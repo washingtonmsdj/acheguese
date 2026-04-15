@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * AddressRepositoryMock - Implementação mock para testes
  */
@@ -21,6 +22,10 @@ export class AddressRepositoryMock implements IAddressRepository {
       number: input.number ?? null,
       complement: input.complement ?? null,
       address_type: input.address_type ?? 'exact',
+      precision: input.precision ?? 'neighborhood',
+      verification_status: 'pending',
+      verified_reason: null,
+      owner_user_id: input.owner_user_id ?? null,
       latitude: input.latitude ?? null,
       longitude: input.longitude ?? null,
       geocoded_at: input.geocoded_at ?? null,

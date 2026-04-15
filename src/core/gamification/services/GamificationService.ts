@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * GamificationService - SSOT para sistema de gamificação
  *

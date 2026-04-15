@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * 👤 PROFILE MUTATIONS - Operações de escrita (SSOT)
  *

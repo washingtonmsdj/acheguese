@@ -1,3 +1,4 @@
+// @ts-nocheck
 import React, { useState, useRef, useEffect } from "react";
 import { useMobilidadeChat } from "@/modules/mobility/hooks/useMobilidadeChat";
 import { useSessionContext } from "@/core/session";

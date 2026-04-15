@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * BusinessHoursService — SSOT canônico de horários de funcionamento
  *

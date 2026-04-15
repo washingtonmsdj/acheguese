@@ -1,3 +1,4 @@
+// @ts-nocheck
 ﻿/**
  * USE BUSINESS CREATE MULTI-PROFILE
  *

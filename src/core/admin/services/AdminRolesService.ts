@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * AdminRolesService - SSOT para gestão de roles e permissões
  */

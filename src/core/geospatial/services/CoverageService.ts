@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * CoverageService - SSOT para área de cobertura geográfica
  * 

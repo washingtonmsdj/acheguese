@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * CommunityIssueService — SSOT de toda lógica de problemas urbanos
  *

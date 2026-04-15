@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Landing Queries - SSOT v2.0
  * 

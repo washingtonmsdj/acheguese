@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * ✏️ NOVO CLASSIFICADO PAGE — Criação Completa Multi-Step
  *

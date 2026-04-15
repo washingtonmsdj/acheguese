@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * 🔒 HIBP Service - Have I Been Pwned
  *

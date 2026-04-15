@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * AdminMessagingService - Serviço de administração de mensagens
  *

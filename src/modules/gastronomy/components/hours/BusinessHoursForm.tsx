@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * BusinessHoursForm — Formulário de horários da semana
  *

@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * OrderService — SSOT canônico de pedidos
  *

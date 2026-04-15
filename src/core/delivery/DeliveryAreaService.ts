@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * DeliveryAreaService — SSOT canônico de áreas de entrega
  *

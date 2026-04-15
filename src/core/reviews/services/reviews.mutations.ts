@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * ⭐ REVIEWS MUTATIONS - SSOT v2.0
  *

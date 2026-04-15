@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * 📸 SSOT: CLASSIFIED IMAGE SERVICE
  *

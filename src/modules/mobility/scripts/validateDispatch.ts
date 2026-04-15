@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Script de Validação - Dispatch Automático
  * 

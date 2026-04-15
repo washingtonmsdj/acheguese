@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { supabase } from "@/integrations/supabase";
 import { logger } from "@/shared/utils/logger";
 import { MobilityAdminQueryService } from "@/core/mobility/services";

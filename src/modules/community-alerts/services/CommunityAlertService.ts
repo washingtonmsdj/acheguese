@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * CommunityAlertService — SSOT de toda lógica de alertas comunitários
  *

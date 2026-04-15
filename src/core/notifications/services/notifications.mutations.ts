@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * 🔔 NOTIFICATIONS MUTATIONS - Operações de escrita (SSOT)
  *

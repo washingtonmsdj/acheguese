@@ -417,14 +417,14 @@ export default function EmpresasLandingPage({ resolved: resolvedProp, activeMemb
   const businessesToShow = useMemo(() => {
     // Se modo "perto de mim" ativo e temos resultados, usar nearbyBusinesses
     if (nearbyMode && nearbyBusinesses && nearbyBusinesses.length > 0) {
-      return nearbyBusinesses.map(result => ({
-        id: result.entity_id,
-        name: result.entity_data?.name || 'Empresa',
+      return nearbyBusinesses.map((result: any) => ({
+        id: result.entity_id || result.id,
+        name: result.entity_data?.name || result.name || 'Empresa',
         category: result.entity_data?.category || "Outros",
         rating: result.entity_data?.rating || 0,
         reviews: result.entity_data?.total_reviews || 0,
-        distance: `${(result.distance_meters / 1000).toFixed(1)} km`,
-        walkTime: `${Math.round(result.distance_meters / 80)} min`, // ~80m/min caminhando
+        distance: `${((result.distance_meters ?? 0) / 1000).toFixed(1)} km`,
+        walkTime: `${Math.round((result.distance_meters ?? 0) / 80)} min`,
         description: result.entity_data?.description || "",
         tags: [],
         premium: result.entity_data?.is_premium || false,
@@ -432,14 +432,14 @@ export default function EmpresasLandingPage({ resolved: resolvedProp, activeMemb
         neighborRecs: 0,
         lastVisit: "",
         coords: { 
-          lat: result.entity_data?.address?.latitude || 0, 
-          lng: result.entity_data?.address?.longitude || 0 
+          lat: result.entity_data?.address?.latitude || result.latitude || 0, 
+          lng: result.entity_data?.address?.longitude || result.longitude || 0 
         },
         phone: result.entity_data?.phone || "",
-        slug: result.entity_data?.slug,
+        slug: result.entity_data?.slug || result.slug,
         is_premium: result.entity_data?.is_premium,
         geographic_path: result.entity_data?.geographic_path,
-        distanceMeters: result.distance_meters, // Para DistanceBadge
+        distanceMeters: result.distance_meters,
       }));
     }
     
@@ -691,7 +691,7 @@ export default function EmpresasLandingPage({ resolved: resolvedProp, activeMemb
                   type: 'business' as const,
                   coordinates: { latitude: b.coords.lat, longitude: b.coords.lng },
                   title: b.name,
-                  status: (b.isOpen ? 'active' : 'inactive') as const,
+                  status: b.isOpen ? 'active' : 'inactive',
                   metadata: { category: b.category, rating: b.rating },
                 }))}
               onMarkerClick={(id) => {

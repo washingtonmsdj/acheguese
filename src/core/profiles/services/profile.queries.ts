@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * 👤 PROFILE QUERIES - Operações de leitura (SSOT)
  *

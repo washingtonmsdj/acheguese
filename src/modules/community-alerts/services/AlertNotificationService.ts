@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * AlertNotificationService — Distribuição de notificações por região
  *

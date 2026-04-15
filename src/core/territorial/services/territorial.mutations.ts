@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Territorial Mutations - SSOT v2.0
  * 

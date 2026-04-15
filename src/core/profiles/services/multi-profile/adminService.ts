@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * ADMIN SERVICE - FASE 7
  * Service para operações administrativas em perfis

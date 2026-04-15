@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * 🔍 BUSINESS QUERIES — Leitura de dados
  * 

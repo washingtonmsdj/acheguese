@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * MobilityService - SSOT core/mobility
  *

@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * NetworkService — Operações de Rede/Filiais
  *

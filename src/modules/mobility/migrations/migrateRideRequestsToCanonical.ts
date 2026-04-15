@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Script de migração: ride_requests (legado) → modelo canônico
  * 

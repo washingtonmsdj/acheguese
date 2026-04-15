@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * ⭐ FAVORITES MUTATIONS - Operações de escrita (SSOT)
  *

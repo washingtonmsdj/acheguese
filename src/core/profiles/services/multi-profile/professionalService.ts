@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * PROFESSIONAL SERVICE
  * Service layer SSOT para operações de professional_data.

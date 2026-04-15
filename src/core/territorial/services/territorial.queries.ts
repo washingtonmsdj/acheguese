@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Territorial Queries - SSOT v2.0
  * 

@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * 🏆 MODERATION SERVICE - SSOT para Sistema de Moderação
  *

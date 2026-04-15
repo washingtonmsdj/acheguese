@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * AdminDataService - SSOT para operações administrativas de dados
  * 

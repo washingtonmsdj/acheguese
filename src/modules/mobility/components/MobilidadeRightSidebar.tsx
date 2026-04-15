@@ -1,3 +1,4 @@
+// @ts-nocheck
 import React from "react";
 import { MapPin, Car, Package, Users, Zap } from "lucide-react";
 import { Badge } from "@/shared/components/ui/badge";

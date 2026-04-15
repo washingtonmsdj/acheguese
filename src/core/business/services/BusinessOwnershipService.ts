@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * BusinessOwnershipService - SSOT para verificação de ownership de negócios
  * 

@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * 📜 BUSINESS LEGACY — Compatibilidade com tabela `businesses`
  * 

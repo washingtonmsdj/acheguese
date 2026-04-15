@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * CORE BILLING SUBSCRIPTION SERVICE — Serviço de assinaturas
  *

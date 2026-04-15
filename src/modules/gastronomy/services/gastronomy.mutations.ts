@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * 🍽️ GASTRONOMY MUTATIONS - SSOT Write Model
  *

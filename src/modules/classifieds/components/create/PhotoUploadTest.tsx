@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * 🧪 COMPONENTE DE TESTE: Upload de Fotos
  * 

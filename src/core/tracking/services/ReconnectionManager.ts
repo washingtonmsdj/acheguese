@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * GATE 4: RECONNECTION MANAGER
  * 

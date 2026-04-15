@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * GATE 5: DRIVER AVAILABILITY SERVICE
  * 

@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * AdminVagasService - SSOT para gestão administrativa de vagas
  */

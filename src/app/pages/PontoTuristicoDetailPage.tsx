@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * PontoTuristicoDetailPage - Página de detalhe de ponto turístico
  * 

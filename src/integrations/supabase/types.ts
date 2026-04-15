@@ -10,152 +10,201 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "14.4"
+    PostgrestVersion: "14.5"
   }
   public: {
     Tables: {
-      classified_likes: {
+      chat_messages: {
         Row: {
-          classified_id: string
+          content: string
           created_at: string
           id: string
+          project_id: string
+          role: string
           user_id: string
         }
         Insert: {
-          classified_id: string
+          content: string
           created_at?: string
           id?: string
+          project_id: string
+          role: string
           user_id: string
         }
         Update: {
-          classified_id?: string
+          content?: string
           created_at?: string
           id?: string
+          project_id?: string
+          role?: string
           user_id?: string
         }
         Relationships: [
           {
-            foreignKeyName: "classified_likes_classified_id_fkey"
-            columns: ["classified_id"]
+            foreignKeyName: "chat_messages_project_id_fkey"
+            columns: ["project_id"]
             isOneToOne: false
-            referencedRelation: "classifieds"
+            referencedRelation: "projects"
             referencedColumns: ["id"]
           },
         ]
       }
-      classifieds: {
+      game_specs: {
         Row: {
-          category: string
           created_at: string
-          description: string
           id: string
-          latitude: number | null
-          longitude: number | null
-          neighborhood: string
-          photos: string[]
-          price: number
-          profile_id: string
-          status: string
-          title: string
-          updated_at: string
+          project_id: string
+          spec_data: Json
+          user_id: string
         }
         Insert: {
-          category?: string
           created_at?: string
-          description?: string
           id?: string
-          latitude?: number | null
-          longitude?: number | null
-          neighborhood?: string
-          photos?: string[]
-          price?: number
-          profile_id: string
-          status?: string
-          title: string
-          updated_at?: string
+          project_id: string
+          spec_data: Json
+          user_id: string
         }
         Update: {
-          category?: string
           created_at?: string
-          description?: string
           id?: string
-          latitude?: number | null
-          longitude?: number | null
-          neighborhood?: string
-          photos?: string[]
-          price?: number
-          profile_id?: string
-          status?: string
-          title?: string
-          updated_at?: string
+          project_id?: string
+          spec_data?: Json
+          user_id?: string
         }
         Relationships: [
           {
-            foreignKeyName: "classifieds_profile_id_fkey"
-            columns: ["profile_id"]
+            foreignKeyName: "game_specs_project_id_fkey"
+            columns: ["project_id"]
             isOneToOne: false
-            referencedRelation: "profiles"
+            referencedRelation: "projects"
             referencedColumns: ["id"]
           },
         ]
       }
-      profiles: {
+      project_assets: {
         Row: {
-          avatar_url: string | null
-          bio: string | null
-          city: string | null
           created_at: string
-          display_name: string | null
           id: string
-          is_active: boolean
-          is_suspended: boolean
           name: string
-          neighborhood: string | null
-          profile_type: string
-          reputation: number
-          updated_at: string
+          project_id: string
+          size_bytes: number
+          type: string
+          url: string
           user_id: string
-          username: string | null
-          verified: boolean
-          whatsapp: string | null
         }
         Insert: {
-          avatar_url?: string | null
-          bio?: string | null
-          city?: string | null
           created_at?: string
-          display_name?: string | null
           id?: string
-          is_active?: boolean
-          is_suspended?: boolean
-          name?: string
-          neighborhood?: string | null
-          profile_type?: string
-          reputation?: number
-          updated_at?: string
+          name: string
+          project_id: string
+          size_bytes?: number
+          type: string
+          url: string
           user_id: string
-          username?: string | null
-          verified?: boolean
-          whatsapp?: string | null
         }
         Update: {
-          avatar_url?: string | null
-          bio?: string | null
-          city?: string | null
           created_at?: string
-          display_name?: string | null
           id?: string
-          is_active?: boolean
-          is_suspended?: boolean
           name?: string
-          neighborhood?: string | null
-          profile_type?: string
-          reputation?: number
+          project_id?: string
+          size_bytes?: number
+          type?: string
+          url?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_assets_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      project_files: {
+        Row: {
+          content: string | null
+          created_at: string
+          id: string
+          language: string | null
+          name: string
+          parent_id: string | null
+          path: string
+          project_id: string
+          type: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          content?: string | null
+          created_at?: string
+          id?: string
+          language?: string | null
+          name: string
+          parent_id?: string | null
+          path: string
+          project_id: string
+          type: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          content?: string | null
+          created_at?: string
+          id?: string
+          language?: string | null
+          name?: string
+          parent_id?: string | null
+          path?: string
+          project_id?: string
+          type?: string
           updated_at?: string
           user_id?: string
-          username?: string | null
-          verified?: boolean
-          whatsapp?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_files_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      projects: {
+        Row: {
+          created_at: string
+          description: string | null
+          game_type: string | null
+          id: string
+          is_public: boolean
+          name: string
+          thumbnail_url: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          game_type?: string | null
+          id?: string
+          is_public?: boolean
+          name: string
+          thumbnail_url?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          game_type?: string | null
+          id?: string
+          is_public?: boolean
+          name?: string
+          thumbnail_url?: string | null
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }

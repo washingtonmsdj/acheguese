@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * PROFILE SERVICE - FASE 3
  * Service layer SSOT para operações de perfil

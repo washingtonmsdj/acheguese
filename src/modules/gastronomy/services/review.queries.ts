@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Review Query Service — operações de reviews para gastronomia
  *

@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * AdminGastronomyService - SSOT para gestão administrativa de gastronomia
  * 

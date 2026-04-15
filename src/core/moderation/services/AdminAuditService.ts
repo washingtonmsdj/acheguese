@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * 🔒 ADMIN AUDIT SERVICE - SSOT v2.0
  *

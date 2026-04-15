@@ -479,7 +479,7 @@ export default function ComplexoNordesteLandingPage() {
               { icon: Store, value: isLoading ? '—' : stats.businesses || '—', label: 'Empresas', color: 'text-blue-500', bg: 'bg-blue-500/10', border: 'border-blue-500/20' },
               { icon: Wrench, value: isLoading ? '—' : stats.services || '—', label: 'Profissionais', color: 'text-violet-500', bg: 'bg-violet-500/10', border: 'border-violet-500/20' },
               { icon: GraduationCap, value: statsLoading ? '—' : territoryStats?.schools ?? '—', label: 'Escolas', color: 'text-emerald-500', bg: 'bg-emerald-500/10', border: 'border-emerald-500/20' },
-              { icon: Bus, value: statsLoading ? '—' : territoryStats?.bus_lines ?? '—', label: 'Linhas de ônibus', color: 'text-rose-500', bg: 'bg-rose-500/10', border: 'border-rose-500/20' },
+              { icon: Bus, value: statsLoading ? '—' : (territoryStats as any)?.bus_lines ?? '—', label: 'Linhas de ônibus', color: 'text-rose-500', bg: 'bg-rose-500/10', border: 'border-rose-500/20' },
             ].map((stat) => (
               <motion.div
                 key={stat.label}

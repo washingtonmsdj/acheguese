@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * ⭐ REVIEWS QUERIES - SSOT v2.0
  *

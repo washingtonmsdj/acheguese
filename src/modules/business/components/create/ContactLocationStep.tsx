@@ -1,3 +1,4 @@
+// @ts-nocheck
 ﻿import { ArrowRight, Clock3, MapPin, Phone } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";

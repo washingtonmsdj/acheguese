@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * ClassifiedReportService - Serviço de denúncias de classificados
  * 

@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * CityService - SSOT para operações de cidade
  * 

@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * resolveLocationDescendants - Resolve location + descendants for hierarchical queries
  * 

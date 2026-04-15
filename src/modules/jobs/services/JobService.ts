@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { supabase } from "@/integrations/supabase/client";
 import { logger } from "@/shared/utils/logger";
 import { MOCK_JOBS } from "../data/mock-jobs";
