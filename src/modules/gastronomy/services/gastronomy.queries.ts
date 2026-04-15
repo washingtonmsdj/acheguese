@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * 🍽️ GASTRONOMY QUERIES - SSOT Read Model
  *

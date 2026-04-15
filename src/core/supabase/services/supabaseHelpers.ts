@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * Typed Supabase helpers.
  *

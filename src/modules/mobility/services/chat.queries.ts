@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * Chat Queries - SSOT v2.0
  * 

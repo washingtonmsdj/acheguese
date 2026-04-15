@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * ClassifiedUrlService — SSOT para URLs públicas de classificados
  *

@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * AnalyticsService — SSOT canônico de analytics
  *

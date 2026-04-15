@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * ðŸ” MOBILITY QUERIES â€” Leitura de dados
  * 

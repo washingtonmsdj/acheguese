@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * ChatService - SSOT para chat de corridas
  * 

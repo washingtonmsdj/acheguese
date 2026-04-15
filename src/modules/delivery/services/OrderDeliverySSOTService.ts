@@ -1,4 +1,3 @@
-// @ts-nocheck
 ﻿/**
  * SSOT: módulo vertical de delivery/pedidos
  *

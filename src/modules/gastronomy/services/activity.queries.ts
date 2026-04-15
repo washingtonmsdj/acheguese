@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * Activity Query Service — operações de atividades sociais de gastronomia
  *

@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * useGastronomySimilar — Restaurantes similares (mesma cuisine_type)
  *

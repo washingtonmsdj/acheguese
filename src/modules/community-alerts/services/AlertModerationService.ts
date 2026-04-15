@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * AlertModerationService — Reports, strikes e moderação de alertas
  */

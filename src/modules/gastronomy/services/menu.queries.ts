@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * 🍽️ MENU QUERIES - SSOT Read Model para Cardápios
  *

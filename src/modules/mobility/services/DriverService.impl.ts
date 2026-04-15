@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * DriverService - canonical implementation
  *

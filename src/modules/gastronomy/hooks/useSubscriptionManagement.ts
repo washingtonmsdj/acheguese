@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * useSubscriptionManagement — Hook para gerenciar assinaturas
  *

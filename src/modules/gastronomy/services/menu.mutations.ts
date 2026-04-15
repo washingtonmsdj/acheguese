@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * 🍽️ MENU MUTATIONS - SSOT Write Model para Cardápios
  *

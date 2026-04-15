@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * useCreatePostForm - Hook para gerenciar formulário de criação de post
  */

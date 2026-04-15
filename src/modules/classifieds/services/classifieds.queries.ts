@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * 📦 CLASSIFIEDS QUERIES - SSOT Read Model
  *
