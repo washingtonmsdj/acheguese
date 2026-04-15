@@ -44,6 +44,7 @@ export default defineConfig(({ mode }) => ({
       "@/app": path.resolve(__dirname, "./src/app"),
       "@/shared": path.resolve(__dirname, "./src/shared"),
       "@/core": path.resolve(__dirname, "./src/core"),
+      "@/core/coverage": path.resolve(__dirname, "./src/core/coverage/index.ts"),
       "@/integrations": path.resolve(__dirname, "./src/integrations"),
       "@/modules": path.resolve(__dirname, "./src/modules"),
       "@/components": path.resolve(__dirname, "./src/components"),
@@ -52,6 +53,7 @@ export default defineConfig(({ mode }) => ({
       "lodash": "lodash-es",
     },
     extensions: ['.mjs', '.js', '.mts', '.ts', '.jsx', '.tsx', '.json'],
+    mainFields: ['module', 'main'],
     dedupe: ["react", "react-dom", "react/jsx-runtime"],
   },
   
