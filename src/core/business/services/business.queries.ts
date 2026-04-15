@@ -1,0 +1,831 @@
+/**
+ * 🔍 BUSINESS QUERIES — Leitura de dados
+ * 
+ * Responsabilidade única: todas as operações de consulta (SELECT)
+ * - Sem escritas (INSERT/UPDATE/DELETE)
+ * - Sem lógica de negócio complexa
+ * - Mapeamento de dados via business.mappers
+ */
+
+import { supabase } from "@/integrations/supabase";
+import { logger } from "@/shared/utils/logger";
+import { applyTerritoryFilter } from "@/core/location";
+
+const supabaseAny = supabase as any;
+import { sanitizeForILike } from "@/shared/utils/sqlSanitization";
+import { PAGINATION } from "@/shared/constants";
+import {
+  isValidBusinessId,
+  isValidPageParam,
+  isValidPageSize,
+  sanitizeSearchQuery,
+  isValidSlug,
+} from "./validators";
+import {
+  mapBusinessDataToBusiness,
+  mapProductRecordToProduct,
+} from "./business.mappers";
+import type {
+  Business,
+  BusinessFilters,
+  BusinessDataWithProfiles,
+  Product,
+  ProductRecord,
+} from "../types";
+import type { TerritoryFilter } from "@/core/location/types";
+
+/**
+ * Buscar empresas (com filtros)
+ * ETAPA 9: Carrega relações canônicas quando disponíveis
+ */
+export async function getBusinesses(
+  filters: BusinessFilters = {},
+): Promise<Business[]> {
+  try {
+    // Check if table exists first
+    const { error: checkError } = await supabaseAny.from("business_data")
+      .select("profile_id")
+      .limit(1);
+
+    if (checkError) {
+      console.warn(
+        "⚠️ business_data table not accessible, returning empty array:",
+        (checkError as { message?: string }).message,
+      );
+      return [];
+    }
+
+    let query = supabaseAny.from("business_data")
+      .select(`
+        *,
+        address:addresses!address_id(*),
+        location:locations!location_id(*)
+      `)
+      .eq("status", "active")
+      .in("business_role", ["standalone", "branch"]);
+
+    // Aplicar filtros
+    if (filters.category && filters.category !== "todos") {
+      query = (query as unknown as { eq: (field: string, value: string) => typeof query }).eq("category", filters.category);
+    }
+
+    if (filters.search) {
+      const sanitizedSearch = sanitizeForILike(filters.search);
+      if (sanitizedSearch) {
+        query = (query as unknown as { or: (condition: string) => typeof query }).or(
+          `business_name.ilike.%${sanitizedSearch}%,description.ilike.%${sanitizedSearch}%`,
+        );
+      }
+    }
+
+    if (filters.neighborhood) {
+      query = (query as unknown as { eq: (field: string, value: string) => typeof query }).eq(
+        "metadata->>neighborhood",
+        filters.neighborhood,
+      );
+    }
+
+    if (filters.hasDelivery) {
+      query = (query as unknown as { eq: (field: string, value: string) => typeof query }).eq(
+        "metadata->>tem_delivery",
+        "true",
+      );
+    }
+
+    // SSOT - Filtro territorial usando utilitário compartilhado
+    if (filters.territoryFilter) {
+      query = applyTerritoryFilter(
+        query as unknown as { in: (field: string, values: string[]) => unknown },
+        filters.territoryFilter,
+      ) as typeof query;
+    }
+
+    // Ordenação
+    switch (filters.sortBy) {
+      case "rating":
+        query = (query as unknown as { order: (field: string, opts: { ascending: boolean }) => typeof query }).order(
+          "rating",
+          { ascending: false },
+        );
+        break;
+      case "name":
+        query = (query as unknown as { order: (field: string, opts: { ascending: boolean }) => typeof query }).order(
+          "business_name",
+          { ascending: true },
+        );
+        break;
+      default:
+        query = (query as unknown as { order: (field: string, opts: { ascending: boolean }) => typeof query }).order(
+          "created_at",
+          { ascending: false },
+        );
+    }
+
+    const { data, error } = await query;
+
+    if (error) {
+      console.warn("⚠️ Error fetching businesses:", (error as { message?: string }).message);
+      return [];
+    }
+
+    // Fetch profiles separately to avoid join issues
+    const profileIds =
+      ((data as Array<{ profile_id: string }>) || [])
+        .map((d) => d.profile_id)
+        .filter(Boolean) || [];
+    const profilesMap = new Map<
+      string,
+      { id: string; name: string; phone?: string; whatsapp?: string }
+    >();
+
+    if (profileIds.length > 0) {
+      // Importação dinâmica para evitar circular dependency
+      const { profileService } = await import("@/core/profiles");
+      const profilesData = await profileService.getProfilesByIds(profileIds);
+      profilesData.forEach((p: { id: string; name: string; phone?: string; whatsapp?: string }) =>
+        profilesMap.set(p.id, p),
+      );
+    }
+
+    const businesses = ((data as BusinessDataWithProfiles[]) || []).map((d) =>
+      mapBusinessDataToBusiness({
+        ...d,
+        profiles: profilesMap.get(d.profile_id) || {
+          id: d.profile_id,
+          name: (d as unknown as { business_name?: string }).business_name || "Empresa",
+        },
+      } as BusinessDataWithProfiles),
+    );
+
+    return businesses;
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    console.warn("⚠️ Unexpected error in getBusinesses:", message);
+    return [];
+  }
+}
+
+/**
+ * Buscar empresas com paginação (para infinite scroll)
+ */
+export async function getBusinessesList(params: {
+  pageParam?: number;
+  category?: string;
+  searchQuery?: string;
+  pageSize?: number;
+  filter?: TerritoryFilter;
+} = {}): Promise<{ businesses: Business[]; nextPage?: number }> {
+  const {
+    pageParam = 0,
+    category,
+    searchQuery,
+    pageSize = 12,
+    filter,
+  } = params;
+
+  // Validação
+  if (!isValidPageParam(pageParam)) {
+    logger.warn("Invalid pageParam provided to getBusinessesList", { pageParam });
+    return { businesses: [], nextPage: undefined };
+  }
+
+  if (!isValidPageSize(pageSize)) {
+    logger.warn("Invalid pageSize provided to getBusinessesList", { pageSize });
+    return { businesses: [], nextPage: undefined };
+  }
+
+  try {
+    const checkResult = await supabaseAny.from("business_data")
+      .select("profile_id")
+      .limit(1);
+
+    if (checkResult.error) {
+      console.warn("⚠️ business_data table not accessible:", checkResult.error.message);
+      return { businesses: [], nextPage: undefined };
+    }
+
+    let query = supabaseAny.from("business_data")
+      .select(`
+        *,
+        address:addresses!address_id(*),
+        location:locations!location_id(*)
+      `)
+      .eq("status", "active")
+      .in("business_role", ["standalone", "branch"])
+      .range(pageParam * pageSize, (pageParam + 1) * pageSize - 1);
+
+    // Aplicar filtros
+    if (category && category !== "todos") {
+      query = (query as unknown as { eq: (field: string, value: string) => typeof query }).eq("category", category);
+    }
+
+    if (searchQuery?.trim()) {
+      const sanitized = sanitizeSearchQuery(searchQuery);
+      if (sanitized) {
+        const safeQuery = sanitizeForILike(sanitized);
+        if (safeQuery) {
+          query = (query as unknown as { or: (condition: string) => typeof query }).or(
+            `business_name.ilike.%${safeQuery}%,category.ilike.%${safeQuery}%,metadata->>neighborhood.ilike.%${safeQuery}%`,
+          );
+        }
+      }
+    }
+
+    // Hierárquico - resolve descendentes
+    let resolvedFilter = filter;
+    if (filter?.scope === "location") {
+      const { data: descendantIds, error: rpcError } = await supabase.rpc(
+        "rpc_get_location_descendants_ids",
+        { p_location_id: filter.location_id },
+      );
+
+      if (!rpcError && descendantIds && descendantIds.length > 0) {
+        resolvedFilter = { scope: "group", location_ids: descendantIds };
+      }
+    }
+
+    if (resolvedFilter) {
+      query = applyTerritoryFilter(
+        query as unknown as { in: (field: string, values: string[]) => unknown },
+        resolvedFilter,
+      ) as typeof query;
+    }
+
+    query = (query as unknown as { 
+      order: (field: string, opts: { ascending: boolean }) => typeof query 
+    }).order("is_premium", { ascending: false })
+     .order("rating", { ascending: false });
+
+    const { data, error } = await query;
+
+    if (error) {
+      console.warn("⚠️ Error fetching businesses list:", (error as { message?: string }).message);
+      return { businesses: [], nextPage: undefined };
+    }
+
+    // Fetch profiles
+    const profileIds =
+      ((data as Array<{ profile_id: string }>) || [])
+        .map((d) => d.profile_id)
+        .filter(Boolean) || [];
+    const profilesMap = new Map<string, { id: string; name: string }>();
+
+    if (profileIds.length > 0) {
+      const { profileService } = await import("@/core/profiles");
+      const profilesData = await profileService.getProfilesByIds(profileIds);
+      profilesData.forEach((p: { id: string; name: string }) => profilesMap.set(p.id, p));
+    }
+
+    const businesses = ((data as BusinessDataWithProfiles[]) || []).map((d) =>
+      mapBusinessDataToBusiness({
+        ...d,
+        profiles: profilesMap.get(d.profile_id) || {
+          id: d.profile_id,
+          name: (d as unknown as { business_name?: string }).business_name || "Empresa",
+        },
+      } as BusinessDataWithProfiles),
+    );
+
+    return {
+      businesses,
+      nextPage: data && (data as unknown[]).length === pageSize ? pageParam + 1 : undefined,
+    };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    console.warn("⚠️ Unexpected error in getBusinessesList:", message);
+    return { businesses: [], nextPage: undefined };
+  }
+}
+
+/**
+ * Buscar perfil básico da empresa (para URLs e metadados)
+ */
+export async function getBusinessProfile(id: string): Promise<{
+  slug: string;
+  nicho: string;
+  city: string;
+  neighborhood: string;
+  is_premium: boolean;
+} | null> {
+  try {
+    const { data, error } = await supabaseAny.from("business_data")
+      .select("slug, category, metadata, is_premium")
+      .eq("profile_id", id)
+      .single();
+
+    if (error || !data) return null;
+
+    const typedData = data as {
+      slug?: string;
+      category?: string;
+      is_premium?: boolean;
+      metadata?: { city?: string; neighborhood?: string };
+    };
+    const metadata = typedData.metadata || {};
+
+    return {
+      slug: typedData.slug || "",
+      nicho: typedData.category || "",
+      city: metadata.city || "",
+      neighborhood: metadata.neighborhood || "",
+      is_premium: typedData.is_premium || false,
+    };
+  } catch (error) {
+    logger.error("Error fetching business profile:", error);
+    return null;
+  }
+}
+
+/**
+ * Buscar empresa por ID
+ * ETAPA 9: Carrega relações canônicas
+ */
+export async function getBusinessById(id: string): Promise<Business> {
+  // Validação
+  if (!isValidBusinessId(id)) {
+    throw new Error("ID de empresa inválido");
+  }
+
+  try {
+    const { data, error } = await supabaseAny.from("business_data")
+      .select(`
+        *,
+        profiles(id, name, avatar_url, phone, whatsapp),
+        address:addresses!address_id(*),
+        location:locations!location_id(*)
+      `)
+      .eq("profile_id", id)
+      .maybeSingle();
+
+    if (error) throw error;
+    if (!data) throw new Error("Empresa não encontrada");
+
+    return mapBusinessDataToBusiness(data as BusinessDataWithProfiles);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    throw new Error(`Erro ao buscar empresa: ${message}`);
+  }
+}
+
+/**
+ * Buscar empresa por slug
+ */
+export async function getBusinessBySlug(slug: string): Promise<{
+  id: string;
+  slug: string;
+  name: string;
+  is_premium?: boolean;
+} | null> {
+  // Validação
+  if (!isValidSlug(slug)) {
+    logger.warn("Invalid slug provided to getBusinessBySlug", { slug });
+    return null;
+  }
+
+  try {
+    const { data, error } = await supabaseAny.from("business_data")
+      .select("id, profile_id, slug, business_name, is_premium")
+      .eq("slug", slug)
+      .eq("status", "active")
+      .maybeSingle();
+
+    if (error) {
+      logger.error("Error fetching business by slug:", error);
+      return null;
+    }
+
+    if (!data) return null;
+
+    const typedData = data as {
+      id?: string;
+      profile_id?: string;
+      slug: string;
+      business_name?: string;
+      is_premium?: boolean;
+    };
+
+    return {
+      id: typedData.profile_id || typedData.id || "",
+      slug: typedData.slug,
+      name: typedData.business_name || "",
+      is_premium: typedData.is_premium,
+    };
+  } catch (error) {
+    logger.error("Error in getBusinessBySlug:", error);
+    return null;
+  }
+}
+
+export async function checkSlugExists(
+  slug: string,
+  excludeId?: string,
+): Promise<boolean> {
+  try {
+    let query = supabaseAny
+      .from("business_data")
+      .select("id")
+      .eq("slug", slug)
+      .limit(1);
+
+    if (excludeId) {
+      query = query.neq("id", excludeId);
+    }
+
+    const { data, error } = await query.maybeSingle();
+
+    if (error) {
+      logger.error("Error checking business slug existence:", error);
+      throw error;
+    }
+
+    return Boolean(data);
+  } catch (error) {
+    logger.error("Error in checkSlugExists:", error);
+    throw error;
+  }
+}
+
+export async function getSimilarSlugs(
+  slug: string,
+  limit = PAGINATION.DEFAULT_LIMIT,
+): Promise<string[]> {
+  try {
+    const { data, error } = await supabaseAny
+      .from("business_data")
+      .select("slug")
+      .ilike("slug", `${slug}%`)
+      .limit(limit);
+
+    if (error) {
+      logger.error("Error getting similar business slugs:", error);
+      throw error;
+    }
+
+    return ((data as Array<{ slug?: string }> | null) ?? [])
+      .map((item) => item.slug)
+      .filter((item): item is string => Boolean(item));
+  } catch (error) {
+    logger.error("Error in getSimilarSlugs:", error);
+    throw error;
+  }
+}
+
+export async function getSlugHistory(businessId: string): Promise<Array<{
+  id: string;
+  old_slug: string;
+  change_reason: string | null;
+  created_at: string;
+}>> {
+  try {
+    const { data, error } = await supabaseAny
+      .from("business_slug_history")
+      .select("id, old_slug, change_reason, created_at")
+      .eq("business_id", businessId)
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      logger.error("Error getting business slug history:", error);
+      throw error;
+    }
+
+    return (data as Array<{
+      id: string;
+      old_slug: string;
+      change_reason: string | null;
+      created_at: string;
+    }> | null) ?? [];
+  } catch (error) {
+    logger.error("Error in getSlugHistory:", error);
+    throw error;
+  }
+}
+
+export async function resolveOldSlug(oldSlug: string): Promise<{
+  businessId: string;
+  currentSlug: string;
+} | null> {
+  try {
+    const { data: history, error: historyError } = await supabaseAny
+      .from("business_slug_history")
+      .select("business_id")
+      .eq("old_slug", oldSlug)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (historyError) {
+      logger.error("Error resolving old business slug history:", historyError);
+      throw historyError;
+    }
+
+    if (!history?.business_id) {
+      return null;
+    }
+
+    const { data: business, error: businessError } = await supabaseAny
+      .from("business_data")
+      .select("id, slug")
+      .eq("id", history.business_id)
+      .maybeSingle();
+
+    if (businessError) {
+      logger.error("Error resolving current business slug:", businessError);
+      throw businessError;
+    }
+
+    if (!business?.id || !business?.slug) {
+      return null;
+    }
+
+    return {
+      businessId: business.id,
+      currentSlug: business.slug,
+    };
+  } catch (error) {
+    logger.error("Error in resolveOldSlug:", error);
+    throw error;
+  }
+}
+
+/**
+ * Buscar businesses por IDs (para uso em serviços agregadores)
+ */
+export async function getBusinessesByIds(
+  ids: string[],
+): Promise<
+  Array<{
+    id: string;
+    name: string;
+    category: string;
+    slug?: string;
+    neighborhood?: string;
+    city?: string;
+    logo?: string;
+    rating?: number;
+    verified?: boolean;
+    is_premium?: boolean;
+    geographic_path?: string | null;
+    description?: string;
+  }>
+> {
+  if (ids.length === 0) return [];
+
+  try {
+    const { data, error } = await supabaseAny.from("business_data")
+      .select(`
+        profile_id,
+        business_name,
+        category,
+        slug,
+        description,
+        logo,
+        rating,
+        is_premium,
+        is_verified,
+        metadata,
+        profiles(name, neighborhood, city),
+        location:locations!location_id(geographic_path)
+      `)
+      .in("profile_id", ids);
+
+    if (error) {
+      logger.error("Error getting businesses by IDs", error, { ids });
+      return [];
+    }
+
+    return ((data as unknown[]) || []).map((b: unknown) => {
+      const typed = b as {
+        profile_id?: string;
+        business_name?: string;
+        profiles?: { name?: string; neighborhood?: string; city?: string };
+        category?: string;
+        slug?: string;
+        neighborhood?: string;
+        metadata?: { neighborhood?: string; city?: string };
+        city?: string;
+        logo?: string;
+        rating?: number;
+        is_verified?: boolean;
+        is_premium?: boolean;
+        location?: { geographic_path?: string | null };
+        description?: string;
+      };
+
+      return {
+        id: typed.profile_id || "",
+        name: typed.business_name || typed.profiles?.name || "",
+        category: typed.category || "",
+        slug: typed.slug,
+        neighborhood: typed.profiles?.neighborhood || typed.metadata?.neighborhood,
+        city: typed.profiles?.city || typed.metadata?.city,
+        logo: typed.logo || undefined,
+        rating: typeof typed.rating === "number" ? typed.rating : 0,
+        verified: Boolean(typed.is_verified),
+        is_premium: Boolean(typed.is_premium),
+        geographic_path: typed.location?.geographic_path ?? null,
+        description: typed.description || undefined,
+      };
+    });
+  } catch (error) {
+    logger.error("Error getting businesses by IDs", error as Error, { ids });
+    return [];
+  }
+}
+
+/**
+ * Buscar businesses por nome (para autocomplete/menções)
+ */
+export async function searchBusinessesByName(
+  query: string,
+  limit = 5,
+): Promise<Array<{ id: string; name: string; category: string }>> {
+  if (query.length < 2) return [];
+
+  try {
+    const sanitized = sanitizeSearchQuery(query);
+    if (!sanitized) return [];
+
+    const sanitizedQuery = sanitizeForILike(sanitized);
+    if (!sanitizedQuery) return [];
+
+    const { data, error } = await supabaseAny.from("business_data")
+      .select("profile_id, business_name, category")
+      .eq("status", "active")
+      .ilike("business_name", `%${sanitizedQuery}%`)
+      .limit(limit);
+
+    if (error) {
+      logger.error("Error searching businesses by name", error, { query });
+      return [];
+    }
+
+    return ((data as unknown[]) || []).map((b: unknown) => {
+      const typed = b as { profile_id?: string; business_name?: string; category?: string };
+      return {
+        id: typed.profile_id || "",
+        name: typed.business_name || "",
+        category: typed.category || "",
+      };
+    });
+  } catch (error) {
+    logger.error("Error searching businesses by name", error as Error, { query });
+    return [];
+  }
+}
+
+/**
+ * Obter produtos de uma empresa
+ */
+export async function getProducts(businessId: string): Promise<Product[]> {
+  // Validação
+  if (!isValidBusinessId(businessId)) {
+    throw new Error("ID de empresa inválido");
+  }
+
+  try {
+    const { data, error } = await supabaseAny.from("business_products")
+      .select("*")
+      .eq("profile_id", businessId)
+      .order("created_at", { ascending: false });
+
+    if (error) throw error;
+
+    return ((data as ProductRecord[]) || []).map(mapProductRecordToProduct);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    throw new Error(`Erro ao buscar produtos: ${message}`);
+  }
+}
+
+/**
+ * Buscar página de produtos ativos
+ */
+export async function getProductsPage(
+  businessId: string,
+  page: number,
+  pageSize: number,
+): Promise<Product[]> {
+  // Validação
+  if (!isValidBusinessId(businessId)) {
+    throw new Error("ID de empresa inválido");
+  }
+  if (!isValidPageParam(page)) {
+    throw new Error("Número de página inválido");
+  }
+  if (!isValidPageSize(pageSize)) {
+    throw new Error("Tamanho de página inválido");
+  }
+
+  const from = page * pageSize;
+  const to = from + pageSize - 1;
+
+  const { data, error } = await supabaseAny.from("business_products")
+    .select("*")
+    .eq("profile_id", businessId)
+    .eq("ativo", true)
+    .order("destaque", { ascending: false })
+    .order("categoria", { ascending: true })
+    .order("nome", { ascending: true })
+    .range(from, to);
+
+  if (error) {
+    throw new Error(`Erro ao buscar página de produtos: ${(error as { message?: string }).message}`);
+  }
+
+  return ((data as ProductRecord[]) || []).map(mapProductRecordToProduct);
+}
+
+/**
+ * Buscar serviços de uma empresa
+ */
+export async function getServices(businessId: string): Promise<unknown[]> {
+  try {
+    const { data, error } = await supabaseAny.from("business_services")
+      .select("*")
+      .eq("business_id", businessId)
+      .order("name");
+
+    if (error) throw error;
+    return (data as unknown[]) || [];
+  } catch (error) {
+    logger.error("Error fetching business services:", error);
+    return [];
+  }
+}
+
+/**
+ * Buscar empresas similares (mesma categoria)
+ */
+export async function getSimilarBusinesses(
+  businessId: string,
+  category: string,
+  limit = 5,
+): Promise<Partial<Business>[]> {
+  try {
+    const { data, error } = await supabaseAny.from("business_data")
+      .select(`
+        profile_id,
+        business_name,
+        category,
+        slug,
+        is_verified,
+        is_premium
+      `)
+      .eq("category", category)
+      .eq("status", "active")
+      .neq("profile_id", businessId)
+      .limit(limit);
+
+    if (error) {
+      logger.error("Error fetching similar businesses:", error);
+      return [];
+    }
+
+    return ((data as unknown[]) || []).map((item: unknown) => {
+      const typed = item as {
+        profile_id?: string;
+        business_name?: string;
+        category?: string;
+        slug?: string;
+        is_verified?: boolean;
+        is_premium?: boolean;
+      };
+
+      return {
+        id: typed.profile_id,
+        name: typed.business_name,
+        slug: typed.slug,
+        category: typed.category,
+        is_premium: typed.is_premium || false,
+        is_verified: typed.is_verified,
+      } as Partial<Business>;
+    });
+  } catch (error) {
+    logger.error("Error in getSimilarBusinesses:", error);
+    return [];
+  }
+}
+
+/**
+ * Buscar galeria de imagens
+ */
+export async function getGallery(businessId: string): Promise<string[]> {
+  try {
+    const { data, error } = await supabaseAny.from("business_gallery")
+      .select("image_url")
+      .eq("business_id", businessId)
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      logger.error("Error fetching business gallery:", error);
+      return [];
+    }
+
+    return ((data as Array<{ image_url?: string }>) || [])
+      .map((item) => item.image_url)
+      .filter((url): url is string => Boolean(url));
+  } catch (error) {
+    logger.error("Error in getGallery:", error);
+    return [];
+  }
+}

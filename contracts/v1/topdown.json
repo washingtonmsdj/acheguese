@@ -1,8 +1,0 @@
-{
-  "version": "1.0",
-  "genre": "topdown",
-  "description": "Contrato canônico para jogos top-down",
-  "requiredEntities": ["player", "enemy"],
-  "requiredSystems": ["PhysicsSystem", "CollisionSystem", "AISystem"],
-  "userMessage": "Para um jogo top-down, o mínimo esperado é:\n🎯 jogador\n👾 inimigos\n⚙️ física e colisão\n🤖 IA dos inimigos"
-}

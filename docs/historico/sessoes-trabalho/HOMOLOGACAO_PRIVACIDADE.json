@@ -1,0 +1,293 @@
+{
+  "data": "2026-03-28T02:17:21.627Z",
+  "usuario_teste": {
+    "userId": "8ba6a506-83b4-4f7d-99a8-25e627b4d7ea",
+    "email": "teste-privacy-1774664236940@example.com"
+  },
+  "perfil_teste": {
+    "profileId": "e797f0f8-3331-4c91-aef0-98d3be9895aa",
+    "handle": "teste-privacy-1774664238125"
+  },
+  "testes": [
+    {
+      "nome": "TESTE 1: Acessar perfil público via view",
+      "acao": "SELECT public_profiles",
+      "payload": {
+        "handle": "teste-privacy-1774664238125"
+      },
+      "esperado": "SUCESSO: Perfil público acessível",
+      "obtido": "SUCESSO: Handle teste-privacy-1774664238125",
+      "passou": true,
+      "evidencia": {
+        "data": {
+          "id": "e797f0f8-3331-4c91-aef0-98d3be9895aa",
+          "profile_type": "business",
+          "handle": "teste-privacy-1774664238125",
+          "display_name": "Teste Privacy",
+          "avatar_url": null,
+          "bio": null,
+          "location": null,
+          "city": null,
+          "state": null,
+          "country": "BR",
+          "website": null,
+          "verified": false,
+          "reputation_score": 0,
+          "created_at": "2026-03-28T02:17:19.283077+00:00",
+          "contact_email": null,
+          "phone": null
+        }
+      }
+    },
+    {
+      "nome": "TESTE 2: Tornar perfil privado",
+      "acao": "UPDATE profiles SET is_public=false",
+      "payload": {
+        "profile_id": "e797f0f8-3331-4c91-aef0-98d3be9895aa"
+      },
+      "esperado": "SUCESSO: Perfil tornado privado",
+      "obtido": "SUCESSO: is_public=false",
+      "passou": true,
+      "evidencia": {
+        "data": [
+          {
+            "id": "e797f0f8-3331-4c91-aef0-98d3be9895aa",
+            "user_id": "8ba6a506-83b4-4f7d-99a8-25e627b4d7ea",
+            "profile_type": "business",
+            "name": "Teste Privacy",
+            "display_name": "Teste Privacy",
+            "username": null,
+            "bio": null,
+            "avatar_url": null,
+            "neighborhood": null,
+            "city": null,
+            "location_id": null,
+            "phone": null,
+            "whatsapp": null,
+            "is_active": true,
+            "verified_at": null,
+            "is_suspended": false,
+            "suspended": false,
+            "suspended_at": null,
+            "suspension_reason": null,
+            "suspended_until": null,
+            "active_ride_id": null,
+            "reputation": 0,
+            "pontos": 0,
+            "telefone": null,
+            "street": null,
+            "created_at": "2026-03-28T02:17:19.283077+00:00",
+            "updated_at": "2026-03-28T02:17:20.598348+00:00",
+            "verified": false,
+            "handle": "teste-privacy-1774664238125",
+            "show_contact_email": false,
+            "show_phone": false,
+            "show_linked_profiles": true,
+            "show_business_links": true,
+            "show_professional_links": true,
+            "is_public": false,
+            "contact_email": null,
+            "website": null,
+            "location": null,
+            "state": null,
+            "country": "BR",
+            "reputation_score": 0,
+            "trust_score": 0
+          }
+        ]
+      }
+    },
+    {
+      "nome": "TESTE 2B: Perfil privado não aparece em public_profiles",
+      "acao": "SELECT public_profiles (após tornar privado)",
+      "payload": {
+        "handle": "teste-privacy-1774664238125"
+      },
+      "esperado": "SUCESSO: Perfil não encontrado (null)",
+      "obtido": "SUCESSO: Perfil oculto",
+      "passou": true,
+      "evidencia": {
+        "data": null
+      }
+    },
+    {
+      "nome": "TESTE 3: Ocultar contact_email",
+      "acao": "UPDATE profiles SET show_contact_email=false",
+      "payload": {
+        "profile_id": "e797f0f8-3331-4c91-aef0-98d3be9895aa"
+      },
+      "esperado": "SUCESSO: contact_email oculto",
+      "obtido": "SUCESSO: show_contact_email=false",
+      "passou": true,
+      "evidencia": {
+        "data": [
+          {
+            "id": "e797f0f8-3331-4c91-aef0-98d3be9895aa",
+            "user_id": "8ba6a506-83b4-4f7d-99a8-25e627b4d7ea",
+            "profile_type": "business",
+            "name": "Teste Privacy",
+            "display_name": "Teste Privacy",
+            "username": null,
+            "bio": null,
+            "avatar_url": null,
+            "neighborhood": null,
+            "city": null,
+            "location_id": null,
+            "phone": null,
+            "whatsapp": null,
+            "is_active": true,
+            "verified_at": null,
+            "is_suspended": false,
+            "suspended": false,
+            "suspended_at": null,
+            "suspension_reason": null,
+            "suspended_until": null,
+            "active_ride_id": null,
+            "reputation": 0,
+            "pontos": 0,
+            "telefone": null,
+            "street": null,
+            "created_at": "2026-03-28T02:17:19.283077+00:00",
+            "updated_at": "2026-03-28T02:17:21.622438+00:00",
+            "verified": false,
+            "handle": "teste-privacy-1774664238125",
+            "show_contact_email": false,
+            "show_phone": false,
+            "show_linked_profiles": true,
+            "show_business_links": true,
+            "show_professional_links": true,
+            "is_public": true,
+            "contact_email": "contato@empresa.com",
+            "website": null,
+            "location": null,
+            "state": null,
+            "country": "BR",
+            "reputation_score": 0,
+            "trust_score": 0
+          }
+        ]
+      }
+    },
+    {
+      "nome": "TESTE 4: Ocultar phone",
+      "acao": "UPDATE profiles SET show_phone=false",
+      "payload": {
+        "profile_id": "e797f0f8-3331-4c91-aef0-98d3be9895aa"
+      },
+      "esperado": "SUCESSO: phone oculto",
+      "obtido": "SUCESSO: show_phone=false",
+      "passou": true,
+      "evidencia": {
+        "data": [
+          {
+            "id": "e797f0f8-3331-4c91-aef0-98d3be9895aa",
+            "user_id": "8ba6a506-83b4-4f7d-99a8-25e627b4d7ea",
+            "profile_type": "business",
+            "name": "Teste Privacy",
+            "display_name": "Teste Privacy",
+            "username": null,
+            "bio": null,
+            "avatar_url": null,
+            "neighborhood": null,
+            "city": null,
+            "location_id": null,
+            "phone": "+5511999999999",
+            "whatsapp": null,
+            "is_active": true,
+            "verified_at": null,
+            "is_suspended": false,
+            "suspended": false,
+            "suspended_at": null,
+            "suspension_reason": null,
+            "suspended_until": null,
+            "active_ride_id": null,
+            "reputation": 0,
+            "pontos": 0,
+            "telefone": null,
+            "street": null,
+            "created_at": "2026-03-28T02:17:19.283077+00:00",
+            "updated_at": "2026-03-28T02:17:21.929686+00:00",
+            "verified": false,
+            "handle": "teste-privacy-1774664238125",
+            "show_contact_email": false,
+            "show_phone": false,
+            "show_linked_profiles": true,
+            "show_business_links": true,
+            "show_professional_links": true,
+            "is_public": true,
+            "contact_email": "contato@empresa.com",
+            "website": null,
+            "location": null,
+            "state": null,
+            "country": "BR",
+            "reputation_score": 0,
+            "trust_score": 0
+          }
+        ]
+      }
+    },
+    {
+      "nome": "TESTE 5: Ocultar linked profiles",
+      "acao": "UPDATE profiles SET show_linked_profiles=false",
+      "payload": {
+        "profile_id": "e797f0f8-3331-4c91-aef0-98d3be9895aa"
+      },
+      "esperado": "SUCESSO: linked profiles ocultos",
+      "obtido": "SUCESSO: show_linked_profiles=false",
+      "passou": true,
+      "evidencia": {
+        "data": [
+          {
+            "id": "e797f0f8-3331-4c91-aef0-98d3be9895aa",
+            "user_id": "8ba6a506-83b4-4f7d-99a8-25e627b4d7ea",
+            "profile_type": "business",
+            "name": "Teste Privacy",
+            "display_name": "Teste Privacy",
+            "username": null,
+            "bio": null,
+            "avatar_url": null,
+            "neighborhood": null,
+            "city": null,
+            "location_id": null,
+            "phone": "+5511999999999",
+            "whatsapp": null,
+            "is_active": true,
+            "verified_at": null,
+            "is_suspended": false,
+            "suspended": false,
+            "suspended_at": null,
+            "suspension_reason": null,
+            "suspended_until": null,
+            "active_ride_id": null,
+            "reputation": 0,
+            "pontos": 0,
+            "telefone": null,
+            "street": null,
+            "created_at": "2026-03-28T02:17:19.283077+00:00",
+            "updated_at": "2026-03-28T02:17:22.256923+00:00",
+            "verified": false,
+            "handle": "teste-privacy-1774664238125",
+            "show_contact_email": false,
+            "show_phone": false,
+            "show_linked_profiles": false,
+            "show_business_links": true,
+            "show_professional_links": true,
+            "is_public": true,
+            "contact_email": "contato@empresa.com",
+            "website": null,
+            "location": null,
+            "state": null,
+            "country": "BR",
+            "reputation_score": 0,
+            "trust_score": 0
+          }
+        ]
+      }
+    }
+  ],
+  "resumo": {
+    "total": 6,
+    "passou": 6,
+    "falhou": 0
+  }
+}

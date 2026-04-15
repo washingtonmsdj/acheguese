@@ -1,0 +1,55 @@
+{
+  "data": "2026-03-28T02:48:07.383Z",
+  "ambiente": "Supabase Remote",
+  "total_testes": 2,
+  "passou": 2,
+  "falhou": 0,
+  "testes": [
+    {
+      "numero": 1,
+      "nome": "verify_profile como authenticated comum",
+      "esperado": "Bloqueado (permission denied ou função não encontrada)",
+      "obtido": {
+        "code": "42501",
+        "message": "permission denied for function verify_profile",
+        "hint": null
+      },
+      "status": "PASSOU",
+      "evidencia": {
+        "payload": {
+          "p_profile_id": "dbbcc7cb-49fa-4a68-b72f-aede4aca6c0c",
+          "p_admin_user_id": "eefeb507-3ef9-4fbd-9274-b4991349f7dc",
+          "p_reason": "Teste de bloqueio"
+        },
+        "response": {
+          "code": "42501",
+          "message": "permission denied for function verify_profile",
+          "hint": null
+        }
+      }
+    },
+    {
+      "numero": 2,
+      "nome": "suspend_profile como authenticated comum",
+      "esperado": "Bloqueado (permission denied ou função não encontrada)",
+      "obtido": {
+        "code": "42501",
+        "message": "permission denied for function suspend_profile",
+        "hint": null
+      },
+      "status": "PASSOU",
+      "evidencia": {
+        "payload": {
+          "p_profile_id": "dbbcc7cb-49fa-4a68-b72f-aede4aca6c0c",
+          "p_admin_user_id": "eefeb507-3ef9-4fbd-9274-b4991349f7dc",
+          "p_reason": "Teste de bloqueio"
+        },
+        "response": {
+          "code": "42501",
+          "message": "permission denied for function suspend_profile",
+          "hint": null
+        }
+      }
+    }
+  ]
+}

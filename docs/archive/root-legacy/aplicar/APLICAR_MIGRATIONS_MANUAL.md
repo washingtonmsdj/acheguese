@@ -1,0 +1,185 @@
+# APLICAR MIGRATIONS MANUALMENTE
+
+## PROBLEMA
+Supabase CLI não consegue sincronizar migrations devido a divergência entre local e remoto.
+
+## SOLUÇÃO
+Aplicar migrations via SQL Editor do Supabase Dashboard.
+
+---
+
+## PASSO 1: Acessar SQL Editor
+
+1. Abrir Supabase Dashboard: https://supabase.com/dashboard
+2. Selecionar projeto
+3. Ir em "SQL Editor" no menu lateral
+
+---
+
+## PASSO 2: Executar Script Consolidado
+
+Copiar e executar o conteúdo do arquivo: `apply_pricing_safety_migrations.sql`
+
+Ou executar diretamente:
+
+```sql
+-- PRICING TABLES
+CREATE TABLE IF NOT EXISTS pricing_rules (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  mode TEXT NOT NULL CHECK (mode IN ('ride', 'delivery', 'mototaxi', 'motoboy', 'custom')),
+  name TEXT NOT NULL,
+  base_fare DECIMAL(10,2) NOT NULL CHECK (base_fare >= 0),
+  price_per_km DECIMAL(10,2) NOT NULL CHECK (price_per_km >= 0),
+  price_per_minute DECIMAL(10,2) NOT NULL CHECK (price_per_minute >= 0),
+  minimum_fare DECIMAL(10,2) NOT NULL CHECK (minimum_fare >= 0),
+  maximum_fare DECIMAL(10,2) CHECK (maximum_fare IS NULL OR maximum_fare >= minimum_fare),
+  is_active BOOLEAN NOT NULL DEFAULT true,
+  valid_from TIMESTAMPTZ,
+  valid_until TIMESTAMPTZ CHECK (valid_until IS NULL OR valid_until > valid_from),
+  metadata JSONB DEFAULT '{}'::jsonb,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  created_by UUID REFERENCES profiles(id) ON DELETE SET NULL,
+  updated_by UUID REFERENCES profiles(id) ON DELETE SET NULL
+);
+
+CREATE TABLE IF NOT EXISTS pricing_peak_hour_multipliers (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  rule_id UUID NOT NULL REFERENCES pricing_rules(id) ON DELETE CASCADE,
+  period_type TEXT NOT NULL CHECK (period_type IN ('morning', 'afternoon', 'evening', 'night', 'weekend', 'custom')),
+  multiplier DECIMAL(5,2) NOT NULL CHECK (multiplier >= 1.0 AND multiplier <= 5.0),
+  start_hour INTEGER CHECK (start_hour >= 0 AND start_hour < 24),
+  end_hour INTEGER CHECK (end_hour >= 0 AND end_hour <= 24),
+  days_of_week INTEGER[],
+  is_active BOOLEAN NOT NULL DEFAULT true,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS pricing_additional_fees (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  rule_id UUID NOT NULL REFERENCES pricing_rules(id) ON DELETE CASCADE,
+  label TEXT NOT NULL,
+  amount DECIMAL(10,2) NOT NULL CHECK (amount >= 0),
+  fee_type TEXT NOT NULL CHECK (fee_type IN ('fixed', 'percentage')),
+  reason TEXT,
+  is_active BOOLEAN NOT NULL DEFAULT true,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS pricing_audit_log (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  action TEXT NOT NULL CHECK (action IN ('rule_created', 'rule_updated', 'rule_activated', 'rule_deactivated', 'rule_deleted', 'fee_added', 'fee_updated', 'fee_removed', 'multiplier_added', 'multiplier_updated', 'multiplier_removed')),
+  entity_type TEXT NOT NULL CHECK (entity_type IN ('rule', 'fee', 'multiplier')),
+  entity_id UUID NOT NULL,
+  performed_by UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+  old_values JSONB,
+  new_values JSONB,
+  metadata JSONB DEFAULT '{}'::jsonb,
+  ip_address INET,
+  user_agent TEXT,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- INDEXES
+CREATE INDEX IF NOT EXISTS idx_pricing_rules_mode ON pricing_rules(mode);
+CREATE INDEX IF NOT EXISTS idx_pricing_rules_is_active ON pricing_rules(is_active);
+CREATE INDEX IF NOT EXISTS idx_pricing_peak_hour_multipliers_rule_id ON pricing_peak_hour_multipliers(rule_id);
+CREATE INDEX IF NOT EXISTS idx_pricing_additional_fees_rule_id ON pricing_additional_fees(rule_id);
+CREATE INDEX IF NOT EXISTS idx_pricing_audit_log_entity ON pricing_audit_log(entity_type, entity_id);
+
+-- RLS
+ALTER TABLE pricing_rules ENABLE ROW LEVEL SECURITY;
+ALTER TABLE pricing_peak_hour_multipliers ENABLE ROW LEVEL SECURITY;
+ALTER TABLE pricing_additional_fees ENABLE ROW LEVEL SECURITY;
+ALTER TABLE pricing_audit_log ENABLE ROW LEVEL SECURITY;
+
+-- SEED
+INSERT INTO pricing_rules (mode, name, base_fare, price_per_km, price_per_minute, minimum_fare, is_active, metadata)
+VALUES 
+  ('ride', 'Corrida Padrão', 5.00, 2.50, 0.50, 8.00, true, '{"description": "Regra padrão para corridas de passageiro"}'::jsonb),
+  ('delivery', 'Entrega Padrão', 4.00, 2.00, 0.30, 7.00, true, '{"description": "Regra padrão para entregas"}'::jsonb),
+  ('mototaxi', 'Mototáxi Padrão', 4.00, 2.00, 0.40, 6.00, true, '{"description": "Regra padrão para mototáxi"}'::jsonb),
+  ('motoboy', 'Motoboy Padrão', 3.50, 1.80, 0.30, 6.00, true, '{"description": "Regra padrão para motoboy"}'::jsonb)
+ON CONFLICT DO NOTHING;
+
+-- SEED MULTIPLIERS
+INSERT INTO pricing_peak_hour_multipliers (rule_id, period_type, multiplier, start_hour, end_hour, days_of_week, is_active)
+SELECT id, 'morning', 1.30, 7, 9, ARRAY[1,2,3,4,5], true
+FROM pricing_rules WHERE mode = 'ride' AND name = 'Corrida Padrão';
+
+INSERT INTO pricing_peak_hour_multipliers (rule_id, period_type, multiplier, start_hour, end_hour, days_of_week, is_active)
+SELECT id, 'afternoon', 1.50, 17, 19, ARRAY[1,2,3,4,5], true
+FROM pricing_rules WHERE mode = 'ride' AND name = 'Corrida Padrão';
+
+INSERT INTO pricing_peak_hour_multipliers (rule_id, period_type, multiplier, start_hour, end_hour, days_of_week, is_active)
+SELECT id, 'night', 1.20, 22, 24, ARRAY[1,2,3,4,5], true
+FROM pricing_rules WHERE mode = 'ride' AND name = 'Corrida Padrão';
+
+INSERT INTO pricing_peak_hour_multipliers (rule_id, period_type, multiplier, start_hour, end_hour, days_of_week, is_active)
+SELECT id, 'morning', 1.20, 7, 9, ARRAY[1,2,3,4,5], true
+FROM pricing_rules WHERE mode = 'mototaxi' AND name = 'Mototáxi Padrão';
+
+INSERT INTO pricing_peak_hour_multipliers (rule_id, period_type, multiplier, start_hour, end_hour, days_of_week, is_active)
+SELECT id, 'afternoon', 1.30, 17, 19, ARRAY[1,2,3,4,5], true
+FROM pricing_rules WHERE mode = 'mototaxi' AND name = 'Mototáxi Padrão';
+```
+
+---
+
+## PASSO 3: Verificar Criação
+
+Executar query de verificação:
+
+```sql
+-- Listar tabelas criadas
+SELECT table_name 
+FROM information_schema.tables 
+WHERE table_schema = 'public' 
+AND table_name IN ('pricing_rules', 'pricing_peak_hour_multipliers', 'pricing_additional_fees', 'pricing_audit_log')
+ORDER BY table_name;
+
+-- Contar regras seedadas
+SELECT mode, name, is_active, base_fare, minimum_fare
+FROM pricing_rules
+ORDER BY mode;
+
+-- Contar multiplicadores
+SELECT pr.mode, pr.name, pm.period_type, pm.multiplier
+FROM pricing_peak_hour_multipliers pm
+JOIN pricing_rules pr ON pr.id = pm.rule_id
+ORDER BY pr.mode, pm.period_type;
+```
+
+**Resultado esperado**:
+- 4 tabelas criadas
+- 4 regras seedadas (ride, delivery, mototaxi, motoboy)
+- 5 multiplicadores (3 para ride, 2 para mototaxi)
+
+---
+
+## PASSO 4: Após Aplicação
+
+1. Confirmar que tabelas existem
+2. Confirmar que regras foram seedadas
+3. Re-executar testes: `npm test src/core/pricing/__tests__/PricingService.runtime.test.ts`
+4. Validar operações reais (criar regra, testar conflito, etc.)
+
+---
+
+## ALTERNATIVA: Aplicar via psql
+
+Se tiver acesso direto ao banco:
+
+```bash
+psql "postgresql://postgres:[PASSWORD]@[HOST]:5432/postgres" < apply_pricing_safety_migrations.sql
+```
+
+---
+
+## PRÓXIMOS PASSOS APÓS APLICAÇÃO
+
+1. ✅ Confirmar estado do banco
+2. ✅ Re-executar testes
+3. ✅ Validar operações reais
+4. ✅ Migrar CreateRideModal
+5. ✅ Criar admin mínimo

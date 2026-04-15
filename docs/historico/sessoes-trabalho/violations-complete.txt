@@ -1,0 +1,1193 @@
+﻿
+> achegue-se@0.0.0 validate:deps
+> tsx scripts/validate-dependencies.ts
+
+Building dependency graph...
+Found 1247 TypeScript files
+Analyzed 1236 files
+
+=== Dependency Graph Validation Report ===
+
+­ƒôè Files by Layer:
+   app: 19 files
+   core: 297 files
+   integrations: 11 files
+   modules: 705 files
+   shared: 204 files
+
+­ƒöä Checking for circular dependencies...
+   ÔÜá´©Å  Found 85 potential circular dependencies
+   (Note: Some may be false positives due to import resolution)
+
+­ƒöì Dependency Rule Validation:
+   ÔØî Found 232 violations:
+
+ÔØî Invalid dependency: core/business/services/BusinessService.ts
+   Layer "core" cannot import from "modules"
+   Import: @/modules/business/schemas/businessSchemas
+   Allowed: core, integrations, shared
+
+ÔØî Invalid dependency: core/gamification/pages/GamificacaoPage.tsx
+   Layer "core" cannot import from "modules"
+   Import: @/modules/community
+   Allowed: core, integrations, shared
+
+ÔØî Invalid dependency: core/gamification/pages/RankingPage.tsx
+   Layer "core" cannot import from "modules"
+   Import: @/modules/mobility/components/NeighborRankingPanel
+   Allowed: core, integrations, shared
+
+ÔØî Invalid dependency: core/professional/services/ProfessionalService.ts
+   Layer "core" cannot import from "modules"
+   Import: @/modules/services/validation/professionalSchemas
+   Allowed: core, integrations, shared
+
+ÔØî Invalid dependency: core/profiles/hooks/useProfile.ts
+   Layer "core" cannot import from "modules"
+   Import: @/modules/profile/hooks/useProfileLocation
+   Allowed: core, integrations, shared
+
+ÔØî Invalid dependency: core/routing/components/BusinessPortalRoute.tsx
+   Layer "core" cannot import from "modules"
+   Import: @/modules/business
+   Allowed: core, integrations, shared
+
+ÔØî Invalid dependency: core/routing/components/StandaloneRoute.tsx
+   Layer "core" cannot import from "modules"
+   Import: @/modules/business
+   Allowed: core, integrations, shared
+
+ÔØî Invalid dependency: modules/admin/hooks/useAdminUserDetail.ts
+   Layer "modules" cannot import from "integrations"
+   Import: @/integrations/supabase/supabaseAdmin
+   Allowed: modules, core, shared
+
+ÔØî Invalid dependency: modules/admin/hooks/useRealtimeMetrics.ts
+   Layer "modules" cannot import from "integrations"
+   Import: @/integrations/supabase/client
+   Allowed: modules, core, shared
+
+ÔØî Invalid dependency: modules/admin/hooks/useReputationStats.ts
+   Layer "modules" cannot import from "integrations"
+   Import: @/integrations/supabase/client
+   Allowed: modules, core, shared
+
+ÔØî Cross-module import: modules/admin/pages/AdminMotoristas.tsx
+   Module "admin" cannot import from module "mobility"
+   Import: @/modules/mobility/services/MobilityService
+   Solution: Move shared logic to @/core or use events
+
+ÔØî Invalid dependency: modules/admin/pages/BannersPage.tsx
+   Layer "modules" cannot import from "integrations"
+   Import: @/integrations/supabase/client
+   Allowed: modules, core, shared
+
+ÔØî Invalid dependency: modules/business/components/SecoesAtivasManager.tsx
+   Layer "modules" cannot import from "integrations"
+   Import: @/integrations/supabase/client
+   Allowed: modules, core, shared
+
+ÔØî Invalid dependency: modules/business/services/BusinessManagementService.ts
+   Layer "modules" cannot import from "integrations"
+   Import: @/integrations/supabase
+   Allowed: modules, core, shared
+
+ÔØî Invalid dependency: modules/community/hooks/useEventos.ts
+   Layer "modules" cannot import from "integrations"
+   Import: @/integrations/supabase/client
+   Allowed: modules, core, shared
+
+ÔØî Invalid dependency: modules/community/hooks/useZeladoria.ts
+   Layer "modules" cannot import from "integrations"
+   Import: @/integrations/supabase/client
+   Allowed: modules, core, shared
+
+ÔØî Cross-module import: modules/community/pages/RecomendacaoDetailPage.tsx
+   Module "community" cannot import from module "business"
+   Import: @/modules/business/hooks/useBusinessNavigation
+   Solution: Move shared logic to @/core or use events
+
+ÔØî Cross-module import: modules/dashboard/pages/DashboardEmpresaPageV2.tsx
+   Module "dashboard" cannot import from module "business"
+   Import: @/modules/business/hooks/useBusiness
+   Solution: Move shared logic to @/core or use events
+
+ÔØî Cross-module import: modules/dashboard/pages/DashboardEmpresaPageV2.tsx
+   Module "dashboard" cannot import from module "business"
+   Import: @/modules/business/components/EmpresaDashboardTab
+   Solution: Move shared logic to @/core or use events
+
+ÔØî Cross-module import: modules/dashboard/pages/DashboardEmpresaPageV2.tsx
+   Module "dashboard" cannot import from module "business"
+   Import: @/modules/business/components/AnalyticsDashboard.tsx
+   Solution: Move shared logic to @/core or use events
+
+ÔØî Cross-module import: modules/dashboard/pages/DashboardEmpresaPageV2.tsx
+   Module "dashboard" cannot import from module "business"
+   Import: @/modules/business/components/CouponManager.tsx
+   Solution: Move shared logic to @/core or use events
+
+ÔØî Cross-module import: modules/dashboard/pages/DashboardEmpresaPageV2.tsx
+   Module "dashboard" cannot import from module "business"
+   Import: @/modules/business/components/SubscriptionPlans.tsx
+   Solution: Move shared logic to @/core or use events
+
+ÔØî Cross-module import: modules/mobility/components/driver/DriverNotifications.tsx
+   Module "mobility" cannot import from module "notifications"
+   Import: @/modules/notifications
+   Solution: Move shared logic to @/core or use events
+
+ÔØî Cross-module import: modules/mobility/components/driver/DriverRealtimeStatus.tsx
+   Module "mobility" cannot import from module "notifications"
+   Import: @/modules/notifications
+   Solution: Move shared logic to @/core or use events
+
+ÔØî Invalid dependency: modules/mobility/components/RouteEstimateCard.tsx
+   Layer "modules" cannot import from "integrations"
+   Import: @/integrations/maps/distance
+   Allowed: modules, core, shared
+
+ÔØî Invalid dependency: modules/mobility/hooks/useDriverLocation.ts
+   Layer "modules" cannot import from "integrations"
+   Import: @/integrations/supabase/client
+   Allowed: modules, core, shared
+
+ÔØî Invalid dependency: modules/mobility/hooks/useMobilidade.ts
+   Layer "modules" cannot import from "integrations"
+   Import: @/integrations/supabase/client
+   Allowed: modules, core, shared
+
+ÔØî Invalid dependency: modules/mobility/hooks/useMobilidadeChat.ts
+   Layer "modules" cannot import from "integrations"
+   Import: @/integrations/supabase/client
+   Allowed: modules, core, shared
+
+ÔØî Invalid dependency: modules/mobility/hooks/useMotoristaPage.ts
+   Layer "modules" cannot import from "integrations"
+   Import: @/integrations/supabase/client
+   Allowed: modules, core, shared
+
+ÔØî Invalid dependency: modules/mobility/hooks/useMotoristaPageV2.ts
+   Layer "modules" cannot import from "integrations"
+   Import: @/integrations/supabase/client
+   Allowed: modules, core, shared
+
+ÔØî Invalid dependency: modules/mobility/hooks/useRideChat.ts
+   Layer "modules" cannot import from "integrations"
+   Import: @/integrations/supabase/client
+   Allowed: modules, core, shared
+
+ÔØî Cross-module import: modules/mobility/pages/MotoristaPage.tsx
+   Module "mobility" cannot import from module "notifications"
+   Import: @/modules/notifications
+   Solution: Move shared logic to @/core or use events
+
+ÔØî Cross-module import: modules/mobility/pages/MotoristaPageV2.tsx
+   Module "mobility" cannot import from module "notifications"
+   Import: @/modules/notifications
+   Solution: Move shared logic to @/core or use events
+
+ÔØî Invalid dependency: modules/mobility/pages/PassageiroPage.tsx
+   Layer "modules" cannot import from "integrations"
+   Import: @/integrations/supabase/client
+   Allowed: modules, core, shared
+
+ÔØî Invalid dependency: modules/mobility/pages/TrackRidePage.tsx
+   Layer "modules" cannot import from "integrations"
+   Import: @/integrations/supabase/client
+   Allowed: modules, core, shared
+
+ÔØî Invalid dependency: modules/mobility/services/DriverService.ts
+   Layer "modules" cannot import from "integrations"
+   Import: @/integrations/supabase
+   Allowed: modules, core, shared
+
+ÔØî Invalid dependency: modules/mobility/services/MobilityService.ts
+   Layer "modules" cannot import from "integrations"
+   Import: @/integrations/supabase
+   Allowed: modules, core, shared
+
+ÔØî Cross-module import: modules/profile/components/ProfileMainContent.tsx
+   Module "profile" cannot import from module "mobility"
+   Import: @/modules/mobility
+   Solution: Move shared logic to @/core or use events
+
+ÔØî Cross-module import: modules/profile/components/SavedPostsGrid.tsx
+   Module "profile" cannot import from module "community"
+   Import: @/modules/community
+   Solution: Move shared logic to @/core or use events
+
+ÔØî Cross-module import: modules/profile/components/UserPostsGrid.tsx
+   Module "profile" cannot import from module "community"
+   Import: @/modules/community
+   Solution: Move shared logic to @/core or use events
+
+ÔØî Cross-module import: modules/profile/hooks/usePerfilPageV3.ts
+   Module "profile" cannot import from module "mobility"
+   Import: @/modules/mobility/hooks/useActiveRide
+   Solution: Move shared logic to @/core or use events
+
+ÔØî Cross-module import: modules/profile/hooks/usePerfilPageV3.ts
+   Module "profile" cannot import from module "business"
+   Import: @/modules/business/hooks/useBusinessNavigation
+   Solution: Move shared logic to @/core or use events
+
+ÔØî Invalid dependency: modules/profile/hooks/useProfileData.ts
+   Layer "modules" cannot import from "integrations"
+   Import: @/integrations/supabase
+   Allowed: modules, core, shared
+
+ÔØî Cross-module import: modules/profile/hooks/usePublicProfile.ts
+   Module "profile" cannot import from module "classifieds"
+   Import: @/modules/classifieds
+   Solution: Move shared logic to @/core or use events
+
+ÔØî Cross-module import: modules/profile/pages/PerfilCentralPage.tsx
+   Module "profile" cannot import from module "mobility"
+   Import: @/modules/mobility
+   Solution: Move shared logic to @/core or use events
+
+ÔØî Invalid dependency: shared/components/accessibility/AccessibilityMenu.tsx
+   Layer "shared" cannot import from "shared"
+   Import: @/shared/components/ui/button
+   Allowed: none
+
+ÔØî Invalid dependency: shared/components/accessibility/AccessibilityMenu.tsx
+   Layer "shared" cannot import from "shared"
+   Import: @/shared/components/ui/dropdown-menu
+   Allowed: none
+
+ÔØî Invalid dependency: shared/components/accessibility/SkipToContent.tsx
+   Layer "shared" cannot import from "shared"
+   Import: @/shared/components/ui/button
+   Allowed: none
+
+ÔØî Invalid dependency: shared/components/badges/PassengerTrustBadge.tsx
+   Layer "shared" cannot import from "shared"
+   Import: @/shared/components/ui/badge
+   Allowed: none
+
+ÔØî Invalid dependency: shared/components/badges/PassengerTrustBadge.tsx
+   Layer "shared" cannot import from "shared"
+   Import: @/shared/utils/cn
+   Allowed: none
+
+ÔØî Invalid dependency: shared/components/badges/VerifiedResidentBadge.tsx
+   Layer "shared" cannot import from "shared"
+   Import: @/shared/components/ui/tooltip
+   Allowed: none
+
+ÔØî Invalid dependency: shared/components/badges/VerifiedResidentBadge.tsx
+   Layer "shared" cannot import from "shared"
+   Import: @/shared/utils/cn
+   Allowed: none
+
+ÔØî Invalid dependency: shared/components/catalogo/CatalogBusinessCard.tsx
+   Layer "shared" cannot import from "shared"
+   Import: @/shared/components/ui/badge
+   Allowed: none
+
+ÔØî Invalid dependency: shared/components/catalogo/CatalogBusinessCard.tsx
+   Layer "shared" cannot import from "shared"
+   Import: @/shared/components/ui/button
+   Allowed: none
+
+ÔØî Invalid dependency: shared/components/catalogo/CatalogBusinessCard.tsx
+   Layer "shared" cannot import from "shared"
+   Import: @/shared/utils/cn
+   Allowed: none
+
+ÔØî Invalid dependency: shared/components/catalogo/CatalogHeader.tsx
+   Layer "shared" cannot import from "shared"
+   Import: @/shared/components/ui/button
+   Allowed: none
+
+ÔØî Invalid dependency: shared/components/catalogo/CatalogProductCard.tsx
+   Layer "shared" cannot import from "shared"
+   Import: @/shared/components/ui/badge
+   Allowed: none
+
+ÔØî Invalid dependency: shared/components/dashboard/DashboardHeader.tsx
+   Layer "shared" cannot import from "shared"
+   Import: @/shared/components/ui/button
+   Allowed: none
+
+ÔØî Invalid dependency: shared/components/dashboard/DashboardHeader.tsx
+   Layer "shared" cannot import from "shared"
+   Import: @/shared/components/ui/card
+   Allowed: none
+
+ÔØî Invalid dependency: shared/components/dashboard/DashboardHeader.tsx
+   Layer "shared" cannot import from "shared"
+   Import: @/shared/types/dashboard
+   Allowed: none
+
+ÔØî Invalid dependency: shared/components/dashboard/DashboardTabs.tsx
+   Layer "shared" cannot import from "shared"
+   Import: @/shared/components/ui/card
+   Allowed: none
+
+ÔØî Invalid dependency: shared/components/dashboard/DashboardTabs.tsx
+   Layer "shared" cannot import from "shared"
+   Import: @/shared/components/ui/tabs
+   Allowed: none
+
+ÔØî Invalid dependency: shared/components/dashboard/DashboardTabs.tsx
+   Layer "shared" cannot import from "shared"
+   Import: @/shared/types/dashboard
+   Allowed: none
+
+ÔØî Invalid dependency: shared/components/dashboard/SettingsTab.tsx
+   Layer "shared" cannot import from "shared"
+   Import: @/shared/components/ui/card
+   Allowed: none
+
+ÔØî Invalid dependency: shared/components/dashboard/SettingsTab.tsx
+   Layer "shared" cannot import from "shared"
+   Import: @/shared/components/ui/button
+   Allowed: none
+
+ÔØî Invalid dependency: shared/components/drawer/CommentItem.tsx
+   Layer "shared" cannot import from "shared"
+   Import: @/shared/components/ui/avatar
+   Allowed: none
+
+ÔØî Invalid dependency: shared/components/drawer/CommentItem.tsx
+   Layer "shared" cannot import from "shared"
+   Import: @/shared/components/ui/dropdown-menu
+   Allowed: none
+
+ÔØî Invalid dependency: shared/components/eventos/EventCard.tsx
+   Layer "shared" cannot import from "shared"
+   Import: @/shared/components/ui/badge
+   Allowed: none
+
+ÔØî Invalid dependency: shared/components/eventos/EventCard.tsx
+   Layer "shared" cannot import from "core"
+   Import: @/core/maps/components/ViewOnMapButton
+   Allowed: none
+
+ÔØî Invalid dependency: shared/components/eventos/EventCard.tsx
+   Layer "shared" cannot import from "shared"
+   Import: @/shared/utils/cn
+   Allowed: none
+
+ÔØî Invalid dependency: shared/components/eventos/EventCard.tsx
+   Layer "shared" cannot import from "modules"
+   Import: @/modules/community/hooks/useEventos
+   Allowed: none
+
+ÔØî Invalid dependency: shared/components/eventos/EventFilters.tsx
+   Layer "shared" cannot import from "shared"
+   Import: @/shared/components/ui/input
+   Allowed: none
+
+ÔØî Invalid dependency: shared/components/eventos/EventFilters.tsx
+   Layer "shared" cannot import from "shared"
+   Import: @/shared/utils/cn
+   Allowed: none
+
+ÔØî Invalid dependency: shared/components/eventos/EventGrid.tsx
+   Layer "shared" cannot import from "shared"
+   Import: @/shared/components/ui/skeleton
+   Allowed: none
+
+ÔØî Invalid dependency: shared/components/eventos/EventGrid.tsx
+   Layer "shared" cannot import from "modules"
+   Import: @/modules/community/hooks/useEventos
+   Allowed: none
+
+ÔØî Invalid dependency: shared/components/grupos/CreateGroupDialog.tsx
+   Layer "shared" cannot import from "shared"
+   Import: @/shared/components/ui/dialog
+   Allowed: none
+
+ÔØî Invalid dependency: shared/components/grupos/CreateGroupDialog.tsx
+   Layer "shared" cannot import from "shared"
+   Import: @/shared/components/ui/input
+   Allowed: none
+
+ÔØî Invalid dependency: shared/components/grupos/CreateGroupDialog.tsx
+   Layer "shared" cannot import from "shared"
+   Import: @/shared/components/ui/textarea
+   Allowed: none
+
+ÔØî Invalid dependency: shared/components/grupos/CreateGroupDialog.tsx
+   Layer "shared" cannot import from "shared"
+   Import: @/shared/components/ui/button
+   Allowed: none
+
+ÔØî Invalid dependency: shared/components/grupos/CreateGroupDialog.tsx
+   Layer "shared" cannot import from "modules"
+   Import: @/modules/community/hooks/useGrupos
+   Allowed: none
+
+ÔØî Invalid dependency: shared/components/grupos/GrupoCard.tsx
+   Layer "shared" cannot import from "shared"
+   Import: @/shared/components/ui/button
+   Allowed: none
+
+ÔØî Invalid dependency: shared/components/grupos/GruposHeader.tsx
+   Layer "shared" cannot import from "shared"
+   Import: @/shared/components/ui/button
+   Allowed: none
+
+ÔØî Invalid dependency: shared/components/grupos/GruposList.tsx
+   Layer "shared" cannot import from "shared"
+   Import: @/shared/components/ui/button
+   Allowed: none
+
+ÔØî Invalid dependency: shared/components/LocationPickerSheet.tsx
+   Layer "shared" cannot import from "shared"
+   Import: @/shared/components/ui/sheet
+   Allowed: none
+
+ÔØî Invalid dependency: shared/components/LocationPickerSheet.tsx
+   Layer "shared" cannot import from "shared"
+   Import: @/shared/components/ui/button
+   Allowed: none
+
+ÔØî Invalid dependency: shared/components/MigrationWarningBanner.tsx
+   Layer "shared" cannot import from "shared"
+   Import: @/shared/components/ui/alert
+   Allowed: none
+
+ÔØî Invalid dependency: shared/components/offline/OfflineIndicator.tsx
+   Layer "shared" cannot import from "shared"
+   Import: @/shared/types/constants
+   Allowed: none
+
+ÔØî Invalid dependency: shared/components/offline/OfflineIndicator.tsx
+   Layer "shared" cannot import from "shared"
+   Import: @/shared/utils/logger
+   Allowed: none
+
+ÔØî Invalid dependency: shared/components/onboarding/NeighborhoodSelector.tsx
+   Layer "shared" cannot import from "shared"
+   Import: @/shared/utils/cn
+   Allowed: none
+
+ÔØî Invalid dependency: shared/components/onboarding/OnboardingFooter.tsx
+   Layer "shared" cannot import from "shared"
+   Import: @/shared/components/ui/button
+   Allowed: none
+
+ÔØî Invalid dependency: shared/components/PublishWarningDialog.tsx
+   Layer "shared" cannot import from "shared"
+   Import: @/shared/components/ui/alert-dialog
+   Allowed: none
+
+ÔØî Invalid dependency: shared/components/recomendacoes/AnswerCard.tsx
+   Layer "shared" cannot import from "shared"
+   Import: @/shared/components/ui/avatar
+   Allowed: none
+
+ÔØî Invalid dependency: shared/components/recomendacoes/AnswerCard.tsx
+   Layer "shared" cannot import from "shared"
+   Import: @/shared/utils/cn
+   Allowed: none
+
+ÔØî Invalid dependency: shared/components/recomendacoes/AnswerCard.tsx
+   Layer "shared" cannot import from "modules"
+   Import: @/modules/community/hooks/useRecomendacaoDetail
+   Allowed: none
+
+ÔØî Invalid dependency: shared/components/recomendacoes/AnswerForm.tsx
+   Layer "shared" cannot import from "shared"
+   Import: @/shared/components/ui/button
+   Allowed: none
+
+ÔØî Invalid dependency: shared/components/recomendacoes/AnswerForm.tsx
+   Layer "shared" cannot import from "shared"
+   Import: @/shared/components/ui/input
+   Allowed: none
+
+ÔØî Invalid dependency: shared/components/recomendacoes/AnswerForm.tsx
+   Layer "shared" cannot import from "shared"
+   Import: @/shared/components/ui/textarea
+   Allowed: none
+
+ÔØî Invalid dependency: shared/components/recomendacoes/AnswersList.tsx
+   Layer "shared" cannot import from "modules"
+   Import: @/modules/community/hooks/useRecomendacaoDetail
+   Allowed: none
+
+ÔØî Invalid dependency: shared/components/recomendacoes/CategoryFilters.tsx
+   Layer "shared" cannot import from "shared"
+   Import: @/shared/utils/cn
+   Allowed: none
+
+ÔØî Invalid dependency: shared/components/recomendacoes/CategorySelector.tsx
+   Layer "shared" cannot import from "shared"
+   Import: @/shared/components/ui/label
+   Allowed: none
+
+ÔØî Invalid dependency: shared/components/recomendacoes/CategorySelector.tsx
+   Layer "shared" cannot import from "shared"
+   Import: @/shared/utils/cn
+   Allowed: none
+
+ÔØî Invalid dependency: shared/components/recomendacoes/QuestionCard.tsx
+   Layer "shared" cannot import from "shared"
+   Import: @/shared/components/ui/avatar
+   Allowed: none
+
+ÔØî Invalid dependency: shared/components/recomendacoes/QuestionCard.tsx
+   Layer "shared" cannot import from "shared"
+   Import: @/shared/components/ui/badge
+   Allowed: none
+
+ÔØî Invalid dependency: shared/components/recomendacoes/QuestionCard.tsx
+   Layer "shared" cannot import from "modules"
+   Import: @/modules/community/hooks/useRecomendacaoDetail
+   Allowed: none
+
+ÔØî Invalid dependency: shared/components/recomendacoes/QuestionsList.tsx
+   Layer "shared" cannot import from "shared"
+   Import: @/shared/components/ui/button
+   Allowed: none
+
+ÔØî Invalid dependency: shared/components/recomendacoes/QuestionsList.tsx
+   Layer "shared" cannot import from "shared"
+   Import: @/shared/components/ui/skeleton
+   Allowed: none
+
+ÔØî Invalid dependency: shared/components/recomendacoes/QuestionsList.tsx
+   Layer "shared" cannot import from "modules"
+   Import: @/modules/community/hooks/useRecomendacoes
+   Allowed: none
+
+ÔØî Invalid dependency: shared/components/recomendacoes/RecomendacaoForm.tsx
+   Layer "shared" cannot import from "shared"
+   Import: @/shared/components/ui/button
+   Allowed: none
+
+ÔØî Invalid dependency: shared/components/recomendacoes/RecomendacaoForm.tsx
+   Layer "shared" cannot import from "shared"
+   Import: @/shared/components/ui/input
+   Allowed: none
+
+ÔØî Invalid dependency: shared/components/recomendacoes/RecomendacaoForm.tsx
+   Layer "shared" cannot import from "shared"
+   Import: @/shared/components/ui/textarea
+   Allowed: none
+
+ÔØî Invalid dependency: shared/components/recomendacoes/RecomendacaoForm.tsx
+   Layer "shared" cannot import from "shared"
+   Import: @/shared/components/ui/label
+   Allowed: none
+
+ÔØî Invalid dependency: shared/components/recomendacoes/RecomendacaoForm.tsx
+   Layer "shared" cannot import from "modules"
+   Import: @/modules/community/hooks/useNovaRecomendacao
+   Allowed: none
+
+ÔØî Invalid dependency: shared/components/ReportContentDialog.tsx
+   Layer "shared" cannot import from "shared"
+   Import: @/shared/components/ui/dialog
+   Allowed: none
+
+ÔØî Invalid dependency: shared/components/ReportContentDialog.tsx
+   Layer "shared" cannot import from "shared"
+   Import: @/shared/components/ui/button
+   Allowed: none
+
+ÔØî Invalid dependency: shared/components/ReportContentDialog.tsx
+   Layer "shared" cannot import from "shared"
+   Import: @/shared/components/ui/textarea
+   Allowed: none
+
+ÔØî Invalid dependency: shared/components/ReportContentDialog.tsx
+   Layer "shared" cannot import from "shared"
+   Import: @/shared/utils/cn
+   Allowed: none
+
+ÔØî Invalid dependency: shared/components/ReportContentDialog.tsx
+   Layer "shared" cannot import from "core"
+   Import: @/core/moderation
+   Allowed: none
+
+ÔØî Invalid dependency: shared/components/ReportContentDialog.tsx
+   Layer "shared" cannot import from "core"
+   Import: @/core/session
+   Allowed: none
+
+ÔØî Invalid dependency: shared/components/routing/HandleRoute.tsx
+   Layer "shared" cannot import from "shared"
+   Import: @/shared/utils/logger
+   Allowed: none
+
+ÔØî Invalid dependency: shared/components/routing/RouterInterceptor.tsx
+   Layer "shared" cannot import from "shared"
+   Import: @/shared/utils/logger
+   Allowed: none
+
+ÔØî Invalid dependency: shared/components/seo/BusinessSEOEnhanced.tsx
+   Layer "shared" cannot import from "shared"
+   Import: @/shared/utils/urlUtils
+   Allowed: none
+
+ÔØî Invalid dependency: shared/components/seo/BusinessSEOEnhanced.tsx
+   Layer "shared" cannot import from "core"
+   Import: @/core/business
+   Allowed: none
+
+ÔØî Invalid dependency: shared/components/standalone/StandaloneAbout.tsx
+   Layer "shared" cannot import from "shared"
+   Import: @/shared/components/ui/card
+   Allowed: none
+
+ÔØî Invalid dependency: shared/components/standalone/StandaloneAbout.tsx
+   Layer "shared" cannot import from "shared"
+   Import: @/shared/components/ui/badge
+   Allowed: none
+
+ÔØî Invalid dependency: shared/components/standalone/StandaloneAbout.tsx
+   Layer "shared" cannot import from "modules"
+   Import: @/modules/business/types
+   Allowed: none
+
+ÔØî Invalid dependency: shared/components/standalone/StandaloneContactBar.tsx
+   Layer "shared" cannot import from "shared"
+   Import: @/shared/components/ui/button
+   Allowed: none
+
+ÔØî Invalid dependency: shared/components/standalone/StandaloneContactBar.tsx
+   Layer "shared" cannot import from "modules"
+   Import: @/modules/business/types
+   Allowed: none
+
+ÔØî Invalid dependency: shared/components/standalone/StandaloneContactBar.tsx
+   Layer "shared" cannot import from "shared"
+   Import: @/shared/utils/logger
+   Allowed: none
+
+ÔØî Invalid dependency: shared/components/standalone/StandaloneFooter.tsx
+   Layer "shared" cannot import from "shared"
+   Import: @/shared/components/ui/avatar
+   Allowed: none
+
+ÔØî Invalid dependency: shared/components/standalone/StandaloneFooter.tsx
+   Layer "shared" cannot import from "shared"
+   Import: @/shared/components/ui/button
+   Allowed: none
+
+ÔØî Invalid dependency: shared/components/standalone/StandaloneFooter.tsx
+   Layer "shared" cannot import from "core"
+   Import: @/core/business
+   Allowed: none
+
+ÔØî Invalid dependency: shared/components/standalone/StandaloneHero.tsx
+   Layer "shared" cannot import from "shared"
+   Import: @/shared/components/ui/badge
+   Allowed: none
+
+ÔØî Invalid dependency: shared/components/standalone/StandaloneHero.tsx
+   Layer "shared" cannot import from "core"
+   Import: @/core/business
+   Allowed: none
+
+ÔØî Invalid dependency: shared/components/standalone/StandaloneMap.tsx
+   Layer "shared" cannot import from "shared"
+   Import: @/shared/components/ui/card
+   Allowed: none
+
+ÔØî Invalid dependency: shared/components/standalone/StandaloneMap.tsx
+   Layer "shared" cannot import from "shared"
+   Import: @/shared/components/ui/button
+   Allowed: none
+
+ÔØî Invalid dependency: shared/components/standalone/StandaloneMap.tsx
+   Layer "shared" cannot import from "core"
+   Import: @/core/business
+   Allowed: none
+
+ÔØî Invalid dependency: shared/components/standalone/StandaloneNav.tsx
+   Layer "shared" cannot import from "shared"
+   Import: @/shared/components/ui/button
+   Allowed: none
+
+ÔØî Invalid dependency: shared/components/standalone/StandaloneNav.tsx
+   Layer "shared" cannot import from "shared"
+   Import: @/shared/components/ui/avatar
+   Allowed: none
+
+ÔØî Invalid dependency: shared/components/standalone/StandaloneNav.tsx
+   Layer "shared" cannot import from "core"
+   Import: @/core/business
+   Allowed: none
+
+ÔØî Invalid dependency: shared/components/ui/accessible-dialog.tsx
+   Layer "shared" cannot import from "shared"
+   Import: @/shared/components/ui/dialog
+   Allowed: none
+
+ÔØî Invalid dependency: shared/components/ui/accordion.tsx
+   Layer "shared" cannot import from "shared"
+   Import: @/shared/utils/cn
+   Allowed: none
+
+ÔØî Invalid dependency: shared/components/ui/alert-dialog.tsx
+   Layer "shared" cannot import from "shared"
+   Import: @/shared/utils/cn
+   Allowed: none
+
+ÔØî Invalid dependency: shared/components/ui/alert-dialog.tsx
+   Layer "shared" cannot import from "shared"
+   Import: @/shared/components/ui/button
+   Allowed: none
+
+ÔØî Invalid dependency: shared/components/ui/alert.tsx
+   Layer "shared" cannot import from "shared"
+   Import: @/shared/utils/cn
+   Allowed: none
+
+ÔØî Invalid dependency: shared/components/ui/avatar.tsx
+   Layer "shared" cannot import from "shared"
+   Import: @/shared/utils/cn
+   Allowed: none
+
+ÔØî Invalid dependency: shared/components/ui/badge.tsx
+   Layer "shared" cannot import from "shared"
+   Import: @/shared/utils/cn
+   Allowed: none
+
+ÔØî Invalid dependency: shared/components/ui/breadcrumb.tsx
+   Layer "shared" cannot import from "shared"
+   Import: @/shared/utils/cn
+   Allowed: none
+
+ÔØî Invalid dependency: shared/components/ui/BusinessSkeleton.tsx
+   Layer "shared" cannot import from "shared"
+   Import: @/shared/components/ui/skeleton
+   Allowed: none
+
+ÔØî Invalid dependency: shared/components/ui/button.tsx
+   Layer "shared" cannot import from "shared"
+   Import: @/shared/utils/cn
+   Allowed: none
+
+ÔØî Invalid dependency: shared/components/ui/calendar.tsx
+   Layer "shared" cannot import from "shared"
+   Import: @/shared/utils/cn
+   Allowed: none
+
+ÔØî Invalid dependency: shared/components/ui/calendar.tsx
+   Layer "shared" cannot import from "shared"
+   Import: @/shared/components/ui/button
+   Allowed: none
+
+ÔØî Invalid dependency: shared/components/ui/card.tsx
+   Layer "shared" cannot import from "shared"
+   Import: @/shared/utils/cn
+   Allowed: none
+
+ÔØî Invalid dependency: shared/components/ui/carousel.tsx
+   Layer "shared" cannot import from "shared"
+   Import: @/shared/utils/cn
+   Allowed: none
+
+ÔØî Invalid dependency: shared/components/ui/carousel.tsx
+   Layer "shared" cannot import from "shared"
+   Import: @/shared/components/ui/button
+   Allowed: none
+
+ÔØî Invalid dependency: shared/components/ui/chart.tsx
+   Layer "shared" cannot import from "shared"
+   Import: @/shared/utils/cn
+   Allowed: none
+
+ÔØî Invalid dependency: shared/components/ui/checkbox.tsx
+   Layer "shared" cannot import from "shared"
+   Import: @/shared/utils/cn
+   Allowed: none
+
+ÔØî Invalid dependency: shared/components/ui/command.tsx
+   Layer "shared" cannot import from "shared"
+   Import: @/shared/utils/cn
+   Allowed: none
+
+ÔØî Invalid dependency: shared/components/ui/command.tsx
+   Layer "shared" cannot import from "shared"
+   Import: @/shared/components/ui/dialog
+   Allowed: none
+
+ÔØî Invalid dependency: shared/components/ui/context-menu.tsx
+   Layer "shared" cannot import from "shared"
+   Import: @/shared/utils/cn
+   Allowed: none
+
+ÔØî Invalid dependency: shared/components/ui/dialog.tsx
+   Layer "shared" cannot import from "shared"
+   Import: @/shared/utils/cn
+   Allowed: none
+
+ÔØî Invalid dependency: shared/components/ui/drawer.tsx
+   Layer "shared" cannot import from "shared"
+   Import: @/shared/utils/cn
+   Allowed: none
+
+ÔØî Invalid dependency: shared/components/ui/dropdown-menu.tsx
+   Layer "shared" cannot import from "shared"
+   Import: @/shared/utils/cn
+   Allowed: none
+
+ÔØî Invalid dependency: shared/components/ui/ErrorBoundary.tsx
+   Layer "shared" cannot import from "shared"
+   Import: @/shared/components/ui/button
+   Allowed: none
+
+ÔØî Invalid dependency: shared/components/ui/ErrorBoundary.tsx
+   Layer "shared" cannot import from "shared"
+   Import: @/shared/utils/logger
+   Allowed: none
+
+ÔØî Invalid dependency: shared/components/ui/form.tsx
+   Layer "shared" cannot import from "shared"
+   Import: @/shared/utils/cn
+   Allowed: none
+
+ÔØî Invalid dependency: shared/components/ui/form.tsx
+   Layer "shared" cannot import from "shared"
+   Import: @/shared/components/ui/label
+   Allowed: none
+
+ÔØî Invalid dependency: shared/components/ui/hover-card.tsx
+   Layer "shared" cannot import from "shared"
+   Import: @/shared/utils/cn
+   Allowed: none
+
+ÔØî Invalid dependency: shared/components/ui/input-otp.tsx
+   Layer "shared" cannot import from "shared"
+   Import: @/shared/utils/cn
+   Allowed: none
+
+ÔØî Invalid dependency: shared/components/ui/input.tsx
+   Layer "shared" cannot import from "shared"
+   Import: @/shared/utils/cn
+   Allowed: none
+
+ÔØî Invalid dependency: shared/components/ui/label.tsx
+   Layer "shared" cannot import from "shared"
+   Import: @/shared/utils/cn
+   Allowed: none
+
+ÔØî Invalid dependency: shared/components/ui/menubar.tsx
+   Layer "shared" cannot import from "shared"
+   Import: @/shared/utils/cn
+   Allowed: none
+
+ÔØî Invalid dependency: shared/components/ui/navigation-menu.tsx
+   Layer "shared" cannot import from "shared"
+   Import: @/shared/utils/cn
+   Allowed: none
+
+ÔØî Invalid dependency: shared/components/ui/optimized-image.tsx
+   Layer "shared" cannot import from "shared"
+   Import: @/shared/utils/cn
+   Allowed: none
+
+ÔØî Invalid dependency: shared/components/ui/pagination.tsx
+   Layer "shared" cannot import from "shared"
+   Import: @/shared/utils/cn
+   Allowed: none
+
+ÔØî Invalid dependency: shared/components/ui/pagination.tsx
+   Layer "shared" cannot import from "shared"
+   Import: @/shared/components/ui/button
+   Allowed: none
+
+ÔØî Invalid dependency: shared/components/ui/popover.tsx
+   Layer "shared" cannot import from "shared"
+   Import: @/shared/utils/cn
+   Allowed: none
+
+ÔØî Invalid dependency: shared/components/ui/progress.tsx
+   Layer "shared" cannot import from "shared"
+   Import: @/shared/utils/cn
+   Allowed: none
+
+ÔØî Invalid dependency: shared/components/ui/radio-group.tsx
+   Layer "shared" cannot import from "shared"
+   Import: @/shared/utils/cn
+   Allowed: none
+
+ÔØî Invalid dependency: shared/components/ui/resizable.tsx
+   Layer "shared" cannot import from "shared"
+   Import: @/shared/utils/cn
+   Allowed: none
+
+ÔØî Invalid dependency: shared/components/ui/scroll-area.tsx
+   Layer "shared" cannot import from "shared"
+   Import: @/shared/utils/cn
+   Allowed: none
+
+ÔØî Invalid dependency: shared/components/ui/select.tsx
+   Layer "shared" cannot import from "shared"
+   Import: @/shared/utils/cn
+   Allowed: none
+
+ÔØî Invalid dependency: shared/components/ui/separator.tsx
+   Layer "shared" cannot import from "shared"
+   Import: @/shared/utils/cn
+   Allowed: none
+
+ÔØî Invalid dependency: shared/components/ui/sheet.tsx
+   Layer "shared" cannot import from "shared"
+   Import: @/shared/utils/cn
+   Allowed: none
+
+ÔØî Invalid dependency: shared/components/ui/sidebar.tsx
+   Layer "shared" cannot import from "shared"
+   Import: @/shared/hooks/use-mobile
+   Allowed: none
+
+ÔØî Invalid dependency: shared/components/ui/sidebar.tsx
+   Layer "shared" cannot import from "shared"
+   Import: @/shared/utils/cn
+   Allowed: none
+
+ÔØî Invalid dependency: shared/components/ui/sidebar.tsx
+   Layer "shared" cannot import from "shared"
+   Import: @/shared/components/ui/button
+   Allowed: none
+
+ÔØî Invalid dependency: shared/components/ui/sidebar.tsx
+   Layer "shared" cannot import from "shared"
+   Import: @/shared/components/ui/input
+   Allowed: none
+
+ÔØî Invalid dependency: shared/components/ui/sidebar.tsx
+   Layer "shared" cannot import from "shared"
+   Import: @/shared/components/ui/separator
+   Allowed: none
+
+ÔØî Invalid dependency: shared/components/ui/sidebar.tsx
+   Layer "shared" cannot import from "shared"
+   Import: @/shared/components/ui/sheet
+   Allowed: none
+
+ÔØî Invalid dependency: shared/components/ui/sidebar.tsx
+   Layer "shared" cannot import from "shared"
+   Import: @/shared/components/ui/skeleton
+   Allowed: none
+
+ÔØî Invalid dependency: shared/components/ui/sidebar.tsx
+   Layer "shared" cannot import from "shared"
+   Import: @/shared/components/ui/tooltip
+   Allowed: none
+
+ÔØî Invalid dependency: shared/components/ui/skeleton.tsx
+   Layer "shared" cannot import from "shared"
+   Import: @/shared/utils/cn
+   Allowed: none
+
+ÔØî Invalid dependency: shared/components/ui/slider.tsx
+   Layer "shared" cannot import from "shared"
+   Import: @/shared/utils/cn
+   Allowed: none
+
+ÔØî Invalid dependency: shared/components/ui/switch.tsx
+   Layer "shared" cannot import from "shared"
+   Import: @/shared/utils/cn
+   Allowed: none
+
+ÔØî Invalid dependency: shared/components/ui/table.tsx
+   Layer "shared" cannot import from "shared"
+   Import: @/shared/utils/cn
+   Allowed: none
+
+ÔØî Invalid dependency: shared/components/ui/tabs.tsx
+   Layer "shared" cannot import from "shared"
+   Import: @/shared/utils/cn
+   Allowed: none
+
+ÔØî Invalid dependency: shared/components/ui/textarea.tsx
+   Layer "shared" cannot import from "shared"
+   Import: @/shared/utils/cn
+   Allowed: none
+
+ÔØî Invalid dependency: shared/components/ui/toast.tsx
+   Layer "shared" cannot import from "shared"
+   Import: @/shared/utils/cn
+   Allowed: none
+
+ÔØî Invalid dependency: shared/components/ui/toaster.tsx
+   Layer "shared" cannot import from "shared"
+   Import: @/shared/hooks/use-toast
+   Allowed: none
+
+ÔØî Invalid dependency: shared/components/ui/toaster.tsx
+   Layer "shared" cannot import from "shared"
+   Import: @/shared/components/ui/toast
+   Allowed: none
+
+ÔØî Invalid dependency: shared/components/ui/toggle-group.tsx
+   Layer "shared" cannot import from "shared"
+   Import: @/shared/utils/cn
+   Allowed: none
+
+ÔØî Invalid dependency: shared/components/ui/toggle-group.tsx
+   Layer "shared" cannot import from "shared"
+   Import: @/shared/components/ui/toggle
+   Allowed: none
+
+ÔØî Invalid dependency: shared/components/ui/toggle.tsx
+   Layer "shared" cannot import from "shared"
+   Import: @/shared/utils/cn
+   Allowed: none
+
+ÔØî Invalid dependency: shared/components/ui/tooltip.tsx
+   Layer "shared" cannot import from "shared"
+   Import: @/shared/utils/cn
+   Allowed: none
+
+ÔØî Invalid dependency: shared/components/ui/use-toast.ts
+   Layer "shared" cannot import from "shared"
+   Import: @/shared/hooks
+   Allowed: none
+
+ÔØî Invalid dependency: shared/constants/statusConfig.ts
+   Layer "shared" cannot import from "shared"
+   Import: @/shared/types/constants
+   Allowed: none
+
+ÔØî Invalid dependency: shared/hooks/queries/useBusinessQueries.test.ts
+   Layer "shared" cannot import from "modules"
+   Import: @/modules/business/BusinessService
+   Allowed: none
+
+ÔØî Invalid dependency: shared/hooks/queries/useBusinessQueries.test.ts
+   Layer "shared" cannot import from "shared"
+   Import: @/shared/hooks/queries/useBusinessQueries
+   Allowed: none
+
+ÔØî Invalid dependency: shared/hooks/use-toast.ts
+   Layer "shared" cannot import from "shared"
+   Import: @/shared/components/ui/toast
+   Allowed: none
+
+ÔØî Invalid dependency: shared/hooks/useAppointments.ts
+   Layer "shared" cannot import from "modules"
+   Import: @/modules/business/hooks/useAppointmentNotifications
+   Allowed: none
+
+ÔØî Invalid dependency: shared/hooks/useAppointments.ts
+   Layer "shared" cannot import from "shared"
+   Import: @/shared/utils/logger
+   Allowed: none
+
+ÔØî Invalid dependency: shared/hooks/useAsyncError.ts
+   Layer "shared" cannot import from "shared"
+   Import: @/shared/utils/logger
+   Allowed: none
+
+ÔØî Invalid dependency: shared/hooks/useErrorHandler.ts
+   Layer "shared" cannot import from "shared"
+   Import: @/shared/utils/logger
+   Allowed: none
+
+ÔØî Invalid dependency: shared/hooks/useGeolocation.ts
+   Layer "shared" cannot import from "shared"
+   Import: @/shared/utils/logger
+   Allowed: none
+
+ÔØî Invalid dependency: shared/hooks/usePersistedState.ts
+   Layer "shared" cannot import from "shared"
+   Import: @/shared/utils/logger
+   Allowed: none
+
+ÔØî Invalid dependency: shared/hooks/usePushNotifications.ts
+   Layer "shared" cannot import from "shared"
+   Import: @/shared/utils/logger
+   Allowed: none
+
+ÔØî Invalid dependency: shared/hooks/useSSOTMonitoring.ts
+   Layer "shared" cannot import from "shared"
+   Import: @/shared/types/constants
+   Allowed: none
+
+ÔØî Invalid dependency: shared/hooks/useValidatedForm.ts
+   Layer "shared" cannot import from "shared"
+   Import: @/shared/utils/logger
+   Allowed: none
+
+ÔØî Invalid dependency: shared/stores/businessStore.ts
+   Layer "shared" cannot import from "modules"
+   Import: @/modules/business/types
+   Allowed: none
+
+ÔØî Invalid dependency: shared/types/map.ts
+   Layer "shared" cannot import from "shared"
+   Import: @/shared/types/constants
+   Allowed: none
+
+ÔØî Invalid dependency: shared/types/moderation.ts
+   Layer "shared" cannot import from "shared"
+   Import: @/shared/types/constants
+   Allowed: none
+
+ÔØî Invalid dependency: shared/types/posts.ts
+   Layer "shared" cannot import from "shared"
+   Import: @/shared/constants/postTypeConfig
+   Allowed: none
+
+ÔØî Invalid dependency: shared/types/posts.ts
+   Layer "shared" cannot import from "shared"
+   Import: @/shared/constants/civicProblemTypes
+   Allowed: none
+
+ÔØî Invalid dependency: shared/types/posts.ts
+   Layer "shared" cannot import from "shared"
+   Import: @/shared/constants/statusConfig
+   Allowed: none
+
+ÔØî Invalid dependency: shared/utils/adminApi.ts
+   Layer "shared" cannot import from "integrations"
+   Import: @/integrations/supabase/client
+   Allowed: none
+
+ÔØî Invalid dependency: shared/utils/errorTracking.ts
+   Layer "shared" cannot import from "shared"
+   Import: @/shared/utils/logger
+   Allowed: none
+
+ÔØî Invalid dependency: shared/utils/monitoring/analytics.ts
+   Layer "shared" cannot import from "shared"
+   Import: @/shared/utils/logger
+   Allowed: none
+
+ÔØî Invalid dependency: shared/utils/ssot-helpers.ts
+   Layer "shared" cannot import from "shared"
+   Import: @/shared/types/constants
+   Allowed: none
+
+ÔØî Invalid dependency: shared/utils/ssot-middleware.ts
+   Layer "shared" cannot import from "shared"
+   Import: @/shared/types/constants
+   Allowed: none
+
+ÔØî Invalid dependency: shared/utils/ssot-middleware.ts
+   Layer "shared" cannot import from "shared"
+   Import: @/shared/utils/logger
+   Allowed: none
+
+ÔØî Invalid dependency: shared/utils/urlUtils.ts
+   Layer "shared" cannot import from "shared"
+   Import: @/shared/types/constants
+   Allowed: none
+
+ÔØî Invalid dependency: shared/utils/webVitals.ts
+   Layer "shared" cannot import from "shared"
+   Import: @/shared/utils/logger
+   Allowed: none
+
+
+=== Summary ===
+Total files analyzed: 1236
+Circular dependencies: 85
+Architecture violations: 232
+Legacy imports: 0
+Warnings: 0
+Status: ÔØî FAILED
+

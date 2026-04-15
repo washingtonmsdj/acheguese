@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Offline - LocalConnect</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      background: linear-gradient(135deg, #0F172A 0%, #1E293B 100%);
+      color: #FFFFFF;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 500px;
+      text-align: center;
+    }
+
+    .icon {
+      width: 120px;
+      height: 120px;
+      margin: 0 auto 30px;
+      background: linear-gradient(135deg, #4FD1C5 0%, #14B8A6 100%);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 60px;
+      animation: pulse 2s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% {
+        transform: scale(1);
+        opacity: 1;
+      }
+      50% {
+        transform: scale(1.05);
+        opacity: 0.8;
+      }
+    }
+
+    h1 {
+      font-size: 32px;
+      margin-bottom: 16px;
+      background: linear-gradient(135deg, #4FD1C5 0%, #14B8A6 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    p {
+      font-size: 16px;
+      color: #94A3B8;
+      margin-bottom: 30px;
+      line-height: 1.6;
+    }
+
+    .critical-info {
+      background: rgba(79, 209, 197, 0.1);
+      border: 1px solid rgba(79, 209, 197, 0.3);
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 20px;
+      text-align: left;
+    }
+
+    .critical-info h2 {
+      font-size: 18px;
+      margin-bottom: 16px;
+      color: #4FD1C5;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .info-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .info-item:last-child {
+      border-bottom: none;
+    }
+
+    .info-label {
+      color: #94A3B8;
+      font-size: 14px;
+    }
+
+    .info-value {
+      color: #FFFFFF;
+      font-weight: 600;
+      font-size: 16px;
+    }
+
+    .btn {
+      display: inline-block;
+      background: linear-gradient(135deg, #4FD1C5 0%, #14B8A6 100%);
+      color: #FFFFFF;
+      padding: 14px 32px;
+      border-radius: 8px;
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 16px;
+      transition: transform 0.2s, box-shadow 0.2s;
+      cursor: pointer;
+      border: none;
+    }
+
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 20px rgba(79, 209, 197, 0.3);
+    }
+
+    .status {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 16px;
+      background: rgba(239, 68, 68, 0.1);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      border-radius: 20px;
+      font-size: 14px;
+      color: #EF4444;
+      margin-bottom: 20px;
+    }
+
+    .status.online {
+      background: rgba(34, 197, 94, 0.1);
+      border-color: rgba(34, 197, 94, 0.3);
+      color: #22C55E;
+    }
+
+    .pulse-dot {
+      width: 8px;
+      height: 8px;
+      background: currentColor;
+      border-radius: 50%;
+      animation: pulse-dot 2s ease-in-out infinite;
+    }
+
+    @keyframes pulse-dot {
+      0%, 100% {
+        opacity: 1;
+      }
+      50% {
+        opacity: 0.5;
+      }
+    }
+
+    .footer {
+      margin-top: 40px;
+      font-size: 14px;
+      color: #64748B;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="icon">📡</div>
+    
+    <div id="status" class="status">
+      <span class="pulse-dot"></span>
+      Você está offline
+    </div>
+
+    <h1>Modo Offline</h1>
+    <p>
+      Você está sem conexão com a internet, mas ainda pode acessar informações importantes salvas no seu dispositivo.
+    </p>
+
+    <!-- Informações Críticas (carregadas do cache) -->
+    <div class="critical-info">
+      <h2>
+        <span>📞</span>
+        Contatos de Emergência
+      </h2>
+      <div class="info-item">
+        <span class="info-label">Portaria</span>
+        <span class="info-value" id="portaria-phone">Carregando...</span>
+      </div>
+      <div class="info-item">
+        <span class="info-label">Síndico</span>
+        <span class="info-value" id="sindico-phone">Carregando...</span>
+      </div>
+      <div class="info-item">
+        <span class="info-label">Emergência</span>
+        <span class="info-value">190 / 193</span>
+      </div>
+    </div>
+
+    <!-- Avisos Importantes -->
+    <div class="critical-info" id="alerts-container" style="display: none;">
+      <h2>
+        <span>⚠️</span>
+        Avisos Importantes
+      </h2>
+      <div id="alerts-list"></div>
+    </div>
+
+    <button class="btn" onclick="tryReconnect()">
+      Tentar Reconectar
+    </button>
+
+    <div class="footer">
+      LocalConnect · Sempre conectado com sua comunidade
+    </div>
+  </div>
+
+  <script>
+    // Verificar status da conexão
+    function updateConnectionStatus() {
+      const statusEl = document.getElementById('status');
+      
+      if (navigator.onLine) {
+        statusEl.className = 'status online';
+        statusEl.innerHTML = '<span class="pulse-dot"></span> Conexão restaurada!';
+        
+        setTimeout(() => {
+          window.location.href = '/';
+        }, 1000);
+      } else {
+        statusEl.className = 'status';
+        statusEl.innerHTML = '<span class="pulse-dot"></span> Você está offline';
+      }
+    }
+
+    // Carregar dados críticos do cache
+    async function loadCriticalData() {
+      try {
+        // Tentar buscar do cache do Service Worker
+        const cache = await caches.open('localconnect-critical-v1');
+        
+        // Carregar contatos
+        const contactsResponse = await cache.match('/offline-data/emergency-contacts');
+        if (contactsResponse) {
+          const contacts = await contactsResponse.json();
+          document.getElementById('portaria-phone').textContent = contacts.portaria || '(27) 3333-4444';
+          document.getElementById('sindico-phone').textContent = contacts.sindico || '(27) 9999-8888';
+        } else {
+          // Dados padrão se não houver cache
+          document.getElementById('portaria-phone').textContent = '(27) 3333-4444';
+          document.getElementById('sindico-phone').textContent = '(27) 9999-8888';
+        }
+        
+        // Carregar avisos
+        const alertsResponse = await cache.match('/offline-data/important-alerts');
+        if (alertsResponse) {
+          const alerts = await alertsResponse.json();
+          
+          if (alerts && alerts.length > 0) {
+            const alertsContainer = document.getElementById('alerts-container');
+            const alertsList = document.getElementById('alerts-list');
+            
+            alertsContainer.style.display = 'block';
+            alertsList.innerHTML = alerts.map(alert => `
+              <div class="info-item">
+                <span class="info-label">${alert.title}</span>
+                <span class="info-value">${alert.date}</span>
+              </div>
+            `).join('');
+          }
+        }
+      } catch (error) {
+        console.error('Erro ao carregar dados críticos:', error);
+      }
+    }
+
+    function tryReconnect() {
+      if (navigator.onLine) {
+        window.location.href = '/';
+      } else {
+        alert('Ainda sem conexão. Tente novamente em alguns instantes.');
+      }
+    }
+
+    // Event listeners
+    window.addEventListener('online', updateConnectionStatus);
+    window.addEventListener('offline', updateConnectionStatus);
+    window.addEventListener('load', () => {
+      updateConnectionStatus();
+      loadCriticalData();
+    });
+
+    // Verificar conexão a cada 5 segundos
+    setInterval(updateConnectionStatus, 5000);
+  </script>
+</body>
+</html>

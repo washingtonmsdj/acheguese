@@ -1,1 +1,0 @@
-export { buildVoxelSandboxThreeSpec } from "./spec";

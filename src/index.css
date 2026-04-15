@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Space+Grotesk:wght@300..700&display=swap");
 
 @tailwind base;
 @tailwind components;
@@ -6,47 +6,73 @@
 
 @layer base {
   :root {
-    /* Dark gaming theme */
-    --background: 225 25% 6%;
-    --foreground: 210 40% 98%;
-    --card: 225 25% 8%;
-    --card-foreground: 210 40% 98%;
-    --popover: 225 25% 10%;
-    --popover-foreground: 210 40% 98%;
-    --primary: 186 100% 45%;
-    --primary-foreground: 225 25% 6%;
-    --secondary: 300 100% 45%;
-    --secondary-foreground: 210 40% 98%;
-    --muted: 225 20% 15%;
-    --muted-foreground: 215 20% 55%;
-    --accent: 186 100% 45%;
-    --accent-foreground: 225 25% 6%;
+    --background: 200 20% 9%;
+    --foreground: 0 0% 98%;
+    --card: 202 15% 14%;
+    --card-foreground: 0 0% 98%;
+    --popover: 202 15% 14%;
+    --popover-foreground: 0 0% 98%;
+    --primary: 171 77% 56%;
+    --primary-foreground: 200 20% 9%;
+    --secondary: 206 14% 19%;
+    --secondary-foreground: 0 0% 85%;
+    --muted: 202 15% 14%;
+    --muted-foreground: 0 0% 60%;
+    --accent: 188 78% 47%;
+    --accent-foreground: 0 0% 100%;
     --destructive: 0 84% 60%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 225 20% 18%;
-    --input: 225 20% 15%;
-    --ring: 186 100% 45%;
-    --radius: 0.5rem;
+    --destructive-foreground: 0 0% 100%;
+    --success: 160 84% 39%;
+    --success-foreground: 0 0% 100%;
+    --warning: 38 92% 50%;
+    --warning-foreground: 0 0% 9%;
+    --border: 0 0% 20%;
+    --input: 0 0% 20%;
+    --ring: 171 77% 56%;
+    --radius: 0.75rem;
+    --sidebar-background: 200 20% 9%;
+    --sidebar-foreground: 0 0% 98%;
+    --sidebar-primary: 171 77% 56%;
+    --sidebar-primary-foreground: 200 20% 9%;
+    --sidebar-accent: 206 14% 19%;
+    --sidebar-accent-foreground: 0 0% 85%;
+    --sidebar-border: 0 0% 20%;
+    --sidebar-ring: 171 77% 56%;
+  }
 
-    /* Gaming colors */
-    --neon-cyan: 186 100% 45%;
-    --neon-magenta: 300 100% 45%;
-    --neon-green: 150 100% 45%;
-    --neon-orange: 25 100% 55%;
-    --neon-purple: 270 100% 60%;
-
-    --surface-1: 225 25% 8%;
-    --surface-2: 225 25% 10%;
-    --surface-3: 225 25% 12%;
-
-    --sidebar-background: 225 25% 8%;
-    --sidebar-foreground: 210 40% 98%;
-    --sidebar-primary: 186 100% 45%;
-    --sidebar-primary-foreground: 225 25% 6%;
-    --sidebar-accent: 225 25% 10%;
-    --sidebar-accent-foreground: 210 40% 98%;
-    --sidebar-border: 225 20% 18%;
-    --sidebar-ring: 186 100% 45%;
+  .light {
+    --background: 0 0% 100%;
+    --foreground: 0 0% 5%;
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 5%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 5%;
+    --primary: 171 77% 40%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 0 0% 96%;
+    --secondary-foreground: 0 0% 9%;
+    --muted: 0 0% 96%;
+    --muted-foreground: 0 0% 45%;
+    --accent: 188 78% 40%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+    --success: 160 84% 36%;
+    --success-foreground: 0 0% 100%;
+    --warning: 38 92% 50%;
+    --warning-foreground: 0 0% 9%;
+    --border: 0 0% 90%;
+    --input: 0 0% 90%;
+    --ring: 171 77% 40%;
+    --radius: 0.75rem;
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 0 0% 9%;
+    --sidebar-primary: 171 77% 40%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 0 0% 96%;
+    --sidebar-accent-foreground: 0 0% 9%;
+    --sidebar-border: 0 0% 90%;
+    --sidebar-ring: 171 77% 40%;
   }
 }
 
@@ -55,22 +81,139 @@
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground font-sans antialiased;
-    font-family: 'Space Grotesk', system-ui, sans-serif;
+    @apply bg-background text-foreground font-sans;
+    font-family: "DM Sans", sans-serif;
+    overflow-x: hidden;
+    max-width: 100vw;
   }
-  code, pre, .font-mono {
-    font-family: 'JetBrains Mono', monospace;
+  h1, h2, h3, h4, h5, h6 {
+    font-family: "Space Grotesk", sans-serif;
   }
 }
 
-@layer components {
-  .glass-panel {
-    @apply bg-card/80 backdrop-blur-xl border border-border/50;
+@layer utilities {
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
   }
-  .neon-glow {
-    box-shadow: 0 0 20px hsl(var(--primary) / 0.3), 0 0 40px hsl(var(--primary) / 0.1);
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
   }
-  .neon-text {
-    text-shadow: 0 0 10px hsl(var(--primary) / 0.5), 0 0 20px hsl(var(--primary) / 0.3);
+  .scroll-smooth-x {
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
   }
+  .scroll-snap-x {
+    scroll-snap-type: x proximity;
+  }
+  .scroll-snap-start {
+    scroll-snap-align: start;
+  }
+  .leaflet-routing-container {
+    display: none !important;
+  }
+  .custom-map-marker {
+    background: none !important;
+    border: none !important;
+  }
+  .custom-cluster-icon {
+    background: none !important;
+    border: none !important;
+  }
+}
+
+.safe-area-bottom {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.sidebar-transition {
+  transition: margin-left 0.3s ease-in-out, width 0.3s ease-in-out;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -1000px 0;
+  }
+  100% {
+    background-position: 1000px 0;
+  }
+}
+
+.skeleton-shimmer {
+  background: linear-gradient(90deg, hsl(var(--muted)) 0%, hsla(var(--muted-foreground), 0.1) 50%, hsl(var(--muted)) 100%);
+  background-size: 1000px 100%;
+  animation: shimmer 2s infinite linear;
+}
+
+.animate-shimmer {
+  animation: shimmer 3s infinite linear;
+}
+
+@keyframes pulse-glow {
+  0%, 100% {
+    box-shadow: 0 0 20px rgba(233, 30, 99, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 30px rgba(233, 30, 99, 0.6);
+  }
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 3s ease-in-out infinite;
+}
+
+@media (min-width: 768px) {
+  .desktop-grid-2 {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+  }
+  .desktop-grid-3 {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .desktop-grid-3 {
+    grid-template-columns: repeat(3, 1fr);
+  }
+  .desktop-grid-4 {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1rem;
+  }
+}
+
+/* MapLibre Popup Styles - Fix para popup branco/vazio */
+.maplibregl-popup-content {
+  background: white !important;
+  padding: 0 !important;
+  border-radius: 8px !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15) !important;
+  min-width: 150px !important;
+}
+
+.maplibregl-popup-content > div {
+  background: white !important;
+  color: #333 !important;
+}
+
+.maplibregl-popup-tip {
+  border-top-color: white !important;
+}
+
+.user-location-popup .maplibregl-popup-content {
+  background: white !important;
+  border: 2px solid #10b981 !important;
+}
+
+.user-location-popup .maplibregl-popup-tip {
+  border-top-color: white !important;
+}
+
+/* Garantir que o popup seja visível */
+.maplibregl-popup {
+  z-index: 10001 !important;
 }

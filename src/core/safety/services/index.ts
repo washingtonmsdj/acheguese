@@ -1,0 +1,1 @@
+export { SafetyService, safetyService } from './SafetyService';

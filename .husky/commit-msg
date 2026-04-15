@@ -1,0 +1,35 @@
+# Validar formato de commit message (Conventional Commits)
+commit_msg=$(cat "$1")
+
+# Padrão: tipo(escopo opcional): descrição
+# Tipos válidos: feat, fix, docs, style, refactor, test, chore, perf, ci, build, revert
+pattern="^(feat|fix|docs|style|refactor|test|chore|perf|ci|build|revert)(\(.+\))?: .{1,100}"
+
+if ! echo "$commit_msg" | grep -qE "$pattern"; then
+  echo "❌ Formato de commit inválido!"
+  echo ""
+  echo "Use o formato Conventional Commits:"
+  echo "  tipo(escopo): descrição"
+  echo ""
+  echo "Tipos válidos:"
+  echo "  feat:     Nova funcionalidade"
+  echo "  fix:      Correção de bug"
+  echo "  docs:     Documentação"
+  echo "  style:    Formatação, ponto e vírgula, etc"
+  echo "  refactor: Refatoração de código"
+  echo "  test:     Adição ou correção de testes"
+  echo "  chore:    Tarefas de manutenção"
+  echo "  perf:     Melhoria de performance"
+  echo "  ci:       Integração contínua"
+  echo "  build:    Sistema de build"
+  echo "  revert:   Reverter commit anterior"
+  echo ""
+  echo "Exemplos:"
+  echo "  feat(auth): adicionar login com Google"
+  echo "  fix(profile): corrigir upload de avatar"
+  echo "  docs: atualizar README"
+  echo ""
+  exit 1
+fi
+
+echo "✅ Formato de commit válido!"

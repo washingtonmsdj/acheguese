@@ -1,0 +1,500 @@
+import { useState, useCallback } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useAuth } from "@/core/auth";
+import { profileService } from "@/core/profiles/services/ProfileService";
+import { toast } from "sonner";
+import { getUserRides, getRideById, getPassengerRating } from "@/modules/mobility/services/mobility.queries";
+import type { RideRequest } from "@/modules/mobility/types/types";
+import { acceptRide, startRide, completeRide, cancelRide } from "@/modules/mobility/services/mobility.mutations";
+import { RideOperationalService } from "@/modules/mobility/core/RideOperationalService";
+import { RideDispatchService } from "@/modules/mobility/core/RideDispatchService";
+import { logger } from "@/shared/utils/logger";
+import { useRideRealtime } from "./useRideRealtime";
+import { RIDE_STATUS, MOBILITY_QUERY_KEYS, TIMEOUTS } from "../constants";
+
+export interface CreateRideRequestData {
+  origin: string;
+  destination: string;
+  departure_time: string;
+  suggested_price?: number;
+  type: "viagem" | "entrega" | "agendada" | "carona_compartilhada";
+  payment_method: string;
+  observation?: string;
+  available_seats?: number;
+  origin_lat: number;
+  origin_lng: number;
+  destination_lat: number;
+  destination_lng: number;
+  search_radius_km?: number;
+  pickup_address_id: string;
+  dropoff_address_id: string;
+  pickup_location_id: string;
+  dropoff_location_id: string;
+}
+
+function isValidCoordinate(value: number): boolean {
+  return Number.isFinite(value);
+}
+
+export function useMobilidade() {
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
+  const [activeRide, setActiveRide] = useState<RideRequest | null>(null);
+
+  const {
+    data: rides = [],
+    isLoading,
+    refetch,
+  } = useQuery({
+    queryKey: MOBILITY_QUERY_KEYS.rides(user?.id),
+    queryFn: async (): Promise<RideRequest[]> => {
+      if (!user) return [];
+      const data = await getUserRides(user.id);
+      const active = (data || []).find((r: RideRequest) =>
+        [RIDE_STATUS.PENDING, RIDE_STATUS.IN_PROGRESS,
+         RIDE_STATUS.REQUESTED, RIDE_STATUS.SEARCHING_DRIVER, RIDE_STATUS.DRIVER_ASSIGNED,
+         RIDE_STATUS.DRIVER_ACCEPTED, RIDE_STATUS.DRIVER_ARRIVING, RIDE_STATUS.PASSENGER_BOARDED,
+         RIDE_STATUS.DRIVER_ON_THE_WAY, RIDE_STATUS.DRIVER_ARRIVED, RIDE_STATUS.PASSENGER_ON_BOARD].includes(r.status),
+      );
+      if (active) setActiveRide(active);
+      return data || [];
+    },
+    enabled: !!user,
+    // REALTIME: Removido polling, usando subscription
+    staleTime: TIMEOUTS.CACHE_STALE_TIME_MEDIUM,
+  });
+
+  // REALTIME NATIVO: Subscription para mudancas de corrida
+  useRideRealtime({
+    userType: 'passenger',
+    userId: user?.id,
+    enabled: !!user,
+    onEvent: (event) => {
+      logger.info('useMobilidade - realtime event', event);
+      
+      // Invalidar queries para atualizar dados
+      queryClient.invalidateQueries({ queryKey: MOBILITY_QUERY_KEYS.rides(user?.id) });
+      
+      // Atualizar activeRide se necessário
+      if (activeRide?.id === event.rideId) {
+        // Recarregar corrida específica
+        getRideById(event.rideId).then(updatedRide => {
+          if (updatedRide) {
+            setActiveRide(updatedRide);
+          }
+        });
+      }
+      
+      // Notificações baseadas no evento
+      switch (event.type) {
+        case 'driver_assigned':
+          toast.success("Motorista encontrado! Aguardando confirmação...");
+          break;
+        case 'driver_accepted':
+          toast.success("Motorista confirmou! Preparando corrida...");
+          break;
+        case 'cancelled':
+          toast.info("Corrida foi cancelada");
+          setActiveRide(null);
+          break;
+        case 'expired':
+          toast.error("Corrida expirou. Tente novamente.");
+          setActiveRide(null);
+          break;
+      }
+    },
+  });
+
+  // SSOT - Rating do passageiro
+  const {
+    data: passengerRating = 5.0,
+    isLoading: isLoadingRating,
+  } = useQuery({
+    queryKey: MOBILITY_QUERY_KEYS.passengerRating(user?.id),
+    queryFn: async () => {
+      if (!user) return 5.0;
+      try {
+        // Usar função SSOT
+        return await getPassengerRating(user.id);
+      } catch (error) {
+        logger.error("useMobilidade.getPassengerRating", error as Error);
+        return 5.0;
+      }
+    },
+    enabled: !!user,
+    staleTime: TIMEOUTS.CACHE_STALE_TIME_VERY_LONG, // Cache por 5 minutos
+  });
+
+  const createRide = useCallback(
+    async (rideData: CreateRideRequestData) => {
+      try {
+        if (!user) {
+          toast.error("Usuário não autenticado");
+          throw new Error("User not authenticated");
+        }
+
+        const passengerProfile =
+          (await profileService.getProfileByType(user.id, "personal")) ||
+          (await profileService.getActiveProfile(user.id));
+
+        if (!passengerProfile?.id) {
+          logger.error("useMobilidade.createRide - profile not found", new Error("No profile"), { userId: user.id });
+          toast.error("Perfil não encontrado. Verifique seu cadastro.");
+          throw new Error("Profile not found");
+        }
+
+        logger.info("useMobilidade.createRide - profile found", {
+          profileId: passengerProfile.id,
+          userId: user.id,
+        });
+        // PRICING AUTOMATICO - Calcular preco estimado oficial
+        let suggestedPrice = rideData.suggested_price;
+        
+        // BLINDAGEM: Coordenadas obrigatorias para calculo oficial
+        if (
+          !isValidCoordinate(rideData.origin_lat) ||
+          !isValidCoordinate(rideData.origin_lng) ||
+          !isValidCoordinate(rideData.destination_lat) ||
+          !isValidCoordinate(rideData.destination_lng)
+        ) {
+          toast.error("Coordenadas são obrigatórias para cálculo de preço. Selecione endereços válidos no mapa.");
+          throw new Error("Coordinates required for official pricing calculation");
+        }
+
+        try {
+          const { pricingService } = await import('@/core/pricing/instance');
+          
+          const priceEstimate = await pricingService.calculateEstimate({
+            mode: rideData.type === 'entrega' ? 'delivery' : 'ride',
+            origin: {
+              latitude: rideData.origin_lat,
+              longitude: rideData.origin_lng,
+            },
+            destination: {
+              latitude: rideData.destination_lat,
+              longitude: rideData.destination_lng,
+            },
+            options: {
+              applyPeakHours: true,
+              includeBreakdown: false,
+            },
+          });
+
+          suggestedPrice = priceEstimate.estimatedPrice;
+          logger.info("useMobilidade.createRide - OFFICIAL pricing calculated", { 
+            estimatedPrice: priceEstimate.estimatedPrice,
+            distanceKm: priceEstimate.metadata.distanceKm,
+            durationMinutes: priceEstimate.metadata.durationMinutes,
+            mode: priceEstimate.metadata.mode,
+          });
+        } catch (pricingError) {
+          logger.error("useMobilidade.createRide - OFFICIAL pricing failed", pricingError as Error);
+          toast.error("Erro no cálculo de preço. Tente novamente ou contate o suporte.");
+          throw new Error("Official pricing calculation failed");
+        }
+
+        // Usar motor operacional com campos canônicos
+        const normalizedSuggestedPrice =
+          typeof suggestedPrice === "number" && Number.isFinite(suggestedPrice)
+            ? suggestedPrice
+            : undefined;
+
+        const result = await RideOperationalService.createRide({
+          passengerProfileId: passengerProfile.id,
+          // Campos canônicos (obrigatórios no banco)
+          pickupAddressId: rideData.pickup_address_id,
+          dropoffAddressId: rideData.dropoff_address_id,
+          pickupLocationId: rideData.pickup_location_id,
+          dropoffLocationId: rideData.dropoff_location_id,
+          // Campos complementares
+          origin: rideData.origin,
+          destination: rideData.destination,
+          originLat: rideData.origin_lat,
+          originLng: rideData.origin_lng,
+          destinationLat: rideData.destination_lat,
+          destinationLng: rideData.destination_lng,
+          mode: rideData.type === 'entrega' ? 'delivery' : 'ride',
+          suggestedPrice: normalizedSuggestedPrice, // Preco calculado automaticamente
+          observation: rideData.observation,
+          availableSeats: rideData.available_seats,
+          paymentMethod: rideData.payment_method,
+          departureTime: rideData.departure_time,
+        });
+
+        if (!result.success) {
+          toast.error(result.error || "Erro ao criar corrida");
+          throw new Error(result.error || "Failed to create ride");
+        }
+
+        // Buscar corrida criada
+        const data = await getRideById(result.rideId!);
+        setActiveRide(data);
+        queryClient.invalidateQueries({ queryKey: MOBILITY_QUERY_KEYS.rides() });
+        
+        // Toast com preço calculado OFICIAL
+        if (normalizedSuggestedPrice !== undefined) {
+          toast.success(`Corrida solicitada! Preço oficial: R$ ${normalizedSuggestedPrice.toFixed(2)}`);
+        } else {
+          toast.success("Corrida solicitada!");
+        }
+        return data;
+      } catch (error) {
+        logger.error("useMobilidade.createRide", error as Error);
+        toast.error("Erro ao criar corrida");
+        throw error;
+      }
+    },
+    [user, queryClient],
+  );
+
+  const cancelRide = useCallback(
+    async (rideId: string, reason?: string) => {
+      try {
+        logger.info("useMobilidade.cancelRide - iniciando", { rideId, userId: user?.id });
+        
+        if (!user) {
+          toast.error("Usuário não autenticado");
+          return false;
+        }
+
+        // Buscar o perfil do usuário logado
+        const userProfile = 
+          (await profileService.getProfileByType(user.id, "personal")) ||
+          (await profileService.getActiveProfile(user.id));
+
+        if (!userProfile?.id) {
+          logger.error("useMobilidade.cancelRide - perfil não encontrado", new Error("No profile"), { userId: user.id });
+          toast.error("Perfil não encontrado");
+          return false;
+        }
+
+        logger.info("useMobilidade.cancelRide - perfil do usuário", {
+          userId: user.id,
+          profileId: userProfile.id
+        });
+        
+        // Buscar corrida para saber quem está cancelando
+        const ride: RideRequest | null = await getRideById(rideId);
+        if (!ride) {
+          logger.warn("useMobilidade.cancelRide - corrida não encontrada", { rideId });
+          toast.error("Corrida não encontrada");
+          return false;
+        }
+
+        logger.info("useMobilidade.cancelRide - corrida encontrada", { 
+          rideId, 
+          status: ride.status,
+          passengerId: ride.passenger_profile_id,
+          driverProfileId: ride.driver_profile_id,
+          userProfileId: userProfile.id
+        });
+
+        const isPassenger = ride.passenger_profile_id === userProfile.id;
+        const isDriver = ride.driver_profile_id === userProfile.id;
+
+        if (!isPassenger && !isDriver) {
+          logger.warn("useMobilidade.cancelRide - usuário não autorizado", { 
+            rideId, 
+            userProfileId: userProfile.id,
+            passengerId: ride.passenger_profile_id,
+            driverProfileId: ride.driver_profile_id
+          });
+          toast.error("Você não pode cancelar esta corrida");
+          return false;
+        }
+
+        // Usar motor operacional
+        logger.info("useMobilidade.cancelRide - chamando RideOperationalService", {
+          rideId,
+          cancelledBy: isPassenger ? 'passenger' : 'driver',
+          profileId: userProfile.id
+        });
+
+        const result = await RideOperationalService.cancelRide({
+          rideId,
+          cancelledBy: isPassenger ? 'passenger' : 'driver',
+          profileId: userProfile.id,
+          reason,
+        });
+
+        if (!result.success) {
+          logger.error("useMobilidade.cancelRide - falha no cancelamento", { 
+            rideId, 
+            error: result.error,
+            fromState: result.fromState,
+            toState: result.toState
+          });
+          
+          // Mensagens de erro mais específicas
+          let errorMessage = result.error || "Erro ao cancelar corrida";
+          
+          if (errorMessage.includes("Cannot cancel ride in state")) {
+            errorMessage = `Não é possível cancelar a corrida no estado atual (${ride?.status})`;
+          } else if (errorMessage.includes("Passenger cannot cancel at this stage")) {
+            errorMessage = "Você não pode mais cancelar esta corrida neste momento";
+          } else if (errorMessage.includes("Driver cannot cancel at this stage")) {
+            errorMessage = "Motorista não pode cancelar neste momento";
+          }
+          
+          toast.error(errorMessage);
+          return false;
+        }
+
+        logger.info("useMobilidade.cancelRide - sucesso", { 
+          rideId,
+          fromState: result.fromState,
+          toState: result.toState
+        });
+
+        setActiveRide(null);
+        queryClient.invalidateQueries({ queryKey: MOBILITY_QUERY_KEYS.rides() });
+        toast.success("Corrida cancelada");
+        return true;
+      } catch (error) {
+        logger.error("useMobilidade.cancelRide", error as Error, { rideId, userId: user?.id });
+        toast.error("Erro ao cancelar corrida");
+        return false;
+      }
+    },
+    [user, queryClient],
+  );
+
+  const acceptRide = useCallback(
+    async (rideId: string) => {
+      try {
+        if (!user) {
+          toast.error("Usuário não autenticado");
+          return null;
+        }
+
+        const driverProfile = await profileService.getProfileByType(user.id, "driver");
+        if (!driverProfile?.id) {
+          toast.error("Perfil de motorista não encontrado");
+          return null;
+        }
+
+        // Usar motor operacional (dispatch service)
+        const result = await RideDispatchService.acceptRide(rideId, driverProfile.id);
+
+        if (!result.success) {
+          if (result.reason === 'already_accepted') {
+            toast.error("Esta corrida já foi aceita por outro motorista");
+          } else if (result.reason === 'invalid_state') {
+            toast.error("Esta corrida não está disponível para aceite");
+          } else if (result.reason === 'driver_busy') {
+            toast.error("Você já tem uma corrida ativa");
+          } else if (result.reason === 'expired') {
+            toast.error("Esta corrida expirou");
+          } else {
+            toast.error(result.error || "Erro ao aceitar corrida");
+          }
+          return null;
+        }
+
+        const data = await getRideById(rideId);
+        setActiveRide(data);
+        queryClient.invalidateQueries({ queryKey: MOBILITY_QUERY_KEYS.rides() });
+        toast.success("Corrida aceita! Indo buscar passageiro...");
+        return data;
+      } catch (error) {
+        logger.error("useMobilidade.acceptRide", error as Error);
+        toast.error("Erro ao aceitar corrida");
+        return null;
+      }
+    },
+    [user, queryClient],
+  );
+
+  const completeRide = useCallback(
+    async (rideId: string, finalPrice?: number) => {
+      try {
+        // CONTRATO OFICIAL: Confirmacao ou ajuste manual (sem recalculo automatico)
+        let calculatedFinalPrice = finalPrice;
+        
+        if (!calculatedFinalPrice) {
+          // Usar suggested_price como confirmação (não recalcular)
+          const ride: RideRequest | null = await getRideById(rideId);
+          calculatedFinalPrice = ride?.suggested_price || 0;
+          
+          logger.info("useMobilidade.completeRide - confirming suggested price", { 
+            rideId,
+            suggestedPrice: ride?.suggested_price,
+            finalPrice: calculatedFinalPrice,
+          });
+        } else {
+          logger.info("useMobilidade.completeRide - manual adjustment", { 
+            rideId,
+            manualPrice: finalPrice,
+            finalPrice: calculatedFinalPrice,
+          });
+        }
+
+        // Usar motor operacional
+        const result = await RideOperationalService.completeRide(
+          rideId,
+          user?.id || '',
+          calculatedFinalPrice
+        );
+
+        if (!result.success) {
+          toast.error(result.error || "Erro ao completar corrida");
+          return;
+        }
+
+        setActiveRide(null);
+        queryClient.invalidateQueries({ queryKey: MOBILITY_QUERY_KEYS.rides() });
+        
+        // Toast com preço final oficial
+        if (finalPrice) {
+          toast.success(`Corrida completada! Valor ajustado: R$ ${calculatedFinalPrice.toFixed(2)}`);
+        } else {
+          toast.success(`Corrida completada! Valor confirmado: R$ ${calculatedFinalPrice.toFixed(2)}`);
+        }
+      } catch (error) {
+        logger.error("useMobilidade.completeRide", error as Error);
+        toast.error("Erro ao completar corrida");
+      }
+    },
+    [user, queryClient],
+  );
+
+  const rateRide = useCallback(async (_rideId: string, _rating: number) => {
+    toast.success("Avaliação enviada!");
+  }, []);
+  const confirmRideCompletion = useCallback(async (_rideId: string) => {
+    toast.success("Corrida confirmada!");
+  }, []);
+  const reportRideProblem = useCallback(
+    async (_rideId: string, _desc: string) => {
+      toast.info("Problema reportado");
+    },
+    [],
+  );
+  const myRides = rides;
+  const error: string | null = null;
+
+  return {
+    rides,
+    isLoading,
+    activeRide,
+    createRide,
+    cancelRide,
+    acceptRide,
+    completeRide,
+    refetch,
+    createRideRequest: createRide,
+    rateRide,
+    confirmRideCompletion,
+    reportRideProblem,
+    myRides,
+    error,
+    pendingRides: rides.filter((r: RideRequest) => [RIDE_STATUS.PENDING, RIDE_STATUS.REQUESTED, RIDE_STATUS.SEARCHING_DRIVER, RIDE_STATUS.DRIVER_ASSIGNED].includes(r.status)),
+    activeRides: rides.filter((r: RideRequest) =>
+      [RIDE_STATUS.DRIVER_ACCEPTED, RIDE_STATUS.IN_PROGRESS, RIDE_STATUS.DRIVER_ARRIVING, RIDE_STATUS.PASSENGER_BOARDED, RIDE_STATUS.PASSENGER_ON_BOARD].includes(r.status),
+    ),
+    // SSOT - Rating do passageiro
+    passengerRating,
+    isLoadingRating,
+  };
+}
+

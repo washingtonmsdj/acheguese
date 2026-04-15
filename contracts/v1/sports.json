@@ -1,8 +1,0 @@
-{
-  "version": "1.0",
-  "genre": "sports",
-  "description": "Contrato canônico para jogos de esporte",
-  "requiredEntities": ["player"],
-  "requiredSystems": ["PhysicsSystem", "CollisionSystem"],
-  "userMessage": "Para um jogo de esporte, o mínimo esperado é:\n🏃 atleta\n🏟️ arena\n⚙️ física e colisão"
-}

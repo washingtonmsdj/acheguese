@@ -1,0 +1,19 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+echo "🔍 Checking SSOT compliance..."
+
+# Executar o script de verificação SSOT
+npx tsx scripts/check-ssot-compliance.ts
+
+# Se falhar, mostrar mensagem e abortar commit
+if [ $? -ne 0 ]; then
+  echo ""
+  echo "❌ SSOT compliance check failed!"
+  echo "📚 Please fix the violations above before committing."
+  echo "💡 See SSOT_REGISTRY.md for guidance."
+  echo ""
+  exit 1
+fi
+
+echo "✅ SSOT compliance check passed!"

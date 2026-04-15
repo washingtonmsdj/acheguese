@@ -1,0 +1,195 @@
+/**
+ * MULTI-PROFILE TYPES - FASE 3
+ * Tipos para arquitetura multi-perfil real
+ * Fonte: ARQUITETURA_MULTI_PERFIL_DEFINITIVA.md v3.0
+ */
+
+import type { Database } from '@/integrations/supabase/types';
+
+// Tipos do banco
+export type ProfileType = 'personal' | 'business' | 'professional' | 'driver';
+export type ProfileRole = 'owner' | 'admin' | 'member';
+export type LinkType = 'owns' | 'works_for' | 'drives_for' | 'partner';
+
+// Profile base
+export interface Profile {
+  id: string;
+  user_id: string;
+  profile_type: ProfileType;
+  handle: string;
+  display_name: string;
+  avatar_url?: string;
+  bio?: string;
+  contact_email?: string;
+  phone?: string;
+  website?: string;
+  location?: string;
+  city?: string;
+  state?: string;
+  country: string;
+  is_active: boolean;
+  is_public: boolean;
+  verified: boolean;
+  verified_at?: string;
+  show_contact_email: boolean;
+  show_phone: boolean;
+  show_linked_profiles: boolean;
+  show_business_links: boolean;
+  show_professional_links: boolean;
+  reputation_score: number;
+  trust_score: number;
+  created_at: string;
+  updated_at: string;
+}
+
+// Business extension
+export interface BusinessData {
+  profile_id: string;
+  legal_name: string;
+  cnpj?: string;
+  tax_id?: string;
+  company_type?: 'mei' | 'ltda' | 'sa' | 'eireli' | 'other';
+  industry?: string;
+  employee_count?: '1-10' | '11-50' | '51-200' | '201-500' | '500+';
+  founded_year?: number;
+  business_address?: string;
+  business_city?: string;
+  business_state?: string;
+  business_zip?: string;
+  business_hours?: any;
+  created_at: string;
+  updated_at: string;
+}
+
+// Professional extension
+export interface ProfessionalData {
+  profile_id: string;
+  profession: string;
+  specialties?: string[];
+  license_number?: string;
+  license_state?: string;
+  years_experience?: number;
+  education?: string;
+  certifications?: string[];
+  services_offered?: string[];
+  service_area?: string[];
+  hourly_rate?: number;
+  accepts_remote: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+// Driver extension
+export interface DriverData {
+  profile_id: string;
+  license_number: string;
+  license_category: string;
+  license_expiry: string;
+  license_state: string;
+  vehicle_type?: 'car' | 'motorcycle' | 'van' | 'truck';
+  vehicle_plate?: string;
+  vehicle_model?: string;
+  vehicle_year?: number;
+  vehicle_color?: string;
+  documents_verified: boolean;
+  documents_verified_at?: string;
+  background_check_status?: 'pending' | 'approved' | 'rejected';
+  background_check_date?: string;
+  is_available: boolean;
+  current_location?: any;
+  last_location_update?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+// Profile member
+export interface ProfileMember {
+  id: string;
+  profile_id: string;
+  user_id: string;
+  role: ProfileRole;
+  invited_by?: string;
+  joined_at: string;
+}
+
+// Profile link
+export interface ProfileLink {
+  id: string;
+  from_profile_id: string;
+  to_profile_id: string;
+  link_type: LinkType;
+  is_public: boolean;
+  display_order: number;
+  created_at: string;
+}
+
+// Perfil completo com extensão
+export type ProfileWithExtension =
+  | { profile: Profile; extension: null; type: 'personal' }
+  | { profile: Profile; extension: BusinessData; type: 'business' }
+  | { profile: Profile; extension: ProfessionalData; type: 'professional' }
+  | { profile: Profile; extension: DriverData; type: 'driver' };
+
+// Dados para criação
+export interface CreateProfileInput {
+  profile_type: ProfileType;
+  handle: string;
+  display_name: string;
+  avatar_url?: string;
+  bio?: string;
+  extension_data?: Record<string, any>;
+}
+
+// Dados para atualização
+export interface UpdateProfileInput {
+  handle?: string;
+  display_name?: string;
+  avatar_url?: string;
+  bio?: string;
+  contact_email?: string;
+  phone?: string;
+  website?: string;
+  location?: string;
+  city?: string;
+  state?: string;
+  is_public?: boolean;
+  show_contact_email?: boolean;
+  show_phone?: boolean;
+  show_linked_profiles?: boolean;
+  show_business_links?: boolean;
+  show_professional_links?: boolean;
+}
+
+export interface ProfileEditorExtensionForms {
+  bizForm: Partial<BusinessData>;
+  proForm: Partial<ProfessionalData>;
+  drvForm: Partial<DriverData>;
+}
+
+export interface LoadProfileEditorInput {
+  profileId: string;
+  userId: string;
+  availableProfiles?: Profile[];
+}
+
+export interface ProfileEditorSnapshot extends ProfileEditorExtensionForms {
+  profile: Profile;
+  baseForm: UpdateProfileInput;
+  editableUsername: string | null;
+  username: string;
+  originalUsername: string;
+}
+
+export interface SaveProfileEditorInput extends ProfileEditorExtensionForms {
+  profile: Pick<Profile, 'id' | 'profile_type'>;
+  baseForm: UpdateProfileInput;
+  username?: string;
+  originalUsername?: string;
+}
+
+// Response types
+export interface ServiceResponse<T> {
+  success: boolean;
+  data?: T;
+  error?: string;
+}

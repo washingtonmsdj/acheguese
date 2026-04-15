@@ -1,8 +1,0 @@
-{
-  "version": "1.0",
-  "genre": "racing",
-  "description": "Contrato canônico para jogos de corrida",
-  "requiredEntities": ["player"],
-  "requiredSystems": ["PhysicsSystem", "CollisionSystem", "TimerSystem"],
-  "userMessage": "Para um jogo de corrida, o mínimo esperado é:\n🚗 veículo jogável\n🛣️ pista\n⚙️ física e colisão\n⏱️ cronômetro"
-}

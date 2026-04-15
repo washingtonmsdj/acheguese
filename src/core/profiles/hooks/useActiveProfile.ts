@@ -1,0 +1,84 @@
+/**
+ * USE ACTIVE PROFILE - FASE 4
+ * Hook para gerenciar perfil ativo do usuário
+ * Fonte: ARQUITETURA_MULTI_PERFIL_DEFINITIVA.md v3.0
+ * 
+ * REGRAS:
+ * - Perfil ativo é armazenado em localStorage
+ * - Se não houver perfil ativo, usa o primeiro perfil do usuário
+ * - Personal profile é preferido como padrão
+ */
+
+import { useState, useEffect, useCallback } from 'react';
+import { MultiProfileService } from '../services/multi-profile';
+import type { Profile } from '../services/multi-profile/types';
+
+const ACTIVE_PROFILE_KEY = 'active_profile_id';
+
+export function useActiveProfile() {
+  const [activeProfile, setActiveProfile] = useState<Profile | null>(null);
+  const [allProfiles, setAllProfiles] = useState<Profile[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const loadProfiles = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      const profiles = await MultiProfileService.getMyProfiles();
+      setAllProfiles(profiles);
+
+      if (profiles.length === 0) {
+        setActiveProfile(null);
+        setLoading(false);
+        return;
+      }
+
+      // Tentar recuperar perfil ativo do localStorage
+      const savedActiveProfileId = localStorage.getItem(ACTIVE_PROFILE_KEY);
+      let active = profiles.find(p => p.id === savedActiveProfileId);
+
+      // Se não encontrou, usar personal como padrão
+      if (!active) {
+        active = profiles.find(p => p.profile_type === 'personal') || profiles[0];
+        if (active) {
+          localStorage.setItem(ACTIVE_PROFILE_KEY, active.id);
+        }
+      }
+
+      setActiveProfile(active || null);
+    } catch (err: any) {
+      console.error('Error loading active profile:', err);
+      setError(err.message || 'Failed to load active profile');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const switchProfile = useCallback(async (profileId: string) => {
+    const profile = allProfiles.find(p => p.id === profileId);
+    
+    if (!profile) {
+      setError('Profile not found');
+      return false;
+    }
+
+    setActiveProfile(profile);
+    localStorage.setItem(ACTIVE_PROFILE_KEY, profileId);
+    return true;
+  }, [allProfiles]);
+
+  useEffect(() => {
+    loadProfiles();
+  }, [loadProfiles]);
+
+  return {
+    activeProfile,
+    allProfiles,
+    loading,
+    error,
+    switchProfile,
+    refetch: loadProfiles,
+  };
+}

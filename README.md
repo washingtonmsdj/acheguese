@@ -1,183 +1,155 @@
-# ORDAX Studio
+﻿# 🏢 Ordax - Plataforma de Serviços Locais
 
-Plataforma para geração de jogos com IA, com pipeline validado por fases (FSM), runtime 2D/3D e edição no navegador.
+> Sistema modular de marketplace local com foco em gastronomia, mobilidade, classificados e serviços profissionais.
 
-## 🏆 Status do Projeto: AAA+ PERFEITO
+## 📋 Visão Geral
 
-✅ **Nível AAA+ Alcançado** - Código perfeito, 100% SSOT, type safety robusto e documentação completa.  
-✅ **SSOT 100%** - Todas as constantes centralizadas em `src/lib/ordax/config.ts` (62 constantes)  
-✅ **Zero Magic Numbers** - Código profissional em todo o projeto  
-✅ **Engine AAA+** - Análise minuciosa e correções completas (21 problemas resolvidos, 48 arquivos modificados)  
-✅ **36 Documentos** - Documentação profissional completa
+Plataforma web moderna construída com React, TypeScript e Supabase, seguindo princípios SSOT (Single Source of Truth) e arquitetura modular.
 
-## 📚 Documentação Completa
+### 🎯 Módulos Principais
 
-Este projeto possui documentação profissional completa com **36 documentos**. **Comece aqui:**
+- **🍽️ Gastronomia** - Cardápios digitais, reviews e favoritos
+- **🚗 Mobilidade** - Solicitação de corridas e entregas
+- **📢 Classificados** - Anúncios locais categorizados
+- **👔 Profissionais** - Perfis e serviços profissionais
+- **🏢 Business** - Gestão de estabelecimentos comerciais
 
-### ⚡ LEITURA RÁPIDA (2 min)
-**[RESUMO_EXECUTIVO_FINAL.md](./RESUMO_EXECUTIVO_FINAL.md)** ⭐⭐⭐ - Status AAA+ em 2 minutos
+## 🚀 Quick Start
 
-### 📖 ÍNDICE MESTRE
-**[INDICE_COMPLETO_DOCUMENTACAO.md](./INDICE_COMPLETO_DOCUMENTACAO.md)** ⭐ - Navegação completa de todos os 36 documentos
+### Pré-requisitos
 
-### 🚀 Para Novos Desenvolvedores (25 min)
-1. **[README.md](./README.md)** - Este arquivo (5 min)
-2. **[GUIA_RAPIDO_AAA.md](./GUIA_RAPIDO_AAA.md)** ⭐ - Referência rápida (5 min)
-3. **[CODING_STANDARDS.md](./CODING_STANDARDS.md)** ⭐⭐⭐ - Padrões (OBRIGATÓRIO - 15 min)
+- Node.js 18+
+- npm ou yarn
+- Conta Supabase
 
-### 🏆 Status e Validação AAA+
-- **[RESUMO_EXECUTIVO_FINAL.md](./RESUMO_EXECUTIVO_FINAL.md)** ⭐⭐⭐ - Resumo executivo (2 min)
-- **[CONCLUSAO_FINAL_100_SSOT.md](./CONCLUSAO_FINAL_100_SSOT.md)** ⭐⭐⭐ - 100% SSOT alcançado! (10 min)
-- **[VALIDACAO_100_SSOT.md](./VALIDACAO_100_SSOT.md)** ⭐⭐ - Validação e certificação (10 min)
-- **[STATUS_FINAL_AAA.md](./STATUS_FINAL_AAA.md)** ⭐⭐⭐ - Status completo (15 min)
-- **[LISTA_COMPLETA_ARQUIVOS_MODIFICADOS.md](./LISTA_COMPLETA_ARQUIVOS_MODIFICADOS.md)** ⭐ - 48 arquivos (10 min)
-
-### 🔧 Análise Engine AAA+
-- **[CONCLUSAO_ENGINE_AAA.md](./CONCLUSAO_ENGINE_AAA.md)** ⭐⭐ - Nível AAA alcançado!
-- **[JORNADA_COMPLETA_AAA.md](./JORNADA_COMPLETA_AAA.md)** ⭐ - Jornada completa
-- **[ANALISE_ENGINE_PENTE_FINO.md](./ANALISE_ENGINE_PENTE_FINO.md)** - Análise detalhada (21 problemas)
-- **[CORRECOES_ENGINE_COMPLETAS.md](./CORRECOES_ENGINE_COMPLETAS.md)** - Todas as correções
-
-### 📊 Análise SSOT Final
-- **[RESUMO_SSOT_FINAL.md](./RESUMO_SSOT_FINAL.md)** ⭐ - Resumo em 30 segundos
-- **[RESUMO_FINAL_30_SEGUNDOS.md](./RESUMO_FINAL_30_SEGUNDOS.md)** ⭐⭐⭐ - Resumo ultra-rápido
-- **[ANALISE_SSOT_FINAL_COMPLETA.md](./ANALISE_SSOT_FINAL_COMPLETA.md)** - Análise completa
-- **[CORRECOES_ENGINE_GAMES.md](./CORRECOES_ENGINE_GAMES.md)** - Correções da engine e jogos
-
-### 📊 Refatoração Anterior
-- **[REFACTORING_FINAL_SUMMARY.md](./REFACTORING_FINAL_SUMMARY.md)** - Resumo executivo
-- **[MELHORIAS_COMPLETAS.md](./MELHORIAS_COMPLETAS.md)** - Todas as melhorias
-- **[ANALISE_SSOT_COMPLETA.md](./ANALISE_SSOT_COMPLETA.md)** - Análise técnica inicial
-
-### 📖 Navegação e Guias
-- **[GUIA_NAVEGACAO.md](./GUIA_NAVEGACAO.md)** - Mapa da documentação
-- **[ARCHITECTURE_RECOMMENDATIONS.md](./ARCHITECTURE_RECOMMENDATIONS.md)** - Arquitetura e roadmap
-- [EXECUTIVE_SUMMARY.md](./EXECUTIVE_SUMMARY.md) - Visão geral e ROI
-- [REFACTORING_GUIDE.md](./REFACTORING_GUIDE.md) - Guia de refatoração
-- [DOCUMENTATION_INDEX.md](./DOCUMENTATION_INDEX.md) - Índice completo
-
-## 🎯 Conquistas Finais - Nível AAA+
-
-| Métrica | Antes | Depois | Melhoria |
-|---------|-------|--------|----------|
-| Configs Duplicados | 2 | 1 | ✅ 100% |
-| Constantes Duplicadas | 29+ | 0 | ✅ 100% |
-| Magic Numbers | 80+ | 0 | ✅ 100% |
-| Uso de `any` | 80+ | 5* | ✅ 94% |
-| Type Safety | 5/10 | 9/10 | ✅ +80% |
-| Código Limpo | 5/10 | 10/10 | ✅ +100% |
-| Manutenibilidade | 5/10 | 10/10 | ✅ +100% |
-| **SSOT Frontend** | **40%** | **100%** | ✅ **+150%** |
-| **SSOT Engine** | **50%** | **100%** | ✅ **+100%** |
-| **SSOT Presets** | **0%** | **100%** | ✅ **+100%** |
-| **SSOT Jogos** | **0%** | **100%** | ✅ **+100%** |
-| **SSOT Geral** | **40%** | **100%** | ✅ **+150%** |
-| **Arquivos Modificados** | **0** | **48** | ✅ **48** |
-| **Problemas Resolvidos** | **0** | **21** | ✅ **21** |
-| **Documentos Criados** | **0** | **36** | ✅ **36** |
-| **Nível Geral** | **A** | **AAA+** | ✅ **+3** |
-
-*5 usos de `any` restantes em validateRuntimeAgainstPlan.ts (validação complexa, aceitável)
-
-### 📊 Estatísticas Detalhadas
-
-- ✅ **62 constantes** centralizadas em `config.ts`
-- ✅ **75 usos de `any`** eliminados
-- ✅ **80+ magic numbers** eliminados
-- ✅ **48 arquivos** modificados em 5 fases
-- ✅ **21 problemas** identificados e resolvidos
-- ✅ **36 documentos** profissionais criados
-- ✅ **100% SSOT** alcançado
-- ✅ **0 erros TypeScript**
-- ✅ **0 itens pendentes**
-
-## Visao Geral
-
-- Frontend: React + TypeScript + Vite
-- Backend: Supabase Edge Functions
-- IA: gateway Lovable AI (`LOVABLE_API_KEY`)
-- Render: Canvas 2D e Three.js
-- Core: `src/lib/ordax` (normalizacao, lint, runtime, mutacoes de codigo)
-
-## Estrutura
-
-```text
-src/
-  components/        UI e Studio
-  lib/ordax/         core da engine e pipeline
-  pages/             rotas da aplicacao
-
-supabase/
-  functions/         Edge Functions (chat/planner/compiler)
-  migrations/        schema e politicas RLS
-
-games/               definicoes e docs dos jogos de exemplo
-contracts/           contratos de genero e validacoes
-```
-
-## Requisitos
-
-- Node.js 20+
-- npm 10+
-- Supabase CLI (para ambiente local)
-
-## Configuracao
-
-Crie um arquivo `.env.local`:
-
-```env
-VITE_SUPABASE_URL=http://localhost:54321
-VITE_SUPABASE_PUBLISHABLE_KEY=seu-anon-ou-publishable-key
-
-# Compat legado (opcional): VITE_SUPABASE_ANON_KEY
-# Se definido, tambem e aceito pelo cliente web.
-```
-
-Para Edge Functions (ambiente Supabase):
-
-```env
-LOVABLE_API_KEY=seu-token
-SUPABASE_URL=...
-SUPABASE_SERVICE_ROLE_KEY=...
-# Opcional para CORS restrito
-# CORS_ORIGINS=https://seu-dominio.com,https://app.seu-dominio.com
-```
-
-## Execucao Local
+### Instalação
 
 ```bash
+# Clonar repositório
+git clone [repository-url]
+cd projeto-ordax2
+
+# Instalar dependências
 npm install
-npx supabase start
+
+# Configurar variáveis de ambiente
+cp .env.example .env.local
+# Edite .env.local apenas com URL e chave publica do Supabase
+
+# Iniciar desenvolvimento
 npm run dev
 ```
 
-## Scripts
+### Testes
 
-- `npm run dev` inicia frontend
-- `npm run build` gera build de producao
-- `npm run lint` executa ESLint
-- `npm run test` executa testes Vitest
-- `npm run test:watch` executa testes em watch mode
+```bash
+# Testes unitários
+npm run test
 
-## Pipeline de Compilacao
+# Testes E2E
+npm run test:e2e
 
-Fluxo principal de novo jogo:
+# Cobertura
+npm run test:coverage
+```
 
-1. `interpretation`
-2. `plan`
-3. `validation`
-4. `confirmation`
-5. `compilation` (stream)
+## 📚 Documentação
 
-Transicoes sao validadas por FSM no backend (`supabase/functions/_shared/compiler-fsm.ts`).
+### Para Desenvolvedores
+- [Arquitetura](./docs/ARCHITECTURE.md) - Visão geral da arquitetura
+- [Getting Started](./docs/GETTING_STARTED.md) - Guia de início
+- [Migrations](./docs/MIGRATIONS.md) - Guia de migrations
+- [SSOT Rules](./docs/CURRENT_RULES.md) - Regras SSOT
+- [Supabase Secrets](./docs/SUPABASE_SECRETS.md) - Fluxo local canonico para secrets do Supabase
 
-## Seguranca e Banco
+### Para Gestores
+- [Geographic Foundation](./docs/GEOGRAPHIC_FOUNDATION.md) - Sistema territorial
+- [Data Modeling](./docs/DATA_MODELING.md) - Modelagem de dados
+- [Security](./SECURITY.md) - Políticas de segurança
 
-- RLS habilitado nas tabelas de projeto/arquivos/spec/chat/assets.
-- Funcoes Edge com verificacao JWT habilitada (`supabase/config.toml`).
-- Migracoes em `supabase/migrations` devem ser executadas em ordem temporal.
+### Auditorias e Relatórios
+- [Auditorias](./docs/audits/) - Auditorias técnicas
+- [Histórico](./docs/historico/) - Histórico de mudanças
 
-## Observacoes
+## 🏗️ Arquitetura
 
-- O projeto possui modo de edicao por patch semantico (code mutator) e modo de geracao de spec.
-- O fallback de geracao usa invocacao direta da function para maior resiliencia quando streaming falha.
+### Estrutura de Pastas
+
+```
+projeto-ordax2/
+├── src/
+│   ├── modules/          # Módulos por domínio
+│   │   ├── gastronomy/
+│   │   ├── mobility/
+│   │   ├── business/
+│   │   └── ...
+│   ├── core/             # Funcionalidades centrais
+│   ├── shared/           # Código compartilhado
+│   ├── features/         # Features cross-module
+│   └── pages/            # Páginas da aplicação
+├── supabase/
+│   ├── migrations/       # Migrations versionadas
+│   └── functions/        # Edge functions
+├── tests/                # Testes unitários
+├── e2e/                  # Testes end-to-end
+└── docs/                 # Documentação
+```
+
+### Tecnologias
+
+- **Frontend:** React 18, TypeScript, Vite
+- **UI:** TailwindCSS, Radix UI, Shadcn/ui
+- **Backend:** Supabase (PostgreSQL + Auth + Storage)
+- **Maps:** MapLibre GL
+- **Testes:** Vitest, Playwright
+- **Linting:** ESLint (custom rules para SSOT)
+
+## 🔒 Segurança
+
+- Row Level Security (RLS) em todas as tabelas
+- Autenticação via Supabase Auth
+- Validação de dados em múltiplas camadas
+- Auditoria de acessos administrativos
+
+## 📊 Status do Projeto
+
+### Módulos Implementados
+- ✅ Gastronomia (100%)
+- ✅ Classificados (100%)
+- ✅ Mobilidade (90%)
+- ✅ Business (95%)
+- ✅ Profissionais (95%)
+
+### Qualidade
+- ✅ Cobertura de testes: 75%+
+- ✅ SSOT compliance: 95%+
+- ✅ TypeScript strict mode
+- ✅ ESLint sem warnings
+
+## 🤝 Contribuindo
+
+1. Fork o projeto
+2. Crie uma branch (`git checkout -b feature/AmazingFeature`)
+3. Commit suas mudanças (`git commit -m 'Add AmazingFeature'`)
+4. Push para a branch (`git push origin feature/AmazingFeature`)
+5. Abra um Pull Request
+
+### Padrões de Código
+
+- Seguir princípios SSOT
+- TypeScript strict mode
+- Testes para novas features
+- Documentação atualizada
+
+## 📝 Licença
+
+Proprietary - Todos os direitos reservados
+
+## 👥 Time
+
+Desenvolvido com ❤️ pela equipe Ordax
+
+---
+
+**Versão:** 2.0.0  
+**Última atualização:** Abril 2026

@@ -1,0 +1,48 @@
+# Gitleaks configuration for detecting secrets
+# https://github.com/gitleaks/gitleaks
+
+title = "Gitleaks Config - Supabase Project"
+
+[extend]
+useDefault = true
+
+[[rules]]
+id = "supabase-service-role-key"
+description = "Supabase Service Role Key"
+regex = '''eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9\.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ii4{20,}Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSI'''
+tags = ["key", "supabase", "critical"]
+
+[[rules]]
+id = "postgresql-connection-string"
+description = "PostgreSQL connection string with password"
+regex = '''postgresql://[^:]+:[^@]+@[^/]+'''
+tags = ["database", "connection-string", "critical"]
+
+[[rules]]
+id = "supabase-anon-key-hardcoded"
+description = "Supabase Anon Key hardcoded in scripts"
+regex = '''(const|let|var)\s+\w+\s*=\s*['"]eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9\.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ii4{20,}Iiwicm9sZSI6ImFub24i'''
+tags = ["key", "supabase", "medium"]
+
+[[rules]]
+id = "generic-api-key"
+description = "Generic API Key"
+regex = '''(?i)(api[_-]?key|apikey|api[_-]?secret)\s*[:=]\s*['"][a-zA-Z0-9_\-]{20,}['"]'''
+tags = ["key", "api"]
+
+[allowlist]
+description = "Allowlist for false positives"
+paths = [
+    '''^\.env\.example$''',
+    '''^\.env\.remote\.example$''',
+    '''\.md$''',
+    '''gitleaks\.toml$''',
+]
+
+regexes = [
+    '''your_.*_key_here''',
+    '''\[YOUR.*\]''',
+    '''\[PASSWORD\]''',
+    '''example\.com''',
+    '''PROJECT_REF''',
+]

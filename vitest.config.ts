@@ -1,16 +1,40 @@
-import { defineConfig } from "vitest/config";
-import react from "@vitejs/plugin-react-swc";
-import path from "path";
+import { defineConfig } from 'vitest/config';
+import { resolve } from 'path';
+import { loadEnv } from 'vite';
 
-export default defineConfig({
-  plugins: [react()],
+export default defineConfig(({ mode }) => ({
   test: {
-    environment: "jsdom",
     globals: true,
-    setupFiles: ["./src/test/setup.ts"],
-    include: ["src/**/*.{test,spec}.{ts,tsx}"],
+    environment: 'jsdom',
+    setupFiles: ['./src/test/setup.ts'],
+    // Suite operacional compartilha fixtures remotas e não é segura em paralelo por arquivo.
+    fileParallelism: false,
+    testTimeout: 120000, // 2 minutos para testes operacionais (Gate 6/7 com auto-dispatch)
+    hookTimeout: 30000,
+    env: loadEnv(mode, process.cwd(), ''),
+    coverage: {
+      provider: 'v8',
+      reporter: ['text', 'json', 'html'],
+      exclude: [
+        'node_modules/',
+        'src/test/',
+        '**/*.d.ts',
+        '**/*.config.*',
+        '**/dist/**',
+      ],
+      thresholds: {
+        global: {
+          branches: 80,
+          functions: 80,
+          lines: 80,
+          statements: 80,
+        },
+      },
+    },
   },
   resolve: {
-    alias: { "@": path.resolve(__dirname, "./src") },
+    alias: {
+      '@': resolve(__dirname, './src'),
+    },
   },
-});
+}));

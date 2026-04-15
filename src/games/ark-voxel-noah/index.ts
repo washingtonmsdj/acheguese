@@ -1,1 +1,0 @@
-export { buildArkVoxelNoahSpec } from "./spec";

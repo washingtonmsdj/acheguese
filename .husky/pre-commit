@@ -1,0 +1,26 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+# Check for secrets before commit
+echo "🔒 Checking for secrets..."
+
+# Check if gitleaks is installed
+if command -v gitleaks >/dev/null 2>&1; then
+    gitleaks protect --staged --verbose
+    if [ $? -ne 0 ]; then
+        echo "❌ Secrets detected! Commit blocked."
+        echo "   Remove secrets from staged files or add to allowlist in .gitleaks.toml"
+        exit 1
+    fi
+    echo "✅ No secrets detected"
+else
+    echo "⚠️  gitleaks not installed - skipping secret detection"
+    echo "   Install: https://github.com/gitleaks/gitleaks#installing"
+fi
+
+# Check SSOT compliance
+sh .husky/check-ssot
+
+# Run lint-staged for code quality
+echo "🔍 Running lint-staged..."
+npx lint-staged

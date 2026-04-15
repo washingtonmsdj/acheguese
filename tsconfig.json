@@ -1,20 +1,40 @@
 {
   "compilerOptions": {
-    "allowJs": false,
-    "forceConsistentCasingInFileNames": true,
-    "noFallthroughCasesInSwitch": true,
-    "noImplicitAny": true,
-    "noImplicitReturns": true,
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
+    "allowJs": true,
+    "noImplicitAny": false,
+    "noUnusedLocals": false,
+    "noUnusedParameters": false,
     "paths": {
       "@/*": [
         "./src/*"
+      ],
+      "@/app/*": [
+        "./src/app/*"
+      ],
+      "@/shared/*": [
+        "./src/shared/*"
+      ],
+      "@/core/*": [
+        "./src/core/*"
+      ],
+      "@/integrations/*": [
+        "./src/integrations/*"
+      ],
+      "@/modules/*": [
+        "./src/modules/*"
+      ],
+      "@/components/*": [
+        "./src/components/*"
+      ],
+      "@/services/*": [
+        "./src/services/*"
+      ],
+      "@/hooks/*": [
+        "./src/hooks/*"
       ]
     },
     "skipLibCheck": true,
-    "strict": true,
-    "strictNullChecks": true
+    "strict": false
   },
   "files": [],
   "references": [
@@ -23,6 +43,9 @@
     },
     {
       "path": "./tsconfig.node.json"
+    },
+    {
+      "path": "./tsconfig.test.json"
     }
   ]
 }

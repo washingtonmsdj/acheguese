@@ -1,8 +1,0 @@
-{
-  "version": "1.0",
-  "genre": "shooter",
-  "description": "Contrato canônico para jogos de tiro",
-  "requiredEntities": ["player", "enemy"],
-  "requiredSystems": ["PhysicsSystem", "CollisionSystem", "AISystem"],
-  "userMessage": "Para um jogo de tiro, o mínimo esperado é:\n🎯 jogador\n👾 inimigos\n🔫 sistema de tiros\n⚙️ física e colisão\n🤖 IA dos inimigos"
-}

@@ -3,11 +3,7 @@
     "allowImportingTsExtensions": true,
     "isolatedModules": true,
     "jsx": "react-jsx",
-    "lib": [
-      "ES2020",
-      "DOM",
-      "DOM.Iterable"
-    ],
+    "lib": ["ES2020", "DOM", "DOM.Iterable"],
     "module": "ESNext",
     "moduleDetection": "force",
     "moduleResolution": "bundler",
@@ -17,19 +13,27 @@
     "noUnusedLocals": false,
     "noUnusedParameters": false,
     "paths": {
-      "@/*": [
-        "./src/*"
-      ]
+      "@/*": ["./src/*"],
+      "@/app/*": ["./src/app/*"],
+      "@/shared/*": ["./src/shared/*"],
+      "@/core/*": ["./src/core/*"],
+      "@/integrations/*": ["./src/integrations/*"],
+      "@/modules/*": ["./src/modules/*"],
+      "@/components/*": ["./src/components/*"],
+      "@/services/*": ["./src/services/*"],
+      "@/hooks/*": ["./src/hooks/*"]
     },
     "skipLibCheck": true,
     "strict": false,
     "target": "ES2020",
-    "types": [
-      "vitest/globals"
-    ],
+    "types": ["vitest/globals"],
     "useDefineForClassFields": true
   },
-  "include": [
-    "src"
+  "include": ["src", ".archive/PerfilHubPage.original.tsx"],
+  "exclude": [
+    "src/integrations/supabase/types.ts",
+    "src/**/*.test.ts",
+    "src/**/*.test.tsx",
+    "src/**/__tests__/**"
   ]
 }

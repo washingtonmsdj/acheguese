@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Check Auth</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+  <h1>Verificação de Autenticação</h1>
+  <div id="result"></div>
+  
+  <script>
+    const supabaseClient = window.supabase.createClient(
+      'https://zaefshyjouzvjunygjsr.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InphZWZzaHlqb3V6dmp1bnlnanNyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMxMDIxNjcsImV4cCI6MjA4ODY3ODE2N30.qXVOf-4FGEh_Eifo4QBXvmSnSfBgfh-nDA'
+    );
+
+    async function check() {
+      const result = document.getElementById('result');
+      
+      // Verificar usuário
+      const { data: { user }, error: userError } = await supabaseClient.auth.getUser();
+      
+      if (userError || !user) {
+        result.innerHTML = '<p style="color: red;">❌ Não está logado</p>';
+        return;
+      }
+      
+      result.innerHTML = `<p style="color: green;">✅ Logado como: ${user.email}</p>`;
+      result.innerHTML += `<p>User ID: ${user.id}</p>`;
+      
+      // Verificar roles
+      const { data: roles, error: rolesError } = await supabaseClient
+        .from('user_roles')
+        .select('*')
+        .eq('user_id', user.id);
+      
+      if (rolesError) {
+        result.innerHTML += `<p style="color: red;">❌ Erro ao buscar roles: ${rolesError.message}</p>`;
+      } else {
+        result.innerHTML += `<p>Roles: <pre>${JSON.stringify(roles, null, 2)}</pre></p>`;
+      }
+    }
+    
+    check();
+  </script>
+</body>
+</html>

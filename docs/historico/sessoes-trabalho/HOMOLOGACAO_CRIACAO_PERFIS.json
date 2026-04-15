@@ -1,0 +1,173 @@
+{
+  "data": "2026-03-28T02:15:58.596Z",
+  "usuario_teste": {
+    "userId": "7f48bfd2-d0af-43d6-8bf4-7152403ea2fe",
+    "email": "teste-1774664155327@example.com"
+  },
+  "testes": [
+    {
+      "nome": "TESTE 1: Criar perfil personal",
+      "acao": "create_profile_with_extension",
+      "payload": {
+        "p_profile_type": "personal",
+        "p_handle": "teste-personal-1774664156392",
+        "p_display_name": "Teste Personal",
+        "p_extension_data": {}
+      },
+      "esperado": "Perfil personal criado com sucesso",
+      "obtido": "SUCESSO: ID [object Object]",
+      "passou": {
+        "handle": "teste-personal-1774664156392",
+        "success": true,
+        "profile_id": "6a0fb6d6-8cc0-42c9-b59b-dc38b1bb13a8"
+      },
+      "evidencia": {
+        "data": {
+          "handle": "teste-personal-1774664156392",
+          "success": true,
+          "profile_id": "6a0fb6d6-8cc0-42c9-b59b-dc38b1bb13a8"
+        }
+      }
+    },
+    {
+      "nome": "TESTE 2: Criar perfil business com extensão",
+      "acao": "create_profile_with_extension",
+      "payload": {
+        "p_profile_type": "business",
+        "p_handle": "teste-business-1774664156902",
+        "p_display_name": "Teste Business",
+        "p_extension_data": {
+          "legal_name": "Empresa Teste LTDA",
+          "cnpj": "12345678000190",
+          "company_type": "ltda",
+          "industry": "Tecnologia"
+        }
+      },
+      "esperado": "Perfil business criado com extensão business_data",
+      "obtido": "SUCESSO: ID [object Object]",
+      "passou": {
+        "handle": "teste-business-1774664156902",
+        "success": true,
+        "profile_id": "e5792c41-7430-4846-a017-9caa66628ba8"
+      },
+      "evidencia": {
+        "data": {
+          "handle": "teste-business-1774664156902",
+          "success": true,
+          "profile_id": "e5792c41-7430-4846-a017-9caa66628ba8"
+        }
+      }
+    },
+    {
+      "nome": "TESTE 3: Criar perfil professional com extensão",
+      "acao": "create_profile_with_extension",
+      "payload": {
+        "p_profile_type": "professional",
+        "p_handle": "teste-prof-1774664157225",
+        "p_display_name": "Teste Professional",
+        "p_extension_data": {
+          "profession": "Médico",
+          "specialties": "Cardiologia,Clínica Geral",
+          "years_experience": 10
+        }
+      },
+      "esperado": "Perfil professional criado com extensão professional_data",
+      "obtido": "SUCESSO: ID [object Object]",
+      "passou": {
+        "handle": "teste-prof-1774664157225",
+        "success": true,
+        "profile_id": "a857de3e-d258-4805-a10c-85c32a0ed570"
+      },
+      "evidencia": {
+        "data": {
+          "handle": "teste-prof-1774664157225",
+          "success": true,
+          "profile_id": "a857de3e-d258-4805-a10c-85c32a0ed570"
+        }
+      }
+    },
+    {
+      "nome": "TESTE 4: Criar perfil driver com extensão",
+      "acao": "create_profile_with_extension",
+      "payload": {
+        "p_profile_type": "driver",
+        "p_handle": "teste-driver-1774664157560",
+        "p_display_name": "Teste Driver",
+        "p_extension_data": {
+          "license_number": "ABC123456",
+          "license_category": "B",
+          "license_expiry": "2028-12-31",
+          "license_state": "SP",
+          "vehicle_type": "car",
+          "vehicle_model": "Honda Civic 2020",
+          "vehicle_plate": "ABC-1234"
+        }
+      },
+      "esperado": "Perfil driver criado com extensão driver_data",
+      "obtido": "SUCESSO: ID [object Object]",
+      "passou": {
+        "handle": "teste-driver-1774664157560",
+        "success": true,
+        "profile_id": "4364366a-2b46-4b6a-b6fb-909bba6c6e6d"
+      },
+      "evidencia": {
+        "data": {
+          "handle": "teste-driver-1774664157560",
+          "success": true,
+          "profile_id": "4364366a-2b46-4b6a-b6fb-909bba6c6e6d"
+        }
+      }
+    },
+    {
+      "nome": "TESTE 5: Tentar criar segundo personal (deve falhar)",
+      "acao": "create_profile_with_extension",
+      "payload": {
+        "p_profile_type": "personal",
+        "p_handle": "teste-personal2-1774664157905",
+        "p_display_name": "Teste Personal 2",
+        "p_extension_data": {}
+      },
+      "esperado": "ERRO: Usuário já possui perfil personal",
+      "obtido": "ERRO RPC: User already has a personal profile",
+      "passou": true,
+      "evidencia": {
+        "data": {
+          "error": "User already has a personal profile",
+          "success": false
+        }
+      }
+    },
+    {
+      "nome": "TESTE 6: Tentar criar segundo driver (deve falhar)",
+      "acao": "create_profile_with_extension",
+      "payload": {
+        "p_profile_type": "driver",
+        "p_handle": "teste-driver2-1774664158228",
+        "p_display_name": "Teste Driver 2",
+        "p_extension_data": {
+          "license_number": "XYZ789012",
+          "license_category": "B",
+          "license_expiry": "2028-12-31",
+          "license_state": "RJ",
+          "vehicle_type": "car",
+          "vehicle_model": "Toyota Corolla 2021",
+          "vehicle_plate": "XYZ-5678"
+        }
+      },
+      "esperado": "ERRO: Usuário já possui perfil driver",
+      "obtido": "ERRO RPC: User already has a driver profile",
+      "passou": true,
+      "evidencia": {
+        "data": {
+          "error": "User already has a driver profile",
+          "success": false
+        }
+      }
+    }
+  ],
+  "resumo": {
+    "total": 6,
+    "passou": 6,
+    "falhou": 0
+  }
+}

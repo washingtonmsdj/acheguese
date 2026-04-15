@@ -1,0 +1,80 @@
+{
+  "data": "2026-03-28T02:48:18.508Z",
+  "ambiente": "Supabase Remote",
+  "descricao": "Validação da rota pública /p/:handle com perfil público e privado",
+  "total_testes": 2,
+  "passou": 2,
+  "falhou": 0,
+  "testes": [
+    {
+      "numero": 1,
+      "nome": "Perfil público renderiza",
+      "handle": "route-test-1774666096200",
+      "esperado": "Perfil encontrado e renderizado",
+      "obtido": {
+        "id": "76d4c7b8-7db5-4fd3-b246-2009f0ebb835",
+        "handle": "route-test-1774666096200",
+        "display_name": "Teste Rota Pública",
+        "profile_type": "business"
+      },
+      "status": "PASSOU",
+      "evidencia": {
+        "rota": "/p/route-test-1774666096200",
+        "metodo": "GET (simulado via public_profiles view)",
+        "response": {
+          "found": true,
+          "profile": {
+            "id": "76d4c7b8-7db5-4fd3-b246-2009f0ebb835",
+            "profile_type": "business",
+            "handle": "route-test-1774666096200",
+            "display_name": "Teste Rota Pública",
+            "avatar_url": null,
+            "bio": null,
+            "location": null,
+            "city": null,
+            "state": null,
+            "country": "BR",
+            "website": null,
+            "verified": false,
+            "reputation_score": 0,
+            "created_at": "2026-03-28T02:48:17.544646+00:00",
+            "contact_email": null,
+            "phone": null,
+            "legal_name": "Empresa Teste LTDA",
+            "company_type": "ltda",
+            "industry": null,
+            "employee_count": null,
+            "founded_year": null,
+            "business_city": null,
+            "business_state": null,
+            "business_hours": null
+          },
+          "error": null
+        }
+      }
+    },
+    {
+      "numero": 2,
+      "nome": "Perfil privado retorna 404",
+      "handle": "route-test-1774666096200",
+      "esperado": "null (404)",
+      "obtido": null,
+      "status": "PASSOU",
+      "evidencia": {
+        "rota": "/p/route-test-1774666096200",
+        "metodo": "GET (simulado via public_profiles view)",
+        "is_public": false,
+        "response": {
+          "found": false,
+          "profile": null,
+          "error": {
+            "code": "PGRST116",
+            "details": "The result contains 0 rows",
+            "hint": null,
+            "message": "Cannot coerce the result to a single JSON object"
+          }
+        }
+      }
+    }
+  ]
+}

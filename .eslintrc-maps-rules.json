@@ -1,0 +1,68 @@
+{
+  "rules": {
+    "no-restricted-imports": [
+      "error",
+      {
+        "patterns": [
+          {
+            "group": ["**/integrations/maps/providers/*"],
+            "message": "❌ PROIBIDO: Não importe providers diretamente. Use providerRegistry de @/core/maps"
+          },
+          {
+            "group": ["@/integrations/supabase/client"],
+            "importNames": ["supabase"],
+            "message": "❌ PROIBIDO: Não use Supabase diretamente em componentes de mapa. Use services de @/core/maps"
+          }
+        ],
+        "paths": [
+          {
+            "name": "@/integrations/maps/providers/OSMTileProvider",
+            "message": "❌ PROIBIDO: Não importe OSMTileProvider diretamente. Use providerRegistry.getTileProvider()"
+          },
+          {
+            "name": "@/integrations/maps/providers/NominatimGeocodingProvider",
+            "message": "❌ PROIBIDO: Não importe NominatimGeocodingProvider diretamente. Use providerRegistry.getGeocodingProvider()"
+          },
+          {
+            "name": "@/integrations/maps/providers/MockRoutingProvider",
+            "message": "❌ PROIBIDO: Não importe MockRoutingProvider diretamente. Use providerRegistry.getRoutingProvider()"
+          }
+        ]
+      }
+    ]
+  },
+  "overrides": [
+    {
+      "files": ["src/modules/**/*", "src/app/**/*", "src/shared/components/**/*"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "group": ["**/integrations/maps/**"],
+                "message": "❌ PROIBIDO: Módulos não podem importar de integrations/maps. Use @/core/maps"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": ["src/integrations/maps/**/*"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "group": ["**/modules/**"],
+                "message": "❌ PROIBIDO: integrations/maps não pode importar de modules. Mantenha separação de camadas"
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

@@ -1,14 +1,29 @@
-User-agent: Googlebot
-Allow: /
-
-User-agent: Bingbot
-Allow: /
-
-User-agent: Twitterbot
-Allow: /
-
-User-agent: facebookexternalhit
-Allow: /
+# robots.txt para Achegue-se
+# Gerado automaticamente
 
 User-agent: *
 Allow: /
+
+# Sitemap
+Sitemap: https://achegue-se.com/sitemap.xml
+
+# Disallow admin e auth pages
+Disallow: /admin/
+Disallow: /auth/
+Disallow: /api/
+
+# Disallow user-specific pages
+Disallow: /perfil/editar
+Disallow: /perfil/configuracoes
+Disallow: /mensagens/
+
+# Allow territorial pages (SEO priority)
+Allow: /ba/
+Allow: /empresas/
+Allow: /servicos/
+Allow: /classificados/
+Allow: /comunidade/
+Allow: /mobilidade/
+
+# Crawl-delay for respectful crawling
+Crawl-delay: 1

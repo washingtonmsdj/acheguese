@@ -1,0 +1,41 @@
+{
+  "data": "2026-03-28T01:43:08.372Z",
+  "views_publicas": 5,
+  "perfis": {
+    "personal": {
+      "total": 16,
+      "publicos": 16,
+      "ativos": 16
+    },
+    "driver": {
+      "total": 12,
+      "publicos": 12,
+      "ativos": 12
+    },
+    "professional": {
+      "total": 11,
+      "publicos": 11,
+      "ativos": 11
+    },
+    "business": {
+      "total": 14,
+      "publicos": 14,
+      "ativos": 14
+    }
+  },
+  "extensoes": {
+    "business": 0,
+    "professional": 0,
+    "driver": 0
+  },
+  "members": {
+    "owner": 25,
+    "member": 2
+  },
+  "links": {
+    "partner": {
+      "total": 1,
+      "publicos": 1
+    }
+  }
+}

@@ -1,0 +1,198 @@
+name: SSOT Territorial Tests
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - 'src/modules/guide/**'
+      - 'src/core/location/**'
+      - 'src/core/routing/**'
+      - 'tests/**'
+      - 'supabase/migrations/**'
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - 'src/modules/guide/**'
+      - 'src/core/location/**'
+      - 'src/core/routing/**'
+      - 'tests/**'
+      - 'supabase/migrations/**'
+
+jobs:
+  runtime-tests:
+    name: Runtime Tests (Vitest)
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Run SSOT Runtime Tests
+        run: npm run test:ssot
+        env:
+          CI: true
+      
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: runtime-test-results
+          path: test-results/
+          retention-days: 7
+
+  e2e-tests:
+    name: E2E Tests (Playwright)
+    runs-on: ubuntu-latest
+    
+    services:
+      postgres:
+        image: supabase/postgres:15.1.0.117
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: postgres
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Install Playwright Browsers
+        run: npx playwright install --with-deps chromium
+      
+      - name: Setup Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: latest
+      
+      - name: Start Supabase (local)
+        run: |
+          supabase start
+          supabase db reset
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      
+      - name: Run migrations
+        run: supabase db push
+      
+      - name: Build application
+        run: npm run build
+        env:
+          NODE_ENV: production
+      
+      - name: Start dev server
+        run: npm run dev &
+        env:
+          VITE_SUPABASE_URL: http://localhost:54321
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+      
+      - name: Wait for server
+        run: npx wait-on http://localhost:8081 --timeout 60000
+      
+      - name: Run E2E Tests
+        run: npx playwright test tests/e2e/tourist-points.spec.ts
+        env:
+          CI: true
+      
+      - name: Upload Playwright Report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 7
+      
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-test-results
+          path: test-results/
+          retention-days: 7
+
+  regression-check:
+    name: Regression Check
+    runs-on: ubuntu-latest
+    needs: [runtime-tests, e2e-tests]
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Run Regression Tests
+        run: npm run test:regression
+        env:
+          CI: true
+      
+      - name: Check for URL manual construction
+        run: |
+          echo "Checking for manual URL construction..."
+          if grep -r "'/pontos-turisticos/'" src/modules/guide --exclude-dir=__mocks__ --exclude="*.test.ts" --exclude="*.spec.ts"; then
+            echo "❌ Found manual URL construction! Use buildTouristPointDetailUrl instead."
+            exit 1
+          fi
+          echo "✅ No manual URL construction found"
+      
+      - name: Check for legacy field usage
+        run: |
+          echo "Checking for legacy field usage..."
+          if grep -r "point\.neighborhood" src/modules/guide --exclude-dir=__mocks__ --exclude="*.test.ts" --exclude="*.spec.ts" | grep -v "point\.location?.name ?? point\.neighborhood"; then
+            echo "❌ Found direct usage of legacy field 'neighborhood'! Use point.location?.name instead."
+            exit 1
+          fi
+          echo "✅ No legacy field usage found"
+      
+      - name: Check for invalid filters
+        run: |
+          echo "Checking for invalid territorial filters..."
+          if grep -r "\.eq('state'" src/modules/guide --exclude-dir=__mocks__ --exclude="*.test.ts" --exclude="*.spec.ts"; then
+            echo "❌ Found invalid territorial filter! Use location_id with TerritoryFilter instead."
+            exit 1
+          fi
+          echo "✅ No invalid filters found"
+
+  status-check:
+    name: All Tests Passed
+    runs-on: ubuntu-latest
+    needs: [runtime-tests, e2e-tests, regression-check]
+    if: always()
+    
+    steps:
+      - name: Check test results
+        run: |
+          if [ "${{ needs.runtime-tests.result }}" != "success" ] || \
+             [ "${{ needs.e2e-tests.result }}" != "success" ] || \
+             [ "${{ needs.regression-check.result }}" != "success" ]; then
+            echo "❌ Some tests failed"
+            exit 1
+          fi
+          echo "✅ All tests passed"

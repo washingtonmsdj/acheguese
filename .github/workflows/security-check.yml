@@ -1,0 +1,148 @@
+name: Security Check
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  security-validation:
+    name: Validate No Hardcoded Credentials
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Run security validation
+        run: npm run security:validate
+      
+      - name: Check for .env.local in commits
+        run: |
+          if git ls-files | grep -q "\.env\.local"; then
+            echo "❌ Error: .env.local file found in repository!"
+            echo "This file should be in .gitignore and never committed."
+            exit 1
+          fi
+          echo "✅ No .env.local file found in repository"
+      
+      - name: Validate .gitignore
+        run: |
+          if ! grep -q "\.env\.local" .gitignore; then
+            echo "❌ Error: .env.local not found in .gitignore!"
+            exit 1
+          fi
+          echo "✅ .env.local is properly ignored"
+
+  lint-and-typecheck:
+    name: Lint and Type Check
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Run ESLint
+        run: npm run lint
+      
+      - name: Run TypeScript type check
+        run: npm run typecheck
+
+  maps-architecture-enforcement:
+    name: Maps Architecture Enforcement
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Validate Maps Blindagem - Test Violation 1
+        run: |
+          echo "🧪 Testing direct provider import detection..."
+          if npx eslint src/test-maps-violation-1.ts; then
+            echo "❌ FALHOU: Violação 1 não foi detectada!"
+            exit 1
+          else
+            echo "✅ PASSOU: Violação 1 detectada corretamente"
+          fi
+      
+      - name: Validate Maps Blindagem - Test Violation 2
+        run: |
+          echo "🧪 Testing cross-layer import detection..."
+          if npx eslint src/modules/test-maps-violation-2.ts; then
+            echo "❌ FALHOU: Violação 2 não foi detectada!"
+            exit 1
+          else
+            echo "✅ PASSOU: Violação 2 detectada corretamente"
+          fi
+      
+      - name: Validate Maps Blindagem - Setup Exception
+        run: |
+          echo "🧪 Testing setup.ts exception..."
+          if ! npx eslint src/integrations/maps/setup.ts; then
+            echo "❌ FALHOU: setup.ts foi bloqueado incorretamente!"
+            exit 1
+          else
+            echo "✅ PASSOU: setup.ts exception funciona corretamente"
+          fi
+      
+      - name: Full Maps Architecture Check
+        run: |
+          echo "🔍 Verificando toda a arquitetura de maps..."
+          npx eslint "src/core/maps/**/*.{ts,tsx}" "src/integrations/maps/**/*.{ts,tsx}"
+
+  test:
+    name: Run Tests
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Run unit tests
+        run: npm run test
+      
+      - name: Upload coverage reports
+        uses: codecov/codecov-action@v4
+        if: always()
+        with:
+          files: ./coverage/coverage-final.json
+          flags: unittests
+          name: codecov-umbrella
