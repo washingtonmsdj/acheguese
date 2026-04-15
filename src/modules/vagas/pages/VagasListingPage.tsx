@@ -22,7 +22,8 @@ import { Input } from "@/shared/components/ui/input";
 import { useAppUrls } from "@/core/routing/hooks/useAppUrls";
 import { useAuth } from "@/core/auth/hooks/useAuth";
 import { useVagas } from "../hooks/useVagas";
-import { VagaCard } from "../components/VagaCard";
+import { VagaCardEnhanced } from "../components/VagaCardEnhanced";
+import { useVagasLocation } from "../hooks/useVagasLocation";
 import { VagasFilters } from "../components/VagasFilters";
 import { VagasLoading, VagasEmpty, VagasError } from "../components/VagasStates";
 import type { ResolvedTerritory } from "@/core/routing/hooks/useResolveTerritoryFromUrl";
@@ -64,6 +65,7 @@ export default function VagasListingPage({ resolved, activeMemberIds }: VagasLis
   const navigate = useNavigate();
   const { user } = useAuth();
   const appUrls = useAppUrls(resolved);
+  const { activeLocationName } = useVagasLocation();
 
   // ✅ Extrair nome do território resolvido com preposição adequada
   const territoryName = useMemo(() => {
@@ -167,7 +169,14 @@ export default function VagasListingPage({ resolved, activeMemberIds }: VagasLis
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {urgentVagas.slice(0, 3).map((vaga, i) => (
-                <VagaCard key={vaga.id} vaga={vaga} index={i} onClick={() => handleVagaClick(vaga.id)} compact />
+                <VagaCardEnhanced 
+                  key={vaga.id} 
+                  vaga={vaga} 
+                  variant="compact"
+                  index={i} 
+                  onClick={() => handleVagaClick(vaga.id)}
+                  locationName={activeLocationName}
+                />
               ))}
             </div>
           </div>
@@ -211,7 +220,14 @@ export default function VagasListingPage({ resolved, activeMemberIds }: VagasLis
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {filteredVagas.map((vaga, i) => (
-              <VagaCard key={vaga.id} vaga={vaga} index={i} onClick={() => handleVagaClick(vaga.id)} />
+              <VagaCardEnhanced 
+                key={vaga.id} 
+                vaga={vaga} 
+                variant="list"
+                index={i} 
+                onClick={() => handleVagaClick(vaga.id)}
+                locationName={activeLocationName}
+              />
             ))}
           </div>
         )}
@@ -227,7 +243,14 @@ export default function VagasListingPage({ resolved, activeMemberIds }: VagasLis
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {featuredVagas.map((vaga, i) => (
-                <VagaCard key={vaga.id} vaga={vaga} index={i} onClick={() => handleVagaClick(vaga.id)} compact />
+                <VagaCardEnhanced 
+                  key={vaga.id} 
+                  vaga={vaga} 
+                  variant="compact"
+                  index={i} 
+                  onClick={() => handleVagaClick(vaga.id)}
+                  locationName={activeLocationName}
+                />
               ))}
             </div>
           </div>

@@ -7,6 +7,7 @@ import React from "react";
 
 import { Star, MapPin, Clock, CheckCircle2 } from "lucide-react";
 import { Badge } from "@/shared/components/ui/badge";
+import { BusinessLogo } from "@/shared/components/ui/business-logo";
 import type { Business } from "@/shared/types/business";
 
 interface StandaloneHeroProps {
@@ -33,11 +34,14 @@ export default function StandaloneHero({ business }: StandaloneHeroProps) {
           <div className="flex flex-col md:flex-row gap-6 items-start">
             {/* Logo */}
             <div className="shrink-0">
-              <img
-                src={business.logo_url || "/placeholder.svg"}
-                alt={business.name}
-                className="w-24 h-24 md:w-32 md:h-32 rounded-2xl object-cover border-4 border-background shadow-lg"
-              />
+              <div className="w-24 h-24 md:w-32 md:h-32 rounded-2xl border-4 border-background shadow-lg overflow-hidden">
+                <BusinessLogo
+                  name={business.name}
+                  logoUrl={business.logo_url}
+                  alt={business.name}
+                  initialsClassName="text-4xl md:text-5xl"
+                />
+              </div>
             </div>
 
             {/* Informações */}

@@ -10,6 +10,7 @@ import { Link } from 'react-router-dom';
 import { Star, Truck, UtensilsCrossed } from 'lucide-react';
 
 import { Badge } from '@/shared/components/ui/badge';
+import { BusinessLogo } from '@/shared/components/ui/business-logo';
 import { normalizePublicTerritoryPath } from '@/core/routing/utils/territoryUrls';
 import { getCuisineLabel } from '../constants';
 import type { FavoriteBusiness } from '../services/favorites.queries';
@@ -29,7 +30,7 @@ export function FavoriteBusinessCard({ favorite: fav }: FavoriteBusinessCardProp
 
   const card = (
     <div className="group flex h-full flex-col overflow-hidden rounded-xl border border-border/50 bg-card transition-all duration-300 hover:border-primary/30 hover:shadow-xl">
-      {/* Banner */}
+      {/* Banner com logo sobreposta */}
       <div className="relative aspect-[16/10] overflow-hidden bg-secondary/50">
         {fav.business_banner_url ? (
           <img
@@ -44,6 +45,16 @@ export function FavoriteBusinessCard({ favorite: fav }: FavoriteBusinessCardProp
             <UtensilsCrossed className="h-12 w-12 text-muted-foreground" />
           </div>
         )}
+
+        {/* Logo sobreposta no canto inferior esquerdo */}
+        <div className="absolute bottom-3 left-3 h-16 w-16 overflow-hidden rounded-lg border-2 border-background shadow-lg">
+          <BusinessLogo
+            name={fav.business_name}
+            logoUrl={fav.business_logo_url}
+            alt={fav.business_name}
+            initialsClassName="text-xl"
+          />
+        </div>
 
         {fav.price_range && (
           <div className="absolute right-3 top-3">

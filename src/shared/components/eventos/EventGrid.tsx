@@ -18,7 +18,7 @@
 import { memo, useRef, useEffect } from "react";
 import { Loader2 } from "lucide-react";
 import { Skeleton } from "@/shared/components/ui/skeleton";
-import { EventCard } from "./EventCard";
+import { EventCardEnhanced } from "./EventCardEnhanced";
 import type { Event } from "@/core/events";
 
 interface EventGridProps {
@@ -89,9 +89,10 @@ export const EventGrid = memo(function EventGrid({
   return (
     <div className="flex flex-col gap-3">
       {eventos.map((evento, index) => (
-        <EventCard
+        <EventCardEnhanced
           key={evento.id}
           evento={evento}
+          variant="list"
           index={index}
           onClick={() => onEventClick(evento)}
         />

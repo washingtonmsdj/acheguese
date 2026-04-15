@@ -19,6 +19,7 @@ export interface FavoriteBusiness {
   business_name: string;
   business_slug: string;
   business_description: string | null;
+  business_logo_url: string | null;
   business_banner_url: string | null;
   business_rating: number;
   business_total_reviews: number;

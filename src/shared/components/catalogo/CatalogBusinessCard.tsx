@@ -4,6 +4,7 @@ import { Copy } from "lucide-react";
 import { toast } from "sonner";
 import { Badge } from "@/shared/components/ui/badge";
 import { Button } from "@/shared/components/ui/button";
+import { BusinessLogo } from "@/shared/components/ui/business-logo";
 import { cn } from "@/shared/utils/cn";
 interface Biz {
   name: string;
@@ -34,16 +35,12 @@ export default function CatalogBusinessCard({ biz }: { biz: Biz }) {
       <div className={cn("p-4", biz.capa ? "-mt-10" : "")}>
         <div className="flex items-start gap-3">
           <div className="h-14 w-14 rounded-2xl bg-card border overflow-hidden shrink-0">
-            {biz.logo ? (
-              <img
-                src={biz.logo}
-                alt={`Logo de ${biz.name}`}
-                className="h-full w-full object-cover"
-                loading="lazy"
-              />
-            ) : (
-              <div className="h-full w-full bg-secondary" />
-            )}
+            <BusinessLogo
+              name={biz.name}
+              logoUrl={biz.logo}
+              alt={`Logo de ${biz.name}`}
+              initialsClassName="text-2xl"
+            />
           </div>
           <div className="min-w-0 flex-1">
             <h1 className="text-lg font-bold font-display truncate">

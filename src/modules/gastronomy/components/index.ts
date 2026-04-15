@@ -4,7 +4,8 @@
 
 export { GastronomyHero } from './GastronomyHero';
 export { GastronomyFilters } from './GastronomyFilters';
-export { GastronomyBusinessCardEnhanced } from './GastronomyBusinessCardEnhanced';
+export { GastronomyCard } from './GastronomyCard';
+export { GastronomyCard as GastronomyBusinessCardEnhanced } from './GastronomyCard'; // Alias para compatibilidade
 export { GastronomyCategoryCards } from './GastronomyCategoryCards';
 export { GastronomyCTA } from './GastronomyCTA';
 export { FoodItemCard } from './FoodItemCard';

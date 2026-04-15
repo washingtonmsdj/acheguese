@@ -8,7 +8,7 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import type { GastronomyBusiness } from '../types';
 import { Button } from '@/shared/components/ui/button';
-import { GastronomyBusinessCardEnhanced } from './GastronomyBusinessCardEnhanced';
+import { GastronomyCard } from './GastronomyCard';
 
 interface Props {
   title: string;
@@ -104,7 +104,7 @@ export function BusinessSectionCarousel({
       <div className="grid auto-rows-fr grid-cols-1 gap-3 min-[420px]:grid-cols-2 md:grid-cols-3 md:gap-4 lg:grid-cols-4 xl:grid-cols-5">
         {pagedItems.map((business) => (
           <div key={business.business_data_id} className="h-full">
-            <GastronomyBusinessCardEnhanced
+            <GastronomyCard
               business={business}
               distanceMeters={distanceByBusinessId?.get(business.business_data_id)}
             />

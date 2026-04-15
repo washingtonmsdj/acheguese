@@ -1,5 +1,6 @@
 import { Badge } from '@/shared/components/ui/badge';
 import { Clock, MapPin, Star } from 'lucide-react';
+import { BusinessLogo } from '@/shared/components/ui/business-logo';
 import { OpeningStatusBadge } from './OpeningStatusBadge';
 import type { GastronomyBusiness } from '../types';
 import { getCuisineLabel } from '../constants';
@@ -28,13 +29,14 @@ export function GastronomyHero({ business }: Props) {
       <div className="container mx-auto px-4">
         <div className="flex items-start gap-6 -mt-16 relative z-10">
           {/* Logo */}
-          {business.logo_url && (
-            <img
-              src={business.logo_url}
+          <div className="w-32 h-32 rounded-lg border-4 border-background bg-background overflow-hidden flex-shrink-0">
+            <BusinessLogo
+              name={business.name}
+              logoUrl={business.logo_url}
               alt={business.name}
-              className="w-32 h-32 rounded-lg border-4 border-background object-cover bg-background"
+              initialsClassName="text-5xl"
             />
-          )}
+          </div>
 
           {/* Detalhes */}
           <div className="flex-1 pt-16">

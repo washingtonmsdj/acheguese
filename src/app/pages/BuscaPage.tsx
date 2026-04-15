@@ -28,6 +28,7 @@ import {
 } from "lucide-react";
 import { Input } from "@/shared/components/ui/input";
 import { Badge } from "@/shared/components/ui/badge";
+import { BusinessLogo } from "@/shared/components/ui/business-logo";
 import { cn } from "@/shared/utils/cn";
 import { motion, AnimatePresence } from "framer-motion";
 import { useBusinessNavigation } from "@/modules/business/hooks/useBusinessNavigation";
@@ -397,13 +398,14 @@ function ProfessionalCard({
       onClick={onClick}
       className="flex items-center gap-3 w-full p-3 rounded-xl bg-card border hover:bg-accent/50 transition-colors text-left"
     >
-      {professional.logo_url && (
-        <img
-          src={professional.logo_url}
+      <div className="h-12 w-12 rounded-full overflow-hidden flex-shrink-0">
+        <BusinessLogo
+          name={professional.name}
+          logoUrl={professional.logo_url}
           alt={professional.name}
-          className="h-12 w-12 rounded-full object-cover flex-shrink-0"
+          initialsClassName="text-lg"
         />
-      )}
+      </div>
       <div className="flex-1 min-w-0">
         <p className="text-sm font-semibold truncate">{professional.name}</p>
         <div className="flex items-center gap-1 text-xs text-muted-foreground mt-0.5">

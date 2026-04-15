@@ -34,6 +34,7 @@ import {
   Building2, GraduationCap, TrendingUp,
   UtensilsCrossed, Music,
 } from 'lucide-react';
+import { BusinessLogo } from '@/shared/components/ui/business-logo';
 import { useTerritorialContext } from './TerritorialLayout';
 import { useTerritoryFilter } from '@/core/location/hooks/useTerritoryFilter';
 import { useLandingFeatured } from '@/core/landing/useLandingFeatured';
@@ -152,10 +153,12 @@ function BusinessCard({ b, onNavigate }: { b: FeaturedBusiness; onNavigate: (to:
       className="flex items-center gap-3 p-3 rounded-xl bg-card border border-border hover:border-blue-500/40 hover:bg-accent transition-all text-left w-full"
     >
       <div className="h-10 w-10 rounded-lg bg-muted flex-shrink-0 overflow-hidden flex items-center justify-center">
-        {b.logo_url
-          ? <img src={b.logo_url} alt={b.name} className="h-full w-full object-cover" />
-          : <Store className="h-4 w-4 text-muted-foreground" />
-        }
+        <BusinessLogo
+          name={b.name}
+          logoUrl={b.logo_url}
+          alt={b.name}
+          initialsClassName="text-sm"
+        />
       </div>
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-1.5">
@@ -186,10 +189,12 @@ function ServiceCard({ s, onNavigate, moduleUrl }: { s: FeaturedService; onNavig
       className="flex items-center gap-3 p-3 rounded-xl bg-card border border-border hover:border-violet-500/40 hover:bg-accent transition-all text-left w-full"
     >
       <div className="h-10 w-10 rounded-lg bg-muted flex-shrink-0 overflow-hidden flex items-center justify-center">
-        {s.logo_url
-          ? <img src={s.logo_url} alt={s.name} className="h-full w-full object-cover" />
-          : <Wrench className="h-4 w-4 text-muted-foreground" />
-        }
+        <BusinessLogo
+          name={s.name}
+          logoUrl={s.logo_url}
+          alt={s.name}
+          initialsClassName="text-sm"
+        />
       </div>
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-1.5">
@@ -601,10 +606,12 @@ export function TerritorialLandingPage() {
                   className="flex items-center gap-3 p-4 rounded-xl bg-card border border-border hover:border-orange-500/40 hover:bg-accent transition-all text-left w-full group"
                 >
                   <div className="h-14 w-14 rounded-lg bg-muted flex-shrink-0 overflow-hidden flex items-center justify-center">
-                    {b.logo_url
-                      ? <img src={b.logo_url} alt={b.name} className="h-full w-full object-cover group-hover:scale-110 transition-transform" />
-                      : <UtensilsCrossed className="h-6 w-6 text-muted-foreground" />
-                    }
+                    <BusinessLogo
+                      name={b.name}
+                      logoUrl={b.logo_url}
+                      alt={b.name}
+                      initialsClassName="text-xl"
+                    />
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-1.5 mb-1">

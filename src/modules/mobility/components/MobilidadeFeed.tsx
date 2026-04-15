@@ -1,5 +1,5 @@
 import React from "react";
-import { RideRequestCard } from "./RideRequestCard";
+import { RideRequestCard } from "./index";
 import { Car, Package, Loader2 } from "lucide-react";
 import type { RideRequest } from "@/modules/mobility/types"; // TODO: Migrar para mobility.generated.ts;
 

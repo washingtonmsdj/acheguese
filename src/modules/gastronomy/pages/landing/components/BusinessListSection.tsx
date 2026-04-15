@@ -6,7 +6,7 @@ import { motion } from 'framer-motion';
 import { ChevronRight, Loader2, Store } from 'lucide-react';
 import { Button } from '@/shared/components/ui/button';
 import { Badge } from '@/shared/components/ui/badge';
-import { GastronomyBusinessCardEnhanced } from '../../../components';
+import { GastronomyCard } from '../../../components';
 import type { GastronomyBusiness } from '../../../types';
 import { getCuisineLabel } from '../../../constants';
 import type { DisplayLayout } from '../types';
@@ -145,9 +145,9 @@ export function BusinessListSection(props: BusinessListSectionProps) {
           >
             {businesses.map((business) => (
               <motion.div key={business.business_data_id} variants={itemVariants} className="h-full">
-                <GastronomyBusinessCardEnhanced
+                <GastronomyCard
                   business={business}
-                  variant={displayLayout === 'list' ? 'list' : 'card'}
+                  variant={displayLayout === 'list' ? 'list' : 'grid'}
                   distanceMeters={distanceMap.get(business.business_data_id)}
                 />
               </motion.div>

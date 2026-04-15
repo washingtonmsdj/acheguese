@@ -6,11 +6,7 @@ import React from "react";
  */
 
 import { Phone, Mail, MapPin, Instagram, Facebook, Globe } from "lucide-react";
-import {
-  Avatar,
-  AvatarImage,
-  AvatarFallback,
-} from "@/shared/components/ui/avatar";
+import { BusinessLogo } from "@/shared/components/ui/business-logo";
 import { Button } from "@/shared/components/ui/button";
 import type { Business } from "@/shared/types/business";
 
@@ -27,10 +23,14 @@ export default function StandaloneFooter({ business }: StandaloneFooterProps) {
             {/* Logo e Nome */}
             <div className="space-y-4">
               <div className="flex items-center gap-3">
-                <Avatar className="h-12 w-12">
-                  <AvatarImage src={business.logo_url} alt={business.name} />
-                  <AvatarFallback>{business.name?.charAt(0)}</AvatarFallback>
-                </Avatar>
+                <div className="h-12 w-12 rounded-full overflow-hidden">
+                  <BusinessLogo
+                    name={business.name}
+                    logoUrl={business.logo_url}
+                    alt={business.name}
+                    initialsClassName="text-xl"
+                  />
+                </div>
                 <div>
                   <h3 className="font-bold text-lg">{business.name}</h3>
                   <p className="text-sm text-muted-foreground">

@@ -3,7 +3,7 @@ import React from "react";
 import { Loader2 } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import { Skeleton } from "@/shared/components/ui/skeleton";
-import { ServiceCard } from "./ServiceCard";
+import { ServiceCardEnhanced } from "./ServiceCardEnhanced";
 import { useServicesAd } from "@/modules/services/hooks/useServicesAd";
 import { SponsoredAdCard } from "@/core/promotions";
 import type { ProfessionalItem } from "@/modules/services/hooks/useServicos";
@@ -63,7 +63,7 @@ const ServicesList = React.forwardRef<HTMLDivElement, ServicesListProps>(
       <div ref={ref} className="flex flex-col gap-3 px-4 py-2">
         {professionals.map((professional, index) => (
           <React.Fragment key={professional.id}>
-            <ServiceCard
+            <ServiceCardEnhanced
               professional={professional}
               index={index}
               onProfessionalClick={onProfessionalClick}

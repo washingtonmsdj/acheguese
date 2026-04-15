@@ -22,6 +22,7 @@ import {
 import { Button } from "@/shared/components/ui/button";
 import { Skeleton } from "@/shared/components/ui/skeleton";
 import { Badge } from "@/shared/components/ui/badge";
+import { BusinessLogo } from "@/shared/components/ui/business-logo";
 import { BusinessService } from "@/core/business/services/BusinessService";
 import { useAuth } from "@/core/auth/hooks/useAuth";
 import { toast } from "sonner";
@@ -404,13 +405,14 @@ export default function EmpresaDetailLandingPage({ businessId: propBusinessId }:
             className="bg-card border border-border rounded-2xl p-5 sm:p-7 shadow-xl">
             <div className="flex items-start gap-4 sm:gap-5">
               {/* Logo */}
-              {business.logo_url ? (
-                <img src={business.logo_url} alt="" className="h-20 w-20 sm:h-24 sm:w-24 rounded-xl border-2 border-border object-cover shadow-md shrink-0" />
-              ) : (
-                <div className="h-20 w-20 sm:h-24 sm:w-24 rounded-xl border-2 border-border bg-gradient-to-br from-primary to-accent flex items-center justify-center text-primary-foreground font-bold text-2xl sm:text-3xl shadow-md shrink-0">
-                  {getInitials(business.name)}
-                </div>
-              )}
+              <div className="h-20 w-20 sm:h-24 sm:w-24 rounded-xl border-2 border-border shadow-md shrink-0 overflow-hidden">
+                <BusinessLogo
+                  name={business.name}
+                  logoUrl={business.logo_url}
+                  alt={business.name}
+                  initialsClassName="text-3xl sm:text-4xl"
+                />
+              </div>
               <div className="flex-1 min-w-0">
                 {/* Name + verification */}
                 <div className="flex items-center gap-2 flex-wrap mb-1">

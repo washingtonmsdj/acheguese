@@ -31,6 +31,7 @@ import {
   Palette, Trophy, Megaphone, Loader2,
 } from 'lucide-react';
 import { Button } from '@/shared/components/ui/button';
+import { BusinessLogo } from '@/shared/components/ui/business-logo';
 import { useTerritorialContext } from '@/core/routing/components/TerritorialLayout';
 import { useTerritoryFilter } from '@/core/location/hooks/useTerritoryFilter';
 import { useLandingFeatured } from '@/core/landing/useLandingFeatured';
@@ -674,11 +675,12 @@ export default function ComplexoNordesteLandingPage() {
               >
                 <div className="flex items-start gap-3">
                   <div className="h-12 w-12 rounded-xl bg-muted flex-shrink-0 overflow-hidden flex items-center justify-center">
-                    {b.logo_url ? (
-                      <img src={b.logo_url} alt={b.name} className="h-full w-full object-cover" />
-                    ) : (
-                      <Store className="h-5 w-5 text-muted-foreground" />
-                    )}
+                    <BusinessLogo
+                      name={b.name}
+                      logoUrl={b.logo_url}
+                      alt={b.name}
+                      initialsClassName="text-lg"
+                    />
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-1.5 mb-1">
@@ -739,11 +741,12 @@ export default function ComplexoNordesteLandingPage() {
               >
                 <div className="flex items-start gap-3">
                   <div className="h-12 w-12 rounded-xl bg-muted flex-shrink-0 overflow-hidden flex items-center justify-center">
-                    {s.logo_url ? (
-                      <img src={s.logo_url} alt={s.name} className="h-full w-full object-cover" />
-                    ) : (
-                      <Wrench className="h-5 w-5 text-muted-foreground" />
-                    )}
+                    <BusinessLogo
+                      name={s.name}
+                      logoUrl={s.logo_url}
+                      alt={s.name}
+                      initialsClassName="text-lg"
+                    />
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-1.5 mb-1">

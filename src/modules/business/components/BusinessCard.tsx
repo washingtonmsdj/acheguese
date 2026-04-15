@@ -31,6 +31,7 @@ import {
 } from "lucide-react";
 import { Badge } from "@/shared/components/ui/badge";
 import { Button } from "@/shared/components/ui/button";
+import { BusinessLogo } from "@/shared/components/ui/business-logo";
 import { cn } from "@/shared/utils/cn";
 import { BusinessUrlService } from "@/core/business/services/BusinessUrlService";
 import type { Business } from "@/modules/business/types";
@@ -216,15 +217,14 @@ export const BusinessCard = memo(
           <div className="p-4 space-y-3">
             {/* Logo + Name */}
             <div className="flex items-start gap-3">
-              {business.logo_url && (
-                <motion.img
-                  src={business.logo_url}
+              <div className="w-14 h-14 rounded-xl border-2 border-white/10 shadow-lg flex-shrink-0 overflow-hidden">
+                <BusinessLogo
+                  name={business.name}
+                  logoUrl={business.logo_url}
                   alt={`Logo de ${business.name}`}
-                  className="w-14 h-14 rounded-xl object-cover border-2 border-white/10 shadow-lg flex-shrink-0"
-                  loading="lazy"
-                  whileHover={{ scale: 1.05 }}
+                  initialsClassName="text-2xl"
                 />
-              )}
+              </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-1">
                   <h3 className="font-bold text-white truncate group-hover:text-teal-400 transition-colors">

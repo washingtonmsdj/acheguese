@@ -54,7 +54,8 @@ export { CUISINE_TYPES, getCuisineLabel, type CuisineType } from './constants';
 // Components
 export {
   GastronomyHero,
-  GastronomyBusinessCardEnhanced,
+  GastronomyCard,
+  GastronomyCard as GastronomyBusinessCardEnhanced, // Alias para compatibilidade
   GastronomyCTA,
   GastronomyCategoryCards,
   GastronomyFilters,

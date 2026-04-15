@@ -31,6 +31,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
+import { BusinessLogo } from "@/shared/components/ui/business-logo";
 import { TERRITORY_CONFIG, LAUNCH_URLS } from "@/config/territory";
 import { useAuth } from "@/core/auth/hooks/useAuth";
 import { useCityMetadata } from "@/core/city/hooks/useCityMetadata";
@@ -411,11 +412,12 @@ export default function CidadeLandingPage() {
                 >
                   <div className="flex items-start gap-4">
                     <div className="h-14 w-14 rounded-xl bg-muted flex-shrink-0 overflow-hidden flex items-center justify-center">
-                      {business.logo_url ? (
-                        <img src={business.logo_url} alt={business.name} className="h-full w-full object-cover" />
-                      ) : (
-                        <Store className="h-6 w-6 text-muted-foreground" />
-                      )}
+                      <BusinessLogo
+                        name={business.name}
+                        logoUrl={business.logo_url}
+                        alt={business.name}
+                        initialsClassName="text-xl"
+                      />
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1.5">
@@ -489,11 +491,12 @@ export default function CidadeLandingPage() {
                 >
                   <div className="flex items-start gap-4">
                     <div className="h-14 w-14 rounded-xl bg-muted flex-shrink-0 overflow-hidden flex items-center justify-center">
-                      {service.logo_url ? (
-                        <img src={service.logo_url} alt={service.name} className="h-full w-full object-cover" />
-                      ) : (
-                        <Wrench className="h-6 w-6 text-muted-foreground" />
-                      )}
+                      <BusinessLogo
+                        name={service.name}
+                        logoUrl={service.logo_url}
+                        alt={service.name}
+                        initialsClassName="text-xl"
+                      />
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1.5">

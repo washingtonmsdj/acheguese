@@ -17,7 +17,7 @@
 export { useAdDelivery } from './hooks/useAdDelivery';
 
 // Componente compartilhado
-export { SponsoredAdCard } from './components/SponsoredAdCard';
+export { SponsoredAdCard, SponsoredAdCardEnhanced } from './components';
 
 // Services (para consumo direto fora de React)
 export { adDeliveryService, AdDeliveryService } from './services/AdDeliveryService';

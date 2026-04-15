@@ -8,11 +8,7 @@ import React from "react";
 import { useState } from "react";
 import { Menu, X } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
-import {
-  Avatar,
-  AvatarImage,
-  AvatarFallback,
-} from "@/shared/components/ui/avatar";
+import { BusinessLogo } from "@/shared/components/ui/business-logo";
 import type { Business } from "@/shared/types/business";
 
 interface StandaloneNavProps {
@@ -36,10 +32,14 @@ export default function StandaloneNav({ business }: StandaloneNavProps) {
         <div className="flex items-center justify-between h-16">
           {/* Logo e Nome */}
           <div className="flex items-center gap-3">
-            <Avatar className="h-10 w-10">
-              <AvatarImage src={business.logo_url} alt={business.name} />
-              <AvatarFallback>{business.name?.charAt(0)}</AvatarFallback>
-            </Avatar>
+            <div className="h-10 w-10 rounded-full overflow-hidden">
+              <BusinessLogo
+                name={business.name}
+                logoUrl={business.logo_url}
+                alt={business.name}
+                initialsClassName="text-lg"
+              />
+            </div>
             <span className="font-semibold text-lg hidden sm:inline">
               {business.name}
             </span>

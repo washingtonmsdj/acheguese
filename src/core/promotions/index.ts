@@ -6,7 +6,7 @@
  */
 
 export { useAdDelivery } from "@/modules/promotions/hooks/useAdDelivery";
-export { SponsoredAdCard } from "@/modules/promotions/components/SponsoredAdCard";
+export { SponsoredAdCard, SponsoredAdCardEnhanced } from "@/modules/promotions/components";
 export {
   adDeliveryService,
   AdDeliveryService,

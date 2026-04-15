@@ -1,18 +1,8 @@
 import React from "react";
 import { Users, Loader2 } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
-import { GrupoCard } from "./GrupoCard";
-
-interface Group {
-  id: string;
-  name: string;
-  description?: string;
-  category?: string;
-  members_count?: number;
-  avatar_url?: string;
-  is_public?: boolean;
-  is_member?: boolean;
-}
+import { GrupoCardEnhanced } from "./GrupoCardEnhanced";
+import type { Group } from "@/core/social/services/GroupService";
 
 interface GruposListProps {
   groups: Group[];
@@ -67,8 +57,15 @@ export function GruposList({
 
   return (
     <div className="space-y-3">
-      {groups.map((group) => (
-        <GrupoCard key={group.id} group={group} onJoin={onJoin} />
+      {groups.map((group, index) => (
+        <GrupoCardEnhanced 
+          key={group.id} 
+          group={group} 
+          variant="list"
+          index={index}
+          onClick={() => {}}
+          onJoin={onJoin} 
+        />
       ))}
     </div>
   );

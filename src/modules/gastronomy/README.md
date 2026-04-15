@@ -1,83 +1,148 @@
-﻿# Modulo de Gastronomia
+﻿# 🍽️ Módulo de Gastronomia
 
-![Status](https://img.shields.io/badge/Status-AAA%20Profissional-success?style=flat-square)
-![SSOT](https://img.shields.io/badge/SSOT-100%25-brightgreen?style=flat-square)
-![TypeScript](https://img.shields.io/badge/TypeScript-Strict-blue?style=flat-square)
-![Duplicações](https://img.shields.io/badge/Duplica%C3%A7%C3%B5es-0-success?style=flat-square)
+Módulo completo para gestão de estabelecimentos gastronômicos (restaurantes, bares, lanchonetes, etc).
 
-Vertical especializada de gastronomia, integrada ao SSOT territorial e ao SSOT operacional de delivery.
+## 📦 Componentes Principais
 
-## Principios
+### GastronomyCard (Nível AAA) ⭐
+Card otimizado para conversão com hierarquia visual clara e metadados úteis.
 
-- `business_data` continua sendo a identidade principal do negocio.
-- `GastronomyBusiness` expoe `business_data_id` para menu, carrinho, checkout e origem do pedido.
-- `gastronomy_profiles.business_id` referencia `business_data.id`.
-- Pagina publica e detail page usam fallback mock somente em `development` quando nao houver dados operacionais reais.
-- O territorio ativo da rota ou do seletor e a fonte de verdade para listagem publica.
+**Variantes:**
+- `grid`: Card vertical completo (padrão)
+- `list`: Card horizontal compacto
+- `compact`: Card mini para carrosséis
 
-## Fronteiras
+**Features:**
+- Status operacional inteligente ("Fecha às 22h" / "Abre às 18h")
+- Metadados úteis (rating, preço, distância, tempo de entrega)
+- Badges secundárias (promoção, premium, entrega grátis)
+- CTA forte e animado
+- Estados visuais ricos (hover, focus, loading, sem imagem)
+- Responsividade completa
+- Acessibilidade WCAG AAA
 
-- `src/modules/gastronomy` trata somente leitura/escrita de gastronomia.
-- `src/modules/delivery` recebe o pedido operacional via adapter oficial.
-- `src/modules/mobility` nao participa do modo atual `merchant_own_fleet`.
+**Uso:**
+```tsx
+<GastronomyCard
+  business={restaurant}
+  variant="grid"
+  distanceMeters={1500}
+  isFavorite={false}
+  onToggleFavorite={handleFavorite}
+  showPromotion={true}
+/>
+```
 
-## Contratos principais
+Ver: [GASTRONOMY_CARD_REDESIGN.md](./components/GASTRONOMY_CARD_REDESIGN.md)
 
-### GastronomyQueryService
-- `getGastronomyProfile(businessId)`
-- `getGastronomyBusiness(identifier)`
-- `getGastronomyBusinessByTerritoryAndSlug({ state, city, district, slug })`
-- `getGastronomyBusinesses(filters)`
-- `getGastronomyBusinessesList(params)`
-- `getAvailableCuisineTypes(territoryFilter)`
+### GastronomyHero
+Hero section para página de detalhes do estabelecimento.
 
-### MenuQueryService
-- `getMenu(menuId)`
-- `getMenusByBusiness(businessId)`
-- `getMenuWithCategories(menuId)`
-- `getMenuItem(itemId)`
-- `getPublicFoodCatalog(params)`
-- `getFeaturedItems(businessId)`
-- `getActivePromotions(businessId)`
-- `searchMenuItems(businessId, query)`
+### GastronomyFilters
+Filtros avançados para busca de estabelecimentos.
 
-### Hooks publicos
-- `useGastronomyList(filters)`
-- `useGastronomyFoodCatalog(filters)`
-- `useGastronomyDetail({ state, city, district, slug })`
-- `useMenu(menuId)`
-- `useMenusByBusiness(businessId)`
-- `useMenuItem(itemId)`
-- `useGastronomyCart(business)`
-- `useGastronomyCheckout()`
+### GastronomyCategoryCards
+Cards de categorias de culinária.
 
-## Regras de runtime publico
+### GastronomyCTA
+Call-to-action para ações principais (delivery, reserva, etc).
 
-- Landing publica so mostra estabelecimentos e itens do territorio resolvido.
-- Bairro fora do seletor pode abrir normalmente se a URL for navegavel.
-- Detail page valida `territorio + slug`; slug valido em outro bairro nao abre.
-- Sem itens reais publicados: a UI mostra estado vazio operacional, nunca itens de outro bairro.
+## 🗂️ Estrutura
 
-## Mocks de desenvolvimento
+```
+src/modules/gastronomy/
+├── components/          # Componentes UI
+│   ├── GastronomyCard.tsx          # Card principal (AAA)
+│   ├── GastronomyHero.tsx
+│   ├── GastronomyFilters.tsx
+│   └── ...
+├── pages/              # Páginas do módulo
+│   ├── landing/        # Landing page de gastronomia
+│   └── ...
+├── services/           # Serviços e queries
+├── hooks/              # Hooks customizados
+├── types/              # Tipos TypeScript
+├── constants/          # Constantes (cuisine types, etc)
+├── utils/              # Utilitários
+└── README.md           # Esta documentação
+```
 
-- Os arquivos em `src/modules/gastronomy/__mocks__/` permanecem no projeto para desenvolvimento local.
-- Os mocks estao alinhados ao SSOT atual (`business_data_id` e `geographic_path` canÃ´nico).
-- Runtime de producao nao usa fallback mock (`import.meta.env.DEV` obrigatorio).
-- Guardrail de teste cobre essa fronteira em gastronomyRuntimeBoundaries.spec.ts.
-- Para desligar o fallback no desenvolvimento: VITE_ENABLE_GASTRONOMY_DEV_MOCKS=false.
+## 🎨 Design System
 
-## Integracao com delivery
+### Cores
+- **Primary**: Laranja/Vermelho (apetite, urgência)
+- **Success**: Verde (aberto, entrega grátis)
+- **Warning**: Amarelo (destaque, premium)
+- **Danger**: Vermelho (fechado, promoção)
 
-Fluxo atual:
-1. o cliente monta o carrinho local por `business_data_id`
-2. o checkout gera `CreateOrderInput` via `GastronomyOrderOriginAdapter`
-3. o pedido e criado em `modules/delivery`
-4. o pedido opera em:
-   - `payment_mode = direct_to_merchant`
-   - `delivery_mode = merchant_own_fleet`
+### Tipografia
+- **Título**: Bold, 16-18px
+- **Subtítulo**: Regular, 12-14px
+- **Metadados**: Regular, 10-12px
+- **Badges**: Semibold, 10px
 
-Limites intencionais da fase atual:
-- o app nao cobra o cliente no checkout
-- nao existe split, payout, wallet ou settlement real
-- o motoboy e operacional da empresa, nao da plataforma
+### Espaçamento
+- **Card padding**: 16px (p-4)
+- **Gap entre elementos**: 12px (gap-3)
+- **Margem entre cards**: 16px (gap-4)
 
+## 📊 Tipos Principais
+
+### GastronomyBusiness
+```typescript
+interface GastronomyBusiness extends Business {
+  business_data_id: string;
+  gastronomy_profile: GastronomyProfile;
+}
+```
+
+### GastronomyProfile
+```typescript
+interface GastronomyProfile {
+  cuisine_type: string;
+  price_range: PriceRange;
+  delivery_enabled: boolean;
+  delivery_fee?: number;
+  delivery_time_min?: number;
+  delivery_time_max?: number;
+  // ... outros campos
+}
+```
+
+## 🔧 Utilitários
+
+### getCuisineLabel(type)
+Converte tipo de culinária em label humanizado.
+
+### formatBrl(value)
+Formata valor em Real brasileiro.
+
+### resolveGastronomyProximity(meters)
+Calcula distância e tempo estimado.
+
+## 📝 Changelog
+
+### v1.0.0 (2026-04-15)
+- ✨ Redesign completo do GastronomyCard (Nível AAA)
+- ✨ Status operacional inteligente
+- ✨ Hierarquia visual otimizada
+- ✨ Badges secundárias coerentes
+- ✨ CTA forte e animado
+- ✨ Estados visuais ricos
+- 📦 Movido componente antigo para `.archive/`
+- 📚 Documentação completa
+
+## 🚀 Roadmap
+
+- [ ] Skeleton loading states
+- [ ] Image blur placeholder
+- [ ] A/B testing de CTAs
+- [ ] Analytics de conversão
+- [ ] Personalização de badges
+- [ ] Modo escuro otimizado
+- [ ] Animações de transição entre variantes
+
+---
+
+**Mantido por**: Equipe de Desenvolvimento
+**Última atualização**: 2026-04-15

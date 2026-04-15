@@ -19,7 +19,8 @@ import { Skeleton } from "@/shared/components/ui/skeleton";
 import { useAuth } from "@/core/auth/hooks/useAuth";
 import { useAppUrls } from "@/core/routing/hooks/useAppUrls";
 import { useVagas } from "../hooks/useVagas";
-import { VagaCard } from "../components/VagaCard";
+import { VagaCardEnhanced } from "../components/VagaCardEnhanced";
+import { useVagasLocation } from "../hooks/useVagasLocation";
 import { CONTRATO_LABELS, MODALIDADE_LABELS, NIVEL_LABELS } from "../types/vagas.types";
 
 // ── Helpers ──────────────────────────────────────────────────────────
@@ -54,6 +55,7 @@ export default function VagaDetailPage() {
   const { user } = useAuth();
   const appUrls = useAppUrls();
   const { getVagaById, getRelatedVagas, isLoading } = useVagas();
+  const { activeLocationName } = useVagasLocation();
   const [isFavorite, setIsFavorite] = useState(false);
 
   const vaga = id ? getVagaById(id) : undefined;
@@ -364,7 +366,14 @@ export default function VagaDetailPage() {
           <h2 className="text-lg font-bold text-foreground mb-4 font-heading">Vagas Relacionadas</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {relatedVagas.map((v, i) => (
-              <VagaCard key={v.id} vaga={v} index={i} onClick={() => navigate(`/vagas/detalhe/${v.id}`)} compact />
+              <VagaCardEnhanced 
+                key={v.id} 
+                vaga={v} 
+                variant="compact"
+                index={i} 
+                onClick={() => navigate(`/vagas/detalhe/${v.id}`)}
+                locationName={activeLocationName}
+              />
             ))}
           </div>
         </section>

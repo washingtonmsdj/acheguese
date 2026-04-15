@@ -18,7 +18,7 @@ import { useMotoristaPageV2 } from "@/modules/mobility/hooks/useMotoristaPageV2"
 import { useMobilityUrls } from "@/modules/mobility/hooks/useMobilityUrls";
 import { useUnifiedNotifications } from '@/core/notifications';
 import { DriverSuspensionAlert } from "../components/driver/DriverSuspensionAlert";
-import { DriverOfferCard } from "../components/DriverOfferCard";
+import { DriverOfferCard } from "../components";
 import { DriverRidesTab } from "../components/driver/DriverRidesTab";
 import { MotoboyDeliveryActions } from "../components/driver/MotoboyDeliveryActions";
 import { DriverEarningsCard } from "../components/driver/DriverEarningsCard";

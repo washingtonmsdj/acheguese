@@ -22,7 +22,7 @@ import { useMotoboyPage } from "@/modules/mobility/hooks/useMotoboyPage";
 import { useMobilityUrls } from "@/modules/mobility/hooks/useMobilityUrls";
 import { useUnifiedNotifications } from '@/core/notifications';
 import { DriverSuspensionAlert } from "../components/driver/DriverSuspensionAlert";
-import { DriverOfferCard } from "../components/DriverOfferCard";
+import { DriverOfferCard } from "../components";
 import { MotoboyDeliveryActions } from "../components/driver/MotoboyDeliveryActions";
 import { DriverEarningsCard } from "../components/driver/DriverEarningsCard";
 import { WeeklyEarningsChart } from "../components/driver/WeeklyEarningsChart";

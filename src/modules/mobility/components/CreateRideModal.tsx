@@ -29,7 +29,7 @@ import { toast } from "sonner";
 import type { RideType, PaymentMethod } from "@/modules/mobility/types";
 import { BoardingPointsPanel, type BoardingPoint } from "./BoardingPointsPanel";
 import { TrustRideFilter, type TrustPreference } from "./TrustRideFilter";
-import { RouteEstimateCard } from "./RouteEstimateCard";
+import { RouteEstimateCard } from "./index";
 import type { GeolocationCoordinates } from "@/modules/mobility/hooks/useGeolocation";
 import { PAYMENT_METHOD } from "@/shared/types/constants";
 import { AddressService } from "@/core/address/services/AddressService";

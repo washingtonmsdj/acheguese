@@ -11,8 +11,13 @@ export { MobilidadeLeftSidebar } from "./components/MobilidadeLeftSidebar";
 export { MobilidadeRightSidebar } from "./components/MobilidadeRightSidebar";
 export { CreateRideModal } from "./components/CreateRideModal";
 export { CreateDeliveryModal } from "./components/CreateDeliveryModal";
-export { DeliveryTrackingCard } from "./components/DeliveryTrackingCard";
-export { RideRequestCard } from "./components/RideRequestCard";
+export { 
+  DeliveryTrackingCard, 
+  RideRequestCard,
+  DriverOfferCard,
+  RouteEstimateCard,
+  RouteEstimateCardSkeleton
+} from "./components";
 export { RideTrackingMap } from "./components/RideTrackingMap";
 export { ActiveRideWidget } from "./components/ActiveRideWidget";
 export { RideHistoryList } from "./components/RideHistoryList";
