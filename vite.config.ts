@@ -1,14 +1,12 @@
 /**
- * VITE CONFIG - OTIMIZADO
+ * VITE CONFIG - PRODUCTION READY
  * 
- * ✅ OTIMIZAÇÕES:
- * - Code splitting avançado
- * - Tree shaking otimizado
- * - Minification agressiva
- * - Cache busting
- * - Bundle analysis
+ * ✅ CONFIGURAÇÃO SIMPLIFICADA E ROBUSTA:
+ * - Code splitting otimizado
+ * - Build confiável para Vercel
+ * - Sem over-engineering
  * 
- * @version 2.1.0
+ * @version 3.0.0
  * @author Kiro AI
  */
 
@@ -59,89 +57,37 @@ export default defineConfig(({ mode }) => ({
   build: {
     target: 'es2020',
     minify: 'esbuild',
-    
     cssCodeSplit: true,
-    sourcemap: mode === 'development',
-    chunkSizeWarningLimit: 500,
+    sourcemap: false, // Desabilitar sourcemaps em produção para reduzir tamanho
+    chunkSizeWarningLimit: 1000,
     
     rollupOptions: {
       output: {
+        // Simplificado: deixar Vite fazer code splitting automático
         manualChunks: (id) => {
-          if (id.includes('node_modules/react/') || 
-              id.includes('node_modules/react-dom/') ||
-              id.includes('node_modules/react-router-dom/')) {
-            return 'vendor-react';
-          }
-          
-          if (id.includes('@radix-ui/react-dialog') ||
-              id.includes('@radix-ui/react-dropdown-menu') ||
-              id.includes('@radix-ui/react-select') ||
-              id.includes('@radix-ui/react-tabs') ||
-              id.includes('@radix-ui/react-toast') ||
-              id.includes('@radix-ui/react-popover')) {
-            return 'vendor-radix-core';
-          }
-          
-          if (id.includes('@radix-ui/')) {
-            return 'vendor-radix-extended';
-          }
-          
-          if (id.includes('leaflet')) {
-            return 'vendor-maps';
-          }
-          
-          if (id.includes('recharts')) {
-            return 'vendor-charts';
-          }
-          
-          if (id.includes('framer-motion')) {
-            return 'vendor-animation';
-          }
-          
-          if (id.includes('@supabase/')) {
-            return 'vendor-supabase';
-          }
-          
-          if (id.includes('@tanstack/react-query')) {
-            return 'vendor-query';
-          }
-          
-          if (id.includes('react-hook-form') ||
-              id.includes('@hookform/resolvers') ||
-              id.includes('zod')) {
-            return 'vendor-forms';
-          }
-          
-          if (id.includes('lucide-react')) {
-            return 'vendor-icons';
-          }
-          
+          // Apenas separar node_modules do código da aplicação
           if (id.includes('node_modules')) {
-            return 'vendor-misc';
+            // Separar bibliotecas grandes em chunks próprios
+            if (id.includes('react') || id.includes('react-dom')) {
+              return 'vendor-react';
+            }
+            if (id.includes('@radix-ui')) {
+              return 'vendor-ui';
+            }
+            if (id.includes('@supabase')) {
+              return 'vendor-supabase';
+            }
+            if (id.includes('maplibre-gl')) {
+              return 'vendor-maps';
+            }
+            // Resto dos node_modules
+            return 'vendor';
           }
         },
         
-        chunkFileNames: 'assets/js/[name]-[hash].js',
-        entryFileNames: 'assets/js/[name]-[hash].js',
-        assetFileNames: (assetInfo) => {
-          const name = assetInfo.name || 'asset';
-          const ext = name.split('.').pop() || '';
-          
-          if (/png|jpe?g|svg|gif|tiff|bmp|ico/i.test(ext)) {
-            return `assets/images/[name]-[hash][extname]`;
-          }
-          
-          if (/woff2?|ttf|otf|eot/i.test(ext)) {
-            return `assets/fonts/[name]-[hash][extname]`;
-          }
-          
-          return `assets/[name]-[hash][extname]`;
-        },
-      },
-      
-      treeshake: {
-        moduleSideEffects: false,
-        propertyReadSideEffects: false,
+        chunkFileNames: 'assets/[name]-[hash].js',
+        entryFileNames: 'assets/[name]-[hash].js',
+        assetFileNames: 'assets/[name]-[hash][extname]',
       },
     },
   },
@@ -153,7 +99,6 @@ export default defineConfig(({ mode }) => ({
       'react-router-dom',
       '@tanstack/react-query',
       'lodash-es',
-      'recharts',
     ],
   },
   
