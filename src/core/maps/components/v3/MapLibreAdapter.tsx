@@ -303,9 +303,20 @@ export const MapLibreAdapter = forwardRef<MapLibreAdapterHandle, MapLibreAdapter
 
       // Evento: erro do mapa
       map.on('error', (e) => {
+        // Suprimir avisos de dados de tiles com valores null (comum em tiles OSM)
+        const errorMessage = e.error?.message || '';
+        if (errorMessage.includes('Expected value to be of type number, but found null')) {
+          // Aviso conhecido: tiles do OSM podem ter propriedades null
+          // Não afeta renderização do mapa, apenas log silencioso
+          return;
+        }
+
+        // Outros erros são registrados para debug
+        console.warn('[MapLibreAdapter] Map error:', errorMessage);
+
         if (typeof window !== 'undefined') {
           const s = (window as any).__mapState || {};
-          (s.errors = s.errors || []).push(e.error?.message ?? 'unknown');
+          (s.errors = s.errors || []).push(errorMessage || 'unknown');
           (window as any).__mapState = s;
         }
       });

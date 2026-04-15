@@ -64,26 +64,9 @@ export default defineConfig(({ mode }) => ({
     
     rollupOptions: {
       output: {
-        manualChunks: (id) => {
-          if (id.includes('node_modules')) {
-            // CRÍTICO: React DEVE estar no mesmo chunk que react-dom
-            if (id.includes('react') || id.includes('react-dom') || id.includes('react/jsx-runtime')) {
-              return 'react-vendor';
-            }
-            // Radix UI depende do React, então vai para chunk separado
-            if (id.includes('@radix-ui')) {
-              return 'ui-vendor';
-            }
-            if (id.includes('@supabase')) {
-              return 'supabase-vendor';
-            }
-            if (id.includes('maplibre-gl')) {
-              return 'maps-vendor';
-            }
-            // Resto dos node_modules
-            return 'vendor';
-          }
-        },
+        // SOLUÇÃO: Não fazer code splitting manual - deixar Vite otimizar
+        // Isso garante que React seja carregado na ordem correta
+        manualChunks: undefined,
         
         chunkFileNames: 'assets/[name]-[hash].js',
         entryFileNames: 'assets/[name]-[hash].js',
