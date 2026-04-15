@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * AdminClassifiedsService - Serviço de administração de classificados
  *

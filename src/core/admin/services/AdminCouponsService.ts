@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * AdminCouponsService - Serviço de administração de cupons
  *

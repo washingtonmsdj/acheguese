@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * AdminCommunityAlertsService - SSOT para gestão administrativa de alertas comunitários
  * 

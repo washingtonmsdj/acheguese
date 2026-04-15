@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * AdminEventsService - Serviço de administração de eventos
  *

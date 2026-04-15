@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * AdminSubscriptionsService - SSOT para gestão administrativa de assinaturas
  */

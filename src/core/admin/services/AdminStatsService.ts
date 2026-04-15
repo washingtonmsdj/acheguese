@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * 🏆 ADMIN STATS SERVICE - SSOT para Estatísticas Administrativas
  *

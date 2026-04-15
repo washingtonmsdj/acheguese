@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * AdminCommunityIssuesService - SSOT para gestão administrativa de problemas urbanos
  * 

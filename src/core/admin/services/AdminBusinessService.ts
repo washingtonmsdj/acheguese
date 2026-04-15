@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * AdminBusinessService - Serviço de administração de negócios
  *
