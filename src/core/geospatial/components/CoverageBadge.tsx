@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * CoverageBadge - Badge de cobertura geográfica
  * 

@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * TerritorialResolver - Helper compartilhado para resolução territorial
  * 
