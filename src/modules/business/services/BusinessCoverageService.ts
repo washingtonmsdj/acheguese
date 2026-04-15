@@ -8,8 +8,8 @@
  * - Validar cobertura para agendamentos/pedidos
  */
 
-import { CoverageService, createCoverageRepository, CoverageStatus, createGeospatialPort } from '@/core/coverage';
-import type { ServiceArea, DoesCoverOutput, GetCoverageOutput } from '@/core/coverage';
+import { CoverageService, createCoverageRepository, CoverageStatus, createGeospatialPort } from '@/core/coverage/index';
+import type { ServiceArea, DoesCoverOutput, GetCoverageOutput } from '@/core/coverage/index';
 import { createLocationRepository } from '@/core/location/repositories/createLocationRepository';
 import { businessLocationService } from './BusinessLocationService';
 
