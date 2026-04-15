@@ -8,29 +8,38 @@
  * GET /functions/v1/nominatim-proxy?reverse=1&lat=<lat>&lon=<lon>&zoom=<zoom>
  */
 
-const NOMINATIM_BASE = 'https://nominatim.openstreetmap.org';
+import { 
+  getAllSecurityHeaders,
+  rateLimitMiddleware,
+  errorResponse,
+  sanitizeString,
+} from '../_shared/security.ts';
 
-const CORS_HEADERS = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Methods': 'GET, OPTIONS',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+const NOMINATIM_BASE = 'https://nominatim.openstreetmap.org';
 
 function jsonResponse(body: unknown, status = 200): Response {
   return new Response(JSON.stringify(body), {
     status,
-    headers: { 'Content-Type': 'application/json', ...CORS_HEADERS },
+    headers: getAllSecurityHeaders('GET, OPTIONS'),
   });
 }
 
 Deno.serve(async (req) => {
+  // Handle CORS preflight
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { status: 200, headers: CORS_HEADERS });
+    return new Response('ok', { 
+      status: 204, 
+      headers: getAllSecurityHeaders('GET, OPTIONS'),
+    });
   }
 
   if (req.method !== 'GET') {
     return jsonResponse({ error: 'Method not allowed' }, 405);
   }
+
+  // Rate limiting (mais permissivo para geocoding)
+  const rateLimitResponse = rateLimitMiddleware(req, 60, 60000);
+  if (rateLimitResponse) return rateLimitResponse;
 
   const url = new URL(req.url);
   const q = url.searchParams.get('q');
@@ -52,6 +61,13 @@ Deno.serve(async (req) => {
       return jsonResponse({ error: 'Parametros obrigatorios para reverse: lat e lon' }, 400);
     }
 
+    // Validar coordenadas
+    const latNum = parseFloat(lat);
+    const lonNum = parseFloat(lon);
+    if (isNaN(latNum) || isNaN(lonNum) || latNum < -90 || latNum > 90 || lonNum < -180 || lonNum > 180) {
+      return jsonResponse({ error: 'Coordenadas invalidas' }, 400);
+    }
+
     nominatimUrl =
       `${NOMINATIM_BASE}/reverse` +
       `?lat=${encodeURIComponent(lat)}` +
@@ -62,16 +78,27 @@ Deno.serve(async (req) => {
       nominatimUrl += `&zoom=${encodeURIComponent(zoom)}`;
     }
   } else if (q) {
+    // Sanitizar query
+    const sanitizedQuery = sanitizeString(q, 200);
+    if (!sanitizedQuery) {
+      return jsonResponse({ error: 'Query invalida' }, 400);
+    }
+
     nominatimUrl =
-      `${NOMINATIM_BASE}/search?q=${encodeURIComponent(q)}` +
+      `${NOMINATIM_BASE}/search?q=${encodeURIComponent(sanitizedQuery)}` +
       `&format=${encodeURIComponent(format)}` +
       `&limit=${encodeURIComponent(limit)}` +
       `&countrycodes=${encodeURIComponent(countryCodes)}` +
       `&addressdetails=${encodeURIComponent(addressdetails)}`;
   } else if (postalcode) {
+    const sanitizedPostalcode = sanitizeString(postalcode, 20);
+    if (!sanitizedPostalcode) {
+      return jsonResponse({ error: 'Postalcode invalido' }, 400);
+    }
+
     nominatimUrl =
       `${NOMINATIM_BASE}/search` +
-      `?postalcode=${encodeURIComponent(postalcode)}` +
+      `?postalcode=${encodeURIComponent(sanitizedPostalcode)}` +
       `&country=${encodeURIComponent(country)}` +
       `&format=${encodeURIComponent(format)}&limit=1`;
   } else {
@@ -81,7 +108,7 @@ Deno.serve(async (req) => {
   try {
     const response = await fetch(nominatimUrl, {
       headers: {
-        'User-Agent': 'VitrineBairro/1.0 (supabase-edge-function)',
+        'User-Agent': 'Ordax/1.0 (supabase-edge-function)',
         'Accept-Language': 'pt-BR,pt;q=0.9',
       },
     });
@@ -91,25 +118,17 @@ Deno.serve(async (req) => {
     try {
       data = JSON.parse(rawBody);
     } catch {
-      data = {
-        error: 'Resposta invalida do Nominatim',
-        raw: rawBody.slice(0, 300),
-      };
+      return errorResponse('Resposta invalida do Nominatim', 502, { raw: rawBody.slice(0, 300) });
     }
 
     return new Response(JSON.stringify(data), {
       status: response.status,
       headers: {
-        'Content-Type': 'application/json',
+        ...getAllSecurityHeaders('GET, OPTIONS'),
         'Cache-Control': 'public, max-age=86400',
-        ...CORS_HEADERS,
       },
     });
   } catch (err) {
-    console.error('[nominatim-proxy] Error calling Nominatim:', err);
-    return jsonResponse(
-      { error: 'Falha ao consultar Nominatim', detail: String(err) },
-      502,
-    );
+    return errorResponse('Falha ao consultar Nominatim', 502, err);
   }
 });

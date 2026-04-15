@@ -8,8 +8,12 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 // Configuração do Supabase
-const supabaseUrl = 'https://xhdowzacfujckjelqhtd.supabase.co';
-const supabaseServiceKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhoZG93emFjZnVqY2tqZWxxaHRkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NDUwNDA4OSwiZXhwIjoyMDkwMDgwMDg5fQ.mRgz7fJ_TfHwvUkp91ymY4L1uKTSQIgeAU1XywpiU-c';
+const supabaseUrl = process.env.VITE_SUPABASE_URL;
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+if (!supabaseUrl || !supabaseServiceKey) {
+  throw new Error('VITE_SUPABASE_URL e SUPABASE_SERVICE_ROLE_KEY devem estar definidas');
+}
 
 // Migrations a aplicar
 const migrations = [
@@ -148,7 +152,7 @@ async function generateApplyInstructions() {
   console.log('📋 INSTRUÇÕES PARA APLICAR AS MIGRATIONS');
   console.log('='.repeat(70));
   console.log('\n1️⃣ Abra o Supabase SQL Editor:');
-  console.log(`   ${supabaseUrl.replace('https://xhdowzacfujckjelqhtd.supabase.co', 'https://supabase.com/dashboard/project/xhdowzacfujckjelqhtd')}/sql/new`);
+  console.log(`   https://supabase.com/dashboard/project/[YOUR_PROJECT_ID]/sql/new`);
   console.log('\n2️⃣ Copie e cole o conteúdo de cada migration (uma por vez):');
   
   migrations.forEach((migration, index) => {

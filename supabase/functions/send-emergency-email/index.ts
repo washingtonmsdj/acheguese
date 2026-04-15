@@ -3,6 +3,16 @@
 
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { 
+  getAllSecurityHeaders,
+  rateLimitMiddleware,
+  auditLog,
+  getAuditInfo,
+  errorResponse,
+  isValidUUID,
+  isValidEmail,
+  sanitizeString,
+} from '../_shared/security.ts';
 
 const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY')
 const EMAIL_FROM_DOMAIN = Deno.env.get('EMAIL_FROM_DOMAIN') || 'onboarding@resend.dev'
@@ -41,16 +51,19 @@ interface EmailResponse {
 }
 
 serve(async (req) => {
-  // CORS headers
+  const auditInfo = getAuditInfo(req);
+  
+  // Handle CORS preflight
   if (req.method === 'OPTIONS') {
     return new Response('ok', {
-      headers: {
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Methods': 'POST',
-        'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-      },
+      status: 204,
+      headers: getAllSecurityHeaders('POST, OPTIONS'),
     })
   }
+
+  // Rate limiting global
+  const rateLimitResponse = rateLimitMiddleware(req, 100, 60000);
+  if (rateLimitResponse) return rateLimitResponse;
 
   try {
     // Validar API key do Resend
@@ -62,12 +75,27 @@ serve(async (req) => {
     const emailRequest: EmailRequest = await req.json()
 
     // Validar campos obrigatórios
-    if (!emailRequest.contactEmail || !emailRequest.alertId) {
-      throw new Error('Missing required fields: contactEmail, alertId')
+    if (!emailRequest.contactEmail || !isValidEmail(emailRequest.contactEmail)) {
+      throw new Error('Valid contactEmail is required')
     }
 
+    if (!emailRequest.alertId || !isValidUUID(emailRequest.alertId)) {
+      throw new Error('Valid alertId is required')
+    }
+
+    if (!emailRequest.contactId || !isValidUUID(emailRequest.contactId)) {
+      throw new Error('Valid contactId is required')
+    }
+
+    // Sanitizar entradas
+    const sanitizedContactName = sanitizeString(emailRequest.contactName || 'Contato', 100);
+    const sanitizedUserName = sanitizeString(emailRequest.userName || 'Usuário', 100);
+    const sanitizedDescription = emailRequest.alertDescription 
+      ? sanitizeString(emailRequest.alertDescription, 500)
+      : undefined;
+
     // ============================================
-    // RATE LIMITING
+    // RATE LIMITING POR ALERTA
     // ============================================
     
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
@@ -113,36 +141,43 @@ serve(async (req) => {
         created_at: new Date().toISOString(),
       })
       
+      auditLog({
+        timestamp: new Date().toISOString(),
+        action: 'emergency_email_rate_limited',
+        resource: 'emergency_alerts',
+        status: 'failure',
+        details: { alertId: emailRequest.alertId, contactId: emailRequest.contactId },
+        ...auditInfo,
+      });
+      
       throw new Error(`Rate limit exceeded: ${RATE_LIMIT_MAX} emails per ${RATE_LIMIT_WINDOW_MINUTES} minutes`)
     }
 
     // Construir email
     const subject = '🚨 ALERTA DE EMERGÊNCIA'
-    const userName = emailRequest.userName || 'Usuário'
-    const userPhone = emailRequest.userPhone || 'Não informado'
     const alertType = translateAlertType(emailRequest.alertType)
     const location = emailRequest.alertLocation
       ? `${emailRequest.alertLocation.latitude}, ${emailRequest.alertLocation.longitude}`
       : 'Não disponível'
 
     const htmlBody = buildEmailHtml(
-      emailRequest.contactName,
-      userName,
-      userPhone,
+      sanitizedContactName,
+      sanitizedUserName,
+      emailRequest.userPhone || 'Não informado',
       alertType,
       emailRequest.alertCreatedAt,
       location,
-      emailRequest.alertDescription
+      sanitizedDescription
     )
 
     const textBody = buildEmailText(
-      emailRequest.contactName,
-      userName,
-      userPhone,
+      sanitizedContactName,
+      sanitizedUserName,
+      emailRequest.userPhone || 'Não informado',
       alertType,
       emailRequest.alertCreatedAt,
       location,
-      emailRequest.alertDescription
+      sanitizedDescription
     )
 
     // Enviar via Resend
@@ -183,6 +218,20 @@ serve(async (req) => {
       created_at: new Date().toISOString(),
     })
 
+    // Audit log
+    auditLog({
+      timestamp: new Date().toISOString(),
+      action: 'emergency_email_sent',
+      resource: 'emergency_alerts',
+      status: 'success',
+      details: { 
+        alertId: emailRequest.alertId, 
+        contactId: emailRequest.contactId,
+        emailId: resendResult.id,
+      },
+      ...auditInfo,
+    });
+
     // Retornar resultado estruturado
     const response: EmailResponse = {
       success: true,
@@ -200,30 +249,19 @@ serve(async (req) => {
     }
 
     return new Response(JSON.stringify(response), {
-      headers: {
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*',
-      },
+      headers: getAllSecurityHeaders(),
     })
   } catch (error) {
-    console.error('Error sending emergency email:', error)
-
-    const errorResponse: EmailResponse = {
-      success: false,
-      contactId: '',
-      channel: 'email',
+    auditLog({
       timestamp: new Date().toISOString(),
-      status: 'failed',
-      error: error instanceof Error ? error.message : 'Unknown error',
-    }
+      action: 'emergency_email_failed',
+      resource: 'emergency_alerts',
+      status: 'failure',
+      details: { error: error instanceof Error ? error.message : 'Unknown error' },
+      ...auditInfo,
+    });
 
-    return new Response(JSON.stringify(errorResponse), {
-      status: 500,
-      headers: {
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*',
-      },
-    })
+    return errorResponse('Failed to send emergency email', 500, error);
   }
 })
 

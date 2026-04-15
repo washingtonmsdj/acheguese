@@ -4,8 +4,12 @@
 
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = "https://xhdowzacfujckjelqhtd.supabase.co";
-const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhoZG93emFjZnVqY2tqZWxxaHRkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ1MDQwODksImV4cCI6MjA5MDA4MDA4OX0.Dn7uIaD0CTpVBi-qM_L4JYH_YXlc6T9tpR0KxO4nzSA";
+const supabaseUrl = process.env.VITE_SUPABASE_URL;
+const supabaseKey = process.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+
+if (!supabaseUrl || !supabaseKey) {
+  throw new Error('VITE_SUPABASE_URL e VITE_SUPABASE_PUBLISHABLE_KEY devem estar definidas');
+}
 
 const supabase = createClient(supabaseUrl, supabaseKey);
 

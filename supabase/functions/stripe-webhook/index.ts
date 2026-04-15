@@ -19,6 +19,15 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import Stripe from 'https://esm.sh/stripe@12.0.0';
+import { 
+  getAllSecurityHeaders, 
+  rateLimitMiddleware,
+  auditLog,
+  getAuditInfo,
+  errorResponse,
+  sanitizeString,
+  isValidUUID,
+} from '../_shared/security.ts';
 
 // ══════════════════════════════════════════════════════════════════════════
 // CONFIGURATION
@@ -28,6 +37,10 @@ const STRIPE_SECRET_KEY = Deno.env.get('STRIPE_SECRET_KEY')!;
 const STRIPE_WEBHOOK_SECRET = Deno.env.get('STRIPE_WEBHOOK_SECRET')!;
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+
+if (!STRIPE_SECRET_KEY || !STRIPE_WEBHOOK_SECRET || !SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
+  throw new Error('Missing required environment variables');
+}
 
 const stripe = new Stripe(STRIPE_SECRET_KEY, {
   apiVersion: '2023-10-16',
@@ -66,9 +79,15 @@ async function handleSubscriptionCreated(subscription: Stripe.Subscription) {
   const businessId = subscription.metadata.business_id;
   const planTier = subscription.metadata.plan_tier as 'pro' | 'delivery';
   
-  if (!businessId || !planTier) {
-    console.error('Missing metadata:', { businessId, planTier });
-    return;
+  // Validação de entrada
+  if (!businessId || !isValidUUID(businessId)) {
+    console.error('Invalid business_id:', businessId);
+    throw new Error('Invalid business_id in metadata');
+  }
+  
+  if (!planTier || !['pro', 'delivery'].includes(planTier)) {
+    console.error('Invalid plan_tier:', planTier);
+    throw new Error('Invalid plan_tier in metadata');
   }
   
   // Inserir ou atualizar assinatura
@@ -93,6 +112,14 @@ async function handleSubscriptionCreated(subscription: Stripe.Subscription) {
     console.error('Error upserting subscription:', error);
     throw error;
   }
+  
+  auditLog({
+    timestamp: new Date().toISOString(),
+    action: 'subscription_created',
+    resource: 'gastronomy_subscriptions',
+    status: 'success',
+    details: { businessId, planTier, subscriptionId: subscription.id },
+  });
   
   console.log('Subscription created successfully');
 }
@@ -207,14 +234,34 @@ async function handlePaymentFailed(invoice: Stripe.Invoice) {
 // ══════════════════════════════════════════════════════════════════════════
 
 serve(async (req) => {
+  const auditInfo = getAuditInfo(req);
+  
+  // Handle CORS preflight
+  if (req.method === 'OPTIONS') {
+    return new Response(null, { 
+      status: 204, 
+      headers: getAllSecurityHeaders('POST, OPTIONS'),
+    });
+  }
+  
+  // Rate limiting (mais permissivo para webhooks do Stripe)
+  const rateLimitResponse = rateLimitMiddleware(req, 1000, 60000);
+  if (rateLimitResponse) return rateLimitResponse;
+  
   try {
     // Get signature and body
     const signature = req.headers.get('stripe-signature');
     if (!signature) {
-      return new Response(
-        JSON.stringify({ error: 'Missing stripe-signature header' }),
-        { status: 400, headers: { 'Content-Type': 'application/json' } }
-      );
+      auditLog({
+        timestamp: new Date().toISOString(),
+        action: 'webhook_failed',
+        resource: 'stripe_webhook',
+        status: 'failure',
+        details: { reason: 'missing_signature' },
+        ...auditInfo,
+      });
+      
+      return errorResponse('Missing stripe-signature header', 400);
     }
     
     const body = await req.text();
@@ -224,11 +271,16 @@ serve(async (req) => {
     try {
       event = stripe.webhooks.constructEvent(body, signature, STRIPE_WEBHOOK_SECRET);
     } catch (err) {
-      console.error('Webhook signature verification failed:', err);
-      return new Response(
-        JSON.stringify({ error: 'Invalid signature' }),
-        { status: 400, headers: { 'Content-Type': 'application/json' } }
-      );
+      auditLog({
+        timestamp: new Date().toISOString(),
+        action: 'webhook_failed',
+        resource: 'stripe_webhook',
+        status: 'failure',
+        details: { reason: 'invalid_signature' },
+        ...auditInfo,
+      });
+      
+      return errorResponse('Invalid signature', 400);
     }
     
     console.log('Processing event:', event.type);
@@ -259,20 +311,31 @@ serve(async (req) => {
         console.log('Unhandled event type:', event.type);
     }
     
+    auditLog({
+      timestamp: new Date().toISOString(),
+      action: 'webhook_processed',
+      resource: 'stripe_webhook',
+      status: 'success',
+      details: { eventType: event.type, eventId: event.id },
+      ...auditInfo,
+    });
+    
     // Return success
     return new Response(
       JSON.stringify({ received: true }),
-      { status: 200, headers: { 'Content-Type': 'application/json' } }
+      { status: 200, headers: getAllSecurityHeaders() }
     );
     
   } catch (error) {
-    console.error('Error processing webhook:', error);
+    auditLog({
+      timestamp: new Date().toISOString(),
+      action: 'webhook_error',
+      resource: 'stripe_webhook',
+      status: 'failure',
+      details: { error: error instanceof Error ? error.message : 'Unknown error' },
+      ...auditInfo,
+    });
     
-    return new Response(
-      JSON.stringify({
-        error: error instanceof Error ? error.message : 'Unknown error',
-      }),
-      { status: 500, headers: { 'Content-Type': 'application/json' } }
-    );
+    return errorResponse('Webhook processing failed', 500, error);
   }
 });

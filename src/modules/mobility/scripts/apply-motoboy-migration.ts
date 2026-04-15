@@ -10,9 +10,12 @@
 
 import { createClient } from "@supabase/supabase-js";
 
-const SUPABASE_URL = process.env.VITE_SUPABASE_URL || "https://xhdowzacfujckjelqhtd.supabase.co";
-const SERVICE_KEY  = process.env.VITE_SUPABASE_SERVICE_ROLE_KEY ||
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhoZG93emFjZnVqY2tqZWxxaHRkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NDUwNDA4OSwiZXhwIjoyMDkwMDgwMDg5fQ.mRgz7fJ_TfHwvUkp91ymY4L1uKTSQIgeAU1XywpiU-c";
+const SUPABASE_URL = process.env.VITE_SUPABASE_URL;
+const SERVICE_KEY  = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+if (!SUPABASE_URL || !SERVICE_KEY) {
+  throw new Error('VITE_SUPABASE_URL e SUPABASE_SERVICE_ROLE_KEY devem estar definidas');
+}
 
 const supabase = createClient(SUPABASE_URL, SERVICE_KEY);
 

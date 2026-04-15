@@ -8,7 +8,15 @@
  */
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
-import { requireAdmin, jsonResponse, corsHeaders } from '../_shared/adminAuth.ts';
+import { requireAdmin, jsonResponse } from '../_shared/adminAuth.ts';
+import { 
+  getAllSecurityHeaders,
+  rateLimitMiddleware,
+  auditLog,
+  getAuditInfo,
+  isValidUUID,
+  sanitizeString,
+} from '../_shared/security.ts';
 
 interface VerifyRequest {
   profile_id: string;
@@ -16,13 +24,23 @@ interface VerifyRequest {
 }
 
 Deno.serve(async (req) => {
+  const auditInfo = getAuditInfo(req);
+  
+  // Handle CORS preflight
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders() });
+    return new Response('ok', { 
+      status: 204, 
+      headers: getAllSecurityHeaders('POST, OPTIONS'),
+    });
   }
 
   if (req.method !== 'POST') {
     return jsonResponse({ error: 'Method not allowed' }, 405);
   }
+
+  // Rate limiting
+  const rateLimitResponse = rateLimitMiddleware(req, 20, 60000);
+  if (rateLimitResponse) return rateLimitResponse;
 
   // 1. Validar admin
   const authResult = await requireAdmin(req);
@@ -33,14 +51,28 @@ Deno.serve(async (req) => {
   try {
     body = await req.json();
   } catch {
+    auditLog({
+      timestamp: new Date().toISOString(),
+      userId: authResult.userId,
+      action: 'verify_profile_failed',
+      resource: 'profiles',
+      status: 'failure',
+      details: { reason: 'invalid_json' },
+      ...auditInfo,
+    });
     return jsonResponse({ error: 'Invalid JSON body' }, 400);
   }
 
-  if (!body.profile_id?.trim()) {
-    return jsonResponse({ error: 'profile_id is required' }, 400);
+  // 3. Validar entrada
+  if (!body.profile_id?.trim() || !isValidUUID(body.profile_id)) {
+    return jsonResponse({ error: 'Valid profile_id is required' }, 400);
   }
 
-  // 3. Executar via service_role
+  const sanitizedReason = body.reason?.trim() 
+    ? sanitizeString(body.reason, 500) 
+    : null;
+
+  // 4. Executar via service_role
   const supabase = createClient(
     Deno.env.get('SUPABASE_URL')!,
     Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
@@ -50,14 +82,32 @@ Deno.serve(async (req) => {
   const { data, error } = await supabase.rpc('verify_profile', {
     p_profile_id: body.profile_id,
     p_admin_user_id: authResult.userId,
-    p_reason: body.reason?.trim() ?? null,
+    p_reason: sanitizedReason,
   });
 
   if (error) {
-    console.error('[admin-verify-profile] RPC error:', error.message);
-    return jsonResponse({ error: error.message }, 500);
+    auditLog({
+      timestamp: new Date().toISOString(),
+      userId: authResult.userId,
+      action: 'verify_profile_failed',
+      resource: 'profiles',
+      status: 'failure',
+      details: { profileId: body.profile_id, error: error.message },
+      ...auditInfo,
+    });
+    return jsonResponse({ error: 'Failed to verify profile' }, 500);
   }
 
-  console.log('[admin-verify-profile] Verified:', body.profile_id, 'by', authResult.userId);
+  // Audit log de sucesso
+  auditLog({
+    timestamp: new Date().toISOString(),
+    userId: authResult.userId,
+    action: 'verify_profile',
+    resource: 'profiles',
+    status: 'success',
+    details: { profileId: body.profile_id, reason: sanitizedReason },
+    ...auditInfo,
+  });
+
   return jsonResponse(data);
 });
