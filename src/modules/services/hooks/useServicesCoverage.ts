@@ -10,11 +10,11 @@
 import { useState, useEffect, useCallback } from 'react';
 import { servicesCoverageService } from '../services';
 import { useServicesLocation } from './useServicesLocation';
-import type { ServiceArea, CheckCoverageOutput } from '@/core/coverage/types';
+import type { ServiceArea, GetCoverageOutput } from '@/core/coverage/index.ts';
 
 export function useServicesCoverage(professionalId?: string) {
   const [hasCoverage, setHasCoverage] = useState<boolean>(false);
-  const [coverageDetails, setCoverageDetails] = useState<CheckCoverageOutput | null>(null);
+  const [coverageDetails, setCoverageDetails] = useState<GetCoverageOutput | null>(null);
   const [serviceAreas, setServiceAreas] = useState<ServiceArea[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [coverageMessage, setCoverageMessage] = useState<string>('');
@@ -80,9 +80,9 @@ export function useServicesCoverage(professionalId?: string) {
     checkCoverage,
     loadServiceAreas,
     validateForBooking,
-    coverageType: coverageDetails?.coverage_type || null,
-    isDirect: coverageDetails?.coverage_type === 'direct',
-    isInherited: coverageDetails?.coverage_type === 'inherited',
+    coverageType: coverageDetails?.coverages?.[0]?.coverage?.coverage_type || null,
+    isDirect: coverageDetails?.coverages?.[0]?.coverage?.coverage_type === 'district' || coverageDetails?.coverages?.[0]?.coverage?.coverage_type === 'radius',
+    isInherited: coverageDetails?.coverages?.[0]?.coverage?.coverage_type === 'city',
     hasAnyCoverage: serviceAreas.length > 0,
   };
 }

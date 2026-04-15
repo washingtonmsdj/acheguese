@@ -9,7 +9,7 @@
  */
 
 import { CoverageService, createCoverageRepository, CoverageStatus, createGeospatialPort } from '@/core/coverage/index.ts';
-import type { ServiceArea, GetCoverageOutput } from '@/core/coverage/index.ts';
+import type { ServiceArea, GetCoverageOutput, DoesCoverOutput } from '@/core/coverage/index.ts';
 import { createLocationRepository } from '@/core/location/repositories/createLocationRepository';
 import { servicesLocationService } from './ServicesLocationService';
 

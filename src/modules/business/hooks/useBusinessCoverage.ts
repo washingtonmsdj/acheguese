@@ -11,11 +11,11 @@ import { useState, useEffect, useCallback } from 'react';
 import { businessCoverageService } from '../services';
 import { useBusinessLocation } from './useBusinessLocation';
 import { logger } from '@/shared/utils/logger';
-import type { ServiceArea, CheckCoverageOutput } from '@/core/coverage/types';
+import type { ServiceArea, DoesCoverOutput } from '@/core/coverage/index.ts';
 
 export function useBusinessCoverage(businessId?: string) {
   const [hasCoverage, setHasCoverage] = useState<boolean>(false);
-  const [coverageDetails, setCoverageDetails] = useState<CheckCoverageOutput | null>(null);
+  const [coverageDetails, setCoverageDetails] = useState<DoesCoverOutput | null>(null);
   const [serviceAreas, setServiceAreas] = useState<ServiceArea[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [coverageMessage, setCoverageMessage] = useState<string>('');
@@ -112,9 +112,9 @@ export function useBusinessCoverage(businessId?: string) {
     validateForOrder,
     
     // Computed
-    coverageType: coverageDetails?.coverage_type || null,
-    isDirect: coverageDetails?.coverage_type === 'direct',
-    isInherited: coverageDetails?.coverage_type === 'inherited',
+    coverageType: coverageDetails?.coverage?.coverage_type === 'city' ? 'inherited' : coverageDetails?.covers ? 'direct' : null,
+    isDirect: coverageDetails?.covers && coverageDetails?.coverage?.coverage_type !== 'city',
+    isInherited: coverageDetails?.coverage?.coverage_type === 'city',
     hasAnyCoverage: serviceAreas.length > 0,
   };
 }

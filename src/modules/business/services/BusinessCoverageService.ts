@@ -8,8 +8,8 @@
  * - Validar cobertura para agendamentos/pedidos
  */
 
-import { CoverageService, createCoverageRepository } from '@/core/coverage/index.ts';
-import type { ServiceArea, CheckCoverageOutput } from '@/core/coverage/index.ts';
+import { CoverageService, createCoverageRepository, CoverageStatus, createGeospatialPort } from '@/core/coverage/index.ts';
+import type { ServiceArea, DoesCoverOutput, GetCoverageOutput } from '@/core/coverage/index.ts';
 import { createLocationRepository } from '@/core/location/repositories/createLocationRepository';
 import { businessLocationService } from './BusinessLocationService';
 
@@ -19,7 +19,8 @@ export class BusinessCoverageService {
   constructor() {
     this.coverageService = new CoverageService(
       createCoverageRepository(),
-      createLocationRepository()
+      createLocationRepository(),
+      createGeospatialPort()
     );
   }
 
@@ -30,18 +31,19 @@ export class BusinessCoverageService {
    */
   async checkCoverageInActiveLocation(businessId: string): Promise<boolean> {
     const locationId = businessLocationService.getActiveLocationId();
-    
+
     if (!locationId) {
       return false;
     }
 
     try {
-      const result = await this.coverageService.checkCoverage({
-        profile_id: businessId,
+      const result = await this.coverageService.doesCover({
+        entity_type: 'business',
+        entity_id: businessId,
         location_id: locationId
       });
-      
-      return result.has_coverage;
+
+      return result.covers;
     } catch {
       return false;
     }
@@ -50,22 +52,21 @@ export class BusinessCoverageService {
   /**
    * Obtém detalhes de cobertura do business na localização ativa
    * @param businessId - ID do business
-   * @returns Promise<CheckCoverageOutput | null> detalhes de cobertura
+   * @returns Promise<DoesCoverOutput | null> detalhes de cobertura
    */
-  async getCoverageDetails(businessId: string): Promise<CheckCoverageOutput | null> {
+  async getCoverageDetails(businessId: string): Promise<DoesCoverOutput | null> {
     const locationId = businessLocationService.getActiveLocationId();
-    
+
     if (!locationId) {
       return null;
     }
 
     try {
-      const result = await this.coverageService.checkCoverage({
-        profile_id: businessId,
+      return await this.coverageService.doesCover({
+        entity_type: 'business',
+        entity_id: businessId,
         location_id: locationId
       });
-      
-      return result;
     } catch {
       return null;
     }
@@ -78,13 +79,12 @@ export class BusinessCoverageService {
    */
   async getBusinessServiceAreas(businessId: string): Promise<ServiceArea[]> {
     try {
-      const result = await this.coverageService.getServiceAreas({
-        profile_id: businessId,
-        page: 1,
-        page_size: 100
+      const result = await this.coverageService.getCoverage({
+        entity_type: 'business',
+        entity_id: businessId,
+        status: CoverageStatus.ACTIVE
       });
-      
-      return result.service_areas;
+      return result.coverages.map((c) => c.coverage);
     } catch {
       return [];
     }
@@ -111,21 +111,19 @@ export class BusinessCoverageService {
    */
   async filterBusinessesByCoverage(businessIds: string[]): Promise<string[]> {
     const locationId = businessLocationService.getActiveLocationId();
-    
+
     if (!locationId || businessIds.length === 0) {
       return [];
     }
 
-    const coverageChecks = await Promise.all(
-      businessIds.map(async (businessId) => {
-        const hasCoverage = await this.checkCoverageInActiveLocation(businessId);
-        return { businessId, hasCoverage };
-      })
+    const checks = await Promise.all(
+      businessIds.map(async (id) => ({
+        id,
+        hasCoverage: await this.checkCoverageInActiveLocation(id)
+      }))
     );
 
-    return coverageChecks
-      .filter(check => check.hasCoverage)
-      .map(check => check.businessId);
+    return checks.filter((c) => c.hasCoverage).map((c) => c.id);
   }
 
   /**
@@ -134,20 +132,23 @@ export class BusinessCoverageService {
    * @returns Promise<string> mensagem de cobertura
    */
   async getCoverageMessage(businessId: string): Promise<string> {
-    const details = await this.getCoverageDetails(businessId);
-    
-    if (!details) {
-      return 'Selecione uma localização para verificar cobertura';
-    }
+    const locationId = businessLocationService.getActiveLocationId();
+    if (!locationId) return 'Selecione uma localização para verificar cobertura';
 
-    if (details.has_coverage) {
-      if (details.coverage_type === 'direct') {
-        return 'Atende nesta região';
-      } else if (details.coverage_type === 'inherited') {
-        return 'Atende nesta região (cobertura herdada)';
+    try {
+      const result = await this.coverageService.doesCover({
+        entity_type: 'business',
+        entity_id: businessId,
+        location_id: locationId
+      });
+      if (result.covers) {
+        return result.coverage?.coverage_type === 'city'
+          ? 'Atende nesta região (cobertura herdada)'
+          : 'Atende nesta região';
       }
+    } catch {
+      // fallthrough
     }
-
     return 'Não atende nesta região';
   }
 
@@ -165,7 +166,7 @@ export class BusinessCoverageService {
     }
 
     const hasCoverage = await this.checkCoverageInActiveLocation(businessId);
-    
+
     if (!hasCoverage) {
       return {
         valid: false,
