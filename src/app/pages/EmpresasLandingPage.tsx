@@ -691,7 +691,7 @@ export default function EmpresasLandingPage({ resolved: resolvedProp, activeMemb
                   type: 'business' as const,
                   coordinates: { latitude: b.coords.lat, longitude: b.coords.lng },
                   title: b.name,
-                  status: (b.isOpen ? 'active' : 'inactive') as const,
+                  status: b.isOpen ? 'active' : 'inactive',
                   metadata: { category: b.category, rating: b.rating },
                 }))}
               onMarkerClick={(id) => {
