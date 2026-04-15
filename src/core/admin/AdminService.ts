@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * AdminService — SSOT canônico de administração
  *

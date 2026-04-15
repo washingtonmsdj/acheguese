@@ -37,7 +37,7 @@ export function AppTopbar() {
   const lastTerritory = useSyncExternalStore(
     lastTerritoryStore.subscribe.bind(lastTerritoryStore),
     lastTerritoryStore.get.bind(lastTerritoryStore),
-  );
+  ) as import('@/core/routing/stores/LastTerritoryStore').LastTerritory | null;
 
   useEffect(() => {
     if (!user) { setUnreadMessages(0); return; }

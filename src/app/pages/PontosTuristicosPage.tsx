@@ -375,7 +375,7 @@ function TouristPointCard({ point, index, featured = false, state, city }: { poi
                 {(point.neighborhood || point.address) && (
                   <div className="flex items-center gap-1 text-xs text-muted-foreground mb-2">
                     <MapPin className="h-3 w-3 flex-shrink-0" />
-                    <span className="truncate">{point.neighborhood || point.address}</span>
+                    <span className="truncate">{point.neighborhood || (typeof point.address === 'string' ? point.address : '')}</span>
                   </div>
                 )}
 
@@ -401,13 +401,13 @@ function TouristPointCard({ point, index, featured = false, state, city }: { poi
                 {/* Amenities + rating */}
                 <div className="flex items-center gap-2 text-muted-foreground">
                   {point.accessibility && (
-                    <Accessibility className="h-3.5 w-3.5" title="Acessível" />
+                    <Accessibility className="h-3.5 w-3.5" aria-label="Acessível" />
                   )}
                   {point.has_parking && (
-                    <ParkingMeter className="h-3.5 w-3.5" title="Estacionamento" />
+                    <ParkingMeter className="h-3.5 w-3.5" aria-label="Estacionamento" />
                   )}
                   {point.has_restaurant && (
-                    <UtensilsCrossed className="h-3.5 w-3.5" title="Restaurante" />
+                    <UtensilsCrossed className="h-3.5 w-3.5" aria-label="Restaurante" />
                   )}
                   {point.rating > 0 && (
                     <span className="flex items-center gap-0.5 text-xs font-medium text-warning">
