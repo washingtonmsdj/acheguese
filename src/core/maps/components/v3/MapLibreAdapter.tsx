@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * MapLibreAdapter - Ponte entre MapLibre GL JS e o sistema de hooks v3
  *

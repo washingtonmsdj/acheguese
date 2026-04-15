@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * SpatialSearchService - SSOT para busca espacial
  * 

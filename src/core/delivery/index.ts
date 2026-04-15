@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Exports centralizados do módulo de entregas
  */

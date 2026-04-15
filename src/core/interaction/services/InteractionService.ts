@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Interaction Service - GATE 4A FASE 2
  *

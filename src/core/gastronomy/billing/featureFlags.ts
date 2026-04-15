@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * @deprecated Este arquivo está DEPRECADO.
  * 

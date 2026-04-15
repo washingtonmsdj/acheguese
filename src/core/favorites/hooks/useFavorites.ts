@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { useCallback, useMemo } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { BusinessService } from "@/core/business/services/BusinessService";

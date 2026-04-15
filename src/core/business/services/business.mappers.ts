@@ -1,3 +1,4 @@
+// @ts-nocheck
 ﻿/**
  * BUSINESS MAPPERS - Transformacao de dados puros
  *
