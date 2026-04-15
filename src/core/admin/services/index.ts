@@ -46,3 +46,29 @@ export { adminPromotionsService } from "./AdminPromotionsService";
 export { adminRolesService } from "./AdminRolesService";
 export { adminSubscriptionsService } from "./AdminSubscriptionsService";
 export { adminVagasService } from "./AdminVagasService";
+export { adminProfileGovernanceService } from "./AdminProfileGovernanceService";
+export type {
+  AdminProfileIdentityRecord,
+  AdminProfileIdentityListResult,
+  AdminProfileIdentityStats,
+  AdminProfileIdentityFilters,
+  AdminProfileIdentityDetail,
+  AdminProfileFamilySummary,
+  AdminProfilePreferenceScopeSummary,
+  AdminProfilePreferenceFieldSummary,
+  AdminProfileReputationSourceSummary,
+  AdminProfileResidenceSummary,
+  AdminProfilePermissionGovernanceSummary,
+  AdminProfileIdentityIssue,
+} from "./AdminProfileGovernanceService";
+export { adminMapGovernanceService } from "./AdminMapGovernanceService";
+export type {
+  AdminMapGovernanceIssue,
+  AdminMapGovernanceStats,
+  AdminMapProviderSummary,
+  AdminMapLayerSummary,
+  AdminMapCoverageSummary,
+  AdminMapTouristPointCategorySummary,
+  AdminMapGovernanceHotspot,
+  AdminMapGovernanceSnapshot,
+} from "./AdminMapGovernanceService";
