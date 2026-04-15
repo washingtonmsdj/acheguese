@@ -44,6 +44,7 @@ export type {
 export { CoverageErrorCode, COVERAGE_VALIDATION, COVERAGE_PAGINATION } from './types';
 
 export type { ICoverageService } from './services/ICoverageService';
+export { CoverageService } from './services/CoverageService';
 export type { ICoverageRepository } from './repositories/ICoverageRepository';
 export type { IGeospatialPort, GeospatialError, GeospatialErrorCode } from './ports/IGeospatialPort';
 

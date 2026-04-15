@@ -8,7 +8,7 @@
  * - Validar cobertura para agendamentos/pedidos
  */
 
-import { CoverageService } from '@/core/coverage/services/CoverageService';
+import { CoverageService } from '@/core/coverage';
 import { createCoverageRepository } from '@/core/coverage/repositories/createCoverageRepository';
 import { createLocationRepository } from '@/core/location/repositories/createLocationRepository';
 import { businessLocationService } from './BusinessLocationService';
