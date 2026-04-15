@@ -89,7 +89,7 @@ BEGIN
       COALESCE(p.display_name, 'Usuário') as user_name,
       p.avatar_url as user_avatar,
       bd.id as business_id,
-      bd.name as business_name,
+      bd.business_name,
       bd.slug as business_slug,
       CONCAT('avaliou com ', r.rating, '★') as action_label,
       '⭐'::text as emoji,
@@ -101,7 +101,11 @@ BEGIN
     WHERE r.status = 'active'
       AND r.review_type = 'business'
       AND v_include_reviews = true
-      AND (p_geographic_path_pattern IS NULL OR bd.geographic_path ~ p_geographic_path_pattern)
+      AND (p_geographic_path_pattern IS NULL OR EXISTS (
+        SELECT 1 FROM locations l 
+        WHERE l.id = bd.location_id 
+        AND l.geographic_path ~ p_geographic_path_pattern
+      ))
     ORDER BY r.created_at DESC
     LIMIT p_limit
   ),
@@ -112,7 +116,7 @@ BEGIN
       COALESCE(p.display_name, 'Usuário') as user_name,
       p.avatar_url as user_avatar,
       bd.id as business_id,
-      bd.name as business_name,
+      bd.business_name,
       bd.slug as business_slug,
       'recomendou'::text as action_label,
       '👍'::text as emoji,
@@ -122,36 +126,45 @@ BEGIN
     INNER JOIN business_data bd ON bd.id = ufb.business_id
     INNER JOIN gastronomy_profiles gp ON gp.business_id = bd.id
     WHERE v_include_favorites = true
-      AND (p_geographic_path_pattern IS NULL OR bd.geographic_path_pattern ~ p_geographic_path_pattern)
+      AND (p_geographic_path_pattern IS NULL OR EXISTS (
+        SELECT 1 FROM locations l 
+        WHERE l.id = bd.location_id 
+        AND l.geographic_path ~ p_geographic_path_pattern
+      ))
     ORDER BY ufb.created_at DESC
     LIMIT p_limit
   ),
   recent_orders AS (
     SELECT 
-      dr.id,
+      o.id,
       'order'::text as type,
       COALESCE(p.display_name, 'Usuário') as user_name,
       p.avatar_url as user_avatar,
       bd.id as business_id,
-      bd.name as business_name,
+      bd.business_name,
       bd.slug as business_slug,
       CASE 
-        WHEN dr.delivery_mode = 'delivery' THEN 'pediu delivery de'
+        WHEN o.delivery_mode = 'delivery' THEN 'pediu delivery de'
         ELSE 'fez pedido no'
       END as action_label,
       CASE 
-        WHEN dr.delivery_mode = 'delivery' THEN '🛵'
+        WHEN o.delivery_mode = 'delivery' THEN '🛵'
         ELSE '🍽️'
       END as emoji,
-      dr.created_at
-    FROM delivery_requests dr
-    INNER JOIN profiles p ON p.user_id = dr.customer_id
-    INNER JOIN business_data bd ON bd.id = dr.business_id
+      o.created_at
+    FROM orders o
+    INNER JOIN profiles p ON p.id = o.customer_profile_id
+    INNER JOIN business_data bd ON bd.id = o.merchant_profile_id
     INNER JOIN gastronomy_profiles gp ON gp.business_id = bd.id
-    WHERE dr.share_as_activity = true
+    LEFT JOIN delivery_requests dr ON dr.order_id = o.id
+    WHERE (dr.share_as_activity = true OR dr.id IS NULL)
       AND v_include_orders = true
-      AND (p_geographic_path_pattern IS NULL OR bd.geographic_path ~ p_geographic_path_pattern)
-    ORDER BY dr.created_at DESC
+      AND (p_geographic_path_pattern IS NULL OR EXISTS (
+        SELECT 1 FROM locations l 
+        WHERE l.id = bd.location_id 
+        AND l.geographic_path ~ p_geographic_path_pattern
+      ))
+    ORDER BY o.created_at DESC
     LIMIT p_limit
   ),
   combined AS (
