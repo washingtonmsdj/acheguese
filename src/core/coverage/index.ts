@@ -51,3 +51,5 @@ export type { IGeospatialPort, GeospatialError, GeospatialErrorCode } from './po
 export { CoverageRepositoryMock } from './repositories/CoverageRepositoryMock';
 export { CoverageRepositorySupabase } from './repositories/CoverageRepositorySupabase';
 export { createCoverageRepository } from './repositories/createCoverageRepository';
+
+export { createGeospatialPort } from './ports/createGeospatialPort';

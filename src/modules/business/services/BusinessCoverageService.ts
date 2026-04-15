@@ -8,11 +8,10 @@
  * - Validar cobertura para agendamentos/pedidos
  */
 
-import { CoverageService } from '@/core/coverage';
-import { createCoverageRepository } from '@/core/coverage/repositories/createCoverageRepository';
+import { CoverageService, createCoverageRepository } from '@/core/coverage';
+import type { ServiceArea, CheckCoverageOutput } from '@/core/coverage';
 import { createLocationRepository } from '@/core/location/repositories/createLocationRepository';
 import { businessLocationService } from './BusinessLocationService';
-import type { ServiceArea, CheckCoverageOutput } from '@/core/coverage/types';
 
 export class BusinessCoverageService {
   private coverageService: CoverageService;

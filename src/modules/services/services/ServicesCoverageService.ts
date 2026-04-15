@@ -8,14 +8,10 @@
  * - Validar cobertura para agendamentos
  */
 
-import { CoverageService } from '@/core/coverage';
-import { createCoverageRepository } from '@/core/coverage/repositories/createCoverageRepository';
+import { CoverageService, createCoverageRepository, CoverageStatus, createGeospatialPort } from '@/core/coverage';
+import type { ServiceArea, GetCoverageOutput } from '@/core/coverage';
 import { createLocationRepository } from '@/core/location/repositories/createLocationRepository';
-import { createGeospatialPort } from '@/core/coverage/ports/createGeospatialPort';
 import { servicesLocationService } from './ServicesLocationService';
-import { CoverageStatus } from '@/core/coverage/types';
-import type { ServiceArea } from '@/core/coverage/types';
-import type { GetCoverageOutput } from '@/core/coverage/types';
 
 export class ServicesCoverageService {
   private coverageService: CoverageService;
