@@ -1,0 +1,8 @@
+{
+  "version": "1.0",
+  "genre": "platformer",
+  "description": "Contrato canônico para jogos de plataforma",
+  "requiredEntities": ["player"],
+  "requiredSystems": ["PhysicsSystem", "CollisionSystem"],
+  "userMessage": "Para um jogo de plataforma, o mínimo esperado é:\n🏃 jogador\n🏗️ plataformas\n⚙️ física e colisão"
+}

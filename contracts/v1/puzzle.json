@@ -1,0 +1,8 @@
+{
+  "version": "1.0",
+  "genre": "puzzle",
+  "description": "Contrato canônico para jogos de puzzle",
+  "requiredEntities": ["player"],
+  "requiredSystems": ["TimerSystem"],
+  "userMessage": "Para um jogo de puzzle, o mínimo esperado é:\n🧩 jogador\n⏱️ cronômetro"
+}
