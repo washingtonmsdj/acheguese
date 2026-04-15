@@ -7,10 +7,10 @@
 
 import { logger } from "@/shared/utils/logger";
 import { adminStatsService } from "@/core/admin/services/AdminStatsService";
+import { adminMobilityService } from "@/core/admin/services/AdminMobilityService";
 import {
   adminCommunityAlertsService,
   adminCommunityIssuesService,
-  adminMobilityService,
   adminNotificationsService,
 } from "@/core/admin";
 import { profileService } from "@/core/profiles/services/ProfileService";

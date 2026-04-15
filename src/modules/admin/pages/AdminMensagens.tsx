@@ -4,8 +4,8 @@ import { ShieldAlert, Shield, Search, Trash2, Eye, MessageSquare, User } from "l
 import { useAdminGuard } from "@/modules/admin/hooks/useAdminGuard";
 import { adminMessagingService } from "@/core/admin";
 import type { AdminConversationData } from "@/core/admin";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Button } from "@/shared/components/ui/button";
+import { Input } from "@/shared/components/ui/input";
 import {
   Table,
   TableBody,
@@ -13,27 +13,27 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
+} from "@/shared/components/ui/table";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
+} from "@/shared/components/ui/select";
 import {
   Card,
   CardContent,
-} from "@/components/ui/card";
+} from "@/shared/components/ui/card";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
-import { Badge } from "@/components/ui/badge";
-import { toast } from "@/components/ui/use-toast";
+} from "@/shared/components/ui/dialog";
+import { Badge } from "@/shared/components/ui/badge";
+import { toast } from "@/shared/components/ui/use-toast";
 
 const STATUS_OPTIONS = ["active", "blocked"];
 
