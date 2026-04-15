@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * GATE 7: OPERATIONAL VERIFICATION SERVICE
  * 

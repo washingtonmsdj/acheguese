@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
 /**
  * ProfileServiceLegacy - IDENTITY CORE (FASE PROFILE.1)

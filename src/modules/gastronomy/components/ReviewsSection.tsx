@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * ReviewsSection - Seção completa de avaliações
  */

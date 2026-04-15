@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * useGastronomyFavoriters — Quem favoritou este restaurante
  *

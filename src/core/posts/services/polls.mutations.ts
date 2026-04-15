@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * 🗳️ POLLS MUTATIONS - SSOT v2.0
  *

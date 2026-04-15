@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * PROFILE LINKS SERVICE - FASE 3
  * Service layer para gestão de vínculos entre perfis

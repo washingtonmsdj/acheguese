@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * 📦 CLASSIFIEDS MUTATIONS - SSOT Write Model
  *

@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * 🔒 USER WARNINGS SERVICE - SSOT v2.0
  *

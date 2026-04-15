@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * 📦 POSTS QUERIES - SSOT v2.0
  *

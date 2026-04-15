@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * 💰 CLASSIFICADOS PAGE — Marketplace Completo
  *

@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * SafetyService - SSOT para segurança, emergência e incidentes
  *

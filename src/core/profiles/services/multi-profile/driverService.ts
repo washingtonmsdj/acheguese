@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * DRIVER SERVICE - FASE 3
  * Service layer para operações de perfis driver

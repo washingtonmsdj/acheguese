@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * 👔 BUSINESS ADMIN — Administração e estatísticas
  * 

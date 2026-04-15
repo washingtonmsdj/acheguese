@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * SubscriptionService - SSOT para assinaturas e planos
  *

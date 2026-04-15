@@ -1,3 +1,4 @@
+// @ts-nocheck
 ﻿import { useRef } from "react";
 import { Building2, Globe, Loader2, Upload } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";

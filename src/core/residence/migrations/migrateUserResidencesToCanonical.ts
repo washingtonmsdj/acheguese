@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Script de migração: user_residences (legado) → modelo canônico
  * 

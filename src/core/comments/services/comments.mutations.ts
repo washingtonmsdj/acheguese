@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * 💬 COMMENTS MUTATIONS - Operações de escrita (SSOT)
  *

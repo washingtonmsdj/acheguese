@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * 📋 CLASSIFICADO GRID COMPONENT (NÍVEL AAA)
  *

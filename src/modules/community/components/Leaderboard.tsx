@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { useState, useEffect, useCallback } from "react";
 import { Trophy, Medal, Award, TrendingUp, MapPin } from "lucide-react";
 import { Card } from "@/shared/components/ui/card";

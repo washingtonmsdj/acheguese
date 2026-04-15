@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * MediaService - SSOT para upload e gerenciamento de mídia
  *

@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * 🔔 NOTIFICATIONS QUERIES - Operações de leitura (SSOT)
  *

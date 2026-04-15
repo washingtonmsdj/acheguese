@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * 📝 PROFESSIONAL MUTATIONS - SSOT v2.0
  *

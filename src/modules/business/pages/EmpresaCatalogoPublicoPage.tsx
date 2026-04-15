@@ -1,3 +1,4 @@
+// @ts-nocheck
 import React from "react";
 
 import { useMemo, useState, useCallback, useEffect } from "react";

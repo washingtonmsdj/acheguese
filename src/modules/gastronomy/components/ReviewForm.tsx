@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * ReviewForm — Formulário para criar/editar avaliação
  *

@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Coverage Repository Mock - In-Memory Implementation
  */

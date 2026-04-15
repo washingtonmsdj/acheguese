@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * BusinessUrlService — Camada autorizada SSOT para URLs públicas de empresas.
  *

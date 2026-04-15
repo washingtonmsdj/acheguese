@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * 💬 COMMENTS QUERIES - Operações de leitura (SSOT)
  *

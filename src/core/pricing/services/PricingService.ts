@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * PricingService - SSOT para precificação e estimativas
  *

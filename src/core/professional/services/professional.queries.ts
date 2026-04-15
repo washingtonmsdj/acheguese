@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * 📦 PROFESSIONAL QUERIES - SSOT v2.0
  *

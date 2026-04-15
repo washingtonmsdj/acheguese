@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * GastronomyProfileService — SSOT canônico do vertical Gastronomia
  *

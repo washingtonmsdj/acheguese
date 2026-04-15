@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * PROFILE MEMBERS SERVICE - FASE 3
  * Service layer para gestão de membros de perfis

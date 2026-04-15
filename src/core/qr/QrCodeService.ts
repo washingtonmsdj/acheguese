@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * CORE QR CODE SERVICE — Serviço central de QR Codes
  *

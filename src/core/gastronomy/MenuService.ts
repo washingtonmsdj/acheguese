@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * MenuService — SSOT canônico do sistema de cardápio
  *

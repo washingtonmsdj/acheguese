@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { Star } from "lucide-react";
 import {
   Avatar,

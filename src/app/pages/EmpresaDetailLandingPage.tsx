@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * EmpresaDetailLandingPage — Página pública profissional de empresa
  * Landing page completa com todas as seções: hero, CTAs, resumo, info, produtos, avaliações

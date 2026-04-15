@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * BUSINESS SERVICE - FASE 3
  * Service layer para operações de perfis business

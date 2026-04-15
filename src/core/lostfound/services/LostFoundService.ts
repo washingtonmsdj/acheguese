@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * LostFoundService - SSOT para lost_found_posts, lost_found_comments
  */

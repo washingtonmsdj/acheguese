@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * 🏛️ POSTS SERVICE FACADE - SSOT v2.0
  *

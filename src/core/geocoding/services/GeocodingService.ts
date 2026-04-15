@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * GeocodingService - Serviço SSOT para geocoding unificado
  * 

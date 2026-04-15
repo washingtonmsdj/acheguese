@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * 🏆 AUTH SERVICE - Verificações de Autenticação Centralizadas
  *

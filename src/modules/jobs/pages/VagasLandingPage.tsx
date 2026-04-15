@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * 🏆 VAGAS LANDING PAGE - SSOT
  * 

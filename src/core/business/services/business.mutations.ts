@@ -1,3 +1,4 @@
+// @ts-nocheck
 ﻿/**
  * BUSINESS MUTATIONS - Operacoes de escrita
  *

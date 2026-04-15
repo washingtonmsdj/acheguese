@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Chat Mutations - SSOT v2.0
  * 

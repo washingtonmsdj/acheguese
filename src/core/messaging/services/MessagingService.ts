@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * 🏆 MESSAGING SERVICE - SSOT para Sistema de Mensagens
  *

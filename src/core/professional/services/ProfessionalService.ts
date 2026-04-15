@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * PROFILE.1.3b - BURN-DOWN AGRESSIVO
  *

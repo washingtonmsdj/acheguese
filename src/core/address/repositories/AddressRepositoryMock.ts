@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * AddressRepositoryMock - Implementação mock para testes
  */

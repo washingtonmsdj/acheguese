@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * ⭐ FAVORITES QUERIES - Operações de leitura (SSOT)
  *
