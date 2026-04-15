@@ -51,6 +51,7 @@ export default defineConfig(({ mode }) => ({
       "@/hooks": path.resolve(__dirname, "./src/hooks"),
       "lodash": "lodash-es",
     },
+    extensions: ['.mjs', '.js', '.mts', '.ts', '.jsx', '.tsx', '.json'],
     dedupe: ["react", "react-dom", "react/jsx-runtime"],
   },
   

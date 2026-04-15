@@ -11,7 +11,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { businessCoverageService } from '../services';
 import { useBusinessLocation } from './useBusinessLocation';
 import { logger } from '@/shared/utils/logger';
-import type { ServiceArea, DoesCoverOutput } from '@/core/coverage/index';
+import type { ServiceArea, DoesCoverOutput } from '@/core/coverage';
 
 export function useBusinessCoverage(businessId?: string) {
   const [hasCoverage, setHasCoverage] = useState<boolean>(false);
