@@ -42,10 +42,11 @@ dist-ssr
 .env
 .env.local
 .env.*.local
-.env.production
 .env.staging
 .env.test
 .env.remote
+
+# IMPORTANTE: .env.production é template, não commitar com valores reais
 
 # Editor directories and files
 .vscode/*

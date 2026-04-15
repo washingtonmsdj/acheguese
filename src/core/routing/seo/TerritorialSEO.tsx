@@ -43,7 +43,7 @@ function resolveCurrentModule(pathname: string, baseUrl: string): ModuleSlug | n
  * Gera structured data (JSON-LD) para o território
  */
 function generateStructuredData(resolved: ResolvedTerritory, canonicalUrl: string, module: ModuleSlug | null) {
-  const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'https://achegue-se.com';
+  const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'https://acheguese.com.br';
   
   // Place schema para território
   const placeSchema = {

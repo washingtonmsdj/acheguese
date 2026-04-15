@@ -32,6 +32,7 @@
     "generate:types": "bash scripts/generate-supabase-types.sh",
     "prebuild": "npm run lint && npm run validate:session-context",
     "prepare": "husky",
+    "verify:deploy": "node scripts/verify-deploy-ready.mjs",
     "test": "vitest --run",
     "test:watch": "vitest",
     "test:ssot": "vitest --run tests/ssot-*.test.ts",

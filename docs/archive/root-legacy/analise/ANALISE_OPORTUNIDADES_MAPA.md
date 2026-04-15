@@ -370,7 +370,7 @@ const CUSTOM_DARK_STYLE = {
 **IMPLEMENTAÇÃO:**
 ```typescript
 // Gerar link
-const shareLink = `https://achegue-se.com/mapa?lat=${lat}&lng=${lng}&zoom=16&item=${itemId}`;
+const shareLink = `https://acheguese.com.br/mapa?lat=${lat}&lng=${lng}&zoom=16&item=${itemId}`;
 
 // Compartilhar no WhatsApp
 const whatsappLink = `https://wa.me/?text=${encodeURIComponent(

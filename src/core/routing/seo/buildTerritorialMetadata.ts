@@ -25,7 +25,7 @@ const HUB_COPY = {
 // ── Configuração da marca ────────────────────────────────────────────────────
 
 const BRAND = 'Achegue-se';
-const SITE_URL = 'https://achegue.se'; // ajustar quando domínio final for definido
+const SITE_URL = 'https://acheguese.com.br';
 const DEFAULT_OG_IMAGE = '/og-image.png';
 
 // ── Textos por módulo ────────────────────────────────────────────────────────

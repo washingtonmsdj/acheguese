@@ -51,7 +51,7 @@ function generateTerritoryUrls(
 export function generateSitemap(
   locations: Location[],
   groups: TerritorialGroupWithMembers[],
-  baseUrl = 'https://achegue-se.com'
+  baseUrl = 'https://acheguese.com.br'
 ): string {
   const urls: SitemapUrl[] = [];
 

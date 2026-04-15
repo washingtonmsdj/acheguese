@@ -129,13 +129,13 @@ export default function BusinessSEO({
         "@type": "ListItem",
         position: 1,
         name: "Início",
-        item: "https://achegue-se.com",
+        item: "https://acheguese.com.br",
       },
       {
         "@type": "ListItem",
         position: 2,
         name: "Empresas",
-        item: "https://achegue-se.com/empresas/ba/salvador",
+        item: "https://acheguese.com.br/empresas/ba/salvador",
       },
       {
         "@type": "ListItem",

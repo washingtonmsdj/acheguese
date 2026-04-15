@@ -26,7 +26,7 @@ interface SEOProps {
 }
 
 const BRAND = "Achegue-se";
-const SITE_URL = "https://achegue.se";
+const SITE_URL = "https://acheguese.com.br";
 const DEFAULT_OG_IMAGE = "/og-image.png";
 
 const DEFAULT_SEO = {
