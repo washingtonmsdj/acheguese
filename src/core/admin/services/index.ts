@@ -25,3 +25,24 @@ export type {
   PickupPoint,
   CreatePickupPointInput,
 } from "./AdminPickupPointsService";
+
+// Additional services exports
+export { adminAlertsService } from "./AdminAlertsService";
+export type { AdminAlertPost, AdminAlertProfile } from "./AdminAlertsService";
+export { adminClassifiedsService } from "./AdminClassifiedsService";
+export type { AdminClassifiedData } from "./AdminClassifiedsService";
+export { adminCommunityAlertsService } from "./AdminCommunityAlertsService";
+export { adminCommunityIssuesService } from "./AdminCommunityIssuesService";
+export { adminCouponsService } from "./AdminCouponsService";
+export type { CouponData } from "./AdminCouponsService";
+export { adminEventsService } from "./AdminEventsService";
+export type { AdminEventData } from "./AdminEventsService";
+export { adminGastronomyService } from "./AdminGastronomyService";
+export { adminMessagingService } from "./AdminMessagingService";
+export type { AdminConversationData } from "./AdminMessagingService";
+export { adminModerationService } from "./AdminModerationService";
+export { adminNotificationsService } from "./AdminNotificationsService";
+export { adminPromotionsService } from "./AdminPromotionsService";
+export { adminRolesService } from "./AdminRolesService";
+export { adminSubscriptionsService } from "./AdminSubscriptionsService";
+export { adminVagasService } from "./AdminVagasService";
