@@ -48,3 +48,49 @@ export const TerritorialFacade = {
   queries: territorialQueries,
   mutations: territorialMutations,
 } as const;
+
+// ============================================================
+// SERVICE CLASS (para compatibilidade com hooks existentes)
+// ============================================================
+import { fetchTerritoryTree as fetchTerritoryTreeFn } from './territorial.queries';
+import {
+  updateMetadataFlag as updateMetadataFlagFn,
+  toggleLocationSelector as toggleLocationSelectorFn,
+  toggleGroupSelector as toggleGroupSelectorFn,
+} from './territorial.mutations';
+import type { VisibilityFlag } from './types';
+
+/**
+ * TerritorialManagementService - Classe de serviço para gestão territorial
+ * 
+ * Fornece métodos estáticos para operações de leitura e escrita
+ * no sistema territorial.
+ */
+export class TerritorialManagementService {
+  static async fetchTerritoryTree() {
+    return fetchTerritoryTreeFn();
+  }
+
+  static async updateMetadataFlag(
+    entity: 'locations' | 'territorial_groups',
+    id: string,
+    flag: VisibilityFlag,
+    value: boolean
+  ) {
+    return updateMetadataFlagFn(entity, id, flag, value);
+  }
+
+  static async toggleLocationSelector(locationId: string, value: boolean) {
+    return toggleLocationSelectorFn(locationId, value);
+  }
+
+  static async toggleGroupSelector(groupId: string, value: boolean) {
+    return toggleGroupSelectorFn(groupId, value);
+  }
+}
+
+/**
+ * Instância singleton do TerritorialManagementService (para compatibilidade)
+ * @deprecated Use a classe TerritorialManagementService diretamente com seus métodos estáticos
+ */
+export const territorialManagementService = TerritorialManagementService;
