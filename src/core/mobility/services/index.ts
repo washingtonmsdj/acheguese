@@ -57,6 +57,7 @@ export {
 // FACADE UNIFICADA (Recomendado)
 // ============================================================
 export {
+  MobilityService,
   MobilityFacade,
   UnifiedMobilityService,
 } from "@/modules/mobility/services/MobilityService";

@@ -77,7 +77,7 @@ import { useSessionContext } from "@/core/session";
 import { profileService } from "@/core/profiles";
 import { logger } from "@/shared/utils/logger";
 import type { ProfileContext } from "@/core/profiles/services/types";
-import { MobilityService, mobilityService } from "@/core/mobility/services";
+import { MobilityService, updateDriverOnlineStatus } from "@/core/mobility/services";
 
 interface DriverRequest {
   id: string;
@@ -314,7 +314,7 @@ export default function AdminMotoristas() {
   ) => {
     setProcessing(true);
     try {
-      await mobilityService.updateDriverOnlineStatus(driver.profile_id, newOnlineStatus);
+      await updateDriverOnlineStatus(driver.profile_id, newOnlineStatus);
 
       toast({
         title: newOnlineStatus ? "✅ Motorista online" : "⏸️ Motorista offline",
