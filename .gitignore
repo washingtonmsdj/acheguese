@@ -126,3 +126,5 @@ _tmp_*
 audit_results.txt
 *_resultado.txt
 test-output.txt
+.vercel
+.env*.local

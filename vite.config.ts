@@ -51,6 +51,7 @@ export default defineConfig(({ mode }) => ({
     },
     extensions: ['.mjs', '.js', '.mts', '.ts', '.jsx', '.tsx', '.json'],
     mainFields: ['module', 'main'],
+    // CRÍTICO: Garantir que React não seja duplicado
     dedupe: ["react", "react-dom", "react/jsx-runtime"],
   },
   
@@ -58,27 +59,26 @@ export default defineConfig(({ mode }) => ({
     target: 'es2020',
     minify: 'esbuild',
     cssCodeSplit: true,
-    sourcemap: false, // Desabilitar sourcemaps em produção para reduzir tamanho
+    sourcemap: false,
     chunkSizeWarningLimit: 1000,
     
     rollupOptions: {
       output: {
-        // Simplificado: deixar Vite fazer code splitting automático
         manualChunks: (id) => {
-          // Apenas separar node_modules do código da aplicação
           if (id.includes('node_modules')) {
-            // Separar bibliotecas grandes em chunks próprios
-            if (id.includes('react') || id.includes('react-dom')) {
-              return 'vendor-react';
+            // CRÍTICO: React DEVE estar no mesmo chunk que react-dom
+            if (id.includes('react') || id.includes('react-dom') || id.includes('react/jsx-runtime')) {
+              return 'react-vendor';
             }
+            // Radix UI depende do React, então vai para chunk separado
             if (id.includes('@radix-ui')) {
-              return 'vendor-ui';
+              return 'ui-vendor';
             }
             if (id.includes('@supabase')) {
-              return 'vendor-supabase';
+              return 'supabase-vendor';
             }
             if (id.includes('maplibre-gl')) {
-              return 'vendor-maps';
+              return 'maps-vendor';
             }
             // Resto dos node_modules
             return 'vendor';
