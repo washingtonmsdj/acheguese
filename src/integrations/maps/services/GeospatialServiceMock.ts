@@ -4,7 +4,7 @@
  * Mock implementation of IGeospatialPort for testing without real maps API.
  */
 
-import type { IGeospatialPort, GeospatialError, GeospatialErrorCode } from '@/core/coverage/ports/IGeospatialPort';
+import type { IGeospatialPort, GeospatialError, GeospatialErrorCode } from '@/core/coverage';
 import type { ILocationRepository } from '@/core/location/repositories/ILocationRepository';
 
 export class GeospatialServiceMock implements IGeospatialPort {

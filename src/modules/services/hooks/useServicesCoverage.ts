@@ -10,7 +10,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { servicesCoverageService } from '../services';
 import { useServicesLocation } from './useServicesLocation';
-import type { ServiceArea, GetCoverageOutput } from '@/core/coverage/index.ts';
+import type { ServiceArea, GetCoverageOutput } from '@/core/coverage';
 
 export function useServicesCoverage(professionalId?: string) {
   const [hasCoverage, setHasCoverage] = useState<boolean>(false);
