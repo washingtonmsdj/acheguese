@@ -2,7 +2,6 @@
  * Mobility Components - Barrel Export
  */
 
-// Cards AAA
 export { RideRequestCardEnhanced } from './RideRequestCardEnhanced';
 export { RideRequestCardEnhanced as RideRequestCard } from './RideRequestCardEnhanced'; // Alias para compatibilidade
 
@@ -15,8 +14,3 @@ export { DeliveryTrackingCardEnhanced as DeliveryTrackingCard } from './Delivery
 export { RouteEstimateCardEnhanced, RouteEstimateCardSkeleton } from './RouteEstimateCardEnhanced';
 export { RouteEstimateCardEnhanced as RouteEstimateCard } from './RouteEstimateCardEnhanced'; // Alias para compatibilidade
 
-// Ride Request Components (NEW - AAA v2.0)
-export * from './ride-request';
-
-// Legacy (deprecated - use RideRequestSheet instead)
-export { CreateRideModal } from './CreateRideModal';

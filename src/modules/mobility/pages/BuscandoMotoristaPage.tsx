@@ -20,6 +20,7 @@ import { useMobilidade } from "@/modules/mobility/hooks/useMobilidade";
 import { mobilityService } from "@/modules/mobility/services/MobilityService";
 import { DEFAULT_TILE_STYLE } from "@/core/maps/providers/MapProvider";
 import { RIDE_STATUS, MOBILITY_QUERY_KEYS, TIMEOUTS } from "@/modules/mobility/constants";
+import { BUSCANDO_MOTORISTA_PAGE_LABELS } from "@/modules/mobility/constants/buscandoMotoristaPageLabels";
 import { PassengerSearchStatus } from "../components/PassengerSearchStatus";
 import { useAuth } from "@/core/auth/hooks/useAuth";
 import { routingService } from "@/core/routing/instance";
@@ -101,7 +102,7 @@ const RouteMap = memo(function RouteMap({
           })
           .then((routeResponse) => {
             if (!routeResponse.routes || routeResponse.routes.length === 0) {
-              console.warn('[BuscandoMotoristaPage] Nenhuma rota retornada');
+              console.warn(BUSCANDO_MOTORISTA_PAGE_LABELS.LOG_NO_ROUTE);
               return;
             }
 
@@ -144,10 +145,10 @@ const RouteMap = memo(function RouteMap({
             });
 
             setRouteLoaded(true);
-            console.log('[BuscandoMotoristaPage] Rota real carregada com sucesso');
+            console.log(BUSCANDO_MOTORISTA_PAGE_LABELS.LOG_ROUTE_SUCCESS);
           })
           .catch((error) => {
-            console.error('[BuscandoMotoristaPage] Erro ao carregar rota real:', error);
+            console.error(BUSCANDO_MOTORISTA_PAGE_LABELS.LOG_ROUTE_ERROR, error);
             // Fallback: ajustar bounds manualmente se rota falhar
             map.fitBounds(
               [
@@ -202,9 +203,9 @@ function SearchPanel({
           </motion.div>
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-bold text-foreground">Buscando motorista...</p>
+          <p className="text-sm font-bold text-foreground">{BUSCANDO_MOTORISTA_PAGE_LABELS.SEARCH_TITLE}</p>
           <p className="text-xs text-muted-foreground">
-            Aguarde enquanto encontramos o mais próximo
+            {BUSCANDO_MOTORISTA_PAGE_LABELS.SEARCH_SUBTITLE}
           </p>
         </div>
         {/* Dots animados */}
@@ -233,7 +234,7 @@ function SearchPanel({
           <div className="flex-1 min-w-0 space-y-3">
             <div>
               <p className="text-[0.6rem] text-muted-foreground uppercase tracking-wider mb-0.5">
-                Origem
+                {BUSCANDO_MOTORISTA_PAGE_LABELS.ROUTE_ORIGIN_LABEL}
               </p>
               <p className="text-sm font-medium text-foreground line-clamp-2">
                 {originText}
@@ -241,7 +242,7 @@ function SearchPanel({
             </div>
             <div>
               <p className="text-[0.6rem] text-muted-foreground uppercase tracking-wider mb-0.5">
-                Destino
+                {BUSCANDO_MOTORISTA_PAGE_LABELS.ROUTE_DESTINATION_LABEL}
               </p>
               <p className="text-sm font-medium text-foreground line-clamp-2">
                 {destinationText}
@@ -252,9 +253,9 @@ function SearchPanel({
 
         {suggestedPrice && (
           <div className="flex items-center justify-between mt-3 pt-3 border-t border-border">
-            <span className="text-xs text-muted-foreground">Valor estimado</span>
+            <span className="text-xs text-muted-foreground">{BUSCANDO_MOTORISTA_PAGE_LABELS.PRICE_LABEL}</span>
             <span className="text-sm font-bold text-foreground">
-              R$ {Number(suggestedPrice).toFixed(2)}
+              {BUSCANDO_MOTORISTA_PAGE_LABELS.PRICE_FORMAT(Number(suggestedPrice))}
             </span>
           </div>
         )}
@@ -267,7 +268,7 @@ function SearchPanel({
         onClick={onCancel}
       >
         <X className="h-4 w-4 mr-2" />
-        Cancelar solicitação
+        {BUSCANDO_MOTORISTA_PAGE_LABELS.BUTTON_CANCEL}
       </Button>
     </div>
   );
@@ -304,7 +305,7 @@ export default function BuscandoMotoristaPage() {
         RIDE_STATUS.IN_PROGRESS,
       ].includes(rideStatus)
     ) {
-      toast.success("Motorista encontrado! 🎉");
+      toast.success(BUSCANDO_MOTORISTA_PAGE_LABELS.TOAST_DRIVER_FOUND);
       navigate("/mobilidade/passageiro", { replace: true });
     }
 
@@ -342,11 +343,11 @@ export default function BuscandoMotoristaPage() {
   const originText =
     r?.pickup_address?.street ||
     r?.pickup_location?.name ||
-    "Origem não informada";
+    BUSCANDO_MOTORISTA_PAGE_LABELS.ROUTE_ORIGIN_DEFAULT;
   const destinationText =
     r?.dropoff_address?.street ||
     r?.dropoff_location?.name ||
-    "Destino não informado";
+    BUSCANDO_MOTORISTA_PAGE_LABELS.ROUTE_DESTINATION_DEFAULT;
 
   return (
     /**
@@ -361,7 +362,7 @@ export default function BuscandoMotoristaPage() {
         <button
           onClick={() => navigate("/mobilidade/passageiro", { replace: true })}
           className="w-10 h-10 rounded-full bg-card/90 backdrop-blur-sm border border-border flex items-center justify-center shadow-lg active:scale-95 transition-transform"
-          aria-label="Voltar"
+          aria-label={BUSCANDO_MOTORISTA_PAGE_LABELS.ARIA_BACK_BUTTON}
         >
           <ArrowLeft className="h-5 w-5 text-foreground" />
         </button>
@@ -404,11 +405,11 @@ export default function BuscandoMotoristaPage() {
         <div className="absolute bottom-3 right-3 flex flex-col gap-1.5 md:hidden">
           <div className="flex items-center gap-1.5 bg-card/90 backdrop-blur-sm rounded-lg px-2 py-1 text-[0.6rem] font-medium text-foreground shadow">
             <div className="w-2.5 h-2.5 rounded-full bg-green-500 flex-shrink-0" />
-            Origem
+            {BUSCANDO_MOTORISTA_PAGE_LABELS.LEGEND_ORIGIN}
           </div>
           <div className="flex items-center gap-1.5 bg-card/90 backdrop-blur-sm rounded-lg px-2 py-1 text-[0.6rem] font-medium text-foreground shadow">
             <div className="w-2.5 h-2.5 rounded-sm bg-red-500 flex-shrink-0" />
-            Destino
+            {BUSCANDO_MOTORISTA_PAGE_LABELS.LEGEND_DESTINATION}
           </div>
         </div>
       </div>
@@ -435,10 +436,10 @@ export default function BuscandoMotoristaPage() {
         {/* Legenda desktop */}
         <div className="hidden md:flex items-center gap-3 mb-6">
           <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-            <div className="w-3 h-3 rounded-full bg-green-500" /> Origem
+            <div className="w-3 h-3 rounded-full bg-green-500" /> {BUSCANDO_MOTORISTA_PAGE_LABELS.LEGEND_ORIGIN}
           </div>
           <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-            <div className="w-3 h-3 rounded-sm bg-red-500" /> Destino
+            <div className="w-3 h-3 rounded-sm bg-red-500" /> {BUSCANDO_MOTORISTA_PAGE_LABELS.LEGEND_DESTINATION}
           </div>
         </div>
 

@@ -229,7 +229,8 @@ export function useMobilidade() {
         // Buscar corrida criada
         const data = await getRideById(result.rideId!);
         setActiveRide(data);
-        queryClient.invalidateQueries({ queryKey: MOBILITY_QUERY_KEYS.rides() });
+        queryClient.invalidateQueries({ queryKey: MOBILITY_QUERY_KEYS.rides(user.id) });
+        queryClient.invalidateQueries({ queryKey: MOBILITY_QUERY_KEYS.activeRide(user.id) });
         
         // Toast com preço calculado OFICIAL
         if (normalizedSuggestedPrice !== undefined) {
@@ -347,7 +348,9 @@ export function useMobilidade() {
         });
 
         setActiveRide(null);
-        queryClient.invalidateQueries({ queryKey: MOBILITY_QUERY_KEYS.rides() });
+        // Invalidar queries com userId correto
+        queryClient.invalidateQueries({ queryKey: MOBILITY_QUERY_KEYS.rides(user.id) });
+        queryClient.invalidateQueries({ queryKey: MOBILITY_QUERY_KEYS.activeRide(user.id) });
         toast.success("Corrida cancelada");
         return true;
       } catch (error) {
@@ -393,7 +396,8 @@ export function useMobilidade() {
 
         const data = await getRideById(rideId);
         setActiveRide(data);
-        queryClient.invalidateQueries({ queryKey: MOBILITY_QUERY_KEYS.rides() });
+        queryClient.invalidateQueries({ queryKey: MOBILITY_QUERY_KEYS.rides(user.id) });
+        queryClient.invalidateQueries({ queryKey: MOBILITY_QUERY_KEYS.activeRide(user.id) });
         toast.success("Corrida aceita! Indo buscar passageiro...");
         return data;
       } catch (error) {
@@ -442,7 +446,8 @@ export function useMobilidade() {
         }
 
         setActiveRide(null);
-        queryClient.invalidateQueries({ queryKey: MOBILITY_QUERY_KEYS.rides() });
+        queryClient.invalidateQueries({ queryKey: MOBILITY_QUERY_KEYS.rides(user.id) });
+        queryClient.invalidateQueries({ queryKey: MOBILITY_QUERY_KEYS.activeRide(user.id) });
         
         // Toast com preço final oficial
         if (finalPrice) {

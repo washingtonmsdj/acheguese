@@ -8,6 +8,7 @@ import { useNavigate } from "react-router-dom";
 import { useMobilidade } from "@/modules/mobility/hooks/useMobilidade";
 import { useMobilityUrls } from "@/modules/mobility/hooks/useMobilityUrls";
 import { RIDE_STATUS } from "@/shared/types/constants";
+import { PASSENGER_PAGE_LABELS } from "@/modules/mobility/constants/passengerPageLabels";
 import { CreateRideModal } from "../components/CreateRideModal";
 import { PassengerRideHistory } from "../components/passenger/PassengerRideHistory";
 import { RateDriverModal } from "../components/passenger/RateDriverModal";
@@ -105,7 +106,9 @@ export default function PassageiroPage() {
     (r) => r.status === RIDE_STATUS.COMPLETED,
   );
   const cancelledRides = myRides.filter(
-    (r) => r.status === RIDE_STATUS.CANCELLED,
+    (r) => r.status === RIDE_STATUS.CANCELLED || 
+           r.status === RIDE_STATUS.CANCELLED_BY_PASSENGER || 
+           r.status === RIDE_STATUS.CANCELLED_BY_DRIVER,
   );
   const needsRating = completedRides.filter((r) => !r.rating);
   const needsConfirmation = completedRides.filter(
@@ -148,20 +151,21 @@ export default function PassageiroPage() {
               <button
                 onClick={() => navigate(mobilityUrls.home)}
                 className="p-2 -ml-2 rounded-xl text-muted-foreground hover:text-foreground transition-colors"
+                aria-label={PASSENGER_PAGE_LABELS.BUTTON_BACK}
               >
                 <ArrowLeft className="h-5 w-5" />
               </button>
               <h1 className="text-sm font-bold text-foreground">
-                Minhas Viagens
+                {PASSENGER_PAGE_LABELS.ERROR_TITLE}
               </h1>
             </div>
           </div>
           <div className="max-w-lg mx-auto px-4 py-8">
             <ErrorState
-              error={error ? new Error(error) : new Error("Erro desconhecido")}
+              error={error ? new Error(error) : new Error(PASSENGER_PAGE_LABELS.ERROR_UNKNOWN)}
               onRetry={() => refetch()}
-              title="Erro ao carregar viagens"
-              description="Verifique sua conexÃ£o e tente novamente."
+              title={PASSENGER_PAGE_LABELS.ERROR_TITLE}
+              description={PASSENGER_PAGE_LABELS.ERROR_DESCRIPTION}
             />
           </div>
         </div>
@@ -172,12 +176,12 @@ export default function PassageiroPage() {
   const tabs: { id: ActiveTab; label: string; icon: any; count?: number }[] = [
     {
       id: "ativas",
-      label: "Ativas",
+      label: PASSENGER_PAGE_LABELS.TAB_ACTIVE,
       icon: Navigation,
       count: activeRides.length || undefined,
     },
-    { id: "historico", label: "HistÃ³rico", icon: History },
-    { id: "seguranca", label: "SOS", icon: Shield },
+    { id: "historico", label: PASSENGER_PAGE_LABELS.TAB_HISTORY, icon: History },
+    { id: "seguranca", label: PASSENGER_PAGE_LABELS.TAB_SECURITY, icon: Shield },
   ];
 
   return (
@@ -199,7 +203,7 @@ export default function PassageiroPage() {
                   <Car className="h-4 w-4 text-primary" />
                 </div>
                 <h1 className="text-sm font-bold text-foreground tracking-tight">
-                  Viagens
+                  {PASSENGER_PAGE_LABELS.HEADER_TITLE}
                 </h1>
               </div>
             </div>
@@ -209,7 +213,7 @@ export default function PassageiroPage() {
               className="bg-gradient-to-r from-primary to-accent text-primary-foreground rounded-xl text-xs h-9 px-4 font-bold shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/30 transition-all"
             >
               <Plus className="h-3.5 w-3.5 mr-1.5" />
-              Nova
+              {PASSENGER_PAGE_LABELS.BUTTON_NEW}
             </Button>
           </div>
         </div>
@@ -225,16 +229,16 @@ export default function PassageiroPage() {
             <button
               onClick={() => setIsCreateOpen(true)}
               className="relative overflow-hidden rounded-2xl p-4 text-left bg-gradient-to-br from-primary/15 to-primary/5 border border-primary/20 hover:border-primary/40 transition-all group active:scale-[0.98]"
-              aria-label="Solicitar viagem"
+              aria-label={PASSENGER_PAGE_LABELS.ACTION_REQUEST_RIDE_ARIA}
             >
               <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
                 <Navigation className="h-5 w-5 text-primary" />
               </div>
               <p className="text-sm font-bold text-foreground">
-                Solicitar Viagem
+                {PASSENGER_PAGE_LABELS.ACTION_REQUEST_RIDE_TITLE}
               </p>
               <p className="text-[0.65rem] text-muted-foreground mt-0.5">
-                Carona segura
+                {PASSENGER_PAGE_LABELS.ACTION_REQUEST_RIDE_SUBTITLE}
               </p>
               <div className="absolute top-3 right-3 w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center">
                 <ChevronRight className="h-3.5 w-3.5 text-primary" />
@@ -246,16 +250,16 @@ export default function PassageiroPage() {
                 // Could set a default type to delivery
               }}
               className="relative overflow-hidden rounded-2xl p-4 text-left bg-gradient-to-br from-accent/15 to-accent/5 border border-accent/20 hover:border-accent/40 transition-all group active:scale-[0.98]"
-              aria-label="Enviar entrega"
+              aria-label={PASSENGER_PAGE_LABELS.ACTION_SEND_DELIVERY_ARIA}
             >
               <div className="w-10 h-10 rounded-xl bg-accent/20 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
                 <Package className="h-5 w-5 text-accent" />
               </div>
               <p className="text-sm font-bold text-foreground">
-                Enviar Entrega
+                {PASSENGER_PAGE_LABELS.ACTION_SEND_DELIVERY_TITLE}
               </p>
               <p className="text-[0.65rem] text-muted-foreground mt-0.5">
-                Docs, comida, compras
+                {PASSENGER_PAGE_LABELS.ACTION_SEND_DELIVERY_SUBTITLE}
               </p>
               <div className="absolute top-3 right-3 w-6 h-6 rounded-full bg-accent/10 flex items-center justify-center">
                 <ChevronRight className="h-3.5 w-3.5 text-accent" />
@@ -272,21 +276,21 @@ export default function PassageiroPage() {
               {
                 icon: Car,
                 value: stats.total,
-                label: "Viagens",
+                label: PASSENGER_PAGE_LABELS.STAT_TRIPS_LABEL,
                 color: "text-primary",
                 bg: "bg-primary/10",
               },
               {
                 icon: CheckCircle2,
                 value: stats.completed,
-                label: "ConcluÃ­das",
+                label: PASSENGER_PAGE_LABELS.STAT_COMPLETED_LABEL,
                 color: "text-success",
                 bg: "bg-success/10",
               },
               {
                 icon: Star,
                 value: stats.avgRating.toFixed(1),
-                label: "AvaliaÃ§Ã£o",
+                label: PASSENGER_PAGE_LABELS.STAT_RATING_LABEL,
                 color: "text-warning",
                 bg: "bg-warning/10",
               },
@@ -327,16 +331,16 @@ export default function PassageiroPage() {
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-bold text-foreground">
-                    Avalie sua viagem
+                    {PASSENGER_PAGE_LABELS.RATING_ALERT_TITLE}
                   </p>
                   <p className="text-[0.65rem] text-muted-foreground">
-                    {needsRating.length} viagem(ns) aguardando
+                    {PASSENGER_PAGE_LABELS.RATING_ALERT_SUBTITLE(needsRating.length)}
                   </p>
                 </div>
                 <div className="flex-shrink-0">
                   <Badge className="bg-warning/20 text-warning border-0 text-[0.6rem] rounded-full">
                     <Sparkles className="h-3 w-3 mr-1" />
-                    +Pontos
+                    {PASSENGER_PAGE_LABELS.RATING_ALERT_BADGE}
                   </Badge>
                 </div>
               </button>
@@ -394,16 +398,16 @@ export default function PassageiroPage() {
                       <Navigation className="h-8 w-8 text-primary/50" />
                     </div>
                     <h3 className="text-sm font-bold text-foreground mb-1.5">
-                      Sem viagens ativas
+                      {PASSENGER_PAGE_LABELS.ACTIVE_EMPTY_TITLE}
                     </h3>
                     <p className="text-xs text-muted-foreground max-w-[220px] mx-auto mb-5">
-                      Solicite uma viagem ou entrega para começar
+                      {PASSENGER_PAGE_LABELS.ACTIVE_EMPTY_SUBTITLE}
                     </p>
                     <Button
                       onClick={() => setIsCreateOpen(true)}
                       className="bg-gradient-to-r from-primary to-accent text-primary-foreground rounded-xl font-bold shadow-lg shadow-primary/20"
                     >
-                      <Zap className="h-4 w-4 mr-2" /> Solicitar Agora
+                      <Zap className="h-4 w-4 mr-2" /> {PASSENGER_PAGE_LABELS.ACTIVE_EMPTY_BUTTON}
                     </Button>
                   </div>
                 ) : (
@@ -426,13 +430,13 @@ export default function PassageiroPage() {
                             </div>
                           </div>
                           <h3 className="text-sm font-bold text-foreground mb-1">
-                            Buscando motorista...
+                            {PASSENGER_PAGE_LABELS.SEARCHING_TITLE}
                           </h3>
                           <p className="text-xs text-muted-foreground mb-1">
-                            {ride.origin || "Origem"} → {ride.destination || "Destino"}
+                            {ride.origin || "Origem"} {PASSENGER_PAGE_LABELS.SEARCHING_ROUTE_SEPARATOR} {ride.destination || "Destino"}
                           </p>
                           <p className="text-[0.65rem] text-muted-foreground">
-                            Aguarde enquanto encontramos o motorista mais próximo
+                            {PASSENGER_PAGE_LABELS.SEARCHING_SUBTITLE}
                           </p>
                           <Button
                             variant="outline"
@@ -443,7 +447,7 @@ export default function PassageiroPage() {
                             }}
                             className="mt-4 text-xs border-destructive/30 text-destructive hover:bg-destructive/10 rounded-xl"
                           >
-                            Cancelar solicitação
+                            {PASSENGER_PAGE_LABELS.SEARCHING_CANCEL_BUTTON}
                           </Button>
                         </div>
                       )}
@@ -456,7 +460,7 @@ export default function PassageiroPage() {
                             const r = activeRides.find((x) => x.id === id);
                             if (r) handleOpenCancelDialog(r);
                           }}
-                          onContact={() => toast.info("Abrindo chat com motorista...")}
+                          onContact={() => toast.info(PASSENGER_PAGE_LABELS.TOAST_OPENING_CHAT)}
                         />
                       )}
 
