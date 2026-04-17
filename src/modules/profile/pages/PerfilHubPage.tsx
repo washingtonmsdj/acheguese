@@ -43,10 +43,12 @@ import {
   HubLinkCard,
   NextActionsPanel,
   NotificationsPanel,
-  ProfileHeader,
+  ProfileChipsBar,
+  ProfileHeaderCompact,
+  ProfileSectionsNav,
   ProfileStats,
-  ProfileSwitcher,
   SectionFrame,
+  type SectionNavItem,
 } from "@/modules/profile/components/hub";
 import { ProfileCompletenessWidget } from "@/modules/profile/components/ProfileCompletenessWidget";
 import { ResidentVerificationCard } from "@/modules/profile/components/ResidentVerificationCard";
