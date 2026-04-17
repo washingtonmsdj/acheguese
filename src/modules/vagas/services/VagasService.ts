@@ -86,8 +86,8 @@ function mapRowToVaga(row: VagaRow): Vaga {
     
     // Controle
     status: row.status,
-    urgencia: row.urgencia,
-    highlightType: row.highlight_type,
+    urgencia: row.urgencia ?? 'normal',
+    highlightType: row.highlight_type ?? 'none',
     vagasQuantidade: row.vagas_quantidade ?? 1,
     
     // Datas
@@ -205,8 +205,7 @@ export class VagasService {
       // Ordenação
       switch (sort) {
         case 'relevance':
-          // Relevância: premium primeiro, depois data
-          query = query.order('highlight_type', { ascending: false, nullsFirst: false });
+          // Relevância: ordenação segura por data no banco, ranking de destaque aplicado no cliente.
           query = query.order('published_at', { ascending: false });
           break;
         case 'newest':
@@ -235,7 +234,24 @@ export class VagasService {
         throw new Error(`Falha ao buscar vagas: ${error.message}`);
       }
 
-      const vagas = (data ?? []).map(mapRowToVaga);
+      const rows = (data ?? []) as VagaRow[];
+      if (sort === 'relevance') {
+        const weight = (highlightType?: string) => {
+          switch (highlightType) {
+            case 'featured':
+              return 3;
+            case 'sponsored':
+              return 2;
+            case 'premium':
+              return 1;
+            default:
+              return 0;
+          }
+        };
+        rows.sort((a, b) => weight(b.highlight_type) - weight(a.highlight_type));
+      }
+
+      const vagas = rows.map(mapRowToVaga);
       const total = count ?? 0;
 
       logger.info(`[VagasService] ${vagas.length} vagas encontradas (total: ${total})`);
@@ -324,16 +340,11 @@ export class VagasService {
         .limit(limit);
 
       if (error) {
-        // Se a coluna não existir, retornar array vazio (migration pendente)
-        if (error.code === '42703' || error.message?.includes('urgencia')) {
-          logger.warn('[VagasService] Coluna urgencia não encontrada. Aplicar migration 20260417100000_fix_vagas_urgencia_highlight.sql');
-          return [];
-        }
         logger.error('[VagasService] Erro ao buscar vagas urgentes:', error);
         return [];
       }
 
-      return (data ?? []).map(mapRowToVaga);
+      return ((data ?? []) as VagaRow[]).map(mapRowToVaga);
     } catch (error) {
       logger.error('[VagasService] Erro:', error);
       return [];
@@ -357,16 +368,11 @@ export class VagasService {
         .limit(limit);
 
       if (error) {
-        // Se a coluna não existir, retornar array vazio (migration pendente)
-        if (error.code === '42703' || error.message?.includes('highlight_type')) {
-          logger.warn('[VagasService] Coluna highlight_type não encontrada. Aplicar migration 20260417100000_fix_vagas_urgencia_highlight.sql');
-          return [];
-        }
         logger.error('[VagasService] Erro ao buscar vagas em destaque:', error);
         return [];
       }
 
-      return (data ?? []).map(mapRowToVaga);
+      return ((data ?? []) as VagaRow[]).map(mapRowToVaga);
     } catch (error) {
       logger.error('[VagasService] Erro:', error);
       return [];

@@ -35,10 +35,16 @@ BEGIN
     SELECT 1 FROM pg_type WHERE typname = 'vaga_highlight_type'
   ) INTO enum_exists;
 
-  -- Criar enum se não existir
+  -- Criar/normalizar enum para garantir compatibilidade com SSOT
   IF NOT enum_exists THEN
     CREATE TYPE vaga_highlight_type AS ENUM ('none', 'premium', 'sponsored', 'featured');
     RAISE NOTICE 'Created enum: vaga_highlight_type';
+  ELSE
+    ALTER TYPE vaga_highlight_type ADD VALUE IF NOT EXISTS 'none';
+    ALTER TYPE vaga_highlight_type ADD VALUE IF NOT EXISTS 'premium';
+    ALTER TYPE vaga_highlight_type ADD VALUE IF NOT EXISTS 'sponsored';
+    ALTER TYPE vaga_highlight_type ADD VALUE IF NOT EXISTS 'featured';
+    RAISE NOTICE 'Normalized enum: vaga_highlight_type';
   END IF;
 
   -- Verificar se a coluna highlight_type existe
@@ -54,68 +60,10 @@ BEGIN
   END IF;
 END $$;
 
--- ───────────────────────────────────────────────────────────────────────────────
--- PASSO 3: Migrar dados do campo antigo 'destaque' (BOOLEAN) para highlight_type
--- ───────────────────────────────────────────────────────────────────────────────
-
-DO $$
-DECLARE
-  has_destaque boolean;
-  has_highlight boolean;
-BEGIN
-  -- Verificar se coluna destaque existe
-  SELECT EXISTS (
-    SELECT 1 FROM information_schema.columns 
-    WHERE table_name = 'vagas' AND column_name = 'destaque'
-  ) INTO has_destaque;
-
-  -- Verificar se coluna highlight_type existe
-  SELECT EXISTS (
-    SELECT 1 FROM information_schema.columns 
-    WHERE table_name = 'vagas' AND column_name = 'highlight_type'
-  ) INTO has_highlight;
-
-  -- Migrar dados: destaque=true -> highlight_type='premium', destaque=false -> highlight_type='none'
-  IF has_destaque AND has_highlight THEN
-    UPDATE vagas 
-    SET highlight_type = CASE 
-      WHEN destaque = true THEN 'premium'::vaga_highlight_type 
-      ELSE 'none'::vaga_highlight_type 
-    END
-    WHERE highlight_type IS NULL;
-    
-    RAISE NOTICE 'Migrated destaque -> highlight_type';
-  END IF;
-END $$;
-
--- ───────────────────────────────────────────────────────────────────────────────
--- PASSO 4: Definir DEFAULT 'none' para highlight_type e ajustar NULLs
--- ───────────────────────────────────────────────────────────────────────────────
-
--- Atualizar registros NULL para 'none'
-UPDATE vagas 
-SET highlight_type = 'none'::vaga_highlight_type 
-WHERE highlight_type IS NULL;
-
--- ───────────────────────────────────────────────────────────────────────────────
--- PASSO 5: Recriar índices otimizados para as queries do VagasService
--- ───────────────────────────────────────────────────────────────────────────────
-
--- Índice para busca de vagas urgentes (getVagasUrgentes)
-DROP INDEX IF EXISTS idx_vagas_urgencia;
-CREATE INDEX idx_vagas_urgencia 
-  ON vagas(urgencia) 
-  WHERE status = 'published' AND urgencia IN ('urgente', 'extrema');
-
--- Índice para busca de vagas em destaque (getVagasDestaque)  
-DROP INDEX IF EXISTS idx_vagas_highlight;
-CREATE INDEX idx_vagas_highlight 
-  ON vagas(highlight_type, published_at DESC) 
-  WHERE status = 'published' AND highlight_type != 'none';
-
--- Comentários
-COMMENT ON COLUMN vagas.urgencia IS 'Nível de urgência: normal, urgente, extrema';
-COMMENT ON COLUMN vagas.highlight_type IS 'Tipo de destaque: none, premium, sponsored, featured';
+-- NOTA:
+-- Nesta migration executamos apenas alterações estruturais de enum/coluna.
+-- O uso de valores do enum (update/default/index com literals) fica na
+-- migration 20260417100001 para evitar erro de "unsafe use of new value".
 
 -- ═══════════════════════════════════════════════════════════════════════════════
 -- FIM DA MIGRATION

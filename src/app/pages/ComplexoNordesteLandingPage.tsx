@@ -19,7 +19,6 @@
  *   L. Rodapé
  */
 
-import { useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, useScroll, useTransform } from 'framer-motion';
 import {
@@ -197,8 +196,7 @@ export default function ComplexoNordesteLandingPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { resolved, baseUrl } = useTerritorialContext();
-  const heroRef = useRef<HTMLElement>(null);
-  const ctaRef = useRef<HTMLElement>(null);
+  const { scrollYProgress } = useScroll();
 
   // SSOT: dados reais do território
   const filter = useTerritoryFilter(resolved);
@@ -218,18 +216,12 @@ export default function ComplexoNordesteLandingPage() {
   };
 
   // Parallax
-  const { scrollYProgress: heroProgress } = useScroll({
-    target: heroRef,
-    offset: ['start start', 'end start'],
-  });
+  const heroProgress = scrollYProgress;
   const heroY = useTransform(heroProgress, [0, 1], ['0%', '30%']);
   const heroScale = useTransform(heroProgress, [0, 1], [1, 1.12]);
   const heroOpacity = useTransform(heroProgress, [0, 0.8], [1, 0.2]);
 
-  const { scrollYProgress: ctaProgress } = useScroll({
-    target: ctaRef,
-    offset: ['start end', 'end start'],
-  });
+  const ctaProgress = scrollYProgress;
   const ctaY = useTransform(ctaProgress, [0, 1], ['12%', '-12%']);
 
   const isGroup = resolved?.kind === 'group';
@@ -239,7 +231,7 @@ export default function ComplexoNordesteLandingPage() {
     <div className="relative min-h-screen w-full bg-background text-foreground overflow-x-hidden">
 
       {/* ── A. HERO PARALLAX ──────────────────────────────────────── */}
-      <section ref={heroRef} className="relative w-full min-h-[90vh] flex items-center justify-center overflow-hidden">
+      <section className="relative w-full min-h-[90vh] flex items-center justify-center overflow-hidden">
         <motion.div className="absolute inset-0" style={{ y: heroY, scale: heroScale }}>
           <img
             src={heroImg}
@@ -846,7 +838,7 @@ export default function ComplexoNordesteLandingPage() {
       </section>
 
       {/* ── L. CTA FINAL ──────────────────────────────────────────── */}
-      <section ref={ctaRef} className="relative w-full py-28 overflow-hidden">
+      <section className="relative w-full py-28 overflow-hidden">
         <motion.div className="absolute inset-0" style={{ y: ctaY }}>
           <img
             src={heroImg}

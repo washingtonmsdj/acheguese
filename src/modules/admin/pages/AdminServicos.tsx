@@ -97,6 +97,7 @@ export default function AdminServicos() {
   const [filterStatus, setFilterStatus] = useState("todos");
   const [selectedPro, setSelectedPro] = useState<Professional | null>(null);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [actionLoading, setActionLoading] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<{
     type: "professional" | "review";
     id: string;
@@ -207,40 +208,84 @@ export default function AdminServicos() {
   }
 
   const updateStatus = async (id: string, status: string) => {
-    await ProfessionalService.updateProfessionalStatus(id, status);
-    toast({
-      title:
-        status === "aprovado"
-          ? "Profissional aprovado!"
-          : "Profissional rejeitado",
-    });
-    loadData();
+    setActionLoading(true);
+    try {
+      await ProfessionalService.updateProfessionalStatus(id, status);
+      toast({
+        title:
+          status === "aprovado"
+            ? "Profissional aprovado!"
+            : "Profissional rejeitado",
+      });
+      await loadData();
+    } catch {
+      toast({
+        title: "Erro ao atualizar status",
+        description: "Não foi possível concluir esta ação.",
+        variant: "destructive",
+      });
+    } finally {
+      setActionLoading(false);
+    }
   };
 
   const deleteProfessional = async (id: string) => {
-    await ProfessionalService.deleteProfessional(id);
-    toast({ title: "Profissional removido" });
-    loadData();
+    setActionLoading(true);
+    try {
+      await ProfessionalService.deleteProfessional(id);
+      toast({ title: "Profissional removido" });
+      await loadData();
+    } catch {
+      toast({
+        title: "Erro ao remover profissional",
+        description: "Não foi possível concluir esta ação.",
+        variant: "destructive",
+      });
+    } finally {
+      setActionLoading(false);
+    }
   };
 
   const deleteReview = async (id: string) => {
-    await ProfessionalService.deleteProfessionalReview(id);
-    toast({ title: "Avaliação removida" });
-    loadData();
+    setActionLoading(true);
+    try {
+      await ProfessionalService.deleteProfessionalReview(id);
+      toast({ title: "Avaliação removida" });
+      await loadData();
+    } catch {
+      toast({
+        title: "Erro ao remover avaliação",
+        description: "Não foi possível concluir esta ação.",
+        variant: "destructive",
+      });
+    } finally {
+      setActionLoading(false);
+    }
   };
 
   const resolveReport = async (id: string, status: string) => {
-    await ProfessionalService.updateProfessionalReport(id, status);
-    toast({ title: "Denúncia resolvida" });
-    loadData();
+    setActionLoading(true);
+    try {
+      await ProfessionalService.updateProfessionalReport(id, status);
+      toast({ title: "Denúncia resolvida" });
+      await loadData();
+    } catch {
+      toast({
+        title: "Erro ao atualizar denúncia",
+        description: "Não foi possível concluir esta ação.",
+        variant: "destructive",
+      });
+    } finally {
+      setActionLoading(false);
+    }
   };
 
-  const confirmDelete = () => {
+  const confirmDelete = async () => {
     if (!deleteTarget) return;
     if (deleteTarget.type === "professional") {
-      deleteProfessional(deleteTarget.id);
+      await deleteProfessional(deleteTarget.id);
     } else {
-      deleteReview(deleteTarget.id);
+      await deleteReview(deleteTarget.id);
     }
     setShowDeleteDialog(false);
     setDeleteTarget(null);
@@ -387,6 +432,7 @@ export default function AdminServicos() {
                           <Button
                             size="icon"
                             variant="ghost"
+                            disabled={actionLoading}
                             onClick={() => setSelectedPro(pro)}
                           >
                             <Eye className="h-4 w-4" />
@@ -397,6 +443,7 @@ export default function AdminServicos() {
                                 size="icon"
                                 variant="ghost"
                                 className="text-success"
+                                disabled={actionLoading}
                                 onClick={() => updateStatus(pro.id, "aprovado")}
                               >
                                 <Check className="h-4 w-4" />
@@ -405,6 +452,7 @@ export default function AdminServicos() {
                                 size="icon"
                                 variant="ghost"
                                 className="text-destructive"
+                                disabled={actionLoading}
                                 onClick={() =>
                                   updateStatus(pro.id, "rejeitado")
                                 }
@@ -417,6 +465,7 @@ export default function AdminServicos() {
                             size="icon"
                             variant="ghost"
                             className="text-destructive"
+                            disabled={actionLoading}
                             onClick={() => {
                               setDeleteTarget({
                                 type: "professional",
@@ -485,6 +534,7 @@ export default function AdminServicos() {
                           size="icon"
                           variant="ghost"
                           className="text-destructive"
+                          disabled={actionLoading}
                           onClick={() => {
                             setDeleteTarget({ type: "review", id: rev.id });
                             setShowDeleteDialog(true);
@@ -546,6 +596,7 @@ export default function AdminServicos() {
                             <Button
                               size="sm"
                               variant="outline"
+                              disabled={actionLoading}
                               onClick={() => resolveReport(rep.id, "resolvido")}
                             >
                               Resolver
@@ -553,6 +604,7 @@ export default function AdminServicos() {
                             <Button
                               size="sm"
                               variant="destructive"
+                              disabled={actionLoading}
                               onClick={() => resolveReport(rep.id, "ignorado")}
                             >
                               Ignorar
@@ -628,11 +680,12 @@ export default function AdminServicos() {
           <DialogFooter>
             <Button
               variant="outline"
+              disabled={actionLoading}
               onClick={() => setShowDeleteDialog(false)}
             >
               Cancelar
             </Button>
-            <Button variant="destructive" onClick={confirmDelete}>
+            <Button variant="destructive" disabled={actionLoading} onClick={confirmDelete}>
               Excluir
             </Button>
           </DialogFooter>

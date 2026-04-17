@@ -66,10 +66,6 @@ export function useTerritoryFilter(
     // ✅ PRIORIDADE 1: Modo Bairro (usuário cadastrado)
     // Quando em modo bairro, SEMPRE filtra pelo bairro do usuário, independente da URL
     if (hasHome && territoryMode === 'bairro' && homeDistrict) {
-      console.log('[useTerritoryFilter] MODO BAIRRO ATIVO:', {
-        bairro: homeDistrict.name,
-        locationId: homeDistrict.id
-      });
       return { scope: 'location', location_id: homeDistrict.id };
     }
 
@@ -80,19 +76,11 @@ export function useTerritoryFilter(
       if (routeResolved?.kind === 'location' && 
           homeCity && 
           routeResolved.location.parent_id === homeCity.id) {
-        console.log('[useTerritoryFilter] MODO CIDADE - Bairro específico:', {
-          bairro: routeResolved.location.name,
-          locationId: routeResolved.location.id
-        });
         return { scope: 'location', location_id: routeResolved.location.id };
       }
       
       // Se está na cidade, mostrar toda a cidade
       if (homeCity) {
-        console.log('[useTerritoryFilter] MODO CIDADE - Toda a cidade:', {
-          cidade: homeCity.name,
-          locationId: homeCity.id
-        });
         return { scope: 'location', location_id: homeCity.id };
       }
     }
@@ -106,24 +94,12 @@ export function useTerritoryFilter(
           ? activeMemberIds
           : routeResolved.group.members.map((m) => m.id);
 
-        console.log('[useTerritoryFilter] GROUP:', {
-          groupName: routeResolved.group.name,
-          allMembers: routeResolved.group.members.length,
-          activeMemberIds,
-          finalIds: ids,
-          scope: ids.length === 0 ? 'none' : 'group'
-        });
-
         // Nunca retornar grupo sem membros como filtro válido
         if (ids.length === 0) return { scope: 'none' };
         return { scope: 'group', location_ids: ids };
       }
 
       if (routeResolved.kind === 'location') {
-        console.log('[useTerritoryFilter] LOCATION:', {
-          locationName: routeResolved.location.name,
-          locationId: routeResolved.location.id
-        });
         return { scope: 'location', location_id: routeResolved.location.id };
       }
     }

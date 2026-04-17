@@ -6,7 +6,6 @@
  */
 
 import { useNavigate } from "react-router-dom";
-import { useRef } from "react";
 import { motion, useScroll, useTransform } from "framer-motion";
 import {
   Store, Wrench, Briefcase, Tag, Calendar,
@@ -136,23 +135,16 @@ const PERSONAS = [
 export default function MainLandingPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const heroRef = useRef<HTMLElement>(null);
-  const ctaRef = useRef<HTMLElement>(null);
+  const { scrollYProgress } = useScroll();
 
   // Parallax: hero image moves slower than scroll
-  const { scrollYProgress: heroProgress } = useScroll({
-    target: heroRef,
-    offset: ["start start", "end start"],
-  });
+  const heroProgress = scrollYProgress;
   const heroY = useTransform(heroProgress, [0, 1], ["0%", "30%"]);
   const heroScale = useTransform(heroProgress, [0, 1], [1, 1.1]);
   const heroOpacity = useTransform(heroProgress, [0, 0.8], [1, 0.3]);
 
   // Parallax: CTA section
-  const { scrollYProgress: ctaProgress } = useScroll({
-    target: ctaRef,
-    offset: ["start end", "end start"],
-  });
+  const ctaProgress = scrollYProgress;
   const ctaY = useTransform(ctaProgress, [0, 1], ["10%", "-10%"]);
 
   const handleExplorar = () => {
@@ -163,7 +155,7 @@ export default function MainLandingPage() {
     <div className="relative min-h-screen w-full bg-background text-foreground overflow-x-hidden">
 
       {/* ── HERO ──────────────────────────────────────────────────── */}
-      <section ref={heroRef} className="relative w-full min-h-[85vh] flex items-center justify-center overflow-hidden">
+      <section className="relative w-full min-h-[85vh] flex items-center justify-center overflow-hidden">
         {/* Parallax background image */}
         <motion.div className="absolute inset-0" style={{ y: heroY, scale: heroScale }}>
           <img
@@ -439,7 +431,7 @@ export default function MainLandingPage() {
       </section>
 
       {/* ── CTA FINAL ─────────────────────────────────────────────── */}
-      <section ref={ctaRef} className="relative w-full py-24 overflow-hidden">
+      <section className="relative w-full py-24 overflow-hidden">
         <motion.div className="absolute inset-0" style={{ y: ctaY }}>
           <img
             src={heroImg}
