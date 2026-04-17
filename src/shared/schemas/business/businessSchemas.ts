@@ -181,6 +181,7 @@ const baseBusinessObjectSchema = z.object({
     tem_delivery: z.boolean().optional(),
     aceita_cartao: z.boolean().optional(),
     aceita_pix: z.boolean().optional(),
+    can_post_vagas: z.boolean().optional(),
 
     logo_url: optionalUrl,
     banner_url: optionalUrl,

@@ -114,6 +114,7 @@ export interface Business {
   total_products: number;
   is_premium: boolean;
   is_verified: boolean;
+  can_post_vagas: boolean;
   is_featured?: boolean;
   slug?: string;
   formas_pagamento: string[];

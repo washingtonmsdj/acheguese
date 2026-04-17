@@ -144,6 +144,7 @@ export function toBusinessData(
   setIfDefined(result, "parent_business_id", input.parent_business_id);
   setIfDefined(result, "is_headquarters", input.is_headquarters);
   setIfDefined(result, "unit_name", input.unit_name);
+  setIfDefined(result, "can_post_vagas", input.can_post_vagas);
 
   // Compatibilidade: se os modos vierem definidos, garante coerencia minima de metadata.
   if (serviceModes.length > 0 && !metadata?.modos_atendimento) {
@@ -250,6 +251,7 @@ export function mapBusinessDataToBusiness(
     total_products: data.total_products || 0,
     is_premium: data.is_premium || false,
     is_verified: data.is_verified || false,
+    can_post_vagas: data.can_post_vagas ?? true,
     slug: data.slug || undefined,
     formas_pagamento: paymentMethods,
     especialidades: specialties,

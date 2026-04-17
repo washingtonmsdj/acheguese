@@ -80,6 +80,10 @@
   * {
     @apply border-border;
   }
+  html,
+  body {
+    position: relative;
+  }
   body {
     @apply bg-background text-foreground font-sans;
     font-family: "DM Sans", sans-serif;

@@ -1,67 +1,29 @@
-/**
- * ADMIN VAGAS SERVICE — SSOT
- * 
- * Responsabilidade: Funcionalidades administrativas para vagas
- * Estende VagasService com operações de moderação e gestão
- * 
- * Padrão SSOT:
- * - Usa tabela vagas (migration 20260416110000)
- * - Enums: vaga_status, vaga_contrato, vaga_modalidade, vaga_nivel, vaga_urgencia
- * - Full-text search em português
- * - Filtros territoriais integrados
- * 
- * Substitui: adminVagasService.ts (antigo)
- */
-
-import { supabase } from '@/integrations/supabase/client';
-import { logger } from '@/shared/utils/logger';
-import type { VagaStatus, VagaContrato, VagaModalidade, VagaNivel } from './VagasService';
-
-// ══════════════════════════════════════════════════════════════════════════
-// TYPES
-// ══════════════════════════════════════════════════════════════════════════
+﻿import { supabase } from "@/integrations/supabase/client";
+import { logger } from "@/shared/utils/logger";
+import type {
+  VagaContrato,
+  VagaHighlightType,
+  VagaModalidade,
+  VagaNivel,
+  VagaStatus,
+  VagaUrgencia,
+} from "../types/vagas.types";
 
 export interface VagaStats {
   total: number;
-  ativas: number;
-  pausadas: number;
-  encerradas: number;
-  preenchidas: number;
+  draft: number;
+  pendingReview: number;
+  published: number;
+  paused: number;
+  closed: number;
+  expired: number;
+  rejected: number;
+  removed: number;
   urgentes: number;
-  destaque: number;
-  byContrato: Record<VagaContrato, number>;
-  byModalidade: Record<VagaModalidade, number>;
-  byNivel: Record<VagaNivel, number>;
-}
-
-export interface AdminVagaRow {
-  id: string;
-  titulo: string;
-  empresa: string;
-  descricao: string;
-  location_id: string;
-  contrato: VagaContrato;
-  modalidade: VagaModalidade;
-  nivel: VagaNivel;
-  tags: string[];
-  salario_texto: string | null;
-  salario_min: number | null;
-  salario_max: number | null;
-  beneficios: string[];
-  contato_email: string | null;
-  contato_whatsapp: string | null;
-  contato_url: string | null;
-  status: VagaStatus;
-  urgencia: 'normal' | 'urgente';
-  destaque: boolean;
-  created_at: string;
-  updated_at: string;
-  expires_at: string | null;
-  location?: {
-    id: string;
-    name: string;
-    type: string;
-  };
+  destaques: number;
+  byContrato: Record<string, number>;
+  byModalidade: Record<string, number>;
+  byNivel: Record<string, number>;
 }
 
 export interface AdminVaga {
@@ -87,10 +49,11 @@ export interface AdminVaga {
   contatoWhatsapp?: string;
   contatoUrl?: string;
   status: VagaStatus;
-  urgencia: 'normal' | 'urgente';
-  destaque: boolean;
+  urgencia: VagaUrgencia;
+  highlightType: VagaHighlightType;
   createdAt: Date;
   updatedAt: Date;
+  publishedAt?: Date;
   expiresAt?: Date;
 }
 
@@ -106,61 +69,90 @@ export interface GetVagasParams {
   destaque?: boolean;
 }
 
-// ══════════════════════════════════════════════════════════════════════════
-// SERVICE
-// ══════════════════════════════════════════════════════════════════════════
-
 export class AdminVagasService {
-  /**
-   * Buscar estatísticas de vagas
-   */
   static async getStats(): Promise<VagaStats> {
     try {
-      const { data: vagas, error } = await supabase
-        .from('vagas')
-        .select('*');
+      const { data, error } = await supabase
+        .from("vagas")
+        .select("status, urgencia, highlight_type, contrato, modalidade, nivel");
 
       if (error) throw error;
 
+      const rows = data ?? [];
+
       const stats: VagaStats = {
-        total: vagas?.length || 0,
-        ativas: vagas?.filter(v => v.status === 'ativa').length || 0,
-        pausadas: vagas?.filter(v => v.status === 'pausada').length || 0,
-        encerradas: vagas?.filter(v => v.status === 'encerrada').length || 0,
-        preenchidas: vagas?.filter(v => v.status === 'preenchida').length || 0,
-        urgentes: vagas?.filter(v => v.urgencia === 'urgente').length || 0,
-        destaque: vagas?.filter(v => v.destaque).length || 0,
-        byContrato: {} as Record<VagaContrato, number>,
-        byModalidade: {} as Record<VagaModalidade, number>,
-        byNivel: {} as Record<VagaNivel, number>,
+        total: rows.length,
+        draft: 0,
+        pendingReview: 0,
+        published: 0,
+        paused: 0,
+        closed: 0,
+        expired: 0,
+        rejected: 0,
+        removed: 0,
+        urgentes: 0,
+        destaques: 0,
+        byContrato: {},
+        byModalidade: {},
+        byNivel: {},
       };
 
-      // Contar por contrato
-      vagas?.forEach(v => {
-        if (v.contrato) {
-          stats.byContrato[v.contrato as VagaContrato] = 
-            (stats.byContrato[v.contrato as VagaContrato] || 0) + 1;
+      rows.forEach((row: any) => {
+        switch (row.status) {
+          case "draft":
+            stats.draft += 1;
+            break;
+          case "pending_review":
+            stats.pendingReview += 1;
+            break;
+          case "published":
+            stats.published += 1;
+            break;
+          case "paused":
+            stats.paused += 1;
+            break;
+          case "closed":
+            stats.closed += 1;
+            break;
+          case "expired":
+            stats.expired += 1;
+            break;
+          case "rejected":
+            stats.rejected += 1;
+            break;
+          case "removed":
+            stats.removed += 1;
+            break;
+          default:
+            break;
         }
-        if (v.modalidade) {
-          stats.byModalidade[v.modalidade as VagaModalidade] = 
-            (stats.byModalidade[v.modalidade as VagaModalidade] || 0) + 1;
+
+        if (row.urgencia === "urgente" || row.urgencia === "extrema") {
+          stats.urgentes += 1;
         }
-        if (v.nivel) {
-          stats.byNivel[v.nivel as VagaNivel] = 
-            (stats.byNivel[v.nivel as VagaNivel] || 0) + 1;
+
+        if ((row.highlight_type ?? "none") !== "none") {
+          stats.destaques += 1;
+        }
+
+        if (row.contrato) {
+          stats.byContrato[row.contrato] = (stats.byContrato[row.contrato] ?? 0) + 1;
+        }
+        if (row.modalidade) {
+          stats.byModalidade[row.modalidade] = (stats.byModalidade[row.modalidade] ?? 0) + 1;
+        }
+        if (row.nivel) {
+          stats.byNivel[row.nivel] = (stats.byNivel[row.nivel] ?? 0) + 1;
         }
       });
 
       return stats;
     } catch (error) {
-      logger.error('Erro ao buscar estatísticas de vagas:', error);
+      logger.error("[AdminVagasService] Erro ao buscar estatísticas", error);
       throw error;
     }
   }
 
-  /**
-   * Buscar todas as vagas com paginação e filtros
-   */
   static async getAllVagas(params: GetVagasParams = {}) {
     try {
       const {
@@ -176,237 +168,223 @@ export class AdminVagasService {
       } = params;
 
       let query = supabase
-        .from('vagas')
-        .select(`
+        .from("vagas")
+        .select(
+          `
           *,
           location:locations(
             id,
             name,
             type
           )
-        `, { count: 'exact' });
+        `,
+          { count: "exact" },
+        );
 
-      // Filtros
       if (search) {
-        query = query.textSearch('titulo,empresa,descricao', search, {
-          type: 'websearch',
-          config: 'portuguese',
-        });
+        query = query.or(
+          `titulo.ilike.%${search}%,empresa_nome.ilike.%${search}%,descricao.ilike.%${search}%`,
+        );
       }
-      if (contrato) {
-        query = query.eq('contrato', contrato);
-      }
-      if (modalidade) {
-        query = query.eq('modalidade', modalidade);
-      }
-      if (nivel) {
-        query = query.eq('nivel', nivel);
-      }
-      if (status) {
-        query = query.eq('status', status);
-      }
+      if (contrato) query = query.eq("contrato", contrato);
+      if (modalidade) query = query.eq("modalidade", modalidade);
+      if (nivel) query = query.eq("nivel", nivel);
+      if (status) query = query.eq("status", status);
+
       if (urgente !== undefined) {
-        query = query.eq('urgencia', urgente ? 'urgente' : 'normal');
-      }
-      if (destaque !== undefined) {
-        query = query.eq('destaque', destaque);
+        query = urgente
+          ? query.in("urgencia", ["urgente", "extrema"])
+          : query.eq("urgencia", "normal");
       }
 
-      // Paginação
+      if (destaque !== undefined) {
+        query = destaque
+          ? query.neq("highlight_type", "none")
+          : query.eq("highlight_type", "none");
+      }
+
       const from = (page - 1) * limit;
       const to = from + limit - 1;
-      query = query.range(from, to);
 
-      // Ordenação
-      query = query.order('created_at', { ascending: false });
-
-      const { data, error, count } = await query;
+      const { data, error, count } = await query
+        .range(from, to)
+        .order("created_at", { ascending: false });
 
       if (error) throw error;
 
       return {
-        data: (data as AdminVagaRow[]).map(this.mapRowToAdminVaga),
-        count: count || 0,
+        data: (data ?? []).map((row: any) => this.mapRowToAdminVaga(row)),
+        count: count ?? 0,
         page,
         limit,
-        totalPages: Math.ceil((count || 0) / limit),
+        totalPages: Math.ceil((count ?? 0) / limit),
       };
     } catch (error) {
-      logger.error('Erro ao buscar vagas:', error);
+      logger.error("[AdminVagasService] Erro ao buscar vagas", error);
       throw error;
     }
   }
 
-  /**
-   * Atualizar status da vaga
-   */
   static async updateStatus(vagaId: string, status: VagaStatus): Promise<boolean> {
     try {
+      const updatePayload: Record<string, unknown> = {
+        status,
+        updated_at: new Date().toISOString(),
+      };
+
+      if (status === "published") {
+        updatePayload.published_at = new Date().toISOString();
+      }
+
+      if (status === "closed" || status === "removed") {
+        updatePayload.closed_at = new Date().toISOString();
+      }
+
       const { error } = await supabase
-        .from('vagas')
-        .update({ 
-          status,
-          updated_at: new Date().toISOString(),
-        })
-        .eq('id', vagaId);
+        .from("vagas")
+        .update(updatePayload)
+        .eq("id", vagaId);
 
       if (error) throw error;
       return true;
     } catch (error) {
-      logger.error('Erro ao atualizar status da vaga:', error);
+      logger.error("[AdminVagasService] Erro ao atualizar status da vaga", error);
       return false;
     }
   }
 
-  /**
-   * Ativar vaga (status = ativa)
-   */
+  static async publicarVaga(vagaId: string): Promise<boolean> {
+    return this.updateStatus(vagaId, "published");
+  }
+
+  static async rejeitarVaga(vagaId: string): Promise<boolean> {
+    return this.updateStatus(vagaId, "rejected");
+  }
+
   static async ativarVaga(vagaId: string): Promise<boolean> {
-    return this.updateStatus(vagaId, 'ativa');
+    return this.publicarVaga(vagaId);
   }
 
-  /**
-   * Pausar vaga (status = pausada)
-   */
   static async pausarVaga(vagaId: string): Promise<boolean> {
-    return this.updateStatus(vagaId, 'pausada');
+    return this.updateStatus(vagaId, "paused");
   }
 
-  /**
-   * Encerrar vaga (status = encerrada)
-   */
   static async encerrarVaga(vagaId: string): Promise<boolean> {
-    return this.updateStatus(vagaId, 'encerrada');
+    return this.updateStatus(vagaId, "closed");
   }
 
-  /**
-   * Marcar vaga como preenchida (status = preenchida)
-   */
   static async marcarPreenchida(vagaId: string): Promise<boolean> {
-    return this.updateStatus(vagaId, 'preenchida');
+    return this.updateStatus(vagaId, "closed");
   }
 
-  /**
-   * Toggle destaque
-   */
   static async toggleDestaque(vagaId: string, destaque: boolean): Promise<boolean> {
     try {
+      const highlightType: VagaHighlightType = destaque ? "premium" : "none";
+
       const { error } = await supabase
-        .from('vagas')
-        .update({ 
-          destaque,
+        .from("vagas")
+        .update({
+          highlight_type: highlightType,
           updated_at: new Date().toISOString(),
         })
-        .eq('id', vagaId);
+        .eq("id", vagaId);
 
       if (error) throw error;
       return true;
     } catch (error) {
-      logger.error('Erro ao toggle destaque:', error);
+      logger.error("[AdminVagasService] Erro ao alterar destaque", error);
       return false;
     }
   }
 
-  /**
-   * Toggle urgência
-   */
   static async toggleUrgencia(vagaId: string, urgente: boolean): Promise<boolean> {
     try {
       const { error } = await supabase
-        .from('vagas')
-        .update({ 
-          urgencia: urgente ? 'urgente' : 'normal',
+        .from("vagas")
+        .update({
+          urgencia: urgente ? "urgente" : "normal",
           updated_at: new Date().toISOString(),
         })
-        .eq('id', vagaId);
+        .eq("id", vagaId);
 
       if (error) throw error;
       return true;
     } catch (error) {
-      logger.error('Erro ao toggle urgência:', error);
+      logger.error("[AdminVagasService] Erro ao alterar urgência", error);
       return false;
     }
   }
 
-  /**
-   * Deletar vaga
-   */
   static async deleteVaga(vagaId: string): Promise<boolean> {
-    try {
-      const { error } = await supabase
-        .from('vagas')
-        .delete()
-        .eq('id', vagaId);
-
-      if (error) throw error;
-      return true;
-    } catch (error) {
-      logger.error('Erro ao deletar vaga:', error);
-      return false;
-    }
+    return this.updateStatus(vagaId, "removed");
   }
 
-  /**
-   * Buscar vagas expirando (próximos N dias)
-   */
-  static async getVagasExpirando(days: number = 7): Promise<AdminVaga[]> {
+  static async getVagasExpirando(days = 7): Promise<AdminVaga[]> {
     try {
       const now = new Date();
-      const futureDate = new Date();
-      futureDate.setDate(futureDate.getDate() + days);
+      const endDate = new Date();
+      endDate.setDate(endDate.getDate() + days);
 
       const { data, error } = await supabase
-        .from('vagas')
-        .select(`
+        .from("vagas")
+        .select(
+          `
           *,
           location:locations(
             id,
             name,
             type
           )
-        `)
-        .eq('status', 'ativa')
-        .not('expires_at', 'is', null)
-        .gte('expires_at', now.toISOString())
-        .lte('expires_at', futureDate.toISOString())
-        .order('expires_at', { ascending: true });
+        `,
+        )
+        .eq("status", "published")
+        .not("expires_at", "is", null)
+        .gte("expires_at", now.toISOString())
+        .lte("expires_at", endDate.toISOString())
+        .order("expires_at", { ascending: true });
 
       if (error) throw error;
-      return (data as AdminVagaRow[]).map(this.mapRowToAdminVaga);
+
+      return (data ?? []).map((row: any) => this.mapRowToAdminVaga(row));
     } catch (error) {
-      logger.error('Erro ao buscar vagas expirando:', error);
+      logger.error("[AdminVagasService] Erro ao buscar vagas expirando", error);
       return [];
     }
   }
 
-  // ════════════════════════════════════════════════════════════════════════
-  // HELPERS PRIVADOS
-  // ════════════════════════════════════════════════════════════════════════
+  private static mapRowToAdminVaga(row: any): AdminVaga {
+    const location = row.location
+      ? {
+          id: row.location.id,
+          name: row.location.name,
+          type: row.location.type,
+        }
+      : undefined;
 
-  private static mapRowToAdminVaga(row: AdminVagaRow): AdminVaga {
     return {
       id: row.id,
       titulo: row.titulo,
-      empresa: row.empresa,
+      empresa: row.empresa_nome ?? row.empresa ?? "Empresa não informada",
       descricao: row.descricao,
       locationId: row.location_id,
-      location: row.location,
+      location,
       contrato: row.contrato,
       modalidade: row.modalidade,
       nivel: row.nivel,
-      tags: row.tags,
-      salarioTexto: row.salario_texto || undefined,
-      salarioMin: row.salario_min || undefined,
-      salarioMax: row.salario_max || undefined,
-      beneficios: row.beneficios,
-      contatoEmail: row.contato_email || undefined,
-      contatoWhatsapp: row.contato_whatsapp || undefined,
-      contatoUrl: row.contato_url || undefined,
+      tags: row.tags ?? [],
+      salarioTexto: row.salario_texto ?? undefined,
+      salarioMin: row.salario_min ?? undefined,
+      salarioMax: row.salario_max ?? undefined,
+      beneficios: row.beneficios ?? [],
+      contatoEmail: row.application_email ?? row.contato_email ?? undefined,
+      contatoWhatsapp: row.application_whatsapp ?? row.contato_whatsapp ?? undefined,
+      contatoUrl: row.application_url ?? row.contato_url ?? undefined,
       status: row.status,
-      urgencia: row.urgencia,
-      destaque: row.destaque,
+      urgencia: row.urgencia ?? "normal",
+      highlightType: row.highlight_type ?? (row.destaque ? "premium" : "none"),
       createdAt: new Date(row.created_at),
       updatedAt: new Date(row.updated_at),
+      publishedAt: row.published_at ? new Date(row.published_at) : undefined,
       expiresAt: row.expires_at ? new Date(row.expires_at) : undefined,
     };
   }

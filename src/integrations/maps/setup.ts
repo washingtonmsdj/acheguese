@@ -10,7 +10,9 @@ export function setupDefaultProviders(): void {
   // Configuração centralizada em:
   // - DEFAULT_TILE_STYLE (src/core/maps/providers/MapProvider.ts)
   // - GeocodingService (src/core/maps/services/GeocodingService.ts)
-  if (import.meta.env.DEV) {
-    console.log('[Maps] Default providers configured: {tiles: \'osm\', geocoding: \'nominatim\', routing: \'mock (temporary)\'}');
+  if (import.meta.env.DEV && import.meta.env.VITE_DEBUG_GEO === "true") {
+    console.debug(
+      "[Maps] Default providers configured: {tiles: 'osm', geocoding: 'nominatim', routing: 'mock (temporary)'}",
+    );
   }
 }

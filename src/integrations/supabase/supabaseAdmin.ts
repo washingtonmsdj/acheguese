@@ -24,6 +24,7 @@ import { createClient } from "@supabase/supabase-js";
 // Validar variaveis de ambiente
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || "https://placeholder.supabase.co";
 const SUPABASE_SERVICE_ROLE_KEY = import.meta.env.SUPABASE_SERVICE_ROLE_KEY;
+const DEBUG_BOOT = import.meta.env.DEV && import.meta.env.VITE_DEBUG_BOOT === "true";
 
 if (!import.meta.env.VITE_SUPABASE_URL) {
   console.warn(
@@ -34,10 +35,12 @@ if (!import.meta.env.VITE_SUPABASE_URL) {
 
 // Log de aviso se service_role key nao estiver configurada
 if (!SUPABASE_SERVICE_ROLE_KEY && import.meta.env.DEV) {
-  console.info(
-    "SUPABASE_SERVICE_ROLE_KEY ausente no frontend (esperado). " +
-      "Operacoes administrativas sensiveis devem usar Edge Functions/Backend.",
-  );
+  if (DEBUG_BOOT) {
+    console.debug(
+      "SUPABASE_SERVICE_ROLE_KEY ausente no frontend (esperado). " +
+        "Operacoes administrativas sensiveis devem usar Edge Functions/Backend.",
+    );
+  }
 }
 
 /**
@@ -57,8 +60,8 @@ export const supabaseAdmin = SUPABASE_SERVICE_ROLE_KEY
   : null;
 
 // Log de inicializacao (apenas em desenvolvimento)
-if (import.meta.env.DEV && supabaseAdmin) {
-  console.log("Supabase Admin inicializado (service_role)");
+if (DEBUG_BOOT && supabaseAdmin) {
+  console.debug("Supabase Admin inicializado (service_role)");
 }
 
 /**

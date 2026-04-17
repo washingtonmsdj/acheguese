@@ -6,7 +6,7 @@
  */
 
 import { useNavigate } from "react-router-dom";
-import { motion, useScroll, useTransform } from "framer-motion";
+import { motion } from "framer-motion";
 import {
   Store, Wrench, Briefcase, Tag, Calendar,
   Users, ArrowRight, MapPin, Clock,
@@ -135,18 +135,6 @@ const PERSONAS = [
 export default function MainLandingPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { scrollYProgress } = useScroll();
-
-  // Parallax: hero image moves slower than scroll
-  const heroProgress = scrollYProgress;
-  const heroY = useTransform(heroProgress, [0, 1], ["0%", "30%"]);
-  const heroScale = useTransform(heroProgress, [0, 1], [1, 1.1]);
-  const heroOpacity = useTransform(heroProgress, [0, 0.8], [1, 0.3]);
-
-  // Parallax: CTA section
-  const ctaProgress = scrollYProgress;
-  const ctaY = useTransform(ctaProgress, [0, 1], ["10%", "-10%"]);
-
   const handleExplorar = () => {
     navigate(`/ba/salvador/complexo-do-nordeste-de-amaralina`);
   };
@@ -157,7 +145,7 @@ export default function MainLandingPage() {
       {/* ── HERO ──────────────────────────────────────────────────── */}
       <section className="relative w-full min-h-[85vh] flex items-center justify-center overflow-hidden">
         {/* Parallax background image */}
-        <motion.div className="absolute inset-0" style={{ y: heroY, scale: heroScale }}>
+        <motion.div className="absolute inset-0">
           <img
             src={heroImg}
             alt="Salvador - Complexo do Nordeste de Amaralina"
@@ -166,7 +154,7 @@ export default function MainLandingPage() {
             height={1080}
           />
         </motion.div>
-        <motion.div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/40 to-background" style={{ opacity: heroOpacity }} />
+        <motion.div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/40 to-background" />
         {/* Extra gradient that always stays for readability */}
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-background" />
 
@@ -432,7 +420,7 @@ export default function MainLandingPage() {
 
       {/* ── CTA FINAL ─────────────────────────────────────────────── */}
       <section className="relative w-full py-24 overflow-hidden">
-        <motion.div className="absolute inset-0" style={{ y: ctaY }}>
+        <motion.div className="absolute inset-0">
           <img
             src={heroImg}
             alt="Salvador"

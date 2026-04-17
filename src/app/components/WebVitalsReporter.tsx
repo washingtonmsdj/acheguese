@@ -18,7 +18,7 @@ function initWebVitals() {
   import("web-vitals")
     .then(({ onCLS, onINP, onFCP, onLCP, onTTFB }) => {
       const reportMetric = (metric: Metric) => {
-        if (import.meta.env.DEV) {
+        if (import.meta.env.DEV && import.meta.env.VITE_DEBUG_WEB_VITALS === "true") {
           logger.info(`📊 ${metric.name}: ${metric.value}`, {
             action: metric.name,
           });

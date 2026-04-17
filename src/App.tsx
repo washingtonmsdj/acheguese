@@ -10,7 +10,6 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter } from "react-router-dom";
 import { HelmetProvider } from "react-helmet-async";
 import { SEO } from "@/app/components/SEO";
-import { WebVitalsReporter } from "@/app/components/WebVitalsReporter";
 import { queryClient } from "@/shared/utils/queryClient";
 import { ErrorBoundary } from "@/app/components/ErrorBoundary";
 import { FullScreenLoader } from "@/shared/components/loading/PageLoader";
@@ -37,7 +36,6 @@ const App = () => (
   <ErrorBoundary>
     <HelmetProvider>
       <SEO />
-      <WebVitalsReporter />
       <QueryClientProvider client={queryClient}>
         <AccessibilityProvider>
           <TooltipProvider>

@@ -34,6 +34,7 @@ export const ADMIN_BUSINESS_FIELDS = [
   },
   { key: "is_premium", label: "Plano Premium", type: "boolean" as const },
   { key: "is_verified", label: "Verificado", type: "boolean" as const },
+  { key: "can_post_vagas", label: "Pode Publicar Vagas", type: "boolean" as const },
   { key: "is_featured", label: "Destaque", type: "boolean" as const },
   {
     key: "modos_atendimento",

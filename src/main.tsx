@@ -43,5 +43,7 @@ deferIdle(() => {
 
 // Defer load: Métricas e analytics
 deferLoad(() => {
-  console.info('✅ Deferred initialization complete - App ready');
+  if (import.meta.env.DEV && import.meta.env.VITE_DEBUG_BOOT === "true") {
+    console.debug("Deferred initialization complete - App ready");
+  }
 });

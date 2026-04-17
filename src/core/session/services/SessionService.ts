@@ -30,6 +30,15 @@ interface DbProfileRow {
 }
 
 export class SessionService {
+  private static readonly debugLogs =
+    import.meta.env.DEV && import.meta.env.VITE_DEBUG_SESSION === "true";
+
+  private static debug(...args: unknown[]): void {
+    if (SessionService.debugLogs) {
+      console.debug(...args);
+    }
+  }
+
   private static initialized = false;
   private static loadVersion = 0;
   private static loadPromise: Promise<void> | null = null;
@@ -95,7 +104,10 @@ export class SessionService {
     // Armazena a subscription para cleanup
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event: AuthChangeEvent, session: Session | null) => {
       SessionService.currentSession = session;
-      console.log(`🔔 onAuthStateChange: ${event}`, session ? `user=${session.user.id}` : 'no session');
+      SessionService.debug(
+        `[SessionService] onAuthStateChange: ${event}`,
+        session ? `user=${session.user.id}` : "no session",
+      );
 
       if (event === "SIGNED_OUT") {
         SessionService.cancelPendingLoads();
@@ -204,7 +216,7 @@ export class SessionService {
     // Publica o user imediatamente — UI pode renderizar enquanto perfis carregam
     SessionState.setState({ user, activeProfile: null, profiles: [] });
 
-    console.log(`🔄 doLoad: fetching profiles user=${user.id}`);
+    SessionService.debug(`[SessionService] doLoad: fetching profiles user=${user.id}`);
 
     const [activeProfile, profiles] = await Promise.all([
       SessionService.getActiveProfile(user.id),
@@ -213,14 +225,18 @@ export class SessionService {
 
     // Descarta resultado se um load mais recente foi iniciado
     if (version !== SessionService.loadVersion) {
-      console.log(`⚠️ doLoad: discarding stale result (version ${version})`);
+      SessionService.debug(
+        `[SessionService] doLoad: discarding stale result (version ${version})`,
+      );
       return;
     }
 
     const sessionData: SessionData = { user, activeProfile, profiles };
     SessionState.setState(sessionData);
     CacheManager.setSession(sessionData);
-    console.log(`✅ doLoad: done user=${user.id} profiles=${profiles.length}`);
+    SessionService.debug(
+      `[SessionService] doLoad: done user=${user.id} profiles=${profiles.length}`,
+    );
   }
 
   // ── getCurrentUser ─────────────────────────────────────────────────────────

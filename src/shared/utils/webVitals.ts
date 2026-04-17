@@ -1,7 +1,7 @@
 /**
  * Web Vitals Monitoring
  * Tracks Core Web Vitals (LCP, INP, CLS) for performance monitoring
- * Integrado com Sentry para monitoramento em produção
+ * Integrado com Sentry para monitoramento em produÃ§Ã£o
  * 
  * @version 2.0.0
  */
@@ -48,19 +48,11 @@ function reportMetric(metric: Metric) {
     id: metric.id,
   };
 
-  // Log to console in development
-  if (import.meta.env.DEV) {
-    const emoji =
-      report.rating === "good"
-        ? "✅"
-        : report.rating === "needs-improvement"
-          ? "⚠️"
-          : "❌";
-    if (import.meta.env.DEV) {
-      logger.info(
-        `${emoji} ${report.name}: ${Math.round(report.value)}ms (${report.rating})`,
-      );
-    }
+  // Log to console in development (opt-in)
+  if (import.meta.env.DEV && import.meta.env.VITE_DEBUG_WEB_VITALS === "true") {
+    logger.info(
+      `[WebVitals] ${report.name}: ${Math.round(report.value)}ms (${report.rating})`,
+    );
   }
 
   // Send to analytics in production
@@ -91,3 +83,4 @@ export function initWebVitals() {
   onFCP(reportMetric); // First Contentful Paint
   onTTFB(reportMetric); // Time to First Byte
 }
+

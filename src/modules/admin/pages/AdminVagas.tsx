@@ -1,12 +1,12 @@
-/**
- * AdminVagas - Gestão administrativa de vagas de emprego
+﻿/**
+ * AdminVagas - GestÃ£o administrativa de vagas de emprego
  * 
  * SSOT: Usa AdminVagasService (novo)
  * Migration: 20260416110000_create_vagas.sql
  * 
  * Atualizado para usar:
  * - Enums: vaga_status, vaga_contrato, vaga_modalidade, vaga_nivel, vaga_urgencia
- * - Full-text search em português
+ * - Full-text search em portuguÃªs
  * - Filtros territoriais integrados
  */
 
@@ -46,21 +46,39 @@ import {
   RefreshCw,
 } from "lucide-react";
 import { toast } from "sonner";
+import type { VagaStatus, VagaContrato, VagaModalidade } from "@/modules/vagas/types/vagas.types";
 
-type VagaStatus = string;
-type VagaContrato = string;
-type VagaModalidade = string;
+const STATUS_OPTIONS: { value: VagaStatus; label: string }[] = [
+  { value: "draft", label: "Rascunho" },
+  { value: "pending_review", label: "Aguardando revisÃ£o" },
+  { value: "published", label: "Publicada" },
+  { value: "paused", label: "Pausada" },
+  { value: "closed", label: "Encerrada" },
+  { value: "expired", label: "Expirada" },
+  { value: "rejected", label: "Rejeitada" },
+  { value: "removed", label: "Removida" },
+];
+
+const ALL_STATUS_FILTER = "__all_status" as const;
+const ALL_CONTRATO_FILTER = "__all_contrato" as const;
+const ALL_MODALIDADE_FILTER = "__all_modalidade" as const;
 
 export default function AdminVagas() {
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState("all");
   const [search, setSearch] = useState("");
-  const [contratoFilter, setContratoFilter] = useState<VagaContrato | "">("");
-  const [modalidadeFilter, setModalidadeFilter] = useState<VagaModalidade | "">("");
-  const [statusFilter, setStatusFilter] = useState<VagaStatus | "">("");
+  const [contratoFilter, setContratoFilter] = useState<
+    VagaContrato | typeof ALL_CONTRATO_FILTER
+  >(ALL_CONTRATO_FILTER);
+  const [modalidadeFilter, setModalidadeFilter] = useState<
+    VagaModalidade | typeof ALL_MODALIDADE_FILTER
+  >(ALL_MODALIDADE_FILTER);
+  const [statusFilter, setStatusFilter] = useState<
+    VagaStatus | typeof ALL_STATUS_FILTER
+  >(ALL_STATUS_FILTER);
   const [page, setPage] = useState(1);
 
-  // Buscar estatísticas
+  // Buscar estatÃ­sticas
   const { data: stats } = useQuery({
     queryKey: ["admin-vagas-stats"],
     queryFn: () => AdminVagasService.getStats(),
@@ -74,9 +92,13 @@ export default function AdminVagas() {
         page,
         limit: 20,
         search: search || undefined,
-        contrato: contratoFilter || undefined,
-        modalidade: modalidadeFilter || undefined,
-        status: statusFilter || undefined,
+        contrato:
+          contratoFilter === ALL_CONTRATO_FILTER ? undefined : contratoFilter,
+        modalidade:
+          modalidadeFilter === ALL_MODALIDADE_FILTER
+            ? undefined
+            : modalidadeFilter,
+        status: statusFilter === ALL_STATUS_FILTER ? undefined : statusFilter,
       }),
   });
 
@@ -124,15 +146,15 @@ export default function AdminVagas() {
     },
   });
 
-  const preenchidaMutation = useMutation({
-    mutationFn: (id: string) => AdminVagasService.marcarPreenchida(id),
+  const rejeitarMutation = useMutation({
+    mutationFn: (id: string) => AdminVagasService.rejeitarVaga(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin-vagas"] });
       queryClient.invalidateQueries({ queryKey: ["admin-vagas-stats"] });
-      toast.success("Vaga marcada como preenchida");
+      toast.success("Vaga rejeitada com sucesso");
     },
     onError: () => {
-      toast.error("Erro ao marcar vaga como preenchida");
+      toast.error("Erro ao rejeitar vaga");
     },
   });
 
@@ -163,14 +185,22 @@ export default function AdminVagas() {
 
   const getStatusBadge = (status: VagaStatus) => {
     switch (status) {
-      case "ativa":
-        return <Badge variant="success">Ativa</Badge>;
-      case "pausada":
+      case "published":
+        return <Badge variant="success">Publicada</Badge>;
+      case "pending_review":
+        return <Badge variant="default">Em revisÃ£o</Badge>;
+      case "paused":
         return <Badge variant="warning">Pausada</Badge>;
-      case "encerrada":
+      case "closed":
         return <Badge variant="secondary">Encerrada</Badge>;
-      case "preenchida":
-        return <Badge variant="default">Preenchida</Badge>;
+      case "draft":
+        return <Badge variant="outline">Rascunho</Badge>;
+      case "rejected":
+        return <Badge variant="destructive">Rejeitada</Badge>;
+      case "removed":
+        return <Badge variant="secondary">Removida</Badge>;
+      case "expired":
+        return <Badge variant="secondary">Expirada</Badge>;
       default:
         return <Badge variant="secondary">{status}</Badge>;
     }
@@ -182,10 +212,10 @@ export default function AdminVagas() {
       <div>
         <h1 className="text-3xl font-bold font-display flex items-center gap-2">
           <Briefcase className="h-8 w-8" />
-          Gestão de Vagas
+          GestÃ£o de Vagas
         </h1>
         <p className="text-muted-foreground mt-1">
-          Gerencie vagas de emprego e moderação
+          Gerencie vagas de emprego e moderaÃ§Ã£o
         </p>
       </div>
 
@@ -200,7 +230,7 @@ export default function AdminVagas() {
           <CardContent>
             <div className="text-2xl font-bold">{stats?.total || 0}</div>
             <p className="text-xs text-muted-foreground mt-1">
-              {stats?.ativas || 0} ativas
+              {stats?.published || 0} publicadas
             </p>
           </CardContent>
         </Card>
@@ -209,13 +239,13 @@ export default function AdminVagas() {
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
               <CheckCircle className="h-4 w-4" />
-              Ativas
+              Publicadas
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-600">{stats?.ativas || 0}</div>
+            <div className="text-2xl font-bold text-green-600">{stats?.published || 0}</div>
             <p className="text-xs text-muted-foreground mt-1">
-              {stats?.total ? Math.round((stats.ativas / stats.total) * 100) : 0}% do total
+              {stats?.total ? Math.round((stats.published / stats.total) * 100) : 0}% do total
             </p>
           </CardContent>
         </Card>
@@ -224,13 +254,13 @@ export default function AdminVagas() {
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
               <Clock className="h-4 w-4" />
-              Pausadas
+              Em revisÃ£o
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-yellow-600">{stats?.pausadas || 0}</div>
+            <div className="text-2xl font-bold text-yellow-600">{stats?.pendingReview || 0}</div>
             <p className="text-xs text-muted-foreground mt-1">
-              Temporariamente inativas
+              Aguardando moderaÃ§Ã£o
             </p>
           </CardContent>
         </Card>
@@ -243,7 +273,7 @@ export default function AdminVagas() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-gray-600">{stats?.encerradas || 0}</div>
+            <div className="text-2xl font-bold text-gray-600">{stats?.closed || 0}</div>
             <p className="text-xs text-muted-foreground mt-1">
               Finalizadas
             </p>
@@ -254,13 +284,13 @@ export default function AdminVagas() {
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
               <TrendingUp className="h-4 w-4" />
-              Preenchidas
+              Destaques
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-blue-600">{stats?.preenchidas || 0}</div>
+            <div className="text-2xl font-bold text-blue-600">{stats?.destaques || 0}</div>
             <p className="text-xs text-muted-foreground mt-1">
-              Candidatos contratados
+              Vagas com destaque ativo
             </p>
           </CardContent>
         </Card>
@@ -293,56 +323,77 @@ export default function AdminVagas() {
                   <div className="relative">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <Input
-                      placeholder="Buscar por título, empresa ou descrição..."
+                      placeholder="Buscar por tÃ­tulo, empresa ou descriÃ§Ã£o..."
                       value={search}
                       onChange={(e) => setSearch(e.target.value)}
                       className="pl-9"
                     />
                   </div>
                 </div>
-                <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as VagaStatus | "")}>
+                <Select
+                  value={statusFilter}
+                  onValueChange={(v) =>
+                    setStatusFilter(v as VagaStatus | typeof ALL_STATUS_FILTER)
+                  }
+                >
                   <SelectTrigger className="w-full md:w-[180px]">
                     <SelectValue placeholder="Status" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Todos</SelectItem>
-                    <SelectItem value="ativa">Ativa</SelectItem>
-                    <SelectItem value="pausada">Pausada</SelectItem>
-                    <SelectItem value="encerrada">Encerrada</SelectItem>
-                    <SelectItem value="preenchida">Preenchida</SelectItem>
+                    <SelectItem value={ALL_STATUS_FILTER}>Todos</SelectItem>
+                    {STATUS_OPTIONS.map((option) => (
+                      <SelectItem key={option.value} value={option.value}>
+                        {option.label}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
-                <Select value={contratoFilter} onValueChange={(v) => setContratoFilter(v as VagaContrato | "")}>
+                <Select
+                  value={contratoFilter}
+                  onValueChange={(v) =>
+                    setContratoFilter(
+                      v as VagaContrato | typeof ALL_CONTRATO_FILTER,
+                    )
+                  }
+                >
                   <SelectTrigger className="w-full md:w-[180px]">
                     <SelectValue placeholder="Contrato" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Todos</SelectItem>
+                    <SelectItem value={ALL_CONTRATO_FILTER}>Todos</SelectItem>
                     <SelectItem value="CLT">CLT</SelectItem>
                     <SelectItem value="PJ">PJ</SelectItem>
-                    <SelectItem value="Temporário">Temporário</SelectItem>
-                    <SelectItem value="Estágio">Estágio</SelectItem>
-                    <SelectItem value="Freelance">Freelance</SelectItem>
+                    <SelectItem value="temporario">Temporário</SelectItem>
+                    <SelectItem value="estagio">Estágio</SelectItem>
+                    <SelectItem value="freelancer">Freelancer</SelectItem>
+                    <SelectItem value="aprendiz">Aprendiz</SelectItem>
                   </SelectContent>
                 </Select>
-                <Select value={modalidadeFilter} onValueChange={(v) => setModalidadeFilter(v as VagaModalidade | "")}>
+                <Select
+                  value={modalidadeFilter}
+                  onValueChange={(v) =>
+                    setModalidadeFilter(
+                      v as VagaModalidade | typeof ALL_MODALIDADE_FILTER,
+                    )
+                  }
+                >
                   <SelectTrigger className="w-full md:w-[180px]">
                     <SelectValue placeholder="Modalidade" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Todas</SelectItem>
-                    <SelectItem value="Presencial">Presencial</SelectItem>
-                    <SelectItem value="Remoto">Remoto</SelectItem>
-                    <SelectItem value="Híbrido">Híbrido</SelectItem>
+                    <SelectItem value={ALL_MODALIDADE_FILTER}>Todas</SelectItem>
+                    <SelectItem value="presencial">Presencial</SelectItem>
+                    <SelectItem value="remoto">Remoto</SelectItem>
+                    <SelectItem value="hibrido">Híbrido</SelectItem>
                   </SelectContent>
                 </Select>
                 <Button
                   variant="outline"
                   onClick={() => {
                     setSearch("");
-                    setContratoFilter("");
-                    setModalidadeFilter("");
-                    setStatusFilter("");
+                    setContratoFilter(ALL_CONTRATO_FILTER);
+                    setModalidadeFilter(ALL_MODALIDADE_FILTER);
+                    setStatusFilter(ALL_STATUS_FILTER);
                   }}
                 >
                   <RefreshCw className="h-4 w-4 mr-2" />
@@ -362,13 +413,13 @@ export default function AdminVagas() {
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>Título</TableHead>
+                        <TableHead>TÃ­tulo</TableHead>
                         <TableHead>Empresa</TableHead>
                         <TableHead>Contrato</TableHead>
                         <TableHead>Modalidade</TableHead>
-                        <TableHead>Nível</TableHead>
+                        <TableHead>NÃ­vel</TableHead>
                         <TableHead>Status</TableHead>
-                        <TableHead className="text-right">Ações</TableHead>
+                        <TableHead className="text-right">AÃ§Ãµes</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -377,10 +428,10 @@ export default function AdminVagas() {
                           <TableCell className="font-medium">
                             <div className="flex items-center gap-2">
                               {vaga.titulo}
-                              {vaga.destaque && (
+                              {vaga.highlightType !== "none" && (
                                 <Badge variant="default" className="text-xs">Destaque</Badge>
                               )}
-                              {vaga.urgencia === 'urgente' && (
+                              {(vaga.urgencia === "urgente" || vaga.urgencia === "extrema") && (
                                 <Badge variant="destructive" className="text-xs">Urgente</Badge>
                               )}
                             </div>
@@ -407,7 +458,27 @@ export default function AdminVagas() {
                           <TableCell>{getStatusBadge(vaga.status)}</TableCell>
                           <TableCell className="text-right">
                             <div className="flex items-center justify-end gap-1">
-                              {vaga.status === "ativa" && (
+                              {vaga.status === "pending_review" && (
+                                <>
+                                  <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    onClick={() => ativarMutation.mutate(vaga.id)}
+                                    title="Publicar"
+                                  >
+                                    <CheckCircle className="h-4 w-4 text-green-600" />
+                                  </Button>
+                                  <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    onClick={() => rejeitarMutation.mutate(vaga.id)}
+                                    title="Rejeitar"
+                                  >
+                                    <XCircle className="h-4 w-4 text-red-600" />
+                                  </Button>
+                                </>
+                              )}
+                              {vaga.status === "published" && (
                                 <Button
                                   size="sm"
                                   variant="ghost"
@@ -417,35 +488,25 @@ export default function AdminVagas() {
                                   <Clock className="h-4 w-4 text-yellow-600" />
                                 </Button>
                               )}
-                              {vaga.status === "pausada" && (
+                              {vaga.status === "paused" && (
                                 <Button
                                   size="sm"
                                   variant="ghost"
                                   onClick={() => ativarMutation.mutate(vaga.id)}
-                                  title="Ativar"
+                                  title="Publicar"
                                 >
                                   <CheckCircle className="h-4 w-4 text-green-600" />
                                 </Button>
                               )}
-                              {(vaga.status === "ativa" || vaga.status === "pausada") && (
-                                <>
-                                  <Button
-                                    size="sm"
-                                    variant="ghost"
-                                    onClick={() => preenchidaMutation.mutate(vaga.id)}
-                                    title="Marcar como preenchida"
-                                  >
-                                    <CheckCircle className="h-4 w-4 text-blue-600" />
-                                  </Button>
-                                  <Button
-                                    size="sm"
-                                    variant="ghost"
-                                    onClick={() => encerrarMutation.mutate(vaga.id)}
-                                    title="Encerrar"
-                                  >
-                                    <XCircle className="h-4 w-4 text-gray-600" />
-                                  </Button>
-                                </>
+                              {(vaga.status === "published" || vaga.status === "paused") && (
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  onClick={() => encerrarMutation.mutate(vaga.id)}
+                                  title="Encerrar"
+                                >
+                                  <XCircle className="h-4 w-4 text-gray-600" />
+                                </Button>
                               )}
                               <Button
                                 size="sm"
@@ -453,12 +514,12 @@ export default function AdminVagas() {
                                 onClick={() =>
                                   toggleDestaqueMutation.mutate({
                                     id: vaga.id,
-                                    destaque: !vaga.destaque,
+                                    destaque: vaga.highlightType === "none",
                                   })
                                 }
-                                title={vaga.destaque ? "Remover destaque" : "Destacar"}
+                                title={vaga.highlightType !== "none" ? "Remover destaque" : "Destacar"}
                               >
-                                {vaga.destaque ? (
+                                {vaga.highlightType !== "none" ? (
                                   <EyeOff className="h-4 w-4" />
                                 ) : (
                                   <Eye className="h-4 w-4" />
@@ -483,11 +544,11 @@ export default function AdminVagas() {
                     </TableBody>
                   </Table>
 
-                  {/* Paginação */}
+                  {/* PaginaÃ§Ã£o */}
                   {vagasData && vagasData.totalPages > 1 && (
                     <div className="flex items-center justify-between mt-4">
                       <p className="text-sm text-muted-foreground">
-                        Página {vagasData.page} de {vagasData.totalPages}
+                        PÃ¡gina {vagasData.page} de {vagasData.totalPages}
                       </p>
                       <div className="flex gap-2">
                         <Button
@@ -504,7 +565,7 @@ export default function AdminVagas() {
                           disabled={page === vagasData.totalPages}
                           onClick={() => setPage(page + 1)}
                         >
-                          Próxima
+                          PrÃ³xima
                         </Button>
                       </div>
                     </div>
@@ -527,19 +588,19 @@ export default function AdminVagas() {
                         <div className="flex-1">
                           <div className="flex items-center gap-2">
                             <h3 className="font-semibold text-lg">{vaga.titulo}</h3>
-                            {vaga.destaque && (
+                            {vaga.highlightType !== "none" && (
                               <Badge variant="default">Destaque</Badge>
                             )}
-                            {vaga.urgencia === 'urgente' && (
+                            {(vaga.urgencia === "urgente" || vaga.urgencia === "extrema") && (
                               <Badge variant="destructive">Urgente</Badge>
                             )}
                           </div>
                           <p className="text-sm text-muted-foreground mt-1">
-                            {vaga.empresa} • {vaga.contrato} • {vaga.modalidade}
+                            {vaga.empresa} â€¢ {vaga.contrato} â€¢ {vaga.modalidade}
                           </p>
                           {vaga.location && (
                             <p className="text-sm text-muted-foreground">
-                              📍 {vaga.location.name}
+                              ðŸ“ {vaga.location.name}
                             </p>
                           )}
                           <p className="text-sm mt-2 text-destructive font-medium">
@@ -551,7 +612,7 @@ export default function AdminVagas() {
                             size="sm"
                             variant="default"
                             onClick={() => {
-                              toast.info("Funcionalidade de renovação em desenvolvimento");
+                              toast.info("Funcionalidade de renovaÃ§Ã£o em desenvolvimento");
                             }}
                           >
                             Renovar
@@ -570,7 +631,7 @@ export default function AdminVagas() {
                 </div>
               ) : (
                 <div className="text-center py-8 text-muted-foreground">
-                  Nenhuma vaga expirando nos próximos 7 dias
+                  Nenhuma vaga expirando nos prÃ³ximos 7 dias
                 </div>
               )}
             </CardContent>
@@ -589,3 +650,4 @@ export default function AdminVagas() {
     </div>
   );
 }
+

@@ -69,6 +69,7 @@ export interface BusinessInput {
   tem_delivery?: boolean;
   aceita_cartao?: boolean;
   aceita_pix?: boolean;
+  can_post_vagas?: boolean;
   logo_url?: string;
   banner_url?: string;
   fotos?: string[];
@@ -135,6 +136,7 @@ export interface BusinessDataRecord {
   facilities?: string[] | null;
   is_premium?: boolean;
   is_verified?: boolean;
+  can_post_vagas?: boolean;
   metadata?: Record<string, unknown> | null;
   status?: string;
   rating?: number;

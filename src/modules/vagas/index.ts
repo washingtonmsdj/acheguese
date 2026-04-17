@@ -34,6 +34,7 @@ export { VagasLoading, VagasEmpty, VagasError } from './components/VagasStates';
 // Hooks novos (recomendados)
 export { useVagasPublic, useVagasUrgentes, useVagasDestaque, useBairrosComVagas } from './hooks/useVagasPublic';
 export { useVagaDetail } from './hooks/useVagaDetail';
+export { useVagaPublishPermission } from './hooks/useVagaPublishPermission';
 
 // Hooks legados (mantidos para compatibilidade)
 export { useVagas } from './hooks/useVagas';
@@ -44,6 +45,7 @@ export { useVagasLocation } from './hooks/useVagasLocation';
 // ═══════════════════════════════════════════════════════════════════════════════
 
 export { VagasService, vagasService } from './services/VagasService';
+export { VagasPublishPermissionService, vagasPublishPermissionService } from './services/VagasPublishPermissionService';
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // TYPES

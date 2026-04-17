@@ -149,6 +149,7 @@ function sanitizeAndValidateInput(
   copy("tem_delivery");
   copy("aceita_cartao");
   copy("aceita_pix");
+  copy("can_post_vagas");
   copy("logo_url", sanitizeOptionalUrlValue);
   copy("banner_url", sanitizeOptionalUrlValue);
   copy("fotos", sanitizeOptionalStringArray);

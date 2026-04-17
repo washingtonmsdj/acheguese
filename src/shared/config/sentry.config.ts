@@ -40,10 +40,15 @@ export function getSentryConfig(): SentryConfig {
  */
 export function initializeSentry(): void {
   const config = getSentryConfig();
+  const debugSentry = import.meta.env.DEV && import.meta.env.VITE_DEBUG_SENTRY === "true";
 
   // Não inicializar se não estiver habilitado
   if (!config.enabled) {
-    console.info('ℹ️  Sentry não habilitado (desenvolvimento ou DSN não configurado)');
+    if (debugSentry) {
+      console.debug(
+        "Sentry não habilitado (desenvolvimento ou DSN não configurado)",
+      );
+    }
     return;
   }
 
@@ -112,9 +117,11 @@ export function initializeSentry(): void {
       ],
     });
 
-    console.info('✅ Sentry inicializado com sucesso');
+    if (debugSentry) {
+      console.debug("Sentry inicializado com sucesso");
+    }
   } catch (error) {
-    console.error('❌ Erro ao inicializar Sentry:', error);
+    console.error("Erro ao inicializar Sentry:", error);
   }
 }
 
@@ -189,7 +196,9 @@ export function captureSentryException(
 ): void {
   const config = getSentryConfig();
   if (!config.enabled) {
-    console.error('Error (Sentry disabled):', error, context);
+    if (import.meta.env.DEV && import.meta.env.VITE_DEBUG_SENTRY === "true") {
+      console.debug("Error (Sentry disabled):", error, context);
+    }
     return;
   }
 
@@ -208,7 +217,9 @@ export function captureSentryMessage(
 ): void {
   const config = getSentryConfig();
   if (!config.enabled) {
-    console.log(`Message (Sentry disabled) [${level}]:`, message, context);
+    if (import.meta.env.DEV && import.meta.env.VITE_DEBUG_SENTRY === "true") {
+      console.debug(`Message (Sentry disabled) [${level}]:`, message, context);
+    }
     return;
   }
 

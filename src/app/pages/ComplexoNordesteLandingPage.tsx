@@ -20,7 +20,7 @@
  */
 
 import { useNavigate } from 'react-router-dom';
-import { motion, useScroll, useTransform } from 'framer-motion';
+import { motion } from 'framer-motion';
 import {
   MapPin, Users, Store, Wrench, Tag, ArrowRight,
   Heart, Music, GraduationCap, Sparkles, Star,
@@ -196,7 +196,6 @@ export default function ComplexoNordesteLandingPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { resolved, baseUrl } = useTerritorialContext();
-  const { scrollYProgress } = useScroll();
 
   // SSOT: dados reais do território
   const filter = useTerritoryFilter(resolved);
@@ -215,15 +214,6 @@ export default function ComplexoNordesteLandingPage() {
     community: `/${MODULE_SLUGS.community}${baseUrl}`,
   };
 
-  // Parallax
-  const heroProgress = scrollYProgress;
-  const heroY = useTransform(heroProgress, [0, 1], ['0%', '30%']);
-  const heroScale = useTransform(heroProgress, [0, 1], [1, 1.12]);
-  const heroOpacity = useTransform(heroProgress, [0, 0.8], [1, 0.2]);
-
-  const ctaProgress = scrollYProgress;
-  const ctaY = useTransform(ctaProgress, [0, 1], ['12%', '-12%']);
-
   const isGroup = resolved?.kind === 'group';
   const memberList = isGroup ? resolved.group.members.map((m) => m.name) : [];
 
@@ -232,7 +222,7 @@ export default function ComplexoNordesteLandingPage() {
 
       {/* ── A. HERO PARALLAX ──────────────────────────────────────── */}
       <section className="relative w-full min-h-[90vh] flex items-center justify-center overflow-hidden">
-        <motion.div className="absolute inset-0" style={{ y: heroY, scale: heroScale }}>
+        <motion.div className="absolute inset-0">
           <img
             src={heroImg}
             alt="Complexo do Nordeste de Amaralina - Vista aérea"
@@ -241,10 +231,7 @@ export default function ComplexoNordesteLandingPage() {
             height={1080}
           />
         </motion.div>
-        <motion.div
-          className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-background"
-          style={{ opacity: heroOpacity }}
-        />
+        <motion.div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-background" />
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-background" />
 
         {/* Header */}
@@ -839,7 +826,7 @@ export default function ComplexoNordesteLandingPage() {
 
       {/* ── L. CTA FINAL ──────────────────────────────────────────── */}
       <section className="relative w-full py-28 overflow-hidden">
-        <motion.div className="absolute inset-0" style={{ y: ctaY }}>
+        <motion.div className="absolute inset-0">
           <img
             src={heroImg}
             alt="Complexo do Nordeste de Amaralina"

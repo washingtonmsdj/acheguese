@@ -31,9 +31,13 @@ export const defaultGeocodingConfig: GeocodingServiceConfig = {
 export function initializeGeocodingService(customConfig?: Partial<GeocodingServiceConfig>): void {
   const config = { ...defaultGeocodingConfig, ...customConfig };
   geocodingService.configure(config);
-  
-  console.log('[Geocoding] Service initialized with providers:', 
-    geocodingService.getAvailableProviders());
+
+  if (import.meta.env.DEV && import.meta.env.VITE_DEBUG_GEO === "true") {
+    console.debug(
+      "[Geocoding] Service initialized with providers:",
+      geocodingService.getAvailableProviders(),
+    );
+  }
 }
 
 /**

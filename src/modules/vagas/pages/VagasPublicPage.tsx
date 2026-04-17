@@ -23,9 +23,9 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useMemo, useCallback } from 'react';
 import {
-  Briefcase, Search, MapPin, Sparkles, ArrowRight,
-  Users, Star, Shield, Clock, Zap, TrendingUp,
-  Filter, X, Building2, DollarSign, Calendar,
+  Briefcase, Search, Sparkles, ArrowRight,
+  Users, Star, Shield, Clock, Zap,
+  X, Building2,
   ChevronDown, Loader2
 } from 'lucide-react';
 import { CanonicalHero } from '@/shared/components/hero/CanonicalHero';
@@ -33,7 +33,6 @@ import { Button } from '@/shared/components/ui/button';
 import { Input } from '@/shared/components/ui/input';
 import { Badge } from '@/shared/components/ui/badge';
 import { Separator } from '@/shared/components/ui/separator';
-import { useAppUrls } from '@/core/routing/hooks/useAppUrls';
 import { useAuth } from '@/core/auth/hooks/useAuth';
 import { useResolveTerritoryFromUrl } from '@/core/routing/hooks/useResolveTerritoryFromUrl';
 import { SEO } from '@/shared/components/seo/SEO';
@@ -44,6 +43,7 @@ import {
   useVagasDestaque,
   useBairrosComVagas,
 } from '../hooks/useVagasPublic';
+import { useVagaPublishPermission } from "../hooks/useVagaPublishPermission";
 import { VagaCardEnhanced } from '../components/VagaCardEnhanced';
 import {
   VagasLoading,
@@ -63,6 +63,7 @@ import {
 } from '../types/vagas.types';
 
 import heroImg from '@/assets/empresas-hero.jpg';
+import { toast } from "sonner";
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // CONFIG
@@ -247,7 +248,7 @@ export default function VagasPublicPage() {
   const navigate = useNavigate();
   const { state, city } = useParams<{ state: string; city: string }>();
   const { user } = useAuth();
-  const appUrls = useAppUrls();
+  const { permission, isLoading: isLoadingPublishPermission } = useVagaPublishPermission();
 
   // Território da URL
   const { status, resolved, error } = useResolveTerritoryFromUrl();
@@ -286,6 +287,21 @@ export default function VagasPublicPage() {
   const handleVagaClick = useCallback((slug: string) => {
     navigate(`/vagas/${state}/${city}/${slug}`);
   }, [navigate, state, city]);
+
+  const handleOpenPublish = useCallback(() => {
+    if (!user) {
+      navigate("/login");
+      return;
+    }
+
+    if (!permission.canPublish) {
+      toast.error(permission.message);
+      navigate("/vagas/publicar");
+      return;
+    }
+
+    navigate("/vagas/publicar");
+  }, [user, permission.canPublish, permission.message, navigate]);
 
   // Labels de filtros ativos
   const activeFilterLabels = useMemo(() => {
@@ -335,15 +351,18 @@ export default function VagasPublicPage() {
           <Sparkles className="h-4 w-4 text-primary" />
           <span className="text-muted-foreground">
             <span className="font-semibold text-foreground">Contrate talentos locais!</span>{' '}
-            Publique vagas gratuitamente.
+            Publique vagas gratuitamente com perfil empresa ativo.
           </span>
           <button
-            onClick={() => navigate(user ? '/vagas/publicar' : '/login')}
+            onClick={handleOpenPublish}
             className="text-primary font-semibold hover:underline ml-1 flex items-center gap-0.5"
           >
             Publicar <ArrowRight className="h-3 w-3" />
           </button>
         </div>
+        {user && !isLoadingPublishPermission && !permission.canPublish && (
+          <p className="text-center text-xs text-warning pb-2 px-4">{permission.message}</p>
+        )}
       </motion.div>
 
       {/* ── HERO ─────────────────────────────────────────────── */}
@@ -585,11 +604,14 @@ export default function VagasPublicPage() {
             Alcance milhares de candidatos qualificados de {cityName}. Publicação gratuita.
           </p>
           <Button
-            onClick={() => navigate(user ? '/vagas/publicar' : '/login')}
+            onClick={handleOpenPublish}
             size="lg"
             className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold rounded-xl"
+            disabled={!!user && !isLoadingPublishPermission && !permission.canPublish}
           >
-            Publicar Vaga Grátis
+            {user && !isLoadingPublishPermission && !permission.canPublish
+              ? "Publicação indisponível"
+              : "Publicar Vaga Grátis"}
             <ArrowRight className="h-4 w-4 ml-2" />
           </Button>
         </div>
