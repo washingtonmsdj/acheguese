@@ -25,13 +25,6 @@ import {
 
 import { Button } from "@/shared/components/ui/button";
 import { Badge } from "@/shared/components/ui/badge";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/shared/components/ui/select";
 import { cn } from "@/shared/utils/cn";
 
 import { useProfileHub } from "@/modules/profile/hooks/useProfileHub";
@@ -43,10 +36,12 @@ import {
   HubLinkCard,
   NextActionsPanel,
   NotificationsPanel,
-  ProfileHeader,
+  ProfileChipsBar,
+  ProfileHeaderCompact,
+  ProfileSectionsNav,
   ProfileStats,
-  ProfileSwitcher,
   SectionFrame,
+  type SectionNavItem,
 } from "@/modules/profile/components/hub";
 import { ProfileCompletenessWidget } from "@/modules/profile/components/ProfileCompletenessWidget";
 import { ResidentVerificationCard } from "@/modules/profile/components/ResidentVerificationCard";
@@ -132,13 +127,7 @@ function formatBackgroundCheckStatus(value?: string | null): string {
   return value;
 }
 
-interface ProfileSectionItem {
-  id: ProfileSection;
-  label: string;
-  description: string;
-  icon: LucideIcon;
-  badge?: string;
-}
+type ProfileSectionItem = SectionNavItem<ProfileSection>;
 
 export default function PerfilHubPage() {
   const navigate = useNavigate();
@@ -962,8 +951,16 @@ export default function PerfilHubPage() {
         />
       </Helmet>
 
-      <div className="mx-auto max-w-7xl px-4 pb-12 pt-6">
-        <ProfileHeader
+      <div className="mx-auto max-w-7xl space-y-4 px-3 pb-24 pt-3 sm:px-4 sm:pb-12 sm:pt-6">
+        {/* Chips horizontais de perfis - sempre visíveis */}
+        <ProfileChipsBar
+          profiles={allProfiles}
+          activeProfileId={activeProfile?.id || null}
+          onSwitch={handleSwitchProfile}
+        />
+
+        {/* Header compacto e responsivo */}
+        <ProfileHeaderCompact
           activeProfile={activeProfile}
           profile={profile}
           userEmail={user?.email || ""}
@@ -979,7 +976,6 @@ export default function PerfilHubPage() {
           identity={identity}
           context={context}
           notifications={notifications}
-          allProfilesCount={allProfiles.length}
           isVerified={isVerified}
           canOpenPublicProfile={canOpenPublicProfile}
           handle={handle}
@@ -987,85 +983,27 @@ export default function PerfilHubPage() {
           onAvatarChange={handleAvatarChange}
         />
 
-        <ProfileSwitcher
-          profiles={allProfiles}
-          activeProfileId={activeProfile?.id || null}
-          onSwitch={handleSwitchProfile}
-        />
-
-        <div className="mt-6 grid gap-6 lg:grid-cols-[280px,1fr]">
+        {/* Layout: sidebar (desktop) + tabs roláveis (mobile) + conteúdo */}
+        <div className="grid gap-4 lg:grid-cols-[260px,1fr] lg:gap-6">
+          {/* Sidebar desktop */}
           <aside className="hidden lg:block">
-            <div className="sticky top-20 rounded-3xl border border-border bg-card p-3 shadow-sm">
-              <p className="px-2 pb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                Navegacao do perfil
-              </p>
-              <div className="space-y-1">
-                {sectionItems.map((item) => {
-                  const Icon = item.icon;
-                  const active = activeSection === item.id;
-
-                  return (
-                    <button
-                      key={item.id}
-                      type="button"
-                      onClick={() => setActiveSection(item.id)}
-                      className={cn(
-                        "flex w-full items-start gap-3 rounded-2xl px-3 py-2.5 text-left transition-colors",
-                        active
-                          ? "bg-primary/10 text-primary"
-                          : "hover:bg-accent/50 text-foreground",
-                      )}
-                    >
-                      <div
-                        className={cn(
-                          "rounded-xl p-2",
-                          active ? "bg-primary/15 text-primary" : "bg-muted text-muted-foreground",
-                        )}
-                      >
-                        <Icon className="h-4 w-4" />
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-center gap-2">
-                          <p className="text-sm font-medium">{item.label}</p>
-                          {item.badge ? (
-                            <Badge variant="outline" className="h-5 text-[10px]">
-                              {item.badge}
-                            </Badge>
-                          ) : null}
-                        </div>
-                        <p className="mt-0.5 text-xs text-muted-foreground">{item.description}</p>
-                      </div>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
+            <ProfileSectionsNav
+              items={sectionItems}
+              activeId={activeSection}
+              onChange={setActiveSection}
+              variant="sidebar"
+            />
           </aside>
 
-          <main className="min-w-0 space-y-6">
-            <div className="rounded-2xl border border-border bg-card p-3 lg:hidden">
-              <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                Secao ativa
-              </p>
-              <Select
-                value={activeSection}
-                onValueChange={(value) => {
-                  if (isProfileSection(value)) {
-                    setActiveSection(value);
-                  }
-                }}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Escolha uma secao" />
-                </SelectTrigger>
-                <SelectContent>
-                  {sectionItems.map((item) => (
-                    <SelectItem key={item.id} value={item.id}>
-                      {item.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+          <main className="min-w-0 space-y-4 sm:space-y-6">
+            {/* Tabs roláveis mobile */}
+            <div className="lg:hidden">
+              <ProfileSectionsNav
+                items={sectionItems}
+                activeId={activeSection}
+                onChange={setActiveSection}
+                variant="tabs"
+              />
             </div>
 
             {renderSectionContent()}

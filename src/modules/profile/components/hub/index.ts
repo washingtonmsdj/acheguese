@@ -5,8 +5,12 @@
  */
 
 export { ProfileHeader } from './ProfileHeader';
+export { ProfileHeaderCompact } from './ProfileHeaderCompact';
 export { ProfileStats } from './ProfileStats';
 export { ProfileSwitcher } from './ProfileSwitcher';
+export { ProfileChipsBar } from './ProfileChipsBar';
+export { ProfileSectionsNav } from './ProfileSectionsNav';
+export type { SectionNavItem } from './ProfileSectionsNav';
 export { SectionFrame } from './SectionFrame';
 export { HubLinkCard } from './HubLinkCard';
 export { EmptyPanel } from './EmptyPanel';
