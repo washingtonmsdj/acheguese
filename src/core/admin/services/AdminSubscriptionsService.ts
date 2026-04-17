@@ -1,9 +1,7 @@
-// @ts-nocheck
 /**
  * AdminSubscriptionsService - SSOT para gestão administrativa de assinaturas
  */
 
-import { supabase } from "@/integrations/supabase";
 import { logger } from "@/shared/utils/logger";
 
 export interface SubscriptionStats {

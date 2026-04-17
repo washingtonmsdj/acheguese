@@ -15,7 +15,7 @@ import { Button } from "@/shared/components/ui/button";
 import { Switch } from "@/shared/components/ui/switch";
 import { ErrorBoundary, ErrorState } from "../components/ErrorBoundary";
 import { useMotoristaPage } from "@/modules/mobility/hooks/useMotoristaPage";
-import { useUnifiedNotifications } from '@/core/notifications';
+import { useUnifiedNotifications } from '@/core/notifications/useUnifiedNotifications';
 import { useMultiProfileContext } from "@/core/profiles/contexts/multi-profile-runtime-context";
 import { ActiveProfileBadge } from "@/core/profiles/components/ActiveProfileBadge";
 import { useEffect } from "react";

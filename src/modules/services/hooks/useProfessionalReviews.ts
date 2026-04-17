@@ -12,7 +12,7 @@ import { useToast } from "@/shared/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import { useAppUrls } from "@/core/routing/hooks/useAppUrls";
 import { useCommunityInteractions } from "@/core/community/hooks/useCommunityInteractions";
-import { profileService } from "@/core/profiles";
+import { profileService } from "@/core/profiles/services/ProfileService";
 import { ReviewsService } from "@/core/reviews/services/ReviewsService";
 import type { ReviewWithProfiles } from "@/shared/types/reviews";
 

@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * AnalyticsService — SSOT canônico de analytics
  *
@@ -14,6 +13,7 @@
 
 import { supabase } from '@/integrations/supabase';
 import { logger } from '@/shared/utils/logger';
+import type { AdminSupabaseClient } from '@/core/admin/types/adminDatabase.types';
 
 // ── Tipos ─────────────────────────────────────────────────────────────────
 

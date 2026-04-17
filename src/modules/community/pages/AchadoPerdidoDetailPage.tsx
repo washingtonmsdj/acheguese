@@ -34,7 +34,7 @@ import { format, formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { cn } from "@/shared/utils/cn";
 import { motion } from "framer-motion";
-import { ProfileService } from "@/core/profiles";
+import { ProfileService } from "@/core/profiles/services/ProfileService";
 
 const profileServiceInstance = new ProfileService();
 

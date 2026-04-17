@@ -1,12 +1,19 @@
 /**
  * AdminVagas - Gestão administrativa de vagas de emprego
  * 
- * SSOT: Usa adminVagasService
+ * SSOT: Usa AdminVagasService (novo)
+ * Migration: 20260416110000_create_vagas.sql
+ * 
+ * Atualizado para usar:
+ * - Enums: vaga_status, vaga_contrato, vaga_modalidade, vaga_nivel, vaga_urgencia
+ * - Full-text search em português
+ * - Filtros territoriais integrados
  */
 
 import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { adminVagasService } from "@/core/admin";
+import { AdminVagasService } from "@/modules/vagas/services/AdminVagasService";
+import type { VagaStatus, VagaContrato, VagaModalidade, VagaNivel } from "@/modules/vagas/services/VagasService";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import {
@@ -45,79 +52,102 @@ export default function AdminVagas() {
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState("all");
   const [search, setSearch] = useState("");
-  const [categoryFilter, setCategoryFilter] = useState<string>("");
-  const [statusFilter, setStatusFilter] = useState<string>("");
+  const [contratoFilter, setContratoFilter] = useState<VagaContrato | "">("");
+  const [modalidadeFilter, setModalidadeFilter] = useState<VagaModalidade | "">("");
+  const [statusFilter, setStatusFilter] = useState<VagaStatus | "">("");
   const [page, setPage] = useState(1);
 
   // Buscar estatísticas
   const { data: stats } = useQuery({
     queryKey: ["admin-vagas-stats"],
-    queryFn: () => adminVagasService.getStats(),
+    queryFn: () => AdminVagasService.getStats(),
   });
 
   // Buscar vagas
   const { data: vagasData, isLoading } = useQuery({
-    queryKey: ["admin-vagas", page, search, categoryFilter, statusFilter, activeTab],
+    queryKey: ["admin-vagas", page, search, contratoFilter, modalidadeFilter, statusFilter],
     queryFn: () =>
-      adminVagasService.getAllVagas({
+      AdminVagasService.getAllVagas({
         page,
         limit: 20,
-        search,
-        category: categoryFilter || undefined,
-        status: activeTab === "pending" ? "pending" : statusFilter || undefined,
+        search: search || undefined,
+        contrato: contratoFilter || undefined,
+        modalidade: modalidadeFilter || undefined,
+        status: statusFilter || undefined,
       }),
   });
 
-  // Buscar vagas pendentes
-  const { data: pendingVagas } = useQuery({
-    queryKey: ["admin-vagas-pending"],
-    queryFn: () => adminVagasService.getPendingVagas(),
-    enabled: activeTab === "pending",
+  // Buscar vagas expirando
+  const { data: expiringVagas } = useQuery({
+    queryKey: ["admin-vagas-expiring"],
+    queryFn: () => AdminVagasService.getVagasExpirando(7),
+    enabled: activeTab === "expiring",
   });
 
   // Mutations
-  const approveMutation = useMutation({
-    mutationFn: (id: string) => adminVagasService.approveVaga(id),
+  const ativarMutation = useMutation({
+    mutationFn: (id: string) => AdminVagasService.ativarVaga(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin-vagas"] });
       queryClient.invalidateQueries({ queryKey: ["admin-vagas-stats"] });
-      queryClient.invalidateQueries({ queryKey: ["admin-vagas-pending"] });
-      toast.success("Vaga aprovada com sucesso");
+      toast.success("Vaga ativada com sucesso");
     },
     onError: () => {
-      toast.error("Erro ao aprovar vaga");
+      toast.error("Erro ao ativar vaga");
     },
   });
 
-  const rejectMutation = useMutation({
-    mutationFn: ({ id, reason }: { id: string; reason?: string }) =>
-      adminVagasService.rejectVaga(id, reason),
+  const pausarMutation = useMutation({
+    mutationFn: (id: string) => AdminVagasService.pausarVaga(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin-vagas"] });
       queryClient.invalidateQueries({ queryKey: ["admin-vagas-stats"] });
-      queryClient.invalidateQueries({ queryKey: ["admin-vagas-pending"] });
-      toast.success("Vaga rejeitada");
+      toast.success("Vaga pausada com sucesso");
     },
     onError: () => {
-      toast.error("Erro ao rejeitar vaga");
+      toast.error("Erro ao pausar vaga");
     },
   });
 
-  const toggleMutation = useMutation({
-    mutationFn: ({ id, isActive }: { id: string; isActive: boolean }) =>
-      adminVagasService.toggleActive(id, isActive),
+  const encerrarMutation = useMutation({
+    mutationFn: (id: string) => AdminVagasService.encerrarVaga(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin-vagas"] });
       queryClient.invalidateQueries({ queryKey: ["admin-vagas-stats"] });
-      toast.success("Status atualizado com sucesso");
+      toast.success("Vaga encerrada com sucesso");
     },
     onError: () => {
-      toast.error("Erro ao atualizar status");
+      toast.error("Erro ao encerrar vaga");
+    },
+  });
+
+  const preenchidaMutation = useMutation({
+    mutationFn: (id: string) => AdminVagasService.marcarPreenchida(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-vagas"] });
+      queryClient.invalidateQueries({ queryKey: ["admin-vagas-stats"] });
+      toast.success("Vaga marcada como preenchida");
+    },
+    onError: () => {
+      toast.error("Erro ao marcar vaga como preenchida");
+    },
+  });
+
+  const toggleDestaqueMutation = useMutation({
+    mutationFn: ({ id, destaque }: { id: string; destaque: boolean }) =>
+      AdminVagasService.toggleDestaque(id, destaque),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-vagas"] });
+      queryClient.invalidateQueries({ queryKey: ["admin-vagas-stats"] });
+      toast.success("Destaque atualizado");
+    },
+    onError: () => {
+      toast.error("Erro ao atualizar destaque");
     },
   });
 
   const deleteMutation = useMutation({
-    mutationFn: (id: string) => adminVagasService.deleteVaga(id),
+    mutationFn: (id: string) => AdminVagasService.deleteVaga(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin-vagas"] });
       queryClient.invalidateQueries({ queryKey: ["admin-vagas-stats"] });
@@ -128,14 +158,16 @@ export default function AdminVagas() {
     },
   });
 
-  const getStatusBadge = (status: string) => {
+  const getStatusBadge = (status: VagaStatus) => {
     switch (status) {
-      case "approved":
-        return <Badge variant="success">Aprovada</Badge>;
-      case "rejected":
-        return <Badge variant="destructive">Rejeitada</Badge>;
-      case "pending":
-        return <Badge variant="warning">Pendente</Badge>;
+      case "ativa":
+        return <Badge variant="success">Ativa</Badge>;
+      case "pausada":
+        return <Badge variant="warning">Pausada</Badge>;
+      case "encerrada":
+        return <Badge variant="secondary">Encerrada</Badge>;
+      case "preenchida":
+        return <Badge variant="default">Preenchida</Badge>;
       default:
         return <Badge variant="secondary">{status}</Badge>;
     }
@@ -155,7 +187,7 @@ export default function AdminVagas() {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">
@@ -165,22 +197,7 @@ export default function AdminVagas() {
           <CardContent>
             <div className="text-2xl font-bold">{stats?.total || 0}</div>
             <p className="text-xs text-muted-foreground mt-1">
-              {stats?.active || 0} ativas
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-              <Clock className="h-4 w-4" />
-              Pendentes
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-yellow-600">{stats?.pending || 0}</div>
-            <p className="text-xs text-muted-foreground mt-1">
-              Aguardando moderação
+              {stats?.ativas || 0} ativas
             </p>
           </CardContent>
         </Card>
@@ -189,13 +206,28 @@ export default function AdminVagas() {
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
               <CheckCircle className="h-4 w-4" />
-              Aprovadas
+              Ativas
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-600">{stats?.approved || 0}</div>
+            <div className="text-2xl font-bold text-green-600">{stats?.ativas || 0}</div>
             <p className="text-xs text-muted-foreground mt-1">
-              {stats?.total ? Math.round((stats.approved / stats.total) * 100) : 0}% do total
+              {stats?.total ? Math.round((stats.ativas / stats.total) * 100) : 0}% do total
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+              <Clock className="h-4 w-4" />
+              Pausadas
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-yellow-600">{stats?.pausadas || 0}</div>
+            <p className="text-xs text-muted-foreground mt-1">
+              Temporariamente inativas
             </p>
           </CardContent>
         </Card>
@@ -204,13 +236,28 @@ export default function AdminVagas() {
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
               <XCircle className="h-4 w-4" />
-              Rejeitadas
+              Encerradas
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-red-600">{stats?.rejected || 0}</div>
+            <div className="text-2xl font-bold text-gray-600">{stats?.encerradas || 0}</div>
             <p className="text-xs text-muted-foreground mt-1">
-              {stats?.total ? Math.round((stats.rejected / stats.total) * 100) : 0}% do total
+              Finalizadas
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+              <TrendingUp className="h-4 w-4" />
+              Preenchidas
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-blue-600">{stats?.preenchidas || 0}</div>
+            <p className="text-xs text-muted-foreground mt-1">
+              Candidatos contratados
             </p>
           </CardContent>
         </Card>
@@ -223,14 +270,9 @@ export default function AdminVagas() {
             <Briefcase className="h-4 w-4" />
             Todas
           </TabsTrigger>
-          <TabsTrigger value="pending" className="flex items-center gap-2">
+          <TabsTrigger value="expiring" className="flex items-center gap-2">
             <Clock className="h-4 w-4" />
-            Pendentes
-            {stats?.pending ? (
-              <Badge variant="warning" className="ml-1">
-                {stats.pending}
-              </Badge>
-            ) : null}
+            Expirando
           </TabsTrigger>
           <TabsTrigger value="analytics" className="flex items-center gap-2">
             <TrendingUp className="h-4 w-4" />
@@ -248,29 +290,55 @@ export default function AdminVagas() {
                   <div className="relative">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <Input
-                      placeholder="Buscar por título ou descrição..."
+                      placeholder="Buscar por título, empresa ou descrição..."
                       value={search}
                       onChange={(e) => setSearch(e.target.value)}
                       className="pl-9"
                     />
                   </div>
                 </div>
-                <Select value={statusFilter} onValueChange={setStatusFilter}>
-                  <SelectTrigger className="w-full md:w-[200px]">
+                <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as VagaStatus | "")}>
+                  <SelectTrigger className="w-full md:w-[180px]">
                     <SelectValue placeholder="Status" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="">Todos</SelectItem>
-                    <SelectItem value="pending">Pendente</SelectItem>
-                    <SelectItem value="approved">Aprovada</SelectItem>
-                    <SelectItem value="rejected">Rejeitada</SelectItem>
+                    <SelectItem value="ativa">Ativa</SelectItem>
+                    <SelectItem value="pausada">Pausada</SelectItem>
+                    <SelectItem value="encerrada">Encerrada</SelectItem>
+                    <SelectItem value="preenchida">Preenchida</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Select value={contratoFilter} onValueChange={(v) => setContratoFilter(v as VagaContrato | "")}>
+                  <SelectTrigger className="w-full md:w-[180px]">
+                    <SelectValue placeholder="Contrato" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">Todos</SelectItem>
+                    <SelectItem value="CLT">CLT</SelectItem>
+                    <SelectItem value="PJ">PJ</SelectItem>
+                    <SelectItem value="Temporário">Temporário</SelectItem>
+                    <SelectItem value="Estágio">Estágio</SelectItem>
+                    <SelectItem value="Freelance">Freelance</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Select value={modalidadeFilter} onValueChange={(v) => setModalidadeFilter(v as VagaModalidade | "")}>
+                  <SelectTrigger className="w-full md:w-[180px]">
+                    <SelectValue placeholder="Modalidade" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">Todas</SelectItem>
+                    <SelectItem value="Presencial">Presencial</SelectItem>
+                    <SelectItem value="Remoto">Remoto</SelectItem>
+                    <SelectItem value="Híbrido">Híbrido</SelectItem>
                   </SelectContent>
                 </Select>
                 <Button
                   variant="outline"
                   onClick={() => {
                     setSearch("");
-                    setCategoryFilter("");
+                    setContratoFilter("");
+                    setModalidadeFilter("");
                     setStatusFilter("");
                   }}
                 >
@@ -293,57 +361,86 @@ export default function AdminVagas() {
                       <TableRow>
                         <TableHead>Título</TableHead>
                         <TableHead>Empresa</TableHead>
-                        <TableHead>Tipo</TableHead>
+                        <TableHead>Contrato</TableHead>
+                        <TableHead>Modalidade</TableHead>
+                        <TableHead>Nível</TableHead>
                         <TableHead>Status</TableHead>
-                        <TableHead>Ativo</TableHead>
                         <TableHead className="text-right">Ações</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {vagasData?.data?.map((vaga: any) => (
+                      {vagasData?.data?.map((vaga) => (
                         <TableRow key={vaga.id}>
-                          <TableCell className="font-medium">{vaga.title}</TableCell>
-                          <TableCell>
+                          <TableCell className="font-medium">
                             <div className="flex items-center gap-2">
-                              {vaga.company?.logo_url && (
-                                <img
-                                  src={vaga.company.logo_url}
-                                  alt={vaga.company.name}
-                                  className="h-6 w-6 rounded object-cover"
-                                />
+                              {vaga.titulo}
+                              {vaga.destaque && (
+                                <Badge variant="default" className="text-xs">Destaque</Badge>
                               )}
-                              <span>{vaga.company?.name}</span>
+                              {vaga.urgencia === 'urgente' && (
+                                <Badge variant="destructive" className="text-xs">Urgente</Badge>
+                              )}
                             </div>
                           </TableCell>
-                          <TableCell>{vaga.type}</TableCell>
-                          <TableCell>{getStatusBadge(vaga.status)}</TableCell>
                           <TableCell>
-                            {vaga.is_active ? (
-                              <Badge variant="success">Sim</Badge>
-                            ) : (
-                              <Badge variant="secondary">Não</Badge>
-                            )}
+                            <div className="flex flex-col">
+                              <span>{vaga.empresa}</span>
+                              {vaga.location && (
+                                <span className="text-xs text-muted-foreground">
+                                  {vaga.location.name}
+                                </span>
+                              )}
+                            </div>
                           </TableCell>
+                          <TableCell>
+                            <Badge variant="outline">{vaga.contrato}</Badge>
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant="secondary">{vaga.modalidade}</Badge>
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant="outline">{vaga.nivel}</Badge>
+                          </TableCell>
+                          <TableCell>{getStatusBadge(vaga.status)}</TableCell>
                           <TableCell className="text-right">
-                            <div className="flex items-center justify-end gap-2">
-                              {vaga.status === "pending" && (
+                            <div className="flex items-center justify-end gap-1">
+                              {vaga.status === "ativa" && (
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  onClick={() => pausarMutation.mutate(vaga.id)}
+                                  title="Pausar"
+                                >
+                                  <Clock className="h-4 w-4 text-yellow-600" />
+                                </Button>
+                              )}
+                              {vaga.status === "pausada" && (
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  onClick={() => ativarMutation.mutate(vaga.id)}
+                                  title="Ativar"
+                                >
+                                  <CheckCircle className="h-4 w-4 text-green-600" />
+                                </Button>
+                              )}
+                              {(vaga.status === "ativa" || vaga.status === "pausada") && (
                                 <>
                                   <Button
                                     size="sm"
                                     variant="ghost"
-                                    onClick={() => approveMutation.mutate(vaga.id)}
+                                    onClick={() => preenchidaMutation.mutate(vaga.id)}
+                                    title="Marcar como preenchida"
                                   >
-                                    <CheckCircle className="h-4 w-4 text-green-600" />
+                                    <CheckCircle className="h-4 w-4 text-blue-600" />
                                   </Button>
                                   <Button
                                     size="sm"
                                     variant="ghost"
-                                    onClick={() => {
-                                      const reason = prompt("Motivo da rejeição (opcional):");
-                                      rejectMutation.mutate({ id: vaga.id, reason: reason || undefined });
-                                    }}
+                                    onClick={() => encerrarMutation.mutate(vaga.id)}
+                                    title="Encerrar"
                                   >
-                                    <XCircle className="h-4 w-4 text-red-600" />
+                                    <XCircle className="h-4 w-4 text-gray-600" />
                                   </Button>
                                 </>
                               )}
@@ -351,13 +448,14 @@ export default function AdminVagas() {
                                 size="sm"
                                 variant="ghost"
                                 onClick={() =>
-                                  toggleMutation.mutate({
+                                  toggleDestaqueMutation.mutate({
                                     id: vaga.id,
-                                    isActive: !vaga.is_active,
+                                    destaque: !vaga.destaque,
                                   })
                                 }
+                                title={vaga.destaque ? "Remover destaque" : "Destacar"}
                               >
-                                {vaga.is_active ? (
+                                {vaga.destaque ? (
                                   <EyeOff className="h-4 w-4" />
                                 ) : (
                                   <Eye className="h-4 w-4" />
@@ -371,6 +469,7 @@ export default function AdminVagas() {
                                     deleteMutation.mutate(vaga.id);
                                   }
                                 }}
+                                title="Deletar"
                               >
                                 <Trash2 className="h-4 w-4 text-destructive" />
                               </Button>
@@ -413,43 +512,53 @@ export default function AdminVagas() {
           </Card>
         </TabsContent>
 
-        {/* Pendentes Tab */}
-        <TabsContent value="pending">
+        {/* Expirando Tab */}
+        <TabsContent value="expiring">
           <Card>
             <CardContent className="pt-6">
-              {pendingVagas && pendingVagas.length > 0 ? (
+              {expiringVagas && expiringVagas.length > 0 ? (
                 <div className="space-y-4">
-                  {pendingVagas.map((vaga: any) => (
+                  {expiringVagas.map((vaga) => (
                     <div key={vaga.id} className="border rounded-lg p-4">
                       <div className="flex items-start justify-between">
                         <div className="flex-1">
-                          <h3 className="font-semibold text-lg">{vaga.title}</h3>
+                          <div className="flex items-center gap-2">
+                            <h3 className="font-semibold text-lg">{vaga.titulo}</h3>
+                            {vaga.destaque && (
+                              <Badge variant="default">Destaque</Badge>
+                            )}
+                            {vaga.urgencia === 'urgente' && (
+                              <Badge variant="destructive">Urgente</Badge>
+                            )}
+                          </div>
                           <p className="text-sm text-muted-foreground mt-1">
-                            {vaga.company?.name}
+                            {vaga.empresa} • {vaga.contrato} • {vaga.modalidade}
                           </p>
-                          <p className="text-sm mt-2">{vaga.description}</p>
+                          {vaga.location && (
+                            <p className="text-sm text-muted-foreground">
+                              📍 {vaga.location.name}
+                            </p>
+                          )}
+                          <p className="text-sm mt-2 text-destructive font-medium">
+                            Expira em: {vaga.expiresAt?.toLocaleDateString('pt-BR')}
+                          </p>
                         </div>
                         <div className="flex gap-2">
                           <Button
                             size="sm"
                             variant="default"
-                            onClick={() => approveMutation.mutate(vaga.id)}
+                            onClick={() => {
+                              toast.info("Funcionalidade de renovação em desenvolvimento");
+                            }}
                           >
-                            <CheckCircle className="h-4 w-4 mr-2" />
-                            Aprovar
+                            Renovar
                           </Button>
                           <Button
                             size="sm"
-                            variant="destructive"
-                            onClick={() => {
-                              const reason = prompt("Motivo da rejeição:");
-                              if (reason) {
-                                rejectMutation.mutate({ id: vaga.id, reason });
-                              }
-                            }}
+                            variant="outline"
+                            onClick={() => pausarMutation.mutate(vaga.id)}
                           >
-                            <XCircle className="h-4 w-4 mr-2" />
-                            Rejeitar
+                            Pausar
                           </Button>
                         </div>
                       </div>
@@ -458,7 +567,7 @@ export default function AdminVagas() {
                 </div>
               ) : (
                 <div className="text-center py-8 text-muted-foreground">
-                  Nenhuma vaga pendente de moderação
+                  Nenhuma vaga expirando nos próximos 7 dias
                 </div>
               )}
             </CardContent>

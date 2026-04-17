@@ -20,7 +20,7 @@ import {
 import { toast } from "sonner";
 import { RIDE_STATUS } from "@/modules/mobility/constants";
 import { trackError } from "@/shared/utils/errorTracking";
-import { profileService } from "@/core/profiles"; // ✅ MIGRADO - Usa ProfileService
+import { profileService } from "@/core/profiles/services/ProfileService"; // ✅ MIGRADO - Usa ProfileService
 import { getRideByShareToken, getDriverCompleteProfile } from "@/modules/mobility/services/mobility.queries";
 import { incrementRideViewCount } from "@/modules/mobility/services/mobility.mutations";
 import type { ProfileContext } from "@/core/profiles/services/types"; // ✅ MIGRADO - Tipos do ProfileService

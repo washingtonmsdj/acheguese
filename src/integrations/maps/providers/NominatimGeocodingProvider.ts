@@ -13,7 +13,7 @@ import type {
   PlaceSuggestion,
   Coordinates,
 } from '@/core/maps/types';
-import { SessionService } from '@/core/session/services/SessionService';
+import { supabase } from '@/integrations/supabase';
 
 /**
  * Resposta do Nominatim
@@ -35,8 +35,9 @@ interface NominatimResult {
 export class NominatimGeocodingProvider implements GeocodingProvider {
   private readonly baseUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/nominatim-proxy`;
 
-  private getAuthHeaders(): HeadersInit {
-    const accessToken = SessionService.getAccessToken();
+  private async getAuthHeaders(): Promise<HeadersInit> {
+    const { data } = await supabase.auth.getSession();
+    const accessToken = data.session?.access_token ?? null;
     return accessToken
       ? { Authorization: `Bearer ${accessToken}` }
       : {};
@@ -62,7 +63,7 @@ export class NominatimGeocodingProvider implements GeocodingProvider {
       }
 
       const response = await fetch(`${this.baseUrl}?${params.toString()}`, {
-        headers: this.getAuthHeaders(),
+        headers: await this.getAuthHeaders(),
       });
 
       if (!response.ok) {
@@ -90,7 +91,7 @@ export class NominatimGeocodingProvider implements GeocodingProvider {
       });
 
       const response = await fetch(`${this.baseUrl}?${params.toString()}`, {
-        headers: this.getAuthHeaders(),
+        headers: await this.getAuthHeaders(),
       });
 
       if (!response.ok) {

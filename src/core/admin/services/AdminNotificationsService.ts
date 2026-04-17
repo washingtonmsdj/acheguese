@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * AdminNotificationsService
  *
@@ -10,6 +9,7 @@
 import { supabase } from "@/integrations/supabase";
 import { supabaseAdmin } from "@/integrations/supabase/supabaseAdmin";
 import { logger } from "@/shared/utils/logger";
+import type { AdminSupabaseClient } from "../types/adminDatabase.types";
 import { normalizeNotification } from "@/core/notifications/utils/normalizeNotification";
 import { profileService } from "@/core/profiles/services/ProfileService";
 import type {
@@ -71,8 +71,8 @@ export interface AdminNotificationListResult {
   totalPages: number;
 }
 
-function getAdminClient() {
-  return (supabaseAdmin ?? supabase) as any;
+function getAdminClient(): AdminSupabaseClient {
+  return (supabaseAdmin ?? supabase) as unknown as AdminSupabaseClient;
 }
 
 function escapeIlike(term: string): string {

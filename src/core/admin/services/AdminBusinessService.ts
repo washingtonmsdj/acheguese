@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * AdminBusinessService - Serviço de administração de negócios
  *
@@ -7,9 +6,9 @@
  * delegando para o BusinessService (SSOT) sempre que possível.
  */
 
-import { supabase } from "@/integrations/supabase/client";
 import { logger } from "@/shared/utils/logger";
 import { BusinessService } from "@/core/business/services/BusinessService";
+import { ReviewsService } from "@/core/reviews/services/ReviewsService";
 
 export interface AdminBusinessData {
   id: string;
@@ -306,9 +305,6 @@ class AdminBusinessServiceClass {
    */
   async getBusinessReviews(businessId: string) {
     try {
-      // ✅ SSOT - Usar ReviewsService
-      const { ReviewsService } =
-        await import("@/core/reviews/services/ReviewsService");
       const reviews = await ReviewsService.getReviewsForProfile(
         businessId,
         "business",
@@ -332,7 +328,7 @@ class AdminBusinessServiceClass {
   ) {
     try {
       // ✅ SSOT - Usar ProfileService
-      const { profileService } = await import("@/core/profiles");
+      const { profileService } = await import("@/core/profiles/services/ProfileService");
 
       // 1. Criar profile usando ProfileService
       const profile = await profileService.createProfile({

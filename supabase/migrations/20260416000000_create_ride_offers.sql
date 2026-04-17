@@ -40,49 +40,81 @@ CREATE INDEX IF NOT EXISTS idx_ride_offers_ride_status ON ride_offers(ride_id, s
 ALTER TABLE ride_offers ENABLE ROW LEVEL SECURITY;
 
 -- Service role: acesso total
-CREATE POLICY "Service role has full access to ride_offers"
-  ON ride_offers FOR ALL
-  TO service_role
-  USING (true)
-  WITH CHECK (true);
+DO $$ BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies 
+    WHERE tablename = 'ride_offers' 
+    AND policyname = 'Service role has full access to ride_offers'
+  ) THEN
+    CREATE POLICY "Service role has full access to ride_offers"
+      ON ride_offers FOR ALL
+      TO service_role
+      USING (true)
+      WITH CHECK (true);
+  END IF;
+END $$;
 
 -- Motorista: ver apenas suas ofertas (usando profiles.user_id)
-CREATE POLICY "Drivers can view their own offers"
-  ON ride_offers FOR SELECT
-  TO authenticated
-  USING (
-    driver_profile_id IN (
-      SELECT id FROM profiles WHERE user_id = auth.uid()
-    )
-  );
+DO $$ BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies 
+    WHERE tablename = 'ride_offers' 
+    AND policyname = 'Drivers can view their own offers'
+  ) THEN
+    CREATE POLICY "Drivers can view their own offers"
+      ON ride_offers FOR SELECT
+      TO authenticated
+      USING (
+        driver_profile_id IN (
+          SELECT id FROM profiles WHERE user_id = auth.uid()
+        )
+      );
+  END IF;
+END $$;
 
 -- Motorista: aceitar/rejeitar apenas suas ofertas pendentes
-CREATE POLICY "Drivers can respond to their own pending offers"
-  ON ride_offers FOR UPDATE
-  TO authenticated
-  USING (
-    driver_profile_id IN (
-      SELECT id FROM profiles WHERE user_id = auth.uid()
-    ) AND
-    status = 'pending' AND
-    expires_at > NOW()
-  )
-  WITH CHECK (
-    driver_profile_id IN (
-      SELECT id FROM profiles WHERE user_id = auth.uid()
-    ) AND
-    status IN ('accepted', 'rejected')
-  );
+DO $$ BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies 
+    WHERE tablename = 'ride_offers' 
+    AND policyname = 'Drivers can respond to their own pending offers'
+  ) THEN
+    CREATE POLICY "Drivers can respond to their own pending offers"
+      ON ride_offers FOR UPDATE
+      TO authenticated
+      USING (
+        driver_profile_id IN (
+          SELECT id FROM profiles WHERE user_id = auth.uid()
+        ) AND
+        status = 'pending' AND
+        expires_at > NOW()
+      )
+      WITH CHECK (
+        driver_profile_id IN (
+          SELECT id FROM profiles WHERE user_id = auth.uid()
+        ) AND
+        status IN ('accepted', 'rejected')
+      );
+  END IF;
+END $$;
 
 -- Passageiro: ver ofertas da sua corrida (apenas status, não dados do motorista)
-CREATE POLICY "Passengers can view offers for their rides"
-  ON ride_offers FOR SELECT
-  TO authenticated
-  USING (
-    ride_id IN (
-      SELECT id FROM ride_requests 
-      WHERE passenger_profile_id IN (
-        SELECT id FROM profiles WHERE user_id = auth.uid()
-      )
-    )
-  );
+DO $$ BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies 
+    WHERE tablename = 'ride_offers' 
+    AND policyname = 'Passengers can view offers for their rides'
+  ) THEN
+    CREATE POLICY "Passengers can view offers for their rides"
+      ON ride_offers FOR SELECT
+      TO authenticated
+      USING (
+        ride_id IN (
+          SELECT id FROM ride_requests 
+          WHERE passenger_profile_id IN (
+            SELECT id FROM profiles WHERE user_id = auth.uid()
+          )
+        )
+      );
+  END IF;
+END $$;

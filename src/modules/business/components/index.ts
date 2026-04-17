@@ -52,7 +52,7 @@ export { SecoesAtivasManager } from "./SecoesAtivasManager";
 // NETWORK COMPONENTS - Rede de empresas
 // ============================================
 
-export { BranchNetworkBlock } from "./BranchNetworkBlock";
+export { default as BranchNetworkBlock } from "@/core/business/components/BranchNetworkBlock";
 export { NetworkTab } from "./NetworkTab";
 
 // ============================================
@@ -62,7 +62,7 @@ export { NetworkTab } from "./NetworkTab";
 export { BookingButton } from "./BookingButton";
 export { BusinessFilters } from "./BusinessFilters";
 export { ContactLink } from "./ContactLink";
-export { NeighborhoodMap } from "./NeighborhoodMap";
+export { NeighborhoodMap } from "@/core/business/components/NeighborhoodMap";
 export { QuickActions } from "./QuickActions";
 export { ShareBusinessDialog } from "./ShareBusinessDialog";
 export { SubscriptionPlans } from "./SubscriptionPlans";

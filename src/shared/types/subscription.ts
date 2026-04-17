@@ -1,7 +1,28 @@
+/**
+ * SUBSCRIPTION TYPES — DEPRECATED
+ * 
+ * ⚠️ DEPRECATED: Este arquivo está obsoleto.
+ * 
+ * Use o novo padrão SSOT:
+ * - Service: BillingPlanService (src/core/billing/services/BillingPlanService.ts)
+ * - Hooks: useBillingPlans (src/core/billing/hooks/useBillingPlans.ts)
+ * - Types: BillingPlan, PlanEntitlements (src/core/billing/services/BillingPlanService.ts)
+ * 
+ * Este arquivo será removido após migração completa.
+ * 
+ * @deprecated Use BillingPlan type do BillingPlanService
+ */
+
 // Tipos para o sistema de assinaturas SaaS
 
+/**
+ * @deprecated Use BillingPlan['code'] do BillingPlanService
+ */
 export type PlanType = "basico" | "profissional" | "premium_20";
 
+/**
+ * @deprecated Use BillingPlan do BillingPlanService
+ */
 export interface SubscriptionPlan {
   id: PlanType;
   name: string;
@@ -44,6 +65,9 @@ export interface BusinessAnalytics {
   taxa_conversao: number;
 }
 
+/**
+ * @deprecated Use BillingPlanService.getActivePlans()
+ */
 export const SUBSCRIPTION_PLANS: SubscriptionPlan[] = [
   {
     id: "basico",

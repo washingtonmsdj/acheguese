@@ -16,7 +16,7 @@
  */
 
 import { supabase } from "@/integrations/supabase";
-import { profileService } from "@/core/profiles";
+import { profileService } from "@/core/profiles/services/ProfileService";
 import { trackError } from "@/shared/utils/errorTracking";
 import type {
   PostLike,

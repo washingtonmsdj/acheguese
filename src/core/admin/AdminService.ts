@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * AdminService — SSOT canônico de administração
  *
@@ -15,6 +14,9 @@
 
 import { supabase } from '@/integrations/supabase';
 import { logger } from '@/shared/utils/logger';
+import type { AdminSupabaseClient } from './types/adminDatabase.types';
+
+const supabaseTyped = supabase as unknown as AdminSupabaseClient;
 
 // ── Tipos ─────────────────────────────────────────────────────────────────
 

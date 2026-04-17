@@ -21,7 +21,7 @@ const ServicosPage         = lazy(() => import('@/modules/services/pages/Servico
 const ClassificadosPage    = lazy(() => import('@/modules/classifieds/pages/ClassificadosPage'));
 const EventosPage          = lazy(() => import('@/modules/community/pages/EventosPage'));
 const MobilidadePage       = lazy(() => import('@/modules/mobility/pages/MobilidadeLandingPage'));
-const VagasPage            = lazy(() => import('@/modules/vagas/pages/VagasListingPage')); // ✅ Nova página SSOT
+const VagasPage            = lazy(() => import('@/modules/vagas/pages/VagasPublicPage')); // ✅ Página AAA atualizada
 const CategoryBusinessPage = lazy(() => import('@/modules/business/pages/CategoryBusinessPage'));
 const MapaPage             = lazy(() => import('@/core/maps/pages/MapaPageV4'));
 

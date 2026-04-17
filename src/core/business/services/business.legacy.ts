@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * 📜 BUSINESS LEGACY — Compatibilidade com tabela `businesses`
  * 
@@ -12,8 +11,9 @@
 import { supabase } from "@/integrations/supabase";
 import { logger } from "@/shared/utils/logger";
 import { PAGINATION } from "@/shared/constants";
+import type { AdminSupabaseClient } from "@/core/admin/types/adminDatabase.types";
 
-const supabaseAny = supabase as any;
+const supabaseTyped = supabase as unknown as AdminSupabaseClient;
 import { sanitizeForILike } from "@/shared/utils/sqlSanitization";
 import { sanitizeSearchQuery } from "./validators";
 
@@ -37,7 +37,7 @@ export async function searchBusinessesLegacy(
       return [];
     }
 
-    const { data, error } = await supabaseAny.from("businesses")
+    const { data, error } = await supabaseTyped.from("businesses")
       .select(
         "id, name, categoria, description, logo, rating, total_avaliacoes, neighborhood, slug, nicho, city, is_premium",
       )

@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * AdminClassifiedsService - Serviço de administração de classificados
  *
@@ -7,7 +6,6 @@
  * delegando para o ClassifiedService (SSOT) sempre que possível.
  */
 
-import { supabase } from "@/integrations/supabase/client";
 import { logger } from "@/shared/utils/logger";
 import { ClassifiedsFacade } from "@/modules/classifieds/services/ClassifiedService";
 import type { ClassifiedData } from "@/modules/classifieds/services/types";

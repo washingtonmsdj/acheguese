@@ -1,5 +1,4 @@
-// @ts-nocheck
-﻿/**
+/**
  * BUSINESS MAPPERS - Transformacao de dados puros
  *
  * Responsabilidade unica: converter dados entre camadas

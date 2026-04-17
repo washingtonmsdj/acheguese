@@ -26,7 +26,7 @@ import {
 import { GeolocationService } from '@/core/maps/services/GeolocationService';
 import { GamificationService } from "@/core/gamification/services";
 import { postService } from "@/core/posts/services"; // ✅ LOTE 8
-import { profileService } from "@/core/profiles";
+import { profileService } from "@/core/profiles/services/ProfileService";
 
 const ALERT_TYPES = [
   { id: "tiroteio", label: "Tiroteio", emoji: "🔫" },

@@ -1,4 +1,3 @@
-// @ts-nocheck
 import {
   DEFAULT_CAMERA,
   DEFAULT_TILE_STYLE,

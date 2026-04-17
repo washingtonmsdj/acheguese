@@ -11,7 +11,7 @@
 // Components - Main UI Components
 // ============================================================================
 
-export { ServiceCardEnhanced ../../../.archive/ServiceCard.oldviceCardEnhanced";
+export { ServiceCardEnhanced } from "./components/ServiceCardEnhanced";
 export { ServiceCardEnhanced as ServiceCard } from "./components/ServiceCardEnhanced"; // Alias para compatibilidade
 export { ServiceCategories } from "./components/ServiceCategories";
 export { ServicesList } from "./components/ServicesList";

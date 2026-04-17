@@ -1,16 +1,18 @@
-// @ts-nocheck
 /**
- * 💬 COMMENTS MUTATIONS - Operações de escrita (SSOT)
+ * Comment mutations — SSOT canônico
  *
- * @version 2.0.0 - Refatoração SSOT
+ * Responsabilidade: Operações de escrita (criar, atualizar, deletar)
  */
 
 import { supabase } from "@/integrations/supabase";
 import { trackError } from "@/shared/utils/errorTracking";
 import type { Comment, CreateCommentData, UpdateCommentData } from "../types";
+import type { AdminSupabaseClient } from "@/core/admin/types/adminDatabase.types";
 
 const TABLE = "comments";
 const LIKES_TABLE = "comment_likes";
+
+const supabaseTyped = supabase as unknown as AdminSupabaseClient;
 
 export class CommentError extends Error {
   constructor(
@@ -42,7 +44,7 @@ export async function createComment(
       parent_comment_id: commentData.parent_id,
     });
 
-    const { data, error } = await (supabase as any)
+    const { data, error } = await supabaseTyped
       .from(TABLE)
       .insert([
         {
@@ -89,7 +91,7 @@ export async function updateComment(
       content: updates.content,
     });
 
-    const { data, error } = await (supabase as any)
+    const { data, error } = await supabaseTyped
       .from(TABLE)
       .update({ content: validatedData.content })
       .eq("id", commentId)
@@ -120,7 +122,7 @@ export async function updateComment(
  */
 export async function deleteComment(commentId: string): Promise<boolean> {
   try {
-    const { error } = await (supabase as any)
+    const { error } = await supabaseTyped
       .from(TABLE)
       .delete()
       .eq("id", commentId);
@@ -146,7 +148,7 @@ export async function likeComment(
   userId: string,
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    const { error } = await (supabase as any)
+    const { error } = await supabaseTyped
       .from(LIKES_TABLE)
       .insert({ comment_id: commentId, user_id: userId });
 
@@ -175,7 +177,7 @@ export async function unlikeComment(
   userId: string,
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    const { error } = await (supabase as any)
+    const { error } = await supabaseTyped
       .from(LIKES_TABLE)
       .delete()
       .eq("comment_id", commentId)

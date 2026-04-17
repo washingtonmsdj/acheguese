@@ -10,7 +10,7 @@ import { Button } from "@/shared/components/ui/button";
 import { Textarea } from "@/shared/components/ui/textarea";
 import { cn } from "@/shared/utils/cn";
 import { useAuth } from "@/core/auth/hooks/useAuth";
-import { profileService } from "@/core/profiles";
+import { profileService } from "@/core/profiles/services/ProfileService";
 import { toast } from "sonner";
 import { ModerationService } from "@/core/moderation";
 import { Loader2 } from "lucide-react";

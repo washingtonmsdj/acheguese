@@ -9,7 +9,7 @@ import { useRecomendacoes } from "@/modules/community/hooks/useRecomendacoes";
 import { useUserTerritory } from "@/core/location/hooks/useUserTerritory";
 import { useProfile } from "@/core/profiles/hooks/useProfile";
 import { CategoryFilters } from "@/shared/components/recomendacoes/CategoryFilters";
-import { QuestionsList } from "@/shared/components/recomendacoes/QuestionsList";
+import { QuestionsList } from "@/modules/community/components/QuestionsList";
 
 export default function RecomendacoesPage() {
   const navigate = useNavigate();

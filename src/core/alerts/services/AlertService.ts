@@ -1,8 +1,5 @@
-// @ts-nocheck
 /**
- * Alert Service
- *
- * Gerencia alertas da comunidade com expiração automática
+ * 🚨 AlertService — SSOT canônico de alertas comunitários com expiração automática
  */
 
 import { supabase } from "@/integrations/supabase";
@@ -13,6 +10,7 @@ import type {
 } from "../../../services/alert/types";
 import { AlertError } from "../../../services/alert/types";
 import { ALERT_STATUS } from "@/shared/types/constants";
+import type { AdminSupabaseClient } from "@/core/admin/types/adminDatabase.types";
 interface GetAlertsParams {
   city: string;
   neighborhood?: string;
@@ -30,7 +28,7 @@ class AlertService {
       const expiresAt = new Date();
       expiresAt.setDate(expiresAt.getDate() + 30);
 
-      const { data: alert, error } = await (supabase as any)
+      const { data: alert, error } = await (supabase as unknown as AdminSupabaseClient)
         .from("alerts")
         .insert({
           profile_id: profileId,
@@ -62,7 +60,7 @@ class AlertService {
    */
   async getAlerts(params: GetAlertsParams): Promise<Alert[]> {
     try {
-      let query = (supabase as any)
+      let query = (supabase as unknown as AdminSupabaseClient)
         .from("alerts")
         .select("*")
         .eq("city", params.city)
@@ -101,7 +99,7 @@ class AlertService {
   async confirmAlert(alertId: string, profileId: string): Promise<void> {
     try {
       // Incrementa o contador de confirmações
-      const { error } = await (supabase as any).rpc("increment_alert_confirmations", {
+      const { error } = await (supabase as unknown as AdminSupabaseClient).rpc("increment_alert_confirmations", {
         alert_id: alertId,
       });
 
@@ -124,7 +122,7 @@ class AlertService {
   async unconfirmAlert(alertId: string, profileId: string): Promise<void> {
     try {
       // Decrementa o contador de confirmações
-      const { error } = await (supabase as any).rpc("decrement_alert_confirmations", {
+      const { error } = await (supabase as unknown as AdminSupabaseClient).rpc("decrement_alert_confirmations", {
         alert_id: alertId,
       });
 
@@ -145,7 +143,7 @@ class AlertService {
    */
   async resolveAlert(alertId: string): Promise<void> {
     try {
-      const { error } = await (supabase as any)
+      const { error } = await (supabase as unknown as AdminSupabaseClient)
         .from("alerts")
         .update({ status: ALERT_STATUS.RESOLVED })
         .eq("id", alertId);

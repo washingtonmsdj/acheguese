@@ -20,10 +20,8 @@ import {
   DialogTitle,
 } from "@/shared/components/ui/dialog";
 import { cn } from "@/shared/utils/cn";
-import {
-  useUnifiedNotifications,
-  type Notification,
-} from '@/core/notifications';
+import { useUnifiedNotifications } from '@/core/notifications/useUnifiedNotifications';
+import type { Notification } from '@/core/notifications/types';
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
 

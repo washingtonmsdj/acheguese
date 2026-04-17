@@ -1,17 +1,20 @@
 /**
  * useVagas — Hook de lógica de negócio para vagas
  *
- * ✅ SSOT compliant - usa useTerritoryFilter
+ * ✅ SSOT compliant - usa VagasService (banco de dados)
  * ✅ Centraliza filtros e lógica fora da UI
- * ✅ Preparado para substituição por backend (VagasService)
  * ✅ Suporte a território ativo (location e group)
+ * ✅ Cache via React Query
+ * 
+ * Migrado de MOCK_VAGAS para banco de dados
  */
 
 import { useState, useMemo, useCallback } from "react";
-import { MOCK_VAGAS } from "../data/mock-vagas";
+import { useQuery } from "@tanstack/react-query";
+import { VagasService } from "../services/VagasService";
+import type { Vaga, VagaContrato, VagaModalidade, VagaNivel } from "../types/vagas.types";
 import { VAGA_CATEGORIAS } from "../types/vagas.types";
 import { useTerritoryFilter } from "@/core/location";
-import type { Vaga, VagaContrato, VagaModalidade, VagaNivel } from "../types/vagas.types";
 import type { ResolvedTerritory } from "@/core/routing/hooks/useResolveTerritoryFromUrl";
 
 interface UseVagasParams {
@@ -31,22 +34,15 @@ export function useVagas(params: UseVagasParams = {}) {
   // ✅ SSOT: Filtro territorial canônico — suporta location e group
   const territoryFilter = useTerritoryFilter(resolved, activeMemberIds);
 
-  // TODO: Quando backend existir, passar territoryFilter para a query SQL
-  // Por enquanto, filtra no client-side usando location_id
-  const allVagas = useMemo(() => {
-    let vagas = MOCK_VAGAS.filter(v => v.status === "ativa");
-    
-    // Aplicar filtro territorial se houver
-    if (territoryFilter.scope === 'location') {
-      vagas = vagas.filter(v => v.location_id === territoryFilter.location_id);
-    } else if (territoryFilter.scope === 'group') {
-      vagas = vagas.filter(v => territoryFilter.location_ids.includes(v.location_id));
-    }
-    // scope === 'none' → retorna todas as vagas
-    
-    return vagas;
-  }, [territoryFilter]);
+  // ✅ SSOT: Busca vagas do banco de dados
+  const { data: allVagas = [], isLoading, isError } = useQuery({
+    queryKey: ['vagas', territoryFilter],
+    queryFn: () => VagasService.getVagas({ territoryFilter }),
+    staleTime: 5 * 60 * 1000, // 5 minutos
+    enabled: true,
+  });
 
+  // Filtros client-side (busca textual e categorias)
   const filteredVagas = useMemo(() => {
     return allVagas.filter((vaga) => {
       if (search) {
@@ -76,7 +72,7 @@ export function useVagas(params: UseVagasParams = {}) {
   }, [allVagas, search, selectedCategory, selectedContract, selectedModality, selectedLevel]);
 
   const urgentVagas = useMemo(() => allVagas.filter(v => v.urgencia === "urgente"), [allVagas]);
-  const recentVagas = useMemo(() => [...allVagas].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()).slice(0, 4), [allVagas]);
+  const recentVagas = useMemo(() => [...allVagas].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).slice(0, 4), [allVagas]);
   const featuredVagas = useMemo(() => allVagas.filter(v => v.destaque), [allVagas]);
 
   const clearFilters = useCallback(() => {
@@ -96,8 +92,8 @@ export function useVagas(params: UseVagasParams = {}) {
   }, [allVagas]);
 
   const getVagaById = useCallback((id: string): Vaga | undefined => {
-    return MOCK_VAGAS.find(v => v.id === id);
-  }, []);
+    return allVagas.find(v => v.id === id);
+  }, [allVagas]);
 
   return {
     search, setSearch,
@@ -113,7 +109,7 @@ export function useVagas(params: UseVagasParams = {}) {
     clearFilters,
     getRelatedVagas,
     getVagaById,
-    isLoading: false,
-    isError: false,
+    isLoading,
+    isError,
   };
 }

@@ -134,6 +134,7 @@ import * as BusinessAdmin from "./business.admin";
 import * as BusinessLegacy from "./business.legacy";
 import * as BusinessHelpers from "./business.helpers";
 import type { BusinessStats } from "../types";
+import { ReviewsService } from "@/core/reviews/services/ReviewsService";
 
 /**
  * 🏢 BusinessFacade - Interface SSOT unificada v2.0
@@ -242,8 +243,7 @@ export class BusinessService {
    * @deprecated Use ReviewsService diretamente
    */
   static async getMyReview(businessId: string, userId: string) {
-    const { ReviewsService } = await import("@/core/reviews/services/ReviewsService");
-    const { profileService } = await import("@/core/profiles");
+    const { profileService } = await import("@/core/profiles/services/ProfileService");
     
     const activeProfile = await profileService.getProfileContext(userId);
     if (!activeProfile) return null;
@@ -260,8 +260,7 @@ export class BusinessService {
     rating: number,
     comment?: string,
   ): Promise<void> {
-    const { ReviewsService } = await import("@/core/reviews/services/ReviewsService");
-    const { profileService } = await import("@/core/profiles");
+    const { profileService } = await import("@/core/profiles/services/ProfileService");
 
     const activeProfile = await profileService.getProfileContext(userId);
     if (!activeProfile) {

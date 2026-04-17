@@ -165,8 +165,6 @@ export class RideOperationalService {
       await this.logStateChange(ride.id, null, initialState, input.passengerProfileId, 'Ride created');
 
       // GATE 7 FASE 2.5: Resolver se PIN é exigido e criar verificação automaticamente
-      const { OperationalVerificationService } = await import('@/modules/mobility/services/OperationalVerificationService');
-
       const pinRequirement = await OperationalVerificationService.resolveRidePINRequirement({
         passengerId: input.passengerProfileId,
         driverProfileId: undefined, // Motorista ainda não atribuído
@@ -698,8 +696,6 @@ export class RideOperationalService {
       await this.logStateChange(ride.id, null, RIDE_STATE.REQUESTED, input.passengerProfileId, 'Delivery created');
 
       // GATE 7 FASE 2.5: Resolver se PIN é exigido e criar verificação automaticamente
-      const { OperationalVerificationService } = await import('@/modules/mobility/services/OperationalVerificationService');
-
       const pinRequirement = await OperationalVerificationService.resolveDeliveryPINRequirement({
         senderProfileId: input.passengerProfileId, // Remetente é o passenger_profile_id
         operationId: input.sourceId, // Se houver operação associada

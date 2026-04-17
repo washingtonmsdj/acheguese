@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * AdminMessagingService - Serviço de administração de mensagens
  *
@@ -9,6 +8,7 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { logger } from "@/shared/utils/logger";
+import type { AdminSupabaseClient } from "../types/adminDatabase.types";
 import { messagingService } from "@/core/messaging/services/MessagingService";
 import type {
   Conversation,
@@ -48,8 +48,8 @@ class AdminMessagingServiceClass {
   async getStats(): Promise<MessagingStats> {
     try {
       const [convResult, msgResult] = await Promise.all([
-        supabase.from("conversations").select("status, is_active"),
-        supabase.from("messages").select("id", { count: "exact", head: true }),
+        (supabase as unknown as AdminSupabaseClient).from("conversations").select("status, is_active"),
+        (supabase as unknown as AdminSupabaseClient).from("messages").select("id", { count: "exact", head: true }),
       ]);
 
       if (convResult.error) {

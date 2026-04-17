@@ -5,7 +5,7 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/core/auth/hooks/useAuth";
 import { logger } from "@/shared/utils/logger";
-import { profileService } from "@/core/profiles";
+import { profileService } from "@/core/profiles/services/ProfileService";
 
 export interface RankingEntry {
   id: string;

@@ -3,7 +3,7 @@ import { Badge } from "@/shared/components/ui/badge";
 import { Card } from "@/shared/components/ui/card";
 import { Wifi, WifiOff, Bell, Activity } from "lucide-react";
 import { cn } from "@/shared/utils/cn";
-import { useUnifiedNotifications } from '@/core/notifications';
+import { useUnifiedNotifications } from '@/core/notifications/useUnifiedNotifications';
 
 export function DriverRealtimeStatus() {
   const { notifications, unreadCount } = useUnifiedNotifications({

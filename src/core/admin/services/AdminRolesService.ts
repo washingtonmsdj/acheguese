@@ -1,6 +1,5 @@
-// @ts-nocheck
 /**
- * AdminRolesService - SSOT para gestão de roles e permissões
+ * AdminRolesService - SSOT para gestão de roles administrativossões
  */
 
 import { supabase } from "@/integrations/supabase";

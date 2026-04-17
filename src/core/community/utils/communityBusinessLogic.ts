@@ -13,7 +13,7 @@ import type {
 import { commentService } from "@/core/comments/services";
 import { postService } from "@/core/posts/services";
 import { AuthorizationEngine } from "@/core/authorization/services/AuthorizationEngine";
-import { profileService } from "@/core/profiles";
+import { profileService } from "@/core/profiles/services/ProfileService";
 
 /**
  * Verificar se perfil pode criar post (rate limit + permissões)

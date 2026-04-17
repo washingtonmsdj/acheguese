@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * CORE BILLING SUBSCRIPTION SERVICE — Serviço de assinaturas
  *
@@ -7,6 +6,7 @@
 
 import { supabase } from '@/integrations/supabase';
 import { PlanTier, type BusinessSubscription } from './types';
+import type { AdminSupabaseClient } from '@/core/admin/types/adminDatabase.types';
 
 // ══════════════════════════════════════════════════════════════════════════
 // TYPES
@@ -30,7 +30,8 @@ export class SubscriptionService {
     businessId: string
   ): Promise<ServiceResult<BusinessSubscription>> {
     try {
-      const { data, error } = await supabase
+      const supabaseTyped = supabase as unknown as AdminSupabaseClient;
+      const { data, error } = await supabaseTyped
         .from('business_subscriptions')
         .select('*')
         .eq('business_id', businessId)
@@ -38,7 +39,7 @@ export class SubscriptionService {
 
       if (error) throw error;
 
-      const row = (data as BusinessSubscription[] | null)?.[0] ?? null;
+      const row = data?.[0] ?? null;
       if (!row) {
         return {
           data: this.createDefaultFreeSubscription(businessId),

@@ -36,11 +36,11 @@ import { supabase } from '@/integrations/supabase';
 import { logger } from '@/shared/utils/logger';
 
 // Componentes de empresa reutilizados — implementações reais em @/modules/business
-import AnalyticsDashboard from '@/modules/business/components/AnalyticsDashboard';
-import CouponManager from '@/modules/business/components/CouponManager';
-import { NeighborhoodMap } from '@/modules/business/components/NeighborhoodMap';
-import BranchNetworkBlock from '@/modules/business/components/BranchNetworkBlock';
-import { useNeighborhoodBounds } from '@/modules/business/hooks/useNeighborhoodBounds';
+import AnalyticsDashboard from '@/core/business/components/AnalyticsDashboard';
+import CouponManager from '@/core/business/components/CouponManager';
+import { NeighborhoodMap } from '@/core/business/components/NeighborhoodMap';
+import BranchNetworkBlock from '@/core/business/components/BranchNetworkBlock';
+import { useNeighborhoodBounds } from '@/core/business/hooks/useNeighborhoodBounds';
 
 import { useGastronomyFavoritersCount } from '../hooks/useGastronomyFavoriters';
 import type { GastronomyBusiness } from '../types';

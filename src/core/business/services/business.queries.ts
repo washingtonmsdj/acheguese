@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * 🔍 BUSINESS QUERIES — Leitura de dados
  * 
@@ -11,8 +10,9 @@
 import { supabase } from "@/integrations/supabase";
 import { logger } from "@/shared/utils/logger";
 import { applyTerritoryFilter } from "@/core/location";
+import type { AdminSupabaseClient } from "@/core/admin/types/adminDatabase.types";
 
-const supabaseAny = supabase as any;
+const supabaseTyped = supabase as unknown as AdminSupabaseClient;
 import { sanitizeForILike } from "@/shared/utils/sqlSanitization";
 import { PAGINATION } from "@/shared/constants";
 import {
@@ -44,7 +44,7 @@ export async function getBusinesses(
 ): Promise<Business[]> {
   try {
     // Check if table exists first
-    const { error: checkError } = await supabaseAny.from("business_data")
+    const { error: checkError } = await supabaseTyped.from("business_data")
       .select("profile_id")
       .limit(1);
 
@@ -56,7 +56,7 @@ export async function getBusinesses(
       return [];
     }
 
-    let query = supabaseAny.from("business_data")
+    let query = supabaseTyped.from("business_data")
       .select(`
         *,
         address:addresses!address_id(*),
@@ -141,7 +141,7 @@ export async function getBusinesses(
 
     if (profileIds.length > 0) {
       // Importação dinâmica para evitar circular dependency
-      const { profileService } = await import("@/core/profiles");
+      const { profileService } = await import("@/core/profiles/services/ProfileService");
       const profilesData = await profileService.getProfilesByIds(profileIds);
       profilesData.forEach((p: { id: string; name: string; phone?: string; whatsapp?: string }) =>
         profilesMap.set(p.id, p),
@@ -196,7 +196,7 @@ export async function getBusinessesList(params: {
   }
 
   try {
-    const checkResult = await supabaseAny.from("business_data")
+    const checkResult = await supabaseTyped.from("business_data")
       .select("profile_id")
       .limit(1);
 
@@ -205,7 +205,7 @@ export async function getBusinessesList(params: {
       return { businesses: [], nextPage: undefined };
     }
 
-    let query = supabaseAny.from("business_data")
+    let query = supabaseTyped.from("business_data")
       .select(`
         *,
         address:addresses!address_id(*),
@@ -272,7 +272,7 @@ export async function getBusinessesList(params: {
     const profilesMap = new Map<string, { id: string; name: string }>();
 
     if (profileIds.length > 0) {
-      const { profileService } = await import("@/core/profiles");
+      const { profileService } = await import("@/core/profiles/services/ProfileService");
       const profilesData = await profileService.getProfilesByIds(profileIds);
       profilesData.forEach((p: { id: string; name: string }) => profilesMap.set(p.id, p));
     }
@@ -309,7 +309,7 @@ export async function getBusinessProfile(id: string): Promise<{
   is_premium: boolean;
 } | null> {
   try {
-    const { data, error } = await supabaseAny.from("business_data")
+    const { data, error } = await supabaseTyped.from("business_data")
       .select("slug, category, metadata, is_premium")
       .eq("profile_id", id)
       .single();
@@ -348,7 +348,7 @@ export async function getBusinessById(id: string): Promise<Business> {
   }
 
   try {
-    const { data, error } = await supabaseAny.from("business_data")
+    const { data, error } = await supabaseTyped.from("business_data")
       .select(`
         *,
         profiles(id, name, avatar_url, phone, whatsapp),
@@ -384,7 +384,7 @@ export async function getBusinessBySlug(slug: string): Promise<{
   }
 
   try {
-    const { data, error } = await supabaseAny.from("business_data")
+    const { data, error } = await supabaseTyped.from("business_data")
       .select("id, profile_id, slug, business_name, is_premium")
       .eq("slug", slug)
       .eq("status", "active")
@@ -422,7 +422,7 @@ export async function checkSlugExists(
   excludeId?: string,
 ): Promise<boolean> {
   try {
-    let query = supabaseAny
+    let query = supabaseTyped
       .from("business_data")
       .select("id")
       .eq("slug", slug)
@@ -572,7 +572,7 @@ export async function getBusinessesByIds(
   if (ids.length === 0) return [];
 
   try {
-    const { data, error } = await supabaseAny.from("business_data")
+    const { data, error } = await supabaseTyped.from("business_data")
       .select(`
         profile_id,
         business_name,
@@ -649,7 +649,7 @@ export async function searchBusinessesByName(
     const sanitizedQuery = sanitizeForILike(sanitized);
     if (!sanitizedQuery) return [];
 
-    const { data, error } = await supabaseAny.from("business_data")
+    const { data, error } = await supabaseTyped.from("business_data")
       .select("profile_id, business_name, category")
       .eq("status", "active")
       .ilike("business_name", `%${sanitizedQuery}%`)
@@ -763,7 +763,7 @@ export async function getSimilarBusinesses(
   limit = 5,
 ): Promise<Partial<Business>[]> {
   try {
-    const { data, error } = await supabaseAny.from("business_data")
+    const { data, error } = await supabaseTyped.from("business_data")
       .select(`
         profile_id,
         business_name,
@@ -812,7 +812,7 @@ export async function getSimilarBusinesses(
  */
 export async function getGallery(businessId: string): Promise<string[]> {
   try {
-    const { data, error } = await supabaseAny.from("business_gallery")
+    const { data, error } = await supabaseTyped.from("business_gallery")
       .select("image_url")
       .eq("business_id", businessId)
       .order("created_at", { ascending: false });

@@ -99,9 +99,10 @@ export const PostsFacade = {
 // ============================================================
 
 import { supabase } from "@/integrations/supabase";
-import { notificationService, NotificationType } from "@/core/notifications";
+import { NotificationType } from "@/core/notifications/types";
+import { notificationService } from "@/core/notifications/services/NotificationService";
 import { SocialInteractionsService } from "@/core/social/services/SocialInteractionsService";
-import { profileService } from "@/core/profiles";
+import { profileService } from "@/core/profiles/services/ProfileService";
 import { trackError } from "@/shared/utils/errorTracking";
 import { StructuredLogger } from "../utils/StructuredLogger";
 import { LocationType, EntityStatus } from "@/shared/types/enums";
@@ -1824,7 +1825,7 @@ export class PostService {
   }> {
     try {
       // Resolver profile_id a partir do user_id via ProfileService (SSOT)
-      const { profileService } = await import("@/core/profiles");
+      const { profileService } = await import("@/core/profiles/services/ProfileService");
       const activeProfile = await profileService.getActiveProfile(userId);
       const profileId = activeProfile?.id;
 

@@ -210,12 +210,6 @@ export const DeliveryTrackingCardEnhanced = memo(
       // EARLY RETURN
       // ========================================================================
 
-      if (delivery.ride_mode !== 'motoboy') return null;
-
-      // ========================================================================
-      // COMPUTED VALUES
-      // ========================================================================
-
       const statusConfig = useMemo(
         () =>
           STATUS_CONFIG[delivery.status] || {
@@ -256,6 +250,8 @@ export const DeliveryTrackingCardEnhanced = memo(
         },
         [onCancel, delivery.id],
       );
+
+      if (delivery.ride_mode !== 'motoboy') return null;
 
       // ========================================================================
       // RENDER VARIANTS

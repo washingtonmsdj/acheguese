@@ -27,7 +27,13 @@ import { cn } from '@/shared/utils/cn';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import type { Vaga } from '../types/vagas.types';
-import { CONTRATO_LABELS, MODALIDADE_LABELS, NIVEL_LABELS } from '../types/vagas.types';
+import { 
+  CONTRATO_LABELS, 
+  MODALIDADE_LABELS, 
+  NIVEL_LABELS,
+  HIGHLIGHT_TYPE_LABELS,
+  formatSalary as formatSalaryFromTypes,
+} from '../types/vagas.types';
 import { BusinessLogo } from '@/shared/components/ui/business-logo';
 
 // ============================================================================
@@ -51,6 +57,12 @@ const URGENCIA_CONFIG = {
     color: 'text-destructive-foreground',
     bgColor: 'bg-destructive',
   },
+  extrema: {
+    label: 'EXTREMA',
+    icon: Zap,
+    color: 'text-white',
+    bgColor: 'bg-red-700',
+  },
   normal: null,
 };
 
@@ -72,47 +84,26 @@ interface VagaCardProps {
 // ============================================================================
 
 /**
- * Formata salário em BRL
+ * Formata salário em BRL (wrapper para manter compatibilidade)
  */
 function formatSalary(vaga: Vaga): string {
-  if (vaga.ocultar_salario) return 'A combinar';
-  
-  const formatValue = (value: number) => {
-    return new Intl.NumberFormat('pt-BR', {
-      style: 'currency',
-      currency: 'BRL',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(value);
-  };
-
-  if (vaga.salario_min && vaga.salario_max) {
-    return `${formatValue(vaga.salario_min)} – ${formatValue(vaga.salario_max)}`;
-  }
-  if (vaga.salario_min) {
-    return `A partir de ${formatValue(vaga.salario_min)}`;
-  }
-  if (vaga.salario_max) {
-    return `Até ${formatValue(vaga.salario_max)}`;
-  }
-  return 'A combinar';
+  return formatSalaryFromTypes(vaga);
 }
 
 /**
  * Formata data relativa
  */
-function formatRelativeDate(date: string): string {
+function formatRelativeDate(date: Date): string {
   try {
     const now = new Date();
-    const vagaDate = new Date(date);
-    const diffInHours = (now.getTime() - vagaDate.getTime()) / (1000 * 60 * 60);
+    const diffInHours = (now.getTime() - date.getTime()) / (1000 * 60 * 60);
     
     // Se foi publicada nas últimas 24h, mostrar "Nova"
     if (diffInHours < 24) {
       return 'Nova';
     }
     
-    return formatDistanceToNow(vagaDate, {
+    return formatDistanceToNow(date, {
       addSuffix: true,
       locale: ptBR,
     });
@@ -124,11 +115,10 @@ function formatRelativeDate(date: string): string {
 /**
  * Verifica se a vaga é nova (menos de 24h)
  */
-function isNewVaga(date: string): boolean {
+function isNewVaga(date: Date): boolean {
   try {
     const now = new Date();
-    const vagaDate = new Date(date);
-    const diffInHours = (now.getTime() - vagaDate.getTime()) / (1000 * 60 * 60);
+    const diffInHours = (now.getTime() - date.getTime()) / (1000 * 60 * 60);
     return diffInHours < 24;
   } catch {
     return false;
@@ -155,16 +145,16 @@ export const VagaCardEnhanced = memo(
     // COMPUTED VALUES
     // ========================================================================
 
-    const formattedSalary = useMemo(() => formatSalary(vaga), [vaga]);
+    const formattedSalary = useMemo(() => formatSalaryFromTypes(vaga), [vaga]);
     
     const relativeDate = useMemo(
-      () => formatRelativeDate(vaga.created_at),
-      [vaga.created_at],
+      () => formatRelativeDate(vaga.publishedAt || vaga.createdAt),
+      [vaga.publishedAt, vaga.createdAt],
     );
 
     const isNew = useMemo(
-      () => isNewVaga(vaga.created_at),
-      [vaga.created_at],
+      () => isNewVaga(vaga.publishedAt || vaga.createdAt),
+      [vaga.publishedAt, vaga.createdAt],
     );
 
     const urgenciaConfig = useMemo(
@@ -172,7 +162,7 @@ export const VagaCardEnhanced = memo(
       [vaga.urgencia],
     );
 
-    const hasMultipleVagas = vaga.vagas_quantidade && vaga.vagas_quantidade > 1;
+    const hasMultipleVagas = vaga.vagasQuantidade > 1;
 
     // ========================================================================
     // HANDLERS
@@ -200,15 +190,14 @@ export const VagaCardEnhanced = memo(
             className,
           )}
           role="article"
-          aria-label={`Vaga: ${vaga.titulo} - ${vaga.empresa}`}
+          aria-label={`Vaga: ${vaga.titulo} - ${vaga.empresaNome}`}
         >
           {/* Logo da Empresa */}
           <div className="shrink-0">
             <BusinessLogo
-              name={vaga.empresa}
-              logoUrl={vaga.empresa_logo}
-              size="md"
-              className="rounded-xl"
+              name={vaga.empresaNome}
+              logoUrl={vaga.empresaLogoUrl}
+              className="h-12 w-12 rounded-xl"
             />
           </div>
 
@@ -221,7 +210,7 @@ export const VagaCardEnhanced = memo(
                   <h3 className="line-clamp-1 text-sm font-bold leading-tight text-foreground transition-colors group-hover:text-primary">
                     {vaga.titulo}
                   </h3>
-                  <p className="text-xs text-muted-foreground">{vaga.empresa}</p>
+                  <p className="text-xs text-muted-foreground">{vaga.empresaNome}</p>
                 </div>
 
                 {/* Badges de Status */}
@@ -238,10 +227,10 @@ export const VagaCardEnhanced = memo(
                       {urgenciaConfig.label}
                     </Badge>
                   )}
-                  {vaga.destaque && (
-                    <Badge className="h-5 bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/20 text-[10px] font-bold">
+                  {vaga.highlightType !== 'none' && HIGHLIGHT_TYPE_LABELS[vaga.highlightType] && (
+                    <Badge className={`h-5 text-[10px] font-bold ${HIGHLIGHT_TYPE_LABELS[vaga.highlightType].bgColor} ${HIGHLIGHT_TYPE_LABELS[vaga.highlightType].color} border-0`}>
                       <Star className="mr-0.5 h-2.5 w-2.5" />
-                      Destaque
+                      {HIGHLIGHT_TYPE_LABELS[vaga.highlightType].label}
                     </Badge>
                   )}
                 </div>
@@ -287,7 +276,7 @@ export const VagaCardEnhanced = memo(
               {hasMultipleVagas && (
                 <Badge variant="outline" className="h-5 px-1.5 py-0 text-[10px]">
                   <Users className="mr-0.5 h-2.5 w-2.5" />
-                  {vaga.vagas_quantidade} vagas
+                  {vaga.vagasQuantidade} vagas
                 </Badge>
               )}
             </div>
@@ -310,15 +299,14 @@ export const VagaCardEnhanced = memo(
             className,
           )}
           role="article"
-          aria-label={`Vaga: ${vaga.titulo} - ${vaga.empresa}`}
+          aria-label={`Vaga: ${vaga.titulo} - ${vaga.empresaNome}`}
         >
           {/* Logo/Ícone */}
           <div className="relative flex aspect-square items-center justify-center overflow-hidden bg-gradient-to-br from-primary/10 to-orange-500/10 p-4">
             <BusinessLogo
-              name={vaga.empresa}
-              logoUrl={vaga.empresa_logo}
-              size="lg"
-              className="rounded-xl"
+              name={vaga.empresaNome}
+              logoUrl={vaga.empresaLogoUrl}
+              className="h-16 w-16 rounded-xl"
             />
 
             {/* Status Badge */}
@@ -342,7 +330,7 @@ export const VagaCardEnhanced = memo(
             <h3 className="line-clamp-2 text-sm font-bold leading-tight text-foreground transition-colors group-hover:text-primary">
               {vaga.titulo}
             </h3>
-            <p className="text-xs text-muted-foreground truncate">{vaga.empresa}</p>
+            <p className="text-xs text-muted-foreground truncate">{vaga.empresaNome}</p>
             <p className="text-xs font-bold text-primary">{formattedSalary}</p>
           </div>
         </motion.article>
@@ -366,16 +354,16 @@ export const VagaCardEnhanced = memo(
           className,
         )}
         role="article"
-        aria-label={`Vaga: ${vaga.titulo} - ${vaga.empresa}`}
+        aria-label={`Vaga: ${vaga.titulo} - ${vaga.empresaNome}`}
       >
         {/* Top Badges */}
         <div className="absolute left-0 right-0 top-0 flex items-start justify-between">
           {/* Destaque Badge */}
-          {vaga.destaque && (
-            <div className="rounded-br-xl bg-amber-500/90 px-3 py-1">
-              <div className="flex items-center gap-1 text-[10px] font-bold text-white">
+          {vaga.highlightType !== 'none' && HIGHLIGHT_TYPE_LABELS[vaga.highlightType] && (
+            <div className={`rounded-br-xl px-3 py-1 ${HIGHLIGHT_TYPE_LABELS[vaga.highlightType].bgColor}`}>
+              <div className={`flex items-center gap-1 text-[10px] font-bold ${HIGHLIGHT_TYPE_LABELS[vaga.highlightType].color}`}>
                 <Star className="h-3 w-3" />
-                DESTAQUE
+                {HIGHLIGHT_TYPE_LABELS[vaga.highlightType].label.toUpperCase()}
               </div>
             </div>
           )}
@@ -392,7 +380,7 @@ export const VagaCardEnhanced = memo(
         </div>
 
         {/* Header */}
-        <div className={cn(vaga.urgencia === 'urgente' || vaga.destaque ? 'mt-6' : '')}>
+        <div className={cn(vaga.urgencia !== 'normal' || vaga.highlightType !== 'none' ? 'mt-6' : '')}>
           <div className="flex items-start justify-between gap-3 mb-3">
             <div className="flex-1 min-w-0">
               <h3 className="text-base font-bold text-foreground group-hover:text-primary transition-colors line-clamp-2 leading-snug sm:text-lg">
@@ -400,17 +388,16 @@ export const VagaCardEnhanced = memo(
               </h3>
               <p className="text-sm text-muted-foreground mt-1 flex items-center gap-1">
                 <Building2 className="h-3.5 w-3.5" />
-                {vaga.empresa}
+                {vaga.empresaNome}
               </p>
             </div>
 
             {/* Logo da Empresa */}
             <div className="shrink-0">
               <BusinessLogo
-                name={vaga.empresa}
-                logoUrl={vaga.empresa_logo}
-                size="lg"
-                className="rounded-xl"
+                name={vaga.empresaNome}
+                logoUrl={vaga.empresaLogoUrl}
+                className="h-16 w-16 rounded-xl"
               />
             </div>
           </div>
@@ -458,7 +445,7 @@ export const VagaCardEnhanced = memo(
               {hasMultipleVagas && (
                 <span className="flex items-center gap-1">
                   <Users className="h-3 w-3" />
-                  {vaga.vagas_quantidade} vagas
+                  {vaga.vagasQuantidade} vagas
                 </span>
               )}
             </div>

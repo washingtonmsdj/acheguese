@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * AdminCouponsService - Serviço de administração de cupons
  *
@@ -10,7 +9,6 @@
  * TODO: Migrar para um CouponsService dedicado em core/coupons
  */
 
-import { supabase } from "@/integrations/supabase/client";
 import { logger } from "@/shared/utils/logger";
 
 export interface CouponData {

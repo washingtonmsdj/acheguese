@@ -29,8 +29,47 @@ const ALLOWED_DEPENDENCIES: Record<string, string[]> = {
   'modules': ['modules', 'core', 'shared'],  // modules can import from same layer (different submodules via barrel exports)
   'core': ['core', 'integrations', 'shared'],  // core can import from core (different subsystems)
   'shared': ['shared'],  // shared can import from shared (UI components, utils, types)
-  'integrations': []
+  'integrations': ['shared']
 };
+
+const NORMALIZED_LAYER_ALIASES: Record<string, string> = {
+  'assets': 'shared',
+  'config': 'shared',
+};
+
+const ALLOWED_IMPORT_PATH_EXCEPTIONS: Array<{
+  from: string;
+  to: string;
+  patterns: RegExp[];
+}> = [
+  {
+    // Integrations podem depender de contratos canonicos sem puxar implementacoes de negocio.
+    from: 'integrations',
+    to: 'core',
+    patterns: [
+      /^@\/core\/maps\/types(?:\/.*)?$/,
+      /^@\/core\/routing\/types(?:\/.*)?$/,
+      /^@\/core\/location\/repositories\/ILocationRepository$/,
+      /^@\/core\/coverage\/index$/,
+    ],
+  },
+];
+
+function normalizeImportLayer(importLayer: string): string {
+  return NORMALIZED_LAYER_ALIASES[importLayer] || importLayer;
+}
+
+function isAllowedImportPathException(
+  sourceLayer: string,
+  targetLayer: string,
+  importPath: string
+): boolean {
+  return ALLOWED_IMPORT_PATH_EXCEPTIONS.some((rule) =>
+    rule.from === sourceLayer &&
+    rule.to === targetLayer &&
+    rule.patterns.some((pattern) => pattern.test(importPath))
+  );
+}
 
 function getLayer(filePath: string): string | null {
   const normalized = filePath.replace(/\\/g, '/');
@@ -175,9 +214,10 @@ function detectCircularDependencies(graph: Map<string, DependencyNode>): string[
       for (const [targetFile, targetNode] of graph.entries()) {
         if (targetFile === file) continue; // Skip self
         
-        const importLayer = importPath.split('/')[1];
+        const rawImportLayer = importPath.split('/')[1];
+        const importLayer = normalizeImportLayer(rawImportLayer);
         const importRest = importPath.substring(importLayer.length + 3); // Remove @/layer/
-        
+
         if (targetNode.layer === importLayer && targetFile.includes(importRest)) {
           dfs(targetFile, [...path]);
         }
@@ -203,16 +243,17 @@ function validateDependencyRules(graph: Map<string, DependencyNode>): Validation
   
   for (const [file, node] of graph.entries()) {
     for (const importPath of node.imports) {
-      const importLayer = importPath.split('/')[1];
+      const rawImportLayer = importPath.split('/')[1];
+      const importLayer = normalizeImportLayer(rawImportLayer);
       
       // Track legacy imports (old architecture paths)
-      if (['components', 'services', 'hooks', 'types', 'lib', 'contexts', 'stores', 'validation'].includes(importLayer)) {
-        legacyImports.set(importLayer, (legacyImports.get(importLayer) || 0) + 1);
+      if (['components', 'services', 'hooks', 'types', 'lib', 'contexts', 'stores', 'validation'].includes(rawImportLayer)) {
+        legacyImports.set(rawImportLayer, (legacyImports.get(rawImportLayer) || 0) + 1);
         continue; // Don't report as errors - these are migration TODOs
       }
       
       // Check for cross-module imports (modules importing from other modules)
-      if (node.layer === 'modules' && importLayer === 'modules') {
+      if (node.layer === 'modules' && rawImportLayer === 'modules') {
         const sourceModule = node.module;
         const targetModuleMatch = importPath.match(/@\/modules\/([^/]+)/);
         const targetModule = targetModuleMatch ? targetModuleMatch[1] : null;
@@ -230,6 +271,10 @@ function validateDependencyRules(graph: Map<string, DependencyNode>): Validation
       
       // Check if this is an allowed dependency
       const allowedLayers = ALLOWED_DEPENDENCIES[node.layer] || [];
+
+      if (isAllowedImportPathException(node.layer, importLayer, importPath)) {
+        continue;
+      }
       
       if (!allowedLayers.includes(importLayer)) {
         errors.push(

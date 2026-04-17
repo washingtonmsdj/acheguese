@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * CityService - SSOT para operações de cidade
  * 
@@ -13,6 +12,7 @@
 import { supabase } from "@/integrations/supabase";
 import { logger } from "@/shared/utils/logger";
 import { trackError } from "@/shared/utils/errorTracking";
+import type { AdminSupabaseClient } from "@/core/admin/types/adminDatabase.types";
 
 export interface EmergencyContact {
   name: string;
@@ -121,7 +121,8 @@ export class CityService {
    */
   static async getCityMetadata(state: string, city: string): Promise<CityMetadata> {
     try {
-      const { data, error } = await supabase
+      const supabaseTyped = supabase as unknown as AdminSupabaseClient;
+      const { data, error } = await supabaseTyped
         .from('city_metadata')
         .select('*')
         .eq('state', state.toLowerCase())
@@ -174,7 +175,8 @@ export class CityService {
    */
   static async getCityMetadataById(cityId: string): Promise<CityMetadata | null> {
     try {
-      const { data, error } = await supabase
+      const supabaseTyped = supabase as unknown as AdminSupabaseClient;
+      const { data, error } = await supabaseTyped
         .from('city_metadata')
         .select('*')
         .eq('id', cityId)
@@ -205,7 +207,8 @@ export class CityService {
     updates: Partial<CityMetadata>
   ): Promise<void> {
     try {
-      const { error } = await supabase
+      const supabaseTyped = supabase as unknown as AdminSupabaseClient;
+      const { error } = await supabaseTyped
         .from('city_metadata')
         .update(updates)
         .eq('id', cityId);
@@ -232,7 +235,8 @@ export class CityService {
    */
   static async listCities(): Promise<CityMetadata[]> {
     try {
-      const { data, error } = await supabase
+      const supabaseTyped = supabase as unknown as AdminSupabaseClient;
+      const { data, error } = await supabaseTyped
         .from('city_metadata')
         .select('*')
         .order('city', { ascending: true });

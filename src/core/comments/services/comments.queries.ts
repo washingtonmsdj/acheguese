@@ -1,22 +1,26 @@
 // @ts-nocheck
 /**
- * 💬 COMMENTS QUERIES - Operações de leitura (SSOT)
+ * Comment queries — SSOT canônico
  *
- * @version 2.0.0 - Refatoração SSOT
+ * Responsabilidade: Operações de leitura (buscar, listar, contar)
  */
 
 import { supabase } from "@/integrations/supabase";
 import { trackError } from "@/shared/utils/errorTracking";
 import type { Comment } from "../types";
+import type { AdminSupabaseClient } from "@/core/admin/types/adminDatabase.types";
 
 const TABLE = "comments";
+const LIKES_TABLE = "comment_likes";
+
+const supabaseTyped = supabase as unknown as AdminSupabaseClient;
 
 /**
  * Busca comentários de um post
  */
 export async function getCommentsByPost(postId: string): Promise<Comment[]> {
   try {
-    const { data, error } = await (supabase as any)
+    const { data, error } = await supabaseTyped
       .from(TABLE)
       .select("*")
       .eq("post_id", postId)
@@ -39,7 +43,7 @@ export async function getCommentsByPost(postId: string): Promise<Comment[]> {
  */
 export async function getAllComments(limit = 1000): Promise<Comment[]> {
   try {
-    const { data, error } = await (supabase as any)
+    const { data, error } = await supabaseTyped
       .from(TABLE)
       .select("*")
       .order("created_at", { ascending: false })
@@ -61,7 +65,7 @@ export async function getAllComments(limit = 1000): Promise<Comment[]> {
  */
 export async function getCommentById(commentId: string): Promise<Comment | null> {
   try {
-    const { data, error } = await (supabase as any)
+    const { data, error } = await supabaseTyped
       .from(TABLE)
       .select("*")
       .eq("id", commentId)
@@ -84,7 +88,7 @@ export async function getCommentById(commentId: string): Promise<Comment | null>
  */
 export async function getCommentsCount(postId: string): Promise<number> {
   try {
-    const { count, error } = await (supabase as any)
+    const { count, error } = await supabaseTyped
       .from(TABLE)
       .select("*", { count: "exact", head: true })
       .eq("post_id", postId);
@@ -106,7 +110,7 @@ export async function getCommentsCount(postId: string): Promise<number> {
  */
 export async function getCommentCountByAuthor(authorProfileId: string): Promise<number> {
   try {
-    const { count, error } = await (supabase as any)
+    const { count, error } = await supabaseTyped
       .from(TABLE)
       .select("*", { count: "exact", head: true })
       .eq("author_profile_id", authorProfileId);
@@ -131,7 +135,7 @@ export async function getCommentsByAuthor(
   options?: { limit?: number; offset?: number },
 ): Promise<Comment[]> {
   try {
-    let query = (supabase as any)
+    let query = supabaseTyped
       .from(TABLE)
       .select(
         "id, post_id, content, author_profile_id, created_at, updated_at, likes_count",
@@ -174,7 +178,7 @@ export async function getCommentsByAuthor(
  */
 export async function getTotalCommentsCount(): Promise<number> {
   try {
-    const { count, error } = await (supabase as any)
+    const { count, error } = await supabaseTyped
       .from(TABLE)
       .select("*", { count: "exact", head: true });
 
@@ -202,7 +206,7 @@ export async function getTotalCommentsCount(): Promise<number> {
  */
 export async function getRecentComments(limit = 10): Promise<any[]> {
   try {
-    const { data, error } = await (supabase as any)
+    const { data, error } = await supabaseTyped
       .from(TABLE)
       .select("id, content, author_profile_id, post_id, created_at")
       .order("created_at", { ascending: false })
@@ -236,7 +240,7 @@ export async function getCommentsCreatedInPeriod(
   endDate: Date,
 ): Promise<number> {
   try {
-    const { count, error } = await (supabase as any)
+    const { count, error } = await supabaseTyped
       .from(TABLE)
       .select("*", { count: "exact", head: true })
       .gte("created_at", startDate.toISOString())

@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * AdminCommunityIssuesService - SSOT para gestão administrativa de problemas urbanos
  * 
@@ -14,6 +13,7 @@
 import { supabase } from '@/integrations/supabase';
 import { SessionService } from '@/core/session/services/SessionService';
 import { logger } from '@/shared/utils/logger';
+import type { AdminSupabaseClient } from '../types/adminDatabase.types';
 import { communityIssueService } from '@/core/community-issues';
 import type {
   CommunityIssue,
@@ -351,13 +351,24 @@ class AdminCommunityIssuesServiceClass {
 
       if (error) throw error;
 
-      // Audit log
-      await supabase.from(this.AUDIT_TABLE).insert({
-        issue_id: issueId,
-        actor_id: user.id,
-        action_type: 'status_changed',
-        metadata: { new_status: status },
-      });
+      const currentIssue = await supabase
+        .from(this.TABLE)
+        .select('status')
+        .eq('id', issueId)
+        .single();
+
+      const { error: auditError } = await (supabase as unknown as AdminSupabaseClient)
+        .from(COMMUNITY_ISSUE_AUDIT_TABLE)
+        .insert({
+          issue_id: issueId,
+          action: 'status_change',
+          previous_status: currentIssue.status,
+          new_status: status,
+          performed_by: user.id,
+          notes: `Status alterado de ${currentIssue.status} para ${status}`,
+        });
+
+      if (auditError) throw auditError;
 
       logger.info('AdminCommunityIssuesService.updateStatus', { issueId, status });
       return true;

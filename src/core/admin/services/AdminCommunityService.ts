@@ -1,6 +1,6 @@
-// @ts-nocheck
 import { supabase } from "@/integrations/supabase";
 import { logger } from "@/shared/utils/logger";
+import type { AdminSupabaseClient, CommunityIssue, ProfessionalReport, ProfessionalData } from "../types/adminDatabase.types";
 import { MobilityAdminQueryService } from "@/core/mobility/services";
 
 export interface ModerationStats {
@@ -40,7 +40,7 @@ export interface PostFlag {
 class AdminCommunityService {
   async getModerationStats(): Promise<ModerationStats | null> {
     try {
-      const { data, error } = await (supabase as any).rpc("get_moderation_stats");
+      const { data, error } = await (supabase as unknown as AdminSupabaseClient).rpc("get_moderation_stats");
       if (error) throw error;
       return data?.[0] || null;
     } catch (error) {
@@ -53,7 +53,7 @@ class AdminCommunityService {
     filter?: "pending" | "approved" | "rejected" | "flagged",
   ): Promise<CommunityPost[]> {
     try {
-      const { profileService } = await import("@/core/profiles");
+      const { profileService } = await import("@/core/profiles/services/ProfileService");
 
       // ✅ Delegado para MobilityAdminQueryService
       const data = await MobilityAdminQueryService.getCommunityPosts(filter);
@@ -88,7 +88,7 @@ class AdminCommunityService {
 
   async getPostFlags(postId: string): Promise<PostFlag[]> {
     try {
-      const { profileService } = await import("@/core/profiles");
+      const { profileService } = await import("@/core/profiles/services/ProfileService");
 
       // ✅ Delegado para MobilityAdminQueryService
       const data = await MobilityAdminQueryService.getPostFlags(postId);
@@ -110,9 +110,9 @@ class AdminCommunityService {
     }
   }
 
-  async getCivicReports(status: string): Promise<any[]> {
+  async getCivicReports(status: string): Promise<(CommunityIssue & { reporter_name: string; is_critical: boolean; supporters_count: number })[]> {
     try {
-      const { data, error } = await (supabase as any)
+      const { data, error } = await (supabase as unknown as AdminSupabaseClient)
         .from("community_issues")
         .select(`*, profiles!community_issues_profile_id_fkey(name)`)
         .eq("status", status)
@@ -120,8 +120,8 @@ class AdminCommunityService {
 
       if (error) throw error;
 
-      return (data || []).map((r: any) => ({
-        ...r,
+      return (data || []).map((r) => ({
+        ...(r as unknown as CommunityIssue),
         reporter_name: r.profiles?.name || "Anônimo",
         is_critical: false,
         supporters_count: 0,
@@ -134,18 +134,20 @@ class AdminCommunityService {
 
   async getCivicReportStats(): Promise<Record<string, number>> {
     try {
-      const { data, error } = await (supabase as any)
+      const { data, error } = await (supabase as unknown as AdminSupabaseClient)
         .from("community_issues")
         .select("status");
 
       if (error) throw error;
 
+      const issues = (data || []) as unknown as CommunityIssue[];
+
       return {
-        total: data?.length || 0,
-        pendente: data?.filter((r: any) => r.status === "open").length || 0,
-        em_analise: data?.filter((r: any) => r.status === "in_progress").length || 0,
-        resolvido: data?.filter((r: any) => r.status === "resolved").length || 0,
-        rejeitado: data?.filter((r: any) => r.status === "closed").length || 0,
+        total: issues.length || 0,
+        pendente: issues.filter((r) => r.status === "open").length || 0,
+        em_analise: issues.filter((r) => r.status === "in_progress").length || 0,
+        resolvido: issues.filter((r) => r.status === "resolved").length || 0,
+        rejeitado: issues.filter((r) => r.status === "closed").length || 0,
         critical: 0,
       };
     } catch (error) {
@@ -154,9 +156,9 @@ class AdminCommunityService {
     }
   }
 
-  async updateCivicReportStatus(reportId: string, status: string): Promise<void> {
+  async updateCivicReportStatus(reportId: string, status: CommunityIssue['status']): Promise<void> {
     try {
-      const { error } = await (supabase as any)
+      const { error } = await (supabase as unknown as AdminSupabaseClient)
         .from("community_issues")
         .update({ status })
         .eq("id", reportId);
@@ -168,30 +170,30 @@ class AdminCommunityService {
     }
   }
 
-  async getProfessionalReports(): Promise<any[]> {
+  async getProfessionalReports(): Promise<ProfessionalReport[]> {
     try {
-      const { data, error } = await (supabase as any)
+      const { data, error } = await (supabase as unknown as AdminSupabaseClient)
         .from("professional_reports")
         .select("*")
         .order("created_at", { ascending: false });
 
       if (error) throw error;
-      return data || [];
+      return (data || []) as unknown as ProfessionalReport[];
     } catch (error) {
       logger.error("Error fetching professional reports", error as Error);
       return [];
     }
   }
 
-  async getAllProfessionals(): Promise<any[]> {
+  async getAllProfessionals(): Promise<ProfessionalData[]> {
     try {
-      const { data, error } = await (supabase as any)
+      const { data, error } = await (supabase as unknown as AdminSupabaseClient)
         .from("professional_data")
         .select("*")
         .order("created_at", { ascending: false });
 
       if (error) throw error;
-      return data || [];
+      return (data || []) as unknown as ProfessionalData[];
     } catch (error) {
       logger.error("Error fetching professionals", error as Error);
       return [];

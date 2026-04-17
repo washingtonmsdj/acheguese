@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * ⭐ FAVORITES MUTATIONS - Operações de escrita (SSOT)
  *
@@ -9,9 +8,13 @@ import { supabase } from "@/integrations/supabase";
 import { logger } from "@/shared/utils/logger";
 import { trackError } from "@/shared/utils/errorTracking";
 import type { ProfileFavorite, CreateFavoriteData } from "../types";
+import type { AdminSupabaseClient } from "@/core/admin/types/adminDatabase.types";
+import { isBusinessFavorited, isFavorited as checkIsFavorited } from "./favorites.queries";
 
 const TABLE = "profile_favorites_new";
 const BUSINESS_FAVORITES_TABLE = "business_favorites";
+
+const supabaseTyped = supabase as unknown as AdminSupabaseClient;
 
 /**
  * Adicionar favorito
@@ -20,7 +23,7 @@ export async function addFavorite(
   data: CreateFavoriteData,
 ): Promise<ProfileFavorite | null> {
   try {
-    const { data: favorite, error } = await (supabase as any)
+    const { data: favorite, error } = await supabaseTyped
       .from(TABLE)
       .insert(data)
       .select()
@@ -53,7 +56,7 @@ export async function removeFavorite(
   favoritingProfileId: string,
 ): Promise<boolean> {
   try {
-    const { error } = await (supabase as any)
+    const { error } = await supabaseTyped
       .from(TABLE)
       .delete()
       .eq("favorited_profile_id", favoritedProfileId)
@@ -86,7 +89,6 @@ export async function toggleFavorite(
   favoritingProfileId: string,
 ): Promise<{ isFavorited: boolean; favorite?: ProfileFavorite }> {
   try {
-    const { isFavorited: checkIsFavorited } = await import("./favorites.queries");
     const isFavorited = await checkIsFavorited(favoritedProfileId, favoritingProfileId);
 
     if (isFavorited) {
@@ -119,7 +121,6 @@ export async function toggleBusinessFavorite(
   userId: string,
 ): Promise<boolean> {
   try {
-    const { isBusinessFavorited } = await import("./favorites.queries");
     const isFavorited = await isBusinessFavorited(businessId, userId);
 
     if (isFavorited) {

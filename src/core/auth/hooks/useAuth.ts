@@ -8,6 +8,7 @@
  * New code should use useSessionContext() instead.
  */
 import { useState, useEffect, useCallback } from "react";
+import { SessionService } from "@/core/session/services/SessionService";
 import { SessionState } from "@/core/session/state/SessionState";
 import { AuthService } from "@/core/auth/services";
 import type {
@@ -186,8 +187,6 @@ export function useAuth(): UseAuthReturn {
       setLoading(true);
       // SessionService.refreshSession() will update SessionState,
       // which will trigger our subscriber above.
-      const { SessionService } =
-        await import("@/core/session/services/SessionService");
       await SessionService.refreshSession();
     } catch (err) {
       setError(err as AuthError);

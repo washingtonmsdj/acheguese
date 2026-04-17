@@ -1,17 +1,17 @@
-// @ts-nocheck
 /**
  * 🏆 AUTH SERVICE - Verificações de Autenticação Centralizadas
  *
- * ✅ Verificação de admin centralizada
- * ✅ Cache de permissões
- * ✅ Fonte única para autorizações
+ * Verificação de admin centralizada
+ * Cache de permissões
+ * Fonte única para autorizações
  */
 
 import { supabase } from "@/integrations/supabase";
-import { USER_ROLE } from "@/shared/types/constants";
 import { SessionService } from "@/core/session/services/SessionService";
-import { parseAuthIdentifier } from "@/core/auth/utils/authIdentifier";
 import { logger } from "@/shared/utils/logger";
+import type { User, Session } from "@supabase/supabase-js";
+import type { AdminSupabaseClient } from "@/core/admin/types/adminDatabase.types";
+
 export class AuthService {
   private static adminCache = new Map<string, boolean>();
   private static cacheExpiry = new Map<string, number>();
@@ -47,7 +47,7 @@ export class AuthService {
   private static async resolveEmailByUsername(username: string): Promise<string> {
     const normalizedUsername = username.replace(/^@/, "").toLowerCase().trim();
 
-    const { data: email, error: rpcError } = await (supabase as any)
+    const { data: email, error: rpcError } = await (supabase as unknown as AdminSupabaseClient)
       .rpc("get_email_by_username", { p_username: normalizedUsername });
 
     if (rpcError || !email) {
@@ -71,7 +71,7 @@ export class AuthService {
     }
 
     try {
-      const { data, error } = await (supabase as any)
+      const { data, error } = await (supabase as unknown as AdminSupabaseClient)
         .from("user_roles")
         .select("role")
         .eq("user_id", userId)
@@ -188,8 +188,6 @@ export class AuthService {
 
   static async getCurrentUser(): Promise<import("./types").AuthUser | null> {
     // Delegate to SessionService — the only place allowed to call supabase.auth.getUser()
-    const { SessionService } =
-      await import("@/core/session/services/SessionService");
     const user = await SessionService.getCurrentUser();
     if (!user) return null;
     return {
@@ -329,7 +327,7 @@ export class AuthService {
     const avatarUrl = `${urlData.publicUrl}?t=${Date.now()}`;
 
     // Atualizar profile usando ProfileService
-    const { profileService } = await import("@/core/profiles");
+    const { profileService } = await import("@/core/profiles/services/ProfileService");
     await profileService.updateProfile(userId, { avatar_url: avatarUrl });
 
     return avatarUrl;

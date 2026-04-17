@@ -1,5 +1,4 @@
-// @ts-nocheck
-﻿/**
+/**
  * BUSINESS MUTATIONS - Operacoes de escrita
  *
  * Responsabilidade unica: criar, atualizar e deletar dados.
@@ -9,7 +8,9 @@ import { supabase } from "@/integrations/supabase";
 import { PublicIdentityService } from "@/core/public-identity";
 import { AddressService } from "@/core/address/services/AddressService";
 import { BusinessHoursService } from "@/core/business/BusinessHoursService";
-const supabaseAny = supabase as any;
+import type { AdminSupabaseClient } from "@/core/admin/types/adminDatabase.types";
+
+const supabaseTyped = supabase as unknown as AdminSupabaseClient;
 import { callRPC } from "@/core/supabase/services/supabaseHelpers";
 import {
   createBusinessSchema,
@@ -301,7 +302,7 @@ export async function createBusiness(
 
     const addressId = await syncAddress(validatedInput);
 
-    const { profileService } = await import("@/core/profiles");
+    const { profileService } = await import("@/core/profiles/services/ProfileService");
     const profile = await profileService.createProfile({
       profile_type: "business",
       name: validatedInput.name,
@@ -315,7 +316,7 @@ export async function createBusiness(
       throw new Error("Erro ao criar perfil da empresa");
     }
 
-    const { error: memberError } = await supabaseAny.from("profile_members").insert({
+    const { error: memberError } = await supabaseTyped.from("profile_members").insert({
       profile_id: profile.id,
       user_id: userId,
       role: "owner",
@@ -331,7 +332,7 @@ export async function createBusiness(
       slug,
     });
 
-    const { data: business, error } = await supabaseAny
+    const { data: business, error } = await supabaseTyped
       .from("business_data")
       .insert({
         profile_id: profile.id,
@@ -350,7 +351,7 @@ export async function createBusiness(
       throw error;
     }
 
-    await supabaseAny.from("business_stats").insert({
+    await supabaseTyped.from("business_stats").insert({
       profile_id: profile.id,
       views_count: 0,
       favorites_count: 0,
@@ -378,7 +379,7 @@ export async function updateBusiness(
   try {
     const validatedInput = sanitizeAndValidateInput(input, true) as UpdateBusinessInput;
 
-    const { data: currentBusiness, error: currentError } = await supabaseAny
+    const { data: currentBusiness, error: currentError } = await supabaseTyped
       .from("business_data")
       .select("id, slug, metadata, address_id, location_id")
       .eq("profile_id", id)
@@ -423,7 +424,7 @@ export async function updateBusiness(
     }
 
     if (validatedInput.name || validatedInput.description || validatedInput.logo_url || validatedInput.city) {
-      const { profileService } = await import("@/core/profiles");
+      const { profileService } = await import("@/core/profiles/services/ProfileService");
       await profileService.updateProfile(id, {
         ...(validatedInput.name !== undefined ? { name: validatedInput.name } : {}),
         ...(validatedInput.description !== undefined ? { bio: validatedInput.description } : {}),
@@ -461,7 +462,7 @@ export async function updateBusiness(
       updatePayload.slug = validatedInput.slug;
     }
 
-    const { data: business, error } = await supabaseAny
+    const { data: business, error } = await supabaseTyped
       .from("business_data")
       .update(updatePayload)
       .eq("profile_id", id)
@@ -496,7 +497,7 @@ export async function updateActiveSections(
     promocoes: boolean;
   },
 ): Promise<void> {
-  const { error } = await supabaseAny.from("business_data")
+  const { error } = await supabaseTyped.from("business_data")
     .update({
       secoes_ativas: sections,
       updated_at: new Date().toISOString(),
@@ -513,7 +514,7 @@ export async function updateActiveSections(
  */
 export async function deleteBusiness(id: string): Promise<void> {
   try {
-    const { error } = await supabaseAny.from("business_data")
+    const { error } = await supabaseTyped.from("business_data")
       .update({
         status: "deleted",
         updated_at: new Date().toISOString(),
@@ -522,7 +523,7 @@ export async function deleteBusiness(id: string): Promise<void> {
 
     if (error) throw error;
 
-    const { profileService } = await import("@/core/profiles");
+      const { profileService } = await import("@/core/profiles/services/ProfileService");
     await profileService.updateProfile(id, {
       is_active: false,
     });
@@ -544,7 +545,7 @@ export async function createProduct(
   }
 
   try {
-    const { data, error } = await supabaseAny.from("business_products")
+    const { data, error } = await supabaseTyped.from("business_products")
       .insert({
         profile_id: businessId,
         name: productData.nome,

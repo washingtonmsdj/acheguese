@@ -74,7 +74,7 @@ import { cn } from "@/shared/utils/cn";
 import { RIDE_STATUS } from "@/shared/types/constants";
 import { useAdminGuard } from "@/modules/admin/hooks/useAdminGuard";
 import { useSessionContext } from "@/core/session";
-import { profileService } from "@/core/profiles";
+import { profileService } from "@/core/profiles/services/ProfileService";
 import { logger } from "@/shared/utils/logger";
 import type { ProfileContext } from "@/core/profiles/services/types";
 import { MobilityService, updateDriverOnlineStatus } from "@/core/mobility/services";

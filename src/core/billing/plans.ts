@@ -1,15 +1,27 @@
 /**
- * CORE BILLING PLANS — Definição dos planos
+ * CORE BILLING PLANS — DEPRECATED
  *
- * SSOT: Única fonte de verdade para definição de planos e entitlements.
+ * ⚠️ DEPRECATED: Este arquivo está obsoleto.
+ * 
+ * Use o novo padrão SSOT:
+ * - Service: BillingPlanService (src/core/billing/services/BillingPlanService.ts)
+ * - Hooks: useBillingPlans (src/core/billing/hooks/useBillingPlans.ts)
+ * - Dados: billing_plans table (banco de dados)
+ * 
+ * Este arquivo será removido após migração completa.
+ * 
+ * @deprecated Use BillingPlanService.getActivePlans() ou useBillingPlans()
  */
 
 import { PlanTier, type PlanDefinition } from './types';
 
 // ══════════════════════════════════════════════════════════════════════════
-// PLAN DEFINITIONS
+// PLAN DEFINITIONS — DEPRECATED
 // ══════════════════════════════════════════════════════════════════════════
 
+/**
+ * @deprecated Use BillingPlanService.getActivePlans()
+ */
 export const PLANS: Record<PlanTier, PlanDefinition> = {
   // ── FREE ──────────────────────────────────────────────────────────────────
   [PlanTier.FREE]: {
@@ -230,32 +242,32 @@ export const PLANS: Record<PlanTier, PlanDefinition> = {
 };
 
 // ══════════════════════════════════════════════════════════════════════════
-// HELPERS
+// HELPERS — DEPRECATED
 // ══════════════════════════════════════════════════════════════════════════
 
 /**
- * Retorna a definição de um plano
+ * @deprecated Use BillingPlanService.getPlanByCode(code)
  */
 export function getPlan(tier: PlanTier): PlanDefinition {
   return PLANS[tier];
 }
 
 /**
- * Retorna os entitlements de um plano
+ * @deprecated Use BillingPlanService.getEntitlements(code)
  */
 export function getEntitlements(tier: PlanTier) {
   return PLANS[tier].entitlements;
 }
 
 /**
- * Verifica se um plano requer pagamento
+ * @deprecated Use BillingPlanService.requiresPayment(code)
  */
 export function requiresPayment(tier: PlanTier): boolean {
   return tier !== PlanTier.FREE;
 }
 
 /**
- * Retorna o valor do plano em centavos
+ * @deprecated Use plan.priceCents do BillingPlanService
  */
 export function getPlanPrice(tier: PlanTier): number {
   return PLANS[tier].priceValue;

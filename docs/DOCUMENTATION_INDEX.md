@@ -5,6 +5,8 @@
 | --- | --- |
 | [README.md](./README.md) | Porta de entrada e politica documental |
 | [CURRENT_RULES.md](./CURRENT_RULES.md) | Regras vigentes de SSOT, fronteiras e organizacao |
+| [SSOT_PATTERNS.md](./SSOT_PATTERNS.md) | Padroes SSOT: corretos vs anti-padroes, prevencao de hardcodes |
+| [QUICK_REFERENCE_SSOT.md](./QUICK_REFERENCE_SSOT.md) | Guia rapido de referencia SSOT (5 minutos) |
 | [ARCHITECTURE.md](./ARCHITECTURE.md) | Arquitetura global e estrutura modular |
 | [DATA_MODELING.md](./DATA_MODELING.md) | Contratos de dados e ownership |
 | [SECURITY.md](./SECURITY.md) | Politicas de seguranca |
@@ -21,6 +23,10 @@
 | [audits/EXECUTION_CHECKLIST.md](./audits/EXECUTION_CHECKLIST.md) | Checklist operacional por prioridade |
 | [audits/QUICK_WINS.md](./audits/QUICK_WINS.md) | Ganhos de curto prazo sem abrir feature nova |
 | [audits/POST_READINESS_BACKLOG.md](./audits/POST_READINESS_BACKLOG.md) | Itens para depois da prontidao do sistema |
+| [audits/AUDITORIA_HARDCODES_COMPLETA.md](./audits/AUDITORIA_HARDCODES_COMPLETA.md) | Auditoria completa de hardcodes indevidos (2026-04-16) |
+| [audits/PLANO_MIGRACAO_HARDCODES.md](./audits/PLANO_MIGRACAO_HARDCODES.md) | Plano detalhado de migracao de hardcodes para SSOT |
+| [audits/EXEMPLOS_REFATORACAO_HARDCODES.md](./audits/EXEMPLOS_REFATORACAO_HARDCODES.md) | Casos praticos de refatoracao com codigo antes/depois |
+| [audits/AUDITORIA_HARDCODES_FINAL.md](./audits/AUDITORIA_HARDCODES_FINAL.md) | Relatorio final consolidado da auditoria de hardcodes |
 
 ## 3. Fontes canonicas por dominio
 | Dominio | Fonte principal |

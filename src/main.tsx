@@ -2,6 +2,7 @@ import React from "react";
 import { createRoot } from "react-dom/client";
 import App from "./App.tsx";
 import "./index.css";
+import { initializeSentry } from "./shared/config/sentry.config.ts";
 import { deferFrame, deferIdle, deferLoad } from "./shared/utils/deferredInit.ts";
 
 // ============================================================
@@ -27,9 +28,7 @@ deferFrame(() => {
 // Defer idle: Serviços não-críticos
 deferIdle(() => {
   // Initialize Sentry (error tracking)
-  import("./shared/config/sentry.config.ts").then(({ initializeSentry }) => {
-    initializeSentry();
-  });
+  initializeSentry();
 
   // Initialize authorization engine
   import("@/core/authorization").then(({ AuthorizationEngine }) => {

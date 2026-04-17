@@ -1,10 +1,10 @@
-// @ts-nocheck
 /**
  * AdminPromotionsService - SSOT para gestão administrativa de promoções
  */
 
 import { supabase } from "@/integrations/supabase";
 import { logger } from "@/shared/utils/logger";
+import type { AdminSupabaseClient } from "../types/adminDatabase.types";
 
 export interface PromotionStats {
   total: number;
@@ -41,7 +41,7 @@ class AdminPromotionsServiceClass {
    */
   async getStats(): Promise<PromotionStats> {
     try {
-      const { data: promotions, error } = await supabase
+      const { data: promotions, error } = await (supabase as unknown as AdminSupabaseClient)
         .from("promotions")
         .select("*");
 

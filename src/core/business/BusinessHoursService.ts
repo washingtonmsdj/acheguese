@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * BusinessHoursService — SSOT canônico de horários de funcionamento
  *
@@ -15,6 +14,7 @@
 
 import { supabase } from '@/integrations/supabase';
 import { logger } from '@/shared/utils/logger';
+import type { AdminSupabaseClient } from '@/core/admin/types/adminDatabase.types';
 
 // ── Tipos ─────────────────────────────────────────────────────────────────
 
@@ -96,7 +96,7 @@ export const BusinessHoursService = {
    */
   async listHours(businessId: string): Promise<ServiceResult<BusinessHours[]>> {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as unknown as AdminSupabaseClient)
         .from('business_hours')
         .select('*')
         .eq('business_id', businessId)
@@ -125,7 +125,7 @@ export const BusinessHoursService = {
     is_closed?: boolean;
   }): Promise<ServiceResult<BusinessHours>> {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as unknown as AdminSupabaseClient)
         .from('business_hours')
         .upsert({
           business_id: input.business_id,
@@ -196,7 +196,7 @@ export const BusinessHoursService = {
    */
   async listExceptions(businessId: string): Promise<ServiceResult<BusinessHoursException[]>> {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as unknown as AdminSupabaseClient)
         .from('business_hours_exceptions')
         .select('*')
         .eq('business_id', businessId)
@@ -226,7 +226,7 @@ export const BusinessHoursService = {
     reason?: string;
   }): Promise<ServiceResult<BusinessHoursException>> {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as unknown as AdminSupabaseClient)
         .from('business_hours_exceptions')
         .upsert({
           business_id: input.business_id,

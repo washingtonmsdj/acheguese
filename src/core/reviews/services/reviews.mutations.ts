@@ -12,6 +12,7 @@ import { supabase } from "@/integrations/supabase";
 import { logger } from "@/shared/utils/logger";
 import { trackError } from "@/shared/utils/errorTracking";
 import type { Review, ReviewType, CreateReviewData } from "../types";
+import { getReviewByReviewer } from "./reviews.queries";
 
 // ============================================================================
 // 🔧 HELPERS
@@ -132,9 +133,6 @@ export async function upsertReview(
   data: CreateReviewData,
   type: ReviewType,
 ): Promise<{ review: Review; isNew: boolean }> {
-  // Dynamic import para evitar circular dependency
-  const { hasReviewed, getReviewByReviewer } = await import("./reviews.queries");
-
   try {
     // Verificar se já existe
     const existing = await getReviewByReviewer(

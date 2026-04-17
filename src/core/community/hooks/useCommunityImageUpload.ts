@@ -2,7 +2,7 @@ import { useState } from "react";
 import { AuthService } from "@/core/auth/services/AuthService";
 import { toast } from "sonner";
 import { logger } from "@/shared/utils/logger";
-import { profileService } from "@/core/profiles";
+import { profileService } from "@/core/profiles/services/ProfileService";
 
 export function useCommunityImageUpload() {
   const [isUploading, setIsUploading] = useState(false);

@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * AddressRepositorySupabase - Implementação Supabase
  */
@@ -6,12 +5,17 @@
 import { supabase } from '@/integrations/supabase/client';
 import type { IAddressRepository } from './IAddressRepository';
 import type { Address, CreateAddressInput, UpdateAddressInput } from '../types';
+import type { AdminSupabaseClient } from '@/core/admin/types/adminDatabase.types';
 
 export class AddressRepositorySupabase implements IAddressRepository {
   private readonly tableName = 'addresses';
 
+  private getTypedClient(): AdminSupabaseClient {
+    return supabase as unknown as AdminSupabaseClient;
+  }
+
   async create(input: CreateAddressInput): Promise<Address> {
-    const { data, error } = await supabase
+    const { data, error } = await this.getTypedClient()
       .from(this.tableName)
       .insert(input)
       .select()
@@ -25,7 +29,7 @@ export class AddressRepositorySupabase implements IAddressRepository {
   }
 
   async findById(id: string): Promise<Address | null> {
-    const { data, error } = await supabase
+    const { data, error } = await this.getTypedClient()
       .from(this.tableName)
       .select('*')
       .eq('id', id)
@@ -42,7 +46,7 @@ export class AddressRepositorySupabase implements IAddressRepository {
   }
 
   async update(id: string, input: UpdateAddressInput): Promise<Address> {
-    const { data, error } = await supabase
+    const { data, error } = await this.getTypedClient()
       .from(this.tableName)
       .update(input)
       .eq('id', id)
@@ -57,7 +61,7 @@ export class AddressRepositorySupabase implements IAddressRepository {
   }
 
   async delete(id: string): Promise<void> {
-    const { error } = await supabase
+    const { error } = await this.getTypedClient()
       .from(this.tableName)
       .delete()
       .eq('id', id);
@@ -68,7 +72,7 @@ export class AddressRepositorySupabase implements IAddressRepository {
   }
 
   async findByLocationId(locationId: string): Promise<Address[]> {
-    const { data, error } = await supabase
+    const { data, error } = await this.getTypedClient()
       .from(this.tableName)
       .select('*')
       .eq('location_id', locationId)
@@ -82,7 +86,7 @@ export class AddressRepositorySupabase implements IAddressRepository {
   }
 
   async findByPostalCode(postalCode: string): Promise<Address[]> {
-    const { data, error } = await supabase
+    const { data, error } = await this.getTypedClient()
       .from(this.tableName)
       .select('*')
       .eq('postal_code', postalCode)

@@ -20,7 +20,7 @@ import { obterNicho } from "@/shared/utils/urlUtils";
 import { BusinessUrlService } from "@/core/business/services/BusinessUrlService";
 import { useAdminGuard } from "@/modules/admin/hooks/useAdminGuard";
 import { notificationService, NotificationType, NotificationPriority } from "@/core/notifications";
-import { profileService } from "@/core/profiles";
+import { profileService } from "@/core/profiles/services/ProfileService";
 import { logger } from "@/shared/utils/logger";
 
 interface Claim {

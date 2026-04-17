@@ -7,6 +7,7 @@
 
 import { supabase } from "@/integrations/supabase";
 import { logger } from "@/shared/utils/logger";
+import type { AdminSupabaseClient } from "@/core/admin/types/adminDatabase.types";
 
 interface AnalyticsEvent {
   event_type: string;
@@ -21,13 +22,16 @@ class AnalyticsServiceClass {
    */
   async trackEvent(event: AnalyticsEvent): Promise<void> {
     try {
-      await (supabase as any).from("analytics_events").insert({
+      const { error } = await (supabase as unknown as AdminSupabaseClient)
+        .from("analytics_events").insert({
         ...event,
         timestamp: new Date().toISOString(),
       });
+      if (error) {
+        logger.error("Analytics tracking error:", error);
+      }
     } catch (error) {
       logger.error("Analytics tracking error:", error);
-      // Don't throw - analytics should not break user experience
     }
   }
 

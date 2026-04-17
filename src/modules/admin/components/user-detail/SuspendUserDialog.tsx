@@ -14,7 +14,7 @@ import {
 } from "@/shared/components/ui/dialog";
 import { toast } from "sonner";
 import { logger } from "@/shared/utils/logger";
-import { profileService } from "@/core/profiles";
+import { profileService } from "@/core/profiles/services/ProfileService";
 
 interface SuspendUserDialogProps {
   open: boolean;

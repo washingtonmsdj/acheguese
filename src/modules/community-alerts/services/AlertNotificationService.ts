@@ -63,7 +63,7 @@ class AlertNotificationServiceClass {
 
     try {
       // Busca usuários elegíveis da região usando ProfileService
-      const { profileService } = await import("@/core/profiles");
+      const { profileService } = await import("@/core/profiles/services/ProfileService");
       const users = await profileService.getProfilesByLocation({
         city: item.city,
         neighborhood: item.neighborhood

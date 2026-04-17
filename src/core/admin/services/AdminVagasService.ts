@@ -1,6 +1,23 @@
-// @ts-nocheck
 /**
  * AdminVagasService - SSOT para gestão administrativa de vagas
+ * 
+ * @deprecated Use AdminVagasService de @/modules/vagas/services/AdminVagasService
+ * Este arquivo está obsoleto e será removido em versão futura.
+ * 
+ * Migration: 20260416110000_create_vagas.sql
+ * Novo Service: src/modules/vagas/services/AdminVagasService.ts
+ * 
+ * Motivo da depreciação:
+ * - Estrutura de dados antiga (não usa enums novos)
+ * - Não usa full-text search em português
+ * - Não integra filtros territoriais
+ * - Campos desatualizados (title, company, type, category, is_active, status)
+ * 
+ * Use o novo service que implementa:
+ * - Enums: vaga_status, vaga_contrato, vaga_modalidade, vaga_nivel, vaga_urgencia
+ * - Full-text search em português
+ * - Filtros territoriais integrados
+ * - Campos corretos: titulo, empresa, contrato, modalidade, nivel, status
  */
 
 import { supabase } from "@/integrations/supabase";

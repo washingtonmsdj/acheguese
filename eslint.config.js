@@ -14,6 +14,9 @@ export default tseslint.config(
   {
     ignores: [
       "dist",
+      "coverage/**",
+      "playwright-report/**",
+      "test-results/**",
       "templates/**",
       ".archive/**", // ✅ Arquivos legados arquivados
       "src/components/AppointmentIndicator.tsx",
@@ -312,10 +315,41 @@ export default tseslint.config(
   // PostService é o SSOT canônico de posts — acesso direto necessário por design.
   {
     files: [
+      "src/core/posts/services/PostService.ts",
       "src/core/posts/services/posts.mutations.ts",
       "src/core/posts/services/posts.queries.ts",
     ],
-    rules: { "ssot/no-direct-posts-polls-access": "off" },
+    rules: {
+      "ssot/no-direct-posts-polls-access": "off",
+      "@typescript-eslint/ban-ts-comment": "off",
+    },
+  },
+  // Mutations legadas ainda em migração tipada. Mantidas sob controle até remoção do @ts-nocheck.
+  {
+    files: [
+      "src/core/professional/services/professional.mutations.ts",
+      "src/core/profiles/services/profile.mutations.ts",
+      "src/core/reviews/services/reviews.mutations.ts",
+      "src/modules/gastronomy/components/GastronomyOwnerDashboard.tsx",
+      "src/app/pages/EmpresaDetailLandingPage.tsx",
+    ],
+    rules: {
+      "@typescript-eslint/ban-ts-comment": "off",
+    },
+  },
+  // Providers de maps dependem de contratos canonicos de core, nao de implementacoes de negocio.
+  {
+    files: [
+      "src/integrations/maps/providers/MockRoutingProvider.ts",
+      "src/integrations/maps/providers/NominatimGeocodingProvider.ts",
+      "src/integrations/maps/providers/OSMTileProvider.ts",
+      "src/integrations/maps/providers/OSRMProvider.ts",
+      "src/integrations/maps/services/GeospatialServiceMock.ts",
+    ],
+    rules: {
+      "no-restricted-imports": "off",
+      "maps/no-cross-layer-import": "off",
+    },
   },
   // ReviewsService é o SSOT canônico de reviews — acesso direto necessário por design.
   {

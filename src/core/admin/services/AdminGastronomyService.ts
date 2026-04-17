@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * AdminGastronomyService - SSOT para gestão administrativa de gastronomia
  * 
@@ -8,6 +7,7 @@
 
 import { supabase } from "@/integrations/supabase";
 import { logger } from "@/shared/utils/logger";
+import type { AdminSupabaseClient } from "../types/adminDatabase.types";
 import type { GastronomyBusiness, GastronomyProfile } from "@/core/gastronomy";
 
 export interface GastronomyStats {
@@ -34,7 +34,7 @@ class AdminGastronomyServiceClass {
    */
   async getStats(): Promise<GastronomyStats> {
     try {
-      const { data: profiles, error } = await supabase
+      const { data: profiles, error } = await (supabase as unknown as AdminSupabaseClient)
         .from("gastronomy_profiles")
         .select("*");
 
@@ -47,7 +47,7 @@ class AdminGastronomyServiceClass {
         byCategory: {},
         byPriceRange: {},
         withDelivery: profiles?.filter(p => p.delivery_available).length || 0,
-        withMenu: 0,
+        withMenu: profiles?.filter((p) => p.has_menu).length || 0,
       };
 
       // Contar por categoria

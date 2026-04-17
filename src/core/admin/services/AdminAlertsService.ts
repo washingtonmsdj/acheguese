@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * 🏛️ ADMIN ALERTS SERVICE - SSOT v2.0 NÍVEL AAA
  *

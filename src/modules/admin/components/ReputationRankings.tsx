@@ -14,7 +14,7 @@ import { PassengerTrustBadge } from "@/shared/components/badges/PassengerTrustBa
 import { Star, Users, Car } from "lucide-react";
 import { toast } from "sonner";
 import { logger } from "@/shared/utils/logger";
-import { profileService } from "@/core/profiles"; // ✅ SSOT - Usa instância do ProfileService
+import { profileService } from "@/core/profiles/services/ProfileService"; // ✅ SSOT - Usa instância do ProfileService
 import { MobilityService } from "@/core/mobility/services"; // ✅ SSOT - Importa MobilityService correto
 
 export function ReputationRankings() {

@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * AdminEventsService - Serviço de administração de eventos
  *
@@ -7,7 +6,6 @@
  * delegando para o EventsService (SSOT) sempre que possível.
  */
 
-import { supabase } from "@/integrations/supabase/client";
 import { logger } from "@/shared/utils/logger";
 import { EventsService, type Event } from "@/core/events";
 

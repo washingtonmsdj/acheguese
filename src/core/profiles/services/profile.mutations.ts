@@ -14,7 +14,11 @@ import type {
   ProfilePrivacySettingsInput,
   UpdateProfileData,
 } from "./types";
-import { isUsernameAvailable } from "./profile.queries";
+import {
+  getActiveProfile,
+  getProfileByType,
+  isUsernameAvailable,
+} from "./profile.queries";
 
 const TABLE = "profiles";
 
@@ -249,15 +253,12 @@ export async function uploadAvatar(userId: string, file: File): Promise<string |
  * Garante que o usuário tenha um profile do tipo driver
  */
 export async function ensureDriverProfileForUser(userId: string): Promise<Profile | null> {
-  const { getProfileByType } = await import("./profile.queries");
-
   const existingDriverProfile = await getProfileByType(userId, "driver");
   if (existingDriverProfile) {
     return existingDriverProfile;
   }
 
   // Busca o perfil ativo para copiar dados
-  const { getActiveProfile } = await import("./profile.queries");
   const activeProfile = await getActiveProfile(userId);
 
   if (!activeProfile) {

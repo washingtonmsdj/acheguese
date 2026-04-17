@@ -1,4 +1,15 @@
-# Geographic Foundation Migrations
+# 📦 Migrations Arquivadas
+
+> **ATENÇÃO**: Este diretório contém migrations **ARQUIVADAS**.
+>
+> As migrations aqui são mantidas para histórico e referência.
+> As migrations ativas estão em `supabase/migrations/`.
+>
+> Ver `supabase/MIGRATIONS_ARCHIVE_GUIDE.md` para política de arquivamento.
+
+---
+
+## Geographic Foundation Migrations (Março 2026)
 
 Migrations da fundação geográfica do sistema.
 

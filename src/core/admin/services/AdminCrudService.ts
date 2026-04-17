@@ -1,5 +1,3 @@
-// @ts-nocheck
-import { supabase } from "@/integrations/supabase";
 import { trackError } from "@/shared/utils/errorTracking";
 import { logger } from "@/shared/utils/logger";
 

@@ -13,7 +13,7 @@
 
 import { useParams, Navigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { profileService } from '@/core/profiles';
+import { profileService } from '@/core/profiles/services/ProfileService';
 import { logger } from '@/shared/utils/logger';
 import { ProfilePublicPage } from '@/modules/profile/pages/ProfilePublicPage';
 import { logPageNotFound } from '@/core/public-identity/utils/identity-logger';

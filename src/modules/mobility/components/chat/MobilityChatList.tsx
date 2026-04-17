@@ -29,7 +29,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { RIDE_STATUS, USER_ROLE } from "@/shared/types/constants";
 import { RIDE_STATUS as MOBILITY_RIDE_STATUS, FILTER_TYPES } from "../../constants";
 import { logger } from "@/shared/utils/logger";
-import { profileService } from "@/core/profiles";
+import { profileService } from "@/core/profiles/services/ProfileService";
 import {
   getMobilityConversations,
   getRideBasicInfo,

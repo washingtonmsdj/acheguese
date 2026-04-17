@@ -35,7 +35,7 @@ import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { toast } from "sonner";
 import { logger } from "@/shared/utils/logger";
-import { profileService } from "@/core/profiles"; // ✅ MIGRADO - Usa ProfileService
+import { profileService } from "@/core/profiles/services/ProfileService"; // ✅ MIGRADO - Usa ProfileService
 import type { ProfileContext } from "@/core/profiles/services/types"; // ✅ MIGRADO - Tipos do ProfileService
 import { adminMobilityService } from "@/core/admin"; // ✅ MIGRADO - Usa AdminMobilityService do core
 

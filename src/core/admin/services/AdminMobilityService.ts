@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * AdminMobilityService
  *
@@ -47,7 +46,7 @@ export interface AdminRideStats {
 class AdminMobilityServiceClass {
   async getDriversWithStats(): Promise<AdminDriverData[]> {
     try {
-      const { profileService } = await import("@/core/profiles");
+      const { profileService } = await import("@/core/profiles/services/ProfileService");
 
       // ✅ Delegado para MobilityAdminQueryService
       const data = await MobilityAdminQueryService.getDriversRaw();

@@ -10,7 +10,7 @@
 
 import { supabase } from "@/integrations/supabase";
 import { trackError } from "@/shared/utils/errorTracking";
-import { profileService } from "@/core/profiles";
+import { profileService } from "@/core/profiles/services/ProfileService";
 import { ProfessionalService } from "@/core/professional/services/ProfessionalService";
 import { BusinessService } from "@/core/business/services/BusinessService";
 import type {

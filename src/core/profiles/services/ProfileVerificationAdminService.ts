@@ -7,7 +7,7 @@
  */
 
 import { logger } from '@/shared/utils/logger';
-import { profileService } from '@/core/profiles';
+import { profileService } from '@/core/profiles/services/ProfileService';
 
 export interface PendingVerification {
   id: string;

@@ -4,7 +4,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { PostsFacade } from "@/core/posts/services"; // ✅ SSOT v2.0
 import { Poll, PollOption } from "@/shared/types/poll";
 import { logger } from "@/shared/utils/logger";
-import { profileService } from "@/core/profiles";
+import { profileService } from "@/core/profiles/services/ProfileService";
 /**
  * Hook para gerenciar votação em enquetes
  *

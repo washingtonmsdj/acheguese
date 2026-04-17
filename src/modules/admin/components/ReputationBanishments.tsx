@@ -18,7 +18,7 @@ import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { logger } from "@/shared/utils/logger";
 import { adminMobilityService } from "@/core/admin"; // ✅ MIGRADO - Usa AdminMobilityService do core
-import { ProfileService } from "@/core/profiles";
+import { ProfileService } from "@/core/profiles/services/ProfileService";
 import { profileService } from "@/core/profiles/services";
 
 /**

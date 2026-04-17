@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * ⭐ FAVORITES QUERIES - Operações de leitura (SSOT)
  *
@@ -9,9 +8,12 @@ import { supabase } from "@/integrations/supabase";
 import { logger } from "@/shared/utils/logger";
 import { trackError } from "@/shared/utils/errorTracking";
 import type { FavoriteStats } from "../types";
+import type { AdminSupabaseClient } from "@/core/admin/types/adminDatabase.types";
 
 const TABLE = "profile_favorites_new";
 const BUSINESS_FAVORITES_TABLE = "business_favorites";
+
+const supabaseTyped = supabase as unknown as AdminSupabaseClient;
 
 /**
  * Verificar se um profile favoritou outro
@@ -21,7 +23,7 @@ export async function isFavorited(
   favoritingProfileId: string,
 ): Promise<boolean> {
   try {
-    const { data, error } = await (supabase as any)
+    const { data, error } = await supabaseTyped
       .from(TABLE)
       .select("id")
       .eq("favorited_profile_id", favoritedProfileId)

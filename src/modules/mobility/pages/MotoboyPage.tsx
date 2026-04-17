@@ -20,7 +20,7 @@ import { Button } from "@/shared/components/ui/button";
 import { ErrorBoundary, ErrorState } from "../components/ErrorBoundary";
 import { useMotoboyPage } from "@/modules/mobility/hooks/useMotoboyPage";
 import { useMobilityUrls } from "@/modules/mobility/hooks/useMobilityUrls";
-import { useUnifiedNotifications } from '@/core/notifications';
+import { useUnifiedNotifications } from '@/core/notifications/useUnifiedNotifications';
 import { DriverSuspensionAlert } from "../components/driver/DriverSuspensionAlert";
 import { DriverOfferCard } from "../components";
 import { MotoboyDeliveryActions } from "../components/driver/MotoboyDeliveryActions";

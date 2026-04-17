@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * BannerService - SSOT para banners e anúncios
  * 
@@ -10,6 +9,9 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { logger } from "@/shared/utils/logger";
+import type { AdminSupabaseClient } from "@/core/admin/types/adminDatabase.types";
+
+const supabaseTyped = supabase as unknown as AdminSupabaseClient;
 
 export interface Banner {
   id: string;
@@ -49,7 +51,7 @@ export class BannerService {
    */
   static async getActiveBanners(position?: Banner['position']): Promise<Banner[]> {
     try {
-      let query = supabase
+      let query = supabaseTyped
         .from('banners')
         .select('*')
         .eq('is_active', true);
@@ -112,7 +114,7 @@ export class BannerService {
    */
   static async getAllBanners(): Promise<Banner[]> {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await supabaseTyped
         .from('banners')
         .select('*')
         .order('created_at', { ascending: false });
@@ -130,7 +132,7 @@ export class BannerService {
    */
   static async getBannerById(id: string): Promise<Banner | null> {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await supabaseTyped
         .from('banners')
         .select('*')
         .eq('id', id)
@@ -149,7 +151,7 @@ export class BannerService {
    */
   static async createBanner(input: CreateBannerInput): Promise<Banner> {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await supabaseTyped
         .from('banners')
         .insert({
           ...input,
@@ -175,7 +177,7 @@ export class BannerService {
     updates: Partial<CreateBannerInput>
   ): Promise<Banner> {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await supabaseTyped
         .from('banners')
         .update(updates)
         .eq('id', id)
@@ -195,7 +197,7 @@ export class BannerService {
    */
   static async toggleBannerStatus(id: string, is_active: boolean): Promise<void> {
     try {
-      const { error } = await supabase
+      const { error } = await supabaseTyped
         .from('banners')
         .update({ is_active })
         .eq('id', id);
@@ -212,7 +214,7 @@ export class BannerService {
    */
   static async deleteBanner(id: string): Promise<void> {
     try {
-      const { error } = await supabase
+      const { error } = await supabaseTyped
         .from('banners')
         .delete()
         .eq('id', id);
@@ -251,7 +253,7 @@ export class BannerService {
    */
   static async getBannerStats(id: string) {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await supabaseTyped
         .from('banners')
         .select('click_count, view_count')
         .eq('id', id)

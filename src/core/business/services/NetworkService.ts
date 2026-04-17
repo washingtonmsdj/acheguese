@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * NetworkService — Operações de Rede/Filiais
  *
@@ -9,6 +8,7 @@
 import { supabase } from '@/integrations/supabase';
 import { logger } from '@/shared/utils/logger';
 import type { BusinessDataRecord } from '../types';
+import type { AdminSupabaseClient } from '@/core/admin/types/adminDatabase.types';
 
 // ─── Tipos ────────────────────────────────────────────────────────────────────
 
@@ -48,7 +48,7 @@ export class NetworkService {
    */
   static async getBrandHub(profileId: string): Promise<BusinessDataRecord | null> {
     try {
-      const { data, error } = await (supabase as any)
+      const { data, error } = await (supabase as unknown as AdminSupabaseClient)
         .from('business_data')
         .select('*')
         .eq('profile_id', profileId)
@@ -68,7 +68,7 @@ export class NetworkService {
    */
   static async getBrandBranches(brandHubId: string): Promise<BranchSummary[]> {
     try {
-      const { data, error } = await (supabase as any)
+      const { data, error } = await (supabase as unknown as AdminSupabaseClient)
         .from('business_data')
         .select(`
           id,
@@ -324,7 +324,7 @@ export class NetworkService {
    */
   static async getParentBrandHub(parentBusinessId: string): Promise<BusinessDataRecord | null> {
     try {
-      const { data, error } = await (supabase as any)
+      const { data, error } = await (supabase as unknown as AdminSupabaseClient)
         .from('business_data')
         .select('*')
         .eq('id', parentBusinessId)
@@ -344,7 +344,7 @@ export class NetworkService {
    */
   static async getProfileBrandHubs(profileId: string): Promise<BrandHubSummary[]> {
     try {
-      const { data, error } = await (supabase as any)
+      const { data, error } = await (supabase as unknown as AdminSupabaseClient)
         .from('business_data')
         .select('id, profile_id, business_name, slug, category, status')
         .eq('profile_id', profileId)

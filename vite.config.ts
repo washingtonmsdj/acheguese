@@ -15,6 +15,39 @@ import react from "@vitejs/plugin-react-swc";
 import path from "path";
 import { componentTagger } from "lovable-tagger";
 
+function getVendorChunk(id: string): string | undefined {
+  if (!id.includes("node_modules")) {
+    return undefined;
+  }
+
+  if (id.includes("maplibre-gl")) {
+    return "vendor-maplibre";
+  }
+
+  if (
+    id.includes("recharts") ||
+    id.includes("victory-vendor") ||
+    id.includes(`${path.sep}d3-`) ||
+    id.includes("/d3-")
+  ) {
+    return "vendor-charts";
+  }
+
+  if (id.includes("qrcode") || id.includes("qrcode.react")) {
+    return "vendor-qr";
+  }
+
+  if (id.includes("@sentry")) {
+    return "vendor-sentry";
+  }
+
+  if (id.includes("@supabase")) {
+    return "vendor-supabase";
+  }
+
+  return undefined;
+}
+
 export default defineConfig(({ mode }) => ({
   server: {
     host: "::",
@@ -50,7 +83,7 @@ export default defineConfig(({ mode }) => ({
       "lodash": "lodash-es",
     },
     extensions: ['.mjs', '.js', '.mts', '.ts', '.jsx', '.tsx', '.json'],
-    mainFields: ['module', 'main'],
+    mainFields: ['browser', 'module', 'main'],
     // CRÍTICO: Garantir que React não seja duplicado
     dedupe: ["react", "react-dom", "react/jsx-runtime"],
   },
@@ -60,13 +93,15 @@ export default defineConfig(({ mode }) => ({
     minify: 'esbuild',
     cssCodeSplit: true,
     sourcemap: false,
-    chunkSizeWarningLimit: 1000,
+    // maplibre-gl já é carregado em chunk isolado e lazy; elevamos o limite
+    // para reduzir falso positivo e manter foco em regressões reais.
+    chunkSizeWarningLimit: 1100,
     
     rollupOptions: {
       output: {
-        // SOLUÇÃO: Não fazer code splitting manual - deixar Vite otimizar
-        // Isso garante que React seja carregado na ordem correta
-        manualChunks: undefined,
+        // Split explícito apenas para vendors pesados. O restante continua
+        // sob heurística do Vite para evitar regressões em carregamento.
+        manualChunks: (id) => getVendorChunk(id),
         
         chunkFileNames: 'assets/[name]-[hash].js',
         entryFileNames: 'assets/[name]-[hash].js',

@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * AdminCommunityAlertsService - SSOT para gestão administrativa de alertas comunitários
  * 
@@ -11,7 +10,6 @@
  * - Adiciona apenas lógica administrativa
  */
 
-import { supabase } from '@/integrations/supabase';
 import { logger } from '@/shared/utils/logger';
 import {
   alertModerationService,

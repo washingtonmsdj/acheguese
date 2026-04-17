@@ -26,25 +26,35 @@ import { CONTRATO_LABELS, MODALIDADE_LABELS, NIVEL_LABELS } from "../types/vagas
 // ── Helpers ──────────────────────────────────────────────────────────
 
 function formatSalary(vaga: any): string {
-  if (vaga.ocultar_salario) return "A combinar";
-  if (vaga.salario_min && vaga.salario_max)
-    return `R$ ${vaga.salario_min.toLocaleString("pt-BR")} – R$ ${vaga.salario_max.toLocaleString("pt-BR")}`;
-  if (vaga.salario_min) return `A partir de R$ ${vaga.salario_min.toLocaleString("pt-BR")}`;
-  if (vaga.salario_max) return `Até R$ ${vaga.salario_max.toLocaleString("pt-BR")}`;
+  // Nova estrutura: salarioTexto, salarioMin, salarioMax (em centavos)
+  if (vaga.salarioTexto) return vaga.salarioTexto;
+  if (vaga.salarioMin && vaga.salarioMax) {
+    const min = (vaga.salarioMin / 100).toLocaleString("pt-BR");
+    const max = (vaga.salarioMax / 100).toLocaleString("pt-BR");
+    return `R$ ${min} – R$ ${max}`;
+  }
+  if (vaga.salarioMin) {
+    const min = (vaga.salarioMin / 100).toLocaleString("pt-BR");
+    return `A partir de R$ ${min}`;
+  }
+  if (vaga.salarioMax) {
+    const max = (vaga.salarioMax / 100).toLocaleString("pt-BR");
+    return `Até R$ ${max}`;
+  }
   return "A combinar";
 }
 
-function timeAgo(dateString: string) {
-  const diff = Date.now() - new Date(dateString).getTime();
+function timeAgo(date: Date) {
+  const diff = Date.now() - date.getTime();
   const days = Math.floor(diff / 86400000);
   if (days === 0) return "Publicada hoje";
   if (days === 1) return "Publicada ontem";
   if (days < 7) return `Publicada há ${days} dias`;
-  return `Publicada em ${new Date(dateString).toLocaleDateString("pt-BR")}`;
+  return `Publicada em ${date.toLocaleDateString("pt-BR")}`;
 }
 
-function formatDate(dateString: string) {
-  return new Date(dateString).toLocaleDateString("pt-BR", { day: "2-digit", month: "long", year: "numeric" });
+function formatDate(date: Date) {
+  return date.toLocaleDateString("pt-BR", { day: "2-digit", month: "long", year: "numeric" });
 }
 
 // ── Page ─────────────────────────────────────────────────────────────
@@ -107,8 +117,8 @@ export default function VagaDetailPage() {
   }
 
   // ── Derived data ──
-  const whatsappUrl = vaga.contato_whatsapp
-    ? `https://wa.me/55${vaga.contato_whatsapp}?text=${encodeURIComponent(`Olá! Vi a vaga "${vaga.titulo}" e tenho interesse. Podemos conversar?`)}`
+  const whatsappUrl = vaga.contatoWhatsapp
+    ? `https://wa.me/55${vaga.contatoWhatsapp}?text=${encodeURIComponent(`Olá! Vi a vaga "${vaga.titulo}" e tenho interesse. Podemos conversar?`)}`
     : null;
 
   return (
@@ -206,28 +216,29 @@ export default function VagaDetailPage() {
                   <p className="text-xs text-muted-foreground mb-1">Remuneração</p>
                   <p className="text-2xl font-bold text-primary">{formatSalary(vaga)}</p>
                 </div>
-                {vaga.vagas_quantidade && vaga.vagas_quantidade > 1 && (
+                {vaga.vagasQuantidade && vaga.vagasQuantidade > 1 && (
                   <div className="flex items-center gap-1.5 bg-primary/10 text-primary text-xs font-bold px-3 py-1.5 rounded-full">
                     <Users className="h-3.5 w-3.5" />
-                    {vaga.vagas_quantidade} vagas
+                    {vaga.vagasQuantidade} vagas
                   </div>
                 )}
               </div>
 
               <div className="flex flex-wrap items-center gap-4 text-xs text-muted-foreground">
-                {/* TODO: Buscar location.full_name do SSOT quando integrado */}
-                <span className="flex items-center gap-1.5">
-                  <MapPin className="h-3.5 w-3.5" />
-                  Salvador, BA
-                </span>
+                {activeLocationName && (
+                  <span className="flex items-center gap-1.5">
+                    <MapPin className="h-3.5 w-3.5" />
+                    {activeLocationName}
+                  </span>
+                )}
                 <span className="flex items-center gap-1.5">
                   <CalendarDays className="h-3.5 w-3.5" />
-                  {timeAgo(vaga.created_at)}
+                  {timeAgo(vaga.createdAt)}
                 </span>
-                {vaga.expires_at && (
+                {vaga.expiresAt && (
                   <span className="flex items-center gap-1.5 text-warning">
                     <Clock className="h-3.5 w-3.5" />
-                    Expira em {formatDate(vaga.expires_at)}
+                    Expira em {formatDate(vaga.expiresAt)}
                   </span>
                 )}
               </div>
@@ -242,19 +253,18 @@ export default function VagaDetailPage() {
             </motion.div>
 
             {/* Requisitos */}
-            {vaga.requisitos.length > 0 && (
+            {vaga.tags && vaga.tags.length > 0 && (
               <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="bg-card border border-border rounded-2xl p-5 sm:p-6">
                 <h2 className="text-base font-bold text-foreground mb-3 font-heading flex items-center gap-2">
-                  <CheckCircle2 className="h-4 w-4 text-primary" /> Requisitos
+                  <CheckCircle2 className="h-4 w-4 text-primary" /> Requisitos e Habilidades
                 </h2>
-                <ul className="space-y-2">
-                  {vaga.requisitos.map((req, i) => (
-                    <li key={i} className="flex items-start gap-2 text-sm text-muted-foreground">
-                      <CheckCircle2 className="h-4 w-4 text-primary/60 mt-0.5 flex-shrink-0" />
-                      {req}
-                    </li>
+                <div className="flex flex-wrap gap-2">
+                  {vaga.tags.map((tag, i) => (
+                    <Badge key={i} variant="secondary" className="text-sm">
+                      {tag}
+                    </Badge>
                   ))}
-                </ul>
+                </div>
               </motion.div>
             )}
 
@@ -304,9 +314,9 @@ export default function VagaDetailPage() {
                   </Button>
                 )}
 
-                {vaga.contato_email && (
+                {vaga.contatoEmail && (
                   <Button
-                    onClick={() => window.open(`mailto:${vaga.contato_email}?subject=Interesse na vaga: ${vaga.titulo}`, "_blank")}
+                    onClick={() => window.open(`mailto:${vaga.contatoEmail}?subject=Interesse na vaga: ${vaga.titulo}`, "_blank")}
                     variant="outline"
                     className="w-full border-primary/30 text-primary hover:bg-primary/10 font-bold rounded-xl h-11"
                   >
@@ -315,9 +325,9 @@ export default function VagaDetailPage() {
                   </Button>
                 )}
 
-                {vaga.link_externo && (
+                {vaga.contatoUrl && (
                   <Button
-                    onClick={() => window.open(vaga.link_externo!, "_blank")}
+                    onClick={() => window.open(vaga.contatoUrl!, "_blank")}
                     variant="outline"
                     className="w-full border-border text-foreground hover:bg-secondary font-bold rounded-xl h-11"
                   >
@@ -335,10 +345,12 @@ export default function VagaDetailPage() {
                   </div>
                   <div>
                     <p className="text-sm font-bold text-foreground">{vaga.empresa}</p>
-                    <p className="text-[11px] text-muted-foreground flex items-center gap-1">
-                      <MapPin className="h-3 w-3" />
-                      Salvador, BA
-                    </p>
+                    {activeLocationName && (
+                      <p className="text-[11px] text-muted-foreground flex items-center gap-1">
+                        <MapPin className="h-3 w-3" />
+                        {activeLocationName}
+                      </p>
+                    )}
                   </div>
                 </div>
               </div>

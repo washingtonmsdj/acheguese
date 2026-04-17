@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { profileService } from "@/core/profiles";
+import { profileService } from "@/core/profiles/services/ProfileService";
 import type { CommunityPost } from "../types";
 import { postService } from "@/core/posts/services";
 

@@ -16,7 +16,7 @@ import { Button } from "@/shared/components/ui/button";
 import { ErrorBoundary, ErrorState } from "../components/ErrorBoundary";
 import { useMotoristaPageV2 } from "@/modules/mobility/hooks/useMotoristaPageV2";
 import { useMobilityUrls } from "@/modules/mobility/hooks/useMobilityUrls";
-import { useUnifiedNotifications } from '@/core/notifications';
+import { useUnifiedNotifications } from '@/core/notifications/useUnifiedNotifications';
 import { DriverSuspensionAlert } from "../components/driver/DriverSuspensionAlert";
 import { DriverOfferCard } from "../components";
 import { DriverRidesTab } from "../components/driver/DriverRidesTab";

@@ -10,7 +10,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAdminGuard } from "@/modules/admin/hooks/useAdminGuard";
 import { useSessionContext } from "@/core/session";
-import { profileService } from "@/core/profiles"; // ✅ MIGRADO - Usa ProfileService
+import { profileService } from "@/core/profiles/services/ProfileService"; // ✅ MIGRADO - Usa ProfileService
 import { REPORT_TYPE, REPORT_SEVERITY } from "@/shared/types/mobility.constants"; // ✅ Import constants
 import { MobilityService } from "@/core/mobility/services"; // ✅ Import MobilityService
 

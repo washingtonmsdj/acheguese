@@ -12,6 +12,10 @@ import { supabase } from "@/integrations/supabase";
 import { logger } from "@/shared/utils/logger";
 import { trackError } from "@/shared/utils/errorTracking";
 import { ReviewsService } from "@/core/reviews";
+import {
+  createProfessionalSchema,
+  updateProfessionalSchema,
+} from "@/shared/schemas/professional/professionalSchemas";
 import type {
   Professional,
   CreateProfessionalInput,
@@ -27,14 +31,6 @@ export type { Professional, CreateProfessionalInput, UpdateProfessionalInput };
 // ============================================================================
 // 🔧 VALIDATION HELPERS
 // ============================================================================
-
-// Importação dinâmica dos schemas para evitar circular dependencies
-async function getValidationSchemas() {
-  const { createProfessionalSchema, updateProfessionalSchema } = await import(
-    "@/shared/schemas/professional/professionalSchemas"
-  );
-  return { createProfessionalSchema, updateProfessionalSchema };
-}
 
 // Importação dinâmica dos sanitizadores
 async function getSanitizers() {
@@ -101,8 +97,7 @@ export async function createProfessional(
     };
 
     // 2. Validação
-    const schemas = await getValidationSchemas();
-    const validationResult = schemas.createProfessionalSchema.safeParse(sanitized);
+    const validationResult = createProfessionalSchema.safeParse(sanitized);
 
     if (!validationResult.success) {
       const errors = validationResult.error.errors.map((e) => e.message).join(", ");
@@ -263,8 +258,7 @@ export async function updateProfessional(
 
     // 2. Validação (se houver dados para validar)
     if (Object.keys(sanitized).length > 0) {
-      const schemas = await getValidationSchemas();
-      const validationResult = schemas.updateProfessionalSchema.safeParse({
+      const validationResult = updateProfessionalSchema.safeParse({
         ...input,
         ...sanitized,
       });

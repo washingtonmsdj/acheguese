@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * 👔 BUSINESS ADMIN — Administração e estatísticas
  * 
@@ -11,25 +10,26 @@
 import { supabase } from "@/integrations/supabase";
 import { logger } from "@/shared/utils/logger";
 import { PAGINATION } from "@/shared/constants";
-
-const supabaseAny = supabase as any;
+import type { AdminSupabaseClient } from "@/core/admin/types/adminDatabase.types";
+import { ReviewsService } from "@/core/reviews/services/ReviewsService";
 
 /**
  * Buscar reivindicações de empresas
  */
 export async function getBusinessClaims(filter?: string): Promise<unknown[]> {
   try {
-    let query = supabaseAny.from("business_claims")
+    let query = (supabase as unknown as AdminSupabaseClient)
+      .from("business_claims")
       .select("*")
       .order("created_at", { ascending: false });
 
     if (filter && filter !== "todos") {
-      query = (query as unknown as { eq: (field: string, value: string) => typeof query }).eq("status", filter);
+      query = query.eq("status", filter);
     }
 
     const { data, error } = await query;
     if (error) throw error;
-    return (data as unknown[]) || [];
+    return data || [];
   } catch (error) {
     logger.error("Error fetching business claims:", error);
     return [];
@@ -43,13 +43,14 @@ export async function getBusinessClaimDetails(
   businessId: string,
 ): Promise<{ profile_id: string; profiles: { name: string } } | null> {
   try {
-    const { data, error } = await supabaseAny.from("business_data")
+    const { data, error } = await (supabase as unknown as AdminSupabaseClient)
+      .from("business_data")
       .select("profile_id, profiles(name)")
       .eq("profile_id", businessId)
       .single();
 
     if (error) throw error;
-    return data as { profile_id: string; profiles: { name: string } } | null;
+    return data;
   } catch (error) {
     logger.error("Error fetching business claim details:", error);
     return null;
@@ -119,7 +120,8 @@ export async function getBusinessesCreatedInPeriod(
   endDate: Date,
 ): Promise<number> {
   try {
-    const { count, error } = await supabaseAny.from("businesses")
+    const { count, error } = await (supabase as unknown as AdminSupabaseClient)
+      .from("businesses")
       .select("*", { count: "exact", head: true })
       .gte("created_at", startDate.toISOString())
       .lte("created_at", endDate.toISOString());
@@ -160,27 +162,29 @@ export async function getBusinessMetrics(businessId: string): Promise<{
     const monthAgo = new Date(now.getTime() - 30 * 86400000).toISOString();
 
     // Usar ReviewsService para estatísticas de reviews
-    const { ReviewsService } = await import("@/core/reviews/services/ReviewsService");
     const reviewStats = await ReviewsService.getReviewStats(businessId, "business");
 
     const [viewsRes, weekRes, monthRes] = await Promise.all([
-      supabaseAny.from("business_views")
+      (supabase as unknown as AdminSupabaseClient)
+        .from("business_views")
         .select("id", { count: "exact", head: true })
         .eq("business_id", businessId),
-      supabaseAny.from("business_views")
+      (supabase as unknown as AdminSupabaseClient)
+        .from("business_views")
         .select("id", { count: "exact", head: true })
         .eq("business_id", businessId)
         .gte("viewed_at", weekAgo),
-      supabaseAny.from("business_views")
+      (supabase as unknown as AdminSupabaseClient)
+        .from("business_views")
         .select("id", { count: "exact", head: true })
         .eq("business_id", businessId)
         .gte("viewed_at", monthAgo),
     ]);
 
     return {
-      totalViews: (viewsRes as { count?: number }).count || 0,
-      weekViews: (weekRes as { count?: number }).count || 0,
-      monthViews: (monthRes as { count?: number }).count || 0,
+      totalViews: viewsRes.count || 0,
+      weekViews: weekRes.count || 0,
+      monthViews: monthRes.count || 0,
       averageRating: reviewStats.average_rating || 0,
       totalReviews: reviewStats.total_reviews || 0,
     };
@@ -201,7 +205,8 @@ export async function getBusinessMetrics(businessId: string): Promise<{
  */
 export async function getActiveCoupons(): Promise<unknown[]> {
   try {
-    const { data, error } = await supabaseAny.from("coupons")
+    const { data, error } = await (supabase as unknown as AdminSupabaseClient)
+      .from("coupons")
       .select("*")
       .eq("is_active", true)
       .order("created_at", { ascending: false });
@@ -210,7 +215,7 @@ export async function getActiveCoupons(): Promise<unknown[]> {
       logger.error("Error fetching coupons:", error);
       return [];
     }
-    return (data as unknown[]) || [];
+    return data || [];
   } catch (error) {
     logger.error("Error in getActiveCoupons:", error);
     return [];
@@ -222,7 +227,8 @@ export async function getActiveCoupons(): Promise<unknown[]> {
  */
 export async function getCouponById(id: string): Promise<unknown | null> {
   try {
-    const { data, error } = await supabaseAny.from("coupons")
+    const { data, error } = await (supabase as unknown as AdminSupabaseClient)
+      .from("coupons")
       .select("*")
       .eq("id", id)
       .single();

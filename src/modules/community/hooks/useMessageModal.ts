@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { profileService } from "@/core/profiles"; // ✅ SSOT
+import { profileService } from "@/core/profiles/services/ProfileService"; // ✅ SSOT
 import { useDirectMessages } from "@/modules/community/hooks/useDirectMessages";
 import type { UnifiedPost } from "@/shared/types/posts";
 import { logger } from "@/shared/utils/logger";

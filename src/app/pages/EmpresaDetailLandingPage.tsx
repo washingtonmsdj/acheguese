@@ -29,7 +29,7 @@ import { toast } from "sonner";
 import type { Business } from "@/modules/business/types";
 import BusinessSEO from "@/shared/components/seo/BusinessSEO";
 import { BusinessUrlService } from "@/core/business/services/BusinessUrlService";
-import BranchNetworkBlock from "@/modules/business/components/BranchNetworkBlock";
+import BranchNetworkBlock from "@/core/business/components/BranchNetworkBlock";
 import { useGastronomyProfile } from "@/modules/gastronomy/hooks";
 import { GastronomyCTA } from "@/modules/gastronomy/components/GastronomyCTA";
 import { CoverageBadge } from "@/core/geospatial/components/CoverageBadge";

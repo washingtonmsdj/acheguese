@@ -708,7 +708,7 @@ export class ProfessionalService {
       }
 
       // 1. Criar profile usando ProfileService (MIGRADO)
-      const { profileService } = await import("@/core/profiles");
+      const { profileService } = await import("@/core/profiles/services/ProfileService");
       const profile = await profileService.createProfile({
         profile_type: "professional",
         name: validatedInput.name,
@@ -818,7 +818,7 @@ export class ProfessionalService {
 
       // Atualizar profile usando ProfileService se necessário (MIGRADO)
       if (validatedInput.name) {
-        const { profileService } = await import("@/core/profiles");
+        const { profileService } = await import("@/core/profiles/services/ProfileService");
         await profileService.updateProfile(currentProfessional.profile_id, {
           name: validatedInput.name,
           bio: validatedInput.description,
@@ -916,7 +916,7 @@ export class ProfessionalService {
 
       // Só atualizar o profile se ele existir
       if (profileExists) {
-        const { profileService } = await import("@/core/profiles");
+        const { profileService } = await import("@/core/profiles/services/ProfileService");
         await profileService.updateProfile(professional.profile_id, {
           is_active: false,
         });
@@ -1093,7 +1093,7 @@ export class ProfessionalService {
   ): Promise<ProfessionalReview | null> {
     try {
       // ✅ LOTE 6 - Usar profile ativo em vez de user_id
-      const { profileService } = await import("@/core/profiles");
+      const { profileService } = await import("@/core/profiles/services/ProfileService");
 
       const activeProfile = await profileService.getActiveProfile(userId);
       if (!activeProfile) return null;
@@ -1138,7 +1138,7 @@ export class ProfessionalService {
   ): Promise<void> {
     try {
       // Buscar profile ativo do usuário
-      const { profileService } = await import("@/core/profiles");
+      const { profileService } = await import("@/core/profiles/services/ProfileService");
       const activeProfile = await profileService.getActiveProfile(userId);
       
       if (!activeProfile) {

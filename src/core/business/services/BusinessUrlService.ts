@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * BusinessUrlService — Camada autorizada SSOT para URLs públicas de empresas.
  *
@@ -10,20 +9,8 @@
  * PADRÃO OFICIAL DE URLs:
  *   Canônica pública:  /empresas/:uf/:cidade/:slug
  *   Premium (curta):   /p/:slug  → redirect 308 para canônica
- *   Interna:           /dashboard/empresas/:id  |  /admin/empresas/:id
- *   Legado controlado: /business/:slug  → redirect para canônica
- *
- * INTEGRAÇÃO PUBLIC-IDENTITY:
- *   - Validação de formato via PublicIdentityService
- *   - Normalização via PublicIdentityService
- *   - Checagem de disponibilidade via PublicIdentityService
- *   - Reserved names via PublicIdentityService
- *
- * @version 2.0.0 - Integrado com core/public-identity
  */
 
-import { supabase } from '@/integrations/supabase';
-import { PublicIdentityService } from '@/core/public-identity';
 import { logger } from '@/shared/utils/logger';
 
 // ─── Tipos ────────────────────────────────────────────────────────────────────

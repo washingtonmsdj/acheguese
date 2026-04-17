@@ -6,9 +6,6 @@
 export { NotificationService } from './services/NotificationService';
 export { notificationService } from './services';
 
-// Hooks
-export { useUnifiedNotifications } from '@/modules/notifications/hooks/useUnifiedNotifications';
-
 // Types
 export {
   NotificationPriority,
