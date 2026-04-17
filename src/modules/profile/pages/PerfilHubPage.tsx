@@ -25,13 +25,6 @@ import {
 
 import { Button } from "@/shared/components/ui/button";
 import { Badge } from "@/shared/components/ui/badge";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/shared/components/ui/select";
 import { cn } from "@/shared/utils/cn";
 
 import { useProfileHub } from "@/modules/profile/hooks/useProfileHub";
