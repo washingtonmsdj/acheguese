@@ -53,6 +53,7 @@ import { useAdminGuard } from "@/modules/admin/hooks/useAdminGuard";
 
 interface Professional {
   id: string;
+  profile_id?: string;
   name: string;
   photo: string;
   service: string;
@@ -103,74 +104,85 @@ export default function AdminServicos() {
 
   const loadData = async () => {
     setLoading(true);
+    try {
+      // Load professionals via AdminCommunityService
+      const pros = await adminCommunityService.getAllProfessionals();
+      setProfessionals((pros as Professional[]) || []);
 
-    // Load professionals via AdminCommunityService
-    const pros = await adminCommunityService.getAllProfessionals();
-    if (pros) setProfessionals(pros as Professional[]);
+      // Load reviews via ReviewsService (SSOT)
+      const revs = await ReviewsService.getAllReviews("professional", 100);
 
-    // Load reviews via ReviewsService (SSOT)
-    const revs = await ReviewsService.getAllReviews("professional", 100);
+      if (revs.length > 0) {
+        const reviewerIds = [...new Set(revs.map((r) => r.reviewer_profile_id))];
+        const proIds = [...new Set(revs.map((r) => r.reviewed_profile_id))];
 
-    if (revs.length > 0) {
-      const reviewerIds = [...new Set(revs.map((r) => r.reviewer_profile_id))];
-      const proIds = [...new Set(revs.map((r) => r.reviewed_profile_id))];
+        const profiles =
+          reviewerIds.length > 0
+            ? await profileService.getProfilesSummary(reviewerIds as string[])
+            : [];
+        const prosData =
+          proIds.length > 0
+            ? await ProfessionalService.getProfessionalsByIdsSimple(
+                proIds as string[],
+              )
+            : [];
 
-      const profiles =
-        reviewerIds.length > 0
-          ? await profileService.getProfilesSummary(reviewerIds as string[])
-          : [];
-      const prosData =
-        proIds.length > 0
-          ? await ProfessionalService.getProfessionalsByIdsSimple(
-              proIds as string[],
-            )
-          : [];
+        const profileMap = new Map(
+          profiles.map((p) => [p.id, { name: p.name, avatar_url: p.avatarUrl }]),
+        );
+        const proMap = new Map(
+          (prosData || []).map((p: any) => [p.id, p] as [string, any]),
+        );
 
-      const profileMap = new Map(
-        profiles.map((p) => [p.id, { name: p.name, avatar_url: p.avatarUrl }]),
-      );
-      const proMap = new Map(
-        (prosData || []).map((p: any) => [p.id, p] as [string, any]),
-      );
+        setReviews(
+          revs.map((r: any) => ({
+            ...r,
+            reviewer: (profileMap.get(r.reviewer_profile_id) as any) || {
+              name: "Usuário",
+              avatar_url: "",
+            },
+            professional: (proMap.get(r.reviewed_profile_id) as any) || {
+              name: "Desconhecido",
+            },
+          })),
+        );
+      } else {
+        setReviews([]);
+      }
 
-      setReviews(
-        revs.map((r: any) => ({
-          ...r,
-          reviewer: (profileMap.get(r.reviewer_profile_id) as any) || {
-            name: "Usuário",
-            avatar_url: "",
-          },
-          professional: (proMap.get(r.reviewed_profile_id) as any) || {
-            name: "Desconhecido",
-          },
-        })),
-      );
+      // Load reports via AdminCommunityService
+      const reps = await adminCommunityService.getProfessionalReports();
+
+      if (reps && reps.length > 0) {
+        const proIds = [...new Set(reps.map((r) => r.professional_id))];
+        const prosData =
+          proIds.length > 0
+            ? await ProfessionalService.getProfessionalsByIdsSimple(
+                proIds as string[],
+              )
+            : [];
+        const proMap = new Map(
+          (prosData || []).map((p: any) => [p.id, p] as [string, any]),
+        );
+
+        setReports(
+          reps.map((r) => ({
+            ...r,
+            professional: proMap.get(r.professional_id) || null,
+          })),
+        );
+      } else {
+        setReports([]);
+      }
+    } catch (error) {
+      toast({
+        title: "Erro ao carregar serviços",
+        description: "Não foi possível carregar os dados de moderação.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
     }
-
-    // Load reports via AdminCommunityService
-    const reps = await adminCommunityService.getProfessionalReports();
-
-    if (reps) {
-      const proIds = [...new Set(reps.map((r) => r.professional_id))];
-      const prosData =
-        proIds.length > 0
-          ? await ProfessionalService.getProfessionalsByIdsSimple(
-              proIds as string[],
-            )
-          : [];
-      const proMap = new Map(
-        (prosData || []).map((p: any) => [p.id, p] as [string, any]),
-      );
-
-      setReports(
-        reps.map((r) => ({
-          ...r,
-          professional: proMap.get(r.professional_id) || null,
-        })),
-      );
-    }
-
-    setLoading(false);
   };
 
   useEffect(() => {
@@ -255,7 +267,7 @@ export default function AdminServicos() {
       <div>
         <h1 className="text-2xl font-bold font-display">Serviços</h1>
         <p className="text-muted-foreground">
-          Gerencie prstateres de serviço e avaliações
+          Gerencie prestadores de serviço e avaliações
         </p>
       </div>
 
@@ -324,7 +336,7 @@ export default function AdminServicos() {
                       colSpan={6}
                       className="p-4 text-center text-muted-foreground"
                     >
-                      Loading...
+                      Carregando serviços...
                     </td>
                   </tr>
                 ) : filteredPros.length === 0 ? (
@@ -408,7 +420,7 @@ export default function AdminServicos() {
                             onClick={() => {
                               setDeleteTarget({
                                 type: "professional",
-                                id: pro.profile_id,
+                                id: pro.profile_id || pro.id,
                               });
                               setShowDeleteDialog(true);
                             }}

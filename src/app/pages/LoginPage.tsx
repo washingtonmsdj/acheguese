@@ -124,10 +124,11 @@ export default function LoginPage() {
         description: 'Verifique sua caixa de entrada para redefinir a senha.',
       });
     } catch (error) {
+      // Evita vazamento de existencia de conta via UX.
       toast({
-        title: 'Erro ao recuperar senha',
-        description: getAuthErrorMessage(error),
-        variant: 'destructive',
+        title: 'Solicitacao recebida',
+        description:
+          'Se o identificador estiver cadastrado, voce recebera as instrucoes de recuperacao em instantes.',
       });
     } finally {
       setPendingAction(null);

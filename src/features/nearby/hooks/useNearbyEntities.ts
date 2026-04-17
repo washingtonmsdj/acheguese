@@ -9,7 +9,6 @@
 
 import React from 'react';
 import { useSpatialSearchByRadius } from '@/core/geospatial/hooks/useSpatialSearch';
-import { useRobustGeolocation } from '@/shared/hooks';
 
 export interface NearbyEntity {
   id: string;
@@ -24,6 +23,7 @@ export interface NearbyEntity {
 export interface UseNearbyEntitiesOptions {
   radiusKm: number;
   entityTypes: Array<'business' | 'event' | 'alert' | 'tourist_point'>;
+  center: { latitude: number; longitude: number } | null;
   locationId?: string;
   limit?: number;
 }
@@ -41,51 +41,43 @@ export interface UseNearbyEntitiesOptions {
  * ```
  */
 export function useNearbyEntities(options: UseNearbyEntitiesOptions) {
-  const { coords: userLocation, loading: geoLoading, requestLocation } = useRobustGeolocation({ 
-    useCache: true 
-  });
-
-  // Solicitar localização ao montar
-  React.useEffect(() => {
-    requestLocation();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  const center = options.center;
 
   // Buscar cada tipo de entidade usando hooks SSOT
   const businesses = useSpatialSearchByRadius({
-    center: userLocation || { latitude: 0, longitude: 0 },
+    center: center || { latitude: 0, longitude: 0 },
     radiusKm: options.radiusKm,
     entityType: 'business',
     locationId: options.locationId,
     limit: options.limit,
-    enabled: !!userLocation && options.entityTypes.includes('business'),
+    enabled: !!center && options.entityTypes.includes('business'),
   });
 
   const events = useSpatialSearchByRadius({
-    center: userLocation || { latitude: 0, longitude: 0 },
+    center: center || { latitude: 0, longitude: 0 },
     radiusKm: options.radiusKm,
     entityType: 'event',
     locationId: options.locationId,
     limit: options.limit,
-    enabled: !!userLocation && options.entityTypes.includes('event'),
+    enabled: !!center && options.entityTypes.includes('event'),
   });
 
   const alerts = useSpatialSearchByRadius({
-    center: userLocation || { latitude: 0, longitude: 0 },
+    center: center || { latitude: 0, longitude: 0 },
     radiusKm: options.radiusKm,
     entityType: 'alert',
     locationId: options.locationId,
     limit: options.limit,
-    enabled: !!userLocation && options.entityTypes.includes('alert'),
+    enabled: !!center && options.entityTypes.includes('alert'),
   });
 
   const touristPoints = useSpatialSearchByRadius({
-    center: userLocation || { latitude: 0, longitude: 0 },
+    center: center || { latitude: 0, longitude: 0 },
     radiusKm: options.radiusKm,
     entityType: 'tourist_point',
     locationId: options.locationId,
     limit: options.limit,
-    enabled: !!userLocation && options.entityTypes.includes('tourist_point'),
+    enabled: !!center && options.entityTypes.includes('tourist_point'),
   });
 
   // Agregar e ordenar por distância
@@ -146,8 +138,7 @@ export function useNearbyEntities(options: UseNearbyEntitiesOptions) {
 
   return {
     entities,
-    userLocation,
-    isLoading: geoLoading || businesses.isLoading || events.isLoading || alerts.isLoading || touristPoints.isLoading,
+    isLoading: businesses.isLoading || events.isLoading || alerts.isLoading || touristPoints.isLoading,
     isError: businesses.isError || events.isError || alerts.isError || touristPoints.isError,
   };
 }

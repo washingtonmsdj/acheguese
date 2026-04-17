@@ -13,6 +13,7 @@ import { applyTerritoryFilter } from "@/core/location";
 import type { AdminSupabaseClient } from "@/core/admin/types/adminDatabase.types";
 
 const supabaseTyped = supabase as unknown as AdminSupabaseClient;
+const supabaseAny = supabase as any;
 import { sanitizeForILike } from "@/shared/utils/sqlSanitization";
 import { PAGINATION } from "@/shared/constants";
 import {
@@ -365,6 +366,35 @@ export async function getBusinessById(id: string): Promise<Business> {
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     throw new Error(`Erro ao buscar empresa: ${message}`);
+  }
+}
+
+/**
+ * Buscar business_data.id pelo profile_id da empresa
+ */
+export async function getBusinessDataIdByProfileId(
+  profileId: string,
+): Promise<string | null> {
+  if (!isValidBusinessId(profileId)) {
+    return null;
+  }
+
+  try {
+    const { data, error } = await supabaseTyped
+      .from("business_data")
+      .select("id")
+      .eq("profile_id", profileId)
+      .maybeSingle();
+
+    if (error) {
+      logger.error("Error fetching business_data id by profile_id:", error);
+      return null;
+    }
+
+    return (data as { id?: string } | null)?.id ?? null;
+  } catch (error) {
+    logger.error("Error in getBusinessDataIdByProfileId:", error);
+    return null;
   }
 }
 

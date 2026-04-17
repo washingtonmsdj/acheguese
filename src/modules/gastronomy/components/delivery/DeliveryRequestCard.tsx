@@ -1,14 +1,14 @@
-/**
- * DeliveryRequestCard — Card de solicitação de entrega
+﻿/**
+ * DeliveryRequestCard â€” Card de solicitaÃ§Ã£o de entrega
  *
- * Exibe informações de uma solicitação de entrega.
+ * Exibe informaÃ§Ãµes de uma solicitaÃ§Ã£o de entrega.
  * Consome hooks (SSOT).
  */
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/components/ui/card';
 import { Badge } from '@/shared/components/ui/badge';
 import { Button } from '@/shared/components/ui/button';
-import { DeliveryRequest, DeliveryRequestStatus } from '@/core/delivery/DeliveryService';
+import { DeliveryRequest, DeliveryRequestStatus } from '@/modules/gastronomy/services/DeliveryService';
 import { MapPin, Phone, User, Clock, DollarSign, Package } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -27,7 +27,7 @@ const statusConfig: Record<
   pending: { label: 'Aguardando', variant: 'secondary' },
   accepted: { label: 'Aceita', variant: 'default' },
   picked_up: { label: 'Retirado', variant: 'default' },
-  in_transit: { label: 'Em Trânsito', variant: 'default' },
+  in_transit: { label: 'Em TrÃ¢nsito', variant: 'default' },
   delivered: { label: 'Entregue', variant: 'outline' },
   failed: { label: 'Falhou', variant: 'destructive' },
   cancelled: { label: 'Cancelada', variant: 'destructive' },
@@ -54,7 +54,7 @@ export function DeliveryRequestCard({
   const nextStatusLabel: Record<DeliveryRequestStatus, string> = {
     pending: 'Aceitar',
     accepted: 'Marcar como Retirado',
-    picked_up: 'Marcar em Trânsito',
+    picked_up: 'Marcar em TrÃ¢nsito',
     in_transit: 'Marcar como Entregue',
     delivered: '',
     failed: '',
@@ -96,7 +96,7 @@ export function DeliveryRequestCard({
           </div>
         </div>
 
-        {/* Endereços */}
+        {/* EndereÃ§os */}
         <div className="space-y-2">
           <div className="flex items-start gap-2">
             <Package className="h-4 w-4 text-muted-foreground mt-0.5" />
@@ -120,7 +120,7 @@ export function DeliveryRequestCard({
           </div>
         </div>
 
-        {/* Informações */}
+        {/* InformaÃ§Ãµes */}
         <div className="flex items-center justify-between text-sm">
           <div className="flex items-center gap-1 text-muted-foreground">
             <DollarSign className="h-4 w-4" />
@@ -135,7 +135,7 @@ export function DeliveryRequestCard({
           )}
         </div>
 
-        {/* Ações */}
+        {/* AÃ§Ãµes */}
         <div className="flex gap-2">
           {onViewDetails && (
             <Button
@@ -172,3 +172,4 @@ export function DeliveryRequestCard({
     </Card>
   );
 }
+

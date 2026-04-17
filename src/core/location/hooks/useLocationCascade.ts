@@ -54,6 +54,7 @@ export function useLocationCascade(
           .sort((a, b) => a.name.localeCompare(b.name))
           .map(toOption)
       ))
+      .catch(() => setStates([]))
       .finally(() => setLoadingStates(false));
   }, []);
 
@@ -70,6 +71,7 @@ export function useLocationCascade(
     const repo = createLocationRepository();
     repo.findChildren(selectedStateId, { type: LocationType.CITY, status: LocationStatus.ACTIVE, page: 1, page_size: 200 })
       .then(result => setCities(result.locations.map(toOption)))
+      .catch(() => setCities([]))
       .finally(() => setLoadingCities(false));
   }, [selectedStateId]);
 
@@ -84,6 +86,7 @@ export function useLocationCascade(
     const repo = createLocationRepository();
     repo.findChildren(selectedCityId, { type: LocationType.DISTRICT, status: LocationStatus.ACTIVE, page: 1, page_size: 500 })
       .then(result => setNeighborhoods(result.locations.map(toOption)))
+      .catch(() => setNeighborhoods([]))
       .finally(() => setLoadingNeighborhoods(false));
   }, [selectedCityId]);
 

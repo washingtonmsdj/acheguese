@@ -1,7 +1,7 @@
-/**
- * DeliveryManagementPage — Página de gestão de entregas
+﻿/**
+ * DeliveryManagementPage â€” PÃ¡gina de gestÃ£o de entregas
  *
- * Gerencia solicitações de entrega da rede de motoboys.
+ * Gerencia solicitaÃ§Ãµes de entrega da rede de motoboys.
  * Consome hooks (SSOT).
  */
 
@@ -16,7 +16,7 @@ import {
 } from '@/modules/gastronomy/hooks';
 import { DeliveryRequestCard } from '@/modules/gastronomy/components/delivery/DeliveryRequestCard';
 import { DeliveryStatsWidget } from '@/modules/gastronomy/components/delivery/DeliveryStatsWidget';
-import { DeliveryRequestStatus } from '@/core/delivery/DeliveryService';
+import { DeliveryRequestStatus } from '@/modules/gastronomy/services/DeliveryService';
 import { Package, Loader2 } from 'lucide-react';
 import {
   AlertDialog,
@@ -88,7 +88,7 @@ export default function DeliveryManagementPage() {
   if (!businessId) {
     return (
       <div className="container mx-auto p-6">
-        <p className="text-muted-foreground">ID da empresa não encontrado</p>
+        <p className="text-muted-foreground">ID da empresa nÃ£o encontrado</p>
       </div>
     );
   }
@@ -98,7 +98,7 @@ export default function DeliveryManagementPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">Gestão de Entregas</h1>
+          <h1 className="text-3xl font-bold">GestÃ£o de Entregas</h1>
           <p className="text-muted-foreground">
             Gerencie as entregas da rede de motoboys
           </p>
@@ -107,7 +107,7 @@ export default function DeliveryManagementPage() {
 
       {/* Layout */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Estatísticas */}
+        {/* EstatÃ­sticas */}
         <div className="lg:col-span-1">
           <DeliveryStatsWidget businessId={businessId} />
         </div>
@@ -157,14 +157,14 @@ export default function DeliveryManagementPage() {
                   <h3 className="text-lg font-medium mb-2">Nenhuma entrega encontrada</h3>
                   <p className="text-sm text-muted-foreground max-w-sm">
                     {activeTab === 'pending'
-                      ? 'Não há entregas aguardando aceite no momento.'
+                      ? 'NÃ£o hÃ¡ entregas aguardando aceite no momento.'
                       : activeTab === 'accepted'
-                      ? 'Não há entregas aceitas no momento.'
+                      ? 'NÃ£o hÃ¡ entregas aceitas no momento.'
                       : activeTab === 'picked_up'
-                      ? 'Não há entregas em andamento no momento.'
+                      ? 'NÃ£o hÃ¡ entregas em andamento no momento.'
                       : activeTab === 'delivered'
-                      ? 'Nenhuma entrega foi concluída ainda.'
-                      : 'Nenhuma solicitação de entrega foi criada ainda.'}
+                      ? 'Nenhuma entrega foi concluÃ­da ainda.'
+                      : 'Nenhuma solicitaÃ§Ã£o de entrega foi criada ainda.'}
                   </p>
                 </div>
               )}
@@ -179,7 +179,7 @@ export default function DeliveryManagementPage() {
           <AlertDialogHeader>
             <AlertDialogTitle>Cancelar Entrega</AlertDialogTitle>
             <AlertDialogDescription>
-              Tem certeza que deseja cancelar esta entrega? Esta ação não pode ser
+              Tem certeza que deseja cancelar esta entrega? Esta aÃ§Ã£o nÃ£o pode ser
               desfeita.
             </AlertDialogDescription>
           </AlertDialogHeader>
@@ -208,3 +208,4 @@ export default function DeliveryManagementPage() {
     </div>
   );
 }
+

@@ -12,8 +12,7 @@
 
 import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { AdminVagasService } from "@/modules/vagas/services/AdminVagasService";
-import type { VagaStatus, VagaContrato, VagaModalidade, VagaNivel } from "@/modules/vagas/services/VagasService";
+import { AdminVagasService } from "@/core/admin/services/AdminVagasRuntimeService";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import {
@@ -47,6 +46,10 @@ import {
   RefreshCw,
 } from "lucide-react";
 import { toast } from "sonner";
+
+type VagaStatus = string;
+type VagaContrato = string;
+type VagaModalidade = string;
 
 export default function AdminVagas() {
   const queryClient = useQueryClient();

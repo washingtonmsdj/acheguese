@@ -6,27 +6,11 @@
  */
 
 import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase';
-import { logger } from '@/shared/utils/logger';
 import { isValidUUID } from '@/shared/utils/validation';
+import { FavoritesQueryService } from '@/modules/gastronomy/services/favorites.queries';
 
 async function fetchFavoritersCount(businessDataId: string): Promise<number> {
-  try {
-    const { count, error } = await supabase
-      .from('user_favorite_businesses')
-      .select('*', { count: 'exact', head: true })
-      .eq('business_id', businessDataId);
-
-    if (error) {
-      logger.error('[useGastronomyFavoriters] Error:', error);
-      return 0;
-    }
-
-    return count || 0;
-  } catch (error) {
-    logger.error('[useGastronomyFavoriters] Unexpected error:', error);
-    return 0;
-  }
+  return FavoritesQueryService.getBusinessFavoritesCount(businessDataId);
 }
 
 export function useGastronomyFavoritersCount(params: {

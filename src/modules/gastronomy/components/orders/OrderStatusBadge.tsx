@@ -1,7 +1,7 @@
-/**
- * OrderStatusBadge — Badge de status do pedido
+﻿/**
+ * OrderStatusBadge â€” Badge de status do pedido
  *
- * Mostra status com cor e ícone apropriados.
+ * Mostra status com cor e Ã­cone apropriados.
  */
 
 import { Badge } from '@/shared/components/ui/badge';
@@ -14,7 +14,7 @@ import {
   CheckCircle2,
   XCircle,
 } from 'lucide-react';
-import type { OrderStatus } from '@/core/orders';
+import type { OrderStatus } from '@/modules/gastronomy/services/OrderService';
 
 interface OrderStatusBadgeProps {
   status: OrderStatus;
@@ -67,7 +67,7 @@ const STATUS_CONFIG: Record<
     color: 'text-green-600',
   },
   completed: {
-    label: 'Concluído',
+    label: 'ConcluÃ­do',
     variant: 'outline',
     icon: CheckCircle2,
     color: 'text-green-600',
@@ -103,3 +103,4 @@ export function OrderStatusBadge({ status, size = 'md' }: OrderStatusBadgeProps)
     </Badge>
   );
 }
+

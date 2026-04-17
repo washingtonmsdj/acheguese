@@ -11,7 +11,6 @@ import { BusinessService } from "@/core/business/services/BusinessService";
 import { createBusinessSchema } from "@/shared/schemas/business/businessSchemas";
 import { toast } from "sonner";
 import { locationContextStore } from "@/core/location/stores/LocationContextStore";
-import { supabase } from "@/integrations/supabase";
 import { mediaService } from "@/core/media/services/MediaService";
 import { PublicIdentityService } from "@/core/public-identity/services/PublicIdentityService";
 import type { CreateBusinessInput } from "@/modules/business/types";
@@ -169,20 +168,14 @@ export function useBusinessCreateMultiProfile(
         banner_url: bannerUrl,
       });
 
-      const { data: businessData, error } = await supabase
-        .from("business_data")
-        .select("id")
-        .eq("profile_id", createdProfile.profile_id)
-        .maybeSingle();
-
-      if (error) {
-        throw error;
-      }
+      const businessDataId = await BusinessService.getBusinessDataIdByProfileId(
+        createdProfile.profile_id,
+      );
 
       return {
         profile_id: createdProfile.profile_id,
         handle: createdProfile.handle,
-        business_data_id: businessData?.id ?? null,
+        business_data_id: businessDataId,
       };
     },
 

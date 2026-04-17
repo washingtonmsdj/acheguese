@@ -34,10 +34,10 @@ import { useMultiProfileContext } from '@/core/profiles/contexts/multi-profile-r
 import { useAppUrls } from '@/core/routing/hooks/useAppUrls';
 import { useFriendlyModuleUrls } from '@/core/routing/hooks/useFriendlyModuleUrls';
 import { BusinessUrlService } from '@/core/business/services/BusinessUrlService';
-import { useDriverProfileIdentity } from '@/modules/mobility/hooks/useDriverProfileIdentity';
+import { useDriverProfileIdentity } from '@/core/profiles/services/useDriverProfileIdentity';
 import { usePerfilPageV3 } from './usePerfilPageV3';
 import { buildProfileEditUrl, buildPublicProfileUrl } from '@/core/profiles/utils/publicProfileUrl';
-import { isProfileVerified } from '../utils/profileDomainRules';
+import { canProfileHaveMembers, isProfileVerified } from '../utils/profileDomainRules';
 
 import type { Business } from '@/core/profiles/services/types';
 
@@ -90,8 +90,7 @@ export function useProfileHub() {
   const territoryLabel = identity?.territoryLabel;
 
   // Permissões
-  const canManageProfileMembers =
-    activeProfile?.profile_type === 'business' || activeProfile?.profile_type === 'professional';
+  const canManageProfileMembers = canProfileHaveMembers(activeProfile);
   const hasDriverProfile = allProfiles.some((item) => item.profile_type === 'driver');
   const hasBusinesses = businessModules.length > 0;
   const driverIdentity = useDriverProfileIdentity({
@@ -455,6 +454,7 @@ export function useProfileHub() {
 
     // Snapshot de motorista (mobilidade)
     hasDriverProfile,
+    canManageProfileMembers,
     driverProfile: resolvedDriverProfile,
     driverProfileId: resolvedDriverProfileId,
     driverData: driverIdentity.driverData ?? null,

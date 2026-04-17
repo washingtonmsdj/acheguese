@@ -1,11 +1,11 @@
-/**
- * useOrders — Hook para gerenciar pedidos
+﻿/**
+ * useOrders â€” Hook para gerenciar pedidos
  *
  * SSOT: Consome OrderService do core/orders
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { OrderService, type Order, type OrderStatus, type OrderType } from '@/core/orders';
+import { OrderService, type Order, type OrderStatus, type OrderType } from '@/modules/gastronomy/services/OrderService';
 import { toast } from 'sonner';
 
 interface UseOrdersFilters {
@@ -101,3 +101,4 @@ export function useOrders(businessId: string, filters?: UseOrdersFilters) {
     isCancelling: cancelOrderMutation.isPending,
   };
 }
+

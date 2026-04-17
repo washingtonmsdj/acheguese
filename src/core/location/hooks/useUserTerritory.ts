@@ -28,7 +28,12 @@ export interface UserTerritory {
 /** Converte geographic_path para URL pública removendo o prefixo /br */
 function toPublicPath(geoPath: string): string {
   const parts = geoPath.split('/').filter(Boolean);
-  return '/' + parts.slice(1).join('/');
+  if (parts.length === 0) return '/';
+
+  const startsWithCountry = parts[0].toLowerCase() === 'br';
+  const publicParts = startsWithCountry ? parts.slice(1) : parts;
+
+  return '/' + publicParts.join('/');
 }
 
 export function useUserTerritory(): UserTerritory {

@@ -13,9 +13,15 @@ const service = new TerritorialGroupService();
 export function useTerritorialGroups() {
   const queryClient = useQueryClient();
 
-  const { data: groups = [], isLoading } = useQuery({
+  const {
+    data: groups = [],
+    isLoading,
+    error,
+    refetch,
+  } = useQuery({
     queryKey: ['admin', 'territorial-groups'],
     queryFn: () => service.listAllGroups(),
+    retry: 1,
   });
 
   const toggleStatus = useMutation({
@@ -42,6 +48,9 @@ export function useTerritorialGroups() {
   return {
     groups,
     isLoading,
+    error: error instanceof Error ? error : null,
+    refetch,
+    togglingGroupId: toggleStatus.isPending ? toggleStatus.variables?.groupId ?? null : null,
     toggleStatus: (groupId: string, currentStatus: string) => 
       toggleStatus.mutate({ groupId, currentStatus }),
   };

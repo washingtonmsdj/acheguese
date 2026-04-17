@@ -1,5 +1,5 @@
-/**
- * OrdersPage — Página de gestão de pedidos
+﻿/**
+ * OrdersPage â€” PÃ¡gina de gestÃ£o de pedidos
  */
 
 import { useState } from 'react';
@@ -10,7 +10,7 @@ import { OrderStatsWidget } from '../components/orders/OrderStatsWidget';
 import { OrderStatusBadge } from '../components/orders/OrderStatusBadge';
 import { Button } from '@/shared/components/ui/button';
 import { Package, RefreshCw } from 'lucide-react';
-import type { Order, OrderStatus } from '@/core/orders';
+import type { Order, OrderStatus } from '@/modules/gastronomy/services/OrderService';
 import {
   Select,
   SelectContent,
@@ -33,7 +33,7 @@ export default function OrdersPage() {
   if (!businessId) {
     return (
       <div className="container max-w-6xl py-8">
-        <p className="text-center text-destructive">ID do negócio não encontrado</p>
+        <p className="text-center text-destructive">ID do negÃ³cio nÃ£o encontrado</p>
       </div>
     );
   }
@@ -57,7 +57,7 @@ export default function OrdersPage() {
         </Button>
       </div>
 
-      {/* Estatísticas */}
+      {/* EstatÃ­sticas */}
       <OrderStatsWidget businessId={businessId} />
 
       {/* Filtros */}
@@ -78,7 +78,7 @@ export default function OrdersPage() {
               <SelectItem value="ready">Prontos</SelectItem>
               <SelectItem value="out_for_delivery">Saiu para Entrega</SelectItem>
               <SelectItem value="delivered">Entregues</SelectItem>
-              <SelectItem value="completed">Concluídos</SelectItem>
+              <SelectItem value="completed">ConcluÃ­dos</SelectItem>
               <SelectItem value="cancelled">Cancelados</SelectItem>
             </SelectContent>
           </Select>
@@ -106,7 +106,7 @@ export default function OrdersPage() {
           <h3 className="text-lg font-semibold mb-2">Nenhum pedido encontrado</h3>
           <p className="text-muted-foreground">
             {statusFilter !== 'all'
-              ? 'Não há pedidos com este status'
+              ? 'NÃ£o hÃ¡ pedidos com este status'
               : 'Aguardando o primeiro pedido'}
           </p>
         </div>
@@ -114,5 +114,6 @@ export default function OrdersPage() {
     </div>
   );
 }
+
 
 

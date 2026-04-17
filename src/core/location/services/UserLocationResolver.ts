@@ -94,20 +94,21 @@ class UserLocationResolverClass {
       // Tentar obter coordenadas do centro do território
       const slug = loc.slug;
       const center = TERRITORY_CENTERS[slug];
+      const systemFallback = TERRITORY_CENTERS['salvador'];
       
       // Também checar metadata do location
       const metaLat = loc.metadata?.center_latitude as number | undefined;
       const metaLng = loc.metadata?.center_longitude as number | undefined;
       
-      const lat = metaLat || center?.lat || null;
-      const lng = metaLng || center?.lng || null;
+      const lat = metaLat ?? center?.lat ?? systemFallback.lat;
+      const lng = metaLng ?? center?.lng ?? systemFallback.lng;
 
       return {
         entityType: 'user_gps',
         source: 'territory_center',
         latitude: lat,
         longitude: lng,
-        accuracy: lat ? 5000 : null, // ~5km para centro de território
+        accuracy: center || metaLat || metaLng ? 5000 : 10000,
         locationId: loc.id,
         locationName: loc.name,
         confidence: 'low',

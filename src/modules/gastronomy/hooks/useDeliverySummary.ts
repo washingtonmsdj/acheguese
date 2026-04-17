@@ -1,11 +1,11 @@
-/**
- * useDeliverySummary — Hook para buscar resumo das áreas de entrega
+﻿/**
+ * useDeliverySummary â€” Hook para buscar resumo das Ã¡reas de entrega
  *
  * SSOT: Consome DeliveryAreaService do core/delivery
  */
 
 import { useQuery } from '@tanstack/react-query';
-import { DeliveryAreaService } from '@/core/delivery';
+import { DeliveryAreaService } from '@/modules/gastronomy/services/DeliveryAreaService';
 
 export function useDeliverySummary(businessId: string) {
   const { data: summary, isLoading, error } = useQuery({
@@ -30,3 +30,4 @@ export function useDeliverySummary(businessId: string) {
     avgEstimatedTime: summary?.avg_estimated_time ?? null,
   };
 }
+

@@ -1,11 +1,11 @@
-/**
- * useDeliveryEligibility — Hook para verificar elegibilidade de entrega
+﻿/**
+ * useDeliveryEligibility â€” Hook para verificar elegibilidade de entrega
  *
  * SSOT: Consome DeliveryAreaService do core/delivery
  */
 
 import { useQuery } from '@tanstack/react-query';
-import { DeliveryAreaService } from '@/core/delivery';
+import { DeliveryAreaService } from '@/modules/gastronomy/services/DeliveryAreaService';
 
 interface UseDeliveryEligibilityParams {
   businessId: string;
@@ -52,3 +52,4 @@ export function useDeliveryEligibility({
     message: eligibility?.message ?? '',
   };
 }
+

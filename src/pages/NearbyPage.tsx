@@ -137,10 +137,12 @@ export default function NearbyPage() {
   const { entities, isLoading: entitiesLoading, isError } = useNearbyEntities({
     radiusKm,
     entityTypes: entityTypes as any,
+    center: userLocation,
+    locationId: activeLocation?.id,
     limit: 100,
   });
 
-  const isLoading = locationLoading || entitiesLoading;
+  const isLoading = entitiesLoading;
 
   // ── Grouped entities ───────────────────────────────────────────────
   const grouped = useMemo(() => groupByType(entities), [entities]);

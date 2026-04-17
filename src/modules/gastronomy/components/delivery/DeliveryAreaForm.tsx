@@ -1,7 +1,7 @@
-/**
- * DeliveryAreaForm — Formulário de área de entrega
+﻿/**
+ * DeliveryAreaForm â€” FormulÃ¡rio de Ã¡rea de entrega
  *
- * Permite criar/editar área de entrega.
+ * Permite criar/editar Ã¡rea de entrega.
  * SSOT: Usa useDeliveryAreas hook
  */
 
@@ -13,7 +13,7 @@ import { Label } from '@/shared/components/ui/label';
 import { Textarea } from '@/shared/components/ui/textarea';
 import { Switch } from '@/shared/components/ui/switch';
 import { MapPin, Save, X } from 'lucide-react';
-import type { DeliveryArea } from '@/core/delivery';
+import type { DeliveryArea } from '@/modules/gastronomy/services/DeliveryAreaService';
 
 interface DeliveryAreaFormProps {
   area?: DeliveryArea | null;
@@ -78,10 +78,10 @@ export function DeliveryAreaForm({
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <MapPin className="w-5 h-5" />
-          {area ? 'Editar Área de Entrega' : 'Nova Área de Entrega'}
+          {area ? 'Editar Ãrea de Entrega' : 'Nova Ãrea de Entrega'}
         </CardTitle>
         <CardDescription>
-          Configure os detalhes da área de entrega
+          Configure os detalhes da Ã¡rea de entrega
         </CardDescription>
       </CardHeader>
 
@@ -90,7 +90,7 @@ export function DeliveryAreaForm({
           {/* Nome */}
           <div className="space-y-2">
             <Label htmlFor="name">
-              Nome da Área <span className="text-destructive">*</span>
+              Nome da Ãrea <span className="text-destructive">*</span>
             </Label>
             <Input
               id="name"
@@ -103,12 +103,12 @@ export function DeliveryAreaForm({
             />
           </div>
 
-          {/* Descrição */}
+          {/* DescriÃ§Ã£o */}
           <div className="space-y-2">
-            <Label htmlFor="description">Descrição (opcional)</Label>
+            <Label htmlFor="description">DescriÃ§Ã£o (opcional)</Label>
             <Textarea
               id="description"
-              placeholder="Descreva a área de entrega..."
+              placeholder="Descreva a Ã¡rea de entrega..."
               value={formData.description}
               onChange={(e) =>
                 setFormData((prev) => ({ ...prev, description: e.target.value }))
@@ -138,13 +138,13 @@ export function DeliveryAreaForm({
               required
             />
             <p className="text-sm text-muted-foreground">
-              Taxa padrão para todos os bairros desta área
+              Taxa padrÃ£o para todos os bairros desta Ã¡rea
             </p>
           </div>
 
-          {/* Pedido Mínimo */}
+          {/* Pedido MÃ­nimo */}
           <div className="space-y-2">
-            <Label htmlFor="minimum-order">Pedido Mínimo (R$, opcional)</Label>
+            <Label htmlFor="minimum-order">Pedido MÃ­nimo (R$, opcional)</Label>
             <Input
               id="minimum-order"
               type="number"
@@ -160,7 +160,7 @@ export function DeliveryAreaForm({
               }
             />
             <p className="text-sm text-muted-foreground">
-              Valor mínimo do pedido para esta área
+              Valor mÃ­nimo do pedido para esta Ã¡rea
             </p>
           </div>
 
@@ -185,16 +185,16 @@ export function DeliveryAreaForm({
               required
             />
             <p className="text-sm text-muted-foreground">
-              Tempo médio de entrega para esta área
+              Tempo mÃ©dio de entrega para esta Ã¡rea
             </p>
           </div>
 
           {/* Ativa */}
           <div className="flex items-center justify-between p-4 border rounded-lg">
             <div className="space-y-0.5">
-              <Label htmlFor="is-active">Área Ativa</Label>
+              <Label htmlFor="is-active">Ãrea Ativa</Label>
               <p className="text-sm text-muted-foreground">
-                Desative para pausar entregas nesta área
+                Desative para pausar entregas nesta Ã¡rea
               </p>
             </div>
             <Switch
@@ -206,7 +206,7 @@ export function DeliveryAreaForm({
             />
           </div>
 
-          {/* Ações */}
+          {/* AÃ§Ãµes */}
           <div className="flex gap-3">
             <Button
               type="submit"
@@ -214,7 +214,7 @@ export function DeliveryAreaForm({
               className="flex-1"
             >
               <Save className="w-4 h-4 mr-2" />
-              {isSaving ? 'Salvando...' : area ? 'Atualizar' : 'Criar Área'}
+              {isSaving ? 'Salvando...' : area ? 'Atualizar' : 'Criar Ãrea'}
             </Button>
             <Button
               type="button"
@@ -231,3 +231,4 @@ export function DeliveryAreaForm({
     </Card>
   );
 }
+

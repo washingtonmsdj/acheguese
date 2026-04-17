@@ -20,7 +20,14 @@ import {
 } from '@/shared/components/ui/dialog';
 
 export default function AdminTerritorialGroups() {
-  const { groups, isLoading, toggleStatus } = useTerritorialGroups();
+  const {
+    groups,
+    isLoading,
+    error,
+    refetch,
+    togglingGroupId,
+    toggleStatus,
+  } = useTerritorialGroups();
   const [formOpen, setFormOpen] = useState(false);
   const [editingGroup, setEditingGroup] = useState<any>(null);
 
@@ -43,6 +50,34 @@ export default function AdminTerritorialGroups() {
     return (
       <div className="flex items-center justify-center py-20">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="space-y-4">
+        <div>
+          <h1 className="text-2xl font-bold">Grupos Territoriais</h1>
+          <p className="text-sm text-muted-foreground mt-1">
+            Gerencie agrupamentos de bairros para governança territorial
+          </p>
+        </div>
+        <div className="rounded-xl border border-destructive/30 bg-destructive/5 p-6">
+          <p className="text-sm font-medium text-foreground">
+            Não foi possível carregar os grupos territoriais.
+          </p>
+          <p className="text-xs text-muted-foreground mt-1">
+            {error.message || 'Falha temporária. Tente novamente.'}
+          </p>
+          <Button
+            className="mt-4"
+            variant="outline"
+            onClick={() => void refetch()}
+          >
+            Tentar novamente
+          </Button>
+        </div>
       </div>
     );
   }
@@ -127,10 +162,15 @@ export default function AdminTerritorialGroups() {
                     variant={group.status === 'active' ? 'destructive' : 'default'}
                     size="sm"
                     onClick={() => toggleStatus(group.id, group.status)}
+                    disabled={togglingGroupId === group.id}
                     className="gap-1"
                   >
                     <Power className="h-3 w-3" />
-                    {group.status === 'active' ? 'Desativar' : 'Ativar'}
+                    {togglingGroupId === group.id
+                      ? 'Processando...'
+                      : group.status === 'active'
+                        ? 'Desativar'
+                        : 'Ativar'}
                   </Button>
                 </div>
               </div>

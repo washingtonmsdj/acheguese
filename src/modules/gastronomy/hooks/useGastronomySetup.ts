@@ -8,9 +8,9 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { supabase } from '@/integrations/supabase';
 import { GastronomyProfileService } from '@/core/gastronomy/GastronomyProfileService';
 import type { BusinessCategory } from '@/core/business/types/Business';
+import { getBusinessCategoryByBusinessDataId } from '@/modules/gastronomy/services/gastronomy-runtime.queries';
 import type {
   CreateGastronomyProfileInput,
   UpdateGastronomyProfileInput,
@@ -35,16 +35,8 @@ export function useGastronomySetup(businessId: string) {
   // Busca category da empresa para sugestão inteligente
   const { data: businessCategory } = useQuery({
     queryKey: ['business-category', businessId],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('business_data')
-        .select('category')
-        .eq('id', businessId)
-        .single();
-      
-      if (error) throw error;
-      return data?.category as BusinessCategory | null;
-    },
+    queryFn: async () =>
+      (await getBusinessCategoryByBusinessDataId(businessId)) as BusinessCategory | null,
     enabled: !!businessId,
   });
 

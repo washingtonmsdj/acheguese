@@ -1,17 +1,17 @@
-/**
- * useDeliveryAreas — Hook para gerenciar áreas de entrega
+﻿/**
+ * useDeliveryAreas â€” Hook para gerenciar Ã¡reas de entrega
  *
  * SSOT: Consome DeliveryAreaService do core/delivery
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { DeliveryAreaService, type DeliveryArea } from '@/core/delivery';
+import { DeliveryAreaService, type DeliveryArea } from '@/modules/gastronomy/services/DeliveryAreaService';
 import { toast } from 'sonner';
 
 export function useDeliveryAreas(businessId: string) {
   const queryClient = useQueryClient();
 
-  // Query: Listar áreas
+  // Query: Listar Ã¡reas
   const { data: areas, isLoading, error } = useQuery({
     queryKey: ['delivery-areas', businessId],
     queryFn: async () => {
@@ -22,7 +22,7 @@ export function useDeliveryAreas(businessId: string) {
     enabled: !!businessId,
   });
 
-  // Mutation: Criar área
+  // Mutation: Criar Ã¡rea
   const createAreaMutation = useMutation({
     mutationFn: async (input: {
       name: string;
@@ -41,14 +41,14 @@ export function useDeliveryAreas(businessId: string) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['delivery-areas', businessId] });
       queryClient.invalidateQueries({ queryKey: ['delivery-summary', businessId] });
-      toast.success('Área de entrega criada com sucesso!');
+      toast.success('Ãrea de entrega criada com sucesso!');
     },
     onError: (error: Error) => {
-      toast.error(`Erro ao criar área: ${error.message}`);
+      toast.error(`Erro ao criar Ã¡rea: ${error.message}`);
     },
   });
 
-  // Mutation: Atualizar área
+  // Mutation: Atualizar Ã¡rea
   const updateAreaMutation = useMutation({
     mutationFn: async (input: {
       areaId: string;
@@ -61,14 +61,14 @@ export function useDeliveryAreas(businessId: string) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['delivery-areas', businessId] });
       queryClient.invalidateQueries({ queryKey: ['delivery-summary', businessId] });
-      toast.success('Área atualizada com sucesso!');
+      toast.success('Ãrea atualizada com sucesso!');
     },
     onError: (error: Error) => {
-      toast.error(`Erro ao atualizar área: ${error.message}`);
+      toast.error(`Erro ao atualizar Ã¡rea: ${error.message}`);
     },
   });
 
-  // Mutation: Deletar área
+  // Mutation: Deletar Ã¡rea
   const deleteAreaMutation = useMutation({
     mutationFn: async (areaId: string) => {
       const result = await DeliveryAreaService.deleteArea(areaId);
@@ -78,14 +78,14 @@ export function useDeliveryAreas(businessId: string) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['delivery-areas', businessId] });
       queryClient.invalidateQueries({ queryKey: ['delivery-summary', businessId] });
-      toast.success('Área deletada com sucesso!');
+      toast.success('Ãrea deletada com sucesso!');
     },
     onError: (error: Error) => {
-      toast.error(`Erro ao deletar área: ${error.message}`);
+      toast.error(`Erro ao deletar Ã¡rea: ${error.message}`);
     },
   });
 
-  // Mutation: Reordenar áreas
+  // Mutation: Reordenar Ã¡reas
   const reorderAreasMutation = useMutation({
     mutationFn: async (areaIds: string[]) => {
       const result = await DeliveryAreaService.reorderAreas(businessId, areaIds);
@@ -94,10 +94,10 @@ export function useDeliveryAreas(businessId: string) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['delivery-areas', businessId] });
-      toast.success('Áreas reordenadas com sucesso!');
+      toast.success('Ãreas reordenadas com sucesso!');
     },
     onError: (error: Error) => {
-      toast.error(`Erro ao reordenar áreas: ${error.message}`);
+      toast.error(`Erro ao reordenar Ã¡reas: ${error.message}`);
     },
   });
 
@@ -115,3 +115,4 @@ export function useDeliveryAreas(businessId: string) {
     isReordering: reorderAreasMutation.isPending,
   };
 }
+

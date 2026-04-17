@@ -116,8 +116,8 @@ export default function AdminZeladoria() {
       const mapped = await adminCommunityService.getCivicReports(activeTab);
       setReports(mapped as any);
     } catch (error) {
-      logger.error("Error search reportes:", error);
-      toast.error("Error load reportes");
+      logger.error("Erro ao buscar reportes:", error);
+      toast.error("Erro ao carregar reportes");
     } finally {
       setLoading(false);
     }
@@ -128,19 +128,19 @@ export default function AdminZeladoria() {
       const stats = await adminCommunityService.getCivicReportStats();
       setStats(stats as any);
     } catch (error) {
-      logger.error("Error search estatísticas:", error);
+      logger.error("Erro ao buscar estatísticas:", error);
     }
   };
 
   const updateStatus = async (reportId: string, newStatus: string) => {
     try {
       await adminCommunityService.updateCivicReportStatus(reportId, newStatus);
-      toast.success("Status updated!");
+      toast.success("Status atualizado!");
       fetchReports();
       fetchStats();
     } catch (error) {
-      logger.error("Error update status:", error);
-      toast.error("Error update status");
+      logger.error("Erro ao atualizar status:", error);
+      toast.error("Erro ao atualizar status");
     }
   };
 
@@ -206,7 +206,9 @@ export default function AdminZeladoria() {
 
         <TabsContent value={activeTab} className="mt-6">
           {loading ? (
-            <div className="text-center py-12">Loading...</div>
+            <div className="text-center py-12 text-muted-foreground">
+              Carregando reportes...
+            </div>
           ) : reports.length === 0 ? (
             <Card className="p-12 text-center">
               <p className="text-muted-foreground">

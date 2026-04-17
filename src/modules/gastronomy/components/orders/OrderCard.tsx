@@ -1,14 +1,14 @@
-/**
- * OrderCard — Card de pedido com resumo
+﻿/**
+ * OrderCard â€” Card de pedido com resumo
  *
- * Mostra informações principais e ações rápidas.
+ * Mostra informaÃ§Ãµes principais e aÃ§Ãµes rÃ¡pidas.
  */
 
 import { Card, CardContent, CardHeader } from '@/shared/components/ui/card';
 import { Button } from '@/shared/components/ui/button';
 import { OrderStatusBadge } from './OrderStatusBadge';
 import { Eye, Phone, MapPin } from 'lucide-react';
-import type { Order } from '@/core/orders';
+import type { Order } from '@/modules/gastronomy/services/OrderService';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
@@ -36,7 +36,7 @@ export function OrderCard({ order, onViewDetails }: OrderCardProps) {
               <OrderStatusBadge status={order.status} size="sm" />
             </div>
             <p className="text-sm text-muted-foreground mt-1">
-              {format(parseISO(order.created_at), "dd/MM/yyyy 'às' HH:mm", {
+              {format(parseISO(order.created_at), "dd/MM/yyyy 'Ã s' HH:mm", {
                 locale: ptBR,
               })}
             </p>
@@ -53,12 +53,12 @@ export function OrderCard({ order, onViewDetails }: OrderCardProps) {
       </CardHeader>
 
       <CardContent className="space-y-4">
-        {/* Informações do cliente */}
+        {/* InformaÃ§Ãµes do cliente */}
         <div className="space-y-2">
           <div className="flex items-center gap-2 text-sm">
             <Phone className="w-4 h-4 text-muted-foreground" />
             <span className="font-medium">{order.customer_name}</span>
-            <span className="text-muted-foreground">•</span>
+            <span className="text-muted-foreground">â€¢</span>
             <span className="text-muted-foreground">{order.customer_phone}</span>
           </div>
 
@@ -100,15 +100,15 @@ export function OrderCard({ order, onViewDetails }: OrderCardProps) {
           )}
         </div>
 
-        {/* Observações */}
+        {/* ObservaÃ§Ãµes */}
         {order.notes && (
           <div className="text-sm p-2 bg-muted rounded">
-            <p className="font-medium mb-1">Observações:</p>
+            <p className="font-medium mb-1">ObservaÃ§Ãµes:</p>
             <p className="text-muted-foreground">{order.notes}</p>
           </div>
         )}
 
-        {/* Ações */}
+        {/* AÃ§Ãµes */}
         <Button
           onClick={() => onViewDetails(order)}
           variant="outline"
@@ -121,3 +121,4 @@ export function OrderCard({ order, onViewDetails }: OrderCardProps) {
     </Card>
   );
 }
+

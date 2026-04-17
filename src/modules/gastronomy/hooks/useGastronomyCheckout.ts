@@ -1,10 +1,12 @@
-import { useMutation } from "@tanstack/react-query";
+﻿import { useMutation } from "@tanstack/react-query";
 import { useShallow } from "zustand/react/shallow";
 
 import { useSessionContext } from "@/core/session";
-import { useOrderDelivery } from "@/core/delivery";
-import { GastronomyOrderOriginAdapter } from "@/core/delivery";
-import type { OrderRecord } from "@/core/delivery";
+import {
+  useOrderDelivery,
+  GastronomyOrderOriginAdapter,
+  type OrderRecord,
+} from "@/shared/services/deliveryBridge";
 import type { GastronomyBusiness } from "../types/gastronomy";
 import type { Cart } from "../types/menu";
 import { useGastronomyCartStore } from "../cart/useGastronomyCartStore";
@@ -65,3 +67,4 @@ export function useGastronomyCheckout() {
     hasActiveProfile: !!activeProfile?.id,
   };
 }
+

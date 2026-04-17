@@ -15,6 +15,7 @@
  * 9. Lugares relacionados
  */
 
+import { useEffect, useState } from 'react';
 import { useParams, Link, useLocation, Navigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import {
@@ -86,6 +87,22 @@ export default function TouristPointDetailPage() {
     : undefined;
 
   const { data: point, isLoading } = useTouristPoint(locationId, pointSlug);
+  const [loadingTimedOut, setLoadingTimedOut] = useState(false);
+
+  useEffect(() => {
+    if (!isLoading) {
+      setLoadingTimedOut(false);
+      return;
+    }
+
+    const timeout = window.setTimeout(() => {
+      setLoadingTimedOut(true);
+    }, 9000);
+
+    return () => {
+      window.clearTimeout(timeout);
+    };
+  }, [isLoading]);
 
   // BLINDAGEM: Redirecionamento canônico
   // Se a URL não está no formato canônico (sem bairro ou bairro errado), redireciona
@@ -105,10 +122,29 @@ export default function TouristPointDetailPage() {
 
   const backUrl = resolved ? guideUrls.touristPoints : '/pontos-turisticos';
 
-  if (isLoading) {
+  if (isLoading && !loadingTimedOut) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  if (isLoading && loadingTimedOut && !mockPoint) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center gap-4 p-8 text-center">
+        <p className="text-lg font-semibold text-foreground">Não foi possível carregar este ponto turístico</p>
+        <p className="text-sm text-muted-foreground">
+          A conexão pode estar instável. Tente novamente.
+        </p>
+        <div className="flex items-center gap-2">
+          <Button type="button" onClick={() => window.location.reload()}>
+            Tentar novamente
+          </Button>
+          <Button asChild variant="outline">
+            <Link to={backUrl}>Voltar para listagem</Link>
+          </Button>
+        </div>
       </div>
     );
   }

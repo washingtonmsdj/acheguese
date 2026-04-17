@@ -36,3 +36,11 @@ export interface SendMessageInput {
   message: string;
   is_system_message?: boolean;
 }
+
+export type Conversation = RideChat;
+
+export interface CreateMessageData {
+  conversation_id: string;
+  content: string;
+  sender_profile_id: string;
+}

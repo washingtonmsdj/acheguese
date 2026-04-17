@@ -1,11 +1,11 @@
-/**
- * useDeliveryNeighborhoods — Hook para gerenciar bairros de uma área
+﻿/**
+ * useDeliveryNeighborhoods â€” Hook para gerenciar bairros de uma Ã¡rea
  *
  * SSOT: Consome DeliveryAreaService do core/delivery
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { DeliveryAreaService, type DeliveryNeighborhood } from '@/core/delivery';
+import { DeliveryAreaService, type DeliveryNeighborhood } from '@/modules/gastronomy/services/DeliveryAreaService';
 import { toast } from 'sonner';
 
 export function useDeliveryNeighborhoods(areaId: string) {
@@ -83,7 +83,7 @@ export function useDeliveryNeighborhoods(areaId: string) {
     },
   });
 
-  // Mutation: Adicionar múltiplos bairros
+  // Mutation: Adicionar mÃºltiplos bairros
   const addNeighborhoodsBulkMutation = useMutation({
     mutationFn: async (
       neighborhoods: Array<{
@@ -118,3 +118,4 @@ export function useDeliveryNeighborhoods(areaId: string) {
     isDeleting: deleteNeighborhoodMutation.isPending,
   };
 }
+

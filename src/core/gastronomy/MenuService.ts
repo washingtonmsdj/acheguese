@@ -19,6 +19,8 @@ import { supabase } from '@/integrations/supabase';
 import { logger } from '@/shared/utils/logger';
 import { sanitizeString } from '@/shared/utils/sanitization';
 
+export const __MENU_SERVICE_FACADE_HINT__ = "compatibility facade";
+
 // ── Tipos ─────────────────────────────────────────────────────────────────
 
 export interface ServiceResult<T> {

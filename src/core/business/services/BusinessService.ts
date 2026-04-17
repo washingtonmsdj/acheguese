@@ -32,6 +32,7 @@ export {
   getBusinessesList,
   getBusinessProfile,
   getBusinessById,
+  getBusinessDataIdByProfileId,
   getBusinessBySlug,
   checkSlugExists,
   getSimilarSlugs,
@@ -166,6 +167,7 @@ export class BusinessService {
   static getBusinessesList = BusinessQueries.getBusinessesList;
   static getBusinessProfile = BusinessQueries.getBusinessProfile;
   static getBusinessById = BusinessQueries.getBusinessById;
+  static getBusinessDataIdByProfileId = BusinessQueries.getBusinessDataIdByProfileId;
   static getBusinessBySlug = BusinessQueries.getBusinessBySlug;
   static checkSlugExists = BusinessQueries.checkSlugExists;
   static getSimilarSlugs = BusinessQueries.getSimilarSlugs;

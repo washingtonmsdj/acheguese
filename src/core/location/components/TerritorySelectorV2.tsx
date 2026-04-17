@@ -13,7 +13,6 @@ import { useState, useMemo, useCallback } from 'react';
 import { useNavigate, useLocation as useRouterLocation } from 'react-router-dom';
 import { MapPin, ChevronDown, Search, X, Home, Building2 } from 'lucide-react';
 import { cn } from '@/shared/utils/cn';
-import { useLocations } from '../hooks/useLocations';
 import { useSelectorTerritories } from '../hooks/useSelectorTerritories';
 import { useUserTerritory } from '../hooks/useUserTerritory';
 import { useActiveTerritory } from '../hooks/useActiveTerritory';
@@ -46,7 +45,6 @@ export function TerritorySelectorV2({
 
   const navigate = useNavigate();
   const routerLocation = useRouterLocation();
-  const { data: allLocations = [] } = useLocations();
   const { homeDistrict, homeCity, hasHome } = useUserTerritory();
   const { activeLocation, territoryMode, setTerritoryMode } = useActiveTerritory();
   const { data: selectorTerritories = [] } = useSelectorTerritories();
@@ -176,6 +174,20 @@ export function TerritorySelectorV2({
 
     return all;
   }, [searchQuery, homeDistrict, homeCity, availableTerritories, normalizeTerritoryPath]);
+
+  const handleSearchSelection = useCallback((territory: TerritoryButtonData) => {
+    if (homeDistrict && territory.id === homeDistrict.id) {
+      handleSelectBairro();
+      return;
+    }
+
+    if (homeCity && territory.id === homeCity.id) {
+      handleSelectCidade();
+      return;
+    }
+
+    handleSelect(territory.path);
+  }, [homeDistrict, homeCity, handleSelectBairro, handleSelectCidade, handleSelect]);
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -357,7 +369,7 @@ export function TerritorySelectorV2({
                       key={territory.id}
                       territory={territory}
                       isActive={currentPath === territory.path}
-                      onClick={() => handleSelect(territory.path)}
+                      onClick={() => handleSearchSelection(territory)}
                     />
                   ))}
                 </>

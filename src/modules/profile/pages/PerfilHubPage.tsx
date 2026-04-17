@@ -173,6 +173,7 @@ export default function PerfilHubPage() {
     statsData,
     nextActions,
     hasDriverProfile,
+    canManageProfileMembers,
     driverProfile,
     driverProfileId,
     driverData,
@@ -262,8 +263,6 @@ export default function PerfilHubPage() {
     },
   ];
 
-  const canManageProfileMembers =
-    activeProfile?.profile_type === "business" || activeProfile?.profile_type === "professional";
   const deliveryModules = businessModules.filter((item) =>
     item.gastronomy.deliveryEnabled ||
     item.subscription.canUseMotoboyNetwork ||

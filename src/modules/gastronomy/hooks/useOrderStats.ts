@@ -1,11 +1,11 @@
-/**
- * useOrderStats — Hook para buscar estatísticas de pedidos
+﻿/**
+ * useOrderStats â€” Hook para buscar estatÃ­sticas de pedidos
  *
  * SSOT: Consome OrderService do core/orders
  */
 
 import { useQuery } from '@tanstack/react-query';
-import { OrderService } from '@/core/orders';
+import { OrderService } from '@/modules/gastronomy/services/OrderService';
 
 export function useOrderStats(
   businessId: string,
@@ -35,3 +35,4 @@ export function useOrderStats(
     averageOrderValue: stats?.average_order_value ?? 0,
   };
 }
+

@@ -310,6 +310,8 @@ export class VagasService {
 
   /**
    * Buscar vagas urgentes em um território
+   * NOTA: Requer coluna 'urgencia' com enum ('normal', 'urgente', 'extrema')
+   * Migration: 20260417100000_fix_vagas_urgencia_highlight.sql
    */
   static async getVagasUrgentes(locationId: string, limit = 5): Promise<Vaga[]> {
     try {
@@ -322,6 +324,11 @@ export class VagasService {
         .limit(limit);
 
       if (error) {
+        // Se a coluna não existir, retornar array vazio (migration pendente)
+        if (error.code === '42703' || error.message?.includes('urgencia')) {
+          logger.warn('[VagasService] Coluna urgencia não encontrada. Aplicar migration 20260417100000_fix_vagas_urgencia_highlight.sql');
+          return [];
+        }
         logger.error('[VagasService] Erro ao buscar vagas urgentes:', error);
         return [];
       }
@@ -335,6 +342,8 @@ export class VagasService {
 
   /**
    * Buscar vagas em destaque/premium
+   * NOTA: Requer coluna 'highlight_type' com enum ('none', 'premium', 'sponsored', 'featured')
+   * Migration: 20260417100000_fix_vagas_urgencia_highlight.sql
    */
   static async getVagasDestaque(locationId: string, limit = 6): Promise<Vaga[]> {
     try {
@@ -348,6 +357,11 @@ export class VagasService {
         .limit(limit);
 
       if (error) {
+        // Se a coluna não existir, retornar array vazio (migration pendente)
+        if (error.code === '42703' || error.message?.includes('highlight_type')) {
+          logger.warn('[VagasService] Coluna highlight_type não encontrada. Aplicar migration 20260417100000_fix_vagas_urgencia_highlight.sql');
+          return [];
+        }
         logger.error('[VagasService] Erro ao buscar vagas em destaque:', error);
         return [];
       }

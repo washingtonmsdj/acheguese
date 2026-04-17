@@ -12,7 +12,7 @@
 
 import { useState, useEffect } from 'react';
 import { postService } from '@/core/posts/services';
-import { getUserClassifieds } from '@/modules/classifieds/services';
+import { getUserClassifieds } from '@/core/classifieds/services';
 import { ProfileLinksService } from '@/core/profiles/services/multi-profile/profileLinksService';
 import { ProfileMembersService } from '@/core/profiles/services/multi-profile/profileMembersService';
 import type { ProfileType } from '@/core/profiles/services/multi-profile/types';
@@ -40,7 +40,12 @@ export function useEcosystemSummary(
 
   // Grupo 1: posts + classificados
   useEffect(() => {
-    if (!profileId) return;
+    if (!profileId) {
+      setPostsCount(0);
+      setClassifiedsCount(0);
+      setLoadingContent(false);
+      return;
+    }
     let cancelled = false;
     setLoadingContent(true);
 
@@ -61,7 +66,12 @@ export function useEcosystemSummary(
 
   // Grupo 2: links + members (assíncrono independente)
   useEffect(() => {
-    if (!profileId) return;
+    if (!profileId) {
+      setLinksCount(0);
+      setMembersCount(0);
+      setLoadingRelations(false);
+      return;
+    }
     let cancelled = false;
     setLoadingRelations(true);
 

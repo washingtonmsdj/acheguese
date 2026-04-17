@@ -108,7 +108,7 @@ export function useResolvedUserLocation(
   const isGps = location?.source === 'gps';
   const isGoodForProximity = location ? userLocationResolver.isGoodForProximity(location) : false;
   
-  const coords = location?.latitude && location?.longitude
+  const coords = location?.latitude != null && location?.longitude != null
     ? { latitude: location.latitude, longitude: location.longitude }
     : null;
 

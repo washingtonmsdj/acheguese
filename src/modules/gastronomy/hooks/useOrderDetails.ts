@@ -1,11 +1,11 @@
-/**
- * useOrderDetails — Hook para buscar detalhes de um pedido
+﻿/**
+ * useOrderDetails â€” Hook para buscar detalhes de um pedido
  *
  * SSOT: Consome OrderService do core/orders
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { OrderService } from '@/core/orders';
+import { OrderService } from '@/modules/gastronomy/services/OrderService';
 import { toast } from 'sonner';
 
 export function useOrderDetails(orderId: string) {
@@ -48,3 +48,4 @@ export function useOrderDetails(orderId: string) {
     isUpdatingNotes: updateNotesMutation.isPending,
   };
 }
+

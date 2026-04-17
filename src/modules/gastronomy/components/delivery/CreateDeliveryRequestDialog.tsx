@@ -1,7 +1,7 @@
-/**
- * CreateDeliveryRequestDialog — Dialog para criar solicitação de entrega
+﻿/**
+ * CreateDeliveryRequestDialog â€” Dialog para criar solicitaÃ§Ã£o de entrega
  *
- * Formulário para criar nova solicitação.
+ * FormulÃ¡rio para criar nova solicitaÃ§Ã£o.
  * Consome hooks (SSOT).
  */
 
@@ -18,7 +18,7 @@ import { Input } from '@/shared/components/ui/input';
 import { Label } from '@/shared/components/ui/label';
 import { Textarea } from '@/shared/components/ui/textarea';
 import { useCreateDeliveryRequest } from '@/modules/gastronomy/hooks';
-import { Order } from '@/core/orders/OrderService';
+import { Order } from '@/modules/gastronomy/services/OrderService';
 
 interface CreateDeliveryRequestDialogProps {
   open: boolean;
@@ -85,14 +85,14 @@ export function CreateDeliveryRequestDialog({
         <DialogHeader>
           <DialogTitle>Solicitar Entrega</DialogTitle>
           <DialogDescription>
-            Criar solicitação de entrega para o pedido #{order.order_number}
+            Criar solicitaÃ§Ã£o de entrega para o pedido #{order.order_number}
           </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Informações do Pedido */}
+          {/* InformaÃ§Ãµes do Pedido */}
           <div className="space-y-2">
-            <h3 className="font-medium">Informações do Pedido</h3>
+            <h3 className="font-medium">InformaÃ§Ãµes do Pedido</h3>
             <div className="grid grid-cols-2 gap-4 text-sm">
               <div>
                 <p className="text-muted-foreground">Cliente</p>
@@ -103,7 +103,7 @@ export function CreateDeliveryRequestDialog({
                 <p className="font-medium">{order.customer_phone}</p>
               </div>
               <div className="col-span-2">
-                <p className="text-muted-foreground">Endereço de Entrega</p>
+                <p className="text-muted-foreground">EndereÃ§o de Entrega</p>
                 <p className="font-medium">{order.delivery_address}</p>
               </div>
               <div>
@@ -128,14 +128,14 @@ export function CreateDeliveryRequestDialog({
               }
             />
             <p className="text-xs text-muted-foreground">
-              Valor que será pago ao motoboy pela entrega
+              Valor que serÃ¡ pago ao motoboy pela entrega
             </p>
           </div>
 
           {/* Estimativas */}
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="estimated_distance_km">Distância (km)</Label>
+              <Label htmlFor="estimated_distance_km">DistÃ¢ncia (km)</Label>
               <Input
                 id="estimated_distance_km"
                 type="number"
@@ -167,12 +167,12 @@ export function CreateDeliveryRequestDialog({
             </div>
           </div>
 
-          {/* Instruções */}
+          {/* InstruÃ§Ãµes */}
           <div className="space-y-2">
-            <Label htmlFor="pickup_instructions">Instruções de Retirada</Label>
+            <Label htmlFor="pickup_instructions">InstruÃ§Ãµes de Retirada</Label>
             <Textarea
               id="pickup_instructions"
-              placeholder="Ex: Retirar no balcão, tocar a campainha..."
+              placeholder="Ex: Retirar no balcÃ£o, tocar a campainha..."
               value={formData.pickup_instructions}
               onChange={(e) =>
                 setFormData({ ...formData, pickup_instructions: e.target.value })
@@ -182,10 +182,10 @@ export function CreateDeliveryRequestDialog({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="delivery_instructions">Instruções de Entrega</Label>
+            <Label htmlFor="delivery_instructions">InstruÃ§Ãµes de Entrega</Label>
             <Textarea
               id="delivery_instructions"
-              placeholder="Ex: Deixar com o porteiro, não tocar a campainha..."
+              placeholder="Ex: Deixar com o porteiro, nÃ£o tocar a campainha..."
               value={formData.delivery_instructions}
               onChange={(e) =>
                 setFormData({ ...formData, delivery_instructions: e.target.value })
@@ -194,7 +194,7 @@ export function CreateDeliveryRequestDialog({
             />
           </div>
 
-          {/* Ações */}
+          {/* AÃ§Ãµes */}
           <div className="flex justify-end gap-2 pt-4">
             <Button
               type="button"
@@ -205,7 +205,7 @@ export function CreateDeliveryRequestDialog({
               Cancelar
             </Button>
             <Button type="submit" disabled={createMutation.isPending}>
-              {createMutation.isPending ? 'Criando...' : 'Criar Solicitação'}
+              {createMutation.isPending ? 'Criando...' : 'Criar SolicitaÃ§Ã£o'}
             </Button>
           </div>
         </form>
@@ -213,3 +213,4 @@ export function CreateDeliveryRequestDialog({
     </Dialog>
   );
 }
+

@@ -32,8 +32,7 @@ import {
   TabsTrigger,
 } from '@/shared/components/ui/tabs';
 import { cn } from '@/shared/utils/cn';
-import { supabase } from '@/integrations/supabase';
-import { logger } from '@/shared/utils/logger';
+import { fetchGastronomyQuickMetrics } from '@/modules/gastronomy/services/gastronomy-runtime.queries';
 
 // Componentes de empresa reutilizados — implementações reais em @/modules/business
 import AnalyticsDashboard from '@/core/business/components/AnalyticsDashboard';
@@ -55,72 +54,10 @@ interface QuickMetrics {
   recentViews: { date: string; count: number }[];
 }
 
-interface ViewRecord {
-  viewed_at: string;
-}
-
-interface ReviewRecord {
-  rating: number;
-}
-
 // ── Query function — fora do componente, sem side effects ─────────────────────
 
 async function fetchQuickMetrics(businessProfileId: string): Promise<QuickMetrics> {
-  const now = new Date();
-  const weekAgo = new Date(now.getTime() - 7 * 86_400_000).toISOString();
-
-  const [totalRes, weekRes, reviewsRes, viewsLast7Res] = await Promise.all([
-    supabase
-      .from('business_views')
-      .select('*', { count: 'exact', head: true })
-      .eq('business_id', businessProfileId),
-    supabase
-      .from('business_views')
-      .select('*', { count: 'exact', head: true })
-      .eq('business_id', businessProfileId)
-      .gte('viewed_at', weekAgo),
-    supabase
-      .from('reviews')
-      .select('rating')
-      .eq('reviewed_profile_id', businessProfileId)
-      .eq('review_type', 'business')
-      .eq('status', 'active'),
-    supabase
-      .from('business_views')
-      .select('viewed_at')
-      .eq('business_id', businessProfileId)
-      .gte('viewed_at', weekAgo),
-  ]);
-
-  if (totalRes.error) logger.error('[GastronomyOwnerDashboard] views error', totalRes.error);
-  if (reviewsRes.error) logger.error('[GastronomyOwnerDashboard] reviews error', reviewsRes.error);
-
-  // Gráfico dos últimos 7 dias
-  const dayMap: Record<string, number> = {};
-  for (let i = 6; i >= 0; i--) {
-    const d = new Date(now.getTime() - i * 86_400_000);
-    dayMap[d.toISOString().slice(0, 10)] = 0;
-  }
-  (viewsLast7Res.data ?? []).forEach((v: ViewRecord) => {
-    const day = v.viewed_at?.slice(0, 10);
-    if (day && Object.prototype.hasOwnProperty.call(dayMap, day)) {
-      dayMap[day]++;
-    }
-  });
-
-  const reviews: ReviewRecord[] = reviewsRes.data ?? [];
-  const avgRating =
-    reviews.length > 0
-      ? reviews.reduce((s, r) => s + r.rating, 0) / reviews.length
-      : 0;
-
-  return {
-    totalViews: totalRes.count ?? 0,
-    viewsThisWeek: weekRes.count ?? 0,
-    totalReviews: reviews.length,
-    avgRating: Math.round(avgRating * 10) / 10,
-    recentViews: Object.entries(dayMap).map(([date, count]) => ({ date, count })),
-  };
+  return fetchGastronomyQuickMetrics(businessProfileId);
 }
 
 // ── Painel de métricas rápidas ────────────────────────────────────────────────
@@ -383,3 +320,4 @@ export function GastronomyOwnerDashboard({
     </div>
   );
 }
+

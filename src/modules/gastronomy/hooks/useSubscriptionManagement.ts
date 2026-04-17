@@ -12,32 +12,14 @@
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { supabase } from '@/integrations/supabase';
 import { PlanTier } from '@/core/billing';
+import {
+  GastronomySubscriptionService,
+} from '@/modules/gastronomy/services/gastronomy-subscription.service';
 
 // ══════════════════════════════════════════════════════════════════════════
 // TYPES
 // ══════════════════════════════════════════════════════════════════════════
-
-export interface GastronomySubscription {
-  id: string;
-  business_id: string;
-  plan_tier: PlanTier;
-  status: 'active' | 'canceled' | 'past_due' | 'trialing';
-  current_period_start: string;
-  current_period_end: string;
-  cancel_at_period_end: boolean;
-  trial_end: string | null;
-  stripe_subscription_id: string | null;
-  stripe_customer_id: string | null;
-  created_at: string;
-  updated_at: string;
-}
-
-export interface SubscriptionWithDetails extends GastronomySubscription {
-  business_name?: string;
-  stripe_customer_id?: string;
-}
 
 export interface UpgradeParams {
   newPlanTier: PlanTier.PRO | PlanTier.DELIVERY;
@@ -64,23 +46,7 @@ export function useSubscriptionManagement(businessId: string) {
     error: fetchError,
   } = useQuery({
     queryKey: ['gastronomy-subscription', businessId],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('gastronomy_subscriptions')
-        .select(`
-          *,
-          business_data!inner(name)
-        `)
-        .eq('business_id', businessId)
-        .single();
-      
-      if (error) throw error;
-      
-      return {
-        ...data,
-        business_name: data.business_data?.name,
-      } as SubscriptionWithDetails;
-    },
+    queryFn: () => GastronomySubscriptionService.getSubscriptionWithDetails(businessId),
     enabled: !!businessId,
   });
   
@@ -109,17 +75,11 @@ export function useSubscriptionManagement(businessId: string) {
    */
   const upgradeMutation = useMutation({
     mutationFn: async (params: UpgradeParams) => {
-      // Chamar edge function que usa GastronomyStripeService
-      const { data, error } = await supabase.functions.invoke('gastronomy-upgrade-plan', {
-        body: {
-          businessId,
-          newPlanTier: params.newPlanTier,
-          prorationBehavior: params.prorationBehavior,
-        },
+      return GastronomySubscriptionService.upgradePlan({
+        businessId,
+        newPlanTier: params.newPlanTier,
+        prorationBehavior: params.prorationBehavior,
       });
-      
-      if (error) throw error;
-      return data;
     },
     onSuccess: (data, variables) => {
       const planName = variables.newPlanTier === PlanTier.PRO ? 'Pro' : 'Delivery';
@@ -139,16 +99,10 @@ export function useSubscriptionManagement(businessId: string) {
    */
   const cancelMutation = useMutation({
     mutationFn: async (immediately: boolean = false) => {
-      // Chamar edge function que usa GastronomyStripeService
-      const { data, error } = await supabase.functions.invoke('gastronomy-cancel-subscription', {
-        body: {
-          businessId,
-          immediately,
-        },
+      return GastronomySubscriptionService.cancelSubscription({
+        businessId,
+        immediately,
       });
-      
-      if (error) throw error;
-      return data;
     },
     onSuccess: (data, immediately) => {
       if (immediately) {
@@ -170,13 +124,7 @@ export function useSubscriptionManagement(businessId: string) {
    */
   const reactivateMutation = useMutation({
     mutationFn: async () => {
-      // Chamar edge function que usa GastronomyStripeService
-      const { data, error } = await supabase.functions.invoke('gastronomy-reactivate-subscription', {
-        body: { businessId },
-      });
-      
-      if (error) throw error;
-      return data;
+      return GastronomySubscriptionService.reactivateSubscription(businessId);
     },
     onSuccess: () => {
       toast.success('Assinatura reativada com sucesso!');
@@ -194,16 +142,10 @@ export function useSubscriptionManagement(businessId: string) {
    */
   const addPaymentMethodMutation = useMutation({
     mutationFn: async (paymentMethodId: string) => {
-      // Chamar edge function que usa GastronomyStripeService
-      const { data, error } = await supabase.functions.invoke('gastronomy-add-payment-method', {
-        body: {
-          businessId,
-          paymentMethodId,
-        },
+      return GastronomySubscriptionService.addPaymentMethod({
+        businessId,
+        paymentMethodId,
       });
-      
-      if (error) throw error;
-      return data;
     },
     onSuccess: () => {
       toast.success('Método de pagamento adicionado com sucesso!');

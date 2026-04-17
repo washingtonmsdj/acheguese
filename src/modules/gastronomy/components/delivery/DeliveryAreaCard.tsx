@@ -1,7 +1,7 @@
-/**
- * DeliveryAreaCard — Card de área de entrega com resumo
+﻿/**
+ * DeliveryAreaCard â€” Card de Ã¡rea de entrega com resumo
  *
- * Mostra informações da área e ações rápidas.
+ * Mostra informaÃ§Ãµes da Ã¡rea e aÃ§Ãµes rÃ¡pidas.
  * SSOT: Usa useDeliveryNeighborhoods hook
  */
 
@@ -11,7 +11,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/sha
 import { Button } from '@/shared/components/ui/button';
 import { Badge } from '@/shared/components/ui/badge';
 import { MapPin, Edit, Trash2, GripVertical, ChevronDown, ChevronUp } from 'lucide-react';
-import type { DeliveryArea } from '@/core/delivery';
+import type { DeliveryArea } from '@/modules/gastronomy/services/DeliveryAreaService';
 
 interface DeliveryAreaCardProps {
   area: DeliveryArea;
@@ -80,7 +80,7 @@ export function DeliveryAreaCard({
       </CardHeader>
 
       <CardContent className="space-y-4">
-        {/* Informações principais */}
+        {/* InformaÃ§Ãµes principais */}
         <div className="grid grid-cols-3 gap-4 text-sm">
           <div>
             <p className="text-muted-foreground">Taxa de Entrega</p>
@@ -89,11 +89,11 @@ export function DeliveryAreaCard({
             </p>
           </div>
           <div>
-            <p className="text-muted-foreground">Pedido Mínimo</p>
+            <p className="text-muted-foreground">Pedido MÃ­nimo</p>
             <p className="font-medium">
               {area.minimum_order_value
                 ? `R$ ${area.minimum_order_value.toFixed(2)}`
-                : 'Sem mínimo'}
+                : 'Sem mÃ­nimo'}
             </p>
           </div>
           <div>
@@ -143,7 +143,7 @@ export function DeliveryAreaCard({
           )}
         </div>
 
-        {/* Ações */}
+        {/* AÃ§Ãµes */}
         <Button
           variant="outline"
           className="w-full"
@@ -155,3 +155,4 @@ export function DeliveryAreaCard({
     </Card>
   );
 }
+

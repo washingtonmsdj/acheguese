@@ -13,7 +13,7 @@ export function useActiveTerritory(): {
   activeTerritory: ActiveTerritory;
   activeLocation: Location | null;
   territoryMode: TerritoryMode;
-  setActiveLocation: (location: Location) => void;
+  setActiveLocation: (location: Location | null) => void;
   setTerritoryMode: (mode: TerritoryMode) => void;
   clearActiveTerritory: () => void;
 } {

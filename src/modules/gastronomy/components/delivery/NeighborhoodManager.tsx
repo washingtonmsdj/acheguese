@@ -1,5 +1,5 @@
-/**
- * NeighborhoodManager — Gestão de bairros de uma área
+﻿/**
+ * NeighborhoodManager â€” GestÃ£o de bairros de uma Ã¡rea
  *
  * Permite adicionar, editar e remover bairros.
  * SSOT: Usa useDeliveryNeighborhoods hook
@@ -13,7 +13,7 @@ import { Input } from '@/shared/components/ui/input';
 import { Label } from '@/shared/components/ui/label';
 import { Badge } from '@/shared/components/ui/badge';
 import { MapPin, Plus, Trash2, X, Edit2 } from 'lucide-react';
-import type { DeliveryArea, DeliveryNeighborhood } from '@/core/delivery';
+import type { DeliveryArea, DeliveryNeighborhood } from '@/modules/gastronomy/services/DeliveryAreaService';
 
 interface NeighborhoodManagerProps {
   area: DeliveryArea;
@@ -89,7 +89,7 @@ export function NeighborhoodManager({ area, onClose }: NeighborhoodManagerProps)
               Bairros - {area.name}
             </CardTitle>
             <CardDescription>
-              Gerencie os bairros atendidos por esta área
+              Gerencie os bairros atendidos por esta Ã¡rea
             </CardDescription>
           </div>
           <Button variant="ghost" size="icon" onClick={onClose}>
@@ -99,20 +99,20 @@ export function NeighborhoodManager({ area, onClose }: NeighborhoodManagerProps)
       </CardHeader>
 
       <CardContent className="space-y-6">
-        {/* Informações da área */}
+        {/* InformaÃ§Ãµes da Ã¡rea */}
         <div className="p-4 bg-muted rounded-lg space-y-2">
-          <p className="text-sm font-medium">Configurações Padrão da Área:</p>
+          <p className="text-sm font-medium">ConfiguraÃ§Ãµes PadrÃ£o da Ãrea:</p>
           <div className="grid grid-cols-3 gap-4 text-sm">
             <div>
               <p className="text-muted-foreground">Taxa</p>
               <p className="font-medium">R$ {area.delivery_fee.toFixed(2)}</p>
             </div>
             <div>
-              <p className="text-muted-foreground">Mínimo</p>
+              <p className="text-muted-foreground">MÃ­nimo</p>
               <p className="font-medium">
                 {area.minimum_order_value
                   ? `R$ ${area.minimum_order_value.toFixed(2)}`
-                  : 'Sem mínimo'}
+                  : 'Sem mÃ­nimo'}
               </p>
             </div>
             <div>
@@ -121,7 +121,7 @@ export function NeighborhoodManager({ area, onClose }: NeighborhoodManagerProps)
             </div>
           </div>
           <p className="text-xs text-muted-foreground">
-            Bairros herdam essas configurações, mas podem ter valores customizados
+            Bairros herdam essas configuraÃ§Ãµes, mas podem ter valores customizados
           </p>
         </div>
 
@@ -157,7 +157,7 @@ export function NeighborhoodManager({ area, onClose }: NeighborhoodManagerProps)
                         )}
                         {n.custom_minimum_order && (
                           <Badge variant="secondary" className="text-xs">
-                            Mín: R$ {n.custom_minimum_order.toFixed(2)}
+                            MÃ­n: R$ {n.custom_minimum_order.toFixed(2)}
                           </Badge>
                         )}
                         {n.custom_estimated_time && (
@@ -186,7 +186,7 @@ export function NeighborhoodManager({ area, onClose }: NeighborhoodManagerProps)
           </p>
         )}
 
-        {/* Formulário de adicionar */}
+        {/* FormulÃ¡rio de adicionar */}
         {isAddingState ? (
           <div className="space-y-4 p-4 border rounded-lg bg-muted/50">
             <div className="flex items-center justify-between">
@@ -224,7 +224,7 @@ export function NeighborhoodManager({ area, onClose }: NeighborhoodManagerProps)
                 </Label>
                 <Input
                   id="city"
-                  placeholder="Ex: São Paulo"
+                  placeholder="Ex: SÃ£o Paulo"
                   value={formData.city}
                   onChange={(e) =>
                     setFormData((prev) => ({ ...prev, city: e.target.value }))
@@ -253,10 +253,10 @@ export function NeighborhoodManager({ area, onClose }: NeighborhoodManagerProps)
 
             <div className="space-y-2">
               <p className="text-sm font-medium">
-                Configurações Customizadas (opcional)
+                ConfiguraÃ§Ãµes Customizadas (opcional)
               </p>
               <p className="text-xs text-muted-foreground">
-                Deixe em branco para usar os valores padrão da área
+                Deixe em branco para usar os valores padrÃ£o da Ã¡rea
               </p>
             </div>
 
@@ -280,7 +280,7 @@ export function NeighborhoodManager({ area, onClose }: NeighborhoodManagerProps)
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="custom-minimum">Mínimo (R$)</Label>
+                <Label htmlFor="custom-minimum">MÃ­nimo (R$)</Label>
                 <Input
                   id="custom-minimum"
                   type="number"
@@ -343,3 +343,4 @@ export function NeighborhoodManager({ area, onClose }: NeighborhoodManagerProps)
     </Card>
   );
 }
+

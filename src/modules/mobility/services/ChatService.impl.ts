@@ -14,6 +14,8 @@
 
 import { supabase } from '@/integrations/supabase';
 import { logger } from '@/shared/utils/logger';
+import * as chatQueries from './chat.queries';
+import * as chatMutations from './chat.mutations';
 
 export interface RideChat {
   id: string;
@@ -192,3 +194,8 @@ export class ChatService {
 }
 
 export const chatService = ChatService;
+
+export const ChatFacade = {
+  queries: chatQueries,
+  mutations: chatMutations,
+} as const;
