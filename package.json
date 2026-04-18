@@ -53,6 +53,8 @@
     "seed:e2e:verbose": "tsx scripts/seed-e2e-users.ts --verbose",
     "seed:e2e:network": "tsx scripts/seed-e2e-network.ts",
     "seed:e2e:network:reset": "tsx scripts/seed-e2e-network.ts --reset",
+    "test:google-places:salvador": "tsx scripts/poc-google-places-salvador.ts",
+    "import:google-places:salvador": "tsx scripts/import-google-places-salvador.ts",
     "validate:e2e": "tsx scripts/validate-e2e-setup.ts",
     "apply:gate2": "tsx scripts/apply-gate2-migration-final.ts",
     "apply:gate2:remote": "tsx scripts/apply-gate2-postgres.ts",

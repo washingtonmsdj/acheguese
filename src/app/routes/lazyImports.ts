@@ -257,3 +257,4 @@ export const AdminTerritoryContent = lazy(() => import("@/modules/admin/pages/Ad
 export const AdminTerritorialGroups = lazy(() => import("@/modules/admin/pages/AdminTerritorialGroups"));
 export const AdminCityMetadata = lazy(() => import("@/modules/admin/pages/AdminCityMetadata"));
 export const AdminTerritoryManagement = lazy(() => import("@/modules/admin/pages/AdminTerritoryManagement"));
+export const AdminGooglePlacesImport = lazy(() => import("@/modules/admin/pages/AdminGooglePlacesImport"));
