@@ -52,6 +52,13 @@ export default defineConfig(({ mode }) => ({
   server: {
     host: "::",
     port: 8080,
+    proxy: {
+      // Permite usar frontend em :8080 com API serverless local (vercel dev) em :3000
+      "/api": {
+        target: process.env.VITE_API_PROXY_TARGET || "http://localhost:3000",
+        changeOrigin: true,
+      },
+    },
     hmr: {
       overlay: false,
     },

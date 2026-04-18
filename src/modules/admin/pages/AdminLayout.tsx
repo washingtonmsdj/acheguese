@@ -274,6 +274,12 @@ const navItems: Array<{
     section: "sistema",
   },
   {
+    to: "/admin/google-places-import",
+    icon: Database,
+    label: "Import Google Places",
+    section: "sistema",
+  },
+  {
     to: "/admin/highlights",
     icon: MapPin,
     label: "Destaques Territoriais",

@@ -238,7 +238,9 @@ export default async function handler(req: any, res: any) {
       return;
     }
 
-    const body = (req.body || {}) as ReqBody;
+    const body = (
+      typeof req.body === "string" ? JSON.parse(req.body || "{}") : req.body || {}
+    ) as ReqBody;
     const mode = body.mode === 'apply' ? 'apply' : 'dry-run';
     const limit = Number.isFinite(body.limit) ? Math.max(1, Number(body.limit)) : 20;
     const sample = Boolean(body.sample);

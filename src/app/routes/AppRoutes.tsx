@@ -366,6 +366,7 @@ export function AppRoutes() {
         <Route path="territorial-groups" element={<P.AdminTerritorialGroups />} />
         <Route path="city-metadata" element={<P.AdminCityMetadata />} />
         <Route path="territory-management" element={<P.AdminTerritoryManagement />} />
+        <Route path="google-places-import" element={<P.AdminGooglePlacesImport />} />
         {/* Compatibilidade com links legados de pontos turísticos */}
         <Route path="pontos-turisticos" element={<P.AdminGuideTouristPointsPage />} />
         <Route path="pontos-turisticos/novo" element={<P.AdminGuideTouristPointFormPage />} />

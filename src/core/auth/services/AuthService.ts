@@ -9,6 +9,7 @@
 import { supabase } from "@/integrations/supabase";
 import { SessionService } from "@/core/session/services/SessionService";
 import { logger } from "@/shared/utils/logger";
+import { USER_ROLE } from "@/shared/types/constants";
 import type { User, Session } from "@supabase/supabase-js";
 import type { AdminSupabaseClient } from "@/core/admin/types/adminDatabase.types";
 
