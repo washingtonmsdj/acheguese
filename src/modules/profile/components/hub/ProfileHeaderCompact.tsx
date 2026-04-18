@@ -8,12 +8,14 @@
 import { useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import {
+  Bell,
   Camera,
   CheckCircle2,
   Globe,
   MapPin,
   MoreHorizontal,
   Pencil,
+  Star,
   Users,
 } from "lucide-react";
 import { motion } from "framer-motion";
@@ -41,6 +43,7 @@ import {
 } from "@/core/profiles/utils/publicProfileUrl";
 import { getProfileTypeLabel } from "@/modules/profile/utils/profileDomainRules";
 import { useAppUrls } from "@/core/routing/hooks/useAppUrls";
+import { ProfileCompletenessWidget } from "@/modules/profile/components/ProfileCompletenessWidget";
 
 import type { Profile } from "@/core/profiles/services/multi-profile/types";
 import type { ProfileAccountSnapshot } from "@/core/profiles/services/types";
@@ -48,6 +51,7 @@ import type { ProfileAccountSnapshot } from "@/core/profiles/services/types";
 interface ProfileHeaderCompactProps {
   activeProfile: Profile | null;
   profile: Profile | null;
+  allProfiles?: Profile[];
   userEmail: string;
   accountSnapshot: ProfileAccountSnapshot;
   identity: any;
@@ -57,7 +61,13 @@ interface ProfileHeaderCompactProps {
   canOpenPublicProfile: boolean;
   handle: string;
   territoryLabel?: string;
+  reputation?: {
+    score: number;
+    level: number;
+    rank?: string;
+  };
   onAvatarChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onNavigate?: (path: string) => void;
 }
 
 function getInitials(name?: string | null): string {
@@ -138,6 +148,7 @@ function getVerificationTone(status: string): string {
 export function ProfileHeaderCompact({
   activeProfile,
   profile,
+  allProfiles,
   userEmail,
   accountSnapshot,
   identity,
@@ -147,7 +158,9 @@ export function ProfileHeaderCompact({
   canOpenPublicProfile,
   handle,
   territoryLabel,
+  reputation,
   onAvatarChange,
+  onNavigate,
 }: ProfileHeaderCompactProps) {
   const navigate = useNavigate();
   const appUrls = useAppUrls();
@@ -163,7 +176,11 @@ export function ProfileHeaderCompact({
 
   const openEditor = () => {
     if (!editorProfileId) return;
-    navigate(buildProfileEditUrl(editorProfileId));
+    if (onNavigate) {
+      onNavigate(buildProfileEditUrl(editorProfileId));
+    } else {
+      navigate(buildProfileEditUrl(editorProfileId));
+    }
   };
 
   return (
@@ -171,24 +188,24 @@ export function ProfileHeaderCompact({
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
-      className="relative overflow-hidden rounded-3xl border border-border bg-gradient-to-br from-primary/10 via-card to-accent/10 p-4 shadow-sm sm:p-5"
+      className="relative overflow-hidden rounded-2xl border border-border bg-gradient-to-br from-primary/10 via-card to-accent/10 p-3 shadow-sm sm:rounded-3xl sm:p-5"
     >
       {/* Topo: avatar + nome + ações */}
-      <div className="flex items-start gap-4">
+      <div className="flex items-start gap-3 sm:gap-4">
         <div className="relative shrink-0">
-          <Avatar className="h-20 w-20 border-4 border-card shadow-md sm:h-24 sm:w-24">
+          <Avatar className="h-16 w-16 border-2 border-card shadow-md sm:h-20 sm:w-20 md:h-24 md:w-24 md:border-4">
             <AvatarImage src={avatarUrl || undefined} />
-            <AvatarFallback className="text-xl font-semibold sm:text-2xl">
+            <AvatarFallback className="text-lg font-semibold sm:text-xl md:text-2xl">
               {getInitials(displayName)}
             </AvatarFallback>
           </Avatar>
           <button
             type="button"
             onClick={() => fileRef.current?.click()}
-            className="absolute -bottom-1 -right-1 flex h-7 w-7 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-md transition-transform hover:scale-110"
+            className="absolute -bottom-1 -right-1 flex h-6 w-6 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-md transition-transform hover:scale-110 sm:h-7 sm:w-7"
             aria-label="Alterar foto de perfil"
           >
-            <Camera className="h-3.5 w-3.5" />
+            <Camera className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
           </button>
           <input
             ref={fileRef}
@@ -202,28 +219,52 @@ export function ProfileHeaderCompact({
 
         <div className="min-w-0 flex-1">
           <div className="flex items-start justify-between gap-2">
-            <div className="min-w-0">
-              <div className="flex flex-wrap items-center gap-1.5">
-                <h1 className="truncate text-xl font-semibold tracking-tight text-foreground sm:text-2xl">
+            <div className="min-w-0 flex-1">
+              <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
+                <h1 className="truncate text-lg font-bold tracking-tight text-foreground sm:text-xl md:text-2xl">
                   {displayName}
                 </h1>
                 {isVerified ? (
                   <CheckCircle2
-                    className="h-4 w-4 shrink-0 text-primary"
+                    className="h-4 w-4 shrink-0 text-primary sm:h-5 sm:w-5"
                     aria-label="Verificado"
                   />
                 ) : null}
               </div>
-              <p className="mt-0.5 truncate text-xs text-muted-foreground sm:text-sm">
-                @{handle || "sem-handle"} · {getProfileTypeLabel(activeProfile)}
-              </p>
+              <div className="mt-0.5 flex flex-wrap items-center gap-1 text-xs text-muted-foreground sm:mt-1 sm:gap-1.5 sm:text-sm">
+                {canOpenPublicProfile ? (
+                  <button
+                    type="button"
+                    onClick={() => navigate(buildPublicProfileUrl(handle))}
+                    className="font-medium text-primary hover:underline"
+                  >
+                    @{handle || "sem-handle"}
+                  </button>
+                ) : (
+                  <span className="font-medium">@{handle || "sem-handle"}</span>
+                )}
+                <span className="text-border">·</span>
+                <Badge variant="secondary" className="h-4 text-[9px] font-medium sm:h-5 sm:text-[10px]">
+                  {getProfileTypeLabel(activeProfile)}
+                </Badge>
+              </div>
+              {/* Bio ou sugestão - apenas desktop */}
+              {bio ? (
+                <p className="mt-2 hidden max-w-2xl text-sm text-muted-foreground md:line-clamp-2">
+                  {bio}
+                </p>
+              ) : (
+                <p className="mt-2 hidden max-w-2xl text-sm italic text-muted-foreground/70 md:block">
+                  Adicione uma bio para se apresentar
+                </p>
+              )}
             </div>
 
             {/* Ações: botão principal + menu dropdown */}
-            <div className="flex shrink-0 items-center gap-1.5">
+            <div className="flex shrink-0 items-center gap-1 sm:gap-1.5">
               <Button
                 size="sm"
-                className="hidden gap-1.5 sm:inline-flex"
+                className="hidden gap-1.5 md:inline-flex"
                 onClick={openEditor}
               >
                 <Pencil className="h-3.5 w-3.5" />
@@ -232,17 +273,17 @@ export function ProfileHeaderCompact({
               <Button
                 size="icon"
                 variant="default"
-                className="sm:hidden"
+                className="h-8 w-8 md:hidden"
                 onClick={openEditor}
                 aria-label="Editar perfil"
               >
-                <Pencil className="h-4 w-4" />
+                <Pencil className="h-3.5 w-3.5" />
               </Button>
 
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button size="icon" variant="outline" aria-label="Mais opções">
-                    <MoreHorizontal className="h-4 w-4" />
+                  <Button size="icon" variant="outline" className="h-8 w-8" aria-label="Mais opções">
+                    <MoreHorizontal className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-56">
@@ -256,10 +297,6 @@ export function ProfileHeaderCompact({
                       Abrir perfil público
                     </DropdownMenuItem>
                   ) : null}
-                  <DropdownMenuItem onClick={() => navigate(appUrls.profile.manage)}>
-                    <Users className="mr-2 h-4 w-4" />
-                    Gerenciar identidades
-                  </DropdownMenuItem>
                   <DropdownMenuItem
                     onClick={() => navigate(appUrls.profile.settings("privacy"))}
                   >
@@ -269,85 +306,245 @@ export function ProfileHeaderCompact({
               </DropdownMenu>
             </div>
           </div>
-
-          {/* Bio (apenas desktop, mobile fica abaixo) */}
-          {bio ? (
-            <p className="mt-2 hidden max-w-2xl text-sm text-muted-foreground sm:line-clamp-2">
-              {bio}
-            </p>
-          ) : null}
         </div>
       </div>
 
       {/* Bio mobile (abaixo do avatar) */}
       {bio ? (
-        <p className="mt-3 line-clamp-2 text-sm text-muted-foreground sm:hidden">{bio}</p>
-      ) : null}
+        <p className="mt-2 line-clamp-2 text-xs text-muted-foreground sm:text-sm md:hidden">{bio}</p>
+      ) : (
+        <p className="mt-2 text-xs italic text-muted-foreground/70 md:hidden">
+          Adicione uma bio para se apresentar
+        </p>
+      )}
 
-      {/* Linha de badges + meta */}
-      <div className="mt-4 flex flex-wrap items-center gap-1.5">
-        <Badge
-          variant="outline"
-          className={cn("h-6 text-[10px] font-medium", getAccountTone(accountSnapshot.accountState))}
-        >
-          {getAccountStateLabel(accountSnapshot.accountState)}
-        </Badge>
-        <Badge variant="outline" className="h-6 text-[10px] font-medium">
-          Plano {planLabel}
-        </Badge>
-        <Badge
-          variant="outline"
-          className={cn(
-            "h-6 text-[10px] font-medium",
-            getVerificationTone(accountSnapshot.verificationStatus),
-          )}
-        >
-          {getVerificationLabel(accountSnapshot.verificationStatus)}
-        </Badge>
-
-        {/* Popover com meta extra (desktop) */}
-        <Popover>
-          <PopoverTrigger asChild>
-            <button
-              type="button"
-              className="ml-auto inline-flex items-center gap-1 rounded-full border border-border bg-card/60 px-2.5 py-1 text-[10px] font-medium text-muted-foreground transition-colors hover:bg-accent/40"
+      {/* Linha de badges + meta - Responsiva e compacta */}
+      <div className="mt-3 space-y-2 sm:mt-4 sm:space-y-3">
+        {/* Primeira linha: Status, Plano, Verificação, Reputação */}
+        <div className="flex flex-wrap items-center gap-1.5 text-[10px] sm:gap-2 sm:text-xs">
+          {/* Status da conta */}
+          <div className="flex items-center gap-1">
+            <span className="hidden font-medium text-muted-foreground sm:inline">Status:</span>
+            <Badge
+              variant="outline"
+              className={cn("h-5 text-[9px] font-semibold sm:h-6 sm:text-[10px]", getAccountTone(accountSnapshot.accountState))}
             >
-              <MapPin className="h-3 w-3" />
-              <span className="max-w-[160px] truncate">
-                {territoryLabel || "Sem territorio"}
-              </span>
-            </button>
-          </PopoverTrigger>
-          <PopoverContent className="w-72" align="end">
-            <div className="space-y-2 text-sm">
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                  Território
-                </p>
-                <p className="mt-1">{territoryLabel || "Não configurado"}</p>
+              {getAccountStateLabel(accountSnapshot.accountState)}
+            </Badge>
+          </div>
+
+          <span className="text-muted-foreground/30">|</span>
+
+          {/* Plano */}
+          <div className="flex items-center gap-1">
+            <span className="hidden font-medium text-muted-foreground sm:inline">Plano:</span>
+            <Badge 
+              variant="outline" 
+              className={cn(
+                "h-5 text-[9px] font-semibold sm:h-6 sm:text-[10px]",
+                (identity?.plan?.isPremium || context?.plan?.isPremium) 
+                  ? "border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-400"
+                  : ""
+              )}
+            >
+              {planLabel}
+              {(identity?.plan?.isPremium || context?.plan?.isPremium) ? " ⭐" : ""}
+            </Badge>
+          </div>
+
+          <span className="hidden text-muted-foreground/30 sm:inline">|</span>
+
+          {/* Verificação - oculta em mobile muito pequeno */}
+          <div className="hidden items-center gap-1 xs:flex">
+            <span className="hidden font-medium text-muted-foreground sm:inline">Verificação:</span>
+            <Badge
+              variant="outline"
+              className={cn(
+                "h-5 text-[9px] font-semibold sm:h-6 sm:text-[10px]",
+                getVerificationTone(accountSnapshot.verificationStatus),
+              )}
+            >
+              {getVerificationLabel(accountSnapshot.verificationStatus)}
+            </Badge>
+          </div>
+
+          {/* Reputação (se houver) */}
+          {reputation ? (
+            <>
+              <span className="hidden text-muted-foreground/30 md:inline">|</span>
+              <div className="hidden items-center gap-1 md:flex">
+                <Star className="h-3 w-3 fill-amber-500 text-amber-500 sm:h-3.5 sm:w-3.5" />
+                <Badge
+                  variant="outline"
+                  className="h-5 gap-1 border-amber-500/30 bg-amber-500/10 text-[9px] font-semibold text-amber-700 dark:text-amber-400 sm:h-6 sm:text-[10px]"
+                >
+                  Nível {reputation.level} · {reputation.score} pts
+                </Badge>
               </div>
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                  Inbox
-                </p>
-                <p className="mt-1">
-                  {notifications.unread > 0
-                    ? `${notifications.unread} não lidas`
-                    : "Em dia"}
-                </p>
+            </>
+          ) : null}
+
+          {/* Território - compacto em mobile */}
+          {territoryLabel ? (
+            <>
+              <span className="hidden text-muted-foreground/30 lg:inline">|</span>
+              <div className="hidden items-center gap-1 lg:flex">
+                <MapPin className="h-3 w-3 text-muted-foreground sm:h-3.5 sm:w-3.5" />
+                <span className="text-[10px] font-medium text-foreground sm:text-xs">
+                  {territoryLabel}
+                </span>
               </div>
-              {totalAlerts > 0 ? (
+            </>
+          ) : null}
+
+          {/* Botão "Mais detalhes" - sempre visível */}
+          <Popover>
+            <PopoverTrigger asChild>
+              <button
+                type="button"
+                className="ml-auto inline-flex items-center gap-1 rounded-full border border-border bg-card/60 px-2 py-1 text-[9px] font-medium text-muted-foreground transition-colors hover:bg-accent/40 hover:text-foreground sm:gap-1.5 sm:px-3 sm:py-1.5 sm:text-[10px]"
+              >
+                <MoreHorizontal className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
+                <span className="hidden xs:inline">Mais</span>
+              </button>
+            </PopoverTrigger>
+            <PopoverContent className="w-72 sm:w-80" align="end">
+              <div className="space-y-3">
                 <div>
                   <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                    Alertas prioritários
+                    Território
                   </p>
-                  <p className="mt-1 text-warning">{totalAlerts}</p>
+                  <p className="mt-1 text-sm font-medium text-foreground">
+                    {territoryLabel || "Não configurado"}
+                  </p>
                 </div>
-              ) : null}
+                
+                {(identity?.reputation || context?.reputation) ? (
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                      Reputação completa
+                    </p>
+                    <div className="mt-1 space-y-1 text-sm">
+                      <p>
+                        <span className="font-medium">Score:</span>{" "}
+                        {identity?.reputation?.score ?? context?.reputation?.score ?? 0}
+                      </p>
+                      <p>
+                        <span className="font-medium">Nível:</span>{" "}
+                        {identity?.reputation?.level ?? context?.reputation?.level ?? 1}
+                      </p>
+                      {(identity?.reputation?.rank || context?.reputation?.rank) ? (
+                        <p>
+                          <span className="font-medium">Rank:</span>{" "}
+                          {identity?.reputation?.rank ?? context?.reputation?.rank}
+                        </p>
+                      ) : null}
+                    </div>
+                  </div>
+                ) : null}
+
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                    Notificações
+                  </p>
+                  <div className="mt-1 space-y-1 text-sm">
+                    <p>
+                      {notifications.unread > 0 ? (
+                        <span className="font-semibold text-warning">
+                          {notifications.unread} não lidas
+                        </span>
+                      ) : (
+                        <span className="text-muted-foreground">Em dia</span>
+                      )}
+                    </p>
+                    {notifications.highPriority > 0 ? (
+                      <p className="text-xs text-muted-foreground">
+                        {notifications.highPriority} de alta prioridade
+                      </p>
+                    ) : null}
+                  </div>
+                </div>
+
+                {totalAlerts > 0 ? (
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                      Alertas prioritários
+                    </p>
+                    <p className="mt-1 text-sm font-semibold text-destructive">
+                      {totalAlerts} alertas urgentes
+                    </p>
+                  </div>
+                ) : null}
+
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                    Email
+                  </p>
+                  <p className="mt-1 truncate text-sm text-muted-foreground">
+                    {userEmail}
+                  </p>
+                </div>
+
+                {(identity?.plan?.expiresAt || context?.plan?.expiresAt) ? (
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                      Plano expira em
+                    </p>
+                    <p className="mt-1 text-sm text-muted-foreground">
+                      {new Date(identity?.plan?.expiresAt || context?.plan?.expiresAt || "").toLocaleDateString("pt-BR")}
+                    </p>
+                  </div>
+                ) : null}
+              </div>
+            </PopoverContent>
+          </Popover>
+        </div>
+
+        {/* Segunda linha: Informações adicionais - apenas desktop */}
+        <div className="hidden flex-wrap items-center gap-2 text-xs md:flex">
+          {/* Total de perfis */}
+          {activeProfile && (
+            <>
+              <div className="flex items-center gap-1.5">
+                <Users className="h-3.5 w-3.5 text-muted-foreground" />
+                <span className="font-medium text-foreground">
+                  {allProfiles?.length ?? 1} {(allProfiles?.length ?? 1) === 1 ? "perfil" : "perfis"}
+                </span>
+              </div>
+              <span className="text-muted-foreground/30">|</span>
+            </>
+          )}
+
+          {/* Notificações não lidas */}
+          {notifications.unread > 0 ? (
+            <>
+              <div className="flex items-center gap-1.5">
+                <Bell className="h-3.5 w-3.5 text-warning" />
+                <span className="font-semibold text-warning">
+                  {notifications.unread} {notifications.unread === 1 ? "notificação" : "notificações"}
+                </span>
+              </div>
+              <span className="text-muted-foreground/30">|</span>
+            </>
+          ) : null}
+
+          {/* Alertas prioritários */}
+          {totalAlerts > 0 ? (
+            <div className="flex items-center gap-1.5">
+              <span className="font-semibold text-destructive">
+                ⚠️ {totalAlerts} {totalAlerts === 1 ? "alerta" : "alertas"} prioritário{totalAlerts === 1 ? "" : "s"}
+              </span>
             </div>
-          </PopoverContent>
-        </Popover>
+          ) : null}
+        </div>
       </div>
+
+      {/* Widget de Completude do Perfil - Responsivo */}
+      {activeProfile && (
+        <div className="mt-3 sm:mt-4">
+          <ProfileCompletenessWidget profile={activeProfile} />
+        </div>
+      )}
     </motion.section>
   );
 }

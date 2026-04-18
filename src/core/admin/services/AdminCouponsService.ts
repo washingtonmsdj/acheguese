@@ -9,6 +9,7 @@
  * TODO: Migrar para um CouponsService dedicado em core/coupons
  */
 
+import { supabase } from "@/integrations/supabase";
 import { logger } from "@/shared/utils/logger";
 
 export interface CouponData {

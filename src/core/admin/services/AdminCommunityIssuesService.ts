@@ -357,16 +357,25 @@ class AdminCommunityIssuesServiceClass {
         .eq('id', issueId)
         .single();
 
-      const { error: auditError } = await (supabase as unknown as AdminSupabaseClient)
-        .from(COMMUNITY_ISSUE_AUDIT_TABLE)
-        .insert({
-          issue_id: issueId,
-          action: 'status_change',
-          previous_status: currentIssue.status,
+      const auditData: {
+        issue_id: string;
+        action: string;
+        actor_id: string;
+        metadata?: any;
+      } = {
+        issue_id: issueId,
+        action: 'status_change',
+        actor_id: user.id,
+        metadata: {
+          previous_status: currentIssue.data?.status,
           new_status: status,
-          performed_by: user.id,
-          notes: `Status alterado de ${currentIssue.status} para ${status}`,
-        });
+          notes: `Status alterado de ${currentIssue.data?.status} para ${status}`,
+        },
+      };
+
+      const { error: auditError } = await (supabase as unknown as AdminSupabaseClient)
+        .from(this.AUDIT_TABLE)
+        .insert([auditData]);
 
       if (auditError) throw auditError;
 
@@ -397,12 +406,19 @@ class AdminCommunityIssuesServiceClass {
       if (error) throw error;
 
       // Audit log
-      await supabase.from(this.AUDIT_TABLE).insert({
+      const auditData: {
+        issue_id: string;
+        action: string;
+        actor_id: string;
+        metadata?: any;
+      } = {
         issue_id: issueId,
+        action: 'updated',
         actor_id: user.id,
-        action_type: 'updated',
         metadata: { priority },
-      });
+      };
+
+      await supabase.from(this.AUDIT_TABLE).insert([auditData]);
 
       logger.info('AdminCommunityIssuesService.updatePriority', { issueId, priority });
       return true;
@@ -432,12 +448,19 @@ class AdminCommunityIssuesServiceClass {
       if (error) throw error;
 
       // Audit log
-      await supabase.from(this.AUDIT_TABLE).insert({
+      const auditData: {
+        issue_id: string;
+        action: string;
+        actor_id: string;
+        metadata?: any;
+      } = {
         issue_id: issueId,
+        action: 'removed',
         actor_id: user.id,
-        action_type: 'removed',
         metadata: { reason },
-      });
+      };
+
+      await supabase.from(this.AUDIT_TABLE).insert([auditData]);
 
       logger.info('AdminCommunityIssuesService.removeIssue', { issueId, reason });
       return true;

@@ -10,16 +10,10 @@ import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import { Label } from "@/shared/components/ui/label";
 import { Checkbox } from "@/shared/components/ui/checkbox";
+import { getPaymentMethodLabels } from "@/core/business/constants";
 
-const formasPagamento = [
-  "Dinheiro",
-  "Pix",
-  "Cartão de Débito",
-  "Cartão de Crédito",
-  "Vale Refeição",
-  "Vale Alimentação",
-  "Transferência Bancária",
-];
+// SSOT: Usa constantes centralizadas de formas de pagamento
+const formasPagamento = getPaymentMethodLabels();
 
 interface ExtrasStepProps {
   capaPreview: string | null;

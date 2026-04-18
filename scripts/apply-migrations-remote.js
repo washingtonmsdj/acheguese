@@ -18,12 +18,12 @@ const __dirname = dirname(__filename);
 // Carregar variáveis de ambiente do arquivo remoto
 dotenv.config({ path: join(__dirname, '../.env.remote') });
 
-const supabaseUrl = process.env.VITE_SUPABASE_URL;
-const serviceRoleKey = process.env.VITE_SUPABASE_SERVICE_ROLE_KEY;
+const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
+const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
 if (!supabaseUrl || !serviceRoleKey) {
   console.error('❌ Erro: Variáveis de ambiente não encontradas');
-  console.error('Verifique se VITE_SUPABASE_URL e VITE_SUPABASE_SERVICE_ROLE_KEY estão definidas em .env.remote');
+  console.error('Verifique se SUPABASE_URL e SUPABASE_SERVICE_ROLE_KEY estão definidas em .env.remote');
   process.exit(1);
 }
 

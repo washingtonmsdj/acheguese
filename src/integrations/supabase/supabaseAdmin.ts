@@ -1,79 +1,72 @@
-﻿/**
+/**
  * SUPABASE ADMIN CLIENT
  *
- * Cliente Supabase com service_role key para operacoes administrativas
- *
- * ATENCAO: Este cliente tem permissoes totais!
- * - Contorna RLS (Row Level Security)
- * - Acessa auth.users
- * - Pode modificar qualquer dado
- *
- * USO: Apenas em hooks/services admin
- * A service_role key DEVE ser configurada via variavel de ambiente.
- *
- * IMPORTANTE:
- * - Nunca exponha a service_role key no frontend
- * - Use apenas em operacoes administrativas
- * - Configure como variavel de ambiente secreta em producao
- *
- * @version 2.1.0
+ * SECURITY NOTE:
+ * - service_role nunca pode ir para bundle de frontend
+ * - este cliente so pode existir em contexto server/edge
  */
 
 import { createClient } from "@supabase/supabase-js";
 
-// Validar variaveis de ambiente
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || "https://placeholder.supabase.co";
-const SUPABASE_SERVICE_ROLE_KEY = import.meta.env.SUPABASE_SERVICE_ROLE_KEY;
 const DEBUG_BOOT = import.meta.env.DEV && import.meta.env.VITE_DEBUG_BOOT === "true";
+const IS_BROWSER = typeof window !== "undefined";
 
-if (!import.meta.env.VITE_SUPABASE_URL) {
-  console.warn(
-    "VITE_SUPABASE_URL nao esta definida. " +
-      "Funcionalidades de backend nao estarao disponiveis.",
+const exposedServiceRole = (import.meta.env as Record<string, string | undefined>)
+  .VITE_SUPABASE_SERVICE_ROLE_KEY;
+
+if (exposedServiceRole) {
+  throw new Error(
+    "SECURITY: VITE_SUPABASE_SERVICE_ROLE_KEY nao pode ser usado. " +
+      "Use apenas SUPABASE_SERVICE_ROLE_KEY em ambiente server/edge.",
   );
 }
 
-// Log de aviso se service_role key nao estiver configurada
-if (!SUPABASE_SERVICE_ROLE_KEY && import.meta.env.DEV) {
-  if (DEBUG_BOOT) {
-    console.debug(
-      "SUPABASE_SERVICE_ROLE_KEY ausente no frontend (esperado). " +
-        "Operacoes administrativas sensiveis devem usar Edge Functions/Backend.",
-    );
-  }
+if (!import.meta.env.VITE_SUPABASE_URL) {
+  console.warn(
+    "VITE_SUPABASE_URL nao esta definida. Funcionalidades de backend nao estarao disponiveis.",
+  );
+}
+
+const runtimeProcessEnv = (globalThis as { process?: { env?: Record<string, string | undefined> } })
+  .process?.env;
+const SUPABASE_SERVICE_ROLE_KEY = !IS_BROWSER
+  ? runtimeProcessEnv?.SUPABASE_SERVICE_ROLE_KEY ?? import.meta.env.SUPABASE_SERVICE_ROLE_KEY
+  : undefined;
+
+if (!SUPABASE_SERVICE_ROLE_KEY && DEBUG_BOOT) {
+  console.debug(
+    "SUPABASE_SERVICE_ROLE_KEY ausente no runtime server (esperado no frontend). " +
+      "Operacoes administrativas sensiveis devem usar Edge Functions/Backend.",
+  );
 }
 
 /**
  * Cliente Supabase com service_role
  *
- * CUIDADO: Tem permissoes totais!
- * Requer SUPABASE_SERVICE_ROLE_KEY configurada como secret
+ * Em browser, e sempre null por seguranca.
  */
-export const supabaseAdmin = SUPABASE_SERVICE_ROLE_KEY
-  ? createClient(SUPABASE_URL!, SUPABASE_SERVICE_ROLE_KEY, {
+export const supabaseAdmin = !IS_BROWSER && SUPABASE_SERVICE_ROLE_KEY
+  ? createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
       auth: {
         autoRefreshToken: false,
         persistSession: false,
-        storageKey: 'sb-admin-auth-token',
+        storageKey: "sb-admin-auth-token",
       },
     })
   : null;
 
-// Log de inicializacao (apenas em desenvolvimento)
 if (DEBUG_BOOT && supabaseAdmin) {
-  console.debug("Supabase Admin inicializado (service_role)");
+  console.debug("Supabase Admin inicializado (server-only service_role)");
 }
 
-/**
- * Helper seguro para obter o admin client
- * Lanca erro se nao configurado
- */
 export function getSupabaseAdmin() {
   if (!supabaseAdmin) {
     throw new Error(
-      "supabaseAdmin nao esta disponivel. " +
-        "Use Edge Functions/Backend ou carregue SUPABASE_SERVICE_ROLE_KEY apenas no shell administrativo",
+      "supabaseAdmin nao esta disponivel neste runtime. " +
+        "Use Edge Functions/Backend para operacoes com service_role.",
     );
   }
   return supabaseAdmin;
 }
+

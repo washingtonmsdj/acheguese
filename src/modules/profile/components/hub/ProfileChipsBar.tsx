@@ -6,13 +6,11 @@
  */
 
 import { motion } from "framer-motion";
-import { Plus, Check } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { Check } from "lucide-react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/shared/components/ui/avatar";
 import { ScrollArea, ScrollBar } from "@/shared/components/ui/scroll-area";
 import { cn } from "@/shared/utils/cn";
-import { useAppUrls } from "@/core/routing/hooks/useAppUrls";
 import { getProfileTypeIcon, getProfileTypeLabel } from "@/modules/profile/utils/profileDomainRules";
 
 import type { Profile } from "@/core/profiles/services/multi-profile/types";
@@ -34,26 +32,10 @@ function getInitials(name?: string | null): string {
 }
 
 export function ProfileChipsBar({ profiles, activeProfileId, onSwitch }: ProfileChipsBarProps) {
-  const navigate = useNavigate();
-  const appUrls = useAppUrls();
-
   if (profiles.length === 0) return null;
 
   return (
     <div className="rounded-3xl border border-border bg-card/60 backdrop-blur-sm p-3 shadow-sm">
-      <div className="mb-2 flex items-center justify-between px-1">
-        <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-          Suas identidades · {profiles.length}
-        </p>
-        <button
-          type="button"
-          onClick={() => navigate(appUrls.profile.manage)}
-          className="text-xs font-medium text-primary hover:underline"
-        >
-          Gerenciar
-        </button>
-      </div>
-
       <ScrollArea className="w-full whitespace-nowrap">
         <div className="flex gap-2 pb-2">
           {profiles.map((profile) => {
@@ -101,19 +83,6 @@ export function ProfileChipsBar({ profiles, activeProfileId, onSwitch }: Profile
               </motion.button>
             );
           })}
-
-          <motion.button
-            type="button"
-            whileTap={{ scale: 0.96 }}
-            onClick={() => navigate(appUrls.profile.manage)}
-            className="flex shrink-0 items-center gap-2 rounded-full border border-dashed border-border bg-background px-3 py-2 text-sm text-muted-foreground transition-colors hover:border-primary/40 hover:text-primary"
-            aria-label="Adicionar novo perfil"
-          >
-            <span className="flex h-9 w-9 items-center justify-center rounded-full bg-muted">
-              <Plus className="h-4 w-4" />
-            </span>
-            <span className="pr-1 text-xs font-medium">Novo perfil</span>
-          </motion.button>
         </div>
         <ScrollBar orientation="horizontal" />
       </ScrollArea>

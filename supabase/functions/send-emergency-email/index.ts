@@ -1,238 +1,378 @@
 // Supabase Edge Function - Send Emergency Email
 // Deploy: supabase functions deploy send-emergency-email
 
-import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
-import { 
+import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { jsonSecurityResponse, requireAuthenticatedUser } from '../_shared/businessAuth.ts';
+import {
+  checkRateLimit,
   getAllSecurityHeaders,
   rateLimitMiddleware,
   auditLog,
   getAuditInfo,
   errorResponse,
   isValidUUID,
-  isValidEmail,
+  isOriginAllowed,
   sanitizeString,
 } from '../_shared/security.ts';
 
-const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY')
-const EMAIL_FROM_DOMAIN = Deno.env.get('EMAIL_FROM_DOMAIN') || 'onboarding@resend.dev'
-const EMAIL_FROM_NAME = Deno.env.get('EMAIL_FROM_NAME') || 'Alerta de Emergência'
-const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!
-const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY');
+const EMAIL_FROM_DOMAIN = Deno.env.get('EMAIL_FROM_DOMAIN') || 'onboarding@resend.dev';
+const EMAIL_FROM_NAME = Deno.env.get('EMAIL_FROM_NAME') || 'Alerta de Emergencia';
+const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
+const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 
-// Rate limiting: 5 emails por perfil a cada 5 minutos
-const RATE_LIMIT_MAX = 5
-const RATE_LIMIT_WINDOW_MINUTES = 5
+const RATE_LIMIT_MAX = 5;
+const RATE_LIMIT_WINDOW_MINUTES = 5;
+
+const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
+  auth: { persistSession: false },
+});
 
 interface EmailRequest {
-  contactId: string
-  contactName: string
-  contactEmail: string
-  alertId: string
-  alertType: string
-  alertCreatedAt: string
-  alertDescription?: string
+  contactId: string;
+  alertId: string;
+  alertType?: string;
+  alertCreatedAt?: string;
+  alertDescription?: string;
   alertLocation?: {
-    latitude: number
-    longitude: number
-  }
-  userName?: string
-  userPhone?: string
+    latitude: number;
+    longitude: number;
+  };
 }
 
 interface EmailResponse {
-  success: boolean
-  contactId: string
-  channel: 'email'
-  timestamp: string
-  status: 'sent' | 'failed'
-  error?: string
-  metadata?: Record<string, unknown>
+  success: boolean;
+  contactId: string;
+  channel: 'email';
+  timestamp: string;
+  status: 'sent' | 'failed';
+  error?: string;
+  metadata?: Record<string, unknown>;
+}
+
+interface UserProfileRecord {
+  id: string;
+  name: string | null;
+  phone: string | null;
+}
+
+interface AlertRecord {
+  id: string;
+  profile_id: string | null;
+  created_at: string | null;
+}
+
+interface ContactRecord {
+  id: string;
+  profile_id: string | null;
+  name: string | null;
+  phone: string | null;
+  is_active?: boolean | null;
 }
 
 serve(async (req) => {
   const auditInfo = getAuditInfo(req);
-  
-  // Handle CORS preflight
+  const origin = req.headers.get('origin');
+
+  if (origin && !isOriginAllowed(origin)) {
+    return jsonSecurityResponse({ error: 'Origin not allowed' }, 403);
+  }
+
   if (req.method === 'OPTIONS') {
     return new Response('ok', {
       status: 204,
       headers: getAllSecurityHeaders('POST, OPTIONS'),
-    })
+    });
   }
 
-  // Rate limiting global
+  if (req.method !== 'POST') {
+    return jsonSecurityResponse({ error: 'Method not allowed' }, 405);
+  }
+
   const rateLimitResponse = rateLimitMiddleware(req, 100, 60000);
   if (rateLimitResponse) return rateLimitResponse;
 
+  if (!RESEND_API_KEY) {
+    return errorResponse('Email service not configured', 500, {
+      code: 'MISSING_RESEND_API_KEY',
+    });
+  }
+
+  const authResult = await requireAuthenticatedUser(req, supabase);
+  if (authResult instanceof Response) {
+    auditLog({
+      timestamp: new Date().toISOString(),
+      action: 'emergency_email_auth_failed',
+      resource: 'emergency_alerts',
+      status: 'failure',
+      details: { reason: 'invalid_or_missing_token' },
+      ...auditInfo,
+    });
+    return authResult;
+  }
+
+  const userId = authResult.user.id;
+  const userRateLimit = checkRateLimit(`emergency-email:${userId}`, 30, 5 * 60 * 1000);
+  if (!userRateLimit.allowed) {
+    return jsonSecurityResponse(
+      { error: 'Rate limit exceeded. Try again later.' },
+      429,
+    );
+  }
+
   try {
-    // Validar API key do Resend
-    if (!RESEND_API_KEY) {
-      throw new Error('RESEND_API_KEY not configured')
-    }
-
-    // Parse request
-    const emailRequest: EmailRequest = await req.json()
-
-    // Validar campos obrigatórios
-    if (!emailRequest.contactEmail || !isValidEmail(emailRequest.contactEmail)) {
-      throw new Error('Valid contactEmail is required')
+    let emailRequest: EmailRequest;
+    try {
+      emailRequest = await req.json();
+    } catch {
+      return jsonSecurityResponse({ error: 'Invalid JSON body' }, 400);
     }
 
     if (!emailRequest.alertId || !isValidUUID(emailRequest.alertId)) {
-      throw new Error('Valid alertId is required')
+      return jsonSecurityResponse({ error: 'Valid alertId is required' }, 400);
     }
-
     if (!emailRequest.contactId || !isValidUUID(emailRequest.contactId)) {
-      throw new Error('Valid contactId is required')
+      return jsonSecurityResponse({ error: 'Valid contactId is required' }, 400);
     }
 
-    // Sanitizar entradas
-    const sanitizedContactName = sanitizeString(emailRequest.contactName || 'Contato', 100);
-    const sanitizedUserName = sanitizeString(emailRequest.userName || 'Usuário', 100);
-    const sanitizedDescription = emailRequest.alertDescription 
-      ? sanitizeString(emailRequest.alertDescription, 500)
-      : undefined;
+    const { data: userProfiles, error: profileError } = await supabase
+      .from('profiles')
+      .select('id, name, phone')
+      .eq('user_id', userId);
 
-    // ============================================
-    // RATE LIMITING POR ALERTA
-    // ============================================
-    
-    const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
-    
-    // Buscar profile_id do alerta
+    if (profileError) {
+      return errorResponse('Failed to validate user profile', 500, profileError);
+    }
+    if (!userProfiles || userProfiles.length === 0) {
+      return jsonSecurityResponse({ error: 'User profile not found' }, 403);
+    }
+
+    const userProfileIds = new Set(userProfiles.map((profile: UserProfileRecord) => profile.id));
+
     const { data: alertData, error: alertError } = await supabase
       .from('emergency_alerts')
-      .select('profile_id')
+      .select('id, profile_id, created_at')
       .eq('id', emailRequest.alertId)
-      .single()
-    
-    if (alertError || !alertData) {
-      throw new Error('Alert not found')
+      .maybeSingle();
+
+    if (alertError) {
+      return errorResponse('Failed to validate alert', 500, alertError);
     }
-    
-    const profileId = alertData.profile_id
-    const windowStart = new Date(Date.now() - RATE_LIMIT_WINDOW_MINUTES * 60 * 1000).toISOString()
-    
-    // Contar emails enviados no período
-    const { data: recentLogs, error: logsError } = await supabase
+    if (!alertData) {
+      return jsonSecurityResponse({ error: 'Alert not found' }, 404);
+    }
+
+    const alert = alertData as AlertRecord;
+    if (!alert.profile_id || !userProfileIds.has(alert.profile_id)) {
+      auditLog({
+        timestamp: new Date().toISOString(),
+        userId,
+        action: 'emergency_email_forbidden',
+        resource: 'emergency_alerts',
+        status: 'failure',
+        details: { reason: 'alert_not_owned_by_user', alertId: emailRequest.alertId },
+        ...auditInfo,
+      });
+      return jsonSecurityResponse({ error: 'Forbidden' }, 403);
+    }
+
+    const { data: contactData, error: contactError } = await supabase
+      .from('emergency_contacts')
+      .select('id, profile_id, name, phone, is_active')
+      .eq('id', emailRequest.contactId)
+      .maybeSingle();
+
+    if (contactError) {
+      return errorResponse('Failed to validate emergency contact', 500, contactError);
+    }
+    if (!contactData) {
+      return jsonSecurityResponse({ error: 'Emergency contact not found' }, 404);
+    }
+
+    const contact = contactData as ContactRecord;
+    if (contact.profile_id !== alert.profile_id) {
+      auditLog({
+        timestamp: new Date().toISOString(),
+        userId,
+        action: 'emergency_email_forbidden',
+        resource: 'emergency_contacts',
+        status: 'failure',
+        details: {
+          reason: 'contact_not_linked_to_alert_profile',
+          alertId: emailRequest.alertId,
+          contactId: emailRequest.contactId,
+        },
+        ...auditInfo,
+      });
+      return jsonSecurityResponse({ error: 'Forbidden' }, 403);
+    }
+    if (contact.is_active === false) {
+      return jsonSecurityResponse({ error: 'Emergency contact is inactive' }, 403);
+    }
+
+    const contactEmail = extractEmail(contact.phone || '');
+    if (!contactEmail) {
+      return jsonSecurityResponse(
+        { error: 'Emergency contact email is not configured' },
+        400,
+      );
+    }
+
+    const windowStart = new Date(
+      Date.now() - RATE_LIMIT_WINDOW_MINUTES * 60 * 1000,
+    ).toISOString();
+
+    const { count: recentCount, error: logsError } = await supabase
       .from('emergency_delivery_log')
-      .select('id')
+      .select('id', { count: 'exact', head: true })
       .eq('alert_id', emailRequest.alertId)
-      .gte('created_at', windowStart)
-    
+      .eq('contact_id', emailRequest.contactId)
+      .eq('channel', 'email')
+      .gte('created_at', windowStart);
+
     if (logsError) {
-      console.error('Error checking rate limit:', logsError)
-      // Continuar mesmo com erro de rate limit (fail open)
-    } else if (recentLogs && recentLogs.length >= RATE_LIMIT_MAX) {
-      // Rate limit excedido - registrar bloqueio
+      return errorResponse('Failed to validate rate limit', 500, logsError);
+    }
+
+    if ((recentCount || 0) >= RATE_LIMIT_MAX) {
       await supabase.from('emergency_delivery_log').insert({
         alert_id: emailRequest.alertId,
         contact_id: emailRequest.contactId,
         channel: 'email',
         status: 'failed',
-        target: emailRequest.contactEmail,
+        target: contactEmail,
         error_message: `Rate limit exceeded: ${RATE_LIMIT_MAX} emails per ${RATE_LIMIT_WINDOW_MINUTES} minutes`,
         metadata: {
           rate_limit_blocked: true,
-          recent_count: recentLogs.length,
+          recent_count: recentCount || 0,
           window_minutes: RATE_LIMIT_WINDOW_MINUTES,
         },
         created_at: new Date().toISOString(),
-      })
-      
+      });
+
       auditLog({
         timestamp: new Date().toISOString(),
+        userId,
         action: 'emergency_email_rate_limited',
         resource: 'emergency_alerts',
         status: 'failure',
         details: { alertId: emailRequest.alertId, contactId: emailRequest.contactId },
         ...auditInfo,
       });
-      
-      throw new Error(`Rate limit exceeded: ${RATE_LIMIT_MAX} emails per ${RATE_LIMIT_WINDOW_MINUTES} minutes`)
+
+      return jsonSecurityResponse(
+        { error: `Rate limit exceeded. Max ${RATE_LIMIT_MAX} attempts per ${RATE_LIMIT_WINDOW_MINUTES} minutes.` },
+        429,
+      );
     }
 
-    // Construir email
-    const subject = '🚨 ALERTA DE EMERGÊNCIA'
-    const alertType = translateAlertType(emailRequest.alertType)
-    const location = emailRequest.alertLocation
-      ? `${emailRequest.alertLocation.latitude}, ${emailRequest.alertLocation.longitude}`
-      : 'Não disponível'
+    const ownerProfile = userProfiles.find(
+      (profile: UserProfileRecord) => profile.id === alert.profile_id,
+    );
 
+    const sanitizedContactName = sanitizeString(contact.name || 'Contato', 100);
+    const sanitizedUserName = sanitizeString(ownerProfile?.name || 'Usuario', 100);
+    const sanitizedUserPhone = sanitizeString(ownerProfile?.phone || 'Nao informado', 50);
+    const sanitizedDescription =
+      typeof emailRequest.alertDescription === 'string' && emailRequest.alertDescription.trim().length > 0
+        ? sanitizeString(emailRequest.alertDescription, 500)
+        : undefined;
+
+    const alertType = translateAlertType(
+      sanitizeString(emailRequest.alertType || 'sos', 50).toLowerCase(),
+    );
+
+    const alertCreatedAt =
+      normalizeIsoDatetime(emailRequest.alertCreatedAt) ||
+      normalizeIsoDatetime(alert.created_at) ||
+      new Date().toISOString();
+
+    const location = normalizeLocation(emailRequest.alertLocation);
+
+    const subject = 'ALERTA DE EMERGENCIA';
     const htmlBody = buildEmailHtml(
       sanitizedContactName,
       sanitizedUserName,
-      emailRequest.userPhone || 'Não informado',
+      sanitizedUserPhone,
       alertType,
-      emailRequest.alertCreatedAt,
+      alertCreatedAt,
       location,
-      sanitizedDescription
-    )
+      sanitizedDescription,
+    );
 
     const textBody = buildEmailText(
       sanitizedContactName,
       sanitizedUserName,
-      emailRequest.userPhone || 'Não informado',
+      sanitizedUserPhone,
       alertType,
-      emailRequest.alertCreatedAt,
+      alertCreatedAt,
       location,
-      sanitizedDescription
-    )
+      sanitizedDescription,
+    );
 
-    // Enviar via Resend
     const resendResponse = await fetch('https://api.resend.com/emails', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${RESEND_API_KEY}`,
+        Authorization: `Bearer ${RESEND_API_KEY}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
         from: `${EMAIL_FROM_NAME} <${EMAIL_FROM_DOMAIN}>`,
-        to: [emailRequest.contactEmail],
+        to: [contactEmail],
         subject,
         html: htmlBody,
         text: textBody,
       }),
-    })
+    });
 
+    const resendRaw = await resendResponse.text();
     if (!resendResponse.ok) {
-      const errorData = await resendResponse.json()
-      throw new Error(`Resend API error: ${resendResponse.status} - ${JSON.stringify(errorData)}`)
+      console.error('Resend API error', {
+        status: resendResponse.status,
+        body: resendRaw.slice(0, 1000),
+      });
+      return errorResponse('Failed to send emergency email', 502, {
+        status: resendResponse.status,
+      });
     }
 
-    const resendResult = await resendResponse.json()
+    let resendResult: Record<string, unknown> = {};
+    try {
+      resendResult = resendRaw ? JSON.parse(resendRaw) : {};
+    } catch {
+      resendResult = {};
+    }
 
-    // Persistir log de sucesso
     await supabase.from('emergency_delivery_log').insert({
       alert_id: emailRequest.alertId,
       contact_id: emailRequest.contactId,
       channel: 'email',
       status: 'sent',
-      target: emailRequest.contactEmail,
+      target: contactEmail,
       metadata: {
         emailId: resendResult.id,
         subject,
-        alertType: emailRequest.alertType,
+        alertType,
       },
       created_at: new Date().toISOString(),
-    })
+      delivered_at: new Date().toISOString(),
+    });
 
-    // Audit log
     auditLog({
       timestamp: new Date().toISOString(),
+      userId,
       action: 'emergency_email_sent',
       resource: 'emergency_alerts',
       status: 'success',
-      details: { 
-        alertId: emailRequest.alertId, 
+      details: {
+        alertId: emailRequest.alertId,
         contactId: emailRequest.contactId,
         emailId: resendResult.id,
       },
       ...auditInfo,
     });
 
-    // Retornar resultado estruturado
     const response: EmailResponse = {
       success: true,
       contactId: emailRequest.contactId,
@@ -240,20 +380,21 @@ serve(async (req) => {
       timestamp: new Date().toISOString(),
       status: 'sent',
       metadata: {
-        to: emailRequest.contactEmail,
+        to: contactEmail,
         subject,
         alertId: emailRequest.alertId,
-        alertType: emailRequest.alertType,
+        alertType,
         emailId: resendResult.id,
       },
-    }
+    };
 
     return new Response(JSON.stringify(response), {
-      headers: getAllSecurityHeaders(),
-    })
+      headers: getAllSecurityHeaders('POST, OPTIONS'),
+    });
   } catch (error) {
     auditLog({
       timestamp: new Date().toISOString(),
+      userId,
       action: 'emergency_email_failed',
       resource: 'emergency_alerts',
       status: 'failure',
@@ -263,17 +404,60 @@ serve(async (req) => {
 
     return errorResponse('Failed to send emergency email', 500, error);
   }
-})
+});
+
+function normalizeIsoDatetime(value: string | null | undefined): string | null {
+  if (!value) return null;
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) return null;
+  return parsed.toISOString();
+}
+
+function normalizeLocation(
+  location: { latitude: number; longitude: number } | undefined,
+): string {
+  if (!location) return 'Nao disponivel';
+  const latitude = Number(location.latitude);
+  const longitude = Number(location.longitude);
+
+  if (Number.isNaN(latitude) || Number.isNaN(longitude)) {
+    return 'Nao disponivel';
+  }
+
+  if (latitude < -90 || latitude > 90 || longitude < -180 || longitude > 180) {
+    return 'Nao disponivel';
+  }
+
+  return `${latitude}, ${longitude}`;
+}
+
+function extractEmail(value: string): string | null {
+  const candidate = value.trim().toLowerCase();
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!candidate || !emailRegex.test(candidate)) {
+    return null;
+  }
+  return candidate;
+}
+
+function escapeHtml(input: string): string {
+  return input
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#39;');
+}
 
 function translateAlertType(type: string): string {
   const translations: Record<string, string> = {
     sos: 'SOS',
-    emergency_button: 'Botão de Emergência',
-    automatic: 'Alerta Automático',
+    emergency_button: 'Botao de Emergencia',
+    automatic: 'Alerta Automatico',
     manual: 'Alerta Manual',
-    panic: 'Pânico',
-  }
-  return translations[type] || type
+    panic: 'Panico',
+  };
+  return translations[type] || type;
 }
 
 function buildEmailHtml(
@@ -283,8 +467,15 @@ function buildEmailHtml(
   alertType: string,
   createdAt: string,
   location: string,
-  description?: string
+  description?: string,
 ): string {
+  const safeContactName = escapeHtml(contactName);
+  const safeUserName = escapeHtml(userName);
+  const safeUserPhone = escapeHtml(userPhone);
+  const safeAlertType = escapeHtml(alertType);
+  const safeLocation = escapeHtml(location);
+  const safeDescription = description ? escapeHtml(description) : '';
+
   return `
 <!DOCTYPE html>
 <html>
@@ -302,33 +493,33 @@ function buildEmailHtml(
 <body>
   <div class="container">
     <div class="header">
-      <h1>🚨 ALERTA DE EMERGÊNCIA</h1>
+      <h1>ALERTA DE EMERGENCIA</h1>
     </div>
     <div class="content">
-      <p>Olá <strong>${contactName}</strong>,</p>
-      <p>Este é um <strong>ALERTA DE EMERGÊNCIA</strong> automático.</p>
-      <p><strong>${userName}</strong> acionou um alerta de emergência e você está cadastrado como contato de emergência.</p>
-      
+      <p>Ola <strong>${safeContactName}</strong>,</p>
+      <p>Este e um <strong>ALERTA DE EMERGENCIA</strong> automatico.</p>
+      <p><strong>${safeUserName}</strong> acionou um alerta de emergencia e voce esta cadastrado como contato de emergencia.</p>
+
       <h3>DETALHES DO ALERTA:</h3>
-      <div class="detail"><strong>Tipo:</strong> ${alertType}</div>
+      <div class="detail"><strong>Tipo:</strong> ${safeAlertType}</div>
       <div class="detail"><strong>Data/Hora:</strong> ${new Date(createdAt).toLocaleString('pt-BR')}</div>
-      <div class="detail"><strong>Localização:</strong> ${location}</div>
-      <div class="detail"><strong>Telefone:</strong> ${userPhone}</div>
-      ${description ? `<div class="detail"><strong>Descrição:</strong> ${description}</div>` : ''}
-      
+      <div class="detail"><strong>Localizacao:</strong> ${safeLocation}</div>
+      <div class="detail"><strong>Telefone:</strong> ${safeUserPhone}</div>
+      ${safeDescription ? `<div class="detail"><strong>Descricao:</strong> ${safeDescription}</div>` : ''}
+
       <p style="margin-top: 20px; padding: 15px; background: #fef2f2; border: 1px solid #fecaca; border-radius: 4px;">
-        <strong>⚠️ AÇÃO NECESSÁRIA:</strong><br>
-        Se você recebeu este email, entre em contato com <strong>${userName}</strong> imediatamente.
+        <strong>ACAO NECESSARIA:</strong><br>
+        Se voce recebeu este email, entre em contato com <strong>${safeUserName}</strong> imediatamente.
       </p>
     </div>
     <div class="footer">
-      <p>Este é um email automático do sistema de segurança.</p>
-      <p>Não responda a este email.</p>
+      <p>Este e um email automatico do sistema de seguranca.</p>
+      <p>Nao responda a este email.</p>
     </div>
   </div>
 </body>
 </html>
-  `.trim()
+  `.trim();
 }
 
 function buildEmailText(
@@ -338,30 +529,30 @@ function buildEmailText(
   alertType: string,
   createdAt: string,
   location: string,
-  description?: string
+  description?: string,
 ): string {
   return `
-🚨 ALERTA DE EMERGÊNCIA
+ALERTA DE EMERGENCIA
 
-Olá ${contactName},
+Ola ${contactName},
 
-Este é um ALERTA DE EMERGÊNCIA automático.
+Este e um ALERTA DE EMERGENCIA automatico.
 
-${userName} acionou um alerta de emergência e você está cadastrado como contato de emergência.
+${userName} acionou um alerta de emergencia e voce esta cadastrado como contato de emergencia.
 
 DETALHES DO ALERTA:
 - Tipo: ${alertType}
 - Data/Hora: ${new Date(createdAt).toLocaleString('pt-BR')}
-- Localização: ${location}
+- Localizacao: ${location}
 - Telefone: ${userPhone}
 
-${description ? `Descrição: ${description}` : ''}
+${description ? `Descricao: ${description}` : ''}
 
-⚠️ AÇÃO NECESSÁRIA:
-Se você recebeu este email, entre em contato com ${userName} imediatamente.
+ACAO NECESSARIA:
+Se voce recebeu este email, entre em contato com ${userName} imediatamente.
 
 ---
-Este é um email automático do sistema de segurança.
-Não responda a este email.
-  `.trim()
+Este e um email automatico do sistema de seguranca.
+Nao responda a este email.
+  `.trim();
 }

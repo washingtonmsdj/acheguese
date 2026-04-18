@@ -1,5 +1,6 @@
 import { trackError } from "@/shared/utils/errorTracking";
 import { logger } from "@/shared/utils/logger";
+import { supabase } from "@/integrations/supabase";
 
 /**
  * @deprecated

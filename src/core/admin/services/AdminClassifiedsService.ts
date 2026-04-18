@@ -6,6 +6,7 @@
  * delegando para o ClassifiedService (SSOT) sempre que possível.
  */
 
+import { supabase } from "@/integrations/supabase";
 import { logger } from "@/shared/utils/logger";
 import { ClassifiedsFacade } from "@/modules/classifieds/services/ClassifiedService";
 import type { ClassifiedData } from "@/modules/classifieds/services/types";

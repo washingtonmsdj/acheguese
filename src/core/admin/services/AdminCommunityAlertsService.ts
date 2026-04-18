@@ -10,6 +10,7 @@
  * - Adiciona apenas lógica administrativa
  */
 
+import { supabase } from "@/integrations/supabase";
 import { logger } from '@/shared/utils/logger';
 import {
   alertModerationService,

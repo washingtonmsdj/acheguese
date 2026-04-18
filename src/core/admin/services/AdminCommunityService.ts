@@ -42,7 +42,8 @@ class AdminCommunityService {
     try {
       const { data, error } = await (supabase as unknown as AdminSupabaseClient).rpc("get_moderation_stats");
       if (error) throw error;
-      return data?.[0] || null;
+      if (!data || data.length === 0) return null;
+      return data[0] || null;
     } catch (error) {
       logger.error("Error fetching moderation stats", error as Error);
       throw error;
@@ -158,9 +159,10 @@ class AdminCommunityService {
 
   async updateCivicReportStatus(reportId: string, status: CommunityIssue['status']): Promise<void> {
     try {
+      const updateData: { status: CommunityIssue['status'] } = { status };
       const { error } = await (supabase as unknown as AdminSupabaseClient)
         .from("community_issues")
-        .update({ status })
+        .update(updateData)
         .eq("id", reportId);
 
       if (error) throw error;

@@ -1,123 +1,131 @@
 /**
  * EDGE FUNCTION: Process Dispatch Timeouts
- * 
+ *
  * Processa timeouts de dispatch de corridas automaticamente.
- * Deve ser chamada a cada 1 minuto via cron externo.
- * 
- * Endpoint: https://xhdowzacfujckjelqhtd.supabase.co/functions/v1/process-timeouts
- * 
- * SEGURANÇA: Requer header x-cron-secret para autenticação
- * 
- * Configuração de cron externo (exemplo):
- * - cron-job.org
- * - EasyCron
- * - GitHub Actions
- * - Vercel Cron
- * 
- * Frequência: A cada 1 minuto
- * Timeout ajustado: 60 segundos (alinhado com frequência do cron)
+ * Deve ser chamada via cron.
+ *
+ * SEGURANCA: requer x-cron-secret OU Authorization Bearer com SUPABASE_SERVICE_ROLE_KEY.
  */
 
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3'
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
+import { getAllSecurityHeaders, isOriginAllowed } from '../_shared/security.ts';
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-cron-secret',
+const CRON_SECRET = Deno.env.get('CRON_SECRET') || '';
+const SUPABASE_URL = Deno.env.get('SUPABASE_URL') ?? '';
+const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
+
+function jsonResponse(body: Record<string, unknown>, status = 200): Response {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: {
+      ...getAllSecurityHeaders('GET, POST, OPTIONS'),
+      'Content-Type': 'application/json',
+    },
+  });
 }
 
-// Secret para autenticação do cron (deve ser configurado no Supabase Dashboard)
-const CRON_SECRET = Deno.env.get('CRON_SECRET') || ''
+function extractBearerToken(req: Request): string | null {
+  const authHeader = req.headers.get('authorization');
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return null;
+  }
+
+  return authHeader.slice(7).trim();
+}
+
+function isAuthorized(req: Request): boolean {
+  const cronHeader = req.headers.get('x-cron-secret') || '';
+  const bearerToken = extractBearerToken(req);
+
+  const hasValidCronSecret = CRON_SECRET.length > 0 && cronHeader === CRON_SECRET;
+  const hasValidServiceToken =
+    SUPABASE_SERVICE_ROLE_KEY.length > 0 && bearerToken === SUPABASE_SERVICE_ROLE_KEY;
+
+  return hasValidCronSecret || hasValidServiceToken;
+}
 
 Deno.serve(async (req) => {
-  // Handle CORS preflight
+  const origin = req.headers.get('origin');
+  if (origin && !isOriginAllowed(origin)) {
+    return jsonResponse({ success: false, error: 'Origin not allowed' }, 403);
+  }
+
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders })
+    return new Response('ok', {
+      status: 204,
+      headers: getAllSecurityHeaders('GET, POST, OPTIONS'),
+    });
+  }
+
+  if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
+    return jsonResponse(
+      { success: false, error: 'Function misconfigured: missing Supabase credentials' },
+      500,
+    );
+  }
+
+  if (!CRON_SECRET && !SUPABASE_SERVICE_ROLE_KEY) {
+    return jsonResponse(
+      { success: false, error: 'Function misconfigured: no authentication secret configured' },
+      500,
+    );
+  }
+
+  if (!isAuthorized(req)) {
+    return jsonResponse(
+      {
+        success: false,
+        error: 'Unauthorized',
+        timestamp: new Date().toISOString(),
+      },
+      401,
+    );
   }
 
   try {
-    // HARDENING: Validar secret do cron
-    const cronSecret = req.headers.get('x-cron-secret')
-    
-    if (!CRON_SECRET) {
-      console.warn('[SECURITY] CRON_SECRET not configured - endpoint is unprotected!')
-    } else if (cronSecret !== CRON_SECRET) {
-      console.error('[SECURITY] Invalid cron secret')
-      return new Response(
-        JSON.stringify({ 
-          success: false,
-          error: 'Unauthorized',
-          timestamp: new Date().toISOString()
-        }),
-        { 
-          status: 401, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-        }
-      )
-    }
+    const supabaseClient = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+    const startTime = Date.now();
 
-    const supabaseClient = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    )
-
-    const startTime = Date.now()
-
-    // Executar process_dispatch_timeouts
-    const { data, error } = await supabaseClient.rpc('process_dispatch_timeouts')
-
-    const executionTime = Date.now() - startTime
+    const { data, error } = await supabaseClient.rpc('process_dispatch_timeouts');
+    const executionTime = Date.now() - startTime;
 
     if (error) {
-      console.error('Error processing timeouts:', error)
-      return new Response(
-        JSON.stringify({ 
+      console.error('Error processing timeouts:', error);
+      return jsonResponse(
+        {
           success: false,
           error: error.message,
           timestamp: new Date().toISOString(),
-          executionTime
-        }),
-        { 
-          status: 500, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-        }
-      )
+          executionTime,
+        },
+        500,
+      );
     }
 
-    const processed = data?.length || 0
-    
-    console.log(`[${new Date().toISOString()}] Processed ${processed} timeout(s) in ${executionTime}ms`)
-    
-    if (processed > 0) {
-      data.forEach((result: any) => {
-        console.log(`  - Ride: ${result.ride_id} | Action: ${result.action} | ${result.details}`)
-      })
-    }
+    const processed = data?.length || 0;
 
-    return new Response(
-      JSON.stringify({ 
-        success: true, 
+    console.log(`[${new Date().toISOString()}] Processed ${processed} timeout(s) in ${executionTime}ms`);
+
+    return jsonResponse(
+      {
+        success: true,
         processed,
         results: data,
         timestamp: new Date().toISOString(),
-        executionTime
-      }),
-      { 
-        status: 200, 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-        }
-      )
+        executionTime,
+      },
+      200,
+    );
   } catch (err) {
-    console.error('Unexpected error:', err)
-    return new Response(
-      JSON.stringify({ 
+    console.error('Unexpected error:', err);
+    return jsonResponse(
+      {
         success: false,
-        error: err.message,
-        timestamp: new Date().toISOString()
-      }),
-      { 
-        status: 500, 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-      }
-    )
+        error: err instanceof Error ? err.message : 'Unexpected error',
+        timestamp: new Date().toISOString(),
+      },
+      500,
+    );
   }
-})
+});
+

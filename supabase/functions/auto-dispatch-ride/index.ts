@@ -3,6 +3,7 @@
 
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { getAllSecurityHeaders, isOriginAllowed } from '../_shared/security.ts';
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
@@ -25,16 +26,48 @@ interface DriverEligibility {
   rating: number;
 }
 
+function extractBearerToken(req: Request): string | null {
+  const authHeader = req.headers.get('authorization');
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return null;
+  }
+  return authHeader.slice(7).trim();
+}
+
 serve(async (req) => {
-  // CORS
+  const origin = req.headers.get('origin');
+  if (origin && !isOriginAllowed(origin)) {
+    return new Response(
+      JSON.stringify({ error: 'Origin not allowed' }),
+      {
+        status: 403,
+        headers: {
+          ...getAllSecurityHeaders('POST, OPTIONS'),
+          'Content-Type': 'application/json',
+        },
+      },
+    );
+  }
+
   if (req.method === 'OPTIONS') {
     return new Response('ok', {
-      headers: {
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Methods': 'POST',
-        'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-      },
+      status: 204,
+      headers: getAllSecurityHeaders('POST, OPTIONS'),
     });
+  }
+
+  const token = extractBearerToken(req);
+  if (!token || token !== SUPABASE_SERVICE_ROLE_KEY) {
+    return new Response(
+      JSON.stringify({ error: 'Unauthorized' }),
+      {
+        status: 401,
+        headers: {
+          ...getAllSecurityHeaders('POST, OPTIONS'),
+          'Content-Type': 'application/json',
+        },
+      },
+    );
   }
 
   try {

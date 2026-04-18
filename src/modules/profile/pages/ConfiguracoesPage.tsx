@@ -63,9 +63,8 @@ export function ConfiguracoesPage() {
             Esta area operacional depende de uma identidade ativa para gerenciar residencia
             e areas de atuacao.
           </p>
-          <div className="mt-6 flex flex-wrap justify-center gap-2">
-            <Button onClick={() => navigate(appUrls.profile.manage)}>Gerenciar identidades</Button>
-            <Button variant="outline" onClick={() => navigate(appUrls.profile.central)}>
+          <div className="mt-6 flex justify-center">
+            <Button onClick={() => navigate(appUrls.profile.central)}>
               Voltar ao hub
             </Button>
           </div>

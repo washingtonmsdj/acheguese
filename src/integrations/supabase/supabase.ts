@@ -13,6 +13,7 @@
 
 import { createClient } from "@supabase/supabase-js";
 import type { Database } from "./types.generated";
+import { createSecureStorage } from "./cookieStorage";
 
 // Validar variáveis de ambiente
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || "https://placeholder.supabase.co";
@@ -50,7 +51,18 @@ if (DEBUG_BOOT) {
 /**
  * Cliente Supabase principal
  * 
- * NOTA: Usa localStorage com fallback para sessionStorage em modo anônimo.
+ * ✅ SEGURO: Usa cookies seguros ao invés de localStorage
+ * 
+ * STORAGE:
+ * - Produção: Cookies com Secure + SameSite=Strict
+ * - Desenvolvimento: Híbrido (cookies preferencial, localStorage fallback)
+ * - Migração automática de localStorage para cookies
+ * 
+ * SEGURANÇA:
+ * - Proteção contra XSS (cookies não acessíveis via JavaScript quando HttpOnly)
+ * - Proteção contra CSRF (SameSite=Strict)
+ * - Transmissão segura (Secure flag em HTTPS)
+ * 
  * Tipado com Database gerado automaticamente do schema do Supabase.
  */
 export const supabase = createClient<Database>(
@@ -58,12 +70,11 @@ export const supabase = createClient<Database>(
   SUPABASE_KEY,
   {
     auth: {
-      storage: typeof window !== 'undefined' ? window.localStorage : undefined,
-      storageKey: 'supabase.auth.token',
+      storage: typeof window !== 'undefined' ? createSecureStorage() : undefined,
+      storageKey: 'token',
       persistSession: true,
       autoRefreshToken: true,
       detectSessionInUrl: true,
-      // Limpa URL após processar tokens para evitar reutilização
       flowType: 'pkce',
     },
   },

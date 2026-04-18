@@ -20,6 +20,9 @@ export function AppLayoutSidebar() {
   const isMobile = useIsMobile();
   const { pathname } = useLocation();
   const showTopbarOnMobile = pathname.startsWith('/gastronomia');
+  
+  // Ocultar sidebar na página de perfil (que tem sua própria sidebar)
+  const hideGlobalSidebar = pathname.startsWith('/perfil');
 
   if (isMobile) {
     return (
@@ -30,6 +33,24 @@ export function AppLayoutSidebar() {
           <Outlet />
         </main>
         <BottomNav />
+      </div>
+    );
+  }
+
+  // Se deve ocultar a sidebar global, renderizar apenas o conteúdo
+  if (hideGlobalSidebar) {
+    return (
+      <div className="flex flex-col h-screen w-full overflow-hidden bg-background">
+        {/* Topbar fixo no topo, 100% largura */}
+        <AppTopbar />
+        
+        {/* Conteúdo sem sidebar */}
+        <main id="main-content" className="flex-1 overflow-y-auto flex flex-col min-h-0" tabIndex={-1}>
+          <TerritoryMismatchBanner />
+          <div className="flex-1 min-h-0">
+            <Outlet />
+          </div>
+        </main>
       </div>
     );
   }

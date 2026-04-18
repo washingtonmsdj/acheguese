@@ -9,7 +9,7 @@
 
 import { logger } from "@/shared/utils/logger";
 import { adminRolesService } from "./AdminRolesService";
-import { ProfileService } from "@/core/profiles/services/ProfileService";
+import { profileService } from "@/core/profiles/services/ProfileService";
 
 export class AdminDataService {
   /**
@@ -19,7 +19,7 @@ export class AdminDataService {
   static async getUserDetails(userId: string) {
     try {
       // Buscar perfis do usuário via ProfileService
-      const profiles = await ProfileService.getProfilesByUserId(userId);
+      const profiles = await profileService.getProfilesByUserId(userId);
       if (!profiles || profiles.length === 0) {
         throw new Error('User not found');
       }
@@ -46,13 +46,13 @@ export class AdminDataService {
   static async updateUserData(userId: string, updates: Record<string, any>) {
     try {
       // Buscar perfil ativo do usuário
-      const profile = await ProfileService.getActiveProfile(userId);
+      const profile = await profileService.getProfileContext(userId);
       if (!profile) {
         throw new Error('User profile not found');
       }
 
       // Atualizar via ProfileService
-      return await ProfileService.updateProfile(profile.id, updates);
+      return await profileService.updateProfile(profile.id, updates);
     } catch (error: any) {
       logger.error('Error updating user data:', error);
       throw new Error(`Erro ao atualizar usuário: ${error.message}`);
@@ -99,7 +99,6 @@ export class AdminDataService {
    */
   static async getAllUsers(page = 0, pageSize = 50) {
     try {
-      const profileService = new ProfileService();
       const result = await profileService.getProfilesFiltered({
         page: page + 1, // getProfilesFiltered usa 1-based
         limit: pageSize,

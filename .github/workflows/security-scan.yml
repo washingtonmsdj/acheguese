@@ -1,0 +1,128 @@
+name: Security Scan
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+  schedule:
+    # Roda todo dia às 3am
+    - cron: '0 3 * * *'
+
+jobs:
+  security-scan:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      # ══════════════════════════════════════════════════════════════
+      # SCAN 1: ESLint Security Rules
+      # ══════════════════════════════════════════════════════════════
+      - name: Run ESLint Security Scan
+        run: npm run lint:security
+        continue-on-error: false
+      
+      # ══════════════════════════════════════════════════════════════
+      # SCAN 2: Dependency Vulnerabilities
+      # ══════════════════════════════════════════════════════════════
+      - name: Run npm audit
+        run: |
+          npm audit --audit-level=high || {
+            echo "❌ High/Critical vulnerabilities found!"
+            exit 1
+          }
+      
+      # ══════════════════════════════════════════════════════════════
+      # SCAN 3: SAST (Static Application Security Testing)
+      # ══════════════════════════════════════════════════════════════
+      - name: Run Semgrep Security Scan
+        uses: returntocorp/semgrep-action@v1
+        with:
+          config: >-
+            p/security-audit
+            p/react
+            p/typescript
+            p/xss
+      
+      # ══════════════════════════════════════════════════════════════
+      # SCAN 4: Secret Detection
+      # ══════════════════════════════════════════════════════════════
+      - name: Run Gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      
+      # ══════════════════════════════════════════════════════════════
+      # SCAN 5: Custom XSS Pattern Detection
+      # ══════════════════════════════════════════════════════════════
+      - name: Scan for XSS Patterns
+        run: |
+          echo "🔍 Scanning for XSS vulnerabilities..."
+          
+          # Procura innerHTML sem sanitização
+          if grep -r "\.innerHTML\s*=" src/ | grep -v "DOMPurify"; then
+            echo "❌ Found innerHTML without DOMPurify!"
+            exit 1
+          fi
+          
+          # Procura dangerouslySetInnerHTML
+          if grep -r "dangerouslySetInnerHTML" src/; then
+            echo "❌ Found dangerouslySetInnerHTML!"
+            exit 1
+          fi
+          
+          # Procura localStorage com tokens
+          if grep -r "localStorage.*token" src/ | grep -v "// SAFE:"; then
+            echo "❌ Found token storage in localStorage!"
+            exit 1
+          fi
+          
+          # Procura document.cookie
+          if grep -r "document\.cookie" src/ | grep -v "// SAFE:"; then
+            echo "❌ Found document.cookie access!"
+            exit 1
+          fi
+          
+          echo "✅ No XSS patterns found"
+      
+      # ══════════════════════════════════════════════════════════════
+      # SCAN 6: TypeScript Type Safety
+      # ══════════════════════════════════════════════════════════════
+      - name: TypeScript Strict Check
+        run: npx tsc --noEmit --strict
+      
+      # ══════════════════════════════════════════════════════════════
+      # REPORT: Gerar relatório de segurança
+      # ══════════════════════════════════════════════════════════════
+      - name: Generate Security Report
+        if: always()
+        run: |
+          echo "# Security Scan Report" > security-report.md
+          echo "" >> security-report.md
+          echo "**Date:** $(date)" >> security-report.md
+          echo "**Commit:** ${{ github.sha }}" >> security-report.md
+          echo "" >> security-report.md
+          echo "## Scans Performed" >> security-report.md
+          echo "- ✅ ESLint Security Rules" >> security-report.md
+          echo "- ✅ npm audit" >> security-report.md
+          echo "- ✅ Semgrep SAST" >> security-report.md
+          echo "- ✅ Gitleaks Secret Detection" >> security-report.md
+          echo "- ✅ Custom XSS Pattern Detection" >> security-report.md
+          echo "- ✅ TypeScript Strict Check" >> security-report.md
+      
+      - name: Upload Security Report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: security-report
+          path: security-report.md

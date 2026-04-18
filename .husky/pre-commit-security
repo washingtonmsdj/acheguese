@@ -1,0 +1,57 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+echo "🔒 Running security checks..."
+
+# 1. ESLint Security Rules
+echo "  → Checking for XSS vulnerabilities..."
+npm run lint:security || {
+  echo ""
+  echo "❌ SECURITY VIOLATION DETECTED!"
+  echo "   Fix the issues above before committing."
+  echo ""
+  exit 1
+}
+
+# 2. Scan for hardcoded secrets
+echo "  → Scanning for hardcoded secrets..."
+npx secretlint "**/*" || {
+  echo ""
+  echo "❌ HARDCODED SECRETS DETECTED!"
+  echo "   Remove secrets before committing."
+  echo ""
+  exit 1
+}
+
+# 3. Check for dangerous patterns
+echo "  → Checking for dangerous patterns..."
+git diff --cached --name-only | grep -E '\.(ts|tsx|js|jsx)$' | while read file; do
+  # Bloqueia innerHTML sem DOMPurify
+  if git diff --cached "$file" | grep -E '\.innerHTML\s*=' | grep -v 'DOMPurify'; then
+    echo ""
+    echo "❌ BLOCKED: innerHTML without DOMPurify in $file"
+    echo "   Use: element.innerHTML = DOMPurify.sanitize(content)"
+    echo ""
+    exit 1
+  fi
+  
+  # Bloqueia localStorage com 'token'
+  if git diff --cached "$file" | grep -E 'localStorage\.(set|get)Item.*["\'].*token'; then
+    echo ""
+    echo "❌ BLOCKED: Token storage in localStorage in $file"
+    echo "   Use HttpOnly cookies instead"
+    echo ""
+    exit 1
+  fi
+  
+  # Bloqueia dangerouslySetInnerHTML
+  if git diff --cached "$file" | grep 'dangerouslySetInnerHTML'; then
+    echo ""
+    echo "❌ BLOCKED: dangerouslySetInnerHTML in $file"
+    echo "   Use DOMPurify or React's automatic escaping"
+    echo ""
+    exit 1
+  fi
+done
+
+echo "✅ Security checks passed!"

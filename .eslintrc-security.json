@@ -1,0 +1,66 @@
+{
+  "extends": [
+    "plugin:security/recommended",
+    "plugin:xss/recommended"
+  ],
+  "plugins": [
+    "security",
+    "xss",
+    "no-unsanitized"
+  ],
+  "rules": {
+    // ══════════════════════════════════════════════════════════════
+    // REGRAS CRÍTICAS - BLOQUEIAM BUILD
+    // ══════════════════════════════════════════════════════════════
+    
+    // Bloqueia innerHTML sem sanitização
+    "no-unsanitized/property": ["error", {
+      "escape": {
+        "methods": ["DOMPurify.sanitize"]
+      }
+    }],
+    
+    // Bloqueia dangerouslySetInnerHTML
+    "react/no-danger": "error",
+    
+    // Bloqueia eval e similares
+    "no-eval": "error",
+    "no-implied-eval": "error",
+    "no-new-func": "error",
+    
+    // Bloqueia document.cookie
+    "no-restricted-globals": ["error", {
+      "name": "document.cookie",
+      "message": "Use secure cookie library instead"
+    }],
+    
+    // Bloqueia localStorage para tokens
+    "no-restricted-syntax": ["error", {
+      "selector": "CallExpression[callee.object.name='localStorage'][callee.property.name='setItem'] > Literal[value=/token|auth|session/i]",
+      "message": "Never store tokens in localStorage - use HttpOnly cookies"
+    }],
+    
+    // Força validação de URLs
+    "security/detect-unsafe-regex": "error",
+    "security/detect-non-literal-regexp": "warn",
+    
+    // ══════════════════════════════════════════════════════════════
+    // REGRAS DE AVISO - NÃO BLOQUEIAM MAS ALERTAM
+    // ══════════════════════════════════════════════════════════════
+    
+    "security/detect-object-injection": "warn",
+    "security/detect-possible-timing-attacks": "warn",
+    "xss/no-mixed-html": "warn",
+    "xss/no-location-href-assign": "warn"
+  },
+  
+  "overrides": [
+    {
+      // Permite innerHTML APENAS em arquivos específicos com sanitização
+      "files": ["**/SafeHtmlRenderer.tsx"],
+      "rules": {
+        "no-unsanitized/property": "off"
+      }
+    }
+  ]
+}

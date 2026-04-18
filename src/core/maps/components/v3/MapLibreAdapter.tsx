@@ -28,6 +28,7 @@ import { MapLayerControl } from './controls/MapLayerControl';
 import { MapTerritoryControl } from './controls/MapTerritoryControl';
 import { MapControlsLayout } from './controls/MapControlsLayout';
 import { MapRadiusControl } from './controls/MapRadiusControl';
+import { createUserLocationSvg } from '@/shared/utils/safeSvg';
 import type { BoundingBox, MapViewport, MapMarker } from '../../types/core';
 import type { TerritoryPolygon } from '../../hooks/useTerritoryPolygon';
 import type { CircleArea } from '../../providers/types';
@@ -725,14 +726,9 @@ export const MapLibreAdapter = forwardRef<MapLibreAdapterHandle, MapLibreAdapter
 
           if (isUserLocation) {
             el.style.cssText = 'width:60px;height:60px;display:flex;align-items:center;justify-content:center;position:relative;pointer-events:auto;';
-            el.innerHTML = `<svg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg">
-              <circle cx="30" cy="30" r="28" fill="#10b981" opacity="0.2">
-                <animate attributeName="r" from="20" to="28" dur="1.5s" repeatCount="indefinite"/>
-                <animate attributeName="opacity" from="0.5" to="0" dur="1.5s" repeatCount="indefinite"/>
-              </circle>
-              <circle cx="30" cy="30" r="16" fill="#10b981" stroke="white" stroke-width="4"/>
-              <circle cx="30" cy="30" r="7" fill="white"/>
-            </svg>`;
+            // ✅ SEGURO - Usa DOM API ao invés de innerHTML
+            const svg = createUserLocationSvg();
+            el.appendChild(svg);
           } else if (isCluster) {
             // Renderizar cluster
             const pointCount = marker.metadata?.pointCount || 0;

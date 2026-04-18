@@ -12,6 +12,7 @@ import {
   CardTitle,
 } from "@/shared/components/ui/card";
 import { Checkbox } from "@/shared/components/ui/checkbox";
+import { getPaymentMethodLabels } from "@/core/business/constants";
 
 interface ExtrasStepProps {
   capaPreview: string | null;
@@ -36,15 +37,8 @@ interface ExtrasStepProps {
   onCreate: () => void;
 }
 
-const FORMAS_PAGAMENTO = [
-  "Dinheiro",
-  "Pix",
-  "Cartao de Debito",
-  "Cartao de Credito",
-  "Vale Refeicao",
-  "Vale Alimentacao",
-  "Transferencia Bancaria",
-];
+// SSOT: Usa constantes centralizadas de formas de pagamento
+const FORMAS_PAGAMENTO = getPaymentMethodLabels();
 
 export function ExtrasStep({
   capaPreview,

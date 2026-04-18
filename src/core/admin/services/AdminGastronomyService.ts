@@ -7,8 +7,7 @@
 
 import { supabase } from "@/integrations/supabase";
 import { logger } from "@/shared/utils/logger";
-import type { AdminSupabaseClient } from "../types/adminDatabase.types";
-import type { GastronomyBusiness, GastronomyProfile } from "@/core/gastronomy";
+import type { AdminSupabaseClient, GastronomyProfile } from "../types/adminDatabase.types";
 
 export interface GastronomyStats {
   total: number;
@@ -40,24 +39,25 @@ class AdminGastronomyServiceClass {
 
       if (error) throw error;
 
+      const typedProfiles = (profiles || []) as GastronomyProfile[];
+
       const stats: GastronomyStats = {
-        total: profiles?.length || 0,
-        active: profiles?.filter(p => p.is_active).length || 0,
-        inactive: profiles?.filter(p => !p.is_active).length || 0,
+        total: typedProfiles.length,
+        active: typedProfiles.filter(p => p.is_active).length,
+        inactive: typedProfiles.filter(p => !p.is_active).length,
         byCategory: {},
         byPriceRange: {},
-        withDelivery: profiles?.filter(p => p.delivery_available).length || 0,
-        withMenu: profiles?.filter((p) => p.has_menu).length || 0,
+        withDelivery: typedProfiles.filter(p => p.delivery_available).length,
+        withMenu: 0,
       };
 
       // Contar por categoria
-      profiles?.forEach(p => {
-        if (p.cuisine_type) {
-          stats.byCategory[p.cuisine_type] = (stats.byCategory[p.cuisine_type] || 0) + 1;
-        }
-        if (p.price_range) {
-          stats.byPriceRange[p.price_range] = (stats.byPriceRange[p.price_range] || 0) + 1;
-        }
+      typedProfiles.forEach(p => {
+        const category = p.category || 'outros';
+        stats.byCategory[category] = (stats.byCategory[category] || 0) + 1;
+        
+        const priceRange = p.price_range || 'não informado';
+        stats.byPriceRange[priceRange] = (stats.byPriceRange[priceRange] || 0) + 1;
       });
 
       // Contar quantos têm menu
@@ -90,9 +90,11 @@ class AdminGastronomyServiceClass {
 
       const avgItemsPerMenu = totalMenus > 0 ? totalItems / totalMenus : 0;
       
-      const prices = itemsResult.data?.map(i => i.price).filter(p => p > 0) || [];
+      const prices = (itemsResult.data || [])
+        .map((i: any) => i.price)
+        .filter((p: number) => p > 0);
       const avgPricePerItem = prices.length > 0 
-        ? prices.reduce((a, b) => a + b, 0) / prices.length 
+        ? prices.reduce((a: number, b: number) => a + b, 0) / prices.length 
         : 0;
 
       return {

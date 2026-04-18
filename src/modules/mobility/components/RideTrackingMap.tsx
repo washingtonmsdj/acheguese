@@ -173,7 +173,18 @@ export const RideTrackingMap = memo(function RideTrackingMap({
     } else {
       const el = document.createElement('div');
       el.style.cssText = 'width:32px;height:32px;background:#14b8a6;border-radius:50%;border:3px solid white;box-shadow:0 2px 8px rgba(0,0,0,0.3);display:flex;align-items:center;justify-content:center;';
-      el.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="white"><path d="M5 17H3v-5l2-5h14l2 5v5h-2m0 0a2 2 0 0 1-4 0m4 0H7m0 0a2 2 0 0 1-4 0"/></svg>`;
+      // ✅ SEGURO - Usa DOM API ao invés de innerHTML
+      const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+      svg.setAttribute('width', '16');
+      svg.setAttribute('height', '16');
+      svg.setAttribute('viewBox', '0 0 24 24');
+      svg.setAttribute('fill', 'white');
+      
+      const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+      path.setAttribute('d', 'M5 17H3v-5l2-5h14l2 5v5h-2m0 0a2 2 0 0 1-4 0m4 0H7m0 0a2 2 0 0 1-4 0');
+      
+      svg.appendChild(path);
+      el.appendChild(svg);
       driverMarkerRef.current = new maplibregl.Marker({ element: el }).setLngLat(lngLat).addTo(map);
     }
 

@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/shared/components/ui
 import { Badge } from "@/shared/components/ui/badge";
 import { ActiveProfileBadge } from "@/core/profiles/components/ActiveProfileBadge";
 import { useMultiProfileContext } from "@/core/profiles/contexts/multi-profile-runtime-context";
-import { buildPublicProfileUrl } from "@/core/profiles/utils/publicProfileUrl";
+import { toast } from "sonner";
 import { useSessionContext } from "@/core/session";
 import { useMobilityUrls } from "@/modules/mobility/hooks/useMobilityUrls";
 import { DriverRegistrationForm } from "@/modules/mobility/components/driver/DriverRegistrationForm";
@@ -65,7 +65,13 @@ export default function CriarMotoristaPage() {
   const { createDriver, isLoading } = useDriverCreateMultiProfile({
     onSuccess: async (result) => {
       await refetch();
-      navigate(buildPublicProfileUrl(result.handle));
+      // ✅ Driver não tem página pública
+      // Redirecionar para dashboard de mobilidade
+      toast({
+        title: "Cadastro realizado com sucesso!",
+        description: `Seu perfil de ${driverType} está ativo.`,
+      });
+      navigate(mobilityUrls.home);
     },
   });
 

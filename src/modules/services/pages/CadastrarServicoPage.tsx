@@ -45,7 +45,6 @@ import { PublicIdentityService } from "@/core/public-identity";
 import { logger } from "@/shared/utils/logger";
 import { useMultiProfileContext } from "@/core/profiles/contexts/multi-profile-runtime-context";
 import { ActiveProfileBadge } from "@/core/profiles/components/ActiveProfileBadge";
-import { buildPublicProfileUrl } from "@/core/profiles/utils/publicProfileUrl";
 import {
   SERVICE_FORM_CATEGORY_OPTIONS,
   getServiceCategoryIcon,
@@ -85,7 +84,13 @@ export default function CadastrarServicoPage() {
 
   const { createProfessional, isLoading: loading } = useProfessionalCreateMultiProfile({
     onSuccess: (result) => {
-      navigate(buildPublicProfileUrl(result.handle));
+      // ✅ Professional não usa /u/:username
+      // Redirecionar para página de sucesso ou listagem de serviços
+      toast({
+        title: "Serviço cadastrado com sucesso!",
+        description: "Seu perfil profissional está ativo.",
+      });
+      navigate('/services');
     },
   });
 

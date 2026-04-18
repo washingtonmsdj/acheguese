@@ -90,13 +90,40 @@ export function MiniMap({
       'cursor: pointer',
     ].join(';');
 
-    el.innerHTML = `
-      <svg width="40" height="40" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg">
-        <circle cx="20" cy="20" r="18" fill="${markerColor}" opacity="0.2"/>
-        <circle cx="20" cy="20" r="12" fill="${markerColor}" stroke="white" stroke-width="3"/>
-        <text x="20" y="24" text-anchor="middle" font-size="16" fill="white">${markerIcon}</text>
-      </svg>
-    `;
+    // ✅ SEGURO - Usa DOM API ao invés de innerHTML
+    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    svg.setAttribute('width', '40');
+    svg.setAttribute('height', '40');
+    svg.setAttribute('viewBox', '0 0 40 40');
+    svg.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+    
+    const outerCircle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+    outerCircle.setAttribute('cx', '20');
+    outerCircle.setAttribute('cy', '20');
+    outerCircle.setAttribute('r', '18');
+    outerCircle.setAttribute('fill', markerColor);
+    outerCircle.setAttribute('opacity', '0.2');
+    
+    const innerCircle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+    innerCircle.setAttribute('cx', '20');
+    innerCircle.setAttribute('cy', '20');
+    innerCircle.setAttribute('r', '12');
+    innerCircle.setAttribute('fill', markerColor);
+    innerCircle.setAttribute('stroke', 'white');
+    innerCircle.setAttribute('stroke-width', '3');
+    
+    const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+    text.setAttribute('x', '20');
+    text.setAttribute('y', '24');
+    text.setAttribute('text-anchor', 'middle');
+    text.setAttribute('font-size', '16');
+    text.setAttribute('fill', 'white');
+    text.textContent = markerIcon;
+    
+    svg.appendChild(outerCircle);
+    svg.appendChild(innerCircle);
+    svg.appendChild(text);
+    el.appendChild(svg);
 
     // Criar popup se houver título ou descrição
     let popup: maplibregl.Popup | undefined;

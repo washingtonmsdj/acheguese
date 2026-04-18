@@ -1,8 +1,8 @@
 /**
  * EDGE FUNCTION: gastronomy-add-payment-method
  *
- * Adiciona ou atualiza método de pagamento de um customer.
- * Define o método como padrão para cobranças futuras.
+ * Adiciona ou atualiza metodo de pagamento de um customer.
+ * Define o metodo como padrao para cobrancas futuras.
  *
  * Endpoint: /functions/v1/gastronomy-add-payment-method
  * Method: POST
@@ -12,10 +12,11 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import Stripe from 'https://esm.sh/stripe@12.0.0';
-
-// ══════════════════════════════════════════════════════════════════════════
-// TYPES
-// ══════════════════════════════════════════════════════════════════════════
+import { getAllSecurityHeaders, isOriginAllowed } from '../_shared/security.ts';
+import {
+  jsonSecurityResponse,
+  requireBusinessManagementAccess,
+} from '../_shared/businessAuth.ts';
 
 interface AddPaymentMethodRequest {
   businessId: string;
@@ -24,13 +25,9 @@ interface AddPaymentMethodRequest {
 
 interface AddPaymentMethodResponse {
   success: boolean;
-  customer?: any;
+  customer?: unknown;
   error?: string;
 }
-
-// ══════════════════════════════════════════════════════════════════════════
-// CONFIGURATION
-// ══════════════════════════════════════════════════════════════════════════
 
 const STRIPE_SECRET_KEY = Deno.env.get('STRIPE_SECRET_KEY')!;
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
@@ -42,96 +39,84 @@ const stripe = new Stripe(STRIPE_SECRET_KEY, {
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
-// ══════════════════════════════════════════════════════════════════════════
-// HELPERS
-// ══════════════════════════════════════════════════════════════════════════
-
-function corsHeaders() {
-  return {
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-  };
-}
-
-// ══════════════════════════════════════════════════════════════════════════
-// HANDLER
-// ══════════════════════════════════════════════════════════════════════════
-
 serve(async (req) => {
-  // Handle CORS preflight
-  if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders() });
+  const origin = req.headers.get('origin');
+  if (origin && !isOriginAllowed(origin)) {
+    return jsonSecurityResponse({ success: false, error: 'Origin not allowed' }, 403);
   }
-  
+
+  if (req.method === 'OPTIONS') {
+    return new Response('ok', {
+      status: 204,
+      headers: getAllSecurityHeaders('POST, OPTIONS'),
+    });
+  }
+
   try {
-    // Parse request
     const { businessId, paymentMethodId }: AddPaymentMethodRequest = await req.json();
-    
-    // Validate input
+
     if (!businessId || !paymentMethodId) {
-      return new Response(
-        JSON.stringify({ success: false, error: 'businessId e paymentMethodId são obrigatórios' }),
-        { status: 400, headers: { ...corsHeaders(), 'Content-Type': 'application/json' } }
+      return jsonSecurityResponse(
+        { success: false, error: 'businessId e paymentMethodId sao obrigatorios' },
+        400,
       );
     }
-    
-    // Buscar assinatura para obter stripe_customer_id
+
+    const accessCheck = await requireBusinessManagementAccess(req, supabase, businessId);
+    if (accessCheck instanceof Response) {
+      return accessCheck;
+    }
+
     const { data: subscription, error: fetchError } = await supabase
       .from('gastronomy_subscriptions')
       .select('stripe_customer_id')
       .eq('business_id', businessId)
       .single();
-    
+
     if (fetchError || !subscription) {
-      return new Response(
-        JSON.stringify({ success: false, error: 'Assinatura não encontrada' }),
-        { status: 404, headers: { ...corsHeaders(), 'Content-Type': 'application/json' } }
+      return jsonSecurityResponse(
+        { success: false, error: 'Assinatura nao encontrada' },
+        404,
       );
     }
-    
+
     if (!subscription.stripe_customer_id) {
-      return new Response(
-        JSON.stringify({ success: false, error: 'Customer Stripe não encontrado' }),
-        { status: 400, headers: { ...corsHeaders(), 'Content-Type': 'application/json' } }
+      return jsonSecurityResponse(
+        { success: false, error: 'Customer Stripe nao encontrado' },
+        400,
       );
     }
-    
-    // Anexar payment method ao customer
+
     await stripe.paymentMethods.attach(paymentMethodId, {
       customer: subscription.stripe_customer_id,
     });
-    
-    // Definir como método padrão
-    const updatedCustomer = await stripe.customers.update(
-      subscription.stripe_customer_id,
+
+    const updatedCustomer = await stripe.customers.update(subscription.stripe_customer_id, {
+      invoice_settings: {
+        default_payment_method: paymentMethodId,
+      },
+    });
+
+    return jsonSecurityResponse(
       {
-        invoice_settings: {
-          default_payment_method: paymentMethodId,
-        },
-      }
-    );
-    
-    // Retornar sucesso
-    return new Response(
-      JSON.stringify({
         success: true,
         customer: {
           id: updatedCustomer.id,
           default_payment_method: paymentMethodId,
         },
-      } as AddPaymentMethodResponse),
-      { status: 200, headers: { ...corsHeaders(), 'Content-Type': 'application/json' } }
+      } as AddPaymentMethodResponse,
+      200,
     );
-    
   } catch (error) {
-    console.error('Erro ao adicionar método de pagamento:', error);
-    
-    return new Response(
-      JSON.stringify({
+    console.error('Erro ao adicionar metodo de pagamento:', error);
+
+    return jsonSecurityResponse(
+      {
         success: false,
-        error: error instanceof Error ? error.message : 'Erro desconhecido',
-      } as AddPaymentMethodResponse),
-      { status: 500, headers: { ...corsHeaders(), 'Content-Type': 'application/json' } }
+        error: 'Erro interno ao adicionar metodo de pagamento',
+      } as AddPaymentMethodResponse,
+      500,
     );
   }
 });
+

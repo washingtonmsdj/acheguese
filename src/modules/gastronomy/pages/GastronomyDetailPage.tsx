@@ -68,7 +68,7 @@ export default function GastronomyDetailPage() {
   const { state, city, district, slug } = useParams();
   const navigate = useNavigate();
   const moduleUrls = useFriendlyModuleUrls();
-  const { user } = useSessionContext();
+  const { user, activeProfile, profiles } = useSessionContext();
 
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const [selectedItem, setSelectedItem] = useState<MenuItemWithRelations | null>(null);
@@ -143,8 +143,13 @@ export default function GastronomyDetailPage() {
   const averageRating = business.rating.toFixed(1);
   const photos = business.fotos ?? [];
 
-  // Dono do estabelecimento: profile_id do business == profile_id do usuário logado
-  const isOwner = !!user && business.profile_id === user.id;
+  // Dono do estabelecimento: comparar com profile.id (nao auth user.id)
+  const ownerProfileId = business.profile_id;
+  const isOwner = Boolean(
+    ownerProfileId &&
+      (activeProfile?.id === ownerProfileId ||
+        profiles.some((profileItem) => profileItem.id === ownerProfileId)),
+  );
 
   const serviceModes = [
     profile.delivery_enabled ? { label: 'Entrega', icon: Truck, color: 'text-emerald-600' } : null,
@@ -170,6 +175,31 @@ export default function GastronomyDetailPage() {
     }
     setShareOpen(true);
   };
+
+  const ownerManagementActions = isOwner
+    ? [
+        ownerProfileId
+          ? { label: 'Dashboard empresa', url: `/dashboard/business/${ownerProfileId}`, primary: true }
+          : null,
+        ownerProfileId
+          ? { label: 'Editar pagina / imagens', url: `/edit-business/${ownerProfileId}` }
+          : null,
+        ownerProfileId
+          ? { label: 'Produtos / cardapio', url: `/dashboard/business/${ownerProfileId}/gastronomy/menu` }
+          : null,
+        ownerProfileId
+          ? { label: 'Analytics / visitantes', url: `/dashboard/business/${ownerProfileId}/gastronomy/analytics` }
+          : null,
+        ownerProfileId && profile.delivery_enabled
+          ? { label: 'Pedidos', url: `/dashboard/business/${ownerProfileId}/gastronomy/orders` }
+          : null,
+        ownerProfileId && profile.delivery_enabled
+          ? { label: 'Entregas', url: `/dashboard/business/${ownerProfileId}/gastronomy/deliveries` }
+          : null,
+      ].filter(
+        (item): item is { label: string; url: string; primary?: boolean } => Boolean(item?.url),
+      )
+    : [];
 
   // ── Render ────────────────────────────────────────────────────────────────
   return (
@@ -325,6 +355,36 @@ export default function GastronomyDetailPage() {
 
           {/* Quick Actions */}
           <GastronomyQuickActions business={business} />
+
+          {isOwner && ownerManagementActions.length > 0 && (
+            <section className="mb-6 rounded-2xl border border-primary/20 bg-primary/5 p-4">
+              <div className="flex items-start gap-3">
+                <div className="rounded-lg bg-primary/10 p-2 text-primary">
+                  <LayoutDashboard className="h-4 w-4" />
+                </div>
+                <div className="min-w-0">
+                  <h2 className="text-sm font-semibold text-foreground">
+                    Painel do proprietario
+                  </h2>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Atalhos rapidos para gerir visitantes, imagens, produtos e operacao.
+                  </p>
+                </div>
+              </div>
+              <div className="mt-3 flex flex-wrap gap-2">
+                {ownerManagementActions.map((action) => (
+                  <Button
+                    key={`owner-action-${action.label}`}
+                    size="sm"
+                    variant={action.primary ? 'default' : 'outline'}
+                    onClick={() => navigate(action.url)}
+                  >
+                    {action.label}
+                  </Button>
+                ))}
+              </div>
+            </section>
+          )}
 
           <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_320px]">
 

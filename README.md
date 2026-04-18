@@ -1,4 +1,4 @@
-﻿# 🏢 Ordax - Plataforma de Serviços Locais
+﻿# 🏢 Achegue-se - Plataforma de Serviços Locais
 
 > Sistema modular de marketplace local com foco em gastronomia, mobilidade, classificados e serviços profissionais.
 
@@ -147,7 +147,7 @@ Proprietary - Todos os direitos reservados
 
 ## 👥 Time
 
-Desenvolvido com ❤️ pela equipe Ordax
+Desenvolvido com ❤️ pela equipe Achegue-se
 
 ---
 

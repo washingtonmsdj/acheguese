@@ -7,7 +7,7 @@
 import { useNavigate } from 'react-router-dom';
 import { useMultiProfileContext } from '@/core/profiles/contexts/multi-profile-runtime-context';
 import { useAppUrls } from '@/core/routing/hooks/useAppUrls';
-import { buildProfileEditUrl, buildPublicProfileUrl } from '@/core/profiles/utils/publicProfileUrl';
+import { buildProfileEditUrl, buildCanonicalPublicUrl, canHavePublicUrl } from '@/core/profiles/utils/publicProfileUrl';
 import { Avatar, AvatarFallback, AvatarImage } from '@/shared/components/ui/avatar';
 import { Badge } from '@/shared/components/ui/badge';
 import { Button } from '@/shared/components/ui/button';
@@ -46,7 +46,10 @@ function IdentityCard({ profile, isActive, onActivate, profileSettingsUrl }: {
   const Icon = getProfileTypeIcon(profile);
   const profileLabel = getProfileTypeLabel(profile);
   const isVerified = isProfileVerified(profile);
-  const canOpenPublicProfile = Boolean(profile.handle);
+  
+  // ✅ SSOT: Usar função canônica para verificar se pode ter URL pública
+  const publicUrl = buildCanonicalPublicUrl(profile);
+  const canOpenPublicProfile = Boolean(publicUrl);
   
   // Verificar se é motoboy (motorista com moto habilitado para entregas)
   const isMotoboy = profile.profile_type === 'driver' && 
@@ -107,11 +110,11 @@ function IdentityCard({ profile, isActive, onActivate, profileSettingsUrl }: {
             className="gap-1.5 text-xs h-7"
             disabled={!canOpenPublicProfile}
             onClick={() => {
-              if (!canOpenPublicProfile) {
-                toast.error('Perfil publico indisponivel para esta identidade');
+              if (!publicUrl) {
+                toast.error('Perfil público indisponível para esta identidade');
                 return;
               }
-              navigate(buildPublicProfileUrl(profile.handle));
+              navigate(publicUrl);
             }}
           >
             <ExternalLink className="h-3 w-3" />Ver público

@@ -121,7 +121,24 @@ export default function StandaloneMap({ business }: StandaloneMapProps) {
       // Criar marcador do negócio
       const el = document.createElement('div');
       el.style.cssText = 'width:32px;height:32px;background:#ef4444;border-radius:50%;border:3px solid white;box-shadow:0 2px 8px rgba(0,0,0,0.3);display:flex;align-items:center;justify-content:center;';
-      el.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="white"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>`;
+      // ✅ SEGURO - Usa DOM API ao invés de innerHTML
+      const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+      svg.setAttribute('width', '16');
+      svg.setAttribute('height', '16');
+      svg.setAttribute('viewBox', '0 0 24 24');
+      svg.setAttribute('fill', 'white');
+      
+      const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+      path.setAttribute('d', 'M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z');
+      
+      const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+      circle.setAttribute('cx', '12');
+      circle.setAttribute('cy', '10');
+      circle.setAttribute('r', '3');
+      
+      svg.appendChild(path);
+      svg.appendChild(circle);
+      el.appendChild(svg);
 
       businessMarkerRef.current = new maplibregl.Marker({ element: el })
         .setLngLat([businessPos[1], businessPos[0]])

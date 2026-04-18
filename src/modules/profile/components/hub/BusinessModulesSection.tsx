@@ -56,7 +56,7 @@ export function BusinessModulesSection({
   return (
     <SectionFrame
       title="Negocios, modulos e dashboards"
-      description="Operacao empresarial consolidada com vertical, plano, QR, presenca publica e links reais."
+      description="Operacao empresarial consolidada com dashboard, analytics, visitantes, imagens, produtos e delivery."
       action={
         <Button className="gap-2" onClick={onCreateBusiness}>
           <Sparkles className="h-4 w-4" />
@@ -137,6 +137,27 @@ function BusinessModuleCard({
     business.subscription.canUseMotoboyNetwork ? 'Rede motoboy' : null,
   ].filter(Boolean) as string[];
 
+  const gastronomyOwnerActions = [
+    business.gastronomy.dashboardUrl
+      ? { label: 'Painel gastro', url: business.gastronomy.dashboardUrl }
+      : null,
+    business.gastronomy.analyticsUrl
+      ? { label: 'Analytics', url: business.gastronomy.analyticsUrl }
+      : null,
+    business.gastronomy.menuUrl
+      ? { label: 'Produtos / cardapio', url: business.gastronomy.menuUrl }
+      : null,
+    business.gastronomy.ordersUrl
+      ? { label: 'Pedidos', url: business.gastronomy.ordersUrl }
+      : null,
+    business.gastronomy.deliveriesUrl
+      ? { label: 'Entregas', url: business.gastronomy.deliveriesUrl }
+      : null,
+    !business.gastronomy.active && business.gastronomy.setupUrl
+      ? { label: 'Ativar gastronomia', url: business.gastronomy.setupUrl }
+      : null,
+  ].filter((item): item is { label: string; url: string } => Boolean(item?.url));
+
   return (
     <div className="rounded-2xl border border-border bg-background p-4">
       <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
@@ -178,7 +199,7 @@ function BusinessModuleCard({
             Dashboard
           </Button>
           <Button size="sm" variant="outline" className="gap-1.5" onClick={() => onNavigate(business.editUrl)}>
-            Editar
+            Editar / imagens
           </Button>
           {business.publicUrl && (
             <Button size="sm" variant="outline" className="gap-1.5" onClick={() => onNavigate(business.publicUrl!)}>
@@ -192,6 +213,27 @@ function BusinessModuleCard({
           )}
         </div>
       </div>
+
+      {gastronomyOwnerActions.length > 0 ? (
+        <div className="mt-4 border-t border-border/70 pt-4">
+          <p className="mb-2 text-[11px] uppercase tracking-wide text-muted-foreground">
+            Gestao operacional
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {gastronomyOwnerActions.map((action) => (
+              <Button
+                key={`${business.businessId}-${action.label}`}
+                size="sm"
+                variant="outline"
+                className="gap-1.5"
+                onClick={() => onNavigate(action.url)}
+              >
+                {action.label}
+              </Button>
+            ))}
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }

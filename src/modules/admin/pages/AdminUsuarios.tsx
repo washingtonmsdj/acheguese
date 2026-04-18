@@ -213,7 +213,7 @@ export default function AdminUsuarios() {
                 <div className="text-center py-10 px-4">
                   <AlertTriangle className="h-8 w-8 text-destructive mx-auto mb-2" />
                   <p className="text-sm text-destructive font-medium">Erro ao carregar</p>
-                  <p className="text-xs text-muted-foreground mt-1">Verifique VITE_SUPABASE_SERVICE_ROLE_KEY</p>
+                  <p className="text-xs text-muted-foreground mt-1">Verifique backend administrativo (Edge Functions)</p>
                 </div>
               ) : isLoading ? (
                 <div className="space-y-2 p-2">

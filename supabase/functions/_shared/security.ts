@@ -15,9 +15,14 @@
  */
 export function getCorsHeaders(methods = 'POST, OPTIONS'): Record<string, string> {
   const allowedOrigins = Deno.env.get('ALLOWED_ORIGINS') || '';
+  const supabaseUrl = Deno.env.get('SUPABASE_URL') || '';
   
   // Em desenvolvimento, permite localhost
-  const isDev = Deno.env.get('DENO_ENV') === 'development';
+  const isDev =
+    Deno.env.get('DENO_ENV') === 'development' ||
+    Deno.env.get('NODE_ENV') === 'development' ||
+    supabaseUrl.includes('127.0.0.1') ||
+    supabaseUrl.includes('localhost');
   const defaultOrigin = isDev 
     ? 'http://localhost:8080,http://localhost:5173' 
     : '';
@@ -53,7 +58,12 @@ export function isOriginAllowed(origin: string | null): boolean {
   if (!origin) return false;
   
   const allowedOrigins = Deno.env.get('ALLOWED_ORIGINS') || '';
-  const isDev = Deno.env.get('DENO_ENV') === 'development';
+  const supabaseUrl = Deno.env.get('SUPABASE_URL') || '';
+  const isDev =
+    Deno.env.get('DENO_ENV') === 'development' ||
+    Deno.env.get('NODE_ENV') === 'development' ||
+    supabaseUrl.includes('127.0.0.1') ||
+    supabaseUrl.includes('localhost');
   
   if (isDev && (origin.includes('localhost') || origin.includes('127.0.0.1'))) {
     return true;

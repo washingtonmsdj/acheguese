@@ -14,6 +14,7 @@ import {
   rateLimitMiddleware,
   auditLog,
   getAuditInfo,
+  isOriginAllowed,
   isValidUUID,
   sanitizeString,
 } from '../_shared/security.ts';
@@ -25,6 +26,11 @@ interface SuspendRequest {
 
 Deno.serve(async (req) => {
   const auditInfo = getAuditInfo(req);
+  const origin = req.headers.get('origin');
+
+  if (origin && !isOriginAllowed(origin)) {
+    return jsonResponse({ error: 'Origin not allowed' }, 403);
+  }
   
   // Handle CORS preflight
   if (req.method === 'OPTIONS') {

@@ -60,7 +60,7 @@ class AdminBusinessServiceClass {
    */
   async getBusinessById(id: string): Promise<AdminBusinessData | null> {
     try {
-      const business = await BusinessService.getBusinessByProfileId(id);
+      const business = await BusinessService.getBusinessById(id);
       
       if (!business) {
         return null;
@@ -69,12 +69,12 @@ class AdminBusinessServiceClass {
       // Mapear para AdminBusinessData
       return {
         id: business.id,
-        name: business.business_name,
+        name: business.name,
         description: business.description,
         category: business.category,
         owner_profile_id: business.profile_id,
-        is_verified: business.is_verified,
-        is_premium: business.is_premium,
+        is_verified: business.is_verified || false,
+        is_premium: business.is_premium || false,
         rating: business.rating,
         total_reviews: business.total_reviews,
         created_at: business.created_at,
@@ -96,13 +96,11 @@ class AdminBusinessServiceClass {
   ): Promise<AdminBusinessData | null> {
     try {
       // Mapear AdminBusinessData para formato do BusinessService
-      const businessUpdates: any = {};
+      const businessUpdates: Record<string, any> = {};
       
-      if (updates.name) businessUpdates.business_name = updates.name;
+      if (updates.name) businessUpdates.name = updates.name;
       if (updates.description !== undefined) businessUpdates.description = updates.description;
       if (updates.category !== undefined) businessUpdates.category = updates.category;
-      if (updates.is_verified !== undefined) businessUpdates.is_verified = updates.is_verified;
-      if (updates.is_premium !== undefined) businessUpdates.is_premium = updates.is_premium;
 
       await BusinessService.updateBusiness(id, businessUpdates);
       
@@ -130,11 +128,18 @@ class AdminBusinessServiceClass {
 
   /**
    * Verifica um negócio
-   * ✅ SSOT: Usa BusinessService
+   * ⚠️ TODO: Adicionar is_verified ao BusinessInput quando implementado no schema
    */
   async verifyBusiness(id: string): Promise<boolean> {
     try {
-      await BusinessService.updateBusiness(id, { is_verified: true });
+      // Temporariamente usar query direta até is_verified ser adicionado ao BusinessInput
+      const { supabase } = await import("@/integrations/supabase");
+      const { error } = await supabase
+        .from("business_data")
+        .update({ is_verified: true })
+        .eq("profile_id", id);
+      
+      if (error) throw error;
       return true;
     } catch (error) {
       logger.error("Error in verifyBusiness:", error);
@@ -144,11 +149,18 @@ class AdminBusinessServiceClass {
 
   /**
    * Remove verificação de um negócio
-   * ✅ SSOT: Usa BusinessService
+   * ⚠️ TODO: Adicionar is_verified ao BusinessInput quando implementado no schema
    */
   async unverifyBusiness(id: string): Promise<boolean> {
     try {
-      await BusinessService.updateBusiness(id, { is_verified: false });
+      // Temporariamente usar query direta até is_verified ser adicionado ao BusinessInput
+      const { supabase } = await import("@/integrations/supabase");
+      const { error } = await supabase
+        .from("business_data")
+        .update({ is_verified: false })
+        .eq("profile_id", id);
+      
+      if (error) throw error;
       return true;
     } catch (error) {
       logger.error("Error in unverifyBusiness:", error);
@@ -158,11 +170,18 @@ class AdminBusinessServiceClass {
 
   /**
    * Torna um negócio premium
-   * ✅ SSOT: Usa BusinessService
+   * ⚠️ TODO: Adicionar is_premium ao BusinessInput quando implementado no schema
    */
   async makePremium(id: string): Promise<boolean> {
     try {
-      await BusinessService.updateBusiness(id, { is_premium: true });
+      // Temporariamente usar query direta até is_premium ser adicionado ao BusinessInput
+      const { supabase } = await import("@/integrations/supabase");
+      const { error } = await supabase
+        .from("business_data")
+        .update({ is_premium: true })
+        .eq("profile_id", id);
+      
+      if (error) throw error;
       return true;
     } catch (error) {
       logger.error("Error in makePremium:", error);
@@ -172,11 +191,18 @@ class AdminBusinessServiceClass {
 
   /**
    * Remove status premium de um negócio
-   * ✅ SSOT: Usa BusinessService
+   * ⚠️ TODO: Adicionar is_premium ao BusinessInput quando implementado no schema
    */
   async removePremium(id: string): Promise<boolean> {
     try {
-      await BusinessService.updateBusiness(id, { is_premium: false });
+      // Temporariamente usar query direta até is_premium ser adicionado ao BusinessInput
+      const { supabase } = await import("@/integrations/supabase");
+      const { error } = await supabase
+        .from("business_data")
+        .update({ is_premium: false })
+        .eq("profile_id", id);
+      
+      if (error) throw error;
       return true;
     } catch (error) {
       logger.error("Error in removePremium:", error);
@@ -207,6 +233,7 @@ class AdminBusinessServiceClass {
     status: "aprovada" | "rejeitada",
   ): Promise<boolean> {
     try {
+      const { supabase } = await import("@/integrations/supabase");
       const { error } = await supabase
         .from("business_claims")
         .update({ status, resolved_at: new Date().toISOString() })
@@ -247,6 +274,7 @@ class AdminBusinessServiceClass {
       // Se precisar filtrar por data, usar query direta temporariamente
       // TODO: Adicionar suporte a filtro de data no BusinessService.getBusinessMetrics
       if (startDate) {
+        const { supabase } = await import("@/integrations/supabase");
         const { data, error } = await supabase
           .from("business_views")
           .select("id, viewed_at")
@@ -262,7 +290,7 @@ class AdminBusinessServiceClass {
       }
 
       // Retornar contagem de views do metrics
-      return Array(metrics.views.total).fill({ id: null, viewed_at: null });
+      return Array(metrics.totalViews).fill({ id: null, viewed_at: null });
     } catch (error) {
       logger.error("Error in getBusinessViews:", error);
       return [];
@@ -280,6 +308,7 @@ class AdminBusinessServiceClass {
       // Se precisar filtrar por data, usar query direta temporariamente
       // TODO: Adicionar suporte a filtro de data no BusinessService.getBusinessMetrics
       if (startDate) {
+        const { supabase } = await import("@/integrations/supabase");
         const { count, error } = await supabase
           .from("business_views")
           .select("id", { count: "exact", head: true })
@@ -293,7 +322,7 @@ class AdminBusinessServiceClass {
         return count || 0;
       }
 
-      return metrics.views.total;
+      return metrics.totalViews;
     } catch (error) {
       logger.error("Error in countBusinessViews:", error);
       return 0;
@@ -342,6 +371,7 @@ class AdminBusinessServiceClass {
 
       // 2. Adicionar user como owner em profile_members
       // ⚠️ TODO: Mover para ProfileService.addMember quando implementado
+      const { supabase } = await import("@/integrations/supabase");
       const { error: memberError } = await supabase
         .from("profile_members")
         .insert({
@@ -376,14 +406,7 @@ class AdminBusinessServiceClass {
    */
   async updateBusinessProfile(profileId: string, businessData: any) {
     try {
-      // Buscar business_id pelo profile_id
-      const business = await BusinessService.getBusinessByProfileId(profileId);
-      
-      if (!business) {
-        throw new Error("Business not found");
-      }
-
-      await BusinessService.updateBusiness(business.id, businessData);
+      await BusinessService.updateBusiness(profileId, businessData);
       return true;
     } catch (error) {
       logger.error("Error in updateBusinessProfile:", error);

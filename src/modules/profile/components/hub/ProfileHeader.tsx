@@ -239,10 +239,6 @@ export function ProfileHeader({
             <Pencil className="h-4 w-4" />
             Editar perfil
           </Button>
-          <Button variant="outline" className="gap-1.5" onClick={() => navigate(appUrls.profile.manage)}>
-            <Users className="h-4 w-4" />
-            Gerenciar identidades
-          </Button>
           {canOpenPublicProfile ? (
             <Button variant="outline" className="gap-1.5" onClick={() => navigate(buildPublicProfileUrl(handle))}>
               <Globe className="h-4 w-4" />

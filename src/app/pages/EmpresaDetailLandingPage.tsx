@@ -34,6 +34,18 @@ import { useGastronomyProfile } from "@/modules/gastronomy/hooks";
 import { GastronomyCTA } from "@/modules/gastronomy/components/GastronomyCTA";
 import { CoverageBadge } from "@/core/geospatial/components/CoverageBadge";
 import { normalizePublicTerritoryPath } from "@/core/routing/utils/territoryUrls";
+import {
+  FACILITIES,
+  getFacilityIcon,
+  getFacilityLabel,
+  getFacilityColor,
+  SERVICE_MODES,
+  getServiceModeIcon,
+  getServiceModeLabel,
+  getServiceModeColor,
+  WEEK_DAY_LABELS,
+  type WeekDay,
+} from "@/core/business/constants";
 
 // ── Mock data ────────────────────────────────────────────────────────
 const MOCK_BUSINESSES: Record<string, any> = {
@@ -112,25 +124,10 @@ const NEARBY_BUSINESSES = [
 
 const AREAS_ATENDIDAS = ["Pituba", "Itaigara", "Caminho das Árvores", "Iguatemi", "Nordeste de Amaralina", "Santa Cruz", "Vale das Pedrinhas"];
 
-const FACILITY_ICONS: Record<string, typeof Wifi> = {
-  wifi: Wifi, estacionamento: ParkingSquare, acessibilidade: Accessibility, kids: Baby, pet_friendly: Dog,
-};
-
-const FACILITY_LABELS: Record<string, string> = {
-  wifi: "Wi-Fi grátis", estacionamento: "Estacionamento", acessibilidade: "Acessível", kids: "Espaço Kids", pet_friendly: "Pet Friendly",
-};
-
-const MODOS_CONFIG: Record<string, { label: string; icon: typeof Store; color: string }> = {
-  presencial: { label: "Atendimento presencial", icon: Store, color: "bg-primary/10 text-primary border-primary/20" },
-  delivery: { label: "Delivery", icon: Truck, color: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20" },
-  domicilio: { label: "Atendimento a domicílio", icon: Home, color: "bg-amber-500/10 text-amber-400 border-amber-500/20" },
-  online: { label: "Atendimento online", icon: Globe, color: "bg-sky-500/10 text-sky-400 border-sky-500/20" },
-};
-
-const DAY_NAMES: Record<string, string> = {
-  segunda: "Segunda-feira", terca: "Terça-feira", quarta: "Quarta-feira", quinta: "Quinta-feira",
-  sexta: "Sexta-feira", sabado: "Sábado", domingo: "Domingo"
-};
+// SSOT: Constantes importadas de @/core/business/constants
+// - FACILITIES, getFacilityIcon, getFacilityLabel, getFacilityColor
+// - SERVICE_MODES, getServiceModeIcon, getServiceModeLabel, getServiceModeColor
+// - WEEK_DAY_LABELS (dias da semana)
 
 function formatDate(dateString: string) {
   return new Date(dateString).toLocaleDateString("pt-BR", { day: "2-digit", month: "long", year: "numeric" });
@@ -461,12 +458,13 @@ export default function EmpresaDetailLandingPage({ businessId: propBusinessId }:
                 {business.modos_atendimento && business.modos_atendimento.length > 0 && (
                   <div className="flex flex-wrap gap-2">
                     {business.modos_atendimento.map((modo) => {
-                      const config = MODOS_CONFIG[modo];
-                      if (!config) return null;
-                      const ModoIcon = config.icon;
+                      const ModoIcon = getServiceModeIcon(modo);
+                      const label = getServiceModeLabel(modo);
+                      const color = getServiceModeColor(modo);
+                      if (!ModoIcon) return null;
                       return (
-                        <span key={modo} className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-medium border ${config.color}`}>
-                          <ModoIcon className="h-3 w-3" /> {config.label}
+                        <span key={modo} className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-medium border ${color}`}>
+                          <ModoIcon className="h-3 w-3" /> {label}
                         </span>
                       );
                     })}
@@ -719,7 +717,7 @@ export default function EmpresaDetailLandingPage({ businessId: propBusinessId }:
                         return (
                           <div key={day} className={`flex items-center justify-between py-2 px-3 rounded-lg ${isToday ? "bg-primary/5 border border-primary/10" : ""}`}>
                             <span className={`text-sm ${isToday ? "font-bold text-primary" : "text-foreground"}`}>
-                              {DAY_NAMES[day] || day} {isToday && <span className="text-xs ml-1">(hoje)</span>}
+                              {WEEK_DAY_LABELS[day as WeekDay] || day} {isToday && <span className="text-xs ml-1">(hoje)</span>}
                             </span>
                             <span className="text-sm text-muted-foreground">
                               {hours?.open && hours?.close ? `${hours.open} – ${hours.close}` : "Fechado"}
@@ -741,13 +739,14 @@ export default function EmpresaDetailLandingPage({ businessId: propBusinessId }:
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
                 {business.modos_atendimento?.map((modo) => {
-                  const config = MODOS_CONFIG[modo];
-                  if (!config) return null;
-                  const ModoIcon = config.icon;
+                  const ModoIcon = getServiceModeIcon(modo);
+                  const label = getServiceModeLabel(modo);
+                  const color = getServiceModeColor(modo);
+                  if (!ModoIcon) return null;
                   return (
-                    <div key={modo} className={`flex items-center gap-3 p-3 rounded-lg border ${config.color}`}>
+                    <div key={modo} className={`flex items-center gap-3 p-3 rounded-lg border ${color}`}>
                       <ModoIcon className="h-5 w-5 shrink-0" />
-                      <span className="text-sm font-medium">{config.label}</span>
+                      <span className="text-sm font-medium">{label}</span>
                     </div>
                   );
                 })}
@@ -856,11 +855,12 @@ export default function EmpresaDetailLandingPage({ businessId: propBusinessId }:
                 <h2 className="text-base font-bold text-foreground mb-3">Facilidades</h2>
                 <div className="space-y-2.5">
                   {business.facilidades.map((fac, idx) => {
-                    const Icon = FACILITY_ICONS[fac] || Store;
+                    const Icon = getFacilityIcon(fac) || Store;
+                    const label = getFacilityLabel(fac) || fac.replace(/_/g, " ");
                     return (
                       <div key={idx} className="flex items-center gap-3 bg-secondary/50 rounded-lg px-3 py-2.5">
                         <Icon className="h-4 w-4 text-primary shrink-0" />
-                        <span className="text-sm text-foreground font-medium">{FACILITY_LABELS[fac] || fac.replace(/_/g, " ")}</span>
+                        <span className="text-sm text-foreground font-medium">{label}</span>
                       </div>
                     );
                   })}

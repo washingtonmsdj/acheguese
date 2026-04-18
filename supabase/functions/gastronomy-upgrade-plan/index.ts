@@ -6,16 +6,17 @@
  *
  * Endpoint: /functions/v1/gastronomy-upgrade-plan
  * Method: POST
- * Auth: Required (service_role ou authenticated user com permissão)
+ * Auth: Required
  */
 
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import Stripe from 'https://esm.sh/stripe@12.0.0';
-
-// ══════════════════════════════════════════════════════════════════════════
-// TYPES
-// ══════════════════════════════════════════════════════════════════════════
+import { getAllSecurityHeaders, isOriginAllowed } from '../_shared/security.ts';
+import {
+  jsonSecurityResponse,
+  requireBusinessManagementAccess,
+} from '../_shared/businessAuth.ts';
 
 interface UpgradeRequest {
   businessId: string;
@@ -25,13 +26,9 @@ interface UpgradeRequest {
 
 interface UpgradeResponse {
   success: boolean;
-  subscription?: any;
+  subscription?: unknown;
   error?: string;
 }
-
-// ══════════════════════════════════════════════════════════════════════════
-// CONFIGURATION
-// ══════════════════════════════════════════════════════════════════════════
 
 const STRIPE_SECRET_KEY = Deno.env.get('STRIPE_SECRET_KEY')!;
 const STRIPE_PRICE_ID_PRO = Deno.env.get('STRIPE_PRICE_ID_PRO')!;
@@ -46,106 +43,103 @@ const stripe = new Stripe(STRIPE_SECRET_KEY, {
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
-// ══════════════════════════════════════════════════════════════════════════
-// HELPERS
-// ══════════════════════════════════════════════════════════════════════════
-
 function getPriceId(planTier: 'pro' | 'delivery'): string {
   return planTier === 'pro' ? STRIPE_PRICE_ID_PRO : STRIPE_PRICE_ID_DELIVERY;
 }
 
-function corsHeaders() {
-  return {
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-  };
-}
-
-// ══════════════════════════════════════════════════════════════════════════
-// HANDLER
-// ══════════════════════════════════════════════════════════════════════════
-
 serve(async (req) => {
-  // Handle CORS preflight
-  if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders() });
+  const origin = req.headers.get('origin');
+  if (origin && !isOriginAllowed(origin)) {
+    return jsonSecurityResponse({ success: false, error: 'Origin not allowed' }, 403);
   }
-  
+
+  if (req.method === 'OPTIONS') {
+    return new Response('ok', {
+      status: 204,
+      headers: getAllSecurityHeaders('POST, OPTIONS'),
+    });
+  }
+
   try {
-    // Parse request
     const { businessId, newPlanTier, prorationBehavior }: UpgradeRequest = await req.json();
-    
-    // Validate input
+
     if (!businessId || !newPlanTier) {
-      return new Response(
-        JSON.stringify({ success: false, error: 'businessId e newPlanTier são obrigatórios' }),
-        { status: 400, headers: { ...corsHeaders(), 'Content-Type': 'application/json' } }
+      return jsonSecurityResponse(
+        { success: false, error: 'businessId e newPlanTier sao obrigatorios' },
+        400,
       );
     }
-    
+
     if (!['pro', 'delivery'].includes(newPlanTier)) {
-      return new Response(
-        JSON.stringify({ success: false, error: 'newPlanTier deve ser "pro" ou "delivery"' }),
-        { status: 400, headers: { ...corsHeaders(), 'Content-Type': 'application/json' } }
+      return jsonSecurityResponse(
+        { success: false, error: 'newPlanTier deve ser "pro" ou "delivery"' },
+        400,
       );
     }
-    
-    // Buscar assinatura atual
+
+    const accessCheck = await requireBusinessManagementAccess(req, supabase, businessId);
+    if (accessCheck instanceof Response) {
+      return accessCheck;
+    }
+
     const { data: currentSubscription, error: fetchError } = await supabase
       .from('gastronomy_subscriptions')
       .select('*')
       .eq('business_id', businessId)
       .single();
-    
+
     if (fetchError || !currentSubscription) {
-      return new Response(
-        JSON.stringify({ success: false, error: 'Assinatura não encontrada' }),
-        { status: 404, headers: { ...corsHeaders(), 'Content-Type': 'application/json' } }
-      );
+      return jsonSecurityResponse({ success: false, error: 'Assinatura nao encontrada' }, 404);
     }
-    
-    // Verificar se já está no plano desejado
+
     if (currentSubscription.plan_tier === newPlanTier) {
-      return new Response(
-        JSON.stringify({ success: false, error: 'Já está no plano desejado' }),
-        { status: 400, headers: { ...corsHeaders(), 'Content-Type': 'application/json' } }
+      return jsonSecurityResponse(
+        { success: false, error: 'Ja esta no plano desejado' },
+        400,
       );
     }
-    
-    // Se não tem stripe_subscription_id, precisa criar assinatura
+
     if (!currentSubscription.stripe_subscription_id) {
-      return new Response(
-        JSON.stringify({ 
-          success: false, 
-          error: 'Assinatura Stripe não encontrada. Use create-subscription primeiro.' 
-        }),
-        { status: 400, headers: { ...corsHeaders(), 'Content-Type': 'application/json' } }
+      return jsonSecurityResponse(
+        {
+          success: false,
+          error: 'Assinatura Stripe nao encontrada. Use create-subscription primeiro.',
+        },
+        400,
       );
     }
-    
-    // Atualizar assinatura no Stripe
+
     const stripeSubscription = await stripe.subscriptions.retrieve(
-      currentSubscription.stripe_subscription_id
+      currentSubscription.stripe_subscription_id,
     );
-    
+
+    const firstItem = stripeSubscription.items.data[0];
+    if (!firstItem?.id) {
+      return jsonSecurityResponse(
+        { success: false, error: 'Assinatura Stripe sem item para atualizacao' },
+        422,
+      );
+    }
+
     const priceId = getPriceId(newPlanTier);
-    
+
     const updatedSubscription = await stripe.subscriptions.update(
       currentSubscription.stripe_subscription_id,
       {
-        items: [{
-          id: stripeSubscription.items.data[0].id,
-          price: priceId,
-        }],
+        items: [
+          {
+            id: firstItem.id,
+            price: priceId,
+          },
+        ],
         proration_behavior: prorationBehavior || 'create_prorations',
         metadata: {
           ...stripeSubscription.metadata,
           plan_tier: newPlanTier,
         },
-      }
+      },
     );
-    
-    // Atualizar banco de dados
+
     const { error: updateError } = await supabase
       .from('gastronomy_subscriptions')
       .update({
@@ -153,16 +147,13 @@ serve(async (req) => {
         updated_at: new Date().toISOString(),
       })
       .eq('business_id', businessId);
-    
+
     if (updateError) {
       console.error('Erro ao atualizar banco:', updateError);
-      // Não falhar a requisição, pois o Stripe já foi atualizado
-      // O webhook vai sincronizar depois
     }
-    
-    // Retornar sucesso
-    return new Response(
-      JSON.stringify({
+
+    return jsonSecurityResponse(
+      {
         success: true,
         subscription: {
           id: updatedSubscription.id,
@@ -170,19 +161,19 @@ serve(async (req) => {
           status: updatedSubscription.status,
           current_period_end: new Date(updatedSubscription.current_period_end * 1000).toISOString(),
         },
-      } as UpgradeResponse),
-      { status: 200, headers: { ...corsHeaders(), 'Content-Type': 'application/json' } }
+      } as UpgradeResponse,
+      200,
     );
-    
   } catch (error) {
     console.error('Erro ao fazer upgrade:', error);
-    
-    return new Response(
-      JSON.stringify({
+
+    return jsonSecurityResponse(
+      {
         success: false,
-        error: error instanceof Error ? error.message : 'Erro desconhecido',
-      } as UpgradeResponse),
-      { status: 500, headers: { ...corsHeaders(), 'Content-Type': 'application/json' } }
+        error: 'Erro interno ao atualizar plano',
+      } as UpgradeResponse,
+      500,
     );
   }
 });
+

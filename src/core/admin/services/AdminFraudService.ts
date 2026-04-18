@@ -54,13 +54,19 @@ export class AdminFraudService {
     resolutionNotes?: string,
   ): Promise<void> {
     const client = supabase as unknown as AdminSupabaseClient;
+    const updateData: {
+      status: FraudAlert["status"];
+      resolution_notes: string | null;
+      reviewed_at: string;
+    } = {
+      status,
+      resolution_notes: resolutionNotes || null,
+      reviewed_at: new Date().toISOString(),
+    };
+    
     const { error } = await client
       .from("fraud_alerts")
-      .update({
-        status,
-        resolution_notes: resolutionNotes || null,
-        reviewed_at: new Date().toISOString(),
-      })
+      .update(updateData)
       .eq("id", alertId);
 
     if (error) throw error;

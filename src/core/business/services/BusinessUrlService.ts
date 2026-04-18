@@ -11,6 +11,8 @@
  *   Premium (curta):   /p/:slug  → redirect 308 para canônica
  */
 
+import { supabase } from '@/integrations/supabase';
+import { PublicIdentityService } from '@/core/public-identity/services/PublicIdentityService';
 import { logger } from '@/shared/utils/logger';
 
 // ─── Tipos ────────────────────────────────────────────────────────────────────
@@ -124,7 +126,7 @@ export class BusinessUrlService {
    */
   static async resolveBySlug(slug: string): Promise<BusinessUrlContext | null> {
     try {
-      const { data, error } = await (supabase as any)
+      const { data, error } = await supabase
         .from('business_data')
         .select(`
           profile_id,
@@ -157,7 +159,7 @@ export class BusinessUrlService {
    */
   static async resolveById(id: string): Promise<BusinessUrlContext | null> {
     try {
-      const { data, error } = await (supabase as any)
+      const { data, error } = await supabase
         .from('business_data')
         .select(`
           profile_id,
@@ -199,7 +201,7 @@ export class BusinessUrlService {
     try {
       const expectedPathPrefix = `/br/${uf}/${cidade}/${bairro}`;
 
-      const { data, error } = await (supabase as any)
+      const { data, error } = await supabase
         .from('business_data')
         .select(`
           profile_id,
@@ -284,7 +286,7 @@ export class BusinessUrlService {
     }
 
     // Fallback: adiciona contador manualmente
-    const { data } = await (supabase as any)
+    const { data } = await supabase
       .from('business_data')
       .select('slug')
       .ilike('slug', `${slug}%`);
@@ -313,7 +315,7 @@ export class BusinessUrlService {
   ): Promise<BusinessUrlContext | null> {
     try {
       // Passo 1: buscar profile_id pelo URL canônica antiga
-      const { data: histData, error: histErr } = await (supabase as any)
+      const { data: histData, error: histErr } = await supabase
         .from('business_slug_history')
         .select('profile_id')
         .eq('old_canonical_url', oldCanonicalUrl)
@@ -322,7 +324,7 @@ export class BusinessUrlService {
       if (histErr || !histData) return null;
 
       // Passo 2: buscar contexto atual da empresa
-      const { data, error } = await (supabase as any)
+      const { data, error } = await supabase
         .from('business_data')
         .select(`
           profile_id,

@@ -36,7 +36,7 @@ export function ProfileCompletenessWidget({ profile }: ProfileCompletenessWidget
     <motion.div
       initial={{ opacity: 0, y: 6 }}
       animate={{ opacity: 1, y: 0 }}
-      className="rounded-xl border bg-card px-4 py-3 space-y-3"
+      className="rounded-lg border bg-card px-3 py-2.5 space-y-2 sm:rounded-xl sm:px-4 sm:py-3 sm:space-y-3"
     >
       {/* Cabeçalho */}
       <div
@@ -47,22 +47,22 @@ export function ProfileCompletenessWidget({ profile }: ProfileCompletenessWidget
         onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setExpanded(v => !v); } }}
         aria-expanded={expanded}
       >
-        <div className="flex items-center gap-2">
-          <Sparkles className="h-4 w-4 text-primary flex-shrink-0" />
-          <span className="text-sm font-medium">Complete seu perfil</span>
-          <span className={cn('text-sm font-bold tabular-nums', scoreColor)}>
+        <div className="flex items-center gap-1.5 sm:gap-2">
+          <Sparkles className="h-3.5 w-3.5 shrink-0 text-primary sm:h-4 sm:w-4" />
+          <span className="text-xs font-medium sm:text-sm">Complete seu perfil</span>
+          <span className={cn('text-xs font-bold tabular-nums sm:text-sm', scoreColor)}>
             {score}%
           </span>
         </div>
         <ChevronDown
-          className={cn('h-4 w-4 text-muted-foreground transition-transform duration-200', expanded && 'rotate-180')}
+          className={cn('h-3.5 w-3.5 shrink-0 text-muted-foreground transition-transform duration-200 sm:h-4 sm:w-4', expanded && 'rotate-180')}
         />
       </div>
 
       {/* Barra de progresso */}
-      <div className="space-y-1">
-        <Progress value={score} className={cn('h-2', barColor)} />
-        <p className="text-[11px] text-muted-foreground">
+      <div className="space-y-0.5 sm:space-y-1">
+        <Progress value={score} className={cn('h-1.5 sm:h-2', barColor)} />
+        <p className="text-[10px] text-muted-foreground sm:text-[11px]">
           {completed} de {total} itens concluídos
         </p>
       </div>
@@ -87,12 +87,12 @@ export function ProfileCompletenessWidget({ profile }: ProfileCompletenessWidget
                     item.done ? 'opacity-50' : 'bg-accent/40'
                   )}
                 >
-                  <div className="flex items-center gap-2 min-w-0">
+                  <div className="flex items-center gap-1.5 min-w-0 sm:gap-2">
                     {item.done
-                      ? <CheckCircle2 className="h-3.5 w-3.5 text-green-500 flex-shrink-0" />
-                      : <Circle className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0" />
+                      ? <CheckCircle2 className="h-3 w-3 shrink-0 text-green-500 sm:h-3.5 sm:w-3.5" />
+                      : <Circle className="h-3 w-3 shrink-0 text-muted-foreground sm:h-3.5 sm:w-3.5" />
                     }
-                    <span className={cn('truncate', item.done && 'line-through text-muted-foreground')}>
+                    <span className={cn('truncate text-[10px] sm:text-xs', item.done && 'line-through text-muted-foreground')}>
                       {item.label}
                     </span>
                   </div>
@@ -100,7 +100,7 @@ export function ProfileCompletenessWidget({ profile }: ProfileCompletenessWidget
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="h-6 px-2 text-[11px] text-primary hover:text-primary flex-shrink-0"
+                      className="h-5 shrink-0 px-1.5 text-[10px] text-primary hover:text-primary sm:h-6 sm:px-2 sm:text-[11px]"
                       onClick={e => { e.stopPropagation(); navigate(item.path); }}
                     >
                       Adicionar
@@ -113,7 +113,7 @@ export function ProfileCompletenessWidget({ profile }: ProfileCompletenessWidget
             {pending.length > 0 && (
               <Button
                 size="sm"
-                className="w-full mt-3 h-8 text-xs gap-1.5"
+                className="w-full mt-2.5 h-7 text-[10px] gap-1 sm:mt-3 sm:h-8 sm:text-xs sm:gap-1.5"
                 onClick={e => { e.stopPropagation(); navigate(pending[0].path); }}
               >
                 Completar agora
