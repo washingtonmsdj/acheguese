@@ -3,7 +3,7 @@
  * 
  * ✅ Valida URLs antes de renderizar
  * ✅ Adiciona rel="noopener noreferrer" automaticamente
- * ✅ Bloqueia javascript: e data: URLs
+ * ✅ Bloqueia protocolos perigosos (configuração vem do SSOT)
  * 
  * @example
  * ```tsx
@@ -13,9 +13,17 @@
  * // ❌ ERRADO - Vulnerável a javascript:
  * <a href={userUrl}>Clique aqui</a>
  * ```
+ * 
+ * @security-critical
+ * @ssot src/config/security.config.ts
  */
 
 import { AnchorHTMLAttributes, ReactNode } from 'react';
+import { 
+  BLOCKED_URL_PROTOCOLS, 
+  ALLOWED_URL_PROTOCOLS,
+  isURLProtocolSafe 
+} from '@/config/security.config';
 
 interface SafeLinkProps extends Omit<AnchorHTMLAttributes<HTMLAnchorElement>, 'href'> {
   href: string;
@@ -26,6 +34,9 @@ interface SafeLinkProps extends Omit<AnchorHTMLAttributes<HTMLAnchorElement>, 'h
 
 /**
  * Valida se URL é segura
+ * 
+ * IMPORTANTE: Usa configuração do SSOT (security.config.ts)
+ * NÃO hardcode protocolos aqui!
  */
 function isUrlSafe(url: string, allowInternal: boolean): boolean {
   // Permite URLs relativas se allowInternal=true
@@ -35,18 +46,25 @@ function isUrlSafe(url: string, allowInternal: boolean): boolean {
 
   try {
     const parsed = new URL(url, window.location.origin);
+    const protocol = parsed.protocol.toLowerCase();
     
-    // Bloqueia protocolos perigosos
-    const dangerousProtocols = ['javascript:', 'data:', 'vbscript:', 'file:'];
-    if (dangerousProtocols.some(proto => parsed.protocol.toLowerCase().startsWith(proto))) {
-      console.warn('[SafeLink] Blocked dangerous protocol:', parsed.protocol);
+    // Verifica protocolos bloqueados (do SSOT)
+    const isBlocked = BLOCKED_URL_PROTOCOLS.some(blocked => 
+      protocol.startsWith(blocked)
+    );
+    
+    if (isBlocked) {
+      console.warn('[SafeLink] Blocked dangerous protocol:', protocol);
       return false;
     }
 
-    // Permite apenas http, https, mailto, tel
-    const allowedProtocols = ['http:', 'https:', 'mailto:', 'tel:'];
-    if (!allowedProtocols.includes(parsed.protocol.toLowerCase())) {
-      console.warn('[SafeLink] Blocked unknown protocol:', parsed.protocol);
+    // Verifica protocolos permitidos (do SSOT)
+    const isAllowed = ALLOWED_URL_PROTOCOLS.some(allowed => 
+      protocol === allowed
+    );
+    
+    if (!isAllowed) {
+      console.warn('[SafeLink] Blocked unknown protocol:', protocol);
       return false;
     }
 
@@ -65,7 +83,7 @@ export function SafeLink({
   rel,
   ...props
 }: SafeLinkProps) {
-  // Valida URL
+  // Valida URL usando configuração do SSOT
   if (!isUrlSafe(href, allowInternal)) {
     // Renderiza texto sem link se URL for perigosa
     return <span className="text-muted-foreground">{children}</span>;

@@ -13,20 +13,18 @@
  * NOTA: Para HttpOnly verdadeiro, é necessário middleware no servidor.
  * Esta implementação prepara o terreno para migração completa.
  * 
+ * SSOT: Todas as configurações importadas de security.config.ts
+ * 
  * @see https://supabase.com/docs/guides/auth/server-side/creating-a-client
  */
 
 import type { SupportedStorage } from '@supabase/supabase-js';
+import { SECURE_COOKIE_CONFIG, AUTH_COOKIE_PREFIX } from '@/config/security.config';
 
 /**
- * Configuração de cookies seguros
+ * Configuração de cookies seguros (importada do SSOT)
  */
-const COOKIE_OPTIONS = {
-  path: '/',
-  sameSite: 'strict' as const,
-  secure: true, // Apenas HTTPS
-  maxAge: 60 * 60 * 24 * 7, // 7 dias
-};
+const COOKIE_OPTIONS = SECURE_COOKIE_CONFIG;
 
 /**
  * Utilitário para manipulação segura de cookies
@@ -120,7 +118,7 @@ class CookieManager {
 export class SecureCookieStorage implements SupportedStorage {
   private prefix: string;
 
-  constructor(prefix = 'sb-auth') {
+  constructor(prefix = AUTH_COOKIE_PREFIX) {
     this.prefix = prefix;
   }
 

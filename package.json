@@ -59,6 +59,10 @@
     "apply:gate2:direct": "tsx scripts/apply-gate2-direct-sql.ts",
     "security:scan": "tsx scripts/validate-security-fixes.ts",
     "security:fix": "npm run lint:security:fix",
+    "security:config:generate": "tsx scripts/generate-vercel-config.ts",
+    "security:config:validate": "tsx scripts/validate-security-config.ts",
+    "generate:vercel": "tsx scripts/generate-vercel-config.ts",
+    "prebuild": "npm run generate:vercel",
     "lint:security": "eslint . --config eslint.config.security.mjs --ext .ts,.tsx",
     "lint:security:fix": "eslint . --config eslint.config.security.mjs --ext .ts,.tsx --fix"
   },

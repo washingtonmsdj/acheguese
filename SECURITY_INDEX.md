@@ -58,6 +58,17 @@ Novo no projeto? Comece aqui:
    - **PÚBLICO:** Desenvolvedores, Tech Leads
    - **TEMPO DE LEITURA:** 8 minutos
 
+6. **[SECURITY_SSOT_COMPLETE.md](./SECURITY_SSOT_COMPLETE.md)** ⭐ **NOVO**
+   - **O QUE É:** Documentação completa do SSOT (Single Source of Truth)
+   - **QUANDO USAR:** Entender arquitetura de configuração de segurança
+   - **PÚBLICO:** Arquitetos, Security Team, Tech Leads
+   - **TEMPO DE LEITURA:** 15 minutos
+   - **CONTEÚDO:**
+     - Implementação SSOT enterprise-grade
+     - Type-safe, immutable, validated
+     - Auto-generation de vercel.json
+     - Guia de uso e manutenção
+
 ---
 
 ## 👨‍💻 GUIAS PARA DESENVOLVEDORES
@@ -140,10 +151,15 @@ Novo no projeto? Comece aqui:
    - **Documentação:** [COOKIE_STORAGE_MIGRATION.md](./docs/COOKIE_STORAGE_MIGRATION.md)
 
 4. **Configuração de Segurança**
+   - **SSOT Central:** `src/config/security.config.ts` ⭐ **NOVO**
+   - **Scripts de Geração:**
+     - `scripts/generate-vercel-config.ts` - Gera vercel.json
+     - `scripts/validate-security-config.ts` - Valida SSOT
    - **ESLint:** `eslint.config.security.mjs`
    - **Pre-commit:** `.husky/pre-commit-security`
    - **CI/CD:** `.github/workflows/security-scan.yml`
-   - **CSP:** `vercel.json`
+   - **CSP:** `vercel.json` (auto-gerado, não editar)
+   - **Documentação:** [SECURITY_SSOT_COMPLETE.md](./SECURITY_SSOT_COMPLETE.md)
 
 ---
 
@@ -273,6 +289,12 @@ npm test tests/security/
 
 # Audit de dependências
 npm audit
+
+# SSOT - Gerar vercel.json
+npm run generate:vercel
+
+# SSOT - Validar configuração
+npm run security:config:validate
 ```
 
 ### Componentes Mais Usados
@@ -321,7 +343,9 @@ import { SafeImage } from '@/shared/components/security';
 ├── SECURITY_COMPLETE.md
 ├── SECURITY_FINAL_REPORT.md
 ├── SECURITY_VALIDATION_REPORT.md
+├── SECURITY_SSOT_COMPLETE.md ⭐ (SSOT - novo)
 ├── SECURITY_README.md
+├── README_SECURITY.md
 ├── IMPLEMENTATION_SUMMARY.md
 └── docs/
     ├── SECURITY_GUIDELINES.md ⭐ (desenvolvedores)
@@ -333,6 +357,8 @@ import { SafeImage } from '@/shared/components/security';
 
 ```
 src/
+├── config/
+│   └── security.config.ts ⭐ (SSOT - novo)
 ├── shared/
 │   ├── components/
 │   │   └── security/
@@ -368,7 +394,9 @@ tests/
 │   └── workflows/
 │       └── security-scan.yml
 └── scripts/
-    └── validate-security-fixes.ts
+    ├── validate-security-fixes.ts
+    ├── generate-vercel-config.ts ⭐ (SSOT - novo)
+    └── validate-security-config.ts ⭐ (SSOT - novo)
 ```
 
 ---

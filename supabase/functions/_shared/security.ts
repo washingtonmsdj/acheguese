@@ -1,6 +1,14 @@
 /**
  * SECURITY UTILITIES
  * Funções centralizadas de segurança para edge functions
+ * 
+ * NOTA: Este arquivo roda em Deno (edge functions) e não pode importar
+ * diretamente do SSOT (src/config/security.config.ts) que é TypeScript/Node.
+ * 
+ * Os valores aqui devem ser mantidos sincronizados manualmente com o SSOT.
+ * Referência: src/config/security.config.ts -> SECURITY_HEADERS
+ * 
+ * TODO: Considerar gerar este arquivo automaticamente do SSOT no futuro.
  */
 
 // ══════════════════════════════════════════════════════════════════════════
@@ -79,14 +87,30 @@ export function isOriginAllowed(origin: string | null): boolean {
 
 /**
  * Retorna headers de segurança padrão
+ * 
+ * IMPORTANTE: Estes valores devem estar sincronizados com o SSOT:
+ * src/config/security.config.ts -> SECURITY_HEADERS
+ * 
+ * Última sincronização: 2026-04-18
  */
 export function getSecurityHeaders(): Record<string, string> {
   return {
+    // Prevent MIME type sniffing
     'X-Content-Type-Options': 'nosniff',
+    
+    // Prevent clickjacking
     'X-Frame-Options': 'DENY',
+    
+    // XSS Protection (legacy, but defense-in-depth)
     'X-XSS-Protection': '1; mode=block',
+    
+    // Force HTTPS
     'Strict-Transport-Security': 'max-age=31536000; includeSubDomains; preload',
+    
+    // Control referrer information
     'Referrer-Policy': 'strict-origin-when-cross-origin',
+    
+    // Control browser features
     'Permissions-Policy': 'geolocation=(), microphone=(), camera=()',
   };
 }

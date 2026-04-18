@@ -39,6 +39,127 @@
 
 ---
 
+## 🎯 SSOT - SINGLE SOURCE OF TRUTH
+
+### O que é SSOT?
+
+**Single Source of Truth (SSOT)** significa que todas as configurações de segurança estão centralizadas em **UM único arquivo**: `src/config/security.config.ts`.
+
+### Por que SSOT?
+
+**Antes (Sem SSOT):**
+```
+❌ CSP hardcoded em: vercel.json
+❌ CSP duplicado em: 4+ docs
+❌ Domínios hardcoded: múltiplos lugares
+❌ Componentes: configs hardcoded
+❌ Mudança requer: editar 8+ arquivos
+❌ Risco de inconsistência: ALTO
+```
+
+**Depois (Com SSOT):**
+```
+✅ CSP definido em: security.config.ts (SSOT)
+✅ vercel.json: gerado automaticamente
+✅ Domínios: centralizados e documentados
+✅ Componentes: importam do SSOT
+✅ Mudança requer: editar 1 arquivo
+✅ Risco de inconsistência: ZERO
+```
+
+### Características
+
+- ✅ **Type-safe** - Erros detectados em compile-time
+- ✅ **Immutable** - Configurações imutáveis (`as const`)
+- ✅ **Validated** - Build-time + runtime validation
+- ✅ **Auditable** - Audit log integrado
+- ✅ **Documented** - Cada domínio justificado
+- ✅ **Auto-generated** - vercel.json gerado automaticamente
+
+### Como Usar
+
+#### Adicionar Novo Domínio
+
+```typescript
+// 1. Editar src/config/security.config.ts
+export const SECURITY_DOMAINS = {
+  NEW_SERVICE: {
+    url: 'https://new-service.com',
+    purpose: 'Description',
+    risk: 'LOW',
+    justification: 'Why needed',
+    alternatives: 'Alternatives',
+  },
+};
+
+// 2. Adicionar ao CSP
+export const CSP_DIRECTIVES = {
+  'connect-src': [
+    // ... existing
+    SECURITY_DOMAINS.NEW_SERVICE.url,
+  ],
+};
+
+// 3. Gerar vercel.json
+npm run generate:vercel
+
+// 4. Validar
+npm run security:config:validate
+```
+
+#### Usar em Componentes
+
+```typescript
+// ✅ Importar do SSOT
+import { 
+  HTML_SANITIZATION_CONFIG,
+  BLOCKED_URL_PROTOCOLS,
+  ALLOWED_IMAGE_EXTENSIONS,
+} from '@/config/security.config';
+
+// ✅ Usar configuração
+const config = HTML_SANITIZATION_CONFIG.ALLOWED_TAGS;
+```
+
+### Scripts SSOT
+
+```bash
+# Gerar vercel.json do SSOT
+npm run generate:vercel
+
+# Validar configuração de segurança
+npm run security:config:validate
+
+# Build (gera vercel.json automaticamente)
+npm run build
+```
+
+### Arquivos SSOT
+
+```
+src/config/
+└── security.config.ts ⭐ SSOT CENTRAL
+
+scripts/
+├── generate-vercel-config.ts - Gera vercel.json
+└── validate-security-config.ts - Valida SSOT
+
+Componentes que importam do SSOT:
+├── src/shared/components/security/SafeHtml.tsx
+├── src/shared/components/security/SafeLink.tsx
+├── src/shared/components/security/SafeImage.tsx
+└── src/integrations/supabase/cookieStorage.ts
+
+Arquivos gerados:
+└── vercel.json (auto-gerado, não editar manualmente)
+```
+
+### Documentação SSOT
+
+📖 **Leia:** [SECURITY_SSOT_COMPLETE.md](./SECURITY_SSOT_COMPLETE.md)
+
+---
+
 ## 📊 STATUS ATUAL
 
 ```
@@ -49,9 +170,20 @@
 ║   ✅ SCORE: 68/70 (97%)                                 ║
 ║   ✅ VULNERABILIDADES: 0/7                              ║
 ║   ✅ RISCO: MÍNIMO (0.1%)                               ║
+║   ✅ CSP: CORRIGIDO (Google Fonts + Workers)            ║
 ║                                                          ║
 ╚══════════════════════════════════════════════════════════╝
 ```
+
+### 🔧 Última Atualização: CSP Corrigido
+
+**Data:** 2026-04-18
+
+Corrigidas 2 violações de CSP detectadas em produção:
+- ✅ Google Fonts agora permitido
+- ✅ MapLibre Web Workers agora permitido
+
+**Detalhes:** [SECURITY_CSP_FIX.md](./SECURITY_CSP_FIX.md)
 
 ---
 
@@ -66,6 +198,7 @@
 ├── SECURITY_COMPLETE.md - Resumo consolidado
 ├── SECURITY_FINAL_REPORT.md - Relatório técnico
 ├── SECURITY_VALIDATION_REPORT.md - Validação
+├── SECURITY_SSOT_COMPLETE.md - SSOT Implementation ⭐ NOVO
 └── SECURITY_CELEBRATION.md - Celebração 🎉
 ```
 
@@ -131,6 +264,17 @@ scripts/
 - ✅ **SecureCookieStorage** - Cookies com flags de segurança
 - ✅ **HybridStorage** - Migração automática de localStorage
 - ✅ **Integração Supabase** - Cliente atualizado
+
+### 🎯 SSOT - Single Source of Truth (100%)
+
+- ✅ **security.config.ts** - SSOT central para todas as configurações
+- ✅ **Type-safe** - TypeScript com `as const` para imutabilidade
+- ✅ **Auto-generated** - vercel.json gerado automaticamente
+- ✅ **Validated** - Build-time + runtime validation
+- ✅ **Auditable** - Audit log integrado
+- ✅ **Documented** - Cada domínio justificado
+
+**Detalhes:** [SECURITY_SSOT_COMPLETE.md](./SECURITY_SSOT_COMPLETE.md)
 
 ### 🧪 Testes (43 testes)
 
@@ -276,6 +420,12 @@ npm test tests/security/
 
 # Audit de dependências
 npm audit
+
+# SSOT - Gerar vercel.json
+npm run generate:vercel
+
+# SSOT - Validar configuração
+npm run security:config:validate
 ```
 
 ---

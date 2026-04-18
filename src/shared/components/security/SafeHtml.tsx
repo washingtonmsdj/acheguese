@@ -3,7 +3,7 @@
  * 
  * ✅ ÚNICO lugar permitido para renderizar HTML de usuário
  * ✅ Sanitização automática com DOMPurify
- * ✅ Configuração restritiva por padrão
+ * ✅ Configuração vem do SSOT (security.config.ts)
  * 
  * @example
  * ```tsx
@@ -13,17 +13,21 @@
  * // ❌ ERRADO - Nunca faça isso
  * <div dangerouslySetInnerHTML={{__html: userContent}} />
  * ```
+ * 
+ * @security-critical
+ * @ssot src/config/security.config.ts
  */
 
 import DOMPurify from 'dompurify';
 import { useMemo } from 'react';
+import { HTML_SANITIZATION_CONFIG } from '@/config/security.config';
 
 interface SafeHtmlProps {
   /** Conteúdo HTML a ser sanitizado e renderizado */
   content: string;
-  /** Tags HTML permitidas (padrão: apenas formatação básica) */
+  /** Tags HTML permitidas (padrão: vem do SSOT) */
   allowedTags?: string[];
-  /** Atributos permitidos */
+  /** Atributos permitidos (padrão: vem do SSOT) */
   allowedAttributes?: Record<string, string[]>;
   /** Classe CSS do container */
   className?: string;
@@ -31,35 +35,34 @@ interface SafeHtmlProps {
   as?: keyof JSX.IntrinsicElements;
 }
 
-// Configuração padrão RESTRITIVA
-const DEFAULT_ALLOWED_TAGS = [
-  'p', 'br', 'strong', 'em', 'u', 'a', 'ul', 'ol', 'li',
-  'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
-  'blockquote', 'code', 'pre'
-];
-
-const DEFAULT_ALLOWED_ATTR = {
-  'a': ['href', 'title', 'target', 'rel'],
-  '*': ['class']
-};
-
 /**
- * Sanitiza HTML usando DOMPurify com configuração segura
+ * Sanitiza HTML usando DOMPurify com configuração do SSOT
+ * 
+ * IMPORTANTE: Configuração vem de security.config.ts (SSOT)
+ * NÃO hardcode configurações aqui!
  */
 function sanitizeHtml(
   html: string,
-  allowedTags: string[] = DEFAULT_ALLOWED_TAGS,
-  allowedAttributes: Record<string, string[]> = DEFAULT_ALLOWED_ATTR
+  allowedTags?: string[],
+  allowedAttributes?: Record<string, string[]>
 ): string {
+  // Configuração vem do SSOT - Single Source of Truth
   return DOMPurify.sanitize(html, {
-    ALLOWED_TAGS: allowedTags,
-    ALLOWED_ATTR: allowedAttributes,
-    ALLOW_DATA_ATTR: false,
+    // Use custom config if provided, otherwise use SSOT
+    ALLOWED_TAGS: allowedTags || HTML_SANITIZATION_CONFIG.ALLOWED_TAGS,
+    ALLOWED_ATTR: allowedAttributes || HTML_SANITIZATION_CONFIG.ALLOWED_ATTR,
+    ALLOW_DATA_ATTR: HTML_SANITIZATION_CONFIG.ALLOW_DATA_ATTR,
     ALLOW_UNKNOWN_PROTOCOLS: false,
     SAFE_FOR_TEMPLATES: true,
-    // Remove scripts e event handlers
-    FORBID_TAGS: ['script', 'style', 'iframe', 'object', 'embed'],
-    FORBID_ATTR: ['onerror', 'onload', 'onclick', 'onmouseover'],
+    // Forbidden tags/attrs from SSOT
+    FORBID_TAGS: HTML_SANITIZATION_CONFIG.FORBID_TAGS,
+    FORBID_ATTR: HTML_SANITIZATION_CONFIG.FORBID_ATTR,
+    KEEP_CONTENT: HTML_SANITIZATION_CONFIG.KEEP_CONTENT,
+    RETURN_DOM: HTML_SANITIZATION_CONFIG.RETURN_DOM,
+    RETURN_DOM_FRAGMENT: HTML_SANITIZATION_CONFIG.RETURN_DOM_FRAGMENT,
+    FORCE_BODY: HTML_SANITIZATION_CONFIG.FORCE_BODY,
+    SANITIZE_DOM: HTML_SANITIZATION_CONFIG.SANITIZE_DOM,
+    WHOLE_DOCUMENT: HTML_SANITIZATION_CONFIG.WHOLE_DOCUMENT,
   });
 }
 
