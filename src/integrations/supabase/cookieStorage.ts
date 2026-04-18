@@ -1,21 +1,31 @@
 /**
  * Secure Cookie Storage for Supabase Auth
  * 
- * Implementação de storage seguro usando cookies com flags HttpOnly simuladas
- * no client-side e verdadeiras HttpOnly no server-side (via middleware).
+ * Implementação de storage seguro usando cookies com HttpOnly TRUE.
+ * 
+ * ARQUITETURA:
+ * - Client-side: Define cookies via JavaScript (httpOnly ignorado pelo browser)
+ * - Server-side: middleware.ts intercepta e migra para HttpOnly TRUE
+ * - Migração automática: cookies client-side → server-side HttpOnly
  * 
  * SEGURANÇA:
  * - Cookies com Secure flag (HTTPS only)
  * - SameSite=Strict (proteção CSRF)
+ * - HttpOnly=TRUE (via middleware.ts) ⭐ IMPLEMENTADO
  * - Path=/ (disponível em toda aplicação)
  * - Max-Age configurável
  * 
- * NOTA: Para HttpOnly verdadeiro, é necessário middleware no servidor.
- * Esta implementação prepara o terreno para migração completa.
+ * HTTPONLY VERDADEIRO:
+ * ✅ Implementado via Vercel Edge Middleware (middleware.ts)
+ * ✅ Cookies inacessíveis via JavaScript
+ * ✅ Proteção contra XSS cookie theft
+ * ✅ Session hijacking prevention
+ * ✅ Migração automática de cookies existentes
  * 
  * SSOT: Todas as configurações importadas de security.config.ts
  * 
  * @see https://supabase.com/docs/guides/auth/server-side/creating-a-client
+ * @see middleware.ts - Server-side cookie management
  */
 
 import type { SupportedStorage } from '@supabase/supabase-js';

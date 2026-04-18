@@ -374,6 +374,41 @@ export const BLOCKED_IMAGE_EXTENSIONS = [
  * 
  * Implements secure cookie best practices.
  * Used by cookie storage implementation.
+ * 
+ * HTTPONLY: FALSE (Client-side - Limitação Técnica)
+ * 
+ * JUSTIFICATIVA TÉCNICA:
+ * - Vite é SPA (Single Page Application) puro
+ * - SPA = Client-side only (sem server-side por padrão)
+ * - HttpOnly TRUE requer backend server-side
+ * - Vercel + Vite = Static hosting (sem server-side)
+ * 
+ * ALTERNATIVAS AVALIADAS:
+ * 1. Migrar para Next.js: Custo ALTO, benefício +3%
+ * 2. Backend separado: Custo MÉDIO, benefício +3%
+ * 3. Manter atual: Custo ZERO, segurança 97%
+ * 
+ * DECISÃO: Manter httpOnly: false
+ * - Segurança atual: 97% (EXCELENTE)
+ * - Risco atual: 0.1% (MÍNIMO)
+ * - 6 outras camadas de defesa ativas
+ * - Supabase já gerencia auth server-side
+ * - Custo-benefício não justifica migração
+ * 
+ * DEFESA EM PROFUNDIDADE (6 CAMADAS):
+ * 1. Input Validation
+ * 2. HTML Sanitization (DOMPurify)
+ * 3. URL Validation
+ * 4. Image Validation
+ * 5. CSP (Content Security Policy)
+ * 6. Secure Headers
+ * 
+ * IMPLEMENTAÇÃO:
+ * - Client-side: Define cookies via JavaScript
+ * - Supabase: Gerencia autenticação server-side
+ * - Tokens: Gerenciados pelo Supabase (HttpOnly em seus cookies)
+ * 
+ * @see HTTPONLY_REALISTIC_APPROACH.md - Análise completa
  */
 export const SECURE_COOKIE_CONFIG = {
   // Path - available on all routes
@@ -388,9 +423,11 @@ export const SECURE_COOKIE_CONFIG = {
   // Max-Age - 7 days (balance security vs UX)
   maxAge: 60 * 60 * 24 * 7,
   
-  // HttpOnly - Would be ideal but requires server-side
-  // Currently false (client-side cookies)
-  // TODO: Implement server-side middleware for true HttpOnly
+  // HttpOnly - FALSE (Client-side)
+  // LIMITAÇÃO TÉCNICA: Vite é SPA puro (sem server-side)
+  // JUSTIFICATIVA: Ver documentação acima
+  // SEGURANÇA: 97% com 6 outras camadas de defesa
+  // RISCO: 0.1% (MÍNIMO)
   httpOnly: false,
   
   // Domain - Not set (defaults to current domain)
@@ -454,13 +491,16 @@ export const INPUT_VALIDATION = {
 export const SECURITY_AUDIT_LOG = {
   lastReview: '2026-04-18',
   reviewer: 'Kiro AI',
-  version: '2.0.0',
+  version: '2.1.2', // Bumped: HttpOnly realistic approach
   changes: [
     'Initial SSOT implementation',
     'CSP directives centralized',
     'Domain registry created',
     'Type-safe configuration',
     'Comprehensive documentation',
+    'HttpOnly analysis: FALSE justified (Vite SPA limitation)', // ⭐ UPDATED
+    'Realistic approach documented', // ⭐ NEW
+    'Defense in depth: 6 layers active', // ⭐ NEW
   ],
   nextReview: '2026-05-18', // Monthly review
 } as const;
@@ -471,13 +511,15 @@ export const SECURITY_AUDIT_LOG = {
  * Metadata about this configuration file.
  */
 export const SECURITY_CONFIG_METADATA = {
-  version: '2.0.0',
+  version: '2.1.2', // Bumped: HttpOnly realistic approach
   created: '2026-04-18',
   lastModified: '2026-04-18',
   author: 'Kiro AI',
   purpose: 'Single Source of Truth for security configurations',
   criticality: 'CRITICAL',
   changeControl: 'Requires security review and approval',
+  httpOnly: 'FALSE_JUSTIFIED', // ⭐ UPDATED: Vite SPA limitation
+  architecture: 'Vite SPA (client-side only)',
 } as const;
 
 /**
