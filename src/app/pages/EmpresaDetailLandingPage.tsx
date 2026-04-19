@@ -294,7 +294,7 @@ export default function EmpresaDetailLandingPage({
         longitude={typeof business.address === "object" ? business.address?.longitude : undefined}
         priceRange="$"
         openingHours={business.horario_funcionamento}
-        paymentMethods={business.formas_pagamento}
+        paymentMethods={business.formas_pagamento ? [...business.formas_pagamento] : undefined}
       />
 
       <EmpresaDetailLayout>
