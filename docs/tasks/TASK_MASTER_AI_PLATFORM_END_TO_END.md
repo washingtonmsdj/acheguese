@@ -684,7 +684,84 @@ Implementacao:
 
 ---
 
-## 27. Critico: O que NAO fazer
+## 27. Lacunas Atuais Prioritarias (Mapeadas no Repositorio)
+
+Estas lacunas devem ser tratadas antes ou junto das fases de expansao de IA, para evitar que a camada inteligente amplifique inconsistencias operacionais.
+
+### 27.1 Mobilidade (motoboy) - pendencias funcionais
+
+Fonte: `src/modules/mobility/MOTOBOY.md`
+
+1. Integrar AddressSelector real no fluxo de criacao de entrega.
+2. Integrar acoes de motoboy no dashboard/pagina de motorista.
+3. Criar historico de entregas dedicado.
+4. Implementar upload de foto para `proof_of_delivery.photo_url`.
+5. Garantir regra de pricing `motoboy` ativa no banco.
+
+Prioridade: P0 (bloqueador para IA operacional de mobilidade/delivery).
+
+### 27.2 Busca global incompleta
+
+Fonte: `src/core/search/services/SearchService.ts`
+
+1. Busca atual cobre business e professionals.
+2. Classificados, eventos e cupons ainda estao como TODO.
+3. Antes de IA semantica total, garantir fonte canonica de todos os dominios na busca.
+
+Prioridade: P0 (base obrigatoria para busca semantica unificada).
+
+### 27.3 Moderacao com inconsistencias de SSOT
+
+Fonte: `src/core/moderation/services/ModerationService.ts`
+
+1. Existem fallbacks e mapeamentos que misturam responsabilidades de tabela.
+2. Necessario consolidar contrato canonico de reports/moderacao antes do scoring IA.
+
+Prioridade: P0 (evita decisao automatizada em base inconsistente).
+
+### 27.4 Classificados com fallback de mock em runtime
+
+Fonte: `src/modules/classifieds/hooks/useClassificados.ts`
+
+1. Quando API retorna vazio/erro, fluxo pode cair para mock.
+2. IA de recomendacao/price assist nao deve operar sobre fallback mock em producao.
+
+Prioridade: P1 (qualidade de dados para ranking e recomendacao).
+
+---
+
+## 28. Novas Funcionalidades e Paginas Recomendadas (IA)
+
+### 28.1 P0 - alto impacto imediato
+
+1. Pagina `Busca Inteligente do Bairro` (multi-dominio, semantica + filtros territoriais).
+2. Pagina `Central de IA Admin` (custo, latencia, quotas, qualidade, cache hit ratio).
+3. Pagina `Copiloto do Anunciante` (classificados, vagas, cardapio, promocoes - sempre em draft).
+
+### 28.2 P1 - impacto operacional
+
+1. Pagina `Command Center Operacional` (mobilidade + delivery com alertas de SLA/anomalia).
+2. Pagina `Trust & Safety` (fila unica de moderacao com score de risco IA).
+3. Pagina `Recomendacoes do Bairro` (feed personalizado por territorio e perfil).
+
+### 28.3 P2 - evolucao de produto
+
+1. Assistente conversacional contextual dentro da busca (somente para refinamento, nao para substituir resultados).
+2. Ferramenta de previsao de demanda local para business/profissionais.
+3. Modulo de experimentos IA (A/B de ranking, prompts e politicas de modelo).
+
+### 28.4 Ordem recomendada de implementacao dessas paginas
+
+1. `Busca Inteligente do Bairro`
+2. `Central de IA Admin`
+3. `Copiloto do Anunciante`
+4. `Trust & Safety`
+5. `Command Center Operacional`
+6. `Recomendacoes do Bairro`
+
+---
+
+## 29. Critico: O que NAO fazer
 
 1. Nao usar IA generativa em toda busca sem cache/limite.
 2. Nao fazer hardcode de modelo no frontend.
@@ -695,7 +772,7 @@ Implementacao:
 
 ---
 
-## 28. Entregavel Final Esperado
+## 30. Entregavel Final Esperado
 
 No estado final, o repositorio deve conter:
 
@@ -706,4 +783,3 @@ No estado final, o repositorio deve conter:
 5. documentacao tecnica completa atualizada.
 
 FIM.
-
