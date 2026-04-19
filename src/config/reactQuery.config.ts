@@ -190,63 +190,53 @@ const queryCache = new QueryCache({
     }
   },
 });
-  
-  mutations: {
-    // Retry logic para mutations
-    retry: false, // Não retry mutations por padrão
-    
-    // Network mode
-    networkMode: 'online',
-    
-    // Performance monitoring
-    onError: (error: any) => {
-      // Log mutation error para Sentry
-      if (import.meta.env.PROD) {
-        captureSentryMessage(
-          `Mutation error: ${error?.message || 'Unknown error'}`,
-          'error',
-          {
-            error: error?.message,
-            status: error?.status,
-            stack: error?.stack,
-          }
-        );
-      } else {
-        logger.error('Mutation error:', error);
-      }
-    },
-    
-    onSuccess: (data: any, variables: any, context: any, mutation: any) => {
-      // Monitor mutation performance
-      const mutationKey = mutation.options?.mutationKey;
-      const duration = Date.now() - (mutation.state?.submittedAt || Date.now());
-      
-      // Alert on slow mutations (> 5s)
-      if (duration > 5000) {
-        const message = `Slow mutation detected: ${JSON.stringify(mutationKey).substring(0, 100)}`;
-        
-        if (import.meta.env.PROD) {
-          captureSentryMessage(message, 'warning', {
-            mutationKey: JSON.stringify(mutationKey),
-            duration,
-          });
-        } else if (import.meta.env.VITE_DEBUG_PERFORMANCE === 'true') {
-          logger.warn(message, { mutationKey, duration });
+
+/**
+ * MutationCache global com handlers de erro/sucesso (TanStack Query v5)
+ */
+const mutationCache = new MutationCache({
+  onError: (error: any) => {
+    if (import.meta.env.PROD) {
+      captureSentryMessage(
+        `Mutation error: ${error?.message || 'Unknown error'}`,
+        'error',
+        {
+          error: error?.message,
+          status: error?.status,
+          stack: error?.stack,
         }
-      }
-      
-      // Add breadcrumb for tracking
-      if (import.meta.env.PROD && duration > 2000) {
-        addSentryBreadcrumb(
-          `Mutation completed: ${JSON.stringify(mutationKey).substring(0, 50)}`,
-          'mutation',
-          'info',
-          { duration }
-        );
-      }
-    },
+      );
+    } else {
+      logger.error('Mutation error:', error);
+    }
   },
-};
+  onSuccess: (data: any, variables: any, context: any, mutation: any) => {
+    const mutationKey = mutation.options?.mutationKey;
+    const duration = Date.now() - (mutation.state?.submittedAt || Date.now());
+    
+    if (duration > 5000) {
+      const message = `Slow mutation detected: ${JSON.stringify(mutationKey).substring(0, 100)}`;
+      
+      if (import.meta.env.PROD) {
+        captureSentryMessage(message, 'warning', {
+          mutationKey: JSON.stringify(mutationKey),
+          duration,
+        });
+      } else if (import.meta.env.VITE_DEBUG_PERFORMANCE === 'true') {
+        logger.warn(message, { mutationKey, duration });
+      }
+    }
+    
+    if (import.meta.env.PROD && duration > 2000) {
+      addSentryBreadcrumb(
+        `Mutation completed: ${JSON.stringify(mutationKey).substring(0, 50)}`,
+        'mutation',
+        'info',
+        { duration }
+      );
+    }
+  },
+});
 
 /**
  * Cria uma instância configurada do QueryClient
@@ -254,6 +244,8 @@ const queryCache = new QueryCache({
 export function createQueryClient(): QueryClient {
   return new QueryClient({
     defaultOptions,
+    queryCache,
+    mutationCache,
   });
 }
 
