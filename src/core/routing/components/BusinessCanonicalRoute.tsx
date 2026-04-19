@@ -14,13 +14,12 @@
  * Esta é a ÚNICA rota que renderiza conteúdo de empresa diretamente.
  * Todas as outras rotas (premium, legado, standalone) redirecionam para cá.
  */
-
+import { logger } from '@/shared/utils/logger';
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { BusinessUrlService } from '@/core/business/services/BusinessUrlService';
 import EmpresaDetailLandingPage from '@/app/pages/EmpresaDetailLandingPage';
 import { Loader2 } from 'lucide-react';
-import { logger } from '@/shared/utils/logger';
 import { logPageNotFound } from '@/core/public-identity/utils/identity-logger';
 
 export default function BusinessCanonicalRoute() {

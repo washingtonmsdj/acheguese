@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * Script de migração: professional_data (legado) → modelo canônico
  * 

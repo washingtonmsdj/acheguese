@@ -6,7 +6,7 @@
  * - Mobile: mapa ocupa ~60vh, bottom sheet fixo na base
  * - Desktop (md+): mapa à esquerda, painel à direita (split view)
  */
-
+import { logger } from '@/shared/utils/logger';
 import { useEffect, useRef, memo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
@@ -25,7 +25,6 @@ import { PassengerSearchStatus } from "../components/PassengerSearchStatus";
 import { useAuth } from "@/core/auth/hooks/useAuth";
 import { routingService } from "@/core/routing/instance";
 import { CancelRideConfirmDialog } from "../components/CancelRideConfirmDialog";
-
 // ── Mapa ──────────────────────────────────────────────────────────────────────
 
 const RouteMap = memo(function RouteMap({
@@ -102,7 +101,7 @@ const RouteMap = memo(function RouteMap({
           })
           .then((routeResponse) => {
             if (!routeResponse.routes || routeResponse.routes.length === 0) {
-              console.warn(BUSCANDO_MOTORISTA_PAGE_LABELS.LOG_NO_ROUTE);
+              logger.warn(BUSCANDO_MOTORISTA_PAGE_LABELS.LOG_NO_ROUTE);
               return;
             }
 
@@ -145,10 +144,10 @@ const RouteMap = memo(function RouteMap({
             });
 
             setRouteLoaded(true);
-            console.log(BUSCANDO_MOTORISTA_PAGE_LABELS.LOG_ROUTE_SUCCESS);
+            logger.debug(BUSCANDO_MOTORISTA_PAGE_LABELS.LOG_ROUTE_SUCCESS);
           })
           .catch((error) => {
-            console.error(BUSCANDO_MOTORISTA_PAGE_LABELS.LOG_ROUTE_ERROR, error);
+            logger.error(BUSCANDO_MOTORISTA_PAGE_LABELS.LOG_ROUTE_ERROR, error);
             // Fallback: ajustar bounds manualmente se rota falhar
             map.fitBounds(
               [

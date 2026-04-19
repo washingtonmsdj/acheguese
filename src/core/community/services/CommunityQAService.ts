@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * CommunityQAService — SSOT para perguntas e respostas da comunidade
  *

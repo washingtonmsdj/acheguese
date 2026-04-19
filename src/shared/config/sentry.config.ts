@@ -7,8 +7,8 @@
  * @version 1.0.0
  */
 
+import { logger } from '@/shared/utils/logger';
 import * as Sentry from '@sentry/react';
-
 /**
  * Configuração do Sentry
  */
@@ -77,7 +77,7 @@ export function initializeSentry(): void {
       beforeSend(event, hint) {
         // Filtrar erros de desenvolvimento
         if (config.environment === 'development') {
-          console.log('🔍 Sentry Event (dev):', event);
+          logger.debug('🔍 Sentry Event (dev):', event);
           return null; // Não enviar em desenvolvimento
         }
 
@@ -121,7 +121,7 @@ export function initializeSentry(): void {
       console.debug("Sentry inicializado com sucesso");
     }
   } catch (error) {
-    console.error("Erro ao inicializar Sentry:", error);
+    logger.error("Erro ao inicializar Sentry:", error);
   }
 }
 

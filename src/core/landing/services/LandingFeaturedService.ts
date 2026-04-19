@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * LandingFeaturedService
  *
@@ -17,11 +16,10 @@
  *   - Retornam shape mínimo para card (sem dados pesados)
  *   - Retornam [] em caso de erro (nunca lançam para a UI)
  */
-
+import { logger } from '@/shared/utils/logger';
 import { supabase } from '@/integrations/supabase';
 import { applyTerritoryFilter } from '@/core/location';
 import type { TerritoryFilter } from '@/core/location/types';
-
 // ── Shapes de saída (mínimos para card) ──────────────────────────────────────
 
 export interface FeaturedBusiness {
@@ -84,7 +82,6 @@ export class LandingFeaturedService {
     limit = 4,
   ): Promise<FeaturedBusiness[]> {
     if (filter.scope === 'none') return [];
-
     try {
       let query = (supabase as any)
         .from('business_data')
@@ -101,7 +98,7 @@ export class LandingFeaturedService {
 
       const { data, error } = await query;
       if (error) {
-        console.warn('⚠️ LandingFeaturedService.getFeaturedBusinesses:', error.message);
+        logger.warn('⚠️ LandingFeaturedService.getFeaturedBusinesses:', error.message);
         return [];
       }
 
@@ -117,7 +114,7 @@ export class LandingFeaturedService {
         geographic_path: d.location?.geographic_path ?? null,
       }));
     } catch (err: any) {
-      console.warn('⚠️ LandingFeaturedService.getFeaturedBusinesses unexpected:', err.message);
+      logger.warn('⚠️ LandingFeaturedService.getFeaturedBusinesses unexpected:', err.message);
       return [];
     }
   }
@@ -148,7 +145,7 @@ export class LandingFeaturedService {
 
       const { data, error } = await query;
       if (error) {
-        console.warn('⚠️ LandingFeaturedService.getFeaturedServices:', error.message);
+        logger.warn('⚠️ LandingFeaturedService.getFeaturedServices:', error.message);
         return [];
       }
 
@@ -183,7 +180,7 @@ export class LandingFeaturedService {
         };
       });
     } catch (err: any) {
-      console.warn('⚠️ LandingFeaturedService.getFeaturedServices unexpected:', err.message);
+      logger.warn('⚠️ LandingFeaturedService.getFeaturedServices unexpected:', err.message);
       return [];
     }
   }
@@ -225,7 +222,7 @@ export class LandingFeaturedService {
 
       const { data, error } = await query;
       if (error) {
-        console.warn('⚠️ LandingFeaturedService.getFeaturedClassifieds:', error.message);
+        logger.warn('⚠️ LandingFeaturedService.getFeaturedClassifieds:', error.message);
         return [];
       }
 
@@ -244,7 +241,7 @@ export class LandingFeaturedService {
         subcategory_slug: d.classified_subcategories?.slug ?? undefined,
       }));
     } catch (err: any) {
-      console.warn('⚠️ LandingFeaturedService.getFeaturedClassifieds unexpected:', err.message);
+      logger.warn('⚠️ LandingFeaturedService.getFeaturedClassifieds unexpected:', err.message);
       return [];
     }
   }

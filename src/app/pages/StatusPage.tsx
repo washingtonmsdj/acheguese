@@ -5,12 +5,11 @@
  * 
  * @version 1.0.0
  */
-
+import { logger } from '@/shared/utils/logger';
 import { useEffect, useState } from 'react';
 import { CheckCircle2, XCircle, AlertCircle, Clock, Activity } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/components/ui/card';
 import { Badge } from '@/shared/components/ui/badge';
-
 interface HealthCheck {
   status: 'healthy' | 'degraded' | 'unhealthy';
   timestamp: string;
@@ -54,12 +53,11 @@ export default function StatusPage() {
           },
         }
       );
-      
       const data = await response.json();
       setHealth(data);
       setLastCheck(new Date());
     } catch (error) {
-      console.error('Failed to check health:', error);
+      logger.error('Failed to check health:', error);
       setHealth({
         status: 'unhealthy',
         timestamp: new Date().toISOString(),

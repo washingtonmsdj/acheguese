@@ -5,11 +5,11 @@
  * O SSOT real agora vive em `@/core/location/services/LocationGeocodingService`.
  */
 
+import { logger } from '@/shared/utils/logger';
 import {
   locationGeocodingService,
   type LocationGeocodingResult,
 } from '@/core/location/services/LocationGeocodingService';
-import { logger } from '@/shared/utils/logger';
 
 export interface ReverseGeocodeResult {
   displayName: string;

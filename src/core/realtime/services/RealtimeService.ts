@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * RealtimeService - CORE SSOT
  *

@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * LocationRepositorySupabase
  *
@@ -7,14 +6,13 @@
  *
  * Contrato público idêntico ao mock — LocationService não sabe qual está ativo.
  */
-
+import { logger } from '@/shared/utils/logger';
 import { supabase } from '@/integrations/supabase';
 import { LocationErrorCode } from '../types/index';
 import { LocationError } from '../errors/LocationError';
 import type { ILocationRepository } from './ILocationRepository';
 import type { Location, LocationType, LocationStatus } from '../types/index';
 import { LOCATION_PAGINATION } from '../types/index';
-
 const TABLE = 'locations';
 
 /** Converte row do banco para o tipo Location do domínio */
@@ -151,7 +149,7 @@ export class LocationRepositorySupabase implements ILocationRepository {
     // ✅ SSOT - Validação: location_id deve ser UUID válido
     const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
     if (!uuidRegex.test(location_id)) {
-      console.warn(`⚠️ LocationRepository.findChildren: Invalid UUID format for location_id: ${location_id}`);
+      logger.warn(`⚠️ LocationRepository.findChildren: Invalid UUID format for location_id: ${location_id}`);
       return { locations: [], total_count: 0 };
     }
 

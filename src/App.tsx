@@ -25,6 +25,7 @@ import {
   OfflineBanner,
   OfflineIndicator,
 } from "@/shared/components/offline/OfflineIndicator";
+import { ConsentBanner } from "@/components/privacy/ConsentBanner";
 import { AppRoutes } from "@/app/routes/AppRoutes";
 import { Analytics } from "@vercel/analytics/react";
 import "@/styles/accessibility.css";
@@ -54,6 +55,7 @@ const App = () => (
                   <TerritoryModeInitializer />
                   <OfflineIndicator />
                   <OfflineBanner />
+                  <ConsentBanner />
                   <ModuleContextSync />
                   <Suspense fallback={<FullScreenLoader />}>
                     <AppRoutes />

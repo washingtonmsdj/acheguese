@@ -18,8 +18,8 @@
  * @version 2.1.0 - Mudança automática condicional (bairro → cidade)
  */
 
+import { logger } from '@/shared/utils/logger';
 import type { Location, TerritoryMode } from '../types';
-
 export class TerritoryModeManager {
   /**
    * Verifica se deve forçar mudança de modo bairro para cidade baseado na URL.
@@ -53,7 +53,7 @@ export class TerritoryModeManager {
     
     // Se a URL aponta para um bairro diferente do usuário, forçar cidade
     if (urlDistrictSlug !== homeDistrictSlug) {
-      console.log(`[TerritoryModeManager] URL bairro (${urlDistrictSlug}) diferente do usuário (${homeDistrictSlug})`);
+      logger.debug(`[TerritoryModeManager] URL bairro (${urlDistrictSlug}) diferente do usuário (${homeDistrictSlug})`);
       return true;
     }
 

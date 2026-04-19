@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * GastronomyOwnerDashboard — Dashboard completo do dono do restaurante
  *

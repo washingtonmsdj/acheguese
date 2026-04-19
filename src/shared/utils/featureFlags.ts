@@ -1,3 +1,4 @@
+import { logger } from '@/shared/utils/logger';
 /**
  * Feature Flags System
  * 
@@ -97,7 +98,7 @@ export function isFeatureEnabled(
   const flag = FEATURE_FLAGS[featureKey];
   
   if (!flag) {
-    console.warn(`Feature flag not found: ${featureKey}`);
+    logger.warn(`Feature flag not found: ${featureKey}`);
     return false;
   }
   

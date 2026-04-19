@@ -141,6 +141,10 @@ export function AppRoutes() {
         <Route path="/termos" element={<P.TermosPage />} />
         <Route path="/privacidade" element={<P.PrivacidadePage />} />
         <Route path="/offline-settings" element={<P.OfflineSettingsPage />} />
+        
+        {/* 🔒 LGPD / Privacidade */}
+        <Route path="/conta/privacidade" element={<P.PrivacySettingsPage />} />
+        <Route path="/dpo" element={<P.DPOContactPage />} />
         <Route path="/motorista-legacy" element={<P.MotoristaPage />} />
         <Route path="/create-driver" element={<P.CriarMotoristaPage />} />
 

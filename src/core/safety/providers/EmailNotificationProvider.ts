@@ -5,9 +5,8 @@
  * 
  * Padrão: Provider isolado, injetado no SafetyService
  */
-
-import { supabase } from '@/integrations/supabase';
 import { logger } from '@/shared/utils/logger';
+import { supabase } from '@/integrations/supabase';
 import type { EmergencyAlert, EmergencyContact } from '../types';
 
 export interface EmailDeliveryResult {

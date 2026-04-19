@@ -1,17 +1,17 @@
-ï»¿/**
+/**
  * useCityNeighborhoodsPolygons
  *
- * Busca os polÃ­gonos de todos os bairros ativos de uma cidade.
- * SÃ³ executa quando `enabled` Ã© true â€” evita chamadas desnecessÃ¡rias.
+ * Busca os polígonos de todos os bairros ativos de uma cidade.
+ * Só executa quando `enabled` é true — evita chamadas desnecessárias.
  *
  * Fluxo:
  *   1. Busca os filhos diretos da cidade (type=district, status=active)
- *   2. Para cada bairro, busca o boundary canÃ´nico via SSOT territorial
- *   3. Retorna um TerritoryPolygon[] com todos os anÃ©is encontrados
+ *   2. Para cada bairro, busca o boundary canônico via SSOT territorial
+ *   3. Retorna um TerritoryPolygon[] com todos os anéis encontrados
  *
  * @module core/maps/hooks
  */
-
+import { logger } from '@/shared/utils/logger';
 import { useState, useEffect, useRef } from 'react';
 import { createLocationRepository } from '@/core/location/repositories/createLocationRepository';
 import { boundaryService } from '@/core/geospatial';
@@ -19,12 +19,11 @@ import { NEIGHBORHOOD_COLORS } from '../providers/MapProvider';
 import type { TerritoryPolygon } from './useTerritoryPolygon';
 import type { Location } from '@/core/location';
 import { LocationType, LocationStatus } from '@/core/location/types';
-import { logger } from '@/shared/utils/logger';
 
 interface UseCityNeighborhoodsPolygonsOptions {
   /** ID da cidade no banco */
   cityId: string | null | undefined;
-  /** Path geogrÃ¡fico da cidade, ex: /br/ba/salvador */
+  /** Path geográfico da cidade, ex: /br/ba/salvador */
   cityGeoPath: string | null | undefined;
   /** Ativa ou desativa a busca */
   enabled: boolean;
@@ -38,7 +37,7 @@ interface UseCityNeighborhoodsPolygonsResult {
 // Cache key para localStorage
 const CACHE_KEY_PREFIX = 'city-neighborhoods-cache-';
 const CACHE_VERSION = 'v1';
-const CACHE_EXPIRY_DAYS = 7; // Cache vÃ¡lido por 7 dias
+const CACHE_EXPIRY_DAYS = 7; // Cache válido por 7 dias
 
 interface CachedData {
   version: string;
@@ -83,13 +82,13 @@ function saveToCache(cityId: string, polygons: TerritoryPolygon[]): void {
     };
     localStorage.setItem(key, JSON.stringify(data));
   } catch (error) {
-    console.warn('[useCityNeighborhoodsPolygons] Failed to save to cache:', error);
+    logger.warn('[useCityNeighborhoodsPolygons] Failed to save to cache:', error);
   }
 }
 
 /**
- * Limpa o cache de uma cidade especÃ­fica ou de todas as cidades.
- * Ãštil para forÃ§ar re-fetch quando os dados mudam.
+ * Limpa o cache de uma cidade específica ou de todas as cidades.
+ * Útil para forçar re-fetch quando os dados mudam.
  */
 export function clearNeighborhoodsCache(cityId?: string): void {
   try {
@@ -105,7 +104,7 @@ export function clearNeighborhoodsCache(cityId?: string): void {
       });
     }
   } catch (error) {
-    console.warn('[useCityNeighborhoodsPolygons] Failed to clear cache:', error);
+    logger.warn('[useCityNeighborhoodsPolygons] Failed to clear cache:', error);
   }
 }
 

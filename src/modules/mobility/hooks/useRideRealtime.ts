@@ -4,13 +4,12 @@
  * Permite passageiro e motorista receberem notificacoes de mudanca de estado
  * sem precisar fazer polling ou refresh manual.
  */
-
+import { logger } from '@/shared/utils/logger';
 import { useEffect, useRef, useState } from 'react';
 import {
   realtimeService,
   type RealtimeSubscription,
 } from '@/core/realtime/services/RealtimeService';
-import { logger } from '@/shared/utils/logger';
 import { DB_TABLES, REALTIME_CHANNELS } from '../constants';
 
 export interface RideRealtimeEvent {

@@ -7,7 +7,7 @@
  * 
  * ✅ SSOT COMPLIANT: Delega todas as queries para ProfileService
  */
-
+import { logger } from '@/shared/utils/logger';
 import { ProfileIdentityPolicy } from '../policies/ProfileIdentityPolicy';
 import type { IdentityAdapter } from '../domain/IdentityAdapter';
 import type { 
@@ -17,7 +17,6 @@ import type {
   IdentityChangeRecord, 
   CooldownResult 
 } from '../domain/types';
-import { logger } from '@/shared/utils/logger';
 
 export class ProfileIdentityAdapter implements IdentityAdapter {
   readonly entityType: EntityType = 'profile';

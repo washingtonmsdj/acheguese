@@ -11,7 +11,7 @@
  * @module mobility/components/ride-request/AddressInput
  * @version 2.0.0 (AAA)
  */
-
+import { logger } from '@/shared/utils/logger';
 import React, { memo, useCallback, forwardRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MapPin, Navigation, X, Loader2, CheckCircle2, AlertCircle } from 'lucide-react';
@@ -20,7 +20,6 @@ import { Label } from '@/shared/components/ui/label';
 import { cn } from '@/shared/utils/cn';
 import { useAddressInput } from '@/modules/mobility/hooks/useAddressInput';
 import type { AddressInputResult } from '@/modules/mobility/hooks/useAddressInput';
-
 export interface AddressInputProps {
   /** Label do campo */
   label: string;
@@ -60,7 +59,7 @@ export interface AddressInputProps {
  *   placeholder="Digite o endereço de origem"
  *   showGPS
  *   autoCaptureGPS
- *   onValidated={(result) => console.log('Validado:', result)}
+ *   onValidated={(result) => logger.debug('Validado:', result)}
  *   icon={<MapPin className="h-4 w-4" />}
  *   iconColor="text-primary"
  * />

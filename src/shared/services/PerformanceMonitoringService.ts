@@ -7,8 +7,8 @@
  * @version 1.0.0
  */
 
-import { captureSentryMessage, addSentryBreadcrumb } from '@/shared/config/sentry.config';
 import { logger } from '@/shared/utils/logger';
+import { captureSentryMessage, addSentryBreadcrumb } from '@/shared/config/sentry.config';
 
 /**
  * Tipos de operações monitoradas

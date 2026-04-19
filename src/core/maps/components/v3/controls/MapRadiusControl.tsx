@@ -5,11 +5,10 @@
  * 
  * @module core/maps/components/v3/controls
  */
-
+import { logger } from '@/shared/utils/logger';
 import React, { useState } from 'react';
 import { Label } from '@/shared/components/ui/label';
 import { Card } from '@/shared/components/ui/card';
-
 export interface MapRadiusControlProps {
   /** Raio inicial em km */
   initialRadius?: number;
@@ -54,7 +53,7 @@ export interface MapRadiusControlProps {
  *   minRadius={1}
  *   maxRadius={10}
  *   onRadiusChange={(radius) => {
- *     console.log(`Buscar em raio de ${radius} km`);
+ *     logger.debug(`Buscar em raio de ${radius} km`);
  *   }}
  * />
  * ```

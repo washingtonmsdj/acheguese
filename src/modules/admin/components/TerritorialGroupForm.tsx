@@ -6,7 +6,7 @@
  * 
  * ✅ SSOT - Usa TerritorialGroupService
  */
-
+import { logger } from '@/shared/utils/logger';
 import { useState, useEffect } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { TerritorialGroupService } from '@/core/territorial/services/TerritorialGroupService';
@@ -17,7 +17,6 @@ import { Badge } from '@/shared/components/ui/badge';
 import { toast } from 'sonner';
 import { Loader2, MapPin, Users, X, Hash, FileText, Building2 } from 'lucide-react';
 import { DistrictSelector } from './DistrictSelector';
-
 interface TerritorialGroupFormProps {
   group?: any;
   onSuccess: () => void;
@@ -71,7 +70,7 @@ export function TerritorialGroupForm({ group, onSuccess, onCancel }: Territorial
             setCurrentMemberNames(members.map(m => m.location_name || 'Desconhecido'));
           }
         } catch (err) {
-          console.error('Error loading group members:', err);
+          logger.error('Error loading group members:', err);
           if (group.member_ids?.length > 0) {
             setSelectedDistricts(group.member_ids);
           }
@@ -101,7 +100,7 @@ export function TerritorialGroupForm({ group, onSuccess, onCancel }: Territorial
       onSuccess();
     },
     onError: (error: any) => {
-      console.error('Error creating group:', error);
+      logger.error('Error creating group:', error);
       toast.error(error.message || 'Erro ao criar grupo');
     },
   });

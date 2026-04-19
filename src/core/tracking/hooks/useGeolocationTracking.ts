@@ -6,10 +6,9 @@
  *
  * Padrão: Banco → Service → Hook → Component
  */
-
+import { logger } from '@/shared/utils/logger';
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { trackingService } from '../services/TrackingService';
-import { logger } from '@/shared/utils/logger';
 import type { TrackingPosition } from '../types';
 
 interface GeolocationOptions {

@@ -7,7 +7,7 @@
  * 
  * ══════════════════════════════════════════════════════════════════════════
  */
-
+import { logger } from '@/shared/utils/logger';
 import { useState } from 'react';
 import { Check, Loader2, Sparkles } from 'lucide-react';
 import { Button } from '@/shared/components/ui/button';
@@ -17,7 +17,6 @@ import { useBilling } from '@/core/billing/hooks/useBilling';
 import { useSubscription } from '@/core/billing/hooks/useSubscription';
 import { useAuth } from '@/core/auth/hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
-
 export default function PricingPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -44,7 +43,7 @@ export default function PricingPage() {
         cancelUrl: `${window.location.origin}/pricing`,
       });
     } catch (error) {
-      console.error('Error redirecting to checkout:', error);
+      logger.error('Error redirecting to checkout:', error);
     } finally {
       setLoadingPlan(null);
     }

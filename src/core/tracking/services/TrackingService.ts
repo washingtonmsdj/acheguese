@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * TrackingService - SSOT para rastreio de posição e presença
  *
@@ -15,9 +14,8 @@
  *
  * Padrão: Banco → Service → Hook → Component
  */
-
-import { supabase as defaultSupabase } from '@/integrations/supabase';
 import { logger } from '@/shared/utils/logger';
+import { supabase as defaultSupabase } from '@/integrations/supabase';
 import { trackError } from '@/shared/utils/errorTracking';
 import { TIMEOUTS } from '@/shared/constants';
 import type { SupabaseClient } from '@/integrations/supabase';

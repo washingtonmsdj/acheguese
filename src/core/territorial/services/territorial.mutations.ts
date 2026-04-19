@@ -1,12 +1,10 @@
-// @ts-nocheck
 /**
  * Territorial Mutations - SSOT v2.0
  * 
  * Funções de escrita para gestão territorial
  */
-
-import { supabase } from '@/integrations/supabase';
 import { logger } from '@/shared/utils/logger';
+import { supabase } from '@/integrations/supabase';
 import type { VisibilityFlag } from './types';
 
 /**

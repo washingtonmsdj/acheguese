@@ -213,7 +213,13 @@ export const PrivacidadePage = lazy(() => import("@/app/pages/PrivacidadePage"))
 export const OfflineSettingsPage = lazy(() => import("@/app/pages/OfflineSettingsPage"));
 
 // ============================================================
-// 🔧 DEV/ADMIN PAGES
+// � LGPD / PRIVACIDADE
+// ============================================================
+export const PrivacySettingsPage = lazy(() => import("@/pages/PrivacySettingsPage"));
+export const DPOContactPage = lazy(() => import("@/pages/DPOContactPage"));
+
+// ============================================================
+// �🔧 DEV/ADMIN PAGES
 // ============================================================
 export const MotoboyValidationPage = lazy(() => 
   import("@/pages/dev/MotoboyValidationPage").then(m => ({ default: m.MotoboyValidationPage }))

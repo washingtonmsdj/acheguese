@@ -3,10 +3,9 @@
  * 
  * Hook para gerenciar MFA (Multi-Factor Authentication)
  */
-
+import { logger } from '@/shared/utils/logger';
 import { useState, useEffect } from 'react';
 import { mfaService, type MFAStatus, type MFARequirement } from '../services/MFAService';
-import { logger } from '@/shared/utils/logger';
 
 export function useMFA() {
   const [status, setStatus] = useState<MFAStatus | null>(null);

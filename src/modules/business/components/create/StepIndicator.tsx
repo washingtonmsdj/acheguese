@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { CheckCircle2 } from "lucide-react";
 
 interface StepIndicatorProps {

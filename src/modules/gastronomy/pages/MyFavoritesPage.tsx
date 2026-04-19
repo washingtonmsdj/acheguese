@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * MyFavoritesPage — Página de favoritos de gastronomia do usuário
  *

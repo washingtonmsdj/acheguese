@@ -3,11 +3,10 @@
  * Hook para listar todos os perfis do usuário autenticado
  * Fonte: ARQUITETURA_MULTI_PERFIL_DEFINITIVA.md v3.0
  */
-
+import { logger } from '@/shared/utils/logger';
 import { useState, useEffect } from 'react';
 import { MultiProfileService } from '../services/multi-profile';
 import type { Profile } from '../services/multi-profile/types';
-
 export function useProfiles() {
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [loading, setLoading] = useState(true);
@@ -21,7 +20,7 @@ export function useProfiles() {
       const data = await MultiProfileService.getMyProfiles();
       setProfiles(data);
     } catch (err: any) {
-      console.error('Error loading profiles:', err);
+      logger.error('Error loading profiles:', err);
       setError(err.message || 'Failed to load profiles');
     } finally {
       setLoading(false);

@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * resolveLocationDescendants - Resolve location + descendants for hierarchical queries
  * 
@@ -9,10 +8,9 @@
  * 
  * @module core/location/utils
  */
-
+import { logger } from '@/shared/utils/logger';
 import { createLocationRepository } from '../repositories/createLocationRepository';
 import type { TerritoryFilter } from '../types';
-
 /**
  * Resolve location descendants para query hierárquica
  * 
@@ -59,7 +57,7 @@ export async function resolveLocationDescendants(
     } while ((page - 1) * pageSize < totalCount);
 
     if (allIds.size === 0) {
-      console.warn('⚠️ No descendants found for location, using exact match');
+      logger.warn('⚠️ No descendants found for location, using exact match');
       return filter; // Fallback: usa filtro original
     }
 
@@ -69,7 +67,7 @@ export async function resolveLocationDescendants(
       location_ids: Array.from(allIds),
     };
   } catch (err) {
-    console.warn('⚠️ Exception resolving descendants, using exact match:', err);
+    logger.warn('⚠️ Exception resolving descendants, using exact match:', err);
     return filter; // Fallback: usa filtro original
   }
 }

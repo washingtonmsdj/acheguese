@@ -4,13 +4,12 @@
  * Componente para upload de imagens da empresa (logo, banner, galeria).
  * Suporta drag & drop, preview, crop e validação.
  */
-
+import { logger } from '@/shared/utils/logger';
 import { useState, useRef } from "react";
 import { Upload, X, Image as ImageIcon, Loader2, Check } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import { cn } from "@/shared/utils/cn";
 import { toast } from "sonner";
-
 interface BusinessImageUploaderProps {
   type: "logo" | "banner" | "gallery";
   currentImage?: string | null;
@@ -102,7 +101,7 @@ export function BusinessImageUploader({
       setPreview(url);
       toast.success("Imagem enviada com sucesso!");
     } catch (error) {
-      console.error("Erro ao fazer upload:", error);
+      logger.error("Erro ao fazer upload:", error);
       toast.error("Erro ao enviar imagem. Tente novamente.");
       setPreview(currentImage || null);
     } finally {

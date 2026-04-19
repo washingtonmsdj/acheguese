@@ -14,7 +14,7 @@
  * - Delegação para adapters
  * - Validação de alto nível
  */
-
+import { logger } from '@/shared/utils/logger';
 import type { 
   EntityType,
   EntityId,
@@ -24,7 +24,6 @@ import type {
 import type { IdentityAdapter } from '../domain/IdentityAdapter';
 import type { IdentityPolicy } from '../domain/IdentityPolicy';
 import { IDENTITY_MESSAGES } from '../domain/messages';
-import { logger } from '@/shared/utils/logger';
 
 export class PublicIdentityService {
   private static adapters: Map<EntityType, IdentityAdapter> = new Map();

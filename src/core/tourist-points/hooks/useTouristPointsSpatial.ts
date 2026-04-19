@@ -5,11 +5,10 @@
  * 
  * @module core/tourist-points/hooks
  */
-
+import { logger } from '@/shared/utils/logger';
 import { useQuery } from '@tanstack/react-query';
 import { spatialSearchService } from '@/core/geospatial/services/SpatialSearchService';
 import type { SpatialSearchResult } from '@/core/geospatial/services/SpatialSearchService';
-
 export interface BoundingBox {
   west: number;
   south: number;
@@ -40,11 +39,11 @@ export function useTouristPointsByBounds(
     queryKey: ['tourist-points-spatial-bounds', bounds, options?.locationId],
     queryFn: async (): Promise<SpatialSearchResult[]> => {
       if (!bounds) {
-        console.log('[useTouristPointsByBounds] bounds is null');
+        logger.debug('[useTouristPointsByBounds] bounds is null');
         return [];
       }
 
-      console.log('[useTouristPointsByBounds] fetching with bounds:', bounds, 'locationId:', options?.locationId);
+      logger.debug('[useTouristPointsByBounds] fetching with bounds:', bounds, 'locationId:', options?.locationId);
 
       try {
         // SSOT: Usa SpatialSearchService ao invés de acessar Supabase diretamente
@@ -54,10 +53,10 @@ export function useTouristPointsByBounds(
           locationId: options?.locationId,
           limit: 200,
         });
-        console.log('[useTouristPointsByBounds] results:', results);
+        logger.debug('[useTouristPointsByBounds] results:', results);
         return results;
       } catch (error) {
-        console.error('[useTouristPointsByBounds] error:', error);
+        logger.error('[useTouristPointsByBounds] error:', error);
         return []; // Fallback para array vazio em caso de erro
       }
     },

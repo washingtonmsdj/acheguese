@@ -10,11 +10,10 @@
  * 
  * @module core/routing
  */
-
+import { logger } from '@/shared/utils/logger';
 import { createRoutingService } from './services/RoutingService';
 import { osrmProvider } from '@/integrations/maps/providers/OSRMProvider';
 import { mockRoutingProvider } from '@/integrations/maps/providers/MockRoutingProvider';
-import { logger } from '@/shared/utils/logger';
 
 /**
  * Instância singleton do RoutingService

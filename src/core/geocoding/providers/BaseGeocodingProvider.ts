@@ -3,7 +3,7 @@
  * 
  * Implementa lógica comum como fallback, cache, logging e validação.
  */
-
+import { logger } from '@/shared/utils/logger';
 import type {
   GeocodingProvider,
   GeocodeRequest,
@@ -17,7 +17,6 @@ import type {
   GeocodingErrorCode
 } from '../types';
 import { GeocodingError } from '../types';
-
 export abstract class BaseGeocodingProvider implements GeocodingProvider {
   abstract readonly id: string;
   abstract readonly name: string;
@@ -223,11 +222,11 @@ export abstract class BaseGeocodingProvider implements GeocodingProvider {
     
     // Em produção, usar logger centralizado
     if (level === 'error') {
-      console.error('[GeocodingProvider]', logEntry);
+      logger.error('[GeocodingProvider]', logEntry);
     } else if (level === 'warn') {
-      console.warn('[GeocodingProvider]', logEntry);
+      logger.warn('[GeocodingProvider]', logEntry);
     } else {
-      console.log('[GeocodingProvider]', logEntry);
+      logger.debug('[GeocodingProvider]', logEntry);
     }
   }
 }

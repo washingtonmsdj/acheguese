@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * SafetyService - SSOT para segurança, emergência e incidentes
  *
@@ -16,9 +15,8 @@
  *
  * Padrão: Banco → Service → Hook → Component
  */
-
-import { supabase } from '@/integrations/supabase';
 import { logger } from '@/shared/utils/logger';
+import { supabase } from '@/integrations/supabase';
 import { trackError } from '@/shared/utils/errorTracking';
 import { notificationService } from '@/core/notifications';
 import { emailNotificationProvider } from '../providers/EmailNotificationProvider';

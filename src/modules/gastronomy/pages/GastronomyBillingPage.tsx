@@ -9,7 +9,7 @@
  * - Ver histórico de faturas
  * - Gerenciar métodos de pagamento
  */
-
+import { logger } from '@/shared/utils/logger';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/components/ui/card';
 import { Button } from '@/shared/components/ui/button';
 import { Badge } from '@/shared/components/ui/badge';
@@ -31,7 +31,6 @@ import {
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-
 // ══════════════════════════════════════════════════════════════════════════
 // COMPONENT
 // ══════════════════════════════════════════════════════════════════════════
@@ -194,7 +193,7 @@ export default function GastronomyBillingPage() {
                   plan={PLANS[PlanTier.PRO]}
                   onUpgrade={() => {
                     // TODO: Implementar upgrade via edge function
-                    console.log('Upgrade to Pro');
+                    logger.debug('Upgrade to Pro');
                   }}
                   isUpgrading={false}
                   isCurrent={false}
@@ -207,7 +206,7 @@ export default function GastronomyBillingPage() {
                   plan={PLANS[PlanTier.DELIVERY]}
                   onUpgrade={() => {
                     // TODO: Implementar upgrade via edge function
-                    console.log('Upgrade to Delivery');
+                    logger.debug('Upgrade to Delivery');
                   }}
                   isUpgrading={false}
                   isCurrent={false}
@@ -231,7 +230,7 @@ export default function GastronomyBillingPage() {
             <Button
               onClick={() => {
                 // TODO: Implementar reativação via edge function
-                console.log('Reactivate subscription');
+                logger.debug('Reactivate subscription');
               }}
               className="w-full"
               variant="default"
@@ -245,7 +244,7 @@ export default function GastronomyBillingPage() {
             <Button
               onClick={() => {
                 // TODO: Implementar cancelamento via edge function
-                console.log('Cancel subscription');
+                logger.debug('Cancel subscription');
               }}
               variant="destructive"
               className="w-full"

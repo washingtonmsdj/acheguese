@@ -15,13 +15,12 @@
  * - Professional → /profissionais/:uf/:cidade/:slug
  * - Driver → 404 (não tem página pública)
  */
-
+import { logger } from '@/shared/utils/logger';
 import { useParams, Navigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { profileService } from '@/core/profiles/services/ProfileService';
 import { BusinessUrlService } from '@/core/business/services/BusinessUrlService';
 import { ProfessionalUrlService } from '@/core/professional/services/ProfessionalUrlService';
-import { logger } from '@/shared/utils/logger';
 import { ProfilePublicPage } from '@/modules/profile/pages/ProfilePublicPage';
 import { logPageNotFound } from '@/core/public-identity/utils/identity-logger';
 

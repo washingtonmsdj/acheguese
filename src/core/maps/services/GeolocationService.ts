@@ -6,7 +6,6 @@
  * 2. GPS com tentativas adaptativas (mobile/desktop)
  * 3. Fallback para IP geolocation quando aplicavel
  */
-
 import { logger } from '@/shared/utils/logger';
 import { TIMEOUTS } from '@/shared/constants';
 

@@ -11,7 +11,7 @@
  * 
  * @module integrations/maps/providers
  */
-
+import { logger } from '@/shared/utils/logger';
 import type {
   RoutingProvider,
   RouteRequest,
@@ -26,7 +26,6 @@ import type {
   TransportProfile,
 } from '@/core/routing/types';
 import type { Coordinates } from '@/core/maps/types';
-import { logger } from '@/shared/utils/logger';
 
 // ============================================
 // CONFIGURAÇÃO

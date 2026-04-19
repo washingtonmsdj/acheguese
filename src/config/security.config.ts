@@ -105,7 +105,6 @@ export const SECURITY_DOMAINS = {
     alternatives: 'Self-hosted Sentry instance',
   },
 } as const;
-
 /**
  * Extract URLs from domain registry
  */

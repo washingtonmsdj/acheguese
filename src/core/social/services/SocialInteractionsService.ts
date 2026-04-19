@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * SocialInteractionsService - GATE 3 FASE 3C
  *

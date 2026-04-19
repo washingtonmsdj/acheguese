@@ -10,8 +10,8 @@
  * ══════════════════════════════════════════════════════════════════════════
  */
 
+import { logger } from '@/shared/utils/logger';
 import { supabase } from '@/integrations/supabase/client';
-
 export interface CreateCheckoutParams {
   planCode: string;
   successUrl: string;
@@ -39,7 +39,7 @@ export class BillingService {
     });
 
     if (error) {
-      console.error('Error creating checkout session:', error);
+      logger.error('Error creating checkout session:', error);
       throw new Error(error.message || 'Failed to create checkout session');
     }
 
@@ -55,7 +55,7 @@ export class BillingService {
     });
 
     if (error) {
-      console.error('Error creating portal session:', error);
+      logger.error('Error creating portal session:', error);
       throw new Error(error.message || 'Failed to create portal session');
     }
 
@@ -89,7 +89,7 @@ export class BillingService {
       .order('display_order', { ascending: true });
 
     if (error) {
-      console.error('Error fetching plans:', error);
+      logger.error('Error fetching plans:', error);
       throw error;
     }
 
@@ -108,7 +108,7 @@ export class BillingService {
       .single();
 
     if (error) {
-      console.error('Error fetching plan:', error);
+      logger.error('Error fetching plan:', error);
       throw error;
     }
 
@@ -126,7 +126,7 @@ export class BillingService {
       .order('created_at', { ascending: false });
 
     if (error) {
-      console.error('Error fetching transactions:', error);
+      logger.error('Error fetching transactions:', error);
       throw error;
     }
 

@@ -1,10 +1,10 @@
+import { logger } from '@/shared/utils/logger';
 import { useQuery } from "@tanstack/react-query";
 import { ClassifiedsFacade, mapToClassificadoList } from "@/modules/classifieds/services";
 import { useTerritoryFilter, isTerritoryFilterReady, territoryFilterKey } from "@/core/location";
 import { MOCK_CLASSIFIEDS } from "@/modules/classifieds/data/mock-classifieds";
 import type { ResolvedTerritory } from "@/core/routing/hooks/useResolveTerritoryFromUrl";
 import type { ClassifiedData } from "../services/types";
-
 export interface ClassificadoWithVendedor {
   id: string;
   public_id: string;
@@ -91,7 +91,7 @@ export function useClassificados(options: UseClassificadosOptions = {}) {
 
         mapped = mapToClassificadoList(filtered as ClassifiedData[]);
       } catch (error) {
-        console.warn('[useClassificados] API failed, using mock data:', error);
+        logger.warn('[useClassificados] API failed, using mock data:', error);
         mapped = [];
       }
 

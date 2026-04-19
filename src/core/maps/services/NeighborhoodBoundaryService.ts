@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * NeighborhoodBoundaryService
  * 
@@ -6,8 +5,8 @@
  * Usado como fallback quando o OpenStreetMap não tem os dados.
  */
 
+import { logger } from '@/shared/utils/logger';
 import { supabase } from '@/integrations/supabase/supabase';
-
 interface NeighborhoodBoundary {
   id: string;
   location_id: string;
@@ -69,7 +68,7 @@ export class NeighborhoodBoundaryService {
 
       return map;
     } catch (error) {
-      console.error('[NeighborhoodBoundaryService] Error fetching boundaries:', error);
+      logger.error('[NeighborhoodBoundaryService] Error fetching boundaries:', error);
       return new Map();
     }
   }
@@ -100,7 +99,7 @@ export class NeighborhoodBoundaryService {
 
       return result;
     } catch (error) {
-      console.error('[NeighborhoodBoundaryService] Error upserting boundary:', error);
+      logger.error('[NeighborhoodBoundaryService] Error upserting boundary:', error);
       return null;
     }
   }
@@ -120,7 +119,7 @@ export class NeighborhoodBoundaryService {
 
       return true;
     } catch (error) {
-      console.error('[NeighborhoodBoundaryService] Error deleting boundary:', error);
+      logger.error('[NeighborhoodBoundaryService] Error deleting boundary:', error);
       return false;
     }
   }
@@ -140,7 +139,7 @@ export class NeighborhoodBoundaryService {
 
       return data || [];
     } catch (error) {
-      console.error('[NeighborhoodBoundaryService] Error listing boundaries:', error);
+      logger.error('[NeighborhoodBoundaryService] Error listing boundaries:', error);
       return [];
     }
   }

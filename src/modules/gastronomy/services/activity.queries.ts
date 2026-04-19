@@ -10,9 +10,8 @@
  * - Pedidos: Requerem opt-in (share_as_activity = true)
  * - Visitas: Requerem opt-in (futuro - check-ins)
  */
-
-import { supabase } from '@/integrations/supabase';
 import { logger } from '@/shared/utils/logger';
+import { supabase } from '@/integrations/supabase';
 import type { 
   GastronomyActivity, 
   GastronomyActivityFilters,

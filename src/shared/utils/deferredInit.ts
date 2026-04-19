@@ -137,7 +137,7 @@ export class DeferredBatch {
         try {
           cb();
         } catch (error) {
-          console.error('[DeferredBatch] Error executing callback:', error);
+          logger.error('[DeferredBatch] Error executing callback:', error);
         }
       });
     };

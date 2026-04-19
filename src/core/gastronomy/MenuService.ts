@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * MenuService — SSOT canônico do sistema de cardápio
  *
@@ -14,9 +13,8 @@
  * - Gestão de disponibilidade
  * - Ordenação
  */
-
-import { supabase } from '@/integrations/supabase';
 import { logger } from '@/shared/utils/logger';
+import { supabase } from '@/integrations/supabase';
 import { sanitizeString } from '@/shared/utils/sanitization';
 
 export const __MENU_SERVICE_FACADE_HINT__ = "compatibility facade";

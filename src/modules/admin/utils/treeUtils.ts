@@ -5,8 +5,8 @@
  * Sem gambiarras: Código limpo e testável
  */
 
+import { logger } from '@/shared/utils/logger';
 import type { TerritoryNode } from "../sections/types";
-
 /**
  * Constrói uma árvore hierárquica a partir de uma lista plana de localizações
  */
@@ -29,7 +29,7 @@ export function buildTree(locations: readonly TerritoryNode[]): TerritoryNode[] 
     } else if (!node.parent_id) {
       roots.push(node);
     } else {
-      console.warn(
+      logger.warn(
         "Orphan node (parent not found):",
         node.name,
         "parent_id:",

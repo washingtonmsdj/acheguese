@@ -8,12 +8,11 @@
  * - Nunca acessar user_roles diretamente
  * - Sempre usar RoleService internamente
  */
-
+import { logger } from '@/shared/utils/logger';
 import { useQuery } from '@tanstack/react-query';
 import { useSession } from '@/core/auth/hooks';
 import { RoleService } from '../services/RoleService';
 import type { AppRole, UserRole, RoleHistory } from '../types/roles.types';
-
 // ============================================================================
 // USE HAS ROLE
 // ============================================================================
@@ -110,7 +109,7 @@ export function useIsSuperAdmin() {
  * 
  * @example
  * const { roles, isLoading } = useUserRoles();
- * console.log(roles); // ['user', 'business_owner']
+ * logger.debug(roles); // ['user', 'business_owner']
  */
 export function useUserRoles() {
   const { session } = useSession();

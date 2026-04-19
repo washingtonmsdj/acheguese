@@ -6,13 +6,12 @@
  * - Bloquear funcionalidades quando inativo
  * - Fornecer configuração do módulo
  */
-
+import { logger } from '@/shared/utils/logger';
 import { useState, useEffect, useCallback } from 'react';
 import { communityRolloutService } from '../services';
 import { useCommunityLocation } from './useCommunityLocation';
 import type { EffectiveRollout } from '@/core/rollout/types';
 import type { ResolvedTerritory } from '@/core/routing/hooks/useResolveTerritoryFromUrl';
-
 export function useCommunityRollout(resolved?: ResolvedTerritory) {
   const [isActive, setIsActive] = useState<boolean>(false);
   const [rollout, setRollout] = useState<EffectiveRollout | null>(null);
@@ -52,7 +51,7 @@ export function useCommunityRollout(resolved?: ResolvedTerritory) {
       const access = await communityRolloutService.checkAccess(resolved);
       setAccessCheck(access);
     } catch (error) {
-      console.error('Error checking community rollout:', error);
+      logger.error('Error checking community rollout:', error);
       setIsActive(false);
       setRollout(null);
       setConfig(null);

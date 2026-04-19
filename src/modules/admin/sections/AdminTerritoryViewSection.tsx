@@ -9,12 +9,11 @@
  * SSOT: Props tipadas vindas de types.ts
  * Sem gambiarras: Componente focado apenas em orquestração de views
  */
-
+import { logger } from '@/shared/utils/logger';
 import { useMemo } from 'react';
 import { HierarchyView, GroupsView, LocationsView } from '../components/views';
 import { buildTree } from '../utils';
 import type { AdminTerritoryViewSectionProps } from './types';
-
 export function AdminTerritoryViewSection({
   filterState,
   searchQuery,
@@ -119,7 +118,7 @@ export function AdminTerritoryViewSection({
     try {
       return buildTree(filteredLocations);
     } catch (err) {
-      console.error('Error building tree:', err);
+      logger.error('Error building tree:', err);
       return [];
     }
   }, [filteredLocations]);

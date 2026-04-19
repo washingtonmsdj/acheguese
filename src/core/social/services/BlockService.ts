@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * BlockService - SSOT para Bloqueios de Usuários
  *

@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * 📊 POLLS QUERIES - SSOT v2.0
  *

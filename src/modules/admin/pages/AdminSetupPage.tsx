@@ -1,4 +1,4 @@
- 
+import { logger } from '@/shared/utils/logger';
 import { useState } from 'react';
 import { AdminService } from '@/modules/admin/services/AdminService';
 import { Button } from '@/shared/components/ui/button';
@@ -6,7 +6,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/sha
 import { Alert, AlertDescription } from '@/shared/components/ui/alert';
 import { CheckCircle, AlertCircle, Loader2 } from 'lucide-react';
 import type { AdminUserResult } from '@/modules/admin/services/AdminService';
-
 export default function AdminSetupPage() {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<AdminUserResult | null>(null);
@@ -16,7 +15,7 @@ export default function AdminSetupPage() {
     setResult(null);
 
     try {
-      console.log('🔄 Criando usuário admin...');
+      logger.debug('🔄 Criando usuário admin...');
 
       // ✅ SSOT - Usa AdminService
       const response = await AdminService.createAdminUser({
@@ -28,13 +27,13 @@ export default function AdminSetupPage() {
       setResult(response);
 
       if (response.success) {
-        console.log('✅ Usuário admin criado com sucesso');
+        logger.debug('✅ Usuário admin criado com sucesso');
       } else {
-        console.error('❌ Erro:', response.message);
+        logger.error('❌ Erro:', response.message);
       }
 
     } catch (error: any) {
-      console.error('❌ Erro:', error);
+      logger.error('❌ Erro:', error);
       setResult({
         success: false,
         message: error.message || 'Erro desconhecido'

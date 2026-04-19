@@ -5,13 +5,12 @@
  * 
  * @module core/maps/components/v3
  */
-
+import { logger } from '@/shared/utils/logger';
 import { useEffect, useRef, useState } from 'react';
 import maplibregl from 'maplibre-gl';
 import { routingService } from '@/core/routing';
 import type { RouteRequest, TransportProfile } from '@/core/routing/types';
 import type { Coordinates } from '@/core/maps/types';
-
 interface RouteLayerProps {
   /** ID do mapa MapLibre */
   mapId: string;
@@ -67,7 +66,7 @@ export function RouteLayer({
   useEffect(() => {
     const map = (window as any)[`maplibre-map-${mapId}`] as maplibregl.Map;
     if (!map) {
-      console.warn(`[RouteLayer] Mapa ${mapId} não encontrado`);
+      logger.warn(`[RouteLayer] Mapa ${mapId} não encontrado`);
       return;
     }
 
@@ -143,7 +142,7 @@ export function RouteLayer({
         const errorMessage = err instanceof Error ? err.message : 'Erro ao calcular rota';
         setError(errorMessage);
         onError?.(err instanceof Error ? err : new Error(errorMessage));
-        console.error('[RouteLayer] Erro:', err);
+        logger.error('[RouteLayer] Erro:', err);
       } finally {
         setLoading(false);
       }

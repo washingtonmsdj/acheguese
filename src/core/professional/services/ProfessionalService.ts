@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * PROFILE.1.3b - BURN-DOWN AGRESSIVO
  *
@@ -1218,7 +1217,7 @@ export class ProfessionalService {
       });
     } catch (error) {
       // Silently fail - views are not critical
-      console.warn("Failed to increment views:", error);
+      logger.warn("Failed to increment views:", error);
     }
   }
 
@@ -1326,7 +1325,7 @@ export class ProfessionalService {
    */
   static clearCache(): void {
     // Cache removido - usar apenas React Query
-    console.warn(
+    logger.warn(
       "ProfessionalService.clearCache() foi removido. Use React Query invalidation.",
     );
   }
@@ -1423,7 +1422,7 @@ export class ProfessionalService {
 
       if (error) throw error;
     } catch (error) {
-      console.error("Error updating professional status:", error);
+      logger.error("Error updating professional status:", error);
       throw error;
     }
   }
@@ -1436,7 +1435,7 @@ export class ProfessionalService {
     try {
       await ReviewsService.removeReview(reviewId, "professional");
     } catch (error) {
-      console.error("Error deleting professional review:", error);
+      logger.error("Error deleting professional review:", error);
       throw error;
     }
   }
@@ -1457,7 +1456,7 @@ export class ProfessionalService {
 
       if (error) throw error;
     } catch (error) {
-      console.error("Error updating professional report:", error);
+      logger.error("Error updating professional report:", error);
       throw error;
     }
   }
@@ -1491,7 +1490,7 @@ export class ProfessionalService {
         ];
       });
     } catch (error) {
-      console.error("Error fetching professionals by IDs:", error);
+      logger.error("Error fetching professionals by IDs:", error);
       return [];
     }
   }

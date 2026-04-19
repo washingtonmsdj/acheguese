@@ -11,7 +11,7 @@
  * @module mobility/components/ride-request/RideRequestForm
  * @version 2.0.0 (AAA)
  */
-
+import { logger } from '@/shared/utils/logger';
 import React, { memo, useCallback, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Loader2, MapPin } from 'lucide-react';
@@ -30,7 +30,6 @@ import type { PriceEstimateRequest } from '@/core/pricing/types';
 import type { CreateRideRequestData } from '@/modules/mobility/hooks/useMobilidade';
 import { AddressService } from '@/core/address/services/AddressService';
 import type { GeolocationCoordinates } from '@/modules/mobility/hooks/useGeolocation';
-import { logger } from '@/shared/utils/logger';
 
 export interface RideRequestFormProps {
   /** Callback ao submeter formulário */

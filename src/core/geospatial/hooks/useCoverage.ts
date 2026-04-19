@@ -8,7 +8,7 @@
  * 
  * @module core/geospatial/hooks
  */
-
+import { logger } from '@/shared/utils/logger';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { coverageService } from '../services/CoverageService';
 import type {
@@ -19,7 +19,6 @@ import type {
   CoverageCheckResult,
   CoverageArea,
 } from '../services/CoverageService';
-
 // ============================================
 // VERIFICAR COBERTURA
 // ============================================
@@ -95,7 +94,7 @@ export interface UseEntityCoverageOptions {
  * 
  * areas?.forEach(area => {
  *   if (area.coverage_type === 'radius') {
- *     console.log(`Raio de ${area.radius_km} km`);
+ *     logger.debug(`Raio de ${area.radius_km} km`);
  *   }
  * });
  * ```

@@ -14,7 +14,7 @@
  * @security-critical
  * @ssot src/config/security.config.ts
  */
-
+import { logger } from '@/shared/utils/logger';
 import { ImgHTMLAttributes, useState } from 'react';
 import { ImageOff } from 'lucide-react';
 import { 
@@ -22,7 +22,6 @@ import {
   BLOCKED_IMAGE_EXTENSIONS,
   isImageExtensionSafe 
 } from '@/config/security.config';
-
 interface SafeImageProps extends Omit<ImgHTMLAttributes<HTMLImageElement>, 'src'> {
   src: string;
   alt: string;
@@ -38,16 +37,15 @@ interface SafeImageProps extends Omit<ImgHTMLAttributes<HTMLImageElement>, 'src'
 function isImageUrlSafe(url: string): boolean {
   try {
     const parsed = new URL(url, window.location.origin);
-    
     // Bloqueia javascript:
     if (parsed.protocol === 'javascript:') {
-      console.warn('[SafeImage] Blocked javascript: protocol');
+      logger.warn('[SafeImage] Blocked javascript: protocol');
       return false;
     }
     
     // Bloqueia data:image/svg (XSS risk)
     if (parsed.protocol === 'data:' && url.toLowerCase().includes('svg')) {
-      console.warn('[SafeImage] Blocked SVG data URL (XSS risk)');
+      logger.warn('[SafeImage] Blocked SVG data URL (XSS risk)');
       return false;
     }
 
@@ -60,7 +58,7 @@ function isImageUrlSafe(url: string): boolean {
       );
       
       if (isBlocked) {
-        console.warn('[SafeImage] Blocked dangerous extension:', extension);
+        logger.warn('[SafeImage] Blocked dangerous extension:', extension);
         return false;
       }
       
@@ -70,14 +68,14 @@ function isImageUrlSafe(url: string): boolean {
       );
       
       if (!isAllowed) {
-        console.warn('[SafeImage] Unknown extension:', extension);
+        logger.warn('[SafeImage] Unknown extension:', extension);
         return false;
       }
     }
 
     return true;
   } catch {
-    console.warn('[SafeImage] Invalid URL:', url);
+    logger.warn('[SafeImage] Invalid URL:', url);
     return false;
   }
 }

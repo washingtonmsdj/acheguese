@@ -6,9 +6,9 @@
  */
 
 import React, { Component, ErrorInfo, ReactNode } from 'react';
+import { logger } from '@/shared/utils/logger';
 import { AlertTriangle, RefreshCw, Home } from 'lucide-react';
 import { Button } from '@/shared/components/ui/button';
-import { logger } from '@/shared/utils/logger';
 
 interface Props {
   children: ReactNode;

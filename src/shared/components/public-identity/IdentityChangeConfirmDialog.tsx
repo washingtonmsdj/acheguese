@@ -3,7 +3,7 @@
  * Dialog de confirmação explícita ao salvar mudança de slug/username.
  * Exigido quando há mudança real de identificador.
  */
-
+import { logger } from '@/shared/utils/logger';
 import { useEffect } from 'react';
 import {
   AlertDialog,
@@ -15,7 +15,6 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/shared/components/ui/alert-dialog';
-import { logger } from '@/shared/utils/logger';
 import type { EntityType } from '@/core/public-identity/domain/types';
 
 interface IdentityChangeConfirmDialogProps {

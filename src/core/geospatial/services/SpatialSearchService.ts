@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * SpatialSearchService - SSOT para busca espacial
  * 
@@ -18,8 +17,8 @@
  * @module core/geospatial/services
  */
 
+import { logger } from '@/shared/utils/logger';
 import { supabase } from '@/integrations/supabase';
-
 // ============================================
 // TYPES
 // ============================================
@@ -111,7 +110,7 @@ export class SpatialSearchService {
     });
 
     if (error) {
-      console.error('[SpatialSearchService] searchByRadius error:', error);
+      logger.error('[SpatialSearchService] searchByRadius error:', error);
       throw new Error(`Erro ao buscar por raio: ${error.message}`);
     }
 
@@ -144,7 +143,7 @@ export class SpatialSearchService {
     });
 
     if (error) {
-      console.error('[SpatialSearchService] searchByBounds error:', error);
+      logger.error('[SpatialSearchService] searchByBounds error:', error);
       throw new Error(`Erro ao buscar por bounds: ${error.message}`);
     }
 
@@ -181,7 +180,7 @@ export class SpatialSearchService {
     });
 
     if (error) {
-      console.error('[SpatialSearchService] searchHybrid error:', error);
+      logger.error('[SpatialSearchService] searchHybrid error:', error);
       throw new Error(`Erro ao buscar híbrido: ${error.message}`);
     }
 
@@ -197,7 +196,7 @@ export class SpatialSearchService {
    *   { latitude: -12.9714, longitude: -38.5014 },
    *   { latitude: -12.9800, longitude: -38.5100 }
    * );
-   * console.log(`${(distance / 1000).toFixed(2)} km`);
+   * logger.debug(`${(distance / 1000).toFixed(2)} km`);
    * ```
    */
   async calculateDistance(
@@ -215,7 +214,7 @@ export class SpatialSearchService {
     });
 
     if (error) {
-      console.error('[SpatialSearchService] calculateDistance error:', error);
+      logger.error('[SpatialSearchService] calculateDistance error:', error);
       throw new Error(`Erro ao calcular distância: ${error.message}`);
     }
 

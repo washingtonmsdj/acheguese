@@ -5,8 +5,8 @@
  * Deve ser executado em build time ou via API route.
  */
 
+import { logger } from '@/shared/utils/logger';
 import type { Location, TerritorialGroupWithMembers } from '@/core/location/types';
-
 interface SitemapUrl {
   loc: string;
   lastmod?: string;
@@ -128,6 +128,6 @@ export async function generateAndSaveSitemap() {
   // const xml = generateSitemap(locations, groups);
   // await fs.writeFile('public/sitemap.xml', xml);
   
-  console.log('Sitemap generation not implemented yet');
-  console.log('TODO: Integrate with database to fetch locations and groups');
+  logger.debug('Sitemap generation not implemented yet');
+  logger.debug('TODO: Integrate with database to fetch locations and groups');
 }

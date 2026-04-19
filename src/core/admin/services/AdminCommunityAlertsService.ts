@@ -9,9 +9,8 @@
  * - Usa services existentes como base
  * - Adiciona apenas lógica administrativa
  */
-
-import { supabase } from "@/integrations/supabase";
 import { logger } from '@/shared/utils/logger';
+import { supabase } from "@/integrations/supabase";
 import {
   alertModerationService,
   communityAlertService,

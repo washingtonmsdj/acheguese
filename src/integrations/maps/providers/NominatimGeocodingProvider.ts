@@ -5,7 +5,7 @@
  * 
  * @module integrations/maps/providers
  */
-
+import { logger } from '@/shared/utils/logger';
 import type {
   GeocodingProvider,
   GeocodingOptions,
@@ -14,7 +14,6 @@ import type {
   Coordinates,
 } from '@/core/maps/types';
 import { supabase } from '@/integrations/supabase';
-
 /**
  * Resposta do Nominatim
  */
@@ -34,7 +33,6 @@ interface NominatimResult {
  */
 export class NominatimGeocodingProvider implements GeocodingProvider {
   private readonly baseUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/nominatim-proxy`;
-
   private async getAuthHeaders(): Promise<HeadersInit> {
     const { data } = await supabase.auth.getSession();
     const accessToken = data.session?.access_token ?? null;
@@ -73,7 +71,7 @@ export class NominatimGeocodingProvider implements GeocodingProvider {
       const results: NominatimResult[] = await response.json();
       return results.map((r) => this.mapToGeocodeResult(r));
     } catch (error) {
-      console.error('[NominatimGeocoding] Geocode error:', error);
+      logger.error('[NominatimGeocoding] Geocode error:', error);
       return [];
     }
   }
@@ -101,7 +99,7 @@ export class NominatimGeocodingProvider implements GeocodingProvider {
       const result: NominatimResult = await response.json();
       return [this.mapToGeocodeResult(result)];
     } catch (error) {
-      console.error('[NominatimGeocoding] Reverse geocode error:', error);
+      logger.error('[NominatimGeocoding] Reverse geocode error:', error);
       return [];
     }
   }
@@ -118,7 +116,7 @@ export class NominatimGeocodingProvider implements GeocodingProvider {
         context: { geocodeResult: r },
       }));
     } catch (error) {
-      console.error('[NominatimGeocoding] Search places error:', error);
+      logger.error('[NominatimGeocoding] Search places error:', error);
       return [];
     }
   }

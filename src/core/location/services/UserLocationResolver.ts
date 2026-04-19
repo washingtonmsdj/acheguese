@@ -11,10 +11,9 @@
  * 
  * @module core/location/services
  */
-
+import { logger } from '@/shared/utils/logger';
 import { GeolocationService } from '@/core/maps/services/GeolocationService';
 import { locationContextStore } from '../stores/LocationContextStore';
-import { logger } from '@/shared/utils/logger';
 import type { ResolvedEntityLocation } from '../types/entityLocation';
 
 export interface UserLocationResolverOptions {

@@ -2,7 +2,7 @@
  * LiveTrackingMap — Mapa de rastreamento em tempo real.
  * Engine: MapLibre GL JS (via SSOT de mapa).
  */
-
+import { logger } from '@/shared/utils/logger';
 import { useEffect, useRef, useState } from 'react';
 import maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
@@ -12,7 +12,6 @@ import { Car, MapPin, Navigation } from 'lucide-react';
 import { cn } from '@/shared/utils/cn';
 import { RIDE_STATUS } from '@/shared/types/constants';
 import { DEFAULT_TILE_STYLE } from '@/core/maps/providers/MapProvider';
-
 interface LiveTrackingMapProps {
   driverProfileId: string;
   origin: { lat: number; lng: number; address: string };
@@ -103,7 +102,7 @@ export function LiveTrackingMap({
 
         setRouteLoaded(true);
       } catch (error) {
-        console.error('[LiveTrackingMap] Erro ao carregar rota real:', error);
+        logger.error('[LiveTrackingMap] Erro ao carregar rota real:', error);
         // Mantém linha reta como fallback visual
       }
     };

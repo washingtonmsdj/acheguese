@@ -2,11 +2,10 @@
  * Hooks para Location - SSOT
  * Usa LocationService para todas as operações
  */
-
+import { logger } from '@/shared/utils/logger';
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { locationService, type LocationHistory } from "@/core/location";
 import { useToast } from "@/shared/hooks/use-toast";
-
 /**
  * Hook para buscar histórico de localização
  */
@@ -110,7 +109,7 @@ export function useLocationTracking(profileId: string | undefined) {
         });
       },
       (error) => {
-        console.error("Erro ao obter localização:", error);
+        logger.error("Erro ao obter localização:", error);
       },
       {
         enableHighAccuracy: true,

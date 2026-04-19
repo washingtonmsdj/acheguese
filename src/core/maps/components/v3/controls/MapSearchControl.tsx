@@ -4,14 +4,13 @@
  * - geocoding: busca endereços via camada territorial centralizada
  * - entity-filter: filtro client-side de entidades no mapa
  */
-
+import { logger } from '@/shared/utils/logger';
 import { useState, useCallback, useMemo, useRef, useEffect } from 'react';
 import { Search, X, Loader2, MapPin } from 'lucide-react';
 import { Input } from '@/shared/components/ui/input';
 import { cn } from '@/shared/utils/cn';
 import { locationGeocodingService } from '@/core/location/services/LocationGeocodingService';
 import type { SearchControlConfig } from './types';
-
 interface GeoResult {
   id: string;
   label: string;
@@ -40,7 +39,7 @@ async function searchGeocoding(query: string): Promise<GeoResult[]> {
       lng: result.coordinates.longitude,
     }));
   } catch (error) {
-    console.error('Erro ao buscar geocoding:', error);
+    logger.error('Erro ao buscar geocoding:', error);
     return [];
   }
 }

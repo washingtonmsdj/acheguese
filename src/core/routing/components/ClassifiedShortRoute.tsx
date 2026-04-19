@@ -11,12 +11,11 @@
  *
  * @version 1.0.0
  */
-
+import { logger } from '@/shared/utils/logger';
 import { useEffect, useState } from 'react';
 import { useParams, Navigate } from 'react-router-dom';
 import { classifiedUrlService } from '@/modules/classifieds/services/ClassifiedUrlService';
 import { FullScreenLoader } from '@/shared/components/loading/PageLoader';
-import { logger } from '@/shared/utils/logger';
 
 export default function ClassifiedShortRoute() {
   const { publicId } = useParams<{ publicId: string }>();

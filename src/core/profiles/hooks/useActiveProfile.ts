@@ -8,11 +8,10 @@
  * - Se não houver perfil ativo, usa o primeiro perfil do usuário
  * - Personal profile é preferido como padrão
  */
-
+import { logger } from '@/shared/utils/logger';
 import { useState, useEffect, useCallback } from 'react';
 import { MultiProfileService } from '../services/multi-profile';
 import type { Profile } from '../services/multi-profile/types';
-
 const ACTIVE_PROFILE_KEY = 'active_profile_id';
 
 export function useActiveProfile() {
@@ -49,7 +48,7 @@ export function useActiveProfile() {
 
       setActiveProfile(active || null);
     } catch (err: any) {
-      console.error('Error loading active profile:', err);
+      logger.error('Error loading active profile:', err);
       setError(err.message || 'Failed to load active profile');
     } finally {
       setLoading(false);

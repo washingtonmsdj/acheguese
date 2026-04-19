@@ -6,11 +6,10 @@
  * 
  * SSOT: Database → MobilityService → Hook → Component
  */
-
+import { logger } from '@/shared/utils/logger';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { deleteDriverNeighborhood, deleteDriverServiceArea } from '../services/mobility.mutations';
 import { toast } from 'sonner';
-import { logger } from '@/shared/utils/logger';
 
 export function useDriverServiceArea() {
   const queryClient = useQueryClient();

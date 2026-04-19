@@ -8,8 +8,8 @@
  * opera na tabela canônica e é o SSOT para reviews de gastronomia.
  */
 
-import { supabase } from '@/integrations/supabase';
 import { logger } from '@/shared/utils/logger';
+import { supabase } from '@/integrations/supabase';
 
 // ── Tipos estendidos da tabela canônica `reviews` ─────────────────────────────
 // Estende o tipo base de @/shared/types/reviews com os campos adicionados

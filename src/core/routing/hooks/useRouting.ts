@@ -6,7 +6,7 @@
  * 
  * @module core/routing/hooks
  */
-
+import { logger } from '@/shared/utils/logger';
 import { useState, useCallback } from 'react';
 import type {
   RouteRequest,
@@ -17,7 +17,6 @@ import type {
 } from '../types';
 import type { Coordinates } from '@/core/maps/types';
 import { routingService } from '../instance';
-
 interface UseRoutingState {
   loading: boolean;
   error: string | null;
@@ -45,7 +44,7 @@ interface UseRoutingResult {
  * 
  * const handleCalculate = async () => {
  *   const eta = await calculateSimpleETA(origin, destination, 'car');
- *   console.log(eta?.durationSeconds);
+ *   logger.debug(eta?.durationSeconds);
  * };
  * ```
  */

@@ -10,7 +10,7 @@
  * 
  * @module modules/admin/pages
  */
-
+import { logger } from '@/shared/utils/logger';
 import React, { useState, useEffect, useCallback } from 'react';
 import { locationGeocodingService } from '@/core/location/services/LocationGeocodingService';
 import { locationAdminService } from '@/modules/admin/services';
@@ -21,7 +21,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/sha
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/components/ui/select';
 import { useToast } from '@/shared/hooks/use-toast';
 import { MapPin, Plus, Edit, RefreshCw, Map, ChevronRight, ChevronDown } from 'lucide-react';
-
 interface Location {
   id: string;
   parent_id: string | null;
@@ -68,7 +67,7 @@ export default function LocationsAdminPage() {
       const hierarchy = buildHierarchy(data || []);
       setLocations(hierarchy);
     } catch (error) {
-      console.error('Error loading locations:', error);
+      logger.error('Error loading locations:', error);
       toast({
         title: 'Erro ao carregar locations',
         description: 'Não foi possível carregar a lista de locations.',
@@ -173,7 +172,7 @@ export default function LocationsAdminPage() {
       setShowAddForm(false);
       loadLocations();
     } catch (error: any) {
-      console.error('Error adding location:', error);
+      logger.error('Error adding location:', error);
       toast({
         title: 'Erro ao adicionar location',
         description: error.message || 'Não foi possível adicionar o location.',
@@ -221,7 +220,7 @@ export default function LocationsAdminPage() {
       });
       loadLocations();
     } catch (error: any) {
-      console.error('Error updating location:', error);
+      logger.error('Error updating location:', error);
       toast({
         title: 'Erro ao atualizar location',
         description: error.message || 'Não foi possível atualizar o location.',
@@ -290,7 +289,7 @@ export default function LocationsAdminPage() {
       // Recarregar lista
       loadLocations();
     } catch (error: any) {
-      console.error('Error refining coordinates:', error);
+      logger.error('Error refining coordinates:', error);
       toast({
         title: 'Erro ao refinar coordenadas',
         description: error.message || 'Não foi possível obter coordenadas precisas.',

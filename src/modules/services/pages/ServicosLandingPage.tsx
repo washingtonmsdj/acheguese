@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * ServicosLandingPage — Vitrine pública de serviços
  * Estilo editorial: dark theme, acentos teal, motion.

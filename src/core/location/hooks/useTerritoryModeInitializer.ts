@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * useTerritoryModeInitializer
  * 
@@ -17,13 +16,12 @@
  * - Visitantes: modo null
  * - Usuários cadastrados: modo 'cidade' (padrão seguro)
  */
-
+import { logger } from '@/shared/utils/logger';
 import { useEffect, useRef } from 'react';
 import { useUserTerritory } from './useUserTerritory';
 import { useActiveTerritory } from './useActiveTerritory';
 import { useLocation } from 'react-router-dom';
 import { TerritoryModeManager } from '../services/TerritoryModeManager';
-
 export function useTerritoryModeInitializer() {
   const { hasHome, homeDistrict, homeCity, loading } = useUserTerritory();
   const { territoryMode, setTerritoryMode } = useActiveTerritory();
@@ -39,7 +37,7 @@ export function useTerritoryModeInitializer() {
     // Visitante: garantir modo null
     if (!hasHome) {
       if (territoryMode !== null) {
-        console.log('[TerritoryModeInit] Visitante detectado, definindo modo null');
+        logger.debug('[TerritoryModeInit] Visitante detectado, definindo modo null');
         setTerritoryMode(null);
       }
       return;
@@ -51,7 +49,7 @@ export function useTerritoryModeInitializer() {
     if (!initializedRef.current && territoryMode === null) {
       const initialMode = 'cidade'; // Modo padrão seguro
       
-      console.log('[TerritoryModeInit] Inicializando modo:', initialMode);
+      logger.debug('[TerritoryModeInit] Inicializando modo:', initialMode);
       setTerritoryMode(initialMode);
       initializedRef.current = true;
     }
@@ -77,7 +75,7 @@ export function useTerritoryModeInitializer() {
     );
 
     if (shouldForce) {
-      console.log('[TerritoryModeInit] Modo bairro acessando outro bairro, forçando modo cidade');
+      logger.debug('[TerritoryModeInit] Modo bairro acessando outro bairro, forçando modo cidade');
       setTerritoryMode('cidade');
     }
   }, [location.pathname, territoryMode, homeDistrict, homeCity, hasHome, loading, setTerritoryMode]);
@@ -85,7 +83,7 @@ export function useTerritoryModeInitializer() {
   // Reset quando usuário faz logout
   useEffect(() => {
     if (!hasHome && initializedRef.current) {
-      console.log('[TerritoryModeInit] Logout detectado, resetando inicialização');
+      logger.debug('[TerritoryModeInit] Logout detectado, resetando inicialização');
       initializedRef.current = false;
       lastPathnameRef.current = '';
     }

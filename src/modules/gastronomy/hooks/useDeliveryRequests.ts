@@ -1,15 +1,14 @@
-﻿/**
- * useDeliveryRequests â€” Hook para gerenciar solicitaÃ§Ãµes de entrega
+/**
+ * useDeliveryRequests — Hook para gerenciar solicitações de entrega
  *
  * Consome DeliveryService (SSOT).
- * NÃƒO acessa Supabase diretamente.
+ * NÃO acessa Supabase diretamente.
  */
-
+import { logger } from '@/shared/utils/logger';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { DeliveryService, DeliveryRequestStatus } from '@/modules/gastronomy/services/DeliveryService';
 import { toast } from 'sonner';
-
-// â”€â”€ Query Keys â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── Query Keys ────────────────────────────────────────────────────────────
 
 export const deliveryKeys = {
   all: ['delivery-requests'] as const,
@@ -22,7 +21,7 @@ export const deliveryKeys = {
     [...deliveryKeys.all, 'stats', businessId, dateFrom, dateTo] as const,
 };
 
-// â”€â”€ Hook â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── Hook ──────────────────────────────────────────────────────────────────
 
 export function useDeliveryRequests(
   businessId: string,
@@ -73,7 +72,7 @@ export function useDeliveryStats(
   });
 }
 
-// â”€â”€ Mutations â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── Mutations ─────────────────────────────────────────────────────────────
 
 export function useCreateDeliveryRequest() {
   const queryClient = useQueryClient();
@@ -87,10 +86,10 @@ export function useCreateDeliveryRequest() {
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: deliveryKeys.list(variables.business_id) });
       queryClient.invalidateQueries({ queryKey: deliveryKeys.stats(variables.business_id) });
-      toast.success('SolicitaÃ§Ã£o de entrega criada com sucesso');
+      toast.success('Solicitação de entrega criada com sucesso');
     },
     onError: (error: Error) => {
-      toast.error(`Erro ao criar solicitaÃ§Ã£o: ${error.message}`);
+      toast.error(`Erro ao criar solicitação: ${error.message}`);
     },
   });
 }
@@ -194,7 +193,7 @@ export function useAddTrackingPoint() {
       });
     },
     onError: (error: Error) => {
-      console.error('Erro ao adicionar ponto de rastreamento:', error.message);
+      logger.error('Erro ao adicionar ponto de rastreamento:', error.message);
     },
   });
 }

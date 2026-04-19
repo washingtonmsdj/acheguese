@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * GATE 4: RECONNECTION MANAGER
  * 
@@ -8,7 +7,6 @@
  * Retry de operações falhadas
  * Detecção de stale state
  */
-
 import { logger } from '@/shared/utils/logger';
 import type { SupabaseClient, RealtimeChannel } from '@/integrations/supabase';
 

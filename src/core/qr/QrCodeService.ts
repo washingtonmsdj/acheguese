@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * CORE QR CODE SERVICE — Serviço central de QR Codes
  *
@@ -11,7 +10,7 @@
  * - Gerar analytics
  * - Gerar assets para impressão
  */
-
+import { logger } from '@/shared/utils/logger';
 import { supabase } from '@/integrations/supabase';
 import { nanoid } from 'nanoid';
 import type {
@@ -25,7 +24,6 @@ import type {
   QrDestinationVariant,
   DeviceType,
 } from './types';
-
 // ══════════════════════════════════════════════════════════════════════════
 // TYPES
 // ══════════════════════════════════════════════════════════════════════════
@@ -95,7 +93,7 @@ export class QrCodeService {
       return { data: data as QrCode, error: null };
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Erro ao criar QR Code';
-      console.error('[QrCodeService] Erro ao criar QR Code:', error);
+      logger.error('[QrCodeService] Erro ao criar QR Code:', error);
       return { data: null, error: message };
     }
   }
@@ -127,7 +125,7 @@ export class QrCodeService {
       return { data: row, error: null };
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Erro ao buscar QR Code';
-      console.error('[QrCodeService] Erro ao buscar QR Code:', error);
+      logger.error('[QrCodeService] Erro ao buscar QR Code:', error);
       return { data: null, error: message };
     }
   }
@@ -148,7 +146,7 @@ export class QrCodeService {
       return { data: data as QrCode, error: null };
     } catch (error) {
       const message = error instanceof Error ? error.message : 'QR Code não encontrado';
-      console.error('[QrCodeService] Erro ao buscar QR Code por token:', error);
+      logger.error('[QrCodeService] Erro ao buscar QR Code por token:', error);
       return { data: null, error: message };
     }
   }
@@ -179,7 +177,7 @@ export class QrCodeService {
       return { data: data as QrCode, error: null };
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Erro ao regenerar token';
-      console.error('[QrCodeService] Erro ao regenerar token:', error);
+      logger.error('[QrCodeService] Erro ao regenerar token:', error);
       return { data: null, error: message };
     }
   }
@@ -204,7 +202,7 @@ export class QrCodeService {
       return { data: data as QrCode, error: null };
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Erro ao desativar QR Code';
-      console.error('[QrCodeService] Erro ao desativar QR Code:', error);
+      logger.error('[QrCodeService] Erro ao desativar QR Code:', error);
       return { data: null, error: message };
     }
   }
@@ -229,7 +227,7 @@ export class QrCodeService {
       return { data: data as QrCode, error: null };
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Erro ao ativar QR Code';
-      console.error('[QrCodeService] Erro ao ativar QR Code:', error);
+      logger.error('[QrCodeService] Erro ao ativar QR Code:', error);
       return { data: null, error: message };
     }
   }
@@ -272,7 +270,7 @@ export class QrCodeService {
       return { data: destinationUrl, error: null };
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Erro ao resolver token';
-      console.error('[QrCodeService] Erro ao resolver token:', error);
+      logger.error('[QrCodeService] Erro ao resolver token:', error);
       return { data: null, error: message };
     }
   }
@@ -308,7 +306,7 @@ export class QrCodeService {
       return { data: data as QrCodeScan, error: null };
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Erro ao registrar scan';
-      console.error('[QrCodeService] Erro ao registrar scan:', error);
+      logger.error('[QrCodeService] Erro ao registrar scan:', error);
       return { data: null, error: message };
     }
   }
@@ -360,7 +358,7 @@ export class QrCodeService {
       return { data: analytics, error: null };
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Erro ao buscar analytics';
-      console.error('[QrCodeService] Erro ao buscar analytics:', error);
+      logger.error('[QrCodeService] Erro ao buscar analytics:', error);
       return { data: null, error: message };
     }
   }

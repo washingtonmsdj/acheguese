@@ -10,10 +10,9 @@
  * 
  * @module core/maps/services
  */
-
+import { logger } from '@/shared/utils/logger';
 import Supercluster from 'supercluster';
 import type { MapMarker, BoundingBox } from '../types/core';
-
 // ============================================
 // TYPES
 // ============================================
@@ -92,7 +91,7 @@ export class ClusteringService {
    */
   getClusters(bounds: BoundingBox, zoom: number): ClusterPoint[] {
     if (!this.supercluster) {
-      console.warn('[ClusteringService] Supercluster not initialized');
+      logger.warn('[ClusteringService] Supercluster not initialized');
       return [];
     }
 
@@ -111,7 +110,7 @@ export class ClusteringService {
     try {
       return this.supercluster.getClusterExpansionZoom(clusterId);
     } catch (error) {
-      console.error('[ClusteringService] Error getting expansion zoom:', error);
+      logger.error('[ClusteringService] Error getting expansion zoom:', error);
       return 16;
     }
   }
@@ -127,7 +126,7 @@ export class ClusteringService {
     try {
       return this.supercluster.getLeaves(clusterId, limit);
     } catch (error) {
-      console.error('[ClusteringService] Error getting cluster leaves:', error);
+      logger.error('[ClusteringService] Error getting cluster leaves:', error);
       return [];
     }
   }

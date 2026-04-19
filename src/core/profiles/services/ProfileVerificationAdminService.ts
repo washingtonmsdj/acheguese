@@ -5,7 +5,6 @@
  * - Fonte de dados: ProfileService (verification_status em profiles)
  * - Consumidores: módulos administrativos de verificação
  */
-
 import { logger } from '@/shared/utils/logger';
 import { profileService } from '@/core/profiles/services/ProfileService';
 

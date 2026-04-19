@@ -1,7 +1,5 @@
-// @ts-nocheck
-
-import { supabase } from '@/integrations/supabase';
 import { logger } from '@/shared/utils/logger';
+import { supabase } from '@/integrations/supabase';
 import { resolveCityToLocationIds, resolveNeighborhoodInCity } from '@/core/location/helpers/territorialResolver';
 import { SALVADOR_MOCK_POINTS } from '../data/salvador-mock';
 import { LocationType } from '@/shared/types/enums';

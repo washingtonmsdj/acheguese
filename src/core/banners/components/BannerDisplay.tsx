@@ -45,7 +45,7 @@ export function BannerDisplay({
 
   async function trackView(bannerId: string) {
     try {
-      console.log("Banner view tracked:", bannerId);
+      logger.debug("Banner view tracked:", bannerId);
     } catch (error) {
       // Silently fail
     }
@@ -53,7 +53,7 @@ export function BannerDisplay({
 
   async function trackClick(bannerId: string) {
     try {
-      console.log("Banner click tracked:", bannerId);
+      logger.debug("Banner click tracked:", bannerId);
     } catch (error) {
       // Silently fail
     }

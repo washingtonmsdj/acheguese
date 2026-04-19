@@ -6,12 +6,11 @@
  * - Bloquear funcionalidades quando inativo
  * - Fornecer configuração do módulo
  */
-
+import { logger } from '@/shared/utils/logger';
 import { useState, useEffect, useCallback } from 'react';
 import { servicesRolloutService } from '../services';
 import { useServicesLocation } from './useServicesLocation';
 import type { EffectiveRollout } from '@/core/rollout/types';
-
 export function useServicesRollout() {
   const [isActive, setIsActive] = useState<boolean>(false);
   const [rollout, setRollout] = useState<EffectiveRollout | null>(null);
@@ -45,7 +44,7 @@ export function useServicesRollout() {
       const access = await servicesRolloutService.checkAccess();
       setAccessCheck(access);
     } catch (error) {
-      console.error('Error checking services rollout:', error);
+      logger.error('Error checking services rollout:', error);
       setIsActive(false);
       setRollout(null);
       setConfig(null);

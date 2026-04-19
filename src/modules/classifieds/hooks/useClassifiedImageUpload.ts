@@ -3,12 +3,11 @@
  *
  * Hook React para gerenciar upload de imagens com estado e callbacks.
  */
-
+import { logger } from '@/shared/utils/logger';
 import { useState, useCallback } from "react";
 import { useSessionContext } from "@/core/session";
 import { ClassifiedImageService, UploadedImage, UploadProgress } from "@/core/classifieds/services/ClassifiedImageService";
 import { toast } from "sonner";
-
 interface UploadState {
   uploading: boolean;
   progress: Record<string, UploadProgress>;
@@ -181,7 +180,7 @@ export function useClassifiedImageUpload() {
       toast.success("Imagem removida");
     } catch (error) {
       toast.error("Erro ao remover imagem");
-      console.error(error);
+      logger.error(error);
     }
   }, []);
 

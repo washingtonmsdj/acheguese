@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * CategoryBusinessPage — Listagem de empresas por categoria (niche-aware)
  *

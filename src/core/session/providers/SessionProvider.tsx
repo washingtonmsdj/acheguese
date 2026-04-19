@@ -1,8 +1,8 @@
+import { logger } from '@/shared/utils/logger';
 import React, { createContext, useState, useEffect } from "react";
 import { SessionState } from "../state/SessionState";
 import { SessionService } from "../services/SessionService";
 import type { SessionContext } from "../types";
-
 /**
  * SessionReactContext - The React context object.
  * Exported so useSessionContext.ts can import it.
@@ -13,7 +13,6 @@ import type { SessionContext } from "../types";
 export const SessionReactContext = createContext<SessionContext | undefined>(
   undefined,
 );
-
 /**
  * SessionProvider - React provider that reads from SessionState (SSOT).
  *
@@ -45,7 +44,7 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
     // Aguarda o primeiro evento de auth para liberar o isLoading
     // Timeout de segurança caso o SDK não dispare nenhum evento
     const timeout = setTimeout(() => {
-      console.warn("⚠️ SessionProvider: auth init timeout — liberando UI");
+      logger.warn("⚠️ SessionProvider: auth init timeout — liberando UI");
       setIsLoading(false);
     }, 3000);
 

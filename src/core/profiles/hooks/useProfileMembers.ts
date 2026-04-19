@@ -3,11 +3,10 @@
  * Hook para gerenciar membros de um perfil
  * Fonte: ARQUITETURA_MULTI_PERFIL_DEFINITIVA.md v3.0
  */
-
+import { logger } from '@/shared/utils/logger';
 import { useState, useEffect, useCallback } from 'react';
 import { ProfileMembersService } from '../services/multi-profile';
 import type { ProfileMember, ProfileRole } from '../services/multi-profile/types';
-
 export function useProfileMembers(profileId: string | null) {
   const [members, setMembers] = useState<ProfileMember[]>([]);
   const [loading, setLoading] = useState(false);
@@ -26,7 +25,7 @@ export function useProfileMembers(profileId: string | null) {
       const data = await ProfileMembersService.getProfileMembers(profileId);
       setMembers(data);
     } catch (err: any) {
-      console.error('Error loading profile members:', err);
+      logger.error('Error loading profile members:', err);
       setError(err.message || 'Failed to load members');
     } finally {
       setLoading(false);

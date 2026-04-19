@@ -3,9 +3,8 @@
  * 
  * Funções de leitura para chat de corridas
  */
-
-import { supabase } from '@/integrations/supabase';
 import { logger } from '@/shared/utils/logger';
+import { supabase } from '@/integrations/supabase';
 import type { RideChat, ChatMessage } from './chat.types';
 
 /**

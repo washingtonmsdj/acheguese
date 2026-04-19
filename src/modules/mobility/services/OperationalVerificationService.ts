@@ -13,7 +13,7 @@
  * - Registrar tentativas
  * - Verificar expiração
  */
-
+import { logger } from '@/shared/utils/logger';
 import { supabase } from '@/integrations/supabase/client';
 import bcrypt from 'bcryptjs';
 import { profileService } from '@/core/profiles/services/ProfileService';
@@ -34,7 +34,6 @@ import {
   VERIFICATION_ERRORS as ERRORS,
   VERIFICATION_SUCCESS as SUCCESS,
 } from '../types/OperationalVerification';
-
 export interface ServiceResult<T = void> {
   success: boolean;
   data?: T;
@@ -115,7 +114,7 @@ export class OperationalVerificationService {
         },
       };
     } catch (error) {
-      console.error('Error creating verification:', error);
+      logger.error('Error creating verification:', error);
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Failed to create verification',
@@ -242,7 +241,7 @@ export class OperationalVerificationService {
         };
       }
     } catch (error) {
-      console.error('Error verifying PIN:', error);
+      logger.error('Error verifying PIN:', error);
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Failed to verify PIN',
@@ -272,7 +271,7 @@ export class OperationalVerificationService {
 
       return data as OperationalVerification;
     } catch (error) {
-      console.error('Error getting verification status:', error);
+      logger.error('Error getting verification status:', error);
       return null;
     }
   }
@@ -296,7 +295,7 @@ export class OperationalVerificationService {
         expiresAt: verification.pin_expires_at,
       };
     } catch (error) {
-      console.error('Error getting verification status summary:', error);
+      logger.error('Error getting verification status summary:', error);
       return null;
     }
   }
@@ -367,7 +366,7 @@ export class OperationalVerificationService {
         reason: 'PIN not required',
       };
     } catch (error) {
-      console.error('Error resolving ride PIN requirement:', error);
+      logger.error('Error resolving ride PIN requirement:', error);
       return {
         isRequired: false,
         requiredBy: null,
@@ -440,7 +439,7 @@ export class OperationalVerificationService {
         reason: 'PIN not required',
       };
     } catch (error) {
-      console.error('Error resolving delivery PIN requirement:', error);
+      logger.error('Error resolving delivery PIN requirement:', error);
       return {
         isRequired: false,
         requiredBy: null,
@@ -473,7 +472,7 @@ export class OperationalVerificationService {
 
       return false;
     } catch (error) {
-      console.error('Error checking if PIN is required:', error);
+      logger.error('Error checking if PIN is required:', error);
       return false;
     }
   }

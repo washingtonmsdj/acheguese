@@ -1,10 +1,9 @@
+import { logger } from '@/shared/utils/logger';
 /**
  * OpeningHoursService - Cálculo de horário de funcionamento
  * 
  * Fonte de verdade: business_data.opening_hours
  */
-
-import { logger } from '@/shared/utils/logger';
 
 export interface OpeningStatus {
   is_open: boolean;

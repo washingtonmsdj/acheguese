@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * DeliveryService — SSOT canônico de entregas
  *
@@ -13,8 +12,8 @@
  * - Estatísticas
  */
 
-import { supabase } from '@/integrations/supabase';
 import { logger } from '@/shared/utils/logger';
+import { supabase } from '@/integrations/supabase';
 
 // ── Tipos ─────────────────────────────────────────────────────────────────
 

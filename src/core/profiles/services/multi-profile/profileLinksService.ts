@@ -1,13 +1,11 @@
-// @ts-nocheck
 /**
  * PROFILE LINKS SERVICE - FASE 3
  * Service layer para gestão de vínculos entre perfis
  * Fonte: ARQUITETURA_MULTI_PERFIL_DEFINITIVA.md v3.0
  */
-
+import { logger } from '@/shared/utils/logger';
 import { supabase } from '@/integrations/supabase/client';
 import type { ProfileLink, LinkType, ServiceResponse } from './types';
-
 export class ProfileLinksService {
   /**
    * Listar links de um perfil (via RLS)
@@ -24,7 +22,7 @@ export class ProfileLinksService {
 
       return (data || []) as ProfileLink[];
     } catch (error: any) {
-      console.error('Error fetching profile links:', error);
+      logger.error('Error fetching profile links:', error);
       return [];
     }
   }
@@ -44,7 +42,7 @@ export class ProfileLinksService {
 
       return data || [];
     } catch (error: any) {
-      console.error('Error fetching public profile links:', error);
+      logger.error('Error fetching public profile links:', error);
       return [];
     }
   }

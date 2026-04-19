@@ -3,9 +3,8 @@
  * 
  * Funções de leitura para landing pages nacionais e estaduais
  */
-
-import { supabase } from '@/integrations/supabase';
 import { logger } from '@/shared/utils/logger';
+import { supabase } from '@/integrations/supabase';
 import { isTerritoryVisibleInLanding } from '@/core/routing/utils/territoryVisibility';
 import type {
   CountryData,

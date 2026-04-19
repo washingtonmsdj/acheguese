@@ -2,7 +2,7 @@
  * RideTrackingMap — Mapa de rastreamento de corrida com localização em tempo real.
  * Engine: MapLibre GL JS (via SSOT de mapa).
  */
-
+import { logger } from '@/shared/utils/logger';
 import { memo, useEffect, useRef, useState } from 'react';
 import maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
@@ -14,7 +14,6 @@ import { useDriverLocation } from '@/modules/mobility/hooks/useDriverLocation';
 import { routingService } from '@/core/routing';
 import { cn } from '@/shared/utils/cn';
 import { DEFAULT_TILE_STYLE } from '@/core/maps/providers/MapProvider';
-
 interface RideTrackingMapProps {
   driverProfileId: string;
   rideId?: string;
@@ -105,7 +104,7 @@ export const RideTrackingMap = memo(function RideTrackingMap({
 
         setRouteLoaded(true);
       } catch (error) {
-        console.error('[RideTrackingMap] Erro ao carregar rota real:', error);
+        logger.error('[RideTrackingMap] Erro ao carregar rota real:', error);
         // Não bloquear o mapa se rota falhar
       }
     };

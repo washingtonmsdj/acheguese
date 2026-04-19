@@ -3,11 +3,10 @@
  *
  * Padrão: Banco → Service → Hook → Component
  */
-
+import { logger } from '@/shared/utils/logger';
 import { useState, useEffect, useCallback } from 'react';
 import { safetyService } from '../instance';
 import type { SafetyIncident, CreateSafetyIncidentInput, SafetyFilter } from '../types';
-import { logger } from '@/shared/utils/logger';
 
 export function useSafetyIncidents(filter?: SafetyFilter) {
   const [incidents, setIncidents] = useState<SafetyIncident[]>([]);

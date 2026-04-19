@@ -7,7 +7,7 @@
  * RESPONSABILIDADE: Boundary específica - toda persistência e consulta de business
  * Entity ID Canônico: business_data.id (PK da tabela)
  */
-
+import { logger } from '@/shared/utils/logger';
 import { BusinessService } from '@/core/business/services/BusinessService';
 import { BusinessIdentityPolicy } from '../policies/BusinessIdentityPolicy';
 import type { IdentityAdapter } from '../domain/IdentityAdapter';
@@ -18,7 +18,6 @@ import type {
   IdentityChangeRecord, 
   CooldownResult 
 } from '../domain/types';
-import { logger } from '@/shared/utils/logger';
 
 export class BusinessIdentityAdapter implements IdentityAdapter {
   readonly entityType: EntityType = 'business';

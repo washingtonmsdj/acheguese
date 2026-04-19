@@ -6,10 +6,9 @@
  *
  * Para casos mais avançados (retry, watch, precisão), use useRobustGeolocation.
  */
-
+import { logger } from '@/shared/utils/logger';
 import { useState, useCallback } from 'react';
 import { GeolocationService } from '@/core/maps/services/GeolocationService';
-import { logger } from '@/shared/utils/logger';
 
 interface GeolocationState {
   latitude: number | null;

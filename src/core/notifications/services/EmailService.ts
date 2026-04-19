@@ -5,8 +5,8 @@
  * Respects user preferences and quiet hours.
  */
 
+import { logger } from '@/shared/utils/logger';
 import { supabase } from '@/integrations/supabase/client';
-
 export interface EmailTemplate {
   subject: string;
   html: string;
@@ -49,13 +49,13 @@ export class EmailService {
       });
 
       if (error) {
-        console.error('Error sending email:', error);
+        logger.error('Error sending email:', error);
         return { success: false, error: error.message };
       }
 
       return { success: true };
     } catch (error) {
-      console.error('Exception sending email:', error);
+      logger.error('Exception sending email:', error);
       return { success: false, error: String(error) };
     }
   }
@@ -199,7 +199,7 @@ export class EmailService {
       .limit(50);
 
     if (error) {
-      console.error('Error fetching email logs:', error);
+      logger.error('Error fetching email logs:', error);
       return [];
     }
 

@@ -6,7 +6,7 @@
  * 
  * ✅ SSOT: Database → TerritorialManagementService → Hook → Component
  */
-
+import { logger } from '@/shared/utils/logger';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import {
@@ -14,7 +14,6 @@ import {
   type VisibilityFlag,
   type TerritoryNode,
 } from '@/core/territorial';
-
 // Re-export types for convenience
 export type { VisibilityFlag, TerritoryNode };
 
@@ -28,12 +27,12 @@ export function useAdminTerritoryManagement() {
 
   const toggleLocationMutation = useMutation({
     mutationFn: async ({ id, currentValue }: { id: string; currentValue: boolean }) => {
-      console.log('🔄 Toggle location:', id, 'from', currentValue, 'to', !currentValue);
+      logger.debug('🔄 Toggle location:', id, 'from', currentValue, 'to', !currentValue);
       
       const newValue = !currentValue;
       await TerritorialManagementService.toggleLocationSelector(id, newValue);
       
-      console.log('✅ Toggle completed');
+      logger.debug('✅ Toggle completed');
       return { id, newValue };
     },
     onMutate: async ({ id, currentValue }) => {
@@ -62,11 +61,11 @@ export function useAdminTerritoryManagement() {
       if (context?.previousData) {
         queryClient.setQueryData(['admin', 'territory-management'], context.previousData);
       }
-      console.error('❌ Mutation error:', err);
+      logger.error('❌ Mutation error:', err);
       toast.error(err.message || 'Erro ao atualizar visibilidade');
     },
     onSuccess: () => {
-      console.log('✅ Mutation success, invalidating queries...');
+      logger.debug('✅ Mutation success, invalidating queries...');
       
       // Pequeno delay para garantir que o banco foi atualizado
       setTimeout(() => {
@@ -80,12 +79,12 @@ export function useAdminTerritoryManagement() {
 
   const toggleGroupMutation = useMutation({
     mutationFn: async ({ id, currentValue }: { id: string; currentValue: boolean }) => {
-      console.log('🔄 Toggle group:', id, 'from', currentValue, 'to', !currentValue);
+      logger.debug('🔄 Toggle group:', id, 'from', currentValue, 'to', !currentValue);
       
       const newValue = !currentValue;
       await TerritorialManagementService.toggleGroupSelector(id, newValue);
       
-      console.log('✅ Toggle completed');
+      logger.debug('✅ Toggle completed');
       return { id, newValue };
     },
     onMutate: async ({ id, currentValue }) => {
@@ -114,11 +113,11 @@ export function useAdminTerritoryManagement() {
       if (context?.previousData) {
         queryClient.setQueryData(['admin', 'territory-management'], context.previousData);
       }
-      console.error('❌ Mutation error:', err);
+      logger.error('❌ Mutation error:', err);
       toast.error(err.message || 'Erro ao atualizar visibilidade do grupo');
     },
     onSuccess: () => {
-      console.log('✅ Mutation success, invalidating queries...');
+      logger.debug('✅ Mutation success, invalidating queries...');
       
       // Pequeno delay para garantir que o banco foi atualizado
       setTimeout(() => {

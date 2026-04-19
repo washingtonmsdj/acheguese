@@ -14,10 +14,9 @@
  *   - Professional não tem link premium curto
  *   - Professional não tem geographic_path (usa location_id)
  */
-
+import { logger } from '@/shared/utils/logger';
 import { supabase } from '@/integrations/supabase';
 import { PublicIdentityService } from '@/core/public-identity/services/PublicIdentityService';
-import { logger } from '@/shared/utils/logger';
 
 // ─── Tipos ────────────────────────────────────────────────────────────────────
 

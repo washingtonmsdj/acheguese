@@ -5,10 +5,9 @@
  *
  * @version 2.0.0 - Extraído de MenuQueryService
  */
-
+import { logger } from '@/shared/utils/logger';
 import { supabase } from '@/integrations/supabase';
 import { OpeningHoursService } from '@/core/business/services/OpeningHoursService';
-import { logger } from '@/shared/utils/logger';
 import { sanitizeForILike } from '@/shared/utils/sqlSanitization';
 import {
   isValidId,

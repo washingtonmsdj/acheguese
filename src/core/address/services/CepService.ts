@@ -1,4 +1,4 @@
-﻿/**
+/**
  * CepService - servico de consulta de CEP (legado).
  *
  * DEPRECATED:
@@ -6,8 +6,8 @@
  * - SSOT atual de geocoding/CEP: locationGeocodingService.
  */
 
-import type { CepLookupResult } from '../types';
 import { logger } from '@/shared/utils/logger';
+import type { CepLookupResult } from '../types';
 
 const VIACEP_BASE = 'https://viacep.com.br/ws';
 
@@ -71,8 +71,8 @@ export class CepService {
    */
   static async lookupWithMigration(cep: string): Promise<CepLookupResult | null> {
     if (process.env.NODE_ENV === 'development') {
-      console.warn(
-        '⚠️  CepService.lookupWithMigration() is deprecated.\n' +
+      logger.warn(
+        '??  CepService.lookupWithMigration() is deprecated.\n' +
         '   Use locationGeocodingService.lookupPostalCode() instead.\n' +
         '   This method will be removed in v2.0.0'
       );

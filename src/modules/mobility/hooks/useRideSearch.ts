@@ -4,9 +4,8 @@
  * Monitora o progresso da busca em tempo real e notifica quando
  * motorista e encontrado, aceita ou corrida expira.
  */
-
-import { useEffect, useState, useCallback } from 'react';
 import { logger } from '@/shared/utils/logger';
+import { useEffect, useState, useCallback } from 'react';
 import { getRideById } from '../services/mobility.queries';
 import { useRideRealtime } from './useRideRealtime';
 

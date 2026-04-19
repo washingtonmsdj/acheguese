@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * MapLibreAdapter - Ponte entre MapLibre GL JS e o sistema de hooks v3
  *
@@ -14,7 +13,7 @@
  *
  * @module core/maps/components/v3
  */
-
+import { logger } from '@/shared/utils/logger';
 import React, { useEffect, useRef, useImperativeHandle, forwardRef, useCallback } from 'react';
 import maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
@@ -34,7 +33,6 @@ import type { TerritoryPolygon } from '../../hooks/useTerritoryPolygon';
 import type { CircleArea } from '../../providers/types';
 import type { MapControlsConfig, UserLocationMarkerConfig } from './controls/types';
 import type { ResolvedTerritory } from '../../routing/hooks/useResolveTerritoryFromUrl';
-
 export interface MapLibreAdapterHandle {
   /** Acesso direto à instância MapLibre (para casos avançados) */
   getMap: () => maplibregl.Map | null;
@@ -313,7 +311,7 @@ export const MapLibreAdapter = forwardRef<MapLibreAdapterHandle, MapLibreAdapter
         }
 
         // Outros erros são registrados para debug
-        console.warn('[MapLibreAdapter] Map error:', errorMessage);
+        logger.warn('[MapLibreAdapter] Map error:', errorMessage);
 
         if (typeof window !== 'undefined') {
           const s = (window as any).__mapState || {};
@@ -490,7 +488,7 @@ export const MapLibreAdapter = forwardRef<MapLibreAdapterHandle, MapLibreAdapter
           
           // Verificar se temos coordenadas válidas suficientes
           if (ring.length < 3) {
-            console.warn(`[MapLibreAdapter] Polígono ${poly.name} tem coordenadas insuficientes ou inválidas`);
+            logger.warn(`[MapLibreAdapter] Polígono ${poly.name} tem coordenadas insuficientes ou inválidas`);
             return;
           }
           
@@ -599,7 +597,7 @@ export const MapLibreAdapter = forwardRef<MapLibreAdapterHandle, MapLibreAdapter
     // Solicitar localização automaticamente ao montar (para marcador aparecer)
     React.useEffect(() => {
       if (userLocationMarker?.enabled && userLocationMarker?.autoAdd) {
-        console.log('[MapLibreAdapter] Solicitando localização para marcador automático...');
+        logger.debug('[MapLibreAdapter] Solicitando localização para marcador automático...');
         handleRequestLocation();
       }
       // eslint-disable-next-line react-hooks/exhaustive-deps

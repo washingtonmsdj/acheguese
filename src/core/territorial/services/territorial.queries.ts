@@ -1,12 +1,10 @@
-// @ts-nocheck
 /**
  * Territorial Queries - SSOT v2.0
  * 
  * Funções de leitura para gestão territorial
  */
-
-import { supabase } from '@/integrations/supabase';
 import { logger } from '@/shared/utils/logger';
+import { supabase } from '@/integrations/supabase';
 import type { TerritoryNode, TerritoryTreeData } from './types';
 
 /**

@@ -2,12 +2,11 @@
  * Hook para buscar dados completos do perfil de um vendedor
  * ✅ SSOT compliant: usa classifiedService e profileService
  */
-
+import { logger } from '@/shared/utils/logger';
 import { useQuery } from "@tanstack/react-query";
 import { ClassifiedsFacade } from "@/modules/classifieds/services";
 import { profileService } from "@/core/profiles/services";
 import type { VendedorWithAds } from "./useVendedores";
-
 // Mock de avaliações de vendedores
 export interface VendedorReview {
   id: string;
@@ -240,7 +239,7 @@ export function useVendedorPerfil(sellerId: string | undefined) {
 
         return vendedorPerfil;
       } catch (error) {
-        console.error("[useVendedorPerfil] Error fetching seller profile:", error);
+        logger.error("[useVendedorPerfil] Error fetching seller profile:", error);
         return null;
       }
     },

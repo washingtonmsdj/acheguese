@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
 /**
  * ProfileServiceLegacy - IDENTITY CORE (FASE PROFILE.1)
@@ -499,7 +498,7 @@ export class ProfileServiceLegacy {
    */
   async getByHandle(handle: string): Promise<Profile | null> {
     if (process.env.NODE_ENV === 'development') {
-      console.warn(
+      logger.warn(
         '⚠️  ProfileService.getByHandle() is deprecated.\n' +
         '   Use getByUsername() instead.\n' +
         '   This method will be removed in v2.0.0'
@@ -1582,7 +1581,7 @@ export class ProfileServiceLegacy {
     excludeUserId?: string,
   ): Promise<boolean> {
     if (process.env.NODE_ENV === 'development') {
-      console.warn(
+      logger.warn(
         '⚠️  ProfileService.isHandleAvailable() is deprecated.\n' +
         '   Use isUsernameAvailable() instead.\n' +
         '   This method will be removed in v2.0.0'

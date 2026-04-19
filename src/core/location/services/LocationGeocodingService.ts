@@ -9,7 +9,7 @@
  * - Consumidores recebem dados normalizados + reconciliação explícita.
  * - Troca futura de provider não quebra consumidores, pois todos dependem deste contrato.
  */
-
+import { logger } from '@/shared/utils/logger';
 import {
   geocodingService as providerGeocodingService,
   type GeocodeRequest,
@@ -17,7 +17,6 @@ import {
   type PostalCodeLookupRequest,
   type ReverseGeocodeRequest,
 } from '@/core/geocoding';
-import { logger } from '@/shared/utils/logger';
 import type { ILocationRepository } from '../repositories/ILocationRepository';
 import { createLocationRepository } from '../repositories/createLocationRepository';
 import { LocationStatus, LocationType, type Location } from '../types';

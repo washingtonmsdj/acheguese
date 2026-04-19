@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * PricingService - SSOT para precificação e estimativas
  *
@@ -15,9 +14,8 @@
  *
  * Padrão: Service → Hook → Component
  */
-
-import { supabase } from '@/integrations/supabase';
 import { logger } from '@/shared/utils/logger';
+import { supabase } from '@/integrations/supabase';
 import { trackError } from '@/shared/utils/errorTracking';
 import { calculateDistance } from '@/shared/utils/geolocation';
 import { PricingError } from '../types';

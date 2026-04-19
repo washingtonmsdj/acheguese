@@ -4,9 +4,8 @@
  * Monitora corridas atribuidas ao motorista em tempo real
  * e permite aceitar/rejeitar ofertas.
  */
-
-import { useEffect, useState, useCallback } from 'react';
 import { logger } from '@/shared/utils/logger';
+import { useEffect, useState, useCallback } from 'react';
 import { RideOperationalService } from '../core/RideOperationalService';
 import { getRideWithAddresses, getRidesByDriverProfile } from '../services/mobility.queries';
 import { useRideRealtime } from './useRideRealtime';

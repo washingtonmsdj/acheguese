@@ -5,7 +5,7 @@
  * 
  * @module core/geospatial/components
  */
-
+import { logger } from '@/shared/utils/logger';
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/components/ui/card';
 import { Button } from '@/shared/components/ui/button';
@@ -15,7 +15,6 @@ import { Badge } from '@/shared/components/ui/badge';
 import { Trash2, Plus, Loader2 } from 'lucide-react';
 import { useEntityCoverage, useAddCoverageByRadius, useRemoveCoverage } from '../hooks/useCoverage';
 import type { CoverageEntityType } from '../services/CoverageService';
-
 export interface CoverageSettingsFormProps {
   /** Tipo de entidade */
   entityType: CoverageEntityType;
@@ -69,7 +68,7 @@ export function CoverageSettingsForm({
         radiusKm,
       });
     } catch (error) {
-      console.error('Erro ao adicionar cobertura:', error);
+      logger.error('Erro ao adicionar cobertura:', error);
       alert('Erro ao adicionar cobertura');
     }
   };
@@ -86,7 +85,7 @@ export function CoverageSettingsForm({
         entityId,
       });
     } catch (error) {
-      console.error('Erro ao remover cobertura:', error);
+      logger.error('Erro ao remover cobertura:', error);
       alert('Erro ao remover cobertura');
     }
   };

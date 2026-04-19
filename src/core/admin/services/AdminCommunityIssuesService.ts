@@ -9,10 +9,9 @@
  * - Usa services existentes como base
  * - Adiciona apenas lógica administrativa
  */
-
+import { logger } from '@/shared/utils/logger';
 import { supabase } from '@/integrations/supabase';
 import { SessionService } from '@/core/session/services/SessionService';
-import { logger } from '@/shared/utils/logger';
 import type { AdminSupabaseClient } from '../types/adminDatabase.types';
 import { communityIssueService } from '@/core/community-issues';
 import type {

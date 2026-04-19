@@ -1,3 +1,4 @@
+import { logger } from '@/shared/utils/logger';
 /**
  * BusinessOwnershipService - SSOT para verificação de ownership de negócios
  * 
@@ -8,8 +9,6 @@
  * 
  * @version 1.0.0
  */
-
-import { logger } from '@/shared/utils/logger';
 
 export class BusinessOwnershipService {
   /**

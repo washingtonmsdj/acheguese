@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * PROFESSIONAL SERVICE
  * Service layer SSOT para operações de professional_data.
@@ -6,10 +5,9 @@
  *
  * Zero acesso direto ao Supabase fora deste service.
  */
-
+import { logger } from '@/shared/utils/logger';
 import { supabase } from '@/integrations/supabase/client';
 import type { ProfessionalData, ServiceResponse } from './types';
-
 export class ProfessionalService {
   /**
    * Buscar professional_data (via RLS)
@@ -25,7 +23,7 @@ export class ProfessionalService {
       if (error) throw error;
       return data as ProfessionalData;
     } catch (err: any) {
-      console.error('[ProfessionalService] getProfessionalData:', err.message);
+      logger.error('[ProfessionalService] getProfessionalData:', err.message);
       return null;
     }
   }

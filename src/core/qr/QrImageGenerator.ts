@@ -5,10 +5,9 @@
  * 
  * Usa qrcode library para geração de imagens
  */
-
+import { logger } from '@/shared/utils/logger';
 import QRCode from 'qrcode';
 import type { QrImageOptions, QrPrintableAsset, QrStyleVariant } from './types';
-
 // ══════════════════════════════════════════════════════════════════════════
 // QR IMAGE GENERATOR
 // ══════════════════════════════════════════════════════════════════════════
@@ -85,7 +84,7 @@ export class QrImageGenerator {
       const dataUrl = await QRCode.toDataURL(url, opts);
       return dataUrl;
     } catch (error) {
-      console.error('[QrImageGenerator] Erro ao gerar PNG:', error);
+      logger.error('[QrImageGenerator] Erro ao gerar PNG:', error);
       throw new Error('Erro ao gerar imagem QR Code');
     }
   }
@@ -111,7 +110,7 @@ export class QrImageGenerator {
       const svg = await QRCode.toString(url, { ...opts, type: 'svg' });
       return svg;
     } catch (error) {
-      console.error('[QrImageGenerator] Erro ao gerar SVG:', error);
+      logger.error('[QrImageGenerator] Erro ao gerar SVG:', error);
       throw new Error('Erro ao gerar SVG QR Code');
     }
   }
@@ -135,10 +134,10 @@ export class QrImageGenerator {
       
       // TODO: Implementar composição com logo usando canvas
       // Por enquanto, retorna apenas o QR base
-      console.warn('[QrImageGenerator] Logo não implementado ainda. Retornando QR base.');
+      logger.warn('[QrImageGenerator] Logo não implementado ainda. Retornando QR base.');
       return qrDataUrl;
     } catch (error) {
-      console.error('[QrImageGenerator] Erro ao gerar QR com logo:', error);
+      logger.error('[QrImageGenerator] Erro ao gerar QR com logo:', error);
       throw new Error('Erro ao gerar QR Code com logo');
     }
   }
@@ -167,7 +166,7 @@ export class QrImageGenerator {
         generated_at: new Date().toISOString(),
       };
     } catch (error) {
-      console.error('[QrImageGenerator] Erro ao gerar asset para impressão:', error);
+      logger.error('[QrImageGenerator] Erro ao gerar asset para impressão:', error);
       throw new Error('Erro ao gerar asset para impressão');
     }
   }
@@ -206,7 +205,7 @@ export class QrImageGenerator {
     try {
       await navigator.clipboard.writeText(text);
     } catch (error) {
-      console.error('[QrImageGenerator] Erro ao copiar para clipboard:', error);
+      logger.error('[QrImageGenerator] Erro ao copiar para clipboard:', error);
       throw new Error('Erro ao copiar link');
     }
   }

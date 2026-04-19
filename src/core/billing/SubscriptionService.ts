@@ -3,11 +3,10 @@
  *
  * SSOT: Única fonte de verdade para operações de assinatura.
  */
-
+import { logger } from '@/shared/utils/logger';
 import { supabase } from '@/integrations/supabase';
 import { PlanTier, type BusinessSubscription } from './types';
 import type { AdminSupabaseClient } from '@/core/admin/types/adminDatabase.types';
-
 // ══════════════════════════════════════════════════════════════════════════
 // TYPES
 // ══════════════════════════════════════════════════════════════════════════
@@ -50,7 +49,7 @@ export class SubscriptionService {
       return { data: row, error: null };
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Erro ao buscar assinatura';
-      console.error('[SubscriptionService] Erro ao buscar assinatura:', error);
+      logger.error('[SubscriptionService] Erro ao buscar assinatura:', error);
       return { data: null, error: message };
     }
   }
@@ -99,7 +98,7 @@ export class SubscriptionService {
       return { data: data as BusinessSubscription, error: null };
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Erro ao salvar assinatura';
-      console.error('[SubscriptionService] Erro ao salvar assinatura:', error);
+      logger.error('[SubscriptionService] Erro ao salvar assinatura:', error);
       return { data: null, error: message };
     }
   }
@@ -127,7 +126,7 @@ export class SubscriptionService {
       return { data: data as BusinessSubscription, error: null };
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Erro ao atualizar plano';
-      console.error('[SubscriptionService] Erro ao atualizar plano:', error);
+      logger.error('[SubscriptionService] Erro ao atualizar plano:', error);
       return { data: null, error: message };
     }
   }
@@ -164,7 +163,7 @@ export class SubscriptionService {
       return { data: data as BusinessSubscription, error: null };
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Erro ao cancelar assinatura';
-      console.error('[SubscriptionService] Erro ao cancelar assinatura:', error);
+      logger.error('[SubscriptionService] Erro ao cancelar assinatura:', error);
       return { data: null, error: message };
     }
   }
@@ -191,7 +190,7 @@ export class SubscriptionService {
       return { data: data as BusinessSubscription, error: null };
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Erro ao reativar assinatura';
-      console.error('[SubscriptionService] Erro ao reativar assinatura:', error);
+      logger.error('[SubscriptionService] Erro ao reativar assinatura:', error);
       return { data: null, error: message };
     }
   }

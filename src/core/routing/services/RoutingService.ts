@@ -6,7 +6,7 @@
  * 
  * @module core/routing/services
  */
-
+import { logger } from '@/shared/utils/logger';
 import type {
   RouteRequest,
   RouteResponse,
@@ -19,7 +19,6 @@ import type {
   PROFILE_MAPPING,
 } from '../types';
 import type { Coordinates } from '@/core/maps/types';
-
 /**
  * Configuração do RoutingService
  */
@@ -58,7 +57,7 @@ export class RoutingService {
       const response = await this.provider.calculateRoute(request);
       return this.normalizeRouteResponse(response);
     } catch (error) {
-      console.error('[RoutingService] Erro ao calcular rota:', error);
+      logger.error('[RoutingService] Erro ao calcular rota:', error);
       throw new Error('Falha ao calcular rota');
     }
   }
@@ -73,7 +72,7 @@ export class RoutingService {
       const response = await this.provider.calculateETA(request);
       return this.normalizeETAResponse(response);
     } catch (error) {
-      console.error('[RoutingService] Erro ao calcular ETA:', error);
+      logger.error('[RoutingService] Erro ao calcular ETA:', error);
       throw new Error('Falha ao calcular ETA');
     }
   }
@@ -109,7 +108,7 @@ export class RoutingService {
       const response = await this.provider.calculateDistanceMatrix(request);
       return response;
     } catch (error) {
-      console.error('[RoutingService] Erro ao calcular matriz:', error);
+      logger.error('[RoutingService] Erro ao calcular matriz:', error);
       throw new Error('Falha ao calcular matriz de distâncias');
     }
   }

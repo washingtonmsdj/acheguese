@@ -17,9 +17,8 @@
  * 
  * @version 3.0.0 - Service Completo AAA
  */
-
-import { supabase } from '@/integrations/supabase/client';
 import { logger } from '@/shared/utils/logger';
+import { supabase } from '@/integrations/supabase/client';
 import type {
   Vaga,
   VagaRow,

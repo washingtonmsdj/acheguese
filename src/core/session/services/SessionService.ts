@@ -1,10 +1,9 @@
-// @ts-nocheck
+import { logger } from '@/shared/utils/logger';
 import { supabase } from "@/integrations/supabase";
 import { SessionState } from "../state/SessionState";
 import { CacheManager } from "../cache/CacheManager";
 import type { User, Profile, SessionData } from "../types";
 import type { AuthChangeEvent, Session } from "@supabase/supabase-js";
-
 /**
  * Tipo para dados de perfil vindos do banco de dados
  * Usado para mapear resultados de queries e RPCs
@@ -32,7 +31,6 @@ interface DbProfileRow {
 export class SessionService {
   private static readonly debugLogs =
     import.meta.env.DEV && import.meta.env.VITE_DEBUG_SESSION === "true";
-
   private static debug(...args: unknown[]): void {
     if (SessionService.debugLogs) {
       console.debug(...args);
@@ -200,7 +198,7 @@ export class SessionService {
       const errorWithStatus = userError as { status?: number; message?: string };
       const status = errorWithStatus.status ?? 0;
       if (status === 403 || status === 401 || userError.message?.includes('User from sub claim in JWT does not exist')) {
-        console.warn('⚠️ SessionService: token órfão detectado, fazendo logout automático.');
+        logger.warn('⚠️ SessionService: token órfão detectado, fazendo logout automático.');
         await supabase.auth.signOut();
         return;
       }
@@ -288,13 +286,13 @@ export class SessionService {
         .eq('is_active', true);
 
       if (error || !data) {
-        console.error('SessionService.getUserProfiles failed:', error);
+        logger.error('SessionService.getUserProfiles failed:', error);
         return [];
       }
 
       return data.map((row: any) => SessionService.mapProfileFromDb(row as DbProfileRow));
     } catch (error) {
-      console.error('SessionService.getUserProfiles failed:', error);
+      logger.error('SessionService.getUserProfiles failed:', error);
       return [];
     }
   }

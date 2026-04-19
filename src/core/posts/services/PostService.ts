@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * 🏛️ POSTS SERVICE FACADE - SSOT v2.0
  *
@@ -72,7 +71,7 @@ export type { Poll, CreatePollData } from "./polls.mutations";
 // ============================================================
 // 🏛️ FACADE UNIFICADA - PostsFacade
 // ============================================================
-
+import { logger } from '@/shared/utils/logger';
 import * as queries from "./posts.queries";
 import * as mutations from "./posts.mutations";
 import * as pollMutations from "./polls.mutations";
@@ -97,7 +96,6 @@ export const PostsFacade = {
 // ============================================================
 // 🔄 BACKWARD COMPATIBILITY - PostService legado
 // ============================================================
-
 import { supabase } from "@/integrations/supabase";
 import { NotificationType } from "@/core/notifications/types";
 import { notificationService } from "@/core/notifications/services/NotificationService";
@@ -157,7 +155,7 @@ export class PostService {
         .single();
 
       if (locationError || !location) {
-        StructuredLogger.error('PostService', 'createPost', 'Location not found', {
+        logger.error('PostService: Location not found', {
           location_id: data.location_id,
           error: locationError?.message,
         });
@@ -166,7 +164,7 @@ export class PostService {
 
       // 3. Validar tipo (apenas city ou district)
       if (![LocationType.CITY, LocationType.DISTRICT].includes(location.type as any)) {
-        StructuredLogger.error('PostService', 'createPost', 'Invalid location type', {
+        logger.error('PostService: Invalid location type', {
           location_id: data.location_id,
           type: location.type,
         });
@@ -178,7 +176,7 @@ export class PostService {
 
       // 4. Validar status (apenas active)
       if (location.status !== EntityStatus.ACTIVE) {
-        StructuredLogger.error('PostService', 'createPost', 'Inactive location', {
+        logger.error('PostService: Inactive location', {
           location_id: data.location_id,
           status: location.status,
         });
@@ -230,7 +228,7 @@ export class PostService {
         .single();
 
       if (error) {
-        StructuredLogger.error('PostService', 'createPost', 'Insert error', {
+        logger.error('PostService: Insert error', {
           error: error.message,
           code: error.code,
         });
@@ -241,7 +239,7 @@ export class PostService {
     } catch (error) {
       if (error instanceof PostError) throw error;
       
-      StructuredLogger.error('PostService', 'createPost', 'Unexpected error', {
+      logger.error('PostService: Unexpected error', {
         error: (error as Error).message,
       });
       trackError(error as Error, {
@@ -390,7 +388,7 @@ export class PostService {
 
       // Validar que temos location_id ou location_ids
       if (!location_id && !location_ids?.length) {
-        StructuredLogger.warn('PostService', 'getFeed', 'Empty location_ids', { params });
+        logger.warn('PostService: Empty location_ids', { params });
         return { posts: [], hasMore: false };
       }
 
@@ -399,7 +397,7 @@ export class PostService {
       const expandedIds = await this.expandLocationIds(inputIds);
 
       if (expandedIds.length === 0) {
-        StructuredLogger.warn('PostService', 'getFeed', 'No valid locations after expansion', { inputIds });
+        logger.warn('PostService: No valid locations after expansion', { inputIds });
         return { posts: [], hasMore: false };
       }
 
@@ -449,7 +447,7 @@ export class PostService {
       const { data: posts, error } = await query;
 
       if (error) {
-        StructuredLogger.error('PostService', 'getFeed', 'Query error', {
+        logger.error('PostService: Query error', {
           error: error.message,
           params,
         });
@@ -476,7 +474,7 @@ export class PostService {
     } catch (error) {
       if (error instanceof PostError) throw error;
       
-      StructuredLogger.error('PostService', 'getFeed', 'Unexpected error', {
+      logger.error('PostService: Unexpected error', {
         error: (error as Error).message,
       });
       trackError(error as Error, {
@@ -508,7 +506,7 @@ export class PostService {
         .single();
 
       if (!location) {
-        StructuredLogger.warn('PostService', 'expandLocationIds', 'Location not found or inactive', {
+        logger.warn('PostService: Location not found or inactive', {
           location_id: locationId,
         });
         continue;

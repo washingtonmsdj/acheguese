@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * TerritorialAIService - SSOT para conteúdo gerado por IA de territórios
  * 

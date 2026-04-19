@@ -4,7 +4,7 @@
  * Editor de endereço completo com busca automática por CEP.
  * Integra com API ViaCEP e permite seleção de coordenadas no mapa.
  */
-
+import { logger } from '@/shared/utils/logger';
 import { useState } from "react";
 import { MapPin, Search, Loader2, Check, X, Map as MapIcon } from "lucide-react";
 import { Input } from "@/shared/components/ui/input";
@@ -12,7 +12,6 @@ import { Button } from "@/shared/components/ui/button";
 import { Label } from "@/shared/components/ui/label";
 import { cn } from "@/shared/utils/cn";
 import { toast } from "sonner";
-
 interface Address {
   street?: string;
   number?: string;
@@ -115,7 +114,7 @@ export function AddressEditor({
 
       toast.success("Endereço encontrado!");
     } catch (error) {
-      console.error("Erro ao buscar CEP:", error);
+      logger.error("Erro ao buscar CEP:", error);
       setCepError("Erro ao buscar CEP");
       toast.error("Erro ao buscar CEP. Tente novamente.");
     } finally {
@@ -141,7 +140,7 @@ export function AddressEditor({
         toast.success("Localização obtida!");
       },
       (error) => {
-        console.error("Erro ao obter localização:", error);
+        logger.error("Erro ao obter localização:", error);
         toast.error("Erro ao obter localização. Verifique as permissões.");
       }
     );

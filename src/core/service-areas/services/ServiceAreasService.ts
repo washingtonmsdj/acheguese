@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * Service Areas Service
  *

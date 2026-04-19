@@ -6,11 +6,10 @@
  *
  * @version 2.0.0 - Extraído de GastronomyService
  */
-
+import { logger } from '@/shared/utils/logger';
 import { supabase } from '@/integrations/supabase';
 import type { Json } from '@/integrations/supabase';
 import { BusinessOwnershipService } from '@/core/business/services/BusinessOwnershipService';
-import { logger } from '@/shared/utils/logger';
 import { sanitizeString } from '@/shared/utils/sanitization';
 import type {
   GastronomyProfile,

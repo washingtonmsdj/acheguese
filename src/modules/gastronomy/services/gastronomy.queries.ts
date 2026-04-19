@@ -6,7 +6,7 @@
  *
  * @version 2.0.0 - Extraído de GastronomyQueryService
  */
-
+import { logger } from '@/shared/utils/logger';
 import { supabase } from '@/integrations/supabase';
 import { BusinessService } from '@/core/business/services/BusinessService';
 import type { Business } from '@/core/business/types';
@@ -15,7 +15,6 @@ import { applyTerritoryFilter, type TerritoryFilter } from '@/core/location';
 import { resolveLocationDescendants } from '@/core/location/utils/resolveLocationDescendants';
 import { profileService } from '@/core/profiles/services/ProfileService';
 import { sanitizeForILike } from '@/shared/utils/sqlSanitization';
-import { logger } from '@/shared/utils/logger';
 import {
   isValidId,
   isValidTerritoryParams,

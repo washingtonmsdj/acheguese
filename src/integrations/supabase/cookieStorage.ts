@@ -27,15 +27,12 @@
  * @see https://supabase.com/docs/guides/auth/server-side/creating-a-client
  * @see middleware.ts - Server-side cookie management
  */
-
 import type { SupportedStorage } from '@supabase/supabase-js';
 import { SECURE_COOKIE_CONFIG, AUTH_COOKIE_PREFIX } from '@/config/security.config';
-
 /**
  * Configuração de cookies seguros (importada do SSOT)
  */
 const COOKIE_OPTIONS = SECURE_COOKIE_CONFIG;
-
 /**
  * Utilitário para manipulação segura de cookies
  */

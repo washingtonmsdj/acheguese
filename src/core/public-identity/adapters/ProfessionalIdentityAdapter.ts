@@ -7,7 +7,7 @@
  * RESPONSABILIDADE: Boundary específica - toda persistência e consulta de professional
  * Entity ID Canônico: professional_data.id (PK da tabela)
  */
-
+import { logger } from '@/shared/utils/logger';
 import { ProfessionalService } from '@/core/professional/services/ProfessionalService';
 import { ProfessionalIdentityPolicy } from '../policies/ProfessionalIdentityPolicy';
 import type { IdentityAdapter } from '../domain/IdentityAdapter';
@@ -18,7 +18,6 @@ import type {
   IdentityChangeRecord,
   CooldownResult,
 } from '../domain/types';
-import { logger } from '@/shared/utils/logger';
 
 export class ProfessionalIdentityAdapter implements IdentityAdapter {
   readonly entityType: EntityType = 'professional';

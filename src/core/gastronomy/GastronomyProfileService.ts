@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * GastronomyProfileService — SSOT canônico do vertical Gastronomia
  *
@@ -10,7 +9,7 @@
  * - Validação de elegibilidade
  * - Verificação de existência
  */
-
+import { logger } from '@/shared/utils/logger';
 import { supabase } from '@/integrations/supabase';
 import { isEligibleForVertical } from '@/core/verticals/config';
 import type { BusinessCategory } from '@/core/business/types/Business';
@@ -19,7 +18,6 @@ import type {
   CreateGastronomyProfileInput,
   UpdateGastronomyProfileInput,
 } from './types';
-import { logger } from '@/shared/utils/logger';
 import { sanitizeString } from '@/shared/utils/sanitization';
 
 // ── Tipos de resultado ────────────────────────────────────────────────────────

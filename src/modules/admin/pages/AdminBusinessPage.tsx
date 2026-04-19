@@ -1,3 +1,4 @@
+import { logger } from '@/shared/utils/logger';
 import React from "react";
 /**
  * 🏆 ADMIN BUSINESS PAGE - SSOT COMPLIANT
@@ -10,7 +11,6 @@ import React from "react";
  *
  * @version 1.0.0 - SSOT Migration
  */
-
 import { useState, useEffect, useMemo } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import {
@@ -48,7 +48,6 @@ import type {
 import { ADMIN_BUSINESS_FIELDS } from "@/modules/admin/config/adminBusinessFields";
 import { ADMIN_BUSINESS_ACTIONS } from "@/modules/admin/config/adminBusinessActions";
 import { ADMIN_BUSINESS_FILTERS } from "@/modules/admin/config/adminBusinessFilters";
-
 interface FieldConfig {
   key: string;
   label: string;
@@ -128,7 +127,7 @@ export default function AdminBusinessPage() {
           : result.businesses.length,
       );
     } catch (error) {
-      console.error("Erro ao carregar empresas:", error);
+      logger.error("Erro ao carregar empresas:", error);
       toast({
         title: "Erro ao carregar empresas",
         description:
@@ -271,7 +270,7 @@ export default function AdminBusinessPage() {
       setDialogOpen(false);
       await loadBusinesses(0, false); // Reload data
     } catch (error) {
-      console.error("Erro ao salvar empresa:", error);
+      logger.error("Erro ao salvar empresa:", error);
       toast({
         title: "Erro ao salvar empresa",
         description:
@@ -297,7 +296,7 @@ export default function AdminBusinessPage() {
       toast({ title: "Empresa excluída com sucesso" });
       await loadBusinesses(0, false); // Reload data
     } catch (error) {
-      console.error("Erro ao excluir empresa:", error);
+      logger.error("Erro ao excluir empresa:", error);
       toast({
         title: "Erro ao excluir empresa",
         description:
@@ -339,7 +338,7 @@ export default function AdminBusinessPage() {
         title: `${action.label}: ${action.getNextValue ? String(newValue) : newValue ? "Ativado" : "Desativado"}`,
       });
     } catch (error) {
-      console.error("Erro ao atualizar empresa:", error);
+      logger.error("Erro ao atualizar empresa:", error);
       toast({
         title: "Erro ao atualizar empresa",
         description:

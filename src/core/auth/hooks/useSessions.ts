@@ -3,7 +3,7 @@
  * 
  * Hook para gerenciar sessões de usuários
  */
-
+import { logger } from '@/shared/utils/logger';
 import { useState, useEffect } from 'react';
 import { 
   sessionService, 
@@ -11,7 +11,6 @@ import {
   type SessionAnomaly,
   type SessionStats 
 } from '../services/SessionService';
-import { logger } from '@/shared/utils/logger';
 
 export function useSessions() {
   const [sessions, setSessions] = useState<UserSession[]>([]);

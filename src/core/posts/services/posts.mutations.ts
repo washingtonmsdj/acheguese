@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * ✏️ POSTS MUTATIONS - SSOT v2.0
  *

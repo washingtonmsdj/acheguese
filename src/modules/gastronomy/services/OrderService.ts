@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * OrderService — SSOT canônico de pedidos
  *
@@ -12,8 +11,8 @@
  * - Validações de negócio
  */
 
-import { supabase } from '@/integrations/supabase';
 import { logger } from '@/shared/utils/logger';
+import { supabase } from '@/integrations/supabase';
 
 // ── Tipos ─────────────────────────────────────────────────────────────────
 

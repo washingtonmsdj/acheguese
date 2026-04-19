@@ -4,14 +4,13 @@
  * Hook robusto para geolocalizacao.
  * Usa GeolocationService como SSOT e expoe API estavel para consumidores.
  */
-
+import { logger } from '@/shared/utils/logger';
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { GeolocationService } from '@/core/maps/services/GeolocationService';
 import type {
   GeolocationCoords,
   GeolocationResult,
 } from '@/core/maps/services/GeolocationService';
-import { logger } from '@/shared/utils/logger';
 
 export type { GeolocationCoords } from '@/core/maps/services/GeolocationService';
 

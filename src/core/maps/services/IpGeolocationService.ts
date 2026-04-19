@@ -7,8 +7,8 @@
  * @module core/maps/services
  */
 
+import { logger } from '@/shared/utils/logger';
 import type { Coordinates } from "../types/core";
-
 export interface IpGeolocationResult {
   coordinates: Coordinates;
   city?: string;
@@ -50,7 +50,7 @@ export class IpGeolocationService {
       const result = await this.fetchFromIpApiCo();
       if (result) return result;
     } catch (error) {
-      console.warn("ipapi.co falhou:", error);
+      logger.warn("ipapi.co falhou:", error);
     }
 
     // Tentar ip-api.com como fallback
@@ -58,7 +58,7 @@ export class IpGeolocationService {
       const result = await this.fetchFromIpApi();
       if (result) return result;
     } catch (error) {
-      console.warn("ip-api.com falhou:", error);
+      logger.warn("ip-api.com falhou:", error);
     }
 
     // Fallback final: Salvador, BA

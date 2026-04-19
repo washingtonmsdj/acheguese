@@ -6,11 +6,10 @@
  * - Bloquear funcionalidades quando inativo
  * - Fornecer configuração do módulo
  */
-
+import { logger } from '@/shared/utils/logger';
 import { useState, useEffect, useCallback } from 'react';
 import { businessRolloutService } from '../services';
 import { useBusinessLocation } from './useBusinessLocation';
-import { logger } from '@/shared/utils/logger';
 import type { EffectiveRollout } from '@/core/rollout/types';
 
 export function useBusinessRollout() {

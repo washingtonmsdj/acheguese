@@ -5,7 +5,7 @@
  * Usa profile ativo em vez de user_id
  * Usa useAppUrls para navegação (sem hardcoded URLs)
  */
-
+import { logger } from '@/shared/utils/logger';
 import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@/core/auth/hooks/useAuth";
 import { useToast } from "@/shared/hooks/use-toast";
@@ -15,7 +15,6 @@ import { useCommunityInteractions } from "@/core/community/hooks/useCommunityInt
 import { profileService } from "@/core/profiles/services/ProfileService";
 import { ReviewsService } from "@/core/reviews/services/ReviewsService";
 import type { ReviewWithProfiles } from "@/shared/types/reviews";
-
 export interface ProfessionalReview {
   id: string;
   rating: number;
@@ -85,7 +84,7 @@ export function useProfessionalReviews(professionalId?: string) {
           }
         }
       } catch (error) {
-        console.error("Error loading professional reviews:", error);
+        logger.error("Error loading professional reviews:", error);
       }
 
       setLoading(false);

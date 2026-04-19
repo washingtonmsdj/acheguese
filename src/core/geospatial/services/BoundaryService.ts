@@ -1,15 +1,14 @@
-// @ts-nocheck
-Ôªø/**
+/**
  * BoundaryService
  *
- * SSOT para boundaries geogr√°ficos do produto.
+ * SSOT para boundaries geogr·ficos do produto.
  *
  * Regras arquiteturais:
  * - Boundaries territoriais saem do SSOT `locations` e, quando habilitado, da tabela `location_boundaries`.
- * - Nominatim n√£o √© usado para pol√≠gonos, bounds ou defini√ß√£o territorial.
- * - Quando n√£o existir pol√≠gono cadastrado, o servi√ßo retorna somente o centro can√¥nico do territ√≥rio.
+ * - Nominatim n„o È usado para polÌgonos, bounds ou definiÁ„o territorial.
+ * - Quando n„o existir polÌgono cadastrado, o serviÁo retorna somente o centro canÙnico do territÛrio.
  */
-
+import { logger } from '@/shared/utils/logger';
 import { supabase } from '@/integrations/supabase';
 import {
   createLocationRepository,
@@ -17,7 +16,6 @@ import {
   type Location,
 } from '@/core/location';
 import { LocationStatus, LocationType } from '@/core/location/types';
-import { logger } from '@/shared/utils/logger';
 
 export interface BoundsResult {
   rings: [number, number][][];

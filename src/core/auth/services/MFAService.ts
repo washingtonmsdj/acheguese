@@ -5,8 +5,8 @@
  * Suporta TOTP (Time-based One-Time Password)
  */
 
-import { supabase } from '@/integrations/supabase';
 import { logger } from '@/shared/utils/logger';
+import { supabase } from '@/integrations/supabase';
 
 export interface MFAStatus {
   mfaEnabled: boolean;

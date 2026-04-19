@@ -4,7 +4,6 @@
  * SSOT para configurações de dispatch
  * Centraliza todas as regras de negócio e configurações
  */
-
 import { logger } from '@/shared/utils/logger';
 import type {
   DispatchStrategy,

@@ -7,7 +7,7 @@
  * 
  * ══════════════════════════════════════════════════════════════════════════
  */
-
+import { logger } from '@/shared/utils/logger';
 import { useState } from 'react';
 import { 
   CreditCard, 
@@ -27,7 +27,6 @@ import { useBilling } from '@/core/billing/hooks/useBilling';
 import { useSubscription } from '@/core/billing/hooks/useSubscription';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-
 export default function SubscriptionManagementPage() {
   const { redirectToPortal, plans } = useBilling();
   const {
@@ -50,7 +49,7 @@ export default function SubscriptionManagementPage() {
     try {
       await redirectToPortal(`${window.location.origin}/settings/subscription`);
     } catch (error) {
-      console.error('Error redirecting to portal:', error);
+      logger.error('Error redirecting to portal:', error);
     } finally {
       setIsRedirecting(false);
     }

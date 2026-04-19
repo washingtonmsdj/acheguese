@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * ✏️ NOVO CLASSIFICADO PAGE — Criação Completa Multi-Step
  *
@@ -8,7 +7,7 @@
  * ✅ Responsivo mobile-first + desktop
  * ✅ Design system tokens
  */
-
+import { logger } from '@/shared/utils/logger';
 import React, { useState, useRef, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
@@ -50,7 +49,6 @@ import { PriceStep } from "@/modules/classifieds/components/create/PriceStep";
 import { CategoryFieldsStep } from "@/modules/classifieds/components/create/CategoryFieldsStep";
 import { ContactStep } from "@/modules/classifieds/components/create/ContactStep";
 import { PreviewStep } from "@/modules/classifieds/components/create/PreviewStep";
-
 // ─── Constants ────────────────────────────────────────────────
 
 const CONDITIONS = [
@@ -298,7 +296,7 @@ export default function NovoClassificadoPage() {
       toast.success("Anúncio publicado com sucesso! 🎉");
       navigate(appUrls.classifieds.list);
     } catch (error) {
-      console.error("Erro ao publicar:", error);
+      logger.error("Erro ao publicar:", error);
       toast.error("Erro ao publicar anúncio. Tente novamente.");
     } finally {
       setPublishing(false);

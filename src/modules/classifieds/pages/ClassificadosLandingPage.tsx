@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * ClassificadosLandingPage — Vitrine item-first de classificados
  * 

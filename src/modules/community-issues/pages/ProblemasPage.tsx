@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * ProblemasPage — Página dedicada a problemas urbanos
  * Rota: /comunidade/problemas

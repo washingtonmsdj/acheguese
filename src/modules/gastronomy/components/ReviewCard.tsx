@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * ReviewCard - Card de avaliação individual
  */

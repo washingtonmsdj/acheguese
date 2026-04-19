@@ -8,8 +8,8 @@
  * ══════════════════════════════════════════════════════════════════════════
  */
 
+import { logger } from '@/shared/utils/logger';
 import { supabase } from '@/integrations/supabase/client';
-
 export interface UserSubscription {
   id: string;
   user_id: string;
@@ -60,7 +60,7 @@ export class SubscriptionService {
         // No subscription found
         return null;
       }
-      console.error('Error fetching subscription:', error);
+      logger.error('Error fetching subscription:', error);
       throw error;
     }
 
@@ -82,7 +82,7 @@ export class SubscriptionService {
     });
 
     if (error) {
-      console.error('Error fetching active subscription:', error);
+      logger.error('Error fetching active subscription:', error);
       throw error;
     }
 
@@ -105,7 +105,7 @@ export class SubscriptionService {
     });
 
     if (error) {
-      console.error('Error checking plan:', error);
+      logger.error('Error checking plan:', error);
       return false;
     }
 
@@ -128,7 +128,7 @@ export class SubscriptionService {
     });
 
     if (error) {
-      console.error('Error checking feature:', error);
+      logger.error('Error checking feature:', error);
       return false;
     }
 
@@ -151,7 +151,7 @@ export class SubscriptionService {
     });
 
     if (error) {
-      console.error('Error getting entitlement limit:', error);
+      logger.error('Error getting entitlement limit:', error);
       return 0;
     }
 

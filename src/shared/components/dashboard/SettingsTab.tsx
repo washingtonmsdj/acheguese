@@ -6,7 +6,7 @@
  * 
  * SSOT: Usa componentes e constantes centralizadas.
  */
-
+import { logger } from '@/shared/utils/logger';
 import { useState, useEffect } from "react";
 import { Card, CardContent } from "@/shared/components/ui/card";
 import { Button } from "@/shared/components/ui/button";
@@ -29,7 +29,6 @@ import {
 import { cn } from "@/shared/utils/cn";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase";
-
 // Seções
 import {
   BasicInfoSection,
@@ -40,7 +39,6 @@ import {
   OpeningHoursSection,
   AdvancedSection,
 } from "@/core/business/components/settings/sections";
-
 interface SettingsTabProps {
   businessId: string;
   onEditBusiness?: () => void;
@@ -195,7 +193,7 @@ export function SettingsTab({ businessId, onEditBusiness }: SettingsTabProps) {
         });
       }
     } catch (error) {
-      console.error("Erro ao carregar dados da empresa:", error);
+      logger.error("Erro ao carregar dados da empresa:", error);
       toast.error("Erro ao carregar dados da empresa");
     } finally {
       setLoading(false);
@@ -260,7 +258,7 @@ export function SettingsTab({ businessId, onEditBusiness }: SettingsTabProps) {
       toast.success("Imagem enviada com sucesso!");
       return publicUrl;
     } catch (error) {
-      console.error("Erro ao fazer upload:", error);
+      logger.error("Erro ao fazer upload:", error);
       toast.error("Erro ao enviar imagem");
       throw error;
     }
@@ -331,7 +329,7 @@ export function SettingsTab({ businessId, onEditBusiness }: SettingsTabProps) {
       toast.success("Alterações salvas com sucesso!");
       setHasChanges(false);
     } catch (error) {
-      console.error("Erro ao salvar:", error);
+      logger.error("Erro ao salvar:", error);
       toast.error("Erro ao salvar alterações");
     } finally {
       setSaving(false);

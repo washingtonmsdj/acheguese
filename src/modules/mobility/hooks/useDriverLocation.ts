@@ -6,12 +6,11 @@
  * Mantém interface compatível para consumidores existentes.
  * Internamente delega para useTracking do core.
  */
-
+import { logger } from '@/shared/utils/logger';
 import { useState, useEffect, useCallback } from "react";
 import { routingService } from '@/core/routing';
 import { trackingService } from '@/core/tracking';
 import type { TrackingPosition } from '@/core/tracking';
-
 interface DriverLocationData {
   latitude: number;
   longitude: number;
@@ -111,7 +110,7 @@ export function useDriverLocation(
           } as any);
         }
       } catch (error) {
-        console.error('[useDriverLocation] Erro ao calcular ETA via routing real:', error);
+        logger.error('[useDriverLocation] Erro ao calcular ETA via routing real:', error);
         // GATE 1: Fallback removido - ETA deve usar rota real sempre
         // Se routing falhar, não mostrar ETA ao invés de mostrar valor errado
         setEta(null);

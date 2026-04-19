@@ -3,11 +3,10 @@
  * Hook para gerenciar vínculos entre perfis
  * Fonte: ARQUITETURA_MULTI_PERFIL_DEFINITIVA.md v3.0
  */
-
+import { logger } from '@/shared/utils/logger';
 import { useState, useEffect, useCallback } from 'react';
 import { ProfileLinksService } from '../services/multi-profile';
 import type { ProfileLink, LinkType } from '../services/multi-profile/types';
-
 export function useProfileLinks(profileId: string | null) {
   const [links, setLinks] = useState<ProfileLink[]>([]);
   const [loading, setLoading] = useState(false);
@@ -26,7 +25,7 @@ export function useProfileLinks(profileId: string | null) {
       const data = await ProfileLinksService.getProfileLinks(profileId);
       setLinks(data);
     } catch (err: any) {
-      console.error('Error loading profile links:', err);
+      logger.error('Error loading profile links:', err);
       setError(err.message || 'Failed to load links');
     } finally {
       setLoading(false);

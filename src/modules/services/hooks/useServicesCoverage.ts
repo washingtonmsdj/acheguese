@@ -6,12 +6,11 @@
  * - Obter áreas de cobertura
  * - Validar cobertura para agendamentos
  */
-
+import { logger } from '@/shared/utils/logger';
 import { useState, useEffect, useCallback } from 'react';
 import { servicesCoverageService } from '../services';
 import { useServicesLocation } from './useServicesLocation';
 import type { ServiceArea, GetCoverageOutput } from '@/core/coverage';
-
 export function useServicesCoverage(professionalId?: string) {
   const [hasCoverage, setHasCoverage] = useState<boolean>(false);
   const [coverageDetails, setCoverageDetails] = useState<GetCoverageOutput | null>(null);
@@ -40,7 +39,7 @@ export function useServicesCoverage(professionalId?: string) {
       const message = await servicesCoverageService.getCoverageMessage(professionalId);
       setCoverageMessage(message);
     } catch (error) {
-      console.error('Error checking services coverage:', error);
+      logger.error('Error checking services coverage:', error);
       setHasCoverage(false);
       setCoverageDetails(null);
       setCoverageMessage('Erro ao verificar cobertura');
@@ -58,7 +57,7 @@ export function useServicesCoverage(professionalId?: string) {
       const areas = await servicesCoverageService.getProfessionalServiceAreas(professionalId);
       setServiceAreas(areas);
     } catch (error) {
-      console.error('Error loading service areas:', error);
+      logger.error('Error loading service areas:', error);
       setServiceAreas([]);
     }
   }, [professionalId]);

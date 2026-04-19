@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * PROFILE SERVICE - FASE 3
  * Service layer SSOT para operações de perfil
@@ -10,7 +9,7 @@
  * - Authenticated usa RLS via queries diretas
  * - Anon usa apenas views públicas
  */
-
+import { logger } from '@/shared/utils/logger';
 import { supabase } from '@/integrations/supabase/client';
 import { SessionService } from '@/core/session/services/SessionService';
 import { BusinessService } from './businessService';
@@ -31,7 +30,6 @@ import type {
   ProfessionalData,
   DriverData,
 } from './types';
-
 export class MultiProfileService {
   private static getEditablePersonalHandle(
     profile?: Pick<Profile, 'profile_type' | 'handle'> | null,
@@ -207,7 +205,7 @@ export class MultiProfileService {
 
       return (data || []) as Profile[];
     } catch (error: any) {
-      console.error('Error fetching my profiles:', error);
+      logger.error('Error fetching my profiles:', error);
       return [];
     }
   }
@@ -227,7 +225,7 @@ export class MultiProfileService {
 
       return data as Profile;
     } catch (error: any) {
-      console.error('Error fetching profile by id:', error);
+      logger.error('Error fetching profile by id:', error);
       return null;
     }
   }
@@ -247,7 +245,7 @@ export class MultiProfileService {
 
       return data;
     } catch (error: any) {
-      console.error('Error fetching public profile:', error);
+      logger.error('Error fetching public profile:', error);
       return null;
     }
   }
@@ -267,7 +265,7 @@ export class MultiProfileService {
 
       return data;
     } catch (error: any) {
-      console.error('Error fetching public business profile:', error);
+      logger.error('Error fetching public business profile:', error);
       return null;
     }
   }
@@ -287,7 +285,7 @@ export class MultiProfileService {
 
       return data;
     } catch (error: any) {
-      console.error('Error fetching public professional profile:', error);
+      logger.error('Error fetching public professional profile:', error);
       return null;
     }
   }
@@ -307,7 +305,7 @@ export class MultiProfileService {
 
       return data;
     } catch (error: any) {
-      console.error('Error fetching public driver profile:', error);
+      logger.error('Error fetching public driver profile:', error);
       return null;
     }
   }

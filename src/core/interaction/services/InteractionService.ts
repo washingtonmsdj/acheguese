@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * Interaction Service - GATE 4A FASE 2
  *
@@ -7,12 +6,11 @@
  * - Saved Posts → SocialInteractionsService
  * - Comments → CommentService
  */
-
+import { logger } from '@/shared/utils/logger';
 import { InteractionError } from "../../../services/interaction/types";
 import { SocialInteractionsService } from "@/core/social/services/SocialInteractionsService";
 import { commentService } from "@/core/comments/services";
 import type { Comment } from "@/core/comments/types";
-
 class InteractionService {
   /**
    * ✅ SSOT - Delega para SocialInteractionsService
@@ -72,7 +70,7 @@ class InteractionService {
     data: { content: string },
   ): Promise<Comment | null> {
     if (process.env.NODE_ENV === 'development') {
-      console.warn(
+      logger.warn(
         '⚠️  InteractionService.addComment() is deprecated.\n' +
         '   Use commentService.createComment() instead.\n' +
         '   This method will be removed in v2.0.0'
@@ -91,7 +89,7 @@ class InteractionService {
    */
   async deleteComment(commentId: string): Promise<void> {
     if (process.env.NODE_ENV === 'development') {
-      console.warn(
+      logger.warn(
         '⚠️  InteractionService.deleteComment() is deprecated.\n' +
         '   Use commentService.deleteComment() instead.\n' +
         '   This method will be removed in v2.0.0'

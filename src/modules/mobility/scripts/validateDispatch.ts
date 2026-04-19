@@ -1,12 +1,10 @@
-// @ts-nocheck
 /**
  * Script de Validação - Dispatch Automático
  * 
  * Valida que todos os componentes do dispatch automático estão funcionando
  */
-
-import { supabase } from '@/integrations/supabase';
 import { logger } from '@/shared/utils/logger';
+import { supabase } from '@/integrations/supabase';
 import { AutoDispatchService } from '../core/AutoDispatchService';
 import { RideOperationalService } from '../core/RideOperationalService';
 import { RideDispatchService } from '../core/RideDispatchService';

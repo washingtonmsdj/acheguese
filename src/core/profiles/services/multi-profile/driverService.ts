@@ -1,13 +1,11 @@
-// @ts-nocheck
 /**
  * DRIVER SERVICE - FASE 3
  * Service layer para operações de perfis driver
  * Fonte: ARQUITETURA_MULTI_PERFIL_DEFINITIVA.md v3.0
  */
-
+import { logger } from '@/shared/utils/logger';
 import { supabase } from '@/integrations/supabase/client';
 import type { DriverData, ServiceResponse } from './types';
-
 export class DriverService {
   /**
    * Buscar driver data (via RLS)
@@ -24,7 +22,7 @@ export class DriverService {
 
       return data as DriverData;
     } catch (error: any) {
-      console.error('Error fetching driver data:', error);
+      logger.error('Error fetching driver data:', error);
       return null;
     }
   }

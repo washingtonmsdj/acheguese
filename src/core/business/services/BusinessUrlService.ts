@@ -10,10 +10,9 @@
  *   Canônica pública:  /empresas/:uf/:cidade/:slug
  *   Premium (curta):   /p/:slug  → redirect 308 para canônica
  */
-
+import { logger } from '@/shared/utils/logger';
 import { supabase } from '@/integrations/supabase';
 import { PublicIdentityService } from '@/core/public-identity/services/PublicIdentityService';
-import { logger } from '@/shared/utils/logger';
 
 // ─── Tipos ────────────────────────────────────────────────────────────────────
 

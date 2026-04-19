@@ -6,11 +6,10 @@
  * 
  * SSOT: Consome BillingPlanService
  */
-
+import { logger } from '@/shared/utils/logger';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { BillingPlanService, type BillingPlan } from '../services/BillingPlanService';
 import { toast } from 'sonner';
-import { logger } from '@/shared/utils/logger';
 
 // ══════════════════════════════════════════════════════════════════════════
 // QUERY KEYS

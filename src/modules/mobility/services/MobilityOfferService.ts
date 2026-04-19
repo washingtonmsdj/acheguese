@@ -7,9 +7,8 @@
  * - Open Board: mÃºltiplos motoristas
  * - Reservation Board: agendamentos
  */
-
-import { supabase } from '@/integrations/supabase';
 import { logger } from '@/shared/utils/logger';
+import { supabase } from '@/integrations/supabase';
 import { profileService } from '@/core/profiles/services/ProfileService';
 import { MobilityDispatchConfigService } from './MobilityDispatchConfigService';
 import { DriverAvailabilityService } from './DriverAvailabilityService';

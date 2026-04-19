@@ -1,14 +1,12 @@
-// @ts-nocheck
 /**
  * TerritorialHighlightRepositorySupabase
  *
  * Implementação Supabase — pronta para produção após migration 13.
  */
-
+import { logger } from '@/shared/utils/logger';
 import { supabase } from '@/integrations/supabase';
 import type { ITerritorialHighlightRepository } from './ITerritorialHighlightRepository';
 import type { TerritorialHighlight, CreateHighlightInput, HighlightQuery } from './types';
-
 const db: any = supabase;
 
 export class TerritorialHighlightRepositorySupabase
@@ -43,7 +41,7 @@ export class TerritorialHighlightRepositorySupabase
 
     const { data, error } = await q;
     if (error) {
-      console.warn('⚠️ TerritorialHighlightRepositorySupabase.listForTerritory:', error.message);
+      logger.warn('⚠️ TerritorialHighlightRepositorySupabase.listForTerritory:', error.message);
       return [];
     }
     return (data ?? []) as TerritorialHighlight[];

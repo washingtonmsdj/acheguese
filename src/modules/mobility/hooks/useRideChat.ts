@@ -3,10 +3,9 @@
  * 
  * ✅ SSOT: Database → ChatService → Hook → Component
  */
-
+import { logger } from '@/shared/utils/logger';
 import { useState, useEffect, useCallback } from "react";
 import { ChatService, type ChatMessage, type RideChat } from "../services/ChatService";
-
 interface UseRideChatOptions {
   rideId: string;
   userId: string;
@@ -40,7 +39,7 @@ export function useRideChat({ rideId, userId, enabled = true }: UseRideChatOptio
           setMessages(messagesData || []);
         }
       } catch (err: any) {
-        console.error("Erro ao carregar chat:", err);
+        logger.error("Erro ao carregar chat:", err);
         setError(err.message || "Erro ao carregar chat");
       } finally {
         setLoading(false);
@@ -69,7 +68,7 @@ export function useRideChat({ rideId, userId, enabled = true }: UseRideChatOptio
         // Adicionar mensagem localmente
         setMessages((prev) => [...prev, data]);
       } catch (err: any) {
-        console.error("Erro ao enviar mensagem:", err);
+        logger.error("Erro ao enviar mensagem:", err);
         setError(err.message || "Erro ao enviar mensagem");
         throw err;
       } finally {
@@ -86,7 +85,7 @@ export function useRideChat({ rideId, userId, enabled = true }: UseRideChatOptio
     try {
       await ChatService.markMessagesAsRead(chat.id, userId);
     } catch (err) {
-      console.error("Erro ao marcar como lido:", err);
+      logger.error("Erro ao marcar como lido:", err);
     }
   }, [chat, userId]);
 

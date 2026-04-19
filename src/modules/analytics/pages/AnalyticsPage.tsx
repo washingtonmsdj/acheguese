@@ -4,7 +4,7 @@
  * Exibe dashboards do Power BI para visualização de métricas e dados.
  * Inclui controle de acesso e suporte para múltiplos dashboards.
  */
-
+import { logger } from '@/shared/utils/logger';
 import React from 'react';
 import { PowerBIEmbed } from '@/shared/components/powerbi';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/components/ui/tabs';
@@ -12,7 +12,6 @@ import { Alert, AlertDescription, AlertTitle } from '@/shared/components/ui/aler
 import { AlertCircle, BarChart3 } from 'lucide-react';
 import { useAnalyticsAccess } from '../hooks/useAnalyticsAccess';
 import { POWERBI_DASHBOARDS } from '../config/dashboards.config';
-import { logger } from '@/shared/utils/logger';
 
 export function AnalyticsPage() {
   const { hasAccess, getAvailableDashboards } = useAnalyticsAccess();

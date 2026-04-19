@@ -10,12 +10,11 @@
  * @module mobility/hooks/useAddressInput
  * @version 2.0.0 (AAA)
  */
-
+import { logger } from '@/shared/utils/logger';
 import { useState, useCallback } from 'react';
 import { toast } from 'sonner';
 import { geocodingService } from '@/core/maps/services/GeocodingService';
 import type { GeolocationCoordinates } from '@/modules/mobility/hooks/useGeolocation';
-import { logger } from '@/shared/utils/logger';
 
 export interface AddressInputResult {
   text: string;
@@ -63,7 +62,7 @@ interface UseAddressInputOptions {
  * ```tsx
  * const origin = useAddressInput({
  *   onValidated: (result) => {
- *     console.log('Origem validada:', result);
+ *     logger.debug('Origem validada:', result);
  *   },
  *   autoGeocodeOnBlur: true,
  * });

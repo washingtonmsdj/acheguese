@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * Script: apply-motoboy-migration
  * Aplica os campos de motoboy em ride_requests e driver_data

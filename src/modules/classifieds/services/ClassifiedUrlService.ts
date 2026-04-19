@@ -20,8 +20,8 @@
  * @version 1.0.0
  */
 
-import { supabase } from '@/integrations/supabase/client';
 import { logger } from '@/shared/utils/logger';
+import { supabase } from '@/integrations/supabase/client';
 
 // ─── Tipos ────────────────────────────────────────────────────────────────────
 

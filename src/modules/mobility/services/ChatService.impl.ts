@@ -11,9 +11,8 @@
  * 
  * @module modules/mobility/services
  */
-
-import { supabase } from '@/integrations/supabase';
 import { logger } from '@/shared/utils/logger';
+import { supabase } from '@/integrations/supabase';
 import * as chatQueries from './chat.queries';
 import * as chatMutations from './chat.mutations';
 

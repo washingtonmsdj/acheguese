@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * TerritorialResolver - Helper compartilhado para resolução territorial
  * 
@@ -6,8 +5,8 @@
  * em múltiplos services.
  */
 
-import { createLocationRepository } from '@/core/location/repositories/createLocationRepository';
 import { logger } from '@/shared/utils/logger';
+import { createLocationRepository } from '@/core/location/repositories/createLocationRepository';
 
 export interface CityResolution {
   cityId: string;

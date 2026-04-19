@@ -1,3 +1,4 @@
+import { logger } from '@/shared/utils/logger';
 import React, { useState, useEffect } from "react";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
@@ -5,7 +6,6 @@ import { Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { AuthService } from "@/core/auth/services/AuthService";
 import { useAuth } from "@/core/auth/hooks/useAuth";
-
 export default function SimpleLoginPage() {
   const { user } = useAuth();
   const [email, setEmail] = useState("");
@@ -26,8 +26,8 @@ export default function SimpleLoginPage() {
     setError("");
     setLoading(true);
 
-    console.log("🔄 Iniciando login...");
-    console.log("📧 Email:", email);
+    logger.debug("🔄 Iniciando login...");
+    logger.debug("📧 Email:", email);
 
     try {
       const timeoutPromise = new Promise((_, reject) => {
@@ -39,17 +39,17 @@ export default function SimpleLoginPage() {
         timeoutPromise
       ]);
 
-      console.log("✅ Login bem-sucedido!");
+      logger.debug("✅ Login bem-sucedido!");
 
       // Aguardar um pouco para garantir que a sessão foi criada
       await new Promise(resolve => setTimeout(resolve, 1000));
 
       // Recarregar a página para garantir que o SessionProvider pegue a sessão
-      console.log("🔄 Redirecionando...");
+      logger.debug("🔄 Redirecionando...");
       window.location.href = "/";
 
     } catch (err: any) {
-      console.error("❌ Erro:", err);
+      logger.error("❌ Erro:", err);
       setError(err.message || "Erro ao fazer login");
       setLoading(false);
     }

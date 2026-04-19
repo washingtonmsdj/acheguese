@@ -3,11 +3,10 @@
  *
  * Padrão: Banco → Service → Hook → Component
  */
-
+import { logger } from '@/shared/utils/logger';
 import { useState, useEffect, useCallback } from 'react';
 import { safetyService } from '../instance';
 import type { EmergencyContact, CreateEmergencyContactInput, UpdateEmergencyContactInput } from '../types';
-import { logger } from '@/shared/utils/logger';
 
 export function useEmergencyContacts(profileId?: string) {
   const [contacts, setContacts] = useState<EmergencyContact[]>([]);

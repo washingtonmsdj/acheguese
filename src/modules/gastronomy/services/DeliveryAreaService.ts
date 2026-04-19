@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * DeliveryAreaService — SSOT canônico de áreas de entrega
  *
@@ -12,8 +11,8 @@
  * - Cálculo de taxa e tempo
  */
 
-import { supabase } from '@/integrations/supabase';
 import { logger } from '@/shared/utils/logger';
+import { supabase } from '@/integrations/supabase';
 
 // ── Tipos ─────────────────────────────────────────────────────────────────
 

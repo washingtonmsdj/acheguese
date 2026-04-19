@@ -11,9 +11,8 @@
  * - Auditoria
  * - Relatórios
  */
-
-import { supabase } from '@/integrations/supabase';
 import { logger } from '@/shared/utils/logger';
+import { supabase } from '@/integrations/supabase';
 import type { AdminSupabaseClient } from '../types/adminDatabase.types';
 
 const supabaseTyped = supabase as unknown as AdminSupabaseClient;

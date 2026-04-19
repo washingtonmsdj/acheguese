@@ -7,12 +7,11 @@
  * - Bloquear funcionalidades quando inativo
  * - Fornecer configuração do módulo
  */
-
+import { logger } from '@/shared/utils/logger';
 import { useState, useEffect, useCallback } from 'react';
 import { classifiedsRolloutService } from '../services';
 import { useClassifiedsLocation } from './useClassifiedsLocation';
 import type { EffectiveRollout } from '@/core/rollout/types';
-
 export function useClassifiedsRollout() {
   const [isActive, setIsActive] = useState<boolean>(false);
   const [rollout, setRollout] = useState<EffectiveRollout | null>(null);
@@ -46,7 +45,7 @@ export function useClassifiedsRollout() {
       const access = await classifiedsRolloutService.checkAccess();
       setAccessCheck(access);
     } catch (error) {
-      console.error('Error checking classifieds rollout:', error);
+      logger.error('Error checking classifieds rollout:', error);
       setIsActive(false);
       setRollout(null);
       setConfig(null);

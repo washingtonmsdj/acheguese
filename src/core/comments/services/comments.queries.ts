@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * Comment queries — SSOT canônico
  *

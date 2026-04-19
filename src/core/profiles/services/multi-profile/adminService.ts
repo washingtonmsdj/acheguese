@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * ADMIN SERVICE - FASE 7
  * Service para operações administrativas em perfis
@@ -9,11 +8,10 @@
  * - Edge functions validam admin_users
  * - Edge functions chamam RPCs via service_role
  */
-
+import { logger } from '@/shared/utils/logger';
 import { supabase } from '@/integrations/supabase/client';
 import { SessionService } from '@/core/session/services/SessionService';
 import type { ServiceResponse } from './types';
-
 export class AdminService {
   /**
    * Verificar perfil (via edge function)
@@ -170,7 +168,7 @@ export class AdminService {
 
       return data || [];
     } catch (error: any) {
-      console.error('Error fetching audit log:', error);
+      logger.error('Error fetching audit log:', error);
       return [];
     }
   }

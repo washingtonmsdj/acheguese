@@ -11,12 +11,11 @@
  * @see src/config/reactQuery.config.ts - Configuração de cache
  * @version 1.0.0
  */
-
+import { logger } from '@/shared/utils/logger';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect } from 'react';
 import { QUERY_KEYS, CACHE_STRATEGIES, createQueryOptions } from '@/config/reactQuery.config';
 import { supabase } from '@/integrations/supabase/client';
-
 /**
  * Location type
  */
@@ -43,7 +42,7 @@ class LocationService {
       .order('name');
 
     if (error) {
-      console.error('Error fetching locations:', error);
+      logger.error('Error fetching locations:', error);
       throw error;
     }
 
@@ -61,7 +60,7 @@ class LocationService {
       .single();
 
     if (error) {
-      console.error('Error fetching location:', error);
+      logger.error('Error fetching location:', error);
       throw error;
     }
 
@@ -79,7 +78,7 @@ class LocationService {
       .order('name');
 
     if (error) {
-      console.error('Error fetching locations by type:', error);
+      logger.error('Error fetching locations by type:', error);
       throw error;
     }
 

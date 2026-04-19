@@ -3,12 +3,11 @@
  * Usa TanStack Query para cache e estado
  * ✅ REFATORADO: Usa MobilityFacade (SSOT) em vez de MobilityService legado
  */
-
+import { logger } from '@/shared/utils/logger';
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { MobilityFacade } from "@/modules/mobility/services/MobilityService";
 import { toast } from "sonner";
 import { TIMEOUTS } from "@/modules/mobility/constants";
-
 // Query Keys
 const MOBILITY_KEYS = {
   rides: (...args: string[]) => ["mobility", "routes", ...args] as string[],
@@ -223,7 +222,7 @@ export function useUpdateDriverLocation() {
     }) => MobilityFacade.updateDriverLocation(driverProfileId, location),
     onError: () => {
       // Falha silenciosa para não interromper a experiência
-      console.warn("Erro ao atualizar localização do motorista");
+      logger.warn("Erro ao atualizar localização do motorista");
     },
   });
 }

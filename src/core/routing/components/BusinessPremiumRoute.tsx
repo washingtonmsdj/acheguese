@@ -13,7 +13,7 @@
  * Decisao arquitetural: /p/:slug fica reservado para premium business.
  * Conteudo de perfil publico agora e canonico em /u/:username.
  */
-
+import { logger } from '@/shared/utils/logger';
 import { useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
@@ -21,7 +21,6 @@ import { BusinessUrlService } from '@/core/business/services/BusinessUrlService'
 import { profileService } from '@/core/profiles/services';
 import { buildPublicProfileUrl } from '@/core/profiles/utils/publicProfileUrl';
 import { isReservedSlug } from '@/core/routing/reservedSlugs';
-import { logger } from '@/shared/utils/logger';
 
 export default function BusinessPremiumRoute() {
   const { slug } = useParams<{ slug: string }>();

@@ -1,3 +1,4 @@
+import { logger } from '@/shared/utils/logger';
 /**
  * SSOT - Image Optimization Utilities
  * 
@@ -149,7 +150,6 @@ export async function compressImage(
 ): Promise<File> {
   // Lazy load compression library
   const imageCompression = await import('browser-image-compression');
-
   const {
     maxSizeMB = 1,
     maxWidthOrHeight = 1920,
@@ -167,7 +167,7 @@ export async function compressImage(
 
     return compressedFile;
   } catch (error) {
-    console.error('Error compressing image:', error);
+    logger.error('Error compressing image:', error);
     return file; // Return original if compression fails
   }
 }

@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * MetricsService - SSOT para métricas e estatísticas
  * 

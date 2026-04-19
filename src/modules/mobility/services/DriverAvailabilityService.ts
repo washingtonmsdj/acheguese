@@ -15,9 +15,8 @@
  * - Stale busy NÃO libera automaticamente
  * - active_ride_id amarrado à corrida
  */
-
-import { supabase as supabaseClient, createClient } from '@/integrations/supabase';
 import { logger } from '@/shared/utils/logger';
+import { supabase as supabaseClient, createClient } from '@/integrations/supabase';
 import { getDriverDataByProfileIds } from './mobility.queries';
 
 // Função para obter o client correto (service role em testes, normal no browser)
@@ -124,7 +123,7 @@ export class DriverAvailabilityService {
       return { success: true };
     } catch (error) {
       // Log detalhado do erro
-      console.error('❌ [ERROR] DriverAvailabilityService.goOnline |', {
+      logger.error('❌ [ERROR] DriverAvailabilityService.goOnline |', {
         driverProfileId,
         error: error,
         message: (error as any)?.message,
@@ -279,7 +278,7 @@ export class DriverAvailabilityService {
       return { success: true };
     } catch (error) {
       // Log detalhado do erro
-      console.error('❌ [ERROR] DriverAvailabilityService.setBusy |', {
+      logger.error('❌ [ERROR] DriverAvailabilityService.setBusy |', {
         driverProfileId,
         rideId,
         rideMode,
@@ -422,7 +421,7 @@ export class DriverAvailabilityService {
       const now = Date.now();
       const threshold = new Date(now - staleThresholdMinutes * 60 * 1000);
 
-      console.log('🔍 [DEBUG] markStaleDrivers |', {
+      logger.debug('🔍 [DEBUG] markStaleDrivers |', {
         now: new Date(now).toISOString(),
         threshold: threshold.toISOString(),
         staleThresholdMinutes,
@@ -436,7 +435,7 @@ export class DriverAvailabilityService {
         .not('last_seen_at', 'is', null) // GATE 5: Garantir que last_seen_at não é NULL
         .lt('last_seen_at', threshold.toISOString());
 
-      console.log('🔍 [DEBUG] markStaleDrivers query result |', {
+      logger.debug('🔍 [DEBUG] markStaleDrivers query result |', {
         found: staleDrivers?.length || 0,
         error: error?.message,
         drivers: staleDrivers?.map(d => ({
@@ -471,7 +470,7 @@ export class DriverAvailabilityService {
 
           if (data && data.length > 0) {
             markedOffline++;
-            console.log('✅ [DEBUG] Driver marked offline |', {
+            logger.debug('✅ [DEBUG] Driver marked offline |', {
               profileId: driver.profile_id,
               lastSeen: driver.last_seen_at,
             });
@@ -483,7 +482,7 @@ export class DriverAvailabilityService {
         } else if (driver.active_ride_id) {
           // BUSY: apenas registrar problema
           staleBusy++;
-          console.log('⚠️ [DEBUG] Driver stale but busy |', {
+          logger.debug('⚠️ [DEBUG] Driver stale but busy |', {
             profileId: driver.profile_id,
             rideId: driver.active_ride_id,
             lastSeen: driver.last_seen_at,
@@ -498,7 +497,7 @@ export class DriverAvailabilityService {
         }
       }
 
-      console.log('📊 [DEBUG] markStaleDrivers result |', {
+      logger.debug('📊 [DEBUG] markStaleDrivers result |', {
         markedOffline,
         staleBusy,
       });
@@ -511,7 +510,7 @@ export class DriverAvailabilityService {
 
       return { markedOffline, staleBusy };
     } catch (error) {
-      console.error('❌ [ERROR] markStaleDrivers |', error);
+      logger.error('❌ [ERROR] markStaleDrivers |', error);
       logger.error('DriverAvailabilityService.markStaleDrivers', error as Error);
       return { markedOffline: 0, staleBusy: 0 };
     }
@@ -596,7 +595,7 @@ export class DriverAvailabilityService {
 
       return available;
     } catch (error) {
-      console.error('❌ [ERROR] DriverAvailabilityService.findAvailableDrivers |', {
+      logger.error('❌ [ERROR] DriverAvailabilityService.findAvailableDrivers |', {
         error: error,
         message: (error as any)?.message,
         code: (error as any)?.code,

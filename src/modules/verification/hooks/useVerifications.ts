@@ -3,11 +3,10 @@
  * 
  * Integra com VerificationService (SSOT)
  */
-
+import { logger } from '@/shared/utils/logger';
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { VerificationService } from "../services/VerificationService";
-
 const QUERY_KEYS = {
   pending: ["verifications", "pending"] as const,
   verified: ["verifications", "verified"] as const,
@@ -53,7 +52,7 @@ export function useVerifications() {
     },
     onError: (error) => {
       toast.error("Erro ao aprovar verificação");
-      console.error(error);
+      logger.error(error);
     },
   });
 
@@ -68,7 +67,7 @@ export function useVerifications() {
     },
     onError: (error) => {
       toast.error("Erro ao rejeitar verificação");
-      console.error(error);
+      logger.error(error);
     },
   });
 
@@ -82,7 +81,7 @@ export function useVerifications() {
     },
     onError: (error) => {
       toast.error("Erro ao revogar verificação");
-      console.error(error);
+      logger.error(error);
     },
   });
 

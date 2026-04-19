@@ -15,10 +15,9 @@
  * 
  * @module core/maps/services
  */
-
+import { logger } from '@/shared/utils/logger';
 import type { MapMarker, MapEntityType, MapEntityStatus, Coordinates } from '../types';
 import { isValidCoordinates } from '../types';
-
 // ============================================
 // INPUT TYPES (Entidades do domínio)
 // ============================================
@@ -64,7 +63,7 @@ export class MapEntityProjectionService {
     // Validar coordenadas
     const coordinates = this.extractCoordinates(entity);
     if (!coordinates) {
-      console.warn(`[MapEntityProjection] Entity ${entity.id} has invalid coordinates`);
+      logger.warn(`[MapEntityProjection] Entity ${entity.id} has invalid coordinates`);
       return null;
     }
 

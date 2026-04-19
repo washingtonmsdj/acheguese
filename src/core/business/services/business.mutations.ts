@@ -3,13 +3,12 @@
  *
  * Responsabilidade unica: criar, atualizar e deletar dados.
  */
-
+import { logger } from '@/shared/utils/logger';
 import { supabase } from "@/integrations/supabase";
 import { PublicIdentityService } from "@/core/public-identity";
 import { AddressService } from "@/core/address/services/AddressService";
 import { BusinessHoursService } from "@/core/business/BusinessHoursService";
 import type { AdminSupabaseClient } from "@/core/admin/types/adminDatabase.types";
-
 const supabaseTyped = supabase as unknown as AdminSupabaseClient;
 import { callRPC } from "@/core/supabase/services/supabaseHelpers";
 import {
@@ -33,7 +32,6 @@ import type {
   Product,
   UpdateBusinessInput,
 } from "../types";
-
 const BUSINESS_SELECT = `
   *,
   profiles(id, name, avatar_url, phone, whatsapp),
@@ -282,7 +280,6 @@ export async function createBusiness(
   try {
     const validatedInput = sanitizeAndValidateInput(input, false) as CreateBusinessInput;
     const { BusinessUrlService } = await import("./BusinessUrlService");
-
     let slug = validatedInput.slug;
     if (slug) {
       const availability = await PublicIdentityService.checkAvailability({
@@ -595,6 +592,6 @@ export async function incrementViews(businessId: string): Promise<void> {
       business_id: businessId,
     });
   } catch (error) {
-    console.warn("Failed to increment views:", error);
+    logger.warn("Failed to increment views:", error);
   }
 }

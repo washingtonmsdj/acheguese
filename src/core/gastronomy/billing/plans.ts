@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * GASTRONOMY PLANS — SSOT de Planos e Configurações
  *

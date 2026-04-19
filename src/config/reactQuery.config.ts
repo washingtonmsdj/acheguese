@@ -9,10 +9,9 @@
  * @version 1.0.0
  * @author Kiro AI
  */
-
+import { logger } from '@/shared/utils/logger';
 import { QueryClient, DefaultOptions } from '@tanstack/react-query';
 import { captureSentryMessage, addSentryBreadcrumb } from '@/shared/config/sentry.config';
-import { logger } from '@/shared/utils/logger';
 
 /**
  * Cache strategies por tipo de dado

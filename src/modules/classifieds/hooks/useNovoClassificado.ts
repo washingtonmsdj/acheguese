@@ -1,3 +1,4 @@
+import { logger } from '@/shared/utils/logger';
 import { useState, useRef, useCallback, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useSessionContext } from "@/core/session";
@@ -5,7 +6,6 @@ import { useAppUrls } from "@/core/routing/hooks/useAppUrls";
 import { toast } from "sonner";
 import { ClassifiedsFacade } from "@/modules/classifieds/services";
 import { useClassifiedsLocation } from "./useClassifiedsLocation";
-
 /**
  * ✅ SSOT COMPLIANT - Hook useNovoClassificado migrado
  * Usa useAppUrls para navegação (sem hardcoded URLs)
@@ -86,7 +86,7 @@ export function useNovoClassificado() {
       toast.success("Classificado publicado!");
       navigate(appUrls.classifieds.list);
     } catch (error) {
-      console.error("Error publishing classified:", error);
+      logger.error("Error publishing classified:", error);
       toast.error("Erro ao publicar classificado");
     } finally {
       setPublishing(false);

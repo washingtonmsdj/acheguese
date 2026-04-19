@@ -228,7 +228,7 @@ export class AuthService {
     if (error) {
       // Log apenas em desenvolvimento
       if (import.meta.env.DEV) {
-        console.error('❌ Erro no login:', {
+        logger.error('❌ Erro no login:', {
           message: error.message,
           status: error.status,
           code: error.code,
@@ -356,7 +356,7 @@ export class AuthService {
       if (error) throw error;
       return true;
     } catch (error) {
-      console.error("Error deleting image:", error);
+      logger.error("Error deleting image:", error);
       return false;
     }
   }

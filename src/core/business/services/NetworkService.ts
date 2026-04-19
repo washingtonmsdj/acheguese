@@ -4,9 +4,8 @@
  * Gerencia brand_hub, branches e conversão standalone → rede.
  * Não cria migrations. Usa apenas as colunas já existentes no banco.
  */
-
-import { supabase } from '@/integrations/supabase';
 import { logger } from '@/shared/utils/logger';
+import { supabase } from '@/integrations/supabase';
 import type { BusinessDataRecord } from '../types';
 import type { AdminSupabaseClient } from '@/core/admin/types/adminDatabase.types';
 

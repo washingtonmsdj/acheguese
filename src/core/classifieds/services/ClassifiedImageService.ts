@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * 📸 SSOT: CLASSIFIED IMAGE SERVICE
  *
@@ -11,10 +10,9 @@
  * - Validação de tipo e tamanho
  * - Otimização de performance
  */
-
+import { logger } from '@/shared/utils/logger';
 import { supabase } from "@/integrations/supabase/client";
 import imageCompression from "browser-image-compression";
-
 // ─── Constants ────────────────────────────────────────────────
 
 const STORAGE_BUCKET = "classified-images";
@@ -86,7 +84,7 @@ export class ClassifiedImageService {
       const compressed = await imageCompression(file, IMAGE_CONSTRAINTS);
       return compressed;
     } catch (error) {
-      console.error("Erro ao comprimir imagem:", error);
+      logger.error("Erro ao comprimir imagem:", error);
       throw new Error("Falha ao comprimir imagem");
     }
   }
@@ -99,7 +97,7 @@ export class ClassifiedImageService {
       const thumbnail = await imageCompression(file, THUMBNAIL_CONSTRAINTS);
       return thumbnail;
     } catch (error) {
-      console.error("Erro ao gerar thumbnail:", error);
+      logger.error("Erro ao gerar thumbnail:", error);
       throw new Error("Falha ao gerar thumbnail");
     }
   }
@@ -150,7 +148,7 @@ export class ClassifiedImageService {
       });
 
     if (error) {
-      console.error("Erro no upload:", error);
+      logger.error("Erro no upload:", error);
       throw new Error(`Falha no upload: ${error.message}`);
     }
 
@@ -287,7 +285,7 @@ export class ClassifiedImageService {
         .remove([filePath]);
 
       if (imageError) {
-        console.error("Erro ao deletar imagem:", imageError);
+        logger.error("Erro ao deletar imagem:", imageError);
       }
 
       // Deletar thumbnail (substituir /images/ por /thumbnails/)
@@ -297,10 +295,10 @@ export class ClassifiedImageService {
         .remove([thumbnailPath]);
 
       if (thumbError) {
-        console.error("Erro ao deletar thumbnail:", thumbError);
+        logger.error("Erro ao deletar thumbnail:", thumbError);
       }
     } catch (error) {
-      console.error("Erro ao deletar imagem:", error);
+      logger.error("Erro ao deletar imagem:", error);
       throw error;
     }
   }

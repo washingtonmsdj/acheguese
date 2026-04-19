@@ -10,7 +10,7 @@
  * - Nunca acessar user_roles diretamente de components/pages
  * - Sempre usar as funções do banco (has_role, is_admin, etc)
  */
-
+import { logger } from '@/shared/utils/logger';
 import { supabase } from '@/integrations/supabase/client';
 import type {
   AppRole,
@@ -20,7 +20,6 @@ import type {
   RevokeRoleRequest,
   RoleCheckResult
 } from '../types/roles.types';
-
 // ============================================================================
 // ROLE SERVICE
 // ============================================================================
@@ -38,7 +37,7 @@ export class RoleService {
     });
 
     if (error) {
-      console.error('Erro ao verificar role:', error);
+      logger.error('Erro ao verificar role:', error);
       return false;
     }
 
@@ -56,7 +55,7 @@ export class RoleService {
     });
 
     if (error) {
-      console.error('Erro ao verificar admin:', error);
+      logger.error('Erro ao verificar admin:', error);
       return false;
     }
 
@@ -74,7 +73,7 @@ export class RoleService {
     });
 
     if (error) {
-      console.error('Erro ao verificar super admin:', error);
+      logger.error('Erro ao verificar super admin:', error);
       return false;
     }
 
@@ -92,7 +91,7 @@ export class RoleService {
     });
 
     if (error) {
-      console.error('Erro ao buscar roles do usuário:', error);
+      logger.error('Erro ao buscar roles do usuário:', error);
       return [];
     }
 
@@ -113,7 +112,7 @@ export class RoleService {
       .order('granted_at', { ascending: false });
 
     if (error) {
-      console.error('Erro ao buscar detalhes de roles:', error);
+      logger.error('Erro ao buscar detalhes de roles:', error);
       return [];
     }
 
@@ -149,7 +148,7 @@ export class RoleService {
       .single();
 
     if (error) {
-      console.error('Erro ao conceder role:', error);
+      logger.error('Erro ao conceder role:', error);
       return { 
         success: false, 
         error: error.message || 'Erro ao conceder role' 
@@ -201,7 +200,7 @@ export class RoleService {
       .eq('id', existingRole.id);
 
     if (error) {
-      console.error('Erro ao revogar role:', error);
+      logger.error('Erro ao revogar role:', error);
       return { 
         success: false, 
         error: error.message || 'Erro ao revogar role' 
@@ -224,7 +223,7 @@ export class RoleService {
       .order('performed_at', { ascending: false });
 
     if (error) {
-      console.error('Erro ao buscar histórico de roles:', error);
+      logger.error('Erro ao buscar histórico de roles:', error);
       return [];
     }
 
@@ -291,7 +290,7 @@ export class RoleService {
       .order('granted_at', { ascending: false });
 
     if (error) {
-      console.error('Erro ao buscar usuários por role:', error);
+      logger.error('Erro ao buscar usuários por role:', error);
       return [];
     }
 
@@ -311,7 +310,7 @@ export class RoleService {
       .is('revoked_at', null);
 
     if (error) {
-      console.error('Erro ao contar usuários por role:', error);
+      logger.error('Erro ao contar usuários por role:', error);
       return 0;
     }
 

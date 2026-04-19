@@ -10,8 +10,8 @@
  * com campos extras (tags, notas, preferências de notificação).
  */
 
-import { supabase } from '@/integrations/supabase';
 import { logger } from '@/shared/utils/logger';
+import { supabase } from '@/integrations/supabase';
 
 export interface FavoriteBusiness {
   favorite_id: string;

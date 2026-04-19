@@ -1,13 +1,11 @@
-// @ts-nocheck
 /**
  * BUSINESS SERVICE - FASE 3
  * Service layer para operações de perfis business
  * Fonte: ARQUITETURA_MULTI_PERFIL_DEFINITIVA.md v3.0
  */
-
+import { logger } from '@/shared/utils/logger';
 import { supabase } from '@/integrations/supabase/client';
 import type { BusinessData, ServiceResponse } from './types';
-
 export class BusinessService {
   /**
    * Buscar business data (via RLS)
@@ -24,7 +22,7 @@ export class BusinessService {
 
       return data as BusinessData;
     } catch (error: any) {
-      console.error('Error fetching business data:', error);
+      logger.error('Error fetching business data:', error);
       return null;
     }
   }

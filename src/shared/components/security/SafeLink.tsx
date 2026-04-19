@@ -17,14 +17,13 @@
  * @security-critical
  * @ssot src/config/security.config.ts
  */
-
+import { logger } from '@/shared/utils/logger';
 import { AnchorHTMLAttributes, ReactNode } from 'react';
 import { 
   BLOCKED_URL_PROTOCOLS, 
   ALLOWED_URL_PROTOCOLS,
   isURLProtocolSafe 
 } from '@/config/security.config';
-
 interface SafeLinkProps extends Omit<AnchorHTMLAttributes<HTMLAnchorElement>, 'href'> {
   href: string;
   children: ReactNode;
@@ -54,7 +53,7 @@ function isUrlSafe(url: string, allowInternal: boolean): boolean {
     );
     
     if (isBlocked) {
-      console.warn('[SafeLink] Blocked dangerous protocol:', protocol);
+      logger.warn('[SafeLink] Blocked dangerous protocol:', protocol);
       return false;
     }
 
@@ -64,13 +63,13 @@ function isUrlSafe(url: string, allowInternal: boolean): boolean {
     );
     
     if (!isAllowed) {
-      console.warn('[SafeLink] Blocked unknown protocol:', protocol);
+      logger.warn('[SafeLink] Blocked unknown protocol:', protocol);
       return false;
     }
 
     return true;
   } catch {
-    console.warn('[SafeLink] Invalid URL:', url);
+    logger.warn('[SafeLink] Invalid URL:', url);
     return false;
   }
 }

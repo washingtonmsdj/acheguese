@@ -6,11 +6,10 @@
  *
  * Padrão: Banco → Service → Hook → Component
  */
-
+import { logger } from '@/shared/utils/logger';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { safetyService } from '../services/SafetyService';
 import { toast } from 'sonner';
-import { logger } from '@/shared/utils/logger';
 import type { CreateRideShareInput, SharedRideData } from '../types';
 
 export function useRideShare() {

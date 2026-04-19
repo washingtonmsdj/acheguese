@@ -5,8 +5,8 @@
  * Uses Firebase Cloud Messaging (FCM) for delivery.
  */
 
+import { logger } from '@/shared/utils/logger';
 import { supabase } from '@/integrations/supabase/client';
-
 export interface PushSubscription {
   endpoint: string;
   keys: {
@@ -98,7 +98,7 @@ export class PushService {
       );
 
       if (configError || !configData?.vapidPublicKey) {
-        console.error('Error getting push config:', configError);
+        logger.error('Error getting push config:', configError);
         return { success: false, error: 'Failed to get push configuration' };
       }
 
@@ -126,13 +126,13 @@ export class PushService {
       });
 
       if (error) {
-        console.error('Error storing push subscription:', error);
+        logger.error('Error storing push subscription:', error);
         return { success: false, error: error.message };
       }
 
       return { success: true };
     } catch (error) {
-      console.error('Exception subscribing to push:', error);
+      logger.error('Exception subscribing to push:', error);
       return { success: false, error: String(error) };
     }
   }
@@ -159,13 +159,13 @@ export class PushService {
       });
 
       if (error) {
-        console.error('Error removing push subscription:', error);
+        logger.error('Error removing push subscription:', error);
         return { success: false, error: error.message };
       }
 
       return { success: true };
     } catch (error) {
-      console.error('Exception unsubscribing from push:', error);
+      logger.error('Exception unsubscribing from push:', error);
       return { success: false, error: String(error) };
     }
   }
@@ -182,7 +182,7 @@ export class PushService {
       .order('created_at', { ascending: false });
 
     if (error) {
-      console.error('Error fetching push subscriptions:', error);
+      logger.error('Error fetching push subscriptions:', error);
       return [];
     }
 
@@ -205,13 +205,13 @@ export class PushService {
       });
 
       if (error) {
-        console.error('Error sending push notification:', error);
+        logger.error('Error sending push notification:', error);
         return { success: false, error: error.message };
       }
 
       return { success: true };
     } catch (error) {
-      console.error('Exception sending push notification:', error);
+      logger.error('Exception sending push notification:', error);
       return { success: false, error: String(error) };
     }
   }
@@ -232,13 +232,13 @@ export class PushService {
       });
 
       if (error) {
-        console.error('Error sending bulk push notifications:', error);
+        logger.error('Error sending bulk push notifications:', error);
         return { success: false, error: error.message };
       }
 
       return { success: true };
     } catch (error) {
-      console.error('Exception sending bulk push notifications:', error);
+      logger.error('Exception sending bulk push notifications:', error);
       return { success: false, error: String(error) };
     }
   }

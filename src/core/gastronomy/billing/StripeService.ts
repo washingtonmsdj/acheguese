@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * @deprecated Este arquivo está DEPRECADO para lógica de planos.
  * 
@@ -30,10 +29,9 @@
  * - Error handling: Tratamento robusto de erros
  * - Idempotência: Operações podem ser repetidas sem efeitos colaterais
  */
-
+import { logger } from '@/shared/utils/logger';
 import Stripe from 'stripe';
 import { GastronomyPlanTier } from './types';
-
 // ══════════════════════════════════════════════════════════════════════════
 // CONFIGURAÇÃO
 // ══════════════════════════════════════════════════════════════════════════
@@ -122,7 +120,7 @@ export class GastronomyStripeService {
       return { data: customer, error: null };
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Erro ao criar customer';
-      console.error('[StripeService] Erro ao criar customer:', error);
+      logger.error('[StripeService] Erro ao criar customer:', error);
       return { data: null, error: message };
     }
   }
@@ -146,7 +144,7 @@ export class GastronomyStripeService {
       return { data: customer as Stripe.Customer, error: null };
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Erro ao buscar customer';
-      console.error('[StripeService] Erro ao buscar customer:', error);
+      logger.error('[StripeService] Erro ao buscar customer:', error);
       return { data: null, error: message };
     }
   }
@@ -172,7 +170,7 @@ export class GastronomyStripeService {
       return { data: customer, error: null };
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Erro ao atualizar customer';
-      console.error('[StripeService] Erro ao atualizar customer:', error);
+      logger.error('[StripeService] Erro ao atualizar customer:', error);
       return { data: null, error: message };
     }
   }
@@ -225,7 +223,7 @@ export class GastronomyStripeService {
       return { data: subscription, error: null };
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Erro ao criar assinatura';
-      console.error('[StripeService] Erro ao criar assinatura:', error);
+      logger.error('[StripeService] Erro ao criar assinatura:', error);
       return { data: null, error: message };
     }
   }
@@ -244,7 +242,7 @@ export class GastronomyStripeService {
       return { data: subscription, error: null };
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Erro ao buscar assinatura';
-      console.error('[StripeService] Erro ao buscar assinatura:', error);
+      logger.error('[StripeService] Erro ao buscar assinatura:', error);
       return { data: null, error: message };
     }
   }
@@ -292,7 +290,7 @@ export class GastronomyStripeService {
       return { data: subscription, error: null };
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Erro ao atualizar assinatura';
-      console.error('[StripeService] Erro ao atualizar assinatura:', error);
+      logger.error('[StripeService] Erro ao atualizar assinatura:', error);
       return { data: null, error: message };
     }
   }
@@ -322,7 +320,7 @@ export class GastronomyStripeService {
       }
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Erro ao cancelar assinatura';
-      console.error('[StripeService] Erro ao cancelar assinatura:', error);
+      logger.error('[StripeService] Erro ao cancelar assinatura:', error);
       return { data: null, error: message };
     }
   }
@@ -344,7 +342,7 @@ export class GastronomyStripeService {
       return { data: subscription, error: null };
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Erro ao reativar assinatura';
-      console.error('[StripeService] Erro ao reativar assinatura:', error);
+      logger.error('[StripeService] Erro ao reativar assinatura:', error);
       return { data: null, error: message };
     }
   }
@@ -371,7 +369,7 @@ export class GastronomyStripeService {
       return { data: setupIntent, error: null };
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Erro ao criar setup intent';
-      console.error('[StripeService] Erro ao criar setup intent:', error);
+      logger.error('[StripeService] Erro ao criar setup intent:', error);
       return { data: null, error: message };
     }
   }
@@ -394,7 +392,7 @@ export class GastronomyStripeService {
       return { data: paymentMethods.data, error: null };
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Erro ao listar métodos de pagamento';
-      console.error('[StripeService] Erro ao listar métodos de pagamento:', error);
+      logger.error('[StripeService] Erro ao listar métodos de pagamento:', error);
       return { data: null, error: message };
     }
   }
@@ -420,7 +418,7 @@ export class GastronomyStripeService {
       return { data: customer, error: null };
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Erro ao definir método padrão';
-      console.error('[StripeService] Erro ao definir método padrão:', error);
+      logger.error('[StripeService] Erro ao definir método padrão:', error);
       return { data: null, error: message };
     }
   }
@@ -449,7 +447,7 @@ export class GastronomyStripeService {
       return { data: invoices.data, error: null };
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Erro ao listar faturas';
-      console.error('[StripeService] Erro ao listar faturas:', error);
+      logger.error('[StripeService] Erro ao listar faturas:', error);
       return { data: null, error: message };
     }
   }
@@ -468,7 +466,7 @@ export class GastronomyStripeService {
       return { data: invoice, error: null };
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Erro ao buscar fatura';
-      console.error('[StripeService] Erro ao buscar fatura:', error);
+      logger.error('[StripeService] Erro ao buscar fatura:', error);
       return { data: null, error: message };
     }
   }

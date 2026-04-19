@@ -50,7 +50,7 @@ export async function getBusinesses(
       .limit(1);
 
     if (checkError) {
-      console.warn(
+      logger.warn(
         "⚠️ business_data table not accessible, returning empty array:",
         (checkError as { message?: string }).message,
       );
@@ -126,7 +126,7 @@ export async function getBusinesses(
     const { data, error } = await query;
 
     if (error) {
-      console.warn("⚠️ Error fetching businesses:", (error as { message?: string }).message);
+      logger.warn("⚠️ Error fetching businesses:", (error as { message?: string }).message);
       return [];
     }
 
@@ -162,7 +162,7 @@ export async function getBusinesses(
     return businesses;
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
-    console.warn("⚠️ Unexpected error in getBusinesses:", message);
+    logger.warn("⚠️ Unexpected error in getBusinesses:", message);
     return [];
   }
 }
@@ -202,7 +202,7 @@ export async function getBusinessesList(params: {
       .limit(1);
 
     if (checkResult.error) {
-      console.warn("⚠️ business_data table not accessible:", checkResult.error.message);
+      logger.warn("⚠️ business_data table not accessible:", checkResult.error.message);
       return { businesses: [], nextPage: undefined };
     }
 
@@ -261,7 +261,7 @@ export async function getBusinessesList(params: {
     const { data, error } = await query;
 
     if (error) {
-      console.warn("⚠️ Error fetching businesses list:", (error as { message?: string }).message);
+      logger.warn("⚠️ Error fetching businesses list:", (error as { message?: string }).message);
       return { businesses: [], nextPage: undefined };
     }
 
@@ -294,7 +294,7 @@ export async function getBusinessesList(params: {
     };
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
-    console.warn("⚠️ Unexpected error in getBusinessesList:", message);
+    logger.warn("⚠️ Unexpected error in getBusinessesList:", message);
     return { businesses: [], nextPage: undefined };
   }
 }

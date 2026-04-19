@@ -14,14 +14,13 @@
  * - cidade/bairro/estado nÃ£o entram no sistema a partir do provider externo.
  * - o cadastro depende de `locationData` reconciliado contra `locations`.
  */
-
+import { logger } from '@/shared/utils/logger';
 import {
   locationGeocodingService,
   type LocationPostalCodeLookupResult,
 } from '@/core/location/services/LocationGeocodingService';
 import { createLocationRepository } from '@/core/location/repositories/createLocationRepository';
 import { residenceService } from '@/core/residence/services/ResidenceService';
-import { logger } from '@/shared/utils/logger';
 import { AddressService } from './AddressService';
 import type {
   Address,
@@ -151,7 +150,7 @@ export class ResidentAddressService {
   }
 
   async lookupCep(cep: string): Promise<LocationPostalCodeLookupResult | null> {
-    console.warn(
+    logger.warn(
       'âš ï¸  ResidentAddressService.lookupCep() is deprecated. ' +
         'Use locationGeocodingService.lookupPostalCode() from @/core/location',
     );

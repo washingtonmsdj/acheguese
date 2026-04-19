@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * CoverageService - SSOT para área de cobertura geográfica
  * 
@@ -16,8 +15,8 @@
  * @module core/geospatial/services
  */
 
+import { logger } from '@/shared/utils/logger';
 import { supabase } from '@/integrations/supabase';
-
 // ============================================
 // TYPES
 // ============================================
@@ -96,7 +95,7 @@ export class CoverageService {
    * });
    * 
    * if (result.has_coverage) {
-   *   console.log('Atende sua região!');
+   *   logger.debug('Atende sua região!');
    * }
    * ```
    */
@@ -111,7 +110,7 @@ export class CoverageService {
     });
 
     if (error) {
-      console.error('[CoverageService] checkCoverage error:', error);
+      logger.error('[CoverageService] checkCoverage error:', error);
       throw new Error(`Erro ao verificar cobertura: ${error.message}`);
     }
 
@@ -136,9 +135,9 @@ export class CoverageService {
    * const areas = await coverageService.getCoverageAreas('business', 'biz-123');
    * areas.forEach(area => {
    *   if (area.coverage_type === 'radius') {
-   *     console.log(`Raio de ${area.radius_km} km`);
+   *     logger.debug(`Raio de ${area.radius_km} km`);
    *   } else if (area.coverage_type === 'location') {
-   *     console.log(`Bairro: ${area.location_name}`);
+   *     logger.debug(`Bairro: ${area.location_name}`);
    *   }
    * });
    * ```
@@ -171,7 +170,7 @@ export class CoverageService {
     const shouldFallbackByMessage = errorMessage.includes('sa.is_active');
 
     if (!shouldFallbackToDirectQuery && !shouldFallbackByMessage) {
-      console.error('[CoverageService] getCoverageAreas error:', rpcResult.error);
+      logger.error('[CoverageService] getCoverageAreas error:', rpcResult.error);
       throw new Error(`Erro ao listar áreas de cobertura: ${rpcResult.error.message}`);
     }
 
@@ -185,7 +184,7 @@ export class CoverageService {
       .order('created_at', { ascending: false });
 
     if (error) {
-      console.error('[CoverageService] getCoverageAreas fallback error:', error);
+      logger.error('[CoverageService] getCoverageAreas fallback error:', error);
       throw new Error(`Erro ao listar áreas de cobertura: ${error.message}`);
     }
 
@@ -218,7 +217,7 @@ export class CoverageService {
     });
 
     if (error) {
-      console.error('[CoverageService] addCoverageByRadius error:', error);
+      logger.error('[CoverageService] addCoverageByRadius error:', error);
       throw new Error(`Erro ao adicionar cobertura por raio: ${error.message}`);
     }
 
@@ -245,7 +244,7 @@ export class CoverageService {
     });
 
     if (error) {
-      console.error('[CoverageService] addCoverageByLocation error:', error);
+      logger.error('[CoverageService] addCoverageByLocation error:', error);
       throw new Error(`Erro ao adicionar cobertura por localidade: ${error.message}`);
     }
 
@@ -266,7 +265,7 @@ export class CoverageService {
     });
 
     if (error) {
-      console.error('[CoverageService] removeCoverage error:', error);
+      logger.error('[CoverageService] removeCoverage error:', error);
       throw new Error(`Erro ao remover cobertura: ${error.message}`);
     }
 
@@ -300,7 +299,7 @@ export class CoverageService {
     });
 
     if (error) {
-      console.error('[CoverageService] findEntitiesWithCoverage error:', error);
+      logger.error('[CoverageService] findEntitiesWithCoverage error:', error);
       throw new Error(`Erro ao buscar entidades com cobertura: ${error.message}`);
     }
 
@@ -374,7 +373,7 @@ export class CoverageService {
       .order('created_at', { ascending: false });
 
     if (error) {
-      console.error('[CoverageService] getCoverageAreas fallback error:', error);
+      logger.error('[CoverageService] getCoverageAreas fallback error:', error);
       throw new Error(`Erro ao listar areas de cobertura: ${error.message}`);
     }
 

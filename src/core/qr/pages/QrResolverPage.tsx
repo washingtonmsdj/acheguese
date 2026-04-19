@@ -8,13 +8,12 @@
  * 2. Registrar scan
  * 3. Redirecionar para destino
  */
-
+import { logger } from '@/shared/utils/logger';
 import { useEffect, useState } from 'react';
 import { useParams, Navigate } from 'react-router-dom';
 import { QrCodeService } from '../QrCodeService';
 import { DeviceType } from '../types';
 import { Loader2 } from 'lucide-react';
-
 export function QrResolverPage() {
   const { token } = useParams<{ token: string }>();
   const [resolvedUrl, setResolvedUrl] = useState<string | null>(null);
@@ -53,7 +52,7 @@ export function QrResolverPage() {
             referrer: document.referrer || null,
             resolved_url: destinationUrl,
           }).catch(err => {
-            console.error('Erro ao registrar scan:', err);
+            logger.error('Erro ao registrar scan:', err);
             // Não bloqueia o redirect
           });
         }
@@ -61,7 +60,7 @@ export function QrResolverPage() {
         // Redirecionar
         setResolvedUrl(destinationUrl);
       } catch (err) {
-        console.error('Erro ao resolver QR Code:', err);
+        logger.error('Erro ao resolver QR Code:', err);
         setError('Erro ao processar QR Code');
       }
     }

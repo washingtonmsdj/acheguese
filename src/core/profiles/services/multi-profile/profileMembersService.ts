@@ -1,14 +1,12 @@
-// @ts-nocheck
 /**
  * PROFILE MEMBERS SERVICE - FASE 3
  * Service layer para gestão de membros de perfis
  * Fonte: ARQUITETURA_MULTI_PERFIL_DEFINITIVA.md v3.0
  */
-
+import { logger } from '@/shared/utils/logger';
 import { supabase } from '@/integrations/supabase/client';
 import { SessionService } from '@/core/session/services/SessionService';
 import type { ProfileMember, ProfileRole, ServiceResponse } from './types';
-
 export class ProfileMembersService {
   /**
    * Listar membros de um perfil (via RLS)
@@ -25,7 +23,7 @@ export class ProfileMembersService {
 
       return (data || []) as ProfileMember[];
     } catch (error: any) {
-      console.error('Error fetching profile members:', error);
+      logger.error('Error fetching profile members:', error);
       return [];
     }
   }

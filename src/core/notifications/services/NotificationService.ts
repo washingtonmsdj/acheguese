@@ -8,8 +8,8 @@
  * ══════════════════════════════════════════════════════════════════════════
  */
 
+import { logger } from '@/shared/utils/logger';
 import { supabase } from '@/integrations/supabase/client';
-
 export interface Notification {
   id: string;
   user_id: string;
@@ -60,7 +60,7 @@ export class NotificationService {
     });
 
     if (error) {
-      console.error('Error creating notification:', error);
+      logger.error('Error creating notification:', error);
       throw error;
     }
 
@@ -102,7 +102,7 @@ export class NotificationService {
     const { data, error } = await query;
 
     if (error) {
-      console.error('Error fetching notifications:', error);
+      logger.error('Error fetching notifications:', error);
       throw error;
     }
 
@@ -118,7 +118,7 @@ export class NotificationService {
     });
 
     if (error) {
-      console.error('Error marking notification as read:', error);
+      logger.error('Error marking notification as read:', error);
       throw error;
     }
   }
@@ -138,7 +138,7 @@ export class NotificationService {
     });
 
     if (error) {
-      console.error('Error marking all notifications as read:', error);
+      logger.error('Error marking all notifications as read:', error);
       throw error;
     }
 
@@ -155,7 +155,7 @@ export class NotificationService {
       .eq('id', notificationId);
 
     if (error) {
-      console.error('Error deleting notification:', error);
+      logger.error('Error deleting notification:', error);
       throw error;
     }
   }
@@ -175,7 +175,7 @@ export class NotificationService {
     });
 
     if (error) {
-      console.error('Error getting unread count:', error);
+      logger.error('Error getting unread count:', error);
       return 0;
     }
 
@@ -204,7 +204,7 @@ export class NotificationService {
         unread: unreadResult.count || 0,
       };
     } catch (error) {
-      console.error('Error getting notification stats:', error);
+      logger.error('Error getting notification stats:', error);
       return { total: 0, unread: 0 };
     }
   }

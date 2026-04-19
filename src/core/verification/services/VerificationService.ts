@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * VerificationService - SSOT para verificações de perfil
  *

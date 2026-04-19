@@ -127,7 +127,7 @@ export type {
 // ============================================================
 // 🏛️ SSOT v2.0 - FACADE
 // ============================================================
-
+import { logger } from '@/shared/utils/logger';
 import * as BusinessMappers from "./business.mappers";
 import * as BusinessQueries from "./business.queries";
 import * as BusinessMutations from "./business.mutations";
@@ -136,7 +136,6 @@ import * as BusinessLegacy from "./business.legacy";
 import * as BusinessHelpers from "./business.helpers";
 import type { BusinessStats } from "../types";
 import { ReviewsService } from "@/core/reviews/services/ReviewsService";
-
 /**
  * 🏢 BusinessFacade - Interface SSOT unificada v2.0
  *
@@ -246,7 +245,6 @@ export class BusinessService {
    */
   static async getMyReview(businessId: string, userId: string) {
     const { profileService } = await import("@/core/profiles/services/ProfileService");
-    
     const activeProfile = await profileService.getProfileContext(userId);
     if (!activeProfile) return null;
 
@@ -263,7 +261,6 @@ export class BusinessService {
     comment?: string,
   ): Promise<void> {
     const { profileService } = await import("@/core/profiles/services/ProfileService");
-
     const activeProfile = await profileService.getProfileContext(userId);
     if (!activeProfile) {
       throw new Error("Perfil ativo não encontrado");
@@ -284,6 +281,6 @@ export class BusinessService {
    * @deprecated Cache removido - usar React Query invalidation
    */
   static clearCache(): void {
-    console.warn("BusinessService.clearCache() foi removido. Use React Query invalidation.");
+    logger.warn("BusinessService.clearCache() foi removido. Use React Query invalidation.");
   }
 }

@@ -1,4 +1,3 @@
-// @ts-nocheck
 ﻿import { SessionService } from "@/core/session/services/SessionService";
 import { supabase } from "@/integrations/supabase";
 import type {

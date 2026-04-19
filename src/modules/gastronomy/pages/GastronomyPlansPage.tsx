@@ -9,14 +9,13 @@
  *
  * SSOT: Usa PLANS do core/billing
  */
-
+import { logger } from '@/shared/utils/logger';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useBusinessSubscription, PLANS, PlanTier } from '@/core/billing';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/shared/components/ui/card';
 import { Button } from '@/shared/components/ui/button';
 import { Badge } from '@/shared/components/ui/badge';
 import { Crown, Zap, Check, ArrowLeft } from 'lucide-react';
-
 export default function GastronomyPlansPage() {
   const { businessId } = useParams<{ businessId: string }>();
   const navigate = useNavigate();
@@ -36,7 +35,7 @@ export default function GastronomyPlansPage() {
 
   const handleUpgrade = (targetPlan: PlanTier) => {
     // TODO: Integrar com Stripe/gateway de pagamento
-    console.log('Upgrade para:', targetPlan);
+    logger.debug('Upgrade para:', targetPlan);
     alert(`Upgrade para ${targetPlan} será implementado em breve!`);
   };
 

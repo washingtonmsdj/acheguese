@@ -13,7 +13,7 @@
  * />
  * ```
  */
-
+import { logger } from '@/shared/utils/logger';
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/components/ui/card';
 import { Button } from '@/shared/components/ui/button';
@@ -35,7 +35,6 @@ import { useQrCode } from '../hooks/useQrCode';
 import { QrImageGenerator } from '../QrImageGenerator';
 import { useBusinessSubscription, EntitlementsService } from '@/core/billing';
 import type { QrEntityType, QrStyleVariant, QrDestinationVariant } from '../types';
-
 // ══════════════════════════════════════════════════════════════════════════
 // TYPES
 // ══════════════════════════════════════════════════════════════════════════
@@ -151,7 +150,7 @@ export function QrCodeWidget({
       });
       setQrImageUrl(dataUrl);
     } catch (error) {
-      console.error('Erro ao gerar imagem QR:', error);
+      logger.error('Erro ao gerar imagem QR:', error);
       toast.error('Erro ao gerar imagem do QR Code');
     } finally {
       setIsGeneratingImage(false);
@@ -166,7 +165,7 @@ export function QrCodeWidget({
       await create();
       toast.success('QR Code criado com sucesso!');
     } catch (error) {
-      console.error('Erro ao criar QR Code:', error);
+      logger.error('Erro ao criar QR Code:', error);
     }
   };
   
@@ -179,7 +178,7 @@ export function QrCodeWidget({
       setQrImageUrl(null); // Força regeneração da imagem
       toast.success('Token regenerado! QR Code atualizado.');
     } catch (error) {
-      console.error('Erro ao regenerar token:', error);
+      logger.error('Erro ao regenerar token:', error);
     }
   };
   
@@ -194,7 +193,7 @@ export function QrCodeWidget({
         await activate();
       }
     } catch (error) {
-      console.error('Erro ao alterar status:', error);
+      logger.error('Erro ao alterar status:', error);
     }
   };
   
@@ -214,7 +213,7 @@ export function QrCodeWidget({
       QrImageGenerator.downloadImage(dataUrl, `qr-code-${entityType}-${entityId}.png`);
       toast.success('QR Code baixado!');
     } catch (error) {
-      console.error('Erro ao baixar PNG:', error);
+      logger.error('Erro ao baixar PNG:', error);
       toast.error('Erro ao baixar imagem');
     }
   };
@@ -242,7 +241,7 @@ export function QrCodeWidget({
       QrImageGenerator.downloadSVG(svg, `qr-code-${entityType}-${entityId}.svg`);
       toast.success('QR Code SVG baixado!');
     } catch (error) {
-      console.error('Erro ao baixar SVG:', error);
+      logger.error('Erro ao baixar SVG:', error);
       toast.error('Erro ao baixar SVG');
     }
   };
@@ -257,7 +256,7 @@ export function QrCodeWidget({
       await QrImageGenerator.copyToClipboard(qrUrl);
       toast.success('Link copiado!');
     } catch (error) {
-      console.error('Erro ao copiar link:', error);
+      logger.error('Erro ao copiar link:', error);
       toast.error('Erro ao copiar link');
     }
   };
