@@ -115,10 +115,12 @@ Criar:
 10. `src/core/ai/services/AISemanticSearchService.ts`
 11. `src/core/ai/services/AIRecommendationService.ts`
 12. `src/core/ai/services/AIModerationAssistService.ts`
-13. `src/core/ai/hooks/useSemanticSearch.ts`
-14. `src/core/ai/hooks/useAIRecommendations.ts`
-15. `src/core/ai/hooks/useAIModerationAssist.ts`
-16. `src/core/ai/constants/ai.constants.ts`
+13. `src/core/ai/services/AIBehaviorProfileService.ts`
+14. `src/core/ai/hooks/useSemanticSearch.ts`
+15. `src/core/ai/hooks/useAIRecommendations.ts`
+16. `src/core/ai/hooks/useAIModerationAssist.ts`
+17. `src/core/ai/hooks/usePersonalizedSuggestions.ts`
+18. `src/core/ai/constants/ai.constants.ts`
 
 Criar edge functions:
 
@@ -168,6 +170,12 @@ Criar edge functions:
 
 1. `ai_moderation_predictions`
 2. `ai_moderation_actions`
+
+### 7.6 Tabelas de Personalizacao Comportamental
+
+1. `ai_personalization_preferences`
+2. `ai_user_behavior_events`
+3. `ai_user_interest_profiles`
 
 ### 7.6 Regras de Banco
 
@@ -305,6 +313,26 @@ Atualizar `src/core/search/services/SearchService.ts` para:
 3. serve recommendation via `AIRecommendationService`;
 4. fallback deterministico se sem dados suficientes.
 
+### 12.3 Aprendizado por comportamento do usuario (aprovado)
+
+Decisao: implementar.  
+Motivo: alto impacto em conversao e retencao, se houver governanca de privacidade.
+
+Regras:
+
+1. coletar apenas eventos necessarios (view, click, add_favorite, add_cart, contato, conversao);
+2. nao coletar dado sensivel para personalizacao;
+3. gerar perfil de interesse derivado (tags/categorias/faixa de preco/territorio), evitando PII bruta;
+4. permitir opt-out de personalizacao a qualquer momento;
+5. respeitar limite de retention e minimizacao de dados;
+6. nunca bloquear acesso do usuario por nao aderir a personalizacao.
+
+### 12.4 Entrada no roadmap (agora vs depois)
+
+1. Entra agora na fundacao: preferencia de personalizacao, trilha de consentimento, coleta minimizada e telemetria.
+2. Entra depois na ativacao: ranking personalizado avancado e experimentos de modelo.
+3. Se consentimento/preferencia nao existir, usar ranking contextual nao personalizado.
+
 ---
 
 ## 13. Moderacao Assistida (Pilar 3)
@@ -387,6 +415,15 @@ Ajudar criacao de conteudo de forma segura e economica.
 2. nenhuma chave no frontend.
 3. rotacao periodica de segredo.
 
+### 16.4 Requisitos de personalizacao sob LGPD
+
+1. registrar base legal do tratamento para personalizacao em `ai_personalization_preferences`;
+2. exibir transparencia clara na politica de privacidade e configuracoes de conta;
+3. permitir revogacao/opt-out sem friccao;
+4. disponibilizar trilha para atendimento dos direitos do titular (acesso/correcao/elimincao/revisao);
+5. manter mecanismo de revisao humana para decisoes automatizadas que afetem interesses do titular;
+6. produzir insumos para RIPD quando risco alto for identificado.
+
 ---
 
 ## 17. Observabilidade (Obrigatorio)
@@ -424,6 +461,7 @@ Done quando:
 2. criar migrations de tabelas core IA.
 3. criar `ai-router` edge function.
 4. implementar quota/cache/telemetry basico.
+5. implementar preferencia de personalizacao (opt-in/opt-out) e trilha de consentimento.
 
 Done quando:
 
@@ -448,11 +486,13 @@ Done quando:
 1. recommendation events/scores.
 2. componentes de recomendacao em gastronomia/servicos.
 3. copiloto de criacao para classificados/vagas/gastronomia.
+4. ativar ranking personalizado por comportamento para usuarios elegiveis.
 
 Done quando:
 
 1. usuarios conseguem usar sugestoes e aceitar/editar;
 2. feedback registrado.
+3. personalizacao respeita opt-out e fallback contextual.
 
 ## Fase 4 - Moderacao + Anomalia
 
@@ -486,6 +526,7 @@ Done quando:
 2. [ ] Criar extension `vector` com protecao idempotente.
 3. [ ] Criar tabelas core IA listadas na secao 7.
 4. [ ] Criar tabelas semanticas listadas na secao 7.
+5. [ ] Criar tabelas de personalizacao (`ai_personalization_preferences`, `ai_user_behavior_events`, `ai_user_interest_profiles`).
 5. [ ] Criar indices (btree + ivfflat/hnsw conforme disponibilidade).
 6. [ ] Habilitar RLS e policies minimas.
 7. [ ] Criar seeds de policy/model aliases.
@@ -515,6 +556,7 @@ Done quando:
 8. [ ] `AISemanticSearchService`: query semantica unificada.
 9. [ ] `AIRecommendationService`: recomendacao basica.
 10. [ ] `AIModerationAssistService`: score de risco.
+11. [ ] `AIBehaviorProfileService`: perfil de interesse derivado + elegibilidade de personalizacao.
 
 ### 19.4 Integracao por Modulo
 
@@ -526,6 +568,7 @@ Done quando:
 6. [ ] Integrar community/moderation com score IA.
 7. [ ] Integrar admin analytics com painel de custo e qualidade.
 8. [ ] Integrar notifications/promotions para copy assistida opcional.
+9. [ ] Integrar preferencia de personalizacao no perfil/conta do usuario.
 
 ### 19.5 Frontend
 
@@ -534,6 +577,7 @@ Done quando:
 3. [ ] Exibir explicacao curta do match (ex.: "similar a blusa rosa, bairro X").
 4. [ ] Adicionar filtros universais (bairro, preco, categoria, distancia).
 5. [ ] Criar estado de fallback quando IA indisponivel.
+6. [ ] Criar controle de configuracao de personalizacao (opt-in/opt-out) acessivel no perfil.
 
 ### 19.6 Testes
 
@@ -544,6 +588,8 @@ Done quando:
 5. [ ] E2E da busca inteligente (consulta natural -> resultado multi-dominio).
 6. [ ] Testes de quota (free vs paid).
 7. [ ] Testes de fallback provider.
+8. [ ] Testes de personalizacao respeitando opt-out.
+9. [ ] Testes de minimizacao de dados no payload enviado ao modelo.
 
 ### 19.7 Observabilidade
 
@@ -567,6 +613,7 @@ Aceitar entrega somente se todos abaixo estiverem verdadeiros:
 7. testes essenciais passando;
 8. gates de arquitetura/SSOT/documentacao passando;
 9. documentacao atualizada em `docs/`.
+10. personalizacao comportamental desativavel por usuario e auditavel.
 
 ---
 

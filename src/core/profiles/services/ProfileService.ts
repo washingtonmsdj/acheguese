@@ -940,10 +940,7 @@ export class ProfileServiceLegacy {
       const { eventService } = await import("@/core/events/services/EventsService");
       const { communityAlertService } = await import("@/core/community-alerts");
       const { communityIssueService } = await import("@/core/community-issues");
-      const {
-        getStats: getNotificationStats,
-        fetchNotifications,
-      } = await import("@/core/notifications/services");
+      const { notificationService } = await import("@/core/notifications/services");
 
       const profileContextPromise = this.getProfileContext(userId);
       const profilesPromise = this.getProfilesByUserId(userId);
@@ -971,8 +968,8 @@ export class ProfileServiceLegacy {
       const issuesCountPromise = communityIssueService
         .getCountByProfile(activeProfile.id)
         .catch(() => 0);
-      const notificationStatsPromise = getNotificationStats(userId).catch(() => null);
-      const notificationFeedPromise = fetchNotifications(userId, { limit: 5 }).catch(() => []);
+      const notificationStatsPromise = notificationService.getStats(userId).catch(() => null);
+      const notificationFeedPromise = notificationService.fetchNotifications(userId, { limit: 5 }).catch(() => []);
       const ridesPromise = getUserRides(userId).catch(() => []);
 
       const [

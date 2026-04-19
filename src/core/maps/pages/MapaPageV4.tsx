@@ -4,7 +4,6 @@
  * SSoTs respeitados:
  * - Território   → useTerritoryFilter(resolved, activeMemberIds)
  * - Businesses   → BusinessService.getBusinesses com territoryFilter
- * - Alertas      → communityAlertService.getByBounds com territoryFilter
  * - Eventos      → EventsService.getByBounds com territoryFilter
  * - Projeção     → mapEntityProjection (MapEntityProjectionService)
  * - Viewport     → useMapViewportFetch + MapLibreAdapter
@@ -22,15 +21,14 @@ import { mapEntityProjection } from '../services/MapEntityProjectionService';
 import { DEFAULT_TILE_STYLE } from '../providers/MapProvider';
 import { MAP_RUNTIME_LAYER_KEYS } from '../config/runtimeConfig';
 import { BusinessService } from '@/core/business/services/BusinessService';
-import { communityAlertService } from '@/modules/community-alerts/services/CommunityAlertService';
 import { EventsService } from '@/core/events/services/EventsService';
+import { communityAlertService } from '@/modules/community-alerts';
 import { useTerritoryFilter, territoryFilterKey, useResolvedUserLocation } from '@/core/location';
 import { useTerritoryPolygon } from '../hooks/useTerritoryPolygon';
 import { useTouristPointsByBounds } from '@/core/tourist-points/hooks/useTouristPointsSpatial';
 import type { BoundingBox, MapMarker, MapViewport } from '../types/core';
 import type { TerritoryFilter } from '@/core/location/types';
 import type { Business } from '@/core/business/types/Business';
-import type { CommunityAlertPublic } from '@/modules/community-alerts/domain/types';
 import type { Event } from '@/core/events/services/EventsService';
 import type { ResolvedTerritory } from '@/core/routing/hooks/useResolveTerritoryFromUrl';
 
@@ -97,32 +95,6 @@ function makeBusinessFetcher(territoryFilter: TerritoryFilter) {
   };
 }
 
-function makeAlertFetcher(territoryFilter: TerritoryFilter) {
-  return async (bounds: BoundingBox): Promise<MapMarker[]> => {
-    try {
-      const alerts = await communityAlertService.getByBounds(bounds, {
-        limit: 200,
-        territoryFilter,
-      });
-      return mapEntityProjection.projectEntities(
-        alerts.map((a: CommunityAlertPublic) => ({
-          id: a.id,
-          name: a.neighborhood_display || a.neighborhood,
-          latitude: a.latitude ?? null,
-          longitude: a.longitude ?? null,
-          status: a.status, // normalizeStatus no MapEntityProjectionService
-          description: a.description,
-          created_at: a.created_at,
-        })),
-        'alert',
-        { includeMetadata: true },
-      );
-    } catch {
-      return [];
-    }
-  };
-}
-
 function makeEventFetcher(territoryFilter: TerritoryFilter) {
   return async (bounds: BoundingBox): Promise<MapMarker[]> => {
     try {
@@ -143,6 +115,44 @@ function makeEventFetcher(territoryFilter: TerritoryFilter) {
         })),
         'event',
         { includeMetadata: true, baseUrl: '/eventos' },
+      );
+    } catch {
+      return [];
+    }
+  };
+}
+
+function makeAlertFetcher(territoryFilter: TerritoryFilter) {
+  return async (bounds: BoundingBox): Promise<MapMarker[]> => {
+    try {
+      // Calcular centro e raio dos bounds
+      const [west, south, east, north] = bounds;
+      const centerLat = (south + north) / 2;
+      const centerLng = (west + east) / 2;
+      
+      // Calcular raio aproximado em metros (distância do centro ao canto)
+      const latDiff = north - south;
+      const lngDiff = east - west;
+      const radiusMeters = Math.sqrt(latDiff * latDiff + lngDiff * lngDiff) * 111000 / 2; // 111km por grau
+      
+      const alerts = await communityAlertService.getBySpatialRadius(
+        [centerLat, centerLng],
+        radiusMeters,
+        { territoryFilter, limit: 50 }
+      );
+      
+      return mapEntityProjection.projectEntities(
+        alerts.map((a) => ({
+          id: a.id,
+          name: `🚨 Alerta em ${a.neighborhood_display || 'região'}`,
+          latitude: a.latitude,
+          longitude: a.longitude,
+          status: 'active',
+          description: a.description,
+          created_at: a.created_at,
+        })),
+        'alert',
+        { includeMetadata: true, baseUrl: '/alertas' },
       );
     } catch {
       return [];
@@ -191,8 +201,8 @@ export default function MapaPageV4({ resolved, activeMemberIds = [] }: MapaPageV
   const fetchers = React.useMemo(
     () => ({
       businesses: makeBusinessFetcher(territoryFilter),
-      alerts: makeAlertFetcher(territoryFilter),
       events: makeEventFetcher(territoryFilter),
+      alerts: makeAlertFetcher(territoryFilter),
     }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [filterKey],

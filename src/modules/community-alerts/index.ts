@@ -14,6 +14,7 @@ export { CreateAlertModal } from "./components/CreateAlertModal";
 // Hooks
 // ============================================================================
 export { useAlerts } from "./hooks/useAlerts";
+export { useAlertsBySpatialRadius } from "./hooks/useAlertsBySpatialRadius";
 export { useCreateAlert } from "./hooks/useCreateAlert";
 export { useAlertReport } from "./hooks/useAlertReport";
 

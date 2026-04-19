@@ -70,9 +70,12 @@ export interface CommunityAlert {
   author_profile_id: string;    // exibido no card
   category: AlertCategory;
   status: AlertStatus;
-  neighborhood: string;         // normalizado para filtros
-  neighborhood_display: string; // label legível
-  city: string;                 // normalizado
+  location_id: string;          // FK para locations (SSOT territorial)
+  latitude: number | null;      // centroide do território (para mapa)
+  longitude: number | null;     // centroide do território (para mapa)
+  neighborhood: string | null;  // DEPRECATED: mantido para display legado
+  neighborhood_display: string | null; // label legível para exibição
+  city: string | null;          // DEPRECATED: mantido para display legado
   description: string;
   seen_personally: boolean;
   started_at_approx: AlertStartedApprox;
@@ -93,25 +96,21 @@ export interface CommunityAlert {
 /**
  * Projeção pública — o que o feed expõe.
  * Campos sensíveis removidos.
- * latitude/longitude incluídos para uso no mapa (migration 20260403000002).
+ * Integrado com SSOT territorial via location_id.
  */
 export type CommunityAlertPublic = Omit<
   CommunityAlert,
-  "author_user_id" | "trust_snapshot" | "removal_reason" | "under_review"
-> & {
-  latitude?: number | null;
-  longitude?: number | null;
-};
+  "author_user_id" | "trust_snapshot" | "removal_reason" | "under_review" | "neighborhood"
+>;
 
 /**
  * Dados necessários para criar um alerta (enviados pelo formulário).
  * author_profile_id e author_user_id são derivados pela RPC — não enviados.
+ * Integrado com SSOT territorial via location_id.
  */
 export interface CreateAlertPayload {
   category: AlertCategory;
-  neighborhood: string;          // label original (RPC normaliza internamente)
-  city: string;
-  location_reference?: string;   // referência aproximada opcional (ex: "próximo ao parque")
+  location_id: string;           // FK para locations (type=district) — SSOT territorial
   description: string;
   seen_personally: boolean;
   started_at_approx: AlertStartedApprox;
@@ -204,9 +203,18 @@ export interface AlertRpcResult {
 // FILTROS DE FEED
 // ============================================================================
 
+/**
+ * Filtros para busca de alertas.
+ * Integrado com SSOT territorial via TerritoryFilter.
+ */
 export interface AlertFeedFilters {
-  city: string;
-  neighborhood?: string;
+  /** Filtro territorial — usar TerritoryFilter do core/location */
+  location_id?: string;          // filtro por bairro único
+  location_ids?: string[];       // filtro por múltiplos bairros (grupo)
   category?: AlertCategory;
   limit?: number;
+  
+  // DEPRECATED: usar location_id/location_ids
+  city?: string;
+  neighborhood?: string;
 }

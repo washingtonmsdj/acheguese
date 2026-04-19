@@ -14,6 +14,7 @@ import {
 import { Helmet } from "react-helmet-async";
 
 import { useSessionContext } from "@/core/session";
+import { usePermission } from "@/core/authorization";
 import { useAppUrls } from "@/core/routing/hooks/useAppUrls";
 import { ResidenceManager } from "@/core/residence/components/ResidenceManager";
 import { ServiceAreasManager } from "@/core/service-areas/components/ServiceAreasManager";
@@ -30,11 +31,11 @@ export function ConfiguracoesPage() {
   const {
     activeProfile,
     isLoading: activeProfileLoading,
-    can,
   } = useSessionContext();
+  const { allowed: canManageServiceAreas } = usePermission("manage", { businessId: activeProfile?.id });
   const [activeTab, setActiveTab] = useState("residencia");
 
-  const isProfessionalProfile = can("manage", "service_areas");
+  const isProfessionalProfile = canManageServiceAreas;
   const territoryLabel =
     [activeProfile?.neighborhood, activeProfile?.city, activeProfile?.state]
       .filter(Boolean)

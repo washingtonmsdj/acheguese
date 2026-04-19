@@ -4,7 +4,8 @@
 
 - [x] Alerta não é tratado como post comum — entidade própria, tabela própria, service próprio
 - [x] Sem categoria livre — 8 categorias fechadas com CHECK constraint no banco
-- [x] Sem localização exata pública — apenas neighborhood_display + city; view pública omite campos sensíveis
+- [x] Integração com SSOT territorial — `location_id` como fonte de verdade
+- [x] Privacidade mantida — coordenadas são centroide do território, não do usuário
 - [x] Expiração automática — expires_at calculado na RPC, job fn_expire_community_alerts() atualiza status
 - [x] Validação backend — RPC SECURITY DEFINER valida elegibilidade, termos proibidos, rate limit, dedup
 - [x] Bloqueio de termos proibidos — tabela alert_blocked_terms consultada na RPC (server-side)
@@ -35,12 +36,13 @@
 
 - [x] 4 tabelas: community_alerts, community_alert_reports, community_alert_audit, alert_notification_queue
 - [x] 1 tabela de config: alert_blocked_terms
-- [x] Índices para feed, rate limit, dedup, expiração, reports, audit, fila
+- [x] Integração territorial: location_id (FK para locations), latitude/longitude (centroide)
+- [x] Índices territoriais: idx_ca_location_status, idx_ca_location_dedup, idx_ca_location_spatial
+- [x] Índices para feed, rate limit, expiração, reports, audit, fila
 - [x] Constraints de consistência lógica (chk_happening_risky, chk_min_informative)
 - [x] Trigger de report_count com under_review sticky
 - [x] Trigger de updated_at automático
-- [x] Função normalize_location_text() IMMUTABLE
-- [x] RPC create_community_alert com SECURITY DEFINER
+- [x] RPC create_community_alert com SECURITY DEFINER (valida location_id, deriva centroide)
 - [x] RLS em todas as tabelas
 - [x] View community_alerts_public sem campos sensíveis
 

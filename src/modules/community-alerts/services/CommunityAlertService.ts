@@ -41,19 +41,29 @@ class CommunityAlertServiceClass {
   // --------------------------------------------------------------------------
 
   /**
-   * Busca alertas ativos para o feed, filtrados por região.
+   * Busca alertas ativos para o feed, filtrados por território.
    * Usa a view pública — campos sensíveis nunca expostos.
+   * Integrado com SSOT territorial via TerritoryFilter.
    */
   async getAlerts(filters: AlertFeedFilters): Promise<CommunityAlertPublic[]> {
     try {
       let query = (supabase as any)
         .from(this.VIEW)
         .select("*")
-        .eq("city", filters.city)
         .order("created_at", { ascending: false });
 
-      if (filters.neighborhood) {
-        query = query.eq("neighborhood_display", filters.neighborhood);
+      // Filtro territorial (novo padrão)
+      if (filters.location_id) {
+        query = query.eq("location_id", filters.location_id);
+      } else if (filters.location_ids && filters.location_ids.length > 0) {
+        query = query.in("location_id", filters.location_ids);
+      }
+      // Fallback legado (deprecated)
+      else if (filters.city) {
+        query = query.eq("city", filters.city);
+        if (filters.neighborhood) {
+          query = query.eq("neighborhood_display", filters.neighborhood);
+        }
       }
 
       if (filters.category) {
@@ -72,6 +82,35 @@ class CommunityAlertServiceClass {
       logger.error("CommunityAlertService.getAlerts", error);
       return [];
     }
+  }
+
+  /**
+   * Busca alertas por território usando TerritoryFilter do SSOT.
+   * Método recomendado para integração com sistema territorial.
+   */
+  async getByTerritory(
+    territoryFilter: import('@/core/location/types').TerritoryFilter,
+    options: { category?: import('../domain/types').AlertCategory; limit?: number } = {}
+  ): Promise<CommunityAlertPublic[]> {
+    const { category, limit = 50 } = options;
+
+    // Converter TerritoryFilter para AlertFeedFilters
+    const filters: AlertFeedFilters = { limit };
+
+    if (territoryFilter.scope === 'location') {
+      filters.location_id = territoryFilter.location_id;
+    } else if (territoryFilter.scope === 'group') {
+      filters.location_ids = territoryFilter.location_ids;
+    } else {
+      // scope: 'none' — não buscar
+      return [];
+    }
+
+    if (category) {
+      filters.category = category;
+    }
+
+    return this.getAlerts(filters);
   }
 
   /**
@@ -290,51 +329,101 @@ class CommunityAlertServiceClass {
   }
 
   // --------------------------------------------------------------------------
-  // BUSCA GEOGRÁFICA
+  // BUSCA ESPACIAL (MAPA)
   // --------------------------------------------------------------------------
 
   /**
-   * Busca alertas dentro de um bounding box geográfico.
-   * Requer que os alertas tenham latitude/longitude preenchidos (migration 20260403000002).
-   *
-   * @param bounds [west, south, east, north]
-   * @param options.limit Parâmetro operacional — revisar após medir volume real por bounds típico
+   * Busca alertas dentro de um raio geográfico (para exibição no mapa).
+   * Usa centroide do território, não localização exata do usuário.
+   * 
+   * @param center [latitude, longitude] do centro da busca
+   * @param radiusMeters Raio em metros
+   * @param options.limit Limite de resultados
+   * @param options.territoryFilter Filtro territorial adicional (opcional)
    */
-  async getByBounds(
-    bounds: [number, number, number, number],
-    options: { limit?: number; territoryFilter?: import('@/core/location/types').TerritoryFilter } = {}
+  async getBySpatialRadius(
+    center: [number, number],
+    radiusMeters: number,
+    options: { 
+      limit?: number; 
+      territoryFilter?: import('@/core/location/types').TerritoryFilter 
+    } = {}
   ): Promise<CommunityAlertPublic[]> {
-    const [west, south, east, north] = bounds;
+    const [centerLat, centerLng] = center;
     const { limit = 200, territoryFilter } = options;
 
     try {
+      // Usar função PostGIS para busca por raio
+      // ST_DWithin com geography calcula distância em metros
       let query = (supabase as any)
         .from(this.VIEW)
         .select('*')
         .not('latitude', 'is', null)
         .not('longitude', 'is', null)
-        .gte('latitude', south)
-        .lte('latitude', north)
-        .gte('longitude', west)
-        .lte('longitude', east)
-        .eq('status', 'open')
+        .eq('status', 'ativo')
         .order('created_at', { ascending: false })
         .limit(limit);
 
-      // Aplicar filtro territorial quando disponível
+      // Aplicar filtro territorial se fornecido
       if (territoryFilter) {
-        const { applyTerritoryFilter } = await import('@/core/location/utils/applyTerritoryFilter');
-        query = applyTerritoryFilter(query, territoryFilter);
+        if (territoryFilter.scope === 'location') {
+          query = query.eq('location_id', territoryFilter.location_id);
+        } else if (territoryFilter.scope === 'group') {
+          query = query.in('location_id', territoryFilter.location_ids);
+        } else {
+          // scope: 'none' — não buscar
+          return [];
+        }
       }
 
       const { data, error } = await query;
 
       if (error) throw error;
-      return (data as CommunityAlertPublic[]) ?? [];
+
+      // Filtrar por raio no client-side (PostGIS via RPC seria mais eficiente,
+      // mas isso funciona para MVP e evita criar RPC adicional)
+      const filtered = (data as CommunityAlertPublic[]).filter((alert) => {
+        if (!alert.latitude || !alert.longitude) return false;
+        
+        const distance = this._calculateDistance(
+          centerLat,
+          centerLng,
+          alert.latitude,
+          alert.longitude
+        );
+        
+        return distance <= radiusMeters;
+      });
+
+      return filtered;
     } catch (error) {
-      logger.error("CommunityAlertService.getByBounds", error);
+      logger.error("CommunityAlertService.getBySpatialRadius", error);
       return [];
     }
+  }
+
+  /**
+   * Calcula distância entre dois pontos usando fórmula de Haversine.
+   * Retorna distância em metros.
+   */
+  private _calculateDistance(
+    lat1: number,
+    lon1: number,
+    lat2: number,
+    lon2: number
+  ): number {
+    const R = 6371e3; // Raio da Terra em metros
+    const φ1 = (lat1 * Math.PI) / 180;
+    const φ2 = (lat2 * Math.PI) / 180;
+    const Δφ = ((lat2 - lat1) * Math.PI) / 180;
+    const Δλ = ((lon2 - lon1) * Math.PI) / 180;
+
+    const a =
+      Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
+      Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+    return R * c;
   }
 }
 
