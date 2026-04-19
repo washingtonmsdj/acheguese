@@ -209,6 +209,31 @@ export class NotificationService {
       supabase.removeChannel(channel);
     };
   }
+
+  // Instance methods for compatibility
+  async fetchNotifications(filters?: NotificationFilters): Promise<Notification[]> {
+    return NotificationService.getUserNotifications(filters);
+  }
+
+  createRealtimeChannel(userId: string, callback: (notification: Notification) => void) {
+    return NotificationService.subscribeToNotifications(userId, callback);
+  }
+
+  async markAsRead(notificationId: string): Promise<void> {
+    return NotificationService.markAsRead(notificationId);
+  }
+
+  async markAllAsRead(): Promise<number> {
+    return NotificationService.markAllAsRead();
+  }
+
+  async getUnreadCount(): Promise<number> {
+    return NotificationService.getUnreadCount();
+  }
+
+  async deleteNotification(notificationId: string): Promise<void> {
+    return NotificationService.deleteNotification(notificationId);
+  }
 }
 
 // Export singleton instance
