@@ -183,6 +183,33 @@ export class NotificationService {
   }
 
   /**
+   * Obtém estatísticas de notificações
+   */
+  static async getStats(userId: string): Promise<{ total: number; unread: number }> {
+    try {
+      const [totalResult, unreadResult] = await Promise.all([
+        supabase
+          .from('notifications')
+          .select('id', { count: 'exact', head: true })
+          .eq('user_id', userId),
+        supabase
+          .from('notifications')
+          .select('id', { count: 'exact', head: true })
+          .eq('user_id', userId)
+          .eq('read', false),
+      ]);
+
+      return {
+        total: totalResult.count || 0,
+        unread: unreadResult.count || 0,
+      };
+    } catch (error) {
+      console.error('Error getting notification stats:', error);
+      return { total: 0, unread: 0 };
+    }
+  }
+
+  /**
    * Subscribe to realtime notifications
    */
   static subscribeToNotifications(
@@ -211,8 +238,17 @@ export class NotificationService {
   }
 
   // Instance methods for compatibility
-  async fetchNotifications(filters?: NotificationFilters): Promise<Notification[]> {
-    return NotificationService.getUserNotifications(filters);
+  async fetchNotifications(userIdOrFilters?: string | NotificationFilters, filters?: NotificationFilters): Promise<Notification[]> {
+    // Support both signatures:
+    // fetchNotifications(filters) - new signature
+    // fetchNotifications(userId, filters) - old signature for compatibility
+    if (typeof userIdOrFilters === 'string') {
+      // Old signature: fetchNotifications(userId, filters)
+      return NotificationService.getUserNotifications(filters);
+    } else {
+      // New signature: fetchNotifications(filters)
+      return NotificationService.getUserNotifications(userIdOrFilters);
+    }
   }
 
   createRealtimeChannel(userId: string, callback: (notification: Notification) => void) {
@@ -229,6 +265,10 @@ export class NotificationService {
 
   async getUnreadCount(): Promise<number> {
     return NotificationService.getUnreadCount();
+  }
+
+  async getStats(userId: string): Promise<{ total: number; unread: number }> {
+    return NotificationService.getStats(userId);
   }
 
   async deleteNotification(notificationId: string): Promise<void> {
