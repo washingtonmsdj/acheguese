@@ -363,27 +363,26 @@ export class MobilityService {
    */
   static async getPassengerRating(profileId: string): Promise<number> {
     try {
-      // TODO: Implementar quando tabela ride_ratings estiver criada
-      // Por enquanto, retornar rating padrão
-      logger.info("MobilityService.getPassengerRating", { 
-        profileId, 
-        note: "Tabela ride_ratings não disponível, retornando rating padrão" 
-      });
-      return 5.0;
-      
-      /* Implementação futura quando tabela existir:
       const { data, error } = await (supabase as any)
         .from("ride_ratings")
         .select("rating")
-        .eq("to_profile_id", profileId);
+        .eq("rated_id", profileId);
 
-      if (error) throw error;
-      
+      if (error) {
+        logger.warn("MobilityService.getPassengerRating - query error", { profileId, error });
+        return 5.0;
+      }
+
       if (!data || data.length === 0) return 5.0;
-      
-      const avg = data.reduce((sum: number, r: any) => sum + r.rating, 0) / data.length;
+
+      const ratings = data
+        .map((row: { rating?: unknown }) => Number(row.rating))
+        .filter((value: number) => Number.isFinite(value));
+
+      if (ratings.length === 0) return 5.0;
+
+      const avg = ratings.reduce((sum: number, value: number) => sum + value, 0) / ratings.length;
       return Number(avg.toFixed(1));
-      */
     } catch (error) {
       logger.error("MobilityService.getPassengerRating", error as Error, { profileId });
       return 5.0;
@@ -924,3 +923,5 @@ class MobilityServiceInstance {
 }
 
 export const mobilityService = new MobilityServiceInstance();
+
+

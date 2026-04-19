@@ -1,11 +1,10 @@
-// @ts-nocheck
 /**
  * User Export Data - Edge Function
- * 
+ *
  * Implementa direito de acesso (Art. 18 LGPD).
  * Exporta todos os dados pessoais do usuário em formato JSON.
- * 
- * @version 1.0.0
+ *
+ * @version 1.1.0
  * @lgpd Art. 18, I - Direito de acesso aos dados
  */
 
@@ -86,7 +85,7 @@ serve(async (req) => {
     });
 
     // Coletar dados de todas as tabelas relacionadas ao usuário
-    const userData: Record<string, any> = {
+  const userData: Record<string, unknown> = {
       export_metadata: {
         user_id: userId,
         email: user.email,
@@ -294,7 +293,7 @@ serve(async (req) => {
       }
     );
 
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('[user-export-data]', error);
     return errorResponse('Export failed', 500, error);
   }

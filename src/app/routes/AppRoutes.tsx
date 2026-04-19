@@ -358,6 +358,7 @@ export function AppRoutes() {
         <Route path="verificacoes" element={<P.AdminVerificacoes />} />
         <Route path="zeladoria" element={<P.AdminZeladoria />} />
         <Route path="analytics-mobilidade" element={<P.AdminAnalyticsMobilidade />} />
+        <Route path="motoboy-operacoes" element={<P.AdminMotoboyOperations />} />
         <Route path="realtime-dashboard" element={<P.AdminRealtimeDashboard />} />
         <Route path="moderacao-completa" element={<P.AdminModeracaoCompleta />} />
         <Route path="moderacao" element={<P.AdminModeracao />} />

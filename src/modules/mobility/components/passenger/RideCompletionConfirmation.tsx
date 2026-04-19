@@ -18,7 +18,7 @@ import {
   Clock,
   User,
 } from "lucide-react";
-import { RideRequest } from "@/modules/mobility/types"; // TODO: Migrar para mobility.generated.ts;
+import { RideRequest } from "@/modules/mobility/types";
 import {
   Avatar,
   AvatarFallback,

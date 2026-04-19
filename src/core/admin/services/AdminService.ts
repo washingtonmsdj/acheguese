@@ -132,9 +132,11 @@ export const AdminService = {
 
           // Busca estatísticas de entregas
           const { data: deliveryStats } = await supabase
-            .from('delivery_requests')
+            .from('ride_requests')
             .select('id')
-            .eq('business_id', business.id)
+            .eq('ride_mode', 'motoboy')
+            .eq('source_type', 'business')
+            .eq('source_id', business.id)
             .eq('status', 'delivered');
 
           const totalOrders = orderStats?.length || 0;
@@ -380,8 +382,9 @@ export const AdminService = {
 
       // Total de entregas
       const { count: totalDeliveries } = await supabase
-        .from('delivery_requests')
+        .from('ride_requests')
         .select('*', { count: 'exact', head: true })
+        .eq('ride_mode', 'motoboy')
         .eq('status', 'delivered');
 
       // Distribuição de planos

@@ -248,7 +248,7 @@ export const AdminVagas = lazy(() => import("@/modules/admin/pages/AdminVagas"))
 export const AdminEventos = lazy(() => import("@/modules/admin/pages/AdminEventos"));
 export const AdminUsuarios = lazy(() => import("@/modules/admin/pages/AdminUsuarios"));
 export const AdminMotoristas = lazy(() => import("@/modules/admin/pages/AdminMotoristas"));
-export const AdminReportsPassageiros = lazy(() => import("@/modules/admin/pages/AdminReportsPassageiros"));
+export const AdminReportsPassageiros = lazy(() => import("@/modules/admin/pages/AdminReportsPassageirosV2"));
 export const AdminPontosEmbarque = lazy(() => import("@/modules/admin/pages/AdminPontosEmbarque"));
 export const AdminVerificacoes = lazy(() => import("@/modules/verification/pages/AdminVerificationsPage"));
 export const AdminZeladoria = lazy(() => import("@/modules/admin/pages/AdminZeladoria"));
@@ -272,6 +272,7 @@ export const AdminIdentidade = lazy(() => import("@/modules/admin/pages/AdminIde
 export const AdminMapa = lazy(() => import("@/modules/admin/pages/AdminMapa"));
 export const AdminConfiguracoes = lazy(() => import("@/modules/admin/pages/AdminConfiguracoes"));
 export const AdminOperacoes = lazy(() => import("@/modules/admin/pages/AdminOperacoes"));
+export const AdminMotoboyOperations = lazy(() => import("@/modules/admin/pages/AdminMotoboyOperations"));
 export const AdminReivindicacoes = lazy(() => import("@/modules/admin/pages/AdminReivindicacoes"));
 export const AdminSSOT = lazy(() => import("@/modules/admin/pages/AdminSSOT"));
 export const AdminHighlights = lazy(() => import("@/modules/admin/pages/AdminHighlights"));

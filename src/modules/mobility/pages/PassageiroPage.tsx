@@ -10,7 +10,7 @@ import { useMobilityUrls } from "@/modules/mobility/hooks/useMobilityUrls";
 import { RIDE_STATUS } from "@/shared/types/constants";
 import { PASSENGER_PAGE_LABELS } from "@/modules/mobility/constants/passengerPageLabels";
 import { CreateRideModal } from "../components/CreateRideModal";
-import { PassengerRideHistory } from "../components/passenger/PassengerRideHistory";
+import { RideHistoryUnified } from "../components/RideHistoryUnified";
 import { RateDriverModal } from "../components/passenger/RateDriverModal";
 import { RideCompletionConfirmation } from "../components/passenger/RideCompletionConfirmation";
 import { CancelRideDialog } from "../components/driver/CancelRideDialog";
@@ -500,9 +500,8 @@ export default function PassageiroPage() {
                 exit={{ opacity: 0, x: 10 }}
                 transition={{ duration: 0.2 }}
               >
-                <PassengerRideHistory
-                  completedRides={completedRides}
-                  cancelledRides={cancelledRides}
+                <RideHistoryUnified
+                  variant="compact"
                   onRate={(ride) => setRatingRide(ride)}
                 />
               </motion.div>

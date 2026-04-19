@@ -13,7 +13,7 @@
 import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useBusinessSubscription } from '@/core/billing';
-import { useMenuCategories, useMenuItems } from '@/modules/gastronomy/hooks';
+import { useMenuCategories, useMenuItems, useGastronomyMenuId } from '@/modules/gastronomy/hooks';
 import { CategoryList, CategoryForm, ItemCard, ItemForm } from '../components/menu';
 import { UpgradePromptInline } from '../components';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/components/ui/tabs';
@@ -35,8 +35,8 @@ export default function MenuManagementPage() {
   const navigate = useNavigate();
   const { entitlements, isLoading: loadingSubscription } = useBusinessSubscription(businessId!);
 
-  // TODO: Buscar menuId do perfil gastronômico
-  const menuId = 'temp-menu-id'; // Placeholder
+  // Resolve o menuId do perfil gastronômico via SSOT
+  const { menuId, isLoading: loadingMenuId } = useGastronomyMenuId(businessId);
 
   // States
   const [categoryFormOpen, setCategoryFormOpen] = useState(false);
@@ -46,7 +46,7 @@ export default function MenuManagementPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [filterCategory, setFilterCategory] = useState<string>('all');
 
-  // Hooks
+  // Hooks — menuId pode ser null enquanto carrega; os hooks só disparam com valor truthy
   const {
     categories,
     isLoading: loadingCategories,
@@ -56,7 +56,7 @@ export default function MenuManagementPage() {
     reorderCategories,
     isCreating: creatingCategory,
     isUpdating: updatingCategory,
-  } = useMenuCategories(menuId);
+  } = useMenuCategories(menuId ?? '');
 
   const {
     items,
@@ -67,7 +67,7 @@ export default function MenuManagementPage() {
     toggleAvailability,
     isCreating: creatingItem,
     isUpdating: updatingItem,
-  } = useMenuItems(menuId, filterCategory === 'all' ? undefined : filterCategory);
+  } = useMenuItems(menuId ?? '', filterCategory === 'all' ? undefined : filterCategory);
 
   // Handlers - Categorias
   const handleCreateCategory = () => {
@@ -133,10 +133,30 @@ export default function MenuManagementPage() {
   const canAddMoreItems = entitlements.maxMenuItems === null ||
     (items?.length || 0) < entitlements.maxMenuItems;
 
-  if (loadingSubscription) {
+  if (loadingSubscription || loadingMenuId) {
     return (
       <div className="container max-w-6xl py-8">
         <p>Carregando...</p>
+      </div>
+    );
+  }
+
+  // Guard: sem menu configurado ainda
+  if (!menuId) {
+    return (
+      <div className="container max-w-6xl py-8 space-y-8">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => navigate(`/dashboard/business/${businessId}/gastronomy`)}
+        >
+          <ArrowLeft className="w-4 h-4 mr-2" />
+          Voltar ao Dashboard
+        </Button>
+        <div className="text-center py-12 text-muted-foreground">
+          <p className="text-lg font-medium mb-2">Nenhum cardápio encontrado</p>
+          <p className="text-sm">Configure o perfil gastronômico para criar seu cardápio.</p>
+        </div>
       </div>
     );
   }

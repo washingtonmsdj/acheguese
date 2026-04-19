@@ -237,6 +237,7 @@ export async function getRideDispatchData(rideId: string): Promise<unknown | nul
       passenger_profile_id,
       pickup_address_id,
       pickup_location_id,
+      ride_mode,
       created_at,
       pickup_address:addresses!pickup_address_id(latitude, longitude)
     `)
@@ -588,15 +589,34 @@ export async function getDriverCompleteProfile(profileId: string): Promise<{
 }
 
 /**
- * Rating do passageiro (placeholder)
+ * Rating medio do passageiro
  */
 export async function getPassengerRating(profileId: string): Promise<number> {
   try {
-    logger.info("MobilityQueries.getPassengerRating", {
-      profileId,
-      note: "Tabela ride_ratings nÃ£o disponÃ­vel, retornando rating padrÃ£o",
-    });
-    return 5.0;
+    const { data, error } = await supabaseClient
+      .from("ride_ratings")
+      .select("rating")
+      .eq("rated_id", profileId);
+
+    if (error) {
+      logger.warn("MobilityQueries.getPassengerRating - query error", { profileId, error });
+      return 5.0;
+    }
+
+    if (!data || data.length === 0) {
+      return 5.0;
+    }
+
+    const ratings = data
+      .map((row) => Number((row as { rating?: unknown }).rating))
+      .filter((value) => Number.isFinite(value));
+
+    if (ratings.length === 0) {
+      return 5.0;
+    }
+
+    const avg = ratings.reduce((sum, value) => sum + value, 0) / ratings.length;
+    return Number(avg.toFixed(1));
   } catch (error) {
     logger.error("MobilityQueries.getPassengerRating", error as Error, { profileId });
     return 5.0;
@@ -1002,4 +1022,6 @@ export async function getDriverLocation(_driverProfileId: string): Promise<unkno
   logger.warn("MobilityQueries.getDriverLocation - nÃ£o implementado, usar GPS tracking");
   return null;
 }
+
+
 

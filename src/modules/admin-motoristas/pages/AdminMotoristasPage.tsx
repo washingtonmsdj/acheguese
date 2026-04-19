@@ -65,6 +65,7 @@ export default function AdminMotoristasPage() {
     handleToggleOnline,
     handleSuspend,
     handleReactivate,
+    loadSuspensionHistory,
   } = useDriverManagement(filter, canModerate, isChecking);
 
   // ============================================
@@ -147,8 +148,14 @@ export default function AdminMotoristasPage() {
   };
 
   const handleViewHistory = async (driverProfileId: string) => {
-    setSuspensionHistory([]);
     setHistoryOpen(true);
+    setHistoryLoading(true);
+    try {
+      const history = await loadSuspensionHistory(driverProfileId);
+      setSuspensionHistory(history);
+    } finally {
+      setHistoryLoading(false);
+    }
   };
 
   // ============================================

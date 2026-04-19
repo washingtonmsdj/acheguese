@@ -16,7 +16,7 @@ import {
 import { Badge } from "@/shared/components/ui/badge";
 import { motion } from "framer-motion";
 import { cn } from "@/shared/utils/cn";
-import type { RideRequest } from "@/modules/mobility/types"; // TODO: Migrar para mobility.generated.ts;
+import type { RideRequest } from "@/modules/mobility/types";
 
 interface ActiveRideWidgetProps {
   ride: RideRequest;

@@ -10,7 +10,7 @@ import { Button } from "@/shared/components/ui/button";
 import { Textarea } from "@/shared/components/ui/textarea";
 import { Star, Car } from "lucide-react";
 import { cn } from "@/shared/utils/cn";
-import type { RideRequest } from "@/modules/mobility/types"; // TODO: Migrar para mobility.generated.ts;
+import type { RideRequest } from "@/modules/mobility/types";
 
 interface RateDriverModalProps {
   ride: RideRequest | null;

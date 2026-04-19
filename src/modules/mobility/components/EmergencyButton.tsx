@@ -93,8 +93,7 @@ export function EmergencyButton({
         duration: 8000,
       });
 
-      // TODO: Enviar notificações para contatos de emergência
-      // TODO: Notificar administradores do sistema
+      // Notificacoes de emergencia sao tratadas no SafetyService (contatos + trilha operacional).
     } catch (error) {
       logger.error("Erro ao acionar emergência:", error);
       toast.error("Erro ao enviar alerta. Tente novamente.");
@@ -377,3 +376,6 @@ export function SecurityChecklist({
     </div>
   );
 }
+
+
+

@@ -17,6 +17,7 @@ import {
   completeRide,
   cancelRide,
 } from "@/modules/mobility/services/mobility.mutations";
+import { supabase } from "@/integrations/supabase";
 import { logger } from "@/shared/utils/logger";
 import { RIDE_STATUS, TIMEOUTS } from "../constants";
 
@@ -81,6 +82,11 @@ function sumRideAmounts(
 
     return total + getRideAmount(ride);
   }, 0);
+}
+
+function clampRating(value: number): number {
+  if (!Number.isFinite(value)) return 5;
+  return Math.max(1, Math.min(5, Math.round(value)));
 }
 
 export function useDriverDashboardBase({
@@ -489,10 +495,76 @@ export function useDriverDashboardBase({
     }
   }, [refetchDashboard, rideToCancel]);
 
-  const handleRatePassenger = useCallback(async (_rating: unknown) => {
-    setRatePassengerOpen(false);
-    toast.success("AvaliaÃ§Ã£o enviada!");
-  }, []);
+    const handleRatePassenger = useCallback(
+    async (ratingPayload: unknown) => {
+      if (!rideToRate?.id || !driverProfileId) {
+        setRatePassengerOpen(false);
+        return;
+      }
+
+      const passengerProfileId =
+        typeof (rideToRate as { passenger_profile_id?: unknown }).passenger_profile_id === "string"
+          ? ((rideToRate as { passenger_profile_id: string }).passenger_profile_id)
+          : null;
+
+      if (!passengerProfileId) {
+        toast.error("Nao foi possivel identificar o passageiro para avaliacao.");
+        setRatePassengerOpen(false);
+        return;
+      }
+
+      const typedPayload = ratingPayload as {
+        rating?: number;
+        behavior_rating?: number;
+        punctuality_rating?: number;
+        payment_rating?: number;
+        comment?: string;
+      };
+
+      const rating = clampRating(typedPayload?.rating ?? 5);
+      const behavior = clampRating(typedPayload?.behavior_rating ?? rating);
+      const punctuality = clampRating(typedPayload?.punctuality_rating ?? rating);
+      const payment = clampRating(typedPayload?.payment_rating ?? rating);
+      const comment = (typedPayload?.comment || "").trim();
+      const composedComment = [
+        comment || null,
+        `behaviour:${behavior}`,
+        `punctuality:${punctuality}`,
+        `payment:${payment}`,
+      ]
+        .filter(Boolean)
+        .join(" | ");
+
+      try {
+        const supabaseAny = supabase as any;
+        const { error } = await supabaseAny.from("ride_ratings").upsert(
+          {
+            ride_id: rideToRate.id,
+            rater_id: driverProfileId,
+            rated_id: passengerProfileId,
+            rating,
+            comment: composedComment || null,
+          },
+          { onConflict: "ride_id,rater_id" },
+        );
+
+        if (error) {
+          throw error;
+        }
+
+        toast.success("Avaliacao enviada!");
+        setRatePassengerOpen(false);
+      } catch (error) {
+        logger.error("useDriverDashboardBase.handleRatePassenger", error as Error, {
+          rideId: rideToRate.id,
+          driverProfileId,
+          passengerProfileId,
+        });
+        toast.error("Nao foi possivel enviar a avaliacao.");
+      }
+    },
+    [driverProfileId, rideToRate],
+  );
 
   return {
     user,

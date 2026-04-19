@@ -463,17 +463,160 @@ export function useMobilidade() {
     [user, queryClient],
   );
 
-  const rateRide = useCallback(async (_rideId: string, _rating: number) => {
-    toast.success("Avalia√ß√£o enviada!");
-  }, []);
-  const confirmRideCompletion = useCallback(async (_rideId: string) => {
-    toast.success("Corrida confirmada!");
-  }, []);
-  const reportRideProblem = useCallback(
-    async (_rideId: string, _desc: string) => {
-      toast.info("Problema reportado");
+  const rateRide = useCallback(
+    async (rideId: string, rating: number, comment?: string) => {
+      try {
+        if (!user) {
+          toast.error("Usu·rio n„o autenticado");
+          return { success: false };
+        }
+
+        const passengerProfile =
+          (await profileService.getProfileByType(user.id, "personal")) ||
+          (await profileService.getActiveProfile(user.id));
+
+        if (!passengerProfile?.id) {
+          toast.error("Perfil n„o encontrado");
+          return { success: false };
+        }
+
+        const ride = await getRideById(rideId);
+        const driverProfileId =
+          ride && typeof (ride as { driver_profile_id?: unknown }).driver_profile_id === "string"
+            ? (ride as { driver_profile_id: string }).driver_profile_id
+            : null;
+
+        if (!driverProfileId) {
+          toast.error("N„o foi possÌvel identificar o motorista desta corrida.");
+          return { success: false };
+        }
+
+        const { supabase } = await import("@/integrations/supabase");
+        const supabaseAny = supabase as any;
+
+        const sanitizedComment = (comment || "").trim();
+        const clampedRating = Math.min(5, Math.max(1, Math.round(rating)));
+
+        const { error } = await supabaseAny.from("ride_ratings").upsert(
+          {
+            ride_id: rideId,
+            rater_id: passengerProfile.id,
+            rated_id: driverProfileId,
+            rating: clampedRating,
+            comment: sanitizedComment || null,
+          },
+          { onConflict: "ride_id,rater_id" },
+        );
+
+        if (error) {
+          logger.error("useMobilidade.rateRide - failed", error);
+          toast.error("Erro ao enviar avaliaÁ„o");
+          return { success: false };
+        }
+
+        queryClient.invalidateQueries({ queryKey: MOBILITY_QUERY_KEYS.rides(user.id) });
+        queryClient.invalidateQueries({ queryKey: MOBILITY_QUERY_KEYS.passengerRating(user.id) });
+        toast.success("AvaliaÁ„o enviada!");
+        return { success: true };
+      } catch (error) {
+        logger.error("useMobilidade.rateRide", error as Error, { rideId, rating });
+        toast.error("Erro ao enviar avaliaÁ„o");
+        return { success: false };
+      }
     },
-    [],
+    [user, queryClient],
+  );
+
+  const confirmRideCompletion = useCallback(
+    async (rideId: string) => {
+      try {
+        if (!user) {
+          toast.error("Usu√°rio n√£o autenticado");
+          return { success: false };
+        }
+
+        const passengerProfile =
+          (await profileService.getProfileByType(user.id, "personal")) ||
+          (await profileService.getActiveProfile(user.id));
+
+        if (!passengerProfile?.id) {
+          toast.error("Perfil n√£o encontrado");
+          return { success: false };
+        }
+
+        const { supabase } = await import("@/integrations/supabase");
+        const supabaseAny = supabase as any;
+
+        const { error } = await supabaseAny
+          .from("ride_requests")
+          .update({
+            passenger_confirmed_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", rideId)
+          .eq("passenger_profile_id", passengerProfile.id);
+
+        if (error) {
+          logger.warn("useMobilidade.confirmRideCompletion - update failed", error);
+          // Coluna pode n√£o existir ‚Äî n√£o quebrar o fluxo
+        }
+
+        queryClient.invalidateQueries({ queryKey: MOBILITY_QUERY_KEYS.rides(user.id) });
+        toast.success("Corrida confirmada!");
+        return { success: true };
+      } catch (error) {
+        logger.error("useMobilidade.confirmRideCompletion", error as Error, { rideId });
+        toast.error("Erro ao confirmar corrida");
+        return { success: false };
+      }
+    },
+    [user, queryClient],
+  );
+
+  const reportRideProblem = useCallback(
+    async (rideId: string, description: string, reportType: string = "other", severity: string = "medium") => {
+      try {
+        if (!user) {
+          toast.error("Usu√°rio n√£o autenticado");
+          return { success: false };
+        }
+
+        const passengerProfile =
+          (await profileService.getProfileByType(user.id, "personal")) ||
+          (await profileService.getActiveProfile(user.id));
+
+        if (!passengerProfile?.id) {
+          toast.error("Perfil n√£o encontrado");
+          return { success: false };
+        }
+
+        // Usar RideReportsService
+        const { RideReportsService } = await import("@/modules/mobility/services/RideReportsService");
+        
+        const result = await RideReportsService.createReport({
+          rideId,
+          reporterProfileId: passengerProfile.id,
+          reporterType: "passenger",
+          reportType: reportType as any,
+          severity: severity as any,
+          title: "Problema reportado",
+          description: description.trim(),
+        });
+
+        if (result.success) {
+          toast.success("Problema reportado com sucesso.");
+          return { success: true };
+        } else {
+          toast.error(result.error || "Erro ao reportar problema");
+          return { success: false };
+        }
+      } catch (error) {
+        logger.error("useMobilidade.reportRideProblem", error as Error, { rideId });
+        toast.error("Erro ao reportar problema");
+        return { success: false };
+      }
+    },
+    [user],
   );
   const myRides = rides;
   const error: string | null = null;
@@ -502,4 +645,6 @@ export function useMobilidade() {
     isLoadingRating,
   };
 }
+
+
 

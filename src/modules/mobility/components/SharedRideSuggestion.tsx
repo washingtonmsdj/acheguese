@@ -3,7 +3,7 @@ import { Users, DollarSign, MapPin, Zap, ChevronRight } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import { Badge } from "@/shared/components/ui/badge";
 import { cn } from "@/shared/utils/cn";
-import type { RideRequest } from "@/modules/mobility/types"; // TODO: Migrar para mobility.generated.ts;
+import type { RideRequest } from "@/modules/mobility/types";
 
 interface SharedRideSuggestionProps {
   myRide: RideRequest;

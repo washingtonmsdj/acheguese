@@ -10,6 +10,9 @@ Resultado esperado:
 - sem quebrar contratos existentes;
 - sem criar camada paralela de verdade.
 
+Arquitetura alvo explicita:
+- seguir o mesmo principio da gastronomia: `Business (perfil basico institucional)` + `Vertical Education (experiencia avancada e especializada)`, com URLs distintas e responsabilidades separadas.
+
 Nao e objetivo deste escopo:
 - gestao pedagogica completa (frequencia, boletim, diario de classe, secretaria academica full).
 
@@ -553,3 +556,246 @@ So iniciar academico interno quando TODOS forem verdade:
 - Recomendado: deixar roadmap e arquitetura futura definidos agora.
 - Nao recomendado: implementar completo e esconder do publico.
 - Motivo: reduz risco tecnico, risco juridico e custo de manutencao prematuro.
+
+---
+
+## 18) Admin, Profile e Area administrativa da escola (complemento obrigatorio)
+
+Este bloco define o que faltava para a IA nao errar na implementacao da administracao da escola.
+
+### 18.1 Perfis de acesso (RBAC minimo)
+- `school_owner`: dono da escola, acesso total ao modulo education daquela escola.
+- `school_manager`: gerencia comercial/operacional da escola (sem alterar ownership).
+- `school_staff`: operacao de leads/eventos (permissoes limitadas).
+- `guardian_view` (futuro): apenas visualizacao de dados autorizados do aluno.
+
+Regra:
+- Ninguem fora da escola pode acessar area administrativa da escola.
+- Permissao deve ser validada no backend (RLS/policies), nao apenas no frontend.
+
+### 18.2 Paginas administrativas obrigatorias (MVP)
+- `EducationSetupPage`: onboarding e configuracao inicial do perfil educacional.
+- `EducationDashboardPage`: KPI comercial, proximas acoes e resumo de pipeline.
+- `EducationLeadsPage`: lista/kanban de leads + filtros + mudanca de status.
+- `EducationEventsAdminPage` (ou secao dedicada em dashboard): CRUD de eventos/visitas.
+- `EducationProgramsAdminPage` (ou secao dedicada): CRUD de programas/turmas.
+- `EducationBillingPage`: assinatura e status do plano.
+- `EducationAnalyticsPage`: metricas de conversao.
+
+### 18.3 Pagina de profile da escola (publica)
+- URL canonica da escola na vertical education.
+- Blocos obrigatorios:
+  - capa + resumo institucional;
+  - programas/turmas;
+  - eventos abertos;
+  - contatos/whatsapp/endereco;
+  - CTA de interesse/matricula.
+- Estado de pagina desativada:
+  - mostrar mensagem padrao e evitar lead form ativo.
+
+### 18.4 Permissoes por recurso (checklist)
+- Perfil da escola:
+  - [ ] owner/manager editam
+  - [ ] staff apenas leitura (ou campos permitidos)
+- Programas:
+  - [ ] owner/manager CRUD
+  - [ ] staff create/update conforme regra definida
+- Leads:
+  - [ ] owner/manager/staff leitura
+  - [ ] transicao de status controlada por role
+- Billing:
+  - [ ] apenas owner (e opcional manager financeiro)
+- Analytics:
+  - [ ] owner/manager leitura
+  - [ ] staff leitura parcial (opcional)
+
+### 18.5 Sidebar e navegacao administrativa (obrigatorio)
+- Entrada unica no dashboard da escola:
+  - `/dashboard/business/:businessId/education/dashboard`
+- Menu minimo:
+  - Dashboard
+  - Leads
+  - Programas
+  - Eventos
+  - Analytics
+  - Billing/Plano
+  - Configuracoes
+- Regras:
+  - [ ] itens escondidos quando sem permissao
+  - [ ] guard de rota para acesso direto por URL
+
+### 18.6 Setup e onboarding da escola (obrigatorio)
+- Passos minimos:
+  1) dados institucionais
+  2) contato e canais
+  3) programas iniciais
+  4) publicacao do perfil
+- Criticos:
+  - [ ] salvar rascunho
+  - [ ] validacao de campos obrigatorios
+  - [ ] estado `draft` vs `published`
+  - [ ] bloqueio de publicacao sem minimo de dados
+
+### 18.7 Auditoria administrativa
+- Toda acao sensivel gera evento de auditoria:
+  - alteracao de perfil
+  - criacao/edicao de programa
+  - mudanca de status de lead
+  - alteracao de configuracao de notificacao
+- Campos minimos do log:
+  - `actor_user_id`, `action`, `resource_type`, `resource_id`, `payload_diff`, `created_at`
+
+### 18.8 Estados e UX obrigatorios nas telas admin
+- [ ] loading/skeleton
+- [ ] empty state com CTA util
+- [ ] erro com mensagem clara + retry
+- [ ] confirmacao para acoes destrutivas
+- [ ] feedback de sucesso padrao
+
+### 18.9 Checklist de testes especificos para admin/profile
+- [ ] usuario sem permissao nao entra em rotas admin da escola.
+- [ ] owner acessa tudo da propria escola.
+- [ ] owner de escola A nao acessa dados da escola B.
+- [ ] profile publico exibe apenas dados publicaveis.
+- [ ] lead form cria lead e registra evento de criacao.
+- [ ] billing so aparece para perfis autorizados.
+
+### 18.10 DoD adicional (admin/profile)
+So concluir se:
+- [ ] RBAC aplicado em frontend e backend.
+- [ ] Rotas administrativas protegidas.
+- [ ] Pagina publica e administrativa separadas corretamente.
+- [ ] Logs de auditoria funcionando para acoes sensiveis.
+- [ ] Testes de autorizacao e isolamento entre escolas passando.
+
+---
+
+## 19) Beneficios por plano (globais x por vertical) + status de implementacao
+
+Esta secao evita ambiguidade de produto e garante implementacao consistente.
+
+### 19.1 Beneficios globais (todas empresas assinantes)
+- Perfil publico profissional.
+- URL canonica publica.
+- Link de compartilhamento curto (politica global definida por plano).
+- CTA de conversao.
+- Dashboard administrativo basico.
+- Billing/plano/assinatura.
+
+### 19.2 Beneficios especificos por vertical
+- Gastronomia:
+  - catalogo avancado de menu (categorias, itens, adicionais, disponibilidade, promocoes).
+  - fluxo operacional de pedidos/entrega.
+- Educacao:
+  - catalogo de programas/turmas (idade, turno, modalidade, vagas, faixa de preco).
+  - pipeline comercial de matricula (lead ate convertido).
+
+### 19.3 Status tecnico atual encontrado no repositorio (verdade de hoje)
+- Ja existe rota curta para empresas premium:
+  - `/p/:slug` em `src/core/routing/components/BusinessPremiumRoute.tsx`
+  - geracao de share URL via `BusinessUrlService.getShareUrl(...)`
+  - regra atual: `premium` curta; nao premium usa canonic.
+- URL canonica de empresa ja existe e segue SSOT em:
+  - `src/core/business/services/BusinessUrlService.ts`
+
+### 19.4 Decisao de produto obrigatoria (antes da execucao final)
+Definir uma regra unica:
+- Opcao A: link curto para todo assinante pago (recomendado para padronizacao comercial).
+- Opcao B: link curto somente para tiers premium.
+
+Sem esta decisao, nao fechar implementacao final de beneficios de assinatura.
+
+### 19.5 Checklist de implementacao para "link curto para todos assinantes"
+Executar apenas se a decisao for Opcao A.
+
+- [ ] Criar capacidade canonica de plano para short link (entitlement), sem hardcode de tier.
+- [ ] Atualizar `BusinessUrlService.getShareUrl` para respeitar entitlement de assinatura.
+- [ ] Manter `/p/:slug` como rota curta canonica (sem duplicar rotas).
+- [ ] Ajustar validacao em `BusinessPremiumRoute` para regra por entitlement (nao por flag isolada).
+- [ ] Adicionar testes:
+  - assinante com entitlement recebe short link;
+  - sem entitlement recebe canonical;
+  - redirecionamento da rota curta funciona apenas quando permitido.
+- [ ] Refletir na UI de plano/billing quais beneficios estao ativos.
+
+### 19.6 Checklist de implementacao para Education
+- [ ] `EducationUrlService` deve reutilizar estrategia canonica de URLs do projeto.
+- [ ] Share URL em education deve seguir a mesma politica global de link curto definida em 19.4.
+- [ ] Nao criar politica divergente entre verticals.
+
+---
+
+## 20) Landing de assinante vs perfil padrao (regra oficial)
+
+Esta secao define exatamente como diferenciar "pagina premium de assinatura" de "perfil basico".
+
+### 20.1 Conceitos
+- `Perfil padrao`:
+  - pagina publica basica da escola;
+  - conteudo reduzido;
+  - sem blocos comerciais avancados.
+- `LandingPage de assinante`:
+  - pagina completa de conversao;
+  - inclui blocos premium e captacao de lead;
+  - pode usar link curto conforme entitlement do plano.
+
+### 20.2 Politica de URL (obrigatoria)
+- URL canonica sempre existe para toda escola publica.
+- Link curto e beneficio de assinatura (definido por entitlement global).
+- Landing completa deve ser publicada na URL canonica.
+- Link curto redireciona para a landing canonica quando permitido.
+
+### 20.3 Conteudo minimo do perfil padrao (free/basico)
+- nome da escola e resumo curto;
+- endereco e contatos basicos;
+- horario de atendimento;
+- 1 CTA simples de contato;
+- aviso visual de recursos premium indisponiveis (sem bloquear navegacao publica).
+
+### 20.4 Conteudo minimo da landing de assinante (premium)
+- Header com identidade da escola + CTA principal.
+- Hero com proposta de valor e chamadas de acao.
+- Bloco de programas/turmas com dados essenciais:
+  - faixa etaria;
+  - turno;
+  - modalidade;
+  - vagas;
+  - preco inicial/faixa.
+- Bloco de diferenciais da escola.
+- Bloco de eventos/visitas abertas.
+- Prova social (depoimentos/avaliacoes quando houver).
+- Formulario de lead (nome, contato, idade do aluno, interesse).
+- FAQ curta.
+- Rodape com mapa/contatos e canais oficiais.
+
+### 20.5 Recursos premium da landing (feature flags sugeridas)
+- `education_landing_enabled`
+- `education_lead_form_enabled`
+- `education_catalog_full_enabled`
+- `education_events_public_enabled`
+- `short_link_enabled` (global por assinatura)
+
+### 20.6 Regras de entitlement (obrigatorias)
+- Nao hardcodar "premium" em componente.
+- Verificar capacidades ativas do plano em camada de service/hook canonica.
+- UI deve ocultar/mostrar blocos conforme entitlement.
+- Backend/RLS deve impedir escrita de recursos premium por nao assinante.
+
+### 20.7 Checklist de implementacao
+- [ ] Criar modo de renderizacao `profile_basic` e `landing_premium`.
+- [ ] Garantir fallback automatico para `profile_basic` quando sem entitlement.
+- [ ] Garantir que formularios premium nao aparecam para quem nao tem direito.
+- [ ] Garantir que URL canonica funcione nos dois modos.
+- [ ] Garantir que link curto so funcione quando `short_link_enabled`.
+
+### 20.8 Checklist de testes
+- [ ] escola sem assinatura abre perfil padrao, sem blocos premium.
+- [ ] escola assinante abre landing completa.
+- [ ] revogacao de plano rebaixa landing para perfil padrao sem quebrar URL.
+- [ ] link curto ativo somente com entitlement.
+- [ ] submissao de lead permitida apenas quando bloco/form premium habilitado.
+
+### 20.9 Decisao de UX recomendada
+- Estrutura visual base unica para manter consistencia.
+- Diferenca entre planos por blocos/capacidades, nao por criar 2 apps diferentes.
+- Conteudo e identidade da escola continuam personalizados.

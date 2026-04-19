@@ -1,12 +1,7 @@
 /**
  * Mobility Rollout Service
  *
- * Verifica se o módulo mobility está ativo na localização de contexto atual.
- *
- * DECISÃO CANÔNICA:
- * - Rollout é binário por cidade nesta etapa: mobility ativo ou não na cidade
- * - Rollout por tipo de serviço (corrida individual vs rota compartilhada) fica para depois
- * - Sem localização ativa → mobility indisponível (não há fallback global)
+ * Verifica se o modulo mobility esta ativo no territorio corrente.
  */
 
 import { RolloutService } from '@/core/rollout/services/RolloutService';
@@ -36,31 +31,30 @@ export class MobilityRolloutService {
   }
 
   /**
-   * Verifica se o módulo mobility está ativo na localização de contexto atual.
+   * Verifica se o modulo mobility esta ativo para o location informado.
+   * Se nao for informado, usa o contexto de localizacao ativo.
    */
-  async isMobilityActive(): Promise<boolean> {
-    const locationId = mobilityLocationService.getActiveLocationId();
+  async isMobilityActive(locationId?: string | null): Promise<boolean> {
+    const targetLocationId = locationId ?? mobilityLocationService.getActiveLocationId();
 
-    if (!locationId) {
-      // Sem localização de contexto → mobility indisponível
+    if (!targetLocationId) {
       return false;
     }
 
     try {
       const result = await this.rolloutService.isModuleActive({
         module_key: ModuleKey.MOBILITY,
-        location_id: locationId
+        location_id: targetLocationId,
       });
 
       return result.is_active;
     } catch {
-      // Em caso de erro, assumir inativo por segurança
       return false;
     }
   }
 
   /**
-   * Obtém rollout efetivo do mobility na localização atual.
+   * Obtem rollout efetivo do mobility na localizacao atual.
    */
   async getMobilityRollout(): Promise<EffectiveRollout | null> {
     const locationId = mobilityLocationService.getActiveLocationId();
@@ -68,7 +62,7 @@ export class MobilityRolloutService {
   }
 
   /**
-   * Obtém rollout efetivo do mobility para uma localização explícita.
+   * Obtem rollout efetivo do mobility para uma localizacao explicita.
    */
   async getMobilityRolloutForLocation(
     locationId: string | null | undefined
@@ -80,7 +74,7 @@ export class MobilityRolloutService {
     try {
       const result = await this.rolloutService.getEffectiveRollout({
         module_key: ModuleKey.MOBILITY,
-        location_id: locationId
+        location_id: locationId,
       });
 
       return result.effective_rollout;
@@ -90,14 +84,13 @@ export class MobilityRolloutService {
   }
 
   /**
-   * Verifica acesso ao módulo mobility.
-   * Retorna blocked=true se sem localização ou rollout inativo.
+   * Verifica acesso ao modulo mobility.
    */
   async checkAccess(): Promise<{ blocked: boolean; reason?: string }> {
     if (!mobilityLocationService.hasActiveLocation()) {
       return {
         blocked: true,
-        reason: 'Localização não selecionada'
+        reason: 'Localizacao nao selecionada',
       };
     }
 
@@ -105,7 +98,7 @@ export class MobilityRolloutService {
     if (!isActive) {
       return {
         blocked: true,
-        reason: 'Mobilidade não está disponível nesta localização'
+        reason: 'Mobilidade nao esta disponivel nesta localizacao',
       };
     }
 
@@ -113,8 +106,7 @@ export class MobilityRolloutService {
   }
 
   /**
-   * Obtém configuração do mobility para a localização atual.
-   * Reservado para rollout por tipo de serviço em etapas futuras.
+   * Obtem configuracao do mobility para a localizacao atual.
    */
   async getMobilityConfig(): Promise<Record<string, unknown> | null> {
     const locationId = mobilityLocationService.getActiveLocationId();
@@ -122,7 +114,7 @@ export class MobilityRolloutService {
   }
 
   /**
-   * Obtém configuração do mobility para uma localização explícita.
+   * Obtem configuracao do mobility para uma localizacao explicita.
    */
   async getMobilityConfigForLocation(
     locationId: string | null | undefined
@@ -134,7 +126,7 @@ export class MobilityRolloutService {
     try {
       const result = await this.rolloutService.getModuleConfig({
         module_key: ModuleKey.MOBILITY,
-        location_id: locationId
+        location_id: locationId,
       });
 
       return isObjectRecord(result.config) ? result.config : null;
@@ -144,8 +136,7 @@ export class MobilityRolloutService {
   }
 
   /**
-   * Verifica se o modo motoboy está habilitado para a localização.
-   * Sem configuração explícita, mantém default habilitado para retrocompatibilidade.
+   * Verifica se o modo motoboy esta habilitado para a localizacao.
    */
   async isMotoboyEnabled(locationId?: string | null): Promise<boolean> {
     const targetLocationId = locationId ?? mobilityLocationService.getActiveLocationId();
@@ -194,8 +185,7 @@ export class MobilityRolloutService {
   }
 
   /**
-   * Liga/desliga o módulo de mobilidade para uma localização.
-   * Mantém a configuração existente para evitar perda de parâmetros.
+   * Liga/desliga o modulo de mobilidade para uma localizacao.
    */
   async setMobilityEnabled(locationId: string, enabled: boolean): Promise<void> {
     const effective = await this.rolloutService.getEffectiveRollout({

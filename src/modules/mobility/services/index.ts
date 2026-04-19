@@ -37,6 +37,7 @@ export * from "./MobilityAdminQueryService";
 export * from "./MobilityAuditService";
 export * from "./DriverAvailabilityService";
 export * from "./OperationalVerificationService";
+export * from "./DriverModerationEventsService";
 
 // ============================================================
 // ADAPTERS E VALIDATORS

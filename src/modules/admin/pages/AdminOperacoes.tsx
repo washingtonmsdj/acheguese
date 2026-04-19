@@ -43,6 +43,8 @@ const RUNTIME_CHECK_TABLES: OperationalTable[] = [
   { table: "driver_profiles", label: "Cadastros de motoristas", required: true },
   { table: "driver_data", label: "Status operacional de motoristas", required: true },
   { table: "ride_requests", label: "Corridas e entregas", required: true },
+  { table: "ride_reports", label: "Reports de corrida", required: true },
+  { table: "driver_moderation_events", label: "Historico de moderacao de motoristas", required: true },
   { table: "pricing_rules", label: "Regras de pricing", required: false },
 ];
 
@@ -54,17 +56,11 @@ const OPTIONAL_NOT_PROVISIONED: OperationalTableResult[] = [
     state: "not_provisioned",
     detail: "Modulo opcional nao provisionado neste schema",
   },
-  {
-    table: "ride_reports",
-    label: "Reports de corrida",
-    required: false,
-    state: "not_provisioned",
-    detail: "Modulo opcional nao provisionado neste schema",
-  },
 ];
 
 const QUICK_TOOLS = [
   { label: "Gestao de Motoristas", to: "/admin/motoristas" },
+  { label: "Operacoes Motoboy", to: "/admin/motoboy-operacoes" },
   { label: "Identidade", to: "/admin/identidade" },
   { label: "Mapa", to: "/admin/mapa" },
   { label: "Pricing", to: "/admin/pricing" },

@@ -1,7 +1,7 @@
 ﻿# MOBILIDADE (MOTOBOY) - RELATORIO COMPLETO E TASKS DE IMPLEMENTACAO
 
 Data: 2026-04-17
-Status deste documento: ANALISE + PLANO (sem implementacao de codigo neste passo)
+Status deste documento: EXECUCAO PARCIAL + ANALISE DE GAP (atualizado em 2026-04-19)
 
 ## 1) Objetivo
 
@@ -395,3 +395,140 @@ GO somente quando:
 - fase 6 aprovada
 - console limpo de erros criticos
 - operacao/admin consegue agir sem gambiarras
+
+## 11) Atualizacao de execucao (2026-04-19)
+
+### 11.1 Veredito objetivo
+
+Status atual: NAO esta 100% pronto.
+
+Estimativa de completude real da mobilidade (motoboy): 68%.
+
+Motivos do nao-100%:
+- build de producao quebrando
+- SSOT de entrega ainda parcialmente duplicado
+- lacunas admin/motorista ainda abertas
+- fluxos de avaliacao ainda com comportamento degradado/stub em partes
+- testes finais de gate de lancamento ainda nao executados
+
+### 11.2 Evidencias executadas
+
+1. Build de producao:
+- comando: `npm run build`
+- resultado: FALHOU
+- erro: import inexistente em `RequestMotoboyButton.tsx` para `@/core/billing/services/EntitlementsService` (arquivo nao encontrado).
+
+2. Validacao arquitetural/SSOT:
+- comando: `npm run validate:ssot`
+- resultado: PASSOU (sem erro)
+- comando: `npm run validate:architecture:delivery`
+- resultado: PASSOU (`Fronteiras arquiteturais de delivery estao validas.`)
+
+3. Estado de migracoes no ambiente linked:
+- comando: `supabase migration list --linked`
+- resultado: versoes sincronizadas local/remote, incluindo:
+  - `20260417100000` (vagas highlight/urgencia)
+  - `20260417100001` (backfill highlight)
+  - `20260419000000` (ride_reports)
+
+### 11.3 Status por fase (execucao real)
+
+- Fase 0 (precondicoes): 85%
+  - decisao D1 estabelecida e migracoes criticas listadas/aplicadas no linked
+  - pendente fechar checklist formal de RLS canonico de `ride_requests` no tronco com evidencia automatizada
+
+- Fase 1 (permissao/backend): 80%
+  - `MotoboyAuthorizationService` integrado ao `RideOperationalService.createDelivery`
+  - ainda falta endurecer pontos de ownership/associacao em todos os caminhos e reduzir bypass/override ad-hoc no admin
+
+- Fase 2 (convergencia SSOT): 45%
+  - rede motoboy em `ride_requests` evoluiu
+  - porem fluxo legado `delivery_requests` segue ativo em listagem/operacao de gastronomia e servicos admin
+  - conclusao: ainda existe dupla verdade operacional
+
+- Fase 3 (integracao paginas de negocio): 65%
+  - CTA de motoboy em empresa e criacao via modal existem
+  - mas:
+    - botao/integração atual quebra build
+    - `DeliveryManagementPage` cria em SSOT novo, porem lista/atualiza/cancela no legado (`delivery_requests`)
+    - historico unificado avancou, mas avaliacao do lado motorista continua stub
+
+- Fase 4 (admin operacional): 60%
+  - `AdminMotoboyOperations` e `AdminReportsPassageirosV2` existem
+  - mas:
+    - aprovacao/rejeicao motorista ainda parcial (rejeicao sem persistencia robusta)
+    - historico de suspensao permanece vazio/no-op em pagina nova de motoristas
+    - alguns pontos ainda dependem de update direto em tabela (override operacional)
+
+- Fase 5 (UX/UI final): 30%
+  - ha melhorias em algumas telas, mas nao houve fechamento completo de consistencia mobile/empty/error states em todas as superfícies
+
+- Fase 6 (testes finais): 10%
+  - validacoes de arquitetura executadas
+  - suite final de gate (unit/integration/e2e de lancamento) ainda nao foi rodada ponta a ponta
+
+### 11.4 Gaps criticos abertos (NO-GO)
+
+1. Build quebrado (bloqueador imediato):
+- arquivo: `src/modules/mobility/components/RequestMotoboyButton.tsx`
+- problema: import inexistente + contrato de props divergente com `CreateDeliveryModal`
+
+2. SSOT incompleto de entrega:
+- `ride_requests` e `delivery_requests` convivendo em operacao real
+- evidencias:
+  - `src/modules/gastronomy/pages/DeliveryManagementPage.tsx`
+  - `src/modules/gastronomy/hooks/useDeliveryRequests.ts`
+  - `src/modules/gastronomy/services/DeliveryService.ts`
+  - `src/core/admin/services/AdminService.ts`
+
+3. Admin de motoristas nao fechado:
+- rejeicao nao persiste estado robusto
+- historico de suspensao nao carrega fonte oficial (abre vazio)
+- evidencias:
+  - `src/modules/admin-motoristas/hooks/useDriverManagement.ts`
+  - `src/modules/admin-motoristas/pages/AdminMotoristasPage.tsx`
+
+4. Avaliacao motorista -> passageiro ainda stub:
+- evidencia:
+  - `src/modules/mobility/hooks/useDriverDashboardBase.ts` (`handleRatePassenger`)
+
+5. Pendencias operacionais em mobilidade:
+- componentes ainda com TODO/mock em chat/pontos/ranking/emergencia/notificacoes
+- embora nem todos bloqueiem motoboy, impedem declarar modulo mobilidade como "100% completo"
+
+## 12) Tasks finais para chegar a 100%
+
+### 12.1 Bloqueadores imediatos (ordem obrigatoria)
+
+T100.1 Corrigir build de producao no `RequestMotoboyButton`:
+- ajustar import de entitlement para caminho existente
+- alinhar props do `CreateDeliveryModal` (`open/onOpenChange/onSubmit`)
+- validar com `npm run build`
+
+T100.2 Fechar SSOT de entrega:
+- migrar listagem/operacao de gastronomia para `ride_requests`
+- descontinuar (ou isolar estritamente) `delivery_requests` para caso legado/frota propria
+- remover duplicacao em hooks/services/admin
+
+T100.3 Fechar governanca admin de motoristas:
+- persistencia real de rejeicao (status, motivo, autor, data)
+- historico real de suspensao/reativacao em fonte oficial
+
+T100.4 Remover stub de avaliacao motorista->passageiro:
+- persistencia real + invalidacao de cache + auditoria
+
+### 12.2 Validacao de fechamento (antes de GO)
+
+T100.5 Rodar gate tecnico:
+- `npm run build`
+- `npm run validate:ssot`
+- `npm run validate:architecture:delivery`
+
+T100.6 Rodar suite critica de mobilidade:
+- permissao por ator
+- fluxo business/gastronomia -> motoboy -> entrega/falha/cancelamento
+- operacao admin (filtros + override + reports)
+
+T100.7 Atualizar este documento com evidencias finais:
+- anexar saidas dos comandos e cenarios E2E
+- so marcar GO quando itens 12.1 e 12.2 estiverem 100% verdes

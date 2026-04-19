@@ -115,6 +115,8 @@ function mapRowToVaga(row: VagaRow): Vaga {
 export class VagasService {
   private static readonly DEFAULT_LIMIT = 20;
   private static readonly MAX_LIMIT = 100;
+  private static urgenciaColumnAvailable: boolean | null = null;
+  private static highlightTypeColumnAvailable: boolean | null = null;
 
   /**
    * Leituras públicas dependem do RLS da tabela `vagas` para definir
@@ -123,6 +125,28 @@ export class VagasService {
    */
   private static getPublicQuery() {
     return supabase.from('vagas');
+  }
+
+  private static isMissingColumnError(error: unknown): boolean {
+    if (!error || typeof error !== 'object') return false;
+    const typed = error as { code?: string; message?: string };
+    return typed.code === '42703' || typed.message?.toLowerCase().includes('column') === true;
+  }
+
+  private static async getRecentByLocation(locationId: string, limit: number): Promise<Vaga[]> {
+    const { data, error } = await supabase
+      .from('vagas')
+      .select('*')
+      .eq('location_id', locationId)
+      .order('published_at', { ascending: false })
+      .limit(limit);
+
+    if (error) {
+      logger.error('[VagasService] Erro no fallback de vagas por localizacao:', error);
+      return [];
+    }
+
+    return ((data ?? []) as VagaRow[]).map(mapRowToVaga);
   }
 
   /**
@@ -330,6 +354,10 @@ export class VagasService {
    */
   static async getVagasUrgentes(locationId: string, limit = 5): Promise<Vaga[]> {
     try {
+      if (this.urgenciaColumnAvailable === false) {
+        return this.getRecentByLocation(locationId, limit);
+      }
+
       const { data, error } = await supabase
         .from('vagas')
         .select('*')
@@ -339,10 +367,18 @@ export class VagasService {
         .limit(limit);
 
       if (error) {
+        if (this.isMissingColumnError(error)) {
+          this.urgenciaColumnAvailable = false;
+          logger.warn(
+            '[VagasService] Coluna urgencia nao encontrada. Aplicar migration 20260417100000_fix_vagas_urgencia_highlight.sql',
+          );
+          return this.getRecentByLocation(locationId, limit);
+        }
         logger.error('[VagasService] Erro ao buscar vagas urgentes:', error);
         return [];
       }
 
+      this.urgenciaColumnAvailable = true;
       return ((data ?? []) as VagaRow[]).map(mapRowToVaga);
     } catch (error) {
       logger.error('[VagasService] Erro:', error);
@@ -357,6 +393,10 @@ export class VagasService {
    */
   static async getVagasDestaque(locationId: string, limit = 6): Promise<Vaga[]> {
     try {
+      if (this.highlightTypeColumnAvailable === false) {
+        return this.getRecentByLocation(locationId, limit);
+      }
+
       const { data, error } = await supabase
         .from('vagas')
         .select('*')
@@ -367,10 +407,18 @@ export class VagasService {
         .limit(limit);
 
       if (error) {
+        if (this.isMissingColumnError(error)) {
+          this.highlightTypeColumnAvailable = false;
+          logger.warn(
+            '[VagasService] Coluna highlight_type nao encontrada. Aplicar migration 20260417100000_fix_vagas_urgencia_highlight.sql',
+          );
+          return this.getRecentByLocation(locationId, limit);
+        }
         logger.error('[VagasService] Erro ao buscar vagas em destaque:', error);
         return [];
       }
 
+      this.highlightTypeColumnAvailable = true;
       return ((data ?? []) as VagaRow[]).map(mapRowToVaga);
     } catch (error) {
       logger.error('[VagasService] Erro:', error);

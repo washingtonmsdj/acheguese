@@ -90,6 +90,56 @@ export interface StaleDriversResult {
 // ============================================
 
 export class DriverAvailabilityService {
+  private static isMissingColumnError(error: unknown): boolean {
+    if (!error || typeof error !== 'object') return false;
+    const typed = error as { code?: string; message?: string };
+    return typed.code === '42703' || typed.message?.toLowerCase().includes('column') === true;
+  }
+
+  private static isDuplicateKeyError(error: unknown): boolean {
+    if (!error || typeof error !== 'object') return false;
+    const typed = error as { code?: string; message?: string };
+    return typed.code === '23505' || typed.message?.toLowerCase().includes('duplicate key') === true;
+  }
+
+  /**
+   * Garante bootstrap mínimo de driver_data para que o motorista possa
+   * participar de dispatch (ride/motoboy) sem depender de migração manual.
+   */
+  private static async ensureDriverDataRow(
+    driverProfileId: string
+  ): Promise<void> {
+    const insertWithCapabilities = async () =>
+      supabase
+        .from('driver_data')
+        .insert({
+          profile_id: driverProfileId,
+          can_do_delivery: true,
+          can_do_rides: true,
+        });
+
+    const insertLegacy = async () =>
+      supabase
+        .from('driver_data')
+        .insert({
+          profile_id: driverProfileId,
+        });
+
+    const firstAttempt = await insertWithCapabilities();
+    if (!firstAttempt.error) return;
+    if (this.isDuplicateKeyError(firstAttempt.error)) return;
+
+    if (this.isMissingColumnError(firstAttempt.error)) {
+      const legacyAttempt = await insertLegacy();
+      if (!legacyAttempt.error || this.isDuplicateKeyError(legacyAttempt.error)) {
+        return;
+      }
+      throw legacyAttempt.error;
+    }
+
+    throw firstAttempt.error;
+  }
+
   /**
    * Motorista fica online (sem disponibilidade ainda)
    * Transição: offline → online_warming_up
@@ -100,6 +150,9 @@ export class DriverAvailabilityService {
     driverProfileId: string
   ): Promise<{ success: boolean; error?: string }> {
     try {
+      // Bootstrap de capacidades operacionais (SSOT)
+      await this.ensureDriverDataRow(driverProfileId);
+
       // GATE 5: Bootstrap - upsert para criar se não existir
       const { error } = await supabase
         .from('driver_availability')
@@ -531,7 +584,8 @@ export class DriverAvailabilityService {
     lat: number,
     lng: number,
     radiusKm: number,
-    rideMode?: 'ride' | 'motoboy'
+    rideMode?: 'ride' | 'motoboy',
+    locationId?: string | null
   ): Promise<AvailableDriver[]> {
     try {
       // GATE 5: SSOT - busca centralizada de motoristas disponíveis
@@ -550,6 +604,57 @@ export class DriverAvailabilityService {
 
       // Buscar driver_data separadamente via SSOT
       const profileIds = drivers.map(d => d.profile_id);
+      const profileLocationMap = new Map<string, string | null>();
+      const locationMetaMap = new Map<string, { id: string; type: string; parent_id: string | null }>();
+      let rideOperationalCityId: string | null = null;
+
+      if (locationId) {
+        const { data: profileRows, error: profileError } = await supabase
+          .from('public_profiles')
+          .select('id, location_id')
+          .in('id', profileIds);
+
+        if (profileError) throw profileError;
+
+        for (const row of profileRows ?? []) {
+          profileLocationMap.set(row.id, row.location_id);
+        }
+
+        const locationIdsToLoad = new Set<string>([locationId]);
+        for (const value of profileLocationMap.values()) {
+          if (value) {
+            locationIdsToLoad.add(value);
+          }
+        }
+
+        const { data: locationRows, error: locationError } = await supabase
+          .from('locations')
+          .select('id, type, parent_id')
+          .in('id', Array.from(locationIdsToLoad));
+
+        if (locationError) throw locationError;
+
+        for (const row of locationRows ?? []) {
+          locationMetaMap.set(row.id, {
+            id: row.id,
+            type: row.type,
+            parent_id: row.parent_id,
+          });
+        }
+
+        const resolveOperationalCityId = (id: string | null | undefined): string | null => {
+          if (!id) return null;
+          const meta = locationMetaMap.get(id);
+          if (!meta) return id;
+
+          if (meta.type === 'city') return meta.id;
+          if (meta.type === 'district' && meta.parent_id) return meta.parent_id;
+          return meta.id;
+        };
+
+        rideOperationalCityId = resolveOperationalCityId(locationId);
+      }
+
       const driverData = await getDriverDataByProfileIds(profileIds) as Array<{
         profile_id: string;
         rating?: number | null;
@@ -566,6 +671,27 @@ export class DriverAvailabilityService {
       for (const d of drivers) {
         const data = dataMap.get(d.profile_id);
         if (!data) continue; // Ignorar motoristas sem driver_data
+
+        // Escopo territorial canônico: dispatch só pode atribuir motorista do mesmo location_id da solicitação
+        if (locationId) {
+          const driverLocationId = profileLocationMap.get(d.profile_id);
+          if (!driverLocationId) continue;
+
+          const driverMeta = locationMetaMap.get(driverLocationId);
+          const driverOperationalCityId =
+            driverMeta?.type === 'city'
+              ? driverMeta.id
+              : driverMeta?.type === 'district' && driverMeta.parent_id
+                ? driverMeta.parent_id
+                : driverLocationId;
+
+          const sameOperationalTerritory =
+            !!rideOperationalCityId &&
+            !!driverOperationalCityId &&
+            rideOperationalCityId === driverOperationalCityId;
+
+          if (!sameOperationalTerritory) continue;
+        }
 
         // Filtrar por capacidade de entrega quando for motoboy
         if (rideMode === 'motoboy' && !data.can_do_delivery) continue;

@@ -9,15 +9,16 @@
  * - Ver histórico de faturas
  * - Gerenciar métodos de pagamento
  */
+import { useState } from 'react';
 import { logger } from '@/shared/utils/logger';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/components/ui/card';
 import { Button } from '@/shared/components/ui/button';
 import { Badge } from '@/shared/components/ui/badge';
 import { Alert, AlertDescription } from '@/shared/components/ui/alert';
 import { Separator } from '@/shared/components/ui/separator';
-import { useBusinessSubscription } from '@/core/billing';
+import { useBusinessSubscription, BillingService } from '@/core/billing';
 import { PlanTier, PLANS } from '@/core/billing';
-// import { useBusinessContext } from '@/contexts/BusinessContext'; // TODO: Fix import
+import { toast } from 'sonner';
 import { 
   CreditCard, 
   CheckCircle2, 
@@ -25,9 +26,7 @@ import {
   AlertTriangle,
   Clock,
   ArrowUpCircle,
-  ArrowDownCircle,
   RotateCcw,
-  Receipt
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -36,9 +35,9 @@ import { ptBR } from 'date-fns/locale';
 // ══════════════════════════════════════════════════════════════════════════
 
 export default function GastronomyBillingPage() {
-  // const { currentBusiness } = useBusinessContext(); // TODO: Fix import
-  // const businessId = currentBusiness?.id || '';
-  const businessId = ''; // Temporary fix
+  const businessId = ''; // Aguardando integração com BusinessContext
+  const [isUpgrading, setIsUpgrading] = useState(false);
+  const [isManagingPortal, setIsManagingPortal] = useState(false);
   
   const {
     subscription,
@@ -58,6 +57,34 @@ export default function GastronomyBillingPage() {
   const canUpgrade = isActive && !isDelivery;
   const canCancel = isActive && !willCancelAtPeriodEnd && !isFree;
   const canReactivate = isActive && willCancelAtPeriodEnd;
+
+  const handleUpgrade = async (planCode: string) => {
+    setIsUpgrading(true);
+    try {
+      await BillingService.redirectToCheckout({
+        planCode,
+        successUrl: `${window.location.origin}/gastronomia/billing?upgrade=success`,
+        cancelUrl: window.location.href,
+      });
+    } catch (error) {
+      logger.error('[GastronomyBillingPage] Erro ao iniciar upgrade', error);
+      toast.error('Erro ao iniciar upgrade. Tente novamente.');
+    } finally {
+      setIsUpgrading(false);
+    }
+  };
+
+  const handleManageSubscription = async () => {
+    setIsManagingPortal(true);
+    try {
+      await BillingService.redirectToPortal(window.location.href);
+    } catch (error) {
+      logger.error('[GastronomyBillingPage] Erro ao abrir portal', error);
+      toast.error('Erro ao abrir portal de assinatura. Tente novamente.');
+    } finally {
+      setIsManagingPortal(false);
+    }
+  };
   
   if (isLoading) {
     return (
@@ -191,11 +218,8 @@ export default function GastronomyBillingPage() {
               {isFree && (
                 <PlanCard
                   plan={PLANS[PlanTier.PRO]}
-                  onUpgrade={() => {
-                    // TODO: Implementar upgrade via edge function
-                    logger.debug('Upgrade to Pro');
-                  }}
-                  isUpgrading={false}
+                  onUpgrade={() => handleUpgrade('gastronomy_pro')}
+                  isUpgrading={isUpgrading}
                   isCurrent={false}
                 />
               )}
@@ -204,11 +228,8 @@ export default function GastronomyBillingPage() {
               {!isDelivery && (
                 <PlanCard
                   plan={PLANS[PlanTier.DELIVERY]}
-                  onUpgrade={() => {
-                    // TODO: Implementar upgrade via edge function
-                    logger.debug('Upgrade to Delivery');
-                  }}
-                  isUpgrading={false}
+                  onUpgrade={() => handleUpgrade('gastronomy_delivery')}
+                  isUpgrading={isUpgrading}
                   isCurrent={false}
                 />
               )}
@@ -228,29 +249,25 @@ export default function GastronomyBillingPage() {
         <CardContent className="space-y-4">
           {canReactivate && (
             <Button
-              onClick={() => {
-                // TODO: Implementar reativação via edge function
-                logger.debug('Reactivate subscription');
-              }}
+              onClick={handleManageSubscription}
+              disabled={isManagingPortal}
               className="w-full"
               variant="default"
             >
               <RotateCcw className="mr-2 h-4 w-4" />
-              Reativar Assinatura
+              {isManagingPortal ? 'Abrindo portal...' : 'Reativar Assinatura'}
             </Button>
           )}
           
           {canCancel && (
             <Button
-              onClick={() => {
-                // TODO: Implementar cancelamento via edge function
-                logger.debug('Cancel subscription');
-              }}
+              onClick={handleManageSubscription}
+              disabled={isManagingPortal}
               variant="destructive"
               className="w-full"
             >
               <XCircle className="mr-2 h-4 w-4" />
-              Cancelar Assinatura
+              {isManagingPortal ? 'Abrindo portal...' : 'Cancelar Assinatura'}
             </Button>
           )}
           

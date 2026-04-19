@@ -11,7 +11,7 @@
 import React, { useEffect, useState } from "react";
 import { CheckCircle2, Clock, Navigation, Car, Package } from "lucide-react";
 import { cn } from "@/shared/utils/cn";
-import type { RideStatus } from "@/modules/mobility/types"; // TODO: Migrar para mobility.generated.ts;
+import type { RideStatus } from "@/modules/mobility/types";
 
 interface StatusTransitionProps {
   status: RideStatus;

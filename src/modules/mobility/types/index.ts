@@ -1,14 +1,17 @@
-// Re-export de tipos de mobilidade do módulo
-// Isso permite que core e outros módulos acessem tipos sem depender do módulo mobility
+/**
+ * Ponto de entrada público dos tipos do módulo mobility.
+ * Importar daqui — não de sub-arquivos internos.
+ */
 
-export type { RideRequest } from "./types";
+// Todos os tipos canônicos via SSOT (mobility.generated.ts)
+export * from './mobility.generated';
 
-// Stub types for mobility.generated
+// Tipos de relatórios (ainda não gerados do banco)
 export type RideReportsRow = Record<string, unknown>;
 export type ReportStatus = "pending" | "reviewed" | "resolved";
 export type ReportSeverity = "low" | "medium" | "high";
 
-// Stub constants for mobility.constants
+// Constantes de domínio
 export const MOBILITY_CONSTANTS = {
   MAX_SEARCH_RADIUS_KM: 50,
   DEFAULT_SEARCH_RADIUS_KM: 10,

@@ -62,6 +62,7 @@ interface DispatchRideData {
   passenger_profile_id?: string | null;
   pickup_address_id?: string | null;
   pickup_location_id?: string | null;
+  ride_mode?: string | null;
   created_at: string;
   pickup_address?: {
     latitude?: number | null;
@@ -123,12 +124,16 @@ export class AutoDispatchService {
         throw new Error('Pickup coordinates not found');
       }
 
+      const rideMode = ride.ride_mode === 'motoboy' ? 'motoboy' : 'ride';
+
       // Buscar motoristas elegíveis
       const eligibleDrivers = await RideDispatchService.findEligibleDrivers(
         rideId,
         pickupLat,
         pickupLng,
-        CONFIG.SEARCH_RADIUS_KM
+        CONFIG.SEARCH_RADIUS_KM,
+        rideMode,
+        ride.pickup_location_id ?? null
       );
 
       if (eligibleDrivers.length === 0) {

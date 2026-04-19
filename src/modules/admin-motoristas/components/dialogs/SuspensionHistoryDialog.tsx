@@ -11,7 +11,16 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/shared/components/ui/dialog";
-import { History, Loader2, CheckCircle, XCircle } from "lucide-react";
+import {
+  History,
+  Loader2,
+  CheckCircle,
+  XCircle,
+  ShieldCheck,
+  ShieldX,
+  ToggleLeft,
+  ToggleRight,
+} from "lucide-react";
 import { cn } from "@/shared/utils/cn";
 import type { SuspensionHistoryDialogProps } from "../../sections/types";
 import { formatDateTime } from "../../utils";
@@ -22,6 +31,46 @@ export function SuspensionHistoryDialog({
   history,
   loading,
 }: SuspensionHistoryDialogProps) {
+  const actionMeta: Record<
+    SuspensionHistoryDialogProps["history"][number]["action"],
+    {
+      label: string;
+      icon: typeof CheckCircle;
+      cardClass: string;
+    }
+  > = {
+    approved: {
+      label: "Cadastro aprovado",
+      icon: ShieldCheck,
+      cardClass: "bg-emerald-500/5 border-emerald-500",
+    },
+    rejected: {
+      label: "Cadastro rejeitado",
+      icon: ShieldX,
+      cardClass: "bg-rose-500/5 border-rose-500",
+    },
+    suspended: {
+      label: "Suspenso",
+      icon: XCircle,
+      cardClass: "bg-red-500/5 border-red-500",
+    },
+    reactivated: {
+      label: "Reativado",
+      icon: CheckCircle,
+      cardClass: "bg-green-500/5 border-green-500",
+    },
+    set_online: {
+      label: "Marcado online",
+      icon: ToggleRight,
+      cardClass: "bg-cyan-500/5 border-cyan-500",
+    },
+    set_offline: {
+      label: "Marcado offline",
+      icon: ToggleLeft,
+      cardClass: "bg-zinc-500/5 border-zinc-500",
+    },
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl">
@@ -48,27 +97,22 @@ export function SuspensionHistoryDialog({
           </div>
         ) : (
           <div className="space-y-3 max-h-[400px] overflow-y-auto">
-            {history.map((entry) => (
+            {history.map((entry) => {
+              const meta = actionMeta[entry.action];
+              const Icon = meta.icon;
+              return (
               <div
                 key={entry.id}
                 className={cn(
                   "p-4 rounded-lg border-l-4",
-                  entry.action === "suspended"
-                    ? "bg-red-500/5 border-red-500"
-                    : "bg-green-500/5 border-green-500"
+                  meta.cardClass
                 )}
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-1">
-                      {entry.action === "suspended" ? (
-                        <XCircle className="h-4 w-4 text-red-600" />
-                      ) : (
-                        <CheckCircle className="h-4 w-4 text-green-600" />
-                      )}
-                      <span className="font-semibold">
-                        {entry.action === "suspended" ? "Suspenso" : "Reativado"}
-                      </span>
+                      <Icon className="h-4 w-4 text-foreground" />
+                      <span className="font-semibold">{meta.label}</span>
                     </div>
                     <p className="text-sm text-muted-foreground">
                       Por: {entry.admin_name}
@@ -84,7 +128,8 @@ export function SuspensionHistoryDialog({
                   </div>
                 </div>
               </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </DialogContent>

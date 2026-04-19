@@ -1,23 +1,19 @@
-﻿/**
- * DeliveryManagementPage â€” PÃ¡gina de gestÃ£o de entregas
+/**
+ * DeliveryManagementPage - Gestao de entregas (SSOT).
  *
- * Gerencia solicitaÃ§Ãµes de entrega da rede de motoboys.
- * Consome hooks (SSOT).
+ * SSOT: useDelivery -> RideOperationalService -> ride_requests (ride_mode='motoboy').
+ * Esta pagina nao deve consumir delivery_requests legado.
  */
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useParams } from 'react-router-dom';
+import { formatDistanceToNow } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
+import { Package, Loader2, Plus, Phone, User, Clock, MapPin, DollarSign } from 'lucide-react';
+import { Badge } from '@/shared/components/ui/badge';
 import { Button } from '@/shared/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/shared/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/components/ui/tabs';
-import {
-  useDeliveryRequests,
-  useUpdateDeliveryStatus,
-  useCancelDeliveryRequest,
-} from '@/modules/gastronomy/hooks';
-import { DeliveryRequestCard } from '@/modules/gastronomy/components/delivery/DeliveryRequestCard';
-import { DeliveryStatsWidget } from '@/modules/gastronomy/components/delivery/DeliveryStatsWidget';
-import { DeliveryRequestStatus } from '@/modules/gastronomy/services/DeliveryService';
-import { Package, Loader2 } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -30,42 +26,130 @@ import {
 } from '@/shared/components/ui/alert-dialog';
 import { Input } from '@/shared/components/ui/input';
 import { Label } from '@/shared/components/ui/label';
+import { CreateDeliveryModal } from '@/modules/mobility/components/CreateDeliveryModal';
+import { useDelivery } from '@/modules/mobility/hooks/useDelivery';
+import { useLocationContext } from '@/core/location';
+
+type DeliveryFilterTab = 'all' | 'pending' | 'in_progress' | 'delivered' | 'failed' | 'cancelled';
+
+interface DeliveryRide {
+  id: string;
+  status: string;
+  created_at?: string;
+  recipient_name?: string | null;
+  recipient_phone?: string | null;
+  package_description?: string | null;
+  package_size?: string | null;
+  payment_method?: string | null;
+  suggested_price?: number | null;
+  final_price?: number | null;
+  origin?: string | null;
+  destination?: string | null;
+}
+
+function mapRideStatus(status: string): DeliveryFilterTab {
+  if (status === 'delivered') return 'delivered';
+  if (status === 'in_delivery') return 'in_progress';
+  if (status === 'failed_delivery' || status === 'expired') return 'failed';
+  if (status === 'cancelled' || status === 'cancelled_by_passenger' || status === 'cancelled_by_driver') {
+    return 'cancelled';
+  }
+
+  return 'pending';
+}
+
+function statusLabel(status: string): string {
+  const labels: Record<string, string> = {
+    requested: 'Solicitada',
+    searching_driver: 'Buscando motoboy',
+    driver_assigned: 'Motoboy atribuido',
+    driver_accepted: 'Motoboy aceitou',
+    driver_arriving: 'Motoboy a caminho',
+    pickup_confirmed: 'Coleta confirmada',
+    in_delivery: 'Em entrega',
+    delivered: 'Entregue',
+    failed_delivery: 'Falha na entrega',
+    cancelled: 'Cancelada',
+    cancelled_by_passenger: 'Cancelada pelo solicitante',
+    cancelled_by_driver: 'Cancelada pelo motoboy',
+    expired: 'Expirada',
+  };
+
+  return labels[status] || status;
+}
+
+function statusVariant(status: string): 'default' | 'secondary' | 'destructive' | 'outline' {
+  const mapped = mapRideStatus(status);
+  if (mapped === 'delivered') return 'outline';
+  if (mapped === 'in_progress') return 'default';
+  if (mapped === 'failed' || mapped === 'cancelled') return 'destructive';
+  return 'secondary';
+}
+
+function canCancel(status: string): boolean {
+  return [
+    'requested',
+    'searching_driver',
+    'driver_assigned',
+    'driver_accepted',
+    'driver_arriving',
+    'pickup_confirmed',
+  ].includes(status);
+}
+
+function formatMoney(value?: number | null): string {
+  const safeValue = typeof value === 'number' && Number.isFinite(value) ? value : 0;
+  return `R$ ${safeValue.toFixed(2)}`;
+}
 
 export default function DeliveryManagementPage() {
   const { businessId } = useParams<{ businessId: string }>();
-  const [activeTab, setActiveTab] = useState<'all' | DeliveryRequestStatus>('all');
+  const { activeLocation } = useLocationContext();
+
+  const [activeTab, setActiveTab] = useState<DeliveryFilterTab>('all');
   const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
   const [selectedRequestId, setSelectedRequestId] = useState<string | null>(null);
   const [cancellationReason, setCancellationReason] = useState('');
+  const [createModalOpen, setCreateModalOpen] = useState(false);
 
-  const updateStatusMutation = useUpdateDeliveryStatus();
-  const cancelMutation = useCancelDeliveryRequest();
+  const { deliveries, isLoading, isSubmitting, createDelivery, cancelDelivery } = useDelivery('gastronomy', businessId);
 
-  // Queries por status
-  const allQuery = useDeliveryRequests(businessId!, {});
-  const pendingQuery = useDeliveryRequests(businessId!, { status: 'pending' });
-  const acceptedQuery = useDeliveryRequests(businessId!, { status: 'accepted' });
-  const inProgressQuery = useDeliveryRequests(businessId!, {
-    status: 'picked_up',
-  });
-  const deliveredQuery = useDeliveryRequests(businessId!, { status: 'delivered' });
+  const typedDeliveries = useMemo(
+    () => (deliveries as unknown as DeliveryRide[]).filter((ride) => ride?.id),
+    [deliveries],
+  );
 
-  const queries = {
-    all: allQuery,
-    pending: pendingQuery,
-    accepted: acceptedQuery,
-    picked_up: inProgressQuery,
-    in_transit: inProgressQuery,
-    delivered: deliveredQuery,
-    failed: allQuery,
-    cancelled: allQuery,
-  };
+  const filteredDeliveries = useMemo(() => {
+    if (activeTab === 'all') return typedDeliveries;
+    return typedDeliveries.filter((ride) => mapRideStatus(ride.status) === activeTab);
+  }, [activeTab, typedDeliveries]);
 
-  const currentQuery = queries[activeTab];
+  const stats = useMemo(() => {
+    const base = {
+      total: typedDeliveries.length,
+      pending: 0,
+      inProgress: 0,
+      delivered: 0,
+      failed: 0,
+      cancelled: 0,
+      revenue: 0,
+    };
 
-  const handleUpdateStatus = async (id: string, status: DeliveryRequestStatus) => {
-    await updateStatusMutation.mutateAsync({ requestId: id, status });
-  };
+    for (const ride of typedDeliveries) {
+      const group = mapRideStatus(ride.status);
+      if (group === 'pending') base.pending += 1;
+      if (group === 'in_progress') base.inProgress += 1;
+      if (group === 'delivered') {
+        base.delivered += 1;
+        const amount = typeof ride.final_price === 'number' ? ride.final_price : ride.suggested_price ?? 0;
+        base.revenue += Number.isFinite(amount) ? amount : 0;
+      }
+      if (group === 'failed') base.failed += 1;
+      if (group === 'cancelled') base.cancelled += 1;
+    }
+
+    return base;
+  }, [typedDeliveries]);
 
   const handleCancelClick = (id: string) => {
     setSelectedRequestId(id);
@@ -75,10 +159,7 @@ export default function DeliveryManagementPage() {
   const handleCancelConfirm = async () => {
     if (!selectedRequestId) return;
 
-    await cancelMutation.mutateAsync({
-      requestId: selectedRequestId,
-      reason: cancellationReason || 'Cancelado pelo estabelecimento',
-    });
+    await cancelDelivery(selectedRequestId, cancellationReason || 'Cancelado pelo estabelecimento');
 
     setCancelDialogOpen(false);
     setSelectedRequestId(null);
@@ -88,104 +169,182 @@ export default function DeliveryManagementPage() {
   if (!businessId) {
     return (
       <div className="container mx-auto p-6">
-        <p className="text-muted-foreground">ID da empresa nÃ£o encontrado</p>
+        <p className="text-muted-foreground">ID da empresa nao encontrado.</p>
       </div>
     );
   }
 
   return (
     <div className="container mx-auto p-6 space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-3">
         <div>
-          <h1 className="text-3xl font-bold">GestÃ£o de Entregas</h1>
-          <p className="text-muted-foreground">
-            Gerencie as entregas da rede de motoboys
-          </p>
+          <h1 className="text-3xl font-bold">Gestao de Entregas</h1>
+          <p className="text-muted-foreground">Painel da rede de motoboys da operacao.</p>
         </div>
+        <Button onClick={() => setCreateModalOpen(true)} className="gap-2" disabled={!activeLocation}>
+          <Plus className="h-4 w-4" />
+          Solicitar Motoboy
+        </Button>
       </div>
 
-      {/* Layout */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* EstatÃ­sticas */}
-        <div className="lg:col-span-1">
-          <DeliveryStatsWidget businessId={businessId} />
-        </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-6 gap-3">
+        <Card>
+          <CardContent className="pt-5">
+            <p className="text-xs text-muted-foreground">Total</p>
+            <p className="text-2xl font-bold">{stats.total}</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-5">
+            <p className="text-xs text-muted-foreground">Pendentes</p>
+            <p className="text-2xl font-bold">{stats.pending}</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-5">
+            <p className="text-xs text-muted-foreground">Em entrega</p>
+            <p className="text-2xl font-bold">{stats.inProgress}</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-5">
+            <p className="text-xs text-muted-foreground">Entregues</p>
+            <p className="text-2xl font-bold text-emerald-600">{stats.delivered}</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-5">
+            <p className="text-xs text-muted-foreground">Falhas/Canceladas</p>
+            <p className="text-2xl font-bold text-destructive">{stats.failed + stats.cancelled}</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-5">
+            <p className="text-xs text-muted-foreground">Receita</p>
+            <p className="text-2xl font-bold">{formatMoney(stats.revenue)}</p>
+          </CardContent>
+        </Card>
+      </div>
 
-        {/* Lista de Entregas */}
-        <div className="lg:col-span-2">
-          <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)}>
-            <TabsList className="grid grid-cols-5 w-full">
-              <TabsTrigger value="all">Todas</TabsTrigger>
-              <TabsTrigger value="pending">
-                Pendentes
-                {pendingQuery.data && pendingQuery.data.length > 0 && (
-                  <span className="ml-1 text-xs">({pendingQuery.data.length})</span>
-                )}
-              </TabsTrigger>
-              <TabsTrigger value="accepted">Aceitas</TabsTrigger>
-              <TabsTrigger value="picked_up">Em Andamento</TabsTrigger>
-              <TabsTrigger value="delivered">Entregues</TabsTrigger>
-            </TabsList>
+      <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as DeliveryFilterTab)}>
+        <TabsList className="grid grid-cols-3 md:grid-cols-6 w-full">
+          <TabsTrigger value="all">Todas</TabsTrigger>
+          <TabsTrigger value="pending">Pendentes</TabsTrigger>
+          <TabsTrigger value="in_progress">Em entrega</TabsTrigger>
+          <TabsTrigger value="delivered">Entregues</TabsTrigger>
+          <TabsTrigger value="failed">Falhas</TabsTrigger>
+          <TabsTrigger value="cancelled">Canceladas</TabsTrigger>
+        </TabsList>
 
-            <TabsContent value={activeTab} className="space-y-4 mt-6">
-              {currentQuery.isLoading ? (
-                <div className="flex items-center justify-center py-12">
-                  <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-                </div>
-              ) : currentQuery.data && currentQuery.data.length > 0 ? (
-                <div className="space-y-4">
-                  {currentQuery.data
-                    .filter((req) => {
-                      if (activeTab === 'all') return true;
-                      if (activeTab === 'picked_up')
-                        return req.status === 'picked_up' || req.status === 'in_transit';
-                      return req.status === activeTab;
-                    })
-                    .map((request) => (
-                      <DeliveryRequestCard
-                        key={request.id}
-                        request={request}
-                        onUpdateStatus={handleUpdateStatus}
-                        onCancel={handleCancelClick}
-                      />
-                    ))}
-                </div>
-              ) : (
-                <div className="flex flex-col items-center justify-center py-12 text-center">
-                  <Package className="h-12 w-12 text-muted-foreground mb-4" />
-                  <h3 className="text-lg font-medium mb-2">Nenhuma entrega encontrada</h3>
-                  <p className="text-sm text-muted-foreground max-w-sm">
-                    {activeTab === 'pending'
-                      ? 'NÃ£o hÃ¡ entregas aguardando aceite no momento.'
-                      : activeTab === 'accepted'
-                      ? 'NÃ£o hÃ¡ entregas aceitas no momento.'
-                      : activeTab === 'picked_up'
-                      ? 'NÃ£o hÃ¡ entregas em andamento no momento.'
-                      : activeTab === 'delivered'
-                      ? 'Nenhuma entrega foi concluÃ­da ainda.'
-                      : 'Nenhuma solicitaÃ§Ã£o de entrega foi criada ainda.'}
-                  </p>
-                </div>
+        <TabsContent value={activeTab} className="space-y-4 mt-6">
+          {isLoading ? (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+            </div>
+          ) : filteredDeliveries.length > 0 ? (
+            <div className="space-y-4">
+              {filteredDeliveries.map((ride) => (
+                <Card key={ride.id}>
+                  <CardHeader>
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <CardTitle className="text-lg">Entrega #{ride.id.slice(0, 8)}</CardTitle>
+                        <p className="text-sm text-muted-foreground">
+                          {ride.created_at
+                            ? formatDistanceToNow(new Date(ride.created_at), {
+                                addSuffix: true,
+                                locale: ptBR,
+                              })
+                            : 'Data nao informada'}
+                        </p>
+                      </div>
+                      <Badge variant={statusVariant(ride.status)}>{statusLabel(ride.status)}</Badge>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-2 text-muted-foreground">
+                          <User className="h-4 w-4" />
+                          <span>{ride.recipient_name || 'Destinatario nao informado'}</span>
+                        </div>
+                        <div className="flex items-center gap-2 text-muted-foreground">
+                          <Phone className="h-4 w-4" />
+                          <span>{ride.recipient_phone || 'Sem telefone'}</span>
+                        </div>
+                        <div className="flex items-center gap-2 text-muted-foreground">
+                          <Package className="h-4 w-4" />
+                          <span>{ride.package_description || `Pacote ${ride.package_size || 'small'}`}</span>
+                        </div>
+                      </div>
+
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-2 text-muted-foreground">
+                          <MapPin className="h-4 w-4" />
+                          <span>{ride.destination || 'Destino nao informado'}</span>
+                        </div>
+                        <div className="flex items-center gap-2 text-muted-foreground">
+                          <Clock className="h-4 w-4" />
+                          <span>Pagamento: {ride.payment_method || 'nao informado'}</span>
+                        </div>
+                        <div className="flex items-center gap-2 text-muted-foreground">
+                          <DollarSign className="h-4 w-4" />
+                          <span>{formatMoney(ride.final_price ?? ride.suggested_price ?? 0)}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {canCancel(ride.status) && (
+                      <div className="flex justify-end">
+                        <Button variant="destructive" size="sm" onClick={() => handleCancelClick(ride.id)}>
+                          Cancelar entrega
+                        </Button>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          ) : (
+            <div className="flex flex-col items-center justify-center py-12 text-center">
+              <Package className="h-12 w-12 text-muted-foreground mb-4" />
+              <h3 className="text-lg font-medium mb-2">Nenhuma entrega encontrada</h3>
+              <p className="text-sm text-muted-foreground max-w-sm">
+                Nao ha entregas para este filtro no momento.
+              </p>
+              {activeTab === 'all' && (
+                <Button variant="outline" className="mt-4 gap-2" onClick={() => setCreateModalOpen(true)}>
+                  <Plus className="h-4 w-4" />
+                  Solicitar primeiro motoboy
+                </Button>
               )}
-            </TabsContent>
-          </Tabs>
-        </div>
-      </div>
+            </div>
+          )}
+        </TabsContent>
+      </Tabs>
 
-      {/* Dialog de Cancelamento */}
+      {activeLocation && (
+        <CreateDeliveryModal
+          open={createModalOpen}
+          onOpenChange={setCreateModalOpen}
+          onSubmit={createDelivery}
+          sourceType="gastronomy"
+          sourceId={businessId}
+          isSubmitting={isSubmitting}
+        />
+      )}
+
       <AlertDialog open={cancelDialogOpen} onOpenChange={setCancelDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Cancelar Entrega</AlertDialogTitle>
+            <AlertDialogTitle>Cancelar entrega</AlertDialogTitle>
             <AlertDialogDescription>
-              Tem certeza que deseja cancelar esta entrega? Esta aÃ§Ã£o nÃ£o pode ser
-              desfeita.
+              Tem certeza que deseja cancelar esta entrega? Esta acao nao pode ser desfeita.
             </AlertDialogDescription>
           </AlertDialogHeader>
 
           <div className="space-y-2 py-4">
-            <Label htmlFor="cancellation_reason">Motivo do Cancelamento</Label>
+            <Label htmlFor="cancellation_reason">Motivo do cancelamento</Label>
             <Input
               id="cancellation_reason"
               placeholder="Ex: Cliente cancelou o pedido"
@@ -200,7 +359,7 @@ export default function DeliveryManagementPage() {
               onClick={handleCancelConfirm}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              Cancelar Entrega
+              Confirmar cancelamento
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -208,4 +367,3 @@ export default function DeliveryManagementPage() {
     </div>
   );
 }
-

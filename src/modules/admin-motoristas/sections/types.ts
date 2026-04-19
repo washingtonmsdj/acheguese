@@ -28,8 +28,15 @@ export interface DriverRequest {
   readonly total_rides: number;
   readonly total_earnings: number;
   readonly created_at: string;
+  readonly updated_at?: string;
   readonly neighborhood?: string;
   readonly city?: string;
+  readonly verification_status?: "pending" | "verified" | "rejected" | "none" | null;
+  readonly verification_rejection_reason?: string | null;
+  readonly is_suspended?: boolean;
+  readonly suspended_at?: string | null;
+  readonly suspended_until?: string | null;
+  readonly suspension_reason?: string | null;
 }
 
 // ============================================
@@ -38,7 +45,13 @@ export interface DriverRequest {
 
 export interface SuspensionHistoryEntry {
   readonly id: string;
-  readonly action: "suspended" | "reactivated";
+  readonly action:
+    | "approved"
+    | "rejected"
+    | "suspended"
+    | "reactivated"
+    | "set_online"
+    | "set_offline";
   readonly reason?: string;
   readonly admin_name: string;
   readonly created_at: string;

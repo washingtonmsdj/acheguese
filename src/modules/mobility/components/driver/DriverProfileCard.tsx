@@ -21,7 +21,7 @@ import { Badge } from "@/shared/components/ui/badge";
 import { Button } from "@/shared/components/ui/button";
 import { Avatar, AvatarFallback } from "@/shared/components/ui/avatar";
 import { cn } from "@/shared/utils/cn";
-import type { DriverPlan, DriverEarnings } from "@/modules/mobility/types"; // TODO: Migrar para mobility.generated.ts;
+import type { DriverPlan, DriverEarnings } from "@/modules/mobility/types";
 
 interface DriverProfileCardProps {
   isOnline: boolean;

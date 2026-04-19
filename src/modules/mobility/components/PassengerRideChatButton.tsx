@@ -3,7 +3,7 @@ import { Button } from "@/shared/components/ui/button";
 import { MessageCircle } from "lucide-react";
 import { RideChatDialog } from "./RideChatDialog";
 import { useSessionContext } from "@/core/session";
-import type { RideRequest } from "@/modules/mobility/types"; // TODO: Migrar para mobility.generated.ts;
+import type { RideRequest } from "@/modules/mobility/types";
 
 interface PassengerRideChatButtonProps {
   ride: RideRequest;

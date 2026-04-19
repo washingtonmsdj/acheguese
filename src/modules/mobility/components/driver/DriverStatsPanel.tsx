@@ -8,7 +8,7 @@ import {
   Clock,
 } from "lucide-react";
 import { cn } from "@/shared/utils/cn";
-import type { DriverStats } from "@/modules/mobility/types"; // TODO: Migrar para mobility.generated.ts;
+import type { DriverStats } from "@/modules/mobility/types";
 
 interface DriverStatsPanelProps {
   stats: DriverStats;

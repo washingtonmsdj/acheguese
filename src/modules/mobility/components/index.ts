@@ -14,3 +14,7 @@ export { DeliveryTrackingCardEnhanced as DeliveryTrackingCard } from './Delivery
 export { RouteEstimateCardEnhanced, RouteEstimateCardSkeleton } from './RouteEstimateCardEnhanced';
 export { RouteEstimateCardEnhanced as RouteEstimateCard } from './RouteEstimateCardEnhanced'; // Alias para compatibilidade
 
+export { CreateDeliveryModal } from './CreateDeliveryModal';
+export { RequestMotoboyButton } from './RequestMotoboyButton';
+export { RideHistoryUnified } from './RideHistoryUnified';
+export { CreateReportModal } from './CreateReportModal';

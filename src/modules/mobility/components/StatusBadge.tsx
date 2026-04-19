@@ -1,4 +1,4 @@
-import { RideStatus } from "@/modules/mobility/types"; // TODO: Migrar para mobility.generated.ts;
+import { RideStatus } from "@/modules/mobility/types";
 
 interface StatusBadgeProps {
   status: RideStatus;

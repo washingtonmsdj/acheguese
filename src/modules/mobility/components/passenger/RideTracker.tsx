@@ -1,6 +1,6 @@
 import React from "react";
 import { MapPin } from "lucide-react";
-import type { RideRequest } from "@/modules/mobility/types"; // TODO: Migrar para mobility.generated.ts;
+import type { RideRequest } from "@/modules/mobility/types";
 import { RIDE_STATUS } from "@/shared/types/constants";
 interface RideTrackerProps {
   ride: RideRequest;

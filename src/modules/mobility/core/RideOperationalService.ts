@@ -23,6 +23,7 @@ import { VALID_FAILURE_REASONS, VALID_ITEM_DESTINATIONS, VALID_ITEM_HOLDERS } fr
 import { OperationalVerificationService } from "../services/OperationalVerificationService";
 import { mobilityRolloutService } from "../services/MobilityRolloutService";
 import { mobilityAuditService } from "../services/MobilityAuditService";
+import { MotoboyAuthorizationService } from "../services/MotoboyAuthorizationService";
 
 // ============================================
 // TIPOS
@@ -61,6 +62,9 @@ export interface CreateDeliveryInput extends Omit<CreateRideInput, 'mode'> {
   deliveryNotes?: string;
   packageDescription?: string;
   packageSize?: 'small' | 'medium' | 'large';
+  // Autorização (passados pelo hook, não pelo componente)
+  requestingUserId?: string;
+  planTier?: string;
 }
 
 interface TransitionResult {
@@ -629,6 +633,8 @@ export class RideOperationalService {
   /**
    * Cria solicitação de entrega (motoboy)
    * Reutiliza o motor de corrida com ride_mode = 'motoboy'
+   *
+   * GATE AUTH: Autorização centralizada via MotoboyAuthorizationService antes de qualquer escrita.
    */
   static async createDelivery(input: CreateDeliveryInput): Promise<TransitionResult> {
     try {
@@ -645,13 +651,25 @@ export class RideOperationalService {
         };
       }
 
-      const isMotoboyEnabled = await mobilityRolloutService.isMotoboyEnabled(
-        input.pickupLocationId,
-      );
-      if (!isMotoboyEnabled) {
+      // GATE AUTH: Verificar autorização centralizada por source_type/source_id
+      const authResult = await MotoboyAuthorizationService.canRequestDelivery({
+        sourceType: input.sourceType,
+        sourceId: input.sourceId,
+        locationId: input.pickupLocationId,
+        planTier: input.planTier,
+        userId: input.requestingUserId,
+      });
+
+      if (!authResult.allowed) {
+        logger.warn('RideOperationalService.createDelivery - authorization denied', {
+          sourceType: input.sourceType,
+          sourceId: input.sourceId,
+          code: authResult.code,
+          reason: authResult.reason,
+        });
         return {
           success: false,
-          error: 'Modo motoboy desativado para a localizacao de coleta.',
+          error: authResult.reason || 'Não autorizado a solicitar entrega.',
         };
       }
 

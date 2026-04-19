@@ -1,11 +1,10 @@
-// @ts-nocheck
 /**
  * User Delete Account - Edge Function
- * 
+ *
  * Implementa direito ao esquecimento (Art. 18 LGPD).
  * Realiza soft-delete imediato + agendamento de purge em 30 dias.
- * 
- * @version 1.0.0
+ *
+ * @version 1.1.0
  * @lgpd Art. 18, VI - Direito de eliminação dos dados
  */
 
@@ -20,6 +19,11 @@ import {
 } from "../_shared/security.ts";
 
 const corsHeaders = getAllSecurityHeaders('POST, OPTIONS');
+
+/** Extrai mensagem de erro de forma type-safe */
+function toErrorMessage(e: unknown): string {
+  return e instanceof Error ? e.message : String(e);
+}
 
 interface DeleteRequest {
   reason?: string;
@@ -179,8 +183,8 @@ serve(async (req) => {
         })
         .eq('user_id', userId);
       deletionResults.profile = { success: !error, error: error?.message };
-    } catch (e) {
-      deletionResults.profile = { success: false, error: e.message };
+    } catch (e: unknown) {
+      deletionResults.profile = { success: false, error: toErrorMessage(e) };
     }
 
     // 2.2 Revogar roles
@@ -195,8 +199,8 @@ serve(async (req) => {
         .eq('user_id', userId)
         .is('revoked_at', null);
       deletionResults.roles = { success: !error, error: error?.message };
-    } catch (e) {
-      deletionResults.roles = { success: false, error: e.message };
+    } catch (e: unknown) {
+      deletionResults.roles = { success: false, error: toErrorMessage(e) };
     }
 
     // 2.3 Anonimizar addresses
@@ -221,8 +225,8 @@ serve(async (req) => {
           .eq('id', addr.address_id);
       }
       deletionResults.addresses = { success: true, count: addresses?.length };
-    } catch (e) {
-      deletionResults.addresses = { success: false, error: e.message };
+    } catch (e: unknown) {
+      deletionResults.addresses = { success: false, error: toErrorMessage(e) };
     }
 
     // 2.4 Anonimizar messages
@@ -236,8 +240,8 @@ serve(async (req) => {
         })
         .eq('sender_id', userId);
       deletionResults.messages = { success: !error, error: error?.message };
-    } catch (e) {
-      deletionResults.messages = { success: false, error: e.message };
+    } catch (e: unknown) {
+      deletionResults.messages = { success: false, error: toErrorMessage(e) };
     }
 
     // 2.5 Anonimizar community posts
@@ -251,8 +255,8 @@ serve(async (req) => {
         })
         .eq('author_id', userId);
       deletionResults.community_posts = { success: !error, error: error?.message };
-    } catch (e) {
-      deletionResults.community_posts = { success: false, error: e.message };
+    } catch (e: unknown) {
+      deletionResults.community_posts = { success: false, error: toErrorMessage(e) };
     }
 
     // 2.6 Anonimizar classifieds
@@ -269,8 +273,8 @@ serve(async (req) => {
         })
         .eq('seller_id', userId);
       deletionResults.classifieds = { success: !error, error: error?.message };
-    } catch (e) {
-      deletionResults.classifieds = { success: false, error: e.message };
+    } catch (e: unknown) {
+      deletionResults.classifieds = { success: false, error: toErrorMessage(e) };
     }
 
     // 2.7 Cancelar subscriptions
@@ -285,8 +289,8 @@ serve(async (req) => {
         .eq('user_id', userId)
         .in('status', ['active', 'trialing', 'past_due']);
       deletionResults.subscriptions = { success: !error, error: error?.message };
-    } catch (e) {
-      deletionResults.subscriptions = { success: false, error: e.message };
+    } catch (e: unknown) {
+      deletionResults.subscriptions = { success: false, error: toErrorMessage(e) };
     }
 
     // 2.8 Revogar todos os consentimentos
@@ -302,8 +306,8 @@ serve(async (req) => {
         .eq('user_id', userId)
         .is('revoked_at', null);
       deletionResults.consents = { success: !error, error: error?.message };
-    } catch (e) {
-      deletionResults.consents = { success: false, error: e.message };
+    } catch (e: unknown) {
+      deletionResults.consents = { success: false, error: toErrorMessage(e) };
     }
 
     // 3. Desativar sessões
@@ -318,8 +322,8 @@ serve(async (req) => {
         .eq('user_id', userId)
         .eq('is_valid', true);
       deletionResults.sessions = { success: !error, error: error?.message };
-    } catch (e) {
-      deletionResults.sessions = { success: false, error: e.message };
+    } catch (e: unknown) {
+      deletionResults.sessions = { success: false, error: toErrorMessage(e) };
     }
 
     // 4. Marcar auth.user como deletado (não deletar ainda - purge em 30 dias)
@@ -339,8 +343,8 @@ serve(async (req) => {
         phone_confirm: false,
       });
       deletionResults.auth_user = { success: !error, error: error?.message };
-    } catch (e) {
-      deletionResults.auth_user = { success: false, error: e.message };
+    } catch (e: unknown) {
+      deletionResults.auth_user = { success: false, error: toErrorMessage(e) };
     }
 
     // 5. Log final
@@ -375,7 +379,7 @@ serve(async (req) => {
       }
     );
 
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('[user-delete-account]', error);
     return errorResponse('Deletion failed', 500, error);
   }

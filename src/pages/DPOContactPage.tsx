@@ -43,14 +43,14 @@ import {
   SelectValue,
 } from '@/shared/components/ui/select';
 import { useToast } from '@/shared/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/core/auth/hooks/useAuth';
+import { PrivacyService, type DPORequestType } from '@/core/privacy';
 
 interface ContactFormData {
   name: string;
   email: string;
   subject: string;
-  requestType: string;
+  requestType: DPORequestType | '';
   message: string;
 }
 
@@ -67,31 +67,15 @@ export default function DPOContactPage() {
 
   const contactMutation = useMutation({
     mutationFn: async (data: ContactFormData) => {
-      // Inserir na tabela de solicitações DPO
-      const { error } = await supabase.from('dpo_requests').insert({
-        user_id: user?.id,
-        requester_name: data.name,
-        requester_email: data.email,
+      if (!data.requestType) throw new Error('Tipo de solicitação obrigatório');
+
+      await PrivacyService.createDPORequest({
+        userId: user?.id,
+        requesterName: data.name,
+        requesterEmail: data.email,
         subject: data.subject,
-        request_type: data.requestType,
+        requestType: data.requestType,
         message: data.message,
-        status: 'pending',
-      });
-
-      if (error) throw error;
-
-      // Também enviar email via edge function
-      await supabase.functions.invoke('send-email', {
-        body: {
-          to: 'dpo@acheguese.com.br',
-          subject: `[DPO] ${data.subject}`,
-          template: 'dpo-request',
-          data: {
-            ...data,
-            user_id: user?.id,
-            submitted_at: new Date().toISOString(),
-          },
-        },
       });
     },
     onSuccess: () => {

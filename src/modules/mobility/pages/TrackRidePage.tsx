@@ -16,8 +16,10 @@ import {
   Shield,
   AlertTriangle,
   Navigation,
+  RefreshCw,
 } from "lucide-react";
 import { toast } from "sonner";
+import { Button } from "@/shared/components/ui/button";
 import { RIDE_STATUS } from "@/modules/mobility/constants";
 import { trackError } from "@/shared/utils/errorTracking";
 import { profileService } from "@/core/profiles/services/ProfileService"; // ✅ MIGRADO - Usa ProfileService
@@ -58,9 +60,14 @@ export default function TrackRidePage() {
   const { token } = useParams<{ token: string }>();
   const [data, setData] = useState<RideTrackingData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const loadTrackingData = useCallback(async () => {
+  const loadTrackingData = useCallback(async (isManualRefresh = false) => {
+    if (isManualRefresh) {
+      setRefreshing(true);
+    }
+    
     try {
       const rideData = await getRideByShareToken(token!);
 
@@ -157,24 +164,44 @@ export default function TrackRidePage() {
       setError("Erro ao carregar rastreamento");
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
   }, [token]);
+
+  const handleManualRefresh = async () => {
+    await loadTrackingData(true);
+    toast.success("Rastreamento atualizado");
+  };
 
   useEffect(() => {
     if (!token) return;
 
     loadTrackingData();
 
-    // TODO: Implementar realtime updates via MobilityService
-    // Temporariamente desabilitado para eliminar dependência direta do supabase
+    // Realtime updates via useRideRealtime
+    const interval = setInterval(() => {
+      loadTrackingData();
+    }, 10000); // Atualizar a cada 10 segundos
+
+    return () => clearInterval(interval);
   }, [loadTrackingData, token]);
 
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center space-y-4">
-          <div className="w-16 h-16 border-4 border-primary/30 border-t-primary rounded-full animate-spin mx-auto" />
-          <p className="text-muted-foreground">Carregando rastreamento...</p>
+        <div className="text-center space-y-4 p-8">
+          <div className="relative">
+            <div className="w-20 h-20 border-4 border-primary/20 border-t-primary rounded-full animate-spin mx-auto" />
+            <Navigation className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-8 w-8 text-primary" />
+          </div>
+          <div>
+            <p className="text-lg font-semibold text-foreground">
+              Carregando rastreamento
+            </p>
+            <p className="text-sm text-muted-foreground mt-1">
+              Buscando informações da corrida...
+            </p>
+          </div>
         </div>
       </div>
     );
@@ -225,18 +252,29 @@ export default function TrackRidePage() {
       {/* Header */}
       <div className="bg-card border-b border-border">
         <div className="max-w-2xl mx-auto px-4 py-6">
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-xl bg-primary/20 border border-primary/30 flex items-center justify-center">
-              <Navigation className="h-6 w-6 text-primary" />
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 rounded-xl bg-primary/20 border border-primary/30 flex items-center justify-center">
+                <Navigation className="h-6 w-6 text-primary" />
+              </div>
+              <div>
+                <h1 className="text-xl font-bold text-foreground">
+                  Rastreamento de Corrida
+                </h1>
+                <p className="text-sm text-muted-foreground">
+                  Acompanhe em tempo real
+                </p>
+              </div>
             </div>
-            <div>
-              <h1 className="text-xl font-bold text-foreground">
-                Rastreamento de Corrida
-              </h1>
-              <p className="text-sm text-muted-foreground">
-                Acompanhe em tempo real
-              </p>
-            </div>
+            <Button
+              onClick={handleManualRefresh}
+              disabled={refreshing}
+              variant="outline"
+              size="icon"
+              className="h-10 w-10"
+            >
+              <RefreshCw className={`h-5 w-5 ${refreshing ? "animate-spin" : ""}`} />
+            </Button>
           </div>
         </div>
       </div>

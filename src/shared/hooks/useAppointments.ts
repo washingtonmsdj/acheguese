@@ -11,8 +11,8 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { toast } from "sonner";
-// TODO: Mover useAppointmentNotificationActions para core ou passar via props
 import { logger } from "@/shared/utils/logger";
+import { useAppointmentNotificationActions } from "@/modules/business/hooks/useAppointmentNotifications";
 
 type AppointmentStatus = "pending" | "confirmed" | "cancelled" | "completed";
 
@@ -50,7 +50,9 @@ export const useAppointments = ({
   } = useAppointmentNotificationActions();
 
   // Carregar agendamentos do Supabase
-  // TODO: Implementar query real do Supabase
+  // PENDENTE: Tabela `appointments` ainda não existe no banco.
+  // Quando criada, substituir por:
+  //   const { data } = await supabase.from('appointments').select('*').eq('business_id', businessId);
   useEffect(() => {
     setTimeout(() => {
       const mockAppointments: Appointment[] = [];

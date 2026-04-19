@@ -23,7 +23,7 @@ import { Avatar, AvatarFallback } from "@/shared/components/ui/avatar";
 import { Badge } from "@/shared/components/ui/badge";
 import { RIDE_STATUS } from "@/shared/types/constants";
 import { cn } from "@/shared/utils/cn";
-import type { RideRequest } from "@/modules/mobility/types"; // TODO: Migrar para mobility.generated.ts;
+import type { RideRequest } from "@/modules/mobility/types";
 import { StatusBadge } from "./StatusBadge";
 import { PAYMENT_METHOD } from "@/shared/types/constants";
 interface RideRequestCardProps {

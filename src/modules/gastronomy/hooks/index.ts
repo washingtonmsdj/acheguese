@@ -5,6 +5,7 @@
 export { useMenu, useMenusByBusiness, useFeaturedItems, useActivePromotions } from './useMenu';
 export { useMenuCategories } from './useMenuCategories';
 export { useMenuItems, useMenuItem } from './useMenuItems';
+export { useGastronomyMenuId } from './useGastronomyMenuId';
 export { useMenuVariations } from './useMenuVariations';
 export { useMenuAddons } from './useMenuAddons';
 export { useBusinessHours } from './useBusinessHours';
@@ -16,16 +17,6 @@ export { useDeliveryNeighborhoods } from './useDeliveryNeighborhoods';
 export { useDeliveryEligibility } from './useDeliveryEligibility';
 export { useDeliverySummary } from './useDeliverySummary';
 export { useDeliveryDestination } from './useDeliveryDestination';
-export {
-  useDeliveryRequests,
-  useDeliveryRequest,
-  useDeliveryStats,
-  useCreateDeliveryRequest,
-  useUpdateDeliveryStatus,
-  useCancelDeliveryRequest,
-  useAcceptDeliveryRequest,
-  useAddTrackingPoint,
-} from './useDeliveryRequests';
 export { useOrders } from './useOrders';
 export { useOrderDetails } from './useOrderDetails';
 export { useOrderStats } from './useOrderStats';

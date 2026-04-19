@@ -70,7 +70,8 @@ export class RideDispatchService {
     originLat: number,
     originLng: number,
     maxRadius: number = CONFIG.MAX_SEARCH_RADIUS_KM,
-    rideMode: 'ride' | 'motoboy' = 'ride'
+    rideMode: 'ride' | 'motoboy' = 'ride',
+    pickupLocationId?: string | null
   ): Promise<DriverEligibility[]> {
     try {
       // GATE 5: Usar service oficial ao invés de acesso direto
@@ -80,7 +81,8 @@ export class RideDispatchService {
         originLat,
         originLng,
         maxRadius,
-        rideMode
+        rideMode,
+        pickupLocationId
       );
 
       if (availableDrivers.length === 0) return [];

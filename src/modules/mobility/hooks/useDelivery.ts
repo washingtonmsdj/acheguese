@@ -17,8 +17,8 @@ import { RideOperationalService } from "@/modules/mobility/core/RideOperationalS
 import { pricingService } from "@/core/pricing/services/PricingService";
 import { logger } from "@/shared/utils/logger";
 import { useRideRealtime } from "./useRideRealtime";
-import { mobilityRolloutService } from "@/modules/mobility/services/MobilityRolloutService";
 import { buildFailedDeliveryMetadata } from "@/modules/mobility/utils/failedDelivery";
+import type { RideRequest } from "@/modules/mobility/types/types";
 import {
   RIDE_STATUS,
   RIDE_MODE,
@@ -163,17 +163,6 @@ export function useDelivery(sourceType: SourceType, sourceId?: string) {
           return { success: false, error: profileError };
         }
 
-        const isMotoboyEnabled = await mobilityRolloutService.isMotoboyEnabled(
-          data.pickupLocationId,
-        );
-
-        if (!isMotoboyEnabled) {
-          const disabledMessage =
-            "Modo motoboy desativado para a localizacao de coleta selecionada.";
-          toast.error(disabledMessage);
-          return { success: false, error: disabledMessage };
-        }
-
         // Calcular preco via pricing oficial
         let suggestedPrice: number | undefined;
         try {
@@ -192,6 +181,7 @@ export function useDelivery(sourceType: SourceType, sourceId?: string) {
           passengerProfileId: passengerProfile.id,
           ...data,
           suggestedPrice,
+          requestingUserId: user.id,
         });
 
         if (result.success) {
