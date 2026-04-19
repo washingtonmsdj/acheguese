@@ -88,6 +88,14 @@ export const SECURITY_DOMAINS = {
     alternatives: 'Self-hosted tile server',
   },
   
+  OSRM_ROUTER: {
+    url: 'https://router.project-osrm.org',
+    purpose: 'Route calculation and navigation',
+    risk: 'LOW',
+    justification: 'Routing service for mobility features',
+    alternatives: 'Self-hosted OSRM instance',
+  },
+  
   // Monitoring - Sentry
   SENTRY_INGEST: {
     url: 'https://*.ingest.us.sentry.io',
@@ -161,6 +169,7 @@ export const CSP_DIRECTIVES = {
     SECURITY_DOMAINS.SUPABASE_WSS.url,
     SECURITY_DOMAINS.OPENSTREETMAP_NOMINATIM.url,
     SECURITY_DOMAINS.OPENFREEMAP_TILES.url,
+    SECURITY_DOMAINS.OSRM_ROUTER.url,
     SECURITY_DOMAINS.SENTRY_INGEST.url,
   ],
   
