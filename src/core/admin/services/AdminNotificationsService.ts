@@ -7,9 +7,7 @@
  */
 
 import { supabase } from "@/integrations/supabase";
-import { supabaseAdmin } from "@/integrations/supabase/supabaseAdmin";
 import { logger } from "@/shared/utils/logger";
-import type { AdminSupabaseClient } from "../types/adminDatabase.types";
 import { normalizeNotification } from "@/core/notifications/utils/normalizeNotification";
 import { profileService } from "@/core/profiles/services/ProfileService";
 import type {
@@ -71,10 +69,6 @@ export interface AdminNotificationListResult {
   totalPages: number;
 }
 
-function getAdminClient(): AdminSupabaseClient {
-  return (supabaseAdmin ?? supabase) as unknown as AdminSupabaseClient;
-}
-
 function escapeIlike(term: string): string {
   return term.replace(/[%(),]/g, " ").trim();
 }
@@ -110,8 +104,7 @@ class AdminNotificationsService {
 
   async getStats(): Promise<AdminNotificationStats> {
     try {
-      const client = getAdminClient();
-      const { data, error } = await client
+      const { data, error } = await supabase
         .from(this.TABLE)
         .select("user_id, type, priority, read, is_read, deleted_at, created_at");
 
@@ -204,8 +197,7 @@ class AdminNotificationsService {
 
   async getSettingsStats(): Promise<AdminNotificationSettingsStats> {
     try {
-      const client = getAdminClient();
-      const { data, error } = await client
+      const { data, error } = await supabase
         .from(this.SETTINGS_TABLE)
         .select(
           "user_id, email_notifications, push_notifications, weekly_digest, new_messages, community_updates, business_updates",
@@ -244,8 +236,7 @@ class AdminNotificationsService {
     }
 
     try {
-      const client = getAdminClient();
-      const { data, error } = await client
+      const { data, error } = await supabase
         .from(this.SETTINGS_TABLE)
         .select("user_id")
         .in("user_id", userIds);
@@ -261,8 +252,7 @@ class AdminNotificationsService {
 
   async getUserSettings(userId: string): Promise<Record<string, unknown> | null> {
     try {
-      const client = getAdminClient();
-      const { data, error } = await client
+      const { data, error } = await supabase
         .from(this.SETTINGS_TABLE)
         .select("*")
         .eq("user_id", userId)
@@ -290,8 +280,7 @@ class AdminNotificationsService {
         limit = 20,
       } = filters;
 
-      const client = getAdminClient();
-      let query = client.from(this.TABLE).select("*", { count: "exact" });
+      let query = supabase.from(this.TABLE).select("*", { count: "exact" });
 
       if (!includeDeleted) {
         query = query.is("deleted_at", null);

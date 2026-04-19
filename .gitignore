@@ -83,6 +83,22 @@ Thumbs.db
 *SERVICE_ROLE*
 *service-role*
 
+# Firebase credentials
+*firebase*service*account*.json
+firebase-config.txt
+firebase-config.json
+*firebase*credentials*
+*firebase*key*
+
+# API Keys e Secrets
+*api-key*
+*api_key*
+*secret-key*
+*secret_key*
+*.pem
+*.key
+*.cert
+
 # Arquivos temporários na raiz (devem estar em pastas apropriadas)
 /*.sql
 /*.txt

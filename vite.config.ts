@@ -14,6 +14,8 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
 import { componentTagger } from "lovable-tagger";
+import { visualizer } from "rollup-plugin-visualizer";
+import { sentryVitePlugin } from "@sentry/vite-plugin";
 
 function getVendorChunk(id: string): string | undefined {
   if (!id.includes("node_modules")) {
@@ -74,6 +76,24 @@ export default defineConfig(({ mode }) => ({
   plugins: [
     react(),
     mode === "development" && componentTagger(),
+    mode === "production" && visualizer({
+      filename: './dist/stats.html',
+      open: false,
+      gzipSize: true,
+      brotliSize: true,
+    }),
+    // Sentry plugin para upload de source maps (apenas se configurado)
+    mode === "production" && process.env.SENTRY_AUTH_TOKEN && sentryVitePlugin({
+      org: process.env.SENTRY_ORG || "ordax",
+      project: process.env.SENTRY_PROJECT || "ordax-saas",
+      authToken: process.env.SENTRY_AUTH_TOKEN,
+      telemetry: false,
+      sourcemaps: {
+        assets: './dist/assets/**',
+        ignore: ['node_modules'],
+        filesToDeleteAfterUpload: ['./dist/assets/**/*.map'],
+      },
+    }),
   ].filter(Boolean),
   
   resolve: {
@@ -99,7 +119,7 @@ export default defineConfig(({ mode }) => ({
     target: 'es2020',
     minify: 'esbuild',
     cssCodeSplit: true,
-    sourcemap: false,
+    sourcemap: true, // Habilitar source maps para Sentry
     // maplibre-gl já é carregado em chunk isolado e lazy; elevamos o limite
     // para reduzir falso positivo e manter foco em regressões reais.
     chunkSizeWarningLimit: 1100,

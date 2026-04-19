@@ -7,7 +7,6 @@
  */
 
 import { supabase } from "@/integrations/supabase";
-import { supabaseAdmin } from "@/integrations/supabase/supabaseAdmin";
 import { logger } from "@/shared/utils/logger";
 import { profileService, ProfileService } from "@/core/profiles/services/ProfileService";
 import { buildPublicProfileUrl } from "@/core/profiles/utils/publicProfileUrl";
@@ -276,10 +275,6 @@ export interface AdminProfileIdentityDetail {
   residence: AdminProfileResidenceSummary | null;
   family: AdminProfileFamilySummary;
   permissionGovernance: AdminProfilePermissionGovernanceSummary | null;
-}
-
-function getAdminClient() {
-  return (supabaseAdmin ?? supabase) as any;
 }
 
 function normalizeText(value: unknown): string | null {
@@ -814,7 +809,7 @@ async function loadActiveSubscriptionsByUserId(
 ): Promise<Map<string, RawRecord>> {
   if (userIds.length === 0) return new Map();
 
-  const { data, error } = await getAdminClient()
+  const { data, error } = await supabase
     .from("user_subscriptions")
     .select("*")
     .in("user_id", userIds)
@@ -866,7 +861,7 @@ async function loadUsernameHistoryCountMap(
 ): Promise<Map<string, number>> {
   if (profileIds.length === 0) return new Map();
 
-  const { data, error } = await getAdminClient()
+  const { data, error } = await supabase
     .from("profile_username_history")
     .select("profile_id")
     .in("profile_id", profileIds);
@@ -888,7 +883,7 @@ async function loadProfileMembersCountMap(
 ): Promise<Map<string, number>> {
   if (profileIds.length === 0) return new Map();
 
-  const { data, error } = await getAdminClient()
+  const { data, error } = await supabase
     .from("profile_members")
     .select("profile_id")
     .in("profile_id", profileIds);
@@ -917,8 +912,8 @@ async function loadEntityMaps(profileIds: string[]): Promise<{
   // ✅ SSOT: Usar ProfileService.getDriverData para driver_data
   // business_data e professional_data ainda precisam de serviços canônicos
   const [businessResult, professionalResult] = await Promise.all([
-    getAdminClient().from("business_data").select("*").in("profile_id", profileIds),
-    getAdminClient().from("professional_data").select("*").in("profile_id", profileIds),
+    supabase.from("business_data").select("*").in("profile_id", profileIds),
+    supabase.from("professional_data").select("*").in("profile_id", profileIds),
   ]);
 
   // Carregar driver_data usando ProfileService
@@ -962,7 +957,7 @@ async function loadDriverReputationMap(
 ): Promise<Map<string, RawRecord>> {
   if (profileIds.length === 0) return new Map();
 
-  const { data, error } = await getAdminClient()
+  const { data, error } = await supabase
     .from("driver_complete_profile")
     .select("profile_id, avg_rating, total_rides")
     .in("profile_id", profileIds);
@@ -983,7 +978,7 @@ async function loadReviewAggregateMap(
 ): Promise<Map<string, ReviewAggregateSummary>> {
   if (profileIds.length === 0) return new Map();
 
-  const { data, error } = await getAdminClient()
+  const { data, error } = await supabase
     .from(table)
     .select("reviewed_profile_id, rating")
     .in("reviewed_profile_id", profileIds);
@@ -1039,7 +1034,7 @@ async function loadPrimaryResidenceMap(
 ): Promise<Map<string, RawRecord>> {
   if (userIds.length === 0) return new Map();
 
-  const { data, error } = await getAdminClient()
+  const { data, error } = await supabase
     .from("user_residences")
     .select(`
       id,
@@ -1083,7 +1078,7 @@ async function loadFamilySummary(userId: string): Promise<AdminProfileFamilySumm
   try {
     const summary = await FamilyService.getCoverageSummaryByUserId(
       userId,
-      getAdminClient(),
+      supabase,
     );
     const hasAnyFamilyRecord =
       summary.activeChildrenCount > 0 ||
@@ -1248,24 +1243,38 @@ function buildIdentityRecord(payload: {
   };
 }
 
+/**
+ * Carregar resumo de autenticação do usuário
+ * 
+ * ✅ SEGURANÇA: Usa edge function admin-get-user-auth-summary
+ * - Validação de role admin no servidor
+ * - Acesso seguro a auth.users
+ * - Audit logging automático
+ */
 async function loadAuthSummary(userId: string): Promise<AdminProfileIdentityAuthSummary | null> {
-  if (!supabaseAdmin) {
-    return null;
-  }
-
   try {
-    const { data, error } = await supabaseAdmin.auth.admin.getUserById(userId);
-    if (error) throw error;
+    const { data, error } = await supabase.functions.invoke('admin-get-user-auth-summary', {
+      body: { userId },
+    });
+
+    if (error) {
+      logger.error('AdminProfileGovernanceService.loadAuthSummary', error);
+      return null;
+    }
+
+    if (!data) {
+      return null;
+    }
 
     return {
-      email: data.user.email ?? null,
-      phone: data.user.phone ?? null,
-      emailConfirmed: Boolean(data.user.email_confirmed_at),
-      createdAt: data.user.created_at ?? null,
-      lastSignInAt: data.user.last_sign_in_at ?? null,
+      email: data.email ?? null,
+      phone: data.phone ?? null,
+      emailConfirmed: Boolean(data.email_confirmed_at),
+      createdAt: data.created_at ?? null,
+      lastSignInAt: data.last_sign_in_at ?? null,
     };
   } catch (error) {
-    logger.error("AdminProfileGovernanceService.loadAuthSummary", error);
+    logger.error('AdminProfileGovernanceService.loadAuthSummary', error);
     return null;
   }
 }
@@ -1577,22 +1586,22 @@ class AdminProfileGovernanceService {
       ] = await Promise.all([
         // ✅ SSOT: Usar ProfileService.getUserRoles
         ProfileService.getUserRoles(userId).then(roles => ({ data: roles.map(role => ({ role, is_active: true })), error: null })),
-        getAdminClient()
+        supabase
           .from("user_subscriptions")
           .select("*")
           .eq("user_id", userId)
           .order("started_at", { ascending: false })
           .limit(1)
           .maybeSingle(),
-        getAdminClient()
+        supabase
           .from("profile_members")
           .select("*")
           .eq("profile_id", profileId)
           .order("joined_at", { ascending: true }),
         // ✅ SSOT: Usar ProfileService.getProfilesByUserId
         ProfileService.getProfilesByUserId(userId).then(data => ({ data, error: null })),
-        getAdminClient().from("business_data").select("*").eq("profile_id", profileId).maybeSingle(),
-        getAdminClient()
+        supabase.from("business_data").select("*").eq("profile_id", profileId).maybeSingle(),
+        supabase
           .from("professional_data")
           .select("*")
           .eq("profile_id", profileId)

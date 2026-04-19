@@ -1,29 +1,45 @@
-# robots.txt para Achegue-se
-# Gerado automaticamente
+# Ordax SaaS - Robots.txt
+# Generated: 2026-04-19
+# Version: 1.0.0
 
+# Allow all crawlers
 User-agent: *
 Allow: /
 
-# Sitemap
-Sitemap: https://acheguese.com.br/sitemap.xml
-
-# Disallow admin e auth pages
+# Disallow admin and private areas
 Disallow: /admin/
-Disallow: /auth/
+Disallow: /perfil/
+Disallow: /conta/
+Disallow: /checkout/
+Disallow: /pagamento/
+
+# Disallow API endpoints
 Disallow: /api/
 
-# Disallow user-specific pages
-Disallow: /perfil/editar
-Disallow: /perfil/configuracoes
-Disallow: /mensagens/
+# Sitemap location
+Sitemap: https://ordax.com.br/sitemap.xml
 
-# Allow territorial pages (SEO priority)
-Allow: /ba/
-Allow: /empresas/
-Allow: /servicos/
-Allow: /classificados/
-Allow: /comunidade/
-Allow: /mobilidade/
-
-# Crawl-delay for respectful crawling
+# Crawl delay (be nice to servers)
 Crawl-delay: 1
+
+# Specific bot rules
+User-agent: Googlebot
+Allow: /
+Crawl-delay: 0
+
+User-agent: Bingbot
+Allow: /
+Crawl-delay: 1
+
+# Block bad bots
+User-agent: AhrefsBot
+Disallow: /
+
+User-agent: SemrushBot
+Disallow: /
+
+User-agent: MJ12bot
+Disallow: /
+
+User-agent: DotBot
+Disallow: /

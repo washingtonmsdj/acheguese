@@ -489,20 +489,85 @@ export const INPUT_VALIDATION = {
  * MUST be updated on every security config change.
  */
 export const SECURITY_AUDIT_LOG = {
-  lastReview: '2026-04-18',
+  lastReview: '2026-04-19',
   reviewer: 'Kiro AI',
-  version: '2.1.2', // Bumped: HttpOnly realistic approach
+  version: '2.2.0', // Bumped: Added cache headers
   changes: [
     'Initial SSOT implementation',
     'CSP directives centralized',
     'Domain registry created',
     'Type-safe configuration',
     'Comprehensive documentation',
-    'HttpOnly analysis: FALSE justified (Vite SPA limitation)', // ⭐ UPDATED
-    'Realistic approach documented', // ⭐ NEW
-    'Defense in depth: 6 layers active', // ⭐ NEW
+    'HttpOnly analysis: FALSE justified (Vite SPA limitation)',
+    'Realistic approach documented',
+    'Defense in depth: 6 layers active',
+    'Cache headers added for performance', // ⭐ NEW
   ],
-  nextReview: '2026-05-18', // Monthly review
+  nextReview: '2026-05-19', // Monthly review
+} as const;
+
+/**
+ * Cache Control Headers Configuration
+ * 
+ * Optimized caching strategy for different asset types.
+ * Balances performance with freshness requirements.
+ * 
+ * Patterns use Vercel-compatible syntax:
+ * - /assets/:path* for wildcard paths
+ * - *.ext for file extensions
+ */
+export const CACHE_HEADERS = {
+  // Static assets (JS, CSS) - Immutable with hash
+  STATIC_ASSETS: {
+    pattern: '/assets/:path*',
+    headers: {
+      'Cache-Control': 'public, max-age=31536000, immutable',
+    },
+  },
+  
+  // Images - Stale while revalidate
+  IMAGES: {
+    pattern: '/:path*.(jpg|jpeg|png|gif|svg|webp|avif|ico)',
+    headers: {
+      'Cache-Control': 'public, max-age=86400, stale-while-revalidate=604800',
+    },
+  },
+  
+  // Fonts - Long cache
+  FONTS: {
+    pattern: '/:path*.(woff|woff2|ttf|otf|eot)',
+    headers: {
+      'Cache-Control': 'public, max-age=31536000, immutable',
+    },
+  },
+  
+  // HTML - No cache (always fresh)
+  HTML: {
+    pattern: '/:path*.html',
+    headers: {
+      'Cache-Control': 'no-cache, no-store, must-revalidate',
+      'Pragma': 'no-cache',
+      'Expires': '0',
+    },
+  },
+  
+  // Service Worker - No cache
+  SERVICE_WORKER: {
+    pattern: '/sw.js',
+    headers: {
+      'Cache-Control': 'no-cache, no-store, must-revalidate',
+      'Pragma': 'no-cache',
+      'Expires': '0',
+    },
+  },
+  
+  // Manifest - Short cache
+  MANIFEST: {
+    pattern: '/manifest.json',
+    headers: {
+      'Cache-Control': 'public, max-age=3600',
+    },
+  },
 } as const;
 
 /**
@@ -511,9 +576,9 @@ export const SECURITY_AUDIT_LOG = {
  * Metadata about this configuration file.
  */
 export const SECURITY_CONFIG_METADATA = {
-  version: '2.1.2', // Bumped: HttpOnly realistic approach
+  version: '2.2.0', // Bumped: Added cache headers
   created: '2026-04-18',
-  lastModified: '2026-04-18',
+  lastModified: '2026-04-19',
   author: 'Kiro AI',
   purpose: 'Single Source of Truth for security configurations',
   criticality: 'CRITICAL',

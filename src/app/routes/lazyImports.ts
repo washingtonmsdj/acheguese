@@ -30,6 +30,7 @@ export const OnboardingPage = lazy(() => import("@/app/pages/OnboardingPage"));
 export const BuscaPage = lazy(() => import("@/app/pages/BuscaPage"));
 export const NearbyPage = lazy(() => import("@/pages/NearbyPage"));
 export const NotFound = lazy(() => import("@/app/pages/NotFound"));
+export const StatusPage = lazy(() => import("@/app/pages/StatusPage"));
 
 // ============================================================
 // 🔐 AUTENTICAÇÃO E ONBOARDING
@@ -48,6 +49,21 @@ export const PerfilEditarPage = lazy(() => import("@/modules/profile/pages/Perfi
 export const PerfilIdentidadesPage = lazy(() => import("@/modules/profile/pages/PerfilIdentidadesPage"));
 export const PerfilContaPage = lazy(() => import("@/modules/profile/pages/PerfilContaPage"));
 export const FamiliaPage = lazy(() => import("@/modules/profile/pages/FamiliaPage"));
+
+// ============================================================
+// 💳 BILLING E ASSINATURAS
+// ============================================================
+export const PricingPage = lazy(() => import("@/pages/PricingPage"));
+export const CheckoutSuccessPage = lazy(() => import("@/pages/CheckoutSuccessPage"));
+export const CheckoutCancelPage = lazy(() => import("@/pages/CheckoutCancelPage"));
+export const SubscriptionManagementPage = lazy(() => import("@/pages/SubscriptionManagementPage"));
+
+// ============================================================
+// 🔔 NOTIFICAÇÕES
+// ============================================================
+export const NotificationsPage = lazy(() => import("@/pages/NotificationsPage"));
+export const NotificationPreferencesPage = lazy(() => import("@/pages/NotificationPreferencesPage"));
+export const EmailLogsPage = lazy(() => import("@/pages/EmailLogsPage"));
 export const ConfiguracoesPage = lazy(() => import("@/modules/profile/pages/ConfiguracoesPage"));
 export const ProfileSettingsPage = lazy(() => import("@/app/pages/ProfileSettingsPage"));
 export const ProfilePublicRoute = lazy(() => import("@/core/routing/components/ProfilePublicRoute"));

@@ -1,35 +1,34 @@
-import { QueryClient } from "@tanstack/react-query";
+/**
+ * SSOT - React Query Client Configuration
+ * 
+ * Configuração otimizada do React Query seguindo SSOT.
+ * Importa configurações de cache do config centralizado.
+ * 
+ * @see src/config/reactQuery.config.ts - Configuração completa
+ * @version 2.0.0
+ */
 
-// Configuração profissional do React Query
-export const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      // Cache por 5 minutos por padrão
-      staleTime: 5 * 60 * 1000,
-      // Manter cache por 10 minutos
-      gcTime: 10 * 60 * 1000,
-      // Retry em caso de erro
-      retry: (failureCount, error: any) => {
-        // Não retry em erros 4xx (client errors)
-        if (error?.status >= 400 && error?.status < 500) {
-          return false;
-        }
-        // Retry até 3 vezes para outros erros
-        return failureCount < 3;
-      },
-      // Refetch quando a janela ganha foco
-      refetchOnWindowFocus: false,
-      // Refetch quando reconecta
-      refetchOnReconnect: true,
-    },
-    mutations: {
-      // Retry mutations uma vez
-      retry: 1,
-    },
-  },
-});
+import { createQueryClient, QUERY_KEYS } from "@/config/reactQuery.config";
 
-// Query keys centralizadas para consistência
+/**
+ * Query Client Instance
+ * 
+ * Instância configurada com estratégias de cache otimizadas:
+ * - Static data: 24h cache
+ * - User data: 5min cache
+ * - Realtime data: 0s cache
+ * - List data: 2min cache
+ */
+export const queryClient = createQueryClient();
+
+/**
+ * Query Keys (Legacy Support)
+ * 
+ * Mantido para compatibilidade com código existente.
+ * Novos códigos devem usar QUERY_KEYS de reactQuery.config.ts
+ * 
+ * @deprecated Use QUERY_KEYS from @/config/reactQuery.config.ts
+ */
 export const queryKeys = {
   // Business queries
   businesses: ["businesses"] as const,
@@ -55,3 +54,10 @@ export const queryKeys = {
   posts: ["posts"] as const,
   post: (id: string) => ["posts", id] as const,
 } as const;
+
+/**
+ * Re-export QUERY_KEYS from SSOT config
+ * 
+ * Use estas keys para novos códigos.
+ */
+export { QUERY_KEYS };

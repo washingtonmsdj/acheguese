@@ -36,6 +36,9 @@ export function AppRoutes() {
       {/* QR Code Resolver - DEVE VIR ANTES DE OUTRAS ROTAS */}
       <Route path="/q/:token" element={<P.QrResolverPage />} />
       
+      {/* Status Page - Página pública de status do sistema */}
+      <Route path="/status" element={<P.StatusPage />} />
+      
       <Route path="/splash" element={<P.SplashPage />} />
       <Route path="/login" element={<P.LoginPage />} />
       <Route path="/cadastro" element={<P.CadastroPage />} />
@@ -52,6 +55,17 @@ export function AppRoutes() {
         <Route path="/" element={<P.MainLandingPage />} />
         <Route path="/home-v2" element={<P.HomePageV2 />} />
         <Route path="/home-v1" element={<P.HomePage />} />
+        
+        {/* Rotas de Billing e Assinaturas */}
+        <Route path="/pricing" element={<P.PricingPage />} />
+        <Route path="/checkout/success" element={<P.CheckoutSuccessPage />} />
+        <Route path="/checkout/cancel" element={<P.CheckoutCancelPage />} />
+        <Route path="/settings/subscription" element={<P.SubscriptionManagementPage />} />
+        
+        {/* Rotas de Notificações */}
+        <Route path="/notifications" element={<P.NotificationsPage />} />
+        <Route path="/settings/notifications" element={<P.NotificationPreferencesPage />} />
+        <Route path="/settings/email-logs" element={<P.EmailLogsPage />} />
         
         {/* Rotas públicas de landing pages */}
         <Route path="/empresas-landing" element={<P.EmpresasLandingPage />} />

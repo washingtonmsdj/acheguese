@@ -15,7 +15,7 @@
 
 import fs from 'fs';
 import path from 'path';
-import { SECURITY_HEADERS, getSecurityConfigSummary } from '../src/config/security.config';
+import { SECURITY_HEADERS, CACHE_HEADERS, getSecurityConfigSummary } from '../src/config/security.config';
 
 /**
  * Vercel configuration template
@@ -37,21 +37,10 @@ const VERCEL_CONFIG_TEMPLATE = {
     },
   ],
   
-  headers: [
-    {
-      source: '/(.*)',
-      headers: [] as Array<{ key: string; value: string }>, // Will be populated
-    },
-    {
-      source: '/assets/(.*)',
-      headers: [
-        {
-          key: 'Cache-Control',
-          value: 'public, max-age=31536000, immutable',
-        },
-      ],
-    },
-  ],
+  headers: [] as Array<{
+    source: string;
+    headers: Array<{ key: string; value: string }>;
+  }>, // Will be populated
 };
 
 /**
@@ -86,29 +75,42 @@ function generateVercelConfig() {
   });
   console.log('');
   
-  // Inject security headers into template
+  // Convert cache headers to Vercel format
+  const cacheHeadersArray = Object.values(CACHE_HEADERS).map(config => ({
+    source: config.pattern,
+    headers: Object.entries(config.headers).map(([key, value]) => ({
+      key,
+      value,
+    })),
+  }));
+  
+  console.log('⚡ Cache Headers:');
+  cacheHeadersArray.forEach(config => {
+    console.log(`   ${config.source}:`);
+    config.headers.forEach(header => {
+      console.log(`      ${header.key}: ${header.value}`);
+    });
+  });
+  console.log('');
+  
+  // Inject headers into template
   const config = { ...VERCEL_CONFIG_TEMPLATE };
-  config.headers[0].headers = securityHeaders;
   
-  // Add generation metadata as comment
-  const metadata = {
-    _comment: 'This file is AUTO-GENERATED from src/config/security.config.ts',
-    _warning: 'DO NOT manually edit security headers - they will be overwritten',
-    _generator: 'scripts/generate-vercel-config.ts',
-    _generated: new Date().toISOString(),
-    _version: summary.version,
-  };
+  // Add security headers for all routes
+  config.headers.push({
+    source: '/(.*)',
+    headers: securityHeaders,
+  });
   
-  const configWithMetadata = {
-    ...metadata,
-    ...config,
-  };
+  // Add cache headers for specific patterns
+  config.headers.push(...cacheHeadersArray);
   
-  // Write to file
+  // Write to file (no comments - Vercel doesn't support them)
   const outputPath = path.join(process.cwd(), 'vercel.json');
+  
   fs.writeFileSync(
     outputPath,
-    JSON.stringify(configWithMetadata, null, 2) + '\n'
+    JSON.stringify(config, null, 2) + '\n'
   );
   
   console.log('✅ vercel.json generated successfully');

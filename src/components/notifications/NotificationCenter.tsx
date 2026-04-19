@@ -1,0 +1,121 @@
+/**
+ * ══════════════════════════════════════════════════════════════════════════
+ * NOTIFICATION CENTER COMPONENT
+ * ══════════════════════════════════════════════════════════════════════════
+ * 
+ * Centro de notificações com lista, filtros e ações.
+ * 
+ * ══════════════════════════════════════════════════════════════════════════
+ */
+
+import { useState } from 'react';
+import { Bell, Check, CheckCheck, Trash2, Filter, Loader2 } from 'lucide-react';
+import { Button } from '@/shared/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/components/ui/tabs';
+import { useNotifications } from '@/core/notifications/hooks/useNotifications';
+import { NotificationItem } from './NotificationItem';
+
+export function NotificationCenter() {
+  const [filter, setFilter] = useState<'all' | 'unread'>('all');
+  const { 
+    notifications, 
+    unreadCount, 
+    isLoading, 
+    markAllAsRead,
+    refetch 
+  } = useNotifications({
+    read: filter === 'unread' ? false : undefined,
+  });
+
+  const handleMarkAllAsRead = async () => {
+    await markAllAsRead.mutateAsync();
+    refetch();
+  };
+
+  if (isLoading) {
+    return (
+      <Card>
+        <CardContent className="flex items-center justify-center py-12">
+          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        </CardContent>
+      </Card>
+    );
+  }
+
+  const hasUnread = (unreadCount || 0) > 0;
+
+  return (
+    <Card>
+      <CardHeader>
+        <div className="flex items-center justify-between">
+          <div>
+            <CardTitle className="flex items-center gap-2">
+              <Bell className="h-5 w-5" />
+              Notificações
+              {hasUnread && (
+                <span className="ml-2 rounded-full bg-primary px-2 py-0.5 text-xs text-primary-foreground">
+                  {unreadCount}
+                </span>
+              )}
+            </CardTitle>
+            <CardDescription>
+              Suas notificações e atualizações
+            </CardDescription>
+          </div>
+          {hasUnread && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleMarkAllAsRead}
+              disabled={markAllAsRead.isPending}
+            >
+              {markAllAsRead.isPending ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <>
+                  <CheckCheck className="h-4 w-4 mr-2" />
+                  Marcar todas como lidas
+                </>
+              )}
+            </Button>
+          )}
+        </div>
+      </CardHeader>
+      <CardContent>
+        <Tabs value={filter} onValueChange={(v) => setFilter(v as 'all' | 'unread')}>
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="all">
+              Todas
+            </TabsTrigger>
+            <TabsTrigger value="unread">
+              Não lidas {hasUnread && `(${unreadCount})`}
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value={filter} className="mt-4">
+            {!notifications || notifications.length === 0 ? (
+              <div className="text-center py-12">
+                <Bell className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                <p className="text-muted-foreground">
+                  {filter === 'unread' 
+                    ? 'Nenhuma notificação não lida' 
+                    : 'Nenhuma notificação'}
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {notifications.map((notification) => (
+                  <NotificationItem
+                    key={notification.id}
+                    notification={notification}
+                  />
+                ))}
+              </div>
+            )}
+          </TabsContent>
+        </Tabs>
+      </CardContent>
+    </Card>
+  );
+}

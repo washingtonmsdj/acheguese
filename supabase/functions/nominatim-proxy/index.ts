@@ -1,11 +1,19 @@
 /**
  * EDGE FUNCTION: nominatim-proxy
- * Browser-safe proxy for OpenStreetMap Nominatim.
+ * Browser-safe proxy for OpenStreetMap Nominatim with database caching.
+ *
+ * Features:
+ * - Database cache (30 days TTL)
+ * - Rate limiting (60 req/min)
+ * - Input sanitization
+ * - Security headers
  *
  * Supported routes:
  * GET /functions/v1/nominatim-proxy?q=<query>
  * GET /functions/v1/nominatim-proxy?postalcode=<cep>&country=br
  * GET /functions/v1/nominatim-proxy?reverse=1&lat=<lat>&lon=<lon>&zoom=<zoom>
+ * 
+ * @version 2.0.0 - Added database caching
  */
 
 import { 
@@ -14,6 +22,7 @@ import {
   errorResponse,
   sanitizeString,
 } from '../_shared/security.ts';
+import { withCache, CACHE_TTL, generateCacheKey } from '../_shared/cache.ts';
 
 const NOMINATIM_BASE = 'https://nominatim.openstreetmap.org';
 
@@ -105,24 +114,46 @@ Deno.serve(async (req) => {
     return jsonResponse({ error: 'Parametro obrigatorio: q, postalcode ou reverse=1' }, 400);
   }
 
-  try {
-    const response = await fetch(nominatimUrl, {
-      headers: {
-        'User-Agent': 'Ordax/1.0 (supabase-edge-function)',
-        'Accept-Language': 'pt-BR,pt;q=0.9',
-      },
-    });
+  // Generate cache key
+  const cacheKey = generateCacheKey('geocoding', {
+    type: reverse ? 'reverse' : (q ? 'search' : 'postalcode'),
+    q: q || undefined,
+    postalcode: postalcode || undefined,
+    country,
+    lat: lat || undefined,
+    lon: lon || undefined,
+    zoom: zoom || undefined,
+  });
 
-    const rawBody = await response.text();
-    let data: unknown;
-    try {
-      data = JSON.parse(rawBody);
-    } catch {
-      return errorResponse('Resposta invalida do Nominatim', 502, { raw: rawBody.slice(0, 300) });
-    }
+  try {
+    // Use cache wrapper
+    const data = await withCache(
+      cacheKey,
+      async () => {
+        // Fetch from Nominatim
+        const response = await fetch(nominatimUrl, {
+          headers: {
+            'User-Agent': 'Ordax/1.0 (supabase-edge-function)',
+            'Accept-Language': 'pt-BR,pt;q=0.9',
+          },
+        });
+
+        const rawBody = await response.text();
+        let parsedData: unknown;
+        try {
+          parsedData = JSON.parse(rawBody);
+        } catch {
+          throw new Error('Invalid JSON response from Nominatim');
+        }
+
+        return parsedData;
+      },
+      CACHE_TTL.VERY_LONG, // 30 days
+      'geocoding'
+    );
 
     return new Response(JSON.stringify(data), {
-      status: response.status,
+      status: 200,
       headers: {
         ...getAllSecurityHeaders('GET, OPTIONS'),
         'Cache-Control': 'public, max-age=86400',

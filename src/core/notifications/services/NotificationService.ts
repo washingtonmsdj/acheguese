@@ -1,360 +1,215 @@
-import { supabase } from "@/integrations/supabase";
-import { trackError } from "@/shared/utils/errorTracking";
-import { normalizeNotification } from "../utils/normalizeNotification";
-import type {
-  CreateNotificationParams,
-  Notification,
-  NotificationFilters,
-  NotificationPriority,
-  NotificationSettings,
-  NotificationStats,
-  NotificationTypeValue,
-} from "../types";
+/**
+ * ══════════════════════════════════════════════════════════════════════════
+ * NOTIFICATION SERVICE
+ * ══════════════════════════════════════════════════════════════════════════
+ * 
+ * Serviço para gerenciar notificações in-app.
+ * 
+ * ══════════════════════════════════════════════════════════════════════════
+ */
 
-const TABLE = "notifications";
-const SETTINGS_TABLE = "user_notification_settings";
+import { supabase } from '@/integrations/supabase/client';
 
-const DEFAULT_NOTIFICATION_SETTINGS: Required<NotificationSettings> = {
-  email_notifications: true,
-  push_notifications: true,
-  new_messages: true,
-  new_comments: true,
-  new_likes: true,
-  new_followers: true,
-  business_updates: true,
-  community_updates: true,
-  weekly_digest: true,
-};
+export interface Notification {
+  id: string;
+  user_id: string;
+  type: 'info' | 'success' | 'warning' | 'error';
+  category: 'transactional' | 'social' | 'system' | 'marketing';
+  title: string;
+  message: string;
+  action_url?: string;
+  action_label?: string;
+  metadata?: Record<string, any>;
+  read: boolean;
+  read_at?: string;
+  created_at: string;
+}
 
-export async function fetchNotifications(
-  userId: string,
-  filters: NotificationFilters = {},
-): Promise<Notification[]> {
-  try {
-    let query = (supabase as any)
-      .from(TABLE)
-      .select("*")
-      .eq("user_id", userId)
-      .is("deleted_at", null);
+export interface CreateNotificationInput {
+  user_id: string;
+  type: 'info' | 'success' | 'warning' | 'error';
+  category: 'transactional' | 'social' | 'system' | 'marketing';
+  title: string;
+  message: string;
+  action_url?: string;
+  action_label?: string;
+  metadata?: Record<string, any>;
+}
 
-    if (filters.type) {
-      const types = Array.isArray(filters.type) ? filters.type : [filters.type];
-      query = query.in("type", types as NotificationTypeValue[]);
+export interface NotificationFilters {
+  read?: boolean;
+  category?: string;
+  limit?: number;
+  offset?: number;
+}
+
+export class NotificationService {
+  /**
+   * Cria uma nova notificação (via função SQL que respeita preferências)
+   */
+  static async createNotification(input: CreateNotificationInput): Promise<string | null> {
+    const { data, error } = await supabase.rpc('create_notification', {
+      p_user_id: input.user_id,
+      p_type: input.type,
+      p_category: input.category,
+      p_title: input.title,
+      p_message: input.message,
+      p_action_url: input.action_url || null,
+      p_action_label: input.action_label || null,
+      p_metadata: input.metadata || {},
+    });
+
+    if (error) {
+      console.error('Error creating notification:', error);
+      throw error;
     }
 
-    if (filters.priority) {
-      const priorities = Array.isArray(filters.priority)
-        ? filters.priority
-        : [filters.priority];
-      query = query.in("priority", priorities as NotificationPriority[]);
+    return data;
+  }
+
+  /**
+   * Obtém notificações do usuário atual
+   */
+  static async getUserNotifications(filters?: NotificationFilters): Promise<Notification[]> {
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    if (!user) {
+      throw new Error('User not authenticated');
     }
 
-    if (filters.read !== undefined) {
-      query = query.eq("read", filters.read);
+    let query = supabase
+      .from('notifications')
+      .select('*')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false });
+
+    if (filters?.read !== undefined) {
+      query = query.eq('read', filters.read);
     }
 
-    query = query.order("priority", { ascending: false });
-    query = query.order("created_at", { ascending: false });
+    if (filters?.category) {
+      query = query.eq('category', filters.category);
+    }
 
-    if (filters.limit) {
+    if (filters?.limit) {
       query = query.limit(filters.limit);
     }
 
-    if (filters.offset !== undefined) {
-      const pageLimit = filters.limit || 50;
-      query = query.range(filters.offset, filters.offset + pageLimit - 1);
+    if (filters?.offset) {
+      query = query.range(filters.offset, filters.offset + (filters.limit || 10) - 1);
     }
 
     const { data, error } = await query;
-    if (error) {
-      throw error;
-    }
-
-    return ((data as Record<string, any>[]) || []).map(normalizeNotification);
-  } catch (error) {
-    trackError(error as Error, {
-      component: "NotificationService",
-      action: "fetchNotifications",
-      metadata: { userId, filters },
-    });
-    throw error;
-  }
-}
-
-export async function getStats(userId: string): Promise<NotificationStats> {
-  try {
-    const notifications = await fetchNotifications(userId);
-
-    const stats: NotificationStats = {
-      total: notifications.length,
-      unread: notifications.filter((notification) => !notification.read).length,
-      by_type: {},
-      by_priority: {
-        low: 0,
-        medium: 0,
-        high: 0,
-        urgent: 0,
-      },
-    };
-
-    notifications.forEach((notification) => {
-      stats.by_type[notification.type] = (stats.by_type[notification.type] || 0) + 1;
-      stats.by_priority[notification.priority] += 1;
-    });
-
-    return stats;
-  } catch (error) {
-    trackError(error as Error, {
-      component: "NotificationService",
-      action: "getStats",
-      metadata: { userId },
-    });
-    throw error;
-  }
-}
-
-export async function getNotificationSettings(userId: string): Promise<NotificationSettings> {
-  try {
-    const { data, error } = await (supabase as any)
-      .from(SETTINGS_TABLE)
-      .select("*")
-      .eq("user_id", userId)
-      .single();
-
-    if (error && error.code !== "PGRST116") {
-      throw error;
-    }
-
-    return data || DEFAULT_NOTIFICATION_SETTINGS;
-  } catch (error) {
-    trackError(error as Error, {
-      component: "NotificationService",
-      action: "getNotificationSettings",
-      metadata: { userId },
-    });
-    throw error;
-  }
-}
-
-export async function getUnreadCount(userId: string): Promise<number> {
-  try {
-    const { data, error } = await (supabase as any).rpc("get_unread_count");
 
     if (error) {
+      console.error('Error fetching notifications:', error);
       throw error;
     }
 
-    return data as number;
-  } catch (error) {
-    trackError(error as Error, {
-      component: "NotificationService",
-      action: "getUnreadCount",
-      metadata: { userId },
-    });
-    return 0;
+    return data || [];
   }
-}
 
-export async function createNotification(
-  params: CreateNotificationParams,
-): Promise<Notification> {
-  try {
-    const { data, error } = await (supabase as any).rpc("create_notification", {
-      p_user_id: params.user_id,
-      p_type: params.type,
-      p_title: params.title,
-      p_message: params.message,
-      p_priority: params.priority || "medium",
-      p_metadata: params.metadata || {},
-    });
-
-    if (error) {
-      throw error;
-    }
-
-    const { data: notification, error: fetchError } = await (supabase as any)
-      .from(TABLE)
-      .select("*")
-      .eq("id", data)
-      .single();
-
-    if (fetchError) {
-      throw fetchError;
-    }
-
-    return normalizeNotification(notification as Record<string, any>);
-  } catch (error) {
-    trackError(error as Error, {
-      component: "NotificationService",
-      action: "createNotification",
-      metadata: { ...params },
-    });
-    throw error;
-  }
-}
-
-export async function markAsRead(notificationId: string): Promise<boolean> {
-  try {
-    const { data, error } = await (supabase as any).rpc("mark_notification_as_read", {
+  /**
+   * Marca notificação como lida
+   */
+  static async markAsRead(notificationId: string): Promise<void> {
+    const { error } = await supabase.rpc('mark_notification_as_read', {
       p_notification_id: notificationId,
     });
 
     if (error) {
+      console.error('Error marking notification as read:', error);
       throw error;
     }
-
-    return data as boolean;
-  } catch (error) {
-    trackError(error as Error, {
-      component: "NotificationService",
-      action: "markAsRead",
-      metadata: { notificationId },
-    });
-    throw error;
   }
-}
 
-export async function markAllAsRead(userId: string): Promise<number> {
-  try {
-    const { data, error } = await (supabase as any).rpc("mark_all_notifications_as_read");
-
-    if (error) {
-      throw error;
+  /**
+   * Marca todas as notificações como lidas
+   */
+  static async markAllAsRead(): Promise<number> {
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    if (!user) {
+      throw new Error('User not authenticated');
     }
 
-    return data as number;
-  } catch (error) {
-    trackError(error as Error, {
-      component: "NotificationService",
-      action: "markAllAsRead",
-      metadata: { userId },
-    });
-    throw error;
-  }
-}
-
-export async function deleteNotification(notificationId: string): Promise<boolean> {
-  try {
-    const { error } = await (supabase as any)
-      .from(TABLE)
-      .update({ deleted_at: new Date().toISOString() })
-      .eq("id", notificationId);
-
-    if (error) {
-      throw error;
-    }
-
-    return true;
-  } catch (error) {
-    trackError(error as Error, {
-      component: "NotificationService",
-      action: "deleteNotification",
-      metadata: { notificationId },
-    });
-    throw error;
-  }
-}
-
-export async function updateNotificationSettings(
-  userId: string,
-  settings: NotificationSettings,
-): Promise<boolean> {
-  try {
-    const { error } = await (supabase as any)
-      .from(SETTINGS_TABLE)
-      .upsert(
-        {
-          user_id: userId,
-          ...settings,
-          updated_at: new Date().toISOString(),
-        },
-        {
-          onConflict: "user_id",
-        },
-      );
-
-    if (error) {
-      throw error;
-    }
-
-    return true;
-  } catch (error) {
-    trackError(error as Error, {
-      component: "NotificationService",
-      action: "updateNotificationSettings",
-      metadata: { userId, ...settings },
-    });
-    throw error;
-  }
-}
-
-export async function cleanupOldNotifications(daysOld = 90): Promise<number> {
-  try {
-    const { data, error } = await (supabase as any).rpc("cleanup_old_notifications", {
-      days_old: daysOld,
+    const { data, error } = await supabase.rpc('mark_all_notifications_as_read', {
+      p_user_id: user.id,
     });
 
     if (error) {
+      console.error('Error marking all notifications as read:', error);
       throw error;
     }
 
-    return data as number;
-  } catch (error) {
-    trackError(error as Error, {
-      component: "NotificationService",
-      action: "cleanupOldNotifications",
-      metadata: { daysOld },
-    });
-    throw error;
+    return data || 0;
   }
-}
 
-export const NotificationsFacade = {
-  queries: {
-    fetchNotifications,
-    getStats,
-    getNotificationSettings,
-    getUnreadCount,
-  },
-  mutations: {
-    createNotification,
-    markAsRead,
-    markAllAsRead,
-    deleteNotification,
-    updateNotificationSettings,
-    cleanupOldNotifications,
-  },
-} as const;
+  /**
+   * Deleta uma notificação
+   */
+  static async deleteNotification(notificationId: string): Promise<void> {
+    const { error } = await supabase
+      .from('notifications')
+      .delete()
+      .eq('id', notificationId);
 
-export class NotificationService {
-  fetchNotifications = fetchNotifications;
-  getStats = getStats;
-  getNotificationSettings = getNotificationSettings;
-  getUnreadCount = getUnreadCount;
+    if (error) {
+      console.error('Error deleting notification:', error);
+      throw error;
+    }
+  }
 
-  createNotification = createNotification;
-  markAsRead = markAsRead;
-  markAllAsRead = markAllAsRead;
-  deleteNotification = deleteNotification;
-  updateNotificationSettings = updateNotificationSettings;
-  cleanupOldNotifications = cleanupOldNotifications;
+  /**
+   * Obtém contagem de notificações não lidas
+   */
+  static async getUnreadCount(): Promise<number> {
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    if (!user) {
+      return 0;
+    }
 
-  createRealtimeChannel(
+    const { data, error } = await supabase.rpc('get_unread_notifications_count', {
+      p_user_id: user.id,
+    });
+
+    if (error) {
+      console.error('Error getting unread count:', error);
+      return 0;
+    }
+
+    return data || 0;
+  }
+
+  /**
+   * Subscribe to realtime notifications
+   */
+  static subscribeToNotifications(
     userId: string,
-    onNotification: (notification: Notification) => void,
+    callback: (notification: Notification) => void
   ) {
-    try {
-      import("@/core/realtime").then(({ realtimeService }) => {
-        return realtimeService.subscribeToNotifications(userId, (notification) => {
-          onNotification(notification);
-        });
-      });
-    } catch (error) {
-      console.error("[NotificationService] Error creating realtime channel:", error);
-      throw error;
-    }
+    const channel = supabase
+      .channel('notifications')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'notifications',
+          filter: `user_id=eq.${userId}`,
+        },
+        (payload) => {
+          callback(payload.new as Notification);
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }
 }
 
+// Export singleton instance
 export const notificationService = new NotificationService();
-

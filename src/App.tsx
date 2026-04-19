@@ -26,6 +26,7 @@ import {
   OfflineIndicator,
 } from "@/shared/components/offline/OfflineIndicator";
 import { AppRoutes } from "@/app/routes/AppRoutes";
+import { Analytics } from "@vercel/analytics/react";
 import "@/styles/accessibility.css";
 
 // ============================================================
@@ -64,6 +65,8 @@ const App = () => (
         </AccessibilityProvider>
       </QueryClientProvider>
     </HelmetProvider>
+    {/* Vercel Analytics - apenas em produção */}
+    {import.meta.env.PROD && <Analytics />}
   </ErrorBoundary>
 );
 
