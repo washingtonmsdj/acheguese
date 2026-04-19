@@ -10,7 +10,7 @@
  * @author Kiro AI
  */
 import { logger } from '@/shared/utils/logger';
-import { QueryClient, DefaultOptions } from '@tanstack/react-query';
+import { QueryClient, DefaultOptions, QueryCache, MutationCache } from '@tanstack/react-query';
 import { captureSentryMessage, addSentryBreadcrumb } from '@/shared/config/sentry.config';
 
 /**
@@ -131,57 +131,65 @@ const defaultOptions: DefaultOptions = {
     
     // Network mode
     networkMode: 'online', // Só faz queries quando online
-    
-    // Performance monitoring
-    onError: (error: any) => {
-      // Log error para Sentry
-      if (import.meta.env.PROD) {
-        captureSentryMessage(
-          `Query error: ${error?.message || 'Unknown error'}`,
-          'error',
-          {
-            error: error?.message,
-            status: error?.status,
-            stack: error?.stack,
-          }
-        );
-      } else {
-        logger.error('Query error:', error);
-      }
-    },
-    
-    onSuccess: (data: any, query: any) => {
-      // Monitor query performance
-      const queryKey = query.queryKey;
-      const dataUpdatedAt = query.state?.dataUpdatedAt || Date.now();
-      const duration = Date.now() - dataUpdatedAt;
-      
-      // Alert on slow queries (> 3s)
-      if (duration > 3000) {
-        const message = `Slow query detected: ${JSON.stringify(queryKey).substring(0, 100)}`;
-        
-        if (import.meta.env.PROD) {
-          captureSentryMessage(message, 'warning', {
-            queryKey: JSON.stringify(queryKey),
-            duration,
-            dataSize: JSON.stringify(data).length,
-          });
-        } else if (import.meta.env.VITE_DEBUG_PERFORMANCE === 'true') {
-          logger.warn(message, { queryKey, duration });
-        }
-      }
-      
-      // Add breadcrumb for tracking
-      if (import.meta.env.PROD && duration > 1000) {
-        addSentryBreadcrumb(
-          `Query completed: ${JSON.stringify(queryKey).substring(0, 50)}`,
-          'query',
-          'info',
-          { duration, dataSize: JSON.stringify(data).length }
-        );
-      }
-    },
   },
+  
+  mutations: {
+    // Retry logic para mutations
+    retry: false, // Não retry mutations por padrão
+    
+    // Network mode
+    networkMode: 'online',
+  },
+};
+
+/**
+ * QueryCache global com handlers de erro/sucesso (TanStack Query v5)
+ */
+const queryCache = new QueryCache({
+  onError: (error: any) => {
+    if (import.meta.env.PROD) {
+      captureSentryMessage(
+        `Query error: ${error?.message || 'Unknown error'}`,
+        'error',
+        {
+          error: error?.message,
+          status: error?.status,
+          stack: error?.stack,
+        }
+      );
+    } else {
+      logger.error('Query error:', error);
+    }
+  },
+  onSuccess: (data: any, query: any) => {
+    const queryKey = query.queryKey;
+    const dataUpdatedAt = query.state?.dataUpdatedAt || Date.now();
+    const duration = Date.now() - dataUpdatedAt;
+    
+    if (duration > 3000) {
+      const message = `Slow query detected: ${JSON.stringify(queryKey).substring(0, 100)}`;
+      
+      if (import.meta.env.PROD) {
+        captureSentryMessage(message, 'warning', {
+          queryKey: JSON.stringify(queryKey),
+          duration,
+          dataSize: JSON.stringify(data).length,
+        });
+      } else if (import.meta.env.VITE_DEBUG_PERFORMANCE === 'true') {
+        logger.warn(message, { queryKey, duration });
+      }
+    }
+    
+    if (import.meta.env.PROD && duration > 1000) {
+      addSentryBreadcrumb(
+        `Query completed: ${JSON.stringify(queryKey).substring(0, 50)}`,
+        'query',
+        'info',
+        { duration, dataSize: JSON.stringify(data).length }
+      );
+    }
+  },
+});
   
   mutations: {
     // Retry logic para mutations
