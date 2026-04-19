@@ -59,7 +59,7 @@ export function ConsentBanner() {
 
       // Se logado, buscar do banco
       if (user?.id) {
-        const { data, error } = await supabase
+        const { data, error } = await (supabase as any)
           .from('user_consents')
           .select('consent_type, granted')
           .eq('user_id', user.id);
@@ -107,7 +107,7 @@ export function ConsentBanner() {
       // Se logado, salvar no banco
       if (user?.id) {
         for (const consent of consentsArray) {
-          await supabase.rpc('record_consent', {
+          await (supabase as any).rpc('record_consent', {
             p_user_id: user.id,
             p_consent_type: consent.consent_type,
             p_granted: consent.granted,
