@@ -99,9 +99,15 @@ export function ErrorBoundary({ children, fallback, showDialog = false }: Props)
   return (
     <SentryErrorBoundary
       fallback={({ error, resetError }) => {
+        // Normalizar erro (Sentry pode passar unknown)
+        const normalizedError =
+          error instanceof Error
+            ? error
+            : new Error(typeof error === "string" ? error : JSON.stringify(error));
+
         // Log para console em desenvolvimento
         if (import.meta.env.DEV) {
-          logger.error("🚨 Error Boundary caught an error:", error, {
+          logger.error("🚨 Error Boundary caught an error:", normalizedError, {
             component: "ErrorBoundary",
             action: "componentDidCatch",
           });
@@ -113,7 +119,7 @@ export function ErrorBoundary({ children, fallback, showDialog = false }: Props)
         }
 
         // Usar UI padrão
-        return <ErrorFallbackUI error={error} resetError={resetError} />;
+        return <ErrorFallbackUI error={normalizedError} resetError={resetError} />;
       }}
       showDialog={showDialog}
       dialogOptions={{
