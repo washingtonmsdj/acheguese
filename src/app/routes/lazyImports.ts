@@ -28,7 +28,7 @@ export const ContactPage = lazy(() => import("@/app/pages/ContactPage"));
 export const SplashPage = lazy(() => import("@/app/pages/SplashPage"));
 export const OnboardingPage = lazy(() => import("@/app/pages/OnboardingPage"));
 export const BuscaPage = lazy(() => import("@/app/pages/BuscaPage"));
-export const NearbyPage = lazy(() => import("@/pages/NearbyPage"));
+export const NearbyPage = lazy(() => import("@/app/pages/NearbyPage"));
 export const NotFound = lazy(() => import("@/app/pages/NotFound"));
 export const StatusPage = lazy(() => import("@/app/pages/StatusPage"));
 
@@ -53,17 +53,17 @@ export const FamiliaPage = lazy(() => import("@/modules/profile/pages/FamiliaPag
 // ============================================================
 // 💳 BILLING E ASSINATURAS
 // ============================================================
-export const PricingPage = lazy(() => import("@/pages/PricingPage"));
-export const CheckoutSuccessPage = lazy(() => import("@/pages/CheckoutSuccessPage"));
-export const CheckoutCancelPage = lazy(() => import("@/pages/CheckoutCancelPage"));
-export const SubscriptionManagementPage = lazy(() => import("@/pages/SubscriptionManagementPage"));
+export const PricingPage = lazy(() => import("@/app/pages/PricingPage"));
+export const CheckoutSuccessPage = lazy(() => import("@/app/pages/CheckoutSuccessPage"));
+export const CheckoutCancelPage = lazy(() => import("@/app/pages/CheckoutCancelPage"));
+export const SubscriptionManagementPage = lazy(() => import("@/app/pages/SubscriptionManagementPage"));
 
 // ============================================================
 // 🔔 NOTIFICAÇÕES
 // ============================================================
-export const NotificationsPage = lazy(() => import("@/pages/NotificationsPage"));
-export const NotificationPreferencesPage = lazy(() => import("@/pages/NotificationPreferencesPage"));
-export const EmailLogsPage = lazy(() => import("@/pages/EmailLogsPage"));
+export const NotificationsPage = lazy(() => import("@/app/pages/NotificationsPage"));
+export const NotificationPreferencesPage = lazy(() => import("@/app/pages/NotificationPreferencesPage"));
+export const EmailLogsPage = lazy(() => import("@/app/pages/EmailLogsPage"));
 export const ConfiguracoesPage = lazy(() => import("@/modules/profile/pages/ConfiguracoesPage"));
 export const ProfileSettingsPage = lazy(() => import("@/app/pages/ProfileSettingsPage"));
 export const ProfilePublicRoute = lazy(() => import("@/core/routing/components/ProfilePublicRoute"));
@@ -215,14 +215,14 @@ export const OfflineSettingsPage = lazy(() => import("@/app/pages/OfflineSetting
 // ============================================================
 // � LGPD / PRIVACIDADE
 // ============================================================
-export const PrivacySettingsPage = lazy(() => import("@/pages/PrivacySettingsPage"));
-export const DPOContactPage = lazy(() => import("@/pages/DPOContactPage"));
+export const PrivacySettingsPage = lazy(() => import("@/app/pages/PrivacySettingsPage"));
+export const DPOContactPage = lazy(() => import("@/app/pages/DPOContactPage"));
 
 // ============================================================
 // �🔧 DEV/ADMIN PAGES
 // ============================================================
 export const MotoboyValidationPage = lazy(() => 
-  import("@/pages/dev/MotoboyValidationPage").then(m => ({ default: m.MotoboyValidationPage }))
+  import("@/app/pages/dev/MotoboyValidationPage").then(m => ({ default: m.MotoboyValidationPage }))
 );
 export const LocationsAdminPage = lazy(() => import("@/modules/admin/pages/LocationsAdminPage"));
 
