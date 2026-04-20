@@ -222,7 +222,7 @@ export const DPOContactPage = lazy(() => import("@/app/pages/DPOContactPage"));
 // �🔧 DEV/ADMIN PAGES
 // ============================================================
 export const MotoboyValidationPage = lazy(() => 
-  import("@/pages/dev/MotoboyValidationPage").then(m => ({ default: m.MotoboyValidationPage }))
+  import("@/app/pages/dev/MotoboyValidationPage").then(m => ({ default: m.MotoboyValidationPage }))
 );
 export const LocationsAdminPage = lazy(() => import("@/modules/admin/pages/LocationsAdminPage"));
 
