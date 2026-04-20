@@ -202,7 +202,7 @@ export const DOMAIN_REGISTRY: DomainRegistryEntry[] = [
   {
     id: "gastronomy",
     label: "gastronomy",
-    sourceRoots: ["src/modules/gastronomy"],
+    sourceRoots: ["src/core/gastronomy", "src/modules/gastronomy"],
     docsPaths: ["src/modules/gastronomy/README.md"],
     ssotPaths: [
       "src/modules/gastronomy/services/GastronomyQueryService.ts",
@@ -237,6 +237,8 @@ export const DOMAIN_REGISTRY: DomainRegistryEntry[] = [
     sourceRoots: [
       "src/core/professional",
       "src/core/service-areas",
+      "src/core/services",
+      "src/core/vagas",
       "src/modules/services",
       "src/modules/professionals",
       "src/modules/jobs",
@@ -246,7 +248,9 @@ export const DOMAIN_REGISTRY: DomainRegistryEntry[] = [
     ssotPaths: [
       "src/core/professional/services/ProfessionalService.ts",
       "src/core/service-areas/services/ServiceAreasService.ts",
-      "src/modules/services/services/ServicesService.ts",
+      "src/core/services/services/ServicesService.ts",
+      "src/core/vagas/services/VagasService.ts",
+      "src/core/vagas/services/AdminVagasService.ts",
     ],
     routePrefixes: [
       "/services/:id",
@@ -263,6 +267,8 @@ export const DOMAIN_REGISTRY: DomainRegistryEntry[] = [
       "ProfessionalService.ts",
       "ServiceAreasService.ts",
       "ServicesService.ts",
+      "VagasService.ts",
+      "AdminVagasService.ts",
     ],
     canonicalTypeBasenames: ["types.ts"],
     adminSummary:
@@ -270,7 +276,7 @@ export const DOMAIN_REGISTRY: DomainRegistryEntry[] = [
     docsSummary:
       "Fraca. Professional tem README em core, mas modules/services e professionals carecem de documentacao viva sobre ownership, tipos oficiais e fronteiras com business/profile.",
     ssotSummary:
-      "ProfessionalService e o SSOT tecnico principal, mas modules/services ainda possui camada propria de services e hooks que precisa ser claramente posicionada como composicao, nao como fonte concorrente.",
+      "ProfessionalService, ServicesService e VagasService formam o eixo SSOT em core para professionals/services/vagas; modules/services e modules/vagas permanecem como camada de compatibilidade/composicao.",
   },
   {
     id: "community-posts",
@@ -318,14 +324,14 @@ export const DOMAIN_REGISTRY: DomainRegistryEntry[] = [
     sourceRoots: [
       "src/core/alerts",
       "src/core/civic",
-      "src/modules/community-alerts",
-      "src/modules/community-issues",
+      "src/core/community-alerts",
+      "src/core/community-issues",
     ],
     docsPaths: [],
     ssotPaths: [
       "src/core/alerts/services/AlertService.ts",
-      "src/modules/community-alerts/services/CommunityAlertService.ts",
-      "src/modules/community-issues/services/CommunityIssueService.ts",
+      "src/core/community-alerts/services/CommunityAlertService.ts",
+      "src/core/community-issues/services/CommunityIssueService.ts",
     ],
     routePrefixes: ["/comunidade/alertas", "/comunidade/problemas"],
     adminRoutePrefixes: ["/admin/community-alerts", "/admin/community-issues", "/admin/alertas"],
@@ -389,7 +395,7 @@ export const DOMAIN_REGISTRY: DomainRegistryEntry[] = [
     docsPaths: ["src/modules/classifieds/data/README.md"],
     ssotPaths: [
       "src/modules/classifieds/services/ClassifiedService.ts",
-      "src/modules/classifieds/services/ClassifiedUrlService.ts",
+      "src/core/classifieds/services/ClassifiedUrlService.ts",
     ],
     routePrefixes: [
       "/classificados/:state/:city",
@@ -416,9 +422,11 @@ export const DOMAIN_REGISTRY: DomainRegistryEntry[] = [
     docsPaths: ["src/core/safety/README.md", "src/core/tracking/README.md"],
     ssotPaths: [
       "src/modules/mobility/services/MobilityService.ts",
+      "src/core/mobility/services/MobilityService.ts",
       "src/modules/mobility/services/RideService.ts",
       "src/modules/mobility/services/DriverService.ts",
       "src/modules/mobility/services/MobilityAdminQueryService.ts",
+      "src/core/mobility/services/DriverAvailabilityService.ts",
     ],
     routePrefixes: [
       "/mobilidade",

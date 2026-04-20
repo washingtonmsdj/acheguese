@@ -8,8 +8,14 @@
 import { createClient } from '@supabase/supabase-js';
 
 const SUPABASE_URL = process.env.VITE_SUPABASE_URL!;
-const PROJECT_REF  = 'xhdowzacfujckjelqhtd';
-const SERVICE_KEY  = 'process.env.SUPABASE_SERVICE_ROLE_KEY!';
+const PROJECT_REF  = process.env.VITE_SUPABASE_PROJECT_ID!;
+// Suporta novo formato (SUPABASE_SECRET_KEY) e legado (SUPABASE_SERVICE_ROLE_KEY)
+const SERVICE_KEY  = process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+if (!SUPABASE_URL || !PROJECT_REF || !SERVICE_KEY) {
+  console.error('❌ Configure VITE_SUPABASE_URL, VITE_SUPABASE_PROJECT_ID e SUPABASE_SECRET_KEY no .env.local');
+  process.exit(1);
+}
 
 const sb = createClient(SUPABASE_URL, SERVICE_KEY, { auth: { persistSession: false } });
 

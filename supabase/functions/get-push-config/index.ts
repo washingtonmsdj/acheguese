@@ -14,6 +14,7 @@
  */
 
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
+import { getAllSecurityHeaders, errorResponse } from '../_shared/security.ts';
 
 const VAPID_PUBLIC_KEY = Deno.env.get('VAPID_PUBLIC_KEY') || 'BEl62iUYgUivxIkv69yViEuiBIa-Ib9-SkvMeAtA3LFgDzkrxZJjSgSnfckjBJuBkr3qBUYIHBQFLXYp5Nksh8U';
 
@@ -22,12 +23,7 @@ serve(async (req: Request) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', {
       status: 204,
-      headers: {
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-        'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-        'Access-Control-Max-Age': '86400', // 24 hours
-      },
+      headers: getAllSecurityHeaders('GET, POST, OPTIONS'),
     });
   }
 
@@ -35,34 +31,27 @@ serve(async (req: Request) => {
   if (req.method !== 'GET' && req.method !== 'POST') {
     return new Response(JSON.stringify({ error: 'Method not allowed' }), {
       status: 405,
-      headers: { 'Content-Type': 'application/json' },
+      headers: getAllSecurityHeaders(),
     });
   }
 
   try {
     return new Response(
-      JSON.stringify({
-        vapidPublicKey: VAPID_PUBLIC_KEY,
-      }),
+      JSON.stringify({ vapidPublicKey: VAPID_PUBLIC_KEY }),
       {
         status: 200,
         headers: {
-          'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*',
-          'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-          // Aggressive caching - VAPID key never changes
-          'Cache-Control': 'public, max-age=3600, immutable', // 1 hour, immutable
-          'CDN-Cache-Control': 'public, max-age=3600', // CDN cache 1 hour
-          'Vary': 'Accept-Encoding', // Vary by encoding only
+          ...getAllSecurityHeaders('GET, POST, OPTIONS'),
+          // VAPID key é pública e imutável — cache agressivo é seguro
+          'Cache-Control': 'public, max-age=3600, immutable',
+          'CDN-Cache-Control': 'public, max-age=3600',
+          'Vary': 'Accept-Encoding',
         },
       }
     );
   } catch (error) {
     console.error('Exception in get-push-config function:', error);
-    return new Response(
-      JSON.stringify({ error: 'Internal server error', details: String(error) }),
-      { status: 500, headers: { 'Content-Type': 'application/json' } }
-    );
+    return errorResponse('Internal server error', 500, error);
   }
 });
 

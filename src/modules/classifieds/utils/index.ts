@@ -1,5 +1,2 @@
-/**
- * Barrel export para utils de Classificados
- */
+﻿export * from "@/core/classifieds/utils/index";
 
-export { getRelativeTime } from "./timeUtils";

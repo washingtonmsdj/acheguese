@@ -37,7 +37,7 @@ serve(async (req: Request) => {
     return authResult;
   }
 
-  const rateLimit = checkRateLimit(`territory-ai:${authResult.user.id}`, 10, 60 * 60 * 1000);
+  const rateLimit = await checkRateLimit(`territory-ai:${authResult.user.id}`, 10, 60 * 60 * 1000);
   if (!rateLimit.allowed) {
     return jsonSecurityResponse(
       { error: "Rate limit exceeded. Try again later." },
@@ -169,10 +169,7 @@ Seja preciso e use informacoes reais sobre Salvador. Se nao tiver dados exatos, 
     return jsonSecurityResponse({ success: true, data }, 200);
   } catch (e) {
     console.error("Error:", e);
-    return jsonSecurityResponse(
-      { error: e instanceof Error ? e.message : "Unknown error" },
-      500,
-    );
+    return jsonSecurityResponse({ error: "Internal server error" }, 500);
   }
 });
 

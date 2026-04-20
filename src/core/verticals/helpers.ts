@@ -5,7 +5,7 @@
  */
 
 import type { BusinessCategory } from '@/core/business/types/Business';
-import type { CuisineType } from '@/modules/gastronomy/constants/cuisine';
+import type { CuisineType } from '@/core/gastronomy';
 
 /**
  * Mapeamento de category (business_data) para cuisine_type sugerido (gastronomy_profile)

@@ -4,7 +4,10 @@
  * Processa timeouts de dispatch de corridas automaticamente.
  * Deve ser chamada via cron.
  *
- * SEGURANCA: requer x-cron-secret OU Authorization Bearer com SUPABASE_SERVICE_ROLE_KEY.
+ * SEGURANÇA: requer x-cron-secret OU Authorization Bearer com CRON_SECRET.
+ * NUNCA use SUPABASE_SERVICE_ROLE_KEY como token de autenticação HTTP.
+ *
+ * SSOT: mesmo padrão de `auto-dispatch-ride/index.ts`.
  */
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
@@ -34,14 +37,13 @@ function extractBearerToken(req: Request): string | null {
 }
 
 function isAuthorized(req: Request): boolean {
+  if (!CRON_SECRET) return false;
+
   const cronHeader = req.headers.get('x-cron-secret') || '';
   const bearerToken = extractBearerToken(req);
 
-  const hasValidCronSecret = CRON_SECRET.length > 0 && cronHeader === CRON_SECRET;
-  const hasValidServiceToken =
-    SUPABASE_SERVICE_ROLE_KEY.length > 0 && bearerToken === SUPABASE_SERVICE_ROLE_KEY;
-
-  return hasValidCronSecret || hasValidServiceToken;
+  // Aceita apenas CRON_SECRET — nunca a service role key como token HTTP.
+  return cronHeader === CRON_SECRET || bearerToken === CRON_SECRET;
 }
 
 Deno.serve(async (req: Request) => {
@@ -64,9 +66,10 @@ Deno.serve(async (req: Request) => {
     );
   }
 
-  if (!CRON_SECRET && !SUPABASE_SERVICE_ROLE_KEY) {
+  if (!CRON_SECRET) {
+    console.error('[ProcessTimeouts] CRON_SECRET não configurado — requisição bloqueada');
     return jsonResponse(
-      { success: false, error: 'Function misconfigured: no authentication secret configured' },
+      { success: false, error: 'Function misconfigured: CRON_SECRET not set' },
       500,
     );
   }

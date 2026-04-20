@@ -19,16 +19,14 @@ import {
   getAuditInfo,
 } from "../_shared/security.ts";
 
-const corsHeaders = getAllSecurityHeaders('POST, OPTIONS');
-
 serve(async (req: Request) => {
   // Handle CORS preflight
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders });
+    return new Response('ok', { status: 204, headers: getAllSecurityHeaders('POST, OPTIONS') });
   }
 
   // Rate limit: 5 requests por hora por usuário
-  const rateLimitResponse = rateLimitMiddleware(req, 5, 60 * 60 * 1000);
+  const rateLimitResponse = await rateLimitMiddleware(req, 5, 60 * 60 * 1000);
   if (rateLimitResponse) return rateLimitResponse;
 
   try {
@@ -284,8 +282,7 @@ serve(async (req: Request) => {
       {
         status: 200,
         headers: {
-          ...corsHeaders,
-          'Content-Type': 'application/json',
+          ...getAllSecurityHeaders('POST, OPTIONS'),
           'Content-Disposition': `attachment; filename="meus-dados-${userId.slice(0, 8)}-${new Date().toISOString().split('T')[0]}.json"`,
           'X-Export-Size': String(sizeInBytes),
           'X-Export-Tables': String(Object.keys(userData).length),

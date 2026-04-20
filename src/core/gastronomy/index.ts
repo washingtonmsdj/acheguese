@@ -2,13 +2,14 @@
  * Contrato canonico de gastronomia para consumo cross-domain.
  */
 
-export { CUISINE_TYPES } from "@/modules/gastronomy/constants/cuisine";
-export type { CuisineType } from "@/modules/gastronomy/constants/cuisine";
+export { CUISINE_TYPES } from "./constants/cuisine";
+export type { CuisineType } from "./constants/cuisine";
 export type {
   GastronomyBusiness,
   GastronomyProfile,
-} from "@/modules/gastronomy/types/gastronomy";
-export type { Cart, CartItem } from "@/modules/gastronomy/types/menu";
+  Cart,
+  CartItem,
+} from "./types";
 export { GastronomyProfileService } from "./GastronomyProfileService";
 export type { ServiceResult } from "./GastronomyProfileService";
 

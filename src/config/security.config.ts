@@ -508,9 +508,9 @@ export const INPUT_VALIDATION = {
  * MUST be updated on every security config change.
  */
 export const SECURITY_AUDIT_LOG = {
-  lastReview: '2026-04-19',
+  lastReview: '2026-04-20',
   reviewer: 'Kiro AI',
-  version: '2.2.0', // Bumped: Added cache headers
+  version: '2.3.0',
   changes: [
     'Initial SSOT implementation',
     'CSP directives centralized',
@@ -520,9 +520,22 @@ export const SECURITY_AUDIT_LOG = {
     'HttpOnly analysis: FALSE justified (Vite SPA limitation)',
     'Realistic approach documented',
     'Defense in depth: 6 layers active',
-    'Cache headers added for performance', // ⭐ NEW
+    'Cache headers added for performance',
+    // v2.3.0 — Security fixes
+    'FIX: isOriginAllowed — detecção de dev não mais baseada em SUPABASE_URL',
+    'FIX: Rate limiting migrado de Map em memória para Deno KV (distribuído)',
+    'FIX: auditLog agora persiste na tabela function_audit além do console',
+    'FIX: adminAuth — verificação de is_active=true adicionada à query de roles',
+    'FIX: auto-dispatch-ride — autenticação migrada de SERVICE_ROLE_KEY para CRON_SECRET',
+    'FIX: process-timeouts — fallback para SERVICE_ROLE_KEY como token removido',
+    'FIX: send-push — JWT signing real com crypto.subtle (RS256) substituindo btoa placeholder',
+    'FIX: MFAService — backup codes gerados com crypto.getRandomValues() em vez de Math.random()',
+    'FIX: .env — project ID e anon key reais substituídos por placeholders',
+    'FIX: sitemap — CORS wildcard (*) removido, usa getAllSecurityHeaders() do SSOT',
+    'FIX: billing checkout/portal — open redirect prevenido com v.redirectUrl() validator',
+    'FIX: validation.ts — novo validator redirectUrl() com verificação de domínio permitido',
   ],
-  nextReview: '2026-05-19', // Monthly review
+  nextReview: '2026-05-20',
 } as const;
 
 /**
@@ -595,14 +608,14 @@ export const CACHE_HEADERS = {
  * Metadata about this configuration file.
  */
 export const SECURITY_CONFIG_METADATA = {
-  version: '2.2.0', // Bumped: Added cache headers
+  version: '2.3.0',
   created: '2026-04-18',
-  lastModified: '2026-04-19',
+  lastModified: '2026-04-20',
   author: 'Kiro AI',
   purpose: 'Single Source of Truth for security configurations',
   criticality: 'CRITICAL',
   changeControl: 'Requires security review and approval',
-  httpOnly: 'FALSE_JUSTIFIED', // ⭐ UPDATED: Vite SPA limitation
+  httpOnly: 'FALSE_JUSTIFIED',
   architecture: 'Vite SPA (client-side only)',
 } as const;
 

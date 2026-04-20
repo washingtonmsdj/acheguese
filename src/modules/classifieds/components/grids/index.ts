@@ -1,9 +1,2 @@
-/**
- * Barrel export para grids de Classificados
- */
+﻿export * from "@/core/classifieds/components/grids/index";
 
-export { AdsGrid } from "./AdsGrid";
-export type { AdsGridProps } from "./AdsGrid";
-
-export { SellersGrid } from "./SellersGrid";
-export type { SellersGridProps } from "./SellersGrid";

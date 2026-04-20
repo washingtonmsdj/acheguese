@@ -245,7 +245,7 @@ serve(async (req: Request) => {
   }
   
   // Rate limiting (mais permissivo para webhooks do Stripe)
-  const rateLimitResponse = rateLimitMiddleware(req, 1000, 60000);
+  const rateLimitResponse = await rateLimitMiddleware(req, 1000, 60000);
   if (rateLimitResponse) return rateLimitResponse;
   
   try {

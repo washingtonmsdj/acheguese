@@ -9,6 +9,7 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { validateBody, sendPushSchema, validationErrorResponse, type SendPushBody } from '../_shared/validation.ts';
+import { getAllSecurityHeaders, rateLimitMiddleware, errorResponse } from '../_shared/security.ts';
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
@@ -17,11 +18,20 @@ const FIREBASE_SERVICE_ACCOUNT = Deno.env.get('FIREBASE_SERVICE_ACCOUNT');
 const FIREBASE_PROJECT_ID = Deno.env.get('FIREBASE_PROJECT_ID');
 
 serve(async (req: Request) => {
+  // Handle CORS preflight
+  if (req.method === 'OPTIONS') {
+    return new Response('ok', { status: 204, headers: getAllSecurityHeaders('POST, OPTIONS') });
+  }
+
+  // Rate limiting
+  const rateLimitResponse = await rateLimitMiddleware(req, 100, 60000);
+  if (rateLimitResponse) return rateLimitResponse;
+
   // 1. Validate HTTP method
   if (req.method !== 'POST') {
     return new Response(JSON.stringify({ error: 'Method not allowed' }), {
       status: 405,
-      headers: { 'Content-Type': 'application/json' },
+      headers: getAllSecurityHeaders(),
     });
   }
 
@@ -29,10 +39,7 @@ serve(async (req: Request) => {
     // 2. Validate authentication
     const authHeader = req.headers.get('Authorization');
     if (!authHeader) {
-      return new Response(JSON.stringify({ error: 'Missing authorization header' }), {
-        status: 401,
-        headers: { 'Content-Type': 'application/json' },
-      });
+      return errorResponse('Missing authorization header', 401);
     }
 
     // Create Supabase client
@@ -43,10 +50,7 @@ serve(async (req: Request) => {
     const { data: { user }, error: authError } = await supabase.auth.getUser(token);
 
     if (authError || !user) {
-      return new Response(JSON.stringify({ error: 'Invalid token' }), {
-        status: 401,
-        headers: { 'Content-Type': 'application/json' },
-      });
+      return errorResponse('Invalid token', 401);
     }
 
     // 3. Parse and validate input
@@ -58,10 +62,7 @@ serve(async (req: Request) => {
     const { userId, notification } = validation.data!;
 
     if (!notification.title || !notification.body) {
-      return new Response(
-        JSON.stringify({ error: 'Missing required fields: notification.title, notification.body' }),
-        { status: 400, headers: { 'Content-Type': 'application/json' } }
-      );
+      return errorResponse('Missing required fields: notification.title, notification.body', 400);
     }
 
     // 4. Check user preferences
@@ -72,10 +73,7 @@ serve(async (req: Request) => {
       .single();
 
     if (preferences && !preferences.push_enabled) {
-      return new Response(
-        JSON.stringify({ error: 'Push notifications disabled by user' }),
-        { status: 403, headers: { 'Content-Type': 'application/json' } }
-      );
+      return errorResponse('Push notifications disabled by user', 403);
     }
 
     // Check quiet hours
@@ -94,10 +92,7 @@ serve(async (req: Request) => {
       const isQuietDay = preferences.quiet_hours_days?.includes(currentDay);
 
       if (isQuietDay && currentTime >= startTime && currentTime <= endTime) {
-        return new Response(
-          JSON.stringify({ error: 'User is in quiet hours' }),
-          { status: 403, headers: { 'Content-Type': 'application/json' } }
-        );
+        return errorResponse('User is in quiet hours', 403);
       }
     }
 
@@ -109,10 +104,7 @@ serve(async (req: Request) => {
       .eq('is_active', true);
 
     if (subsError || !subscriptions || subscriptions.length === 0) {
-      return new Response(
-        JSON.stringify({ error: 'No active push subscriptions found' }),
-        { status: 404, headers: { 'Content-Type': 'application/json' } }
-      );
+      return errorResponse('No active push subscriptions found', 404);
     }
 
     // 6. Send push notifications
@@ -260,12 +252,9 @@ serve(async (req: Request) => {
       }
     }
 
-    // Helper function to create JWT for OAuth2
-    async function createJWT(serviceAccount: any): Promise<string> {
-      const header = {
-        alg: 'RS256',
-        typ: 'JWT',
-      };
+    // Helper function to create JWT for OAuth2 (RS256 via Web Crypto API)
+    async function createJWT(serviceAccount: { client_email: string; private_key: string }): Promise<string> {
+      const header = { alg: 'RS256', typ: 'JWT' };
 
       const now = Math.floor(Date.now() / 1000);
       const payload = {
@@ -276,20 +265,50 @@ serve(async (req: Request) => {
         iat: now,
       };
 
-      const encodedHeader = btoa(JSON.stringify(header));
-      const encodedPayload = btoa(JSON.stringify(payload));
-      const unsignedToken = `${encodedHeader}.${encodedPayload}`;
+      // Base64url encode (sem padding, substituindo +/ por -_)
+      const base64url = (input: string): string =>
+        btoa(input).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
 
-      // Sign with private key (simplified - in production use proper crypto library)
-      const signature = await signWithPrivateKey(unsignedToken, serviceAccount.private_key);
-      
-      return `${unsignedToken}.${signature}`;
+      const encodedHeader = base64url(JSON.stringify(header));
+      const encodedPayload = base64url(JSON.stringify(payload));
+      const signingInput = `${encodedHeader}.${encodedPayload}`;
+
+      const signature = await signRS256(signingInput, serviceAccount.private_key);
+      return `${signingInput}.${signature}`;
     }
 
-    async function signWithPrivateKey(data: string, privateKey: string): Promise<string> {
-      // This is a simplified version - in production, use proper crypto library
-      // For now, return a placeholder
-      return btoa(data);
+    /**
+     * Assina dados com chave privada RSA-SHA256 usando a Web Crypto API nativa do Deno.
+     * Substitui o placeholder `btoa(data)` que não era uma assinatura criptográfica real.
+     */
+    async function signRS256(data: string, pemPrivateKey: string): Promise<string> {
+      // Remove cabeçalho/rodapé PEM e espaços em branco
+      const pemBody = pemPrivateKey
+        .replace(/-----BEGIN PRIVATE KEY-----/, '')
+        .replace(/-----END PRIVATE KEY-----/, '')
+        .replace(/\s+/g, '');
+
+      const derBuffer = Uint8Array.from(atob(pemBody), (c) => c.charCodeAt(0));
+
+      const cryptoKey = await crypto.subtle.importKey(
+        'pkcs8',
+        derBuffer,
+        { name: 'RSASSA-PKCS1-v1_5', hash: 'SHA-256' },
+        false,
+        ['sign'],
+      );
+
+      const encoder = new TextEncoder();
+      const signatureBuffer = await crypto.subtle.sign(
+        'RSASSA-PKCS1-v1_5',
+        cryptoKey,
+        encoder.encode(data),
+      );
+
+      // Base64url encode da assinatura
+      const signatureBytes = new Uint8Array(signatureBuffer);
+      const base64 = btoa(String.fromCharCode(...signatureBytes));
+      return base64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
     }
 
     // 7. Return response
@@ -303,19 +322,12 @@ serve(async (req: Request) => {
       }),
       {
         status: 200,
-        headers: {
-          'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*',
-          'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-        },
+        headers: getAllSecurityHeaders(),
       }
     );
   } catch (error) {
     console.error('Exception in send-push function:', error);
-    return new Response(
-      JSON.stringify({ error: 'Internal server error', details: String(error) }),
-      { status: 500, headers: { 'Content-Type': 'application/json' } }
-    );
+    return errorResponse('Internal server error', 500, error);
   }
 });
 

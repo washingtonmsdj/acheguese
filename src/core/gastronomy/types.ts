@@ -8,6 +8,7 @@
  */
 
 import type { Json } from '@/integrations/supabase';
+import type { Business } from '@/core/business';
 
 export type PriceRange = '$' | '$$' | '$$$' | '$$$$';
 
@@ -63,4 +64,42 @@ export interface CreateGastronomyProfileInput {
 
 export interface UpdateGastronomyProfileInput extends Partial<CreateGastronomyProfileInput> {
   status?: GastronomyStatus;
+}
+
+export interface GastronomyBusiness extends Business {
+  business_data_id: string;
+  gastronomy_profile: GastronomyProfile;
+}
+
+export interface CartItemVariant {
+  variant_id: string;
+  name: string;
+  price_adjustment: number;
+}
+
+export interface CartItemAddon {
+  addon_id: string;
+  name: string;
+  price: number;
+  quantity: number;
+}
+
+export interface CartItem {
+  line_id?: string;
+  item_id: string;
+  name: string;
+  base_price: number;
+  quantity: number;
+  variant?: CartItemVariant;
+  addons: CartItemAddon[];
+  special_instructions?: string;
+  subtotal: number;
+}
+
+export interface Cart {
+  business_id: string;
+  items: CartItem[];
+  subtotal: number;
+  delivery_fee: number;
+  total: number;
 }

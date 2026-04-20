@@ -9,7 +9,7 @@
 
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
-import { getAllSecurityHeaders, auditLog, getAuditInfo } from '../_shared/security.ts';
+import { getAllSecurityHeaders, auditLog, getAuditInfo, errorResponse } from '../_shared/security.ts';
 import { requireAdmin } from '../_shared/adminAuth.ts';
 import { validateBody, getUserSchema, validationErrorResponse, type GetUserBody } from '../_shared/validation.ts';
 
@@ -37,7 +37,7 @@ serve(async (req: Request) => {
   const rawBody = await req.json();
   const validation = validateBody<GetUserBody>(rawBody, getUserSchema);
   if (!validation.ok) {
-    return validationErrorResponse(validation.errors, getAllSecurityHeaders());
+    return validationErrorResponse(validation.errors);
   }
   const { userId } = validation.data!;
 
@@ -105,7 +105,7 @@ serve(async (req: Request) => {
       { status: 200, headers: getAllSecurityHeaders() },
     );
   } catch (error: unknown) {
-    const message = error instanceof Error ? error.message : 'Internal server error';
+    const message = error instanceof Error ? error.message : 'Unknown error';
     auditLog({
       timestamp: new Date().toISOString(),
       userId: requesterId,
@@ -115,9 +115,6 @@ serve(async (req: Request) => {
       details: { error: message, targetUserId: userId },
       ...getAuditInfo(req),
     });
-    return new Response(
-      JSON.stringify({ error: message }),
-      { status: 500, headers: getAllSecurityHeaders() },
-    );
+    return errorResponse('Internal server error', 500, error);
   }
 });

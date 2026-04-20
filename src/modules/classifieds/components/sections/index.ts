@@ -1,6 +1,2 @@
-/**
- * Barrel export para sections components de Classificados
- */
+﻿export * from "@/core/classifieds/components/sections/index";
 
-export { HorizontalSection } from "./HorizontalSection";
-export type { HorizontalSectionProps } from "./HorizontalSection";

@@ -47,7 +47,7 @@ Deno.serve(async (req: Request) => {
   }
 
   // Rate limiting (mais permissivo para geocoding)
-  const rateLimitResponse = rateLimitMiddleware(req, 60, 60000);
+  const rateLimitResponse = await rateLimitMiddleware(req, 60, 60000);
   if (rateLimitResponse) return rateLimitResponse;
 
   const url = new URL(req.url);

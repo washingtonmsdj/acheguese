@@ -1,34 +1,59 @@
 /**
- * Re-exports de Classifieds Services - SSOT v2.0
- * 
- * NOTA: Usar ClassifiedsFacade ou imports diretos de queries/mutations.
- * Compatibilidade mantida para imports antigos.
+ * Core Classifieds Services - Canonical barrel
+ *
+ * Core is the canonical import surface. Implementation still delegates
+ * to stable modules services where migration is not yet finalized.
  */
 
 export {
   ClassifiedsFacade,
+  default as ClassifiedService,
+  CLASSIFIED_CONDITIONS,
+  CLASSIFIED_STATUSES,
+} from "../../../modules/classifieds/services/ClassifiedService";
+
+export {
+  getNeighborhoodsWithClassifieds,
+  getAllClassifieds,
+  getClassifiedById,
+  getClassifiedsByCategory,
+  getUserClassifieds,
+  getClassifiedsBySeller,
+  getSellersWithAds,
+  getTotalClassifiedsCount,
+  getRecentClassifieds,
+  getClassifiedsCreatedInPeriod,
+} from "../../../modules/classifieds/services/classifieds.queries";
+
+export {
   createClassified,
   updateClassified,
   deleteClassified,
   markAsSold,
   reactivateClassified,
-  getAllClassifieds,
-  getClassifiedById,
-  getUserClassifieds,
-} from "../../../modules/classifieds/services/ClassifiedService";
+} from "../../../modules/classifieds/services/classifieds.mutations";
 
 export type {
   ClassifiedData,
   CreateClassifiedInput,
   UpdateClassifiedInput,
-} from "../../../modules/classifieds/services/ClassifiedService";
+  NeighborhoodWithClassifiedCount,
+  SellerWithAds,
+  ClassifiedCondition,
+  ClassifiedStatus,
+} from "./types";
 
-export { classifiedUrlService, ClassifiedUrlService } from "../../../modules/classifieds/services/ClassifiedUrlService";
+export {
+  mapToClassificadoWithVendedor,
+  mapToClassificadoList,
+} from "./classifieds.mappers";
+
+export { classifiedUrlService, ClassifiedUrlService } from "./ClassifiedUrlService";
 export type {
   ClassifiedUrlContext,
   ResolvedClassifiedUrl,
   ClassifiedResolution,
-} from "../../../modules/classifieds/services/ClassifiedUrlService";
+} from "./ClassifiedUrlService";
 
 export { classifiedReportService } from "../../../modules/classifieds/services/ClassifiedReportService";
 export type {

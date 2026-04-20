@@ -26,10 +26,11 @@ export interface AdminAuthResult {
 
 function getSupabaseClient() {
   const url = Deno.env.get('SUPABASE_URL');
-  const key = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+  // Suporta novo formato (SUPABASE_SECRET_KEY) e legado (SUPABASE_SERVICE_ROLE_KEY)
+  const key = Deno.env.get('SUPABASE_SECRET_KEY') || Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
 
   if (!url || !key) {
-    throw new Error('Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY env vars');
+    throw new Error('Missing SUPABASE_URL or SUPABASE_SECRET_KEY env vars');
   }
 
   return createClient(url, key, {
@@ -81,10 +82,13 @@ export async function requireAdmin(req: Request): Promise<AdminAuthResult | Resp
     }
 
     // SSOT: verificar roles em user_roles
+    // Verifica revoked_at IS NULL **e** is_active = true para garantir
+    // que roles desativados (is_active=false) não concedam acesso admin.
     const { data: roles, error: rolesError } = await supabase
       .from('user_roles')
       .select('role_enum')
       .eq('user_id', user.id)
+      .eq('is_active', true)
       .is('revoked_at', null);
 
     if (rolesError) {

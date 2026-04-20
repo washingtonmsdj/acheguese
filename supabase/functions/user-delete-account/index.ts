@@ -38,7 +38,7 @@ serve(async (req: Request) => {
   }
 
   // Rate limit: 3 tentativas por dia
-  const rateLimitResponse = rateLimitMiddleware(req, 3, 24 * 60 * 60 * 1000);
+  const rateLimitResponse = await rateLimitMiddleware(req, 3, 24 * 60 * 60 * 1000);
   if (rateLimitResponse) return rateLimitResponse;
 
   try {

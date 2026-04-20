@@ -153,7 +153,7 @@ export class TrackingService {
 
       // GATE 5: Atualizar last_seen_at para motoristas
       if (entityType === 'driver') {
-        const { DriverAvailabilityService } = await import('@/modules/mobility/services/DriverAvailabilityService');
+        const { DriverAvailabilityService } = await import('@/core/mobility/services');
         await DriverAvailabilityService.markLastSeen(entityId);
       }
     } catch (error) {
@@ -317,7 +317,7 @@ export class TrackingService {
 
       // GATE 5: Atualizar last_seen_at para motoristas
       if (payload.entityType === 'driver') {
-        const { DriverAvailabilityService } = await import('@/modules/mobility/services/DriverAvailabilityService');
+        const { DriverAvailabilityService } = await import('@/core/mobility/services');
         await DriverAvailabilityService.markLastSeen(payload.entityId);
       }
 
@@ -508,7 +508,7 @@ export class TrackingService {
 
       // GATE 5: Atualizar last_seen_at para motoristas
       if (entityType === 'driver') {
-        const { DriverAvailabilityService } = await import('@/modules/mobility/services/DriverAvailabilityService');
+        const { DriverAvailabilityService } = await import('@/core/mobility/services');
         await DriverAvailabilityService.markLastSeen(entityId);
       }
 

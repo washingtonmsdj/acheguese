@@ -1,23 +1,23 @@
-/**
- * ClassifiedCanonicalRoute — Rota canônica de classificado
+﻿/**
+ * ClassifiedCanonicalRoute â€” Rota canÃ´nica de classificado
  *
- * Resolve classificado pela URL canônica completa:
+ * Resolve classificado pela URL canÃ´nica completa:
  * /classificados/:uf/:cidade/:bairro/:categoria/:subcategoria/:slug/:publicId
  *
  * Comportamento:
- * - Resolve pelo public_id (âncora estável)
- * - Detecta URL desatualizada (slug/território/categoria mudou)
+ * - Resolve pelo public_id (Ã¢ncora estÃ¡vel)
+ * - Detecta URL desatualizada (slug/territÃ³rio/categoria mudou)
  * - Redirect 308 para canonical atual
- * - 404 se não encontrado
+ * - 404 se nÃ£o encontrado
  *
  * @version 1.0.0
  */
 import { logger } from '@/shared/utils/logger';
 import { useEffect, useState } from 'react';
 import { useParams, Navigate } from 'react-router-dom';
-import { classifiedUrlService } from '@/modules/classifieds/services/ClassifiedUrlService';
+import { classifiedUrlService } from '@/core/classifieds/services/ClassifiedUrlService';
 import { FullScreenLoader } from '@/shared/components/loading/PageLoader';
-import ClassificadoDetailPage from '@/modules/classifieds/pages/ClassificadoDetailPage';
+import ClassificadoDetailPage from '@/core/classifieds/pages/ClassificadoDetailPage';
 
 export default function ClassifiedCanonicalRoute() {
   const { uf, cidade, bairro, categoria, subcategoria, slug, publicId } = useParams<{
@@ -55,7 +55,7 @@ export default function ClassifiedCanonicalRoute() {
         );
 
         if (!result) {
-          logger.warn('[ClassifiedCanonicalRoute] Classificado não encontrado:', publicId);
+          logger.warn('[ClassifiedCanonicalRoute] Classificado nÃ£o encontrado:', publicId);
           setResolution({ status: 'not-found' });
           return;
         }
@@ -94,6 +94,6 @@ export default function ClassifiedCanonicalRoute() {
     return <Navigate to="/404" replace />;
   }
 
-  // Renderiza página de detalhe com ID resolvido
+  // Renderiza pÃ¡gina de detalhe com ID resolvido
   return <ClassificadoDetailPage classifiedId={resolution.classifiedId} />;
 }

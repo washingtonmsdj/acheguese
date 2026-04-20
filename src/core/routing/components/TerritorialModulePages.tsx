@@ -15,14 +15,14 @@ import { useTerritorialContext } from './TerritorialLayout';
 import { ModulePageLoader } from '@/shared/components/loading/PageLoader';
 
 // Lazy imports dos módulos existentes
-const ComunidadePage       = lazy(() => import('@/modules/community/pages/ComunidadePage'));
+const ComunidadePage       = lazy(() => import('@/core/community/pages/ComunidadePage'));
 const EmpresasLandingPage  = lazy(() => import('@/app/pages/EmpresasLandingPage'));
-const ServicosPage         = lazy(() => import('@/modules/services/pages/ServicosLandingPage'));
-const ClassificadosPage    = lazy(() => import('@/modules/classifieds/pages/ClassificadosPage'));
-const EventosPage          = lazy(() => import('@/modules/community/pages/EventosPage'));
-const MobilidadePage       = lazy(() => import('@/modules/mobility/pages/MobilidadeLandingPage'));
-const VagasPage            = lazy(() => import('@/modules/vagas/pages/VagasPublicPage')); // ✅ Página AAA atualizada
-const CategoryBusinessPage = lazy(() => import('@/modules/business/pages/CategoryBusinessPage'));
+const ServicosPage         = lazy(() => import('@/core/services/pages/ServicosLandingPage'));
+const ClassificadosPage    = lazy(() => import('@/core/classifieds/pages/ClassificadosPage'));
+const EventosPage          = lazy(() => import('@/core/community/pages/EventosPage'));
+const MobilidadePage       = lazy(() => import('@/core/mobility/pages/MobilidadeLandingPage'));
+const VagasPage            = lazy(() => import('@/core/vagas/pages/VagasPublicPage'));
+const CategoryBusinessPage = lazy(() => import('@/core/business/pages/CategoryBusinessPage'));
 const MapaPage             = lazy(() => import('@/core/maps/pages/MapaPageV4'));
 
 /**

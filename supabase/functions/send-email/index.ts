@@ -10,6 +10,7 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { validateBody, sendEmailSchema, validationErrorResponse, type SendEmailBody } from '../_shared/validation.ts';
+import { getAllSecurityHeaders, rateLimitMiddleware, errorResponse } from '../_shared/security.ts';
 
 const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY');
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
@@ -17,11 +18,20 @@ const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 const FROM_EMAIL = Deno.env.get('FROM_EMAIL') || 'noreply@yourdomain.com';
 
 serve(async (req: Request) => {
+  // Handle CORS preflight
+  if (req.method === 'OPTIONS') {
+    return new Response('ok', { status: 204, headers: getAllSecurityHeaders('POST, OPTIONS') });
+  }
+
+  // Rate limiting
+  const rateLimitResponse = await rateLimitMiddleware(req, 50, 60000);
+  if (rateLimitResponse) return rateLimitResponse;
+
   // 1. Validate HTTP method
   if (req.method !== 'POST') {
     return new Response(JSON.stringify({ error: 'Method not allowed' }), {
       status: 405,
-      headers: { 'Content-Type': 'application/json' },
+      headers: getAllSecurityHeaders(),
     });
   }
 
@@ -29,10 +39,7 @@ serve(async (req: Request) => {
     // 2. Validate authentication
     const authHeader = req.headers.get('Authorization');
     if (!authHeader) {
-      return new Response(JSON.stringify({ error: 'Missing authorization header' }), {
-        status: 401,
-        headers: { 'Content-Type': 'application/json' },
-      });
+      return errorResponse('Missing authorization header', 401);
     }
 
     // Create Supabase client
@@ -43,10 +50,7 @@ serve(async (req: Request) => {
     const { data: { user }, error: authError } = await supabase.auth.getUser(token);
 
     if (authError || !user) {
-      return new Response(JSON.stringify({ error: 'Invalid token' }), {
-        status: 401,
-        headers: { 'Content-Type': 'application/json' },
-      });
+      return errorResponse('Invalid token', 401);
     }
 
     // 3. Parse and validate input
@@ -68,19 +72,13 @@ serve(async (req: Request) => {
       if (preferences) {
         // Check if email is enabled
         if (!preferences.email_enabled) {
-          return new Response(
-            JSON.stringify({ error: 'Email notifications disabled by user' }),
-            { status: 403, headers: { 'Content-Type': 'application/json' } }
-          );
+          return errorResponse('Email notifications disabled by user', 403);
         }
 
         // Check category preferences
         const categoryKey = `${category}_enabled`;
         if (preferences[categoryKey] === false && category !== 'transactional') {
-          return new Response(
-            JSON.stringify({ error: `${category} emails disabled by user` }),
-            { status: 403, headers: { 'Content-Type': 'application/json' } }
-          );
+          return errorResponse(`${category} emails disabled by user`, 403);
         }
 
         // Check quiet hours
@@ -95,16 +93,12 @@ serve(async (req: Request) => {
           const startTime = startHour * 60 + startMinute;
           const endTime = endHour * 60 + endMinute;
 
-          const currentDay = now.getDay() || 7; // Convert Sunday from 0 to 7
+          const currentDay = now.getDay() || 7;
           const isQuietDay = preferences.quiet_hours_days?.includes(currentDay);
 
           if (isQuietDay && currentTime >= startTime && currentTime <= endTime) {
-            // Skip non-transactional emails during quiet hours
             if (category !== 'transactional') {
-              return new Response(
-                JSON.stringify({ error: 'User is in quiet hours' }),
-                { status: 403, headers: { 'Content-Type': 'application/json' } }
-              );
+              return errorResponse('User is in quiet hours', 403);
             }
           }
         }
@@ -174,10 +168,7 @@ serve(async (req: Request) => {
 
     // 7. Return response
     if (emailStatus === 'failed') {
-      return new Response(
-        JSON.stringify({ error: 'Failed to send email', details: errorMessage }),
-        { status: 500, headers: { 'Content-Type': 'application/json' } }
-      );
+      return errorResponse('Failed to send email', 500);
     }
 
     return new Response(
@@ -188,19 +179,12 @@ serve(async (req: Request) => {
       }),
       {
         status: 200,
-        headers: {
-          'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*',
-          'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-        },
+        headers: getAllSecurityHeaders(),
       }
     );
   } catch (error) {
     console.error('Exception in send-email function:', error);
-    return new Response(
-      JSON.stringify({ error: 'Internal server error', details: String(error) }),
-      { status: 500, headers: { 'Content-Type': 'application/json' } }
-    );
+    return errorResponse('Internal server error', 500, error);
   }
 });
 

@@ -269,14 +269,25 @@ class MFAService {
   }
 
   /**
-   * Gerar códigos de backup
-   * (Simulado - em produção, isso deveria ser feito no servidor)
+   * Gera códigos de backup criptograficamente seguros.
+   *
+   * Usa `crypto.getRandomValues()` (Web Crypto API) em vez de `Math.random()`,
+   * que não é criptograficamente seguro e não deve ser usado para segredos.
+   *
+   * Formato: 8 caracteres alfanuméricos maiúsculos (ex: "A3F9K2M7")
+   * Entropia: ~41 bits por código (36^8), suficiente para backup codes de MFA.
    */
   private generateBackupCodes(count: number): string[] {
+    const ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // sem 0/O e 1/I para evitar confusão visual
+    const CODE_LENGTH = 8;
     const codes: string[] = [];
-    
+
     for (let i = 0; i < count; i++) {
-      const code = Math.random().toString(36).substring(2, 10).toUpperCase();
+      const randomBytes = new Uint8Array(CODE_LENGTH);
+      crypto.getRandomValues(randomBytes);
+      const code = Array.from(randomBytes)
+        .map((byte) => ALPHABET[byte % ALPHABET.length])
+        .join('');
       codes.push(code);
     }
 

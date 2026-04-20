@@ -39,7 +39,8 @@ dist-ssr
 *.local
 
 # Environment
-.env
+# .env é o template público com placeholders — DEVE ser commitado
+!.env
 .env.local
 .env.*.local
 .env.staging

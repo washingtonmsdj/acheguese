@@ -45,7 +45,7 @@ Deno.serve(async (req: Request) => {
   }
 
   // Rate limiting
-  const rateLimitResponse = rateLimitMiddleware(req, 20, 60000);
+  const rateLimitResponse = await rateLimitMiddleware(req, 20, 60000);
   if (rateLimitResponse) return rateLimitResponse;
 
   // 1. Validar admin

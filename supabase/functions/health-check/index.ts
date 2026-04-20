@@ -8,6 +8,8 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { getAllSecurityHeaders } from "../_shared/security.ts";
+import { requireAdmin } from "../_shared/adminAuth.ts";
 
 interface HealthCheck {
   status: 'healthy' | 'degraded' | 'unhealthy';
@@ -31,16 +33,14 @@ interface CheckResult {
 const startTime = Date.now();
 
 serve(async (req: Request) => {
-  // CORS headers
-  const corsHeaders = {
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-  };
-
   // Handle CORS preflight
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders });
+    return new Response('ok', { status: 204, headers: getAllSecurityHeaders('GET, OPTIONS') });
   }
+
+  // Requer autenticação admin — health check expõe informações de infraestrutura
+  const auth = await requireAdmin(req);
+  if (auth instanceof Response) return auth;
 
   const healthCheck: HealthCheck = {
     status: 'healthy',
@@ -84,7 +84,7 @@ serve(async (req: Request) => {
       healthCheck.checks.database = {
         status: 'unhealthy',
         duration_ms: Date.now() - dbStart,
-        error: error.message,
+        error: error instanceof Error ? error.message : 'Unknown error',
       };
       healthCheck.status = 'unhealthy';
     }
@@ -115,7 +115,7 @@ serve(async (req: Request) => {
       healthCheck.checks.storage = {
         status: 'unhealthy',
         duration_ms: Date.now() - storageStart,
-        error: error.message,
+        error: error instanceof Error ? error.message : 'Unknown error',
       };
       healthCheck.status = 'unhealthy';
     }
@@ -147,13 +147,12 @@ serve(async (req: Request) => {
       healthCheck.checks.auth = {
         status: 'unhealthy',
         duration_ms: Date.now() - authStart,
-        error: error.message,
+        error: error instanceof Error ? error.message : 'Unknown error',
       };
       healthCheck.status = 'unhealthy';
     }
 
-    // Determine HTTP status code
-    const statusCode = healthCheck.status === 'healthy' ? 200 : 
+    const statusCode = healthCheck.status === 'healthy' ? 200 :
                        healthCheck.status === 'degraded' ? 200 : 503;
 
     return new Response(
@@ -161,8 +160,7 @@ serve(async (req: Request) => {
       {
         status: statusCode,
         headers: {
-          ...corsHeaders,
-          'Content-Type': 'application/json',
+          ...getAllSecurityHeaders('GET, OPTIONS'),
           'Cache-Control': 'no-cache, no-store, must-revalidate',
         },
       }
@@ -179,15 +177,12 @@ serve(async (req: Request) => {
     };
 
     return new Response(
-      JSON.stringify({
-        ...healthCheck,
-        error: error.message,
-      }, null, 2),
+      JSON.stringify(healthCheck, null, 2),
       {
         status: 503,
         headers: {
-          ...corsHeaders,
-          'Content-Type': 'application/json',
+          ...getAllSecurityHeaders('GET, OPTIONS'),
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
         },
       }
     );

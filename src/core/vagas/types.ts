@@ -2,4 +2,4 @@ export type {
   VagaStatus,
   VagaContrato,
   VagaModalidade,
-} from "@/modules/vagas/types/vagas.types";
+} from "@/core/vagas/types/vagas.types";

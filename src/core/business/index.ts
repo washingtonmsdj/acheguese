@@ -1,8 +1,5 @@
 /**
  * Core Business Barrel Export
- * 
- * Re-exporta funcionalidades do módulo business que são usadas por outras camadas core.
- * Isso mantém o isolamento de módulos enquanto permite que core acesse funcionalidades compartilhadas.
  */
 
 // Re-export de services
@@ -26,18 +23,6 @@ export * from './utils';
 // Validators
 export * from './services/validators';
 
-// Re-export seletivo do módulo business para evitar conflitos
-export { 
-  BusinessCard,
-  BusinessGrid,
-  BusinessHeader,
-  BusinessAbout,
-  BusinessGallery,
-  BusinessProducts,
-  BusinessReviews,
-  BusinessService as BusinessModuleService,
-} from '@/modules/business';
-
 // Migration (ETAPA 6)
 export {
   migrateBusinessDataToCanonical,
@@ -56,5 +41,5 @@ export {
   type BusinessWithCanonicalRelations as BusinessDataWithRelations,
 } from './services/BusinessCanonicalAdapter';
 
-export { default as NetworkTab } from "@/modules/business/components/NetworkTab";
-export { useBusinessNavigation } from "@/modules/business/hooks/useBusinessNavigation";
+export { default as NetworkTab } from './components/NetworkTab';
+export { useBusinessNavigation } from './hooks/useBusinessNavigation';

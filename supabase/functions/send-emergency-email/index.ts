@@ -90,7 +90,7 @@ serve(async (req: Request) => {
     return jsonSecurityResponse({ error: 'Method not allowed' }, 405);
   }
 
-  const rateLimitResponse = rateLimitMiddleware(req, 100, 60000);
+  const rateLimitResponse = await rateLimitMiddleware(req, 100, 60000);
   if (rateLimitResponse) return rateLimitResponse;
 
   if (!RESEND_API_KEY) {
@@ -113,7 +113,7 @@ serve(async (req: Request) => {
   }
 
   const userId = authResult.user.id;
-  const userRateLimit = checkRateLimit(`emergency-email:${userId}`, 30, 5 * 60 * 1000);
+  const userRateLimit = await checkRateLimit(`emergency-email:${userId}`, 30, 5 * 60 * 1000);
   if (!userRateLimit.allowed) {
     return jsonSecurityResponse(
       { error: 'Rate limit exceeded. Try again later.' },

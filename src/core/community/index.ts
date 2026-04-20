@@ -1,12 +1,9 @@
 /**
- * Core Community Barrel Export
- * 
- * Re-exporta funcionalidades do módulo community que são usadas por outras camadas core.
- * Isso mantém o isolamento de módulos enquanto permite que core acesse funcionalidades compartilhadas.
+ * Core community public API.
+ *
+ * Expõe apenas contratos canônicos consumidos cross-domain.
  */
 
-// Services
-export { CommunityService } from './services/CommunityService';
-
-// Re-export do módulo community
-export * from '@/modules/community';
+export { CommunityService, communityService } from "./services/CommunityService";
+export type { CommunityProfile } from "./services/CommunityService";
+export * from "./components";

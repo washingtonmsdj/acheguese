@@ -18,18 +18,14 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import Stripe from 'https://esm.sh/stripe@14.21.0'
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, stripe-signature',
-}
+import { getAllSecurityHeaders, errorResponse, auditLog, getAuditInfo } from '../_shared/security.ts'
 
 serve(async (req: Request) => {
   // ════════════════════════════════════════════════════════════════════════
-  // 1. CORS
+  // 1. CORS — Webhooks do Stripe não enviam Origin, mas preflight pode ocorrer
   // ════════════════════════════════════════════════════════════════════════
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders })
+    return new Response('ok', { status: 204, headers: getAllSecurityHeaders('POST, OPTIONS') })
   }
 
   try {
@@ -39,7 +35,7 @@ serve(async (req: Request) => {
     if (req.method !== 'POST') {
       return new Response(
         JSON.stringify({ error: 'Method not allowed' }),
-        { status: 405, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        { status: 405, headers: getAllSecurityHeaders() }
       )
     }
 
@@ -48,10 +44,7 @@ serve(async (req: Request) => {
     // ════════════════════════════════════════════════════════════════════════
     const signature = req.headers.get('stripe-signature')
     if (!signature) {
-      return new Response(
-        JSON.stringify({ error: 'Missing stripe-signature header' }),
-        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      )
+      return errorResponse('Missing stripe-signature header', 401)
     }
 
     const body = await req.text()
@@ -70,10 +63,7 @@ serve(async (req: Request) => {
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Unknown error';
       console.error('Webhook signature verification failed:', errorMessage)
-      return new Response(
-        JSON.stringify({ error: 'Invalid signature' }),
-        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      )
+      return errorResponse('Invalid signature', 401)
     }
 
     // ════════════════════════════════════════════════════════════════════════
@@ -94,7 +84,7 @@ serve(async (req: Request) => {
     if (!webhookId) {
       return new Response(
         JSON.stringify({ received: true, message: 'Event already processed' }),
-        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        { status: 200, headers: getAllSecurityHeaders() }
       )
     }
 
@@ -133,7 +123,7 @@ serve(async (req: Request) => {
 
       return new Response(
         JSON.stringify({ received: true }),
-        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        { status: 200, headers: getAllSecurityHeaders() }
       )
     } catch (error) {
       // Marcar webhook como erro
@@ -148,10 +138,7 @@ serve(async (req: Request) => {
     }
   } catch (error) {
     console.error('Error in billing-webhook:', error)
-    return new Response(
-      JSON.stringify({ error: error instanceof Error ? error.message : 'Internal server error' }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    )
+    return errorResponse('Internal server error', 500, error)
   }
 })
 

@@ -1,28 +1,28 @@
-/**
- * TerritorialLandingPage — Vitrine pública do território
+﻿/**
+ * TerritorialLandingPage â€” Vitrine pÃºblica do territÃ³rio
  *
  * Hub/landing para bairro individual ou agrupamento territorial.
- * Pública — não exige login.
+ * PÃºblica â€” nÃ£o exige login.
  *
  * Hierarquia editorial (ordem de blocos):
- *   A. Hero do território
- *   B. Estatísticas do território (habitantes, negócios, escolas)
- *   C. Sobre o bairro (descrição, história)
- *   D. Destaques editoriais (curados — máx. 3)
+ *   A. Hero do territÃ³rio
+ *   B. EstatÃ­sticas do territÃ³rio (habitantes, negÃ³cios, escolas)
+ *   C. Sobre o bairro (descriÃ§Ã£o, histÃ³ria)
+ *   D. Destaques editoriais (curados â€” mÃ¡x. 3)
  *   E. Gastronomia (top 3 restaurantes/bares mais avaliados)
- *   F. Negócios locais (máx. 4)
- *   G. Serviços disponíveis (máx. 4)
+ *   F. NegÃ³cios locais (mÃ¡x. 4)
+ *   G. ServiÃ§os disponÃ­veis (mÃ¡x. 4)
  *   H. Lazer e atividades
- *   I. Classificados recentes (máx. 4)
+ *   I. Classificados recentes (mÃ¡x. 4)
  *   J. CTA Comunidade
  *
  * Regra editorial:
- *   - Destaques: máx. 3 ativos, ordenados por position
- *   - Negócios: premium primeiro, depois rating
- *   - Serviços: verificados primeiro, depois rating
+ *   - Destaques: mÃ¡x. 3 ativos, ordenados por position
+ *   - NegÃ³cios: premium primeiro, depois rating
+ *   - ServiÃ§os: verificados primeiro, depois rating
  *   - Classificados: mais recentes primeiro
  *   - Nenhum bloco exibe mais de 4 itens na landing
- *   - Navegação principal via sidebar (não duplicada na landing)
+ *   - NavegaÃ§Ã£o principal via sidebar (nÃ£o duplicada na landing)
  */
 
 import { useNavigate } from 'react-router-dom';
@@ -43,19 +43,19 @@ import { useTerritoryStats } from '@/core/territorial/hooks/useTerritoryStats';
 import { getCityStateFromResolved, formatCityState } from '@/core/location/utils/territoryHelpers';
 import { MODULE_SLUGS } from '../utils/territoryUrls';
 import { BusinessUrlService } from '@/core/business/services/BusinessUrlService';
-import { classifiedUrlService } from '@/modules/classifieds/services/ClassifiedUrlService';
-import { useClassifiedUrls } from '@/modules/classifieds/hooks/useClassifiedUrls';
+import { classifiedUrlService } from '@/core/classifieds/services/ClassifiedUrlService';
+import { useClassifiedUrls } from '@/core/classifieds/hooks/useClassifiedUrls';
 import type { FeaturedBusiness, FeaturedService, FeaturedClassified } from '@/core/landing/services/LandingFeaturedService';
 import type { TerritorialHighlight, HighlightType } from '@/core/territorial/highlights/types';
 import { TerritoryAIContentSection } from '@/core/territorial/components/TerritoryAIContentSection';
 
-// ── Regra editorial ───────────────────────────────────────────────────────────
+// â”€â”€ Regra editorial â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const MAX_HIGHLIGHTS  = 3;
 const MAX_BUSINESSES  = 4;
 const MAX_SERVICES    = 4;
 const MAX_CLASSIFIEDS = 4;
 
-// ── Helpers ──────────────────────────────────────────────────────────────────
+// â”€â”€ Helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function getTerritoryName(resolved: ReturnType<typeof useTerritorialContext>['resolved']): string {
   if (!resolved) return '';
@@ -70,12 +70,12 @@ function getTerritorySubtitle(resolved: ReturnType<typeof useTerritorialContext>
   
   if (resolved.kind === 'group') {
     const names = resolved.group.members.map((m) => m.name);
-    if (names.length === 0) return `Agrupamento territorial${cityStateStr ? ` · ${cityStateStr}` : ''}`;
-    if (names.length <= 3) return `${names.join(', ')}${cityStateStr ? ` · ${cityStateStr}` : ''}`;
-    return `${names.slice(0, 3).join(', ')} e mais ${names.length - 3} bairros${cityStateStr ? ` · ${cityStateStr}` : ''}`;
+    if (names.length === 0) return `Agrupamento territorial${cityStateStr ? ` Â· ${cityStateStr}` : ''}`;
+    if (names.length <= 3) return `${names.join(', ')}${cityStateStr ? ` Â· ${cityStateStr}` : ''}`;
+    return `${names.slice(0, 3).join(', ')} e mais ${names.length - 3} bairros${cityStateStr ? ` Â· ${cityStateStr}` : ''}`;
   }
   
-  return `Bairro${cityStateStr ? ` · ${cityStateStr}` : ''}`;
+  return `Bairro${cityStateStr ? ` Â· ${cityStateStr}` : ''}`;
 }
 
 function getMemberList(resolved: ReturnType<typeof useTerritorialContext>['resolved']): string[] {
@@ -91,7 +91,7 @@ function formatCategory(cat: string): string {
   return cat.charAt(0).toUpperCase() + cat.slice(1).replace(/_/g, ' ');
 }
 
-// ── Sub-componentes ──────────────────────────────────────────────────────────
+// â”€â”€ Sub-componentes â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function SectionHeader({
   title,
@@ -140,7 +140,7 @@ function BlockLoader() {
   );
 }
 
-// ── Cards ────────────────────────────────────────────────────────────────────
+// â”€â”€ Cards â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function BusinessCard({ b, onNavigate }: { b: FeaturedBusiness; onNavigate: (to: string) => void }) {
   return (
@@ -217,7 +217,7 @@ function ClassifiedCard({ c, onNavigate, classifiedUrls }: {
 }) {
   const thumb = c.photos?.[0];
   
-  // ✅ Constrói URL canônica se dados disponíveis, senão usa link curto
+  // âœ… ConstrÃ³i URL canÃ´nica se dados disponÃ­veis, senÃ£o usa link curto
   const getUrl = () => {
     if (c.geographic_path && c.category_slug && c.subcategory_slug && c.slug && c.public_id) {
       try {
@@ -257,7 +257,7 @@ function ClassifiedCard({ c, onNavigate, classifiedUrls }: {
   );
 }
 
-// ── Highlight card ───────────────────────────────────────────────────────────
+// â”€â”€ Highlight card â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 const HIGHLIGHT_ICON: Record<HighlightType, React.ElementType> = {
   business:   Store,
@@ -312,17 +312,17 @@ function HighlightCard({ h, onNavigate }: { h: TerritorialHighlight; onNavigate:
   );
 }
 
-// ── Módulos de navegação ─────────────────────────────────────────────────────
+// â”€â”€ MÃ³dulos de navegaÃ§Ã£o â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 const MODULE_ITEMS = [
   { slug: MODULE_SLUGS.community,   icon: Users,  label: 'Comunidade',    color: 'text-teal-500' },
   { slug: MODULE_SLUGS.business,    icon: Store,  label: 'Empresas',      color: 'text-blue-500' },
-  { slug: MODULE_SLUGS.services,    icon: Wrench, label: 'Serviços',      color: 'text-violet-500' },
+  { slug: MODULE_SLUGS.services,    icon: Wrench, label: 'ServiÃ§os',      color: 'text-violet-500' },
   { slug: MODULE_SLUGS.classifieds, icon: Tag,    label: 'Classificados', color: 'text-orange-500' },
   { slug: MODULE_SLUGS.mobility,    icon: Bus,    label: 'Mobilidade',    color: 'text-rose-500' },
 ] as const;
 
-// ── Página principal ─────────────────────────────────────────────────────────
+// â”€â”€ PÃ¡gina principal â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export function TerritorialLandingPage() {
   const { resolved, baseUrl } = useTerritorialContext();
@@ -342,7 +342,7 @@ export function TerritorialLandingPage() {
   const memberList = getMemberList(resolved);
   const isGroup = resolved?.kind === 'group';
 
-  // URLs dos módulos (formato correto: /modulo/state/city)
+  // URLs dos mÃ³dulos (formato correto: /modulo/state/city)
   const moduleUrls = {
     business: `/${MODULE_SLUGS.business}${baseUrl}`,
     services: `/${MODULE_SLUGS.services}${baseUrl}`,
@@ -353,7 +353,7 @@ export function TerritorialLandingPage() {
   return (
     <div className="min-h-screen w-full bg-background text-foreground flex flex-col">
 
-      {/* ── NAVBAR ────────────────────────────────────────────────── */}
+      {/* â”€â”€ NAVBAR â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       <nav className="sticky top-0 z-50 bg-card/95 backdrop-blur-md border-b border-border">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 flex items-center justify-between h-14">
           <button
@@ -385,18 +385,18 @@ export function TerritorialLandingPage() {
         </div>
       </nav>
 
-      {/* ── BANNER ────────────────────────────────────────────────── */}
+      {/* â”€â”€ BANNER â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       <div className="w-full bg-gradient-to-r from-teal-500/20 via-teal-500/10 to-teal-500/20 border-b border-teal-500/20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-2.5 flex items-center justify-center gap-2 text-sm">
           <Sparkles className="h-4 w-4 text-teal-500" />
           <span className="text-muted-foreground">
             <span className="font-semibold text-foreground">Portal do {isGroup ? 'Complexo' : 'Bairro'}!</span>{" "}
-            Tudo sobre {name} em um só lugar.
+            Tudo sobre {name} em um sÃ³ lugar.
           </span>
         </div>
       </div>
 
-      {/* ── A. HERO ──────────────────────────────────────────────────────── */}
+      {/* â”€â”€ A. HERO â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       <section className="relative w-full overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-teal-500/12 via-teal-500/6 to-transparent">
           <div className="absolute top-0 right-0 w-96 h-96 bg-teal-500/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
@@ -413,8 +413,8 @@ export function TerritorialLandingPage() {
             </h1>
             <p className="text-muted-foreground text-base md:text-lg mb-6">
               {isGroup 
-                ? `Agrupamento de ${memberList.length} bairros com tudo que você precisa: empresas, serviços, eventos e comunidade.`
-                : 'Seu bairro conectado: empresas locais, serviços, eventos e tudo que acontece na comunidade.'
+                ? `Agrupamento de ${memberList.length} bairros com tudo que vocÃª precisa: empresas, serviÃ§os, eventos e comunidade.`
+                : 'Seu bairro conectado: empresas locais, serviÃ§os, eventos e tudo que acontece na comunidade.'
               }
             </p>
 
@@ -442,7 +442,7 @@ export function TerritorialLandingPage() {
               {[
                 { icon: Users, label: 'Comunidade', url: moduleUrls.community },
                 { icon: Store, label: 'Empresas', url: moduleUrls.business },
-                { icon: Wrench, label: 'Serviços', url: moduleUrls.services },
+                { icon: Wrench, label: 'ServiÃ§os', url: moduleUrls.services },
                 { icon: Tag, label: 'Classificados', url: moduleUrls.classifieds },
               ].map((chip) => (
                 <button
@@ -465,11 +465,11 @@ export function TerritorialLandingPage() {
         </div>
       </section>
 
-      {/* ── B. ESTATÍSTICAS DO TERRITÓRIO ─────────────────────────────────── */}
+      {/* â”€â”€ B. ESTATÃSTICAS DO TERRITÃ“RIO â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 py-10 md:py-14 w-full">
         <div className="text-center mb-8">
           <h2 className="text-xl md:text-2xl font-bold text-foreground font-heading">
-            {name} em Números
+            {name} em NÃºmeros
           </h2>
           <p className="text-sm text-muted-foreground mt-1">
             Dados do {isGroup ? 'complexo' : 'bairro'}
@@ -483,7 +483,7 @@ export function TerritorialLandingPage() {
               </div>
             </div>
             <p className="text-xl md:text-2xl font-bold text-foreground">
-              {statsLoading ? '—' : territoryStats?.population ? `~${(territoryStats.population / 1000).toFixed(0)}mil` : '—'}
+              {statsLoading ? 'â€”' : territoryStats?.population ? `~${(territoryStats.population / 1000).toFixed(0)}mil` : 'â€”'}
             </p>
             <p className="text-[11px] text-muted-foreground mt-1 font-medium">Habitantes</p>
           </div>
@@ -493,7 +493,7 @@ export function TerritorialLandingPage() {
                 <Store className="h-5 w-5 text-blue-500" />
               </div>
             </div>
-            <p className="text-xl md:text-2xl font-bold text-foreground">{isLoading ? '—' : stats.businesses}</p>
+            <p className="text-xl md:text-2xl font-bold text-foreground">{isLoading ? 'â€”' : stats.businesses}</p>
             <p className="text-[11px] text-muted-foreground mt-1 font-medium">Empresas ativas</p>
           </div>
           <div className="bg-gradient-to-br from-violet-500/8 to-violet-500/4 border border-violet-500/20 rounded-2xl p-4 text-center hover:scale-105 transition-transform">
@@ -502,7 +502,7 @@ export function TerritorialLandingPage() {
                 <Wrench className="h-5 w-5 text-violet-500" />
               </div>
             </div>
-            <p className="text-xl md:text-2xl font-bold text-foreground">{isLoading ? '—' : stats.services}</p>
+            <p className="text-xl md:text-2xl font-bold text-foreground">{isLoading ? 'â€”' : stats.services}</p>
             <p className="text-[11px] text-muted-foreground mt-1 font-medium">Profissionais</p>
           </div>
           <div className="bg-gradient-to-br from-orange-500/8 to-orange-500/4 border border-orange-500/20 rounded-2xl p-4 text-center hover:scale-105 transition-transform">
@@ -511,8 +511,8 @@ export function TerritorialLandingPage() {
                 <Tag className="h-5 w-5 text-orange-500" />
               </div>
             </div>
-            <p className="text-xl md:text-2xl font-bold text-foreground">{isLoading ? '—' : stats.classifieds}</p>
-            <p className="text-[11px] text-muted-foreground mt-1 font-medium">Anúncios ativos</p>
+            <p className="text-xl md:text-2xl font-bold text-foreground">{isLoading ? 'â€”' : stats.classifieds}</p>
+            <p className="text-[11px] text-muted-foreground mt-1 font-medium">AnÃºncios ativos</p>
           </div>
           <div className="bg-gradient-to-br from-green-500/8 to-green-500/4 border border-green-500/20 rounded-2xl p-4 text-center hover:scale-105 transition-transform">
             <div className="flex justify-center mb-2">
@@ -521,7 +521,7 @@ export function TerritorialLandingPage() {
               </div>
             </div>
             <p className="text-xl md:text-2xl font-bold text-foreground">
-              {statsLoading ? '—' : territoryStats?.schools ?? '—'}
+              {statsLoading ? 'â€”' : territoryStats?.schools ?? 'â€”'}
             </p>
             <p className="text-[11px] text-muted-foreground mt-1 font-medium">Escolas</p>
           </div>
@@ -532,14 +532,14 @@ export function TerritorialLandingPage() {
               </div>
             </div>
             <p className="text-xl md:text-2xl font-bold text-foreground">
-              {statsLoading ? '—' : territoryStats?.bus_lines ?? '—'}
+              {statsLoading ? 'â€”' : territoryStats?.bus_lines ?? 'â€”'}
             </p>
-            <p className="text-[11px] text-muted-foreground mt-1 font-medium">Linhas de ônibus</p>
+            <p className="text-[11px] text-muted-foreground mt-1 font-medium">Linhas de Ã´nibus</p>
           </div>
         </div>
       </section>
 
-      {/* ── C. SOBRE O BAIRRO (IA) ─────────────────────────────────────── */}
+      {/* â”€â”€ C. SOBRE O BAIRRO (IA) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 w-full">
         <TerritoryAIContentSection
           territorySlug={resolved?.kind === 'group'
@@ -552,7 +552,7 @@ export function TerritorialLandingPage() {
         />
       </div>
 
-      {/* ── D. DESTAQUES EDITORIAIS ───────────────────────────────────────── */}
+      {/* â”€â”€ D. DESTAQUES EDITORIAIS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       {(highlightsLoading || highlights.length > 0) && (
         <section className="max-w-7xl mx-auto px-4 sm:px-6 pb-10 md:pb-14 w-full">
           <div className="mb-6">
@@ -573,12 +573,12 @@ export function TerritorialLandingPage() {
         </section>
       )}
 
-      {/* ── E. GASTRONOMIA ────────────────────────────────────────────────── */}
+      {/* â”€â”€ E. GASTRONOMIA â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 pb-10 md:pb-14 w-full">
         <div className="flex items-center justify-between mb-6">
           <div>
             <h2 className="text-xl md:text-2xl font-bold text-foreground font-heading">Gastronomia</h2>
-            <p className="text-sm text-muted-foreground mt-1">Melhores opções para comer e beber</p>
+            <p className="text-sm text-muted-foreground mt-1">Melhores opÃ§Ãµes para comer e beber</p>
           </div>
           <button
             onClick={() => navigate(moduleUrls.business)}
@@ -623,7 +623,7 @@ export function TerritorialLandingPage() {
                       <div className="flex items-center gap-1">
                         <Star className="h-3.5 w-3.5 text-amber-400 fill-amber-400" />
                         <span className="text-xs font-medium text-foreground">{b.rating.toFixed(1)}</span>
-                        <span className="text-xs text-muted-foreground">• Recomendado</span>
+                        <span className="text-xs text-muted-foreground">â€¢ Recomendado</span>
                       </div>
                     )}
                   </div>
@@ -633,12 +633,12 @@ export function TerritorialLandingPage() {
         )}
       </section>
 
-      {/* ── F. NEGÓCIOS LOCAIS ────────────────────────────────────────────── */}
+      {/* â”€â”€ F. NEGÃ“CIOS LOCAIS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 pb-10 md:pb-14 w-full">
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h2 className="text-xl md:text-2xl font-bold text-foreground font-heading">Negócios Locais</h2>
-            <p className="text-sm text-muted-foreground mt-1">Empresas e comércios do território</p>
+            <h2 className="text-xl md:text-2xl font-bold text-foreground font-heading">NegÃ³cios Locais</h2>
+            <p className="text-sm text-muted-foreground mt-1">Empresas e comÃ©rcios do territÃ³rio</p>
           </div>
           <button
             onClick={() => navigate(moduleUrls.business)}
@@ -658,18 +658,18 @@ export function TerritorialLandingPage() {
           </div>
         ) : (
           <EmptyBlock
-            label="Nenhum negócio cadastrado aqui ainda."
-            hint="Em breve, este espaço vai mostrar empresas e comércios do território."
+            label="Nenhum negÃ³cio cadastrado aqui ainda."
+            hint="Em breve, este espaÃ§o vai mostrar empresas e comÃ©rcios do territÃ³rio."
           />
         )}
       </section>
 
-      {/* ── G. SERVIÇOS ──────────────────────────────────────────────────── */}
+      {/* â”€â”€ G. SERVIÃ‡OS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 pb-10 md:pb-14 w-full">
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h2 className="text-xl md:text-2xl font-bold text-foreground font-heading">Profissionais e Serviços</h2>
-            <p className="text-sm text-muted-foreground mt-1">Quem atende neste território</p>
+            <h2 className="text-xl md:text-2xl font-bold text-foreground font-heading">Profissionais e ServiÃ§os</h2>
+            <p className="text-sm text-muted-foreground mt-1">Quem atende neste territÃ³rio</p>
           </div>
           <button
             onClick={() => navigate(moduleUrls.services)}
@@ -690,12 +690,12 @@ export function TerritorialLandingPage() {
         ) : (
           <EmptyBlock
             label="Nenhum profissional cadastrado aqui ainda."
-            hint="Em breve, este espaço vai mostrar quem presta serviços no território."
+            hint="Em breve, este espaÃ§o vai mostrar quem presta serviÃ§os no territÃ³rio."
           />
         )}
       </section>
 
-      {/* ── H. LAZER E ATIVIDADES ─────────────────────────────────────────── */}
+      {/* â”€â”€ H. LAZER E ATIVIDADES â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 pb-10 md:pb-14 w-full">
         <div className="mb-6">
           <h2 className="text-xl md:text-2xl font-bold text-foreground font-heading">Lazer e Atividades</h2>
@@ -707,7 +707,7 @@ export function TerritorialLandingPage() {
               <Music className="h-6 w-6 text-teal-500" />
             </div>
             <p className="text-base font-semibold text-foreground mb-2">Eventos culturais</p>
-            <p className="text-sm text-muted-foreground">Shows e apresentações</p>
+            <p className="text-sm text-muted-foreground">Shows e apresentaÃ§Ãµes</p>
             <div className="absolute -bottom-4 -right-4 h-24 w-24 bg-teal-500/10 rounded-full blur-2xl" />
           </div>
           <div className="relative overflow-hidden bg-gradient-to-br from-blue-500/12 to-blue-500/6 border border-blue-500/25 rounded-2xl p-6 hover:scale-105 transition-transform">
@@ -737,12 +737,12 @@ export function TerritorialLandingPage() {
         </div>
       </section>
 
-      {/* ── I. CLASSIFICADOS ─────────────────────────────────────────────── */}
+      {/* â”€â”€ I. CLASSIFICADOS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 pb-10 md:pb-14 w-full">
         <div className="flex items-center justify-between mb-6">
           <div>
             <h2 className="text-xl md:text-2xl font-bold text-foreground font-heading">Classificados Recentes</h2>
-            <p className="text-sm text-muted-foreground mt-1">O que está à venda no {isGroup ? 'complexo' : 'bairro'}</p>
+            <p className="text-sm text-muted-foreground mt-1">O que estÃ¡ Ã  venda no {isGroup ? 'complexo' : 'bairro'}</p>
           </div>
           <button
             onClick={() => navigate(moduleUrls.classifieds)}
@@ -763,12 +763,12 @@ export function TerritorialLandingPage() {
         ) : (
           <EmptyBlock
             label="Nenhum classificado ativo no momento."
-            hint="Quando alguém anunciar algo aqui, vai aparecer neste espaço."
+            hint="Quando alguÃ©m anunciar algo aqui, vai aparecer neste espaÃ§o."
           />
         )}
       </section>
 
-      {/* ── J. CTA COMUNIDADE ─────────────────────────────────────────────── */}
+      {/* â”€â”€ J. CTA COMUNIDADE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 pb-20">
         <div className="rounded-2xl bg-gradient-to-br from-teal-500/12 to-teal-500/6 border border-teal-500/20 p-8 md:p-12">
           <div className="flex flex-col md:flex-row items-start md:items-center gap-6">
@@ -780,7 +780,7 @@ export function TerritorialLandingPage() {
                 Comunidade {name}
               </h2>
               <p className="text-base text-muted-foreground leading-relaxed mb-6">
-                Notícias, alertas, discussões e eventos do {isGroup ? 'complexo' : 'bairro'} — tudo em um só lugar. 
+                NotÃ­cias, alertas, discussÃµes e eventos do {isGroup ? 'complexo' : 'bairro'} â€” tudo em um sÃ³ lugar. 
                 Conecte-se com seus vizinhos e fique por dentro de tudo que acontece.
               </p>
               <button

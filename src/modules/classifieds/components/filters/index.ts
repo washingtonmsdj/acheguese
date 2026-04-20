@@ -1,9 +1,2 @@
-/**
- * Barrel export para filters de Classificados
- */
+﻿export * from "@/core/classifieds/components/filters/index";
 
-export { SearchBar } from "./SearchBar";
-export type { SearchBarProps } from "./SearchBar";
-
-export { CategoryChips } from "./CategoryChips";
-export type { CategoryChipsProps, Category } from "./CategoryChips";

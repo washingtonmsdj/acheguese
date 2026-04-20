@@ -1,0 +1,158 @@
+﻿import React, { useState, useEffect, useCallback } from "react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/shared/components/ui/dialog";
+import { ScrollArea } from "@/shared/components/ui/scroll-area";
+import { useSessionContext } from "@/core/session";
+import { useCommentInteractions } from "@/core/community/hooks/useCommentInteractions";
+import { useComments } from "@/core/community/hooks/useComments";
+import { useCommentActions } from "@/core/community/hooks/useCommentActions";
+import { CommentsList } from "./comments/CommentsList";
+import { CommentForm } from "./comments/CommentForm";
+import { INLINE_STYLES } from "./styles/communityDesignSystem";
+interface CommentsModalProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  postId: string | null;
+  postAuthorId?: string;
+  postAuthorName?: string;
+  currentUserId?: string;
+}
+
+export function CommentsModal({
+  open,
+  onOpenChange,
+  postId,
+  postAuthorId,
+  postAuthorName,
+  currentUserId,
+}: CommentsModalProps) {
+  const { user, activeProfile } = useSessionContext();
+  const { handleLike, getCommentState, initializeComment, isProcessing } =
+    useCommentInteractions(postId || "");
+  const { comments, loading, fetchComments, addComment, removeComment } =
+    useComments(postId, activeProfile?.id);
+  const { submitting, submitComment, deleteComment } = useCommentActions(
+    postId || "",
+    activeProfile?.id,
+    activeProfile?.name || undefined,
+    activeProfile?.avatarUrl || undefined,
+  );
+
+  const [newComment, setNewComment] = useState("");
+  const [replyTo, setReplyTo] = useState<{ id: string; name: string } | null>(
+    null,
+  );
+
+  const handleFetchComments = useCallback(async () => {
+    const fetchedComments = await fetchComments();
+
+    // Inicializar state de curtidas para cada comentÃ¡rio
+    fetchedComments.forEach((comment) => {
+      initializeComment(comment.id, comment.is_liked, comment.likes_count);
+      comment.replies?.forEach((reply) => {
+        initializeComment(reply.id, reply.is_liked, reply.likes_count);
+      });
+    });
+  }, [fetchComments, initializeComment]);
+
+  useEffect(() => {
+    if (open && postId) {
+      handleFetchComments();
+    } else {
+      setReplyTo(null);
+      setNewComment("");
+    }
+  }, [open, postId, handleFetchComments]);
+
+  const handleSubmitComment = async () => {
+    const comment = await submitComment(newComment, replyTo?.id);
+
+    if (comment) {
+      addComment(comment, replyTo?.id);
+      initializeComment(comment.id, false, 0);
+      setNewComment("");
+      setReplyTo(null);
+    }
+  };
+
+  const handleDeleteComment = async (commentId: string) => {
+    const success = await deleteComment(commentId);
+    if (success) {
+      removeComment(commentId);
+    }
+  };
+
+  const totalComments = comments.reduce(
+    (acc, c) => acc + 1 + (c.replies?.length || 0),
+    0,
+  );
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent
+        className="rounded-[20px] shadow-2xl max-w-2xl max-h-[90vh] flex flex-col border-0 p-0 gap-0 overflow-hidden"
+        style={{ backgroundColor: "#1E2529" }}
+        aria-describedby="comments-description"
+      >
+        {/* Header Fixo */}
+        <DialogHeader
+          className="border-b pb-3 pt-4 px-5 flex-shrink-0"
+          style={{ borderColor: "rgba(255, 255, 255, 0.1)" }}
+        >
+          <DialogTitle
+            className="text-base font-bold"
+            style={INLINE_STYLES.textPrimary}
+          >
+            ComentÃ¡rios {totalComments > 0 && `(${totalComments})`}
+          </DialogTitle>
+          <p
+            id="comments-description"
+            className="text-xs mt-1"
+            style={INLINE_STYLES.textSecondary}
+          >
+            {postAuthorName
+              ? `Post de ${postAuthorName}`
+              : "Visualize e adicione comentÃ¡rios"}
+          </p>
+        </DialogHeader>
+        <DialogDescription className="sr-only">
+          Visualize e adicione comentÃ¡rios nesta publicaÃ§Ã£o
+        </DialogDescription>
+
+        {/* Ãrea de ComentÃ¡rios com Scroll */}
+        <ScrollArea className="flex-1 px-5 py-4 overflow-y-auto">
+          <CommentsList
+            comments={comments}
+            loading={loading}
+            currentUserId={currentUserId}
+            postAuthorId={postAuthorId}
+            getCommentState={getCommentState}
+            isProcessing={isProcessing}
+            onLike={handleLike}
+            onReply={(id, name) => setReplyTo({ id, name })}
+            onDelete={handleDeleteComment}
+          />
+        </ScrollArea>
+
+        {/* Input de ComentÃ¡rio Fixo */}
+        <CommentForm
+          value={newComment}
+          onChange={setNewComment}
+          onSubmit={handleSubmitComment}
+          replyTo={replyTo}
+          onCancelReply={() => setReplyTo(null)}
+          submitting={submitting}
+          userAvatar={activeProfile?.avatarUrl}
+          userName={activeProfile?.name}
+          isLoggedIn={!!user}
+        />
+      </DialogContent>
+    </Dialog>
+  );
+}
+

@@ -1,29 +1,55 @@
 /**
- * Contrato canonico de community-alerts para consumo cross-domain.
- *
- * Enquanto o dominio ainda conclui sua consolidacao interna, outros modulos
- * devem depender desta fachada em vez de importar detalhes de `modules/*`.
+ * Community Alerts Module — Barrel Export
+ * Apenas API pública. Internals não são exportados.
  */
 
+// ============================================================================
+// Components
+// ============================================================================
+export { AlertFeedSection } from "./components/AlertFeedSection";
+export { AlertCard } from "./components/AlertCard";
+export { CreateAlertModal } from "./components/CreateAlertModal";
+
+// ============================================================================
+// Hooks
+// ============================================================================
+export { useAlerts } from "./hooks/useAlerts";
+export { useAlertsBySpatialRadius } from "./hooks/useAlertsBySpatialRadius";
+export { useCreateAlert } from "./hooks/useCreateAlert";
+export { useAlertReport } from "./hooks/useAlertReport";
+
+// ============================================================================
+// Services (para uso em outros módulos via core se necessário)
+// ============================================================================
+export { communityAlertService } from "./services/CommunityAlertService";
+export { alertModerationService } from "./services/AlertModerationService";
+
+// ============================================================================
+// Config (feature flag e labels — consumidos por outros módulos)
+// ============================================================================
 export {
+  COMMUNITY_ALERTS_ENABLED,
   ALERT_CATEGORY_LABELS,
   ALERT_REPORT_REASON_LABELS,
-} from "@/modules/community-alerts/config/alertConfig";
+} from "./config/alertConfig";
 
+// ============================================================================
+// Types
+// ============================================================================
 export type {
   AlertCategory,
-  AlertReportReason,
   AlertStatus,
+  AlertStartedApprox,
+  AlertAuditAction,
+  AlertReportReason,
+  AlertTrustSnapshot,
   CommunityAlert,
   CommunityAlertPublic,
-} from "@/modules/community-alerts/domain/types";
-
-export {
-  AlertFeedSection,
-  CreateAlertModal,
-} from "@/modules/community-alerts";
-
-export {
-  alertModerationService,
-  communityAlertService,
-} from "@/modules/community-alerts";
+  CreateAlertPayload,
+  UpdateAlertPayload,
+  CommunityAlertReport,
+  CommunityAlertAudit,
+  AlertFeedFilters,
+  AlertRpcResult,
+  AlertRpcError,
+} from "./domain/types";

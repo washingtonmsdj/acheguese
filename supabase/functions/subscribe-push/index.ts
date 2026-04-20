@@ -8,6 +8,7 @@
 
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { getAllSecurityHeaders, rateLimitMiddleware, errorResponse, isValidUUID } from '../_shared/security.ts';
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
@@ -24,11 +25,20 @@ interface SubscribePushRequest {
 }
 
 serve(async (req: Request) => {
+  // Handle CORS preflight
+  if (req.method === 'OPTIONS') {
+    return new Response('ok', { status: 204, headers: getAllSecurityHeaders('POST, OPTIONS') });
+  }
+
+  // Rate limiting
+  const rateLimitResponse = await rateLimitMiddleware(req, 10, 60000);
+  if (rateLimitResponse) return rateLimitResponse;
+
   // 1. Validate HTTP method
   if (req.method !== 'POST') {
     return new Response(JSON.stringify({ error: 'Method not allowed' }), {
       status: 405,
-      headers: { 'Content-Type': 'application/json' },
+      headers: getAllSecurityHeaders(),
     });
   }
 
@@ -36,10 +46,7 @@ serve(async (req: Request) => {
     // 2. Validate authentication
     const authHeader = req.headers.get('Authorization');
     if (!authHeader) {
-      return new Response(JSON.stringify({ error: 'Missing authorization header' }), {
-        status: 401,
-        headers: { 'Content-Type': 'application/json' },
-      });
+      return errorResponse('Missing authorization header', 401);
     }
 
     // Create Supabase client
@@ -50,29 +57,20 @@ serve(async (req: Request) => {
     const { data: { user }, error: authError } = await supabase.auth.getUser(token);
 
     if (authError || !user) {
-      return new Response(JSON.stringify({ error: 'Invalid token' }), {
-        status: 401,
-        headers: { 'Content-Type': 'application/json' },
-      });
+      return errorResponse('Invalid token', 401);
     }
 
     // 3. Parse and validate input
     const body: SubscribePushRequest = await req.json();
     const { userId, subscription, userAgent, deviceName } = body;
 
-    if (!userId || !subscription || !subscription.endpoint || !subscription.p256dh || !subscription.auth) {
-      return new Response(
-        JSON.stringify({ error: 'Missing required fields' }),
-        { status: 400, headers: { 'Content-Type': 'application/json' } }
-      );
+    if (!userId || !isValidUUID(userId) || !subscription || !subscription.endpoint || !subscription.p256dh || !subscription.auth) {
+      return errorResponse('Missing or invalid required fields', 400);
     }
 
     // Verify user is subscribing for themselves
     if (user.id !== userId) {
-      return new Response(
-        JSON.stringify({ error: 'Cannot subscribe for another user' }),
-        { status: 403, headers: { 'Content-Type': 'application/json' } }
-      );
+      return errorResponse('Cannot subscribe for another user', 403);
     }
 
     // 4. Check if subscription already exists
@@ -99,10 +97,7 @@ serve(async (req: Request) => {
 
       if (updateError) {
         console.error('Error updating push subscription:', updateError);
-        return new Response(
-          JSON.stringify({ error: 'Failed to update subscription' }),
-          { status: 500, headers: { 'Content-Type': 'application/json' } }
-        );
+        return errorResponse('Failed to update subscription', 500);
       }
 
       return new Response(
@@ -111,14 +106,7 @@ serve(async (req: Request) => {
           message: 'Subscription updated',
           subscriptionId: existing.id,
         }),
-        {
-          status: 200,
-          headers: {
-            'Content-Type': 'application/json',
-            'Access-Control-Allow-Origin': '*',
-            'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-          },
-        }
+        { status: 200, headers: getAllSecurityHeaders() }
       );
     }
 
@@ -139,10 +127,7 @@ serve(async (req: Request) => {
 
     if (insertError) {
       console.error('Error creating push subscription:', insertError);
-      return new Response(
-        JSON.stringify({ error: 'Failed to create subscription' }),
-        { status: 500, headers: { 'Content-Type': 'application/json' } }
-      );
+      return errorResponse('Failed to create subscription', 500);
     }
 
     // 6. Return success
@@ -152,21 +137,11 @@ serve(async (req: Request) => {
         message: 'Subscription created',
         subscriptionId: newSubscription.id,
       }),
-      {
-        status: 200,
-        headers: {
-          'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*',
-          'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-        },
-      }
+      { status: 200, headers: getAllSecurityHeaders() }
     );
   } catch (error) {
     console.error('Exception in subscribe-push function:', error);
-    return new Response(
-      JSON.stringify({ error: 'Internal server error', details: String(error) }),
-      { status: 500, headers: { 'Content-Type': 'application/json' } }
-    );
+    return errorResponse('Internal server error', 500, error);
   }
 });
 

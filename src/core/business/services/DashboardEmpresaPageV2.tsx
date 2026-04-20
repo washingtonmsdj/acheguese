@@ -30,9 +30,9 @@ import type { BusinessData } from "@/shared/types/dashboard";
 
 // Vertical gastronomia — importado do módulo gastronomy, orquestrado aqui na camada app/shell
 import { isEligibleForVertical } from '@/core/verticals/config';
-import { useGastronomyStatus } from '@/modules/gastronomy/hooks';
-import { GastronomyVerticalCTA } from '@/modules/gastronomy/components/GastronomyVerticalCTA';
-import GastronomySetupPage from '@/modules/gastronomy/pages/GastronomySetupPage';
+import { useGastronomyStatus } from '@/core/gastronomy/hooks/useGastronomyStatus';
+import { GastronomyVerticalCTA } from '@/core/gastronomy/components/GastronomyVerticalCTA';
+import GastronomySetupPage from '@/core/gastronomy/pages/GastronomySetupPage';
 
 export default function DashboardEmpresaPageV2() {
   const { profileId } = useParams<{ profileId: string }>();

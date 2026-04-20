@@ -1,14 +1,15 @@
 /**
  * SECURITY UTILITIES
  * Funções centralizadas de segurança para edge functions
- * 
+ *
  * NOTA: Este arquivo roda em Deno (edge functions) e não pode importar
  * diretamente do SSOT (src/config/security.config.ts) que é TypeScript/Node.
- * 
+ *
  * Os valores aqui devem ser mantidos sincronizados manualmente com o SSOT.
  * Referência: src/config/security.config.ts -> SECURITY_HEADERS
- * 
- * TODO: Considerar gerar este arquivo automaticamente do SSOT no futuro.
+ *
+ * REGRA: Toda edge function DEVE importar e usar este módulo.
+ * Proibido: corsHeaders locais, CORS '*', error details expostos ao cliente.
  */
 
 // ══════════════════════════════════════════════════════════════════════════
@@ -23,18 +24,17 @@
  */
 export function getCorsHeaders(methods = 'POST, OPTIONS'): Record<string, string> {
   const allowedOrigins = Deno.env.get('ALLOWED_ORIGINS') || '';
-  const supabaseUrl = Deno.env.get('SUPABASE_URL') || '';
-  
-  // Em desenvolvimento, permite localhost
+
+  // Desenvolvimento: APENAS quando DENO_ENV ou NODE_ENV está explicitamente
+  // definido como 'development'. Nunca inferir pelo conteúdo da SUPABASE_URL.
   const isDev =
     Deno.env.get('DENO_ENV') === 'development' ||
-    Deno.env.get('NODE_ENV') === 'development' ||
-    supabaseUrl.includes('127.0.0.1') ||
-    supabaseUrl.includes('localhost');
-  const defaultOrigin = isDev 
-    ? 'http://localhost:8080,http://localhost:5173' 
+    Deno.env.get('NODE_ENV') === 'development';
+
+  const defaultOrigin = isDev
+    ? 'http://localhost:8080,http://localhost:5173'
     : '';
-  
+
   const origins = allowedOrigins || defaultOrigin;
   
   // Se não houver origens configuradas, bloqueia tudo
@@ -60,24 +60,31 @@ export function getCorsHeaders(methods = 'POST, OPTIONS'): Record<string, string
 }
 
 /**
- * Valida se a origem da requisição é permitida
+ * Valida se a origem da requisição é permitida.
+ *
+ * SEGURANÇA: A detecção de ambiente de desenvolvimento é feita APENAS via
+ * DENO_ENV/NODE_ENV explícito. Nunca inferimos dev a partir da SUPABASE_URL
+ * para evitar que uma configuração acidental em produção abra o CORS para
+ * localhost.
  */
 export function isOriginAllowed(origin: string | null): boolean {
   if (!origin) return false;
-  
+
   const allowedOrigins = Deno.env.get('ALLOWED_ORIGINS') || '';
-  const supabaseUrl = Deno.env.get('SUPABASE_URL') || '';
+
+  // Desenvolvimento: APENAS quando DENO_ENV ou NODE_ENV está explicitamente
+  // definido como 'development'. Nunca inferir pelo conteúdo da SUPABASE_URL.
   const isDev =
     Deno.env.get('DENO_ENV') === 'development' ||
-    Deno.env.get('NODE_ENV') === 'development' ||
-    supabaseUrl.includes('127.0.0.1') ||
-    supabaseUrl.includes('localhost');
-  
-  if (isDev && (origin.includes('localhost') || origin.includes('127.0.0.1'))) {
+    Deno.env.get('NODE_ENV') === 'development';
+
+  if (isDev && (origin.startsWith('http://localhost:') || origin.startsWith('http://127.0.0.1:'))) {
     return true;
   }
-  
-  const origins = allowedOrigins.split(',').map(o => o.trim());
+
+  if (!allowedOrigins) return false;
+
+  const origins = allowedOrigins.split(',').map(o => o.trim()).filter(Boolean);
   return origins.includes(origin);
 }
 
@@ -130,84 +137,122 @@ export function getAllSecurityHeaders(methods = 'POST, OPTIONS'): Record<string,
 // RATE LIMITING
 // ══════════════════════════════════════════════════════════════════════════
 
-interface RateLimitStore {
-  [key: string]: {
-    count: number;
-    resetAt: number;
-  };
+/**
+ * Rate limiting distribuído via Deno KV.
+ *
+ * Deno KV é o único storage persistente disponível nativamente em Supabase
+ * Edge Functions, garantindo que o limite seja respeitado entre todas as
+ * instâncias simultâneas da função (ao contrário de um Map em memória).
+ *
+ * Fallback: se o KV não estiver disponível (ambiente de teste), usa Map
+ * em memória com aviso explícito no log.
+ */
+
+interface RateLimitEntry {
+  count: number;
+  resetAt: number;
 }
 
-const rateLimitStore: RateLimitStore = {};
+// Fallback em memória — usado APENAS quando Deno KV não está disponível
+// (ex: testes unitários locais). Em produção, Deno KV sempre está disponível.
+const _memoryFallback = new Map<string, RateLimitEntry>();
 
-/**
- * Implementação simples de rate limiting em memória
- * 
- * NOTA: Para produção, use Redis ou Deno KV para rate limiting distribuído
- */
-export function checkRateLimit(
+async function _getKv(): Promise<Deno.Kv | null> {
+  try {
+    return await Deno.openKv();
+  } catch {
+    console.warn('[RateLimit] Deno KV indisponível — usando fallback em memória (não distribuído)');
+    return null;
+  }
+}
+
+export async function checkRateLimit(
   identifier: string,
   maxRequests = 100,
-  windowMs = 60000
-): { allowed: boolean; remaining: number; resetAt: number } {
+  windowMs = 60000,
+): Promise<{ allowed: boolean; remaining: number; resetAt: number }> {
   const now = Date.now();
   const key = `ratelimit:${identifier}`;
-  
-  // Limpa entradas expiradas
-  if (rateLimitStore[key] && rateLimitStore[key].resetAt < now) {
-    delete rateLimitStore[key];
+
+  const kv = await _getKv();
+
+  if (kv) {
+    // ── Caminho principal: Deno KV (distribuído) ──────────────────────────
+    const kvKey = ['ratelimit', identifier];
+    const result = await kv.get<RateLimitEntry>(kvKey);
+    const entry = result.value;
+
+    if (!entry || entry.resetAt < now) {
+      // Janela nova ou expirada
+      const newEntry: RateLimitEntry = { count: 1, resetAt: now + windowMs };
+      await kv.set(kvKey, newEntry, { expireIn: windowMs });
+      return { allowed: true, remaining: maxRequests - 1, resetAt: newEntry.resetAt };
+    }
+
+    const newCount = entry.count + 1;
+    const remaining = Math.max(0, maxRequests - newCount);
+    const allowed = newCount <= maxRequests;
+
+    // Atualiza contador mantendo o mesmo resetAt (janela fixa)
+    const ttlMs = Math.max(1, entry.resetAt - now);
+    await kv.set(kvKey, { count: newCount, resetAt: entry.resetAt }, { expireIn: ttlMs });
+
+    return { allowed, remaining, resetAt: entry.resetAt };
   }
-  
-  // Inicializa ou incrementa contador
-  if (!rateLimitStore[key]) {
-    rateLimitStore[key] = {
-      count: 1,
-      resetAt: now + windowMs,
-    };
-    return { allowed: true, remaining: maxRequests - 1, resetAt: rateLimitStore[key].resetAt };
+
+  // ── Fallback: Map em memória (instância única, não distribuído) ──────────
+  const existing = _memoryFallback.get(key);
+
+  if (!existing || existing.resetAt < now) {
+    const newEntry: RateLimitEntry = { count: 1, resetAt: now + windowMs };
+    _memoryFallback.set(key, newEntry);
+    return { allowed: true, remaining: maxRequests - 1, resetAt: newEntry.resetAt };
   }
-  
-  rateLimitStore[key].count++;
-  const remaining = Math.max(0, maxRequests - rateLimitStore[key].count);
-  const allowed = rateLimitStore[key].count <= maxRequests;
-  
-  return { allowed, remaining, resetAt: rateLimitStore[key].resetAt };
+
+  existing.count++;
+  const remaining = Math.max(0, maxRequests - existing.count);
+  const allowed = existing.count <= maxRequests;
+
+  return { allowed, remaining, resetAt: existing.resetAt };
 }
 
 /**
- * Middleware de rate limiting para edge functions
+ * Middleware de rate limiting para edge functions.
+ * Retorna Response 429 se o limite foi excedido, null caso contrário.
  */
-export function rateLimitMiddleware(
+export async function rateLimitMiddleware(
   req: Request,
   maxRequests = 100,
-  windowMs = 60000
-): Response | null {
-  // Usa IP ou user-agent como identificador
-  const identifier = req.headers.get('x-forwarded-for') || 
-                     req.headers.get('x-real-ip') || 
-                     req.headers.get('user-agent') || 
-                     'unknown';
-  
-  const { allowed, remaining, resetAt } = checkRateLimit(identifier, maxRequests, windowMs);
-  
+  windowMs = 60000,
+): Promise<Response | null> {
+  const identifier =
+    req.headers.get('x-forwarded-for') ||
+    req.headers.get('x-real-ip') ||
+    req.headers.get('user-agent') ||
+    'unknown';
+
+  const { allowed, remaining, resetAt } = await checkRateLimit(identifier, maxRequests, windowMs);
+
   if (!allowed) {
+    const retryAfter = Math.ceil((resetAt - Date.now()) / 1000);
     return new Response(
-      JSON.stringify({ 
+      JSON.stringify({
         error: 'Rate limit exceeded',
-        retryAfter: Math.ceil((resetAt - Date.now()) / 1000),
+        retryAfter,
       }),
-      { 
+      {
         status: 429,
         headers: {
           ...getAllSecurityHeaders(),
-          'Retry-After': String(Math.ceil((resetAt - Date.now()) / 1000)),
+          'Retry-After': String(retryAfter),
           'X-RateLimit-Limit': String(maxRequests),
           'X-RateLimit-Remaining': String(remaining),
           'X-RateLimit-Reset': String(Math.ceil(resetAt / 1000)),
         },
-      }
+      },
     );
   }
-  
+
   return null; // Permitido
 }
 
@@ -285,26 +330,25 @@ export function validateSchema<T>(
 // ══════════════════════════════════════════════════════════════════════════
 
 /**
- * Retorna resposta de erro segura (sem expor detalhes internos)
+ * Retorna resposta de erro segura (NUNCA expõe detalhes internos ao cliente).
+ *
+ * - Erros 5xx: mensagem genérica ao cliente, detalhes apenas no log interno.
+ * - Erros 4xx: mensagem descritiva ao cliente (sem stack/detalhes de infra).
  */
 export function errorResponse(
   message: string,
   status = 500,
   logDetails?: unknown
 ): Response {
-  // Log detalhes internamente
   if (logDetails) {
     console.error('[Error]', message, logDetails);
   }
-  
-  // Retorna mensagem genérica ao cliente
-  const clientMessage = status >= 500 
-    ? 'Internal server error' 
-    : message;
-  
+
+  const clientMessage = status >= 500 ? 'Internal server error' : message;
+
   return new Response(
     JSON.stringify({ error: clientMessage }),
-    { 
+    {
       status,
       headers: getAllSecurityHeaders(),
     }
@@ -346,18 +390,57 @@ export interface AuditLogEntry {
 }
 
 /**
- * Registra evento de auditoria
- * 
- * NOTA: Em produção, envie para sistema de logging centralizado
+ * Registra evento de auditoria.
+ *
+ * Persiste na tabela `function_audit` via Supabase service role.
+ * Em caso de falha na persistência, faz fallback para console.log
+ * para não bloquear o fluxo principal.
+ *
+ * SSOT: tabela `function_audit` (migration 20260418120000_create_function_audit.sql)
  */
 export function auditLog(entry: AuditLogEntry): void {
   const logEntry = {
     ...entry,
     timestamp: entry.timestamp || new Date().toISOString(),
   };
-  
-  // Log estruturado para CloudWatch/Datadog/etc
+
+  // Log estruturado imediato (síncrono) — garante visibilidade mesmo se o KV falhar
   console.log('[AUDIT]', JSON.stringify(logEntry));
+
+  // Persistência assíncrona no banco — fire-and-forget com tratamento de erro
+  const supabaseUrl = Deno.env.get('SUPABASE_URL');
+  // Suporta novo formato (SUPABASE_SECRET_KEY) e legado (SUPABASE_SERVICE_ROLE_KEY)
+  const serviceKey = Deno.env.get('SUPABASE_SECRET_KEY') || Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+
+  if (supabaseUrl && serviceKey) {
+    fetch(`${supabaseUrl}/rest/v1/function_audit`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': serviceKey,
+        // Nota: com as novas chaves (sb_secret_...), a secret key não é um JWT
+        // e não deve ser usada no Authorization header. O header apikey é suficiente
+        // para autenticar chamadas REST internas server-side.
+        // Referência: https://github.com/orgs/supabase/discussions/29260
+        'Prefer': 'return=minimal',
+      },
+      body: JSON.stringify({
+        function_name: logEntry.resource,
+        user_id: logEntry.userId ?? null,
+        input: {
+          action: logEntry.action,
+          details: logEntry.details ?? null,
+        },
+        output: { status: logEntry.status },
+        success: logEntry.status === 'success',
+        ip_address: logEntry.ip ?? null,
+        user_agent: logEntry.userAgent ?? null,
+      }),
+    }).catch((err) => {
+      // Nunca deixar falha de auditoria quebrar o fluxo principal
+      console.error('[AUDIT] Falha ao persistir no banco:', err);
+    });
+  }
 }
 
 /**

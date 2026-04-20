@@ -23,7 +23,7 @@ export {
   getDriverStatsDetailed,
   getDriverDataByProfileIds,
   getMobilityStats,
-} from "@/modules/mobility/services/mobility.queries";
+} from "@/core/mobility/services/mobility.queries";
 
 // ============================================================
 // MUTATIONS - Operações de Escrita (SSOT)
@@ -39,44 +39,47 @@ export {
   updateDriverOnlineStatus,
   deleteDriverNeighborhood,
   deleteDriverServiceArea,
-} from "@/modules/mobility/services/mobility.mutations";
+} from "@/core/mobility/services/mobility.mutations";
 
 // ============================================================
 // SERVICES ESPECIALIZADOS
 // ============================================================
 export {
   MobilityAdminQueryService,
-} from "@/modules/mobility/services/MobilityAdminQueryService";
+} from "@/core/mobility/services/MobilityAdminQueryService";
 
 export {
   MobilityRolloutService,
   mobilityRolloutService,
-} from "@/modules/mobility/services/MobilityRolloutService";
+} from "@/core/mobility/services/MobilityRolloutService";
 
 export {
   mobilityAuditService,
-} from "@/modules/mobility/services/MobilityAuditService";
+} from "@/core/mobility/services/MobilityAuditService";
 
 export {
   DriverModerationEventsService,
-} from "@/modules/mobility/services/DriverModerationEventsService";
+} from "@/core/mobility/services/DriverModerationEventsService";
 export type {
   DriverModerationAction,
-} from "@/modules/mobility/services/DriverModerationEventsService";
+} from "@/core/mobility/services/DriverModerationEventsService";
 
 export {
   RideReportsService,
-} from "@/modules/mobility/services/RideReportsService";
+} from "@/core/mobility/services/RideReportsService";
 export type {
   RideReport,
   ReportStatus,
   ReportSeverity,
-} from "@/modules/mobility/services/RideReportsService";
+} from "@/core/mobility/services/RideReportsService";
 
 export {
   RideOperationalService,
-} from "@/modules/mobility/core/RideOperationalService";
+} from "@/core/mobility/core/RideOperationalService";
 export { RideRatingService } from "@/core/mobility/services/RideRatingService";
+export {
+  DriverAvailabilityService,
+} from "@/core/mobility/services/DriverAvailabilityService";
 
 // ============================================================
 // FACADE UNIFICADA (Recomendado)
@@ -85,4 +88,5 @@ export {
   MobilityService,
   MobilityFacade,
   UnifiedMobilityService,
-} from "@/modules/mobility/services/MobilityService";
+} from "@/core/mobility/services/MobilityService";
+export { mobilityService } from "@/core/mobility/services/MobilityService.impl";

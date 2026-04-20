@@ -22,7 +22,7 @@ import { DEFAULT_TILE_STYLE } from '../providers/MapProvider';
 import { MAP_RUNTIME_LAYER_KEYS } from '../config/runtimeConfig';
 import { BusinessService } from '@/core/business/services/BusinessService';
 import { EventsService } from '@/core/events/services/EventsService';
-import { communityAlertService } from '@/modules/community-alerts';
+import { communityAlertService } from '@/core/community-alerts';
 import { useTerritoryFilter, territoryFilterKey, useResolvedUserLocation } from '@/core/location';
 import { useTerritoryPolygon } from '../hooks/useTerritoryPolygon';
 import { useTouristPointsByBounds } from '@/core/tourist-points/hooks/useTouristPointsSpatial';

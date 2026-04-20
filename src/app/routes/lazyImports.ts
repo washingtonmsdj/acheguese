@@ -122,9 +122,9 @@ export const ClassifiedShortRoute = lazy(() => import("@/core/routing/components
 // ============================================================
 // 💼 VAGAS/EMPREGOS
 // ============================================================
-export const PublicarVagaPage = lazy(() => import("@/modules/vagas/pages/PublicarVagaPage"));
-export const VagaDetailPage = lazy(() => import("@/modules/vagas/pages/VagaDetailPage"));
-export const VagaDetailPublicPage = lazy(() => import("@/modules/vagas/pages/VagaDetailPublicPage"));
+export const PublicarVagaPage = lazy(() => import("@/core/vagas/pages/PublicarVagaPage"));
+export const VagaDetailPage = lazy(() => import("@/core/vagas/pages/VagaDetailPage"));
+export const VagaDetailPublicPage = lazy(() => import("@/core/vagas/pages/VagaDetailPublicPage"));
 
 // ============================================================
 // 👥 COMUNIDADE (GRUPOS, EVENTOS, POSTS)

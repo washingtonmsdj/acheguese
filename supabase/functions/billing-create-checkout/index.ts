@@ -13,60 +13,28 @@ import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import Stripe from 'https://esm.sh/stripe@14.21.0'
 import { validateBody, createCheckoutSchema, validationErrorResponse, type CreateCheckoutBody } from '../_shared/validation.ts'
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-}
-
-// Rate limiting map (em produção, usar Redis)
-const rateLimitMap = new Map<string, { count: number; resetAt: number }>()
-
-function checkRateLimit(userId: string, limit: number = 20): boolean {
-  const now = Date.now()
-  const userLimit = rateLimitMap.get(userId)
-
-  if (!userLimit || now > userLimit.resetAt) {
-    rateLimitMap.set(userId, { count: 1, resetAt: now + 60000 }) // 1 minuto
-    return true
-  }
-
-  if (userLimit.count >= limit) {
-    return false
-  }
-
-  userLimit.count++
-  return true
-}
+import { getAllSecurityHeaders, errorResponse, rateLimitMiddleware } from '../_shared/security.ts'
 
 serve(async (req: Request) => {
-  // ════════════════════════════════════════════════════════════════════════
-  // 1. CORS
-  // ════════════════════════════════════════════════════════════════════════
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders })
+    return new Response('ok', { status: 204, headers: getAllSecurityHeaders('POST, OPTIONS') })
   }
 
+  // Rate limiting via SSOT — 20 req/min por IP
+  const rl = await rateLimitMiddleware(req, 20, 60000)
+  if (rl) return rl
+
   try {
-    // ════════════════════════════════════════════════════════════════════════
-    // 2. VALIDAR MÉTODO
-    // ════════════════════════════════════════════════════════════════════════
     if (req.method !== 'POST') {
       return new Response(
         JSON.stringify({ error: 'Method not allowed' }),
-        { status: 405, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        { status: 405, headers: getAllSecurityHeaders() }
       )
     }
 
-    // ════════════════════════════════════════════════════════════════════════
-    // 3. VALIDAR AUTENTICAÇÃO
-    // ════════════════════════════════════════════════════════════════════════
     const authHeader = req.headers.get('Authorization')
     if (!authHeader) {
-      return new Response(
-        JSON.stringify({ error: 'Missing authorization header' }),
-        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      )
+      return errorResponse('Missing authorization header', 401)
     }
 
     const supabaseClient = createClient(
@@ -78,29 +46,13 @@ serve(async (req: Request) => {
     const { data: { user }, error: userError } = await supabaseClient.auth.getUser()
 
     if (userError || !user) {
-      return new Response(
-        JSON.stringify({ error: 'Invalid token' }),
-        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      )
+      return errorResponse('Invalid token', 401)
     }
 
-    // ════════════════════════════════════════════════════════════════════════
-    // 4. RATE LIMITING
-    // ════════════════════════════════════════════════════════════════════════
-    if (!checkRateLimit(user.id)) {
-      return new Response(
-        JSON.stringify({ error: 'Rate limit exceeded' }),
-        { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      )
-    }
-
-    // ════════════════════════════════════════════════════════════════════════
-    // 5. VALIDAR INPUT
-    // ════════════════════════════════════════════════════════════════════════
     const rawBody = await req.json()
     const validation = validateBody<CreateCheckoutBody>(rawBody, createCheckoutSchema)
     if (!validation.ok) {
-      return validationErrorResponse(validation.errors, corsHeaders)
+      return validationErrorResponse(validation.errors)
     }
     const { planCode, successUrl, cancelUrl } = validation.data!
 
@@ -121,18 +73,12 @@ serve(async (req: Request) => {
       .single()
 
     if (planError || !plan) {
-      return new Response(
-        JSON.stringify({ error: 'Plan not found' }),
-        { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      )
+      return errorResponse('Plan not found', 404)
     }
 
     // Plano free não precisa de checkout
     if (plan.code === 'free') {
-      return new Response(
-        JSON.stringify({ error: 'Free plan does not require checkout' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      )
+      return errorResponse('Free plan does not require checkout', 400)
     }
 
     // Buscar ou criar customer no Stripe
@@ -208,21 +154,12 @@ serve(async (req: Request) => {
     // 8. RETORNAR SUCESSO
     // ════════════════════════════════════════════════════════════════════════
     return new Response(
-      JSON.stringify({
-        sessionId: session.id,
-        url: session.url,
-      }),
-      {
-        status: 200,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      }
+      JSON.stringify({ sessionId: session.id, url: session.url }),
+      { status: 200, headers: getAllSecurityHeaders() }
     )
   } catch (error) {
     console.error('Error in billing-create-checkout:', error)
-    return new Response(
-      JSON.stringify({ error: error instanceof Error ? error.message : 'Internal server error' }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    )
+    return errorResponse('Internal server error', 500, error)
   }
 })
 

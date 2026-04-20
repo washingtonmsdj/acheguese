@@ -1,7 +1,7 @@
-/**
+﻿/**
  * Landing Queries - SSOT v2.0
  * 
- * Funções de leitura para landing pages nacionais e estaduais
+ * FunÃ§Ãµes de leitura para landing pages nacionais e estaduais
  */
 import { logger } from '@/shared/utils/logger';
 import { supabase } from '@/integrations/supabase';
@@ -16,7 +16,7 @@ import type {
 } from './types';
 
 /**
- * Buscar dados de um país
+ * Buscar dados de um paÃ­s
  */
 export async function getCountryData(countryCode: string): Promise<CountryData | null> {
   try {
@@ -43,7 +43,7 @@ export async function getCountryData(countryCode: string): Promise<CountryData |
 }
 
 /**
- * Buscar estados ativos de um país
+ * Buscar estados ativos de um paÃ­s
  */
 export async function getActiveStates(countryCode: string): Promise<StateData[]> {
   try {
@@ -270,7 +270,7 @@ export async function getTerritorialGroups(): Promise<TerritorialGroupData[]> {
 }
 
 /**
- * Buscar estatísticas da plataforma
+ * Buscar estatÃ­sticas da plataforma
  */
 export async function getPlatformStats(): Promise<PlatformStats> {
   try {
@@ -350,7 +350,7 @@ export async function getVerifiedBusinesses(limit: number = 6): Promise<Verified
 }
 
 /**
- * Verificar se usuário tem role de admin
+ * Verificar se usuÃ¡rio tem role de admin
  */
 export async function checkAdminRole(userId: string): Promise<boolean> {
   try {
@@ -406,7 +406,7 @@ export async function getNationalBusinesses(limit: number = 6): Promise<any[]> {
 }
 
 /**
- * Buscar serviços nacionais em destaque
+ * Buscar serviÃ§os nacionais em destaque
  */
 export async function getNationalServices(limit: number = 6): Promise<any[]> {
   try {
@@ -445,7 +445,7 @@ export async function getNationalServices(limit: number = 6): Promise<any[]> {
  */
 export async function getNationalClassifieds(limit: number = 6): Promise<any[]> {
   try {
-    const { getRecentClassifieds } = await import('@/modules/classifieds/services');
+    const { getRecentClassifieds } = await import('@/core/classifieds/services');
     const classifieds = await getRecentClassifieds(limit);
 
     return classifieds.map((d: any) => ({
@@ -468,12 +468,12 @@ export async function getNationalClassifieds(limit: number = 6): Promise<any[]> 
 }
 
 /**
- * Buscar estatísticas nacionais
+ * Buscar estatÃ­sticas nacionais
  */
 export async function getNationalStats(): Promise<any> {
   try {
     const { BusinessService } = await import('@/core/business/services/BusinessService');
-    const { getTotalClassifiedsCount } = await import('@/modules/classifieds/services');
+    const { getTotalClassifiedsCount } = await import('@/core/classifieds/services');
 
     const [bizCount, clsCount, cities, districts, svc] = await Promise.allSettled([
       BusinessService.getTotalBusinessesCount(),
@@ -507,7 +507,7 @@ export async function getNationalStats(): Promise<any> {
 }
 
 /**
- * Buscar territórios ativos com landing habilitada
+ * Buscar territÃ³rios ativos com landing habilitada
  */
 export async function getActiveTerritoriesWithLanding(): Promise<any> {
   try {

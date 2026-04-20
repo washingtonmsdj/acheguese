@@ -14,11 +14,12 @@
  */
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
+import { getAllSecurityHeaders, errorResponse } from '../_shared/security.ts';
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+// Sitemap é um recurso público consumido por crawlers (sem credenciais).
+// Usamos getAllSecurityHeaders() do SSOT, que já configura CORS corretamente
+// a partir de ALLOWED_ORIGINS. Crawlers não enviam Origin, portanto não são
+// afetados pela política de CORS — apenas requisições cross-origin de browsers.
 
 interface SitemapURL {
   loc: string;
@@ -63,7 +64,7 @@ ${urlEntries}
 Deno.serve(async (req: Request) => {
   // Handle CORS preflight
   if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
+    return new Response(null, { headers: getAllSecurityHeaders('GET, OPTIONS') });
   }
 
   try {
@@ -153,24 +154,14 @@ Deno.serve(async (req: Request) => {
     // Return with caching headers
     return new Response(sitemap, {
       headers: {
-        ...corsHeaders,
+        ...getAllSecurityHeaders('GET, OPTIONS'),
         'Content-Type': 'application/xml',
-        'Cache-Control': 'public, max-age=3600, s-maxage=3600', // 1 hour
+        'Cache-Control': 'public, max-age=3600, s-maxage=3600',
       },
     });
   } catch (error) {
     console.error('Sitemap generation error:', error);
-    
-    return new Response(
-      JSON.stringify({ error: 'Failed to generate sitemap' }),
-      {
-        status: 500,
-        headers: {
-          ...corsHeaders,
-          'Content-Type': 'application/json',
-        },
-      }
-    );
+    return errorResponse('Failed to generate sitemap', 500, error);
   }
 });
 
