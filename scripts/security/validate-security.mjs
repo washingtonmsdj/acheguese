@@ -20,11 +20,15 @@ const CHECKS = [
     name: 'Credenciais hardcoded',
     severity: 'CRITICO',
     patterns: [
+      // JWT legado (service_role e anon key)
       /eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+/g,
+      // Novo formato Supabase (sb_secret_ e sb_publishable_)
+      /sb_secret_[A-Za-z0-9_-]{20,}/g,
+      /sb_publishable_[A-Za-z0-9_-]{20,}/g,
+      // Stripe
       /sk_live_[A-Za-z0-9]+/g,
       /sk_test_[A-Za-z0-9]+/g,
       /whsec_[A-Za-z0-9]+/g,
-      /sb_secret_[A-Za-z0-9_-]{20,}/g,
     ],
     exclude: [
       '.env.example',

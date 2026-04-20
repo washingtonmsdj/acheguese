@@ -3,11 +3,22 @@
 
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
-import { getAllSecurityHeaders, isOriginAllowed } from '../_shared/security.ts';
+import { getAllSecurityHeaders, isOriginAllowed, errorResponse } from '../_shared/security.ts';
 import { validateBody, dispatchRideSchema, validationErrorResponse, type DispatchRideBody } from '../_shared/validation.ts';
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+
+/**
+ * CRON_SECRET: segredo dedicado para autenticação de chamadas internas/cron.
+ *
+ * SSOT: mesmo padrão de `process-timeouts/index.ts`.
+ *
+ * NUNCA use SUPABASE_SERVICE_ROLE_KEY como token de autenticação HTTP —
+ * essa chave tem acesso irrestrito ao banco e não deve trafegar em headers.
+ * Configure CRON_SECRET como variável de ambiente separada no Supabase Dashboard.
+ */
+const CRON_SECRET = Deno.env.get('CRON_SECRET') || '';
 
 // Configurações
 const CONFIG = {
@@ -29,6 +40,25 @@ function extractBearerToken(req: Request): string | null {
     return null;
   }
   return authHeader.slice(7).trim();
+}
+
+/**
+ * Valida autenticação da requisição.
+ *
+ * Aceita:
+ * 1. Header `x-cron-secret` com o valor de CRON_SECRET (preferencial)
+ * 2. Bearer token igual a CRON_SECRET (compatibilidade com schedulers que
+ *    só suportam Authorization header)
+ *
+ * SSOT: mesmo padrão de `process-timeouts/index.ts`.
+ */
+function isAuthorized(req: Request): boolean {
+  if (!CRON_SECRET) return false;
+
+  const cronHeader = req.headers.get('x-cron-secret') || '';
+  const bearerToken = extractBearerToken(req);
+
+  return cronHeader === CRON_SECRET || bearerToken === CRON_SECRET;
 }
 
 serve(async (req: Request) => {
@@ -53,8 +83,22 @@ serve(async (req: Request) => {
     });
   }
 
-  const token = extractBearerToken(req);
-  if (!token || token !== SUPABASE_SERVICE_ROLE_KEY) {
+  if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
+    return new Response(
+      JSON.stringify({ error: 'Function misconfigured: missing Supabase credentials' }),
+      { status: 500, headers: getAllSecurityHeaders('POST, OPTIONS') },
+    );
+  }
+
+  if (!CRON_SECRET) {
+    console.error('[AutoDispatch] CRON_SECRET não configurado — requisição bloqueada');
+    return new Response(
+      JSON.stringify({ error: 'Function misconfigured: CRON_SECRET not set' }),
+      { status: 500, headers: getAllSecurityHeaders('POST, OPTIONS') },
+    );
+  }
+
+  if (!isAuthorized(req)) {
     return new Response(
       JSON.stringify({ error: 'Unauthorized' }),
       {
@@ -73,7 +117,7 @@ serve(async (req: Request) => {
     if (!validation.ok) {
       return new Response(
         JSON.stringify({ error: 'Validation failed', details: validation.errors }),
-        { status: 400, headers: { 'Content-Type': 'application/json' } }
+        { status: 400, headers: getAllSecurityHeaders() }
       );
     }
     const { rideId } = validation.data!;
@@ -246,10 +290,7 @@ serve(async (req: Request) => {
 
   } catch (error) {
     console.error('[AutoDispatch] Error:', error);
-    return new Response(
-      JSON.stringify({ error: (error as Error).message }),
-      { status: 500, headers: { 'Content-Type': 'application/json' } }
-    );
+    return errorResponse('Internal server error', 500, error);
   }
 });
 

@@ -4,6 +4,9 @@
  * Validação de input centralizada para todas as edge functions.
  * Substitui validações ad-hoc espalhadas por cada função.
  *
+ * NOTA: Importa getAllSecurityHeaders do SSOT para garantir que
+ * todas as respostas de validação incluem os headers de segurança.
+ *
  * NOTA: Deno não suporta Zod diretamente via esm.sh em todas as versões.
  * Esta implementação usa validação manual tipada e robusta, compatível
  * com o ambiente Deno das edge functions.
@@ -12,6 +15,8 @@
  *   const result = validateBody<MyRequest>(body, mySchema);
  *   if (!result.ok) return badRequest(result.errors);
  */
+
+import { getAllSecurityHeaders } from './security.ts';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // TIPOS BASE
@@ -153,6 +158,68 @@ export const v = {
     };
   },
 
+  /**
+   * URL de redirecionamento segura.
+   *
+   * Valida que a URL:
+   * 1. É uma URL válida
+   * 2. Usa protocolo HTTPS (ou HTTP em desenvolvimento)
+   * 3. Pertence a um dos domínios permitidos configurados em ALLOWED_REDIRECT_DOMAINS
+   *    ou, se não configurado, ao mesmo host da SUPABASE_URL (fallback seguro).
+   *
+   * Previne open redirect — atacante não pode passar https://evil.com como
+   * successUrl/cancelUrl/returnUrl em operações de billing.
+   */
+  redirectUrl(): FieldValidator {
+    return (val) => {
+      if (typeof val !== "string") return "Must be a string";
+
+      let parsed: URL;
+      try {
+        parsed = new URL(val);
+      } catch {
+        return "Must be a valid URL";
+      }
+
+      // Apenas HTTPS (ou HTTP em desenvolvimento explícito)
+      const isDev = Deno.env.get('DENO_ENV') === 'development' || Deno.env.get('NODE_ENV') === 'development';
+      if (parsed.protocol !== 'https:' && !(isDev && parsed.protocol === 'http:')) {
+        return "Redirect URL must use HTTPS";
+      }
+
+      // Verificar domínios permitidos
+      const allowedDomainsEnv = Deno.env.get('ALLOWED_REDIRECT_DOMAINS') || '';
+      let allowedHosts: string[];
+
+      if (allowedDomainsEnv) {
+        allowedHosts = allowedDomainsEnv.split(',').map((d) => d.trim().toLowerCase()).filter(Boolean);
+      } else {
+        // Fallback: extrair host da SUPABASE_URL (mesmo projeto)
+        const supabaseUrl = Deno.env.get('SUPABASE_URL') || '';
+        try {
+          allowedHosts = [new URL(supabaseUrl).hostname];
+        } catch {
+          allowedHosts = [];
+        }
+        // Em desenvolvimento, permitir localhost
+        if (isDev) {
+          allowedHosts.push('localhost', '127.0.0.1');
+        }
+      }
+
+      const requestedHost = parsed.hostname.toLowerCase();
+      const isAllowed = allowedHosts.some(
+        (allowed) => requestedHost === allowed || requestedHost.endsWith(`.${allowed}`),
+      );
+
+      if (!isAllowed) {
+        return `Redirect URL domain '${requestedHost}' is not allowed. Configure ALLOWED_REDIRECT_DOMAINS.`;
+      }
+
+      return null;
+    };
+  },
+
   /** Slug (lowercase, hifens) */
   slug(): FieldValidator {
     return (val) =>
@@ -263,8 +330,8 @@ export interface CreateCheckoutBody {
 
 export const createCheckoutSchema: Schema<CreateCheckoutBody> = {
   planCode: { required: true, validator: v.string(1, 50) },
-  successUrl: { required: true, validator: v.url() },
-  cancelUrl: { required: true, validator: v.url() },
+  successUrl: { required: true, validator: v.redirectUrl() },
+  cancelUrl: { required: true, validator: v.redirectUrl() },
 };
 
 /** Schema para portal de billing */
@@ -273,7 +340,7 @@ export interface CreatePortalBody {
 }
 
 export const createPortalSchema: Schema<CreatePortalBody> = {
-  returnUrl: { required: true, validator: v.url() },
+  returnUrl: { required: true, validator: v.redirectUrl() },
 };
 
 /** Schema para envio de email */
@@ -382,11 +449,12 @@ export const gastronomyCancelSchema: Schema<GastronomyCancelBody> = {
 // ─────────────────────────────────────────────────────────────────────────────
 
 /**
- * Retorna resposta 400 com erros de validação formatados
+ * Retorna resposta 400 com erros de validação formatados.
+ * Sempre inclui os headers de segurança completos do SSOT.
+ * O parâmetro corsHeaders foi removido — use getAllSecurityHeaders() via security.ts.
  */
 export function validationErrorResponse(
   errors: Record<string, string>,
-  corsHeaders: Record<string, string> = {},
 ): Response {
   return new Response(
     JSON.stringify({
@@ -395,7 +463,7 @@ export function validationErrorResponse(
     }),
     {
       status: 400,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      headers: getAllSecurityHeaders(),
     },
   );
 }

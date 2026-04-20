@@ -26,7 +26,7 @@ Value: https://xhdowzacfujckjelqhtd.supabase.co
 ### 2. VITE_SUPABASE_PUBLISHABLE_KEY
 ```
 Name: VITE_SUPABASE_PUBLISHABLE_KEY
-Value: sb_publishable_WVn4OOnU853X3kGXwi2miA_9HmLO83V
+Value: [ROTATED_KEY_REMOVED]
 ```
 
 ### 3. VITE_SUPABASE_PROJECT_ID

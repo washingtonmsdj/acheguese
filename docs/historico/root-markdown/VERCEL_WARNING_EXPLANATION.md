@@ -198,7 +198,7 @@ Qualquer pessoa pode abrir DevTools (F12) e ver:
 ```javascript
 // Visível no código fonte
 const SUPABASE_URL = "https://xhdowzacfujckjelqhtd.supabase.co"
-const SUPABASE_KEY = "sb_publishable_WVn4OOnU853X3kGXwi2miA_9HmLO83V"
+const SUPABASE_KEY = "[ROTATED_KEY_REMOVED]"
 
 // Mas isso NÃO é um problema porque:
 // 1. É uma chave pública (anon key)

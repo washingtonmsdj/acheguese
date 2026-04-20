@@ -239,7 +239,7 @@ No Vercel → Settings → Environment Variables:
 
 ```
 VITE_SUPABASE_URL=https://xhdowzacfujckjelqhtd.supabase.co
-VITE_SUPABASE_PUBLISHABLE_KEY=sb_publishable_WVn4OOnU853X3kGXwi2miA_9HmLO83V
+VITE_SUPABASE_PUBLISHABLE_KEY=[ROTATED_KEY_REMOVED]
 VITE_SUPABASE_PROJECT_ID=xhdowzacfujckjelqhtd
 ALLOWED_ORIGINS=https://acheguese-qx8q3jdbo-jogo-brasils-projects.vercel.app,https://acheguese.com.br
 VITE_FEATURE_COMMUNITY_ALERTS=false

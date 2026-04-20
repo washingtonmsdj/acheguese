@@ -7,10 +7,22 @@ title = "Gitleaks Config - Supabase Project"
 useDefault = true
 
 [[rules]]
-id = "supabase-service-role-key"
-description = "Supabase Service Role Key"
+id = "supabase-service-role-key-jwt"
+description = "Supabase Service Role Key (formato JWT legado)"
 regex = '''eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9\.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ii4{20,}Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSI'''
 tags = ["key", "supabase", "critical"]
+
+[[rules]]
+id = "supabase-secret-key-new"
+description = "Supabase Secret Key (novo formato sb_secret_...)"
+regex = '''sb_secret_[A-Za-z0-9_\-]{20,}'''
+tags = ["key", "supabase", "critical"]
+
+[[rules]]
+id = "supabase-publishable-key-new"
+description = "Supabase Publishable Key (novo formato sb_publishable_...)"
+regex = '''sb_publishable_[A-Za-z0-9_\-]{20,}'''
+tags = ["key", "supabase", "medium"]
 
 [[rules]]
 id = "postgresql-connection-string"
@@ -20,7 +32,7 @@ tags = ["database", "connection-string", "critical"]
 
 [[rules]]
 id = "supabase-anon-key-hardcoded"
-description = "Supabase Anon Key hardcoded in scripts"
+description = "Supabase Anon Key hardcoded em scripts (formato JWT legado)"
 regex = '''(const|let|var)\s+\w+\s*=\s*['"]eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9\.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ii4{20,}Iiwicm9sZSI6ImFub24i'''
 tags = ["key", "supabase", "medium"]
 
@@ -35,8 +47,10 @@ description = "Allowlist for false positives"
 paths = [
     '''^\.env\.example$''',
     '''^\.env\.remote\.example$''',
+    '''^\.env\.local\.example$''',
     '''\.md$''',
     '''gitleaks\.toml$''',
+    '''scripts/security/validate-security\.mjs$''',
 ]
 
 regexes = [
@@ -45,4 +59,7 @@ regexes = [
     '''\[PASSWORD\]''',
     '''example\.com''',
     '''PROJECT_REF''',
+    # Placeholders explícitos nos arquivos de exemplo
+    '''sb_publishable_your''',
+    '''sb_secret_your''',
 ]

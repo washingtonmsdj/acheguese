@@ -121,7 +121,7 @@ Configure as seguintes variáveis:
 #### Production
 ```bash
 VITE_SUPABASE_URL=https://xhdowzacfujckjelqhtd.supabase.co
-VITE_SUPABASE_PUBLISHABLE_KEY=sb_publishable_WVn4OOnU853X3kGXwi2miA_9HmLO83V
+VITE_SUPABASE_PUBLISHABLE_KEY=[ROTATED_KEY_REMOVED]
 VITE_SUPABASE_PROJECT_ID=xhdowzacfujckjelqhtd
 VITE_FEATURE_COMMUNITY_ALERTS=false
 VITE_FEATURE_MAPS_V4=true
@@ -131,7 +131,7 @@ BASE_URL=https://yourdomain.com
 #### Preview (Staging)
 ```bash
 VITE_SUPABASE_URL=https://xhdowzacfujckjelqhtd.supabase.co
-VITE_SUPABASE_PUBLISHABLE_KEY=sb_publishable_WVn4OOnU853X3kGXwi2miA_9HmLO83V
+VITE_SUPABASE_PUBLISHABLE_KEY=[ROTATED_KEY_REMOVED]
 VITE_SUPABASE_PROJECT_ID=xhdowzacfujckjelqhtd
 VITE_FEATURE_COMMUNITY_ALERTS=false
 VITE_FEATURE_MAPS_V4=true
@@ -141,7 +141,7 @@ BASE_URL=https://preview.yourdomain.com
 #### Development
 ```bash
 VITE_SUPABASE_URL=https://xhdowzacfujckjelqhtd.supabase.co
-VITE_SUPABASE_PUBLISHABLE_KEY=sb_publishable_WVn4OOnU853X3kGXwi2miA_9HmLO83V
+VITE_SUPABASE_PUBLISHABLE_KEY=[ROTATED_KEY_REMOVED]
 VITE_SUPABASE_PROJECT_ID=xhdowzacfujckjelqhtd
 VITE_FEATURE_COMMUNITY_ALERTS=false
 VITE_FEATURE_MAPS_V4=true
@@ -235,7 +235,7 @@ Essas devem estar **apenas** em:
 ```bash
 # .env.local (NÃO commitar)
 VITE_SUPABASE_URL=https://xhdowzacfujckjelqhtd.supabase.co
-VITE_SUPABASE_PUBLISHABLE_KEY=sb_publishable_WVn4OOnU853X3kGXwi2miA_9HmLO83V
+VITE_SUPABASE_PUBLISHABLE_KEY=[ROTATED_KEY_REMOVED]
 VITE_SUPABASE_PROJECT_ID=xhdowzacfujckjelqhtd
 
 # Secrets (apenas para scripts backend)

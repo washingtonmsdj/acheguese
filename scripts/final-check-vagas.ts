@@ -4,10 +4,15 @@
 
 import { createClient } from '@supabase/supabase-js';
 
-const supabase = createClient(
-  'https://xhdowzacfujckjelqhtd.supabase.co',
-  'sb_publishable_WVn4OOnU853X3kGXwi2miA_9HmLO83V'
-);
+const supabaseUrl = process.env.VITE_SUPABASE_URL;
+const supabaseKey = process.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+
+if (!supabaseUrl || !supabaseKey) {
+  console.error('❌ Configure VITE_SUPABASE_URL e VITE_SUPABASE_PUBLISHABLE_KEY no .env.local');
+  process.exit(1);
+}
+
+const supabase = createClient(supabaseUrl, supabaseKey);
 
 const SALVADOR_CORRETO = '63c41c29-adce-40f5-a552-e52d176123c3';
 

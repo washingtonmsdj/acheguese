@@ -53,8 +53,14 @@ try {
 }
 
 async function createAdminUser(supabase) {
-  const email = 'washingtonmsdj@gmail.com';
-  const password = 'admin12345678';
+  const email = process.env.ADMIN_EMAIL;
+  const password = process.env.ADMIN_PASSWORD;
+
+  if (!email || !password) {
+    console.error('❌ ADMIN_EMAIL e ADMIN_PASSWORD são obrigatórios.');
+    console.error('   Configure em .env.local antes de executar este script.');
+    process.exit(1);
+  }
 
   console.log('\n🔄 Criando usuário admin...');
   console.log(`📧 Email: ${email}`);
@@ -113,7 +119,6 @@ async function createAdminUser(supabase) {
     console.log('');
     console.log('🎉 Sucesso! Usuário admin criado:');
     console.log(`   Email: ${email}`);
-    console.log(`   Senha: ${password}`);
     console.log(`   ID: ${userData.user.id}`);
 
   } catch (error) {

@@ -101,7 +101,7 @@ Na tela de configuração:
 ```bash
 # Supabase (obtenha no dashboard do Supabase)
 VITE_SUPABASE_URL=https://xhdowzacfujckjelqhtd.supabase.co
-VITE_SUPABASE_PUBLISHABLE_KEY=sb_publishable_WVn4OOnU853X3kGXwi2miA_9HmLO83V
+VITE_SUPABASE_PUBLISHABLE_KEY=[ROTATED_KEY_REMOVED]
 VITE_SUPABASE_PROJECT_ID=xhdowzacfujckjelqhtd
 
 # CORS (seus domínios - IMPORTANTE!)
