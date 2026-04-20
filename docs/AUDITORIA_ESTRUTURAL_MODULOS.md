@@ -153,7 +153,20 @@ Os outros 53 são em hooks/services internos do módulo — aceitáveis se conti
 
 ## 4. Plano de correção (priorizado)
 
-### 🔴 P0 — Blindagem estrutural imediata (4–6 h)
+### ✅ P0 — Blindagem estrutural imediata — **EXECUTADO em 2026-04-20**
+
+- [x] Criados barrels `index.ts` em: `admin-identidade`, `admin-motoristas`, `empresa`, `empresas-landing`, `onboarding`, `professionals`
+- [x] Movidos 11 arquivos `src/pages/*` → `src/app/pages/*` (incluindo `dev/MotoboyValidationPage`)
+- [x] Movidos `src/components/{billing,notifications,privacy}` → `src/shared/components/*`
+- [x] Movido `src/features/nearby` → `src/modules/community/nearby`
+- [x] Removidas pastas legadas: `src/pages`, `src/components`, `src/features`
+- [x] Atualizado `src/app/routes/lazyImports.ts` (10 paths)
+- [x] Atualizado `src/App.tsx` (ConsentBanner)
+- [x] Removida duplicata `parseArray` em `EmpresaEditSheet.tsx`
+
+**Validação**: 0 cross-imports residuais para pastas legadas, 0 módulos sem barrel.
+
+### 🔴 P0.1 — Próximo: fundir admin-identidade/motoristas em modules/admin (não executado)
 
 1. **Criar barrels** em `admin-identidade`, `admin-motoristas`, `empresa`, `empresas-landing`, `onboarding`, `professionals`.
 2. **Fundir `admin-identidade` e `admin-motoristas`** dentro de `modules/admin/` como sub-features (`modules/admin/identidade`, `modules/admin/motoristas`).
