@@ -8,6 +8,7 @@ import { CheckCircle, Eye, EyeOff, Key, Loader2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { AuthService } from '@/core/auth';
 import { useAuth } from '@/core/auth/hooks/useAuth';
+import { supabase } from '@/integrations/supabase';
 import { getAuthErrorMessage } from '@/core/auth/utils/authMessages';
 import { getAuthPasswordRequirementStatus } from '@/core/auth/utils/passwordPolicy';
 import { useToast } from '@/shared/hooks/use-toast';
@@ -24,9 +25,7 @@ export default function ResetPasswordPage() {
   const { user, updatePassword } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [done, setDone] = useState(false);
-  const [recoveryState, setRecoveryState] = useState<RecoveryState>(
-    AuthService.isRecoveryRedirect() ? 'ready' : 'checking',
-  );
+  const [recoveryState, setRecoveryState] = useState<RecoveryState>('checking');
 
   const {
     register,
@@ -46,17 +45,34 @@ export default function ResetPasswordPage() {
   );
 
   useEffect(() => {
-    if (AuthService.isRecoveryRedirect() || user) {
+    // Caso 1: URL já tem o marcador de recovery (redirect com ?mode=recovery)
+    if (AuthService.isRecoveryRedirect()) {
       setRecoveryState('ready');
       return;
     }
 
+    // Caso 2: usuário já autenticado via sessão de recovery ativa
+    if (user) {
+      setRecoveryState('ready');
+      return;
+    }
+
+    // Caso 3: aguardar evento PASSWORD_RECOVERY do SDK Supabase
+    // O SDK processa o hash/code de forma assíncrona e emite este evento
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+      if (event === 'PASSWORD_RECOVERY') {
+        setRecoveryState('ready');
+      }
+    });
+
+    // Timeout de segurança: se nenhum evento chegar em 3s, link é inválido
     const invalidTimer = window.setTimeout(() => {
       setRecoveryState((current) => (current === 'checking' ? 'invalid' : current));
-    }, 1200);
+    }, 3000);
 
     return () => {
       window.clearTimeout(invalidTimer);
+      subscription.unsubscribe();
     };
   }, [user]);
 

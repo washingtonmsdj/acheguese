@@ -41,7 +41,11 @@ export class AuthService {
     return (
       searchParams.get("mode") === "recovery" ||
       searchParams.get("type") === "recovery" ||
-      hashParams.get("type") === "recovery"
+      hashParams.get("type") === "recovery" ||
+      // Supabase PKCE flow: code + type no query string
+      (searchParams.get("code") !== null && searchParams.get("type") === "recovery") ||
+      // Supabase implicit flow: access_token + type no hash
+      (hashParams.get("access_token") !== null && hashParams.get("type") === "recovery")
     );
   }
 

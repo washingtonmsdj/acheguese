@@ -48,8 +48,8 @@ enabled = true
 
 [auth]
 enabled = true
-site_url = "http://127.0.0.1:5173"
-additional_redirect_urls = ["https://127.0.0.1:5173"]
+site_url = "http://localhost:8080"
+additional_redirect_urls = ["http://localhost:8080", "http://localhost:5173", "https://acheguese.vercel.app", "https://acheguese.com.br"]
 jwt_expiry = 3600
 enable_refresh_token_rotation = true
 refresh_token_reuse_interval = 10
