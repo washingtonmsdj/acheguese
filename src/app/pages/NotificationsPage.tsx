@@ -8,7 +8,7 @@
  * ══════════════════════════════════════════════════════════════════════════
  */
 
-import { NotificationCenter } from '@/components/notifications/NotificationCenter';
+import { NotificationCenter } from '@/shared/components/notifications/NotificationCenter';
 import { Button } from '@/shared/components/ui/button';
 import { Settings } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
