@@ -376,13 +376,6 @@ export default function EmpresaEditSheet({
     setSaving(false);
   };
 
-  const arrayValue = (arr: string[]) => arr.join(", ");
-  const parseArray = (val: string) =>
-    val
-      .split(",")
-      .map((s) => s.trim())
-      .filter(Boolean);
-
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="bottom" className="h-[90vh] rounded-t-2xl p-0">
