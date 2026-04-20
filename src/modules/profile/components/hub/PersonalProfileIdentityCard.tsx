@@ -14,10 +14,10 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/shared/components/ui/avat
 import { Badge } from "@/shared/components/ui/badge";
 import { Button } from "@/shared/components/ui/button";
 import { cn } from "@/shared/utils/cn";
-import type { Profile } from "@/core/profiles/services/multi-profile/types";
+import type { MultiProfileRecord } from "@/core/profiles/services/multi-profile/types";
 
 interface PersonalProfileIdentityCardProps {
-  profile: Profile | null;
+  profile: MultiProfileRecord | null;
   handle?: string;
   isVerified?: boolean;
   territoryLabel?: string;

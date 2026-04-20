@@ -13,7 +13,7 @@ import { Button } from '@/shared/components/ui/button';
 import { UnifiedNotificationBellV2 } from '@/modules/notifications';
 import { MessagingService } from '@/core/messaging';
 import { useAuth } from '@/core/auth/hooks/useAuth';
-import { useProfile } from '@/core/profiles/hooks/useProfile';
+import { useSessionContext } from '@/core/session';
 import { useFriendlyModuleUrls } from '@/core/routing/hooks/useFriendlyModuleUrls';
 import { lastTerritoryStore } from '@/core/routing/stores/LastTerritoryStore';
 import { useIsMobile } from '@/shared/hooks/use-mobile';
@@ -27,7 +27,7 @@ export function AppTopbar() {
   const isMobile = useIsMobile();
   const [searchParams, setSearchParams] = useSearchParams();
   const { user } = useAuth();
-  const { profile } = useProfile();
+  const { activeProfile } = useSessionContext();
   const urls = useFriendlyModuleUrls();
   const [unreadMessages, setUnreadMessages] = useState(0);
   const isGastronomyRoute = pathname.startsWith('/gastronomia');
@@ -165,9 +165,9 @@ export function AppTopbar() {
             user ? (
               <Link to="/perfil" className="ml-1">
                 <Avatar className="h-9 w-9 border-2 border-primary/30 hover:border-primary transition-colors">
-                  <AvatarImage src={profile?.avatar_url || undefined} />
+                  <AvatarImage src={activeProfile?.avatarUrl || undefined} />
                   <AvatarFallback className="text-[10px] bg-primary/10 text-primary font-semibold">
-                    {getInitials(profile?.name || profile?.display_name || user.email)}
+                    {getInitials(activeProfile?.displayName || user.email)}
                   </AvatarFallback>
                 </Avatar>
               </Link>

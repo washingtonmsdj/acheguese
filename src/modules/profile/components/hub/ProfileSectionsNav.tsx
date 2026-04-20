@@ -22,7 +22,7 @@ import { Separator } from "@/shared/components/ui/separator";
 import { cn } from "@/shared/utils/cn";
 import { ProfileSidebarHeader } from "./ProfileSidebarHeader";
 import { ProfileSidebarFooter } from "./ProfileSidebarFooter";
-import type { Profile } from "@/core/profiles/services/multi-profile/types";
+import type { MultiProfileRecord } from "@/core/profiles/services/multi-profile/types";
 
 export interface SectionNavItem<TId extends string = string> {
   id: TId;
@@ -39,7 +39,7 @@ interface ProfileSectionsNavProps<TId extends string = string> {
   /** Variante de exibição. Defaults: "sidebar" (desktop) e "tabs" (mobile) */
   variant?: "sidebar" | "tabs";
   /** Perfil ativo (apenas para sidebar) */
-  profile?: Profile | null;
+  profile?: MultiProfileRecord | null;
   /** Se o perfil está verificado (apenas para sidebar) */
   isVerified?: boolean;
   /** Handle do perfil (apenas para sidebar) */

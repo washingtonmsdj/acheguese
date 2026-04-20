@@ -74,6 +74,9 @@ export interface BusinessInput {
   banner_url?: string;
   fotos?: string[];
   status?: "active" | "inactive" | "pending" | "suspended";
+  /** Campos administrativos — apenas super_admin/admin */
+  is_verified?: boolean;
+  is_premium?: boolean;
 }
 
 export type CreateBusinessInput = BusinessInput;

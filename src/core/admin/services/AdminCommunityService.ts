@@ -40,10 +40,11 @@ export interface PostFlag {
 class AdminCommunityService {
   async getModerationStats(): Promise<ModerationStats | null> {
     try {
-      const { data, error } = await (supabase as unknown as AdminSupabaseClient).rpc("get_moderation_stats");
+      const { data, error } = await (supabase as any).rpc("get_moderation_stats");
       if (error) throw error;
-      if (!data || data.length === 0) return null;
-      return data[0] || null;
+      const rows = data as ModerationStats[] | null;
+      if (!rows || rows.length === 0) return null;
+      return rows[0] || null;
     } catch (error) {
       logger.error("Error fetching moderation stats", error as Error);
       throw error;
@@ -159,10 +160,9 @@ class AdminCommunityService {
 
   async updateCivicReportStatus(reportId: string, status: CommunityIssue['status']): Promise<void> {
     try {
-      const updateData: { status: CommunityIssue['status'] } = { status };
-      const { error } = await (supabase as unknown as AdminSupabaseClient)
+      const { error } = await (supabase as any)
         .from("community_issues")
-        .update(updateData)
+        .update({ status })
         .eq("id", reportId);
 
       if (error) throw error;

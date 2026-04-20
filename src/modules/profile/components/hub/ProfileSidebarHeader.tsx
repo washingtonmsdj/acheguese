@@ -16,10 +16,10 @@ import { Badge } from "@/shared/components/ui/badge";
 import { cn } from "@/shared/utils/cn";
 import { getProfileTypeLabel } from "@/modules/profile/utils/profileDomainRules";
 import { buildPublicProfileUrl } from "@/core/profiles/utils/publicProfileUrl";
-import type { Profile } from "@/core/profiles/services/multi-profile/types";
+import type { MultiProfileRecord } from "@/core/profiles/services/multi-profile/types";
 
 interface ProfileSidebarHeaderProps {
-  profile: Profile | null;
+  profile: MultiProfileRecord | null;
   isVerified?: boolean;
   handle?: string;
   canOpenPublicProfile?: boolean;

@@ -8,7 +8,8 @@ import {
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import { Database, Download, Pause, Trash2 } from "lucide-react";
-import type { Profile, ProfileStats } from "@/core/profiles/services/types";
+import type { Profile } from "@/core/profiles/domain/Profile";
+import type { ProfileStats } from "@/core/profiles/services/types";
 
 interface DataManagementDialogsProps {
   profile: Profile | null;
@@ -98,26 +99,26 @@ export function DataManagementDialogs({
           </DialogHeader>
 
           <div className="mt-2 space-y-3">
-            <DataField label="Nome" value={profile?.name || "Nao informado"} />
+            <DataField label="Nome" value={profile?.displayName || profile?.name || "Nao informado"} />
             <DataField label="Email" value={userEmail || "Nao informado"} />
             <DataField
               label="Localizacao"
               value={
-                [profile?.neighborhood, profile?.city, profile?.state]
-                  .filter(Boolean)
-                  .join(", ") || "Nao informado"
+                // SessionProfileView tem city/neighborhood/state como snapshots
+                // Profile domain não tem esses campos — usar fallback vazio
+                "Nao informado"
               }
             />
             <DataField
               label="Telefone"
-              value={profile?.phone || profile?.telefone || "Nao informado"}
+              value={profile?.phone || "Nao informado"}
             />
             <DataField label="WhatsApp" value={profile?.whatsapp || "Nao informado"} />
             <DataField
               label="Membro desde"
               value={
-                profile?.created_at
-                  ? new Date(profile.created_at).toLocaleDateString("pt-BR")
+                profile?.createdAt
+                  ? new Date(profile.createdAt).toLocaleDateString("pt-BR")
                   : "N/A"
               }
             />

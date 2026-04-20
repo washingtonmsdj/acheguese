@@ -34,20 +34,22 @@ import type {
   Profile,
   ProfileContext,
   ProfileLikeActivityRecord,
-  ProfilePermissions,
-  ProfilePlan,
   ProfilePollVoteActivityRecord,
   ProfilePrivateWorkspace,
   ProfilePrivacySettingsInput,
-  ProfileReputation,
   ProfileSaveActivityRecord,
   ProfileStats,
-  ProfileStatus,
   ProfileSummary,
   ProfileSummaryExtended,
   UpdateProfileData,
   ProfileVerificationStatusValue,
 } from "./types";
+import type {
+  ProfilePermissions,
+  ProfilePlan,
+  ProfileReputation,
+  ProfileStatus,
+} from "@/core/profiles/contracts/ProfileRuntimeContracts";
 
 export class ProfileServiceLegacy {
   // ============================================================================
@@ -2680,6 +2682,31 @@ export class ProfileServiceLegacy {
         metadata: { profileId, userId },
       });
       return false;
+    }
+  }
+
+  /**
+   * Adiciona um membro a um perfil
+   * ✅ SSOT: Único ponto de entrada para inserção em profile_members
+   */
+  async addMember(
+    profileId: string,
+    userId: string,
+    role: "owner" | "admin" | "member" = "member",
+  ): Promise<void> {
+    try {
+      const { error } = await (supabase as any)
+        .from("profile_members")
+        .insert({ profile_id: profileId, user_id: userId, role });
+
+      if (error) throw error;
+    } catch (error) {
+      trackError(error as Error, {
+        component: "ProfileService",
+        action: "addMember",
+        metadata: { profileId, userId, role },
+      });
+      throw error;
     }
   }
 

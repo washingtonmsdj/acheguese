@@ -128,18 +128,11 @@ class AdminBusinessServiceClass {
 
   /**
    * Verifica um negócio
-   * ⚠️ TODO: Adicionar is_verified ao BusinessInput quando implementado no schema
+   * ✅ SSOT: Usa BusinessService.updateBusiness
    */
   async verifyBusiness(id: string): Promise<boolean> {
     try {
-      // Temporariamente usar query direta até is_verified ser adicionado ao BusinessInput
-      const { supabase } = await import("@/integrations/supabase");
-      const { error } = await supabase
-        .from("business_data")
-        .update({ is_verified: true })
-        .eq("profile_id", id);
-      
-      if (error) throw error;
+      await BusinessService.updateBusiness(id, { is_verified: true });
       return true;
     } catch (error) {
       logger.error("Error in verifyBusiness:", error);
@@ -149,18 +142,11 @@ class AdminBusinessServiceClass {
 
   /**
    * Remove verificação de um negócio
-   * ⚠️ TODO: Adicionar is_verified ao BusinessInput quando implementado no schema
+   * ✅ SSOT: Usa BusinessService.updateBusiness
    */
   async unverifyBusiness(id: string): Promise<boolean> {
     try {
-      // Temporariamente usar query direta até is_verified ser adicionado ao BusinessInput
-      const { supabase } = await import("@/integrations/supabase");
-      const { error } = await supabase
-        .from("business_data")
-        .update({ is_verified: false })
-        .eq("profile_id", id);
-      
-      if (error) throw error;
+      await BusinessService.updateBusiness(id, { is_verified: false });
       return true;
     } catch (error) {
       logger.error("Error in unverifyBusiness:", error);
@@ -170,18 +156,11 @@ class AdminBusinessServiceClass {
 
   /**
    * Torna um negócio premium
-   * ⚠️ TODO: Adicionar is_premium ao BusinessInput quando implementado no schema
+   * ✅ SSOT: Usa BusinessService.updateBusiness
    */
   async makePremium(id: string): Promise<boolean> {
     try {
-      // Temporariamente usar query direta até is_premium ser adicionado ao BusinessInput
-      const { supabase } = await import("@/integrations/supabase");
-      const { error } = await supabase
-        .from("business_data")
-        .update({ is_premium: true })
-        .eq("profile_id", id);
-      
-      if (error) throw error;
+      await BusinessService.updateBusiness(id, { is_premium: true });
       return true;
     } catch (error) {
       logger.error("Error in makePremium:", error);
@@ -191,18 +170,11 @@ class AdminBusinessServiceClass {
 
   /**
    * Remove status premium de um negócio
-   * ⚠️ TODO: Adicionar is_premium ao BusinessInput quando implementado no schema
+   * ✅ SSOT: Usa BusinessService.updateBusiness
    */
   async removePremium(id: string): Promise<boolean> {
     try {
-      // Temporariamente usar query direta até is_premium ser adicionado ao BusinessInput
-      const { supabase } = await import("@/integrations/supabase");
-      const { error } = await supabase
-        .from("business_data")
-        .update({ is_premium: false })
-        .eq("profile_id", id);
-      
-      if (error) throw error;
+      await BusinessService.updateBusiness(id, { is_premium: false });
       return true;
     } catch (error) {
       logger.error("Error in removePremium:", error);
@@ -225,29 +197,13 @@ class AdminBusinessServiceClass {
 
   /**
    * Atualiza o status de uma reivindicação
-   * ⚠️ TODO: Mover para BusinessService quando implementar ClaimService
-   * Por enquanto mantém query direta mas documentada
+   * ✅ SSOT: Usa BusinessService.updateBusinessClaimStatus
    */
   async updateClaimStatus(
     claimId: string,
     status: "aprovada" | "rejeitada",
   ): Promise<boolean> {
-    try {
-      const { supabase } = await import("@/integrations/supabase");
-      const { error } = await supabase
-        .from("business_claims")
-        .update({ status, resolved_at: new Date().toISOString() })
-        .eq("id", claimId);
-
-      if (error) {
-        logger.error("Error updating claim status:", error);
-        return false;
-      }
-      return true;
-    } catch (error) {
-      logger.error("Error in updateClaimStatus:", error);
-      return false;
-    }
+    return BusinessService.updateBusinessClaimStatus(claimId, status);
   }
 
   /**
@@ -265,31 +221,11 @@ class AdminBusinessServiceClass {
 
   /**
    * Busca visualizações de um negócio
-   * ✅ SSOT: Usa BusinessService.getBusinessMetrics
+   * ✅ SSOT: Usa BusinessService.getBusinessMetrics com suporte a startDate
    */
   async getBusinessViews(businessId: string, startDate?: string) {
     try {
-      const metrics = await BusinessService.getBusinessMetrics(businessId);
-      
-      // Se precisar filtrar por data, usar query direta temporariamente
-      // TODO: Adicionar suporte a filtro de data no BusinessService.getBusinessMetrics
-      if (startDate) {
-        const { supabase } = await import("@/integrations/supabase");
-        const { data, error } = await supabase
-          .from("business_views")
-          .select("id, viewed_at")
-          .eq("business_id", businessId)
-          .gte("viewed_at", startDate)
-          .order("viewed_at", { ascending: true });
-
-        if (error) {
-          logger.error("Error fetching business views:", error);
-          return [];
-        }
-        return data || [];
-      }
-
-      // Retornar contagem de views do metrics
+      const metrics = await BusinessService.getBusinessMetrics(businessId, startDate);
       return Array(metrics.totalViews).fill({ id: null, viewed_at: null });
     } catch (error) {
       logger.error("Error in getBusinessViews:", error);
@@ -299,29 +235,11 @@ class AdminBusinessServiceClass {
 
   /**
    * Conta visualizações de um negócio
-   * ✅ SSOT: Usa BusinessService.getBusinessMetrics
+   * ✅ SSOT: Usa BusinessService.getBusinessMetrics com suporte a startDate
    */
   async countBusinessViews(businessId: string, startDate?: string) {
     try {
-      const metrics = await BusinessService.getBusinessMetrics(businessId);
-      
-      // Se precisar filtrar por data, usar query direta temporariamente
-      // TODO: Adicionar suporte a filtro de data no BusinessService.getBusinessMetrics
-      if (startDate) {
-        const { supabase } = await import("@/integrations/supabase");
-        const { count, error } = await supabase
-          .from("business_views")
-          .select("id", { count: "exact", head: true })
-          .eq("business_id", businessId)
-          .gte("viewed_at", startDate);
-
-        if (error) {
-          logger.error("Error counting business views:", error);
-          return 0;
-        }
-        return count || 0;
-      }
-
+      const metrics = await BusinessService.getBusinessMetrics(businessId, startDate);
       return metrics.totalViews;
     } catch (error) {
       logger.error("Error in countBusinessViews:", error);
@@ -356,7 +274,6 @@ class AdminBusinessServiceClass {
     userId: string,
   ) {
     try {
-      // ✅ SSOT - Usar ProfileService
       const { profileService } = await import("@/core/profiles/services/ProfileService");
 
       // 1. Criar profile usando ProfileService
@@ -369,21 +286,8 @@ class AdminBusinessServiceClass {
         avatar_url: profileData.avatar_url,
       });
 
-      // 2. Adicionar user como owner em profile_members
-      // ⚠️ TODO: Mover para ProfileService.addMember quando implementado
-      const { supabase } = await import("@/integrations/supabase");
-      const { error: memberError } = await supabase
-        .from("profile_members")
-        .insert({
-          profile_id: profile.id,
-          user_id: userId,
-          role: "owner",
-        });
-
-      if (memberError) {
-        logger.error("Error adding owner:", memberError);
-        throw memberError;
-      }
+      // 2. Adicionar user como owner via ProfileService.addMember
+      await profileService.addMember(profile.id, userId, "owner");
 
       // 3. Criar business_data usando BusinessService
       await BusinessService.createBusiness({
@@ -391,7 +295,7 @@ class AdminBusinessServiceClass {
         ...businessData,
         status: "pendente",
         neighborhood_id: "00000000-0000-0000-0000-000000000000",
-      });
+      }, userId);
 
       return profile;
     } catch (error) {

@@ -13,6 +13,7 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import Stripe from 'https://esm.sh/stripe@14.21.0'
+import { validateBody, createPortalSchema, validationErrorResponse, type CreatePortalBody } from '../_shared/validation.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -39,7 +40,7 @@ function checkRateLimit(userId: string, limit: number = 30): boolean {
   return true
 }
 
-serve(async (req) => {
+serve(async (req: Request) => {
   // ════════════════════════════════════════════════════════════════════════
   // 1. CORS
   // ════════════════════════════════════════════════════════════════════════
@@ -97,14 +98,12 @@ serve(async (req) => {
     // ════════════════════════════════════════════════════════════════════════
     // 5. VALIDAR INPUT
     // ════════════════════════════════════════════════════════════════════════
-    const { returnUrl } = await req.json()
-
-    if (!returnUrl || typeof returnUrl !== 'string') {
-      return new Response(
-        JSON.stringify({ error: 'Invalid returnUrl' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      )
+    const rawBody = await req.json()
+    const validation = validateBody<CreatePortalBody>(rawBody, createPortalSchema)
+    if (!validation.ok) {
+      return validationErrorResponse(validation.errors, corsHeaders)
     }
+    const { returnUrl } = validation.data!
 
     // ════════════════════════════════════════════════════════════════════════
     // 6. EXECUTAR OPERAÇÃO
@@ -172,8 +171,9 @@ serve(async (req) => {
   } catch (error) {
     console.error('Error in billing-create-portal:', error)
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: error instanceof Error ? error.message : 'Internal server error' }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
   }
 })
+

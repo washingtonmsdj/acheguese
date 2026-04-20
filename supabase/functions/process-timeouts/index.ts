@@ -44,7 +44,7 @@ function isAuthorized(req: Request): boolean {
   return hasValidCronSecret || hasValidServiceToken;
 }
 
-Deno.serve(async (req) => {
+Deno.serve(async (req: Request) => {
   const origin = req.headers.get('origin');
   if (origin && !isOriginAllowed(origin)) {
     return jsonResponse({ success: false, error: 'Origin not allowed' }, 403);
@@ -128,4 +128,5 @@ Deno.serve(async (req) => {
     );
   }
 });
+
 

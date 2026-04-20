@@ -71,7 +71,7 @@ interface ContactRecord {
   is_active?: boolean | null;
 }
 
-serve(async (req) => {
+serve(async (req: Request) => {
   const auditInfo = getAuditInfo(req);
   const origin = req.headers.get('origin');
 
@@ -556,3 +556,4 @@ Este e um email automatico do sistema de seguranca.
 Nao responda a este email.
   `.trim();
 }
+

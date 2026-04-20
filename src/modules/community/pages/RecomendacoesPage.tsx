@@ -7,7 +7,7 @@ import { TooltipProvider } from "@/shared/components/ui/tooltip";
 import { useAppUrls } from "@/core/routing/hooks"; // ✅ SSOT URLs
 import { useRecomendacoes } from "@/modules/community/hooks/useRecomendacoes";
 import { useUserTerritory } from "@/core/location/hooks/useUserTerritory";
-import { useProfile } from "@/core/profiles/hooks/useProfile";
+import { useSessionContext } from "@/core/session";
 import { CategoryFilters } from "@/shared/components/recomendacoes/CategoryFilters";
 import { QuestionsList } from "@/modules/community/components/QuestionsList";
 
@@ -18,7 +18,7 @@ export default function RecomendacoesPage() {
   const [filter, setFilter] = useState("todos");
 
   // ✅ Verificação de autenticação
-  const { profile } = useProfile();
+  const { activeProfile } = useSessionContext();
   const { hasHome, loading: territoryLoading } = useUserTerritory();
 
   const { questions, loading, initialLoading, sentinelRef } = useRecomendacoes({
@@ -27,7 +27,7 @@ export default function RecomendacoesPage() {
   });
 
   // Bloquear se não estiver logado
-  if (!profile) {
+  if (!activeProfile) {
     return (
       <TooltipProvider>
         <div className="min-h-screen bg-[#12181B] flex items-center justify-center" role="main">

@@ -11,8 +11,19 @@ export type ProfileType = 'personal' | 'business' | 'professional' | 'driver';
 export type ProfileRole = 'owner' | 'admin' | 'member';
 export type LinkType = 'owns' | 'works_for' | 'drives_for' | 'partner';
 
-// Profile base
-export interface Profile {
+/**
+ * MultiProfileRecord — Perfil na arquitetura multi-profile
+ * 
+ * Representa um perfil no contexto da arquitetura multi-profile (FASE 3).
+ * Usa snake_case (shape do banco), tem handle obrigatório.
+ * 
+ * ⚠️ NÃO confundir com Profile de core/profiles/domain/Profile.ts
+ * - Profile (domain): camelCase, SSOT canônico, 36 campos
+ * - MultiProfileRecord: snake_case, contexto multi-profile, shape do banco
+ * 
+ * @see Profile em core/profiles/domain/Profile.ts para o SSOT canônico
+ */
+export interface MultiProfileRecord {
   id: string;
   user_id: string;
   profile_type: ProfileType;
@@ -125,10 +136,10 @@ export interface ProfileLink {
 
 // Perfil completo com extensão
 export type ProfileWithExtension =
-  | { profile: Profile; extension: null; type: 'personal' }
-  | { profile: Profile; extension: BusinessData; type: 'business' }
-  | { profile: Profile; extension: ProfessionalData; type: 'professional' }
-  | { profile: Profile; extension: DriverData; type: 'driver' };
+  | { profile: MultiProfileRecord; extension: null; type: 'personal' }
+  | { profile: MultiProfileRecord; extension: BusinessData; type: 'business' }
+  | { profile: MultiProfileRecord; extension: ProfessionalData; type: 'professional' }
+  | { profile: MultiProfileRecord; extension: DriverData; type: 'driver' };
 
 // Dados para criação
 export interface CreateProfileInput {
@@ -169,11 +180,11 @@ export interface ProfileEditorExtensionForms {
 export interface LoadProfileEditorInput {
   profileId: string;
   userId: string;
-  availableProfiles?: Profile[];
+  availableProfiles?: MultiProfileRecord[];
 }
 
 export interface ProfileEditorSnapshot extends ProfileEditorExtensionForms {
-  profile: Profile;
+  profile: MultiProfileRecord;
   baseForm: UpdateProfileInput;
   editableUsername: string | null;
   username: string;
@@ -181,7 +192,7 @@ export interface ProfileEditorSnapshot extends ProfileEditorExtensionForms {
 }
 
 export interface SaveProfileEditorInput extends ProfileEditorExtensionForms {
-  profile: Pick<Profile, 'id' | 'profile_type'>;
+  profile: Pick<MultiProfileRecord, 'id' | 'profile_type'>;
   baseForm: UpdateProfileInput;
   username?: string;
   originalUsername?: string;

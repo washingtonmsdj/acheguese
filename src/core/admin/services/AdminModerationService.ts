@@ -72,9 +72,10 @@ class AdminModerationService {
   async getAllModerationData(): Promise<AdminModerationData> {
     try {
       // ✅ SSOT AAA - Usa PostsFacade para buscar posts
-      const posts = await PostsFacade.queries.getFeed({
+      const feedResult = await PostsFacade.queries.getFeed({
         limit: 1000,
       });
+      const posts = feedResult.posts;
 
       // ✅ SSOT AAA - Usa CommentsFacade para buscar comentários
       const comments = await CommentsFacade.queries.getAllComments(1000);
@@ -154,7 +155,8 @@ class AdminModerationService {
 
       // ✅ SSOT AAA - Usa ProfileService para atualizar perfil
       const profile = await profileService.getProfileById(userId);
-      const newWarningCount = (profile?.warning_count || 0) + 1;
+      const currentWarningCount = (profile as any)?.warning_count ?? 0;
+      const newWarningCount = currentWarningCount + 1;
 
       const updateData: any = { warning_count: newWarningCount };
 

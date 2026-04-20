@@ -1,6 +1,8 @@
 import React from "react";
 
 import { useState, useEffect } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { adminBusinessService } from "@/core/admin/services";
 import { useSessionContext } from "@/core/session";
 import {
@@ -19,6 +21,8 @@ import { toast } from "sonner";
 import { cn } from "@/shared/utils/cn";
 import { DRIVER_STATUS } from "@/shared/types/constants";
 import { profileService } from "@/core/profiles/services";
+import { InlineFieldError } from "@/shared/components/ui/InlineFieldError";
+import { updateBusinessSchema, type UpdateBusinessInput } from "@/shared/schemas/business/businessSchemas";
 
 export interface BizEditData {
   id: string;
@@ -124,6 +128,26 @@ const emptyBiz: BizEditData = {
   modos_atendimento: ["presencial"],
 };
 
+// Helper para mapear BizEditData para UpdateBusinessInput
+function mapBizToDefaultValues(biz: BizEditData | undefined): Partial<UpdateBusinessInput> {
+  if (!biz) return {};
+  return {
+    name: biz.name,
+    description: biz.description,
+    category: biz.category as UpdateBusinessInput['category'],
+    phone: biz.phone,
+    whatsapp: biz.whatsapp,
+    email: biz.email,
+    website: biz.website,
+    address: biz.address,
+    neighborhood: biz.neighborhood,
+    instagram: biz.instagram,
+    facebook: biz.facebook,
+    latitude: biz.latitude ?? undefined,
+    longitude: biz.longitude ?? undefined,
+  };
+}
+
 export default function EmpresaEditSheet({
   open,
   onOpenChange,
@@ -132,78 +156,93 @@ export default function EmpresaEditSheet({
   mode = "edit",
 }: Props) {
   const { user, activeProfile } = useSessionContext();
-  const [form, setForm] = useState<BizEditData>(
-    biz ? { ...biz } : { ...emptyBiz },
-  );
   const [saving, setSaving] = useState(false);
+
+  // Campos fora do schema (arrays, files, etc)
+  const [schedule, setSchedule] = useState("");
+  const [scheduleFechamento, setScheduleFechamento] = useState<string | null>(null);
+  const [modosAtendimento, setModosAtendimento] = useState<string[]>(["presencial"]);
+  const [especialidades, setEspecialidades] = useState<string[]>([]);
+  const [formasPagamento, setFormasPagamento] = useState<string[]>([]);
+  const [facilidades, setFacilidades] = useState<string[]>([]);
+  const [logo, setLogo] = useState("");
+  const [capa, setCapa] = useState("");
+  const [instagram, setInstagram] = useState("");
+  const [facebook, setFacebook] = useState("");
+  const [anoFundacao, setAnoFundacao] = useState<number | null>(null);
+  const [address, setAddress] = useState("");
+
+  const {
+    register,
+    handleSubmit,
+    reset,
+    watch,
+    formState: { errors },
+  } = useForm<UpdateBusinessInput>({
+    resolver: zodResolver(updateBusinessSchema),
+    mode: "onBlur",
+    defaultValues: mapBizToDefaultValues(biz),
+  });
+
+  const watchName = watch("name");
+  const watchCategory = watch("category");
 
   useEffect(() => {
     if (open) {
-      setForm(
-        biz
-          ? {
-              ...biz,
-              modos_atendimento: biz.modos_atendimento ?? ["presencial"],
-            }
-          : { ...emptyBiz },
-      );
+      reset(mapBizToDefaultValues(biz));
+      // Sincronizar campos fora do schema
+      if (biz) {
+        setSchedule(biz.schedule ?? "");
+        setScheduleFechamento(biz.schedule_fechamento ?? null);
+        setModosAtendimento(biz.modos_atendimento ?? ["presencial"]);
+        setEspecialidades(biz.especialidades ?? []);
+        setFormasPagamento(biz.formas_pagamento ?? []);
+        setFacilidades(biz.facilidades ?? []);
+        setLogo(biz.logo ?? "");
+        setCapa(biz.capa ?? "");
+        setInstagram(biz.instagram ?? "");
+        setFacebook(biz.facebook ?? "");
+        setAnoFundacao(biz.ano_fundacao ?? null);
+        setAddress(biz.address ?? "");
+      } else {
+        setSchedule("");
+        setScheduleFechamento(null);
+        setModosAtendimento(["presencial"]);
+        setEspecialidades([]);
+        setFormasPagamento([]);
+        setFacilidades([]);
+        setLogo("");
+        setCapa("");
+        setInstagram("");
+        setFacebook("");
+        setAnoFundacao(null);
+        setAddress("");
+      }
     }
-  }, [open, biz]);
-
-  const set = (
-    key: keyof BizEditData,
-    value: string | string[] | number | null,
-  ) => setForm((prev) => ({ ...prev, [key]: value }));
+  }, [open, biz, reset]);
 
   const toggleModo = (modo: string) => {
-    const current = form.modos_atendimento ?? ["presencial"];
+    const current = modosAtendimento;
     if (current.includes(modo)) {
-      if (current.length <= 1) {
-        return;
-      } // at least one mode
-      set(
-        "modos_atendimento",
-        current.filter((m) => m !== modo),
-      );
+      if (current.length <= 1) return;
+      setModosAtendimento(current.filter((m) => m !== modo));
     } else {
-      set("modos_atendimento", [...current, modo]);
+      setModosAtendimento([...current, modo]);
     }
   };
 
-  const payload = () => ({
-    name: form.name.trim(),
-    description: form.description.trim(),
-    category: form.category,
-    address: form.address.trim(),
-    neighborhood: form.neighborhood.trim(),
-    phone: form.phone.trim(),
-    whatsapp: form.whatsapp.trim(),
-    schedule: form.schedule.trim(),
-    schedule_fechamento: form.schedule_fechamento?.trim() || null,
-    email: form.email.trim(),
-    instagram: form.instagram.trim(),
-    facebook: form.facebook.trim(),
-    website: form.website.trim(),
-    logo: form.logo.trim(),
-    capa: form.capa.trim(),
-    formas_pagamento: form.formas_pagamento,
-    especialidades: form.especialidades,
-    facilidades: form.facilidades,
-    ano_fundacao: form.ano_fundacao,
-    latitude: form.latitude,
-    longitude: form.longitude,
-    modos_atendimento: form.modos_atendimento ?? ["presencial"],
-  });
+  const arrayValue = (arr: string[]) => arr.join(", ");
+  const parseArray = (val: string) =>
+    val
+      .split(",")
+      .map((s) => s.trim())
+      .filter(Boolean);
 
-  const handleSave = async () => {
-    if (!form.name.trim()) {
-      toast.error("Nome é obrigatório");
-      return;
-    }
+  const onValid = async (data: UpdateBusinessInput) => {
     if (mode === "create") {
       if (
-        !form.address.trim() &&
-        !(form.modos_atendimento ?? []).every((m) => m === DRIVER_STATUS.ONLINE)
+        !address.trim() &&
+        !modosAtendimento.every((m) => m === DRIVER_STATUS.ONLINE)
       ) {
         toast.error("Endereço é obrigatório para businesss presenciais");
         return;
@@ -211,6 +250,22 @@ export default function EmpresaEditSheet({
     }
 
     setSaving(true);
+
+    const payload = {
+      ...data,
+      address,
+      instagram,
+      facebook,
+      schedule: schedule.trim(),
+      schedule_fechamento: scheduleFechamento?.trim() || null,
+      formas_pagamento: formasPagamento,
+      especialidades: especialidades,
+      facilidades: facilidades,
+      ano_fundacao: anoFundacao,
+      modos_atendimento: modosAtendimento,
+      logo_url: logo.trim() || undefined,
+      banner_url: capa.trim() || undefined,
+    };
 
     if (mode === "create") {
       if (!user) {
@@ -228,19 +283,44 @@ export default function EmpresaEditSheet({
       try {
         const profile = await adminBusinessService.createBusinessProfile(
           {
-            name: form.name.trim(),
-            bio: form.description.trim(),
-            avatar_url: form.logo.trim() || null,
-            phone: form.phone.trim() || null,
-            whatsapp: form.whatsapp.trim() || null,
+            name: data.name?.trim() ?? "",
+            bio: data.description?.trim() ?? "",
+            avatar_url: logo.trim() || null,
+            phone: data.phone?.trim() || null,
+            whatsapp: data.whatsapp?.trim() || null,
           },
-          payload(),
+          payload,
           activeProfile.id,
         );
 
         toast.success("Empresa cadastrada! Aguarde aprovação pela equipe. ⏳");
-        onSaved({ ...form, id: profile.id });
+        onSaved({
+          id: profile.id,
+          name: data.name ?? "",
+          description: data.description ?? "",
+          category: data.category ?? "outros",
+          address,
+          neighborhood: data.neighborhood ?? "",
+          phone: data.phone ?? "",
+          whatsapp: data.whatsapp ?? "",
+          schedule,
+          schedule_fechamento: scheduleFechamento,
+          email: data.email ?? "",
+          instagram,
+          facebook,
+          website: data.website ?? "",
+          logo,
+          capa,
+          formas_pagamento: formasPagamento,
+          especialidades,
+          facilidades,
+          ano_fundacao: anoFundacao,
+          latitude: data.latitude ?? null,
+          longitude: data.longitude ?? null,
+          modos_atendimento: modosAtendimento,
+        });
         onOpenChange(false);
+        reset();
       } catch (error) {
         toast.error(`Erro ao cadastrar: ${(error as Error).message}`);
       }
@@ -248,25 +328,52 @@ export default function EmpresaEditSheet({
       // Modo edição: update profiles E business_profiles
 
       // 1. Atualizar profiles (name, bio, avatar, phone, whatsapp)
-      // ✅ MIGRADO GATE 2: Usar ProfileService.updateProfile
-      await profileService.updateProfile(form.id, {
-        name: form.name.trim(),
-        bio: form.description.trim(),
-        avatar_url: form.logo.trim() || null,
-        phone: form.phone.trim() || null,
-        whatsapp: form.whatsapp.trim() || null,
-      });
+      if (biz?.id) {
+        await profileService.updateProfile(biz.id, {
+          name: data.name?.trim() ?? "",
+          bio: data.description?.trim() ?? "",
+          avatar_url: logo.trim() || null,
+          phone: data.phone?.trim() || null,
+          whatsapp: data.whatsapp?.trim() || null,
+        });
 
-      // 2. Atualizar business_profiles (usando profile_id)
-      try {
-        await adminBusinessService.updateBusinessProfile(form.id, payload());
-        toast.success("Informações atualizadas! ✅");
-        onSaved(form);
-        onOpenChange(false);
-      } catch (error) {
-        toast.error(`Erro ao salvar: ${(error as Error).message}`);
+        // 2. Atualizar business_profiles (usando profile_id)
+        try {
+          await adminBusinessService.updateBusinessProfile(biz.id, payload);
+          toast.success("Informações atualizadas! ✅");
+          onSaved({
+            id: biz.id,
+            name: data.name ?? biz.name,
+            description: data.description ?? biz.description,
+            category: data.category ?? biz.category,
+            address,
+            neighborhood: data.neighborhood ?? biz.neighborhood,
+            phone: data.phone ?? biz.phone,
+            whatsapp: data.whatsapp ?? biz.whatsapp,
+            schedule,
+            schedule_fechamento: scheduleFechamento,
+            email: data.email ?? biz.email,
+            instagram,
+            facebook,
+            website: data.website ?? biz.website,
+            logo,
+            capa,
+            formas_pagamento: formasPagamento,
+            especialidades,
+            facilidades,
+            ano_fundacao: anoFundacao,
+            latitude: data.latitude ?? biz.latitude,
+            longitude: data.longitude ?? biz.longitude,
+            modos_atendimento: modosAtendimento,
+          });
+          onOpenChange(false);
+          reset();
+        } catch (error) {
+          toast.error(`Erro ao salvar: ${(error as Error).message}`);
+        }
       }
     }
+    setSaving(false);
   };
 
   const arrayValue = (arr: string[]) => arr.join(", ");
@@ -285,18 +392,15 @@ export default function EmpresaEditSheet({
           </SheetTitle>
         </SheetHeader>
         <ScrollArea className="h-[calc(90vh-120px)] px-4">
-          <div className="space-y-3 pb-4">
+          <form onSubmit={handleSubmit(onValid)} className="space-y-3 pb-4">
             <SectionTitle>📋 Dados básicos</SectionTitle>
             <Field label="Nome *">
-              <Input
-                value={form.name}
-                onChange={(e) => set("name", e.target.value)}
-              />
+              <Input {...register("name")} />
+              <InlineFieldError message={errors.name?.message} />
             </Field>
             <Field label="Categoria">
               <select
-                value={form.category}
-                onChange={(e) => set("category", e.target.value)}
+                {...register("category")}
                 className="w-full h-10 rounded-md border border-input bg-background px-3 text-sm"
               >
                 {CATEGORIAS.map((c) => (
@@ -305,13 +409,11 @@ export default function EmpresaEditSheet({
                   </option>
                 ))}
               </select>
+              <InlineFieldError message={errors.category?.message} />
             </Field>
             <Field label="Descrição">
-              <Textarea
-                value={form.description}
-                onChange={(e) => set("description", e.target.value)}
-                rows={3}
-              />
+              <Textarea {...register("description")} rows={3} />
+              <InlineFieldError message={errors.description?.message} />
             </Field>
 
             <SectionTitle>🚀 Modos de Atendimento</SectionTitle>
@@ -320,7 +422,7 @@ export default function EmpresaEditSheet({
             </p>
             <div className="grid grid-cols-2 gap-2">
               {MODOS.map((m) => {
-                const active = (form.modos_atendimento ?? []).includes(m.id);
+                const active = modosAtendimento.includes(m.id);
                 return (
                   <button
                     key={m.id}
@@ -342,86 +444,61 @@ export default function EmpresaEditSheet({
             <SectionTitle>📍 Endereço</SectionTitle>
             <Field label="Endereço">
               <Input
-                value={form.address}
-                onChange={(e) => set("address", e.target.value)}
+                value={address}
+                onChange={(e) => setAddress(e.target.value)}
               />
             </Field>
             <Field label="Bairro">
-              <Input
-                value={form.neighborhood}
-                onChange={(e) => set("neighborhood", e.target.value)}
-              />
+              <Input {...register("neighborhood")} />
+              <InlineFieldError message={errors.neighborhood?.message} />
             </Field>
             <div className="grid grid-cols-2 gap-2">
               <Field label="Latitude">
                 <Input
                   type="number"
                   step="any"
-                  value={form.latitude ?? ""}
-                  onChange={(e) =>
-                    set(
-                      "latitude",
-                      e.target.value ? Number(e.target.value) : null,
-                    )
-                  }
+                  {...register("latitude", { valueAsNumber: true })}
                 />
+                <InlineFieldError message={errors.latitude?.message} />
               </Field>
               <Field label="Longitude">
                 <Input
                   type="number"
                   step="any"
-                  value={form.longitude ?? ""}
-                  onChange={(e) =>
-                    set(
-                      "longitude",
-                      e.target.value ? Number(e.target.value) : null,
-                    )
-                  }
+                  {...register("longitude", { valueAsNumber: true })}
                 />
+                <InlineFieldError message={errors.longitude?.message} />
               </Field>
             </div>
 
             <SectionTitle>📞 Contato</SectionTitle>
             <Field label="Telefone">
-              <Input
-                value={form.phone}
-                onChange={(e) => set("phone", e.target.value)}
-                placeholder="(71) 3333-5555"
-              />
+              <Input {...register("phone")} placeholder="(71) 3333-5555" />
+              <InlineFieldError message={errors.phone?.message} />
             </Field>
             <Field label="WhatsApp">
-              <Input
-                value={form.whatsapp}
-                onChange={(e) => set("whatsapp", e.target.value)}
-                placeholder="5571999999999"
-              />
+              <Input {...register("whatsapp")} placeholder="5571999999999" />
+              <InlineFieldError message={errors.whatsapp?.message} />
             </Field>
             <Field label="E-mail">
-              <Input
-                type="email"
-                value={form.email}
-                onChange={(e) => set("email", e.target.value)}
-                placeholder="contato@business.com"
-              />
+              <Input type="email" {...register("email")} placeholder="contato@business.com" />
+              <InlineFieldError message={errors.email?.message} />
             </Field>
             <Field label="Website">
-              <Input
-                value={form.website}
-                onChange={(e) => set("website", e.target.value)}
-                placeholder="www.business.com.br"
-              />
+              <Input {...register("website")} placeholder="www.business.com.br" />
+              <InlineFieldError message={errors.website?.message} />
             </Field>
             <Field label="Instagram">
               <Input
-                value={form.instagram}
-                onChange={(e) => set("instagram", e.target.value)}
+                value={instagram}
+                onChange={(e) => setInstagram(e.target.value)}
                 placeholder="@user"
               />
             </Field>
             <Field label="Facebook">
               <Input
-                value={form.facebook}
-                onChange={(e) => set("facebook", e.target.value)}
+                value={facebook}
+                onChange={(e) => setFacebook(e.target.value)}
                 placeholder="https://facebook.com/..."
               />
             </Field>
@@ -429,8 +506,8 @@ export default function EmpresaEditSheet({
             <SectionTitle>🕐 Horários e Serviços</SectionTitle>
             <Field label="Horário de funcionamento">
               <Textarea
-                value={form.schedule}
-                onChange={(e) => set("schedule", e.target.value)}
+                value={schedule}
+                onChange={(e) => setSchedule(e.target.value)}
                 placeholder="Seg-Sex: 8h-18h&#10;Sábado: 8h-12h&#10;Domingo: Fechado"
                 rows={4}
               />
@@ -440,8 +517,8 @@ export default function EmpresaEditSheet({
             </Field>
             <Field label="Horário de fechamento hoje (HH:MM)">
               <Input
-                value={form.schedule_fechamento ?? ""}
-                onChange={(e) => set("schedule_fechamento", e.target.value)}
+                value={scheduleFechamento ?? ""}
+                onChange={(e) => setScheduleFechamento(e.target.value)}
                 placeholder="18:00"
                 maxLength={5}
               />
@@ -451,28 +528,24 @@ export default function EmpresaEditSheet({
             </Field>
             <Field label="Especialidades (separar por vírgula)">
               <Textarea
-                value={arrayValue(form.especialidades)}
-                onChange={(e) =>
-                  set("especialidades", parseArray(e.target.value))
-                }
+                value={arrayValue(especialidades)}
+                onChange={(e) => setEspecialidades(parseArray(e.target.value))}
                 placeholder="Carnes frescas, Aves, Peixes"
                 rows={2}
               />
             </Field>
             <Field label="Formas de pagamento (separar por vírgula)">
               <Textarea
-                value={arrayValue(form.formas_pagamento)}
-                onChange={(e) =>
-                  set("formas_pagamento", parseArray(e.target.value))
-                }
+                value={arrayValue(formasPagamento)}
+                onChange={(e) => setFormasPagamento(parseArray(e.target.value))}
                 placeholder="Dinheiro, PIX, Cartão"
                 rows={2}
               />
             </Field>
             <Field label="Facilidades (separar por vírgula)">
               <Textarea
-                value={arrayValue(form.facilidades)}
-                onChange={(e) => set("facilidades", parseArray(e.target.value))}
+                value={arrayValue(facilidades)}
+                onChange={(e) => setFacilidades(parseArray(e.target.value))}
                 placeholder="Estacionamento, Wi-Fi, Acessibilidade"
                 rows={2}
               />
@@ -482,12 +555,9 @@ export default function EmpresaEditSheet({
             <Field label="Ano de fundação">
               <Input
                 type="number"
-                value={form.ano_fundacao ?? ""}
+                value={anoFundacao ?? ""}
                 onChange={(e) =>
-                  set(
-                    "ano_fundacao",
-                    e.target.value ? Number(e.target.value) : null,
-                  )
+                  setAnoFundacao(e.target.value ? Number(e.target.value) : null)
                 }
                 placeholder="2015"
               />
@@ -496,23 +566,25 @@ export default function EmpresaEditSheet({
             <SectionTitle>🖼️ Imagens</SectionTitle>
             <Field label="URL do Logo">
               <Input
-                value={form.logo}
-                onChange={(e) => set("logo", e.target.value)}
+                value={logo}
+                onChange={(e) => setLogo(e.target.value)}
                 placeholder="https://..."
               />
             </Field>
             <Field label="URL da Capa">
               <Input
-                value={form.capa}
-                onChange={(e) => set("capa", e.target.value)}
+                value={capa}
+                onChange={(e) => setCapa(e.target.value)}
                 placeholder="https://..."
               />
             </Field>
-          </div>
+          </form>
         </ScrollArea>
         <div className="px-4 py-3 border-t">
           <Button
-            onClick={handleSave}
+            type="submit"
+            form={undefined}
+            onClick={handleSubmit(onValid)}
             disabled={saving}
             className="w-full gap-2"
           >

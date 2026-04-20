@@ -152,6 +152,8 @@ function sanitizeAndValidateInput(
   copy("banner_url", sanitizeOptionalUrlValue);
   copy("fotos", sanitizeOptionalStringArray);
   copy("status");
+  copy("is_verified");
+  copy("is_premium");
 
   const schema = isUpdate ? updateBusinessSchema : createBusinessSchema;
   const validation = schema.safeParse(sanitized);

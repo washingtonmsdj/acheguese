@@ -21,7 +21,7 @@ import {
 
 const corsHeaders = getAllSecurityHeaders('POST, OPTIONS');
 
-serve(async (req) => {
+serve(async (req: Request) => {
   // Handle CORS preflight
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
@@ -298,3 +298,4 @@ serve(async (req) => {
     return errorResponse('Export failed', 500, error);
   }
 });
+

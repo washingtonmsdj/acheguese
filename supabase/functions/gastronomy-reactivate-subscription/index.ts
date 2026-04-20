@@ -17,15 +17,13 @@ import {
   jsonSecurityResponse,
   requireBusinessManagementAccess,
 } from '../_shared/businessAuth.ts';
-
-interface ReactivateRequest {
-  businessId: string;
-}
+import { validateBody, gastronomyBusinessSchema, validationErrorResponse } from '../_shared/validation.ts';
 
 interface ReactivateResponse {
   success: boolean;
   subscription?: unknown;
   error?: string;
+  [key: string]: unknown;
 }
 
 const STRIPE_SECRET_KEY = Deno.env.get('STRIPE_SECRET_KEY')!;
@@ -38,7 +36,7 @@ const stripe = new Stripe(STRIPE_SECRET_KEY, {
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
-serve(async (req) => {
+serve(async (req: Request) => {
   const origin = req.headers.get('origin');
   if (origin && !isOriginAllowed(origin)) {
     return jsonSecurityResponse({ success: false, error: 'Origin not allowed' }, 403);
@@ -52,11 +50,12 @@ serve(async (req) => {
   }
 
   try {
-    const { businessId }: ReactivateRequest = await req.json();
-
-    if (!businessId) {
-      return jsonSecurityResponse({ success: false, error: 'businessId e obrigatorio' }, 400);
+    const rawBody = await req.json();
+    const bodyValidation = validateBody<{ businessId: string }>(rawBody, gastronomyBusinessSchema);
+    if (!bodyValidation.ok) {
+      return validationErrorResponse(bodyValidation.errors);
     }
+    const { businessId } = bodyValidation.data!;
 
     const accessCheck = await requireBusinessManagementAccess(req, supabase, businessId);
     if (accessCheck instanceof Response) {

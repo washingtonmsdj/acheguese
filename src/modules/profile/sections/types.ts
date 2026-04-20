@@ -6,7 +6,7 @@
  */
 
 import type { NavigateFunction } from "react-router-dom";
-import type { Profile } from "@/core/profiles/services/multi-profile/types";
+import type { MultiProfileRecord } from "@/core/profiles/services/multi-profile/types";
 import type { ProfileBusinessModuleItem } from "@/core/profiles/services/types";
 import type { AppUrls } from "@/core/routing/types";
 
@@ -19,7 +19,7 @@ export interface BaseSectionProps {
     readonly id: string;
     readonly email?: string;
   };
-  readonly personalProfile: Profile | null;
+  readonly personalProfile: MultiProfileRecord | null;
   readonly personalProfileId: string | null;
   readonly navigate: NavigateFunction;
   readonly appUrls: AppUrls;
@@ -165,7 +165,7 @@ export interface ResumoSectionProps extends BaseSectionProps {
 }
 
 export interface DadosPessoaisSectionProps extends BaseSectionProps {
-  readonly profile: Profile | null;
+  readonly profile: MultiProfileRecord | null;
   readonly identity: Identity | null;
   readonly context: Context | null;
   readonly stats: Stats;
@@ -186,7 +186,7 @@ export interface EmpresasSectionProps extends BaseSectionProps {
 
 export interface MobilidadeSectionProps extends BaseSectionProps {
   readonly hasDriverProfile: boolean;
-  readonly driverProfile: Profile | null;
+  readonly driverProfile: MultiProfileRecord | null;
   readonly driverProfileId: string | null;
   readonly driverData: any;
   readonly driverDataLoading: boolean;
@@ -215,12 +215,12 @@ export interface ConfiguracoesSectionProps extends BaseSectionProps {
 }
 
 export interface SegurancaSectionProps extends BaseSectionProps {
-  readonly profile: Profile | null;
+  readonly profile: MultiProfileRecord | null;
   readonly identity: Identity | null;
   readonly context: Context | null;
   readonly account: AccountSnapshot | null;
   readonly roles: Roles;
-  readonly activeProfile: Profile | null;
+  readonly activeProfile: MultiProfileRecord | null;
   readonly stats: Stats;
   readonly verificationStatus: string;
   readonly verificationRejectionReason?: string;

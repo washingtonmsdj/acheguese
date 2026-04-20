@@ -15,7 +15,7 @@ interface TerritoryPayload {
   members?: string[];
 }
 
-serve(async (req) => {
+serve(async (req: Request) => {
   const origin = req.headers.get("origin");
   if (origin && !isOriginAllowed(origin)) {
     return jsonSecurityResponse({ error: "Origin not allowed" }, 403);
@@ -175,4 +175,5 @@ Seja preciso e use informacoes reais sobre Salvador. Se nao tiver dados exatos, 
     );
   }
 });
+
 

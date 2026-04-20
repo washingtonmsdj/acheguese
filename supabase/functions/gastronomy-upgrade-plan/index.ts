@@ -17,17 +17,13 @@ import {
   jsonSecurityResponse,
   requireBusinessManagementAccess,
 } from '../_shared/businessAuth.ts';
-
-interface UpgradeRequest {
-  businessId: string;
-  newPlanTier: 'pro' | 'delivery';
-  prorationBehavior?: 'create_prorations' | 'none' | 'always_invoice';
-}
+import { validateBody, gastronomyUpgradeSchema, validationErrorResponse, type GastronomyUpgradeBody } from '../_shared/validation.ts';
 
 interface UpgradeResponse {
   success: boolean;
   subscription?: unknown;
   error?: string;
+  [key: string]: unknown;
 }
 
 const STRIPE_SECRET_KEY = Deno.env.get('STRIPE_SECRET_KEY')!;
@@ -47,7 +43,7 @@ function getPriceId(planTier: 'pro' | 'delivery'): string {
   return planTier === 'pro' ? STRIPE_PRICE_ID_PRO : STRIPE_PRICE_ID_DELIVERY;
 }
 
-serve(async (req) => {
+serve(async (req: Request) => {
   const origin = req.headers.get('origin');
   if (origin && !isOriginAllowed(origin)) {
     return jsonSecurityResponse({ success: false, error: 'Origin not allowed' }, 403);
@@ -61,21 +57,12 @@ serve(async (req) => {
   }
 
   try {
-    const { businessId, newPlanTier, prorationBehavior }: UpgradeRequest = await req.json();
-
-    if (!businessId || !newPlanTier) {
-      return jsonSecurityResponse(
-        { success: false, error: 'businessId e newPlanTier sao obrigatorios' },
-        400,
-      );
+    const rawBody = await req.json();
+    const bodyValidation = validateBody<GastronomyUpgradeBody>(rawBody, gastronomyUpgradeSchema);
+    if (!bodyValidation.ok) {
+      return validationErrorResponse(bodyValidation.errors);
     }
-
-    if (!['pro', 'delivery'].includes(newPlanTier)) {
-      return jsonSecurityResponse(
-        { success: false, error: 'newPlanTier deve ser "pro" ou "delivery"' },
-        400,
-      );
-    }
+    const { businessId, newPlanTier, prorationBehavior } = bodyValidation.data!;
 
     const accessCheck = await requireBusinessManagementAccess(req, supabase, businessId);
     if (accessCheck instanceof Response) {

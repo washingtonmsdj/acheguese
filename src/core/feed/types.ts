@@ -4,7 +4,7 @@
  * Tipos TypeScript para o serviço de feed
  */
 
-import type { Profile } from "@/core/profiles/services/types";
+import type { ProfileSummary } from "@/core/profiles/views/ProfileSummary";
 
 export type PostType =
   | "texto"
@@ -32,7 +32,7 @@ export interface Post {
   updated_at: string;
 
   // Relacionamentos
-  profile?: Profile;
+  profile?: ProfileSummary;
 }
 
 export interface FeedParams {

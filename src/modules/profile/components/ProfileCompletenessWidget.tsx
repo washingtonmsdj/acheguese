@@ -6,10 +6,10 @@ import { Progress } from '@/shared/components/ui/progress';
 import { Button } from '@/shared/components/ui/button';
 import { cn } from '@/shared/utils/cn';
 import { useProfileCompleteness } from '../hooks/useProfileCompleteness';
-import type { Profile } from '@/core/profiles/services/multi-profile/types';
+import type { MultiProfileRecord } from '@/core/profiles/services/multi-profile/types';
 
 interface ProfileCompletenessWidgetProps {
-  profile: Profile;
+  profile: MultiProfileRecord;
 }
 
 export function ProfileCompletenessWidget({ profile }: ProfileCompletenessWidgetProps) {

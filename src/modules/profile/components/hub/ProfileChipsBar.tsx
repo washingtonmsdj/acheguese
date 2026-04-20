@@ -13,10 +13,10 @@ import { ScrollArea, ScrollBar } from "@/shared/components/ui/scroll-area";
 import { cn } from "@/shared/utils/cn";
 import { getProfileTypeIcon, getProfileTypeLabel } from "@/modules/profile/utils/profileDomainRules";
 
-import type { Profile } from "@/core/profiles/services/multi-profile/types";
+import type { MultiProfileRecord } from "@/core/profiles/services/multi-profile/types";
 
 interface ProfileChipsBarProps {
-  profiles: Profile[];
+  profiles: MultiProfileRecord[];
   activeProfileId: string | null;
   onSwitch: (profileId: string) => void;
 }

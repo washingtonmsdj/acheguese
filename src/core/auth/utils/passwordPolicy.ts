@@ -42,6 +42,10 @@ export function getAuthPasswordRequirementStatus(
   ];
 }
 
+/**
+ * @deprecated Use strongPasswordValidator do user.schema.ts em vez disso.
+ * Este método será removido em favor da validação via Zod schemas.
+ */
 export function validateAuthPassword(password: string): string | null {
   if (!password) {
     return "Senha e obrigatoria";

@@ -16,18 +16,10 @@ import {
 // PROFILE
 // ============================================
 
-export interface Profile {
-  id: string;
-  email: string;
-  name: string;
-  avatar_url: string | null;
-  neighborhood: string | null;
-  city: string | null;
-  role: UserRole;
-  is_verified: boolean;
-  created_at: string;
-  updated_at: string;
-}
+// ⚠️ REMOVIDO: interface Profile estava aqui como redefinição concorrente.
+// O SSOT canônico é src/core/profiles/domain/Profile.ts
+// Para tipos de persistência, use ProfileRow de src/core/profiles/persistence/ProfileRow.ts
+// Para views, use os read models de src/core/profiles/views/
 
 // ============================================
 // POST

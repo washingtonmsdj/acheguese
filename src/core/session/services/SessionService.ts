@@ -33,7 +33,7 @@ export class SessionService {
     import.meta.env.DEV && import.meta.env.VITE_DEBUG_SESSION === "true";
   private static debug(...args: unknown[]): void {
     if (SessionService.debugLogs) {
-      console.debug(...args);
+      logger.debug(...args);
     }
   }
 

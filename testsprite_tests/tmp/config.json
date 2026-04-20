@@ -1,0 +1,17 @@
+{
+  "status": "init",
+  "executionArgs": {
+    "projectName": "acheguese",
+    "projectPath": "C:\\Users\\Casa\\Documents\\Novo github\\acheguese",
+    "testIds": [],
+    "additionalInstruction": "The app is running at http://localhost:8080/. Test all major user flows including authentication, gastronomy browsing, mobility ride requests, classifieds, and profile management.",
+    "serverMode": "development",
+    "envs": {
+      "API_KEY": "sk-user-HfUMjWkWXkeZo1JiFxwrLPqCnpaqtJeQnkHPQPf3IMNbAP03RGiqRsFDyF4sZ-y58OgGZAxOjVkGoHqwiNGg6Xd-4H8mgtZZaSAnSpGMn-dkJm5o3oAejogHFCefMk5Kab0"
+    }
+  },
+  "scope": "codebase",
+  "type": "frontend",
+  "localEndpoint": "http://localhost:8080/",
+  "serverPort": 49752
+}

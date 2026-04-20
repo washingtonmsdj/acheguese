@@ -24,7 +24,7 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, stripe-signature',
 }
 
-serve(async (req) => {
+serve(async (req: Request) => {
   // ════════════════════════════════════════════════════════════════════════
   // 1. CORS
   // ════════════════════════════════════════════════════════════════════════
@@ -68,7 +68,8 @@ serve(async (req) => {
         Deno.env.get('STRIPE_WEBHOOK_SECRET') ?? ''
       )
     } catch (err) {
-      console.error('Webhook signature verification failed:', err.message)
+      const errorMessage = err instanceof Error ? err.message : 'Unknown error';
+      console.error('Webhook signature verification failed:', errorMessage)
       return new Response(
         JSON.stringify({ error: 'Invalid signature' }),
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -136,10 +137,11 @@ serve(async (req) => {
       )
     } catch (error) {
       // Marcar webhook como erro
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       await supabaseAdmin.rpc('mark_webhook_processed', {
         p_event_id: webhookId,
         p_success: false,
-        p_error_message: error.message,
+        p_error_message: errorMessage,
       })
 
       throw error
@@ -147,7 +149,7 @@ serve(async (req) => {
   } catch (error) {
     console.error('Error in billing-webhook:', error)
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: error instanceof Error ? error.message : 'Internal server error' }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
   }
@@ -337,3 +339,4 @@ async function handleInvoicePaymentFailed(event: Stripe.Event, supabase: any) {
     },
   })
 }
+

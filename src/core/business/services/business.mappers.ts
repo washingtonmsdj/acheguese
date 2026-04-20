@@ -145,6 +145,8 @@ export function toBusinessData(
   setIfDefined(result, "is_headquarters", input.is_headquarters);
   setIfDefined(result, "unit_name", input.unit_name);
   setIfDefined(result, "can_post_vagas", input.can_post_vagas);
+  setIfDefined(result, "is_verified", input.is_verified);
+  setIfDefined(result, "is_premium", input.is_premium);
 
   // Compatibilidade: se os modos vierem definidos, garante coerencia minima de metadata.
   if (serviceModes.length > 0 && !metadata?.modos_atendimento) {

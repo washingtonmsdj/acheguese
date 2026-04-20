@@ -4,6 +4,7 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { getAllSecurityHeaders, isOriginAllowed } from '../_shared/security.ts';
+import { validateBody, dispatchRideSchema, validationErrorResponse, type DispatchRideBody } from '../_shared/validation.ts';
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
@@ -15,10 +16,6 @@ const CONFIG = {
   TOTAL_TIMEOUT_MINUTES: 10,
   SEARCH_RADIUS_KM: 10,
 };
-
-interface DispatchRequest {
-  rideId: string;
-}
 
 interface DriverEligibility {
   profileId: string;
@@ -34,7 +31,7 @@ function extractBearerToken(req: Request): string | null {
   return authHeader.slice(7).trim();
 }
 
-serve(async (req) => {
+serve(async (req: Request) => {
   const origin = req.headers.get('origin');
   if (origin && !isOriginAllowed(origin)) {
     return new Response(
@@ -71,14 +68,15 @@ serve(async (req) => {
   }
 
   try {
-    const { rideId }: DispatchRequest = await req.json();
-
-    if (!rideId) {
+    const rawBody = await req.json();
+    const validation = validateBody<DispatchRideBody>(rawBody, dispatchRideSchema);
+    if (!validation.ok) {
       return new Response(
-        JSON.stringify({ error: 'rideId is required' }),
+        JSON.stringify({ error: 'Validation failed', details: validation.errors }),
         { status: 400, headers: { 'Content-Type': 'application/json' } }
       );
     }
+    const { rideId } = validation.data!;
 
     console.log(`[AutoDispatch] Starting for ride: ${rideId}`);
 
@@ -128,9 +126,10 @@ serve(async (req) => {
       );
     }
 
-    // Buscar coordenadas
-    const pickupLat = ride.addresses?.latitude;
-    const pickupLng = ride.addresses?.longitude;
+    // Buscar coordenadas - addresses é um array, pegar o primeiro elemento
+    const addressData = Array.isArray(ride.addresses) ? ride.addresses[0] : ride.addresses;
+    const pickupLat = addressData?.latitude;
+    const pickupLng = addressData?.longitude;
 
     if (!pickupLat || !pickupLng) {
       console.error('[AutoDispatch] Missing coordinates');
@@ -319,7 +318,7 @@ async function findEligibleDrivers(
       };
     })
     .filter((d: DriverEligibility) => d.distance <= CONFIG.SEARCH_RADIUS_KM)
-    .sort((a, b) => a.distance - b.distance);
+    .sort((a: DriverEligibility, b: DriverEligibility) => a.distance - b.distance);
 
   return eligible;
 }
@@ -466,3 +465,4 @@ function calculateDistance(
 function toRad(degrees: number): number {
   return degrees * (Math.PI / 180);
 }
+

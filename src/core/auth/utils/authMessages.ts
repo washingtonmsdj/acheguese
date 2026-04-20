@@ -11,7 +11,12 @@ export function getAuthErrorMessage(
       ? error.message
       : fallback;
 
-  if (/invalid login credentials/i.test(errorMessage)) {
+  // Mensagens genéricas para evitar user enumeration (OWASP)
+  if (
+    /invalid login credentials/i.test(errorMessage) ||
+    /user not found/i.test(errorMessage) ||
+    /invalid email/i.test(errorMessage)
+  ) {
     return "Email, usuario ou senha incorretos.";
   }
 
@@ -19,16 +24,8 @@ export function getAuthErrorMessage(
     return "Confirme seu email antes de entrar. Verifique sua caixa de entrada.";
   }
 
-  if (/user not found/i.test(errorMessage)) {
-    return "Usuario nao encontrado.";
-  }
-
   if (/over email rate limit/i.test(errorMessage)) {
     return "Muitas tentativas. Aguarde alguns minutos antes de tentar novamente.";
-  }
-
-  if (/invalid email/i.test(errorMessage)) {
-    return "Email invalido.";
   }
 
   if (/same password/i.test(errorMessage)) {

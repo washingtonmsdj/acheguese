@@ -62,7 +62,7 @@ export class IpGeolocationService {
     }
 
     // Fallback final: Salvador, BA
-    console.info("Usando fallback para Salvador, BA");
+    logger.info("Usando fallback para Salvador, BA");
     return {
       coordinates: this.SALVADOR_FALLBACK,
       city: "Salvador",

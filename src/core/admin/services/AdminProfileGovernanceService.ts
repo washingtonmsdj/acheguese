@@ -8,7 +8,7 @@
 
 import { supabase } from "@/integrations/supabase";
 import { logger } from "@/shared/utils/logger";
-import { profileService, ProfileService } from "@/core/profiles/services/ProfileService";
+import { profileService, ProfileServiceLegacy } from "@/core/profiles/services/ProfileService";
 import { buildPublicProfileUrl } from "@/core/profiles/utils/publicProfileUrl";
 import { AuthorizationEngine } from "@/core/authorization/services/AuthorizationEngine";
 import { FamilyService, FAMILY_TABLES } from "@/core/family";
@@ -18,7 +18,8 @@ import type {
   ProfilePlan,
   ProfileReputation,
   ProfileStatus,
-} from "@/core/profiles/services/types";
+} from "@/core/profiles/contracts/ProfileRuntimeContracts";
+// ✅ Fronteira de camada correta: service importa de contracts/, não de views/
 
 type RawRecord = Record<string, any>;
 
@@ -788,7 +789,7 @@ async function loadRolesByUserId(userIds: string[]): Promise<Map<string, string[
     await Promise.all(
       userIds.map(async (userId) => {
         try {
-          const roles = await ProfileService.getUserRoles(userId);
+          const roles = await profileService.getUserRoles(userId);
           if (roles && roles.length > 0) {
             map.set(userId, roles);
           }
@@ -841,7 +842,7 @@ async function loadUserProfileCountMap(userIds: string[]): Promise<Map<string, n
     await Promise.all(
       userIds.map(async (userId) => {
         try {
-          const profiles = await ProfileService.getProfilesByUserId(userId);
+          const profiles = await profileService.getProfilesByUserId(userId);
           map.set(userId, profiles.length);
         } catch (error) {
           logger.error(`AdminProfileGovernanceService.loadUserProfileCountMap for ${userId}`, error);
@@ -921,7 +922,7 @@ async function loadEntityMaps(profileIds: string[]): Promise<{
   await Promise.all(
     profileIds.map(async (profileId) => {
       try {
-        const driverData = await ProfileService.getDriverData(profileId);
+        const driverData = await profileService.getDriverData(profileId);
         if (driverData) {
           driverMap.set(profileId, driverData);
         }
@@ -1303,15 +1304,14 @@ async function loadEffectiveContext(
 class AdminProfileGovernanceService {
   async getStats(): Promise<AdminProfileIdentityStats> {
     try {
-      // ✅ SSOT: Usar ProfileService para buscar profiles
-      const profiles = await ProfileService.getProfilesByIds(
-        await ProfileService.getAllProfileIds()
-      );
+      // ✅ SSOT: Usar profileService para buscar profiles
+      const allIds = await profileService.getAllProfileIds() as string[];
+      const profiles = await profileService.getProfilesByIds(allIds);
       
       // Converter para RawRecord para manter compatibilidade com código existente
       const profilesRaw = profiles as unknown as RawRecord[];
-      const profileIds = profiles.map((profile) => profile.id);
-      const userIds = unique(profiles.map((profile) => profile.user_id));
+      const profileIds = profiles.map((profile) => profile.id) as string[];
+      const userIds = unique(profiles.map((profile) => profile.user_id)) as string[];
 
       const [
         usernameHistoryCountMap,
@@ -1490,8 +1490,8 @@ class AdminProfileGovernanceService {
         limit = 20,
       } = filters;
 
-      // ✅ SSOT: Usar ProfileService para buscar profiles com filtros
-      const { data: rawData, total: count } = await ProfileService.getProfilesFiltered({
+      // ✅ SSOT: Usar profileService para buscar profiles com filtros
+      const { data: rawData, total: count } = await profileService.getProfilesFiltered({
         search,
         profileType,
         visibility,
@@ -1500,11 +1500,11 @@ class AdminProfileGovernanceService {
       });
 
       const profilesBasic = (rawData as RawRecord[]) ?? [];
-      const profileIds = profilesBasic.map((profile) => profile.id);
-      const userIds = unique(profilesBasic.map((profile) => profile.user_id));
+      const profileIds = profilesBasic.map((profile) => profile.id) as string[];
+      const userIds = unique(profilesBasic.map((profile) => profile.user_id)) as string[];
       
-      // ✅ SSOT: Buscar dados completos via ProfileService
-      const profiles = await ProfileService.getProfilesByIds(profileIds);
+      // ✅ SSOT: Buscar dados completos via profileService
+      const profiles = await profileService.getProfilesByIds(profileIds);
       const profilesMap = new Map(profiles.map(p => [p.id, p as unknown as RawRecord]));
 
       const [
@@ -1526,21 +1526,21 @@ class AdminProfileGovernanceService {
       ]);
 
       return {
-        data: profilesBasic.map((profileBasic) => {
-          const profile = profilesMap.get(profileBasic.id) ?? profileBasic;
+        data: profilesBasic.map((profileBasic: RawRecord) => {
+          const profile: RawRecord = (profilesMap.get(profileBasic.id as string) ?? profileBasic) as RawRecord;
           return buildIdentityRecord({
             profile,
-            roles: rolesByUserId.get(profile.user_id) ?? [],
-            subscription: subscriptionsByUserId.get(profile.user_id) ?? null,
-            accountProfileCount: userProfileCountMap.get(profile.user_id) ?? 1,
-            usernameHistoryCount: usernameHistoryCountMap.get(profile.id) ?? 0,
-            memberCount: memberCountMap.get(profile.id) ?? 0,
+            roles: rolesByUserId.get(profile.user_id as string) ?? [],
+            subscription: subscriptionsByUserId.get(profile.user_id as string) ?? null,
+            accountProfileCount: userProfileCountMap.get(profile.user_id as string) ?? 1,
+            usernameHistoryCount: usernameHistoryCountMap.get(profile.id as string) ?? 0,
+            memberCount: memberCountMap.get(profile.id as string) ?? 0,
             linkedEntities: buildLinkedEntities({
-              business: entityMaps.businessMap.get(profile.id),
-              professional: entityMaps.professionalMap.get(profile.id),
-              driver: entityMaps.driverMap.get(profile.id),
+              business: entityMaps.businessMap.get(profile.id as string),
+              professional: entityMaps.professionalMap.get(profile.id as string),
+              driver: entityMaps.driverMap.get(profile.id as string),
             }),
-            hasNotificationSettings: notificationSettingsUserIds.has(profile.user_id),
+            hasNotificationSettings: notificationSettingsUserIds.has(profile.user_id as string),
           });
         }),
         total: count ?? 0,
@@ -1560,8 +1560,8 @@ class AdminProfileGovernanceService {
 
   async getProfileDetail(profileId: string): Promise<AdminProfileIdentityDetail | null> {
     try {
-      // ✅ SSOT: Usar ProfileService para buscar profile
-      const profileData = await ProfileService.getProfileById(profileId);
+      // ✅ SSOT: Usar profileService para buscar profile
+      const profileData = await profileService.getProfileById(profileId);
       if (!profileData) return null;
 
       const profile = profileData as unknown as RawRecord;
@@ -1584,8 +1584,8 @@ class AdminProfileGovernanceService {
         primaryResidenceMap,
         family,
       ] = await Promise.all([
-        // ✅ SSOT: Usar ProfileService.getUserRoles
-        ProfileService.getUserRoles(userId).then(roles => ({ data: roles.map(role => ({ role, is_active: true })), error: null })),
+        // ✅ SSOT: Usar profileService.getUserRoles
+        profileService.getUserRoles(userId).then((roles: string[]) => ({ data: roles.map((role: string) => ({ role, is_active: true })), error: null })),
         supabase
           .from("user_subscriptions")
           .select("*")
@@ -1598,18 +1598,18 @@ class AdminProfileGovernanceService {
           .select("*")
           .eq("profile_id", profileId)
           .order("joined_at", { ascending: true }),
-        // ✅ SSOT: Usar ProfileService.getProfilesByUserId
-        ProfileService.getProfilesByUserId(userId).then(data => ({ data, error: null })),
+        // ✅ SSOT: Usar profileService.getProfilesByUserId
+        profileService.getProfilesByUserId(userId).then((data: unknown[]) => ({ data, error: null })),
         supabase.from("business_data").select("*").eq("profile_id", profileId).maybeSingle(),
         supabase
           .from("professional_data")
           .select("*")
           .eq("profile_id", profileId)
           .maybeSingle(),
-        // ✅ SSOT: Usar ProfileService.getDriverData
-        ProfileService.getDriverData(profileId).then(data => ({ data, error: null })),
+        // ✅ SSOT: Usar profileService.getDriverData
+        profileService.getDriverData(profileId).then((data: unknown) => ({ data, error: null })),
         adminNotificationsService.getUserSettings(userId),
-        ProfileService.getUsernameHistory(profileId),
+        ProfileServiceLegacy.getUsernameHistory(profileId),
         loadAuthSummary(userId),
         loadEffectiveContext(userId),
         loadDriverReputationMap([profileId]),

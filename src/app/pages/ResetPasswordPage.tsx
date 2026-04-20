@@ -1,16 +1,20 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { Button } from '@/shared/components/ui/button';
 import { Input } from '@/shared/components/ui/input';
+import { InlineFieldError } from '@/shared/components/ui/InlineFieldError';
 import { CheckCircle, Eye, EyeOff, Key, Loader2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { AuthService } from '@/core/auth';
 import { useAuth } from '@/core/auth/hooks/useAuth';
 import { getAuthErrorMessage } from '@/core/auth/utils/authMessages';
-import {
-  getAuthPasswordRequirementStatus,
-  validateAuthPassword,
-} from '@/core/auth/utils/passwordPolicy';
+import { getAuthPasswordRequirementStatus } from '@/core/auth/utils/passwordPolicy';
 import { useToast } from '@/shared/hooks/use-toast';
+import {
+  ResetPasswordFormSchema,
+  type ResetPasswordFormInput,
+} from '@/shared/validation/schemas/user.schema';
 
 type RecoveryState = 'checking' | 'ready' | 'invalid';
 
@@ -18,18 +22,27 @@ export default function ResetPasswordPage() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user, updatePassword } = useAuth();
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [loading, setLoading] = useState(false);
   const [done, setDone] = useState(false);
   const [recoveryState, setRecoveryState] = useState<RecoveryState>(
     AuthService.isRecoveryRedirect() ? 'ready' : 'checking',
   );
 
+  const {
+    register,
+    handleSubmit,
+    watch,
+    formState: { errors, isSubmitting },
+  } = useForm<ResetPasswordFormInput>({
+    resolver: zodResolver(ResetPasswordFormSchema),
+    mode: 'onBlur',
+  });
+
+  // Derivado do watch para o PasswordStrengthIndicator em tempo real
+  const newPasswordValue = watch('newPassword') ?? '';
   const passwordRequirements = useMemo(
-    () => getAuthPasswordRequirementStatus(password),
-    [password],
+    () => getAuthPasswordRequirementStatus(newPasswordValue),
+    [newPasswordValue],
   );
 
   useEffect(() => {
@@ -47,27 +60,7 @@ export default function ResetPasswordPage() {
     };
   }, [user]);
 
-  const handleSubmit = async () => {
-    const passwordError = validateAuthPassword(password);
-
-    if (passwordError) {
-      toast({
-        title: 'Senha invalida',
-        description: passwordError,
-        variant: 'destructive',
-      });
-      return;
-    }
-
-    if (password !== confirmPassword) {
-      toast({
-        title: 'Senhas nao coincidem',
-        description: 'Repita a mesma senha nos dois campos.',
-        variant: 'destructive',
-      });
-      return;
-    }
-
+  const onValid = async (data: ResetPasswordFormInput) => {
     if (recoveryState !== 'ready') {
       toast({
         title: 'Link invalido ou expirado',
@@ -77,10 +70,8 @@ export default function ResetPasswordPage() {
       return;
     }
 
-    setLoading(true);
-
     try {
-      await updatePassword(password);
+      await updatePassword(data.newPassword);
       setDone(true);
       toast({ title: 'Senha redefinida com sucesso.' });
       window.setTimeout(() => navigate('/'), 2000);
@@ -90,8 +81,6 @@ export default function ResetPasswordPage() {
         description: getAuthErrorMessage(error),
         variant: 'destructive',
       });
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -141,7 +130,11 @@ export default function ResetPasswordPage() {
           </p>
         </div>
 
-        <div className="space-y-4 rounded-2xl border border-border bg-card p-5">
+        <form
+          onSubmit={handleSubmit(onValid)}
+          className="space-y-4 rounded-2xl border border-border bg-card p-5"
+          noValidate
+        >
           <div>
             <label className="text-xs font-medium text-muted-foreground mb-1 block">
               Nova senha
@@ -149,15 +142,16 @@ export default function ResetPasswordPage() {
             <div className="relative">
               <Input
                 type={showPassword ? 'text' : 'password'}
-                value={password}
-                onChange={(event) => setPassword(event.target.value)}
                 placeholder="Minimo 8 caracteres"
                 autoComplete="new-password"
+                aria-describedby={errors.newPassword ? 'new-password-error' : undefined}
+                {...register('newPassword')}
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
                 className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground"
+                aria-label={showPassword ? 'Ocultar senha' : 'Mostrar senha'}
               >
                 {showPassword ? (
                   <EyeOff className="h-4 w-4" />
@@ -166,8 +160,10 @@ export default function ResetPasswordPage() {
                 )}
               </button>
             </div>
+            <InlineFieldError id="new-password-error" message={errors.newPassword?.message} />
           </div>
 
+          {/* PasswordStrengthIndicator — alimentado por watch('newPassword') */}
           <div className="space-y-1 rounded-xl border border-border/60 bg-secondary/30 p-3">
             {passwordRequirements.map((requirement) => (
               <div
@@ -185,20 +181,28 @@ export default function ResetPasswordPage() {
             </label>
             <Input
               type="password"
-              value={confirmPassword}
-              onChange={(event) => setConfirmPassword(event.target.value)}
               placeholder="Repita a nova senha"
               autoComplete="new-password"
+              aria-describedby={errors.confirmNewPassword ? 'confirm-password-error' : undefined}
+              {...register('confirmNewPassword')}
+            />
+            <InlineFieldError
+              id="confirm-password-error"
+              message={errors.confirmNewPassword?.message}
             />
           </div>
 
-          <Button onClick={handleSubmit} disabled={loading || recoveryState !== 'ready'} className="w-full">
-            {loading ? (
+          <Button
+            type="submit"
+            disabled={isSubmitting || recoveryState !== 'ready'}
+            className="w-full"
+          >
+            {isSubmitting ? (
               <Loader2 className="h-4 w-4 animate-spin mr-1.5" />
             ) : null}
             Redefinir senha
           </Button>
-        </div>
+        </form>
       </div>
     </div>
   );

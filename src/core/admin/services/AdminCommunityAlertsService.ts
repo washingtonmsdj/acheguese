@@ -168,11 +168,12 @@ class AdminCommunityAlertsServiceClass {
         limit = 20,
       } = filters;
 
-      let query = supabase
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      let query = (supabase as any)
         .from(this.TABLE)
         .select(`
           *,
-          author_profile:profiles!community_alerts_author_profile_id_fkey(
+          author_profile:profiles!community_alerts_profile_id_fkey(
             display_name,
             avatar_url
           )
@@ -235,7 +236,7 @@ class AdminCommunityAlertsServiceClass {
       });
 
       return {
-        data: alertsWithReports as AlertWithDetails[],
+        data: alertsWithReports as unknown as AlertWithDetails[],
         total,
         page,
         totalPages,
@@ -474,11 +475,11 @@ class AdminCommunityAlertsServiceClass {
    */
   async getTopReportedAlerts(limit: number = 10): Promise<AlertWithDetails[]> {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from(this.TABLE)
         .select(`
           *,
-          author_profile:profiles!community_alerts_author_profile_id_fkey(
+          author_profile:profiles!community_alerts_profile_id_fkey(
             display_name,
             avatar_url
           )
@@ -504,7 +505,7 @@ class AdminCommunityAlertsServiceClass {
         count: alertsWithReports.length,
       });
 
-      return alertsWithReports as AlertWithDetails[];
+      return alertsWithReports as unknown as AlertWithDetails[];
     } catch (error) {
       logger.error('AdminCommunityAlertsService.getTopReportedAlerts', error);
       return [];
@@ -518,14 +519,14 @@ class AdminCommunityAlertsServiceClass {
     try {
       const { data, error } = await supabase
         .from(this.TABLE)
-        .select('category');
+        .select('type');
 
       if (error) throw error;
 
       const stats: Record<string, number> = {};
       
-      data?.forEach((alert) => {
-        stats[alert.category] = (stats[alert.category] || 0) + 1;
+      (data as Array<{ type: string }> | null)?.forEach((alert) => {
+        stats[alert.type] = (stats[alert.type] || 0) + 1;
       });
 
       logger.info('AdminCommunityAlertsService.getStatsByCategory', stats);

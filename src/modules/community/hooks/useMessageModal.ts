@@ -2,19 +2,13 @@ import { useState } from "react";
 import { profileService } from "@/core/profiles/services/ProfileService"; // ✅ SSOT
 import { useDirectMessages } from "@/modules/community/hooks/useDirectMessages";
 import type { UnifiedPost } from "@/shared/types/posts";
+import type { DirectMessageRecipientView } from "@/core/profiles/views/DirectMessageRecipientView";
 import { logger } from "@/shared/utils/logger";
-
-interface Profile {
-  id: string;
-  name: string;
-  avatar_url?: string;
-  is_verified?: boolean;
-}
 
 export function useMessageModal(currentUserId?: string) {
   const [isOpen, setIsOpen] = useState(false);
   const [selectedPost, setSelectedPost] = useState<UnifiedPost | null>(null);
-  const [recipientProfile, setRecipientProfile] = useState<Profile | null>(
+  const [recipientProfile, setRecipientProfile] = useState<DirectMessageRecipientView | null>(
     null,
   );
   const [conversationId, setConversationId] = useState<string | null>(null);
@@ -77,9 +71,9 @@ export function useMessageModal(currentUserId?: string) {
       setSelectedPost(post);
       setRecipientProfile({
         id: profileData.id,
-        name: profileData.name,
-        avatar_url: profileData.avatar_url ?? undefined,
-        is_verified: profileData.verified ?? false,
+        displayName: profileData.display_name ?? profileData.name,
+        avatarUrl: profileData.avatar_url ?? null,
+        verified: profileData.verified ?? false,
       });
       setConversationId(newConversationId);
       setIsOpen(true);

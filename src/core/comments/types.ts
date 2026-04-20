@@ -4,7 +4,7 @@
  * Tipos TypeScript para o serviço de comentários
  */
 
-import type { Profile } from "@/core/profiles/services/types";
+import type { ProfileSummary } from "@/core/profiles/views/ProfileSummary";
 
 export interface Comment {
   id: string;
@@ -17,7 +17,7 @@ export interface Comment {
   updated_at: string;
 
   // Relacionamentos
-  profile?: Profile;
+  profile?: ProfileSummary;
 }
 
 export interface CommentWithReplies extends Comment {

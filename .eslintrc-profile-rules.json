@@ -1,0 +1,81 @@
+{
+  "rules": {
+    "no-restricted-imports": [
+      "error",
+      {
+        "patterns": [
+          {
+            "group": [
+              "**/core/profiles/types/Profile*"
+            ],
+            "message": "❌ PROIBIDO: types/Profile.ts foi removido. Use @/core/profiles/domain/Profile"
+          },
+          {
+            "group": ["**/shared/types/core.generated*"],
+            "importNames": ["Profile"],
+            "message": "❌ PROIBIDO: interface Profile foi removida de core.generated. Use @/core/profiles/domain/Profile"
+          }
+        ],
+        "paths": [
+          {
+            "name": "@/core/profiles/services/types",
+            "importNames": ["Business"],
+            "message": "❌ PROIBIDO em código novo: 'Business' é alias deprecated. Use ProfileAssociatedBusiness de @/core/profiles/services/ProfileBusinessTypes"
+          },
+          {
+            "name": "@/core/profiles/services/types",
+            "importNames": ["ProfileBusinessModuleItem"],
+            "message": "❌ PROIBIDO em código novo: 'ProfileBusinessModuleItem' é alias deprecated. Use ProfileBusinessModuleSnapshot de @/core/profiles/services/ProfileBusinessTypes"
+          },
+          {
+            "name": "@/core/profiles/services/types",
+            "importNames": ["ProfileStats"],
+            "message": "❌ PROIBIDO em código novo: 'ProfileStats' é alias deprecated. Use ProfileActivityStats de @/core/profiles/services/ProfileOperationTypes"
+          },
+          {
+            "name": "@/core/profiles/services/types",
+            "importNames": ["Profile"],
+            "message": "❌ PROIBIDO em código novo: não importe Profile de services/types. Use @/core/profiles/domain/Profile"
+          },
+          {
+            "name": "@/core/profiles/services/types",
+            "importNames": ["ProfileContext"],
+            "message": "❌ PROIBIDO em código novo: não importe ProfileContext de services/types. Use @/core/profiles/views/ProfileContext"
+          },
+          {
+            "name": "@/core/profiles/services/types",
+            "importNames": ["ProfileStatus", "ProfilePermissions", "ProfilePlan", "ProfileReputation"],
+            "message": "❌ PROIBIDO em código novo: use @/core/profiles/contracts/ProfileRuntimeContracts para esses tipos"
+          }
+        ]
+      }
+    ],
+    "no-restricted-syntax": [
+      "error",
+      {
+        "selector": "TSInterfaceDeclaration[id.name='Profile']",
+        "message": "❌ PROIBIDO: não redefina interface Profile localmente. Importe de @/core/profiles/domain/Profile ou use um view model de @/core/profiles/views/"
+      },
+      {
+        "selector": "TSTypeAliasDeclaration[id.name='Profile']",
+        "message": "❌ PROIBIDO: não redefina type Profile localmente. Importe de @/core/profiles/domain/Profile ou use um view model de @/core/profiles/views/"
+      }
+    ]
+  },
+  "overrides": [
+    {
+      "files": [
+        "src/core/profiles/domain/Profile.ts",
+        "src/core/profiles/services/types.ts",
+        "src/core/profiles/services/multi-profile/types.ts",
+        "src/core/profiles/services/ProfileBusinessTypes.ts",
+        "src/core/profiles/services/ProfileOperationTypes.ts",
+        "src/core/profiles/contracts/ProfileRuntimeContracts.ts"
+      ],
+      "rules": {
+        "no-restricted-syntax": "off",
+        "no-restricted-imports": "off"
+      }
+    }
+  ]
+}

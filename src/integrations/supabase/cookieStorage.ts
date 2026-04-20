@@ -29,6 +29,7 @@
  */
 import type { SupportedStorage } from '@supabase/supabase-js';
 import { SECURE_COOKIE_CONFIG, AUTH_COOKIE_PREFIX } from '@/config/security.config';
+import { logger } from '@/shared/utils/logger';
 /**
  * Configuração de cookies seguros (importada do SSOT)
  */
@@ -174,7 +175,7 @@ export class HybridStorage implements SupportedStorage {
 
     // Log de configuração (apenas em desenvolvimento)
     if (import.meta.env.DEV) {
-      console.debug('[HybridStorage] Initialized', {
+      logger.debug('[HybridStorage] Initialized', {
         cookies: this.cookiesAvailable ? '✅' : '❌',
         localStorage: this.localStorageAvailable ? '✅' : '❌',
         preferredStorage: this.cookiesAvailable ? 'cookies' : 'localStorage',
@@ -209,7 +210,7 @@ export class HybridStorage implements SupportedStorage {
         localStorage.removeItem(key);
         
         if (import.meta.env.DEV) {
-          console.debug(`[HybridStorage] Migrated ${key} from localStorage to cookies`);
+          logger.debug(`[HybridStorage] Migrated ${key} from localStorage to cookies`);
         }
       }
     } catch (error) {
@@ -262,7 +263,7 @@ export class HybridStorage implements SupportedStorage {
         }
         return;
       } catch (error) {
-        console.warn('[HybridStorage] Cookie storage failed, falling back to localStorage:', error);
+        logger.warn('[HybridStorage] Cookie storage failed, falling back to localStorage:', error);
       }
     }
 
@@ -271,7 +272,7 @@ export class HybridStorage implements SupportedStorage {
       try {
         localStorage.setItem(key, value);
       } catch (error) {
-        console.error('[HybridStorage] All storage methods failed:', error);
+        logger.error('[HybridStorage] All storage methods failed:', error);
       }
     }
   }
@@ -306,7 +307,7 @@ export function createSecureStorage(): SupportedStorage {
   // Em desenvolvimento, permitir localStorage para facilitar debug
   // mas avisar sobre migração futura
   if (import.meta.env.DEV) {
-    console.warn(
+    logger.warn(
       '[Security] Usando localStorage em desenvolvimento. ' +
       'Em produção, tokens serão armazenados em cookies seguros.'
     );

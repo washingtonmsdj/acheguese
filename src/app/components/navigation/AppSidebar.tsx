@@ -30,7 +30,7 @@ import {
   useSidebar,
 } from '@/shared/components/ui/sidebar';
 import { Avatar, AvatarFallback, AvatarImage } from '@/shared/components/ui/avatar';
-import { useProfile } from '@/core/profiles/hooks/useProfile';
+import { useSessionContext } from '@/core/session';
 import { useAuth } from '@/core/auth/hooks/useAuth';
 import { useAppUrls } from '@/core/routing/hooks/useAppUrls';
 import { lastTerritoryStore } from '@/core/routing/stores/LastTerritoryStore';
@@ -41,7 +41,7 @@ export function AppSidebar() {
   const location = useLocation();
   const { state: sidebarState } = useSidebar();
   const collapsed = sidebarState === 'collapsed';
-  const { profile } = useProfile();
+  const { activeProfile } = useSessionContext();
   const { user } = useAuth();
   const appUrls = useAppUrls();
   
@@ -177,18 +177,18 @@ export function AppSidebar() {
               <SidebarMenuButton asChild tooltip="Meu perfil">
                 <Link to={appUrls.profile.central} className="flex items-center gap-2">
                   <Avatar className="h-6 w-6 flex-shrink-0">
-                    <AvatarImage src={profile?.avatar_url || undefined} />
+                    <AvatarImage src={activeProfile?.avatarUrl || undefined} />
                     <AvatarFallback className="text-[10px]">
-                      {getInitials(profile?.name || profile?.display_name || user.email)}
+                      {getInitials(activeProfile?.displayName || user.email)}
                     </AvatarFallback>
                   </Avatar>
                   {!collapsed && (
                     <div className="flex-1 min-w-0 text-left">
                       <p className="text-sm font-medium truncate">
-                        {profile?.name || profile?.display_name || user.email?.split('@')[0]}
+                        {activeProfile?.displayName || user.email?.split('@')[0]}
                       </p>
                       <p className="text-[11px] text-muted-foreground truncate">
-                        {profile?.username ? `@${profile.username}` : 'Ver perfil'}
+                        {activeProfile?.username ? `@${activeProfile.username}` : 'Ver perfil'}
                       </p>
                     </div>
                   )}

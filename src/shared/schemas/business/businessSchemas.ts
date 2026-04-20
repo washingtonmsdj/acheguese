@@ -188,6 +188,10 @@ const baseBusinessObjectSchema = z.object({
     fotos: z.array(z.string().url("URL de foto invalida")).optional(),
 
     status: z.enum(["active", "inactive", "pending", "suspended"]).optional(),
+
+    /** Campos administrativos — apenas super_admin/admin */
+    is_verified: z.boolean().optional(),
+    is_premium: z.boolean().optional(),
   });
 
 function applyBusinessRules<T extends z.AnyZodObject>(

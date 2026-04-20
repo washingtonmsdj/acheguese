@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { toast } from "sonner";
 import { useAppUrls } from "@/core/routing/hooks"; // ✅ SSOT URLs
-import { useProfile } from "@/core/profiles/hooks/useProfile";
+import { useSessionContext } from "@/core/session";
 import { useAuth } from "@/core/auth/hooks/useAuth";
 import { useGroupDetail } from "@/modules/community/hooks/useGroups";
 import { useGroupChat } from "@/modules/community/hooks/useGroupChat";
@@ -248,7 +248,7 @@ export default function GrupoDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const appUrls = useAppUrls(); // ✅ SSOT URLs
-  const { profile } = useProfile();
+  const { activeProfile } = useSessionContext();
   const { user } = useAuth();
   const { group, members, isMember, userRole, loading, refetch } =
     useGroupDetail(id);

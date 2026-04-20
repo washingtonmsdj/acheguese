@@ -37,6 +37,7 @@ import {
 import { logger } from "@/shared/utils/logger";
 import { useSessionContext } from "@/core/session";
 import { GeolocationService } from "@/core/maps/services/GeolocationService";
+import type { DirectMessageRecipientView } from "@/core/profiles/views/DirectMessageRecipientView";
 
 interface PostContext {
   id: string;
@@ -55,13 +56,6 @@ interface PostContext {
     | "desapego";
 }
 
-interface Profile {
-  id: string;
-  name: string;
-  avatar_url?: string;
-  is_verified?: boolean;
-}
-
 interface DirectMessage {
   id: string;
   sender_profile_id: string;
@@ -73,14 +67,14 @@ interface DirectMessage {
     address?: string;
   };
   created_at: string;
-  sender_profile?: Profile;
+  sender_profile?: DirectMessageRecipientView;
 }
 
 interface DirectMessageModalProps {
   isOpen: boolean;
   onClose: () => void;
   postContext: PostContext;
-  recipientProfile: Profile;
+  recipientProfile: DirectMessageRecipientView;
   currentUserId: string;
   onSendMessage?: (
     message: string,
@@ -126,7 +120,9 @@ export function DirectMessageModal({
         created_at: new Date().toISOString(),
         sender_profile: {
           id: currentProfileId,
-          name: "Você",
+          displayName: "Você",
+          avatarUrl: null,
+          verified: false,
         },
       };
 
@@ -159,7 +155,7 @@ export function DirectMessageModal({
         message_type: "location",
         location_date: locationData,
         created_at: new Date().toISOString(),
-        sender_profile: { id: currentProfileId, name: "Você" },
+        sender_profile: { id: currentProfileId, displayName: "Você", avatarUrl: null, verified: false },
       };
 
       setMessages((prev) => [...prev, tempMessage]);
@@ -265,16 +261,16 @@ export function DirectMessageModal({
           {/* Info do Destinatário - Compacto */}
           <div className="flex items-center gap-2 mt-2">
             <Avatar className="h-7 w-7 border border-gray-700">
-              <AvatarImage src={recipientProfile.avatar_url} />
+              <AvatarImage src={recipientProfile.avatarUrl ?? undefined} />
               <AvatarFallback className="bg-orange-500 text-white text-xs">
-                {getInitials(recipientProfile.name)}
+                {getInitials(recipientProfile.displayName)}
               </AvatarFallback>
             </Avatar>
             <div className="flex items-center gap-2">
               <span className="text-sm font-medium text-white">
-                {recipientProfile.name}
+                {recipientProfile.displayName}
               </span>
-              {recipientProfile.is_verified && (
+              {recipientProfile.verified && (
                 <Shield className="w-3 h-3 text-blue-400" />
               )}
             </div>
@@ -305,9 +301,9 @@ export function DirectMessageModal({
                   }`}
                 >
                   <Avatar className="h-5 w-5 border border-gray-700 flex-shrink-0">
-                    <AvatarImage src={message.sender_profile?.avatar_url} />
+                    <AvatarImage src={message.sender_profile?.avatarUrl ?? undefined} />
                     <AvatarFallback className="bg-gray-600 text-white text-[10px]">
-                      {getInitials(message.sender_profile?.name || "U")}
+                      {getInitials(message.sender_profile?.displayName || "U")}
                     </AvatarFallback>
                   </Avatar>
 

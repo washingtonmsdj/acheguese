@@ -25,16 +25,16 @@ import {
 } from "lucide-react";
 import { usePushNotifications } from "@/shared/hooks/usePushNotifications";
 import { useGeolocation } from "@/shared/hooks/useGeolocation";
-import { useProfile } from "@/core/profiles/hooks/useProfile";
+import { useSessionContext } from "@/core/session";
 import { toast } from "sonner";
 export function NotificationSettings() {
-  const { profile } = useProfile();
+  const { activeProfile } = useSessionContext();
   const {
     preferences,
     loading,
     requestNotificationPermission,
     updatePreferences,
-  } = usePushNotifications(profile?.id);
+  } = usePushNotifications(activeProfile?.id);
   const {
     latitude,
     longitude,
@@ -63,8 +63,8 @@ export function NotificationSettings() {
     }
 
     // 3. Atualizar localização no banco
-    if (profile?.id) {
-      await updateUserLocation(profile.id);
+    if (activeProfile?.id) {
+      await updateUserLocation(activeProfile.id);
     }
 
     toast.success(

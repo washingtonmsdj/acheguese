@@ -30,7 +30,7 @@ interface CheckResult {
 
 const startTime = Date.now();
 
-serve(async (req) => {
+serve(async (req: Request) => {
   // CORS headers
   const corsHeaders = {
     'Access-Control-Allow-Origin': '*',
@@ -193,3 +193,4 @@ serve(async (req) => {
     );
   }
 });
+

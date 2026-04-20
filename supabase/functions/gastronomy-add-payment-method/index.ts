@@ -17,16 +17,13 @@ import {
   jsonSecurityResponse,
   requireBusinessManagementAccess,
 } from '../_shared/businessAuth.ts';
-
-interface AddPaymentMethodRequest {
-  businessId: string;
-  paymentMethodId: string;
-}
+import { validateBody, gastronomyAddPaymentSchema, validationErrorResponse, type GastronomyAddPaymentBody } from '../_shared/validation.ts';
 
 interface AddPaymentMethodResponse {
   success: boolean;
   customer?: unknown;
   error?: string;
+  [key: string]: unknown;
 }
 
 const STRIPE_SECRET_KEY = Deno.env.get('STRIPE_SECRET_KEY')!;
@@ -39,7 +36,7 @@ const stripe = new Stripe(STRIPE_SECRET_KEY, {
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
-serve(async (req) => {
+serve(async (req: Request) => {
   const origin = req.headers.get('origin');
   if (origin && !isOriginAllowed(origin)) {
     return jsonSecurityResponse({ success: false, error: 'Origin not allowed' }, 403);
@@ -53,14 +50,12 @@ serve(async (req) => {
   }
 
   try {
-    const { businessId, paymentMethodId }: AddPaymentMethodRequest = await req.json();
-
-    if (!businessId || !paymentMethodId) {
-      return jsonSecurityResponse(
-        { success: false, error: 'businessId e paymentMethodId sao obrigatorios' },
-        400,
-      );
+    const rawBody = await req.json();
+    const bodyValidation = validateBody<GastronomyAddPaymentBody>(rawBody, gastronomyAddPaymentSchema);
+    if (!bodyValidation.ok) {
+      return validationErrorResponse(bodyValidation.errors);
     }
+    const { businessId, paymentMethodId } = bodyValidation.data!;
 
     const accessCheck = await requireBusinessManagementAccess(req, supabase, businessId);
     if (accessCheck instanceof Response) {

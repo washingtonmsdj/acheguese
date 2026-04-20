@@ -10,7 +10,8 @@
  * ══════════════════════════════════════════════════════════════════════════
  */
 
-import { useState } from 'react';
+import { useForm, Controller } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation } from '@tanstack/react-query';
 import {
   Shield,
@@ -44,31 +45,37 @@ import {
 } from '@/shared/components/ui/select';
 import { useToast } from '@/shared/hooks/use-toast';
 import { useAuth } from '@/core/auth/hooks/useAuth';
-import { PrivacyService, type DPORequestType } from '@/core/privacy';
-
-interface ContactFormData {
-  name: string;
-  email: string;
-  subject: string;
-  requestType: DPORequestType | '';
-  message: string;
-}
+import { PrivacyService } from '@/core/privacy';
+import { InlineFieldError } from '@/shared/components/ui/InlineFieldError';
+import {
+  DPOContactSchema,
+  type DPOContactInput,
+} from '@/shared/validation/schemas/dpo.schema';
 
 export default function DPOContactPage() {
   const { user } = useAuth();
   const { toast } = useToast();
-  const [formData, setFormData] = useState<ContactFormData>({
-    name: user?.user_metadata?.full_name || '',
-    email: user?.email || '',
-    subject: '',
-    requestType: '',
-    message: '',
+
+  const {
+    register,
+    handleSubmit,
+    control,
+    reset,
+    formState: { errors },
+  } = useForm<DPOContactInput>({
+    resolver: zodResolver(DPOContactSchema),
+    mode: 'onBlur',
+    defaultValues: {
+      name: user?.user_metadata?.full_name || '',
+      email: user?.email || '',
+      subject: '',
+      requestType: undefined,
+      message: '',
+    },
   });
 
   const contactMutation = useMutation({
-    mutationFn: async (data: ContactFormData) => {
-      if (!data.requestType) throw new Error('Tipo de solicitação obrigatório');
-
+    mutationFn: async (data: DPOContactInput) => {
       await PrivacyService.createDPORequest({
         userId: user?.id,
         requesterName: data.name,
@@ -84,15 +91,15 @@ export default function DPOContactPage() {
         description:
           'Recebemos sua solicitação. O DPO responderá em até 15 dias úteis conforme LGPD.',
       });
-      setFormData({
+      reset({
         name: user?.user_metadata?.full_name || '',
         email: user?.email || '',
         subject: '',
-        requestType: '',
+        requestType: undefined,
         message: '',
       });
     },
-    onError: (error) => {
+    onError: () => {
       toast({
         title: 'Erro ao enviar',
         description:
@@ -102,9 +109,8 @@ export default function DPOContactPage() {
     },
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    contactMutation.mutate(formData);
+  const onValid = (data: DPOContactInput) => {
+    contactMutation.mutate(data);
   };
 
   const requestTypes = [
@@ -188,86 +194,71 @@ export default function DPOContactPage() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <form onSubmit={handleSubmit} className="space-y-6">
+              <form onSubmit={handleSubmit(onValid)} className="space-y-6">
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div className="space-y-2">
                     <Label htmlFor="name">Nome completo *</Label>
-                    <Input
-                      id="name"
-                      required
-                      value={formData.name}
-                      onChange={(e) =>
-                        setFormData({ ...formData, name: e.target.value })
-                      }
-                    />
+                    <Input id="name" {...register('name')} />
+                    <InlineFieldError message={errors.name?.message} />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="email">E-mail *</Label>
-                    <Input
-                      id="email"
-                      type="email"
-                      required
-                      value={formData.email}
-                      onChange={(e) =>
-                        setFormData({ ...formData, email: e.target.value })
-                      }
-                    />
+                    <Input id="email" type="email" {...register('email')} />
+                    <InlineFieldError message={errors.email?.message} />
                   </div>
                 </div>
 
                 <div className="space-y-2">
                   <Label htmlFor="requestType">Tipo de solicitação *</Label>
-                  <Select
-                    required
-                    value={formData.requestType}
-                    onValueChange={(value) =>
-                      setFormData({ ...formData, requestType: value })
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione o tipo de solicitação" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {requestTypes.map((type) => (
-                        <SelectItem key={type.value} value={type.value}>
-                          <div className="flex flex-col items-start">
-                            <span>{type.label}</span>
-                            <span className="text-xs text-muted-foreground">
-                              {type.description}
-                            </span>
-                          </div>
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <Controller
+                    name="requestType"
+                    control={control}
+                    render={({ field }) => (
+                      <Select
+                        value={field.value}
+                        onValueChange={field.onChange}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione o tipo de solicitação" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {requestTypes.map((type) => (
+                            <SelectItem key={type.value} value={type.value}>
+                              <div className="flex flex-col items-start">
+                                <span>{type.label}</span>
+                                <span className="text-xs text-muted-foreground">
+                                  {type.description}
+                                </span>
+                              </div>
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    )}
+                  />
+                  <InlineFieldError message={errors.requestType?.message} />
                 </div>
 
                 <div className="space-y-2">
                   <Label htmlFor="subject">Assunto *</Label>
                   <Input
                     id="subject"
-                    required
+                    {...register('subject')}
                     placeholder="Resumo breve da sua solicitação"
-                    value={formData.subject}
-                    onChange={(e) =>
-                      setFormData({ ...formData, subject: e.target.value })
-                    }
                   />
+                  <InlineFieldError message={errors.subject?.message} />
                 </div>
 
                 <div className="space-y-2">
                   <Label htmlFor="message">Mensagem detalhada *</Label>
                   <textarea
                     id="message"
-                    required
                     rows={6}
                     className="w-full min-h-[150px] p-3 rounded-md border bg-background text-sm"
                     placeholder="Descreva sua solicitação com o máximo de detalhes possível..."
-                    value={formData.message}
-                    onChange={(e) =>
-                      setFormData({ ...formData, message: e.target.value })
-                    }
+                    {...register('message')}
                   />
+                  <InlineFieldError message={errors.message?.message} />
                 </div>
 
                 <div className="flex items-start gap-2 p-4 bg-muted rounded-lg">

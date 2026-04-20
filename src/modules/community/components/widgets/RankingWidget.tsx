@@ -6,7 +6,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/shared/components/ui/avat
 import { Button } from "@/shared/components/ui/button";
 import { useRankingUsers } from "../../hooks/useRankingUsers";
 import { WidgetSkeleton } from "./WidgetSkeleton";
-import { useProfile } from "@/core/profiles/hooks/useProfile";
+import { useSessionContext } from "@/core/session";
 
 /**
  * Widget de Ranking Melhorado
@@ -14,7 +14,7 @@ import { useProfile } from "@/core/profiles/hooks/useProfile";
  */
 export const RankingWidget = memo(() => {
   const { data: users, isLoading } = useRankingUsers(5);
-  const { profile } = useProfile();
+  const { activeProfile } = useSessionContext();
 
   if (isLoading) {
     return <WidgetSkeleton hasHeader itemCount={3} />;
@@ -66,7 +66,7 @@ export const RankingWidget = memo(() => {
       {/* Lista de Usuários */}
       <div className="space-y-1.5">
         {users.map((user) => {
-          const isCurrentUser = profile?.id === user.id;
+          const isCurrentUser = activeProfile?.id === user.id;
           const medal = getMedal(user.position);
           
           return (

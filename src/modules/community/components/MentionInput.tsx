@@ -10,17 +10,11 @@ import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import { logger } from "@/shared/utils/logger";
 import { profileService } from "@/core/profiles/services";
-interface Profile {
-  id: string;
-  name: string;
-  avatar_url?: string;
-  neighborhood?: string;
-  user_type?: string;
-}
+import type { MentionableProfileView } from "@/core/profiles/views/MentionableProfileView";
 
 interface MentionInputProps {
-  onMentionSelect: (profile: Profile) => void;
-  selectedMentions: Profile[];
+  onMentionSelect: (profile: MentionableProfileView) => void;
+  selectedMentions: MentionableProfileView[];
   onRemoveMention: (profileId: string) => void;
   placeholder?: string;
 }
@@ -32,7 +26,7 @@ export function MentionInput({
   placeholder = "Buscar pessoa para mencionar...",
 }: MentionInputProps) {
   const [searchQuery, setSearchQuery] = useState("");
-  const [searchResults, setSearchResults] = useState<Profile[]>([]);
+  const [searchResults, setSearchResults] = useState<MentionableProfileView[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [showResults, setShowResults] = useState(false);
   const searchRef = useRef<HTMLDivElement>(null);
@@ -61,10 +55,19 @@ export function MentionInput({
       setIsSearching(true);
       try {
         // ✅ SSOT - Buscar perfis por nome usando ProfileService
-        const profiles = await profileService.searchProfilesByName(
+        const rawProfiles = await profileService.searchProfilesByName(
           searchQuery,
           10,
         );
+
+        // Mapear para MentionableProfileView (camelCase, sem shape legado)
+        const profiles: MentionableProfileView[] = rawProfiles.map((p: any) => ({
+          id: p.id,
+          displayName: p.display_name ?? p.name,
+          avatarUrl: p.avatar_url ?? null,
+          neighborhood: p.neighborhood ?? null,
+          profileType: p.profile_type ?? null,
+        }));
 
         // Filtrar perfis já mencionados
         const filtered = profiles.filter(
@@ -83,7 +86,7 @@ export function MentionInput({
     return () => clearTimeout(debounce);
   }, [searchQuery, selectedMentions]);
 
-  const handleSelectProfile = (profile: Profile) => {
+  const handleSelectProfile = (profile: MentionableProfileView) => {
     onMentionSelect(profile);
     setSearchQuery("");
     setSearchResults([]);
@@ -110,13 +113,13 @@ export function MentionInput({
               className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-teal-500/10 border border-teal-500/20"
             >
               <Avatar className="w-5 h-5">
-                <AvatarImage src={profile.avatar_url} />
+                <AvatarImage src={profile.avatarUrl ?? undefined} />
                 <AvatarFallback className="text-[10px] bg-teal-500 text-white">
-                  {getInitials(profile.name)}
+                  {getInitials(profile.displayName)}
                 </AvatarFallback>
               </Avatar>
               <span className="text-xs font-medium text-teal-400">
-                {profile.name}
+                {profile.displayName}
               </span>
               <button
                 onClick={() => onRemoveMention(profile.id)}
@@ -153,14 +156,14 @@ export function MentionInput({
                 className="w-full flex items-center gap-3 px-4 py-3 hover:bg-white/5 transition-colors text-left"
               >
                 <Avatar className="w-8 h-8">
-                  <AvatarImage src={profile.avatar_url} />
+                  <AvatarImage src={profile.avatarUrl ?? undefined} />
                   <AvatarFallback className="text-xs bg-gradient-to-br from-teal-400 to-cyan-400 text-white">
-                    {getInitials(profile.name)}
+                    {getInitials(profile.displayName)}
                   </AvatarFallback>
                 </Avatar>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium text-white truncate">
-                    {profile.name}
+                    {profile.displayName}
                   </p>
                   {profile.neighborhood && (
                     <p className="text-xs text-gray-400 truncate">
@@ -168,7 +171,7 @@ export function MentionInput({
                     </p>
                   )}
                 </div>
-                {profile.user_type === "business" && (
+                {profile.profileType === "business" && (
                   <span className="text-[10px] px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/20">
                     Empresa
                   </span>

@@ -2,10 +2,9 @@
  * PostService Types - SSOT Territorial
  *
  * Tipos TypeScript para o serviço de posts.
- * Campos legados (city, neighborhood, street, texto, autor_id) removidos no cleanup pós-Sprint 2.
  */
 
-import type { Profile } from "@/core/profiles/services/types";
+import type { ProfileSummary } from "@/core/profiles/views/ProfileSummary";
 
 export type PostType =
   | "texto"
@@ -33,7 +32,7 @@ export interface Post {
   updated_at: string;
 
   // Relacionamentos
-  profile?: Profile;
+  profile?: ProfileSummary;
 }
 
 export interface FeedParams {

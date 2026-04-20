@@ -15,7 +15,7 @@ import {
 } from "@/shared/components/ui/avatar";
 import { Badge } from "@/shared/components/ui/badge";
 import { useCommunityProfile } from "@/core/community/hooks/useCommunityProfile";
-import { useProfile } from "@/core/profiles/hooks/useProfile";
+import { useSessionContext } from "@/core/session";
 import { AuthService } from "@/core/auth";
 
 interface UserProfileDropdownProps {
@@ -23,7 +23,7 @@ interface UserProfileDropdownProps {
 }
 
 export function UserProfileDropdown({ onLogout }: UserProfileDropdownProps) {
-  const { profile } = useProfile();
+  const { activeProfile } = useSessionContext();
   const {
     profile: communityProfile,
     stats,
@@ -52,9 +52,9 @@ export function UserProfileDropdown({ onLogout }: UserProfileDropdownProps) {
       <DropdownMenuTrigger asChild>
         <button className="group focus:outline-none">
           <Avatar className="w-9 h-9 ring-2 ring-primary/30 hover:ring-primary transition-all cursor-pointer">
-            <AvatarImage src={profile?.avatar_url} alt={profile?.name} />
+            <AvatarImage src={activeProfile?.avatarUrl} alt={activeProfile?.displayName} />
             <AvatarFallback className="bg-primary text-primary-foreground font-semibold text-xs">
-              {getInitials(profile?.name)}
+              {getInitials(activeProfile?.displayName)}
             </AvatarFallback>
           </Avatar>
         </button>
@@ -64,14 +64,14 @@ export function UserProfileDropdown({ onLogout }: UserProfileDropdownProps) {
         <DropdownMenuLabel className="font-normal">
           <div className="flex items-start gap-3 py-2">
             <Avatar className="w-12 h-12">
-              <AvatarImage src={profile?.avatar_url} alt={profile?.name} />
+              <AvatarImage src={activeProfile?.avatarUrl} alt={activeProfile?.displayName} />
               <AvatarFallback className="bg-primary text-primary-foreground">
-                {getInitials(profile?.name)}
+                {getInitials(activeProfile?.displayName)}
               </AvatarFallback>
             </Avatar>
 
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-semibold truncate">{profile?.name}</p>
+              <p className="text-sm font-semibold truncate">{activeProfile?.displayName}</p>
               <p className="text-xs text-muted-foreground truncate">
                 {communityProfile?.city}, {communityProfile?.neighborhood}
               </p>

@@ -1,5 +1,5 @@
 // Barrel export for profiles hooks
-export * from "./useProfile";
+// useProfile foi removido na Fase 4 — use useSessionContext de @/core/session
 export * from "./useProfiles";
 export * from "./useActiveProfile";
 export * from "./useProfileMembers";

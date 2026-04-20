@@ -356,12 +356,7 @@ class AdminCommunityIssuesServiceClass {
         .eq('id', issueId)
         .single();
 
-      const auditData: {
-        issue_id: string;
-        action: string;
-        actor_id: string;
-        metadata?: any;
-      } = {
+      const auditData = {
         issue_id: issueId,
         action: 'status_change',
         actor_id: user.id,
@@ -374,7 +369,7 @@ class AdminCommunityIssuesServiceClass {
 
       const { error: auditError } = await (supabase as unknown as AdminSupabaseClient)
         .from(this.AUDIT_TABLE)
-        .insert([auditData]);
+        .insert([auditData] as any);
 
       if (auditError) throw auditError;
 
@@ -405,19 +400,14 @@ class AdminCommunityIssuesServiceClass {
       if (error) throw error;
 
       // Audit log
-      const auditData: {
-        issue_id: string;
-        action: string;
-        actor_id: string;
-        metadata?: any;
-      } = {
+      const auditData = {
         issue_id: issueId,
         action: 'updated',
         actor_id: user.id,
         metadata: { priority },
       };
 
-      await supabase.from(this.AUDIT_TABLE).insert([auditData]);
+      await (supabase as any).from(this.AUDIT_TABLE).insert([auditData]);
 
       logger.info('AdminCommunityIssuesService.updatePriority', { issueId, priority });
       return true;
@@ -447,19 +437,14 @@ class AdminCommunityIssuesServiceClass {
       if (error) throw error;
 
       // Audit log
-      const auditData: {
-        issue_id: string;
-        action: string;
-        actor_id: string;
-        metadata?: any;
-      } = {
+      const auditData = {
         issue_id: issueId,
         action: 'removed',
         actor_id: user.id,
         metadata: { reason },
       };
 
-      await supabase.from(this.AUDIT_TABLE).insert([auditData]);
+      await (supabase as any).from(this.AUDIT_TABLE).insert([auditData]);
 
       logger.info('AdminCommunityIssuesService.removeIssue', { issueId, reason });
       return true;
@@ -488,10 +473,10 @@ class AdminCommunityIssuesServiceClass {
       if (error) throw error;
 
       // Audit log
-      await supabase.from(this.AUDIT_TABLE).insert({
+      await (supabase as any).from(this.AUDIT_TABLE).insert({
         issue_id: issueId,
         actor_id: user.id,
-        action_type: 'reviewed_cleared',
+        action: 'reviewed_cleared',
         metadata: { cleared_at: new Date().toISOString() },
       });
 

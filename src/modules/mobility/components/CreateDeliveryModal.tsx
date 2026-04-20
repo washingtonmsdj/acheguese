@@ -44,10 +44,8 @@ import { logger } from "@/shared/utils/logger";
 import type { CreateDeliveryData } from "../hooks/useDelivery";
 import { useDelivery } from "../hooks/useDelivery";
 import { useLocationContext } from "@/core/location";
-import { supabase } from "@/integrations/supabase";
 import type { SourceType, PackageSize } from "../constants";
-
-const supabaseAny = supabase as any;
+import { MotoboySourceResolverService } from "../services/MotoboySourceResolverService";
 
 interface PickupPoint {
   addressId?: string;
@@ -110,6 +108,7 @@ function extractCoordsFromMetadata(metadata: Record<string, unknown> | null | un
 
   return { lat, lng };
 }
+
 
 export function CreateDeliveryModal({
   open,
@@ -198,21 +197,22 @@ export function CreateDeliveryModal({
       let pickupLabel = businessName?.trim() || "";
 
       if (sourceId) {
-        const { data: sourceProfile, error: sourceError } = await supabaseAny
-          .from("profiles")
-          .select("id, name, city, neighborhood, location_id")
-          .eq("id", sourceId)
-          .maybeSingle();
-
-        if (sourceError) {
-          logger.warn("CreateDeliveryModal.resolvePickupPoint.profile", sourceError);
-        }
+        const sourceProfile = await MotoboySourceResolverService.getProfileSummaryById(sourceId);
 
         if (sourceProfile) {
           locationId = sourceProfile.location_id || locationId;
           if (!pickupLabel) {
             const parts = [sourceProfile.name, sourceProfile.neighborhood, sourceProfile.city].filter(Boolean);
             pickupLabel = parts.join(" - ");
+          }
+        } else {
+          const sourceBusiness = await MotoboySourceResolverService.getBusinessDataFromSource(sourceId);
+          if (sourceBusiness) {
+            locationId = sourceBusiness.location_id || locationId;
+            if (!pickupLabel) {
+              const parts = [sourceBusiness.business_name, sourceBusiness.business_city].filter(Boolean);
+              pickupLabel = parts.join(" - ");
+            }
           }
         }
       }
@@ -222,15 +222,7 @@ export function CreateDeliveryModal({
         return;
       }
 
-      const { data: locationData, error: locationError } = await supabaseAny
-        .from("locations")
-        .select("id, name, full_name, metadata")
-        .eq("id", locationId)
-        .maybeSingle();
-
-      if (locationError) {
-        logger.warn("CreateDeliveryModal.resolvePickupPoint.location", locationError);
-      }
+      const locationData = await MotoboySourceResolverService.getLocationSummaryById(locationId);
 
       let lat: number | null = null;
       let lng: number | null = null;

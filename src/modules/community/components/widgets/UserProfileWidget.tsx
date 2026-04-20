@@ -5,7 +5,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/shared/components/ui/avat
 import { Badge } from "@/shared/components/ui/badge";
 import { Progress } from "@/shared/components/ui/progress";
 import { TrendingUp } from "lucide-react";
-import { useProfile } from "@/core/profiles/hooks/useProfile";
+import { useSessionContext } from "@/core/session";
 import { WidgetSkeleton } from "./WidgetSkeleton";
 
 /**
@@ -13,13 +13,13 @@ import { WidgetSkeleton } from "./WidgetSkeleton";
  * Mostra avatar, nome, nível, pontos e progresso
  */
 export const UserProfileWidget = memo(() => {
-  const { profile, loading } = useProfile();
+  const { activeProfile, isLoading } = useSessionContext();
 
-  if (loading) {
+  if (isLoading) {
     return <WidgetSkeleton variant="profile" hasHeader={false} />;
   }
 
-  if (!profile) return null;
+  if (!activeProfile) return null;
 
   const getInitials = (name?: string | null): string => {
     if (!name) return "U";
@@ -32,7 +32,7 @@ export const UserProfileWidget = memo(() => {
   };
 
   // Cálculo de nível e progresso (exemplo)
-  const points = profile.pontos || 0;
+  const points = 0; // pontos não existe em SessionProfileView (campo legado de gamificação ainda não migrado)
   const level = Math.floor(points / 100) + 1;
   const pointsInLevel = points % 100;
   const progressPercent = pointsInLevel;
@@ -46,9 +46,9 @@ export const UserProfileWidget = memo(() => {
         {/* Avatar com Badge de Nível */}
         <div className="relative flex-shrink-0">
           <Avatar className="h-11 w-11 ring-2 ring-primary/20 group-hover:ring-primary/40 transition-all">
-            <AvatarImage src={profile.avatar_url || undefined} />
+            <AvatarImage src={activeProfile.avatarUrl || undefined} />
             <AvatarFallback className="bg-primary/10 text-primary font-semibold text-sm">
-              {getInitials(profile.name)}
+              {getInitials(activeProfile.displayName)}
             </AvatarFallback>
           </Avatar>
           <Badge 
@@ -62,7 +62,7 @@ export const UserProfileWidget = memo(() => {
         {/* Info do Usuário */}
         <div className="flex-1 min-w-0">
           <h3 className="text-sm font-semibold text-foreground truncate group-hover:text-primary transition-colors leading-tight">
-            {profile.name || "Usuário"}
+            {activeProfile.displayName || "Usuário"}
           </h3>
           <div className="flex items-center gap-1 mt-1">
             <TrendingUp className="h-3 w-3 text-primary flex-shrink-0" />

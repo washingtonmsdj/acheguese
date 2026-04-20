@@ -1,0 +1,67 @@
+project_name: acheguese
+project_type: frontend
+framework: React 18 + TypeScript + Vite
+ui_library: TailwindCSS + Radix UI + Shadcn/ui
+backend: Supabase (PostgreSQL + Auth + Storage + Edge Functions)
+maps: MapLibre GL
+state_management: Zustand + TanStack Query
+routing: React Router DOM v6
+forms: React Hook Form + Zod
+testing: Vitest + Playwright
+deployment: Vercel
+
+description: >
+  Achegue-se is a local services marketplace platform focused on gastronomy,
+  mobility, classifieds, and professional services. It is a modular web app
+  built with React 18, TypeScript, and Supabase as the backend.
+
+modules:
+  - name: Gastronomy
+    description: Digital menus, reviews, favorites for restaurants
+    status: 100%
+  - name: Mobility
+    description: Ride and delivery requests (driver/passenger flow)
+    status: 90%
+  - name: Classifieds
+    description: Local categorized ads
+    status: 100%
+  - name: Professionals
+    description: Professional profiles and services
+    status: 95%
+  - name: Business
+    description: Commercial establishment management
+    status: 95%
+
+auth:
+  provider: Supabase Auth
+  methods: email/password, Google OAuth (optional)
+  roles: user, admin, driver, business_owner
+
+key_pages:
+  - /login
+  - /register
+  - /home
+  - /gastronomy
+  - /mobility
+  - /classifieds
+  - /professionals
+  - /business
+  - /profile
+  - /admin
+
+tech_stack:
+  - React 18
+  - TypeScript 5
+  - Vite 5
+  - TailwindCSS 3
+  - Radix UI
+  - Supabase JS v2
+  - React Router DOM v6
+  - React Hook Form v7
+  - Zod v3
+  - TanStack Query v5
+  - Zustand v5
+  - MapLibre GL v5
+  - Framer Motion v12
+  - Recharts v2
+  - Sonner (toasts)

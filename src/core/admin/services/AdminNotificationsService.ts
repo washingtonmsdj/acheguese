@@ -100,7 +100,7 @@ async function loadProfilesByUserId(userIds: string[]): Promise<Map<string, Admi
 
 class AdminNotificationsService {
   private readonly TABLE = "notifications";
-  private readonly SETTINGS_TABLE = "user_notification_settings";
+  private readonly SETTINGS_TABLE = "notification_preferences";
 
   async getStats(): Promise<AdminNotificationStats> {
     try {
@@ -200,7 +200,7 @@ class AdminNotificationsService {
       const { data, error } = await supabase
         .from(this.SETTINGS_TABLE)
         .select(
-          "user_id, email_notifications, push_notifications, weekly_digest, new_messages, community_updates, business_updates",
+          "user_id, email_enabled, push_enabled, inapp_enabled, social_enabled, system_enabled, transactional_enabled",
         );
 
       if (error) throw error;
@@ -209,12 +209,12 @@ class AdminNotificationsService {
 
       return {
         totalUsersWithSettings: rows.length,
-        emailEnabled: rows.filter((item) => item.email_notifications !== false).length,
-        pushEnabled: rows.filter((item) => item.push_notifications !== false).length,
-        weeklyDigestEnabled: rows.filter((item) => item.weekly_digest !== false).length,
-        newMessagesEnabled: rows.filter((item) => item.new_messages !== false).length,
-        communityUpdatesEnabled: rows.filter((item) => item.community_updates !== false).length,
-        businessUpdatesEnabled: rows.filter((item) => item.business_updates !== false).length,
+        emailEnabled: rows.filter((item) => item.email_enabled !== false).length,
+        pushEnabled: rows.filter((item) => item.push_enabled !== false).length,
+        weeklyDigestEnabled: rows.filter((item) => item.transactional_enabled !== false).length,
+        newMessagesEnabled: rows.filter((item) => item.inapp_enabled !== false).length,
+        communityUpdatesEnabled: rows.filter((item) => item.social_enabled !== false).length,
+        businessUpdatesEnabled: rows.filter((item) => item.system_enabled !== false).length,
       };
     } catch (error) {
       logger.error("AdminNotificationsService.getSettingsStats", error);

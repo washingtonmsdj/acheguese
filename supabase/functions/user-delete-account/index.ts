@@ -31,7 +31,7 @@ interface DeleteRequest {
   export_first?: boolean; // If true, export data before deletion
 }
 
-serve(async (req) => {
+serve(async (req: Request) => {
   // Handle CORS preflight
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
@@ -384,3 +384,4 @@ serve(async (req) => {
     return errorResponse('Deletion failed', 500, error);
   }
 });
+

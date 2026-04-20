@@ -13,20 +13,16 @@ import { toast } from 'sonner';
 import { useAuth } from '@/core/auth/hooks/useAuth';
 import { useAppUrls } from '@/core/routing/hooks/useAppUrls';
 import { getAuthErrorMessage } from '@/core/auth/utils/authMessages';
-import { validateAuthPassword } from '@/core/auth/utils/passwordPolicy';
 import { ChangePasswordForm } from '@/modules/profile/components/ChangePasswordForm';
 import { Button } from '@/shared/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/components/ui/card';
 import { Separator } from '@/shared/components/ui/separator';
+import type { UpdatePasswordInput } from '@/shared/validation/schemas/user.schema';
 
 export default function PerfilContaPage() {
   const navigate = useNavigate();
   const appUrls = useAppUrls();
   const { user, updatePassword, resetPassword } = useAuth();
-  const [newPassword, setNewPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
-  const [savingPassword, setSavingPassword] = useState(false);
   const [sendingReset, setSendingReset] = useState(false);
   const [resetSent, setResetSent] = useState(false);
 
@@ -34,30 +30,13 @@ export default function PerfilContaPage() {
     return <Navigate to={appUrls.auth.login} replace />;
   }
 
-  const handleChangePassword = async () => {
-    const passwordError = validateAuthPassword(newPassword);
-
-    if (passwordError) {
-      toast.error(passwordError);
-      return;
-    }
-
-    if (newPassword !== confirmPassword) {
-      toast.error('As senhas nao coincidem');
-      return;
-    }
-
-    setSavingPassword(true);
-
+  const handleChangePassword = async (data: UpdatePasswordInput) => {
     try {
-      await updatePassword(newPassword);
+      await updatePassword(data.newPassword);
       toast.success('Senha alterada com sucesso');
-      setNewPassword('');
-      setConfirmPassword('');
     } catch (error) {
       toast.error(getAuthErrorMessage(error, 'Erro ao alterar senha'));
-    } finally {
-      setSavingPassword(false);
+      throw error; // Re-throw para que ChangePasswordForm não chame reset()
     }
   };
 
@@ -73,12 +52,6 @@ export default function PerfilContaPage() {
     } finally {
       setSendingReset(false);
     }
-  };
-
-  const handleCancelPasswordEdit = () => {
-    setNewPassword('');
-    setConfirmPassword('');
-    setShowPassword(false);
   };
 
   return (
@@ -112,31 +85,25 @@ export default function PerfilContaPage() {
         <Separator />
 
         <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="text-sm flex items-center gap-2">
-            <Mail className="h-4 w-4" />
-            Email de login
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-sm font-medium">{user.email}</p>
-          <p className="text-xs text-muted-foreground mt-1">
-            Este e o email usado para acessar sua conta. Para altera-lo, entre em
-            contato com o suporte.
-          </p>
-        </CardContent>
-      </Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm flex items-center gap-2">
+              <Mail className="h-4 w-4" />
+              Email de login
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm font-medium">{user.email}</p>
+            <p className="text-xs text-muted-foreground mt-1">
+              Este e o email usado para acessar sua conta. Para altera-lo, entre em
+              contato com o suporte.
+            </p>
+          </CardContent>
+        </Card>
 
+        {/* ChangePasswordForm agora gerencia seu próprio estado interno via RHF */}
         <ChangePasswordForm
-          newPassword={newPassword}
-          confirmPassword={confirmPassword}
-          showPassword={showPassword}
-          loading={savingPassword}
-          onNewPasswordChange={setNewPassword}
-          onConfirmPasswordChange={setConfirmPassword}
-          onToggleShow={() => setShowPassword((current) => !current)}
           onSave={handleChangePassword}
-          onCancel={handleCancelPasswordEdit}
+          onCancel={() => {/* estado interno ao componente */}}
         />
 
         <Card>

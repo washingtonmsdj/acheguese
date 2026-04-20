@@ -12,7 +12,6 @@ import {
   BarChart3,
   Zap,
 } from "lucide-react";
-import type { Profile } from "@/core/profiles/services/types";
 import {
   getNivel,
   getProgresso,
@@ -20,8 +19,24 @@ import {
 } from "@/core/gamification/data/gamification";
 import { cn } from "@/shared/utils/cn";
 
+/**
+ * GamificationProfileView — Shape mínimo para exibição de gamificação
+ *
+ * Não usa LegacyProfile completo — apenas os campos necessários.
+ * Quando pontos/badges forem migrados para domain/Profile, este tipo
+ * será atualizado para usar Profile diretamente.
+ */
+interface GamificationProfileView {
+  /** Pontos de gamificação (campo legado — mapeado de `reputation` ou `pontos`) */
+  pontos?: number;
+  /** Badges conquistados (campo legado) */
+  badges?: string[];
+  /** Data de criação (para exibir "membro desde") */
+  created_at: string;
+}
+
 interface GamificationCardProps {
-  profile: Profile;
+  profile: GamificationProfileView;
   onViewRanking: () => void;
 }
 

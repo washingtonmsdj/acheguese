@@ -6,7 +6,7 @@ import type {
   ProfileLikeActivityRecord,
   ProfilePollVoteActivityRecord,
   ProfileSaveActivityRecord,
-} from "@/core/profiles/services/types";
+} from "@/core/profiles/views/ProfileActivityRecords";
 import type {
   ActivityFilters,
   ActivityItem,

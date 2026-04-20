@@ -8,14 +8,14 @@ import { Badge } from '@/shared/components/ui/badge';
 import { SectionFrame } from './SectionFrame';
 import { getProfileTypeLabel } from '@/modules/profile/utils/profileDomainRules';
 
-import type { Profile } from '@/core/profiles/services/multi-profile/types';
-import type { ProfileAccountSnapshot } from '@/core/profiles/services/types';
+import type { MultiProfileRecord } from '@/core/profiles/services/multi-profile/types';
+import type { ProfileAccountSnapshot } from '@/core/profiles/views/ProfileAccountSnapshot';
 
 interface AccountHealthPanelProps {
   accountSnapshot: ProfileAccountSnapshot;
   identity: any;
   context: any;
-  activeProfile: Profile | null;
+  activeProfile: MultiProfileRecord | null;
   roles: string[];
 }
 

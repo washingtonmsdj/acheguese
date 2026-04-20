@@ -9,7 +9,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { profileService } from "@/core/profiles/services";
-import type { ProfileContext } from "@/core/profiles/services/types";
+import type { ProfileContext } from "@/core/profiles/views/ProfileContext";
 import {
   toCanonicalProfile,
   toCanonicalProfiles,

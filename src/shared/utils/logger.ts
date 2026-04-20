@@ -12,7 +12,17 @@ import {
   captureSentryMessage,
   addSentryBreadcrumb,
 } from "@/shared/config/sentry.config";
-import { supabase } from "@/integrations/supabase/client";
+
+// Lazy import to avoid circular dependency: logger ← supabase ← cookieStorage ← logger
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let _supabase: any = null;
+async function getSupabase() {
+  if (!_supabase) {
+    const mod = await import("@/integrations/supabase/client");
+    _supabase = mod.supabase;
+  }
+  return _supabase;
+}
 
 export enum LogLevel {
   DEBUG = 0,
@@ -274,6 +284,7 @@ class Logger {
         session_id: this.getSessionId(),
       }));
 
+      const supabase = await getSupabase();
       const { error } = await supabase
         .from('application_logs')
         .insert(records);

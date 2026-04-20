@@ -1,0 +1,401 @@
+/**
+ * VALIDATION UTILITIES — Edge Functions
+ *
+ * Validação de input centralizada para todas as edge functions.
+ * Substitui validações ad-hoc espalhadas por cada função.
+ *
+ * NOTA: Deno não suporta Zod diretamente via esm.sh em todas as versões.
+ * Esta implementação usa validação manual tipada e robusta, compatível
+ * com o ambiente Deno das edge functions.
+ *
+ * Padrão de uso:
+ *   const result = validateBody<MyRequest>(body, mySchema);
+ *   if (!result.ok) return badRequest(result.errors);
+ */
+
+// ─────────────────────────────────────────────────────────────────────────────
+// TIPOS BASE
+// ─────────────────────────────────────────────────────────────────────────────
+
+export type FieldValidator = (value: unknown) => string | null; // null = válido
+
+export interface FieldSchema {
+  required?: boolean;
+  validator: FieldValidator;
+}
+
+export type Schema<T> = {
+  [K in keyof T]: FieldSchema;
+};
+
+export interface ValidationResult<T> {
+  ok: boolean;
+  data?: T;
+  errors: Record<string, string>;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// ENGINE DE VALIDAÇÃO
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Valida um objeto contra um schema de campos.
+ * Retorna { ok, data, errors }.
+ *
+ * O tipo T não precisa satisfazer Record<string, unknown> — o schema
+ * valida a estrutura em runtime. O cast final é seguro porque todos
+ * os campos foram validados.
+ */
+export function validateBody<T>(
+  body: unknown,
+  schema: Schema<T>,
+): ValidationResult<T> {
+  if (typeof body !== "object" || body === null || Array.isArray(body)) {
+    return { ok: false, errors: { _root: "Body must be a JSON object" } };
+  }
+
+  const obj = body as Record<string, unknown>;
+  const errors: Record<string, string> = {};
+
+  for (const [field, def] of Object.entries(schema) as [string, FieldSchema][]) {
+    const value = obj[field];
+    const missing = value === undefined || value === null || value === "";
+
+    if (def.required && missing) {
+      errors[field] = `Field '${field}' is required`;
+      continue;
+    }
+
+    if (!missing) {
+      const error = def.validator(value);
+      if (error) errors[field] = error;
+    }
+  }
+
+  if (Object.keys(errors).length > 0) {
+    return { ok: false, errors };
+  }
+
+  return { ok: true, data: obj as T, errors: {} };
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// VALIDATORS REUTILIZÁVEIS
+// ─────────────────────────────────────────────────────────────────────────────
+
+const UUID_REGEX =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const SLUG_REGEX = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+
+export const v = {
+  /** UUID v4 */
+  uuid(): FieldValidator {
+    return (val) =>
+      typeof val === "string" && UUID_REGEX.test(val)
+        ? null
+        : "Must be a valid UUID";
+  },
+
+  /** Email */
+  email(): FieldValidator {
+    return (val) =>
+      typeof val === "string" && EMAIL_REGEX.test(val) && val.length <= 254
+        ? null
+        : "Must be a valid email address";
+  },
+
+  /** String com tamanho mínimo/máximo */
+  string(min = 1, max = 1000): FieldValidator {
+    return (val) => {
+      if (typeof val !== "string") return "Must be a string";
+      if (val.trim().length < min) return `Must be at least ${min} character(s)`;
+      if (val.length > max) return `Must be at most ${max} character(s)`;
+      return null;
+    };
+  },
+
+  /** String de enum */
+  enum<T extends string>(values: readonly T[]): FieldValidator {
+    return (val) =>
+      typeof val === "string" && (values as readonly string[]).includes(val)
+        ? null
+        : `Must be one of: ${values.join(", ")}`;
+  },
+
+  /** Inteiro positivo */
+  positiveInt(max?: number): FieldValidator {
+    return (val) => {
+      if (typeof val !== "number" || !Number.isInteger(val) || val < 0) {
+        return "Must be a non-negative integer";
+      }
+      if (max !== undefined && val > max) return `Must be at most ${max}`;
+      return null;
+    };
+  },
+
+  /** Booleano */
+  boolean(): FieldValidator {
+    return (val) =>
+      typeof val === "boolean" ? null : "Must be a boolean";
+  },
+
+  /** URL válida */
+  url(): FieldValidator {
+    return (val) => {
+      if (typeof val !== "string") return "Must be a string";
+      try {
+        new URL(val);
+        return null;
+      } catch {
+        return "Must be a valid URL";
+      }
+    };
+  },
+
+  /** Slug (lowercase, hifens) */
+  slug(): FieldValidator {
+    return (val) =>
+      typeof val === "string" && SLUG_REGEX.test(val)
+        ? null
+        : "Must be a valid slug (lowercase letters, numbers, hyphens)";
+  },
+
+  /** Senha com força mínima */
+  password(minLength = 12): FieldValidator {
+    return (val) => {
+      if (typeof val !== "string") return "Must be a string";
+      if (val.length < minLength) return `Must be at least ${minLength} characters`;
+      return null;
+    };
+  },
+
+  /** Username alfanumérico + underscore */
+  username(): FieldValidator {
+    return (val) => {
+      if (typeof val !== "string") return "Must be a string";
+      if (!/^[a-zA-Z0-9_]{3,30}$/.test(val)) {
+        return "Must be 3-30 characters: letters, numbers, underscores only";
+      }
+      return null;
+    };
+  },
+
+  /** ISO 8601 date string */
+  isoDate(): FieldValidator {
+    return (val) => {
+      if (typeof val !== "string") return "Must be a string";
+      const d = new Date(val);
+      return isNaN(d.getTime()) ? "Must be a valid ISO 8601 date" : null;
+    };
+  },
+
+  /** Objeto não-nulo */
+  object(): FieldValidator {
+    return (val) =>
+      typeof val === "object" && val !== null && !Array.isArray(val)
+        ? null
+        : "Must be an object";
+  },
+
+  /** Array não-vazio */
+  array(minItems = 0): FieldValidator {
+    return (val) => {
+      if (!Array.isArray(val)) return "Must be an array";
+      if (val.length < minItems) return `Must have at least ${minItems} item(s)`;
+      return null;
+    };
+  },
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SCHEMAS CANÔNICOS (reutilizados por múltiplas edge functions)
+// ─────────────────────────────────────────────────────────────────────────────
+
+/** Schema para criação de usuário admin */
+export interface CreateUserBody {
+  email: string;
+  password: string;
+  username: string;
+  fullName: string;
+  role: "user" | "business" | "driver" | "moderator" | "admin" | "super_admin";
+}
+
+export const createUserSchema: Schema<CreateUserBody> = {
+  email: { required: true, validator: v.email() },
+  password: { required: true, validator: v.password(12) },
+  username: { required: true, validator: v.username() },
+  fullName: { required: true, validator: v.string(2, 100) },
+  role: {
+    required: true,
+    validator: v.enum(["user", "business", "driver", "moderator", "admin", "super_admin"] as const),
+  },
+};
+
+/** Schema para busca de usuário por ID */
+export interface GetUserBody {
+  userId: string;
+}
+
+export const getUserSchema: Schema<GetUserBody> = {
+  userId: { required: true, validator: v.uuid() },
+};
+
+/** Schema para listagem de usuários */
+export interface ListUsersBody {
+  page: number;
+  pageSize: number;
+  search?: string;
+}
+
+export const listUsersSchema: Schema<ListUsersBody> = {
+  page: { required: true, validator: v.positiveInt(10000) },
+  pageSize: { required: true, validator: v.positiveInt(100) },
+  search: { required: false, validator: v.string(1, 100) },
+};
+
+/** Schema para checkout de billing */
+export interface CreateCheckoutBody {
+  planCode: string;
+  successUrl: string;
+  cancelUrl: string;
+}
+
+export const createCheckoutSchema: Schema<CreateCheckoutBody> = {
+  planCode: { required: true, validator: v.string(1, 50) },
+  successUrl: { required: true, validator: v.url() },
+  cancelUrl: { required: true, validator: v.url() },
+};
+
+/** Schema para portal de billing */
+export interface CreatePortalBody {
+  returnUrl: string;
+}
+
+export const createPortalSchema: Schema<CreatePortalBody> = {
+  returnUrl: { required: true, validator: v.url() },
+};
+
+/** Schema para envio de email */
+export interface SendEmailBody {
+  to: string;
+  subject: string;
+  html: string;
+  text?: string;
+  userId?: string;
+  category?: "transactional" | "social" | "system" | "marketing";
+}
+
+export const sendEmailSchema: Schema<SendEmailBody> = {
+  to: { required: true, validator: v.email() },
+  subject: { required: true, validator: v.string(1, 200) },
+  html: { required: true, validator: v.string(1, 100000) },
+  text: { required: false, validator: v.string(1, 100000) },
+  userId: { required: false, validator: v.uuid() },
+  category: {
+    required: false,
+    validator: v.enum(["transactional", "social", "system", "marketing"] as const),
+  },
+};
+
+/** Schema para envio de push */
+export interface SendPushBody {
+  userId: string;
+  notification: {
+    title: string;
+    body: string;
+    icon?: string;
+    badge?: string;
+    image?: string;
+    data?: Record<string, unknown>;
+    tag?: string;
+    requireInteraction?: boolean;
+  };
+}
+
+export const sendPushSchema: Schema<SendPushBody> = {
+  userId: { required: true, validator: v.uuid() },
+  notification: { required: true, validator: v.object() },
+};
+
+/** Schema para dispatch de corrida */
+export interface DispatchRideBody {
+  rideId: string;
+}
+
+export const dispatchRideSchema: Schema<DispatchRideBody> = {
+  rideId: { required: true, validator: v.uuid() },
+};
+
+/** Schema para operações de gastronomia (base — só businessId) */
+export interface GastronomyBusinessBody {
+  businessId: string;
+}
+
+export const gastronomyBusinessSchema: Schema<GastronomyBusinessBody> = {
+  businessId: { required: true, validator: v.uuid() },
+};
+
+/** Schema para upgrade/downgrade de plano de gastronomia */
+export interface GastronomyUpgradeBody {
+  businessId: string;
+  newPlanTier: 'pro' | 'delivery';
+  prorationBehavior?: 'create_prorations' | 'always_invoice' | 'none';
+}
+
+export const gastronomyUpgradeSchema: Schema<GastronomyUpgradeBody> = {
+  businessId: { required: true, validator: v.uuid() },
+  newPlanTier: {
+    required: true,
+    validator: v.enum(['pro', 'delivery'] as const),
+  },
+  prorationBehavior: {
+    required: false,
+    validator: v.enum(['create_prorations', 'always_invoice', 'none'] as const),
+  },
+};
+
+/** Schema para adicionar método de pagamento */
+export interface GastronomyAddPaymentBody {
+  businessId: string;
+  paymentMethodId: string;
+}
+
+export const gastronomyAddPaymentSchema: Schema<GastronomyAddPaymentBody> = {
+  businessId: { required: true, validator: v.uuid() },
+  paymentMethodId: { required: true, validator: v.string(1, 100) },
+};
+
+/** Schema para cancelamento de assinatura */
+export interface GastronomyCancelBody {
+  businessId: string;
+  immediately?: boolean;
+}
+
+export const gastronomyCancelSchema: Schema<GastronomyCancelBody> = {
+  businessId: { required: true, validator: v.uuid() },
+  immediately: { required: false, validator: v.boolean() },
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// HELPERS DE RESPOSTA
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Retorna resposta 400 com erros de validação formatados
+ */
+export function validationErrorResponse(
+  errors: Record<string, string>,
+  corsHeaders: Record<string, string> = {},
+): Response {
+  return new Response(
+    JSON.stringify({
+      error: "Validation failed",
+      details: errors,
+    }),
+    {
+      status: 400,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    },
+  );
+}

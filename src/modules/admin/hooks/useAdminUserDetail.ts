@@ -1,13 +1,17 @@
 /**
- * ✅ SSOT - Hook useAdminUserDetail migrado
- * Usa ProfileService para todos os acessos a dados de perfil
- * Usa AdminUserService para dados auth/admin
+ * SSOT - Hook de detalhe de usuario no admin
+ * - Perfil: ProfileService
+ * - Auth: AdminUserService
+ * - Reports de corrida: ride_reports
+ * - Historico de moderacao de motoristas: driver_moderation_events
  */
 
-import { useState, useEffect } from "react";
-import { logger } from "@/shared/utils/logger";
+import { useEffect, useState } from "react";
 import { profileService } from "@/core/profiles/services/ProfileService";
 import { AdminUserService } from "@/core/admin/services/AdminUserService";
+import { supabase } from "@/integrations/supabase";
+import { logger } from "@/shared/utils/logger";
+import { DriverModerationEventsService } from "@/modules/mobility/services/DriverModerationEventsService";
 
 export interface AdminUserDetail {
   id: string;
@@ -100,13 +104,86 @@ interface UseAdminUserDetailReturn {
   refetch: () => Promise<void>;
 }
 
+type RideReportRow = {
+  id: string;
+  title: string | null;
+  description: string | null;
+  severity: string | null;
+  status: string | null;
+  created_at: string | null;
+  reported_at: string | null;
+  reporter_profile_id: string | null;
+};
+
+const supabaseAny = supabase as any;
+const MISSING_TABLE_ERROR_CODES = new Set(["42P01", "PGRST116", "PGRST205"]);
+
+function isMissingTableError(error: unknown): boolean {
+  if (!error || typeof error !== "object") return false;
+
+  const candidate = error as { code?: string; message?: string; details?: string };
+  if (candidate.code && MISSING_TABLE_ERROR_CODES.has(candidate.code)) return true;
+
+  const text = `${candidate.message ?? ""} ${candidate.details ?? ""}`.toLowerCase();
+  return text.includes("does not exist") || text.includes("relation");
+}
+
+function normalizeSeverity(value: string | null | undefined): UserReport["severity"] {
+  if (value === "low" || value === "medium" || value === "high" || value === "critical") {
+    return value;
+  }
+  return "medium";
+}
+
+function normalizeStatus(value: string | null | undefined): UserReport["status"] {
+  if (value === "under_review") return "investigating";
+  if (value === "pending" || value === "resolved" || value === "dismissed") return value;
+  return "pending";
+}
+
+async function loadReporterNames(profileIds: string[]): Promise<Map<string, string>> {
+  if (profileIds.length === 0) return new Map<string, string>();
+
+  const { data, error } = await supabaseAny
+    .from("profiles")
+    .select("id, name")
+    .in("id", profileIds);
+
+  if (error) {
+    logger.warn("useAdminUserDetail.loadReporterNames", error);
+    return new Map<string, string>();
+  }
+
+  const names = new Map<string, string>();
+  for (const item of (data || []) as Array<{ id: string; name?: string | null }>) {
+    names.set(item.id, item.name || "Usuario");
+  }
+  return names;
+}
+
+function toUserReport(
+  row: RideReportRow,
+  namesByProfileId: Map<string, string>,
+): UserReport {
+  return {
+    id: row.id,
+    title: row.title || "Report",
+    description: row.description || "",
+    severity: normalizeSeverity(row.severity),
+    status: normalizeStatus(row.status),
+    reporter_name:
+      (row.reporter_profile_id && namesByProfileId.get(row.reporter_profile_id)) || "Usuario",
+    created_at: row.reported_at || row.created_at || new Date().toISOString(),
+  };
+}
+
 export function useAdminUserDetail(
   userId: string | null,
 ): UseAdminUserDetailReturn {
   const [user, setUser] = useState<AdminUserDetail | null>(null);
   const [driverData, setDriverData] = useState<DriverDetail | null>(null);
-  const [reportsReceived] = useState<UserReport[]>([]);
-  const [reportsMade] = useState<UserReport[]>([]);
+  const [reportsReceived, setReportsReceived] = useState<UserReport[]>([]);
+  const [reportsMade, setReportsMade] = useState<UserReport[]>([]);
   const [suspensionHistory, setSuspensionHistory] = useState<
     SuspensionHistory[]
   >([]);
@@ -115,6 +192,11 @@ export function useAdminUserDetail(
 
   const fetchUserDetail = async () => {
     if (!userId) {
+      setUser(null);
+      setDriverData(null);
+      setReportsReceived([]);
+      setReportsMade([]);
+      setSuspensionHistory([]);
       setLoading(false);
       return;
     }
@@ -123,11 +205,9 @@ export function useAdminUserDetail(
       setLoading(true);
       setError(null);
 
-      // ✅ SSOT - Buscar profile via ProfileService
       const profileData = await profileService.getProfileById(userId);
       if (!profileData) throw new Error("Profile not found");
 
-      // Auth data (necessário acesso admin - seguro via env secret)
       const adminUser = profileData?.user_id
         ? await AdminUserService.getUserById(profileData.user_id)
         : null;
@@ -156,22 +236,155 @@ export function useAdminUserDetail(
         updated_at: profileData.updated_at,
       });
 
-      // ✅ SSOT - Buscar dados complementares via ProfileService
       const driverResult = await profileService.getDriverData(userId);
-
       if (driverResult) {
         setDriverData(driverResult as DriverDetail);
+      } else {
+        setDriverData(null);
       }
-      // ride_reports não existe no schema — reportsReceived/reportsMade permanecem []
 
-      // Histórico de suspensões
-      if (profileData?.is_suspended) {
+      const selectReportFields =
+        "id, title, description, severity, status, created_at, reported_at, reporter_profile_id";
+
+      const [reportsMadeResult, reportsReceivedAsPassengerResult, reportsReceivedAsDriverResult] =
+        await Promise.all([
+          supabaseAny
+            .from("ride_reports")
+            .select(selectReportFields)
+            .eq("reporter_profile_id", userId)
+            .order("reported_at", { ascending: false }),
+          supabaseAny
+            .from("ride_reports")
+            .select(`${selectReportFields}, ride_requests!inner(passenger_profile_id)`)
+            .eq("ride_requests.passenger_profile_id", userId)
+            .neq("reporter_profile_id", userId)
+            .order("reported_at", { ascending: false }),
+          supabaseAny
+            .from("ride_reports")
+            .select(`${selectReportFields}, ride_requests!inner(driver_profile_id)`)
+            .eq("ride_requests.driver_profile_id", userId)
+            .neq("reporter_profile_id", userId)
+            .order("reported_at", { ascending: false }),
+        ]);
+
+      const reportErrors = [
+        reportsMadeResult.error,
+        reportsReceivedAsPassengerResult.error,
+        reportsReceivedAsDriverResult.error,
+      ].filter(Boolean);
+
+      if (reportErrors.length > 0) {
+        const hasOnlyMissingTableErrors = reportErrors.every((item) =>
+          isMissingTableError(item),
+        );
+
+        if (!hasOnlyMissingTableErrors) {
+          logger.warn("useAdminUserDetail.fetchUserDetail.reports", reportErrors);
+        }
+      }
+
+      const reportsMadeRows = ((reportsMadeResult.data || []) as RideReportRow[]) ?? [];
+      const receivedRowsMap = new Map<string, RideReportRow>();
+
+      for (const row of ((reportsReceivedAsPassengerResult.data || []) as RideReportRow[]) ?? []) {
+        if (row?.id) receivedRowsMap.set(row.id, row);
+      }
+
+      for (const row of ((reportsReceivedAsDriverResult.data || []) as RideReportRow[]) ?? []) {
+        if (row?.id) receivedRowsMap.set(row.id, row);
+      }
+
+      const reportsReceivedRows = Array.from(receivedRowsMap.values());
+
+      const reporterIds = Array.from(
+        new Set(
+          [...reportsMadeRows, ...reportsReceivedRows]
+            .map((report) => report.reporter_profile_id)
+            .filter((id): id is string => typeof id === "string" && id.length > 0),
+        ),
+      );
+      const reporterNames = await loadReporterNames(reporterIds);
+
+      setReportsMade(
+        reportsMadeRows
+          .map((row) => toUserReport(row, reporterNames))
+          .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()),
+      );
+
+      setReportsReceived(
+        reportsReceivedRows
+          .map((row) => toUserReport(row, reporterNames))
+          .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()),
+      );
+
+      const moderationEvents = await DriverModerationEventsService.listByDriverProfile(userId);
+      const moderationTimeline = moderationEvents.filter(
+        (event) => event.action === "suspended" || event.action === "reactivated",
+      );
+
+      if (moderationTimeline.length > 0) {
+        const reactivationEvents = moderationTimeline
+          .filter((event) => event.action === "reactivated")
+          .sort(
+            (a, b) =>
+              new Date(a.created_at).getTime() - new Date(b.created_at).getTime(),
+          );
+
+        const history = moderationTimeline.map((event) => {
+          const nextReactivation = reactivationEvents.find(
+            (reactivation) =>
+              new Date(reactivation.created_at).getTime() >
+              new Date(event.created_at).getTime(),
+          );
+
+          const isSuspensionEvent = event.action === "suspended";
+          const isActiveSuspension =
+            isSuspensionEvent && !nextReactivation && Boolean(profileData?.is_suspended);
+
+          const liftedAt =
+            nextReactivation?.created_at ||
+            (event.action === "reactivated" ? event.created_at : null);
+          const liftedBy =
+            nextReactivation?.admin_profile_id ||
+            (event.action === "reactivated" ? event.admin_profile_id : null);
+
+          return {
+            id: event.id,
+            user_id: userId,
+            reason:
+              event.reason ||
+              (event.action === "reactivated"
+                ? "Suspensao removida"
+                : "Suspensao aplicada"),
+            suspended_at: event.created_at,
+            suspended_until:
+              isActiveSuspension && profileData?.suspended_until
+                ? profileData.suspended_until
+                : "",
+            suspended_by: event.admin_profile_id || "admin",
+            suspended_by_name: event.admin_name || "Administrador",
+            lifted_at: liftedAt,
+            lifted_by: liftedBy,
+            is_active: isActiveSuspension,
+          } satisfies SuspensionHistory;
+        });
+
+        setSuspensionHistory(
+          history.sort(
+            (a, b) =>
+              new Date(b.suspended_at).getTime() - new Date(a.suspended_at).getTime(),
+          ),
+        );
+      } else if (profileData?.is_suspended) {
         setSuspensionHistory([
           {
-            id: "1",
+            id: `${userId}-active-suspension`,
             user_id: userId,
-            reason: "Suspensão ativa",
-            suspended_at: new Date().toISOString(),
+            reason: profileData.suspension_reason || "Suspensao ativa",
+            suspended_at:
+              profileData.suspended_at ||
+              profileData.updated_at ||
+              new Date().toISOString(),
             suspended_until: profileData.suspended_until || "",
             suspended_by: "admin",
             suspended_by_name: "Administrador",
@@ -180,9 +393,11 @@ export function useAdminUserDetail(
             is_active: true,
           },
         ]);
+      } else {
+        setSuspensionHistory([]);
       }
     } catch (err) {
-      logger.error("Erro ao buscar detalhes do usuário:", err);
+      logger.error("Erro ao buscar detalhes do usuario:", err);
       setError(err as Error);
     } finally {
       setLoading(false);
@@ -190,7 +405,7 @@ export function useAdminUserDetail(
   };
 
   useEffect(() => {
-    fetchUserDetail();
+    void fetchUserDetail();
   }, [userId]);
 
   return {

@@ -9,22 +9,14 @@
 
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { validateBody, sendEmailSchema, validationErrorResponse, type SendEmailBody } from '../_shared/validation.ts';
 
 const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY');
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 const FROM_EMAIL = Deno.env.get('FROM_EMAIL') || 'noreply@yourdomain.com';
 
-interface SendEmailRequest {
-  to: string;
-  subject: string;
-  html: string;
-  text?: string;
-  userId?: string;
-  category?: 'transactional' | 'social' | 'system' | 'marketing';
-}
-
-serve(async (req) => {
+serve(async (req: Request) => {
   // 1. Validate HTTP method
   if (req.method !== 'POST') {
     return new Response(JSON.stringify({ error: 'Method not allowed' }), {
@@ -58,24 +50,12 @@ serve(async (req) => {
     }
 
     // 3. Parse and validate input
-    const body: SendEmailRequest = await req.json();
-    const { to, subject, html, text, userId, category = 'transactional' } = body;
-
-    if (!to || !subject || !html) {
-      return new Response(
-        JSON.stringify({ error: 'Missing required fields: to, subject, html' }),
-        { status: 400, headers: { 'Content-Type': 'application/json' } }
-      );
+    const rawBody = await req.json();
+    const validation = validateBody<SendEmailBody>(rawBody, sendEmailSchema);
+    if (!validation.ok) {
+      return validationErrorResponse(validation.errors);
     }
-
-    // Validate email format
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(to)) {
-      return new Response(JSON.stringify({ error: 'Invalid email format' }), {
-        status: 400,
-        headers: { 'Content-Type': 'application/json' },
-      });
-    }
+    const { to, subject, html, text, userId, category = 'transactional' } = validation.data!;
 
     // 4. Check user preferences (if userId provided)
     if (userId) {
@@ -223,3 +203,4 @@ serve(async (req) => {
     );
   }
 });
+

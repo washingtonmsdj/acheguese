@@ -1,8 +1,11 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { Button } from '@/shared/components/ui/button';
 import { Input } from '@/shared/components/ui/input';
 import { Label } from '@/shared/components/ui/label';
 import { Separator } from '@/shared/components/ui/separator';
+import { InlineFieldError } from '@/shared/components/ui/InlineFieldError';
 import { AtSign, CheckCircle2, Eye, EyeOff, Home, Loader2, Mail, ShieldCheck } from 'lucide-react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/core/auth/hooks/useAuth';
@@ -11,6 +14,10 @@ import { getAuthErrorMessage } from '@/core/auth/utils/authMessages';
 import { clearPendingSignupEmail } from '@/core/auth/utils/pendingSignup';
 import { useToast } from '@/shared/hooks/use-toast';
 import { cn } from '@/shared/utils/cn';
+import {
+  LoginIdentifierSchema,
+  type LoginIdentifierInput,
+} from '@/shared/validation/schemas/user.schema';
 
 type PendingAction = 'login' | 'recovery' | 'google' | null;
 
@@ -23,8 +30,6 @@ export default function LoginPage() {
     resetPasswordByIdentifier,
     googleAuthAvailable,
   } = useAuth();
-  const [identifier, setIdentifier] = useState('');
-  const [password, setPassword] = useState('');
   const [pendingAction, setPendingAction] = useState<PendingAction>(null);
   const [showPassword, setShowPassword] = useState(false);
   const [searchParams] = useSearchParams();
@@ -35,7 +40,19 @@ export default function LoginPage() {
   const isEmailConfirmed = searchParams.get('confirmed') === '1';
   const isPasswordReset = searchParams.get('passwordReset') === '1';
 
-  const parsedIdentifier = parseAuthIdentifier(identifier);
+  const {
+    register,
+    handleSubmit,
+    watch,
+    formState: { errors },
+  } = useForm<LoginIdentifierInput>({
+    resolver: zodResolver(LoginIdentifierSchema),
+    mode: 'onBlur',
+  });
+
+  // Derivado do watch para detecção de tipo de identificador (UX: ícone AtSign vs Mail)
+  const identifierValue = watch('identifier') ?? '';
+  const parsedIdentifier = parseAuthIdentifier(identifierValue);
   const isUsername = parsedIdentifier?.kind === 'username';
 
   const statusMessage = useMemo(() => {
@@ -66,35 +83,23 @@ export default function LoginPage() {
   }, [isEmailConfirmed]);
 
   useEffect(() => {
-    if (!user) {
-      return;
-    }
-
+    if (!user) return;
     clearPendingSignupEmail();
     navigate(redirectTo, { replace: true });
   }, [navigate, redirectTo, user]);
 
-  const handleLogin = async (event: React.FormEvent) => {
-    event.preventDefault();
-
-    if (!parsedIdentifier || !password) {
-      toast({
-        title: 'Preencha os campos obrigatorios',
-        description: 'Informe email ou usuario e a sua senha.',
-        variant: 'destructive',
-      });
-      return;
-    }
+  const onValid = async (data: LoginIdentifierInput) => {
+    const parsed = parseAuthIdentifier(data.identifier);
+    if (!parsed) return;
 
     setPendingAction('login');
 
     try {
-      if (isUsername) {
-        await signInWithUsername({ username: parsedIdentifier.value, password });
+      if (parsed.kind === 'username') {
+        await signInWithUsername({ username: parsed.value, password: data.password });
         return;
       }
-
-      await signIn({ email: parsedIdentifier.value, password });
+      await signIn({ email: parsed.value, password: data.password });
     } catch (error) {
       toast({
         title: 'Erro ao entrar',
@@ -123,7 +128,7 @@ export default function LoginPage() {
         title: 'Email enviado',
         description: 'Verifique sua caixa de entrada para redefinir a senha.',
       });
-    } catch (error) {
+    } catch {
       // Evita vazamento de existencia de conta via UX.
       toast({
         title: 'Solicitacao recebida',
@@ -218,7 +223,7 @@ export default function LoginPage() {
           </div>
         )}
 
-        <form onSubmit={handleLogin} className="space-y-4">
+        <form onSubmit={handleSubmit(onValid)} className="space-y-4" noValidate>
           <div className="space-y-1.5">
             <Label htmlFor="login-identifier">Email ou nome de usuario</Label>
             <div className="relative">
@@ -226,16 +231,18 @@ export default function LoginPage() {
                 id="login-identifier"
                 type="text"
                 placeholder="seu@email.com ou @seunome"
-                className={cn('h-11 pr-10')}
-                value={identifier}
-                onChange={(event) => setIdentifier(event.target.value)}
+                className={cn('h-11 pr-10', errors.identifier && 'border-destructive')}
                 autoComplete="username"
                 autoCapitalize="none"
+                disabled={isBusy}
+                aria-describedby={errors.identifier ? 'login-identifier-error' : undefined}
+                {...register('identifier')}
               />
               <div className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none">
                 {isUsername ? <AtSign className="h-4 w-4" /> : <Mail className="h-4 w-4" />}
               </div>
             </div>
+            <InlineFieldError id="login-identifier-error" message={errors.identifier?.message} />
           </div>
 
           <div className="space-y-1.5">
@@ -245,10 +252,11 @@ export default function LoginPage() {
                 id="login-password"
                 type={showPassword ? 'text' : 'password'}
                 placeholder="Sua senha"
-                className="h-11 pr-10"
-                value={password}
-                onChange={(event) => setPassword(event.target.value)}
+                className={cn('h-11 pr-10', errors.password && 'border-destructive')}
                 autoComplete="current-password"
+                disabled={isBusy}
+                aria-describedby={errors.password ? 'login-password-error' : undefined}
+                {...register('password')}
               />
               <button
                 type="button"
@@ -259,6 +267,7 @@ export default function LoginPage() {
                 {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
               </button>
             </div>
+            <InlineFieldError id="login-password-error" message={errors.password?.message} />
             <button
               type="button"
               onClick={handleForgotPassword}

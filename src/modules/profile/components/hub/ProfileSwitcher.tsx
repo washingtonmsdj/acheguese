@@ -10,10 +10,10 @@ import { Badge } from '@/shared/components/ui/badge';
 import { cn } from '@/shared/utils/cn';
 import { getProfileTypeIcon, getProfileTypeLabel } from '@/modules/profile/utils/profileDomainRules';
 
-import type { Profile } from '@/core/profiles/services/multi-profile/types';
+import type { MultiProfileRecord } from '@/core/profiles/services/multi-profile/types';
 
 interface ProfileSwitcherProps {
-  profiles: Profile[];
+  profiles: MultiProfileRecord[];
   activeProfileId: string | null;
   onSwitch: (profileId: string) => void;
 }
@@ -44,7 +44,7 @@ function ProfileSwitcherCard({
   isActive,
   onSwitch,
 }: {
-  profile: Profile;
+  profile: MultiProfileRecord;
   isActive: boolean;
   onSwitch: (profileId: string) => void;
 }) {

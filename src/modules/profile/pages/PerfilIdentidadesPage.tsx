@@ -18,7 +18,7 @@ import {
   CheckCircle2, Shield, Globe, Lock, ArrowLeft, Zap, Bike, Package,
 } from 'lucide-react';
 import { toast } from 'sonner';
-import type { Profile, ProfileType } from '@/core/profiles/services/multi-profile/types';
+import type { MultiProfileRecord, ProfileType } from '@/core/profiles/services/multi-profile/types';
 import {
   getProfileTypeIcon,
   getProfileTypeLabel,
@@ -40,7 +40,7 @@ function getInitials(name?: string) {
 }
 
 function IdentityCard({ profile, isActive, onActivate, profileSettingsUrl }: {
-  profile: Profile; isActive: boolean; onActivate: (id: string) => void; profileSettingsUrl: string;
+  profile: MultiProfileRecord; isActive: boolean; onActivate: (id: string) => void; profileSettingsUrl: string;
 }) {
   const navigate = useNavigate();
   const Icon = getProfileTypeIcon(profile);

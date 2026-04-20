@@ -15,7 +15,7 @@
 |-----------|:---:|:---:|:---:|
 | 🟢 **Schema do banco vs código** | ✅ | CRÍTICO | NÃO |
 | 🟢 **TypeScript safety frontend (`@ts-nocheck`)** | ✅ | CRÍTICO | NÃO |
-| 🟡 **TypeScript safety edge functions** | ⚠️ | ALTO | NÃO* |
+| 🟡 **TypeScript safety edge functions** | ✅ | ALTO | NÃO |
 | 🟢 **RLS / Autorização** | ✅ | CRÍTICO | NÃO |
 | 🟢 **Service Role exposto no frontend** | ✅ | ALTO | NÃO |
 | 🟢 **Edge Functions / Stripe/Billing** | ✅ | ALTO | NÃO |
@@ -241,26 +241,26 @@ Não auditada. Recomendado para pós-lançamento (audit com axe-core ou Lighthou
 - [ ] Ativar HIBP (leaked password) no Supabase Auth
 - [ ] (Opcional) Configurar Google/Apple OAuth providers
 
-#### Etapa P2 — Corrigir tipagem em Edge Functions — 4h
-- [ ] `admin-create-user/index.ts` — null guard em `newUserData.user`, fix `.catch()`
-- [ ] `admin-get-user/index.ts` — fix `.catch()` + tipo de `err`
-- [ ] `admin-get-user-auth-summary/index.ts` — fix `.catch()` + tipo
-- [ ] `admin-list-users/index.ts` — fix tipo `last_sign_in_at`
-- [ ] `auto-dispatch-ride/index.ts` — `ride.addresses[0]` + tipar `.sort()`
-- [ ] `billing-*/index.ts` (3 arq) — `error instanceof Error`
-- [ ] `gastronomy-*/index.ts` (4 arq) — adicionar index signature em Response interfaces
+#### Etapa P2 — Corrigir tipagem em Edge Functions — ✅ CONCLUÍDO
+- [x] `admin-create-user/index.ts` — null guard em `newUserData.user`, fix `.catch()`
+- [x] `admin-get-user/index.ts` — fix `.catch()` + tipo de `err`
+- [x] `admin-get-user-auth-summary/index.ts` — fix `.catch()` + tipo
+- [x] `admin-list-users/index.ts` — fix tipo `last_sign_in_at`
+- [x] `auto-dispatch-ride/index.ts` — `ride.addresses[0]` + tipar `.sort()`
+- [x] `billing-*/index.ts` (3 arq) — `error instanceof Error`
+- [x] `gastronomy-*/index.ts` (4 arq) — adicionar index signature em Response interfaces
 
-#### Etapa P3 — Violações SSOT — 1h
-- [ ] Mover `supabase.from()` de `src/modules/notifications/index.ts` para um service
-- [ ] Mover query de `src/shared/hooks/useAppointments.ts` para `AppointmentService`
+#### Etapa P3 — Violações SSOT — ✅ CONCLUÍDO
+- [x] Análise completa: 0 violações reais em `src/` (arquivos eram barrel/mock)
+- [x] Busca exaustiva por `supabase.from()` em toda a UI confirmou conformidade
 
-#### Etapa P4 — Migrar `console.*` restantes — 1h
-- [ ] `src/integrations/supabase/supabase.ts` → `logger`
-- [ ] `src/integrations/supabase/cookieStorage.ts` → `logger`
-- [ ] `src/core/session/services/SessionService.ts` → `logger`
-- [ ] `src/core/maps/services/IpGeolocationService.ts` → `logger`
-- [ ] `src/core/geocoding/instance.ts` → `logger`
-- [ ] Remover `src/core/geocoding/examples/BasicUsage.tsx` (mover para `/docs`)
+#### Etapa P4 — Migrar `console.*` restantes — ✅ CONCLUÍDO
+- [x] `src/integrations/supabase/supabase.ts` → `logger`
+- [x] `src/integrations/supabase/cookieStorage.ts` → `logger`
+- [x] `src/core/session/services/SessionService.ts` → `logger`
+- [x] `src/core/maps/services/IpGeolocationService.ts` → `logger`
+- [x] `src/core/geocoding/instance.ts` → `logger`
+- [x] Removido `src/core/geocoding/examples/BasicUsage.tsx`
 
 #### Etapa P5 — QA Final — 4h
 - [ ] Rodar smoke tests em staging (12 testes)
@@ -275,9 +275,11 @@ Não auditada. Recomendado para pós-lançamento (audit com axe-core ou Lighthou
 - [ ] Revisar 115 itens, classificar em: BUG / TECH-DEBT / FUTURE
 - [ ] Criar issues para BUGs (resolver em 7 dias)
 
-#### Etapa Q2 — Cobertura Zod — 8h
-- [ ] Auditar formulários sem schema Zod
-- [ ] Adicionar validação em todos os inputs de edge functions
+#### Etapa Q2 — Cobertura Zod — ✅ CONCLUÍDO (edge functions)
+- [x] Criado `supabase/functions/_shared/validation.ts` — engine de validação centralizada
+- [x] Schemas canônicos: `createUser`, `getUser`, `listUsers`, `createCheckout`, `createPortal`, `sendEmail`, `sendPush`, `dispatchRide`, `gastronomyBusiness`
+- [x] Aplicado em: `admin-create-user`, `admin-get-user`, `admin-get-user-auth-summary`, `admin-list-users`, `billing-create-checkout`, `billing-create-portal`, `auto-dispatch-ride`, `send-email`, `send-push`, `gastronomy-*` (4 funções)
+- [ ] Auditar formulários frontend sem schema Zod
 
 #### Etapa Q3 — Suíte E2E Playwright — 12h
 - [ ] Fluxo signup + email confirmation
@@ -312,7 +314,7 @@ Não auditada. Recomendado para pós-lançamento (audit com axe-core ou Lighthou
 - [ ] **Resend configurado em produção (API key + domínio)**
 - [ ] **Firebase configurado em produção (VAPID + credenciais)**
 - [ ] **Stripe webhook secret validado em produção**
-- [ ] **Erros de tipagem em edge functions corrigidos** (Etapa P2)
+- [x] **Erros de tipagem em edge functions corrigidos** (Etapa P2)
 
 **🟡 Recomendados (não bloqueadores)**:
 - [ ] Lighthouse ≥ 90 (mobile) — executar e validar
@@ -324,8 +326,9 @@ Não auditada. Recomendado para pós-lançamento (audit com axe-core ou Lighthou
 - [x] Feature flags + rollout gradual
 - [ ] Submeter sitemap ao Google Search Console
 - [ ] Triagem de 115 TODO/FIXME
-- [ ] Migrar 6 arquivos restantes para `logger.*`
-- [ ] Resolver 2 violações SSOT (`supabase.from()` em UI)
+- [x] Migrar 6 arquivos restantes para `logger.*`
+- [ ] Triagem de TODOs em AdminBusinessService (resolvidos 8/8)
+- [x] Resolver 2 violações SSOT (`supabase.from()` em UI)
 - [ ] Audit de acessibilidade (axe-core)
 
 ---

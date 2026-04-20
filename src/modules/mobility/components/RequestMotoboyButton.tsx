@@ -1,8 +1,7 @@
 /**
- * RequestMotoboyButton - CTA para solicitar motoboy.
+ * RequestMotoboyButton
  *
- * Usa autorizacao centralizada (MotoboyAuthorizationService) para
- * evitar drift de regras em componentes.
+ * CTA para solicitar motoboy usando autorizacao centralizada.
  */
 
 import React, { useState } from "react";
@@ -10,13 +9,12 @@ import { useQuery } from "@tanstack/react-query";
 import { Bike, AlertCircle } from "lucide-react";
 import { useAuth } from "@/core/auth";
 import { useLocationContext } from "@/core/location";
-import { supabase } from "@/integrations/supabase";
-import { logger } from "@/shared/utils/logger";
 import { Alert, AlertDescription } from "@/shared/components/ui/alert";
 import { Button } from "@/shared/components/ui/button";
 import { MotoboyAuthorizationService } from "../services/MotoboyAuthorizationService";
 import type { SourceType } from "../constants";
 import { CreateDeliveryModal } from "./CreateDeliveryModal";
+import { MotoboySourceResolverService } from "../services/MotoboySourceResolverService";
 
 interface RequestMotoboyButtonProps {
   sourceType: SourceType;
@@ -30,46 +28,6 @@ interface RequestMotoboyButtonProps {
 interface PermissionResult {
   allowed: boolean;
   reason?: string;
-}
-
-const supabaseAny = supabase as any;
-
-async function resolvePlanTier(sourceType: SourceType, sourceId: string): Promise<string | undefined> {
-  if (sourceType === "business") {
-    const { data, error } = await supabaseAny
-      .from("business_subscriptions")
-      .select("plan_tier")
-      .eq("business_id", sourceId)
-      .order("updated_at", { ascending: false })
-      .limit(1)
-      .maybeSingle();
-
-    if (error) {
-      logger.warn("RequestMotoboyButton.resolvePlanTier.business", error);
-      return undefined;
-    }
-
-    return data?.plan_tier;
-  }
-
-  if (sourceType === "gastronomy") {
-    const { data, error } = await supabaseAny
-      .from("gastronomy_subscriptions")
-      .select("plan_tier")
-      .eq("business_id", sourceId)
-      .order("updated_at", { ascending: false })
-      .limit(1)
-      .maybeSingle();
-
-    if (error) {
-      logger.warn("RequestMotoboyButton.resolvePlanTier.gastronomy", error);
-      return undefined;
-    }
-
-    return data?.plan_tier;
-  }
-
-  return undefined;
 }
 
 export function RequestMotoboyButton({
@@ -90,7 +48,7 @@ export function RequestMotoboyButton({
       if (!user?.id) {
         return {
           allowed: false,
-          reason: "Faça login para solicitar motoboy.",
+          reason: "Faca login para solicitar motoboy.",
         };
       }
 
@@ -104,17 +62,7 @@ export function RequestMotoboyButton({
       let locationId = activeLocation?.id ?? null;
 
       if (!locationId && sourceId) {
-        const { data: sourceProfile, error: sourceError } = await supabaseAny
-          .from("profiles")
-          .select("location_id")
-          .eq("id", sourceId)
-          .maybeSingle();
-
-        if (sourceError) {
-          logger.warn("RequestMotoboyButton.resolveLocation.profile", sourceError);
-        }
-
-        locationId = sourceProfile?.location_id ?? null;
+        locationId = (await MotoboySourceResolverService.resolveLocationIdFromSource(sourceId)) ?? null;
       }
 
       if (!locationId) {
@@ -124,7 +72,9 @@ export function RequestMotoboyButton({
         };
       }
 
-      const planTier = sourceId ? await resolvePlanTier(sourceType, sourceId) : undefined;
+      const planTier = sourceId
+        ? await MotoboySourceResolverService.resolvePlanTier(sourceType, sourceId)
+        : undefined;
 
       const auth = await MotoboyAuthorizationService.canRequestDelivery({
         sourceType,

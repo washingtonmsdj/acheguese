@@ -233,7 +233,7 @@ async function handlePaymentFailed(invoice: Stripe.Invoice) {
 // MAIN HANDLER
 // ══════════════════════════════════════════════════════════════════════════
 
-serve(async (req) => {
+serve(async (req: Request) => {
   const auditInfo = getAuditInfo(req);
   
   // Handle CORS preflight
@@ -339,3 +339,4 @@ serve(async (req) => {
     return errorResponse('Webhook processing failed', 500, error);
   }
 });
+

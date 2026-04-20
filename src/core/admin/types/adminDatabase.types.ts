@@ -142,20 +142,31 @@ export type NotificationUpdate = Partial<Notification>;
 // USER NOTIFICATION SETTINGS
 // ============================================
 
+/**
+ * Mapeado para a tabela real: notification_preferences
+ */
 export interface UserNotificationSettings {
   id: string;
   user_id: string;
   email_enabled: boolean;
   push_enabled: boolean;
-  sms_enabled: boolean;
-  types_config?: Record<string, { email: boolean; push: boolean; sms: boolean }>;
+  inapp_enabled: boolean;
+  marketing_enabled: boolean;
+  social_enabled: boolean;
+  system_enabled: boolean;
+  transactional_enabled: boolean;
+  frequency: string;
+  quiet_hours_start?: string | null;
+  quiet_hours_end?: string | null;
+  quiet_hours_days?: number[] | null;
   created_at: string;
-  updated_at?: string;
+  updated_at: string;
 }
 
-export interface UserNotificationSettingsInsert extends Omit<UserNotificationSettings, 'id' | 'created_at'> {
+export interface UserNotificationSettingsInsert extends Omit<UserNotificationSettings, 'id' | 'created_at' | 'updated_at'> {
   id?: string;
   created_at?: string;
+  updated_at?: string;
 }
 
 export type UserNotificationSettingsUpdate = Partial<UserNotificationSettings>;
@@ -166,20 +177,35 @@ export type UserNotificationSettingsUpdate = Partial<UserNotificationSettings>;
 
 export interface GastronomyProfile {
   id: string;
-  profile_id: string;
-  business_name: string;
-  is_active: boolean;
-  delivery_available: boolean;
-  category?: string;
-  price_range?: string;
-  rating?: number;
+  business_id: string;
+  cuisine_type: string;
+  cuisine_subtypes?: string[] | null;
+  status: string;
+  price_range: string;
+  delivery_enabled: boolean;
+  delivery_fee?: number | null;
+  delivery_time_min?: number | null;
+  delivery_time_max?: number | null;
+  minimum_order?: number | null;
+  dine_in_enabled: boolean;
+  takeout_enabled: boolean;
+  accepts_reservations: boolean;
+  seating_capacity?: number | null;
+  has_parking: boolean;
+  has_wifi: boolean;
+  has_accessibility: boolean;
+  has_kids_area: boolean;
+  has_live_music: boolean;
+  plan_tier: string;
+  metadata: Record<string, unknown>;
   created_at: string;
-  updated_at?: string;
+  updated_at: string;
 }
 
-export interface GastronomyProfileInsert extends Omit<GastronomyProfile, 'id' | 'created_at'> {
+export interface GastronomyProfileInsert extends Omit<GastronomyProfile, 'id' | 'created_at' | 'updated_at'> {
   id?: string;
   created_at?: string;
+  updated_at?: string;
 }
 
 export type GastronomyProfileUpdate = Partial<GastronomyProfile>;
@@ -481,29 +507,6 @@ export type AlertUpdate = Partial<Alert>;
 // ADDRESSES
 // ============================================
 
-export interface Address {
-  id: string;
-  street: string;
-  number?: string;
-  complement?: string;
-  neighborhood?: string;
-  city: string;
-  state: string;
-  zip_code?: string;
-  country?: string;
-  latitude?: number;
-  longitude?: number;
-  created_at: string;
-  updated_at?: string;
-}
-
-export interface AddressInsert extends Omit<Address, 'id' | 'created_at'> {
-  id?: string;
-  created_at?: string;
-}
-
-export type AddressUpdate = Partial<Address>;
-
 // ============================================
 // FAVORITES
 // ============================================
@@ -566,12 +569,6 @@ export interface AdminTables {
     Row: Notification;
     Insert: NotificationInsert;
     Update: NotificationUpdate;
-    Relationships: [];
-  };
-  user_notification_settings: {
-    Row: UserNotificationSettings;
-    Insert: UserNotificationSettingsInsert;
-    Update: UserNotificationSettingsUpdate;
     Relationships: [];
   };
   gastronomy_profiles: {
@@ -650,12 +647,6 @@ export interface AdminTables {
     Row: Coupon;
     Insert: CouponInsert;
     Update: CouponUpdate;
-    Relationships: [];
-  };
-  addresses: {
-    Row: Address;
-    Insert: AddressInsert;
-    Update: AddressUpdate;
     Relationships: [];
   };
   alerts: {

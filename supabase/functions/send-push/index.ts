@@ -8,6 +8,7 @@
 
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { validateBody, sendPushSchema, validationErrorResponse, type SendPushBody } from '../_shared/validation.ts';
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
@@ -15,26 +16,7 @@ const FCM_SERVER_KEY = Deno.env.get('FCM_SERVER_KEY');
 const FIREBASE_SERVICE_ACCOUNT = Deno.env.get('FIREBASE_SERVICE_ACCOUNT');
 const FIREBASE_PROJECT_ID = Deno.env.get('FIREBASE_PROJECT_ID');
 
-interface SendPushRequest {
-  userId: string;
-  notification: {
-    title: string;
-    body: string;
-    icon?: string;
-    badge?: string;
-    image?: string;
-    data?: Record<string, any>;
-    actions?: Array<{
-      action: string;
-      title: string;
-      icon?: string;
-    }>;
-    tag?: string;
-    requireInteraction?: boolean;
-  };
-}
-
-serve(async (req) => {
+serve(async (req: Request) => {
   // 1. Validate HTTP method
   if (req.method !== 'POST') {
     return new Response(JSON.stringify({ error: 'Method not allowed' }), {
@@ -68,12 +50,16 @@ serve(async (req) => {
     }
 
     // 3. Parse and validate input
-    const body: SendPushRequest = await req.json();
-    const { userId, notification } = body;
+    const rawBody = await req.json();
+    const validation = validateBody<SendPushBody>(rawBody, sendPushSchema);
+    if (!validation.ok) {
+      return validationErrorResponse(validation.errors);
+    }
+    const { userId, notification } = validation.data!;
 
-    if (!userId || !notification || !notification.title || !notification.body) {
+    if (!notification.title || !notification.body) {
       return new Response(
-        JSON.stringify({ error: 'Missing required fields: userId, notification.title, notification.body' }),
+        JSON.stringify({ error: 'Missing required fields: notification.title, notification.body' }),
         { status: 400, headers: { 'Content-Type': 'application/json' } }
       );
     }
@@ -332,3 +318,4 @@ serve(async (req) => {
     );
   }
 });
+

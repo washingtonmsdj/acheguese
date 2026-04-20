@@ -6,7 +6,7 @@
  */
 
 import type { LucideIcon } from "lucide-react";
-import type { ProfileContext } from "@/core/profiles/services/types";
+import type { ProfileContext } from "@/core/profiles/views/ProfileContext";
 
 // ============================================
 // Driver

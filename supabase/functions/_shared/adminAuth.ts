@@ -2,23 +2,26 @@
  * ADMIN AUTH HELPER
  * Valida permissões administrativas para edge functions
  *
- * Tabela esperada: admin_users (user_id uuid, role text)
- * Roles válidas: 'super_admin', 'moderator'
+ * SSOT: Tabela `user_roles` com campo `role_enum` (app_role)
+ * Roles admin válidas: 'admin', 'super_admin'
+ *
+ * @see supabase/migrations/*_migrate_user_roles_to_new_structure.sql
  */
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
-import { 
-  getAllSecurityHeaders, 
-  auditLog, 
+import {
+  getAllSecurityHeaders,
+  auditLog,
   getAuditInfo,
   errorResponse,
 } from './security.ts';
 
+export type AdminRole = 'admin' | 'super_admin';
+
 export interface AdminAuthResult {
   isAdmin: boolean;
-  userId?: string;
-  role?: 'super_admin' | 'moderator';
-  error?: string;
+  userId: string;
+  role: AdminRole;
 }
 
 function getSupabaseClient() {
@@ -34,119 +37,118 @@ function getSupabaseClient() {
   });
 }
 
-export async function validateAdmin(req: Request): Promise<AdminAuthResult> {
+/**
+ * Valida se o request vem de um admin (admin ou super_admin).
+ * Retorna AdminAuthResult em caso de sucesso, Response em caso de falha.
+ *
+ * Uso:
+ *   const auth = await requireAdmin(req);
+ *   if (auth instanceof Response) return auth;
+ *   const { userId, role } = auth;
+ */
+export async function requireAdmin(req: Request): Promise<AdminAuthResult | Response> {
   const auditInfo = getAuditInfo(req);
-  
+
   try {
     const authHeader = req.headers.get('Authorization');
     if (!authHeader?.startsWith('Bearer ')) {
       auditLog({
         timestamp: new Date().toISOString(),
         action: 'admin_auth_failed',
-        resource: 'admin_validation',
+        resource: req.url,
         status: 'failure',
         details: { reason: 'missing_auth_header' },
         ...auditInfo,
       });
-      
-      return { isAdmin: false, error: 'Missing or invalid authorization header' };
+      return errorResponse('Missing or invalid authorization header', 401);
     }
 
     const token = authHeader.slice(7);
     const supabase = getSupabaseClient();
 
-    // Valida token e obtém usuário
     const { data: { user }, error: authError } = await supabase.auth.getUser(token);
 
     if (authError || !user) {
       auditLog({
         timestamp: new Date().toISOString(),
         action: 'admin_auth_failed',
-        resource: 'admin_validation',
+        resource: req.url,
         status: 'failure',
         details: { reason: 'invalid_token', error: authError?.message },
         ...auditInfo,
       });
-      
-      return { isAdmin: false, error: 'Invalid or expired token' };
+      return errorResponse('Invalid or expired token', 401);
     }
 
-    // Verifica se usuário é admin
-    const { data: adminUser, error: adminError } = await supabase
-      .from('admin_users')
-      .select('role')
+    // SSOT: verificar roles em user_roles
+    const { data: roles, error: rolesError } = await supabase
+      .from('user_roles')
+      .select('role_enum')
       .eq('user_id', user.id)
-      .single();
+      .is('revoked_at', null);
 
-    if (adminError || !adminUser) {
+    if (rolesError) {
+      return errorResponse('Failed to verify permissions', 500);
+    }
+
+    const adminRole = roles?.find(
+      (r: { role_enum: string }) => r.role_enum === 'admin' || r.role_enum === 'super_admin',
+    );
+
+    if (!adminRole) {
       auditLog({
         timestamp: new Date().toISOString(),
         userId: user.id,
         action: 'admin_auth_failed',
-        resource: 'admin_validation',
+        resource: req.url,
         status: 'failure',
-        details: { reason: 'not_admin' },
+        details: { reason: 'insufficient_role' },
         ...auditInfo,
       });
-      
-      return { isAdmin: false, userId: user.id, error: 'User is not an admin' };
+      return errorResponse('Forbidden: Admin access required', 403);
     }
 
-    // Sucesso - registra auditoria
     auditLog({
       timestamp: new Date().toISOString(),
       userId: user.id,
       action: 'admin_auth_success',
-      resource: 'admin_validation',
+      resource: req.url,
       status: 'success',
-      details: { role: adminUser.role },
+      details: { role: adminRole.role_enum },
       ...auditInfo,
     });
 
     return {
       isAdmin: true,
       userId: user.id,
-      role: adminUser.role as 'super_admin' | 'moderator',
+      role: adminRole.role_enum as AdminRole,
     };
-  } catch (err: any) {
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : 'Unknown error';
     auditLog({
       timestamp: new Date().toISOString(),
       action: 'admin_auth_error',
-      resource: 'admin_validation',
+      resource: req.url,
       status: 'failure',
-      details: { error: err.message },
+      details: { error: message },
       ...auditInfo,
     });
-    
-    return { isAdmin: false, error: 'Authentication failed' };
+    return errorResponse('Authentication failed', 500);
   }
 }
 
-export async function requireAdmin(req: Request): Promise<AdminAuthResult | Response> {
-  const result = await validateAdmin(req);
+/**
+ * Variante que exige especificamente super_admin.
+ */
+export async function requireSuperAdmin(req: Request): Promise<AdminAuthResult | Response> {
+  const result = await requireAdmin(req);
+  if (result instanceof Response) return result;
 
-  if (!result.isAdmin) {
-    return errorResponse(result.error ?? 'Unauthorized', 403);
+  if (result.role !== 'super_admin') {
+    return errorResponse('Forbidden: Super admin access required', 403);
   }
 
   return result;
-}
-
-// DEPRECATED: Use getCorsHeaders from ./security.ts
-// Mantido para compatibilidade temporária
-export function corsHeaders(methods = 'POST, OPTIONS') {
-  console.warn('⚠️ corsHeaders is deprecated. Use getCorsHeaders from ./security.ts');
-  
-  const allowedOrigins = Deno.env.get('ALLOWED_ORIGINS') || '';
-  const isDev = Deno.env.get('DENO_ENV') === 'development';
-  const defaultOrigin = isDev ? 'http://localhost:8080' : '';
-  const origin = allowedOrigins || defaultOrigin || 'null';
-  
-  return {
-    'Access-Control-Allow-Origin': origin.split(',')[0].trim(),
-    'Access-Control-Allow-Methods': methods,
-    'Access-Control-Allow-Headers': 'authorization, content-type, x-client-info',
-  };
 }
 
 export function jsonResponse(body: unknown, status = 200): Response {

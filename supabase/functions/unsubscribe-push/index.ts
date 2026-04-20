@@ -16,7 +16,7 @@ interface UnsubscribePushRequest {
   subscriptionId: string;
 }
 
-serve(async (req) => {
+serve(async (req: Request) => {
   // 1. Validate HTTP method
   if (req.method !== 'POST') {
     return new Response(JSON.stringify({ error: 'Method not allowed' }), {
@@ -118,3 +118,4 @@ serve(async (req) => {
     );
   }
 });
+

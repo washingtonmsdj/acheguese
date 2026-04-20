@@ -45,13 +45,13 @@ import { getProfileTypeLabel } from "@/modules/profile/utils/profileDomainRules"
 import { useAppUrls } from "@/core/routing/hooks/useAppUrls";
 import { ProfileCompletenessWidget } from "@/modules/profile/components/ProfileCompletenessWidget";
 
-import type { Profile } from "@/core/profiles/services/multi-profile/types";
-import type { ProfileAccountSnapshot } from "@/core/profiles/services/types";
+import type { MultiProfileRecord } from "@/core/profiles/services/multi-profile/types";
+import type { ProfileAccountSnapshot } from "@/core/profiles/views/ProfileAccountSnapshot";
 
 interface ProfileHeaderCompactProps {
-  activeProfile: Profile | null;
-  profile: Profile | null;
-  allProfiles?: Profile[];
+  activeProfile: MultiProfileRecord | null;
+  profile: MultiProfileRecord | null;
+  allProfiles?: MultiProfileRecord[];
   userEmail: string;
   accountSnapshot: ProfileAccountSnapshot;
   identity: any;

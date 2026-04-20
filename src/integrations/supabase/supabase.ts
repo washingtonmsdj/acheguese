@@ -13,12 +13,13 @@
 import { createClient } from "@supabase/supabase-js";
 import type { Database } from "./types.generated";
 import { createSecureStorage } from "./cookieStorage";
+import { logger } from "@/shared/utils/logger";
 // Validar variáveis de ambiente
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || "https://placeholder.supabase.co";
 const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || "placeholder-key";
 const DEBUG_BOOT = import.meta.env.DEV && import.meta.env.VITE_DEBUG_BOOT === "true";
 if (!import.meta.env.VITE_SUPABASE_URL || !import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY) {
-  console.warn(
+  logger.warn(
     "⚠️ Variáveis de ambiente do Supabase não configuradas. " +
       "Usando placeholders — funcionalidades de backend não estarão disponíveis.",
   );
@@ -40,7 +41,7 @@ if (typeof window !== 'undefined') {
 
 // Log de inicialização (apenas em desenvolvimento)
 if (DEBUG_BOOT) {
-  console.debug("[Supabase] initialized", {
+  logger.debug("[Supabase] initialized", {
     url: import.meta.env.VITE_SUPABASE_URL,
   });
 }

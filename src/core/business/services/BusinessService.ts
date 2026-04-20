@@ -67,6 +67,7 @@ export {
   getBusinessMetrics,
   getActiveCoupons,
   getCouponById,
+  updateBusinessClaimStatus,
 } from "./business.admin";
 
 // Re-exports de legacy
@@ -197,6 +198,7 @@ export class BusinessService {
   static getBusinessMetrics = BusinessAdmin.getBusinessMetrics;
   static getActiveCoupons = BusinessAdmin.getActiveCoupons;
   static getCouponById = BusinessAdmin.getCouponById;
+  static updateBusinessClaimStatus = BusinessAdmin.updateBusinessClaimStatus;
 
   // ===== LEGACY =====
   static searchBusinessesLegacy = BusinessLegacy.searchBusinessesLegacy;

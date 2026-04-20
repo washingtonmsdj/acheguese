@@ -43,17 +43,17 @@ class AdminGastronomyServiceClass {
 
       const stats: GastronomyStats = {
         total: typedProfiles.length,
-        active: typedProfiles.filter(p => p.is_active).length,
-        inactive: typedProfiles.filter(p => !p.is_active).length,
+        active: typedProfiles.filter(p => p.status === 'active').length,
+        inactive: typedProfiles.filter(p => p.status !== 'active').length,
         byCategory: {},
         byPriceRange: {},
-        withDelivery: typedProfiles.filter(p => p.delivery_available).length,
+        withDelivery: typedProfiles.filter(p => p.delivery_enabled).length,
         withMenu: 0,
       };
 
       // Contar por categoria
       typedProfiles.forEach(p => {
-        const category = p.category || 'outros';
+        const category = p.cuisine_type || 'outros';
         stats.byCategory[category] = (stats.byCategory[category] || 0) + 1;
         
         const priceRange = p.price_range || 'não informado';
@@ -188,9 +188,9 @@ class AdminGastronomyServiceClass {
    */
   async toggleActive(profileId: string, isActive: boolean): Promise<boolean> {
     try {
-      const { error } = await supabase
+      const { error } = await (supabase as unknown as AdminSupabaseClient)
         .from("gastronomy_profiles")
-        .update({ is_active: isActive })
+        .update({ status: isActive ? 'active' : 'inactive' })
         .eq("id", profileId);
 
       if (error) throw error;

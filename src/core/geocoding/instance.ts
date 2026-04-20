@@ -6,6 +6,7 @@
 
 import { GeocodingService } from './services/GeocodingService';
 import type { GeocodingServiceConfig } from './types';
+import { logger } from '@/shared/utils/logger';
 
 /**
  * Instância singleton do GeocodingService
@@ -33,7 +34,7 @@ export function initializeGeocodingService(customConfig?: Partial<GeocodingServi
   geocodingService.configure(config);
 
   if (import.meta.env.DEV && import.meta.env.VITE_DEBUG_GEO === "true") {
-    console.debug(
+    logger.debug(
       "[Geocoding] Service initialized with providers:",
       geocodingService.getAvailableProviders(),
     );

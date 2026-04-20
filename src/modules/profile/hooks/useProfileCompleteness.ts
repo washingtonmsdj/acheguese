@@ -1,6 +1,6 @@
 import { buildProfileEditUrl } from '@/core/profiles';
 import { buildProfileSettingsUrl } from '@/core/profiles/utils/publicProfileUrl';
-import type { Profile } from '@/core/profiles/services/multi-profile/types';
+import type { MultiProfileRecord } from '@/core/profiles/services/multi-profile/types';
 
 export interface CompletenessItem {
   id: string;
@@ -17,7 +17,7 @@ export interface ProfileCompleteness {
   completed: number;
 }
 
-export function useProfileCompleteness(profile: Profile | null): ProfileCompleteness {
+export function useProfileCompleteness(profile: MultiProfileRecord | null): ProfileCompleteness {
   if (!profile) {
     return { score: 0, items: [], total: 0, completed: 0 };
   }

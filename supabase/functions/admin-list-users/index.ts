@@ -1,216 +1,166 @@
 /**
  * Edge Function: admin-list-users
- * 
+ *
  * Lista usuários com paginação (apenas para admins)
- * 
- * Substitui: AdminUserService.listUsers()
- * 
+ *
  * @security Requer role admin ou super_admin
  * @rateLimit 100 req/min
  */
 
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { getAllSecurityHeaders, auditLog, getAuditInfo } from '../_shared/security.ts';
+import { requireAdmin } from '../_shared/adminAuth.ts';
+import { validateBody, listUsersSchema, validationErrorResponse, type ListUsersBody } from '../_shared/validation.ts';
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
-
-interface ListUsersRequest {
-  page: number;
-  pageSize: number;
-  search?: string;
-}
+const SUPABASE_URL = Deno.env.get('SUPABASE_URL') ?? '';
+const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
 
 interface AdminUser {
   id: string;
   email: string;
   created_at: string;
-  last_sign_in_at: string | null;
-  email_confirmed_at: string | null;
-  profiles: any[];
-  roles: any[];
+  last_sign_in_at: string | null | undefined;
+  email_confirmed_at: string | null | undefined;
+  profiles: unknown[];
+  roles: unknown[];
 }
 
-serve(async (req) => {
-  // Handle CORS preflight
+serve(async (req: Request) => {
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders });
+    return new Response('ok', { status: 204, headers: getAllSecurityHeaders('POST, OPTIONS') });
   }
 
-  try {
-    // 1. Validar método
-    if (req.method !== 'POST') {
-      return new Response(
-        JSON.stringify({ error: 'Method not allowed' }),
-        { status: 405, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    // 2. Obter token do header
-    const authHeader = req.headers.get('Authorization');
-    if (!authHeader) {
-      return new Response(
-        JSON.stringify({ error: 'Unauthorized' }),
-        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    // 3. Criar cliente com service_role
-    const supabaseAdmin = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
-      {
-        auth: {
-          autoRefreshToken: false,
-          persistSession: false,
-        },
-      }
+  if (req.method !== 'POST') {
+    return new Response(
+      JSON.stringify({ error: 'Method not allowed' }),
+      { status: 405, headers: getAllSecurityHeaders() },
     );
+  }
 
-    // 4. Validar usuário
-    const token = authHeader.replace('Bearer ', '');
-    const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(token);
-    
-    if (authError || !user) {
-      return new Response(
-        JSON.stringify({ error: 'Unauthorized' }),
-        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
+  // 1. Autenticação e autorização centralizadas
+  const auth = await requireAdmin(req);
+  if (auth instanceof Response) return auth;
+  const { userId: requesterId } = auth;
 
-    // 5. Verificar role admin
-    const { data: roles } = await supabaseAdmin
-      .from('user_roles')
-      .select('role_enum')
-      .eq('user_id', user.id)
-      .is('revoked_at', null);
+  // 2. Validar body
+  const rawBody = await req.json();
+  const validation = validateBody<ListUsersBody>(rawBody, listUsersSchema);
+  if (!validation.ok) {
+    return validationErrorResponse(validation.errors, getAllSecurityHeaders());
+  }
+  const { page = 0, pageSize = 20, search } = validation.data!;
 
-    const isAdmin = roles?.some(r => ['admin', 'super_admin'].includes(r.role_enum));
-    if (!isAdmin) {
-      return new Response(
-        JSON.stringify({ error: 'Forbidden: Admin access required' }),
-        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
+  if (pageSize < 1 || pageSize > 100) {
+    return new Response(
+      JSON.stringify({ error: 'pageSize must be between 1 and 100' }),
+      { status: 400, headers: getAllSecurityHeaders() },
+    );
+  }
 
-    // 6. Parsear body
-    const body: ListUsersRequest = await req.json();
-    const { page = 0, pageSize = 20, search } = body;
+  const supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
+    auth: { autoRefreshToken: false, persistSession: false },
+  });
 
-    // 7. Validar input
-    if (page < 0 || pageSize < 1 || pageSize > 100) {
-      return new Response(
-        JSON.stringify({ error: 'Invalid pagination parameters' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    // 8. Buscar usuários do auth
+  try {
+    // 3. Buscar usuários do auth
     const { data: authData, error: authListError } = await supabaseAdmin.auth.admin.listUsers({
-      page: page + 1, // Supabase auth usa 1-indexed
+      page: page + 1,
       perPage: pageSize,
     });
 
-    if (authListError) {
-      throw authListError;
-    }
+    if (authListError) throw authListError;
 
-    const users = authData.users || [];
-    const userIds = users.map(u => u.id);
+    const users = authData.users ?? [];
+    const userIds = users.map((u: { id: string }) => u.id);
 
-    // 9. Buscar perfis desses usuários
+    // 4. Buscar perfis e roles em paralelo
     let profilesQuery = supabaseAdmin
       .from('profiles')
       .select('id, user_id, username, full_name, avatar_url, created_at')
       .in('user_id', userIds);
 
     if (search) {
-      profilesQuery = profilesQuery.or(
-        `username.ilike.%${search}%,full_name.ilike.%${search}%`
-      );
+      profilesQuery = profilesQuery.or(`username.ilike.%${search}%,full_name.ilike.%${search}%`);
     }
 
-    const { data: profilesData, error: profilesError } = await profilesQuery;
+    const [profilesResult, rolesResult] = await Promise.all([
+      profilesQuery,
+      supabaseAdmin
+        .from('user_roles')
+        .select('user_id, role_enum, granted_at')
+        .in('user_id', userIds)
+        .is('revoked_at', null),
+    ]);
 
-    if (profilesError) {
-      throw profilesError;
-    }
+    if (profilesResult.error) throw profilesResult.error;
+    if (rolesResult.error) throw rolesResult.error;
 
-    // 10. Buscar roles dos usuários
-    const { data: rolesData, error: rolesError } = await supabaseAdmin
-      .from('user_roles')
-      .select('user_id, role_enum, granted_at')
-      .in('user_id', userIds)
-      .is('revoked_at', null);
+    // 5. Combinar dados
+    let adminUsers: AdminUser[] = users.map((authUser: {
+      id: string;
+      email?: string;
+      created_at: string;
+      last_sign_in_at?: string | null;
+      email_confirmed_at?: string | null;
+    }) => ({
+      id: authUser.id,
+      email: authUser.email ?? '',
+      created_at: authUser.created_at,
+      last_sign_in_at: authUser.last_sign_in_at,
+      email_confirmed_at: authUser.email_confirmed_at,
+      profiles: (profilesResult.data ?? []).filter((p: { user_id: string }) => p.user_id === authUser.id),
+      roles: (rolesResult.data ?? []).filter((r: { user_id: string }) => r.user_id === authUser.id),
+    }));
 
-    if (rolesError) {
-      throw rolesError;
-    }
-
-    // 11. Combinar dados
-    const adminUsers: AdminUser[] = users.map(authUser => {
-      const userProfiles = profilesData?.filter(p => p.user_id === authUser.id) || [];
-      const userRoles = rolesData?.filter(r => r.user_id === authUser.id) || [];
-
-      return {
-        id: authUser.id,
-        email: authUser.email || '',
-        created_at: authUser.created_at,
-        last_sign_in_at: authUser.last_sign_in_at,
-        email_confirmed_at: authUser.email_confirmed_at,
-        profiles: userProfiles,
-        roles: userRoles,
-      };
-    });
-
-    // 12. Filtrar por search se necessário
-    let filteredUsers = adminUsers;
+    // 6. Filtro de busca por email
     if (search) {
       const searchLower = search.toLowerCase();
-      filteredUsers = adminUsers.filter(u => 
-        u.email.toLowerCase().includes(searchLower) ||
-        u.profiles.some(p => 
-          p.username?.toLowerCase().includes(searchLower) ||
-          p.full_name?.toLowerCase().includes(searchLower)
-        )
+      adminUsers = adminUsers.filter(
+        (u) =>
+          u.email.toLowerCase().includes(searchLower) ||
+          (u.profiles as Array<{ username?: string; full_name?: string }>).some(
+            (p) =>
+              p.username?.toLowerCase().includes(searchLower) ||
+              p.full_name?.toLowerCase().includes(searchLower),
+          ),
       );
     }
 
-    // 13. Audit log
-    await supabaseAdmin.from('function_audit').insert({
-      function_name: 'admin-list-users',
-      user_id: user.id,
-      input: { page, pageSize, search },
-      success: true,
-      duration_ms: 0, // TODO: calcular tempo real
-    }).catch(err => console.error('Audit log error:', err));
+    // 7. Audit log
+    auditLog({
+      timestamp: new Date().toISOString(),
+      userId: requesterId,
+      action: 'admin_list_users',
+      resource: 'users',
+      status: 'success',
+      details: { page, pageSize, search, resultCount: adminUsers.length },
+      ...getAuditInfo(req),
+    });
 
-    // 14. Retornar resultado
     return new Response(
       JSON.stringify({
-        users: filteredUsers,
-        total: authData.total || 0,
+        users: adminUsers,
+        total: authData.total ?? 0,
         page,
         pageSize,
       }),
-      {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      }
+      { status: 200, headers: getAllSecurityHeaders() },
     );
-
-  } catch (error) {
-    console.error('Error in admin-list-users:', error);
-    
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Internal server error';
+    auditLog({
+      timestamp: new Date().toISOString(),
+      userId: requesterId,
+      action: 'admin_list_users_error',
+      resource: 'users',
+      status: 'failure',
+      details: { error: message },
+      ...getAuditInfo(req),
+    });
     return new Response(
-      JSON.stringify({ 
-        error: error instanceof Error ? error.message : 'Internal server error' 
-      }),
-      {
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      }
+      JSON.stringify({ error: message }),
+      { status: 500, headers: getAllSecurityHeaders() },
     );
   }
 });

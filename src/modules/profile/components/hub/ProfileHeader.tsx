@@ -16,12 +16,12 @@ import { buildProfileEditUrl, buildPublicProfileUrl } from '@/core/profiles/util
 import { getProfileTypeLabel } from '@/modules/profile/utils/profileDomainRules';
 import { useAppUrls } from '@/core/routing/hooks/useAppUrls';
 
-import type { Profile } from '@/core/profiles/services/multi-profile/types';
-import type { ProfileAccountSnapshot } from '@/core/profiles/services/types';
+import type { MultiProfileRecord } from '@/core/profiles/services/multi-profile/types';
+import type { ProfileAccountSnapshot } from '@/core/profiles/views/ProfileAccountSnapshot';
 
 interface ProfileHeaderProps {
-  activeProfile: Profile | null;
-  profile: Profile | null;
+  activeProfile: MultiProfileRecord | null;
+  profile: MultiProfileRecord | null;
   userEmail: string;
   accountSnapshot: ProfileAccountSnapshot;
   identity: any;

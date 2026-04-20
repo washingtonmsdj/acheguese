@@ -69,3 +69,11 @@ export type {
   ForgotPasswordInput,
   ResetPasswordInput,
 } from "./user.schema";
+
+// Lost & Found schemas
+export { NovoAchadoPerdidoSchema } from "./lostfound.schema";
+export type { NovoAchadoPerdidoInput } from "./lostfound.schema";
+
+// DPO schemas
+export { DPOContactSchema } from "./dpo.schema";
+export type { DPOContactInput } from "./dpo.schema";

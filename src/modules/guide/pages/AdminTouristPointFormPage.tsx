@@ -9,6 +9,7 @@
 import { useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { ArrowLeft, Loader2, Save } from 'lucide-react';
 import { Button } from '@/shared/components/ui/button';
 import { Input } from '@/shared/components/ui/input';
@@ -38,22 +39,11 @@ import {
   generateSlug,
 } from '../types';
 import type { CreateTouristPointInput, PriceType, TouristPointStatus } from '../types';
-
-interface FormValues {
-  location_id: string;
-  title: string;
-  slug: string;
-  summary: string;
-  description: string;
-  address_text: string;
-  price_type: PriceType;
-  price_text: string;
-  opening_hours: string;
-  accessibility_notes: string;
-  official_url: string;
-  is_featured: boolean;
-  status: TouristPointStatus;
-}
+import { InlineFieldError } from '@/shared/components/ui/InlineFieldError';
+import {
+  TouristPointFormSchema,
+  type TouristPointFormInput,
+} from '../schemas/touristPoint.schema';
 
 export default function AdminTouristPointFormPage() {
   const { id } = useParams<{ id?: string }>();
@@ -73,11 +63,23 @@ export default function AdminTouristPointFormPage() {
     watch,
     reset,
     formState: { errors, isSubmitting },
-  } = useForm<FormValues>({
+  } = useForm<TouristPointFormInput>({
+    resolver: zodResolver(TouristPointFormSchema),
+    mode: 'onBlur',
     defaultValues: {
+      location_id: '',
+      title: '',
+      slug: '',
+      summary: '',
+      description: '',
+      address_text: null,
       price_type: PRICE_TYPE.FREE,
-      status: TOURIST_POINT_STATUS.DRAFT,
+      price_text: null,
+      opening_hours: null,
+      accessibility_notes: null,
+      official_url: null,
       is_featured: false,
+      status: TOURIST_POINT_STATUS.DRAFT,
     },
   });
 
@@ -99,31 +101,31 @@ export default function AdminTouristPointFormPage() {
         slug:                 existing.slug,
         summary:              existing.summary,
         description:          existing.description,
-        address_text:         existing.address_text ?? '',
+        address_text:         existing.address_text ?? null,
         price_type:           existing.price_type,
-        price_text:           existing.price_text ?? '',
-        opening_hours:        existing.opening_hours ?? '',
-        accessibility_notes:  existing.accessibility_notes ?? '',
-        official_url:         existing.official_url ?? '',
+        price_text:           existing.price_text ?? null,
+        opening_hours:        existing.opening_hours ?? null,
+        accessibility_notes:  existing.accessibility_notes ?? null,
+        official_url:         existing.official_url ?? null,
         is_featured:          existing.is_featured,
         status:               existing.status,
       });
     }
   }, [existing, reset]);
 
-  const onSubmit = async (values: FormValues) => {
+  const onSubmit = async (values: TouristPointFormInput) => {
     const input: CreateTouristPointInput = {
       location_id:          values.location_id,
       slug:                 values.slug || undefined,
       title:                values.title,
       summary:              values.summary,
       description:          values.description,
-      address_text:         values.address_text || null,
+      address_text:         values.address_text,
       price_type:           values.price_type,
-      price_text:           values.price_text || null,
-      opening_hours:        values.opening_hours || null,
-      accessibility_notes:  values.accessibility_notes || null,
-      official_url:         values.official_url || null,
+      price_text:           values.price_text,
+      opening_hours:        values.opening_hours,
+      accessibility_notes:  values.accessibility_notes,
+      official_url:         values.official_url,
       is_featured:          values.is_featured,
       status:               values.status,
     };
@@ -182,12 +184,10 @@ export default function AdminTouristPointFormPage() {
               <Label htmlFor="location_id">Location ID *</Label>
               <Input
                 id="location_id"
-                {...register('location_id', { required: 'Obrigatório' })}
+                {...register('location_id')}
                 placeholder="UUID da location (bairro/cidade)"
               />
-              {errors.location_id && (
-                <p className="text-xs text-destructive mt-1">{errors.location_id.message}</p>
-              )}
+              <InlineFieldError message={errors.location_id?.message} />
               <p className="text-xs text-muted-foreground mt-1">
                 UUID da tabela locations (bairro ou cidade).
               </p>
@@ -205,12 +205,10 @@ export default function AdminTouristPointFormPage() {
               <Label htmlFor="title">Título *</Label>
               <Input
                 id="title"
-                {...register('title', { required: 'Obrigatório' })}
+                {...register('title')}
                 placeholder="Ex: Pelourinho"
               />
-              {errors.title && (
-                <p className="text-xs text-destructive mt-1">{errors.title.message}</p>
-              )}
+              <InlineFieldError message={errors.title?.message} />
             </div>
 
             <div>
@@ -229,25 +227,21 @@ export default function AdminTouristPointFormPage() {
               <Label htmlFor="summary">Resumo *</Label>
               <Input
                 id="summary"
-                {...register('summary', { required: 'Obrigatório' })}
+                {...register('summary')}
                 placeholder="Uma linha descrevendo o ponto turístico"
               />
-              {errors.summary && (
-                <p className="text-xs text-destructive mt-1">{errors.summary.message}</p>
-              )}
+              <InlineFieldError message={errors.summary?.message} />
             </div>
 
             <div>
               <Label htmlFor="description">Descrição completa *</Label>
               <Textarea
                 id="description"
-                {...register('description', { required: 'Obrigatório' })}
+                {...register('description')}
                 rows={5}
                 placeholder="Descrição detalhada do ponto turístico"
               />
-              {errors.description && (
-                <p className="text-xs text-destructive mt-1">{errors.description.message}</p>
-              )}
+              <InlineFieldError message={errors.description?.message} />
             </div>
           </CardContent>
         </Card>
@@ -265,6 +259,7 @@ export default function AdminTouristPointFormPage() {
                 {...register('address_text')}
                 placeholder="Ex: Largo do Pelourinho, s/n — Centro Histórico"
               />
+              <InlineFieldError message={errors.address_text?.message} />
             </div>
 
             <div>
@@ -274,6 +269,7 @@ export default function AdminTouristPointFormPage() {
                 {...register('opening_hours')}
                 placeholder="Ex: Ter–Dom 9h–18h"
               />
+              <InlineFieldError message={errors.opening_hours?.message} />
             </div>
 
             <div className="grid grid-cols-2 gap-4">
@@ -281,7 +277,7 @@ export default function AdminTouristPointFormPage() {
                 <Label htmlFor="price_type">Tipo de preço *</Label>
                 <Select
                   defaultValue={PRICE_TYPE.FREE}
-                  onValueChange={(v) => setValue('price_type', v as PriceType)}
+                  onValueChange={(v) => setValue('price_type', v as PriceType, { shouldValidate: true })}
                 >
                   <SelectTrigger id="price_type">
                     <SelectValue />
@@ -292,6 +288,7 @@ export default function AdminTouristPointFormPage() {
                     ))}
                   </SelectContent>
                 </Select>
+                <InlineFieldError message={errors.price_type?.message} />
               </div>
 
               <div>
@@ -301,6 +298,7 @@ export default function AdminTouristPointFormPage() {
                   {...register('price_text')}
                   placeholder="Ex: R$ 10 adulto"
                 />
+                <InlineFieldError message={errors.price_text?.message} />
               </div>
             </div>
 
@@ -311,6 +309,7 @@ export default function AdminTouristPointFormPage() {
                 {...register('accessibility_notes')}
                 placeholder="Ex: Rampas de acesso, piso tátil"
               />
+              <InlineFieldError message={errors.accessibility_notes?.message} />
             </div>
 
             <div>
@@ -321,6 +320,7 @@ export default function AdminTouristPointFormPage() {
                 placeholder="https://..."
                 type="url"
               />
+              <InlineFieldError message={errors.official_url?.message} />
             </div>
           </CardContent>
         </Card>

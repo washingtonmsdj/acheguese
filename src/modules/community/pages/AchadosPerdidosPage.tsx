@@ -19,7 +19,7 @@ import { Skeleton } from "@/shared/components/ui/skeleton";
 import { TooltipProvider } from "@/shared/components/ui/tooltip";
 import { useAppUrls } from "@/core/routing/hooks"; // ✅ SSOT URLs
 import { useUserTerritory } from "@/core/location/hooks/useUserTerritory";
-import { useProfile } from "@/core/profiles/hooks/useProfile";
+import { useSessionContext } from "@/core/session";
 import {
   Select,
   SelectContent,
@@ -72,7 +72,7 @@ export default function AchadosPerdidosPage() {
   const [filterCategoria, setFilterCategoria] = useState("todos");
 
   // ✅ Verificação de autenticação
-  const { profile } = useProfile();
+  const { activeProfile } = useSessionContext();
   const { hasHome, loading: territoryLoading } = useUserTerritory();
 
   const {
@@ -161,7 +161,7 @@ export default function AchadosPerdidosPage() {
     CATEGORIAS.find((c) => c.id === cat)?.icon || "❓";
 
   // Bloquear se não estiver logado
-  if (!profile) {
+  if (!activeProfile) {
     return (
       <TooltipProvider>
         <div className="min-h-screen bg-[#12181B] flex items-center justify-center" role="main">

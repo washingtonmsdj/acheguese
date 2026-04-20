@@ -97,3 +97,43 @@ export type LoginUserInput = z.infer<typeof LoginUserSchema>;
 export type UpdatePasswordInput = z.infer<typeof UpdatePasswordSchema>;
 export type ForgotPasswordInput = z.infer<typeof ForgotPasswordSchema>;
 export type ResetPasswordInput = z.infer<typeof ResetPasswordSchema>;
+
+// ── Schemas para formulários de auth ─────────────────────────────────────
+
+/**
+ * Schema para o campo unificado de login (email OU @username)
+ *
+ * Não valida formato de email nem de username — apenas que o campo
+ * não está vazio. A lógica de detecção de tipo (parseAuthIdentifier)
+ * permanece no componente para fins de UX e roteamento de auth.
+ */
+export const LoginIdentifierSchema = z.object({
+  identifier: z
+    .string({ required_error: validationMessages.required })
+    .min(1, validationMessages.required),
+  password: z
+    .string({ required_error: validationMessages.required })
+    .min(1, validationMessages.required),
+});
+
+export type LoginIdentifierInput = z.infer<typeof LoginIdentifierSchema>;
+
+/**
+ * Schema para o formulário de redefinição de senha
+ *
+ * Versão sem o campo `token` — o token vem da sessão Supabase
+ * após o redirect, não é digitado pelo usuário.
+ */
+export const ResetPasswordFormSchema = z
+  .object({
+    newPassword: strongPasswordValidator,
+    confirmNewPassword: z.string({
+      required_error: validationMessages.required,
+    }),
+  })
+  .refine((data) => data.newPassword === data.confirmNewPassword, {
+    message: validationMessages.fields.password.mismatch,
+    path: ["confirmNewPassword"],
+  });
+
+export type ResetPasswordFormInput = z.infer<typeof ResetPasswordFormSchema>;

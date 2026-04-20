@@ -24,7 +24,7 @@ interface SuspendRequest {
   reason: string;
 }
 
-Deno.serve(async (req) => {
+Deno.serve(async (req: Request) => {
   const auditInfo = getAuditInfo(req);
   const origin = req.headers.get('origin');
 
@@ -119,3 +119,4 @@ Deno.serve(async (req) => {
 
   return jsonResponse(data);
 });
+

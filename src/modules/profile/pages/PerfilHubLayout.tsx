@@ -15,7 +15,7 @@ import { Helmet } from "react-helmet-async";
 import type { ReactNode } from "react";
 
 import { ProfileHeaderCompact, ProfileSectionsNav } from "@/modules/profile/components/hub";
-import type { Profile } from "@/core/profiles/services/multi-profile/types";
+import type { MultiProfileRecord } from "@/core/profiles/services/multi-profile/types";
 import type { ProfileSectionId } from "@/modules/profile/sections/types";
 import type { SectionNavItem } from "@/modules/profile/components/hub/ProfileSectionsNav";
 
@@ -26,9 +26,9 @@ export interface PerfilHubLayoutProps {
   readonly sectionItems: readonly SectionNavItem<ProfileSectionId>[];
   
   // Perfil
-  readonly personalProfile: Profile | null;
-  readonly profile: Profile | null;
-  readonly allProfiles?: readonly Profile[];
+  readonly personalProfile: MultiProfileRecord | null;
+  readonly profile: MultiProfileRecord | null;
+  readonly allProfiles?: readonly MultiProfileRecord[];
   readonly isVerified: boolean;
   readonly canOpenPublicProfile: boolean;
   readonly handle: string;
