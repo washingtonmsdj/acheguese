@@ -7,6 +7,7 @@ import { useNavigate } from "react-router-dom";
 import { AuthService } from "@/core/auth";
 import { useAuth } from "@/core/auth/hooks/useAuth";
 import { HibpService } from "@/core/auth/services/HibpService";
+import { getAuthErrorMessage } from "@/core/auth/utils/authMessages";
 import { useToast } from "@/shared/hooks/use-toast";
 
 export default function LoginPage() {
@@ -94,7 +95,7 @@ export default function LoginPage() {
     } catch (error: any) {
       toast({
         title: "Erro ao criar conta",
-        description: error.message,
+        description: getAuthErrorMessage(error),
         variant: "destructive",
       });
     }

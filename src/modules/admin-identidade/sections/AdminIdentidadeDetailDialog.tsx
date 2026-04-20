@@ -6,7 +6,7 @@
 
 import { Loader2 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/shared/components/ui/dialog";
-import { AdminErrorState } from "@/modules/admin/components";
+import { AdminErrorState } from "@/core/admin/components";
 import type { AdminIdentidadeDetailDialogProps } from "./types";
 import {
   IdentityCard,

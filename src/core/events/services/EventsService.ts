@@ -7,7 +7,7 @@
  * @version 1.0.0
  */
 
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/integrations/supabase/supabase";
 import { logger } from "@/shared/utils/logger";
 import type { TerritoryFilter } from "@/core/location/types/TerritoryFilter";
 import { applyTerritoryFilter } from "@/core/location/utils/applyTerritoryFilter";
@@ -441,3 +441,4 @@ export class EventsService {
 
 // Singleton instance para consistência com outros serviços
 export const eventService = EventsService;
+

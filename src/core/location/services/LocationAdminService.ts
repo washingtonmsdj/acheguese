@@ -5,7 +5,7 @@
  * Owns admin CRUD boundaries for location records.
  */
 
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from '@/integrations/supabase/supabase';
 import { createLocationRepository } from '../repositories/createLocationRepository';
 import type { Location, LocationMetadata, LocationType } from '../types';
 
@@ -70,4 +70,5 @@ export class LocationAdminService {
 }
 
 export const locationAdminService = LocationAdminService;
+
 

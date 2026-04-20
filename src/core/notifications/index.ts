@@ -26,3 +26,6 @@ export type {
   AlertNotificationMetadata,
   SystemNotificationMetadata,
 } from './types';
+
+// Components
+export { UnifiedNotificationBellV2 } from './components/UnifiedNotificationBellV2';

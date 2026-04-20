@@ -24,8 +24,8 @@ import {
 import { Switch } from '@/shared/components/ui/switch';
 import { Label } from '@/shared/components/ui/label';
 import { useToast } from '@/shared/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/core/auth/hooks/useAuth';
+import { ConsentService } from '@/core/privacy/services/ConsentService';
 
 interface ConsentPreferences {
   necessary: boolean; // Sempre true - não pode ser desabilitado
@@ -50,32 +50,7 @@ export function ConsentBanner() {
   // Verificar se usuário já tem consentimento registrado
   const { data: existingConsents, isLoading } = useQuery({
     queryKey: ['user-consents-check', user?.id],
-    queryFn: async () => {
-      // Verificar localStorage primeiro (para usuários não logados)
-      const localConsent = localStorage.getItem('lgpd-consent');
-      if (localConsent) {
-        return JSON.parse(localConsent);
-      }
-
-      // Se logado, buscar do banco
-      if (user?.id) {
-        const { data, error } = await (supabase as any)
-          .from('user_consents')
-          .select('consent_type, granted')
-          .eq('user_id', user.id);
-
-        if (error) throw error;
-        
-        // Se tem consentimentos no banco, salvar no localStorage
-        if (data && data.length > 0) {
-          localStorage.setItem('lgpd-consent', JSON.stringify(data));
-        }
-        
-        return data;
-      }
-
-      return null;
-    },
+    queryFn: async () => ConsentService.getExistingConsents(user?.id),
     enabled: true,
   });
 
@@ -93,31 +68,15 @@ export function ConsentBanner() {
   // Mutação para salvar consentimentos
   const saveConsentsMutation = useMutation({
     mutationFn: async (consents: ConsentPreferences) => {
-      // Salvar no localStorage (para todos os usuários)
-      const consentsArray = [
-        { consent_type: 'cookies', granted: true }, // Necessários sempre true
-        { consent_type: 'analytics', granted: consents.analytics },
-        { consent_type: 'marketing', granted: consents.marketing },
-        { consent_type: 'geolocation', granted: consents.geolocation },
-        { consent_type: 'privacy_policy', granted: true },
-      ];
-      
-      localStorage.setItem('lgpd-consent', JSON.stringify(consentsArray));
-
-      // Se logado, salvar no banco
-      if (user?.id) {
-        for (const consent of consentsArray) {
-          await (supabase as any).rpc('record_consent', {
-            p_user_id: user.id,
-            p_consent_type: consent.consent_type,
-            p_granted: consent.granted,
-            p_ip_address: null,
-            p_user_agent: navigator.userAgent,
-            p_terms_version: '1.0',
-            p_privacy_version: '1.0',
-          });
-        }
-      }
+      await ConsentService.saveConsentPreferences({
+        userId: user?.id,
+        preferences: {
+          analytics: consents.analytics,
+          marketing: consents.marketing,
+          geolocation: consents.geolocation,
+        },
+        userAgent: navigator.userAgent,
+      });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['user-consents-check', user?.id] });

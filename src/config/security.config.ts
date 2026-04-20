@@ -105,6 +105,8 @@ export const SECURITY_DOMAINS = {
     alternatives: 'Self-hosted Sentry instance',
   },
 } as const;
+
+const IS_DEV = typeof import.meta !== 'undefined' && import.meta.env.DEV;
 /**
  * Extract URLs from domain registry
  */
@@ -131,8 +133,7 @@ export const CSP_DIRECTIVES = {
   // Scripts - CRITICAL: Most dangerous directive
   'script-src': [
     "'self'",
-    "'unsafe-inline'",  // TODO: Remove after refactoring inline scripts
-    "'unsafe-eval'",    // TODO: Remove after removing eval() usage
+    ...(IS_DEV ? ["'unsafe-inline'", "'unsafe-eval'"] : []),
     SECURITY_DOMAINS.CDN_JSDELIVR.url,
     SECURITY_DOMAINS.SUPABASE_HTTPS.url,
   ],
@@ -644,13 +645,15 @@ export function validateCSPConfig(): { valid: boolean; errors: string[] } {
     }
   }
   
-  // Check for dangerous values
-  if (CSP_DIRECTIVES['script-src']?.includes("'unsafe-inline'")) {
-    errors.push("WARNING: 'unsafe-inline' in script-src is dangerous");
-  }
-  
-  if (CSP_DIRECTIVES['script-src']?.includes("'unsafe-eval'")) {
-    errors.push("WARNING: 'unsafe-eval' in script-src is dangerous");
+  // Check for dangerous values only outside dev runtime.
+  if (!IS_DEV) {
+    if (CSP_DIRECTIVES['script-src']?.includes("'unsafe-inline'")) {
+      errors.push("WARNING: 'unsafe-inline' in script-src is dangerous");
+    }
+
+    if (CSP_DIRECTIVES['script-src']?.includes("'unsafe-eval'")) {
+      errors.push("WARNING: 'unsafe-eval' in script-src is dangerous");
+    }
   }
   
   return {
@@ -697,9 +700,9 @@ export function getSecurityConfigSummary() {
 
 // Validate configuration on module load (build-time check)
 // Only in development/build context (not in Node.js scripts)
-if (typeof import.meta.env !== 'undefined' && import.meta.env.DEV) {
+if (typeof import.meta.env !== 'undefined' && import.meta.env.DEV && import.meta.env.VITE_SECURITY_DEBUG === 'true') {
   const validation = validateCSPConfig();
   if (!validation.valid) {
-    console.warn('⚠️ Security Configuration Warnings:', validation.errors);
+    console.warn('Security Configuration Warnings:', validation.errors);
   }
 }

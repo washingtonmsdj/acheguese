@@ -61,23 +61,15 @@ import { Label } from '@/shared/components/ui/label';
 import { Switch } from '@/shared/components/ui/switch';
 import { Separator } from '@/shared/components/ui/separator';
 import { useToast } from '@/shared/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/core/auth/hooks/useAuth';
+import {
+  PrivacySettingsService,
+  type UserConsentRecord,
+  type DeletionStatusRecord,
+} from '@/core/privacy/services/PrivacySettingsService';
 
-interface UserConsent {
-  id: string;
-  consent_type: string;
-  granted: boolean;
-  granted_at: string;
-  terms_version: string;
-  privacy_policy_version: string;
-}
-
-interface DeletionStatus {
-  status: 'scheduled' | 'processing' | 'completed' | 'cancelled' | null;
-  scheduled_purge_at: string | null;
-  days_remaining: number | null;
-}
+type UserConsent = UserConsentRecord;
+type DeletionStatus = DeletionStatusRecord;
 
 export default function PrivacySettingsPage() {
   const { user } = useAuth();
@@ -90,44 +82,14 @@ export default function PrivacySettingsPage() {
   // Buscar consentimentos do usuário
   const { data: consents, isLoading: consentsLoading } = useQuery({
     queryKey: ['user-consents', user?.id],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('user_consents')
-        .select('*')
-        .eq('user_id', user?.id)
-        .order('consent_type', { ascending: true });
-
-      if (error) throw error;
-      return data as UserConsent[];
-    },
+    queryFn: async () => PrivacySettingsService.getUserConsents(user!.id),
     enabled: !!user?.id,
   });
 
   // Buscar status de deleção
   const { data: deletionStatus, isLoading: deletionLoading } = useQuery({
     queryKey: ['deletion-status', user?.id],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('user_deletion_schedule')
-        .select('status, scheduled_purge_at')
-        .eq('user_id', user?.id)
-        .single();
-
-      if (error) return null;
-
-      const daysRemaining = data.scheduled_purge_at
-        ? Math.ceil(
-            (new Date(data.scheduled_purge_at).getTime() - Date.now()) /
-              (1000 * 60 * 60 * 24)
-          )
-        : null;
-
-      return {
-        status: data.status as DeletionStatus['status'],
-        scheduled_purge_at: data.scheduled_purge_at,
-        days_remaining: daysRemaining && daysRemaining > 0 ? daysRemaining : 0,
-      } as DeletionStatus;
-    },
+    queryFn: async () => PrivacySettingsService.getDeletionStatus(user!.id),
     enabled: !!user?.id,
   });
 
@@ -140,17 +102,12 @@ export default function PrivacySettingsPage() {
       consentType: string;
       granted: boolean;
     }) => {
-      const { error } = await supabase.rpc('record_consent', {
-        p_user_id: user?.id,
-        p_consent_type: consentType,
-        p_granted: granted,
-        p_ip_address: null,
-        p_user_agent: navigator.userAgent,
-        p_terms_version: '1.0',
-        p_privacy_version: '1.0',
+      await PrivacySettingsService.recordConsent({
+        userId: user!.id,
+        consentType,
+        granted,
+        userAgent: navigator.userAgent,
       });
-
-      if (error) throw error;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['user-consents', user?.id] });
@@ -172,30 +129,11 @@ export default function PrivacySettingsPage() {
   const handleExportData = async () => {
     setIsExporting(true);
     try {
-      const { data: sessionData } = await supabase.auth.getSession();
-      const accessToken = sessionData.session?.access_token;
-
-      if (!accessToken) {
-        throw new Error('Sessão não encontrada');
-      }
-
-      const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/user-export-data`,
-        {
-          method: 'POST',
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-            'Content-Type': 'application/json',
-          },
-        }
+      const accessToken = await PrivacySettingsService.getAccessToken();
+      const blob = await PrivacySettingsService.exportUserData(
+        import.meta.env.VITE_SUPABASE_URL,
+        accessToken,
       );
-
-      if (!response.ok) {
-        throw new Error('Falha na exportação');
-      }
-
-      // Download do arquivo
-      const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
@@ -223,34 +161,12 @@ export default function PrivacySettingsPage() {
   // Solicitar exclusão de conta (LGPD Art. 18, VI)
   const handleDeleteAccount = async () => {
     try {
-      const { data: sessionData } = await supabase.auth.getSession();
-      const accessToken = sessionData.session?.access_token;
-
-      if (!accessToken) {
-        throw new Error('Sessão não encontrada');
-      }
-
-      const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/user-delete-account`,
-        {
-          method: 'POST',
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            confirmation: true,
-            reason: deleteReason,
-          }),
-        }
-      );
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || 'Falha na solicitação');
-      }
-
-      const result = await response.json();
+      const accessToken = await PrivacySettingsService.getAccessToken();
+      const result = await PrivacySettingsService.requestAccountDeletion({
+        supabaseUrl: import.meta.env.VITE_SUPABASE_URL,
+        accessToken,
+        reason: deleteReason,
+      });
 
       queryClient.invalidateQueries({
         queryKey: ['deletion-status', user?.id],
@@ -258,7 +174,7 @@ export default function PrivacySettingsPage() {
 
       toast({
         title: 'Conta agendada para exclusão',
-        description: `Sua conta será excluída em ${result.details.days_until_purge} dias. Você pode cancelar até lá.`,
+        description: `Sua conta será excluída em ${result.days_until_purge} dias. Você pode cancelar até lá.`,
       });
 
       setShowDeleteConfirm(false);
@@ -275,12 +191,7 @@ export default function PrivacySettingsPage() {
   // Cancelar exclusão
   const handleCancelDeletion = async () => {
     try {
-      const { error } = await supabase.rpc('cancel_account_deletion', {
-        p_user_id: user?.id,
-        p_reason: 'Cancelado pelo usuário',
-      });
-
-      if (error) throw error;
+      await PrivacySettingsService.cancelAccountDeletion(user!.id);
 
       queryClient.invalidateQueries({
         queryKey: ['deletion-status', user?.id],

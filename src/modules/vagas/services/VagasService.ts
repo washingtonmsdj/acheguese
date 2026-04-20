@@ -18,7 +18,7 @@
  * @version 3.0.0 - Service Completo AAA
  */
 import { logger } from '@/shared/utils/logger';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from '@/integrations/supabase/supabase';
 import type {
   Vaga,
   VagaRow,
@@ -750,3 +750,4 @@ export class VagasService {
 
 // Export singleton
 export const vagasService = VagasService;
+

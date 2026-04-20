@@ -11,7 +11,7 @@
  * - Otimização de performance
  */
 import { logger } from '@/shared/utils/logger';
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/integrations/supabase/supabase";
 import imageCompression from "browser-image-compression";
 // ─── Constants ────────────────────────────────────────────────
 
@@ -312,3 +312,4 @@ export class ClassifiedImageService {
 }
 
 export default ClassifiedImageService;
+

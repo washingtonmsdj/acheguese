@@ -5,7 +5,7 @@
  */
 
 import { UserCog, AlertTriangle, ShieldCheck, MapPin, Star } from "lucide-react";
-import { AdminStatsGrid, AdminStatsCard } from "@/modules/admin/components";
+import { AdminStatsGrid, AdminStatsCard } from "@/core/admin/components";
 import type { AdminIdentidadeStatsSectionProps } from "./types";
 
 export function AdminIdentidadeStatsSection({ stats, loading, error }: AdminIdentidadeStatsSectionProps) {

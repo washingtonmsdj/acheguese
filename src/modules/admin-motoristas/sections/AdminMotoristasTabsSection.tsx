@@ -17,10 +17,12 @@ import {
   Award,
   Settings,
 } from "lucide-react";
-import { DriverEarningsMetrics } from "@/modules/admin/components/DriverEarningsMetrics";
-import { DriverCancellationMetrics } from "@/modules/admin/components/DriverCancellationMetrics";
-import { ReputationManagementPanel } from "@/modules/admin/components/ReputationManagementPanel";
-import { MobilitySettingsPanel } from "@/modules/admin/components/MobilitySettingsPanel";
+import {
+  DriverEarningsMetrics,
+  DriverCancellationMetrics,
+  ReputationManagementPanel,
+  MobilitySettingsPanel,
+} from "@/core/admin/components";
 import type { AdminMotoristasTabsSectionProps } from "./types";
 
 export function AdminMotoristasTabsSection({

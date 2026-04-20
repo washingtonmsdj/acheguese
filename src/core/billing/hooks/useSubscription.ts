@@ -11,6 +11,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { SubscriptionService } from '../services/SubscriptionService';
 import { useAuth } from '@/core/auth/hooks/useAuth';
+import { SubscriptionStatusService } from '../services/SubscriptionStatusService';
 
 export function useSubscription() {
   const { user } = useAuth();
@@ -40,12 +41,14 @@ export function useSubscription() {
   });
 
   // Computed values
-  const isActive = subscription?.status === 'active' || subscription?.status === 'trialing';
-  const isTrialing = subscription?.status === 'trialing';
-  const isCanceled = subscription?.cancel_at_period_end === true;
-  const isPastDue = subscription?.status === 'past_due';
-  const planCode = subscription?.plan_code || 'free';
+  const subscriptionStatus = SubscriptionStatusService.getStatus(subscription);
+  const isActive = SubscriptionStatusService.isActive(subscriptionStatus);
+  const isTrialing = SubscriptionStatusService.isTrialing(subscriptionStatus);
+  const isCanceled = SubscriptionStatusService.isCanceled(subscription);
+  const isPastDue = SubscriptionStatusService.isPastDue(subscriptionStatus);
+  const planCode = SubscriptionStatusService.planCode(subscription);
   const planName = activeSubscription?.plan_name || 'Free';
+  const statusLabel = SubscriptionStatusService.statusLabel(subscriptionStatus);
 
   // Helpers
   const hasPlano = async (code: string) => {
@@ -82,6 +85,7 @@ export function useSubscription() {
     isTrialing,
     isCanceled,
     isPastDue,
+    statusLabel,
     planCode,
     planName,
 

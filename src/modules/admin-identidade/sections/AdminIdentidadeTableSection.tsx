@@ -14,7 +14,7 @@ import {
   AdminPagination,
   AdminSectionCard,
   AdminTable,
-} from "@/modules/admin/components";
+} from "@/core/admin/components";
 import type { AdminIdentidadeTableSectionProps } from "./types";
 import { StatusBadge, PlanBadge, IssueBadge } from "../components/badges";
 import { label } from "../utils";

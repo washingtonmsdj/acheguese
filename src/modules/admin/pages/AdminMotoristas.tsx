@@ -13,7 +13,7 @@
  * Score original: 237 (19 regras manuais + 1 wrapper antigo)
  */
 
-import AdminMotoristasPage from "@/modules/admin-motoristas/pages/AdminMotoristasPage";
+import AdminMotoristasPage from "@/core/admin/pages/AdminMotoristasPage";
 
 export default function AdminMotoristas() {
   return <AdminMotoristasPage />;

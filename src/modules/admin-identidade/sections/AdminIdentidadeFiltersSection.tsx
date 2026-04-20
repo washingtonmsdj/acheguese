@@ -5,7 +5,7 @@
  */
 
 import { useMemo } from "react";
-import { AdminFiltersBar, type FilterOption } from "@/modules/admin/components";
+import { AdminFiltersBar, type FilterOption } from "@/core/admin/components";
 import type { AdminIdentidadeFiltersSectionProps } from "./types";
 
 export function AdminIdentidadeFiltersSection({

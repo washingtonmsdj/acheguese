@@ -20,7 +20,7 @@ import {
 } from 'lucide-react';
 import { Button } from '@/shared/components/ui/button';
 import { ActionButton, RouteOptions } from '../components/ctas';
-import { GastronomyCTA } from '@/modules/gastronomy/components/GastronomyCTA';
+import { GastronomyCTA } from '@/core/gastronomy/components/GastronomyCTA';
 import type { EmpresaCTAsSectionProps } from './types';
 
 export function EmpresaCTAsSection({

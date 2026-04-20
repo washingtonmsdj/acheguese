@@ -6,7 +6,7 @@
  */
 
 import type { NavigateFunction } from "react-router-dom";
-import type { Business } from "@/modules/business/types";
+import type { Business } from "@/core/business/types";
 
 // ============================================
 // Business Extended (com campos adicionais)

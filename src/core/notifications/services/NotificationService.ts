@@ -9,7 +9,7 @@
  */
 
 import { logger } from '@/shared/utils/logger';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from '@/integrations/supabase/supabase';
 export interface Notification {
   id: string;
   user_id: string;
@@ -278,3 +278,4 @@ export class NotificationService {
 
 // Export singleton instance
 export const notificationService = new NotificationService();
+

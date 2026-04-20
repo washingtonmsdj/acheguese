@@ -67,6 +67,9 @@ jobs:
       - name: Run TypeScript type check
         run: npm run typecheck
 
+      - name: Run architecture boundaries incremental validation
+        run: npm run validate:architecture:incremental
+
   maps-architecture-enforcement:
     name: Maps Architecture Enforcement
     runs-on: ubuntu-latest

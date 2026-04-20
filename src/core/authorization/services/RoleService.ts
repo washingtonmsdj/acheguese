@@ -11,7 +11,7 @@
  * - Sempre usar as funções do banco (has_role, is_admin, etc)
  */
 import { logger } from '@/shared/utils/logger';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from '@/integrations/supabase/supabase';
 import type {
   AppRole,
   UserRole,
@@ -317,3 +317,4 @@ export class RoleService {
     return count || 0;
   }
 }
+

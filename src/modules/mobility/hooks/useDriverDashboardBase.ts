@@ -17,9 +17,9 @@ import {
   completeRide,
   cancelRide,
 } from "@/modules/mobility/services/mobility.mutations";
-import { supabase } from "@/integrations/supabase";
 import { logger } from "@/shared/utils/logger";
 import { RIDE_STATUS, TIMEOUTS } from "../constants";
+import { RideRatingService } from "@/core/mobility/services/RideRatingService";
 
 interface MobilityRide {
   id: string;
@@ -536,21 +536,13 @@ export function useDriverDashboardBase({
         .join(" | ");
 
       try {
-        const supabaseAny = supabase as any;
-        const { error } = await supabaseAny.from("ride_ratings").upsert(
-          {
-            ride_id: rideToRate.id,
-            rater_id: driverProfileId,
-            rated_id: passengerProfileId,
-            rating,
-            comment: composedComment || null,
-          },
-          { onConflict: "ride_id,rater_id" },
-        );
-
-        if (error) {
-          throw error;
-        }
+        await RideRatingService.upsert({
+          rideId: rideToRate.id,
+          raterId: driverProfileId,
+          ratedId: passengerProfileId,
+          rating,
+          comment: composedComment || null,
+        });
 
         toast.success("Avaliacao enviada!");
         setRatePassengerOpen(false);

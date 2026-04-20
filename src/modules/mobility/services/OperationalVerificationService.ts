@@ -14,7 +14,7 @@
  * - Verificar expiração
  */
 import { logger } from '@/shared/utils/logger';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from '@/integrations/supabase/supabase';
 import bcrypt from 'bcryptjs';
 import { profileService } from '@/core/profiles/services/ProfileService';
 import type {
@@ -503,5 +503,6 @@ export class OperationalVerificationService {
     return /^\d{4}$/.test(pin);
   }
 }
+
 
 

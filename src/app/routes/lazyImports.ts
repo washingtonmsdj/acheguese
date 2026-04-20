@@ -195,7 +195,7 @@ export const MapaPage = lazy(() => import("@/core/maps/pages/MapaPageV4"));
 // ============================================================
 // 📊 ANALYTICS
 // ============================================================
-export const GeneralAnalyticsPage = lazy(() => import("@/modules/analytics/pages/AnalyticsPage"));
+export const GeneralAnalyticsPage = lazy(() => import("@/core/analytics/pages/AnalyticsPage"));
 
 // ============================================================
 // 📱 QR CODE

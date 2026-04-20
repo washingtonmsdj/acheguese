@@ -8,6 +8,8 @@
 // 🏛️ FACADE - Interface unificada SSOT v2.0
 // ============================================================
 export { NotificationService, notificationService } from "./NotificationService";
+export { PushNotificationPreferencesService } from "./PushNotificationPreferencesService";
+export { UserNotificationPreferencesService } from "./UserNotificationPreferencesService";
 
 // ============================================================
 // 📦 LEGACY - Re-exports de types

@@ -17,22 +17,14 @@ import { Label } from '@/shared/components/ui/label';
 import { Switch } from '@/shared/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/components/ui/select';
 import { useToast } from '@/shared/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/core/auth/hooks/useAuth';
 import { PushNotificationSettings } from '@/shared/components/notifications/PushNotificationSettings';
+import {
+  UserNotificationPreferencesService,
+  type NotificationPreferencesRecord,
+} from '@/core/notifications/services/UserNotificationPreferencesService';
 
-interface NotificationPreferences {
-  email_enabled: boolean;
-  push_enabled: boolean;
-  inapp_enabled: boolean;
-  transactional_enabled: boolean;
-  social_enabled: boolean;
-  system_enabled: boolean;
-  marketing_enabled: boolean;
-  frequency: 'immediate' | 'daily' | 'weekly' | 'never';
-  quiet_hours_start: string | null;
-  quiet_hours_end: string | null;
-}
+type NotificationPreferences = NotificationPreferencesRecord;
 
 export default function NotificationPreferencesPage() {
   const { user } = useAuth();
@@ -55,16 +47,7 @@ export default function NotificationPreferencesPage() {
   // Query: Buscar preferências
   const { data, isLoading } = useQuery({
     queryKey: ['notification-preferences', user?.id],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('notification_preferences')
-        .select('*')
-        .eq('user_id', user!.id)
-        .single();
-
-      if (error) throw error;
-      return data;
-    },
+    queryFn: async () => UserNotificationPreferencesService.getByUserId(user!.id),
     enabled: !!user,
   });
 
@@ -88,14 +71,8 @@ export default function NotificationPreferencesPage() {
 
   // Mutation: Salvar preferências
   const saveMutation = useMutation({
-    mutationFn: async (prefs: NotificationPreferences) => {
-      const { error } = await supabase
-        .from('notification_preferences')
-        .update(prefs)
-        .eq('user_id', user!.id);
-
-      if (error) throw error;
-    },
+    mutationFn: async (prefs: NotificationPreferences) =>
+      UserNotificationPreferencesService.updateByUserId(user!.id, prefs),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['notification-preferences'] });
       toast({

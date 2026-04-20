@@ -10,7 +10,7 @@
  * - Anon usa apenas views públicas
  */
 import { logger } from '@/shared/utils/logger';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from '@/integrations/supabase/supabase';
 import { SessionService } from '@/core/session/services/SessionService';
 import { BusinessService } from './businessService';
 import { ProfessionalService } from './professionalService';
@@ -540,3 +540,4 @@ export class MultiProfileService {
     }
   }
 }
+

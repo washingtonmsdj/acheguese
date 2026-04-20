@@ -15,8 +15,8 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useEffect } from 'react';
 import { NotificationService, type Notification, type NotificationFilters } from '../services/NotificationService';
-import { QUERY_KEYS, CACHE_STRATEGIES, createQueryOptions } from '@/config/reactQuery.config';
-import { supabase } from '@/integrations/supabase/client';
+import { QUERY_KEYS, createQueryOptions } from '@/config/reactQuery.config';
+import { useAuth } from '@/core/auth/hooks/useAuth';
 
 /**
  * Hook para buscar notificações do usuário
@@ -26,9 +26,7 @@ import { supabase } from '@/integrations/supabase/client';
  */
 export function useNotifications(filters?: NotificationFilters) {
   const queryClient = useQueryClient();
-
-  // Get current user
-  const { data: { user } = {} } = supabase.auth.getUser();
+  const { user } = useAuth();
   const userId = user?.id;
 
   // Query com estratégia REALTIME
@@ -72,7 +70,7 @@ export function useNotifications(filters?: NotificationFilters) {
  * Usa estratégia REALTIME (sempre fresh)
  */
 export function useUnreadCount() {
-  const { data: { user } = {} } = supabase.auth.getUser();
+  const { user } = useAuth();
   const userId = user?.id;
 
   return useQuery({
@@ -95,7 +93,7 @@ export function useUnreadCount() {
  */
 export function useMarkAsRead() {
   const queryClient = useQueryClient();
-  const { data: { user } = {} } = supabase.auth.getUser();
+  const { user } = useAuth();
   const userId = user?.id;
 
   return useMutation({
@@ -163,7 +161,7 @@ export function useMarkAsRead() {
  */
 export function useMarkAllAsRead() {
   const queryClient = useQueryClient();
-  const { data: { user } = {} } = supabase.auth.getUser();
+  const { user } = useAuth();
   const userId = user?.id;
 
   return useMutation({
@@ -184,7 +182,7 @@ export function useMarkAllAsRead() {
  */
 export function useDeleteNotification() {
   const queryClient = useQueryClient();
-  const { data: { user } = {} } = supabase.auth.getUser();
+  const { user } = useAuth();
   const userId = user?.id;
 
   return useMutation({

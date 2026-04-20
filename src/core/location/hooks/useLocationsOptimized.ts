@@ -11,11 +11,10 @@
  * @see src/config/reactQuery.config.ts - Configuração de cache
  * @version 1.0.0
  */
-import { logger } from '@/shared/utils/logger';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect } from 'react';
-import { QUERY_KEYS, CACHE_STRATEGIES, createQueryOptions } from '@/config/reactQuery.config';
-import { supabase } from '@/integrations/supabase/client';
+import { QUERY_KEYS, createQueryOptions } from '@/config/reactQuery.config';
+import { LocationsReadService } from '@/core/location/services/LocationsReadService';
 /**
  * Location type
  */
@@ -31,94 +30,6 @@ export interface Location {
 /**
  * Location Service
  */
-class LocationService {
-  /**
-   * Busca todas as locations
-   */
-  static async getAllLocations(): Promise<Location[]> {
-    const { data, error } = await supabase
-      .from('locations')
-      .select('*')
-      .order('name');
-
-    if (error) {
-      logger.error('Error fetching locations:', error);
-      throw error;
-    }
-
-    return data || [];
-  }
-
-  /**
-   * Busca location por ID
-   */
-  static async getLocationById(id: string): Promise<Location | null> {
-    const { data, error } = await supabase
-      .from('locations')
-      .select('*')
-      .eq('id', id)
-      .single();
-
-    if (error) {
-      logger.error('Error fetching location:', error);
-      throw error;
-    }
-
-    return data;
-  }
-
-  /**
-   * Busca locations por tipo
-   */
-  static async getLocationsByType(type: Location['type']): Promise<Location[]> {
-    const { data, error } = await supabase
-      .from('locations')
-      .select('*')
-      .eq('type', type)
-      .order('name');
-
-    if (error) {
-      logger.error('Error fetching locations by type:', error);
-      throw error;
-    }
-
-    return data || [];
-  }
-
-  /**
-   * Busca árvore de locations (hierárquica)
-   */
-  static async getLocationTree(): Promise<Location[]> {
-    // Busca todas as locations e constrói árvore no client
-    const locations = await this.getAllLocations();
-    
-    // Organiza em árvore (parent -> children)
-    const tree: Location[] = [];
-    const map = new Map<string, Location & { children?: Location[] }>();
-
-    // Primeiro, cria map de todas as locations
-    locations.forEach((loc) => {
-      map.set(loc.id, { ...loc, children: [] });
-    });
-
-    // Depois, organiza em árvore
-    locations.forEach((loc) => {
-      const node = map.get(loc.id)!;
-      if (loc.parent_id) {
-        const parent = map.get(loc.parent_id);
-        if (parent) {
-          parent.children = parent.children || [];
-          parent.children.push(node);
-        }
-      } else {
-        tree.push(node);
-      }
-    });
-
-    return tree;
-  }
-}
-
 /**
  * Hook para buscar todas as locations
  * 
@@ -129,7 +40,7 @@ export function useLocations() {
   return useQuery({
     ...createQueryOptions(
       QUERY_KEYS.locations.all,
-      () => LocationService.getAllLocations(),
+      () => LocationsReadService.getAll(),
       'STATIC' // 24h cache
     ),
   });
@@ -144,7 +55,7 @@ export function useLocation(id: string | undefined) {
   return useQuery({
     ...createQueryOptions(
       QUERY_KEYS.locations.byId(id || ''),
-      () => LocationService.getLocationById(id!),
+      () => LocationsReadService.getById(id!),
       'STATIC',
       {
         enabled: !!id,
@@ -162,7 +73,7 @@ export function useLocationsByType(type: Location['type']) {
   return useQuery({
     ...createQueryOptions(
       QUERY_KEYS.locations.byType(type),
-      () => LocationService.getLocationsByType(type),
+      () => LocationsReadService.getByType(type),
       'STATIC'
     ),
   });
@@ -178,7 +89,7 @@ export function useLocationTree() {
   return useQuery({
     ...createQueryOptions(
       QUERY_KEYS.locations.tree,
-      () => LocationService.getLocationTree(),
+      () => LocationsReadService.getTree(),
       'STATIC'
     ),
   });
@@ -198,7 +109,7 @@ export function usePrefetchLocations() {
     queryClient.prefetchQuery({
       ...createQueryOptions(
         QUERY_KEYS.locations.all,
-        () => LocationService.getAllLocations(),
+        () => LocationsReadService.getAll(),
         'STATIC'
       ),
     });
@@ -207,7 +118,7 @@ export function usePrefetchLocations() {
     queryClient.prefetchQuery({
       ...createQueryOptions(
         QUERY_KEYS.locations.tree,
-        () => LocationService.getLocationTree(),
+        () => LocationsReadService.getTree(),
         'STATIC'
       ),
     });
@@ -228,7 +139,7 @@ export function usePrefetchLocation(id: string | undefined) {
     queryClient.prefetchQuery({
       ...createQueryOptions(
         QUERY_KEYS.locations.byId(id),
-        () => LocationService.getLocationById(id),
+        () => LocationsReadService.getById(id),
         'STATIC'
       ),
     });

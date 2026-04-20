@@ -49,10 +49,8 @@ import {
 } from "@/shared/components/ui/alert-dialog";
 import { useToast } from "@/shared/hooks/use-toast";
 import { useAdminGuard } from "@/modules/admin/hooks/useAdminGuard";
-import { supabase } from "@/integrations/supabase";
 import { logger } from "@/shared/utils/logger";
-import { RideOperationalService } from "@/modules/mobility/core/RideOperationalService";
-import { mobilityAuditService } from "@/modules/mobility/services/MobilityAuditService";
+import { AdminMotoboyOperationsService } from "@/core/admin/services/AdminMotoboyOperationsService";
 import {
   Package,
   RefreshCw,
@@ -64,8 +62,6 @@ import {
   Search,
   Filter,
 } from "lucide-react";
-
-const supabaseAny = supabase as any;
 
 // ============================================
 // TIPOS
@@ -189,25 +185,10 @@ export default function AdminMotoboyOperations() {
 
   const loadDeliveries = useCallback(async () => {
     try {
-      let query = supabaseAny
-        .from("ride_requests")
-        .select(
-          "id, status, source_type, source_id, recipient_name, package_size, suggested_price, created_at, updated_at, driver_profile_id, pickup_location_id, delivery_notes, failed_delivery_reason",
-        )
-        .eq("ride_mode", "motoboy")
-        .order("created_at", { ascending: false })
-        .limit(200);
-
-      if (statusFilter !== "all") {
-        query = query.eq("status", statusFilter);
-      }
-      if (sourceTypeFilter !== "all") {
-        query = query.eq("source_type", sourceTypeFilter);
-      }
-
-      const { data, error } = await query;
-      if (error) throw error;
-
+      const data = await AdminMotoboyOperationsService.listDeliveries({
+        status: statusFilter,
+        sourceType: sourceTypeFilter,
+      });
       setDeliveries((data as MotoboyDelivery[]) || []);
     } catch (error) {
       logger.error("AdminMotoboyOperations.loadDeliveries", error as Error);
@@ -217,14 +198,7 @@ export default function AdminMotoboyOperations() {
 
   const loadStats = useCallback(async () => {
     try {
-      const { data, error } = await supabaseAny
-        .from("ride_requests")
-        .select("id, status, created_at, driver_profile_id")
-        .eq("ride_mode", "motoboy");
-
-      if (error) throw error;
-
-      const rows = (data as { id: string; status: string; created_at: string; driver_profile_id: string | null }[]) || [];
+      const rows = await AdminMotoboyOperationsService.listStatsRows();
 
       const total = rows.length;
       const pending = rows.filter((r) =>
@@ -298,38 +272,17 @@ export default function AdminMotoboyOperations() {
     setIsCancelling(true);
 
     try {
-      // Admin cancela como 'passenger' (solicitante) com motivo operacional
-      const result = await RideOperationalService.cancelRide({
-        rideId: selectedDeliveryId,
-        cancelledBy: "passenger",
-        profileId: "admin-override",
-        reason: cancelReason || "Cancelamento operacional pelo admin",
-      });
+      const usedStateMachine = await AdminMotoboyOperationsService.cancelOperational(
+        selectedDeliveryId,
+        cancelReason || "Cancelamento operacional pelo admin",
+      );
 
-      if (result.success) {
+      if (usedStateMachine) {
         toast({ title: "Entrega cancelada", description: "Cancelamento operacional registrado." });
-        await refresh(true);
       } else {
-        // Fallback: forçar status diretamente se state machine bloquear
-        await supabaseAny
-          .from("ride_requests")
-          .update({
-            status: "cancelled_by_passenger",
-            updated_at: new Date().toISOString(),
-          })
-          .eq("id", selectedDeliveryId);
-
-        await mobilityAuditService.logRideStateChange({
-          rideId: selectedDeliveryId,
-          fromState: null,
-          toState: "cancelled_by_passenger",
-          changedBy: "admin-override",
-          reason: `Admin override: ${cancelReason || "Cancelamento operacional"}`,
-        });
-
         toast({ title: "Entrega cancelada (override)", description: "Status forçado pelo admin." });
-        await refresh(true);
       }
+      await refresh(true);
     } catch (error) {
       logger.error("AdminMotoboyOperations.handleCancelConfirm", error as Error);
       toast({ title: "Erro", description: "Não foi possível cancelar a entrega.", variant: "destructive" });
@@ -344,22 +297,7 @@ export default function AdminMotoboyOperations() {
 
   const handleRedispatch = async (deliveryId: string) => {
     try {
-      await supabaseAny
-        .from("ride_requests")
-        .update({
-          status: "searching_driver",
-          driver_profile_id: null,
-          updated_at: new Date().toISOString(),
-        })
-        .eq("id", deliveryId);
-
-      await mobilityAuditService.logRideStateChange({
-        rideId: deliveryId,
-        fromState: null,
-        toState: "searching_driver",
-        changedBy: "admin-redispatch",
-        reason: "Reencaminhamento manual pelo admin",
-      });
+      await AdminMotoboyOperationsService.redispatch(deliveryId);
 
       toast({ title: "Reencaminhado", description: "Entrega voltou para fila de dispatch." });
       await refresh(true);

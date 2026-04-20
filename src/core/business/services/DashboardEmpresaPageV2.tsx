@@ -3,19 +3,19 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { Skeleton } from "@/shared/components/ui/skeleton";
 import { toast } from "sonner";
-import { useDashboardAccess } from "@/modules/dashboard/hooks/useDashboardAccess";
+import { useDashboardAccess } from "@/core/business/hooks/useDashboardAccess";
 import { useBusiness } from "@/core/business/hooks/useBusiness";
 import { BusinessUrlService } from '@/core/business/services/BusinessUrlService';
 import { useAppUrls } from "@/core/routing/hooks/useAppUrls";
-import { useDashboardTabs } from "@/modules/dashboard/hooks/useDashboardTabs";
-import { DashboardBreadcrumb } from "@/modules/dashboard/components/DashboardBreadcrumb";
-import { DashboardHeader } from "@/modules/dashboard/components/DashboardHeader";
+import { useDashboardTabs } from "@/core/business/hooks/useDashboardTabs";
+import { DashboardBreadcrumb } from "@/shared/components/dashboard/DashboardBreadcrumb";
+import { DashboardHeader } from "@/shared/components/dashboard/DashboardHeader";
 import {
   DashboardTabs,
   TabPanel,
   GASTRONOMY_TAB,
 } from "@/shared/components/dashboard/DashboardTabs";
-import { SettingsTab } from "@/modules/dashboard/components/SettingsTab";
+import { SettingsTab } from "@/shared/components/dashboard/SettingsTab";
 import EmpresaDashboardTab from '@/core/business/components/EmpresaDashboardTab';
 import AnalyticsDashboard from '@/core/business/components/AnalyticsDashboard';
 import CouponManager from '@/core/business/components/CouponManager';
@@ -26,7 +26,7 @@ import type { PlanType } from "@/shared/types/subscription";
 import { SUBSCRIPTION_PLAN } from "@/shared/types/constants";
 import { useMultiProfileContext } from "@/core/profiles/contexts/multi-profile-runtime-context";
 import { ActiveProfileBadge } from "@/core/profiles/components/ActiveProfileBadge";
-import type { BusinessData } from "@/modules/dashboard/types/dashboard";
+import type { BusinessData } from "@/shared/types/dashboard";
 
 // Vertical gastronomia — importado do módulo gastronomy, orquestrado aqui na camada app/shell
 import { isEligibleForVertical } from '@/core/verticals/config';

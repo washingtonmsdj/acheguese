@@ -7,7 +7,7 @@
  * @version 1.0.0
  */
 import { logger } from '@/shared/utils/logger';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from '@/integrations/supabase/supabase';
 import { addSentryBreadcrumb } from '@/shared/config/sentry.config';
 
 /**
@@ -417,3 +417,4 @@ export class AnalyticsService {
 if (typeof window !== 'undefined') {
   AnalyticsService.initialize();
 }
+

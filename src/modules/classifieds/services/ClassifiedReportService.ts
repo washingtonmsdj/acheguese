@@ -5,7 +5,7 @@
  * Armazena em classified_reports e notifica administradores.
  */
 
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/integrations/supabase/supabase";
 import { logger } from "@/shared/utils/logger";
 import { trackError } from "@/shared/utils/errorTracking";
 
@@ -250,3 +250,4 @@ class ClassifiedReportServiceClass {
 }
 
 export const classifiedReportService = new ClassifiedReportServiceClass();
+

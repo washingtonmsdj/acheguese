@@ -18,7 +18,8 @@
  *    ❌ Criar channels Realtime fora do hook oficial
  *
  * 3. REGRAS DE USO
- *    ✅ Sempre importar de '@/modules/notifications'
+ *    ✅ Codigo novo deve preferir '@/core/notifications'
+ *    ✅ Este modulo existe como fachada de compatibilidade legada
  *    ✅ Usar notificationService para criar notificações
  *    ✅ Usar helpers para notificações específicas
  *    ✅ Usar tipos centralizados

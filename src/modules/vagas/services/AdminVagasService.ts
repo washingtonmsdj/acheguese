@@ -1,4 +1,4 @@
-ï»¿import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/integrations/supabase/supabase";
 import { logger } from "@/shared/utils/logger";
 import type {
   VagaContrato,
@@ -148,7 +148,7 @@ export class AdminVagasService {
 
       return stats;
     } catch (error) {
-      logger.error("[AdminVagasService] Erro ao buscar estatÃ­sticas", error);
+      logger.error("[AdminVagasService] Erro ao buscar estatísticas", error);
       throw error;
     }
   }
@@ -310,7 +310,7 @@ export class AdminVagasService {
       if (error) throw error;
       return true;
     } catch (error) {
-      logger.error("[AdminVagasService] Erro ao alterar urgÃªncia", error);
+      logger.error("[AdminVagasService] Erro ao alterar urgência", error);
       return false;
     }
   }
@@ -364,7 +364,7 @@ export class AdminVagasService {
     return {
       id: row.id,
       titulo: row.titulo,
-      empresa: row.empresa_nome ?? row.empresa ?? "Empresa nÃ£o informada",
+      empresa: row.empresa_nome ?? row.empresa ?? "Empresa não informada",
       descricao: row.descricao,
       locationId: row.location_id,
       location,
@@ -389,3 +389,4 @@ export class AdminVagasService {
     };
   }
 }
+

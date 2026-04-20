@@ -9,39 +9,14 @@ import { useEffect, useState } from "react";
 import { useToast } from "@/shared/hooks/use-toast";
 import { profileService } from "@/core/profiles/services/ProfileService";
 import { MobilityService, updateDriverOnlineStatus } from "@/core/mobility/services";
-import { supabase } from "@/integrations/supabase";
 import { logger } from "@/shared/utils/logger";
 import type { DriverRequest, FilterStatus, SuspensionHistoryEntry } from "../sections/types";
 import { RIDE_STATUS } from "@/shared/types/constants";
 import {
   DriverModerationEventsService,
   type DriverModerationAction,
-} from "@/modules/mobility/services/DriverModerationEventsService";
-
-const supabaseAny = supabase as any;
-
-interface DriverModerationRow {
-  id: string;
-  verification_status?: "pending" | "verified" | "rejected" | "none" | null;
-  verification_rejection_reason?: string | null;
-  is_suspended?: boolean | null;
-  suspended_at?: string | null;
-  suspended_until?: string | null;
-  suspension_reason?: string | null;
-  updated_at?: string;
-}
-
-function resolveVerificationStatus(driver: DriverRequest): "pending" | "verified" | "rejected" | "none" {
-  if (driver.verification_status) {
-    return driver.verification_status;
-  }
-
-  if (driver.profileContext?.verified) {
-    return "verified";
-  }
-
-  return "pending";
-}
+} from "@/core/mobility/services";
+import { AdminDriverModerationService, type DriverModerationRow } from "@/core/admin/services/AdminDriverModerationService";
 
 export function useDriverManagement(filter: FilterStatus, canModerate: boolean, isChecking: boolean) {
   const { toast } = useToast();
@@ -97,20 +72,7 @@ export function useDriverManagement(filter: FilterStatus, canModerate: boolean, 
 
       let moderationMap = new Map<string, DriverModerationRow>();
       if (profileIds.length > 0) {
-        const { data: moderationRows, error: moderationError } = await supabaseAny
-          .from("profiles")
-          .select(
-            "id, verification_status, verification_rejection_reason, is_suspended, suspended_at, suspended_until, suspension_reason, updated_at",
-          )
-          .in("id", profileIds);
-
-        if (moderationError) {
-          logger.warn("useDriverManagement.loadDrivers - moderation lookup", moderationError);
-        } else {
-          moderationMap = new Map(
-            ((moderationRows || []) as DriverModerationRow[]).map((row) => [row.id, row]),
-          );
-        }
+        moderationMap = await AdminDriverModerationService.getModerationRows(profileIds);
       }
 
       const driversWithContext = await Promise.all(
@@ -152,11 +114,29 @@ export function useDriverManagement(filter: FilterStatus, canModerate: boolean, 
 
       let filtered = driversWithContext;
       if (filter === RIDE_STATUS.PENDING) {
-        filtered = driversWithContext.filter((d) => resolveVerificationStatus(d) === "pending");
+        filtered = driversWithContext.filter(
+          (d) =>
+            AdminDriverModerationService.resolveVerificationStatus({
+              verificationStatus: d.verification_status,
+              fallbackVerified: Boolean(d.profileContext?.verified),
+            }) === "pending",
+        );
       } else if (filter === "approved") {
-        filtered = driversWithContext.filter((d) => resolveVerificationStatus(d) === "verified");
+        filtered = driversWithContext.filter(
+          (d) =>
+            AdminDriverModerationService.resolveVerificationStatus({
+              verificationStatus: d.verification_status,
+              fallbackVerified: Boolean(d.profileContext?.verified),
+            }) === "verified",
+        );
       } else if (filter === "rejected") {
-        filtered = driversWithContext.filter((d) => resolveVerificationStatus(d) === "rejected");
+        filtered = driversWithContext.filter(
+          (d) =>
+            AdminDriverModerationService.resolveVerificationStatus({
+              verificationStatus: d.verification_status,
+              fallbackVerified: Boolean(d.profileContext?.verified),
+            }) === "rejected",
+        );
       }
 
       setDrivers(filtered);
@@ -341,43 +321,7 @@ export function useDriverManagement(filter: FilterStatus, canModerate: boolean, 
         }));
       }
 
-      const { data, error } = await supabaseAny
-        .from("profiles")
-        .select("id, is_suspended, suspended_at, suspended_until, suspension_reason, updated_at")
-        .eq("id", driverProfileId)
-        .maybeSingle();
-
-      if (error || !data) {
-        if (error) {
-          logger.warn("useDriverManagement.loadSuspensionHistory", error);
-        }
-        return [];
-      }
-
-      const history: SuspensionHistoryEntry[] = [];
-
-      if (data.suspended_at) {
-        history.push({
-          id: `${data.id}-suspended`,
-          action: "suspended",
-          reason: data.suspension_reason || undefined,
-          admin_name: "Admin",
-          created_at: data.suspended_at,
-        });
-      }
-
-      if (!data.is_suspended && data.suspended_at) {
-        history.push({
-          id: `${data.id}-reactivated`,
-          action: "reactivated",
-          admin_name: "Admin",
-          created_at: data.updated_at || data.suspended_until || data.suspended_at,
-        });
-      }
-
-      return history.sort(
-        (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
-      );
+      return await AdminDriverModerationService.getFallbackSuspensionHistory(driverProfileId) as SuspensionHistoryEntry[];
     } catch (error) {
       logger.error("useDriverManagement.loadSuspensionHistory", error as Error);
       return [];

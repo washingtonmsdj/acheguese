@@ -21,7 +21,7 @@ import { lastTerritoryStore } from '@/core/routing/stores/LastTerritoryStore';
 import { TerritorySelectorV2 } from '@/core/location/components/TerritorySelectorV2';
 import { MessagingService } from '@/core/messaging';
 import { useAuth } from '@/core/auth/hooks/useAuth';
-import { useUnifiedNotifications } from '@/modules/notifications/hooks/useUnifiedNotifications';
+import { useUnifiedNotifications } from '@/core/notifications/useUnifiedNotifications';
 import {
   Sheet,
   SheetContent,

@@ -12,17 +12,7 @@ import {
   captureSentryMessage,
   addSentryBreadcrumb,
 } from "@/shared/config/sentry.config";
-
-// Lazy import to avoid circular dependency: logger ← supabase ← cookieStorage ← logger
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-let _supabase: any = null;
-async function getSupabase() {
-  if (!_supabase) {
-    const mod = await import("@/integrations/supabase/client");
-    _supabase = mod.supabase;
-  }
-  return _supabase;
-}
+import { ApplicationLogService } from "@/core/telemetry/services/ApplicationLogService";
 
 export enum LogLevel {
   DEBUG = 0,
@@ -284,19 +274,12 @@ class Logger {
         session_id: this.getSessionId(),
       }));
 
-      const supabase = await getSupabase();
-      const { error } = await supabase
-        .from('application_logs')
-        .insert(records);
-
-      if (error) {
-        // Em caso de erro, recolocar na fila (mas não infinitamente)
-        if (batch.length < 100) { // Limite de retry
-          this.persistQueue.unshift(...batch);
-        }
-      }
+      await ApplicationLogService.insert(records);
     } catch (error) {
       // Falha silenciosa - não queremos que logging quebre a aplicação
+      if (batch.length < 100) {
+        this.persistQueue.unshift(...batch);
+      }
       if (this.isDevelopment) {
         console.error('Failed to persist logs:', error);
       }

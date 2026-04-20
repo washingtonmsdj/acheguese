@@ -4,10 +4,11 @@
 Centralizar a documentacao viva em `docs/`, manter contratos tecnicos junto do dominio em `src/` e isolar historico sem contaminar o SSOT.
 
 ## Ler Primeiro
-1. [CURRENT_RULES.md](./CURRENT_RULES.md)
-2. [ARCHITECTURE.md](./ARCHITECTURE.md)
-3. [DOCUMENTATION_INDEX.md](./DOCUMENTATION_INDEX.md)
-4. [audits/MASTER_REPORT.md](./audits/MASTER_REPORT.md)
+1. [INDEX_CANONICO.md](./INDEX_CANONICO.md)
+2. [CURRENT_RULES.md](./CURRENT_RULES.md)
+3. [ARCHITECTURE.md](./ARCHITECTURE.md)
+4. [STATUS.md](./STATUS.md)
+5. [audits/MASTER_REPORT.md](./audits/MASTER_REPORT.md)
 
 ## Estrutura Oficial
 - `docs/`: regras globais, arquitetura, seguranca, manutencao e mapa canonico.
@@ -23,7 +24,8 @@ Centralizar a documentacao viva em `docs/`, manter contratos tecnicos junto do d
 - A raiz do repositorio permanece restrita a `README.md` e `SECURITY.md`.
 
 ## Navegacao
-- Indice mestre: [DOCUMENTATION_INDEX.md](./DOCUMENTATION_INDEX.md)
+- Indice canonico: [INDEX_CANONICO.md](./INDEX_CANONICO.md)
+- Indice mestre legado: [DOCUMENTATION_INDEX.md](./DOCUMENTATION_INDEX.md)
 - Mapa canonico: [CANONICAL_MAP.md](./CANONICAL_MAP.md)
 - Documentos substituidos: [DOCUMENT_REPLACEMENTS.md](./DOCUMENT_REPLACEMENTS.md)
 - Arquivo historico: [ARCHIVE_INDEX.md](./ARCHIVE_INDEX.md)

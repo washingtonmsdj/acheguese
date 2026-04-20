@@ -31,13 +31,13 @@ export default function SubscriptionManagementPage() {
   const { redirectToPortal, plans } = useBilling();
   const {
     subscription,
-    activeSubscription,
     isLoadingSubscription,
     isActive,
     isTrialing,
     isCanceled,
     isPastDue,
     planName,
+    statusLabel,
     canUpgrade,
     canDowngrade,
   } = useSubscription();
@@ -128,7 +128,7 @@ export default function SubscriptionManagementPage() {
                 </p>
               </div>
               <Badge variant={isActive ? 'default' : 'secondary'}>
-                {isTrialing ? 'Trial' : subscription?.status}
+                {statusLabel}
               </Badge>
             </div>
 

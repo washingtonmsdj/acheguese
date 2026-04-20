@@ -28,7 +28,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/shared/utils/cn";
 import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase";
+import { BusinessSettingsService } from "@/core/business/services/BusinessSettingsService";
 // Seções
 import {
   BasicInfoSection,
@@ -177,14 +177,7 @@ export function SettingsTab({ businessId, onEditBusiness }: SettingsTabProps) {
   const loadBusinessData = async () => {
     try {
       setLoading(true);
-
-      const { data, error } = await supabase
-        .from("businesses")
-        .select("*")
-        .eq("id", businessId)
-        .single();
-
-      if (error) throw error;
+      const data = await BusinessSettingsService.getBusinessById(businessId);
 
       if (data) {
         setBusinessData({
@@ -242,18 +235,11 @@ export function SettingsTab({ businessId, onEditBusiness }: SettingsTabProps) {
     type: "logo" | "banner" | "gallery"
   ): Promise<string> => {
     try {
-      const fileExt = file.name.split(".").pop();
-      const fileName = `${businessId}/${type}-${Date.now()}.${fileExt}`;
-
-      const { error: uploadError, data } = await supabase.storage
-        .from("business-images")
-        .upload(fileName, file);
-
-      if (uploadError) throw uploadError;
-
-      const {
-        data: { publicUrl },
-      } = supabase.storage.from("business-images").getPublicUrl(fileName);
+      const publicUrl = await BusinessSettingsService.uploadBusinessImage({
+        businessId,
+        file,
+        type,
+      });
 
       toast.success("Imagem enviada com sucesso!");
       return publicUrl;
@@ -276,9 +262,7 @@ export function SettingsTab({ businessId, onEditBusiness }: SettingsTabProps) {
         return;
       }
 
-      const { error } = await supabase
-        .from("businesses")
-        .update({
+      await BusinessSettingsService.updateBusinessById(businessId, {
           name: businessData.name,
           slug: businessData.slug,
           category: businessData.category,
@@ -320,11 +304,7 @@ export function SettingsTab({ businessId, onEditBusiness }: SettingsTabProps) {
           allow_reviews: businessData.allow_reviews,
           allow_messages: businessData.allow_messages,
           show_contact_info: businessData.show_contact_info,
-          updated_at: new Date().toISOString(),
-        })
-        .eq("id", businessId);
-
-      if (error) throw error;
+        });
 
       toast.success("Alterações salvas com sucesso!");
       setHasChanges(false);

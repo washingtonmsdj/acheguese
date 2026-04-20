@@ -7,7 +7,7 @@
  * @version 2.0.0 - Extraído de ClassifiedService.impl.ts
  */
 
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/integrations/supabase/supabase";
 import { logger } from "@/shared/utils/logger";
 import { trackError } from "@/shared/utils/errorTracking";
 import { applyTerritoryFilter } from "@/core/location";
@@ -535,3 +535,4 @@ export async function getSellersWithAds(
     return [];
   }
 }
+

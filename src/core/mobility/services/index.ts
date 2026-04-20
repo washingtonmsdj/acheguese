@@ -53,6 +53,31 @@ export {
   mobilityRolloutService,
 } from "@/modules/mobility/services/MobilityRolloutService";
 
+export {
+  mobilityAuditService,
+} from "@/modules/mobility/services/MobilityAuditService";
+
+export {
+  DriverModerationEventsService,
+} from "@/modules/mobility/services/DriverModerationEventsService";
+export type {
+  DriverModerationAction,
+} from "@/modules/mobility/services/DriverModerationEventsService";
+
+export {
+  RideReportsService,
+} from "@/modules/mobility/services/RideReportsService";
+export type {
+  RideReport,
+  ReportStatus,
+  ReportSeverity,
+} from "@/modules/mobility/services/RideReportsService";
+
+export {
+  RideOperationalService,
+} from "@/modules/mobility/core/RideOperationalService";
+export { RideRatingService } from "@/core/mobility/services/RideRatingService";
+
 // ============================================================
 // FACADE UNIFICADA (Recomendado)
 // ============================================================

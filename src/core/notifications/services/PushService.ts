@@ -6,7 +6,7 @@
  */
 
 import { logger } from '@/shared/utils/logger';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from '@/integrations/supabase/supabase';
 export interface PushSubscription {
   endpoint: string;
   keys: {
@@ -303,3 +303,4 @@ export class PushService {
     return 'Unknown Device';
   }
 }
+

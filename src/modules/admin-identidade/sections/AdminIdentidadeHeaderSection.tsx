@@ -6,7 +6,7 @@
 
 import { RefreshCw, Loader2, UserCog } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
-import { AdminPageHeader } from "@/modules/admin/components";
+import { AdminPageHeader } from "@/core/admin/components";
 import type { AdminIdentidadeHeaderSectionProps } from "./types";
 
 interface Props extends AdminIdentidadeHeaderSectionProps {

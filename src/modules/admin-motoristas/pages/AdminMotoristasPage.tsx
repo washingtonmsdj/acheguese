@@ -10,7 +10,7 @@
 
 import { useState } from "react";
 import { Shield, Loader2 } from "lucide-react";
-import { useAdminGuard } from "@/modules/admin/hooks/useAdminGuard";
+import { useAdminGuard } from "@/core/admin/hooks/useAdminGuard";
 import { RIDE_STATUS } from "@/shared/types/constants";
 import type { FilterStatus, DriverRequest, ConfirmDialogState } from "../sections/types";
 import { AdminMotoristasLayout } from "./AdminMotoristasLayout";

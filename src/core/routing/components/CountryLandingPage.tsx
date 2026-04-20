@@ -12,7 +12,7 @@ import {
   MapPin, Map, ChevronRight, Loader2, Globe, Building2,
 } from 'lucide-react';
 import { TERRITORY_CONFIG } from '@/config/territory';
-import { getCountryData, getActiveStates } from '@/modules/landing/services/LandingService';
+import { getCountryData, getActiveStates } from '@/core/landing/services/LandingService';
 
 interface StateItem {
   id: string;

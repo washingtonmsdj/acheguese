@@ -10,7 +10,7 @@ import { useState, useEffect, useSyncExternalStore, type FormEvent } from 'react
 import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { MessageCircle, Home, Search } from 'lucide-react';
 import { Button } from '@/shared/components/ui/button';
-import { UnifiedNotificationBellV2 } from '@/modules/notifications';
+import { UnifiedNotificationBellV2 } from '@/core/notifications';
 import { MessagingService } from '@/core/messaging';
 import { useAuth } from '@/core/auth/hooks/useAuth';
 import { useSessionContext } from '@/core/session';

@@ -6,7 +6,7 @@
  * Zero acesso direto ao Supabase fora deste service.
  */
 import { logger } from '@/shared/utils/logger';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from '@/integrations/supabase/supabase';
 import type { ProfessionalData, ServiceResponse } from './types';
 export class ProfessionalService {
   /**
@@ -50,3 +50,4 @@ export class ProfessionalService {
     }
   }
 }
+

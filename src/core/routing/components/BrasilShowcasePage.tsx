@@ -29,7 +29,7 @@ import { Input } from '@/shared/components/ui/input';
 import { BusinessLogo } from '@/shared/components/ui/business-logo';
 import { useNationalFeatured } from '@/core/landing/useNationalFeatured';
 import { useAppUrls } from '@/core/routing/hooks/useAppUrls';
-import { checkAdminRole } from '@/modules/landing/services/LandingService';
+import { checkAdminRole } from '@/core/landing/services/LandingService';
 
 // ── Animação ────────────────────────────────────────────────────────────────
 const fadeUp = {

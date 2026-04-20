@@ -7,7 +7,7 @@
  * @version 1.0.0
  */
 
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/integrations/supabase/supabase";
 import { logger } from "@/shared/utils/logger";
 import type { AdminSupabaseClient } from "@/core/admin/types/adminDatabase.types";
 

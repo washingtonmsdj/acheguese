@@ -8,8 +8,8 @@
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { logger } from "@/shared/utils/logger";
-import { supabase } from "@/integrations/supabase/client";
 import { PushService } from "@/core/notifications/services/PushService";
+import { PushNotificationPreferencesService } from "@/core/notifications/services/PushNotificationPreferencesService";
 
 interface NotificationPreferences {
   notify_pet_perdido: boolean;
@@ -44,16 +44,7 @@ export function usePushNotifications(userId: string | undefined) {
 
     const loadPreferences = async () => {
       try {
-        const { data, error } = await supabase
-          .from("notification_preferences")
-          .select("*")
-          .eq("user_id", userId)
-          .maybeSingle();
-
-        if (error) {
-          logger.warn("[usePushNotifications] Erro ao carregar preferências", error);
-          return;
-        }
+        const data = await PushNotificationPreferencesService.getByUserId(userId);
 
         if (data) {
           setPreferences({
@@ -108,16 +99,7 @@ export function usePushNotifications(userId: string | undefined) {
     setLoading(true);
     try {
       const updatedPrefs = { ...preferences, ...newPreferences };
-
-      const { error } = await supabase
-        .from("notification_preferences")
-        .upsert({ user_id: userId, ...updatedPrefs }, { onConflict: "user_id" });
-
-      if (error) {
-        logger.error("[usePushNotifications] Erro ao salvar preferências", error);
-        toast.error("Erro ao salvar preferências");
-        return false;
-      }
+      await PushNotificationPreferencesService.upsertByUserId(userId, updatedPrefs);
 
       setPreferences(updatedPrefs);
       toast.success("Preferências atualizadas!");

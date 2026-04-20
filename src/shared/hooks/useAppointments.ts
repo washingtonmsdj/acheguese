@@ -49,10 +49,7 @@ export const useAppointments = ({
     notifyAppointmentCompleted,
   } = useAppointmentNotificationActions();
 
-  // Carregar agendamentos do Supabase
-  // PENDENTE: Tabela `appointments` ainda não existe no banco.
-  // Quando criada, substituir por:
-  //   const { data } = await supabase.from('appointments').select('*').eq('business_id', businessId);
+  // Carregar agendamentos (stub temporario ate disponibilidade do backend de appointments).
   useEffect(() => {
     setTimeout(() => {
       const mockAppointments: Appointment[] = [];

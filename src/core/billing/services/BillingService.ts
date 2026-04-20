@@ -11,7 +11,7 @@
  */
 
 import { logger } from '@/shared/utils/logger';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from '@/integrations/supabase/supabase';
 export interface CreateCheckoutParams {
   planCode: string;
   successUrl: string;
@@ -133,3 +133,4 @@ export class BillingService {
     return data;
   }
 }
+

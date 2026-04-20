@@ -13,7 +13,8 @@
 import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAdminGuard } from "@/modules/admin/hooks/useAdminGuard";
-import { RideReportsService, type RideReport, type ReportStatus, type ReportSeverity } from "@/modules/mobility/services/RideReportsService";
+import { RideReportsService } from "@/core/mobility/services";
+import type { RideReport, ReportStatus, ReportSeverity } from "@/core/mobility/services";
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/components/ui/card";
 import { Button } from "@/shared/components/ui/button";
 import { Badge } from "@/shared/components/ui/badge";

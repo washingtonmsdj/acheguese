@@ -28,6 +28,10 @@ export function getAuthErrorMessage(
     return "Muitas tentativas. Aguarde alguns minutos antes de tentar novamente.";
   }
 
+  if (/user already registered/i.test(errorMessage)) {
+    return "Este e-mail já está cadastrado. Tente fazer login ou recuperar sua senha.";
+  }
+
   if (/same password/i.test(errorMessage)) {
     return "Escolha uma senha diferente da atual.";
   }

@@ -19,10 +19,10 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/shared/components/ui/dropdown-menu';
-import { useClassificados } from '@/modules/classifieds/hooks/useClassificados';
-import { classifiedUrlService } from '@/modules/classifieds/services/ClassifiedUrlService';
+import { useClassificados } from '@/core/classifieds/hooks/useClassificados';
+import { classifiedUrlService } from '@/core/classifieds/services/ClassifiedUrlService';
 import { useTerritoryLabels } from '@/core/location';
-import type { ClassificadoWithVendedor } from '@/modules/classifieds/hooks/useClassificados';
+import type { ClassificadoWithVendedor } from '@/core/classifieds/hooks/useClassificados';
 import type { ResolvedTerritory } from '@/core/routing/hooks/useResolveTerritoryFromUrl';
 import { cn } from '@/shared/utils/cn';
 

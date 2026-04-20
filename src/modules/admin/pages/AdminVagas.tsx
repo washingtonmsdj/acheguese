@@ -46,7 +46,7 @@ import {
   RefreshCw,
 } from "lucide-react";
 import { toast } from "sonner";
-import type { VagaStatus, VagaContrato, VagaModalidade } from "@/modules/vagas/types/vagas.types";
+import type { VagaStatus, VagaContrato, VagaModalidade } from "@/core/vagas/types";
 
 const STATUS_OPTIONS: { value: VagaStatus; label: string }[] = [
   { value: "draft", label: "Rascunho" },

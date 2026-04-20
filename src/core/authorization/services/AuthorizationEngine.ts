@@ -2,7 +2,7 @@
 //
 // Validates: Requirements 4.1–4.9, 6.4, 6.7, 7.1–7.8, 8.1, 8.2, 8.7
 
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/integrations/supabase/supabase";
 import { CacheManager } from "@/core/session/cache/CacheManager";
 import { getCacheConfig } from "@/core/session/cache/CacheConfig";
 import type {
@@ -446,3 +446,4 @@ export class AuthorizationEngine {
     this.cacheExpiry.clear();
   }
 }
+

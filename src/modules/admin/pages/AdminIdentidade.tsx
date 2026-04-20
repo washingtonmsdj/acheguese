@@ -8,7 +8,7 @@
  * Sem gambiarras: Código profissional e modular
  */
 
-import AdminIdentidadePage from "@/modules/admin-identidade/pages/AdminIdentidadePage";
+import AdminIdentidadePage from "@/core/admin/pages/AdminIdentidadePage";
 
 export default function AdminIdentidade() {
   return <AdminIdentidadePage />;

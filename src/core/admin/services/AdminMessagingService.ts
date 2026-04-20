@@ -6,7 +6,7 @@
  * delegando para o MessagingService (SSOT) sempre que possível.
  */
 
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/integrations/supabase/supabase";
 import { logger } from "@/shared/utils/logger";
 import type { AdminSupabaseClient } from "../types/adminDatabase.types";
 import { messagingService } from "@/core/messaging/services/MessagingService";
@@ -302,3 +302,4 @@ class AdminMessagingServiceClass {
 }
 
 export const adminMessagingService = new AdminMessagingServiceClass();
+

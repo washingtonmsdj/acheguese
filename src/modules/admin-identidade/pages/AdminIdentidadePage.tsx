@@ -11,7 +11,7 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { adminProfileGovernanceService } from "@/core/admin";
-import { AdminErrorState } from "@/modules/admin/components";
+import { AdminErrorState } from "@/core/admin/components";
 import { AdminIdentidadeLayout } from "./AdminIdentidadeLayout";
 import {
   AdminIdentidadeHeaderSection,

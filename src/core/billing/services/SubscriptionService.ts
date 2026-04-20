@@ -9,7 +9,7 @@
  */
 
 import { logger } from '@/shared/utils/logger';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from '@/integrations/supabase/supabase';
 export interface UserSubscription {
   id: string;
   user_id: string;
@@ -222,3 +222,4 @@ export class SubscriptionService {
     return planCode === 'pro' || planCode === 'delivery';
   }
 }
+

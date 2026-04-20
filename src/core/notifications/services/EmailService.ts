@@ -6,7 +6,7 @@
  */
 
 import { logger } from '@/shared/utils/logger';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from '@/integrations/supabase/supabase';
 export interface EmailTemplate {
   subject: string;
   html: string;
@@ -570,3 +570,4 @@ export class EmailService {
     };
   }
 }
+

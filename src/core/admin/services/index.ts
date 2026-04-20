@@ -62,6 +62,9 @@ export type {
   AdminProfileIdentityIssue,
 } from "./AdminProfileGovernanceService";
 export { adminMapGovernanceService } from "./AdminMapGovernanceService";
+export { AdminMotoboyOperationsService } from "./AdminMotoboyOperationsService";
+export { AdminDriverModerationService } from "./AdminDriverModerationService";
+export { AdminUserDetailService } from "./AdminUserDetailService";
 export type {
   AdminMapGovernanceIssue,
   AdminMapGovernanceStats,
