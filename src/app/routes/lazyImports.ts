@@ -250,7 +250,7 @@ export const AdminUsuarios = lazy(() => import("@/modules/admin/pages/AdminUsuar
 export const AdminMotoristas = lazy(() => import("@/modules/admin/pages/AdminMotoristas"));
 export const AdminReportsPassageiros = lazy(() => import("@/modules/admin/pages/AdminReportsPassageirosV2"));
 export const AdminPontosEmbarque = lazy(() => import("@/modules/admin/pages/AdminPontosEmbarque"));
-export const AdminVerificacoes = lazy(() => import("@/modules/verification/pages/AdminVerificationsPage"));
+export const AdminVerificacoes = lazy(() => import("@/core/verification/pages/AdminVerificationsPage"));
 export const AdminZeladoria = lazy(() => import("@/modules/admin/pages/AdminZeladoria"));
 export const AdminAnalyticsMobilidade = lazy(() => import("@/modules/admin/pages/AdminAnalyticsMobilidade"));
 export const AdminRealtimeDashboard = lazy(() => import("@/modules/admin/pages/AdminRealtimeDashboard"));

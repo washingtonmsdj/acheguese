@@ -1,15 +1,11 @@
 /**
- * AdminVerificationsPage - Painel de verificações de endereço
- * 
- * Permite admins aprovar/rejeitar verificações de moradores
+ * AdminVerificationsPage - Painel administrativo de verificacoes.
  */
-
-import { useState } from "react";
 import { CheckCircle, Clock, Users } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/shared/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/shared/components/ui/tabs";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/components/ui/card";
-import { useVerifications } from "../hooks/useVerifications";
-import { VerificationCard } from "../components/VerificationCard";
+import { VerificationCard } from "@/core/verification/components/VerificationCard";
+import { useVerifications } from "@/core/verification/hooks/useVerifications";
 
 export default function AdminVerificationsPage() {
   const {
@@ -26,15 +22,13 @@ export default function AdminVerificationsPage() {
 
   return (
     <div className="container mx-auto p-6 max-w-6xl">
-      {/* Header */}
       <div className="mb-6">
-        <h1 className="text-3xl font-bold mb-2">Verificações de Endereço</h1>
+        <h1 className="text-3xl font-bold mb-2">Verificacoes de Perfil</h1>
         <p className="text-muted-foreground">
-          Aprove ou rejeite solicitações de acesso à comunidade
+          Aprove ou rejeite solicitacoes pendentes de verificacao.
         </p>
       </div>
 
-      {/* Stats */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -43,7 +37,6 @@ export default function AdminVerificationsPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats?.pending || 0}</div>
-            <p className="text-xs text-muted-foreground">Aguardando aprovação</p>
           </CardContent>
         </Card>
 
@@ -54,7 +47,6 @@ export default function AdminVerificationsPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats?.verified || 0}</div>
-            <p className="text-xs text-muted-foreground">Moradores aprovados</p>
           </CardContent>
         </Card>
 
@@ -65,12 +57,10 @@ export default function AdminVerificationsPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats?.total || 0}</div>
-            <p className="text-xs text-muted-foreground">Com endereço cadastrado</p>
           </CardContent>
         </Card>
       </div>
 
-      {/* Tabs */}
       <Tabs defaultValue="pending" className="space-y-4">
         <TabsList>
           <TabsTrigger value="pending" className="gap-2">
@@ -83,19 +73,13 @@ export default function AdminVerificationsPage() {
           </TabsTrigger>
         </TabsList>
 
-        {/* Pendentes */}
         <TabsContent value="pending" className="space-y-4">
           {loadingPending ? (
-            <div className="text-center py-12 text-muted-foreground">
-              Carregando...
-            </div>
+            <div className="text-center py-12 text-muted-foreground">Carregando...</div>
           ) : pending.length === 0 ? (
             <Card>
-              <CardContent className="py-12 text-center">
-                <CheckCircle className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                <p className="text-muted-foreground">
-                  Nenhuma verificação pendente no momento
-                </p>
+              <CardContent className="py-12 text-center text-muted-foreground">
+                Nenhuma verificacao pendente no momento.
               </CardContent>
             </Card>
           ) : (
@@ -114,19 +98,13 @@ export default function AdminVerificationsPage() {
           )}
         </TabsContent>
 
-        {/* Verificados */}
         <TabsContent value="verified" className="space-y-4">
           {loadingVerified ? (
-            <div className="text-center py-12 text-muted-foreground">
-              Carregando...
-            </div>
+            <div className="text-center py-12 text-muted-foreground">Carregando...</div>
           ) : verified.length === 0 ? (
             <Card>
-              <CardContent className="py-12 text-center">
-                <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                <p className="text-muted-foreground">
-                  Nenhum perfil verificado ainda
-                </p>
+              <CardContent className="py-12 text-center text-muted-foreground">
+                Nenhum perfil verificado ainda.
               </CardContent>
             </Card>
           ) : (
@@ -147,3 +125,4 @@ export default function AdminVerificationsPage() {
     </div>
   );
 }
+

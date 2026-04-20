@@ -8,9 +8,8 @@ Ultima atualizacao: 2026-04-20
 - Governanca arquitetural em estado verde.
 - SSOT, typecheck, build e validacao de estrutura documental passando.
 - Correcao de runtime aplicada para bootstrap de Supabase/cookies.
-- P3 iniciado com consolidacao real de `verification` (ownership em `core`).
-- Consolidacao de `notifications` iniciada no consumo de app (`BottomNav` em `core`).
-- `UnifiedNotificationBellV2` consolidado em `core/notifications` e consumido por `AppTopbar` via barrel canonico.
+- Consolidacao de `verification` concluida com ownership final em `core/verification`.
+- Consolidacao de `notifications` concluida com ownership final em `core/notifications`.
 - Inversao `core -> modules` removida no dashboard de empresa.
 - Inversao `core -> modules` removida em landing (services movidos para `core/landing`).
 - Inversao `core -> modules` removida em analytics (ownership em `core/analytics` com wrappers de compatibilidade em `modules`).
@@ -24,26 +23,28 @@ Ultima atualizacao: 2026-04-20
 
 ## Divida tecnica remanescente
 1. Consolidacao `core` x `modules`:
-   - definir ownership final de `notifications` (facade permanente em `modules` ou absorcao total em `core`);
-   - definir janela de deprecacao para facades legadas de `modules` (especialmente `notifications`).
+   - monitorar regressao por gate incremental e manter ownership canonico em `core`.
 2. Consolidacao documental final:
    - manter este arquivo como status oficial unico;
-   - evitar novos arquivos paralelos de status fora do fluxo canonico.
+   - reduzir duplicacoes em documentos de pre-launch para evitar status paralelo.
 
 ## Correcoes estruturais concluidas nesta rodada
 - Imports de Supabase normalizados para `@/integrations/supabase/supabase`.
 - Warning de build sobre reexport `client.ts` eliminado.
 - `core/verification` deixou de depender de `modules/verification` (inversao de dependencia removida).
 - `VerificationBanner` consolidado em `src/core/verification/components/VerificationBanner.tsx`.
+- `AdminVerificationsPage`, `useVerifications` e `VerificationCard` migrados para `src/core/verification/*`.
+- Facade legada `src/modules/verification/*` removida do repositorio.
 - `BottomNav` migrou para hook canonico em `src/core/notifications/useUnifiedNotifications.ts`.
 - `UnifiedNotificationBellV2` migrou para `src/core/notifications/components/UnifiedNotificationBellV2.tsx`.
 - `AppTopbar` passou a importar o sino de notificacoes de `@/core/notifications`.
+- Facade legada `src/modules/notifications/*` removida do repositorio.
 - `DashboardEmpresaPageV2` deixou de importar `modules/dashboard/*` e passou a depender de `core/business` + `shared`.
 - `useDashboardAccess` e `useDashboardTabs` migrados para `src/core/business/hooks/` com wrappers de compatibilidade no modulo.
 - Servicos de landing migrados para `src/core/landing/services/` e consumidores de `core` atualizados.
 - `AnalyticsPage`, `useAnalyticsAccess` e `dashboards.config` migrados para ownership canonico em `src/core/analytics/*`.
 - `GeneralAnalyticsPage` atualizado para lazy import de `@/core/analytics/pages/AnalyticsPage`.
-- Gate incremental endurecido para bloquear regressao de imports legados `@/modules/analytics` e `@/modules/notifications` em `app/core/shared`.
+- Gate incremental endurecido para bloquear regressao de imports legados `@/modules/analytics`, `@/modules/notifications` e `@/modules/verification` em todo `src/`.
 - Erro de runtime `Cannot access 'logger' before initialization` resolvido em `cookieStorage`.
 - Warning de CSP em dev passou a depender de `VITE_SECURITY_DEBUG=true`.
 - Bloqueio de `rg` no ambiente Windows corrigido (ripgrep MSVC + override de perfil PowerShell).

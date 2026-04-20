@@ -1,12 +1,11 @@
 /**
- * useVerifications - Hook para gerenciar verificações
- * 
- * Integra com VerificationService (SSOT)
+ * useVerifications - Hook canonic para moderacao de verificacoes.
  */
-import { logger } from '@/shared/utils/logger';
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { logger } from "@/shared/utils/logger";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { VerificationService } from "../services/VerificationService";
+import { ProfileVerificationAdminService } from "@/core/profiles/services/ProfileVerificationAdminService";
+
 const QUERY_KEYS = {
   pending: ["verifications", "pending"] as const,
   verified: ["verifications", "verified"] as const,
@@ -16,92 +15,74 @@ const QUERY_KEYS = {
 export function useVerifications() {
   const queryClient = useQueryClient();
 
-  // Query: pending verifications
-  const {
-    data: pending = [],
-    isLoading: loadingPending,
-    refetch: refetchPending,
-  } = useQuery({
+  const { data: pending = [], isLoading: loadingPending } = useQuery({
     queryKey: QUERY_KEYS.pending,
-    queryFn: () => VerificationService.getPendingVerifications(),
+    queryFn: () => ProfileVerificationAdminService.getPendingVerifications(),
   });
 
-  // Query: verified profiles
-  const {
-    data: verified = [],
-    isLoading: loadingVerified,
-  } = useQuery({
+  const { data: verified = [], isLoading: loadingVerified } = useQuery({
     queryKey: QUERY_KEYS.verified,
-    queryFn: () => VerificationService.getVerifiedProfiles(),
+    queryFn: () => ProfileVerificationAdminService.getVerifiedProfiles(),
   });
 
-  // Query: stats
   const { data: stats } = useQuery({
     queryKey: QUERY_KEYS.stats,
-    queryFn: () => VerificationService.getVerificationStats(),
+    queryFn: () => ProfileVerificationAdminService.getVerificationStats(),
   });
 
-  // Mutation: approve
   const approveMutation = useMutation({
-    mutationFn: (profileId: string) => VerificationService.approveVerification(profileId),
+    mutationFn: (profileId: string) => ProfileVerificationAdminService.approveVerification(profileId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.pending });
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.verified });
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.stats });
-      toast.success("Verificação aprovada com sucesso");
+      toast.success("Verificacao aprovada com sucesso");
     },
     onError: (error) => {
-      toast.error("Erro ao aprovar verificação");
+      toast.error("Erro ao aprovar verificacao");
       logger.error(error);
     },
   });
 
-  // Mutation: reject
   const rejectMutation = useMutation({
     mutationFn: ({ profileId, reason }: { profileId: string; reason?: string }) =>
-      VerificationService.rejectVerification(profileId, reason),
+      ProfileVerificationAdminService.rejectVerification(profileId, reason),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.pending });
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.stats });
-      toast.success("Verificação rejeitada");
+      toast.success("Verificacao rejeitada");
     },
     onError: (error) => {
-      toast.error("Erro ao rejeitar verificação");
+      toast.error("Erro ao rejeitar verificacao");
       logger.error(error);
     },
   });
 
-  // Mutation: revoke
   const revokeMutation = useMutation({
-    mutationFn: (profileId: string) => VerificationService.revokeVerification(profileId),
+    mutationFn: (profileId: string) => ProfileVerificationAdminService.revokeVerification(profileId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.verified });
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.stats });
-      toast.success("Verificação revogada");
+      toast.success("Verificacao revogada");
     },
     onError: (error) => {
-      toast.error("Erro ao revogar verificação");
+      toast.error("Erro ao revogar verificacao");
       logger.error(error);
     },
   });
 
   return {
-    // Data
     pending,
     verified,
     stats,
-
-    // Loading states
     loadingPending,
     loadingVerified,
     isApproving: approveMutation.isPending,
     isRejecting: rejectMutation.isPending,
     isRevoking: revokeMutation.isPending,
-
-    // Actions
     approve: approveMutation.mutate,
     reject: rejectMutation.mutate,
     revoke: revokeMutation.mutate,
-    refetchPending,
   };
 }
+

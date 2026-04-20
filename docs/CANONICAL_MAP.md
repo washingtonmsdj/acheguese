@@ -35,7 +35,8 @@ Se houver conflito entre documentos, vence a ordem abaixo:
 | map | `src/core/maps/README.md` |
 | classifieds | `src/modules/classifieds/data/README.md` |
 | mobility | `src/core/safety/README.md`, `src/core/tracking/README.md` |
-| notifications | `src/modules/notifications/README.md` |
+| notifications | `src/core/notifications/README.md`, `src/core/notifications/types.ts` |
+| verification | `src/core/verification/README.md`, `src/core/verification/services/VerificationService.ts` |
 
 ## Nao canonico
 - `docs/archive/**`

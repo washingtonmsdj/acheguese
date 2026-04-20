@@ -90,7 +90,7 @@ Implementação das etapas críticas do Sprint Pré-Go-Live identificadas no aud
 **Problema**: Audit identificou 2 arquivos com possíveis violações SSOT.
 
 **Análise Realizada**:
-1. **src/modules/notifications/index.ts** — ✅ Apenas barrel file (exports), sem violação
+1. **src/modules/notifications/index.ts** — registro historico; modulo removido e consolidado em `src/core/notifications`
 2. **src/shared/hooks/useAppointments.ts** — ✅ Usa mock data (tabela ainda não existe), sem violação
 
 **Busca Completa**:

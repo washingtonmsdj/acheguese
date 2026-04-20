@@ -294,15 +294,15 @@ O inventario completo e regeneravel e esta em [PROJECT_INVENTORY.md](./PROJECT_I
 
 ### notifications
 - Fonte SSOT atual: `src/core/notifications/services/NotificationService.ts`.
-- Problemas de organizacao: modulo de notifications atua como wrapper de compatibilidade; a coverage administrativa minima ja existe, mas ainda faltam politica de templates, canais e entrega.
+- Problemas de organizacao: facade legada em `modules/notifications` foi removida; a coverage administrativa minima ja existe, mas ainda faltam politica de templates, canais e entrega.
 - Arquivos legados: mocks em `src/core/notifications/__mocks__/`.
 - Acesso direto ao banco fora do service: `PostService` foi corrigido nesta fase; o gate agora bloqueia regressao no dominio.
 - Importacoes incorretas entre modulos: o problema principal esta no consumo por mobility e admin, nao dentro do dominio.
-- Duplicacoes de tipos, regras ou services: wrapper `notification.service.ts` em `modules/notifications`, agora sustentado por tipos canonicos em `core/notifications/types.ts`.
+- Duplicacoes de tipos, regras ou services: sem wrapper ativo em `modules/notifications`; tipos canonicos consolidados em `core/notifications/types.ts`.
 - Status do admin: parcial; existe `/admin/notifications` para leitura global e estado de settings, mas sem gestao de templates/canais.
-- Status da documentacao: boa no modulo, mas ainda isolada do mapa global.
+- Status da documentacao: ownership documentado em `src/core/notifications/README.md` e refletido no mapa canonico.
 - Criticidade: high.
-- Classificacao: manter `NotificationService`; consolidar o wrapper como compatibilidade temporaria; migrar consumers para contrato de core; remover mocks quando possivel; documentar governanca de notificacoes e fechar a camada de templates/canais.
+- Classificacao: manter `NotificationService`; manter consumo em `core`; remover mocks quando possivel; documentar governanca de notificacoes e fechar a camada de templates/canais.
 
 ## Organizacao documental executada
 - `docs/README.md`, `docs/DOCUMENTATION_INDEX.md`, `docs/CANONICAL_MAP.md`, `docs/CURRENT_RULES.md` e `docs/MAINTENANCE.md` foram reescritos para refletir a estrutura atual.

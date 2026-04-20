@@ -124,7 +124,7 @@ Build do Deno reporta 30+ erros de tipagem espalhados por edge functions. Embora
 
 2 arquivos em camadas não autorizadas (regra: só `services/`/`repositories/`):
 
-- `src/modules/notifications/index.ts` — barrel file com query direta
+- `src/modules/notifications/index.ts` — item historico (modulo removido; ownership atual em `src/core/notifications`)
 - `src/shared/hooks/useAppointments.ts` — hook com query direta
 
 **Ação**: Mover lógica para um service/repository do domínio.

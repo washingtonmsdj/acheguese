@@ -17,7 +17,7 @@ const CODE_FILE_RE = /\.(ts|tsx|js|jsx)$/;
 const IMPORT_RE = /from\s+["']([^"']+)["']/g;
 const SUPABASE_BOUNDARY_RE =
   /(\(\s*supabase\s+as\s+any\s*\)|\bsupabase\s*\.\s*(from|rpc|channel|functions|auth|storage|removeChannel)\s*\(|from\s+['"]@\/integrations\/supabase(?:\/client)?['"])/;
-const DEPRECATED_MODULE_IMPORTS = new Set(["analytics", "notifications"]);
+const DEPRECATED_MODULE_IMPORTS = new Set(["analytics", "notifications", "verification"]);
 
 function normalize(filePath) {
   return filePath.replace(/\\/g, "/");
@@ -171,7 +171,7 @@ function collectDeprecatedModuleImportViolations(files) {
 
   for (const file of files) {
     const relativeFile = relativeToRoot(file);
-    if (!/^(src\/app|src\/core|src\/shared)\//.test(relativeFile)) continue;
+    if (!/^src\//.test(relativeFile)) continue;
 
     const content = fs.readFileSync(file, "utf-8");
     for (const specifier of extractImports(content)) {
@@ -184,7 +184,7 @@ function collectDeprecatedModuleImportViolations(files) {
       violations.push({
         kind: "deprecated-module-import",
         file: relativeFile,
-        message: `Import proibido de facade legada: ${specifier}. Use ownership canonico em core.`,
+        message: `Import proibido de modulo legado: ${specifier}. Use ownership canonico em core.`,
       });
     }
   }
