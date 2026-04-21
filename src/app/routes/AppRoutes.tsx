@@ -280,6 +280,11 @@ export function AppRoutes() {
         </Route>
 
         {/* Rotas de gastronomia */}
+        {/* Detalhe premium: /gastronomia-premium/:uf/:cidade/:bairro/:slug */}
+        <Route path="/gastronomia-premium/:state/:city/:district/:slug" element={<TerritorialLayout />}>
+          <Route index element={<P.GastronomyPremiumDetailPage />} />
+        </Route>
+
         {/* Detalhe: /gastronomia/:uf/:cidade/:bairro/:slug */}
         <Route path="/gastronomia/:state/:city/:district/:slug" element={<TerritorialLayout />}>
           <Route index element={<P.GastronomyDetailPage />} />

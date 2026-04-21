@@ -1,7 +1,1 @@
-/**
- * Cards Barrel Export
- */
-
-export * from "./StatCard";
-export * from "./DriverCard";
-export * from "./DriverInfoCard";
+﻿export * from '@/core/admin-motoristas/components/cards/index';

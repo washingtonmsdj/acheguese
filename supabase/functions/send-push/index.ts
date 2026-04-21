@@ -61,6 +61,12 @@ serve(async (req: Request) => {
     }
     const { userId, notification } = validation.data!;
 
+    // Verificar ownership: apenas o próprio usuário pode enviar push para si mesmo.
+    // Admins que precisem enviar notificações devem usar a service role diretamente.
+    if (user.id !== userId) {
+      return errorResponse('Cannot send push notification for another user', 403);
+    }
+
     if (!notification.title || !notification.body) {
       return errorResponse('Missing required fields: notification.title, notification.body', 400);
     }

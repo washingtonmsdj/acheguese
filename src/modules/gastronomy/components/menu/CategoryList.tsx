@@ -17,6 +17,8 @@ interface CategoryListProps {
   onDelete: (categoryId: string) => void;
   onCreate: () => void;
   onReorder: (updates: Array<{ id: string; display_order: number }>) => void;
+  canCreate?: boolean;
+  createDisabledReason?: string;
 }
 
 export function CategoryList({
@@ -25,6 +27,8 @@ export function CategoryList({
   onDelete,
   onCreate,
   onReorder,
+  canCreate = true,
+  createDisabledReason,
 }: CategoryListProps) {
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
 
@@ -75,11 +79,17 @@ export function CategoryList({
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h3 className="text-lg font-medium">Categorias</h3>
-        <Button onClick={onCreate} size="sm">
+        <Button onClick={onCreate} size="sm" disabled={!canCreate}>
           <Plus className="w-4 h-4 mr-2" />
           Nova Categoria
         </Button>
       </div>
+
+      {!canCreate && createDisabledReason && (
+        <div className="rounded-md border border-amber-200 bg-amber-50 p-3 text-sm text-amber-700">
+          {createDisabledReason}
+        </div>
+      )}
 
       <div className="space-y-2">
         {categories.map((category, index) => (

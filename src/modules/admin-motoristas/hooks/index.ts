@@ -1,5 +1,1 @@
-/**
- * Hooks Barrel Export
- */
-
-export * from "./useDriverManagement";
+﻿export * from '@/core/admin-motoristas/hooks/index';

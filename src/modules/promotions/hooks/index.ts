@@ -1,1 +1,1 @@
-export { useAdDelivery } from './useAdDelivery';
+﻿export * from '@/core/promotions/hooks/index';

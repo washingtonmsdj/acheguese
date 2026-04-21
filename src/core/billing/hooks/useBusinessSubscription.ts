@@ -1,29 +1,16 @@
 /**
- * useBusinessSubscription — Hook para gerenciar assinatura de empresa
+ * useBusinessSubscription - Hook para gerenciar assinatura de empresa
  *
- * SSOT: Hook central que todos os módulos devem usar.
- * 
- * Uso:
- * ```typescript
- * const { subscription, planTier, entitlements, isLoading } = useBusinessSubscription(businessId);
- * 
- * if (entitlements.canUsePromotions) {
- *   // Mostrar recurso de promoções
- * }
- * ```
+ * SSOT: Hook central que todos os modulos devem usar.
  */
 
 import { useQuery } from '@tanstack/react-query';
 import { SubscriptionService } from '../SubscriptionService';
 import { EntitlementsService } from '../entitlements';
+import { BillingPlanService } from '../services/BillingPlanService';
 import { PlanTier } from '../types';
 
-// ══════════════════════════════════════════════════════════════════════════
-// HOOK
-// ══════════════════════════════════════════════════════════════════════════
-
 export function useBusinessSubscription(businessId: string | undefined) {
-  // Buscar assinatura
   const {
     data: result,
     isLoading,
@@ -32,43 +19,68 @@ export function useBusinessSubscription(businessId: string | undefined) {
   } = useQuery({
     queryKey: ['business-subscription', businessId],
     queryFn: async () => {
-      if (!businessId) throw new Error('businessId é obrigatório');
-      return SubscriptionService.getByBusinessId(businessId);
+      if (!businessId) throw new Error('businessId e obrigatorio');
+
+      const subscriptionResult = await SubscriptionService.getByBusinessId(businessId);
+      if (subscriptionResult.error) {
+        throw new Error(subscriptionResult.error);
+      }
+
+      const subscription = subscriptionResult.data;
+      const planTier = subscription?.plan_tier || PlanTier.FREE;
+
+      let entitlements = EntitlementsService.getAll(planTier);
+
+      try {
+        const dynamicEntitlements = await BillingPlanService.getEntitlements(planTier);
+        if (dynamicEntitlements) {
+          entitlements = dynamicEntitlements;
+        }
+      } catch {
+        // fallback para legado
+      }
+
+      return {
+        subscription: subscription || null,
+        planTier,
+        entitlements,
+      };
     },
     enabled: !!businessId,
-    staleTime: 1000 * 60 * 5, // 5 minutos
+    staleTime: 1000 * 60 * 5,
   });
-  
-  const subscription = result?.data;
-  const planTier = subscription?.plan_tier || PlanTier.FREE;
-  const entitlements = EntitlementsService.getAll(planTier);
-  
-  // Status flags
+
+  const subscription = result?.subscription || null;
+  const planTier = result?.planTier || PlanTier.FREE;
+  const entitlements = result?.entitlements || EntitlementsService.getAll(PlanTier.FREE);
+
   const isActive = subscription?.status === 'active';
   const isCanceled = subscription?.status === 'canceled';
   const isPastDue = subscription?.status === 'past_due';
   const isTrialing = subscription?.status === 'trialing';
   const willCancelAtPeriodEnd = subscription?.cancel_at_period_end || false;
-  
+
+  const isFree = planTier === PlanTier.FREE;
+  const isPro = planTier === PlanTier.PRO;
+  const isDelivery = planTier === PlanTier.DELIVERY;
+
   return {
-    // Data
     subscription,
     planTier,
     entitlements,
-    
-    // Loading
+
     isLoading,
-    error: result?.error || (error instanceof Error ? error.message : null),
-    
-    // Status flags
+    error: error instanceof Error ? error.message : null,
+
     isActive,
     isCanceled,
     isPastDue,
     isTrialing,
     willCancelAtPeriodEnd,
-    
-    // Actions
+    isFree,
+    isPro,
+    isDelivery,
+
     refetch,
   };
 }
-

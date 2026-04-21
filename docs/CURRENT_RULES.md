@@ -1,8 +1,8 @@
 # Regras Vigentes do Sistema
 
-Data-base: 2026-04-09
+Data-base: 2026-04-20
 Status: ativo
-Versao documental: 3.0
+Versao documental: 3.1
 
 ## 1. Regras de identidade e ownership
 - `user_id` identifica autenticacao e contexto administrativo.
@@ -24,8 +24,9 @@ Versao documental: 3.0
 - Documento global vivo fica em `docs/`.
 - Documento tecnico de dominio fica no proprio dominio.
 - Historico vai para `docs/archive/` ou `docs/historico/`.
-- O indice mestre da documentacao e `docs/DOCUMENTATION_INDEX.md`.
+- O indice mestre da documentacao e `docs/INDEX_CANONICO.md`.
 - O relatorio executivo vigente de organizacao e blindagem e `docs/audits/MASTER_REPORT.md`.
+- Documentos fora do indice canonico (principalmente historico/sessao) nao substituem status oficial.
 
 ## 4. Gates obrigatorios
 Execute antes de consolidacoes estruturais e antes de build:

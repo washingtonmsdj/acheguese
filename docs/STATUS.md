@@ -20,6 +20,7 @@ Ultima atualizacao: 2026-04-20
 - `npm run validate:ssot`: sucesso.
 - `npm run typecheck`: sucesso.
 - `npm run build`: sucesso (build completo apos ajuste de exports em `core/classifieds/services`, duracao ~8m06s nesta maquina).
+- Checkpoint adicional nesta sessao (2026-04-20): `typecheck`, `validate:ssot`, `validate:architecture:governance`, `validate:architecture:incremental`, `validate:docs-structure` e `build` reexecutados com sucesso.
 
 ## Divida tecnica remanescente
 1. Consolidacao `core` x `modules`:
@@ -95,7 +96,14 @@ Ultima atualizacao: 2026-04-20
 - `classifieds`: `ClassificadoDetailPage` promovida para `src/core/classifieds/pages/ClassificadoDetailPage.tsx` e rota canônica passou a consumir `@/core/classifieds/pages/ClassificadoDetailPage`.
 - `classifieds`: hooks `useClassificadoDetail` e `useSellerAds` promovidos para `src/core/classifieds/hooks/*`; equivalentes em `src/modules/classifieds/hooks/*` convertidos para wrappers.
 - `classifieds`: `core/admin`, `core/landing`, `core/profiles`, `core/messaging` e `core/routing` deixaram de importar `@/modules/classifieds/*` e passaram a consumir `@/core/classifieds/*`.
+- `promotions`: contrato canônico em `src/core/promotions/*` promovido (hooks/components/services/types/repositories); `src/modules/promotions/*` convertido para wrappers de compatibilidade nos entrypoints públicos.
+- `profile`: `ProfilePublicPage` promovida para `src/core/profile/pages/ProfilePublicPage.tsx` com utilitário `profileDomainRules` em `src/core/profile/utils/`; `ProfilePublicRoute` atualizado para consumir `core`.
+- `admin`: componentes compartilhados de admin promovidos para `src/core/admin/components/*` (incluindo cadeia de reputação) e `core/admin/components/index.ts` convertido para barrel local sem dependência de `modules`.
+- `admin-identidade`/`admin-motoristas`: implementação promovida para `src/core/admin-identidade/*` e `src/core/admin-motoristas/*`; pages em `src/core/admin/pages/*` apontando para `core` e páginas equivalentes em `modules/*` convertidas para wrappers.
+- `auth`: `ResetPasswordPage` deixou de acessar `supabase.auth` direto; fluxo de `PASSWORD_RECOVERY` encapsulado em `AuthService.onPasswordRecovery`.
+- `core`: `rg -n "@/modules/" src/core --glob "*.ts" --glob "*.tsx"` retornando `0` (sem acoplamento runtime `core -> modules`).
 - `docs`: consolidacao de pre-launch aplicada; 99 markdowns movidos para `docs/historico/pre-launch/2026-04-20/` e `docs/pre-launch` reduzido a ponte historica (`README.md` + `INDEX.md`).
+- `docs`: governanca canonica alinhada (`CURRENT_RULES`, `INDEX_CANONICO`, `CANONICAL_MAP`) para refletir ownership atual em `core/*` e deixar explicito que documentos historicos nao substituem status oficial.
 - Imports de Supabase normalizados para `@/integrations/supabase/supabase`.
 - Warning de build sobre reexport `client.ts` eliminado.
 - `core/verification` deixou de depender de `modules/verification` (inversao de dependencia removida).
@@ -106,6 +114,11 @@ Ultima atualizacao: 2026-04-20
 - `UnifiedNotificationBellV2` migrou para `src/core/notifications/components/UnifiedNotificationBellV2.tsx`.
 - `AppTopbar` passou a importar o sino de notificacoes de `@/core/notifications`.
 - Facade legada `src/modules/notifications/*` removida do repositorio.
+- `notifications/admin`: cobertura fechada para canais, templates e auditoria de entrega:
+  - `src/core/admin/services/AdminNotificationsService.ts` expandido com `getChannelStats`, `getTemplateStats`, `getEmailDeliveryAudit`.
+  - `src/modules/admin/pages/AdminNotifications.tsx` passou a exibir governanca operacional de canais (push/e-mail), top templates e tabela de auditoria de `email_logs`.
+  - `ResetPasswordPage` manteve boundary de UI sem Supabase direto via `AuthService.applyRecoverySession`.
+  - migration SSOT adicionada em `supabase/migrations/20260421093000_admin_notifications_governance_rpc.sql` com RPCs administrativos para `notification_preferences`, `push_subscriptions` e `email_logs`.
 - `DashboardEmpresaPageV2` deixou de importar `modules/dashboard/*` e passou a depender de `core/business` + `shared`.
 - `useDashboardAccess` e `useDashboardTabs` migrados para `src/core/business/hooks/` com wrappers de compatibilidade no modulo.
 - Servicos de landing migrados para `src/core/landing/services/` e consumidores de `core` atualizados.

@@ -85,6 +85,7 @@ export const BusinessPremiumRoute = lazy(() => import("@/core/routing/components
 // ============================================================
 export const GastronomyLandingPage = lazy(() => import("@/modules/gastronomy/pages/GastronomyLandingPage"));
 export const GastronomyDetailPage = lazy(() => import("@/modules/gastronomy/pages/GastronomyDetailPage"));
+export const GastronomyPremiumDetailPage = lazy(() => import("@/modules/gastronomy/pages/GastronomyPremiumDetailPage"));
 export const MyFavoritesPage = lazy(() => import("@/modules/gastronomy/pages/MyFavoritesPage"));
 export const GastronomySetupPage = lazy(() => import("@/modules/gastronomy/pages/GastronomySetupPage"));
 export const GastronomyBillingPage = lazy(() => import("@/modules/gastronomy/pages/GastronomyBillingPage"));
@@ -249,6 +250,7 @@ export const AdminEventos = lazy(() => import("@/modules/admin/pages/AdminEvento
 export const AdminUsuarios = lazy(() => import("@/modules/admin/pages/AdminUsuarios"));
 export const AdminMotoristas = lazy(() => import("@/modules/admin/pages/AdminMotoristas"));
 export const AdminReportsPassageiros = lazy(() => import("@/modules/admin/pages/AdminReportsPassageirosV2"));
+export const AdminReportsPassageirosV2 = AdminReportsPassageiros;
 export const AdminPontosEmbarque = lazy(() => import("@/modules/admin/pages/AdminPontosEmbarque"));
 export const AdminVerificacoes = lazy(() => import("@/core/verification/pages/AdminVerificationsPage"));
 export const AdminZeladoria = lazy(() => import("@/modules/admin/pages/AdminZeladoria"));

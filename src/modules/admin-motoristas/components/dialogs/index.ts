@@ -1,7 +1,1 @@
-/**
- * Dialogs Barrel Export
- */
-
-export * from "./DriverReviewDialog";
-export * from "./ConfirmationDialog";
-export * from "./SuspensionHistoryDialog";
+﻿export * from '@/core/admin-motoristas/components/dialogs/index';

@@ -1,25 +1,14 @@
 /**
- * MenuService — SSOT canônico do sistema de cardápio
- *
- * Centraliza toda a lógica de negócio do cardápio gastronômico.
- * Hooks e componentes NÃO acessam Supabase diretamente — consomem este service.
- *
- * Responsabilidades:
- * - CRUD de categorias
- * - CRUD de itens
- * - CRUD de variações
- * - CRUD de adicionais
- * - CRUD de combos
- * - Gestão de disponibilidade
- * - Ordenação
+ * MenuService - SSOT de cardapio com validacao de plano.
  */
 import { logger } from '@/shared/utils/logger';
 import { supabase } from '@/integrations/supabase';
 import { sanitizeString } from '@/shared/utils/sanitization';
+import { SubscriptionService } from '@/core/billing/SubscriptionService';
+import { EntitlementsService } from '@/core/billing/entitlements';
+import { BillingPlanService, type PlanEntitlements } from '@/core/billing/services/BillingPlanService';
 
-export const __MENU_SERVICE_FACADE_HINT__ = "compatibility facade";
-
-// ── Tipos ─────────────────────────────────────────────────────────────────
+export const __MENU_SERVICE_FACADE_HINT__ = 'compatibility facade';
 
 export interface ServiceResult<T> {
   data: T | null;
@@ -103,17 +92,133 @@ export interface MenuComboItem {
   created_at: string;
 }
 
-// ── Service ───────────────────────────────────────────────────────────────
+interface PlanContext {
+  businessId: string;
+  entitlements: PlanEntitlements;
+}
+
+function hasImageUrl(value: string | null | undefined): boolean {
+  return typeof value === 'string' && value.trim().length > 0;
+}
+
+async function resolveBusinessIdFromMenu(menuId: string): Promise<string | null> {
+  const primary = await supabase
+    .from('menus')
+    .select('business_id')
+    .eq('id', menuId)
+    .maybeSingle();
+
+  if (!primary.error && primary.data?.business_id) {
+    return String(primary.data.business_id);
+  }
+
+  const fallback = await supabase
+    .from('gastronomy_menus')
+    .select('business_id')
+    .eq('id', menuId)
+    .maybeSingle();
+
+  if (!fallback.error && fallback.data?.business_id) {
+    return String(fallback.data.business_id);
+  }
+
+  return null;
+}
+
+async function resolveMenuIdFromCategory(categoryId: string): Promise<string | null> {
+  const { data, error } = await supabase
+    .from('gastronomy_menu_categories')
+    .select('menu_id')
+    .eq('id', categoryId)
+    .maybeSingle();
+
+  if (error || !data?.menu_id) {
+    return null;
+  }
+
+  return String(data.menu_id);
+}
+
+async function resolveItem(itemId: string): Promise<Pick<MenuItem, 'id' | 'menu_id' | 'image_url'> | null> {
+  const { data, error } = await supabase
+    .from('gastronomy_menu_items')
+    .select('id, menu_id, image_url')
+    .eq('id', itemId)
+    .maybeSingle();
+
+  if (error || !data?.id || !data?.menu_id) {
+    return null;
+  }
+
+  return data as Pick<MenuItem, 'id' | 'menu_id' | 'image_url'>;
+}
+
+async function getEntitlementsForBusiness(businessId: string): Promise<PlanEntitlements> {
+  const subscriptionResult = await SubscriptionService.getByBusinessId(businessId);
+
+  const planTier = subscriptionResult.data?.plan_tier ?? 'free';
+  const dynamicEntitlements = await BillingPlanService.getEntitlements(planTier).catch(() => null);
+
+  if (dynamicEntitlements) {
+    return dynamicEntitlements;
+  }
+
+  return EntitlementsService.getAll(planTier as any);
+}
+
+async function getPlanContextByMenuId(menuId: string): Promise<PlanContext | null> {
+  const businessId = await resolveBusinessIdFromMenu(menuId);
+  if (!businessId) return null;
+
+  const entitlements = await getEntitlementsForBusiness(businessId);
+  return { businessId, entitlements };
+}
+
+async function getPlanContextByCategoryId(categoryId: string): Promise<PlanContext | null> {
+  const menuId = await resolveMenuIdFromCategory(categoryId);
+  if (!menuId) return null;
+  return getPlanContextByMenuId(menuId);
+}
+
+async function getPlanContextByItemId(itemId: string): Promise<PlanContext | null> {
+  const item = await resolveItem(itemId);
+  if (!item) return null;
+  return getPlanContextByMenuId(item.menu_id);
+}
+
+async function countMenuCategories(menuId: string): Promise<number> {
+  const { count } = await supabase
+    .from('gastronomy_menu_categories')
+    .select('*', { count: 'exact', head: true })
+    .eq('menu_id', menuId);
+  return count || 0;
+}
+
+async function countMenuItems(menuId: string): Promise<number> {
+  const { count } = await supabase
+    .from('gastronomy_menu_items')
+    .select('*', { count: 'exact', head: true })
+    .eq('menu_id', menuId);
+  return count || 0;
+}
+
+async function countMenuItemsWithImage(menuId: string): Promise<number> {
+  const { count } = await supabase
+    .from('gastronomy_menu_items')
+    .select('*', { count: 'exact', head: true })
+    .eq('menu_id', menuId)
+    .not('image_url', 'is', null);
+  return count || 0;
+}
+
+function requirePlanContext(context: PlanContext | null): ServiceResult<true> {
+  if (!context) {
+    return { data: null, error: 'Nao foi possivel validar o plano deste menu.' };
+  }
+  return { data: true, error: null };
+}
 
 export const MenuService = {
-  
-  // ══════════════════════════════════════════════════════════════════════════
-  // CATEGORIAS
-  // ══════════════════════════════════════════════════════════════════════════
-  
-  /**
-   * Lista categorias de um menu
-   */
   async listCategories(menuId: string): Promise<ServiceResult<MenuCategory[]>> {
     try {
       const { data, error } = await supabase
@@ -129,14 +234,10 @@ export const MenuService = {
 
       return { data: data as MenuCategory[], error: null };
     } catch (err) {
-      const msg = err instanceof Error ? err.message : String(err);
-      return { data: null, error: msg };
+      return { data: null, error: err instanceof Error ? err.message : String(err) };
     }
   },
 
-  /**
-   * Cria uma categoria
-   */
   async createCategory(input: {
     menu_id: string;
     name: string;
@@ -144,6 +245,24 @@ export const MenuService = {
     display_order?: number;
   }): Promise<ServiceResult<MenuCategory>> {
     try {
+      const context = await getPlanContextByMenuId(input.menu_id);
+      const contextCheck = requirePlanContext(context);
+      if (contextCheck.error) return { data: null, error: contextCheck.error };
+
+      if (!context!.entitlements.canUseMenuCategories) {
+        return { data: null, error: 'Seu plano nao permite categorias no cardapio.' };
+      }
+
+      if (context!.entitlements.maxCategories !== null) {
+        const current = await countMenuCategories(input.menu_id);
+        if (current >= context!.entitlements.maxCategories) {
+          return {
+            data: null,
+            error: `Limite de categorias atingido (${context!.entitlements.maxCategories}).`,
+          };
+        }
+      }
+
       const { data, error } = await supabase
         .from('gastronomy_menu_categories')
         .insert({
@@ -163,19 +282,23 @@ export const MenuService = {
 
       return { data: data as MenuCategory, error: null };
     } catch (err) {
-      const msg = err instanceof Error ? err.message : String(err);
-      return { data: null, error: msg };
+      return { data: null, error: err instanceof Error ? err.message : String(err) };
     }
   },
 
-  /**
-   * Atualiza uma categoria
-   */
   async updateCategory(
     categoryId: string,
     input: Partial<Pick<MenuCategory, 'name' | 'description' | 'display_order' | 'is_active'>>
   ): Promise<ServiceResult<MenuCategory>> {
     try {
+      const context = await getPlanContextByCategoryId(categoryId);
+      const contextCheck = requirePlanContext(context);
+      if (contextCheck.error) return { data: null, error: contextCheck.error };
+
+      if (!context!.entitlements.canUseMenuCategories) {
+        return { data: null, error: 'Seu plano nao permite gerenciar categorias.' };
+      }
+
       const updates: Record<string, any> = { updated_at: new Date().toISOString() };
 
       if (input.name !== undefined) updates.name = sanitizeString(input.name);
@@ -197,16 +320,20 @@ export const MenuService = {
 
       return { data: data as MenuCategory, error: null };
     } catch (err) {
-      const msg = err instanceof Error ? err.message : String(err);
-      return { data: null, error: msg };
+      return { data: null, error: err instanceof Error ? err.message : String(err) };
     }
   },
 
-  /**
-   * Deleta uma categoria
-   */
   async deleteCategory(categoryId: string): Promise<ServiceResult<boolean>> {
     try {
+      const context = await getPlanContextByCategoryId(categoryId);
+      const contextCheck = requirePlanContext(context);
+      if (contextCheck.error) return { data: null, error: contextCheck.error };
+
+      if (!context!.entitlements.canUseMenuCategories) {
+        return { data: null, error: 'Seu plano nao permite gerenciar categorias.' };
+      }
+
       const { error } = await supabase
         .from('gastronomy_menu_categories')
         .delete()
@@ -219,16 +346,22 @@ export const MenuService = {
 
       return { data: true, error: null };
     } catch (err) {
-      const msg = err instanceof Error ? err.message : String(err);
-      return { data: null, error: msg };
+      return { data: null, error: err instanceof Error ? err.message : String(err) };
     }
   },
 
-  /**
-   * Reordena categorias
-   */
   async reorderCategories(updates: Array<{ id: string; display_order: number }>): Promise<ServiceResult<boolean>> {
     try {
+      if (updates.length === 0) return { data: true, error: null };
+
+      const context = await getPlanContextByCategoryId(updates[0].id);
+      const contextCheck = requirePlanContext(context);
+      if (contextCheck.error) return { data: null, error: contextCheck.error };
+
+      if (!context!.entitlements.canUseMenuCategories) {
+        return { data: null, error: 'Seu plano nao permite reordenar categorias.' };
+      }
+
       for (const update of updates) {
         const { error } = await supabase
           .from('gastronomy_menu_categories')
@@ -243,18 +376,10 @@ export const MenuService = {
 
       return { data: true, error: null };
     } catch (err) {
-      const msg = err instanceof Error ? err.message : String(err);
-      return { data: null, error: msg };
+      return { data: null, error: err instanceof Error ? err.message : String(err) };
     }
   },
 
-  // ══════════════════════════════════════════════════════════════════════════
-  // ITENS
-  // ══════════════════════════════════════════════════════════════════════════
-
-  /**
-   * Lista itens de um menu (opcionalmente filtrado por categoria)
-   */
   async listItems(menuId: string, categoryId?: string): Promise<ServiceResult<MenuItem[]>> {
     try {
       let query = supabase
@@ -275,14 +400,10 @@ export const MenuService = {
 
       return { data: data as MenuItem[], error: null };
     } catch (err) {
-      const msg = err instanceof Error ? err.message : String(err);
-      return { data: null, error: msg };
+      return { data: null, error: err instanceof Error ? err.message : String(err) };
     }
   },
 
-  /**
-   * Busca um item por ID
-   */
   async getItem(itemId: string): Promise<ServiceResult<MenuItem>> {
     try {
       const { data, error } = await supabase
@@ -298,14 +419,10 @@ export const MenuService = {
 
       return { data: data as MenuItem, error: null };
     } catch (err) {
-      const msg = err instanceof Error ? err.message : String(err);
-      return { data: null, error: msg };
+      return { data: null, error: err instanceof Error ? err.message : String(err) };
     }
   },
 
-  /**
-   * Cria um item
-   */
   async createItem(input: {
     menu_id: string;
     category_id?: string;
@@ -318,6 +435,38 @@ export const MenuService = {
     allergens?: string[];
   }): Promise<ServiceResult<MenuItem>> {
     try {
+      const context = await getPlanContextByMenuId(input.menu_id);
+      const contextCheck = requirePlanContext(context);
+      if (contextCheck.error) return { data: null, error: contextCheck.error };
+
+      if (context!.entitlements.maxMenuItems !== null) {
+        const current = await countMenuItems(input.menu_id);
+        if (current >= context!.entitlements.maxMenuItems) {
+          return {
+            data: null,
+            error: `Limite de itens atingido (${context!.entitlements.maxMenuItems}).`,
+          };
+        }
+      }
+
+      if (input.category_id && !context!.entitlements.canUseMenuCategories) {
+        return { data: null, error: 'Seu plano nao permite categorias no cardapio.' };
+      }
+
+      if (hasImageUrl(input.image_url) && !context!.entitlements.canUseMenuImages) {
+        return { data: null, error: 'Seu plano nao permite imagens nos itens.' };
+      }
+
+      if (hasImageUrl(input.image_url) && context!.entitlements.maxImages !== null) {
+        const currentImages = await countMenuItemsWithImage(input.menu_id);
+        if (currentImages >= context!.entitlements.maxImages) {
+          return {
+            data: null,
+            error: `Limite de imagens atingido (${context!.entitlements.maxImages}).`,
+          };
+        }
+      }
+
       const { data, error } = await supabase
         .from('gastronomy_menu_items')
         .insert({
@@ -344,19 +493,51 @@ export const MenuService = {
 
       return { data: data as MenuItem, error: null };
     } catch (err) {
-      const msg = err instanceof Error ? err.message : String(err);
-      return { data: null, error: msg };
+      return { data: null, error: err instanceof Error ? err.message : String(err) };
     }
   },
 
-  /**
-   * Atualiza um item
-   */
   async updateItem(
     itemId: string,
     input: Partial<Omit<MenuItem, 'id' | 'menu_id' | 'created_at' | 'updated_at'>>
   ): Promise<ServiceResult<MenuItem>> {
     try {
+      const item = await resolveItem(itemId);
+      if (!item) {
+        return { data: null, error: 'Item nao encontrado.' };
+      }
+
+      const context = await getPlanContextByMenuId(item.menu_id);
+      const contextCheck = requirePlanContext(context);
+      if (contextCheck.error) return { data: null, error: contextCheck.error };
+
+      if (input.category_id !== undefined && input.category_id !== null && !context!.entitlements.canUseMenuCategories) {
+        return { data: null, error: 'Seu plano nao permite categorias no cardapio.' };
+      }
+
+      if (input.image_url !== undefined) {
+        if (hasImageUrl(input.image_url) && !context!.entitlements.canUseMenuImages) {
+          return { data: null, error: 'Seu plano nao permite imagens nos itens.' };
+        }
+
+        const willHaveImage = hasImageUrl(input.image_url);
+        const hadImage = hasImageUrl(item.image_url);
+
+        if (willHaveImage && !hadImage && context!.entitlements.maxImages !== null) {
+          const currentImages = await countMenuItemsWithImage(item.menu_id);
+          if (currentImages >= context!.entitlements.maxImages) {
+            return {
+              data: null,
+              error: `Limite de imagens atingido (${context!.entitlements.maxImages}).`,
+            };
+          }
+        }
+      }
+
+      if (input.is_available !== undefined && !context!.entitlements.canManageAvailability) {
+        return { data: null, error: 'Seu plano nao permite gerenciar disponibilidade.' };
+      }
+
       const updates: Record<string, any> = { updated_at: new Date().toISOString() };
 
       if (input.name !== undefined) updates.name = sanitizeString(input.name);
@@ -386,14 +567,10 @@ export const MenuService = {
 
       return { data: data as MenuItem, error: null };
     } catch (err) {
-      const msg = err instanceof Error ? err.message : String(err);
-      return { data: null, error: msg };
+      return { data: null, error: err instanceof Error ? err.message : String(err) };
     }
   },
 
-  /**
-   * Deleta um item
-   */
   async deleteItem(itemId: string): Promise<ServiceResult<boolean>> {
     try {
       const { error } = await supabase
@@ -408,25 +585,14 @@ export const MenuService = {
 
       return { data: true, error: null };
     } catch (err) {
-      const msg = err instanceof Error ? err.message : String(err);
-      return { data: null, error: msg };
+      return { data: null, error: err instanceof Error ? err.message : String(err) };
     }
   },
 
-  /**
-   * Alterna disponibilidade de um item
-   */
   async toggleItemAvailability(itemId: string, isAvailable: boolean): Promise<ServiceResult<MenuItem>> {
     return this.updateItem(itemId, { is_available: isAvailable });
   },
 
-  // ══════════════════════════════════════════════════════════════════════════
-  // VARIAÇÕES
-  // ══════════════════════════════════════════════════════════════════════════
-
-  /**
-   * Lista variações de um item
-   */
   async listVariations(itemId: string): Promise<ServiceResult<MenuItemVariation[]>> {
     try {
       const { data, error } = await supabase
@@ -442,14 +608,10 @@ export const MenuService = {
 
       return { data: data as MenuItemVariation[], error: null };
     } catch (err) {
-      const msg = err instanceof Error ? err.message : String(err);
-      return { data: null, error: msg };
+      return { data: null, error: err instanceof Error ? err.message : String(err) };
     }
   },
 
-  /**
-   * Cria uma variação
-   */
   async createVariation(input: {
     item_id: string;
     name: string;
@@ -457,6 +619,14 @@ export const MenuService = {
     price_adjustment: number;
   }): Promise<ServiceResult<MenuItemVariation>> {
     try {
+      const context = await getPlanContextByItemId(input.item_id);
+      const contextCheck = requirePlanContext(context);
+      if (contextCheck.error) return { data: null, error: contextCheck.error };
+
+      if (!context!.entitlements.canUseMenuVariations) {
+        return { data: null, error: 'Seu plano nao permite variacoes de item.' };
+      }
+
       const { data, error } = await supabase
         .from('gastronomy_menu_item_variations')
         .insert({
@@ -477,14 +647,10 @@ export const MenuService = {
 
       return { data: data as MenuItemVariation, error: null };
     } catch (err) {
-      const msg = err instanceof Error ? err.message : String(err);
-      return { data: null, error: msg };
+      return { data: null, error: err instanceof Error ? err.message : String(err) };
     }
   },
 
-  /**
-   * Deleta uma variação
-   */
   async deleteVariation(variationId: string): Promise<ServiceResult<boolean>> {
     try {
       const { error } = await supabase
@@ -499,18 +665,10 @@ export const MenuService = {
 
       return { data: true, error: null };
     } catch (err) {
-      const msg = err instanceof Error ? err.message : String(err);
-      return { data: null, error: msg };
+      return { data: null, error: err instanceof Error ? err.message : String(err) };
     }
   },
 
-  // ══════════════════════════════════════════════════════════════════════════
-  // ADICIONAIS
-  // ══════════════════════════════════════════════════════════════════════════
-
-  /**
-   * Lista adicionais de um item
-   */
   async listAddons(itemId: string): Promise<ServiceResult<MenuItemAddon[]>> {
     try {
       const { data, error } = await supabase
@@ -526,14 +684,10 @@ export const MenuService = {
 
       return { data: data as MenuItemAddon[], error: null };
     } catch (err) {
-      const msg = err instanceof Error ? err.message : String(err);
-      return { data: null, error: msg };
+      return { data: null, error: err instanceof Error ? err.message : String(err) };
     }
   },
 
-  /**
-   * Cria um adicional
-   */
   async createAddon(input: {
     item_id: string;
     name: string;
@@ -542,6 +696,14 @@ export const MenuService = {
     max_quantity?: number;
   }): Promise<ServiceResult<MenuItemAddon>> {
     try {
+      const context = await getPlanContextByItemId(input.item_id);
+      const contextCheck = requirePlanContext(context);
+      if (contextCheck.error) return { data: null, error: contextCheck.error };
+
+      if (!context!.entitlements.canUseMenuAddons) {
+        return { data: null, error: 'Seu plano nao permite adicionais.' };
+      }
+
       const { data, error } = await supabase
         .from('gastronomy_menu_item_addons')
         .insert({
@@ -563,14 +725,10 @@ export const MenuService = {
 
       return { data: data as MenuItemAddon, error: null };
     } catch (err) {
-      const msg = err instanceof Error ? err.message : String(err);
-      return { data: null, error: msg };
+      return { data: null, error: err instanceof Error ? err.message : String(err) };
     }
   },
 
-  /**
-   * Deleta um adicional
-   */
   async deleteAddon(addonId: string): Promise<ServiceResult<boolean>> {
     try {
       const { error } = await supabase
@@ -585,8 +743,7 @@ export const MenuService = {
 
       return { data: true, error: null };
     } catch (err) {
-      const msg = err instanceof Error ? err.message : String(err);
-      return { data: null, error: msg };
+      return { data: null, error: err instanceof Error ? err.message : String(err) };
     }
   },
 };

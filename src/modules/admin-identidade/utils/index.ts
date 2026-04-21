@@ -1,5 +1,1 @@
-/**
- * Admin Identidade - Utils Barrel Export
- */
-
-export * from "./identityHelpers";
+﻿export * from '@/core/admin-identidade/utils/index';

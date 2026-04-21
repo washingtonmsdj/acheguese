@@ -58,6 +58,8 @@ interface ItemFormProps {
   item?: MenuItem | null;
   categories: MenuCategory[];
   isSubmitting?: boolean;
+  allowCategorySelection?: boolean;
+  allowImage?: boolean;
 }
 
 export function ItemForm({
@@ -67,6 +69,8 @@ export function ItemForm({
   item,
   categories,
   isSubmitting = false,
+  allowCategorySelection = true,
+  allowImage = true,
 }: ItemFormProps) {
   const form = useForm<ItemFormValues>({
     resolver: zodResolver(itemSchema),
@@ -93,8 +97,8 @@ export function ItemForm({
       allergens: values.allergens
         ? values.allergens.split(',').map((a) => a.trim()).filter(Boolean)
         : [],
-      image_url: values.image_url || undefined,
-      category_id: values.category_id || undefined,
+      image_url: allowImage ? values.image_url || undefined : undefined,
+      category_id: allowCategorySelection ? values.category_id || undefined : undefined,
     };
 
     onSubmit(processedValues);
@@ -173,51 +177,63 @@ export function ItemForm({
                 )}
               />
 
-              <FormField
-                control={form.control}
-                name="category_id"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Categoria</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Selecione..." />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="">Sem categoria</SelectItem>
-                        {categories.map((cat) => (
-                          <SelectItem key={cat.id} value={cat.id}>
-                            {cat.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              {allowCategorySelection ? (
+                <FormField
+                  control={form.control}
+                  name="category_id"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Categoria</FormLabel>
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Selecione..." />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="">Sem categoria</SelectItem>
+                          {categories.map((cat) => (
+                            <SelectItem key={cat.id} value={cat.id}>
+                              {cat.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              ) : (
+                <div className="rounded-md border p-3 text-sm text-muted-foreground">
+                  Seu plano nao permite organizar itens por categoria.
+                </div>
+              )}
             </div>
 
             {/* URL da Imagem e Tempo de Preparo */}
             <div className="grid grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="image_url"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>URL da Imagem</FormLabel>
-                    <FormControl>
-                      <Input placeholder="https://..." {...field} />
-                    </FormControl>
-                    <FormDescription>
-                      Link da imagem do item
-                    </FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              {allowImage ? (
+                <FormField
+                  control={form.control}
+                  name="image_url"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>URL da Imagem</FormLabel>
+                      <FormControl>
+                        <Input placeholder="https://..." {...field} />
+                      </FormControl>
+                      <FormDescription>
+                        Link da imagem do item
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              ) : (
+                <div className="rounded-md border p-3 text-sm text-muted-foreground">
+                  Seu plano nao permite imagem nos itens.
+                </div>
+              )}
 
               <FormField
                 control={form.control}

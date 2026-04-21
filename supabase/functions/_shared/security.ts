@@ -17,12 +17,37 @@
 // ══════════════════════════════════════════════════════════════════════════
 
 /**
- * Retorna headers CORS seguros baseados em configuração de ambiente
- * 
+ * Retorna headers CORS seguros baseados em configuração de ambiente.
+ *
+ * Implementa validação dinâmica de Origin: verifica o header Origin da
+ * requisição contra a lista ALLOWED_ORIGINS e retorna apenas a origem
+ * solicitada se ela for permitida — suportando múltiplas origens corretamente.
+ *
  * IMPORTANTE: Nunca use '*' em produção!
- * Configure ALLOWED_ORIGINS no ambiente com domínios específicos
+ * Configure ALLOWED_ORIGINS no ambiente com domínios específicos.
  */
-export function getCorsHeaders(methods = 'POST, OPTIONS'): Record<string, string> {
+export function getCorsHeaders(methods = 'POST, OPTIONS', req?: Request): Record<string, string> {
+  const requestOrigin = req?.headers.get('origin') ?? null;
+  const allowedOrigin = resolveAllowedOrigin(requestOrigin);
+
+  return {
+    'Access-Control-Allow-Origin': allowedOrigin,
+    'Access-Control-Allow-Methods': methods,
+    'Access-Control-Allow-Headers': 'authorization, content-type, x-client-info, stripe-signature',
+    'Access-Control-Max-Age': '86400', // 24 horas
+    ...(allowedOrigin !== 'null' ? { 'Vary': 'Origin' } : {}),
+  };
+}
+
+/**
+ * Resolve a origem permitida para o header CORS.
+ *
+ * Retorna a origem solicitada se ela estiver na lista de origens permitidas,
+ * ou 'null' (string) para bloquear o acesso.
+ *
+ * Separado de getCorsHeaders para permitir reutilização em isOriginAllowed.
+ */
+function resolveAllowedOrigin(requestOrigin: string | null): string {
   const allowedOrigins = Deno.env.get('ALLOWED_ORIGINS') || '';
 
   // Desenvolvimento: APENAS quando DENO_ENV ou NODE_ENV está explicitamente
@@ -31,32 +56,24 @@ export function getCorsHeaders(methods = 'POST, OPTIONS'): Record<string, string
     Deno.env.get('DENO_ENV') === 'development' ||
     Deno.env.get('NODE_ENV') === 'development';
 
-  const defaultOrigin = isDev
-    ? 'http://localhost:8080,http://localhost:5173'
-    : '';
-
-  const origins = allowedOrigins || defaultOrigin;
-  
-  // Se não houver origens configuradas, bloqueia tudo
-  if (!origins) {
-    console.warn('⚠️ ALLOWED_ORIGINS não configurado - bloqueando CORS');
-    return {
-      'Access-Control-Allow-Origin': 'null',
-      'Access-Control-Allow-Methods': methods,
-      'Access-Control-Allow-Headers': 'authorization, content-type, x-client-info',
-    };
+  // Sem Origin no request (ex: chamadas server-to-server, webhooks) — permitir
+  if (!requestOrigin) {
+    if (!allowedOrigins && !isDev) {
+      console.warn('⚠️ ALLOWED_ORIGINS não configurado - bloqueando CORS');
+    }
+    // Sem Origin = não é um request de browser cross-origin; retornar primeira origem
+    // configurada como fallback para preflight sem Origin (raro mas possível)
+    const origins = allowedOrigins.split(',').map(o => o.trim()).filter(Boolean);
+    return origins[0] ?? (isDev ? 'http://localhost:8080' : 'null');
   }
-  
-  // Retorna primeira origem (edge functions não suportam múltiplas origens diretamente)
-  // Para suporte completo, implemente validação dinâmica baseada no header Origin
-  const primaryOrigin = origins.split(',')[0].trim();
-  
-  return {
-    'Access-Control-Allow-Origin': primaryOrigin,
-    'Access-Control-Allow-Methods': methods,
-    'Access-Control-Allow-Headers': 'authorization, content-type, x-client-info, stripe-signature',
-    'Access-Control-Max-Age': '86400', // 24 horas
-  };
+
+  // Verificar se a origem solicitada está na lista permitida
+  if (isOriginAllowed(requestOrigin)) {
+    return requestOrigin;
+  }
+
+  console.warn(`⚠️ Origem bloqueada pelo CORS: ${requestOrigin}`);
+  return 'null';
 }
 
 /**
@@ -123,11 +140,12 @@ export function getSecurityHeaders(): Record<string, string> {
 }
 
 /**
- * Combina todos os headers de segurança
+ * Combina todos os headers de segurança.
+ * Passa o request para getCorsHeaders para validação dinâmica de Origin.
  */
-export function getAllSecurityHeaders(methods = 'POST, OPTIONS'): Record<string, string> {
+export function getAllSecurityHeaders(methods = 'POST, OPTIONS', req?: Request): Record<string, string> {
   return {
-    ...getCorsHeaders(methods),
+    ...getCorsHeaders(methods, req),
     ...getSecurityHeaders(),
     'Content-Type': 'application/json',
   };
@@ -219,17 +237,30 @@ export async function checkRateLimit(
 /**
  * Middleware de rate limiting para edge functions.
  * Retorna Response 429 se o limite foi excedido, null caso contrário.
+ *
+ * Identifier usa CF-Connecting-IP (Cloudflare) ou x-real-ip (Supabase/proxies
+ * confiáveis) antes de x-forwarded-for, que pode ser forjado pelo cliente.
+ * Combina IP + user-agent como fallback para reduzir colisões.
  */
 export async function rateLimitMiddleware(
   req: Request,
   maxRequests = 100,
   windowMs = 60000,
 ): Promise<Response | null> {
-  const identifier =
-    req.headers.get('x-forwarded-for') ||
-    req.headers.get('x-real-ip') ||
-    req.headers.get('user-agent') ||
-    'unknown';
+  // Preferência: CF-Connecting-IP > x-real-ip > primeiro IP de x-forwarded-for
+  // x-forwarded-for pode conter múltiplos IPs (client, proxy1, proxy2...)
+  // O ÚLTIMO IP é o mais confiável (adicionado pelo proxy mais próximo ao servidor)
+  const cfIp = req.headers.get('cf-connecting-ip');
+  const realIp = req.headers.get('x-real-ip');
+  const forwardedFor = req.headers.get('x-forwarded-for');
+  const lastForwardedIp = forwardedFor
+    ? forwardedFor.split(',').at(-1)?.trim() ?? null
+    : null;
+
+  const ip = cfIp ?? realIp ?? lastForwardedIp ?? 'unknown';
+  const ua = req.headers.get('user-agent') ?? 'unknown-ua';
+  // Combinar IP + primeiros 32 chars do UA para reduzir colisões sem expor UA completo
+  const identifier = `${ip}:${ua.slice(0, 32)}`;
 
   const { allowed, remaining, resetAt } = await checkRateLimit(identifier, maxRequests, windowMs);
 

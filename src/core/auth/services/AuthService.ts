@@ -10,7 +10,7 @@ import { supabase } from "@/integrations/supabase";
 import { SessionService } from "@/core/session/services/SessionService";
 import { logger } from "@/shared/utils/logger";
 import { USER_ROLE } from "@/shared/types/constants";
-import type { User, Session } from "@supabase/supabase-js";
+import type { User, Session, AuthChangeEvent, Subscription } from "@supabase/supabase-js";
 import type { AdminSupabaseClient } from "@/core/admin/types/adminDatabase.types";
 
 export class AuthService {
@@ -47,6 +47,49 @@ export class AuthService {
       // Supabase implicit flow: access_token + type no hash
       (hashParams.get("access_token") !== null && hashParams.get("type") === "recovery")
     );
+  }
+
+  /**
+   * Captura os parâmetros do hash de auth do Supabase.
+   * Deve ser chamado o mais cedo possível — o SDK pode limpar o hash após processar.
+   */
+  static captureAuthHash(): URLSearchParams {
+    if (typeof window === 'undefined') return new URLSearchParams();
+    return new URLSearchParams(window.location.hash.replace(/^#/, ''));
+  }
+
+  /**
+   * Detecta se a URL atual contém um erro de auth do Supabase (ex: link expirado).
+   */
+  static getAuthHashError(): { error: string; errorCode: string } | null {
+    const params = AuthService.captureAuthHash();
+    const error = params.get('error');
+    const errorCode = params.get('error_code');
+    if (error || errorCode) return { error: error ?? '', errorCode: errorCode ?? '' };
+    return null;
+  }
+
+  static onPasswordRecovery(callback: () => void): () => void {
+    const { data: { subscription } } = (supabase as any).auth.onAuthStateChange(
+      (event: AuthChangeEvent) => {
+        if (event === "PASSWORD_RECOVERY") {
+          callback();
+        }
+      },
+    ) as { data: { subscription: Subscription } };
+
+    return () => subscription.unsubscribe();
+  }
+
+  static async applyRecoverySession(
+    accessToken: string,
+    refreshToken?: string | null,
+  ): Promise<boolean> {
+    const { error } = await (supabase as any).auth.setSession({
+      access_token: accessToken,
+      refresh_token: refreshToken ?? "",
+    });
+    return !error;
   }
 
   private static async resolveEmailByUsername(username: string): Promise<string> {

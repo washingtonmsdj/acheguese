@@ -704,6 +704,7 @@ export class TouristPointService {
       const results = await postService.getPostsWithImages({
         locationId: resolvedLocationId,
         locationIds: resolvedLocationIds,
+        state,
         city: !resolvedLocationId && !resolvedLocationIds ? city : undefined,
         neighborhood: !resolvedLocationId && !resolvedLocationIds ? (neighborhood ?? undefined) : undefined,
         limit: PAGINATION.DEFAULT_PAGE_SIZE,

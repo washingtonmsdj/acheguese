@@ -113,6 +113,62 @@ export interface PlanEntitlements {
   maxOrdersPerDay: number | null;
 }
 
+export const DEFAULT_PLAN_ENTITLEMENTS: PlanEntitlements = {
+  // Página Pública
+  canUsePremiumPublicPage: false,
+  canUseShortPremiumLink: false,
+  canUseCustomQRCode: false,
+
+  // Cardápio / Catálogo
+  canUseAdvancedMenu: false,
+  canUseMenuCategories: false,
+  canUseMenuImages: false,
+  canUseMenuVariations: false,
+  canUseMenuAddons: false,
+  canUseMenuCombos: false,
+  canManageAvailability: false,
+  canScheduleItems: false,
+
+  // Pedidos
+  canReceiveInternalOrders: false,
+  canUseOrdersPanel: false,
+  canManageOrderStatus: false,
+  canCancelOrders: false,
+  canViewOrderHistory: false,
+
+  // Delivery / Operação
+  canUseMotoboyNetwork: false,
+  canRequestDelivery: false,
+  canTrackDelivery: false,
+  canConfigureDeliveryArea: false,
+  canSetDeliveryFees: false,
+  canManageBusinessHours: false,
+  canSetMinimumOrder: false,
+  canUseOwnDelivery: false,
+
+  // Marketing
+  canUsePromotions: false,
+  canUseFeaturedPlacement: false,
+  canUseBanners: false,
+  canUseCoupons: false,
+  canSchedulePromotions: false,
+
+  // Analytics
+  canUseBasicAnalytics: false,
+  canUseAdvancedAnalytics: false,
+  canExportReports: false,
+  canViewRealtimeMetrics: false,
+  canViewCustomerInsights: false,
+
+  // Limites
+  maxMenuItems: null,
+  maxPromotions: null,
+  maxImages: null,
+  maxCategories: null,
+  maxCombos: null,
+  maxOrdersPerDay: null,
+};
+
 // ══════════════════════════════════════════════════════════════════════════
 // SERVICE
 // ══════════════════════════════════════════════════════════════════════════
@@ -144,7 +200,7 @@ export class BillingPlanService {
         throw new Error(`Falha ao buscar planos: ${error.message}`);
       }
 
-      const plans = (data as BillingPlanRow[]).map(this.mapRowToPlan);
+      const plans = (data as BillingPlanRow[]).map((row) => this.mapRowToPlan(row));
       
       // Atualizar cache
       this.allPlansCache = plans;
@@ -270,7 +326,7 @@ export class BillingPlanService {
         throw new Error(`Falha ao buscar planos: ${error.message}`);
       }
 
-      return (data as BillingPlanRow[]).map(this.mapRowToPlan);
+      return (data as BillingPlanRow[]).map((row) => this.mapRowToPlan(row));
     } catch (error) {
       logger.error('Erro inesperado ao buscar todos os planos:', error);
       throw error;
@@ -436,12 +492,23 @@ export class BillingPlanService {
       currency: row.currency,
       billingPeriod: row.billing_period,
       features: row.features,
-      entitlements: row.entitlements as PlanEntitlements,
+      entitlements: this.normalizeEntitlements(row.entitlements),
       isActive: row.is_active,
       isFeatured: row.is_featured,
       displayOrder: row.display_order,
       createdAt: new Date(row.created_at),
       updatedAt: new Date(row.updated_at),
+    };
+  }
+
+  private static normalizeEntitlements(value: unknown): PlanEntitlements {
+    if (!value || typeof value !== 'object') {
+      return { ...DEFAULT_PLAN_ENTITLEMENTS };
+    }
+
+    return {
+      ...DEFAULT_PLAN_ENTITLEMENTS,
+      ...(value as Partial<PlanEntitlements>),
     };
   }
 }

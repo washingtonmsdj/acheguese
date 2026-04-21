@@ -27,14 +27,15 @@ Se houver conflito entre documentos, vence a ordem abaixo:
 | --- | --- |
 | core/routing/location/public-identity | `src/core/routing/README.md`, `src/core/location/docs/LOCATION_ARCHITECTURE.md`, `src/core/public-identity/README.md` |
 | profile | `src/core/profiles/docs/CONTRACT_AUDIT_USERID_PROFILEID.md` |
-| admin | `src/modules/admin/README.md` |
+| admin | `src/modules/admin/README.md`, `src/core/admin/services/admin.queries.ts`, `src/core/admin-identidade/pages/AdminIdentidadePage.tsx`, `src/core/admin-motoristas/pages/AdminMotoristasPage.tsx` |
 | business | `src/core/business/README.md` |
-| gastronomy | `src/modules/gastronomy/README.md` |
+| gastronomy | `src/modules/gastronomy/README.md`, `src/core/gastronomy/index.ts` |
 | professionals/services | `src/core/professional/README.md` |
-| community/posts | `src/modules/community/README.md` |
+| community/posts | `src/modules/community/README.md`, `src/core/community/index.ts`, `src/core/community-alerts/README.md` |
 | map | `src/core/maps/README.md` |
-| classifieds | `src/modules/classifieds/data/README.md` |
-| mobility | `src/core/safety/README.md`, `src/core/tracking/README.md` |
+| classifieds | `src/modules/classifieds/data/README.md`, `src/core/classifieds/services/ClassifiedUrlService.ts` |
+| mobility | `src/core/mobility/services/MobilityService.ts`, `src/core/safety/README.md`, `src/core/tracking/README.md` |
+| promotions | `src/core/promotions/index.ts` |
 | notifications | `src/core/notifications/README.md`, `src/core/notifications/types.ts` |
 | verification | `src/core/verification/README.md`, `src/core/verification/services/VerificationService.ts` |
 

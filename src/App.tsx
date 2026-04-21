@@ -27,6 +27,7 @@ import {
 } from "@/shared/components/offline/OfflineIndicator";
 import { ConsentBanner } from "@/shared/components/privacy/ConsentBanner";
 import { AppRoutes } from "@/app/routes/AppRoutes";
+import { AuthHashRedirect } from "@/core/auth/components/AuthHashRedirect";
 import { Analytics } from "@vercel/analytics/react";
 import "@/styles/accessibility.css";
 
@@ -52,6 +53,7 @@ const App = () => (
                     v7_relativeSplatPath: true,
                   }}
                 >
+                  <AuthHashRedirect />
                   <TerritoryModeInitializer />
                   <OfflineIndicator />
                   <OfflineBanner />

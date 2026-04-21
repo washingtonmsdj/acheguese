@@ -69,6 +69,55 @@ export interface AdminNotificationListResult {
   totalPages: number;
 }
 
+export interface AdminNotificationChannelStats {
+  totalPushSubscriptions: number;
+  activePushSubscriptions: number;
+  inactivePushSubscriptions: number;
+  usersWithPushSubscriptions: number;
+  emailSent24h: number;
+  emailDelivered24h: number;
+  emailFailed24h: number;
+}
+
+export interface AdminNotificationTemplateStat {
+  template: string;
+  total: number;
+  sent: number;
+  delivered: number;
+  failed: number;
+  opened: number;
+  clicked: number;
+  lastSentAt: string | null;
+}
+
+export interface AdminEmailDeliveryAuditFilters {
+  page?: number;
+  limit?: number;
+  template?: string;
+  status?: string;
+  search?: string;
+}
+
+export interface AdminEmailDeliveryAuditRecord {
+  id: string;
+  userId: string | null;
+  email: string;
+  template: string;
+  subject: string;
+  status: string;
+  providerId: string | null;
+  errorMessage: string | null;
+  metadata: Record<string, unknown>;
+  createdAt: string;
+}
+
+export interface AdminEmailDeliveryAuditResult {
+  data: AdminEmailDeliveryAuditRecord[];
+  total: number;
+  page: number;
+  totalPages: number;
+}
+
 function escapeIlike(term: string): string {
   return term.replace(/[%(),]/g, " ").trim();
 }
@@ -100,7 +149,6 @@ async function loadProfilesByUserId(userIds: string[]): Promise<Map<string, Admi
 
 class AdminNotificationsService {
   private readonly TABLE = "notifications";
-  private readonly SETTINGS_TABLE = "notification_preferences";
 
   async getStats(): Promise<AdminNotificationStats> {
     try {
@@ -197,24 +245,22 @@ class AdminNotificationsService {
 
   async getSettingsStats(): Promise<AdminNotificationSettingsStats> {
     try {
-      const { data, error } = await supabase
-        .from(this.SETTINGS_TABLE)
-        .select(
-          "user_id, email_enabled, push_enabled, inapp_enabled, social_enabled, system_enabled, transactional_enabled",
-        );
-
+      const { data, error } = await supabase.rpc(
+        "admin_notifications_get_settings_stats",
+      );
       if (error) throw error;
-
-      const rows = (data as Record<string, any>[]) || [];
+      const row = Array.isArray(data)
+        ? (data[0] as Record<string, unknown> | undefined)
+        : (data as Record<string, unknown> | null);
 
       return {
-        totalUsersWithSettings: rows.length,
-        emailEnabled: rows.filter((item) => item.email_enabled !== false).length,
-        pushEnabled: rows.filter((item) => item.push_enabled !== false).length,
-        weeklyDigestEnabled: rows.filter((item) => item.transactional_enabled !== false).length,
-        newMessagesEnabled: rows.filter((item) => item.inapp_enabled !== false).length,
-        communityUpdatesEnabled: rows.filter((item) => item.social_enabled !== false).length,
-        businessUpdatesEnabled: rows.filter((item) => item.system_enabled !== false).length,
+        totalUsersWithSettings: Number(row?.total_users_with_settings || 0),
+        emailEnabled: Number(row?.email_enabled || 0),
+        pushEnabled: Number(row?.push_enabled || 0),
+        weeklyDigestEnabled: Number(row?.weekly_digest_enabled || 0),
+        newMessagesEnabled: Number(row?.new_messages_enabled || 0),
+        communityUpdatesEnabled: Number(row?.community_updates_enabled || 0),
+        businessUpdatesEnabled: Number(row?.business_updates_enabled || 0),
       };
     } catch (error) {
       logger.error("AdminNotificationsService.getSettingsStats", error);
@@ -236,14 +282,18 @@ class AdminNotificationsService {
     }
 
     try {
-      const { data, error } = await supabase
-        .from(this.SETTINGS_TABLE)
-        .select("user_id")
-        .in("user_id", userIds);
+      const { data, error } = await supabase.rpc(
+        "admin_notifications_get_settings_user_ids",
+        { p_user_ids: userIds },
+      );
 
       if (error) throw error;
 
-      return new Set(((data as Record<string, any>[]) || []).map((row) => row.user_id));
+      return new Set(
+        ((data as Array<{ user_id: string }> | null) || []).map(
+          (row) => row.user_id,
+        ),
+      );
     } catch (error) {
       logger.error("AdminNotificationsService.getSettingsUserIds", error);
       return new Set();
@@ -252,14 +302,16 @@ class AdminNotificationsService {
 
   async getUserSettings(userId: string): Promise<Record<string, unknown> | null> {
     try {
-      const { data, error } = await supabase
-        .from(this.SETTINGS_TABLE)
-        .select("*")
-        .eq("user_id", userId)
-        .maybeSingle();
+      const { data, error } = await supabase.rpc(
+        "admin_notifications_get_user_settings",
+        { p_user_id: userId },
+      );
 
       if (error) throw error;
-      return (data as Record<string, unknown>) ?? null;
+      const row = Array.isArray(data)
+        ? (data[0] as { settings?: Record<string, unknown> | null } | undefined)
+        : (data as { settings?: Record<string, unknown> | null } | null);
+      return row?.settings ?? null;
     } catch (error) {
       logger.error("AdminNotificationsService.getUserSettings", error);
       return null;
@@ -330,6 +382,114 @@ class AdminNotificationsService {
       };
     } catch (error) {
       logger.error("AdminNotificationsService.getNotifications", error);
+      return {
+        data: [],
+        total: 0,
+        page: 1,
+        totalPages: 1,
+      };
+    }
+  }
+
+  async getChannelStats(): Promise<AdminNotificationChannelStats> {
+    try {
+      const { data, error } = await supabase.rpc(
+        "admin_notifications_get_channel_stats",
+      );
+      if (error) throw error;
+
+      const row = Array.isArray(data)
+        ? (data[0] as Record<string, unknown> | undefined)
+        : (data as Record<string, unknown> | null);
+
+      return {
+        totalPushSubscriptions: Number(row?.total_push_subscriptions || 0),
+        activePushSubscriptions: Number(row?.active_push_subscriptions || 0),
+        inactivePushSubscriptions: Number(row?.inactive_push_subscriptions || 0),
+        usersWithPushSubscriptions: Number(row?.users_with_push_subscriptions || 0),
+        emailSent24h: Number(row?.email_sent_24h || 0),
+        emailDelivered24h: Number(row?.email_delivered_24h || 0),
+        emailFailed24h: Number(row?.email_failed_24h || 0),
+      };
+    } catch (error) {
+      logger.error("AdminNotificationsService.getChannelStats", error);
+      return {
+        totalPushSubscriptions: 0,
+        activePushSubscriptions: 0,
+        inactivePushSubscriptions: 0,
+        usersWithPushSubscriptions: 0,
+        emailSent24h: 0,
+        emailDelivered24h: 0,
+        emailFailed24h: 0,
+      };
+    }
+  }
+
+  async getTemplateStats(limit = 10): Promise<AdminNotificationTemplateStat[]> {
+    try {
+      const { data, error } = await supabase.rpc(
+        "admin_notifications_get_template_stats",
+        { p_limit: limit },
+      );
+      if (error) throw error;
+
+      return ((data as Record<string, unknown>[]) || []).map((row) => ({
+        template: String(row.template || "sem_template"),
+        total: Number(row.total || 0),
+        sent: Number(row.sent || 0),
+        delivered: Number(row.delivered || 0),
+        failed: Number(row.failed || 0),
+        opened: Number(row.opened || 0),
+        clicked: Number(row.clicked || 0),
+        lastSentAt: (row.last_sent_at as string | null) ?? null,
+      }));
+    } catch (error) {
+      logger.error("AdminNotificationsService.getTemplateStats", error);
+      return [];
+    }
+  }
+
+  async getEmailDeliveryAudit(
+    filters: AdminEmailDeliveryAuditFilters = {},
+  ): Promise<AdminEmailDeliveryAuditResult> {
+    try {
+      const page = filters.page ?? 1;
+      const limit = filters.limit ?? 20;
+      const { data, error } = await supabase.rpc(
+        "admin_notifications_get_delivery_audit",
+        {
+          p_page: page,
+          p_limit: limit,
+          p_template: filters.template || null,
+          p_status: filters.status || null,
+          p_search: filters.search?.trim() || null,
+        },
+      );
+
+      if (error) throw error;
+
+      const rows = ((data as Record<string, unknown>[]) || []).map((row) => ({
+        id: String(row.id),
+        userId: (row.user_id as string | null) ?? null,
+        email: String(row.email || ""),
+        template: String(row.template || "sem_template"),
+        subject: String(row.subject || ""),
+        status: String(row.status || "unknown"),
+        providerId: (row.provider_id as string | null) ?? null,
+        errorMessage: (row.error_message as string | null) ?? null,
+        metadata: (row.metadata as Record<string, unknown>) || {},
+        createdAt: String(row.created_at || ""),
+      }));
+      const total = Number((data as Record<string, unknown>[] | null)?.[0]?.total_count || 0);
+
+      return {
+        data: rows,
+        total,
+        page,
+        totalPages: total > 0 ? Math.max(1, Math.ceil(total / limit)) : 1,
+      };
+    } catch (error) {
+      logger.error("AdminNotificationsService.getEmailDeliveryAudit", error);
       return {
         data: [],
         total: 0,

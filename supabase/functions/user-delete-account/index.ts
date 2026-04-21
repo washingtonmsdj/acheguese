@@ -59,15 +59,16 @@ serve(async (req: Request) => {
 
     // Initialize Supabase clients
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 
-    // Client with user's JWT
-    const userClient = createClient(supabaseUrl, supabaseServiceKey, {
+    // Client com JWT do usuário + anon key (respeita RLS — apenas para verificar o token)
+    const userClient = createClient(supabaseUrl, supabaseAnonKey, {
       global: { headers: { Authorization: `Bearer ${jwt}` } },
       auth: { autoRefreshToken: false, persistSession: false },
     });
 
-    // Service role client
+    // Service role client (para operações administrativas que bypassam RLS)
     const serviceClient = createClient(supabaseUrl, supabaseServiceKey);
 
     // Verify user

@@ -105,6 +105,7 @@ import { trackError } from "@/shared/utils/errorTracking";
 import { StructuredLogger } from "../utils/StructuredLogger";
 import { LocationType, EntityStatus } from "@/shared/types/enums";
 import { PAGINATION } from "@/shared/constants";
+import { resolveCityToLocationIds, resolveNeighborhoodInCity } from "@/core/location/helpers/territorialResolver";
 import type {
   Post,
   PostType,
@@ -2247,6 +2248,7 @@ export class PostService {
     locationIds?: string[];
     city?: string;
     neighborhood?: string;
+    state?: string;
     limit?: number;
   }): Promise<Array<{
     id: string;
@@ -2275,10 +2277,28 @@ export class PostService {
         query = query.eq("location_id", options.locationId);
       } else if (options.locationIds?.length) {
         query = query.in("location_id", options.locationIds);
-      } else if (options.neighborhood && options.city) {
-        query = query.eq("city", options.city).eq("neighborhood", options.neighborhood);
-      } else if (options.city) {
-        query = query.eq("city", options.city);
+      } else if (options.city && options.state) {
+        const cityResolution = await resolveCityToLocationIds(options.state, options.city);
+        if (cityResolution?.districtIds?.length) {
+          if (options.neighborhood) {
+            const neighborhoodId = await resolveNeighborhoodInCity(
+              options.state,
+              options.city,
+              options.neighborhood,
+            );
+            if (neighborhoodId) {
+              query = query.eq("location_id", neighborhoodId);
+            } else {
+              return [];
+            }
+          } else {
+            query = query.in("location_id", cityResolution.districtIds);
+          }
+        } else {
+          return [];
+        }
+      } else if (options.city || options.neighborhood) {
+        return [];
       }
 
       const { data, error } = await query;

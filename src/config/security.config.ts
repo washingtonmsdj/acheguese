@@ -104,9 +104,36 @@ export const SECURITY_DOMAINS = {
     justification: 'Production error monitoring',
     alternatives: 'Self-hosted Sentry instance',
   },
+
+  // Vercel - Analytics & Speed Insights (injetados automaticamente pelo runtime Vercel)
+  VERCEL_VITALS: {
+    url: 'https://vitals.vercel-insights.com',
+    purpose: 'Web Vitals analytics',
+    risk: 'LOW',
+    justification: 'Performance monitoring via Vercel Analytics',
+    alternatives: 'Disable Vercel Analytics',
+  },
+
+  VERCEL_SCRIPTS: {
+    url: 'https://va.vercel-scripts.com',
+    purpose: 'Vercel Analytics script',
+    risk: 'LOW',
+    justification: 'Required for Vercel Analytics to function',
+    alternatives: 'Disable Vercel Analytics',
+  },
+
+  VERCEL_LIVE: {
+    url: 'https://*.vercel.live',
+    purpose: 'Vercel preview/live collaboration toolbar',
+    risk: 'LOW',
+    justification: 'Required for Vercel preview deployments',
+    alternatives: 'Only present in preview environments',
+  },
 } as const;
 
-const IS_DEV = typeof import.meta !== 'undefined' && import.meta.env.DEV;
+const IS_DEV = typeof import.meta !== 'undefined' &&
+  typeof (import.meta as Record<string, unknown>).env !== 'undefined' &&
+  !!(import.meta as { env?: { DEV?: boolean } }).env?.DEV;
 /**
  * Extract URLs from domain registry
  */
@@ -131,11 +158,16 @@ export const CSP_DIRECTIVES = {
   'default-src': ["'self'"],
   
   // Scripts - CRITICAL: Most dangerous directive
+  // 'unsafe-inline' e 'unsafe-eval' são permitidos APENAS em dev (Vite HMR).
+  // Em produção o Vite gera bundles sem inline scripts — não precisamos deles.
+  // Os domínios Vercel são necessários para Analytics e preview toolbar.
   'script-src': [
     "'self'",
     ...(IS_DEV ? ["'unsafe-inline'", "'unsafe-eval'"] : []),
     SECURITY_DOMAINS.CDN_JSDELIVR.url,
     SECURITY_DOMAINS.SUPABASE_HTTPS.url,
+    SECURITY_DOMAINS.VERCEL_SCRIPTS.url,
+    SECURITY_DOMAINS.VERCEL_LIVE.url,
   ],
   
   // Styles - Medium risk
@@ -171,6 +203,7 @@ export const CSP_DIRECTIVES = {
     SECURITY_DOMAINS.OPENFREEMAP_TILES.url,
     SECURITY_DOMAINS.OSRM_ROUTER.url,
     SECURITY_DOMAINS.SENTRY_INGEST.url,
+    SECURITY_DOMAINS.VERCEL_VITALS.url,
   ],
   
   // Web Workers - Medium risk
@@ -510,7 +543,7 @@ export const INPUT_VALIDATION = {
 export const SECURITY_AUDIT_LOG = {
   lastReview: '2026-04-20',
   reviewer: 'Kiro AI',
-  version: '2.3.0',
+  version: '2.4.0',
   changes: [
     'Initial SSOT implementation',
     'CSP directives centralized',
@@ -534,6 +567,17 @@ export const SECURITY_AUDIT_LOG = {
     'FIX: sitemap — CORS wildcard (*) removido, usa getAllSecurityHeaders() do SSOT',
     'FIX: billing checkout/portal — open redirect prevenido com v.redirectUrl() validator',
     'FIX: validation.ts — novo validator redirectUrl() com verificação de domínio permitido',
+    // v2.4.0 — Security audit fixes
+    'FIX: CSP script-src — unsafe-inline/unsafe-eval removidos de produção (eram hardcoded no vercel.json)',
+    'FIX: SECURITY_DOMAINS — domínios Vercel (vitals, scripts, live) adicionados ao registry',
+    'FIX: connect-src — VERCEL_VITALS adicionado para Vercel Analytics',
+    'FIX: script-src — VERCEL_SCRIPTS e VERCEL_LIVE adicionados para preview toolbar',
+    'FIX: storage buckets — políticas de upload com ownership check para business/post/event/classified',
+    'FIX: send-push — verificação de ownership (user.id === userId) adicionada',
+    'FIX: user-delete-account — userClient migrado de SERVICE_ROLE_KEY para ANON_KEY',
+    'FIX: pii_access_log — EXECUTE da função log_pii_access restrito a service_role',
+    'FIX: rate limiting — identifier usa CF-Connecting-IP antes de x-forwarded-for',
+    'FIX: getCorsHeaders — validação dinâmica de Origin implementada (suporta múltiplas origens)',
   ],
   nextReview: '2026-05-20',
 } as const;
@@ -608,7 +652,7 @@ export const CACHE_HEADERS = {
  * Metadata about this configuration file.
  */
 export const SECURITY_CONFIG_METADATA = {
-  version: '2.3.0',
+  version: '2.4.0',
   created: '2026-04-18',
   lastModified: '2026-04-20',
   author: 'Kiro AI',

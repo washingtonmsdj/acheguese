@@ -1,6 +1,1 @@
-/**
- * Utils Barrel Export
- */
-
-export * from "./driverHelpers";
-export * from "./statsCalculator";
+﻿export * from '@/core/admin-motoristas/utils/index';

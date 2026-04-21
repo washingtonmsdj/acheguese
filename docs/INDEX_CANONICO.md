@@ -26,6 +26,9 @@ Data de referencia: 2026-04-20
 - [audits/POST_READINESS_BACKLOG.md](./audits/POST_READINESS_BACKLOG.md)
 - [tasks/SSOT_EXECUCAO_CONTINUIDADE_2026-04-20.md](./tasks/SSOT_EXECUCAO_CONTINUIDADE_2026-04-20.md)
 
+Observacao:
+- Auditorias podem citar caminhos legados por contexto historico; para decisao atual, prevalecem `CURRENT_RULES.md`, `STATUS.md` e `AUDITORIA_ESTRUTURAL_MODULOS.md`.
+
 ## Historico e legado
 - Historico consolidado: `docs/historico/`
 - Arquivo de legado e sessoes: `docs/archive/`

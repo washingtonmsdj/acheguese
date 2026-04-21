@@ -4,12 +4,15 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import {
   Bell,
+  CheckCircle2,
   Eye,
   Filter,
+  Mail,
   RefreshCw,
   Settings2,
   ShieldCheck,
   UserRound,
+  XCircle,
 } from "lucide-react";
 import {
   adminNotificationsService,
@@ -95,6 +98,25 @@ export default function AdminNotifications() {
     queryFn: () => adminNotificationsService.getSettingsStats(),
   });
 
+  const channelStatsQuery = useQuery({
+    queryKey: ["admin-notifications-channel-stats"],
+    queryFn: () => adminNotificationsService.getChannelStats(),
+  });
+
+  const templateStatsQuery = useQuery({
+    queryKey: ["admin-notifications-template-stats"],
+    queryFn: () => adminNotificationsService.getTemplateStats(8),
+  });
+
+  const deliveryAuditQuery = useQuery({
+    queryKey: ["admin-notifications-delivery-audit"],
+    queryFn: () =>
+      adminNotificationsService.getEmailDeliveryAudit({
+        page: 1,
+        limit: 10,
+      }),
+  });
+
   const notificationsQuery = useQuery({
     queryKey: [
       "admin-notifications-list",
@@ -117,6 +139,9 @@ export default function AdminNotifications() {
 
   const stats = statsQuery.data;
   const settingsStats = settingsStatsQuery.data;
+  const channelStats = channelStatsQuery.data;
+  const templateStats = templateStatsQuery.data || [];
+  const deliveryAudit = deliveryAuditQuery.data;
   const notifications = notificationsQuery.data;
 
   const typeOptions = useMemo(() => {
@@ -169,10 +194,18 @@ export default function AdminNotifications() {
   );
 
   const isRefreshing =
-    statsQuery.isFetching || settingsStatsQuery.isFetching || notificationsQuery.isFetching;
+    statsQuery.isFetching ||
+    settingsStatsQuery.isFetching ||
+    channelStatsQuery.isFetching ||
+    templateStatsQuery.isFetching ||
+    deliveryAuditQuery.isFetching ||
+    notificationsQuery.isFetching;
   const retryAll = () => {
     void statsQuery.refetch();
     void settingsStatsQuery.refetch();
+    void channelStatsQuery.refetch();
+    void templateStatsQuery.refetch();
+    void deliveryAuditQuery.refetch();
     void notificationsQuery.refetch();
   };
 
@@ -243,6 +276,30 @@ export default function AdminNotifications() {
           icon={Settings2}
           iconColor="text-emerald-600"
           loading={settingsStatsQuery.isLoading}
+        />
+        <AdminStatsCard
+          title="Push ativos"
+          value={channelStatsQuery.isError ? "--" : channelStats?.activePushSubscriptions || 0}
+          subtitle={
+            channelStatsQuery.isError
+              ? "Falha ao carregar canais push"
+              : `${channelStats?.inactivePushSubscriptions || 0} inativos`
+          }
+          icon={Bell}
+          iconColor="text-indigo-600"
+          loading={channelStatsQuery.isLoading}
+        />
+        <AdminStatsCard
+          title="E-mails com falha (24h)"
+          value={channelStatsQuery.isError ? "--" : channelStats?.emailFailed24h || 0}
+          subtitle={
+            channelStatsQuery.isError
+              ? "Falha ao carregar auditoria de e-mail"
+              : `${channelStats?.emailDelivered24h || 0} entregues em 24h`
+          }
+          icon={Mail}
+          iconColor="text-rose-600"
+          loading={channelStatsQuery.isLoading}
         />
       </AdminStatsGrid>
 
@@ -489,21 +546,164 @@ export default function AdminNotifications() {
           </AdminSectionCard>
 
           <AdminSectionCard
-            title="Leitura operacional"
+            title="Canais de entrega"
             icon={UserRound}
-            contentClassName="space-y-2 text-sm text-muted-foreground"
+            contentClassName="space-y-3 text-sm"
           >
-            <p>
-              Esta pagina abre coverage administrativa real para o dominio sem criar
-              service paralelo fora de `core/admin`.
-            </p>
-            <p>
-              O backlog segue faltando em templates globais, canais externos e auditoria
-              de entrega, que devem entrar apenas depois do SSOT atual estar estavel.
-            </p>
+            {channelStatsQuery.isError ? (
+              <AdminErrorState
+                title="Falha ao carregar canais de entrega"
+                description="A governanca de canais (push/e-mail) nao respondeu nesta tentativa."
+                onRetry={() => {
+                  void channelStatsQuery.refetch();
+                }}
+              />
+            ) : (
+              <>
+                <div className="flex items-center justify-between">
+                  <span>Total de subscriptions push</span>
+                  <Badge variant="outline">
+                    {channelStats?.totalPushSubscriptions || 0}
+                  </Badge>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span>Usuarios com push</span>
+                  <Badge variant="outline">
+                    {channelStats?.usersWithPushSubscriptions || 0}
+                  </Badge>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span>E-mails enviados (24h)</span>
+                  <Badge variant="outline">{channelStats?.emailSent24h || 0}</Badge>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span>E-mails entregues (24h)</span>
+                  <Badge className="bg-emerald-600 hover:bg-emerald-600">
+                    {channelStats?.emailDelivered24h || 0}
+                  </Badge>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span>E-mails com falha (24h)</span>
+                  <Badge variant="destructive">
+                    {channelStats?.emailFailed24h || 0}
+                  </Badge>
+                </div>
+              </>
+            )}
+          </AdminSectionCard>
+
+          <AdminSectionCard
+            title="Top templates de e-mail"
+            description="Uso e entrega por template em `email_logs`."
+            icon={Mail}
+          >
+            {templateStatsQuery.isError ? (
+              <AdminErrorState
+                title="Falha ao carregar templates"
+                description="As metricas por template nao puderam ser consolidadas."
+                onRetry={() => {
+                  void templateStatsQuery.refetch();
+                }}
+              />
+            ) : (
+              <AdminDataState
+                loading={templateStatsQuery.isLoading}
+                isEmpty={!templateStats.length}
+                emptyTitle="Sem templates registrados"
+                emptyDescription="Ainda nao existem e-mails suficientes para consolidacao por template."
+              >
+                <>
+                  {templateStats.map((template) => (
+                    <div
+                      key={template.template}
+                      className="rounded-lg border p-3 space-y-1"
+                    >
+                      <div className="flex items-center justify-between gap-3">
+                        <p className="text-sm font-medium">{template.template}</p>
+                        <Badge variant="outline">{template.total}</Badge>
+                      </div>
+                      <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                        <span className="inline-flex items-center gap-1">
+                          <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />
+                          {template.delivered}
+                        </span>
+                        <span className="inline-flex items-center gap-1">
+                          <XCircle className="h-3.5 w-3.5 text-rose-600" />
+                          {template.failed}
+                        </span>
+                        <span>Abertos: {template.opened}</span>
+                        <span>Cliques: {template.clicked}</span>
+                      </div>
+                    </div>
+                  ))}
+                </>
+              </AdminDataState>
+            )}
           </AdminSectionCard>
         </div>
       </div>
+
+      <AdminSectionCard
+        title="Auditoria de entrega (e-mail)"
+        description="Eventos recentes de `email_logs` para governanca de envio, entrega e falhas."
+        icon={Mail}
+      >
+        {deliveryAuditQuery.isError ? (
+          <AdminErrorState
+            title="Falha ao carregar auditoria de entrega"
+            description="A leitura canonica de `email_logs` nao ficou disponivel."
+            onRetry={() => {
+              void deliveryAuditQuery.refetch();
+            }}
+          />
+        ) : (
+          <AdminDataState
+            loading={deliveryAuditQuery.isLoading}
+            isEmpty={!deliveryAuditQuery.isLoading && !deliveryAudit?.data.length}
+            emptyTitle="Sem eventos de entrega"
+            emptyDescription="Nao foram encontrados registros recentes em `email_logs`."
+          >
+            <AdminTable>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Email</TableHead>
+                  <TableHead>Template</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Assunto</TableHead>
+                  <TableHead>Data</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {deliveryAudit?.data.map((item) => (
+                  <TableRow key={item.id}>
+                    <TableCell className="font-medium">{item.email}</TableCell>
+                    <TableCell>
+                      <Badge variant="outline">{item.template}</Badge>
+                    </TableCell>
+                    <TableCell>
+                      {item.status === "failed" || item.status === "bounced" ? (
+                        <Badge variant="destructive">{item.status}</Badge>
+                      ) : (
+                        <Badge className="bg-emerald-600 hover:bg-emerald-600">
+                          {item.status}
+                        </Badge>
+                      )}
+                    </TableCell>
+                    <TableCell className="max-w-[280px] truncate">{item.subject}</TableCell>
+                    <TableCell className="text-xs text-muted-foreground">
+                      {item.createdAt
+                        ? format(new Date(item.createdAt), "dd/MM/yyyy HH:mm", {
+                            locale: ptBR,
+                          })
+                        : "-"}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </AdminTable>
+          </AdminDataState>
+        )}
+      </AdminSectionCard>
 
       <Dialog
         open={Boolean(selectedNotification)}

@@ -50,7 +50,7 @@ function isImageUrlSafe(url: string): boolean {
     }
 
     // Valida extensão usando SSOT
-    const extension = url.toLowerCase().match(/\.[^.?#]+/)?.[0];
+    const extension = parsed.pathname.toLowerCase().match(/\.[^./?#]+$/)?.[0];
     if (extension) {
       // Verifica se está na lista de bloqueados (do SSOT)
       const isBlocked = BLOCKED_IMAGE_EXTENSIONS.some(blocked => 

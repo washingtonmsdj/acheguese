@@ -5,12 +5,12 @@
  * a detalhes internos de `modules/promotions`.
  */
 
-export { useAdDelivery } from "@/modules/promotions/hooks/useAdDelivery";
-export { SponsoredAdCard, SponsoredAdCardEnhanced } from "@/modules/promotions/components";
+export { useAdDelivery } from "@/core/promotions/hooks/useAdDelivery";
+export { SponsoredAdCard, SponsoredAdCardEnhanced } from "@/core/promotions/components";
 export {
   adDeliveryService,
   AdDeliveryService,
-} from "@/modules/promotions/services/AdDeliveryService";
+} from "@/core/promotions/services/AdDeliveryService";
 
 export type {
   AdCampaign,
@@ -22,4 +22,4 @@ export type {
   AdResolutionResult,
   AdTarget,
   AdTargetScope,
-} from "@/modules/promotions/types";
+} from "@/core/promotions/types";

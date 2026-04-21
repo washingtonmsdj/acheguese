@@ -2,7 +2,7 @@
  * BUSINESS TYPES - Tipos Compartilhados SSOT
  *
  * Tipos basicos de Business usados transversalmente na aplicacao.
- * Para tipos especificos do modulo business, veja @/modules/business/types
+ * Para tipos especificos do dominio business, veja os tipos locais do core.
  */
 
 export type BusinessCategory =

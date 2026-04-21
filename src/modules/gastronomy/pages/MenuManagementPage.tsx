@@ -1,13 +1,7 @@
 /**
- * MenuManagementPage — Página de gestão do cardápio
+ * MenuManagementPage - Pagina de gestao do cardapio
  *
- * Dashboard completo para gerenciar:
- * - Categorias
- * - Itens
- * - Variações
- * - Adicionais
- *
- * SSOT: Usa hooks que consomem MenuService
+ * SSOT: Usa hooks que consomem MenuService.
  */
 
 import { useState } from 'react';
@@ -35,10 +29,8 @@ export default function MenuManagementPage() {
   const navigate = useNavigate();
   const { entitlements, isLoading: loadingSubscription } = useBusinessSubscription(businessId!);
 
-  // Resolve o menuId do perfil gastronômico via SSOT
   const { menuId, isLoading: loadingMenuId } = useGastronomyMenuId(businessId);
 
-  // States
   const [categoryFormOpen, setCategoryFormOpen] = useState(false);
   const [itemFormOpen, setItemFormOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<MenuCategory | null>(null);
@@ -46,7 +38,6 @@ export default function MenuManagementPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [filterCategory, setFilterCategory] = useState<string>('all');
 
-  // Hooks — menuId pode ser null enquanto carrega; os hooks só disparam com valor truthy
   const {
     categories,
     isLoading: loadingCategories,
@@ -69,8 +60,21 @@ export default function MenuManagementPage() {
     isUpdating: updatingItem,
   } = useMenuItems(menuId ?? '', filterCategory === 'all' ? undefined : filterCategory);
 
-  // Handlers - Categorias
+  const { items: allItems } = useMenuItems(menuId ?? '');
+
+  const canUseCategories = entitlements.canUseMenuCategories;
+  const canUseImages = entitlements.canUseMenuImages;
+  const categoriesCount = categories?.length || 0;
+  const totalItemsCount = allItems?.length || 0;
+
+  const canAddMoreItems =
+    entitlements.maxMenuItems === null || totalItemsCount < entitlements.maxMenuItems;
+
+  const canAddMoreCategories =
+    entitlements.maxCategories === null || categoriesCount < entitlements.maxCategories;
+
   const handleCreateCategory = () => {
+    if (!canUseCategories || !canAddMoreCategories) return;
     setSelectedCategory(null);
     setCategoryFormOpen(true);
   };
@@ -80,10 +84,11 @@ export default function MenuManagementPage() {
     setCategoryFormOpen(true);
   };
 
-  const handleCategorySubmit = (values: any) => {
+  const handleCategorySubmit = (values: Record<string, unknown>) => {
     if (selectedCategory) {
       updateCategory({ categoryId: selectedCategory.id, ...values });
     } else {
+      if (!canUseCategories || !canAddMoreCategories) return;
       createCategory(values);
     }
     setCategoryFormOpen(false);
@@ -96,8 +101,8 @@ export default function MenuManagementPage() {
     }
   };
 
-  // Handlers - Itens
   const handleCreateItem = () => {
+    if (!canAddMoreItems) return;
     setSelectedItem(null);
     setItemFormOpen(true);
   };
@@ -107,11 +112,18 @@ export default function MenuManagementPage() {
     setItemFormOpen(true);
   };
 
-  const handleItemSubmit = (values: any) => {
+  const handleItemSubmit = (values: Record<string, unknown>) => {
+    const normalizedValues = {
+      ...values,
+      image_url: canUseImages ? values.image_url : undefined,
+      category_id: canUseCategories ? values.category_id : undefined,
+    };
+
     if (selectedItem) {
-      updateItem({ itemId: selectedItem.id, ...values });
+      updateItem({ itemId: selectedItem.id, ...normalizedValues });
     } else {
-      createItem(values);
+      if (!canAddMoreItems) return;
+      createItem(normalizedValues);
     }
     setItemFormOpen(false);
     setSelectedItem(null);
@@ -123,15 +135,11 @@ export default function MenuManagementPage() {
     }
   };
 
-  // Filtrar itens por busca
-  const filteredItems = items?.filter((item) =>
-    item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    item.description?.toLowerCase().includes(searchQuery.toLowerCase())
-  ) || [];
-
-  // Verificar limites
-  const canAddMoreItems = entitlements.maxMenuItems === null ||
-    (items?.length || 0) < entitlements.maxMenuItems;
+  const filteredItems =
+    items?.filter((item) =>
+      item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      item.description?.toLowerCase().includes(searchQuery.toLowerCase()),
+    ) || [];
 
   if (loadingSubscription || loadingMenuId) {
     return (
@@ -141,7 +149,6 @@ export default function MenuManagementPage() {
     );
   }
 
-  // Guard: sem menu configurado ainda
   if (!menuId) {
     return (
       <div className="container max-w-6xl py-8 space-y-8">
@@ -154,14 +161,13 @@ export default function MenuManagementPage() {
           Voltar ao Dashboard
         </Button>
         <div className="text-center py-12 text-muted-foreground">
-          <p className="text-lg font-medium mb-2">Nenhum cardápio encontrado</p>
-          <p className="text-sm">Configure o perfil gastronômico para criar seu cardápio.</p>
+          <p className="text-lg font-medium mb-2">Nenhum cardapio encontrado</p>
+          <p className="text-sm">Configure o perfil gastronomico para criar seu cardapio.</p>
         </div>
       </div>
     );
   }
 
-  // Guard: Cardápio avançado
   if (!entitlements.canUseAdvancedMenu) {
     return (
       <div className="container max-w-6xl py-8 space-y-8">
@@ -176,7 +182,7 @@ export default function MenuManagementPage() {
 
         <UpgradePromptInline
           businessId={businessId!}
-          feature="Cardápio Avançado"
+          feature="Cardapio Avancado"
           requiredPlan="pro"
         />
       </div>
@@ -185,7 +191,6 @@ export default function MenuManagementPage() {
 
   return (
     <div className="container max-w-6xl py-8 space-y-8">
-      {/* Header */}
       <div>
         <Button
           variant="ghost"
@@ -196,27 +201,25 @@ export default function MenuManagementPage() {
           <ArrowLeft className="w-4 h-4 mr-2" />
           Voltar ao Dashboard
         </Button>
-        <h1 className="text-3xl font-bold">Gestão de Cardápio</h1>
+        <h1 className="text-3xl font-bold">Gestao de Cardapio</h1>
         <p className="text-muted-foreground mt-2">
-          Gerencie categorias, itens, variações e adicionais
+          Gerencie categorias, itens, variacoes e adicionais
         </p>
       </div>
 
-      {/* Tabs */}
       <Tabs defaultValue="items" className="space-y-6">
         <TabsList>
           <TabsTrigger value="items">Itens</TabsTrigger>
-          <TabsTrigger value="categories">Categorias</TabsTrigger>
+          {canUseCategories && <TabsTrigger value="categories">Categorias</TabsTrigger>}
         </TabsList>
 
-        {/* Tab: Itens */}
         <TabsContent value="items" className="space-y-6">
-          {/* Filtros e Busca */}
           <Card>
             <CardHeader>
-              <CardTitle>Itens do Cardápio</CardTitle>
+              <CardTitle>Itens do Cardapio</CardTitle>
               <CardDescription>
-                {items?.length || 0} {entitlements.maxMenuItems !== null && `/ ${entitlements.maxMenuItems}`} itens
+                {totalItemsCount}
+                {entitlements.maxMenuItems !== null && ` / ${entitlements.maxMenuItems}`} itens
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -230,37 +233,43 @@ export default function MenuManagementPage() {
                     className="pl-10"
                   />
                 </div>
-                <Select value={filterCategory} onValueChange={setFilterCategory}>
-                  <SelectTrigger className="w-[200px]">
-                    <SelectValue placeholder="Categoria" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Todas</SelectItem>
-                    {categories?.map((cat) => (
-                      <SelectItem key={cat.id} value={cat.id}>
-                        {cat.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <Button
-                  onClick={handleCreateItem}
-                  disabled={!canAddMoreItems}
-                >
+
+                {canUseCategories && (
+                  <Select value={filterCategory} onValueChange={setFilterCategory}>
+                    <SelectTrigger className="w-[200px]">
+                      <SelectValue placeholder="Categoria" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Todas</SelectItem>
+                      {categories?.map((cat) => (
+                        <SelectItem key={cat.id} value={cat.id}>
+                          {cat.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+
+                <Button onClick={handleCreateItem} disabled={!canAddMoreItems}>
                   <Plus className="w-4 h-4 mr-2" />
                   Novo Item
                 </Button>
               </div>
 
+              {!canUseImages && (
+                <div className="text-sm text-muted-foreground bg-muted/50 border rounded-lg p-3">
+                  Seu plano nao permite imagens nos itens.
+                </div>
+              )}
+
               {!canAddMoreItems && (
                 <div className="text-sm text-amber-600 bg-amber-50 border border-amber-200 rounded-lg p-3">
-                  ⚠️ Você atingiu o limite de {entitlements.maxMenuItems} itens. Faça upgrade para adicionar mais.
+                  Voce atingiu o limite de {entitlements.maxMenuItems} itens. Faca upgrade para adicionar mais.
                 </div>
               )}
             </CardContent>
           </Card>
 
-          {/* Lista de Itens */}
           {loadingItems ? (
             <Card>
               <CardContent className="py-12 text-center">
@@ -271,12 +280,10 @@ export default function MenuManagementPage() {
             <Card>
               <CardContent className="py-12 text-center">
                 <p className="text-muted-foreground mb-4">
-                  {searchQuery
-                    ? 'Nenhum item encontrado'
-                    : 'Nenhum item cadastrado ainda'}
+                  {searchQuery ? 'Nenhum item encontrado' : 'Nenhum item cadastrado ainda'}
                 </p>
                 {!searchQuery && (
-                  <Button onClick={handleCreateItem}>
+                  <Button onClick={handleCreateItem} disabled={!canAddMoreItems}>
                     <Plus className="w-4 h-4 mr-2" />
                     Criar Primeiro Item
                   </Button>
@@ -298,27 +305,33 @@ export default function MenuManagementPage() {
           )}
         </TabsContent>
 
-        {/* Tab: Categorias */}
-        <TabsContent value="categories">
-          {loadingCategories ? (
-            <Card>
-              <CardContent className="py-12 text-center">
-                <p className="text-muted-foreground">Carregando categorias...</p>
-              </CardContent>
-            </Card>
-          ) : (
-            <CategoryList
-              categories={categories || []}
-              onEdit={handleEditCategory}
-              onDelete={handleDeleteCategory}
-              onCreate={handleCreateCategory}
-              onReorder={reorderCategories}
-            />
-          )}
-        </TabsContent>
+        {canUseCategories && (
+          <TabsContent value="categories">
+            {loadingCategories ? (
+              <Card>
+                <CardContent className="py-12 text-center">
+                  <p className="text-muted-foreground">Carregando categorias...</p>
+                </CardContent>
+              </Card>
+            ) : (
+              <CategoryList
+                categories={categories || []}
+                onEdit={handleEditCategory}
+                onDelete={handleDeleteCategory}
+                onCreate={handleCreateCategory}
+                onReorder={reorderCategories}
+                canCreate={canAddMoreCategories}
+                createDisabledReason={
+                  entitlements.maxCategories !== null
+                    ? `Limite de ${entitlements.maxCategories} categorias atingido.`
+                    : undefined
+                }
+              />
+            )}
+          </TabsContent>
+        )}
       </Tabs>
 
-      {/* Modals */}
       <CategoryForm
         open={categoryFormOpen}
         onClose={() => {
@@ -340,9 +353,9 @@ export default function MenuManagementPage() {
         item={selectedItem}
         categories={categories || []}
         isSubmitting={creatingItem || updatingItem}
+        allowCategorySelection={canUseCategories}
+        allowImage={canUseImages}
       />
     </div>
   );
 }
-
-

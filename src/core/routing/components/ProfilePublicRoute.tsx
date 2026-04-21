@@ -21,7 +21,7 @@ import { useQuery } from '@tanstack/react-query';
 import { profileService } from '@/core/profiles/services/ProfileService';
 import { BusinessUrlService } from '@/core/business/services/BusinessUrlService';
 import { ProfessionalUrlService } from '@/core/professional/services/ProfessionalUrlService';
-import { ProfilePublicPage } from '@/modules/profile/pages/ProfilePublicPage';
+import { ProfilePublicPage } from '@/core/profile/pages/ProfilePublicPage';
 import { logPageNotFound } from '@/core/public-identity/utils/identity-logger';
 
 type RouteResult = 

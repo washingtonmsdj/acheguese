@@ -5,10 +5,9 @@ import { Button } from '@/shared/components/ui/button';
 import { Input } from '@/shared/components/ui/input';
 import { InlineFieldError } from '@/shared/components/ui/InlineFieldError';
 import { CheckCircle, Eye, EyeOff, Key, Loader2 } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { AuthService } from '@/core/auth';
 import { useAuth } from '@/core/auth/hooks/useAuth';
-import { supabase } from '@/integrations/supabase';
 import { getAuthErrorMessage } from '@/core/auth/utils/authMessages';
 import { getAuthPasswordRequirementStatus } from '@/core/auth/utils/passwordPolicy';
 import { useToast } from '@/shared/hooks/use-toast';
@@ -21,11 +20,17 @@ type RecoveryState = 'checking' | 'ready' | 'invalid';
 
 export default function ResetPasswordPage() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { toast } = useToast();
-  const { user, updatePassword } = useAuth();
+  const { user, updatePassword, resetPasswordByIdentifier } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [done, setDone] = useState(false);
-  const [recoveryState, setRecoveryState] = useState<RecoveryState>('checking');
+  const [recoveryState, setRecoveryState] = useState<RecoveryState>(
+    // Se chegou com ?expired=1, já sabemos que é inválido
+    searchParams.get('expired') === '1' ? 'invalid' : 'checking'
+  );
+  const [resendEmail, setResendEmail] = useState('');
+  const [isSendingLink, setIsSendingLink] = useState(false);
 
   const {
     register,
@@ -45,24 +50,39 @@ export default function ResetPasswordPage() {
   );
 
   useEffect(() => {
-    // Caso 1: URL já tem o marcador de recovery (redirect com ?mode=recovery)
+    // Se já sabemos que é inválido (ex: ?expired=1), não precisa verificar
+    if (recoveryState === 'invalid') return;
+
+    // Caso 1: hash da URL tem access_token + type=recovery (implicit flow)
+    // Com flowType='implicit' o SDK processa automaticamente, mas como fallback
+    // também tentamos via setSession caso o hash ainda esteja disponível
+    const hashParams = AuthService.captureAuthHash();
+    const accessToken = hashParams.get('access_token');
+    const refreshToken = hashParams.get('refresh_token');
+    const hashType = hashParams.get('type');
+
+    if (accessToken && hashType === 'recovery') {
+      AuthService.applyRecoverySession(accessToken, refreshToken).then((isApplied) => {
+        setRecoveryState(isApplied ? 'ready' : 'invalid');
+      });
+      return;
+    }
+
+    // Caso 2: URL já tem o marcador de recovery (redirect com ?mode=recovery)
     if (AuthService.isRecoveryRedirect()) {
       setRecoveryState('ready');
       return;
     }
 
-    // Caso 2: usuário já autenticado via sessão de recovery ativa
+    // Caso 3: usuário já autenticado via sessão de recovery ativa
     if (user) {
       setRecoveryState('ready');
       return;
     }
 
-    // Caso 3: aguardar evento PASSWORD_RECOVERY do SDK Supabase
-    // O SDK processa o hash/code de forma assíncrona e emite este evento
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
-      if (event === 'PASSWORD_RECOVERY') {
-        setRecoveryState('ready');
-      }
+    // Caso 4: aguardar evento PASSWORD_RECOVERY do SDK Supabase (PKCE flow com ?code=)
+    const unsubscribeRecovery = AuthService.onPasswordRecovery(() => {
+      setRecoveryState('ready');
     });
 
     // Timeout de segurança: se nenhum evento chegar em 3s, link é inválido
@@ -72,7 +92,7 @@ export default function ResetPasswordPage() {
 
     return () => {
       window.clearTimeout(invalidTimer);
-      subscription.unsubscribe();
+      unsubscribeRecovery();
     };
   }, [user]);
 
@@ -100,6 +120,22 @@ export default function ResetPasswordPage() {
     }
   };
 
+  const handleResendLink = async () => {
+    if (!resendEmail.trim()) {
+      toast({ title: 'Informe seu email para reenviar o link.', variant: 'destructive' });
+      return;
+    }
+    setIsSendingLink(true);
+    try {
+      await resetPasswordByIdentifier(resendEmail.trim());
+      toast({ title: 'Link enviado', description: 'Verifique sua caixa de entrada.' });
+    } catch (error) {
+      toast({ title: 'Erro ao enviar', description: getAuthErrorMessage(error), variant: 'destructive' });
+    } finally {
+      setIsSendingLink(false);
+    }
+  };
+
   if (done) {
     return (
       <div className="min-h-screen flex items-center justify-center p-4">
@@ -120,12 +156,26 @@ export default function ResetPasswordPage() {
             <Key className="h-6 w-6 text-primary" />
           </div>
           <div className="space-y-2">
-            <h1 className="text-xl font-bold">Link invalido ou expirado</h1>
+            <h1 className="text-xl font-bold">Link expirado</h1>
             <p className="text-sm text-muted-foreground">
-              Solicite uma nova recuperacao de senha a partir do login.
+              O link de recuperacao de senha expirou. Informe seu email para receber um novo link.
             </p>
           </div>
-          <Button className="w-full" onClick={() => navigate('/login')}>
+          <div className="space-y-3 text-left">
+            <label className="text-xs font-medium text-muted-foreground block">Email</label>
+            <Input
+              type="email"
+              placeholder="seu@email.com"
+              value={resendEmail}
+              onChange={(e) => setResendEmail(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleResendLink()}
+            />
+            <Button className="w-full" onClick={handleResendLink} disabled={isSendingLink}>
+              {isSendingLink ? <Loader2 className="h-4 w-4 animate-spin mr-1.5" /> : null}
+              Enviar novo link
+            </Button>
+          </div>
+          <Button variant="ghost" className="w-full text-sm" onClick={() => navigate('/login')}>
             Voltar ao login
           </Button>
         </div>

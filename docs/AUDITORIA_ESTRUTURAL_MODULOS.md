@@ -157,6 +157,21 @@ Baseline incremental: `docs/audits/architecture-boundaries-incremental-baseline.
   - `core/routing/components/TerritorialModulePages.tsx` atualizado para lazy import de `@/core/business/pages/CategoryBusinessPage`
   - `classifieds` (detalhe/canonical): `ClassificadoDetailPage` promovida para `src/core/classifieds/pages/ClassificadoDetailPage.tsx`, `ClassifiedCanonicalRoute` atualizado para `@/core/classifieds/pages/ClassificadoDetailPage`, e hooks `useClassificadoDetail`/`useSellerAds` promovidos para `src/core/classifieds/hooks/*` com wrappers em `modules`
   - acoplamento `core -> modules` eliminado para `community/gastronomy/mobility` (`rg -n "@/modules/(community|gastronomy|mobility)" src/core` retorna `0`)
+  - `promotions`: ownership promovido para `src/core/promotions/*` (hooks/components/services/types/repositories) com wrappers públicos em `modules/promotions`
+  - `profile`: `ProfilePublicPage` e `profileDomainRules` promovidos para `src/core/profile/*`; `ProfilePublicRoute` atualizado para `core`
+  - `admin`: componentes compartilhados promovidos para `src/core/admin/components/*` (incluindo `Reputation*`, `TrendIndicator` e `UserReputationManager`)
+  - `admin-identidade` e `admin-motoristas`: implementação promovida para `src/core/admin-identidade/*` e `src/core/admin-motoristas/*`; wrappers de compatibilidade mantidos em `modules`
+  - `auth UI boundary`: `ResetPasswordPage` sem `supabase.auth` direto, usando `AuthService.onPasswordRecovery`
+  - `notifications/admin`: cobertura administrativa fechada para canais/templates/auditoria:
+    - `src/core/admin/services/AdminNotificationsService.ts` expandido com metodos de governanca (`getChannelStats`, `getTemplateStats`, `getEmailDeliveryAudit`) sem query direta em page.
+    - `src/modules/admin/pages/AdminNotifications.tsx` atualizado para exibir leitura de canais push/e-mail, ranking de templates e auditoria de entrega de `email_logs`.
+    - migration SSOT adicionada em `supabase/migrations/20260421093000_admin_notifications_governance_rpc.sql` com RPCs administrativos seguros:
+      - `admin_notifications_get_settings_stats`
+      - `admin_notifications_get_settings_user_ids`
+      - `admin_notifications_get_user_settings`
+      - `admin_notifications_get_channel_stats`
+      - `admin_notifications_get_template_stats`
+      - `admin_notifications_get_delivery_audit`
 
 ### P3.1 - Runtime/seguranca (concluido)
 - ciclo de bootstrap (`cookieStorage`/`logger`) resolvido
@@ -168,6 +183,7 @@ Baseline incremental: `docs/audits/architecture-boundaries-incremental-baseline.
 - estrutura documental validada por script
 - `docs/pre-launch` consolidado: 99 arquivos movidos para `docs/historico/pre-launch/2026-04-20/`
 - `docs/pre-launch` mantido apenas com `README.md` e `INDEX.md` como ponte historica
+- governanca canonica refinada em `CURRENT_RULES.md`, `INDEX_CANONICO.md` e `CANONICAL_MAP.md` para deixar claro o peso de documentos historicos e os caminhos SSOT atualizados em `core`
 
 ---
 
@@ -178,6 +194,8 @@ Baseline incremental: `docs/audits/architecture-boundaries-incremental-baseline.
 - `npm run typecheck` -> sucesso
 - `npm run build` -> sucesso (apos ajuste de exports em `src/core/classifieds/services/index.ts`)
 - `npm run validate:docs-structure` -> sucesso
+- `rg -n "@/modules/" src/core --glob "*.ts" --glob "*.tsx"` -> sem ocorrencias
+- Checkpoint adicional 2026-04-20 (sessao atual): todos os gates reexecutados com sucesso, incluindo `build` e incremental `currentTotal=0`.
 
 ---
 
