@@ -1,6 +1,6 @@
 ﻿# STATUS OFICIAL DO PROJETO
 
-Ultima atualizacao: 2026-04-20
+Ultima atualizacao: 2026-04-21
 
 ## Resumo executivo
 - Blindagem estrutural P0 executada.
@@ -21,6 +21,8 @@ Ultima atualizacao: 2026-04-20
 - `npm run typecheck`: sucesso.
 - `npm run build`: sucesso (build completo apos ajuste de exports em `core/classifieds/services`, duracao ~8m06s nesta maquina).
 - Checkpoint adicional nesta sessao (2026-04-20): `typecheck`, `validate:ssot`, `validate:architecture:governance`, `validate:architecture:incremental`, `validate:docs-structure` e `build` reexecutados com sucesso.
+- Checkpoint adicional nesta sessao (2026-04-21): `typecheck`, `validate:ssot`, `validate:architecture:governance -- --json` (`[]`) e teste `AdminMapGovernanceService.spec.ts` reexecutados com sucesso.
+- Observacao desta sessao (2026-04-21): `npm run build` excedeu timeout do ambiente antes de concluir; ultimo build completo documentado permanece o checkpoint verde de 2026-04-20.
 
 ## Divida tecnica remanescente
 1. Consolidacao `core` x `modules`:
@@ -119,6 +121,42 @@ Ultima atualizacao: 2026-04-20
   - `src/modules/admin/pages/AdminNotifications.tsx` passou a exibir governanca operacional de canais (push/e-mail), top templates e tabela de auditoria de `email_logs`.
   - `ResetPasswordPage` manteve boundary de UI sem Supabase direto via `AuthService.applyRecoverySession`.
   - migration SSOT adicionada em `supabase/migrations/20260421093000_admin_notifications_governance_rpc.sql` com RPCs administrativos para `notification_preferences`, `push_subscriptions` e `email_logs`.
+- `map/admin`: write-side de governanca fechado no agregado canonico:
+  - `src/core/admin/services/AdminMapGovernanceService.ts` passou a expor `resolveHotspot` para reconciliacao de coordenadas (`missing_coordinates`/`needs_refinement`) e reabilitacao de boundaries (`selector_hidden`/`route_disabled`) sem regra de escrita na page.
+  - `src/modules/admin/pages/AdminMapa.tsx` passou a executar resolucao por hotspot com feedback operacional e refresh de snapshot.
+  - `src/core/admin/services/__tests__/AdminMapGovernanceService.spec.ts` adicionado cobrindo reconciliacao de coordenadas e boundaries.
+- `territorial`: contrato de write em edge functions alinhado com SSOT e compatibilidade:
+  - `supabase/functions/territorial-update-location-visibility/index.ts` e `supabase/functions/territorial-update-group-visibility/index.ts` passaram a aceitar flags canonicas (`is_selector_active`, `is_navigable`, `is_landing_enabled`) mantendo suporte legado (`hidden`/`visible`).
+  - `src/core/territorial/services/territorial.mutations.ts` passou a enviar payload compativel (`id` + `locationId/groupId`) para evitar quebra por versao de contrato.
+- `admin/business`: ownership entre admin central e dashboard de negocio consolidado na rota oficial:
+  - `src/modules/admin/pages/AdminEmpresas.tsx` passou a usar `AdminBusinessesPage` (governanca de plano/status) como superficie principal.
+  - `src/modules/admin/index.ts` manteve export legado `AdminBusinessPage`, redirecionando para a superficie canônica `AdminBusinessesPage`.
+  - o fluxo de edicao operacional ampla de empresa deixa de ser superficie principal do admin central.
+- `admin/mobility`: ownership explicitado na superficie operacional:
+  - `src/modules/admin/pages/AdminOperacoes.tsx` documenta no proprio card de leitura objetiva a fronteira: admin central governa rollout/politicas globais; dashboard executa operacao do perfil.
+- `admin/gastronomy`: coverage administrativo fechado para menu, integridade operacional e ownership de promocoes:
+  - `src/core/admin/services/AdminGastronomyService.ts` consolidado para:
+    - estatisticas de perfil/menu no schema ativo (`gastronomy_profiles`, `menus`, `menu_categories`, `menu_items`)
+    - gestao administrativa de menus e itens (`toggleMenu`, `toggleMenuItem`)
+    - diagnostico de integridade (`getIntegritySummary`)
+    - rastreabilidade de ownership de promocoes no vertical (`getPromotionOwnershipSummary` com `promotions`, `coupons`, `menu_promotions`)
+  - `src/modules/admin/pages/AdminGastronomia.tsx` passou a exibir:
+    - tab de menus operacional
+    - tab de itens operacional
+    - painel de integridade do catalogo
+    - painel de ownership de promocoes com fronteira explicita para `/admin/promocoes` e `/admin/cupons`
+- `admin/classifieds`: coverage administrativo fechado para catalogo, categorias, vendedores, URL history e politicas administrativas:
+  - `src/core/admin/services/AdminClassifiedsService.ts` expandido com agregados canonicos:
+    - `getCategoryCoverage` (taxonomia x uso real do catalogo)
+    - `getSellerCoverage` (volume/status por vendedor)
+    - `getUrlHistory` (trilha administrativa de canonical URL)
+    - `getPolicySummary` (violacoes do contrato SSOT em `category_id`, `subcategory_id`, `location_id`, `public_id`, `slug`)
+    - `getAllClassifieds` agora suporta filtro por `category_id` no agregado administrativo
+  - `src/modules/admin/pages/AdminClassificados.tsx` refatorada para baseline comum do admin:
+    - abas de catalogo, categorias, vendedores e governanca
+    - filtros oficiais de status/categoria no catalogo
+    - tabela de historico de URLs e painel de politicas administrativas
+- `supabase`: migrations aplicadas no remoto com sucesso via `supabase db push --linked`, incluindo `20260421093000_admin_notifications_governance_rpc.sql` e `20260421120000_reconcile_community_qa_schema.sql` (com correcao de encoding/idempotencia durante o processo).
 - `DashboardEmpresaPageV2` deixou de importar `modules/dashboard/*` e passou a depender de `core/business` + `shared`.
 - `useDashboardAccess` e `useDashboardTabs` migrados para `src/core/business/hooks/` com wrappers de compatibilidade no modulo.
 - Servicos de landing migrados para `src/core/landing/services/` e consumidores de `core` atualizados.

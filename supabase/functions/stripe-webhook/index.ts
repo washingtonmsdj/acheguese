@@ -1,9 +1,28 @@
 /**
  * EDGE FUNCTION: stripe-webhook
- *
- * Recebe e processa webhooks do Stripe.
- * Mantém sincronização entre Stripe e banco de dados.
- *
+ * 
+ * ⚠️ ⚠️ ⚠️ DEPRECATED ⚠️ ⚠️ ⚠️
+ * 
+ * Esta função será removida em 30 dias (2026-05-21).
+ * 
+ * Use billing-webhook ao invés desta função.
+ * Esta função está mantida apenas para compatibilidade temporária.
+ * 
+ * Motivo da deprecação:
+ * - Específico para gastronomia (não multi-vertical)
+ * - Usa tabela legada gastronomy_subscriptions
+ * - Não cria snapshot de contrato
+ * - Não usa status_v2 alinhado com Stripe
+ * 
+ * Migração:
+ * - Todos os eventos agora são processados por billing-webhook
+ * - Dados migrados para user_subscriptions
+ * - Snapshot de contrato implementado
+ * 
+ * @deprecated Use billing-webhook
+ * @see supabase/functions/billing-webhook/index.ts
+ * @see .kiro/specs/monetization-multi-vertical-refactor/F8_SUNSET_LEGADO.md
+ * 
  * Endpoint: /functions/v1/stripe-webhook
  * Method: POST
  * Auth: Webhook signature verification
@@ -235,6 +254,13 @@ async function handlePaymentFailed(invoice: Stripe.Invoice) {
 
 serve(async (req: Request) => {
   const auditInfo = getAuditInfo(req);
+  
+  // ⚠️ DEPRECATION WARNING
+  console.warn('═══════════════════════════════════════════════════════════');
+  console.warn('⚠️  DEPRECATED: stripe-webhook will be removed on 2026-05-21');
+  console.warn('⚠️  Use billing-webhook instead');
+  console.warn('⚠️  See: F8_SUNSET_LEGADO.md');
+  console.warn('═══════════════════════════════════════════════════════════');
   
   // Handle CORS preflight
   if (req.method === 'OPTIONS') {

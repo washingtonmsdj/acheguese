@@ -3,6 +3,12 @@
  * 
  * SSOT: Componente isolado com props tipadas
  * Sem gambiarras: Lógica clara e organizada
+ * 
+ * FASE 6 - P2: Badges visuais já resolvidos no backend
+ * - businessModules.subscription.canUse* vem de ProfileService
+ * - ProfileService usa EntitlementResolver para popular subscription
+ * - Componente apenas exibe, não calcula elegibilidade
+ * - Aceitável para P2 (baixo risco - apenas visual)
  */
 
 import { Badge } from "@/shared/components/ui/badge";

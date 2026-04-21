@@ -1,5 +1,6 @@
 ﻿import { useMemo, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { Link } from "react-router-dom";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import {
   AlertTriangle,
   Layers3,
@@ -29,6 +30,7 @@ import {
 } from "@/modules/admin/components";
 import { Badge } from "@/shared/components/ui/badge";
 import { Button } from "@/shared/components/ui/button";
+import { useToast } from "@/shared/hooks/use-toast";
 import {
   TableBody,
   TableCell,
@@ -106,14 +108,48 @@ function matchesHotspotSearch(hotspot: AdminMapGovernanceHotspot, search: string
 }
 
 export default function AdminMapa() {
+  const { toast } = useToast();
   const [search, setSearch] = useState("");
   const [issueFilter, setIssueFilter] = useState("");
   const [scopeFilter, setScopeFilter] = useState("");
   const [page, setPage] = useState(1);
+  const [resolvingHotspotId, setResolvingHotspotId] = useState<string | null>(null);
 
   const snapshotQuery = useQuery({
     queryKey: ["admin-map-governance"],
     queryFn: () => adminMapGovernanceService.getSnapshot(),
+  });
+
+  const resolveHotspotMutation = useMutation({
+    mutationFn: (hotspot: AdminMapGovernanceHotspot) =>
+      adminMapGovernanceService.resolveHotspot({
+        id: hotspot.id,
+        entityKind: hotspot.entityKind,
+        entityId: hotspot.entityId,
+        issue: hotspot.issue,
+        name: hotspot.name,
+      }),
+    onMutate: (hotspot) => {
+      setResolvingHotspotId(hotspot.id);
+    },
+    onSuccess: (result) => {
+      toast({
+        title: "Hotspot reconciliado",
+        description: result.message,
+      });
+      void snapshotQuery.refetch();
+    },
+    onError: (error: unknown) => {
+      const message = error instanceof Error ? error.message : "Falha ao resolver hotspot.";
+      toast({
+        title: "Falha na reconciliacao",
+        description: message,
+        variant: "destructive",
+      });
+    },
+    onSettled: () => {
+      setResolvingHotspotId(null);
+    },
   });
 
   const filters = useMemo<FilterOption[]>(
@@ -166,6 +202,29 @@ export default function AdminMapa() {
   const isRefreshing = snapshotQuery.isFetching;
   const retrySnapshot = () => {
     void snapshotQuery.refetch();
+  };
+
+  const renderHotspotAction = (hotspot: AdminMapGovernanceHotspot) => {
+    if (hotspot.issue === "group_without_members") {
+      return (
+        <Button asChild size="sm" variant="outline">
+          <Link to="/admin/territory-management">Abrir curadoria</Link>
+        </Button>
+      );
+    }
+
+    return (
+      <Button
+        size="sm"
+        variant="outline"
+        disabled={resolveHotspotMutation.isPending}
+        onClick={() => resolveHotspotMutation.mutate(hotspot)}
+      >
+        {resolveHotspotMutation.isPending && resolvingHotspotId === hotspot.id
+          ? "Aplicando..."
+          : "Resolver"}
+      </Button>
+    );
   };
 
   return (
@@ -371,6 +430,7 @@ export default function AdminMapa() {
                     <TableHead>Problema</TableHead>
                     <TableHead>Visibilidade</TableHead>
                     <TableHead>Status</TableHead>
+                    <TableHead>Acao</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -412,6 +472,7 @@ export default function AdminMapa() {
                           {stateBadge(hotspot.status)}
                         </div>
                       </TableCell>
+                      <TableCell>{renderHotspotAction(hotspot)}</TableCell>
                     </TableRow>
                   ))}
                 </TableBody>

@@ -25,8 +25,13 @@ export async function updateMetadataFlag(
       ? 'territorial-update-location-visibility'
       : 'territorial-update-group-visibility';
 
+    const body =
+      table === 'locations'
+        ? { id, locationId: id, flag, value }
+        : { id, groupId: id, flag, value };
+
     const { data, error } = await supabase.functions.invoke(functionName, {
-      body: { id, flag, value },
+      body,
     });
 
     if (error) {

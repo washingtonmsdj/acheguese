@@ -111,10 +111,28 @@ export class BusinessUrlService {
   /**
    * Gera a URL premium curta, ou a canônica se não for premium.
    * Uso: botão "compartilhar" para empresas premium.
+   * 
+   * IMPORTANTE: is_premium deve vir de entitlement resolvido, não de flag isolada.
+   * Para uso correto, consultar EntitlementResolver.hasShortPremiumLink()
    */
   static getShareUrl(ctx: BusinessUrlContext): string {
     const urls = this.buildUrls(ctx);
     return urls.premium ?? urls.canonical;
+  }
+  
+  /**
+   * Gera a URL de compartilhamento baseada em entitlement.
+   * Versão SSOT que consulta o resolver de entitlements.
+   * 
+   * @param ctx - Contexto da empresa
+   * @param hasShortLinkEntitlement - Resultado de EntitlementResolver.hasShortPremiumLink()
+   */
+  static getShareUrlByEntitlement(
+    ctx: BusinessUrlContext,
+    hasShortLinkEntitlement: boolean
+  ): string {
+    const urls = this.buildUrls(ctx);
+    return hasShortLinkEntitlement ? (urls.premium ?? urls.canonical) : urls.canonical;
   }
 
   /**

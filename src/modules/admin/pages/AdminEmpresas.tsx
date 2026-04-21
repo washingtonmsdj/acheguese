@@ -1,6 +1,6 @@
 import { Shield } from "lucide-react";
 import { useAdminGuard } from "@/modules/admin/hooks/useAdminGuard";
-import AdminBusinessPage from "./AdminBusinessPage";
+import AdminBusinessesPage from "./AdminBusinessesPage";
 
 export default function AdminEmpresas() {
   const { canModerate, isChecking } = useAdminGuard();
@@ -20,5 +20,5 @@ export default function AdminEmpresas() {
     );
   }
 
-  return <AdminBusinessPage />;
+  return <AdminBusinessesPage />;
 }

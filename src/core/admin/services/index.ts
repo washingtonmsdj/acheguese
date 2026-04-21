@@ -30,7 +30,16 @@ export type {
 export { adminAlertsService } from "./AdminAlertsService";
 export type { AdminAlertPost, AdminAlertProfile } from "./AdminAlertsService";
 export { adminClassifiedsService } from "./AdminClassifiedsService";
-export type { AdminClassifiedData } from "./AdminClassifiedsService";
+export type {
+  AdminClassifiedData,
+  ClassifiedCategoryCoverageItem,
+  ClassifiedCategoryCoverageResult,
+  ClassifiedSellerCoverageItem,
+  ClassifiedSellerCoverageResult,
+  ClassifiedUrlHistoryItem,
+  ClassifiedUrlHistoryResult,
+  ClassifiedPolicySummary,
+} from "./AdminClassifiedsService";
 export { adminCommunityAlertsService } from "./AdminCommunityAlertsService";
 export { adminCommunityIssuesService } from "./AdminCommunityIssuesService";
 export { adminCouponsService } from "./AdminCouponsService";
@@ -74,4 +83,5 @@ export type {
   AdminMapTouristPointCategorySummary,
   AdminMapGovernanceHotspot,
   AdminMapGovernanceSnapshot,
+  AdminMapHotspotResolutionResult,
 } from "./AdminMapGovernanceService";

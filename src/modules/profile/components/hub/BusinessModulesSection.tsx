@@ -2,6 +2,12 @@
  * BusinessModulesSection - Seção de módulos empresariais
  * 
  * Exibe empresas do usuário com seus módulos e funcionalidades
+ * 
+ * FASE 6 - P2: Badges visuais já resolvidos no backend
+ * - business.subscription.canUse* vem de ProfileService
+ * - ProfileService usa EntitlementResolver para popular subscription
+ * - Componente apenas exibe, não calcula elegibilidade
+ * - Aceitável para P2 (baixo risco - apenas visual)
  */
 
 import { Sparkles } from 'lucide-react';

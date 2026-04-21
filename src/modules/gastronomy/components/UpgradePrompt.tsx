@@ -4,10 +4,11 @@
  * Mostra quando um recurso está bloqueado pelo plano atual.
  * Incentiva o usuário a fazer upgrade.
  *
- * SSOT: Usa EntitlementsService do core/billing
+ * SSOT: Usa useBillingPlan do core/billing para buscar dados do catálogo
  */
 
 import { PlanTier } from '@/core/billing';
+import { useBillingPlan } from '@/core/billing/hooks/useBillingPlans';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/components/ui/card';
 import { Button } from '@/shared/components/ui/button';
 import { Badge } from '@/shared/components/ui/badge';
@@ -29,8 +30,12 @@ export function UpgradePrompt({
   description,
   benefits = [],
 }: UpgradePromptProps) {
-  const planName = requiredPlan === PlanTier.PRO ? 'Pro' : 'Delivery';
-  const planPrice = requiredPlan === PlanTier.PRO ? 'R$ 49,90/mês' : 'R$ 99,90/mês';
+  // Buscar dados do plano do catálogo
+  const planCode = requiredPlan === PlanTier.PRO ? 'gastronomy_pro' : 'gastronomy_delivery';
+  const { data: planData } = useBillingPlan(planCode);
+  
+  const planName = planData?.name || (requiredPlan === PlanTier.PRO ? 'Pro' : 'Delivery');
+  const planPrice = planData?.priceDisplay || (requiredPlan === PlanTier.PRO ? 'R$ 49,90/mês' : 'R$ 99,90/mês');
   const planIcon = requiredPlan === PlanTier.PRO ? <Crown className="w-5 h-5" /> : <Zap className="w-5 h-5" />;
 
   return (
@@ -101,7 +106,11 @@ export function UpgradePromptInline({
   feature,
   requiredPlan,
 }: UpgradePromptInlineProps) {
-  const planName = requiredPlan === PlanTier.PRO ? 'Pro' : 'Delivery';
+  // Buscar dados do plano do catálogo
+  const planCode = requiredPlan === PlanTier.PRO ? 'gastronomy_pro' : 'gastronomy_delivery';
+  const { data: planData } = useBillingPlan(planCode);
+  
+  const planName = planData?.name || (requiredPlan === PlanTier.PRO ? 'Pro' : 'Delivery');
 
   return (
     <div className="flex items-center justify-between p-4 border rounded-lg bg-muted/50">

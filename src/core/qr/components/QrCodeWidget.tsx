@@ -3,6 +3,12 @@
  *
  * SSOT: Componente central para exibir e gerenciar QR Code
  * 
+ * FASE 6 - P2: Style de QR Code resolvido via EntitlementsService
+ * - Usa EntitlementsService.getQrStyleVariant(planTier) para determinar estilo
+ * - planTier vem de useBusinessSubscription que consulta backend
+ * - Aceitável para P2 (baixo risco - apenas visual)
+ * - TODO futuro: Migrar para useEntitlements() com cache React Query
+ * 
  * Uso:
  * ```tsx
  * <QrCodeWidget

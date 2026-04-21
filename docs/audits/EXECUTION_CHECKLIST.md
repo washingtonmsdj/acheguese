@@ -1,6 +1,6 @@
 ﻿# Checklist de Execucao por Prioridade
 
-Atualizado em: 2026-04-10
+Atualizado em: 2026-04-21
 
 ## P0 - Bloquear nova desorganizacao
 - [x] Rodar `npm run audit:architecture` e anexar o inventario atual ao fluxo de consolidacao.
@@ -61,7 +61,7 @@ Atualizado em: 2026-04-10
 - [x] Abrir coverage admin formal para identidade, plano atual e preferencias basicas de profile.
 - [x] Abrir coverage admin para reputacao por origem e preferencias por escopo de profile.
 - [x] Abrir coverage admin para residencia canonica primaria e snapshot de permissoes efetivas de profile.
-- [ ] Fechar ownership entre admin central e dashboards de business/mobility.
+- [x] Fechar ownership entre admin central e dashboards de business/mobility.
 - [x] Hardenizar service, hook e leitura administrativa de `family` na coverage de `profile`.
 - [x] Formalizar schema/migration e RLS de `family` no contrato local de banco.
 - [ ] Aplicar/validar a migration e o RLS de `family` no ambiente linked.
@@ -73,10 +73,10 @@ Atualizado em: 2026-04-10
 - [ ] Definir matriz formal de uso entre `Dialog`, `Drawer` e `Sheet` no admin.
 - [ ] Abrir coverage admin para community/posts (grupos, recomendacoes, eventos, achados/perdidos).
 - [ ] Abrir coverage admin para professionals/services (areas de atendimento, disponibilidade, reputacao).
-- [ ] Fechar coverage admin de gastronomy (menu, integridade operacional, ownership de promocao).
-- [ ] Fechar coverage admin de classifieds (categorias, vendedor, URL history).
-- [ ] Fechar coverage admin de notifications (templates, canais externos, auditoria de entrega).
-- [ ] Fechar coverage admin de map (write-side de boundaries, reconciliacao geografica).
+- [x] Fechar coverage admin de gastronomy (menu, integridade operacional, ownership de promocao).
+- [x] Fechar coverage admin de classifieds (categorias, vendedor, URL history, politicas administrativas).
+- [x] Fechar coverage admin de notifications (templates, canais externos, auditoria de entrega).
+- [x] Fechar coverage admin de map (write-side de boundaries, reconciliacao geografica).
 
 ## P4 - Front-end base
 - [x] Consolidar base visual do admin com `AdminPageHeader`, `AdminStatsGrid`, `AdminSectionCard`, `AdminDataState` e `AdminPagination`.

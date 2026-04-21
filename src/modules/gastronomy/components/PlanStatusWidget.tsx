@@ -7,10 +7,10 @@
  * - Limites e uso atual
  * - CTAs de upgrade
  *
- * SSOT: Usa useBusinessSubscription do core/billing
+ * SSOT: Usa useEntitlements do core/billing
  */
 
-import { useBusinessSubscription } from '@/core/billing';
+import { useEntitlements } from '@/core/billing/hooks/useEntitlements';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/components/ui/card';
 import { Badge } from '@/shared/components/ui/badge';
 import { Button } from '@/shared/components/ui/button';
@@ -31,7 +31,10 @@ export function PlanStatusWidget({
   currentImages = 0,
   currentPromotions = 0,
 }: PlanStatusWidgetProps) {
-  const { planTier, entitlements, isLoading, isPro, isDelivery } = useBusinessSubscription(businessId);
+  const { entitlements, isLoading, can } = useEntitlements({
+    business_id: businessId,
+    subscription_scope: 'business',
+  });
 
   if (isLoading) {
     return (
@@ -41,6 +44,10 @@ export function PlanStatusWidget({
         </CardHeader>
       </Card>
     );
+  }
+  
+  if (!entitlements) {
+    return null;
   }
 
   // Calcular progresso dos limites
@@ -57,6 +64,10 @@ export function PlanStatusWidget({
     : 0;
 
   // Determinar cor do badge
+  const isDelivery = entitlements.planTier === 'delivery';
+  const isPro = entitlements.planTier === 'pro';
+  const isFree = entitlements.planTier === 'free';
+  
   const badgeVariant = isDelivery ? 'default' : isPro ? 'secondary' : 'outline';
   const badgeIcon = isDelivery ? <Zap className="w-3 h-3 mr-1" /> : isPro ? <Crown className="w-3 h-3 mr-1" /> : null;
 
@@ -72,15 +83,13 @@ export function PlanStatusWidget({
               Plano Atual
               <Badge variant={badgeVariant} className="flex items-center">
                 {badgeIcon}
-                {planTier === 'free' && 'Free'}
-                {planTier === 'pro' && 'Pro'}
-                {planTier === 'delivery' && 'Delivery'}
+                {entitlements.planName}
               </Badge>
             </CardTitle>
             <CardDescription>
-              {planTier === 'free' && 'Recursos básicos para começar'}
-              {planTier === 'pro' && 'Recursos avançados para crescer'}
-              {planTier === 'delivery' && 'Todos os recursos + pedidos internos'}
+              {isFree && 'Recursos básicos para começar'}
+              {isPro && 'Recursos avançados para crescer'}
+              {isDelivery && 'Todos os recursos + pedidos internos'}
             </CardDescription>
           </div>
           {showUpgradeCTA && (
@@ -132,7 +141,7 @@ export function PlanStatusWidget({
         )}
 
         {/* Limite de Promoções */}
-        {entitlements.maxPromotions !== null && entitlements.canUsePromotions && (
+        {entitlements.maxPromotions !== null && can('canUsePromotions') && (
           <div className="space-y-2">
             <div className="flex items-center justify-between text-sm">
               <span className="text-muted-foreground">Promoções</span>
@@ -159,7 +168,7 @@ export function PlanStatusWidget({
         )}
 
         {/* Recursos Bloqueados (Free) */}
-        {planTier === 'free' && (
+        {isFree && (
           <div className="pt-2 border-t space-y-1">
             <p className="text-sm font-medium">Desbloqueie com Pro:</p>
             <ul className="text-xs text-muted-foreground space-y-1 ml-4">
@@ -174,7 +183,7 @@ export function PlanStatusWidget({
         )}
 
         {/* Recursos Bloqueados (Pro) */}
-        {planTier === 'pro' && (
+        {isPro && (
           <div className="pt-2 border-t space-y-1">
             <p className="text-sm font-medium">Desbloqueie com Delivery:</p>
             <ul className="text-xs text-muted-foreground space-y-1 ml-4">

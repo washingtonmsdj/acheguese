@@ -1,0 +1,63 @@
+{
+  "extends": ["./.eslintrc.json"],
+  "rules": {
+    "no-restricted-imports": [
+      "error",
+      {
+        "patterns": [
+          {
+            "group": ["**/gastronomy_subscriptions*"],
+            "message": "❌ SSOT Violation: Use EntitlementResolver ao invés de acessar gastronomy_subscriptions diretamente. Esta tabela está em sunset."
+          },
+          {
+            "group": ["**/business_subscriptions*"],
+            "message": "❌ SSOT Violation: Use EntitlementResolver ao invés de acessar business_subscriptions diretamente. Use user_subscriptions como fonte canônica."
+          },
+          {
+            "group": ["**/subscription_plans*"],
+            "message": "❌ SSOT Violation: Use CatalogService ao invés de acessar subscription_plans diretamente. Esta tabela está deprecated."
+          }
+        ]
+      }
+    ],
+    "no-restricted-syntax": [
+      "error",
+      {
+        "selector": "CallExpression[callee.object.name='supabase'][callee.property.name='from'][arguments.0.value='gastronomy_subscriptions']",
+        "message": "❌ SSOT Violation: Acesso direto a gastronomy_subscriptions é proibido. Use EntitlementResolver.resolve() para obter entitlements."
+      },
+      {
+        "selector": "CallExpression[callee.object.name='supabase'][callee.property.name='from'][arguments.0.value='business_subscriptions']",
+        "message": "❌ SSOT Violation: Acesso direto a business_subscriptions é proibido. Use EntitlementResolver.resolve() para obter entitlements."
+      },
+      {
+        "selector": "VariableDeclarator[id.name='PLANS'][init.type='ObjectExpression']",
+        "message": "❌ SSOT Violation: PLANS hardcoded é proibido. Use CatalogService.getEligibleCatalog() para obter catálogo dinâmico."
+      },
+      {
+        "selector": "TSTypeAliasDeclaration[id.name='PlanTier'] > TSUnionType",
+        "message": "⚠️  Warning: PlanTier type deve ser importado de @/core/billing/types ao invés de redefinido localmente."
+      }
+    ]
+  },
+  "overrides": [
+    {
+      "files": [
+        "src/core/billing/services/**/*.ts",
+        "src/core/billing/hooks/**/*.ts",
+        "supabase/functions/**/*.ts"
+      ],
+      "rules": {
+        "no-restricted-imports": "off",
+        "no-restricted-syntax": "off"
+      }
+    },
+    {
+      "files": ["**/*.test.ts", "**/*.test.tsx", "**/*.spec.ts", "**/*.spec.tsx"],
+      "rules": {
+        "no-restricted-imports": "off",
+        "no-restricted-syntax": "off"
+      }
+    }
+  ]
+}

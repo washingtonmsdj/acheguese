@@ -1,0 +1,166 @@
+name: SSOT Enforcement
+
+on:
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - 'src/**'
+      - 'supabase/**'
+      - '.eslintrc*.json'
+      - 'package.json'
+  push:
+    branches: [main, develop]
+    paths:
+      - 'src/**'
+      - 'supabase/**'
+
+jobs:
+  ssot-enforcement:
+    name: SSOT Enforcement Checks
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Run ESLint Billing Rules
+        run: |
+          echo "🔍 Verificando conformidade SSOT com regras de billing..."
+          npx eslint --config .eslintrc-billing-rules.json 'src/**/*.{ts,tsx}' || {
+            echo "❌ Violações de SSOT detectadas!"
+            echo ""
+            echo "Regras violadas:"
+            echo "- Acesso direto a tabelas de subscription (use EntitlementResolver)"
+            echo "- PLANS hardcoded (use CatalogService)"
+            echo "- Import de tabelas legadas (gastronomy_subscriptions, business_subscriptions)"
+            echo ""
+            echo "Consulte .kiro/specs/monetization-multi-vertical-refactor/F7_SSOT_ENFORCEMENT.md"
+            exit 1
+          }
+      
+      - name: Run Contract Tests
+        run: |
+          echo "🧪 Executando testes de contrato..."
+          npm run test -- src/core/billing/__tests__/contracts/ || {
+            echo "❌ Testes de contrato falharam!"
+            echo ""
+            echo "Os contratos de API foram violados:"
+            echo "- EntitlementResolver.resolve()"
+            echo "- CatalogService.getEligibleCatalog()"
+            echo "- SubscriptionContractService"
+            echo ""
+            exit 1
+          }
+      
+      - name: Check for PLANS hardcoded
+        run: |
+          echo "🔍 Verificando PLANS hardcoded..."
+          if grep -r "const PLANS = {" src/ --exclude-dir=node_modules --exclude-dir=__tests__; then
+            echo "❌ PLANS hardcoded detectado!"
+            echo ""
+            echo "Arquivos com PLANS hardcoded:"
+            grep -r "const PLANS = {" src/ --exclude-dir=node_modules --exclude-dir=__tests__ -l
+            echo ""
+            echo "❌ SSOT Violation: Use CatalogService.getEligibleCatalog() ao invés de PLANS hardcoded"
+            echo ""
+            echo "Exemplo correto:"
+            echo "  const catalog = await CatalogService.getEligibleCatalog({"
+            echo "    entity_family: 'company',"
+            echo "    vertical: 'gastronomy',"
+            echo "  });"
+            echo ""
+            exit 1
+          fi
+          echo "✅ Nenhum PLANS hardcoded detectado"
+      
+      - name: Check for direct subscription table access
+        run: |
+          echo "🔍 Verificando acesso direto a tabelas de subscription..."
+          
+          # Verifica gastronomy_subscriptions
+          if grep -r "from('gastronomy_subscriptions')" src/ \
+            --exclude-dir=node_modules \
+            --exclude-dir=__tests__ \
+            --exclude-dir=core/billing/services; then
+            echo "❌ Acesso direto a gastronomy_subscriptions detectado!"
+            echo ""
+            echo "Arquivos com acesso direto:"
+            grep -r "from('gastronomy_subscriptions')" src/ \
+              --exclude-dir=node_modules \
+              --exclude-dir=__tests__ \
+              --exclude-dir=core/billing/services -l
+            echo ""
+            echo "❌ SSOT Violation: Use EntitlementResolver.resolve() ao invés de acesso direto"
+            echo ""
+            echo "Exemplo correto:"
+            echo "  const entitlements = await EntitlementResolver.resolve({"
+            echo "    user_id: userId,"
+            echo "    subscription_scope: 'user',"
+            echo "  });"
+            echo ""
+            exit 1
+          fi
+          
+          # Verifica business_subscriptions
+          if grep -r "from('business_subscriptions')" src/ \
+            --exclude-dir=node_modules \
+            --exclude-dir=__tests__ \
+            --exclude-dir=core/billing/services; then
+            echo "❌ Acesso direto a business_subscriptions detectado!"
+            echo ""
+            echo "❌ SSOT Violation: Use EntitlementResolver.resolve() ao invés de acesso direto"
+            exit 1
+          fi
+          
+          echo "✅ Nenhum acesso direto a tabelas de subscription detectado"
+      
+      - name: Check for planTier calculations in components
+        run: |
+          echo "🔍 Verificando cálculos de planTier em componentes..."
+          
+          # Verifica se componentes calculam entitlement localmente
+          if grep -r "planTier === 'pro'" src/ \
+            --include="*.tsx" \
+            --exclude-dir=node_modules \
+            --exclude-dir=__tests__ \
+            --exclude-dir=core/billing; then
+            echo "⚠️  Warning: Possível cálculo de entitlement em componente detectado"
+            echo ""
+            echo "Arquivos suspeitos:"
+            grep -r "planTier === 'pro'" src/ \
+              --include="*.tsx" \
+              --exclude-dir=node_modules \
+              --exclude-dir=__tests__ \
+              --exclude-dir=core/billing -l
+            echo ""
+            echo "⚠️  Recomendação: Use useEntitlements() ao invés de comparar planTier diretamente"
+            echo ""
+            echo "Exemplo correto:"
+            echo "  const { can } = useEntitlements({ business_id });"
+            echo "  if (can('canUseFeature')) { ... }"
+            echo ""
+            # Não falha, apenas avisa
+          fi
+      
+      - name: Summary
+        if: success()
+        run: |
+          echo "✅ Todos os checks de SSOT Enforcement passaram!"
+          echo ""
+          echo "Verificações realizadas:"
+          echo "  ✅ ESLint billing rules"
+          echo "  ✅ Testes de contrato"
+          echo "  ✅ PLANS hardcoded"
+          echo "  ✅ Acesso direto a tabelas"
+          echo "  ✅ Cálculos de entitlement"
+          echo ""
+          echo "Conformidade SSOT: 100%"

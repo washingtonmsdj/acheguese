@@ -16,8 +16,8 @@ import { Button } from '@/shared/components/ui/button';
 import { Badge } from '@/shared/components/ui/badge';
 import { Alert, AlertDescription } from '@/shared/components/ui/alert';
 import { Separator } from '@/shared/components/ui/separator';
-import { useBusinessSubscription, BillingService } from '@/core/billing';
-import { PlanTier, PLANS } from '@/core/billing';
+import { useBusinessSubscription, BillingService, useBillingPlans } from '@/core/billing';
+import { PlanTier } from '@/core/billing';
 import { toast } from 'sonner';
 import { 
   CreditCard, 
@@ -53,6 +53,12 @@ export default function GastronomyBillingPage() {
     isDelivery,
   } = useBusinessSubscription(businessId);
   
+  // Buscar planos do catálogo
+  const { data: allPlans, isLoading: isLoadingPlans } = useBillingPlans();
+  
+  // Encontrar plano atual no catálogo
+  const currentPlanData = allPlans?.find(p => p.tier === currentPlan);
+  
   // Capability flags
   const canUpgrade = isActive && !isDelivery;
   const canCancel = isActive && !willCancelAtPeriodEnd && !isFree;
@@ -86,13 +92,26 @@ export default function GastronomyBillingPage() {
     }
   };
   
-  if (isLoading) {
+  if (isLoading || isLoadingPlans) {
     return (
       <div className="container mx-auto py-8">
         <div className="animate-pulse space-y-4">
           <div className="h-8 bg-gray-200 rounded w-1/4"></div>
           <div className="h-64 bg-gray-200 rounded"></div>
         </div>
+      </div>
+    );
+  }
+  
+  if (!currentPlanData) {
+    return (
+      <div className="container mx-auto py-8">
+        <Alert variant="destructive">
+          <AlertTriangle className="h-4 w-4" />
+          <AlertDescription>
+            Erro ao carregar informações do plano. Tente novamente.
+          </AlertDescription>
+        </Alert>
       </div>
     );
   }
@@ -162,13 +181,10 @@ export default function GastronomyBillingPage() {
           <div className="flex items-start justify-between">
             <div className="space-y-1">
               <h3 className="text-2xl font-bold">
-                {PLANS[currentPlan].name}
+                {currentPlanData.name}
               </h3>
               <p className="text-3xl font-bold text-primary">
-                {PLANS[currentPlan].price}
-                {currentPlan !== PlanTier.FREE && (
-                  <span className="text-sm font-normal text-muted-foreground">/mês</span>
-                )}
+                {currentPlanData.priceDisplay}
               </p>
             </div>
           </div>
@@ -179,7 +195,7 @@ export default function GastronomyBillingPage() {
           <div className="space-y-2">
             <h4 className="font-semibold">Recursos incluídos:</h4>
             <ul className="space-y-2">
-              {PLANS[currentPlan].features.map((feature, index) => (
+              {currentPlanData.features.map((feature, index) => (
                 <li key={index} className="flex items-start gap-2">
                   <CheckCircle2 className="h-5 w-5 text-green-600 shrink-0 mt-0.5" />
                   <span className="text-sm">{feature}</span>
@@ -215,9 +231,9 @@ export default function GastronomyBillingPage() {
           <CardContent>
             <div className="grid gap-4 md:grid-cols-2">
               {/* Pro Plan */}
-              {isFree && (
+              {isFree && allPlans && (
                 <PlanCard
-                  plan={PLANS[PlanTier.PRO]}
+                  plan={allPlans.find(p => p.tier === PlanTier.PRO)!}
                   onUpgrade={() => handleUpgrade('gastronomy_pro')}
                   isUpgrading={isUpgrading}
                   isCurrent={false}
@@ -225,9 +241,9 @@ export default function GastronomyBillingPage() {
               )}
               
               {/* Delivery Plan */}
-              {!isDelivery && (
+              {!isDelivery && allPlans && (
                 <PlanCard
-                  plan={PLANS[PlanTier.DELIVERY]}
+                  plan={allPlans.find(p => p.tier === PlanTier.DELIVERY)!}
                   onUpgrade={() => handleUpgrade('gastronomy_delivery')}
                   isUpgrading={isUpgrading}
                   isCurrent={false}
@@ -334,7 +350,12 @@ function StatusBadge({ isActive, isCanceled, isPastDue, isTrialing }: StatusBadg
 }
 
 interface PlanCardProps {
-  plan: typeof PLANS[PlanTier];
+  plan: {
+    name: string;
+    priceDisplay: string;
+    features: string[];
+    tier: PlanTier;
+  };
   onUpgrade: () => void;
   isUpgrading: boolean;
   isCurrent: boolean;
@@ -346,10 +367,7 @@ function PlanCard({ plan, onUpgrade, isUpgrading, isCurrent }: PlanCardProps) {
       <CardHeader>
         <CardTitle>{plan.name}</CardTitle>
         <div className="text-2xl font-bold">
-          {plan.price}
-          {plan.tier !== PlanTier.FREE && (
-            <span className="text-sm font-normal text-muted-foreground">/mês</span>
-          )}
+          {plan.priceDisplay}
         </div>
       </CardHeader>
       <CardContent className="space-y-4">

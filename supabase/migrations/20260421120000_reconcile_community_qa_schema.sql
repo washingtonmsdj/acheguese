@@ -4,13 +4,13 @@
 -- Data: 2026-04-21
 -- Objetivo:
 --   1) Consolidar community_posts -> community_questions
---   2) Garantir location_id NOT NULL + FK canônica para locations
+--   2) Garantir location_id NOT NULL + FK canÃ´nica para locations
 --   3) Migrar community_polls.post_id para posts(id) e alinhar RLS
 --   4) Criar question_answers e question_answer_likes
---   5) Criar funções/triggers de sincronização e RPC mark_best_answer
+--   5) Criar funÃ§Ãµes/triggers de sincronizaÃ§Ã£o e RPC mark_best_answer
 -- ============================================================================
 
--- 1) Renomeio canônico community_posts -> community_questions
+-- 1) Renomeio canÃ´nico community_posts -> community_questions
 DO $$
 BEGIN
   IF EXISTS (
@@ -45,7 +45,7 @@ ALTER TABLE IF EXISTS community_questions
   REFERENCES locations(id)
   ON DELETE RESTRICT;
 
--- 3) Polls: FK canônica para posts e RLS baseada em posts
+-- 3) Polls: FK canÃ´nica para posts e RLS baseada em posts
 ALTER TABLE IF EXISTS community_polls
   DROP CONSTRAINT IF EXISTS community_polls_post_id_fkey;
 
@@ -76,7 +76,7 @@ CREATE POLICY "Authors manage polls"
     )
   );
 
--- 4) Tabelas de respostas canônicas
+-- 4) Tabelas de respostas canÃ´nicas
 CREATE TABLE IF NOT EXISTS question_answers (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   question_id UUID NOT NULL REFERENCES community_questions(id) ON DELETE CASCADE,
@@ -143,7 +143,7 @@ CREATE POLICY "Users manage own question answer likes"
   USING (user_id = auth.uid())
   WITH CHECK (user_id = auth.uid());
 
--- 5) Triggers de sincronização
+-- 5) Triggers de sincronizaÃ§Ã£o
 CREATE OR REPLACE FUNCTION sync_question_answer_likes_count()
 RETURNS TRIGGER
 LANGUAGE plpgsql
@@ -206,7 +206,9 @@ CREATE TRIGGER update_question_answers_updated_at
   FOR EACH ROW
   EXECUTE FUNCTION update_updated_at_column();
 
--- RPC canônica para melhor resposta
+-- RPC canÃ´nica para melhor resposta
+DROP FUNCTION IF EXISTS mark_best_answer(UUID, UUID);
+
 CREATE OR REPLACE FUNCTION mark_best_answer(_question_id UUID, _answer_id UUID)
 RETURNS VOID
 LANGUAGE plpgsql
@@ -229,3 +231,4 @@ END;
 $$;
 
 GRANT EXECUTE ON FUNCTION mark_best_answer(UUID, UUID) TO authenticated;
+

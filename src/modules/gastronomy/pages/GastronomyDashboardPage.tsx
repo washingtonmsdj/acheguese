@@ -11,7 +11,7 @@
  */
 
 import { useParams, Link } from 'react-router-dom';
-import { useBusinessSubscription } from '@/core/billing';
+import { useEntitlements } from '@/core/billing/hooks/useEntitlements';
 import { PlanStatusWidget, UpgradePrompt, UpgradePromptInline } from '../components';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/components/ui/card';
 import { Button } from '@/shared/components/ui/button';
@@ -29,7 +29,10 @@ import {
 
 export default function GastronomyDashboardPage() {
   const { businessId } = useParams<{ businessId: string }>();
-  const { entitlements, isLoading, planTier } = useBusinessSubscription(businessId!);
+  const { can, isLoading, entitlements } = useEntitlements({
+    business_id: businessId,
+    subscription_scope: 'business',
+  });
 
   if (isLoading) {
     return (
@@ -71,7 +74,7 @@ export default function GastronomyDashboardPage() {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            {entitlements.canUseAdvancedMenu ? (
+            {can('canUseAdvancedMenu') ? (
               <>
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-muted-foreground">Itens cadastrados</span>
@@ -114,7 +117,7 @@ export default function GastronomyDashboardPage() {
                 Ver QR Code
               </Button>
             </Link>
-            {entitlements.canUseCustomQRCode && (
+            {can('canUseCustomQRCode') && (
               <p className="text-xs text-muted-foreground">
                 ✨ QR Code personalizado disponível
               </p>
@@ -134,7 +137,7 @@ export default function GastronomyDashboardPage() {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            {entitlements.canUsePromotions ? (
+            {can('canUsePromotions') ? (
               <>
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-muted-foreground">Promoções ativas</span>
@@ -168,7 +171,7 @@ export default function GastronomyDashboardPage() {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            {entitlements.canReceiveInternalOrders ? (
+            {can('canReceiveInternalOrders') ? (
               <>
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-muted-foreground">Pedidos hoje</span>
@@ -202,7 +205,7 @@ export default function GastronomyDashboardPage() {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            {entitlements.canUseMotoboyNetwork ? (
+            {can('canUseMotoboyNetwork') ? (
               <>
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-muted-foreground">Entregas hoje</span>
@@ -236,7 +239,7 @@ export default function GastronomyDashboardPage() {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            {entitlements.canUseBasicAnalytics ? (
+            {can('canUseBasicAnalytics') ? (
               <>
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-muted-foreground">Visualizações</span>
@@ -247,7 +250,7 @@ export default function GastronomyDashboardPage() {
                     Ver Analytics
                   </Button>
                 </Link>
-                {entitlements.canUseAdvancedAnalytics && (
+                {can('canUseAdvancedAnalytics') && (
                   <p className="text-xs text-muted-foreground">
                     ✨ Analytics avançado disponível
                   </p>
@@ -299,7 +302,7 @@ export default function GastronomyDashboardPage() {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            {entitlements.canConfigureDeliveryArea ? (
+            {can('canConfigureDeliveryArea') ? (
               <>
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-muted-foreground">Bairros atendidos</span>

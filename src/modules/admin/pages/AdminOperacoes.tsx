@@ -467,6 +467,9 @@ export default function AdminOperacoes() {
               Esta superficie concentra controles criticos de rollout e diagnostico de schema sem acessar tabelas sensiveis diretamente da page.
             </p>
             <p>
+              Ownership canonico: o admin central governa rollout/moderacao/politicas globais; dashboards de negocio e mobilidade permanecem responsaveis por operacao do proprio perfil e execucao diaria.
+            </p>
+            <p>
               Prontidao total depende de zerar tabelas obrigatorias ausentes ou com erro e consolidar a leitura operacional hoje ainda vinculada a `operationalDiagnosticsService` dentro de `core/admin`.
             </p>
           </AdminSectionCard>

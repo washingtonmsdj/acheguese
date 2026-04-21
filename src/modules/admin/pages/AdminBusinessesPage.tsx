@@ -26,15 +26,29 @@ import {
   TableRow,
 } from '@/shared/components/ui/table';
 import { useBusinesses, useToggleBusinessStatus, useUpdateBusinessPlan } from '@/modules/admin/hooks/useAdmin';
+import { PlanChangeValidator, type PlanChangeImpact } from '@/modules/admin/services/PlanChangeValidator';
+import { PlanChangeConfirmationModal } from '@/modules/admin/components/PlanChangeConfirmationModal';
 import { Search, Building2, DollarSign, ShoppingCart, Bike } from 'lucide-react';
 import { Skeleton } from '@/shared/components/ui/skeleton';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { toast } from 'sonner';
 
 export function AdminBusinessesPage() {
   const [search, setSearch] = useState('');
   const [planFilter, setPlanFilter] = useState<string>('all');
   const [statusFilter, setStatusFilter] = useState<string>('all');
+  
+  // Modal de confirmação
+  const [confirmModalOpen, setConfirmModalOpen] = useState(false);
+  const [pendingChange, setPendingChange] = useState<{
+    businessId: string;
+    businessName: string;
+    currentPlan: string;
+    newPlan: string;
+  } | null>(null);
+  const [changeImpact, setChangeImpact] = useState<PlanChangeImpact | null>(null);
+  const [isValidating, setIsValidating] = useState(false);
 
   const filters = {
     search: search || undefined,
@@ -53,11 +67,55 @@ export function AdminBusinessesPage() {
     });
   };
 
-  const handleUpdatePlan = (businessId: string, planTier: string) => {
-    updatePlanMutation.mutate({
-      businessId,
-      planTier,
-    });
+  const handlePlanChangeRequest = async (
+    businessId: string,
+    businessName: string,
+    currentPlan: string,
+    newPlan: string
+  ) => {
+    if (currentPlan === newPlan) return;
+    
+    setIsValidating(true);
+    
+    try {
+      // Validar impacto da mudança
+      const impact = await PlanChangeValidator.validateChange(
+        businessId,
+        currentPlan,
+        newPlan
+      );
+      
+      setChangeImpact(impact);
+      setPendingChange({ businessId, businessName, currentPlan, newPlan });
+      setConfirmModalOpen(true);
+      
+    } catch (error) {
+      toast.error('Erro ao validar mudança de plano');
+    } finally {
+      setIsValidating(false);
+    }
+  };
+  
+  const handleConfirmPlanChange = () => {
+    if (!pendingChange) return;
+    
+    updatePlanMutation.mutate(
+      {
+        businessId: pendingChange.businessId,
+        planTier: pendingChange.newPlan,
+      },
+      {
+        onSuccess: () => {
+          toast.success('Plano alterado com sucesso');
+          setConfirmModalOpen(false);
+          setPendingChange(null);
+          setChangeImpact(null);
+        },
+        onError: () => {
+          toast.error('Erro ao alterar plano');
+        },
+      }
+    );
   };
 
   return (
@@ -66,7 +124,7 @@ export function AdminBusinessesPage() {
       <div>
         <h1 className="text-3xl font-bold">Gestão de Empresas</h1>
         <p className="text-muted-foreground">
-          Gerencie todas as empresas da plataforma
+          Governança central de plano e status. Edição operacional da empresa permanece no dashboard do negócio.
         </p>
       </div>
 
@@ -162,8 +220,14 @@ export function AdminBusinessesPage() {
                       <Select
                         value={business.plan_tier}
                         onValueChange={(value) =>
-                          handleUpdatePlan(business.id, value)
+                          handlePlanChangeRequest(
+                            business.id,
+                            business.name,
+                            business.plan_tier,
+                            value
+                          )
                         }
+                        disabled={isValidating}
                       >
                         <SelectTrigger className="w-32">
                           <SelectValue />
@@ -225,6 +289,20 @@ export function AdminBusinessesPage() {
           )}
         </CardContent>
       </Card>
+      
+      {/* Modal de Confirmação */}
+      {pendingChange && (
+        <PlanChangeConfirmationModal
+          open={confirmModalOpen}
+          onOpenChange={setConfirmModalOpen}
+          impact={changeImpact}
+          businessName={pendingChange.businessName}
+          currentPlan={pendingChange.currentPlan}
+          newPlan={pendingChange.newPlan}
+          onConfirm={handleConfirmPlanChange}
+          isLoading={updatePlanMutation.isPending}
+        />
+      )}
     </div>
   );
 }

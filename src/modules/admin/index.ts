@@ -39,7 +39,8 @@ export { default as AdminConfiguracoes } from "./pages/AdminConfiguracoes";
 export { default as AdminOperacoes } from "./pages/AdminOperacoes";
 export { default as AdminSSOT } from "./pages/AdminSSOT";
 export { default as AdminVerificacoes } from "./pages/AdminVerificacoes";
-export { default as AdminBusinessPage } from "./pages/AdminBusinessPage";
+// Compat: nome legado mantido, surface oficial agora aponta para AdminBusinessesPage.
+export { default as AdminBusinessPage } from "./pages/AdminBusinessesPage";
 export { default as AdminModeracaoCompleta } from "./pages/AdminModeracaoCompleta";
 export { default as AdminModeracaoComunidade } from "./pages/AdminModeracaoComunidade";
 export { default as AdminPontosEmbarque } from "./pages/AdminPontosEmbarque";

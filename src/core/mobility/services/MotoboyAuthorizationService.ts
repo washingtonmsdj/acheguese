@@ -3,12 +3,16 @@
  *
  * SSOT para autorizacao de solicitacao/operacao de motoboy.
  * Componentes e hooks nao devem implementar regra de permissao local.
+ * 
+ * FASE 6: Migrado para usar EntitlementResolver ao invés de planTier string
+ * - Removido parâmetro planTier de canRequestDelivery()
+ * - Entitlements resolvidos via EntitlementResolver.resolve()
+ * - Zero cálculo de elegibilidade em componentes
  */
 
 import { supabase } from "@/integrations/supabase";
 import { logger } from "@/shared/utils/logger";
 import { mobilityRolloutService } from "./MobilityRolloutService";
-import { EntitlementsService } from "@/core/billing/entitlements";
 
 const supabaseAny = supabase as any;
 const MODERATOR_ROLES = ["owner", "admin"] as const;
@@ -59,10 +63,9 @@ export class MotoboyAuthorizationService {
     sourceType: MotoboySourceType;
     sourceId?: string;
     locationId: string;
-    planTier?: string;
     userId?: string;
   }): Promise<AuthorizationResult> {
-    const { sourceType, sourceId, locationId, planTier, userId } = params;
+    const { sourceType, sourceId, locationId, userId } = params;
     const effectiveUserId = userId ?? (await this.resolveAuthenticatedUserId());
 
     try {
@@ -89,10 +92,10 @@ export class MotoboyAuthorizationService {
           return this.authorizePassenger(effectiveUserId);
 
         case "business":
-          return this.authorizeBusiness(sourceId, planTier, effectiveUserId);
+          return this.authorizeBusiness(sourceId, effectiveUserId);
 
         case "gastronomy":
-          return this.authorizeGastronomy(sourceId, planTier, effectiveUserId);
+          return this.authorizeGastronomy(sourceId, effectiveUserId);
 
         case "service":
           return this.authorizeService(sourceId, effectiveUserId);
@@ -238,7 +241,6 @@ export class MotoboyAuthorizationService {
 
   private static async authorizeBusiness(
     businessId?: string,
-    planTier?: string,
     userId?: string,
   ): Promise<AuthorizationResult> {
     if (!businessId) {
@@ -267,17 +269,39 @@ export class MotoboyAuthorizationService {
       };
     }
 
-    const effectivePlanTier =
-      planTier || (await this.resolvePlanTierByBusinessIds(businessContext.businessDataIds));
-    if (effectivePlanTier) {
-      const canUse = EntitlementsService.canUseMotoboyNetwork(effectivePlanTier as any);
-      if (!canUse) {
-        return {
-          allowed: false,
-          reason: "Plano da empresa nao permite uso da rede de motoboys.",
-          code: "PLAN_NOT_ALLOWED",
-        };
-      }
+    // Resolver entitlement via SSOT ao invés de planTier string
+    const { data: subscription } = await supabaseAny
+      .from("user_subscriptions")
+      .select("id, status_v2")
+      .eq("user_id", userId)
+      .in("status_v2", ["active", "trialing"])
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (!subscription) {
+      return {
+        allowed: false,
+        reason: "Nenhuma assinatura ativa encontrada.",
+        code: "PLAN_NOT_ALLOWED",
+      };
+    }
+
+    // Importar EntitlementResolver dinamicamente para evitar ciclo
+    const { EntitlementResolver } = await import("@/core/billing/services/EntitlementResolver");
+    
+    const entitlements = await EntitlementResolver.resolve({
+      user_id: userId,
+      business_id: businessId,
+      subscription_scope: "business",
+    });
+
+    if (!entitlements.canUseMotoboyNetwork) {
+      return {
+        allowed: false,
+        reason: "Plano da empresa nao permite uso da rede de motoboys.",
+        code: "PLAN_NOT_ALLOWED",
+      };
     }
 
     return { allowed: true };
@@ -285,7 +309,6 @@ export class MotoboyAuthorizationService {
 
   private static async authorizeGastronomy(
     gastronomyId?: string,
-    planTier?: string,
     userId?: string,
   ): Promise<AuthorizationResult> {
     if (!gastronomyId) {
@@ -314,17 +337,39 @@ export class MotoboyAuthorizationService {
       };
     }
 
-    const effectivePlanTier =
-      planTier || (await this.resolvePlanTierByBusinessIds(gastronomyContext.businessDataIds));
-    if (effectivePlanTier) {
-      const canRequest = EntitlementsService.canRequestDelivery(effectivePlanTier as any);
-      if (!canRequest) {
-        return {
-          allowed: false,
-          reason: "Plano do estabelecimento nao permite solicitacao de entregas.",
-          code: "PLAN_NOT_ALLOWED",
-        };
-      }
+    // Resolver entitlement via SSOT ao invés de planTier string
+    const { data: subscription } = await supabaseAny
+      .from("user_subscriptions")
+      .select("id, status_v2")
+      .eq("user_id", userId)
+      .in("status_v2", ["active", "trialing"])
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (!subscription) {
+      return {
+        allowed: false,
+        reason: "Nenhuma assinatura ativa encontrada.",
+        code: "PLAN_NOT_ALLOWED",
+      };
+    }
+
+    // Importar EntitlementResolver dinamicamente para evitar ciclo
+    const { EntitlementResolver } = await import("@/core/billing/services/EntitlementResolver");
+    
+    const entitlements = await EntitlementResolver.resolve({
+      user_id: userId,
+      business_id: gastronomyContext.businessDataIds[0],
+      subscription_scope: "business",
+    });
+
+    if (!entitlements.canRequestDelivery) {
+      return {
+        allowed: false,
+        reason: "Plano do estabelecimento nao permite solicitacao de entregas.",
+        code: "PLAN_NOT_ALLOWED",
+      };
     }
 
     return { allowed: true };

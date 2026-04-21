@@ -15,9 +15,20 @@ import { getAllSecurityHeaders, errorResponse, isValidUUID, rateLimitMiddleware 
 import { requireAdmin } from '../_shared/adminAuth.ts';
 
 interface UpdateLocationVisibilityRequest {
-  locationId: string;
-  flag: 'hidden' | 'visible';
+  locationId?: string;
+  id?: string;
+  flag: 'is_selector_active' | 'is_landing_enabled' | 'is_navigable' | 'hidden' | 'visible';
   value: boolean;
+}
+
+type CanonicalVisibilityFlag = 'is_selector_active' | 'is_landing_enabled' | 'is_navigable';
+
+function normalizeCanonicalFlag(flag: UpdateLocationVisibilityRequest['flag']): CanonicalVisibilityFlag | null {
+  if (flag === 'is_selector_active' || flag === 'is_landing_enabled' || flag === 'is_navigable') {
+    return flag;
+  }
+
+  return null;
 }
 
 serve(async (req: Request) => {
@@ -49,14 +60,16 @@ serve(async (req: Request) => {
     );
 
     const body: UpdateLocationVisibilityRequest = await req.json();
-    const { locationId, flag, value } = body;
+    const locationId = body.locationId ?? body.id;
+    const { flag, value } = body;
+    const canonicalFlag = normalizeCanonicalFlag(flag);
 
     if (!locationId || !isValidUUID(locationId)) {
       return errorResponse('Invalid location ID', 400);
     }
 
-    if (!['hidden', 'visible'].includes(flag)) {
-      return errorResponse('Invalid flag. Must be "hidden" or "visible"', 400);
+    if (!canonicalFlag && !['hidden', 'visible'].includes(flag)) {
+      return errorResponse('Invalid flag. Must be canonical visibility flag or legacy "hidden/visible"', 400);
     }
 
     if (typeof value !== 'boolean') {
@@ -73,12 +86,16 @@ serve(async (req: Request) => {
       return errorResponse('Location not found', 404);
     }
 
-    const updatedMetadata = {
+    const updatedMetadata: Record<string, unknown> = {
       ...(location.metadata || {}),
-      [flag]: value,
       updated_by: userId,
       updated_at: new Date().toISOString(),
     };
+    if (canonicalFlag) {
+      updatedMetadata[canonicalFlag] = value;
+    } else {
+      updatedMetadata[flag] = value;
+    }
 
     const { data: updatedLocation, error: updateError } = await supabaseAdmin
       .from('locations')
@@ -89,8 +106,8 @@ serve(async (req: Request) => {
 
     if (updateError) throw updateError;
 
-    // Propagar flag para filhos diretos (apenas um nível — recursão profunda via job assíncrono)
-    if (flag === 'hidden' && value === true) {
+    // Propagar ocultação de seletor para filhos diretos (apenas 1 nível).
+    if ((canonicalFlag === 'is_selector_active' && value === false) || (flag === 'hidden' && value === true)) {
       const { data: children } = await supabaseAdmin
         .from('locations')
         .select('id, metadata')
@@ -103,7 +120,7 @@ serve(async (req: Request) => {
             .update({
               metadata: {
                 ...(child.metadata || {}),
-                hidden: true,
+                is_selector_active: false,
                 updated_by: userId,
                 updated_at: new Date().toISOString(),
               },

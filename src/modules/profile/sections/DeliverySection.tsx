@@ -4,7 +4,13 @@
  * SSOT: Componente isolado com props tipadas
  * Sem gambiarras: Lógica clara e organizada
  * 
- * TODO: Extrair DeliveryBusinessCard quando refatorar
+ * FASE 6: Entitlements já resolvidos no backend
+ * - businessModules.subscription.canUse* vem de ProfileService
+ * - ProfileService usa EntitlementResolver para popular subscription
+ * - Componente apenas exibe, não calcula elegibilidade
+ * 
+ * TODO P2: Migrar para useEntitlements() com cache React Query
+ * Atualmente usa props que já vêm resolvidas do backend (aceitável para P2)
  */
 
 import { Button } from "@/shared/components/ui/button";

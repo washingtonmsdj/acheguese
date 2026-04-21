@@ -2,6 +2,10 @@
  * RequestMotoboyButton
  *
  * CTA para solicitar motoboy usando autorizacao centralizada.
+ * 
+ * FASE 6: Migrado para SSOT
+ * - Removida resolução local de planTier
+ * - Autorização resolve entitlement internamente via EntitlementResolver
  */
 
 import React, { useState } from "react";
@@ -14,7 +18,6 @@ import { Button } from "@/shared/components/ui/button";
 import { MotoboyAuthorizationService } from "../services/MotoboyAuthorizationService";
 import type { SourceType } from "../constants";
 import { CreateDeliveryModal } from "./CreateDeliveryModal";
-import { MotoboySourceResolverService } from "../services/MotoboySourceResolverService";
 
 interface RequestMotoboyButtonProps {
   sourceType: SourceType;
@@ -62,6 +65,7 @@ export function RequestMotoboyButton({
       let locationId = activeLocation?.id ?? null;
 
       if (!locationId && sourceId) {
+        const { MotoboySourceResolverService } = await import("../services/MotoboySourceResolverService");
         locationId = (await MotoboySourceResolverService.resolveLocationIdFromSource(sourceId)) ?? null;
       }
 
@@ -72,15 +76,12 @@ export function RequestMotoboyButton({
         };
       }
 
-      const planTier = sourceId
-        ? await MotoboySourceResolverService.resolvePlanTier(sourceType, sourceId)
-        : undefined;
-
+      // FASE 6: Removida resolução local de planTier
+      // Autorização resolve entitlement internamente via EntitlementResolver
       const auth = await MotoboyAuthorizationService.canRequestDelivery({
         sourceType,
         sourceId,
         locationId,
-        planTier,
         userId: user.id,
       });
 

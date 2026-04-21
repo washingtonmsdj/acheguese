@@ -15,9 +15,20 @@ import { getAllSecurityHeaders, errorResponse, isValidUUID, rateLimitMiddleware 
 import { requireAdmin } from '../_shared/adminAuth.ts';
 
 interface UpdateGroupVisibilityRequest {
-  groupId: string;
-  flag: 'hidden' | 'visible';
+  groupId?: string;
+  id?: string;
+  flag: 'is_selector_active' | 'is_landing_enabled' | 'is_navigable' | 'hidden' | 'visible';
   value: boolean;
+}
+
+type CanonicalVisibilityFlag = 'is_selector_active' | 'is_landing_enabled' | 'is_navigable';
+
+function normalizeCanonicalFlag(flag: UpdateGroupVisibilityRequest['flag']): CanonicalVisibilityFlag | null {
+  if (flag === 'is_selector_active' || flag === 'is_landing_enabled' || flag === 'is_navigable') {
+    return flag;
+  }
+
+  return null;
 }
 
 serve(async (req: Request) => {
@@ -50,14 +61,16 @@ serve(async (req: Request) => {
     );
 
     const body: UpdateGroupVisibilityRequest = await req.json();
-    const { groupId, flag, value } = body;
+    const groupId = body.groupId ?? body.id;
+    const { flag, value } = body;
+    const canonicalFlag = normalizeCanonicalFlag(flag);
 
     if (!groupId || !isValidUUID(groupId)) {
       return errorResponse('Invalid group ID', 400);
     }
 
-    if (!['hidden', 'visible'].includes(flag)) {
-      return errorResponse('Invalid flag. Must be "hidden" or "visible"', 400);
+    if (!canonicalFlag && !['hidden', 'visible'].includes(flag)) {
+      return errorResponse('Invalid flag. Must be canonical visibility flag or legacy "hidden/visible"', 400);
     }
 
     if (typeof value !== 'boolean') {
@@ -74,12 +87,16 @@ serve(async (req: Request) => {
       return errorResponse('Group not found', 404);
     }
 
-    const updatedMetadata = {
+    const updatedMetadata: Record<string, unknown> = {
       ...(group.metadata || {}),
-      [flag]: value,
       updated_by: userId,
       updated_at: new Date().toISOString(),
     };
+    if (canonicalFlag) {
+      updatedMetadata[canonicalFlag] = value;
+    } else {
+      updatedMetadata[flag] = value;
+    }
 
     const { data: updatedGroup, error: updateError } = await supabaseAdmin
       .from('territorial_groups')

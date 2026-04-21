@@ -127,9 +127,10 @@ Fase executada: consolidacao de identidade publica, extracao inicial de regras d
 ### Proximo cluster dominante
 - O gate estrutural esta verde; o proximo trabalho deixa de ser saneamento reativo e passa a ser consolidacao administrativa, documental e visual.
 - `admin` agora tem baseline visual canonica nas superficies prioritarias, mas ainda precisa expandir o contrato para pages restantes, bulk actions e refinamento responsivo.
-- `notifications` agora tem coverage administrativa minima, mas ainda nao cobre templates, canais externos e auditoria de entrega.
-- `map` agora tem coverage administrativa operacional, mas ainda deve convergencia final de Nearby e write-side de boundaries.
+- `notifications` agora tem coverage administrativa fechada em `/admin/notifications`, incluindo templates, canais e auditoria de entrega.
+- `map` agora tem coverage administrativa operacional com write-side de boundaries/reconciliacao de coordenadas em `/admin/mapa`; backlog residual focado em convergencia final de Nearby e governanca de geometrias.
 - `profile` agora cobre reputacao por origem, residence canonica primaria, `family` via service canonico, schema local formalizado de `family`, snapshot de permissoes efetivas e snapshot privado canonico do hub, mas ainda deve rollout da migration de `family`, historico administrativo de permissoes e convergencia final da edicao privada.
+- `classifieds` agora tem coverage administrativa fechada em `/admin/classificados`, cobrindo catalogo, categorias, vendedores, URL history e politicas administrativas; backlog residual focado em automacoes de enforcement e trilha de sancoes.
 
 ## Veredito geral
 - Manter: os SSOTs reais ja existentes em `core/profiles`, `core/business`, `core/maps/geocoding`, `core/admin`, `modules/gastronomy`, `modules/mobility` e `core/notifications`.
@@ -145,8 +146,9 @@ Fase executada: consolidacao de identidade publica, extracao inicial de regras d
 4. O gate estrutural zerou services paralelos, mas ainda existem wrappers historicos a consolidar em dominios como mobility, location, landing, business e classifieds.
 5. A documentacao ativa estava parcialmente organizada, mas ainda havia sobreposicao entre `docs/README.md`, `docs/DOCUMENTATION_INDEX.md`, `docs/CANONICAL_MAP.md` e um pacote historico fora de `docs/historico/`.
 6. O front-end base ainda esta mais maduro em `perto-de-mim`, `empresas` e `gastronomia` do que em `map` e `profile`. `admin` melhorou nas superficies prioritarias, mas o restante da aplicacao ainda carrega experiencia visual inconsistente.
-7. `notifications` passou a ter cobertura administrativa minima em `/admin/notifications`, mas ainda nao possui governanca fechada para templates, canais externos e auditoria de entrega.
+7. `notifications` passou a ter cobertura administrativa fechada em `/admin/notifications`, com segunda camada (templates, canais e auditoria de entrega) consolidada em 2026-04-21.
 8. `profile` passou a ter coverage administrativa formal em `/admin/identidade`, incluindo reputacao por origem, residence canonica primaria, `family` via service canonico e snapshot de permissoes; o backlog residual agora esta no rollout da migration de `family` e no historico administrativo de permissoes.
+9. `classifieds` passou a ter coverage administrativa formal em `/admin/classificados`, incluindo taxonomia, vendedor, historico de URL e metricas de politica SSOT; o backlog residual esta em enforcement administrativo.
 
 ## Inventario geral do projeto
 O inventario completo e regeneravel e esta em [PROJECT_INVENTORY.md](./PROJECT_INVENTORY.md). Ele mapeia:
@@ -263,7 +265,7 @@ O inventario completo e regeneravel e esta em [PROJECT_INVENTORY.md](./PROJECT_I
 - Acesso direto ao banco fora do service: `src/integrations/maps/providers/NominatimGeocodingProvider.ts`.
 - Importacoes incorretas entre modulos: nao ha entre modulos, mas `MapaPageV4` ainda compoe alertas via `modules/community-alerts/services/CommunityAlertService`.
 - Duplicacoes de tipos, regras ou services: o passivo maior deixou de ser duplicacao real e passou a ser drift entre runtime do mapa e a superficie `NearbyPage`.
-- Status do admin: parcial; agora ha coverage dedicada em `/admin/mapa`, alem de locations e turismo, mas ainda sem write-side de boundaries e reconciliacao geografica.
+- Status do admin: parcial; agora ha coverage dedicada em `/admin/mapa`, incluindo write-side de boundaries e reconciliacao geografica, com backlog residual em governanca de geometrias e convergencia de Nearby.
 - Status da documentacao: boa e mais coesa; o dominio agora possui documento vivo em `docs/audits/MAP_GOVERNANCE.md`, mas ainda precisa alinhar docs historicas de providers com a implementacao real.
 - Criticidade: high.
 - Classificacao: manter `core/maps`, `core/location` e `core/admin/services/AdminMapGovernanceService.ts`; consolidar surfaces publicas e boundaries; migrar `NearbyPage` para ownership coerente; remover mocks e referencias documentais obsoletas; documentar governance do produto mapa.
@@ -294,15 +296,15 @@ O inventario completo e regeneravel e esta em [PROJECT_INVENTORY.md](./PROJECT_I
 
 ### notifications
 - Fonte SSOT atual: `src/core/notifications/services/NotificationService.ts`.
-- Problemas de organizacao: facade legada em `modules/notifications` foi removida; a coverage administrativa minima ja existe, mas ainda faltam politica de templates, canais e entrega.
+- Problemas de organizacao: facade legada em `modules/notifications` foi removida; coverage administrativa foi fechada para templates/canais/auditoria, restando governanca de politicas globais e reprocessamento administrativo.
 - Arquivos legados: mocks em `src/core/notifications/__mocks__/`.
 - Acesso direto ao banco fora do service: `PostService` foi corrigido nesta fase; o gate agora bloqueia regressao no dominio.
 - Importacoes incorretas entre modulos: o problema principal esta no consumo por mobility e admin, nao dentro do dominio.
 - Duplicacoes de tipos, regras ou services: sem wrapper ativo em `modules/notifications`; tipos canonicos consolidados em `core/notifications/types.ts`.
-- Status do admin: parcial; existe `/admin/notifications` para leitura global e estado de settings, mas sem gestao de templates/canais.
+- Status do admin: bom; `/admin/notifications` cobre leitura global, settings, templates, canais e auditoria de entrega.
 - Status da documentacao: ownership documentado em `src/core/notifications/README.md` e refletido no mapa canonico.
 - Criticidade: high.
-- Classificacao: manter `NotificationService`; manter consumo em `core`; remover mocks quando possivel; documentar governanca de notificacoes e fechar a camada de templates/canais.
+- Classificacao: manter `NotificationService`; manter consumo em `core`; remover mocks quando possivel; documentar politicas globais e fluxo de reprocessamento administrativo.
 
 ## Organizacao documental executada
 - `docs/README.md`, `docs/DOCUMENTATION_INDEX.md`, `docs/CANONICAL_MAP.md`, `docs/CURRENT_RULES.md` e `docs/MAINTENANCE.md` foram reescritos para refletir a estrutura atual.
@@ -376,10 +378,10 @@ O gate esta verde no baseline atual. Ele deixou de ser cerca reativa e passou a 
 | professionals/services | sim | parcial | areas de atendimento, reputacao, disponibilidade e relacao com perfil | high |
 | community/posts | sim | parcial | grupos, recomendacoes, eventos e achados/perdidos em uma unica governanca | critical |
 | community-alerts | sim | sim | consolidacao de alertas, issues e civic reports | high |
-| map | sim | parcial | write-side de boundaries, reconciliacao geografica e convergencia final de Nearby | high |
+| map | sim | sim | convergencia final de Nearby e governanca administrativa de geometrias (`location_boundaries`/`neighborhood_boundaries`) | high |
 | classifieds | sim | sim | categorias, vendedor, URL history e politicas administrativas | high |
 | mobility | sim | sim | dispatch, chat de corrida e verificacoes operacionais | critical |
-| notifications | sim | parcial | templates, canais externos, auditoria de entrega e settings globais | high |
+| notifications | sim | sim | politicas globais de notificacao e reprocessamento administrativo | high |
 
 ## Auditoria do perfil como centro de identidade
 - Dados publicos vs privados: o contrato documental agora existe em `docs/audits/PROFILE_IDENTITY_GOVERNANCE.md`, tem reflexo administrativo em `/admin/identidade` e passou a ter snapshot privado canonico em `ProfileService`; o ponto restante de mistura estrutural ficou concentrado em `PerfilEditarPage`.
@@ -410,7 +412,7 @@ O gate esta verde no baseline atual. Ele deixou de ser cerca reativa e passou a 
 - consolidar admin para depender apenas de contratos em core
 
 ### Fase 3 - Cobertura administrativa
-- fechar lacunas de notifications, map e profile
+- fechar lacunas de map e profile
 - aplicar e validar a migration/RLS de `family` mantendo `FamilyService` como unico ponto de acesso
 - formalizar ownership de cada pagina admin e qual service canonico ela consome
 - criar matriz viva de cobertura administrativa por dominio

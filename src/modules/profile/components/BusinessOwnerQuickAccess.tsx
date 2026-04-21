@@ -8,6 +8,12 @@
  * - Resolver problema de donos não encontrarem como gerenciar suas empresas
  * - Fornecer acesso visual e intuitivo aos dashboards
  * - Destacar funcionalidades principais (cardápio, analytics, pedidos)
+ * 
+ * FASE 6 - P2: Badges visuais já resolvidos no backend
+ * - biz.subscription.canUse* vem de ProfileService
+ * - ProfileService usa EntitlementResolver para popular subscription
+ * - Componente apenas exibe, não calcula elegibilidade
+ * - Aceitável para P2 (baixo risco - apenas visual)
  */
 
 import { Building2, BarChart3, Package, Settings, UtensilsCrossed, Crown, ExternalLink } from "lucide-react";

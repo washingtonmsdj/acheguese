@@ -6,7 +6,11 @@ import {
   type MapProductSurface,
 } from "@/core/maps";
 import { getLayerConfig } from "@/core/maps/config/markerConfig";
-import { locationAdminService, type AdminLocationRecord } from "@/core/location";
+import {
+  locationAdminService,
+  locationGeocodingService,
+  type AdminLocationRecord,
+} from "@/core/location";
 import {
   TerritorialManagementService,
   type TerritoryNode,
@@ -103,6 +107,12 @@ export interface AdminMapGovernanceSnapshot {
   hotspots: AdminMapGovernanceHotspot[];
   surfaces: MapProductSurface[];
   notes: string[];
+}
+
+export interface AdminMapHotspotResolutionResult {
+  hotspotId: string;
+  action: "reconciled_coordinates" | "enabled_selector" | "enabled_route";
+  message: string;
 }
 
 type LocationCoverageRecord = AdminLocationRecord & {
@@ -306,6 +316,87 @@ function compareHotspots(
 }
 
 class AdminMapGovernanceService {
+  async resolveHotspot(
+    hotspot: Pick<AdminMapGovernanceHotspot, "id" | "entityKind" | "entityId" | "issue" | "name">,
+  ): Promise<AdminMapHotspotResolutionResult> {
+    switch (hotspot.issue) {
+      case "missing_coordinates":
+      case "needs_refinement":
+        return this.reconcileLocationCoordinates(hotspot.id, hotspot.entityId);
+      case "selector_hidden":
+        await TerritorialManagementService.updateMetadataFlag(
+          hotspot.entityKind === "group" ? "territorial_groups" : "locations",
+          hotspot.entityId,
+          "is_selector_active",
+          true,
+        );
+        return {
+          hotspotId: hotspot.id,
+          action: "enabled_selector",
+          message: `${hotspot.name}: seletor territorial reabilitado no runtime canonico.`,
+        };
+      case "route_disabled":
+        await TerritorialManagementService.updateMetadataFlag(
+          hotspot.entityKind === "group" ? "territorial_groups" : "locations",
+          hotspot.entityId,
+          "is_navigable",
+          true,
+        );
+        return {
+          hotspotId: hotspot.id,
+          action: "enabled_route",
+          message: `${hotspot.name}: navegacao publica reabilitada no runtime canonico.`,
+        };
+      case "group_without_members":
+        throw new Error(
+          "Grupo sem membros exige curadoria estrutural em /admin/territory-management.",
+        );
+      default:
+        throw new Error("Hotspot administrativo sem acao de resolucao registrada.");
+    }
+  }
+
+  private async reconcileLocationCoordinates(
+    hotspotId: string,
+    locationId: string,
+  ): Promise<AdminMapHotspotResolutionResult> {
+    const location = await locationAdminService.getLocationById(locationId);
+
+    if (!location) {
+      throw new Error("Location nao encontrado para reconciliacao de coordenadas.");
+    }
+
+    const results = await locationGeocodingService.geocode({
+      query: location.full_name,
+      country: "BR",
+      limit: 1,
+    });
+
+    const result = results[0];
+
+    if (!result) {
+      throw new Error("Geocoding nao retornou coordenadas para reconciliar o hotspot.");
+    }
+
+    await locationAdminService.updateLocation(locationId, {
+      metadata: {
+        ...(location.metadata ?? {}),
+        center_latitude: result.coordinates.latitude,
+        center_longitude: result.coordinates.longitude,
+        coordinates_source: result.source,
+        coordinates_confidence: "high",
+        coordinates_needs_refinement: false,
+        coordinates_updated_at: new Date().toISOString(),
+      },
+    });
+
+    return {
+      hotspotId,
+      action: "reconciled_coordinates",
+      message: `${location.name}: coordenadas reconciliadas via ${result.source}.`,
+    };
+  }
+
   async getSnapshot(): Promise<AdminMapGovernanceSnapshot> {
     try {
       const [locations, territoryTree, activePoints, inactivePoints, archivedPoints] =

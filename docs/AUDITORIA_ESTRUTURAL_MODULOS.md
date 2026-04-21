@@ -1,6 +1,6 @@
 ﻿# Auditoria Estrutural Modular - Acheguese
 
-> Data: 2026-04-20
+> Data: 2026-04-21
 > Tipo: Auditoria arquitetural ponta a ponta (camadas, SSOT, boundaries, exports, legado)
 > Metodo: Varredura real de codigo, imports e validadores de arquitetura
 
@@ -172,6 +172,38 @@ Baseline incremental: `docs/audits/architecture-boundaries-incremental-baseline.
       - `admin_notifications_get_channel_stats`
       - `admin_notifications_get_template_stats`
       - `admin_notifications_get_delivery_audit`
+  - `map/admin`: write-side administrativo fechado para hotspots de governanca:
+    - `src/core/admin/services/AdminMapGovernanceService.ts` expandido com `resolveHotspot` para:
+      - reconciliacao de coordenadas em hotspots `missing_coordinates`/`needs_refinement`
+      - reabilitacao de boundaries (`is_selector_active`/`is_navigable`) em hotspots `selector_hidden`/`route_disabled`
+    - `src/modules/admin/pages/AdminMapa.tsx` passou a expor acao operacional por hotspot sem query de escrita na page.
+    - `src/core/admin/services/__tests__/AdminMapGovernanceService.spec.ts` adicionada para blindar o fluxo de resolucao.
+  - `territorial`: contrato de edge functions de visibilidade normalizado com SSOT:
+    - `supabase/functions/territorial-update-location-visibility/index.ts`
+    - `supabase/functions/territorial-update-group-visibility/index.ts`
+    - ambas aceitam flags canonicas (`is_selector_active`, `is_navigable`, `is_landing_enabled`) mantendo compatibilidade com payload legado (`hidden`/`visible`).
+    - `src/core/territorial/services/territorial.mutations.ts` ajustado para enviar `id` e alias (`locationId`/`groupId`) no payload.
+  - `business/admin`: ownership entre admin central e dashboard de negocio consolidado:
+    - `src/modules/admin/pages/AdminEmpresas.tsx` passou a usar a superficie canônica `AdminBusinessesPage` (governanca de plano/status).
+    - export legado `AdminBusinessPage` em `src/modules/admin/index.ts` redirecionado para `AdminBusinessesPage` por compatibilidade.
+    - admin central deixa de priorizar fluxo de edicao operacional ampla de empresa.
+  - `mobility/admin`: fronteira de ownership explicitada na superficie operacional:
+    - `src/modules/admin/pages/AdminOperacoes.tsx` passou a registrar de forma explicita a separacao: admin central governa rollout/politicas globais; dashboard executa operacao por perfil.
+  - `gastronomy/admin`: coverage fechado para menu, integridade operacional e ownership de promocoes:
+    - `src/core/admin/services/AdminGastronomyService.ts` consolidado para schema ativo (`gastronomy_profiles`, `menus`, `menu_categories`, `menu_items`) e leitura de ownership promocional (`promotions`, `coupons`, `menu_promotions`).
+    - `src/modules/admin/pages/AdminGastronomia.tsx` deixou de usar abas placeholder e passou a expor:
+      - gestao de menus
+      - gestao de itens
+      - painel de integridade de catalogo
+      - painel de ownership promocional com fronteira funcional para `AdminPromocoes`/`AdminCupons`.
+  - `classifieds/admin`: coverage fechado para catalogo, categorias, vendedores, URL history e politicas administrativas:
+    - `src/core/admin/services/AdminClassifiedsService.ts` expandido com agregados canonicos (`getCategoryCoverage`, `getSellerCoverage`, `getUrlHistory`, `getPolicySummary`) e filtro administrativo por `category_id` em `getAllClassifieds`.
+    - `src/modules/admin/pages/AdminClassificados.tsx` refatorado para baseline comum do admin com abas dedicadas de:
+      - catalogo
+      - taxonomia (categorias/subcategorias)
+      - vendedores
+      - governanca (historico de URLs + politicas SSOT)
+    - `src/core/admin/services/index.ts` atualizado para exportar os novos tipos administrativos de classifieds.
 
 ### P3.1 - Runtime/seguranca (concluido)
 - ciclo de bootstrap (`cookieStorage`/`logger`) resolvido
@@ -196,6 +228,12 @@ Baseline incremental: `docs/audits/architecture-boundaries-incremental-baseline.
 - `npm run validate:docs-structure` -> sucesso
 - `rg -n "@/modules/" src/core --glob "*.ts" --glob "*.tsx"` -> sem ocorrencias
 - Checkpoint adicional 2026-04-20 (sessao atual): todos os gates reexecutados com sucesso, incluindo `build` e incremental `currentTotal=0`.
+- Checkpoint adicional 2026-04-21:
+  - `npm run typecheck` -> sucesso
+  - `npm run validate:ssot` -> sucesso
+  - `npm run validate:architecture:governance -- --json` -> `[]`
+  - `npm test -- src/core/admin/services/__tests__/AdminMapGovernanceService.spec.ts` -> sucesso (4 testes)
+  - `npm run build` -> nao concluido nesta sessao por timeout de ambiente (ultimo build completo permanece o checkpoint de 2026-04-20)
 
 ---
 
