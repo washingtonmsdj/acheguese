@@ -123,7 +123,7 @@ const navItems: Array<{
   {
     to: "/admin/services",
     icon: Wrench,
-    label: "Serviços",
+    label: "Serviï¿½os",
     section: "conteudo",
   },
   {
@@ -135,7 +135,7 @@ const navItems: Array<{
   {
     to: "/admin/classificados/denuncias",
     icon: Flag,
-    label: "Denúncias",
+    label: "Denï¿½ncias",
     badge: "pendingReportsCount",
     section: "moderacao",
   },
@@ -155,27 +155,27 @@ const navItems: Array<{
   {
     to: "/admin/promocoes",
     icon: Ticket,
-    label: "Promoções",
+    label: "Promoï¿½ï¿½es",
     section: "conteudo",
   },
 
-  // MODERAÇÃO & SEGURANÇA
+  // MODERAï¿½ï¿½O & SEGURANï¿½A
   {
     to: "/admin/moderacao-completa",
     icon: ShieldCheck,
-    label: "Moderação Geral",
+    label: "Moderaï¿½ï¿½o Geral",
     section: "moderacao",
   },
   {
     to: "/admin/verificacoes",
     icon: ShieldCheck,
-    label: "Verificações",
+    label: "Verificaï¿½ï¿½es",
     section: "moderacao",
   },
   {
     to: "/admin/reivindicacoes",
     icon: AlertTriangle,
-    label: "Reivindicações",
+    label: "Reivindicaï¿½ï¿½es",
     section: "moderacao",
   },
   {
@@ -187,7 +187,7 @@ const navItems: Array<{
   {
     to: "/admin/community-alerts",
     icon: AlertTriangle,
-    label: "Alertas Comunitários",
+    label: "Alertas Comunitï¿½rios",
     section: "comunidade",
   },
   {
@@ -198,7 +198,7 @@ const navItems: Array<{
   },
 
   // COMUNIDADE
-  { to: "/admin/users", icon: Users, label: "Usuários", section: "comunidade" },
+  { to: "/admin/users", icon: Users, label: "Usuï¿½rios", section: "comunidade" },
   {
     to: "/admin/zeladoria",
     icon: Home,
@@ -214,7 +214,7 @@ const navItems: Array<{
   {
     to: "/admin/gamificacao",
     icon: Trophy,
-    label: "Gamificação",
+    label: "Gamificaï¿½ï¿½o",
     section: "comunidade",
   },
 
@@ -228,7 +228,7 @@ const navItems: Array<{
   {
     to: "/admin/roles",
     icon: UserCog,
-    label: "Roles & Permissões",
+    label: "Roles & Permissï¿½es",
     section: "sistema",
   },
   {
@@ -246,25 +246,31 @@ const navItems: Array<{
   {
     to: "/admin/notifications",
     icon: Bell,
-    label: "Notificações",
+    label: "Notificaï¿½ï¿½es",
     section: "sistema",
   },
   {
     to: "/admin/configuracoes",
     icon: Settings2,
-    label: "Configurações",
+    label: "ConfiguraÃ§Ãµes",
+    section: "sistema",
+  },
+  {
+    to: "/admin/branding",
+    icon: Image,
+    label: "Identidade Visual",
     section: "sistema",
   },
   {
     to: "/admin/operacoes",
     icon: Settings2,
-    label: "Operações",
+    label: "OperaÃ§Ãµes",
     section: "sistema",
   },
   {
     to: "/admin/analytics",
     icon: BarChart3,
-    label: "Analytics Avançado",
+    label: "Analytics Avanï¿½ado",
     section: "sistema",
   },
   {
@@ -294,7 +300,7 @@ const navItems: Array<{
   {
     to: "/admin/territory-management",
     icon: MapPin,
-    label: "Gestão de Territórios",
+    label: "Gestï¿½o de Territï¿½rios",
     section: "sistema",
   },
   {
@@ -306,7 +312,7 @@ const navItems: Array<{
   {
     to: "/admin/guia/pontos-turisticos",
     icon: MapPin,
-    label: "Pontos Turísticos",
+    label: "Pontos Turï¿½sticos",
     section: "conteudo",
   },
   {
@@ -326,7 +332,7 @@ export default function AdminLayout() {
   const adminBypassEnabled =
     import.meta.env.DEV && import.meta.env.VITE_ADMIN_BYPASS === "true";
 
-  // Buscar contagem de denúncias pendentes
+  // Buscar contagem de denï¿½ncias pendentes
   const { data: pendingReportsCount = 0 } = useQuery({
     queryKey: ["admin-pending-reports-count"],
     queryFn: () => classifiedReportService.getPendingReportsCount(),
@@ -391,7 +397,7 @@ export default function AdminLayout() {
           <div>
             <h1 className="text-xl font-bold text-white mb-1">Acesso Restrito</h1>
             <p className="text-gray-400 text-sm max-w-xs mx-auto">
-              Sua conta não tem permissão de administrador.
+              Sua conta nï¿½o tem permissï¿½o de administrador.
             </p>
           </div>
           <button
@@ -440,8 +446,8 @@ export default function AdminLayout() {
           const sectionLabels: Record<string, string> = {
             overview: "",
             mobilidade: "MOBILIDADE",
-            conteudo: "CONTEÚDO & CADASTROS",
-            moderacao: "MODERAÇÃO & SEGURANÇA",
+            conteudo: "CONTEï¿½DO & CADASTROS",
+            moderacao: "MODERAï¿½ï¿½O & SEGURANï¿½A",
             comunidade: "COMUNIDADE",
             sistema: "SISTEMA",
           };

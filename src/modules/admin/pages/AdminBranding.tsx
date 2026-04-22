@@ -8,7 +8,7 @@
  * - Cores da marca
  */
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Upload, Image as ImageIcon, Palette, Save, RefreshCw } from 'lucide-react';
 import { Button } from '@/shared/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/components/ui/card';
@@ -16,18 +16,103 @@ import { Input } from '@/shared/components/ui/input';
 import { Label } from '@/shared/components/ui/label';
 import { toast } from 'sonner';
 import { AdminPageHeader } from '../components';
+import { SiteSettingsService } from '@/core/admin/services/SiteSettingsService';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
 export default function AdminBranding() {
+  const queryClient = useQueryClient();
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [logoPreview, setLogoPreview] = useState<string>('');
   const [faviconFile, setFaviconFile] = useState<File | null>(null);
   const [faviconPreview, setFaviconPreview] = useState<string>('');
   const [primaryColor, setPrimaryColor] = useState('#3b82f6');
-  const [isSaving, setIsSaving] = useState(false);
+
+  // Buscar configurações atuais
+  const { data: settings, isLoading } = useQuery({
+    queryKey: ['site-settings'],
+    queryFn: () => SiteSettingsService.getAllSettings(),
+  });
+
+  // Atualizar estado quando as configurações forem carregadas
+  useEffect(() => {
+    if (settings) {
+      if (settings.logo_url) setLogoPreview(settings.logo_url);
+      if (settings.favicon_url) setFaviconPreview(settings.favicon_url);
+      if (settings.primary_color) setPrimaryColor(settings.primary_color);
+    }
+  }, [settings]);
+
+  // Mutation para upload de logo
+  const uploadLogoMutation = useMutation({
+    mutationFn: (file: File) => SiteSettingsService.uploadLogo(file),
+    onSuccess: (url) => {
+      setLogoPreview(url);
+      queryClient.invalidateQueries({ queryKey: ['site-settings'] });
+      toast.success('Logo atualizada com sucesso!');
+    },
+    onError: (error) => {
+      toast.error('Erro ao fazer upload da logo', {
+        description: error instanceof Error ? error.message : 'Tente novamente',
+      });
+    },
+  });
+
+  // Mutation para upload de favicon
+  const uploadFaviconMutation = useMutation({
+    mutationFn: (file: File) => SiteSettingsService.uploadFavicon(file),
+    onSuccess: (url) => {
+      setFaviconPreview(url);
+      queryClient.invalidateQueries({ queryKey: ['site-settings'] });
+      toast.success('Favicon atualizado com sucesso!');
+    },
+    onError: (error) => {
+      toast.error('Erro ao fazer upload do favicon', {
+        description: error instanceof Error ? error.message : 'Tente novamente',
+      });
+    },
+  });
+
+  // Mutation para atualizar cor
+  const updateColorMutation = useMutation({
+    mutationFn: (color: string) => SiteSettingsService.updatePrimaryColor(color),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['site-settings'] });
+      toast.success('Cor primária atualizada!');
+    },
+    onError: (error) => {
+      toast.error('Erro ao atualizar cor', {
+        description: error instanceof Error ? error.message : 'Tente novamente',
+      });
+    },
+  });
+
+  // Mutation para restaurar padrões
+  const restoreDefaultsMutation = useMutation({
+    mutationFn: () => SiteSettingsService.restoreDefaults(),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['site-settings'] });
+      setLogoFile(null);
+      setFaviconFile(null);
+      toast.success('Configurações restauradas para o padrão!');
+    },
+    onError: (error) => {
+      toast.error('Erro ao restaurar configurações', {
+        description: error instanceof Error ? error.message : 'Tente novamente',
+      });
+    },
+  });
 
   const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      // Validar tamanho (máx 2MB)
+      if (file.size > 2 * 1024 * 1024) {
+        toast.error('Arquivo muito grande', {
+          description: 'O tamanho máximo é 2MB',
+        });
+        return;
+      }
+
       setLogoFile(file);
       const reader = new FileReader();
       reader.onloadend = () => {
@@ -40,6 +125,14 @@ export default function AdminBranding() {
   const handleFaviconChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      // Validar tamanho (máx 500KB)
+      if (file.size > 500 * 1024) {
+        toast.error('Arquivo muito grande', {
+          description: 'O tamanho máximo é 500KB',
+        });
+        return;
+      }
+
       setFaviconFile(file);
       const reader = new FileReader();
       reader.onloadend = () => {
@@ -50,23 +143,38 @@ export default function AdminBranding() {
   };
 
   const handleSave = async () => {
-    setIsSaving(true);
     try {
-      // TODO: Implementar upload para Supabase Storage
-      // Por enquanto, apenas simula o salvamento
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      toast.success('Configurações salvas com sucesso!', {
-        description: 'As alterações serão aplicadas em breve.',
-      });
+      // Upload de logo se houver arquivo novo
+      if (logoFile) {
+        await uploadLogoMutation.mutateAsync(logoFile);
+        setLogoFile(null);
+      }
+
+      // Upload de favicon se houver arquivo novo
+      if (faviconFile) {
+        await uploadFaviconMutation.mutateAsync(faviconFile);
+        setFaviconFile(null);
+      }
+
+      // Atualizar cor se mudou
+      if (primaryColor !== settings?.primary_color) {
+        await updateColorMutation.mutateAsync(primaryColor);
+      }
+
+      toast.success('Todas as alterações foram salvas!');
     } catch (error) {
-      toast.error('Erro ao salvar configurações', {
-        description: 'Tente novamente mais tarde.',
-      });
-    } finally {
-      setIsSaving(false);
+      // Erros já tratados nas mutations individuais
     }
   };
+
+  const handleRestoreDefaults = () => {
+    if (confirm('Tem certeza que deseja restaurar as configurações padrão? Esta ação não pode ser desfeita.')) {
+      restoreDefaultsMutation.mutate();
+    }
+  };
+
+  const isSaving = uploadLogoMutation.isPending || uploadFaviconMutation.isPending || updateColorMutation.isPending;
+  const hasChanges = logoFile !== null || faviconFile !== null || primaryColor !== settings?.primary_color;
 
   return (
     <div className="space-y-6">
@@ -220,11 +328,24 @@ export default function AdminBranding() {
 
       {/* Ações */}
       <div className="flex justify-end gap-3">
-        <Button variant="outline" disabled={isSaving}>
-          <RefreshCw className="h-4 w-4 mr-2" />
-          Restaurar Padrão
+        <Button 
+          variant="outline" 
+          disabled={isSaving || restoreDefaultsMutation.isPending}
+          onClick={handleRestoreDefaults}
+        >
+          {restoreDefaultsMutation.isPending ? (
+            <>
+              <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+              Restaurando...
+            </>
+          ) : (
+            <>
+              <RefreshCw className="h-4 w-4 mr-2" />
+              Restaurar Padrão
+            </>
+          )}
         </Button>
-        <Button onClick={handleSave} disabled={isSaving}>
+        <Button onClick={handleSave} disabled={isSaving || !hasChanges || isLoading}>
           {isSaving ? (
             <>
               <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
@@ -240,23 +361,23 @@ export default function AdminBranding() {
       </div>
 
       {/* Aviso */}
-      <Card className="border-amber-500/50 bg-amber-500/5">
+      <Card className="border-blue-500/50 bg-blue-500/5">
         <CardContent className="pt-6">
           <div className="flex gap-3">
             <div className="flex-shrink-0">
-              <div className="h-8 w-8 rounded-full bg-amber-500/20 flex items-center justify-center">
-                <ImageIcon className="h-4 w-4 text-amber-600" />
+              <div className="h-8 w-8 rounded-full bg-blue-500/20 flex items-center justify-center">
+                <ImageIcon className="h-4 w-4 text-blue-600" />
               </div>
             </div>
             <div className="space-y-1">
-              <h4 className="font-semibold text-sm">Funcionalidade em Desenvolvimento</h4>
+              <h4 className="font-semibold text-sm">Funcionalidade Completa</h4>
               <p className="text-sm text-muted-foreground">
-                O upload de arquivos para o Supabase Storage será implementado em breve. 
-                Por enquanto, você pode visualizar como ficará a interface de gerenciamento de branding.
+                O sistema de upload e gerenciamento de branding está totalmente funcional! 
+                As imagens são armazenadas no Supabase Storage e as configurações são salvas no banco de dados.
               </p>
               <p className="text-sm text-muted-foreground mt-2">
-                <strong>Próximos passos:</strong> Criar bucket no Supabase Storage, implementar upload de arquivos, 
-                e integrar com a topbar para exibir a logo customizada.
+                <strong>Próximo passo:</strong> Integrar a logo customizada com a topbar para exibir 
+                automaticamente a logo configurada aqui.
               </p>
             </div>
           </div>
