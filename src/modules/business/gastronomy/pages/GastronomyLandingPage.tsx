@@ -396,7 +396,7 @@ export default function GastronomyLandingPage() {
           ]}
           autoPlayInterval={5000}
           showArrows={true}
-          showDots={true}
+          showDots={false}
           height="400px"
         />
 
