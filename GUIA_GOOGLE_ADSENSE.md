@@ -220,7 +220,105 @@ VITE_ADSENSE_CLIENT_ID=ca-pub-XXXXXXXXXXXXXXXX
 
 ---
 
+## 🔒 Content Security Policy (CSP)
+
+### ⚠️ Importante: Recomendação do Google
+
+O Google AdSense **recomenda oficialmente** usar **strict CSP com nonce** em vez de uma lista de domínios, porque:
+
+1. **Os domínios do AdSense mudam com o tempo**
+2. **Listas de domínios podem ficar desatualizadas** e quebrar o site
+3. **Strict CSP é mais seguro e sustentável**
+
+**Fonte oficial:** [Integrate the AdSense ad code with a Content Security Policy (CSP)](https://support.google.com/adsense/answer/16283098)
+
+### Abordagem Atual (Lista de Domínios)
+
+Atualmente, estamos usando uma **lista de domínios** no CSP:
+
+```
+script-src 'self' 
+  https://pagead2.googlesyndication.com 
+  https://*.googlesyndication.com 
+  https://*.googleadservices.com 
+  https://*.doubleclick.net 
+  https://ep1.adtrafficquality.google;
+```
+
+**Domínios incluídos:**
+- ✅ `pagead2.googlesyndication.com` - Script principal do AdSense
+- ✅ `*.googlesyndication.com` - Entrega de anúncios
+- ✅ `*.googleadservices.com` - Recursos estáticos
+- ✅ `*.doubleclick.net` - Servidor de anúncios
+- ✅ `ep1.adtrafficquality.google` - Monitoramento de qualidade
+
+**⚠️ Limitações:**
+- Se o Google adicionar novos domínios, os anúncios podem parar de funcionar
+- Requer manutenção manual da lista
+- Menos seguro que strict CSP
+
+### Migração Futura para Strict CSP (Recomendado)
+
+Para seguir a recomendação oficial do Google, considere migrar para **strict CSP com nonce**:
+
+**Exemplo de strict CSP:**
+```
+Content-Security-Policy:
+  object-src 'none';
+  script-src 'nonce-{random}' 'unsafe-inline' 'unsafe-eval' 'strict-dynamic' https: http:;
+  base-uri 'none';
+```
+
+**Exemplo de código com nonce:**
+```html
+<script nonce="${nonce}" async src="//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1234" crossorigin="anonymous"></script>
+<ins class="adsbygoogle" ...></ins>
+<script nonce="${nonce}">
+  (adsbygoogle = window.adsbygoogle || []).push({});
+</script>
+```
+
+**Benefícios:**
+- ✅ Não precisa manter lista de domínios
+- ✅ Mais seguro (nonce aleatório por requisição)
+- ✅ Recomendado oficialmente pelo Google
+- ✅ Não quebra quando o Google adiciona novos domínios
+
+**Requisitos:**
+- Servidor que gera nonce aleatório por requisição
+- Aplicar nonce em todos os scripts da página
+- Mais complexo de implementar (requer backend)
+
+**Nota:** A migração para strict CSP requer mudanças na arquitetura (adicionar backend para gerar nonces). Por enquanto, a lista de domínios funciona, mas monitore o console do navegador para novos erros de CSP.
+
+---
+
 ## 🐛 Troubleshooting
+
+### Erros de CSP no Console
+
+Se você ver erros como:
+```
+Connecting to 'https://...' violates the following Content Security Policy directive
+```
+
+**Solução:**
+1. Copie o domínio do erro (ex: `https://ep1.adtrafficquality.google`)
+2. Adicione ao `src/config/security.config.ts` no `SECURITY_DOMAINS`
+3. Adicione às diretivas CSP apropriadas (`script-src`, `connect-src`, etc.)
+4. Execute `npm run generate:vercel` para regenerar o `vercel.json`
+5. Faça commit e push para deploy
+
+**Exemplo:**
+```typescript
+GOOGLE_NEW_DOMAIN: {
+  url: 'https://novo-dominio.google',
+  purpose: 'Descrição do propósito',
+  risk: 'MEDIUM',
+  justification: 'Requerido pelo Google AdSense',
+  alternatives: 'Nenhuma (dependência do AdSense)',
+},
+```
 
 ### Anúncios não aparecem?
 
