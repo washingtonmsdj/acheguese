@@ -177,8 +177,8 @@ export function CanonicalHero({
             width={1920}
             height={isBanner ? 520 : 800}
           />
-          <div className="absolute inset-0 bg-gradient-to-r from-background/70 via-background/50 to-transparent" />
-          <div className={`absolute inset-0 ${isBanner ? "bg-gradient-to-t from-background/70 via-background/25 to-transparent" : "bg-gradient-to-t from-background/60 via-transparent to-transparent"}`} />
+          <div className={`absolute inset-0 ${centered ? "bg-gradient-to-r from-background/80 via-background/70 to-background/80" : "bg-gradient-to-r from-background/70 via-background/50 to-transparent"}`} />
+          <div className={`absolute inset-0 ${isBanner ? "bg-gradient-to-t from-background/80 via-background/40 to-background/60" : "bg-gradient-to-t from-background/60 via-transparent to-transparent"}`} />
         </div>
       ) : (
         <>
@@ -215,7 +215,7 @@ export function CanonicalHero({
           {/* Title */}
           <motion.h1
             variants={itemVariants}
-            className={titleClass}
+            className={`${titleClass} ${centered ? "drop-shadow-2xl [text-shadow:_0_2px_12px_rgb(0_0_0_/_80%)]" : ""}`}
           >
             <span className="block">{title}</span>
             {titleHighlight && (
@@ -228,7 +228,7 @@ export function CanonicalHero({
           {/* Subtitle */}
           <motion.p
             variants={itemVariants}
-            className={`${subtitleClass} ${centered ? "mx-auto" : ""}`}
+            className={`${subtitleClass} ${centered ? "mx-auto drop-shadow-xl [text-shadow:_0_1px_8px_rgb(0_0_0_/_70%)]" : ""}`}
           >
             {subtitle}
           </motion.p>
