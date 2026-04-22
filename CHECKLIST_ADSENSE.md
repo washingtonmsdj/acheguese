@@ -36,7 +36,19 @@ No painel do AdSense:
 - [ ] Criar nova unidade (Display responsivo)
 - [ ] Copiar o **Ad Slot ID** (ex: `1234567890`)
 
-#### D. Atualizar o Código
+#### D. Criar arquivo ads.txt
+Crie o arquivo `public/ads.txt` com o conteúdo:
+
+```
+google.com, pub-XXXXXXXXXXXXXXXX, DIRECT, f08c47fec0942fa0
+```
+
+**⚠️ Importante:**
+- Substitua `pub-XXXXXXXXXXXXXXXX` pelo seu Publisher ID
+- O arquivo já foi criado automaticamente em `public/ads.txt`
+- Após o deploy, estará em: `https://seu-dominio.com/ads.txt`
+
+#### E. Atualizar o Código
 Em `src/modules/business/gastronomy/pages/GastronomyLandingPage.tsx`:
 
 ```tsx
@@ -48,8 +60,9 @@ Em `src/modules/business/gastronomy/pages/GastronomyLandingPage.tsx`:
 ```
 
 ### 4. Publicar e Verificar
-- [ ] Fazer commit das alterações
+- [ ] Fazer commit das alterações (incluindo `public/ads.txt`)
 - [ ] Fazer deploy do site
+- [ ] Verificar se `https://seu-dominio.com/ads.txt` está acessível
 - [ ] Voltar ao painel do AdSense
 - [ ] Clicar em "Verificar site"
 - [ ] Aguardar aprovação (1-7 dias)
@@ -76,6 +89,10 @@ Verifique o console para mensagens de erro do AdSense
 
 ### O site está aprovado?
 Acesse o painel do AdSense e verifique o status
+
+### O ads.txt está correto?
+Acesse `https://seu-dominio.com/ads.txt` no navegador
+Deve mostrar: `google.com, pub-XXXXXXXXXXXXXXXX, DIRECT, f08c47fec0942fa0`
 
 ---
 

@@ -102,12 +102,46 @@ useEffect(() => {
 }, []);
 ```
 
-### 7️⃣ Verificação e Aprovação
+### 7️⃣ Criar arquivo ads.txt
 
-1. **Publique o site** com o código do AdSense
+O **ads.txt** é um arquivo que autoriza o Google AdSense a vender anúncios no seu site. É **altamente recomendado** pelo Google.
+
+**O que é ads.txt?**
+- Authorized Digital Sellers (Vendedores Digitais Autorizados)
+- Previne inventário falso de anúncios
+- Aumenta a confiança dos anunciantes
+- Pode aumentar sua receita
+
+**Formato do arquivo:**
+```
+google.com, pub-XXXXXXXXXXXXXXXX, DIRECT, f08c47fec0942fa0
+```
+
+**Como criar:**
+
+1. Crie um arquivo chamado `ads.txt` na pasta `public/`
+2. Adicione a linha acima com seu Publisher ID
+3. O arquivo já foi criado automaticamente em: `public/ads.txt`
+4. Após o deploy, o arquivo estará disponível em: `https://seu-dominio.com/ads.txt`
+
+**Verificar se está funcionando:**
+- Acesse: `https://acheguese.com.br/ads.txt`
+- Você deve ver o conteúdo do arquivo
+- Se aparecer, o Google conseguirá verificá-lo
+
+**⚠️ Importante:**
+- O arquivo DEVE estar na raiz do domínio (não em subpastas)
+- O nome DEVE ser `ads.txt` (minúsculas)
+- Pode levar alguns dias para o Google verificar
+
+### 8️⃣ Verificação e Aprovação
+
+1. **Publique o site** com o código do AdSense e o arquivo ads.txt
 2. Volte ao painel do AdSense
 3. Clique em **Verificar site**
-4. O Google verificará se o código está instalado corretamente
+4. O Google verificará:
+   - Se o código está instalado corretamente
+   - Se o arquivo ads.txt está presente e correto
 5. **Aguarde a aprovação** (pode levar de 1 a 7 dias)
 
 Durante a análise, você verá anúncios em branco ou de teste.
@@ -336,6 +370,29 @@ GOOGLE_NEW_DOMAIN: {
 - Normal durante o período de análise
 - Pode significar que não há anúncios disponíveis para seu nicho
 - Verifique se o site está aprovado
+
+### Problemas com ads.txt?
+
+**Erro: "Your site doesn't have an ads.txt file"**
+- Verifique se o arquivo está em `public/ads.txt`
+- Acesse `https://seu-dominio.com/ads.txt` no navegador
+- Se não aparecer, o arquivo não foi deployado corretamente
+- Verifique se fez commit e push do arquivo
+
+**Erro: "Your publisher ID is missing from your ads.txt file"**
+- Verifique se o Publisher ID está correto
+- Formato: `google.com, pub-XXXXXXXXXXXXXXXX, DIRECT, f08c47fec0942fa0`
+- O ID deve ser o mesmo da sua conta AdSense
+
+**Erro: "AdSense still says you need to create one"**
+- Pode levar alguns dias para o Google verificar
+- Sites com pouco tráfego podem levar até 1 mês
+- No painel do AdSense, clique em **Sites** → **Check for updates**
+
+**Como verificar se o ads.txt está correto:**
+1. Acesse: `https://acheguese.com.br/ads.txt`
+2. Você deve ver: `google.com, pub-6454131132519516, DIRECT, f08c47fec0942fa0`
+3. Se aparecer, está correto!
 
 ### Erro "adsbygoogle.push() error"?
 
