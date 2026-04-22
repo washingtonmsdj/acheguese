@@ -130,6 +130,21 @@ export const ALERT_STATUS = {
 export type AlertStatus = (typeof ALERT_STATUS)[keyof typeof ALERT_STATUS];
 
 // ============================================
+// REPORT STATUS
+// ============================================
+
+export const REPORT_STATUS = {
+  PENDING: "pending",
+  UNDER_REVIEW: "under_review",
+  INVESTIGATING: "investigating",
+  REVIEWED: "reviewed",
+  RESOLVED: "resolved",
+  DISMISSED: "dismissed",
+} as const;
+
+export type ReportStatus = (typeof REPORT_STATUS)[keyof typeof REPORT_STATUS];
+
+// ============================================
 // HELPERS
 // ============================================
 
@@ -165,4 +180,8 @@ export function isValidVerificationStatus(
   return Object.values(VERIFICATION_STATUS).includes(
     status as VerificationStatus,
   );
+}
+
+export function isValidReportStatus(status: string): status is ReportStatus {
+  return Object.values(REPORT_STATUS).includes(status as ReportStatus);
 }

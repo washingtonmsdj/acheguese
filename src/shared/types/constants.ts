@@ -49,6 +49,7 @@ export type {
   PostStatus,
   PaymentStatus,
   PaymentMethod,
+  ReportStatus,
   NotificationType,
   DriverStatus,
   VerificationStatus,
