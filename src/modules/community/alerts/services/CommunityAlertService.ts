@@ -8,6 +8,7 @@
  */
 
 import { supabase } from "@/integrations/supabase";
+import { callRPC } from "@/integrations/supabase/services/supabaseHelpers";
 import type { Database } from "@/integrations/supabase/types.generated";
 import { logger } from "@/shared/utils/logger";
 import type {
@@ -99,11 +100,6 @@ class CommunityAlertServiceClass {
         query = query.eq("location_id", filters.location_id);
       } else if (filters.location_ids && filters.location_ids.length > 0) {
         query = query.in("location_id", filters.location_ids);
-      } else if (filters.city) {
-        query = query.eq("city", filters.city);
-        if (filters.neighborhood) {
-          query = query.eq("neighborhood_display", filters.neighborhood);
-        }
       }
 
       if (filters.category) {
@@ -196,7 +192,7 @@ class CommunityAlertServiceClass {
 
   async createAlert(payload: CreateAlertPayload): Promise<AlertRpcResult> {
     try {
-      const { data, error } = await (supabase as any).rpc("create_community_alert", {
+      const { data, error } = await callRPC<AlertRpcResult>("create_community_alert", {
         payload,
       });
 
@@ -206,26 +202,25 @@ class CommunityAlertServiceClass {
           error,
           this._errorContext(error)
         );
-        return { error: "internal_error", detail: error.message };
+        return { error: "internal_error", detail: String(error) };
       }
 
-      return data as AlertRpcResult;
-    } catch (error: any) {
+      return data ?? { error: "internal_error" };
+    } catch (error) {
       logger.error(
         "CommunityAlertService.createAlert",
         error,
         this._errorContext(error)
       );
-      return { error: "internal_error", detail: error?.message };
+      return { error: "internal_error", detail: String(error) };
     }
   }
 
   async updateAlert(alertId: string, payload: UpdateAlertPayload): Promise<boolean> {
     try {
-      const { error: rpcError } = await (supabase as any).rpc(
-        "increment_alert_edit_count",
-        { p_alert_id: alertId }
-      );
+      const { error: rpcError } = await callRPC<unknown>("increment_alert_edit_count", {
+        p_alert_id: alertId,
+      });
       if (rpcError) throw rpcError;
 
       const updateData: Record<string, unknown> = {
@@ -389,12 +384,12 @@ class CommunityAlertServiceClass {
       } = await supabase.auth.getUser();
       if (!user) return;
 
-      await (supabase as any).from("community_alert_audit").insert({
+      await supabase.from("community_alert_audit" as never).insert({
         alert_id: alertId,
         actor_id: user.id,
         action_type: action,
         metadata,
-      });
+      } as never);
     } catch (error) {
       logger.error("CommunityAlertService._auditLog", error, this._errorContext(error));
     }

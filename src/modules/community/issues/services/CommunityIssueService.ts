@@ -9,7 +9,9 @@
  */
 
 import { supabase } from "@/integrations/supabase";
+import { callRPC } from "@/integrations/supabase/services/supabaseHelpers";
 import { logger } from "@/shared/utils/logger";
+import type { TerritoryFilter } from "@/core/location/types";
 import type {
   CommunityIssuePublic,
   CreateIssuePayload,
@@ -22,10 +24,31 @@ import type {
 class CommunityIssueServiceClass {
   private readonly VIEW = "community_issues_public";
   private readonly TABLE = "community_issues";
+  private readonly DB_SELECT = `
+    id,
+    author_profile_id,
+    location_id,
+    category,
+    status,
+    priority,
+    title,
+    description,
+    images,
+    neighborhood,
+    neighborhood_display,
+    city,
+    address_reference,
+    support_count,
+    comments_count,
+    report_count,
+    resolved_at,
+    created_at,
+    updated_at
+  `;
 
   async getCountByProfile(profileId: string): Promise<number> {
     try {
-      const { count, error } = await (supabase as any)
+      const { count, error } = await supabase
         .from(this.TABLE)
         .select("id", { count: "exact", head: true })
         .eq("author_profile_id", profileId);
@@ -43,32 +66,19 @@ class CommunityIssueServiceClass {
   // --------------------------------------------------------------------------
 
   /**
-   * Busca problemas ativos para o feed, filtrados por região.
-   * 
-   * NOTA TEMPORÁRIA: Filtros territoriais (city/neighborhood) removidos
-   * até implementação completa da resolução location_id via LocationService.
-   * Por ora, retorna todos os issues filtrados apenas por categoria/status.
+   * Busca problemas ativos para o feed, filtrados por território.
    */
   async getIssues(filters: IssueFeedFilters): Promise<CommunityIssuePublic[]> {
     try {
-      let query = (supabase as any)
+      let query = supabase
         .from(this.TABLE)
-        .select(`
-          id,
-          profile_id:author_profile_id,
-          title,
-          description,
-          category,
-          status,
-          location_id,
-          created_at,
-          updated_at
-        `)
+        .select(this.DB_SELECT)
         .order("created_at", { ascending: false });
 
-      // Filtrar por location_id se fornecido explicitamente
       if (filters.location_id) {
         query = query.eq("location_id", filters.location_id);
+      } else if (filters.location_ids && filters.location_ids.length > 0) {
+        query = query.in("location_id", filters.location_ids);
       }
 
       if (filters.category) {
@@ -93,12 +103,30 @@ class CommunityIssueServiceClass {
     }
   }
 
+  async getByTerritory(
+    territoryFilter: TerritoryFilter,
+    options: { category?: IssueFeedFilters["category"]; status?: IssueFeedFilters["status"]; limit?: number } = {}
+  ): Promise<CommunityIssuePublic[]> {
+    const { category, status, limit } = options;
+    const filters: IssueFeedFilters = { category, status, limit };
+
+    if (territoryFilter.scope === "location") {
+      filters.location_id = territoryFilter.location_id;
+    } else if (territoryFilter.scope === "group") {
+      filters.location_ids = territoryFilter.location_ids;
+    } else {
+      return [];
+    }
+
+    return this.getIssues(filters);
+  }
+
   /**
    * Busca um problema específico pelo ID (projeção pública).
    */
   async getIssueById(issueId: string): Promise<CommunityIssuePublic | null> {
     try {
-      const { data, error } = await (supabase as any)
+      const { data, error } = await supabase
         .from(this.VIEW)
         .select("*")
         .eq("id", issueId)
@@ -117,28 +145,9 @@ class CommunityIssueServiceClass {
    */
   async getIssuesByProfile(profileId: string, limit = 20): Promise<CommunityIssuePublic[]> {
     try {
-      const { data, error } = await (supabase as any)
+      const { data, error } = await supabase
         .from(this.TABLE)
-        .select(`
-          id,
-          author_profile_id,
-          category,
-          status,
-          priority,
-          title,
-          description,
-          images,
-          neighborhood,
-          neighborhood_display,
-          city,
-          address_reference,
-          support_count,
-          comments_count,
-          report_count,
-          resolved_at,
-          created_at,
-          updated_at
-        `)
+        .select(this.DB_SELECT)
         .eq("author_profile_id", profileId)
         .order("created_at", { ascending: false })
         .limit(limit);
@@ -161,20 +170,19 @@ class CommunityIssueServiceClass {
    */
   async createIssue(payload: CreateIssuePayload): Promise<IssueRpcResult> {
     try {
-      const { data, error } = await (supabase as any).rpc(
-        "create_community_issue",
-        { payload }
-      );
+      const { data, error } = await callRPC<IssueRpcResult>("create_community_issue", {
+        payload,
+      });
 
       if (error) {
         logger.error("CommunityIssueService.createIssue RPC error", error);
-        return { error: "internal_error", detail: error.message };
+        return { error: "internal_error", detail: String(error) };
       }
 
-      return data as IssueRpcResult;
-    } catch (error: any) {
+      return data ?? { error: "internal_error" };
+    } catch (error) {
       logger.error("CommunityIssueService.createIssue", error);
-      return { error: "internal_error", detail: error.message };
+      return { error: "internal_error", detail: String(error) };
     }
   }
 
@@ -188,7 +196,7 @@ class CommunityIssueServiceClass {
    */
   async updateIssue(issueId: string, payload: UpdateIssuePayload): Promise<boolean> {
     try {
-      const { error } = await (supabase as any)
+      const { error } = await supabase
         .from(this.TABLE)
         .update({
           ...payload,
@@ -217,7 +225,7 @@ class CommunityIssueServiceClass {
    */
   async supportIssue(issueId: string, profileId: string): Promise<boolean> {
     try {
-      const { error } = await (supabase as any)
+      const { error } = await supabase
         .from("community_issue_supports")
         .insert({ issue_id: issueId, profile_id: profileId });
 
@@ -236,7 +244,7 @@ class CommunityIssueServiceClass {
    */
   async unsupportIssue(issueId: string, profileId: string): Promise<boolean> {
     try {
-      const { error } = await (supabase as any)
+      const { error } = await supabase
         .from("community_issue_supports")
         .delete()
         .eq("issue_id", issueId)
@@ -255,7 +263,7 @@ class CommunityIssueServiceClass {
    */
   async isSupporting(issueId: string, profileId: string): Promise<boolean> {
     try {
-      const { data, error } = await (supabase as any)
+      const { data, error } = await supabase
         .from("community_issue_supports")
         .select("id")
         .eq("issue_id", issueId)
@@ -280,14 +288,18 @@ class CommunityIssueServiceClass {
    */
   async reportIssue(payload: CreateIssueReportPayload): Promise<boolean> {
     try {
-      const { data: { user } } = await (supabase as any).auth.getUser();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
       if (!user) return false;
+      const profileId = await this._getActiveProfileIdByUserId(user.id);
+      if (!profileId) return false;
 
-      const { error } = await (supabase as any)
+      const { error } = await supabase
         .from("community_issue_reports")
         .insert({
           issue_id: payload.issue_id,
-          reporter_profile_id: user.id,
+          profile_id: profileId,
           reason: payload.reason,
         });
 
@@ -311,19 +323,39 @@ class CommunityIssueServiceClass {
     metadata: Record<string, unknown>
   ): Promise<void> {
     try {
-      const { data: { user } } = await (supabase as any).auth.getUser();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
       if (!user) return;
 
-      await (supabase as any).from("community_issue_audit").insert({
+      await supabase.from("community_issue_audit").insert({
         issue_id: issueId,
         actor_id: user.id,
-        action_type: action,
+        action,
         metadata,
       });
     } catch (error) {
       // Audit log nunca deve quebrar o fluxo principal
       logger.error("CommunityIssueService._auditLog", error);
     }
+  }
+
+  private async _getActiveProfileIdByUserId(userId: string): Promise<string | null> {
+    const { data, error } = await supabase
+      .from("profiles")
+      .select("id")
+      .eq("user_id", userId)
+      .eq("is_active", true)
+      .order("created_at", { ascending: true })
+      .limit(1)
+      .maybeSingle();
+
+    if (error) {
+      logger.error("CommunityIssueService._getActiveProfileIdByUserId", error);
+      return null;
+    }
+
+    return data?.id ?? null;
   }
 }
 

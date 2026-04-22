@@ -16,6 +16,8 @@ import { ModulePageLoader } from '@/shared/components/loading/PageLoader';
 
 // Lazy imports dos módulos existentes
 const ComunidadePage       = lazy(() => import('@/core/community/pages/ComunidadePage'));
+const AlertasPage          = lazy(() => import('@/modules/community/pages/AlertasPage'));
+const ProblemasPage        = lazy(() => import('@/modules/community/issues/pages/ProblemasPage'));
 const ServicosPage         = lazy(() => import('@/modules/professionals/services/pages/ServicosLandingPage'));
 const ClassificadosPage    = lazy(() => import('@/modules/classifieds/pages/ClassificadosPage'));
 const EventosPage          = lazy(() => import('@/core/community/pages/EventosPage'));
@@ -37,6 +39,24 @@ export function TerritorialCommunityPage() {
   return (
     <Suspense fallback={<ModulePageLoader />}>
       <ComunidadePage resolved={resolved} />
+    </Suspense>
+  );
+}
+
+export function TerritorialCommunityAlertsPage() {
+  const { resolved } = useTerritorialContext();
+  return (
+    <Suspense fallback={<ModulePageLoader />}>
+      <AlertasPage resolved={resolved} />
+    </Suspense>
+  );
+}
+
+export function TerritorialCommunityIssuesPage() {
+  const { resolved } = useTerritorialContext();
+  return (
+    <Suspense fallback={<ModulePageLoader />}>
+      <ProblemasPage resolved={resolved} />
     </Suspense>
   );
 }

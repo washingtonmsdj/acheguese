@@ -1,14 +1,9 @@
 /**
- * Community Alerts — Schemas de validação Zod
- * Validação frontend (UX imediato). Validação definitiva é server-side via RPC.
+ * Community Alerts - Schemas de validacao Zod
  */
 
 import { z } from "zod";
 import { ALERT_RULES, ALERT_BLOCKED_TERMS_FRONTEND } from "../config/alertConfig";
-
-// ============================================================================
-// HELPERS
-// ============================================================================
 
 const VALID_CATEGORIES = [
   "tiroteio_disparos",
@@ -44,85 +39,57 @@ function containsBlockedTerm(text: string): boolean {
   return ALERT_BLOCKED_TERMS_FRONTEND.some((term) => lower.includes(term.toLowerCase()));
 }
 
-// ============================================================================
-// SCHEMA DE CRIAÇÃO
-// ============================================================================
-
 export const createAlertSchema = z
   .object({
     category: z.enum(VALID_CATEGORIES, {
-      errorMap: () => ({ message: "Selecione uma categoria válida." }),
+      errorMap: () => ({ message: "Selecione uma categoria valida." }),
     }),
 
-    neighborhood: z
-      .string()
-      .max(100),
+    location_id: z.string().uuid("Localizacao invalida."),
 
-    city: z
-      .string()
-      .min(2, "Cidade inválida.")
-      .max(100),
-
-    // Referência aproximada — opcional, não expõe localização exata
     location_reference: z
       .string()
-      .max(120, "Referência muito longa.")
+      .max(120, "Referencia muito longa.")
       .optional()
-      .refine(
-        (val) => !val || !containsBlockedTerm(val),
-        "A referência contém conteúdo não permitido."
-      ),
+      .refine((val) => !val || !containsBlockedTerm(val), "A referencia contem conteudo nao permitido."),
 
     description: z
       .string()
       .min(
         ALERT_RULES.DESCRIPTION_MIN_LENGTH,
-        `Descrição deve ter pelo menos ${ALERT_RULES.DESCRIPTION_MIN_LENGTH} caracteres.`
+        `Descricao deve ter pelo menos ${ALERT_RULES.DESCRIPTION_MIN_LENGTH} caracteres.`
       )
       .max(
         ALERT_RULES.DESCRIPTION_MAX_LENGTH,
-        `Descrição deve ter no máximo ${ALERT_RULES.DESCRIPTION_MAX_LENGTH} caracteres.`
+        `Descricao deve ter no maximo ${ALERT_RULES.DESCRIPTION_MAX_LENGTH} caracteres.`
       )
-      .refine(
-        (val) => !containsBlockedTerm(val),
-        "A descrição contém conteúdo não permitido neste recurso."
-      ),
+      .refine((val) => !containsBlockedTerm(val), "A descricao contem conteudo nao permitido neste recurso."),
 
     seen_personally: z.boolean(),
 
     started_at_approx: z.enum(VALID_STARTED_APPROX, {
-      errorMap: () => ({ message: "Selecione quando o evento começou." }),
+      errorMap: () => ({ message: "Selecione quando o evento comecou." }),
     }),
 
     is_happening_now: z.boolean(),
-
     still_risky: z.boolean(),
 
-    // Checkboxes de confirmação (apenas frontend — não enviados à RPC)
     confirm_real: z.literal(true, {
-      errorMap: () => ({ message: "Confirmação obrigatória." }),
+      errorMap: () => ({ message: "Confirmacao obrigatoria." }),
     }),
     confirm_no_ops: z.literal(true, {
-      errorMap: () => ({ message: "Confirmação obrigatória." }),
+      errorMap: () => ({ message: "Confirmacao obrigatoria." }),
     }),
     confirm_consequences: z.literal(true, {
-      errorMap: () => ({ message: "Confirmação obrigatória." }),
+      errorMap: () => ({ message: "Confirmacao obrigatoria." }),
     }),
   })
+  .refine((data) => !(data.is_happening_now === true && data.still_risky === false), {
+    message: "Se o evento esta acontecendo agora, ele ainda representa risco.",
+    path: ["still_risky"],
+  })
   .refine(
-    (data) => !(data.is_happening_now === true && data.still_risky === false),
-    {
-      message: "Se o evento está acontecendo agora, ele ainda representa risco.",
-      path: ["still_risky"],
-    }
-  )
-  .refine(
-    (data) =>
-      !(
-        data.seen_personally === false &&
-        data.is_happening_now === false &&
-        data.still_risky === false
-      ),
+    (data) => !(data.seen_personally === false && data.is_happening_now === false && data.still_risky === false),
     {
       message: "Alerta sem valor informativo. Revise as respostas.",
       path: ["still_risky"],
@@ -131,29 +98,20 @@ export const createAlertSchema = z
 
 export type CreateAlertFormData = z.infer<typeof createAlertSchema>;
 
-// ============================================================================
-// SCHEMA DE ATUALIZAÇÃO
-// ============================================================================
-
 export const updateAlertSchema = z.object({
   description: z
     .string()
     .min(ALERT_RULES.DESCRIPTION_MIN_LENGTH)
     .max(ALERT_RULES.DESCRIPTION_MAX_LENGTH)
-    .refine((val) => !containsBlockedTerm(val), "Conteúdo não permitido.")
+    .refine((val) => !containsBlockedTerm(val), "Conteudo nao permitido.")
     .optional(),
-
   still_risky: z.boolean().optional(),
 });
 
 export type UpdateAlertFormData = z.infer<typeof updateAlertSchema>;
 
-// ============================================================================
-// SCHEMA DE REPORT
-// ============================================================================
-
 export const createAlertReportSchema = z.object({
-  alert_id: z.string().uuid("ID de alerta inválido."),
+  alert_id: z.string().uuid("ID de alerta invalido."),
   reason: z.enum(VALID_REPORT_REASONS, {
     errorMap: () => ({ message: "Selecione um motivo." }),
   }),

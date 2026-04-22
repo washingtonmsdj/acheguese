@@ -13,19 +13,20 @@ import { AlertCardSkeleton } from "./AlertCardSkeleton";
 import { CreateAlertModal } from "./CreateAlertModal";
 import { useAlerts } from "../hooks/useAlerts";
 import { COMMUNITY_ALERTS_ENABLED } from "../config/alertConfig";
-import type { AlertFeedFilters } from "../domain/types";
+import type { TerritoryFilter } from "@/core/location/types";
 
 interface AlertFeedSectionProps {
+  territoryFilter: TerritoryFilter;
   city: string;
   neighborhood?: string;
+  locationId?: string;
 }
 
-export function AlertFeedSection({ city, neighborhood }: AlertFeedSectionProps) {
+export function AlertFeedSection({ territoryFilter, city, neighborhood, locationId }: AlertFeedSectionProps) {
   const [modalOpen, setModalOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
 
-  const filters: AlertFeedFilters = { city, neighborhood, limit: 10 };
-  const { data: alerts = [], isLoading } = useAlerts(filters);
+  const { data: alerts = [], isLoading } = useAlerts({ territoryFilter, limit: 10 });
 
   // Feature flag — seção inteira oculta se desativada
   if (!COMMUNITY_ALERTS_ENABLED) return null;
@@ -58,6 +59,7 @@ export function AlertFeedSection({ city, neighborhood }: AlertFeedSectionProps) 
           variant="outline"
           className="text-xs gap-1 border-red-300 text-red-600 hover:bg-red-50 dark:border-red-700 dark:text-red-400"
           onClick={() => setModalOpen(true)}
+          disabled={!locationId}
           aria-label="Criar novo alerta"
         >
           <Plus className="h-3 w-3" />
@@ -90,6 +92,7 @@ export function AlertFeedSection({ city, neighborhood }: AlertFeedSectionProps) 
         onClose={() => setModalOpen(false)}
         neighborhood={neighborhood}
         city={city}
+        locationId={locationId}
       />
     </section>
   );

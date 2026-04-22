@@ -127,6 +127,20 @@ export const NAV_SECTIONS: NavSection[] = [
         href: '/achados-perdidos', 
         description: 'Objetos Perdidos e Encontrados' 
       },
+      {
+        id: 'community-alerts',
+        icon: Megaphone,
+        label: 'Alertas',
+        href: '/comunidade/alertas',
+        description: 'Alertas urgentes da comunidade',
+      },
+      {
+        id: 'community-issues',
+        icon: MapPin,
+        label: 'Problemas Urbanos',
+        href: '/comunidade/problemas',
+        description: 'Reportes de problemas urbanos',
+      },
     ],
   },
   {

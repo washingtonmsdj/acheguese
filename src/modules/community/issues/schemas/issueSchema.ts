@@ -1,14 +1,9 @@
 /**
- * Community Issues — Schemas de validação Zod
- * Validação frontend (UX imediato). Validação definitiva é server-side via RPC.
+ * Community Issues - Schemas de validacao Zod
  */
 
 import { z } from "zod";
 import { ISSUE_RULES } from "../config/issueConfig";
-
-// ============================================================================
-// HELPERS
-// ============================================================================
 
 const VALID_CATEGORIES = [
   "buraco_via",
@@ -33,76 +28,50 @@ const VALID_REPORT_REASONS = [
   "other",
 ] as const;
 
-// ============================================================================
-// SCHEMA DE CRIAÇÃO
-// ============================================================================
-
 export const createIssueSchema = z.object({
+  location_id: z.string().uuid("Localizacao invalida."),
+
   category: z.enum(VALID_CATEGORIES, {
-    errorMap: () => ({ message: "Selecione uma categoria válida." }),
+    errorMap: () => ({ message: "Selecione uma categoria valida." }),
   }),
 
   title: z
     .string()
-    .min(ISSUE_RULES.TITLE_MIN_LENGTH, `Título deve ter pelo menos ${ISSUE_RULES.TITLE_MIN_LENGTH} caracteres.`)
-    .max(ISSUE_RULES.TITLE_MAX_LENGTH, `Título deve ter no máximo ${ISSUE_RULES.TITLE_MAX_LENGTH} caracteres.`),
+    .min(ISSUE_RULES.TITLE_MIN_LENGTH, `Titulo deve ter pelo menos ${ISSUE_RULES.TITLE_MIN_LENGTH} caracteres.`)
+    .max(ISSUE_RULES.TITLE_MAX_LENGTH, `Titulo deve ter no maximo ${ISSUE_RULES.TITLE_MAX_LENGTH} caracteres.`),
 
   description: z
     .string()
-    .min(ISSUE_RULES.DESCRIPTION_MIN_LENGTH, `Descrição deve ter pelo menos ${ISSUE_RULES.DESCRIPTION_MIN_LENGTH} caracteres.`)
-    .max(ISSUE_RULES.DESCRIPTION_MAX_LENGTH, `Descrição deve ter no máximo ${ISSUE_RULES.DESCRIPTION_MAX_LENGTH} caracteres.`),
+    .min(
+      ISSUE_RULES.DESCRIPTION_MIN_LENGTH,
+      `Descricao deve ter pelo menos ${ISSUE_RULES.DESCRIPTION_MIN_LENGTH} caracteres.`
+    )
+    .max(
+      ISSUE_RULES.DESCRIPTION_MAX_LENGTH,
+      `Descricao deve ter no maximo ${ISSUE_RULES.DESCRIPTION_MAX_LENGTH} caracteres.`
+    ),
 
-  neighborhood: z
-    .string()
-    .min(2, "Bairro inválido.")
-    .max(100),
-
-  city: z
-    .string()
-    .min(2, "Cidade inválida.")
-    .max(100),
-
-  address_reference: z
-    .string()
-    .max(150, "Referência muito longa.")
-    .optional(),
+  address_reference: z.string().max(150, "Referencia muito longa.").optional(),
 
   priority: z.enum(VALID_PRIORITIES).optional(),
 });
 
 export type CreateIssueFormData = z.infer<typeof createIssueSchema>;
 
-// ============================================================================
-// SCHEMA DE ATUALIZAÇÃO
-// ============================================================================
-
 export const updateIssueSchema = z.object({
-  title: z
-    .string()
-    .min(ISSUE_RULES.TITLE_MIN_LENGTH)
-    .max(ISSUE_RULES.TITLE_MAX_LENGTH)
-    .optional(),
-
+  title: z.string().min(ISSUE_RULES.TITLE_MIN_LENGTH).max(ISSUE_RULES.TITLE_MAX_LENGTH).optional(),
   description: z
     .string()
     .min(ISSUE_RULES.DESCRIPTION_MIN_LENGTH)
     .max(ISSUE_RULES.DESCRIPTION_MAX_LENGTH)
     .optional(),
-
-  address_reference: z
-    .string()
-    .max(150)
-    .optional(),
+  address_reference: z.string().max(150).optional(),
 });
 
 export type UpdateIssueFormData = z.infer<typeof updateIssueSchema>;
 
-// ============================================================================
-// SCHEMA DE REPORT
-// ============================================================================
-
 export const createIssueReportSchema = z.object({
-  issue_id: z.string().uuid("ID de problema inválido."),
+  issue_id: z.string().uuid("ID de problema invalido."),
   reason: z.enum(VALID_REPORT_REASONS, {
     errorMap: () => ({ message: "Selecione um motivo." }),
   }),

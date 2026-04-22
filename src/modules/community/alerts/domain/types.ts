@@ -1,11 +1,6 @@
 /**
- * Community Alerts — Tipos de domínio
- * Fonte única de verdade para todos os tipos do módulo
+ * Community Alerts - Tipos de dominio
  */
-
-// ============================================================================
-// ENUMS / UNION TYPES
-// ============================================================================
 
 export type AlertCategory =
   | "tiroteio_disparos"
@@ -44,38 +39,26 @@ export type AlertReportReason =
   | "spam"
   | "other";
 
-// ============================================================================
-// INTERFACES PRINCIPAIS
-// ============================================================================
-
-/**
- * Snapshot imutável das condições de elegibilidade no momento da criação.
- * Armazenado como jsonb — nunca atualizado após criação.
- */
 export interface AlertTrustSnapshot {
   phone_verified: boolean;
   account_age_days: number;
   active_strikes: number;
   eligibility_passed: boolean;
-  checked_at: string; // ISO timestamp
+  checked_at: string;
 }
 
-/**
- * Entidade completa — shape do banco.
- * Nunca exposta diretamente ao cliente.
- */
 export interface CommunityAlert {
   id: string;
-  author_user_id: string;       // nunca exposto publicamente
-  author_profile_id: string;    // exibido no card
+  author_user_id: string;
+  author_profile_id: string;
   category: AlertCategory;
   status: AlertStatus;
-  location_id: string;          // FK para locations (SSOT territorial)
-  latitude: number | null;      // centroide do território (para mapa)
-  longitude: number | null;     // centroide do território (para mapa)
-  neighborhood: string | null;  // DEPRECATED: mantido para display legado
-  neighborhood_display: string | null; // label legível para exibição
-  city: string | null;          // DEPRECATED: mantido para display legado
+  location_id: string;
+  latitude: number | null;
+  longitude: number | null;
+  neighborhood: string | null;
+  neighborhood_display: string | null;
+  city: string | null;
   description: string;
   seen_personally: boolean;
   started_at_approx: AlertStartedApprox;
@@ -93,24 +76,14 @@ export interface CommunityAlert {
   removal_reason?: string;
 }
 
-/**
- * Projeção pública — o que o feed expõe.
- * Campos sensíveis removidos.
- * Integrado com SSOT territorial via location_id.
- */
 export type CommunityAlertPublic = Omit<
   CommunityAlert,
   "author_user_id" | "trust_snapshot" | "removal_reason" | "under_review" | "neighborhood"
 >;
 
-/**
- * Dados necessários para criar um alerta (enviados pelo formulário).
- * author_profile_id e author_user_id são derivados pela RPC — não enviados.
- * Integrado com SSOT territorial via location_id.
- */
 export interface CreateAlertPayload {
   category: AlertCategory;
-  location_id: string;           // FK para locations (type=district) — SSOT territorial
+  location_id: string;
   description: string;
   seen_personally: boolean;
   started_at_approx: AlertStartedApprox;
@@ -118,17 +91,10 @@ export interface CreateAlertPayload {
   still_risky: boolean;
 }
 
-/**
- * Dados para atualizar um alerta (apenas campos editáveis pelo autor).
- */
 export interface UpdateAlertPayload {
   description?: string;
   still_risky?: boolean;
 }
-
-// ============================================================================
-// REPORT
-// ============================================================================
 
 export interface CommunityAlertReport {
   id: string;
@@ -143,10 +109,6 @@ export interface CreateAlertReportPayload {
   reason: AlertReportReason;
 }
 
-// ============================================================================
-// AUDIT
-// ============================================================================
-
 export interface CommunityAlertAudit {
   id: string;
   alert_id: string;
@@ -155,10 +117,6 @@ export interface CommunityAlertAudit {
   metadata?: Record<string, unknown>;
   created_at: string;
 }
-
-// ============================================================================
-// FILA DE NOTIFICAÇÕES
-// ============================================================================
 
 export interface AlertNotificationQueueItem {
   id: string;
@@ -173,15 +131,14 @@ export interface AlertNotificationQueueItem {
   created_at: string;
 }
 
-// ============================================================================
-// RESULTADOS DE OPERAÇÕES
-// ============================================================================
-
 export type AlertRpcError =
   | "not_authenticated"
   | "phone_not_verified"
   | "account_too_new"
   | "profile_not_found"
+  | "location_id_required"
+  | "location_not_found"
+  | "location_must_be_district"
   | "rate_limit_exceeded"
   | "invalid_category"
   | "invalid_description_length"
@@ -199,22 +156,9 @@ export interface AlertRpcResult {
   length?: number;
 }
 
-// ============================================================================
-// FILTROS DE FEED
-// ============================================================================
-
-/**
- * Filtros para busca de alertas.
- * Integrado com SSOT territorial via TerritoryFilter.
- */
 export interface AlertFeedFilters {
-  /** Filtro territorial — usar TerritoryFilter do core/location */
-  location_id?: string;          // filtro por bairro único
-  location_ids?: string[];       // filtro por múltiplos bairros (grupo)
+  location_id?: string;
+  location_ids?: string[];
   category?: AlertCategory;
   limit?: number;
-  
-  // DEPRECATED: usar location_id/location_ids
-  city?: string;
-  neighborhood?: string;
 }

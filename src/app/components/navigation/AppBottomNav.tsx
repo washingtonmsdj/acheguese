@@ -21,6 +21,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@/shared/components/ui/tooltip';
+import { useAppUrls } from '@/core/routing/hooks/useAppUrls';
 import { cn } from '@/shared/utils/cn';
 import { MOBILE_NAV_ITEMS, type NavItem } from './navigation.config';
 
@@ -71,11 +72,15 @@ const BottomNavItem = memo(({ icon: Icon, label, href, description, isActive }: 
 
 BottomNavItem.displayName = 'BottomNavItem';
 
-const CreatePostButton = memo(() => (
+interface CreatePostButtonProps {
+  href: string;
+}
+
+const CreatePostButton = memo(({ href }: CreatePostButtonProps) => (
   <Tooltip>
     <TooltipTrigger asChild>
       <Link
-        to="/novo-post"
+        to={href}
         className="flex flex-col items-center justify-center -mt-6"
         aria-label="Criar novo post"
       >
@@ -101,6 +106,7 @@ CreatePostButton.displayName = 'CreatePostButton';
 
 export function AppBottomNav() {
   const location = useLocation();
+  const appUrls = useAppUrls();
 
   const isActive = (href: string): boolean => {
     if (!href) return false;
@@ -133,7 +139,7 @@ export function AppBottomNav() {
           />
         ))}
 
-        <CreatePostButton />
+        <CreatePostButton href={appUrls.community.newPost} />
 
         {itemsAfter.map(item => (
           <BottomNavItem

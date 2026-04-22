@@ -7,6 +7,7 @@ import { useQuery } from "@tanstack/react-query";
 import { communityAlertService } from "../services/CommunityAlertService";
 import { territoryFilterKey } from "@/core/location/hooks/useTerritoryFilter";
 import type { TerritoryFilter } from "@/core/location/types";
+import type { CommunityAlertPublic } from "../domain/types";
 
 interface UseAlertsBySpatialRadiusOptions {
   center: [number, number]; // [latitude, longitude]
@@ -26,7 +27,7 @@ export function useAlertsBySpatialRadius({
   const [lat, lng] = center;
   const territoryKey = territoryFilter ? territoryFilterKey(territoryFilter) : 'none';
 
-  return useQuery({
+  return useQuery<CommunityAlertPublic[], Error>({
     queryKey: ["community-alerts-spatial", lat, lng, radiusMeters, territoryKey, limit],
     queryFn: () =>
       communityAlertService.getBySpatialRadius(center, radiusMeters, {

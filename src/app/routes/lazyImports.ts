@@ -142,6 +142,9 @@ export const RecomendacaoDetailPage = lazy(() => import("@/modules/community/pag
 export const AchadosPerdidosPage = lazy(() => import("@/modules/community/pages/AchadosPerdidosPage"));
 export const NovoAchadoPerdidoPage = lazy(() => import("@/modules/community/pages/NovoAchadoPerdidoPage"));
 export const AchadoPerdidoDetailPage = lazy(() => import("@/modules/community/pages/AchadoPerdidoDetailPage"));
+export const AlertasPage = lazy(() => import("@/modules/community/pages/AlertasPage"));
+export const ProblemasPage = lazy(() => import("@/modules/community/issues/pages/ProblemasPage"));
+export const NovoPostPage = lazy(() => import("@/modules/community/pages/NovoPostPage"));
 export const ExamplePostPage = lazy(() => import("@/modules/community/pages/ExamplePostPage"));
 
 // ============================================================

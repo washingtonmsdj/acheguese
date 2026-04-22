@@ -7,7 +7,7 @@ import { alertModerationService } from "../services/AlertModerationService";
 import type { CreateAlertReportPayload } from "../domain/types";
 
 export function useAlertReport() {
-  return useMutation({
+  return useMutation<boolean, Error, CreateAlertReportPayload>({
     mutationFn: (payload: CreateAlertReportPayload) =>
       alertModerationService.reportAlert(payload),
   });

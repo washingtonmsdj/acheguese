@@ -7,7 +7,7 @@ import { useQuery } from "@tanstack/react-query";
 import { communityAlertService } from "../services/CommunityAlertService";
 import { territoryFilterKey } from "@/core/location/hooks/useTerritoryFilter";
 import type { TerritoryFilter } from "@/core/location/types";
-import type { AlertCategory } from "../domain/types";
+import type { AlertCategory, CommunityAlertPublic } from "../domain/types";
 
 interface UseAlertsOptions {
   territoryFilter: TerritoryFilter;
@@ -16,7 +16,7 @@ interface UseAlertsOptions {
 }
 
 export function useAlerts({ territoryFilter, category, limit }: UseAlertsOptions) {
-  return useQuery({
+  return useQuery<CommunityAlertPublic[], Error>({
     queryKey: ["community-alerts", territoryFilterKey(territoryFilter), category, limit],
     queryFn: () => communityAlertService.getByTerritory(territoryFilter, { category, limit }),
     enabled: territoryFilter.scope !== 'none',

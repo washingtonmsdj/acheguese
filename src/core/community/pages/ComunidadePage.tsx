@@ -8,13 +8,14 @@
  */
 
 import React, { lazy, Suspense } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Users, LayoutList } from "lucide-react";
 import { TooltipProvider } from "@/shared/components/ui/tooltip";
 import { Button } from "@/shared/components/ui/button";
 import { useIsAdmin } from "@/core/auth/hooks/useIsAdmin";
 import { useAppUrls } from "@/core/routing/hooks";
 import { useUserTerritory } from "@/core/location/hooks/useUserTerritory";
+import { useTerritoryFilter } from "@/core/location/hooks/useTerritoryFilter";
 import { useComunidadePage } from "../hooks/page/useComunidadePage";
 import { CommunityFeed } from "../components/feed/CommunityFeed";
 import { CommunityRightSidebar } from "../components/CommunityRightSidebar";
@@ -42,10 +43,12 @@ interface ComunidadePageProps {
 }
 
 export default function ComunidadePage({ resolved }: ComunidadePageProps) {
+  const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const activeTab = (searchParams.get("tab") as CommunityTab) || "feed";
   const [showBanner, setShowBanner] = React.useState(true);
-  const appUrls = useAppUrls(); // ✅ SSOT URLs
+  const appUrls = useAppUrls(resolved); // ✅ SSOT URLs com contexto territorial
+  const territoryFilter = useTerritoryFilter(resolved);
 
   // ✅ SSOT: guarda de acesso por UUID canônico, não por string de perfil
   const { hasHome, homeDistrict, homeCity, loading: territoryLoading } = useUserTerritory();
@@ -84,6 +87,18 @@ export default function ComunidadePage({ resolved }: ComunidadePageProps) {
     handleCloseModal,
     communityLocation,
   } = useComunidadePage();
+  const issueLocationId =
+    communityLocation.activeLocation?.type === "district"
+      ? communityLocation.activeLocation.id
+      : homeDistrict?.id;
+  const modalCity =
+    communityLocation.activeLocation?.type === "city"
+      ? communityLocation.activeLocation.name
+      : homeCity?.name ?? profile.city ?? "";
+  const modalNeighborhood =
+    communityLocation.activeLocation?.type === "district"
+      ? communityLocation.activeLocation.name
+      : homeDistrict?.name ?? profile.neighborhood;
 
   // Bloquear se não estiver logado
   if (!profile) {
@@ -190,6 +205,32 @@ export default function ComunidadePage({ resolved }: ComunidadePageProps) {
                 />
               )}
 
+              <div className="mb-4 rounded-xl border border-white/10 bg-white/5 p-3">
+                <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-400">
+                  Acessos da Comunidade
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  <Button size="sm" variant="outline" onClick={() => setTab("grupos")}>
+                    Grupos
+                  </Button>
+                  <Button size="sm" variant="outline" onClick={() => navigate(appUrls.community.recommendations)}>
+                    Recomendações
+                  </Button>
+                  <Button size="sm" variant="outline" onClick={() => navigate(appUrls.community.lostAndFound)}>
+                    Achados e Perdidos
+                  </Button>
+                  <Button size="sm" variant="outline" onClick={() => navigate(appUrls.community.alerts)}>
+                    Alertas
+                  </Button>
+                  <Button size="sm" variant="outline" onClick={() => navigate(appUrls.community.issues)}>
+                    Problemas
+                  </Button>
+                  <Button size="sm" variant="outline" onClick={() => navigate(appUrls.community.events)}>
+                    Eventos
+                  </Button>
+                </div>
+              </div>
+
               {/* Cards de escopo sempre baseados no bairro do usuário — dados do SSOT */}
               <LocationScopeCards
                 city={homeCity?.name ?? profile.city}
@@ -214,8 +255,10 @@ export default function ComunidadePage({ resolved }: ComunidadePageProps) {
               {/* Problemas urbanos do bairro do usuário */}
               <div className="mt-6">
                 <IssueFeedSection
+                  territoryFilter={territoryFilter}
                   city={homeCity?.name ?? profile.city}
                   neighborhood={homeDistrict?.name ?? profile.neighborhood}
+                  locationId={homeDistrict?.id}
                   profileId={profile.id}
                 />
               </div>
@@ -243,16 +286,18 @@ export default function ComunidadePage({ resolved }: ComunidadePageProps) {
         <CreateAlertModal
           open={alertModalOpen}
           onClose={handleCloseAlertModal}
-          city={communityLocation.activeLocation?.name || homeCity?.name || ""}
-          neighborhood={communityLocation.activeLocation?.type === 'district' ? communityLocation.activeLocation.name : homeDistrict?.name}
+          city={modalCity}
+          neighborhood={modalNeighborhood}
+          locationId={issueLocationId}
         />
 
         {/* Modal de Criar Problema */}
         <CreateIssueModal
           open={issueModalOpen}
           onClose={handleCloseIssueModal}
-          city={communityLocation.activeLocation?.name || homeCity?.name || ""}
-          neighborhood={communityLocation.activeLocation?.type === 'district' ? communityLocation.activeLocation.name : homeDistrict?.name}
+          city={modalCity}
+          neighborhood={modalNeighborhood}
+          locationId={issueLocationId}
         />
 
         {/* Modais de Detalhes e Comentários */}

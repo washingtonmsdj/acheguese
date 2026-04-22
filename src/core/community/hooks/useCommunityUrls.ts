@@ -18,6 +18,8 @@ import type { ResolvedTerritory } from '@/core/routing/hooks/useResolveTerritory
 
 export interface CommunityUrls {
   feed: string;
+  alerts: string;
+  issues: string;
   events: string;
   eventDetail: (id: string) => string;
   groups: string;
@@ -64,8 +66,13 @@ export function useCommunityUrls(routeResolved?: ResolvedTerritory | null): Comm
     eventsUrl = `/eventos/${TERRITORY_CONFIG.launch.state}/${TERRITORY_CONFIG.launch.city}`;
   }
 
+  const alertsUrl = `${feedUrl}/alertas`;
+  const issuesUrl = `${feedUrl}/problemas`;
+
   return {
     feed: feedUrl,
+    alerts: alertsUrl,
+    issues: issuesUrl,
     events: eventsUrl,
     eventDetail: (id: string) => `/eventos/${id}`,
     groups: '/grupos',

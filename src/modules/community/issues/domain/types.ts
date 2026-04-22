@@ -1,13 +1,6 @@
 /**
- * Community Issues — Tipos de domínio
- *
- * Domínio: problemas urbanos persistentes que requerem ação de responsável externo.
- * NÃO confundir com alertas (imediatos/urgentes) — ver regra de fronteira em ARCHITECTURE.md
+ * Community Issues - Tipos de dominio
  */
-
-// ============================================================================
-// ENUMS / UNION TYPES
-// ============================================================================
 
 export type IssueCategory =
   | "buraco_via"
@@ -21,16 +14,12 @@ export type IssueCategory =
   | "pichacao_vandalismo"
   | "outro";
 
-/**
- * Workflow operacional — ciclo de vida do problema.
- * Moderação é tratada em campos separados (under_review, removed_at).
- */
 export type IssueStatus =
-  | "aberto"       // recém criado, aguardando triagem
-  | "em_analise"   // responsável reconheceu o problema
-  | "em_andamento" // solução em execução
-  | "resolvido"    // problema corrigido e confirmado
-  | "rejeitado";   // fora de escopo ou inválido
+  | "aberto"
+  | "em_analise"
+  | "em_andamento"
+  | "resolvido"
+  | "rejeitado";
 
 export type IssuePriority = "baixa" | "media" | "alta" | "urgente";
 
@@ -50,16 +39,10 @@ export type IssueAuditAction =
   | "reviewed_cleared"
   | "removed";
 
-// ============================================================================
-// INTERFACES PRINCIPAIS
-// ============================================================================
-
-/**
- * Entidade completa — shape do banco.
- */
 export interface CommunityIssue {
   id: string;
   author_profile_id: string;
+  location_id: string;
   category: IssueCategory;
   status: IssueStatus;
   priority: IssuePriority;
@@ -81,31 +64,18 @@ export interface CommunityIssue {
   updated_at: string;
 }
 
-/**
- * Projeção pública — campos sensíveis removidos.
- */
-export type CommunityIssuePublic = Omit<
-  CommunityIssue,
-  "removal_reason" | "under_review"
->;
+export type CommunityIssuePublic = Omit<CommunityIssue, "removal_reason" | "under_review">;
 
-/**
- * Dados para criar um problema urbano.
- */
 export interface CreateIssuePayload {
   category: IssueCategory;
   title: string;
   description: string;
+  location_id: string;
   images?: string[];
-  neighborhood: string;
-  city: string;
   address_reference?: string;
   priority?: IssuePriority;
 }
 
-/**
- * Dados para atualizar um problema (apenas campos editáveis pelo autor).
- */
 export interface UpdateIssuePayload {
   title?: string;
   description?: string;
@@ -113,20 +83,12 @@ export interface UpdateIssuePayload {
   address_reference?: string;
 }
 
-// ============================================================================
-// SUPORTE (upvote)
-// ============================================================================
-
 export interface IssueSupport {
   id: string;
   issue_id: string;
   profile_id: string;
   created_at: string;
 }
-
-// ============================================================================
-// REPORT
-// ============================================================================
 
 export interface CommunityIssueReport {
   id: string;
@@ -141,10 +103,6 @@ export interface CreateIssueReportPayload {
   reason: IssueReportReason;
 }
 
-// ============================================================================
-// AUDIT
-// ============================================================================
-
 export interface CommunityIssueAudit {
   id: string;
   issue_id: string;
@@ -154,26 +112,20 @@ export interface CommunityIssueAudit {
   created_at: string;
 }
 
-// ============================================================================
-// FILTROS DE FEED
-// ============================================================================
-
 export interface IssueFeedFilters {
-  location_id?: string;  // Filtro por location canônico
-  city?: string;         // DEPRECATED: mantido para compatibilidade
-  neighborhood?: string; // DEPRECATED: mantido para compatibilidade
+  location_id?: string;
+  location_ids?: string[];
   category?: IssueCategory;
   status?: IssueStatus;
   limit?: number;
 }
 
-// ============================================================================
-// RESULTADOS DE OPERAÇÕES
-// ============================================================================
-
 export type IssueRpcError =
   | "not_authenticated"
   | "profile_not_found"
+  | "location_id_required"
+  | "location_not_found"
+  | "location_must_be_district"
   | "rate_limit_exceeded"
   | "invalid_category"
   | "invalid_title_length"

@@ -18,6 +18,8 @@ import { CountryLandingPage } from "@/core/routing/components/CountryLandingPage
 import { BrasilShowcasePage } from "@/core/routing/components/BrasilShowcasePage";
 import {
   TerritorialCommunityPage,
+  TerritorialCommunityAlertsPage,
+  TerritorialCommunityIssuesPage,
   TerritorialServicesPage,
   TerritorialClassificadosPage,
   TerritorialEventosPage,
@@ -135,6 +137,7 @@ export function AppRoutes() {
         <Route path="/grupos" element={<P.GruposPage />} />
         <Route path="/grupos/:id" element={<P.GrupoDetailPage />} />
         <Route path="/comunidade/grupo/:id" element={<P.GrupoDetailPage />} />
+        <Route path="/novo-post" element={<P.NovoPostPage />} />
         <Route path="/exemplo-post" element={<P.ExamplePostPage />} />
         <Route path="/busca" element={<P.BuscaPage />} />
         <Route path="/regras" element={<P.RegrasPage />} />
@@ -150,9 +153,9 @@ export function AppRoutes() {
 
         {/* Rotas legadas sem território */}
         <Route path="/comunidade" element={<Navigate to={LAUNCH_URLS.community} replace />} />
-        <Route path="/comunidade/alertas" element={<Navigate to={LAUNCH_URLS.community} replace />} />
-        <Route path="/comunidade/problemas" element={<Navigate to={LAUNCH_URLS.community} replace />} />
-        <Route path="/alertas" element={<Navigate to={LAUNCH_URLS.community} replace />} />
+        <Route path="/comunidade/alertas" element={<Navigate to={`${LAUNCH_URLS.community}/alertas`} replace />} />
+        <Route path="/comunidade/problemas" element={<Navigate to={`${LAUNCH_URLS.community}/problemas`} replace />} />
+        <Route path="/alertas" element={<Navigate to={`${LAUNCH_URLS.community}/alertas`} replace />} />
         <Route path="/businesss" element={<Navigate to={LAUNCH_URLS.business} replace />} />
         <Route path="/services" element={<Navigate to={LAUNCH_URLS.services} replace />} />
         <Route path="/classificados" element={<Navigate to={LAUNCH_URLS.classifieds} replace />} />
@@ -323,6 +326,18 @@ export function AppRoutes() {
         <Route path="/gastronomia/favoritos" element={<P.MyFavoritesPage />} />
 
         {/* Rotas de comunidade */}
+        <Route path="/comunidade/:state/:city/:groupSlugOrDistrict/alertas" element={<TerritorialLayout />}>
+          <Route index element={<TerritorialCommunityAlertsPage />} />
+        </Route>
+        <Route path="/comunidade/:state/:city/alertas" element={<TerritorialLayout />}>
+          <Route index element={<TerritorialCommunityAlertsPage />} />
+        </Route>
+        <Route path="/comunidade/:state/:city/:groupSlugOrDistrict/problemas" element={<TerritorialLayout />}>
+          <Route index element={<TerritorialCommunityIssuesPage />} />
+        </Route>
+        <Route path="/comunidade/:state/:city/problemas" element={<TerritorialLayout />}>
+          <Route index element={<TerritorialCommunityIssuesPage />} />
+        </Route>
         <Route path="/comunidade/:state/:city/:groupSlugOrDistrict" element={<TerritorialLayout />}>
           <Route index element={<TerritorialCommunityPage />} />
         </Route>

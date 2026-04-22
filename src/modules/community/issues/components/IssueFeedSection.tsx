@@ -1,8 +1,5 @@
 /**
- * IssueFeedSection — Seção de problemas urbanos no feed da comunidade
- *
- * Exibida separadamente de posts e alertas.
- * Controlada por feature flag COMMUNITY_ISSUES_ENABLED.
+ * IssueFeedSection - Secao de problemas urbanos no feed da comunidade
  */
 
 import { useState } from "react";
@@ -13,27 +10,33 @@ import { IssueCardSkeleton } from "./IssueCardSkeleton";
 import { CreateIssueModal } from "./CreateIssueModal";
 import { useIssues } from "../hooks/useIssues";
 import { COMMUNITY_ISSUES_ENABLED } from "../config/issueConfig";
-import type { IssueFeedFilters } from "../domain/types";
+import type { TerritoryFilter } from "@/core/location/types";
 
 interface IssueFeedSectionProps {
+  territoryFilter: TerritoryFilter;
   city: string;
   neighborhood?: string;
+  locationId?: string;
   profileId?: string;
 }
 
-export function IssueFeedSection({ city, neighborhood, profileId }: IssueFeedSectionProps) {
+export function IssueFeedSection({
+  territoryFilter,
+  city,
+  neighborhood,
+  locationId,
+  profileId,
+}: IssueFeedSectionProps) {
   const [modalOpen, setModalOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
 
-  const filters: IssueFeedFilters = { city, neighborhood, limit: 5 };
-  const { data: issues = [], isLoading } = useIssues(filters);
+  const { data: issues = [], isLoading } = useIssues({ territoryFilter, limit: 5 });
 
-  // Feature flag — seção inteira oculta se desativada
   if (!COMMUNITY_ISSUES_ENABLED) return null;
+  if (territoryFilter.scope === "none") return null;
 
   return (
     <section aria-label="Problemas urbanos da comunidade" className="space-y-3">
-      {/* Header da seção */}
       <div className="flex items-center justify-between">
         <button
           className="flex items-center gap-2 text-sm font-semibold text-amber-600 dark:text-amber-400"
@@ -59,6 +62,7 @@ export function IssueFeedSection({ city, neighborhood, profileId }: IssueFeedSec
           variant="outline"
           className="text-xs gap-1 border-amber-300 text-amber-600 hover:bg-amber-50 dark:border-amber-700 dark:text-amber-400"
           onClick={() => setModalOpen(true)}
+          disabled={!locationId}
           aria-label="Reportar novo problema"
         >
           <Plus className="h-3 w-3" />
@@ -66,7 +70,6 @@ export function IssueFeedSection({ city, neighborhood, profileId }: IssueFeedSec
         </Button>
       </div>
 
-      {/* Lista de problemas */}
       {!collapsed && (
         <div className="space-y-3">
           {isLoading ? (
@@ -76,16 +79,10 @@ export function IssueFeedSection({ city, neighborhood, profileId }: IssueFeedSec
             </>
           ) : issues.length === 0 ? (
             <p className="text-xs text-muted-foreground py-2">
-              Nenhum problema registrado nesta região.
+              Nenhum problema registrado nesta regiao.
             </p>
           ) : (
-            issues.map((issue) => (
-              <IssueCard
-                key={issue.id}
-                issue={issue}
-                profileId={profileId}
-              />
-            ))
+            issues.map((issue) => <IssueCard key={issue.id} issue={issue} profileId={profileId} />)
           )}
         </div>
       )}
@@ -95,6 +92,7 @@ export function IssueFeedSection({ city, neighborhood, profileId }: IssueFeedSec
         onClose={() => setModalOpen(false)}
         city={city}
         neighborhood={neighborhood}
+        locationId={locationId}
       />
     </section>
   );

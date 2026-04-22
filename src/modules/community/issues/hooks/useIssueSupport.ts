@@ -17,7 +17,7 @@ export function useIssueSupport(issueId: string, profileId?: string) {
       .then(setIsSupporting);
   }, [issueId, profileId]);
 
-  const toggleSupport = useMutation({
+  const toggleSupport = useMutation<void, Error, void>({
     mutationFn: async () => {
       if (!profileId) return;
       if (isSupporting) {
