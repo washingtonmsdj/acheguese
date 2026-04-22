@@ -1,10 +1,11 @@
 /**
- * Barra de contato do vendedor — WhatsApp e chat interno
- * ✅ SSOT: usa messaging types de core/messaging
+ * Barra de contato do vendedor - WhatsApp e chat interno
+ * SSOT: integra com core/messaging para conversas reais.
  */
 
 import React, { useState } from "react";
 import { MessageCircle, Phone, Send } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/shared/components/ui/button";
 import {
   Dialog,
@@ -13,12 +14,16 @@ import {
   DialogTitle,
 } from "@/shared/components/ui/dialog";
 import { toast } from "sonner";
+import { useAuth } from "@/core/auth";
+import { messagingService } from "@/core/messaging";
+import { useAppUrls } from "@/core/routing/hooks/useAppUrls";
 
 interface VendedorContactBarProps {
   vendedorId: string;
   vendedorName: string;
   vendedorPhone?: string | null;
   vendedorWhatsapp?: string | null;
+  initialClassifiedId?: string | null;
 }
 
 export function VendedorContactBar({
@@ -26,7 +31,11 @@ export function VendedorContactBar({
   vendedorName,
   vendedorPhone,
   vendedorWhatsapp,
+  initialClassifiedId,
 }: VendedorContactBarProps) {
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const appUrls = useAppUrls();
   const [chatOpen, setChatOpen] = useState(false);
   const [message, setMessage] = useState("");
 
@@ -34,32 +43,70 @@ export function VendedorContactBar({
 
   const handleWhatsApp = () => {
     if (!whatsappNumber) {
-      toast.info("Este vendedor não informou WhatsApp.");
+      toast.info("Este vendedor nao informou WhatsApp.");
       return;
     }
+
     const cleaned = whatsappNumber.replace(/\D/g, "");
     const fullNumber = cleaned.startsWith("55") ? cleaned : `55${cleaned}`;
     const text = encodeURIComponent(
-      `Olá ${vendedorName}! Vi seu perfil nos classificados e gostaria de saber mais sobre seus anúncios.`
+      `Ola ${vendedorName}! Vi seu perfil nos classificados e gostaria de saber mais sobre seus anuncios.`,
     );
+
     window.open(`https://wa.me/${fullNumber}?text=${text}`, "_blank");
   };
 
-  const handleSendMessage = () => {
+  const handleSendMessage = async () => {
     if (!message.trim()) return;
-    // TODO: integrar com ChatService/messagingService real
-    toast.success("Mensagem enviada! O vendedor será notificado.");
-    setMessage("");
-    setChatOpen(false);
+
+    if (!user?.id) {
+      toast.error("Faca login para enviar mensagens.");
+      return;
+    }
+
+    if (user.id === vendedorId) {
+      toast.info("Voce nao pode enviar mensagem para o proprio perfil.");
+      return;
+    }
+
+    if (!initialClassifiedId) {
+      toast.info("Abra um anuncio deste vendedor para iniciar conversa.");
+      return;
+    }
+
+    try {
+      const conversation = await messagingService.findOrCreateConversation(
+        initialClassifiedId,
+        user.id,
+        vendedorId,
+      );
+
+      if (!conversation?.id) {
+        toast.error("Nao foi possivel iniciar conversa agora.");
+        return;
+      }
+
+      await messagingService.sendMessage({
+        conversation_id: conversation.id,
+        sender_profile_id: user.id,
+        text: message.trim(),
+      });
+
+      toast.success("Mensagem enviada com sucesso.");
+      setMessage("");
+      setChatOpen(false);
+      navigate(appUrls.chat(conversation.id));
+    } catch {
+      toast.error("Erro ao enviar mensagem. Tente novamente.");
+    }
   };
 
   return (
     <>
-      {/* Sticky contact bar */}
-      <div className="flex gap-2 mt-4">
+      <div className="mt-4 flex gap-2">
         <Button
           onClick={handleWhatsApp}
-          className="flex-1 gap-2 bg-green-600 hover:bg-green-700 text-white"
+          className="flex-1 gap-2 bg-green-600 text-white hover:bg-green-700"
           size="sm"
         >
           <Phone className="h-4 w-4" />
@@ -76,28 +123,21 @@ export function VendedorContactBar({
         </Button>
       </div>
 
-      {/* Chat dialog */}
       <Dialog open={chatOpen} onOpenChange={setChatOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle className="text-base">
-              Mensagem para {vendedorName}
-            </DialogTitle>
+            <DialogTitle className="text-base">Mensagem para {vendedorName}</DialogTitle>
           </DialogHeader>
           <div className="space-y-3">
             <textarea
               value={message}
               onChange={(e) => setMessage(e.target.value)}
-              placeholder={`Olá ${vendedorName}, tenho interesse nos seus anúncios...`}
-              className="w-full min-h-[120px] rounded-xl border border-border bg-secondary/30 p-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 resize-none"
+              placeholder={`Ola ${vendedorName}, tenho interesse nos seus anuncios...`}
+              className="min-h-[120px] w-full resize-none rounded-xl border border-border bg-secondary/30 p-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
               autoFocus
             />
             <div className="flex justify-end gap-2">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setChatOpen(false)}
-              >
+              <Button variant="ghost" size="sm" onClick={() => setChatOpen(false)}>
                 Cancelar
               </Button>
               <Button

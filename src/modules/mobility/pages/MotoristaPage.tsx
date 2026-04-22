@@ -1,11 +1,11 @@
 /**
- * ⚠️ DEPRECATED - Painel do Motorista V1
+ * Painel do Motorista V1
  * 
- * Esta página está DEPRECADA. Use MotoristaPageV2 para novos desenvolvimentos.
- * Mantida apenas para compatibilidade transitória.
+ * Esta pagina e mantida para suporte a rota historica V1.
+ * MotoristaPageV2 permanece como superficie oficial.
  * 
  * Rota oficial: /mobilidade/motorista → MotoristaPageV2
- * Rota legacy: /motorista-legacy → MotoristaPage (esta)
+ * Rota historica V1: /motorista-v1 → MotoristaPage (esta)
  */
 
 import React from "react";
@@ -137,7 +137,7 @@ export default function MotoristaPage() {
         <div className="bg-warning/10 border-b border-warning/20 px-4 py-2">
           <div className="max-w-7xl mx-auto flex items-center justify-between">
             <div className="flex items-center gap-2 text-warning text-sm">
-              <span className="font-semibold">⚠️ Versão Legada</span>
+              <span className="font-semibold">⚠️ Versao V1</span>
               <span>Esta é a versão antiga do painel. Use a versão oficial.</span>
             </div>
             <Button

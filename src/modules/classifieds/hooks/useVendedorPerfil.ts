@@ -23,6 +23,8 @@ export interface VendedorPerfil extends VendedorWithAds {
   response_rate: number;
   avg_rating: number;
   total_reviews: number;
+  phone?: string | null;
+  whatsapp?: string | null;
   all_ads: Array<{
     id: string;
     title: string;
@@ -161,26 +163,6 @@ const MOCK_PROFILES: Record<string, VendedorPerfil> = {
   },
 };
 
-// Mock reviews para vendedores reais (fallback)
-const MOCK_REVIEWS: VendedorReview[] = [
-  { 
-    id: "review-1", 
-    reviewer_name: "Cliente Satisfeito", 
-    reviewer_avatar: null, 
-    rating: 5, 
-    comment: "Excelente vendedor! Produto como descrito.", 
-    created_at: new Date().toISOString() 
-  },
-  { 
-    id: "review-2", 
-    reviewer_name: "Comprador Feliz", 
-    reviewer_avatar: null, 
-    rating: 4, 
-    comment: "Boa experiência de compra. Recomendo!", 
-    created_at: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString() 
-  },
-];
-
 export function useVendedorPerfil(sellerId: string | undefined) {
   const query = useQuery({
     queryKey: ["vendedor-perfil", sellerId],
@@ -224,9 +206,11 @@ export function useVendedorPerfil(sellerId: string | undefined) {
           active_ads_count: activeAds.length,
           bio: profile.bio || "Vendedor na plataforma",
           member_since: profile.created_at || new Date().toISOString(),
-          response_rate: 85, // TODO: calcular taxa de resposta real
-          avg_rating: 4.5, // TODO: calcular média de avaliações reais
-          total_reviews: MOCK_REVIEWS.length, // TODO: buscar avaliações reais
+          response_rate: 0,
+          avg_rating: 0,
+          total_reviews: 0,
+          phone: profile.phone || null,
+          whatsapp: profile.whatsapp || null,
           featured_ads: activeAds.slice(0, 3).map(ad => ({
             id: ad.id,
             title: ad.title,
@@ -234,7 +218,7 @@ export function useVendedorPerfil(sellerId: string | undefined) {
             photos: ad.photos || [],
           })),
           all_ads,
-          reviews: MOCK_REVIEWS, // TODO: buscar avaliações reais do banco
+          reviews: [],
         };
 
         return vendedorPerfil;

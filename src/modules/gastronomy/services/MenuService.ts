@@ -2,7 +2,7 @@
  * 🍽️ MENU SERVICE FACADE - SSOT Unified Export
  *
  * Fachada que re-exporta todos os módulos de cardápio.
- * Mantém compatibilidade com código legado.
+ * Mantém estabilidade com código migracao.
  *
  * @version 2.0.0 - Refatorado para SSOT
  */
@@ -24,6 +24,7 @@ export {
   getMenuItemVariants,
   getMenuItemAddons,
   getActiveMenuPromotions,
+  getMenuUsageStats,
   getPublicMenuCatalog,
   getPublicFoodItems,
 } from './menu.queries';
@@ -53,7 +54,7 @@ export {
 } from './menu.mutations';
 
 // ============================================================
-// COMPATIBILIDADE: CLASSE LEGACY MenuService
+// API de classe mantida para estabilidade de contrato
 // ============================================================
 
 import {
@@ -70,8 +71,8 @@ import {
 } from './menu.mutations';
 
 /**
- * @deprecated Use as funções individuais de menu.mutations.ts
- * Classe legacy mantida para compatibilidade
+ * Use as funcoes individuais de menu.mutations.ts em novas implementacoes.
+ * Classe mantida para estabilidade de contrato.
  */
 export class MenuService {
   static async createMenu(

@@ -5,7 +5,7 @@
  * Componentes e hooks nao devem implementar regra de permissao local.
  */
 
-import { supabase } from "@/integrations/supabase";
+import { supabase } from "@/core/supabase";
 import { logger } from "@/shared/utils/logger";
 import { mobilityRolloutService } from "./MobilityRolloutService";
 import { EntitlementsService } from "@/core/billing/entitlements";
@@ -606,22 +606,22 @@ export class MotoboyAuthorizationService {
       return currentSubscription.plan_tier;
     }
 
-    const { data: legacySubscription, error: legacySubscriptionError } = await supabaseAny
+    const { data: fallbackSubscription, error: fallbackSubscriptionError } = await supabaseAny
       .from("gastronomy_subscriptions")
       .select("plan_tier")
       .in("business_id", businessIds)
       .order("updated_at", { ascending: false })
       .limit(1)
       .maybeSingle();
-    if (legacySubscriptionError) {
+    if (fallbackSubscriptionError) {
       logger.warn("MotoboyAuthorizationService.resolvePlanTierByBusinessIds.gastronomy_subscriptions", {
         businessIds,
-        error: legacySubscriptionError,
+        error: fallbackSubscriptionError,
       });
       return undefined;
     }
 
-    return legacySubscription?.plan_tier;
+    return fallbackSubscription?.plan_tier;
   }
 
   private static async checkServiceAssociation(
@@ -643,3 +643,4 @@ export class MotoboyAuthorizationService {
     }
   }
 }
+

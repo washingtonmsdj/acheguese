@@ -133,7 +133,7 @@ export function UnifiedComposer({
         onClose={handleCloseComposer}
       />
 
-      {/* Modal de Alerta - Módulo community-alerts (mantido por compatibilidade) */}
+      {/* Modal de Alerta - Módulo community-alerts (API pública estável) */}
       <CreateAlertModal
         open={activeComposer === "alert"}
         onClose={handleCloseComposer}
@@ -142,7 +142,7 @@ export function UnifiedComposer({
         neighborhood={undefined}
       />
 
-      {/* Modal de Problema - Módulo community-issues (mantido por compatibilidade) */}
+      {/* Modal de Problema - Módulo community-issues (API pública estável) */}
       <CreateIssueModal
         open={activeComposer === "issue"}
         onClose={handleCloseComposer}

@@ -3,16 +3,16 @@
  */
 
 export { RideRequestCardEnhanced } from './RideRequestCardEnhanced';
-export { RideRequestCardEnhanced as RideRequestCard } from './RideRequestCardEnhanced'; // Alias para compatibilidade
+export { RideRequestCardEnhanced as RideRequestCard } from './RideRequestCardEnhanced'; // Alias publico estavel
 
 export { DriverOfferCardEnhanced } from './DriverOfferCardEnhanced';
-export { DriverOfferCardEnhanced as DriverOfferCard } from './DriverOfferCardEnhanced'; // Alias para compatibilidade
+export { DriverOfferCardEnhanced as DriverOfferCard } from './DriverOfferCardEnhanced'; // Alias publico estavel
 
 export { DeliveryTrackingCardEnhanced } from './DeliveryTrackingCardEnhanced';
-export { DeliveryTrackingCardEnhanced as DeliveryTrackingCard } from './DeliveryTrackingCardEnhanced'; // Alias para compatibilidade
+export { DeliveryTrackingCardEnhanced as DeliveryTrackingCard } from './DeliveryTrackingCardEnhanced'; // Alias publico estavel
 
 export { RouteEstimateCardEnhanced, RouteEstimateCardSkeleton } from './RouteEstimateCardEnhanced';
-export { RouteEstimateCardEnhanced as RouteEstimateCard } from './RouteEstimateCardEnhanced'; // Alias para compatibilidade
+export { RouteEstimateCardEnhanced as RouteEstimateCard } from './RouteEstimateCardEnhanced'; // Alias publico estavel
 
 export { CreateDeliveryModal } from './CreateDeliveryModal';
 export { RequestMotoboyButton } from './RequestMotoboyButton';

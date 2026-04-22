@@ -45,7 +45,7 @@ export { useUnifiedDetailModal } from "./modals/useUnifiedDetailModal";
 // Page hooks
 export { useComunidadePage } from "./page/useComunidadePage";
 
-// Legacy hooks (manter por compatibilidade)
+// Hook exports complementares para estabilidade de API publica
 export {
   useCommunityProfile,
   useCommunityStats,

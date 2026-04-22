@@ -66,7 +66,7 @@ export function useCommunityFeedSimple(options: UseCommunityFeedOptions = {}) {
   // Flatten all pages into a single list of posts
   const posts: Post[] = query.data?.pages.flatMap((page) => page.posts) ?? [];
 
-  // Convert to feed items format for backward compatibility
+  // Convert to feed items format expected by current feed consumers
   const feedItems = posts.map((post) => ({
     type: "post" as const,
     data: post,

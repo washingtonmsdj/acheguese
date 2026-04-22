@@ -2,7 +2,7 @@
  * 🍽️ GASTRONOMY SERVICE FACADE - SSOT Unified Export
  *
  * Fachada que re-exporta todos os módulos de gastronomia.
- * Mantém compatibilidade com código legado.
+ * Mantém estabilidade com código migracao.
  *
  * @version 2.0.0 - Refatorado para SSOT
  */
@@ -126,7 +126,7 @@ export {
 } from './gastronomy.helpers';
 
 // ============================================================
-// COMPATIBILIDADE: CLASSE LEGACY GastronomyService
+// API de classe mantida para estabilidade de contrato
 // ============================================================
 
 import {
@@ -137,8 +137,8 @@ import {
 } from './gastronomy.mutations';
 
 /**
- * @deprecated Use as funções individuais de gastronomy.mutations.ts
- * Classe legacy mantida para compatibilidade
+ * Use as funcoes individuais de gastronomy.mutations.ts em novas implementacoes.
+ * Classe mantida para estabilidade de contrato.
  */
 export class GastronomyService {
   static async createGastronomyProfile(

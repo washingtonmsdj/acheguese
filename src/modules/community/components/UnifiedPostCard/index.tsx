@@ -53,7 +53,7 @@ interface UnifiedPostCardProps {
   // Sistema de mensagens
   onSendMessage?: (postId: string, recipientProfileId: string) => void;
 
-  // Compatibilidade
+  // API pública estável
   onDelete?: (postId: string) => void;
   onEdit?: (postId: string) => void;
   onTagClick?: (tag: string) => void;

@@ -1,8 +1,8 @@
 /**
  * RideCanonicalAdapter
  * 
- * Camada de compatibilidade transitória para ride_requests
- * Suporta modelo canônico (address_id + location_id) e legado (JSONB)
+ * Camada de transicao para ride_requests
+ * Suporta modelo canônico (address_id + location_id) e formato anterior (JSONB)
  * 
  * ETAPA 8: Não refatora MobilityService inteiro, apenas adiciona helpers
  */
@@ -38,7 +38,7 @@ export function hasDropoffAddress(ride: RideRequestRecord): boolean {
 }
 
 /**
- * Obter endereço formatado de origem (compatível com legado)
+ * Obter endereço formatado de origem (compatível com formato anterior)
  */
 export function getFormattedPickupAddress(ride: RideRequestRecord): string {
   const parts: string[] = [];
@@ -65,7 +65,7 @@ export function getFormattedPickupAddress(ride: RideRequestRecord): string {
 }
 
 /**
- * Obter endereço formatado de destino (compatível com legado)
+ * Obter endereço formatado de destino (compatível com formato anterior)
  */
 export function getFormattedDropoffAddress(ride: RideRequestRecord): string {
   const parts: string[] = [];
@@ -92,7 +92,7 @@ export function getFormattedDropoffAddress(ride: RideRequestRecord): string {
 }
 
 /**
- * Obter coordenadas de origem (preferindo address canônico, fallback para legado)
+ * Obter coordenadas de origem (preferindo address canônico, fallback para formato anterior)
  */
 export function getPickupCoordinates(
   ride: RideRequestWithRelations
@@ -105,7 +105,7 @@ export function getPickupCoordinates(
     };
   }
 
-  // Fallback para pickup_location legado
+  // Fallback para pickup_location formato anterior
   const pickup = ride.pickup_location as any;
   if (pickup && typeof pickup === 'object') {
     const lat = pickup.latitude || pickup.lat;
@@ -115,7 +115,7 @@ export function getPickupCoordinates(
     }
   }
 
-  // Fallback para origin legado
+  // Fallback para origin formato anterior
   const origin = (ride as any).origin;
   if (origin && typeof origin === 'object') {
     const lat = origin.latitude || origin.lat;
@@ -129,7 +129,7 @@ export function getPickupCoordinates(
 }
 
 /**
- * Obter coordenadas de destino (preferindo address canônico, fallback para legado)
+ * Obter coordenadas de destino (preferindo address canônico, fallback para formato anterior)
  */
 export function getDropoffCoordinates(
   ride: RideRequestWithRelations
@@ -142,7 +142,7 @@ export function getDropoffCoordinates(
     };
   }
 
-  // Fallback para dropoff_location legado
+  // Fallback para dropoff_location formato anterior
   const dropoff = ride.dropoff_location as any;
   if (dropoff && typeof dropoff === 'object') {
     const lat = dropoff.latitude || dropoff.lat;
@@ -152,7 +152,7 @@ export function getDropoffCoordinates(
     }
   }
 
-  // Fallback para destination legado
+  // Fallback para destination formato anterior
   const destination = (ride as any).destination;
   if (destination && typeof destination === 'object') {
     const lat = destination.latitude || destination.lat;
@@ -180,7 +180,7 @@ export function getDropoffTerritory(ride: RideRequestRecord): string | null {
 }
 
 /**
- * Obter nome do território de origem (preferindo location canônico, fallback para legado)
+ * Obter nome do território de origem (preferindo location canônico, fallback para formato anterior)
  */
 export function getPickupTerritoryName(
   ride: RideRequestWithRelations
@@ -190,14 +190,14 @@ export function getPickupTerritoryName(
     return (ride.pickup_location as Location).name;
   }
 
-  // Fallback para pickup_location legado
+  // Fallback para pickup_location formato anterior
   const pickup = ride.pickup_location as any;
   if (pickup && typeof pickup === 'object') {
     if (pickup.city) return pickup.city;
     if (pickup.neighborhood) return pickup.neighborhood;
   }
 
-  // Fallback para origin legado
+  // Fallback para origin formato anterior
   const origin = (ride as any).origin;
   if (origin && typeof origin === 'object') {
     if (origin.city) return origin.city;
@@ -208,7 +208,7 @@ export function getPickupTerritoryName(
 }
 
 /**
- * Obter nome do território de destino (preferindo location canônico, fallback para legado)
+ * Obter nome do território de destino (preferindo location canônico, fallback para formato anterior)
  */
 export function getDropoffTerritoryName(
   ride: RideRequestWithRelations
@@ -218,14 +218,14 @@ export function getDropoffTerritoryName(
     return (ride.dropoff_location as Location).name;
   }
 
-  // Fallback para dropoff_location legado
+  // Fallback para dropoff_location formato anterior
   const dropoff = ride.dropoff_location as any;
   if (dropoff && typeof dropoff === 'object') {
     if (dropoff.city) return dropoff.city;
     if (dropoff.neighborhood) return dropoff.neighborhood;
   }
 
-  // Fallback para destination legado
+  // Fallback para destination formato anterior
   const destination = (ride as any).destination;
   if (destination && typeof destination === 'object') {
     if (destination.city) return destination.city;

@@ -1,5 +1,5 @@
 /**
- * Compatibility facade for mobility chat service.
+ * Stable facade for mobility chat service.
  *
  * Canonical implementations live in chat.queries/chat.mutations/ChatService.impl.
  */
@@ -24,4 +24,3 @@ export type {
 } from "./chat.types";
 
 export { ChatFacade, ChatService, chatService } from "./ChatService.impl";
-

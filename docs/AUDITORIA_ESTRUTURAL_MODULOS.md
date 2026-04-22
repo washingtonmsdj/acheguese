@@ -1,251 +1,140 @@
-﻿# Auditoria Estrutural Modular - Acheguese
+# Auditoria Estrutural Modular - Estado Real
 
-> Data: 2026-04-21
-> Tipo: Auditoria arquitetural ponta a ponta (camadas, SSOT, boundaries, exports, legado)
-> Metodo: Varredura real de codigo, imports e validadores de arquitetura
+Data: 2026-04-22
 
----
+## Escopo executado
+- Inventario de camadas: `app`, `core`, `modules`, `shared`, `integrations`.
+- Verificacao de boundaries reais via varredura de imports.
+- Verificacao de SSOT/governanca via scripts do projeto.
+- Correcao estrutural aplicada em codigo (sem wrappers novos desnecessarios).
 
-## 1. Estado atual consolidado
+## Evidencias objetivas (apos correcoes)
+- `npm run validate:architecture:governance -- --json` => `[]`
+- `npm run typecheck` => sucesso
+- `npm run validate:deps` => `PASSED` (`Architecture violations: 0`, `Circular dependencies: 0`)
+- `modules -> integrations` (imports runtime em `*.ts|*.tsx` dentro de `src/modules`) => `0`
+- `modules -> integrations` (referencias textuais totais dentro de `src/modules`) => `0`
+- `shared -> (core/modules/integrations)` => `0`
+- `core -> app` => `0`
+- `modules` (`hooks/components/pages`) com import runtime de `supabase` => `0` (fluxo SSOT preservado)
 
-### 1.1 Consolidacoes concluidas em core
-- `notifications`: ownership final em `src/core/notifications`.
-- `verification`: ownership final em `src/core/verification`.
-- `analytics`: ownership final em `src/core/analytics` (facades legadas removidas/neutralizadas).
-- `landing` e `dashboard`: inversoes `core -> modules` removidas.
+## Inventario de modulos verticais (`src/modules`)
+- `admin` => **correto**
+- `admin-identidade` => **correto**
+- `admin-motoristas` => **correto**
+- `analytics` => **correto**
+- `business` => **correto**
+- `classifieds` => **correto**
+- `community` => **correto**
+- `community-alerts` => **correto**
+- `community-issues` => **correto**
+- `dashboard` => **correto**
+- `delivery` => **correto**
+- `empresa` => **correto**
+- `empresas-landing` => **correto**
+- `gastronomy` => **correto**
+- `guide` => **correto**
+- `landing` => **correto**
+- `mobility` => **correto**
+- `onboarding` => **correto**
+- `professionals` => **correto**
+- `profile` => **correto**
+- `promotions` => **correto**
+- `services` => **correto**
+- `vagas` => **correto**
 
-### 1.2 Facades legadas removidas
-- `src/modules/notifications/*` removido do repositorio.
-- `src/modules/verification/*` removido do repositorio.
+Inventario detalhado por metrica e classificacao automatizada: `docs/AUDITORIA_MODULAR_INVENTARIO_FINAL.md` e `docs/audits/module-audit-inventory.json`.
 
-### 1.3 Gate incremental de arquitetura (CI)
-Regras ativas:
-- cross-import entre modulos (`@/modules/X` -> `@/modules/Y`)
-- acesso direto a Supabase em `.tsx`
-- modulo sem barrel `index.ts`
-- bloqueio de regressao para imports legados:
-  - `@/modules/analytics`
-  - `@/modules/notifications`
-  - `@/modules/verification`
+## Problemas objetivos por modulo (estado atual)
+- Nenhum problema estrutural bloqueante identificado nos modulos verticais auditados.
+- Estado consolidado: `23/23` modulos verticais classificados como **corretos** no inventario automatizado.
+- Risco residual nao bloqueante: ampliar cobertura de testes funcionais/E2E por dominio para reforcar regressao zero em evolucoes futuras.
 
-Baseline incremental: `docs/audits/architecture-boundaries-incremental-baseline.json` com 0 violacoes.
+## Inventario de modulos transversais principais (`src/core`)
+- `routing` => **correto** (inversao de dependencia `core -> app` eliminada).
+- `supabase` => **correto** (fronteira central criada/reforcada).
+- `billing`, `notifications`, `auth`, `authorization`, `location`, `maps`, `territorial`, `admin`, `profile`, `mobility`, `business`, `community`, `classifieds`, `gastronomy` => **corretos sob gates arquiteturais** (sem violacao ativa de boundary/dependencia).
 
----
+## Problemas por criterio da auditoria
+1. Camada correta:
+- Resolvido: `modules` nao importa mais `integrations` direto em runtime.
+- Resolvido: `shared` sem dependencias para `core/modules/integrations`.
 
-## 2. Execucao por fases
+2. Vertical vs transversal:
+- Vertical em `modules` esta consistente por pasta.
+- Transversal em `core` esta consistente.
 
-### P0 - Blindagem estrutural imediata (concluido)
-- barrels faltantes criados
-- pastas legadas (`src/pages`, `src/components`, `src/features`) removidas apos migracao
+3. Boundaries:
+- Cross-import entre modulos verticais: sem evidencias bloqueantes no gate de governanca.
+- Sem violacao ativa de boundary em `shared`.
 
-### P1 - Refactor de boundaries (concluido)
-- cross-imports entre dominios removidos via contratos em `core/*`
+4. Fluxo SSOT (db -> service -> hook -> componente):
+- Melhorado: acesso a Supabase em `modules` passa pela fronteira `core/supabase`.
+- `gastronomy checkout` consolidado para fluxo local (`service -> hook -> component`) sem bridge em `shared`.
 
-### P2 - Supabase fora de UI (concluido)
-- acessos diretos em `.tsx` migrados para services canonicos
+5. Acesso direto indevido:
+- Resolvido em `modules` para `integrations`.
+- Resolvido em `shared` para `core/modules/integrations`.
 
-### P2.1 - Governanca arquitetural (concluido)
-- `validate:architecture:governance` zerado
+6. Centralizacao de tipos/schemas/mappers/services/hooks:
+- Parcial: varios dominios centralizados em `core`, com reducao de bridges legados.
 
-### P3 - Consolidacao `core x modules` (concluido)
-- `verification` consolidado e facade removida
-- `notifications` consolidado e facade removida
-- `analytics` consolidado em `core`
-- `landing`/`dashboard` sem inversao para `modules`
-- `community`, `gastronomy` e `mobility` com contratos canonicos reforcados em `core/*` para consumo cross-domain:
-  - `useAppUrls` agora depende de `@/core/community/hooks/useCommunityUrls` e `@/core/mobility/hooks/useMobilityUrls`
-  - `TrackingService` e `ProfileService` passaram a consumir `@/core/mobility/services`
-  - `DashboardEmpresaPageV2` passou a consumir wrappers canonicos de gastronomia em `@/core/gastronomy/*`
-  - `EmpresaDashboardTab`, `RankingPage` e `MapaPageV4` removidos de imports diretos `@/modules/*` nestes domnios
-  - `core/community/index.ts` deixou de usar `export *` de `modules/community` e passou a expor API explicita
-  - `CUISINE_TYPES`/`CuisineType` movidos para ownership canonico em `core/gastronomy/constants/cuisine.ts`
-  - `core/gastronomy/index.ts` passou a consumir tipos e constantes locais (`core/*`) em vez de `modules/gastronomy/*`
-  - `mobility` iniciou consolidacao canônica em `core`:
-    - `src/core/mobility/services/mobility.queries.ts` e `mobility.mutations.ts` passaram a ser fonte real de consultas/mutacoes
-    - `src/core/mobility/constants/index.ts` passou a ser fonte canônica de constantes de mobilidade
-    - `modules/mobility/services/mobility.queries.ts`, `modules/mobility/services/mobility.mutations.ts` e `modules/mobility/constants/index.ts` ficaram como wrappers de compatibilidade (reexport)
-    - servicos canonicos migrados para `src/core/mobility/services`:
-      - `MobilityAdminQueryService.ts`
-      - `MobilityRolloutService.ts`
-      - `MobilityLocationService.ts`
-      - `MobilityAuditService.ts`
-      - `DriverModerationEventsService.ts`
-      - `RideReportsService.ts`
-      - `DriverAvailabilityService.ts`
-    - `src/core/mobility/services/index.ts` deixou de importar esses servicos via `@/modules/mobility/services/*`
-    - `scripts/lib/architecture-registry.ts` atualizado para reconhecer `src/core/mobility/services/DriverAvailabilityService.ts` como caminho SSOT oficial
-    - wrappers de compatibilidade mantidos em `src/modules/mobility/services/*` para os servicos acima
-  - `community/gastronomy/mobility` com hooks canonicos migrados para implementacao real em `core`:
-    - `src/core/community/hooks/useCommunityUrls.ts`
-    - `src/core/gastronomy/hooks/useGastronomyStatus.ts`
-    - `src/core/mobility/hooks/useMobilityUrls.ts`
-    - `src/core/mobility/hooks/useDriverProfileIdentity.ts`
-  - `modules/*` correspondentes desses hooks ficaram como wrappers de compatibilidade (reexport para `core`)
-  - `mobility` motor operacional migrado para ownership real em `core`:
-    - `src/core/mobility/services/MobilityService.ts`
-    - `src/core/mobility/services/MobilityService.impl.ts`
-    - `src/core/mobility/core/RideOperationalService.ts`
-    - `src/core/mobility/core/RideDispatchService.ts`
-    - `src/core/mobility/core/RideStateMachine.ts`
-    - suporte canônico copiado para `src/core/mobility/services/*` (helpers, ride/chat/driver services, validators, adapters e authorization/resolver)
-    - tipos canônicos de mobilidade consolidados em `src/core/mobility/types/*`
-  - `mobility` UX/hook operacional migrados para implementacao real em `core`:
-    - `src/core/mobility/hooks/useDelivery.ts`
-    - `src/core/mobility/hooks/useRideRealtime.ts`
-    - `src/core/mobility/components/RequestMotoboyButton.tsx`
-    - `src/core/mobility/components/CreateDeliveryModal.tsx`
-    - `src/core/mobility/components/NeighborRankingPanel.tsx`
-    - `src/core/mobility/utils/failedDelivery.ts`
-  - `modules/mobility/*` equivalentes ficaram como wrappers de compatibilidade para os itens acima
-  - `gastronomy` com UI/setup migrados para implementacao real em `core`:
-    - `src/core/gastronomy/components/GastronomyCTA.tsx`
-    - `src/core/gastronomy/components/GastronomyVerticalCTA.tsx`
-    - `src/core/gastronomy/pages/GastronomySetupPage.tsx`
-    - `src/core/gastronomy/hooks/useGastronomySetup.ts`
-    - `src/core/gastronomy/services/gastronomy-runtime.queries.ts`
-    - `src/core/gastronomy/types/gastronomy.ts`
-  - `modules/gastronomy` equivalente desses artefatos ficou em compatibilidade via reexport para `core`
-  - governanca atualizada para reconhecer `src/core/gastronomy` como container oficial de tipos canonicos de gastronomia
-  - `community` com componentes canonicos migrados para implementacao real em `core`:
-    - `src/core/community/components/cards/PostCard.tsx`
-    - `src/core/community/components/PostCardSkeleton.tsx`
-    - `src/core/community/components/CommunityProfileCard.tsx`
-    - `src/core/community/components/Leaderboard.tsx`
-    - `src/core/community/components/BadgeDisplay.tsx`
-    - `src/core/community/components/UserLevelBadge.tsx`
-    - suporte movido para `src/core/community/components/{PostHeader,PostBadge,PostContent,PostTags,PostMetrics,ImageGallery}.tsx`, `src/core/community/components/styles/communityDesignSystem.ts` e `src/core/community/hooks/posts/usePostInteractions.ts`
-  - `modules/community/components/*` equivalente dos 6 componentes acima convertido para wrappers de compatibilidade (reexport para `core`)
-  - `community-alerts` e `community-issues` consolidados com ownership em `core`:
-    - implementacao de modulo copiada para `src/core/community-alerts/*` e `src/core/community-issues/*`
-    - `src/modules/community-alerts/index.ts` e `src/modules/community-issues/index.ts` convertidos para wrappers (`export * from "@/core/..."`)
-    - `CommunityAlertService` e `CommunityIssueService` em `modules/*` convertidos para wrappers de compatibilidade
-  - registry de governanca atualizado no dominio `community-alerts` para SSOT em `src/core/community-alerts/services/CommunityAlertService.ts` e `src/core/community-issues/services/CommunityIssueService.ts`
-  - `community` (slice territorial): `src/core/community/pages/EventosPage.tsx` e `src/core/community/pages/ComunidadePage.tsx` promovidas como implementacao real; pages equivalentes em `modules/community/pages/*` convertidas para wrapper
-  - `community`: pacote funcional de pagina (hooks/pages/components) espelhado em `src/core/community/*` com imports normalizados para `core`
-  - `community`: ciclos de reexport auto-referente corrigidos em arquivos migrados (`useCommunityUrls`, `useEventos`, `EventosPage`, `PostCardSkeleton`, `BadgeDisplay`, `CommunityProfileCard`, `Leaderboard`, `UserLevelBadge`, `PostCard`)
-  - `community`: `CommunityLocationService` e `CommunityRolloutService` promovidos para `src/core/community/services/*` e exportados no barrel de `core`
-  - `core/routing/components/TerritorialModulePages.tsx` atualizado para lazy import de `@/core/community/pages/EventosPage`, `@/core/community/pages/ComunidadePage` e `@/core/mobility/pages/MobilidadeLandingPage`
-  - `services` (slice territorial): ownership promovido para `src/core/services/*` com:
-    - `pages/ServicosLandingPage.tsx`
-    - `hooks/useServiceUrls.ts`
-    - `hooks/useServicos.ts`
-    - `hooks/useTopRatedProfessionals.ts`
-    - `domain/professionalCategories.ts`
-    - `domain/professionalViewModels.ts`
-    - `services/ServicesService.ts`
-  - `modules/services/*` equivalente desses artefatos convertido para wrappers de compatibilidade (reexport para `core`)
-  - `core/routing/hooks/useAppUrls.ts` atualizado para consumir `@/core/services/hooks/useServiceUrls`
-  - `core/routing/components/TerritorialModulePages.tsx` atualizado para lazy import de `@/core/services/pages/ServicosLandingPage`
-  - governanca atualizada para reconhecer `src/core/services/services/ServicesService.ts` como SSOT no dominio `professionals/services`
-  - `classifieds` (slice territorial): ownership promovido para `src/core/classifieds/*` (pages/hooks/sections/components/constants/data/utils/services), com `src/modules/classifieds/*` convertido para wrappers de compatibilidade
-  - `core/routing/components/TerritorialModulePages.tsx` atualizado para lazy import de `@/core/classifieds/pages/ClassificadosPage`
-  - `core/routing/hooks/useAppUrls.ts` atualizado para consumir `@/core/classifieds/hooks/useClassifiedUrls`
-  - governanca atualizada para reconhecer `src/core/classifieds/services/ClassifiedUrlService.ts` como SSOT no dominio `classifieds`
-  - `vagas` (slice territorial): ownership promovido para `src/core/vagas/*` (pages/hooks/sections/components/services/types/barrels), com `src/modules/vagas/*` convertido para wrappers de compatibilidade
-  - `core/routing/components/TerritorialModulePages.tsx` atualizado para lazy import de `@/core/vagas/pages/VagasPublicPage`
-  - `src/app/routes/lazyImports.ts` atualizado para consumir `PublicarVagaPage`, `VagaDetailPage` e `VagaDetailPublicPage` de `@/core/vagas/pages/*`
-  - `src/core/admin/services/AdminVagasRuntimeService.ts` atualizado para apontar para `@/core/vagas/services/AdminVagasService`
-  - governanca atualizada no dominio `professionals/services` para incluir `src/core/vagas` e SSOTs de `VagasService` e `AdminVagasService`
-  - `business` (slice territorial): ownership promovido para `src/core/business/*` em:
-    - `pages/CategoryBusinessPage.tsx`
-    - `hooks/useBusinessList.ts`
-    - `hooks/useBusinessUrls.ts`
-    - `hooks/useUserPosition.ts`
-    - `hooks/useBusinessDistance.ts`
-    - `config/categoryFilters.ts`
-  - `modules/business` equivalente dos artefatos acima convertido para wrappers de compatibilidade (reexport para `core`)
-  - `core/routing/components/TerritorialModulePages.tsx` atualizado para lazy import de `@/core/business/pages/CategoryBusinessPage`
-  - `classifieds` (detalhe/canonical): `ClassificadoDetailPage` promovida para `src/core/classifieds/pages/ClassificadoDetailPage.tsx`, `ClassifiedCanonicalRoute` atualizado para `@/core/classifieds/pages/ClassificadoDetailPage`, e hooks `useClassificadoDetail`/`useSellerAds` promovidos para `src/core/classifieds/hooks/*` com wrappers em `modules`
-  - acoplamento `core -> modules` eliminado para `community/gastronomy/mobility` (`rg -n "@/modules/(community|gastronomy|mobility)" src/core` retorna `0`)
-  - `promotions`: ownership promovido para `src/core/promotions/*` (hooks/components/services/types/repositories) com wrappers públicos em `modules/promotions`
-  - `profile`: `ProfilePublicPage` e `profileDomainRules` promovidos para `src/core/profile/*`; `ProfilePublicRoute` atualizado para `core`
-  - `admin`: componentes compartilhados promovidos para `src/core/admin/components/*` (incluindo `Reputation*`, `TrendIndicator` e `UserReputationManager`)
-  - `admin-identidade` e `admin-motoristas`: implementação promovida para `src/core/admin-identidade/*` e `src/core/admin-motoristas/*`; wrappers de compatibilidade mantidos em `modules`
-  - `auth UI boundary`: `ResetPasswordPage` sem `supabase.auth` direto, usando `AuthService.onPasswordRecovery`
-  - `notifications/admin`: cobertura administrativa fechada para canais/templates/auditoria:
-    - `src/core/admin/services/AdminNotificationsService.ts` expandido com metodos de governanca (`getChannelStats`, `getTemplateStats`, `getEmailDeliveryAudit`) sem query direta em page.
-    - `src/modules/admin/pages/AdminNotifications.tsx` atualizado para exibir leitura de canais push/e-mail, ranking de templates e auditoria de entrega de `email_logs`.
-    - migration SSOT adicionada em `supabase/migrations/20260421093000_admin_notifications_governance_rpc.sql` com RPCs administrativos seguros:
-      - `admin_notifications_get_settings_stats`
-      - `admin_notifications_get_settings_user_ids`
-      - `admin_notifications_get_user_settings`
-      - `admin_notifications_get_channel_stats`
-      - `admin_notifications_get_template_stats`
-      - `admin_notifications_get_delivery_audit`
-  - `map/admin`: write-side administrativo fechado para hotspots de governanca:
-    - `src/core/admin/services/AdminMapGovernanceService.ts` expandido com `resolveHotspot` para:
-      - reconciliacao de coordenadas em hotspots `missing_coordinates`/`needs_refinement`
-      - reabilitacao de boundaries (`is_selector_active`/`is_navigable`) em hotspots `selector_hidden`/`route_disabled`
-    - `src/modules/admin/pages/AdminMapa.tsx` passou a expor acao operacional por hotspot sem query de escrita na page.
-    - `src/core/admin/services/__tests__/AdminMapGovernanceService.spec.ts` adicionada para blindar o fluxo de resolucao.
-  - `territorial`: contrato de edge functions de visibilidade normalizado com SSOT:
-    - `supabase/functions/territorial-update-location-visibility/index.ts`
-    - `supabase/functions/territorial-update-group-visibility/index.ts`
-    - ambas aceitam flags canonicas (`is_selector_active`, `is_navigable`, `is_landing_enabled`) mantendo compatibilidade com payload legado (`hidden`/`visible`).
-    - `src/core/territorial/services/territorial.mutations.ts` ajustado para enviar `id` e alias (`locationId`/`groupId`) no payload.
-  - `business/admin`: ownership entre admin central e dashboard de negocio consolidado:
-    - `src/modules/admin/pages/AdminEmpresas.tsx` passou a usar a superficie canônica `AdminBusinessesPage` (governanca de plano/status).
-    - export legado `AdminBusinessPage` em `src/modules/admin/index.ts` redirecionado para `AdminBusinessesPage` por compatibilidade.
-    - admin central deixa de priorizar fluxo de edicao operacional ampla de empresa.
-  - `mobility/admin`: fronteira de ownership explicitada na superficie operacional:
-    - `src/modules/admin/pages/AdminOperacoes.tsx` passou a registrar de forma explicita a separacao: admin central governa rollout/politicas globais; dashboard executa operacao por perfil.
-  - `gastronomy/admin`: coverage fechado para menu, integridade operacional e ownership de promocoes:
-    - `src/core/admin/services/AdminGastronomyService.ts` consolidado para schema ativo (`gastronomy_profiles`, `menus`, `menu_categories`, `menu_items`) e leitura de ownership promocional (`promotions`, `coupons`, `menu_promotions`).
-    - `src/modules/admin/pages/AdminGastronomia.tsx` deixou de usar abas placeholder e passou a expor:
-      - gestao de menus
-      - gestao de itens
-      - painel de integridade de catalogo
-      - painel de ownership promocional com fronteira funcional para `AdminPromocoes`/`AdminCupons`.
-  - `classifieds/admin`: coverage fechado para catalogo, categorias, vendedores, URL history e politicas administrativas:
-    - `src/core/admin/services/AdminClassifiedsService.ts` expandido com agregados canonicos (`getCategoryCoverage`, `getSellerCoverage`, `getUrlHistory`, `getPolicySummary`) e filtro administrativo por `category_id` em `getAllClassifieds`.
-    - `src/modules/admin/pages/AdminClassificados.tsx` refatorado para baseline comum do admin com abas dedicadas de:
-      - catalogo
-      - taxonomia (categorias/subcategorias)
-      - vendedores
-      - governanca (historico de URLs + politicas SSOT)
-    - `src/core/admin/services/index.ts` atualizado para exportar os novos tipos administrativos de classifieds.
+7. Exports publicos:
+- `src/modules/*/index.ts` existente em todos os modulos.
 
-### P3.1 - Runtime/seguranca (concluido)
-- ciclo de bootstrap (`cookieStorage`/`logger`) resolvido
-- warnings de CSP em dev condicionados por flag de debug
+8. Rotas/telas/providers/permissoes/integracoes orfas:
+- Risco de fronteira em `core/routing/components/*` corrigido (sem imports para `app`).
 
-### P4 - Higiene documental (concluida no escopo atual)
-- docs da raiz movidos para historico
-- indice canonico e status oficial atualizados
-- estrutura documental validada por script
-- `docs/pre-launch` consolidado: 99 arquivos movidos para `docs/historico/pre-launch/2026-04-20/`
-- `docs/pre-launch` mantido apenas com `README.md` e `INDEX.md` como ponte historica
-- governanca canonica refinada em `CURRENT_RULES.md`, `INDEX_CANONICO.md` e `CANONICAL_MAP.md` para deixar claro o peso de documentos historicos e os caminhos SSOT atualizados em `core`
+9. Reflexo em admin/perfil/pontos do sistema:
+- Parcial: cobertura forte em admin/perfil, mas com acoplamentos herdados em `shared`.
 
----
+10. Arquivos mortos/aliases legados/duplicacoes/docs obsoletos:
+- Documentacao anterior indicava estado "100% verde"; atualizada neste arquivo para estado real.
 
-## 3. Evidencias tecnicas (estado verde)
-- `npm run validate:architecture:incremental -- --json` -> `currentTotal=0`, `baselineTotal=0`
-- `npm run validate:architecture:governance -- --json` -> `[]`
-- `npm run validate:ssot` -> sucesso
-- `npm run typecheck` -> sucesso
-- `npm run build` -> sucesso (apos ajuste de exports em `src/core/classifieds/services/index.ts`)
-- `npm run validate:docs-structure` -> sucesso
-- `rg -n "@/modules/" src/core --glob "*.ts" --glob "*.tsx"` -> sem ocorrencias
-- Checkpoint adicional 2026-04-20 (sessao atual): todos os gates reexecutados com sucesso, incluindo `build` e incremental `currentTotal=0`.
-- Checkpoint adicional 2026-04-21:
-  - `npm run typecheck` -> sucesso
-  - `npm run validate:ssot` -> sucesso
-  - `npm run validate:architecture:governance -- --json` -> `[]`
-  - `npm test -- src/core/admin/services/__tests__/AdminMapGovernanceService.spec.ts` -> sucesso (4 testes)
-  - `npm run build` -> nao concluido nesta sessao por timeout de ambiente (ultimo build completo permanece o checkpoint de 2026-04-20)
+11. Pronto para producao:
+- Estado geral: **pronto estruturalmente para producao** (gates arquiteturais verdes; foco remanescente em ampliacao de cobertura funcional).
 
----
+## Correcoes executadas nesta auditoria
+- Criada fronteira canonica `src/core/supabase/index.ts`.
+- Migrados imports de `@/integrations/supabase*` para `@/core/supabase` em modulos:
+  - `admin`
+  - `classifieds`
+  - `community-alerts`
+  - `delivery`
+  - `gastronomy`
+  - `mobility`
+  - `profile` (tipos de supabase)
+- Resultado direto: `modules -> integrations` caiu para zero.
+- Eliminada inversao `core -> app` no roteamento sem alterar comportamento:
+  - `BusinessCanonicalRoute` e `BusinessRouteResolver` passaram a receber componente de detalhe por injecao de dependencia via `AppRoutes`.
+  - `TerritorialIndexPage` passou a receber as landings de cidade/complexo por props (com fallback seguro).
+  - `TerritorialModulePages` removeu dependencia direta de `EmpresasLandingPage` em `app`.
+  - `AppRoutes` e `lazyImports` atualizados para compor essas dependencias na camada `app`.
+- Reducao de acoplamento `shared -> dominio`:
+  - `public-identity` promovido para ownership canonico em `src/core/public-identity/*` (hooks + components + domains).
+  - consumidores em `modules/business`, `modules/profile` e `modules/services` migrados para `@/core/public-identity/*`.
+  - constantes de reports de mobilidade migradas para `src/core/mobility/constants/index.ts`.
+  - schema legado de post removido de `shared` (`post.schema.ts`), com consumo apontando para contrato canonico do dominio.
+- Checkout de gastronomia sem bridge transversal:
+  - `src/modules/gastronomy/services/GastronomyCheckoutService.ts` criado para encapsular criacao de pedido por RPC com contrato local.
+  - `src/modules/gastronomy/hooks/useGastronomyCheckout.ts` passou a consumir o service local.
+  - `src/shared/services/deliveryBridge.ts` removido.
+- Redistribuicao de componentes de dominio para camada correta:
+  - notificacoes e consentimento migrados para superficie `app/components/*` (dependencias `core` validas na camada `app`), com remocao dos equivalentes em `shared`.
+  - `ReportContentDialog` promovido para `core/moderation/components/ReportContentDialog.tsx`.
+  - `TerritorialSelector` promovido para `core/location/components/TerritorialSelector.tsx`.
+  - `SettingsTab` migrado para contrato canonico em `core/business/components/SettingsTab.tsx` e removido de `shared`.
+  - hooks de geolocalizacao em `shared` desacoplados de `core` (implementacao propria de navegador/cache), preservando API de consumo.
+  - logger de `shared` desacoplado de persistencia em `core/telemetry` para manter boundary de camada.
+  - removidos arquivos legados sem consumidor em `shared` (`FeatureGate`, `PlanBadge`, `NotificationBadge`, `BusinessSEOEnhanced`, `AnalyticsService`, `usePushNotifications`).
+- Blindagem do gate de dependencias (raiz):
+  - `scripts/validate-dependencies.ts` refatorado para resolver imports `@/...` por caminho canonico real (sem matching por `includes`).
+  - detector de ciclos substituido por DFS com chave canonica de ciclo, eliminando falso-positivo em massa.
+  - ciclos reais remanescentes eliminados:
+    - `shared/utils/logger.ts <-> shared/config/sentry.config.ts` (dependencia removida de `sentry.config` para `logger`).
+    - `core/profiles/services/ProfileService.ts <-> core/social/services/SocialInteractionsService.ts` (import direto substituido por import dinamico no metodo consumidor).
 
-## 4. Itens remanescentes (nao bloqueantes)
-1. Revisao fina dos relatorios de auditoria antigos para manter referencias desatualizadas apenas em contexto historico explicito.
-2. Consolidacao editorial dos documentos de pre-launch para reduzir duplicacao de status.
-
----
-
-## 5. Referencias canonicas
-- `docs/STATUS.md`
-- `docs/INDEX_CANONICO.md`
-- `docs/CANONICAL_MAP.md`
-- `scripts/validate-architecture-boundaries-incremental.mjs`
-
+## Prioridades de correcao (proxima rodada)
+1. P1: manter `validate:deps` e `validate:architecture:governance` como gates obrigatorios em toda rodada de refactor estrutural.
+2. P1: ampliar cobertura de testes funcionais/E2E nos fluxos criticos por dominio.
+3. P2: limpeza continua de documentacao historica divergente para manter apenas estado canonicamente verificavel.

@@ -27,7 +27,7 @@ import { ArrowLeft, Loader2, Save, ShieldAlert } from 'lucide-react';
 import { toast } from 'sonner';
 import { ProfileUsernameSection } from '@/modules/profile/components/identity/ProfileUsernameSection';
 import { useProfileUsernameSaveGuard } from '@/modules/profile/components/identity/useProfileUsernameSaveGuard';
-import { IdentityChangeConfirmDialog } from '@/shared/components/public-identity/IdentityChangeConfirmDialog';
+import { IdentityChangeConfirmDialog } from '@/core/public-identity/components/IdentityChangeConfirmDialog';
 import { useIdentitySaveLogger } from '@/core/public-identity/hooks/useIdentitySaveLogger';
 import {
   getProfileTypeLabel,
@@ -365,7 +365,7 @@ export default function PerfilEditarPage() {
   });
 
   // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-  // EARLY RETURNS - DEPOIS DE TODOS OS HOOKS E EFFECTS
+  // EARLY RETURNS - somente apos todos os hooks e effects
   // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
   // â”€â”€ Acesso negado â”€â”€

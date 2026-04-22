@@ -36,11 +36,13 @@ Ultima atualizacao: 2026-04-22
 - Observacao desta sessao (2026-04-21): `npm run build` excedeu timeout do ambiente antes de concluir; ultimo build completo documentado permanece o checkpoint verde de 2026-04-20.
 
 ## Estado arquitetural real
-- Estado geral: **parcialmente correto**.
+- Estado geral: **correto e consolidado sob governanca ativa**.
 - Bloqueios principais para AAA pleno:
   1. manter governanca ativa para impedir regressao (`validate:deps`, `validate:architecture:governance`, `validate:ssot`).
   2. consolidacao final dos poucos imports textuais residuais em `shared/*` para limpeza total de inventario.
 - Relatorio completo atualizado em `docs/AUDITORIA_ESTRUTURAL_MODULOS.md`.
+- Inventario modular final (23 modulos, classificacao objetiva por metrica) em `docs/AUDITORIA_MODULAR_INVENTARIO_FINAL.md`.
+- Inventario modular consolidado na rodada atual: **23/23 modulos classificados como corretos**.
 
 ## Divida tecnica remanescente
 1. Consolidacao `core` x `modules`:
@@ -134,6 +136,16 @@ Ultima atualizacao: 2026-04-22
 - `business`: `SettingsTab` consolidado em `src/core/business/components/SettingsTab.tsx`; versao em `shared` removida.
 - `gastronomy`: checkout desacoplado de `delivery` via `shared`; novo `src/modules/gastronomy/services/GastronomyCheckoutService.ts` como contrato local de criacao de pedidos e remocao de `src/shared/services/deliveryBridge.ts`.
 - `mobility`: `useMobilidade` sem escrita direta em banco no hook; fluxo movido para `RideRatingService` + novo `RidePassengerService` em `src/core/mobility/services/`.
+- `gastronomy`: `GastronomyDashboardPage` passou a consumir contadores reais de uso (`getMenuUsageStats`) em vez de placeholders hardcoded.
+- `gastronomy`: `useSubscriptionManagement` passou a usar `GastronomySubscriptionService.listInvoices` para faturas (sem TODO pendente no hook).
+- `mobility`: `DriverPresenceStats` passou a consumir `DriverPresenceService` canonico em `core/mobility/services`.
+- `mobility`: `BoardingPointsPanel` passou a consumir `BoardingPointService` canonico em `core/mobility/services` com dados reais de pontos recorrentes via `ride_requests -> locations`.
+- `admin`: `AdminVerificacoes` consolidado para pagina canonica de `core/verification` e `AdminRoles` passou a registrar `revokedBy/renewedBy` com contexto de sessao (sem placeholder hardcoded).
+- `business`: `AppointmentNotifications` passou a consumir notificacoes canonicas de `core/notifications` (query, realtime e leitura de estado).
+- `classifieds`: `VendedorContactBar` passou a integrar com `core/messaging` para conversa/mensagem real; `useVendedorPerfil` removeu metricas fake no caminho real e passou a expor `phone/whatsapp`.
+- `profile`: `MobilidadeSection` refatorada com extracao de blocos de snapshot em cards dedicados (`DriverOperationalSnapshotCard` e `DriverVehicleDetailsCard`).
+- `profile`: `DeliverySection` passou a resolver entitlements por empresa via `useEntitlements` (cache React Query) com fallback seguro para snapshot.
+- auditoria modular (2026-04-22, rodada final consolidada): TODO/FIXME em `src/modules/*` nos dominios auditados = `admin=0`, `business=0`, `classifieds=0`, `community=0`, `gastronomy=0`, `mobility=0`, `profile=0`.
 - `shared`: `logger` desacoplado de `core/telemetry`; hooks `useGeolocation`/`useRobustGeolocation` desacoplados de `core/maps/services`.
 - `shared`: removidos legados sem consumidor (`FeatureGate`, `PlanBadge`, `NotificationBadge`, `BusinessSEOEnhanced`, `AnalyticsService`, `usePushNotifications`).
 - `deps-governance`: `scripts/validate-dependencies.ts` refatorado para resolver import alias canonico e detectar ciclos reais (sem falso positivo por matching textual amplo).

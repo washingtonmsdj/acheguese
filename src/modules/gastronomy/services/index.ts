@@ -11,7 +11,7 @@ export {
   // GastronomyFacade - Acesso unificado a queries, mutations e helpers
   GastronomyFacade,
   default as gastronomyService,
-  // Exports legados (compatibilidade)
+  // Exports de estabilidade de contrato
   GastronomyService,
 } from './GastronomyService';
 
@@ -19,7 +19,7 @@ export {
 export {
   MenuFacade,
   default as menuService,
-  // Exports legados (compatibilidade)
+  // Exports de estabilidade de contrato
   MenuService,
 } from './MenuService';
 

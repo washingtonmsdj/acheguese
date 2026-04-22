@@ -2,7 +2,7 @@
  * Re-exports de formatação monetária do SSOT shared.
  *
  * O contrato canonico esta em @/shared/utils/currency.
- * Este arquivo mantem a API do modulo por compatibilidade.
+ * Este arquivo mantem a API publica estavel do modulo.
  */
 
 export { formatBrl, formatBrlCompact } from '@/shared/utils/currency';

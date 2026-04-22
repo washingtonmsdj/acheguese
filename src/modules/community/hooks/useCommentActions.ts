@@ -1,6 +1,6 @@
 /**
- * @deprecated Use useAddComment ou useDeleteComment do core/comments/hooks
- * Este hook será removido em breve - mantido apenas para compatibilidade
+ * Use useAddComment ou useDeleteComment do core/comments/hooks em novos fluxos.
+ * Este hook segue exposto para estabilidade da API publica do modulo.
  */
 
 import { useState } from "react";

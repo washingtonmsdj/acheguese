@@ -15,7 +15,7 @@
  * - Gera relatório detalhado
  */
 
-import { supabase } from '@/integrations/supabase';
+import { supabase } from '@/core/supabase';
 import { AddressService } from '@/core/address/services/AddressService';
 import { GeospatialService } from '@/core/geospatial/services/GeospatialService';
 import { getAllRideRequests } from '../services/mobility.queries';
@@ -26,7 +26,7 @@ import type { RideMigrationResult, ResolutionStrategy } from '../types';
 const addressService = new AddressService();
 const geospatialService = new GeospatialService();
 
-interface LegacyRide {
+interface HistoricalRide {
   id: string;
   passenger_profile_id: string;
   pickup_location_id: string | null;
@@ -76,7 +76,7 @@ export async function migrateRideRequestsToCanonical(): Promise<RideMigrationRes
   };
 
   // Buscar todas as corridas via SSOT
-  const rides = await getAllRideRequests() as LegacyRide[];
+  const rides = await getAllRideRequests() as HistoricalRide[];
 
   if (!rides || rides.length === 0) {
     return result;
@@ -107,7 +107,7 @@ export async function migrateRideRequestsToCanonical(): Promise<RideMigrationRes
 }
 
 async function migrateRide(
-  ride: LegacyRide,
+  ride: HistoricalRide,
   result: RideMigrationResult
 ): Promise<void> {
   // Skip se já migrado completamente
@@ -281,7 +281,7 @@ async function createAddress(
 
   const addressInput: CreateAddressInput = {
     location_id: locationId,
-    geocoding_source: 'migration_legacy',
+    geocoding_source: 'migration_history',
     geocoding_confidence: 0.7,
   };
 
