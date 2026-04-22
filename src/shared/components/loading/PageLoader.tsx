@@ -75,19 +75,19 @@ export function PageLoader({
  * Variantes específicas para contextos diferentes
  */
 export const AdminPageLoader = () => (
-  <PageLoader message="Carregando painel..." />
+  <PageLoader message="Organizando o painel..." />
 );
 
 export const ModulePageLoader = () => (
-  <PageLoader message="Carregando conteúdo..." />
+  <PageLoader message="Buscando as informações..." />
 );
 
 export const FullScreenLoader = () => (
   <PageLoader
-    message="Carregando aplicação..."
+    message="Preparando a casa para você se achegar..."
     fullScreen
     recoveryAfterMs={8000}
-    recoveryTitle="Aplicação ainda não respondeu"
-    recoveryDescription="Se a tela continuar travada, recarregue para tentar novamente."
+    recoveryTitle="Demorando um pouco mais que o normal..."
+    recoveryDescription="Verifique sua conexão ou recarregue a página para tentar novamente."
   />
 );
