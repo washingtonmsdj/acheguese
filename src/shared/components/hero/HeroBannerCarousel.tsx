@@ -123,9 +123,9 @@ export function HeroBannerCarousel({
               alt={currentBanner.title}
               className="w-full h-full object-cover"
             />
-            {/* Overlay mais escuro e uniforme */}
-            <div className="absolute inset-0 bg-gradient-to-r from-background/85 via-background/70 to-background/85" />
-            <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-background/50 to-background/70" />
+            {/* Overlay mais claro */}
+            <div className="absolute inset-0 bg-gradient-to-r from-background/70 via-background/50 to-transparent" />
+            <div className="absolute inset-0 bg-gradient-to-t from-background/70 via-background/25 to-transparent" />
           </div>
 
           {/* Content */}
@@ -135,7 +135,7 @@ export function HeroBannerCarousel({
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.2 }}
-                className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-foreground mb-4 leading-tight [text-shadow:_0_4px_20px_rgb(0_0_0_/_90%),_0_2px_8px_rgb(0_0_0_/_80%)]"
+                className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-foreground mb-3 leading-tight drop-shadow-2xl [text-shadow:_0_2px_12px_rgb(0_0_0_/_80%)]"
               >
                 {currentBanner.title}
               </motion.h2>
@@ -145,7 +145,7 @@ export function HeroBannerCarousel({
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.3 }}
-                  className="text-base md:text-lg lg:text-xl text-muted-foreground mb-6 [text-shadow:_0_2px_12px_rgb(0_0_0_/_85%),_0_1px_6px_rgb(0_0_0_/_75%)]"
+                  className="text-sm md:text-base text-muted-foreground mb-6 drop-shadow-xl [text-shadow:_0_1px_8px_rgb(0_0_0_/_70%)]"
                 >
                   {currentBanner.subtitle}
                 </motion.p>
@@ -160,7 +160,7 @@ export function HeroBannerCarousel({
                   <Button
                     onClick={currentBanner.cta.onClick}
                     size="lg"
-                    className="h-14 px-10 rounded-full font-bold text-base shadow-2xl shadow-primary/30 hover:shadow-primary/40 hover:scale-105 transition-all duration-300"
+                    className="h-12 px-8 rounded-xl font-semibold shadow-lg shadow-primary/20 hover:shadow-primary/30 hover:scale-105 transition-all duration-300"
                   >
                     {currentBanner.cta.label}
                   </Button>
