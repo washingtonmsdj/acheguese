@@ -357,69 +357,50 @@ export default function GastronomyLandingPage() {
       </Helmet>
 
       <div className="min-h-screen bg-background">
-        <CanonicalHero
-          moduleName="Gastronomia"
-          moduleIcon={UtensilsCrossed}
-          density="banner"
-          centered={true}
-          territoryName={territoryName}
-          territoryFallback="Sua regiao"
-          title="O que voce quer comer hoje?"
-          titleHighlight=""
-          subtitle="Descubra lojas e cardapios no seu territorio, com foco em qualidade, tempo e conveniencia."
-          backgroundImage={gastronomyHeroBg}
-          stats={[
-            { value: String(effectiveFoodCatalog.length), label: 'pratos' },
-            { value: String(sortedBusinesses.length), label: 'lojas' },
+        {/* ── Hero Carrossel de Banners ─────────────────────── */}
+        <HeroBannerCarousel
+          banners={[
+            {
+              id: '1',
+              image: gastronomyHeroBg,
+              title: 'Promoção Especial!',
+              subtitle: 'Desconto de 20% em todos os pedidos acima de R$ 50',
+              textPosition: 'left',
+              cta: {
+                label: 'Ver Ofertas',
+                onClick: () => console.log('Ver ofertas'),
+              },
+            },
+            {
+              id: '2',
+              image: gastronomyHeroBg,
+              title: 'Delivery Grátis',
+              subtitle: 'Frete grátis para pedidos acima de R$ 30',
+              textPosition: 'center',
+              cta: {
+                label: 'Pedir Agora',
+                onClick: () => console.log('Pedir agora'),
+              },
+            },
+            {
+              id: '3',
+              image: gastronomyHeroBg,
+              title: 'Novos Restaurantes',
+              subtitle: 'Conheça as novidades da sua região',
+              textPosition: 'right',
+              cta: {
+                label: 'Explorar',
+                onClick: () => console.log('Explorar'),
+              },
+            },
           ]}
+          autoPlayInterval={5000}
+          showArrows={true}
+          showDots={true}
+          height="400px"
         />
 
         <section className="container mx-auto px-4 pt-4">
-          {/* ── Carrossel de Banners Promocionais ─────────────── */}
-          <div className="mb-6">
-            <HeroBannerCarousel
-              banners={[
-                {
-                  id: '1',
-                  image: gastronomyHeroBg,
-                  title: 'Promoção Especial!',
-                  subtitle: 'Desconto de 20% em todos os pedidos acima de R$ 50',
-                  textPosition: 'left',
-                  cta: {
-                    label: 'Ver Ofertas',
-                    onClick: () => console.log('Ver ofertas'),
-                  },
-                },
-                {
-                  id: '2',
-                  image: gastronomyHeroBg,
-                  title: 'Delivery Grátis',
-                  subtitle: 'Frete grátis para pedidos acima de R$ 30',
-                  textPosition: 'center',
-                  cta: {
-                    label: 'Pedir Agora',
-                    onClick: () => console.log('Pedir agora'),
-                  },
-                },
-                {
-                  id: '3',
-                  image: gastronomyHeroBg,
-                  title: 'Novos Restaurantes',
-                  subtitle: 'Conheça as novidades da sua região',
-                  textPosition: 'right',
-                  cta: {
-                    label: 'Explorar',
-                    onClick: () => console.log('Explorar'),
-                  },
-                },
-              ]}
-              autoPlayInterval={5000}
-              showArrows={true}
-              showDots={true}
-              height="300px"
-            />
-          </div>
-
           {/* ── Google AdSense ─────────────────────────────────── */}
           <div className="mb-6 w-full overflow-hidden rounded-xl" style={{ maxHeight: '120px' }}>
             <AdSense 
