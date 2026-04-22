@@ -12,6 +12,8 @@ export type {
 } from "./types";
 export { GastronomyProfileService } from "./GastronomyProfileService";
 export type { ServiceResult } from "./GastronomyProfileService";
+export { gastronomyMapService } from "./services/GastronomyMapService";
+export type { GastronomyMapEntity } from "./services/GastronomyMapService";
 
 // Menu Service
 export { MenuService } from "./MenuService";

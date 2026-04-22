@@ -23,10 +23,11 @@ import { MAP_RUNTIME_LAYER_KEYS } from '../config/runtimeConfig';
 import { BusinessService } from '@/core/business/services/BusinessService';
 import { EventsService } from '@/core/events/services/EventsService';
 import { communityAlertService } from '@/core/community-alerts';
+import { gastronomyMapService } from '@/core/gastronomy';
 import { useTerritoryFilter, territoryFilterKey, useResolvedUserLocation } from '@/core/location';
 import { useTerritoryPolygon } from '../hooks/useTerritoryPolygon';
 import { useTouristPointsByBounds } from '@/core/tourist-points/hooks/useTouristPointsSpatial';
-import type { BoundingBox, MapMarker, MapViewport } from '../types/core';
+import type { BoundingBox, MapLayerKey, MapMarker, MapViewport } from '../types/core';
 import type { TerritoryFilter } from '@/core/location/types';
 import type { Business } from '@/core/business/types/Business';
 import type { Event } from '@/core/events/services/EventsService';
@@ -50,6 +51,12 @@ const TILE_STYLE_URL = DEFAULT_TILE_STYLE.styleUrl;
 // ─── Bounds e zoom iniciais (Salvador, BA) ────────────────────────────────────
 const SALVADOR_BOUNDS: BoundingBox = [-38.6, -13.1, -38.3, -12.8];
 const INITIAL_ZOOM = 13;
+
+function createInitialVisibleLayers(): Partial<Record<MapLayerKey, boolean>> {
+  return Object.fromEntries(
+    MAP_RUNTIME_LAYER_KEYS.map((layer) => [layer, true]),
+  ) as Partial<Record<MapLayerKey, boolean>>;
+}
 
 // ─── Helper de filtro por bounds (client-side) ────────────────────────────────
 function isInsideBounds(
@@ -85,6 +92,7 @@ function makeBusinessFetcher(territoryFilter: TerritoryFilter) {
           is_premium: b.is_premium,
           is_verified: b.is_verified,
           rating: b.rating,
+          map_layer_key: 'businesses',
         })),
         'business',
         { includeMetadata: true, calculateScore: true, baseUrl: '/empresas' },
@@ -112,9 +120,43 @@ function makeEventFetcher(territoryFilter: TerritoryFilter) {
           description: e.description,
           created_at: e.created_at,
           coordinate_source: e.coordinate_source,
+          map_layer_key: 'events',
         })),
         'event',
         { includeMetadata: true, baseUrl: '/eventos' },
+      );
+    } catch {
+      return [];
+    }
+  };
+}
+
+function makeGastronomyFetcher(territoryFilter: TerritoryFilter) {
+  return async (bounds: BoundingBox): Promise<MapMarker[]> => {
+    try {
+      const gastronomyBusinesses = await gastronomyMapService.getByBounds(bounds, {
+        territoryFilter,
+        limit: 200,
+      });
+
+      return mapEntityProjection.projectEntities(
+        gastronomyBusinesses.map((business) => ({
+          id: business.id,
+          name: business.name,
+          slug: business.slug,
+          latitude: business.latitude,
+          longitude: business.longitude,
+          status: 'active',
+          is_premium: business.is_premium,
+          is_verified: business.is_verified,
+          rating: business.rating,
+          category: 'gastronomy',
+          cuisine_type: business.cuisine_type,
+          delivery_enabled: business.delivery_enabled,
+          map_layer_key: 'gastronomy',
+        })),
+        'business',
+        { includeMetadata: true, calculateScore: true, baseUrl: '/gastronomia' },
       );
     } catch {
       return [];
@@ -150,6 +192,7 @@ function makeAlertFetcher(territoryFilter: TerritoryFilter) {
           status: 'active',
           description: a.description,
           created_at: a.created_at,
+          map_layer_key: 'alerts',
         })),
         'alert',
         { includeMetadata: true, baseUrl: '/alertas' },
@@ -166,6 +209,10 @@ export default function MapaPageV4({ resolved, activeMemberIds = [] }: MapaPageV
   const adapterRef = useRef<MapLibreAdapterHandle>(null);
   const [selectedMarker, setSelectedMarker] = useState<MapMarker | null>(null);
   const [currentBounds, setCurrentBounds] = useState<BoundingBox>(SALVADOR_BOUNDS);
+  const [currentZoom, setCurrentZoom] = useState<number>(INITIAL_ZOOM);
+  const [visibleLayers, setVisibleLayers] = useState<Partial<Record<MapLayerKey, boolean>>>(
+    createInitialVisibleLayers,
+  );
   const navigate = useNavigate();
 
   // Localização do usuário com fallback territorial
@@ -183,6 +230,12 @@ export default function MapaPageV4({ resolved, activeMemberIds = [] }: MapaPageV
   const territoryFilter = useTerritoryFilter(resolved, activeMemberIds);
   const { polygons: territoryPolygons } = useTerritoryPolygon(resolved);
 
+  const touristLayerVisible = visibleLayers.tourist_points !== false;
+  const businessesLayerVisible = visibleLayers.businesses !== false;
+  const gastronomyLayerVisible = visibleLayers.gastronomy !== false;
+  const eventsLayerVisible = visibleLayers.events !== false;
+  const alertsLayerVisible = visibleLayers.alerts !== false;
+
   // Busca de pontos turísticos por bounds (modo normal)
   const { data: touristPointsData } = useTouristPointsByBounds(
     {
@@ -193,26 +246,42 @@ export default function MapaPageV4({ resolved, activeMemberIds = [] }: MapaPageV
     },
     { 
       // NÃO filtrar por locationId - pontos turísticos devem aparecer em toda a cidade
-      enabled: true,
+      enabled: touristLayerVisible && currentZoom >= 10,
     }
   );
 
   const filterKey = territoryFilterKey(territoryFilter);
   const fetchers = React.useMemo(
     () => ({
-      businesses: makeBusinessFetcher(territoryFilter),
-      events: makeEventFetcher(territoryFilter),
-      alerts: makeAlertFetcher(territoryFilter),
+      ...(businessesLayerVisible ? { businesses: makeBusinessFetcher(territoryFilter) } : {}),
+      ...(gastronomyLayerVisible ? { gastronomy: makeGastronomyFetcher(territoryFilter) } : {}),
+      ...(eventsLayerVisible ? { events: makeEventFetcher(territoryFilter) } : {}),
+      ...(alertsLayerVisible ? { alerts: makeAlertFetcher(territoryFilter) } : {}),
     }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [filterKey],
+    [filterKey, businessesLayerVisible, gastronomyLayerVisible, eventsLayerVisible, alertsLayerVisible],
   );
 
-  const { layerData, loadingLayers, fetchByBounds } = useMapViewportFetch({
+  const { layerData, loadingLayers, fetchByBounds, clearLayer } = useMapViewportFetch({
     fetchers,
     debounceMs: 400,
     minZoom: 10,
   });
+
+  const handleLayerToggle = useCallback((key: string, visible: boolean) => {
+    if (!MAP_RUNTIME_LAYER_KEYS.includes(key as MapLayerKey)) return;
+
+    setVisibleLayers((prev) => ({
+      ...prev,
+      [key]: visible,
+    }));
+
+    if (!visible) {
+      if (key === 'businesses' || key === 'gastronomy' || key === 'events' || key === 'alerts') {
+        clearLayer(key as MapLayerKey);
+      }
+    }
+  }, [clearLayer]);
 
   // Fetch inicial com bounds de Salvador.
   // Quando os polígonos do território chegarem, o MapLibreAdapter centraliza
@@ -237,6 +306,7 @@ export default function MapaPageV4({ resolved, activeMemberIds = [] }: MapaPageV
   const handleViewportChange = useCallback(
     (viewport: MapViewport, bounds: BoundingBox) => {
       setCurrentBounds(bounds);
+      setCurrentZoom(viewport.zoom);
       fetchByBounds(bounds, viewport.zoom);
     },
     [fetchByBounds],
@@ -247,21 +317,24 @@ export default function MapaPageV4({ resolved, activeMemberIds = [] }: MapaPageV
   const markers = React.useMemo(() => {
     // Modo normal: busca por bounds
     // Combinar marcadores de viewport fetch + pontos turísticos
-    const touristPointMarkers = mapEntityProjection.projectEntities(
-      (touristPointsData || []).map((result) => ({
-        id: result.id,
-        name: result.name,
-        latitude: result.latitude,
-        longitude: result.longitude,
-        status: 'active',
-        location_id: result.location_id,
-      })),
-      'tourist_point',
-      { includeMetadata: true, calculateScore: true, baseUrl: '/pontos-turisticos' },
-    );
+    const touristPointMarkers = touristLayerVisible
+      ? mapEntityProjection.projectEntities(
+          (touristPointsData || []).map((result) => ({
+            id: result.id,
+            name: result.name,
+            latitude: result.latitude,
+            longitude: result.longitude,
+            status: 'active',
+            location_id: result.location_id,
+            map_layer_key: 'tourist_points',
+          })),
+          'tourist_point',
+          { includeMetadata: true, calculateScore: true, baseUrl: '/pontos-turisticos' },
+        )
+      : [];
 
     return [...Object.values(layerData).flat(), ...touristPointMarkers];
-  }, [touristPointsData, layerData]);
+  }, [touristPointsData, layerData, touristLayerVisible]);
 
   return (
     <div
@@ -302,6 +375,8 @@ export default function MapaPageV4({ resolved, activeMemberIds = [] }: MapaPageV
               position: 'bottom-left',
               layers: MAP_RUNTIME_LAYER_KEYS,
               layout: 'vertical',
+              visibleLayers,
+              onLayerToggle: handleLayerToggle,
             },
             territory: {
               enabled: true,

@@ -12,7 +12,9 @@ import {
   Telescope,
 } from "lucide-react";
 import {
+  adminMobilityService,
   adminMapGovernanceService,
+  type AdminMobilityOperationalFilter,
   type AdminMapGovernanceHotspot,
   type AdminMapGovernanceIssue,
 } from "@/core/admin";
@@ -114,10 +116,17 @@ export default function AdminMapa() {
   const [scopeFilter, setScopeFilter] = useState("");
   const [page, setPage] = useState(1);
   const [resolvingHotspotId, setResolvingHotspotId] = useState<string | null>(null);
+  const [mobilityFilter, setMobilityFilter] =
+    useState<AdminMobilityOperationalFilter>("all");
 
   const snapshotQuery = useQuery({
     queryKey: ["admin-map-governance"],
     queryFn: () => adminMapGovernanceService.getSnapshot(),
+  });
+
+  const mobilityOperationalQuery = useQuery({
+    queryKey: ["admin-map-mobility-operational", mobilityFilter],
+    queryFn: () => adminMobilityService.getOperationalSnapshot(mobilityFilter, 50),
   });
 
   const resolveHotspotMutation = useMutation({
@@ -202,6 +211,7 @@ export default function AdminMapa() {
   const isRefreshing = snapshotQuery.isFetching;
   const retrySnapshot = () => {
     void snapshotQuery.refetch();
+    void mobilityOperationalQuery.refetch();
   };
 
   const renderHotspotAction = (hotspot: AdminMapGovernanceHotspot) => {
@@ -531,6 +541,95 @@ export default function AdminMapa() {
                   </div>
                 ))}
               </div>
+            </AdminDataState>
+          </AdminSectionCard>
+
+          <AdminSectionCard
+            title="Mobilidade operacional"
+            description="Filtro administrativo de motoristas online, corridas e entregas em andamento."
+          >
+            <AdminDataState
+              loading={mobilityOperationalQuery.isLoading}
+              isEmpty={
+                !mobilityOperationalQuery.isLoading &&
+                !(mobilityOperationalQuery.data?.items.length || 0)
+              }
+              emptyTitle="Sem itens operacionais"
+              emptyDescription="Nao ha motoristas online nem corridas/entregas em andamento neste momento."
+            >
+              <div className="flex flex-wrap gap-2 mb-3">
+                <Button
+                  size="sm"
+                  variant={mobilityFilter === "all" ? "default" : "outline"}
+                  onClick={() => setMobilityFilter("all")}
+                >
+                  Tudo
+                </Button>
+                <Button
+                  size="sm"
+                  variant={mobilityFilter === "drivers_online" ? "default" : "outline"}
+                  onClick={() => setMobilityFilter("drivers_online")}
+                >
+                  Motoristas online
+                </Button>
+                <Button
+                  size="sm"
+                  variant={mobilityFilter === "rides_in_progress" ? "default" : "outline"}
+                  onClick={() => setMobilityFilter("rides_in_progress")}
+                >
+                  Corridas
+                </Button>
+                <Button
+                  size="sm"
+                  variant={mobilityFilter === "deliveries_in_progress" ? "default" : "outline"}
+                  onClick={() => setMobilityFilter("deliveries_in_progress")}
+                >
+                  Entregas
+                </Button>
+              </div>
+
+              <div className="grid grid-cols-3 gap-2 mb-3 text-xs">
+                <Badge variant="outline">
+                  Motoristas: {mobilityOperationalQuery.data?.drivers_online || 0}
+                </Badge>
+                <Badge variant="outline">
+                  Corridas: {mobilityOperationalQuery.data?.rides_in_progress || 0}
+                </Badge>
+                <Badge variant="outline">
+                  Entregas: {mobilityOperationalQuery.data?.deliveries_in_progress || 0}
+                </Badge>
+              </div>
+
+              <AdminTable>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Tipo</TableHead>
+                    <TableHead>Entidade</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Atualizado</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {(mobilityOperationalQuery.data?.items ?? []).map((item) => (
+                    <TableRow key={`${item.kind}:${item.id}`}>
+                      <TableCell>
+                        <Badge variant="outline">
+                          {item.kind === "driver"
+                            ? "Motorista"
+                            : item.kind === "ride"
+                              ? "Corrida"
+                              : "Entrega"}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="font-medium">{item.label}</TableCell>
+                      <TableCell>{stateBadge(item.status)}</TableCell>
+                      <TableCell className="text-xs text-muted-foreground">
+                        {new Date(item.updated_at).toLocaleString("pt-BR")}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </AdminTable>
             </AdminDataState>
           </AdminSectionCard>
 

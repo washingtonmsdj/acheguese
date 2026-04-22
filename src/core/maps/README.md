@@ -219,6 +219,7 @@ setupDefaultProviders();
 ## Camadas Disponíveis
 
 - `businesses`: Empresas
+- `gastronomy`: Gastronomia
 - `services`: Serviços
 - `classifieds`: Classificados
 - `events`: Eventos
@@ -263,13 +264,13 @@ Contratos definidos, sem acoplamento prematuro.
 1. ✅ Tipos e contratos
 2. ✅ Services centrais
 3. ✅ Providers (OSM, Nominatim, Mock)
-4. ⏳ Hooks React
-5. ⏳ Componentes de mapa
-6. ⏳ Página /mapa/:uf/:cidade
-7. ⏳ Integração com módulos existentes
+4. ✅ Hooks React
+5. ✅ Componentes de mapa
+6. ✅ Página `/mapa/:state/:city` e `/mapa/:state/:city/:groupSlugOrDistrict`
+7. ✅ Integração com módulos existentes (businesses, gastronomy, events, alerts, tourist points)
 8. ⏳ Provider real de routing (OSRM/Valhalla)
-9. ⏳ Clustering nativo
-10. ⏳ Paginação espacial
+9. ✅ Clustering nativo
+10. ⏳ Paginação espacial (otimização futura)
 
 ## Regras de Importação
 

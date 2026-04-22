@@ -321,6 +321,7 @@ export class MapEntityProjectionService {
       'created_at',
       'updated_at',
       'coordinate_source',  // precisão de coordenada: exact | geocoded | approximate
+      'map_layer_key',
     ];
 
     commonFields.forEach((field) => {

@@ -4,6 +4,9 @@ export type {
   AdminDriverData,
   AdminRideData,
   AdminRideStats,
+  AdminMobilityOperationalFilter,
+  AdminMobilityOperationalItem,
+  AdminMobilityOperationalSnapshot,
 } from "./AdminMobilityService";
 export { adminBusinessService } from "./AdminBusinessService";
 export type { AdminBusinessData } from "./AdminBusinessService";

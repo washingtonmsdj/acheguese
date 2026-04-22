@@ -2,6 +2,7 @@ import type { MapLayerKey } from "../types/core";
 
 export const MAP_RUNTIME_LAYER_KEYS: MapLayerKey[] = [
   "businesses",
+  "gastronomy",
   "events",
   "alerts",
   "tourist_points",

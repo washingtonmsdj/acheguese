@@ -167,6 +167,12 @@ function layerSource(layerKey: string): { source: string; route: string; note: s
         route: "/mapa",
         note: "Camada principal de descoberta comercial do mapa.",
       };
+    case "gastronomy":
+      return {
+        source: "gastronomyMapService.getByBounds",
+        route: "/mapa",
+        note: "Camada de gastronomia dedicada, derivada do vertical oficial.",
+      };
     case "events":
       return {
         source: "EventsService.getByBounds",
@@ -175,7 +181,7 @@ function layerSource(layerKey: string): { source: string; route: string; note: s
       };
     case "alerts":
       return {
-        source: "communityAlertService.getByBounds",
+        source: "communityAlertService.getBySpatialRadius",
         route: "/mapa",
         note: "Alertas comunitarios entram por bounds e territorio.",
       };
@@ -184,6 +190,12 @@ function layerSource(layerKey: string): { source: string; route: string; note: s
         source: "useTouristPointsByBounds / TouristPointService.list",
         route: "/mapa",
         note: "Pontos turisticos aparecem como camada transversal do mapa.",
+      };
+    case "mobility":
+      return {
+        source: "AdminMobilityService.getOperationalSnapshot",
+        route: "/admin/mapa",
+        note: "Mobilidade operacional permanece em superficie administrativa dedicada.",
       };
     default:
       return {

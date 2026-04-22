@@ -43,6 +43,7 @@ import type { MapLayerKey } from '../types/core';
 
 const LAYER_KEY_TO_TYPE: Partial<Record<MapLayerKey, MapEntityType>> = {
   businesses:    'business',
+  gastronomy:    'business',
   services:      'service',
   classifieds:   'classified',
   events:        'event',
@@ -53,7 +54,20 @@ const LAYER_KEY_TO_TYPE: Partial<Record<MapLayerKey, MapEntityType>> = {
   user_location: 'user_location',
 };
 
+const LAYER_CONFIG_OVERRIDES: Partial<Record<MapLayerKey, Partial<MarkerTypeConfig>>> = {
+  gastronomy: {
+    label: 'Gastronomia',
+    color: '#dc2626',
+    iconClass: 'text-red-600',
+  },
+};
+
 export function getLayerConfig(key: MapLayerKey): MarkerTypeConfig {
   const type = LAYER_KEY_TO_TYPE[key];
-  return type ? MARKER_TYPE_CONFIG[type] : { label: key, emoji: '📌', color: '#6b7280', iconClass: 'text-gray-500' };
+  const baseConfig = type
+    ? MARKER_TYPE_CONFIG[type]
+    : { label: key, emoji: '📌', color: '#6b7280', iconClass: 'text-gray-500' };
+
+  const overrides = LAYER_CONFIG_OVERRIDES[key];
+  return overrides ? { ...baseConfig, ...overrides } : baseConfig;
 }

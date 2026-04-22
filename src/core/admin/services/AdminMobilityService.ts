@@ -43,6 +43,27 @@ export interface AdminRideStats {
   total_revenue: number;
 }
 
+export type AdminMobilityOperationalFilter =
+  | "all"
+  | "drivers_online"
+  | "rides_in_progress"
+  | "deliveries_in_progress";
+
+export interface AdminMobilityOperationalItem {
+  id: string;
+  kind: "driver" | "ride" | "delivery";
+  label: string;
+  status: string;
+  updated_at: string;
+}
+
+export interface AdminMobilityOperationalSnapshot {
+  drivers_online: number;
+  rides_in_progress: number;
+  deliveries_in_progress: number;
+  items: AdminMobilityOperationalItem[];
+}
+
 class AdminMobilityServiceClass {
   async getDriversWithStats(): Promise<AdminDriverData[]> {
     try {
@@ -149,6 +170,76 @@ class AdminMobilityServiceClass {
 
   async getAllRides(): Promise<AdminRideData[]> {
     return MobilityAdminQueryService.getAllRides() as Promise<AdminRideData[]>;
+  }
+
+  async getOperationalSnapshot(
+    filter: AdminMobilityOperationalFilter = "all",
+    limit = 50,
+  ): Promise<AdminMobilityOperationalSnapshot> {
+    const [drivers, rides, profileService] = await Promise.all([
+      MobilityAdminQueryService.getActiveDriversForMap(),
+      MobilityAdminQueryService.getActiveRidesForMap(),
+      import("@/core/profiles/services/ProfileService").then((m) => m.profileService),
+    ]);
+
+    const profileIds = [
+      ...new Set([
+        ...drivers.map((driver) => driver.profile_id),
+        ...rides
+          .map((ride) => ride.driver_profile_id)
+          .filter((profileId): profileId is string => Boolean(profileId)),
+      ]),
+    ];
+
+    const profileSummaries = profileIds.length
+      ? await profileService.getProfilesSummary(profileIds)
+      : [];
+    const profileMap = new Map(profileSummaries.map((profile) => [profile.id, profile]));
+
+    const driverItems: AdminMobilityOperationalItem[] = drivers.map((driver) => {
+      const profile = profileMap.get(driver.profile_id);
+      return {
+        id: `driver-${driver.profile_id}`,
+        kind: "driver",
+        label: profile?.name || `Motorista ${driver.profile_id.slice(0, 8)}`,
+        status: driver.is_available ? "online_available" : "online",
+        updated_at: driver.last_location_update || new Date().toISOString(),
+      };
+    });
+
+    const rideItems: AdminMobilityOperationalItem[] = rides.map((ride) => {
+      const isDelivery = ride.ride_mode === "motoboy";
+      const profile = ride.driver_profile_id
+        ? profileMap.get(ride.driver_profile_id)
+        : undefined;
+      return {
+        id: ride.id,
+        kind: isDelivery ? "delivery" : "ride",
+        label: isDelivery
+          ? `Entrega ${ride.id.slice(0, 8)}`
+          : `Corrida ${ride.id.slice(0, 8)}${profile?.name ? ` (${profile.name})` : ""}`,
+        status: ride.status,
+        updated_at: ride.updated_at || ride.created_at,
+      };
+    });
+
+    const allItems = [...driverItems, ...rideItems].sort((left, right) =>
+      right.updated_at.localeCompare(left.updated_at),
+    );
+
+    const filteredItems = allItems.filter((item) => {
+      if (filter === "all") return true;
+      if (filter === "drivers_online") return item.kind === "driver";
+      if (filter === "rides_in_progress") return item.kind === "ride";
+      return item.kind === "delivery";
+    });
+
+    return {
+      drivers_online: driverItems.length,
+      rides_in_progress: rideItems.filter((item) => item.kind === "ride").length,
+      deliveries_in_progress: rideItems.filter((item) => item.kind === "delivery").length,
+      items: filteredItems.slice(0, limit),
+    };
   }
 }
 

@@ -62,6 +62,25 @@ export interface RawRide {
   [key: string]: unknown;
 }
 
+export interface RawActiveDriver {
+  profile_id: string;
+  is_online: boolean;
+  is_available: boolean | null;
+  can_do_delivery: boolean;
+  last_location_update: string | null;
+  current_location: unknown;
+}
+
+export interface RawActiveRide {
+  id: string;
+  status: string;
+  ride_mode: string;
+  driver_profile_id: string | null;
+  passenger_profile_id: string;
+  updated_at: string;
+  created_at: string;
+}
+
 export class MobilityAdminQueryService {
   // ─── Community Posts ────────────────────────────────────────────────────
 
@@ -272,6 +291,57 @@ export class MobilityAdminQueryService {
       return data || [];
     } catch (error) {
       logger.error("MobilityAdminQueryService.getAllRideRatings", error as Error);
+      throw error;
+    }
+  }
+
+  static async getActiveDriversForMap(): Promise<RawActiveDriver[]> {
+    try {
+      const { data, error } = await (supabase as any)
+        .from("driver_data")
+        .select(
+          "profile_id, is_online, is_available, can_do_delivery, last_location_update, current_location",
+        )
+        .eq("is_online", true);
+
+      if (error) throw error;
+      return data || [];
+    } catch (error) {
+      logger.error("MobilityAdminQueryService.getActiveDriversForMap", error as Error);
+      throw error;
+    }
+  }
+
+  static async getActiveRidesForMap(): Promise<RawActiveRide[]> {
+    try {
+      const activeStatuses = [
+        "pending",
+        "requested",
+        "searching_driver",
+        "driver_assigned",
+        "driver_accepted",
+        "driver_arriving",
+        "driver_on_the_way",
+        "driver_arrived",
+        "passenger_boarded",
+        "passenger_on_board",
+        "in_progress",
+        "pickup_confirmed",
+        "in_delivery",
+      ];
+
+      const { data, error } = await (supabase as any)
+        .from("ride_requests")
+        .select(
+          "id, status, ride_mode, driver_profile_id, passenger_profile_id, updated_at, created_at",
+        )
+        .in("status", activeStatuses)
+        .order("updated_at", { ascending: false });
+
+      if (error) throw error;
+      return data || [];
+    } catch (error) {
+      logger.error("MobilityAdminQueryService.getActiveRidesForMap", error as Error);
       throw error;
     }
   }

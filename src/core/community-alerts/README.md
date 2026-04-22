@@ -116,6 +116,10 @@ Campos **NUNCA** expostos:
 - `under_review`
 - `neighborhood` (deprecated)
 
+Nota de implementação SSOT:
+- O `CommunityAlertService` usa projeção pública explícita (`PUBLIC_SELECT`) na tabela `community_alerts`.
+- Isso evita drift entre versões de view em produção e mantém contrato público estável sem expor campos sensíveis.
+
 ## 🗺️ Integração com Mapa
 
 ### Privacidade por Design

@@ -108,6 +108,7 @@ export interface MapCluster {
  */
 export type MapLayerKey =
   | 'businesses'
+  | 'gastronomy'
   | 'services'
   | 'classifieds'
   | 'events'

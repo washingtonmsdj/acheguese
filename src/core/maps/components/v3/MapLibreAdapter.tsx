@@ -606,14 +606,35 @@ export const MapLibreAdapter = forwardRef<MapLibreAdapterHandle, MapLibreAdapter
     const [searchQuery, setSearchQuery] = React.useState('');
     const locationAccuracy = userLocation?.accuracy;
 
-    // ── Estado de camadas visíveis — conecta MapLayerControl com os marcadores ──
-    const [visibleLayers, setVisibleLayers] = React.useState<Record<string, boolean>>(
+    // ── Estado de camadas visíveis — suporta modo controlado e não-controlado ──
+    const [internalVisibleLayers, setInternalVisibleLayers] = React.useState<Record<string, boolean>>(
       () => Object.fromEntries((controls?.layers?.layers ?? []).map((k) => [k, true])),
     );
+    const controlledVisibleLayers = controls?.layers?.visibleLayers;
+    const isLayerVisibilityControlled = controlledVisibleLayers !== undefined;
+    const visibleLayers = isLayerVisibilityControlled
+      ? controlledVisibleLayers
+      : internalVisibleLayers;
+
+    // Re-sincroniza estado interno quando a lista de camadas muda
+    React.useEffect(() => {
+      if (!controls?.layers?.layers) return;
+      if (isLayerVisibilityControlled) return;
+      setInternalVisibleLayers((prev) => {
+        const next: Record<string, boolean> = {};
+        controls.layers?.layers.forEach((key) => {
+          next[key] = prev[key] ?? true;
+        });
+        return next;
+      });
+    }, [controls?.layers?.layers, isLayerVisibilityControlled]);
 
     const handleLayerToggle = React.useCallback((key: string, visible: boolean) => {
-      setVisibleLayers((prev) => ({ ...prev, [key]: visible }));
-    }, []);
+      if (!isLayerVisibilityControlled) {
+        setInternalVisibleLayers((prev) => ({ ...prev, [key]: visible }));
+      }
+      controls?.layers?.onLayerToggle?.(key, visible);
+    }, [controls?.layers, isLayerVisibilityControlled]);
 
     // Mapeamento tipo de marcador → chave de camada
     // Filtrar marcadores por busca
@@ -632,7 +653,9 @@ export const MapLibreAdapter = forwardRef<MapLibreAdapterHandle, MapLibreAdapter
       // Filtro de camadas — só aplica se houver controle de camadas configurado
       if (controls?.layers?.enabled) {
         result = result.filter((m) => {
-          const layerKey = MARKER_TYPE_TO_LAYER[m.type];
+          const metadataLayerKey =
+            typeof m.metadata?.map_layer_key === 'string' ? m.metadata.map_layer_key : undefined;
+          const layerKey = metadataLayerKey ?? MARKER_TYPE_TO_LAYER[m.type];
           if (!layerKey) return true; // tipo sem camada → sempre visível
           return visibleLayers[layerKey] !== false;
         });
