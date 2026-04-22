@@ -129,6 +129,39 @@ export const SECURITY_DOMAINS = {
     justification: 'Required for Vercel preview deployments',
     alternatives: 'Only present in preview environments',
   },
+
+  // Google AdSense - Advertising
+  GOOGLE_ADSENSE_SCRIPT: {
+    url: 'https://pagead2.googlesyndication.com',
+    purpose: 'Google AdSense advertising scripts',
+    risk: 'MEDIUM',
+    justification: 'Monetization via Google AdSense',
+    alternatives: 'Alternative ad networks or direct sponsorships',
+  },
+
+  GOOGLE_ADSENSE_ADS: {
+    url: 'https://*.googlesyndication.com',
+    purpose: 'Google AdSense ad delivery',
+    risk: 'MEDIUM',
+    justification: 'Required for displaying AdSense ads',
+    alternatives: 'Alternative ad networks',
+  },
+
+  GOOGLE_ADSENSE_STATIC: {
+    url: 'https://*.googleadservices.com',
+    purpose: 'Google AdSense static resources',
+    risk: 'MEDIUM',
+    justification: 'Ad assets and tracking',
+    alternatives: 'Alternative ad networks',
+  },
+
+  GOOGLE_DOUBLECLICK: {
+    url: 'https://*.doubleclick.net',
+    purpose: 'Google DoubleClick ad serving',
+    risk: 'MEDIUM',
+    justification: 'Ad delivery infrastructure',
+    alternatives: 'Alternative ad networks',
+  },
 } as const;
 
 const IS_DEV = typeof import.meta !== 'undefined' &&
@@ -168,6 +201,10 @@ export const CSP_DIRECTIVES = {
     SECURITY_DOMAINS.SUPABASE_HTTPS.url,
     SECURITY_DOMAINS.VERCEL_SCRIPTS.url,
     SECURITY_DOMAINS.VERCEL_LIVE.url,
+    SECURITY_DOMAINS.GOOGLE_ADSENSE_SCRIPT.url,
+    SECURITY_DOMAINS.GOOGLE_ADSENSE_ADS.url,
+    SECURITY_DOMAINS.GOOGLE_ADSENSE_STATIC.url,
+    SECURITY_DOMAINS.GOOGLE_DOUBLECLICK.url,
   ],
   
   // Styles - Medium risk
@@ -204,12 +241,23 @@ export const CSP_DIRECTIVES = {
     SECURITY_DOMAINS.OSRM_ROUTER.url,
     SECURITY_DOMAINS.SENTRY_INGEST.url,
     SECURITY_DOMAINS.VERCEL_VITALS.url,
+    SECURITY_DOMAINS.GOOGLE_ADSENSE_SCRIPT.url,
+    SECURITY_DOMAINS.GOOGLE_ADSENSE_ADS.url,
+    SECURITY_DOMAINS.GOOGLE_ADSENSE_STATIC.url,
+    SECURITY_DOMAINS.GOOGLE_DOUBLECLICK.url,
   ],
   
   // Web Workers - Medium risk
   'worker-src': [
     "'self'",
     'blob:',  // Required for MapLibre GL JS workers
+  ],
+  
+  // Frames/iframes - For AdSense ads
+  'frame-src': [
+    "'self'",
+    SECURITY_DOMAINS.GOOGLE_ADSENSE_ADS.url,
+    SECURITY_DOMAINS.GOOGLE_DOUBLECLICK.url,
   ],
   
   // Frames - CRITICAL: Prevent clickjacking
