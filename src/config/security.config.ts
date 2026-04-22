@@ -170,6 +170,14 @@ export const SECURITY_DOMAINS = {
     justification: 'Ad fraud detection and quality monitoring - uses multiple endpoints (ep1, ep2, etc)',
     alternatives: 'None (required by AdSense)',
   },
+
+  GOOGLE_CORE: {
+    url: 'https://*.google.com',
+    purpose: 'Google core services for AdSense',
+    risk: 'MEDIUM',
+    justification: 'Required for AdSense iframe communication and core functionality',
+    alternatives: 'None (required by AdSense)',
+  },
 } as const;
 
 const IS_DEV = typeof import.meta !== 'undefined' &&
@@ -214,6 +222,7 @@ export const CSP_DIRECTIVES = {
     SECURITY_DOMAINS.GOOGLE_ADSENSE_STATIC.url,
     SECURITY_DOMAINS.GOOGLE_DOUBLECLICK.url,
     SECURITY_DOMAINS.GOOGLE_ADTRAFFIC.url,
+    SECURITY_DOMAINS.GOOGLE_CORE.url,
   ],
   
   // Styles - Medium risk
@@ -255,6 +264,7 @@ export const CSP_DIRECTIVES = {
     SECURITY_DOMAINS.GOOGLE_ADSENSE_STATIC.url,
     SECURITY_DOMAINS.GOOGLE_DOUBLECLICK.url,
     SECURITY_DOMAINS.GOOGLE_ADTRAFFIC.url,
+    SECURITY_DOMAINS.GOOGLE_CORE.url,
   ],
   
   // Web Workers - Medium risk
@@ -268,6 +278,8 @@ export const CSP_DIRECTIVES = {
     "'self'",
     SECURITY_DOMAINS.GOOGLE_ADSENSE_ADS.url,
     SECURITY_DOMAINS.GOOGLE_DOUBLECLICK.url,
+    SECURITY_DOMAINS.GOOGLE_ADTRAFFIC.url,
+    SECURITY_DOMAINS.GOOGLE_CORE.url,
   ],
   
   // Frames - CRITICAL: Prevent clickjacking
@@ -599,9 +611,9 @@ export const INPUT_VALIDATION = {
  * MUST be updated on every security config change.
  */
 export const SECURITY_AUDIT_LOG = {
-  lastReview: '2026-04-20',
+  lastReview: '2026-04-22',
   reviewer: 'Kiro AI',
-  version: '2.4.0',
+  version: '2.5.0',
   changes: [
     'Initial SSOT implementation',
     'CSP directives centralized',
@@ -636,8 +648,14 @@ export const SECURITY_AUDIT_LOG = {
     'FIX: pii_access_log — EXECUTE da função log_pii_access restrito a service_role',
     'FIX: rate limiting — identifier usa CF-Connecting-IP antes de x-forwarded-for',
     'FIX: getCorsHeaders — validação dinâmica de Origin implementada (suporta múltiplas origens)',
+    // v2.5.0 — Google AdSense CSP fixes
+    'FIX: GOOGLE_ADTRAFFIC — wildcard *.adtrafficquality.google para cobrir ep1, ep2, ep3, etc',
+    'FIX: GOOGLE_CORE — domínio *.google.com adicionado para iframe communication',
+    'FIX: frame-src — adicionados *.adtrafficquality.google e *.google.com',
+    'FIX: script-src — adicionado *.google.com para scripts do AdSense',
+    'FIX: connect-src — adicionado *.google.com para conexões do AdSense',
   ],
-  nextReview: '2026-05-20',
+  nextReview: '2026-05-22',
 } as const;
 
 /**
@@ -710,9 +728,9 @@ export const CACHE_HEADERS = {
  * Metadata about this configuration file.
  */
 export const SECURITY_CONFIG_METADATA = {
-  version: '2.4.0',
+  version: '2.5.0',
   created: '2026-04-18',
-  lastModified: '2026-04-20',
+  lastModified: '2026-04-22',
   author: 'Kiro AI',
   purpose: 'Single Source of Truth for security configurations',
   criticality: 'CRITICAL',
