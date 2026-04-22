@@ -12,7 +12,7 @@
  * @version 1.0.0
  */
 
-import { supabase } from '@/integrations/supabase/supabase';
+import { supabase } from '@/core/supabase';
 import { logger } from '@/shared/utils/logger';
 
 // ─── Tipos ────────────────────────────────────────────────────────────────────
