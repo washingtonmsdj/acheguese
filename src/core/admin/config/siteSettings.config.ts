@@ -23,6 +23,23 @@ export const SITE_SETTINGS_STORAGE = {
     LOGO: ['image/png', 'image/jpeg', 'image/svg+xml'],
     FAVICON: ['image/png', 'image/x-icon'],
   },
+  RECOMMENDED_SIZES: {
+    LOGO_DESKTOP: {
+      width: 140,
+      height: 36,
+      description: 'Logo horizontal para desktop (topbar altura 64px)',
+    },
+    LOGO_MOBILE: {
+      width: 40,
+      height: 40,
+      description: 'Logo quadrada/ícone para mobile',
+    },
+    FAVICON: {
+      width: 32,
+      height: 32,
+      description: 'Favicon para navegador',
+    },
+  },
 } as const;
 
 /**
