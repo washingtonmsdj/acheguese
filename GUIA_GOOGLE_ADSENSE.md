@@ -285,9 +285,14 @@ script-src 'self'
 - ✅ `*.googleadservices.com` - Recursos estáticos
 - ✅ `*.doubleclick.net` - Servidor de anúncios
 - ✅ `*.adtrafficquality.google` - Monitoramento de qualidade (wildcard para ep1, ep2, ep3, etc)
+- ✅ `*.google.com` - Serviços core do Google (iframe communication, scripts auxiliares)
 
 **⚠️ Nota sobre wildcards:**
-O Google usa múltiplos endpoints para Ad Traffic Quality (ep1, ep2, ep3, etc). Por isso, usamos `*.adtrafficquality.google` para cobrir todos os endpoints automaticamente.
+O Google usa múltiplos endpoints e serviços para o AdSense:
+- **Ad Traffic Quality**: ep1, ep2, ep3, etc → `*.adtrafficquality.google`
+- **Core Services**: www.google.com, outros subdomínios → `*.google.com`
+
+Isso garante que todos os recursos do AdSense funcionem corretamente.
 
 **⚠️ Limitações:**
 - Se o Google adicionar novos domínios, os anúncios podem parar de funcionar
