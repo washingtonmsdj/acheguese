@@ -25,19 +25,19 @@ export const SITE_SETTINGS_STORAGE = {
   },
   RECOMMENDED_SIZES: {
     LOGO_DESKTOP: {
-      width: 140,
-      height: 36,
-      description: 'Logo horizontal para desktop (topbar altura 64px)',
+      width: 180,
+      height: 48,
+      description: 'Logo horizontal para desktop (topbar altura 64px) - Alta resolução',
     },
     LOGO_MOBILE: {
-      width: 40,
-      height: 40,
-      description: 'Logo quadrada/ícone para mobile',
+      width: 48,
+      height: 48,
+      description: 'Logo quadrada/ícone para mobile - Alta resolução',
     },
     FAVICON: {
-      width: 32,
-      height: 32,
-      description: 'Favicon para navegador',
+      width: 64,
+      height: 64,
+      description: 'Favicon para navegador - Alta resolução (será redimensionado automaticamente)',
     },
   },
 } as const;

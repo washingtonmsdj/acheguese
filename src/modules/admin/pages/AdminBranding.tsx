@@ -201,7 +201,9 @@ export default function AdminBranding() {
             <CardDescription>
               Logo exibida na topbar. Recomendado: PNG transparente ou SVG
               <br />
-              <strong>Desktop:</strong> 140x36px (horizontal) | <strong>Mobile:</strong> 40x40px (quadrada)
+              <strong>Desktop:</strong> 180x48px (horizontal) | <strong>Mobile:</strong> 48x48px (quadrada)
+              <br />
+              <span className="text-xs text-muted-foreground">Tamanhos maiores para melhor qualidade em telas HD/Retina</span>
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -253,7 +255,9 @@ export default function AdminBranding() {
               Favicon
             </CardTitle>
             <CardDescription>
-              Ícone exibido na aba do navegador. Recomendado: PNG ou ICO, 32x32px
+              Ícone exibido na aba do navegador. Recomendado: PNG ou ICO, 64x64px
+              <br />
+              <span className="text-xs text-muted-foreground">Tamanho maior garante qualidade em telas Retina (será redimensionado automaticamente)</span>
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
