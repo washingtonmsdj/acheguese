@@ -19,6 +19,7 @@ import { useFriendlyModuleUrls } from '@/core/routing/hooks/useFriendlyModuleUrl
 import { useTerritorialContext } from '@/core/routing/components/TerritorialLayout';
 import { useSessionContext } from '@/core/session';
 import { CanonicalHero } from '@/shared/components/hero/CanonicalHero';
+import { HeroBannerCarousel, type HeroBanner } from '@/shared/components/hero/HeroBannerCarousel';
 import { Button } from '@/shared/components/ui/button';
 import { AdSense } from '@/shared/components/advertising';
 import {
@@ -374,6 +375,51 @@ export default function GastronomyLandingPage() {
         />
 
         <section className="container mx-auto px-4 pt-4">
+          {/* ── Carrossel de Banners Promocionais ─────────────── */}
+          <div className="mb-6">
+            <HeroBannerCarousel
+              banners={[
+                {
+                  id: '1',
+                  image: gastronomyHeroBg,
+                  title: 'Promoção Especial!',
+                  subtitle: 'Desconto de 20% em todos os pedidos acima de R$ 50',
+                  textPosition: 'left',
+                  cta: {
+                    label: 'Ver Ofertas',
+                    onClick: () => console.log('Ver ofertas'),
+                  },
+                },
+                {
+                  id: '2',
+                  image: gastronomyHeroBg,
+                  title: 'Delivery Grátis',
+                  subtitle: 'Frete grátis para pedidos acima de R$ 30',
+                  textPosition: 'center',
+                  cta: {
+                    label: 'Pedir Agora',
+                    onClick: () => console.log('Pedir agora'),
+                  },
+                },
+                {
+                  id: '3',
+                  image: gastronomyHeroBg,
+                  title: 'Novos Restaurantes',
+                  subtitle: 'Conheça as novidades da sua região',
+                  textPosition: 'right',
+                  cta: {
+                    label: 'Explorar',
+                    onClick: () => console.log('Explorar'),
+                  },
+                },
+              ]}
+              autoPlayInterval={5000}
+              showArrows={true}
+              showDots={true}
+              height="300px"
+            />
+          </div>
+
           {/* ── Google AdSense ─────────────────────────────────── */}
           <div className="mb-6 w-full overflow-hidden rounded-xl" style={{ maxHeight: '120px' }}>
             <AdSense 
