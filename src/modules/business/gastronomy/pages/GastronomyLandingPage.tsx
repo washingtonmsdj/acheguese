@@ -405,7 +405,7 @@ export default function GastronomyLandingPage() {
           <div 
             className="mb-6 w-full overflow-hidden rounded-xl" 
             style={{ 
-              maxHeight: '90px',
+              maxHeight: '60px',
               backgroundColor: import.meta.env.DEV ? '#ffffff' : 'transparent'
             }}
           >
@@ -413,7 +413,7 @@ export default function GastronomyLandingPage() {
               slot="7618818955"
               format="auto"
               responsive={true}
-              style={{ display: 'block', minHeight: '70px', maxHeight: '90px' }}
+              style={{ display: 'block', minHeight: '50px', maxHeight: '60px' }}
             />
           </div>
 
