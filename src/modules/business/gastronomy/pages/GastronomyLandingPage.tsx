@@ -376,9 +376,10 @@ export default function GastronomyLandingPage() {
           {/* ── Google AdSense ─────────────────────────────────── */}
           <div className="mb-6 w-full overflow-hidden rounded-xl">
             <AdSense 
-              slot="XXXXXXXXXX"
-              format="horizontal"
-              style={{ minHeight: '90px' }}
+              slot="7618818955"
+              format="auto"
+              responsive={true}
+              style={{ display: 'block', minHeight: '90px' }}
             />
           </div>
 
