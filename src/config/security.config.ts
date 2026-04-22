@@ -164,10 +164,10 @@ export const SECURITY_DOMAINS = {
   },
 
   GOOGLE_ADTRAFFIC: {
-    url: 'https://ep1.adtrafficquality.google',
-    purpose: 'Google Ad Traffic Quality monitoring',
+    url: 'https://*.adtrafficquality.google',
+    purpose: 'Google Ad Traffic Quality monitoring (all endpoints)',
     risk: 'LOW',
-    justification: 'Ad fraud detection and quality monitoring',
+    justification: 'Ad fraud detection and quality monitoring - uses multiple endpoints (ep1, ep2, etc)',
     alternatives: 'None (required by AdSense)',
   },
 } as const;
