@@ -31,6 +31,7 @@ export { useGastronomyList } from './useGastronomyList';
 export { useGastronomyFoodCatalog } from './useGastronomyFoodCatalog';
 export { useGastronomyOpeningStatus } from './useGastronomyOpeningStatus';
 export { useGastronomyBusinessSort } from './useGastronomyBusinessSort';
+export type { BusinessSortKey } from './useGastronomyBusinessSort';
 export { useGastronomySimilar } from './useGastronomySimilar';
 export { useGastronomyFavoritersCount } from './useGastronomyFavoriters';
 export {

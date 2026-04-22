@@ -128,7 +128,7 @@ export function TerritorialLayout() {
 
   // Resolve availability do grupo (só relevante quando resolved.kind === 'group')
   const groupId = resolved?.kind === 'group' ? resolved.group.id : null;
-  const { availability, active_member_ids, result: availabilityResult } = useGroupAvailability(
+  const { availability, active_member_ids, result: availabilityResult, isLoading: availabilityLoading } = useGroupAvailability(
     groupId,
     currentModuleKey,
   );
@@ -265,7 +265,7 @@ export function TerritorialLayout() {
               totalCount={availabilityResult.total_active_members}
             />
           )}
-          {effectiveAvailability === 'none' && <UnavailableModuleBanner />}
+          {effectiveAvailability === 'none' && !availabilityLoading && <UnavailableModuleBanner />}
         </>
       )}
 

@@ -26,6 +26,7 @@ import {
   GastronomyCategoryCards,
   GastronomyDeliveryDestinationPanel,
   GastronomyActivityFeed,
+  GastronomyHeader,
 } from '../components';
 import {
   useDeliveryDestination,
@@ -54,7 +55,6 @@ import {
   FilterControls,
   FoodCatalogSections,
   ProximityAlert,
-  SearchBar,
 } from './landing/components';
 import type { DisplayLayout } from './landing/types';
 import { INSECURE_CONTEXT_DESTINATION_MESSAGE } from './landing/constants';
@@ -138,6 +138,7 @@ export default function GastronomyLandingPage() {
     setSearchQuery,
     handleCuisineFilter,
     handlePriceFilter,
+    handleOpenNowFilter,
     clearFilters,
   } = filtersManager;
 
@@ -290,10 +291,10 @@ export default function GastronomyLandingPage() {
     effectiveBusinesses.length > 0 && (!hasActiveFilters || hasCuisineFilter);
 
   const allStoresSubtitle = hasCuisineFilter
-    ? `Exibindo lojas da categoria ${activeCuisineLabel}`
+    ? `Exibindo restaurantes da categoria ${activeCuisineLabel}`
     : hasActiveFilters
-      ? 'Exibindo lojas com filtros ativos'
-      : `Catalogo completo de lojas em ${territoryName}`;
+      ? 'Exibindo restaurantes com filtros ativos'
+      : `Catalogo completo de restaurantes em ${territoryName}`;
 
   const destinationGateMessage = !canUseGeolocation
     ? INSECURE_CONTEXT_DESTINATION_MESSAGE
@@ -301,10 +302,10 @@ export default function GastronomyLandingPage() {
       ? 'Validando sua localizacao para calcular distancias e tempo de entrega com precisao.'
       : locationPermissionState === 'denied'
         ? 'Localizacao bloqueada no navegador. Informe um endereco valido para liberar a listagem.'
-        : 'Informe um endereco completo ou use sua localizacao atual para liberar lojas e cardapios.';
+        : 'Informe um endereco completo ou use sua localizacao atual para liberar restaurantes e cardapios.';
 
   const proximityFallbackMessage = distanceReferenceCoords
-    ? 'Seu destino de entrega esta ativo, mas as lojas desta selecao ainda nao possuem coordenadas suficientes para ordenar por distancia real.'
+    ? `Ainda estamos mapeando os restaurantes desta seleção. Em breve você verá os mais próximos do seu endereço.`
     : !canUseGeolocation
       ? INSECURE_CONTEXT_DESTINATION_MESSAGE
       : locationPermissionState === 'denied'
@@ -352,15 +353,21 @@ export default function GastronomyLandingPage() {
         <title>Gastronomia em {territoryName} | OrdaX</title>
         <meta
           name="description"
-          content={`Descubra lojas e cardapios de gastronomia em ${territoryName}.`}
+          content={`Descubra restaurantes e cardapios de gastronomia em ${territoryName}.`}
         />
       </Helmet>
 
       <div className="min-h-screen bg-background">
+        {/* ── Header exclusivo ───────────────────────────────────── */}
+        <GastronomyHeader
+          searchQuery={searchQuery}
+          onSearchChange={setSearchQuery}
+        />
+
         {/* ── Cards de Categorias (TOPO) ─────────────────────────── */}
         <section className="w-full bg-card/50 border-b border-border py-4">
-          <div className="w-full px-4">
-            <div className="flex justify-center gap-3 overflow-x-auto pb-1 scrollbar-hide">
+          <div className="w-full overflow-x-auto scrollbar-hide">
+            <div className="flex justify-center gap-3 pb-1 px-4 min-w-max mx-auto">
               {GASTRO_CATEGORIES.map((cat, i) => {
                 const Icon = cat.icon;
                 const isActive = filters.cuisine_type === cat.cuisineFilter;
@@ -373,12 +380,12 @@ export default function GastronomyLandingPage() {
                     whileHover={{ scale: 1.08, y: -4 }}
                     whileTap={{ scale: 0.95 }}
                     onClick={() => handleCuisineFilter(isActive ? '' : cat.cuisineFilter)}
-                    className={`flex flex-col items-center gap-2.5 p-4 rounded-2xl border bg-card/80 backdrop-blur-sm transition-colors duration-200 group shrink-0 min-w-[80px] ${cat.bg} ${isActive ? 'ring-2 ring-primary/40' : ''}`}
+                    className={`flex flex-col items-center gap-1.5 p-2.5 rounded-xl border bg-card/80 backdrop-blur-sm transition-colors duration-200 group shrink-0 min-w-[60px] ${cat.bg} ${isActive ? 'ring-2 ring-primary/40' : ''}`}
                   >
                     <motion.div whileHover={{ rotate: [0, -10, 10, 0] }} transition={{ duration: 0.4 }}>
-                      <Icon className={`h-7 w-7 ${cat.iconColor}`} />
+                      <Icon className={`h-5 w-5 ${cat.iconColor}`} />
                     </motion.div>
-                    <span className="text-xs font-semibold text-foreground leading-tight text-center whitespace-nowrap">
+                    <span className="text-[10px] font-semibold text-foreground leading-tight text-center whitespace-nowrap">
                       {cat.label}
                     </span>
                   </motion.button>
@@ -445,41 +452,6 @@ export default function GastronomyLandingPage() {
             </div>
           </div>
 
-          {/* ── Barra de Pesquisa ─────────────────────────────── */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, delay: 0.2 }}
-            className="mb-8"
-          >
-            <SearchBar
-              value={searchQuery}
-              onChange={setSearchQuery}
-              placeholder="Buscar lojas, pratos, bebidas..."
-            />
-          </motion.div>
-
-          {/* Botão de favoritos — visível apenas para usuários autenticados */}
-          {user && (
-            <motion.div
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.3, delay: 0.3 }}
-              className="mb-4 flex justify-end"
-            >
-              <Button
-                asChild
-                variant="outline"
-                size="sm"
-                className="gap-2 rounded-full hover:bg-primary/10 hover:border-primary/50 transition-all duration-200"
-              >
-                <Link to={moduleUrls.gastronomyFavorites}>
-                  <Heart className="h-4 w-4" />
-                  Meus Favoritos
-                </Link>
-              </Button>
-            </motion.div>
-          )}
         </section>
 
         {isDestinationRequired && (
@@ -525,8 +497,10 @@ export default function GastronomyLandingPage() {
                 sortBy={sortBy}
                 displayLayout={displayLayout}
                 hasActiveFilters={hasActiveFilters}
+                isOpenNow={Boolean(filters.is_open_now)}
                 onSortChange={handleSortChange}
                 onLayoutChange={setDisplayLayout}
+                onToggleOpenNow={handleOpenNowFilter}
                 onToggleFilters={() => setShowAdvancedFilters((current) => !current)}
                 onClearFilters={clearFilters}
               />

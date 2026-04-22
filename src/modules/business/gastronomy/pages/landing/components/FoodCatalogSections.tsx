@@ -17,15 +17,15 @@ export function FoodCatalogSections(props: FoodCatalogSectionsProps) {
   return (
     <div className="container mx-auto space-y-10 px-4 py-4">
       <FoodSectionCarousel
-        title="Produtos mais vendidos"
+        title="Mais pedidos"
         subtitle={`Itens com maior volume de pedidos ${sectionScopeLabel}`}
         icon={TrendingUp}
         items={sectionItems.mostOrdered}
         accentColor="bg-primary/10"
       />
       <FoodSectionCarousel
-        title="Produtos melhor avaliados"
-        subtitle={`Itens com melhor avaliacao de loja ${sectionScopeLabel}`}
+        title="Mais bem avaliados"
+        subtitle={`Itens com melhor avaliação do restaurante ${sectionScopeLabel}`}
         icon={Star}
         items={sectionItems.topRated}
         accentColor="bg-amber-500/10"

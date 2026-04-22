@@ -40,8 +40,8 @@ export function ProximityAlert(props: ProximityAlertProps) {
 
       {hasDistanceData ? (
         <span>
-          Ordenacao por distancia ativa (lojas)
-          {nearestDistanceLabel ? ` - loja mais proxima em ${nearestDistanceLabel}.` : '.'}
+          Ordenacao por distancia ativa (restaurantes)
+          {nearestDistanceLabel ? ` - restaurante mais proximo em ${nearestDistanceLabel}.` : '.'}
         </span>
       ) : (
         <span className="flex items-center gap-2">

@@ -6,10 +6,9 @@
  * Shape is aligned with current SSOT (business_data_id + canonical geographic_path).
  */
 
-import type { GastronomyBusiness, GastronomyProfile } from '../types';
+import type { GastronomyBusiness } from '../types';
 
 import catRestaurantes from '@/assets/gastronomy/cat-restaurantes.jpg';
-import catLanchonetes from '@/assets/gastronomy/cat-lanchonetes.jpg';
 import catPizzarias from '@/assets/gastronomy/cat-pizzarias.jpg';
 import catHamburgueria from '@/assets/gastronomy/cat-hamburgueria.jpg';
 import catAcai from '@/assets/gastronomy/cat-acai.jpg';
@@ -39,6 +38,9 @@ function createMockGastronomyBusiness(params: {
   price_range: '$' | '$$' | '$$$' | '$$$$';
   rating: number;
   total_reviews: number;
+  latitude: number;
+  longitude: number;
+  horario_funcionamento: Record<string, { open: string; close: string; closed?: boolean }>;
   is_premium?: boolean;
   is_featured?: boolean;
   delivery_enabled?: boolean;
@@ -85,9 +87,10 @@ function createMockGastronomyBusiness(params: {
     facilidades: [],
     modos_atendimento: ['delivery', 'local'],
     address: {
-      latitude: -12.9814,
-      longitude: -38.4514,
+      latitude: params.latitude,
+      longitude: params.longitude,
     },
+    horario_funcionamento: params.horario_funcionamento,
     created_at: '2026-01-01T00:00:00.000Z',
     updated_at: '2026-01-01T00:00:00.000Z',
     banner_url: params.banner_url,
@@ -118,6 +121,57 @@ function createMockGastronomyBusiness(params: {
   };
 }
 
+// Horários reutilizáveis
+const HORARIO_ALMOCO_JANTAR = {
+  segunda: { open: '11:00', close: '23:00' },
+  terca:   { open: '11:00', close: '23:00' },
+  quarta:  { open: '11:00', close: '23:00' },
+  quinta:  { open: '11:00', close: '23:00' },
+  sexta:   { open: '11:00', close: '00:00' },
+  sabado:  { open: '11:00', close: '00:00' },
+  domingo: { open: '11:00', close: '22:00' },
+};
+
+const HORARIO_DELIVERY_RAPIDO = {
+  segunda: { open: '10:00', close: '22:00' },
+  terca:   { open: '10:00', close: '22:00' },
+  quarta:  { open: '10:00', close: '22:00' },
+  quinta:  { open: '10:00', close: '22:00' },
+  sexta:   { open: '10:00', close: '23:00' },
+  sabado:  { open: '10:00', close: '23:00' },
+  domingo: { open: '11:00', close: '21:00' },
+};
+
+const HORARIO_CAFE = {
+  segunda: { open: '07:00', close: '20:00' },
+  terca:   { open: '07:00', close: '20:00' },
+  quarta:  { open: '07:00', close: '20:00' },
+  quinta:  { open: '07:00', close: '20:00' },
+  sexta:   { open: '07:00', close: '21:00' },
+  sabado:  { open: '08:00', close: '21:00' },
+  domingo: { open: '08:00', close: '18:00' },
+};
+
+const HORARIO_BAR = {
+  segunda: { open: '00:00', close: '00:00', closed: true },
+  terca:   { open: '17:00', close: '01:00' },
+  quarta:  { open: '17:00', close: '01:00' },
+  quinta:  { open: '17:00', close: '02:00' },
+  sexta:   { open: '17:00', close: '03:00' },
+  sabado:  { open: '16:00', close: '03:00' },
+  domingo: { open: '16:00', close: '00:00' },
+};
+
+const HORARIO_MARMITA = {
+  segunda: { open: '10:30', close: '14:30' },
+  terca:   { open: '10:30', close: '14:30' },
+  quarta:  { open: '10:30', close: '14:30' },
+  quinta:  { open: '10:30', close: '14:30' },
+  sexta:   { open: '10:30', close: '14:30' },
+  sabado:  { open: '10:30', close: '14:00' },
+  domingo: { open: '00:00', close: '00:00', closed: true },
+};
+
 export const MOCK_GASTRONOMY_BUSINESSES: GastronomyBusiness[] = [
   createMockGastronomyBusiness({
     business_data_id: 'mock-biz-cantina',
@@ -134,6 +188,9 @@ export const MOCK_GASTRONOMY_BUSINESSES: GastronomyBusiness[] = [
     price_range: '$$$',
     rating: 4.8,
     total_reviews: 342,
+    latitude: -12.9947,
+    longitude: -38.4573,
+    horario_funcionamento: HORARIO_ALMOCO_JANTAR,
     is_premium: true,
     is_featured: true,
     delivery_fee: 7.99,
@@ -159,6 +216,9 @@ export const MOCK_GASTRONOMY_BUSINESSES: GastronomyBusiness[] = [
     price_range: '$$',
     rating: 4.6,
     total_reviews: 528,
+    latitude: -13.0094,
+    longitude: -38.5322,
+    horario_funcionamento: HORARIO_DELIVERY_RAPIDO,
     is_premium: true,
     is_featured: true,
     delivery_fee: 5.99,
@@ -180,6 +240,17 @@ export const MOCK_GASTRONOMY_BUSINESSES: GastronomyBusiness[] = [
     price_range: '$$$$',
     rating: 4.9,
     total_reviews: 215,
+    latitude: -12.9833,
+    longitude: -38.4614,
+    horario_funcionamento: {
+      segunda: { open: '00:00', close: '00:00', closed: true },
+      terca:   { open: '18:00', close: '23:00' },
+      quarta:  { open: '18:00', close: '23:00' },
+      quinta:  { open: '18:00', close: '23:00' },
+      sexta:   { open: '18:00', close: '00:00' },
+      sabado:  { open: '12:00', close: '00:00' },
+      domingo: { open: '12:00', close: '22:00' },
+    },
     is_premium: true,
     is_featured: true,
     delivery_fee: 12.99,
@@ -205,6 +276,17 @@ export const MOCK_GASTRONOMY_BUSINESSES: GastronomyBusiness[] = [
     price_range: '$$',
     rating: 4.4,
     total_reviews: 189,
+    latitude: -13.0069,
+    longitude: -38.5108,
+    horario_funcionamento: {
+      segunda: { open: '00:00', close: '00:00', closed: true },
+      terca:   { open: '18:00', close: '23:30' },
+      quarta:  { open: '18:00', close: '23:30' },
+      quinta:  { open: '18:00', close: '23:30' },
+      sexta:   { open: '18:00', close: '00:30' },
+      sabado:  { open: '18:00', close: '00:30' },
+      domingo: { open: '18:00', close: '23:00' },
+    },
     delivery_fee: 4.99,
     delivery_time_min: 30,
     delivery_time_max: 50,
@@ -224,6 +306,9 @@ export const MOCK_GASTRONOMY_BUSINESSES: GastronomyBusiness[] = [
     price_range: '$',
     rating: 4.7,
     total_reviews: 412,
+    latitude: -13.0019,
+    longitude: -38.5241,
+    horario_funcionamento: HORARIO_DELIVERY_RAPIDO,
     is_featured: true,
     delivery_fee: 3.99,
     delivery_time_min: 15,
@@ -237,7 +322,7 @@ export const MOCK_GASTRONOMY_BUSINESSES: GastronomyBusiness[] = [
     slug: 'cafe-brisa',
     description: 'Cafeteria artesanal com doces da casa.',
     banner_url: catCafes,
-    location_id: 'loc-graza',
+    location_id: 'loc-graca',
     location_name: 'Graca',
     location_full_name: 'Graca, Salvador',
     geographic_path: '/ba/salvador/graca',
@@ -245,6 +330,9 @@ export const MOCK_GASTRONOMY_BUSINESSES: GastronomyBusiness[] = [
     price_range: '$$',
     rating: 4.3,
     total_reviews: 156,
+    latitude: -13.0011,
+    longitude: -38.5189,
+    horario_funcionamento: HORARIO_CAFE,
     is_featured: true,
     delivery_fee: 4.99,
     delivery_time_min: 25,
@@ -266,6 +354,9 @@ export const MOCK_GASTRONOMY_BUSINESSES: GastronomyBusiness[] = [
     price_range: '$$',
     rating: 4.3,
     total_reviews: 267,
+    latitude: -12.9714,
+    longitude: -38.5097,
+    horario_funcionamento: HORARIO_BAR,
     delivery_enabled: false,
     takeout_enabled: false,
     dine_in_enabled: true,
@@ -286,6 +377,9 @@ export const MOCK_GASTRONOMY_BUSINESSES: GastronomyBusiness[] = [
     price_range: '$',
     rating: 4.6,
     total_reviews: 580,
+    latitude: -12.9889,
+    longitude: -38.4831,
+    horario_funcionamento: HORARIO_MARMITA,
     is_featured: true,
     delivery_fee: 2.99,
     delivery_time_min: 20,

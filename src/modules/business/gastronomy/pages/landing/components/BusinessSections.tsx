@@ -3,7 +3,7 @@
  */
 
 import { motion } from 'framer-motion';
-import { MapPin, Star, Tag } from 'lucide-react';
+import { MapPin, Tag } from 'lucide-react';
 import { Button } from '@/shared/components/ui/button';
 import { BusinessSectionCarousel } from '../../../components';
 import type { BusinessSectionItems } from '../types';
@@ -38,12 +38,12 @@ export function BusinessSections(props: BusinessSectionsProps) {
   } = props;
 
   const fallbackMessage = hasDistanceReference
-    ? `Seu destino de entrega esta ativo, mas as lojas ${sectionScopeLabel} ainda nao possuem coordenadas suficientes para calcular proximidade real.`
+    ? `Ainda estamos mapeando os restaurantes ${sectionScopeLabel}. Em breve você verá os mais próximos do seu endereço.`
     : !canUseGeolocation
       ? INSECURE_CONTEXT_DESTINATION_MESSAGE
       : locationPermissionState === 'denied'
-        ? 'Localizacao bloqueada no navegador. Informe um endereco para calcular proximidade real.'
-        : `Defina um destino de entrega para exibir as lojas mais proximas primeiro ${sectionScopeLabel}.`;
+        ? 'Localização bloqueada no navegador. Informe um endereço para ver os mais próximos.'
+        : `Informe seu endereço de entrega para ver os restaurantes mais próximos ${sectionScopeLabel}.`;
 
   const showLocationButton =
     !hasDistanceReference && canUseGeolocation && locationPermissionState !== 'denied';
@@ -52,8 +52,8 @@ export function BusinessSections(props: BusinessSectionsProps) {
     <div className="container mx-auto space-y-10 px-4 py-4">
       {sectionItems.nearest.length > 0 ? (
         <BusinessSectionCarousel
-          title="Lojas mais proximas de voce"
-          subtitle={`Lojas ordenadas por distancia real ${sectionScopeLabel}`}
+          title="Mais perto de você"
+          subtitle={`Ordenados por distância real ${sectionScopeLabel}`}
           icon={MapPin}
           items={sectionItems.nearest}
           accentColor="bg-sky-500/10"
@@ -70,7 +70,7 @@ export function BusinessSections(props: BusinessSectionsProps) {
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <p className="text-sm font-semibold text-foreground">
-                Lojas mais proximas de voce
+                Mais perto de você
               </p>
               <p className="text-xs text-muted-foreground">{fallbackMessage}</p>
             </div>
@@ -91,17 +91,8 @@ export function BusinessSections(props: BusinessSectionsProps) {
       )}
 
       <BusinessSectionCarousel
-        title="Lojas melhor avaliadas"
-        subtitle={`Selecao com maior nota ${sectionScopeLabel}`}
-        icon={Star}
-        items={sectionItems.topRated}
-        accentColor="bg-amber-500/10"
-        distanceByBusinessId={distanceMap}
-      />
-
-      <BusinessSectionCarousel
-        title="Lojas em destaque"
-        subtitle={`Lojas premium e bem avaliadas ${sectionScopeLabel}`}
+        title="Em destaque"
+        subtitle={`Restaurantes premium e bem avaliados ${sectionScopeLabel}`}
         icon={Tag}
         items={sectionItems.featured}
         accentColor="bg-primary/10"

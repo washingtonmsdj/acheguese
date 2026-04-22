@@ -51,6 +51,13 @@ export function useGastronomyFilters() {
     }));
   }, []);
 
+  const handleOpenNowFilter = useCallback(() => {
+    setFilters((current) => ({
+      ...current,
+      is_open_now: current.is_open_now ? undefined : true,
+    }));
+  }, []);
+
   const clearFilters = useCallback(() => {
     setFilters({});
     setSearchQuery('');
@@ -78,6 +85,7 @@ export function useGastronomyFilters() {
     setShowAdvancedFilters,
     handleCuisineFilter,
     handlePriceFilter,
+    handleOpenNowFilter,
     clearFilters,
   };
 }

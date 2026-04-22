@@ -75,9 +75,9 @@ export function BusinessListSection(props: BusinessListSectionProps) {
             <Store className="h-5 w-5 text-accent-foreground" />
           </div>
           <div>
-            <h2 className="text-lg font-bold text-foreground md:text-xl">Todas as lojas</h2>
+            <h2 className="text-lg font-bold text-foreground md:text-xl">Todos os restaurantes</h2>
             <p className="text-xs text-muted-foreground">
-              {`${totalCount} ${totalCount === 1 ? 'loja' : 'lojas'}`}
+              {`${totalCount} ${totalCount === 1 ? 'restaurante' : 'restaurantes'}`}
             </p>
             <p className="text-xs text-muted-foreground">{subtitle}</p>
           </div>
@@ -123,7 +123,7 @@ export function BusinessListSection(props: BusinessListSectionProps) {
           <div className="mb-4 inline-block rounded-full bg-muted/50 p-4">
             <Store className="h-10 w-10 text-muted-foreground" />
           </div>
-          <h3 className="mb-2 text-xl font-bold text-foreground">Nenhuma loja encontrada</h3>
+          <h3 className="mb-2 text-xl font-bold text-foreground">Nenhum restaurante encontrado</h3>
           <p className="mx-auto mb-6 max-w-md text-muted-foreground">
             Tente ajustar os filtros ou navegar para outra area ativa.
           </p>

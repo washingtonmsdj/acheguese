@@ -66,3 +66,6 @@ export { AnalyticsEngagementCard } from './analytics/AnalyticsEngagementCard';
 
 // Activity Feed
 export { GastronomyActivityFeed } from './GastronomyActivityFeed';
+
+// Header exclusivo
+export { GastronomyHeader } from './GastronomyHeader';

@@ -54,14 +54,17 @@ export function useDeliveryDestination(options: UseDeliveryDestinationOptions) {
   const {
     coords: userCoords,
     loading: isLocatingUser,
-    permissionState: locationPermissionState,
+    permissionState: rawPermissionState,
     source: userLocationSource,
     requestLocation,
   } = useRobustGeolocation({
     useCache: true,
     timeout: 10_000,
-    maxRetries: 2,
   });
+
+  // 'unknown' não é um PermissionState válido — mapeia para null (estado não determinado)
+  const locationPermissionState: PermissionState | null =
+    rawPermissionState === 'unknown' ? null : rawPermissionState;
 
   const canUseGeolocation = canUseBrowserGeolocation();
 
@@ -147,7 +150,7 @@ export function useDeliveryDestination(options: UseDeliveryDestinationOptions) {
         longitude: userCoords.longitude,
         label:
           current?.label ||
-          (userLocationSource === 'ip' || userCoords.accuracy > 1000
+          (userCoords.accuracy > 1000
             ? 'Localizacao aproximada'
             : 'Localizacao atual'),
         updatedAt: new Date().toISOString(),
@@ -295,7 +298,6 @@ export function useDeliveryDestination(options: UseDeliveryDestinationOptions) {
     setDestinationErrorMessage(null);
     void requestLocation({
       useCache: false,
-      forcePrompt: true,
     });
   }, [canUseGeolocation, requestLocation]);
 

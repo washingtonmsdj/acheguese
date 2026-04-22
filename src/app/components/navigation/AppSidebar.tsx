@@ -104,6 +104,10 @@ export function AppSidebar() {
         return moduleUrls.community;
       case 'feed':
         return `${moduleUrls.community}${moduleUrls.community.includes('?') ? '&' : '?'}tab=feed`;
+      case 'community-alerts':
+        return `${moduleUrls.community}/alertas`;
+      case 'community-issues':
+        return `${moduleUrls.community}/problemas`;
       case 'ranking':
         return moduleUrls.ranking;
       case 'map':
@@ -152,7 +156,7 @@ export function AppSidebar() {
             'w-full rounded-lg transition-colors hover:bg-sidebar-accent/60',
             collapsed
               ? 'flex h-10 items-center justify-center'
-              : 'flex flex-col items-center justify-center gap-3 px-3 pt-0 pb-3',
+              : 'flex flex-col items-center justify-center gap-0 px-3 pt-0 pb-3',
           )}
         >
           {isSiteSettingsLoading ? (
@@ -173,7 +177,7 @@ export function AppSidebar() {
                 )}
               />
               {!collapsed ? (
-                <span className="w-full text-center text-lg font-semibold text-foreground font-heading leading-none">
+                <span className="w-full text-center text-2xl font-semibold text-foreground font-heading leading-none -mt-3">
                   Achegue-<span className="text-primary">se</span>
                 </span>
               ) : null}
@@ -184,7 +188,7 @@ export function AppSidebar() {
                 A
               </div>
               {!collapsed ? (
-                <span className="w-full text-center text-lg font-semibold text-foreground font-heading leading-none">
+                <span className="w-full text-center text-2xl font-semibold text-foreground font-heading leading-none -mt-3">
                   Achegue-<span className="text-primary">se</span>
                 </span>
               ) : null}
@@ -200,8 +204,8 @@ export function AppSidebar() {
       </SidebarHeader>
 
       <SidebarContent className="gap-0">
-        {user ? (
-          <>
+        <div className="flex-1 overflow-y-auto py-1">
+          {user ? (
             <SidebarGroup className="px-2 py-2">
               <SidebarGroupLabel className="h-6 px-2 text-[11px] font-semibold uppercase tracking-wide text-sidebar-foreground/60">
                 Acoes
@@ -249,11 +253,7 @@ export function AppSidebar() {
                 </SidebarMenu>
               </SidebarGroupContent>
             </SidebarGroup>
-            <SidebarSeparator />
-          </>
-        ) : null}
-
-        <div className="flex-1 overflow-y-auto py-1">
+          ) : null}
           {NAV_SECTIONS.map((section) => {
             const visibleItems = section.items.filter(
               (item) => !item.requiresAuth || Boolean(user),
