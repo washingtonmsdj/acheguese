@@ -284,7 +284,10 @@ script-src 'self'
 - ✅ `*.googlesyndication.com` - Entrega de anúncios
 - ✅ `*.googleadservices.com` - Recursos estáticos
 - ✅ `*.doubleclick.net` - Servidor de anúncios
-- ✅ `ep1.adtrafficquality.google` - Monitoramento de qualidade
+- ✅ `*.adtrafficquality.google` - Monitoramento de qualidade (wildcard para ep1, ep2, ep3, etc)
+
+**⚠️ Nota sobre wildcards:**
+O Google usa múltiplos endpoints para Ad Traffic Quality (ep1, ep2, ep3, etc). Por isso, usamos `*.adtrafficquality.google` para cobrir todos os endpoints automaticamente.
 
 **⚠️ Limitações:**
 - Se o Google adicionar novos domínios, os anúncios podem parar de funcionar
