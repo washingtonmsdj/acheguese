@@ -360,6 +360,7 @@ export default function GastronomyLandingPage() {
           moduleName="Gastronomia"
           moduleIcon={UtensilsCrossed}
           density="banner"
+          centered={true}
           territoryName={territoryName}
           territoryFallback="Sua regiao"
           title="O que voce quer comer hoje?"

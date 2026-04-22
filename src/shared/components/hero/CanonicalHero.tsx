@@ -108,6 +108,9 @@ export interface CanonicalHeroProps {
 
   /** Densidade visual do hero */
   density?: "default" | "banner";
+
+  /** Centralizar textos */
+  centered?: boolean;
 }
 
 // ── Component ────────────────────────────────────────────────────────
@@ -128,6 +131,7 @@ export function CanonicalHero({
   stats,
   extraContent,
   density = "default",
+  centered = false,
 }: CanonicalHeroProps) {
   const displayTerritory = territoryName || territoryFallback;
   const isBanner = density === "banner";
@@ -190,12 +194,12 @@ export function CanonicalHero({
           initial="hidden"
           animate="visible"
           variants={containerVariants}
-          className={isBanner ? "max-w-4xl" : "max-w-3xl"}
+          className={`${isBanner ? "max-w-4xl" : "max-w-3xl"} ${centered ? "mx-auto text-center" : ""}`}
         >
           {/* Breadcrumb pills */}
           <motion.div
             variants={itemVariants}
-            className="flex items-center gap-2 text-sm mb-3 flex-wrap"
+            className={`flex items-center gap-2 text-sm mb-3 flex-wrap ${centered ? "justify-center" : ""}`}
           >
             <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-background/60 backdrop-blur-sm border border-border/30 text-muted-foreground text-xs font-medium">
               <MapPin className="h-3.5 w-3.5 text-primary shrink-0" />
@@ -224,18 +228,18 @@ export function CanonicalHero({
           {/* Subtitle */}
           <motion.p
             variants={itemVariants}
-            className={subtitleClass}
+            className={`${subtitleClass} ${centered ? "mx-auto" : ""}`}
           >
             {subtitle}
           </motion.p>
 
           {/* Search + CTAs row */}
           {(search || primaryCTA || secondaryCTA) && (
-            <motion.div variants={itemVariants}>
+            <motion.div variants={itemVariants} className={centered ? "flex justify-center" : ""}>
               {search ? (
                 <form
                   onSubmit={handleSearchSubmit}
-                  className={`flex flex-col sm:flex-row gap-2.5 ${isBanner ? "max-w-2xl" : "max-w-xl"}`}
+                  className={`flex flex-col sm:flex-row gap-2.5 ${isBanner ? "max-w-2xl" : "max-w-xl"} ${centered ? "mx-auto" : ""}`}
                 >
                   <div className="relative flex-1">
                     <Search className={`absolute top-1/2 -translate-y-1/2 text-muted-foreground ${isBanner ? "left-3.5 h-4 w-4" : "left-4 h-4.5 w-4.5"}`} />
@@ -272,7 +276,7 @@ export function CanonicalHero({
                   </div>
                 </form>
               ) : (
-                <div className="flex flex-wrap gap-3">
+                <div className={`flex flex-wrap gap-3 ${centered ? "justify-center" : ""}`}>
                   {primaryCTA && (
                     <Button
                       onClick={primaryCTA.onClick}
@@ -304,7 +308,7 @@ export function CanonicalHero({
           {quickFilters && quickFilters.length > 0 && (
             <motion.div
               variants={itemVariants}
-              className={`flex flex-wrap gap-2 ${isBanner ? "mt-4" : "mt-5"}`}
+              className={`flex flex-wrap gap-2 ${isBanner ? "mt-4" : "mt-5"} ${centered ? "justify-center" : ""}`}
             >
               {quickFilters.map((chip) => (
                 <button
@@ -328,7 +332,7 @@ export function CanonicalHero({
           {stats && stats.length > 0 && (
             <motion.div
               variants={itemVariants}
-              className={`flex flex-wrap gap-4 ${isBanner ? "mt-4" : "mt-6"}`}
+              className={`flex flex-wrap gap-4 ${isBanner ? "mt-4" : "mt-6"} ${centered ? "justify-center" : ""}`}
             >
               {stats.map((stat) => (
                 <div
