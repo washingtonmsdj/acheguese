@@ -151,7 +151,7 @@ class SecurityValidator {
   private async checkESLintConfig(): Promise<void> {
     console.log('📝 Verificando configuração ESLint...');
     
-    const eslintPath = path.join(process.cwd(), '.eslintrc-security.json');
+    const eslintPath = path.join(process.cwd(), 'eslint-rules/configs/.eslintrc-security.json');
     
     if (fs.existsSync(eslintPath)) {
       this.results.push({

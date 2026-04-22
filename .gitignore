@@ -48,6 +48,13 @@ dist-ssr
 .env.staging
 .env.test
 .env.remote
+.env.e2e.*
+
+# Exceto templates
+!.env.example
+!.env.local.example
+!.env.remote.example
+!.env.e2e.network.example
 
 # IMPORTANTE: .env.production é template, não commitar com valores reais
 

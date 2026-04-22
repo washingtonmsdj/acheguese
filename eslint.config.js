@@ -6,9 +6,9 @@ import tseslint from "typescript-eslint";
 import { createRequire } from "module";
 
 const require = createRequire(import.meta.url);
-const ssot = require("./eslint-plugin-ssot.cjs");
-const sessionContext = require("./eslint-plugin-session-context.cjs");
-const maps = require("./eslint-plugin-maps.cjs");
+const ssot = require("./eslint-rules/plugins/eslint-plugin-ssot.cjs");
+const sessionContext = require("./eslint-rules/plugins/eslint-plugin-session-context.cjs");
+const maps = require("./eslint-rules/plugins/eslint-plugin-maps.cjs");
 
 export default tseslint.config(
   {

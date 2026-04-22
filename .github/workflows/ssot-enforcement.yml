@@ -35,7 +35,7 @@ jobs:
       - name: Run ESLint Billing Rules
         run: |
           echo "🔍 Verificando conformidade SSOT com regras de billing..."
-          npx eslint --config .eslintrc-billing-rules.json 'src/**/*.{ts,tsx}' || {
+          npx eslint --config eslint-rules/configs/.eslintrc-billing-rules.json 'src/**/*.{ts,tsx}' || {
             echo "❌ Violações de SSOT detectadas!"
             echo ""
             echo "Regras violadas:"
