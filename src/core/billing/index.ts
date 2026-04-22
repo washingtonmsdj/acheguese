@@ -31,4 +31,5 @@ export * from './services/BillingService';
 
 // Hooks
 export * from './hooks/useBusinessSubscription';
+export * from './hooks/useBillingPlans';
 
