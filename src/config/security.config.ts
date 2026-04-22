@@ -162,6 +162,14 @@ export const SECURITY_DOMAINS = {
     justification: 'Ad delivery infrastructure',
     alternatives: 'Alternative ad networks',
   },
+
+  GOOGLE_ADTRAFFIC: {
+    url: 'https://ep1.adtrafficquality.google',
+    purpose: 'Google Ad Traffic Quality monitoring',
+    risk: 'LOW',
+    justification: 'Ad fraud detection and quality monitoring',
+    alternatives: 'None (required by AdSense)',
+  },
 } as const;
 
 const IS_DEV = typeof import.meta !== 'undefined' &&
@@ -245,6 +253,7 @@ export const CSP_DIRECTIVES = {
     SECURITY_DOMAINS.GOOGLE_ADSENSE_ADS.url,
     SECURITY_DOMAINS.GOOGLE_ADSENSE_STATIC.url,
     SECURITY_DOMAINS.GOOGLE_DOUBLECLICK.url,
+    SECURITY_DOMAINS.GOOGLE_ADTRAFFIC.url,
   ],
   
   // Web Workers - Medium risk
