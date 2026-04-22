@@ -1,19 +1,31 @@
 /**
  * SiteSettingsService - Gerenciamento de Configurações do Site
  * 
- * Serviço para gerenciar configurações globais do site como:
- * - Logo principal
- * - Favicon
- * - Cores da marca
- * - Nome e tagline do site
+ * SSOT: Todas as configurações vêm de siteSettings.config.ts
+ * Sem hardcoded values, sem gambiarras
+ * 
+ * Responsabilidades:
+ * - CRUD de configurações via RPC functions
+ * - Upload de arquivos para Supabase Storage
+ * - Validação de arquivos
  */
 
 import { supabase } from '@/integrations/supabase/client';
 import { logger } from '@/shared/utils/logger';
+import {
+  SITE_SETTINGS_STORAGE,
+  SITE_SETTING_KEYS,
+  SITE_SETTINGS_DEFAULTS,
+  type SiteSettingKey,
+  validateFileSize,
+  validateFileType,
+  getFileExtension,
+  generateFileName,
+} from '../config/siteSettings.config';
 
 export interface SiteSetting {
   key: string;
-  value: any;
+  value: unknown;
   description?: string;
   updated_at: string;
 }
@@ -78,7 +90,7 @@ class SiteSettingsServiceClass {
   /**
    * Atualiza ou insere uma configuração
    */
-  async upsertSetting(key: string, value: any, description?: string): Promise<SiteSetting> {
+  async upsertSetting(key: SiteSettingKey, value: unknown, description?: string): Promise<SiteSetting> {
     try {
       const { data, error } = await supabase.rpc('upsert_site_setting', {
         p_key: key,
@@ -140,14 +152,27 @@ class SiteSettingsServiceClass {
    */
   async uploadLogo(file: File): Promise<string> {
     try {
-      const timestamp = Date.now();
-      const fileName = `logo-${timestamp}.${file.name.split('.').pop()}`;
-      const path = `branding/${fileName}`;
+      // Validar arquivo
+      if (!validateFileSize(file, SITE_SETTINGS_STORAGE.MAX_FILE_SIZE.LOGO)) {
+        throw new Error(`Arquivo muito grande. Tamanho máximo: ${SITE_SETTINGS_STORAGE.MAX_FILE_SIZE.LOGO / 1024 / 1024}MB`);
+      }
 
-      const { url } = await this.uploadFile('public-assets', path, file);
+      if (!validateFileType(file, SITE_SETTINGS_STORAGE.ALLOWED_TYPES.LOGO)) {
+        throw new Error('Tipo de arquivo não permitido. Use PNG, JPG ou SVG');
+      }
 
-      // Atualizar configuração
-      await this.upsertSetting('logo_url', url, 'URL da logo principal do site');
+      const extension = getFileExtension(file.name);
+      const fileName = generateFileName('logo', extension);
+      const path = `${SITE_SETTINGS_STORAGE.PATHS.LOGOS}/${fileName}`;
+
+      const { url } = await this.uploadFile(SITE_SETTINGS_STORAGE.BUCKET, path, file);
+
+      // Atualizar configuração usando SSOT key
+      await this.upsertSetting(
+        SITE_SETTING_KEYS.LOGO_URL,
+        url,
+        'URL da logo principal do site'
+      );
 
       return url;
     } catch (error) {
@@ -161,14 +186,27 @@ class SiteSettingsServiceClass {
    */
   async uploadFavicon(file: File): Promise<string> {
     try {
-      const timestamp = Date.now();
-      const fileName = `favicon-${timestamp}.${file.name.split('.').pop()}`;
-      const path = `branding/${fileName}`;
+      // Validar arquivo
+      if (!validateFileSize(file, SITE_SETTINGS_STORAGE.MAX_FILE_SIZE.FAVICON)) {
+        throw new Error(`Arquivo muito grande. Tamanho máximo: ${SITE_SETTINGS_STORAGE.MAX_FILE_SIZE.FAVICON / 1024}KB`);
+      }
 
-      const { url } = await this.uploadFile('public-assets', path, file);
+      if (!validateFileType(file, SITE_SETTINGS_STORAGE.ALLOWED_TYPES.FAVICON)) {
+        throw new Error('Tipo de arquivo não permitido. Use PNG ou ICO');
+      }
 
-      // Atualizar configuração
-      await this.upsertSetting('favicon_url', url, 'URL do favicon');
+      const extension = getFileExtension(file.name);
+      const fileName = generateFileName('favicon', extension);
+      const path = `${SITE_SETTINGS_STORAGE.PATHS.FAVICONS}/${fileName}`;
+
+      const { url } = await this.uploadFile(SITE_SETTINGS_STORAGE.BUCKET, path, file);
+
+      // Atualizar configuração usando SSOT key
+      await this.upsertSetting(
+        SITE_SETTING_KEYS.FAVICON_URL,
+        url,
+        'URL do favicon'
+      );
 
       return url;
     } catch (error) {
@@ -182,7 +220,11 @@ class SiteSettingsServiceClass {
    */
   async updatePrimaryColor(color: string): Promise<void> {
     try {
-      await this.upsertSetting('primary_color', color, 'Cor primária da marca');
+      await this.upsertSetting(
+        SITE_SETTING_KEYS.PRIMARY_COLOR,
+        color,
+        'Cor primária da marca'
+      );
     } catch (error) {
       logger.error('Erro ao atualizar cor primária', error as Error);
       throw error;
@@ -191,21 +233,12 @@ class SiteSettingsServiceClass {
 
   /**
    * Restaura configurações padrão
+   * SSOT: Valores vêm de SITE_SETTINGS_DEFAULTS
    */
   async restoreDefaults(): Promise<void> {
     try {
-      const defaults = {
-        logo_url: '',
-        logo_mobile_url: '',
-        favicon_url: '',
-        primary_color: '#3b82f6',
-        secondary_color: '#8b5cf6',
-        site_name: 'Achegue-se',
-        site_tagline: 'Super App de Bairro',
-      };
-
-      for (const [key, value] of Object.entries(defaults)) {
-        await this.upsertSetting(key, value);
+      for (const [key, value] of Object.entries(SITE_SETTINGS_DEFAULTS)) {
+        await this.upsertSetting(key as SiteSettingKey, value);
       }
     } catch (error) {
       logger.error('Erro ao restaurar configurações padrão', error as Error);

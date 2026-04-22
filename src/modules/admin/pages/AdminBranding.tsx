@@ -17,6 +17,12 @@ import { Label } from '@/shared/components/ui/label';
 import { toast } from 'sonner';
 import { AdminPageHeader } from '../components';
 import { SiteSettingsService } from '@/core/admin/services/SiteSettingsService';
+import { SITE_SETTINGS_STORAGE } from '@/core/admin/config/siteSettings.config';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { Label } from '@/shared/components/ui/label';
+import { toast } from 'sonner';
+import { AdminPageHeader } from '../components';
+import { SiteSettingsService } from '@/core/admin/services/SiteSettingsService';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
 export default function AdminBranding() {
@@ -105,10 +111,10 @@ export default function AdminBranding() {
   const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      // Validar tamanho (máx 2MB)
-      if (file.size > 2 * 1024 * 1024) {
+      // Validar tamanho usando SSOT
+      if (file.size > SITE_SETTINGS_STORAGE.MAX_FILE_SIZE.LOGO) {
         toast.error('Arquivo muito grande', {
-          description: 'O tamanho máximo é 2MB',
+          description: `O tamanho máximo é ${SITE_SETTINGS_STORAGE.MAX_FILE_SIZE.LOGO / 1024 / 1024}MB`,
         });
         return;
       }
@@ -125,10 +131,10 @@ export default function AdminBranding() {
   const handleFaviconChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      // Validar tamanho (máx 500KB)
-      if (file.size > 500 * 1024) {
+      // Validar tamanho usando SSOT
+      if (file.size > SITE_SETTINGS_STORAGE.MAX_FILE_SIZE.FAVICON) {
         toast.error('Arquivo muito grande', {
-          description: 'O tamanho máximo é 500KB',
+          description: `O tamanho máximo é ${SITE_SETTINGS_STORAGE.MAX_FILE_SIZE.FAVICON / 1024}KB`,
         });
         return;
       }
