@@ -20,6 +20,7 @@ import { useTerritorialContext } from '@/core/routing/components/TerritorialLayo
 import { useSessionContext } from '@/core/session';
 import { CanonicalHero } from '@/shared/components/hero/CanonicalHero';
 import { Button } from '@/shared/components/ui/button';
+import { AdSense } from '@/shared/components/ads';
 import {
   GastronomyCategoryCards,
   GastronomyDeliveryDestinationPanel,
@@ -52,6 +53,7 @@ import {
   FilterControls,
   FoodCatalogSections,
   ProximityAlert,
+  SearchBar,
 } from './landing/components';
 import type { DisplayLayout } from './landing/types';
 import { INSECURE_CONTEXT_DESTINATION_MESSAGE } from './landing/constants';
@@ -372,32 +374,48 @@ export default function GastronomyLandingPage() {
 
         <section className="container mx-auto px-4 pt-4">
           {/* ── Google AdSense ─────────────────────────────────── */}
-          <div className="mb-4 w-full overflow-hidden rounded-xl bg-muted/40 border border-border/50 flex items-center justify-center min-h-[90px]">
-            <ins
-              className="adsbygoogle"
-              style={{ display: 'block', width: '100%', minHeight: '90px' }}
-              data-ad-client="ca-pub-XXXXXXXXXXXXXXXX"
-              data-ad-slot="XXXXXXXXXX"
-              data-ad-format="auto"
-              data-full-width-responsive="true"
+          <div className="mb-6 w-full overflow-hidden rounded-xl">
+            <AdSense 
+              slot="XXXXXXXXXX"
+              format="horizontal"
+              style={{ minHeight: '90px' }}
             />
           </div>
 
+          {/* ── Barra de Pesquisa ─────────────────────────────── */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, delay: 0.2 }}
+            className="mb-8"
+          >
+            <SearchBar
+              value={searchQuery}
+              onChange={setSearchQuery}
+              placeholder="Buscar lojas, pratos, bebidas..."
+            />
+          </motion.div>
+
           {/* Botão de favoritos — visível apenas para usuários autenticados */}
           {user && (
-            <div className="mb-3 flex justify-end">
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.3, delay: 0.3 }}
+              className="mb-4 flex justify-end"
+            >
               <Button
                 asChild
                 variant="outline"
                 size="sm"
-                className="gap-2 rounded-full"
+                className="gap-2 rounded-full hover:bg-primary/10 hover:border-primary/50 transition-all duration-200"
               >
                 <Link to={moduleUrls.gastronomyFavorites}>
                   <Heart className="h-4 w-4" />
                   Meus Favoritos
                 </Link>
               </Button>
-            </div>
+            </motion.div>
           )}
         </section>
 

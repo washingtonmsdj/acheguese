@@ -9,3 +9,4 @@ export * from './ProximityAlert';
 export * from './BusinessListSection';
 export * from './BusinessSections';
 export * from './FoodCatalogSections';
+export * from './SearchBar';
