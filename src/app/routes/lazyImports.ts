@@ -268,6 +268,7 @@ export const AdminPromocoes = lazy(() => import("@/modules/admin/pages/AdminProm
 export const AdminAssinaturas = lazy(() => import("@/modules/admin/pages/AdminAssinaturas"));
 export const AdminRoles = lazy(() => import("@/modules/admin/pages/AdminRoles"));
 export const AdminPricing = lazy(() => import("@/modules/admin/pages/AdminPricing"));
+export const AdminBranding = lazy(() => import("@/modules/admin/pages/AdminBranding"));
 export const AdminMensagens = lazy(() => import("@/modules/admin/pages/AdminMensagens"));
 export const AdminNotifications = lazy(() => import("@/modules/admin/pages/AdminNotifications"));
 export const AdminCommunityAlerts = lazy(() => import("@/modules/admin/pages/AdminCommunityAlerts"));

@@ -398,6 +398,7 @@ export function AppRoutes() {
         <Route path="identidade" element={<P.AdminIdentidade />} />
         <Route path="mapa" element={<P.AdminMapa />} />
         <Route path="pricing" element={<P.AdminPricing />} />
+        <Route path="branding" element={<P.AdminBranding />} />
         <Route path="configuracoes" element={<P.AdminConfiguracoes />} />
         <Route path="operacoes" element={<P.AdminOperacoes />} />
         <Route path="analytics" element={<P.AdminAnalytics />} />
