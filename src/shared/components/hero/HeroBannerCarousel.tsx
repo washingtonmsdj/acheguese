@@ -123,14 +123,14 @@ export function HeroBannerCarousel({
               alt={currentBanner.title}
               className="w-full h-full object-cover"
             />
-            {/* Overlay mais claro */}
-            <div className="absolute inset-0 bg-gradient-to-r from-background/70 via-background/50 to-transparent" />
-            <div className="absolute inset-0 bg-gradient-to-t from-background/70 via-background/25 to-transparent" />
+            {/* Overlay centralizado */}
+            <div className="absolute inset-0 bg-gradient-to-r from-background/75 via-background/60 to-background/75" />
+            <div className="absolute inset-0 bg-gradient-to-t from-background/80 via-background/40 to-background/60" />
           </div>
 
           {/* Content */}
-          <div className="relative h-full flex flex-col justify-center px-6 md:px-12 lg:px-16">
-            <div className={`flex flex-col ${textAlignClass} max-w-2xl`}>
+          <div className="relative h-full flex flex-col justify-center items-center px-6 md:px-12 lg:px-16">
+            <div className={`flex flex-col ${textAlignClass} max-w-3xl w-full`}>
               <motion.h2
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}

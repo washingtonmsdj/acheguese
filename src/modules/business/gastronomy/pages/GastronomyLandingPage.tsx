@@ -365,7 +365,7 @@ export default function GastronomyLandingPage() {
               image: gastronomyHeroBg,
               title: 'Promoção Especial!',
               subtitle: 'Desconto de 20% em todos os pedidos acima de R$ 50',
-              textPosition: 'left',
+              textPosition: 'center',
               cta: {
                 label: 'Ver Ofertas',
                 onClick: () => console.log('Ver ofertas'),
@@ -387,7 +387,7 @@ export default function GastronomyLandingPage() {
               image: gastronomyHeroBg,
               title: 'Novos Restaurantes',
               subtitle: 'Conheça as novidades da sua região',
-              textPosition: 'right',
+              textPosition: 'center',
               cta: {
                 label: 'Explorar',
                 onClick: () => console.log('Explorar'),
