@@ -433,7 +433,7 @@ Após migração, atualizar:
 
 1. `src/core/profiles/README.md` — Arquitetura final
 2. `docs/architecture/SSOT_REGISTRY.md` — Registrar Profile como SSOT
-3. `docs/architecture/PROFILE_DOMAIN.md` — Documentar domínio Profile
+3. `docs/audits/PROFILE_IDENTITY_GOVERNANCE.md` — Documentar domínio Profile
 4. `.eslintrc.js` — Adicionar regras de blindagem
 
 ---
@@ -451,3 +451,4 @@ Esta auditoria identificou **deriva arquitetural severa** no domínio Profile. A
 A execução em 4 fases minimiza riscos e permite rollback incremental.
 
 **Próximo passo**: Aprovação para iniciar Fase 1 (preparação sem breaking changes).
+

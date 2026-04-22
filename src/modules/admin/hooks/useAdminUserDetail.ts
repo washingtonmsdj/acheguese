@@ -10,7 +10,7 @@ import { useEffect, useState } from "react";
 import { profileService } from "@/core/profiles/services/ProfileService";
 import { AdminUserService } from "@/core/admin/services/AdminUserService";
 import { logger } from "@/shared/utils/logger";
-import { DriverModerationEventsService } from "@/core/mobility/services";
+import { DriverModerationEventsService } from "@/shared/services/mobilityAdmin";
 import { AdminUserDetailService, type UserReport } from "@/core/admin/services/AdminUserDetailService";
 
 export interface AdminUserDetail {
@@ -266,3 +266,4 @@ export function useAdminUserDetail(
     refetch: fetchUserDetail,
   };
 }
+

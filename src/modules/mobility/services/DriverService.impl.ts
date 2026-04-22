@@ -1,11 +1,11 @@
-/**
+﻿/**
  * DriverService - canonical implementation
  *
- * Stable facade over the canonical driver aggregate:
+ * Compatibility facade over the canonical driver aggregate:
  * `profiles (driver)` + MobilityService.
  */
 
-import type { Tables } from "@/core/supabase";
+import type { Tables } from "@/integrations/supabase/types.generated";
 import { profileService } from "@/core/profiles/services/ProfileService";
 import { getCompletedRidePaymentsByDriver, getDriverData, getDriverStatsDetailed } from "./mobility.queries";
 import { updateDriverData, updateDriverOnlineStatus } from "./mobility.mutations";
@@ -178,4 +178,3 @@ export class DriverService {
 }
 
 export const driverService = new DriverService();
-

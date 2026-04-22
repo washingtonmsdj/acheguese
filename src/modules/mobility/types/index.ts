@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Ponto de entrada público dos tipos do módulo mobility.
  * Importar daqui — não de sub-arquivos internos.
  */

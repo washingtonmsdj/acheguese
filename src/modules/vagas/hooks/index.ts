@@ -1,1 +1,0 @@
-export * from "@/core/vagas/hooks/index";

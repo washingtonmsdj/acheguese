@@ -49,7 +49,7 @@ UI Components (presentation only)
 
 ### Fase 2: Análise Manual por Módulo ✅
 - [x] src/modules/mobility - **85 violações**
-- [x] src/modules/gastronomy - **52 violações**
+- [x] src/modules/business/gastronomy - **52 violações**
 - [x] src/modules/business - **Incluído em billing**
 - [x] src/modules/classifieds - **Incluído em análise**
 - [x] src/modules/community - **Incluído em análise**
@@ -183,3 +183,4 @@ UI Components (presentation only)
 - ✅ Sumário Geral
 
 **Próximo Passo:** Iniciar Fase 1 de Correções (Billing Plans)
+

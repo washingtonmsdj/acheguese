@@ -75,7 +75,7 @@ Elevar o módulo de mobilidade (motoboy) ao nível de robustez esperado para lan
 ## 📦 Arquivos Entregues
 
 ### Novos (9 arquivos)
-1. **`docs/architecture/ADR-001-ssot-motoboy-ride-requests.md`**
+1. **`docs/adr/ADR-001-ssot-motoboy-ride-requests.md`**
    - Decisão arquitetural oficial
    - Rationale e alternativas consideradas
 
@@ -111,7 +111,7 @@ Elevar o módulo de mobilidade (motoboy) ao nível de robustez esperado para lan
 1. `src/modules/mobility/core/RideOperationalService.ts`
 2. `src/modules/mobility/hooks/useDelivery.ts`
 3. `src/modules/mobility/hooks/useMobilidade.ts`
-4. `src/modules/gastronomy/pages/DeliveryManagementPage.tsx`
+4. `src/modules/business/gastronomy/pages/DeliveryManagementPage.tsx`
 5. `src/modules/mobility/components/index.ts`
 6. `src/core/business/components/EmpresaDashboardTab.tsx`
 7. `src/app/routes/lazyImports.ts`
@@ -400,3 +400,5 @@ O código está **sólido, profissional e pronto para testes**. Bloqueadores sã
 **Responsável**: Implementação via Kiro AI  
 **Progresso**: 75% completo (Fases 0-3 completas, Fase 4 parcial)  
 **Próximo marco**: Validação de ambiente + Testes E2E
+
+

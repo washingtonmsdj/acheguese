@@ -1,4 +1,4 @@
-/**
+﻿/**
  * GATE 7: OPERATIONAL VERIFICATION TYPES
  * 
  * Types para verificação operacional (PIN) de corridas e entregas.

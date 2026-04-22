@@ -27,9 +27,9 @@ import {
 import { Button } from '@/shared/components/ui/button';
 import { Input } from '@/shared/components/ui/input';
 import { BusinessLogo } from '@/shared/components/ui/business-logo';
-import { useNationalFeatured } from '@/core/landing/useNationalFeatured';
+import { useNationalFeatured } from '@/app/features/landing/hooks/useNationalFeatured';
 import { useAppUrls } from '@/core/routing/hooks/useAppUrls';
-import { checkAdminRole } from '@/core/landing/services/LandingService';
+import { checkAdminRole } from '@/app/features/landing/services/LandingService';
 
 // ── Animação ────────────────────────────────────────────────────────────────
 const fadeUp = {
@@ -972,3 +972,5 @@ export function BrasilShowcasePage() {
     </>
   );
 }
+
+

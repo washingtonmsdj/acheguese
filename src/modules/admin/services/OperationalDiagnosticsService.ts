@@ -1,4 +1,4 @@
-import { supabase } from "@/core/supabase";
+import { supabase } from "@/integrations/supabase";
 
 export type TableHealthState = "ok" | "missing" | "error" | "not_provisioned";
 
@@ -71,4 +71,5 @@ class OperationalDiagnosticsService {
 }
 
 export const operationalDiagnosticsService = new OperationalDiagnosticsService();
+
 

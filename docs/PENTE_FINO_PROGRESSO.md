@@ -63,7 +63,7 @@ Realizar pente-fino completo em TODOS os módulos do projeto, seguindo o padrão
 - Segurança: MÉDIA → ALTA (50% melhoria)
 - Linhas/Componente: 1000+ → <500 (50% redução)
 
-**Documentação**: `docs/PENTE_FINO_GASTRONOMIA.md`
+**Documentação**: `docs/archive/2026-04-22-gastronomy-legacy/PENTE_FINO_GASTRONOMIA.md`
 
 ---
 
@@ -295,3 +295,4 @@ Ao iniciar pente-fino em novo módulo, seguir:
 **Progresso**: 2/7 módulos (28.6%)  
 **Qualidade Média**: AAA ⭐⭐⭐  
 **Assinatura**: Sistema de Análise Profunda
+

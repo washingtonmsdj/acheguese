@@ -2,7 +2,7 @@ import { useState, useCallback } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/core/auth";
 import { profileService } from "@/core/profiles/services/ProfileService";
-import { RidePassengerService, RideRatingService, RideReportsService } from "@/core/mobility/services";
+import { RidePassengerService, RideRatingService, RideReportsService } from "@/modules/mobility/services";
 import { toast } from "sonner";
 import { getUserRides, getRideById, getPassengerRating } from "@/modules/mobility/services/mobility.queries";
 import type { RideRequest } from "@/modules/mobility/types/types";
@@ -616,6 +616,7 @@ const result = await RideReportsService.createReport({
     isLoadingRating,
   };
 }
+
 
 
 

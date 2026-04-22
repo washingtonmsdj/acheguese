@@ -21,16 +21,16 @@ import { mapEntityProjection } from '../services/MapEntityProjectionService';
 import { DEFAULT_TILE_STYLE } from '../providers/MapProvider';
 import { MAP_RUNTIME_LAYER_KEYS } from '../config/runtimeConfig';
 import { BusinessService } from '@/core/business/services/BusinessService';
-import { EventsService } from '@/core/events/services/EventsService';
-import { communityAlertService } from '@/core/community-alerts';
-import { gastronomyMapService } from '@/core/gastronomy';
+import { EventsService } from '@/modules/community/events/services/EventsService';
+import { communityAlertService } from '@/modules/community/alerts';
+import { gastronomyMapService } from '@/modules/business/gastronomy';
 import { useTerritoryFilter, territoryFilterKey, useResolvedUserLocation } from '@/core/location';
 import { useTerritoryPolygon } from '../hooks/useTerritoryPolygon';
-import { useTouristPointsByBounds } from '@/core/tourist-points/hooks/useTouristPointsSpatial';
+import { useTouristPointsByBounds } from '@/modules/guide/tourist-points/hooks/useTouristPointsSpatial';
 import type { BoundingBox, MapLayerKey, MapMarker, MapViewport } from '../types/core';
 import type { TerritoryFilter } from '@/core/location/types';
 import type { Business } from '@/core/business/types/Business';
-import type { Event } from '@/core/events/services/EventsService';
+import type { Event } from '@/modules/community/events/services/EventsService';
 import type { ResolvedTerritory } from '@/core/routing/hooks/useResolveTerritoryFromUrl';
 
 // ─── Props ────────────────────────────────────────────────────────────────────
@@ -440,3 +440,7 @@ export default function MapaPageV4({ resolved, activeMemberIds = [] }: MapaPageV
     </div>
   );
 }
+
+
+
+

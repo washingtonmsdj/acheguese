@@ -1,4 +1,4 @@
-/**
+﻿/**
  * MOBILITY DISPATCH CONFIG SERVICE
  * 
  * SSOT para configurações de dispatch

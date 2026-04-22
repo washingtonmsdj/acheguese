@@ -5,7 +5,7 @@
  * ✅ SEGURO: Usa edge functions ao invés de supabaseAdmin
  */
 import { logger } from '@/shared/utils/logger';
-import { supabase } from '@/core/supabase';
+import { supabase } from '@/integrations/supabase';
 import type { AdminUserConfig, AdminUserResult } from './types';
 
 /**
@@ -51,3 +51,4 @@ export async function createAdminUser(config: AdminUserConfig): Promise<AdminUse
     };
   }
 }
+

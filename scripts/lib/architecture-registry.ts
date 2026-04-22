@@ -39,7 +39,7 @@ export const DOMAIN_REGISTRY: DomainRegistryEntry[] = [
       "src/core/city",
       "src/core/territorial",
       "src/core/governance",
-      "src/modules/landing",
+      "src/app/features/landing",
       "src/core/landing",
     ],
     docsPaths: [
@@ -82,11 +82,11 @@ export const DOMAIN_REGISTRY: DomainRegistryEntry[] = [
     ],
     canonicalTypeBasenames: ["types.ts", "index.ts"],
     adminSummary:
-      "Parcial. Ha superfícies de locations e territorio no admin, mas a governanca de identidade publica e de roteamento ainda esta espalhada entre core e modules/landing.",
+      "Parcial. Ha superfícies de locations e territorio no admin, mas a governanca de identidade publica e de roteamento ainda esta espalhada entre core e app/features/landing.",
     docsSummary:
       "Parcial. Location e public-identity possuem docs proprias, mas routing, landing e fundamentos geograficos ainda se sobrepoem e parte das referencias aponta para caminhos antigos.",
     ssotSummary:
-      "SSOT fragmentado entre core/location, core/routing, core/public-identity e modules/landing. O ownership conceitual esta em core, mas a leitura nacional/landing ainda depende de services em modules.",
+      "SSOT fragmentado entre core/location, core/routing, core/public-identity e app/features/landing. O ownership conceitual esta em core, mas a leitura nacional/landing ainda depende de composicao em app.",
   },
   {
     id: "profile",
@@ -141,7 +141,7 @@ export const DOMAIN_REGISTRY: DomainRegistryEntry[] = [
   {
     id: "admin",
     label: "admin",
-    sourceRoots: ["src/core/admin", "src/modules/admin", "src/modules/verification"],
+    sourceRoots: ["src/core/admin", "src/modules/admin", "src/core/verification"],
     docsPaths: [
       "src/modules/admin/README.md",
       "src/modules/admin/docs/ADMIN_LOCATIONS_INTERFACE.md",
@@ -173,7 +173,7 @@ export const DOMAIN_REGISTRY: DomainRegistryEntry[] = [
   {
     id: "business",
     label: "business",
-    sourceRoots: ["src/core/business", "src/modules/business", "src/modules/dashboard"],
+    sourceRoots: ["src/core/business", "src/modules/business", "src/app/features/dashboard"],
     docsPaths: ["src/core/business/README.md", "src/modules/business/README.md"],
     ssotPaths: [
       "src/core/business/services/BusinessService.ts",
@@ -202,13 +202,14 @@ export const DOMAIN_REGISTRY: DomainRegistryEntry[] = [
   {
     id: "gastronomy",
     label: "gastronomy",
-    sourceRoots: ["src/core/gastronomy", "src/modules/gastronomy"],
-    docsPaths: ["src/modules/gastronomy/README.md"],
+    sourceRoots: ["src/modules/business/gastronomy"],
+    docsPaths: ["src/modules/business/gastronomy/README.md"],
     ssotPaths: [
-      "src/modules/gastronomy/services/GastronomyQueryService.ts",
-      "src/modules/gastronomy/services/GastronomyService.ts",
-      "src/modules/gastronomy/services/MenuQueryService.ts",
-      "src/modules/gastronomy/services/MenuService.ts",
+      "src/modules/business/gastronomy/services/GastronomyService.ts",
+      "src/modules/business/gastronomy/services/gastronomy-runtime.queries.ts",
+      "src/modules/business/gastronomy/services/GastronomyProfileService.ts",
+      "src/modules/business/gastronomy/services/MenuService.ts",
+      "src/modules/business/gastronomy/services/GastronomyMapService.ts",
     ],
     routePrefixes: [
       "/gastronomia/:state/:city",
@@ -218,10 +219,10 @@ export const DOMAIN_REGISTRY: DomainRegistryEntry[] = [
     adminRoutePrefixes: ["/admin/gastronomia"],
     criticality: "high",
     canonicalServiceBasenames: [
-      "GastronomyQueryService.ts",
       "GastronomyService.ts",
-      "MenuQueryService.ts",
+      "GastronomyProfileService.ts",
       "MenuService.ts",
+      "GastronomyMapService.ts",
     ],
     canonicalTypeBasenames: ["gastronomy.ts", "menu.ts"],
     adminSummary:
@@ -229,7 +230,7 @@ export const DOMAIN_REGISTRY: DomainRegistryEntry[] = [
     docsSummary:
       "Boa no modulo, mas restrita ao runtime publico e delivery. Faltam contratos administrativos e matriz de ownership entre business_data, gastronomy_profiles e menu_*.",
     ssotSummary:
-      "O modulo tem SSOT proprio, mas depende de business_data como identidade principal. Isso exige contrato explicito com business para evitar services paralelos e duplicacao de regras de ownership.",
+      "Ownership consolidado no modulo business/gastronomy (inclusive contrato tecnico antes em core). O dominio depende de business_data como identidade principal e exige fronteira explicita com business para evitar duplicacao de regras.",
   },
   {
     id: "professionals-services",
@@ -239,18 +240,17 @@ export const DOMAIN_REGISTRY: DomainRegistryEntry[] = [
       "src/core/service-areas",
       "src/core/services",
       "src/core/vagas",
-      "src/modules/services",
+      "src/modules/professionals/services",
       "src/modules/professionals",
-      "src/modules/jobs",
-      "src/modules/vagas",
+      "src/modules/classifieds/jobs",
     ],
     docsPaths: ["src/core/professional/README.md"],
     ssotPaths: [
       "src/core/professional/services/ProfessionalService.ts",
       "src/core/service-areas/services/ServiceAreasService.ts",
       "src/core/services/services/ServicesService.ts",
-      "src/core/vagas/services/VagasService.ts",
-      "src/core/vagas/services/AdminVagasService.ts",
+      "src/modules/classifieds/jobs/services/VagasService.ts",
+      "src/modules/classifieds/jobs/services/AdminVagasService.ts",
     ],
     routePrefixes: [
       "/services/:id",
@@ -274,9 +274,9 @@ export const DOMAIN_REGISTRY: DomainRegistryEntry[] = [
     adminSummary:
       "Parcial. Existem paginas de servicos, vagas e verificacoes, mas nao ha uma matriz unificada para profissional, area de atendimento, reputacao e disponibilidade.",
     docsSummary:
-      "Fraca. Professional tem README em core, mas modules/services e professionals carecem de documentacao viva sobre ownership, tipos oficiais e fronteiras com business/profile.",
+      "Fraca. Professional tem README em core, mas professionals/services ainda carece de documentacao viva sobre ownership, tipos oficiais e fronteiras com business/profile.",
     ssotSummary:
-      "ProfessionalService, ServicesService e VagasService formam o eixo SSOT em core para professionals/services/vagas; modules/services e modules/vagas permanecem como camada de compatibilidade/composicao.",
+      "ProfessionalService, ServicesService e VagasService formam o eixo SSOT em core para professionals/services/vagas, com composicao oficial em modules/professionals/services e modules/classifieds/jobs.",
   },
   {
     id: "community-posts",
@@ -462,8 +462,8 @@ export const DOMAIN_REGISTRY: DomainRegistryEntry[] = [
   {
     id: "notifications",
     label: "notifications",
-    sourceRoots: ["src/core/notifications", "src/modules/notifications"],
-    docsPaths: ["src/modules/notifications/README.md"],
+    sourceRoots: ["src/core/notifications", "src/modules/admin", "src/modules/profile"],
+    docsPaths: ["src/core/notifications/README.md"],
     ssotPaths: ["src/core/notifications/services/NotificationService.ts"],
     routePrefixes: ["/mensagens"],
     adminRoutePrefixes: ["/admin/notifications"],
@@ -473,9 +473,9 @@ export const DOMAIN_REGISTRY: DomainRegistryEntry[] = [
     adminSummary:
       "Parcial. O sistema agora possui leitura administrativa oficial em `/admin/notifications`, mas ainda nao cobre templates, canais externos, auditoria de entrega nem politicas globais de notificacao.",
     docsSummary:
-      "Boa no modulo, mas com referencias historicas fora de lugar e sem integracao com a documentacao global do projeto.",
+      "Boa no core, mas com referencias historicas fora de lugar e sem integracao com a documentacao global do projeto.",
     ssotSummary:
-      "Core/notifications e o SSOT real, enquanto modules/notifications funciona como wrapper de compatibilidade. O agregado admin usa `AdminNotificationsService` como superficie de leitura administrativa sem reabrir services paralelos no dominio.",
+      "Core/notifications e o SSOT real. O agregado admin usa `AdminNotificationsService` como superficie de leitura administrativa sem reabrir services paralelos no dominio.",
   },
 ];
 
@@ -517,3 +517,4 @@ export const GOVERNANCE_SERVICE_FACADE_HINTS = [
   "re-export público",
   "re-export publico",
 ];
+

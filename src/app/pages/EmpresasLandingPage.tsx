@@ -37,8 +37,8 @@ import {
   EmpresasRecomendacoesSection,
   EmpresasBeneficiosSection,
   EmpresasCTASection,
-} from "@/modules/empresas-landing/sections";
-import { EmpresasLandingLayout } from "@/modules/empresas-landing/pages/EmpresasLandingLayout";
+} from "@/app/features/business-landing/sections";
+import { EmpresasLandingLayout } from "@/app/features/business-landing/pages/EmpresasLandingLayout";
 import {
   CATEGORIES,
   FEATURED_BUSINESSES,
@@ -50,8 +50,8 @@ import {
   getTerritoryName,
   getTerritoryNameShort,
   getTerritoryPreposition,
-} from "@/modules/empresas-landing/utils";
-import type { Business } from "@/modules/empresas-landing/sections/types";
+} from "@/app/features/business-landing/utils";
+import type { Business } from "@/app/features/business-landing/sections/types";
 
 interface EmpresasLandingPageProps {
   resolved?: ResolvedTerritory;

@@ -64,7 +64,7 @@ Essa coexistência gerava:
 | `src/modules/mobility/services/MotoboyAuthorizationService.ts` | CRIADO — guard central |
 | `src/modules/mobility/core/RideOperationalService.ts` | ATUALIZADO — integra authorization |
 | `src/modules/mobility/hooks/useDelivery.ts` | ATUALIZADO — passa requestingUserId |
-| `src/modules/gastronomy/pages/DeliveryManagementPage.tsx` | ATUALIZADO — usa useDelivery para criar |
+| `src/modules/business/gastronomy/pages/DeliveryManagementPage.tsx` | ATUALIZADO — usa useDelivery para criar |
 | `src/modules/admin/pages/AdminMotoboyOperations.tsx` | CRIADO — console operacional |
 | `src/app/routes/AppRoutes.tsx` | ATUALIZADO — rota /admin/motoboy-operacoes |
 
@@ -75,3 +75,4 @@ Essa coexistência gerava:
 - `docs/MOBILIDADE_MOTOBOY_RELATORIO_E_TASKS.md` — Diagnóstico e plano de implementação
 - `src/modules/mobility/core/RideOperationalService.ts` — Motor operacional SSOT
 - `src/core/billing/entitlements.ts` — Entitlements de plano para motoboy
+

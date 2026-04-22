@@ -21,7 +21,7 @@ import { Skeleton } from "@/shared/components/ui/skeleton";
 import { ClassificadoCard } from "./ClassificadoCard";
 import { AnimatePresence, motion } from "framer-motion";
 import { useClassifiedsAd } from "@/modules/classifieds/hooks/useClassifiedsAd";
-import { SponsoredAdCard } from "@/core/promotions";
+import { SponsoredAdCard } from "@/shared/services/promotions";
 import type { ClassificadoWithVendedor } from "@/modules/classifieds/hooks/useClassificados";
 
 interface ClassificadoGridProps {
@@ -135,3 +135,4 @@ export const ClassificadoGrid = memo(function ClassificadoGrid({
     </div>
   );
 });
+

@@ -1,1 +1,0 @@
-export * from "@/core/vagas/types/vagas.types";

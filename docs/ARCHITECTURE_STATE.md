@@ -107,7 +107,7 @@ const state = SessionState.getState();
 
 ```typescript
 // Apenas em gastronomia/cart
-src/modules/gastronomy/cart/useGastronomyCartStore.ts
+src/modules/business/gastronomy/cart/useGastronomyCartStore.ts
 ```
 
 ### Por Uso Mínimo?
@@ -278,3 +278,4 @@ export function BusinessCard({ id }: { id: string }) {
 ---
 
 *Documento mantido pela equipe de Arquitetura*
+

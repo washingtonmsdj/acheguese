@@ -1,4 +1,4 @@
-/**
+﻿/**
  * 🛠️ MOBILITY HELPERS — Utilitários de mobilidade puros
  * 
  * Responsabilidade única: helpers e verificações puras

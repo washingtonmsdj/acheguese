@@ -1,23 +1,23 @@
-﻿/**
- * 📅 useEventos Hook - REFATORADO PARA SSOT + TERRITORIAL
+/**
+ * ?? useEventos Hook - REFATORADO PARA SSOT + TERRITORIAL
  * 
  * Hook para buscar eventos usando EventsService (SSOT)
  * 
- * ✅ Usa EventsService ao invés de acesso direto ao Supabase
- * ✅ Segue arquitetura SSOT
- * ✅ Type-safe com interface Event do service
- * ✅ Suporte a filtro territorial
+ * ? Usa EventsService ao inv�s de acesso direto ao Supabase
+ * ? Segue arquitetura SSOT
+ * ? Type-safe com interface Event do service
+ * ? Suporte a filtro territorial
  * 
  * @version 3.0.0 - SSOT Compliant + Territorial
  */
 
 import { useQuery } from "@tanstack/react-query";
-import { EventsService, type Event } from "@/core/events";
+import { EventsService, type Event } from "@/modules/community/events";
 import { useTerritoryFilter } from "@/core/location/hooks/useTerritoryFilter";
 import type { RouteResolved } from "@/core/routing/types";
 
 // Re-exporta Event do service para compatibilidade
-export type { Event as Evento } from "@/core/events";
+export type { Event as Evento } from "@/modules/community/events";
 
 interface UseEventosOptions {
   routeResolved?: RouteResolved;
@@ -32,17 +32,17 @@ interface UseEventosOptions {
 export function useEventos(options: UseEventosOptions = {}) {
   const { filters, routeResolved } = options;
   
-  // ✅ Aplica filtro territorial
+  // ? Aplica filtro territorial
   const territoryFilter = useTerritoryFilter(routeResolved);
   
   const query = useQuery({
     queryKey: ["eventos", filters, territoryFilter],
     queryFn: async () => {
-      // ✅ SSOT: Usa EventsService com filtro territorial
+      // ? SSOT: Usa EventsService com filtro territorial
       const events = await EventsService.getEvents({
         category: filters?.category,
-        upcoming: true, // Apenas eventos futuros por padrão
-        territoryFilter, // ✅ Filtro territorial aplicado
+        upcoming: true, // Apenas eventos futuros por padr�o
+        territoryFilter, // ? Filtro territorial aplicado
       });
       
       // Aplica filtros adicionais no client (search)
@@ -69,3 +69,4 @@ export function useEventos(options: UseEventosOptions = {}) {
     error: query.error,
   };
 }
+

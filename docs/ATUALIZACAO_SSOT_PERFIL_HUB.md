@@ -291,7 +291,7 @@ navigate("/vagas/publicar") // ERRADO!
 ## 📚 Documentação Relacionada
 
 1. **Rotas Públicas**: `docs/ROTAS_PUBLICAS_CANONICAS.md`
-2. **URLs Completo**: `docs/URLS_PUBLICAS_COMPLETO_COM_GASTRONOMIA.md`
+2. **URLs Completo**: `docs/architecture/GASTRONOMY_CONSOLIDATION_SSOT.md`
 3. **Consolidação Final**: `docs/CONSOLIDACAO_FINAL_URLS_E_PERMISSOES.md`
 4. **useAppUrls Hook**: `src/core/routing/hooks/useAppUrls.ts`
 5. **useProfileHub Hook**: `src/modules/profile/hooks/useProfileHub.ts`
@@ -299,3 +299,4 @@ navigate("/vagas/publicar") // ERRADO!
 ---
 
 **Página de perfil 100% conforme SSOT! Código limpo, manutenível e type-safe.** 🚀
+

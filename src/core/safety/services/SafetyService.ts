@@ -339,14 +339,14 @@ export class SafetyService {
       }
 
       // Buscar dados da corrida via MobilityService (SSOT)
-      const { MobilityService: MS } = await import('@/core/mobility/services');
+      const { MobilityService: MS } = await import('@/modules/mobility/services');
       const rideData = await MS.getRideById(shareData.ride_id) as any;
       if (!rideData) return null;
 
       // Buscar dados do motorista
       let driverName, vehicleModel, vehiclePlate;
       if (rideData.driver_profile_id) {
-        const { MobilityService } = await import('@/core/mobility/services');
+        const { MobilityService } = await import('@/modules/mobility/services');
         const { profileService } = await import('@/core/profiles');
 
         const [driverCompleteProfile, driverProfile] = await Promise.all([

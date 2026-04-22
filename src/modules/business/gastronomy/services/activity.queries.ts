@@ -1,0 +1,220 @@
+import { logger } from '@/shared/utils/logger';
+import { supabase } from '@/integrations/supabase';
+import type {
+  GastronomyActivity,
+  GastronomyActivityFilters,
+  ActivityType,
+} from '../types/gastronomy';
+import { formatDistanceToNow } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
+
+function formatTimeAgo(timestamp: string): string {
+  try {
+    return formatDistanceToNow(new Date(timestamp), {
+      addSuffix: true,
+      locale: ptBR,
+    });
+  } catch (error) {
+    logger.error('Error formatting time ago', error, { timestamp });
+    return 'recentemente';
+  }
+}
+
+function buildGeographicPathPattern(
+  territoryFilter?: import('@/core/location/types').TerritoryFilter,
+): string | null {
+  if (!territoryFilter) {
+    return null;
+  }
+
+  const { state, city, district } = territoryFilter;
+
+  if (district) {
+    return `^BR\\.${state}\\.${city}\\.${district}$`;
+  }
+
+  if (city) {
+    return `^BR\\.${state}\\.${city}\\.`;
+  }
+
+  if (state) {
+    return `^BR\\.${state}\\.`;
+  }
+
+  return null;
+}
+
+function mapActivityRows(rows: Array<Record<string, unknown>>): GastronomyActivity[] {
+  return rows.map((row) => {
+    const createdAt = String(row.created_at ?? new Date().toISOString());
+
+    return {
+      id: String(row.id),
+      type: row.type as ActivityType,
+      user_name: String(row.user_name ?? 'Usuario'),
+      user_avatar: (row.user_avatar as string | null) ?? null,
+      business_id: String(row.business_id ?? ''),
+      business_name: String(row.business_name ?? ''),
+      business_slug: String(row.business_slug ?? ''),
+      action_label: String(row.action_label ?? ''),
+      emoji: String(row.emoji ?? ''),
+      created_at: createdAt,
+      time_ago: formatTimeAgo(createdAt),
+    };
+  });
+}
+
+export class ActivityQueryService {
+  static async getRecentActivities(
+    filters: GastronomyActivityFilters = {},
+  ): Promise<GastronomyActivity[]> {
+    try {
+      const { territoryFilter, limit = 10, types } = filters;
+      const geographicPathPattern = buildGeographicPathPattern(territoryFilter);
+
+      const { data, error } = await supabase.rpc('get_recent_gastronomy_activities', {
+        p_geographic_path_pattern: geographicPathPattern,
+        p_limit: limit,
+        p_types: types || null,
+      });
+
+      if (error) {
+        logger.error('Failed to fetch recent activities', error, {
+          filters,
+          geographicPathPattern,
+        });
+        throw error;
+      }
+
+      if (!data || data.length === 0) {
+        return [];
+      }
+
+      const activities = mapActivityRows((data as Array<Record<string, unknown>>) ?? []);
+
+      logger.info('Recent activities fetched successfully', {
+        count: activities.length,
+        filters,
+      });
+
+      return activities;
+    } catch (error) {
+      logger.error('Error in getRecentActivities', error);
+      throw error;
+    }
+  }
+
+  static async getUserActivities(
+    userId: string,
+    limit = 20,
+  ): Promise<GastronomyActivity[]> {
+    try {
+      const rawLimit = Math.max(limit * 5, 50);
+      const { data, error } = await supabase.rpc('get_recent_gastronomy_activities', {
+        p_geographic_path_pattern: null,
+        p_limit: rawLimit,
+        p_types: null,
+      });
+
+      if (error) {
+        logger.error('Failed to fetch user activities', error, { userId, limit });
+        throw error;
+      }
+
+      const rows = ((data as Array<Record<string, unknown>> | null) ?? []).filter((row) => {
+        const actorUserId = row.user_id ?? row.actor_user_id ?? row.profile_user_id;
+        const actorProfileId = row.profile_id ?? row.actor_profile_id;
+        return actorUserId === userId || actorProfileId === userId;
+      });
+
+      return mapActivityRows(rows).slice(0, limit);
+    } catch (error) {
+      logger.error('Error in getUserActivities', error);
+      throw error;
+    }
+  }
+
+  static async getBusinessActivities(
+    businessId: string,
+    limit = 20,
+  ): Promise<GastronomyActivity[]> {
+    try {
+      const { data, error } = await supabase.rpc('get_recent_gastronomy_activities', {
+        p_geographic_path_pattern: null,
+        p_limit: Math.max(limit, 20),
+        p_types: null,
+      });
+
+      if (error) {
+        logger.error('Failed to fetch business activities', error, {
+          businessId,
+          limit,
+        });
+        throw error;
+      }
+
+      const rows = ((data as Array<Record<string, unknown>> | null) ?? []).filter(
+        (row) => row.business_id === businessId,
+      );
+
+      return mapActivityRows(rows).slice(0, limit);
+    } catch (error) {
+      logger.error('Error in getBusinessActivities', error);
+      throw error;
+    }
+  }
+
+  static async getUserShareActivityDefault(userId: string): Promise<boolean> {
+    try {
+      // eslint-disable-next-line ssot/no-direct-profile-access -- Campo especifico de privacidade de atividades
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('share_activity_default')
+        .eq('user_id', userId)
+        .single();
+
+      if (error) {
+        logger.error('Failed to get user share activity default', error, {
+          userId,
+        });
+        return true;
+      }
+
+      return data?.share_activity_default ?? true;
+    } catch (error) {
+      logger.error('Error in getUserShareActivityDefault', error);
+      return true;
+    }
+  }
+
+  static async updateUserShareActivityDefault(
+    userId: string,
+    shareDefault: boolean,
+  ): Promise<void> {
+    try {
+      // eslint-disable-next-line ssot/no-direct-profile-access -- Campo especifico de privacidade de atividades
+      const { error } = await supabase
+        .from('profiles')
+        .update({ share_activity_default: shareDefault })
+        .eq('user_id', userId);
+
+      if (error) {
+        logger.error('Failed to update user share activity default', error, {
+          userId,
+          shareDefault,
+        });
+        throw error;
+      }
+
+      logger.info('User share activity default updated', {
+        userId,
+        shareDefault,
+      });
+    } catch (error) {
+      logger.error('Error in updateUserShareActivityDefault', error);
+      throw error;
+    }
+  }
+}
+
+

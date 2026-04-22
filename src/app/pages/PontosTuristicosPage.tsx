@@ -18,14 +18,14 @@ import { Button } from '@/shared/components/ui/button';
 import { Input } from '@/shared/components/ui/input';
 import { Badge } from '@/shared/components/ui/badge';
 import { Card, CardContent } from '@/shared/components/ui/card';
-import { useTouristPoints } from '@/core/tourist-points/hooks/useTouristPoints';
+import { useTouristPoints } from '@/modules/guide/tourist-points/hooks/useTouristPoints';
 import {
   CATEGORY_LABELS,
   CATEGORY_ICONS,
   TouristPointCategory,
   type TouristPoint,
-} from '@/core/tourist-points/types';
-import { TouristPointsMap } from '@/core/tourist-points/components/TouristPointsMap';
+} from '@/modules/guide/tourist-points/types';
+import { TouristPointsMap } from '@/modules/guide/tourist-points/components/TouristPointsMap';
 
 const fadeUp = {
   initial: { opacity: 0, y: 20 },
@@ -445,3 +445,4 @@ function EmptyState({ search, cityName }: { search: string; cityName: string }) 
     </div>
   );
 }
+

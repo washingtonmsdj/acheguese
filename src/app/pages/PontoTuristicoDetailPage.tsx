@@ -25,9 +25,9 @@ import {
   PRICE_TYPE_LABELS,
   ACCESSIBILITY_LABELS,
   type TouristPoint,
-} from '@/core/tourist-points';
-import { useNearbyBusinesses, useNearbyGuides, type NearbyBusiness } from '@/core/tourist-points/hooks/useNearbyBusinesses';
-import { useCommunityPhotos } from '@/core/tourist-points/hooks/useCommunityPhotos';
+} from '@/modules/guide/tourist-points';
+import { useNearbyBusinesses, useNearbyGuides, type NearbyBusiness } from '@/modules/guide/tourist-points/hooks/useNearbyBusinesses';
+import { useCommunityPhotos } from '@/modules/guide/tourist-points/hooks/useCommunityPhotos';
 import { formatDistance } from '@/shared/utils/geolocation';
 import { SEO } from '@/app/components/SEO';
 import { BusinessUrlService } from '@/core/business/services/BusinessUrlService';
@@ -940,3 +940,4 @@ function AmenityItem({ icon, label, available }: { icon: React.ReactNode; label:
     </div>
   );
 }
+

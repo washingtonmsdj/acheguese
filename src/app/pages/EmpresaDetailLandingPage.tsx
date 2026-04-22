@@ -20,7 +20,7 @@ import { useAuth } from "@/core/auth/hooks/useAuth";
 import BusinessSEO from "@/shared/components/seo/BusinessSEO";
 import { BusinessUrlService } from "@/core/business/services/BusinessUrlService";
 import BranchNetworkBlock from "@/core/business/components/BranchNetworkBlock";
-import { useGastronomyProfile } from "@/modules/gastronomy/hooks";
+import { useGastronomyProfile } from "@/modules/business/gastronomy/hooks";
 import { normalizePublicTerritoryPath } from "@/core/routing/utils/territoryUrls";
 import {
   EmpresaHeroSection,
@@ -31,8 +31,8 @@ import {
   EmpresaAvaliacoesSection,
   EmpresaFotosSection,
   EmpresaProximasSection,
-} from "@/modules/empresa/sections";
-import { EmpresaDetailLayout } from "@/modules/empresa/pages/EmpresaDetailLayout";
+} from "@/modules/business/company/sections";
+import { EmpresaDetailLayout } from "@/modules/business/company/pages/EmpresaDetailLayout";
 import {
   MOCK_BUSINESSES,
   MOCK_PRODUCTS,
@@ -42,8 +42,8 @@ import {
   getAddressText,
   getLocationText,
   getYearsActive,
-} from "@/modules/empresa/utils";
-import type { BusinessExtended } from "@/modules/empresa/sections/types";
+} from "@/modules/business/company/utils";
+import type { BusinessExtended } from "@/modules/business/company/sections/types";
 
 interface EmpresaDetailLandingPageProps {
   businessId?: string;

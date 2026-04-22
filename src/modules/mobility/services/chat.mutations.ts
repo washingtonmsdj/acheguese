@@ -1,10 +1,10 @@
-/**
+﻿/**
  * Chat Mutations - SSOT v2.0
  * 
  * Funções de escrita para chat de corridas
  */
 import { logger } from '@/shared/utils/logger';
-import { supabase } from '@/core/supabase';
+import { supabase } from '@/integrations/supabase';
 import type { ChatMessage, SendMessageInput } from './chat.types';
 
 /**
@@ -104,4 +104,3 @@ export async function createChat(rideId: string): Promise<import('./chat.types')
     throw error;
   }
 }
-

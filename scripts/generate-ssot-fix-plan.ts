@@ -22,14 +22,14 @@ const PRIORITY_CONFIG = {
     'src/core/admin/',
     'src/core/session/',
     'src/core/subscription/',
-    'src/modules/verification/',
+    'src/core/verification/',
   ],
   
   // Arquivos importantes (média prioridade)
   important: [
     'src/core/public-identity/',
     'src/modules/business/',
-    'src/modules/gastronomy/',
+    'src/modules/business/gastronomy/',
   ],
   
   // Arquivos de baixa prioridade
@@ -116,14 +116,14 @@ function generateFixPlan(): void {
       suggestedApproach: 'Use ProfessionalService for data access',
     },
     {
-      file: 'src/modules/verification/services/VerificationService.ts',
+      file: 'src/core/verification/services/VerificationService.ts',
       violations: 15,
       priority: 'critical',
       estimatedEffort: 'medium',
       suggestedApproach: 'Use ProfileService for profile operations',
     },
     {
-      file: 'src/modules/gastronomy/services/MenuService.ts',
+      file: 'src/modules/business/gastronomy/services/MenuService.ts',
       violations: 9,
       priority: 'important',
       estimatedEffort: 'small',

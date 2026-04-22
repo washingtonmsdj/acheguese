@@ -1,4 +1,4 @@
-﻿import React from "react";
+import React from "react";
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
@@ -35,13 +35,13 @@ import {
 import { useToast } from "@/shared/hooks/use-toast";
 import { ALERT_STATUS } from "@/shared/types/constants";
 import { messagingService } from "@/core/messaging";
-import { useClassifiedUrls } from "@/core/classifieds/hooks/useClassifiedUrls";
+import { useClassifiedUrls } from "@/modules/classifieds/hooks/useClassifiedUrls";
 import { useFriendlyModuleUrls } from "@/core/routing/hooks/useFriendlyModuleUrls";
 import type { Message, ConversationWithDetails } from "@/core/messaging/types";
 
 /**
- * âœ… SSOT COMPLIANT - ChatPage migrado
- * Usa MessagingService como fonte Ãºnica
+ * ✅ SSOT COMPLIANT - ChatPage migrado
+ * Usa MessagingService como fonte única
  */
 
 export default function ChatPage() {
@@ -72,7 +72,7 @@ export default function ChatPage() {
     if (!user || !conversationId) return;
 
     async function load() {
-      // âœ… SSOT - Buscar conversa via MessagingService
+      // ✅ SSOT - Buscar conversa via MessagingService
       const conv = await messagingService.getConversationWithDetails(
         conversationId!,
         user.id,
@@ -85,12 +85,12 @@ export default function ChatPage() {
 
       setConversation(conv);
 
-      // âœ… SSOT - Buscar mensagens via MessagingService
+      // ✅ SSOT - Buscar mensagens via MessagingService
       const msgs = await messagingService.getMessages(conversationId!);
       setMessages(msgs);
       setLoading(false);
 
-      // âœ… SSOT - Marcar mensagens como lidas via MessagingService
+      // ✅ SSOT - Marcar mensagens como lidas via MessagingService
       if (msgs.length > 0) {
         await messagingService.markMessagesAsRead(conversationId!, user.id);
       }
@@ -133,7 +133,7 @@ export default function ChatPage() {
     if (conversation.status !== ALERT_STATUS.ACTIVE) {
       toast({
         title: "Conversa bloqueada",
-        description: "NÃ£o Ã© possÃ­vel enviar mensagens nesta conversa.",
+        description: "Não é possível enviar mensagens nesta conversa.",
         variant: "destructive",
       });
       return;
@@ -144,7 +144,7 @@ export default function ChatPage() {
     setSending(true);
 
     try {
-      // âœ… SSOT - Enviar mensagem via MessagingService
+      // ✅ SSOT - Enviar mensagem via MessagingService
       await messagingService.sendMessage({
         conversation_id: conversation.id,
         sender_profile_id: user.id,
@@ -154,7 +154,7 @@ export default function ChatPage() {
       setNewMessage(text);
       toast({
         title: "Erro",
-        description: "NÃ£o foi possÃ­vel enviar a mensagem.",
+        description: "Não foi possível enviar a mensagem.",
         variant: "destructive",
       });
     }
@@ -167,20 +167,20 @@ export default function ChatPage() {
     if (!reportMessageId || !user) return;
 
     try {
-      // âœ… SSOT - Reportar mensagem via MessagingService
+      // ✅ SSOT - Reportar mensagem via MessagingService
       await messagingService.reportMessage(
         reportMessageId,
         user.id,
-        "ConteÃºdo inadequado",
+        "Conteúdo inadequado",
       );
       toast({
-        title: "DenÃºncia enviada",
+        title: "Denúncia enviada",
         description: "Nossa equipe vai analisar a mensagem.",
       });
     } catch (error) {
       toast({
         title: "Erro",
-        description: "NÃ£o foi possÃ­vel enviar a denÃºncia.",
+        description: "Não foi possível enviar a denúncia.",
         variant: "destructive",
       });
     }
@@ -195,22 +195,22 @@ export default function ChatPage() {
     const blockedBy = conversation.buyer_id === user.id ? "buyer" : "seller";
 
     try {
-      // âœ… SSOT - Bloquear conversa via MessagingService
+      // ✅ SSOT - Bloquear conversa via MessagingService
       await messagingService.blockConversation({
         conversation_id: conversation.id,
         blocked_by: blockedBy,
-        block_reason: "Bloqueado pelo usuÃ¡rio",
+        block_reason: "Bloqueado pelo usuário",
       });
 
       setConversation((prev) => (prev ? { ...prev, status: "blocked" } : null));
       toast({
-        title: "UsuÃ¡rio bloqueado",
-        description: "VocÃª nÃ£o receberÃ¡ mais mensagens desta conversa.",
+        title: "Usuário bloqueado",
+        description: "Você não receberá mais mensagens desta conversa.",
       });
     } catch (error) {
       toast({
         title: "Erro",
-        description: "NÃ£o foi possÃ­vel bloquear o usuÃ¡rio.",
+        description: "Não foi possível bloquear o usuário.",
         variant: "destructive",
       });
     }
@@ -279,7 +279,7 @@ export default function ChatPage() {
               />
             ) : (
               <div className="h-full w-full flex items-center justify-center text-lg">
-                ðŸ“¦
+                📦
               </div>
             )}
           </div>
@@ -288,7 +288,7 @@ export default function ChatPage() {
               {conversation.other_user_name}
             </p>
             <p className="text-[10px] text-muted-foreground truncate">
-              {conversation.classified_title} Â· R${" "}
+              {conversation.classified_title} · R${" "}
               {conversation.classified_price?.toLocaleString("pt-BR")}
             </p>
           </div>
@@ -306,14 +306,14 @@ export default function ChatPage() {
                 navigate(`${moduleUrls.classifieds}/${conversation.classified_id}`)
               }
             >
-              Ver anÃºncio
+              Ver anúncio
             </DropdownMenuItem>
             <DropdownMenuItem
               onClick={() => setBlockDialogOpen(true)}
               className="text-destructive"
             >
               <ShieldAlert className="h-4 w-4 mr-2" />
-              Bloquear usuÃ¡rio
+              Bloquear usuário
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
@@ -322,8 +322,8 @@ export default function ChatPage() {
       {/* Safety banner */}
       <div className="px-4 py-2 bg-warning/5 border-b border-warning/20">
         <p className="text-[10px] text-center text-muted-foreground">
-          ðŸ”’ Negocie pelo chat. NÃ£o compartilhe dados pessoais. Encontre-se em
-          locais pÃºblicos.
+          🔒 Negocie pelo chat. Não compartilhe dados pessoais. Encontre-se em
+          locais públicos.
         </p>
       </div>
 
@@ -334,7 +334,7 @@ export default function ChatPage() {
             <div className="h-14 w-14 rounded-2xl bg-primary/10 flex items-center justify-center mb-3">
               <Send className="h-6 w-6 text-primary" />
             </div>
-            <p className="text-sm font-semibold">InÃ­cio da conversa</p>
+            <p className="text-sm font-semibold">Início da conversa</p>
             <p className="text-xs text-muted-foreground mt-1 max-w-[240px]">
               Envie uma mensagem sobre "{conversation.classified_title}"
             </p>
@@ -395,7 +395,7 @@ export default function ChatPage() {
                       </span>
                       {isMine && msg.read_at && (
                         <span className="text-[9px] text-primary-foreground/60">
-                          âœ“âœ“
+                          ✓✓
                         </span>
                       )}
                     </div>
@@ -425,10 +425,10 @@ export default function ChatPage() {
       {isBlocked ? (
         <div className="px-4 py-4 border-t bg-destructive/5 text-center">
           <p className="text-sm text-destructive font-medium">
-            ðŸš« Conversa bloqueada
+            🚫 Conversa bloqueada
           </p>
           <p className="text-xs text-muted-foreground mt-0.5">
-            NÃ£o Ã© possÃ­vel enviar mensagens
+            Não é possível enviar mensagens
           </p>
         </div>
       ) : (
@@ -469,8 +469,8 @@ export default function ChatPage() {
           <AlertDialogHeader>
             <AlertDialogTitle>Denunciar mensagem</AlertDialogTitle>
             <AlertDialogDescription>
-              Tem certeza que deseja denunciar esta mensagem? Nossa equipe irÃ¡
-              analisar o conteÃºdo.
+              Tem certeza que deseja denunciar esta mensagem? Nossa equipe irá
+              analisar o conteúdo.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -489,10 +489,10 @@ export default function ChatPage() {
       <AlertDialog open={blockDialogOpen} onOpenChange={setBlockDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Bloquear usuÃ¡rio</AlertDialogTitle>
+            <AlertDialogTitle>Bloquear usuário</AlertDialogTitle>
             <AlertDialogDescription>
-              Ao bloquear, nenhum dos dois poderÃ¡ send mensagens nesta conversa.
-              O administrador poderÃ¡ revisar o caso se necessÃ¡rio.
+              Ao bloquear, nenhum dos dois poderá send mensagens nesta conversa.
+              O administrador poderá revisar o caso se necessário.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -527,3 +527,4 @@ function formatMessageTime(dateStr: string): string {
     minute: "2-digit",
   });
 }
+

@@ -8,7 +8,7 @@
 
 import { supabase } from "@/integrations/supabase";
 import { logger } from "@/shared/utils/logger";
-import { EventsService, type Event } from "@/core/events";
+import { EventsService, type Event } from "@/modules/community/events";
 
 export interface AdminEventData extends Event {
   organizer_name?: string;
@@ -268,3 +268,4 @@ class AdminEventsServiceClass {
 }
 
 export const adminEventsService = new AdminEventsServiceClass();
+

@@ -1,24 +1,45 @@
-# Feature Modules
+# Product Modules (SSOT)
 
-**Purpose**: Self-contained feature modules organized by business domain.
+`src/modules` contains only product bounded contexts.
 
-## Structure
+## Canonical top-level modules
 
-Each module follows this internal structure:
+- `admin`
+- `business`
+- `classifieds`
+- `community`
+- `guide`
+- `mobility`
+- `professionals`
+- `profile`
 
-```
-modules/{feature-name}/
-├── components/     # Feature-specific components
-├── hooks/         # Feature-specific hooks
-├── services/      # Business logic
-├── types/         # Feature-specific types
-├── pages/         # Feature pages
-└── index.ts       # Barrel exports
-```
+## Taxonomy rules
 
-## Rules
+- `business` is the horizontal base domain for business entities.
+- `business` is **not** a vertical.
+- Official business verticals are declared only in `src/core/verticals/config.ts`.
+- Current official vertical state: only `gastronomy`.
 
-- Can import from `shared/`, `core/`, and `integrations/`
-- **NO CROSS-MODULE IMPORTS** between feature modules
-- Each module is self-contained and independent
-- Follows feature-first organization principles
+## Domain nesting rules
+
+- Business-derived domains stay inside `business`.
+: `business/company`, `business/gastronomy`, `business/promotions`
+- Community derived domains stay inside `community`.
+: `community/alerts`, `community/issues`
+- Mobility derived domains stay inside `mobility`.
+: `mobility/delivery`
+- Classified jobs stay inside `classifieds`.
+: `classifieds/jobs`
+- Services capability stays consolidated in `professionals`.
+: `professionals/services`
+
+## Out of `src/modules`
+
+App-level flows and landings do not belong to domain modules.
+They live in `src/app/features` (for example: onboarding, dashboard, landings).
+
+## Boundary rules
+
+- Modules can import from `shared`, `core`, and `integrations` through approved boundaries.
+- Cross-module implementation imports are not allowed.
+- Shared contracts and canonical services must come from `core`.

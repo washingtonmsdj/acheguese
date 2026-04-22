@@ -1,1 +1,2 @@
-export { default } from "@/core/admin-identidade/pages/AdminIdentidadePage";
+export { default } from "@/core/admin/identity/pages/AdminIdentidadePage";
+

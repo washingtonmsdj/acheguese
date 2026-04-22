@@ -1,10 +1,10 @@
-/**
+﻿/**
  * Chat Queries - SSOT v2.0
  * 
  * Funções de leitura para chat de corridas
  */
 import { logger } from '@/shared/utils/logger';
-import { supabase } from '@/core/supabase';
+import { supabase } from '@/integrations/supabase';
 import type { RideChat, ChatMessage } from './chat.types';
 
 /**
@@ -58,4 +58,3 @@ export async function getMessages(chatId: string): Promise<ChatMessage[]> {
     throw error;
   }
 }
-

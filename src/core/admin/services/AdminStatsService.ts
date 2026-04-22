@@ -1,11 +1,11 @@
-﻿/**
- * ðŸ† ADMIN STATS SERVICE - SSOT para EstatÃ­sticas Administrativas
+/**
+ * 🏆 ADMIN STATS SERVICE - SSOT para Estatísticas Administrativas
  *
- * âœ… Fonte Ãºnica para TODAS as estatÃ­sticas do dashboard admin
- * âœ… Delega para serviÃ§os especÃ­ficos (SSOT compliance)
- * âœ… Tratamento de erros padronizado
- * âœ… Logging consistente
- * âœ… ZERO queries diretas ao Supabase
+ * ✅ Fonte única para TODAS as estatísticas do dashboard admin
+ * ✅ Delega para serviços específicos (SSOT compliance)
+ * ✅ Tratamento de erros padronizado
+ * ✅ Logging consistente
+ * ✅ ZERO queries diretas ao Supabase
  *
  * @version 2.0.1 - Export Fix
  */
@@ -16,12 +16,12 @@ import {
   getTotalClassifiedsCount,
   getClassifiedsCreatedInPeriod,
   getRecentClassifieds,
-} from "@/core/classifieds/services";
-import { getMobilityStats } from "@/core/mobility/services";
+} from "@/modules/classifieds/services";
+import { getMobilityStats } from "@/modules/mobility/services";
 import { ProfessionalService } from "@/core/professional/services/ProfessionalService";
 import { profileService } from "@/core/profiles/services/ProfileService";
 import { postService } from "@/core/posts/services/PostService";
-import { eventService } from "@/core/events/services/EventsService";
+import { eventService } from "@/modules/community/events/services/EventsService";
 import { commentService } from "@/core/comments/services/CommentService";
 
 // ============================================================================
@@ -66,26 +66,26 @@ export interface RecentActivity {
 // ============================================================================
 
 /**
- * SSOT para estatÃ­sticas do dashboard admin
- * âœ… ConsolidaÃ§Ã£o completa - Todas as queries delegadas para serviÃ§os especÃ­ficos
+ * SSOT para estatísticas do dashboard admin
+ * ✅ Consolidação completa - Todas as queries delegadas para serviços específicos
  */
 class AdminStatsService {
   // ============================================================================
-  // ðŸ‘‘ ESTATÃSTICAS DE EMPRESAS PREMIUM
+  // 👑 ESTATÍSTICAS DE EMPRESAS PREMIUM
   // ============================================================================
 
   /**
-   * ðŸ‘‘ BUSCAR ESTATÃSTICAS DE EMPRESAS PREMIUM
-   * âœ… SSOT: Delega para BusinessService
+   * 👑 BUSCAR ESTATÍSTICAS DE EMPRESAS PREMIUM
+   * ✅ SSOT: Delega para BusinessService
    *
    * @param totalBusinesses - Total de empresas para calcular percentual
-   * @returns EstatÃ­sticas de empresas premium
+   * @returns Estatísticas de empresas premium
    */
   async getPremiumBusinessStats(
     totalBusinesses: number,
   ): Promise<PremiumStats> {
     try {
-      // âœ… SSOT: Usar BusinessService.getPremiumBusinessesCount()
+      // ✅ SSOT: Usar BusinessService.getPremiumBusinessesCount()
       const premiumCount = await BusinessService.getPremiumBusinessesCount();
 
       return {
@@ -105,18 +105,18 @@ class AdminStatsService {
   }
 
   // ============================================================================
-  // ðŸ“Š CONTAGEM DE REGISTROS POR TABELA
+  // 📊 CONTAGEM DE REGISTROS POR TABELA
   // ============================================================================
 
   /**
-   * ðŸ“Š OBTER ESTATÃSTICAS DE CONTAGEM DE REGISTROS
-   * âœ… SSOT: Delega para serviÃ§os especÃ­ficos de cada domÃ­nio
+   * 📊 OBTER ESTATÍSTICAS DE CONTAGEM DE REGISTROS
+   * ✅ SSOT: Delega para serviços específicos de cada domínio
    *
    * @returns Objeto com contagens de todas as tabelas
    */
   async getTableStats(): Promise<TableStats> {
     try {
-      // âœ… SSOT: Buscar de cada serviÃ§o especÃ­fico em paralelo
+      // ✅ SSOT: Buscar de cada serviço específico em paralelo
       const [
         businessesCount,
         professionalsCount,
@@ -160,11 +160,11 @@ class AdminStatsService {
   }
 
   /**
-   * ðŸ“ˆ OBTER ESTATÃSTICAS COM TENDÃŠNCIAS
-   * âœ… SSOT: Calcula tendÃªncias comparando com perÃ­odo anterior
+   * 📈 OBTER ESTATÍSTICAS COM TENDÊNCIAS
+   * ✅ SSOT: Calcula tendências comparando com período anterior
    *
-   * @param currentPeriodDays - Dias do perÃ­odo atual (padrÃ£o: 7)
-   * @returns EstatÃ­sticas com indicadores de tendÃªncia
+   * @param currentPeriodDays - Dias do período atual (padrão: 7)
+   * @returns Estatísticas com indicadores de tendência
    */
   async getTableStatsWithTrends(currentPeriodDays: number = 7): Promise<{
     stats: TableStats;
@@ -182,7 +182,7 @@ class AdminStatsService {
       const previousStart = new Date(currentStart);
       previousStart.setDate(previousStart.getDate() - currentPeriodDays);
 
-      // Buscar contagens do perÃ­odo anterior em paralelo
+      // Buscar contagens do período anterior em paralelo
       const [
         prevBusinesses,
         prevProfessionals,
@@ -199,7 +199,7 @@ class AdminStatsService {
         profileService.getProfilesCreatedInPeriod(previousStart, currentStart),
       ]);
 
-      // Buscar contagens do perÃ­odo atual
+      // Buscar contagens do período atual
       const [
         currBusinesses,
         currProfessionals,
@@ -216,7 +216,7 @@ class AdminStatsService {
         profileService.getProfilesCreatedInPeriod(currentStart, now),
       ]);
 
-      // Calcular tendÃªncias
+      // Calcular tendências
       const calculateTrend = (current: number, previous: number) => {
         if (previous === 0) {
           return { value: current > 0 ? 100 : 0, direction: current > 0 ? "up" as const : "neutral" as const };
@@ -250,12 +250,12 @@ class AdminStatsService {
   }
 
   // ============================================================================
-  // ðŸ“ˆ DADOS DE ATIVIDADE POR DIA
+  // 📈 DADOS DE ATIVIDADE POR DIA
   // ============================================================================
 
   /**
-   * ðŸ“ˆ OBTER DADOS DE ATIVIDADE POR DIA
-   * Gera dados agregados por perÃ­odo â€” uma Ãºnica passagem, sem query por dia.
+   * 📈 OBTER DADOS DE ATIVIDADE POR DIA
+   * Gera dados agregados por período — uma única passagem, sem query por dia.
    */
   async getActivity(days = 30): Promise<ActivityData[]> {
     try {
@@ -267,7 +267,7 @@ class AdminStatsService {
         getRecentClassifieds(200),
       ]);
 
-      // Monta um mapa date â†’ contagens
+      // Monta um mapa date → contagens
       const map = new Map<string, ActivityData>();
       const startDate = new Date();
       startDate.setDate(startDate.getDate() - days);
@@ -299,21 +299,21 @@ class AdminStatsService {
   }
 
   // ============================================================================
-  // ðŸ• ATIVIDADES RECENTES
+  // 🕐 ATIVIDADES RECENTES
   // ============================================================================
 
   /**
-   * ðŸ• OBTER ATIVIDADES RECENTES DO SISTEMA
-   * âœ… SSOT: Busca de cada serviÃ§o especÃ­fico e agrega
+   * 🕐 OBTER ATIVIDADES RECENTES DO SISTEMA
+   * ✅ SSOT: Busca de cada serviço específico e agrega
    *
-   * @param limit - NÃºmero mÃ¡ximo de atividades (padrÃ£o: 10)
+   * @param limit - Número máximo de atividades (padrão: 10)
    * @returns Array com atividades recentes ordenadas por data
    */
   async getRecentActivity(limit = 10): Promise<RecentActivity[]> {
     try {
       const recent: RecentActivity[] = [];
 
-      // âœ… SSOT: Buscar de cada serviÃ§o especÃ­fico em paralelo
+      // ✅ SSOT: Buscar de cada serviço específico em paralelo
       const [businesses, posts, events, classifieds, profiles, comments] =
         await Promise.all([
           BusinessService.getRecentBusinessesLegacy(5),
@@ -340,7 +340,7 @@ class AdminStatsService {
           content.length > 50 ? content.substring(0, 50) + "..." : content;
         recent.push({
           type: "post",
-          label: `Novo post: ${preview || "Sem conteÃºdo"}`,
+          label: `Novo post: ${preview || "Sem conteúdo"}`,
           date: p.created_at,
         });
       });
@@ -349,7 +349,7 @@ class AdminStatsService {
       events.forEach((e) => {
         recent.push({
           type: "event",
-          label: `Novo evento: ${e.title || "Sem tÃ­tulo"}`,
+          label: `Novo evento: ${e.title || "Sem título"}`,
           date: e.created_at,
         });
       });
@@ -358,28 +358,28 @@ class AdminStatsService {
       classifieds.forEach((c) => {
         recent.push({
           type: "classified",
-          label: `Novo classificado: ${c.title || "Sem tÃ­tulo"}`,
+          label: `Novo classificado: ${c.title || "Sem título"}`,
           date: c.created_at,
         });
       });
 
-      // Adicionar usuÃ¡rios
+      // Adicionar usuários
       profiles.forEach((p) => {
         recent.push({
           type: "user",
-          label: `Novo usuÃ¡rio: ${p.name || p.username || "Sem nome"}`,
+          label: `Novo usuário: ${p.name || p.username || "Sem nome"}`,
           date: p.created_at,
         });
       });
 
-      // Adicionar comentÃ¡rios
+      // Adicionar comentários
       comments.forEach((c: any) => {
         const content = c.content || c.texto || "";
         const preview =
           content.length > 40 ? content.substring(0, 40) + "..." : content;
         recent.push({
           type: "comment",
-          label: `Novo comentÃ¡rio: ${preview || "Sem conteÃºdo"}`,
+          label: `Novo comentário: ${preview || "Sem conteúdo"}`,
           date: c.created_at,
         });
       });
@@ -403,3 +403,5 @@ class AdminStatsService {
 // ============================================================================
 
 export const adminStatsService = new AdminStatsService();
+
+

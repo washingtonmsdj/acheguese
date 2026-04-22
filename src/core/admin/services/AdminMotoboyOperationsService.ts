@@ -1,5 +1,5 @@
 import { supabase } from "@/integrations/supabase";
-import { RideOperationalService, mobilityAuditService } from "@/core/mobility/services";
+import { RideOperationalService, mobilityAuditService } from "@/modules/mobility/services";
 
 const supabaseAny = supabase as any;
 
@@ -103,3 +103,4 @@ export class AdminMotoboyOperationsService {
     });
   }
 }
+

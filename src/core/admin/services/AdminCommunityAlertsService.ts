@@ -14,14 +14,14 @@ import { supabase } from "@/integrations/supabase";
 import {
   alertModerationService,
   communityAlertService,
-} from '@/core/community-alerts';
+} from '@/modules/community/alerts';
 import type {
   AlertCategory,
   AlertReportReason,
   AlertStatus,
   CommunityAlert,
   CommunityAlertPublic,
-} from '@/core/community-alerts';
+} from '@/modules/community/alerts';
 
 // ============================================================================
 // TIPOS ADMINISTRATIVOS
@@ -539,3 +539,4 @@ class AdminCommunityAlertsServiceClass {
 }
 
 export const adminCommunityAlertsService = new AdminCommunityAlertsServiceClass();
+

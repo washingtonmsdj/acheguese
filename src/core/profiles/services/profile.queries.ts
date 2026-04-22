@@ -7,7 +7,7 @@
 import { supabase } from "@/integrations/supabase";
 import { logger } from "@/shared/utils/logger";
 import { trackError } from "@/shared/utils/errorTracking";
-import { createTypedQuery } from "@/core/supabase/services/supabaseHelpers";
+import { createTypedQuery } from "@/integrations/supabase/services/supabaseHelpers";
 import type {
   AdminFilters,
   AdminProfileListItem,
@@ -518,3 +518,4 @@ export async function getUsernameHistory(profileId: string): Promise<
     throw new Error("Infrastructure error getting username history");
   }
 }
+

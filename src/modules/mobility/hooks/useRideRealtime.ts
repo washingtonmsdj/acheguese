@@ -1,4 +1,4 @@
-/**
+﻿/**
  * useRideRealtime - Hook para atualizacoes em tempo real de corridas
  *
  * Permite passageiro e motorista receberem notificacoes de mudanca de estado

@@ -18,7 +18,7 @@ const FORBIDDEN_IMPORT_PATTERNS = [
   "@/core/logistics",
 ];
 
-const ALLOWED_VERTICAL_HOME = path.join("src", "modules", "delivery");
+const ALLOWED_VERTICAL_HOME = path.join("src", "modules", "mobility", "delivery");
 const REQUIRED_DELIVERY_SUBDOMAINS = [
   path.join(ALLOWED_VERTICAL_HOME, "order"),
   path.join(ALLOWED_VERTICAL_HOME, "logistics"),

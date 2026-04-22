@@ -20,6 +20,13 @@ Versao documental: 3.1
 - `core/admin` agrega dominios; ele nao deve depender de implementacoes internas de `modules/*`.
 - Rotas publicas devem ter namespace unico por entidade. O mesmo padrao nao pode servir a tipos diferentes ao mesmo tempo.
 
+## 2.1 Regras de taxonomia (vertical vs horizontal)
+- `business`/`empresas` e dominio base horizontal das entidades empresariais.
+- `business` nao e vertical.
+- Vertical empresarial oficial existe somente quando declarado em `src/core/verticals/config.ts`.
+- Estado oficial atual: apenas `gastronomy` esta formalizada como vertical.
+- Capacidade implementada em codigo nao implica reconhecimento oficial de vertical sem declaracao no SSOT.
+
 ## 3. Regras documentais
 - Documento global vivo fica em `docs/`.
 - Documento tecnico de dominio fica no proprio dominio.
@@ -33,6 +40,7 @@ Execute antes de consolidacoes estruturais e antes de build:
 ```bash
 npm run audit:architecture
 npm run validate:architecture:governance
+npm run validate:taxonomy
 npm run validate:ssot
 npm run validate:docs-structure
 ```

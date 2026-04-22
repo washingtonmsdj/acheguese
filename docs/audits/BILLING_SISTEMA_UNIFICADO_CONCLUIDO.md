@@ -124,22 +124,22 @@ interface PlanEntitlements {
 
 **9+ referências ativas** no código:
 
-1. `src/modules/gastronomy/pages/MenuManagementPage.tsx`
+1. `src/modules/business/gastronomy/pages/MenuManagementPage.tsx`
    - Usa `useBusinessSubscription` para verificar permissões de cardápio
 
-2. `src/modules/gastronomy/pages/GastronomyPlansPage.tsx`
+2. `src/modules/business/gastronomy/pages/GastronomyPlansPage.tsx`
    - Exibe planos disponíveis usando `useBillingPlans`
 
-3. `src/modules/gastronomy/pages/GastronomyBillingPage.tsx`
+3. `src/modules/business/gastronomy/pages/GastronomyBillingPage.tsx`
    - Gerencia assinatura usando `BillingService`
 
-4. `src/modules/gastronomy/components/UpgradePrompt.tsx`
+4. `src/modules/business/gastronomy/components/UpgradePrompt.tsx`
    - Mostra prompt de upgrade baseado em `PlanTier`
 
 5. `src/core/qr/components/QrCodeWidget.tsx`
    - Usa `EntitlementsService` para estilo de QR Code
 
-6. `src/modules/gastronomy/hooks/useSubscriptionManagement.ts`
+6. `src/modules/business/gastronomy/hooks/useSubscriptionManagement.ts`
    - Gerencia ciclo de vida da assinatura
 
 ### 5. Serviços Implementados
@@ -208,9 +208,9 @@ src/core/billing/__tests__/
 ### 1. Código Legado DEPRECATED (P2)
 
 **Arquivos marcados como DEPRECATED mas ainda presentes**:
-- `src/core/gastronomy/billing/permissions.ts`
-- `src/core/gastronomy/billing/featureFlags.ts`
-- `src/core/gastronomy/billing/StripeService.ts`
+- `src/modules/business/gastronomy/billing/permissions.ts`
+- `src/modules/business/gastronomy/billing/featureFlags.ts`
+- `src/modules/business/gastronomy/billing/StripeService.ts`
 - `src/core/billing/plans.ts` (mantido para compatibilidade)
 
 **Impacto**: Baixo (código não usado, apenas ocupa espaço)
@@ -329,3 +329,4 @@ O sistema de billing unificado está **OPERACIONAL e em USO ATIVO em produção*
 **Última atualização**: 2026-04-22
 **Status**: ✅ CONCLUÍDO
 **Aprovadores**: CTO, Tech Lead, Arquiteto
+

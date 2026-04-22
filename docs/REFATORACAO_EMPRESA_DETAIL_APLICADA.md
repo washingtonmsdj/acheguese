@@ -104,7 +104,7 @@ import { Store, ArrowLeft } from "lucide-react";
 // Services & Hooks
 import { BusinessService } from "@/core/business/services/BusinessService";
 import { useAuth } from "@/core/auth/hooks/useAuth";
-import { useGastronomyProfile } from "@/modules/gastronomy/hooks";
+import { useGastronomyProfile } from "@/modules/business/gastronomy/hooks";
 
 // Sections & Layout (REFATORADO)
 import {
@@ -270,3 +270,4 @@ src/modules/empresa/
 ---
 
 **Refatoração aplicada com sucesso!** 🚀
+

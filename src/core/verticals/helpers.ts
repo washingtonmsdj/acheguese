@@ -5,7 +5,7 @@
  */
 
 import type { BusinessCategory } from '@/core/business/types/Business';
-import type { CuisineType } from '@/core/gastronomy';
+import type { CuisineType } from '@/modules/business/gastronomy';
 
 /**
  * Mapeamento de category (business_data) para cuisine_type sugerido (gastronomy_profile)
@@ -40,3 +40,5 @@ export function getCuisineSuggestionFromCategory(
 export function isGastronomyRelatedCategory(category: BusinessCategory): boolean {
   return category === 'restaurante' || category === 'lazer';
 }
+
+

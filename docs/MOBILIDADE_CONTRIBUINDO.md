@@ -128,7 +128,7 @@ static async authorize(input: AuthorizationInput): Promise<AuthorizationResult> 
 
 2. **Documentar no ADR**
 ```markdown
-# docs/architecture/ADR-002-horario-operacao.md
+# docs/adr/ADR-001-ssot-motoboy-ride-requests.md
 # Adicionar decisão arquitetural
 ```
 
@@ -394,3 +394,4 @@ Antes de submeter PR:
 **Última atualização**: 2026-04-19  
 **Versão**: 1.0  
 **Manutenção**: Atualizar conforme novos padrões forem estabelecidos
+

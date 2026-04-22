@@ -12,7 +12,7 @@
 
 import { useState, useEffect } from 'react';
 import { postService } from '@/core/posts/services';
-import { getUserClassifieds } from '@/core/classifieds/services';
+import { getUserClassifieds } from '@/shared/services/classifieds';
 import { ProfileLinksService } from '@/core/profiles/services/multi-profile/profileLinksService';
 import { ProfileMembersService } from '@/core/profiles/services/multi-profile/profileMembersService';
 import type { ProfileType } from '@/core/profiles/services/multi-profile/types';
@@ -105,3 +105,4 @@ export function useEcosystemSummary(
     loadingRelations,
   };
 }
+

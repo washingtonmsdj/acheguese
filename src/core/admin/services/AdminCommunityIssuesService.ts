@@ -13,7 +13,7 @@ import { logger } from '@/shared/utils/logger';
 import { supabase } from '@/integrations/supabase';
 import { SessionService } from '@/core/session/services/SessionService';
 import type { AdminSupabaseClient } from '../types/adminDatabase.types';
-import { communityIssueService } from '@/core/community-issues';
+import { communityIssueService } from '@/modules/community/issues';
 import type {
   CommunityIssue,
   CommunityIssuePublic,
@@ -21,7 +21,7 @@ import type {
   IssuePriority,
   IssueReportReason,
   IssueStatus,
-} from '@/core/community-issues';
+} from '@/modules/community/issues';
 
 // ============================================================================
 // TIPOS ADMINISTRATIVOS
@@ -668,3 +668,4 @@ class AdminCommunityIssuesServiceClass {
 }
 
 export const adminCommunityIssuesService = new AdminCommunityIssuesServiceClass();
+

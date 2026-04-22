@@ -136,7 +136,7 @@ if (!result.authorized) {
 ### 4. Integração em Páginas Produtivas
 
 #### Gastronomia
-**Arquivo**: `src/modules/gastronomy/pages/DeliveryManagementPage.tsx`
+**Arquivo**: `src/modules/business/gastronomy/pages/DeliveryManagementPage.tsx`
 - Botão "Nova Entrega" conectado ao `CreateDeliveryModal`
 - `sourceType="gastronomy"` + `sourceId={businessProfileId}`
 
@@ -320,3 +320,4 @@ Para dúvidas sobre a implementação:
 **Última atualização**: 2026-04-19  
 **Responsável**: Implementação via Kiro AI  
 **Status**: ✅ Core Completo, ⏳ Validação Pendente
+

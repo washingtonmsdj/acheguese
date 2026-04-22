@@ -25,7 +25,7 @@ import {
 } from "@/shared/components/ui/popover";
 import { LocationPickerSheet } from "@/shared/components/LocationPickerSheet";
 import { useToast } from "@/shared/hooks/use-toast";
-import { lostFoundService } from "@/core/lostfound/services";
+import { lostFoundService } from "@/modules/community/lostfound/services";
 import { useAuth } from "@/core/auth/hooks/useAuth";
 import { cn } from "@/shared/utils/cn";
 import { format } from "date-fns";

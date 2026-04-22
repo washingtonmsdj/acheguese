@@ -35,7 +35,7 @@ vi.mock("@/core/maps/config/markerConfig", () => ({
   getLayerConfig: () => ({ label: "Layer" }),
 }));
 
-vi.mock("@/core/tourist-points", () => ({
+vi.mock("@/modules/guide/tourist-points", () => ({
   CATEGORY_LABELS: {},
   TouristPointService: {
     list: vi.fn(),
@@ -158,3 +158,4 @@ describe("AdminMapGovernanceService.resolveHotspot", () => {
     ).rejects.toThrow("Grupo sem membros exige curadoria estrutural");
   });
 });
+

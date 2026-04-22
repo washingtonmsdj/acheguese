@@ -25,8 +25,8 @@ import {
 } from "@/shared/components/ui/dropdown-menu";
 import { Plus, MessageCircle, AlertTriangle, Construction } from "lucide-react";
 import { CreatePostModal } from "./CreatePostModal";
-import { CreateAlertModal } from "@/core/community-alerts";
-import { CreateIssueModal } from "@/core/community-issues";
+import { CreateAlertModal } from "@/modules/community/alerts";
+import { CreateIssueModal } from "@/modules/community/issues";
 
 interface UnifiedComposerProps {
   locationId?: string; // ✅ SPRINT 2 FASE 3: location_id explícito (opcional)
@@ -153,3 +153,4 @@ export function UnifiedComposer({
     </>
   );
 }
+

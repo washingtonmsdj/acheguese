@@ -6,9 +6,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/shared/components/ui
 import { Button } from "@/shared/components/ui/button";
 import { Badge } from "@/shared/components/ui/badge";
 import { Input } from "@/shared/components/ui/input";
-import { classifiedReportService } from "@/core/classifieds/services";
+import { classifiedReportService } from "@/shared/services/classifiedReports";
 import { useSessionContext } from "@/core/session";
-import type { ClassifiedReport } from "@/core/classifieds/services/ClassifiedReportService";
+import type { ClassifiedReport } from "@/shared/services/classifiedReports/ClassifiedReportService";
 import { cn } from "@/shared/utils/cn";
 
 type ReportStatus = "pending" | "reviewed" | "resolved" | "dismissed";
@@ -338,3 +338,4 @@ function StatCard({
     </Card>
   );
 }
+

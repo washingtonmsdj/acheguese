@@ -7,11 +7,17 @@ Data de referencia: 2026-04-20
 2. [Regras vigentes](./CURRENT_RULES.md)
 3. [Arquitetura](./ARCHITECTURE.md)
 4. [Status oficial](./STATUS.md)
-5. [Auditoria estrutural de modulos](./AUDITORIA_ESTRUTURAL_MODULOS.md)
+5. [Auditoria estrutural global](./AUDITORIA_ESTRUTURAL_GLOBAL.md)
+6. [Auditoria estrutural de modulos](./AUDITORIA_ESTRUTURAL_MODULOS.md)
 
 ## Fontes ativas por tema
 - Regras SSOT e governanca: [CURRENT_RULES.md](./CURRENT_RULES.md)
 - Arquitetura global: [ARCHITECTURE.md](./ARCHITECTURE.md)
+- Taxonomia global oficial: [architecture/TAXONOMY_SSOT.md](./architecture/TAXONOMY_SSOT.md)
+- SSOT da camada core: [architecture/CORE_LAYER_SSOT.md](./architecture/CORE_LAYER_SSOT.md)
+- SSOT da consolidacao de gastronomia: [architecture/GASTRONOMY_CONSOLIDATION_SSOT.md](./architecture/GASTRONOMY_CONSOLIDATION_SSOT.md)
+- Auditoria estrutural global: [AUDITORIA_ESTRUTURAL_GLOBAL.md](./AUDITORIA_ESTRUTURAL_GLOBAL.md)
+- Taxonomia vertical oficial: `src/core/verticals/config.ts` e `src/core/verticals/README.md`
 - Mapa de ownership por assunto: [CANONICAL_MAP.md](./CANONICAL_MAP.md)
 - Estado operacional atual: [STATUS.md](./STATUS.md)
 - Auditoria estrutural e plano de correcao: [AUDITORIA_ESTRUTURAL_MODULOS.md](./AUDITORIA_ESTRUTURAL_MODULOS.md)
@@ -34,6 +40,7 @@ Observacao:
 - Arquivo de legado e sessoes: `docs/archive/`
 - Lote movido da raiz em 2026-04-20: `docs/historico/root-markdown/`
 - Lote pre-launch consolidado em 2026-04-20: `docs/historico/pre-launch/2026-04-20/`
+- Lote gastronomia legado consolidado em 2026-04-22: `docs/archive/2026-04-22-gastronomy-legacy/`
 - Ponte historica de pre-launch: `docs/pre-launch/README.md` e `docs/pre-launch/INDEX.md`
 
 ## Regras de atualizacao

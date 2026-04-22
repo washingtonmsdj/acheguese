@@ -1,1 +1,2 @@
-export { default } from "@/core/admin-motoristas/pages/AdminMotoristasPage";
+export { default } from "@/core/admin/drivers/pages/AdminMotoristasPage";
+

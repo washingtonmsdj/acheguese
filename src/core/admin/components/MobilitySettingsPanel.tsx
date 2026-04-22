@@ -15,7 +15,7 @@ import { useToast } from "@/shared/hooks/use-toast";
 import { Settings, MapPin, TrendingUp, Save, RefreshCw } from "lucide-react";
 import { logger } from "@/shared/utils/logger";
 import { useLocationContext } from "@/core/location";
-import { mobilityRolloutService } from "@/core/mobility/services";
+import { mobilityRolloutService } from "@/modules/mobility/services";
 
 interface MobilitySettings {
   prioritize_destination_residents: {
@@ -308,3 +308,4 @@ export function MobilitySettingsPanel() {
     </div>
   );
 }
+

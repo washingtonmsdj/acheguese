@@ -1,4 +1,4 @@
-import { useAdDelivery } from '@/core/promotions';
+import { useAdDelivery } from '@/shared/services/promotions';
 import type { SponsoredAd } from '@/modules/community/types';
 
 /**
@@ -24,3 +24,4 @@ export function useSponsoredAds() {
 
   return { data: ad, isLoading };
 }
+

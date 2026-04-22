@@ -16,11 +16,11 @@ import { ModulePageLoader } from '@/shared/components/loading/PageLoader';
 
 // Lazy imports dos módulos existentes
 const ComunidadePage       = lazy(() => import('@/core/community/pages/ComunidadePage'));
-const ServicosPage         = lazy(() => import('@/core/services/pages/ServicosLandingPage'));
-const ClassificadosPage    = lazy(() => import('@/core/classifieds/pages/ClassificadosPage'));
+const ServicosPage         = lazy(() => import('@/modules/professionals/services/pages/ServicosLandingPage'));
+const ClassificadosPage    = lazy(() => import('@/modules/classifieds/pages/ClassificadosPage'));
 const EventosPage          = lazy(() => import('@/core/community/pages/EventosPage'));
-const MobilidadePage       = lazy(() => import('@/core/mobility/pages/MobilidadeLandingPage'));
-const VagasPage            = lazy(() => import('@/core/vagas/pages/VagasPublicPage'));
+const MobilidadePage       = lazy(() => import('@/modules/mobility/pages/MobilidadeLandingPage'));
+const VagasPage            = lazy(() => import('@/modules/classifieds/jobs/pages/VagasPublicPage'));
 const CategoryBusinessPage = lazy(() => import('@/core/business/pages/CategoryBusinessPage'));
 const MapaPage             = lazy(() => import('@/core/maps/pages/MapaPageV4'));
 
@@ -103,3 +103,4 @@ export function TerritorialMapPage() {
     </Suspense>
   );
 }
+

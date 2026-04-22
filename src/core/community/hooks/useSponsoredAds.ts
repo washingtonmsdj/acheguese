@@ -1,17 +1,17 @@
-﻿import { useAdDelivery } from '@/core/promotions';
+import { useAdDelivery } from '@/modules/business/promotions';
 import type { SponsoredAd } from '@/core/community/types';
 
 /**
- * Hook para buscar anÃºncio patrocinado no widget lateral do community.
+ * Hook para buscar anúncio patrocinado no widget lateral do community.
  *
- * Delega toda a lÃ³gica de targeting e elegibilidade para modules/ads.
- * NÃ£o contÃ©m lÃ³gica geogrÃ¡fica local â€” apenas adapta o resultado
+ * Delega toda a lógica de targeting e elegibilidade para modules/ads.
+ * Não contém lógica geográfica local — apenas adapta o resultado
  * para o tipo SponsoredAd esperado pelo SponsoredWidget.
  */
 export function useSponsoredAds() {
   const { campaign, isLoading } = useAdDelivery('sidebar_widget');
 
-  // Adaptar AdCampaignWithTargets â†’ SponsoredAd (tipo legado do community)
+  // Adaptar AdCampaignWithTargets → SponsoredAd (tipo legado do community)
   const ad: SponsoredAd | undefined = campaign
     ? {
         id: campaign.id,
@@ -24,4 +24,5 @@ export function useSponsoredAds() {
 
   return { data: ad, isLoading };
 }
+
 

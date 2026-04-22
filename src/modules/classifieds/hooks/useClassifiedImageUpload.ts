@@ -6,7 +6,7 @@
 import { logger } from '@/shared/utils/logger';
 import { useState, useCallback } from "react";
 import { useSessionContext } from "@/core/session";
-import { ClassifiedImageService, UploadedImage, UploadProgress } from "@/core/classifieds/services/ClassifiedImageService";
+import { ClassifiedImageService, UploadedImage, UploadProgress } from "@/modules/classifieds/services/ClassifiedImageService";
 import { toast } from "sonner";
 interface UploadState {
   uploading: boolean;
@@ -211,3 +211,4 @@ export function useClassifiedImageUpload() {
     reset,
   };
 }
+

@@ -12,10 +12,10 @@
  */
 
 import { useBusinessUrls } from '@/core/business/hooks/useBusinessUrls';
-import { useServiceUrls } from '@/core/services/hooks/useServiceUrls';
-import { useClassifiedUrls } from '@/core/classifieds/hooks/useClassifiedUrls';
+import { useServiceUrls } from '@/modules/professionals/services/hooks/useServiceUrls';
+import { useClassifiedUrls } from '@/modules/classifieds/hooks/useClassifiedUrls';
 import { useCommunityUrls } from '@/core/community/hooks/useCommunityUrls';
-import { useMobilityUrls } from '@/core/mobility/hooks/useMobilityUrls';
+import { useMobilityUrls } from '@/modules/mobility/hooks/useMobilityUrls';
 import { useFriendlyModuleUrls } from './useFriendlyModuleUrls';
 import { LAUNCH_URLS } from '@/config/territory';
 import { buildProfileEditUrl, buildProfileSettingsUrl } from '@/core/profiles/utils/publicProfileUrl';
@@ -111,3 +111,4 @@ export function useAppUrls(routeResolved?: ResolvedTerritory | null): AppUrls {
     },
   };
 }
+

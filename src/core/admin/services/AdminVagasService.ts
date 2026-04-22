@@ -6,10 +6,11 @@
 export {
   AdminVagasService,
   AdminVagasService as adminVagasService,
-} from "@/core/vagas/services/AdminVagasService";
+} from "@/modules/classifieds/jobs/services/AdminVagasService";
 
 export type {
   AdminVaga,
   GetVagasParams,
   VagaStats,
-} from "@/core/vagas/services/AdminVagasService";
+} from "@/modules/classifieds/jobs/services/AdminVagasService";
+

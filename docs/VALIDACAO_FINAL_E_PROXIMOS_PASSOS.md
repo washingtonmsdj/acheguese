@@ -463,8 +463,9 @@ O sistema está **pronto para produção** no estado atual. As pendências são 
 - `src/core/profiles/utils/publicProfileUrl.ts`
 - `src/core/business/services/BusinessUrlService.ts`
 - `src/core/professional/services/ProfessionalUrlService.ts`
-- `src/modules/gastronomy/services/GastronomyUrlService.ts`
+- `src/modules/business/gastronomy/services/GastronomyUrlService.ts`
 
 ---
 
 **Validação final concluída! Sistema pronto para uso.** 🎉
+

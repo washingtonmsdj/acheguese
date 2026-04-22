@@ -10,7 +10,7 @@ import { AddressService } from "@/core/address/services/AddressService";
 import { BusinessHoursService } from "@/core/business/BusinessHoursService";
 import type { AdminSupabaseClient } from "@/core/admin/types/adminDatabase.types";
 const supabaseTyped = supabase as unknown as AdminSupabaseClient;
-import { callRPC } from "@/core/supabase/services/supabaseHelpers";
+import { callRPC } from "@/integrations/supabase/services/supabaseHelpers";
 import {
   createBusinessSchema,
   updateBusinessSchema,
@@ -597,3 +597,4 @@ export async function incrementViews(businessId: string): Promise<void> {
     logger.warn("Failed to increment views:", error);
   }
 }
+

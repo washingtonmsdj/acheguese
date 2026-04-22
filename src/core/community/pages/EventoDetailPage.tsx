@@ -25,7 +25,7 @@ import {
 import { Button } from "@/shared/components/ui/button";
 import { Badge } from "@/shared/components/ui/badge";
 import { Skeleton } from "@/shared/components/ui/skeleton";
-import { EventsService, type Event } from "@/core/events";
+import { EventsService, type Event } from "@/modules/community/events";
 
 export default function EventoDetailPage() {
   const { id } = useParams();
@@ -189,3 +189,4 @@ export default function EventoDetailPage() {
     </div>
   );
 }
+

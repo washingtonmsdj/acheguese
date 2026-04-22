@@ -7,7 +7,7 @@ import {
   TabsList,
   TabsTrigger,
 } from "@/shared/components/ui/tabs";
-import { NeighborRankingPanel } from '@/core/mobility/components/NeighborRankingPanel';
+import { NeighborRankingPanel } from '@/modules/mobility/components/NeighborRankingPanel';
 
 export default function RankingPage() {
   const navigate = useNavigate();
@@ -99,3 +99,4 @@ export default function RankingPage() {
     </div>
   );
 }
+

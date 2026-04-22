@@ -11,7 +11,7 @@ O fluxo deste documento pertence ao runtime de `mobility` e representa dispatch/
 
 Ele **não é** o SSOT de pedido/logística de `merchant_own_fleet`.
 
-Para pedido com pagamento direto ao merchant e frota própria do estabelecimento, o módulo correto é `src/modules/delivery`.
+Para pedido com pagamento direto ao merchant e frota propria do estabelecimento, o modulo correto e `src/modules/mobility/delivery`.
 
 ---
 ## 1. MODELAGEM

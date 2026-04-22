@@ -14,7 +14,7 @@ import {
   adminNotificationsService,
 } from "@/core/admin";
 import { profileService } from "@/core/profiles/services/ProfileService";
-import { classifiedReportService } from "@/core/classifieds/services";
+import { classifiedReportService } from "@/shared/services/classifiedReports";
 import type {
   ActiveRide,
   AdminModuleCoverage,
@@ -598,3 +598,4 @@ export async function getOperationalOverview(
     };
   }
 }
+

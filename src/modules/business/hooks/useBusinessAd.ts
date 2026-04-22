@@ -9,8 +9,8 @@
  * Contexto geográfico: resolvido automaticamente pela fundação via AdDeliveryService
  */
 
-import { useAdDelivery } from '@/core/promotions';
-import type { AdCampaignWithTargets } from '@/core/promotions';
+import { useAdDelivery } from '@/modules/business/promotions';
+import type { AdCampaignWithTargets } from '@/modules/business/promotions';
 
 interface UseBusinessAdReturn {
   /** Campanha elegível para o contexto atual, ou null */
@@ -34,3 +34,4 @@ export function useBusinessAd(fallbackLocationId?: string | null): UseBusinessAd
     resolutionSource,
   };
 }
+

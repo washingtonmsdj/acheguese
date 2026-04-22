@@ -1,25 +1,18 @@
-/**
- * 📦 CLASSIFIEDS SERVICES - Barrel Export
+﻿/**
+ * Core Classifieds Services - Canonical barrel
  *
- * SSOT para todos os serviços de classificados.
- * Organizado em queries, mutations, helpers e serviços especializados.
- *
- * @version 2.0.0 - Refatoração SSOT
+ * Core is the canonical import surface. Implementation still delegates
+ * to stable modules services where migration is not yet finalized.
  */
 
-// ============================================================
-// 🎯 FACADE PRINCIPAL (Recomendado)
-// ============================================================
 export {
   ClassifiedsFacade,
   default as ClassifiedService,
-} from "./ClassifiedService";
+  CLASSIFIED_CONDITIONS,
+  CLASSIFIED_STATUSES,
+} from "../../../modules/classifieds/services/ClassifiedService";
 
-// ============================================================
-// 📦 QUERIES - Operações de Leitura (SSOT)
-// ============================================================
 export {
-  // Listagem e busca
   getNeighborhoodsWithClassifieds,
   getAllClassifieds,
   getClassifiedById,
@@ -27,26 +20,19 @@ export {
   getUserClassifieds,
   getClassifiedsBySeller,
   getSellersWithAds,
-  // Estatísticas
   getTotalClassifiedsCount,
   getRecentClassifieds,
   getClassifiedsCreatedInPeriod,
-} from "./classifieds.queries";
+} from "../../../modules/classifieds/services/classifieds.queries";
 
-// ============================================================
-// ✏️ MUTATIONS - Operações de Escrita (SSOT)
-// ============================================================
 export {
   createClassified,
   updateClassified,
   deleteClassified,
   markAsSold,
   reactivateClassified,
-} from "./classifieds.mutations";
+} from "../../../modules/classifieds/services/classifieds.mutations";
 
-// ============================================================
-// 📋 TYPES - Tipagens Canônicas (SSOT)
-// ============================================================
 export type {
   ClassifiedData,
   CreateClassifiedInput,
@@ -57,36 +43,31 @@ export type {
   ClassifiedStatus,
 } from "./types";
 
-// ============================================================
-// 🔄 MAPPERS - Transformação de Dados (SSOT)
-// ============================================================
 export {
   mapToClassificadoWithVendedor,
   mapToClassificadoList,
 } from "./classifieds.mappers";
 
-// ============================================================
-// 🌐 SERVIÇOS ESPECIALIZADOS
-// ============================================================
-export { classifiedUrlService } from "./ClassifiedUrlService";
-export { classifiedReportService } from "./ClassifiedReportService";
+export { classifiedUrlService, ClassifiedUrlService } from "./ClassifiedUrlService";
+export type {
+  ClassifiedUrlContext,
+  ResolvedClassifiedUrl,
+  ClassifiedResolution,
+} from "./ClassifiedUrlService";
 
-// ============================================================
-// 🌍 GEOGRAPHIC FOUNDATION INTEGRATION
-// ============================================================
+export { classifiedReportService } from "../../../modules/classifieds/services/ClassifiedReportService";
+export type {
+  ClassifiedReport,
+  CreateReportInput,
+  ReportReason,
+} from "../../../modules/classifieds/services/ClassifiedReportService";
+
 export {
   classifiedsLocationService,
   ClassifiedsLocationService,
 } from "./ClassifiedsLocationService";
+
 export {
   classifiedsRolloutService,
   ClassifiedsRolloutService,
 } from "./ClassifiedsRolloutService";
-
-// ============================================================
-// 📊 CONSTANTS E CONFIGURAÇÕES
-// ============================================================
-export {
-  CLASSIFIED_CONDITIONS,
-  CLASSIFIED_STATUSES,
-} from "./ClassifiedService";

@@ -53,7 +53,7 @@ const url = BusinessUrlService.getCanonicalUrl({
 
 ### **3. Gastronomia (GastronomyUrlService)**
 ```typescript
-import { GastronomyUrlService } from '@/modules/gastronomy/services';
+import { GastronomyUrlService } from '@/modules/business/gastronomy/services';
 
 const url = GastronomyUrlService.getCanonicalUrl({
   id: 'uuid',
@@ -135,7 +135,7 @@ Implementado sistema de redirecionamento automático baseado no tipo de perfil:
 ### **Uso em Código**
 
 ```typescript
-import { GastronomyPermissions } from '@/core/gastronomy/billing/permissions';
+import { GastronomyPermissions } from '@/modules/business/gastronomy/billing/permissions';
 
 // Verificar permissão individual
 if (GastronomyPermissions.canUseInternalOrders(planTier)) {
@@ -264,7 +264,7 @@ if (!existing) {
 ### **2. Fazer Upgrade de Plano**
 
 ```typescript
-import { GastronomySubscriptionService } from '@/modules/gastronomy/services';
+import { GastronomySubscriptionService } from '@/modules/business/gastronomy/services';
 
 // Upgrade de FREE para PRO
 await GastronomySubscriptionService.upgradePlan({
@@ -348,7 +348,7 @@ npx tsc --noEmit --skipLibCheck
 3. ✅ `docs/IMPLEMENTACAO_PROFESSIONAL_URL_SERVICE.md` - Fase 5
 4. ✅ `docs/RESUMO_IDENTIDADE_PUBLICA_CANONICA.md` - Resumo executivo
 5. ✅ `docs/RESUMO_FINAL_IDENTIDADE_PUBLICA.md` - Consolidação
-6. ✅ `docs/URLS_PUBLICAS_COMPLETO_COM_GASTRONOMIA.md` - Gastronomia
+6. ✅ `docs/architecture/GASTRONOMY_CONSOLIDATION_SSOT.md` - Gastronomia
 7. ✅ `docs/CONSOLIDACAO_FINAL_URLS_E_PERMISSOES.md` - Este documento
 
 ---
@@ -452,20 +452,22 @@ Sistema completo de URLs públicas canônicas e permissões de gastronomia imple
 ```typescript
 import { buildPublicProfileUrl } from '@/core/profiles/utils/publicProfileUrl';
 import { BusinessUrlService } from '@/core/business/services/BusinessUrlService';
-import { GastronomyUrlService } from '@/modules/gastronomy/services';
+import { GastronomyUrlService } from '@/modules/business/gastronomy/services';
 import { ProfessionalUrlService } from '@/core/professional/services/ProfessionalUrlService';
 ```
 
 ### **Permissões**
 ```typescript
-import { GastronomyPermissions } from '@/core/gastronomy/billing/permissions';
+import { GastronomyPermissions } from '@/modules/business/gastronomy/billing/permissions';
 ```
 
 ### **Assinaturas**
 ```typescript
-import { GastronomySubscriptionService } from '@/modules/gastronomy/services';
+import { GastronomySubscriptionService } from '@/modules/business/gastronomy/services';
 ```
 
 ---
 
 **Implementação 100% concluída e validada!** 🎉
+
+

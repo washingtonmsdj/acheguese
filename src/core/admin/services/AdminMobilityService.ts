@@ -6,7 +6,7 @@
  */
 
 import { logger } from "@/shared/utils/logger";
-import { MobilityAdminQueryService } from "@/core/mobility/services";
+import { MobilityAdminQueryService } from "@/modules/mobility/services";
 
 export interface AdminDriverData {
   id: string;
@@ -244,3 +244,4 @@ class AdminMobilityServiceClass {
 }
 
 export const adminMobilityService = new AdminMobilityServiceClass();
+

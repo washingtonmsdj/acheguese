@@ -21,7 +21,7 @@ import { Button } from "@/shared/components/ui/button";
 import { BusinessCard } from "./BusinessCard";
 import { cn } from "@/shared/utils/cn";
 import { useBusinessAd } from "@/modules/business/hooks/useBusinessAd";
-import { SponsoredAdCard } from "@/core/promotions";
+import { SponsoredAdCard } from "@/modules/business/promotions";
 
 // 🎯 TYPES
 interface BusinessGridItem {
@@ -280,3 +280,4 @@ export const BusinessGrid = memo(
 );
 
 BusinessGrid.displayName = "BusinessGrid";
+

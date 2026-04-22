@@ -1,4 +1,4 @@
-﻿import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import {
   AlertCircle,
@@ -28,7 +28,7 @@ import { TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/shared
 import { useToast } from "@/shared/hooks/use-toast";
 import { useAdminGuard } from "@/modules/admin/hooks/useAdminGuard";
 import { useLocationContext } from "@/core/location";
-import { mobilityRolloutService } from "@/core/mobility/services";
+import { mobilityRolloutService } from "@/shared/services/mobilityAdmin";
 import { RolloutSource, RolloutStatus } from "@/core/rollout/types";
 import {
   operationalDiagnosticsService,
@@ -478,3 +478,4 @@ export default function AdminOperacoes() {
     </div>
   );
 }
+

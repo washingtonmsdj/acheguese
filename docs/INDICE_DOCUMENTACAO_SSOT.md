@@ -69,7 +69,7 @@
 ---
 
 #### **2.2 URLs Públicas com Gastronomia**
-**Arquivo**: `docs/URLS_PUBLICAS_COMPLETO_COM_GASTRONOMIA.md`  
+**Arquivo**: `docs/architecture/GASTRONOMY_CONSOLIDATION_SSOT.md`  
 **Descrição**: Guia completo incluindo gastronomia  
 **Conteúdo**:
 - Relação empresa ↔ gastronomia
@@ -204,7 +204,7 @@
 2. **Rotas**: `ROTAS_PUBLICAS_CANONICAS.md`
    - Entender rotas públicas
 
-3. **Gastronomia**: `URLS_PUBLICAS_COMPLETO_COM_GASTRONOMIA.md`
+3. **Gastronomia**: `architecture/GASTRONOMY_CONSOLIDATION_SSOT.md`
    - Entender gastronomia e permissões
 
 4. **Validação**: `VALIDACAO_FINAL_E_PROXIMOS_PASSOS.md`
@@ -293,7 +293,7 @@
 
 ### **📘 Importantes (Leitura Recomendada)**
 
-6. `URLS_PUBLICAS_COMPLETO_COM_GASTRONOMIA.md`
+6. `architecture/GASTRONOMY_CONSOLIDATION_SSOT.md`
 7. `IMPLEMENTACAO_IDENTIDADE_PUBLICA_CANONICA.md`
 8. `IMPLEMENTACAO_PROFESSIONAL_URL_SERVICE.md`
 
@@ -311,16 +311,16 @@
 
 ### **URLs Públicas**
 - `ROTAS_PUBLICAS_CANONICAS.md` (principal)
-- `URLS_PUBLICAS_COMPLETO_COM_GASTRONOMIA.md` (com gastronomia)
+- `architecture/GASTRONOMY_CONSOLIDATION_SSOT.md` (com gastronomia)
 - `CONSOLIDACAO_FINAL_URLS_E_PERMISSOES.md` (consolidação)
 
 ### **Services SSOT**
 - `IMPLEMENTACAO_IDENTIDADE_PUBLICA_CANONICA.md` (Business)
 - `IMPLEMENTACAO_PROFESSIONAL_URL_SERVICE.md` (Professional)
-- `URLS_PUBLICAS_COMPLETO_COM_GASTRONOMIA.md` (Gastronomia)
+- `architecture/GASTRONOMY_CONSOLIDATION_SSOT.md` (Gastronomia)
 
 ### **Permissões**
-- `URLS_PUBLICAS_COMPLETO_COM_GASTRONOMIA.md` (principal)
+- `architecture/GASTRONOMY_CONSOLIDATION_SSOT.md` (principal)
 - `CONSOLIDACAO_FINAL_URLS_E_PERMISSOES.md` (consolidação)
 
 ### **Redirecionamentos**
@@ -366,13 +366,13 @@
 ```typescript
 import { buildPublicProfileUrl } from '@/core/profiles/utils/publicProfileUrl';
 import { BusinessUrlService } from '@/core/business/services/BusinessUrlService';
-import { GastronomyUrlService } from '@/modules/gastronomy/services';
+import { GastronomyUrlService } from '@/modules/business/gastronomy/services';
 import { ProfessionalUrlService } from '@/core/professional/services/ProfessionalUrlService';
 ```
 
 ### **Permissões**
 ```typescript
-import { GastronomyPermissions } from '@/core/gastronomy/billing/permissions';
+import { GastronomyPermissions } from '@/modules/business/gastronomy/billing/permissions';
 ```
 
 ### **Navegação**
@@ -395,3 +395,5 @@ const appUrls = useAppUrls();
 ---
 
 **Documentação completa e organizada! Use este índice para navegar.** 📚✨
+
+

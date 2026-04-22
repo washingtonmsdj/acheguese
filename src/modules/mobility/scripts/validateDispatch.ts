@@ -4,7 +4,7 @@
  * Valida que todos os componentes do dispatch automático estão funcionando
  */
 import { logger } from '@/shared/utils/logger';
-import { supabase } from '@/core/supabase';
+import { supabase } from '@/integrations/supabase';
 import { AutoDispatchService } from '../core/AutoDispatchService';
 import { RideOperationalService } from '../core/RideOperationalService';
 import { RideDispatchService } from '../core/RideDispatchService';
@@ -214,3 +214,4 @@ export async function runValidation() {
 if (import.meta.url === `file://${process.argv[1]}`) {
   runValidation().catch(console.error);
 }
+

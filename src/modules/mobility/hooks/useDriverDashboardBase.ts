@@ -19,7 +19,7 @@ import {
 } from "@/modules/mobility/services/mobility.mutations";
 import { logger } from "@/shared/utils/logger";
 import { RIDE_STATUS, TIMEOUTS } from "../constants";
-import { RideRatingService } from "@/core/mobility/services/RideRatingService";
+import { RideRatingService } from "@/modules/mobility/services/RideRatingService";
 
 interface MobilityRide {
   id: string;
@@ -622,4 +622,5 @@ export function useDriverDashboardBase({
     actionsLoading,
   };
 }
+
 

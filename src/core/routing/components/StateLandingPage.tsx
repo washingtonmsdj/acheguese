@@ -13,7 +13,7 @@ import {
   Users, Store, ArrowRight,
 } from 'lucide-react';
 import { TERRITORY_CONFIG } from '@/config/territory';
-import { getStateData, getActiveCitiesByState } from '@/core/landing/services/LandingService';
+import { getStateData, getActiveCitiesByState } from '@/app/features/landing/services/LandingService';
 
 interface CityItem {
   id: string;
@@ -182,3 +182,4 @@ export function StateLandingPage() {
     </div>
   );
 }
+

@@ -1,15 +1,15 @@
-﻿/**
- * AdminClassifiedsService - ServiÃ§o de administraÃ§Ã£o de classificados
+/**
+ * AdminClassifiedsService - Serviço de administração de classificados
  *
- * âœ… SSOT COMPLIANCE: Delega para ClassifiedService (modules/classifieds)
- * Este serviÃ§o encapsula operaÃ§Ãµes administrativas de classificados,
- * delegando para o ClassifiedService (SSOT) sempre que possÃ­vel.
+ * ✅ SSOT COMPLIANCE: Delega para ClassifiedService (modules/classifieds)
+ * Este serviço encapsula operações administrativas de classificados,
+ * delegando para o ClassifiedService (SSOT) sempre que possível.
  */
 
 import { supabase } from "@/integrations/supabase";
 import { logger } from "@/shared/utils/logger";
-import { ClassifiedsFacade } from "@/core/classifieds/services";
-import type { ClassifiedData } from "@/core/classifieds/services/types";
+import { ClassifiedsFacade } from "@/modules/classifieds/services";
+import type { ClassifiedData } from "@/modules/classifieds/services/types";
 
 export interface AdminClassifiedData extends ClassifiedData {
   // Admin-specific fields
@@ -109,7 +109,7 @@ export interface ClassifiedPolicySummary {
 
 class AdminClassifiedsServiceClass {
   /**
-   * Busca estatÃ­sticas de classificados
+   * Busca estatísticas de classificados
    */
   async getStats(): Promise<ClassifiedsStats> {
     try {
@@ -376,8 +376,8 @@ class AdminClassifiedsServiceClass {
   }
 
   /**
-   * Busca todos os classificados com paginaÃ§Ã£o
-   * âœ… SSOT: Delega para ClassifiedsFacade.queries.getAllClassifieds
+   * Busca todos os classificados com paginação
+   * ✅ SSOT: Delega para ClassifiedsFacade.queries.getAllClassifieds
    */
   async getAllClassifieds(options: {
     page?: number;
@@ -459,7 +459,7 @@ class AdminClassifiedsServiceClass {
 
   /**
    * Busca um classificado por ID
-   * âœ… SSOT: Delega para ClassifiedsFacade.queries.getClassifiedById
+   * ✅ SSOT: Delega para ClassifiedsFacade.queries.getClassifiedById
    */
   async getClassifiedById(id: string): Promise<AdminClassifiedData | null> {
     try {
@@ -478,7 +478,7 @@ class AdminClassifiedsServiceClass {
 
   /**
    * Atualiza um classificado
-   * âœ… SSOT: Delega para ClassifiedsFacade.mutations.updateClassified
+   * ✅ SSOT: Delega para ClassifiedsFacade.mutations.updateClassified
    */
   async updateClassified(
     id: string,
@@ -511,7 +511,7 @@ class AdminClassifiedsServiceClass {
 
   /**
    * Deleta um classificado
-   * âœ… SSOT: Delega para ClassifiedsFacade.mutations.deleteClassified
+   * ✅ SSOT: Delega para ClassifiedsFacade.mutations.deleteClassified
    */
   async deleteClassified(id: string): Promise<boolean> {
     try {
@@ -575,7 +575,7 @@ class AdminClassifiedsServiceClass {
 
   /**
    * Marca um classificado como vendido
-   * âœ… SSOT: Delega para ClassifiedsFacade.mutations.markAsSold
+   * ✅ SSOT: Delega para ClassifiedsFacade.mutations.markAsSold
    */
   async markAsSold(id: string): Promise<boolean> {
     try {
@@ -595,7 +595,7 @@ class AdminClassifiedsServiceClass {
 
   /**
    * Reativa um classificado
-   * âœ… SSOT: Delega para ClassifiedsFacade.mutations.reactivateClassified
+   * ✅ SSOT: Delega para ClassifiedsFacade.mutations.reactivateClassified
    */
   async reactivateClassified(id: string): Promise<boolean> {
     try {
@@ -638,3 +638,4 @@ class AdminClassifiedsServiceClass {
 }
 
 export const adminClassifiedsService = new AdminClassifiedsServiceClass();
+

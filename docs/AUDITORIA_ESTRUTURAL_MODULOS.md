@@ -18,36 +18,35 @@ Data: 2026-04-22
 - `core -> app` => `0`
 - `modules` (`hooks/components/pages`) com import runtime de `supabase` => `0` (fluxo SSOT preservado)
 
-## Inventario de modulos verticais (`src/modules`)
+## Inventario de modulos de produto (`src/modules`)
 - `admin` => **correto**
-- `admin-identidade` => **correto**
-- `admin-motoristas` => **correto**
-- `analytics` => **correto**
 - `business` => **correto**
 - `classifieds` => **correto**
 - `community` => **correto**
-- `community-alerts` => **correto**
-- `community-issues` => **correto**
-- `dashboard` => **correto**
-- `delivery` => **correto**
-- `empresa` => **correto**
-- `empresas-landing` => **correto**
-- `gastronomy` => **correto**
 - `guide` => **correto**
-- `landing` => **correto**
 - `mobility` => **correto**
-- `onboarding` => **correto**
 - `professionals` => **correto**
 - `profile` => **correto**
-- `promotions` => **correto**
-- `services` => **correto**
-- `vagas` => **correto**
+
+Subdominios consolidados (fora do topo):
+- `admin/identity`, `admin/drivers`, `admin/analytics`
+- `business/company`, `business/gastronomy`, `business/promotions`
+- `community/alerts`, `community/issues`
+- `mobility/delivery`
+- `classifieds/jobs`
+- `professionals/services`
+
+Fluxos de app removidos de `src/modules`:
+- `src/app/features/onboarding`
+- `src/app/features/dashboard`
+- `src/app/features/landing`
+- `src/app/features/business-landing`
 
 Inventario detalhado por metrica e classificacao automatizada: `docs/AUDITORIA_MODULAR_INVENTARIO_FINAL.md` e `docs/audits/module-audit-inventory.json`.
 
 ## Problemas objetivos por modulo (estado atual)
-- Nenhum problema estrutural bloqueante identificado nos modulos verticais auditados.
-- Estado consolidado: `23/23` modulos verticais classificados como **corretos** no inventario automatizado.
+- Nenhum problema estrutural bloqueante identificado nos modulos de produto auditados.
+- Estado consolidado: `8/8` modulos de topo classificados como **corretos** no inventario arquitetural.
 - Risco residual nao bloqueante: ampliar cobertura de testes funcionais/E2E por dominio para reforcar regressao zero em evolucoes futuras.
 
 ## Inventario de modulos transversais principais (`src/core`)
@@ -60,12 +59,13 @@ Inventario detalhado por metrica e classificacao automatizada: `docs/AUDITORIA_M
 - Resolvido: `modules` nao importa mais `integrations` direto em runtime.
 - Resolvido: `shared` sem dependencias para `core/modules/integrations`.
 
-2. Vertical vs transversal:
-- Vertical em `modules` esta consistente por pasta.
-- Transversal em `core` esta consistente.
+2. Dominio de produto vs transversal:
+- `modules` representa dominios/superficies de produto e nao implica vertical oficial.
+- Verticais oficiais empresariais sao definidos apenas em `src/core/verticals/config.ts`.
+- `core` representa capacidades transversais e contratos canonicos.
 
 3. Boundaries:
-- Cross-import entre modulos verticais: sem evidencias bloqueantes no gate de governanca.
+- Cross-import entre modulos de produto: sem evidencias bloqueantes no gate de governanca.
 - Sem violacao ativa de boundary em `shared`.
 
 4. Fluxo SSOT (db -> service -> hook -> componente):
@@ -116,8 +116,8 @@ Inventario detalhado por metrica e classificacao automatizada: `docs/AUDITORIA_M
   - constantes de reports de mobilidade migradas para `src/core/mobility/constants/index.ts`.
   - schema legado de post removido de `shared` (`post.schema.ts`), com consumo apontando para contrato canonico do dominio.
 - Checkout de gastronomia sem bridge transversal:
-  - `src/modules/gastronomy/services/GastronomyCheckoutService.ts` criado para encapsular criacao de pedido por RPC com contrato local.
-  - `src/modules/gastronomy/hooks/useGastronomyCheckout.ts` passou a consumir o service local.
+  - `src/modules/business/gastronomy/services/GastronomyCheckoutService.ts` criado para encapsular criacao de pedido por RPC com contrato local.
+  - `src/modules/business/gastronomy/hooks/useGastronomyCheckout.ts` passou a consumir o service local.
   - `src/shared/services/deliveryBridge.ts` removido.
 - Redistribuicao de componentes de dominio para camada correta:
   - notificacoes e consentimento migrados para superficie `app/components/*` (dependencias `core` validas na camada `app`), com remocao dos equivalentes em `shared`.

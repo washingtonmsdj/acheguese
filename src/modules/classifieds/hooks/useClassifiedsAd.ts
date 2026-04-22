@@ -9,8 +9,8 @@
  * Contexto geográfico: resolvido automaticamente pela fundação via AdDeliveryService
  */
 
-import { useAdDelivery } from '@/core/promotions';
-import type { AdCampaignWithTargets } from '@/core/promotions';
+import { useAdDelivery } from '@/shared/services/promotions';
+import type { AdCampaignWithTargets } from '@/shared/services/promotions';
 
 interface UseClassifiedsAdReturn {
   /** Campanha elegível para o contexto atual, ou null */
@@ -34,3 +34,4 @@ export function useClassifiedsAd(fallbackLocationId?: string | null): UseClassif
     resolutionSource,
   };
 }
+

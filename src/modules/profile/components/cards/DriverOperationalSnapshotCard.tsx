@@ -1,8 +1,17 @@
 import { Badge } from "@/shared/components/ui/badge";
 import { MobilityMetricCard } from "./MobilityMetricCard";
-import type { Tables } from "@/core/supabase";
 
-type DriverDataRecord = Tables<"driver_data">;
+interface DriverDataRecord {
+  is_online: boolean | null;
+  is_available: boolean | null;
+  is_verified: boolean | null;
+  rating: number | null;
+  total_rides: number | null;
+  total_rides_completed: number | null;
+  total_rides_cancelled: number | null;
+  acceptance_rate: number | null;
+  cancellation_rate: number | null;
+}
 
 interface DriverOperationalSnapshotCardProps {
   readonly driverDisplayName: string;
@@ -73,4 +82,5 @@ export function DriverOperationalSnapshotCard({
     </div>
   );
 }
+
 

@@ -1,4 +1,4 @@
-/**
+﻿/**
  * AUTO DISPATCH SERVICE - Dispatch Automático de Corridas
  * 
  * Responsabilidades:

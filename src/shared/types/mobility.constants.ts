@@ -1,7 +1,7 @@
 /**
  * Mobility constants compatibility shim.
  *
- * Canonical ownership lives in `@/core/mobility/constants`.
+ * Canonical ownership lives in `@/modules/mobility/constants`.
  * This file preserves the historical import path used by shared/types/constants.
  */
 
@@ -20,7 +20,7 @@ export {
   SOURCE_TYPE,
   TIMEOUTS,
   USER_TYPES,
-} from "@/core/mobility/constants";
+} from "@/modules/mobility/constants";
 
 export type {
   FilterType,
@@ -32,4 +32,5 @@ export type {
   RideType,
   SourceType,
   UserType,
-} from "@/core/mobility/constants";
+} from "@/modules/mobility/constants";
+

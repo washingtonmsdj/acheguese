@@ -45,7 +45,7 @@ import { RIDE_STATUS } from "@/shared/types/constants";
 import { useAdminGuard } from "@/modules/admin/hooks/useAdminGuard";
 import { logger } from "@/shared/utils/logger";
 import { adminMobilityService } from "@/core/admin"; // ✅ MIGRADO - Usa AdminMobilityService do core
-import type { RideRequest } from "@/core/mobility/types"; // ✅ MIGRADO - Tipo movido para core
+import type { RideRequest } from "@/shared/services/mobilityAdmin"; // ✅ MIGRADO - Tipo movido para core
 
 interface MobilidadeStats {
   totalRides: number;
@@ -701,3 +701,4 @@ export default function AdminAnalyticsMobilidade() {
     </div>
   );
 }
+

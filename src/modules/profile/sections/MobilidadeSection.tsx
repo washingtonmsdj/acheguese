@@ -12,7 +12,7 @@ import {
 } from "@/modules/profile/components/cards";
 
 import type { MobilidadeSectionProps } from "./types";
-import type { Tables } from "@/core/supabase";
+import type { Tables } from "@/integrations/supabase";
 
 type DriverDataRecord = Tables<"driver_data">;
 
@@ -121,3 +121,4 @@ export function MobilidadeSection({
     </div>
   );
 }
+

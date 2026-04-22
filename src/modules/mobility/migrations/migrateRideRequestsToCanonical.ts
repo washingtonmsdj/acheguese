@@ -15,7 +15,7 @@
  * - Gera relatório detalhado
  */
 
-import { supabase } from '@/core/supabase';
+import { supabase } from '@/integrations/supabase';
 import { AddressService } from '@/core/address/services/AddressService';
 import { GeospatialService } from '@/core/geospatial/services/GeospatialService';
 import { getAllRideRequests } from '../services/mobility.queries';
@@ -479,3 +479,4 @@ export function formatMigrationReport(result: RideMigrationResult): string {
 
   return lines.join('\n');
 }
+

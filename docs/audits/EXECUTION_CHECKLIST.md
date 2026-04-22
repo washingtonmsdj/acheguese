@@ -1,4 +1,4 @@
-﻿# Checklist de Execucao por Prioridade
+# Checklist de Execucao por Prioridade
 
 Atualizado em: 2026-04-21
 
@@ -98,7 +98,7 @@ Atualizado em: 2026-04-21
 ## P5 - Remocao de legado e documentacao
 - [ ] Remover pasta `src/modules/business/components/legacy/` por partes controladas.
 - [ ] Remover paginas legadas de classificados: `ClassificadosPageLegado.tsx`, `NovoClassificadoPageLegado.tsx`, `TestUploadPage.tsx`.
-- [ ] Remover mocks de runtime: `src/modules/gastronomy/dev/devMockRuntime.ts`.
+- [ ] Remover mocks de runtime: `src/modules/business/gastronomy/dev/devMockRuntime.ts`.
 - [ ] Remover mocks de jobs/vagas: `src/modules/jobs/data/mock-jobs.ts`, `src/modules/vagas/data/mock-vagas.ts`.
 - [ ] Revisar mocks historicos e manter apenas fixtures necessarias para testes ativos.
 - [ ] Criar documento canonico para community-alerts.
@@ -114,3 +114,4 @@ Atualizado em: 2026-04-21
 - [ ] Remover mocks de repositorios sem consumidores: `GovernanceRepositoryMock.ts`, `LandingFeaturedServiceMock.ts`, `LocationRepositoryMock.ts`, `TerritorialGroupRepositoryMock.ts`, `TerritorialHighlightRepositoryMock.ts`.
 - [ ] Remover mocks de geospatial: `GeospatialRepositoryMock.ts`, `MockRoutingProvider.ts`, `GeospatialServiceMock.ts`.
 - [ ] Mover `src/pages/NearbyPage.tsx` para `src/features/nearby/` ou `src/core/maps/pages/` para fechar ownership.
+

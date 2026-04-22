@@ -2,7 +2,7 @@ import React from "react";
 
 import { useParams, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
-import { lostFoundService } from "@/core/lostfound/services";
+import { lostFoundService } from "@/modules/community/lostfound/services";
 import { useAppUrls } from "@/core/routing/hooks"; // ✅ SSOT URLs
 import {
   ArrowLeft,
@@ -29,7 +29,7 @@ import { ReportContentDialog } from "@/core/moderation/components/ReportContentD
 import {
   LostFoundMiniMap,
   LostFoundLocationCard,
-} from "@/core/lostfound/components/LostFoundMiniMap";
+} from "@/modules/community/lostfound/components/LostFoundMiniMap";
 import { format, formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { cn } from "@/shared/utils/cn";

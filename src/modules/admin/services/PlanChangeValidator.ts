@@ -12,7 +12,7 @@
  * @version 1.0.0
  */
 
-import { supabase } from '@/core/supabase';
+import { supabase } from '@/integrations/supabase';
 import { logger } from '@/shared/utils/logger';
 
 // ─── Tipos ────────────────────────────────────────────────────────────────────
@@ -157,3 +157,4 @@ export class PlanChangeValidator {
 }
 
 export const planChangeValidator = PlanChangeValidator;
+

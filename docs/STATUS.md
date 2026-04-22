@@ -16,6 +16,13 @@ Ultima atualizacao: 2026-04-22
 - Inversao `core -> modules` removida em analytics (ownership em `core/analytics` com wrappers de compatibilidade em `modules`).
 - **Sistema de Monetizacao Multi-Vertical SSOT concluido (10/10 fases) - 100% pronto para producao.**
 
+## Taxonomia oficial (clareza de estado atual)
+- `business`/`empresas` e dominio base horizontal das entidades empresariais.
+- `business` nao e vertical.
+- O contrato oficial de verticais empresariais esta em `src/core/verticals/config.ts`.
+- Estado atual oficial: apenas `gastronomy` esta formalizada como vertical.
+- O termo "multi-vertical" aqui descreve capacidade de monetizacao/plataforma, nao declaracao automatica de verticais oficiais.
+
 ## Estado tecnico validado
 - `npm run validate:architecture:incremental -- --json`: `currentTotal=0`, `baselineTotal=0`.
 - `npm run validate:architecture:governance -- --json`: `[]`.
@@ -41,8 +48,8 @@ Ultima atualizacao: 2026-04-22
   1. manter governanca ativa para impedir regressao (`validate:deps`, `validate:architecture:governance`, `validate:ssot`).
   2. consolidacao final dos poucos imports textuais residuais em `shared/*` para limpeza total de inventario.
 - Relatorio completo atualizado em `docs/AUDITORIA_ESTRUTURAL_MODULOS.md`.
-- Inventario modular final (23 modulos, classificacao objetiva por metrica) em `docs/AUDITORIA_MODULAR_INVENTARIO_FINAL.md`.
-- Inventario modular consolidado na rodada atual: **23/23 modulos classificados como corretos**.
+- Inventario modular final (8 modulos de topo, com subdominios consolidados por dominio-base) em `docs/AUDITORIA_ESTRUTURAL_MODULOS.md`.
+- Inventario modular consolidado na rodada atual: **8/8 modulos de topo classificados como corretos**.
 
 ## Divida tecnica remanescente
 1. Consolidacao `core` x `modules`:
@@ -59,11 +66,11 @@ Ultima atualizacao: 2026-04-22
 ## Correcoes estruturais concluidas nesta rodada
 - `community`: criado contrato canonico de URL em `src/core/community/hooks/useCommunityUrls.ts` e `useAppUrls` atualizado para consumir `core`.
 - `community`: `src/core/community/index.ts` deixou de reexportar `modules/community` inteiro e passou para API explicita.
-- `gastronomy`: `DashboardEmpresaPageV2` deixou de importar `modules/gastronomy/*` e passou a consumir wrappers canonicos em `src/core/gastronomy/hooks|components|pages`.
-- `gastronomy`: constants de culinaria (`CUISINE_TYPES`, `CuisineType`) migradas para ownership canonico em `src/core/gastronomy/constants/cuisine.ts` com compatibilidade via reexport em `modules`.
-- `gastronomy`: `src/core/gastronomy/index.ts` passou a usar tipos e constantes locais de `core`.
+- `gastronomy`: `DashboardEmpresaPageV2` deixou de importar `modules/gastronomy/*` e passou a consumir wrappers canonicos em `src/modules/business/gastronomy/hooks|components|pages`.
+- `gastronomy`: constants de culinaria (`CUISINE_TYPES`, `CuisineType`) migradas para ownership canonico em `src/modules/business/gastronomy/constants/cuisine.ts` com compatibilidade via reexport em `modules`.
+- `gastronomy`: `src/modules/business/gastronomy/index.ts` passou a usar tipos e constantes locais de `core`.
 - `mobility`: `TrackingService` e `ProfileService` passaram a consumir `@/core/mobility/services`; `EmpresaDashboardTab` e `RankingPage` migraram para `@/core/mobility/components`.
-- `maps`: `MapaPageV4` deixou de importar `@/modules/community-alerts` e passou para `@/core/community-alerts`.
+- `maps`: `MapaPageV4` deixou de importar `@/modules/community/alerts` e passou para `@/core/community-alerts`.
 - `mobility` contracts complementados com novos exports canonicos (`DriverAvailabilityService` e `mobilityService`) em `src/core/mobility/services/index.ts`.
 - `mobility`: `mobility.queries.ts` e `mobility.mutations.ts` migrados para ownership canonico em `src/core/mobility/services/`.
 - `mobility`: constantes centrais migradas para ownership canonico em `src/core/mobility/constants/index.ts`.
@@ -74,21 +81,21 @@ Ultima atualizacao: 2026-04-22
 - governanca: `scripts/lib/architecture-registry.ts` atualizado para incluir `src/core/mobility/services/DriverAvailabilityService.ts` como caminho SSOT oficial.
 - governanca: `scripts/lib/architecture-registry.ts` atualizado para incluir `src/core/mobility/services/MobilityService.ts` como caminho SSOT oficial.
 - `community`: `useCommunityUrls` migrou para implementacao real em `src/core/community/hooks/useCommunityUrls.ts`; modulo legado ficou como reexport.
-- `gastronomy`: `useGastronomyStatus` migrou para implementacao real em `src/core/gastronomy/hooks/useGastronomyStatus.ts`; modulo legado ficou como reexport.
+- `gastronomy`: `useGastronomyStatus` migrou para implementacao real em `src/modules/business/gastronomy/hooks/useGastronomyStatus.ts`; modulo legado ficou como reexport.
 - `mobility`: `useMobilityUrls` e `useDriverProfileIdentity` migraram para implementacao real em `src/core/mobility/hooks/*`; modulo legado ficou como reexport.
 - `mobility`: `MobilityService.ts` e `MobilityService.impl.ts` migrados para implementacao real em `src/core/mobility/services/`.
 - `mobility`: motor operacional migrado para implementacao real em `src/core/mobility/core/` (`RideOperationalService`, `RideDispatchService`, `RideStateMachine`).
 - `mobility`: tipos operacionais consolidados em `src/core/mobility/types/*`.
 - `mobility`: `useDelivery`, `useRideRealtime`, `RequestMotoboyButton`, `CreateDeliveryModal`, `NeighborRankingPanel` e `utils/failedDelivery` migrados para implementacao real em `core`.
 - `mobility`: arquivos equivalentes em `src/modules/mobility/*` convertidos para wrappers de compatibilidade (reexport para `core`) nos itens migrados.
-- `gastronomy`: `GastronomyCTA`, `GastronomyVerticalCTA`, `GastronomySetupPage`, `useGastronomySetup`, `gastronomy-runtime.queries` e `types/gastronomy.ts` migrados para implementacao real em `src/core/gastronomy/*`.
-- `gastronomy`: arquivos equivalentes em `src/modules/gastronomy/*` convertidos para wrappers de compatibilidade (reexport para `core`) nos itens migrados.
-- governanca: `scripts/lib/architecture-registry.ts` atualizado para reconhecer `src/core/gastronomy` como container oficial dos tipos canonicos de gastronomia.
+- `gastronomy`: `GastronomyCTA`, `GastronomyVerticalCTA`, `GastronomySetupPage`, `useGastronomySetup`, `gastronomy-runtime.queries` e `types/gastronomy.ts` migrados para implementacao real em `src/modules/business/gastronomy/*`.
+- `gastronomy`: arquivos equivalentes em `src/modules/business/gastronomy/*` convertidos para wrappers de compatibilidade (reexport para `core`) nos itens migrados.
+- governanca: `scripts/lib/architecture-registry.ts` atualizado para reconhecer `src/modules/business/gastronomy` como container oficial dos tipos canonicos de gastronomia.
 - `community`: `PostCard`, `PostCardSkeleton`, `CommunityProfileCard`, `Leaderboard`, `BadgeDisplay` e `UserLevelBadge` migrados para implementacao real em `src/core/community/components/*`.
 - `community`: suporte dos componentes migrado para `src/core/community/components/{PostHeader,PostBadge,PostContent,PostTags,PostMetrics,ImageGallery}.tsx`, `src/core/community/components/styles/communityDesignSystem.ts` e `src/core/community/hooks/posts/usePostInteractions.ts`.
 - `community`: arquivos equivalentes em `src/modules/community/components/*` convertidos para wrappers de compatibilidade (reexport para `core`) nos componentes migrados.
 - `community-alerts`/`community-issues`: ownership migrado para `src/core/community-alerts/*` e `src/core/community-issues/*`.
-- `community-alerts`/`community-issues`: `src/modules/community-alerts/index.ts` e `src/modules/community-issues/index.ts` convertidos para wrappers (`export * from "@/core/..."`).
+- `community-alerts`/`community-issues`: `src/modules/community/alerts/index.ts` e `src/modules/community/issues/index.ts` convertidos para wrappers (`export * from "@/core/..."`).
 - `community-alerts`/`community-issues`: `CommunityAlertService` e `CommunityIssueService` em `modules/*` convertidos para wrappers de compatibilidade.
 - governanca: `scripts/lib/architecture-registry.ts` atualizado para reconhecer SSOT do dominio em `src/core/community-alerts/services/CommunityAlertService.ts` e `src/core/community-issues/services/CommunityIssueService.ts`.
 - `community`: `EventosPage` migrada para implementacao real em `src/core/community/pages/EventosPage.tsx`; `src/modules/community/pages/EventosPage.tsx` convertido para wrapper de compatibilidade.
@@ -100,7 +107,7 @@ Ultima atualizacao: 2026-04-22
 - `routing`: `TerritorialModulePages` passou a lazy-importar `@/core/community/pages/ComunidadePage`.
 - `routing`: `TerritorialModulePages` passou a lazy-importar `@/core/mobility/pages/MobilidadeLandingPage`.
 - `services`: slice territorial migrado para `core` com ownership em `src/core/services/*` (`ServicosLandingPage`, `useServiceUrls`, `useServicos`, `useTopRatedProfessionals`, `professionalCategories`, `professionalViewModels`, `ServicesService`).
-- `services`: arquivos equivalentes em `src/modules/services/*` convertidos para wrappers de compatibilidade.
+- `services`: arquivos equivalentes em `src/modules/professionals/services/*` convertidos para wrappers de compatibilidade.
 - `routing`: `TerritorialModulePages` passou a lazy-importar `@/core/services/pages/ServicosLandingPage`.
 - `routing`: `useAppUrls` passou a consumir `@/core/services/hooks/useServiceUrls`.
 - `governanca`: `scripts/lib/architecture-registry.ts` atualizado para SSOT de `ServicesService` em `src/core/services/services/ServicesService.ts`.
@@ -110,7 +117,7 @@ Ultima atualizacao: 2026-04-22
 - `routing`: `useAppUrls` passou a consumir `@/core/classifieds/hooks/useClassifiedUrls`.
 - `governanca`: `scripts/lib/architecture-registry.ts` atualizado para SSOT de `ClassifiedUrlService` em `src/core/classifieds/services/ClassifiedUrlService.ts`.
 - `vagas`: slice territorial migrado para `core` com ownership em `src/core/vagas/*` (pages, hooks, sections, components, services, types e barrel).
-- `vagas`: arquivos equivalentes em `src/modules/vagas/*` convertidos para wrappers de compatibilidade.
+- `vagas`: arquivos equivalentes em `src/modules/classifieds/jobs/*` convertidos para wrappers de compatibilidade.
 - `routing`: `TerritorialModulePages` passou a lazy-importar `@/core/vagas/pages/VagasPublicPage`.
 - `app/routes`: `lazyImports.ts` passou a lazy-importar `PublicarVagaPage`, `VagaDetailPage` e `VagaDetailPublicPage` de `@/core/vagas/pages/*`.
 - `admin`: `AdminVagasRuntimeService` passou a apontar para `@/core/vagas/services/AdminVagasService`.
@@ -122,7 +129,7 @@ Ultima atualizacao: 2026-04-22
 - `classifieds`: `ClassificadoDetailPage` promovida para `src/core/classifieds/pages/ClassificadoDetailPage.tsx` e rota canônica passou a consumir `@/core/classifieds/pages/ClassificadoDetailPage`.
 - `classifieds`: hooks `useClassificadoDetail` e `useSellerAds` promovidos para `src/core/classifieds/hooks/*`; equivalentes em `src/modules/classifieds/hooks/*` convertidos para wrappers.
 - `classifieds`: `core/admin`, `core/landing`, `core/profiles`, `core/messaging` e `core/routing` deixaram de importar `@/modules/classifieds/*` e passaram a consumir `@/core/classifieds/*`.
-- `promotions`: contrato canônico em `src/core/promotions/*` promovido (hooks/components/services/types/repositories); `src/modules/promotions/*` convertido para wrappers de compatibilidade nos entrypoints públicos.
+- `promotions`: contrato canônico em `src/core/promotions/*` promovido (hooks/components/services/types/repositories); `src/modules/business/promotions/*` convertido para wrappers de compatibilidade nos entrypoints públicos.
 - `profile`: `ProfilePublicPage` promovida para `src/core/profile/pages/ProfilePublicPage.tsx` com utilitário `profileDomainRules` em `src/core/profile/utils/`; `ProfilePublicRoute` atualizado para consumir `core`.
 - `admin`: componentes compartilhados de admin promovidos para `src/core/admin/components/*` (incluindo cadeia de reputação) e `core/admin/components/index.ts` convertido para barrel local sem dependência de `modules`.
 - `admin-identidade`/`admin-motoristas`: implementação promovida para `src/core/admin-identidade/*` e `src/core/admin-motoristas/*`; pages em `src/core/admin/pages/*` apontando para `core` e páginas equivalentes em `modules/*` convertidas para wrappers.
@@ -134,7 +141,7 @@ Ultima atualizacao: 2026-04-22
 - `moderation`: `ReportContentDialog` migrado para `src/core/moderation/components/ReportContentDialog.tsx` e consumidores atualizados.
 - `location`: `TerritorialSelector` migrado para `src/core/location/components/TerritorialSelector.tsx` e consumidores atualizados.
 - `business`: `SettingsTab` consolidado em `src/core/business/components/SettingsTab.tsx`; versao em `shared` removida.
-- `gastronomy`: checkout desacoplado de `delivery` via `shared`; novo `src/modules/gastronomy/services/GastronomyCheckoutService.ts` como contrato local de criacao de pedidos e remocao de `src/shared/services/deliveryBridge.ts`.
+- `gastronomy`: checkout desacoplado de `delivery` via `shared`; novo `src/modules/business/gastronomy/services/GastronomyCheckoutService.ts` como contrato local de criacao de pedidos e remocao de `src/shared/services/deliveryBridge.ts`.
 - `mobility`: `useMobilidade` sem escrita direta em banco no hook; fluxo movido para `RideRatingService` + novo `RidePassengerService` em `src/core/mobility/services/`.
 - `gastronomy`: `GastronomyDashboardPage` passou a consumir contadores reais de uso (`getMenuUsageStats`) em vez de placeholders hardcoded.
 - `gastronomy`: `useSubscriptionManagement` passou a usar `GastronomySubscriptionService.listInvoices` para faturas (sem TODO pendente no hook).
@@ -209,7 +216,7 @@ Ultima atualizacao: 2026-04-22
 - Servicos de landing migrados para `src/core/landing/services/` e consumidores de `core` atualizados.
 - `AnalyticsPage`, `useAnalyticsAccess` e `dashboards.config` migrados para ownership canonico em `src/core/analytics/*`.
 - `GeneralAnalyticsPage` atualizado para lazy import de `@/core/analytics/pages/AnalyticsPage`.
-- Gate incremental endurecido para bloquear regressao de imports legados `@/modules/analytics`, `@/modules/notifications` e `@/modules/verification` em todo `src/`.
+- Gate incremental endurecido para bloquear regressao de imports legados `@/modules/admin/analytics`, `@/modules/notifications` e `@/modules/verification` em todo `src/`.
 - Erro de runtime `Cannot access 'logger' before initialization` resolvido em `cookieStorage`.
 - Warning de CSP em dev passou a depender de `VITE_SECURITY_DEBUG=true`.
 - Bloqueio de `rg` no ambiente Windows corrigido (ripgrep MSVC + override de perfil PowerShell).
@@ -222,7 +229,7 @@ Ultima atualizacao: 2026-04-22
 
 ## Sistema de Monetizacao Multi-Vertical SSOT (2026-04-22)
 
-### Status: ✅ 100% CONCLUIDO - PRONTO PARA PRODUCAO
+### Status: ? 100% CONCLUIDO - PRONTO PARA PRODUCAO
 
 **Projeto completo**: 10/10 fases implementadas com padrao AAA (10/10) e zero gambiarras.
 
@@ -241,11 +248,11 @@ Ultima atualizacao: 2026-04-22
 
 ### Metricas de Sucesso
 
-- ✅ 75% reducao de tabelas (4 → 1)
-- ✅ 50% reducao de webhooks (2 → 1)
-- ✅ 100% eliminacao de hardcodes
-- ✅ Zero gambiarras em 50+ arquivos
-- ✅ Padrao AAA (10/10) mantido
+- ? 75% reducao de tabelas (4 ? 1)
+- ? 50% reducao de webhooks (2 ? 1)
+- ? 100% eliminacao de hardcodes
+- ? Zero gambiarras em 50+ arquivos
+- ? Padrao AAA (10/10) mantido
 
 ### Arquivos Principais
 
@@ -300,16 +307,16 @@ Ultima atualizacao: 2026-04-22
 
 ### Conformidade SSOT
 
-✅ Unica fonte de verdade (user_subscriptions)
-✅ Entitlements resolvidos apenas no backend
-✅ Catalogo versionado e imutavel
-✅ Contratos com snapshot imutavel
-✅ Precedencia oficial respeitada
-✅ Validacao de assinatura ativa obrigatoria
-✅ Valores monetarios em centavos (INTEGER)
-✅ Governanca completa de alteracoes
-✅ Blindagem arquitetural implementada
-✅ Zero anti-patterns
+? Unica fonte de verdade (user_subscriptions)
+? Entitlements resolvidos apenas no backend
+? Catalogo versionado e imutavel
+? Contratos com snapshot imutavel
+? Precedencia oficial respeitada
+? Validacao de assinatura ativa obrigatoria
+? Valores monetarios em centavos (INTEGER)
+? Governanca completa de alteracoes
+? Blindagem arquitetural implementada
+? Zero anti-patterns
 
 ### Proximos Passos
 
@@ -321,3 +328,5 @@ Ultima atualizacao: 2026-04-22
 ### Documentacao Completa
 
 Ver: `.kiro/specs/monetization-multi-vertical-refactor/PROXIMOS_PASSOS_PRATICOS.md`
+
+

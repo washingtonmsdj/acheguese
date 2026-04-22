@@ -1,4 +1,4 @@
-/**
+﻿/**
  * mobility.generated.ts — Ponto único de re-exportação de tipos do domínio Mobility
  *
  * SSOT: Todos os componentes e hooks do módulo mobility importam tipos daqui.

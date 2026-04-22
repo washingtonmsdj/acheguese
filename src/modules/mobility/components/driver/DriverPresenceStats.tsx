@@ -1,4 +1,4 @@
-﻿import { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Card,
   CardContent,
@@ -8,7 +8,7 @@ import { cn } from "@/shared/utils/cn";
 import {
   DriverPresenceService,
   type DriverPresenceStats as PresenceStats,
-} from "@/core/mobility/services";
+} from "@/modules/mobility/services";
 
 interface DriverPresenceStatsProps {
   driverProfileId: string;
@@ -110,3 +110,4 @@ export function DriverPresenceStats({
     </div>
   );
 }
+

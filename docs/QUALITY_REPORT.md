@@ -29,7 +29,7 @@ O projeto demonstra **excelente qualidade técnica**, seguindo rigorosamente pri
 **Exemplo:**
 ```typescript
 // ✅ Excelente: Módulo auto-contido
-src/modules/gastronomy/
+src/modules/business/gastronomy/
 ├── components/
 ├── hooks/
 ├── services/
@@ -325,3 +325,4 @@ interface GastronomyBusiness {
 **Auditado por:** Equipe Técnica  
 **Data:** 13 de Abril de 2026  
 **Próxima Auditoria:** Julho de 2026
+

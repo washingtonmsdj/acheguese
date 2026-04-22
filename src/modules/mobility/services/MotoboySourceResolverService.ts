@@ -1,4 +1,4 @@
-import { supabase } from "@/core/supabase";
+﻿import { supabase } from "@/integrations/supabase";
 import { logger } from "@/shared/utils/logger";
 import type { SourceType } from "../constants";
 
@@ -77,7 +77,7 @@ export class MotoboySourceResolverService {
       return currentPlan.plan_tier;
     }
 
-    const { data: fallbackPlan, error: fallbackPlanError } = await supabaseAny
+    const { data: legacyPlan, error: legacyPlanError } = await supabaseAny
       .from("gastronomy_subscriptions")
       .select("plan_tier")
       .eq("business_id", businessDataId)
@@ -85,12 +85,12 @@ export class MotoboySourceResolverService {
       .limit(1)
       .maybeSingle();
 
-    if (fallbackPlanError) {
-      logger.warn("MotoboySourceResolverService.resolvePlanTier.gastronomySubscriptions", fallbackPlanError);
+    if (legacyPlanError) {
+      logger.warn("MotoboySourceResolverService.resolvePlanTier.gastronomySubscriptions", legacyPlanError);
       return undefined;
     }
 
-    return fallbackPlan?.plan_tier;
+    return legacyPlan?.plan_tier;
   }
 
   static async resolveLocationIdFromSource(
@@ -205,4 +205,3 @@ export class MotoboySourceResolverService {
     return (data as SourceBusinessDataSummary | null) ?? null;
   }
 }
-

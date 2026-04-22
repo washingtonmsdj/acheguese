@@ -1,7 +1,7 @@
 import { supabase } from "@/integrations/supabase";
 import { logger } from "@/shared/utils/logger";
 import type { AdminSupabaseClient, CommunityIssue, ProfessionalReport, ProfessionalData } from "../types/adminDatabase.types";
-import { MobilityAdminQueryService } from "@/core/mobility/services";
+import { MobilityAdminQueryService } from "@/modules/mobility/services";
 
 export interface ModerationStats {
   total_posts: number;
@@ -204,3 +204,4 @@ class AdminCommunityService {
 }
 
 export const adminCommunityService = new AdminCommunityService();
+

@@ -1,8 +1,8 @@
-﻿/**
- * NearbyClassifiedsSection â€” SeÃ§Ã£o de classificados prÃ³ximos
+/**
+ * NearbyClassifiedsSection — Seção de classificados próximos
  * 
- * Integra com o mÃ³dulo de classificados via SSOT (useClassificados)
- * Exibe anÃºncios prÃ³ximos ao usuÃ¡rio com filtros territoriais
+ * Integra com o módulo de classificados via SSOT (useClassificados)
+ * Exibe anúncios próximos ao usuário com filtros territoriais
  * 
  * @module features/nearby/components
  */
@@ -19,28 +19,28 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/shared/components/ui/dropdown-menu';
-import { useClassificados } from '@/core/classifieds/hooks/useClassificados';
-import { classifiedUrlService } from '@/core/classifieds/services/ClassifiedUrlService';
+import { useClassificados } from '@/shared/services/classifieds';
+import { classifiedUrlService } from '@/shared/services/classifieds';
 import { useTerritoryLabels } from '@/core/location';
-import type { ClassificadoWithVendedor } from '@/core/classifieds/hooks/useClassificados';
+import type { ClassificadoWithVendedor } from '@/shared/services/classifieds';
 import type { ResolvedTerritory } from '@/core/routing/hooks/useResolveTerritoryFromUrl';
 import { cn } from '@/shared/utils/cn';
 
 interface NearbyClassifiedsSectionProps {
-  /** LocalizaÃ§Ã£o do usuÃ¡rio para filtro territorial */
+  /** Localização do usuário para filtro territorial */
   userLocation?: { latitude: number; longitude: number } | null;
   /** Raio em km */
   radiusKm?: number;
-  /** Limite de anÃºncios exibidos */
+  /** Limite de anúncios exibidos */
   limit?: number;
-  /** TerritÃ³rio resolvido (opcional) */
+  /** Território resolvido (opcional) */
   resolved?: ResolvedTerritory | null;
   /** Callback para mostrar item no mapa */
   onShowInMap?: (ad: ClassificadoWithVendedor) => void;
 }
 
 /**
- * SeÃ§Ã£o de classificados prÃ³ximos integrada via SSOT
+ * Seção de classificados próximos integrada via SSOT
  */
 export function NearbyClassifiedsSection({
   userLocation,
@@ -51,10 +51,10 @@ export function NearbyClassifiedsSection({
 }: NearbyClassifiedsSectionProps) {
   const navigate = useNavigate();
   
-  // âœ… SSOT: Labels territoriais
+  // ✅ SSOT: Labels territoriais
   const territoryLabels = useTerritoryLabels(resolved);
 
-  // âœ… SSOT: Hook de classificados com filtro territorial
+  // ✅ SSOT: Hook de classificados com filtro territorial
   const { classificados, isLoading } = useClassificados({
     filters: {
       sortBy: 'recente',
@@ -83,7 +83,7 @@ export function NearbyClassifiedsSection({
   }, [classificados, userLocation, territoryLabels.name, limit]);
 
   const handleAdClick = (ad: ClassificadoWithVendedor) => {
-    // âœ… SSOT: Usar classifiedUrlService para construir URL canÃ´nica
+    // ✅ SSOT: Usar classifiedUrlService para construir URL canônica
     if (ad.geographic_path && ad.category_slug && ad.subcategory_slug && ad.slug && ad.public_id) {
       const urls = classifiedUrlService.buildUrls({
         id: ad.id,
@@ -114,7 +114,7 @@ export function NearbyClassifiedsSection({
   return (
     <NearbySection
       title={`Classificados ${territoryLabels.inTerritory}`}
-      subtitle="Produtos e serviÃ§os Ã  venda na sua regiÃ£o"
+      subtitle="Produtos e serviços à venda na sua região"
       icon={ShoppingBag}
       iconColorClass="bg-amber-500/10 text-amber-500"
       count={nearbyClassifieds.length}
@@ -158,7 +158,7 @@ function ClassifiedCard({ ad, index, onViewProduct, onShowInMap }: ClassifiedCar
       transition={{ delay: Math.min(index, 6) * 0.05, duration: 0.3 }}
       className="group bg-card rounded-xl border border-border overflow-hidden hover:shadow-lg hover:shadow-primary/5 transition-all duration-300 hover:-translate-y-0.5"
       role="article"
-      aria-label={`AnÃºncio: ${ad.titulo}`}
+      aria-label={`Anúncio: ${ad.titulo}`}
     >
       {/* Imagem */}
       <div className="relative overflow-hidden aspect-square cursor-pointer" onClick={onViewProduct}>
@@ -177,7 +177,7 @@ function ClassifiedCard({ ad, index, onViewProduct, onShowInMap }: ClassifiedCar
             ? "bg-success/90 text-white"
             : "bg-muted/90 text-muted-foreground"
         )}>
-          {ad.status === 'active' ? 'DisponÃ­vel' : 'Vendido'}
+          {ad.status === 'active' ? 'Disponível' : 'Vendido'}
         </div>
 
         {/* Contador de fotos */}
@@ -188,7 +188,7 @@ function ClassifiedCard({ ad, index, onViewProduct, onShowInMap }: ClassifiedCar
           </div>
         )}
 
-        {/* PreÃ§o */}
+        {/* Preço */}
         <div className="absolute bottom-2 left-2">
           <span className="text-sm font-bold text-white drop-shadow-lg">
             R$ {ad.preco?.toLocaleString('pt-BR')}
@@ -196,7 +196,7 @@ function ClassifiedCard({ ad, index, onViewProduct, onShowInMap }: ClassifiedCar
         </div>
       </div>
 
-      {/* ConteÃºdo */}
+      {/* Conteúdo */}
       <div className="p-2">
         <h3 
           className="text-[11px] font-semibold leading-tight line-clamp-2 text-foreground group-hover:text-primary transition-colors mb-1 cursor-pointer"
@@ -205,7 +205,7 @@ function ClassifiedCard({ ad, index, onViewProduct, onShowInMap }: ClassifiedCar
           {ad.titulo}
         </h3>
 
-        {/* LocalizaÃ§Ã£o e AÃ§Ãµes */}
+        {/* Localização e Ações */}
         <div className="flex items-center justify-between gap-1">
           {ad.bairro && (
             <div className="flex items-center gap-0.5 text-muted-foreground text-[9px] flex-1 min-w-0">
@@ -214,7 +214,7 @@ function ClassifiedCard({ ad, index, onViewProduct, onShowInMap }: ClassifiedCar
             </div>
           )}
           
-          {/* Menu de aÃ§Ãµes */}
+          {/* Menu de ações */}
           {onShowInMap && (
             <DropdownMenu open={isMenuOpen} onOpenChange={setIsMenuOpen}>
               <DropdownMenuTrigger asChild>
@@ -244,6 +244,7 @@ function ClassifiedCard({ ad, index, onViewProduct, onShowInMap }: ClassifiedCar
     </motion.div>
   );
 }
+
 
 
 

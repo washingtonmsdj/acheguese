@@ -1,8 +1,14 @@
 import { useCallback, useState } from "react";
 import { toast } from "sonner";
-import type { TablesUpdate } from "@/core/supabase";
 import { DriverAvailabilityService } from "@/modules/mobility/services/DriverAvailabilityService";
 import { mobilityService } from "@/modules/mobility/services/MobilityService";
+
+type DriverDataOperationalUpdate = {
+  is_online?: boolean;
+  is_available?: boolean;
+  last_location_update?: string | null;
+  updated_at?: string;
+};
 
 interface UseDriverOperationalStatusOptions {
   driverProfileId: string | null;
@@ -46,7 +52,7 @@ export function useDriverOperationalStatus({
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
 
   const persistSnapshot = useCallback(
-    async (updates: TablesUpdate<"driver_data">) => {
+    async (updates: DriverDataOperationalUpdate) => {
       if (!driverProfileId) {
         return;
       }
@@ -132,4 +138,5 @@ export function useDriverOperationalStatus({
     clearGpsError: () => setGpsError(null),
   };
 }
+
 

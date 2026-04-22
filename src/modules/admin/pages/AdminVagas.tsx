@@ -1,12 +1,12 @@
-﻿/**
- * AdminVagas - GestÃ£o administrativa de vagas de emprego
+/**
+ * AdminVagas - Gestão administrativa de vagas de emprego
  * 
  * SSOT: Usa AdminVagasService (novo)
  * Migration: 20260416110000_create_vagas.sql
  * 
  * Atualizado para usar:
  * - Enums: vaga_status, vaga_contrato, vaga_modalidade, vaga_nivel, vaga_urgencia
- * - Full-text search em portuguÃªs
+ * - Full-text search em português
  * - Filtros territoriais integrados
  */
 
@@ -46,11 +46,11 @@ import {
   RefreshCw,
 } from "lucide-react";
 import { toast } from "sonner";
-import type { VagaStatus, VagaContrato, VagaModalidade } from "@/core/vagas/types";
+import type { VagaStatus, VagaContrato, VagaModalidade } from "@/core/admin/services/AdminVagasService";
 
 const STATUS_OPTIONS: { value: VagaStatus; label: string }[] = [
   { value: "draft", label: "Rascunho" },
-  { value: "pending_review", label: "Aguardando revisÃ£o" },
+  { value: "pending_review", label: "Aguardando revisão" },
   { value: "published", label: "Publicada" },
   { value: "paused", label: "Pausada" },
   { value: "closed", label: "Encerrada" },
@@ -78,7 +78,7 @@ export default function AdminVagas() {
   >(ALL_STATUS_FILTER);
   const [page, setPage] = useState(1);
 
-  // Buscar estatÃ­sticas
+  // Buscar estatísticas
   const { data: stats } = useQuery({
     queryKey: ["admin-vagas-stats"],
     queryFn: () => AdminVagasService.getStats(),
@@ -188,7 +188,7 @@ export default function AdminVagas() {
       case "published":
         return <Badge variant="success">Publicada</Badge>;
       case "pending_review":
-        return <Badge variant="default">Em revisÃ£o</Badge>;
+        return <Badge variant="default">Em revisão</Badge>;
       case "paused":
         return <Badge variant="warning">Pausada</Badge>;
       case "closed":
@@ -212,10 +212,10 @@ export default function AdminVagas() {
       <div>
         <h1 className="text-3xl font-bold font-display flex items-center gap-2">
           <Briefcase className="h-8 w-8" />
-          GestÃ£o de Vagas
+          Gestão de Vagas
         </h1>
         <p className="text-muted-foreground mt-1">
-          Gerencie vagas de emprego e moderaÃ§Ã£o
+          Gerencie vagas de emprego e moderação
         </p>
       </div>
 
@@ -254,13 +254,13 @@ export default function AdminVagas() {
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
               <Clock className="h-4 w-4" />
-              Em revisÃ£o
+              Em revisão
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-yellow-600">{stats?.pendingReview || 0}</div>
             <p className="text-xs text-muted-foreground mt-1">
-              Aguardando moderaÃ§Ã£o
+              Aguardando moderação
             </p>
           </CardContent>
         </Card>
@@ -323,7 +323,7 @@ export default function AdminVagas() {
                   <div className="relative">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <Input
-                      placeholder="Buscar por tÃ­tulo, empresa ou descriÃ§Ã£o..."
+                      placeholder="Buscar por título, empresa ou descrição..."
                       value={search}
                       onChange={(e) => setSearch(e.target.value)}
                       className="pl-9"
@@ -363,8 +363,8 @@ export default function AdminVagas() {
                     <SelectItem value={ALL_CONTRATO_FILTER}>Todos</SelectItem>
                     <SelectItem value="CLT">CLT</SelectItem>
                     <SelectItem value="PJ">PJ</SelectItem>
-                    <SelectItem value="temporario">Temporário</SelectItem>
-                    <SelectItem value="estagio">Estágio</SelectItem>
+                    <SelectItem value="temporario">Tempor�rio</SelectItem>
+                    <SelectItem value="estagio">Est�gio</SelectItem>
                     <SelectItem value="freelancer">Freelancer</SelectItem>
                     <SelectItem value="aprendiz">Aprendiz</SelectItem>
                   </SelectContent>
@@ -384,7 +384,7 @@ export default function AdminVagas() {
                     <SelectItem value={ALL_MODALIDADE_FILTER}>Todas</SelectItem>
                     <SelectItem value="presencial">Presencial</SelectItem>
                     <SelectItem value="remoto">Remoto</SelectItem>
-                    <SelectItem value="hibrido">Híbrido</SelectItem>
+                    <SelectItem value="hibrido">H�brido</SelectItem>
                   </SelectContent>
                 </Select>
                 <Button
@@ -413,13 +413,13 @@ export default function AdminVagas() {
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>TÃ­tulo</TableHead>
+                        <TableHead>Título</TableHead>
                         <TableHead>Empresa</TableHead>
                         <TableHead>Contrato</TableHead>
                         <TableHead>Modalidade</TableHead>
-                        <TableHead>NÃ­vel</TableHead>
+                        <TableHead>Nível</TableHead>
                         <TableHead>Status</TableHead>
-                        <TableHead className="text-right">AÃ§Ãµes</TableHead>
+                        <TableHead className="text-right">Ações</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -544,11 +544,11 @@ export default function AdminVagas() {
                     </TableBody>
                   </Table>
 
-                  {/* PaginaÃ§Ã£o */}
+                  {/* Paginação */}
                   {vagasData && vagasData.totalPages > 1 && (
                     <div className="flex items-center justify-between mt-4">
                       <p className="text-sm text-muted-foreground">
-                        PÃ¡gina {vagasData.page} de {vagasData.totalPages}
+                        Página {vagasData.page} de {vagasData.totalPages}
                       </p>
                       <div className="flex gap-2">
                         <Button
@@ -565,7 +565,7 @@ export default function AdminVagas() {
                           disabled={page === vagasData.totalPages}
                           onClick={() => setPage(page + 1)}
                         >
-                          PrÃ³xima
+                          Próxima
                         </Button>
                       </div>
                     </div>
@@ -596,11 +596,11 @@ export default function AdminVagas() {
                             )}
                           </div>
                           <p className="text-sm text-muted-foreground mt-1">
-                            {vaga.empresa} â€¢ {vaga.contrato} â€¢ {vaga.modalidade}
+                            {vaga.empresa} • {vaga.contrato} • {vaga.modalidade}
                           </p>
                           {vaga.location && (
                             <p className="text-sm text-muted-foreground">
-                              ðŸ“ {vaga.location.name}
+                              📍 {vaga.location.name}
                             </p>
                           )}
                           <p className="text-sm mt-2 text-destructive font-medium">
@@ -612,7 +612,7 @@ export default function AdminVagas() {
                             size="sm"
                             variant="default"
                             onClick={() => {
-                              toast.info("Funcionalidade de renovaÃ§Ã£o em desenvolvimento");
+                              toast.info("Funcionalidade de renovação em desenvolvimento");
                             }}
                           >
                             Renovar
@@ -631,7 +631,7 @@ export default function AdminVagas() {
                 </div>
               ) : (
                 <div className="text-center py-8 text-muted-foreground">
-                  Nenhuma vaga expirando nos prÃ³ximos 7 dias
+                  Nenhuma vaga expirando nos próximos 7 dias
                 </div>
               )}
             </CardContent>
@@ -650,4 +650,5 @@ export default function AdminVagas() {
     </div>
   );
 }
+
 

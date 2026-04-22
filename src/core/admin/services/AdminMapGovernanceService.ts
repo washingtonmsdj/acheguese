@@ -20,7 +20,7 @@ import {
   TouristPointService,
   TouristPointStatus,
   type TouristPoint,
-} from "@/core/tourist-points";
+} from "@/modules/guide/tourist-points";
 import { logger } from "@/shared/utils/logger";
 
 type VisibilityStatus = "official" | "compatibility" | "attention";
@@ -599,3 +599,4 @@ class AdminMapGovernanceService {
 }
 
 export const adminMapGovernanceService = new AdminMapGovernanceService();
+

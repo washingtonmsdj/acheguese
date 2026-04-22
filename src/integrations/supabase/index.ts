@@ -13,5 +13,8 @@ export { supabase } from "./supabase";
 export { createClient } from "@supabase/supabase-js";
 export type { SupabaseClient, RealtimeChannel } from "@supabase/supabase-js";
 
-// Re-export tipos do cliente gerado
-export * from "./types";
+// Re-export tipos canônicos do schema
+export * from "./types.generated";
+
+// Helpers tipados de query/RPC
+export * from "./services/supabaseHelpers";

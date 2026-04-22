@@ -1,5 +1,5 @@
 import React from "react";
-import { useOnboarding } from "@/modules/onboarding/hooks/useOnboarding";
+import { useOnboarding } from "@/app/features/onboarding/hooks/useOnboarding";
 import { OnboardingHeader } from "@/shared/components/onboarding/OnboardingHeader";
 import { PopulationBanner } from "@/shared/components/onboarding/PopulationBanner";
 import { NeighborhoodSelector } from "@/shared/components/onboarding/NeighborhoodSelector";

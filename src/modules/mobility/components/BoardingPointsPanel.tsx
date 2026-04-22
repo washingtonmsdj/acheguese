@@ -1,4 +1,4 @@
-﻿import React, { useMemo, useState } from "react";
+import React, { useMemo, useState } from "react";
 import {
   MapPin,
   Plus,
@@ -19,7 +19,7 @@ import { toast } from "sonner";
 import {
   BoardingPointService,
   type BoardingPointSummary,
-} from "@/core/mobility/services";
+} from "@/modules/mobility/services";
 
 export interface BoardingPoint {
   id: string;
@@ -322,3 +322,4 @@ export function BoardingPointsPanel({
     </div>
   );
 }
+

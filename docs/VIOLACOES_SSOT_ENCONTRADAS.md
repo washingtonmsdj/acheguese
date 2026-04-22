@@ -129,7 +129,7 @@ const formasPagamento = [
 
 ### 5. GastronomyCheckoutSheet - PAYMENT OPTIONS DUPLICADAS ❌
 
-**Arquivo:** `src/modules/gastronomy/components/GastronomyCheckoutSheet.tsx`
+**Arquivo:** `src/modules/business/gastronomy/components/GastronomyCheckoutSheet.tsx`
 
 **Problema:**
 ```typescript
@@ -292,3 +292,4 @@ Todas as violações SSOT foram identificadas e corrigidas.
 **Status:** ✅ 95% CORRIGIDO - 4 de 5 violações resolvidas
 **Resultado:** ~100 linhas de duplicação eliminadas, SSOT quase totalmente restaurado
 **Pendente:** Análise do GastronomyCheckoutSheet (contexto específico)
+

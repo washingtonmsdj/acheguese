@@ -1,29 +1,29 @@
 /**
- * VERTICAL CONFIG — SSOT de verticais de negócio
+ * VERTICAL CONFIG - SSOT de taxonomia vertical.
  *
- * Define quais categorias de business_data são elegíveis para cada vertical.
- * Escalável: adicionar novos verticais aqui sem tocar em outros módulos.
+ * Regras oficiais:
+ * - `business`/`empresas` e dominio base horizontal de entidades empresariais.
+ * - `business` nao e vertical.
+ * - Apenas chaves presentes em `VerticalKey` sao verticais oficiais.
+ * - Estado atual: somente `gastronomy` e vertical oficial.
+ * - Verticais futuros so existem quando declarados neste arquivo.
  *
- * Padrão: business base + profile vertical opcional 1:1
- * Verticais atuais: gastronomy
- * Verticais futuros: tourism, delivery, real-estate, specialized-services
+ * Padrao estrutural:
+ * - business base + profile vertical opcional 1:1
  */
 
-import type { BusinessCategory } from '@/core/business/types/Business';
+import type { BusinessCategory } from "@/core/business/types/Business";
 
-// ── Identificadores canônicos de vertical ────────────────────────────────────
-
-export type VerticalKey = 'gastronomy'; // | 'tourism' | 'real-estate' | ...
-
-// ── Configuração de cada vertical ────────────────────────────────────────────
+// Identificadores canonicos de vertical (estado atual do projeto)
+export type VerticalKey = "gastronomy";
 
 export interface VerticalConfig {
   key: VerticalKey;
   label: string;
   description: string;
-  /** Categorias de business_data elegíveis para este vertical */
+  /** Categorias de business_data elegiveis para este vertical */
   eligibleCategories: BusinessCategory[];
-  /** Rota de setup após criação da empresa */
+  /** Rota de setup apos criacao da empresa */
   setupRoute: (businessId: string) => string;
   /** Rota do painel no dashboard */
   dashboardRoute: (businessId: string) => string;
@@ -31,19 +31,17 @@ export interface VerticalConfig {
 
 export const VERTICAL_CONFIGS: Record<VerticalKey, VerticalConfig> = {
   gastronomy: {
-    key: 'gastronomy',
-    label: 'Gastronomia',
-    description: 'Cardápio, delivery, reservas e gestão gastronômica',
-    eligibleCategories: ['restaurante', 'lazer'], // lazer inclui bares, cafeterias, sorveterias, etc.
+    key: "gastronomy",
+    label: "Gastronomia",
+    description: "Cardapio, delivery, reservas e gestao gastronomica",
+    eligibleCategories: ["restaurante", "lazer"], // lazer inclui bares, cafeterias, sorveterias, etc.
     setupRoute: (businessId) => `/dashboard/business/${businessId}/gastronomy/setup`,
     dashboardRoute: (businessId) => `/dashboard/business/${businessId}/gastronomy/dashboard`,
   },
 };
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
-
 /**
- * Retorna os verticais elegíveis para uma categoria de empresa.
+ * Retorna os verticais elegiveis para uma categoria de empresa.
  */
 export function getEligibleVerticals(category: BusinessCategory): VerticalConfig[] {
   return Object.values(VERTICAL_CONFIGS).filter((v) =>
@@ -52,7 +50,7 @@ export function getEligibleVerticals(category: BusinessCategory): VerticalConfig
 }
 
 /**
- * Verifica se uma categoria é elegível para um vertical específico.
+ * Verifica se uma categoria e elegivel para um vertical especifico.
  */
 export function isEligibleForVertical(
   category: BusinessCategory,

@@ -599,18 +599,18 @@
     {
       "domain": "gastronomy",
       "services": [
-        "src/modules/gastronomy/cart/GastronomyCartService.ts",
-        "src/modules/gastronomy/services/GastronomyQueryService.ts",
-        "src/modules/gastronomy/services/GastronomyService.ts",
-        "src/modules/gastronomy/services/GastronomyUrlService.ts",
-        "src/modules/gastronomy/services/MenuQueryService.ts",
-        "src/modules/gastronomy/services/MenuService.ts",
-        "src/modules/gastronomy/services/index.ts"
+        "src/modules/business/gastronomy/cart/GastronomyCartService.ts",
+        "src/modules/business/gastronomy/services/GastronomyQueryService.ts",
+        "src/modules/business/gastronomy/services/GastronomyService.ts",
+        "src/modules/business/gastronomy/services/GastronomyUrlService.ts",
+        "src/modules/business/gastronomy/services/MenuQueryService.ts",
+        "src/modules/business/gastronomy/services/MenuService.ts",
+        "src/modules/business/gastronomy/services/index.ts"
       ],
       "pages": [
-        "src/modules/gastronomy/pages/GastronomyDetailPage.tsx",
-        "src/modules/gastronomy/pages/GastronomyLandingPage.tsx",
-        "src/modules/gastronomy/pages/index.ts"
+        "src/modules/business/gastronomy/pages/GastronomyDetailPage.tsx",
+        "src/modules/business/gastronomy/pages/GastronomyLandingPage.tsx",
+        "src/modules/business/gastronomy/pages/index.ts"
       ],
       "routes": [
         "/gastronomia/:state/:city -> TerritorialLayout",
@@ -634,25 +634,25 @@
         "rpc_get_location_descendants_ids"
       ],
       "officialHooks": [
-        "src/modules/gastronomy/hooks/useGastronomyCart.ts",
-        "src/modules/gastronomy/hooks/useGastronomyCheckout.ts",
-        "src/modules/gastronomy/hooks/useGastronomyDetail.ts",
-        "src/modules/gastronomy/hooks/useGastronomyFoodCatalog.ts",
-        "src/modules/gastronomy/hooks/useGastronomyList.ts",
-        "src/modules/gastronomy/hooks/useGastronomyProfile.ts",
-        "src/modules/gastronomy/hooks/useMenu.ts",
-        "src/modules/gastronomy/hooks/useMenuItem.ts"
+        "src/modules/business/gastronomy/hooks/useGastronomyCart.ts",
+        "src/modules/business/gastronomy/hooks/useGastronomyCheckout.ts",
+        "src/modules/business/gastronomy/hooks/useGastronomyDetail.ts",
+        "src/modules/business/gastronomy/hooks/useGastronomyFoodCatalog.ts",
+        "src/modules/business/gastronomy/hooks/useGastronomyList.ts",
+        "src/modules/business/gastronomy/hooks/useGastronomyProfile.ts",
+        "src/modules/business/gastronomy/hooks/useMenu.ts",
+        "src/modules/business/gastronomy/hooks/useMenuItem.ts"
       ],
       "legacyHooks": [],
       "legacyFiles": [
-        "src/modules/gastronomy/__mocks__/foodItemMocks.ts",
-        "src/modules/gastronomy/__mocks__/gastronomyDetailMocks.ts",
-        "src/modules/gastronomy/__mocks__/gastronomyMocks.ts",
-        "src/modules/gastronomy/dev/__tests__/devMockRuntime.spec.ts",
-        "src/modules/gastronomy/dev/devMockRuntime.ts"
+        "src/modules/business/gastronomy/__mocks__/foodItemMocks.ts",
+        "src/modules/business/gastronomy/__mocks__/gastronomyDetailMocks.ts",
+        "src/modules/business/gastronomy/__mocks__/gastronomyMocks.ts",
+        "src/modules/business/gastronomy/dev/__tests__/devMockRuntime.spec.ts",
+        "src/modules/business/gastronomy/dev/devMockRuntime.ts"
       ],
       "docs": [
-        "src/modules/gastronomy/README.md"
+        "src/modules/business/gastronomy/README.md"
       ],
       "directDbOutsideServices": [],
       "crossModuleImports": [],

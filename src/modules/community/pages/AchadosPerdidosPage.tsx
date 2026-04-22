@@ -35,7 +35,7 @@ import {
   useInfiniteScroll,
   usePaginatedState,
 } from "@/shared/hooks/useInfiniteScroll";
-import { lostFoundService } from "@/core/lostfound/services/LostFoundService";
+import { lostFoundService } from "@/modules/community/lostfound/services/LostFoundService";
 import { ViewOnMapButton } from "@/core/maps/components/ViewOnMapButton";
 
 const CATEGORIAS = [

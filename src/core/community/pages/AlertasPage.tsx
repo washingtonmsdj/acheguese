@@ -1,18 +1,18 @@
-﻿/**
- * AlertasPage â€” PÃ¡gina dedicada aos alertas comunitÃ¡rios de seguranÃ§a
- * Usa o mÃ³dulo community-alerts (AlertFeedSection) como Ãºnica fonte de alertas.
+/**
+ * AlertasPage — Página dedicada aos alertas comunitários de segurança
+ * Usa o módulo community-alerts (AlertFeedSection) como única fonte de alertas.
  *
- * MIGRAÃ‡ÃƒO: usa locationContextStore (fundaÃ§Ã£o geogrÃ¡fica) em vez de profile.city.
+ * MIGRAÇÃO: usa locationContextStore (fundação geográfica) em vez de profile.city.
  */
 
 import React from "react";
 import { TooltipProvider } from "@/shared/components/ui/tooltip";
-import { AlertFeedSection } from "@/core/community-alerts";
+import { AlertFeedSection } from "@/modules/community/alerts";
 import { communityLocationService } from "@/core/community/services/CommunityLocationService";
 import { useLocationContext } from "@/core/location";
 
 export default function AlertasPage() {
-  // Usa a fundaÃ§Ã£o geogrÃ¡fica â€” nÃ£o depende de profile.city
+  // Usa a fundação geográfica — não depende de profile.city
   const { activeLocation } = useLocationContext();
   const locationName = communityLocationService.getActiveLocationName();
 
@@ -31,7 +31,7 @@ export default function AlertasPage() {
             />
           ) : (
             <p className="text-sm text-muted-foreground text-center py-12">
-              Selecione uma localizaÃ§Ã£o para ver os alertas da sua regiÃ£o.
+              Selecione uma localização para ver os alertas da sua região.
             </p>
           )}
         </div>
@@ -39,4 +39,5 @@ export default function AlertasPage() {
     </TooltipProvider>
   );
 }
+
 

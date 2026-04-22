@@ -40,7 +40,7 @@ import {
   UtensilsCrossed,
 } from "lucide-react";
 import { toast } from "sonner";
-import { CUISINE_TYPES } from "@/core/gastronomy";
+import { CUISINE_TYPES } from "@/shared/services/gastronomyFacade";
 
 const PAGE_SIZE = 20;
 
@@ -573,3 +573,5 @@ export default function AdminGastronomia() {
     </div>
   );
 }
+
+

@@ -1,4 +1,4 @@
-ï»¿# MOBILIDADE (MOTOBOY) - RELATORIO COMPLETO E TASKS DE IMPLEMENTACAO
+# MOBILIDADE (MOTOBOY) - RELATORIO COMPLETO E TASKS DE IMPLEMENTACAO
 
 Data: 2026-04-17
 Status deste documento: EXECUCAO PARCIAL + ANALISE DE GAP (atualizado em 2026-04-19)
@@ -54,8 +54,8 @@ Nao incluido (neste passo):
 - fluxo B (gastronomia): `delivery_requests` via `DeliveryService`
 - arquivos:
   - `src/modules/mobility/hooks/useDelivery.ts`
-  - `src/modules/gastronomy/services/DeliveryService.ts` (inclusive com `// @ts-nocheck`)
-  - `src/modules/gastronomy/hooks/useDeliveryRequests.ts`
+  - `src/modules/business/gastronomy/services/DeliveryService.ts` (inclusive com `// @ts-nocheck`)
+  - `src/modules/business/gastronomy/hooks/useDeliveryRequests.ts`
 - risco: dupla fonte de verdade, analytics divergente, operacao/admin fragmentados.
 
 2. Integracao de solicitacao motoboy em paginas de negocio ainda incompleta:
@@ -68,8 +68,8 @@ Nao incluido (neste passo):
 - pagina de gestao de entregas lista/atualiza, mas nao expoe criacao de solicitacao de forma operacional completa.
 - `CreateDeliveryRequestDialog` existe, mas nao esta conectado em pagina.
 - arquivos:
-  - `src/modules/gastronomy/pages/DeliveryManagementPage.tsx`
-  - `src/modules/gastronomy/components/delivery/CreateDeliveryRequestDialog.tsx`
+  - `src/modules/business/gastronomy/pages/DeliveryManagementPage.tsx`
+  - `src/modules/business/gastronomy/components/delivery/CreateDeliveryRequestDialog.tsx`
 
 4. Permissao de quem pode solicitar motoboy ainda nao esta fechada ponta a ponta:
 - service de mobilidade valida rollout e dados minimos, mas nao fecha regra de negocio por `sourceType/sourceId` no backend com governanca forte.
@@ -82,7 +82,7 @@ Nao incluido (neste passo):
   - auditoria por `source_type/source_id`
 
 6. Riscos de qualidade no modulo paralelo de delivery:
-- `src/modules/gastronomy/services/DeliveryService.ts` com `@ts-nocheck`.
+- `src/modules/business/gastronomy/services/DeliveryService.ts` com `@ts-nocheck`.
 - aumenta risco de regressao, mascara problemas de contrato/tipo.
 
 7. Dependencia pendente no modulo vagas (impacta estabilidade geral de lancamento):
@@ -449,7 +449,7 @@ Motivos do nao-100%:
 - Fase 3 (integracao paginas de negocio): 65%
   - CTA de motoboy em empresa e criacao via modal existem
   - mas:
-    - botao/integraÃ§Ã£o atual quebra build
+    - botao/integração atual quebra build
     - `DeliveryManagementPage` cria em SSOT novo, porem lista/atualiza/cancela no legado (`delivery_requests`)
     - historico unificado avancou, mas avaliacao do lado motorista continua stub
 
@@ -461,7 +461,7 @@ Motivos do nao-100%:
     - alguns pontos ainda dependem de update direto em tabela (override operacional)
 
 - Fase 5 (UX/UI final): 30%
-  - ha melhorias em algumas telas, mas nao houve fechamento completo de consistencia mobile/empty/error states em todas as superfÃ­cies
+  - ha melhorias em algumas telas, mas nao houve fechamento completo de consistencia mobile/empty/error states em todas as superfícies
 
 - Fase 6 (testes finais): 10%
   - validacoes de arquitetura executadas
@@ -476,9 +476,9 @@ Motivos do nao-100%:
 2. SSOT incompleto de entrega:
 - `ride_requests` e `delivery_requests` convivendo em operacao real
 - evidencias:
-  - `src/modules/gastronomy/pages/DeliveryManagementPage.tsx`
-  - `src/modules/gastronomy/hooks/useDeliveryRequests.ts`
-  - `src/modules/gastronomy/services/DeliveryService.ts`
+  - `src/modules/business/gastronomy/pages/DeliveryManagementPage.tsx`
+  - `src/modules/business/gastronomy/hooks/useDeliveryRequests.ts`
+  - `src/modules/business/gastronomy/services/DeliveryService.ts`
   - `src/core/admin/services/AdminService.ts`
 
 3. Admin de motoristas nao fechado:
@@ -532,3 +532,4 @@ T100.6 Rodar suite critica de mobilidade:
 T100.7 Atualizar este documento com evidencias finais:
 - anexar saidas dos comandos e cenarios E2E
 - so marcar GO quando itens 12.1 e 12.2 estiverem 100% verdes
+

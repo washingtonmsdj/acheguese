@@ -77,7 +77,7 @@ Arquivos Afetados:
 - src/core/billing/plans.ts
 - src/shared/types/subscription.ts
 - src/modules/mobility/constants/index.ts
-- src/modules/gastronomy/__mocks__/foodItemMocks.ts
+- src/modules/business/gastronomy/__mocks__/foodItemMocks.ts
 - src/modules/jobs/data/mock-jobs.ts
 ```
 
@@ -91,7 +91,7 @@ Arquivos Afetados:
 - src/core/tourist-points/data/salvador-mock.ts
 - src/modules/guide/__mocks__/touristPointMocks.ts
 - src/modules/admin/pages/AdminPontosEmbarque.tsx
-- src/modules/gastronomy/__mocks__/gastronomyMocks.ts
+- src/modules/business/gastronomy/__mocks__/gastronomyMocks.ts
 ```
 
 ### Mocks em Runtime
@@ -318,7 +318,7 @@ Meta: Chegar a 0 em 4 semanas
 1. src/modules/mobility/constants/index.ts          (25 hardcodes)
 2. src/modules/guide/__mocks__/touristPointMocks.ts (20 hardcodes)
 3. src/core/tourist-points/data/salvador-mock.ts    (18 hardcodes)
-4. src/modules/gastronomy/__mocks__/foodItemMocks.ts(15 hardcodes)
+4. src/modules/business/gastronomy/__mocks__/foodItemMocks.ts(15 hardcodes)
 5. src/shared/types/subscription.ts                 (12 hardcodes)
 ```
 
@@ -442,3 +442,4 @@ npm run dashboard
    - Marcar milestones
    - Reconhecer contribuições
    - Manter motivação alta
+

@@ -39,7 +39,7 @@ import { useCityFeatured } from "@/core/city/hooks/useCityFeatured";
 import { BusinessUrlService } from "@/core/business/services/BusinessUrlService";
 import { classifiedUrlService } from "@/modules/classifieds/services/ClassifiedUrlService";
 import { useClassifiedUrls } from "@/modules/classifieds/hooks/useClassifiedUrls";
-import { useTouristPoints } from "@/core/tourist-points/hooks/useTouristPoints";
+import { useTouristPoints } from "@/modules/guide/tourist-points/hooks/useTouristPoints";
 
 import heroImg from "@/assets/hero-cidade-salvador.jpg";
 import featuredImg from "@/assets/neighborhood-featured.jpg";
@@ -969,3 +969,4 @@ export default function CidadeLandingPage() {
     </div>
   );
 }
+

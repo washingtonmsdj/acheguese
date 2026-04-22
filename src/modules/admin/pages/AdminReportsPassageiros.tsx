@@ -11,8 +11,8 @@ import { useNavigate } from "react-router-dom";
 import { useAdminGuard } from "@/modules/admin/hooks/useAdminGuard";
 import { useSessionContext } from "@/core/session";
 import { profileService } from "@/core/profiles/services/ProfileService"; // ✅ MIGRADO - Usa ProfileService
-import { REPORT_TYPE, REPORT_SEVERITY } from "@/core/mobility/constants"; // ✅ Import constants
-import { MobilityService } from "@/core/mobility/services"; // ✅ Import MobilityService
+import { REPORT_TYPE, REPORT_SEVERITY } from "@/shared/services/mobilityAdmin"; // ✅ Import constants
+import { MobilityService } from "@/shared/services/mobilityAdmin"; // ✅ Import MobilityService
 
 // ✅ SSOT - Define REPORT_STATUS localmente (não existe em constants)
 const REPORT_STATUS = {
@@ -58,7 +58,7 @@ import type {
   REPORT_STATUS,
   REPORT_SEVERITY,
   REPORT_TYPE,
-} from "@/core/mobility/types";
+} from "@/shared/services/mobilityAdmin";
 import { RIDE_STATUS, ALERT_STATUS, USER_ROLE } from "@/shared/types/constants";
 import { logger } from "@/shared/utils/logger";
 
@@ -697,3 +697,4 @@ function ReportCard({ report, onViewDetails }: ReportCardProps) {
     </Card>
   );
 }
+

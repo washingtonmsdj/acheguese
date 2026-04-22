@@ -66,8 +66,8 @@ import {
   ISSUE_STATUS_LABELS,
   ISSUE_PRIORITY_LABELS,
   ISSUE_REPORT_REASON_LABELS,
-} from "@/core/community-issues";
-import type { IssueCategory, IssueStatus, IssuePriority } from "@/core/community-issues";
+} from "@/shared/services/communityIssues";
+import type { IssueCategory, IssueStatus, IssuePriority } from "@/shared/services/communityIssues";
 
 export default function AdminCommunityIssues() {
   const queryClient = useQueryClient();
@@ -774,3 +774,4 @@ export default function AdminCommunityIssues() {
     </div>
   );
 }
+

@@ -1,4 +1,4 @@
-Ôªøimport React, { Suspense } from "react";
+import React, { Suspense } from "react";
 import { NavLink, Outlet, useNavigate, Navigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import {
@@ -39,7 +39,7 @@ import { useState, useEffect } from "react";
 import { Button } from "@/shared/components/ui/button";
 import { useSessionContext } from "@/core/session";
 import { AuthService } from "@/core/auth";
-import { classifiedReportService } from "@/core/classifieds/services";
+import { classifiedReportService } from "@/shared/services/classifiedReports";
 import { logger } from "@/shared/utils/logger";
 import { AdminPageLoader } from "@/shared/components/loading/PageLoader";
 
@@ -51,7 +51,7 @@ const navItems: Array<{
   badge?: string;
   section?: string;
 }> = [
-  // VIS√É∆íO GERAL
+  // VIS√ÉO GERAL
   {
     to: "/admin",
     icon: LayoutDashboard,
@@ -100,7 +100,7 @@ const navItems: Array<{
     section: "mobilidade",
   },
 
-  // CONTE√É≈°DO & CADASTROS
+  // CONTE√öDO & CADASTROS
   {
     to: "/admin/banners",
     icon: Image,
@@ -123,7 +123,7 @@ const navItems: Array<{
   {
     to: "/admin/services",
     icon: Wrench,
-    label: "Servi√ßos",
+    label: "ServiÁos",
     section: "conteudo",
   },
   {
@@ -135,7 +135,7 @@ const navItems: Array<{
   {
     to: "/admin/classificados/denuncias",
     icon: Flag,
-    label: "Den√∫ncias",
+    label: "Den˙ncias",
     badge: "pendingReportsCount",
     section: "moderacao",
   },
@@ -155,27 +155,27 @@ const navItems: Array<{
   {
     to: "/admin/promocoes",
     icon: Ticket,
-    label: "Promo√ß√µes",
+    label: "PromoÁıes",
     section: "conteudo",
   },
 
-  // MODERA√á√ÉO & SEGURAN√áA
+  // MODERA«√O & SEGURAN«A
   {
     to: "/admin/moderacao-completa",
     icon: ShieldCheck,
-    label: "Modera√ß√£o Geral",
+    label: "ModeraÁ„o Geral",
     section: "moderacao",
   },
   {
     to: "/admin/verificacoes",
     icon: ShieldCheck,
-    label: "Verifica√ß√µes",
+    label: "VerificaÁıes",
     section: "moderacao",
   },
   {
     to: "/admin/reivindicacoes",
     icon: AlertTriangle,
-    label: "Reivindica√ß√µes",
+    label: "ReivindicaÁıes",
     section: "moderacao",
   },
   {
@@ -187,7 +187,7 @@ const navItems: Array<{
   {
     to: "/admin/community-alerts",
     icon: AlertTriangle,
-    label: "Alertas Comunit√°rios",
+    label: "Alertas Comunit·rios",
     section: "comunidade",
   },
   {
@@ -198,7 +198,7 @@ const navItems: Array<{
   },
 
   // COMUNIDADE
-  { to: "/admin/users", icon: Users, label: "Usu√°rios", section: "comunidade" },
+  { to: "/admin/users", icon: Users, label: "Usu·rios", section: "comunidade" },
   {
     to: "/admin/zeladoria",
     icon: Home,
@@ -214,7 +214,7 @@ const navItems: Array<{
   {
     to: "/admin/gamificacao",
     icon: Trophy,
-    label: "Gamifica√ß√£o",
+    label: "GamificaÁ„o",
     section: "comunidade",
   },
 
@@ -228,7 +228,7 @@ const navItems: Array<{
   {
     to: "/admin/roles",
     icon: UserCog,
-    label: "Roles & Permiss√µes",
+    label: "Roles & Permissıes",
     section: "sistema",
   },
   {
@@ -246,25 +246,25 @@ const navItems: Array<{
   {
     to: "/admin/notifications",
     icon: Bell,
-    label: "Notifica√ß√µes",
+    label: "NotificaÁıes",
     section: "sistema",
   },
   {
     to: "/admin/configuracoes",
     icon: Settings2,
-    label: "Configura√ß√µes",
+    label: "ConfiguraÁıes",
     section: "sistema",
   },
   {
     to: "/admin/operacoes",
     icon: Settings2,
-    label: "Opera√ß√µes",
+    label: "OperaÁıes",
     section: "sistema",
   },
   {
     to: "/admin/analytics",
     icon: BarChart3,
-    label: "Analytics Avan√ßado",
+    label: "Analytics AvanÁado",
     section: "sistema",
   },
   {
@@ -294,7 +294,7 @@ const navItems: Array<{
   {
     to: "/admin/territory-management",
     icon: MapPin,
-    label: "Gest√£o de Territ√≥rios",
+    label: "Gest„o de TerritÛrios",
     section: "sistema",
   },
   {
@@ -306,7 +306,7 @@ const navItems: Array<{
   {
     to: "/admin/guia/pontos-turisticos",
     icon: MapPin,
-    label: "Pontos Tur√≠sticos",
+    label: "Pontos TurÌsticos",
     section: "conteudo",
   },
   {
@@ -326,7 +326,7 @@ export default function AdminLayout() {
   const adminBypassEnabled =
     import.meta.env.DEV && import.meta.env.VITE_ADMIN_BYPASS === "true";
 
-  // Buscar contagem de den√∫ncias pendentes
+  // Buscar contagem de den˙ncias pendentes
   const { data: pendingReportsCount = 0 } = useQuery({
     queryKey: ["admin-pending-reports-count"],
     queryFn: () => classifiedReportService.getPendingReportsCount(),
@@ -391,7 +391,7 @@ export default function AdminLayout() {
           <div>
             <h1 className="text-xl font-bold text-white mb-1">Acesso Restrito</h1>
             <p className="text-gray-400 text-sm max-w-xs mx-auto">
-              Sua conta n√£o tem permiss√£o de administrador.
+              Sua conta n„o tem permiss„o de administrador.
             </p>
           </div>
           <button
@@ -440,8 +440,8 @@ export default function AdminLayout() {
           const sectionLabels: Record<string, string> = {
             overview: "",
             mobilidade: "MOBILIDADE",
-            conteudo: "CONTE√öDO & CADASTROS",
-            moderacao: "MODERA√á√ÉO & SEGURAN√áA",
+            conteudo: "CONTE⁄DO & CADASTROS",
+            moderacao: "MODERA«√O & SEGURAN«A",
             comunidade: "COMUNIDADE",
             sistema: "SISTEMA",
           };
@@ -543,3 +543,4 @@ export default function AdminLayout() {
     </div>
   );
 }
+

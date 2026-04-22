@@ -33,7 +33,7 @@ import { Button } from '@/shared/components/ui/button';
 import { BusinessLogo } from '@/shared/components/ui/business-logo';
 import { useTerritorialContext } from '@/core/routing/components/TerritorialLayout';
 import { useTerritoryFilter } from '@/core/location/hooks/useTerritoryFilter';
-import { useLandingFeatured } from '@/core/landing/useLandingFeatured';
+import { useLandingFeatured } from '@/app/features/landing/hooks/useLandingFeatured';
 import { useTerritorialHighlights } from '@/core/territorial/highlights/useTerritorialHighlights';
 import { useTerritoryStats } from '@/core/territorial/hooks/useTerritoryStats';
 import { MODULE_SLUGS } from '@/core/routing/utils/territoryUrls';
@@ -900,3 +900,5 @@ export default function ComplexoNordesteLandingPage() {
     </div>
   );
 }
+
+

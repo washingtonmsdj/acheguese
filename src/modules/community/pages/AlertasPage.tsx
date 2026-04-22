@@ -7,7 +7,7 @@
 
 import React from "react";
 import { TooltipProvider } from "@/shared/components/ui/tooltip";
-import { AlertFeedSection } from "@/core/community-alerts";
+import { AlertFeedSection } from "@/modules/community/alerts";
 import { communityLocationService } from "@/modules/community/services/CommunityLocationService";
 import { useLocationContext } from "@/core/location";
 
@@ -39,3 +39,4 @@ export default function AlertasPage() {
     </TooltipProvider>
   );
 }
+

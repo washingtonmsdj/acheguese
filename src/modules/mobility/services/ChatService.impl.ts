@@ -1,4 +1,4 @@
-/**
+﻿/**
  * ChatService - SSOT para chat de corridas
  * 
  * IMPLEMENTAÇÃO REAL - Não importar diretamente
@@ -12,7 +12,7 @@
  * @module modules/mobility/services
  */
 import { logger } from '@/shared/utils/logger';
-import { supabase } from '@/core/supabase';
+import { supabase } from '@/integrations/supabase';
 import * as chatQueries from './chat.queries';
 import * as chatMutations from './chat.mutations';
 
@@ -198,4 +198,3 @@ export const ChatFacade = {
   queries: chatQueries,
   mutations: chatMutations,
 } as const;
-

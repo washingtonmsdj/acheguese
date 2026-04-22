@@ -74,7 +74,7 @@ Nao e objetivo deste escopo:
 
 ## 4) Estrutura alvo de pastas/arquivos
 
-Criar modulo seguindo o padrao de `src/modules/gastronomy`.
+Criar modulo seguindo o padrao de `src/modules/business/gastronomy`.
 
 ```txt
 src/modules/education/
@@ -799,3 +799,4 @@ Esta secao define exatamente como diferenciar "pagina premium de assinatura" de 
 - Estrutura visual base unica para manter consistencia.
 - Diferenca entre planos por blocos/capacidades, nao por criar 2 apps diferentes.
 - Conteudo e identidade da escola continuam personalizados.
+

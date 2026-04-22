@@ -72,8 +72,8 @@ import { ptBR } from "date-fns/locale";
 import {
   ALERT_CATEGORY_LABELS,
   ALERT_REPORT_REASON_LABELS,
-} from "@/core/community-alerts";
-import type { AlertCategory, AlertStatus } from "@/core/community-alerts";
+} from "@/shared/services/communityAlerts";
+import type { AlertCategory, AlertStatus } from "@/shared/services/communityAlerts";
 
 export default function AdminCommunityAlerts() {
   const queryClient = useQueryClient();
@@ -766,3 +766,4 @@ export default function AdminCommunityAlerts() {
     </div>
   );
 }
+

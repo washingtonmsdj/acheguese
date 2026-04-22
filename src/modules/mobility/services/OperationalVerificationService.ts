@@ -1,4 +1,4 @@
-/**
+﻿/**
  * GATE 7: OPERATIONAL VERIFICATION SERVICE
  * 
  * Service para gerenciar verificações operacionais (PIN) de corridas e entregas.
@@ -14,7 +14,7 @@
  * - Verificar expiração
  */
 import { logger } from '@/shared/utils/logger';
-import { supabase } from '@/core/supabase';
+import { supabase } from '@/integrations/supabase/supabase';
 import bcrypt from 'bcryptjs';
 import { profileService } from '@/core/profiles/services/ProfileService';
 import type {
@@ -38,16 +38,6 @@ export interface ServiceResult<T = void> {
   success: boolean;
   data?: T;
   error?: string;
-}
-
-function isMissingOperationalConfigError(error: unknown): boolean {
-  if (!error || typeof error !== "object") return false;
-  const typedError = error as { code?: string; message?: string };
-  return (
-    typedError.code === "42P01" || // undefined_table
-    typedError.code === "42703" || // undefined_column
-    typedError.message?.toLowerCase().includes("does not exist") === true
-  );
 }
 
 export class OperationalVerificationService {
@@ -413,28 +403,20 @@ export class OperationalVerificationService {
 
       // 2. Verificar configuração da operação (se houver)
       if (params.operationId) {
-        const { data: operation, error: operationError } = await supabase
-          .from('operations')
-          .select('requires_pin_for_deliveries')
-          .eq('id', params.operationId)
-          .maybeSingle();
-
-        if (operationError) {
-          if (!isMissingOperationalConfigError(operationError)) {
-            throw operationError;
-          }
-
-          logger.warn('Operational PIN config table unavailable, skipping operation-level rule', {
-            operationId: params.operationId,
-            code: (operationError as { code?: string }).code,
-          });
-        } else if ((operation as { requires_pin_for_deliveries?: boolean } | null)?.requires_pin_for_deliveries === true) {
-          return {
-            isRequired: true,
-            requiredBy: 'operation',
-            reason: 'Operation requires PIN verification',
-          };
-        }
+        // TODO: Implementar quando houver tabela de operações
+        // const { data: operation } = await supabase
+        //   .from('operations')
+        //   .select('requires_pin_for_deliveries')
+        //   .eq('id', params.operationId)
+        //   .single();
+        //
+        // if (operation?.requires_pin_for_deliveries === true) {
+        //   return {
+        //     isRequired: true,
+        //     requiredBy: 'operation',
+        //     reason: 'Operation requires PIN verification',
+        //   };
+        // }
       }
 
       // 3. Verificar preferência do remetente
@@ -467,7 +449,7 @@ export class OperationalVerificationService {
   }
 
   /**
-   * Wrapper de assinatura para consumidores anteriores.
+   * @deprecated Use resolveRidePINRequirement() or resolveDeliveryPINRequirement()
    */
   static async isPINRequired(
     params: CheckPINRequiredParams
@@ -521,7 +503,6 @@ export class OperationalVerificationService {
     return /^\d{4}$/.test(pin);
   }
 }
-
 
 
 

@@ -1,7 +1,11 @@
 import { MobilityDetailRow } from "./MobilityDetailRow";
-import type { Tables } from "@/core/supabase";
 
-type DriverDataRecord = Tables<"driver_data">;
+interface DriverDataRecord {
+  vehicle_model: string | null;
+  vehicle_plate: string | null;
+  vehicle_year: number | null;
+  vehicle_color: string | null;
+}
 
 interface DriverVehicleDetailsCardProps {
   readonly driverSnapshot: DriverDataRecord;
@@ -41,4 +45,5 @@ export function DriverVehicleDetailsCard({
     </div>
   );
 }
+
 

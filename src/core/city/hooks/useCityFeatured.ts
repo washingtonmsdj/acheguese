@@ -6,7 +6,7 @@
  */
 
 import { useQuery } from '@tanstack/react-query';
-import { createLandingFeaturedService } from '@/core/landing/createLandingFeaturedService';
+import { createLandingFeaturedService } from '@/app/features/landing/hooks/createLandingFeaturedService';
 import type { TerritoryFilter } from '@/core/location/types';
 
 const STALE_TIME = 5 * 60 * 1000;
@@ -46,3 +46,5 @@ export function useCityFeatured(state: string = 'ba', city: string = 'salvador')
     isLoading: businesses.isLoading || services.isLoading || classifieds.isLoading,
   };
 }
+
+

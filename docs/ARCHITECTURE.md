@@ -34,6 +34,13 @@ Database -> Service -> Hook -> Component
 - `modules/*`: composicao de telas e casos de uso do dominio, consumindo servicos canonicos.
 - `integrations/*`: detalhes de infraestrutura, nunca regra de negocio de dominio.
 
+## Taxonomia oficial
+- `business`/`empresas` e o dominio base horizontal para entidades empresariais.
+- `business` nao e vertical.
+- Verticais empresariais oficiais sao somente as chaves declaradas no contrato `src/core/verticals/config.ts`.
+- Estado atual do projeto: `gastronomy` e o unico vertical oficialmente formalizado.
+- Modulo existente em `src/modules/*` nao equivale automaticamente a vertical oficial.
+
 ## Documentacao Relacionada
 - [CURRENT_RULES.md](./CURRENT_RULES.md)
 - [DATA_MODELING.md](./DATA_MODELING.md)

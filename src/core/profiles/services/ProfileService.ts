@@ -1,19 +1,19 @@
-﻿/**
+/**
 /**
  * ProfileServiceLegacy - IDENTITY CORE (FASE PROFILE.1)
  * 
- * Fonte Ãºnica de verdade da identidade do usuÃ¡rio
- * ResponsÃ¡vel por:
- * - Dados bÃ¡sicos (nome, avatar, etc)
+ * Fonte única de verdade da identidade do usuário
+ * Responsável por:
+ * - Dados básicos (nome, avatar, etc)
  * - Status (ativo, bloqueado, suspenso)
- * - VerificaÃ§Ã£o
+ * - Verificação
  * - Plano (basic/premium)
- * - NÃ­vel/score (apenas leitura)
- * - PermissÃµes centralizadas
+ * - Nível/score (apenas leitura)
+ * - Permissões centralizadas
  * 
  * REGRAS:
  * - ZERO acessos diretos a supabase.from('profiles') fora deste service
- * - Todas as regras de negÃ³cio ficam aqui
+ * - Todas as regras de negócio ficam aqui
  * - Hooks apenas fazem fetch/loading/error
  */
 
@@ -21,7 +21,7 @@ import { supabase } from "@/integrations/supabase";
 import { logger } from "@/shared/utils/logger";
 import { trackError } from "@/shared/utils/errorTracking";
 import { publicIdentityService, PublicIdentityService } from "@/core/public-identity";
-import { createTypedQuery, callRPC } from "@/core/supabase/services/supabaseHelpers";
+import { createTypedQuery, callRPC } from "@/integrations/supabase/services/supabaseHelpers";
 import type {
   AdminFilters,
   AdminProfileListItem,
@@ -52,13 +52,13 @@ import type {
 
 export class ProfileServiceLegacy {
   // ============================================================================
-  // FASE PROFILE.1 â€” IDENTITY CORE METHODS
+  // FASE PROFILE.1 — IDENTITY CORE METHODS
   // ============================================================================
 
   /**
-   * ðŸ§  PROFILE CONTEXT - CoraÃ§Ã£o do sistema
-   * Retorna contexto completo do usuÃ¡rio incluindo status, permissÃµes e plano
-   * @param userId - ID do usuÃ¡rio
+   * 🧠 PROFILE CONTEXT - Coração do sistema
+   * Retorna contexto completo do usuário incluindo status, permissões e plano
+   * @param userId - ID do usuário
    */
   async getProfileContext(userId: string): Promise<ProfileContext | null> {
     try {
@@ -81,13 +81,13 @@ export class ProfileServiceLegacy {
       // Calcular status
       const status = this._calculateProfileStatus(profile, bannedUser);
 
-      // Calcular permissÃµes baseadas no status
+      // Calcular permissões baseadas no status
       const permissions = await this._calculatePermissions(status, profile);
 
       // Calcular plano
       const plan = this._calculatePlan(subscription);
 
-      // Calcular reputaÃ§Ã£o
+      // Calcular reputação
       const reputation = this._calculateReputation(profile);
 
       return {
@@ -114,11 +114,11 @@ export class ProfileServiceLegacy {
   }
 
   // ============================================================================
-  // MÃ‰TODOS PRIVADOS - REGRAS DE NEGÃ“CIO
+  // MÉTODOS PRIVADOS - REGRAS DE NEGÓCIO
   // ============================================================================
 
   /**
-   * Calcula status do perfil baseado em dados de moderaÃ§Ã£o
+   * Calcula status do perfil baseado em dados de moderação
    */
   private _calculateProfileStatus(
     profile: Profile,
@@ -139,14 +139,14 @@ export class ProfileServiceLegacy {
   }
 
   /**
-   * Calcula permissÃµes baseadas no status do usuÃ¡rio
-   * âœ… LOTE 6 - Refatorado para usar AdminRolesService
+   * Calcula permissões baseadas no status do usuário
+   * ✅ LOTE 6 - Refatorado para usar AdminRolesService
    */
   private async _calculatePermissions(
     status: ProfileStatus,
     profile: Profile,
   ): Promise<ProfilePermissions> {
-    // UsuÃ¡rio bloqueado ou suspenso nÃ£o pode fazer nada
+    // Usuário bloqueado ou suspenso não pode fazer nada
     if (status.isBlocked || status.isSuspended) {
       return {
         canPost: false,
@@ -157,7 +157,7 @@ export class ProfileServiceLegacy {
       };
     }
 
-    // UsuÃ¡rio inativo tem permissÃµes limitadas
+    // Usuário inativo tem permissões limitadas
     if (!status.isActive) {
       return {
         canPost: false,
@@ -168,7 +168,7 @@ export class ProfileServiceLegacy {
       };
     }
 
-    // âœ… LOTE 6 - Verificar se Ã© admin/moderador via AdminRolesService
+    // ✅ LOTE 6 - Verificar se é admin/moderador via AdminRolesService
     let canModerate = false;
     try {
       const { adminRolesService } =
@@ -181,7 +181,7 @@ export class ProfileServiceLegacy {
       // Silently fail - default to no moderation
     }
 
-    // UsuÃ¡rio ativo normal
+    // Usuário ativo normal
     return {
       canPost: true,
       canComment: true,
@@ -192,7 +192,7 @@ export class ProfileServiceLegacy {
   }
 
   /**
-   * Calcula plano do usuÃ¡rio
+   * Calcula plano do usuário
    */
   private _calculatePlan(subscription: any): ProfilePlan {
     if (!subscription || !subscription.active) {
@@ -210,7 +210,7 @@ export class ProfileServiceLegacy {
   }
 
   /**
-   * Calcula reputaÃ§Ã£o do usuÃ¡rio
+   * Calcula reputação do usuário
    */
   private _calculateReputation(profile: Profile): ProfileReputation {
     return {
@@ -221,18 +221,18 @@ export class ProfileServiceLegacy {
   }
 
   /**
-   * Calcula rank baseado na reputaÃ§Ã£o
+   * Calcula rank baseado na reputação
    */
   private _calculateRank(reputation: number): string {
     if (reputation >= 1000) return "Expert";
-    if (reputation >= 500) return "AvanÃ§ado";
-    if (reputation >= 100) return "IntermediÃ¡rio";
+    if (reputation >= 500) return "Avançado";
+    if (reputation >= 100) return "Intermediário";
     return "Iniciante";
   }
 
   /**
-   * Busca status de usuÃ¡rio banido
-   * âœ… LOTE 9A - Delegado para ModerationService (SSOT para banned_users)
+   * Busca status de usuário banido
+   * ✅ LOTE 9A - Delegado para ModerationService (SSOT para banned_users)
    */
   private async _getBannedUserStatus(userId: string): Promise<any | null> {
     try {
@@ -246,7 +246,7 @@ export class ProfileServiceLegacy {
   }
 
   /**
-   * Busca assinatura do usuÃ¡rio
+   * Busca assinatura do usuário
    */
   private async _getUserSubscription(userId: string) {
     try {
@@ -257,7 +257,7 @@ export class ProfileServiceLegacy {
         .eq("active", true)
         .maybeSingle();
 
-      // Ignora erros de "nÃ£o encontrado" ou "tabela nÃ£o existe"
+      // Ignora erros de "não encontrado" ou "tabela não existe"
       if (error) {
         if (!["PGRST116", "42P01", "PGRST301"].includes(error.code || "")) {
           logger.error("Error fetching user subscription:", error);
@@ -273,7 +273,7 @@ export class ProfileServiceLegacy {
   }
 
   /**
-   * Busca status de verificaÃ§Ã£o
+   * Busca status de verificação
    */
   private async _getVerificationStatus(profileId: string) {
     try {
@@ -290,7 +290,7 @@ export class ProfileServiceLegacy {
   }
 
   // ============================================================================
-  // MÃ‰TODOS EXISTENTES (mantidos para compatibilidade)
+  // MÉTODOS EXISTENTES (mantidos para compatibilidade)
   // ============================================================================
 
   /**
@@ -317,8 +317,8 @@ export class ProfileServiceLegacy {
   }
 
   /**
-   * Busca perfil ativo do usuÃ¡rio
-   * @param userId - ID do usuÃ¡rio (opcional, usa usuÃ¡rio autenticado se nÃ£o fornecido)
+   * Busca perfil ativo do usuário
+   * @param userId - ID do usuário (opcional, usa usuário autenticado se não fornecido)
    */
   async getActiveProfile(userId?: string): Promise<Profile | null> {
     let targetUserId = userId;
@@ -344,14 +344,14 @@ export class ProfileServiceLegacy {
       return null;
     }
 
-    // RPC retorna SETOF profiles (array) â€” pegar o primeiro elemento
+    // RPC retorna SETOF profiles (array) — pegar o primeiro elemento
     const profile = Array.isArray(data) ? data[0] : data;
     return profile || null;
   }
 
   /**
-   * Busca todos os perfis de um usuÃ¡rio
-   * @param userId - ID do usuÃ¡rio (opcional, usa usuÃ¡rio autenticado se nÃ£o fornecido)
+   * Busca todos os perfis de um usuário
+   * @param userId - ID do usuário (opcional, usa usuário autenticado se não fornecido)
    */
   async getProfilesByUserId(userId?: string): Promise<Profile[]> {
     let targetUserId = userId;
@@ -383,15 +383,15 @@ export class ProfileServiceLegacy {
   }
 
   /**
-   * Busca perfil especÃ­fico por tipo
-   * @param userId - ID do usuÃ¡rio
+   * Busca perfil específico por tipo
+   * @param userId - ID do usuário
    * @param profileType - Tipo do perfil (personal, driver, business, professional)
    */
   async getProfileByType(
     userId: string,
     profileType: "personal" | "driver" | "business" | "professional",
   ): Promise<Profile | null> {
-    // âœ… CORREÃ‡ÃƒO: Buscar todos e pegar o primeiro (caso haja duplicados)
+    // ✅ CORREÇÃO: Buscar todos e pegar o primeiro (caso haja duplicados)
     const { data, error } = await (supabase as any)
       .from("profiles")
       .select("*")
@@ -409,13 +409,13 @@ export class ProfileServiceLegacy {
       return null;
     }
 
-    // Retornar o primeiro resultado (ou null se nÃ£o houver)
+    // Retornar o primeiro resultado (ou null se não houver)
     return data && data.length > 0 ? data[0] : null;
   }
 
   /**
-   * Garante que o usuÃ¡rio tenha um profile do tipo driver.
-   * Retorna o profile existente ou cria um novo quando necessÃ¡rio.
+   * Garante que o usuário tenha um profile do tipo driver.
+   * Retorna o profile existente ou cria um novo quando necessário.
    */
   async ensureDriverProfileForUser(userId: string): Promise<Profile | null> {
     try {
@@ -459,9 +459,9 @@ export class ProfileServiceLegacy {
   }
 
   /**
-   * Busca perfil ativo obrigatÃ³rio - lanÃ§a erro se nÃ£o encontrar
-   * @param userId - ID do usuÃ¡rio (opcional, usa usuÃ¡rio autenticado se nÃ£o fornecido)
-   * @throws Error se nÃ£o houver profile ativo
+   * Busca perfil ativo obrigatório - lança erro se não encontrar
+   * @param userId - ID do usuário (opcional, usa usuário autenticado se não fornecido)
+   * @throws Error se não houver profile ativo
    */
   async getRequiredActiveProfile(userId?: string): Promise<Profile> {
     const profile = await this.getActiveProfile(userId);
@@ -500,7 +500,7 @@ export class ProfileServiceLegacy {
   async getByHandle(handle: string): Promise<Profile | null> {
     if (process.env.NODE_ENV === 'development') {
       logger.warn(
-        'âš ï¸  ProfileService.getByHandle() is deprecated.\n' +
+        '⚠️  ProfileService.getByHandle() is deprecated.\n' +
         '   Use getByUsername() instead.\n' +
         '   This method will be removed in v2.0.0'
       );
@@ -510,7 +510,7 @@ export class ProfileServiceLegacy {
 
   /**
    * Cria novo profile
-   * âœ… INTEGRADO: Usa PublicIdentityService para validaÃ§Ã£o de username
+   * ✅ INTEGRADO: Usa PublicIdentityService para validação de username
    * @param profile - Dados do perfil
    */
   async createProfile(profile: CreateProfileData): Promise<Profile> {
@@ -519,7 +519,7 @@ export class ProfileServiceLegacy {
     } = await (supabase as any).auth.getUser();
     if (!user) throw new Error("Not authenticated");
 
-    // Validar campos obrigatÃ³rios da nova arquitetura
+    // Validar campos obrigatórios da nova arquitetura
     if (!profile.profile_type) {
       throw new Error("profile_type is required");
     }
@@ -533,7 +533,7 @@ export class ProfileServiceLegacy {
       throw new Error("city is required");
     }
 
-    // âœ… INTEGRAÃ‡ÃƒO: Validar username via PublicIdentityService
+    // ✅ INTEGRAÇÃO: Validar username via PublicIdentityService
     const validation = PublicIdentityService.validateFormat(
       profile.username,
       'profile'
@@ -543,7 +543,7 @@ export class ProfileServiceLegacy {
       throw new Error(`Invalid username: ${validation.error}`);
     }
 
-    // âœ… INTEGRAÃ‡ÃƒO: Verificar disponibilidade via PublicIdentityService
+    // ✅ INTEGRAÇÃO: Verificar disponibilidade via PublicIdentityService
     const availability = await PublicIdentityService.checkAvailability({
       identifier: profile.username,
       entityType: 'profile',
@@ -583,8 +583,8 @@ export class ProfileServiceLegacy {
   }
 
   /**
-   * Troca o perfil ativo do usuÃ¡rio
-   * @param userId - ID do usuÃ¡rio
+   * Troca o perfil ativo do usuário
+   * @param userId - ID do usuário
    * @param profileId - ID do perfil a ser ativado
    */
   async switchActiveProfile(
@@ -608,19 +608,19 @@ export class ProfileServiceLegacy {
 
   /**
    * Atualiza profile existente
-   * âœ… INTEGRADO: Usa PublicIdentityService para validaÃ§Ã£o e cooldown de username
+   * ✅ INTEGRADO: Usa PublicIdentityService para validação e cooldown de username
    * 
    * REGRAS:
-   * - Alterar name/display_name NÃƒO afeta username
-   * - Username sÃ³ muda se fornecido explicitamente no payload
-   * - MudanÃ§a de username respeita cooldown de 30 dias
-   * - MudanÃ§a de username valida disponibilidade
+   * - Alterar name/display_name NÃO afeta username
+   * - Username só muda se fornecido explicitamente no payload
+   * - Mudança de username respeita cooldown de 30 dias
+   * - Mudança de username valida disponibilidade
    */
   async updateProfile(
     profileId: string,
     updates: UpdateProfileData,
   ): Promise<Profile> {
-    // Se username nÃ£o estÃ¡ sendo alterado, update direto
+    // Se username não está sendo alterado, update direto
     if (!updates.username) {
       return this._updateProfileDirect(profileId, updates);
     }
@@ -631,12 +631,12 @@ export class ProfileServiceLegacy {
       throw new Error('Profile not found');
     }
 
-    // Se username Ã© o mesmo, update direto (sem validaÃ§Ã£o)
+    // Se username é o mesmo, update direto (sem validação)
     if (currentProfile.username === updates.username) {
       return this._updateProfileDirect(profileId, updates);
     }
 
-    // âœ… INTEGRAÃ‡ÃƒO: Validar novo username via PublicIdentityService
+    // ✅ INTEGRAÇÃO: Validar novo username via PublicIdentityService
     const validation = PublicIdentityService.validateFormat(
       updates.username,
       'profile'
@@ -646,7 +646,7 @@ export class ProfileServiceLegacy {
       throw new Error(`Invalid username: ${validation.error}`);
     }
 
-    // âœ… INTEGRAÃ‡ÃƒO: Verificar cooldown via PublicIdentityService
+    // ✅ INTEGRAÇÃO: Verificar cooldown via PublicIdentityService
     const cooldown = await PublicIdentityService.canChangeIdentifier({
       entityType: 'profile',
       entityId: profileId,
@@ -659,7 +659,7 @@ export class ProfileServiceLegacy {
       );
     }
 
-    // âœ… INTEGRAÃ‡ÃƒO: Verificar disponibilidade via PublicIdentityService
+    // ✅ INTEGRAÇÃO: Verificar disponibilidade via PublicIdentityService
     const availability = await PublicIdentityService.checkAvailability({
       identifier: updates.username,
       entityType: 'profile',
@@ -670,13 +670,13 @@ export class ProfileServiceLegacy {
       throw new Error('Username already in use');
     }
 
-    // Update com novo username (trigger registra histÃ³rico)
+    // Update com novo username (trigger registra histórico)
     return this._updateProfileDirect(profileId, updates);
   }
 
   /**
-   * Update direto sem validaÃ§Ã£o de username
-   * Usado internamente quando username nÃ£o muda ou jÃ¡ foi validado
+   * Update direto sem validação de username
+   * Usado internamente quando username não muda ou já foi validado
    */
   private async _updateProfileDirect(
     profileId: string,
@@ -775,7 +775,7 @@ export class ProfileServiceLegacy {
 
   /**
    * Busca profiles por IDs com campos adicionais para admin (alert_banned, neighborhood, created_at)
-   * âœ… SSOT - Ãšnico mÃ©todo autorizado para buscar alert_banned em batch
+   * ✅ SSOT - Único método autorizado para buscar alert_banned em batch
    */
   async getProfilesWithAlertBan(profileIds: string[]): Promise<
     Array<{
@@ -865,10 +865,10 @@ export class ProfileServiceLegacy {
   }
 
   /**
-   * Snapshot privado canÃ´nico do hub de perfil.
+   * Snapshot privado canônico do hub de perfil.
    *
-   * Consolida o estado privado usado por `/perfil` em um Ãºnico agregado
-   * de service, sem espalhar orquestraÃ§Ã£o por hook/pÃ¡gina.
+   * Consolida o estado privado usado por `/perfil` em um único agregado
+   * de service, sem espalhar orquestração por hook/página.
    */
   async getPrivateWorkspace(userId: string): Promise<ProfilePrivateWorkspace> {
     const emptyWorkspace: ProfilePrivateWorkspace = {
@@ -929,17 +929,17 @@ export class ProfileServiceLegacy {
       const { FavoritesService } = await import(
         "@/core/favorites/services/FavoritesService"
       );
-      const { getActiveRide, getUserRides } = await import("@/core/mobility/services");
+      const { getActiveRide, getUserRides } = await import("@/modules/mobility/services");
       const { VerificationService } = await import(
         "@/core/verification/services/VerificationService"
       );
       const { ProfessionalService } = await import(
         "@/core/professional/services/ProfessionalService"
       );
-      const { getUserClassifieds } = await import("@/core/classifieds/services");
-      const { eventService } = await import("@/core/events/services/EventsService");
-      const { communityAlertService } = await import("@/core/community-alerts");
-      const { communityIssueService } = await import("@/core/community-issues");
+      const { getUserClassifieds } = await import("@/modules/classifieds/services");
+      const { eventService } = await import("@/modules/community/events/services/EventsService");
+      const { communityAlertService } = await import("@/modules/community/alerts");
+      const { communityIssueService } = await import("@/modules/community/issues");
       const { notificationService } = await import("@/core/notifications/services");
 
       const profileContextPromise = this.getProfileContext(userId);
@@ -1025,7 +1025,7 @@ export class ProfileServiceLegacy {
             { BusinessUrlService },
           ] = await Promise.all([
             import("@/core/billing"),
-            import("@/core/gastronomy"),
+            import("@/modules/business/gastronomy"),
             import("@/core/verticals/config"),
             import("@/core/qr"),
             import("@/core/qr/types"),
@@ -1205,7 +1205,7 @@ export class ProfileServiceLegacy {
         canModerate: false,
       };
 
-      // eslint-disable-next-line session-context/require-authorization-engine -- Read-only para exibiÃ§Ã£o em UI, nÃ£o para decisÃ£o de autorizaÃ§Ã£o
+      // eslint-disable-next-line session-context/require-authorization-engine -- Read-only para exibição em UI, não para decisão de autorização
       const permissionMatrix = [
         { key: "canPost" as const, label: "Publicar conteudo", allowed: permissions.canPost },
         {
@@ -1376,10 +1376,10 @@ export class ProfileServiceLegacy {
   }
 
   /**
-   * Busca estatÃ­sticas do profile
+   * Busca estatísticas do profile
    */
   async getStats(userId: string) {
-    // âœ… SSOT COMPLIANT - Usa mÃ©todos internos do ProfileService
+    // ✅ SSOT COMPLIANT - Usa métodos internos do ProfileService
     const activeProfile = await this.getActiveProfile(userId);
 
     if (!activeProfile) {
@@ -1390,14 +1390,14 @@ export class ProfileServiceLegacy {
       };
     }
 
-    // âœ… SSOT - Usar PostService para contagem de posts
+    // ✅ SSOT - Usar PostService para contagem de posts
     const { postService } = await import("@/core/posts/services");
 
     const [postsCount, likesCount, favoritesResult] = await Promise.all([
       postService.getPostsCountByUser(userId),
-      // âœ… SSOT - Usar mÃ©todo interno getUserLikesCount
+      // ✅ SSOT - Usar método interno getUserLikesCount
       this.getUserLikesCount(activeProfile.id),
-      // âœ… SSOT - Usar FavoritesService
+      // ✅ SSOT - Usar FavoritesService
       import("@/core/favorites/services/FavoritesService").then(
         ({ FavoritesService }) =>
           FavoritesService.getFavoriteStats(activeProfile.id),
@@ -1412,14 +1412,14 @@ export class ProfileServiceLegacy {
   }
 
   // ============================================================================
-  // ðŸ“Š ESTATÃSTICAS ADMINISTRATIVAS
+  // 📊 ESTATÍSTICAS ADMINISTRATIVAS
   // ============================================================================
 
   /**
-   * ðŸ“Š OBTER CONTAGEM TOTAL DE USUÃRIOS
-   * âœ… SSOT para contagem de usuÃ¡rios no dashboard admin
+   * 📊 OBTER CONTAGEM TOTAL DE USUÁRIOS
+   * ✅ SSOT para contagem de usuários no dashboard admin
    *
-   * @returns NÃºmero total de usuÃ¡rios cadastrados
+   * @returns Número total de usuários cadastrados
    */
   async getTotalProfilesCount(): Promise<number> {
     try {
@@ -1446,11 +1446,11 @@ export class ProfileServiceLegacy {
   }
 
   /**
-   * ðŸ“‹ OBTER USUÃRIOS RECENTES
-   * âœ… SSOT para atividade recente de usuÃ¡rios
+   * 📋 OBTER USUÁRIOS RECENTES
+   * ✅ SSOT para atividade recente de usuários
    *
-   * @param limit - NÃºmero mÃ¡ximo de resultados (padrÃ£o: 10)
-   * @returns Lista de usuÃ¡rios recentes
+   * @param limit - Número máximo de resultados (padrão: 10)
+   * @returns Lista de usuários recentes
    */
   async getRecentProfiles(limit = 10): Promise<any[]> {
     try {
@@ -1480,12 +1480,12 @@ export class ProfileServiceLegacy {
   }
 
   /**
-   * ðŸ“… OBTER USUÃRIOS CRIADOS EM UM PERÃODO
-   * âœ… SSOT para atividade de usuÃ¡rios por perÃ­odo
+   * 📅 OBTER USUÁRIOS CRIADOS EM UM PERÍODO
+   * ✅ SSOT para atividade de usuários por período
    *
-   * @param startDate - Data inicial do perÃ­odo
-   * @param endDate - Data final do perÃ­odo
-   * @returns NÃºmero de usuÃ¡rios criados no perÃ­odo
+   * @param startDate - Data inicial do período
+   * @param endDate - Data final do período
+   * @returns Número de usuários criados no período
    */
   async getProfilesCreatedInPeriod(
     startDate: Date,
@@ -1547,10 +1547,10 @@ export class ProfileServiceLegacy {
   }
 
   /**
-   * Verifica se username estÃ¡ disponÃ­vel
-   * âœ… INTEGRADO: Delega para PublicIdentityService (SSOT)
+   * Verifica se username está disponível
+   * ✅ INTEGRADO: Delega para PublicIdentityService (SSOT)
    * @param username - Username para verificar
-   * @param excludeProfileId - ID do perfil a excluir da verificaÃ§Ã£o (para updates)
+   * @param excludeProfileId - ID do perfil a excluir da verificação (para updates)
    */
   async isUsernameAvailable(
     username: string,
@@ -1574,7 +1574,7 @@ export class ProfileServiceLegacy {
   }
 
   /**
-   * Verifica se handle estÃ¡ disponÃ­vel - DEPRECATED, use isUsernameAvailable
+   * Verifica se handle está disponível - DEPRECATED, use isUsernameAvailable
    * @deprecated Use isUsernameAvailable instead. Will be removed in v2.0.0
    */
   async isHandleAvailable(
@@ -1583,7 +1583,7 @@ export class ProfileServiceLegacy {
   ): Promise<boolean> {
     if (process.env.NODE_ENV === 'development') {
       logger.warn(
-        'âš ï¸  ProfileService.isHandleAvailable() is deprecated.\n' +
+        '⚠️  ProfileService.isHandleAvailable() is deprecated.\n' +
         '   Use isUsernameAvailable() instead.\n' +
         '   This method will be removed in v2.0.0'
       );
@@ -1596,8 +1596,8 @@ export class ProfileServiceLegacy {
   // ============================================================================
 
   /**
-   * Read model para feeds, listas e comentÃ¡rios
-   * Evita N+1 queries e nÃ£o expÃµe shape do banco
+   * Read model para feeds, listas e comentários
+   * Evita N+1 queries e não expõe shape do banco
    */
   async getProfilesByIds(ids: string[]): Promise<Profile[]> {
     if (ids.length === 0) return [];
@@ -1639,7 +1639,7 @@ export class ProfileServiceLegacy {
       return [];
     }
 
-    // Mapear para shape de domÃ­nio (camelCase)
+    // Mapear para shape de domínio (camelCase)
     return (data || []).map((profile) => ({
       id: profile.id,
       userId: profile.user_id,
@@ -1650,8 +1650,8 @@ export class ProfileServiceLegacy {
   }
 
   /**
-   * GATE 2 - Read model estendido para casos especÃ­ficos
-   * Usado quando ProfileSummary nÃ£o tem campos suficientes
+   * GATE 2 - Read model estendido para casos específicos
+   * Usado quando ProfileSummary não tem campos suficientes
    */
   async getProfilesSummaryExtended(
     ids: string[],
@@ -1674,7 +1674,7 @@ export class ProfileServiceLegacy {
       return [];
     }
 
-    // Mapear para shape de domÃ­nio (camelCase)
+    // Mapear para shape de domínio (camelCase)
     return (data || []).map((profile) => ({
       id: profile.id,
       name: profile.name,
@@ -1686,8 +1686,8 @@ export class ProfileServiceLegacy {
   }
 
   /**
-   * Read model para painÃ©is administrativos
-   * Campos especÃ­ficos para administraÃ§Ã£o
+   * Read model para painéis administrativos
+   * Campos específicos para administração
    */
   async getAdminProfilesList(
     filters?: AdminFilters,
@@ -1727,7 +1727,7 @@ export class ProfileServiceLegacy {
       return [];
     }
 
-    // Mapear para shape de domÃ­nio (camelCase)
+    // Mapear para shape de domínio (camelCase)
     return (data || []).map((profile) => ({
       id: profile.id,
       name: profile.name,
@@ -1741,8 +1741,8 @@ export class ProfileServiceLegacy {
   }
 
   /**
-   * Busca profiles com filtros avanÃ§ados e paginaÃ§Ã£o para uso administrativo.
-   * Suporta filtro por tipo, visibilidade, busca textual e paginaÃ§Ã£o com count total.
+   * Busca profiles com filtros avançados e paginação para uso administrativo.
+   * Suporta filtro por tipo, visibilidade, busca textual e paginação com count total.
    */
   async getProfilesFiltered(filters: {
     search?: string;
@@ -1816,8 +1816,8 @@ export class ProfileServiceLegacy {
   }
 
   /**
-   * PermissÃµes-base tipadas (nÃ£o motor genÃ©rico)
-   * Apenas identidade bÃ¡sica, regras de domÃ­nio ficam no domÃ­nio
+   * Permissões-base tipadas (não motor genérico)
+   * Apenas identidade básica, regras de domínio ficam no domínio
    */
   async getBasePermissions(userId: string): Promise<BasePermissions> {
     const context = await this.getProfileContext(userId);
@@ -1837,13 +1837,13 @@ export class ProfileServiceLegacy {
   }
 
   // ============================================================================
-  // MÃ‰TODOS TEMPORÃRIOS PARA MOBILIDADE - GATE 2 CLOSURE
+  // MÉTODOS TEMPORÁRIOS PARA MOBILIDADE - GATE 2 CLOSURE
   // TODO: Mover para MobilityService quando refatorar arquitetura
   // ============================================================================
 
   /**
-   * ObtÃ©m active_ride_id de um perfil
-   * TEMPORÃRIO: Este campo deveria estar em tabela separada de estado de mobilidade
+   * Obtém active_ride_id de um perfil
+   * TEMPORÁRIO: Este campo deveria estar em tabela separada de estado de mobilidade
    */
   async getActiveRideId(profileId: string): Promise<string | null> {
     const { data, error } = await (supabase as any)
@@ -1858,7 +1858,7 @@ export class ProfileServiceLegacy {
 
   /**
    * Define active_ride_id de um perfil
-   * TEMPORÃRIO: Este campo deveria estar em tabela separada de estado de mobilidade
+   * TEMPORÁRIO: Este campo deveria estar em tabela separada de estado de mobilidade
    */
   async setActiveRideId(
     profileId: string,
@@ -1881,7 +1881,7 @@ export class ProfileServiceLegacy {
 
   /**
    * Limpa active_ride_id de um perfil (apenas se corresponder ao rideId fornecido)
-   * TEMPORÃRIO: Este campo deveria estar em tabela separada de estado de mobilidade
+   * TEMPORÁRIO: Este campo deveria estar em tabela separada de estado de mobilidade
    */
   async clearActiveRideId(profileId: string, rideId: string): Promise<void> {
     const { error } = await (supabase as any)
@@ -1901,8 +1901,8 @@ export class ProfileServiceLegacy {
   }
 
   /**
-   * Busca dados bÃ¡sicos de perfis para mobilidade (passageiro/motorista)
-   * TEMPORÃRIO: Retorna campos especÃ­ficos de mobilidade
+   * Busca dados básicos de perfis para mobilidade (passageiro/motorista)
+   * TEMPORÁRIO: Retorna campos específicos de mobilidade
    */
   async getProfilesForRides(
     ids: string[],
@@ -1932,7 +1932,7 @@ export class ProfileServiceLegacy {
     return data || [];
   }
   /**
-   * Remove suspensÃ£o de um usuÃ¡rio
+   * Remove suspensão de um usuário
    */
   async unsuspendUser(userId: string): Promise<void> {
     await this.updateProfile(userId, {
@@ -1944,7 +1944,7 @@ export class ProfileServiceLegacy {
   }
 
   /**
-   * Verifica um usuÃ¡rio (marca como verificado)
+   * Verifica um usuário (marca como verificado)
    */
   async verifyUser(userId: string): Promise<void> {
     try {
@@ -1968,7 +1968,7 @@ export class ProfileServiceLegacy {
   }
 
   /**
-   * Busca perfis por status de verificaÃ§Ã£o
+   * Busca perfis por status de verificação
    * Usado por VerificationService para listar perfis pendentes/verificados/rejeitados
    */
   async getProfilesByVerificationStatus(
@@ -2018,8 +2018,8 @@ export class ProfileServiceLegacy {
   }
 
   /**
-   * Busca estatÃ­sticas de verificaÃ§Ã£o
-   * Retorna contagem de perfis por status de verificaÃ§Ã£o
+   * Busca estatísticas de verificação
+   * Retorna contagem de perfis por status de verificação
    */
   async getVerificationStats(): Promise<{
     total_pending: number;
@@ -2058,8 +2058,8 @@ export class ProfileServiceLegacy {
   }
 
   /**
-   * Atualiza status de verificaÃ§Ã£o de um perfil
-   * MÃ©todo genÃ©rico usado pelos mÃ©todos especÃ­ficos abaixo
+   * Atualiza status de verificação de um perfil
+   * Método genérico usado pelos métodos específicos abaixo
    */
   async updateVerificationStatus(
     profileId: string,
@@ -2098,28 +2098,28 @@ export class ProfileServiceLegacy {
   }
 
   /**
-   * Aprova verificaÃ§Ã£o de um perfil
+   * Aprova verificação de um perfil
    */
   async approveVerification(profileId: string): Promise<void> {
     await this.updateVerificationStatus(profileId, 'verified');
   }
 
   /**
-   * Rejeita verificaÃ§Ã£o de um perfil
+   * Rejeita verificação de um perfil
    */
   async rejectVerification(profileId: string, reason?: string): Promise<void> {
     await this.updateVerificationStatus(profileId, 'rejected', reason);
   }
 
   /**
-   * Revoga verificaÃ§Ã£o de um perfil
+   * Revoga verificação de um perfil
    */
   async revokeVerification(profileId: string): Promise<void> {
     await this.updateVerificationStatus(profileId, 'none');
   }
 
   /**
-   * Suspende um usuÃ¡rio
+   * Suspende um usuário
    */
   async suspendUser(
     userId: string,
@@ -2152,7 +2152,7 @@ export class ProfileServiceLegacy {
   }
 
   /**
-   * Calcula data de fim da suspensÃ£o
+   * Calcula data de fim da suspensão
    */
   private _calculateSuspensionEnd(duration: string): string {
     const now = new Date();
@@ -2171,7 +2171,7 @@ export class ProfileServiceLegacy {
   }
 
   /**
-   * Busca todos os usuÃ¡rios com contexto de status
+   * Busca todos os usuários com contexto de status
    */
   async getAllUsers(): Promise<
     Array<{
@@ -2225,12 +2225,12 @@ export class ProfileServiceLegacy {
   }
 
   // ============================================================================
-  // SSOT: MÃ©todos auxiliares para dados complementares de perfil
+  // SSOT: Métodos auxiliares para dados complementares de perfil
   // ============================================================================
 
   /**
-   * Busca roles de um usuÃ¡rio
-   * âœ… LOTE 6 - Refatorado para usar AdminRolesService
+   * Busca roles de um usuário
+   * ✅ LOTE 6 - Refatorado para usar AdminRolesService
    */
   async getUserRoles(userId: string): Promise<string[]> {
     try {
@@ -2253,7 +2253,7 @@ export class ProfileServiceLegacy {
    */
   async getUserLikesCount(profileId: string): Promise<number> {
     try {
-      // Import dinÃ¢mico evita ciclo ProfileService <-> SocialInteractionsService.
+      // Import dinâmico evita ciclo ProfileService <-> SocialInteractionsService.
       const { SocialInteractionsService } = await import(
         "@/core/social/services/SocialInteractionsService"
       );
@@ -2270,7 +2270,7 @@ export class ProfileServiceLegacy {
   }
 
   /**
-   * Conta favoritos de um usuÃ¡rio
+   * Conta favoritos de um usuário
    */
   async getUserFavoritesCount(userId: string): Promise<number> {
     const { count, error } = await (supabase as any)
@@ -2283,7 +2283,7 @@ export class ProfileServiceLegacy {
   }
 
   /**
-   * Busca businesses de mÃºltiplos perfis (para useProfile)
+   * Busca businesses de múltiplos perfis (para useProfile)
    */
   async getUserBusinessesByProfiles(profileIds: string[]): Promise<any[]> {
     if (!profileIds.length) return [];
@@ -2349,7 +2349,7 @@ export class ProfileServiceLegacy {
   }
 
   /**
-   * Busca favoritos de negÃ³cios de um usuÃ¡rio
+   * Busca favoritos de negócios de um usuário
    */
   async getUserFavoriteBusinesses(userId: string): Promise<any[]> {
     const { data: favs, error } = await (supabase as any)
@@ -2381,7 +2381,7 @@ export class ProfileServiceLegacy {
   }
 
   /**
-   * Busca ranking de usuÃ¡rios por pontos
+   * Busca ranking de usuários por pontos
    */
   async getRanking(
     limit: number = 50,
@@ -2405,7 +2405,7 @@ export class ProfileServiceLegacy {
 
     return (data || []).map((p) => ({
       id: p.id,
-      name: p.name || "UsuÃ¡rio",
+      name: p.name || "Usuário",
       avatar_url: p.avatar_url || "",
       pontos: p.pontos || 0,
     }));
@@ -2413,11 +2413,11 @@ export class ProfileServiceLegacy {
 
   /**
    * Busca dados de motorista de um perfil (admin)
-   * âœ… LOTE 9A - Delegado para MobilityService (SSOT para driver_data)
+   * ✅ LOTE 9A - Delegado para MobilityService (SSOT para driver_data)
    */
   async getDriverData(profileId: string): Promise<any | null> {
     try {
-      const { mobilityService } = await import("@/core/mobility/services");
+      const { mobilityService } = await import("@/modules/mobility/services");
       return await mobilityService.getDriverData(profileId);
     } catch (error) {
       logger.error("Error in getDriverData:", error);
@@ -2426,10 +2426,10 @@ export class ProfileServiceLegacy {
   }
 
   /**
-   * Busca confirmaÃ§Ãµes de alertas (admin)
+   * Busca confirmações de alertas (admin)
    */
   /**
-   * Busca menÃ§Ãµes de um usuÃ¡rio em posts
+   * Busca menções de um usuário em posts
    */
   async getUserMentions(
     userId: string,
@@ -2469,7 +2469,7 @@ export class ProfileServiceLegacy {
   }
 
   /**
-   * Busca atividade de likes de um usuÃ¡rio
+   * Busca atividade de likes de um usuário
    */
   async getUserLikeActivity(
     userId: string,
@@ -2502,7 +2502,7 @@ export class ProfileServiceLegacy {
   }
 
   /**
-   * Busca atividade de saves de um usuÃ¡rio
+   * Busca atividade de saves de um usuário
    */
   async getUserSaveActivity(
     userId: string,
@@ -2535,7 +2535,7 @@ export class ProfileServiceLegacy {
   }
 
   /**
-   * Busca atividade de votos em enquetes de um usuÃ¡rio
+   * Busca atividade de votos em enquetes de um usuário
    */
   async getUserPollVoteActivity(
     userId: string,
@@ -2560,7 +2560,7 @@ export class ProfileServiceLegacy {
   }
 
   /**
-   * Busca usuÃ¡rios com baixo rating (admin)
+   * Busca usuários com baixo rating (admin)
    */
   async getLowRatedUsers(params: {
     maxRating: number;
@@ -2687,7 +2687,7 @@ export class ProfileServiceLegacy {
 
   /**
    * Adiciona um membro a um perfil
-   * âœ… SSOT: Ãšnico ponto de entrada para inserÃ§Ã£o em profile_members
+   * ✅ SSOT: Único ponto de entrada para inserção em profile_members
    */
   async addMember(
     profileId: string,
@@ -2711,16 +2711,16 @@ export class ProfileServiceLegacy {
   }
 
   // ============================================================================
-  // âœ… SSOT: USERNAME MANAGEMENT (para ProfileIdentityAdapter)
+  // ✅ SSOT: USERNAME MANAGEMENT (para ProfileIdentityAdapter)
   // ============================================================================
 
   /**
-   * âœ… SSOT: Verifica se username existe
+   * ✅ SSOT: Verifica se username existe
    * Usado por ProfileIdentityAdapter.identifierExists()
    * 
    * @param username - Username normalizado para verificar
-   * @param excludeId - ID do perfil a excluir da verificaÃ§Ã£o (para updates)
-   * @returns true se username existe, false caso contrÃ¡rio
+   * @param excludeId - ID do perfil a excluir da verificação (para updates)
+   * @returns true se username existe, false caso contrário
    */
   static async checkUsernameExists(
     username: string,
@@ -2755,11 +2755,11 @@ export class ProfileServiceLegacy {
   }
 
   /**
-   * âœ… SSOT: Busca usernames similares
+   * ✅ SSOT: Busca usernames similares
    * Usado por ProfileIdentityAdapter.getExistingSimilar()
    * 
    * @param username - Username base para buscar similares
-   * @param limit - NÃºmero mÃ¡ximo de resultados (padrÃ£o: 20)
+   * @param limit - Número máximo de resultados (padrão: 20)
    * @returns Array de usernames similares
    */
   static async getSimilarUsernames(
@@ -2791,11 +2791,11 @@ export class ProfileServiceLegacy {
   }
 
   /**
-   * âœ… SSOT: ObtÃ©m histÃ³rico de mudanÃ§as de username
+   * ✅ SSOT: Obtém histórico de mudanças de username
    * Usado por ProfileIdentityAdapter.getHistory()
    * 
    * @param profileId - ID do perfil
-   * @returns Array de mudanÃ§as de username ordenado por data (mais recente primeiro)
+   * @returns Array de mudanças de username ordenado por data (mais recente primeiro)
    */
   static async getUsernameHistory(profileId: string): Promise<Array<{
     id: string;
@@ -2829,18 +2829,18 @@ export class ProfileServiceLegacy {
 }
 
 // ============================================================
-// ðŸ›ï¸ PROFILE FACADE - Interface unificada SSOT v2.0
+// 🏛️ PROFILE FACADE - Interface unificada SSOT v2.0
 // ============================================================
 
 import * as profileQueries from "./profile.queries";
 import * as profileMutations from "./profile.mutations";
 
 /**
- * ProfileFacade - Interface unificada para operaÃ§Ãµes de Profile
+ * ProfileFacade - Interface unificada para operações de Profile
  *
- * OrganizaÃ§Ã£o SSOT:
- * - queries: Todas as operaÃ§Ãµes de leitura
- * - mutations: Todas as operaÃ§Ãµes de escrita
+ * Organização SSOT:
+ * - queries: Todas as operações de leitura
+ * - mutations: Todas as operações de escrita
  *
  * @example
  * ```typescript
@@ -2885,12 +2885,12 @@ export const ProfileFacade = {
 };
 
 // ============================================================
-// ðŸ”§ LEGACY - Compatibilidade com cÃ³digo existente
+// 🔧 LEGACY - Compatibilidade com código existente
 // ============================================================
 
 /**
  * @deprecated Use ProfileFacade ou os exports diretos
- * InstÃ¢ncia singleton do ProfileServiceLegacy
+ * Instância singleton do ProfileServiceLegacy
  */
 export const profileService = new ProfileServiceLegacy();
 
@@ -2899,3 +2899,10 @@ export const profileService = new ProfileServiceLegacy();
  * Alias para ProfileServiceLegacy mantido para compatibilidade
  */
 export { ProfileServiceLegacy as ProfileService };
+
+
+
+
+
+
+
