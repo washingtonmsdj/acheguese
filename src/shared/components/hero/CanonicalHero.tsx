@@ -189,12 +189,12 @@ export function CanonicalHero({
       )}
 
       {/* ── Content ────────────────────────────────────────────── */}
-      <div className={sectionContentClass}>
+      <div className={`${sectionContentClass} ${centered ? "flex items-center min-h-[inherit]" : ""}`}>
         <motion.div
           initial="hidden"
           animate="visible"
           variants={containerVariants}
-          className={`${isBanner ? "max-w-4xl" : "max-w-3xl"} ${centered ? "mx-auto text-center" : ""}`}
+          className={`${isBanner ? "max-w-4xl" : "max-w-3xl"} ${centered ? "mx-auto text-center w-full" : ""}`}
         >
           {/* Breadcrumb pills */}
           <motion.div
