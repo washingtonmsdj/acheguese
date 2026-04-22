@@ -402,12 +402,12 @@ export default function GastronomyLandingPage() {
 
         <section className="container mx-auto px-4 pt-4">
           {/* ── Google AdSense ─────────────────────────────────── */}
-          <div className="mb-6 w-full overflow-hidden rounded-xl" style={{ maxHeight: '120px' }}>
+          <div className="mb-6 w-full overflow-hidden rounded-xl" style={{ maxHeight: '90px' }}>
             <AdSense 
               slot="7618818955"
               format="auto"
               responsive={true}
-              style={{ display: 'block', minHeight: '90px', maxHeight: '120px' }}
+              style={{ display: 'block', minHeight: '70px', maxHeight: '90px' }}
             />
           </div>
 
