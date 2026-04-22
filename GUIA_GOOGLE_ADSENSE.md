@@ -119,7 +119,7 @@ Durante a análise, você verá anúncios em branco ou de teste.
 Criamos um componente `<AdSense />` para facilitar o uso:
 
 ```tsx
-import { AdSense } from '@/shared/components/ads/AdSense';
+import { AdSense } from '@/shared/components/advertising';
 
 // Uso básico
 <AdSense slot="1234567890" />

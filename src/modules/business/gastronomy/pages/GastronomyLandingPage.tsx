@@ -20,7 +20,7 @@ import { useTerritorialContext } from '@/core/routing/components/TerritorialLayo
 import { useSessionContext } from '@/core/session';
 import { CanonicalHero } from '@/shared/components/hero/CanonicalHero';
 import { Button } from '@/shared/components/ui/button';
-import { AdSense } from '@/shared/components/ads';
+import { AdSense } from '@/shared/components/advertising';
 import {
   GastronomyCategoryCards,
   GastronomyDeliveryDestinationPanel,
