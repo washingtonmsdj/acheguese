@@ -11,7 +11,7 @@
  */
 
 import { logger } from '@/shared/utils/logger';
-import { supabase } from '@/integrations/supabase';
+import { supabase } from '@/core/supabase';
 
 export interface FavoriteBusiness {
   favorite_id: string;
@@ -348,3 +348,4 @@ export class FavoritesQueryService {
     }
   }
 }
+

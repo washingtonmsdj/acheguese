@@ -40,9 +40,11 @@ import {
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { useSessionContext } from "@/core/session";
 
 export default function AdminRoles() {
   const queryClient = useQueryClient();
+  const { user, activeProfile } = useSessionContext();
   const [activeTab, setActiveTab] = useState("roles");
   const [search, setSearch] = useState("");
   const [roleFilter, setRoleFilter] = useState<string>("");
@@ -99,6 +101,8 @@ export default function AdminRoles() {
       toast.error("Erro ao renovar role");
     },
   });
+
+  const actingUserId = user?.id ?? activeProfile?.id ?? "system";
 
   const getRoleBadge = (role: string) => {
     switch (role) {
@@ -318,7 +322,7 @@ export default function AdminRoles() {
                                     revokeMutation.mutate({
                                       userId: roleData.user_id,
                                       role: roleData.role,
-                                      revokedBy: "current-admin-id", // TODO: pegar do contexto
+                                      revokedBy: actingUserId,
                                       reason: reason || undefined,
                                     });
                                   }}
@@ -400,7 +404,7 @@ export default function AdminRoles() {
                                 userId: roleData.user_id,
                                 role: roleData.role,
                                 newExpiresAt: newDate.toISOString(),
-                                renewedBy: "current-admin-id", // TODO: pegar do contexto
+                                renewedBy: actingUserId,
                               });
                             }
                           }}

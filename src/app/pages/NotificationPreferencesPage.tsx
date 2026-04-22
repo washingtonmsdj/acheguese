@@ -18,7 +18,7 @@ import { Switch } from '@/shared/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/components/ui/select';
 import { useToast } from '@/shared/hooks/use-toast';
 import { useAuth } from '@/core/auth/hooks/useAuth';
-import { PushNotificationSettings } from '@/shared/components/notifications/PushNotificationSettings';
+import { PushNotificationSettings } from '@/app/components/notifications/PushNotificationSettings';
 import {
   UserNotificationPreferencesService,
   type NotificationPreferencesRecord,

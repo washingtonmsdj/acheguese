@@ -33,7 +33,7 @@ import {
 import { cn } from '@/shared/utils/cn';
 import { fetchGastronomyQuickMetrics } from '@/modules/gastronomy/services/gastronomy-runtime.queries';
 
-// Componentes de empresa reutilizados — implementações reais em @/modules/business
+// Componentes de empresa reutilizados a partir do domínio de business
 import AnalyticsDashboard from '@/core/business/components/AnalyticsDashboard';
 import CouponManager from '@/core/business/components/CouponManager';
 import { NeighborhoodMap } from '@/core/business/components/NeighborhoodMap';

@@ -25,7 +25,7 @@ import {
   OfflineBanner,
   OfflineIndicator,
 } from "@/shared/components/offline/OfflineIndicator";
-import { ConsentBanner } from "@/shared/components/privacy/ConsentBanner";
+import { ConsentBanner } from "@/app/components/privacy/ConsentBanner";
 import { AppRoutes } from "@/app/routes/AppRoutes";
 import { AuthHashRedirect } from "@/core/auth/components/AuthHashRedirect";
 import { Analytics } from "@vercel/analytics/react";

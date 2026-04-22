@@ -7,7 +7,7 @@
  * @version 2.0.0 - Extraído de GastronomyQueryService
  */
 import { logger } from '@/shared/utils/logger';
-import { supabase } from '@/integrations/supabase';
+import { supabase } from '@/core/supabase';
 import { BusinessService } from '@/core/business/services/BusinessService';
 import type { Business } from '@/core/business/types';
 import { OpeningHoursService } from '@/core/business/services/OpeningHoursService';
@@ -548,3 +548,4 @@ export async function hasGastronomyProfile(businessId: string): Promise<boolean>
 // ============================================================
 
 export type { PaginatedGastronomyBusinesses, TerritorySlugParams };
+

@@ -1,5 +1,5 @@
-import { ProfessionalIdentityField } from "@/shared/components/public-identity/domains/ProfessionalIdentityField";
-import { IdentityImpactNotice } from "@/shared/components/public-identity/IdentityImpactNotice";
+import { ProfessionalIdentityField } from "@/core/public-identity/components/domains/ProfessionalIdentityField";
+import { IdentityImpactNotice } from "@/core/public-identity/components/IdentityImpactNotice";
 
 interface ProfessionalSlugSectionProps {
   slug: string;

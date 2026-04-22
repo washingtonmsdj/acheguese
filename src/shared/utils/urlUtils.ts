@@ -1,61 +1,104 @@
 /**
- * Utilitários de URL para empresas
+ * Utilitarios de URL para slugs de dominio.
  *
- * ATENÇÃO: Para URLs de empresas, use BusinessUrlService.
- * Para funções de slug, use as funções abaixo.
+ * Mantido em shared sem dependencias de core.
  */
 
-// Re-exporta da fonte canônica
-export { RESERVED_SLUGS, isReservedSlug } from '@/core/routing/reservedSlugs';
+export const RESERVED_SLUGS = [
+  "admin",
+  "api",
+  "auth",
+  "login",
+  "logout",
+  "signup",
+  "register",
+  "profile",
+  "perfil",
+  "settings",
+  "configuracoes",
+  "business",
+  "businesss",
+  "empresas",
+  "services",
+  "servicos",
+  "professionals",
+  "profissionais",
+  "classifieds",
+  "classificados",
+  "events",
+  "eventos",
+  "community",
+  "comunidade",
+  "mobility",
+  "mobilidade",
+  "messages",
+  "mensagens",
+  "jobs",
+  "vagas",
+  "pontos-turisticos",
+  "search",
+  "busca",
+  "map",
+  "mapa",
+  "about",
+  "sobre",
+  "contact",
+  "contato",
+  "help",
+  "ajuda",
+  "terms",
+  "termos",
+  "static",
+  "assets",
+  "public",
+  "uploads",
+  "files",
+  "u",
+  "p",
+  "user",
+  "users",
+  "usuario",
+  "usuarios",
+] as const;
 
-/**
- * Remove acentos de uma string
- */
+export function isReservedSlug(slug: string): boolean {
+  return RESERVED_SLUGS.includes(
+    slug.toLowerCase() as (typeof RESERVED_SLUGS)[number],
+  );
+}
+
 function removeAcentos(str: string): string {
   return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 }
 
-/**
- * Gera um slug a partir de um texto
- * Exemplo: "Salão da Ju" → "salao-da-ju"
- */
 export function gerarSlug(texto: string): string {
   return removeAcentos(texto)
     .toLowerCase()
     .trim()
-    .replace(/[^\w\s-]/g, "") // Remove caracteres especiais
-    .replace(/\s+/g, "-") // Substitui espaços por hífens
-    .replace(/-+/g, "-") // Remove hífens duplicados
-    .replace(/^-+|-+$/g, ""); // Remove hífens do início e fim
+    .replace(/[^\w\s-]/g, "")
+    .replace(/\s+/g, "-")
+    .replace(/-+/g, "-")
+    .replace(/^-+|-+$/g, "");
 }
 
-/**
- * Valida se um slug é válido (não está na lista de palavras reservadas)
- */
 export function isSlugValido(slug: string): boolean {
   return !isReservedSlug(slug.toLowerCase());
 }
 
-/**
- * Gera um slug único adicionando sufixo numérico se necessário
- */
 export function gerarSlugUnico(
   texto: string,
   slugsExistentes: string[],
 ): string {
   let slug = gerarSlug(texto);
 
-  // Se for palavra reservada, adiciona sufixo
   if (!isSlugValido(slug)) {
     slug = `${slug}-business`;
   }
 
-  // Se não existe, retorna
   if (!slugsExistentes.includes(slug)) {
     return slug;
   }
 
-  // Adiciona sufixo numérico
   let contador = 1;
   let slugComSufixo = `${slug}-${contador}`;
 
@@ -67,9 +110,6 @@ export function gerarSlugUnico(
   return slugComSufixo;
 }
 
-/**
- * Normaliza texto para URL (city/neighborhood)
- */
 export function normalizarParaUrl(texto: string): string {
   return gerarSlug(texto);
 }

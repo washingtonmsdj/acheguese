@@ -5,18 +5,6 @@
  * Data: 2026-03-19
  */
 
-// Post schemas
-export {
-  CreatePostSchema,
-  UpdatePostSchema,
-  GetPostsSchema,
-} from "./post.schema";
-export type {
-  CreatePostInput,
-  UpdatePostInput,
-  GetPostsInput,
-} from "./post.schema";
-
 // Comment schemas
 export {
   CreateCommentSchema,
@@ -41,7 +29,7 @@ export type {
   GetProfilesInput,
 } from "./profile.schema";
 
-// Business schemas - REMOVED: Import directly from @/modules/business/schemas/business.schema
+// Business schemas removidos desta camada.
 // Review schemas
 export {
   CreateReviewSchema,

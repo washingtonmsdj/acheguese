@@ -43,7 +43,7 @@ import {
   MapPin, Camera, Eye, EyeOff, Filter,
 } from 'lucide-react';
 import { useSessionContext } from '@/core/session';
-import { TerritorialSelector } from '@/shared/components/TerritorialSelector';
+import { TerritorialSelector } from '@/core/location/components/TerritorialSelector';
 
 // Brazilian states for dropdown (mantido para filtros)
 const BRAZILIAN_STATES = [

@@ -22,7 +22,7 @@ import { ContactStep } from "@/modules/business/components/edit/ContactStep";
 import { ExtrasStep } from "@/modules/business/components/edit/ExtrasStep";
 import { BusinessSlugSection } from "@/modules/business/components/identity/BusinessSlugSection";
 import { useBusinessSlugSaveGuard } from "@/modules/business/components/identity/useBusinessSlugSaveGuard";
-import { IdentityChangeConfirmDialog } from "@/shared/components/public-identity/IdentityChangeConfirmDialog";
+import { IdentityChangeConfirmDialog } from "@/core/public-identity/components/IdentityChangeConfirmDialog";
 import { useState } from "react";
 import { useMultiProfileContext } from "@/core/profiles/contexts/multi-profile-runtime-context";
 import { ActiveProfileBadge } from "@/core/profiles/components/ActiveProfileBadge";

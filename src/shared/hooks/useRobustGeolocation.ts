@@ -1,31 +1,28 @@
-/**
- * useRobustGeolocation
- *
- * Hook robusto para geolocalizacao.
- * Usa GeolocationService como SSOT e expoe API estavel para consumidores.
- */
-import { logger } from '@/shared/utils/logger';
-import { useState, useCallback, useEffect, useRef } from 'react';
-import { GeolocationService } from '@/core/maps/services/GeolocationService';
-import type {
-  GeolocationCoords,
-  GeolocationResult,
-} from '@/core/maps/services/GeolocationService';
+import { useState, useCallback, useEffect, useRef } from "react";
+import { logger } from "@/shared/utils/logger";
 
-export type { GeolocationCoords } from '@/core/maps/services/GeolocationService';
+export interface GeolocationCoords {
+  latitude: number;
+  longitude: number;
+  accuracy: number;
+  altitude?: number | null;
+  altitudeAccuracy?: number | null;
+  heading?: number | null;
+  speed?: number | null;
+  timestamp: number;
+}
 
 export interface GeolocationState {
   coords: GeolocationCoords | null;
   loading: boolean;
   error: string | null;
-  permissionState: 'prompt' | 'granted' | 'denied' | 'unknown';
-  source: 'gps' | 'ip' | 'cache' | null;
+  permissionState: "prompt" | "granted" | "denied" | "unknown";
+  source: "gps" | "cache" | null;
 }
 
 interface UseRobustGeolocationOptions {
   watch?: boolean;
   timeout?: number;
-  maxRetries?: number;
   useCache?: boolean;
   onSuccess?: (coords: GeolocationCoords) => void;
   onError?: (error: string) => void;
@@ -33,14 +30,36 @@ interface UseRobustGeolocationOptions {
 
 interface RequestLocationOptions {
   useCache?: boolean;
-  forcePrompt?: boolean;
+}
+
+const CACHE_KEY = "robust_geolocation_cache_v1";
+
+function readCache(): GeolocationCoords | null {
+  try {
+    const raw = localStorage.getItem(CACHE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as GeolocationCoords;
+    if (!parsed?.latitude || !parsed?.longitude) return null;
+    const ageMs = Date.now() - parsed.timestamp;
+    if (ageMs > 15 * 60 * 1000) return null;
+    return parsed;
+  } catch {
+    return null;
+  }
+}
+
+function writeCache(coords: GeolocationCoords): void {
+  try {
+    localStorage.setItem(CACHE_KEY, JSON.stringify(coords));
+  } catch {
+    // ignore cache failures
+  }
 }
 
 export function useRobustGeolocation(options: UseRobustGeolocationOptions = {}) {
   const {
     watch = false,
     timeout = 15000,
-    maxRetries = 3,
     useCache = true,
     onSuccess,
     onError,
@@ -50,7 +69,7 @@ export function useRobustGeolocation(options: UseRobustGeolocationOptions = {}) 
     coords: null,
     loading: false,
     error: null,
-    permissionState: 'unknown',
+    permissionState: "unknown",
     source: null,
   });
 
@@ -69,103 +88,78 @@ export function useRobustGeolocation(options: UseRobustGeolocationOptions = {}) 
 
   const requestLocation = useCallback(
     async (requestOptions: RequestLocationOptions = {}) => {
-      if (requestInFlight.current) {
-        logger.warn('[useRobustGeolocation] Request already in flight');
-        return;
-      }
-
+      if (requestInFlight.current) return;
       requestInFlight.current = true;
       setState((prev) => ({ ...prev, loading: true, error: null }));
 
       try {
-        logger.info('[useRobustGeolocation] Starting location lookup');
         const shouldUseCache = requestOptions.useCache ?? useCache;
-        const forcePrompt = requestOptions.forcePrompt ?? false;
-
-        const result: GeolocationResult = await GeolocationService.getCurrentLocation({
-          useCache: shouldUseCache,
-          forcePrompt,
-          timeout,
-          maxRetries,
-          onProgress: (attempt, max) => {
-            logger.debug(`[useRobustGeolocation] Attempt ${attempt}/${max}`);
-          },
-        });
-
-        logger.info('[useRobustGeolocation] Location resolved', {
-          source: result.source,
-          accuracy: `${Math.round(result.coords.accuracy)}m`,
-          coords: result.coords,
-        });
-
-        setState({
-          coords: result.coords,
-          loading: false,
-          error: null,
-          permissionState: 'granted',
-          source: result.source,
-        });
-
-        onSuccessRef.current?.(result.coords);
-      } catch (error: any) {
-        const errorCode =
-          typeof error?.code === 'string' || typeof error?.code === 'number'
-            ? String(error.code)
-            : '';
-        const rawMessage =
-          typeof error?.message === 'string'
-            ? error.message
-            : 'Could not resolve location';
-        const lowerMessage = rawMessage.toLowerCase();
-        const isInsecureContext =
-          errorCode === 'INSECURE_CONTEXT' ||
-          lowerMessage.includes('secure origin') ||
-          lowerMessage.includes('secure context') ||
-          lowerMessage.includes('only secure') ||
-          lowerMessage.includes('https');
-        const isPermissionDenied =
-          isInsecureContext ||
-          errorCode === 'PERMISSION_DENIED' ||
-          errorCode === '1' ||
-          lowerMessage.includes('negada') ||
-          lowerMessage.includes('denied');
-        const errorMsg = isInsecureContext
-          ? 'Automatic location is unavailable in this environment. Use HTTPS/localhost or provide address manually.'
-          : rawMessage;
-
-        if (isPermissionDenied) {
-          logger.warn('[useRobustGeolocation] Location unavailable due to permission/context');
-        } else {
-          logger.error('[useRobustGeolocation] Failed to resolve location', error);
+        if (shouldUseCache) {
+          const cached = readCache();
+          if (cached) {
+            setState({
+              coords: cached,
+              loading: false,
+              error: null,
+              permissionState: "granted",
+              source: "cache",
+            });
+            onSuccessRef.current?.(cached);
+            return;
+          }
         }
 
+        if (!("geolocation" in navigator)) {
+          throw new Error("Geolocalizacao nao suportada neste navegador.");
+        }
+
+        const position = await new Promise<GeolocationPosition>((resolve, reject) => {
+          navigator.geolocation.getCurrentPosition(resolve, reject, {
+            enableHighAccuracy: true,
+            timeout,
+            maximumAge: 10000,
+          });
+        });
+
+        const coords: GeolocationCoords = {
+          latitude: position.coords.latitude,
+          longitude: position.coords.longitude,
+          accuracy: position.coords.accuracy,
+          altitude: position.coords.altitude,
+          altitudeAccuracy: position.coords.altitudeAccuracy,
+          heading: position.coords.heading,
+          speed: position.coords.speed,
+          timestamp: position.timestamp || Date.now(),
+        };
+
+        writeCache(coords);
+        setState({
+          coords,
+          loading: false,
+          error: null,
+          permissionState: "granted",
+          source: "gps",
+        });
+        onSuccessRef.current?.(coords);
+      } catch (error: any) {
+        const msg = error?.message ?? "Nao foi possivel obter localizacao.";
+        logger.warn("[useRobustGeolocation] requestLocation failed", { msg });
         setState((prev) => ({
           ...prev,
           loading: false,
-          error: errorMsg,
-          permissionState: isPermissionDenied ? 'denied' : prev.permissionState,
+          error: msg,
+          permissionState: "denied",
         }));
-
-        onErrorRef.current?.(errorMsg);
+        onErrorRef.current?.(msg);
       } finally {
         requestInFlight.current = false;
       }
     },
-    [useCache, timeout, maxRetries],
+    [timeout, useCache],
   );
 
   const startWatching = useCallback(() => {
-    if (!('geolocation' in navigator) || watchIdRef.current !== null) {
-      return;
-    }
-
-    const isMobile =
-      /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
-        navigator.userAgent,
-      ) ||
-      'ontouchstart' in window ||
-      navigator.maxTouchPoints > 0;
-
+    if (!("geolocation" in navigator) || watchIdRef.current !== null) return;
     watchIdRef.current = navigator.geolocation.watchPosition(
       (position) => {
         const coords: GeolocationCoords = {
@@ -176,43 +170,25 @@ export function useRobustGeolocation(options: UseRobustGeolocationOptions = {}) 
           altitudeAccuracy: position.coords.altitudeAccuracy,
           heading: position.coords.heading,
           speed: position.coords.speed,
-          timestamp: position.timestamp,
+          timestamp: position.timestamp || Date.now(),
         };
-
+        writeCache(coords);
         setState((prev) => ({
           ...prev,
           coords,
           error: null,
-          permissionState: 'granted',
-          source: 'gps',
+          permissionState: "granted",
+          source: "gps",
         }));
         onSuccessRef.current?.(coords);
       },
       (error) => {
-        const isPermissionDenied = error?.code === 1;
-        const message =
-          typeof error?.message === 'string'
-            ? error.message
-            : 'Could not watch location';
-
-        if (isPermissionDenied) {
-          logger.warn('[useRobustGeolocation] Watch position denied');
-        } else {
-          logger.error('[useRobustGeolocation] Watch position error', error);
-        }
-
-        setState((prev) => ({
-          ...prev,
-          error: message,
-          permissionState: isPermissionDenied ? 'denied' : prev.permissionState,
-        }));
-        onErrorRef.current?.(message);
+        const msg = error?.message ?? "Falha ao acompanhar localizacao.";
+        logger.warn("[useRobustGeolocation] watch failed", { msg });
+        setState((prev) => ({ ...prev, error: msg, permissionState: "denied" }));
+        onErrorRef.current?.(msg);
       },
-      {
-        enableHighAccuracy: !isMobile,
-        timeout: isMobile ? 20000 : timeout,
-        maximumAge: isMobile ? 10000 : 5000,
-      },
+      { enableHighAccuracy: true, timeout, maximumAge: 5000 },
     );
   }, [timeout]);
 
@@ -224,24 +200,30 @@ export function useRobustGeolocation(options: UseRobustGeolocationOptions = {}) 
   }, []);
 
   const checkPermission = useCallback(async () => {
-    const permission = await GeolocationService.checkPermission();
-    setState((prev) => ({ ...prev, permissionState: permission as any }));
-    return permission;
+    if (!("permissions" in navigator) || !("geolocation" in navigator)) {
+      return "unknown" as const;
+    }
+
+    try {
+      const permission = await navigator.permissions.query({
+        name: "geolocation" as PermissionName,
+      });
+      const value = permission.state as "prompt" | "granted" | "denied";
+      setState((prev) => ({ ...prev, permissionState: value }));
+      return value;
+    } catch {
+      return "unknown" as const;
+    }
+  }, []);
+
+  const clearCache = useCallback(() => {
+    localStorage.removeItem(CACHE_KEY);
   }, []);
 
   useEffect(() => {
-    if (watch) {
-      startWatching();
-    }
-    return () => {
-      stopWatching();
-      GeolocationService.abort();
-    };
+    if (watch) startWatching();
+    return () => stopWatching();
   }, [watch, startWatching, stopWatching]);
-
-  const clearCache = useCallback(() => {
-    GeolocationService.clearCache();
-  }, []);
 
   return {
     ...state,

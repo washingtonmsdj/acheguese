@@ -4,8 +4,8 @@
  * O fluxo de confirmacao de salvamento e controlado pela pagina.
  */
 
-import { ProfileIdentityField } from '@/shared/components/public-identity/domains/ProfileIdentityField';
-import { IdentityImpactNotice } from '@/shared/components/public-identity/IdentityImpactNotice';
+import { ProfileIdentityField } from '@/core/public-identity/components/domains/ProfileIdentityField';
+import { IdentityImpactNotice } from '@/core/public-identity/components/IdentityImpactNotice';
 
 interface ProfileUsernameSectionProps {
   username: string;

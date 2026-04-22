@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+﻿import React, { useState } from "react";
 import { Badge } from "@/shared/components/ui/badge";
 import { Button } from "@/shared/components/ui/button";
 import { Edit, Power, PowerOff, Trash2 } from "lucide-react";
@@ -21,14 +21,16 @@ export function PricingRulesList({
   loading,
   onRefetch,
 }: PricingRulesListProps) {
-  const { profile } = useSessionContext();
+  const { activeProfile, user } = useSessionContext();
   const [editingRule, setEditingRule] = useState<PricingRule | null>(null);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
 
   const handleToggleActive = async (rule: PricingRule) => {
-    // ⚠️ DESENVOLVIMENTO: Usar ID fake se não houver profile
-    // TODO: Remover em produção quando autenticação estiver ativa
-    const userId = profile?.id || '00000000-0000-0000-0000-000000000000';
+    const userId = activeProfile?.id ?? user?.id ?? null;
+    if (!userId) {
+      toast.error("Sessao administrativa indisponivel");
+      return;
+    }
 
     setActionLoading(rule.id);
     try {
@@ -47,11 +49,11 @@ export function PricingRulesList({
       
       // Detectar conflito via tipo de erro
       if (err instanceof PricingError && err.isConflict()) {
-        toast.error("Conflito: já existe regra ativa para este modo");
+        toast.error("Conflito: jÃ¡ existe regra ativa para este modo");
       } else if (errorMessage.includes('Conflito') || errorMessage.includes('conflito')) {
-        toast.error("Não é possível desativar a única regra ativa desta modalidade");
+        toast.error("NÃ£o Ã© possÃ­vel desativar a Ãºnica regra ativa desta modalidade");
       } else if (err?.code === '23514' || err?.hint?.includes('validate_single_active_rule')) {
-        toast.error("Não é possível desativar a única regra ativa desta modalidade");
+        toast.error("NÃ£o Ã© possÃ­vel desativar a Ãºnica regra ativa desta modalidade");
       } else {
         toast.error(errorMessage || "Erro ao alterar regra");
       }
@@ -92,7 +94,7 @@ export function PricingRulesList({
               <h3 className="font-semibold text-foreground capitalize">
                 {mode === "ride" && "Corrida"}
                 {mode === "delivery" && "Entrega"}
-                {mode === "mototaxi" && "Mototáxi"}
+                {mode === "mototaxi" && "MototÃ¡xi"}
                 {mode === "motoboy" && "Motoboy"}
                 {!["ride", "delivery", "mototaxi", "motoboy"].includes(mode) &&
                   mode}
@@ -140,11 +142,11 @@ export function PricingRulesList({
                       </div>
                       <div className="flex gap-4">
                         <span>
-                          Mínimo: R$ {rule.minimumFare.toFixed(2)}
+                          MÃ­nimo: R$ {rule.minimumFare.toFixed(2)}
                         </span>
                         {rule.maximumFare && (
                           <span>
-                            Máximo: R$ {rule.maximumFare.toFixed(2)}
+                            MÃ¡ximo: R$ {rule.maximumFare.toFixed(2)}
                           </span>
                         )}
                       </div>
@@ -193,3 +195,6 @@ export function PricingRulesList({
     </>
   );
 }
+
+
+

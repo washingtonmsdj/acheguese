@@ -26,9 +26,19 @@ import { motion } from 'framer-motion';
 import { Badge } from '@/shared/components/ui/badge';
 import { Button } from '@/shared/components/ui/button';
 import { cn } from '@/shared/utils/cn';
-import { formatDistanceToNow } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
-import type { Group } from '@/core/social/services/GroupService';
+
+interface Group {
+  id: string;
+  name: string;
+  category: string | null;
+  created_at: string;
+  members_count: number;
+  posts_count: number;
+  avatar_url?: string | null;
+  description?: string | null;
+  is_private: boolean;
+  is_member: boolean;
+}
 
 // ============================================================================
 // CONSTANTS

@@ -1,18 +1,6 @@
- 
-/**
- * 📅 HOOK: useAppointments
- *
- * Hook consolidado para gerenciamento de agendamentos de negócios.
- * Anteriormente duplicado em business/ e empresa/.
- *
- * @version 2.0.0 (consolidado)
- * @author Kiro AI
- */
-
 import { useState, useEffect, useCallback } from "react";
 import { toast } from "sonner";
 import { logger } from "@/shared/utils/logger";
-import { useAppointmentNotificationActions } from "@/modules/business/hooks/useAppointmentNotifications";
 
 type AppointmentStatus = "pending" | "confirmed" | "cancelled" | "completed";
 
@@ -34,36 +22,24 @@ interface UseAppointmentsProps {
   businessName: string;
 }
 
-export const useAppointments = ({
-  businessId,
-  businessName,
-}: UseAppointmentsProps) => {
+export const useAppointments = ({ businessId }: UseAppointmentsProps) => {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
 
-  const {
-    notifyAppointmentConfirmed,
-    notifyAppointmentCancelled,
-    notifyAppointmentCompleted,
-  } = useAppointmentNotificationActions();
-
-  // Carregar agendamentos (stub temporario ate disponibilidade do backend de appointments).
   useEffect(() => {
-    setTimeout(() => {
-      const mockAppointments: Appointment[] = [];
-      setAppointments(mockAppointments);
+    const timer = setTimeout(() => {
+      setAppointments([]);
       setLoading(false);
-    }, 1000);
+    }, 800);
+
+    return () => clearTimeout(timer);
   }, [businessId]);
 
-  // Filtrar agendamentos
   const filteredAppointments = appointments.filter((appointment) => {
     const matchesSearch =
-      appointment.client_name
-        .toLowerCase()
-        .includes(searchTerm.toLowerCase()) ||
+      appointment.client_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       appointment.client_phone.includes(searchTerm) ||
       appointment.service_name.toLowerCase().includes(searchTerm.toLowerCase());
 
@@ -73,7 +49,6 @@ export const useAppointments = ({
     return matchesSearch && matchesStatus;
   });
 
-  // Atualizar status do agendamento
   const updateAppointmentStatus = useCallback(
     async (appointmentId: string, newStatus: Appointment["status"]) => {
       const appointment = appointments.find((apt) => apt.id === appointmentId);
@@ -92,58 +67,18 @@ export const useAppointments = ({
         pending: "pendente",
         confirmed: "confirmado",
         cancelled: "cancelado",
-        completed: "concluído",
+        completed: "concluido",
       };
 
       toast.success(`Agendamento ${statusLabels[newStatus]} com sucesso!`);
-
-      // Criar notificações
-      try {
-        const notificationData = {
-          appointment_id: appointmentId,
-          business_id: businessId,
-          business_name: businessName,
-          client_name: appointment.client_name,
-          client_phone: appointment.client_phone,
-          service_name: appointment.service_name,
-          appointment_date: appointment.appointment_date,
-          appointment_time: appointment.appointment_time,
-        };
-
-        switch (newStatus) {
-          case "confirmed":
-            await notifyAppointmentConfirmed(notificationData);
-            break;
-          case "cancelled":
-            await notifyAppointmentCancelled(notificationData);
-            break;
-          case "completed":
-            await notifyAppointmentCompleted(notificationData);
-            break;
-        }
-      } catch (error) {
-        logger.error("Error creating appointment notification", {
-          error,
-          appointmentId,
-          newStatus,
-        });
-      }
     },
-    [
-      appointments,
-      businessId,
-      businessName,
-      notifyAppointmentConfirmed,
-      notifyAppointmentCancelled,
-      notifyAppointmentCompleted,
-    ],
+    [appointments],
   );
 
-  // Contatar cliente
   const contactClient = useCallback(
     (appointment: Appointment, method: "whatsapp" | "phone") => {
       if (method === "whatsapp") {
-        const message = `Olá ${appointment.client_name}! Sobre seu agendamento de ${appointment.service_name} para ${appointment.appointment_date} às ${appointment.appointment_time}.`;
+        const message = `Ola ${appointment.client_name}! Sobre seu agendamento de ${appointment.service_name} para ${appointment.appointment_date} as ${appointment.appointment_time}.`;
         window.open(
           `https://wa.me/${appointment.client_phone.replace(/\D/g, "")}?text=${encodeURIComponent(message)}`,
           "_blank",

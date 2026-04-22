@@ -1,6 +1,6 @@
 import { useCallback, useState } from "react";
 import { toast } from "sonner";
-import type { TablesUpdate } from "@/integrations/supabase/types.generated";
+import type { TablesUpdate } from "@/core/supabase";
 import { DriverAvailabilityService } from "@/modules/mobility/services/DriverAvailabilityService";
 import { mobilityService } from "@/modules/mobility/services/MobilityService";
 
@@ -132,3 +132,4 @@ export function useDriverOperationalStatus({
     clearGpsError: () => setGpsError(null),
   };
 }
+

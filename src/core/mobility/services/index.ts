@@ -77,9 +77,23 @@ export {
   RideOperationalService,
 } from "@/core/mobility/core/RideOperationalService";
 export { RideRatingService } from "@/core/mobility/services/RideRatingService";
+export { RidePassengerService } from "@/core/mobility/services/RidePassengerService";
 export {
   DriverAvailabilityService,
 } from "@/core/mobility/services/DriverAvailabilityService";
+export {
+  BoardingPointService,
+} from "@/core/mobility/services/BoardingPointService";
+export type {
+  BoardingPointSummary,
+  BoardingPointSuggestionInput,
+} from "@/core/mobility/services/BoardingPointService";
+export {
+  DriverPresenceService,
+} from "@/core/mobility/services/DriverPresenceService";
+export type {
+  DriverPresenceStats,
+} from "@/core/mobility/services/DriverPresenceService";
 
 // ============================================================
 // FACADE UNIFICADA (Recomendado)

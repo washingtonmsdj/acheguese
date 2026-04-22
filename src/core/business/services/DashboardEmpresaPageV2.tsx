@@ -15,7 +15,7 @@ import {
   TabPanel,
   GASTRONOMY_TAB,
 } from "@/shared/components/dashboard/DashboardTabs";
-import { SettingsTab } from "@/shared/components/dashboard/SettingsTab";
+import { SettingsTab } from "@/core/business/components/SettingsTab";
 import EmpresaDashboardTab from '@/core/business/components/EmpresaDashboardTab';
 import AnalyticsDashboard from '@/core/business/components/AnalyticsDashboard';
 import CouponManager from '@/core/business/components/CouponManager';

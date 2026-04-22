@@ -4,7 +4,7 @@
  * Valida que todos os componentes do dispatch automático estão funcionando
  */
 import { logger } from '@/shared/utils/logger';
-import { supabase } from '@/integrations/supabase';
+import { supabase } from '@/core/supabase';
 import { AutoDispatchService } from '../core/AutoDispatchService';
 import { RideOperationalService } from '../core/RideOperationalService';
 import { RideDispatchService } from '../core/RideDispatchService';

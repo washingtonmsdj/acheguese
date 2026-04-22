@@ -18,7 +18,6 @@
  */
 
 import { supabase } from "@/integrations/supabase";
-import { SocialInteractionsService } from "@/core/social/services/SocialInteractionsService";
 import { logger } from "@/shared/utils/logger";
 import { trackError } from "@/shared/utils/errorTracking";
 import { publicIdentityService, PublicIdentityService } from "@/core/public-identity";
@@ -2254,9 +2253,11 @@ export class ProfileServiceLegacy {
    */
   async getUserLikesCount(profileId: string): Promise<number> {
     try {
-      // Usar SocialInteractionsService para obter estatÃ­sticas
-      const stats =
-        await SocialInteractionsService.getInteractionStats(profileId);
+      // Import dinÃ¢mico evita ciclo ProfileService <-> SocialInteractionsService.
+      const { SocialInteractionsService } = await import(
+        "@/core/social/services/SocialInteractionsService"
+      );
+      const stats = await SocialInteractionsService.getInteractionStats(profileId);
       return stats.likesGiven || 0;
     } catch (error) {
       trackError(error as Error, {

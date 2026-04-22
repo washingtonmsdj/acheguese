@@ -56,10 +56,7 @@ interface MobilityChatListProps {
   role: "driver" | "passenger";
 }
 
-// TODO: Implementar hook para buscar conversas reais do Supabase
-// const { data: chats } = useRideChats(role);
-const MOCK_CHATS_DRIVER: RideChatPreview[] = [];
-const MOCK_CHATS_PASSENGER: RideChatPreview[] = [];
+const EMPTY_CHATS: RideChatPreview[] = [];
 
 const statusConfig: Record<
   string,
@@ -101,11 +98,7 @@ export function MobilityChatList({ role }: MobilityChatListProps) {
         const conversations = await getMobilityConversations(activeProfile.id);
 
         if (!conversations || conversations.length === 0) {
-          setConversations(
-            role === USER_ROLE.DRIVER
-              ? MOCK_CHATS_DRIVER
-              : MOCK_CHATS_PASSENGER,
-          );
+          setConversations(EMPTY_CHATS);
           setLoading(false);
           return;
         }
@@ -157,9 +150,7 @@ export function MobilityChatList({ role }: MobilityChatListProps) {
         setConversations(mapped);
       } catch (error) {
         logger.error("Erro:", error);
-        setConversations(
-          role === USER_ROLE.DRIVER ? MOCK_CHATS_DRIVER : MOCK_CHATS_PASSENGER,
-        );
+        setConversations(EMPTY_CHATS);
       } finally {
         setLoading(false);
       }

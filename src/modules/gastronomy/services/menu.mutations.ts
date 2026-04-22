@@ -6,7 +6,7 @@
  * @version 2.0.0 - Extraído de MenuService
  */
 
-import { supabase } from '@/integrations/supabase';
+import { supabase } from '@/core/supabase';
 import { BusinessOwnershipService } from '@/core/business/services/BusinessOwnershipService';
 import { sanitizeString } from '@/shared/utils/sanitization';
 import type {
@@ -783,3 +783,4 @@ export async function reorderMenuCategories(
 
   await Promise.all(updates);
 }
+

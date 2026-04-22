@@ -23,6 +23,8 @@ export const HomePage = lazy(() => import("@/app/pages/HomePage"));
 export const HomePageV2 = lazy(() => import("@/app/pages/HomePageV2"));
 export const MainLandingPage = lazy(() => import("@/app/pages/MainLandingPage"));
 export const EmpresasLandingPage = lazy(() => import("@/app/pages/EmpresasLandingPage"));
+export const CidadeLandingPage = lazy(() => import("@/app/pages/CidadeLandingPage"));
+export const ComplexoNordesteLandingPage = lazy(() => import("@/app/pages/ComplexoNordesteLandingPage"));
 export const AboutPage = lazy(() => import("@/app/pages/AboutPage"));
 export const ContactPage = lazy(() => import("@/app/pages/ContactPage"));
 export const SplashPage = lazy(() => import("@/app/pages/SplashPage"));

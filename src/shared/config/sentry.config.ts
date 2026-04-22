@@ -1,17 +1,5 @@
-/**
- * Configuração do Sentry para Monitoramento de Erros
- * 
- * Este arquivo centraliza toda a configuração do Sentry,
- * incluindo inicialização, opções e integrações.
- * 
- * @version 1.0.0
- */
+import * as Sentry from "@sentry/react";
 
-import { logger } from '@/shared/utils/logger';
-import * as Sentry from '@sentry/react';
-/**
- * Configuração do Sentry
- */
 export interface SentryConfig {
   dsn: string;
   environment: string;
@@ -21,33 +9,25 @@ export interface SentryConfig {
   replaysOnErrorSampleRate: number;
 }
 
-/**
- * Obtém configuração do Sentry a partir das variáveis de ambiente
- */
 export function getSentryConfig(): SentryConfig {
   return {
-    dsn: import.meta.env.VITE_SENTRY_DSN || '',
-    environment: import.meta.env.MODE || 'development',
+    dsn: import.meta.env.VITE_SENTRY_DSN || "",
+    environment: import.meta.env.MODE || "development",
     enabled: import.meta.env.PROD && !!import.meta.env.VITE_SENTRY_DSN,
-    tracesSampleRate: import.meta.env.PROD ? 0.1 : 1.0, // 10% em produção, 100% em dev
-    replaysSessionSampleRate: 0.1, // 10% das sessões
-    replaysOnErrorSampleRate: 1.0, // 100% quando há erro
+    tracesSampleRate: import.meta.env.PROD ? 0.1 : 1.0,
+    replaysSessionSampleRate: 0.1,
+    replaysOnErrorSampleRate: 1.0,
   };
 }
 
-/**
- * Inicializa o Sentry
- */
 export function initializeSentry(): void {
   const config = getSentryConfig();
-  const debugSentry = import.meta.env.DEV && import.meta.env.VITE_DEBUG_SENTRY === "true";
+  const debugSentry =
+    import.meta.env.DEV && import.meta.env.VITE_DEBUG_SENTRY === "true";
 
-  // Não inicializar se não estiver habilitado
   if (!config.enabled) {
     if (debugSentry) {
-      console.debug(
-        "Sentry não habilitado (desenvolvimento ou DSN não configurado)",
-      );
+      console.debug("Sentry desabilitado (ambiente/DSN).");
     }
     return;
   }
@@ -56,8 +36,6 @@ export function initializeSentry(): void {
     Sentry.init({
       dsn: config.dsn,
       environment: config.environment,
-      
-      // Performance Monitoring
       integrations: [
         Sentry.browserTracingIntegration(),
         Sentry.replayIntegration({
@@ -65,55 +43,43 @@ export function initializeSentry(): void {
           blockAllMedia: true,
         }),
       ],
-      
-      // Performance
       tracesSampleRate: config.tracesSampleRate,
-      
-      // Session Replay
       replaysSessionSampleRate: config.replaysSessionSampleRate,
       replaysOnErrorSampleRate: config.replaysOnErrorSampleRate,
-      
-      // Filtros
       beforeSend(event, hint) {
-        // Filtrar erros de desenvolvimento
-        if (config.environment === 'development') {
-          logger.debug('🔍 Sentry Event (dev):', event);
-          return null; // Não enviar em desenvolvimento
+        if (config.environment === "development") {
+          if (debugSentry) {
+            console.debug("Sentry Event (dev):", event);
+          }
+          return null;
         }
 
-        // Filtrar erros conhecidos/ignoráveis
         const error = hint.originalException;
         if (error instanceof Error) {
-          // Ignorar erros de rede temporários
-          if (error.message.includes('NetworkError') || 
-              error.message.includes('Failed to fetch')) {
+          if (
+            error.message.includes("NetworkError") ||
+            error.message.includes("Failed to fetch")
+          ) {
             return null;
           }
-          
-          // Ignorar erros de extensões do navegador
-          if (error.stack?.includes('chrome-extension://') ||
-              error.stack?.includes('moz-extension://')) {
+          if (
+            error.stack?.includes("chrome-extension://") ||
+            error.stack?.includes("moz-extension://")
+          ) {
             return null;
           }
         }
 
         return event;
       },
-      
-      // Ignorar erros específicos
       ignoreErrors: [
-        // Erros de rede
-        'NetworkError',
-        'Failed to fetch',
-        'Load failed',
-        
-        // Erros de navegador
-        'ResizeObserver loop limit exceeded',
-        'ResizeObserver loop completed with undelivered notifications',
-        
-        // Erros de extensões
-        'chrome-extension://',
-        'moz-extension://',
+        "NetworkError",
+        "Failed to fetch",
+        "Load failed",
+        "ResizeObserver loop limit exceeded",
+        "ResizeObserver loop completed with undelivered notifications",
+        "chrome-extension://",
+        "moz-extension://",
       ],
     });
 
@@ -121,13 +87,12 @@ export function initializeSentry(): void {
       console.debug("Sentry inicializado com sucesso");
     }
   } catch (error) {
-    logger.error("Erro ao inicializar Sentry:", error);
+    if (debugSentry) {
+      console.error("Erro ao inicializar Sentry:", error);
+    }
   }
 }
 
-/**
- * Define usuário no Sentry
- */
 export function setSentryUser(user: {
   id: string;
   email?: string;
@@ -143,37 +108,26 @@ export function setSentryUser(user: {
   });
 }
 
-/**
- * Remove usuário do Sentry (logout)
- */
 export function clearSentryUser(): void {
   const config = getSentryConfig();
   if (!config.enabled) return;
-
   Sentry.setUser(null);
 }
 
-/**
- * Define contexto adicional no Sentry
- */
 export function setSentryContext(
   key: string,
-  context: Record<string, unknown>
+  context: Record<string, unknown>,
 ): void {
   const config = getSentryConfig();
   if (!config.enabled) return;
-
   Sentry.setContext(key, context);
 }
 
-/**
- * Adiciona breadcrumb ao Sentry
- */
 export function addSentryBreadcrumb(
   message: string,
   category: string,
-  level: 'debug' | 'info' | 'warning' | 'error' | 'fatal' = 'info',
-  data?: Record<string, unknown>
+  level: "debug" | "info" | "warning" | "error" | "fatal" = "info",
+  data?: Record<string, unknown>,
 ): void {
   const config = getSentryConfig();
   if (!config.enabled) return;
@@ -187,41 +141,23 @@ export function addSentryBreadcrumb(
   });
 }
 
-/**
- * Captura exceção manualmente
- */
 export function captureSentryException(
   error: Error,
-  context?: Record<string, unknown>
+  context?: Record<string, unknown>,
 ): void {
   const config = getSentryConfig();
-  if (!config.enabled) {
-    if (import.meta.env.DEV && import.meta.env.VITE_DEBUG_SENTRY === "true") {
-      console.debug("Error (Sentry disabled):", error, context);
-    }
-    return;
-  }
+  if (!config.enabled) return;
 
-  Sentry.captureException(error, {
-    extra: context,
-  });
+  Sentry.captureException(error, { extra: context });
 }
 
-/**
- * Captura mensagem manualmente
- */
 export function captureSentryMessage(
   message: string,
-  level: 'debug' | 'info' | 'warning' | 'error' | 'fatal' = 'info',
-  context?: Record<string, unknown>
+  level: "debug" | "info" | "warning" | "error" | "fatal" = "info",
+  context?: Record<string, unknown>,
 ): void {
   const config = getSentryConfig();
-  if (!config.enabled) {
-    if (import.meta.env.DEV && import.meta.env.VITE_DEBUG_SENTRY === "true") {
-      console.debug(`Message (Sentry disabled) [${level}]:`, message, context);
-    }
-    return;
-  }
+  if (!config.enabled) return;
 
   Sentry.captureMessage(message, {
     level,
@@ -229,25 +165,15 @@ export function captureSentryMessage(
   });
 }
 
-/**
- * Inicia transação de performance
- */
-export function startSentryTransaction(
-  name: string,
-  op: string
-): any {
+export function startSentryTransaction(name: string, op: string): unknown {
   const config = getSentryConfig();
   if (!config.enabled) return null;
 
   const sentryApi = Sentry as unknown as Record<string, unknown>;
-  const startTransaction = sentryApi['startTransaction'];
+  const startTransaction = sentryApi["startTransaction"];
+  if (typeof startTransaction !== "function") return null;
 
-  if (typeof startTransaction === 'function') {
-    return (startTransaction as (context: { name: string; op: string }) => unknown)({
-      name,
-      op,
-    });
-  }
-
-  return null;
+  return (startTransaction as (context: { name: string; op: string }) => unknown)(
+    { name, op },
+  );
 }

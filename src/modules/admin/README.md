@@ -22,4 +22,4 @@ import { AdminComponent } from "@/modules/admin";
 ## Dependencies
 
 - Can import from: `@/core/*`, `@/shared/*`
-- Cannot import from: other `@/modules/*`, `@/integrations/*`
+- Cannot import from: other `@/modules/*`, direct integration adapters

@@ -25,11 +25,24 @@ import { memo, forwardRef, useMemo, useCallback } from 'react';
 import { Calendar, Clock, Users, MapPin, Heart, TrendingUp, Sparkles } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Badge } from '@/shared/components/ui/badge';
-import { ViewOnMapButton } from '@/core/maps/components/ViewOnMapButton';
+import { Button } from '@/shared/components/ui/button';
 import { cn } from '@/shared/utils/cn';
 import { format, formatDistanceToNow, isToday, isTomorrow, isPast } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import type { Event } from '@/core/events';
+
+interface Event {
+  id: string;
+  title: string;
+  date: string;
+  created_at: string;
+  status: 'upcoming' | 'ongoing' | 'completed' | 'cancelled';
+  current_participants: number;
+  max_participants?: number | null;
+  location?: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
+  image_url?: string | null;
+}
 
 // ============================================================================
 // CONSTANTS
@@ -161,6 +174,14 @@ function isNewEvent(date: string): boolean {
 function isAlmostFull(current: number, max?: number): boolean {
   if (!max) return false;
   return (current / max) >= 0.8;
+}
+
+function openInMaps(latitude: number, longitude: number): void {
+  window.open(
+    `https://www.google.com/maps/search/?api=1&query=${latitude},${longitude}`,
+    "_blank",
+    "noopener,noreferrer",
+  );
 }
 
 // ============================================================================
@@ -348,16 +369,17 @@ export const EventCardEnhanced = memo(
                 </Badge>
               )}
               {hasCoordinates && (
-                <ViewOnMapButton
-                  latitude={evento.latitude!}
-                  longitude={evento.longitude!}
-                  itemId={evento.id}
-                  itemType="event"
-                  itemName={evento.title}
+                <Button
                   size="sm"
                   variant="outline"
                   className="ml-auto"
-                />
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    openInMaps(evento.latitude!, evento.longitude!);
+                  }}
+                >
+                  Ver no mapa
+                </Button>
               )}
             </div>
           </div>
@@ -575,16 +597,17 @@ export const EventCardEnhanced = memo(
           {/* Footer */}
           {hasCoordinates && (
             <div className="mt-auto">
-              <ViewOnMapButton
-                latitude={evento.latitude!}
-                longitude={evento.longitude!}
-                itemId={evento.id}
-                itemType="event"
-                itemName={evento.title}
+              <Button
                 size="sm"
                 variant="outline"
                 className="w-full"
-              />
+                onClick={(e) => {
+                  e.stopPropagation();
+                  openInMaps(evento.latitude!, evento.longitude!);
+                }}
+              >
+                Ver no mapa
+              </Button>
             </div>
           )}
         </div>

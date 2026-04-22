@@ -1,21 +1,25 @@
-import React, { useState } from "react";
+﻿import React, { useMemo, useState } from "react";
 import {
   MapPin,
   Plus,
-  Star,
-  Navigation,
-  CheckCircle2,
   Store,
   Trees,
   ShoppingCart,
   GraduationCap,
   Church,
   Coffee,
+  Navigation,
+  CheckCircle2,
 } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/shared/components/ui/button";
 import { Badge } from "@/shared/components/ui/badge";
 import { cn } from "@/shared/utils/cn";
 import { toast } from "sonner";
+import {
+  BoardingPointService,
+  type BoardingPointSummary,
+} from "@/core/mobility/services";
 
 export interface BoardingPoint {
   id: string;
@@ -30,7 +34,7 @@ export interface BoardingPoint {
     | "cafe"
     | "outro";
   address: string;
-  distance?: string; // e.g. "80m"
+  distance?: string;
   popular: boolean;
   rides_count: number;
 }
@@ -49,7 +53,7 @@ const typeConfig: Record<
     icon: <Trees className="h-4 w-4" />,
     color: "text-green-400",
     bg: "bg-green-500/10",
-    label: "Praça",
+    label: "Praca",
   },
   padaria: {
     icon: <Coffee className="h-4 w-4" />,
@@ -73,7 +77,7 @@ const typeConfig: Record<
     icon: <Coffee className="h-4 w-4" />,
     color: "text-orange-400",
     bg: "bg-orange-500/10",
-    label: "Café",
+    label: "Cafe",
   },
   outro: {
     icon: <Store className="h-4 w-4" />,
@@ -83,17 +87,24 @@ const typeConfig: Record<
   },
 };
 
-// TODO: Implementar hook para buscar pontos de embarque reais do Supabase
-// const { data: points } = useBoardingPoints();
-const MOCK_POINTS: BoardingPoint[] = [];
-
 type FilterType = "todos" | BoardingPoint["type"];
 
 interface BoardingPointsPanelProps {
-  /** When provided, renders as a selector (used inside CreateRideModal) */
   selectable?: boolean;
   selectedId?: string;
   onSelect?: (point: BoardingPoint) => void;
+}
+
+function mapSummaryToBoardingPoint(point: BoardingPointSummary): BoardingPoint {
+  return {
+    id: point.id,
+    name: point.name,
+    description: point.description,
+    type: point.type,
+    address: point.address,
+    popular: point.popular,
+    rides_count: point.rides_count,
+  };
 }
 
 export function BoardingPointsPanel({
@@ -106,43 +117,64 @@ export function BoardingPointsPanel({
   const [suggestName, setSuggestName] = useState("");
   const [suggestAddress, setSuggestAddress] = useState("");
 
+  const { data: pointsData = [] } = useQuery({
+    queryKey: ["mobility", "boarding-points"],
+    queryFn: () => BoardingPointService.listMostUsedPoints(20),
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const points = useMemo(
+    () => pointsData.map(mapSummaryToBoardingPoint),
+    [pointsData],
+  );
+
   const filters: { value: FilterType; label: string }[] = [
-    { value: "todos", label: "📍 Todos" },
-    { value: "padaria", label: "☕ Padarias" },
-    { value: "praca", label: "🌳 Praças" },
-    { value: "mercado", label: "🛒 Mercados" },
-    { value: "escola", label: "🎓 Escolas" },
-    { value: "igreja", label: "⛪ Igrejas" },
+    { value: "todos", label: "Todos" },
+    { value: "padaria", label: "Padarias" },
+    { value: "praca", label: "Pracas" },
+    { value: "mercado", label: "Mercados" },
+    { value: "escola", label: "Escolas" },
+    { value: "igreja", label: "Igrejas" },
   ];
 
   const filtered =
-    filter === "todos"
-      ? MOCK_POINTS
-      : MOCK_POINTS.filter((p) => p.type === filter);
+    filter === "todos" ? points : points.filter((point) => point.type === filter);
 
-  const handleSuggest = () => {
-    if (!suggestName || !suggestAddress) return;
-    toast.success("Sugestão enviada para análise! Obrigado 🙏");
-    setSuggestName("");
-    setSuggestAddress("");
-    setShowSuggestForm(false);
+  const handleSuggest = async () => {
+    if (!suggestName || !suggestAddress) {
+      return;
+    }
+
+    const result = await BoardingPointService.submitSuggestion({
+      name: suggestName,
+      address: suggestAddress,
+    });
+
+    if (result.accepted) {
+      toast.success("Sugestao enviada para analise.");
+      setSuggestName("");
+      setSuggestAddress("");
+      setShowSuggestForm(false);
+      return;
+    }
+
+    toast.info("Sugestoes de novos pontos estao indisponiveis no momento.");
   };
 
   return (
     <div className="space-y-4">
-      {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="text-sm font-bold text-white">Pontos de Embarque</h3>
+          <h3 className="text-sm font-bold text-white">Pontos de embarque</h3>
           <p className="text-xs text-gray-500 mt-0.5">
-            Locais conhecidos do bairro para facilitar encontrar o motorista
+            Locais recorrentes para facilitar o encontro com o motorista
           </p>
         </div>
         {!selectable && (
           <Button
             size="sm"
             variant="outline"
-            onClick={() => setShowSuggestForm((v) => !v)}
+            onClick={() => setShowSuggestForm((value) => !value)}
             className="border-white/10 text-gray-400 hover:text-white hover:bg-white/5 rounded-xl text-xs h-8"
           >
             <Plus className="h-3 w-3 mr-1" /> Sugerir ponto
@@ -150,22 +182,19 @@ export function BoardingPointsPanel({
         )}
       </div>
 
-      {/* Suggest form */}
       {showSuggestForm && (
         <div className="p-4 rounded-2xl border border-teal-500/20 bg-teal-500/5 space-y-3">
-          <p className="text-xs font-semibold text-teal-400">
-            📍 Sugerir novo ponto
-          </p>
+          <p className="text-xs font-semibold text-teal-400">Sugerir novo ponto</p>
           <input
             value={suggestName}
-            onChange={(e) => setSuggestName(e.target.value)}
-            placeholder="Nome do ponto (ex: Padaria do Zé)"
+            onChange={(event) => setSuggestName(event.target.value)}
+            placeholder="Nome do ponto"
             className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-xs text-white placeholder:text-gray-500 outline-none focus:border-teal-500/50"
           />
           <input
             value={suggestAddress}
-            onChange={(e) => setSuggestAddress(e.target.value)}
-            placeholder="Endereço / referência"
+            onChange={(event) => setSuggestAddress(event.target.value)}
+            placeholder="Endereco ou referencia"
             className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-xs text-white placeholder:text-gray-500 outline-none focus:border-teal-500/50"
           />
           <div className="flex gap-2">
@@ -174,7 +203,7 @@ export function BoardingPointsPanel({
               onClick={handleSuggest}
               className="bg-teal-500/20 text-teal-400 hover:bg-teal-500/30 rounded-xl text-xs h-8 flex-1"
             >
-              Enviar sugestão
+              Enviar sugestao
             </Button>
             <Button
               size="sm"
@@ -188,28 +217,26 @@ export function BoardingPointsPanel({
         </div>
       )}
 
-      {/* Filter pills */}
       <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
-        {filters.map((f) => (
+        {filters.map((item) => (
           <button
-            key={f.value}
-            onClick={() => setFilter(f.value)}
+            key={item.value}
+            onClick={() => setFilter(item.value)}
             className={cn(
               "flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-all border",
-              filter === f.value
+              filter === item.value
                 ? "bg-teal-500/20 border-teal-500/30 text-teal-400"
                 : "bg-white/5 border-white/10 text-gray-400 hover:text-white",
             )}
           >
-            {f.label}
+            {item.label}
           </button>
         ))}
       </div>
 
-      {/* Points list */}
       <div className="space-y-2">
         {filtered.map((point) => {
-          const cfg = typeConfig[point.type];
+          const config = typeConfig[point.type];
           const isSelected = selectedId === point.id;
 
           return (
@@ -224,46 +251,38 @@ export function BoardingPointsPanel({
                   : "border-white/10 bg-[#1E2529] hover:border-white/20",
               )}
             >
-              {/* Popular badge */}
               {point.popular && (
                 <div className="absolute top-3 right-3">
                   <Badge className="bg-amber-500/20 text-amber-400 border-amber-500/20 text-[0.55rem] px-1.5 h-4">
-                    🔥 Popular
+                    Popular
                   </Badge>
                 </div>
               )}
 
               <div className="flex items-start gap-3">
-                {/* Icon */}
                 <div
                   className={cn(
                     "w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0",
-                    cfg.bg,
+                    config.bg,
                   )}
                 >
-                  <span className={cfg.color}>{cfg.icon}</span>
+                  <span className={config.color}>{config.icon}</span>
                 </div>
 
-                {/* Info */}
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <p className="text-sm font-semibold text-white truncate">
-                      {point.name}
-                    </p>
+                    <p className="text-sm font-semibold text-white truncate">{point.name}</p>
                     <Badge
                       className={cn(
-                        "text-[0.55rem] px-1.5 h-4 border",
-                        cfg.bg,
-                        cfg.color,
-                        "border-transparent",
+                        "text-[0.55rem] px-1.5 h-4 border border-transparent",
+                        config.bg,
+                        config.color,
                       )}
                     >
-                      {cfg.label}
+                      {config.label}
                     </Badge>
                   </div>
-                  <p className="text-xs text-gray-500 mt-0.5">
-                    {point.description}
-                  </p>
+                  <p className="text-xs text-gray-500 mt-0.5">{point.description}</p>
 
                   <div className="flex items-center gap-3 mt-2">
                     <span className="flex items-center gap-1 text-xs text-gray-400">
@@ -280,24 +299,19 @@ export function BoardingPointsPanel({
 
                   <div className="flex items-center gap-3 mt-1.5">
                     <span className="text-xs text-gray-500">
-                      🚗 {point.rides_count} corridas neste ponto
+                      {point.rides_count} corridas neste ponto
                     </span>
                   </div>
                 </div>
 
-                {/* Selection indicator */}
                 {selectable && (
                   <div
                     className={cn(
                       "w-5 h-5 rounded-full border-2 flex-shrink-0 flex items-center justify-center transition-all mt-0.5",
-                      isSelected
-                        ? "border-teal-400 bg-teal-400"
-                        : "border-white/20",
+                      isSelected ? "border-teal-400 bg-teal-400" : "border-white/20",
                     )}
                   >
-                    {isSelected && (
-                      <CheckCircle2 className="h-3 w-3 text-white" />
-                    )}
+                    {isSelected && <CheckCircle2 className="h-3 w-3 text-white" />}
                   </div>
                 )}
               </div>

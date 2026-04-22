@@ -11,10 +11,12 @@
  */
 
 import { useParams, Link } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import { useEntitlements } from '@/core/billing/hooks/useEntitlements';
 import { PlanStatusWidget, UpgradePrompt, UpgradePromptInline } from '../components';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/components/ui/card';
 import { Button } from '@/shared/components/ui/button';
+import { MenuFacade } from '@/modules/gastronomy/services/MenuService';
 import {
   UtensilsCrossed,
   QrCode,
@@ -32,6 +34,11 @@ export default function GastronomyDashboardPage() {
   const { can, isLoading, entitlements } = useEntitlements({
     business_id: businessId,
     subscription_scope: 'business',
+  });
+  const { data: usageStats } = useQuery({
+    queryKey: ['gastronomy', 'dashboard-usage', businessId],
+    enabled: !!businessId,
+    queryFn: async () => MenuFacade.queries.getMenuUsageStats(businessId!),
   });
 
   if (isLoading) {
@@ -55,9 +62,9 @@ export default function GastronomyDashboardPage() {
       {/* Widget de Status do Plano */}
       <PlanStatusWidget
         businessId={businessId!}
-        currentMenuItems={0} // TODO: Buscar do banco
-        currentImages={0} // TODO: Buscar do banco
-        currentPromotions={0} // TODO: Buscar do banco
+        currentMenuItems={usageStats?.currentMenuItems ?? 0}
+        currentImages={usageStats?.currentImages ?? 0}
+        currentPromotions={usageStats?.currentPromotions ?? 0}
       />
 
       {/* Grid de Recursos */}

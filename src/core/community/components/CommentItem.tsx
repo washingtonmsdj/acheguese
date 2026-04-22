@@ -8,7 +8,7 @@ import {
 import { Button } from "@/shared/components/ui/button";
 import { Heart, MessageSquare, Edit, Trash2, Flag } from "lucide-react";
 import { Comment, canEditComment } from "@/shared/utils/commentTree";
-import { formatRelativeTime } from "@/shared/utils/communityUtils";
+import { formatRelativeTime } from "@/shared/utils/textUtils";
 import { useCommentActions } from "@/core/community/hooks/useCommentActions";
 import { useModeration } from "@/core/community/hooks/useModeration";
 import { useSessionContext } from "@/core/session";

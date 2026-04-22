@@ -5,9 +5,9 @@
  */
 
 import { useState, useCallback } from 'react';
-import { BusinessIdentityField } from '@/shared/components/public-identity/domains/BusinessIdentityField';
-import { IdentityImpactNotice } from '@/shared/components/public-identity/IdentityImpactNotice';
-import { IdentityChangeConfirmDialog } from '@/shared/components/public-identity/IdentityChangeConfirmDialog';
+import { BusinessIdentityField } from '@/core/public-identity/components/domains/BusinessIdentityField';
+import { IdentityImpactNotice } from '@/core/public-identity/components/IdentityImpactNotice';
+import { IdentityChangeConfirmDialog } from '@/core/public-identity/components/IdentityChangeConfirmDialog';
 
 interface BusinessSlugSectionProps {
   slug: string;

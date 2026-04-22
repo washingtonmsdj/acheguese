@@ -11,13 +11,20 @@
  */
 
 import { useEffect, useState } from 'react';
+import type { ComponentType } from 'react';
 import { useParams } from 'react-router-dom';
 import { BusinessUrlService } from '@/core/business/services/BusinessUrlService';
 import { TerritorialLayout } from './TerritorialLayout';
 import BusinessCanonicalRoute from './BusinessCanonicalRoute';
 import { Loader2 } from 'lucide-react';
 
-export default function BusinessRouteResolver() {
+interface BusinessRouteResolverProps {
+  BusinessDetailComponent?: ComponentType<{ businessId?: string }>;
+}
+
+export default function BusinessRouteResolver({
+  BusinessDetailComponent,
+}: BusinessRouteResolverProps = {}) {
   const { state, city, district, slug } = useParams<{
     state: string;
     city: string;
@@ -62,7 +69,7 @@ export default function BusinessRouteResolver() {
   }
 
   if (resolved === 'business') {
-    return <BusinessCanonicalRoute />;
+    return <BusinessCanonicalRoute BusinessDetailComponent={BusinessDetailComponent} />;
   }
 
   return <TerritorialLayout />;

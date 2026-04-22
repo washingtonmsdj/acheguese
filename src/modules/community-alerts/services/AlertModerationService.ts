@@ -2,7 +2,7 @@
  * AlertModerationService — Reports, strikes e moderação de alertas
  */
 
-import { supabase } from "@/integrations/supabase";
+import { supabase } from "@/core/supabase";
 import { logger } from "@/shared/utils/logger";
 import type {
   CommunityAlertReport,

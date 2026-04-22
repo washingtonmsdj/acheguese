@@ -7,8 +7,8 @@
  * @version 2.0.0 - Extraído de GastronomyService
  */
 import { logger } from '@/shared/utils/logger';
-import { supabase } from '@/integrations/supabase';
-import type { Json } from '@/integrations/supabase';
+import { supabase } from '@/core/supabase';
+import type { Json } from '@/core/supabase';
 import { BusinessOwnershipService } from '@/core/business/services/BusinessOwnershipService';
 import { sanitizeString } from '@/shared/utils/sanitization';
 import type {
@@ -264,3 +264,4 @@ export async function patchGastronomyProfile(
     throw new Error(`Erro ao atualizar perfil: ${message}`);
   }
 }
+

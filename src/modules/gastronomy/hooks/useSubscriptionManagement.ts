@@ -58,11 +58,7 @@ export function useSubscriptionManagement(businessId: string) {
     isLoading: isLoadingInvoices,
   } = useQuery({
     queryKey: ['gastronomy-invoices', businessId],
-    queryFn: async () => {
-      // TODO: Implementar busca de faturas via edge function
-      // que chama GastronomyStripeService.listInvoices()
-      return [];
-    },
+    queryFn: async () => GastronomySubscriptionService.listInvoices(businessId),
     enabled: !!businessId && subscription?.stripe_subscription_id != null,
   });
   

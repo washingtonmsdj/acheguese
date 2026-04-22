@@ -6,7 +6,7 @@
  * @version 2.0.0 - Extraído de MenuQueryService
  */
 import { logger } from '@/shared/utils/logger';
-import { supabase } from '@/integrations/supabase';
+import { supabase } from '@/core/supabase';
 import { OpeningHoursService } from '@/core/business/services/OpeningHoursService';
 import { sanitizeForILike } from '@/shared/utils/sqlSanitization';
 import {
@@ -811,3 +811,83 @@ export async function getPublicFoodItems(params: {
     return [];
   }
 }
+
+/**
+ * Buscar uso atual dos recursos de cardápio para o dashboard.
+ */
+export async function getMenuUsageStats(businessId: string): Promise<{
+  currentMenuItems: number;
+  currentImages: number;
+  currentPromotions: number;
+}> {
+  try {
+    if (!isValidId(businessId) || isDevMockId(businessId)) {
+      return {
+        currentMenuItems: 0,
+        currentImages: 0,
+        currentPromotions: 0,
+      };
+    }
+
+    const menus = await getMenusByBusiness(businessId);
+    const menuIds = menus.map((menu) => menu.id);
+    if (!menuIds.length) {
+      return {
+        currentMenuItems: 0,
+        currentImages: 0,
+        currentPromotions: 0,
+      };
+    }
+
+    const now = new Date().toISOString();
+
+    const [
+      menuItemsCountResult,
+      imagesCountResult,
+      promotionsCountResult,
+    ] = await Promise.all([
+      supabase
+        .from('menu_items')
+        .select('*', { count: 'exact', head: true })
+        .in('menu_id', menuIds)
+        .eq('is_available', true),
+      supabase
+        .from('menu_items')
+        .select('*', { count: 'exact', head: true })
+        .in('menu_id', menuIds)
+        .eq('is_available', true)
+        .not('image_url', 'is', null),
+      supabase
+        .from('menu_promotions')
+        .select('*', { count: 'exact', head: true })
+        .in('menu_id', menuIds)
+        .eq('is_active', true)
+        .lte('start_date', now)
+        .gte('end_date', now),
+    ]);
+
+    if (menuItemsCountResult.error) {
+      logger.error('[MenuQueries] Error counting menu items:', menuItemsCountResult.error);
+    }
+    if (imagesCountResult.error) {
+      logger.error('[MenuQueries] Error counting menu images:', imagesCountResult.error);
+    }
+    if (promotionsCountResult.error) {
+      logger.error('[MenuQueries] Error counting active promotions:', promotionsCountResult.error);
+    }
+
+    return {
+      currentMenuItems: menuItemsCountResult.count ?? 0,
+      currentImages: imagesCountResult.count ?? 0,
+      currentPromotions: promotionsCountResult.count ?? 0,
+    };
+  } catch (error) {
+    logger.error('[MenuQueries] Unexpected error getting menu usage stats:', error);
+    return {
+      currentMenuItems: 0,
+      currentImages: 0,
+      currentPromotions: 0,
+    };
+  }
+}
+

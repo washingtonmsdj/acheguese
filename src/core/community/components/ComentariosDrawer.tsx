@@ -17,7 +17,7 @@ import { ScrollArea } from "@/shared/components/ui/scroll-area";
 import { Skeleton } from "@/shared/components/ui/skeleton";
 import { useAuth } from "@/core/auth/hooks/useAuth";
 import { AnimatePresence } from "framer-motion";
-import { ReportContentDialog } from "@/shared/components/ReportContentDialog";
+import { ReportContentDialog } from "@/core/moderation/components/ReportContentDialog";
 import { CommentItem } from "@/shared/components/drawer/CommentItem";
 import { useComments } from "@/core/comments/hooks/useComments";
 

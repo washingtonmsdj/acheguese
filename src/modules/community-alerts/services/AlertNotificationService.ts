@@ -8,7 +8,7 @@
  * Arquitetura pronta para expansão para raio geográfico / bairros adjacentes.
  */
 
-import { supabase } from "@/integrations/supabase";
+import { supabase } from "@/core/supabase";
 import { logger } from "@/shared/utils/logger";
 import { notificationService } from "@/core/notifications/services/NotificationService";
 import { ALERT_RULES } from "../config/alertConfig";

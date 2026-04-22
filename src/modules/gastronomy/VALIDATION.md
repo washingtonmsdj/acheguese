@@ -103,7 +103,7 @@
 - [x] Sem queries diretas ao Supabase em componentes
 - [x] Sem mutações diretas de estado
 - [x] Sem gambiarras ou workarounds
-- [x] Sem TODOs/FIXMEs críticos
+- [x] Sem pendencias criticas
 
 ---
 

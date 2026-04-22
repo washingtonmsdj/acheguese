@@ -25,7 +25,7 @@ import { Badge } from "@/shared/components/ui/badge";
 import { Skeleton } from "@/shared/components/ui/skeleton";
 import { useToast } from "@/shared/hooks/use-toast";
 import { useAuth } from "@/core/auth/hooks/useAuth";
-import { ReportContentDialog } from "@/shared/components/ReportContentDialog";
+import { ReportContentDialog } from "@/core/moderation/components/ReportContentDialog";
 import {
   LostFoundMiniMap,
   LostFoundLocationCard,

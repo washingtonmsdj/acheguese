@@ -19,7 +19,20 @@ import { memo, useRef, useEffect } from "react";
 import { Loader2 } from "lucide-react";
 import { Skeleton } from "@/shared/components/ui/skeleton";
 import { EventCardEnhanced } from "./EventCardEnhanced";
-import type { Event } from "@/core/events";
+
+interface Event {
+  id: string;
+  title: string;
+  date: string;
+  created_at: string;
+  status: "upcoming" | "ongoing" | "completed" | "cancelled";
+  current_participants: number;
+  max_participants?: number | null;
+  location?: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
+  image_url?: string | null;
+}
 
 interface EventGridProps {
   eventos: Event[];

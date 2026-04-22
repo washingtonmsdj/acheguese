@@ -47,7 +47,7 @@ import { useProfessionalEdit } from "@/modules/services/hooks/useProfessionalEdi
 import { useServiceUrls } from "@/modules/services/hooks/useServiceUrls";
 import { ProfessionalSlugSection } from "@/modules/services/components/identity/ProfessionalSlugSection";
 import { useProfessionalSlugSaveGuard } from "@/modules/services/components/identity/useProfessionalSlugSaveGuard";
-import { IdentityChangeConfirmDialog } from "@/shared/components/public-identity/IdentityChangeConfirmDialog";
+import { IdentityChangeConfirmDialog } from "@/core/public-identity/components/IdentityChangeConfirmDialog";
 import { useIdentitySaveLogger } from "@/core/public-identity/hooks/useIdentitySaveLogger";
 import { SERVICE_FORM_CATEGORY_OPTIONS } from "@/modules/services/domain/professionalCategories";
 import { SERVICE_AREA_OPTIONS } from "@/modules/services/domain/serviceAreaOptions";

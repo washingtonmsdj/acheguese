@@ -16,10 +16,21 @@ import 'maplibre-gl/dist/maplibre-gl.css';
 import { MapPin, Navigation, Loader2, Map as MapIcon } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/components/ui/card';
 import { Button } from '@/shared/components/ui/button';
-import type { Business } from '@/core/business/types/Business';
-import { DEFAULT_TILE_STYLE } from '@/core/maps/providers/MapProvider';
+const DEFAULT_TILE_STYLE_URL = "https://demotiles.maplibre.org/style.json";
 import { useRobustGeolocation } from '@/shared/hooks';
-import { useFriendlyModuleUrls } from '@/core/routing/hooks/useFriendlyModuleUrls';
+
+interface Business {
+  name: string;
+  location?: { name?: string | null } | null;
+  address?: {
+    latitude?: number | null;
+    longitude?: number | null;
+    street?: string | null;
+    number?: string | null;
+    complement?: string | null;
+    postal_code?: string | null;
+  } | null;
+}
 
 interface StandaloneMapProps {
   business: Business;
@@ -65,8 +76,7 @@ export default function StandaloneMap({ business }: StandaloneMapProps) {
   const postalCode = business.address?.postal_code ?? null;
 
   // URL territorial do mapa — SSOT via useFriendlyModuleUrls
-  const moduleUrls = useFriendlyModuleUrls();
-  const internalMapUrl = businessPos ? moduleUrls.map : null;
+  const internalMapUrl = businessPos ? "/mapa" : null;
 
   // ── Geolocalização robusta (SSOT) ──────────────────────────────
   const {
@@ -92,7 +102,7 @@ export default function StandaloneMap({ business }: StandaloneMapProps) {
     // ✅ SSOT: Usa DEFAULT_TILE_STYLE do MapProvider
     const map = new maplibregl.Map({
       container: containerRef.current,
-      style: DEFAULT_TILE_STYLE.styleUrl,
+      style: DEFAULT_TILE_STYLE_URL,
       center: [businessPos[1], businessPos[0]], // [lng, lat]
       zoom: 15,
       attributionControl: false,
@@ -105,7 +115,7 @@ export default function StandaloneMap({ business }: StandaloneMapProps) {
     map.addControl(
       new maplibregl.AttributionControl({ 
         compact: true, 
-        customAttribution: DEFAULT_TILE_STYLE.attribution 
+        customAttribution: "OpenStreetMap contributors" 
       }), 
       'bottom-left'
     );

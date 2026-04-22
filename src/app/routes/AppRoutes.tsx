@@ -18,7 +18,6 @@ import { CountryLandingPage } from "@/core/routing/components/CountryLandingPage
 import { BrasilShowcasePage } from "@/core/routing/components/BrasilShowcasePage";
 import {
   TerritorialCommunityPage,
-  TerritorialBusinessPage,
   TerritorialServicesPage,
   TerritorialClassificadosPage,
   TerritorialEventosPage,
@@ -194,10 +193,26 @@ export function AppRoutes() {
         
         {/* Landing territorial genérico */}
         <Route path="/:state/:city/:groupSlugOrDistrict" element={<TerritorialLayout />}>
-          <Route index element={<TerritorialIndexPage />} />
+          <Route
+            index
+            element={
+              <TerritorialIndexPage
+                CityLandingComponent={P.CidadeLandingPage}
+                ComplexoLandingComponent={P.ComplexoNordesteLandingPage}
+              />
+            }
+          />
         </Route>
         <Route path="/:state/:city" element={<TerritorialLayout />}>
-          <Route index element={<TerritorialIndexPage />} />
+          <Route
+            index
+            element={
+              <TerritorialIndexPage
+                CityLandingComponent={P.CidadeLandingPage}
+                ComplexoLandingComponent={P.ComplexoNordesteLandingPage}
+              />
+            }
+          />
         </Route>
 
         {/* Landing de estado — lista cidades ativas */}
@@ -209,7 +224,10 @@ export function AppRoutes() {
 
         {/* Módulo empresas — estrutura hierárquica clara */}
         {/* 5 segmentos = empresa específica: /empresas/:uf/:cidade/:bairro/:slug */}
-        <Route path="/empresas/:state/:city/:district/:slug" element={<P.BusinessRouteResolver />} />
+        <Route
+          path="/empresas/:state/:city/:district/:slug"
+          element={<P.BusinessRouteResolver BusinessDetailComponent={P.EmpresaDetailLandingPage} />}
+        />
         
         {/* Categoria: /empresas/:uf/:cidade/categoria/:category */}
         <Route path="/empresas/:state/:city/categoria/:category" element={<TerritorialLayout />}>

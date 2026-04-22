@@ -1,15 +1,14 @@
-﻿import { useMutation } from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
 import { useShallow } from "zustand/react/shallow";
 
 import { useSessionContext } from "@/core/session";
+import { useGastronomyCartStore } from "../cart/useGastronomyCartStore";
 import {
-  useOrderDelivery,
-  GastronomyOrderOriginAdapter,
-  type OrderRecord,
-} from "@/shared/services/deliveryBridge";
+  GastronomyCheckoutService,
+  type GastronomyCheckoutOrderRecord,
+} from "../services/GastronomyCheckoutService";
 import type { GastronomyBusiness } from "../types/gastronomy";
 import type { Cart } from "../types/menu";
-import { useGastronomyCartStore } from "../cart/useGastronomyCartStore";
 
 export interface GastronomyCheckoutInput {
   business: GastronomyBusiness;
@@ -20,13 +19,14 @@ export interface GastronomyCheckoutInput {
 
 export function useGastronomyCheckout() {
   const { activeProfile } = useSessionContext();
-  const { createOrder } = useOrderDelivery();
   const clearCart = useGastronomyCartStore(
     useShallow((state) => state.clearCart),
   );
 
   const mutation = useMutation({
-    mutationFn: async (input: GastronomyCheckoutInput): Promise<OrderRecord> => {
+    mutationFn: async (
+      input: GastronomyCheckoutInput,
+    ): Promise<GastronomyCheckoutOrderRecord> => {
       if (!activeProfile?.id) {
         throw new Error("Selecione um perfil ativo para concluir o pedido.");
       }
@@ -35,7 +35,7 @@ export function useGastronomyCheckout() {
         throw new Error("O carrinho precisa ter pelo menos um item.");
       }
 
-      const draft = GastronomyOrderOriginAdapter.toCreateOrderInput({
+      return GastronomyCheckoutService.createOrder({
         customer_profile_id: activeProfile.id,
         actor_profile_id: activeProfile.id,
         business: input.business,
@@ -43,15 +43,6 @@ export function useGastronomyCheckout() {
         payment_method: input.payment_method,
         notes: input.notes,
       });
-
-      const { actor_profile_id: _actorProfileId, ...payload } = draft;
-      const result = await createOrder(payload);
-
-      if (!result.success || !result.data) {
-        throw new Error(result.error || "Falha ao criar o pedido.");
-      }
-
-      return result.data;
     },
     onSuccess: () => {
       clearCart();
@@ -67,4 +58,3 @@ export function useGastronomyCheckout() {
     hasActiveProfile: !!activeProfile?.id,
   };
 }
-

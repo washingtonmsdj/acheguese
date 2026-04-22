@@ -5,7 +5,7 @@
  * Armazena em classified_reports e notifica administradores.
  */
 
-import { supabase } from "@/integrations/supabase/supabase";
+import { supabase } from "@/core/supabase";
 import { logger } from "@/shared/utils/logger";
 import { trackError } from "@/shared/utils/errorTracking";
 

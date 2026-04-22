@@ -1,7 +1,7 @@
-import React from "react";
+﻿import React from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/components/ui/card";
 import { Badge } from "@/shared/components/ui/badge";
-import { BarChart3, Building2, Calendar, Tag, FileText } from "lucide-react";
+import { Building2, Calendar, FileText } from "lucide-react";
 import { cn } from "@/shared/utils/cn";
 
 interface ContentCategory {
@@ -18,6 +18,23 @@ interface ContentMetricsProps {
   categories: ContentCategory[];
   total: number;
   loading?: boolean;
+}
+
+function toCategoriesFromCountMap(
+  input: Record<string, number> | undefined,
+  palette: string[],
+): ContentCategory[] {
+  if (!input || Object.keys(input).length === 0) return [];
+
+  const total = Object.values(input).reduce((sum, count) => sum + (count || 0), 0);
+  if (total === 0) return [];
+
+  return Object.entries(input).map(([label, count], index) => ({
+    label,
+    count,
+    percentage: Math.round((count / total) * 100),
+    color: palette[index % palette.length],
+  }));
 }
 
 export function ContentMetrics({
@@ -69,15 +86,10 @@ export function ContentMetrics({
                     {category.count}
                   </Badge>
                 </div>
-                <span className="text-sm text-muted-foreground">
-                  {category.percentage}%
-                </span>
+                <span className="text-sm text-muted-foreground">{category.percentage}%</span>
               </div>
               <div className="h-2 bg-muted rounded-full overflow-hidden">
-                <div
-                  className={cn("h-full rounded-full transition-all", category.color)}
-                  style={{ width: `${category.percentage}%` }}
-                />
+                <div className={cn("h-full rounded-full transition-all", category.color)} style={{ width: `${category.percentage}%` }} />
               </div>
             </div>
           ))}
@@ -94,66 +106,87 @@ export function ContentMetrics({
   );
 }
 
-// Exemplos de uso
 export function BusinessesByNichoMetrics({ data, loading }: { data?: any; loading?: boolean }) {
-  // TODO: Implementar cálculo real
-  const categories: ContentCategory[] = [
-    { label: "Alimentação", count: 0, percentage: 0, color: "bg-orange-500" },
-    { label: "Serviços", count: 0, percentage: 0, color: "bg-blue-500" },
-    { label: "Comércio", count: 0, percentage: 0, color: "bg-green-500" },
-    { label: "Saúde", count: 0, percentage: 0, color: "bg-red-500" },
-    { label: "Outros", count: 0, percentage: 0, color: "bg-gray-500" },
-  ];
+  const fallback = {
+    Alimentacao: 0,
+    Servicos: 0,
+    Comercio: 0,
+    Saude: 0,
+    Outros: 0,
+  };
+  const byCategory = (data?.byCategory as Record<string, number> | undefined) ?? fallback;
+  const categories = toCategoriesFromCountMap(byCategory, [
+    "bg-orange-500",
+    "bg-blue-500",
+    "bg-green-500",
+    "bg-red-500",
+    "bg-gray-500",
+  ]);
+  const total = categories.reduce((sum, c) => sum + c.count, 0);
 
   return (
     <ContentMetrics
       title="Empresas por Nicho"
-      description="Distribuição de empresas por categoria"
+      description="Distribuicao de empresas por categoria"
       icon={Building2}
       categories={categories}
-      total={0}
+      total={total}
       loading={loading}
     />
   );
 }
 
 export function PostsByCategoryMetrics({ data, loading }: { data?: any; loading?: boolean }) {
-  // TODO: Implementar cálculo real
-  const categories: ContentCategory[] = [
-    { label: "Discussão", count: 0, percentage: 0, color: "bg-blue-500" },
-    { label: "Recomendação", count: 0, percentage: 0, color: "bg-green-500" },
-    { label: "Enquete", count: 0, percentage: 0, color: "bg-purple-500" },
-    { label: "Evento", count: 0, percentage: 0, color: "bg-orange-500" },
-  ];
+  const fallback = {
+    Discussao: 0,
+    Recomendacao: 0,
+    Enquete: 0,
+    Evento: 0,
+  };
+  const byCategory = (data?.byType as Record<string, number> | undefined) ?? fallback;
+  const categories = toCategoriesFromCountMap(byCategory, [
+    "bg-blue-500",
+    "bg-green-500",
+    "bg-purple-500",
+    "bg-orange-500",
+  ]);
+  const total = categories.reduce((sum, c) => sum + c.count, 0);
 
   return (
     <ContentMetrics
       title="Posts por Categoria"
-      description="Distribuição de posts por tipo"
+      description="Distribuicao de posts por tipo"
       icon={FileText}
       categories={categories}
-      total={0}
+      total={total}
       loading={loading}
     />
   );
 }
 
 export function EventsByMonthMetrics({ data, loading }: { data?: any; loading?: boolean }) {
-  // TODO: Implementar cálculo real
-  const categories: ContentCategory[] = [
-    { label: "Janeiro", count: 0, percentage: 0, color: "bg-blue-500" },
-    { label: "Fevereiro", count: 0, percentage: 0, color: "bg-green-500" },
-    { label: "Março", count: 0, percentage: 0, color: "bg-purple-500" },
-    { label: "Abril", count: 0, percentage: 0, color: "bg-orange-500" },
-  ];
+  const fallback = {
+    Janeiro: 0,
+    Fevereiro: 0,
+    Marco: 0,
+    Abril: 0,
+  };
+  const byMonth = (data?.byMonth as Record<string, number> | undefined) ?? fallback;
+  const categories = toCategoriesFromCountMap(byMonth, [
+    "bg-blue-500",
+    "bg-green-500",
+    "bg-purple-500",
+    "bg-orange-500",
+  ]);
+  const total = categories.reduce((sum, c) => sum + c.count, 0);
 
   return (
     <ContentMetrics
-      title="Eventos por Mês"
-      description="Distribuição de eventos ao longo do ano"
+      title="Eventos por Mes"
+      description="Distribuicao de eventos ao longo do ano"
       icon={Calendar}
       categories={categories}
-      total={0}
+      total={total}
       loading={loading}
     />
   );

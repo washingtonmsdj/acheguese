@@ -9,7 +9,7 @@
  */
 
 import { logger } from '@/shared/utils/logger';
-import { supabase } from '@/integrations/supabase';
+import { supabase } from '@/core/supabase';
 
 // ── Tipos estendidos da tabela canônica `reviews` ─────────────────────────────
 // Estende o tipo base de @/shared/types/reviews com os campos adicionados
@@ -385,3 +385,4 @@ export class ReviewQueryService {
     }
   }
 }
+

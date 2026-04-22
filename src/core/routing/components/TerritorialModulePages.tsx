@@ -16,7 +16,6 @@ import { ModulePageLoader } from '@/shared/components/loading/PageLoader';
 
 // Lazy imports dos módulos existentes
 const ComunidadePage       = lazy(() => import('@/core/community/pages/ComunidadePage'));
-const EmpresasLandingPage  = lazy(() => import('@/app/pages/EmpresasLandingPage'));
 const ServicosPage         = lazy(() => import('@/core/services/pages/ServicosLandingPage'));
 const ClassificadosPage    = lazy(() => import('@/core/classifieds/pages/ClassificadosPage'));
 const EventosPage          = lazy(() => import('@/core/community/pages/EventosPage'));
@@ -38,15 +37,6 @@ export function TerritorialCommunityPage() {
   return (
     <Suspense fallback={<ModulePageLoader />}>
       <ComunidadePage resolved={resolved} />
-    </Suspense>
-  );
-}
-
-export function TerritorialBusinessPage() {
-  const { resolved, activeMemberIds } = useTerritorialContext();
-  return (
-    <Suspense fallback={<ModulePageLoader />}>
-      <EmpresasLandingPage resolved={resolved} activeMemberIds={activeMemberIds} />
     </Suspense>
   );
 }

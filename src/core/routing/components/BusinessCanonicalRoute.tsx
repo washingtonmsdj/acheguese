@@ -16,13 +16,19 @@
  */
 import { logger } from '@/shared/utils/logger';
 import { useEffect, useState } from 'react';
+import type { ComponentType } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { BusinessUrlService } from '@/core/business/services/BusinessUrlService';
-import EmpresaDetailLandingPage from '@/app/pages/EmpresaDetailLandingPage';
 import { Loader2 } from 'lucide-react';
 import { logPageNotFound } from '@/core/public-identity/utils/identity-logger';
 
-export default function BusinessCanonicalRoute() {
+interface BusinessCanonicalRouteProps {
+  BusinessDetailComponent?: ComponentType<{ businessId?: string }>;
+}
+
+export default function BusinessCanonicalRoute({
+  BusinessDetailComponent,
+}: BusinessCanonicalRouteProps = {}) {
   const { state, city, district, slug } = useParams<{
     state: string;
     city: string;
@@ -105,5 +111,10 @@ export default function BusinessCanonicalRoute() {
 
   if (!businessId) return null;
 
-  return <EmpresaDetailLandingPage businessId={businessId} />;
+  if (!BusinessDetailComponent) {
+    logger.error('[BusinessCanonicalRoute] BusinessDetailComponent nao informado.');
+    return null;
+  }
+
+  return <BusinessDetailComponent businessId={businessId} />;
 }

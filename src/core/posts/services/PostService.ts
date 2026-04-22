@@ -290,8 +290,8 @@ export class PostService {
   async updatePost(postId: string, data: UpdatePostData): Promise<Post> {
     try {
       // ✅ FUNDAÇÃO 3: Validar dados de entrada
-      const { UpdatePostSchema } =
-        await import("@/shared/validation/schemas/post.schema");
+      const { updatePostSchema: UpdatePostSchema } =
+        await import("@/modules/community/schemas/postSchemas");
       const validatedData = UpdatePostSchema.parse({
         content: data.content,
       });

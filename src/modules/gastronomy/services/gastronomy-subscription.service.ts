@@ -1,5 +1,6 @@
-import { supabase } from "@/integrations/supabase";
+import { supabase } from "@/core/supabase";
 import type { PlanTier } from "@/core/billing";
+import { logger } from "@/shared/utils/logger";
 
 export interface GastronomySubscription {
   id: string;
@@ -25,6 +26,18 @@ export interface UpgradePlanParams {
   businessId: string;
   newPlanTier: PlanTier.PRO | PlanTier.DELIVERY;
   prorationBehavior?: "create_prorations" | "none" | "always_invoice";
+}
+
+export interface GastronomyInvoice {
+  id: string;
+  amount_due: number;
+  amount_paid: number;
+  currency: string;
+  status: string;
+  hosted_invoice_url: string | null;
+  invoice_pdf: string | null;
+  created: number;
+  due_date: number | null;
 }
 
 export class GastronomySubscriptionService {
@@ -113,5 +126,26 @@ export class GastronomySubscriptionService {
 
     return data;
   }
+
+  static async listInvoices(businessId: string): Promise<GastronomyInvoice[]> {
+    const { data, error } = await supabase.functions.invoke("gastronomy-list-invoices", {
+      body: { businessId },
+    });
+
+    if (error) {
+      logger.warn("[GastronomySubscriptionService] Unable to fetch invoices", {
+        businessId,
+        error: error.message,
+      });
+      return [];
+    }
+
+    if (!Array.isArray(data)) {
+      return [];
+    }
+
+    return data as GastronomyInvoice[];
+  }
 }
+
 

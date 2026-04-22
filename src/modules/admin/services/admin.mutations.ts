@@ -5,7 +5,7 @@
  * ✅ SEGURO: Usa edge functions ao invés de supabaseAdmin
  */
 import { logger } from '@/shared/utils/logger';
-import { supabase } from '@/integrations/supabase';
+import { supabase } from '@/core/supabase';
 import type { AdminUserConfig, AdminUserResult } from './types';
 
 /**

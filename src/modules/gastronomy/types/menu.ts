@@ -2,7 +2,7 @@
  * Tipos do sistema de cardápio
  */
 
-import type { Json } from '@/integrations/supabase';
+import type { Json } from '@/core/supabase';
 
 // ============================================================================
 // MENU
@@ -348,3 +348,4 @@ export interface MenuItemFilters {
   is_lactose_free?: boolean;
   search?: string;
 }
+

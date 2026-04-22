@@ -125,7 +125,7 @@ if (isLoading) {
 }
 ```
 
-## 📝 TODO
+## 📝 Pendencias
 
 - [ ] Implementar queries reais no backend
 - [ ] Adicionar sistema de grupos

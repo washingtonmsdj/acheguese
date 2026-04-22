@@ -9,27 +9,34 @@
  * - Bairro/Grupo genérico → TerritorialLandingPage
  */
 
-import { lazy, Suspense } from 'react';
+import { Suspense } from 'react';
+import type { ComponentType } from 'react';
 import { TerritorialLandingPage } from './TerritorialLandingPage';
 import { useTerritorialContext } from './TerritorialLayout';
 import { FullScreenLoader } from '@/shared/components/loading/PageLoader';
 
-const CidadeLandingPage = lazy(() => import('@/app/pages/CidadeLandingPage'));
-const ComplexoNordesteLandingPage = lazy(() => import('@/app/pages/ComplexoNordesteLandingPage'));
+interface TerritorialIndexPageProps {
+  CityLandingComponent?: ComponentType;
+  ComplexoLandingComponent?: ComponentType;
+}
 
 function getGroupSlug(resolved: ReturnType<typeof useTerritorialContext>['resolved']): string | null {
   if (!resolved || resolved.kind !== 'group') return null;
   return resolved.group.slug || null;
 }
 
-export function TerritorialIndexPage() {
+export function TerritorialIndexPage({
+  CityLandingComponent,
+  ComplexoLandingComponent,
+}: TerritorialIndexPageProps = {}) {
   const { resolved } = useTerritorialContext();
 
   // Cidade → CidadeLandingPage
   if (resolved?.kind === 'location' && resolved.location.type === 'city') {
+    if (!CityLandingComponent) return <TerritorialLandingPage />;
     return (
       <Suspense fallback={<FullScreenLoader />}>
-        <CidadeLandingPage />
+        <CityLandingComponent />
       </Suspense>
     );
   }
@@ -37,9 +44,10 @@ export function TerritorialIndexPage() {
   // Complexo do Nordeste de Amaralina → Landing dedicada
   const groupSlug = getGroupSlug(resolved);
   if (groupSlug === 'complexo-do-nordeste-de-amaralina') {
+    if (!ComplexoLandingComponent) return <TerritorialLandingPage />;
     return (
       <Suspense fallback={<FullScreenLoader />}>
-        <ComplexoNordesteLandingPage />
+        <ComplexoLandingComponent />
       </Suspense>
     );
   }

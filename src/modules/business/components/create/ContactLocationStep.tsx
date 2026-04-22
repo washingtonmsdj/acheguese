@@ -10,7 +10,7 @@ import {
   CardTitle,
 } from "@/shared/components/ui/card";
 import { Checkbox } from "@/shared/components/ui/checkbox";
-import { TerritorialSelector } from "@/shared/components/TerritorialSelector";
+import { TerritorialSelector } from "@/core/location/components/TerritorialSelector";
 
 interface DayHoursValue {
   open: string;

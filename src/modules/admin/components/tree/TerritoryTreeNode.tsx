@@ -33,7 +33,7 @@ export function TerritoryTreeNode({
   onToggleGroupFlag,
   isToggling,
 }: TerritoryTreeNodeProps) {
-  // ✅ TODOS OS HOOKS NO TOPO - antes de qualquer lógica condicional
+  // Todos os hooks no topo, antes de qualquer lógica condicional
   const [expanded, setExpanded] = useState(depth < 2);
   
   const hasChildren = (node.children?.length || 0) > 0;

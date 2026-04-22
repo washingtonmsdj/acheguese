@@ -200,9 +200,9 @@ Todos os hooks usam React Query para cache e gerenciamento de estado.
 | useTrendingTopics | 10min      | 15min   | ❌               |
 | useSponsoredAds   | 30min      | 60min   | ❌               |
 
-## 📝 TODO Backend
+## 📝 Pendencias de Backend
 
-Cada hook possui comentários `TODO` indicando a estrutura esperada do backend:
+Cada hook possui comentários de pendência indicando a estrutura esperada do backend:
 
 ### useRankingUsers
 

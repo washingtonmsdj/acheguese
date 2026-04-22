@@ -2,6 +2,7 @@ import { useState, useCallback } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/core/auth";
 import { profileService } from "@/core/profiles/services/ProfileService";
+import { RidePassengerService, RideRatingService, RideReportsService } from "@/core/mobility/services";
 import { toast } from "sonner";
 import { getUserRides, getRideById, getPassengerRating } from "@/modules/mobility/services/mobility.queries";
 import type { RideRequest } from "@/modules/mobility/types/types";
@@ -490,29 +491,16 @@ export function useMobilidade() {
           toast.error("N„o foi possÌvel identificar o motorista desta corrida.");
           return { success: false };
         }
-
-        const { supabase } = await import("@/integrations/supabase");
-        const supabaseAny = supabase as any;
-
         const sanitizedComment = (comment || "").trim();
         const clampedRating = Math.min(5, Math.max(1, Math.round(rating)));
 
-        const { error } = await supabaseAny.from("ride_ratings").upsert(
-          {
-            ride_id: rideId,
-            rater_id: passengerProfile.id,
-            rated_id: driverProfileId,
-            rating: clampedRating,
-            comment: sanitizedComment || null,
-          },
-          { onConflict: "ride_id,rater_id" },
-        );
-
-        if (error) {
-          logger.error("useMobilidade.rateRide - failed", error);
-          toast.error("Erro ao enviar avaliaÁ„o");
-          return { success: false };
-        }
+        await RideRatingService.upsert({
+          rideId,
+          raterId: passengerProfile.id,
+          ratedId: driverProfileId,
+          rating: clampedRating,
+          comment: sanitizedComment || null,
+        });
 
         queryClient.invalidateQueries({ queryKey: MOBILITY_QUERY_KEYS.rides(user.id) });
         queryClient.invalidateQueries({ queryKey: MOBILITY_QUERY_KEYS.passengerRating(user.id) });
@@ -543,23 +531,10 @@ export function useMobilidade() {
           toast.error("Perfil n√£o encontrado");
           return { success: false };
         }
-
-        const { supabase } = await import("@/integrations/supabase");
-        const supabaseAny = supabase as any;
-
-        const { error } = await supabaseAny
-          .from("ride_requests")
-          .update({
-            passenger_confirmed_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-          })
-          .eq("id", rideId)
-          .eq("passenger_profile_id", passengerProfile.id);
-
-        if (error) {
-          logger.warn("useMobilidade.confirmRideCompletion - update failed", error);
-          // Coluna pode n√£o existir ‚Äî n√£o quebrar o fluxo
-        }
+        await RidePassengerService.confirmRideCompletion(
+          rideId,
+          passengerProfile.id,
+        );
 
         queryClient.invalidateQueries({ queryKey: MOBILITY_QUERY_KEYS.rides(user.id) });
         toast.success("Corrida confirmada!");
@@ -589,11 +564,7 @@ export function useMobilidade() {
           toast.error("Perfil n√£o encontrado");
           return { success: false };
         }
-
-        // Usar RideReportsService
-        const { RideReportsService } = await import("@/modules/mobility/services/RideReportsService");
-        
-        const result = await RideReportsService.createReport({
+const result = await RideReportsService.createReport({
           rideId,
           reporterProfileId: passengerProfile.id,
           reporterType: "passenger",
@@ -645,6 +616,7 @@ export function useMobilidade() {
     isLoadingRating,
   };
 }
+
 
 
 

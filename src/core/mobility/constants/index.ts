@@ -68,6 +68,28 @@ export const PACKAGE_SIZE = {
 } as const;
 
 // ============================================
+// REPORTING - Denuncias e moderacao
+// ============================================
+export const REPORT_SEVERITY = {
+  LOW: 'low',
+  MEDIUM: 'medium',
+  HIGH: 'high',
+  CRITICAL: 'critical',
+} as const;
+
+export const REPORT_TYPE = {
+  DRIVER_BEHAVIOR: 'driver_behavior',
+  SAFETY_CONCERN: 'safety_concern',
+  ROUTE_ISSUE: 'route_issue',
+  PAYMENT_DISPUTE: 'payment_dispute',
+  VEHICLE_CONDITION: 'vehicle_condition',
+  CANCELLATION_ABUSE: 'cancellation_abuse',
+  HARASSMENT: 'harassment',
+  FRAUD: 'fraud',
+  OTHER: 'other',
+} as const;
+
+// ============================================
 // TIMEOUTS & INTERVALS - Configurações de tempo
 // ============================================
 export const TIMEOUTS = {
@@ -242,3 +264,5 @@ export type FilterType = typeof FILTER_TYPES[keyof typeof FILTER_TYPES];
 export type RideMode = typeof RIDE_MODE[keyof typeof RIDE_MODE];
 export type SourceType = typeof SOURCE_TYPE[keyof typeof SOURCE_TYPE];
 export type PackageSize = typeof PACKAGE_SIZE[keyof typeof PACKAGE_SIZE];
+export type ReportSeverity = typeof REPORT_SEVERITY[keyof typeof REPORT_SEVERITY];
+export type ReportType = typeof REPORT_TYPE[keyof typeof REPORT_TYPE];

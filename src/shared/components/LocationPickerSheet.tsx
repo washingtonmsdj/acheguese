@@ -9,8 +9,7 @@ import 'maplibre-gl/dist/maplibre-gl.css';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '@/shared/components/ui/sheet';
 import { Button } from '@/shared/components/ui/button';
 import { MapPin, Navigation, Check } from 'lucide-react';
-import { DEFAULT_TILE_STYLE } from '@/core/maps/providers/MapProvider';
-import { GeolocationService } from '@/core/maps/services/GeolocationService';
+const DEFAULT_TILE_STYLE_URL = "https://demotiles.maplibre.org/style.json";
 
 const DEFAULT_CENTER: [number, number] = [-38.4825, -12.987]; // [lng, lat] Salvador
 
@@ -48,7 +47,7 @@ export function LocationPickerSheet({ open, onOpenChange, onConfirm, initialLat,
 
       const map = new maplibregl.Map({
         container: containerRef.current,
-        style: DEFAULT_TILE_STYLE.styleUrl,
+        style: DEFAULT_TILE_STYLE_URL,
         center: [startLng, startLat],
         zoom: 16,
         attributionControl: false,
@@ -89,8 +88,15 @@ export function LocationPickerSheet({ open, onOpenChange, onConfirm, initialLat,
 
   const centerOnUser = useCallback(async () => {
     try {
-      const result = await GeolocationService.getCurrentLocation({ useCache: true });
-      const { latitude: lat, longitude: lng } = result.coords;
+      const position = await new Promise<GeolocationPosition>((resolve, reject) => {
+        navigator.geolocation.getCurrentPosition(resolve, reject, {
+          enableHighAccuracy: true,
+          timeout: 10000,
+          maximumAge: 60000,
+        });
+      });
+      const lat = position.coords.latitude;
+      const lng = position.coords.longitude;
       mapRef.current?.flyTo({ center: [lng, lat], zoom: 17, duration: 800 });
       markerRef.current?.setLngLat([lng, lat]);
       setPosition([lat, lng]);

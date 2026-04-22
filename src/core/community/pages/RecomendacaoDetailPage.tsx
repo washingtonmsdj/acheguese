@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import { Skeleton } from "@/shared/components/ui/skeleton";
-import { ReportContentDialog } from "@/shared/components/ReportContentDialog";
+import { ReportContentDialog } from "@/core/moderation/components/ReportContentDialog";
 import { useAppUrls } from "@/core/routing/hooks"; // âœ… SSOT URLs
 import { useBusinessNavigation } from '@/core/business';
 import { useRecomendacaoDetail } from "@/core/community/hooks/useRecomendacaoDetail";

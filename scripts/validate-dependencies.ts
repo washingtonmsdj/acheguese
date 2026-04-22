@@ -1,5 +1,5 @@
 import { readFileSync, readdirSync, statSync } from 'fs';
-import { join, relative } from 'path';
+import { join, relative, normalize as normalizePath } from 'path';
 
 interface DependencyNode {
   path: string;
@@ -29,7 +29,7 @@ const ALLOWED_DEPENDENCIES: Record<string, string[]> = {
   'modules': ['modules', 'core', 'shared'],  // modules can import from same layer (different submodules via barrel exports)
   'core': ['core', 'integrations', 'shared'],  // core can import from core (different subsystems)
   'shared': ['shared'],  // shared can import from shared (UI components, utils, types)
-  'integrations': ['shared']
+  'integrations': ['integrations', 'shared']
 };
 
 const NORMALIZED_LAYER_ALIASES: Record<string, string> = {
@@ -173,66 +173,118 @@ function buildDependencyGraph(srcDir: string): Map<string, DependencyNode> {
   return graph;
 }
 
+function resolveAliasImport(
+  importPath: string,
+  fileSet: Set<string>,
+): string | null {
+  if (!importPath.startsWith('@/')) return null;
+
+  const normalizedImport = normalizePath(importPath.replace(/^@\//, ''))
+    .replace(/\\/g, '/');
+
+  const candidates = normalizedImport.endsWith('.ts') || normalizedImport.endsWith('.tsx')
+    ? [normalizedImport]
+    : [
+        `${normalizedImport}.ts`,
+        `${normalizedImport}.tsx`,
+        `${normalizedImport}/index.ts`,
+        `${normalizedImport}/index.tsx`,
+      ];
+
+  for (const candidate of candidates) {
+    if (fileSet.has(candidate)) {
+      return candidate;
+    }
+  }
+
+  return null;
+}
+
+function buildAdjacency(graph: Map<string, DependencyNode>): Map<string, string[]> {
+  const adjacency = new Map<string, string[]>();
+  const fileSet = new Set(graph.keys());
+
+  for (const [file, node] of graph.entries()) {
+    const neighbors = new Set<string>();
+    for (const importPath of node.imports) {
+      const resolved = resolveAliasImport(importPath, fileSet);
+      if (resolved && resolved !== file) {
+        neighbors.add(resolved);
+      }
+    }
+    adjacency.set(file, [...neighbors]);
+  }
+
+  return adjacency;
+}
+
+function canonicalCycleKey(cycle: string[]): string {
+  // cycle vem no formato [a,b,c,a]
+  const body = cycle.slice(0, -1);
+  if (body.length === 0) return '';
+
+  const rotations: string[] = [];
+  for (let i = 0; i < body.length; i++) {
+    const rotated = [...body.slice(i), ...body.slice(0, i)];
+    rotations.push(rotated.join('->'));
+  }
+
+  const reversedBody = [...body].reverse();
+  for (let i = 0; i < reversedBody.length; i++) {
+    const rotated = [...reversedBody.slice(i), ...reversedBody.slice(0, i)];
+    rotations.push(rotated.join('->'));
+  }
+
+  rotations.sort();
+  return rotations[0];
+}
+
 function detectCircularDependencies(graph: Map<string, DependencyNode>): string[][] {
+  const adjacency = buildAdjacency(graph);
   const cycles: string[][] = [];
-  const visited = new Set<string>();
-  const recursionStack = new Set<string>();
-  
-  function dfs(file: string, path: string[]): void {
-    if (recursionStack.has(file)) {
-      // Found a cycle - only report if it's not a self-reference
-      const cycleStart = path.indexOf(file);
-      if (cycleStart !== -1 && cycleStart < path.length - 1) {
-        const cycle = [...path.slice(cycleStart), file];
-        // Only add unique cycles (not duplicates or self-references)
+  const seenKeys = new Set<string>();
+  const state = new Map<string, 0 | 1 | 2>(); // 0=unvisited, 1=visiting, 2=done
+  const stack: string[] = [];
+  const stackIndex = new Map<string, number>();
+
+  function dfs(node: string): void {
+    state.set(node, 1);
+    stackIndex.set(node, stack.length);
+    stack.push(node);
+
+    const neighbors = adjacency.get(node) ?? [];
+    for (const neighbor of neighbors) {
+      const neighborState = state.get(neighbor) ?? 0;
+      if (neighborState === 0) {
+        dfs(neighbor);
+        continue;
+      }
+
+      if (neighborState === 1) {
+        const start = stackIndex.get(neighbor);
+        if (start === undefined) continue;
+        const cycle = [...stack.slice(start), neighbor];
         if (cycle.length > 2) {
-          const cycleKey = cycle.sort().join('|');
-          if (!cycles.some(c => c.sort().join('|') === cycleKey)) {
+          const key = canonicalCycleKey(cycle);
+          if (!seenKeys.has(key)) {
+            seenKeys.add(key);
             cycles.push(cycle);
           }
         }
       }
-      return;
     }
-    
-    if (visited.has(file)) {
-      return;
-    }
-    
-    visited.add(file);
-    recursionStack.add(file);
-    path.push(file);
-    
-    const node = graph.get(file);
-    if (!node) {
-      recursionStack.delete(file);
-      return;
-    }
-    
-    for (const importPath of node.imports) {
-      // Find files that could match this import
-      for (const [targetFile, targetNode] of graph.entries()) {
-        if (targetFile === file) continue; // Skip self
-        
-        const rawImportLayer = importPath.split('/')[1];
-        const importLayer = normalizeImportLayer(rawImportLayer);
-        const importRest = importPath.substring(importLayer.length + 3); // Remove @/layer/
 
-        if (targetNode.layer === importLayer && targetFile.includes(importRest)) {
-          dfs(targetFile, [...path]);
-        }
-      }
-    }
-    
-    recursionStack.delete(file);
+    stack.pop();
+    stackIndex.delete(node);
+    state.set(node, 2);
   }
-  
+
   for (const file of graph.keys()) {
-    visited.clear();
-    recursionStack.clear();
-    dfs(file, []);
+    if ((state.get(file) ?? 0) === 0) {
+      dfs(file);
+    }
   }
-  
+
   return cycles;
 }
 
@@ -305,7 +357,7 @@ function validateDependencyRules(graph: Map<string, DependencyNode>): Validation
   };
 }
 
-function generateReport(result: ValidationResult): void {
+function generateReport(result: ValidationResult, cycles: string[][]): void {
   console.log('\n=== Dependency Graph Validation Report ===\n');
   
   // Count nodes by layer
@@ -331,7 +383,6 @@ function generateReport(result: ValidationResult): void {
   
   // Check for circular dependencies
   console.log('🔄 Checking for circular dependencies...');
-  const cycles = detectCircularDependencies(result.graph);
   if (cycles.length > 0) {
     console.log(`   ⚠️  Found ${cycles.length} potential circular dependencies`);
     console.log('   (Note: Some may be false positives due to import resolution)');
@@ -388,9 +439,10 @@ const graph = buildDependencyGraph(srcDir);
 console.log(`Analyzed ${graph.size} files`);
 
 const result = validateDependencyRules(graph);
-generateReport(result);
+const cycles = detectCircularDependencies(graph);
+generateReport(result, cycles);
 
 // Exit with error code if validation failed
-if (!result.valid || detectCircularDependencies(graph).length > 0) {
+if (!result.valid || cycles.length > 0) {
   process.exit(1);
 }

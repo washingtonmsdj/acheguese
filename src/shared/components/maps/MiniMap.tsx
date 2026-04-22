@@ -7,7 +7,7 @@
 import { useEffect, useRef } from 'react';
 import maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
-import { DEFAULT_TILE_STYLE } from '@/core/maps/providers/MapProvider';
+const DEFAULT_TILE_STYLE_URL = "https://demotiles.maplibre.org/style.json";
 
 export interface MiniMapProps {
   latitude: number;
@@ -46,7 +46,7 @@ export function MiniMap({
     // Inicializar mapa
     const map = new maplibregl.Map({
       container: containerRef.current,
-      style: DEFAULT_TILE_STYLE.styleUrl,
+      style: DEFAULT_TILE_STYLE_URL,
       center: [longitude, latitude],
       zoom: zoom,
       attributionControl: false,

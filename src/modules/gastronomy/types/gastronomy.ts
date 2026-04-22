@@ -6,7 +6,7 @@
  */
 
 import type { Business } from '@/core/business';
-import type { Json } from '@/integrations/supabase';
+import type { Json } from '@/core/supabase';
 
 // Re-exporta tipos canônicos do core (SSOT)
 export type {
@@ -283,3 +283,4 @@ export interface GastronomyActivityFilters {
   limit?: number;
   types?: ActivityType[];
 }
+

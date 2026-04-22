@@ -8,7 +8,7 @@
  * - Reservation Board: agendamentos
  */
 import { logger } from '@/shared/utils/logger';
-import { supabase } from '@/integrations/supabase';
+import { supabase } from '@/core/supabase';
 import { profileService } from '@/core/profiles/services/ProfileService';
 import { MobilityDispatchConfigService } from './MobilityDispatchConfigService';
 import { DriverAvailabilityService } from './DriverAvailabilityService';
@@ -92,7 +92,7 @@ export class MobilityOfferService {
         driverProfileId,
         offeredAt: ride.driver_assigned_at || ride.created_at,
         expiresAt: expiresAt.toISOString(),
-        attemptNumber: 1, // TODO: buscar do audit
+        attemptNumber: this.resolveAttemptNumber(ride as Record<string, unknown>),
         status: 'pending',
         
         // Dados protegidos (apenas apÃ³s aceite)
@@ -229,7 +229,11 @@ export class MobilityOfferService {
           paymentMethod: ride.payment_method,
           
           // Filtros
-          priority: 1, // TODO: calcular prioridade
+          priority: this.calculateOpenBoardPriority({
+            createdAt: ride.created_at,
+            suggestedPrice: ride.suggested_price,
+            distanceToOrigin,
+          }),
           
           // Cliente
           customerName: customerDisplayName,
@@ -494,10 +498,39 @@ export class MobilityOfferService {
    * Extrai bairro do endereÃ§o completo
    */
   private static extractNeighborhood(address: string): string {
-    // TODO: Implementar extraÃ§Ã£o inteligente de bairro
-    // Por enquanto, retorna primeiras palavras
-    const parts = address.split(',');
-    return parts[parts.length - 2]?.trim() || 'RegiÃ£o';
+    if (!address) return "Regiao";
+
+    const segments = address
+      .split(",")
+      .map((segment) => segment.trim())
+      .filter(Boolean);
+
+    if (segments.length === 0) {
+      return "Regiao";
+    }
+
+    const noiseTokens = new Set([
+      "brasil",
+      "bahia",
+      "ba",
+      "rio de janeiro",
+      "rj",
+      "sao paulo",
+      "sp",
+      "cep",
+    ]);
+
+    const candidate = [...segments]
+      .reverse()
+      .find((segment) => {
+        const normalized = segment.toLowerCase();
+        if (noiseTokens.has(normalized)) return false;
+        if (/^\d+$/.test(normalized)) return false;
+        if (/^cep[:\s-]*/i.test(normalized)) return false;
+        return normalized.length >= 3;
+      });
+
+    return candidate ?? segments[segments.length - 1];
   }
 
   /**
@@ -535,12 +568,47 @@ export class MobilityOfferService {
     return Math.ceil((distanceKm / avgSpeedKmh) * 60); // minutos
   }
 
+  private static resolveAttemptNumber(ride: Record<string, unknown>): number {
+    const rawValue = ride.dispatch_attempt ?? ride.assignment_attempt;
+    if (typeof rawValue === "number" && Number.isFinite(rawValue) && rawValue >= 1) {
+      return Math.floor(rawValue);
+    }
+    return 1;
+  }
+
+  private static calculateOpenBoardPriority(input: {
+    createdAt: string;
+    suggestedPrice: number;
+    distanceToOrigin: number;
+  }): number {
+    let score = 0;
+
+    const createdAtMs = new Date(input.createdAt).getTime();
+    if (Number.isFinite(createdAtMs)) {
+      const ageMinutes = (Date.now() - createdAtMs) / 60_000;
+      if (ageMinutes <= 5) score += 2;
+      else if (ageMinutes <= 15) score += 1;
+    }
+
+    if (input.suggestedPrice >= 40) score += 2;
+    else if (input.suggestedPrice >= 20) score += 1;
+
+    if (input.distanceToOrigin <= 2) score += 1;
+
+    if (score >= 5) return 5;
+    if (score >= 4) return 4;
+    if (score >= 2) return 3;
+    if (score >= 1) return 2;
+    return 1;
+  }
+
   private static async getDriverCapabilities(
     driverProfileId: string
   ) {
     return getDriverOfferCapabilities(driverProfileId);
   }
 }
+
 
 
 

@@ -272,7 +272,7 @@ function ReportButton({ alertId }: { alertId: string }) {
 ### Internas
 - `@/core/location` — SSOT territorial
 - `@/shared/utils/logger` — Logging
-- `@/integrations/supabase` — Cliente Supabase
+- `@/core/supabase` — Fronteira canônica de persistência
 
 ### Externas
 - `@tanstack/react-query` — Data fetching

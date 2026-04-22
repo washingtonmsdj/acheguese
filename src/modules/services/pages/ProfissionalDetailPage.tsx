@@ -9,7 +9,7 @@ import {
   TabsList,
   TabsTrigger,
 } from "@/shared/components/ui/tabs";
-import { ReportContentDialog } from "@/shared/components/ReportContentDialog";
+import { ReportContentDialog } from "@/core/moderation/components/ReportContentDialog";
 import { ProfessionalHeader } from "@/modules/services/components/ProfessionalHeader";
 import { ProfessionalActionButtons } from "@/modules/services/components/ProfessionalActionButtons";
 import { ProfessionalDetails } from "@/modules/services/components/ProfessionalDetails";

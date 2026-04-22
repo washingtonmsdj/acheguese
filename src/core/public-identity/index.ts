@@ -40,6 +40,40 @@ export { ProfessionalIdentityAdapter } from './adapters/ProfessionalIdentityAdap
 // Services
 export { PublicIdentityService } from './services/PublicIdentityService';
 
+// Hooks
+export {
+  useIdentityAvailability,
+  useIdentityCooldown,
+  useIdentityHistory,
+  useIdentityUrlPreview,
+  URL_PREVIEW_FNS,
+} from './hooks';
+export type {
+  UseIdentityAvailabilityOptions,
+  UseIdentityAvailabilityReturn,
+  UseIdentityCooldownOptions,
+  UseIdentityCooldownReturn,
+  UseIdentityHistoryOptions,
+  UseIdentityHistoryReturn,
+  UseIdentityUrlPreviewOptions,
+  UrlPreviewFn,
+} from './hooks';
+
+// Components
+export {
+  IdentityField,
+  IdentityAvailabilityBadge,
+  IdentityUrlPreview,
+  IdentityCooldownNotice,
+  IdentityHistoryPanel,
+  IdentityImpactNotice,
+  IdentityChangeConfirmDialog,
+  BusinessIdentityField,
+  ProfileIdentityField,
+  ProfessionalIdentityField,
+} from './components';
+export type { IdentityFieldProps } from './components';
+
 // Singleton instance
 import { PublicIdentityService } from './services/PublicIdentityService';
 export const publicIdentityService = new PublicIdentityService();
