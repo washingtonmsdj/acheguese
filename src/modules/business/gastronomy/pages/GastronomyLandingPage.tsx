@@ -402,7 +402,13 @@ export default function GastronomyLandingPage() {
 
         <section className="container mx-auto px-4 pt-4">
           {/* ── Google AdSense ─────────────────────────────────── */}
-          <div className="mb-6 w-full overflow-hidden rounded-xl" style={{ maxHeight: '90px' }}>
+          <div 
+            className="mb-6 w-full overflow-hidden rounded-xl" 
+            style={{ 
+              maxHeight: '90px',
+              backgroundColor: import.meta.env.DEV ? '#ffffff' : 'transparent'
+            }}
+          >
             <AdSense 
               slot="7618818955"
               format="auto"
