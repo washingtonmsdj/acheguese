@@ -63,6 +63,7 @@ export function AppRoutes() {
         
         {/* Rotas de Notificações */}
         <Route path="/notifications" element={<P.NotificationsPage />} />
+        <Route path="/notificacoes" element={<Navigate to="/notifications" replace />} />
         <Route path="/settings/notifications" element={<P.NotificationPreferencesPage />} />
         <Route path="/settings/email-logs" element={<P.EmailLogsPage />} />
         

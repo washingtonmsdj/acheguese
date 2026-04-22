@@ -1,75 +1,93 @@
-/**
- * AppSidebar - Navegação Desktop Global
- *
- * Sidebar global da aplicação usando shadcn Sidebar.
- * Consome configuração de navigation.config.ts (SSOT).
- * 
- * Features:
- * - Colapsável com modo ícone
- * - Seções organizadas (Explorar, Comunidade, Ferramentas)
- * - TerritorySelector integrado
- * - Perfil do usuário no footer
- * - Botão "Início" dinâmico que leva para o território ativo (cidade ou bairro)
- */
-
+import { useEffect, useState, useSyncExternalStore } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Settings, LogIn } from 'lucide-react';
-import { useSyncExternalStore } from 'react';
-import { useFriendlyModuleUrls } from '@/core/routing/hooks/useFriendlyModuleUrls';
+import { Bell, LogIn, MessageCircle, Settings } from 'lucide-react';
 import {
   Sidebar,
   SidebarContent,
+  SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
   SidebarGroupLabel,
+  SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-  SidebarFooter,
   SidebarSeparator,
   useSidebar,
 } from '@/shared/components/ui/sidebar';
 import { Avatar, AvatarFallback, AvatarImage } from '@/shared/components/ui/avatar';
+import { Badge } from '@/shared/components/ui/badge';
+import { cn } from '@/shared/utils/cn';
 import { useSessionContext } from '@/core/session';
 import { useAuth } from '@/core/auth/hooks/useAuth';
 import { useAppUrls } from '@/core/routing/hooks/useAppUrls';
-import { lastTerritoryStore } from '@/core/routing/stores/LastTerritoryStore';
+import { useFriendlyModuleUrls } from '@/core/routing/hooks/useFriendlyModuleUrls';
+import {
+  lastTerritoryStore,
+  type LastTerritory,
+} from '@/core/routing/stores/LastTerritoryStore';
+import { useSiteSettings } from '@/core/admin/hooks/useSiteSettings';
+import { TerritorySelectorV2 } from '@/core/location/components/TerritorySelectorV2';
+import { MessagingService } from '@/core/messaging';
 import { GuideSidebarItem } from '@/modules/guide/components/GuideSidebarItem';
 import { NAV_SECTIONS, type NavItem } from './navigation.config';
+
+function getInitials(value?: string | null): string {
+  if (!value) return 'U';
+  return value
+    .split(' ')
+    .filter(Boolean)
+    .map((part) => part[0])
+    .join('')
+    .toUpperCase()
+    .slice(0, 2);
+}
 
 export function AppSidebar() {
   const location = useLocation();
   const { state: sidebarState } = useSidebar();
   const collapsed = sidebarState === 'collapsed';
-  const { activeProfile } = useSessionContext();
   const { user } = useAuth();
+  const { activeProfile } = useSessionContext();
   const appUrls = useAppUrls();
-  
-  // ✅ SSOT: Usar useFriendlyModuleUrls para URLs dinâmicas baseadas no território ativo
   const moduleUrls = useFriendlyModuleUrls();
-  
-  // Usa lastTerritoryStore para obter o último território visitado
-  const lastTerritory = useSyncExternalStore(
+  const { data: siteSettings, isLoading: isSiteSettingsLoading } = useSiteSettings();
+  const [unreadMessages, setUnreadMessages] = useState(0);
+
+  const lastTerritory = useSyncExternalStore<LastTerritory | null>(
     lastTerritoryStore.subscribe.bind(lastTerritoryStore),
     lastTerritoryStore.get.bind(lastTerritoryStore),
-  ) as import('@/core/routing/stores/LastTerritoryStore').LastTerritory | null;
+  );
 
-  // URL dinâmica para o botão "Início" - vai para landing do território ativo
-  const getHomeUrl = (): string => {
-    // Se há território ativo (cidade ou bairro), usa o baseUrl dele
-    if (lastTerritory?.baseUrl) {
-      return lastTerritory.baseUrl;
+  useEffect(() => {
+    if (!user) {
+      setUnreadMessages(0);
+      return;
     }
-    
-    // Fallback: home padrão
-    return '/';
-  };
-  
-  // ✅ Mapear IDs de navegação para URLs dinâmicas
-  const getDynamicHref = (item: NavItem): string => {
+
+    const fetchUnread = async () => {
+      try {
+        const count = await MessagingService.getUnreadMessagesCount(user.id);
+        setUnreadMessages(count);
+      } catch {
+        setUnreadMessages(0);
+      }
+    };
+
+    fetchUnread();
+    const sub = MessagingService.subscribeToMessages(user.id, fetchUnread);
+
+    return () => {
+      if (sub) MessagingService.unsubscribeFromMessages(sub);
+    };
+  }, [user]);
+
+  const homeHref = lastTerritory?.baseUrl || '/';
+
+  const getNavHref = (item: NavItem): string => {
     switch (item.id) {
       case 'home':
-        return getHomeUrl();
+        return homeHref;
       case 'business':
         return moduleUrls.business;
       case 'services':
@@ -83,8 +101,9 @@ export function AppSidebar() {
       case 'jobs':
         return moduleUrls.jobs;
       case 'neighborhood':
-      case 'feed':
         return moduleUrls.community;
+      case 'feed':
+        return `${moduleUrls.community}${moduleUrls.community.includes('?') ? '&' : '?'}tab=feed`;
       case 'ranking':
         return moduleUrls.ranking;
       case 'map':
@@ -94,34 +113,25 @@ export function AppSidebar() {
     }
   };
 
-  const isActive = (href: string): boolean => {
-    if (!href) return false;
+  const isActiveHref = (href: string): boolean => {
     const [path, query] = href.split('?');
-    if (href === '/') return location.pathname === path;
+    if (href === '/') return location.pathname === '/';
     if (!query) return location.pathname.startsWith(path);
-    const params = new URLSearchParams(query);
-    const tab = params.get('tab');
+
+    const expectedTab = new URLSearchParams(query).get('tab');
     const currentTab = new URLSearchParams(location.search).get('tab');
-    return location.pathname.startsWith(path) && currentTab === tab;
+    return location.pathname.startsWith(path) && expectedTab === currentTab;
   };
 
-  const getInitials = (name?: string | null): string => {
-    if (!name) return 'U';
-    return name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
-  };
-
-  const renderNavItems = (items: NavItem[]) => (
+  const renderSectionItems = (items: NavItem[]) => (
     <SidebarMenu>
-      {items.map(item => {
+      {items.map((item) => {
         if (item.requiresAuth && !user) return null;
-        
-        // ✅ URL dinâmica baseada no território ativo
-        const href = getDynamicHref(item);
-        const active = isActive(href);
-        
+
+        const href = getNavHref(item);
         return (
           <SidebarMenuItem key={item.id}>
-            <SidebarMenuButton asChild isActive={active} tooltip={item.label}>
+            <SidebarMenuButton asChild isActive={isActiveHref(href)} tooltip={item.label}>
               <Link to={href}>
                 <item.icon className="h-4 w-4" />
                 <span>{item.label}</span>
@@ -134,56 +144,172 @@ export function AppSidebar() {
   );
 
   return (
-    <Sidebar collapsible="icon" className="border-r border-border">
-      <SidebarContent>
-        {NAV_SECTIONS.map(section => (
-          <div key={section.id}>
-            <SidebarGroup>
-              <SidebarGroupLabel>{section.label}</SidebarGroupLabel>
-              <SidebarGroupContent>
-                {section.id === 'explore' ? (
-                  <>
-                    {renderNavItems(section.items)}
-                    <SidebarMenu>
-                      <GuideSidebarItem />
-                    </SidebarMenu>
-                  </>
-                ) : section.id === 'community' && !user && !collapsed ? (
-                  <div className="mx-2 mb-2 p-3 bg-primary/5 border border-primary/20 rounded-lg">
-                    <p className="text-xs text-muted-foreground mb-2">
-                      Faça login para participar da comunidade
-                    </p>
-                    <Link
-                      to="/login"
-                      className="w-full px-3 py-1.5 flex items-center justify-center bg-primary text-primary-foreground text-xs font-medium hover:bg-primary/90 transition-colors rounded"
-                    >
-                      Entrar
-                    </Link>
-                  </div>
-                ) : (
-                  renderNavItems(section.items)
+    <Sidebar collapsible="icon" className="border-r border-sidebar-border">
+      <SidebarHeader className="border-b border-sidebar-border p-0">
+        <Link
+          to={homeHref}
+          className={cn(
+            'w-full rounded-lg transition-colors hover:bg-sidebar-accent/60',
+            collapsed
+              ? 'flex h-10 items-center justify-center'
+              : 'flex flex-col items-center justify-center gap-3 px-3 pt-0 pb-3',
+          )}
+        >
+          {isSiteSettingsLoading ? (
+            <div
+              className={cn(
+                'animate-pulse rounded-md bg-muted/70',
+                collapsed ? 'h-6 w-6' : 'h-24 w-full',
+              )}
+            />
+          ) : siteSettings?.logo_url ? (
+            <>
+              <img
+                src={siteSettings.logo_url}
+                alt={siteSettings.site_name || 'Achegue-se'}
+                className={cn(
+                  'object-contain',
+                  collapsed ? 'h-6 w-6 rounded-sm' : 'h-28 w-auto max-w-full',
                 )}
+              />
+              {!collapsed ? (
+                <span className="w-full text-center text-lg font-semibold text-foreground font-heading leading-none">
+                  Achegue-<span className="text-primary">se</span>
+                </span>
+              ) : null}
+            </>
+          ) : (
+            <>
+              <div className="flex h-20 w-20 items-center justify-center rounded-md bg-primary text-primary-foreground text-2xl font-bold">
+                A
+              </div>
+              {!collapsed ? (
+                <span className="w-full text-center text-lg font-semibold text-foreground font-heading leading-none">
+                  Achegue-<span className="text-primary">se</span>
+                </span>
+              ) : null}
+            </>
+          )}
+        </Link>
+
+        {!collapsed ? (
+          <div className="px-3 pb-2 pt-1">
+            <TerritorySelectorV2 compact />
+          </div>
+        ) : null}
+      </SidebarHeader>
+
+      <SidebarContent className="gap-0">
+        {user ? (
+          <>
+            <SidebarGroup className="px-2 py-2">
+              <SidebarGroupLabel className="h-6 px-2 text-[11px] font-semibold uppercase tracking-wide text-sidebar-foreground/60">
+                Acoes
+              </SidebarGroupLabel>
+              <SidebarGroupContent>
+                <SidebarMenu>
+                  <SidebarMenuItem>
+                    <SidebarMenuButton
+                      asChild
+                      tooltip="Mensagens"
+                      isActive={
+                        location.pathname.startsWith('/mensagens') ||
+                        location.pathname.startsWith('/chat/')
+                      }
+                    >
+                      <Link to={appUrls.messages}>
+                        <MessageCircle className="h-4 w-4" />
+                        <span>Mensagens</span>
+                        {!collapsed && unreadMessages > 0 ? (
+                          <Badge
+                            variant="destructive"
+                            className="ml-auto h-5 min-w-[20px] px-1.5 text-[10px] font-bold"
+                          >
+                            {unreadMessages > 9 ? '9+' : unreadMessages}
+                          </Badge>
+                        ) : null}
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                  <SidebarMenuItem>
+                    <SidebarMenuButton
+                      asChild
+                      tooltip="Notificacoes"
+                      isActive={
+                        location.pathname.startsWith('/notifications') ||
+                        location.pathname.startsWith(appUrls.notifications)
+                      }
+                    >
+                      <Link to={appUrls.notifications}>
+                        <Bell className="h-4 w-4" />
+                        <span>Notificacoes</span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                </SidebarMenu>
               </SidebarGroupContent>
             </SidebarGroup>
             <SidebarSeparator />
-          </div>
-        ))}
+          </>
+        ) : null}
+
+        <div className="flex-1 overflow-y-auto py-1">
+          {NAV_SECTIONS.map((section) => {
+            const visibleItems = section.items.filter(
+              (item) => !item.requiresAuth || Boolean(user),
+            );
+            const hasVisibleItems = visibleItems.length > 0;
+            const showGuestCommunityCta = section.id === 'community' && !user;
+
+            if (!hasVisibleItems && !showGuestCommunityCta) return null;
+
+            return (
+              <SidebarGroup key={section.id} className="px-2 py-1">
+                <SidebarGroupLabel className="h-6 px-2 text-[11px] font-semibold uppercase tracking-wide text-sidebar-foreground/60">
+                  {section.label}
+                </SidebarGroupLabel>
+                <SidebarGroupContent>
+                  {renderSectionItems(section.items)}
+
+                  {section.id === 'explore' ? (
+                    <SidebarMenu>
+                      <GuideSidebarItem />
+                    </SidebarMenu>
+                  ) : null}
+
+                  {showGuestCommunityCta && !collapsed ? (
+                    <SidebarMenu className="mt-1">
+                      <SidebarMenuItem>
+                        <SidebarMenuButton asChild tooltip="Entrar">
+                          <Link to="/login">
+                            <LogIn className="h-4 w-4" />
+                            <span>Entrar na comunidade</span>
+                          </Link>
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
+                    </SidebarMenu>
+                  ) : null}
+                </SidebarGroupContent>
+              </SidebarGroup>
+            );
+          })}
+        </div>
       </SidebarContent>
 
-      <SidebarFooter>
+      <SidebarFooter className="border-t border-sidebar-border p-2">
         {user ? (
           <SidebarMenu>
             <SidebarMenuItem>
               <SidebarMenuButton asChild tooltip="Meu perfil">
-                <Link to={appUrls.profile.central} className="flex items-center gap-2">
-                  <Avatar className="h-6 w-6 flex-shrink-0">
+                <Link to={appUrls.profile.central}>
+                  <Avatar className="h-6 w-6 shrink-0">
                     <AvatarImage src={activeProfile?.avatarUrl || undefined} />
                     <AvatarFallback className="text-[10px]">
                       {getInitials(activeProfile?.displayName || user.email)}
                     </AvatarFallback>
                   </Avatar>
-                  {!collapsed && (
-                    <div className="flex-1 min-w-0 text-left">
+                  {!collapsed ? (
+                    <div className="min-w-0 text-left">
                       <p className="text-sm font-medium truncate">
                         {activeProfile?.displayName || user.email?.split('@')[0]}
                       </p>
@@ -191,15 +317,15 @@ export function AppSidebar() {
                         {activeProfile?.username ? `@${activeProfile.username}` : 'Ver perfil'}
                       </p>
                     </div>
-                  )}
+                  ) : null}
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
             <SidebarMenuItem>
-              <SidebarMenuButton asChild tooltip="Configurações">
+              <SidebarMenuButton asChild tooltip="Configuracoes">
                 <Link to={appUrls.settings}>
                   <Settings className="h-4 w-4" />
-                  <span>Configurações</span>
+                  <span>Configuracoes</span>
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>

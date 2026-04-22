@@ -357,6 +357,37 @@ export default function GastronomyLandingPage() {
       </Helmet>
 
       <div className="min-h-screen bg-background">
+        {/* ── Cards de Categorias (TOPO) ─────────────────────────── */}
+        <section className="w-full bg-card/50 border-b border-border py-4">
+          <div className="w-full px-4">
+            <div className="flex justify-center gap-3 overflow-x-auto pb-1 scrollbar-hide">
+              {GASTRO_CATEGORIES.map((cat, i) => {
+                const Icon = cat.icon;
+                const isActive = filters.cuisine_type === cat.cuisineFilter;
+                return (
+                  <motion.button
+                    key={cat.id}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.03 * i }}
+                    whileHover={{ scale: 1.08, y: -4 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => handleCuisineFilter(isActive ? '' : cat.cuisineFilter)}
+                    className={`flex flex-col items-center gap-2.5 p-4 rounded-2xl border bg-card/80 backdrop-blur-sm transition-colors duration-200 group shrink-0 min-w-[80px] ${cat.bg} ${isActive ? 'ring-2 ring-primary/40' : ''}`}
+                  >
+                    <motion.div whileHover={{ rotate: [0, -10, 10, 0] }} transition={{ duration: 0.4 }}>
+                      <Icon className={`h-7 w-7 ${cat.iconColor}`} />
+                    </motion.div>
+                    <span className="text-xs font-semibold text-foreground leading-tight text-center whitespace-nowrap">
+                      {cat.label}
+                    </span>
+                  </motion.button>
+                );
+              })}
+            </div>
+          </div>
+        </section>
+
         {/* ── Hero Carrossel de Banners ─────────────────────── */}
         <HeroBannerCarousel
           banners={[
@@ -397,24 +428,21 @@ export default function GastronomyLandingPage() {
           autoPlayInterval={5000}
           showArrows={true}
           showDots={false}
-          height="400px"
+          height="280px"
+          heightMd="320px"
+          heightLg="380px"
         />
 
         <section className="container mx-auto px-4 pt-4">
           {/* ── Google AdSense ─────────────────────────────────── */}
-          <div 
-            className="mb-6 w-full overflow-hidden rounded-xl" 
-            style={{ 
-              maxHeight: '90px',
-              backgroundColor: import.meta.env.DEV ? '#ffffff' : 'transparent'
-            }}
-          >
-            <AdSense 
-              slot="7618818955"
-              format="auto"
-              responsive={true}
-              style={{ display: 'block', minHeight: '90px', maxHeight: '90px' }}
-            />
+          <div className="mb-6 w-full rounded-xl">
+            <div className="overflow-hidden rounded-xl max-h-[90px] min-h-[50px]">
+              <AdSense 
+                slot="7618818955"
+                format="horizontal"
+                responsive={true}
+              />
+            </div>
           </div>
 
           {/* ── Barra de Pesquisa ─────────────────────────────── */}
@@ -466,36 +494,6 @@ export default function GastronomyLandingPage() {
 
         {!isDestinationRequired && (
           <>
-            <section className="w-full bg-card/50 border-b border-border py-4">
-              <div className="w-full px-4">
-                <div className="flex justify-center gap-3 overflow-x-auto pb-1 scrollbar-hide">
-                  {GASTRO_CATEGORIES.map((cat, i) => {
-                    const Icon = cat.icon;
-                    const isActive = filters.cuisine_type === cat.cuisineFilter;
-                    return (
-                      <motion.button
-                        key={cat.id}
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.03 * i }}
-                        whileHover={{ scale: 1.08, y: -4 }}
-                        whileTap={{ scale: 0.95 }}
-                        onClick={() => handleCuisineFilter(isActive ? '' : cat.cuisineFilter)}
-                        className={`flex flex-col items-center gap-2.5 p-4 rounded-2xl border bg-card/80 backdrop-blur-sm transition-colors duration-200 group shrink-0 min-w-[80px] ${cat.bg} ${isActive ? 'ring-2 ring-primary/40' : ''}`}
-                      >
-                        <motion.div whileHover={{ rotate: [0, -10, 10, 0] }} transition={{ duration: 0.4 }}>
-                          <Icon className={`h-7 w-7 ${cat.iconColor}`} />
-                        </motion.div>
-                        <span className="text-xs font-semibold text-foreground leading-tight text-center whitespace-nowrap">
-                          {cat.label}
-                        </span>
-                      </motion.button>
-                    );
-                  })}
-                </div>
-              </div>
-            </section>
-
             {/* ── ATIVIDADE DOS VIZINHOS (SSOT) ──────────────────────────── */}
             <GastronomyActivityFeed 
               territoryFilter={territoryFilter}

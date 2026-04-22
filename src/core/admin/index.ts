@@ -13,3 +13,6 @@ export type {
 
 // Re-export all services
 export * from './services';
+
+// Hooks
+export { useSiteSettings } from './hooks/useSiteSettings';

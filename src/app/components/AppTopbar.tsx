@@ -22,6 +22,7 @@ import { lastTerritoryStore } from '@/core/routing/stores/LastTerritoryStore';
 import { useIsMobile } from '@/shared/hooks/use-mobile';
 import { Avatar, AvatarFallback, AvatarImage } from '@/shared/components/ui/avatar';
 import { TerritorySelectorV2 } from '@/core/location/components/TerritorySelectorV2';
+import { useSiteSettings } from '@/core/admin/hooks/useSiteSettings';
 import {
   Tooltip,
   TooltipContent,
@@ -37,6 +38,7 @@ export function AppTopbar() {
   const { activeProfile } = useSessionContext();
   const urls = useFriendlyModuleUrls();
   const [unreadMessages, setUnreadMessages] = useState(0);
+  const { data: siteSettings } = useSiteSettings();
 
   // Usa lastTerritoryStore para obter o nome correto do território
   const lastTerritory = useSyncExternalStore(
@@ -79,19 +81,36 @@ export function AppTopbar() {
   // Nota: contextMessage não é mais passado como prop - o seletor detecta automaticamente
 
   return (
-    <header className="sticky top-0 w-full bg-gradient-to-r from-card/98 via-card/95 to-card/98 backdrop-blur-lg border-b border-border/60 shadow-sm flex-shrink-0 z-20">
+    <header className="sticky top-0 w-full bg-gradient-to-r from-card/98 via-card/95 to-card/98 backdrop-blur-lg border-b border-border/60 shadow-sm flex-shrink-0 z-30">
       <div className="flex items-center h-16 gap-3 px-3 sm:px-6 max-w-[1600px] mx-auto">
-        {/* Logo com gradiente moderno */}
+        {/* Logo customizada + Nome */}
         <Link
           to={getHomeUrl()}
-          className="flex items-center gap-2.5 hover:scale-105 transition-transform duration-200 flex-shrink-0 group"
+          className="flex items-center gap-2 hover:scale-105 transition-transform duration-200 flex-shrink-0 group"
         >
-          <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-primary via-primary to-primary/80 flex items-center justify-center shadow-md group-hover:shadow-lg transition-shadow">
-            <Home className="h-4.5 w-4.5 text-primary-foreground" />
-          </div>
-          <span className="text-base font-bold text-foreground font-heading hidden sm:inline">
-            Achegue-<span className="text-primary">se</span>
-          </span>
+          {siteSettings?.logo_url ? (
+            // Logo customizada + Nome
+            <>
+              <img 
+                src={siteSettings.logo_url} 
+                alt={siteSettings.site_name || 'Logo'}
+                className="h-10 w-auto object-contain"
+              />
+              <span className="text-xl font-bold text-foreground font-heading hidden sm:inline">
+                Achegue-<span className="text-primary">se</span>
+              </span>
+            </>
+          ) : (
+            // Logo padrão (fallback)
+            <>
+              <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-primary via-primary to-primary/80 flex items-center justify-center shadow-md group-hover:shadow-lg transition-shadow">
+                <Home className="h-4.5 w-4.5 text-primary-foreground" />
+              </div>
+              <span className="text-xl font-bold text-foreground font-heading hidden sm:inline">
+                Achegue-<span className="text-primary">se</span>
+              </span>
+            </>
+          )}
         </Link>
 
         {/* Territory Selector — centralizado */}

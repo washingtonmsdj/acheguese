@@ -19,11 +19,6 @@ import { AdminPageHeader } from '../components';
 import { SiteSettingsService } from '@/core/admin/services/SiteSettingsService';
 import { SITE_SETTINGS_STORAGE } from '@/core/admin/config/siteSettings.config';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Label } from '@/shared/components/ui/label';
-import { toast } from 'sonner';
-import { AdminPageHeader } from '../components';
-import { SiteSettingsService } from '@/core/admin/services/SiteSettingsService';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
 export default function AdminBranding() {
   const queryClient = useQueryClient();

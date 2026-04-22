@@ -34,6 +34,8 @@ export interface HeroBannerCarouselProps {
   showArrows?: boolean;
   showDots?: boolean;
   height?: string;
+  heightMd?: string;
+  heightLg?: string;
 }
 
 const slideVariants = {
@@ -59,6 +61,8 @@ export function HeroBannerCarousel({
   showArrows = true,
   showDots = true,
   height = '400px',
+  heightMd,
+  heightLg,
 }: HeroBannerCarouselProps) {
   const [[page, direction], setPage] = useState([0, 0]);
   const [isPaused, setIsPaused] = useState(false);
@@ -95,10 +99,17 @@ export function HeroBannerCarousel({
     currentBanner.textPosition === 'right' ? 'items-end text-right' :
     'items-start text-left';
 
+  // Estilo responsivo para altura
+  const heightStyle = {
+    '--height-base': height,
+    '--height-md': heightMd || height,
+    '--height-lg': heightLg || heightMd || height,
+  } as React.CSSProperties;
+
   return (
     <div
-      className="relative w-full overflow-hidden rounded-xl"
-      style={{ height }}
+      className="relative w-full overflow-hidden rounded-xl [height:var(--height-base)] md:[height:var(--height-md)] lg:[height:var(--height-lg)]"
+      style={heightStyle}
       onMouseEnter={() => setIsPaused(true)}
       onMouseLeave={() => setIsPaused(false)}
     >
@@ -123,9 +134,9 @@ export function HeroBannerCarousel({
               alt={currentBanner.title}
               className="w-full h-full object-cover"
             />
-            {/* Overlay centralizado */}
-            <div className="absolute inset-0 bg-gradient-to-r from-background/75 via-background/60 to-background/75" />
-            <div className="absolute inset-0 bg-gradient-to-t from-background/80 via-background/40 to-background/60" />
+            {/* Overlay mais claro */}
+            <div className="absolute inset-0 bg-gradient-to-r from-background/60 via-background/40 to-background/60" />
+            <div className="absolute inset-0 bg-gradient-to-t from-background/50 via-transparent to-background/30" />
           </div>
 
           {/* Content */}
