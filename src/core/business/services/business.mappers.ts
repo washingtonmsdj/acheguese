@@ -189,6 +189,8 @@ export function mapBusinessDataToBusiness(
           name: data.location.name,
           full_name: data.location.full_name,
           geographic_path: data.location.geographic_path ?? undefined,
+          canonical_lat: data.location.canonical_lat ?? undefined,
+          canonical_lng: data.location.canonical_lng ?? undefined,
         }
       : undefined;
 
@@ -250,6 +252,8 @@ export function mapBusinessDataToBusiness(
     status: (data.status as Business["status"]) || "active",
     rating: data.rating || 0,
     total_reviews: data.total_reviews || 0,
+    favorites_count: data.favorites_count || 0,
+    recommendations_count: data.recommendations_count || 0,
     total_products: data.total_products || 0,
     is_premium: data.is_premium || false,
     is_verified: data.is_verified || false,

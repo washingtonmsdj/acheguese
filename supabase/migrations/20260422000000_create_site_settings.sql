@@ -30,12 +30,14 @@ CREATE INDEX IF NOT EXISTS idx_site_settings_updated_at ON public.site_settings(
 ALTER TABLE public.site_settings ENABLE ROW LEVEL SECURITY;
 
 -- Política: Todos podem ler as configurações
+DROP POLICY IF EXISTS "site_settings_select_public" ON public.site_settings;
 CREATE POLICY "site_settings_select_public"
   ON public.site_settings
   FOR SELECT
   USING (true);
 
 -- Política: Apenas admins podem inserir/atualizar/deletar
+DROP POLICY IF EXISTS "site_settings_admin_all" ON public.site_settings;
 CREATE POLICY "site_settings_admin_all"
   ON public.site_settings
   FOR ALL

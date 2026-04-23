@@ -40,7 +40,7 @@ INSERT INTO user_subscriptions (
   updated_at
 )
 SELECT 
-  bd.owner_id as user_id,
+  p.user_id as user_id,
   gs.business_id,
   -- Mapear plan_tier para plan_code
   CASE 
@@ -84,6 +84,7 @@ SELECT
   gs.updated_at
 FROM gastronomy_subscriptions gs
 INNER JOIN business_data bd ON gs.business_id = bd.profile_id
+INNER JOIN profiles p ON bd.profile_id = p.id
 WHERE 
   -- Apenas migrar se não existir contrato ativo
   NOT EXISTS (
@@ -96,16 +97,7 @@ WHERE
   AND (
     gs.status IN ('active', 'trialing', 'past_due')
     OR gs.updated_at > NOW() - INTERVAL '90 days'
-  )
-ON CONFLICT (business_id) 
-WHERE subscription_scope = 'business' AND status_v2 = 'active'
-DO UPDATE SET
-  -- Atualizar apenas se o contrato legado for mais recente
-  updated_at = CASE 
-    WHEN EXCLUDED.updated_at > user_subscriptions.updated_at 
-    THEN EXCLUDED.updated_at 
-    ELSE user_subscriptions.updated_at 
-  END;
+  );
 
 -- ──────────────────────────────────────────────────────────────────────────
 -- STEP 2: Registrar migração
@@ -132,4 +124,3 @@ COMMENT ON COLUMN user_subscriptions.contract_snapshot IS
 -- ══════════════════════════════════════════════════════════════════════════
 -- FIM DA MIGRATION
 -- ══════════════════════════════════════════════════════════════════════════
-

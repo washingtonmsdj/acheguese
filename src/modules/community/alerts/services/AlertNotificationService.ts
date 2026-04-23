@@ -3,23 +3,14 @@
  */
 
 import { supabase } from "@/integrations/supabase";
+import {
+  selectLooseRows,
+  updateLooseRows,
+} from "@/integrations/supabase/services/supabaseHelpers";
 import { logger } from "@/shared/utils/logger";
 import { notificationService } from "@/core/notifications/services/NotificationService";
 import { ALERT_RULES } from "../config/alertConfig";
 import type { AlertNotificationQueueItem } from "../domain/types";
-
-interface QueueRow {
-  id: string;
-  alert_id: string;
-  neighborhood: string;
-  city: string;
-  processed: boolean;
-  attempt_count: number;
-  processing_started_at: string | null;
-  processed_at: string | null;
-  last_error: string | null;
-  created_at: string;
-}
 
 interface AlertSnapshotRow {
   category: string | null;
@@ -39,19 +30,24 @@ class AlertNotificationServiceClass {
         Date.now() - ALERT_RULES.NOTIFICATION_LOCK_TIMEOUT_MINUTES * 60 * 1000
       ).toISOString();
 
-      const { data: items, error } = await supabase
-        .from(this.QUEUE_TABLE as never)
-        .select("*")
-        .eq("processed", false)
-        .lt("attempt_count", ALERT_RULES.NOTIFICATION_MAX_ATTEMPTS)
-        .or(`processing_started_at.is.null,processing_started_at.lt.${lockTimeout}`)
-        .order("created_at", { ascending: true })
-        .limit(batchSize);
+      const { data: items, error } = await selectLooseRows<AlertNotificationQueueItem>(
+        this.QUEUE_TABLE,
+        {
+          columns: "*",
+          filters: [
+            { op: "eq", column: "processed", value: false },
+            { op: "lt", column: "attempt_count", value: ALERT_RULES.NOTIFICATION_MAX_ATTEMPTS },
+            { op: "or", expression: `processing_started_at.is.null,processing_started_at.lt.${lockTimeout}` },
+          ],
+          orderBy: { column: "created_at", ascending: true },
+          limit: batchSize,
+        }
+      );
 
       if (error) throw error;
       if (!items?.length) return 0;
 
-      for (const item of items as unknown as AlertNotificationQueueItem[]) {
+      for (const item of items) {
         await this._processItem(item);
         processed++;
       }
@@ -63,11 +59,14 @@ class AlertNotificationServiceClass {
   }
 
   private async _processItem(item: AlertNotificationQueueItem): Promise<void> {
-    await supabase
-      .from(this.QUEUE_TABLE as never)
-      .update({ processing_started_at: new Date().toISOString() } as never)
-      .eq("id", item.id)
-      .eq("processed", false);
+    await updateLooseRows(
+      this.QUEUE_TABLE,
+      { processing_started_at: new Date().toISOString() },
+      [
+        { column: "id", value: item.id },
+        { column: "processed", value: false },
+      ]
+    );
 
     try {
       const { profileService } = await import("@/core/profiles/services/ProfileService");
@@ -111,30 +110,28 @@ class AlertNotificationServiceClass {
 
       await Promise.allSettled(notifications);
 
-      await supabase
-        .from(this.QUEUE_TABLE as never)
-        .update(
-          {
-            processed: true,
-            processed_at: new Date().toISOString(),
-            attempt_count: item.attempt_count + 1,
-            processing_started_at: null,
-          } as never
-        )
-        .eq("id", item.id);
+      await updateLooseRows(
+        this.QUEUE_TABLE,
+        {
+          processed: true,
+          processed_at: new Date().toISOString(),
+          attempt_count: item.attempt_count + 1,
+          processing_started_at: null,
+        },
+        [{ column: "id", value: item.id }]
+      );
     } catch (error) {
       const errMessage = error instanceof Error ? error.message : String(error);
 
-      await supabase
-        .from(this.QUEUE_TABLE as never)
-        .update(
-          {
-            processing_started_at: null,
-            attempt_count: item.attempt_count + 1,
-            last_error: errMessage,
-          } as never
-        )
-        .eq("id", item.id);
+      await updateLooseRows(
+        this.QUEUE_TABLE,
+        {
+          processing_started_at: null,
+          attempt_count: item.attempt_count + 1,
+          last_error: errMessage,
+        },
+        [{ column: "id", value: item.id }]
+      );
 
       logger.error("AlertNotificationService._processItem", error);
     }

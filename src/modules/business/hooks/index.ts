@@ -14,6 +14,7 @@ export * from "./useBusinessById";
 export * from "./useBusinessCreate";
 export * from "./useBusinessEdit";
 export { useBusinessFavorite, useBusinessFavorites } from "./useBusinessFavorite";
+export { useBusinessRecommendation } from "./useBusinessRecommendation";
 export * from "./useBusinessForm";
 export * from "./useBusinessFormSteps";
 export * from "./useBusinessGallery";

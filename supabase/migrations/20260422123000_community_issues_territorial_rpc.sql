@@ -21,11 +21,11 @@ DECLARE
   v_issue_count         INTEGER;
   v_duplicate_count     INTEGER;
   v_issue_id            UUID;
-  v_category            issue_category;
+  v_category            TEXT;
   v_title               TEXT;
   v_description         TEXT;
   v_address_ref         TEXT;
-  v_priority            issue_priority;
+  v_priority            TEXT;
 BEGIN
   IF v_user_id IS NULL THEN
     RETURN jsonb_build_object('error', 'not_authenticated');
@@ -68,11 +68,11 @@ BEGIN
     RETURN jsonb_build_object('error', 'location_must_be_district');
   END IF;
 
-  v_category := (payload->>'category')::issue_category;
+  v_category := payload->>'category';
   v_title := payload->>'title';
   v_description := payload->>'description';
   v_address_ref := payload->>'address_reference';
-  v_priority := COALESCE((payload->>'priority')::issue_priority, 'media');
+  v_priority := COALESCE(payload->>'priority', 'media');
 
   IF v_category IS NULL THEN
     RETURN jsonb_build_object('error', 'invalid_category');

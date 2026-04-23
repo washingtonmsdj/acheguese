@@ -72,6 +72,19 @@ function hasBlockedContent(text: string): boolean {
   return BLOCKED_PATTERNS.some((pattern) => pattern.test(text));
 }
 
+function resolveProfileLocationId(profile: unknown): string | null {
+  if (!profile || typeof profile !== "object") return null;
+  const record = profile as Record<string, unknown>;
+
+  if (typeof record.locationId === "string" && record.locationId) {
+    return record.locationId;
+  }
+  if (typeof record.location_id === "string" && record.location_id) {
+    return record.location_id;
+  }
+  return null;
+}
+
 type Step = "rules" | "type" | "details" | "confirm";
 
 interface Props {
@@ -191,8 +204,9 @@ export function PanicAlertButton({ userId }: Props) {
       // ✅ CLEANUP PÓS-SPRINT2: Usar createPost() diretamente
       // userId aqui é author_profile_id (não user_id)
       const profile = await profileService.getProfileById(userId);
+      const locationId = resolveProfileLocationId(profile);
 
-      if (!profile?.location_id) {
+      if (!locationId) {
         toast.error("Configure sua localização no perfil antes de enviar alertas.");
         return;
       }
@@ -201,7 +215,7 @@ export function PanicAlertButton({ userId }: Props) {
         author_profile_id: userId,
         content: texto,
         type: "segurança",
-        location_id: profile.location_id,
+        location_id: locationId,
         reach: 'neighborhood',
       });
 

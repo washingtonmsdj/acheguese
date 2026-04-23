@@ -96,6 +96,8 @@ export interface Business {
     name: string;
     full_name: string;
     geographic_path?: string | null;
+    canonical_lat?: number | null;
+    canonical_lng?: number | null;
   };
 
   // Campo derivado para URLs (carregado via join com locations)
@@ -111,6 +113,8 @@ export interface Business {
   status: BusinessStatus;
   rating: number;
   total_reviews: number;
+  favorites_count?: number;
+  recommendations_count?: number;
   total_products: number;
   is_premium: boolean;
   is_verified: boolean;

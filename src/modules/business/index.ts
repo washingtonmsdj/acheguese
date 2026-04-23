@@ -36,6 +36,7 @@ export { useBusinessById } from "./hooks/useBusinessById";
 export { useBusinessCreate } from "./hooks/useBusinessCreate";
 export { useBusinessEdit } from "./hooks/useBusinessEdit";
 export { useBusinessFavorite, useBusinessFavorites } from "./hooks/useBusinessFavorite";
+export { useBusinessRecommendation } from "./hooks/useBusinessRecommendation";
 export { useBusinessForm } from "./hooks/useBusinessForm";
 export { useBusinessFormSteps } from "./hooks/useBusinessFormSteps";
 export { useBusinessGallery } from "./hooks/useBusinessGallery";

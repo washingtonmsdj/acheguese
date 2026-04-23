@@ -59,32 +59,50 @@ interface CreatePostModalProps {
   defaultType?: PostType;
 }
 
-// ✅ SPRINT 2 FASE 4: Tipo auxiliar para profile com location_id
-interface ProfileWithLocation {
+interface ProfileForPost {
   id: string;
-  name?: string;
-  avatar_url?: string;
-  location_id?: string;
-  profile_type?: string;
+  displayName: string;
+  avatarUrl?: string;
+  locationId?: string;
+  profileType?: string;
 }
 
-// ✅ SPRINT 2 FASE 4: Type guard para verificar se profile tem location_id
-function hasLocationId(profile: any): profile is ProfileWithLocation {
-  return profile && typeof profile.location_id === 'string';
-}
-
-// ✅ SPRINT 2 FASE 4: Adaptador seguro para profile
-function toProfileWithLocation(profile: any): ProfileWithLocation | null {
-  if (!profile || typeof profile !== 'object' || !profile.id) {
+function toProfileForPost(profile: unknown): ProfileForPost | null {
+  if (!profile || typeof profile !== "object") {
     return null;
   }
-  
+
+  const record = profile as Record<string, unknown>;
+  const id = typeof record.id === "string" ? record.id : null;
+  if (!id) return null;
+
+  const displayName =
+    (typeof record.display_name === "string" && record.display_name) ||
+    (typeof record.displayName === "string" && record.displayName) ||
+    (typeof record.name === "string" && record.name) ||
+    "Usuario";
+
+  const avatarUrl =
+    (typeof record.avatar_url === "string" && record.avatar_url) ||
+    (typeof record.avatarUrl === "string" && record.avatarUrl) ||
+    undefined;
+
+  const locationId =
+    (typeof record.location_id === "string" && record.location_id) ||
+    (typeof record.locationId === "string" && record.locationId) ||
+    undefined;
+
+  const profileType =
+    (typeof record.profile_type === "string" && record.profile_type) ||
+    (typeof record.profileType === "string" && record.profileType) ||
+    undefined;
+
   return {
-    id: profile.id,
-    name: profile.name,
-    avatar_url: profile.avatar_url,
-    location_id: profile.location_id,
-    profile_type: profile.profile_type,
+    id,
+    displayName,
+    avatarUrl,
+    locationId,
+    profileType,
   };
 }
 
@@ -113,7 +131,7 @@ export function CreatePostModal({ open, onClose, defaultType }: CreatePostModalP
   const { effectiveProfile } = useMultiProfileContext();
   // effectiveProfile = contextual (business/professional/driver) ?? personal
   const rawProfile = effectiveProfile ?? sessionProfile;
-  const profile = toProfileWithLocation(rawProfile);
+  const profile = toProfileForPost(rawProfile);
   const form = useCreatePostForm();
   const [publishing, setPublishing] = React.useState(false);
   const territoryFilter = useTerritoryFilter();
@@ -124,7 +142,7 @@ export function CreatePostModal({ open, onClose, defaultType }: CreatePostModalP
     }
   }, [open, defaultType]);
 
-  const displayName = profile?.name || "Usuário";
+  const displayName = profile?.displayName || "Usuário";
   const initials = displayName.split(" ").map((n: string) => n[0]).join("").toUpperCase().slice(0, 2);
   const currentType = POST_TYPES.find((t) => t.value === form.type);
   const currentReach = REACH_OPTIONS.find((r) => r.value === form.reach);
@@ -152,10 +170,10 @@ export function CreatePostModal({ open, onClose, defaultType }: CreatePostModalP
       };
     }
 
-    // 3. Fallback para profile.location_id (✅ FASE 4: tipado corretamente)
-    if (profile && hasLocationId(profile)) {
+    // 3. Fallback para profile.locationId (compatível com camel/snake no adaptador)
+    if (profile?.locationId) {
       return {
-        location_id: profile.location_id,
+        location_id: profile.locationId,
         error: null
       };
     }
@@ -204,11 +222,18 @@ export function CreatePostModal({ open, onClose, defaultType }: CreatePostModalP
       toast.success("Post publicado!");
       form.resetForm();
       onClose();
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const errorCode =
+        typeof error === "object" &&
+        error !== null &&
+        "code" in error &&
+        typeof (error as { code?: unknown }).code === "string"
+          ? (error as { code: string }).code
+          : null;
       // Tratar erros específicos do service
-      if (error.code === 'INVALID_LOCATION_TYPE') {
+      if (errorCode === 'INVALID_LOCATION_TYPE') {
         toast.error("Esta localização não permite criação de posts");
-      } else if (error.code === 'INACTIVE_LOCATION') {
+      } else if (errorCode === 'INACTIVE_LOCATION') {
         toast.error("Localização inativa");
       } else {
         toast.error("Erro ao publicar");
@@ -249,7 +274,7 @@ export function CreatePostModal({ open, onClose, defaultType }: CreatePostModalP
             <div className="flex flex-col gap-2">
               <div className="flex items-center gap-3">
                 <Avatar className="h-9 w-9 ring-2 ring-border">
-                  <AvatarImage src={profile?.avatar_url} />
+                  <AvatarImage src={profile?.avatarUrl} />
                   <AvatarFallback className="bg-primary/20 text-primary text-sm font-semibold">{initials}</AvatarFallback>
                 </Avatar>
                 <div className="flex-1 min-w-0">
@@ -271,8 +296,8 @@ export function CreatePostModal({ open, onClose, defaultType }: CreatePostModalP
                 </div>
               </div>
               {/* Badge de autoria — visível quando não é o perfil personal padrão */}
-              {profile && profile.profile_type && profile.profile_type !== 'personal' && (
-                <ActiveProfileBadge profile={profile} action="publicando como" />
+              {effectiveProfile && effectiveProfile.profile_type !== 'personal' && (
+                <ActiveProfileBadge profile={effectiveProfile} action="publicando como" />
               )}
             </div>
 
@@ -332,7 +357,7 @@ export function CreatePostModal({ open, onClose, defaultType }: CreatePostModalP
                     <TooltipTrigger asChild>
                       <button
                         type="button"
-                        onClick={() => form.setReach(r.value as any)}
+                        onClick={() => form.setReach(r.value)}
                         className={cn(
                           "flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-xs transition-all",
                           active

@@ -16,7 +16,10 @@ import {
   Clock,
   MapPin,
   Star,
+  ThumbsUp,
   Calendar,
+  CreditCard,
+  ParkingSquare,
 } from 'lucide-react';
 import { cn } from '@/shared/utils/cn';
 import { Badge } from '@/shared/components/ui/badge';
@@ -26,6 +29,9 @@ import {
   getServiceModeIcon,
   getServiceModeLabel,
   getServiceModeColor,
+  getFacilityIcon,
+  getFacilityLabel,
+  getPaymentMethodLabel,
 } from '@/core/business/constants';
 import type { EmpresaHeroSectionProps } from './types';
 
@@ -35,6 +41,38 @@ export function EmpresaHeroSection({
   yearsActive,
 }: EmpresaHeroSectionProps) {
   const locationText = business.location?.full_name || business.location?.name || null;
+  const prioritizedFacilityIds = [
+    'estacionamento',
+    'acessibilidade',
+    'wifi',
+    'pet_friendly',
+  ];
+
+  const facilityHighlights = (business.facilidades ?? [])
+    .slice()
+    .sort((a, b) => {
+      const ai = prioritizedFacilityIds.indexOf(a);
+      const bi = prioritizedFacilityIds.indexOf(b);
+      const left = ai === -1 ? Number.MAX_SAFE_INTEGER : ai;
+      const right = bi === -1 ? Number.MAX_SAFE_INTEGER : bi;
+      return left - right;
+    })
+    .slice(0, 3);
+
+  const paymentHighlights = (() => {
+    const values: string[] = [];
+    if (business.aceita_pix) values.push('PIX');
+    if (business.aceita_cartao) values.push('Cartão');
+
+    (business.formas_pagamento ?? []).forEach((item) => {
+      const normalized = getPaymentMethodLabel(item.trim());
+      if (!normalized) return;
+      if (values.some((v) => v.toLowerCase() === normalized.toLowerCase())) return;
+      values.push(normalized);
+    });
+
+    return values.slice(0, 3);
+  })();
 
   return (
     <motion.section
@@ -87,25 +125,25 @@ export function EmpresaHeroSection({
       </div>
 
       {/* Company card overlapping banner */}
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 -mt-12 sm:-mt-16 relative z-10">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 -mt-14 sm:-mt-20 relative z-10">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          className="bg-card border border-border rounded-2xl p-5 sm:p-7 shadow-xl"
-        >
-          <div className="flex items-start gap-4 sm:gap-5">
+        transition={{ delay: 0.1 }}
+        className="bg-card border border-border rounded-2xl p-5 sm:p-7 shadow-xl"
+      >
+          <div className="flex flex-col sm:flex-row items-start gap-4 sm:gap-5">
             {/* Logo */}
-            <div className="h-20 w-20 sm:h-24 sm:w-24 rounded-xl border-2 border-border shadow-md shrink-0 overflow-hidden">
+            <div className="h-20 w-20 sm:h-32 sm:w-32 rounded-xl border-2 border-border shadow-md shrink-0 overflow-hidden">
               <BusinessLogo
                 name={business.name}
                 logoUrl={business.logo_url}
                 alt={business.name}
-                initialsClassName="text-3xl sm:text-4xl"
+                initialsClassName="text-3xl sm:text-5xl"
               />
             </div>
 
-            <div className="flex-1 min-w-0">
+            <div className="flex-1 min-w-0 w-full">
               {/* Name + verification */}
               <div className="flex items-center gap-2 flex-wrap mb-1">
                 <h1 className="text-xl sm:text-3xl font-bold text-foreground leading-tight">
@@ -147,21 +185,74 @@ export function EmpresaHeroSection({
                 <span className="text-sm text-muted-foreground">
                   ({business.total_reviews || 0} avaliações)
                 </span>
+                {(business.recommendations_count || 0) > 0 && (
+                  <span className="text-sm text-muted-foreground flex items-center gap-1">
+                    <ThumbsUp className="h-3.5 w-3.5" />
+                    {business.recommendations_count} recomendações
+                  </span>
+                )}
                 {yearsActive && (
-                  <>
-                    <div className="h-4 w-px bg-border" />
-                    <span className="text-sm text-muted-foreground flex items-center gap-1">
-                      <Calendar className="h-3.5 w-3.5" /> Há {yearsActive} no
-                      bairro
-                    </span>
-                  </>
+                  <span className="text-sm text-muted-foreground flex items-center gap-1">
+                    <Calendar className="h-3.5 w-3.5" /> Há {yearsActive} no bairro
+                  </span>
                 )}
                 {/* Coverage Badge */}
                 <CoverageBadge
                   entityType="business"
                   entityId={business.id}
-                  className="ml-auto"
+                  className="sm:ml-auto"
                 />
+              </div>
+
+              {/* Operational highlights at top */}
+              <div className="rounded-xl border border-border bg-secondary/40 p-3 mb-3">
+                <div className="flex flex-wrap items-center gap-2 mb-2">
+                  <span
+                    className={cn(
+                      "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold border",
+                      openStatus.open
+                        ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
+                        : "bg-destructive/10 text-destructive border-destructive/20",
+                    )}
+                  >
+                    <div
+                      className={cn(
+                        "h-1.5 w-1.5 rounded-full",
+                        openStatus.open ? "bg-emerald-500 animate-pulse" : "bg-destructive",
+                      )}
+                    />
+                    {openStatus.open ? "Aberto agora" : "Fechado"}
+                  </span>
+                  {openStatus.todayHours && (
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium border border-border bg-background/70 text-foreground">
+                      <Clock className="h-3 w-3" /> Hoje: {openStatus.todayHours}
+                    </span>
+                  )}
+                  {paymentHighlights.length > 0 && (
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium border border-border bg-background/70 text-foreground">
+                      <CreditCard className="h-3 w-3" />
+                      {paymentHighlights.join(' · ')}
+                    </span>
+                  )}
+                </div>
+
+                {facilityHighlights.length > 0 && (
+                  <div className="flex flex-wrap gap-2">
+                    {facilityHighlights.map((facilityId) => {
+                      const Icon = getFacilityIcon(facilityId) ?? ParkingSquare;
+                      const label = getFacilityLabel(facilityId);
+                      return (
+                        <span
+                          key={facilityId}
+                          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium border border-primary/20 bg-primary/5 text-primary"
+                        >
+                          <Icon className="h-3 w-3" />
+                          {label}
+                        </span>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
 
               {/* Service modes */}

@@ -8,7 +8,7 @@
  */
 
 import { motion } from 'framer-motion';
-import { Info, Calendar, Star, BadgeCheck } from 'lucide-react';
+import { Info, Calendar, Star, ThumbsUp, BadgeCheck } from 'lucide-react';
 import type { EmpresaResumoSectionProps } from './types';
 
 export function EmpresaResumoSection({
@@ -48,6 +48,12 @@ export function EmpresaResumoSection({
             <span className="inline-flex items-center gap-1.5 bg-secondary text-secondary-foreground text-xs font-medium px-3 py-1.5 rounded-lg">
               <Star className="h-3.5 w-3.5 text-primary" />{" "}
               {business.total_reviews} avaliações
+            </span>
+          )}
+          {(business.recommendations_count || 0) > 0 && (
+            <span className="inline-flex items-center gap-1.5 bg-secondary text-secondary-foreground text-xs font-medium px-3 py-1.5 rounded-lg">
+              <ThumbsUp className="h-3.5 w-3.5 text-primary" />{" "}
+              {business.recommendations_count} recomendações
             </span>
           )}
           {business.is_verified && (

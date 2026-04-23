@@ -27,6 +27,10 @@ interface ContactStepProps {
   onEmailChange: (value: string) => void;
   address: string;
   onAddressChange: (value: string) => void;
+  latitude?: number;
+  onLatitudeChange: (value: number | undefined) => void;
+  longitude?: number;
+  onLongitudeChange: (value: number | undefined) => void;
   schedules: string;
   onSchedulesChange: (value: string) => void;
   selectedModos: string[];
@@ -45,6 +49,10 @@ export function ContactStep({
   onEmailChange,
   address,
   onAddressChange,
+  latitude,
+  onLatitudeChange,
+  longitude,
+  onLongitudeChange,
   schedules,
   onSchedulesChange,
   selectedModos,
@@ -107,6 +115,38 @@ export function ContactStep({
             onChange={(e) => onAddressChange(e.target.value)}
             placeholder="Rua, número, bairro, cidade"
           />
+        </div>
+
+        <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label htmlFor="latitude">Latitude</Label>
+            <Input
+              id="latitude"
+              type="number"
+              step="any"
+              value={latitude ?? ""}
+              onChange={(e) => onLatitudeChange(e.target.value ? parseFloat(e.target.value) : undefined)}
+              placeholder="-12.9714"
+            />
+            <p className="text-xs text-muted-foreground">
+              Coordenada para localização no mapa
+            </p>
+          </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="longitude">Longitude</Label>
+            <Input
+              id="longitude"
+              type="number"
+              step="any"
+              value={longitude ?? ""}
+              onChange={(e) => onLongitudeChange(e.target.value ? parseFloat(e.target.value) : undefined)}
+              placeholder="-38.5014"
+            />
+            <p className="text-xs text-muted-foreground">
+              Coordenada para localização no mapa
+            </p>
+          </div>
         </div>
 
         <div className="space-y-2">

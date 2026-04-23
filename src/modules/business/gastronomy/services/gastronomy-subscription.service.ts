@@ -48,7 +48,7 @@ export class GastronomySubscriptionService {
       .from("gastronomy_subscriptions")
       .select(`
         *,
-        business_data!inner(name)
+        business_data!inner(business_name)
       `)
       .eq("business_id", businessId)
       .single();
@@ -59,7 +59,7 @@ export class GastronomySubscriptionService {
 
     return {
       ...data,
-      business_name: (data as { business_data?: { name?: string } })?.business_data?.name,
+      business_name: (data as { business_data?: { business_name?: string } })?.business_data?.business_name,
     } as SubscriptionWithDetails;
   }
 

@@ -80,6 +80,7 @@ export default function EmpresasPage({ resolved, activeMemberIds }: EmpresasPage
   // 🎯 STATES
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("todos");
+  const [selectedSortBy, setSelectedSortBy] = useState<"rating" | "recommendations_count" | "name" | "created_at">("rating");
   const { favorites, toggleFavorite } = useBusinessFavorites();
   const favoriteIds = useMemo(() => new Set(favorites), [favorites]);
 
@@ -97,6 +98,7 @@ export default function EmpresasPage({ resolved, activeMemberIds }: EmpresasPage
   } = useBusinessList({
     category: selectedCategory === "todos" ? undefined : selectedCategory,
     searchQuery: searchQuery.trim() || undefined,
+    sortBy: selectedSortBy,
     enabled: true,
     routeResolved: resolved, // ✅ Passa contexto territorial
     activeMemberIds, // ✅ Passa IDs dos membros ativos do grupo
@@ -182,8 +184,10 @@ export default function EmpresasPage({ resolved, activeMemberIds }: EmpresasPage
           <BusinessFilters
             searchQuery={searchQuery}
             selectedCategory={selectedCategory}
+            selectedSortBy={selectedSortBy}
             onSearchChange={setSearchQuery}
             onCategoryChange={setSelectedCategory}
+            onSortChange={setSelectedSortBy}
             searchPlaceholder={territoryLabels.searchPlaceholder}
           />
         </div>

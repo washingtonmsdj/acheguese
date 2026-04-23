@@ -14,7 +14,14 @@ import {
 } from '../services/favorites.queries';
 
 const QUERY_KEYS = {
-  userFavorites: (userId: string) => ['gastronomy', 'favorites', 'user', userId],
+  userFavorites: (userId: string, limit?: number, offset?: number) => [
+    'gastronomy',
+    'favorites',
+    'user',
+    userId,
+    limit ?? 50,
+    offset ?? 0,
+  ],
   isFavorited: (userId: string, businessId: string) => [
     'gastronomy',
     'favorites',
@@ -47,9 +54,10 @@ export function useUserFavorites(params: {
   enabled?: boolean;
 }) {
   return useQuery({
-    queryKey: QUERY_KEYS.userFavorites(params.userId),
+    queryKey: QUERY_KEYS.userFavorites(params.userId, params.limit, params.offset),
     queryFn: () => FavoritesQueryService.getUserFavorites(params),
     enabled: params.enabled !== false && !!params.userId,
+    retry: false,
     staleTime: 2 * 60 * 1000, // 2 minutos
   });
 }

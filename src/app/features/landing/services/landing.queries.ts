@@ -336,7 +336,7 @@ export async function getVerifiedBusinesses(limit: number = 6): Promise<Verified
         name: b.name,
         slug: b.slug || '',
         category: b.nicho || b.category || '',
-        logo_url: b.logo,
+        logo_url: b.logo_url || null,
         is_verified: b.verified || false,
         is_premium: b.is_premium || false,
         rating: b.rating || 0,

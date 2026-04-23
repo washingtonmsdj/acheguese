@@ -83,7 +83,7 @@ ALTER TABLE user_subscriptions
 
 -- Referência a negócio (quando scope = 'business')
 ALTER TABLE user_subscriptions 
-  ADD COLUMN IF NOT EXISTS business_id UUID REFERENCES business_data(profile_id) ON DELETE CASCADE;
+  ADD COLUMN IF NOT EXISTS business_id UUID REFERENCES business_data(id) ON DELETE CASCADE;
 
 -- Referência a catálogo versionado
 ALTER TABLE user_subscriptions 
@@ -201,8 +201,10 @@ CREATE POLICY "Business owners can view their subscriptions" ON user_subscriptio
   USING (
     subscription_scope = 'business' 
     AND business_id IN (
-      SELECT profile_id FROM business_data 
-      WHERE owner_id = auth.uid()
+      SELECT id FROM business_data 
+      WHERE profile_id IN (
+        SELECT id FROM profiles WHERE user_id = auth.uid()
+      )
     )
   );
 

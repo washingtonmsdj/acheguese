@@ -88,7 +88,7 @@ export interface BusinessFilters {
   search?: string;
   neighborhood?: string;
   hasDelivery?: boolean;
-  sortBy?: "rating" | "name" | "distancia" | "created_at";
+  sortBy?: "rating" | "name" | "distancia" | "created_at" | "recommendations_count";
   /** SSOT - Filtro territorial canonico */
   territoryFilter?: import("@/core/location/types").TerritoryFilter;
 }
@@ -144,6 +144,8 @@ export interface BusinessDataRecord {
   status?: string;
   rating?: number;
   total_reviews?: number;
+  favorites_count?: number;
+  recommendations_count?: number;
   total_products?: number;
   slug?: string | null;
   created_at?: string;
@@ -177,6 +179,8 @@ export interface BusinessDataWithProfiles extends BusinessDataRecord {
     type: string;
     slug: string;
     geographic_path?: string | null;
+    canonical_lat?: number | null;
+    canonical_lng?: number | null;
   } | null;
 }
 

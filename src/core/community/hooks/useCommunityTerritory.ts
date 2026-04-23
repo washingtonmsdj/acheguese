@@ -2,7 +2,7 @@
  * useCommunityTerritory
  *
  * Hook específico para o módulo Comunidade.
- * Retorna o território baseado no location_id do perfil do usuário (onde ele mora).
+ * Retorna o território baseado no locationId do perfil do usuário (onde ele mora).
  *
  * Diferente das páginas públicas que usam o território navegado,
  * a Comunidade sempre mostra conteúdo do bairro onde o usuário mora.
@@ -21,7 +21,7 @@ export function useCommunityTerritory() {
 
   useEffect(() => {
     const loadUserLocation = async () => {
-      if (!activeProfile?.location_id) {
+      if (!activeProfile?.locationId) {
         setUserLocation(null);
         setIsLoading(false);
         return;
@@ -29,7 +29,7 @@ export function useCommunityTerritory() {
 
       try {
         setIsLoading(true);
-        const location = await LocationService.getLocationById(activeProfile.location_id);
+        const location = await LocationService.getLocationById(activeProfile.locationId);
         setUserLocation(location);
         setError(null);
       } catch (err) {
@@ -41,7 +41,7 @@ export function useCommunityTerritory() {
     };
 
     loadUserLocation();
-  }, [activeProfile?.location_id]);
+  }, [activeProfile?.locationId]);
 
   return {
     userLocation,

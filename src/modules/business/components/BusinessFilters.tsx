@@ -23,6 +23,7 @@ import {
   Heart,
   Scissors,
   Dumbbell,
+  ArrowUpDown,
 } from "lucide-react";
 import { Input } from "@/shared/components/ui/input";
 import { Button } from "@/shared/components/ui/button";
@@ -38,12 +39,26 @@ export interface Category {
 interface BusinessFiltersProps {
   searchQuery: string;
   selectedCategory: string;
+  selectedSortBy?: SortOptionId;
   onSearchChange: (query: string) => void;
   onCategoryChange: (category: string) => void;
+  onSortChange?: (sortBy: SortOptionId) => void;
   categories?: Category[];
+  sortOptions?: SortOption[];
   debounceMs?: number;
   searchPlaceholder?: string;
 }
+
+export interface SortOption {
+  id: SortOptionId;
+  label: string;
+}
+
+export type SortOptionId =
+  | "rating"
+  | "recommendations_count"
+  | "name"
+  | "created_at";
 
 // 🎨 DEFAULT CATEGORIES
 const DEFAULT_CATEGORIES: Category[] = [
@@ -55,6 +70,13 @@ const DEFAULT_CATEGORIES: Category[] = [
   { id: "servicos", label: "Serviços", icon: Scissors },
   { id: "educacao", label: "Educação", icon: Store },
   { id: "lazer", label: "Lazer", icon: Dumbbell },
+];
+
+const DEFAULT_SORT_OPTIONS: SortOption[] = [
+  { id: "rating", label: "Melhor avaliação" },
+  { id: "recommendations_count", label: "Mais recomendadas" },
+  { id: "name", label: "Nome (A-Z)" },
+  { id: "created_at", label: "Mais recentes" },
 ];
 
 // 🎯 DEBOUNCE HOOK
@@ -130,9 +152,12 @@ export const BusinessFilters = memo(
   ({
     searchQuery,
     selectedCategory,
+    selectedSortBy = "rating",
     onSearchChange,
     onCategoryChange,
+    onSortChange,
     categories = DEFAULT_CATEGORIES,
+    sortOptions = DEFAULT_SORT_OPTIONS,
     debounceMs = 300,
     searchPlaceholder,
   }: BusinessFiltersProps) => {
@@ -167,6 +192,13 @@ export const BusinessFilters = memo(
         onCategoryChange(categoryId);
       },
       [onCategoryChange],
+    );
+
+    const handleSortChange = useCallback(
+      (e: React.ChangeEvent<HTMLSelectElement>) => {
+        onSortChange?.(e.target.value as SortOptionId);
+      },
+      [onSortChange],
     );
 
     return (
@@ -222,8 +254,33 @@ export const BusinessFilters = memo(
           ))}
         </motion.div>
 
+        {/* Sort */}
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.12 }}
+          className="relative max-w-xs"
+        >
+          <ArrowUpDown
+            className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none"
+            aria-hidden="true"
+          />
+          <select
+            value={selectedSortBy}
+            onChange={handleSortChange}
+            className="w-full h-11 pl-10 pr-3 rounded-xl bg-white/5 border border-white/10 text-sm text-gray-200 focus:border-teal-400 focus:outline-none"
+            aria-label="Ordenar empresas"
+          >
+            {sortOptions.map((option) => (
+              <option key={option.id} value={option.id} className="bg-[#1E2529] text-gray-200">
+                {option.label}
+              </option>
+            ))}
+          </select>
+        </motion.div>
+
         {/* Active Filters Indicator */}
-        {(localSearch || selectedCategory !== "todos") && (
+        {(localSearch || selectedCategory !== "todos" || selectedSortBy !== "rating") && (
           <motion.div
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: "auto" }}
@@ -241,6 +298,11 @@ export const BusinessFilters = memo(
                 {categories.find((c) => c.id === selectedCategory)?.label}
               </span>
             )}
+            {selectedSortBy !== "rating" && (
+              <span className="px-2 py-1 rounded-lg bg-teal-400/10 text-teal-400">
+                Ordem: {sortOptions.find((s) => s.id === selectedSortBy)?.label}
+              </span>
+            )}
             <Button
               size="sm"
               variant="ghost"
@@ -248,6 +310,7 @@ export const BusinessFilters = memo(
                 setLocalSearch("");
                 onSearchChange("");
                 onCategoryChange("todos");
+                onSortChange?.("rating");
               }}
               className="text-gray-400 hover:text-white"
             >

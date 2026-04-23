@@ -146,7 +146,7 @@ export function CommunityFeed({
         sortCriteria={sortCriteria}
         filterType={filterType}
         userLocation={{
-          location_id: activeProfile?.location_id,
+          location_id: activeProfile?.locationId,
         }}
         onLike={handleLike}
         onComment={handleComment}

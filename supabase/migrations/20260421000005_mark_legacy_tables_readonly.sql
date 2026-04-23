@@ -108,28 +108,9 @@ END $$;
 -- STEP 5: Criar view de auditoria para monitorar tentativas de write
 -- ──────────────────────────────────────────────────────────────────────────
 
--- View para monitorar erros de write em tabelas legadas
-CREATE OR REPLACE VIEW legacy_write_attempts AS
-SELECT 
-  'gastronomy_subscriptions' as table_name,
-  COUNT(*) as blocked_attempts,
-  MAX(created_at) as last_attempt
-FROM pg_stat_statements
-WHERE query LIKE '%INSERT INTO gastronomy_subscriptions%'
-   OR query LIKE '%UPDATE gastronomy_subscriptions%'
-
-UNION ALL
-
-SELECT 
-  'business_subscriptions' as table_name,
-  COUNT(*) as blocked_attempts,
-  MAX(created_at) as last_attempt
-FROM pg_stat_statements
-WHERE query LIKE '%INSERT INTO business_subscriptions%'
-   OR query LIKE '%UPDATE business_subscriptions%';
-
-COMMENT ON VIEW legacy_write_attempts IS 
-  'Monitors blocked write attempts on deprecated tables. Used for sunset validation.';
+-- SKIPPED: View legacy_write_attempts requires pg_stat_statements extension
+-- which may not be available in all Supabase instances.
+-- This is optional monitoring functionality and can be added manually if needed.
 
 -- ──────────────────────────────────────────────────────────────────────────
 -- STEP 6: Registrar deprecação
@@ -151,4 +132,3 @@ END $$;
 -- ══════════════════════════════════════════════════════════════════════════
 -- FIM DA MIGRATION
 -- ══════════════════════════════════════════════════════════════════════════
-

@@ -38,6 +38,7 @@ interface BasicInfoStepProps {
   logoPreview: string | null;
   logoRef: React.RefObject<HTMLInputElement>;
   onLogoChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  uploading?: boolean;
   errors: Record<string, string>;
   onNext: () => void;
 }
@@ -52,6 +53,7 @@ export function BasicInfoStep({
   logoPreview,
   logoRef,
   onLogoChange,
+  uploading = false,
   errors,
   onNext,
 }: BasicInfoStepProps) {
@@ -87,10 +89,11 @@ export function BasicInfoStep({
                 variant="outline"
                 size="sm"
                 onClick={() => logoRef.current?.click()}
+                disabled={uploading}
                 className="gap-2"
               >
                 <Upload className="h-4 w-4" />
-                {logoPreview ? "Trocar Logo" : "Adicionar Logo"}
+                {uploading ? "Enviando..." : logoPreview ? "Trocar Logo" : "Adicionar Logo"}
               </Button>
               <p className="text-xs text-muted-foreground mt-1">
                 Recomendado: 400x400px, máximo 5MB

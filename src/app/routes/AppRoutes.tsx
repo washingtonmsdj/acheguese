@@ -72,7 +72,7 @@ export function AppRoutes() {
         {/* Rotas públicas de landing pages */}
         <Route path="/empresas-landing" element={<P.EmpresasLandingPage />} />
         <Route path="/servicos-landing" element={<P.ServicosLandingPage />} />
-        <Route path="/empresa/:id" element={<P.EmpresaDetailLandingPage />} />
+        <Route path="/empresa/:id" element={<P.BusinessLegacyRoute />} />
         <Route path="/classificado/:id" element={<P.ClassificadoDetailLandingPage />} />
         <Route path="/classificado/:id/chat" element={<P.ClassificadoChatLandingPage />} />
         <Route path="/vagas/detalhe/:id" element={<P.VagaDetailPage />} />

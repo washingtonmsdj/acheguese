@@ -131,7 +131,7 @@ interface GastronomyBusiness {
 
 **Solução Aplicada:**
 ```bash
-✅ Movidos para docs/temp-work-2026-04-13/
+✅ Movidos para docs/archive/temp-work/2026-04-13/
 ✅ Mantidos apenas arquivos essenciais na raiz
 ✅ Criado índice de documentação
 ```

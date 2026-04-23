@@ -4,7 +4,7 @@
  * Paridade com QuickActions do módulo de empresas.
  */
 
-import { MessageCircle, Navigation, Phone, ShoppingCart } from 'lucide-react';
+import { Building2, MessageCircle, Navigation, Phone, ShoppingCart } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { Button } from '@/shared/components/ui/button';
@@ -13,11 +13,13 @@ import type { GastronomyBusiness } from '../types';
 interface GastronomyQuickActionsProps {
   business: GastronomyBusiness;
   onOrderClick?: () => void;
+  companyUrl?: string | null;
 }
 
 export function GastronomyQuickActions({
   business,
   onOrderClick,
+  companyUrl,
 }: GastronomyQuickActionsProps) {
   const { phone, whatsapp, address, gastronomy_profile: profile } = business;
   const latitude = address?.latitude;
@@ -50,7 +52,7 @@ export function GastronomyQuickActions({
     window.open(url, '_blank');
   };
 
-  const hasActions = whatsapp || phone || hasCoords || profile.delivery_enabled;
+  const hasActions = whatsapp || phone || hasCoords || profile.delivery_enabled || companyUrl;
   if (!hasActions) return null;
 
   return (
@@ -89,6 +91,14 @@ export function GastronomyQuickActions({
         >
           <Navigation className="h-4 w-4" />
           Como Chegar
+        </Button>
+      )}
+      {companyUrl && (
+        <Button asChild variant="outline" className="gap-2 rounded-full px-5">
+          <a href={companyUrl}>
+            <Building2 className="h-4 w-4" />
+            Pagina da Empresa
+          </a>
         </Button>
       )}
     </div>

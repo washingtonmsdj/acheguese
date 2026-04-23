@@ -28,13 +28,13 @@ export async function isFavorited(
       .select("id")
       .eq("favorited_profile_id", favoritedProfileId)
       .eq("favoriting_profile_id", favoritingProfileId)
-      .maybeSingle();
+      .limit(1);
 
     if (error) {
       return false;
     }
 
-    return !!data;
+    return Array.isArray(data) && data.length > 0;
   } catch (error) {
     logger.error("[favorites.queries] Error checking if favorited:", error);
     return false;
@@ -180,13 +180,13 @@ export async function isBusinessFavorited(
       .select("id")
       .eq("business_id", businessId)
       .eq("profile_id", userId)
-      .single();
+      .limit(1);
 
-    if (error && error.code !== "PGRST116") {
+    if (error) {
       throw error;
     }
 
-    return !!data;
+    return Array.isArray(data) && data.length > 0;
   } catch (error) {
     logger.error("[favorites.queries] Error checking if business is favorited:", error);
     trackError(error as Error, {

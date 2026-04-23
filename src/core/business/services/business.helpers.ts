@@ -64,26 +64,55 @@ export function getFormattedAddress(
  * Retorna null se não houver coordenadas canônicas
  */
 export function getCoordinates(
-  business: BusinessDataRecord,
+  business: BusinessDataRecord | {
+    address?: { latitude?: number | null; longitude?: number | null } | null;
+    location?: { canonical_lat?: number | null; canonical_lng?: number | null } | null;
+    metadata?: Record<string, unknown> | null;
+  },
 ): { latitude: number; longitude: number } | null {
-  const addressData = (business as BusinessDataRecord & { address?: unknown }).address;
+  const isFiniteNumber = (value: unknown): value is number =>
+    typeof value === "number" && Number.isFinite(value);
 
+  const addressCoords = business.address;
   if (
-    addressData &&
-    typeof addressData === "object" &&
-    "latitude" in addressData &&
-    "longitude" in addressData
+    addressCoords &&
+    isFiniteNumber(addressCoords.latitude) &&
+    isFiniteNumber(addressCoords.longitude)
   ) {
-    const addr = addressData as { latitude?: number | null; longitude?: number | null };
-    if (
-      typeof addr.latitude === "number" &&
-      typeof addr.longitude === "number" &&
-      Number.isFinite(addr.latitude) &&
-      Number.isFinite(addr.longitude)
-    ) {
+    return {
+      latitude: addressCoords.latitude,
+      longitude: addressCoords.longitude,
+    };
+  }
+
+  const canonicalCoords = business.location;
+  if (
+    canonicalCoords &&
+    isFiniteNumber(canonicalCoords.canonical_lat) &&
+    isFiniteNumber(canonicalCoords.canonical_lng)
+  ) {
+    return {
+      latitude: canonicalCoords.canonical_lat,
+      longitude: canonicalCoords.canonical_lng,
+    };
+  }
+
+  const metadata = business.metadata;
+  if (metadata && typeof metadata === "object") {
+    const latitude =
+      metadata.latitude ??
+      metadata.lat ??
+      metadata.canonical_lat;
+    const longitude =
+      metadata.longitude ??
+      metadata.lng ??
+      metadata.lon ??
+      metadata.canonical_lng;
+
+    if (isFiniteNumber(latitude) && isFiniteNumber(longitude)) {
       return {
-        latitude: addr.latitude,
-        longitude: addr.longitude,
+        latitude,
+        longitude,
       };
     }
   }

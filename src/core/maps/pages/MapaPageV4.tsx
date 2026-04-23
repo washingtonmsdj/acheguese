@@ -13,7 +13,7 @@
  */
 
 import React, { useRef, useCallback, useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { MapLibreAdapter, type MapLibreAdapterHandle } from '../components/v3/MapLibreAdapter';
 import { MapMarkerPopup } from '../components/v3/MapMarkerPopup';
 import { useMapViewportFetch } from '../hooks/useMapViewportFetch';
@@ -214,6 +214,41 @@ export default function MapaPageV4({ resolved, activeMemberIds = [] }: MapaPageV
     createInitialVisibleLayers,
   );
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+
+  const focusTarget = React.useMemo(() => {
+    const rawLat = Number(searchParams.get('lat'));
+    const rawLng = Number(searchParams.get('lng'));
+    const rawZoom = Number(searchParams.get('z') ?? 16);
+    const name = searchParams.get('name') ?? 'Estabelecimento';
+
+    const validLat = Number.isFinite(rawLat) && rawLat >= -90 && rawLat <= 90;
+    const validLng = Number.isFinite(rawLng) && rawLng >= -180 && rawLng <= 180;
+    if (!validLat || !validLng) return null;
+
+    const zoom = Number.isFinite(rawZoom) ? Math.min(20, Math.max(10, rawZoom)) : 16;
+
+    return {
+      latitude: rawLat,
+      longitude: rawLng,
+      zoom,
+      name,
+    };
+  }, [searchParams]);
+
+  const initialViewport = React.useMemo(
+    () =>
+      focusTarget
+        ? {
+            center: {
+              latitude: focusTarget.latitude,
+              longitude: focusTarget.longitude,
+            },
+            zoom: focusTarget.zoom,
+          }
+        : undefined,
+    [focusTarget],
+  );
 
   // Localização do usuário com fallback territorial
   const { 
@@ -314,6 +349,25 @@ export default function MapaPageV4({ resolved, activeMemberIds = [] }: MapaPageV
 
   // Marcadores de dados — MapMarker[] canônico, sem conversão.
   // O marcador de usuário é gerenciado pelo MapLibreAdapter via userLocationMarker.autoAdd.
+  const focusMarkers = React.useMemo(() => {
+    if (!focusTarget) return [] as MapMarker[];
+
+    return mapEntityProjection.projectEntities(
+      [
+        {
+          id: 'focus-target',
+          name: focusTarget.name,
+          latitude: focusTarget.latitude,
+          longitude: focusTarget.longitude,
+          status: 'active',
+          map_layer_key: 'businesses',
+        },
+      ],
+      'business',
+      { includeMetadata: true, calculateScore: true, baseUrl: '/empresas' },
+    );
+  }, [focusTarget]);
+
   const markers = React.useMemo(() => {
     // Modo normal: busca por bounds
     // Combinar marcadores de viewport fetch + pontos turísticos
@@ -333,8 +387,14 @@ export default function MapaPageV4({ resolved, activeMemberIds = [] }: MapaPageV
         )
       : [];
 
-    return [...Object.values(layerData).flat(), ...touristPointMarkers];
-  }, [touristPointsData, layerData, touristLayerVisible]);
+    const merged = [...Object.values(layerData).flat(), ...touristPointMarkers];
+    return [...focusMarkers, ...merged];
+  }, [touristPointsData, layerData, touristLayerVisible, focusMarkers]);
+
+  useEffect(() => {
+    if (!focusTarget || selectedMarker || focusMarkers.length === 0) return;
+    setSelectedMarker(focusMarkers[0]);
+  }, [focusTarget, selectedMarker, focusMarkers]);
 
   return (
     <div
@@ -346,6 +406,7 @@ export default function MapaPageV4({ resolved, activeMemberIds = [] }: MapaPageV
         <MapLibreAdapter
           ref={adapterRef}
           styleUrl={TILE_STYLE_URL}
+          initialViewport={initialViewport}
           territoryPolygons={territoryPolygons}
           markers={markers}
           resolved={resolved}

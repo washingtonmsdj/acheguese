@@ -33,6 +33,7 @@ import {
 
 import { useFriendlyModuleUrls } from '@/core/routing/hooks/useFriendlyModuleUrls';
 import { useSessionContext } from '@/core/session';
+import { BusinessUrlService } from '@/core/business/services/BusinessUrlService';
 import { Badge } from '@/shared/components/ui/badge';
 import { Button } from '@/shared/components/ui/button';
 import {
@@ -92,6 +93,20 @@ export default function GastronomyDetailPage() {
   const { data: promotions = [] } = useActivePromotions(business?.business_data_id);
 
   const openingStatus = useGastronomyOpeningStatus(business ?? null);
+  const companyUrl = useMemo(() => {
+    if (!business?.slug || !business.geographic_path) return null;
+
+    try {
+      return BusinessUrlService.getCanonicalUrl({
+        id: business.profile_id,
+        slug: business.slug,
+        geographic_path: business.geographic_path,
+        is_premium: business.is_premium,
+      });
+    } catch {
+      return null;
+    }
+  }, [business]);
 
   // ── Cardápio ──────────────────────────────────────────────────────────────
   const sortedCategories = useMemo(() => {
@@ -354,7 +369,7 @@ export default function GastronomyDetailPage() {
         <div className="mx-auto max-w-5xl px-4 py-8">
 
           {/* Quick Actions */}
-          <GastronomyQuickActions business={business} />
+          <GastronomyQuickActions business={business} companyUrl={companyUrl} />
 
           {isOwner && ownerManagementActions.length > 0 && (
             <section className="mb-6 rounded-2xl border border-primary/20 bg-primary/5 p-4">

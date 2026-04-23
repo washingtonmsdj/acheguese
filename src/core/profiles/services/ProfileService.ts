@@ -20,6 +20,7 @@
 import { supabase } from "@/integrations/supabase";
 import { logger } from "@/shared/utils/logger";
 import { trackError } from "@/shared/utils/errorTracking";
+import { FavoritesService } from "@/core/favorites/services/FavoritesService";
 import { publicIdentityService, PublicIdentityService } from "@/core/public-identity";
 import { createTypedQuery, callRPC } from "@/integrations/supabase/services/supabaseHelpers";
 import type {
@@ -849,7 +850,7 @@ export class ProfileServiceLegacy {
     return records.map((business: any) => ({
       id: business.profile_id,
       name: business.business_name,
-      logo: business.logo || "",
+      logo: business.metadata?.logo_url || business.logo || "",
       category: business.category,
       rating: business.rating || 0,
       neighborhood: business.profiles?.neighborhood || "",
@@ -1205,7 +1206,6 @@ export class ProfileServiceLegacy {
         canModerate: false,
       };
 
-      // eslint-disable-next-line session-context/require-authorization-engine -- Read-only para exibição em UI, não para decisão de autorização
       const permissionMatrix = [
         { key: "canPost" as const, label: "Publicar conteudo", allowed: permissions.canPost },
         {
@@ -2273,13 +2273,39 @@ export class ProfileServiceLegacy {
    * Conta favoritos de um usuário
    */
   async getUserFavoritesCount(userId: string): Promise<number> {
-    const { count, error } = await (supabase as any)
-      .from("profile_favorites")
-      .select("*", { count: "exact", head: true })
-      .eq("user_id", userId);
+    try {
+      const { data: byUserId, error: byUserIdError } = await (supabase as any)
+        .from("profiles")
+        .select("id")
+        .eq("user_id", userId);
 
-    if (error) return 0;
-    return count || 0;
+      if (byUserIdError) return 0;
+
+      let profileIds = ((byUserId as Array<{ id: string }> | null) || []).map((p) => p.id);
+
+      if (profileIds.length === 0) {
+        const { data: byProfileId, error: byProfileIdError } = await (supabase as any)
+          .from("profiles")
+          .select("id")
+          .eq("id", userId)
+          .limit(1);
+
+        if (byProfileIdError) return 0;
+        profileIds = ((byProfileId as Array<{ id: string }> | null) || []).map((p) => p.id);
+      }
+
+      if (profileIds.length === 0) return 0;
+
+      const { count, error } = await (supabase as any)
+        .from("profile_favorites_new")
+        .select("*", { count: "exact", head: true })
+        .in("favoriting_profile_id", profileIds);
+
+      if (error) return 0;
+      return count || 0;
+    } catch {
+      return 0;
+    }
   }
 
   /**
@@ -2295,8 +2321,12 @@ export class ProfileServiceLegacy {
         profile_id,
         business_name,
         category,
+        metadata,
+        rating,
         is_premium,
         is_verified,
+        slug,
+        description,
         created_at
       `,
       )
@@ -2324,11 +2354,13 @@ export class ProfileServiceLegacy {
       .select(
         `
         profile_id,
+        business_name,
         category,
-        logo,
+        metadata,
         slug,
-        verified,
+        is_verified,
         is_premium,
+        description,
         created_at,
         profiles(name, neighborhood, city)
       `,
@@ -2352,28 +2384,50 @@ export class ProfileServiceLegacy {
    * Busca favoritos de negócios de um usuário
    */
   async getUserFavoriteBusinesses(userId: string): Promise<any[]> {
-    const { data: favs, error } = await (supabase as any)
-      .from("profile_favorites")
-      .select("profile_id")
+    const { data: profileRows, error: profileError } = await (supabase as any)
+      .from("profiles")
+      .select("id")
       .eq("user_id", userId);
 
-    if (error || !favs?.length) return [];
+    if (profileError) return [];
 
-    const ids = favs.map((f: any) => f.profile_id);
+    let ownerProfileIds = ((profileRows as Array<{ id: string }> | null) || []).map((row) => row.id);
+    if (ownerProfileIds.length === 0) {
+      const { data: profileById, error: profileByIdError } = await (supabase as any)
+        .from("profiles")
+        .select("id")
+        .eq("id", userId)
+        .limit(1);
+
+      if (profileByIdError) return [];
+      ownerProfileIds = ((profileById as Array<{ id: string }> | null) || []).map((row) => row.id);
+    }
+
+    if (!ownerProfileIds.length) return [];
+
+    const businessIdGroups = await Promise.all(
+      ownerProfileIds.map((profileId) => FavoritesService.getUserBusinessFavorites(profileId)),
+    );
+
+    const businessIds = [...new Set(businessIdGroups.flat().filter(Boolean))];
+    if (!businessIds.length) return [];
+
     const { data: businesses, error: bizError } = await (supabase as any)
       .from("business_data")
       .select(
         `
         profile_id,
+        business_name,
         category,
-        logo,
+        metadata,
         slug,
-        verified,
+        is_verified,
         is_premium,
+        description,
         profiles(name, neighborhood, city)
       `,
       )
-      .in("profile_id", ids)
+      .in("profile_id", businessIds)
       .eq("status", "active");
 
     if (bizError) return [];

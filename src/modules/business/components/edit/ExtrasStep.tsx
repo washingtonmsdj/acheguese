@@ -19,6 +19,7 @@ interface ExtrasStepProps {
   capaPreview: string | null;
   capaRef: React.RefObject<HTMLInputElement>;
   onCapaChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  uploading?: boolean;
   website: string;
   onWebsiteChange: (value: string) => void;
   instagram: string;
@@ -40,6 +41,7 @@ export function ExtrasStep({
   capaPreview,
   capaRef,
   onCapaChange,
+  uploading = false,
   website,
   onWebsiteChange,
   instagram,
@@ -89,10 +91,11 @@ export function ExtrasStep({
             variant="outline"
             size="sm"
             onClick={() => capaRef.current?.click()}
+            disabled={uploading}
             className="gap-2"
           >
             <Upload className="h-4 w-4" />
-            {capaPreview ? "Trocar Capa" : "Adicionar Capa"}
+            {uploading ? "Enviando..." : capaPreview ? "Trocar Capa" : "Adicionar Capa"}
           </Button>
           <p className="text-xs text-muted-foreground">
             Recomendado: 1200x400px, máximo 5MB

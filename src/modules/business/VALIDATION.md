@@ -4,7 +4,8 @@
 
 ### Corrigido nesta rodada
 
-- Favoritos de empresas realinhados com `business_favorites`.
+- Favoritos do fluxo `empresas` mantidos com `business_favorites` (compat).
+- Favoritos do fluxo `gastronomia` consolidados em `user_favorite_businesses` com fallback SSOT em leitura direta.
 - Navegação pública passou a resolver contexto territorial por ID/slug quando necessário.
 - Fluxos paralelos removidos:
   - `useBusinessActions`

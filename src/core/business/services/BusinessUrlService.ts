@@ -157,12 +157,14 @@ export class BusinessUrlService {
         .maybeSingle();
 
       if (error || !data) return null;
+      const geographicPath = data.location?.geographic_path;
+      if (!geographicPath) return null;
 
       return {
         id: data.profile_id,
         slug: data.slug,
         is_premium: data.is_premium,
-        geographic_path: data.location?.geographic_path ?? null,
+        geographic_path: geographicPath,
       };
     } catch (err) {
       logger.error('[BusinessUrlService] resolveBySlug error:', err);
@@ -190,12 +192,14 @@ export class BusinessUrlService {
         .maybeSingle();
 
       if (error || !data || !data.slug) return null;
+      const geographicPath = data.location?.geographic_path;
+      if (!geographicPath) return null;
 
       return {
         id: data.profile_id,
         slug: data.slug,
         is_premium: data.is_premium,
-        geographic_path: data.location?.geographic_path ?? null,
+        geographic_path: geographicPath,
       };
     } catch (err) {
       logger.error('[BusinessUrlService] resolveById error:', err);
@@ -355,12 +359,14 @@ export class BusinessUrlService {
         .maybeSingle();
 
       if (error || !data || !data.slug) return null;
+      const geographicPath = data.location?.geographic_path;
+      if (!geographicPath) return null;
 
       return {
         id: data.profile_id,
         slug: data.slug,
         is_premium: data.is_premium,
-        geographic_path: data.location?.geographic_path ?? null,
+        geographic_path: geographicPath,
       };
     } catch (err) {
       logger.error('[BusinessUrlService] resolveBySlugHistory error:', err);

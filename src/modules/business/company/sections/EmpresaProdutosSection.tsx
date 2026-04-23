@@ -20,9 +20,7 @@ export function EmpresaProdutosSection({
   onSelectCategory,
   onToggleShowAll,
 }: EmpresaProdutosSectionProps) {
-  if (products.length === 0) return null;
-
-  // Get unique categories
+  const hasProducts = products.length > 0;
   const categories = ['todos', ...new Set(products.map((p) => p.category))];
 
   // Filter products
@@ -55,47 +53,52 @@ export function EmpresaProdutosSection({
           </span>
         </div>
 
-        {/* Category filter */}
-        <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-3">
-          {categories.map((cat) => (
-            <button
-              key={cat}
-              onClick={() => onSelectCategory(cat)}
-              className={`shrink-0 text-xs font-medium px-4 py-2 rounded-lg transition-all ${
-                selectedCategory === cat
-                  ? 'bg-primary text-primary-foreground shadow-md'
-                  : 'bg-card border border-border text-muted-foreground hover:border-primary/30 hover:text-primary'
-              }`}
-            >
-              {cat === 'todos' ? 'Todos' : cat}
-            </button>
-          ))}
-        </div>
+        {hasProducts ? (
+          <>
+            <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-3">
+              {categories.map((cat) => (
+                <button
+                  key={cat}
+                  onClick={() => onSelectCategory(cat)}
+                  className={`shrink-0 text-xs font-medium px-4 py-2 rounded-lg transition-all ${
+                    selectedCategory === cat
+                      ? 'bg-primary text-primary-foreground shadow-md'
+                      : 'bg-card border border-border text-muted-foreground hover:border-primary/30 hover:text-primary'
+                  }`}
+                >
+                  {cat === 'todos' ? 'Todos' : cat}
+                </button>
+              ))}
+            </div>
 
-        {/* Product grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          {displayedProducts.map((product) => (
-            <ProductCard key={product.id} product={product} />
-          ))}
-        </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {displayedProducts.map((product) => (
+                <ProductCard key={product.id} product={product} />
+              ))}
+            </div>
 
-        {/* Show more */}
-        {filteredProducts.length > 4 && (
-          <button
-            onClick={onToggleShowAll}
-            className="w-full mt-3 flex items-center justify-center gap-2 py-3 text-sm font-medium text-primary hover:underline"
-          >
-            {showAllProducts ? (
-              <>
-                <ChevronUp className="h-4 w-4" /> Mostrar menos
-              </>
-            ) : (
-              <>
-                <ChevronDown className="h-4 w-4" /> Ver todos os{' '}
-                {filteredProducts.length} itens
-              </>
+            {filteredProducts.length > 4 && (
+              <button
+                onClick={onToggleShowAll}
+                className="w-full mt-3 flex items-center justify-center gap-2 py-3 text-sm font-medium text-primary hover:underline"
+              >
+                {showAllProducts ? (
+                  <>
+                    <ChevronUp className="h-4 w-4" /> Mostrar menos
+                  </>
+                ) : (
+                  <>
+                    <ChevronDown className="h-4 w-4" /> Ver todos os{' '}
+                    {filteredProducts.length} itens
+                  </>
+                )}
+              </button>
             )}
-          </button>
+          </>
+        ) : (
+          <div className="rounded-xl border border-border bg-card p-5 text-sm text-muted-foreground">
+            Catalogo nao disponivel no momento.
+          </div>
         )}
       </motion.div>
     </section>

@@ -13,7 +13,7 @@ export const BUSINESS_SORT_OPTIONS = [
 ] as const;
 
 export const SECTION_ITEMS_LIMIT = 25;
-export const PRODUCT_SECTION_ITEMS_LIMIT = 5;
+export const PRODUCT_SECTION_ITEMS_LIMIT = 10;
 export const DISTANCE_FALLBACK = Number.POSITIVE_INFINITY;
 export const INITIAL_VISIBLE_COUNT = 12;
 export const LOAD_MORE_INCREMENT = 12;

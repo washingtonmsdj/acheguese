@@ -27,10 +27,12 @@ export function NearbyBusinessCard({ business, onClick }: NearbyBusinessCardProp
             <h3 className="text-sm font-semibold text-foreground truncate group-hover:text-primary transition-colors">
               {business.name}
             </h3>
-            {business.isOpen ? (
-              <span className="shrink-0 h-2 w-2 rounded-full bg-emerald-500" />
-            ) : (
-              <span className="shrink-0 h-2 w-2 rounded-full bg-muted-foreground/40" />
+            {typeof business.isOpen === 'boolean' && (
+              business.isOpen ? (
+                <span className="shrink-0 h-2 w-2 rounded-full bg-emerald-500" />
+              ) : (
+                <span className="shrink-0 h-2 w-2 rounded-full bg-muted-foreground/40" />
+              )
             )}
           </div>
           
@@ -39,9 +41,11 @@ export function NearbyBusinessCard({ business, onClick }: NearbyBusinessCardProp
           </p>
           
           <div className="flex items-center gap-3 text-xs">
-            <span className="flex items-center gap-1 text-primary font-semibold">
-              <MapPin className="h-3 w-3" /> {business.distance}
-            </span>
+            {business.distance && (
+              <span className="flex items-center gap-1 text-primary font-semibold">
+                <MapPin className="h-3 w-3" /> {business.distance}
+              </span>
+            )}
             <span className="flex items-center gap-1 text-muted-foreground">
               <Star className="h-3 w-3 fill-primary text-primary" /> {business.rating}
             </span>

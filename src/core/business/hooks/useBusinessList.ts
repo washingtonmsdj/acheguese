@@ -22,11 +22,13 @@ import { BusinessService } from "@/core/business/services/BusinessService";
 import { useCallback, useMemo, useRef, useEffect } from "react";
 import { useTerritoryFilter, isTerritoryFilterReady, territoryFilterKey } from "@/core/location";
 import type { Business } from "@/core/business/types/Business";
+import type { BusinessFilters } from "@/core/business/types";
 import type { ResolvedTerritory } from "@/core/routing/hooks/useResolveTerritoryFromUrl";
 
 interface UseBusinessListOptions {
   category?: string;
   searchQuery?: string;
+  sortBy?: BusinessFilters["sortBy"];
   enabled?: boolean;
   pageSize?: number;
   /** Território resolvido pela rota — passar quando dentro de TerritorialLayout */
@@ -44,11 +46,12 @@ const STALE_TIME = 5 * 60 * 1000; // 5 minutos
 const createQueryKey = (
   category?: string,
   searchQuery?: string,
+  sortBy?: BusinessFilters["sortBy"],
   filterKey?: string,
 ) => [
   "businesses",
   "list",
-  { category, searchQuery, filterKey },
+  { category, searchQuery, sortBy, filterKey },
 ];
 
 /**
@@ -59,6 +62,7 @@ const createQueryKey = (
 export function useBusinessList({
   category,
   searchQuery,
+  sortBy,
   enabled = true,
   pageSize = DEFAULT_PAGE_SIZE,
   routeResolved,
@@ -83,12 +87,13 @@ export function useBusinessList({
     error,
     refetch,
   } = useInfiniteQuery({
-    queryKey: createQueryKey(category, searchQuery, filterKey),
+    queryKey: createQueryKey(category, searchQuery, sortBy, filterKey),
     queryFn: ({ pageParam = 0 }) =>
       BusinessService.getBusinessesList({
         pageParam,
         category,
         searchQuery,
+        sortBy,
         pageSize,
         filter: filterReady ? filter : undefined, // Só aplica filtro se estiver pronto
       }),

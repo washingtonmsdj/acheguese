@@ -11,18 +11,11 @@ import { AlertFeedSection } from "@/modules/community/alerts";
 import { useLocationContext } from "@/core/location";
 import { useSessionContext } from "@/core/session";
 import { useTerritoryFilter } from "@/core/location/hooks/useTerritoryFilter";
+import { buildCommunityTerritoryPresentation } from "@/core/community/utils/communityTerritoryPresentation";
 import type { ResolvedTerritory } from "@/core/routing/hooks/useResolveTerritoryFromUrl";
 
 interface AlertasPageProps {
   resolved?: ResolvedTerritory;
-}
-
-function formatSlug(slug?: string): string {
-  if (!slug) return "";
-  return slug
-    .split("-")
-    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-    .join(" ");
 }
 
 export default function AlertasPage({ resolved }: AlertasPageProps) {
@@ -37,22 +30,11 @@ export default function AlertasPage({ resolved }: AlertasPageProps) {
       ? resolved.group.members[0]
       : null;
 
-  const locationForUi = resolvedLocation ?? activeLocation;
-  const pathParts = locationForUi?.geographic_path?.split("/").filter(Boolean) ?? [];
-
-  const city =
-    locationForUi?.type === "city"
-      ? locationForUi.name
-      : locationForUi?.type === "district"
-      ? formatSlug(pathParts[2]) || activeProfile?.city || ""
-      : formatSlug(pathParts[2]) || activeProfile?.city || "";
-
-  const neighborhood =
-    locationForUi?.type === "district" ? locationForUi.name : activeProfile?.neighborhood;
-  const alertLocationId =
-    locationForUi?.type === "district"
-      ? locationForUi.id
-      : (activeProfile as { location_id?: string } | null)?.location_id;
+  const territoryPresentation = buildCommunityTerritoryPresentation({
+    resolvedLocation,
+    activeLocation,
+    profile: activeProfile,
+  });
 
   return (
     <TooltipProvider>
@@ -61,9 +43,9 @@ export default function AlertasPage({ resolved }: AlertasPageProps) {
           {territoryFilter.scope !== "none" ? (
             <AlertFeedSection
               territoryFilter={territoryFilter}
-              city={city}
-              neighborhood={neighborhood}
-              locationId={alertLocationId}
+              city={territoryPresentation.city}
+              neighborhood={territoryPresentation.neighborhood}
+              locationId={territoryPresentation.locationId}
             />
           ) : (
             <p className="text-sm text-muted-foreground text-center py-12">

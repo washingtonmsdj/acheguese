@@ -6,7 +6,9 @@
  */
 
 import type { NavigateFunction } from "react-router-dom";
+import type { User } from "@supabase/supabase-js";
 import type { Business } from "@/core/business/types";
+import type { VerticalKey } from "@/core/verticals";
 
 // ============================================
 // Business Extended (com campos adicionais)
@@ -67,9 +69,10 @@ export interface NearbyBusiness {
   readonly id: string;
   readonly name: string;
   readonly category: string;
-  readonly distance: string;
+  readonly distance?: string;
   readonly rating: number;
-  readonly isOpen: boolean;
+  readonly isOpen?: boolean;
+  readonly canonicalUrl?: string;
 }
 
 // ============================================
@@ -103,6 +106,7 @@ export interface EmpresaCTAsSectionProps extends BaseSectionProps {
   readonly business: BusinessExtended;
   readonly isDeliveryBusiness: boolean;
   readonly gastronomyUrl: string | null;
+  readonly verticalPublicUrls?: Partial<Record<VerticalKey, string>>;
   readonly isFavorite: boolean;
   readonly hasRecommended: boolean;
   readonly showRouteOptions: boolean;
@@ -141,7 +145,8 @@ export interface EmpresaProdutosSectionProps extends BaseSectionProps {
 export interface EmpresaAvaliacoesSectionProps extends BaseSectionProps {
   readonly business: BusinessExtended;
   readonly reviews: readonly Review[];
-  readonly user: any;
+  readonly user: User | null;
+  readonly reviewUrl?: string | null;
 }
 
 export interface EmpresaFotosSectionProps extends BaseSectionProps {
@@ -152,6 +157,7 @@ export interface EmpresaFotosSectionProps extends BaseSectionProps {
 export interface EmpresaProximasSectionProps extends BaseSectionProps {
   readonly nearbyBusinesses: readonly NearbyBusiness[];
   readonly currentBusinessId: string;
+  readonly currentBusinessGeographicPath?: string | null;
 }
 
 // ============================================

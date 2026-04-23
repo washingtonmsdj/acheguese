@@ -1,8 +1,22 @@
 -- ============================================================================
--- SEED: Dados Mock para Módulo Gastronomia
+-- SEED: Dados Mock COMPLETOS para Módulo Gastronomia
 -- ============================================================================
 -- Execute este SQL no Supabase Dashboard para popular dados de teste
 -- Permite visualizar a página de gastronomia sem alterar código
+--
+-- ATUALIZADO: 2026-04-23
+-- STATUS: ✅ COMPLETO - Todos os campos necessários incluídos
+--
+-- INCLUI:
+-- - 5 restaurantes (business_data)
+-- - 5 perfis gastronômicos (gastronomy_profiles)
+-- - 3 menus completos com categorias e itens
+-- - 2 promoções ativas
+-- - Variações e adicionais de itens
+-- - Fotos e imagens
+-- - Horários estruturados
+-- - Dados de delivery completos
+-- ============================================================================
 
 -- ============================================================================
 -- 1. CRIAR BUSINESS_DATA MOCK (Restaurantes)
@@ -19,8 +33,6 @@ INSERT INTO business_data (
   address,
   latitude,
   longitude,
-  phone,
-  whatsapp,
   instagram,
   opening_hours,
   is_premium,
@@ -40,8 +52,6 @@ INSERT INTO business_data (
   'Largo do Pelourinho, 15',
   -12.9714,
   -38.5124,
-  '(71) 3321-4567',
-  '71987654321',
   '@acarajedadinha',
   '{"segunda": "08:00-18:00", "terca": "08:00-18:00", "quarta": "08:00-18:00", "quinta": "08:00-18:00", "sexta": "08:00-20:00", "sabado": "08:00-20:00", "domingo": "08:00-14:00"}',
   true,
@@ -64,8 +74,6 @@ INSERT INTO business_data (
   address,
   latitude,
   longitude,
-  phone,
-  whatsapp,
   website,
   instagram,
   opening_hours,
@@ -86,8 +94,6 @@ INSERT INTO business_data (
   'Av. Tancredo Neves, 450',
   -12.9777,
   -38.4531,
-  '(71) 3345-6789',
-  '71998765432',
   'https://bellanapoli.com.br',
   '@bellanapoli_ssa',
   '{"terca": "18:00-23:00", "quarta": "18:00-23:00", "quinta": "18:00-23:00", "sexta": "18:00-00:00", "sabado": "18:00-00:00", "domingo": "18:00-23:00"}',
@@ -111,8 +117,6 @@ INSERT INTO business_data (
   address,
   latitude,
   longitude,
-  phone,
-  whatsapp,
   instagram,
   opening_hours,
   is_premium,
@@ -132,8 +136,6 @@ INSERT INTO business_data (
   'Shopping Barra, Piso L2',
   -13.0104,
   -38.5124,
-  '(71) 3356-7890',
-  '71987651234',
   '@sushihouse_ssa',
   '{"segunda": "11:30-15:00,18:00-23:00", "terca": "11:30-15:00,18:00-23:00", "quarta": "11:30-15:00,18:00-23:00", "quinta": "11:30-15:00,18:00-23:00", "sexta": "11:30-15:00,18:00-00:00", "sabado": "11:30-00:00", "domingo": "11:30-23:00"}',
   false,
@@ -156,8 +158,6 @@ INSERT INTO business_data (
   address,
   latitude,
   longitude,
-  phone,
-  whatsapp,
   instagram,
   opening_hours,
   is_premium,
@@ -177,8 +177,6 @@ INSERT INTO business_data (
   'Rua da Paciência, 89',
   -12.9833,
   -38.4789,
-  '(71) 3367-8901',
-  '71976543210',
   '@burgerstation_ssa',
   '{"terca": "18:00-23:30", "quarta": "18:00-23:30", "quinta": "18:00-23:30", "sexta": "18:00-01:00", "sabado": "18:00-01:00", "domingo": "18:00-23:00"}',
   false,
@@ -201,8 +199,6 @@ INSERT INTO business_data (
   address,
   latitude,
   longitude,
-  phone,
-  whatsapp,
   instagram,
   opening_hours,
   is_premium,
@@ -222,8 +218,6 @@ INSERT INTO business_data (
   'Av. Sete de Setembro, 234',
   -12.9722,
   -38.5089,
-  '(71) 3378-9012',
-  '71965432109',
   '@cantinadanonna',
   '{"segunda": "11:30-15:00,18:30-22:30", "terca": "11:30-15:00,18:30-22:30", "quarta": "11:30-15:00,18:30-22:30", "quinta": "11:30-15:00,18:30-22:30", "sexta": "11:30-15:00,18:30-23:30", "sabado": "11:30-23:30", "domingo": "11:30-22:00"}',
   true,
@@ -593,7 +587,376 @@ INSERT INTO menu_promotions (
 );
 
 -- ============================================================================
--- VALIDAÇÃO
+-- 7. CRIAR VARIAÇÕES DE ITENS (Tamanhos, Bordas, etc)
+-- ============================================================================
+
+-- Variações para Pizzas (Tamanhos)
+INSERT INTO menu_item_variants (item_id, name, description, price_modifier, is_available, display_order)
+SELECT 
+  mi.id,
+  'Média (4 fatias)',
+  'Pizza média, serve 2 pessoas',
+  0.00,
+  true,
+  0
+FROM menu_items mi
+JOIN menu_categories mc ON mc.id = mi.category_id
+WHERE mc.name LIKE '%Pizza%'
+ON CONFLICT DO NOTHING;
+
+INSERT INTO menu_item_variants (item_id, name, description, price_modifier, is_available, display_order)
+SELECT 
+  mi.id,
+  'Grande (8 fatias)',
+  'Pizza grande, serve 3-4 pessoas',
+  15.00,
+  true,
+  1
+FROM menu_items mi
+JOIN menu_categories mc ON mc.id = mi.category_id
+WHERE mc.name LIKE '%Pizza%'
+ON CONFLICT DO NOTHING;
+
+INSERT INTO menu_item_variants (item_id, name, description, price_modifier, is_available, display_order)
+SELECT 
+  mi.id,
+  'Gigante (12 fatias)',
+  'Pizza gigante, serve 5-6 pessoas',
+  30.00,
+  true,
+  2
+FROM menu_items mi
+JOIN menu_categories mc ON mc.id = mi.category_id
+WHERE mc.name LIKE '%Pizza%'
+ON CONFLICT DO NOTHING;
+
+-- ============================================================================
+-- 8. CRIAR ADICIONAIS
+-- ============================================================================
+
+-- Adicionais para Pizzas
+INSERT INTO menu_item_addons (item_id, name, description, price, is_available, display_order)
+SELECT 
+  mi.id,
+  'Borda Recheada (Catupiry)',
+  'Borda recheada com catupiry',
+  8.00,
+  true,
+  0
+FROM menu_items mi
+JOIN menu_categories mc ON mc.id = mi.category_id
+WHERE mc.name LIKE '%Pizza%'
+ON CONFLICT DO NOTHING;
+
+INSERT INTO menu_item_addons (item_id, name, description, price, is_available, display_order)
+SELECT 
+  mi.id,
+  'Borda Recheada (Cheddar)',
+  'Borda recheada com cheddar',
+  8.00,
+  true,
+  1
+FROM menu_items mi
+JOIN menu_categories mc ON mc.id = mi.category_id
+WHERE mc.name LIKE '%Pizza%'
+ON CONFLICT DO NOTHING;
+
+INSERT INTO menu_item_addons (item_id, name, description, price, is_available, display_order)
+SELECT 
+  mi.id,
+  'Extra Queijo',
+  'Dobro de queijo',
+  10.00,
+  true,
+  2
+FROM menu_items mi
+JOIN menu_categories mc ON mc.id = mi.category_id
+WHERE mc.name LIKE '%Pizza%'
+ON CONFLICT DO NOTHING;
+
+-- Adicionais para Acarajé
+INSERT INTO menu_item_addons (item_id, name, description, price, is_available, display_order)
+SELECT 
+  mi.id,
+  'Camarão Extra',
+  'Porção adicional de camarão seco',
+  5.00,
+  true,
+  0
+FROM menu_items mi
+JOIN menu_categories mc ON mc.id = mi.category_id
+WHERE mc.name LIKE '%Acarajé%'
+ON CONFLICT DO NOTHING;
+
+INSERT INTO menu_item_addons (item_id, name, description, price, is_available, display_order)
+SELECT 
+  mi.id,
+  'Pimenta Extra',
+  'Molho de pimenta adicional',
+  2.00,
+  true,
+  1
+FROM menu_items mi
+JOIN menu_categories mc ON mc.id = mi.category_id
+WHERE mc.name LIKE '%Acarajé%'
+ON CONFLICT DO NOTHING;
+
+-- ============================================================================
+-- 9. ADICIONAR FOTOS AOS RESTAURANTES
+-- ============================================================================
+
+-- Fotos Bella Napoli (logo_url e banner_url vão no metadata)
+UPDATE business_data SET
+  metadata = jsonb_set(
+    jsonb_set(
+      jsonb_set(
+        COALESCE(metadata, '{}'::jsonb),
+        '{logo_url}',
+        '"https://images.unsplash.com/photo-1513104890138-7c749659a591?w=400"'
+      ),
+      '{banner_url}',
+      '"https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=1200"'
+    ),
+    '{photos}',
+    '["https://images.unsplash.com/photo-1513104890138-7c749659a591?w=800", "https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=800", "https://images.unsplash.com/photo-1574071318508-1cdbab80d002?w=800"]'::jsonb
+  )
+WHERE id = '22222222-2222-2222-2222-222222222222';
+
+-- Fotos Acarajé da Dinha
+UPDATE business_data SET
+  metadata = jsonb_set(
+    jsonb_set(
+      jsonb_set(
+        COALESCE(metadata, '{}'::jsonb),
+        '{logo_url}',
+        '"https://images.unsplash.com/photo-1606787366850-de6330128bfc?w=400"'
+      ),
+      '{banner_url}',
+      '"https://images.unsplash.com/photo-1606787366850-de6330128bfc?w=1200"'
+    ),
+    '{photos}',
+    '["https://images.unsplash.com/photo-1606787366850-de6330128bfc?w=800", "https://images.unsplash.com/photo-1612392062798-2dbae36d8c05?w=800"]'::jsonb
+  )
+WHERE id = '11111111-1111-1111-1111-111111111111';
+
+-- Fotos Sushi House
+UPDATE business_data SET
+  metadata = jsonb_set(
+    jsonb_set(
+      jsonb_set(
+        COALESCE(metadata, '{}'::jsonb),
+        '{logo_url}',
+        '"https://images.unsplash.com/photo-1579871494447-9811cf80d66c?w=400"'
+      ),
+      '{banner_url}',
+      '"https://images.unsplash.com/photo-1579871494447-9811cf80d66c?w=1200"'
+    ),
+    '{photos}',
+    '["https://images.unsplash.com/photo-1579871494447-9811cf80d66c?w=800", "https://images.unsplash.com/photo-1617196034796-73dfa7b1fd56?w=800", "https://images.unsplash.com/photo-1611143669185-af224c5e3252?w=800"]'::jsonb
+  )
+WHERE id = '33333333-3333-3333-3333-333333333333';
+
+-- Fotos Burger Station
+UPDATE business_data SET
+  metadata = jsonb_set(
+    jsonb_set(
+      jsonb_set(
+        COALESCE(metadata, '{}'::jsonb),
+        '{logo_url}',
+        '"https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=400"'
+      ),
+      '{banner_url}',
+      '"https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=1200"'
+    ),
+    '{photos}',
+    '["https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=800", "https://images.unsplash.com/photo-1550547660-d9450f859349?w=800"]'::jsonb
+  )
+WHERE id = '44444444-4444-4444-4444-444444444444';
+
+-- Fotos Cantina da Nonna
+UPDATE business_data SET
+  metadata = jsonb_set(
+    jsonb_set(
+      jsonb_set(
+        COALESCE(metadata, '{}'::jsonb),
+        '{logo_url}',
+        '"https://images.unsplash.com/photo-1621996346565-e3dbc646d9a9?w=400"'
+      ),
+      '{banner_url}',
+      '"https://images.unsplash.com/photo-1621996346565-e3dbc646d9a9?w=1200"'
+    ),
+    '{photos}',
+    '["https://images.unsplash.com/photo-1621996346565-e3dbc646d9a9?w=800", "https://images.unsplash.com/photo-1645112411341-6c4fd023714a?w=800"]'::jsonb
+  )
+WHERE id = '55555555-5555-5555-5555-555555555555';
+
+-- ============================================================================
+-- 10. ADICIONAR CAMPOS FALTANTES EM BUSINESS_DATA
+-- ============================================================================
+
+-- Adicionar email, website, facebook para todos (usando nomes corretos das colunas)
+UPDATE business_data SET
+  email = 'contato@acarajedadinha.com.br',
+  facebook = 'https://facebook.com/acarajedadinha',
+  payment_methods = '["dinheiro", "pix", "cartao_debito", "cartao_credito"]'::jsonb,
+  specialties = '["acarajé", "abará", "cocada"]'::jsonb,
+  facilities = '["aceita_pix", "delivery"]'::jsonb
+WHERE id = '11111111-1111-1111-1111-111111111111';
+
+UPDATE business_data SET
+  email = 'contato@bellanapoli.com.br',
+  facebook = 'https://facebook.com/bellanapoli',
+  payment_methods = '["pix", "cartao_debito", "cartao_credito", "vale_refeicao"]'::jsonb,
+  specialties = '["pizza_artesanal", "massa_fermentada", "forno_a_lenha"]'::jsonb,
+  facilities = '["estacionamento", "wifi", "acessibilidade", "kids_area", "delivery"]'::jsonb
+WHERE id = '22222222-2222-2222-2222-222222222222';
+
+UPDATE business_data SET
+  email = 'contato@sushihouse.com.br',
+  website = 'https://sushihouse.com.br',
+  facebook = 'https://facebook.com/sushihouse',
+  payment_methods = '["pix", "cartao_debito", "cartao_credito", "vale_refeicao"]'::jsonb,
+  specialties = '["rodizio", "sushi", "sashimi", "temaki"]'::jsonb,
+  facilities = '["estacionamento", "wifi", "acessibilidade", "reservas", "delivery"]'::jsonb
+WHERE id = '33333333-3333-3333-3333-333333333333';
+
+UPDATE business_data SET
+  email = 'contato@burgerstation.com.br',
+  website = 'https://burgerstation.com.br',
+  facebook = 'https://facebook.com/burgerstation',
+  payment_methods = '["dinheiro", "pix", "cartao_debito", "cartao_credito"]'::jsonb,
+  specialties = '["hamburger_artesanal", "batata_rustica", "milkshake"]'::jsonb,
+  facilities = '["wifi", "delivery"]'::jsonb
+WHERE id = '44444444-4444-4444-4444-444444444444';
+
+UPDATE business_data SET
+  email = 'contato@cantinadanonna.com.br',
+  website = 'https://cantinadanonna.com.br',
+  facebook = 'https://facebook.com/cantinadanonna',
+  payment_methods = '["pix", "cartao_debito", "cartao_credito", "vale_refeicao"]'::jsonb,
+  specialties = '["massa_fresca", "molhos_artesanais", "receitas_italianas"]'::jsonb,
+  facilities = '["estacionamento", "wifi", "acessibilidade", "musica_ao_vivo", "reservas", "delivery"]'::jsonb
+WHERE id = '55555555-5555-5555-5555-555555555555';
+
+-- ============================================================================
+-- 11. ADICIONAR IMAGENS AOS ITENS DO MENU
+-- ============================================================================
+
+-- Imagens para itens de Acarajé
+UPDATE menu_items SET
+  image_url = 'https://images.unsplash.com/photo-1606787366850-de6330128bfc?w=400'
+WHERE name = 'Acarajé Completo';
+
+UPDATE menu_items SET
+  image_url = 'https://images.unsplash.com/photo-1612392062798-2dbae36d8c05?w=400'
+WHERE name = 'Acarajé Simples';
+
+-- Imagens para Pizzas
+UPDATE menu_items SET
+  image_url = 'https://images.unsplash.com/photo-1574071318508-1cdbab80d002?w=400'
+WHERE name = 'Margherita';
+
+UPDATE menu_items SET
+  image_url = 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=400'
+WHERE name = 'Calabresa';
+
+UPDATE menu_items SET
+  image_url = 'https://images.unsplash.com/photo-1513104890138-7c749659a591?w=400'
+WHERE name = 'Quattro Formaggi';
+
+UPDATE menu_items SET
+  image_url = 'https://images.unsplash.com/photo-1571997478779-2adcbbe9ab2f?w=400'
+WHERE name = 'Camarão Premium';
+
+-- Imagens para Sushi
+UPDATE menu_items SET
+  image_url = 'https://images.unsplash.com/photo-1579871494447-9811cf80d66c?w=400'
+WHERE name = 'Sushi de Salmão';
+
+UPDATE menu_items SET
+  image_url = 'https://images.unsplash.com/photo-1617196034796-73dfa7b1fd56?w=400'
+WHERE name = 'Hot Roll Filadélfia';
+
+UPDATE menu_items SET
+  image_url = 'https://images.unsplash.com/photo-1611143669185-af224c5e3252?w=400'
+WHERE name = 'Temaki de Salmão';
+
+-- ============================================================================
+-- 12. ADICIONAR MENUS PARA BURGER STATION E CANTINA DA NONNA
+-- ============================================================================
+
+-- Menu Burger Station
+INSERT INTO menus (
+  id,
+  business_id,
+  name,
+  description,
+  is_active,
+  display_order
+) VALUES (
+  'a4444444-4444-4444-4444-444444444444',
+  '44444444-4444-4444-4444-444444444444',
+  'Burgers & Sides',
+  'Hambúrgueres artesanais e acompanhamentos',
+  true,
+  0
+) ON CONFLICT (id) DO NOTHING;
+
+-- Categorias Burger Station
+INSERT INTO menu_categories (id, menu_id, name, description, display_order, is_available) VALUES
+('c4444444-4444-4444-4444-444444444441', 'a4444444-4444-4444-4444-444444444444', 'Burgers', 'Hambúrgueres artesanais', 0, true),
+('c4444444-4444-4444-4444-444444444442', 'a4444444-4444-4444-4444-444444444444', 'Acompanhamentos', 'Batatas e onion rings', 1, true),
+('c4444444-4444-4444-4444-444444444443', 'a4444444-4444-4444-4444-444444444444', 'Bebidas', 'Milkshakes e refrigerantes', 2, true)
+ON CONFLICT (id) DO NOTHING;
+
+-- Itens Burger Station
+INSERT INTO menu_items (category_id, name, description, base_price, preparation_time, is_available, is_featured, display_order) VALUES
+('c4444444-4444-4444-4444-444444444441', 'Smash Burger Clássico', 'Blend 180g, queijo cheddar, alface, tomate', 28.00, 15, true, true, 0),
+('c4444444-4444-4444-4444-444444444441', 'Bacon Burger', 'Blend 180g, bacon crocante, cheddar, cebola caramelizada', 32.00, 18, true, true, 1),
+('c4444444-4444-4444-4444-444444444441', 'Veggie Burger', 'Hambúrguer vegetal, queijo vegano, rúcula', 30.00, 15, true, false, 2),
+('c4444444-4444-4444-4444-444444444442', 'Batata Rústica', 'Batatas com casca, temperadas', 15.00, 10, true, false, 0),
+('c4444444-4444-4444-4444-444444444442', 'Onion Rings', 'Anéis de cebola empanados', 18.00, 12, true, false, 1),
+('c4444444-4444-4444-4444-444444444443', 'Milkshake Chocolate', '500ml', 16.00, 5, true, false, 0),
+('c4444444-4444-4444-4444-444444444443', 'Milkshake Morango', '500ml', 16.00, 5, true, false, 1)
+ON CONFLICT DO NOTHING;
+
+-- Menu Cantina da Nonna
+INSERT INTO menus (
+  id,
+  business_id,
+  name,
+  description,
+  is_active,
+  display_order
+) VALUES (
+  'a5555555-5555-5555-5555-555555555555',
+  '55555555-5555-5555-5555-555555555555',
+  'Massas Tradicionais',
+  'Receitas da família italiana',
+  true,
+  0
+) ON CONFLICT (id) DO NOTHING;
+
+-- Categorias Cantina da Nonna
+INSERT INTO menu_categories (id, menu_id, name, description, display_order, is_available) VALUES
+('c5555555-5555-5555-5555-555555555551', 'a5555555-5555-5555-5555-555555555555', 'Massas', 'Massas frescas artesanais', 0, true),
+('c5555555-5555-5555-5555-555555555552', 'a5555555-5555-5555-5555-555555555555', 'Risotos', 'Risotos cremosos', 1, true),
+('c5555555-5555-5555-5555-555555555553', 'a5555555-5555-5555-5555-555555555555', 'Sobremesas', 'Doces italianos', 2, true)
+ON CONFLICT (id) DO NOTHING;
+
+-- Itens Cantina da Nonna
+INSERT INTO menu_items (category_id, name, description, base_price, preparation_time, is_vegetarian, is_available, is_featured, display_order) VALUES
+('c5555555-5555-5555-5555-555555555551', 'Fettuccine Alfredo', 'Massa fresca com molho de parmesão', 42.00, 20, true, true, true, 0),
+('c5555555-5555-5555-5555-555555555551', 'Lasanha Bolonhesa', 'Camadas de massa, ragù e bechamel', 48.00, 25, false, true, true, 1),
+('c5555555-5555-5555-5555-555555555551', 'Ravioli de Ricota', 'Recheado com ricota e espinafre', 45.00, 18, true, true, false, 2),
+('c5555555-5555-5555-5555-555555555552', 'Risoto de Funghi', 'Arroz arbóreo com cogumelos', 52.00, 30, true, true, true, 0),
+('c5555555-5555-5555-5555-555555555552', 'Risoto de Camarão', 'Arroz arbóreo com camarões grandes', 58.00, 30, false, true, false, 1),
+('c5555555-5555-5555-5555-555555555553', 'Tiramisu', 'Mascarpone, café e cacau', 22.00, 5, true, true, true, 0),
+('c5555555-5555-5555-5555-555555555553', 'Panna Cotta', 'Creme italiano com calda de frutas vermelhas', 20.00, 5, true, true, false, 1)
+ON CONFLICT DO NOTHING;
+
+-- ============================================================================
+-- VALIDAÇÃO FINAL
 -- ============================================================================
 
 -- Verificar dados criados
@@ -603,12 +966,15 @@ SELECT
   gp.price_range,
   gp.delivery_enabled,
   COUNT(DISTINCT m.id) as total_menus,
-  COUNT(DISTINCT mi.id) as total_items
+  COUNT(DISTINCT mc.id) as total_categories,
+  COUNT(DISTINCT mi.id) as total_items,
+  COUNT(DISTINCT mp.id) as total_promotions
 FROM business_data bd
 JOIN gastronomy_profiles gp ON gp.business_id = bd.id
 LEFT JOIN menus m ON m.business_id = bd.id
 LEFT JOIN menu_categories mc ON mc.menu_id = m.id
 LEFT JOIN menu_items mi ON mi.category_id = mc.id
+LEFT JOIN menu_promotions mp ON mp.business_id = bd.id AND mp.is_active = true
 WHERE bd.id IN (
   '11111111-1111-1111-1111-111111111111',
   '22222222-2222-2222-2222-222222222222',
@@ -620,6 +986,15 @@ GROUP BY bd.business_name, gp.cuisine_type, gp.price_range, gp.delivery_enabled
 ORDER BY bd.business_name;
 
 -- Resultado esperado:
--- 5 restaurantes com perfis gastronômicos
--- 3 com menus completos (Acarajé, Bella Napoli, Sushi House)
--- 2 sem menus ainda (Burger Station, Cantina da Nonna)
+-- ✅ 5 restaurantes com perfis gastronômicos completos
+-- ✅ 5 menus completos (todos os restaurantes)
+-- ✅ 15+ categorias no total
+-- ✅ 30+ itens no total
+-- ✅ 2 promoções ativas
+-- ✅ Variações e adicionais configurados
+-- ✅ Fotos e imagens em todos os restaurantes
+-- ✅ Todos os campos obrigatórios preenchidos
+
+-- ============================================================================
+-- FIM DO SEED
+-- ============================================================================

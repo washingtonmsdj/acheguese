@@ -9,6 +9,7 @@ import { TooltipProvider } from "@/shared/components/ui/tooltip";
 import { useSessionContext } from "@/core/session";
 import { useLocationContext } from "@/core/location";
 import { useTerritoryFilter } from "@/core/location/hooks/useTerritoryFilter";
+import { buildCommunityTerritoryPresentation } from "@/core/community/utils/communityTerritoryPresentation";
 import { IssueCard } from "../components/IssueCard";
 import { IssueCardSkeleton } from "../components/IssueCardSkeleton";
 import { CreateIssueModal } from "../components/CreateIssueModal";
@@ -20,14 +21,6 @@ import type { ResolvedTerritory } from "@/core/routing/hooks/useResolveTerritory
 
 interface ProblemasPageProps {
   resolved?: ResolvedTerritory;
-}
-
-function formatSlug(slug?: string): string {
-  if (!slug) return "";
-  return slug
-    .split("-")
-    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-    .join(" ");
 }
 
 export default function ProblemasPage({ resolved }: ProblemasPageProps) {
@@ -43,22 +36,11 @@ export default function ProblemasPage({ resolved }: ProblemasPageProps) {
       : resolved?.kind === "group"
       ? resolved.group.members[0]
       : null;
-  const locationForUi = resolvedLocation ?? activeLocation;
-  const pathParts = locationForUi?.geographic_path?.split("/").filter(Boolean) ?? [];
-
-  const city =
-    locationForUi?.type === "city"
-      ? locationForUi.name
-      : locationForUi?.type === "district"
-      ? formatSlug(pathParts[2]) || profile?.city || ""
-      : formatSlug(pathParts[2]) || profile?.city || "";
-
-  const neighborhood =
-    locationForUi?.type === "district" ? locationForUi.name : profile?.neighborhood;
-  const issueLocationId =
-    locationForUi?.type === "district"
-      ? locationForUi.id
-      : (profile as { location_id?: string } | null)?.location_id;
+  const territoryPresentation = buildCommunityTerritoryPresentation({
+    resolvedLocation,
+    activeLocation,
+    profile,
+  });
 
   const { data: issues = [], isLoading } = useIssues({
     territoryFilter,
@@ -78,7 +60,7 @@ export default function ProblemasPage({ resolved }: ProblemasPageProps) {
             <Button
               size="sm"
               onClick={() => setModalOpen(true)}
-              disabled={!profile || !issueLocationId}
+              disabled={!profile || !territoryPresentation.locationId}
               aria-label="Reportar novo problema"
             >
               Reportar
@@ -124,9 +106,9 @@ export default function ProblemasPage({ resolved }: ProblemasPageProps) {
         <CreateIssueModal
           open={modalOpen}
           onClose={() => setModalOpen(false)}
-          city={city}
-          neighborhood={neighborhood}
-          locationId={issueLocationId}
+          city={territoryPresentation.city}
+          neighborhood={territoryPresentation.neighborhood}
+          locationId={territoryPresentation.locationId}
         />
       </div>
     </TooltipProvider>

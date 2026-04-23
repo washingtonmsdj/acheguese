@@ -1,11 +1,11 @@
 /**
- * FoodSectionCarousel - secao tematica de pratos no mesmo padrao da grade principal.
+ * FoodSectionCarousel - carrossel horizontal de pratos com scroll nativo.
+ * Exibe até 10 itens, deslizável no mobile e desktop.
  */
 
-import { useEffect, useMemo, useState } from 'react';
+import { useRef } from 'react';
 import { motion } from 'framer-motion';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { Button } from '@/shared/components/ui/button';
 import { FoodItemCard } from './FoodItemCard';
 import type { PublicGastronomyFoodItem } from '../types';
 import type { LucideIcon } from 'lucide-react';
@@ -23,7 +23,8 @@ const fadeIn = {
   visible: { opacity: 1, y: 0, transition: { duration: 0.4 } },
 };
 
-const ITEMS_PER_PAGE = 5;
+const MAX_ITEMS = 10;
+const SCROLL_AMOUNT = 280;
 
 export function FoodSectionCarousel({
   title,
@@ -32,33 +33,28 @@ export function FoodSectionCarousel({
   items,
   accentColor = 'bg-primary/10',
 }: Props) {
-  const [pageIndex, setPageIndex] = useState(0);
-  const totalItems = items.length;
-  const totalPages = Math.max(1, Math.ceil(totalItems / ITEMS_PER_PAGE));
-  const hasPagination = totalPages > 1;
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const visibleItems = items.slice(0, MAX_ITEMS);
 
-  const pagedItems = useMemo(() => {
-    const start = pageIndex * ITEMS_PER_PAGE;
-    return items.slice(start, start + ITEMS_PER_PAGE);
-  }, [items, pageIndex]);
+  if (!visibleItems.length) return null;
 
-  useEffect(() => {
-    setPageIndex(0);
-  }, [items]);
-
-  const handlePrevious = () => {
-    setPageIndex((current) => Math.max(0, current - 1));
+  const scroll = (direction: 'left' | 'right') => {
+    if (!scrollRef.current) return;
+    scrollRef.current.scrollBy({
+      left: direction === 'left' ? -SCROLL_AMOUNT : SCROLL_AMOUNT,
+      behavior: 'smooth',
+    });
   };
-
-  const handleNext = () => {
-    setPageIndex((current) => Math.min(totalPages - 1, current + 1));
-  };
-
-  if (!totalItems) return null;
 
   return (
-    <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, margin: '-40px' }} variants={fadeIn}>
-      <div className="mb-4 flex items-center justify-between gap-3 sm:mb-5">
+    <motion.div
+      initial="hidden"
+      whileInView="visible"
+      viewport={{ once: true, margin: '-40px' }}
+      variants={fadeIn}
+    >
+      {/* Header */}
+      <div className="mb-3 flex items-center justify-between gap-3">
         <div className="flex items-center gap-2 sm:gap-3">
           <div className={`rounded-lg p-1.5 sm:p-2 ${accentColor}`}>
             <Icon className="h-4 w-4 text-primary sm:h-5 sm:w-5" />
@@ -68,40 +64,40 @@ export function FoodSectionCarousel({
             {subtitle && <p className="text-xs text-muted-foreground">{subtitle}</p>}
           </div>
         </div>
-        {hasPagination && (
-          <div className="flex items-center gap-1.5">
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              className="h-8 gap-1 rounded-full px-2.5 text-[11px] sm:text-xs"
-              onClick={handlePrevious}
-              disabled={pageIndex === 0}
-            >
-              <ChevronLeft className="h-3.5 w-3.5" />
-              <span className="hidden sm:inline">Anterior</span>
-            </Button>
-            <span className="min-w-[52px] text-center text-[11px] text-muted-foreground sm:text-xs">
-              {pageIndex + 1}/{totalPages}
-            </span>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              className="h-8 gap-1 rounded-full px-2.5 text-[11px] sm:text-xs"
-              onClick={handleNext}
-              disabled={pageIndex >= totalPages - 1}
-            >
-              <span className="hidden sm:inline">Proximos</span>
-              <ChevronRight className="h-3.5 w-3.5" />
-            </Button>
-          </div>
-        )}
+
+        {/* Botões de scroll — desktop */}
+        <div className="hidden sm:flex items-center gap-1">
+          <button
+            type="button"
+            onClick={() => scroll('left')}
+            className="flex h-8 w-8 items-center justify-center rounded-full border border-border bg-background text-muted-foreground hover:text-foreground hover:border-primary/50 transition-colors"
+            aria-label="Anterior"
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </button>
+          <button
+            type="button"
+            onClick={() => scroll('right')}
+            className="flex h-8 w-8 items-center justify-center rounded-full border border-border bg-background text-muted-foreground hover:text-foreground hover:border-primary/50 transition-colors"
+            aria-label="Próximo"
+          >
+            <ChevronRight className="h-4 w-4" />
+          </button>
+        </div>
       </div>
 
-      <div className="grid auto-rows-fr grid-cols-1 gap-3 min-[420px]:grid-cols-2 md:grid-cols-3 md:gap-4 lg:grid-cols-4 xl:grid-cols-5">
-        {pagedItems.map((item) => (
-          <div key={item.id} className="h-full">
+      {/* Carrossel */}
+      <div
+        ref={scrollRef}
+        className="flex gap-3 overflow-x-auto scroll-smooth pb-2 scrollbar-hide"
+        style={{ scrollSnapType: 'x mandatory' }}
+      >
+        {visibleItems.map((item) => (
+          <div
+            key={item.id}
+            className="w-[200px] shrink-0 sm:w-[220px]"
+            style={{ scrollSnapAlign: 'start' }}
+          >
             <FoodItemCard item={item} />
           </div>
         ))}

@@ -5,14 +5,15 @@
  * Usa homeDistrict.id do usuário como território canônico.
  */
 
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useEffect, useMemo, useState } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useToast } from "@/shared/hooks/use-toast";
 import { useAuth } from "@/core/auth/hooks/useAuth";
 import { useAppUrls } from "@/core/routing/hooks/useAppUrls";
 import { useUserTerritory } from "@/core/location/hooks/useUserTerritory";
 import { logger } from "@/shared/utils/logger";
 import { CommunityQAService } from "@/core/community/services/CommunityQAService";
+import { buildRecommendationPrefillFromSearchParams } from "@/core/community/utils/recommendationPrefill";
 import type { CreateQuestionInput } from "@/core/community/qa-types";
 
 export interface NovaRecomendacaoData {
@@ -23,17 +24,32 @@ export interface NovaRecomendacaoData {
 
 export function useNovaRecomendacao() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { toast } = useToast();
   const { user } = useAuth();
   const appUrls = useAppUrls();
   const { homeDistrict, homeCity, hasHome, loading: territoryLoading } = useUserTerritory();
   const [loading, setLoading] = useState(false);
 
+  const prefill = useMemo(
+    () => buildRecommendationPrefillFromSearchParams(searchParams),
+    [searchParams],
+  );
+
   const [formData, setFormData] = useState<NovaRecomendacaoData>({
-    titulo: "",
-    description: "",
-    category: "",
+    titulo: prefill.titulo || "",
+    description: prefill.description || "",
+    category: prefill.category || "",
   });
+
+  useEffect(() => {
+    if (!prefill.titulo && !prefill.description && !prefill.category) return;
+    setFormData((previous) => ({
+      titulo: prefill.titulo || previous.titulo,
+      description: prefill.description || previous.description,
+      category: prefill.category || previous.category,
+    }));
+  }, [prefill]);
 
   const updateField = (field: keyof NovaRecomendacaoData, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));

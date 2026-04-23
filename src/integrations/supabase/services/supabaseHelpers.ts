@@ -90,3 +90,81 @@ export function isSupabaseError(error: unknown): error is {
     "code" in error
   );
 }
+
+type LooseFilter =
+  | { op: "eq"; column: string; value: unknown }
+  | { op: "lt"; column: string; value: unknown }
+  | { op: "in"; column: string; values: unknown[] }
+  | { op: "or"; expression: string };
+
+interface LooseSelectOptions {
+  columns?: string;
+  filters?: LooseFilter[];
+  orderBy?: { column: string; ascending?: boolean };
+  limit?: number;
+}
+
+interface LooseBuilder {
+  eq: (column: string, value: unknown) => LooseBuilder;
+  lt: (column: string, value: unknown) => LooseBuilder;
+  in: (column: string, values: unknown[]) => LooseBuilder;
+  or: (expression: string) => LooseBuilder;
+  order: (column: string, options?: { ascending?: boolean }) => LooseBuilder;
+  limit: (count: number) => LooseBuilder;
+  then: PromiseLike<{ data: unknown[] | null; error: unknown }>["then"];
+}
+
+interface LooseMutationBuilder {
+  eq: (column: string, value: unknown) => LooseMutationBuilder;
+  then: PromiseLike<{ error: unknown }>["then"];
+}
+
+export async function selectLooseRows<TRow extends Record<string, unknown>>(
+  tableName: string,
+  options: LooseSelectOptions = {},
+): Promise<{ data: TRow[] | null; error: unknown }> {
+  const { columns = "*", filters = [], orderBy, limit } = options;
+  let query = supabase.from(tableName as never).select(columns) as unknown as LooseBuilder;
+
+  for (const filter of filters) {
+    if (filter.op === "eq") query = query.eq(filter.column, filter.value);
+    if (filter.op === "lt") query = query.lt(filter.column, filter.value);
+    if (filter.op === "in") query = query.in(filter.column, filter.values);
+    if (filter.op === "or") query = query.or(filter.expression);
+  }
+
+  if (orderBy) query = query.order(orderBy.column, { ascending: orderBy.ascending });
+  if (typeof limit === "number") query = query.limit(limit);
+
+  const result = (await query) as { data: unknown[] | null; error: unknown };
+  return { data: (result.data as TRow[] | null) ?? null, error: result.error };
+}
+
+export async function insertLooseRow(
+  tableName: string,
+  row: Record<string, unknown>,
+): Promise<{ error: unknown }> {
+  const result = (await (supabase
+    .from(tableName as never)
+    .insert(row as never) as unknown as Promise<{ error: unknown }>)) as {
+    error: unknown;
+  };
+  return { error: result.error };
+}
+
+export async function updateLooseRows(
+  tableName: string,
+  patch: Record<string, unknown>,
+  filters: Array<{ column: string; value: unknown }>,
+): Promise<{ error: unknown }> {
+  let query = supabase
+    .from(tableName as never)
+    .update(patch as never) as unknown as LooseMutationBuilder;
+
+  for (const filter of filters) {
+    query = query.eq(filter.column, filter.value);
+  }
+
+  const result = (await query) as { error: unknown };
+  return { error: result.error };
+}

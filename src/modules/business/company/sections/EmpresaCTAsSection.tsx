@@ -1,14 +1,12 @@
 /**
  * EmpresaCTAsSection
- * 
- * Seção de CTAs principais com botões de ação e opções de rota.
+ *
+ * Secao de CTAs principais com botoes de acao e opcoes de rota.
  * Inclui WhatsApp, Ligar, Rota, Salvar, Recomendar e CTA de Gastronomia.
- * 
- * SSOT: Props tipadas vindas de types.ts
- * Sem gambiarras: Componente focado apenas em renderização
  */
 
 import { motion } from 'framer-motion';
+import { Link, useNavigate } from 'react-router-dom';
 import {
   MessageCircle,
   Phone,
@@ -17,16 +15,22 @@ import {
   ThumbsUp,
   ShoppingBag,
   ClipboardList,
+  ArrowRight,
+  Building2,
+  UtensilsCrossed,
 } from 'lucide-react';
 import { Button } from '@/shared/components/ui/button';
+import { Card, CardContent } from '@/shared/components/ui/card';
 import { ActionButton, RouteOptions } from '../components/ctas';
-import { GastronomyCTA } from '@/modules/business/gastronomy/components/GastronomyCTA';
+import type { VerticalKey } from '@/core/verticals';
+import { VERTICAL_CONFIGS } from '@/core/verticals';
 import type { EmpresaCTAsSectionProps } from './types';
 
 export function EmpresaCTAsSection({
   business,
   isDeliveryBusiness,
   gastronomyUrl,
+  verticalPublicUrls,
   isFavorite,
   hasRecommended,
   showRouteOptions,
@@ -35,6 +39,21 @@ export function EmpresaCTAsSection({
   onToggleRouteOptions,
   onRoute,
 }: EmpresaCTAsSectionProps) {
+  const navigate = useNavigate();
+  const canNavigateToOrderFlow = Boolean(gastronomyUrl);
+  const availableVerticals = Object.entries(verticalPublicUrls ?? {}) as Array<
+    [VerticalKey, string]
+  >;
+
+  const getVerticalIcon = (vertical: VerticalKey) => {
+    switch (vertical) {
+      case 'gastronomy':
+        return UtensilsCrossed;
+      default:
+        return Building2;
+    }
+  };
+
   return (
     <section className="max-w-5xl mx-auto px-4 sm:px-6 w-full mt-4">
       <motion.div
@@ -43,42 +62,55 @@ export function EmpresaCTAsSection({
         transition={{ delay: 0.15 }}
         className="space-y-3"
       >
-        {/* Primary CTA for delivery businesses */}
         {isDeliveryBusiness && (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <Button className="w-full h-12 bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-base rounded-xl shadow-lg gap-2">
+            <Button
+              className="w-full h-12 bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-base rounded-xl shadow-lg gap-2"
+              onClick={() => {
+                if (gastronomyUrl) navigate(gastronomyUrl);
+              }}
+              disabled={!canNavigateToOrderFlow}
+            >
               <ShoppingBag className="h-5 w-5" /> Pedir Agora
             </Button>
             <Button
               variant="outline"
               className="w-full h-12 border-primary/30 text-primary hover:bg-primary/5 font-semibold text-base rounded-xl gap-2"
+              onClick={() => {
+                if (gastronomyUrl) navigate(gastronomyUrl);
+              }}
+              disabled={!canNavigateToOrderFlow}
             >
-              <ClipboardList className="h-5 w-5" /> Ver Cardápio
+              <ClipboardList className="h-5 w-5" /> Ver Cardapio
             </Button>
           </div>
         )}
 
-        {/* Action grid */}
-        <div className="grid grid-cols-3 sm:grid-cols-5 gap-2 sm:gap-3">
-          {business.whatsapp && (
-            <ActionButton
-              icon={MessageCircle}
-              label="WhatsApp"
-              href={`https://wa.me/${business.whatsapp.replace(/\D/g, "")}`}
-              color="emerald-400"
-            />
-          )}
-          {business.phone && (
-            <ActionButton
-              icon={Phone}
-              label="Ligar"
-              href={`tel:${business.phone}`}
-              color="primary"
-            />
-          )}
+        {(business.whatsapp || business.phone) && (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
+            {business.whatsapp && (
+              <ActionButton
+                icon={MessageCircle}
+                label="WhatsApp"
+                href={`https://wa.me/${business.whatsapp.replace(/\D/g, '')}`}
+                color="emerald-400"
+              />
+            )}
+            {business.phone && (
+              <ActionButton
+                icon={Phone}
+                label="Ligar"
+                href={`tel:${business.phone}`}
+                color="primary"
+              />
+            )}
+          </div>
+        )}
+
+        <div className="grid grid-cols-3 gap-2 sm:gap-3">
           <ActionButton
             icon={Navigation}
-            label="Como chegar"
+            label="Rota"
             onClick={onToggleRouteOptions}
             color="amber-400"
           />
@@ -98,26 +130,58 @@ export function EmpresaCTAsSection({
           />
         </div>
 
-        {/* Route options */}
         <RouteOptions show={showRouteOptions} onRoute={onRoute} />
       </motion.div>
 
-      {/* Gastronomy CTA */}
-      {gastronomyUrl && business && (
+      {availableVerticals.length > 0 && business && (
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.25 }}
           className="mt-6"
         >
-          <GastronomyCTA
-            gastronomyUrl={gastronomyUrl}
-            businessName={business.name}
-          />
+          <div className="space-y-3">
+            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+              Experiências especializadas
+            </p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              {availableVerticals.map(([vertical, url]) => {
+                const config = VERTICAL_CONFIGS[vertical];
+                const Icon = getVerticalIcon(vertical);
+
+                return (
+                  <Card
+                    key={vertical}
+                    className="border border-primary/20 bg-gradient-to-r from-primary/5 to-transparent"
+                  >
+                    <CardContent className="p-4">
+                      <div className="flex items-start gap-3">
+                        <div className="rounded-full bg-primary/10 p-2.5 shrink-0">
+                          <Icon className="h-4 w-4 text-primary" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <h3 className="text-sm font-semibold text-foreground">
+                            {config.label}
+                          </h3>
+                          <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
+                            {config.description}
+                          </p>
+                          <Button asChild size="sm" className="mt-3 gap-1.5">
+                            <Link to={url}>
+                              Acessar {config.label}
+                              <ArrowRight className="h-3.5 w-3.5" />
+                            </Link>
+                          </Button>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+          </div>
         </motion.div>
       )}
     </section>
   );
 }
-
-

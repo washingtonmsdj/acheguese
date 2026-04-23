@@ -46,13 +46,69 @@ class Logger {
   }
 
   error(message: string, error?: Error | unknown, context?: LogContext): void {
-    const errorObj = error instanceof Error ? error : new Error(String(error));
-    this.log(LogLevel.ERROR, message, context, errorObj);
+    const normalized = this.normalizeError(error, context);
+    this.log(LogLevel.ERROR, message, normalized.context, normalized.error);
   }
 
   fatal(message: string, error?: Error | unknown, context?: LogContext): void {
-    const errorObj = error instanceof Error ? error : new Error(String(error));
-    this.log(LogLevel.FATAL, message, context, errorObj);
+    const normalized = this.normalizeError(error, context);
+    this.log(LogLevel.FATAL, message, normalized.context, normalized.error);
+  }
+
+  private normalizeError(
+    error: Error | unknown,
+    context?: LogContext,
+  ): { error: Error; context?: LogContext } {
+    if (error instanceof Error) {
+      return { error, context };
+    }
+
+    if (error && typeof error === "object") {
+      const errorLike = error as Record<string, unknown>;
+      const message =
+        typeof errorLike.message === "string" && errorLike.message.trim().length > 0
+          ? errorLike.message
+          : JSON.stringify(errorLike);
+
+      const normalizedError = new Error(message);
+      const meta = {
+        code: errorLike.code,
+        details: errorLike.details,
+        hint: errorLike.hint,
+        status: errorLike.status,
+      };
+
+      return {
+        error: normalizedError,
+        context: this.mergeContext(context, meta),
+      };
+    }
+
+    return { error: new Error(String(error)), context };
+  }
+
+  private mergeContext(context?: LogContext, meta?: Record<string, unknown>): LogContext | undefined {
+    if (!meta) {
+      return context;
+    }
+
+    const compactMeta = Object.fromEntries(
+      Object.entries(meta).filter(([, value]) => value !== undefined && value !== null),
+    );
+
+    if (Object.keys(compactMeta).length === 0) {
+      return context;
+    }
+
+    if (context === undefined) {
+      return compactMeta;
+    }
+
+    if (typeof context === "object" && context !== null && !Array.isArray(context)) {
+      return { ...(context as Record<string, unknown>), ...compactMeta };
+    }
+
+    return { context, ...compactMeta };
   }
 
   private log(

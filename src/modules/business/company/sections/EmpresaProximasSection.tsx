@@ -10,14 +10,24 @@
 
 import { motion } from 'framer-motion';
 import { Navigation, ChevronRight } from 'lucide-react';
+import { LAUNCH_URLS } from '@/config/territory';
 import { NearbyBusinessCard } from '../components/cards';
 import type { EmpresaProximasSectionProps } from './types';
 
 export function EmpresaProximasSection({
   nearbyBusinesses,
   currentBusinessId,
+  currentBusinessGeographicPath,
   navigate,
 }: EmpresaProximasSectionProps) {
+  const buildBusinessesHubUrl = () => {
+    const parts = (currentBusinessGeographicPath || '').replace(/^\//, '').split('/');
+    if (parts.length >= 4) {
+      return `/empresas/${parts[1]}/${parts[2]}/${parts[3]}`;
+    }
+    return LAUNCH_URLS.business;
+  };
+
   const filteredBusinesses = nearbyBusinesses
     .filter((b) => b.id !== currentBusinessId)
     .slice(0, 4);
@@ -39,7 +49,7 @@ export function EmpresaProximasSection({
             </h2>
           </div>
           <button
-            onClick={() => navigate?.('/empresas-landing')}
+            onClick={() => navigate?.(buildBusinessesHubUrl())}
             className="text-xs text-primary font-medium hover:underline flex items-center gap-1"
           >
             Ver todas <ChevronRight className="h-3.5 w-3.5" />
@@ -50,7 +60,7 @@ export function EmpresaProximasSection({
             <NearbyBusinessCard
               key={biz.id}
               business={biz}
-              onClick={() => navigate?.(`/empresa/${biz.id}`)}
+              onClick={() => navigate?.(biz.canonicalUrl ?? buildBusinessesHubUrl())}
             />
           ))}
         </div>

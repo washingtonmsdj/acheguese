@@ -31,6 +31,7 @@ Versao documental: 3.1
 - Documento global vivo fica em `docs/`.
 - Documento tecnico de dominio fica no proprio dominio.
 - Historico vai para `docs/archive/` ou `docs/historico/`.
+- `docs/temp-work-*` e `supabase/migrations_old` sao historicos e nao podem ser usados como SSOT de regras, schema ou contrato.
 - O indice mestre da documentacao e `docs/INDEX_CANONICO.md`.
 - O relatorio executivo vigente de organizacao e blindagem e `docs/audits/MASTER_REPORT.md`.
 - Documentos fora do indice canonico (principalmente historico/sessao) nao substituem status oficial.

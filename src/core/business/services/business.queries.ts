@@ -110,6 +110,16 @@ export async function getBusinesses(
           { ascending: false },
         );
         break;
+      case "recommendations_count":
+        query = (query as unknown as { order: (field: string, opts: { ascending: boolean }) => typeof query }).order(
+          "recommendations_count",
+          { ascending: false },
+        );
+        query = (query as unknown as { order: (field: string, opts: { ascending: boolean }) => typeof query }).order(
+          "rating",
+          { ascending: false },
+        );
+        break;
       case "name":
         query = (query as unknown as { order: (field: string, opts: { ascending: boolean }) => typeof query }).order(
           "business_name",
@@ -174,6 +184,7 @@ export async function getBusinessesList(params: {
   pageParam?: number;
   category?: string;
   searchQuery?: string;
+  sortBy?: BusinessFilters["sortBy"];
   pageSize?: number;
   filter?: TerritoryFilter;
 } = {}): Promise<{ businesses: Business[]; nextPage?: number }> {
@@ -181,6 +192,7 @@ export async function getBusinessesList(params: {
     pageParam = 0,
     category,
     searchQuery,
+    sortBy,
     pageSize = 12,
     filter,
   } = params;
@@ -253,10 +265,34 @@ export async function getBusinessesList(params: {
       ) as typeof query;
     }
 
-    query = (query as unknown as { 
-      order: (field: string, opts: { ascending: boolean }) => typeof query 
-    }).order("is_premium", { ascending: false })
-     .order("rating", { ascending: false });
+    query = (query as unknown as {
+      order: (field: string, opts: { ascending: boolean }) => typeof query
+    }).order("is_premium", { ascending: false });
+
+    switch (sortBy) {
+      case "recommendations_count":
+        query = (query as unknown as {
+          order: (field: string, opts: { ascending: boolean }) => typeof query
+        }).order("recommendations_count", { ascending: false })
+          .order("rating", { ascending: false });
+        break;
+      case "name":
+        query = (query as unknown as {
+          order: (field: string, opts: { ascending: boolean }) => typeof query
+        }).order("business_name", { ascending: true });
+        break;
+      case "created_at":
+        query = (query as unknown as {
+          order: (field: string, opts: { ascending: boolean }) => typeof query
+        }).order("created_at", { ascending: false });
+        break;
+      case "rating":
+      default:
+        query = (query as unknown as {
+          order: (field: string, opts: { ascending: boolean }) => typeof query
+        }).order("rating", { ascending: false });
+        break;
+    }
 
     const { data, error } = await query;
 
@@ -609,7 +645,6 @@ export async function getBusinessesByIds(
         category,
         slug,
         description,
-        logo,
         rating,
         is_premium,
         is_verified,
@@ -632,9 +667,12 @@ export async function getBusinessesByIds(
         category?: string;
         slug?: string;
         neighborhood?: string;
-        metadata?: { neighborhood?: string; city?: string };
         city?: string;
-        logo?: string;
+        metadata?: {
+          neighborhood?: string;
+          city?: string;
+          logo_url?: string;
+        };
         rating?: number;
         is_verified?: boolean;
         is_premium?: boolean;
@@ -649,7 +687,7 @@ export async function getBusinessesByIds(
         slug: typed.slug,
         neighborhood: typed.profiles?.neighborhood || typed.metadata?.neighborhood,
         city: typed.profiles?.city || typed.metadata?.city,
-        logo: typed.logo || undefined,
+        logo: typed.metadata?.logo_url || undefined,
         rating: typeof typed.rating === "number" ? typed.rating : 0,
         verified: Boolean(typed.is_verified),
         is_premium: Boolean(typed.is_premium),

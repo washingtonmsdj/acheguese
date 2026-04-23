@@ -11,6 +11,7 @@
 import { MapPin, Navigation, ExternalLink, Store } from 'lucide-react';
 import { Button } from '@/shared/components/ui/button';
 import StandaloneMap from '@/shared/components/standalone/StandaloneMap';
+import { getCoordinates } from '@/core/business/services/business.helpers';
 import type { AddressCardProps } from '../../sections/types';
 
 export function AddressCard({
@@ -19,9 +20,9 @@ export function AddressCard({
   locationText,
   onRoute,
 }: AddressCardProps) {
-  // Se tem coordenadas, usa StandaloneMap
-  if (business.address?.latitude && business.address?.longitude) {
-    return <StandaloneMap business={business as any} />;
+  // SSOT: resolve coordenadas por helper canônico (address/location/metadata)
+  if (getCoordinates(business)) {
+    return <StandaloneMap business={business} />;
   }
 
   // Fallback: Card com endereço estilizado

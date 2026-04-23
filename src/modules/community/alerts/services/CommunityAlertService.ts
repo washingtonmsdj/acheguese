@@ -8,7 +8,7 @@
  */
 
 import { supabase } from "@/integrations/supabase";
-import { callRPC } from "@/integrations/supabase/services/supabaseHelpers";
+import { callRPC, insertLooseRow } from "@/integrations/supabase/services/supabaseHelpers";
 import type { Database } from "@/integrations/supabase/types.generated";
 import { logger } from "@/shared/utils/logger";
 import type {
@@ -384,12 +384,13 @@ class CommunityAlertServiceClass {
       } = await supabase.auth.getUser();
       if (!user) return;
 
-      await supabase.from("community_alert_audit" as never).insert({
+      const { error } = await insertLooseRow("community_alert_audit", {
         alert_id: alertId,
         actor_id: user.id,
         action_type: action,
         metadata,
-      } as never);
+      });
+      if (error) throw error;
     } catch (error) {
       logger.error("CommunityAlertService._auditLog", error, this._errorContext(error));
     }

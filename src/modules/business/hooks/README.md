@@ -12,11 +12,15 @@
 
 ### `useBusinessFavorite`
 - Toggle de favorito para uma única empresa.
-- Usa `business_favorites` via `FavoritesService`.
+- Usa `FavoritesService` do core (compatibilidade atual em `business_favorites` para fluxo de perfil).
 
 ### `useBusinessFavorites`
 - Lista IDs favoritos do perfil ativo.
 - Atualiza cache de lista e status individual sem duplicar lógica em página.
+
+### `useBusinessRecommendation`
+- Toggle de recomendação para uma única empresa.
+- Usa RPCs SSOT (`is_business_recommended` / `toggle_business_recommendation`).
 
 ### `useBusinessCreate`
 - Criação de empresa.
@@ -42,5 +46,6 @@
 ## Regras
 
 - Não duplicar favoritos em componentes ou páginas.
+- Não misturar contratos de favoritos: `empresas` (perfil -> empresa) e `gastronomia` (usuário -> empresa) têm backends distintos até convergência total.
 - Não montar URL de empresa manualmente.
 - Não criar nova store para listagem pública de empresas.

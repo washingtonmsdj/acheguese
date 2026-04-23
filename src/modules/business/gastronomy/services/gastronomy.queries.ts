@@ -343,7 +343,7 @@ export async function getGastronomyBusinessByTerritorySlug(
     }
 
     const { state, city, district, slug } = params;
-    const geoPath = `${state}/${city}/${district}`;
+    const geoPath = `/br/${state}/${city}/${district}`;
 
     // geographic_path está em locations, não em business_data.
     // Resolver o location_id primeiro, depois buscar o negócio.

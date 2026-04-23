@@ -10,18 +10,24 @@
  * (centro dinâmico, interações específicas). O SSOT está no MapProvider.
  */
 
-import { useEffect, useRef, useState, useCallback } from 'react';
+import { useEffect, useRef, useState, useCallback, useMemo } from 'react';
 import maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import { MapPin, Navigation, Loader2, Map as MapIcon } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/components/ui/card';
 import { Button } from '@/shared/components/ui/button';
-const DEFAULT_TILE_STYLE_URL = "https://demotiles.maplibre.org/style.json";
 import { useRobustGeolocation } from '@/shared/hooks';
+import { getCoordinates } from '@/core/business/services/business.helpers';
+import { DEFAULT_TILE_STYLE } from '@/core/maps/providers/MapProvider';
 
 interface Business {
   name: string;
-  location?: { name?: string | null } | null;
+  metadata?: Record<string, unknown> | null;
+  location?: {
+    name?: string | null;
+    canonical_lat?: number | null;
+    canonical_lng?: number | null;
+  } | null;
   address?: {
     latitude?: number | null;
     longitude?: number | null;
@@ -49,9 +55,8 @@ function haversineDistance(a: [number, number], b: [number, number]): string {
 
 /** Extrai coordenadas do Business canônico */
 function getBusinessCoords(business: Business): [number, number] | null {
-  const lat = business.address?.latitude;
-  const lng = business.address?.longitude;
-  if (lat != null && lng != null) return [lat, lng];
+  const coords = getCoordinates(business);
+  if (coords) return [coords.latitude, coords.longitude];
   return null;
 }
 
@@ -75,8 +80,17 @@ export default function StandaloneMap({ business }: StandaloneMapProps) {
   const locationName = business.location?.name ?? null;
   const postalCode = business.address?.postal_code ?? null;
 
-  // URL territorial do mapa — SSOT via useFriendlyModuleUrls
-  const internalMapUrl = businessPos ? "/mapa" : null;
+  // URL do mapa completo com foco explícito no estabelecimento.
+  const internalMapUrl = useMemo(() => {
+    if (!businessPos) return null;
+    const params = new URLSearchParams({
+      lat: String(businessPos[0]),
+      lng: String(businessPos[1]),
+      z: '16',
+      name: business.name,
+    });
+    return `/mapa?${params.toString()}`;
+  }, [businessPos, business.name]);
 
   // ── Geolocalização robusta (SSOT) ──────────────────────────────
   const {
@@ -91,9 +105,13 @@ export default function StandaloneMap({ business }: StandaloneMapProps) {
     },
   });
 
-  const userPos: [number, number] | null = userCoords
-    ? [userCoords.latitude, userCoords.longitude]
-    : null;
+  const userPos = useMemo<[number, number] | null>(
+    () =>
+      userCoords
+        ? [userCoords.latitude, userCoords.longitude]
+        : null,
+    [userCoords],
+  );
 
   // ── Inicialização do mapa (SSOT: DEFAULT_TILE_STYLE) ──────────
   useEffect(() => {
@@ -102,7 +120,7 @@ export default function StandaloneMap({ business }: StandaloneMapProps) {
     // ✅ SSOT: Usa DEFAULT_TILE_STYLE do MapProvider
     const map = new maplibregl.Map({
       container: containerRef.current,
-      style: DEFAULT_TILE_STYLE_URL,
+      style: DEFAULT_TILE_STYLE.styleUrl,
       center: [businessPos[1], businessPos[0]], // [lng, lat]
       zoom: 15,
       attributionControl: false,
@@ -115,7 +133,7 @@ export default function StandaloneMap({ business }: StandaloneMapProps) {
     map.addControl(
       new maplibregl.AttributionControl({ 
         compact: true, 
-        customAttribution: "OpenStreetMap contributors" 
+        customAttribution: DEFAULT_TILE_STYLE.attribution,
       }), 
       'bottom-left'
     );

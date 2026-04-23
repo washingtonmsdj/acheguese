@@ -24,6 +24,7 @@ import {
   MapPin,
   BadgeCheck,
   Heart,
+  ThumbsUp,
   Clock,
   Navigation,
   Phone,
@@ -264,6 +265,12 @@ export const BusinessCard = memo(
               <span className="text-sm text-gray-400">
                 ({business.total_reviews})
               </span>
+              {(business.recommendations_count || 0) > 0 && (
+                <span className="text-sm text-gray-400 inline-flex items-center gap-1">
+                  <ThumbsUp className="w-3.5 h-3.5" />
+                  {business.recommendations_count}
+                </span>
+              )}
             </div>
 
             {/* Location — distingue empresa física vs serviço móvel */}

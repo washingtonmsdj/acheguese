@@ -11,6 +11,7 @@
 import type { ReactNode } from 'react';
 import { Home } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { LAUNCH_URLS } from '@/config/territory';
 
 interface EmpresaDetailLayoutProps {
   readonly children: ReactNode;
@@ -37,7 +38,7 @@ export function EmpresaDetailLayout({ children }: EmpresaDetailLayoutProps) {
             </div>
             <div className="flex items-center gap-4 text-xs text-muted-foreground">
               <button
-                onClick={() => navigate('/empresas-landing')}
+                onClick={() => navigate(LAUNCH_URLS.business)}
                 className="hover:text-primary transition-colors"
               >
                 Todas as empresas

@@ -118,6 +118,11 @@ const defaultOptions: DefaultOptions = {
       if (error?.status >= 400 && error?.status < 500) {
         return false;
       }
+      // Não retry em erros de contrato/schema do PostgREST/PostgreSQL
+      const errorCode = typeof error?.code === 'string' ? error.code : '';
+      if (errorCode.startsWith('PGRST') || /^[0-9A-Z]{5}$/.test(errorCode)) {
+        return false;
+      }
       // Retry até 3 vezes em erros 5xx
       return failureCount < 3;
     },

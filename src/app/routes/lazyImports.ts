@@ -81,6 +81,7 @@ export const EmpresaCatalogoPublicoPage = lazy(() => import("@/modules/business/
 export const BusinessCanonicalRoute = lazy(() => import("@/core/routing/components/BusinessCanonicalRoute"));
 export const BusinessRouteResolver = lazy(() => import("@/core/routing/components/BusinessRouteResolver"));
 export const BusinessPremiumRoute = lazy(() => import("@/core/routing/components/BusinessPremiumRoute"));
+export const BusinessLegacyRoute = lazy(() => import("@/core/routing/components/BusinessLegacyRoute"));
 
 // ============================================================
 // 🍽️ GASTRONOMIA

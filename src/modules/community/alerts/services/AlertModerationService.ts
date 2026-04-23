@@ -4,6 +4,10 @@
 
 import { supabase } from "@/integrations/supabase";
 import type { Database } from "@/integrations/supabase/types.generated";
+import {
+  insertLooseRow,
+  selectLooseRows,
+} from "@/integrations/supabase/services/supabaseHelpers";
 import { logger } from "@/shared/utils/logger";
 import type {
   CommunityAlertAudit,
@@ -32,12 +36,13 @@ class AlertModerationServiceClass {
         throw error;
       }
 
-      await supabase.from("community_alert_audit" as never).insert({
+      const { error: auditError } = await insertLooseRow("community_alert_audit", {
         alert_id: payload.alert_id,
         actor_id: user.id,
         action_type: "reported",
         metadata: { reason: payload.reason },
-      } as never);
+      });
+      if (auditError) throw auditError;
 
       return true;
     } catch (error) {
@@ -93,12 +98,13 @@ class AlertModerationServiceClass {
 
       if (error) throw error;
 
-      await supabase.from("community_alert_audit" as never).insert({
+      const { error: auditError } = await insertLooseRow("community_alert_audit", {
         alert_id: alertId,
         actor_id: user.id,
         action_type: "reviewed_cleared",
         metadata: { cleared_at: new Date().toISOString() },
-      } as never);
+      });
+      if (auditError) throw auditError;
 
       return true;
     } catch (error) {
@@ -109,11 +115,14 @@ class AlertModerationServiceClass {
 
   async getAuditLog(alertId: string): Promise<CommunityAlertAudit[]> {
     try {
-      const { data, error } = await supabase
-        .from("community_alert_audit" as never)
-        .select("*")
-        .eq("alert_id", alertId)
-        .order("created_at", { ascending: true });
+      const { data, error } = await selectLooseRows<CommunityAlertAudit>(
+        "community_alert_audit",
+        {
+          columns: "*",
+          filters: [{ op: "eq", column: "alert_id", value: alertId }],
+          orderBy: { column: "created_at", ascending: true },
+        }
+      );
 
       if (error) throw error;
       return (data as CommunityAlertAudit[]) ?? [];

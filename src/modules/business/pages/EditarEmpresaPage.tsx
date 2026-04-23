@@ -2,14 +2,15 @@
  * 🏆 EDITAR EMPRESA PAGE - SSOT Completo
  */
 
-import { useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ArrowLeft, Loader2 } from "lucide-react";
+import { toast } from "sonner";
 import { useSessionContext } from "@/core/session";
 import { useBusinessById } from "@/modules/business/hooks/useBusinessById";
-import { useBusinessEdit } from "@/modules/business/hooks/useBusinessEdit";
+import { useBusinessEdit, useBusinessImageUpload } from "@/modules/business/hooks/useBusinessEdit";
 import { updateBusinessSchema } from "@/shared/schemas/business/businessSchemas";
 import type {
   UpdateBusinessInput,
@@ -23,7 +24,6 @@ import { ExtrasStep } from "@/modules/business/components/edit/ExtrasStep";
 import { BusinessSlugSection } from "@/modules/business/components/identity/BusinessSlugSection";
 import { useBusinessSlugSaveGuard } from "@/modules/business/components/identity/useBusinessSlugSaveGuard";
 import { IdentityChangeConfirmDialog } from "@/core/public-identity/components/IdentityChangeConfirmDialog";
-import { useState } from "react";
 import { useMultiProfileContext } from "@/core/profiles/contexts/multi-profile-runtime-context";
 import { ActiveProfileBadge } from "@/core/profiles/components/ActiveProfileBadge";
 import { useIdentitySaveLogger } from "@/core/public-identity/hooks/useIdentitySaveLogger";
@@ -37,6 +37,14 @@ export default function EditarEmpresaPage() {
   const [currentStep, setCurrentStep] = useState(1);
   const [slug, setSlug] = useState("");
   const [originalSlug, setOriginalSlug] = useState("");
+  
+  // Refs para upload de imagens
+  const logoRef = useRef<HTMLInputElement>(null);
+  const capaRef = useRef<HTMLInputElement>(null);
+  
+  // Estados para preview de imagens
+  const [logoPreview, setLogoPreview] = useState<string>("");
+  const [capaPreview, setCapaPreview] = useState<string>("");
 
   useEffect(() => {
     setModuleContext('business');
@@ -54,6 +62,8 @@ export default function EditarEmpresaPage() {
       navigate("/perfil");
     },
   });
+  
+  const { mutateAsync: uploadImage, isPending: uploading } = useBusinessImageUpload();
 
   const { logAttempt, logSuccess, logError } = useIdentitySaveLogger({
     entityType: 'business',
@@ -103,7 +113,14 @@ export default function EditarEmpresaPage() {
         especialidades: business.especialidades || [],
         facilidades: business.facilidades || [],
         modos_atendimento: business.modos_atendimento || ["presencial"],
+        latitude: business.address?.latitude,
+        longitude: business.address?.longitude,
       });
+      
+      // Inicializar previews de imagens
+      setLogoPreview(business.logo_url || "");
+      setCapaPreview(business.banner_url || "");
+      
       // Inicializar slug com valor existente ou derivado do nome
       const businessSlug = (business as Business & { slug?: string }).slug;
       if (businessSlug) {
@@ -130,6 +147,61 @@ export default function EditarEmpresaPage() {
     form.trigger(["phone", "whatsapp", "email", "address"]).then((isValid) => {
       if (isValid) setCurrentStep(3);
     });
+  };
+  
+  // Handlers de upload de imagens
+  const handleLogoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    
+    // Validar tamanho (5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("Imagem muito grande. Máximo 5MB");
+      return;
+    }
+    
+    // Validar tipo
+    if (!file.type.startsWith("image/")) {
+      toast.error("Arquivo deve ser uma imagem");
+      return;
+    }
+    
+    try {
+      const url = await uploadImage({ file, folder: "logos" });
+      form.setValue("logo_url", url);
+      setLogoPreview(url);
+      toast.success("Logo atualizado!");
+    } catch (error) {
+      toast.error("Erro ao fazer upload do logo");
+      console.error(error);
+    }
+  };
+  
+  const handleCapaChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    
+    // Validar tamanho (5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("Imagem muito grande. Máximo 5MB");
+      return;
+    }
+    
+    // Validar tipo
+    if (!file.type.startsWith("image/")) {
+      toast.error("Arquivo deve ser uma imagem");
+      return;
+    }
+    
+    try {
+      const url = await uploadImage({ file, folder: "banners" });
+      form.setValue("banner_url", url);
+      setCapaPreview(url);
+      toast.success("Capa atualizada!");
+    } catch (error) {
+      toast.error("Erro ao fazer upload da capa");
+      console.error(error);
+    }
   };
 
   const doSave = form.handleSubmit(async (data) => {
@@ -232,9 +304,10 @@ export default function EditarEmpresaPage() {
                 onCategoryChange={(value) =>
                   form.setValue("category", value as BusinessCategory)
                 }
-                logoPreview={business.logo_url || ""}
-                logoRef={null}
-                onLogoChange={() => {}}
+                logoPreview={logoPreview}
+                logoRef={logoRef}
+                onLogoChange={handleLogoChange}
+                uploading={uploading}
                 errors={getErrors()}
                 onNext={handleNextStep1}
               />
@@ -258,6 +331,10 @@ export default function EditarEmpresaPage() {
               onEmailChange={(value) => form.setValue("email", value)}
               address={form.watch("address") || ""}
               onAddressChange={(value) => form.setValue("address", value)}
+              latitude={form.watch("latitude")}
+              onLatitudeChange={(value) => form.setValue("latitude", value)}
+              longitude={form.watch("longitude")}
+              onLongitudeChange={(value) => form.setValue("longitude", value)}
               schedules={""}
               onSchedulesChange={() => {}}
               selectedModos={form.watch("modos_atendimento") || []}
@@ -273,9 +350,10 @@ export default function EditarEmpresaPage() {
           {currentStep === 3 && (
             <>
               <ExtrasStep
-                capaPreview={business.banner_url || ""}
-                capaRef={null}
-                onCapaChange={() => {}}
+                capaPreview={capaPreview}
+                capaRef={capaRef}
+                onCapaChange={handleCapaChange}
+                uploading={uploading}
                 website={form.watch("website") || ""}
                 onWebsiteChange={(value) => form.setValue("website", value)}
                 instagram={form.watch("instagram") || ""}
