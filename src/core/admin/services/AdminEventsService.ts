@@ -8,9 +8,26 @@
 
 import { supabase } from "@/integrations/supabase";
 import { logger } from "@/shared/utils/logger";
-import { EventsService, type Event } from "@/modules/community/events";
 
-export interface AdminEventData extends Event {
+export interface AdminEventData {
+  [key: string]: unknown;
+  id: string;
+  title: string;
+  description: string;
+  date: string;
+  location: string;
+  location_id?: string;
+  organizer_profile_id: string;
+  category: string;
+  image_url?: string;
+  max_participants?: number;
+  current_participants: number;
+  status: "upcoming" | "ongoing" | "completed" | "cancelled";
+  created_at: string;
+  updated_at: string;
+  latitude?: number | null;
+  longitude?: number | null;
+  coordinate_source?: "exact" | "geocoded" | "approximate" | null;
   organizer_name?: string;
   organizer_avatar?: string;
   participant_count?: number;
@@ -136,7 +153,16 @@ class AdminEventsServiceClass {
    */
   async getEventById(id: string): Promise<AdminEventData | null> {
     try {
-      const event = await EventsService.getEventById(id);
+      const { data: event, error } = await supabase
+        .from("events")
+        .select("*")
+        .eq("id", id)
+        .maybeSingle();
+
+      if (error) {
+        logger.error("Error fetching event by id:", error);
+        throw error;
+      }
       
       if (!event) {
         return null;
@@ -172,7 +198,17 @@ class AdminEventsServiceClass {
       // Remove campos que não são parte de CreateEventInput
       const { organizer_name, organizer_avatar, organizer_profile_id, current_participants, created_at, updated_at, ...safeUpdates } = updates;
 
-      const updated = await EventsService.updateEvent(id, safeUpdates);
+      const { data: updated, error } = await supabase
+        .from("events")
+        .update(safeUpdates)
+        .eq("id", id)
+        .select("*")
+        .single();
+
+      if (error) {
+        logger.error("Error updating event:", error);
+        throw error;
+      }
       
       return updated as AdminEventData;
     } catch (error) {
@@ -187,7 +223,16 @@ class AdminEventsServiceClass {
    */
   async deleteEvent(id: string): Promise<boolean> {
     try {
-      await EventsService.deleteEvent(id);
+      const { error } = await supabase
+        .from("events")
+        .delete()
+        .eq("id", id);
+
+      if (error) {
+        logger.error("Error deleting event:", error);
+        throw error;
+      }
+
       return true;
     } catch (error) {
       logger.error("Error in deleteEvent:", error);
@@ -245,7 +290,20 @@ class AdminEventsServiceClass {
    */
   async getEventParticipants(eventId: string) {
     try {
-      return await EventsService.getEventParticipants(eventId);
+      const { data, error } = await supabase
+        .from("event_participants")
+        .select(`
+          profile_id,
+          profiles(id, name, avatar_url)
+        `)
+        .eq("event_id", eventId);
+
+      if (error) {
+        logger.error("Error fetching event participants:", error);
+        throw error;
+      }
+
+      return data || [];
     } catch (error) {
       logger.error("Error in getEventParticipants:", error);
       throw error;
@@ -258,7 +316,18 @@ class AdminEventsServiceClass {
    */
   async removeParticipant(eventId: string, profileId: string): Promise<boolean> {
     try {
-      await EventsService.leaveEvent(eventId, profileId);
+      const { error } = await supabase
+        .from("event_participants")
+        .delete()
+        .eq("event_id", eventId)
+        .eq("profile_id", profileId);
+
+      if (error) {
+        logger.error("Error removing event participant:", error);
+        throw error;
+      }
+
+      await supabase.rpc("decrement_event_participants", { event_id: eventId });
       return true;
     } catch (error) {
       logger.error("Error in removeParticipant:", error);

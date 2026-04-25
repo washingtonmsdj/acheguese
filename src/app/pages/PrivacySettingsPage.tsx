@@ -71,6 +71,31 @@ import {
 type UserConsent = UserConsentRecord;
 type DeletionStatus = DeletionStatusRecord;
 
+function getConsentIcon(type: string): React.ReactNode {
+  switch (type) {
+    case 'cookies':
+      return <Cookie className="h-5 w-5" />;
+    case 'analytics':
+      return <FileText className="h-5 w-5" />;
+    case 'marketing':
+      return <Mail className="h-5 w-5" />;
+    case 'geolocation':
+      return <MapPin className="h-5 w-5" />;
+    case 'notifications':
+      return <Bell className="h-5 w-5" />;
+    case 'data_processing':
+      return <Shield className="h-5 w-5" />;
+    case 'third_party':
+      return <FileText className="h-5 w-5" />;
+    case 'terms_of_service':
+      return <FileText className="h-5 w-5" />;
+    case 'privacy_policy':
+      return <Shield className="h-5 w-5" />;
+    default:
+      return <FileText className="h-5 w-5" />;
+  }
+}
+
 export default function PrivacySettingsPage() {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -210,18 +235,6 @@ export default function PrivacySettingsPage() {
     }
   };
 
-  const consentIcons: Record<string, React.ReactNode> = {
-    cookies: <Cookie className="h-5 w-5" />,
-    analytics: <FileText className="h-5 w-5" />,
-    marketing: <Mail className="h-5 w-5" />,
-    geolocation: <MapPin className="h-5 w-5" />,
-    notifications: <Bell className="h-5 w-5" />,
-    data_processing: <Shield className="h-5 w-5" />,
-    third_party: <FileText className="h-5 w-5" />,
-    terms_of_service: <FileText className="h-5 w-5" />,
-    privacy_policy: <Shield className="h-5 w-5" />,
-  };
-
   const consentLabels: Record<string, string> = {
     cookies: 'Cookies não essenciais',
     analytics: 'Analytics e métricas',
@@ -346,7 +359,7 @@ export default function PrivacySettingsPage() {
                   >
                     <div className="flex items-center gap-3">
                       <div className="text-muted-foreground">
-                        {consentIcons[type]}
+                        {getConsentIcon(type)}
                       </div>
                       <div>
                         <Label

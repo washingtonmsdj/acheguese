@@ -21,6 +21,8 @@ export function EmpresasHeroSection({
   onBannerSelect,
   navigate,
 }: EmpresasHeroSectionProps) {
+  const activeBannerImage = bannerImages.at(currentBannerIndex) ?? bannerImages[0] ?? "";
+
   return (
     <div className="relative group">
       <CanonicalHero
@@ -31,7 +33,7 @@ export function EmpresasHeroSection({
         title={`Empresas ${territoryPreposition}`}
         titleHighlight={territoryNameShort}
         subtitle="Descubra, avalie e recomende negócios perto de você. Veja o que seus vizinhos estão indicando."
-        backgroundImage={bannerImages[currentBannerIndex]}
+        backgroundImage={activeBannerImage}
         search={{
           placeholder: "Buscar empresa, categoria...",
           value: searchQuery,

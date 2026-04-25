@@ -40,6 +40,58 @@ export const RIDE_STATUS = {
   FAILED: 'failed',
 } as const;
 
+export type RideStatus = typeof RIDE_STATUS[keyof typeof RIDE_STATUS];
+
+// Labels de Status de Corridas
+export const RIDE_STATUS_LABELS: Record<string, string> = {
+  [RIDE_STATUS.PENDING]: "Aguardando motorista",
+  [RIDE_STATUS.REQUESTED]: "Solicitada",
+  [RIDE_STATUS.SEARCHING_DRIVER]: "Procurando motorista",
+  [RIDE_STATUS.DRIVER_ASSIGNED]: "Motorista atribuído",
+  [RIDE_STATUS.DRIVER_ACCEPTED]: "Motorista aceitou",
+  [RIDE_STATUS.DRIVER_ARRIVING]: "Motorista chegando",
+  [RIDE_STATUS.DRIVER_ON_THE_WAY]: "Motorista a caminho",
+  [RIDE_STATUS.DRIVER_ARRIVED]: "Motorista chegou",
+  [RIDE_STATUS.PASSENGER_BOARDED]: "Passageiro embarcado",
+  [RIDE_STATUS.PASSENGER_ON_BOARD]: "Passageiro a bordo",
+  [RIDE_STATUS.IN_PROGRESS]: "Em andamento",
+  [RIDE_STATUS.PICKUP_CONFIRMED]: "Coleta confirmada",
+  [RIDE_STATUS.IN_DELIVERY]: "Em entrega",
+  [RIDE_STATUS.DELIVERED]: "Entregue",
+  [RIDE_STATUS.FAILED_DELIVERY]: "Falha na entrega",
+  [RIDE_STATUS.COMPLETED]: "Concluída",
+  [RIDE_STATUS.CANCELLED]: "Cancelada",
+  [RIDE_STATUS.CANCELLED_BY_PASSENGER]: "Cancelada pelo passageiro",
+  [RIDE_STATUS.CANCELLED_BY_DRIVER]: "Cancelada pelo motorista",
+  [RIDE_STATUS.EXPIRED]: "Expirada",
+  [RIDE_STATUS.FAILED]: "Falhou",
+};
+
+// Cores de Status de Corridas
+export const RIDE_STATUS_COLORS: Record<string, string> = {
+  [RIDE_STATUS.PENDING]: "#F59E0B", // amber-500
+  [RIDE_STATUS.REQUESTED]: "#F59E0B", // amber-500
+  [RIDE_STATUS.SEARCHING_DRIVER]: "#F59E0B", // amber-500
+  [RIDE_STATUS.DRIVER_ASSIGNED]: "#3B82F6", // blue-500
+  [RIDE_STATUS.DRIVER_ACCEPTED]: "#3B82F6", // blue-500
+  [RIDE_STATUS.DRIVER_ARRIVING]: "#8B5CF6", // purple-500
+  [RIDE_STATUS.DRIVER_ON_THE_WAY]: "#8B5CF6", // purple-500
+  [RIDE_STATUS.DRIVER_ARRIVED]: "#06B6D4", // cyan-500
+  [RIDE_STATUS.PASSENGER_BOARDED]: "#10B981", // green-500
+  [RIDE_STATUS.PASSENGER_ON_BOARD]: "#10B981", // green-500
+  [RIDE_STATUS.IN_PROGRESS]: "#10B981", // green-500
+  [RIDE_STATUS.PICKUP_CONFIRMED]: "#10B981", // green-500
+  [RIDE_STATUS.IN_DELIVERY]: "#8B5CF6", // purple-500
+  [RIDE_STATUS.DELIVERED]: "#10B981", // green-500
+  [RIDE_STATUS.FAILED_DELIVERY]: "#EF4444", // red-500
+  [RIDE_STATUS.COMPLETED]: "#6B7280", // gray-500
+  [RIDE_STATUS.CANCELLED]: "#EF4444", // red-500
+  [RIDE_STATUS.CANCELLED_BY_PASSENGER]: "#EF4444", // red-500
+  [RIDE_STATUS.CANCELLED_BY_DRIVER]: "#EF4444", // red-500
+  [RIDE_STATUS.EXPIRED]: "#6B7280", // gray-500
+  [RIDE_STATUS.FAILED]: "#EF4444", // red-500
+};
+
 // ============================================
 // RIDE MODE - Modo da solicitação
 // ============================================
@@ -266,3 +318,10 @@ export type SourceType = typeof SOURCE_TYPE[keyof typeof SOURCE_TYPE];
 export type PackageSize = typeof PACKAGE_SIZE[keyof typeof PACKAGE_SIZE];
 export type ReportSeverity = typeof REPORT_SEVERITY[keyof typeof REPORT_SEVERITY];
 export type ReportType = typeof REPORT_TYPE[keyof typeof REPORT_TYPE];
+
+// ============================================
+// VALIDATORS - Funções de validação
+// ============================================
+export function isValidRideStatus(status: string): status is RideStatus {
+  return Object.values(RIDE_STATUS).includes(status as RideStatus);
+}

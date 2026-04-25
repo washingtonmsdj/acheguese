@@ -1,12 +1,12 @@
 import { useState, useEffect, useCallback } from "react";
 import { useSessionContext } from "@/core/session";
-import { AuthorizationEngine } from "@/core/authorization";
+import { BusinessService } from "@/core/business/services/BusinessService";
+import { BusinessOwnershipService } from "@/core/business/services/BusinessOwnershipService";
 import type { AccessPermissions } from "@/shared/types/dashboard";
 import { logger } from "@/shared/utils/logger";
-import { profileService } from "@/core/profiles/services";
 
 export function useDashboardAccess(profileId: string | undefined) {
-  const { user, activeProfile } = useSessionContext();
+  const { user, isLoading: sessionLoading } = useSessionContext();
   const [permissions, setPermissions] = useState<AccessPermissions>({
     isMember: false,
     isAdmin: false,
@@ -16,6 +16,11 @@ export function useDashboardAccess(profileId: string | undefined) {
   const [error, setError] = useState<string | null>(null);
 
   const checkAccess = useCallback(async () => {
+    if (sessionLoading) {
+      setLoading(true);
+      return;
+    }
+
     if (!user || !profileId) {
       setLoading(false);
       return;
@@ -25,23 +30,23 @@ export function useDashboardAccess(profileId: string | undefined) {
     setError(null);
 
     try {
-      const members = await profileService.getProfileMembers(profileId);
-      const memberData = members?.find((member) => member.user_id === user.id);
-      const isMember = Boolean(memberData);
+      const businessDataId = await BusinessService.getBusinessDataIdByProfileId(profileId);
+      if (!businessDataId) {
+        setPermissions({
+          isMember: false,
+          isAdmin: false,
+          hasAccess: false,
+        });
+        return;
+      }
 
-      const isAdmin = activeProfile
-        ? await AuthorizationEngine.canProfilePerformAction(
-            activeProfile.id,
-            "moderateContent",
-            {},
-          )
-        : false;
+      const hasAccess = await BusinessOwnershipService.isOwner(businessDataId, user.id);
 
       setPermissions({
-        isMember,
-        isAdmin,
-        hasAccess: isMember || isAdmin,
-        role: memberData?.role,
+        isMember: hasAccess,
+        isAdmin: hasAccess,
+        hasAccess,
+        role: hasAccess ? "owner" : undefined,
       });
     } catch (err: unknown) {
       logger.error("Error checking access:", err);
@@ -54,7 +59,7 @@ export function useDashboardAccess(profileId: string | undefined) {
     } finally {
       setLoading(false);
     }
-  }, [user, activeProfile, profileId]);
+  }, [sessionLoading, user, profileId]);
 
   useEffect(() => {
     checkAccess();

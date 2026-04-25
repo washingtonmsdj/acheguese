@@ -23,6 +23,7 @@ import { trackError } from "@/shared/utils/errorTracking";
 import { FavoritesService } from "@/core/favorites/services/FavoritesService";
 import { publicIdentityService, PublicIdentityService } from "@/core/public-identity";
 import { createTypedQuery, callRPC } from "@/integrations/supabase/services/supabaseHelpers";
+import { businessManagementRoutes } from "@/core/business/utils/businessManagementRoutes";
 import type {
   AdminFilters,
   AdminProfileListItem,
@@ -938,9 +939,9 @@ export class ProfileServiceLegacy {
         "@/core/professional/services/ProfessionalService"
       );
       const { getUserClassifieds } = await import("@/modules/classifieds/services");
-      const { eventService } = await import("@/modules/community/events/services/EventsService");
+      const { eventService } = await import("@/core/community/services/CommunityEventsRuntimeService");
       const { communityAlertService } = await import("@/modules/community/alerts");
-      const { communityIssueService } = await import("@/modules/community/issues");
+      const { communityIssueService } = await import("@/core/community/issues/services/CommunityIssueService");
       const { notificationService } = await import("@/core/notifications/services");
 
       const profileContextPromise = this.getProfileContext(userId);
@@ -1065,7 +1066,7 @@ export class ProfileServiceLegacy {
                   geographic_path: business.geographic_path,
                 })
               : undefined;
-          const dashboardUrl = `/dashboard/business/${business.id}`;
+          const dashboardUrl = businessManagementRoutes.overview(business.id);
 
           return {
             businessId: business.id,
@@ -1108,37 +1109,31 @@ export class ProfileServiceLegacy {
               dineInEnabled: Boolean(gastronomyProfile?.dine_in_enabled),
               takeoutEnabled: Boolean(gastronomyProfile?.takeout_enabled),
               setupUrl: gastronomyEligible
-                ? `/dashboard/business/${business.id}/gastronomy/setup`
+                ? businessManagementRoutes.gastronomySetup(business.id)
                 : undefined,
               dashboardUrl: gastronomyProfile
-                ? `/dashboard/business/${business.id}/gastronomy/dashboard`
-                : undefined,
-              operationalUrl: gastronomyProfile
-                ? `/dashboard/business/${business.id}/gastronomy/operational`
+                ? businessManagementRoutes.gastronomia(business.id)
                 : undefined,
               menuUrl: gastronomyProfile
-                ? `/dashboard/business/${business.id}/gastronomy/menu`
+                ? businessManagementRoutes.gastronomyCardapio(business.id)
                 : undefined,
               ordersUrl: gastronomyProfile
-                ? `/dashboard/business/${business.id}/gastronomy/orders`
+                ? businessManagementRoutes.gastronomyPedidos(business.id)
                 : undefined,
               deliveriesUrl: gastronomyProfile
-                ? `/dashboard/business/${business.id}/gastronomy/deliveries`
+                ? businessManagementRoutes.gastronomyEntregas(business.id)
                 : undefined,
               deliveryAreaUrl: gastronomyProfile
-                ? `/dashboard/business/${business.id}/gastronomy/delivery-area`
+                ? businessManagementRoutes.gastronomyAreaEntrega(business.id)
                 : undefined,
               analyticsUrl: gastronomyProfile
-                ? `/dashboard/business/${business.id}/gastronomy/analytics`
-                : undefined,
-              billingUrl: gastronomyProfile
-                ? `/dashboard/business/${business.id}/gastronomy/billing`
+                ? businessManagementRoutes.gastronomyAnalytics(business.id)
                 : undefined,
               hoursUrl: gastronomyProfile
-                ? `/dashboard/business/${business.id}/gastronomy/hours`
+                ? businessManagementRoutes.gastronomyHorarios(business.id)
                 : undefined,
               plansUrl: gastronomyEligible
-                ? `/dashboard/business/${business.id}/gastronomy/plans`
+                ? businessManagementRoutes.planos(business.id)
                 : undefined,
             },
             qrCode: {

@@ -65,6 +65,7 @@ export default function PhotoGallery({
   const prevLightbox = () => {
     setLightboxIndex((prev) => (prev - 1 + photos.length) % photos.length);
   };
+  const activePhoto = photos.at(lightboxIndex);
 
   if (photos.length === 0) {
     return null;
@@ -186,8 +187,8 @@ export default function PhotoGallery({
             {/* Image */}
             <div className="relative w-full h-full flex items-center justify-center p-12">
               <img
-                src={photos[lightboxIndex].image_url}
-                alt={photos[lightboxIndex].caption}
+                src={activePhoto?.image_url ?? ""}
+                alt={activePhoto?.caption ?? businessName}
                 className="max-w-full max-h-full object-contain"
               />
             </div>
@@ -205,10 +206,10 @@ export default function PhotoGallery({
             )}
 
             {/* Caption */}
-            {photos[lightboxIndex].caption && (
+            {activePhoto?.caption && (
               <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-6 z-10">
                 <p className="text-white text-center text-lg font-medium">
-                  {photos[lightboxIndex].caption}
+                  {activePhoto.caption}
                 </p>
                 <p className="text-white/60 text-center text-sm mt-1">
                   {lightboxIndex + 1} / {photos.length}

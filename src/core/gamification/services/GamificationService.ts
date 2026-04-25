@@ -498,8 +498,8 @@ export class GamificationService {
         share_content: 3,
         like_given: 1,
       };
-
-      const points = actionPoints[action] || 0;
+      const points =
+        Object.entries(actionPoints).find(([key]) => key === action)?.[1] ?? 0;
 
       if (points > 0) {
         const success = await this.addPoints(

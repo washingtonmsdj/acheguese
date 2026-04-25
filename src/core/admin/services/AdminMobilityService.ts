@@ -6,7 +6,7 @@
  */
 
 import { logger } from "@/shared/utils/logger";
-import { MobilityAdminQueryService } from "@/modules/mobility/services";
+import { MobilityAdminQueryService } from "@/core/admin/services/MobilityAdminQueryService";
 
 export interface AdminDriverData {
   id: string;
@@ -170,6 +170,18 @@ class AdminMobilityServiceClass {
 
   async getAllRides(): Promise<AdminRideData[]> {
     return MobilityAdminQueryService.getAllRides() as Promise<AdminRideData[]>;
+  }
+
+  async getMobilityStats(): Promise<{ total_drivers: number; total_rides: number }> {
+    const [drivers, rides] = await Promise.all([
+      MobilityAdminQueryService.getDriversRaw(),
+      MobilityAdminQueryService.getAllRides(),
+    ]);
+
+    return {
+      total_drivers: drivers.length,
+      total_rides: rides.length,
+    };
   }
 
   async getOperationalSnapshot(

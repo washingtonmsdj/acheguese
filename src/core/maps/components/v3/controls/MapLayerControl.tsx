@@ -16,6 +16,20 @@ interface MapLayerControlProps extends LayerControlConfig {
   className?: string;
 }
 
+function getExternalVisibility(
+  externalVisible: Record<string, boolean> | undefined,
+  key: string,
+): boolean {
+  if (!externalVisible) {
+    return true;
+  }
+
+  const visibilityEntry = Object.entries(externalVisible).find(
+    ([entryKey]) => entryKey === key,
+  );
+  return visibilityEntry ? visibilityEntry[1] : true;
+}
+
 export function MapLayerControl({
   layers: layerKeys,
   layout = 'vertical',
@@ -24,22 +38,28 @@ export function MapLayerControl({
   className,
 }: MapLayerControlProps) {
   // Estado interno — usado apenas quando não há controle externo
-  const [internalVisible, setInternalVisible] = useState<Record<string, boolean>>(
-    () => Object.fromEntries((layerKeys as string[]).map((k) => [k, true])),
+  const [internalVisible, setInternalVisible] = useState<Map<string, boolean>>(
+    () => new Map((layerKeys as string[]).map((layerKey) => [layerKey, true])),
   );
 
   const isControlled = externalVisible !== undefined;
-  const visibleLayers = isControlled ? externalVisible : internalVisible;
 
   const toggleLayer = useCallback(
     (key: string) => {
-      const next = !(visibleLayers[key] ?? true);
+      const currentVisibility = isControlled
+        ? getExternalVisibility(externalVisible, key)
+        : (internalVisible.get(key) ?? true);
+      const next = !currentVisibility;
       if (!isControlled) {
-        setInternalVisible((prev) => ({ ...prev, [key]: next }));
+        setInternalVisible((prev) => {
+          const nextState = new Map(prev);
+          nextState.set(key, next);
+          return nextState;
+        });
       }
       onLayerToggle?.(key, next);
     },
-    [visibleLayers, isControlled, onLayerToggle],
+    [externalVisible, internalVisible, isControlled, onLayerToggle],
   );
 
   return (
@@ -58,7 +78,9 @@ export function MapLayerControl({
 
       <div className={cn('p-2', layout === 'horizontal' ? 'flex flex-row gap-1' : 'flex flex-col gap-1')}>
         {(layerKeys as MapLayerKey[]).map((key) => {
-          const isVisible = visibleLayers[key] ?? true;
+          const isVisible = isControlled
+            ? getExternalVisibility(externalVisible, key)
+            : (internalVisible.get(key) ?? true);
           const cfg = getLayerConfig(key);
 
           return (

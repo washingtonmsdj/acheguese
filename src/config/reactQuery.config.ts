@@ -267,10 +267,25 @@ export function createQueryOptions<T>(
     refetchInterval?: number;
   }
 ) {
+  const cacheStrategy = (() => {
+    switch (strategy) {
+      case 'STATIC':
+        return CACHE_STRATEGIES.STATIC;
+      case 'USER':
+        return CACHE_STRATEGIES.USER;
+      case 'REALTIME':
+        return CACHE_STRATEGIES.REALTIME;
+      case 'LIST':
+        return CACHE_STRATEGIES.LIST;
+      default:
+        return CACHE_STRATEGIES.USER;
+    }
+  })();
+
   return {
     queryKey,
     queryFn,
-    ...CACHE_STRATEGIES[strategy],
+    ...cacheStrategy,
     ...options,
   };
 }

@@ -763,6 +763,20 @@ export type BlockedURLProtocol = typeof BLOCKED_URL_PROTOCOLS[number];
  */
 export function validateCSPConfig(): { valid: boolean; errors: string[] } {
   const errors: string[] = [];
+  const getDirectiveValue = (directive: CSPDirective): readonly string[] => {
+    switch (directive) {
+      case 'default-src':
+        return CSP_DIRECTIVES['default-src'];
+      case 'script-src':
+        return CSP_DIRECTIVES['script-src'];
+      case 'frame-ancestors':
+        return CSP_DIRECTIVES['frame-ancestors'];
+      case 'base-uri':
+        return CSP_DIRECTIVES['base-uri'];
+      default:
+        return [];
+    }
+  };
   
   // Check critical directives exist
   const criticalDirectives: CSPDirective[] = [
@@ -773,7 +787,7 @@ export function validateCSPConfig(): { valid: boolean; errors: string[] } {
   ];
   
   for (const directive of criticalDirectives) {
-    if (!CSP_DIRECTIVES[directive]) {
+    if (getDirectiveValue(directive).length === 0) {
       errors.push(`Missing critical CSP directive: ${directive}`);
     }
   }

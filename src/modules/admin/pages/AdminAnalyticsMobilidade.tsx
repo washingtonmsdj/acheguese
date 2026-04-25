@@ -181,56 +181,61 @@ export default function AdminAnalyticsMobilidade() {
       });
 
       // Build daily data
-      const dailyMap: Record<string, DailyData> = {};
+      const dailyMap = new Map<string, DailyData>();
       for (let i = 0; i < days; i++) {
         const d = new Date();
         d.setDate(d.getDate() - (days - 1 - i));
         const key = d.toISOString().split("T")[0];
-        dailyMap[key] = {
+        dailyMap.set(key, {
           date: key,
           rides: 0,
           revenue: 0,
           completed: 0,
           cancelled: 0,
-        };
+        });
       }
       allRides.forEach((r) => {
         const key = r.created_at?.split("T")[0];
-        if (dailyMap[key]) {
-          dailyMap[key].rides++;
+        const daily = dailyMap.get(key);
+        if (daily) {
+          daily.rides += 1;
           if (r.status === RIDE_STATUS.COMPLETED) {
-            dailyMap[key].completed++;
-            dailyMap[key].revenue +=
+            daily.completed += 1;
+            daily.revenue +=
               r.final_price || (r as RideRequest).suggested_price || 0;
           }
-          if (r.status === RIDE_STATUS.CANCELLED) dailyMap[key].cancelled++;
+          if (r.status === RIDE_STATUS.CANCELLED) daily.cancelled += 1;
         }
       });
-      setDailyData(Object.values(dailyMap));
+      setDailyData(Array.from(dailyMap.values()));
 
       // Top drivers by completed rides
-      const driverRideCount: Record<
+      const driverRideCount = new Map<
         string,
         { driver: any; count: number; revenue: number }
-      > = {};
+      >();
       completed.forEach((r) => {
         const driverProfileId =
           (r as RideRequest).driver_profile_id || r.driver_profile_id;
         if (driverProfileId) {
-          if (!driverRideCount[driverProfileId]) {
+          if (!driverRideCount.has(driverProfileId)) {
             const drv = allDrivers.find((d) => d.id === driverProfileId);
-            driverRideCount[driverProfileId] = {
+            driverRideCount.set(driverProfileId, {
               driver: drv,
               count: 0,
               revenue: 0,
-            };
+            });
           }
-          driverRideCount[driverProfileId].count++;
-          driverRideCount[driverProfileId].revenue +=
+          const entry = driverRideCount.get(driverProfileId);
+          if (!entry) {
+            return;
+          }
+          entry.count += 1;
+          entry.revenue +=
             r.final_price || (r as RideRequest).suggested_price || 0;
         }
       });
-      const sorted = Object.values(driverRideCount)
+      const sorted = Array.from(driverRideCount.values())
         .sort((a, b) => b.count - a.count)
         .slice(0, 5);
       setTopDrivers(sorted);

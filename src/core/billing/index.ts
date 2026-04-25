@@ -28,6 +28,7 @@ export * from './entitlements-extended';
 // Services
 export * from './SubscriptionService';
 export * from './services/BillingService';
+export * from './services/BillingOfferService';
 
 // Hooks
 export * from './hooks/useBusinessSubscription';

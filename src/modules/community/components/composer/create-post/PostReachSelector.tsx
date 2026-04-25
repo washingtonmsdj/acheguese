@@ -20,6 +20,31 @@ interface PostReachSelectorProps {
   profileAvatar: string;
 }
 
+function getPostTypeSummary(tipo: UnifiedPostType): { emoji: string; label: string } {
+  switch (tipo) {
+    case "discussao":
+      return { emoji: POST_TYPES.discussao.emoji, label: POST_TYPES.discussao.label };
+    case "pergunta":
+      return { emoji: POST_TYPES.pergunta.emoji, label: POST_TYPES.pergunta.label };
+    case "enquete":
+      return { emoji: POST_TYPES.enquete.emoji, label: POST_TYPES.enquete.label };
+    case "evento":
+      return { emoji: POST_TYPES.evento.emoji, label: POST_TYPES.evento.label };
+    case "achados":
+      return { emoji: POST_TYPES.achados.emoji, label: POST_TYPES.achados.label };
+    case "alerta":
+      return { emoji: POST_TYPES.alerta.emoji, label: POST_TYPES.alerta.label };
+    case "favor":
+      return { emoji: POST_TYPES.favor.emoji, label: POST_TYPES.favor.label };
+    case "desapego":
+      return { emoji: POST_TYPES.desapego.emoji, label: POST_TYPES.desapego.label };
+    case "recomendacao":
+      return { emoji: POST_TYPES.recomendacao.emoji, label: POST_TYPES.recomendacao.label };
+    default:
+      return { emoji: "📝", label: "Publicação" };
+  }
+}
+
 export function PostReachSelector({
   alcance,
   onAlcanceChange,
@@ -33,6 +58,7 @@ export function PostReachSelector({
 }: PostReachSelectorProps) {
   const charCount = texto.length;
   const tagsCount = tagsInput.split(",").filter((t) => t.trim()).length;
+  const postTypeSummary = getPostTypeSummary(tipo);
 
   return (
     <div className="h-full flex flex-col px-4 overflow-hidden">
@@ -145,7 +171,7 @@ export function PostReachSelector({
               </p>
               <div className="flex items-center gap-1 text-xs text-muted-foreground">
                 <span>
-                  {POST_TYPES[tipo].emoji} {POST_TYPES[tipo].label}
+                  {postTypeSummary.emoji} {postTypeSummary.label}
                 </span>
                 <span>•</span>
                 <span>

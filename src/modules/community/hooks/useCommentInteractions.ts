@@ -23,6 +23,69 @@ interface CommentInteractionState {
   };
 }
 
+const DEFAULT_COMMENT_STATE = { isLiked: false, likesCount: 0 };
+
+function getCommentStateById(
+  source: CommentInteractionState,
+  commentId: string,
+): { isLiked: boolean; likesCount: number } {
+  for (const [key, value] of Object.entries(source)) {
+    if (key === commentId) {
+      return value;
+    }
+  }
+  return DEFAULT_COMMENT_STATE;
+}
+
+function setCommentStateById(
+  source: CommentInteractionState,
+  commentId: string,
+  value: { isLiked: boolean; likesCount: number },
+): CommentInteractionState {
+  let found = false;
+  const entries = Object.entries(source).map(([key, currentValue]) => {
+    if (key === commentId) {
+      found = true;
+      return [key, value] as const;
+    }
+    return [key, currentValue] as const;
+  });
+
+  if (!found) {
+    entries.push([commentId, value] as const);
+  }
+  return Object.fromEntries(entries);
+}
+
+function getProcessingById(source: Record<string, boolean>, commentId: string): boolean {
+  for (const [key, value] of Object.entries(source)) {
+    if (key === commentId) {
+      return value;
+    }
+  }
+  return false;
+}
+
+function setProcessingById(
+  source: Record<string, boolean>,
+  commentId: string,
+  value: boolean,
+): Record<string, boolean> {
+  let found = false;
+  const entries = Object.entries(source).map(([key, currentValue]) => {
+    if (key === commentId) {
+      found = true;
+      return [key, value] as const;
+    }
+    return [key, currentValue] as const;
+  });
+
+  if (!found) {
+    entries.push([commentId, value] as const);
+  }
+  return Object.fromEntries(entries);
+}
+
 export function useCommentInteractions(postId: string) {
   const { user, activeProfile } = useSessionContext();
   const queryClient = useQueryClient();
@@ -49,7 +112,7 @@ export function useCommentInteractions(postId: string) {
    * Curtir/Descurtir comentário
    */
   const handleLike = async (commentId: string) => {
-    if (isProcessing[commentId] || !user || !activeProfile) {
+    if (getProcessingById(isProcessing, commentId) || !user || !activeProfile) {
       if (!user) {
         toast.error("Faça login para curtir comentários");
       }
@@ -57,21 +120,20 @@ export function useCommentInteractions(postId: string) {
     }
 
     // Otimistic update
-    const previousState = state[commentId] || { isLiked: false, likesCount: 0 };
+    const previousState = getCommentStateById(state, commentId);
     const newIsLiked = !previousState.isLiked;
     const newLikesCount = newIsLiked
       ? previousState.likesCount + 1
       : previousState.likesCount - 1;
 
-    setState((prev) => ({
-      ...prev,
-      [commentId]: {
+    setState((prev) =>
+      setCommentStateById(prev, commentId, {
         isLiked: newIsLiked,
         likesCount: newLikesCount,
-      },
-    }));
+      }),
+    );
 
-    setIsProcessing((prev) => ({ ...prev, [commentId]: true }));
+    setIsProcessing((prev) => setProcessingById(prev, commentId, true));
 
     try {
       // ✅ GATE 4A FASE 2 - Usar SocialInteractionsService para likes
@@ -97,15 +159,12 @@ export function useCommentInteractions(postId: string) {
       queryClient.invalidateQueries({ queryKey: ["comments", postId] });
     } catch (error) {
       // Rollback em caso de erro
-      setState((prev) => ({
-        ...prev,
-        [commentId]: previousState,
-      }));
+      setState((prev) => setCommentStateById(prev, commentId, previousState));
 
       logger.error("Error curtir comentário:", error);
       toast.error("Não foi possível curtir o comentário. Tente novamente.");
     } finally {
-      setIsProcessing((prev) => ({ ...prev, [commentId]: false }));
+      setIsProcessing((prev) => setProcessingById(prev, commentId, false));
     }
   };
 
@@ -113,7 +172,7 @@ export function useCommentInteractions(postId: string) {
    * Obter state de um comentário
    */
   const getCommentState = (commentId: string) => {
-    return state[commentId] || { isLiked: false, likesCount: 0 };
+    return getCommentStateById(state, commentId);
   };
 
   return {

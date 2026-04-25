@@ -24,6 +24,41 @@ const QUERY_KEYS = {
   featured: ['billing-plans', 'featured'] as const,
 };
 
+function getEntitlementValue(
+  entitlements: PlanEntitlements | undefined,
+  entitlement: keyof PlanEntitlements,
+): boolean {
+  if (!entitlements) {
+    return false;
+  }
+
+  const value = entitlements[entitlement];
+
+  if (typeof value === 'boolean') {
+    return value;
+  }
+
+  if (typeof value === 'number') {
+    return value > 0;
+  }
+
+  return value === null;
+}
+
+function getLimitValue(
+  entitlements: PlanEntitlements | undefined,
+  limitKey: keyof Pick<
+    PlanEntitlements,
+    "maxMenuItems" | "maxPromotions" | "maxImages" | "maxCategories" | "maxCombos" | "maxOrdersPerDay"
+  >,
+): number | null {
+  if (!entitlements) {
+    return null;
+  }
+
+  return entitlements[limitKey] ?? null;
+}
+
 // ══════════════════════════════════════════════════════════════════════════
 // HOOKS
 // ══════════════════════════════════════════════════════════════════════════
@@ -210,7 +245,7 @@ export function useHasEntitlement(
   entitlement: keyof PlanEntitlements
 ) {
   const { data: entitlements } = usePlanEntitlements(planCode);
-  return entitlements?.[entitlement] ?? false;
+  return getEntitlementValue(entitlements, entitlement);
 }
 
 /**
@@ -239,5 +274,5 @@ export function usePlanLimit(
   >
 ) {
   const { data: entitlements } = usePlanEntitlements(planCode);
-  return entitlements?.[limitKey] ?? null;
+  return getLimitValue(entitlements, limitKey);
 }

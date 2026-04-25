@@ -209,7 +209,22 @@ export default function AdminCommunityIssues() {
       resolvido: { variant: "default", label: "Resolvido" },
       rejeitado: { variant: "destructive", label: "Rejeitado" },
     };
-    const config = variants[status] || variants.aberto;
+    const config = (() => {
+      switch (status) {
+        case "aberto":
+          return variants.aberto;
+        case "em_analise":
+          return variants.em_analise;
+        case "em_andamento":
+          return variants.em_andamento;
+        case "resolvido":
+          return variants.resolvido;
+        case "rejeitado":
+          return variants.rejeitado;
+        default:
+          return variants.aberto;
+      }
+    })();
     return <Badge variant={config.variant}>{config.label}</Badge>;
   };
 
@@ -220,12 +235,39 @@ export default function AdminCommunityIssues() {
       alta: { variant: "default", icon: ArrowUp },
       urgente: { variant: "destructive", icon: AlertCircle },
     };
-    const config = variants[priority] || variants.media;
+    const config = (() => {
+      switch (priority) {
+        case "baixa":
+          return variants.baixa;
+        case "media":
+          return variants.media;
+        case "alta":
+          return variants.alta;
+        case "urgente":
+          return variants.urgente;
+        default:
+          return variants.media;
+      }
+    })();
     const Icon = config.icon;
+    const priorityLabel = (() => {
+      switch (priority) {
+        case "baixa":
+          return ISSUE_PRIORITY_LABELS.baixa;
+        case "media":
+          return ISSUE_PRIORITY_LABELS.media;
+        case "alta":
+          return ISSUE_PRIORITY_LABELS.alta;
+        case "urgente":
+          return ISSUE_PRIORITY_LABELS.urgente;
+        default:
+          return ISSUE_PRIORITY_LABELS.media;
+      }
+    })();
     return (
       <Badge variant={config.variant} className="flex items-center gap-1">
         {Icon && <Icon className="h-3 w-3" />}
-        {ISSUE_PRIORITY_LABELS[priority]}
+        {priorityLabel}
       </Badge>
     );
   };

@@ -247,19 +247,18 @@ export function useProfileHub() {
       },
       {
         icon: Car,
-        title: hasDriverProfile ? 'Ferramentas de motorista' : 'Mobilidade passageiro',
+        title: 'Mobilidade',
         description: hasDriverProfile
-          ? 'Acesse perfil de motorista, historico e operacao de corridas.'
-          : 'Acesse a central de mobilidade e o historico de corridas.',
-        onClick: () =>
-          navigate(hasDriverProfile ? appUrls.mobility.driverProfile : appUrls.mobility.passenger),
+          ? 'Abra seu painel operacional de mobilidade com cadastro, disponibilidade e rotinas.'
+          : 'Abra seu painel operacional de mobilidade e complete o cadastro se necessario.',
+        onClick: () => navigate(appUrls.profile.mobilidade.home),
       },
       {
         icon: Route,
-        title: 'Historico de mobilidade',
-        description: 'Resumo de corridas, solicitacoes e operacao em andamento.',
+        title: 'Corridas e entregas',
+        description: 'Resumo de corridas, entregas, solicitacoes e operacao em andamento.',
         badge: operations.ridesTotal > 0 ? `${operations.ridesTotal}` : undefined,
-        onClick: () => navigate(appUrls.mobility.history),
+        onClick: () => navigate(appUrls.profile.mobilidade.motorista.corridas),
       },
     ],
     [hasDriverProfile, operations.ridesTotal, navigate, appUrls],
@@ -372,10 +371,10 @@ export function useProfileHub() {
           : null,
         hasDriverProfile && operations.ridesTotal === 0
           ? {
-              title: 'Revisar operacao de mobilidade',
-              description: 'O perfil de motorista existe, mas ainda nao ha historico recente consolidado.',
+              title: 'Revisar mobilidade',
+              description: 'O perfil operacional existe, mas ainda nao ha historico recente consolidado.',
               actionLabel: 'Abrir mobilidade',
-              onClick: () => navigate(appUrls.mobility.driverProfile),
+              onClick: () => navigate(appUrls.profile.mobilidade.home),
             }
           : null,
       ].filter(Boolean) as Array<{

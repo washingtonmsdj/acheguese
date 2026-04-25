@@ -62,6 +62,40 @@ const EMPLOYEE_COUNT_LABELS: Record<string, string> = {
   "500+": "Mais de 500 pessoas",
 };
 
+function getCompanyTypeLabel(option: string): string {
+  switch (option) {
+    case "mei":
+      return COMPANY_TYPE_LABELS.mei;
+    case "ltda":
+      return COMPANY_TYPE_LABELS.ltda;
+    case "sa":
+      return COMPANY_TYPE_LABELS.sa;
+    case "eireli":
+      return COMPANY_TYPE_LABELS.eireli;
+    case "other":
+      return COMPANY_TYPE_LABELS.other;
+    default:
+      return option;
+  }
+}
+
+function getEmployeeCountLabel(option: string): string {
+  switch (option) {
+    case "1-10":
+      return EMPLOYEE_COUNT_LABELS["1-10"];
+    case "11-50":
+      return EMPLOYEE_COUNT_LABELS["11-50"];
+    case "51-200":
+      return EMPLOYEE_COUNT_LABELS["51-200"];
+    case "201-500":
+      return EMPLOYEE_COUNT_LABELS["201-500"];
+    case "500+":
+      return EMPLOYEE_COUNT_LABELS["500+"];
+    default:
+      return option;
+  }
+}
+
 export function BasicInfoStep({
   name,
   legalName,
@@ -216,7 +250,7 @@ export function BasicInfoStep({
               <option value="">Nao informado</option>
               {BUSINESS_COMPANY_TYPES.map((option) => (
                 <option key={option} value={option}>
-                  {COMPANY_TYPE_LABELS[option]}
+                  {getCompanyTypeLabel(option)}
                 </option>
               ))}
             </select>
@@ -234,7 +268,7 @@ export function BasicInfoStep({
               <option value="">Nao informado</option>
               {BUSINESS_EMPLOYEE_COUNTS.map((option) => (
                 <option key={option} value={option}>
-                  {EMPLOYEE_COUNT_LABELS[option]}
+                  {getEmployeeCountLabel(option)}
                 </option>
               ))}
             </select>

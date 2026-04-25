@@ -163,6 +163,13 @@ const MOCK_PROFILES: Record<string, VendedorPerfil> = {
   },
 };
 
+function getMockProfileBySellerId(sellerId: string): VendedorPerfil | null {
+  return (
+    Object.entries(MOCK_PROFILES).find(([currentSellerId]) => currentSellerId === sellerId)?.[1] ??
+    null
+  );
+}
+
 export function useVendedorPerfil(sellerId: string | undefined) {
   const query = useQuery({
     queryKey: ["vendedor-perfil", sellerId],
@@ -170,8 +177,9 @@ export function useVendedorPerfil(sellerId: string | undefined) {
       if (!sellerId) return null;
 
       // Try mock data first
-      if (MOCK_PROFILES[sellerId]) {
-        return MOCK_PROFILES[sellerId];
+      const mockProfile = getMockProfileBySellerId(sellerId);
+      if (mockProfile) {
+        return mockProfile;
       }
 
       // Fetch real data from database

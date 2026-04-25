@@ -17,6 +17,7 @@ import { Button } from '@/shared/components/ui/button';
 import { Progress } from '@/shared/components/ui/progress';
 import { Crown, TrendingUp, Zap } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { businessManagementRoutes } from '@/core/business/utils/businessManagementRoutes';
 
 interface PlanStatusWidgetProps {
   businessId: string;
@@ -93,7 +94,7 @@ export function PlanStatusWidget({
             </CardDescription>
           </div>
           {showUpgradeCTA && (
-            <Link to={`/dashboard/business/${businessId}/gastronomy/plans`}>
+            <Link to={businessManagementRoutes.planos(businessId)}>
               <Button size="sm" variant="default">
                 <TrendingUp className="w-4 h-4 mr-2" />
                 Fazer Upgrade

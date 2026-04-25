@@ -25,6 +25,13 @@ interface OpeningHours {
 
 const DAY_NAMES = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
 
+function getDayNameByIndex(index: number): string {
+  if (index < 0 || index > 6) {
+    return 'sunday';
+  }
+  return DAY_NAMES.at(index) ?? 'sunday';
+}
+
 export class OpeningHoursService {
   /**
    * Calcula status de abertura atual
@@ -43,8 +50,9 @@ export class OpeningHoursService {
     try {
       const now = new Date();
       const dayIndex = now.getDay();
-      const dayName = DAY_NAMES[dayIndex];
-      const schedule = openingHours.schedules[dayName];
+      const dayName = getDayNameByIndex(dayIndex);
+      const scheduleMap = new Map(Object.entries(openingHours.schedules));
+      const schedule = scheduleMap.get(dayName);
 
       if (!schedule) {
         return {
@@ -84,8 +92,8 @@ export class OpeningHoursService {
 
       // Fechado após horário - abre amanhã
       const tomorrowIndex = (dayIndex + 1) % 7;
-      const tomorrowName = DAY_NAMES[tomorrowIndex];
-      const tomorrowSchedule = openingHours.schedules[tomorrowName];
+      const tomorrowName = getDayNameByIndex(tomorrowIndex);
+      const tomorrowSchedule = scheduleMap.get(tomorrowName);
 
       if (tomorrowSchedule) {
         return {

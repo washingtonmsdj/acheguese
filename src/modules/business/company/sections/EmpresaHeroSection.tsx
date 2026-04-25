@@ -62,7 +62,7 @@ export function EmpresaHeroSection({
   const paymentHighlights = (() => {
     const values: string[] = [];
     if (business.aceita_pix) values.push('PIX');
-    if (business.aceita_cartao) values.push('Cartão');
+    if (business.aceita_cartao) values.push('Cartao');
 
     (business.formas_pagamento ?? []).forEach((item) => {
       const normalized = getPaymentMethodLabel(item.trim());
@@ -73,6 +73,8 @@ export function EmpresaHeroSection({
 
     return values.slice(0, 3);
   })();
+  const paymentHighlightsMobile = paymentHighlights.slice(0, 2);
+  const facilityHighlightsMobile = facilityHighlights.slice(0, 2);
 
   return (
     <motion.section
@@ -109,7 +111,7 @@ export function EmpresaHeroSection({
               </Badge>
             )}
             {openStatus.todayHours && (
-              <Badge className="bg-background/80 backdrop-blur-sm text-foreground border border-border shadow-lg px-3 py-1.5 text-xs">
+              <Badge className="hidden sm:inline-flex bg-background/80 backdrop-blur-sm text-foreground border border-border shadow-lg px-3 py-1.5 text-xs">
                 <Clock className="h-3 w-3 mr-1" /> {openStatus.todayHours}
               </Badge>
             )}
@@ -146,7 +148,7 @@ export function EmpresaHeroSection({
             <div className="flex-1 min-w-0 w-full">
               {/* Name + verification */}
               <div className="flex items-center gap-2 flex-wrap mb-1">
-                <h1 className="text-xl sm:text-3xl font-bold text-foreground leading-tight">
+                <h1 className="text-2xl sm:text-3xl font-bold text-foreground leading-tight">
                   {business.name}
                 </h1>
                 {business.is_verified && (
@@ -175,14 +177,14 @@ export function EmpresaHeroSection({
               </p>
 
               {/* Rating + reviews */}
-              <div className="flex items-center gap-3 flex-wrap mb-3">
-                <div className="flex items-center gap-1 bg-primary/10 px-2.5 py-1 rounded-lg">
+              <div className="flex items-center gap-2 sm:gap-3 flex-wrap mb-3">
+                <div className="flex items-center gap-1 bg-primary/10 px-2.5 py-1 rounded-lg shrink-0">
                   <Star className="h-4 w-4 text-primary fill-primary" />
                   <span className="text-sm font-bold text-primary">
                     {business.rating?.toFixed(1) || "0.0"}
                   </span>
                 </div>
-                <span className="text-sm text-muted-foreground">
+                <span className="text-sm text-muted-foreground shrink-0">
                   ({business.total_reviews || 0} avaliações)
                 </span>
                 {(business.recommendations_count || 0) > 0 && (
@@ -200,7 +202,7 @@ export function EmpresaHeroSection({
                 <CoverageBadge
                   entityType="business"
                   entityId={business.id}
-                  className="sm:ml-auto"
+                  className="w-full sm:w-auto sm:ml-auto"
                 />
               </div>
 
@@ -229,16 +231,39 @@ export function EmpresaHeroSection({
                     </span>
                   )}
                   {paymentHighlights.length > 0 && (
-                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium border border-border bg-background/70 text-foreground">
+                    <span className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium border border-border bg-background/70 text-foreground">
                       <CreditCard className="h-3 w-3" />
-                      {paymentHighlights.join(' · ')}
+                      {paymentHighlights.join(" | ")}
+                    </span>
+                  )}
+                  {paymentHighlightsMobile.length > 0 && (
+                    <span className="inline-flex sm:hidden items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium border border-border bg-background/70 text-foreground">
+                      <CreditCard className="h-3 w-3" />
+                      {paymentHighlightsMobile.join(" | ")}
                     </span>
                   )}
                 </div>
 
                 {facilityHighlights.length > 0 && (
-                  <div className="flex flex-wrap gap-2">
+                  <div className="hidden sm:flex flex-wrap gap-2">
                     {facilityHighlights.map((facilityId) => {
+                      const Icon = getFacilityIcon(facilityId) ?? ParkingSquare;
+                      const label = getFacilityLabel(facilityId);
+                      return (
+                        <span
+                          key={facilityId}
+                          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium border border-primary/20 bg-primary/5 text-primary"
+                        >
+                          <Icon className="h-3 w-3" />
+                          {label}
+                        </span>
+                      );
+                    })}
+                  </div>
+                )}
+                {facilityHighlightsMobile.length > 0 && (
+                  <div className="flex sm:hidden flex-wrap gap-2">
+                    {facilityHighlightsMobile.map((facilityId) => {
                       const Icon = getFacilityIcon(facilityId) ?? ParkingSquare;
                       const label = getFacilityLabel(facilityId);
                       return (

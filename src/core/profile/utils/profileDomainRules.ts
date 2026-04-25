@@ -31,12 +31,17 @@ export function getProfileTypeIcon(
 ): LucideIcon {
   const profileType = getProfileType(profileOrType);
 
-  return {
-    personal: User,
-    business: Building2,
-    professional: Briefcase,
-    driver: Car,
-  }[profileType ?? "personal"];
+  switch (profileType ?? "personal") {
+    case "business":
+      return Building2;
+    case "professional":
+      return Briefcase;
+    case "driver":
+      return Car;
+    case "personal":
+    default:
+      return User;
+  }
 }
 
 export function getProfileTypeLabel(
@@ -44,12 +49,17 @@ export function getProfileTypeLabel(
 ): string {
   const profileType = getProfileType(profileOrType) ?? "personal";
 
-  return {
-    personal: "Pessoal",
-    business: "Empresa",
-    professional: "Profissional",
-    driver: "Motorista",
-  }[profileType];
+  switch (profileType) {
+    case "business":
+      return "Empresa";
+    case "professional":
+      return "Profissional";
+    case "driver":
+      return "Motorista";
+    case "personal":
+    default:
+      return "Pessoal";
+  }
 }
 
 export function canProfileHaveMembers(

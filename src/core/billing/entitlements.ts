@@ -20,87 +20,115 @@ export class EntitlementsService {
    * Retorna todos os entitlements de um plano
    */
   static getAll(planTier: PlanTier): PlanEntitlements {
-    return getEntitlements(planTier);
+    return this.withGenericAliases(getEntitlements(planTier));
   }
   
   // ── Página Pública ────────────────────────────────────────────────────────
   
   static canUsePremiumPublicPage(planTier: PlanTier): boolean {
-    return getEntitlements(planTier).canUsePremiumPublicPage;
+    return this.getAll(planTier).canUsePremiumPublicPage;
   }
   
   static canUseShortPremiumLink(planTier: PlanTier): boolean {
-    return getEntitlements(planTier).canUseShortPremiumLink;
+    return this.getAll(planTier).canUseShortPremiumLink;
   }
   
   static canUseCustomQRCode(planTier: PlanTier): boolean {
-    return getEntitlements(planTier).canUseCustomQRCode;
+    return this.getAll(planTier).canUseCustomQRCode;
+  }
+
+  static canUsePremiumSite(planTier: PlanTier): boolean {
+    return this.getAll(planTier).canUsePremiumSite ?? this.canUsePremiumPublicPage(planTier);
+  }
+
+  static canUseShortLink(planTier: PlanTier): boolean {
+    return this.getAll(planTier).canUseShortLink ?? this.canUseShortPremiumLink(planTier);
   }
   
   // ── Cardápio ──────────────────────────────────────────────────────────────
   
   static canUseAdvancedMenu(planTier: PlanTier): boolean {
-    return getEntitlements(planTier).canUseAdvancedMenu;
+    return this.getAll(planTier).canUseAdvancedMenu;
+  }
+
+  static canUseAdvancedCatalog(planTier: PlanTier): boolean {
+    return this.getAll(planTier).canUseAdvancedCatalog ?? this.canUseAdvancedMenu(planTier);
   }
   
   static canUseMenuCategories(planTier: PlanTier): boolean {
-    return getEntitlements(planTier).canUseMenuCategories;
+    return this.getAll(planTier).canUseMenuCategories;
   }
   
   static canUseMenuImages(planTier: PlanTier): boolean {
-    return getEntitlements(planTier).canUseMenuImages;
+    return this.getAll(planTier).canUseMenuImages;
   }
   
   // ── Pedidos ───────────────────────────────────────────────────────────────
   
   static canReceiveInternalOrders(planTier: PlanTier): boolean {
-    return getEntitlements(planTier).canReceiveInternalOrders;
+    return this.getAll(planTier).canReceiveInternalOrders;
+  }
+
+  static canUseInternalOrders(planTier: PlanTier): boolean {
+    return this.getAll(planTier).canUseInternalOrders ?? this.canReceiveInternalOrders(planTier);
   }
   
   static canUseOrdersPanel(planTier: PlanTier): boolean {
-    return getEntitlements(planTier).canUseOrdersPanel;
+    return this.getAll(planTier).canUseOrdersPanel;
   }
   
   // ── Delivery ──────────────────────────────────────────────────────────────
   
   static canUseMotoboyNetwork(planTier: PlanTier): boolean {
-    return getEntitlements(planTier).canUseMotoboyNetwork;
+    return this.getAll(planTier).canUseMotoboyNetwork;
+  }
+
+  static canUseDeliveryNetwork(planTier: PlanTier): boolean {
+    return this.getAll(planTier).canUseDeliveryNetwork ?? this.canUseMotoboyNetwork(planTier);
   }
   
   static canRequestDelivery(planTier: PlanTier): boolean {
-    return getEntitlements(planTier).canRequestDelivery;
+    return this.getAll(planTier).canRequestDelivery;
+  }
+
+  static canUseDeliveryRequests(planTier: PlanTier): boolean {
+    return this.getAll(planTier).canUseDeliveryRequests ?? this.canRequestDelivery(planTier);
   }
   
   static canTrackDelivery(planTier: PlanTier): boolean {
-    return getEntitlements(planTier).canTrackDelivery;
+    return this.getAll(planTier).canTrackDelivery;
+  }
+
+  static canUseDeliveryTracking(planTier: PlanTier): boolean {
+    return this.getAll(planTier).canUseDeliveryTracking ?? this.canTrackDelivery(planTier);
   }
   
   // ── Marketing ─────────────────────────────────────────────────────────────
   
   static canUsePromotions(planTier: PlanTier): boolean {
-    return getEntitlements(planTier).canUsePromotions;
+    return this.getAll(planTier).canUsePromotions;
   }
   
   static canUseFeaturedPlacement(planTier: PlanTier): boolean {
-    return getEntitlements(planTier).canUseFeaturedPlacement;
+    return this.getAll(planTier).canUseFeaturedPlacement;
   }
   
   static canUseBanners(planTier: PlanTier): boolean {
-    return getEntitlements(planTier).canUseBanners;
+    return this.getAll(planTier).canUseBanners;
   }
   
   // ── Analytics ─────────────────────────────────────────────────────────────
   
   static canUseBasicAnalytics(planTier: PlanTier): boolean {
-    return getEntitlements(planTier).canUseBasicAnalytics;
+    return this.getAll(planTier).canUseBasicAnalytics;
   }
   
   static canUseAdvancedAnalytics(planTier: PlanTier): boolean {
-    return getEntitlements(planTier).canUseAdvancedAnalytics;
+    return this.getAll(planTier).canUseAdvancedAnalytics;
   }
   
   static canExportReports(planTier: PlanTier): boolean {
-    return getEntitlements(planTier).canExportReports;
+    return this.getAll(planTier).canExportReports;
   }
   
   // ── Limites ───────────────────────────────────────────────────────────────
@@ -156,19 +184,49 @@ export class EntitlementsService {
       throw new Error('Plano atual não permite página premium. Faça upgrade para Pro ou Delivery.');
     }
   }
+
+  static requirePremiumSite(planTier: PlanTier): void {
+    if (!this.canUsePremiumSite(planTier)) {
+      throw new Error('Plano atual não permite página premium. Faça upgrade para Pro ou Delivery.');
+    }
+  }
   
   static requireShortPremiumLink(planTier: PlanTier): void {
     if (!this.canUseShortPremiumLink(planTier)) {
       throw new Error('Plano atual não permite link premium. Faça upgrade para Pro ou Delivery.');
     }
   }
-  
+
+  static requireShortLink(planTier: PlanTier): void {
+    if (!this.canUseShortLink(planTier)) {
+      throw new Error('Plano atual não permite link premium. Faça upgrade para Pro ou Delivery.');
+    }
+  }
+
   static requireInternalOrders(planTier: PlanTier): void {
     if (!this.canReceiveInternalOrders(planTier)) {
       throw new Error('Plano atual não permite pedidos internos. Faça upgrade para Delivery.');
     }
   }
-  
+
+  static requireAdvancedCatalog(planTier: PlanTier): void {
+    if (!this.canUseAdvancedCatalog(planTier)) {
+      throw new Error('Plano atual não permite cardápio avançado. Faça upgrade para Pro ou Delivery.');
+    }
+  }
+
+  static requireDeliveryRequests(planTier: PlanTier): void {
+    if (!this.canUseDeliveryRequests(planTier)) {
+      throw new Error('Plano atual não permite solicitações de entrega. Faça upgrade para Delivery.');
+    }
+  }
+
+  static requireDeliveryTracking(planTier: PlanTier): void {
+    if (!this.canUseDeliveryTracking(planTier)) {
+      throw new Error('Plano atual não permite rastreamento de entrega. Faça upgrade para Delivery.');
+    }
+  }
+
   static requireMotoboyNetwork(planTier: PlanTier): void {
     if (!this.canUseMotoboyNetwork(planTier)) {
       throw new Error('Plano atual não permite rede de motoboys. Faça upgrade para Delivery.');
@@ -200,6 +258,19 @@ export class EntitlementsService {
       default:
         return 'basic';
     }
+  }
+
+  private static withGenericAliases(entitlements: PlanEntitlements): PlanEntitlements {
+    return {
+      ...entitlements,
+      canUsePremiumSite: entitlements.canUsePremiumSite ?? entitlements.canUsePremiumPublicPage,
+      canUseShortLink: entitlements.canUseShortLink ?? entitlements.canUseShortPremiumLink,
+      canUseAdvancedCatalog: entitlements.canUseAdvancedCatalog ?? entitlements.canUseAdvancedMenu,
+      canUseInternalOrders: entitlements.canUseInternalOrders ?? entitlements.canReceiveInternalOrders,
+      canUseDeliveryRequests: entitlements.canUseDeliveryRequests ?? entitlements.canRequestDelivery,
+      canUseDeliveryTracking: entitlements.canUseDeliveryTracking ?? entitlements.canTrackDelivery,
+      canUseDeliveryNetwork: entitlements.canUseDeliveryNetwork ?? entitlements.canUseMotoboyNetwork,
+    };
   }
 }
 

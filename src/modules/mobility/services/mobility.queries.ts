@@ -388,14 +388,20 @@ export async function getReservationOfferRides(
 export async function getDriverOfferCapabilities(
   driverProfileId: string,
 ): Promise<DriverOfferCapabilitiesRow | null> {
+  const profilePromise = profileService.getProfileById(driverProfileId).catch(() => null);
+
   const queryWithRideCapability = await supabaseClient
     .from("driver_data")
-    .select("is_verified, is_suspended, subscription_active, can_do_delivery, can_do_rides")
+    .select("is_verified, subscription_active, can_do_delivery, can_do_rides")
     .eq("profile_id", driverProfileId)
     .maybeSingle();
 
   if (!queryWithRideCapability.error) {
-    return (queryWithRideCapability.data as DriverOfferCapabilitiesRow | null) ?? null;
+    const profile = await profilePromise;
+    return {
+      ...(queryWithRideCapability.data as Omit<DriverOfferCapabilitiesRow, "is_suspended">),
+      is_suspended: Boolean((profile as Record<string, unknown> | null)?.is_suspended ?? (profile as Record<string, unknown> | null)?.suspended ?? false),
+    };
   }
 
   if (!isMissingColumnError(queryWithRideCapability.error)) {
@@ -404,16 +410,18 @@ export async function getDriverOfferCapabilities(
 
   const legacyQuery = await supabaseClient
     .from("driver_data")
-    .select("is_verified, is_suspended, subscription_active, can_do_delivery")
+    .select("is_verified, subscription_active, can_do_delivery")
     .eq("profile_id", driverProfileId)
     .maybeSingle();
 
   if (legacyQuery.error) throw legacyQuery.error;
   if (!legacyQuery.data) return null;
 
+  const profile = await profilePromise;
   return {
-    ...(legacyQuery.data as Omit<DriverOfferCapabilitiesRow, "can_do_rides">),
+    ...(legacyQuery.data as Omit<DriverOfferCapabilitiesRow, "can_do_rides" | "is_suspended">),
     can_do_rides: true,
+    is_suspended: Boolean((profile as Record<string, unknown> | null)?.is_suspended ?? (profile as Record<string, unknown> | null)?.suspended ?? false),
   };
 }
 

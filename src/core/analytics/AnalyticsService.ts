@@ -262,16 +262,25 @@ export const AnalyticsService = {
     businessId: string,
     clickType: 'phone' | 'whatsapp' | 'directions'
   ): Promise<ServiceResult<string>> {
-    const eventTypeMap = {
-      phone: 'click_phone' as const,
-      whatsapp: 'click_whatsapp' as const,
-      directions: 'click_directions' as const,
-    };
+    let eventType: 'click_phone' | 'click_whatsapp' | 'click_directions' = 'click_phone';
+    switch (clickType) {
+      case 'phone':
+        eventType = 'click_phone';
+        break;
+      case 'whatsapp':
+        eventType = 'click_whatsapp';
+        break;
+      case 'directions':
+        eventType = 'click_directions';
+        break;
+      default:
+        break;
+    }
 
     return this.trackEvent({
       entity_type: 'business',
       entity_id: businessId,
-      event_type: eventTypeMap[clickType],
+      event_type: eventType,
       session_id: this.getSessionId(),
     });
   },

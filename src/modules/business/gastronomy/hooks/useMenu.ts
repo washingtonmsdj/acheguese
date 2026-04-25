@@ -61,13 +61,7 @@ export function useActivePromotions(businessId?: string) {
   return useQuery({
     queryKey: ['menu', 'promotions', businessId],
     queryFn: async () => {
-      const menus = await GastronomyFacade.queries.getMenusByBusiness(businessId!);
-      if (!menus.length) return [];
-
-      const menuId = menus[0]?.id;
-      if (!menuId) return [];
-
-      const promotions = await GastronomyFacade.queries.getActiveMenuPromotions(menuId);
+      const promotions = await GastronomyFacade.queries.getActiveMenuPromotions(businessId!);
       if (promotions.length > 0 || !shouldUseDevMocks) {
         return promotions;
       }

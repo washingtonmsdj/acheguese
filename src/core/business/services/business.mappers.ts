@@ -41,6 +41,24 @@ function toStringArray(value: unknown): string[] {
     .filter(Boolean);
 }
 
+function resolveMetadataPhotos(metadata: BusinessMetadata): string[] {
+  const candidates: unknown[] = [
+    metadata.fotos,
+    (metadata as Record<string, unknown>).photos,
+    (metadata as Record<string, unknown>).gallery,
+    (metadata as Record<string, unknown>).gallery_images,
+  ];
+
+  for (const candidate of candidates) {
+    const parsed = toStringArray(candidate);
+    if (parsed.length > 0) {
+      return parsed;
+    }
+  }
+
+  return [];
+}
+
 function buildBusinessAddressSummary(
   input: CreateBusinessInput | UpdateBusinessInput,
 ): string | undefined {
@@ -200,6 +218,7 @@ export function mapBusinessDataToBusiness(
   const facilities = toStringArray(data.facilities);
   const serviceModes = toStringArray(metadata.modos_atendimento);
   const paymentFlags = normalizePaymentFlags(paymentMethods);
+  const metadataPhotos = resolveMetadataPhotos(metadata);
 
   const resolvedServiceModes =
     serviceModes.length > 0
@@ -218,7 +237,7 @@ export function mapBusinessDataToBusiness(
     industry: data.industry ?? undefined,
     employee_count: (data.employee_count as Business["employee_count"]) ?? undefined,
     founded_year: data.founded_year ?? undefined,
-    description: data.description || "",
+    description: data.description || profileData?.bio || "",
     category: (data.category as BusinessCategory) || "outros",
     subcategoria: data.subcategory ?? undefined,
     phone: profileData?.phone || metadata.phone,
@@ -246,9 +265,9 @@ export function mapBusinessDataToBusiness(
     tem_delivery: metadata.tem_delivery ?? resolvedServiceModes.includes("delivery"),
     aceita_cartao: metadata.aceita_cartao ?? paymentFlags.acceptsCard,
     aceita_pix: metadata.aceita_pix ?? paymentFlags.acceptsPix,
-    logo_url: metadata.logo_url,
+    logo_url: metadata.logo_url || profileData?.avatar_url,
     banner_url: metadata.banner_url,
-    fotos: metadata.fotos || [],
+    fotos: metadataPhotos,
     status: (data.status as Business["status"]) || "active",
     rating: data.rating || 0,
     total_reviews: data.total_reviews || 0,

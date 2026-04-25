@@ -86,16 +86,16 @@ serve(async (req: Request) => {
       return errorResponse('Location not found', 404);
     }
 
+    const legacyVisibilityPatch = flag === 'hidden'
+      ? { hidden: value }
+      : { visible: value };
+
     const updatedMetadata: Record<string, unknown> = {
       ...(location.metadata || {}),
       updated_by: userId,
       updated_at: new Date().toISOString(),
+      ...(canonicalFlag ? { [canonicalFlag]: value } : legacyVisibilityPatch),
     };
-    if (canonicalFlag) {
-      updatedMetadata[canonicalFlag] = value;
-    } else {
-      updatedMetadata[flag] = value;
-    }
 
     const { data: updatedLocation, error: updateError } = await supabaseAdmin
       .from('locations')

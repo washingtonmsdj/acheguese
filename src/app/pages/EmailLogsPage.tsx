@@ -44,15 +44,26 @@ export default function EmailLogsPage() {
   };
 
   const getCategoryBadge = (category: string) => {
-    const colors: Record<string, string> = {
-      transactional: 'bg-blue-500',
-      social: 'bg-purple-500',
-      system: 'bg-orange-500',
-      marketing: 'bg-pink-500',
-    };
+    let colorClass = 'bg-gray-500';
+    switch (category) {
+      case 'transactional':
+        colorClass = 'bg-blue-500';
+        break;
+      case 'social':
+        colorClass = 'bg-purple-500';
+        break;
+      case 'system':
+        colorClass = 'bg-orange-500';
+        break;
+      case 'marketing':
+        colorClass = 'bg-pink-500';
+        break;
+      default:
+        break;
+    }
 
     return (
-      <Badge variant="secondary" className={colors[category] || 'bg-gray-500'}>
+      <Badge variant="secondary" className={colorClass}>
         {category}
       </Badge>
     );

@@ -51,8 +51,9 @@ export function SocialMediaEditor({
         [platform]: "Formato inválido",
       });
     } else {
-      const newErrors = { ...validationErrors };
-      delete newErrors[platform];
+      const newErrors = Object.fromEntries(
+        Object.entries(validationErrors).filter(([key]) => key !== platform),
+      );
       setValidationErrors(newErrors);
     }
 

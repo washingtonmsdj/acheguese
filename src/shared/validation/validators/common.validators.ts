@@ -124,8 +124,22 @@ export function isValidSlug(slug: unknown): slug is string {
   }
 
   // Slug deve conter apenas letras minúsculas, números e hífens
-  const slugPattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
-  return slugPattern.test(slug);
+  if (slug.startsWith('-') || slug.endsWith('-') || slug.includes('--')) {
+    return false;
+  }
+
+  for (let i = 0; i < slug.length; i += 1) {
+    const code = slug.charCodeAt(i);
+    const isDigit = code >= 48 && code <= 57;
+    const isLowerAlpha = code >= 97 && code <= 122;
+    const isHyphen = code === 45;
+
+    if (!isDigit && !isLowerAlpha && !isHyphen) {
+      return false;
+    }
+  }
+
+  return true;
 }
 
 /**

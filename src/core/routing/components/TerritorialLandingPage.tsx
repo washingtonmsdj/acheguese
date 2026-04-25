@@ -37,15 +37,15 @@ import {
 import { BusinessLogo } from '@/shared/components/ui/business-logo';
 import { useTerritorialContext } from './TerritorialLayout';
 import { useTerritoryFilter } from '@/core/location/hooks/useTerritoryFilter';
-import { useLandingFeatured } from '@/app/features/landing/hooks/useLandingFeatured';
+import { useLandingFeatured } from '@/core/landing/hooks/useLandingFeatured';
 import { useTerritorialHighlights } from '@/core/territorial/highlights/useTerritorialHighlights';
 import { useTerritoryStats } from '@/core/territorial/hooks/useTerritoryStats';
 import { getCityStateFromResolved, formatCityState } from '@/core/location/utils/territoryHelpers';
 import { MODULE_SLUGS } from '../utils/territoryUrls';
 import { BusinessUrlService } from '@/core/business/services/BusinessUrlService';
-import { classifiedUrlService } from '@/modules/classifieds/services/ClassifiedUrlService';
-import { useClassifiedUrls } from '@/modules/classifieds/hooks/useClassifiedUrls';
-import type { FeaturedBusiness, FeaturedService, FeaturedClassified } from '@/app/features/landing/services/LandingFeaturedService';
+import { classifiedUrlService } from '@/core/classifieds/services/ClassifiedUrlService';
+import { useClassifiedUrls } from '@/core/classifieds/hooks/useClassifiedUrls';
+import type { FeaturedBusiness, FeaturedService, FeaturedClassified } from '@/core/landing/services/LandingFeaturedService';
 import type { TerritorialHighlight, HighlightType } from '@/core/territorial/highlights/types';
 import { TerritoryAIContentSection } from '@/core/territorial/components/TerritoryAIContentSection';
 

@@ -32,7 +32,7 @@ export function PricingAuditLog() {
       rule_activated: "Ativada",
       rule_deactivated: "Desativada",
     };
-    return labels[action] || action;
+    return Object.entries(labels).find(([key]) => key === action)?.[1] ?? action;
   };
 
   const getActionColor = (action: string) => {

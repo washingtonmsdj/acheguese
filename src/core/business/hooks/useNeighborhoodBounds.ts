@@ -78,7 +78,7 @@ export function useNeighborhoodBounds({
             if (result.rings && result.rings.length > 0) {
               result.rings.forEach((ring) => allBounds.push(...ring));
               nextNamedBounds.push({
-                name: neighborhoods[index].name,
+                name: neighborhoods.at(index)?.name ?? "",
                 bounds: result.rings[0],
                 center: result.center,
                 color: NEIGHBORHOOD_COLORS[index % NEIGHBORHOOD_COLORS.length],

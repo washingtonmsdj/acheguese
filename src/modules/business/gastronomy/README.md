@@ -1,21 +1,21 @@
-# ??? Módulo de Gastronomia
+# ??? MÃ³dulo de Gastronomia
 
-Módulo completo para gestão de estabelecimentos gastronômicos (restaurantes, bares, lanchonetes, etc).
+MÃ³dulo completo para gestÃ£o de estabelecimentos gastronÃ´micos (restaurantes, bares, lanchonetes, etc).
 
 ## ?? Componentes Principais
 
-### GastronomyCard (Nível AAA) ?
-Card otimizado para conversão com hierarquia visual clara e metadados úteis.
+### GastronomyCard (NÃ­vel AAA) ?
+Card otimizado para conversÃ£o com hierarquia visual clara e metadados Ãºteis.
 
 **Variantes:**
-- `grid`: Card vertical completo (padrão)
+- `grid`: Card vertical completo (padrÃ£o)
 - `list`: Card horizontal compacto
-- `compact`: Card mini para carrosséis
+- `compact`: Card mini para carrossÃ©is
 
 **Features:**
-- Status operacional inteligente ("Fecha às 22h" / "Abre às 18h")
-- Metadados úteis (rating, preço, distância, tempo de entrega)
-- Badges secundárias (promoção, premium, entrega grátis)
+- Status operacional inteligente ("Fecha Ã s 22h" / "Abre Ã s 18h")
+- Metadados Ãºteis (rating, preÃ§o, distÃ¢ncia, tempo de entrega)
+- Badges secundÃ¡rias (promoÃ§Ã£o, premium, entrega grÃ¡tis)
 - CTA forte e animado
 - Estados visuais ricos (hover, focus, loading, sem imagem)
 - Responsividade completa
@@ -36,52 +36,52 @@ Card otimizado para conversão com hierarquia visual clara e metadados úteis.
 Ver: [GASTRONOMY_CARD_REDESIGN.md](./components/GASTRONOMY_CARD_REDESIGN.md)
 
 ### GastronomyHero
-Hero section para página de detalhes do estabelecimento.
+Hero section para pÃ¡gina de detalhes do estabelecimento.
 
 ### GastronomyFilters
-Filtros avançados para busca de estabelecimentos.
+Filtros avanÃ§ados para busca de estabelecimentos.
 
 ### GastronomyCategoryCards
-Cards de categorias de culinária.
+Cards de categorias de culinÃ¡ria.
 
 ### GastronomyCTA
-Call-to-action para ações principais (delivery, reserva, etc).
+Call-to-action para aÃ§Ãµes principais (delivery, reserva, etc).
 
 ## ??? Estrutura
 
 ```
 src/modules/business/gastronomy/
 +-- components/          # Componentes UI
-¦   +-- GastronomyCard.tsx          # Card principal (AAA)
-¦   +-- GastronomyHero.tsx
-¦   +-- GastronomyFilters.tsx
-¦   +-- ...
-+-- pages/              # Páginas do módulo
-¦   +-- landing/        # Landing page de gastronomia
-¦   +-- ...
-+-- services/           # Serviços e queries
+Â¦   +-- GastronomyCard.tsx          # Card principal (AAA)
+Â¦   +-- GastronomyHero.tsx
+Â¦   +-- GastronomyFilters.tsx
+Â¦   +-- ...
++-- pages/              # PÃ¡ginas do mÃ³dulo
+Â¦   +-- landing/        # Landing page de gastronomia
+Â¦   +-- ...
++-- services/           # ServiÃ§os e queries
 +-- hooks/              # Hooks customizados
 +-- types/              # Tipos TypeScript
 +-- constants/          # Constantes (cuisine types, etc)
-+-- utils/              # Utilitários
-+-- README.md           # Esta documentação
++-- utils/              # UtilitÃ¡rios
++-- README.md           # Esta documentaÃ§Ã£o
 ```
 
 ## ?? Design System
 
 ### Cores
-- **Primary**: Laranja/Vermelho (apetite, urgência)
-- **Success**: Verde (aberto, entrega grátis)
+- **Primary**: Laranja/Vermelho (apetite, urgÃªncia)
+- **Success**: Verde (aberto, entrega grÃ¡tis)
 - **Warning**: Amarelo (destaque, premium)
-- **Danger**: Vermelho (fechado, promoção)
+- **Danger**: Vermelho (fechado, promoÃ§Ã£o)
 
 ### Tipografia
-- **Título**: Bold, 16-18px
-- **Subtítulo**: Regular, 12-14px
+- **TÃ­tulo**: Bold, 16-18px
+- **SubtÃ­tulo**: Regular, 12-14px
 - **Metadados**: Regular, 10-12px
 - **Badges**: Semibold, 10px
 
-### Espaçamento
+### EspaÃ§amento
 - **Card padding**: 16px (p-4)
 - **Gap entre elementos**: 12px (gap-3)
 - **Margem entre cards**: 16px (gap-4)
@@ -109,40 +109,105 @@ interface GastronomyProfile {
 }
 ```
 
-## ?? Utilitários
+## ?? UtilitÃ¡rios
 
 ### getCuisineLabel(type)
-Converte tipo de culinária em label humanizado.
+Converte tipo de culinÃ¡ria em label humanizado.
 
 ### formatBrl(value)
 Formata valor em Real brasileiro.
 
 ### resolveGastronomyProximity(meters)
-Calcula distância e tempo estimado.
+Calcula distÃ¢ncia e tempo estimado.
 
 ## ?? Changelog
 
 ### v1.0.0 (2026-04-15)
-- ? Redesign completo do GastronomyCard (Nível AAA)
+- ? Redesign completo do GastronomyCard (NÃ­vel AAA)
 - ? Status operacional inteligente
 - ? Hierarquia visual otimizada
-- ? Badges secundárias coerentes
+- ? Badges secundÃ¡rias coerentes
 - ? CTA forte e animado
 - ? Estados visuais ricos
 - ?? Movido componente antigo para `.archive/`
-- ?? Documentação completa
+- ?? DocumentaÃ§Ã£o completa
+
+## ğŸ¯ Nichos GastronÃ´micos
+
+O mÃ³dulo de Gastronomia suporta **nichos especializados** internos, permitindo que diferentes tipos de estabelecimentos (pizza, sushi, aÃ§aÃ­, etc) tenham funcionalidades especÃ­ficas sem duplicar cÃ³digo.
+
+### Arquitetura
+
+```
+src/modules/business/gastronomy/
++-- niches/              # Nichos especializados (novo!)
+|   +-- types.ts         # Tipos canÃ´nicos
+|   +-- registry.ts      # Registro SSOT
+|   +-- services/        # ServiÃ§os
+|   +-- hooks/           # Hooks
+|   +-- components/      # UI components
+|   +-- presets/         # Configs por nicho
+|       +-- pizza.ts     # ğŸ• (beta)
+|       +-- sushi.ts     # ğŸ£ (beta)
+|       +-- lanches.ts  # ğŸ¥ª (ativo)
+|       +-- ...
+```
+
+### Conceitos
+
+- **Nicho**: EspecializaÃ§Ã£o operacional (pizza tem meio a meio, sushi tem contador de peÃ§as)
+- **Cuisine Type**: ClassificaÃ§Ã£o ampla ("Italiana", "Japonesa")
+- **Status**: `full_enabled` | `basic_enabled` | `beta_enabled` | `hidden` | `coming_soon`
+
+### Nichos DisponÃ­veis
+
+| Nicho | Status | Suporte |
+|-------|--------|---------|
+| **Lanches** | âœ… `basic_enabled` | CardÃ¡pio completo |
+| **Brasileira** | âœ… `basic_enabled` | CardÃ¡pio completo |
+| **Ãrabe** | âœ… `basic_enabled` | CardÃ¡pio completo |
+| **SaudÃ¡vel** | âœ… `basic_enabled` | CardÃ¡pio completo |
+| **HambÃºrguer** | âœ… `basic_enabled` | CardÃ¡pio completo |
+| **Pizza** | âœ… `full_enabled` | Pizzaria completa |
+| **Sushi** | ğŸ”’ `beta_enabled` | Preparado (Fase 3) |
+| **AÃ§aÃ­** | ğŸ”’ `beta_enabled` | Preparado (Fase 3) |
+
+### Uso
+
+```typescript
+import { NicheConfigService, useGastronomyNiche } from '@/modules/business/gastronomy';
+
+// Verificar capacidades
+if (NicheConfigService.hasCapability('pizza', 'pizza_half_half')) {
+  // Mostrar seletor de meio a meio
+}
+
+// Hook em componentes
+const { config, hasCapability } = useGastronomyNiche({ nicheKey: 'pizza' });
+```
+
+Ver documentaÃ§Ã£o completa: [niches/README.md](./niches/README.md)
+
+---
 
 ## ?? Roadmap
 
-- [ ] Skeleton loading states
-- [ ] Image blur placeholder
-- [ ] A/B testing de CTAs
-- [ ] Analytics de conversão
-- [ ] Personalização de badges
-- [ ] Modo escuro otimizado
-- [ ] Animações de transição entre variantes
+### Fase 1 (Atual) âœ…
+- âœ… Estrutura de nichos
+- âœ… Nichos bÃ¡sicos liberados
+- âœ… UI de seleÃ§Ã£o
+
+### Fase 2 âœ…
+- âœ… Nicho Pizza completo (meio a meio, 3/4 sabores, bordas, massas)
+- âœ… Tabelas especÃ­ficas de pizza
+- âœ… Regras de preÃ§o complexas
+
+### Fase 3 (Futuro)
+- [ ] Nicho Sushi (monte seu combinado)
+- [ ] Nicho AÃ§aÃ­ (monte seu aÃ§aÃ­)
+- [ ] Nicho Churrascaria (preÃ§o por kg)
 
 ---
 
 **Mantido por**: Equipe de Desenvolvimento
-**Última atualização**: 2026-04-15
+**Ãšltima atualizaÃ§Ã£o**: 2026-04-25

@@ -122,7 +122,7 @@ export class ProfessionalService {
     isUpdate = false,
   ): CreateProfessionalInput | UpdateProfessionalInput {
     // 1. SANITIZAÇÃO primeiro
-    const sanitized = {
+    const sanitizedBase = {
       ...input,
       name: sanitizeString(input.name),
       description: sanitizeString(input.description),
@@ -162,47 +162,54 @@ export class ProfessionalService {
 
     // 2. VALIDAÇÃO com schema
     if (input.slug) {
-      sanitized.slug = PublicIdentityService.normalize(input.slug, "professional");
+      sanitizedBase.slug = PublicIdentityService.normalize(input.slug, "professional");
     }
 
     if (isUpdate) {
-      const optionalKeys: Array<keyof UpdateProfessionalInput> = [
-        "name",
-        "slug",
-        "description",
-        "phone",
-        "whatsapp",
-        "email",
-        "website",
-        "facebook",
-        "linkedin",
-        "address",
-        "neighborhood",
-        "city",
-        "state",
-        "cep",
-        "education",
-        "price_range",
-        "instagram",
-        "logo_url",
-        "banner_url",
-        "portfolio_images",
-        "certifications",
-        "service_areas",
-        "languages",
-      ];
+      const sanitizedUpdate: Partial<UpdateProfessionalInput> = {};
+      if ("name" in input) sanitizedUpdate.name = sanitizedBase.name;
+      if ("slug" in input) sanitizedUpdate.slug = sanitizedBase.slug;
+      if ("category" in input) sanitizedUpdate.category = sanitizedBase.category;
+      if ("subcategory" in input) sanitizedUpdate.subcategory = sanitizedBase.subcategory;
+      if ("description" in input) sanitizedUpdate.description = sanitizedBase.description;
+      if ("experience_years" in input) sanitizedUpdate.experience_years = sanitizedBase.experience_years;
+      if ("phone" in input) sanitizedUpdate.phone = sanitizedBase.phone;
+      if ("whatsapp" in input) sanitizedUpdate.whatsapp = sanitizedBase.whatsapp;
+      if ("email" in input) sanitizedUpdate.email = sanitizedBase.email;
+      if ("website" in input) sanitizedUpdate.website = sanitizedBase.website;
+      if ("facebook" in input) sanitizedUpdate.facebook = sanitizedBase.facebook;
+      if ("linkedin" in input) sanitizedUpdate.linkedin = sanitizedBase.linkedin;
+      if ("address" in input) sanitizedUpdate.address = sanitizedBase.address;
+      if ("neighborhood" in input) sanitizedUpdate.neighborhood = sanitizedBase.neighborhood;
+      if ("city" in input) sanitizedUpdate.city = sanitizedBase.city;
+      if ("state" in input) sanitizedUpdate.state = sanitizedBase.state;
+      if ("cep" in input) sanitizedUpdate.cep = sanitizedBase.cep;
+      if ("education" in input) sanitizedUpdate.education = sanitizedBase.education;
+      if ("price_range" in input) sanitizedUpdate.price_range = sanitizedBase.price_range;
+      if ("instagram" in input) sanitizedUpdate.instagram = sanitizedBase.instagram;
+      if ("logo_url" in input) sanitizedUpdate.logo_url = sanitizedBase.logo_url;
+      if ("banner_url" in input) sanitizedUpdate.banner_url = sanitizedBase.banner_url;
+      if ("portfolio_images" in input) sanitizedUpdate.portfolio_images = sanitizedBase.portfolio_images;
+      if ("certifications" in input) sanitizedUpdate.certifications = sanitizedBase.certifications;
+      if ("service_areas" in input) sanitizedUpdate.service_areas = sanitizedBase.service_areas;
+      if ("languages" in input) sanitizedUpdate.languages = sanitizedBase.languages;
+      if ("service_radius_km" in input) sanitizedUpdate.service_radius_km = sanitizedBase.service_radius_km;
+      if ("available_hours" in input) sanitizedUpdate.available_hours = sanitizedBase.available_hours;
+      if ("location_id" in input) sanitizedUpdate.location_id = sanitizedBase.location_id;
+      if ("address_id" in input) sanitizedUpdate.address_id = sanitizedBase.address_id;
+      if ("is_accepting_clients" in input) sanitizedUpdate.is_accepting_clients = sanitizedBase.is_accepting_clients;
 
-      for (const key of optionalKeys) {
-        if (!(key in input)) {
-          delete (sanitized as Partial<UpdateProfessionalInput>)[key];
-        }
+      const validation = updateProfessionalSchema.safeParse(sanitizedUpdate);
+      if (!validation.success) {
+        const errors = validation.error.errors
+          .map((e) => `${e.path.join(".")}: ${e.message}`)
+          .join(", ");
+        throw new Error(`Dados inválidos: ${errors}`);
       }
+      return validation.data;
     }
 
-    const schema = isUpdate
-      ? updateProfessionalSchema
-      : createProfessionalSchema;
-    const validation = schema.safeParse(sanitized);
+    const validation = createProfessionalSchema.safeParse(sanitizedBase);
 
     if (!validation.success) {
       const errors = validation.error.errors
@@ -226,36 +233,27 @@ export class ProfessionalService {
   ): Partial<ProfessionalDataRecord> {
     const result: Partial<ProfessionalDataRecord> = {};
 
-    const setIfProvided = <K extends keyof ProfessionalDataRecord>(
-      key: K,
-      value: ProfessionalDataRecord[K] | undefined,
-    ) => {
-      if (value !== undefined) {
-        result[key] = value;
-      }
-    };
-
-    setIfProvided("slug", input.slug ?? undefined);
-    setIfProvided("professional_name", input.name ?? undefined);
-    setIfProvided("service_category", input.category ?? undefined);
-    setIfProvided("service_subcategory", input.subcategory ?? undefined);
-    setIfProvided("description", input.description ?? undefined);
-    setIfProvided("certifications", input.certifications ?? undefined);
-    setIfProvided("experience_years", input.experience_years ?? undefined);
-    setIfProvided("education", input.education ?? undefined);
-    setIfProvided("price_range", input.price_range ?? undefined);
-    setIfProvided("service_areas", input.service_areas ?? undefined);
-    setIfProvided("service_radius_km", input.service_radius_km ?? undefined);
-    setIfProvided("available_hours", input.available_hours ?? undefined);
-    setIfProvided("whatsapp", input.whatsapp ?? undefined);
-    setIfProvided("email", input.email ?? undefined);
-    setIfProvided("location_id", input.location_id ?? undefined);
-    setIfProvided("address_id", input.address_id ?? undefined);
+    if (input.slug !== undefined) result.slug = input.slug;
+    if (input.name !== undefined) result.professional_name = input.name;
+    if (input.category !== undefined) result.service_category = input.category;
+    if (input.subcategory !== undefined) result.service_subcategory = input.subcategory;
+    if (input.description !== undefined) result.description = input.description;
+    if (input.certifications !== undefined) result.certifications = input.certifications;
+    if (input.experience_years !== undefined) result.experience_years = input.experience_years;
+    if (input.education !== undefined) result.education = input.education;
+    if (input.price_range !== undefined) result.price_range = input.price_range;
+    if (input.service_areas !== undefined) result.service_areas = input.service_areas;
+    if (input.service_radius_km !== undefined) result.service_radius_km = input.service_radius_km;
+    if (input.available_hours !== undefined) result.available_hours = input.available_hours;
+    if (input.whatsapp !== undefined) result.whatsapp = input.whatsapp;
+    if (input.email !== undefined) result.email = input.email;
+    if (input.location_id !== undefined) result.location_id = input.location_id;
+    if (input.address_id !== undefined) result.address_id = input.address_id;
 
     if (input.is_accepting_clients !== undefined) {
-      setIfProvided("is_accepting_clients", input.is_accepting_clients);
+      result.is_accepting_clients = input.is_accepting_clients;
     } else if (options.mode === "create") {
-      setIfProvided("is_accepting_clients", true);
+      result.is_accepting_clients = true;
     }
 
     const metadata: ProfessionalMetadata = {

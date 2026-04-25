@@ -15,7 +15,7 @@ import { Star, Users, Car } from "lucide-react";
 import { toast } from "sonner";
 import { logger } from "@/shared/utils/logger";
 import { profileService } from "@/core/profiles/services/ProfileService"; // ✅ SSOT - Usa instância do ProfileService
-import { MobilityService } from "@/modules/mobility/services"; // ✅ SSOT - Importa MobilityService correto
+import { adminMobilityRuntimeService } from "@/core/admin/services/AdminMobilityRuntimeService";
 
 export function ReputationRankings() {
   const [topPassengers, setTopPassengers] = useState<any[]>([]);
@@ -37,7 +37,7 @@ export function ReputationRankings() {
       setTopPassengers(passengers || []);
 
       // ✅ SSOT - Usar MobilityService para top motoristas
-      const drivers = await MobilityService.getTopDrivers({
+      const drivers = await adminMobilityRuntimeService.getTopDrivers({
         minRides: 1,
         limit: 10,
       });

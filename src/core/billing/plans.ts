@@ -249,14 +249,23 @@ export const PLANS: Record<PlanTier, PlanDefinition> = {
  * @deprecated Use BillingPlanService.getPlanByCode(code)
  */
 export function getPlan(tier: PlanTier): PlanDefinition {
-  return PLANS[tier];
+  switch (tier) {
+    case PlanTier.FREE:
+      return PLANS[PlanTier.FREE];
+    case PlanTier.PRO:
+      return PLANS[PlanTier.PRO];
+    case PlanTier.DELIVERY:
+      return PLANS[PlanTier.DELIVERY];
+    default:
+      return PLANS[PlanTier.FREE];
+  }
 }
 
 /**
  * @deprecated Use BillingPlanService.getEntitlements(code)
  */
 export function getEntitlements(tier: PlanTier) {
-  return PLANS[tier].entitlements;
+  return getPlan(tier).entitlements;
 }
 
 /**
@@ -270,6 +279,6 @@ export function requiresPayment(tier: PlanTier): boolean {
  * @deprecated Use plan.priceCents do BillingPlanService
  */
 export function getPlanPrice(tier: PlanTier): number {
-  return PLANS[tier].priceValue;
+  return getPlan(tier).priceValue;
 }
 

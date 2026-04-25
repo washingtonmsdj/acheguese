@@ -22,11 +22,20 @@ const positionClasses: Record<ControlPosition, string> = {
 };
 
 export function MapControlsLayout({ children, position, className }: MapControlsLayoutProps) {
+  const positionClass =
+    position === 'top-left'
+      ? positionClasses['top-left']
+      : position === 'top-right'
+        ? positionClasses['top-right']
+        : position === 'bottom-left'
+          ? positionClasses['bottom-left']
+          : positionClasses['bottom-right'];
+
   return (
     <div
       className={cn(
         'absolute z-[1000] pointer-events-none',
-        positionClasses[position],
+        positionClass,
         className
       )}
     >

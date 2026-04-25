@@ -107,18 +107,24 @@ const sizeClasses = {
 };
 
 export function StatusBadge({ status, size = "md" }: StatusBadgeProps) {
-  const config = statusConfig[status] ?? {
+  const config = Object.entries(statusConfig).find(
+    ([statusKey]) => statusKey === status,
+  )?.[1] ?? {
     label: status,
     color: "bg-gray-100 text-gray-600 border-gray-200",
     icon: "•",
   };
+  const sizeClass = Object.entries(sizeClasses).find(
+    ([sizeKey]) => sizeKey === size,
+  )?.[1] ?? sizeClasses.md;
 
   return (
     <span
-      className={`inline-flex items-center gap-1 rounded-full border font-medium ${config.color} ${sizeClasses[size]}`}
+      className={`inline-flex items-center gap-1 rounded-full border font-medium ${config.color} ${sizeClass}`}
     >
       <span>{config.icon}</span>
       <span>{config.label}</span>
     </span>
   );
 }
+

@@ -28,6 +28,19 @@ const REPUTATION_POINTS: Record<ReputationAction, number> = {
   alert_confirmed: 5,
 };
 
+function getReputationPoints(action: ReputationAction): number {
+  switch (action) {
+    case "post_liked":
+      return REPUTATION_POINTS.post_liked;
+    case "comment_liked":
+      return REPUTATION_POINTS.comment_liked;
+    case "alert_confirmed":
+      return REPUTATION_POINTS.alert_confirmed;
+    default:
+      return 0;
+  }
+}
+
 interface UpdateReputationParams {
   userId: string;
   action: ReputationAction;
@@ -52,7 +65,7 @@ export function useUserReputation(userId?: string) {
   // Atualizar reputação
   const updateReputationMutation = useMutation({
     mutationFn: async ({ userId, action }: UpdateReputationParams) => {
-      const points = REPUTATION_POINTS[action];
+      const points = getReputationPoints(action);
 
       // ✅ SSOT — PostService gerencia incremento de reputação (inclui fallback RPC)
       await postService.incrementUserReputation(userId, points);

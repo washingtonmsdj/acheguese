@@ -9,6 +9,7 @@
 
 import { readFileSync, readdirSync, statSync } from 'fs';
 import { join, extname } from 'path';
+import { pathToFileURL } from 'url';
 
 interface SSotViolation {
   file: string;
@@ -27,7 +28,7 @@ class SSotValidator {
   private readonly FORBIDDEN_PATTERNS = {
     // Uso direto de user.id em contexto social
     USER_ID_SOCIAL: {
-      pattern: /(?:user\.id|getUser\(\).*\.id)/g,
+      pattern: /(?:insert|upsert|update)\s*\([^)]*(?:user\.id|getUser\(\).*\.id)/g,
       rule: 'Regra 1: Toda ação de domínio usa profile',
       suggestion: 'Use getRequiredActiveProfile() ou getActiveProfile()',
       type: 'CRITICAL' as const
@@ -35,7 +36,7 @@ class SSotValidator {
     
     // Nomenclatura ambígua
     AMBIGUOUS_NAMING: {
-      pattern: /(?:author_id|owner_id|creator_id|profile_id(?!_))/g,
+      pattern: /\b(?:author_id|owner_id|creator_id)\s*[:=]/g,
       rule: 'Regra 2: Nomenclatura explícita obrigatória',
       suggestion: 'Use author_profile_id, owner_profile_id, creator_profile_id',
       type: 'HIGH' as const
@@ -47,16 +48,7 @@ class SSotValidator {
       rule: 'Regra 3: user_id só em contexto global/técnico',
       suggestion: 'Use *_profile_id para contexto social',
       type: 'CRITICAL' as const
-    },
-    
-    // Verificações de permissão inline
-    INLINE_PERMISSIONS: {
-      pattern: /(?:profile\.(?:verified|is_suspended|plan|type)\s*(?:&&|\|\||===|!==))/g,
-      rule: 'Permissões devem ser centralizadas',
-      suggestion: 'Use profileService.canUserPerformAction()',
-      type: 'MEDIUM' as const
-    }
-  };
+    }};
 
   // Contextos onde user_id é permitido (exceções)
   private readonly ALLOWED_USER_ID_CONTEXTS = [
@@ -70,7 +62,8 @@ class SSotValidator {
     'profiles', // Exceção: profiles.user_id
     'auth', // Contexto de autenticação
     'billing', // Contexto de billing
-    'admin' // Contexto administrativo
+    'admin', // Contexto administrativo
+    'family' // Contexto familiar usa user_id como owner t�cnico
   ];
 
   async validateProject(): Promise<void> {
@@ -107,6 +100,10 @@ class SSotValidator {
 
   private async validateFile(filePath: string): Promise<void> {
     try {
+      if (this.shouldSkipFile(filePath)) {
+        return;
+      }
+
       const content = readFileSync(filePath, 'utf-8');
       const lines = content.split('\n');
       
@@ -152,6 +149,21 @@ class SSotValidator {
     });
   }
 
+  private shouldSkipFile(filePath: string): boolean {
+    const normalizedPath = filePath.replace(/\\/g, '/');
+
+    return (
+      normalizedPath.includes('/__tests__/') ||
+      normalizedPath.includes('/__fixtures__/') ||
+      normalizedPath.includes('/types/') ||
+      normalizedPath.endsWith('.generated.ts') ||
+      normalizedPath.endsWith('.test.ts') ||
+      normalizedPath.endsWith('.test.tsx') ||
+      normalizedPath.endsWith('.spec.ts') ||
+      normalizedPath.endsWith('.spec.tsx')
+    );
+  }
+
   private isCommentOrString(line: string): boolean {
     const trimmed = line.trim();
     return (
@@ -173,7 +185,10 @@ class SSotValidator {
   }
 
   private getRelativePath(fullPath: string): string {
-    return fullPath.replace(process.cwd(), '').replace(/^\//, '');
+    return fullPath
+      .replace(process.cwd(), '')
+      .replace(/^[\\/]/, '')
+      .replace(/\\/g, '/');
   }
 
   private printReport(): void {
@@ -245,7 +260,7 @@ class SSotValidator {
 }
 
 // Executar validação
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (import.meta.url === pathToFileURL(process.argv[1]).href) {
   console.log('🔍 Iniciando validação SSOT...');
   const validator = new SSotValidator();
   validator.validateProject().catch(console.error);

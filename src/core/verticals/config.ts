@@ -35,8 +35,8 @@ export const VERTICAL_CONFIGS: Record<VerticalKey, VerticalConfig> = {
     label: "Gastronomia",
     description: "Cardapio, delivery, reservas e gestao gastronomica",
     eligibleCategories: ["restaurante", "lazer"], // lazer inclui bares, cafeterias, sorveterias, etc.
-    setupRoute: (businessId) => `/dashboard/business/${businessId}/gastronomy/setup`,
-    dashboardRoute: (businessId) => `/dashboard/business/${businessId}/gastronomy/dashboard`,
+    setupRoute: (businessId) => `/perfil/empresas/${businessId}/gastronomia/setup`,
+    dashboardRoute: (businessId) => `/perfil/empresas/${businessId}/gastronomia`,
   },
 };
 
@@ -56,5 +56,10 @@ export function isEligibleForVertical(
   category: BusinessCategory,
   vertical: VerticalKey,
 ): boolean {
-  return VERTICAL_CONFIGS[vertical].eligibleCategories.includes(category);
+  switch (vertical) {
+    case "gastronomy":
+      return VERTICAL_CONFIGS.gastronomy.eligibleCategories.includes(category);
+    default:
+      return false;
+  }
 }

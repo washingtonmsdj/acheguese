@@ -68,8 +68,9 @@ export function ImageGallery({ images, className }: ImageGalleryProps) {
   };
 
   const handleDownload = async () => {
+    const currentImage = images.at(currentIndex) ?? images[0];
     try {
-      const response = await fetch(images[currentIndex]);
+      const response = await fetch(currentImage);
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
@@ -205,7 +206,7 @@ export function ImageGallery({ images, className }: ImageGalleryProps) {
           {/* Imagem principal */}
           <div className="w-full h-full flex items-center justify-center overflow-auto p-16">
             <img
-              src={images[currentIndex]}
+              src={images.at(currentIndex) ?? images[0]}
               alt={`Imagem ${currentIndex + 1}`}
               className="max-w-full max-h-full object-contain transition-transform duration-300"
               style={{

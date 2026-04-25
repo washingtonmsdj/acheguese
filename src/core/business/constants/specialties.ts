@@ -71,7 +71,8 @@ export const SPECIALTY_SUGGESTIONS: Readonly<Record<string, readonly string[]>> 
 
 // Helper functions
 export const getSpecialtySuggestions = (category: string): readonly string[] => {
-  return SPECIALTY_SUGGESTIONS[category] || [];
+  const entry = Object.entries(SPECIALTY_SUGGESTIONS).find(([key]) => key === category);
+  return entry?.[1] ?? [];
 };
 
 export const hasSpecialtySuggestions = (category: string): boolean => {

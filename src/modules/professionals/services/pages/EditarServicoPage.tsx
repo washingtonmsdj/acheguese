@@ -295,8 +295,10 @@ export default function EditarServicoPage() {
       const existingPortfolioUrls = (
         professional?.portfolio_images || []
       ).filter(
-        (_, i) =>
-          portfolioPreviews[i] && !portfolioPreviews[i].startsWith("data:"),
+        (_, i) => {
+          const previewAtIndex = portfolioPreviews.at(i);
+          return !!previewAtIndex && !previewAtIndex.startsWith("data:");
+        },
       );
       const newPortfolioUrls: string[] = [];
 

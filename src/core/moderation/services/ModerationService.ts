@@ -32,13 +32,39 @@ class ModerationServiceClass {
     profile: "profile_id",
   };
 
+  private getTableByTarget(targetType: "post" | "comment" | "profile"): string {
+    switch (targetType) {
+      case "post":
+        return this.tableMap.post;
+      case "comment":
+        return this.tableMap.comment;
+      case "profile":
+        return this.tableMap.profile;
+      default:
+        return this.tableMap.post;
+    }
+  }
+
+  private getIdFieldByTarget(targetType: "post" | "comment" | "profile"): string {
+    switch (targetType) {
+      case "post":
+        return this.idFieldMap.post;
+      case "comment":
+        return this.idFieldMap.comment;
+      case "profile":
+        return this.idFieldMap.profile;
+      default:
+        return this.idFieldMap.post;
+    }
+  }
+
   /**
    * Reportar conteúdo (posts, comentários, perfis)
    */
   async reportContent(input: ReportContentInput): Promise<void> {
     try {
-      const table = this.tableMap[input.targetType];
-      const idField = this.idFieldMap[input.targetType];
+      const table = this.getTableByTarget(input.targetType);
+      const idField = this.getIdFieldByTarget(input.targetType);
 
       const { error } = await (supabase as any).from(table).insert({
         [idField]: input.targetId,
@@ -62,7 +88,7 @@ class ModerationServiceClass {
   ): Promise<any[]> {
     try {
       if (targetType) {
-        const table = this.tableMap[targetType];
+        const table = this.getTableByTarget(targetType);
         const { data, error } = await (supabase as any)
           .from(table)
           .select("*")
@@ -102,7 +128,7 @@ class ModerationServiceClass {
     targetType: "post" | "comment" | "profile",
   ): Promise<void> {
     try {
-      const table = this.tableMap[targetType];
+      const table = this.getTableByTarget(targetType);
       const { error } = await (supabase as any)
         .from(table)
         .update({ status: "approved", reviewed_at: new Date().toISOString() })
@@ -123,7 +149,7 @@ class ModerationServiceClass {
     targetType: "post" | "comment" | "profile",
   ): Promise<void> {
     try {
-      const table = this.tableMap[targetType];
+      const table = this.getTableByTarget(targetType);
       const { error } = await (supabase as any)
         .from(table)
         .update({ status: "rejected", reviewed_at: new Date().toISOString() })

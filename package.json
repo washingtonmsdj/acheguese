@@ -66,8 +66,8 @@
     "security:config:generate": "tsx scripts/generate-vercel-config.ts",
     "security:config:validate": "tsx scripts/validate-security-config.ts",
     "generate:vercel": "tsx scripts/generate-vercel-config.ts",
-    "lint:security": "eslint . --config eslint.config.security.mjs --ext .ts,.tsx",
-    "lint:security:fix": "eslint . --config eslint.config.security.mjs --ext .ts,.tsx --fix"
+    "lint:security": "eslint src api supabase/functions --config eslint.config.security.mjs --ext .ts,.tsx --no-inline-config",
+    "lint:security:fix": "eslint src api supabase/functions --config eslint.config.security.mjs --ext .ts,.tsx --fix --no-inline-config"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",

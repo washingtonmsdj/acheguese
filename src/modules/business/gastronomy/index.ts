@@ -74,3 +74,7 @@ export {
 
 // Pages
 export * from './pages';
+
+// Nichos Gastronômicos (Especializações Internas)
+// SSOT: modules/business/gastronomy/niches/
+export * from './niches';

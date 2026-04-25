@@ -47,6 +47,34 @@ const TYPE_CONFIG = {
   },
 };
 
+function getAspectRatioClass(aspectRatioValue: "1:1" | "21:9" | "16:9" | "free"): string {
+  switch (aspectRatioValue) {
+    case "1:1":
+      return ASPECT_RATIOS["1:1"];
+    case "21:9":
+      return ASPECT_RATIOS["21:9"];
+    case "16:9":
+      return ASPECT_RATIOS["16:9"];
+    case "free":
+      return ASPECT_RATIOS.free;
+    default:
+      return ASPECT_RATIOS.free;
+  }
+}
+
+function getTypeConfig(type: "logo" | "banner" | "gallery") {
+  switch (type) {
+    case "logo":
+      return TYPE_CONFIG.logo;
+    case "banner":
+      return TYPE_CONFIG.banner;
+    case "gallery":
+      return TYPE_CONFIG.gallery;
+    default:
+      return TYPE_CONFIG.gallery;
+  }
+}
+
 export function BusinessImageUploader({
   type,
   currentImage,
@@ -55,7 +83,7 @@ export function BusinessImageUploader({
   maxSizeMB,
   className,
 }: BusinessImageUploaderProps) {
-  const config = TYPE_CONFIG[type];
+  const config = getTypeConfig(type);
   const finalAspectRatio = aspectRatio || config.aspectRatio;
   const finalMaxSize = maxSizeMB || config.maxSizeMB;
 
@@ -124,14 +152,16 @@ export function BusinessImageUploader({
     e.stopPropagation();
     setDragActive(false);
 
-    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-      handleFile(e.dataTransfer.files[0]);
+    const droppedFile = e.dataTransfer.files?.item(0);
+    if (droppedFile) {
+      handleFile(droppedFile);
     }
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      handleFile(e.target.files[0]);
+    const selectedFile = e.target.files?.item(0);
+    if (selectedFile) {
+      handleFile(selectedFile);
     }
   };
 
@@ -155,7 +185,7 @@ export function BusinessImageUploader({
       <div
         className={cn(
           "relative rounded-xl border-2 border-dashed transition-all overflow-hidden",
-          ASPECT_RATIOS[finalAspectRatio],
+          getAspectRatioClass(finalAspectRatio),
           dragActive
             ? "border-primary bg-primary/5"
             : "border-border hover:border-primary/50",

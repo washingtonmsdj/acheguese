@@ -6,7 +6,19 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { MenuService, type MenuItem } from '@/modules/business/gastronomy/services/MenuService';
+import { getMenuItem } from '@/modules/business/gastronomy/services/menu.queries';
 import { toast } from 'sonner';
+
+const DEV_MOCK_ID_PREFIX = 'mock-';
+const DEMO_UUID_PREFIXES = ['d1111111-', 'd2222222-', 'd3333333-', 'd4444444-'];
+
+function isMockMenuItemId(itemId?: string | null): boolean {
+  if (!itemId) return false;
+  return (
+    itemId.startsWith(DEV_MOCK_ID_PREFIX) ||
+    DEMO_UUID_PREFIXES.some((prefix) => itemId.startsWith(prefix))
+  );
+}
 
 export function useMenuItems(menuId: string, categoryId?: string) {
   const queryClient = useQueryClient();
@@ -121,15 +133,14 @@ export function useMenuItems(menuId: string, categoryId?: string) {
 /**
  * useMenuItem â€” Hook para buscar um item especÃ­fico
  */
-export function useMenuItem(itemId: string) {
+export function useMenuItem(itemId: string | undefined) {
   const { data: item, isLoading, error } = useQuery({
     queryKey: ['menu-item', itemId],
     queryFn: async () => {
-      const result = await MenuService.getItem(itemId);
-      if (result.error) throw new Error(result.error);
-      return result.data;
+      if (!itemId || isMockMenuItemId(itemId)) return null;
+      return getMenuItem(itemId);
     },
-    enabled: !!itemId,
+    enabled: !!itemId && !isMockMenuItemId(itemId),
   });
 
   return {

@@ -105,7 +105,10 @@ export class MockRoutingProvider implements RoutingProvider {
       const row: DistanceMatrixElement[] = [];
       
       for (let j = 0; j < destinations.length; j++) {
-        const distance = this.calculateDistance(origins[i], destinations[j]);
+        const origin = origins.at(i);
+        const destination = destinations.at(j);
+        if (!origin || !destination) continue;
+        const distance = this.calculateDistance(origin, destination);
         const speed = this.getSpeedForProfile(profile);
         const duration = (distance / speed) * 3600;
         
@@ -155,15 +158,18 @@ export class MockRoutingProvider implements RoutingProvider {
   }
 
   private getSpeedForProfile(profile: TransportProfile): number {
-    // Velocidades médias em m/s
-    const speeds: Record<TransportProfile, number> = {
-      car: 13.9,        // ~50 km/h
-      motorcycle: 16.7, // ~60 km/h
-      foot: 1.4,        // ~5 km/h
-      bicycle: 4.2,     // ~15 km/h
-    };
-
-    return speeds[profile] || speeds.car;
+    switch (profile) {
+      case 'car':
+        return 13.9; // ~50 km/h
+      case 'motorcycle':
+        return 16.7; // ~60 km/h
+      case 'foot':
+        return 1.4; // ~5 km/h
+      case 'bicycle':
+        return 4.2; // ~15 km/h
+      default:
+        return 13.9;
+    }
   }
 
   private calculateBounds(

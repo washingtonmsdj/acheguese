@@ -114,8 +114,8 @@ export function TouristPointGallery({ media, title }: TouristPointGalleryProps) 
           </Button>
 
           <img
-            src={sorted[lightboxIndex].url}
-            alt={sorted[lightboxIndex].alt_text ?? title}
+            src={sorted.at(lightboxIndex)?.url ?? sorted[0]?.url}
+            alt={sorted.at(lightboxIndex)?.alt_text ?? title}
             className="max-h-[90vh] max-w-[90vw] object-contain pointer-events-none"
           />
 

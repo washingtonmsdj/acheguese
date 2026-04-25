@@ -41,16 +41,39 @@ const FINAL_STATUSES: FinancialStatus[] = [
   FINANCIAL_STATUS.PAYOUT_SENT,
 ];
 
+function getAllowedTransitions(status: FinancialStatus): FinancialStatus[] {
+  switch (status) {
+    case FINANCIAL_STATUS.NOT_APPLICABLE:
+      return ALLOWED_TRANSITIONS.not_applicable;
+    case FINANCIAL_STATUS.PENDING_PAYMENT:
+      return ALLOWED_TRANSITIONS.pending_payment;
+    case FINANCIAL_STATUS.PAID:
+      return ALLOWED_TRANSITIONS.paid;
+    case FINANCIAL_STATUS.REFUNDED:
+      return ALLOWED_TRANSITIONS.refunded;
+    case FINANCIAL_STATUS.PARTIALLY_REFUNDED:
+      return ALLOWED_TRANSITIONS.partially_refunded;
+    case FINANCIAL_STATUS.PAYOUT_PENDING:
+      return ALLOWED_TRANSITIONS.payout_pending;
+    case FINANCIAL_STATUS.PAYOUT_SENT:
+      return ALLOWED_TRANSITIONS.payout_sent;
+    case FINANCIAL_STATUS.PAYOUT_FAILED:
+      return ALLOWED_TRANSITIONS.payout_failed;
+    default:
+      return [];
+  }
+}
+
 export class FinancialStatusStateMachine {
   static canTransition(from: FinancialStatus, to: FinancialStatus): boolean {
     if (from === to) return true;
-    return (ALLOWED_TRANSITIONS[from] ?? []).includes(to);
+    return getAllowedTransitions(from).includes(to);
   }
 
   static assertCanTransition(from: FinancialStatus, to: FinancialStatus): void {
     if (!this.canTransition(from, to)) {
       throw new Error(
-        `Transição financeira inválida: ${from} -> ${to}. Permitidos: ${(ALLOWED_TRANSITIONS[from] ?? []).join(", ") || "nenhum"}`,
+        `Transição financeira inválida: ${from} -> ${to}. Permitidos: ${getAllowedTransitions(from).join(", ") || "nenhum"}`,
       );
     }
   }
@@ -60,6 +83,6 @@ export class FinancialStatusStateMachine {
   }
 
   static getNextStatuses(status: FinancialStatus): FinancialStatus[] {
-    return ALLOWED_TRANSITIONS[status] ?? [];
+    return getAllowedTransitions(status);
   }
 }

@@ -9,7 +9,7 @@
  */
 
 import { useQuery } from '@tanstack/react-query';
-import { createLandingFeaturedService } from './createLandingFeaturedService';
+import { createLandingFeaturedService } from '@/core/landing/hooks/createLandingFeaturedService';
 import { isTerritoryFilterReady, territoryFilterKey } from '@/core/location/hooks/useTerritoryFilter';
 import type { TerritoryFilter } from '@/core/location/types';
 

@@ -14,7 +14,7 @@
 import { logger } from '@/shared/utils/logger';
 import { useEffect, useState } from 'react';
 import { useParams, Navigate } from 'react-router-dom';
-import { classifiedUrlService } from '@/modules/classifieds/services/ClassifiedUrlService';
+import { classifiedUrlService } from '@/core/classifieds/services/ClassifiedUrlService';
 import { FullScreenLoader } from '@/shared/components/loading/PageLoader';
 
 export default function ClassifiedShortRoute() {

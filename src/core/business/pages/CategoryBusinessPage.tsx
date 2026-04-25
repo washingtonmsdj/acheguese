@@ -41,13 +41,37 @@ interface CategoryBusinessPageProps {
 // ── Open-now helper ──────────────────────────────────────────────────
 function isBusinessOpenNow(hours: Business["horario_funcionamento"]): boolean | null {
   if (!hours || typeof hours !== "object") return null;
-  const dayMap: Record<number, string> = {
-    0: "domingo", 1: "segunda", 2: "terca", 3: "quarta",
-    4: "quinta", 5: "sexta", 6: "sabado",
-  };
   const now = new Date();
-  const dayKey = dayMap[now.getDay()];
-  const entry = hours && typeof hours === 'object' ? (hours as Record<string, { open: string; close: string; closed?: boolean }>)[dayKey] : null;
+  const dayNumber = now.getDay();
+  let dayKey = "domingo";
+  switch (dayNumber) {
+    case 0:
+      dayKey = "domingo";
+      break;
+    case 1:
+      dayKey = "segunda";
+      break;
+    case 2:
+      dayKey = "terca";
+      break;
+    case 3:
+      dayKey = "quarta";
+      break;
+    case 4:
+      dayKey = "quinta";
+      break;
+    case 5:
+      dayKey = "sexta";
+      break;
+    case 6:
+      dayKey = "sabado";
+      break;
+    default:
+      break;
+  }
+  const entry = Object.entries(
+    (hours ?? {}) as Record<string, { open: string; close: string; closed?: boolean }>,
+  ).find(([key]) => key === dayKey)?.[1] ?? null;
   if (!entry || entry.closed) return false;
   const currentTime = `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
   return currentTime >= entry.open && currentTime <= entry.close;

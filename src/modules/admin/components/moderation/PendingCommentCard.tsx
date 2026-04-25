@@ -27,7 +27,12 @@ export function PendingCommentCard({ comment }: PendingCommentCardProps) {
   const { executeAction, isExecuting } = useModeration();
 
   const priorityLabel = comment.priority >= 3 ? 'high' : comment.priority === 2 ? 'medium' : 'low';
-  const priorityColor = PRIORITY_COLORS[priorityLabel];
+  const priorityColor =
+    priorityLabel === 'high'
+      ? PRIORITY_COLORS.high
+      : priorityLabel === 'medium'
+        ? PRIORITY_COLORS.medium
+        : PRIORITY_COLORS.low;
 
   const handleApprove = async () => {
     executeAction({

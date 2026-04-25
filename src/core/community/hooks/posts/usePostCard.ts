@@ -37,7 +37,9 @@ export function usePostCard({
   }, [postType, tags]);
 
   const typeConfig = useMemo(
-    () => POST_TYPE_CONFIG[effectiveType] || POST_TYPE_CONFIG["discussao"],
+    () =>
+      Object.entries(POST_TYPE_CONFIG).find(([key]) => key === effectiveType)?.[1] ??
+      POST_TYPE_CONFIG["discussao"],
     [effectiveType],
   );
 

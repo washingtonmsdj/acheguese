@@ -177,14 +177,68 @@ export const BUSINESS_CATEGORY_LABELS: Record<BusinessCategory, string> = {
  * Obtém o label amigável de uma categoria
  */
 export function getCategoryLabel(category: BusinessCategory): string {
-  return BUSINESS_CATEGORY_LABELS[category];
+  switch (category) {
+    case "restaurante":
+      return BUSINESS_CATEGORY_LABELS.restaurante;
+    case "padaria":
+      return BUSINESS_CATEGORY_LABELS.padaria;
+    case "farmacia":
+      return BUSINESS_CATEGORY_LABELS.farmacia;
+    case "salao":
+      return BUSINESS_CATEGORY_LABELS.salao;
+    case "academia":
+      return BUSINESS_CATEGORY_LABELS.academia;
+    case "petshop":
+      return BUSINESS_CATEGORY_LABELS.petshop;
+    case "mercado":
+      return BUSINESS_CATEGORY_LABELS.mercado;
+    case "loja":
+      return BUSINESS_CATEGORY_LABELS.loja;
+    case "clinica":
+      return BUSINESS_CATEGORY_LABELS.clinica;
+    case "automovel":
+      return BUSINESS_CATEGORY_LABELS.automovel;
+    case "servicos":
+      return BUSINESS_CATEGORY_LABELS.servicos;
+    case "outros":
+      return BUSINESS_CATEGORY_LABELS.outros;
+    default:
+      return BUSINESS_CATEGORY_LABELS.outros;
+  }
 }
 
 /**
  * Obtém as subcategorias de uma categoria
  */
 export function getSubcategories(category: BusinessCategory): readonly string[] {
-  return BUSINESS_SUBCATEGORIES[category] || [];
+  switch (category) {
+    case "restaurante":
+      return BUSINESS_SUBCATEGORIES.restaurante;
+    case "padaria":
+      return BUSINESS_SUBCATEGORIES.padaria;
+    case "farmacia":
+      return BUSINESS_SUBCATEGORIES.farmacia;
+    case "salao":
+      return BUSINESS_SUBCATEGORIES.salao;
+    case "academia":
+      return BUSINESS_SUBCATEGORIES.academia;
+    case "petshop":
+      return BUSINESS_SUBCATEGORIES.petshop;
+    case "mercado":
+      return BUSINESS_SUBCATEGORIES.mercado;
+    case "loja":
+      return BUSINESS_SUBCATEGORIES.loja;
+    case "clinica":
+      return BUSINESS_SUBCATEGORIES.clinica;
+    case "automovel":
+      return BUSINESS_SUBCATEGORIES.automovel;
+    case "servicos":
+      return BUSINESS_SUBCATEGORIES.servicos;
+    case "outros":
+      return BUSINESS_SUBCATEGORIES.outros;
+    default:
+      return [];
+  }
 }
 
 /**

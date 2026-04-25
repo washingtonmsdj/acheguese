@@ -1,4 +1,4 @@
-import { GastronomyUrlService } from '@/modules/business/gastronomy/services/GastronomyUrlService';
+import { GastronomyUrlService } from "@/core/verticals/gastronomy/services/GastronomyUrlService";
 import type { VerticalKey } from './config';
 
 export interface BusinessVerticalRouteContext {
@@ -32,7 +32,12 @@ export function getVerticalPublicUrl(
   vertical: VerticalKey,
   ctx: BusinessVerticalRouteContext,
 ): string {
-  return VERTICAL_URL_BUILDERS[vertical](ctx);
+  switch (vertical) {
+    case "gastronomy":
+      return VERTICAL_URL_BUILDERS.gastronomy(ctx);
+    default:
+      return VERTICAL_URL_BUILDERS.gastronomy(ctx);
+  }
 }
 
 export function getAvailableVerticalPublicUrls(
@@ -41,14 +46,11 @@ export function getAvailableVerticalPublicUrls(
 ): Partial<Record<VerticalKey, string>> {
   const urls: Partial<Record<VerticalKey, string>> = {};
 
-  (Object.keys(VERTICAL_URL_BUILDERS) as VerticalKey[]).forEach((vertical) => {
-    const requiresProfile = VERTICAL_REQUIRES_PROFILE[vertical];
-    const hasProfile = availability.profiles?.[vertical] ?? false;
-
-    if (requiresProfile && !hasProfile) return;
-
-    urls[vertical] = getVerticalPublicUrl(vertical, ctx);
-  });
+  const hasGastronomyProfile = availability.profiles?.gastronomy ?? false;
+  const requiresGastronomyProfile = VERTICAL_REQUIRES_PROFILE.gastronomy;
+  if (!requiresGastronomyProfile || hasGastronomyProfile) {
+    urls.gastronomy = getVerticalPublicUrl("gastronomy", ctx);
+  }
 
   return urls;
 }

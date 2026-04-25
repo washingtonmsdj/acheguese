@@ -33,10 +33,10 @@ navigate(appUrls.services.register)
 navigate(appUrls.services.edit(id))
 navigate(appUrls.classifieds.new)
 navigate(appUrls.classifieds.edit(id))
-navigate(appUrls.mobility.driverProfile)
-navigate(appUrls.mobility.passenger)
-navigate(appUrls.mobility.history)
-navigate(appUrls.mobility.home)
+navigate(appUrls.profile.mobilidade.home)
+navigate(appUrls.profile.mobilidade.cadastro)
+navigate(appUrls.profile.mobilidade.corridas)
+navigate(appUrls.profile.mobilidade.disponibilidade)
 navigate(appUrls.notifications)
 navigate(appUrls.settings)
 navigate(appUrls.profile.account)
@@ -144,7 +144,7 @@ onClick={() => navigate(moduleUrls.analytics || "/analytics")}
 - [x] **Todas as URLs de perfil** usando `appUrls.profile.*`
 - [x] **Todas as URLs de negócio** usando `appUrls.business.*`
 - [x] **Todas as URLs de serviços** usando `appUrls.services.*`
-- [x] **Todas as URLs de mobilidade** usando `appUrls.mobility.*`
+- [x] **Todas as URLs de mobilidade** usando `appUrls.profile.mobilidade.*`
 - [x] **Todas as URLs de módulos** usando `moduleUrls.*`
 - [x] **URLs de gastronomia** usando propriedades do módulo
 - [x] **URLs de dashboard** usando propriedades do módulo

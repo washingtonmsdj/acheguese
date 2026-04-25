@@ -7,10 +7,26 @@ interface PostTypeSelectorProps {
   onTipoChange: (tipo: UnifiedPostType) => void;
 }
 
+function getPostTypeConfig(tipo: UnifiedPostType) {
+  switch (tipo) {
+    case "discussao": return POST_TYPES.discussao;
+    case "pergunta": return POST_TYPES.pergunta;
+    case "enquete": return POST_TYPES.enquete;
+    case "evento": return POST_TYPES.evento;
+    case "achados": return POST_TYPES.achados;
+    case "alerta": return POST_TYPES.alerta;
+    case "favor": return POST_TYPES.favor;
+    case "desapego": return POST_TYPES.desapego;
+    case "recomendacao": return POST_TYPES.recomendacao;
+    default: return POST_TYPES.discussao;
+  }
+}
+
 export function PostTypeSelector({
   tipo,
   onTipoChange,
 }: PostTypeSelectorProps) {
+  const selectedType = getPostTypeConfig(tipo);
   return (
     <div className="h-full flex flex-col px-4 overflow-hidden">
       <div className="text-center py-3 flex-shrink-0">
@@ -41,13 +57,13 @@ export function PostTypeSelector({
 
         <div className="p-3 bg-primary/10 rounded-lg border border-primary/20 max-w-sm mx-auto w-full">
           <div className="flex items-center gap-3">
-            <span className="text-2xl">{POST_TYPES[tipo].emoji}</span>
+            <span className="text-2xl">{selectedType.emoji}</span>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-semibold leading-tight">
-                {POST_TYPES[tipo].label}
+                {selectedType.label}
               </p>
               <p className="text-xs text-muted-foreground leading-tight">
-                {POST_TYPES[tipo].description}
+                {selectedType.description}
               </p>
             </div>
           </div>

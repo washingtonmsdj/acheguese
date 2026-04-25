@@ -11,6 +11,7 @@ import { Button } from '@/shared/components/ui/button';
 import { Package, ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { startOfDay, endOfDay } from 'date-fns';
+import { businessManagementRoutes } from '@/core/business/utils/businessManagementRoutes';
 
 interface TodayOrdersCardProps {
   businessId: string;
@@ -82,7 +83,7 @@ export function TodayOrdersCard({ businessId }: TodayOrdersCardProps) {
         </div>
 
         {/* Link para página de pedidos */}
-        <Link to={`/dashboard/business/${businessId}/gastronomy/orders`}>
+        <Link to={businessManagementRoutes.gastronomyPedidos(businessId)}>
           <Button variant="outline" className="w-full">
             Ver Todos os Pedidos
             <ArrowRight className="w-4 h-4 ml-2" />

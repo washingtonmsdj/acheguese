@@ -1661,14 +1661,15 @@ export class PostService {
       }
 
       // Contar tags
-      const tagCounts: Record<string, number> = {};
+      const tagCounts = new Map<string, number>();
       (data || []).forEach((post: any) => {
         (post.tags || []).forEach((tag: string) => {
-          tagCounts[tag] = (tagCounts[tag] || 0) + 1;
+          const currentCount = tagCounts.get(tag) ?? 0;
+          tagCounts.set(tag, currentCount + 1);
         });
       });
 
-      return Object.entries(tagCounts)
+      return Array.from(tagCounts.entries())
         .sort(([, a], [, b]) => b - a)
         .slice(0, limit)
         .map(([tag, count]) => ({ tag, count }));

@@ -14,7 +14,7 @@ import {
   adminNotificationsService,
 } from "@/core/admin";
 import { profileService } from "@/core/profiles/services/ProfileService";
-import { classifiedReportService } from "@/modules/classifieds/services";
+import { adminClassifiedsService } from "@/core/admin/services/AdminClassifiedsService";
 import type {
   ActiveRide,
   AdminModuleCoverage,
@@ -451,7 +451,7 @@ export async function getOperationalOverview(
       adminCommunityAlertsService.getStats(),
       adminCommunityIssuesService.getStats(),
       adminNotificationsService.getStats(),
-      classifiedReportService.getPendingReportsCount(),
+      adminClassifiedsService.getPendingReportsCount(),
       getRealtimeMetrics(),
     ]);
 

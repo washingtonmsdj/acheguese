@@ -15,6 +15,11 @@ export { MenuService as menuService } from './MenuService';
 export { GastronomyProfileService } from './GastronomyProfileService';
 export { gastronomyMapService } from './GastronomyMapService';
 export { GastronomyUrlService } from './GastronomyUrlService';
+export {
+  GastronomyPublicPreviewService,
+  type GastronomyPreview,
+  type GastronomyPreviewItem,
+} from './GastronomyPublicPreviewService';
 
 // Runtime queries
 export {
@@ -58,6 +63,7 @@ export {
   getMenuItemVariants,
   getMenuItemAddons,
   getActiveMenuPromotions,
+  getMenuUsageStats,
   getPublicMenuCatalog,
   getPublicFoodItems,
   getPublicFoodCatalog,

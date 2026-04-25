@@ -18,7 +18,8 @@ interface PostBadgesProps {
  */
 export const PostBadges = memo<PostBadgesProps>(({ postType }) => {
   const typeConfig =
-    POST_TYPE_CONFIG[postType] || POST_TYPE_CONFIG["discussao"];
+    Object.entries(POST_TYPE_CONFIG).find(([key]) => key === postType)?.[1] ??
+    POST_TYPE_CONFIG["discussao"];
   const TypeIcon = typeConfig?.icon || MessageCircle;
 
   return (

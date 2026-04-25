@@ -154,7 +154,11 @@ export default function AdminCrudPage({
       if (value) {
         result = result.filter(
           (item) =>
-            String(item[key] ?? "").toLowerCase() === value.toLowerCase(),
+            String(
+              Object.entries(item as Record<string, unknown>).find(
+                ([entryKey]) => entryKey === key,
+              )?.[1] ?? "",
+            ).toLowerCase() === value.toLowerCase(),
         );
       }
     });

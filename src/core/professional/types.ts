@@ -260,10 +260,7 @@ export interface CreateProfessionalInput {
   languages?: string[];
 }
 
-// eslint-disable-next-line @typescript-eslint/no-empty-object-type
-export interface UpdateProfessionalInput extends Partial<CreateProfessionalInput> {
-  // All fields are optional for updates
-}
+export type UpdateProfessionalInput = Partial<CreateProfessionalInput>;
 
 // ============================================================================
 // FILTER AND QUERY TYPES

@@ -182,7 +182,7 @@ export function extractRouteContext(pathname: string): {
   
   for (let i = 1; i < parts.length; i++) {
     // Se encontrar "categoria" ou outros sufixos conhecidos
-    if (parts[i] === 'categoria') {
+    if (parts.at(i) === 'categoria') {
       suffixStartIndex = i;
       break;
     }

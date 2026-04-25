@@ -25,12 +25,17 @@ export function MapLayerToggle({
   renderLayer,
   className,
 }: MapLayerToggleProps) {
-  const [visibleLayers, setVisibleLayers] = useState<Record<string, boolean>>(
-    () => Object.fromEntries(layerKeys.map((k) => [k, true]))
+  const [visibleLayers, setVisibleLayers] = useState<Map<MapLayerKey, boolean>>(
+    () => new Map(layerKeys.map((layerKey) => [layerKey, true])),
   );
 
   const toggleLayer = useCallback((key: MapLayerKey) => {
-    setVisibleLayers((prev) => ({ ...prev, [key]: !prev[key] }));
+    setVisibleLayers((prev) => {
+      const nextState = new Map(prev);
+      const currentVisibility = nextState.get(key) ?? true;
+      nextState.set(key, !currentVisibility);
+      return nextState;
+    });
   }, []);
 
   return (
@@ -42,7 +47,7 @@ export function MapLayerToggle({
       aria-label="Controle de camadas do mapa"
     >
       {layerKeys.map((key) => {
-        const isVisible = visibleLayers[key] ?? true;
+        const isVisible = visibleLayers.get(key) ?? true;
         const toggle = () => toggleLayer(key);
 
         if (renderLayer) {

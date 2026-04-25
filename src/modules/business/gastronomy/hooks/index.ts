@@ -26,6 +26,7 @@ export { useGastronomyCheckout } from './useGastronomyCheckout';
 export { useGastronomyStatus } from './useGastronomyStatus';
 export { useGastronomySetup } from './useGastronomySetup';
 export { useGastronomyProfile } from './useGastronomyProfile';
+export { useGastronomyPreview } from './useGastronomyPreview';
 export { useGastronomyDetail } from './useGastronomyDetail';
 export { useGastronomyList } from './useGastronomyList';
 export { useGastronomyFoodCatalog } from './useGastronomyFoodCatalog';

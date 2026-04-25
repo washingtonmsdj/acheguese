@@ -12,17 +12,13 @@
 
 import { logger } from "@/shared/utils/logger";
 import { BusinessService } from "@/core/business/services/BusinessService";
-import {
-  getTotalClassifiedsCount,
-  getClassifiedsCreatedInPeriod,
-  getRecentClassifieds,
-} from "@/modules/classifieds/services";
-import { getMobilityStats } from "@/modules/mobility/services";
 import { ProfessionalService } from "@/core/professional/services/ProfessionalService";
 import { profileService } from "@/core/profiles/services/ProfileService";
 import { postService } from "@/core/posts/services/PostService";
-import { eventService } from "@/modules/community/events/services/EventsService";
 import { commentService } from "@/core/comments/services/CommentService";
+import { adminClassifiedsService } from "@/core/admin/services/AdminClassifiedsService";
+import { adminEventsRuntimeService } from "@/core/admin/services/AdminEventsRuntimeService";
+import { adminMobilityService } from "@/core/admin/services/AdminMobilityService";
 
 // ============================================================================
 // TYPES
@@ -129,12 +125,12 @@ class AdminStatsService {
       ] = await Promise.all([
         BusinessService.getTotalBusinessesCount(),
         ProfessionalService.getTotalProfessionalsCount(),
-        getTotalClassifiedsCount(),
-        eventService.getTotalEventsCount(),
+        adminClassifiedsService.getTotalClassifiedsCount(),
+        adminEventsRuntimeService.getTotalEventsCount(),
         postService.getTotalPostsCount(),
         profileService.getTotalProfilesCount(),
         commentService.getTotalCommentsCount(),
-        getMobilityStats(),
+        adminMobilityService.getMobilityStats(),
       ]);
 
       const stats: TableStats = {
@@ -193,8 +189,8 @@ class AdminStatsService {
       ] = await Promise.all([
         BusinessService.getBusinessesCreatedInPeriod(previousStart, currentStart),
         ProfessionalService.getProfessionalsCreatedInPeriod(previousStart, currentStart),
-        getClassifiedsCreatedInPeriod(previousStart, currentStart),
-        eventService.getEventsCreatedInPeriod(previousStart, currentStart),
+        adminClassifiedsService.getClassifiedsCreatedInPeriod(previousStart, currentStart),
+        adminEventsRuntimeService.getEventsCreatedInPeriod(previousStart, currentStart),
         postService.getPostsCreatedInPeriod(previousStart, currentStart),
         profileService.getProfilesCreatedInPeriod(previousStart, currentStart),
       ]);
@@ -210,8 +206,8 @@ class AdminStatsService {
       ] = await Promise.all([
         BusinessService.getBusinessesCreatedInPeriod(currentStart, now),
         ProfessionalService.getProfessionalsCreatedInPeriod(currentStart, now),
-        getClassifiedsCreatedInPeriod(currentStart, now),
-        eventService.getEventsCreatedInPeriod(currentStart, now),
+        adminClassifiedsService.getClassifiedsCreatedInPeriod(currentStart, now),
+        adminEventsRuntimeService.getEventsCreatedInPeriod(currentStart, now),
         postService.getPostsCreatedInPeriod(currentStart, now),
         profileService.getProfilesCreatedInPeriod(currentStart, now),
       ]);
@@ -263,8 +259,8 @@ class AdminStatsService {
         postService.getRecentPosts(200),
         profileService.getRecentProfiles(200),
         BusinessService.getRecentBusinessesLegacy(200),
-        eventService.getRecentEvents(200),
-        getRecentClassifieds(200),
+        adminEventsRuntimeService.getRecentEvents(200),
+        adminClassifiedsService.getRecentClassifieds(200),
       ]);
 
       // Monta um mapa date → contagens
@@ -318,8 +314,8 @@ class AdminStatsService {
         await Promise.all([
           BusinessService.getRecentBusinessesLegacy(5),
           postService.getRecentPosts(5),
-          eventService.getRecentEvents(5),
-          getRecentClassifieds(5),
+          adminEventsRuntimeService.getRecentEvents(5),
+          adminClassifiedsService.getRecentClassifieds(5),
           profileService.getRecentProfiles(5),
           commentService.getRecentComments(5),
         ]);

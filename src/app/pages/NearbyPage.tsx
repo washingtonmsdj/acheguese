@@ -62,6 +62,35 @@ const CATEGORY_TO_TYPES: Record<QuickCategoryKey, typeof ALL_ENTITY_TYPES[number
   alerts: ['alert'],
 };
 
+function resolveEntityTypesByCategory(category: QuickCategoryKey): typeof ALL_ENTITY_TYPES[number][] {
+  switch (category) {
+    case 'all':
+      return CATEGORY_TO_TYPES.all;
+    case 'food':
+      return CATEGORY_TO_TYPES.food;
+    case 'shopping':
+      return CATEGORY_TO_TYPES.shopping;
+    case 'services':
+      return CATEGORY_TO_TYPES.services;
+    case 'health':
+      return CATEGORY_TO_TYPES.health;
+    case 'education':
+      return CATEGORY_TO_TYPES.education;
+    case 'leisure':
+      return CATEGORY_TO_TYPES.leisure;
+    case 'fitness':
+      return CATEGORY_TO_TYPES.fitness;
+    case 'tourism':
+      return CATEGORY_TO_TYPES.tourism;
+    case 'events':
+      return CATEGORY_TO_TYPES.events;
+    case 'alerts':
+      return CATEGORY_TO_TYPES.alerts;
+    default:
+      return [...ALL_ENTITY_TYPES];
+  }
+}
+
 // ============================================================================
 // ANIMATIONS
 // ============================================================================
@@ -128,10 +157,7 @@ export default function NearbyPage() {
   const [highlightedItemId, setHighlightedItemId] = useState<string | null>(null);
 
   // ── Derived entity types from category ─────────────────────────────
-  const entityTypes = useMemo(
-    () => CATEGORY_TO_TYPES[activeCategory] || [...ALL_ENTITY_TYPES],
-    [activeCategory],
-  );
+  const entityTypes = useMemo(() => resolveEntityTypesByCategory(activeCategory), [activeCategory]);
 
   // ── Data (SSOT) ────────────────────────────────────────────────────
   const { entities, isLoading: entitiesLoading, isError } = useNearbyEntities({

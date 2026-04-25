@@ -1,7 +1,1 @@
-/**
- * Compatibility facade for admin vagas runtime.
- *
- * SSOT implementation remains in core/vagas.
- */
-export { AdminVagasService } from "@/modules/classifieds/jobs/services/AdminVagasService";
-
+export { AdminVagasService } from "@/core/admin/services/AdminVagasService";

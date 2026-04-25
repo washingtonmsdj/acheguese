@@ -36,6 +36,7 @@ export interface UseEntitlementsResult {
   
   // Helpers
   can: (entitlement: keyof ResolvedEntitlements) => boolean;
+  hasShortLink: boolean;
   hasShortPremiumLink: boolean;
   isPremium: boolean;
   isActive: boolean;
@@ -81,8 +82,9 @@ export function useEntitlements(
   // Helper: verificar entitlement específico
   const can = (entitlement: keyof ResolvedEntitlements): boolean => {
     if (!entitlements) return false;
-    
-    const value = entitlements[entitlement];
+    const value = new Map<keyof ResolvedEntitlements, ResolvedEntitlements[keyof ResolvedEntitlements]>(
+      Object.entries(entitlements) as [keyof ResolvedEntitlements, ResolvedEntitlements[keyof ResolvedEntitlements]][],
+    ).get(entitlement);
     
     // Booleano
     if (typeof value === 'boolean') {
@@ -110,6 +112,7 @@ export function useEntitlements(
     
     // Helpers
     can,
+    hasShortLink: can('canUseShortLink'),
     hasShortPremiumLink: can('canUseShortPremiumLink'),
     isPremium: entitlements?.planTier !== 'free',
     isActive: entitlements?.isActive ?? false,

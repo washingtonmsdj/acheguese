@@ -97,14 +97,18 @@ export const CLASSIFIED_SUBCATEGORIES: Record<string, readonly ClassifiedSubcate
  * Retorna subcategorias para uma categoria específica.
  */
 export function getSubcategories(categoryId: string): readonly ClassifiedSubcategory[] {
-  return CLASSIFIED_SUBCATEGORIES[categoryId] || [];
+  return (
+    Object.entries(CLASSIFIED_SUBCATEGORIES).find(
+      ([currentCategoryId]) => currentCategoryId === categoryId,
+    )?.[1] ?? []
+  );
 }
 
 /**
  * Verifica se uma categoria possui subcategorias.
  */
 export function hasSubcategories(categoryId: string): boolean {
-  return categoryId in CLASSIFIED_SUBCATEGORIES && CLASSIFIED_SUBCATEGORIES[categoryId].length > 0;
+  return getSubcategories(categoryId).length > 0;
 }
 
 /**

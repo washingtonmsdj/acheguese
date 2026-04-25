@@ -45,6 +45,35 @@ const PAYMENT_OPTIONS = [
 function buildItemSummary(item: CartItem): string[] {
   const summary: string[] = [];
 
+  if (item.structured_item?.kind === "pizza") {
+    const snapshot = item.structured_item.snapshot as {
+      size?: { name?: string };
+      flavors?: Array<{ name?: string; fraction?: number }>;
+      edge?: { name?: string } | null;
+      dough?: { name?: string } | null;
+      price_rule?: string;
+    };
+
+    if (snapshot.flavors?.length) {
+      summary.push(
+        ...snapshot.flavors.map((flavor) => {
+          const fraction = flavor.fraction ? `${Math.round(flavor.fraction * 100)}%` : "";
+          return `${fraction} ${flavor.name ?? "Sabor"}`.trim();
+        }),
+      );
+    }
+
+    if (snapshot.edge?.name) {
+      summary.push(`Borda: ${snapshot.edge.name}`);
+    }
+
+    if (snapshot.dough?.name) {
+      summary.push(`Massa: ${snapshot.dough.name}`);
+    }
+
+    return summary;
+  }
+
   if (item.variant?.name) {
     summary.push(item.variant.name);
   }

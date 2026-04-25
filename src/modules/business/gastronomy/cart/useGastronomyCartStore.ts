@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
-import type { Cart } from "../types/menu";
+import type { Cart, CartItem } from "../types/menu";
 import {
   GastronomyCartService,
   type BuildCartItemInput,
@@ -13,6 +13,11 @@ interface GastronomyCartStoreState {
     business_id: string;
     delivery_fee: number;
     item_input: BuildCartItemInput;
+  }) => Cart;
+  addCartItem: (input: {
+    business_id: string;
+    delivery_fee: number;
+    cart_item: CartItem;
   }) => Cart;
   removeItem: (lineId: string) => void;
   clearCart: () => void;
@@ -36,6 +41,23 @@ export const useGastronomyCartStore = create<GastronomyCartStoreState>()(
             business_id,
             delivery_fee,
             cart_item: cartItem,
+          });
+
+          return {
+            cart: nextCart,
+          };
+        });
+
+        return nextCart as Cart;
+      },
+
+      addCartItem: ({ business_id, delivery_fee, cart_item }) => {
+        let nextCart: Cart | null = null;
+        set((state) => {
+          nextCart = GastronomyCartService.appendItem(state.cart, {
+            business_id,
+            delivery_fee,
+            cart_item,
           });
 
           return {

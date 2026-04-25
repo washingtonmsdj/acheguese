@@ -12,8 +12,8 @@
  * - Renderizar layout + section ativa
  */
 
-import { useEffect } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { CircleAlert, RefreshCw, Users } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 
@@ -34,12 +34,8 @@ import {
   type SectionPropsMap,
 } from "@/modules/profile/sections";
 
-import {
-  PROFILE_SECTIONS,
-  isProfileSectionId,
-} from "@/modules/profile/config/profile-sections.config";
-
 import type { SectionNavItem } from "@/modules/profile/components/hub/ProfileSectionsNav";
+import { buildProfileSectionItems, getProfileSectionPath } from "@/modules/profile/utils/profileNavigation";
 
 // ============================================
 // Mapa de Sections (SSOT)
@@ -88,6 +84,8 @@ function buildSectionProps(
         nextActions: data.nextActions,
         hasActiveRide: data.hasActiveRide,
         activeRide: data.activeRide,
+        driverProfileId: data.driverProfileId,
+        driverData: data.driverData,
         setActiveSection: data.setActiveSection,
       };
 
@@ -103,6 +101,7 @@ function buildSectionProps(
         verificationStatus: data.verificationStatus,
         verificationRejectionReason: data.verificationRejectionReason,
         favorites: data.favorites,
+        setActiveSection: data.setActiveSection,
         handleBusinessClick: (id: string) => {
           const business = data.businessModules.find((b) => b.business.id === id)?.business;
           if (business) data.handleBusinessClick(business);
@@ -199,50 +198,31 @@ function buildSectionProps(
 
 export default function PerfilHubPage() {
   const navigate = useNavigate();
-  const [searchParams, setSearchParams] = useSearchParams();
+  const [activeSection, setActiveSection] = useState<ProfileSectionId>("resumo");
   const data = useProfileHub();
-
-  // Determinar section ativa
-  const sectionParam = searchParams.get("sec");
-  const activeSection: ProfileSectionId = isProfileSectionId(sectionParam)
-    ? sectionParam
-    : "resumo";
 
   // ✅ SSOT: Perfil personal é a identidade principal
   const personalProfile = data.allProfiles.find((p) => p.profile_type === "personal") || data.profile;
   const personalProfileId = personalProfile?.id ?? null;
 
   // Função para mudar de section
-  const setActiveSection = (section: ProfileSectionId) => {
-    const nextParams = new URLSearchParams(searchParams);
-    if (section === "resumo") {
-      nextParams.delete("sec");
-    } else {
-      nextParams.set("sec", section);
+  const handleSectionChange = (section: ProfileSectionId) => {
+    const nextPath = getProfileSectionPath(section);
+
+    if (nextPath === "/perfil") {
+      setActiveSection(section);
+      return;
     }
-    setSearchParams(nextParams, { replace: true });
+
+    navigate(nextPath, { replace: true });
   };
 
   // ✅ SSOT: Usar configuração de seções com badges dinâmicos
-  const sectionItems: SectionNavItem<ProfileSectionId>[] = PROFILE_SECTIONS.map((section) => {
-    let badge: string | undefined;
-
-    if (section.id === "empresas" && data.businessModules.length > 0) {
-      badge = String(data.businessModules.length);
-    } else if (section.id === "mobilidade" && data.operations.activeRides > 0) {
-      badge = String(data.operations.activeRides);
-    } else if (section.id === "notificacoes" && data.notifications.unread > 0) {
-      badge = String(data.notifications.unread);
-    }
-
-    return {
-      id: section.id,
-      label: section.label,
-      description: section.description,
-      icon: section.icon,
-      badge,
-    };
-  });
+  const sectionItems: SectionNavItem<ProfileSectionId>[] = buildProfileSectionItems({
+    businessModules: data.businessModules,
+    operations: data.operations,
+    notifications: data.notifications,
+  }) as SectionNavItem<ProfileSectionId>[];
 
   // Guard: Redirecionar se não estiver logado
   useEffect(() => {
@@ -333,7 +313,7 @@ export default function PerfilHubPage() {
   return (
     <PerfilHubLayout
       activeSection={activeSection}
-      onSectionChange={setActiveSection}
+      onSectionChange={handleSectionChange}
       sectionItems={sectionItems}
       personalProfile={personalProfile}
       profile={data.profile}

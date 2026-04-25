@@ -206,7 +206,7 @@ export class OSRMProvider implements RoutingProvider {
       // Converter matriz OSRM para formato interno
       const matrix = data.durations.map((row: number[], i: number) =>
         row.map((duration: number, j: number) => ({
-          distanceMeters: Math.round(data.distances[i][j]),
+          distanceMeters: Math.round(data.distances?.at(i)?.at(j) ?? 0),
           durationSeconds: Math.round(duration),
           status: duration === null ? 'not_found' : 'ok',
         }))
@@ -290,11 +290,14 @@ export class OSRMProvider implements RoutingProvider {
         durationSeconds: Math.round(osrmLeg.duration),
         coordinates: legCoords,
         steps,
-        origin: legIndex === 0 ? request.origin : request.waypoints![legIndex - 1],
+        origin:
+          legIndex === 0
+            ? request.origin
+            : request.waypoints?.at(legIndex - 1) ?? request.origin,
         destination:
           legIndex === osrmRoute.legs.length - 1
             ? request.destination
-            : request.waypoints![legIndex],
+            : request.waypoints?.at(legIndex) ?? request.destination,
       };
     });
 

@@ -80,25 +80,45 @@ const STATUS_CONFIG: Record<
   },
 };
 
+function getStatusConfig(status: OrderStatus) {
+  switch (status) {
+    case 'pending': return STATUS_CONFIG.pending;
+    case 'confirmed': return STATUS_CONFIG.confirmed;
+    case 'preparing': return STATUS_CONFIG.preparing;
+    case 'ready': return STATUS_CONFIG.ready;
+    case 'out_for_delivery': return STATUS_CONFIG.out_for_delivery;
+    case 'delivered': return STATUS_CONFIG.delivered;
+    case 'completed': return STATUS_CONFIG.completed;
+    case 'cancelled': return STATUS_CONFIG.cancelled;
+    default: return STATUS_CONFIG.pending;
+  }
+}
+
+function getSizeClass(size: 'sm' | 'md' | 'lg'): string {
+  switch (size) {
+    case 'sm': return 'text-xs';
+    case 'md': return 'text-sm';
+    case 'lg': return 'text-base';
+    default: return 'text-sm';
+  }
+}
+
+function getIconSizeClass(size: 'sm' | 'md' | 'lg'): string {
+  switch (size) {
+    case 'sm': return 'w-3 h-3';
+    case 'md': return 'w-4 h-4';
+    case 'lg': return 'w-5 h-5';
+    default: return 'w-4 h-4';
+  }
+}
+
 export function OrderStatusBadge({ status, size = 'md' }: OrderStatusBadgeProps) {
-  const config = STATUS_CONFIG[status];
+  const config = getStatusConfig(status);
   const Icon = config.icon;
 
-  const sizeClasses = {
-    sm: 'text-xs',
-    md: 'text-sm',
-    lg: 'text-base',
-  };
-
-  const iconSizes = {
-    sm: 'w-3 h-3',
-    md: 'w-4 h-4',
-    lg: 'w-5 h-5',
-  };
-
   return (
-    <Badge variant={config.variant} className={`gap-1 ${sizeClasses[size]}`}>
-      <Icon className={`${iconSizes[size]} ${config.color}`} />
+    <Badge variant={config.variant} className={`gap-1 ${getSizeClass(size)}`}>
+      <Icon className={`${getIconSizeClass(size)} ${config.color}`} />
       {config.label}
     </Badge>
   );

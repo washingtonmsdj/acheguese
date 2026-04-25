@@ -47,6 +47,31 @@ const DENIED_MESSAGES: Record<VagaPublishDeniedReason, string> = {
   UNKNOWN: "N�o foi poss�vel validar as permiss�es para publicar vagas.",
 };
 
+function getDeniedMessageByReason(reason: VagaPublishDeniedReason): string {
+  switch (reason) {
+    case "NOT_AUTHENTICATED":
+      return DENIED_MESSAGES.NOT_AUTHENTICATED;
+    case "NO_ACTIVE_PROFILE":
+      return DENIED_MESSAGES.NO_ACTIVE_PROFILE;
+    case "NO_ACTIVE_LOCATION":
+      return DENIED_MESSAGES.NO_ACTIVE_LOCATION;
+    case "PROFILE_NOT_BUSINESS":
+      return DENIED_MESSAGES.PROFILE_NOT_BUSINESS;
+    case "INSUFFICIENT_PROFILE_ROLE":
+      return DENIED_MESSAGES.INSUFFICIENT_PROFILE_ROLE;
+    case "BUSINESS_NOT_FOUND":
+      return DENIED_MESSAGES.BUSINESS_NOT_FOUND;
+    case "BUSINESS_INACTIVE":
+      return DENIED_MESSAGES.BUSINESS_INACTIVE;
+    case "BUSINESS_POSTING_DISABLED":
+      return DENIED_MESSAGES.BUSINESS_POSTING_DISABLED;
+    case "UNKNOWN":
+      return DENIED_MESSAGES.UNKNOWN;
+    default:
+      return DENIED_MESSAGES.UNKNOWN;
+  }
+}
+
 export class VagasPublishPermissionService {
   static async evaluate(
     input: EvaluatePublishPermissionInput,
@@ -183,7 +208,7 @@ export class VagasPublishPermissionService {
   }
 
   static getDeniedMessage(reason: VagaPublishDeniedReason): string {
-    return DENIED_MESSAGES[reason];
+    return getDeniedMessageByReason(reason);
   }
 
   private static denied(
@@ -194,7 +219,7 @@ export class VagasPublishPermissionService {
       canPublish: false,
       isAdmin,
       reason,
-      message: DENIED_MESSAGES[reason],
+      message: getDeniedMessageByReason(reason),
     };
   }
 }

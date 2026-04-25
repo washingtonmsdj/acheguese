@@ -245,24 +245,60 @@ export const CATEGORY_CONFIGS: Record<string, CategoryConfig> = {
   outros: OUTROS_CONFIG,
 };
 
+function resolveCategorySlug(slug: string): string {
+  switch (slug) {
+    case "restaurantes":
+      return "restaurante";
+    case "mercados":
+      return "mercado";
+    case "farmacias":
+      return "farmacia";
+    case "saude":
+      return "saude";
+    case "educacao":
+      return "educacao";
+    case "servicos":
+      return "servicos";
+    case "lazer":
+      return "lazer";
+    case "lojas":
+      return "outros";
+    case "delivery":
+      return "restaurante";
+    case "outros":
+      return "outros";
+    default:
+      return slug;
+  }
+}
+
+function getConfigBySlug(slug: string): CategoryConfig | null {
+  switch (slug) {
+    case "restaurante":
+      return CATEGORY_CONFIGS.restaurante;
+    case "mercado":
+      return CATEGORY_CONFIGS.mercado;
+    case "farmacia":
+      return CATEGORY_CONFIGS.farmacia;
+    case "saude":
+      return CATEGORY_CONFIGS.saude;
+    case "educacao":
+      return CATEGORY_CONFIGS.educacao;
+    case "servicos":
+      return CATEGORY_CONFIGS.servicos;
+    case "lazer":
+      return CATEGORY_CONFIGS.lazer;
+    case "outros":
+      return CATEGORY_CONFIGS.outros;
+    default:
+      return null;
+  }
+}
+
 /** Resolve a category slug coming from the URL to a config */
 export function getCategoryConfig(slug: string): CategoryConfig | null {
-  // Map landing page label slugs to internal category slugs
-  const SLUG_MAP: Record<string, string> = {
-    restaurantes: "restaurante",
-    mercados: "mercado",
-    farmacias: "farmacia",
-    saude: "saude",
-    educacao: "educacao",
-    servicos: "servicos",
-    lazer: "lazer",
-    lojas: "outros",
-    delivery: "restaurante", // delivery is a filter, defaults to restaurante
-    outros: "outros",
-  };
-
-  const resolved = SLUG_MAP[slug] || slug;
-  return CATEGORY_CONFIGS[resolved] || null;
+  const resolved = resolveCategorySlug(slug);
+  return getConfigBySlug(resolved);
 }
 
 /** All categories for navigation */

@@ -27,7 +27,7 @@ export {
   getNationalClassifieds,
   getNationalStats,
   getActiveTerritoriesWithLanding,
-} from './landing.queries';
+} from '@/core/landing/services/landing.queries';
 
 // ============================================================
 // TYPES
@@ -39,12 +39,12 @@ export type {
   TerritorialGroupData,
   PlatformStats,
   VerifiedBusiness,
-} from './types';
+} from '@/core/landing/services/types';
 
 // ============================================================
 // FACADE UNIFICADA (compatibilidade legada)
 // ============================================================
-import * as landingQueries from './landing.queries';
+import * as landingQueries from '@/core/landing/services/landing.queries';
 
 /**
  * LandingFacade - Fachada unificada para operações de landing

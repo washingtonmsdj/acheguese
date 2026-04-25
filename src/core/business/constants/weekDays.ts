@@ -82,14 +82,32 @@ export const WEEKEND: readonly WeekDay[] = [
  * Obtém o label completo de um dia
  */
 export function getWeekDayLabel(day: WeekDay): string {
-  return WEEK_DAY_LABELS[day];
+  switch (day) {
+    case "segunda": return WEEK_DAY_LABELS.segunda;
+    case "terca": return WEEK_DAY_LABELS.terca;
+    case "quarta": return WEEK_DAY_LABELS.quarta;
+    case "quinta": return WEEK_DAY_LABELS.quinta;
+    case "sexta": return WEEK_DAY_LABELS.sexta;
+    case "sabado": return WEEK_DAY_LABELS.sabado;
+    case "domingo": return WEEK_DAY_LABELS.domingo;
+    default: return WEEK_DAY_LABELS.segunda;
+  }
 }
 
 /**
  * Obtém o label curto de um dia
  */
 export function getWeekDayShortLabel(day: WeekDay): string {
-  return WEEK_DAY_SHORT_LABELS[day];
+  switch (day) {
+    case "segunda": return WEEK_DAY_SHORT_LABELS.segunda;
+    case "terca": return WEEK_DAY_SHORT_LABELS.terca;
+    case "quarta": return WEEK_DAY_SHORT_LABELS.quarta;
+    case "quinta": return WEEK_DAY_SHORT_LABELS.quinta;
+    case "sexta": return WEEK_DAY_SHORT_LABELS.sexta;
+    case "sabado": return WEEK_DAY_SHORT_LABELS.sabado;
+    case "domingo": return WEEK_DAY_SHORT_LABELS.domingo;
+    default: return WEEK_DAY_SHORT_LABELS.segunda;
+  }
 }
 
 /**
@@ -138,16 +156,16 @@ export function isValidWeekDay(day: string): day is WeekDay {
  * Útil para trabalhar com Date.getDay()
  */
 export function indexToWeekDay(index: number): WeekDay | null {
-  const mapping: Record<number, WeekDay> = {
-    0: "domingo",
-    1: "segunda",
-    2: "terca",
-    3: "quarta",
-    4: "quinta",
-    5: "sexta",
-    6: "sabado",
-  };
-  return mapping[index] || null;
+  switch (index) {
+    case 0: return "domingo";
+    case 1: return "segunda";
+    case 2: return "terca";
+    case 3: return "quarta";
+    case 4: return "quinta";
+    case 5: return "sexta";
+    case 6: return "sabado";
+    default: return null;
+  }
 }
 
 /**
@@ -155,14 +173,14 @@ export function indexToWeekDay(index: number): WeekDay | null {
  * Útil para trabalhar com Date.getDay()
  */
 export function weekDayToIndex(day: WeekDay): number {
-  const mapping: Record<WeekDay, number> = {
-    domingo: 0,
-    segunda: 1,
-    terca: 2,
-    quarta: 3,
-    quinta: 4,
-    sexta: 5,
-    sabado: 6,
-  };
-  return mapping[day];
+  switch (day) {
+    case "domingo": return 0;
+    case "segunda": return 1;
+    case "terca": return 2;
+    case "quarta": return 3;
+    case "quinta": return 4;
+    case "sexta": return 5;
+    case "sabado": return 6;
+    default: return 1;
+  }
 }

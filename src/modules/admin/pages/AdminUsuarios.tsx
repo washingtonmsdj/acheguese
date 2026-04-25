@@ -172,12 +172,18 @@ export default function AdminUsuarios() {
             className="pl-9" />
         </div>
         <div className="flex gap-1.5 flex-wrap">
-          {(["all", "verified", "suspended", "admin"] as const).map((f) => (
-            <Button key={f} variant={filter === f ? "default" : "outline"} size="sm"
-              onClick={() => setFilter(f)}>
-              {{ all: "Todos", verified: "Verificados", suspended: "Suspensos", admin: "Admins" }[f]}
-            </Button>
-          ))}
+              {(["all", "verified", "suspended", "admin"] as const).map((f) => (
+                <Button key={f} variant={filter === f ? "default" : "outline"} size="sm"
+                  onClick={() => setFilter(f)}>
+                  {f === "all"
+                    ? "Todos"
+                    : f === "verified"
+                      ? "Verificados"
+                      : f === "suspended"
+                        ? "Suspensos"
+                        : "Admins"}
+                </Button>
+              ))}
         </div>
       </div>
 

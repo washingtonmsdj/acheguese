@@ -4,6 +4,7 @@ import { ChevronRight, Home } from "lucide-react";
 import { cn } from "@/shared/utils/cn";
 import { USER_ROLE } from "@/shared/types/constants";
 import { useFriendlyModuleUrls } from "@/core/routing/hooks/useFriendlyModuleUrls";
+
 const routeNames: Record<string, string> = {
   "": "Feed",
   businesss: "Empresas",
@@ -12,6 +13,16 @@ const routeNames: Record<string, string> = {
   eventos: "Eventos",
   cupons: "Cupons",
   mapa: "Mapa",
+  perfil: "Perfil",
+  mobilidade: "Mobilidade",
+  motorista: "Motorista",
+  motoboy: "Motoboy",
+  corridas: "Corridas",
+  entregas: "Entregas",
+  cadastro: "Cadastro",
+  disponibilidade: "Disponibilidade",
+  ganhos: "Ganhos",
+  configuracoes: "Configuracoes",
   profile: "Perfil",
   mensagens: "Mensagens",
   ranking: "Ranking",
@@ -21,6 +32,63 @@ const routeNames: Record<string, string> = {
   recomendacoes: "Recomendações",
   [USER_ROLE.ADMIN]: "Administração",
 };
+
+function resolveRouteName(name: string): string | undefined {
+  switch (name) {
+    case "":
+      return routeNames[""];
+    case "businesss":
+      return routeNames.businesss;
+    case "services":
+      return routeNames.services;
+    case "classificados":
+      return routeNames.classificados;
+    case "eventos":
+      return routeNames.eventos;
+    case "cupons":
+      return routeNames.cupons;
+    case "mapa":
+      return routeNames.mapa;
+    case "perfil":
+      return routeNames.perfil;
+    case "mobilidade":
+      return routeNames.mobilidade;
+    case "motorista":
+      return routeNames.motorista;
+    case "motoboy":
+      return routeNames.motoboy;
+    case "corridas":
+      return routeNames.corridas;
+    case "entregas":
+      return routeNames.entregas;
+    case "cadastro":
+      return routeNames.cadastro;
+    case "disponibilidade":
+      return routeNames.disponibilidade;
+    case "ganhos":
+      return routeNames.ganhos;
+    case "configuracoes":
+      return routeNames.configuracoes;
+    case "profile":
+      return routeNames.profile;
+    case "mensagens":
+      return routeNames.mensagens;
+    case "ranking":
+      return routeNames.ranking;
+    case "busca":
+      return routeNames.busca;
+    case "novo-post":
+      return routeNames["novo-post"];
+    case "achados-perdidos":
+      return routeNames["achados-perdidos"];
+    case "recomendacoes":
+      return routeNames.recomendacoes;
+    case USER_ROLE.ADMIN:
+      return routeNames[USER_ROLE.ADMIN];
+    default:
+      return undefined;
+  }
+}
 
 export function Breadcrumbs() {
   const location = useLocation();
@@ -43,8 +111,8 @@ export function Breadcrumbs() {
       {pathnames.map((name, index) => {
         const routeTo = `/${pathnames.slice(0, index + 1).join("/")}`;
         const isLast = index === pathnames.length - 1;
-        const displayName =
-          routeNames[name] || name.charAt(0).toUpperCase() + name.slice(1);
+        const mappedName = resolveRouteName(name);
+        const displayName = mappedName || name.charAt(0).toUpperCase() + name.slice(1);
 
         return (
           <div key={routeTo} className="flex items-center gap-2">

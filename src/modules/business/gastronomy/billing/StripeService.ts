@@ -482,7 +482,16 @@ export class GastronomyStripeService {
    * @returns Price ID ou null
    */
   static getPriceId(planTier: GastronomyPlanTier): string | null {
-    return PRICE_IDS[planTier];
+    switch (planTier) {
+      case GastronomyPlanTier.FREE:
+        return PRICE_IDS.free;
+      case GastronomyPlanTier.PRO:
+        return PRICE_IDS.pro;
+      case GastronomyPlanTier.DELIVERY:
+        return PRICE_IDS.delivery;
+      default:
+        return null;
+    }
   }
   
   /**
@@ -504,18 +513,26 @@ export class GastronomyStripeService {
   static mapSubscriptionStatus(
     stripeStatus: Stripe.Subscription.Status
   ): 'active' | 'canceled' | 'past_due' | 'trialing' {
-    const statusMap: Record<Stripe.Subscription.Status, 'active' | 'canceled' | 'past_due' | 'trialing'> = {
-      'active': 'active',
-      'canceled': 'canceled',
-      'incomplete': 'past_due',
-      'incomplete_expired': 'canceled',
-      'past_due': 'past_due',
-      'trialing': 'trialing',
-      'unpaid': 'past_due',
-      'paused': 'canceled',
-    };
-    
-    return statusMap[stripeStatus] || 'canceled';
+    switch (stripeStatus) {
+      case "active":
+        return "active";
+      case "canceled":
+        return "canceled";
+      case "incomplete":
+        return "past_due";
+      case "incomplete_expired":
+        return "canceled";
+      case "past_due":
+        return "past_due";
+      case "trialing":
+        return "trialing";
+      case "unpaid":
+        return "past_due";
+      case "paused":
+        return "canceled";
+      default:
+        return "canceled";
+    }
   }
 }
 

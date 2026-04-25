@@ -40,7 +40,12 @@ export function UserLevelBadge({
     },
   };
 
-  const classes = sizeClasses[size];
+  const classes =
+    size === "sm"
+      ? sizeClasses.sm
+      : size === "lg"
+        ? sizeClasses.lg
+        : sizeClasses.md;
 
   return (
     <Card

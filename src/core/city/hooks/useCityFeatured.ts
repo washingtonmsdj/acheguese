@@ -6,7 +6,7 @@
  */
 
 import { useQuery } from '@tanstack/react-query';
-import { createLandingFeaturedService } from '@/app/features/landing/hooks/createLandingFeaturedService';
+import { createLandingFeaturedService } from '@/core/landing/hooks/createLandingFeaturedService';
 import type { TerritoryFilter } from '@/core/location/types';
 
 const STALE_TIME = 5 * 60 * 1000;

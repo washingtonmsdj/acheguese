@@ -92,7 +92,8 @@ class UserLocationResolverClass {
       
       // Tentar obter coordenadas do centro do território
       const slug = loc.slug;
-      const center = TERRITORY_CENTERS[slug];
+      const center =
+        Object.entries(TERRITORY_CENTERS).find(([key]) => key === slug)?.[1] ?? null;
       const systemFallback = TERRITORY_CENTERS['salvador'];
       
       // Também checar metadata do location

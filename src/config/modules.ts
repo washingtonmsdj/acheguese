@@ -216,6 +216,48 @@ export const ACTIVE_MODULES = MODULES_ARRAY.filter(m => m.isActive);
  */
 export const TERRITORIAL_MODULES = MODULES_ARRAY.filter(m => m.isTerritorial);
 
+function getModuleById(moduleId: string): ModuleConfig | null {
+  switch (moduleId) {
+    case 'community':
+      return MODULES.community;
+    case 'business':
+      return MODULES.business;
+    case 'services':
+      return MODULES.services;
+    case 'classifieds':
+      return MODULES.classifieds;
+    case 'events':
+      return MODULES.events;
+    case 'jobs':
+      return MODULES.jobs;
+    case 'gastronomy':
+      return MODULES.gastronomy;
+    case 'touristPoints':
+      return MODULES.touristPoints;
+    case 'mobility':
+      return MODULES.mobility;
+    case 'map':
+      return MODULES.map;
+    case 'search':
+      return MODULES.search;
+    case 'ranking':
+      return MODULES.ranking;
+    default:
+      return null;
+  }
+}
+
+function resolveLegacyAlias(firstSegment: string): string | null {
+  switch (firstSegment) {
+    case 'business':
+      return 'business';
+    case 'pontos-turisticos':
+      return 'guide';
+    default:
+      return null;
+  }
+}
+
 /**
  * Helper: Detectar módulo pela URL
  * 
@@ -234,13 +276,8 @@ export function detectModuleFromPath(pathname: string): ModuleConfig | null {
   if (module) return module;
   
   // Aliases legados
-  const aliases: Record<string, string> = {
-    'business': 'business',
-    'pontos-turisticos': 'guide',
-  };
-  
-  const moduleId = aliases[firstSegment];
-  return moduleId ? MODULES[moduleId] : null;
+  const moduleId = resolveLegacyAlias(firstSegment);
+  return moduleId ? getModuleById(moduleId) : null;
 }
 
 /**

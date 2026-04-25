@@ -159,6 +159,7 @@ export interface BusinessDataWithProfiles extends BusinessDataRecord {
     avatar_url?: string;
     phone?: string;
     whatsapp?: string;
+    bio?: string;
   };
   // FK joins canonicos
   address?: {
@@ -271,3 +272,18 @@ export interface ReviewWithUser extends ReviewRecord {
     avatar_url?: string;
   };
 }
+
+// ============================================
+// GASTRONOMY TYPES - Re-export from gastronomy.ts
+// ============================================
+export type {
+  PriceRange,
+  GastronomyStatus,
+  GastronomyProfile,
+  CreateGastronomyProfileInput,
+  UpdateGastronomyProfileInput,
+  GastronomyBusiness,
+  GastronomyBusinessFilters,
+  TerritorySlugParams,
+  PaginatedGastronomyBusinesses,
+} from "./gastronomy";

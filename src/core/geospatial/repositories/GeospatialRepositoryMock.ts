@@ -139,8 +139,11 @@ export class GeospatialRepositoryMock implements IGeospatialRepository {
     let inside = false;
 
     for (let i = 0, j = coords.length - 1; i < coords.length; j = i++) {
-      const xi = coords[i][0], yi = coords[i][1];
-      const xj = coords[j][0], yj = coords[j][1];
+      const current = coords.at(i);
+      const previous = coords.at(j);
+      if (!current || !previous) continue;
+      const [xi, yi] = current;
+      const [xj, yj] = previous;
 
       const intersect = ((yi > lat) !== (yj > lat)) &&
         (lng < (xj - xi) * (lat - yi) / (yj - yi) + xi);

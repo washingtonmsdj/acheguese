@@ -75,7 +75,17 @@ export interface PlanDefinition {
  * 
  * SSOT: Define o que cada plano pode fazer
  */
-export interface PlanEntitlements {
+export interface GenericBillingEntitlementAliases {
+  canUsePremiumSite?: boolean;
+  canUseShortLink?: boolean;
+  canUseAdvancedCatalog?: boolean;
+  canUseInternalOrders?: boolean;
+  canUseDeliveryRequests?: boolean;
+  canUseDeliveryTracking?: boolean;
+  canUseDeliveryNetwork?: boolean;
+}
+
+export interface PlanEntitlements extends GenericBillingEntitlementAliases {
   // ── Página Pública ──────────────────────────────────────────────────────
   canUsePremiumPublicPage: boolean;
   canUseShortPremiumLink: boolean; // /p/:slug

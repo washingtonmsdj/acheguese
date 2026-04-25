@@ -50,18 +50,25 @@ export function useBusinessFormSteps() {
     facilidades: "",
   });
 
+  const hasErrorForField = (field: keyof BusinessFormState): boolean =>
+    Object.entries(errors).some(([key]) => key === field);
+
+  const removeErrorForField = (
+    currentErrors: Record<string, string>,
+    field: keyof BusinessFormState,
+  ): Record<string, string> =>
+    Object.fromEntries(
+      Object.entries(currentErrors).filter(([key]) => key !== field),
+    );
+
   const updateField = <K extends keyof BusinessFormState>(
     field: K,
     value: BusinessFormState[K],
   ) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
     // Limpar erro do campo ao editar
-    if (errors[field]) {
-      setErrors((prev) => {
-        const newErrors = { ...prev };
-        delete newErrors[field];
-        return newErrors;
-      });
+    if (hasErrorForField(field)) {
+      setErrors((prev) => removeErrorForField(prev, field));
     }
   };
 

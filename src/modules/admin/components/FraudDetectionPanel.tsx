@@ -143,7 +143,7 @@ export function FraudDetectionPanel() {
       pattern_zero_distance: "🔄 Padrão: Distância Zero",
       fake_completion: "🎭 Conclusão Falsa",
     };
-    return labels[type] || type;
+    return Object.entries(labels).find(([key]) => key === type)?.[1] ?? type;
   };
 
   if (loading) {

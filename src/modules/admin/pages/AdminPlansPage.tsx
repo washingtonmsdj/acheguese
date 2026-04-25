@@ -34,6 +34,32 @@ export function AdminPlansPage() {
     delivery: 'Delivery',
   };
 
+  const getPlanLabel = (plan: string): string => {
+    switch (plan) {
+      case "free":
+        return planLabels.free;
+      case "pro":
+        return planLabels.pro;
+      case "delivery":
+        return planLabels.delivery;
+      default:
+        return plan;
+    }
+  };
+
+  const getPlanBadgeVariant = (plan: string) => {
+    switch (plan) {
+      case "free":
+        return planColors.free;
+      case "pro":
+        return planColors.pro;
+      case "delivery":
+        return planColors.delivery;
+      default:
+        return "secondary";
+    }
+  };
+
   return (
     <div className="container mx-auto p-6 space-y-6">
       {/* Header */}
@@ -56,8 +82,8 @@ export function AdminPlansPage() {
               <Card key={plan}>
                 <CardHeader>
                   <CardTitle className="flex items-center justify-between">
-                    <span>Plano {planLabels[plan]}</span>
-                    <Badge variant={planColors[plan] as any}>
+                    <span>Plano {getPlanLabel(plan)}</span>
+                    <Badge variant={getPlanBadgeVariant(plan) as any}>
                       {businesses.length} empresas
                     </Badge>
                   </CardTitle>

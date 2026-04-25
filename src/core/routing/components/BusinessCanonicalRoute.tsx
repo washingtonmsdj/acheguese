@@ -11,8 +11,7 @@
  *   4. Não encontrada em nenhum lugar → /404
  *   5. Encontrada → renderiza EmpresaDetailPage com businessId
  *
- * Esta é a ÚNICA rota que renderiza conteúdo de empresa diretamente.
- * Todas as outras rotas (premium, legado, standalone) redirecionam para cá.
+ * Esta é a rota canônica institucional de empresa no ecossistema Achegue-se.
  */
 import { logger } from '@/shared/utils/logger';
 import { useEffect, useState } from 'react';

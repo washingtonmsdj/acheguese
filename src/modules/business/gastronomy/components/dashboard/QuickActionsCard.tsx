@@ -7,6 +7,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/components/ui/card';
 import { Button } from '@/shared/components/ui/button';
 import { Link } from 'react-router-dom';
+import { businessManagementRoutes } from '@/core/business/utils/businessManagementRoutes';
 import {
   UtensilsCrossed,
   Clock,
@@ -27,37 +28,37 @@ export function QuickActionsCard({ businessId }: QuickActionsCardProps) {
     {
       icon: UtensilsCrossed,
       label: 'Cardápio',
-      href: `/dashboard/business/${businessId}/gastronomy/menu`,
+      href: businessManagementRoutes.gastronomyCardapio(businessId),
       color: 'text-orange-600',
     },
     {
       icon: Package,
       label: 'Pedidos',
-      href: `/dashboard/business/${businessId}/gastronomy/orders`,
+      href: businessManagementRoutes.gastronomyPedidos(businessId),
       color: 'text-blue-600',
     },
     {
       icon: Bike,
       label: 'Entregas',
-      href: `/dashboard/business/${businessId}/gastronomy/deliveries`,
+      href: businessManagementRoutes.gastronomyEntregas(businessId),
       color: 'text-indigo-600',
     },
     {
       icon: BarChart3,
       label: 'Analytics',
-      href: `/dashboard/business/${businessId}/gastronomy/analytics`,
+      href: businessManagementRoutes.gastronomyAnalytics(businessId),
       color: 'text-cyan-600',
     },
     {
       icon: Clock,
       label: 'Horários',
-      href: `/dashboard/business/${businessId}/gastronomy/hours`,
+      href: businessManagementRoutes.gastronomyHorarios(businessId),
       color: 'text-purple-600',
     },
     {
       icon: MapPin,
       label: 'Áreas de Entrega',
-      href: `/dashboard/business/${businessId}/gastronomy/delivery-area`,
+      href: businessManagementRoutes.gastronomyAreaEntrega(businessId),
       color: 'text-green-600',
     },
   ];

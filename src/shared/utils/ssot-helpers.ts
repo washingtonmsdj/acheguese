@@ -4,7 +4,6 @@
 import { useState } from "react";
 import {
   USER_ROLE,
-  RIDE_STATUS,
   PAYMENT_METHOD,
   DRIVER_STATUS,
   VERIFICATION_STATUS,
@@ -14,6 +13,7 @@ import {
   REPORT_STATUS,
   SUBSCRIPTION_PLAN,
 } from "@/shared/types/constants";
+import { RIDE_STATUS } from "@/modules/mobility/constants";
 /**
  * Validadores SSOT - Type-safe validation functions
  */

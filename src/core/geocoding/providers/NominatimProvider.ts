@@ -192,7 +192,10 @@ export class NominatimProvider extends BaseGeocodingProvider {
       const attemptParams = [requestParams(true), requestParams(false)];
 
       for (let attempt = 0; attempt < attemptParams.length; attempt++) {
-        const params = attemptParams[attempt];
+        const params = attemptParams.at(attempt);
+        if (!params) {
+          continue;
+        }
         const url = `${this.proxyUrl}?${params.toString()}`;
 
         const response = await this.withTimeout(fetch(url, { headers }));

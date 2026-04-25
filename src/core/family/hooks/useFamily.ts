@@ -147,9 +147,9 @@ export function useChildrenLocations() {
         );
 
         if (index >= 0) {
-          const updated = [...prev];
-          updated[index] = { ...updated[index], ...location };
-          return updated;
+          return prev.map((item, itemIndex) =>
+            itemIndex === index ? { ...item, ...location } : item,
+          );
         }
 
         return prev;

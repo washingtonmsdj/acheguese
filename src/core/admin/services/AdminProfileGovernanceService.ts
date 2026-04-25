@@ -311,14 +311,13 @@ function normalizeNumber(value: unknown): number | null {
 
 function createCountMap(
   rows: RawRecord[] | null | undefined,
-  key: string,
 ): Map<string, number> {
   const map = new Map<string, number>();
 
   for (const row of rows ?? []) {
-    const id = row[key];
-    if (!id) continue;
-    map.set(id, (map.get(id) ?? 0) + 1);
+    const rawId = row.profile_id;
+    if (typeof rawId !== "string" || rawId.trim().length === 0) continue;
+    map.set(rawId, (map.get(rawId) ?? 0) + 1);
   }
 
   return map;
@@ -872,7 +871,7 @@ async function loadUsernameHistoryCountMap(
     return new Map();
   }
 
-  return createCountMap(data as RawRecord[], "profile_id");
+  return createCountMap(data as RawRecord[]);
 }
 
 async function loadNotificationSettingsUserIds(userIds: string[]): Promise<Set<string>> {
@@ -894,7 +893,7 @@ async function loadProfileMembersCountMap(
     return new Map();
   }
 
-  return createCountMap(data as RawRecord[], "profile_id");
+  return createCountMap(data as RawRecord[]);
 }
 
 async function loadEntityMaps(profileIds: string[]): Promise<{

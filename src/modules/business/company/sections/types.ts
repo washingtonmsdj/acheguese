@@ -9,6 +9,7 @@ import type { NavigateFunction } from "react-router-dom";
 import type { User } from "@supabase/supabase-js";
 import type { Business } from "@/core/business/types";
 import type { VerticalKey } from "@/core/verticals";
+import type { GastronomyPreviewItem } from "@/modules/business/gastronomy/services";
 
 // ============================================
 // Business Extended (com campos adicionais)
@@ -142,6 +143,13 @@ export interface EmpresaProdutosSectionProps extends BaseSectionProps {
   readonly onToggleShowAll: () => void;
 }
 
+export interface EmpresaGastronomiaPreviewSectionProps extends BaseSectionProps {
+  readonly items: readonly GastronomyPreviewItem[];
+  readonly canonicalUrl: string;
+  readonly businessName: string;
+  readonly isLoading?: boolean;
+}
+
 export interface EmpresaAvaliacoesSectionProps extends BaseSectionProps {
   readonly business: BusinessExtended;
   readonly reviews: readonly Review[];
@@ -239,6 +247,7 @@ export type EmpresaSectionId =
   | "resumo"
   | "info"
   | "produtos"
+  | "gastronomiaPreview"
   | "avaliacoes"
   | "fotos"
   | "proximas";
@@ -249,6 +258,7 @@ export type SectionPropsMap = {
   readonly resumo: EmpresaResumoSectionProps;
   readonly info: EmpresaInfoSectionProps;
   readonly produtos: EmpresaProdutosSectionProps;
+  readonly gastronomiaPreview: EmpresaGastronomiaPreviewSectionProps;
   readonly avaliacoes: EmpresaAvaliacoesSectionProps;
   readonly fotos: EmpresaFotosSectionProps;
   readonly proximas: EmpresaProximasSectionProps;

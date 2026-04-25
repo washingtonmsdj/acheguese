@@ -121,6 +121,23 @@ export const ENTITY_DISPLAY_RULES: Record<LocationEntityType, EntityDisplayRules
   },
 };
 
+function resolveDisplayRules(entityType: LocationEntityType): EntityDisplayRules {
+  switch (entityType) {
+    case 'user_gps':
+      return ENTITY_DISPLAY_RULES.user_gps;
+    case 'verified_resident':
+      return ENTITY_DISPLAY_RULES.verified_resident;
+    case 'physical_business':
+      return ENTITY_DISPLAY_RULES.physical_business;
+    case 'mobile_service':
+      return ENTITY_DISPLAY_RULES.mobile_service;
+    case 'territorial':
+      return ENTITY_DISPLAY_RULES.territorial;
+    default:
+      return ENTITY_DISPLAY_RULES.territorial;
+  }
+}
+
 // ============================================
 // HELPER FUNCTIONS
 // ============================================
@@ -129,21 +146,21 @@ export const ENTITY_DISPLAY_RULES: Record<LocationEntityType, EntityDisplayRules
  * Obtém regras de exibição para um tipo de entidade
  */
 export function getDisplayRules(entityType: LocationEntityType): EntityDisplayRules {
-  return ENTITY_DISPLAY_RULES[entityType];
+  return resolveDisplayRules(entityType);
 }
 
 /**
  * Verifica se uma entidade pode exibir endereço completo publicamente
  */
 export function canShowFullAddress(entityType: LocationEntityType): boolean {
-  return ENTITY_DISPLAY_RULES[entityType].showStreetAddress;
+  return resolveDisplayRules(entityType).showStreetAddress;
 }
 
 /**
  * Verifica se uma entidade pode aparecer com pin exato no mapa
  */
 export function canShowExactPin(entityType: LocationEntityType): boolean {
-  return ENTITY_DISPLAY_RULES[entityType].showExactPin;
+  return resolveDisplayRules(entityType).showExactPin;
 }
 
 /**
@@ -158,7 +175,7 @@ export function getPublicLocationLabel(
     fullAddress?: string;
   }
 ): string {
-  const rules = ENTITY_DISPLAY_RULES[entityType];
+  const rules = resolveDisplayRules(entityType);
 
   switch (rules.publicLabel) {
     case 'exact_address':

@@ -93,8 +93,9 @@ No arquivo `AppRoutes.tsx`, adicione dentro do componente `Routes`:
 
 ```
 /mobilidade/passageiro
-/mobilidade/motorista
-/mobilidade/motoboy
+/perfil/mobilidade
+/perfil/mobilidade/motorista
+/perfil/mobilidade/motoboy
 ```
 
 ---

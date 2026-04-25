@@ -122,6 +122,35 @@ const MARKER_TYPE_TO_LAYER: Partial<Record<string, string>> = {
   ride: 'mobility',
 };
 
+function getRecordBoolean(source: Record<string, boolean>, key: string): boolean | undefined {
+  for (const [entryKey, value] of Object.entries(source)) {
+    if (entryKey === key) {
+      return value;
+    }
+  }
+  return undefined;
+}
+
+function setRecordBoolean(
+  source: Record<string, boolean>,
+  key: string,
+  value: boolean,
+): Record<string, boolean> {
+  let found = false;
+  const entries = Object.entries(source).map(([entryKey, entryValue]) => {
+    if (entryKey === key) {
+      found = true;
+      return [entryKey, value] as const;
+    }
+    return [entryKey, entryValue] as const;
+  });
+
+  if (!found) {
+    entries.push([key, value] as const);
+  }
+  return Object.fromEntries(entries);
+}
+
 function createUserLocationMarker(
   coordinates: { latitude: number; longitude: number },
   label?: string,
@@ -621,9 +650,9 @@ export const MapLibreAdapter = forwardRef<MapLibreAdapterHandle, MapLibreAdapter
       if (!controls?.layers?.layers) return;
       if (isLayerVisibilityControlled) return;
       setInternalVisibleLayers((prev) => {
-        const next: Record<string, boolean> = {};
+        let next: Record<string, boolean> = {};
         controls.layers?.layers.forEach((key) => {
-          next[key] = prev[key] ?? true;
+          next = setRecordBoolean(next, key, getRecordBoolean(prev, key) ?? true);
         });
         return next;
       });
@@ -631,7 +660,7 @@ export const MapLibreAdapter = forwardRef<MapLibreAdapterHandle, MapLibreAdapter
 
     const handleLayerToggle = React.useCallback((key: string, visible: boolean) => {
       if (!isLayerVisibilityControlled) {
-        setInternalVisibleLayers((prev) => ({ ...prev, [key]: visible }));
+        setInternalVisibleLayers((prev) => setRecordBoolean(prev, key, visible));
       }
       controls?.layers?.onLayerToggle?.(key, visible);
     }, [controls?.layers, isLayerVisibilityControlled]);
@@ -657,7 +686,7 @@ export const MapLibreAdapter = forwardRef<MapLibreAdapterHandle, MapLibreAdapter
             typeof m.metadata?.map_layer_key === 'string' ? m.metadata.map_layer_key : undefined;
           const layerKey = metadataLayerKey ?? MARKER_TYPE_TO_LAYER[m.type];
           if (!layerKey) return true; // tipo sem camada → sempre visível
-          return visibleLayers[layerKey] !== false;
+          return getRecordBoolean(visibleLayers, layerKey) !== false;
         });
       }
 

@@ -9,6 +9,7 @@ import type { NavigateFunction } from "react-router-dom";
 import type { MultiProfileRecord } from "@/core/profiles/services/multi-profile/types";
 import type { ProfileBusinessModuleItem } from "@/core/profiles/services/types";
 import type { AppUrls } from "@/core/routing/types";
+import type { ProfileSectionId } from "@/modules/profile/config/profile-sections.config";
 
 // ============================================
 // Base Props (compartilhadas por todas)
@@ -158,10 +159,12 @@ export interface ResumoSectionProps extends BaseSectionProps {
   readonly operations: Operations;
   readonly notifications: Notifications;
   readonly stats: Stats;
-  readonly nextActions: readonly NextAction[];
+  readonly nextActions: readonly NextAction[]; 
   readonly hasActiveRide: boolean;
   readonly activeRide?: Ride;
-  readonly setActiveSection: (section: string) => void;
+  readonly driverProfileId: string | null;
+  readonly driverData?: any;
+  readonly setActiveSection: (section: ProfileSectionId) => void;
 }
 
 export interface DadosPessoaisSectionProps extends BaseSectionProps {
@@ -175,6 +178,7 @@ export interface DadosPessoaisSectionProps extends BaseSectionProps {
   readonly verificationRejectionReason?: string;
   readonly favorites: readonly Favorite[];
   readonly handleBusinessClick: (id: string) => void;
+  readonly setActiveSection: (section: ProfileSectionId) => void;
 }
 
 export interface EmpresasSectionProps extends BaseSectionProps {
@@ -196,8 +200,8 @@ export interface MobilidadeSectionProps extends BaseSectionProps {
 }
 
 export interface DeliverySectionProps extends BaseSectionProps {
-  readonly businessModules: readonly ProfileBusinessModuleItem[];
-  readonly setActiveSection: (section: string) => void;
+  readonly businessModules: readonly ProfileBusinessModuleItem[]; 
+  readonly setActiveSection: (section: ProfileSectionId) => void;
 }
 
 export interface PlanosSectionProps extends BaseSectionProps {

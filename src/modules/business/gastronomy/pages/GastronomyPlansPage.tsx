@@ -12,6 +12,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter }
 import { Button } from '@/shared/components/ui/button';
 import { Badge } from '@/shared/components/ui/badge';
 import { Check, ArrowLeft, Crown } from 'lucide-react';
+import { businessManagementRoutes } from '@/core/business/utils/businessManagementRoutes';
 
 export default function GastronomyPlansPage() {
   const { businessId } = useParams<{ businessId: string }>();
@@ -41,7 +42,7 @@ export default function GastronomyPlansPage() {
         <Button
           variant="ghost"
           size="sm"
-          onClick={() => navigate(`/dashboard/business/${businessId}/gastronomy`)}
+          onClick={() => navigate(businessManagementRoutes.gastronomia(businessId!))}
           className="mb-4"
         >
           <ArrowLeft className="w-4 h-4 mr-2" />

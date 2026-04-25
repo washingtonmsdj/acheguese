@@ -76,7 +76,8 @@ export default function CadastroPage() {
   const [capsLock, setCapsLock] = React.useState(false);
   const passwordRequirements = getAuthPasswordRequirementStatus(formData.password);
 
-  const stepId = STEPS[currentStep].id;
+  const activeStep = STEPS.at(currentStep) ?? STEPS[0];
+  const stepId = activeStep.id;
 
   return (
     <div className="min-h-screen bg-background flex flex-col">

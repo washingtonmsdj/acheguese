@@ -8,6 +8,7 @@ import { useAppUrls } from "@/core/routing/hooks";
 interface ProfileActiveRide {
   id: string;
   status?: string;
+  ride_mode?: string | null;
   origin?: string | null;
   origin_details?: string | null;
   destination?: string | null;
@@ -41,6 +42,10 @@ export function ProfileActiveRideCard({ ride }: ProfileActiveRideCardProps) {
   const destination =
     ride.destination_details || ride.destination || "Destino nao informado";
   const statusLabel = STATUS_LABELS[ride.status || "pending"] || "Em andamento";
+  const mobilityPath =
+    ride.ride_mode === "motoboy"
+      ? appUrls.profile.mobilidade.motoboy.entregas
+      : appUrls.profile.mobilidade.motorista.corridas;
 
   return (
     <Card className="border-primary/20 bg-gradient-to-br from-primary/5 via-background to-accent/10">
@@ -99,7 +104,7 @@ export function ProfileActiveRideCard({ ride }: ProfileActiveRideCardProps) {
           <Button
             size="sm"
             className="gap-1.5 shrink-0"
-            onClick={() => navigate(appUrls.mobility.home)}
+            onClick={() => navigate(mobilityPath)}
           >
             Abrir mobilidade
             <ArrowRight className="h-4 w-4" />

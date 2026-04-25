@@ -371,13 +371,13 @@ export class QrCodeService {
    * Agrupa scans por data
    */
   private static groupScansByDate(scans: QrCodeScan[]): Array<{ date: string; count: number }> {
-    const groups = scans.reduce((acc, scan) => {
+    const groupsMap = scans.reduce((acc, scan) => {
       const date = scan.scanned_at.split('T')[0];
-      acc[date] = (acc[date] || 0) + 1;
+      acc.set(date, (acc.get(date) || 0) + 1);
       return acc;
-    }, {} as Record<string, number>);
+    }, new Map<string, number>());
     
-    return Object.entries(groups)
+    return [...groupsMap.entries()]
       .map(([date, count]) => ({ date, count }))
       .sort((a, b) => b.date.localeCompare(a.date))
       .slice(0, 30);
@@ -387,15 +387,15 @@ export class QrCodeService {
    * Retorna top localizações
    */
   private static getTopLocations(scans: QrCodeScan[]): Array<{ location: string; count: number }> {
-    const locations = scans
+    const locationsMap = scans
       .filter(s => s.approximate_location)
       .reduce((acc, scan) => {
         const loc = scan.approximate_location!;
-        acc[loc] = (acc[loc] || 0) + 1;
+        acc.set(loc, (acc.get(loc) || 0) + 1);
         return acc;
-      }, {} as Record<string, number>);
+      }, new Map<string, number>());
     
-    return Object.entries(locations)
+    return [...locationsMap.entries()]
       .map(([location, count]) => ({ location, count }))
       .sort((a, b) => b.count - a.count)
       .slice(0, 10);

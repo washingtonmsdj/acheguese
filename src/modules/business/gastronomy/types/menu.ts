@@ -315,6 +315,12 @@ export interface CartItemAddon {
   quantity: number;
 }
 
+export interface StructuredCartItem {
+  kind: 'pizza';
+  snapshot: Json;
+  price_breakdown: Json;
+}
+
 export interface CartItem {
   line_id?: string;
   item_id: string;
@@ -324,6 +330,7 @@ export interface CartItem {
   variant?: CartItemVariant;
   addons: CartItemAddon[];
   special_instructions?: string;
+  structured_item?: StructuredCartItem;
   subtotal: number; // calculado
 }
 

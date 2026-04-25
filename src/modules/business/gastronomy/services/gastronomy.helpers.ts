@@ -30,7 +30,9 @@ export function isGastronomyBusinessOpen(business: GastronomyBusiness): boolean 
 
   const now = new Date();
   const dayOfWeek = now.getDay();
-  const hours = business.horario_funcionamento[dayOfWeek];
+  const hours = Object.entries(business.horario_funcionamento).find(
+    ([day]) => day === String(dayOfWeek),
+  )?.[1];
 
   if (!hours || hours.closed) {
     return false;
@@ -238,14 +240,18 @@ export function filterItemsByDiet(
   items: MenuItem[],
   diet: 'vegetarian' | 'vegan' | 'gluten_free' | 'lactose_free',
 ): MenuItem[] {
-  const filterMap = {
-    vegetarian: (item: MenuItem) => item.is_vegetarian,
-    vegan: (item: MenuItem) => item.is_vegan,
-    gluten_free: (item: MenuItem) => item.is_gluten_free,
-    lactose_free: (item: MenuItem) => item.is_lactose_free,
-  };
-
-  return items.filter(filterMap[diet]);
+  switch (diet) {
+    case "vegetarian":
+      return items.filter((item) => item.is_vegetarian);
+    case "vegan":
+      return items.filter((item) => item.is_vegan);
+    case "gluten_free":
+      return items.filter((item) => item.is_gluten_free);
+    case "lactose_free":
+      return items.filter((item) => item.is_lactose_free);
+    default:
+      return items;
+  }
 }
 
 /**

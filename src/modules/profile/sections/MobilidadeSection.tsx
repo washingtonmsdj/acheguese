@@ -1,9 +1,9 @@
-/**
+﻿/**
  * MobilidadeSection - Secao de mobilidade do perfil
  * SSOT: componente isolado com props tipadas.
  */
 
-import { ArrowRight, Car } from "lucide-react";
+import { ArrowRight, Bike, Car } from "lucide-react";
 import { SectionFrame, HubLinkCard, EmptyPanel } from "@/modules/profile/components/hub";
 import { ProfileActiveRideCard } from "@/modules/profile/components/ProfileActiveRideCard";
 import {
@@ -13,6 +13,7 @@ import {
 
 import type { MobilidadeSectionProps } from "./types";
 import type { Tables } from "@/integrations/supabase";
+import { getMobilityServiceStatus } from "@/modules/profile/utils/mobilityServiceStatus";
 
 type DriverDataRecord = Tables<"driver_data">;
 
@@ -28,41 +29,45 @@ export function MobilidadeSection({
   appUrls,
 }: MobilidadeSectionProps) {
   const driverSnapshot = driverData as DriverDataRecord | null;
-  const driverDisplayName = driverProfile?.display_name || "Perfil de motorista";
+  const driverDisplayName = driverProfile?.display_name || "Perfil operacional";
+
+  const motoristaStatus = getMobilityServiceStatus({
+    driverProfileId: driverProfile?.id ?? null,
+    driverData: driverSnapshot,
+    service: "motorista",
+  });
+
+  const motoboyStatus = getMobilityServiceStatus({
+    driverProfileId: driverProfile?.id ?? null,
+    driverData: driverSnapshot,
+    service: "motoboy",
+  });
 
   return (
     <div className="space-y-6">
       <SectionFrame
-        title="Motorista e mobilidade"
-        description="Dados e acoes de mobilidade sem misturar conteudo de outros modulos."
+        title="Mobilidade"
+        description="Motorista e Motoboy sao servicos separados dentro da secao geral de mobilidade."
       >
         <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
           <HubLinkCard
             icon={Car}
-            title={hasDriverProfile ? "Perfil de motorista" : "Central de mobilidade"}
-            description={
-              hasDriverProfile
-                ? "Acesse o perfil de motorista e configuracoes de operacao."
-                : "Acesse mobilidade como passageiro."
-            }
-            onClick={() =>
-              navigate(
-                hasDriverProfile ? appUrls.mobility.driverProfile : appUrls.mobility.passenger,
-              )
-            }
+            title="Motorista"
+            description={`Corridas de passageiros. Status: ${motoristaStatus}.`}
+            onClick={() => navigate(appUrls.profile.mobilidade.motorista.home)}
+          />
+          <HubLinkCard
+            icon={Bike}
+            title="Motoboy"
+            description={`Entregas de produtos e pedidos. Status: ${motoboyStatus}.`}
+            onClick={() => navigate(appUrls.profile.mobilidade.motoboy.home)}
           />
           <HubLinkCard
             icon={ArrowRight}
-            title="Historico de corridas"
-            description="Consulte corridas anteriores e estado operacional."
+            title="Abrir hub de mobilidade"
+            description="Acessar a visao geral da mobilidade com os dois servicos separados."
             badge={operations.ridesTotal > 0 ? `${operations.ridesTotal}` : undefined}
-            onClick={() => navigate(appUrls.mobility.history)}
-          />
-          <HubLinkCard
-            icon={ArrowRight}
-            title="Abrir central de mobilidade"
-            description="Acesse busca de corridas, acompanhamento e operacao em tempo real."
-            onClick={() => navigate(appUrls.mobility.home)}
+            onClick={() => navigate(appUrls.profile.mobilidade.home)}
           />
         </div>
       </SectionFrame>
@@ -72,13 +77,13 @@ export function MobilidadeSection({
           <div className="rounded-2xl border border-border bg-card p-6">
             <div className="flex items-center gap-3 text-sm text-muted-foreground">
               <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-              Carregando dados do motorista...
+              Carregando dados operacionais...
             </div>
           </div>
         ) : driverSnapshot ? (
           <SectionFrame
-            title="Dados do perfil de motorista"
-            description="Snapshot operacional com status, veiculo e documentacao do motorista."
+            title="Dados operacionais compartilhados"
+            description="Base comum de mobilidade usada por motorista e motoboy sem duplicacao desnecessaria."
           >
             <div className="grid gap-4 xl:grid-cols-[1.2fr,0.8fr]">
               <DriverOperationalSnapshotCard
@@ -93,18 +98,18 @@ export function MobilidadeSection({
           </SectionFrame>
         ) : (
           <EmptyPanel
-            title="Perfil de motorista incompleto"
-            description="Existe perfil de motorista, mas os dados operacionais ainda nao estao completos."
-            actionLabel="Completar perfil de motorista"
-            onAction={() => navigate(appUrls.mobility.driverProfile)}
+            title="Perfil operacional incompleto"
+            description="Existe perfil de mobilidade, mas os dados comuns ainda nao estao completos."
+            actionLabel="Completar cadastro"
+            onAction={() => navigate(appUrls.profile.mobilidade.motorista.cadastro)}
           />
         )
       ) : (
         <EmptyPanel
-          title="Motorista nao ativado"
-          description="Ainda nao existe perfil de motorista vinculado para mostrar dados de veiculo e operacao."
-          actionLabel="Ativar perfil de motorista"
-          onAction={() => navigate(appUrls.mobility.driver)}
+          title="Mobilidade nao ativada"
+          description="Ainda nao existe perfil operacional vinculado para motorista ou motoboy."
+          actionLabel="Abrir cadastro de motorista"
+          onAction={() => navigate(appUrls.profile.mobilidade.motorista.cadastro)}
         />
       )}
 
@@ -112,13 +117,12 @@ export function MobilidadeSection({
         <ProfileActiveRideCard ride={activeRide as any} />
       ) : (
         <EmptyPanel
-          title="Nenhuma corrida ativa"
-          description="Nao ha corrida em andamento para o perfil ativo no momento."
+          title="Nenhuma operacao ativa"
+          description="Nao ha corrida nem entrega em andamento para o perfil ativo no momento."
           actionLabel="Abrir mobilidade"
-          onAction={() => navigate(appUrls.mobility.home)}
+          onAction={() => navigate(appUrls.profile.mobilidade.home)}
         />
       )}
     </div>
   );
 }
-

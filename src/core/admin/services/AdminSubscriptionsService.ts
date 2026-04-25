@@ -5,6 +5,11 @@
 import { supabase } from "@/integrations/supabase";
 import { logger } from "@/shared/utils/logger";
 
+function incrementCounter(counter: Map<string, number>, key: string, amount: number): void {
+  const currentValue = counter.get(key) ?? 0;
+  counter.set(key, currentValue + amount);
+}
+
 export interface SubscriptionStats {
   total: number;
   active: number;
@@ -53,10 +58,11 @@ class AdminSubscriptionsServiceClass {
         monthlyRecurringRevenue: 0,
         averageLifetime: 0,
       };
+      const byPlanCounter = new Map<string, number>();
 
       subscriptions?.forEach(s => {
         if (s.plan_type) {
-          stats.byPlan[s.plan_type] = (stats.byPlan[s.plan_type] || 0) + 1;
+          incrementCounter(byPlanCounter, s.plan_type, 1);
         }
         if (s.amount_cents) {
           stats.totalRevenue += s.amount_cents / 100;
@@ -65,6 +71,7 @@ class AdminSubscriptionsServiceClass {
           }
         }
       });
+      stats.byPlan = Object.fromEntries(byPlanCounter.entries());
 
       // Calcular tempo médio de vida das assinaturas
       const lifetimes = subscriptions
@@ -283,18 +290,22 @@ class AdminSubscriptionsServiceClass {
         byPlan: {} as Record<string, number>,
         byMonth: {} as Record<string, number>,
       };
+      const byPlanCounter = new Map<string, number>();
+      const byMonthCounter = new Map<string, number>();
 
       data?.forEach(s => {
         const amount = s.amount_cents / 100;
         revenue.total += amount;
 
         if (s.plan_type) {
-          revenue.byPlan[s.plan_type] = (revenue.byPlan[s.plan_type] || 0) + amount;
+          incrementCounter(byPlanCounter, s.plan_type, amount);
         }
 
         const month = new Date(s.created_at).toISOString().slice(0, 7);
-        revenue.byMonth[month] = (revenue.byMonth[month] || 0) + amount;
+        incrementCounter(byMonthCounter, month, amount);
       });
+      revenue.byPlan = Object.fromEntries(byPlanCounter.entries());
+      revenue.byMonth = Object.fromEntries(byMonthCounter.entries());
 
       return revenue;
     } catch (error) {

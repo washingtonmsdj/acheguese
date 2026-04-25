@@ -8,7 +8,7 @@
  *
  * PADRÃO OFICIAL DE URLs:
  *   Canônica pública:  /empresas/:uf/:cidade/:slug
- *   Premium (curta):   /p/:slug  → redirect 308 para canônica
+ *   Premium (curta):   /p/:slug  → mini-site premium isolado
  */
 import { logger } from '@/shared/utils/logger';
 import { supabase } from '@/integrations/supabase';
@@ -32,7 +32,7 @@ export interface ResolvedBusinessUrl {
   premium: string | null;
   /** URL legado controlado: /business/tonecos-studios */
   legacy: string;
-  /** URL interna de dashboard: /dashboard/business/:id */
+  /** URL interna de gestao: /perfil/empresas/:id */
   dashboard: string;
 }
 
@@ -96,7 +96,7 @@ export class BusinessUrlService {
       canonical,
       premium: is_premium ? `/p/${slug}` : null,
       legacy: `/business/${slug}`,
-      dashboard: `/dashboard/business/${id}`,
+      dashboard: `/perfil/empresas/${id}`,
     };
   }
 
@@ -168,6 +168,68 @@ export class BusinessUrlService {
       };
     } catch (err) {
       logger.error('[BusinessUrlService] resolveBySlug error:', err);
+      return null;
+    }
+  }
+
+  /**
+   * Resolve empresa por slug curto premium (/p/:slug) usando business_premium_links.
+   * Prioriza o mapeamento explícito de assinantes elegíveis.
+   */
+  static async resolveByPremiumSlug(slug: string): Promise<BusinessUrlContext | null> {
+    try {
+      const { data, error } = await supabase
+        .from("business_premium_links")
+        .select(`
+          slug,
+          business:business_data!business_id(
+            profile_id,
+            slug,
+            is_premium,
+            status,
+            business_role,
+            location:locations!location_id(geographic_path)
+          )
+        `)
+        .eq("slug", slug)
+        .maybeSingle();
+
+      if (error || !data || !data.business) {
+        return null;
+      }
+
+      const business = data.business as {
+        profile_id?: string;
+        slug?: string;
+        is_premium?: boolean;
+        status?: string;
+        business_role?: string;
+        location?: { geographic_path?: string | null } | null;
+      };
+
+      if (
+        !business.profile_id ||
+        !business.slug ||
+        !business.is_premium ||
+        business.status !== "active" ||
+        !["standalone", "branch"].includes(business.business_role ?? "")
+      ) {
+        return null;
+      }
+
+      const geographicPath = business.location?.geographic_path;
+      if (!geographicPath) {
+        return null;
+      }
+
+      return {
+        id: business.profile_id,
+        slug: business.slug,
+        is_premium: true,
+        geographic_path: geographicPath,
+      };
+    } catch (err) {
+      logger.error("[BusinessUrlService] resolveByPremiumSlug error:", err);
       return null;
     }
   }

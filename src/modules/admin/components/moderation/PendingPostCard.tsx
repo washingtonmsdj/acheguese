@@ -105,7 +105,15 @@ export function PendingPostCard({ post }: PendingPostCardProps) {
           {/* Badges */}
           <div className="flex gap-2">
             <Badge variant="outline">{post.type}</Badge>
-            <Badge className={priorityColors[priorityLevel]}>
+            <Badge
+              className={
+                priorityLevel === "high"
+                  ? priorityColors.high
+                  : priorityLevel === "medium"
+                    ? priorityColors.medium
+                    : priorityColors.low
+              }
+            >
               Prioridade:{" "}
               {priorityLevel === "high"
                 ? "Alta"

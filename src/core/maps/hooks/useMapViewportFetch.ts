@@ -43,6 +43,130 @@ export interface UseMapViewportFetchReturn {
   clearLayer: (key: MapLayerKey) => void;
 }
 
+const MAP_LAYER_KEYS: MapLayerKey[] = [
+  'businesses',
+  'gastronomy',
+  'services',
+  'classifieds',
+  'events',
+  'alerts',
+  'professionals',
+  'tourist_points',
+  'mobility',
+  'user_location',
+  'service_areas',
+  'boundaries',
+];
+
+function getFetcherByKey(
+  fetchers: Partial<Record<MapLayerKey, LayerFetcher>>,
+  key: MapLayerKey,
+): LayerFetcher | undefined {
+  switch (key) {
+    case 'businesses': return fetchers.businesses;
+    case 'gastronomy': return fetchers.gastronomy;
+    case 'services': return fetchers.services;
+    case 'classifieds': return fetchers.classifieds;
+    case 'events': return fetchers.events;
+    case 'alerts': return fetchers.alerts;
+    case 'professionals': return fetchers.professionals;
+    case 'tourist_points': return fetchers.tourist_points;
+    case 'mobility': return fetchers.mobility;
+    case 'user_location': return fetchers.user_location;
+    case 'service_areas': return fetchers.service_areas;
+    case 'boundaries': return fetchers.boundaries;
+    default: return undefined;
+  }
+}
+
+function withLayerMarkers(
+  prev: Partial<Record<MapLayerKey, MapMarker[]>>,
+  key: MapLayerKey,
+  markers: MapMarker[],
+): Partial<Record<MapLayerKey, MapMarker[]>> {
+  switch (key) {
+    case 'businesses': return { ...prev, businesses: markers };
+    case 'gastronomy': return { ...prev, gastronomy: markers };
+    case 'services': return { ...prev, services: markers };
+    case 'classifieds': return { ...prev, classifieds: markers };
+    case 'events': return { ...prev, events: markers };
+    case 'alerts': return { ...prev, alerts: markers };
+    case 'professionals': return { ...prev, professionals: markers };
+    case 'tourist_points': return { ...prev, tourist_points: markers };
+    case 'mobility': return { ...prev, mobility: markers };
+    case 'user_location': return { ...prev, user_location: markers };
+    case 'service_areas': return { ...prev, service_areas: markers };
+    case 'boundaries': return { ...prev, boundaries: markers };
+    default: return prev;
+  }
+}
+
+function withoutLayerData(
+  prev: Partial<Record<MapLayerKey, MapMarker[]>>,
+  key: MapLayerKey,
+): Partial<Record<MapLayerKey, MapMarker[]>> {
+  const next = { ...prev };
+  switch (key) {
+    case 'businesses': delete next.businesses; return next;
+    case 'gastronomy': delete next.gastronomy; return next;
+    case 'services': delete next.services; return next;
+    case 'classifieds': delete next.classifieds; return next;
+    case 'events': delete next.events; return next;
+    case 'alerts': delete next.alerts; return next;
+    case 'professionals': delete next.professionals; return next;
+    case 'tourist_points': delete next.tourist_points; return next;
+    case 'mobility': delete next.mobility; return next;
+    case 'user_location': delete next.user_location; return next;
+    case 'service_areas': delete next.service_areas; return next;
+    case 'boundaries': delete next.boundaries; return next;
+    default: return next;
+  }
+}
+
+function withLayerError(
+  prev: Partial<Record<MapLayerKey, string>>,
+  key: MapLayerKey,
+  message: string,
+): Partial<Record<MapLayerKey, string>> {
+  switch (key) {
+    case 'businesses': return { ...prev, businesses: message };
+    case 'gastronomy': return { ...prev, gastronomy: message };
+    case 'services': return { ...prev, services: message };
+    case 'classifieds': return { ...prev, classifieds: message };
+    case 'events': return { ...prev, events: message };
+    case 'alerts': return { ...prev, alerts: message };
+    case 'professionals': return { ...prev, professionals: message };
+    case 'tourist_points': return { ...prev, tourist_points: message };
+    case 'mobility': return { ...prev, mobility: message };
+    case 'user_location': return { ...prev, user_location: message };
+    case 'service_areas': return { ...prev, service_areas: message };
+    case 'boundaries': return { ...prev, boundaries: message };
+    default: return prev;
+  }
+}
+
+function withoutLayerError(
+  prev: Partial<Record<MapLayerKey, string>>,
+  key: MapLayerKey,
+): Partial<Record<MapLayerKey, string>> {
+  const next = { ...prev };
+  switch (key) {
+    case 'businesses': delete next.businesses; return next;
+    case 'gastronomy': delete next.gastronomy; return next;
+    case 'services': delete next.services; return next;
+    case 'classifieds': delete next.classifieds; return next;
+    case 'events': delete next.events; return next;
+    case 'alerts': delete next.alerts; return next;
+    case 'professionals': delete next.professionals; return next;
+    case 'tourist_points': delete next.tourist_points; return next;
+    case 'mobility': delete next.mobility; return next;
+    case 'user_location': delete next.user_location; return next;
+    case 'service_areas': delete next.service_areas; return next;
+    case 'boundaries': delete next.boundaries; return next;
+    default: return next;
+  }
+}
+
 /**
  * Hook para buscar entidades do mapa por bounds do viewport.
  *
@@ -80,7 +204,7 @@ export function useMapViewportFetch({
   const [errors, setErrors] = useState<Partial<Record<MapLayerKey, string>>>({});
 
   const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const abortControllersRef = useRef<Partial<Record<MapLayerKey, AbortController>>>({});
+  const abortControllersRef = useRef<Map<MapLayerKey, AbortController>>(new Map());
   // Keep fetchers in a ref so callbacks don't need to re-create when fetchers object identity changes
   const fetchersRef = useRef(fetchers);
   fetchersRef.current = fetchers;
@@ -89,32 +213,29 @@ export function useMapViewportFetch({
 
   // Cancelar fetches em andamento para uma camada
   const cancelFetch = useCallback((key: MapLayerKey) => {
-    abortControllersRef.current[key]?.abort();
-    delete abortControllersRef.current[key];
+    const controller = abortControllersRef.current.get(key);
+    controller?.abort();
+    abortControllersRef.current.delete(key);
   }, []);
 
   // Fetch de uma camada específica
   const fetchLayer = useCallback(
     async (key: MapLayerKey, bounds: BoundingBox) => {
-      const fetcher = fetchersRef.current[key];
+      const fetcher = getFetcherByKey(fetchersRef.current, key);
       if (!fetcher) return;
 
       cancelFetch(key);
 
       setLoadingLayers((prev) => new Set([...prev, key]));
-      setErrors((prev) => {
-        const next = { ...prev };
-        delete next[key];
-        return next;
-      });
+      setErrors((prev) => withoutLayerError(prev, key));
 
       try {
         const markers = await fetcher(bounds);
-        setLayerData((prev) => ({ ...prev, [key]: markers }));
+        setLayerData((prev) => withLayerMarkers(prev, key, markers));
       } catch (err) {
         if (err instanceof Error && err.name === 'AbortError') return;
         const message = err instanceof Error ? err.message : 'Erro ao buscar dados';
-        setErrors((prev) => ({ ...prev, [key]: message }));
+        setErrors((prev) => withLayerError(prev, key, message));
         onErrorRef.current?.(key, err instanceof Error ? err : new Error(message));
       } finally {
         setLoadingLayers((prev) => {
@@ -137,7 +258,9 @@ export function useMapViewportFetch({
       }
 
       debounceTimerRef.current = setTimeout(() => {
-        const layerKeys = Object.keys(fetchersRef.current) as MapLayerKey[];
+        const layerKeys = MAP_LAYER_KEYS.filter(
+          (layerKey) => getFetcherByKey(fetchersRef.current, layerKey) !== undefined,
+        );
         layerKeys.forEach((key) => fetchLayer(key, bounds));
       }, debounceMs);
     },
@@ -147,11 +270,7 @@ export function useMapViewportFetch({
   // Limpar dados de uma camada
   const clearLayer = useCallback((key: MapLayerKey) => {
     cancelFetch(key);
-    setLayerData((prev) => {
-      const next = { ...prev };
-      delete next[key];
-      return next;
-    });
+    setLayerData((prev) => withoutLayerData(prev, key));
   }, [cancelFetch]);
 
   // Cleanup no unmount
@@ -160,7 +279,7 @@ export function useMapViewportFetch({
     const abortControllers = abortControllersRef;
     return () => {
       if (debounceTimer.current) clearTimeout(debounceTimer.current);
-      Object.values(abortControllers.current).forEach((ac) => ac?.abort());
+      abortControllers.current.forEach((ac) => ac.abort());
     };
   }, []);
 

@@ -5,7 +5,7 @@
  */
 
 import type { BusinessCategory } from '@/core/business/types/Business';
-import type { CuisineType } from '@/modules/business/gastronomy';
+import type { CuisineType } from "@/core/verticals/gastronomy/types";
 
 /**
  * Mapeamento de category (business_data) para cuisine_type sugerido (gastronomy_profile)
@@ -30,7 +30,14 @@ const CATEGORY_TO_CUISINE_SUGGESTION: Partial<Record<BusinessCategory, CuisineTy
 export function getCuisineSuggestionFromCategory(
   category: BusinessCategory,
 ): CuisineType | null {
-  return CATEGORY_TO_CUISINE_SUGGESTION[category] ?? null;
+  switch (category) {
+    case "restaurante":
+      return CATEGORY_TO_CUISINE_SUGGESTION.restaurante ?? null;
+    case "lazer":
+      return CATEGORY_TO_CUISINE_SUGGESTION.lazer ?? null;
+    default:
+      return null;
+  }
 }
 
 /**

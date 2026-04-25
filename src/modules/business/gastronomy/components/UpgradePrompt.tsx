@@ -2,23 +2,23 @@
  * UpgradePrompt — Componente de prompt de upgrade
  *
  * Mostra quando um recurso está bloqueado pelo plano atual.
- * Incentiva o usuário a fazer upgrade.
- *
- * SSOT: Usa useBillingPlan do core/billing para buscar dados do catálogo
+ * O módulo conversa com uma oferta genérica do core billing e não com plan code
+ * direto.
  */
 
-import { PlanTier } from '@/core/billing';
 import { useBillingPlan } from '@/core/billing/hooks/useBillingPlans';
+import { BillingOfferService, type BillingOfferKey } from '@/core/billing/services/BillingOfferService';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/components/ui/card';
 import { Button } from '@/shared/components/ui/button';
 import { Badge } from '@/shared/components/ui/badge';
 import { Crown, Zap, Lock, TrendingUp } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { businessManagementRoutes } from '@/core/business/utils/businessManagementRoutes';
 
 interface UpgradePromptProps {
   businessId: string;
   feature: string;
-  requiredPlan: PlanTier;
+  offerKey: BillingOfferKey;
   description?: string;
   benefits?: string[];
 }
@@ -26,17 +26,16 @@ interface UpgradePromptProps {
 export function UpgradePrompt({
   businessId,
   feature,
-  requiredPlan,
+  offerKey,
   description,
   benefits = [],
 }: UpgradePromptProps) {
-  // Buscar dados do plano do catálogo
-  const planCode = requiredPlan === PlanTier.PRO ? 'gastronomy_pro' : 'gastronomy_delivery';
-  const { data: planData } = useBillingPlan(planCode);
-  
-  const planName = planData?.name || (requiredPlan === PlanTier.PRO ? 'Pro' : 'Delivery');
-  const planPrice = planData?.priceDisplay || (requiredPlan === PlanTier.PRO ? 'R$ 49,90/mês' : 'R$ 99,90/mês');
-  const planIcon = requiredPlan === PlanTier.PRO ? <Crown className="w-5 h-5" /> : <Zap className="w-5 h-5" />;
+  const offer = BillingOfferService.getOffer(offerKey);
+  const { data: planData } = useBillingPlan(offer.planCode);
+
+  const planName = planData?.name || offer.label;
+  const planPrice = planData?.priceDisplay || offer.priceFallback;
+  const planIcon = offer.icon === 'crown' ? <Crown className="w-5 h-5" /> : <Zap className="w-5 h-5" />;
 
   return (
     <Card className="border-dashed">
@@ -80,7 +79,7 @@ export function UpgradePrompt({
             <p className="text-sm font-medium">{planName}</p>
             <p className="text-xs text-muted-foreground">{planPrice}</p>
           </div>
-          <Link to={`/dashboard/business/${businessId}/gastronomy/plans`}>
+          <Link to={businessManagementRoutes.planos(businessId)}>
             <Button>
               <TrendingUp className="w-4 h-4 mr-2" />
               Fazer Upgrade
@@ -98,19 +97,17 @@ export function UpgradePrompt({
 interface UpgradePromptInlineProps {
   businessId: string;
   feature: string;
-  requiredPlan: PlanTier;
+  offerKey: BillingOfferKey;
 }
 
 export function UpgradePromptInline({
   businessId,
   feature,
-  requiredPlan,
+  offerKey,
 }: UpgradePromptInlineProps) {
-  // Buscar dados do plano do catálogo
-  const planCode = requiredPlan === PlanTier.PRO ? 'gastronomy_pro' : 'gastronomy_delivery';
-  const { data: planData } = useBillingPlan(planCode);
-  
-  const planName = planData?.name || (requiredPlan === PlanTier.PRO ? 'Pro' : 'Delivery');
+  const offer = BillingOfferService.getOffer(offerKey);
+  const { data: planData } = useBillingPlan(offer.planCode);
+  const planName = planData?.name || offer.label;
 
   return (
     <div className="flex items-center justify-between p-4 border rounded-lg bg-muted/50">
@@ -123,7 +120,7 @@ export function UpgradePromptInline({
           </p>
         </div>
       </div>
-      <Link to={`/dashboard/business/${businessId}/gastronomy/plans`}>
+      <Link to={businessManagementRoutes.planos(businessId)}>
         <Button size="sm" variant="outline">
           Fazer Upgrade
         </Button>

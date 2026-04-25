@@ -45,6 +45,7 @@ export function DadosPessoaisSection({
   verificationStatus,
   verificationRejectionReason,
   favorites,
+  setActiveSection,
   navigate,
   appUrls,
   moduleUrls,
@@ -176,7 +177,7 @@ export function DadosPessoaisSection({
             icon={Database}
             title="Dados"
             description="Exportar e gerenciar"
-            onClick={() => navigate("/perfil?sec=seguranca")}
+            onClick={() => setActiveSection("seguranca")}
           />
         </div>
       </SectionFrame>

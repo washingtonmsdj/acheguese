@@ -18,8 +18,9 @@ export function usePollForm() {
   };
 
   const handleOpcaoChange = (index: number, value: string) => {
-    const newOptions = [...opcoesEnquete];
-    newOptions[index] = value;
+    const newOptions = opcoesEnquete.map((option, optionIndex) =>
+      optionIndex === index ? value : option,
+    );
     setOpcoesEnquete(newOptions);
   };
 

@@ -20,16 +20,22 @@ export function label(value: string): string {
  * Retorna o label traduzido para um issue
  */
 export function issueLabel(issue: AdminProfileIdentityIssue): string {
-  const labels: Record<AdminProfileIdentityIssue, string> = {
-    public_without_username: "Publico sem username",
-    public_unverified: "Publico sem verificacao",
-    suspended: "Suspenso",
-    inactive: "Inativo",
-    multi_profile: "Conta multi-profile",
-    missing_preferences: "Sem preferencias",
-  };
-
-  return labels[issue] || label(issue);
+  switch (issue) {
+    case "public_without_username":
+      return "Publico sem username";
+    case "public_unverified":
+      return "Publico sem verificacao";
+    case "suspended":
+      return "Suspenso";
+    case "inactive":
+      return "Inativo";
+    case "multi_profile":
+      return "Conta multi-profile";
+    case "missing_preferences":
+      return "Sem preferencias";
+    default:
+      return label(issue);
+  }
 }
 
 /**

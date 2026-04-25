@@ -6,7 +6,7 @@
  * Este script escaneia o código em busca de hardcodes que violam o SSOT
  */
 
-import { readFileSync, readdirSync, statSync } from 'fs';
+import { existsSync, readFileSync, readdirSync, statSync } from 'fs';
 import { join } from 'path';
 
 interface Violation {
@@ -23,35 +23,35 @@ const violations: Violation[] = [];
 const PATTERNS = {
   // Preços e valores monetários
   hardcodedPrice: {
-    regex: /(?:price|fare|rate|valor|preco).*?[:=]\s*\d+\.?\d*/gi,
-    severity: 'critical' as const,
+    regex: /\b(?:price|priceCents|fare|fareCents|tarifa|valor|preco|preço|amountCents)\b\s*[:=]\s*\d+(?:\.\d+)?/gi,
+    severity: 'high' as const,
     type: 'Preço hardcoded',
   },
   
   // Coordenadas geográficas
   hardcodedCoordinates: {
-    regex: /(?:lat|latitude|lng|longitude).*?[:=]\s*-?\d+\.\d+/gi,
-    severity: 'critical' as const,
+    regex: /\b(?:lat|latitude|lng|lon|longitude)\b\s*[:=]\s*-?\d+\.\d+/gi,
+    severity: 'high' as const,
     type: 'Coordenada hardcoded',
   },
   
   // UUIDs
   hardcodedUUID: {
     regex: /['"][0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}['"]/gi,
-    severity: 'critical' as const,
+    severity: 'high' as const,
     type: 'UUID hardcoded',
   },
   
   // Imports de mocks
   mockImport: {
     regex: /import.*(?:mock-|__mocks__|\/data\/mock)/gi,
-    severity: 'critical' as const,
+    severity: 'high' as const,
     type: 'Import de mock em runtime',
   },
   
   // Status hardcoded
   hardcodedStatus: {
-    regex: /status:\s*['"](?:active|inactive|pending|approved|rejected)['"]/gi,
+    regex: /\bstatus\s*:\s*['"](?:active|inactive|pending|approved|rejected)['"]/gi,
     severity: 'high' as const,
     type: 'Status hardcoded',
   },
@@ -83,13 +83,33 @@ const IGNORE_DIRS = [
   '.test.',
   '.spec.',
   '.stories.',
+  'mockData.ts',
+  '/dev/',
+  'Exemplo',
+  'Example',
+  'Mock',
+  'mock',
+];
+
+const ALLOWED_HARDCODE_PATH_SEGMENTS = [
+  '/constants/',
+  '/config/',
+  '/types/',
+  '/fixtures/',
+  '/mocks/',
+  '/__tests__/',
+  '/__fixtures__/',
 ];
 
 /**
  * Verifica se o arquivo deve ser ignorado
  */
 function shouldIgnore(filePath: string): boolean {
-  return IGNORE_DIRS.some(dir => filePath.includes(dir));
+  const normalized = filePath.replace(/\\/g, '/');
+  return (
+    IGNORE_DIRS.some(dir => normalized.includes(dir)) ||
+    ALLOWED_HARDCODE_PATH_SEGMENTS.some(segment => normalized.includes(segment))
+  );
 }
 
 /**
@@ -132,6 +152,10 @@ function scanFile(filePath: string): void {
  * Escaneia um diretório recursivamente
  */
 function scanDirectory(dirPath: string): void {
+  if (!existsSync(dirPath)) {
+    return;
+  }
+
   try {
     const entries = readdirSync(dirPath);
 

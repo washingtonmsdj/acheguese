@@ -38,8 +38,26 @@ export const BUSINESS_ROLES = ["standalone", "brand_hub", "branch"] as const;
 const currentYear = new Date().getFullYear();
 const phoneRegex = /^[+()\d\s-]{10,20}$/;
 const cepRegex = /^\d{5}-?\d{3}$/;
-const slugRegex = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const cnpjRegex = /^\d{2}\.?\d{3}\.?\d{3}\/?\d{4}-?\d{2}$/;
+
+const isSafeSlug = (value: string): boolean => {
+  if (!value || value.startsWith("-") || value.endsWith("-") || value.includes("--")) {
+    return false;
+  }
+
+  for (let i = 0; i < value.length; i += 1) {
+    const code = value.charCodeAt(i);
+    const isDigit = code >= 48 && code <= 57;
+    const isLowerAlpha = code >= 97 && code <= 122;
+    const isHyphen = code === 45;
+
+    if (!isDigit && !isLowerAlpha && !isHyphen) {
+      return false;
+    }
+  }
+
+  return true;
+};
 
 const emptyStringToUndefined = (value: unknown) => {
   if (typeof value !== "string") {
@@ -89,7 +107,7 @@ const optionalSlug = z.preprocess(
     .string()
     .min(3, "Slug deve ter no minimo 3 caracteres")
     .max(60, "Slug deve ter no maximo 60 caracteres")
-    .regex(slugRegex, "Use apenas letras minusculas, numeros e hifens")
+    .refine(isSafeSlug, "Use apenas letras minusculas, numeros e hifens")
     .optional(),
 );
 

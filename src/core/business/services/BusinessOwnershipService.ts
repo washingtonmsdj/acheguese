@@ -1,4 +1,5 @@
 import { logger } from '@/shared/utils/logger';
+import { supabase } from '@/integrations/supabase';
 /**
  * BusinessOwnershipService - SSOT para verificação de ownership de negócios
  * 

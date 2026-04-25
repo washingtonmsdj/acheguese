@@ -8,11 +8,21 @@
 
 import { supabase } from "@/integrations/supabase";
 import { logger } from "@/shared/utils/logger";
-import { ClassifiedsFacade } from "@/modules/classifieds/services";
-import type { ClassifiedData } from "@/modules/classifieds/services/types";
 
-export interface AdminClassifiedData extends ClassifiedData {
-  // Admin-specific fields
+export interface AdminClassifiedData {
+  [key: string]: unknown;
+  id?: string;
+  title?: string;
+  description?: string;
+  price?: number;
+  category?: string;
+  category_id?: string | null;
+  subcategory_id?: string | null;
+  location_id?: string | null;
+  seller_id?: string;
+  status?: string;
+  created_at?: string;
+  updated_at?: string;
   seller_name?: string;
   seller_avatar?: string;
   seller_phone?: string;
@@ -108,6 +118,63 @@ export interface ClassifiedPolicySummary {
 }
 
 class AdminClassifiedsServiceClass {
+  async getTotalClassifiedsCount(): Promise<number> {
+    const { count, error } = await supabase
+      .from("classifieds")
+      .select("*", { count: "exact", head: true });
+
+    if (error) {
+      logger.error("Error fetching total classifieds count:", error);
+      throw error;
+    }
+
+    return count || 0;
+  }
+
+  async getClassifiedsCreatedInPeriod(startDate: Date, endDate: Date): Promise<number> {
+    const { count, error } = await supabase
+      .from("classifieds")
+      .select("*", { count: "exact", head: true })
+      .gte("created_at", startDate.toISOString())
+      .lt("created_at", endDate.toISOString());
+
+    if (error) {
+      logger.error("Error fetching classifieds created in period:", error);
+      throw error;
+    }
+
+    return count || 0;
+  }
+
+  async getRecentClassifieds(limit = 10): Promise<AdminClassifiedData[]> {
+    const { data, error } = await supabase
+      .from("classifieds")
+      .select("*")
+      .order("created_at", { ascending: false })
+      .limit(limit);
+
+    if (error) {
+      logger.error("Error fetching recent classifieds:", error);
+      throw error;
+    }
+
+    return (data || []) as AdminClassifiedData[];
+  }
+
+  async getPendingReportsCount(): Promise<number> {
+    const { count, error } = await supabase
+      .from("classified_reports")
+      .select("*", { count: "exact", head: true })
+      .eq("status", "pending");
+
+    if (error) {
+      logger.error("Error fetching pending classified reports count:", error);
+      throw error;
+    }
+
+    return count || 0;
+  }
+
   /**
    * Busca estatísticas de classificados
    */
@@ -463,13 +530,22 @@ class AdminClassifiedsServiceClass {
    */
   async getClassifiedById(id: string): Promise<AdminClassifiedData | null> {
     try {
-      const classified = await ClassifiedsFacade.queries.getClassifiedById(id);
-      
-      if (!classified) {
+      const { data, error } = await supabase
+        .from("classifieds")
+        .select("*")
+        .eq("id", id)
+        .maybeSingle();
+
+      if (error) {
+        logger.error("Error fetching classified by id:", error);
+        throw error;
+      }
+
+      if (!data) {
         return null;
       }
 
-      return classified as AdminClassifiedData;
+      return data as AdminClassifiedData;
     } catch (error) {
       logger.error("Error in getClassifiedById:", error);
       throw error;
@@ -496,13 +572,19 @@ class AdminClassifiedsServiceClass {
       // Remove status from updates if present (use specific methods for status changes)
       const { status, ...safeUpdates } = updates;
 
-      const updated = await ClassifiedsFacade.mutations.updateClassified(
-        id,
-        existing.seller_id,
-        safeUpdates as any,
-      );
+      const { data, error } = await supabase
+        .from("classifieds")
+        .update(safeUpdates)
+        .eq("id", id)
+        .select("*")
+        .single();
+
+      if (error) {
+        logger.error("Error updating classified:", error);
+        throw error;
+      }
       
-      return updated as AdminClassifiedData;
+      return data as AdminClassifiedData;
     } catch (error) {
       logger.error("Error in updateClassified:", error);
       throw error;
@@ -521,7 +603,16 @@ class AdminClassifiedsServiceClass {
         throw new Error("Classified not found");
       }
 
-      await ClassifiedsFacade.mutations.deleteClassified(id, existing.seller_id);
+      const { error } = await supabase
+        .from("classifieds")
+        .delete()
+        .eq("id", id);
+
+      if (error) {
+        logger.error("Error deleting classified:", error);
+        throw error;
+      }
+
       return true;
     } catch (error) {
       logger.error("Error in deleteClassified:", error);
@@ -585,7 +676,16 @@ class AdminClassifiedsServiceClass {
         throw new Error("Classified not found");
       }
 
-      await ClassifiedsFacade.mutations.markAsSold(id, existing.seller_id);
+      const { error } = await supabase
+        .from("classifieds")
+        .update({ status: "sold" })
+        .eq("id", id);
+
+      if (error) {
+        logger.error("Error marking classified as sold:", error);
+        throw error;
+      }
+
       return true;
     } catch (error) {
       logger.error("Error in markAsSold:", error);
@@ -605,7 +705,16 @@ class AdminClassifiedsServiceClass {
         throw new Error("Classified not found");
       }
 
-      await ClassifiedsFacade.mutations.reactivateClassified(id, existing.seller_id);
+      const { error } = await supabase
+        .from("classifieds")
+        .update({ status: "active" })
+        .eq("id", id);
+
+      if (error) {
+        logger.error("Error reactivating classified:", error);
+        throw error;
+      }
+
       return true;
     } catch (error) {
       logger.error("Error in reactivateClassified:", error);

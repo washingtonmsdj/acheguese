@@ -13,15 +13,47 @@ import { logger } from '@/shared/utils/logger';
 import { supabase } from '@/integrations/supabase';
 import { SessionService } from '@/core/session/services/SessionService';
 import type { AdminSupabaseClient } from '../types/adminDatabase.types';
-import { communityIssueService } from '@/modules/community/issues';
-import type {
-  CommunityIssue,
-  CommunityIssuePublic,
-  IssueCategory,
-  IssuePriority,
-  IssueReportReason,
-  IssueStatus,
-} from '@/modules/community/issues';
+
+type IssueCategory =
+  | "buraco_via"
+  | "calcada_danificada"
+  | "iluminacao_publica"
+  | "lixo_acumulado"
+  | "alagamento_cronico"
+  | "arvore_risco"
+  | "sinalizacao_danificada"
+  | "esgoto_aberto"
+  | "pichacao_vandalismo"
+  | "outro";
+type IssueStatus = "aberto" | "em_analise" | "em_andamento" | "resolvido" | "rejeitado";
+type IssuePriority = "baixa" | "media" | "alta" | "urgente";
+type IssueReportReason = "duplicate" | "false_report" | "inappropriate_content" | "spam" | "other";
+
+interface CommunityIssue {
+  [key: string]: unknown;
+  id: string;
+  author_profile_id: string;
+  location_id: string;
+  category: IssueCategory;
+  status: IssueStatus;
+  priority: IssuePriority;
+  title: string;
+  description: string;
+  images?: string[];
+  neighborhood: string;
+  neighborhood_display: string;
+  city: string;
+  address_reference?: string;
+  support_count: number;
+  comments_count: number;
+  report_count: number;
+  under_review: boolean;
+  removed_at?: string;
+  removal_reason?: string;
+  resolved_at?: string;
+  created_at: string;
+  updated_at: string;
+}
 
 // ============================================================================
 // TIPOS ADMINISTRATIVOS

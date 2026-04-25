@@ -42,6 +42,24 @@ interface PaginatedGastronomyBusinesses {
   totalCount: number;
 }
 
+async function fetchActiveGastronomyProfileByBusinessDataId(
+  businessDataId: string,
+): Promise<GastronomyProfile | null> {
+  const { data, error } = await supabase
+    .from('gastronomy_profiles')
+    .select('*')
+    .eq('business_id', businessDataId)
+    .eq('status', 'active')
+    .maybeSingle();
+
+  if (error) {
+    logger.error('[GastronomyQueries] Error fetching profile by business_data.id:', error);
+    return null;
+  }
+
+  return data as GastronomyProfile | null;
+}
+
 // ============================================================
 // HELPERS INTERNOS
 // ============================================================
@@ -249,19 +267,18 @@ export async function getGastronomyProfile(businessId: string): Promise<Gastrono
       return null;
     }
 
-    const { data, error } = await supabase
-      .from('gastronomy_profiles')
-      .select('*')
-      .eq('business_id', businessId)
-      .eq('status', 'active')
-      .maybeSingle();
+    const directProfile = await fetchActiveGastronomyProfileByBusinessDataId(businessId);
+    if (directProfile) {
+      return directProfile;
+    }
 
-    if (error) {
-      logger.error('[GastronomyQueries] Error fetching profile:', error);
+    // Compatibilidade: alguns fluxos ainda passam profile_id em vez de business_data.id.
+    const resolvedBusinessDataId = await BusinessService.getBusinessDataIdByProfileId(businessId);
+    if (!resolvedBusinessDataId || resolvedBusinessDataId === businessId) {
       return null;
     }
 
-    return data as GastronomyProfile | null;
+    return fetchActiveGastronomyProfileByBusinessDataId(resolvedBusinessDataId);
   } catch (error) {
     logger.error('[GastronomyQueries] Unexpected error fetching profile:', error);
     return null;
@@ -306,7 +323,7 @@ export async function getGastronomyBusiness(identifier: string): Promise<Gastron
       return null;
     }
 
-    // Tentar por ID
+    // Tentar por business_data.id
     const { data: byId, error: idError } = await supabase
       .from('business_data')
       .select(`
@@ -320,7 +337,24 @@ export async function getGastronomyBusiness(identifier: string): Promise<Gastron
       .maybeSingle();
 
     if (idError || !byId) {
-      return null;
+      // Compatibilidade: aceitar profile_id como identificador em fluxos legados.
+      const { data: byProfileId } = await supabase
+        .from('business_data')
+        .select(`
+          *,
+          address:addresses!address_id(*),
+          location:locations!location_id(*)
+        `)
+        .eq('status', 'active')
+        .in('business_role', ['standalone', 'branch'])
+        .eq('profile_id', normalizedIdentifier)
+        .maybeSingle();
+
+      if (!byProfileId) {
+        return null;
+      }
+
+      return mapRecordToGastronomyBusiness(byProfileId);
     }
 
     return mapRecordToGastronomyBusiness(byId);

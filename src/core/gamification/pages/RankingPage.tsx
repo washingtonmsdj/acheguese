@@ -7,7 +7,7 @@ import {
   TabsList,
   TabsTrigger,
 } from "@/shared/components/ui/tabs";
-import { NeighborRankingPanel } from '@/modules/mobility/components/NeighborRankingPanel';
+import { NeighborRankingPanel } from "@/core/gamification/components/NeighborRankingPanel";
 
 export default function RankingPage() {
   const navigate = useNavigate();

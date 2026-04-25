@@ -331,10 +331,16 @@ export class VerificationService {
       };
 
       // Contar por tipo
+      const typeCounter = new Map<VerificationType, number>();
       data?.forEach((v) => {
         const type = v.verification_type as VerificationType;
-        stats.by_type[type] = (stats.by_type[type] || 0) + 1;
+        const currentCount = typeCounter.get(type) ?? 0;
+        typeCounter.set(type, currentCount + 1);
       });
+      stats.by_type = Object.fromEntries(typeCounter.entries()) as Record<
+        VerificationType,
+        number
+      >;
 
       return stats;
     } catch (error) {

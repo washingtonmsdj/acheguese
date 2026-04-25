@@ -19,16 +19,30 @@ export function TrendIndicator({
   className,
   size = "md",
 }: TrendIndicatorProps) {
-  const sizeClasses = {
-    sm: "text-xs",
-    md: "text-sm",
-    lg: "text-base",
+  const getSizeClass = (): string => {
+    switch (size) {
+      case "sm":
+        return "text-xs";
+      case "md":
+        return "text-sm";
+      case "lg":
+        return "text-base";
+      default:
+        return "text-sm";
+    }
   };
 
-  const iconSizes = {
-    sm: "h-3 w-3",
-    md: "h-4 w-4",
-    lg: "h-5 w-5",
+  const getIconSizeClass = (): string => {
+    switch (size) {
+      case "sm":
+        return "h-3 w-3";
+      case "md":
+        return "h-4 w-4";
+      case "lg":
+        return "h-5 w-5";
+      default:
+        return "h-4 w-4";
+    }
   };
 
   const getColorClass = () => {
@@ -43,7 +57,7 @@ export function TrendIndicator({
   };
 
   const getIcon = () => {
-    const iconClass = iconSizes[size];
+    const iconClass = getIconSizeClass();
     switch (trend.direction) {
       case "up":
         return <TrendingUp className={iconClass} />;
@@ -58,7 +72,7 @@ export function TrendIndicator({
     <div
       className={cn(
         "flex items-center gap-1 font-medium",
-        sizeClasses[size],
+        getSizeClass(),
         getColorClass(),
         className,
       )}

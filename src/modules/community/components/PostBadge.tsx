@@ -76,8 +76,25 @@ const postTypeConfig = {
   },
 };
 
+function getPostTypeConfig(type: PostType) {
+  switch (type) {
+    case "pergunta":
+      return postTypeConfig.pergunta;
+    case "enquete":
+      return postTypeConfig.enquete;
+    case "discussao":
+      return postTypeConfig.discussao;
+    case "recomendacao":
+      return postTypeConfig.recomendacao;
+    case "achados_e_perdidos":
+      return postTypeConfig.achados_e_perdidos;
+    default:
+      return postTypeConfig.discussao;
+  }
+}
+
 export function PostBadge({ type, isVerified = false }: PostBadgeProps) {
-  const config = postTypeConfig[type];
+  const config = getPostTypeConfig(type);
   const Icon = config.icon;
 
   return (

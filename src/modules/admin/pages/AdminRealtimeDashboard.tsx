@@ -60,7 +60,13 @@ const StatusIndicator = ({
     },
   };
 
-  const { color, text, icon: Icon } = config[status];
+  const currentConfig =
+    status === "healthy"
+      ? config.healthy
+      : status === "warning"
+        ? config.warning
+        : config.critical;
+  const { color, text, icon: Icon } = currentConfig;
 
   return (
     <div className="flex items-center gap-2">

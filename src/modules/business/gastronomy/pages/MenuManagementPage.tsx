@@ -7,8 +7,9 @@
 import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useBusinessSubscription } from '@/core/billing';
-import { useMenuCategories, useMenuItems, useGastronomyMenuId } from '@/modules/business/gastronomy/hooks';
+import { useMenuCategories, useMenuItems, useGastronomyMenuId, useGastronomyProfile } from '@/modules/business/gastronomy/hooks';
 import { CategoryList, CategoryForm, ItemCard, ItemForm } from '../components/menu';
+import { PizzaAdminPanel } from '../niches';
 import { UpgradePromptInline } from '../components';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/components/ui/card';
@@ -23,6 +24,7 @@ import {
 } from '@/shared/components/ui/select';
 import { ArrowLeft, Plus, Search } from 'lucide-react';
 import type { MenuCategory, MenuItem } from '@/modules/business/gastronomy/services/MenuService';
+import { businessManagementRoutes } from '@/core/business/utils/businessManagementRoutes';
 
 export default function MenuManagementPage() {
   const { businessId } = useParams<{ businessId: string }>();
@@ -30,6 +32,7 @@ export default function MenuManagementPage() {
   const { entitlements, isLoading: loadingSubscription } = useBusinessSubscription(businessId!);
 
   const { menuId, isLoading: loadingMenuId } = useGastronomyMenuId(businessId);
+  const { data: gastronomyProfile } = useGastronomyProfile(businessId);
 
   const [categoryFormOpen, setCategoryFormOpen] = useState(false);
   const [itemFormOpen, setItemFormOpen] = useState(false);
@@ -72,6 +75,10 @@ export default function MenuManagementPage() {
 
   const canAddMoreCategories =
     entitlements.maxCategories === null || categoriesCount < entitlements.maxCategories;
+  const isPizzaria =
+    gastronomyProfile?.niche_key === 'pizza' ||
+    gastronomyProfile?.cuisine_type === 'pizzaria' ||
+    gastronomyProfile?.cuisine_type === 'pizza';
 
   const handleCreateCategory = () => {
     if (!canUseCategories || !canAddMoreCategories) return;
@@ -155,7 +162,7 @@ export default function MenuManagementPage() {
         <Button
           variant="ghost"
           size="sm"
-          onClick={() => navigate(`/dashboard/business/${businessId}/gastronomy`)}
+          onClick={() => navigate(businessManagementRoutes.gastronomia(businessId!))}
         >
           <ArrowLeft className="w-4 h-4 mr-2" />
           Voltar ao Dashboard
@@ -174,7 +181,7 @@ export default function MenuManagementPage() {
         <Button
           variant="ghost"
           size="sm"
-          onClick={() => navigate(`/dashboard/business/${businessId}/gastronomy`)}
+          onClick={() => navigate(businessManagementRoutes.gastronomia(businessId!))}
         >
           <ArrowLeft className="w-4 h-4 mr-2" />
           Voltar ao Dashboard
@@ -183,7 +190,7 @@ export default function MenuManagementPage() {
         <UpgradePromptInline
           businessId={businessId!}
           feature="Cardapio Avancado"
-          requiredPlan="pro"
+          offerKey="catalog"
         />
       </div>
     );
@@ -195,7 +202,7 @@ export default function MenuManagementPage() {
         <Button
           variant="ghost"
           size="sm"
-          onClick={() => navigate(`/dashboard/business/${businessId}/gastronomy`)}
+          onClick={() => navigate(businessManagementRoutes.gastronomia(businessId!))}
           className="mb-4"
         >
           <ArrowLeft className="w-4 h-4 mr-2" />
@@ -211,6 +218,7 @@ export default function MenuManagementPage() {
         <TabsList>
           <TabsTrigger value="items">Itens</TabsTrigger>
           {canUseCategories && <TabsTrigger value="categories">Categorias</TabsTrigger>}
+          {isPizzaria && <TabsTrigger value="pizzaria">Pizzaria</TabsTrigger>}
         </TabsList>
 
         <TabsContent value="items" className="space-y-6">
@@ -328,6 +336,12 @@ export default function MenuManagementPage() {
                 }
               />
             )}
+          </TabsContent>
+        )}
+
+        {isPizzaria && businessId && (
+          <TabsContent value="pizzaria">
+            <PizzaAdminPanel businessId={businessId} />
           </TabsContent>
         )}
       </Tabs>

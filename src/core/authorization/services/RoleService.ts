@@ -239,15 +239,17 @@ export class RoleService {
     userId: string, 
     roles: AppRole[]
   ): Promise<Record<AppRole, boolean>> {
-    const results: Record<string, boolean> = {};
+    const results = new Map<AppRole, boolean>();
 
     await Promise.all(
       roles.map(async (role) => {
-        results[role] = await this.hasRole(userId, role);
+        results.set(role, await this.hasRole(userId, role));
       })
     );
 
-    return results as Record<AppRole, boolean>;
+    return Object.fromEntries(
+      roles.map((role) => [role, results.get(role) ?? false]),
+    ) as Record<AppRole, boolean>;
   }
 
   /**

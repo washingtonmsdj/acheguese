@@ -299,11 +299,17 @@ export function sanitizeString(input: unknown, maxLength = 1000): string {
     throw new Error('Input must be a string');
   }
   
-  // Remove caracteres de controle e limita tamanho
-  const sanitized = input
-    .replace(/[\x00-\x1F\x7F]/g, '') // Remove caracteres de controle
-    .trim()
-    .slice(0, maxLength);
+  // Remove caracteres de controle e limita tamanho sem regex de control chars.
+  let withoutControlChars = '';
+  for (let i = 0; i < input.length; i += 1) {
+    const code = input.charCodeAt(i);
+    const isControl = (code >= 0 && code <= 31) || code === 127;
+    if (!isControl) {
+      withoutControlChars += input.charAt(i);
+    }
+  }
+
+  const sanitized = withoutControlChars.trim().slice(0, maxLength);
   
   return sanitized;
 }
@@ -344,7 +350,8 @@ export function validateSchema<T>(
   const obj = data as Record<string, unknown>;
   
   for (const [key, validator] of Object.entries(schema)) {
-    if (!validator(obj[key])) {
+    const value = Reflect.get(obj, key);
+    if (!validator(value)) {
       errors.push(`Invalid value for field: ${key}`);
     }
   }

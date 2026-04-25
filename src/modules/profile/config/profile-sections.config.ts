@@ -1,14 +1,8 @@
 /**
  * Profile Sections Configuration - SSOT
- * 
- * Single Source of Truth para todas as seções de navegação do perfil.
- * Usado por ProfileSectionsNav (sidebar desktop e tabs mobile).
- * 
- * Estrutura:
- * - Seções organizadas por categoria
- * - Metadados completos (ícone, label, descrição)
- * - Type-safe com TypeScript
- * - Fácil manutenção e extensão
+ *
+ * Single Source of Truth for profile navigation sections.
+ * Used by ProfileSectionsNav (desktop sidebar and mobile tabs).
  */
 
 import type { LucideIcon } from "lucide-react";
@@ -24,10 +18,6 @@ import {
   Shield,
 } from "lucide-react";
 
-/**
- * IDs das seções do perfil
- * Usado para type-safety e validação
- */
 export const PROFILE_SECTION_IDS = [
   "resumo",
   "dados-pessoais",
@@ -42,9 +32,6 @@ export const PROFILE_SECTION_IDS = [
 
 export type ProfileSectionId = (typeof PROFILE_SECTION_IDS)[number];
 
-/**
- * Interface para item de seção do perfil
- */
 export interface ProfileSectionItem {
   readonly id: ProfileSectionId;
   readonly icon: LucideIcon;
@@ -54,61 +41,43 @@ export interface ProfileSectionItem {
   readonly order: number;
   readonly requiresAuth?: boolean;
   readonly requiresProfile?: boolean;
+  readonly hiddenInNavigation?: boolean;
 }
 
-/**
- * Configuração completa das seções do perfil
- * SSOT - Single Source of Truth
- */
 export const PROFILE_SECTIONS: readonly ProfileSectionItem[] = [
-  // ============================================================
-  // OVERVIEW
-  // ============================================================
   {
     id: "resumo",
     icon: LayoutGrid,
-    label: "Resumo",
-    description: "Visão geral com dados essenciais e ações rápidas",
+    label: "Visão geral",
+    description: "Resumo da conta com status e atalhos principais.",
     category: "overview",
     order: 1,
     requiresAuth: true,
   },
-
-  // ============================================================
-  // PERSONAL
-  // ============================================================
   {
     id: "dados-pessoais",
     icon: UserRound,
-    label: "Dados pessoais",
-    description: "Identidade, perfil público e conteúdo pessoal",
+    label: "Minha conta",
+    description: "Identidade, perfil público e dados pessoais.",
     category: "personal",
     order: 2,
     requiresAuth: true,
     requiresProfile: true,
   },
-
-  // ============================================================
-  // BUSINESS
-  // ============================================================
   {
     id: "empresas",
     icon: Building2,
     label: "Empresas",
-    description: "Gestão de empresas, módulos e dashboards",
+    description: "Gestão das empresas e seus painéis.",
     category: "business",
     order: 3,
     requiresAuth: true,
   },
-
-  // ============================================================
-  // OPERATIONS
-  // ============================================================
   {
     id: "mobilidade",
     icon: Car,
-    label: "Motorista / Mobilidade",
-    description: "Operação de corridas e perfil de motorista",
+    label: "Mobilidade",
+    description: "Perfil operacional para corridas e entregas.",
     category: "operations",
     order: 4,
     requiresAuth: true,
@@ -116,21 +85,18 @@ export const PROFILE_SECTIONS: readonly ProfileSectionItem[] = [
   {
     id: "delivery",
     icon: Truck,
-    label: "Delivery / Motoboy",
-    description: "Operação de entregas e rede de motoboy",
+    label: "Entregas",
+    description: "Fluxos operacionais de entrega e motoboy.",
     category: "operations",
     order: 5,
     requiresAuth: true,
+    hiddenInNavigation: true,
   },
-
-  // ============================================================
-  // SYSTEM
-  // ============================================================
   {
     id: "planos",
     icon: CreditCard,
-    label: "Planos e assinaturas",
-    description: "Planos da identidade e por empresa",
+    label: "Planos",
+    description: "Planos, cobranças e recursos por entidade.",
     category: "system",
     order: 6,
     requiresAuth: true,
@@ -139,7 +105,7 @@ export const PROFILE_SECTIONS: readonly ProfileSectionItem[] = [
     id: "notificacoes",
     icon: Bell,
     label: "Notificações",
-    description: "Inbox e alertas do sistema",
+    description: "Alertas, mensagens e avisos do sistema.",
     category: "system",
     order: 7,
     requiresAuth: true,
@@ -148,7 +114,7 @@ export const PROFILE_SECTIONS: readonly ProfileSectionItem[] = [
     id: "configuracoes",
     icon: Settings2,
     label: "Configurações",
-    description: "Privacidade, vínculos e preferências",
+    description: "Preferências, vínculos e ajustes gerais.",
     category: "system",
     order: 8,
     requiresAuth: true,
@@ -157,16 +123,13 @@ export const PROFILE_SECTIONS: readonly ProfileSectionItem[] = [
     id: "seguranca",
     icon: Shield,
     label: "Segurança",
-    description: "Conta, acesso e dados sensíveis",
+    description: "Conta, acesso e proteção de dados.",
     category: "system",
     order: 9,
     requiresAuth: true,
   },
 ] as const;
 
-/**
- * Helper: Validar se um valor é um ProfileSectionId válido
- */
 export function isProfileSectionId(value: unknown): value is ProfileSectionId {
   return (
     typeof value === "string" &&
@@ -174,79 +137,58 @@ export function isProfileSectionId(value: unknown): value is ProfileSectionId {
   );
 }
 
-/**
- * Helper: Obter seção por ID
- */
 export function getProfileSection(
   id: ProfileSectionId,
 ): ProfileSectionItem | undefined {
   return PROFILE_SECTIONS.find((section) => section.id === id);
 }
 
-/**
- * Helper: Obter seções por categoria
- */
 export function getProfileSectionsByCategory(
   category: ProfileSectionItem["category"],
 ): readonly ProfileSectionItem[] {
   return PROFILE_SECTIONS.filter((section) => section.category === category);
 }
 
-/**
- * Helper: Obter todas as seções ordenadas
- */
 export function getAllProfileSections(): readonly ProfileSectionItem[] {
   return [...PROFILE_SECTIONS].sort((a, b) => a.order - b.order);
 }
 
-/**
- * Helper: Obter label de uma seção
- */
 export function getProfileSectionLabel(id: ProfileSectionId): string {
   return getProfileSection(id)?.label ?? id;
 }
 
-/**
- * Helper: Obter descrição de uma seção
- */
 export function getProfileSectionDescription(id: ProfileSectionId): string {
   return getProfileSection(id)?.description ?? "";
 }
 
-/**
- * Helper: Obter ícone de uma seção
- */
 export function getProfileSectionIcon(id: ProfileSectionId): LucideIcon {
   return getProfileSection(id)?.icon ?? LayoutGrid;
 }
 
-/**
- * Categorias de seções com metadados
- */
 export const PROFILE_SECTION_CATEGORIES = {
   overview: {
     id: "overview",
-    label: "Visão Geral",
-    description: "Resumo e ações rápidas",
+    label: "Visão geral",
+    description: "Resumo e atalhos principais",
   },
   personal: {
     id: "personal",
-    label: "Pessoal",
-    description: "Dados e conteúdo pessoal",
+    label: "Conta",
+    description: "Dados e identidade pessoal",
   },
   business: {
     id: "business",
-    label: "Empresarial",
+    label: "Empresas",
     description: "Gestão de empresas",
   },
   operations: {
     id: "operations",
-    label: "Operações",
-    description: "Mobilidade e delivery",
+    label: "Mobilidade",
+    description: "Mobilidade operacional e entregas",
   },
   system: {
     id: "system",
     label: "Sistema",
-    description: "Configurações e segurança",
+    description: "Planos, notificações, ajustes e segurança",
   },
 } as const;

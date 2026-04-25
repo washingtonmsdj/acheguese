@@ -1,5 +1,6 @@
 import { readFile } from 'fs/promises';
 import { resolve } from 'path';
+import { createHash, timingSafeEqual } from 'crypto';
 import { createClient } from '@supabase/supabase-js';
 
 type ReqBody = {
@@ -7,6 +8,18 @@ type ReqBody = {
   limit?: number;
   sample?: boolean;
   ownerUserId?: string;
+};
+
+type RequestLike = {
+  method?: string;
+  headers: Record<string, string | string[] | undefined>;
+  body?: unknown;
+};
+
+type ResponseLike = {
+  status: (code: number) => ResponseLike;
+  setHeader: (key: string, value: string) => ResponseLike;
+  end: (payload?: string) => void;
 };
 
 type NormalizedPlace = {
@@ -42,10 +55,82 @@ type PlanItem = {
 
 const DEFAULT_INPUT = resolve(process.cwd(), 'tests', 'fixtures', 'salvador', 'google-places-preview.json');
 const SALVADOR_GEO_PATH = '/br/ba/salvador';
+const UUID_V4_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+const MAX_LIMIT = 100;
+const RATE_LIMIT_WINDOW_MS = 5 * 60 * 1000;
+const RATE_LIMIT_MAX = 20;
+const APPLY_RATE_LIMIT_WINDOW_MS = 15 * 60 * 1000;
+const APPLY_RATE_LIMIT_MAX = 5;
+const rateLimitStore = new Map<string, { count: number; resetAt: number }>();
 
-function json(res: any, status: number, payload: unknown) {
+function json(res: ResponseLike, status: number, payload: unknown) {
   res.status(status).setHeader('Content-Type', 'application/json');
+  res.setHeader('Cache-Control', 'no-store, max-age=0');
+  res.setHeader('Pragma', 'no-cache');
+  res.setHeader('X-Content-Type-Options', 'nosniff');
   res.end(JSON.stringify(payload));
+}
+
+function getHeader(req: RequestLike, key: string): string | undefined {
+  const value = req.headers[key.toLowerCase()];
+  if (Array.isArray(value)) return value[0];
+  return value;
+}
+
+function extractProvidedToken(req: RequestLike): string | null {
+  const explicitHeader = getHeader(req, 'x-import-admin-token');
+  if (explicitHeader?.trim()) return explicitHeader.trim();
+
+  const authHeader = getHeader(req, 'authorization');
+  if (!authHeader) return null;
+  const match = authHeader.match(/^Bearer\s+(.+)$/i);
+  return match?.[1]?.trim() ?? null;
+}
+
+function constantTimeEquals(left: string, right: string): boolean {
+  const leftHash = createHash('sha256').update(left).digest();
+  const rightHash = createHash('sha256').update(right).digest();
+  return timingSafeEqual(leftHash, rightHash);
+}
+
+function parseBody(rawBody: unknown): ReqBody {
+  if (typeof rawBody === 'string') {
+    return JSON.parse(rawBody || '{}') as ReqBody;
+  }
+  if (rawBody && typeof rawBody === 'object') {
+    return rawBody as ReqBody;
+  }
+  return {};
+}
+
+function getClientIp(req: RequestLike): string {
+  const forwarded = getHeader(req, 'x-forwarded-for');
+  const firstForwarded = forwarded?.split(',')[0]?.trim();
+  if (firstForwarded) return firstForwarded;
+  return getHeader(req, 'x-real-ip') ?? 'unknown';
+}
+
+function checkRateLimit(
+  key: string,
+  maxRequests: number,
+  windowMs: number,
+): { allowed: boolean; retryAfterSeconds?: number } {
+  const now = Date.now();
+  const current = rateLimitStore.get(key);
+
+  if (!current || current.resetAt <= now) {
+    rateLimitStore.set(key, { count: 1, resetAt: now + windowMs });
+    return { allowed: true };
+  }
+
+  if (current.count >= maxRequests) {
+    const retryAfterSeconds = Math.ceil((current.resetAt - now) / 1000);
+    return { allowed: false, retryAfterSeconds };
+  }
+
+  current.count += 1;
+  rateLimitStore.set(key, current);
+  return { allowed: true };
 }
 
 function slugify(value: string): string {
@@ -224,7 +309,7 @@ async function createUniqueHandle(
   throw new Error(`Nao foi possivel gerar handle para ${slug}`);
 }
 
-export default async function handler(req: any, res: any) {
+export default async function handler(req: RequestLike, res: ResponseLike) {
   try {
     if (req.method !== 'POST') {
       json(res, 405, { error: 'Method not allowed' });
@@ -232,29 +317,63 @@ export default async function handler(req: any, res: any) {
     }
 
     const adminToken = process.env.IMPORT_ADMIN_TOKEN;
-    const providedToken = req.headers['x-import-admin-token'] || req.headers.authorization?.replace('Bearer ', '');
-    if (!adminToken || providedToken !== adminToken) {
+    const providedToken = extractProvidedToken(req);
+    if (!adminToken || !providedToken || !constantTimeEquals(providedToken, adminToken)) {
       json(res, 401, { error: 'Unauthorized' });
       return;
     }
 
-    const body = (
-      typeof req.body === "string" ? JSON.parse(req.body || "{}") : req.body || {}
-    ) as ReqBody;
+    let body: ReqBody;
+    try {
+      body = parseBody(req.body);
+    } catch {
+      json(res, 400, { error: 'Invalid JSON body' });
+      return;
+    }
+
+    const requestIp = getClientIp(req);
+    const globalRateLimit = checkRateLimit(
+      `google-places-import:global:${requestIp}`,
+      RATE_LIMIT_MAX,
+      RATE_LIMIT_WINDOW_MS,
+    );
+    if (!globalRateLimit.allowed) {
+      res.setHeader('Retry-After', String(globalRateLimit.retryAfterSeconds ?? 60));
+      json(res, 429, { error: 'Too many requests' });
+      return;
+    }
+
     const mode = body.mode === 'apply' ? 'apply' : 'dry-run';
-    const limit = Number.isFinite(body.limit) ? Math.max(1, Number(body.limit)) : 20;
+    const limit = Number.isFinite(body.limit) ? Math.min(MAX_LIMIT, Math.max(1, Number(body.limit))) : 20;
     const sample = Boolean(body.sample);
-    const ownerUserId = body.ownerUserId;
+    const ownerUserId = body.ownerUserId?.trim();
+
+    if (mode === 'apply') {
+      const applyRateLimit = checkRateLimit(
+        `google-places-import:apply:${requestIp}`,
+        APPLY_RATE_LIMIT_MAX,
+        APPLY_RATE_LIMIT_WINDOW_MS,
+      );
+      if (!applyRateLimit.allowed) {
+        res.setHeader('Retry-After', String(applyRateLimit.retryAfterSeconds ?? 120));
+        json(res, 429, { error: 'Too many apply requests' });
+        return;
+      }
+    }
 
     if (mode === 'apply' && !ownerUserId) {
       json(res, 400, { error: 'ownerUserId is required for apply mode' });
       return;
     }
+    if (ownerUserId && !UUID_V4_REGEX.test(ownerUserId)) {
+      json(res, 400, { error: 'ownerUserId must be a valid UUID' });
+      return;
+    }
 
-    const supabaseUrl = process.env.VITE_SUPABASE_URL;
+    const supabaseUrl = process.env.SUPABASE_URL ?? process.env.VITE_SUPABASE_URL;
     const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-    if (!supabaseUrl || !serviceKey) {
-      json(res, 500, { error: 'Missing VITE_SUPABASE_URL/SUPABASE_SERVICE_ROLE_KEY' });
+    if (!supabaseUrl || !serviceKey || !adminToken) {
+      json(res, 500, { error: 'Server configuration error' });
       return;
     }
 
@@ -391,6 +510,9 @@ export default async function handler(req: any, res: any) {
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
-    json(res, 500, { error: message });
+    const isProd = process.env.NODE_ENV === 'production';
+    json(res, 500, {
+      error: isProd ? 'Internal server error' : message,
+    });
   }
 }

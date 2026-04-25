@@ -1,7 +1,7 @@
 import { supabase } from "@/integrations/supabase";
 import { logger } from "@/shared/utils/logger";
 import type { AdminSupabaseClient, CommunityIssue, ProfessionalReport, ProfessionalData } from "../types/adminDatabase.types";
-import { MobilityAdminQueryService } from "@/modules/mobility/services";
+import { MobilityAdminQueryService } from "@/core/admin/services/MobilityAdminQueryService";
 
 export interface ModerationStats {
   total_posts: number;

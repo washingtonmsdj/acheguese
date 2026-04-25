@@ -15,15 +15,48 @@ import {
   TerritorialManagementService,
   type TerritoryNode,
 } from "@/core/territorial";
-import {
-  CATEGORY_LABELS,
-  TouristPointService,
-  TouristPointStatus,
-  type TouristPoint,
-} from "@/modules/guide/tourist-points";
+import { supabase } from "@/integrations/supabase";
 import { logger } from "@/shared/utils/logger";
 
 type VisibilityStatus = "official" | "compatibility" | "attention";
+type TouristPointStatus = "active" | "inactive" | "archived";
+
+interface TouristPoint {
+  id: string;
+  category: string;
+  latitude: number | null;
+  longitude: number | null;
+}
+
+const TouristPointStatus = {
+  ACTIVE: "active",
+  INACTIVE: "inactive",
+  ARCHIVED: "archived",
+} as const;
+
+const TOURIST_POINT_DB_STATUS: Record<TouristPointStatus, string> = {
+  active: "published",
+  inactive: "draft",
+  archived: "archived",
+};
+
+const CATEGORY_LABELS: Record<string, string> = {
+  historico: "Histórico",
+  natural: "Natural",
+  religioso: "Religioso",
+  cultural: "Cultural",
+  gastronomico: "Gastronômico",
+  praia: "Praia",
+  parque: "Parque",
+  mirante: "Mirante",
+  museu: "Museu",
+  monumento: "Monumento",
+  arquitetonico: "Arquitetônico",
+  esportivo: "Esportivo",
+  entretenimento: "Entretenimento",
+  compras: "Compras",
+  outro: "Outro",
+};
 
 export type AdminMapGovernanceIssue =
   | "missing_coordinates"
@@ -150,13 +183,20 @@ function resolveProviderHost(styleUrl: string): string {
 }
 
 function issueLabel(issue: AdminMapGovernanceIssue): string {
-  return {
-    missing_coordinates: "Sem coordenadas",
-    needs_refinement: "Coordenadas pedem refinamento",
-    selector_hidden: "Oculto do seletor",
-    route_disabled: "Rota publica desativada",
-    group_without_members: "Grupo sem membros",
-  }[issue];
+  switch (issue) {
+    case "missing_coordinates":
+      return "Sem coordenadas";
+    case "needs_refinement":
+      return "Coordenadas pedem refinamento";
+    case "selector_hidden":
+      return "Oculto do seletor";
+    case "route_disabled":
+      return "Rota publica desativada";
+    case "group_without_members":
+      return "Grupo sem membros";
+    default:
+      return "Nao informado";
+  }
 }
 
 function layerSource(layerKey: string): { source: string; route: string; note: string } {
@@ -327,6 +367,20 @@ function compareHotspots(
   return left.name.localeCompare(right.name);
 }
 
+async function listTouristPointsByStatus(status: TouristPointStatus): Promise<TouristPoint[]> {
+  const { data, error } = await supabase
+    .from("tourist_points")
+    .select("id, category, latitude, longitude")
+    .eq("status", TOURIST_POINT_DB_STATUS[status]);
+
+  if (error) {
+    logger.error("AdminMapGovernanceService.listTouristPointsByStatus", error);
+    return [];
+  }
+
+  return (data || []) as TouristPoint[];
+}
+
 class AdminMapGovernanceService {
   async resolveHotspot(
     hotspot: Pick<AdminMapGovernanceHotspot, "id" | "entityKind" | "entityId" | "issue" | "name">,
@@ -415,9 +469,9 @@ class AdminMapGovernanceService {
         await Promise.all([
           locationAdminService.listLocations(),
           TerritorialManagementService.fetchTerritoryTree(),
-          TouristPointService.list({ status: TouristPointStatus.ACTIVE }),
-          TouristPointService.list({ status: TouristPointStatus.INACTIVE }),
-          TouristPointService.list({ status: TouristPointStatus.ARCHIVED }),
+          listTouristPointsByStatus(TouristPointStatus.ACTIVE),
+          listTouristPointsByStatus(TouristPointStatus.INACTIVE),
+          listTouristPointsByStatus(TouristPointStatus.ARCHIVED),
         ]);
 
       const visibilityMap = new Map(

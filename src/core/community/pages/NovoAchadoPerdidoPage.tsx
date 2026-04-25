@@ -9,7 +9,7 @@ import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import { Textarea } from "@/shared/components/ui/textarea";
 import { Label } from "@/shared/components/ui/label";
-import { useAppUrls } from "@/core/routing/hooks"; // ✅ SSOT URLs
+import { useAppUrls } from "@/core/routing/hooks"; // âœ… SSOT URLs
 import {
   Select,
   SelectContent,
@@ -25,7 +25,7 @@ import {
 } from "@/shared/components/ui/popover";
 import { LocationPickerSheet } from "@/shared/components/LocationPickerSheet";
 import { useToast } from "@/shared/hooks/use-toast";
-import { lostFoundService } from "@/modules/community/lostfound/services";
+import { lostFoundRuntimeService as lostFoundService } from "@/core/community/services/LostFoundRuntimeService";
 import { useAuth } from "@/core/auth/hooks/useAuth";
 import { cn } from "@/shared/utils/cn";
 import { format } from "date-fns";
@@ -36,28 +36,28 @@ import {
   type NovoAchadoPerdidoInput,
 } from "@/shared/validation/schemas/lostfound.schema";
 const CATEGORIAS = [
-  { id: "animal", label: "Animal perdido", icon: "🐾" },
-  { id: "celular", label: "Celular", icon: "📱" },
-  { id: "documentos", label: "Documentos", icon: "📄" },
-  { id: "chaves", label: "Chaves", icon: "🔑" },
-  { id: "carteira", label: "Carteira", icon: "👛" },
-  { id: "objetos", label: "Objetos diversos", icon: "📦" },
-  { id: "outro", label: "Outro", icon: "❓" },
+  { id: "animal", label: "Animal perdido", icon: "ðŸ¾" },
+  { id: "celular", label: "Celular", icon: "ðŸ“±" },
+  { id: "documentos", label: "Documentos", icon: "ðŸ“„" },
+  { id: "chaves", label: "Chaves", icon: "ðŸ”‘" },
+  { id: "carteira", label: "Carteira", icon: "ðŸ‘›" },
+  { id: "objetos", label: "Objetos diversos", icon: "ðŸ“¦" },
+  { id: "outro", label: "Outro", icon: "â“" },
 ];
 
 const BAIRROS = [
   "Nova Holanda",
-  "Parque União",
+  "Parque UniÃ£o",
   "Rubens Vaz",
-  "Parque Maré",
+  "Parque MarÃ©",
   "Baixa do Sapateiro",
   "Morro do Timbau",
   "Parque Roquete Pinto",
   "Praia de Ramos",
-  "Conjunto Esperança",
-  "Vila do João",
+  "Conjunto EsperanÃ§a",
+  "Vila do JoÃ£o",
   "Salsa e Merengue",
-  "Marcílio Dias",
+  "MarcÃ­lio Dias",
   "Bento Ribeiro Dantas",
   "Conjunto Pinheiros",
   "Vila dos Pinheiros",
@@ -66,7 +66,7 @@ const BAIRROS = [
 
 export default function NovoAchadoPerdidoPage() {
   const navigate = useNavigate();
-  const appUrls = useAppUrls(); // ✅ SSOT URLs
+  const appUrls = useAppUrls(); // âœ… SSOT URLs
   const { toast } = useToast();
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
@@ -113,8 +113,8 @@ export default function NovoAchadoPerdidoPage() {
 
   const onValid = async (data: NovoAchadoPerdidoInput) => {
     if (!user) {
-      toast({ title: "Faça login para publicar", variant: "destructive" });
-      navigate(appUrls.auth.login); // ✅ SSOT
+      toast({ title: "FaÃ§a login para publicar", variant: "destructive" });
+      navigate(appUrls.auth.login); // âœ… SSOT
       return;
     }
 
@@ -127,7 +127,7 @@ export default function NovoAchadoPerdidoPage() {
         photoUrl = result.url;
       }
 
-      // ✅ SSOT: Usar LostFoundService para criar post
+      // âœ… SSOT: Usar LostFoundService para criar post
       const result = await lostFoundService.createPost({
         autor_id: user.id,
         tipo: data.tipo === "encontrado" ? "achado" : data.tipo,
@@ -141,7 +141,7 @@ export default function NovoAchadoPerdidoPage() {
       });
 
       if (!result) throw new Error("Erro ao criar post");
-      toast({ title: "Publicação criada!" });
+      toast({ title: "PublicaÃ§Ã£o criada!" });
       navigate(`/achados-perdidos/${result.id}`);
     } catch {
       toast({ title: "Erro ao publicar", variant: "destructive" });
@@ -181,7 +181,7 @@ export default function NovoAchadoPerdidoPage() {
                       : "border-border bg-card hover:bg-secondary/50",
                   )}
                 >
-                  <span className="text-3xl">😢</span>
+                  <span className="text-3xl">ðŸ˜¢</span>
                   <span className="text-sm font-bold">Perdi algo</span>
                   <span className="text-[10px] text-muted-foreground">
                     Preciso de ajuda para encontrar
@@ -197,7 +197,7 @@ export default function NovoAchadoPerdidoPage() {
                       : "border-border bg-card hover:bg-secondary/50",
                   )}
                 >
-                  <span className="text-3xl">🤗</span>
+                  <span className="text-3xl">ðŸ¤—</span>
                   <span className="text-sm font-bold">Encontrei algo</span>
                   <span className="text-[10px] text-muted-foreground">
                     Quero devolver ao dono
@@ -266,9 +266,9 @@ export default function NovoAchadoPerdidoPage() {
           </label>
         </div>
 
-        {/* Título */}
+        {/* TÃ­tulo */}
         <div className="space-y-1.5">
-          <Label>Título *</Label>
+          <Label>TÃ­tulo *</Label>
           <Input
             {...register("titulo")}
             placeholder="Ex: Cachorro perdido na Nova Holanda"
@@ -277,12 +277,12 @@ export default function NovoAchadoPerdidoPage() {
           <InlineFieldError message={errors.titulo?.message} />
         </div>
 
-        {/* Descrição */}
+        {/* DescriÃ§Ã£o */}
         <div className="space-y-1.5">
-          <Label>Descrição</Label>
+          <Label>DescriÃ§Ã£o</Label>
           <Textarea
             {...register("description")}
-            placeholder="Descreva o item com o máximo de detalhes: cor, tamanho, características..."
+            placeholder="Descreva o item com o mÃ¡ximo de detalhes: cor, tamanho, caracterÃ­sticas..."
             rows={3}
             maxLength={1000}
           />
@@ -312,15 +312,15 @@ export default function NovoAchadoPerdidoPage() {
           />
         </div>
 
-        {/* Localização aprox */}
+        {/* LocalizaÃ§Ã£o aprox */}
         <div className="space-y-1.5">
-          <Label>Localização aproximada</Label>
-          <Input {...register("localizacaoAprox")} placeholder="Ex: Perto da praça principal" />
+          <Label>LocalizaÃ§Ã£o aproximada</Label>
+          <Input {...register("localizacaoAprox")} placeholder="Ex: Perto da praÃ§a principal" />
         </div>
 
-        {/* Localização Exata no Mapa */}
+        {/* LocalizaÃ§Ã£o Exata no Mapa */}
         <div className="space-y-2">
-          <Label>Localização Exata (Opcional)</Label>
+          <Label>LocalizaÃ§Ã£o Exata (Opcional)</Label>
           <p className="text-xs text-muted-foreground mb-2">
             Marque no mapa o ponto exato onde{" "}
             {watchTipo === "perdido" ? "perdeu" : "encontrou"} o item. Isso
@@ -334,7 +334,7 @@ export default function NovoAchadoPerdidoPage() {
           >
             <MapPin className="h-4 w-4 mr-2" />
             {watchLatitude && watchLongitude
-              ? `📍 Localização marcada (${watchLatitude.toFixed(4)}, ${watchLongitude.toFixed(4)})`
+              ? `ðŸ“ LocalizaÃ§Ã£o marcada (${watchLatitude.toFixed(4)}, ${watchLongitude.toFixed(4)})`
               : "Marcar no Mapa"}
           </Button>
           {watchLatitude && watchLongitude && (
@@ -348,7 +348,7 @@ export default function NovoAchadoPerdidoPage() {
                 setValue("longitude", null);
               }}
             >
-              Remover localização
+              Remover localizaÃ§Ã£o
             </Button>
           )}
         </div>

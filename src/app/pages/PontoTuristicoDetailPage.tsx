@@ -404,6 +404,7 @@ function HeroGallery({ point }: { point: TouristPoint }) {
     setLightboxIndex(index);
     setLightboxOpen(true);
   };
+  const activeImage = images.at(lightboxIndex) ?? '';
 
   return (
     <>
@@ -503,7 +504,7 @@ function HeroGallery({ point }: { point: TouristPoint }) {
               key={lightboxIndex}
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
-              src={images[lightboxIndex]}
+              src={activeImage}
               alt={`${point.name} - ${lightboxIndex + 1}`}
               className="max-w-[90vw] max-h-[85vh] object-contain rounded-lg"
               onClick={(e) => e.stopPropagation()}
@@ -837,6 +838,7 @@ function CommunityPhotosSection({ point }: { point: TouristPoint }) {
   );
 
   if (photos.length === 0) return null;
+  const activePhoto = photos.at(lightboxIndex);
 
   return (
     <>
@@ -908,14 +910,14 @@ function CommunityPhotosSection({ point }: { point: TouristPoint }) {
                 key={lightboxIndex}
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
-                src={photos[lightboxIndex].image_url}
-                alt={photos[lightboxIndex].content}
+                src={activePhoto?.image_url ?? ''}
+                alt={activePhoto?.content ?? `Foto da comunidade ${lightboxIndex + 1}`}
                 className="max-w-[90vw] max-h-[80vh] object-contain rounded-lg"
               />
               <div className="text-center">
-                <p className="text-white/80 text-sm">{photos[lightboxIndex].author_name}</p>
-                {photos[lightboxIndex].content && (
-                  <p className="text-white/50 text-xs mt-1 max-w-sm truncate">{photos[lightboxIndex].content}</p>
+                <p className="text-white/80 text-sm">{activePhoto?.author_name ?? 'Comunidade'}</p>
+                {activePhoto?.content && (
+                  <p className="text-white/50 text-xs mt-1 max-w-sm truncate">{activePhoto.content}</p>
                 )}
               </div>
             </div>

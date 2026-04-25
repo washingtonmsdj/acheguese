@@ -1,23 +1,16 @@
 /**
- * ?? useEventos Hook - REFATORADO PARA SSOT + TERRITORIAL
- * 
- * Hook para buscar eventos usando EventsService (SSOT)
- * 
- * ? Usa EventsService ao invés de acesso direto ao Supabase
- * ? Segue arquitetura SSOT
- * ? Type-safe com interface Event do service
- * ? Suporte a filtro territorial
- * 
- * @version 3.0.0 - SSOT Compliant + Territorial
+ * useEventos Hook - SSOT + territorial.
  */
 
 import { useQuery } from "@tanstack/react-query";
-import { EventsService, type Event } from "@/modules/community/events";
+import {
+  communityEventsRuntimeService,
+  type CommunityEvent,
+} from "@/core/community/services/CommunityEventsRuntimeService";
 import { useTerritoryFilter } from "@/core/location/hooks/useTerritoryFilter";
 import type { RouteResolved } from "@/core/routing/types";
 
-// Re-exporta Event do service para compatibilidade
-export type { Event as Evento } from "@/modules/community/events";
+export type Evento = CommunityEvent;
 
 interface UseEventosOptions {
   routeResolved?: RouteResolved;
@@ -31,32 +24,26 @@ interface UseEventosOptions {
 
 export function useEventos(options: UseEventosOptions = {}) {
   const { filters, routeResolved } = options;
-  
-  // ? Aplica filtro territorial
   const territoryFilter = useTerritoryFilter(routeResolved);
-  
+
   const query = useQuery({
     queryKey: ["eventos", filters, territoryFilter],
     queryFn: async () => {
-      // ? SSOT: Usa EventsService com filtro territorial
-      const events = await EventsService.getEvents({
+      const events = await communityEventsRuntimeService.getEvents({
         category: filters?.category,
-        upcoming: true, // Apenas eventos futuros por padrão
-        territoryFilter, // ? Filtro territorial aplicado
+        upcoming: true,
+        territoryFilter,
       });
-      
-      // Aplica filtros adicionais no client (search)
-      let filtered = events;
-      
-      if (filters?.search) {
-        const searchLower = filters.search.toLowerCase();
-        filtered = filtered.filter(e => 
-          e.title.toLowerCase().includes(searchLower) ||
-          e.description.toLowerCase().includes(searchLower)
-        );
+
+      if (!filters?.search) {
+        return events;
       }
-      
-      return filtered;
+
+      const searchLower = filters.search.toLowerCase();
+      return events.filter((event) =>
+        event.title.toLowerCase().includes(searchLower) ||
+        event.description.toLowerCase().includes(searchLower),
+      );
     },
   });
 
@@ -69,4 +56,3 @@ export function useEventos(options: UseEventosOptions = {}) {
     error: query.error,
   };
 }
-

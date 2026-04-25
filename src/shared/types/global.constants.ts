@@ -118,16 +118,67 @@ export type AlertSeverity =
   (typeof ALERT_SEVERITY)[keyof typeof ALERT_SEVERITY];
 
 // ============================================
+// RIDE STATUS - MOVED TO @/modules/mobility/constants
+// ============================================
+// NOTA: RIDE_STATUS agora é mantido em @/modules/mobility/constants
+// para evitar duplicação. Use:
+// import { RIDE_STATUS } from '@/modules/mobility/constants'
+// ou
+// import { RIDE_STATUS } from '@/shared/types/constants'
+
+// ============================================
+// BUSINESS STATUS
+// ============================================
+
+export const BUSINESS_STATUS = {
+  ACTIVE: "ativo",
+  INACTIVE: "inativo",
+  PENDING: "pendente",
+  SUSPENDED: "suspenso",
+} as const;
+
+export type BusinessStatus =
+  (typeof BUSINESS_STATUS)[keyof typeof BUSINESS_STATUS];
+
+// Labels de Status de Empresas
+export const BUSINESS_STATUS_LABELS: Record<BusinessStatus, string> = {
+  [BUSINESS_STATUS.ACTIVE]: "Ativo",
+  [BUSINESS_STATUS.INACTIVE]: "Inativo",
+  [BUSINESS_STATUS.PENDING]: "Pendente",
+  [BUSINESS_STATUS.SUSPENDED]: "Suspenso",
+};
+
+// ============================================
 // ALERT STATUS
 // ============================================
 
 export const ALERT_STATUS = {
   ACTIVE: "active",
   RESOLVED: "resolved",
+  EXPIRED: "expired",
+  CANCELLED: "cancelled",
   DISMISSED: "dismissed",
 } as const;
 
 export type AlertStatus = (typeof ALERT_STATUS)[keyof typeof ALERT_STATUS];
+
+// Labels de Status de Alertas
+export const ALERT_STATUS_LABELS: Record<AlertStatus, string> = {
+  [ALERT_STATUS.ACTIVE]: "Ativo",
+  [ALERT_STATUS.RESOLVED]: "Resolvido",
+  [ALERT_STATUS.EXPIRED]: "Expirado",
+  [ALERT_STATUS.CANCELLED]: "Cancelado",
+  [ALERT_STATUS.DISMISSED]: "Descartado",
+};
+
+// Cores de Status de Alertas
+export const ALERT_STATUS_COLORS: Record<AlertStatus, string> = {
+  [ALERT_STATUS.ACTIVE]: "#EF4444", // red-500
+  [ALERT_STATUS.RESOLVED]: "#10B981", // green-500
+  [ALERT_STATUS.EXPIRED]: "#6B7280", // gray-500
+  [ALERT_STATUS.CANCELLED]: "#9CA3AF", // gray-400
+  [ALERT_STATUS.DISMISSED]: "#9CA3AF", // gray-400
+};
 
 // ============================================
 // REPORT STATUS
@@ -184,4 +235,16 @@ export function isValidVerificationStatus(
 
 export function isValidReportStatus(status: string): status is ReportStatus {
   return Object.values(REPORT_STATUS).includes(status as ReportStatus);
+}
+
+export function isValidAlertStatus(status: string): status is AlertStatus {
+  return Object.values(ALERT_STATUS).includes(status as AlertStatus);
+}
+
+// isValidRideStatus movido para @/modules/mobility/constants
+
+export function isValidBusinessStatus(
+  status: string,
+): status is BusinessStatus {
+  return Object.values(BUSINESS_STATUS).includes(status as BusinessStatus);
 }

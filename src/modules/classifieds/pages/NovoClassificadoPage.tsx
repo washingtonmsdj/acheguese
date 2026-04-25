@@ -74,6 +74,10 @@ const MAX_PHOTOS = 10;
 const MAX_TITLE = 100;
 const MAX_DESCRIPTION = 2000;
 
+function getStepAt(index: number) {
+  return STEPS.at(index);
+}
+
 // ─── Page ─────────────────────────────────────────────────────
 
 export default function NovoClassificadoPage() {
@@ -202,15 +206,17 @@ export default function NovoClassificadoPage() {
   const goNext = useCallback(() => {
     if (!validateStep(currentStep)) return;
     const nextIdx = currentStepIndex + 1;
-    if (nextIdx < STEPS.length) {
-      setCurrentStep(STEPS[nextIdx].id);
+    const nextStep = getStepAt(nextIdx);
+    if (nextStep) {
+      setCurrentStep(nextStep.id);
     }
   }, [currentStep, currentStepIndex, validateStep]);
 
   const goPrev = useCallback(() => {
     const prevIdx = currentStepIndex - 1;
-    if (prevIdx >= 0) {
-      setCurrentStep(STEPS[prevIdx].id);
+    const prevStep = getStepAt(prevIdx);
+    if (prevStep) {
+      setCurrentStep(prevStep.id);
     } else {
       navigate(-1);
     }
@@ -346,7 +352,7 @@ export default function NovoClassificadoPage() {
           </motion.button>
           <div className="flex-1 min-w-0">
             <h1 className="text-lg font-bold text-foreground truncate">
-              {STEPS[currentStepIndex].label}
+              {getStepAt(currentStepIndex)?.label ?? "Novo anúncio"}
             </h1>
             <p className="text-[10px] text-muted-foreground">
               Passo {currentStepIndex + 1} de {STEPS.length} · {completeness}% preenchido

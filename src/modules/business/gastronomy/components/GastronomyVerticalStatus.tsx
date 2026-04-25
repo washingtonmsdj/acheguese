@@ -18,6 +18,7 @@ import { Badge } from '@/shared/components/ui/badge';
 import { Skeleton } from '@/shared/components/ui/skeleton';
 import { GastronomyProfileService } from '@/modules/business/gastronomy/services/GastronomyProfileService';
 import { getEligibleVerticals } from '@/core/verticals';
+import { businessManagementRoutes } from '@/core/business/utils/businessManagementRoutes';
 import type { BusinessCategory } from '@/core/business/types/Business';
 
 interface GastronomyVerticalStatusProps {
@@ -92,7 +93,7 @@ export function GastronomyVerticalStatus({
               criar cardápio digital e receber pedidos online.
             </p>
             <Button asChild className="w-full">
-              <Link to={`/dashboard/business/${businessId}/gastronomy/setup`}>
+              <Link to={businessManagementRoutes.gastronomySetup(businessId)}>
                 <UtensilsCrossed className="h-4 w-4 mr-2" />
                 Ativar Módulo Gastronomia
               </Link>
@@ -122,18 +123,18 @@ export function GastronomyVerticalStatus({
             </div>
             <div className="flex gap-2">
               <Button asChild variant="outline" className="flex-1">
-                <Link to={`/dashboard/business/${businessId}/gastronomy/setup`}>
+                <Link to={businessManagementRoutes.gastronomySetup(businessId)}>
                   Configurar
                 </Link>
               </Button>
               <Button asChild variant="outline" className="flex-1">
-                <Link to={`/dashboard/business/${businessId}/gastronomy/billing`}>
+                <Link to={businessManagementRoutes.planos(businessId)}>
                   <CreditCard className="h-4 w-4 mr-2" />
-                  Assinatura
+                  Planos
                 </Link>
               </Button>
               <Button asChild className="flex-1">
-                <Link to={`/dashboard/business/${businessId}/gastronomy`}>
+                <Link to={businessManagementRoutes.gastronomia(businessId)}>
                   Gerenciar Cardápio
                 </Link>
               </Button>

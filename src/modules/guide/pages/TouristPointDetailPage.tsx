@@ -43,8 +43,72 @@ import { NearbyPlacesBlock } from '../components/NearbyPlacesBlock';
 import { RelatedPointsBlock } from '../components/RelatedPointsBlock';
 import { CommunityPhotosGallery } from '../components/CommunityPhotosGallery';
 import { MOCK_TOURIST_POINTS, type MockTouristPointExtended } from '../__mocks__/touristPointMocks';
-import { CATEGORY_LABELS, CATEGORY_ICONS } from '../types/categories';
+import { CATEGORY_LABELS, CATEGORY_ICONS, type TouristPointCategory } from '../types/categories';
 import { PRICE_TYPE_LABELS } from '../types';
+
+function getCategoryLabel(category?: TouristPointCategory | null): string | null {
+  if (!category) return null;
+  switch (category) {
+    case 'praia':
+      return CATEGORY_LABELS.praia;
+    case 'praca':
+      return CATEGORY_LABELS.praca;
+    case 'parque':
+      return CATEGORY_LABELS.parque;
+    case 'trilha':
+      return CATEGORY_LABELS.trilha;
+    case 'mirante':
+      return CATEGORY_LABELS.mirante;
+    case 'museu':
+      return CATEGORY_LABELS.museu;
+    case 'centro-cultural':
+      return CATEGORY_LABELS['centro-cultural'];
+    case 'historico':
+      return CATEGORY_LABELS.historico;
+    case 'igreja':
+      return CATEGORY_LABELS.igreja;
+    case 'monumento':
+      return CATEGORY_LABELS.monumento;
+    case 'mercado':
+      return CATEGORY_LABELS.mercado;
+    case 'ar-livre':
+      return CATEGORY_LABELS['ar-livre'];
+    default:
+      return null;
+  }
+}
+
+function getCategoryIcon(category?: TouristPointCategory | null): string | null {
+  if (!category) return null;
+  switch (category) {
+    case 'praia':
+      return CATEGORY_ICONS.praia;
+    case 'praca':
+      return CATEGORY_ICONS.praca;
+    case 'parque':
+      return CATEGORY_ICONS.parque;
+    case 'trilha':
+      return CATEGORY_ICONS.trilha;
+    case 'mirante':
+      return CATEGORY_ICONS.mirante;
+    case 'museu':
+      return CATEGORY_ICONS.museu;
+    case 'centro-cultural':
+      return CATEGORY_ICONS['centro-cultural'];
+    case 'historico':
+      return CATEGORY_ICONS.historico;
+    case 'igreja':
+      return CATEGORY_ICONS.igreja;
+    case 'monumento':
+      return CATEGORY_ICONS.monumento;
+    case 'mercado':
+      return CATEGORY_ICONS.mercado;
+    case 'ar-livre':
+      return CATEGORY_ICONS['ar-livre'];
+    default:
+      return null;
+  }
+}
 
 export default function TouristPointDetailPage() {
   const params = useParams<{ state?: string; city?: string; slug?: string; groupSlugOrDistrict?: string; id?: string }>();
@@ -170,9 +234,9 @@ export default function TouristPointDetailPage() {
 
   // Extended fields from mock
   const ext = mockPoint as MockTouristPointExtended | undefined;
-  const category = ext?.category;
-  const catLabel = category ? CATEGORY_LABELS[category] : null;
-  const catIcon = category ? CATEGORY_ICONS[category] : null;
+  const category = (ext?.category as TouristPointCategory | undefined) ?? undefined;
+  const catLabel = getCategoryLabel(category);
+  const catIcon = getCategoryIcon(category);
   const rating = ext?.rating ?? 0;
   const reviewCount = ext?.review_count ?? 0;
   

@@ -1,7 +1,7 @@
 /**
  * GastronomySetupPage — Configuração do perfil gastronômico
  *
- * Rota: /dashboard/business/:businessId/gastronomy/setup
+ * Rota: /perfil/empresas/:businessId/gastronomia/setup
  *
  * Permite criar ou editar o gastronomy_profile de uma empresa elegível.
  * Integrada ao fluxo pós-criação de empresa e ao dashboard.
@@ -32,6 +32,7 @@ import { CUISINE_TYPES, getCuisineLabel } from '../constants/cuisine';
 import { useGastronomySetup } from '../hooks/useGastronomySetup';
 import type { PriceRange } from '../types/gastronomy';
 import { getCuisineSuggestionFromCategory } from '@/core/verticals';
+import { businessManagementRoutes } from '@/core/business/utils/businessManagementRoutes';
 
 // ── Schema de validação ───────────────────────────────────────────────────────
 
@@ -111,7 +112,7 @@ export default function GastronomySetupPage({ businessId: propBusinessId }: { bu
       ...values,
     });
     // Após salvar, volta para o dashboard
-    navigate(`/dashboard/business/${businessId}`);
+    navigate(businessManagementRoutes.overview(businessId!));
   };
 
   if (isLoading) {
@@ -128,7 +129,7 @@ export default function GastronomySetupPage({ businessId: propBusinessId }: { bu
       {/* Header */}
       <div className="flex items-center gap-3 mb-6">
         <button
-          onClick={() => navigate(`/dashboard/business/${businessId}`)}
+          onClick={() => navigate(businessManagementRoutes.overview(businessId!))}
           className="text-muted-foreground hover:text-foreground transition-colors"
         >
           <ArrowLeft className="h-5 w-5" />
@@ -259,7 +260,7 @@ export default function GastronomySetupPage({ businessId: propBusinessId }: { bu
           <Button
             type="button"
             variant="outline"
-            onClick={() => navigate(`/dashboard/business/${businessId}`)}
+            onClick={() => navigate(businessManagementRoutes.overview(businessId!))}
             className="flex-1"
           >
             Cancelar

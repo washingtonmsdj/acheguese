@@ -38,6 +38,29 @@ const postTypeLabels = {
   recomendacao: "RecomendaÃ§Ã£o",
 };
 
+function getPostTypeLabel(tipo: UnifiedPostType): string {
+  switch (tipo) {
+    case "discussao":
+      return postTypeLabels.discussao;
+    case "pergunta":
+      return postTypeLabels.pergunta;
+    case "enquete":
+      return postTypeLabels.enquete;
+    case "evento":
+      return postTypeLabels.evento;
+    case "alerta":
+      return postTypeLabels.alerta;
+    case "achado_perdido":
+      return postTypeLabels.achado_perdido;
+    case "classificado":
+      return postTypeLabels.classificado;
+    case "recomendacao":
+      return postTypeLabels.recomendacao;
+    default:
+      return postTypeLabels.discussao;
+  }
+}
+
 interface PostReviewProps {
   tipo: UnifiedPostType;
   texto: string;
@@ -79,7 +102,19 @@ export function PostReview({
     city: { label: "Cidade", icon: Globe, color: "text-purple-600" },
   };
 
-  const AlcanceIcon = alcanceLabels[alcance].icon;
+  const alcanceConfig = (() => {
+    switch (alcance) {
+      case "rua":
+        return alcanceLabels.rua;
+      case "neighborhood":
+        return alcanceLabels.neighborhood;
+      case "city":
+        return alcanceLabels.city;
+      default:
+        return alcanceLabels.rua;
+    }
+  })();
+  const AlcanceIcon = alcanceConfig.icon;
   const tags = tagsInput
     ? tagsInput
         .split(",")
@@ -101,7 +136,7 @@ export function PostReview({
         <CardHeader>
           <div className="flex items-center justify-between">
             <CardTitle className="text-base">Preview do Post</CardTitle>
-            <Badge variant="outline">{postTypeLabels[tipo]}</Badge>
+            <Badge variant="outline">{getPostTypeLabel(tipo)}</Badge>
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -164,9 +199,9 @@ export function PostReview({
             <div className="flex items-center gap-4">
               <div className="flex items-center gap-1">
                 <AlcanceIcon
-                  className={`h-3 w-3 ${alcanceLabels[alcance].color}`}
+                  className={`h-3 w-3 ${alcanceConfig.color}`}
                 />
-                <span>{alcanceLabels[alcance].label}</span>
+                <span>{alcanceConfig.label}</span>
               </div>
 
               {location && (

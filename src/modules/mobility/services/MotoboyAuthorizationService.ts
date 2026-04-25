@@ -11,6 +11,7 @@
  */
 
 import { supabase } from "@/integrations/supabase";
+import { profileService } from "@/core/profiles/services/ProfileService";
 import { logger } from "@/shared/utils/logger";
 import { mobilityRolloutService } from "./MobilityRolloutService";
 
@@ -119,11 +120,16 @@ export class MotoboyAuthorizationService {
 
   static async canOperateDelivery(driverProfileId: string): Promise<AuthorizationResult> {
     try {
-      const { data, error } = await supabaseAny
-        .from("driver_data")
-        .select("is_verified, is_suspended, subscription_active, can_do_delivery, is_online")
-        .eq("profile_id", driverProfileId)
-        .maybeSingle();
+      const [driverResult, profile] = await Promise.all([
+        supabaseAny
+          .from("driver_data")
+          .select("is_verified, subscription_active, can_do_delivery, is_online")
+          .eq("profile_id", driverProfileId)
+          .maybeSingle(),
+        profileService.getProfileById(driverProfileId).catch(() => null),
+      ]);
+
+      const { data, error } = driverResult;
 
       if (error || !data) {
         return {
@@ -133,7 +139,13 @@ export class MotoboyAuthorizationService {
         };
       }
 
-      if (data.is_suspended) {
+      const isSuspended = Boolean(
+        (profile as Record<string, unknown> | null)?.is_suspended ??
+          (profile as Record<string, unknown> | null)?.suspended ??
+          false,
+      );
+
+      if (isSuspended) {
         return {
           allowed: false,
           reason: "Motorista suspenso.",

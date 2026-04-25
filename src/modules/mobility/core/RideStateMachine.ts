@@ -124,6 +124,45 @@ const ALLOWED_TRANSITIONS: Record<RideState, RideState[]> = {
   [RIDE_STATE.FAILED]: [],
 };
 
+function getAllowedTransitions(state: RideState): RideState[] {
+  switch (state) {
+    case RIDE_STATE.REQUESTED:
+      return ALLOWED_TRANSITIONS.requested;
+    case RIDE_STATE.SEARCHING_DRIVER:
+      return ALLOWED_TRANSITIONS.searching_driver;
+    case RIDE_STATE.DRIVER_ASSIGNED:
+      return ALLOWED_TRANSITIONS.driver_assigned;
+    case RIDE_STATE.DRIVER_ACCEPTED:
+      return ALLOWED_TRANSITIONS.driver_accepted;
+    case RIDE_STATE.DRIVER_ARRIVING:
+      return ALLOWED_TRANSITIONS.driver_arriving;
+    case RIDE_STATE.PASSENGER_BOARDED:
+      return ALLOWED_TRANSITIONS.passenger_boarded;
+    case RIDE_STATE.IN_PROGRESS:
+      return ALLOWED_TRANSITIONS.in_progress;
+    case RIDE_STATE.PICKUP_CONFIRMED:
+      return ALLOWED_TRANSITIONS.pickup_confirmed;
+    case RIDE_STATE.IN_DELIVERY:
+      return ALLOWED_TRANSITIONS.in_delivery;
+    case RIDE_STATE.DELIVERED:
+      return ALLOWED_TRANSITIONS.delivered;
+    case RIDE_STATE.FAILED_DELIVERY:
+      return ALLOWED_TRANSITIONS.failed_delivery;
+    case RIDE_STATE.COMPLETED:
+      return ALLOWED_TRANSITIONS.completed;
+    case RIDE_STATE.CANCELLED_BY_PASSENGER:
+      return ALLOWED_TRANSITIONS.cancelled_by_passenger;
+    case RIDE_STATE.CANCELLED_BY_DRIVER:
+      return ALLOWED_TRANSITIONS.cancelled_by_driver;
+    case RIDE_STATE.EXPIRED:
+      return ALLOWED_TRANSITIONS.expired;
+    case RIDE_STATE.FAILED:
+      return ALLOWED_TRANSITIONS.failed;
+    default:
+      return [];
+  }
+}
+
 // ============================================
 // ESTADOS FINAIS
 // ============================================
@@ -175,7 +214,7 @@ export class RideStateMachine {
    * Valida se uma transição é permitida
    */
   static canTransition(from: RideState, to: RideState): boolean {
-    const allowed = ALLOWED_TRANSITIONS[from] || [];
+    const allowed = getAllowedTransitions(from);
     return allowed.includes(to);
   }
 
@@ -185,7 +224,7 @@ export class RideStateMachine {
   static assertCanTransition(from: RideState, to: RideState): void {
     if (!this.canTransition(from, to)) {
       throw new Error(
-        `Invalid transition: ${from} -> ${to}. Allowed: ${ALLOWED_TRANSITIONS[from]?.join(', ') || 'none'}`
+        `Invalid transition: ${from} -> ${to}. Allowed: ${getAllowedTransitions(from).join(', ') || 'none'}`
       );
     }
   }
@@ -215,7 +254,7 @@ export class RideStateMachine {
    * Obtém próximos estados possíveis
    */
   static getNextStates(from: RideState): RideState[] {
-    return ALLOWED_TRANSITIONS[from] || [];
+    return getAllowedTransitions(from);
   }
 
   /**

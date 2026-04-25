@@ -28,6 +28,31 @@ interface PostContentEditorProps {
   onDuracaoChange: (value: string) => void;
 }
 
+function getPostTypeConfig(type: UnifiedPostType) {
+  switch (type) {
+    case "discussao":
+      return POST_TYPES.discussao;
+    case "pergunta":
+      return POST_TYPES.pergunta;
+    case "enquete":
+      return POST_TYPES.enquete;
+    case "evento":
+      return POST_TYPES.evento;
+    case "achados":
+      return POST_TYPES.achados;
+    case "alerta":
+      return POST_TYPES.alerta;
+    case "favor":
+      return POST_TYPES.favor;
+    case "desapego":
+      return POST_TYPES.desapego;
+    case "recomendacao":
+      return POST_TYPES.recomendacao;
+    default:
+      return POST_TYPES.discussao;
+  }
+}
+
 export function PostContentEditor({
   tipo,
   texto,
@@ -47,6 +72,7 @@ export function PostContentEditor({
   const charCount = texto.length;
   const maxChars = 2000;
   const minChars = 20;
+  const postType = getPostTypeConfig(tipo);
 
   return (
     <div className="h-full flex flex-col px-4 overflow-hidden">
@@ -69,7 +95,7 @@ export function PostContentEditor({
             <p className="font-medium text-xs leading-tight">{profileName}</p>
             <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
               <span>
-                {POST_TYPES[tipo].emoji} {POST_TYPES[tipo].label}
+                {postType.emoji} {postType.label}
               </span>
             </div>
           </div>
@@ -79,7 +105,7 @@ export function PostContentEditor({
           <Textarea
             value={texto}
             onChange={(e) => onTextoChange(e.target.value.slice(0, maxChars))}
-            placeholder={`${POST_TYPES[tipo].emoji} ${POST_TYPES[tipo].description}... Use #hashtags para marcar o assunto!`}
+            placeholder={`${postType.emoji} ${postType.description}... Use #hashtags para marcar o assunto!`}
             className="flex-1 min-h-0 text-sm resize-none border focus:border-primary"
             autoFocus
           />

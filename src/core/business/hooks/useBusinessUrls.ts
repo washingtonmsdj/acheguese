@@ -33,10 +33,10 @@ export interface BusinessUrls {
   share: (ctx: BusinessUrlContext) => string;
   /** Criar empresa: /empresas/criar-empresa */
   create: string;
-  /** Editar empresa: /edit-business/{profileId} (global) */
-  edit: (profileId: string) => string;
-  /** Dashboard: /dashboard/business/{profileId} (global) */
-  dashboard: (profileId: string) => string;
+  /** Editar empresa: /edit-business/{businessId} (global) */
+  edit: (businessId: string) => string;
+  /** Gestao da empresa: /perfil/empresas/{businessId} (global) */
+  dashboard: (businessId: string) => string;
 }
 
 export function useBusinessUrls(routeResolved?: ResolvedTerritory | null): BusinessUrls {
@@ -72,7 +72,7 @@ export function useBusinessUrls(routeResolved?: ResolvedTerritory | null): Busin
     canonical: (ctx: BusinessUrlContext) => BusinessUrlService.getCanonicalUrl(ctx),
     share: (ctx: BusinessUrlContext) => BusinessUrlService.getShareUrl(ctx),
     create: '/empresas/criar-empresa',
-    edit: (profileId: string) => `/edit-business/${profileId}`,
-    dashboard: (profileId: string) => `/dashboard/business/${profileId}`,
+    edit: (businessId: string) => `/edit-business/${businessId}`,
+    dashboard: (businessId: string) => `/perfil/empresas/${businessId}`,
   };
 }

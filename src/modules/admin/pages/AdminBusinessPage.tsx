@@ -187,7 +187,11 @@ export default function AdminBusinessPage() {
       if (value) {
         result = result.filter(
           (business) =>
-            String((business as any)[key] ?? "").toLowerCase() ===
+            String(
+              Object.entries(business as Record<string, unknown>).find(
+                ([entryKey]) => entryKey === key,
+              )?.[1] ?? "",
+            ).toLowerCase() ===
             value.toLowerCase(),
         );
       }

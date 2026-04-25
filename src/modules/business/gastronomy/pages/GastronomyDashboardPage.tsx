@@ -13,10 +13,11 @@
 import { useParams, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { useEntitlements } from '@/core/billing/hooks/useEntitlements';
-import { PlanStatusWidget, UpgradePrompt, UpgradePromptInline } from '../components';
+import { PlanStatusWidget, UpgradePromptInline } from '../components';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/components/ui/card';
 import { Button } from '@/shared/components/ui/button';
-import { MenuService } from '@/modules/business/gastronomy/services/MenuService';
+import { getMenuUsageStats } from '@/modules/business/gastronomy/services';
+import { businessManagementRoutes } from '@/core/business/utils/businessManagementRoutes';
 import {
   UtensilsCrossed,
   QrCode,
@@ -31,14 +32,14 @@ import {
 
 export default function GastronomyDashboardPage() {
   const { businessId } = useParams<{ businessId: string }>();
-  const { can, isLoading, entitlements } = useEntitlements({
+  const { can, isLoading } = useEntitlements({
     business_id: businessId,
     subscription_scope: 'business',
   });
   const { data: usageStats } = useQuery({
     queryKey: ['gastronomy', 'dashboard-usage', businessId],
     enabled: !!businessId,
-    queryFn: async () => MenuService.queries.getMenuUsageStats(businessId!),
+    queryFn: async () => getMenuUsageStats(businessId!),
   });
 
   if (isLoading) {
@@ -81,13 +82,13 @@ export default function GastronomyDashboardPage() {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            {can('canUseAdvancedMenu') ? (
+            {can('canUseAdvancedCatalog') ? (
               <>
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-muted-foreground">Itens cadastrados</span>
                   <span className="font-medium">0</span>
                 </div>
-                <Link to={`/dashboard/business/${businessId}/gastronomy/menu`}>
+                <Link to={businessManagementRoutes.gastronomyCardapio(businessId!)}>
                   <Button className="w-full">
                     Gerenciar Cardápio
                   </Button>
@@ -97,7 +98,7 @@ export default function GastronomyDashboardPage() {
               <UpgradePromptInline
                 businessId={businessId!}
                 feature="Cardápio Avançado"
-                requiredPlan="pro"
+                offerKey="catalog"
               />
             )}
           </CardContent>
@@ -119,7 +120,7 @@ export default function GastronomyDashboardPage() {
               <span className="text-muted-foreground">Scans totais</span>
               <span className="font-medium">0</span>
             </div>
-            <Link to={`/dashboard/business/${businessId}/gastronomy/qr`}>
+            <Link to={businessManagementRoutes.linkPremium(businessId!)}>
               <Button className="w-full" variant="outline">
                 Ver QR Code
               </Button>
@@ -150,7 +151,7 @@ export default function GastronomyDashboardPage() {
                   <span className="text-muted-foreground">Promoções ativas</span>
                   <span className="font-medium">0</span>
                 </div>
-                <Link to={`/dashboard/business/${businessId}/gastronomy/promotions`}>
+                <Link to={businessManagementRoutes.gastronomyPromocoes(businessId!)}>
                   <Button className="w-full">
                     Gerenciar Promoções
                   </Button>
@@ -160,7 +161,7 @@ export default function GastronomyDashboardPage() {
               <UpgradePromptInline
                 businessId={businessId!}
                 feature="Promoções"
-                requiredPlan="pro"
+                offerKey="catalog"
               />
             )}
           </CardContent>
@@ -178,13 +179,13 @@ export default function GastronomyDashboardPage() {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            {can('canReceiveInternalOrders') ? (
+            {can('canUseInternalOrders') ? (
               <>
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-muted-foreground">Pedidos hoje</span>
                   <span className="font-medium">0</span>
                 </div>
-                <Link to={`/dashboard/business/${businessId}/gastronomy/orders`}>
+                <Link to={businessManagementRoutes.gastronomyPedidos(businessId!)}>
                   <Button className="w-full">
                     Ver Pedidos
                   </Button>
@@ -194,7 +195,7 @@ export default function GastronomyDashboardPage() {
               <UpgradePromptInline
                 businessId={businessId!}
                 feature="Pedidos Internos"
-                requiredPlan="delivery"
+                offerKey="delivery"
               />
             )}
           </CardContent>
@@ -212,13 +213,13 @@ export default function GastronomyDashboardPage() {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            {can('canUseMotoboyNetwork') ? (
+            {can('canUseDeliveryNetwork') ? (
               <>
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-muted-foreground">Entregas hoje</span>
                   <span className="font-medium">0</span>
                 </div>
-                <Link to={`/dashboard/business/${businessId}/gastronomy/delivery`}>
+                <Link to={businessManagementRoutes.gastronomyEntregas(businessId!)}>
                   <Button className="w-full">
                     Solicitar Entrega
                   </Button>
@@ -228,7 +229,7 @@ export default function GastronomyDashboardPage() {
               <UpgradePromptInline
                 businessId={businessId!}
                 feature="Rede de Motoboys"
-                requiredPlan="delivery"
+                offerKey="delivery"
               />
             )}
           </CardContent>
@@ -252,7 +253,7 @@ export default function GastronomyDashboardPage() {
                   <span className="text-muted-foreground">Visualizações</span>
                   <span className="font-medium">0</span>
                 </div>
-                <Link to={`/dashboard/business/${businessId}/gastronomy/analytics`}>
+                <Link to={businessManagementRoutes.gastronomyAnalytics(businessId!)}>
                   <Button className="w-full" variant="outline">
                     Ver Analytics
                   </Button>
@@ -267,7 +268,7 @@ export default function GastronomyDashboardPage() {
               <UpgradePromptInline
                 businessId={businessId!}
                 feature="Analytics"
-                requiredPlan="pro"
+                offerKey="catalog"
               />
             )}
           </CardContent>
@@ -289,7 +290,7 @@ export default function GastronomyDashboardPage() {
               <span className="text-muted-foreground">Status</span>
               <span className="font-medium text-green-600">Aberto</span>
             </div>
-            <Link to={`/dashboard/business/${businessId}/gastronomy/hours`}>
+            <Link to={businessManagementRoutes.gastronomyHorarios(businessId!)}>
               <Button className="w-full" variant="outline">
                 Configurar Horários
               </Button>
@@ -315,7 +316,7 @@ export default function GastronomyDashboardPage() {
                   <span className="text-muted-foreground">Bairros atendidos</span>
                   <span className="font-medium">0</span>
                 </div>
-                <Link to={`/dashboard/business/${businessId}/gastronomy/delivery-area`}>
+                <Link to={businessManagementRoutes.gastronomyAreaEntrega(businessId!)}>
                   <Button className="w-full" variant="outline">
                     Configurar Área
                   </Button>
@@ -325,7 +326,7 @@ export default function GastronomyDashboardPage() {
               <UpgradePromptInline
                 businessId={businessId!}
                 feature="Área de Entrega"
-                requiredPlan="delivery"
+                offerKey="delivery"
               />
             )}
           </CardContent>
@@ -344,7 +345,7 @@ export default function GastronomyDashboardPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <Link to={`/dashboard/business/${businessId}/gastronomy/setup`}>
+          <Link to={businessManagementRoutes.gastronomySetup(businessId!)}>
             <Button variant="outline">
               Editar Perfil Gastronômico
             </Button>

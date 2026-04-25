@@ -15,6 +15,7 @@ import { Button } from '@/shared/components/ui/button';
 import { Badge } from '@/shared/components/ui/badge';
 import { SectionFrame } from './SectionFrame';
 import { EmptyPanel } from './EmptyPanel';
+import { businessManagementRoutes } from '@/core/business/utils/businessManagementRoutes';
 
 import type { ProfileBusinessModuleItem } from '@/core/profiles/services/types';
 
@@ -183,7 +184,15 @@ function BusinessModuleCard({
             <Badge variant="secondary" className="h-5 text-[10px]">
               Plano {formatPlanLabel(business.subscription.planTier)}
             </Badge>
+            <Badge variant="outline" className="h-5 text-[10px]">
+              {business.subscription.status}
+            </Badge>
           </div>
+
+          <p className="mt-2 text-xs text-muted-foreground">
+            {business.neighborhood || "Bairro nao informado"}
+            {business.city ? `, ${business.city}` : ""}
+          </p>
 
           <div className="mt-3 flex flex-wrap gap-2">
             {featureBadges.length > 0 ? (
@@ -202,14 +211,50 @@ function BusinessModuleCard({
 
         <div className="flex flex-wrap gap-2 xl:justify-end">
           <Button size="sm" className="gap-1.5" onClick={() => onNavigate(business.dashboardUrl)}>
-            Dashboard
+            Gerenciar empresa
+          </Button>
+          <Button
+            size="sm"
+            variant="outline"
+            className="gap-1.5"
+            onClick={() => onNavigate(businessManagementRoutes.planos(business.businessId))}
+          >
+            Planos
+          </Button>
+          {business.gastronomy.dashboardUrl && (
+            <Button
+              size="sm"
+              variant="outline"
+              className="gap-1.5"
+              onClick={() => onNavigate(business.gastronomy.dashboardUrl!)}
+            >
+              Gastronomia
+            </Button>
+          )}
+          <Button
+            size="sm"
+            variant="outline"
+            className="gap-1.5"
+            onClick={() => onNavigate(businessManagementRoutes.linkPremium(business.businessId))}
+          >
+            Link premium
           </Button>
           <Button size="sm" variant="outline" className="gap-1.5" onClick={() => onNavigate(business.editUrl)}>
             Editar / imagens
           </Button>
           {business.publicUrl && (
             <Button size="sm" variant="outline" className="gap-1.5" onClick={() => onNavigate(business.publicUrl!)}>
-              Publica
+              Ver pagina publica
+            </Button>
+          )}
+          {business.shareUrl && (
+            <Button
+              size="sm"
+              variant="outline"
+              className="gap-1.5"
+              onClick={() => onNavigate(business.shareUrl!)}
+            >
+              Ver mini-site
             </Button>
           )}
           {business.shareUrl && (

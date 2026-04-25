@@ -73,7 +73,7 @@ export const ActiveRideWidget = memo(
 
     const handleClick = () => {
       if (isDriver) {
-        navigate("/mobilidade/motorista");
+        navigate("/perfil/mobilidade/motorista");
       } else {
         navigate("/mobilidade/passageiro");
       }

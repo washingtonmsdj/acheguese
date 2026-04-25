@@ -18,6 +18,8 @@ interface BusinessSEOProps {
   priceRange?: string;
   openingHours?: Record<string, { open: string; close: string } | { closed: true }>;
   paymentMethods?: string[];
+  schemaType?: "LocalBusiness" | "Restaurant";
+  robots?: string;
 }
 
 export default function BusinessSEO({
@@ -37,6 +39,8 @@ export default function BusinessSEO({
   priceRange,
   openingHours,
   paymentMethods,
+  schemaType = "LocalBusiness",
+  robots = "index, follow, max-image-preview:large",
 }: BusinessSEOProps) {
   const title = `${name} | Achegue-se`;
   const fullDescription =
@@ -75,10 +79,10 @@ export default function BusinessSEO({
     return hours.length > 0 ? hours : undefined;
   };
 
-  // Schema.org LocalBusiness
+  // Schema.org LocalBusiness/Restaurant
   const businessSchema = {
     "@context": "https://schema.org",
-    "@type": "LocalBusiness",
+    "@type": schemaType,
     name: name,
     description: fullDescription,
     image: imageUrl,
@@ -151,7 +155,7 @@ export default function BusinessSEO({
       {/* Basic Meta Tags */}
       <title>{title}</title>
       <meta name="description" content={fullDescription} />
-      <meta name="robots" content="index, follow, max-image-preview:large" />
+      <meta name="robots" content={robots} />
       <meta name="googlebot" content="index, follow" />
       
       {/* Open Graph / Facebook */}

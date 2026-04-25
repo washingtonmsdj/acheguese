@@ -54,6 +54,16 @@ const STEPS = [
 
 type StepId = typeof STEPS[number]["id"];
 
+const contratoLabelsMap = new Map(
+  Object.entries(CONTRATO_LABELS) as Array<[VagaContrato, string]>,
+);
+const modalidadeLabelsMap = new Map(
+  Object.entries(MODALIDADE_LABELS) as Array<[VagaModalidade, string]>,
+);
+const nivelLabelsMap = new Map(
+  Object.entries(NIVEL_LABELS) as Array<[VagaNivel, string]>,
+);
+
 const MAX_TITLE = 120;
 const MAX_DESCRIPTION = 3000;
 
@@ -197,12 +207,14 @@ export default function PublicarVagaPage() {
   const goNext = useCallback(() => {
     if (!validateStep(currentStep)) return;
     const nextIdx = currentStepIndex + 1;
-    if (nextIdx < STEPS.length) setCurrentStep(STEPS[nextIdx].id);
+    const nextStep = STEPS.at(nextIdx);
+    if (nextStep) setCurrentStep(nextStep.id);
   }, [currentStep, currentStepIndex, validateStep]);
 
   const goPrev = useCallback(() => {
     const prevIdx = currentStepIndex - 1;
-    if (prevIdx >= 0) setCurrentStep(STEPS[prevIdx].id);
+    const prevStep = STEPS.at(prevIdx);
+    if (prevStep) setCurrentStep(prevStep.id);
     else navigate(-1);
   }, [currentStepIndex, navigate]);
 
@@ -476,7 +488,7 @@ export default function PublicarVagaPage() {
           <div className="flex-1 min-w-0">
             <h1 className="text-lg font-bold text-foreground truncate flex items-center gap-2">
               <Briefcase className="h-4 w-4 text-primary shrink-0" />
-              {STEPS[currentStepIndex].label}
+              {STEPS.at(currentStepIndex)?.label ?? "Etapa"}
             </h1>
             <p className="text-[10px] text-muted-foreground">
               Passo {currentStepIndex + 1} de {STEPS.length} Â· {completeness}% preenchido
@@ -995,7 +1007,7 @@ export default function PublicarVagaPage() {
               {modalidade === "remoto" && (
                 <div className="p-4 rounded-xl bg-accent/10 border border-accent/20">
                   <p className="text-xs text-muted-foreground">
-                    ðŸ  Vaga remota â€” a localizaÃ§Ã£o indica a sede da empresa para referÃªncia.
+                    Vaga remota - a localizacao indica a sede da empresa para referencia.
                   </p>
                 </div>
               )}
@@ -1086,9 +1098,9 @@ export default function PublicarVagaPage() {
                 </div>
 
                 <div className="flex flex-wrap gap-1.5">
-                  <span className="text-[10px] bg-primary/10 text-primary px-2 py-0.5 rounded-full font-medium">{CONTRATO_LABELS[contrato]}</span>
-                  <span className="text-[10px] bg-accent/10 text-accent px-2 py-0.5 rounded-full font-medium">{MODALIDADE_LABELS[modalidade]}</span>
-                  <span className="text-[10px] bg-success/10 text-success px-2 py-0.5 rounded-full font-medium">{NIVEL_LABELS[nivel]}</span>
+                  <span className="text-[10px] bg-primary/10 text-primary px-2 py-0.5 rounded-full font-medium">{contratoLabelsMap.get(contrato) ?? contrato}</span>
+                  <span className="text-[10px] bg-accent/10 text-accent px-2 py-0.5 rounded-full font-medium">{modalidadeLabelsMap.get(modalidade) ?? modalidade}</span>
+                  <span className="text-[10px] bg-success/10 text-success px-2 py-0.5 rounded-full font-medium">{nivelLabelsMap.get(nivel) ?? nivel}</span>
                   {urgente && (
                     <span className="text-[10px] bg-warning/10 text-warning px-2 py-0.5 rounded-full font-medium flex items-center gap-0.5">
                       <Clock className="h-2.5 w-2.5" /> Urgente
@@ -1166,7 +1178,7 @@ export default function PublicarVagaPage() {
                   {contatoTelefone && <p className="flex items-center gap-2"><Phone className="h-3.5 w-3.5" /> {contatoTelefone}</p>}
                   {linkExterno && <p className="flex items-center gap-2"><ExternalLink className="h-3.5 w-3.5" /> {linkExterno}</p>}
                   {!contatoEmail && !contatoWhatsapp && !contatoTelefone && !linkExterno && (
-                    <p className="text-destructive text-xs">âš ï¸ Nenhum contato informado</p>
+                    <p className="text-destructive text-xs">Atencao: nenhum contato informado</p>
                   )}
                 </div>
               </div>

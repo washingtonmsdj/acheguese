@@ -60,6 +60,15 @@ function formatPercent(value: number, total: number): string {
   return `${Math.round((value / total) * 100)}%`;
 }
 
+function getTypeCount(byType: Record<string, number> | undefined, type: string): number {
+  if (!byType) {
+    return 0;
+  }
+
+  const typeEntry = Object.entries(byType).find(([key]) => key === type);
+  return typeEntry ? Number(typeEntry[1]) : 0;
+}
+
 function getPriorityBadge(priority: string) {
   switch (priority) {
     case "urgent":
@@ -146,8 +155,8 @@ export default function AdminNotifications() {
 
   const typeOptions = useMemo(() => {
     return Object.keys(stats?.byType || {}).sort((left, right) => {
-      const leftCount = stats?.byType[left] || 0;
-      const rightCount = stats?.byType[right] || 0;
+      const leftCount = getTypeCount(stats?.byType, left);
+      const rightCount = getTypeCount(stats?.byType, right);
       return rightCount - leftCount;
     });
   }, [stats?.byType]);

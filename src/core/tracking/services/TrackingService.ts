@@ -576,13 +576,18 @@ export class TrackingService {
   // ============================================
 
   private getTableName(entityType: string): string {
-    const tables: Record<string, string> = {
-      driver: 'driver_locations',
-      user: 'user_locations',
-      vehicle: 'vehicle_locations',
-      device: 'device_locations',
-    };
-    return tables[entityType] || 'driver_locations';
+    switch (entityType) {
+      case 'driver':
+        return 'driver_locations';
+      case 'user':
+        return 'user_locations';
+      case 'vehicle':
+        return 'vehicle_locations';
+      case 'device':
+        return 'device_locations';
+      default:
+        return 'driver_locations';
+    }
   }
 
   /**
@@ -590,23 +595,33 @@ export class TrackingService {
    * Será implementado em fase futura como driver_location_tracking
    */
   private getHistoryTableName(entityType: string): string {
-    const tables: Record<string, string> = {
-      driver: 'driver_location_tracking',  // ⚠️ Não existe ainda
-      user: 'user_location_history',       // ⚠️ Não existe ainda
-      vehicle: 'vehicle_location_history', // ⚠️ Não existe ainda
-      device: 'device_location_history',   // ⚠️ Não existe ainda
-    };
-    return tables[entityType] || 'driver_location_tracking';
+    switch (entityType) {
+      case 'driver':
+        return 'driver_location_tracking'; // ⚠️ Não existe ainda
+      case 'user':
+        return 'user_location_history'; // ⚠️ Não existe ainda
+      case 'vehicle':
+        return 'vehicle_location_history'; // ⚠️ Não existe ainda
+      case 'device':
+        return 'device_location_history'; // ⚠️ Não existe ainda
+      default:
+        return 'driver_location_tracking';
+    }
   }
 
   private getIdField(entityType: string): string {
-    const fields: Record<string, string> = {
-      driver: 'driver_profile_id',
-      user: 'user_id',
-      vehicle: 'vehicle_id',
-      device: 'device_id',
-    };
-    return fields[entityType] || 'driver_profile_id';
+    switch (entityType) {
+      case 'driver':
+        return 'driver_profile_id';
+      case 'user':
+        return 'user_id';
+      case 'vehicle':
+        return 'vehicle_id';
+      case 'device':
+        return 'device_id';
+      default:
+        return 'driver_profile_id';
+    }
   }
 
   /**

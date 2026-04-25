@@ -16,12 +16,29 @@ const DAYS_OF_WEEK = [
   'sabado',
 ] as const;
 
+type DayOfWeek = (typeof DAYS_OF_WEEK)[number];
+type DaySchedule = BusinessHours[string];
+
+function getDayByIndex(dayIndex: number): DayOfWeek {
+  if (dayIndex < 0 || dayIndex > 6) {
+    return "domingo";
+  }
+  return DAYS_OF_WEEK.at(dayIndex) ?? "domingo";
+}
+
+function toScheduleMap(openingHours: BusinessHours | undefined): Map<string, DaySchedule> {
+  if (!openingHours) {
+    return new Map();
+  }
+  return new Map(Object.entries(openingHours));
+}
+
 /**
  * Obtém dia da semana atual
  */
 export function getCurrentDayOfWeek(): string {
   const dayIndex = new Date().getDay();
-  return DAYS_OF_WEEK[dayIndex];
+  return getDayByIndex(dayIndex);
 }
 
 /**
@@ -33,7 +50,8 @@ export function isOpenNow(openingHours: BusinessHours | undefined): boolean {
   }
 
   const currentDay = getCurrentDayOfWeek();
-  const daySchedule = openingHours[currentDay];
+  const scheduleMap = toScheduleMap(openingHours);
+  const daySchedule = scheduleMap.get(currentDay);
 
   if (!daySchedule || daySchedule.closed) {
     return false;
@@ -58,7 +76,8 @@ export function getTodaySchedule(openingHours: BusinessHours | undefined): {
   }
 
   const currentDay = getCurrentDayOfWeek();
-  const daySchedule = openingHours[currentDay];
+  const scheduleMap = toScheduleMap(openingHours);
+  const daySchedule = scheduleMap.get(currentDay);
 
   if (!daySchedule) {
     return null;
@@ -147,12 +166,13 @@ export function getNextOpeningTime(openingHours: BusinessHours | undefined): str
   }
 
   const currentDayIndex = new Date().getDay();
+  const scheduleMap = toScheduleMap(openingHours);
 
   // Procurar nos próximos 7 dias
   for (let i = 0; i < 7; i++) {
     const dayIndex = (currentDayIndex + i) % 7;
-    const dayName = DAYS_OF_WEEK[dayIndex];
-    const daySchedule = openingHours[dayName];
+    const dayName = getDayByIndex(dayIndex);
+    const daySchedule = scheduleMap.get(dayName);
 
     if (daySchedule && !daySchedule.closed) {
       if (i === 0) {
@@ -190,8 +210,9 @@ export function getScheduledDays(openingHours: BusinessHours | undefined): strin
     return [];
   }
 
+  const scheduleMap = toScheduleMap(openingHours);
   return Object.keys(openingHours).filter((day) => {
-    const schedule = openingHours[day];
+    const schedule = scheduleMap.get(day);
     return schedule && !schedule.closed;
   });
 }
@@ -221,8 +242,9 @@ export function isOpenEveryDay(openingHours: BusinessHours | undefined): boolean
     return false;
   }
 
+  const scheduleMap = toScheduleMap(openingHours);
   return DAYS_OF_WEEK.every((day) => {
-    const schedule = openingHours[day];
+    const schedule = scheduleMap.get(day);
     return schedule && !schedule.closed;
   });
 }
@@ -254,7 +276,10 @@ export function getOpeningHoursSummary(openingHours: BusinessHours | undefined):
 
   if (scheduledDays.length === 1) {
     const day = scheduledDays[0];
-    const schedule = openingHours[day];
+    const schedule = toScheduleMap(openingHours).get(day);
+    if (!schedule) {
+      return 'Fechado';
+    }
     return `${day}: ${formatSchedule(schedule)}`;
   }
 

@@ -305,30 +305,21 @@ export class MapEntityProjectionService {
       entityType: type,
     };
 
-    // Campos comuns
-    const commonFields = [
-      'category',
-      'subcategory',
-      'tags',
-      'phone',
-      'whatsapp',
-      'email',
-      'website',
-      'rating',
-      'review_count',
-      'is_verified',
-      'is_premium',
-      'created_at',
-      'updated_at',
-      'coordinate_source',  // precisão de coordenada: exact | geocoded | approximate
-      'map_layer_key',
-    ];
-
-    commonFields.forEach((field) => {
-      if (entity[field] !== undefined) {
-        metadata[field] = entity[field];
-      }
-    });
+    if (entity.category !== undefined) metadata.category = entity.category;
+    if (entity.subcategory !== undefined) metadata.subcategory = entity.subcategory;
+    if (entity.tags !== undefined) metadata.tags = entity.tags;
+    if (entity.phone !== undefined) metadata.phone = entity.phone;
+    if (entity.whatsapp !== undefined) metadata.whatsapp = entity.whatsapp;
+    if (entity.email !== undefined) metadata.email = entity.email;
+    if (entity.website !== undefined) metadata.website = entity.website;
+    if (entity.rating !== undefined) metadata.rating = entity.rating;
+    if (entity.review_count !== undefined) metadata.review_count = entity.review_count;
+    if (entity.is_verified !== undefined) metadata.is_verified = entity.is_verified;
+    if (entity.is_premium !== undefined) metadata.is_premium = entity.is_premium;
+    if (entity.created_at !== undefined) metadata.created_at = entity.created_at;
+    if (entity.updated_at !== undefined) metadata.updated_at = entity.updated_at;
+    if (entity.coordinate_source !== undefined) metadata.coordinate_source = entity.coordinate_source;
+    if (entity.map_layer_key !== undefined) metadata.map_layer_key = entity.map_layer_key;
 
     // Campos específicos por tipo
     if (type === 'event') {

@@ -45,6 +45,12 @@ export function ReportContentDialog({
     comment: "Denunciar comentario",
     profile: "Denunciar perfil",
   };
+  const dialogTitle =
+    targetType === "post"
+      ? titleMap.post
+      : targetType === "comment"
+        ? titleMap.comment
+        : titleMap.profile;
 
   const handleEnviar = async () => {
     if (!motivo || !targetId || !activeProfile) return;
@@ -73,7 +79,7 @@ export function ReportContentDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-sm">
         <DialogHeader>
-          <DialogTitle className="font-display">{titleMap[targetType]}</DialogTitle>
+          <DialogTitle className="font-display">{dialogTitle}</DialogTitle>
           <DialogDescription>Por que este conteudo e inadequado?</DialogDescription>
         </DialogHeader>
 

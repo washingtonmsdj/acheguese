@@ -55,7 +55,22 @@ const OSM_STYLES: Record<TileStyle, TileProviderConfig> = {
  */
 export class OSMTileProvider implements MapTileProvider {
   getTileConfig(style: TileStyle): TileProviderConfig {
-    return OSM_STYLES[style] || OSM_STYLES.streets;
+    switch (style) {
+      case 'streets':
+        return OSM_STYLES.streets;
+      case 'light':
+        return OSM_STYLES.light;
+      case 'dark':
+        return OSM_STYLES.dark;
+      case 'satellite':
+        return OSM_STYLES.satellite;
+      case 'hybrid':
+        return OSM_STYLES.hybrid;
+      case 'terrain':
+        return OSM_STYLES.terrain;
+      default:
+        return OSM_STYLES.streets;
+    }
   }
 
   getAvailableStyles(): TileStyle[] {

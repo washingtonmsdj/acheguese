@@ -7,6 +7,7 @@
 
 import {
   BarChart3,
+  Bike,
   Bell,
   Bookmark,
   Briefcase,
@@ -25,7 +26,6 @@ import {
   SectionFrame,
   HubLinkCard,
   NextActionsPanel,
-  ProfileStats,
 } from "@/modules/profile/components/hub";
 import { ProfileActiveRideCard } from "@/modules/profile/components/ProfileActiveRideCard";
 import {
@@ -35,18 +35,31 @@ import {
 } from "@/modules/profile/components/cards";
 
 import type { ResumoSectionProps } from "./types";
+import { getMobilityServiceStatus } from "@/modules/profile/utils/mobilityServiceStatus";
 
 export function ResumoSection({
   operations,
   notifications,
-  stats,
   nextActions,
   hasActiveRide,
   activeRide,
+  driverProfileId,
+  driverData,
   setActiveSection,
+  navigate,
   appUrls,
-  moduleUrls,
 }: ResumoSectionProps) {
+  const motoristaStatus = getMobilityServiceStatus({
+    driverProfileId,
+    driverData: driverData ?? null,
+    service: "motorista",
+  });
+  const motoboyStatus = getMobilityServiceStatus({
+    driverProfileId,
+    driverData: driverData ?? null,
+    service: "motoboy",
+  });
+
   return (
     <div className="space-y-6">
       {/* Corrida ativa (se houver) - Destaque no topo */}
@@ -215,7 +228,31 @@ export function ResumoSection({
         title="Atalhos principais"
         description="Acesso rápido às áreas mais importantes do seu perfil pessoal."
       >
-        <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+          <HubLinkCard
+            icon={Building2}
+            title="Minhas empresas"
+            description="Lista de empresas e acesso ao painel de gestão."
+            onClick={() => navigate("/perfil/empresas")}
+          />
+          <HubLinkCard
+            icon={Car}
+            title="Mobilidade"
+            description={`Motorista: ${motoristaStatus}. Motoboy: ${motoboyStatus}.`}
+            onClick={() => navigate(appUrls.profile.mobilidade.home)}
+          />
+          <HubLinkCard
+            icon={Bike}
+            title="Motoboy"
+            description="Area separada para entregas dentro de Mobilidade."
+            onClick={() => navigate(appUrls.profile.mobilidade.motoboy.home)}
+          />
+          <HubLinkCard
+            icon={Briefcase}
+            title="Planos e cobranças"
+            description="Assinaturas por empresa, mobilidade e classificados."
+            onClick={() => navigate("/perfil/planos")}
+          />
           <HubLinkCard
             icon={UserRound}
             title="Dados pessoais"

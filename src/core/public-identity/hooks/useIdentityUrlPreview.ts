@@ -29,8 +29,13 @@ export function useIdentityUrlPreview({
   previewFn,
 }: UseIdentityUrlPreviewOptions): string {
   return useMemo(() => {
-    const fn = previewFn ?? URL_PREVIEW_FNS[entityType];
+    const defaultFn =
+      entityType === 'business'
+        ? URL_PREVIEW_FNS.business
+        : entityType === 'profile'
+          ? URL_PREVIEW_FNS.profile
+          : URL_PREVIEW_FNS.professional;
+    const fn = previewFn ?? defaultFn;
     return fn(identifier);
   }, [entityType, identifier, previewFn]);
 }
-

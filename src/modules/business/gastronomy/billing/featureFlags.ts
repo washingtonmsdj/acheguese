@@ -41,6 +41,18 @@ import {
 // ── FEATURE FLAGS ─────────────────────────────────────────────────────────
 
 export class GastronomyFeatureFlags {
+  private static getPlanForTier(planTier: GastronomyPlanTier): GastronomyPlan {
+    switch (planTier) {
+      case GastronomyPlanTier.FREE:
+        return GASTRONOMY_PLANS[GastronomyPlanTier.FREE];
+      case GastronomyPlanTier.PRO:
+        return GASTRONOMY_PLANS[GastronomyPlanTier.PRO];
+      case GastronomyPlanTier.DELIVERY:
+        return GASTRONOMY_PLANS[GastronomyPlanTier.DELIVERY];
+      default:
+        return GASTRONOMY_PLANS[GastronomyPlanTier.FREE];
+    }
+  }
   
   /**
    * Verifica se uma feature está habilitada para um plano
@@ -53,7 +65,7 @@ export class GastronomyFeatureFlags {
     planTier: GastronomyPlanTier,
     feature: GastronomyFeature,
   ): boolean {
-    const plan = GASTRONOMY_PLANS[planTier];
+    const plan = this.getPlanForTier(planTier);
     return plan.features.includes(feature);
   }
   
@@ -69,8 +81,28 @@ export class GastronomyFeatureFlags {
     limitType: keyof GastronomyLimits,
     currentValue: number,
   ): { allowed: boolean; limit: number | null; remaining: number | null } {
-    const plan = GASTRONOMY_PLANS[planTier];
-    const limit = plan.limits[limitType];
+    const plan = this.getPlanForTier(planTier);
+    const limits = plan.limits;
+    let limit: number | null;
+    switch (limitType) {
+      case 'max_menu_items':
+        limit = limits.max_menu_items;
+        break;
+      case 'max_photos':
+        limit = limits.max_photos;
+        break;
+      case 'max_menus':
+        limit = limits.max_menus;
+        break;
+      case 'max_promotions':
+        limit = limits.max_promotions;
+        break;
+      case 'analytics_retention_days':
+        limit = limits.analytics_retention_days;
+        break;
+      default:
+        limit = null;
+    }
     
     if (limit === null) {
       return { allowed: true, limit: null, remaining: null }; // ilimitado
@@ -94,8 +126,8 @@ export class GastronomyFeatureFlags {
     currentTier: GastronomyPlanTier,
     targetTier: GastronomyPlanTier,
   ): GastronomyFeature[] {
-    const current = GASTRONOMY_PLANS[currentTier];
-    const target = GASTRONOMY_PLANS[targetTier];
+    const current = this.getPlanForTier(currentTier);
+    const target = this.getPlanForTier(targetTier);
     
     return target.features.filter(
       (f) => !current.features.includes(f)
@@ -106,14 +138,14 @@ export class GastronomyFeatureFlags {
    * Retorna todas as features de um plano
    */
   static getPlanFeatures(planTier: GastronomyPlanTier): GastronomyFeature[] {
-    return GASTRONOMY_PLANS[planTier].features;
+    return this.getPlanForTier(planTier).features;
   }
   
   /**
    * Retorna os limites de um plano
    */
   static getPlanLimits(planTier: GastronomyPlanTier): GastronomyLimits {
-    return GASTRONOMY_PLANS[planTier].limits;
+    return this.getPlanForTier(planTier).limits;
   }
   
   /**

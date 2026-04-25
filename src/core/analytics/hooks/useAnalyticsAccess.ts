@@ -9,7 +9,9 @@ export function useAnalyticsAccess() {
   const canViewDashboard = (dashboardId: DashboardId): boolean => {
     if (!activeProfile) return false;
 
-    const dashboard = POWERBI_DASHBOARDS[dashboardId];
+    const dashboard = Object.values(POWERBI_DASHBOARDS).find(
+      (item) => item.id === dashboardId,
+    );
     if (!dashboard) return false;
 
     if (!dashboard.requiredRole || dashboard.requiredRole.length === 0) {

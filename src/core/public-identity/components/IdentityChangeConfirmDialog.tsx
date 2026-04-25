@@ -52,7 +52,12 @@ export function IdentityChangeConfirmDialog({
   oldIdentifier,
   newIdentifier,
 }: IdentityChangeConfirmDialogProps) {
-  const config = DIALOG_CONFIG[entityType];
+  const config =
+    entityType === 'business'
+      ? DIALOG_CONFIG.business
+      : entityType === 'profile'
+        ? DIALOG_CONFIG.profile
+        : DIALOG_CONFIG.professional;
 
   useEffect(() => {
     if (open) {
@@ -97,4 +102,3 @@ export function IdentityChangeConfirmDialog({
     </AlertDialog>
   );
 }
-

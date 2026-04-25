@@ -19,6 +19,32 @@ import type { RankingEntry } from "@/core/gamification/hooks/useRanking";
 const podiumColors = ["text-yellow-500", "text-gray-400", "text-amber-700"];
 const podiumIcons = [Trophy, Medal, Medal];
 
+function getPodiumColor(index: number): string {
+  switch (index) {
+    case 0:
+      return podiumColors[0];
+    case 1:
+      return podiumColors[1];
+    case 2:
+      return podiumColors[2];
+    default:
+      return "text-muted-foreground";
+  }
+}
+
+function getPodiumIcon(index: number) {
+  switch (index) {
+    case 0:
+      return podiumIcons[0];
+    case 1:
+      return podiumIcons[1];
+    case 2:
+      return podiumIcons[2];
+    default:
+      return null;
+  }
+}
+
 interface LeaderboardListProps {
   ranking: RankingEntry[];
 }
@@ -27,9 +53,10 @@ export function LeaderboardList({ ranking }: LeaderboardListProps) {
   return (
     <div className="px-4 space-y-2">
       {ranking.map((entry, i) => {
-        const PodiumIcon = i < 3 ? podiumIcons[i] : null;
+        const PodiumIcon = i < 3 ? getPodiumIcon(i) : null;
         const nivel = getNivel(entry.pontos);
         const progresso = getProgresso(entry.pontos);
+        const avatarInitial = entry.name.charAt(0);
 
         return (
           <motion.div
@@ -45,7 +72,7 @@ export function LeaderboardList({ ranking }: LeaderboardListProps) {
             {/* Position */}
             <div className="flex items-center justify-center h-8 w-8 flex-shrink-0">
               {PodiumIcon ? (
-                <PodiumIcon className={cn("h-5 w-5", podiumColors[i])} />
+                <PodiumIcon className={cn("h-5 w-5", getPodiumColor(i))} />
               ) : (
                 <span className="text-sm font-bold text-muted-foreground">
                   #{i + 1}
@@ -55,7 +82,7 @@ export function LeaderboardList({ ranking }: LeaderboardListProps) {
 
             <Avatar className="h-10 w-10 flex-shrink-0">
               <AvatarImage src={entry.avatar_url} />
-              <AvatarFallback>{entry.name[0]}</AvatarFallback>
+              <AvatarFallback>{avatarInitial}</AvatarFallback>
             </Avatar>
 
             <div className="flex-1 min-w-0">

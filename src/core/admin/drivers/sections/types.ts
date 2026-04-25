@@ -111,7 +111,9 @@ export interface DriverActions {
 // Section Props
 // ============================================
 
-export interface AdminMotoristasHeaderSectionProps {}
+export type AdminMotoristasHeaderSectionProps = {
+  readonly _sectionId?: "admin-motoristas-header";
+};
 
 export interface AdminMotoristasStatsSectionProps {
   readonly stats: DriverStats;

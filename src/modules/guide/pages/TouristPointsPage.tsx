@@ -65,6 +65,41 @@ const QUICK_FILTERS = [
   { label: 'Família', key: 'is_family_friendly' as const, icon: Baby },
 ] as const;
 
+type QuickFilterKey = (typeof QUICK_FILTERS)[number]['key'];
+type QuickFiltersState = Record<QuickFilterKey, boolean>;
+
+const DEFAULT_QUICK_FILTERS: QuickFiltersState = {
+  is_free: false,
+  is_accessible: false,
+  is_family_friendly: false,
+};
+
+function toggleQuickFilterState(prev: QuickFiltersState, key: QuickFilterKey): QuickFiltersState {
+  switch (key) {
+    case 'is_free':
+      return { ...prev, is_free: !prev.is_free };
+    case 'is_accessible':
+      return { ...prev, is_accessible: !prev.is_accessible };
+    case 'is_family_friendly':
+      return { ...prev, is_family_friendly: !prev.is_family_friendly };
+    default:
+      return prev;
+  }
+}
+
+function isQuickFilterEnabled(filters: QuickFiltersState, key: QuickFilterKey): boolean {
+  switch (key) {
+    case 'is_free':
+      return filters.is_free;
+    case 'is_accessible':
+      return filters.is_accessible;
+    case 'is_family_friendly':
+      return filters.is_family_friendly;
+    default:
+      return false;
+  }
+}
+
 // ============================================================================
 // ANIMATIONS
 // ============================================================================
@@ -97,7 +132,7 @@ export default function TouristPointsPage() {
   const [displayLayout, setDisplayLayout] = useState<DisplayLayout>('grid');
   const [searchQuery, setSearchQuery] = useState('');
   const [categoryFilter, setCategoryFilter] = useState<string | undefined>();
-  const [quickFilters, setQuickFilters] = useState<Record<string, boolean>>({});
+  const [quickFilters, setQuickFilters] = useState<QuickFiltersState>(DEFAULT_QUICK_FILTERS);
   const [sortBy, setSortBy] = useState<TouristPointSortKey>('relevance');
   const [visibleCount, setVisibleCount] = useState(12);
   const [nearbyTypeFilter, setNearbyTypeFilter] = useState<string>('todos');
@@ -177,14 +212,14 @@ export default function TouristPointsPage() {
     setVisibleCount(12);
   }, []);
 
-  const handleQuickFilter = useCallback((key: string) => {
-    setQuickFilters(prev => ({ ...prev, [key]: !prev[key] }));
+  const handleQuickFilter = useCallback((key: QuickFilterKey) => {
+    setQuickFilters((prev) => toggleQuickFilterState(prev, key));
   }, []);
 
   const clearFilters = useCallback(() => {
     setSearchQuery('');
     setCategoryFilter(undefined);
-    setQuickFilters({});
+    setQuickFilters(DEFAULT_QUICK_FILTERS);
     setSortBy('relevance');
     setVisibleCount(12);
   }, []);
@@ -248,7 +283,7 @@ export default function TouristPointsPage() {
           quickFilters={QUICK_FILTERS.map(({ label, key, icon: Icon }) => ({
             label,
             icon: Icon,
-            isActive: !!quickFilters[key],
+            isActive: isQuickFilterEnabled(quickFilters, key),
             onClick: () => handleQuickFilter(key),
           }))}
           stats={[

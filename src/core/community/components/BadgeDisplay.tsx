@@ -36,6 +36,32 @@ const iconSizeClasses = {
   lg: "h-10 w-10",
 };
 
+function getBadgeSizeClass(size: "sm" | "md" | "lg"): string {
+  switch (size) {
+    case "sm":
+      return sizeClasses.sm;
+    case "md":
+      return sizeClasses.md;
+    case "lg":
+      return sizeClasses.lg;
+    default:
+      return sizeClasses.md;
+  }
+}
+
+function getBadgeIconSizeClass(size: "sm" | "md" | "lg"): string {
+  switch (size) {
+    case "sm":
+      return iconSizeClasses.sm;
+    case "md":
+      return iconSizeClasses.md;
+    case "lg":
+      return iconSizeClasses.lg;
+    default:
+      return iconSizeClasses.md;
+  }
+}
+
 export function BadgeDisplay({
   badge,
   size = "md",
@@ -53,7 +79,7 @@ export function BadgeDisplay({
             <div
               className={cn(
                 "rounded-full flex items-center justify-center transition-all",
-                sizeClasses[size],
+                getBadgeSizeClass(size),
                 isEarned
                   ? "bg-gradient-to-br from-yellow-400 to-yellow-600 shadow-lg"
                   : locked
@@ -67,7 +93,7 @@ export function BadgeDisplay({
               }
             >
               {locked ? (
-                <Lock className={cn(iconSizeClasses[size], "text-gray-400")} />
+                <Lock className={cn(getBadgeIconSizeClass(size), "text-gray-400")} />
               ) : badge.icon ? (
                 <span
                   className={cn(
@@ -81,7 +107,7 @@ export function BadgeDisplay({
               ) : (
                 <Award
                   className={cn(
-                    iconSizeClasses[size],
+                    getBadgeIconSizeClass(size),
                     isEarned ? "text-white" : "text-gray-400",
                   )}
                 />
@@ -175,7 +201,7 @@ export function BadgeGrid({
         <div
           className={cn(
             "rounded-full flex items-center justify-center bg-gray-100 dark:bg-gray-800",
-            sizeClasses[size],
+            getBadgeSizeClass(size),
           )}
         >
           <span className="text-sm font-semibold text-muted-foreground">

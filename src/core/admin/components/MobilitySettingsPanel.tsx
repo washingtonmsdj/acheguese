@@ -15,7 +15,7 @@ import { useToast } from "@/shared/hooks/use-toast";
 import { Settings, MapPin, TrendingUp, Save, RefreshCw } from "lucide-react";
 import { logger } from "@/shared/utils/logger";
 import { useLocationContext } from "@/core/location";
-import { mobilityRolloutService } from "@/modules/mobility/services";
+import { adminMobilityRuntimeService } from "@/core/admin/services/AdminMobilityRuntimeService";
 
 interface MobilitySettings {
   prioritize_destination_residents: {
@@ -57,7 +57,7 @@ export function MobilitySettingsPanel() {
         return;
       }
 
-      const enabled = await mobilityRolloutService.isMotoboyEnabled(activeLocationId);
+      const enabled = await adminMobilityRuntimeService.isMotoboyEnabled(activeLocationId);
       setMotoboyModeEnabled(enabled);
     } catch (error) {
       logger.error("Erro ao carregar configuracoes:", error);
@@ -83,7 +83,7 @@ export function MobilitySettingsPanel() {
 
     setSaving(true);
     try {
-      await mobilityRolloutService.setMotoboyEnabled(activeLocationId, motoboyModeEnabled);
+      await adminMobilityRuntimeService.setMotoboyEnabled(activeLocationId, motoboyModeEnabled);
 
       toast({
         title: "Configuracoes salvas",

@@ -173,24 +173,29 @@ export class NominatimGeocodingProvider implements GeocodingProvider {
   private mapType(
     type: string
   ): 'address' | 'poi' | 'city' | 'district' | 'state' | 'country' {
-    const typeMap: Record<string, 'address' | 'poi' | 'city' | 'district' | 'state' | 'country'> =
-      {
-        house: 'address',
-        building: 'address',
-        residential: 'address',
-        amenity: 'poi',
-        shop: 'poi',
-        tourism: 'poi',
-        city: 'city',
-        town: 'city',
-        village: 'city',
-        suburb: 'district',
-        neighbourhood: 'district',
-        state: 'state',
-        country: 'country',
-      };
-
-    return typeMap[type] || 'poi';
+    switch (type) {
+      case 'house':
+      case 'building':
+      case 'residential':
+        return 'address';
+      case 'amenity':
+      case 'shop':
+      case 'tourism':
+        return 'poi';
+      case 'city':
+      case 'town':
+      case 'village':
+        return 'city';
+      case 'suburb':
+      case 'neighbourhood':
+        return 'district';
+      case 'state':
+        return 'state';
+      case 'country':
+        return 'country';
+      default:
+        return 'poi';
+    }
   }
 }
 

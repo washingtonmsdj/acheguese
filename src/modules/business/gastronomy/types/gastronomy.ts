@@ -9,6 +9,7 @@ export type GastronomyStatus = 'active' | 'inactive' | 'temporarily_closed';
 export interface GastronomyProfile {
   id: string;
   business_id: string;
+  niche_key?: string;
   cuisine_type: string;
   cuisine_subtypes: string[];
   price_range: PriceRange;
@@ -34,6 +35,7 @@ export interface GastronomyProfile {
 
 export interface CreateGastronomyProfileInput {
   business_id: string;
+  niche_key?: string;
   cuisine_type: string;
   cuisine_subtypes?: string[];
   price_range: PriceRange;
@@ -64,6 +66,7 @@ export interface GastronomyBusiness extends Business {
 }
 
 export interface GastronomyBusinessFilters {
+  niche_key?: string;
   cuisine_type?: string;
   price_range?: PriceRange;
   delivery_enabled?: boolean;

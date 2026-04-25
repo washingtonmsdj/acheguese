@@ -65,15 +65,17 @@ const settings: SettingItem[] = [
 ];
 
 export function DriverSettingsPanel() {
-  const [values, setValues] = useState<Record<string, boolean>>(
-    Object.fromEntries(settings.map((s) => [s.id, s.defaultValue])),
+  const [values, setValues] = useState<Map<string, boolean>>(
+    () => new Map(settings.map((setting) => [setting.id, setting.defaultValue])),
   );
 
   const toggle = (id: string) => {
     setValues((prev) => {
-      const next = { ...prev, [id]: !prev[id] };
+      const next = new Map(prev);
+      const nextValue = !(next.get(id) ?? false);
+      next.set(id, nextValue);
       toast.success(
-        `${next[id] ? "Ativado" : "Desativado"}: ${settings.find((s) => s.id === id)?.label}`,
+        `${nextValue ? "Ativado" : "Desativado"}: ${settings.find((s) => s.id === id)?.label}`,
       );
       return next;
     });
@@ -109,7 +111,7 @@ export function DriverSettingsPanel() {
               </div>
             </div>
             <Switch
-              checked={values[s.id]}
+              checked={values.get(s.id) ?? false}
               onCheckedChange={() => toggle(s.id)}
               className="data-[state=checked]:bg-teal-500 scale-70"
             />

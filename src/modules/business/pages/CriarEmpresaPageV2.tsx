@@ -20,6 +20,7 @@ import { BusinessSlugSection } from "@/modules/business/components/identity/Busi
 import { useMultiProfileContext } from "@/core/profiles/contexts/multi-profile-runtime-context";
 import { ActiveProfileBadge } from "@/core/profiles/components/ActiveProfileBadge";
 import { getEligibleVerticals } from "@/core/verticals/config";
+import { businessManagementRoutes } from "@/core/business/utils/businessManagementRoutes";
 
 interface DayHoursValue {
   open: string;
@@ -82,12 +83,12 @@ export default function CriarEmpresaPageV2() {
       const category = form.getValues("category");
       const eligibleVerticals = getEligibleVerticals(category);
 
-      if (eligibleVerticals.length > 0 && result.business_data_id) {
-        navigate(eligibleVerticals[0].setupRoute(result.business_data_id));
+      if (eligibleVerticals.length > 0) {
+        navigate(eligibleVerticals[0].setupRoute(result.profile_id));
         return;
       }
 
-      navigate(`/dashboard/business/${result.profile_id}`);
+      navigate(businessManagementRoutes.overview(result.profile_id));
     },
   });
 

@@ -11,6 +11,7 @@ import {
 import { NetworkService, type BranchSummary } from '@/core/business/services/NetworkService';
 import { useLocationCascade, type LocationOption } from '@/core/location/hooks/useLocationCascade';
 import { geoPathToPublicUrl } from '@/core/routing/utils/territoryUrls';
+import { businessManagementRoutes } from '@/core/business/utils/businessManagementRoutes';
 import type {
   ConvertToNetworkPanelProps,
   BrandHubPanelProps,
@@ -91,7 +92,7 @@ function ConvertToNetworkPanel({ profileId, businessId, locationId, toast }: Con
       });
       setOpen(false);
       setTimeout(() => {
-        window.location.href = `/dashboard/business/${result.brand_hub_id}`;
+        window.location.href = businessManagementRoutes.overview(result.brand_hub_id);
       }, 500);
     } catch (err) {
       toast({ title: 'Erro ao criar rede', description: (err as Error).message, variant: 'destructive' });

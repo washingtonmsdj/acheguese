@@ -13,11 +13,12 @@
  * @version 1.0.0
  */
 import { logger } from '@/shared/utils/logger';
-import { useEffect, useState } from 'react';
+import { lazy, Suspense, useEffect, useState } from 'react';
 import { useParams, Navigate } from 'react-router-dom';
-import { classifiedUrlService } from '@/modules/classifieds/services/ClassifiedUrlService';
+import { classifiedUrlService } from '@/core/classifieds/services/ClassifiedUrlService';
 import { FullScreenLoader } from '@/shared/components/loading/PageLoader';
-import ClassificadoDetailPage from '@/modules/classifieds/pages/ClassificadoDetailPage';
+
+const ClassificadoDetailPage = lazy(() => import('@/modules/classifieds/pages/ClassificadoDetailPage'));
 
 export default function ClassifiedCanonicalRoute() {
   const { uf, cidade, bairro, categoria, subcategoria, slug, publicId } = useParams<{
@@ -95,6 +96,10 @@ export default function ClassifiedCanonicalRoute() {
   }
 
   // Renderiza página de detalhe com ID resolvido
-  return <ClassificadoDetailPage classifiedId={resolution.classifiedId} />;
+  return (
+    <Suspense fallback={<FullScreenLoader />}>
+      <ClassificadoDetailPage classifiedId={resolution.classifiedId} />
+    </Suspense>
+  );
 }
 

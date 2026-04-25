@@ -87,6 +87,32 @@ export { BusinessFacade, BusinessService } from "./BusinessService";
 export { BusinessService as businessService } from "./BusinessService";
 
 // ============================================================
+// 🍽️ GASTRONOMY QUERIES - Leitura de dados gastronômicos
+// ============================================================
+export {
+  getGastronomyProfile,
+  getGastronomyBusiness,
+  getGastronomyBusinessByTerritorySlug,
+  getGastronomyBusinessesList,
+  getGastronomyBusinesses,
+  getGastronomyBusinessesByIds,
+  hasGastronomyProfile,
+  type PaginatedGastronomyBusinesses,
+  type TerritorySlugParams,
+} from "./gastronomy.queries";
+
+// ============================================================
+// 🍽️ GASTRONOMY MUTATIONS - Escrita de dados gastronômicos
+// ============================================================
+export {
+  createGastronomyProfile,
+  updateGastronomyProfile,
+  deleteGastronomyProfile,
+  updateOperationalStatus,
+  patchGastronomyProfile,
+} from "./gastronomy.mutations";
+
+// ============================================================
 // 📝 TYPES - Re-exports de tipos
 // ============================================================
 export type {
@@ -107,4 +133,14 @@ export type {
   Product,
   ProductRecord,
   CreateProductInput,
+} from "../types";
+
+export type {
+  PriceRange,
+  GastronomyStatus,
+  GastronomyProfile,
+  CreateGastronomyProfileInput,
+  UpdateGastronomyProfileInput,
+  GastronomyBusiness,
+  GastronomyBusinessFilters,
 } from "../types";

@@ -71,6 +71,29 @@ const SLUG_TO_MODULE_KEY: Record<string, ModuleKey> = {
   [MODULE_SLUGS.jobs]:        ModuleKey.JOBS,
 };
 
+function resolveModuleKeyFromSlug(slug: string): ModuleKey | null {
+  switch (slug) {
+    case MODULE_SLUGS.community:
+      return SLUG_TO_MODULE_KEY[MODULE_SLUGS.community];
+    case MODULE_SLUGS.business:
+      return SLUG_TO_MODULE_KEY[MODULE_SLUGS.business];
+    case MODULE_SLUGS.services:
+      return SLUG_TO_MODULE_KEY[MODULE_SLUGS.services];
+    case MODULE_SLUGS.classifieds:
+      return SLUG_TO_MODULE_KEY[MODULE_SLUGS.classifieds];
+    case MODULE_SLUGS.mobility:
+      return SLUG_TO_MODULE_KEY[MODULE_SLUGS.mobility];
+    case MODULE_SLUGS.gastronomy:
+      return SLUG_TO_MODULE_KEY[MODULE_SLUGS.gastronomy];
+    case MODULE_SLUGS.events:
+      return SLUG_TO_MODULE_KEY[MODULE_SLUGS.events];
+    case MODULE_SLUGS.jobs:
+      return SLUG_TO_MODULE_KEY[MODULE_SLUGS.jobs];
+    default:
+      return null;
+  }
+}
+
 // ── Banner de cobertura parcial ──────────────────────────────────────────────
 
 function PartialCoverageBanner({
@@ -124,7 +147,7 @@ export function TerritorialLayout() {
 
   // Resolve o módulo atual a partir do pathname
   const currentModuleSlug = pathname.split('/').filter(Boolean)[0] ?? '';
-  const currentModuleKey = SLUG_TO_MODULE_KEY[currentModuleSlug] ?? null;
+  const currentModuleKey = resolveModuleKeyFromSlug(currentModuleSlug);
 
   // Resolve availability do grupo (só relevante quando resolved.kind === 'group')
   const groupId = resolved?.kind === 'group' ? resolved.group.id : null;

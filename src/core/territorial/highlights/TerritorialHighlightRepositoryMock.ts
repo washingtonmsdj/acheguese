@@ -199,10 +199,16 @@ export class TerritorialHighlightRepositoryMock
   }
 
   async update(id: string, input: Partial<CreateHighlightInput>): Promise<TerritorialHighlight> {
-    const idx = this.store.findIndex((h) => h.id === id);
-    if (idx === -1) throw new Error(`Highlight not found: ${id}`);
-    this.store[idx] = { ...this.store[idx], ...input, updated_at: new Date().toISOString() };
-    return this.store[idx];
+    const current = this.store.find((h) => h.id === id);
+    if (!current) throw new Error(`Highlight not found: ${id}`);
+
+    const updated: TerritorialHighlight = {
+      ...current,
+      ...input,
+      updated_at: new Date().toISOString(),
+    };
+    this.store = this.store.map((highlight) => (highlight.id === id ? updated : highlight));
+    return updated;
   }
 
   async delete(id: string): Promise<void> {

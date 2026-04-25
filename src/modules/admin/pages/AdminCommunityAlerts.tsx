@@ -230,7 +230,16 @@ export default function AdminCommunityAlerts() {
       expirado: { variant: "outline", label: "Expirado" },
       removido: { variant: "destructive", label: "Removido" },
     };
-    const config = variants[status] || variants.ativo;
+    const config =
+      status === 'ativo'
+        ? variants.ativo
+        : status === 'encerrado'
+          ? variants.encerrado
+          : status === 'expirado'
+            ? variants.expirado
+            : status === 'removido'
+              ? variants.removido
+              : variants.ativo;
     return <Badge variant={config.variant}>{config.label}</Badge>;
   };
 

@@ -17,7 +17,7 @@ import { Button } from "@/shared/components/ui/button";
 import { Badge } from "@/shared/components/ui/badge";
 import { Skeleton } from "@/shared/components/ui/skeleton";
 import { TooltipProvider } from "@/shared/components/ui/tooltip";
-import { useAppUrls } from "@/core/routing/hooks"; // ✅ SSOT URLs
+import { useAppUrls } from "@/core/routing/hooks"; // âœ… SSOT URLs
 import { useUserTerritory } from "@/core/location/hooks/useUserTerritory";
 import { useSessionContext } from "@/core/session";
 import {
@@ -35,18 +35,18 @@ import {
   useInfiniteScroll,
   usePaginatedState,
 } from "@/shared/hooks/useInfiniteScroll";
-import { lostFoundService } from "@/modules/community/lostfound/services/LostFoundService";
+import { lostFoundRuntimeService as lostFoundService } from "@/core/community/services/LostFoundRuntimeService";
 import { ViewOnMapButton } from "@/core/maps/components/ViewOnMapButton";
 
 const CATEGORIAS = [
-  { id: "todos", label: "Todos", icon: "🔍" },
-  { id: "animal", label: "Animal", icon: "🐾" },
-  { id: "celular", label: "Celular", icon: "📱" },
-  { id: "documentos", label: "Documentos", icon: "📄" },
-  { id: "chaves", label: "Chaves", icon: "🔑" },
-  { id: "carteira", label: "Carteira", icon: "👛" },
-  { id: "objetos", label: "Objetos", icon: "📦" },
-  { id: "outro", label: "Outro", icon: "❓" },
+  { id: "todos", label: "Todos", icon: "ðŸ”" },
+  { id: "animal", label: "Animal", icon: "ðŸ¾" },
+  { id: "celular", label: "Celular", icon: "ðŸ“±" },
+  { id: "documentos", label: "Documentos", icon: "ðŸ“„" },
+  { id: "chaves", label: "Chaves", icon: "ðŸ”‘" },
+  { id: "carteira", label: "Carteira", icon: "ðŸ‘›" },
+  { id: "objetos", label: "Objetos", icon: "ðŸ“¦" },
+  { id: "outro", label: "Outro", icon: "â“" },
 ];
 
 interface LostFoundItem {
@@ -66,12 +66,12 @@ interface LostFoundItem {
 
 export default function AchadosPerdidosPage() {
   const navigate = useNavigate();
-  const appUrls = useAppUrls(); // ✅ SSOT URLs
+  const appUrls = useAppUrls(); // âœ… SSOT URLs
   const [search, setSearch] = useState("");
   const [filterTipo, setFilterTipo] = useState("todos");
   const [filterCategoria, setFilterCategoria] = useState("todos");
 
-  // ✅ Verificação de autenticação
+  // âœ… VerificaÃ§Ã£o de autenticaÃ§Ã£o
   const { activeProfile } = useSessionContext();
   const { hasHome, loading: territoryLoading } = useUserTerritory();
 
@@ -95,7 +95,7 @@ export default function AchadosPerdidosPage() {
       const from = pageNum * PAGE_SIZE;
       const to = from + PAGE_SIZE - 1;
 
-      // ✅ LOTE 9A - Usar lostFoundService.getPostsPage (SSOT para lost_found_posts)
+      // âœ… LOTE 9A - Usar lostFoundService.getPostsPage (SSOT para lost_found_posts)
       const data = await lostFoundService.getPostsPage(
         { tipo: filterTipo, categoria: filterCategoria },
         from,
@@ -158,9 +158,9 @@ export default function AchadosPerdidosPage() {
   );
 
   const getCatIcon = (cat: string) =>
-    CATEGORIAS.find((c) => c.id === cat)?.icon || "❓";
+    CATEGORIAS.find((c) => c.id === cat)?.icon || "â“";
 
-  // Bloquear se não estiver logado
+  // Bloquear se nÃ£o estiver logado
   if (!activeProfile) {
     return (
       <TooltipProvider>
@@ -168,10 +168,10 @@ export default function AchadosPerdidosPage() {
           <div className="text-center p-8 max-w-md">
             <Users className="h-16 w-16 text-teal-400 mx-auto mb-4" />
             <h2 className="text-xl font-semibold text-white mb-4">
-              Faça login para acessar achados e perdidos
+              FaÃ§a login para acessar achados e perdidos
             </h2>
             <p className="text-gray-400 mb-6">
-              Os achados e perdidos são exclusivos para moradores cadastrados do bairro.
+              Os achados e perdidos sÃ£o exclusivos para moradores cadastrados do bairro.
             </p>
             <Button onClick={() => window.location.href = appUrls.auth.login} className="bg-teal-500 hover:bg-teal-400">
               Fazer Login
@@ -182,7 +182,7 @@ export default function AchadosPerdidosPage() {
     );
   }
 
-  // Aguardar resolução do território
+  // Aguardar resoluÃ§Ã£o do territÃ³rio
   if (territoryLoading) {
     return (
       <div className="min-h-screen bg-[#12181B] flex items-center justify-center">
@@ -191,7 +191,7 @@ export default function AchadosPerdidosPage() {
     );
   }
 
-  // Bloquear se não tiver bairro cadastrado
+  // Bloquear se nÃ£o tiver bairro cadastrado
   if (!hasHome) {
     return (
       <TooltipProvider>
@@ -202,7 +202,7 @@ export default function AchadosPerdidosPage() {
               Complete seu cadastro
             </h2>
             <p className="text-gray-400 mb-6">
-              Para acessar os achados e perdidos, você precisa cadastrar seu bairro no perfil.
+              Para acessar os achados e perdidos, vocÃª precisa cadastrar seu bairro no perfil.
             </p>
             <Button onClick={() => window.location.href = appUrls.profile.central} className="bg-teal-500 hover:bg-teal-400">
               Completar Perfil
@@ -225,7 +225,7 @@ export default function AchadosPerdidosPage() {
               Ajude a comunidade a encontrar o que perdeu
             </p>
           </div>
-          <Button size="sm" onClick={() => navigate(appUrls.community.newLostAndFound)}> {/* ✅ SSOT */}
+          <Button size="sm" onClick={() => navigate(appUrls.community.newLostAndFound)}> {/* âœ… SSOT */}
             <Plus className="h-4 w-4 mr-1" /> Publicar
           </Button>
         </div>
@@ -244,8 +244,8 @@ export default function AchadosPerdidosPage() {
       <div className="flex gap-2 px-4 py-2">
         {[
           { id: "todos", label: "Todos", color: "" },
-          { id: "perdido", label: "🔴 Perdido", color: "text-destructive" },
-          { id: "encontrado", label: "🟢 Encontrado", color: "text-success" },
+          { id: "perdido", label: "ðŸ”´ Perdido", color: "text-destructive" },
+          { id: "encontrado", label: "ðŸŸ¢ Encontrado", color: "text-success" },
         ].map((t) => (
           <button
             key={t.id}
@@ -288,13 +288,13 @@ export default function AchadosPerdidosPage() {
           ))
         ) : filtered.length === 0 ? (
           <div className="text-center py-12">
-            <p className="text-4xl mb-3">🔎</p>
+            <p className="text-4xl mb-3">ðŸ”Ž</p>
             <p className="text-sm text-muted-foreground mb-3">
               Nenhum item publicado ainda.
             </p>
             <Button
               variant="outline"
-              onClick={() => navigate(appUrls.community.newLostAndFound)} // ✅ SSOT
+              onClick={() => navigate(appUrls.community.newLostAndFound)} // âœ… SSOT
             >
               Publicar item
             </Button>
@@ -350,7 +350,7 @@ export default function AchadosPerdidosPage() {
                 <div className="flex items-center gap-3 mt-1.5 text-xs text-muted-foreground">
                   <span className="flex items-center gap-0.5">
                     <MapPin className="h-3 w-3" />
-                    {item.neighborhood || "Não informado"}
+                    {item.neighborhood || "NÃ£o informado"}
                   </span>
                   {item.date_ocorrido && (
                     <span>

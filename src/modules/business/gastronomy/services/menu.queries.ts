@@ -506,11 +506,12 @@ export async function getMenuItemAddons(itemId: string): Promise<MenuItemAddon[]
 // ============================================================
 
 /**
- * Buscar promoções ativas de um menu
+ * Buscar promoções ativas de um negócio gastronômico.
+ * SSOT: menu_promotions pertence diretamente a business_data via business_id.
  */
-export async function getActiveMenuPromotions(menuId: string): Promise<MenuPromotion[]> {
+export async function getActiveMenuPromotions(businessId: string): Promise<MenuPromotion[]> {
   try {
-    if (!isValidId(menuId)) {
+    if (!isValidId(businessId)) {
       return [];
     }
 
@@ -519,10 +520,10 @@ export async function getActiveMenuPromotions(menuId: string): Promise<MenuPromo
     const { data, error } = await supabase
       .from('menu_promotions')
       .select('*')
-      .eq('menu_id', menuId)
+      .eq('business_id', businessId)
       .eq('is_active', true)
-      .lte('start_date', now)
-      .gte('end_date', now)
+      .lte('valid_from', now)
+      .gte('valid_until', now)
       .order('created_at', { ascending: false });
 
     if (error) {
@@ -860,10 +861,10 @@ export async function getMenuUsageStats(businessId: string): Promise<{
       supabase
         .from('menu_promotions')
         .select('*', { count: 'exact', head: true })
-        .in('menu_id', menuIds)
+        .eq('business_id', businessId)
         .eq('is_active', true)
-        .lte('start_date', now)
-        .gte('end_date', now),
+        .lte('valid_from', now)
+        .gte('valid_until', now),
     ]);
 
     if (menuItemsCountResult.error) {

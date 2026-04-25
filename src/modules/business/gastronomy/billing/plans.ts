@@ -143,7 +143,16 @@ export const GASTRONOMY_PLANS: Record<GastronomyPlanTier, GastronomyPlan> = {
  * Retorna o plano de um tier específico
  */
 export function getPlan(tier: GastronomyPlanTier): GastronomyPlan {
-  return GASTRONOMY_PLANS[tier];
+  switch (tier) {
+    case GastronomyPlanTier.FREE:
+      return GASTRONOMY_PLANS[GastronomyPlanTier.FREE];
+    case GastronomyPlanTier.PRO:
+      return GASTRONOMY_PLANS[GastronomyPlanTier.PRO];
+    case GastronomyPlanTier.DELIVERY:
+      return GASTRONOMY_PLANS[GastronomyPlanTier.DELIVERY];
+    default:
+      return GASTRONOMY_PLANS[GastronomyPlanTier.FREE];
+  }
 }
 
 /**
@@ -160,13 +169,20 @@ export function isTierHigher(
   tier: GastronomyPlanTier,
   compareTo: GastronomyPlanTier,
 ): boolean {
-  const hierarchy = {
-    [GastronomyPlanTier.FREE]: 0,
-    [GastronomyPlanTier.PRO]: 1,
-    [GastronomyPlanTier.MARKETPLACE]: 2,
+  const hierarchy = (current: GastronomyPlanTier): number => {
+    switch (current) {
+      case GastronomyPlanTier.FREE:
+        return 0;
+      case GastronomyPlanTier.PRO:
+        return 1;
+      case GastronomyPlanTier.DELIVERY:
+        return 2;
+      default:
+        return 0;
+    }
   };
-  
-  return hierarchy[tier] > hierarchy[compareTo];
+
+  return hierarchy(tier) > hierarchy(compareTo);
 }
 
 // Funções de cálculo de comissão comentadas para o futuro

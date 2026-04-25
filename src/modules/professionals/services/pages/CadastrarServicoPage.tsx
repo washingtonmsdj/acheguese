@@ -189,10 +189,14 @@ export default function CadastrarServicoPage() {
 
     // Validate current step before advancing
     for (let i = currentIdx; i < targetIdx; i++) {
-      const err = validateStep(stepOrder[i]);
+      const currentStep = stepOrder.at(i);
+      if (!currentStep) {
+        continue;
+      }
+      const err = validateStep(currentStep);
       if (err) {
         toast({ title: err, variant: "destructive" });
-        setStep(stepOrder[i]);
+        setStep(currentStep);
         return;
       }
     }

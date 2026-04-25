@@ -75,6 +75,27 @@ const CATEGORY_ICONS: Record<string, React.ElementType> = {
   outros: Package,
 };
 
+function getCategoryIcon(category: string): React.ElementType {
+  switch (category) {
+    case "veiculos":
+      return Car;
+    case "imoveis":
+      return Home;
+    case "eletronicos":
+      return Laptop;
+    case "roupas":
+      return Shirt;
+    case "moveis":
+      return Sofa;
+    case "esportes":
+      return Bike;
+    case "outros":
+      return Package;
+    default:
+      return Package;
+  }
+}
+
 // ── Mock Data ────────────────────────────────────────────────────────
 interface MockClassified {
   id: string;
@@ -163,6 +184,23 @@ const MOCK_CLASSIFIEDS: Record<string, MockClassified> = {
     },
   },
 };
+
+function getMockClassifiedById(classifiedId?: string): MockClassified | null {
+  if (!classifiedId) {
+    return null;
+  }
+
+  switch (classifiedId) {
+    case "1":
+      return MOCK_CLASSIFIEDS["1"];
+    case "2":
+      return MOCK_CLASSIFIEDS["2"];
+    case "3":
+      return MOCK_CLASSIFIEDS["3"];
+    default:
+      return null;
+  }
+}
 
 interface MockMessage {
   id: string;
@@ -280,9 +318,9 @@ export default function ClassificadoChatLandingPage() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const ad = id ? MOCK_CLASSIFIEDS[id] : null;
+  const ad = getMockClassifiedById(id);
   const seller = ad?.vendedor;
-  const CatIcon = ad ? CATEGORY_ICONS[ad.categoria] || Package : Package;
+  const CatIcon = ad ? getCategoryIcon(ad.categoria) : Package;
   const currentUserId = user?.id || "current-user";
 
   // Load mock messages

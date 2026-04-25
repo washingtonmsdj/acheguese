@@ -67,7 +67,9 @@ export interface ProfileFilters {
 // Section Props
 // ============================================
 
-export interface AdminIdentidadeHeaderSectionProps {}
+export type AdminIdentidadeHeaderSectionProps = {
+  readonly _sectionId?: "admin-identidade-header";
+};
 
 export interface AdminIdentidadeStatsSectionProps {
   readonly stats: ProfileStats | null | undefined;

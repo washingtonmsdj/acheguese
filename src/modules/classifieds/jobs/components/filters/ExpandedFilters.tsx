@@ -23,6 +23,37 @@ export interface ExpandedFiltersProps {
   readonly bairros: readonly Bairro[];
 }
 
+function getContratoLabel(tipo: VagaContrato): string {
+  switch (tipo) {
+    case "clt": return CONTRATO_LABELS.clt;
+    case "pj": return CONTRATO_LABELS.pj;
+    case "temporario": return CONTRATO_LABELS.temporario;
+    case "estagio": return CONTRATO_LABELS.estagio;
+    case "freelancer": return CONTRATO_LABELS.freelancer;
+    default: return tipo;
+  }
+}
+
+function getModalidadeLabel(mod: VagaModalidade): string {
+  switch (mod) {
+    case "presencial": return MODALIDADE_LABELS.presencial;
+    case "hibrido": return MODALIDADE_LABELS.hibrido;
+    case "remoto": return MODALIDADE_LABELS.remoto;
+    default: return mod;
+  }
+}
+
+function getNivelLabel(nivel: VagaNivel): string {
+  switch (nivel) {
+    case "estagiario": return NIVEL_LABELS.estagiario;
+    case "junior": return NIVEL_LABELS.junior;
+    case "pleno": return NIVEL_LABELS.pleno;
+    case "senior": return NIVEL_LABELS.senior;
+    case "especialista": return NIVEL_LABELS.especialista;
+    default: return nivel;
+  }
+}
+
 export function ExpandedFilters({
   filters,
   updateFilter,
@@ -84,7 +115,7 @@ export function ExpandedFilters({
                   : "bg-secondary hover:bg-secondary/80"
               }`}
             >
-              {CONTRATO_LABELS[tipo]}
+              {getContratoLabel(tipo)}
             </button>
           ))}
         </div>
@@ -111,7 +142,7 @@ export function ExpandedFilters({
                   : "bg-secondary hover:bg-secondary/80"
               }`}
             >
-              {MODALIDADE_LABELS[mod]}
+              {getModalidadeLabel(mod)}
             </button>
           ))}
         </div>
@@ -135,7 +166,7 @@ export function ExpandedFilters({
                   : "bg-secondary hover:bg-secondary/80"
               }`}
             >
-              {NIVEL_LABELS[nivel]}
+              {getNivelLabel(nivel)}
             </button>
           ))}
         </div>

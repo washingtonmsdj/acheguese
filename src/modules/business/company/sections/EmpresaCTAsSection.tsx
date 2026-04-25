@@ -6,7 +6,7 @@
  */
 
 import { motion } from 'framer-motion';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import {
   MessageCircle,
   Phone,
@@ -28,7 +28,6 @@ import type { EmpresaCTAsSectionProps } from './types';
 
 export function EmpresaCTAsSection({
   business,
-  isDeliveryBusiness,
   gastronomyUrl,
   verticalPublicUrls,
   isFavorite,
@@ -39,8 +38,6 @@ export function EmpresaCTAsSection({
   onToggleRouteOptions,
   onRoute,
 }: EmpresaCTAsSectionProps) {
-  const navigate = useNavigate();
-  const canNavigateToOrderFlow = Boolean(gastronomyUrl);
   const availableVerticals = Object.entries(verticalPublicUrls ?? {}) as Array<
     [VerticalKey, string]
   >;
@@ -62,26 +59,24 @@ export function EmpresaCTAsSection({
         transition={{ delay: 0.15 }}
         className="space-y-3"
       >
-        {isDeliveryBusiness && (
+        {gastronomyUrl && (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <Button
+              asChild
               className="w-full h-12 bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-base rounded-xl shadow-lg gap-2"
-              onClick={() => {
-                if (gastronomyUrl) navigate(gastronomyUrl);
-              }}
-              disabled={!canNavigateToOrderFlow}
             >
-              <ShoppingBag className="h-5 w-5" /> Pedir Agora
+              <Link to={gastronomyUrl}>
+                <ShoppingBag className="h-5 w-5" /> Ver cardapio e pedir
+              </Link>
             </Button>
             <Button
+              asChild
               variant="outline"
               className="w-full h-12 border-primary/30 text-primary hover:bg-primary/5 font-semibold text-base rounded-xl gap-2"
-              onClick={() => {
-                if (gastronomyUrl) navigate(gastronomyUrl);
-              }}
-              disabled={!canNavigateToOrderFlow}
             >
-              <ClipboardList className="h-5 w-5" /> Ver Cardapio
+              <Link to={gastronomyUrl}>
+                <ClipboardList className="h-5 w-5" /> Abrir cardapio
+              </Link>
             </Button>
           </div>
         )}

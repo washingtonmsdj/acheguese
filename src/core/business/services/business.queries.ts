@@ -388,7 +388,7 @@ export async function getBusinessById(id: string): Promise<Business> {
     const { data, error } = await supabaseTyped.from("business_data")
       .select(`
         *,
-        profiles(id, name, avatar_url, phone, whatsapp),
+        profiles(id, name, avatar_url, phone, whatsapp, bio),
         address:addresses!address_id(*),
         location:locations!location_id(*)
       `)
@@ -418,16 +418,19 @@ export async function getBusinessDataIdByProfileId(
   try {
     const { data, error } = await supabaseTyped
       .from("business_data")
-      .select("id")
+      .select("id, business_role, updated_at")
       .eq("profile_id", profileId)
-      .maybeSingle();
+      .in("business_role", ["standalone", "branch"])
+      .order("updated_at", { ascending: false })
+      .limit(1);
 
     if (error) {
       logger.error("Error fetching business_data id by profile_id:", error);
       return null;
     }
 
-    return (data as { id?: string } | null)?.id ?? null;
+    const rows = (data as Array<{ id?: string }> | null) ?? [];
+    return rows[0]?.id ?? null;
   } catch (error) {
     logger.error("Error in getBusinessDataIdByProfileId:", error);
     return null;
@@ -890,7 +893,31 @@ export async function getGallery(businessId: string): Promise<string[]> {
       return [];
     }
 
-    return ((data as Array<{ image_url?: string }>) || [])
+    const directImages = ((data as Array<{ image_url?: string }>) || [])
+      .map((item) => item.image_url)
+      .filter((url): url is string => Boolean(url));
+
+    if (directImages.length > 0) {
+      return directImages;
+    }
+
+    const businessDataId = await getBusinessDataIdByProfileId(businessId);
+    if (!businessDataId || businessDataId === businessId) {
+      return [];
+    }
+
+    const { data: fallbackData, error: fallbackError } = await supabaseTyped
+      .from("business_gallery")
+      .select("image_url")
+      .eq("business_id", businessDataId)
+      .order("created_at", { ascending: false });
+
+    if (fallbackError) {
+      logger.error("Error fetching business gallery by profile fallback:", fallbackError);
+      return [];
+    }
+
+    return ((fallbackData as Array<{ image_url?: string }>) || [])
       .map((item) => item.image_url)
       .filter((url): url is string => Boolean(url));
   } catch (error) {

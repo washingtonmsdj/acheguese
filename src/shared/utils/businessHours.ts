@@ -153,7 +153,7 @@ export function isOpenNow(schedule: string): boolean {
     "sexta",
     "sábado",
   ];
-  const currentDayName = dayNames[currentDay];
+  const currentDayName = dayNames.at(currentDay) ?? "domingo";
   const scheduleLower = schedule.toLowerCase();
 
   if (
@@ -233,7 +233,7 @@ export function getClosingTime(schedule: string): string | null {
     "sexta",
     "sábado",
   ];
-  const currentDayName = dayNames[currentDay];
+  const currentDayName = dayNames.at(currentDay) ?? "domingo";
   const scheduleLower = schedule.toLowerCase();
 
   if (

@@ -11,14 +11,14 @@ import { GastronomyFacade } from "../services";
 
 const STALE_TIME_FIVE_MINUTES = 5 * 60 * 1000;
 
-export function useGastronomyProfile(businessId: string | undefined) {
+export function useGastronomyProfile(businessIdentifier: string | undefined) {
   return useQuery({
-    queryKey: ["gastronomy-profile", businessId],
+    queryKey: ["gastronomy-profile", businessIdentifier],
     queryFn: () => {
-      if (!businessId) return null;
-      return GastronomyFacade.queries.getGastronomyProfile(businessId);
+      if (!businessIdentifier) return null;
+      return GastronomyFacade.queries.getGastronomyProfile(businessIdentifier);
     },
-    enabled: !!businessId,
+    enabled: !!businessIdentifier,
     staleTime: STALE_TIME_FIVE_MINUTES,
   });
 }

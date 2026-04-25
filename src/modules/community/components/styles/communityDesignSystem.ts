@@ -168,14 +168,28 @@ export const INLINE_STYLES = {
  * Retorna as classes CSS para um card padrão
  */
 export const getCardClasses = (variant: "default" | "bordered" = "default") => {
-  return CARD_STYLES[variant];
+  switch (variant) {
+    case "default":
+      return CARD_STYLES.default;
+    case "bordered":
+      return CARD_STYLES.bordered;
+    default:
+      return CARD_STYLES.default;
+  }
 };
 
 /**
  * Retorna as classes CSS para um título
  */
 export const getTitleClasses = (type: "section" | "widget") => {
-  return TITLE_STYLES[type];
+  switch (type) {
+    case "section":
+      return TITLE_STYLES.section;
+    case "widget":
+      return TITLE_STYLES.widget;
+    default:
+      return TITLE_STYLES.widget;
+  }
 };
 
 /**

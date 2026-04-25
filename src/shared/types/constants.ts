@@ -1,7 +1,48 @@
 // Re-export de todas as constantes do sistema
 // Este arquivo centraliza os imports de constantes para facilitar a migração
 
-export * from "./global.constants";
+// Export seletivo para evitar conflitos de nome
+export {
+  USER_ROLE,
+  POST_STATUS,
+  PAYMENT_STATUS,
+  PAYMENT_METHOD,
+  NOTIFICATION_TYPE,
+  DRIVER_STATUS,
+  VERIFICATION_STATUS,
+  ALERT_SEVERITY,
+  ALERT_STATUS,
+  BUSINESS_STATUS,
+  REPORT_STATUS,
+  BUSINESS_STATUS_LABELS,
+  ALERT_STATUS_LABELS,
+  ALERT_STATUS_COLORS,
+  isValidUserRole,
+  isValidPostStatus,
+  isValidPaymentStatus,
+  isValidPaymentMethod,
+  isValidNotificationType,
+  isValidDriverStatus,
+  isValidVerificationStatus,
+  isValidReportStatus,
+  isValidAlertStatus,
+  isValidBusinessStatus,
+} from "./global.constants";
+
+export type {
+  UserRole,
+  PostStatus,
+  PaymentStatus,
+  PaymentMethod,
+  NotificationType,
+  DriverStatus,
+  VerificationStatus,
+  AlertSeverity,
+  AlertStatus,
+  BusinessStatus,
+  ReportStatus,
+} from "./global.constants";
+
 export * from "./mobility.constants";
 
 // Re-export de tipos gerados

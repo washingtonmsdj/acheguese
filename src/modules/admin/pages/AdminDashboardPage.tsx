@@ -137,7 +137,7 @@ export function AdminDashboardPage() {
                 <div key={plan}>
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-sm font-medium">
-                      {planLabels[plan] || plan}
+                      {Object.entries(planLabels).find(([key]) => key === plan)?.[1] ?? plan}
                     </span>
                     <span className="text-sm text-muted-foreground">
                       {count} empresas ({percentage.toFixed(1)}%)

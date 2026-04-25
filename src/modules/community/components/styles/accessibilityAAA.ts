@@ -114,6 +114,11 @@ export const ARIA_HELPERS = {
 // KEYBOARD NAVIGATION
 // ============================================
 export const KEYBOARD_HANDLERS = {
+  focusAt: (items: HTMLElement[], index: number) => {
+    const item = items.at(index);
+    item?.focus();
+  },
+
   // Handler para navegação por setas
   arrowNavigation: (
     event: KeyboardEvent,
@@ -127,7 +132,7 @@ export const KEYBOARD_HANDLERS = {
         const nextIndex =
           currentIndex < items.length - 1 ? currentIndex + 1 : 0;
         onIndexChange(nextIndex);
-        items[nextIndex]?.focus();
+        KEYBOARD_HANDLERS.focusAt(items, nextIndex);
         break;
       }
       case "ArrowUp": {
@@ -135,20 +140,20 @@ export const KEYBOARD_HANDLERS = {
         const prevIndex =
           currentIndex > 0 ? currentIndex - 1 : items.length - 1;
         onIndexChange(prevIndex);
-        items[prevIndex]?.focus();
+        KEYBOARD_HANDLERS.focusAt(items, prevIndex);
         break;
       }
       case "Home": {
         event.preventDefault();
         onIndexChange(0);
-        items[0]?.focus();
+        KEYBOARD_HANDLERS.focusAt(items, 0);
         break;
       }
       case "End": {
         event.preventDefault();
         const lastIndex = items.length - 1;
         onIndexChange(lastIndex);
-        items[lastIndex]?.focus();
+        KEYBOARD_HANDLERS.focusAt(items, lastIndex);
         break;
       }
     }

@@ -1,6 +1,6 @@
 import { BarChart3, Bike, Package, TrendingUp } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/components/ui/card";
-import { RequestMotoboyButton } from "@/modules/mobility/components";
+import { RequestMotoboyButton } from "@/core/mobility/components/RequestMotoboyButton";
 
 interface Props {
   businessId: string;

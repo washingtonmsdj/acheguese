@@ -42,16 +42,39 @@ const FINAL_STATES: LogisticsStatus[] = [
   LOGISTICS_STATUS.FAILED,
 ];
 
+function getAllowedTransitions(status: LogisticsStatus): LogisticsStatus[] {
+  switch (status) {
+    case LOGISTICS_STATUS.PENDING:
+      return ALLOWED_TRANSITIONS.pending;
+    case LOGISTICS_STATUS.ACCEPTED:
+      return ALLOWED_TRANSITIONS.accepted;
+    case LOGISTICS_STATUS.PREPARING:
+      return ALLOWED_TRANSITIONS.preparing;
+    case LOGISTICS_STATUS.READY_FOR_PICKUP:
+      return ALLOWED_TRANSITIONS.ready_for_pickup;
+    case LOGISTICS_STATUS.PICKED_UP:
+      return ALLOWED_TRANSITIONS.picked_up;
+    case LOGISTICS_STATUS.DELIVERED:
+      return ALLOWED_TRANSITIONS.delivered;
+    case LOGISTICS_STATUS.CANCELED:
+      return ALLOWED_TRANSITIONS.canceled;
+    case LOGISTICS_STATUS.FAILED:
+      return ALLOWED_TRANSITIONS.failed;
+    default:
+      return [];
+  }
+}
+
 export class OrderLogisticsStateMachine {
   static canTransition(from: LogisticsStatus, to: LogisticsStatus): boolean {
     if (from === to) return true;
-    return (ALLOWED_TRANSITIONS[from] ?? []).includes(to);
+    return getAllowedTransitions(from).includes(to);
   }
 
   static assertCanTransition(from: LogisticsStatus, to: LogisticsStatus): void {
     if (!this.canTransition(from, to)) {
       throw new Error(
-        `Transição logística inválida: ${from} -> ${to}. Permitidos: ${(ALLOWED_TRANSITIONS[from] ?? []).join(", ") || "nenhum"}`,
+        `Transição logística inválida: ${from} -> ${to}. Permitidos: ${getAllowedTransitions(from).join(", ") || "nenhum"}`,
       );
     }
   }
@@ -61,6 +84,6 @@ export class OrderLogisticsStateMachine {
   }
 
   static getNextStatuses(status: LogisticsStatus): LogisticsStatus[] {
-    return ALLOWED_TRANSITIONS[status] ?? [];
+    return getAllowedTransitions(status);
   }
 }

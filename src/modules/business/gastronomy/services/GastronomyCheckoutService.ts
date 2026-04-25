@@ -31,7 +31,7 @@ export interface CreateGastronomyCheckoutOrderInput {
   notes?: string;
 }
 
-interface DeliveryRpcOrderItem {
+export interface DeliveryRpcOrderItem {
   source_item_id: string;
   name: string;
   quantity: number;
@@ -72,7 +72,7 @@ function normalizeRpcOrder(value: unknown): GastronomyCheckoutOrderRecord {
   };
 }
 
-function mapOrderItem(item: CartItem): DeliveryRpcOrderItem {
+export function mapCartItemToCheckoutOrderItem(item: CartItem): DeliveryRpcOrderItem {
   const unitPrice = roundMoney(item.base_price + (item.variant?.price_adjustment ?? 0));
   const addonsTotal = roundMoney(
     item.addons.reduce((total, addon) => total + addon.price * addon.quantity, 0),
@@ -109,6 +109,7 @@ function mapOrderItem(item: CartItem): DeliveryRpcOrderItem {
         total_price: roundMoney(addon.price * addon.quantity),
       })),
       special_instructions: item.special_instructions ?? null,
+      structured_item: item.structured_item ?? null,
     },
   };
 }
@@ -176,9 +177,16 @@ export class GastronomyCheckoutService {
     assertCheckoutInput(input);
 
     const financial = buildFinancial(input.cart);
-    const orderItems = input.cart.items.map((item) => mapOrderItem(item));
+    const orderItems = input.cart.items.map((item) => mapCartItemToCheckoutOrderItem(item));
 
-    const { data, error } = await (supabase as unknown as { rpc: Function }).rpc(
+    type RpcClient = {
+      rpc: (
+        fn: string,
+        params: Record<string, unknown>,
+      ) => Promise<{ data: unknown; error: unknown }>;
+    };
+
+    const { data, error } = await (supabase as unknown as RpcClient).rpc(
       DELIVERY_CREATE_ORDER_RPC,
       {
         p_customer_profile_id: input.customer_profile_id,

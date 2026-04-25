@@ -11,17 +11,48 @@
  */
 import { logger } from '@/shared/utils/logger';
 import { supabase } from "@/integrations/supabase";
-import {
-  alertModerationService,
-  communityAlertService,
-} from '@/modules/community/alerts';
-import type {
-  AlertCategory,
-  AlertReportReason,
-  AlertStatus,
-  CommunityAlert,
-  CommunityAlertPublic,
-} from '@/modules/community/alerts';
+
+type AlertCategory =
+  | "tiroteio_disparos"
+  | "assalto_em_andamento"
+  | "tentativa_de_invasao"
+  | "incendio_explosao"
+  | "acidente_grave"
+  | "alagamento_deslizamento"
+  | "risco_na_via"
+  | "pessoa_vulneravel_em_risco";
+type AlertStatus = "ativo" | "encerrado" | "expirado" | "removido";
+type AlertReportReason =
+  | "false_alert"
+  | "promotes_crime"
+  | "identifies_person"
+  | "monitors_operation"
+  | "hate_speech"
+  | "spam"
+  | "other";
+
+interface CommunityAlert {
+  [key: string]: unknown;
+  id: string;
+  author_user_id?: string;
+  author_profile_id?: string;
+  category: AlertCategory;
+  status: AlertStatus;
+  location_id: string;
+  latitude: number | null;
+  longitude: number | null;
+  neighborhood?: string | null;
+  neighborhood_display: string | null;
+  city: string | null;
+  description: string;
+  report_count: number;
+  under_review: boolean;
+  created_at: string;
+  updated_at: string;
+  ended_at?: string;
+  removed_at?: string;
+  removal_reason?: string;
+}
 
 // ============================================================================
 // TIPOS ADMINISTRATIVOS
@@ -257,11 +288,18 @@ class AdminCommunityAlertsServiceClass {
    */
   async getAlertsUnderReview(): Promise<AlertWithDetails[]> {
     try {
-      const alerts = await alertModerationService.getAlertsUnderReview();
+      const { data: alerts, error } = await supabase
+        .from(this.TABLE)
+        .select('*')
+        .eq('under_review', true)
+        .in('status', ['ativo'])
+        .order('report_count', { ascending: false });
+
+      if (error) throw error;
 
       // Buscar reports para cada alerta
       const alertsWithReports = await Promise.all(
-        alerts.map(async (alert) => {
+        (alerts || []).map(async (alert) => {
           const reports = await this.getAlertReports(alert.id);
           return {
             ...alert,
@@ -310,7 +348,20 @@ class AdminCommunityAlertsServiceClass {
    */
   async removeAlert(alertId: string, reason: string): Promise<boolean> {
     try {
-      const success = await communityAlertService.removeAlert(alertId, reason);
+      const { error } = await supabase
+        .from(this.TABLE)
+        .update({
+          status: 'removido',
+          removed_at: new Date().toISOString(),
+          removal_reason: reason,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', alertId);
+
+      if (error) throw error;
+
+      await this.writeAuditLog(alertId, 'removed', { reason });
+      const success = true;
       
       if (success) {
         logger.info('AdminCommunityAlertsService.removeAlert', { alertId, reason });
@@ -328,7 +379,17 @@ class AdminCommunityAlertsServiceClass {
    */
   async clearUnderReview(alertId: string): Promise<boolean> {
     try {
-      const success = await alertModerationService.clearUnderReview(alertId);
+      const { error } = await supabase
+        .from(this.TABLE)
+        .update({ under_review: false, updated_at: new Date().toISOString() })
+        .eq('id', alertId);
+
+      if (error) throw error;
+
+      await this.writeAuditLog(alertId, 'reviewed_cleared', {
+        cleared_at: new Date().toISOString(),
+      });
+      const success = true;
       
       if (success) {
         logger.info('AdminCommunityAlertsService.clearUnderReview', { alertId });
@@ -346,7 +407,18 @@ class AdminCommunityAlertsServiceClass {
    */
   async endAlert(alertId: string): Promise<boolean> {
     try {
-      const success = await communityAlertService.endAlert(alertId);
+      const { error } = await supabase
+        .from(this.TABLE)
+        .update({
+          status: 'encerrado',
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', alertId);
+
+      if (error) throw error;
+
+      await this.writeAuditLog(alertId, 'ended', {});
+      const success = true;
       
       if (success) {
         logger.info('AdminCommunityAlertsService.endAlert', { alertId });
@@ -364,10 +436,44 @@ class AdminCommunityAlertsServiceClass {
    */
   async getAuditLog(alertId: string) {
     try {
-      return await alertModerationService.getAuditLog(alertId);
+      const { data, error } = await (supabase as any)
+        .from('community_alert_audit')
+        .select('*')
+        .eq('alert_id', alertId)
+        .order('created_at', { ascending: true });
+
+      if (error) throw error;
+      return data || [];
     } catch (error) {
       logger.error('AdminCommunityAlertsService.getAuditLog', error);
       return [];
+    }
+  }
+
+  private async writeAuditLog(
+    alertId: string,
+    actionType: string,
+    metadata: Record<string, unknown>,
+  ): Promise<void> {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) {
+      return;
+    }
+
+    const { error } = await (supabase as any)
+      .from('community_alert_audit')
+      .insert({
+        alert_id: alertId,
+        actor_id: user.id,
+        action_type: actionType,
+        metadata,
+      });
+
+    if (error) {
+      throw error;
     }
   }
 

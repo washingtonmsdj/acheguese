@@ -16,10 +16,13 @@ export {
   REPORT_TYPE,
   RIDE_MODE,
   RIDE_STATUS,
+  RIDE_STATUS_LABELS,
+  RIDE_STATUS_COLORS,
   RIDE_TYPES,
   SOURCE_TYPE,
   TIMEOUTS,
   USER_TYPES,
+  isValidRideStatus,
 } from "@/modules/mobility/constants";
 
 export type {

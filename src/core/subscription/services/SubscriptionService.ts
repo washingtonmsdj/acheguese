@@ -105,6 +105,30 @@ const PLAN_FEATURES: Record<PlanType, Record<string, any>> = {
   },
 };
 
+function getPlanFeatureSet(planType: PlanType): Record<string, any> {
+  switch (planType) {
+    case "free":
+      return PLAN_FEATURES.free;
+    case "basic":
+      return PLAN_FEATURES.basic;
+    case "premium":
+      return PLAN_FEATURES.premium;
+    case "enterprise":
+      return PLAN_FEATURES.enterprise;
+    default:
+      return PLAN_FEATURES.free;
+  }
+}
+
+function getFeatureValue(features: Record<string, any>, featureName: string): any {
+  for (const [key, value] of Object.entries(features)) {
+    if (key === featureName) {
+      return value;
+    }
+  }
+  return undefined;
+}
+
 /**
  * Serviço de Assinaturas - SSOT
  */
@@ -332,10 +356,10 @@ export class SubscriptionService {
 
       if (!subscription) {
         // Sem assinatura = plano free
-        return PLAN_FEATURES.free[featureName] || false;
+        return getFeatureValue(PLAN_FEATURES.free, featureName) || false;
       }
 
-      return subscription.features[featureName] || false;
+      return getFeatureValue(subscription.features, featureName) || false;
     } catch (error) {
       trackError(error as Error, {
         component: "SubscriptionService",
@@ -462,7 +486,7 @@ export class SubscriptionService {
    * Busca features padrão de um plano
    */
   static getPlanFeatures(planType: PlanType): Record<string, any> {
-    return PLAN_FEATURES[planType];
+    return getPlanFeatureSet(planType);
   }
 }
 

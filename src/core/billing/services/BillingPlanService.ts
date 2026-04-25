@@ -16,6 +16,7 @@
 
 import { logger } from '@/shared/utils/logger';
 import { supabase } from '@/integrations/supabase/supabase';
+import type { GenericBillingEntitlementAliases } from '../types';
 
 // ══════════════════════════════════════════════════════════════════════════
 // TYPES
@@ -57,7 +58,7 @@ export interface BillingPlan {
   updatedAt: Date;
 }
 
-export interface PlanEntitlements {
+export interface PlanEntitlements extends GenericBillingEntitlementAliases {
   // Página Pública
   canUsePremiumPublicPage: boolean;
   canUseShortPremiumLink: boolean;
@@ -229,15 +230,15 @@ export class BillingPlanService {
         .select('*')
         .eq('code', code)
         .eq('is_active', true)
-        .single();
+        .maybeSingle();
 
       if (error) {
-        if (error.code === 'PGRST116') {
-          // Not found
-          return null;
-        }
         logger.error(`Erro ao buscar plano ${code}:`, error);
-        throw new Error(`Falha ao buscar plano: ${error.message}`);
+        return null;
+      }
+
+      if (!data) {
+        return null;
       }
 
       const plan = this.mapRowToPlan(data as BillingPlanRow);
@@ -258,7 +259,7 @@ export class BillingPlanService {
    */
   static async getEntitlements(code: string): Promise<PlanEntitlements | null> {
     const plan = await this.getPlanByCode(code);
-    return plan?.entitlements || null;
+    return plan?.entitlements ? this.withGenericAliases(plan.entitlements) : null;
   }
 
   /**
@@ -281,20 +282,17 @@ export class BillingPlanService {
         .eq('is_featured', true)
         .order('display_order', { ascending: true })
         .limit(1)
-        .single();
+        .maybeSingle();
 
       if (error) {
-        if (error.code === 'PGRST116') {
-          return null;
-        }
         logger.error('Erro ao buscar plano em destaque:', error);
-        throw new Error(`Falha ao buscar plano em destaque: ${error.message}`);
+        return null;
       }
 
-      return this.mapRowToPlan(data as BillingPlanRow);
+      return data ? this.mapRowToPlan(data as BillingPlanRow) : null;
     } catch (error) {
       logger.error('Erro inesperado ao buscar plano em destaque:', error);
-      throw error;
+      return null;
     }
   }
 
@@ -503,12 +501,25 @@ export class BillingPlanService {
 
   private static normalizeEntitlements(value: unknown): PlanEntitlements {
     if (!value || typeof value !== 'object') {
-      return { ...DEFAULT_PLAN_ENTITLEMENTS };
+      return this.withGenericAliases({ ...DEFAULT_PLAN_ENTITLEMENTS });
     }
 
-    return {
+    return this.withGenericAliases({
       ...DEFAULT_PLAN_ENTITLEMENTS,
       ...(value as Partial<PlanEntitlements>),
+    });
+  }
+
+  private static withGenericAliases(entitlements: PlanEntitlements): PlanEntitlements {
+    return {
+      ...entitlements,
+      canUsePremiumSite: entitlements.canUsePremiumSite ?? entitlements.canUsePremiumPublicPage,
+      canUseShortLink: entitlements.canUseShortLink ?? entitlements.canUseShortPremiumLink,
+      canUseAdvancedCatalog: entitlements.canUseAdvancedCatalog ?? entitlements.canUseAdvancedMenu,
+      canUseInternalOrders: entitlements.canUseInternalOrders ?? entitlements.canReceiveInternalOrders,
+      canUseDeliveryRequests: entitlements.canUseDeliveryRequests ?? entitlements.canRequestDelivery,
+      canUseDeliveryTracking: entitlements.canUseDeliveryTracking ?? entitlements.canTrackDelivery,
+      canUseDeliveryNetwork: entitlements.canUseDeliveryNetwork ?? entitlements.canUseMotoboyNetwork,
     };
   }
 }

@@ -27,9 +27,9 @@ import {
 import { Button } from '@/shared/components/ui/button';
 import { Input } from '@/shared/components/ui/input';
 import { BusinessLogo } from '@/shared/components/ui/business-logo';
-import { useNationalFeatured } from '@/app/features/landing/hooks/useNationalFeatured';
+import { useNationalFeatured } from '@/core/landing/hooks/useNationalFeatured';
 import { useAppUrls } from '@/core/routing/hooks/useAppUrls';
-import { checkAdminRole } from '@/app/features/landing/services/LandingService';
+import { checkAdminRole } from '@/core/landing/services/LandingService';
 
 // ── Animação ────────────────────────────────────────────────────────────────
 const fadeUp = {
@@ -170,17 +170,19 @@ export function BrasilShowcasePage() {
 
   // Agrupar cidades por estado para navegação
   const states = useMemo(() => {
-    const stateGroups = cities.reduce<Record<string, StateGroup>>((acc, city) => {
+    const stateGroups = cities.reduce<Map<string, StateGroup>>((acc, city) => {
       const parts = city.geographic_path.split('/').filter(Boolean);
       const stateSlug = parts[1]; // /br/ba -> ba
       if (!stateSlug) return acc;
-      if (!acc[stateSlug]) {
-        acc[stateSlug] = { slug: stateSlug, cities: [] };
+      const existing = acc.get(stateSlug);
+      if (!existing) {
+        acc.set(stateSlug, { slug: stateSlug, cities: [city] });
+      } else {
+        existing.cities.push(city);
       }
-      acc[stateSlug].cities.push(city);
       return acc;
-    }, {});
-    return Object.values(stateGroups);
+    }, new Map<string, StateGroup>());
+    return [...stateGroups.values()];
   }, [cities]);
 
   // Filtrar apenas empresas verificadas com CNPJ

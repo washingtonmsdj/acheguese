@@ -95,7 +95,9 @@ export function isFeatureEnabled(
   userId?: string,
   territory?: string
 ): boolean {
-  const flag = FEATURE_FLAGS[featureKey];
+  const flag = Object.entries(FEATURE_FLAGS).find(
+    ([registeredFeatureKey]) => registeredFeatureKey === featureKey,
+  )?.[1];
   
   if (!flag) {
     logger.warn(`Feature flag not found: ${featureKey}`);
@@ -169,7 +171,9 @@ export function getEnabledFeatures(userId?: string, territory?: string): string[
  * Get feature flag details
  */
 export function getFeatureFlag(featureKey: string): FeatureFlag | undefined {
-  return FEATURE_FLAGS[featureKey];
+  return Object.entries(FEATURE_FLAGS).find(
+    ([registeredFeatureKey]) => registeredFeatureKey === featureKey,
+  )?.[1];
 }
 
 /**

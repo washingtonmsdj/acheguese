@@ -51,7 +51,12 @@ export function IdentityImpactNotice({
   originalUrl,
   newUrl,
 }: IdentityImpactNoticeProps) {
-  const config = NOTICE_CONFIG[entityType];
+  const config =
+    entityType === 'business'
+      ? NOTICE_CONFIG.business
+      : entityType === 'profile'
+        ? NOTICE_CONFIG.profile
+        : NOTICE_CONFIG.professional;
   const hasChange =
     !!originalValue &&
     !!currentValue &&
@@ -86,4 +91,3 @@ export function IdentityImpactNotice({
     </div>
   );
 }
-

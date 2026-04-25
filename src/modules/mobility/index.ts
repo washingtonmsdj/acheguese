@@ -12,7 +12,6 @@ export { MobilidadeRightSidebar } from "./components/MobilidadeRightSidebar";
 export { CreateRideModal } from "./components/CreateRideModal";
 export { CreateDeliveryModal } from "./components/CreateDeliveryModal";
 export { 
-  DeliveryTrackingCard, 
   RideRequestCard,
   DriverOfferCard,
   RouteEstimateCard,

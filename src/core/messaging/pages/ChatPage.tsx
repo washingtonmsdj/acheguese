@@ -35,7 +35,7 @@ import {
 import { useToast } from "@/shared/hooks/use-toast";
 import { ALERT_STATUS } from "@/shared/types/constants";
 import { messagingService } from "@/core/messaging";
-import { useClassifiedUrls } from "@/modules/classifieds/hooks/useClassifiedUrls";
+import { useClassifiedUrls } from "@/core/classifieds/hooks/useClassifiedUrls";
 import { useFriendlyModuleUrls } from "@/core/routing/hooks/useFriendlyModuleUrls";
 import type { Message, ConversationWithDetails } from "@/core/messaging/types";
 

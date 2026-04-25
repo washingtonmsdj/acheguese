@@ -30,6 +30,7 @@ const STATUS_BADGE: Record<string, { label: string; className: string }> = {
   expired:   { label: 'Expirado',    className: 'bg-muted text-muted-foreground border-border' },
   inactive:  { label: 'Inativo',     className: 'bg-muted text-muted-foreground border-border' },
 };
+const STATUS_BADGE_MAP = new Map(Object.entries(STATUS_BADGE));
 
 function formatDate(iso?: string | null): string {
   if (!iso) return '—';
@@ -58,7 +59,7 @@ function HighlightRow({
   isLast: boolean;
 }) {
   const st = highlightStatus(h);
-  const badge = STATUS_BADGE[st];
+  const badge = STATUS_BADGE_MAP.get(st) ?? STATUS_BADGE.inactive;
 
   return (
     <div className="flex items-center gap-3 p-3 rounded-lg bg-card border border-border hover:border-border/80 transition-colors">
@@ -143,7 +144,7 @@ export default function AdminHighlights() {
   // Carrega territórios dinamicamente — sem hardcode
   const { data: territories = [], isLoading: loadingTerritories } = useTerritoryOptions();
 
-  const territory = territories[selectedIdx] ?? null;
+  const territory = territories.at(selectedIdx) ?? null;
   const query: HighlightQuery | null = territory
     ? {
         territory_type:   territory.type,
@@ -158,14 +159,16 @@ export default function AdminHighlights() {
   function handleMoveUp(idx: number) {
     if (idx === 0) return;
     const reordered = [...highlights];
-    [reordered[idx - 1], reordered[idx]] = [reordered[idx], reordered[idx - 1]];
+    const [moved] = reordered.splice(idx, 1);
+    reordered.splice(idx - 1, 0, moved);
     reorder.mutate(reordered.map((h, i) => ({ id: h.id, position: i })));
   }
 
   function handleMoveDown(idx: number) {
     if (idx === highlights.length - 1) return;
     const reordered = [...highlights];
-    [reordered[idx], reordered[idx + 1]] = [reordered[idx + 1], reordered[idx]];
+    const [moved] = reordered.splice(idx, 1);
+    reordered.splice(idx + 1, 0, moved);
     reorder.mutate(reordered.map((h, i) => ({ id: h.id, position: i })));
   }
 

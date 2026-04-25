@@ -167,30 +167,42 @@ export function hasHigherPrivilege(role1: AppRole, role2: AppRole): boolean {
  * Retorna o label amigável de um role.
  */
 export function getRoleLabel(role: AppRole): string {
-  const labels: Record<AppRole, string> = {
-    super_admin: 'Super Administrador',
-    admin: 'Administrador',
-    moderator: 'Moderador',
-    business_owner: 'Proprietário de Negócio',
-    driver: 'Motorista',
-    user: 'Usuário'
-  };
-  
-  return labels[role];
+  switch (role) {
+    case 'super_admin':
+      return 'Super Administrador';
+    case 'admin':
+      return 'Administrador';
+    case 'moderator':
+      return 'Moderador';
+    case 'business_owner':
+      return 'Proprietário de Negócio';
+    case 'driver':
+      return 'Motorista';
+    case 'user':
+      return 'Usuário';
+    default:
+      return 'Usuário';
+  }
 }
 
 /**
  * Retorna a descrição de um role.
  */
 export function getRoleDescription(role: AppRole): string {
-  const descriptions: Record<AppRole, string> = {
-    super_admin: 'Acesso total ao sistema, incluindo gerenciamento de outros admins',
-    admin: 'Administração geral do sistema e moderação',
-    moderator: 'Moderação de conteúdo e usuários',
-    business_owner: 'Gerenciamento de negócios cadastrados',
-    driver: 'Acesso a funcionalidades de motorista',
-    user: 'Usuário padrão do sistema'
-  };
-  
-  return descriptions[role];
+  switch (role) {
+    case 'super_admin':
+      return 'Acesso total ao sistema, incluindo gerenciamento de outros admins';
+    case 'admin':
+      return 'Administração geral do sistema e moderação';
+    case 'moderator':
+      return 'Moderação de conteúdo e usuários';
+    case 'business_owner':
+      return 'Gerenciamento de negócios cadastrados';
+    case 'driver':
+      return 'Acesso a funcionalidades de motorista';
+    case 'user':
+      return 'Usuário padrão do sistema';
+    default:
+      return 'Usuário padrão do sistema';
+  }
 }

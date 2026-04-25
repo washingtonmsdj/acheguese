@@ -80,6 +80,8 @@ class AdminGastronomyServiceClass {
 
       const typedProfiles = (profiles || []) as GastronomyProfile[];
       const businessIds = typedProfiles.map((profile) => profile.business_id);
+      const categoryCounts = new Map<string, number>();
+      const priceRangeCounts = new Map<string, number>();
 
       const stats: GastronomyStats = {
         total: typedProfiles.length,
@@ -93,11 +95,14 @@ class AdminGastronomyServiceClass {
 
       typedProfiles.forEach((profile) => {
         const category = profile.cuisine_type || "outros";
-        stats.byCategory[category] = (stats.byCategory[category] || 0) + 1;
+        categoryCounts.set(category, (categoryCounts.get(category) || 0) + 1);
 
         const priceRange = profile.price_range || "nao informado";
-        stats.byPriceRange[priceRange] = (stats.byPriceRange[priceRange] || 0) + 1;
+        priceRangeCounts.set(priceRange, (priceRangeCounts.get(priceRange) || 0) + 1);
       });
+
+      stats.byCategory = Object.fromEntries(categoryCounts.entries());
+      stats.byPriceRange = Object.fromEntries(priceRangeCounts.entries());
 
       if (businessIds.length > 0) {
         const { count } = await supabase

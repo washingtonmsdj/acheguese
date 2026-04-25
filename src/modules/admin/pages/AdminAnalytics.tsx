@@ -230,7 +230,9 @@ export default function AdminAnalytics() {
                         trend.direction === "neutral" && "text-muted-foreground",
                       )}
                     />
-                    <span className="text-sm font-medium">{TREND_LABELS[key] || key}</span>
+                    <span className="text-sm font-medium">
+                      {Object.entries(TREND_LABELS).find(([trendKey]) => trendKey === key)?.[1] ?? key}
+                    </span>
                   </div>
                   <span className="text-sm text-muted-foreground">
                     {trend.value}% ({trend.direction})

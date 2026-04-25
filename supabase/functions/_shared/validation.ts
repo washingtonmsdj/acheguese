@@ -60,22 +60,26 @@ export function validateBody<T>(
   }
 
   const obj = body as Record<string, unknown>;
-  const errors: Record<string, string> = {};
+  const errorEntries: Array<[string, string]> = [];
 
   for (const [field, def] of Object.entries(schema) as [string, FieldSchema][]) {
-    const value = obj[field];
+    const value = Reflect.get(obj, field);
     const missing = value === undefined || value === null || value === "";
 
     if (def.required && missing) {
-      errors[field] = `Field '${field}' is required`;
+      errorEntries.push([field, `Field '${field}' is required`]);
       continue;
     }
 
     if (!missing) {
       const error = def.validator(value);
-      if (error) errors[field] = error;
+      if (error) {
+        errorEntries.push([field, error]);
+      }
     }
   }
+
+  const errors = Object.fromEntries(errorEntries) as Record<string, string>;
 
   if (Object.keys(errors).length > 0) {
     return { ok: false, errors };
@@ -91,7 +95,24 @@ export function validateBody<T>(
 const UUID_REGEX =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const SLUG_REGEX = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+function isSafeSlug(value: string): boolean {
+  if (!value || value.startsWith('-') || value.endsWith('-') || value.includes('--')) {
+    return false;
+  }
+
+  for (let i = 0; i < value.length; i += 1) {
+    const code = value.charCodeAt(i);
+    const isDigit = code >= 48 && code <= 57;
+    const isLowerAlpha = code >= 97 && code <= 122;
+    const isHyphen = code === 45;
+
+    if (!isDigit && !isLowerAlpha && !isHyphen) {
+      return false;
+    }
+  }
+
+  return true;
+}
 
 export const v = {
   /** UUID v4 */
@@ -223,7 +244,7 @@ export const v = {
   /** Slug (lowercase, hifens) */
   slug(): FieldValidator {
     return (val) =>
-      typeof val === "string" && SLUG_REGEX.test(val)
+      typeof val === "string" && isSafeSlug(val)
         ? null
         : "Must be a valid slug (lowercase letters, numbers, hyphens)";
   },

@@ -10,6 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/shared/components/ui
 import { Button } from '@/shared/components/ui/button';
 import { UtensilsCrossed, ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { businessManagementRoutes } from '@/core/business/utils/businessManagementRoutes';
 
 interface MenuSummaryCardProps {
   businessId: string;
@@ -68,7 +69,7 @@ export function MenuSummaryCard({ businessId }: MenuSummaryCardProps) {
         </div>
 
         {/* Link para gestão */}
-        <Link to={`/dashboard/business/${businessId}/gastronomy/menu`}>
+        <Link to={businessManagementRoutes.gastronomyCardapio(businessId)}>
           <Button variant="outline" className="w-full">
             Gerenciar Cardápio
             <ArrowRight className="w-4 h-4 ml-2" />

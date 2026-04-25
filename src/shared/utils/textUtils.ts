@@ -81,7 +81,15 @@ export function sanitizeUrl(url: string): string {
 
   // Remove espaços e caracteres de controle
   // eslint-disable-next-line no-control-regex
-  const cleaned = url.trim().replace(/[\x00-\x1F\x7F]/g, "");
+  const trimmed = url.trim();
+  let cleaned = "";
+  for (let i = 0; i < trimmed.length; i += 1) {
+    const code = trimmed.charCodeAt(i);
+    const isControl = (code >= 0 && code <= 31) || code === 127;
+    if (!isControl) {
+      cleaned += trimmed.charAt(i);
+    }
+  }
 
   // Valida protocolo seguro
   const allowedProtocols = ["http:", "https:"];

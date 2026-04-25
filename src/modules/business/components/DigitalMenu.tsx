@@ -21,9 +21,9 @@ import {
   Plus,
   Minus,
   ShoppingCart,
-  Heart,
   Share2,
 } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import { cn } from "@/shared/utils/cn";
 import { toast } from "sonner";
 interface Product {
@@ -46,17 +46,30 @@ interface DigitalMenuProps {
   onAddToCart?: (product: Product, quantity: number) => void;
 }
 
-const CATEGORY_ICONS: Record<string, any> = {
-  lanches: Beef,
-  bebidas: Coffee,
-  doces: Tag,
-  salgados: Package,
-  vegetariano: Leaf,
-  "sem-gluten": Wheat,
-  destaques: Star,
-  promocoes: Tag,
-  geral: Package,
-};
+function getCategoryIcon(category: string): LucideIcon {
+  switch (category) {
+    case "lanches":
+      return Beef;
+    case "bebidas":
+      return Coffee;
+    case "doces":
+      return Tag;
+    case "salgados":
+      return Package;
+    case "vegetariano":
+      return Leaf;
+    case "sem-gluten":
+      return Wheat;
+    case "destaques":
+      return Star;
+    case "promocoes":
+      return Tag;
+    case "geral":
+      return Package;
+    default:
+      return Package;
+  }
+}
 
 const FILTER_OPTIONS = [
   { id: "vegetariano", label: "Vegetariano", icon: Leaf },
@@ -74,13 +87,7 @@ export default function DigitalMenu({
   const [searchTerm, setSearchTerm] = useState("");
   const [activeFilters, setActiveFilters] = useState<string[]>([]);
   const [expandedCategories, setExpandedCategories] = useState<string[]>([]);
-  const [quantities, setQuantities] = useState<Record<string, number>>({});
-
-  // Extrai categorys únicas dos products
-  const categories = useMemo(() => {
-    const cats = [...new Set(products.map((p) => p.category))];
-    return cats.sort();
-  }, [products]);
+  const [quantities, setQuantities] = useState<Map<string, number>>(new Map());
 
   // Filtra products
   const filteredProducts = useMemo(() => {
@@ -111,17 +118,21 @@ export default function DigitalMenu({
 
   // Agrupa products por category
   const productsByCategory = useMemo(() => {
-    const grouped: Record<string, Product[]> = {};
+    const grouped = new Map<string, Product[]>();
 
     filteredProducts.forEach((product) => {
-      if (!grouped[product.category]) {
-        grouped[product.category] = [];
+      const existing = grouped.get(product.category);
+      if (existing) {
+        existing.push(product);
+        return;
       }
-      grouped[product.category].push(product);
+      grouped.set(product.category, [product]);
     });
 
     return grouped;
   }, [filteredProducts]);
+
+  const getQuantity = (productId: string): number => quantities.get(productId) ?? 0;
 
   const toggleFilter = (filterId: string) => {
     setActiveFilters((prev) =>
@@ -140,21 +151,30 @@ export default function DigitalMenu({
   };
 
   const increaseQuantity = (productId: string) => {
-    setQuantities((prev) => ({
-      ...prev,
-      [productId]: (prev[productId] || 0) + 1,
-    }));
+    setQuantities((prev) => {
+      const next = new Map(prev);
+      const currentQuantity = next.get(productId) ?? 0;
+      next.set(productId, currentQuantity + 1);
+      return next;
+    });
   };
 
   const decreaseQuantity = (productId: string) => {
-    setQuantities((prev) => ({
-      ...prev,
-      [productId]: Math.max(0, (prev[productId] || 0) - 1),
-    }));
+    setQuantities((prev) => {
+      const next = new Map(prev);
+      const currentQuantity = next.get(productId) ?? 0;
+      const updatedQuantity = Math.max(0, currentQuantity - 1);
+      if (updatedQuantity === 0) {
+        next.delete(productId);
+        return next;
+      }
+      next.set(productId, updatedQuantity);
+      return next;
+    });
   };
 
   const handleAddToCart = (product: Product) => {
-    const quantity = quantities[product.id] || 1;
+    const quantity = Math.max(1, getQuantity(product.id));
     if (onAddToCart) {
       onAddToCart(product, quantity);
     }
@@ -265,9 +285,9 @@ export default function DigitalMenu({
 
       {/* Lista de categorys com products */}
       <div className="space-y-4">
-        {Object.entries(productsByCategory).map(
+        {Array.from(productsByCategory.entries()).map(
           ([category, categoryProducts]) => {
-            const Icon = CATEGORY_ICONS[category] || Package;
+            const Icon = getCategoryIcon(category);
             const isExpanded = expandedCategories.includes(category);
 
             return (
@@ -300,8 +320,8 @@ export default function DigitalMenu({
                 {isExpanded && (
                   <div className="border-t p-4 space-y-4">
                     {categoryProducts.map((product) => {
-                      const quantity = quantities[product.id] || 0;
-                      const Icon = CATEGORY_ICONS[product.category] || Package;
+                      const quantity = getQuantity(product.id);
+                      const Icon = getCategoryIcon(product.category);
 
                       return (
                         <div
@@ -428,14 +448,14 @@ export default function DigitalMenu({
       </div>
 
       {/* Resumo do carrinho (se houver itens) */}
-      {Object.values(quantities).some((qty) => qty > 0) && (
+      {Array.from(quantities.values()).some((qty) => qty > 0) && (
         <Card className="sticky bottom-4 border-2 border-primary/20 bg-background/95 backdrop-blur-sm">
           <div className="p-4">
             <div className="flex items-center justify-between mb-3">
               <div>
                 <h4 className="font-semibold">Seu Pedido</h4>
                 <p className="text-xs text-muted-foreground">
-                  {Object.values(quantities).filter((qty) => qty > 0).length}{" "}
+                  {Array.from(quantities.values()).filter((qty) => qty > 0).length}{" "}
                   itens
                 </p>
               </div>
@@ -446,7 +466,7 @@ export default function DigitalMenu({
             </div>
 
             <div className="space-y-2 max-h-40 overflow-y-auto">
-              {Object.entries(quantities)
+              {Array.from(quantities.entries())
                 .filter(([_, qty]) => qty > 0)
                 .map(([productId, qty]) => {
                   const product = products.find((p) => p.id === productId);

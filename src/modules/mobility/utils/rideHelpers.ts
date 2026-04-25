@@ -206,54 +206,52 @@ export function isPriceNegotiated(ride: RideRequest): boolean {
  * Obtém label amigável do status
  */
 export function getStatusLabel(status: string): string {
-  const labels: Record<string, string> = {
-    pending: 'Aguardando',
-    searching: 'Buscando motorista',
-    driver_assigned: 'Motorista atribuído',
-    driver_arriving: 'Motorista a caminho',
-    in_progress: 'Em andamento',
-    completed: 'Concluída',
-    cancelled: 'Cancelada',
-    delivered: 'Entregue',
-  };
-  
-  return labels[status] || status;
+  switch (status) {
+    case 'pending': return 'Aguardando';
+    case 'searching': return 'Buscando motorista';
+    case 'driver_assigned': return 'Motorista atribu?do';
+    case 'driver_arriving': return 'Motorista a caminho';
+    case 'in_progress': return 'Em andamento';
+    case 'completed': return 'Conclu?da';
+    case 'cancelled': return 'Cancelada';
+    case 'delivered': return 'Entregue';
+    default: return status;
+  }
 }
 
 /**
  * Obtém cor do status para UI
  */
 export function getStatusColor(status: string): string {
-  const colors: Record<string, string> = {
-    pending: 'yellow',
-    searching: 'blue',
-    driver_assigned: 'cyan',
-    driver_arriving: 'purple',
-    in_progress: 'green',
-    completed: 'emerald',
-    cancelled: 'red',
-    delivered: 'emerald',
-  };
-  
-  return colors[status] || 'gray';
+  switch (status) {
+    case 'pending': return 'yellow';
+    case 'searching': return 'blue';
+    case 'driver_assigned': return 'cyan';
+    case 'driver_arriving': return 'purple';
+    case 'in_progress': return 'green';
+    case 'completed':
+    case 'delivered':
+      return 'emerald';
+    case 'cancelled': return 'red';
+    default: return 'gray';
+  }
 }
 
 /**
  * Obtém ícone do status
  */
 export function getStatusIcon(status: string): string {
-  const icons: Record<string, string> = {
-    pending: 'clock',
-    searching: 'search',
-    driver_assigned: 'user-check',
-    driver_arriving: 'navigation',
-    in_progress: 'car',
-    completed: 'check-circle',
-    cancelled: 'x-circle',
-    delivered: 'package-check',
-  };
-  
-  return icons[status] || 'circle';
+  switch (status) {
+    case 'pending': return 'clock';
+    case 'searching': return 'search';
+    case 'driver_assigned': return 'user-check';
+    case 'driver_arriving': return 'navigation';
+    case 'in_progress': return 'car';
+    case 'completed': return 'check-circle';
+    case 'cancelled': return 'x-circle';
+    case 'delivered': return 'package-check';
+    default: return 'circle';
+  }
 }
 
 // ==================== TRANSIÇÕES DE STATUS ====================
@@ -261,19 +259,29 @@ export function getStatusIcon(status: string): string {
 /**
  * Verifica se pode transicionar de um status para outro
  */
+function getValidTransitions(status: string): string[] {
+  switch (status) {
+    case 'pending':
+      return ['searching', 'cancelled'];
+    case 'searching':
+      return ['driver_assigned', 'cancelled'];
+    case 'driver_assigned':
+      return ['driver_arriving', 'cancelled'];
+    case 'driver_arriving':
+      return ['in_progress', 'cancelled'];
+    case 'in_progress':
+      return ['completed', 'delivered', 'cancelled'];
+    case 'completed':
+    case 'delivered':
+    case 'cancelled':
+      return [];
+    default:
+      return [];
+  }
+}
+
 export function canTransitionTo(currentStatus: string, newStatus: string): boolean {
-  const validTransitions: Record<string, string[]> = {
-    pending: ['searching', 'cancelled'],
-    searching: ['driver_assigned', 'cancelled'],
-    driver_assigned: ['driver_arriving', 'cancelled'],
-    driver_arriving: ['in_progress', 'cancelled'],
-    in_progress: ['completed', 'delivered', 'cancelled'],
-    completed: [],
-    delivered: [],
-    cancelled: [],
-  };
-  
-  const allowed = validTransitions[currentStatus] || [];
+  const allowed = getValidTransitions(currentStatus);
   return allowed.includes(newStatus);
 }
 
@@ -281,18 +289,7 @@ export function canTransitionTo(currentStatus: string, newStatus: string): boole
  * Obtém próximos status possíveis
  */
 export function getNextPossibleStatuses(currentStatus: string): string[] {
-  const validTransitions: Record<string, string[]> = {
-    pending: ['searching', 'cancelled'],
-    searching: ['driver_assigned', 'cancelled'],
-    driver_assigned: ['driver_arriving', 'cancelled'],
-    driver_arriving: ['in_progress', 'cancelled'],
-    in_progress: ['completed', 'delivered', 'cancelled'],
-    completed: [],
-    delivered: [],
-    cancelled: [],
-  };
-  
-  return validTransitions[currentStatus] || [];
+  return getValidTransitions(currentStatus);
 }
 
 // ==================== FILTROS ====================

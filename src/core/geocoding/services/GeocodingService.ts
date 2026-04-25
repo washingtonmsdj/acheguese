@@ -459,7 +459,7 @@ export class GeocodingService {
 
   private recordSuccess(providerId: string, responseTimeMs: number): void {
     this.metrics.successfulRequests++;
-    this.metrics.providerUsage[providerId] = (this.metrics.providerUsage[providerId] || 0) + 1;
+    this.metrics.providerUsage = this.incrementCounter(this.metrics.providerUsage, providerId);
     
     // Atualiza tempo médio de resposta
     const totalTime = this.metrics.averageResponseTimeMs * (this.metrics.successfulRequests - 1);
@@ -468,11 +468,28 @@ export class GeocodingService {
 
   private recordError(providerId: string, error: any): void {
     const errorCode = error instanceof GeocodingError ? error.code : 'UNKNOWN_ERROR';
-    this.metrics.errorDistribution[errorCode] = (this.metrics.errorDistribution[errorCode] || 0) + 1;
+    this.metrics.errorDistribution = this.incrementCounter(this.metrics.errorDistribution, errorCode);
   }
 
   private recordFailure(): void {
     this.metrics.failedRequests++;
+  }
+
+  private incrementCounter(source: Record<string, number>, key: string): Record<string, number> {
+    let found = false;
+    const updated = Object.entries(source).map(([entryKey, value]) => {
+      if (entryKey === key) {
+        found = true;
+        return [entryKey, value + 1] as const;
+      }
+      return [entryKey, value] as const;
+    });
+
+    if (!found) {
+      updated.push([key, 1] as const);
+    }
+
+    return Object.fromEntries(updated);
   }
 
   private updateMetrics(startTime: number, providerUsed: string): void {

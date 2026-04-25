@@ -83,15 +83,16 @@ export default function EmpresaDashboardTab({
         weekAgo,
       );
 
-      const dayMap: Record<string, number> = {};
+      const dayMap = new Map<string, number>();
       for (let i = 6; i >= 0; i--) {
         const d = new Date(now.getTime() - i * 86400000);
-        dayMap[d.toISOString().slice(0, 10)] = 0;
+        dayMap.set(d.toISOString().slice(0, 10), 0);
       }
       (viewsLast7 || []).forEach((v) => {
         const day = v.viewed_at?.slice(0, 10);
-        if (day && dayMap[day] !== undefined) {
-          dayMap[day]++;
+        if (day && dayMap.has(day)) {
+          const currentCount = dayMap.get(day) ?? 0;
+          dayMap.set(day, currentCount + 1);
         }
       });
 
@@ -108,7 +109,7 @@ export default function EmpresaDashboardTab({
         totalReviews: reviews.length,
         avgRating: Math.round(avg * 10) / 10,
         totalFavorites: typeof favsRes === 'object' && favsRes && 'count' in favsRes ? (favsRes as { count: number }).count : 0,
-        recentViews: Object.entries(dayMap).map(([date, count]) => ({
+        recentViews: Array.from(dayMap.entries()).map(([date, count]) => ({
           date,
           count,
         })),

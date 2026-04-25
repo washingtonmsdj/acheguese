@@ -631,15 +631,16 @@ export async function getPopularTags(
     }
 
     // Contar ocorrências de tags
-    const tagCounts: Record<string, number> = {};
+    const tagCounts = new Map<string, number>();
     (posts || []).forEach((post: any) => {
       (post.tags || []).forEach((tag: string) => {
-        tagCounts[tag] = (tagCounts[tag] || 0) + 1;
+        const currentCount = tagCounts.get(tag) ?? 0;
+        tagCounts.set(tag, currentCount + 1);
       });
     });
 
     // Converter para array e ordenar
-    return Object.entries(tagCounts)
+    return Array.from(tagCounts.entries())
       .map(([tag, count]) => ({ tag, count }))
       .sort((a, b) => b.count - a.count)
       .slice(0, limit);

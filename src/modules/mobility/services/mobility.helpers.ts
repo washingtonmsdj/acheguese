@@ -161,38 +161,56 @@ export function truncateText(text: string, maxLength: number): string {
  * Mapear status da corrida para label legível
  */
 export function getRideStatusLabel(status: string): string {
-  const labels: Record<string, string> = {
-    [RIDE_STATUS.PENDING]: "Pendente",
-    [RIDE_STATUS.REQUESTED]: "Solicitada",
-    [RIDE_STATUS.SEARCHING_DRIVER]: "Procurando motorista",
-    [RIDE_STATUS.DRIVER_ASSIGNED]: "Motorista designado",
-    [RIDE_STATUS.DRIVER_ACCEPTED]: "Aceita",
-    [RIDE_STATUS.IN_PROGRESS]: "Em andamento",
-    [RIDE_STATUS.DRIVER_ARRIVING]: "Motorista chegando",
-    [RIDE_STATUS.PASSENGER_BOARDED]: "Passageiro a bordo",
-    [RIDE_STATUS.COMPLETED]: "Concluída",
-    [RIDE_STATUS.CANCELLED]: "Cancelada",
-    [RIDE_STATUS.REJECTED]: "Rejeitada",
-  };
-  return labels[status] || status;
+  switch (status) {
+    case RIDE_STATUS.PENDING:
+      return "Pendente";
+    case RIDE_STATUS.REQUESTED:
+      return "Solicitada";
+    case RIDE_STATUS.SEARCHING_DRIVER:
+      return "Procurando motorista";
+    case RIDE_STATUS.DRIVER_ASSIGNED:
+      return "Motorista designado";
+    case RIDE_STATUS.DRIVER_ACCEPTED:
+      return "Aceita";
+    case RIDE_STATUS.IN_PROGRESS:
+      return "Em andamento";
+    case RIDE_STATUS.DRIVER_ARRIVING:
+      return "Motorista chegando";
+    case RIDE_STATUS.PASSENGER_BOARDED:
+      return "Passageiro a bordo";
+    case RIDE_STATUS.COMPLETED:
+      return "Concluída";
+    case RIDE_STATUS.CANCELLED:
+      return "Cancelada";
+    case RIDE_STATUS.REJECTED:
+      return "Rejeitada";
+    default:
+      return status;
+  }
 }
 
 /**
  * Mapear status da corrida para cor
  */
 export function getRideStatusColor(status: string): string {
-  const colors: Record<string, string> = {
-    [RIDE_STATUS.PENDING]: "yellow",
-    [RIDE_STATUS.REQUESTED]: "yellow",
-    [RIDE_STATUS.SEARCHING_DRIVER]: "blue",
-    [RIDE_STATUS.DRIVER_ASSIGNED]: "blue",
-    [RIDE_STATUS.DRIVER_ACCEPTED]: "green",
-    [RIDE_STATUS.IN_PROGRESS]: "green",
-    [RIDE_STATUS.DRIVER_ARRIVING]: "green",
-    [RIDE_STATUS.PASSENGER_BOARDED]: "green",
-    [RIDE_STATUS.COMPLETED]: "gray",
-    [RIDE_STATUS.CANCELLED]: "red",
-    [RIDE_STATUS.REJECTED]: "red",
-  };
-  return colors[status] || "gray";
+  switch (status) {
+    case RIDE_STATUS.PENDING:
+    case RIDE_STATUS.REQUESTED:
+      return "yellow";
+    case RIDE_STATUS.SEARCHING_DRIVER:
+    case RIDE_STATUS.DRIVER_ASSIGNED:
+      return "blue";
+    case RIDE_STATUS.DRIVER_ACCEPTED:
+    case RIDE_STATUS.IN_PROGRESS:
+    case RIDE_STATUS.DRIVER_ARRIVING:
+    case RIDE_STATUS.PASSENGER_BOARDED:
+      return "green";
+    case RIDE_STATUS.COMPLETED:
+      return "gray";
+    case RIDE_STATUS.CANCELLED:
+    case RIDE_STATUS.REJECTED:
+      return "red";
+    default:
+      return "gray";
+  }
 }

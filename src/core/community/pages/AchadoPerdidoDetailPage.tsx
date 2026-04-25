@@ -2,8 +2,8 @@ import React from "react";
 
 import { useParams, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
-import { lostFoundService } from "@/modules/community/lostfound/services";
-import { useAppUrls } from "@/core/routing/hooks"; // ✅ SSOT URLs
+import { lostFoundRuntimeService as lostFoundService } from "@/core/community/services/LostFoundRuntimeService";
+import { useAppUrls } from "@/core/routing/hooks"; // ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ SSOT URLs
 import {
   ArrowLeft,
   MapPin,
@@ -26,10 +26,6 @@ import { Skeleton } from "@/shared/components/ui/skeleton";
 import { useToast } from "@/shared/hooks/use-toast";
 import { useAuth } from "@/core/auth/hooks/useAuth";
 import { ReportContentDialog } from "@/core/moderation/components/ReportContentDialog";
-import {
-  LostFoundMiniMap,
-  LostFoundLocationCard,
-} from "@/modules/community/lostfound/components/LostFoundMiniMap";
 import { format, formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { cn } from "@/shared/utils/cn";
@@ -39,15 +35,37 @@ import { ProfileService } from "@/core/profiles/services/ProfileService";
 const profileServiceInstance = new ProfileService();
 
 const CAT_ICONS: Record<string, string> = {
-  animal: "🐾",
-  celular: "📱",
-  documentos: "📄",
-  chaves: "🔑",
-  carteira: "👛",
-  objetos: "📦",
-  outro: "❓",
+  animal: "ÃƒÂ°Ã…Â¸Ã‚ÂÃ‚Â¾",
+  celular: "ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã‚Â±",
+  documentos: "ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã¢â‚¬Å¾",
+  chaves: "ÃƒÂ°Ã…Â¸Ã¢â‚¬ÂÃ¢â‚¬Ëœ",
+  carteira: "ÃƒÂ°Ã…Â¸Ã¢â‚¬ËœÃ¢â‚¬Âº",
+  objetos: "ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã‚Â¦",
+  outro: "ÃƒÂ¢Ã‚ÂÃ¢â‚¬Å“",
 };
 
+function LostFoundMiniMap({ latitude, longitude, title, className }: { latitude: number; longitude: number; title: string; tipo: "perdido" | "encontrado"; className?: string }) {
+  return (
+    <div className={cn("rounded-xl border bg-card p-4", className)}>
+      <p className="text-sm font-semibold">{title}</p>
+      <p className="mt-2 text-xs text-muted-foreground">Localização aproximada: {latitude.toFixed(5)}, {longitude.toFixed(5)}</p>
+      <Button asChild variant="outline" size="sm" className="mt-3">
+        <a href={`https://www.google.com/maps?q=${latitude},${longitude}`} target="_blank" rel="noopener noreferrer">
+          Abrir no mapa
+        </a>
+      </Button>
+    </div>
+  );
+}
+
+function LostFoundLocationCard({ neighborhood, localizacaoAprox }: { neighborhood: string; localizacaoAprox: string }) {
+  return (
+    <div className="rounded-xl border bg-card p-4">
+      <p className="text-sm font-semibold">Localização</p>
+      <p className="mt-2 text-sm text-muted-foreground">{neighborhood || localizacaoAprox || "Não informada"}</p>
+    </div>
+  );
+}
 interface Post {
   id: string;
   tipo: string;
@@ -76,7 +94,7 @@ interface Comment {
 export default function AchadoPerdidoDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const appUrls = useAppUrls(); // ✅ SSOT URLs
+  const appUrls = useAppUrls(); // ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ SSOT URLs
   const { toast } = useToast();
   const { user } = useAuth();
 
@@ -158,14 +176,14 @@ export default function AchadoPerdidoDetailPage() {
         autor: (profileMap.get(c.autor_id) as {
           name: string;
           avatar_url: string;
-        }) || { name: "Usuário", avatar_url: "" },
+        }) || { name: "UsuÃƒÆ’Ã‚Â¡rio", avatar_url: "" },
       })),
     );
   }
 
   async function handleComment() {
     if (!user) {
-      toast({ title: "Faça login para comentar", variant: "destructive" });
+      toast({ title: "FaÃƒÆ’Ã‚Â§a login para comentar", variant: "destructive" });
       return;
     }
     if (!commentText.trim()) return;
@@ -178,7 +196,7 @@ export default function AchadoPerdidoDetailPage() {
         conteudo: commentText.trim(),
       });
       setCommentText("");
-      toast({ title: "Comentário enviado!" });
+      toast({ title: "ComentÃƒÆ’Ã‚Â¡rio enviado!" });
       await loadComments();
     } catch {
       toast({ title: "Error comentar", variant: "destructive" });
@@ -192,7 +210,7 @@ export default function AchadoPerdidoDetailPage() {
     await lostFoundService.toggleResolved(post.id);
     toast({
       title: post.resolvido
-        ? "Marcado como não resolvido"
+        ? "Marcado como nÃƒÆ’Ã‚Â£o resolvido"
         : "Marcado como resolvido!",
     });
     loadPost();
@@ -210,10 +228,10 @@ export default function AchadoPerdidoDetailPage() {
   if (notFound || !post)
     return (
       <div className="p-4 text-center">
-        <p>Publicação não encontrada.</p>
+        <p>PublicaÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o nÃƒÆ’Ã‚Â£o encontrada.</p>
         <Button
           variant="outline"
-          onClick={() => navigate(appUrls.community.lostAndFound)} // ✅ SSOT
+          onClick={() => navigate(appUrls.community.lostAndFound)} // ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ SSOT
           className="mt-4"
         >
           Voltar
@@ -253,7 +271,7 @@ export default function AchadoPerdidoDetailPage() {
           />
         ) : (
           <div className="w-full h-40 bg-secondary flex items-center justify-center text-5xl">
-            {CAT_ICONS[post.category] || "❓"}
+            {CAT_ICONS[post.category] || "ÃƒÂ¢Ã‚ÂÃ¢â‚¬Å“"}
           </div>
         )}
 
@@ -262,7 +280,7 @@ export default function AchadoPerdidoDetailPage() {
             <Badge
               variant={post.tipo === "perdido" ? "destructive" : "default"}
             >
-              {post.tipo === "perdido" ? "🔴 Perdido" : "🟢 Encontrado"}
+              {post.tipo === "perdido" ? "ÃƒÂ°Ã…Â¸Ã¢â‚¬ÂÃ‚Â´ Perdido" : "ÃƒÂ°Ã…Â¸Ã…Â¸Ã‚Â¢ Encontrado"}
             </Badge>
             <Badge variant="secondary">
               {CAT_ICONS[post.category]} {post.category}
@@ -316,7 +334,7 @@ export default function AchadoPerdidoDetailPage() {
             </Avatar>
             <div className="flex-1">
               <p className="text-sm font-medium">
-                {post.autor?.name || "Anônimo"}
+                {post.autor?.name || "AnÃƒÆ’Ã‚Â´nimo"}
               </p>
               <p className="text-xs text-muted-foreground">
                 {formatDistanceToNow(new Date(post.created_at), {
@@ -357,11 +375,11 @@ export default function AchadoPerdidoDetailPage() {
 
           <div>
             <h3 className="text-sm font-bold mb-3">
-              Comentários ({comments.length})
+              ComentÃƒÆ’Ã‚Â¡rios ({comments.length})
             </h3>
             {comments.length === 0 ? (
               <p className="text-sm text-muted-foreground">
-                Nenhum comentário ainda.
+                Nenhum comentÃƒÆ’Ã‚Â¡rio ainda.
               </p>
             ) : (
               <div className="space-y-3">
@@ -381,7 +399,7 @@ export default function AchadoPerdidoDetailPage() {
                         </AvatarFallback>
                       </Avatar>
                       <span className="text-xs font-medium">
-                        {c.autor?.name || "Anônimo"}
+                        {c.autor?.name || "AnÃƒÆ’Ã‚Â´nimo"}
                       </span>
                       <span className="text-xs text-muted-foreground ml-auto">
                         {formatDistanceToNow(new Date(c.created_at), {
@@ -403,7 +421,7 @@ export default function AchadoPerdidoDetailPage() {
             <Textarea
               value={commentText}
               onChange={(e) => setCommentText(e.target.value.slice(0, 500))}
-              placeholder="Deixe um comentário..."
+              placeholder="Deixe um comentÃƒÆ’Ã‚Â¡rio..."
               className="min-h-[40px] max-h-[80px] text-sm resize-none flex-1"
               rows={1}
             />
@@ -448,7 +466,7 @@ export default function AchadoPerdidoDetailPage() {
           )}
 
           <div className="bg-card rounded-xl border p-4 space-y-3">
-            <h3 className="font-semibold text-sm">Informações</h3>
+            <h3 className="font-semibold text-sm">InformaÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Âµes</h3>
             <div className="space-y-2 text-sm">
               <div className="flex items-center justify-between">
                 <span className="text-muted-foreground">Status:</span>
@@ -496,10 +514,10 @@ export default function AchadoPerdidoDetailPage() {
 
           <div className="bg-blue-500/10 border border-blue-500/20 rounded-xl p-4">
             <p className="text-xs text-blue-500 leading-relaxed">
-              💡 <strong>Dica:</strong>{" "}
+              ÃƒÂ°Ã…Â¸Ã¢â‚¬â„¢Ã‚Â¡ <strong>Dica:</strong>{" "}
               {post.tipo === "perdido"
-                ? "Se você encontrou este item, entre em contato com o autor pelo WhatsApp."
-                : "Se este item é seu, entre em contato com quem encontrou para combinar a devolução."}
+                ? "Se vocÃƒÆ’Ã‚Âª encontrou este item, entre em contato com o autor pelo WhatsApp."
+                : "Se este item ÃƒÆ’Ã‚Â© seu, entre em contato com quem encontrou para combinar a devoluÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o."}
             </p>
           </div>
         </div>

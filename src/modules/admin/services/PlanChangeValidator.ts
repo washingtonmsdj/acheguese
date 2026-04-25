@@ -146,8 +146,12 @@ export class PlanChangeValidator {
       ],
     };
     
-    const currentFeatures = featuresByTier[currentTier] || [];
-    const newFeatures = featuresByTier[newTier] || [];
+    const currentFeatures = Object.entries(featuresByTier).find(
+      ([tier]) => tier === currentTier,
+    )?.[1] ?? [];
+    const newFeatures = Object.entries(featuresByTier).find(
+      ([tier]) => tier === newTier,
+    )?.[1] ?? [];
     
     const willLose = currentFeatures.filter(f => !newFeatures.includes(f));
     const willGain = newFeatures.filter(f => !currentFeatures.includes(f));

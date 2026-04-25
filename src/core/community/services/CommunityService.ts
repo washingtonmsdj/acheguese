@@ -137,6 +137,33 @@ const INTERACTION_POINTS: Record<InteractionType, number> = {
   profile_completed: 25,
 };
 
+function getInteractionPoints(interactionType: InteractionType): number {
+  switch (interactionType) {
+    case "post_created":
+      return INTERACTION_POINTS.post_created;
+    case "comment_added":
+      return INTERACTION_POINTS.comment_added;
+    case "helpful_vote":
+      return INTERACTION_POINTS.helpful_vote;
+    case "review_written":
+      return INTERACTION_POINTS.review_written;
+    case "recommendation_made":
+      return INTERACTION_POINTS.recommendation_made;
+    case "event_attended":
+      return INTERACTION_POINTS.event_attended;
+    case "business_created":
+      return INTERACTION_POINTS.business_created;
+    case "service_offered":
+      return INTERACTION_POINTS.service_offered;
+    case "ride_completed":
+      return INTERACTION_POINTS.ride_completed;
+    case "profile_completed":
+      return INTERACTION_POINTS.profile_completed;
+    default:
+      return 0;
+  }
+}
+
 /**
  * Requisitos para badges automáticos
  */
@@ -292,7 +319,7 @@ class CommunityServiceClass {
     error?: string;
   }> {
     try {
-      const points = INTERACTION_POINTS[interactionType] || 0;
+      const points = getInteractionPoints(interactionType);
 
       const { data: interaction, error } = await (supabase as any)
         .from("community_interactions")

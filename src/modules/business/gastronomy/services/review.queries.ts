@@ -365,20 +365,25 @@ export class ReviewQueryService {
 
       const distribution = reviews.reduce(
         (acc, r) => {
-          acc[r.rating] = (acc[r.rating] || 0) + 1;
+          const currentCount = acc.get(r.rating) ?? 0;
+          acc.set(r.rating, currentCount + 1);
           return acc;
         },
-        {} as Record<number, number>,
+        new Map<number, number>(),
       );
 
       // Garantir que todas as estrelas estejam no objeto
       for (let i = 1; i <= 5; i++) {
-        if (!distribution[i]) {
-          distribution[i] = 0;
+        if (!distribution.has(i)) {
+          distribution.set(i, 0);
         }
       }
 
-      return { total, average, distribution };
+      return {
+        total,
+        average,
+        distribution: Object.fromEntries(distribution.entries()) as Record<number, number>,
+      };
     } catch (error) {
       logger.error('Error in getBusinessReviewStats', error);
       throw error;

@@ -18,12 +18,20 @@ import { useGastronomyCartStore } from "../cart/useGastronomyCartStore";
 import type { GastronomyBusiness } from "../types/gastronomy";
 import type { MenuItemAddon, MenuItemVariant, MenuItemWithRelations } from "../types";
 import { money } from "../utils/currency";
+import {
+  PizzaAdminService,
+  PizzaBuilder,
+  PizzaCartItemBuilder,
+  type PizzaBuildSelection,
+  type PizzaCatalog,
+} from "../niches";
 
 interface Props {
   business: GastronomyBusiness;
   item: MenuItemWithRelations | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  hydrateFromServer?: boolean;
 }
 
 function getInitialVariant(item: MenuItemWithRelations | null): string | null {
@@ -40,15 +48,23 @@ export function MenuItemDetailDrawer({
   item,
   open,
   onOpenChange,
+  hydrateFromServer = true,
 }: Props) {
   const itemId = item?.id;
-  const { data: hydratedItem } = useMenuItem(itemId);
+  const { data: hydratedItem } = useMenuItem(hydrateFromServer ? itemId : undefined);
   const addItem = useGastronomyCartStore((state) => state.addItem);
+  const addCartItem = useGastronomyCartStore((state) => state.addCartItem);
   const resolvedItem = hydratedItem ?? item;
   const [quantity, setQuantity] = useState(1);
   const [selectedVariantId, setSelectedVariantId] = useState<string | null>(null);
   const [addonQuantities, setAddonQuantities] = useState<Record<string, number>>({});
   const [specialInstructions, setSpecialInstructions] = useState("");
+  const [pizzaCatalog, setPizzaCatalog] = useState<PizzaCatalog | null>(null);
+  const [pizzaCatalogError, setPizzaCatalogError] = useState<string | null>(null);
+  const isPizzaria =
+    business.gastronomy_profile?.niche_key === "pizza" ||
+    business.gastronomy_profile?.cuisine_type === "pizzaria" ||
+    business.gastronomy_profile?.cuisine_type === "pizza";
 
   useEffect(() => {
     if (!resolvedItem) return;
@@ -58,6 +74,31 @@ export function MenuItemDetailDrawer({
     setAddonQuantities({});
     setSpecialInstructions("");
   }, [open, resolvedItem]);
+
+  useEffect(() => {
+    if (!open || !isPizzaria) return;
+
+    let mounted = true;
+    setPizzaCatalogError(null);
+
+    PizzaAdminService.getCatalog(business.business_data_id)
+      .then((catalog) => {
+        if (mounted) setPizzaCatalog(catalog);
+      })
+      .catch((error) => {
+        if (mounted) {
+          setPizzaCatalogError(
+            error instanceof Error
+              ? error.message
+              : "Nao foi possivel carregar configuracoes da pizzaria.",
+          );
+        }
+      });
+
+    return () => {
+      mounted = false;
+    };
+  }, [business.business_data_id, isPizzaria, open]);
 
   const availableVariants = useMemo(
     () => (resolvedItem?.variants ?? []).filter((variant) => variant.is_available),
@@ -138,6 +179,28 @@ export function MenuItemDetailDrawer({
     }
   };
 
+  const handleAddPizzaToCart = (selection: PizzaBuildSelection) => {
+    if (!pizzaCatalog) return;
+
+    try {
+      const cartItem = PizzaCartItemBuilder.build(selection, pizzaCatalog);
+      addCartItem({
+        business_id: businessDataId,
+        delivery_fee: business.gastronomy_profile?.delivery_fee ?? 0,
+        cart_item: cartItem,
+      });
+
+      toast.success("Pizza adicionada ao carrinho.");
+      onOpenChange(false);
+    } catch (error) {
+      const message =
+        error instanceof Error
+          ? error.message
+          : "Nao foi possivel adicionar a pizza ao carrinho.";
+      toast.error(message);
+    }
+  };
+
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="right" className="w-full overflow-y-auto sm:max-w-xl">
@@ -157,6 +220,23 @@ export function MenuItemDetailDrawer({
             />
           )}
 
+          {isPizzaria && (
+            pizzaCatalog ? (
+              <PizzaBuilder
+                businessId={businessDataId}
+                item={resolvedItem}
+                catalog={pizzaCatalog}
+                onAddToCart={handleAddPizzaToCart}
+              />
+            ) : (
+              <div className="rounded-xl border p-4 text-sm text-muted-foreground">
+                {pizzaCatalogError ?? "Carregando configuracoes da pizzaria..."}
+              </div>
+            )
+          )}
+
+          {!isPizzaria && (
+            <>
           <div className="flex items-center justify-between rounded-xl border bg-muted/30 p-4">
             <div>
               <p className="text-sm text-muted-foreground">Preco base</p>
@@ -309,8 +389,11 @@ export function MenuItemDetailDrawer({
               </div>
             </div>
           </section>
+            </>
+          )}
         </div>
 
+        {!isPizzaria && (
         <SheetFooter className="mt-6">
           <Button
             type="button"
@@ -322,6 +405,7 @@ export function MenuItemDetailDrawer({
             {deliveryEnabled ? "Adicionar ao carrinho" : "Delivery indisponivel"}
           </Button>
         </SheetFooter>
+        )}
       </SheetContent>
     </Sheet>
   );

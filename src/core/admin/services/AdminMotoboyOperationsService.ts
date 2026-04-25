@@ -1,5 +1,4 @@
 import { supabase } from "@/integrations/supabase";
-import { RideOperationalService, mobilityAuditService } from "@/modules/mobility/services";
 
 const supabaseAny = supabase as any;
 
@@ -56,16 +55,7 @@ export class AdminMotoboyOperationsService {
   }
 
   static async cancelOperational(rideId: string, reason: string): Promise<boolean> {
-    const result = await RideOperationalService.cancelRide({
-      rideId,
-      cancelledBy: "passenger",
-      profileId: "admin-override",
-      reason: reason || "Cancelamento operacional pelo admin",
-    });
-
-    if (result.success) return true;
-
-    await supabaseAny
+    const { error } = await supabaseAny
       .from("ride_requests")
       .update({
         status: "cancelled_by_passenger",
@@ -73,7 +63,9 @@ export class AdminMotoboyOperationsService {
       })
       .eq("id", rideId);
 
-    await mobilityAuditService.logRideStateChange({
+    if (error) throw error;
+
+    await this.logRideStateChange({
       rideId,
       fromState: null,
       toState: "cancelled_by_passenger",
@@ -81,7 +73,7 @@ export class AdminMotoboyOperationsService {
       reason: `Admin override: ${reason || "Cancelamento operacional"}`,
     });
 
-    return false;
+    return true;
   }
 
   static async redispatch(rideId: string): Promise<void> {
@@ -94,12 +86,29 @@ export class AdminMotoboyOperationsService {
       })
       .eq("id", rideId);
 
-    await mobilityAuditService.logRideStateChange({
+    await this.logRideStateChange({
       rideId,
       fromState: null,
       toState: "searching_driver",
       changedBy: "admin-redispatch",
       reason: "Reencaminhamento manual pelo admin",
+    });
+  }
+
+  private static async logRideStateChange(input: {
+    rideId: string;
+    fromState: string | null;
+    toState: string;
+    changedBy: string;
+    reason: string;
+  }): Promise<void> {
+    await supabaseAny.from("ride_state_audit").insert({
+      ride_id: input.rideId,
+      from_state: input.fromState ?? "none",
+      to_state: input.toState,
+      changed_by: input.changedBy,
+      reason: input.reason,
+      created_at: new Date().toISOString(),
     });
   }
 }

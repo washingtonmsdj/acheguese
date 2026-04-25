@@ -39,18 +39,25 @@ const BUSINESS_SELECT = `
   location:locations!location_id(*)
 `;
 
-const DAY_INDEX_MAP: Record<string, number> = {
-  domingo: 0,
-  segunda: 1,
-  terca: 2,
-  quarta: 3,
-  quinta: 4,
-  sexta: 5,
-  sabado: 6,
-};
-
-function hasOwn(source: Record<string, unknown>, key: string): boolean {
-  return Object.prototype.hasOwnProperty.call(source, key);
+function getDayIndex(day: string): number | undefined {
+  switch (day) {
+    case "domingo":
+      return 0;
+    case "segunda":
+      return 1;
+    case "terca":
+      return 2;
+    case "quarta":
+      return 3;
+    case "quinta":
+      return 4;
+    case "sexta":
+      return 5;
+    case "sabado":
+      return 6;
+    default:
+      return undefined;
+  }
 }
 
 function sanitizeOptionalText(value: unknown): string | undefined {
@@ -90,70 +97,65 @@ function sanitizeAndValidateInput(
   input: CreateBusinessInput | UpdateBusinessInput,
   isUpdate = false,
 ): CreateBusinessInput | UpdateBusinessInput {
-  const source = input as Record<string, unknown>;
-  const sanitized: Record<string, unknown> = {};
+  const foundedYearRaw = input.founded_year;
+  const foundedYear =
+    typeof foundedYearRaw === "number"
+      ? foundedYearRaw
+      : typeof foundedYearRaw === "string" && foundedYearRaw.trim()
+        ? Number(foundedYearRaw)
+        : undefined;
 
-  const copy = (key: string, sanitizer?: (value: unknown) => unknown) => {
-    if (!hasOwn(source, key)) {
-      return;
-    }
-
-    sanitized[key] = sanitizer ? sanitizer(source[key]) : source[key];
+  const sanitized: Record<string, unknown> = {
+    name: sanitizeOptionalText(input.name),
+    legal_name: sanitizeOptionalText(input.legal_name),
+    cnpj: sanitizeOptionalText(input.cnpj),
+    company_type: input.company_type,
+    industry: sanitizeOptionalText(input.industry),
+    employee_count: input.employee_count,
+    founded_year: foundedYear,
+    description: sanitizeOptionalText(input.description),
+    category: sanitizeOptionalText(input.category),
+    subcategoria: sanitizeOptionalText(input.subcategoria),
+    slug: sanitizeOptionalText(input.slug),
+    phone: sanitizeOptionalPhoneValue(input.phone),
+    whatsapp: sanitizeOptionalPhoneValue(input.whatsapp),
+    email: sanitizeOptionalEmailValue(input.email),
+    website: sanitizeOptionalUrlValue(input.website),
+    instagram: sanitizeOptionalText(input.instagram),
+    facebook: sanitizeOptionalText(input.facebook),
+    address_id: sanitizeOptionalText(input.address_id),
+    location_id: sanitizeOptionalText(input.location_id),
+    city: sanitizeOptionalText(input.city),
+    state: sanitizeOptionalText(input.state),
+    postal_code: sanitizeOptionalText(input.postal_code),
+    address_street: sanitizeOptionalText(input.address_street),
+    address_number: sanitizeOptionalText(input.address_number),
+    address_complement: sanitizeOptionalText(input.address_complement),
+    address: sanitizeOptionalText(input.address),
+    neighborhood: sanitizeOptionalText(input.neighborhood),
+    cep: sanitizeOptionalText(input.cep),
+    latitude: input.latitude,
+    longitude: input.longitude,
+    business_role: input.business_role,
+    parent_business_id: sanitizeOptionalText(input.parent_business_id),
+    is_headquarters: input.is_headquarters,
+    unit_name: sanitizeOptionalText(input.unit_name),
+    horario_funcionamento: input.horario_funcionamento,
+    formas_pagamento: sanitizeOptionalStringArray(input.formas_pagamento),
+    especialidades: sanitizeOptionalStringArray(input.especialidades),
+    facilidades: sanitizeOptionalStringArray(input.facilidades),
+    modos_atendimento: sanitizeOptionalStringArray(input.modos_atendimento),
+    tem_delivery: input.tem_delivery,
+    aceita_cartao: input.aceita_cartao,
+    aceita_pix: input.aceita_pix,
+    can_post_vagas: input.can_post_vagas,
+    logo_url: sanitizeOptionalUrlValue(input.logo_url),
+    banner_url: sanitizeOptionalUrlValue(input.banner_url),
+    fotos: sanitizeOptionalStringArray(input.fotos),
+    status: input.status,
+    is_verified: input.is_verified,
+    is_premium: input.is_premium,
   };
-
-  copy("name", sanitizeOptionalText);
-  copy("legal_name", sanitizeOptionalText);
-  copy("cnpj", sanitizeOptionalText);
-  copy("company_type");
-  copy("industry", sanitizeOptionalText);
-  copy("employee_count");
-  copy("founded_year", (value) => {
-    if (typeof value === "number") return value;
-    if (typeof value === "string" && value.trim()) return Number(value);
-    return undefined;
-  });
-  copy("description", sanitizeOptionalText);
-  copy("category", sanitizeOptionalText);
-  copy("subcategoria", sanitizeOptionalText);
-  copy("slug", sanitizeOptionalText);
-  copy("phone", sanitizeOptionalPhoneValue);
-  copy("whatsapp", sanitizeOptionalPhoneValue);
-  copy("email", sanitizeOptionalEmailValue);
-  copy("website", sanitizeOptionalUrlValue);
-  copy("instagram", sanitizeOptionalText);
-  copy("facebook", sanitizeOptionalText);
-  copy("address_id", sanitizeOptionalText);
-  copy("location_id", sanitizeOptionalText);
-  copy("city", sanitizeOptionalText);
-  copy("state", sanitizeOptionalText);
-  copy("postal_code", sanitizeOptionalText);
-  copy("address_street", sanitizeOptionalText);
-  copy("address_number", sanitizeOptionalText);
-  copy("address_complement", sanitizeOptionalText);
-  copy("address", sanitizeOptionalText);
-  copy("neighborhood", sanitizeOptionalText);
-  copy("cep", sanitizeOptionalText);
-  copy("latitude");
-  copy("longitude");
-  copy("business_role");
-  copy("parent_business_id", sanitizeOptionalText);
-  copy("is_headquarters");
-  copy("unit_name", sanitizeOptionalText);
-  copy("horario_funcionamento");
-  copy("formas_pagamento", sanitizeOptionalStringArray);
-  copy("especialidades", sanitizeOptionalStringArray);
-  copy("facilidades", sanitizeOptionalStringArray);
-  copy("modos_atendimento", sanitizeOptionalStringArray);
-  copy("tem_delivery");
-  copy("aceita_cartao");
-  copy("aceita_pix");
-  copy("can_post_vagas");
-  copy("logo_url", sanitizeOptionalUrlValue);
-  copy("banner_url", sanitizeOptionalUrlValue);
-  copy("fotos", sanitizeOptionalStringArray);
-  copy("status");
-  copy("is_verified");
-  copy("is_premium");
 
   const schema = isUpdate ? updateBusinessSchema : createBusinessSchema;
   const validation = schema.safeParse(sanitized);
@@ -223,7 +225,7 @@ function toBusinessHoursRows(hours: unknown): Array<{
   return Object.entries(hours as Record<string, { open?: string; close?: string; closed?: boolean }>)
     .map(([day, value]) => {
       const dayKey = day.toLowerCase();
-      const dayOfWeek = DAY_INDEX_MAP[dayKey];
+      const dayOfWeek = getDayIndex(dayKey);
       if (dayOfWeek === undefined) {
         return null;
       }

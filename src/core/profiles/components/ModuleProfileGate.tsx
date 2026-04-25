@@ -23,11 +23,33 @@ import type { Profile, ProfileType } from '../services/multi-profile/types';
 import { toast } from 'sonner';
 
 function typeLabel(t: ProfileType): string {
-  return { personal: 'Pessoal', business: 'Empresa', professional: 'Profissional', driver: 'Motorista' }[t];
+  switch (t) {
+    case "personal":
+      return "Pessoal";
+    case "business":
+      return "Empresa";
+    case "professional":
+      return "Profissional";
+    case "driver":
+      return "Motorista";
+    default:
+      return "Perfil";
+  }
 }
 
 function typeIcon(t: ProfileType) {
-  return { personal: User, business: Building2, professional: Briefcase, driver: Car }[t];
+  switch (t) {
+    case "personal":
+      return User;
+    case "business":
+      return Building2;
+    case "professional":
+      return Briefcase;
+    case "driver":
+      return Car;
+    default:
+      return User;
+  }
 }
 
 function getInitials(name?: string | null): string {

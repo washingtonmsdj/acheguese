@@ -238,10 +238,12 @@ export async function withCache<T>(
  * // Returns: 'geocoding:lat=10:lon=20'
  */
 export function generateCacheKey(prefix: string, params: Record<string, any>): string {
-  const sortedKeys = Object.keys(params).sort();
-  const parts = sortedKeys
-    .filter(key => params[key] !== undefined && params[key] !== null)
-    .map(key => `${key}=${params[key]}`);
+  const sortedEntries = Object.entries(params).sort(([leftKey], [rightKey]) =>
+    leftKey.localeCompare(rightKey),
+  );
+  const parts = sortedEntries
+    .filter(([, value]) => value !== undefined && value !== null)
+    .map(([key, value]) => `${key}=${String(value)}`);
   
   return `${prefix}:${parts.join(':')}`;
 }

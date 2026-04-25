@@ -14,6 +14,7 @@ import { Button } from '@/shared/components/ui/button';
 import { Card, CardContent } from '@/shared/components/ui/card';
 import { Badge } from '@/shared/components/ui/badge';
 import type { GastronomyActivationStatus } from '../hooks/useGastronomyStatus';
+import { businessManagementRoutes } from '@/core/business/utils/businessManagementRoutes';
 
 interface GastronomyVerticalCTAProps {
   businessId: string;
@@ -65,7 +66,7 @@ export function GastronomyVerticalCTA({ businessId, status }: GastronomyVertical
   const Icon = config.icon;
 
   const handleClick = () => {
-    navigate(`/dashboard/business/${businessId}/gastronomy/setup`);
+    navigate(businessManagementRoutes.gastronomySetup(businessId));
   };
 
   return (

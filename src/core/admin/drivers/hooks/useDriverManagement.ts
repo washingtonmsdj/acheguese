@@ -8,14 +8,13 @@
 import { useEffect, useState } from "react";
 import { useToast } from "@/shared/hooks/use-toast";
 import { profileService } from "@/core/profiles/services/ProfileService";
-import { MobilityService, updateDriverOnlineStatus } from "@/modules/mobility/services";
 import { logger } from "@/shared/utils/logger";
 import type { DriverRequest, FilterStatus, SuspensionHistoryEntry } from "../sections/types";
 import { RIDE_STATUS } from "@/shared/types/constants";
 import {
-  DriverModerationEventsService,
+  adminMobilityRuntimeService,
   type DriverModerationAction,
-} from "@/modules/mobility/services";
+} from "@/core/admin/services/AdminMobilityRuntimeService";
 import { AdminDriverModerationService, type DriverModerationRow } from "@/core/admin/services/AdminDriverModerationService";
 
 export function useDriverManagement(filter: FilterStatus, canModerate: boolean, isChecking: boolean) {
@@ -32,7 +31,7 @@ export function useDriverManagement(filter: FilterStatus, canModerate: boolean, 
   }) => {
     try {
       const adminProfile = await profileService.getActiveProfile();
-      await DriverModerationEventsService.createEvent({
+      await adminMobilityRuntimeService.createDriverModerationEvent({
         driverProfileId: params.driverProfileId,
         adminProfileId: adminProfile?.id ?? null,
         action: params.action,
@@ -53,7 +52,7 @@ export function useDriverManagement(filter: FilterStatus, canModerate: boolean, 
   const loadDrivers = async () => {
     setLoading(true);
     try {
-      const { data: driversData, error } = await MobilityService.getDriverProfiles();
+      const { data: driversData, error } = await adminMobilityRuntimeService.getDriverProfiles();
 
       if (error) {
         logger.error("Erro ao carregar motoristas:", error as Error);
@@ -191,7 +190,7 @@ export function useDriverManagement(filter: FilterStatus, canModerate: boolean, 
     setProcessing(true);
     try {
       await profileService.rejectVerification(driver.profile_id, reason.trim());
-      await updateDriverOnlineStatus(driver.profile_id, false).catch((err) =>
+      await adminMobilityRuntimeService.updateDriverOnlineStatus(driver.profile_id, false).catch((err) =>
         logger.warn("useDriverManagement.handleReject - online status fallback", err),
       );
       await appendModerationEvent({
@@ -220,7 +219,7 @@ export function useDriverManagement(filter: FilterStatus, canModerate: boolean, 
   const handleToggleOnline = async (driver: DriverRequest, newOnlineStatus: boolean) => {
     setProcessing(true);
     try {
-      await updateDriverOnlineStatus(driver.profile_id, newOnlineStatus);
+      await adminMobilityRuntimeService.updateDriverOnlineStatus(driver.profile_id, newOnlineStatus);
       await appendModerationEvent({
         driverProfileId: driver.profile_id,
         action: newOnlineStatus ? "set_online" : "set_offline",
@@ -254,7 +253,7 @@ export function useDriverManagement(filter: FilterStatus, canModerate: boolean, 
         suspensionReason,
       );
 
-      await updateDriverOnlineStatus(driver.profile_id, false).catch((err) =>
+      await adminMobilityRuntimeService.updateDriverOnlineStatus(driver.profile_id, false).catch((err) =>
         logger.warn("Aviso ao atualizar driver_data:", err),
       );
       await appendModerationEvent({
@@ -310,7 +309,7 @@ export function useDriverManagement(filter: FilterStatus, canModerate: boolean, 
 
   const loadSuspensionHistory = async (driverProfileId: string): Promise<SuspensionHistoryEntry[]> => {
     try {
-      const events = await DriverModerationEventsService.listByDriverProfile(driverProfileId);
+      const events = await adminMobilityRuntimeService.listDriverModerationEvents(driverProfileId);
       if (events.length > 0) {
         return events.map((event) => ({
           id: event.id,

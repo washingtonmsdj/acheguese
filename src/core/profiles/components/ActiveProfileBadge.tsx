@@ -14,16 +14,33 @@ import { Building2, Briefcase, Car, User } from 'lucide-react';
 import type { Profile, ProfileType } from '../services/multi-profile/types';
 
 function typeIcon(t: ProfileType) {
-  return { personal: User, business: Building2, professional: Briefcase, driver: Car }[t] ?? User;
+  switch (t) {
+    case "personal":
+      return User;
+    case "business":
+      return Building2;
+    case "professional":
+      return Briefcase;
+    case "driver":
+      return Car;
+    default:
+      return User;
+  }
 }
 
 function typeColor(t: ProfileType): string {
-  return {
-    personal: 'text-blue-500',
-    business: 'text-emerald-500',
-    professional: 'text-violet-500',
-    driver: 'text-orange-500',
-  }[t] ?? 'text-muted-foreground';
+  switch (t) {
+    case "personal":
+      return "text-blue-500";
+    case "business":
+      return "text-emerald-500";
+    case "professional":
+      return "text-violet-500";
+    case "driver":
+      return "text-orange-500";
+    default:
+      return "text-muted-foreground";
+  }
 }
 
 function getInitials(name?: string | null): string {

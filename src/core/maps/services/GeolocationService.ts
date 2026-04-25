@@ -179,7 +179,10 @@ class GeolocationServiceClass {
         ];
 
     for (let i = 0; i < Math.min(attempts.length, maxRetries); i++) {
-      const attempt = attempts[i];
+      const attempt = attempts.at(i);
+      if (!attempt) {
+        continue;
+      }
 
       try {
         logger.info(

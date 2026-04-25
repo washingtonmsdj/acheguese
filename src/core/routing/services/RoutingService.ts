@@ -142,13 +142,17 @@ export class RoutingService {
    * Mapear perfil legado para novo
    */
   mapLegacyProfile(legacyProfile: string): TransportProfile {
-    const mapping: Record<string, TransportProfile> = {
-      'driving': 'car',
-      'walking': 'foot',
-      'cycling': 'bicycle',
-      'transit': 'car',
-    };
-    return mapping[legacyProfile] || this.defaultProfile;
+    switch (legacyProfile) {
+      case 'driving':
+      case 'transit':
+        return 'car';
+      case 'walking':
+        return 'foot';
+      case 'cycling':
+        return 'bicycle';
+      default:
+        return this.defaultProfile;
+    }
   }
 
   // ============================================

@@ -50,8 +50,8 @@ export function isCurrentlyOpen(
 /**
  * Extrai texto de endereço
  */
-export function getAddressText(address: any): string | null {
-  if (!address) return null;
+export function getAddressText(address: any, businessAddress?: string | null): string | null {
+  if (!address) return businessAddress || null;
   
   if (typeof address === "object" && address) {
     return [address.street, address.number, address.complement]
@@ -59,13 +59,24 @@ export function getAddressText(address: any): string | null {
       .join(", ");
   }
   
-  return typeof address === "string" ? address : null;
+  return (typeof address === "string" ? address : businessAddress) || null;
 }
 
 /**
  * Extrai texto de localização
  */
-export function getLocationText(location: any): string | null {
-  if (!location) return null;
+export function getLocationText(
+  location: any,
+  businessCity?: string | null,
+  businessState?: string | null,
+): string | null {
+  if (!location) {
+    if (businessCity && businessState) {
+      return `${businessCity} - ${businessState}`;
+    }
+
+    return businessCity || businessState || null;
+  }
+
   return location.full_name || location.name || null;
 }

@@ -629,7 +629,20 @@ export class PricingService {
       },
     };
 
-    return fallbacks[mode] || fallbacks.ride;
+    switch (mode) {
+      case 'ride':
+        return fallbacks.ride;
+      case 'taxi':
+        return fallbacks.taxi;
+      case 'mototaxi':
+        return fallbacks.mototaxi;
+      case 'motoboy':
+        return fallbacks.motoboy;
+      case 'custom':
+        return fallbacks.custom;
+      default:
+        return fallbacks.ride;
+    }
   }
 
   /**

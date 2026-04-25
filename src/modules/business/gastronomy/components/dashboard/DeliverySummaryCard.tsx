@@ -10,6 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/shared/components/ui
 import { Button } from '@/shared/components/ui/button';
 import { MapPin, ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { businessManagementRoutes } from '@/core/business/utils/businessManagementRoutes';
 
 interface DeliverySummaryCardProps {
   businessId: string;
@@ -71,7 +72,7 @@ export function DeliverySummaryCard({ businessId }: DeliverySummaryCardProps) {
             )}
 
             {/* Link para gestão */}
-            <Link to={`/dashboard/business/${businessId}/gastronomy/delivery-area`}>
+            <Link to={businessManagementRoutes.gastronomyAreaEntrega(businessId)}>
               <Button variant="outline" className="w-full">
                 Gerenciar Áreas
                 <ArrowRight className="w-4 h-4 ml-2" />
@@ -83,7 +84,7 @@ export function DeliverySummaryCard({ businessId }: DeliverySummaryCardProps) {
             <p className="text-sm text-muted-foreground mb-4">
               Nenhuma área configurada
             </p>
-            <Link to={`/dashboard/business/${businessId}/gastronomy/delivery-area`}>
+            <Link to={businessManagementRoutes.gastronomyAreaEntrega(businessId)}>
               <Button variant="outline" className="w-full">
                 Configurar Áreas
                 <ArrowRight className="w-4 h-4 ml-2" />

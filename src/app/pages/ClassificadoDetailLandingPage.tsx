@@ -41,16 +41,6 @@ import { useAuth } from "@/core/auth/hooks/useAuth";
 import { LAUNCH_URLS, TERRITORY_CONFIG } from "@/config/territory";
 
 // ── Category Icons ───────────────────────────────────────────────────
-const CATEGORY_ICONS: Record<string, React.ElementType> = {
-  veiculos: Car,
-  imoveis: Home,
-  eletronicos: Laptop,
-  roupas: Shirt,
-  moveis: Sofa,
-  esportes: Bike,
-  outros: Package,
-};
-
 // ── Status config ────────────────────────────────────────────────────
 const STATUS_CONFIG: Record<string, { label: string; color: string; dot: string }> = {
   active: { label: "Disponível", color: "bg-success/10 text-success border-success/20", dot: "bg-success" },
@@ -91,6 +81,61 @@ interface MockClassified {
   };
   created_at: string;
   views: number;
+}
+
+function getCategoryIcon(category: string): React.ElementType {
+  switch (category) {
+    case "veiculos":
+      return Car;
+    case "imoveis":
+      return Home;
+    case "eletronicos":
+      return Laptop;
+    case "roupas":
+      return Shirt;
+    case "moveis":
+      return Sofa;
+    case "esportes":
+      return Bike;
+    case "outros":
+      return Package;
+    default:
+      return Package;
+  }
+}
+
+function getStatusConfig(status: string): { label: string; color: string; dot: string } {
+  switch (status) {
+    case "active":
+      return STATUS_CONFIG.active;
+    case "reserved":
+      return STATUS_CONFIG.reserved;
+    case "sold":
+      return STATUS_CONFIG.sold;
+    default:
+      return STATUS_CONFIG.active;
+  }
+}
+
+function getCategoryName(category: string): string {
+  switch (category) {
+    case "veiculos":
+      return CATEGORY_NAMES.veiculos;
+    case "imoveis":
+      return CATEGORY_NAMES.imoveis;
+    case "eletronicos":
+      return CATEGORY_NAMES.eletronicos;
+    case "roupas":
+      return CATEGORY_NAMES.roupas;
+    case "moveis":
+      return CATEGORY_NAMES.moveis;
+    case "esportes":
+      return CATEGORY_NAMES.esportes;
+    case "outros":
+      return CATEGORY_NAMES.outros;
+    default:
+      return category;
+  }
 }
 
 const MOCK_CLASSIFIEDS: Record<string, MockClassified> = {
@@ -166,6 +211,23 @@ const MOCK_CLASSIFIEDS: Record<string, MockClassified> = {
 };
 
 // ── Related ads (mock) ───────────────────────────────────────────────
+function getMockClassifiedById(classifiedId?: string): MockClassified | null {
+  if (!classifiedId) {
+    return null;
+  }
+
+  switch (classifiedId) {
+    case "1":
+      return MOCK_CLASSIFIEDS["1"];
+    case "2":
+      return MOCK_CLASSIFIEDS["2"];
+    case "3":
+      return MOCK_CLASSIFIEDS["3"];
+    default:
+      return null;
+  }
+}
+
 const RELATED_ADS = [
   { id: "4", titulo: "Notebook Dell i5 8GB", preco: 2400, categoria: "eletronicos", bairro: "Stiep" },
   { id: "5", titulo: "Cama box casal queen", preco: 700, categoria: "moveis", bairro: "Pituba" },
@@ -217,7 +279,7 @@ export default function ClassificadoDetailLandingPage() {
   const [currentPhoto, setCurrentPhoto] = useState(0);
 
   // Mock data lookup
-  const ad = id ? MOCK_CLASSIFIEDS[id] : null;
+  const ad = getMockClassifiedById(id);
   const loading = false;
   const notFound = !ad;
 
@@ -272,11 +334,12 @@ export default function ClassificadoDetailLandingPage() {
   }
 
   // ── Derived data ─────────────────────────────────────────────────
-  const CatIcon = CATEGORY_ICONS[ad.categoria] || Package;
-  const status = STATUS_CONFIG[ad.status] || STATUS_CONFIG.active;
-  const categoryName = CATEGORY_NAMES[ad.categoria] || ad.categoria;
+  const CatIcon = getCategoryIcon(ad.categoria);
+  const status = getStatusConfig(ad.status);
+  const categoryName = getCategoryName(ad.categoria);
   const photos = ad.fotos.length > 0 ? ad.fotos : [];
   const hasPhotos = photos.length > 0;
+  const currentPhotoUrl = photos.at(currentPhoto) ?? photos[0] ?? "";
   const seller = ad.vendedor;
 
   return (
@@ -332,7 +395,7 @@ export default function ClassificadoDetailLandingPage() {
             {hasPhotos ? (
               <>
                 <img
-                  src={photos[currentPhoto]}
+                  src={currentPhotoUrl}
                   alt={ad.titulo}
                   className="w-full h-full object-cover"
                 />
@@ -615,7 +678,7 @@ export default function ClassificadoDetailLandingPage() {
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           {RELATED_ADS.map((related, i) => {
-            const RelIcon = CATEGORY_ICONS[related.categoria] || Package;
+            const RelIcon = getCategoryIcon(related.categoria);
             return (
               <motion.div
                 key={related.id}

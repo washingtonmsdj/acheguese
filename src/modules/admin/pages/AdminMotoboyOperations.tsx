@@ -126,7 +126,9 @@ function statusBadge(status: string) {
     cancelled_by_passenger: { label: "Cancelada (solicitante)", variant: "outline" },
     cancelled_by_driver: { label: "Cancelada (motoboy)", variant: "outline" },
   };
-  const config = map[status] ?? { label: status, variant: "outline" as const };
+  const config =
+    Object.entries(map).find(([key]) => key === status)?.[1] ??
+    { label: status, variant: "outline" as const };
   return <Badge variant={config.variant}>{config.label}</Badge>;
 }
 
