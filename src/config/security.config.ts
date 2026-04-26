@@ -210,9 +210,13 @@ export const CSP_DIRECTIVES = {
   // 'unsafe-inline' e 'unsafe-eval' são permitidos APENAS em dev (Vite HMR).
   // Em produção o Vite gera bundles sem inline scripts — não precisamos deles.
   // Os domínios Vercel são necessários para Analytics e preview toolbar.
+  // Hashes específicos permitem inline scripts do index.html (AdSense loader e SW cleanup)
   'script-src': [
     "'self'",
     ...(IS_DEV ? ["'unsafe-inline'", "'unsafe-eval'"] : []),
+    // Hashes dos inline scripts no index.html
+    "'sha256-9ll9gJXvcvz1hq1/HNwQ86RhAJQWeiZwEZzJ48i88bM='",
+    "'sha256-O162sKaTzi0Yi5Xk/VEeTYLMkdsIVbsGi1ephDdNhZU='",
     SECURITY_DOMAINS.CDN_JSDELIVR.url,
     SECURITY_DOMAINS.SUPABASE_HTTPS.url,
     SECURITY_DOMAINS.VERCEL_SCRIPTS.url,
@@ -611,9 +615,9 @@ export const INPUT_VALIDATION = {
  * MUST be updated on every security config change.
  */
 export const SECURITY_AUDIT_LOG = {
-  lastReview: '2026-04-22',
+  lastReview: '2026-04-26',
   reviewer: 'Kiro AI',
-  version: '2.5.0',
+  version: '2.6.0',
   changes: [
     'Initial SSOT implementation',
     'CSP directives centralized',
@@ -654,8 +658,11 @@ export const SECURITY_AUDIT_LOG = {
     'FIX: frame-src — adicionados *.adtrafficquality.google e *.google.com',
     'FIX: script-src — adicionado *.google.com para scripts do AdSense',
     'FIX: connect-src — adicionado *.google.com para conexões do AdSense',
+    // v2.6.0 — CSP inline script hashes
+    'FIX: script-src — adicionados hashes SHA256 dos inline scripts do index.html',
+    'FIX: CSP violation — permite AdSense loader e SW cleanup scripts via hash whitelist',
   ],
-  nextReview: '2026-05-22',
+  nextReview: '2026-05-26',
 } as const;
 
 /**
@@ -728,9 +735,9 @@ export const CACHE_HEADERS = {
  * Metadata about this configuration file.
  */
 export const SECURITY_CONFIG_METADATA = {
-  version: '2.5.0',
+  version: '2.6.0',
   created: '2026-04-18',
-  lastModified: '2026-04-22',
+  lastModified: '2026-04-26',
   author: 'Kiro AI',
   purpose: 'Single Source of Truth for security configurations',
   criticality: 'CRITICAL',
