@@ -5,7 +5,7 @@
 -- aos itens de pizza do cardápio da Bella Napoli.
 -- ============================================================================
 
-DO $
+DO $$
 DECLARE
   v_business_id UUID;
   v_pizza_item RECORD;
@@ -134,4 +134,4 @@ BEGIN
   END LOOP;
 
   RAISE NOTICE 'Extras de pizza adicionados para a Pizzaria Bella Napoli.';
-END $;
+END $$;

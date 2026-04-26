@@ -1,4 +1,4 @@
-import { useMutation } from "@tantml:query";
+import { useMutation } from "@tanstack/react-query";
 import { useShallow } from "zustand/react/shallow";
 
 import { useSessionContext } from "@/core/session";

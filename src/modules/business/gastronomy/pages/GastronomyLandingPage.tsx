@@ -10,7 +10,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { motion } from 'framer-motion';
-import { Heart, Loader2, UtensilsCrossed, Users, Coffee, Pizza, Beef, IceCream, Beer, ShoppingBag, Sandwich, Flame, Croissant, Cake, Salad, Fish } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 
 import gastronomyHeroBg from '@/assets/gastronomy-hero-bg.jpg';
 import { useTerritoryFilter } from '@/core/location';
@@ -59,23 +59,28 @@ const fadeIn = {
 };
 
 // ── Categorias de gastronomia (estilo empresa) ───────────────────────────────
+// Componente para emoji como ícone
+const EmojiIcon = ({ emoji, className }: { emoji: string; className?: string }) => (
+  <span className={className} style={{ fontSize: '1.5rem', lineHeight: 1 }}>{emoji}</span>
+);
+
 const GASTRO_CATEGORIES = [
-  { id: 'lanches',    icon: Sandwich,        label: 'Lanches',       cuisineFilter: 'lanchonete',   iconColor: 'text-amber-400',   bg: 'bg-amber-500/15 border-amber-500/20' },
-  { id: 'pizza',      icon: Pizza,           label: 'Pizza',         cuisineFilter: 'pizzaria',     iconColor: 'text-red-400',     bg: 'bg-red-500/15 border-red-500/20' },
-  { id: 'brasileira', icon: UtensilsCrossed, label: 'Brasileira',    cuisineFilter: 'brasileira',   iconColor: 'text-orange-400',  bg: 'bg-orange-500/15 border-orange-500/20' },
-  { id: 'arabe',      icon: Fish,            label: 'Árabe',         cuisineFilter: 'arabe',        iconColor: 'text-yellow-400',  bg: 'bg-yellow-500/15 border-yellow-500/20' },
-  { id: 'sorveteria', icon: IceCream,        label: 'Açaí / Sorvete',cuisineFilter: 'sorveteria',   iconColor: 'text-purple-400',  bg: 'bg-purple-500/15 border-purple-500/20' },
-  { id: 'saudavel',   icon: Salad,           label: 'Saudável',      cuisineFilter: 'vegetariana',  iconColor: 'text-green-400',   bg: 'bg-green-500/15 border-green-500/20' },
-  { id: 'japonesa',   icon: Heart,           label: 'Japonesa',      cuisineFilter: 'japonesa',     iconColor: 'text-pink-400',    bg: 'bg-pink-500/15 border-pink-500/20' },
-  { id: 'salgados',   icon: ShoppingBag,     label: 'Salgados',      cuisineFilter: 'outros',       iconColor: 'text-lime-400',    bg: 'bg-lime-500/15 border-lime-500/20' },
-  { id: 'pastel',     icon: Flame,           label: 'Pastel',        cuisineFilter: 'pastel',       iconColor: 'text-orange-500',  bg: 'bg-orange-600/15 border-orange-600/20' },
-  { id: 'padaria',    icon: Croissant,       label: 'Padarias',      cuisineFilter: 'padaria',      iconColor: 'text-yellow-600',  bg: 'bg-yellow-600/15 border-yellow-600/20' },
-  { id: 'doceria',    icon: Cake,            label: 'Doces & Bolos', cuisineFilter: 'doceria',      iconColor: 'text-fuchsia-400', bg: 'bg-fuchsia-500/15 border-fuchsia-500/20' },
-  { id: 'carnes',     icon: Beef,            label: 'Carnes',        cuisineFilter: 'churrascaria', iconColor: 'text-red-500',     bg: 'bg-red-600/15 border-red-600/20' },
-  { id: 'marmita',    icon: Coffee,          label: 'Marmita',       cuisineFilter: 'regional',     iconColor: 'text-teal-400',    bg: 'bg-teal-500/15 border-teal-500/20' },
-  { id: 'bar',        icon: Beer,            label: 'Bares',         cuisineFilter: 'bar',          iconColor: 'text-emerald-400', bg: 'bg-emerald-500/15 border-emerald-500/20' },
-  { id: 'cafeteria',  icon: Coffee,          label: 'Cafés',         cuisineFilter: 'cafeteria',    iconColor: 'text-yellow-500',  bg: 'bg-yellow-500/15 border-yellow-500/20' },
-  { id: 'hamburger',  icon: Beef,            label: 'Hambúrguer',    cuisineFilter: 'hamburguer',   iconColor: 'text-amber-500',   bg: 'bg-amber-600/15 border-amber-600/20' },
+  { id: 'lanches',    icon: () => <EmojiIcon emoji="🥪" />, label: 'Lanches',       cuisineFilter: 'lanchonete',   iconColor: 'text-amber-400',   bg: 'bg-amber-500/15 border-amber-500/20' },
+  { id: 'pizza',      icon: () => <EmojiIcon emoji="🍕" />, label: 'Pizza',         cuisineFilter: 'pizzaria',     iconColor: 'text-red-400',     bg: 'bg-red-500/15 border-red-500/20' },
+  { id: 'brasileira', icon: () => <EmojiIcon emoji="🍛" />, label: 'Brasileira',    cuisineFilter: 'brasileira',   iconColor: 'text-orange-400',  bg: 'bg-orange-500/15 border-orange-500/20' },
+  { id: 'arabe',      icon: () => <EmojiIcon emoji="🥙" />, label: 'Árabe',         cuisineFilter: 'arabe',        iconColor: 'text-yellow-400',  bg: 'bg-yellow-500/15 border-yellow-500/20' },
+  { id: 'sorveteria', icon: () => <EmojiIcon emoji="🍨" />, label: 'Açaí / Sorvete',cuisineFilter: 'sorveteria',   iconColor: 'text-purple-400',  bg: 'bg-purple-500/15 border-purple-500/20' },
+  { id: 'saudavel',   icon: () => <EmojiIcon emoji="🥗" />, label: 'Saudável',      cuisineFilter: 'vegetariana',  iconColor: 'text-green-400',   bg: 'bg-green-500/15 border-green-500/20' },
+  { id: 'japonesa',   icon: () => <EmojiIcon emoji="🍱" />, label: 'Japonesa',      cuisineFilter: 'japonesa',     iconColor: 'text-pink-400',    bg: 'bg-pink-500/15 border-pink-500/20' },
+  { id: 'salgados',   icon: () => <EmojiIcon emoji="🥟" />, label: 'Salgados',      cuisineFilter: 'outros',       iconColor: 'text-lime-400',    bg: 'bg-lime-500/15 border-lime-500/20' },
+  { id: 'pastel',     icon: () => <EmojiIcon emoji="🥐" />, label: 'Pastel',        cuisineFilter: 'pastel',       iconColor: 'text-orange-500',  bg: 'bg-orange-600/15 border-orange-600/20' },
+  { id: 'padaria',    icon: () => <EmojiIcon emoji="🥖" />, label: 'Padarias',      cuisineFilter: 'padaria',      iconColor: 'text-yellow-600',  bg: 'bg-yellow-600/15 border-yellow-600/20' },
+  { id: 'doceria',    icon: () => <EmojiIcon emoji="🍰" />, label: 'Doces & Bolos', cuisineFilter: 'doceria',      iconColor: 'text-fuchsia-400', bg: 'bg-fuchsia-500/15 border-fuchsia-500/20' },
+  { id: 'carnes',     icon: () => <EmojiIcon emoji="🥩" />, label: 'Carnes',        cuisineFilter: 'churrascaria', iconColor: 'text-red-500',     bg: 'bg-red-600/15 border-red-600/20' },
+  { id: 'marmita',    icon: () => <EmojiIcon emoji="🍲" />, label: 'Marmita',       cuisineFilter: 'regional',     iconColor: 'text-teal-400',    bg: 'bg-teal-500/15 border-teal-500/20' },
+  { id: 'bar',        icon: () => <EmojiIcon emoji="🍺" />, label: 'Bares',         cuisineFilter: 'bar',          iconColor: 'text-emerald-400', bg: 'bg-emerald-500/15 border-emerald-500/20' },
+  { id: 'cafeteria',  icon: () => <EmojiIcon emoji="☕" />, label: 'Cafés',         cuisineFilter: 'cafeteria',    iconColor: 'text-yellow-500',  bg: 'bg-yellow-500/15 border-yellow-500/20' },
+  { id: 'hamburger',  icon: () => <EmojiIcon emoji="🍔" />, label: 'Hambúrguer',    cuisineFilter: 'hamburguer',   iconColor: 'text-amber-500',   bg: 'bg-amber-600/15 border-amber-600/20' },
 ];
 
 export default function GastronomyLandingPage() {
@@ -514,7 +519,7 @@ export default function GastronomyLandingPage() {
                   className="rounded-2xl border border-primary/20 bg-gradient-to-br from-primary/10 via-card to-accent/5 p-8 text-center md:p-12"
                 >
                   <div className="mb-4 inline-block rounded-full bg-primary/10 p-3">
-                    <UtensilsCrossed className="h-8 w-8 text-primary" />
+                    <EmojiIcon emoji="🍽️" className="h-8 w-8 text-primary" />
                   </div>
                   <h2 className="mb-3 text-2xl font-bold text-foreground md:text-3xl">
                     Tem um restaurante?
