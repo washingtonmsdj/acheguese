@@ -20,6 +20,10 @@ import { supabase } from '@/integrations/supabase';
 import { trackError } from '@/shared/utils/errorTracking';
 import { notificationService } from '@/core/notifications';
 import { emailNotificationProvider } from '../providers/EmailNotificationProvider';
+import {
+  SAFETY_ALERT_STATUS,
+  SAFETY_RIDE_SHARE_STATUS,
+} from '@/core/safety/constants/status';
 import type {
   EmergencyAlert,
   CreateEmergencyAlertInput,
@@ -79,7 +83,7 @@ export class SafetyService {
         profile_id: input.profileId,
         ride_id: input.rideId,
         alert_type: input.alertType,
-        status: 'active' as EmergencyAlertStatus,
+        status: SAFETY_ALERT_STATUS.ACTIVE as EmergencyAlertStatus,
         latitude: input.location?.latitude,
         longitude: input.location?.longitude,
         accuracy: input.location?.accuracy,
@@ -259,7 +263,7 @@ export class SafetyService {
       const shareData = {
         ride_id: input.rideId,
         share_token: token,
-        status: 'active',
+        status: SAFETY_RIDE_SHARE_STATUS.ACTIVE,
         created_by: input.createdBy,
         expires_at: expiresAt,
         created_at: new Date().toISOString(),
@@ -327,7 +331,7 @@ export class SafetyService {
         .from('ride_shares')
         .select('ride_id, expires_at, status')
         .eq('share_token', shareToken)
-        .eq('status', 'active')
+        .eq('status', SAFETY_RIDE_SHARE_STATUS.ACTIVE)
         .maybeSingle();
 
       if (shareError) throw shareError;
@@ -406,7 +410,7 @@ export class SafetyService {
       const { error } = await supabase
         .from('ride_shares')
         .update({
-          status: 'revoked',
+          status: SAFETY_RIDE_SHARE_STATUS.REVOKED,
           revoked_at: new Date().toISOString(),
         })
         .eq('id', shareId);

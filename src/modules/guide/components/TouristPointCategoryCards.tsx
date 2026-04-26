@@ -5,7 +5,7 @@
  */
 
 import { motion } from 'framer-motion';
-import { TOURIST_CATEGORY_SHORTCUTS } from '../__mocks__/touristPointMocks';
+import { TOURIST_CATEGORY_SHORTCUTS } from '../types/presentation';
 import type { TouristPointCategory } from '../types/categories';
 
 interface Props {
@@ -64,7 +64,7 @@ export function TouristPointCategoryCards({ onCategorySelect, activeCategory }: 
                 {cat.label}
               </h3>
             </div>
-            <span className="text-white/70 text-xs">{cat.count} locais</span>
+            <span className="text-white/70 text-xs">Explorar</span>
           </div>
           {activeCategory === cat.categoryFilter && (
             <div className="absolute top-2 right-2 bg-primary text-primary-foreground rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold">

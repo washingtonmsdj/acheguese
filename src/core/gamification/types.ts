@@ -2,6 +2,9 @@
  * Tipos para o sistema de gamificação
  */
 
+export type UserQuestStatus = "active" | "completed" | "failed" | "expired";
+export type UserRewardStatus = "active" | "used" | "expired";
+
 export interface Badge {
   id: string;
   code: string;
@@ -45,7 +48,7 @@ export interface UserQuest {
   id: string;
   user_id: string;
   quest_id: string;
-  status: "active" | "completed" | "failed" | "expired";
+  status: UserQuestStatus;
   progress: number;
   started_at: string;
   completed_at?: string;
@@ -71,7 +74,7 @@ export interface UserReward {
   claimed_at: string;
   used_at?: string;
   expires_at?: string;
-  status: "active" | "used" | "expired";
+  status: UserRewardStatus;
 }
 
 export interface Streak {

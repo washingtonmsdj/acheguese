@@ -59,6 +59,10 @@ import type {
   ProfessionalReviewWithUser,
 } from "@/core/professional/types";
 
+const PROFESSIONAL_ENTITY_STATUS = {
+  ACTIVE: "active",
+} as const;
+
 // ============================================================
 // SSOT v2.0 - FACADE EXPORTS (NOVO)
 // ============================================================
@@ -369,7 +373,7 @@ export class ProfessionalService {
       website: socialLinks.website,
 
       // Status
-      status: "active",
+      status: PROFESSIONAL_ENTITY_STATUS.ACTIVE,
       is_verified: data.is_verified ?? false,
       verified_at: data.verified_at || undefined,
       is_accepting_clients: data.is_accepting_clients ?? true,

@@ -47,6 +47,7 @@ export function PizzaPredefinedBuilder({
   const [edgeId, setEdgeId] = useState<string | null>(defaultEdgeId);
   const [doughId, setDoughId] = useState<string | null>(catalog.doughs[0]?.id ?? null);
   const [extraQuantities, setExtraQuantities] = useState<Record<string, number>>({});
+  const [quantity, setQuantity] = useState(1);
 
   useEffect(() => {
     setEdgeId(defaultEdgeId);
@@ -155,9 +156,9 @@ export function PizzaPredefinedBuilder({
       edge,
       dough,
       addons: selectedExtras,
-      quantity: 1,
+      quantity,
     });
-  }, [catalog, dough, edge, flavorSelection, predefinedFlavor, selectedExtras, selectedSize, validation.is_valid]);
+  }, [catalog, dough, edge, flavorSelection, predefinedFlavor, quantity, selectedExtras, selectedSize, validation.is_valid]);
 
   const canAddMoreFlavors = selectedSize
     ? additionalFlavors.length < selectedSize.max_flavors - 1
@@ -213,11 +214,15 @@ export function PizzaPredefinedBuilder({
       edge_id: edgeId,
       dough_id: doughId,
       addon_quantities: extraQuantities,
-      quantity: 1,
+      quantity,
       price_rule: catalog.config.default_price_rule,
     };
 
+    PizzaCartItemBuilder.build(selection, catalog);
     onAddToCart(selection);
+    setQuantity(1);
+    setHasAdditionalFlavors(false);
+    setAdditionalFlavorIds([]);
   };
 
   const canHaveMultipleFlavors = selectedSize ? selectedSize.max_flavors >= 2 : false;
@@ -464,6 +469,7 @@ export function PizzaPredefinedBuilder({
               baseFlavor={predefinedFlavor}
               additionalFlavors={hasAdditionalFlavors ? additionalFlavors : []}
               totalSlices={selectedSize.slices}
+              quantity={quantity}
               size={visualSize}
               showCrust={shouldShowCrust}
             />
@@ -580,6 +586,34 @@ export function PizzaPredefinedBuilder({
           </div>
         )}
 
+        {/* Quantidade */}
+        <section className="rounded-lg border p-4">
+          <div className="flex items-center justify-between">
+            <span className="font-medium">Quantidade</span>
+            <div className="flex items-center gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setQuantity((q) => Math.max(1, q - 1))}
+                disabled={quantity <= 1}
+              >
+                -
+              </Button>
+              <span className="w-8 text-center font-medium">{quantity}</span>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setQuantity((q) => Math.min(10, q + 1))}
+                disabled={quantity >= 10}
+              >
+                +
+              </Button>
+            </div>
+          </div>
+        </section>
+
         {/* Breakdown de preço */}
         {price && (
           <section className="rounded-lg border bg-muted/30 p-4">
@@ -626,7 +660,7 @@ export function PizzaPredefinedBuilder({
           disabled={!validation.is_valid}
           onClick={handleAdd}
         >
-          Adicionar ao carrinho
+          Adicionar {quantity > 1 ? `${quantity} pizzas` : "pizza"} ao carrinho
         </Button>
       </CardContent>
     </Card>

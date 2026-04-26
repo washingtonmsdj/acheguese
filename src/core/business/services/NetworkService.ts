@@ -8,6 +8,7 @@ import { logger } from '@/shared/utils/logger';
 import { supabase } from '@/integrations/supabase';
 import type { BusinessDataRecord } from '../types';
 import type { AdminSupabaseClient } from '@/core/admin/types/adminDatabase.types';
+import { EntityStatus } from '@/shared/types/enums';
 
 // ─── Tipos ────────────────────────────────────────────────────────────────────
 
@@ -166,7 +167,7 @@ export class NetworkService {
         category: standalone.category,
         subcategory: standalone.subcategory,
         description: standalone.description,
-        status: 'active',
+        status: EntityStatus.ACTIVE,
         payment_methods: standalone.payment_methods || [],
         specialties: standalone.specialties || [],
         facilities: standalone.facilities || [],
@@ -277,7 +278,7 @@ export class NetworkService {
         is_headquarters: params.isHeadquarters ?? false,
         category: hub.category,
         subcategory: hub.subcategory,
-        status: 'active',
+        status: EntityStatus.ACTIVE,
         payment_methods: hub.payment_methods || [],
         specialties: hub.specialties || [],
         facilities: hub.facilities || [],
@@ -348,7 +349,7 @@ export class NetworkService {
         .select('id, profile_id, business_name, slug, category, status')
         .eq('profile_id', profileId)
         .eq('business_role', 'brand_hub')
-        .eq('status', 'active');
+        .eq('status', EntityStatus.ACTIVE);
 
       if (error) throw error;
 

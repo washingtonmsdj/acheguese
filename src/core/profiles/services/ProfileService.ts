@@ -24,6 +24,7 @@ import { FavoritesService } from "@/core/favorites/services/FavoritesService";
 import { publicIdentityService, PublicIdentityService } from "@/core/public-identity";
 import { createTypedQuery, callRPC } from "@/integrations/supabase/services/supabaseHelpers";
 import { businessManagementRoutes } from "@/core/business/utils/businessManagementRoutes";
+import { PROFILE_VERIFICATION_STATUS } from "@/core/profile/constants/verificationStatus";
 import type {
   AdminFilters,
   AdminProfileListItem,
@@ -51,6 +52,8 @@ import type {
   ProfileReputation,
   ProfileStatus,
 } from "@/core/profiles/contracts/ProfileRuntimeContracts";
+
+type VerificationWorkflowStatus = "pending" | "verified" | "rejected" | "none";
 
 export class ProfileServiceLegacy {
   // ============================================================================
@@ -830,21 +833,21 @@ export class ProfileServiceLegacy {
     rejectionReason?: string;
   } {
     if (!verification) {
-      return { status: "not_requested" };
+      return { status: PROFILE_VERIFICATION_STATUS.NOT_REQUESTED };
     }
 
     if (verification.verified) {
-      return { status: "approved" };
+      return { status: PROFILE_VERIFICATION_STATUS.APPROVED };
     }
 
     if (verification.rejection_reason) {
       return {
-        status: "rejected",
+        status: PROFILE_VERIFICATION_STATUS.REJECTED,
         rejectionReason: verification.rejection_reason,
       };
     }
 
-    return { status: "pending" };
+    return { status: PROFILE_VERIFICATION_STATUS.PENDING };
   }
 
   private _mapBusinessRecords(records: any[]): Business[] {
@@ -1967,7 +1970,7 @@ export class ProfileServiceLegacy {
    * Usado por VerificationService para listar perfis pendentes/verificados/rejeitados
    */
   async getProfilesByVerificationStatus(
-    status: 'pending' | 'verified' | 'rejected' | 'none',
+    status: VerificationWorkflowStatus,
     options?: {
       limit?: number;
       offset?: number;
@@ -2058,7 +2061,7 @@ export class ProfileServiceLegacy {
    */
   async updateVerificationStatus(
     profileId: string,
-    status: 'pending' | 'verified' | 'rejected' | 'none',
+    status: VerificationWorkflowStatus,
     reason?: string
   ): Promise<void> {
     try {

@@ -13,6 +13,7 @@
 import { logger } from '@/shared/utils/logger';
 import { supabase } from "@/integrations/supabase/supabase";
 import imageCompression from "browser-image-compression";
+import { CLASSIFIED_UPLOAD_LIMITS } from "../constants/upload-limits";
 // ─── Constants ────────────────────────────────────────────────
 
 const STORAGE_BUCKET = "classified-images";
@@ -32,7 +33,6 @@ const THUMBNAIL_CONSTRAINTS = {
 } as const;
 
 const ALLOWED_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp", "image/gif"];
-const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB antes da compressão
 
 // ─── Types ────────────────────────────────────────────────────
 
@@ -66,10 +66,10 @@ export class ClassifiedImageService {
       };
     }
 
-    if (file.size > MAX_FILE_SIZE) {
+    if (file.size > CLASSIFIED_UPLOAD_LIMITS.MAX_FILE_SIZE_BYTES) {
       return {
         valid: false,
-        error: `Arquivo muito grande. Máximo: ${MAX_FILE_SIZE / 1024 / 1024}MB`,
+        error: `Arquivo muito grande. Máximo: ${CLASSIFIED_UPLOAD_LIMITS.MAX_FILE_SIZE_BYTES / 1024 / 1024}MB`,
       };
     }
 

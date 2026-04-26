@@ -30,6 +30,7 @@ export function PizzaBuilder({ businessId, item, catalog, onAddToCart, defaultEd
   const [flavorSearch, setFlavorSearch] = useState("");
   const [edgeId, setEdgeId] = useState<string | null>(defaultEdgeId);
   const [doughId, setDoughId] = useState<string | null>(catalog.doughs[0]?.id ?? null);
+  const [quantity, setQuantity] = useState(1);
 
   const inferredFlavor = useMemo(
     () =>
@@ -101,9 +102,9 @@ export function PizzaBuilder({ businessId, item, catalog, onAddToCart, defaultEd
       rule: catalog.config.default_price_rule,
       edge,
       dough,
-      quantity: 1,
+      quantity,
     });
-  }, [catalog, dough, edge, flavorSelection, size, validation.is_valid]);
+  }, [catalog, dough, edge, flavorSelection, quantity, size, validation.is_valid]);
 
   const selectedFlavors = useMemo(
     () =>
@@ -158,12 +159,13 @@ export function PizzaBuilder({ businessId, item, catalog, onAddToCart, defaultEd
       flavors: flavorSelection,
       edge_id: edgeId,
       dough_id: doughId,
-      quantity: 1,
+      quantity,
       price_rule: catalog.config.default_price_rule,
     };
 
     PizzaCartItemBuilder.build(selection, catalog);
     onAddToCart(selection);
+    setQuantity(1);
   };
 
   return (
@@ -231,6 +233,7 @@ export function PizzaBuilder({ businessId, item, catalog, onAddToCart, defaultEd
               totalSlices={size.slices}
               size={visualSize}
               showCrust={shouldShowCrust}
+              quantity={quantity}
             />
           </section>
         )}
@@ -277,14 +280,37 @@ export function PizzaBuilder({ businessId, item, catalog, onAddToCart, defaultEd
         )}
 
         <div className="flex items-center justify-between rounded-lg border p-3">
-          <span className="font-medium">Total</span>
+          <div className="flex items-center gap-3">
+            <span className="font-medium">Quantidade</span>
+            <div className="flex items-center gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setQuantity((q) => Math.max(1, q - 1))}
+                disabled={quantity <= 1}
+              >
+                -
+              </Button>
+              <span className="w-8 text-center font-medium">{quantity}</span>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setQuantity((q) => Math.min(10, q + 1))}
+                disabled={quantity >= 10}
+              >
+                +
+              </Button>
+            </div>
+          </div>
           <span className="text-lg font-bold text-primary">
             {price ? `R$ ${price.line_total.toFixed(2)}` : "--"}
           </span>
         </div>
 
         <Button type="button" className="w-full" disabled={!validation.is_valid} onClick={handleAdd}>
-          Adicionar pizza ao carrinho
+          Adicionar {quantity > 1 ? `${quantity} pizzas` : "pizza"} ao carrinho
         </Button>
       </CardContent>
     </Card>

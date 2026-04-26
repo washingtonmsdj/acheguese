@@ -3,8 +3,7 @@ import { mediaService } from "@/core/media/services/MediaService";
 import { useSessionContext } from "@/core/session";
 import { toast } from "sonner";
 import { logger } from "@/shared/utils/logger";
-
-const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+import { BUSINESS_IMAGE_UPLOAD_LIMITS } from "@/core/business/constants";
 
 export function useBusinessImageUpload() {
   const { activeProfile } = useSessionContext();
@@ -20,7 +19,7 @@ export function useBusinessImageUpload() {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (file.size > MAX_FILE_SIZE) {
+    if (file.size > BUSINESS_IMAGE_UPLOAD_LIMITS.MAX_FILE_SIZE_BYTES) {
       toast.error("Logo deve ter no máximo 5MB");
       return;
     }
@@ -35,7 +34,7 @@ export function useBusinessImageUpload() {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (file.size > MAX_FILE_SIZE) {
+    if (file.size > BUSINESS_IMAGE_UPLOAD_LIMITS.MAX_FILE_SIZE_BYTES) {
       toast.error("Capa deve ter no máximo 5MB");
       return;
     }

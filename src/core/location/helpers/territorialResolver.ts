@@ -7,6 +7,7 @@
 
 import { logger } from '@/shared/utils/logger';
 import { createLocationRepository } from '@/core/location/repositories/createLocationRepository';
+import { LocationStatus, LocationType } from '@/core/location/types';
 
 export interface CityResolution {
   cityId: string;
@@ -35,7 +36,7 @@ export async function resolveCityToLocationIds(
     // 1. Buscar estado
     const allLocations = await locationRepository.findAll();
     const stateLocation = allLocations.find((location) => {
-      if (location.type !== 'state' || location.status !== 'active') return false;
+      if (location.type !== LocationType.STATE || location.status !== LocationStatus.ACTIVE) return false;
       const name = location.name?.trim().toLowerCase();
       const slug = location.slug?.trim().toLowerCase();
       return name === normalizedState || slug === normalizedState;
@@ -48,8 +49,8 @@ export async function resolveCityToLocationIds(
 
     // 2. Buscar cidade dentro do estado
     const cityChildren = await locationRepository.findChildren(stateLocation.id, {
-      type: 'city',
-      status: 'active',
+      type: LocationType.CITY,
+      status: LocationStatus.ACTIVE,
       page: 1,
       page_size: 500,
     });
@@ -64,8 +65,8 @@ export async function resolveCityToLocationIds(
 
     // 3. Buscar todos os distritos (bairros) da cidade
     const districtChildren = await locationRepository.findChildren(cityLocation.id, {
-      type: 'district',
-      status: 'active',
+      type: LocationType.DISTRICT,
+      status: LocationStatus.ACTIVE,
       page: 1,
       page_size: 5000,
     });
@@ -109,8 +110,8 @@ export async function resolveNeighborhoodInCity(
     // 2. Buscar bairro dentro da cidade
     const locationRepository = createLocationRepository();
     const districts = await locationRepository.findChildren(cityResolution.cityId, {
-      type: 'district',
-      status: 'active',
+      type: LocationType.DISTRICT,
+      status: LocationStatus.ACTIVE,
       page: 1,
       page_size: 5000,
     });

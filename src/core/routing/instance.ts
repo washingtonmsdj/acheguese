@@ -13,7 +13,6 @@
 import { logger } from '@/shared/utils/logger';
 import { createRoutingService } from './services/RoutingService';
 import { osrmProvider } from '@/integrations/maps/providers/OSRMProvider';
-import { mockRoutingProvider } from '@/integrations/maps/providers/MockRoutingProvider';
 
 /**
  * Instância singleton do RoutingService
@@ -27,7 +26,7 @@ osrmProvider.validate().then((isValid) => {
   if (isValid) {
     logger.info('[RoutingService] OSRM provider validado com sucesso');
   } else {
-    logger.warn('[RoutingService] OSRM provider indisponível, considere fallback');
+    logger.warn('[RoutingService] OSRM provider indisponível');
   }
 }).catch((error) => {
   logger.error('[RoutingService] Erro ao validar OSRM provider', error);

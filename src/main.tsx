@@ -5,6 +5,20 @@ import "./index.css";
 import { initializeSentry } from "./shared/config/sentry.config.ts";
 import { deferFrame, deferIdle, deferLoad } from "./shared/utils/deferredInit.ts";
 
+// In local development, remove any previously registered SW/caches that can
+// intercept Vite assets and break HMR/WebSocket.
+if (import.meta.env.DEV && "serviceWorker" in navigator) {
+  navigator.serviceWorker.getRegistrations()
+    .then((registrations) => Promise.all(registrations.map((registration) => registration.unregister())))
+    .catch(() => undefined);
+
+  if ("caches" in window) {
+    caches.keys()
+      .then((keys) => Promise.all(keys.map((key) => caches.delete(key))))
+      .catch(() => undefined);
+  }
+}
+
 // ============================================================
 // 🚀 CRITICAL PATH - Mínimo necessário para FCP
 // ============================================================

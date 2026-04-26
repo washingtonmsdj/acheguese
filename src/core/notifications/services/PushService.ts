@@ -49,6 +49,8 @@ export class PushService {
    * Check if push notifications are supported
    */
   static isSupported(): boolean {
+    // Push/SW is production-only to avoid development runtime interference.
+    if (import.meta.env.DEV) return false;
     return 'serviceWorker' in navigator && 'PushManager' in window;
   }
 

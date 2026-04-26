@@ -13,8 +13,7 @@ import { Label } from '@/shared/components/ui/label';
 import { Textarea } from '@/shared/components/ui/textarea';
 import { mediaService } from '@/core/media/services/MediaService';
 import { useSessionContext } from '@/core/session';
-
-const MAX_PHOTOS = 5;
+import { REVIEW_MAX_PHOTOS } from '../constants/ui-limits';
 
 const RATING_LABELS = ['', 'Péssimo', 'Ruim', 'Regular', 'Bom', 'Excelente'] as const;
 
@@ -70,8 +69,8 @@ export function ReviewForm({
     const files = Array.from(e.target.files ?? []);
     if (!files.length) return;
 
-    if (photos.length + files.length > MAX_PHOTOS) {
-      toast.error(`Você pode adicionar no máximo ${MAX_PHOTOS} fotos`);
+    if (photos.length + files.length > REVIEW_MAX_PHOTOS) {
+      toast.error(`Você pode adicionar no máximo ${REVIEW_MAX_PHOTOS} fotos`);
       return;
     }
 
@@ -161,7 +160,7 @@ export function ReviewForm({
       <div className="space-y-2">
         <Label>Adicionar fotos (opcional)</Label>
         <p className="text-xs text-muted-foreground">
-          Compartilhe fotos do seu pedido (máximo {MAX_PHOTOS})
+          Compartilhe fotos do seu pedido (máximo {REVIEW_MAX_PHOTOS})
         </p>
 
         {photos.length > 0 && (
@@ -186,7 +185,7 @@ export function ReviewForm({
           </div>
         )}
 
-        {photos.length < MAX_PHOTOS && (
+        {photos.length < REVIEW_MAX_PHOTOS && (
           <>
             <input
               ref={fileInputRef}

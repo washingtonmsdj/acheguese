@@ -9,14 +9,14 @@ import { motion } from 'framer-motion';
 import { Button } from '@/shared/components/ui/button';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { TouristPointCard } from './TouristPointCard';
-import type { MockTouristPointExtended } from '../__mocks__/touristPointMocks';
+import type { TouristPointDisplay } from '../types/presentation';
 import type { LucideIcon } from 'lucide-react';
 
 interface Props {
   title: string;
   subtitle?: string;
   icon: LucideIcon;
-  items: MockTouristPointExtended[];
+  items: TouristPointDisplay[];
   accentColor?: string;
   getDetailUrl: (point: { slug: string; location?: { geographic_path: string } | null }) => string;
 }

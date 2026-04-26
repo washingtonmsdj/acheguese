@@ -44,6 +44,7 @@ import { useClassifiedImageUpload } from "@/modules/classifieds/hooks/useClassif
 import { useMultiProfileContext } from "@/core/profiles/contexts/multi-profile-runtime-context";
 import { ActiveProfileBadge } from "@/core/profiles/components/ActiveProfileBadge";
 import { CLASSIFIED_FORM_CATEGORIES } from "@/modules/classifieds/constants/categories";
+import { CLASSIFIED_FORM_LIMITS } from "@/modules/classifieds/constants/form-limits";
 import { getSubcategories, hasSubcategories } from "@/modules/classifieds/constants/subcategories";
 import { PriceStep } from "@/modules/classifieds/components/create/PriceStep";
 import { CategoryFieldsStep } from "@/modules/classifieds/components/create/CategoryFieldsStep";
@@ -69,10 +70,6 @@ const STEPS = [
 ] as const;
 
 type StepId = typeof STEPS[number]["id"];
-
-const MAX_PHOTOS = 10;
-const MAX_TITLE = 100;
-const MAX_DESCRIPTION = 2000;
 
 function getStepAt(index: number) {
   return STEPS.at(index);
@@ -127,7 +124,7 @@ export default function NovoClassificadoPage() {
 
   const handleAddPhotos = useCallback(
     async (files: FileList | File[]) => {
-      const fileArray = Array.from(files).slice(0, MAX_PHOTOS - photos.length);
+      const fileArray = Array.from(files).slice(0, CLASSIFIED_FORM_LIMITS.MAX_PHOTOS - photos.length);
       if (fileArray.length === 0) return;
 
       // Adicionar previews locais imediatamente
@@ -408,24 +405,24 @@ export default function NovoClassificadoPage() {
               )}
 
               {/* Título */}
-              <FormField label="Título do Anúncio" error={errors.titulo} counter={`${titulo.length}/${MAX_TITLE}`} required>
+              <FormField label="Título do Anúncio" error={errors.titulo} counter={`${titulo.length}/${CLASSIFIED_FORM_LIMITS.MAX_TITLE}`} required>
                 <Input
                   placeholder="Ex: iPhone 15 Pro Max 256GB"
                   value={titulo}
                   onChange={(e) => setTitulo(e.target.value)}
-                  maxLength={MAX_TITLE}
+                  maxLength={CLASSIFIED_FORM_LIMITS.MAX_TITLE}
                   className={cn("h-12 text-sm rounded-xl", errors.titulo && "border-destructive")}
                 />
               </FormField>
 
               {/* Descrição */}
-              <FormField label="Descrição" error={errors.description} counter={`${description.length}/${MAX_DESCRIPTION}`} required>
+              <FormField label="Descrição" error={errors.description} counter={`${description.length}/${CLASSIFIED_FORM_LIMITS.MAX_DESCRIPTION}`} required>
                 <Textarea
                   placeholder="Descreva o item: estado, motivo da venda, detalhes relevantes..."
                   rows={4}
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
-                  maxLength={MAX_DESCRIPTION}
+                  maxLength={CLASSIFIED_FORM_LIMITS.MAX_DESCRIPTION}
                   className={cn("text-sm rounded-xl resize-none", errors.description && "border-destructive")}
                 />
               </FormField>
@@ -607,7 +604,7 @@ export default function NovoClassificadoPage() {
                   <Camera className="h-4 w-4 text-primary" />
                   Fotos do Anúncio
                   <span className="text-muted-foreground font-normal text-xs">
-                    ({photos.length}/{MAX_PHOTOS})
+                    ({photos.length}/{CLASSIFIED_FORM_LIMITS.MAX_PHOTOS})
                   </span>
                 </label>
               </div>
@@ -679,7 +676,7 @@ export default function NovoClassificadoPage() {
                   </div>
                 ))}
 
-                {photos.length < MAX_PHOTOS && !uploadingImages && (
+                {photos.length < CLASSIFIED_FORM_LIMITS.MAX_PHOTOS && !uploadingImages && (
                   <button
                     onClick={() => fileInputRef.current?.click()}
                     className="aspect-square rounded-xl border-2 border-dashed flex flex-col items-center justify-center gap-1.5 transition-colors text-muted-foreground hover:border-primary hover:text-primary"

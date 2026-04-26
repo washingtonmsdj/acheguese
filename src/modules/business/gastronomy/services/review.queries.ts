@@ -10,6 +10,8 @@
 
 import { logger } from '@/shared/utils/logger';
 import { supabase } from '@/integrations/supabase';
+import { REPORT_STATUS } from '@/shared/types/constants';
+import { EntityStatus } from '@/shared/types/enums';
 
 // ── Tipos estendidos da tabela canônica `reviews` ─────────────────────────────
 // Estende o tipo base de @/shared/types/reviews com os campos adicionados
@@ -135,7 +137,7 @@ export class ReviewQueryService {
           photos: input.photos || [],
           order_id: input.order_id || null,
           review_type: 'business',
-          status: 'active',
+          status: EntityStatus.ACTIVE,
         })
         .select('id')
         .single();
@@ -249,7 +251,7 @@ export class ReviewQueryService {
           reporter_profile_id: input.reporter_profile_id,
           reason: input.reason,
           description: input.description || null,
-          status: 'pending',
+          status: REPORT_STATUS.PENDING,
         })
         .select('id')
         .single();
@@ -341,7 +343,7 @@ export class ReviewQueryService {
         .from('reviews')
         .select('rating')
         .eq('reviewed_profile_id', businessProfileId)
-        .eq('status', 'active')
+        .eq('status', EntityStatus.ACTIVE)
         .eq('review_type', 'business');
 
       if (error) {

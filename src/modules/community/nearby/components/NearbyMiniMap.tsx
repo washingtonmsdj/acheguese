@@ -7,7 +7,9 @@ import { useMemo, useRef } from 'react';
 import { MapPin } from 'lucide-react';
 import { mapEntityProjection } from '@/core/maps';
 import { MapLibreAdapter } from '@/core/maps/components/v3/MapLibreAdapter';
+import { MAP_DEFAULT_COORDINATES } from '@/core/maps/config/defaultCoordinates';
 import { DEFAULT_TILE_STYLE } from '@/core/maps/providers/MapProvider';
+import { EntityStatus } from '@/shared/types/enums';
 import type { MapMarker } from '@/core/maps/types';
 import type { NearbyEntity } from '../hooks/useNearbyEntities';
 
@@ -40,7 +42,7 @@ export function NearbyMiniMap({
             name: entity.name,
             latitude: entity.latitude,
             longitude: entity.longitude,
-            status: 'active',
+            status: EntityStatus.ACTIVE,
             ...entity.metadata,
           },
           entity.type,
@@ -71,7 +73,7 @@ export function NearbyMiniMap({
       };
     }
 
-    return { latitude: -12.9714, longitude: -38.5014 };
+    return MAP_DEFAULT_COORDINATES;
   }, [userLocation]);
 
   const zoom = useMemo(() => {

@@ -1,12 +1,16 @@
 import { useMemo } from "react";
 import type { PizzaFlavor } from "../types";
 
-interface Props {
+interface SinglePizzaProps {
   baseFlavor: PizzaFlavor;
   additionalFlavors: PizzaFlavor[];
   totalSlices: number;
   size?: "sm" | "md" | "lg" | "xl";
   showCrust?: boolean;
+}
+
+interface Props extends SinglePizzaProps {
+  quantity?: number;
 }
 
 function hashString(input: string): number {
@@ -67,13 +71,236 @@ function describeArc(
   ].join(" ");
 }
 
-export function PizzaSliceVisualizer({
+// Componente que renderiza SÓ o SVG da pizza (sem textos/legendas)
+function PizzaSVG({
   baseFlavor,
   additionalFlavors,
   totalSlices,
   size = "md",
   showCrust = false,
-}: Props) {
+}: SinglePizzaProps) {
+  const allFlavors = useMemo(
+    () => [baseFlavor, ...additionalFlavors],
+    [baseFlavor, additionalFlavors],
+  );
+
+  const flavorCount = allFlavors.length;
+
+  const dimensions = useMemo(() => {
+    switch (size) {
+      case "sm":
+        return { width: 80, height: 80, viewBox: 120 };
+      case "lg":
+        return { width: 200, height: 200, viewBox: 240 };
+      case "xl":
+        return { width: 280, height: 280, viewBox: 300 };
+      default:
+        return { width: 140, height: 140, viewBox: 240 };
+    }
+  }, [size]);
+
+  const { center, outerRadius, innerRadius } = useMemo(() => {
+    const localCenter = dimensions.viewBox / 2;
+    return {
+      center: localCenter,
+      outerRadius: dimensions.viewBox * 0.42,
+      innerRadius: dimensions.viewBox * 0.08,
+    };
+  }, [dimensions]);
+
+  const flavorSegments = useMemo(() => {
+    const anglePerFlavor = 360 / flavorCount;
+    return allFlavors.map((flavor, index) => {
+      const startAngle = index * anglePerFlavor;
+      const endAngle = (index + 1) * anglePerFlavor;
+      return {
+        flavor,
+        startAngle,
+        endAngle,
+        color: getFlavorColor(flavor.name, index),
+      };
+    });
+  }, [allFlavors, flavorCount]);
+
+  const sliceLines = useMemo(() => {
+    const lines: Array<{ x1: number; y1: number; x2: number; y2: number }> = [];
+    const anglePerSlice = 360 / totalSlices;
+
+    for (let i = 0; i < totalSlices; i += 1) {
+      const angle = i * anglePerSlice;
+      const start = polarToCartesian(center, center, innerRadius, angle);
+      const end = polarToCartesian(center, center, outerRadius, angle);
+      lines.push({ x1: start.x, y1: start.y, x2: end.x, y2: end.y });
+    }
+
+    return lines;
+  }, [center, innerRadius, outerRadius, totalSlices]);
+
+  // Pizza com 1 sabor - círculo cheio
+  if (flavorCount === 1) {
+    return (
+      <svg
+        width={dimensions.width}
+        height={dimensions.height}
+        viewBox={`0 0 ${dimensions.viewBox} ${dimensions.viewBox}`}
+        className="drop-shadow-md"
+      >
+        {showCrust ? (
+          <>
+            <circle
+              cx={center}
+              cy={center}
+              r={outerRadius + 4}
+              fill="#f5deb3"
+              stroke="#d4a574"
+              strokeWidth="2"
+            />
+            <circle
+              cx={center}
+              cy={center}
+              r={outerRadius}
+              fill="#fef3c7"
+              stroke="#d4a574"
+              strokeWidth="1"
+            />
+          </>
+        ) : (
+          <circle
+            cx={center}
+            cy={center}
+            r={outerRadius}
+            fill="#ffffff0f"
+            stroke="#ffffff33"
+            strokeWidth="1"
+          />
+        )}
+        <circle
+          cx={center}
+          cy={center}
+          r={showCrust ? outerRadius - 8 : outerRadius - 1}
+          fill={flavorSegments[0]?.color ?? getFlavorColor(baseFlavor.name, 0)}
+          opacity="0.9"
+        />
+        <circle cx={center} cy={center} r={innerRadius} fill={showCrust ? "#fef3c7" : "#ffffffd9"} />
+        {sliceLines.map((line, index) => (
+          <line
+            key={index}
+            x1={line.x1}
+            y1={line.y1}
+            x2={line.x2}
+            y2={line.y2}
+            stroke={showCrust ? "#d4a574" : "#ffffff99"}
+            strokeWidth="1"
+            opacity="0.6"
+          />
+        ))}
+      </svg>
+    );
+  }
+
+  // Pizza com múltiplos sabores - fatias
+  return (
+    <svg
+      width={dimensions.width}
+      height={dimensions.height}
+      viewBox={`0 0 ${dimensions.viewBox} ${dimensions.viewBox}`}
+      className="drop-shadow-md"
+    >
+      <defs>
+        <radialGradient id="crustGradient" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stopColor="#fef3c7" />
+          <stop offset="85%" stopColor="#fde68a" />
+          <stop offset="100%" stopColor="#d4a574" />
+        </radialGradient>
+        <filter id="softShadow" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="1" stdDeviation="2" floodOpacity="0.15" />
+        </filter>
+      </defs>
+
+      {showCrust ? (
+        <>
+          <circle
+            cx={center}
+            cy={center}
+            r={outerRadius + 4}
+            fill="#f5deb3"
+            stroke="#d4a574"
+            strokeWidth="2"
+          />
+          <circle
+            cx={center}
+            cy={center}
+            r={outerRadius}
+            fill="url(#crustGradient)"
+            stroke="#d4a574"
+            strokeWidth="1"
+          />
+        </>
+      ) : (
+        <circle
+          cx={center}
+          cy={center}
+          r={outerRadius}
+          fill="#ffffff0f"
+          stroke="#ffffff33"
+          strokeWidth="1"
+        />
+      )}
+
+      {flavorSegments.map((segment) => {
+        const path = describeArc(
+          center,
+          center,
+          showCrust ? outerRadius - 6 : outerRadius - 1,
+          segment.startAngle,
+          segment.endAngle,
+        );
+        return (
+          <path
+            key={segment.flavor.id}
+            d={path}
+            fill={segment.color}
+            opacity="0.85"
+            stroke="white"
+            strokeWidth="2"
+            style={{ filter: "url(#softShadow)", transition: "all 0.3s ease" }}
+          />
+        );
+      })}
+
+      {sliceLines.map((line, index) => (
+        <line
+          key={index}
+          x1={line.x1}
+          y1={line.y1}
+          x2={line.x2}
+          y2={line.y2}
+          stroke={showCrust ? "#8b6914" : "#ffffff99"}
+          strokeWidth="1"
+          opacity="0.4"
+        />
+      ))}
+
+      <circle
+        cx={center}
+        cy={center}
+        r={innerRadius}
+        fill={showCrust ? "url(#crustGradient)" : "#ffffffd9"}
+        stroke={showCrust ? "#d4a574" : "#ffffff4d"}
+        strokeWidth="1"
+      />
+    </svg>
+  );
+}
+
+// Componente interno que renderiza o conteúdo de uma única pizza (com textos)
+function SinglePizzaContent({
+  baseFlavor,
+  additionalFlavors,
+  totalSlices,
+  size = "md",
+  showCrust = false,
+}: SinglePizzaProps) {
   const allFlavors = useMemo(
     () => [baseFlavor, ...additionalFlavors],
     [baseFlavor, additionalFlavors],
@@ -315,6 +542,87 @@ export function PizzaSliceVisualizer({
             </div>
           ))}
         </div>
+      </div>
+    </div>
+  );
+}
+
+// Componente principal que renderiza uma ou múltiplas pizzas
+export function PizzaSliceVisualizer({
+  baseFlavor,
+  additionalFlavors,
+  totalSlices,
+  size = "md",
+  showCrust = false,
+  quantity = 1,
+}: Props) {
+  const pizzas = useMemo(() => {
+    return Array.from({ length: quantity }, (_, index) => index);
+  }, [quantity]);
+
+  const dimensions = useMemo(() => {
+    switch (size) {
+      case "sm":
+        return { width: 120, height: 120 };
+      case "lg":
+        return { width: 200, height: 200 };
+      case "xl":
+        return { width: 260, height: 260 };
+      default:
+        return { width: 160, height: 160 };
+    }
+  }, [size]);
+
+  const flavorCount = 1 + additionalFlavors.length;
+  const flavorLabel = flavorCount === 1 
+    ? baseFlavor.name 
+    : `${flavorCount} sabores`;
+
+  if (quantity === 1) {
+    return (
+      <div className="flex flex-col items-center gap-2">
+        <SinglePizzaContent
+          baseFlavor={baseFlavor}
+          additionalFlavors={additionalFlavors}
+          totalSlices={totalSlices}
+          size={size}
+          showCrust={showCrust}
+        />
+      </div>
+    );
+  }
+
+  // Para múltiplas pizzas, usar tamanho menor
+  const miniSize: SinglePizzaProps['size'] = "sm";
+
+  return (
+    <div className="flex flex-col items-center gap-3">
+      <div className="flex flex-row justify-center items-center gap-4 p-2">
+        {pizzas.map((index) => (
+          <div 
+            key={index} 
+            className="flex-shrink-1" 
+            style={{ 
+              transform: `rotate(${index * 8 - (quantity - 1) * 4}deg)`,
+            }}
+          >
+            <PizzaSVG
+              baseFlavor={baseFlavor}
+              additionalFlavors={additionalFlavors}
+              totalSlices={totalSlices}
+              size={miniSize}
+              showCrust={showCrust}
+            />
+          </div>
+        ))}
+      </div>
+      <div className="text-center space-y-1">
+        <p className="text-sm font-medium">
+          {quantity}x {flavorLabel}
+        </p>
+        <p className="text-xs text-muted-foreground">
+          {totalSlices} fatias cada · {flavorCount} {flavorCount === 1 ? 'sabor' : 'sabores'}
+        </p>
       </div>
     </div>
   );

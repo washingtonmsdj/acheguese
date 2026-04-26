@@ -15,6 +15,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { createTerritorialGroupRepository } from '@/core/location/repositories/createTerritorialGroupRepository';
 import { createLocationRepository } from '@/core/location/repositories/createLocationRepository';
+import { LocationStatus, LocationType } from '@/core/location/types';
 import type { HighlightTerritoryType } from './types';
 
 export interface TerritoryOption {
@@ -43,8 +44,8 @@ export function useTerritoryOptions(anchorCityId = 'loc-salvador') {
         // Como não há listAll por cidade, usamos findWithMembers do grupo conhecido.
         // Para suporte multi-grupo futuro, o repositório precisará de listByCityId.
         // Por ora: busca grupos que contêm qualquer district da cidade.
-        locationRepo.findChildren(anchorCityId, { type: 'district' as any, status: 'active' as any }),
-        locationRepo.findChildren(anchorCityId, { type: 'district' as any, status: 'active' as any }),
+        locationRepo.findChildren(anchorCityId, { type: LocationType.DISTRICT, status: LocationStatus.ACTIVE }),
+        locationRepo.findChildren(anchorCityId, { type: LocationType.DISTRICT, status: LocationStatus.ACTIVE }),
       ]);
 
       // Districts ativos da cidade
@@ -57,7 +58,7 @@ export function useTerritoryOptions(anchorCityId = 'loc-salvador') {
         districts.map(async (district) => {
           const groups = await groupRepo.findGroupsContainingLocation(district.id);
           for (const g of groups) {
-            if (g.status === 'active' && !groupMap.has(g.id)) {
+            if (g.status === LocationStatus.ACTIVE && !groupMap.has(g.id)) {
               groupMap.set(g.id, {
                 ref_id: g.id,
                 label: g.name,

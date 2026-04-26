@@ -9,12 +9,11 @@ import type {
   Profile,
   ProfileType,
 } from "@/core/profiles/services/multi-profile/types";
+import {
+  PROFILE_VERIFICATION_STATUS,
+  type ProfileVerificationStatus,
+} from "@/core/profile/constants/verificationStatus";
 
-export type ProfileVerificationStatus =
-  | "not_requested"
-  | "pending"
-  | "approved"
-  | "rejected";
 
 export function getProfileType(
   profileOrType?: Pick<Profile, "profile_type"> | ProfileType | null,
@@ -91,21 +90,21 @@ export function resolveVerificationStatus(
   verification?: { verified?: boolean | null; rejection_reason?: string | null } | null,
 ): { status: ProfileVerificationStatus; rejectionReason?: string } {
   if (!verification) {
-    return { status: "not_requested" };
+    return { status: PROFILE_VERIFICATION_STATUS.NOT_REQUESTED };
   }
 
   if (verification.verified) {
-    return { status: "approved" };
+    return { status: PROFILE_VERIFICATION_STATUS.APPROVED };
   }
 
   if (verification.rejection_reason) {
     return {
-      status: "rejected",
+      status: PROFILE_VERIFICATION_STATUS.REJECTED,
       rejectionReason: verification.rejection_reason,
     };
   }
 
-  return { status: "pending" };
+  return { status: PROFILE_VERIFICATION_STATUS.PENDING };
 }
 
 export async function saveProfileExtensionByType(

@@ -10,6 +10,7 @@ import { Input } from "@/shared/components/ui/input";
 import { Separator } from "@/shared/components/ui/separator";
 import { Sheet, SheetContent } from "@/shared/components/ui/sheet";
 import { Skeleton } from "@/shared/components/ui/skeleton";
+import { SIDEBAR_UI_CONFIG } from "@/shared/components/ui/config/sidebar.config";
 import {
   Tooltip,
   TooltipContent,
@@ -17,12 +18,12 @@ import {
   TooltipTrigger,
 } from "@/shared/components/ui/tooltip";
 
-const SIDEBAR_COOKIE_NAME = "sidebar:state";
-const SIDEBAR_COOKIE_MAX_AGE = 60 * 60 * 24 * 7;
-const SIDEBAR_WIDTH = "16rem";
-const SIDEBAR_WIDTH_MOBILE = "18rem";
-const SIDEBAR_WIDTH_ICON = "3rem";
-const SIDEBAR_KEYBOARD_SHORTCUT = "b";
+const SIDEBAR_COOKIE_NAME = SIDEBAR_UI_CONFIG.COOKIE_NAME;
+const SIDEBAR_COOKIE_MAX_AGE_SECONDS = SIDEBAR_UI_CONFIG.COOKIE_MAX_AGE_SECONDS;
+const SIDEBAR_WIDTH = SIDEBAR_UI_CONFIG.WIDTH;
+const SIDEBAR_WIDTH_MOBILE = SIDEBAR_UI_CONFIG.MOBILE_WIDTH;
+const SIDEBAR_WIDTH_ICON = SIDEBAR_UI_CONFIG.ICON_WIDTH;
+const SIDEBAR_KEYBOARD_SHORTCUT = SIDEBAR_UI_CONFIG.KEYBOARD_SHORTCUT;
 
 type SidebarContext = {
   state: "expanded" | "collapsed";
@@ -82,7 +83,7 @@ const SidebarProvider = React.forwardRef<
         }
 
         // This sets the cookie to keep the sidebar state.
-        document.cookie = `${SIDEBAR_COOKIE_NAME}=${openState}; path=/; max-age=${SIDEBAR_COOKIE_MAX_AGE}`;
+        document.cookie = `${SIDEBAR_COOKIE_NAME}=${openState}; path=/; max-age=${SIDEBAR_COOKIE_MAX_AGE_SECONDS}`;
       },
       [setOpenProp, open],
     );

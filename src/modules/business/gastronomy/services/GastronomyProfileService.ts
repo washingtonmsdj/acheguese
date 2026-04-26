@@ -13,6 +13,7 @@ import { logger } from '@/shared/utils/logger';
 import { supabase } from '@/integrations/supabase';
 import { isEligibleForVertical } from '@/core/verticals/config';
 import type { BusinessCategory } from '@/core/business/types/Business';
+import { GASTRONOMY_PROFILE_STATUSES } from '@/core/business/constants';
 import type {
   GastronomyProfile,
   CreateGastronomyProfileInput,
@@ -124,7 +125,7 @@ export const GastronomyProfileService = {
           has_kids_area: input.has_kids_area ?? false,
           has_live_music: input.has_live_music ?? false,
           seating_capacity: input.seating_capacity,
-          status: 'active',
+          status: GASTRONOMY_PROFILE_STATUSES.ACTIVE,
           metadata: input.metadata ?? {},
         })
         .select()

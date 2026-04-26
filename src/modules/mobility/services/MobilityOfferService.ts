@@ -29,6 +29,7 @@ import type {
   OpenBoardSort,
 } from '../types/dispatch.types';
 import { RIDE_STATUS } from '../constants';
+import { DISPATCH_ATTEMPT_STATUS } from '../constants/dispatchStatus';
 
 // ============================================
 // MOBILITY OFFER SERVICE
@@ -93,7 +94,7 @@ export class MobilityOfferService {
         offeredAt: ride.driver_assigned_at || ride.created_at,
         expiresAt: expiresAt.toISOString(),
         attemptNumber: 1, // TODO: buscar do audit
-        status: 'pending',
+        status: DISPATCH_ATTEMPT_STATUS.PENDING,
         
         // Dados protegidos (apenas apÃ³s aceite)
         origin: ride.origin,

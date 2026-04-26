@@ -18,8 +18,10 @@ import {
   SelectValue,
 } from "@/shared/components/ui/select";
 
+type AdvancedBusinessStatus = "active" | "paused" | "inactive";
+
 interface AdvancedSettings {
-  status: "active" | "paused" | "inactive";
+  status: AdvancedBusinessStatus;
   visibility: "public" | "private" | "unlisted";
   seo_title?: string;
   seo_description?: string;

@@ -60,6 +60,7 @@ export type {
 
 import * as queries from "./classifieds.queries";
 import * as mutations from "./classifieds.mutations";
+import { CLASSIFIED_STATUS_VALUES } from "../constants/statuses";
 
 /**
  * 🎯 ClassifiedsFacade - Interface SSOT unificada
@@ -98,9 +99,5 @@ export const CLASSIFIED_CONDITIONS = [
  * Status válidos para classificados
  */
 export const CLASSIFIED_STATUSES = [
-  "active",
-  "inactive",
-  "sold",
-  "pending",
-  "rejected",
+  ...CLASSIFIED_STATUS_VALUES,
 ] as const;

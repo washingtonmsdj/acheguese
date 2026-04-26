@@ -32,7 +32,9 @@ import {
 import { Button } from '@/shared/components/ui/button';
 import { Badge } from '@/shared/components/ui/badge';
 import { useTerritorialContext } from '@/core/routing/components/TerritorialLayout';
+import { useTerritoryFilter } from '@/core/location/hooks/useTerritoryFilter';
 import { useTouristPoint } from '../hooks/useTouristPoint';
+import { useTouristPoints } from '../hooks/useTouristPoints';
 import { useGuideUrls } from '../hooks/useGuideUrls';
 import { shouldRedirect } from '../utils/canonicalRedirect';
 import { TouristPointGallery } from '../components/TouristPointGallery';
@@ -42,9 +44,9 @@ import { TouristPointMapSection } from '../components/TouristPointMapSection';
 import { NearbyPlacesBlock } from '../components/NearbyPlacesBlock';
 import { RelatedPointsBlock } from '../components/RelatedPointsBlock';
 import { CommunityPhotosGallery } from '../components/CommunityPhotosGallery';
-import { MOCK_TOURIST_POINTS, type MockTouristPointExtended } from '../__mocks__/touristPointMocks';
 import { CATEGORY_LABELS, CATEGORY_ICONS, type TouristPointCategory } from '../types/categories';
 import { PRICE_TYPE_LABELS } from '../types';
+import { toTouristPointDisplay } from '../types/presentation';
 
 function getCategoryLabel(category?: TouristPointCategory | null): string | null {
   if (!category) return null;
@@ -115,12 +117,15 @@ export default function TouristPointDetailPage() {
   const location = useLocation();
   // Para rota direta por ID, resolved pode não existir (não está dentro de TerritorialLayout)
   let resolved;
+  let activeMemberIds: string[] | undefined;
   try {
     const context = useTerritorialContext();
     resolved = context.resolved;
+    activeMemberIds = context.activeMemberIds;
   } catch {
     // Rota direta por ID não tem contexto territorial
     resolved = undefined;
+    activeMemberIds = undefined;
   }
   
   const guideUrls = useGuideUrls(resolved);
@@ -150,7 +155,9 @@ export default function TouristPointDetailPage() {
       : resolved.group.members[0]?.id ?? '')
     : undefined;
 
+  const territoryFilter = useTerritoryFilter(resolved, activeMemberIds);
   const { data: point, isLoading } = useTouristPoint(locationId, pointSlug);
+  const { data: relatedPointsRaw = [] } = useTouristPoints(territoryFilter);
   const [loadingTimedOut, setLoadingTimedOut] = useState(false);
 
   useEffect(() => {
@@ -175,9 +182,6 @@ export default function TouristPointDetailPage() {
     return <Navigate to={redirectCheck.canonicalUrl} replace />;
   }
 
-  // Enrich with mock extended data when available
-  const mockPoint = MOCK_TOURIST_POINTS.find((p) => p.slug === pointSlug);
-
   const territoryName = resolved
     ? (resolved.kind === 'location'
       ? resolved.location.full_name
@@ -194,7 +198,7 @@ export default function TouristPointDetailPage() {
     );
   }
 
-  if (isLoading && loadingTimedOut && !mockPoint) {
+  if (isLoading && loadingTimedOut) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center gap-4 p-8 text-center">
         <p className="text-lg font-semibold text-foreground">Não foi possível carregar este ponto turístico</p>
@@ -213,8 +217,7 @@ export default function TouristPointDetailPage() {
     );
   }
 
-  // Use real data if available, otherwise fall back to mock
-  const displayPoint = point ?? mockPoint;
+  const displayPoint = point;
 
   if (!displayPoint) {
     return (
@@ -230,29 +233,23 @@ export default function TouristPointDetailPage() {
     );
   }
 
+  const displayModel = toTouristPointDisplay(displayPoint);
+  const relatedPoints = relatedPointsRaw.map(toTouristPointDisplay);
   const coverMedia = displayPoint.media?.find((m) => m.is_cover) ?? displayPoint.media?.[0];
 
-  // Extended fields from mock
-  const ext = mockPoint as MockTouristPointExtended | undefined;
-  const category = (ext?.category as TouristPointCategory | undefined) ?? undefined;
+  const category = displayModel.category as TouristPointCategory | undefined;
   const catLabel = getCategoryLabel(category);
   const catIcon = getCategoryIcon(category);
-  const rating = ext?.rating ?? 0;
-  const reviewCount = ext?.review_count ?? 0;
-  
-  // SSOT: Priorizar point.location?.name sobre mock neighborhood
-  const neighborhood = point?.location?.name ?? ext?.neighborhood;
-  const neighborhoodFull = point?.location?.full_name ?? neighborhood;
-  
-  // SSOT: Priorizar point.address coordenadas sobre mock
-  const latitude = point?.address?.latitude ?? ext?.latitude;
-  const longitude = point?.address?.longitude ?? ext?.longitude;
-  
-  const tips = ext?.tips ?? null;
-  const howToGetThere = ext?.how_to_get_there ?? null;
-  const isFree = ext?.is_free;
-  const isAccessible = ext?.is_accessible;
-  const isFamilyFriendly = ext?.is_family_friendly;
+  const rating = displayModel.rating;
+  const reviewCount = displayModel.review_count;
+  const neighborhood = displayModel.location?.name ?? displayModel.neighborhood;
+  const latitude = displayModel.latitude;
+  const longitude = displayModel.longitude;
+  const tips = displayModel.tips;
+  const howToGetThere = displayModel.how_to_get_there;
+  const isFree = displayModel.is_free;
+  const isAccessible = displayModel.is_accessible;
+  const isFamilyFriendly = displayModel.is_family_friendly;
 
   return (
     <>
@@ -432,6 +429,7 @@ export default function TouristPointDetailPage() {
 
           {/* ── Related Points ───────────────────────────────────── */}
           <RelatedPointsBlock
+            points={relatedPoints}
             currentPointId={displayPoint.id}
             category={category}
             neighborhood={neighborhood}

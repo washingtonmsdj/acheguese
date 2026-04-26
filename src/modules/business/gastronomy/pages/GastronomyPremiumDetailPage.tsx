@@ -50,7 +50,9 @@ export default function GastronomyPremiumDetailPage() {
   const [shareOpen, setShareOpen] = useState(false);
   const [sortMode, setSortMode] = useState<SortMode>('mais-pedidos');
   const [veganOnly, setVeganOnly] = useState(false);
+  const [vegetarianOnly, setVegetarianOnly] = useState(false);
   const [glutenFreeOnly, setGlutenFreeOnly] = useState(false);
+  const [lactoseFreeOnly, setLactoseFreeOnly] = useState(false);
   const [itemQuantities, setItemQuantities] = useState<Record<string, number>>({});
   const [couponCode, setCouponCode] = useState('');
   const [orderNotes, setOrderNotes] = useState('');
@@ -106,7 +108,9 @@ export default function GastronomyPremiumDetailPage() {
         return false;
       }
       if (veganOnly && !item.is_vegan) return false;
+      if (vegetarianOnly && !item.is_vegetarian) return false;
       if (glutenFreeOnly && !item.is_gluten_free) return false;
+      if (lactoseFreeOnly && !item.is_lactose_free) return false;
       return true;
     });
 
@@ -119,7 +123,7 @@ export default function GastronomyPremiumDetailPage() {
     }
 
     return nextItems;
-  }, [activeCategoryData?.items, glutenFreeOnly, search, sortMode, veganOnly]);
+  }, [activeCategoryData?.items, glutenFreeOnly, lactoseFreeOnly, search, sortMode, veganOnly, vegetarianOnly]);
 
   const profile = business?.gastronomy_profile;
 
@@ -330,14 +334,28 @@ export default function GastronomyPremiumDetailPage() {
                   size="sm"
                   onClick={() => setVeganOnly((current) => !current)}
                 >
-                  Vegano
+                  🌱 Vegano
+                </Button>
+                <Button
+                  variant={vegetarianOnly ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setVegetarianOnly((current) => !current)}
+                >
+                  🥬 Vegetariano
                 </Button>
                 <Button
                   variant={glutenFreeOnly ? 'default' : 'outline'}
                   size="sm"
                   onClick={() => setGlutenFreeOnly((current) => !current)}
                 >
-                  Sem glúten
+                  🌾 Sem glúten
+                </Button>
+                <Button
+                  variant={lactoseFreeOnly ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setLactoseFreeOnly((current) => !current)}
+                >
+                  🥛 Sem lactose
                 </Button>
               </div>
 
@@ -420,6 +438,35 @@ export default function GastronomyPremiumDetailPage() {
                       <p className="line-clamp-2 text-sm text-muted-foreground">
                         {item.description || 'Sem descrição adicional.'}
                       </p>
+                    </div>
+
+                    {/* Badges de características */}
+                    <div className="flex flex-wrap gap-1">
+                      {item.is_vegan && (
+                        <Badge variant="outline" className="text-xs bg-green-50 text-green-700 border-green-200">
+                          🌱 Vegano
+                        </Badge>
+                      )}
+                      {item.is_vegetarian && !item.is_vegan && (
+                        <Badge variant="outline" className="text-xs bg-green-50 text-green-600 border-green-200">
+                          🥬 Vegetariano
+                        </Badge>
+                      )}
+                      {item.is_gluten_free && (
+                        <Badge variant="outline" className="text-xs bg-amber-50 text-amber-700 border-amber-200">
+                          Sem Glúten
+                        </Badge>
+                      )}
+                      {item.is_lactose_free && (
+                        <Badge variant="outline" className="text-xs bg-blue-50 text-blue-700 border-blue-200">
+                          Sem Lactose
+                        </Badge>
+                      )}
+                      {item.is_spicy && (
+                        <Badge variant="outline" className="text-xs bg-red-50 text-red-700 border-red-200">
+                          🌶️ Picante
+                        </Badge>
+                      )}
                     </div>
 
                     <div className="flex items-center justify-between">

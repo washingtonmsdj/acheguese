@@ -1,0 +1,7 @@
+export const TERRITORIAL_LANDING_LIMITS = {
+  HIGHLIGHTS: 3,
+  BUSINESSES: 4,
+  SERVICES: 4,
+  CLASSIFIEDS: 4,
+} as const;
+

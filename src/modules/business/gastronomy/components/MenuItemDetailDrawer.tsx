@@ -316,6 +316,35 @@ export function MenuItemDetailDrawer({
         <SheetHeader>
           <SheetTitle>{resolvedItem.name}</SheetTitle>
           {resolvedItem.description && <SheetDescription>{resolvedItem.description}</SheetDescription>}
+          
+          {/* Badges de características dietéticas */}
+          <div className="flex flex-wrap gap-2 pt-2">
+            {resolvedItem.is_vegan && (
+              <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+                🌱 Vegano
+              </Badge>
+            )}
+            {resolvedItem.is_vegetarian && !resolvedItem.is_vegan && (
+              <Badge variant="outline" className="bg-green-50 text-green-600 border-green-200">
+                🥬 Vegetariano
+              </Badge>
+            )}
+            {resolvedItem.is_gluten_free && (
+              <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200">
+                🌾 Sem Glúten
+              </Badge>
+            )}
+            {resolvedItem.is_lactose_free && (
+              <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+                🥛 Sem Lactose
+              </Badge>
+            )}
+            {resolvedItem.is_spicy && (
+              <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">
+                🌶️ Picante {resolvedItem.spicy_level ? `(${resolvedItem.spicy_level}/5)` : ''}
+              </Badge>
+            )}
+          </div>
         </SheetHeader>
 
         <div className="mt-6 space-y-6">
@@ -358,10 +387,36 @@ export function MenuItemDetailDrawer({
                 <div>
                   <p className="text-sm text-muted-foreground">Preco base</p>
                   <p className="text-2xl font-bold text-primary">R$ {resolvedItem.base_price.toFixed(2)}</p>
+                  {resolvedItem.calories && (
+                    <p className="text-xs text-muted-foreground mt-1">{resolvedItem.calories} kcal</p>
+                  )}
                 </div>
 
                 {!deliveryEnabled && <Badge variant="outline">Delivery indisponivel</Badge>}
               </div>
+
+              {/* Ingredientes e Alérgenos */}
+              {(resolvedItem.ingredients?.length || resolvedItem.allergens?.length) && (
+                <section className="space-y-3 rounded-xl border bg-muted/30 p-4">
+                  {resolvedItem.ingredients && resolvedItem.ingredients.length > 0 && (
+                    <div>
+                      <h4 className="text-sm font-semibold mb-2">Ingredientes</h4>
+                      <p className="text-sm text-muted-foreground">
+                        {resolvedItem.ingredients.join(', ')}
+                      </p>
+                    </div>
+                  )}
+                  
+                  {resolvedItem.allergens && resolvedItem.allergens.length > 0 && (
+                    <div>
+                      <h4 className="text-sm font-semibold mb-2 text-amber-700">⚠️ Contém Alérgenos</h4>
+                      <p className="text-sm text-amber-600">
+                        {resolvedItem.allergens.join(', ')}
+                      </p>
+                    </div>
+                  )}
+                </section>
+              )}
 
               {availableVariants.length > 0 && (
                 <section className="space-y-3">
@@ -445,6 +500,7 @@ export function MenuItemDetailDrawer({
                     totalSlices={fallbackSlices}
                     size={fallbackVisualizerSize}
                     showCrust={fallbackShowCrust}
+                    quantity={quantity}
                   />
                 </section>
               )}

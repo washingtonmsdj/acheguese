@@ -6,6 +6,7 @@
  */
 
 import type { NavigateFunction } from "react-router-dom";
+import type { TerritoryNodeStatus } from "@/modules/admin/constants/territory";
 
 // ============================================
 // Territory Node (do hook)
@@ -16,7 +17,7 @@ export interface TerritoryNode {
   readonly name: string;
   readonly slug: string;
   readonly type: "country" | "state" | "city" | "district" | "territorial_group";
-  readonly status: "active" | "inactive" | "pending";
+  readonly status: TerritoryNodeStatus;
   readonly parent_id: string | null;
   readonly geographic_path?: string;
   readonly is_selector_active: boolean;

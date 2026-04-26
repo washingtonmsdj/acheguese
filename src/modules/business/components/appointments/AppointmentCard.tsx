@@ -14,8 +14,7 @@ import {
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { cn } from "@/shared/utils/cn";
-
-type AppointmentStatus = "pending" | "confirmed" | "cancelled" | "completed";
+import { APPOINTMENT_STATUSES, type AppointmentStatus } from "./constants";
 
 interface Appointment {
   id: string;
@@ -116,11 +115,11 @@ export const AppointmentCard = ({
         </div>
 
         <div className="flex items-center gap-2">
-          {appointment.status === "pending" && (
+          {appointment.status === APPOINTMENT_STATUSES.PENDING && (
             <>
               <Button
                 size="sm"
-                onClick={() => onStatusChange(appointment.id, "confirmed")}
+                onClick={() => onStatusChange(appointment.id, APPOINTMENT_STATUSES.CONFIRMED)}
                 className="gap-1"
               >
                 <CheckCircle className="h-3 w-3" />
@@ -129,7 +128,7 @@ export const AppointmentCard = ({
               <Button
                 size="sm"
                 variant="outline"
-                onClick={() => onStatusChange(appointment.id, "cancelled")}
+                onClick={() => onStatusChange(appointment.id, APPOINTMENT_STATUSES.CANCELLED)}
                 className="gap-1"
               >
                 <XCircle className="h-3 w-3" />
@@ -138,11 +137,11 @@ export const AppointmentCard = ({
             </>
           )}
 
-          {appointment.status === "confirmed" && (
+          {appointment.status === APPOINTMENT_STATUSES.CONFIRMED && (
             <Button
               size="sm"
               variant="outline"
-              onClick={() => onStatusChange(appointment.id, "completed")}
+              onClick={() => onStatusChange(appointment.id, APPOINTMENT_STATUSES.COMPLETED)}
               className="gap-1"
             >
               <CheckCircle className="h-3 w-3" />

@@ -1,6 +1,7 @@
 import validationMessages from "@/shared/validation/messages/pt-BR";
+import { AUTH_PASSWORD_POLICY } from "@/core/auth/constants/password";
 
-export const AUTH_PASSWORD_MIN_LENGTH = 8;
+export const AUTH_PASSWORD_MIN_LENGTH = AUTH_PASSWORD_POLICY.MIN_LENGTH;
 
 const SPECIAL_CHARACTER_REGEX = /[^A-Za-z0-9\s]/;
 

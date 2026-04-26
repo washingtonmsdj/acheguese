@@ -21,6 +21,10 @@ import {
 import { updateRideIfStatusIn } from "../services/mobility.mutations";
 import { mobilityAuditService } from "../services/MobilityAuditService";
 import { TIMEOUTS, BUSINESS_RULES, REALTIME_CHANNELS } from "../constants";
+import {
+  DISPATCH_ATTEMPT_STATUS,
+  type DispatchAttemptStatus,
+} from "../constants/dispatchStatus";
 
 // ============================================
 // CONFIGURAÇÕES (Migradas para constants)
@@ -43,7 +47,7 @@ interface DispatchAttempt {
   attemptNumber: number;
   offeredAt: string;
   timeoutAt: string;
-  status: 'pending' | 'accepted' | 'timeout' | 'rejected';
+  status: DispatchAttemptStatus;
   respondedAt?: string;
 }
 
@@ -172,7 +176,7 @@ export class AutoDispatchService {
           attemptNumber,
           offeredAt: new Date().toISOString(),
           timeoutAt: new Date(Date.now() + CONFIG.OFFER_TIMEOUT_SECONDS * 1000).toISOString(),
-          status: 'pending',
+          status: DISPATCH_ATTEMPT_STATUS.PENDING,
         });
 
         // Atribuir motorista
@@ -203,8 +207,8 @@ export class AutoDispatchService {
 
         if (accepted) {
           // Sucesso!
-          await this.updateDispatchAttempt(rideId, driver.profileId, {
-            status: 'accepted',
+        await this.updateDispatchAttempt(rideId, driver.profileId, {
+            status: DISPATCH_ATTEMPT_STATUS.ACCEPTED,
             respondedAt: new Date().toISOString(),
           });
 
@@ -225,7 +229,7 @@ export class AutoDispatchService {
 
         // Timeout - tentar próximo motorista
         await this.updateDispatchAttempt(rideId, driver.profileId, {
-          status: 'timeout',
+          status: DISPATCH_ATTEMPT_STATUS.TIMEOUT,
           respondedAt: new Date().toISOString(),
         });
 

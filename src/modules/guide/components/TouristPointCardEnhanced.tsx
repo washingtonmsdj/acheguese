@@ -10,10 +10,10 @@ import { Badge } from '@/shared/components/ui/badge';
 import { Card, CardContent } from '@/shared/components/ui/card';
 import { CATEGORY_LABELS, CATEGORY_ICONS } from '../types/categories';
 import { PRICE_TYPE_LABELS } from '../types';
-import type { MockTouristPointExtended } from '../__mocks__/touristPointMocks';
+import type { TouristPointDisplay } from '../types/presentation';
 
 interface Props {
-  point: MockTouristPointExtended;
+  point: TouristPointDisplay;
   detailUrl: string;
   variant?: 'card' | 'compact';
 }

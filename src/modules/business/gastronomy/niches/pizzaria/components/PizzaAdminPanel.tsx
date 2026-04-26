@@ -439,26 +439,80 @@ export function PizzaAdminPanel({ businessId, userId }: Props) {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>
-              {editingItem ? "Editar" : "Adicionar"}{" "}
+              {dialogType === "config"
+                ? "Editar Configuracoes"
+                : editingItem
+                  ? "Editar"
+                  : "Adicionar"}{" "}
               {dialogType === "size" && "Tamanho"}
               {dialogType === "flavor" && "Sabor"}
               {dialogType === "edge" && "Borda"}
               {dialogType === "dough" && "Massa"}
             </DialogTitle>
             <DialogDescription>
-              Preencha os dados abaixo para {editingItem ? "atualizar" : "criar"} o item.
+              {dialogType === "config"
+                ? "Configure as regras de preco e limites de sabores."
+                : `Preencha os dados abaixo para ${editingItem ? "atualizar" : "criar"} o item.`}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4 max-h-[60vh] overflow-y-auto pr-2">
-            <div className="space-y-2">
-              <Label htmlFor="name">Nome</Label>
-              <Input
-                id="name"
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                placeholder="Ex: Calabresa"
-              />
-            </div>
+            {dialogType === "config" && (
+              <>
+                <div className="space-y-2">
+                  <Label htmlFor="default_price_rule">Regra de preco padrao</Label>
+                  <select
+                    id="default_price_rule"
+                    value={configForm.default_price_rule}
+                    onChange={(e) => setConfigForm({ ...configForm, default_price_rule: e.target.value as PizzaPriceRuleType })}
+                    className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                  >
+                    <option value="highest_price">Maior preco (padrao)</option>
+                    <option value="average_price">Media simples</option>
+                    <option value="weighted_average">Media ponderada</option>
+                    <option value="fixed_base_plus_flavors">Preco base + sabores</option>
+                  </select>
+                </div>
+                <div className="space-y-3 rounded-lg border p-4">
+                  <p className="text-sm font-medium">Limites de sabores permitidos</p>
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="allow_half_half" className="text-sm">Permitir 2 sabores (meio a meio)</Label>
+                    <Switch
+                      id="allow_half_half"
+                      checked={configForm.allow_half_half}
+                      onCheckedChange={(checked) => setConfigForm({ ...configForm, allow_half_half: checked })}
+                    />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="allow_three_flavors" className="text-sm">Permitir 3 sabores</Label>
+                    <Switch
+                      id="allow_three_flavors"
+                      checked={configForm.allow_three_flavors}
+                      onCheckedChange={(checked) => setConfigForm({ ...configForm, allow_three_flavors: checked })}
+                    />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="allow_four_flavors" className="text-sm">Permitir 4 sabores</Label>
+                    <Switch
+                      id="allow_four_flavors"
+                      checked={configForm.allow_four_flavors}
+                      onCheckedChange={(checked) => setConfigForm({ ...configForm, allow_four_flavors: checked })}
+                    />
+                  </div>
+                </div>
+              </>
+            )}
+
+            {dialogType !== "config" && (
+              <div className="space-y-2">
+                <Label htmlFor="name">Nome</Label>
+                <Input
+                  id="name"
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  placeholder="Ex: Calabresa"
+                />
+              </div>
+            )}
 
             {(dialogType === "flavor" || dialogType === "edge" || dialogType === "dough") && (
               <div className="space-y-2">
@@ -589,21 +643,23 @@ export function PizzaAdminPanel({ businessId, userId }: Props) {
               </div>
             )}
 
-            <div className="flex items-center gap-2 pt-2">
-              <Switch
-                id="is_available"
-                checked={formData.is_available}
-                onCheckedChange={(checked) => setFormData({ ...formData, is_available: checked })}
-              />
-              <Label htmlFor="is_available">Disponivel</Label>
-            </div>
+            {dialogType !== "config" && (
+              <div className="flex items-center gap-2 pt-2">
+                <Switch
+                  id="is_available"
+                  checked={formData.is_available}
+                  onCheckedChange={(checked) => setFormData({ ...formData, is_available: checked })}
+                />
+                <Label htmlFor="is_available">Disponivel</Label>
+              </div>
+            )}
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={closeDialog} disabled={isSubmitting}>
               Cancelar
             </Button>
             <Button onClick={handleSubmit} disabled={isSubmitting}>
-              {isSubmitting ? "Salvando..." : (editingItem ? "Atualizar" : "Criar")}
+              {isSubmitting ? "Salvando..." : (dialogType === "config" ? "Salvar" : (editingItem ? "Atualizar" : "Criar"))}
             </Button>
           </DialogFooter>
         </DialogContent>

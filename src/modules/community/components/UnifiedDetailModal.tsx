@@ -92,7 +92,7 @@ interface CivicReport {
     | "outro";
   description: string;
   location: string;
-  status: "pending" | "in_progress" | "resolved" | "rejected";
+  status: CivicReportStatus;
   urgency: "low" | "medium" | "high" | "critical";
   upvotes: number;
   created_at: string;
@@ -137,11 +137,21 @@ const PROBLEM_TYPES = {
   outro: { label: "Outro", icon: AlertCircle, color: "#6B7280" },
 };
 
+const CIVIC_REPORT_STATUSES = {
+  PENDING: "pending",
+  IN_PROGRESS: "in_progress",
+  RESOLVED: "resolved",
+  REJECTED: "rejected",
+} as const;
+
+type CivicReportStatus =
+  (typeof CIVIC_REPORT_STATUSES)[keyof typeof CIVIC_REPORT_STATUSES];
+
 const STATUS_CONFIG = {
-  pending: { label: "Pendente", color: "#F59E0B" },
-  in_progress: { label: "Em Andamento", color: "#3B82F6" },
-  resolved: { label: "Resolvido", color: "#10B981" },
-  rejected: { label: "Rejeitado", color: "#EF4444" },
+  [CIVIC_REPORT_STATUSES.PENDING]: { label: "Pendente", color: "#F59E0B" },
+  [CIVIC_REPORT_STATUSES.IN_PROGRESS]: { label: "Em Andamento", color: "#3B82F6" },
+  [CIVIC_REPORT_STATUSES.RESOLVED]: { label: "Resolvido", color: "#10B981" },
+  [CIVIC_REPORT_STATUSES.REJECTED]: { label: "Rejeitado", color: "#EF4444" },
 };
 
 const URGENCY_CONFIG = {
@@ -224,7 +234,8 @@ export function UnifiedDetailModal({
     }
 
     const problemType = PROBLEM_TYPES[civicReportData?.type || "outro"];
-    const statusConfig = STATUS_CONFIG[civicReportData?.status || "pending"];
+    const statusConfig =
+      STATUS_CONFIG[civicReportData?.status || CIVIC_REPORT_STATUSES.PENDING];
     const urgencyConfig = URGENCY_CONFIG[civicReportData?.urgency || "low"];
 
     return (

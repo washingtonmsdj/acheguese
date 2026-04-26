@@ -3,7 +3,7 @@
  *
  * Busca posts com imagens cujo location_id corresponde ao bairro do ponto.
  * Fallback para filtro por city+neighborhood quando location_id não disponível.
- * Retorna mock data quando não há posts reais.
+ * Retorna array vazio quando não há posts reais.
  * 
  * ✅ SSOT: Database → TouristPointService → Hook → Component
  */

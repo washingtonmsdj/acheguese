@@ -44,7 +44,15 @@ const itemSchema = z.object({
   category_id: z.string().optional(),
   image_url: z.string().url('URL inválida').optional().or(z.literal('')),
   preparation_time_min: z.number().min(0).optional(),
+  calories: z.number().min(0).optional(),
   is_featured: z.boolean().default(false),
+  is_vegetarian: z.boolean().default(false),
+  is_vegan: z.boolean().default(false),
+  is_gluten_free: z.boolean().default(false),
+  is_lactose_free: z.boolean().default(false),
+  is_spicy: z.boolean().default(false),
+  spicy_level: z.number().int().min(1).max(5).optional(),
+  ingredients: z.string().optional(), // Será convertido para array
   tags: z.string().optional(), // Será convertido para array
   allergens: z.string().optional(), // Será convertido para array
   pizza_size_label: z.string().max(40).optional(),
@@ -90,7 +98,15 @@ export function ItemForm({
       category_id: item?.category_id || '',
       image_url: item?.image_url || '',
       preparation_time_min: item?.preparation_time_min || undefined,
+      calories: item?.calories || undefined,
       is_featured: item?.is_featured || false,
+      is_vegetarian: item?.is_vegetarian || false,
+      is_vegan: item?.is_vegan || false,
+      is_gluten_free: item?.is_gluten_free || false,
+      is_lactose_free: item?.is_lactose_free || false,
+      is_spicy: item?.is_spicy || false,
+      spicy_level: item?.spicy_level || undefined,
+      ingredients: item?.ingredients?.join(', ') || '',
       tags: item?.tags?.join(', ') || '',
       allergens: item?.allergens?.join(', ') || '',
       pizza_size_label: pizzaVisual?.size_label || '',
@@ -128,9 +144,12 @@ export function ItemForm({
       delete baseNutritionalInfo.pizza_visual;
     }
 
-    // Converter tags e allergens de string para array
+    // Converter strings separadas por vírgula para arrays
     const processedValues = {
       ...baseValues,
+      ingredients: baseValues.ingredients
+        ? baseValues.ingredients.split(',').map((i) => i.trim()).filter(Boolean)
+        : [],
       tags: baseValues.tags
         ? baseValues.tags.split(',').map((t) => t.trim()).filter(Boolean)
         : [],
@@ -299,6 +318,32 @@ export function ItemForm({
               />
             </div>
 
+            {/* Calorias */}
+            <FormField
+              control={form.control}
+              name="calories"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Calorias (opcional)</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="number"
+                      placeholder="Ex: 850"
+                      {...field}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        field.onChange(val ? parseInt(val) : undefined);
+                      }}
+                    />
+                  </FormControl>
+                  <FormDescription>
+                    Valor calórico aproximado do item
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
             {isPizzaria && (
               <div className="space-y-3 rounded-lg border p-4">
                 <div>
@@ -367,16 +412,170 @@ export function ItemForm({
               </div>
             )}
 
+            {/* Características Dietéticas */}
+            <div className="space-y-3 rounded-lg border p-4">
+              <div>
+                <p className="font-medium">Características Dietéticas</p>
+                <p className="text-sm text-muted-foreground">
+                  Marque as opções que se aplicam ao item
+                </p>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="is_vegetarian"
+                  render={({ field }) => (
+                    <FormItem className="flex items-center justify-between rounded-lg border p-3">
+                      <div className="space-y-0.5">
+                        <FormLabel className="text-sm">Vegetariano</FormLabel>
+                      </div>
+                      <FormControl>
+                        <Switch
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                        />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="is_vegan"
+                  render={({ field }) => (
+                    <FormItem className="flex items-center justify-between rounded-lg border p-3">
+                      <div className="space-y-0.5">
+                        <FormLabel className="text-sm">Vegano</FormLabel>
+                      </div>
+                      <FormControl>
+                        <Switch
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                        />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="is_gluten_free"
+                  render={({ field }) => (
+                    <FormItem className="flex items-center justify-between rounded-lg border p-3">
+                      <div className="space-y-0.5">
+                        <FormLabel className="text-sm">Sem Glúten</FormLabel>
+                      </div>
+                      <FormControl>
+                        <Switch
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                        />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="is_lactose_free"
+                  render={({ field }) => (
+                    <FormItem className="flex items-center justify-between rounded-lg border p-3">
+                      <div className="space-y-0.5">
+                        <FormLabel className="text-sm">Sem Lactose</FormLabel>
+                      </div>
+                      <FormControl>
+                        <Switch
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                        />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="is_spicy"
+                  render={({ field }) => (
+                    <FormItem className="flex items-center justify-between rounded-lg border p-3">
+                      <div className="space-y-0.5">
+                        <FormLabel className="text-sm">Picante</FormLabel>
+                      </div>
+                      <FormControl>
+                        <Switch
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                        />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="spicy_level"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Nível de Picância</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="number"
+                          min="1"
+                          max="5"
+                          placeholder="1-5"
+                          {...field}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            field.onChange(val ? parseInt(val) : undefined);
+                          }}
+                          disabled={!form.watch('is_spicy')}
+                        />
+                      </FormControl>
+                      <FormDescription>
+                        1 (suave) a 5 (muito picante)
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+            </div>
+
+            {/* Ingredientes */}
+            <FormField
+              control={form.control}
+              name="ingredients"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Ingredientes</FormLabel>
+                  <FormControl>
+                    <Textarea
+                      placeholder="mussarela, tomate, manjericão, azeite"
+                      rows={2}
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormDescription>
+                    Separe por vírgula
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
             {/* Tags */}
             <FormField
               control={form.control}
               name="tags"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Tags</FormLabel>
+                  <FormLabel>Tags (opcional)</FormLabel>
                   <FormControl>
                     <Input
-                      placeholder="vegetariano, picante, sem glúten"
+                      placeholder="promoção, mais vendido, novo"
                       {...field}
                     />
                   </FormControl>
@@ -397,12 +596,12 @@ export function ItemForm({
                   <FormLabel>Alergênicos</FormLabel>
                   <FormControl>
                     <Input
-                      placeholder="glúten, lactose, amendoim"
+                      placeholder="glúten, lactose, amendoim, soja"
                       {...field}
                     />
                   </FormControl>
                   <FormDescription>
-                    Separe por vírgula
+                    Separe por vírgula. Informe substâncias que podem causar alergias
                   </FormDescription>
                   <FormMessage />
                 </FormItem>

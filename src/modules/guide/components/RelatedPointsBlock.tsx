@@ -7,10 +7,11 @@
 import { Link } from 'react-router-dom';
 import { Star, MapPin } from 'lucide-react';
 import { Badge } from '@/shared/components/ui/badge';
-import { MOCK_TOURIST_POINTS, type MockTouristPointExtended } from '../__mocks__/touristPointMocks';
 import { CATEGORY_LABELS, CATEGORY_ICONS } from '../types/categories';
+import type { TouristPointDisplay } from '../types/presentation';
 
 interface RelatedPointsBlockProps {
+  points: TouristPointDisplay[];
   currentPointId: string;
   category?: string;
   neighborhood?: string;
@@ -18,13 +19,14 @@ interface RelatedPointsBlockProps {
 }
 
 export function RelatedPointsBlock({
+  points,
   currentPointId,
   category,
   neighborhood,
   buildDetailUrl,
 }: RelatedPointsBlockProps) {
   // Get related points: same category or neighborhood, excluding current
-  const related = MOCK_TOURIST_POINTS
+  const related = points
     .filter((p) => p.id !== currentPointId)
     .filter((p) => p.category === category || p.neighborhood === neighborhood)
     .slice(0, 4);
@@ -47,7 +49,7 @@ export function RelatedPointsBlock({
   );
 }
 
-function RelatedPointCard({ point, detailUrl }: { point: MockTouristPointExtended; detailUrl: string }) {
+function RelatedPointCard({ point, detailUrl }: { point: TouristPointDisplay; detailUrl: string }) {
   const coverUrl = point.media?.[0]?.url;
   const catLabel = CATEGORY_LABELS[point.category] ?? point.category;
   const catIcon = CATEGORY_ICONS[point.category] ?? '📍';

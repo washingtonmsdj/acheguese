@@ -563,7 +563,7 @@ class MessagingService {
       const { error } = await (supabase as any)
         .from("conversations")
         .update({
-          status: "active",
+          status: ALERT_STATUS.ACTIVE,
           blocked_by: null,
           block_reason: null,
         })

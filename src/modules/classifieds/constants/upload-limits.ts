@@ -1,0 +1,3 @@
+export const CLASSIFIED_UPLOAD_LIMITS = {
+  MAX_FILE_SIZE_BYTES: 10 * 1024 * 1024,
+} as const;

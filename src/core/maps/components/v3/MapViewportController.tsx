@@ -9,6 +9,7 @@
 
 import React, { useCallback, useRef } from 'react';
 import type { MapViewport } from '../../types/core';
+import { MAP_DEFAULT_COORDINATES } from '../../config/defaultCoordinates';
 
 export interface MapViewportControllerProps {
   onViewportChange: (viewport: MapViewport) => void;
@@ -28,7 +29,7 @@ export function MapViewportController({ children }: MapViewportControllerProps) 
 // eslint-disable-next-line react-refresh/only-export-components
 export function useViewportBridge() {
   const viewportRef = useRef<MapViewport>({
-    center: { latitude: -12.9714, longitude: -38.5014 },
+    center: MAP_DEFAULT_COORDINATES,
     zoom: 13,
   });
 

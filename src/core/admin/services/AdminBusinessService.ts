@@ -9,6 +9,7 @@
 import { logger } from "@/shared/utils/logger";
 import { BusinessService } from "@/core/business/services/BusinessService";
 import { ReviewsService } from "@/core/reviews/services/ReviewsService";
+import { ADMIN_PLACEHOLDER_IDS } from "@/core/admin/config/identifiers";
 
 export interface AdminBusinessData {
   id: string;
@@ -294,7 +295,7 @@ class AdminBusinessServiceClass {
         profile_id: profile.id,
         ...businessData,
         status: "pendente",
-        neighborhood_id: "00000000-0000-0000-0000-000000000000",
+        neighborhood_id: ADMIN_PLACEHOLDER_IDS.EMPTY_LOCATION_ID,
       }, userId);
 
       return profile;

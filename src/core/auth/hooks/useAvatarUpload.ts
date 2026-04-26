@@ -3,8 +3,7 @@ import { AuthService } from "@/core/auth/services/AuthService";
 import { useAuth } from "@/core/auth/hooks/useAuth";
 import { useToast } from "@/shared/hooks/use-toast";
 import { trackError } from "@/shared/utils/errorTracking";
-
-const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2MB
+import { AUTH_AVATAR_UPLOAD_LIMITS } from "@/core/auth/constants/avatar";
 
 export function useAvatarUpload(onSuccess?: (avatarUrl: string) => void) {
   const { user } = useAuth();
@@ -22,7 +21,7 @@ export function useAvatarUpload(onSuccess?: (avatarUrl: string) => void) {
         return false;
       }
 
-      if (file.size > MAX_FILE_SIZE) {
+      if (file.size > AUTH_AVATAR_UPLOAD_LIMITS.MAX_FILE_SIZE_BYTES) {
         toast({
           title: "Arquivo muito grande",
           description: "O tamanho máximo é 2MB",

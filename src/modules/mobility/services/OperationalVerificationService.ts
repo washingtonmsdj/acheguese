@@ -34,6 +34,7 @@ import {
   VERIFICATION_ERRORS as ERRORS,
   VERIFICATION_SUCCESS as SUCCESS,
 } from '../types/OperationalVerification';
+import { OPERATIONAL_VERIFICATION_STATUS } from '../constants/dispatchStatus';
 export interface ServiceResult<T = void> {
   success: boolean;
   data?: T;
@@ -94,7 +95,7 @@ export class OperationalVerificationService {
           is_required: true,
           required_by: requiredBy,
           required_at: now.toISOString(),
-          status: 'pending',
+          status: OPERATIONAL_VERIFICATION_STATUS.PENDING,
           pin_hash: pinHash,
           pin_generated_at: now.toISOString(),
           pin_expires_at: expiresAt.toISOString(),

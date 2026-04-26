@@ -49,6 +49,10 @@ export default function GastronomyDetailPage() {
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const [selectedItem, setSelectedItem] = useState<MenuItemWithRelations | null>(null);
   const [shareOpen, setShareOpen] = useState(false);
+  const [veganOnly, setVeganOnly] = useState(false);
+  const [vegetarianOnly, setVegetarianOnly] = useState(false);
+  const [glutenFreeOnly, setGlutenFreeOnly] = useState(false);
+  const [lactoseFreeOnly, setLactoseFreeOnly] = useState(false);
 
   const { data: snapshot, isLoading: isLoadingSnapshot } = usePublicGastronomySnapshot({
     state,
@@ -124,7 +128,17 @@ export default function GastronomyDetailPage() {
   }
 
   const activeCategoryData = sortedCategories.find((c) => c.id === activeCategory);
-  const activeItems = activeCategoryData?.items ?? [];
+  const allCategoryItems = activeCategoryData?.items ?? [];
+  
+  const activeItems = useMemo(() => {
+    return allCategoryItems.filter((item) => {
+      if (veganOnly && !item.is_vegan) return false;
+      if (vegetarianOnly && !item.is_vegetarian) return false;
+      if (glutenFreeOnly && !item.is_gluten_free) return false;
+      if (lactoseFreeOnly && !item.is_lactose_free) return false;
+      return true;
+    });
+  }, [allCategoryItems, veganOnly, vegetarianOnly, glutenFreeOnly, lactoseFreeOnly]);
   const cuisineLabel = getCuisineLabel(profile.cuisine_type);
   const averageRating = business.rating.toFixed(1);
   const photos = business.fotos ?? [];
@@ -481,6 +495,38 @@ export default function GastronomyDetailPage() {
                         ))}
                       </div>
                     )}
+
+                    {/* Filtros Dietéticos */}
+                    <div className="flex flex-wrap gap-2">
+                      <Button
+                        variant={veganOnly ? 'default' : 'outline'}
+                        size="sm"
+                        onClick={() => setVeganOnly((current) => !current)}
+                      >
+                        🌱 Vegano
+                      </Button>
+                      <Button
+                        variant={vegetarianOnly ? 'default' : 'outline'}
+                        size="sm"
+                        onClick={() => setVegetarianOnly((current) => !current)}
+                      >
+                        🥬 Vegetariano
+                      </Button>
+                      <Button
+                        variant={glutenFreeOnly ? 'default' : 'outline'}
+                        size="sm"
+                        onClick={() => setGlutenFreeOnly((current) => !current)}
+                      >
+                        🌾 Sem glúten
+                      </Button>
+                      <Button
+                        variant={lactoseFreeOnly ? 'default' : 'outline'}
+                        size="sm"
+                        onClick={() => setLactoseFreeOnly((current) => !current)}
+                      >
+                        🥛 Sem lactose
+                      </Button>
+                    </div>
 
                     <div className="space-y-3">
                       {activeItems.map((item) => (

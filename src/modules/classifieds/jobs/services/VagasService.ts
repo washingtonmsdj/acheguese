@@ -19,6 +19,7 @@
  */
 import { logger } from '@/shared/utils/logger';
 import { supabase } from '@/integrations/supabase/supabase';
+import { JOB_QUERY_LIMITS } from '../constants/query-limits';
 import type {
   Vaga,
   VagaRow,
@@ -113,8 +114,8 @@ function mapRowToVaga(row: VagaRow): Vaga {
 // ═══════════════════════════════════════════════════════════════════════════════
 
 export class VagasService {
-  private static readonly DEFAULT_LIMIT = 20;
-  private static readonly MAX_LIMIT = 100;
+  private static readonly DEFAULT_LIMIT = JOB_QUERY_LIMITS.DEFAULT_LIMIT;
+  private static readonly MAX_LIMIT = JOB_QUERY_LIMITS.MAX_LIMIT;
   private static urgenciaColumnAvailable: boolean | null = null;
   private static highlightTypeColumnAvailable: boolean | null = null;
 

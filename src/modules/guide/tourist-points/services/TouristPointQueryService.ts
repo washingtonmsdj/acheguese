@@ -7,14 +7,22 @@
 
 import { supabase } from '@/integrations/supabase';
 import type { TerritoryFilter } from '@/core/location/types';
+import type { TouristPoint } from '../types';
 
 const SELECT_PUBLIC = `
   id,
   location_id,
+  address_id,
   slug,
   title,
   summary,
   description,
+  category,
+  rating,
+  total_reviews,
+  accessibility,
+  accessibility_level,
+  neighborhood,
   address_text,
   price_type,
   price_text,
@@ -29,6 +37,7 @@ const SELECT_PUBLIC = `
   created_by,
   updated_by,
   location:locations!location_id(id, name, full_name, geographic_path, type),
+  address:addresses!address_id(latitude, longitude),
   media:tourist_point_media(id, url, alt_text, is_cover, display_order)
 `;
 
@@ -81,7 +90,7 @@ export class TouristPointQueryService {
     return [locationId];
   }
 
-  static async listPublished(filters: TouristPointQueryFilters): Promise<any[]> {
+  static async listPublished(filters: TouristPointQueryFilters): Promise<TouristPoint[]> {
     if (!filters.location_ids.length) return [];
 
     try {
@@ -114,7 +123,7 @@ export class TouristPointQueryService {
     }
   }
 
-  static async getPublishedBySlug(locationId: string, slug: string): Promise<any | null> {
+  static async getPublishedBySlug(locationId: string, slug: string): Promise<TouristPoint | null> {
     try {
       const locationIds = await this.expandLocationIds(locationId);
 
@@ -150,7 +159,7 @@ export class TouristPointQueryService {
     }
   }
 
-  static async listAdmin(filters: TouristPointQueryFilters): Promise<any[]> {
+  static async listAdmin(filters: TouristPointQueryFilters): Promise<TouristPoint[]> {
     try {
       let query = supabase
         .from('tourist_points')
@@ -177,7 +186,7 @@ export class TouristPointQueryService {
     }
   }
 
-  static async getById(id: string): Promise<any | null> {
+  static async getById(id: string): Promise<TouristPoint | null> {
     try {
       const { data, error } = await supabase
         .from('tourist_points')

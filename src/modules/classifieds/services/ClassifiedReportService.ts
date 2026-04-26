@@ -6,6 +6,7 @@
  */
 
 import { supabase } from "@/integrations/supabase";
+import { REPORT_STATUS, type ReportStatus } from "@/shared/types/constants";
 import { logger } from "@/shared/utils/logger";
 import { trackError } from "@/shared/utils/errorTracking";
 
@@ -25,7 +26,13 @@ export interface ClassifiedReport {
   reporter_id: string | null;
   reason: ReportReason;
   description?: string;
-  status: "pending" | "reviewed" | "resolved" | "dismissed";
+  status: Extract<
+    ReportStatus,
+    | typeof REPORT_STATUS.PENDING
+    | typeof REPORT_STATUS.REVIEWED
+    | typeof REPORT_STATUS.RESOLVED
+    | typeof REPORT_STATUS.DISMISSED
+  >;
   created_at: string;
   updated_at: string;
   reviewed_by?: string;
@@ -55,7 +62,7 @@ class ClassifiedReportServiceClass {
           reporter_id: userId,
           reason: input.reason,
           description: input.description,
-          status: "pending",
+          status: REPORT_STATUS.PENDING,
         })
         .select()
         .single();
@@ -207,7 +214,7 @@ class ClassifiedReportServiceClass {
       const { count, error } = await supabase
         .from("classified_reports")
         .select("*", { count: "exact", head: true })
-        .eq("status", "pending");
+        .eq("status", REPORT_STATUS.PENDING);
 
       if (error) {
         logger.error("Error counting pending reports:", error);

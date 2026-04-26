@@ -33,6 +33,7 @@ import {
   EyeOff,
   Link2,
   Menu as MenuIcon,
+  Pizza,
   RefreshCw,
   Search,
   Trash2,
@@ -106,6 +107,18 @@ export default function AdminGastronomia() {
     queryKey: ["admin-gastronomy-promotion-ownership"],
     queryFn: () => adminGastronomyService.getPromotionOwnershipSummary(),
     enabled: activeTab === "analytics",
+  });
+
+  // Query para nichos (pizzarias)
+  const { data: nicheBusinessesData, isLoading: loadingNicheBusinesses } = useQuery({
+    queryKey: ["admin-gastronomy-niches", "pizza", page, search],
+    queryFn: () =>
+      adminGastronomyService.getBusinessesByNiche("pizza", {
+        page,
+        limit: PAGE_SIZE,
+        search,
+      }),
+    enabled: activeTab === "niches",
   });
 
   const toggleProfileMutation = useMutation({
@@ -220,6 +233,10 @@ export default function AdminGastronomia() {
           <TabsTrigger value="items" className="flex items-center gap-2">
             <UtensilsCrossed className="h-4 w-4" />
             Itens
+          </TabsTrigger>
+          <TabsTrigger value="niches" className="flex items-center gap-2">
+            <Pizza className="h-4 w-4" />
+            Nichos
           </TabsTrigger>
           <TabsTrigger value="analytics" className="flex items-center gap-2">
             <TrendingUp className="h-4 w-4" />
@@ -471,6 +488,81 @@ export default function AdminGastronomia() {
                             }
                           >
                             {item.is_available ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="niches" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle>Nichos - Pizzarias</CardTitle>
+                  <CardDescription>
+                    Gestao de empresas com nicho especifico (pizzaria)
+                  </CardDescription>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="pt-6 space-y-4">
+              <div className="flex flex-col md:flex-row gap-4">
+                <div className="flex-1">
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      placeholder="Buscar pizzaria por nome..."
+                      value={search}
+                      onChange={(event) => setSearch(event.target.value)}
+                      className="pl-9"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {loadingNicheBusinesses ? (
+                <p className="text-muted-foreground">Carregando...</p>
+              ) : nicheBusinessesData?.data.length === 0 ? (
+                <p className="text-muted-foreground">Nenhuma pizzaria encontrada.</p>
+              ) : (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Nome</TableHead>
+                      <TableHead>Slug</TableHead>
+                      <TableHead>Tipo de cozinha</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead className="text-right">Acoes</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {nicheBusinessesData?.data.map((business) => (
+                      <TableRow key={business.id}>
+                        <TableCell className="font-medium">{business.name}</TableCell>
+                        <TableCell>
+                          <code className="text-xs">{business.slug}</code>
+                        </TableCell>
+                        <TableCell>{business.cuisineType || "-"}</TableCell>
+                        <TableCell>
+                          {business.status === "active" ? (
+                            <Badge variant="success">Ativo</Badge>
+                          ) : (
+                            <Badge variant="secondary">Inativo</Badge>
+                          )}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => window.open(`/negocio/${business.slug}/cardapio`, "_blank")}
+                          >
+                            Ver Cardapio
                           </Button>
                         </TableCell>
                       </TableRow>

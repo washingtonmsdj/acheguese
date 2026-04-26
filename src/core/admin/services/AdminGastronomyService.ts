@@ -69,6 +69,31 @@ export interface GastronomyPromotionOwnershipSummary {
   menuPromotionsActive: number;
 }
 
+export interface BusinessWithNiche {
+  id: string;
+  name: string;
+  slug: string;
+  nicheKey: string | null;
+  cuisineType: string | null;
+  status: string;
+  createdAt: string;
+}
+
+export interface PizzaCatalogSummary {
+  businessId: string;
+  businessName: string;
+  config: {
+    defaultPriceRule: string;
+    allowHalfHalf: boolean;
+    allowThreeFlavors: boolean;
+    allowFourFlavors: boolean;
+  };
+  sizesCount: number;
+  flavorsCount: number;
+  edgesCount: number;
+  doughsCount: number;
+}
+
 class AdminGastronomyServiceClass {
   async getStats(): Promise<GastronomyStats> {
     try {
@@ -581,6 +606,112 @@ class AdminGastronomyServiceClass {
       };
     } catch (error) {
       logger.error("AdminGastronomyService.getPromotionOwnershipSummary", error);
+      throw error;
+    }
+  }
+
+  /**
+   * Busca empresas gastronomicas com nicho especifico (ex: 'pizza')
+   */
+  async getBusinessesByNiche(nicheKey: string, params: {
+    page?: number;
+    limit?: number;
+    search?: string;
+  } = {}): Promise<{ data: BusinessWithNiche[]; count: number; totalPages: number }> {
+    const { page = 1, limit = 20, search } = params;
+
+    try {
+      let query = supabase
+        .from("gastronomy_profiles")
+        .select(
+          `
+          business_id,
+          niche_key,
+          cuisine_type,
+          status,
+          created_at,
+          business:business_data!inner(
+            id,
+            name,
+            slug
+          )
+        `,
+          { count: "exact" },
+        )
+        .eq("niche_key", nicheKey);
+
+      if (search) {
+        query = query.ilike("business.name", `%${search}%`);
+      }
+
+      const from = (page - 1) * limit;
+      const to = from + limit - 1;
+
+      const { data, error, count } = await query
+        .range(from, to)
+        .order("created_at", { ascending: false });
+
+      if (error) throw error;
+
+      const businesses: BusinessWithNiche[] = (data || []).map((row: any) => ({
+        id: row.business_id,
+        name: row.business?.name || "",
+        slug: row.business?.slug || "",
+        nicheKey: row.niche_key,
+        cuisineType: row.cuisine_type,
+        status: row.status,
+        createdAt: row.created_at,
+      }));
+
+      return {
+        data: businesses,
+        count: count || 0,
+        totalPages: Math.ceil((count || 0) / limit),
+      };
+    } catch (error) {
+      logger.error("AdminGastronomyService.getBusinessesByNiche", error);
+      throw error;
+    }
+  }
+
+  /**
+   * Obtem resumo do catalogo de pizzaria para visualizacao admin
+   */
+  async getPizzaCatalogSummary(businessId: string): Promise<PizzaCatalogSummary | null> {
+    try {
+      // Buscar dados em paralelo
+      const [configRes, sizesRes, flavorsRes, edgesRes, doughsRes, businessRes] = await Promise.all([
+        supabase.from("pizza_niche_configs").select("*").eq("business_id", businessId).single(),
+        supabase.from("pizza_sizes").select("id").eq("business_id", businessId),
+        supabase.from("pizza_flavors").select("id").eq("business_id", businessId),
+        supabase.from("pizza_edges").select("id").eq("business_id", businessId),
+        supabase.from("pizza_doughs").select("id").eq("business_id", businessId),
+        supabase.from("business_data").select("name").eq("id", businessId).single(),
+      ]);
+
+      if (configRes.error) {
+        // Config nao encontrada = nao eh pizzaria ou nao configurada
+        return null;
+      }
+
+      const config = configRes.data;
+
+      return {
+        businessId,
+        businessName: businessRes.data?.name || "",
+        config: {
+          defaultPriceRule: config.default_price_rule,
+          allowHalfHalf: config.allow_half_half,
+          allowThreeFlavors: config.allow_three_flavors,
+          allowFourFlavors: config.allow_four_flavors,
+        },
+        sizesCount: sizesRes.data?.length || 0,
+        flavorsCount: flavorsRes.data?.length || 0,
+        edgesCount: edgesRes.data?.length || 0,
+        doughsCount: doughsRes.data?.length || 0,
+      };
+    } catch (error) {
+      logger.error("AdminGastronomyService.getPizzaCatalogSummary", error);
       throw error;
     }
   }

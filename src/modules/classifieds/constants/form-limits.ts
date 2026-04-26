@@ -1,0 +1,5 @@
+export const CLASSIFIED_FORM_LIMITS = {
+  MAX_PHOTOS: 10,
+  MAX_TITLE: 100,
+  MAX_DESCRIPTION: 2000,
+} as const;

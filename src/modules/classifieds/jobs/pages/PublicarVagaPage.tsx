@@ -30,6 +30,7 @@ import { useSessionContext } from "@/core/session";
 import { useVagasLocation } from "../hooks/useVagasLocation";
 import { useVagaPublishPermission } from "../hooks/useVagaPublishPermission";
 import { VagasService } from "../services/VagasService";
+import { JOB_FORM_LIMITS } from "../constants/form-limits";
 import {
   VAGA_CATEGORIAS,
   CONTRATO_LABELS,
@@ -63,9 +64,6 @@ const modalidadeLabelsMap = new Map(
 const nivelLabelsMap = new Map(
   Object.entries(NIVEL_LABELS) as Array<[VagaNivel, string]>,
 );
-
-const MAX_TITLE = 120;
-const MAX_DESCRIPTION = 3000;
 
 // â”€â”€â”€ Suggested benefits â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const SUGGESTED_BENEFITS = [
@@ -578,12 +576,12 @@ export default function PublicarVagaPage() {
           {currentStep === "info" && (
             <div className="space-y-5">
               {/* TÃ­tulo */}
-              <FormField label="TÃ­tulo da Vaga" error={errors.titulo} counter={`${titulo.length}/${MAX_TITLE}`} required>
+              <FormField label="TÃ­tulo da Vaga" error={errors.titulo} counter={`${titulo.length}/${JOB_FORM_LIMITS.MAX_TITLE}`} required>
                 <Input
                   placeholder="Ex: Desenvolvedor Full Stack, Vendedor Externo..."
                   value={titulo}
                   onChange={(e) => setTitulo(e.target.value)}
-                  maxLength={MAX_TITLE}
+                  maxLength={JOB_FORM_LIMITS.MAX_TITLE}
                   className={cn("h-12 text-sm rounded-xl", errors.titulo && "border-destructive")}
                 />
               </FormField>
@@ -603,13 +601,13 @@ export default function PublicarVagaPage() {
               </FormField>
 
               {/* DescriÃ§Ã£o */}
-              <FormField label="DescriÃ§Ã£o da Vaga" error={errors.descricao} counter={`${descricao.length}/${MAX_DESCRIPTION}`} required>
+              <FormField label="DescriÃ§Ã£o da Vaga" error={errors.descricao} counter={`${descricao.length}/${JOB_FORM_LIMITS.MAX_DESCRIPTION}`} required>
                 <Textarea
                   placeholder="Descreva as responsabilidades, ambiente de trabalho, diferenciais..."
                   rows={5}
                   value={descricao}
                   onChange={(e) => setDescricao(e.target.value)}
-                  maxLength={MAX_DESCRIPTION}
+                  maxLength={JOB_FORM_LIMITS.MAX_DESCRIPTION}
                   className={cn("text-sm rounded-xl resize-none", errors.descricao && "border-destructive")}
                 />
               </FormField>

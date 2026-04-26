@@ -13,6 +13,10 @@ import { buildPublicProfileUrl } from "@/core/profiles/utils/publicProfileUrl";
 import { AuthorizationEngine } from "@/core/authorization/services/AuthorizationEngine";
 import { FamilyService, FAMILY_TABLES } from "@/core/family";
 import { adminNotificationsService } from "./AdminNotificationsService";
+import {
+  ADMIN_PROFILE_PERMISSION_GOVERNANCE_STATUS,
+  type AdminProfilePermissionGovernanceStatus,
+} from "@/core/admin/config/profile-governance";
 import type {
   ProfilePermissions,
   ProfilePlan,
@@ -244,7 +248,7 @@ export interface AdminProfilePermissionActionSummary {
 }
 
 export interface AdminProfilePermissionGovernanceSummary {
-  status: "active" | "limited" | "blocked";
+  status: AdminProfilePermissionGovernanceStatus;
   sourceRoles: string[];
   sourceMembershipRoles: string[];
   allowedActions: number;
@@ -337,7 +341,9 @@ function buildLinkedEntities(payload: {
       id: row.id,
       title: normalizeText(row.business_name) ?? "Empresa sem nome",
       subtitle: normalizeText(row.category),
-      status: normalizeText(row.status) ?? "active",
+      status:
+        normalizeText(row.status) ??
+        ADMIN_PROFILE_PERMISSION_GOVERNANCE_STATUS.ACTIVE,
       verified: Boolean(row.is_verified),
       publicUrl: normalizeText(row.slug) ? `/p/${row.slug}` : null,
       metadata: [

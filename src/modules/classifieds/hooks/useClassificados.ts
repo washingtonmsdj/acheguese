@@ -2,7 +2,6 @@ import { logger } from '@/shared/utils/logger';
 import { useQuery } from "@tanstack/react-query";
 import { ClassifiedsFacade, mapToClassificadoList } from "@/modules/classifieds/services";
 import { useTerritoryFilter, isTerritoryFilterReady, territoryFilterKey } from "@/core/location";
-import { MOCK_CLASSIFIEDS } from "@/modules/classifieds/data/mock-classifieds";
 import type { ResolvedTerritory } from "@/core/routing/hooks/useResolveTerritoryFromUrl";
 import type { ClassifiedData } from "../services/types";
 export interface ClassificadoWithVendedor {
@@ -91,36 +90,9 @@ export function useClassificados(options: UseClassificadosOptions = {}) {
 
         mapped = mapToClassificadoList(filtered as ClassifiedData[]);
       } catch (error) {
-        logger.warn('[useClassificados] API failed, using mock data:', error);
+        logger.warn('[useClassificados] API failed', error);
         mapped = [];
       }
-
-      // ✅ Fallback: usa mock data quando API retorna vazio
-      if (mapped.length === 0) {
-        let mocks = [...MOCK_CLASSIFIEDS];
-
-        if (filters?.category) {
-          mocks = mocks.filter((m) => m.categoria === filters.category);
-        }
-        if (filters?.search) {
-          const s = filters.search.toLowerCase();
-          mocks = mocks.filter((m) =>
-            m.titulo.toLowerCase().includes(s) ||
-            m.categoria?.toLowerCase().includes(s) ||
-            m.bairro?.toLowerCase().includes(s) ||
-            m.vendedor?.nome?.toLowerCase().includes(s)
-          );
-        }
-        if (filters?.priceMin) {
-          mocks = mocks.filter((m) => m.preco >= filters.priceMin!);
-        }
-        if (filters?.priceMax) {
-          mocks = mocks.filter((m) => m.preco <= filters.priceMax!);
-        }
-
-        return mocks;
-      }
-
       return mapped as ClassificadoWithVendedor[];
     },
     enabled: true, // Sempre executa - filtro territorial é opcional

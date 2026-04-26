@@ -7,6 +7,7 @@ import { logger } from '@/shared/utils/logger';
 import { supabase } from '@/integrations/supabase';
 import { PlanTier, type BusinessSubscription } from './types';
 import type { AdminSupabaseClient } from '@/core/admin/types/adminDatabase.types';
+import { BILLING_SUBSCRIPTION_STATUS } from './constants/subscription-status';
 // ══════════════════════════════════════════════════════════════════════════
 // TYPES
 // ══════════════════════════════════════════════════════════════════════════
@@ -66,7 +67,7 @@ export class SubscriptionService {
       id: 'temp-free-' + businessId,
       business_id: businessId,
       plan_tier: PlanTier.FREE,
-      status: 'active',
+      status: BILLING_SUBSCRIPTION_STATUS.ACTIVE,
       current_period_start: now,
       current_period_end: futureDate.toISOString(),
       cancel_at_period_end: false,
@@ -144,7 +145,7 @@ export class SubscriptionService {
       };
       
       if (immediately) {
-        updates.status = 'canceled';
+        updates.status = BILLING_SUBSCRIPTION_STATUS.CANCELED;
         updates.plan_tier = PlanTier.FREE;
         updates.cancel_at_period_end = false;
       } else {

@@ -14,6 +14,7 @@
 import { logger } from '@/shared/utils/logger';
 import { GeolocationService } from '@/core/maps/services/GeolocationService';
 import { locationContextStore } from '../stores/LocationContextStore';
+import { TERRITORY_CENTERS } from '../config/territoryCenters';
 import type { ResolvedEntityLocation } from '../types/entityLocation';
 
 export interface UserLocationResolverOptions {
@@ -24,14 +25,6 @@ export interface UserLocationResolverOptions {
   /** Usar cache? (default: true) */
   useCache?: boolean;
 }
-
-// Coordenadas centrais de territórios conhecidos (fallback)
-const TERRITORY_CENTERS: Record<string, { lat: number; lng: number }> = {
-  // Salvador
-  'salvador': { lat: -12.9714, lng: -38.5124 },
-  // Conceição do Jacuípe
-  'conceicao-do-jacuipe': { lat: -12.3269, lng: -38.7661 },
-};
 
 class UserLocationResolverClass {
   /**

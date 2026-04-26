@@ -21,6 +21,7 @@ import { useMultiProfileContext } from "@/core/profiles/contexts/multi-profile-r
 import { ActiveProfileBadge } from "@/core/profiles/components/ActiveProfileBadge";
 import { getEligibleVerticals } from "@/core/verticals/config";
 import { businessManagementRoutes } from "@/core/business/utils/businessManagementRoutes";
+import { EntityStatus } from "@/shared/types/enums";
 
 interface DayHoursValue {
   open: string;
@@ -120,7 +121,7 @@ export default function CriarEmpresaPageV2() {
       especialidades: [],
       facilidades: [],
       modos_atendimento: ["presencial"],
-      status: "active",
+      status: EntityStatus.ACTIVE,
     },
   });
 
@@ -361,7 +362,7 @@ export default function CriarEmpresaPageV2() {
               selectedPagamentos={form.watch("formas_pagamento") || []}
               especialidades={(form.watch("especialidades") || []).join(", ")}
               facilidades={(form.watch("facilidades") || []).join(", ")}
-              status={form.watch("status") || "active"}
+              status={form.watch("status") || EntityStatus.ACTIVE}
               errors={getErrors()}
               isCreating={isCreating}
               onCapaChange={setBannerFile}

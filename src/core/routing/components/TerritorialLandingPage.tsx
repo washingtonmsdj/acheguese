@@ -48,12 +48,9 @@ import { useClassifiedUrls } from '@/core/classifieds/hooks/useClassifiedUrls';
 import type { FeaturedBusiness, FeaturedService, FeaturedClassified } from '@/core/landing/services/LandingFeaturedService';
 import type { TerritorialHighlight, HighlightType } from '@/core/territorial/highlights/types';
 import { TerritoryAIContentSection } from '@/core/territorial/components/TerritoryAIContentSection';
+import { TERRITORIAL_LANDING_LIMITS } from '@/core/routing/config/territorialLanding.limits';
 
 // ── Regra editorial ───────────────────────────────────────────────────────────
-const MAX_HIGHLIGHTS  = 3;
-const MAX_BUSINESSES  = 4;
-const MAX_SERVICES    = 4;
-const MAX_CLASSIFIEDS = 4;
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -335,7 +332,7 @@ export function TerritorialLandingPage() {
   const classifiedUrls = useClassifiedUrls(resolved);
 
   // Aplica limite editorial de highlights
-  const highlights = allHighlights.slice(0, MAX_HIGHLIGHTS);
+  const highlights = allHighlights.slice(0, TERRITORIAL_LANDING_LIMITS.HIGHLIGHTS);
 
   const name = getTerritoryName(resolved);
   const subtitle = getTerritorySubtitle(resolved);
@@ -652,7 +649,7 @@ export function TerritorialLandingPage() {
           <BlockLoader />
         ) : businesses.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            {businesses.slice(0, MAX_BUSINESSES).map((b) => (
+            {businesses.slice(0, TERRITORIAL_LANDING_LIMITS.BUSINESSES).map((b) => (
               <BusinessCard key={b.id} b={b} onNavigate={navigate} />
             ))}
           </div>
@@ -683,7 +680,7 @@ export function TerritorialLandingPage() {
           <BlockLoader />
         ) : services.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            {services.slice(0, MAX_SERVICES).map((s) => (
+            {services.slice(0, TERRITORIAL_LANDING_LIMITS.SERVICES).map((s) => (
               <ServiceCard key={s.id} s={s} onNavigate={navigate} moduleUrl={moduleUrls.services} />
             ))}
           </div>
@@ -756,7 +753,7 @@ export function TerritorialLandingPage() {
           <BlockLoader />
         ) : classifieds.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            {classifieds.slice(0, MAX_CLASSIFIEDS).map((c) => (
+            {classifieds.slice(0, TERRITORIAL_LANDING_LIMITS.CLASSIFIEDS).map((c) => (
               <ClassifiedCard key={c.id} c={c} onNavigate={navigate} classifiedUrls={classifiedUrls} />
             ))}
           </div>

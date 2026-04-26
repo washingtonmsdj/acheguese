@@ -101,3 +101,14 @@ export {
   weekDayToIndex,
   type WeekDay,
 } from './weekDays';
+
+// Status de Gastronomia
+export {
+  GASTRONOMY_PROFILE_STATUSES,
+  type GastronomyProfileStatus,
+} from './gastronomyProfileStatus';
+
+// Upload de imagens
+export {
+  BUSINESS_IMAGE_UPLOAD_LIMITS,
+} from './imageUpload';

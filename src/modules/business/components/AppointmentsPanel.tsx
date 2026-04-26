@@ -8,6 +8,7 @@ import { AppointmentFilters } from "./appointments/AppointmentFilters";
 import { AppointmentDetailsModal } from "./appointments/AppointmentDetailsModal";
 import { EmptyAppointments } from "./appointments/EmptyAppointments";
 import { useAppointments } from "@/shared/hooks/useAppointments";
+import type { AppointmentStatus } from "./appointments/constants";
 
 interface Appointment {
   id: string;
@@ -17,7 +18,7 @@ interface Appointment {
   service_name: string;
   appointment_date: string;
   appointment_time: string;
-  status: "pending" | "confirmed" | "cancelled" | "completed";
+  status: AppointmentStatus;
   notes?: string;
   created_at: string;
 }

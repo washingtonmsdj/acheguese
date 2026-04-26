@@ -12,8 +12,7 @@ import { MessageCircle, Phone } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { cn } from "@/shared/utils/cn";
-
-type AppointmentStatus = "pending" | "confirmed" | "cancelled" | "completed";
+import type { AppointmentStatus } from "./constants";
 
 interface Appointment {
   id: string;

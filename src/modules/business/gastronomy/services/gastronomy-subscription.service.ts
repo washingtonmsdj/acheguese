@@ -1,12 +1,13 @@
 import { supabase } from "@/integrations/supabase";
 import type { PlanTier } from "@/core/billing";
 import { logger } from "@/shared/utils/logger";
+import type { GastronomySubscriptionStatus } from "../constants/subscription-status";
 
 export interface GastronomySubscription {
   id: string;
   business_id: string;
   plan_tier: PlanTier;
-  status: "active" | "canceled" | "past_due" | "trialing";
+  status: GastronomySubscriptionStatus;
   current_period_start: string;
   current_period_end: string;
   cancel_at_period_end: boolean;

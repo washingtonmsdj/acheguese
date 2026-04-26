@@ -9,6 +9,10 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { FoodItemCard } from './FoodItemCard';
 import type { PublicGastronomyFoodItem } from '../types';
 import type { LucideIcon } from 'lucide-react';
+import {
+  FOOD_SECTION_MAX_ITEMS,
+  FOOD_SECTION_SCROLL_AMOUNT,
+} from '../constants/ui-limits';
 
 interface Props {
   title: string;
@@ -23,9 +27,6 @@ const fadeIn = {
   visible: { opacity: 1, y: 0, transition: { duration: 0.4 } },
 };
 
-const MAX_ITEMS = 10;
-const SCROLL_AMOUNT = 280;
-
 export function FoodSectionCarousel({
   title,
   subtitle,
@@ -34,14 +35,14 @@ export function FoodSectionCarousel({
   accentColor = 'bg-primary/10',
 }: Props) {
   const scrollRef = useRef<HTMLDivElement>(null);
-  const visibleItems = items.slice(0, MAX_ITEMS);
+  const visibleItems = items.slice(0, FOOD_SECTION_MAX_ITEMS);
 
   if (!visibleItems.length) return null;
 
   const scroll = (direction: 'left' | 'right') => {
     if (!scrollRef.current) return;
     scrollRef.current.scrollBy({
-      left: direction === 'left' ? -SCROLL_AMOUNT : SCROLL_AMOUNT,
+      left: direction === 'left' ? -FOOD_SECTION_SCROLL_AMOUNT : FOOD_SECTION_SCROLL_AMOUNT,
       behavior: 'smooth',
     });
   };

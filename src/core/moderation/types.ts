@@ -3,6 +3,7 @@
  *
  * Tipos TypeScript para o serviço de moderação
  */
+import type { ModerationReportStatus } from "./constants/reportStatus";
 
 export interface PostReport {
   id: string;
@@ -10,7 +11,7 @@ export interface PostReport {
   reporter_id: string;
   reason: string;
   description?: string;
-  status: "pending" | "approved" | "rejected";
+  status: ModerationReportStatus;
   created_at: string;
   reviewed_at?: string;
   reviewed_by?: string;
@@ -28,7 +29,7 @@ export interface CommentReport {
   reporter_id: string;
   reason: string;
   description?: string;
-  status: "pending" | "approved" | "rejected";
+  status: ModerationReportStatus;
   created_at: string;
   reviewed_at?: string;
   reviewed_by?: string;
@@ -73,7 +74,7 @@ export interface ModerationStats {
 }
 
 export interface ModerationFilters {
-  status?: "pending" | "approved" | "rejected";
+  status?: ModerationReportStatus;
   target_type?: "post" | "comment";
   priority?: "high" | "medium" | "low";
   date_from?: string;

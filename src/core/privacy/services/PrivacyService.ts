@@ -16,6 +16,7 @@
 
 import { logger } from '@/shared/utils/logger';
 import { supabase } from '@/integrations/supabase/supabase';
+import { DPO_REQUEST_STATUS } from '@/core/privacy/constants/dpoRequestStatus';
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -76,7 +77,7 @@ export class PrivacyService {
       subject: params.subject,
       request_type: params.requestType,
       message: params.message,
-      status: 'pending',
+      status: DPO_REQUEST_STATUS.PENDING,
     });
 
     if (dbError) {

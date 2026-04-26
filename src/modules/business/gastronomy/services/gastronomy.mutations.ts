@@ -10,6 +10,10 @@ import { logger } from '@/shared/utils/logger';
 import { supabase } from '@/integrations/supabase';
 import type { Json } from '@/integrations/supabase';
 import { BusinessOwnershipService } from '@/core/business/services/BusinessOwnershipService';
+import {
+  GASTRONOMY_PROFILE_STATUSES,
+  type GastronomyProfileStatus,
+} from '@/core/business/constants';
 import { sanitizeString } from '@/shared/utils/sanitization';
 import type {
   GastronomyProfile,
@@ -86,7 +90,7 @@ export async function createGastronomyProfile(
       has_kids_area: (sanitized.has_kids_area as boolean) ?? false,
       has_live_music: (sanitized.has_live_music as boolean) ?? false,
       seating_capacity: sanitized.seating_capacity as number | undefined,
-      status: 'active' as const,
+      status: GASTRONOMY_PROFILE_STATUSES.ACTIVE,
       metadata: (sanitized.metadata as Json) || {},
     };
 
@@ -157,7 +161,7 @@ export async function deleteGastronomyProfile(
     const { error } = await supabase
       .from('gastronomy_profiles')
       .update({
-        status: 'inactive',
+        status: GASTRONOMY_PROFILE_STATUSES.INACTIVE,
         updated_at: new Date().toISOString(),
       })
       .eq('business_id', businessId);
@@ -175,7 +179,7 @@ export async function deleteGastronomyProfile(
  */
 export async function updateOperationalStatus(
   businessId: string,
-  status: 'active' | 'inactive' | 'temporarily_closed',
+  status: GastronomyProfileStatus,
   userId: string,
 ): Promise<void> {
   try {

@@ -9,12 +9,14 @@ import { logger } from '@/shared/utils/logger';
 import { supabase } from '@/integrations/supabase';
 import type { EmergencyAlert, EmergencyContact } from '../types';
 
+export type EmailDeliveryStatus = 'pending' | 'sent' | 'failed';
+
 export interface EmailDeliveryResult {
   success: boolean;
   contactId: string;
   channel: 'email';
   timestamp: string;
-  status: 'pending' | 'sent' | 'failed';
+  status: EmailDeliveryStatus;
   error?: string;
   metadata?: Record<string, unknown>;
 }

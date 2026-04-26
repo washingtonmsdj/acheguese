@@ -1,0 +1,4 @@
+export const BUSINESS_IMAGE_UPLOAD_LIMITS = {
+  MAX_FILE_SIZE_BYTES: 5 * 1024 * 1024,
+} as const;
+

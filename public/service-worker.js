@@ -4,6 +4,10 @@
 const CACHE_NAME = 'localconnect-v1';
 const OFFLINE_CACHE = 'localconnect-offline-v1';
 const CRITICAL_CACHE = 'localconnect-critical-v1';
+const IS_LOCALHOST =
+  self.location.hostname === 'localhost' ||
+  self.location.hostname === '127.0.0.1' ||
+  self.location.hostname === '::1';
 
 // Recursos críticos que SEMPRE devem estar disponíveis offline
 const CRITICAL_RESOURCES = [
@@ -36,6 +40,11 @@ const CACHE_STRATEGIES = {
 // =====================================================
 self.addEventListener('install', (event) => {
   console.log('[SW] Instalando Service Worker...');
+
+  if (IS_LOCALHOST) {
+    event.waitUntil(self.skipWaiting());
+    return;
+  }
   
   event.waitUntil(
     Promise.all([
@@ -56,6 +65,16 @@ self.addEventListener('install', (event) => {
 // =====================================================
 self.addEventListener('activate', (event) => {
   console.log('[SW] Ativando Service Worker...');
+
+  if (IS_LOCALHOST) {
+    event.waitUntil(
+      caches.keys()
+        .then((keys) => Promise.all(keys.map((key) => caches.delete(key))))
+        .then(() => self.registration.unregister())
+        .then(() => self.clients.claim())
+    );
+    return;
+  }
   
   event.waitUntil(
     Promise.all([
@@ -85,6 +104,10 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
   const { request } = event;
   const url = new URL(request.url);
+
+  if (IS_LOCALHOST) {
+    return;
+  }
 
   // Ignorar requisições de outros domínios (exceto Supabase)
   if (url.origin !== location.origin && !url.origin.includes('supabase.co')) {

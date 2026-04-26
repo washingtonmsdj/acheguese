@@ -14,6 +14,7 @@ import {
   updateRide,
   createEmergencyAlert,
 } from './mobility.mutations';
+import { RIDE_STATUS } from '../constants';
 
 export interface RideRequest {
   id: string;
@@ -47,7 +48,7 @@ interface CompleteRideData extends UpdateRideData {
 
 export class RideService {
   async createRide(data: CreateRideData & { passenger_profile_id: string }): Promise<RideRequest> {
-    const ride = await createRide({ ...data, status: 'pending' });
+    const ride = await createRide({ ...data, status: RIDE_STATUS.PENDING });
     return ride as RideRequest;
   }
 

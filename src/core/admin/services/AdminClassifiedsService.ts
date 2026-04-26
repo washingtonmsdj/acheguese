@@ -8,6 +8,8 @@
 
 import { supabase } from "@/integrations/supabase";
 import { logger } from "@/shared/utils/logger";
+import { REPORT_STATUS } from "@/shared/types/constants";
+import { CLASSIFIED_STATUS } from "@/modules/classifieds/constants/statuses";
 
 export interface AdminClassifiedData {
   [key: string]: unknown;
@@ -165,7 +167,7 @@ class AdminClassifiedsServiceClass {
     const { count, error } = await supabase
       .from("classified_reports")
       .select("*", { count: "exact", head: true })
-      .eq("status", "pending");
+      .eq("status", REPORT_STATUS.PENDING);
 
     if (error) {
       logger.error("Error fetching pending classified reports count:", error);
@@ -192,11 +194,11 @@ class AdminClassifiedsServiceClass {
 
       const stats: ClassifiedsStats = {
         total: data?.length || 0,
-        active: data?.filter((c: any) => c.status === "active").length || 0,
-        inactive: data?.filter((c: any) => c.status === "inactive").length || 0,
-        sold: data?.filter((c: any) => c.status === "sold").length || 0,
-        pending: data?.filter((c: any) => c.status === "pending").length || 0,
-        rejected: data?.filter((c: any) => c.status === "rejected").length || 0,
+        active: data?.filter((c: any) => c.status === CLASSIFIED_STATUS.ACTIVE).length || 0,
+        inactive: data?.filter((c: any) => c.status === CLASSIFIED_STATUS.INACTIVE).length || 0,
+        sold: data?.filter((c: any) => c.status === CLASSIFIED_STATUS.SOLD).length || 0,
+        pending: data?.filter((c: any) => c.status === CLASSIFIED_STATUS.PENDING).length || 0,
+        rejected: data?.filter((c: any) => c.status === CLASSIFIED_STATUS.REJECTED).length || 0,
       };
 
       return stats;
@@ -245,8 +247,8 @@ class AdminClassifiedsServiceClass {
         const previous = classifiedsByCategory.get(classified.category_id) ?? { total: 0, active: 0, pending: 0 };
         classifiedsByCategory.set(classified.category_id, {
           total: previous.total + 1,
-          active: previous.active + (classified.status === "active" ? 1 : 0),
-          pending: previous.pending + (classified.status === "pending" ? 1 : 0),
+          active: previous.active + (classified.status === CLASSIFIED_STATUS.ACTIVE ? 1 : 0),
+          pending: previous.pending + (classified.status === CLASSIFIED_STATUS.PENDING ? 1 : 0),
         });
       }
 
@@ -307,11 +309,11 @@ class AdminClassifiedsServiceClass {
         sellerMap.set(row.seller_id, {
           ...previous,
           totalAds: previous.totalAds + 1,
-          activeAds: previous.activeAds + (row.status === "active" ? 1 : 0),
-          pendingAds: previous.pendingAds + (row.status === "pending" ? 1 : 0),
-          soldAds: previous.soldAds + (row.status === "sold" ? 1 : 0),
-          rejectedAds: previous.rejectedAds + (row.status === "rejected" ? 1 : 0),
-          inactiveAds: previous.inactiveAds + (row.status === "inactive" ? 1 : 0),
+          activeAds: previous.activeAds + (row.status === CLASSIFIED_STATUS.ACTIVE ? 1 : 0),
+          pendingAds: previous.pendingAds + (row.status === CLASSIFIED_STATUS.PENDING ? 1 : 0),
+          soldAds: previous.soldAds + (row.status === CLASSIFIED_STATUS.SOLD ? 1 : 0),
+          rejectedAds: previous.rejectedAds + (row.status === CLASSIFIED_STATUS.REJECTED ? 1 : 0),
+          inactiveAds: previous.inactiveAds + (row.status === CLASSIFIED_STATUS.INACTIVE ? 1 : 0),
           lastAdAt: previous.lastAdAt && previous.lastAdAt > row.created_at ? previous.lastAdAt : row.created_at,
         });
       }
@@ -627,7 +629,7 @@ class AdminClassifiedsServiceClass {
     try {
       const { error } = await supabase
         .from("classifieds")
-        .update({ status: "active" })
+        .update({ status: CLASSIFIED_STATUS.ACTIVE })
         .eq("id", id);
 
       if (error) {
@@ -649,7 +651,7 @@ class AdminClassifiedsServiceClass {
     try {
       const { error } = await supabase
         .from("classifieds")
-        .update({ status: "rejected" })
+        .update({ status: CLASSIFIED_STATUS.REJECTED })
         .eq("id", id);
 
       if (error) {
@@ -678,7 +680,7 @@ class AdminClassifiedsServiceClass {
 
       const { error } = await supabase
         .from("classifieds")
-        .update({ status: "sold" })
+        .update({ status: CLASSIFIED_STATUS.SOLD })
         .eq("id", id);
 
       if (error) {
@@ -707,7 +709,7 @@ class AdminClassifiedsServiceClass {
 
       const { error } = await supabase
         .from("classifieds")
-        .update({ status: "active" })
+        .update({ status: CLASSIFIED_STATUS.ACTIVE })
         .eq("id", id);
 
       if (error) {
@@ -727,7 +729,7 @@ class AdminClassifiedsServiceClass {
    */
   async toggleActive(id: string, isActive: boolean): Promise<boolean> {
     try {
-      const status = isActive ? "active" : "inactive";
+      const status = isActive ? CLASSIFIED_STATUS.ACTIVE : CLASSIFIED_STATUS.INACTIVE;
       const { error } = await supabase
         .from("classifieds")
         .update({ status })
@@ -747,4 +749,5 @@ class AdminClassifiedsServiceClass {
 }
 
 export const adminClassifiedsService = new AdminClassifiedsServiceClass();
+
 

@@ -99,16 +99,39 @@ export function ItemCard({
               )}
             </div>
 
-            {/* Tags */}
-            {item.tags && item.tags.length > 0 && (
-              <div className="flex flex-wrap gap-1 mt-2">
-                {item.tags.map((tag) => (
-                  <Badge key={tag} variant="outline" className="text-xs">
-                    {tag}
-                  </Badge>
-                ))}
-              </div>
-            )}
+            {/* Tags e Características Dietéticas */}
+            <div className="flex flex-wrap gap-1 mt-2">
+              {item.is_vegan && (
+                <Badge variant="outline" className="text-xs bg-green-50 text-green-700 border-green-200">
+                  🌱 Vegano
+                </Badge>
+              )}
+              {item.is_vegetarian && !item.is_vegan && (
+                <Badge variant="outline" className="text-xs bg-green-50 text-green-600 border-green-200">
+                  🥬 Vegetariano
+                </Badge>
+              )}
+              {item.is_gluten_free && (
+                <Badge variant="outline" className="text-xs bg-amber-50 text-amber-700 border-amber-200">
+                  🌾 Sem Glúten
+                </Badge>
+              )}
+              {item.is_lactose_free && (
+                <Badge variant="outline" className="text-xs bg-blue-50 text-blue-700 border-blue-200">
+                  🥛 Sem Lactose
+                </Badge>
+              )}
+              {item.is_spicy && (
+                <Badge variant="outline" className="text-xs bg-red-50 text-red-700 border-red-200">
+                  🌶️ Picante
+                </Badge>
+              )}
+              {item.tags && item.tags.length > 0 && item.tags.map((tag) => (
+                <Badge key={tag} variant="outline" className="text-xs">
+                  {tag}
+                </Badge>
+              ))}
+            </div>
 
             {/* Toggle Disponibilidade */}
             <div className="flex items-center gap-2 mt-3 pt-3 border-t">

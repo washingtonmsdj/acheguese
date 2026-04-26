@@ -13,6 +13,7 @@
 import { supabase } from "@/integrations/supabase";
 import { trackError } from "@/shared/utils/errorTracking";
 import { logger } from "@/shared/utils/logger";
+import { USER_SUBSCRIPTION_STATUS } from "@/core/subscription/constants/subscriptionStatus";
 
 export type PlanType = "free" | "basic" | "premium" | "enterprise";
 export type SubscriptionStatus =
@@ -210,7 +211,7 @@ export class SubscriptionService {
         .insert({
           user_id: params.user_id,
           plan_type: params.plan_type,
-          status: "active",
+          status: USER_SUBSCRIPTION_STATUS.ACTIVE,
           active: true,
           expires_at: params.expires_at || null,
           payment_method: params.payment_method || null,
@@ -278,7 +279,7 @@ export class SubscriptionService {
   ): Promise<{ success: boolean; error?: string }> {
     try {
       const updates: any = {
-        status: "cancelled",
+        status: USER_SUBSCRIPTION_STATUS.CANCELLED,
         cancelled_at: new Date().toISOString(),
       };
 
@@ -320,7 +321,7 @@ export class SubscriptionService {
       const { error } = await (supabase as any)
         .from("user_subscriptions")
         .update({
-          status: "active",
+          status: USER_SUBSCRIPTION_STATUS.ACTIVE,
           expires_at: expiresAt,
           last_payment_at: new Date().toISOString(),
           next_payment_at: expiresAt,
@@ -459,7 +460,7 @@ export class SubscriptionService {
       const { data, error } = await (supabase as any)
         .from("user_subscriptions")
         .update({
-          status: "expired",
+          status: USER_SUBSCRIPTION_STATUS.EXPIRED,
           active: false,
         })
         .eq("active", true)

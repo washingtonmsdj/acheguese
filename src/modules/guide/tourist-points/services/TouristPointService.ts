@@ -1,7 +1,6 @@
 import { logger } from '@/shared/utils/logger';
 import { supabase } from '@/integrations/supabase';
 import { resolveCityToLocationIds, resolveNeighborhoodInCity } from '@/core/location/helpers/territorialResolver';
-import { SALVADOR_MOCK_POINTS } from '../data/salvador-mock';
 import { LocationType } from '@/shared/types/enums';
 import { PAGINATION } from '@/shared/constants';
 import type {
@@ -155,32 +154,6 @@ function mapDbToLegacy(point: any): TouristPoint {
   };
 }
 
-function filterMock(filters: TouristPointFilters = {}): TouristPoint[] {
-  let rows = [...SALVADOR_MOCK_POINTS];
-  const status = (filters.status ?? DEFAULT_LEGACY_STATUS).toLowerCase();
-
-  rows = rows.filter((p) => p.status === status);
-  if (filters.state) rows = rows.filter((p) => p.state === filters.state!.toLowerCase());
-  if (filters.city) rows = rows.filter((p) => p.city === filters.city!.toLowerCase());
-  if (filters.category) rows = rows.filter((p) => p.category === filters.category);
-  if (filters.is_featured !== undefined) rows = rows.filter((p) => p.is_featured === filters.is_featured);
-  if (filters.search) {
-    const q = filters.search.toLowerCase();
-    rows = rows.filter(
-      (p) =>
-        p.name.toLowerCase().includes(q) ||
-        p.description.toLowerCase().includes(q) ||
-        p.short_description?.toLowerCase().includes(q),
-    );
-  }
-  if (filters.limit) {
-    const start = filters.offset ?? 0;
-    rows = rows.slice(start, start + filters.limit);
-  }
-
-  return rows;
-}
-
 function pickName(input: Record<string, unknown>): string | null {
   return toText(input.title) ?? toText(input.name);
 }
@@ -203,15 +176,13 @@ export class TouristPointService {
   }
 
   private static async resolveStateAndCity(locationId: string): Promise<{ state: string; city: string }> {
-    const fallback = { state: 'ba', city: 'salvador' };
-
     const { data: location } = await supabase
       .from('locations')
       .select('id, type, name, slug, parent_id')
       .eq('id', locationId)
       .maybeSingle();
 
-    if (!location) return fallback;
+    if (!location) throw new Error(`location nao encontrada: ${locationId}`);
 
     if (location.type === LocationType.CITY) {
       const { data: state } = await supabase
@@ -221,8 +192,8 @@ export class TouristPointService {
         .maybeSingle();
 
       return {
-        state: toText(state?.slug ?? state?.name)?.toLowerCase() ?? fallback.state,
-        city: toText(location.slug ?? location.name)?.toLowerCase() ?? fallback.city,
+        state: toText(state?.slug ?? state?.name)?.toLowerCase() ?? '',
+        city: toText(location.slug ?? location.name)?.toLowerCase() ?? '',
       };
     }
 
@@ -237,12 +208,12 @@ export class TouristPointService {
         : { data: null };
 
       return {
-        state: toText(state?.slug ?? state?.name)?.toLowerCase() ?? fallback.state,
-        city: toText(city?.slug ?? city?.name)?.toLowerCase() ?? fallback.city,
+        state: toText(state?.slug ?? state?.name)?.toLowerCase() ?? '',
+        city: toText(city?.slug ?? city?.name)?.toLowerCase() ?? '',
       };
     }
 
-    return fallback;
+    throw new Error(`tipo de location nao suportado: ${location.type}`);
   }
 
   private static async ensureUniqueSlug(locationId: string, baseSlug: string, excludeId?: string): Promise<string> {
@@ -297,30 +268,26 @@ export class TouristPointService {
       if (filters.offset) query = query.range(filters.offset, filters.offset + (filters.limit ?? 20) - 1);
 
       const { data, error } = await query;
-      if (error || !data || data.length === 0) return filterMock(filters);
+      if (error || !data || data.length === 0) return [];
       return data.map(mapDbToLegacy);
     } catch (error) {
-      logger.warn('TouristPointService.list fallback', error);
-      return filterMock(filters);
+      logger.warn('TouristPointService.list failed', error);
+      return [];
     }
   }
 
   static async getById(id: string): Promise<TouristPoint | null> {
     try {
       const { data, error } = await supabase.from('tourist_points').select(SELECT_LEGACY).eq('id', id).maybeSingle();
-      if (error) return SALVADOR_MOCK_POINTS.find((p) => p.id === id) ?? null;
+      if (error) return null;
       if (!data) return null;
       return mapDbToLegacy(data);
     } catch {
-      return SALVADOR_MOCK_POINTS.find((p) => p.id === id) ?? null;
+      return null;
     }
   }
 
   static async getBySlug(state: string, city: string, slug: string): Promise<TouristPoint | null> {
-    const fallbackMock = SALVADOR_MOCK_POINTS.find(
-      (p) => p.state === state.toLowerCase() && p.city === city.toLowerCase() && p.slug === slug,
-    );
-
     try {
       const resolution = await resolveCityToLocationIds(state, city);
       if (resolution) {
@@ -344,24 +311,23 @@ export class TouristPointService {
         .maybeSingle();
 
       if (fallback) return mapDbToLegacy(fallback);
-      return fallbackMock ?? null;
+      return null;
     } catch {
-      return fallbackMock ?? null;
+      return null;
     }
   }
 
   static async getByIds(ids: string[]): Promise<TouristPoint[]> {
     if (!ids.length) return [];
     const uuidIds = ids.filter((id) => UUID_RE.test(id));
-    const mockRows = SALVADOR_MOCK_POINTS.filter((p) => ids.includes(p.id));
-    if (!uuidIds.length) return mockRows;
+    if (!uuidIds.length) return [];
 
     try {
       const { data, error } = await supabase.from('tourist_points').select(SELECT_LEGACY).in('id', uuidIds);
-      if (error || !data) return mockRows;
-      return [...data.map(mapDbToLegacy), ...mockRows];
+      if (error || !data) return [];
+      return data.map(mapDbToLegacy);
     } catch {
-      return mockRows;
+      return [];
     }
   }
 
@@ -657,33 +623,6 @@ export class TouristPointService {
       created_at: string;
     }>
   > {
-    const mock = [
-      {
-        id: 'mock-photo-1',
-        image_url: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=400&q=75',
-        content: 'Tarde perfeita na praia!',
-        author_name: 'Ana Lima',
-        author_avatar: null,
-        created_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
-      },
-      {
-        id: 'mock-photo-2',
-        image_url: 'https://images.unsplash.com/photo-1519046904884-53103b34b206?w=400&q=75',
-        content: 'Por do sol incrivel aqui na Barra',
-        author_name: 'Joao Silva',
-        author_avatar: null,
-        created_at: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
-      },
-      {
-        id: 'mock-photo-3',
-        image_url: 'https://images.unsplash.com/photo-1473116763249-2faaef81ccda?w=400&q=75',
-        content: 'Agua cristalina hoje!',
-        author_name: 'Maria Santos',
-        author_avatar: null,
-        created_at: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
-      },
-    ];
-
     try {
       const { postService } = await import('@/core/posts/services');
 
@@ -710,11 +649,11 @@ export class TouristPointService {
         limit: PAGINATION.DEFAULT_PAGE_SIZE,
       });
 
-      if (!results.length) return mock;
+      if (!results.length) return [];
       return results;
     } catch (error) {
       logger.error('TouristPointService.getCommunityPhotos', error);
-      return mock;
+      return [];
     }
   }
 }

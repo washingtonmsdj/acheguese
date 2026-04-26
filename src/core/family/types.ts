@@ -9,6 +9,11 @@
 export type FamilyTableName = (typeof FAMILY_TABLES)[keyof typeof FAMILY_TABLES];
 
 export type FamilyConnectionStatus = "pending" | "active" | "rejected";
+export const FAMILY_CONNECTION_STATUS = {
+  PENDING: "pending",
+  ACTIVE: "active",
+  REJECTED: "rejected",
+} as const;
 
 export type FamilyRelationshipType = "pai" | "mae" | "responsavel" | "tutor";
 

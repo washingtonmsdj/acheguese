@@ -28,6 +28,7 @@ import { MapTerritoryControl } from './controls/MapTerritoryControl';
 import { MapControlsLayout } from './controls/MapControlsLayout';
 import { MapRadiusControl } from './controls/MapRadiusControl';
 import { createUserLocationSvg } from '@/shared/utils/safeSvg';
+import { EntityStatus } from '@/shared/types/enums';
 import type { BoundingBox, MapViewport, MapMarker } from '../../types/core';
 import type { TerritoryPolygon } from '../../hooks/useTerritoryPolygon';
 import type { CircleArea } from '../../providers/types';
@@ -100,7 +101,7 @@ interface ClusterRenderMarker {
   type: 'cluster';
   coordinates: { latitude: number; longitude: number };
   title: string;
-  status: 'active';
+  status: typeof EntityStatus.ACTIVE;
   metadata: {
     isCluster: true;
     pointCount: number;
@@ -159,7 +160,7 @@ function createUserLocationMarker(
     id: 'user-location',
     type: 'user_location' as const,
     title: label ?? 'Voce esta aqui',
-    status: 'active' as const,
+    status: EntityStatus.ACTIVE,
     metadata: { isUserLocation: true },
   } as MapMarker;
 
@@ -181,7 +182,7 @@ function createClusterRenderMarker(
     id: `cluster-${clusterId}`,
     type: 'cluster' as const,
     title: `${pointCount} itens`,
-    status: 'active' as const,
+    status: EntityStatus.ACTIVE,
     metadata: {
       isCluster: true,
       pointCount,

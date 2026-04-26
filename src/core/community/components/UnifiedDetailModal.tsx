@@ -38,6 +38,11 @@ import { CommentInput } from "./detail-modal/CommentInput";
 import { useUnifiedDetailModal } from "../hooks/modals/useUnifiedDetailModal";
 import { PostType } from "./PostBadge";
 import { Poll } from "@/shared/types/poll";
+import {
+  STATUS_CONFIG as CIVIC_STATUS_CONFIG,
+  type PostStatus,
+  type PostUrgency,
+} from "@/shared/constants/statusConfig";
 
 /**
  * Modal unificado para visualização de posts e reportes cívicos
@@ -92,8 +97,8 @@ interface CivicReport {
     | "outro";
   description: string;
   location: string;
-  status: "pending" | "in_progress" | "resolved" | "rejected";
-  urgency: "low" | "medium" | "high" | "critical";
+  status: PostStatus;
+  urgency: PostUrgency;
   upvotes: number;
   created_at: string;
   profile?: {
@@ -137,12 +142,7 @@ const PROBLEM_TYPES = {
   outro: { label: "Outro", icon: AlertCircle, color: "#6B7280" },
 };
 
-const STATUS_CONFIG = {
-  pending: { label: "Pendente", color: "#F59E0B" },
-  in_progress: { label: "Em Andamento", color: "#3B82F6" },
-  resolved: { label: "Resolvido", color: "#10B981" },
-  rejected: { label: "Rejeitado", color: "#EF4444" },
-};
+const STATUS_CONFIG = CIVIC_STATUS_CONFIG;
 
 const URGENCY_CONFIG = {
   low: { label: "Baixa", color: "#6B7280" },

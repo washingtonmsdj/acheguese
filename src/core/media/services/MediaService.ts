@@ -10,6 +10,7 @@
 
 import { supabase } from "@/integrations/supabase";
 import { logger } from "@/shared/utils/logger";
+import { MEDIA_UPLOAD_LIMITS } from "@/core/media/config/uploadLimits";
 
 export class MediaError extends Error {
   constructor(
@@ -27,8 +28,6 @@ export interface UploadResult {
 }
 
 class MediaServiceClass {
-  private readonly MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
-  private readonly MAX_AVATAR_SIZE = 2 * 1024 * 1024; // 2MB
   private readonly ALLOWED_IMAGE_TYPES = [
     "image/jpeg",
     "image/png",
@@ -42,7 +41,7 @@ class MediaServiceClass {
   async uploadAvatar(userId: string, file: File): Promise<UploadResult> {
     try {
       // Validações
-      if (file.size > this.MAX_AVATAR_SIZE) {
+      if (file.size > MEDIA_UPLOAD_LIMITS.AVATAR_SIZE_BYTES) {
         throw new MediaError(
           "Avatar muito grande. Máximo 2MB",
           "FILE_TOO_LARGE",
@@ -98,7 +97,7 @@ class MediaServiceClass {
   async uploadPostImage(userId: string, file: File): Promise<UploadResult> {
     try {
       // Validações
-      if (file.size > this.MAX_FILE_SIZE) {
+      if (file.size > MEDIA_UPLOAD_LIMITS.FILE_SIZE_BYTES) {
         throw new MediaError(
           "Imagem muito grande. Máximo 5MB",
           "FILE_TOO_LARGE",
@@ -199,7 +198,7 @@ class MediaServiceClass {
   ): Promise<UploadResult> {
     try {
       // Validações
-      if (file.size > this.MAX_FILE_SIZE) {
+      if (file.size > MEDIA_UPLOAD_LIMITS.FILE_SIZE_BYTES) {
         throw new MediaError(
           "Imagem muito grande. Máximo 5MB",
           "FILE_TOO_LARGE",
@@ -258,7 +257,7 @@ class MediaServiceClass {
   ): Promise<UploadResult> {
     try {
       // Validações
-      if (file.size > this.MAX_FILE_SIZE) {
+      if (file.size > MEDIA_UPLOAD_LIMITS.FILE_SIZE_BYTES) {
         throw new MediaError(
           "Imagem muito grande. Máximo 5MB",
           "FILE_TOO_LARGE",
@@ -326,7 +325,7 @@ class MediaServiceClass {
   ): Promise<string> {
     try {
       // Validações
-      if (file.size > this.MAX_FILE_SIZE) {
+      if (file.size > MEDIA_UPLOAD_LIMITS.FILE_SIZE_BYTES) {
         throw new MediaError(
           "Arquivo muito grande. Máximo 5MB",
           "FILE_TOO_LARGE",

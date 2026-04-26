@@ -135,6 +135,7 @@ import {
   deleteGastronomyProfile,
   updateOperationalStatus,
 } from './gastronomy.mutations';
+import type { GastronomyProfileStatus } from '@/core/business/constants';
 
 /**
  * Use as funcoes individuais de gastronomy.mutations.ts em novas implementacoes.
@@ -162,7 +163,7 @@ export class GastronomyService {
 
   static async updateOperationalStatus(
     businessId: string,
-    status: 'active' | 'inactive' | 'temporarily_closed',
+    status: GastronomyProfileStatus,
     userId: string,
   ): Promise<void> {
     return updateOperationalStatus(businessId, status, userId);

@@ -11,6 +11,7 @@ import { supabase } from "@/integrations/supabase";
 import { logger } from "@/shared/utils/logger";
 import { trackError } from "@/shared/utils/errorTracking";
 import type { ClassifiedData, CreateClassifiedInput, UpdateClassifiedInput } from "./types";
+import { CLASSIFIED_STATUS } from "../constants/statuses";
 
 // ============================================================
 // HELPERS INTERNOS
@@ -45,7 +46,7 @@ export async function createClassified(
         ...input,
         slug, // ✅ Slug gerado automaticamente
         seller_id: userId,
-        status: "active", // Define status ao invés de is_active (que é computed)
+        status: CLASSIFIED_STATUS.ACTIVE, // Define status ao invés de is_active (que é computed)
       })
       .select(
         `
@@ -140,7 +141,7 @@ export async function deleteClassified(id: string, userId: string): Promise<bool
   try {
     const { error } = await supabase
       .from("classifieds")
-      .update({ status: "inactive" }) // Atualiza status ao invés de is_active (que é computed)
+      .update({ status: CLASSIFIED_STATUS.INACTIVE }) // Atualiza status ao invés de is_active (que é computed)
       .eq("id", id)
       .eq("seller_id", userId); // Só o vendedor pode deletar
 
@@ -174,7 +175,7 @@ export async function markAsSold(
   try {
     const { data, error } = await supabase
       .from("classifieds")
-      .update({ status: "sold" })
+      .update({ status: CLASSIFIED_STATUS.SOLD })
       .eq("id", id)
       .eq("seller_id", userId)
       .select(
@@ -223,7 +224,7 @@ export async function reactivateClassified(
   try {
     const { data, error } = await supabase
       .from("classifieds")
-      .update({ status: "active" })
+      .update({ status: CLASSIFIED_STATUS.ACTIVE })
       .eq("id", id)
       .eq("seller_id", userId)
       .select(

@@ -4,6 +4,10 @@
 
 import { supabase } from "@/integrations/supabase";
 import { logger } from "@/shared/utils/logger";
+import {
+  ADMIN_SUBSCRIPTION_STATUS,
+  type AdminSubscriptionStatus,
+} from "@/core/admin/config/subscription-status";
 
 function incrementCounter(counter: Map<string, number>, key: string, amount: number): void {
   const currentValue = counter.get(key) ?? 0;
@@ -25,7 +29,7 @@ export interface Subscription {
   id: string;
   user_id: string;
   plan_type: "free" | "basic" | "premium" | "enterprise";
-  status: "active" | "expired" | "cancelled" | "pending";
+  status: AdminSubscriptionStatus;
   active: boolean;
   amount_cents: number;
   started_at: string;
@@ -50,9 +54,9 @@ class AdminSubscriptionsServiceClass {
       const now = new Date();
       const stats: SubscriptionStats = {
         total: subscriptions?.length || 0,
-        active: subscriptions?.filter(s => s.active && s.status === "active").length || 0,
-        expired: subscriptions?.filter(s => s.status === "expired").length || 0,
-        cancelled: subscriptions?.filter(s => s.status === "cancelled").length || 0,
+        active: subscriptions?.filter(s => s.active && s.status === ADMIN_SUBSCRIPTION_STATUS.ACTIVE).length || 0,
+        expired: subscriptions?.filter(s => s.status === ADMIN_SUBSCRIPTION_STATUS.EXPIRED).length || 0,
+        cancelled: subscriptions?.filter(s => s.status === ADMIN_SUBSCRIPTION_STATUS.CANCELLED).length || 0,
         byPlan: {},
         totalRevenue: 0,
         monthlyRecurringRevenue: 0,
@@ -66,7 +70,7 @@ class AdminSubscriptionsServiceClass {
         }
         if (s.amount_cents) {
           stats.totalRevenue += s.amount_cents / 100;
-          if (s.active && s.status === "active") {
+          if (s.active && s.status === ADMIN_SUBSCRIPTION_STATUS.ACTIVE) {
             stats.monthlyRecurringRevenue += s.amount_cents / 100;
           }
         }
@@ -203,7 +207,7 @@ class AdminSubscriptionsServiceClass {
       const { error } = await supabase
         .from("user_subscriptions")
         .update({
-          status: "cancelled",
+          status: ADMIN_SUBSCRIPTION_STATUS.CANCELLED,
           active: false,
           cancelled_at: new Date().toISOString(),
         })
@@ -225,7 +229,7 @@ class AdminSubscriptionsServiceClass {
       const { error } = await supabase
         .from("user_subscriptions")
         .update({
-          status: "active",
+          status: ADMIN_SUBSCRIPTION_STATUS.ACTIVE,
           active: true,
           cancelled_at: null,
         })
@@ -258,7 +262,7 @@ class AdminSubscriptionsServiceClass {
           )
         `)
         .eq("active", true)
-        .eq("status", "active")
+        .eq("status", ADMIN_SUBSCRIPTION_STATUS.ACTIVE)
         .not("expires_at", "is", null)
         .gte("expires_at", now.toISOString())
         .lte("expires_at", futureDate.toISOString())
@@ -330,7 +334,9 @@ class AdminSubscriptionsServiceClass {
       if (error) throw error;
 
       const total = subscriptions?.length || 0;
-      const cancelled = subscriptions?.filter(s => s.status === "cancelled").length || 0;
+      const cancelled = subscriptions?.filter(
+        s => s.status === ADMIN_SUBSCRIPTION_STATUS.CANCELLED,
+      ).length || 0;
 
       return {
         churnRate: total > 0 ? (cancelled / total) * 100 : 0,

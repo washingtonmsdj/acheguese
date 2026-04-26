@@ -1,0 +1,5 @@
+export const MEDIA_UPLOAD_LIMITS = {
+  FILE_SIZE_BYTES: 5 * 1024 * 1024,
+  AVATAR_SIZE_BYTES: 2 * 1024 * 1024,
+} as const;
+

@@ -8,6 +8,7 @@
 
 import { supabase } from "@/integrations/supabase";
 import { logger } from "@/shared/utils/logger";
+import { MODERATION_REPORT_STATUS } from "@/core/moderation/constants/reportStatus";
 
 interface ReportContentInput {
   targetType: "post" | "comment" | "profile";
@@ -92,7 +93,7 @@ class ModerationServiceClass {
         const { data, error } = await (supabase as any)
           .from(table)
           .select("*")
-          .eq("status", "pending")
+          .eq("status", MODERATION_REPORT_STATUS.PENDING)
           .order("created_at", { ascending: false });
 
         if (error) throw error;
@@ -131,7 +132,10 @@ class ModerationServiceClass {
       const table = this.getTableByTarget(targetType);
       const { error } = await (supabase as any)
         .from(table)
-        .update({ status: "approved", reviewed_at: new Date().toISOString() })
+        .update({
+          status: MODERATION_REPORT_STATUS.APPROVED,
+          reviewed_at: new Date().toISOString(),
+        })
         .eq("id", reportId);
 
       if (error) throw error;
@@ -152,7 +156,10 @@ class ModerationServiceClass {
       const table = this.getTableByTarget(targetType);
       const { error } = await (supabase as any)
         .from(table)
-        .update({ status: "rejected", reviewed_at: new Date().toISOString() })
+        .update({
+          status: MODERATION_REPORT_STATUS.REJECTED,
+          reviewed_at: new Date().toISOString(),
+        })
         .eq("id", reportId);
 
       if (error) throw error;

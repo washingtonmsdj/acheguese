@@ -5,6 +5,7 @@ import {
   type BusinessSectionConfig,
   type BusinessEditData,
 } from "@/core/business/services/BusinessManagementService";
+import type { BusinessStatus } from "@/core/business/types/Business";
 import { toast } from "sonner";
 
 export function useBusinessSections(businessId: string) {
@@ -87,7 +88,7 @@ export function useUpdateBusinessStatus() {
       status,
     }: {
       businessId: string;
-      status: "active" | "inactive" | "pending";
+      status: BusinessStatus;
     }) => businessManagementService.updateBusinessStatus(businessId, status),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({

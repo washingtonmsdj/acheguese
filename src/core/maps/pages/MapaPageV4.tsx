@@ -27,6 +27,7 @@ import { useTerritoryFilter, territoryFilterKey, useResolvedUserLocation } from 
 import { useTerritoryPolygon } from '../hooks/useTerritoryPolygon';
 import { useQuery } from '@tanstack/react-query';
 import { spatialSearchService } from '@/core/geospatial/services/SpatialSearchService';
+import { EntityStatus } from '@/shared/types/enums';
 import type { BoundingBox, MapLayerKey, MapMarker, MapViewport } from '../types/core';
 import type { TerritoryFilter } from '@/core/location/types';
 import type { Business } from '@/core/business/types/Business';
@@ -145,7 +146,7 @@ function makeGastronomyFetcher(territoryFilter: TerritoryFilter) {
           slug: business.slug,
           latitude: business.latitude,
           longitude: business.longitude,
-          status: 'active',
+          status: EntityStatus.ACTIVE,
           is_premium: business.is_premium,
           is_verified: business.is_verified,
           rating: business.rating,
@@ -188,7 +189,7 @@ function makeAlertFetcher(territoryFilter: TerritoryFilter) {
           name: `Alerta em ${a.neighborhood_display || 'região'}`,
           latitude: a.latitude,
           longitude: a.longitude,
-          status: 'active',
+          status: EntityStatus.ACTIVE,
           description: a.description,
           created_at: a.created_at,
           map_layer_key: 'alerts',
@@ -368,7 +369,7 @@ export default function MapaPageV4({ resolved, activeMemberIds = [] }: MapaPageV
           name: focusTarget.name,
           latitude: focusTarget.latitude,
           longitude: focusTarget.longitude,
-          status: 'active',
+          status: EntityStatus.ACTIVE,
           map_layer_key: 'businesses',
         },
       ],
@@ -387,7 +388,7 @@ export default function MapaPageV4({ resolved, activeMemberIds = [] }: MapaPageV
             name: result.name,
             latitude: result.latitude,
             longitude: result.longitude,
-            status: 'active',
+            status: EntityStatus.ACTIVE,
             location_id: result.location_id,
             map_layer_key: 'tourist_points',
           })),

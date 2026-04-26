@@ -15,21 +15,13 @@ interface SimilarAdsProps {
   onAdClick: (id: string) => void;
 }
 
-// Mock similar ads for demo
-const MOCK_SIMILAR: SimilarAd[] = [
-  { id: "s1", titulo: "Item similar 1", preco: 150, foto: "/placeholder.svg", bairro: "Pituba" },
-  { id: "s2", titulo: "Item similar 2", preco: 280, foto: "/placeholder.svg", bairro: "Barra" },
-  { id: "s3", titulo: "Item similar 3", preco: 95, foto: "/placeholder.svg", bairro: "Itapuã" },
-  { id: "s4", titulo: "Item similar 4", preco: 420, foto: "/placeholder.svg", bairro: "Ondina" },
-  { id: "s5", titulo: "Item similar 5", preco: 175, foto: "/placeholder.svg", bairro: "Brotas" },
-  { id: "s6", titulo: "Item similar 6", preco: 310, foto: "/placeholder.svg", bairro: "Graça" },
-];
-
 export const SimilarAds = memo(function SimilarAds({
   ads,
   onAdClick,
 }: SimilarAdsProps) {
-  const displayAds = ads.length > 0 ? ads : MOCK_SIMILAR;
+  if (ads.length === 0) {
+    return null;
+  }
 
   return (
     <motion.section
@@ -43,7 +35,7 @@ export const SimilarAds = memo(function SimilarAds({
           <Layers className="h-4 w-4 text-accent" />
         </div>
         <div>
-          <h2 className="text-sm font-bold font-display">Anúncios similares</h2>
+          <h2 className="text-sm font-bold font-display">Anuncios similares</h2>
           <p className="text-[10px] text-muted-foreground">
             Outros itens que podem te interessar
           </p>
@@ -51,7 +43,7 @@ export const SimilarAds = memo(function SimilarAds({
       </div>
 
       <div className="flex gap-3 overflow-x-auto scrollbar-hide pb-2 -mx-1 px-1">
-        {displayAds.map((ad, i) => (
+        {ads.map((ad, i) => (
           <motion.div
             key={ad.id}
             initial={{ opacity: 0, x: 20 }}

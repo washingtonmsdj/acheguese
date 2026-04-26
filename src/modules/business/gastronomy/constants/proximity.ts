@@ -1,0 +1,5 @@
+export const GASTRONOMY_PROXIMITY = {
+  MIN_DISTANCE_KM: 0.1,
+  MIN_ETA_MINUTES: 2,
+  DEFAULT_URBAN_SPEED_KMH: 24,
+} as const;

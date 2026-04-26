@@ -1,0 +1,3 @@
+export const FOOD_SECTION_MAX_ITEMS = 10;
+export const FOOD_SECTION_SCROLL_AMOUNT = 280;
+export const REVIEW_MAX_PHOTOS = 5;

@@ -8,11 +8,15 @@
  * - Image caching (Stale-While-Revalidate)
  * - Offline fallback
  * 
- * @version 2.0.0
+ * @version 2.0.1
  */
 
 // Service Worker version
-const SW_VERSION = '2.0.0';
+const SW_VERSION = '2.0.1';
+const IS_LOCALHOST =
+  self.location.hostname === 'localhost' ||
+  self.location.hostname === '127.0.0.1' ||
+  self.location.hostname === '::1';
 
 // Cache names
 const CACHE_NAMES = {
@@ -40,6 +44,11 @@ const STATIC_ASSETS = [
 // Install event
 self.addEventListener('install', (event) => {
   console.log(`[SW ${SW_VERSION}] Installing...`);
+
+  if (IS_LOCALHOST) {
+    event.waitUntil(self.skipWaiting());
+    return;
+  }
   
   event.waitUntil(
     caches.open(CACHE_NAMES.static)
@@ -57,6 +66,16 @@ self.addEventListener('install', (event) => {
 // Activate event
 self.addEventListener('activate', (event) => {
   console.log(`[SW ${SW_VERSION}] Activating...`);
+
+  if (IS_LOCALHOST) {
+    event.waitUntil(
+      caches.keys()
+        .then((keys) => Promise.all(keys.map((key) => caches.delete(key))))
+        .then(() => self.registration.unregister())
+        .then(() => self.clients.claim())
+    );
+    return;
+  }
   
   event.waitUntil(
     Promise.all([
@@ -279,7 +298,6 @@ console.log(`[SW ${SW_VERSION}] Loaded`);
 self.addEventListener('fetch', (event) => {
   const { request } = event;
   const url = new URL(request.url);
-
   // Skip non-GET requests
   if (request.method !== 'GET') {
     return;
@@ -287,6 +305,26 @@ self.addEventListener('fetch', (event) => {
 
   // Skip chrome-extension and other non-http(s) requests
   if (!url.protocol.startsWith('http')) {
+    return;
+  }
+
+  // Never cache/intercept in local dev (avoids breaking Vite HMR/WebSocket)
+  if (IS_LOCALHOST) {
+    return;
+  }
+
+  // Never intercept third-party requests (ads, analytics, CDN, etc.)
+  if (url.origin !== self.location.origin) {
+    return;
+  }
+
+  // Skip Vite/HMR internals defensively
+  if (
+    url.pathname.startsWith('/@vite') ||
+    url.pathname.startsWith('/@react-refresh') ||
+    url.pathname.includes('/vite/dist/client/') ||
+    request.destination === 'websocket'
+  ) {
     return;
   }
 
@@ -382,15 +420,17 @@ async function staleWhileRevalidate(request, cacheName) {
   const cached = await cache.match(request);
 
   // Fetch in background
-  const fetchPromise = fetch(request).then((response) => {
-    if (response.ok) {
-      cache.put(request, response.clone());
-      
-      // Enforce cache size limit
-      limitCacheSize(cacheName, CACHE_LIMITS.images);
-    }
-    return response;
-  });
+  const fetchPromise = fetch(request)
+    .then((response) => {
+      if (response.ok) {
+        cache.put(request, response.clone());
+
+        // Enforce cache size limit
+        limitCacheSize(cacheName, CACHE_LIMITS.images);
+      }
+      return response;
+    })
+    .catch(() => cached || new Response('Offline', { status: 503 }));
 
   // Return cached version immediately if available
   return cached || fetchPromise;

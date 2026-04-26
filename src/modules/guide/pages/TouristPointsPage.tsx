@@ -27,26 +27,16 @@ import { TouristPointCardEnhanced } from '../components/TouristPointCardEnhanced
 import { TouristPointCategoryCards } from '../components/TouristPointCategoryCards';
 import { TouristPointSectionCarousel } from '../components/TouristPointSectionCarousel';
 import { Button } from '@/shared/components/ui/button';
-import { Input } from '@/shared/components/ui/input';
 import { Badge } from '@/shared/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/components/ui/select';
 import {
-  Loader2, Search, MapPin, Star, Camera, ChevronRight,
-  LayoutGrid, List, Filter, Compass, Store,
-  TreePine, Waves, Accessibility, Baby, DollarSign,
+  Loader2, Search, Star, Camera, ChevronRight,
+  LayoutGrid, List, Compass, Store,
+  Accessibility, Baby, DollarSign,
   TrendingUp, Heart,
 } from 'lucide-react';
-import {
-  MOCK_TOURIST_POINTS,
-  getMockFeaturedPoints,
-  getMockFreePoints,
-  getMockTopRatedPoints,
-  searchMockPoints,
-  type MockTouristPointExtended,
-} from '../__mocks__/touristPointMocks';
-import { MOCK_NEARBY_BUSINESSES, NEARBY_BUSINESS_TYPES } from '../__mocks__/nearbyBusinessMocks';
-import { NearbyBusinessCard, type NearbyBusinessType } from '../components/NearbyBusinessCard';
 import { SORT_OPTIONS, CATEGORY_LABELS, type TouristPointCategory, type TouristPointSortKey } from '../types/categories';
+import { toTouristPointDisplay, type TouristPointDisplay } from '../types/presentation';
 
 // ============================================================================
 // TYPES
@@ -135,24 +125,18 @@ export default function TouristPointsPage() {
   const [quickFilters, setQuickFilters] = useState<QuickFiltersState>(DEFAULT_QUICK_FILTERS);
   const [sortBy, setSortBy] = useState<TouristPointSortKey>('relevance');
   const [visibleCount, setVisibleCount] = useState(12);
-  const [nearbyTypeFilter, setNearbyTypeFilter] = useState<string>('todos');
 
   const territoryName =
     resolved.kind === 'location'
       ? resolved.location.full_name
       : resolved.group.name;
 
-  // Use mocks when no real data
-  const useMocks = realPoints.length === 0 && !realLoading;
-
   // ============================================================================
   // FILTERING & SORTING
   // ============================================================================
 
   const filteredPoints = useMemo(() => {
-    let items: MockTouristPointExtended[] = useMocks
-      ? [...MOCK_TOURIST_POINTS]
-      : realPoints.map(p => ({ ...p, category: 'historico', rating: 0, review_count: 0, is_free: p.price_type === 'free', is_accessible: false, is_family_friendly: true, neighborhood: p.address_text ?? '', latitude: 0, longitude: 0, tips: null, how_to_get_there: null } as MockTouristPointExtended));
+    let items: TouristPointDisplay[] = realPoints.map(toTouristPointDisplay);
 
     // Search
     if (searchQuery) {
@@ -195,12 +179,15 @@ export default function TouristPointsPage() {
     }
 
     return items;
-  }, [useMocks, realPoints, searchQuery, categoryFilter, quickFilters, sortBy]);
+  }, [realPoints, searchQuery, categoryFilter, quickFilters, sortBy]);
 
   // Themed sections
-  const featuredPoints = useMemo(() => useMocks ? getMockFeaturedPoints() : [], [useMocks]);
-  const freePoints = useMemo(() => useMocks ? getMockFreePoints() : [], [useMocks]);
-  const topRated = useMemo(() => useMocks ? getMockTopRatedPoints(6) : [], [useMocks]);
+  const featuredPoints = useMemo(() => filteredPoints.filter((point) => point.is_featured), [filteredPoints]);
+  const freePoints = useMemo(() => filteredPoints.filter((point) => point.is_free), [filteredPoints]);
+  const topRated = useMemo(
+    () => [...filteredPoints].sort((a, b) => b.rating - a.rating).slice(0, 6),
+    [filteredPoints],
+  );
 
   const displayedPoints = filteredPoints.slice(0, visibleCount);
   const canLoadMore = visibleCount < filteredPoints.length;
@@ -238,7 +225,7 @@ export default function TouristPointsPage() {
   , []);
 
   // Loading
-  if (realLoading && !useMocks) {
+  if (realLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-background">
         <div className="text-center space-y-4">
@@ -287,7 +274,7 @@ export default function TouristPointsPage() {
             onClick: () => handleQuickFilter(key),
           }))}
           stats={[
-            { value: `${MOCK_TOURIST_POINTS.length}+`, label: "pontos" },
+            { value: `${realPoints.length}`, label: "pontos" },
             { value: `${featuredPoints.length}`, label: "destaques" },
           ]}
         />
@@ -391,83 +378,17 @@ export default function TouristPointsPage() {
         {viewMode === 'ao-redor' && (
           <section className="container mx-auto px-4 py-8">
             <motion.div initial="hidden" animate="visible" variants={containerVariants}>
-
-              {/* Header */}
-              <motion.div variants={itemVariants} className="mb-6">
-                <div className="flex items-center gap-3 mb-2">
-                  <div className="p-2 rounded-lg bg-accent/10">
-                    <Store className="h-5 w-5 text-accent-foreground" />
-                  </div>
-                  <div>
-                    <h2 className="text-lg md:text-xl font-display font-bold text-foreground">
-                      O que tem ao redor
-                    </h2>
-                    <p className="text-xs text-muted-foreground">
-                      Restaurantes, cafés, lojas e serviços próximos dos pontos turísticos de {territoryName}
-                    </p>
-                  </div>
-                </div>
-
-                {/* Info banner */}
-                <div className="mt-3 p-3 rounded-xl bg-secondary/50 border border-border/30 flex items-start gap-2">
-                  <Store className="h-4 w-4 text-muted-foreground mt-0.5 flex-shrink-0" />
-                  <p className="text-xs text-muted-foreground leading-relaxed">
-                    Estes são estabelecimentos e serviços próximos dos pontos turísticos — uma camada complementar
-                    para ajudar no seu roteiro. O foco principal são os <button onClick={() => switchViewMode('pontos')} className="text-primary font-medium hover:underline">pontos turísticos</button>.
-                  </p>
-                </div>
-              </motion.div>
-
-              {/* Type filter pills */}
-              <motion.div variants={itemVariants} className="flex flex-wrap gap-2 mb-6">
-                {NEARBY_BUSINESS_TYPES.map(({ key, label, emoji }) => (
-                  <Button
-                    key={key}
-                    variant={nearbyTypeFilter === key ? 'default' : 'outline'}
-                    size="sm"
-                    onClick={() => setNearbyTypeFilter(key)}
-                    className="rounded-full gap-1.5 h-9"
-                  >
-                    <span>{emoji}</span>
-                    {label}
-                  </Button>
-                ))}
-              </motion.div>
-
-              {/* Business cards grid */}
-              <motion.div variants={containerVariants} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {MOCK_NEARBY_BUSINESSES
-                  .filter(b => nearbyTypeFilter === 'todos' || b.type === nearbyTypeFilter)
-                  .map((business) => (
-                    <motion.div key={business.id} variants={itemVariants}>
-                      <NearbyBusinessCard business={business} variant="card" />
-                    </motion.div>
-                  ))}
-              </motion.div>
-
-              {/* Empty state */}
-              {MOCK_NEARBY_BUSINESSES.filter(b => nearbyTypeFilter === 'todos' || b.type === nearbyTypeFilter).length === 0 && (
-                <div className="text-center py-12 bg-card/50 rounded-2xl border border-border/30">
-                  <Store className="h-10 w-10 text-muted-foreground mx-auto mb-3" />
-                  <p className="text-foreground font-semibold">Nenhum estabelecimento encontrado</p>
-                  <p className="text-sm text-muted-foreground mt-1">Tente outro tipo de estabelecimento.</p>
-                  <Button variant="outline" size="sm" className="mt-4 rounded-full" onClick={() => setNearbyTypeFilter('todos')}>
-                    Ver todos
-                  </Button>
-                </div>
-              )}
-
-              {/* CTA to switch back */}
-              <motion.div variants={itemVariants} className="mt-8 text-center">
-                <p className="text-sm text-muted-foreground mb-3">
-                  Quer voltar aos pontos turísticos?
+              <motion.div variants={itemVariants} className="text-center py-12 bg-card/50 rounded-2xl border border-border/30">
+                <Store className="h-10 w-10 text-muted-foreground mx-auto mb-3" />
+                <p className="text-foreground font-semibold">Camada "Ao redor" em ajuste para dados reais</p>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Esta seção foi desativada para remover dados mock em produção.
                 </p>
-                <Button variant="outline" className="rounded-full gap-2" onClick={() => switchViewMode('pontos')}>
+                <Button variant="outline" className="mt-4 rounded-full gap-2" onClick={() => switchViewMode('pontos')}>
                   <Compass className="h-4 w-4" />
                   Ver Pontos / Experiências
                 </Button>
               </motion.div>
-
             </motion.div>
           </section>
         )}

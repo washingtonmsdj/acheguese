@@ -1,12 +1,16 @@
 import { supabase } from "@/integrations/supabase";
 import { logger } from "@/shared/utils/logger";
+import {
+  ADMIN_USER_REPORT_STATUS,
+  type AdminUserReportStatus,
+} from "@/core/admin/config/user-report-status";
 
 export interface UserReport {
   id: string;
   title: string;
   description: string;
   severity: "low" | "medium" | "high" | "critical";
-  status: "pending" | "investigating" | "resolved" | "dismissed";
+  status: AdminUserReportStatus;
   reporter_name: string;
   created_at: string;
 }
@@ -42,9 +46,11 @@ function normalizeSeverity(value: string | null | undefined): UserReport["severi
 }
 
 function normalizeStatus(value: string | null | undefined): UserReport["status"] {
-  if (value === "under_review") return "investigating";
-  if (value === "pending" || value === "resolved" || value === "dismissed") return value;
-  return "pending";
+  if (value === "under_review") return ADMIN_USER_REPORT_STATUS.INVESTIGATING;
+  if (value === ADMIN_USER_REPORT_STATUS.PENDING) return ADMIN_USER_REPORT_STATUS.PENDING;
+  if (value === ADMIN_USER_REPORT_STATUS.RESOLVED) return ADMIN_USER_REPORT_STATUS.RESOLVED;
+  if (value === ADMIN_USER_REPORT_STATUS.DISMISSED) return ADMIN_USER_REPORT_STATUS.DISMISSED;
+  return ADMIN_USER_REPORT_STATUS.PENDING;
 }
 
 function toUserReport(row: RideReportRow, namesByProfileId: Map<string, string>): UserReport {
@@ -154,4 +160,3 @@ export class AdminUserDetailService {
     return names;
   }
 }
-

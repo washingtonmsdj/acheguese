@@ -40,6 +40,7 @@ import {
 import { cn } from "@/shared/utils/cn";
 import { toast } from "sonner";
 import { useAdminGuard } from "@/modules/admin/hooks/useAdminGuard";
+import { PICKUP_POINTS_DEFAULTS } from "@/modules/admin/config/pickupPoints.config";
 
 const typeConfig: Record<
   string,
@@ -92,9 +93,9 @@ export default function AdminPontosEmbarque() {
     name: "",
     description: "",
     address: "",
-    neighborhood: "Nordeste de Amaralina",
-    latitude: -12.9833,
-    longitude: -38.4667,
+    neighborhood: PICKUP_POINTS_DEFAULTS.neighborhood,
+    latitude: PICKUP_POINTS_DEFAULTS.coordinates.latitude,
+    longitude: PICKUP_POINTS_DEFAULTS.coordinates.longitude,
     type: "bus_stop",
     capacity: 10,
     has_shelter: false,
@@ -212,9 +213,9 @@ export default function AdminPontosEmbarque() {
       name: "",
       description: "",
       address: "",
-      neighborhood: "Nordeste de Amaralina",
-      latitude: -12.9833,
-      longitude: -38.4667,
+      neighborhood: PICKUP_POINTS_DEFAULTS.neighborhood,
+      latitude: PICKUP_POINTS_DEFAULTS.coordinates.latitude,
+      longitude: PICKUP_POINTS_DEFAULTS.coordinates.longitude,
       type: "bus_stop",
       capacity: 10,
       has_shelter: false,

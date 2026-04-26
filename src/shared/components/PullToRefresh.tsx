@@ -1,9 +1,10 @@
 import { useState, useRef, useCallback, type ReactNode } from "react";
 import { motion, useMotionValue, useTransform } from "framer-motion";
 import { Loader2 } from "lucide-react";
+import { PULL_TO_REFRESH_CONFIG } from "@/shared/components/config/pullToRefresh.config";
 
-const THRESHOLD = 80;
-const MAX_PULL = 120;
+const THRESHOLD = PULL_TO_REFRESH_CONFIG.TRIGGER_THRESHOLD_PX;
+const PULL_DISTANCE_CAP = PULL_TO_REFRESH_CONFIG.MAX_PULL_DISTANCE_PX;
 
 interface Props {
   onRefresh: () => Promise<void> | void;
@@ -23,7 +24,7 @@ export function PullToRefresh({ onRefresh, children }: Props) {
     [0, 0.5, 1],
   );
   const indicatorScale = useTransform(pullY, [0, THRESHOLD], [0.5, 1]);
-  const indicatorRotate = useTransform(pullY, [0, MAX_PULL], [0, 360]);
+  const indicatorRotate = useTransform(pullY, [0, PULL_DISTANCE_CAP], [0, 360]);
 
   const handleTouchStart = useCallback(
     (e: React.TouchEvent) => {
@@ -42,7 +43,7 @@ export function PullToRefresh({ onRefresh, children }: Props) {
       if (!pulling.current || refreshing) return;
       const dy = Math.max(0, e.touches[0].clientY - startY.current);
       // Dampen the pull
-      const dampened = Math.min(MAX_PULL, dy * 0.45);
+      const dampened = Math.min(PULL_DISTANCE_CAP, dy * 0.45);
       pullY.set(dampened);
     },
     [refreshing, pullY],

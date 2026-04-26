@@ -1,10 +1,11 @@
 import type { Business } from '@/core/business';
 import type { TerritoryFilter } from '@/core/location/types';
 import type { Json } from '@/integrations/supabase';
+import type { GastronomyProfileStatus } from '@/core/business/constants';
 
 export type PriceRange = '$' | '$$' | '$$$' | '$$$$';
 
-export type GastronomyStatus = 'active' | 'inactive' | 'temporarily_closed';
+export type GastronomyStatus = GastronomyProfileStatus;
 
 export interface GastronomyProfile {
   id: string;

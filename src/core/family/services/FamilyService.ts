@@ -9,7 +9,7 @@ import type {
   FamilyLocationSharingSettings,
   SendFamilyInviteInput,
 } from "@/core/family/types";
-import { FAMILY_TABLES } from "@/core/family/types";
+import { FAMILY_CONNECTION_STATUS, FAMILY_TABLES } from "@/core/family/types";
 
 const db = supabase as any;
 const CONNECTION_SELECT = `
@@ -71,7 +71,7 @@ async function getPendingInviteForUser(connectionId: string) {
       .from(FAMILY_TABLES.connections)
       .select(CONNECTION_SELECT)
       .eq("id", connectionId)
-      .eq("status", "pending")
+      .eq("status", FAMILY_CONNECTION_STATUS.PENDING)
       .eq("child_id", user.id)
       .maybeSingle(),
     normalizedEmail
@@ -79,7 +79,7 @@ async function getPendingInviteForUser(connectionId: string) {
           .from(FAMILY_TABLES.connections)
           .select(CONNECTION_SELECT)
           .eq("id", connectionId)
-          .eq("status", "pending")
+          .eq("status", FAMILY_CONNECTION_STATUS.PENDING)
           .eq("child_email", normalizedEmail)
           .maybeSingle()
       : Promise.resolve({ data: null, error: null }),
@@ -105,7 +105,7 @@ export class FamilyService {
       .from(FAMILY_TABLES.connections)
       .select(CONNECTION_SELECT)
       .eq("parent_id", user.id)
-      .eq("status", "active")
+      .eq("status", FAMILY_CONNECTION_STATUS.ACTIVE)
       .order("created_at", { ascending: false });
 
     if (error) throw error;
@@ -120,7 +120,7 @@ export class FamilyService {
       .from(FAMILY_TABLES.connections)
       .select(CONNECTION_SELECT)
       .eq("child_id", user.id)
-      .eq("status", "active")
+      .eq("status", FAMILY_CONNECTION_STATUS.ACTIVE)
       .order("created_at", { ascending: false });
 
     if (error) throw error;
@@ -137,14 +137,14 @@ export class FamilyService {
         .from(FAMILY_TABLES.connections)
         .select(CONNECTION_SELECT)
         .eq("child_id", user.id)
-        .eq("status", "pending")
+        .eq("status", FAMILY_CONNECTION_STATUS.PENDING)
         .order("created_at", { ascending: false }),
       normalizedEmail
         ? db
             .from(FAMILY_TABLES.connections)
             .select(CONNECTION_SELECT)
             .eq("child_email", normalizedEmail)
-            .eq("status", "pending")
+            .eq("status", FAMILY_CONNECTION_STATUS.PENDING)
             .order("created_at", { ascending: false })
         : Promise.resolve({ data: [], error: null }),
     ]);
@@ -178,7 +178,7 @@ export class FamilyService {
       parent_id: user.id,
       child_email: childEmail,
       relationship_type: input.relationshipType,
-      status: "pending",
+      status: FAMILY_CONNECTION_STATUS.PENDING,
     });
 
     if (error) throw error;
@@ -195,7 +195,7 @@ export class FamilyService {
       .update({
         child_id: user.id,
         child_email: normalizeEmail(user.email),
-        status: "active",
+        status: FAMILY_CONNECTION_STATUS.ACTIVE,
         responded_at: new Date().toISOString(),
       })
       .eq("id", connectionId);
@@ -214,7 +214,7 @@ export class FamilyService {
       .update({
         child_id: user.id,
         child_email: normalizeEmail(user.email),
-        status: "rejected",
+        status: FAMILY_CONNECTION_STATUS.REJECTED,
         responded_at: new Date().toISOString(),
       })
       .eq("id", connectionId);
@@ -414,13 +414,13 @@ export class FamilyService {
 
     const rows = (data || []) as FamilyConnection[];
     const activeChildrenCount = rows.filter(
-      (row) => row.parent_id === userId && row.status === "active",
+      (row) => row.parent_id === userId && row.status === FAMILY_CONNECTION_STATUS.ACTIVE,
     ).length;
     const activeParentsCount = rows.filter(
-      (row) => row.child_id === userId && row.status === "active",
+      (row) => row.child_id === userId && row.status === FAMILY_CONNECTION_STATUS.ACTIVE,
     ).length;
     const pendingInvitesCount = rows.filter(
-      (row) => row.child_id === userId && row.status === "pending",
+      (row) => row.child_id === userId && row.status === FAMILY_CONNECTION_STATUS.PENDING,
     ).length;
     const relationshipTypes = Array.from(
       new Set(

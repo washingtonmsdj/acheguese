@@ -8,6 +8,7 @@
  */
 
 import { logger } from '@/shared/utils/logger';
+import { MAP_DEFAULT_COORDINATES } from '../config/defaultCoordinates';
 import type { Coordinates } from "../types/core";
 export interface IpGeolocationResult {
   coordinates: Coordinates;
@@ -33,10 +34,7 @@ export interface IpGeolocationError {
  */
 export class IpGeolocationService {
   private static readonly TIMEOUT_MS = 5000;
-  private static readonly SALVADOR_FALLBACK: Coordinates = {
-    latitude: -12.9714,
-    longitude: -38.5014,
-  };
+  private static readonly SALVADOR_FALLBACK: Coordinates = MAP_DEFAULT_COORDINATES;
 
   /**
    * Obtém localização aproximada baseada em IP
