@@ -124,6 +124,7 @@ export const MenuManagementPage = lazy(() => import("@/modules/business/gastrono
 export const BusinessHoursPage = lazy(() => import("@/modules/business/gastronomy/pages/BusinessHoursPage"));
 export const DeliveryAreaPage = lazy(() => import("@/modules/business/gastronomy/pages/DeliveryAreaPage"));
 export const OrdersPage = lazy(() => import("@/modules/business/gastronomy/pages/OrdersPage"));
+export const OrderDetailsPage = lazy(() => import("@/modules/business/gastronomy/pages/OrderDetailsPage"));
 export const DeliveryManagementPage = lazy(() => import("@/modules/business/gastronomy/pages/DeliveryManagementPage"));
 export const AnalyticsPage = lazy(() => import("@/modules/business/gastronomy/pages/AnalyticsPage"));
 export const GastronomyPromotionsPage = lazy(() => import("@/modules/business/gastronomy/pages/GastronomyPromotionsPage"));

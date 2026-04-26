@@ -119,6 +119,7 @@ export function AppRoutes() {
           <Route path="gastronomia/horarios" element={<P.BusinessHoursPage />} />
           <Route path="gastronomia/area-entrega" element={<P.DeliveryAreaPage />} />
           <Route path="gastronomia/pedidos" element={<P.OrdersPage />} />
+          <Route path="gastronomia/pedidos/:orderId" element={<P.OrderDetailsPage />} />
           <Route path="gastronomia/entregas" element={<P.DeliveryManagementPage />} />
           <Route path="gastronomia/analytics" element={<P.AnalyticsPage />} />
           <Route path="gastronomia/promocoes" element={<P.GastronomyPromotionsPage />} />

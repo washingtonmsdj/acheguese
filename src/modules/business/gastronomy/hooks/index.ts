@@ -20,6 +20,7 @@ export { useDeliveryDestination } from './useDeliveryDestination';
 export { useOrders } from './useOrders';
 export { useOrderDetails } from './useOrderDetails';
 export { useOrderStats } from './useOrderStats';
+export { useOrderTracking } from './useOrderTracking';
 export { useSubscriptionManagement } from './useSubscriptionManagement';
 export { useGastronomyCart } from './useGastronomyCart';
 export { useGastronomyCheckout } from './useGastronomyCheckout';

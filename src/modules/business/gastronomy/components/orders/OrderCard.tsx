@@ -7,6 +7,7 @@
 import { Card, CardContent, CardHeader } from '@/shared/components/ui/card';
 import { Button } from '@/shared/components/ui/button';
 import { OrderStatusBadge } from './OrderStatusBadge';
+import { OrderTrackingBadge } from './OrderTrackingBadge';
 import { Eye, Phone, MapPin } from 'lucide-react';
 import type { Order } from '@/modules/business/gastronomy/services/OrderService';
 import { format, parseISO } from 'date-fns';
@@ -29,11 +30,14 @@ export function OrderCard({ order, onViewDetails }: OrderCardProps) {
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between">
           <div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
               <h3 className="font-semibold text-lg">
                 Pedido #{order.order_number}
               </h3>
               <OrderStatusBadge status={order.status} size="sm" />
+              {order.order_type === 'delivery' && (
+                <OrderTrackingBadge orderId={order.id} />
+              )}
             </div>
             <p className="text-sm text-muted-foreground mt-1">
               {format(parseISO(order.created_at), "dd/MM/yyyy 'às' HH:mm", {

@@ -49,6 +49,7 @@ export { DeliverySummaryWidget } from './delivery/DeliverySummaryWidget';
 export { OrderCard } from './orders/OrderCard';
 export { OrderStatusBadge } from './orders/OrderStatusBadge';
 export { OrderStatsWidget } from './orders/OrderStatsWidget';
+export { OrderTrackingCard } from './orders/OrderTrackingCard';
 
 // Dashboard components
 export { OperationalStatusCard } from './dashboard/OperationalStatusCard';

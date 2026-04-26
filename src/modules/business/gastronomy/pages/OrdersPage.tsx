@@ -3,7 +3,7 @@
  */
 
 import { useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { useOrders } from '../hooks';
 import { OrderCard } from '../components/orders/OrderCard';
 import { OrderStatsWidget } from '../components/orders/OrderStatsWidget';
@@ -21,6 +21,7 @@ import {
 
 export default function OrdersPage() {
   const { businessId } = useParams<{ businessId: string }>();
+  const navigate = useNavigate();
   const [statusFilter, setStatusFilter] = useState<OrderStatus | 'all'>('all');
   
   const { orders, isLoading, refetch, isUpdatingStatus } = useOrders(
@@ -28,7 +29,9 @@ export default function OrdersPage() {
     statusFilter !== 'all' ? { status: statusFilter } : undefined
   );
 
-  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const handleViewDetails = (order: Order) => {
+    navigate(`/gastronomy/${businessId}/orders/${order.id}`);
+  };
 
   if (!businessId) {
     return (
@@ -96,7 +99,7 @@ export default function OrdersPage() {
             <OrderCard
               key={order.id}
               order={order}
-              onViewDetails={setSelectedOrder}
+              onViewDetails={handleViewDetails}
             />
           ))}
         </div>
