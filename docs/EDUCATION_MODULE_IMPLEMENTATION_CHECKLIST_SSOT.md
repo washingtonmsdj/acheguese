@@ -1,83 +1,94 @@
-# EDUCATION MODULE - CHECKLIST COMPLETO (SSOT / SEM GAMBIARRA)
+# EDUCATION MODULE - CHECKLIST COMPLETO (SSOT / ESCALAVEL / ATUALIZADO)
 
 ## 1) Objetivo deste documento
 
-Este documento e um guia de execucao para outra IA implementar o modulo `education` neste projeto com qualidade AAA, seguindo SSOT e sem duplicacoes.
+Este documento e o guia oficial para implementar o modulo `education` no estado atual do projeto, com qualidade AAA, SSOT rigoroso e sem gambiarras.
 
 Resultado esperado:
-- modulo novo para escolas focado em aquisicao e conversao de matriculas;
-- arquitetura alinhada ao padrao existente em `gastronomy`;
-- sem quebrar contratos existentes;
-- sem criar camada paralela de verdade.
-
-Arquitetura alvo explicita:
-- seguir o mesmo principio da gastronomia: `Business (perfil basico institucional)` + `Vertical Education (experiencia avancada e especializada)`, com URLs distintas e responsabilidades separadas.
-
-Nao e objetivo deste escopo:
-- gestao pedagogica completa (frequencia, boletim, diario de classe, secretaria academica full).
+- vertical `education` para escolas focada em captacao e conversao de matriculas;
+- arquitetura alinhada com a estrategia atual: `Business (base)` + `Vertical (especializada)`;
+- compatibilidade com rotas e billing ja existentes no projeto;
+- fundacao pronta para evolucao futura (academico, frequencia, boletim) sem retrabalho estrutural.
 
 ---
 
-## 2) Escopo de produto (MVP 60-90 dias)
+## 2) Estado atual do projeto (verdade hoje)
 
-### 2.1 In scope (obrigatorio)
-- Perfil publico da escola (institucional, diferenciais, contatos, horarios, endereco).
-- Catalogo de programas/turmas (faixa etaria, turno, vagas, faixa de preco).
+Antes de implementar, assumir estas verdades do repositorio:
+
+- Existe `business` como base canonica.
+- A gastronomia esta em `src/modules/business/gastronomy` (nao em `src/modules/gastronomy`).
+- Dashboard de empresa usa namespace:
+  - `/perfil/empresas/:businessId/...`
+- Site premium curto usa:
+  - `/p/:slug/*`
+  - resolvido por `PremiumBusinessSiteRoute`.
+- Entitlements de plano ja existem em `src/core/billing/types.ts` com flags como:
+  - `canUsePremiumPublicPage`
+  - `canUseShortPremiumLink`
+  - alias generico `canUsePremiumSite` / `canUseShortLink`.
+
+Conclusao arquitetural:
+- Education deve seguir o mesmo encaixe da gastronomia: vertical dentro de `business`.
+
+---
+
+## 3) Escopo de produto (MVP 60-90 dias)
+
+### 3.1 In scope (obrigatorio)
+- Perfil publico da escola.
+- Catalogo de programas/turmas.
 - Landing publica da vertical.
 - Pagina de detalhe da escola.
 - Captacao de leads (formulario "tenho interesse").
-- Pipeline comercial basico de lead (`new -> contacted -> visit_scheduled -> proposal_sent -> enrolled -> lost`).
-- Agenda de eventos/visitas abertas.
-- Dashboard da escola (resumo de leads, conversao, proximas acoes).
-- Billing/plans da vertical reaproveitando core billing existente.
-- Analytics basico de conversao da vertical.
+- Pipeline comercial de matricula:
+  - `new -> contacted -> visit_scheduled -> proposal_sent -> enrolled -> lost`.
+- Agenda de eventos/visitas.
+- Dashboard administrativo da escola.
+- Billing/plans da vertical usando core billing.
+- Analytics basico de conversao.
+- Botao oficial de WhatsApp da escola em perfil padrao e landing premium.
 
-### 2.2 Out of scope (proibido neste ciclo)
+### 3.2 Out of scope (MVP)
 - Frequencia por aula.
-- Lancamento de notas.
-- Boletim.
-- Diario de classe.
-- Controle financeiro academico completo.
-- Emissao fiscal complexa.
+- Boletim/notas.
+- Diario de classe completo.
+- Secretaria academica full.
+- Emissao fiscal avancada.
 
 ---
 
-## 3) Regras duras de arquitetura (SSOT)
+## 4) Regras SSOT obrigatorias
 
-### 3.1 Fluxo canonico de dados (obrigatorio)
+### 4.1 Fluxo canonico
 `Database -> Service -> Hook -> Component/Page`
 
-### 3.2 Regras SSOT obrigatorias
-- Nao fazer query Supabase direta em componente/pagina.
-- Nao duplicar regras que ja existem em `src/core/*`.
-- Dados de negocio variaveis vao para banco, nao hardcoded.
-- Constantes tecnicas podem ficar em codigo (timeouts, limites de pagina, etc).
-- Mock nao pode contaminar producao.
-- Todo arquivo novo deve ter responsabilidade clara.
+### 4.2 Regras
+- Nao fazer query Supabase direta em componentes/paginas.
+- Nao duplicar regra ja existente em `src/core/*`.
+- Dados de negocio variaveis no banco.
+- Mock isolado de runtime de producao.
+- Sem `any` sem justificativa.
+- Sem hardcode de entitlement em componente.
 
-### 3.3 Reuso de fontes canonicas do projeto
-- Base de empresa: `src/core/business/services/BusinessService.ts`
-- Ownership: `src/core/business/services/BusinessOwnershipService.ts`
-- Horarios: `src/core/business/services/OpeningHoursService.ts`
-- Billing: `src/core/billing/*`
-- Rotas app: `src/app/routes/AppRoutes.tsx`
-
-### 3.4 Anti-padroes proibidos
-- "Temporary fix" sem ticket.
-- Conversao de tipo com `as any`.
-- Duplicar enums/status em multiplos lugares.
-- Service chamando hook.
-- Hook contendo regra de negocio pesada.
-- Componente com mais de 1 responsabilidade de dominio.
+### 4.3 Owners canonicos para reuso
+- `src/core/business/services/BusinessService.ts`
+- `src/core/business/services/BusinessOwnershipService.ts`
+- `src/core/business/services/OpeningHoursService.ts`
+- `src/core/business/services/BusinessUrlService.ts`
+- `src/core/billing/*`
+- `src/app/routes/AppRoutes.tsx`
+- `src/config/modules.ts`
+- `src/config/territory.ts`
 
 ---
 
-## 4) Estrutura alvo de pastas/arquivos
+## 5) Estrutura alvo (atualizada para o projeto)
 
-Criar modulo seguindo o padrao de `src/modules/business/gastronomy`.
+Criar em:
 
 ```txt
-src/modules/education/
+src/modules/business/education/
   index.ts
   README.md
   VALIDATION.md
@@ -89,6 +100,8 @@ src/modules/education/
   constants/
     index.ts
     education.ts
+    ui-limits.ts
+    subscription-status.ts
   utils/
     index.ts
     education.helpers.ts
@@ -122,14 +135,13 @@ src/modules/education/
     EducationLeadForm.tsx
     EducationLeadPipeline.tsx
     EducationEventsPanel.tsx
-    EducationDashboardSummary.tsx
     EducationPlanStatusWidget.tsx
-    analytics/
-      EducationAnalyticsOverviewCard.tsx
-      EducationAnalyticsConversionCard.tsx
     dashboard/
       EducationLeadsSummaryCard.tsx
       EducationQuickActionsCard.tsx
+    analytics/
+      EducationAnalyticsOverviewCard.tsx
+      EducationAnalyticsConversionCard.tsx
   pages/
     index.ts
     EducationLandingPage.tsx
@@ -140,225 +152,257 @@ src/modules/education/
     EducationBillingPage.tsx
     EducationPlansPage.tsx
     EducationAnalyticsPage.tsx
+  niches/
+    index.ts
+    README.md
+    types.ts
+    registry.ts
+    services/
+      EducationNicheConfigService.ts
+    hooks/
+      useEducationNiche.ts
+    versioning/
+      EducationNicheVersioningService.ts
+      hooks/
+        useEducationNicheVersioning.ts
+      components/
+        EducationAdminSectionGuard.tsx
+        EducationNicheUpgradeBanner.tsx
 ```
 
 ---
 
-## 5) Modelo de dados minimo (migrations)
+## 6) Rotas e navegacao (atualizadas)
 
-## 5.1 Tabelas obrigatorias
+## 6.1 Dashboard da empresa (namespace atual)
+Adicionar em `AppRoutes` dentro de `/perfil/empresas/:businessId`:
+
+- `education` -> `EducationDashboardPage`
+- `education/setup`
+- `education/programas`
+- `education/leads`
+- `education/eventos`
+- `education/analytics`
+- `education/planos`
+
+## 6.2 Rota publica da vertical
+Seguir padrao territorial:
+- listagem: `/educacao/:state/:city`
+- listagem bairro/grupo: `/educacao/:state/:city/:groupSlugOrDistrict`
+- detalhe: `/educacao/:state/:city/:district/:slug`
+
+## 6.3 Integracao com site premium curto
+- manter politica global em `/p/:slug/*`;
+- Education deve plugar no mesmo mecanismo de entitlement, sem criar rota curta paralela.
+
+## 6.4 Atualizacoes de configuracao global (obrigatorio)
+- [ ] Adicionar `education` em `src/config/modules.ts` (id, slug, icon, order, isTerritorial).
+- [ ] Adicionar `education` em `LAUNCH_URLS` de `src/config/territory.ts`.
+- [ ] Adicionar lazy imports de Education em `src/app/routes/lazyImports.ts`.
+- [ ] Garantir que sidebar/menus leiam o modulo via SSOT de `modules.ts`.
+- [ ] Evitar hardcode de rotas de education fora de `AppRoutes` e helpers canonicos.
+
+---
+
+## 7) Modelo de dados minimo (MVP)
+
+## 7.1 Tabelas obrigatorias
 - `education_profiles`
 - `education_programs`
 - `education_leads`
 - `education_lead_events`
 - `education_events`
-- `education_messages` (basico, opcional na fase 1 se houver backlog)
+- `education_messages` (opcional fase 1)
 
-## 5.2 Relacionamentos minimos
+## 7.2 Relacionamentos
 - `education_profiles.business_id -> businesses.id`
 - `education_programs.education_profile_id -> education_profiles.id`
 - `education_leads.education_profile_id -> education_profiles.id`
 - `education_lead_events.lead_id -> education_leads.id`
 - `education_events.education_profile_id -> education_profiles.id`
 
-## 5.3 Campos minimos por tabela (MVP)
+## 7.3 Campos chave adicionais (recomendado)
+- `education_profiles.niche_key text not null default 'regular_school'`
+- `education_profiles.support_level text not null default 'basic_enabled'`
+- `education_profiles.whatsapp_number text null`
+- `education_profiles.published_at timestamptz null`
+- `education_profiles.status text not null default 'draft'` (`draft`, `published`, `paused`)
 
-### `education_profiles`
-- `id uuid pk`
-- `business_id uuid unique not null`
-- `institution_type text not null` (school, course, daycare, language_school, other)
-- `summary text`
-- `age_range_min int`
-- `age_range_max int`
-- `pedagogical_approach text`
-- `admission_process text`
-- `contact_whatsapp text`
-- `website_url text`
-- `is_active boolean default true`
-- `created_at timestamptz`
-- `updated_at timestamptz`
-
-### `education_programs`
-- `id uuid pk`
-- `education_profile_id uuid not null`
-- `name text not null`
-- `description text`
-- `age_group text`
-- `shift text` (morning, afternoon, evening, full_time, flexible)
-- `modality text` (in_person, remote, hybrid)
-- `available_slots int`
-- `price_from numeric(10,2)`
-- `is_active boolean default true`
-- `display_order int default 0`
-- `created_at timestamptz`
-- `updated_at timestamptz`
-
-### `education_leads`
-- `id uuid pk`
-- `education_profile_id uuid not null`
-- `full_name text not null`
-- `phone text`
-- `email text`
-- `child_name text`
-- `child_age int`
-- `interest_note text`
-- `source_channel text` (organic, whatsapp, ad, referral, other)
-- `status text not null` (pipeline canonico)
-- `owner_user_id uuid null`
-- `first_contact_at timestamptz null`
-- `lost_reason text null`
-- `created_at timestamptz`
-- `updated_at timestamptz`
-
-### `education_lead_events`
-- `id uuid pk`
-- `lead_id uuid not null`
-- `event_type text not null` (created, status_changed, note_added, call_made, visit_scheduled, proposal_sent, converted, lost)
-- `payload jsonb not null default '{}'::jsonb`
-- `created_by uuid`
-- `created_at timestamptz`
-
-### `education_events`
-- `id uuid pk`
-- `education_profile_id uuid not null`
-- `title text not null`
-- `description text`
-- `starts_at timestamptz not null`
-- `ends_at timestamptz null`
-- `is_public boolean default true`
-- `capacity int null`
-- `created_at timestamptz`
-- `updated_at timestamptz`
-
-## 5.4 Regras SQL obrigatorias
-- Constraints de dominio para status pipeline.
-- Indices para listagem/analytics:
+## 7.4 Regras SQL obrigatorias
+- constraints para status pipeline.
+- indices:
   - `education_leads(education_profile_id, status, created_at desc)`
   - `education_programs(education_profile_id, is_active, display_order)`
   - `education_events(education_profile_id, starts_at)`
-- Trigger de `updated_at`.
-- RLS habilitado em todas as tabelas novas.
-
-## 5.5 RLS minima
-- Leitura publica apenas para dados publicos (`education_profiles.is_active = true`, programas/eventos publicos).
-- Escrita apenas para owners/admin da empresa vinculada.
-- Leads: apenas owners/admin visualizam e alteram.
-- Eventos privados: apenas owners/admin.
+- trigger de `updated_at`.
+- RLS em todas as tabelas novas.
 
 ---
 
-## 6) Contratos TypeScript (obrigatorio)
+## 8) Nichos de Education (novo - inspirado na gastronomia)
 
-Criar contratos tipados sem `any`.
+Sim, e recomendado implementar nichos em education, no mesmo estilo arquitetural de nichos da gastronomia.
 
-### 6.1 Tipos minimos
-- `EducationProfile`
-- `EducationProgram`
-- `EducationLead`
-- `EducationLeadStatus` (union literal)
-- `EducationLeadEvent`
-- `EducationEvent`
-- Inputs/outputs separados:
-  - `CreateEducationProfileInput`
-  - `UpdateEducationProfileInput`
-  - `CreateEducationLeadInput`
-  - `UpdateEducationLeadStatusInput`
-  - `CreateEducationProgramInput`
-  - `UpdateEducationProgramInput`
+## 8.1 Objetivo de nichos
+- adaptar UX/fluxos sem duplicar modulo;
+- liberar capacidades por nicho e por plano;
+- manter um unico core de education.
 
-### 6.2 Regras de tipo
-- Preferir `as const` para enums de string.
-- Exportar todos os tipos no `types/index.ts`.
-- Evitar type duplicado em hooks/pages/components.
+## 8.2 Nichos iniciais sugeridos
+- `regular_school`
+- `daycare`
+- `language_school`
+- `prep_course`
+- `technical_school`
+- `tutoring_center`
+- `music_school`
+- `sports_school`
 
----
+## 8.3 Modelo de nicho (padrao)
+Cada nicho deve declarar:
+- `nicheKey`
+- `displayName`
+- `supportLevel` (`full_enabled`, `basic_enabled`, `beta`, `planned`)
+- `enabledCapabilities`
+- `missingCapabilities`
+- `adminSections`
+- `isPublic`, `isSelectable`, `isBeta`
 
-## 7) Services e hooks (checklist de implementacao)
+## 8.4 Capacidades de nicho (exemplos)
+- `class_schedule_public`
+- `trial_class_booking`
+- `enrollment_pipeline`
+- `document_upload_pre_enrollment`
+- `guardian_portal_basic`
+- `attendance_tracking` (futuro)
+- `gradebook` (futuro)
+- `transport_tracking` (futuro)
 
-## 7.1 Services
-- [ ] `education.queries.ts` com leitura de perfil/lista/detalhe.
-- [ ] `education.mutations.ts` com create/update profile.
-- [ ] `lead.queries.ts` com listagem paginada + filtros por status.
-- [ ] `lead.mutations.ts` com transicao de status + trilha em `education_lead_events`.
-- [ ] `education.helpers.ts` com validacoes de dominio (pipeline, conversao, labels).
-- [ ] `EducationService.ts` como facade de alto nivel.
-- [ ] `EducationUrlService.ts` com URLs canonicas da vertical.
-- [ ] `education-subscription.service.ts` integrado ao core billing.
+## 8.5 Secoes admin por nicho (exemplos)
+- `basic_profile`
+- `programs`
+- `events`
+- `lead_pipeline`
+- `documents`
+- `guardians`
+- `attendance` (futuro)
+- `grades` (futuro)
 
-## 7.2 Hooks
-- [ ] Hooks apenas com estado/orquestracao/cache (React Query).
-- [ ] Cada hook delega regra ao service correspondente.
-- [ ] `queryKey` consistente e estavel.
-- [ ] Invalidation correta apos mutacoes.
-- [ ] Tratamento uniforme de loading/error/empty state.
-
----
-
-## 8) UI/Pages/Rotas (checklist de implementacao)
-
-## 8.1 Paginas obrigatorias
-- [ ] `EducationLandingPage`
-- [ ] `EducationDetailPage`
-- [ ] `EducationSetupPage`
-- [ ] `EducationDashboardPage`
-- [ ] `EducationLeadsPage`
-- [ ] `EducationBillingPage`
-- [ ] `EducationPlansPage`
-- [ ] `EducationAnalyticsPage`
-
-## 8.2 Componentes obrigatorios
-- [ ] Card principal da escola com metadados relevantes.
-- [ ] Form de lead com validacao (zod ou padrao do projeto).
-- [ ] Pipeline visual de leads com transicao controlada.
-- [ ] Painel de eventos/visitas.
-- [ ] Cards de resumo no dashboard.
-
-## 8.3 Rotas obrigatorias (inserir em `src/app/routes/AppRoutes.tsx`)
-- [ ] `/dashboard/business/:businessId/education/setup`
-- [ ] `/dashboard/business/:businessId/education/billing`
-- [ ] `/dashboard/business/:businessId/education/dashboard`
-- [ ] `/dashboard/business/:businessId/education/leads`
-- [ ] `/dashboard/business/:businessId/education/plans`
-- [ ] `/dashboard/business/:businessId/education/analytics`
-- [ ] Rota publica de landing/listagem education (seguir padrao territorial atual do projeto).
-
-## 8.4 Lazy imports
-- [ ] Adicionar exports no arquivo de lazy imports utilizado por `AppRoutes`.
-- [ ] Garantir que nao haja import circular.
+## 8.6 Checklist de implementacao de nichos
+- [ ] Criar `registry.ts` de nichos education.
+- [ ] Criar `EducationNicheConfigService` (leitura/filtro/validacao/section-guard).
+- [ ] Criar hook `useEducationNiche`.
+- [ ] Criar guard visual de secoes admin por nicho.
+- [ ] Criar banner de upgrade quando nicho/plano bloquear recurso.
+- [ ] Cobrir com testes unitarios de capability + visibilidade.
 
 ---
 
-## 9) Integracoes obrigatorias
+## 9) Landing premium vs perfil padrao (atualizado)
 
-- [ ] Integrar com `BusinessService` para dados base da empresa.
-- [ ] Integrar ownership com `BusinessOwnershipService`.
-- [ ] Integrar horario com `OpeningHoursService` quando aplicavel.
-- [ ] Integrar billing com hooks/services de `src/core/billing`.
-- [ ] Integrar favoritos/reviews apenas se houver contrato canonico ja existente (nao duplicar).
+## 9.1 Conceitos
+- `profile_basic`: perfil publico basico (plano sem premium page).
+- `landing_premium`: pagina de conversao completa (assinante com entitlement).
+
+## 9.2 Politica de URL
+- URL canonica sempre existe.
+- `/p/:slug/*` e atalho premium, governado por entitlement.
+- sem entitlement premium, fallback para visual basico na canonic.
+
+## 9.3 Entitlements (usar nomenclatura atual)
+Usar flags canonicamente no core billing:
+- `canUsePremiumPublicPage`
+- `canUseShortPremiumLink`
+- aliases genericos quando aplicavel (`canUsePremiumSite`, `canUseShortLink`)
+
+## 9.4 Conteudo minimo `profile_basic`
+- nome + resumo;
+- endereco/contato/horario;
+- whatsapp da escola;
+- CTA simples.
+
+## 9.5 Conteudo minimo `landing_premium`
+- hero + CTA;
+- programas/turmas com metadados;
+- diferenciais;
+- eventos;
+- prova social;
+- formulario de lead;
+- FAQ curta;
+- mapa + contatos.
 
 ---
 
-## 10) Testes obrigatorios
+## 10) Admin e RBAC
 
-## 10.1 Unitarios
-- [ ] Testes para regras de pipeline de lead (transicoes validas/invalidas).
-- [ ] Testes para helpers de status/conversao.
-- [ ] Testes para services criticos (`education.queries`, `lead.mutations`).
+## 10.1 Roles
+- `school_owner`
+- `school_manager`
+- `school_staff`
+- `guardian_view` (futuro)
 
-## 10.2 Integracao (runtime)
-- [ ] Fluxo criar lead -> alterar status -> gerar evento.
-- [ ] Fluxo setup da escola -> publicar perfil -> listar landing.
-- [ ] Fluxo billing/plans basico da vertical.
+## 10.2 Regras
+- autorizacao em backend via RLS + ownership.
+- guard de rota frontend.
+- isolamento entre escolas.
 
-## 10.3 Nao-regressao
-- [ ] Garantir que modulo `gastronomy` continua compilando e funcional.
-- [ ] Garantir que rotas existentes nao foram quebradas.
+## 10.3 Auditoria obrigatoria
+Auditar:
+- alteracao de perfil.
+- alteracao de programa.
+- mudanca de status de lead.
+- alteracao de configuracao sensivel.
+
+Campos minimos:
+- `actor_user_id`, `action`, `resource_type`, `resource_id`, `payload_diff`, `created_at`.
+
+## 10.4 LGPD e seguranca para Education (dados de menores) - Gate obrigatorio
+Sem cumprir os itens abaixo, nao liberar features sensiveis de Education:
+
+- [ ] Classificar dados de alunos/responsaveis como sensiveis quando aplicavel.
+- [ ] Definir minimizacao de dados por campo e finalidade.
+- [ ] Registrar consentimento do responsavel para tratamento/notificacoes sensiveis.
+- [ ] Implementar revogacao de consentimento e efeitos no produto.
+- [ ] RLS em todas as tabelas de education.
+- [ ] Isolamento entre escolas garantido no backend.
+- [ ] Trilhas de auditoria para alteracoes criticas.
+- [ ] Politica de retencao por tipo de dado.
+- [ ] Mascara de dados sensiveis em logs.
+- [ ] Upload seguro (MIME/tamanho/signed URL/scan malware) quando documentos forem habilitados.
 
 ---
 
-## 11) Validacao obrigatoria antes de concluir
+## 11) Integracoes obrigatorias
 
-Executar e anexar resultado (pass/fail) de:
+- [ ] `BusinessService`.
+- [ ] `BusinessOwnershipService`.
+- [ ] `OpeningHoursService` (quando aplicavel).
+- [ ] `core/billing` (planos/entitlements).
+- [ ] `BusinessUrlService`/padrao de URL publica.
+- [ ] `PremiumBusinessSiteRoute` para experiencia premium curta.
+
+---
+
+## 12) Testes obrigatorios
+
+## 12.1 Unitarios
+- pipeline de lead (transicoes validas/invalidas).
+- helpers de nicho (capabilities, section visibility).
+- services criticos (queries/mutations).
+
+## 12.2 Integracao
+- setup -> publicar -> aparecer na landing.
+- criar lead -> trocar status -> auditar evento.
+- downgrade de plano -> fallback de landing premium para profile basic.
+
+## 12.3 Seguranca/autorizacao
+- usuario sem permissao nao acessa admin.
+- escola A nao acessa dados da escola B.
+- dados publicos nao expõem campos privados.
+
+---
+
+## 13) Validacoes obrigatorias antes de concluir
 
 - [ ] `npm run typecheck`
 - [ ] `npm run lint`
@@ -366,437 +410,96 @@ Executar e anexar resultado (pass/fail) de:
 - [ ] `npm run check:ssot`
 - [ ] `npm run validate:architecture:governance -- --json`
 - [ ] `npm run build`
-- [ ] testes do modulo novo (unitarios e integracao adicionados)
+- [ ] testes do modulo education
 
-Se qualquer item falhar:
-- [ ] corrigir;
-- [ ] reexecutar;
-- [ ] nao marcar como pronto sem tudo verde.
+Falhou:
+- [ ] corrigir
+- [ ] reexecutar
+- [ ] nao finalizar
 
 ---
 
-## 12) Definition of Done (DoD) obrigatoria
+## 14) Definition of Done (DoD)
 
-So considerar "entregue" se TODOS abaixo forem verdadeiros:
-
-- [ ] Escopo MVP implementado completo.
-- [ ] Sem hardcodes de negocio fora SSOT.
-- [ ] Sem query direta em componente/pagina.
-- [ ] Services/hooks/pages/componentes separados por responsabilidade.
-- [ ] Barrel exports completos (`index.ts`) no modulo.
-- [ ] Rotas adicionadas e navegacao funcional.
-- [ ] Migrations com RLS e indices aplicadas.
-- [ ] Testes novos passando.
-- [ ] Build e validadores SSOT/arquitetura passando.
+So considerar pronto quando:
+- [ ] modulo em `src/modules/business/education` implementado.
+- [ ] rotas no namespace atual (`/perfil/empresas/:businessId/...`) funcionando.
+- [ ] rota publica education funcionando no padrao territorial.
+- [ ] profile basic + landing premium por entitlement funcionando.
+- [ ] nichos education (registry + service + hook + guard) implementados.
+- [ ] RLS, testes e validadores passando.
 - [ ] README e VALIDATION do modulo atualizados.
 
 ---
 
-## 13) Checklist de code review (para reprovar PR ruim)
+## 15) Anti-padroes (bloqueio de PR)
 
-Reprovar se houver qualquer um:
-- [ ] `any` sem justificativa forte.
-- [ ] duplicacao de enum/status/constante de dominio.
-- [ ] logica de negocio em hook/componente.
-- [ ] mutacao de banco fora service.
-- [ ] ausencia de RLS.
-- [ ] ausencia de testes para regra de pipeline.
-- [ ] uso de mock em runtime de producao.
-- [ ] "TODO depois ajusta" em caminho critico.
+Reprovar PR se houver:
+- query direta ao banco em componente.
+- entitlement hardcoded em UI.
+- duplicacao de enum/status/constantes.
+- sem RLS nas tabelas novas.
+- sem testes de pipeline e nichos.
+- mock em runtime de producao.
 
 ---
 
-## 14) Sequencia sugerida de execucao (ordem obrigatoria)
+## 16) Sequencia recomendada
 
 1. Migrations + RLS + indices.
-2. Types + constants + utils.
-3. Services (queries/mutations/helpers/facades).
+2. Types/constants/utils.
+3. Services.
 4. Hooks.
-5. Components.
-6. Pages.
-7. Rotas/lazy imports.
-8. Testes.
-9. Validacoes finais SSOT/arquitetura/build.
-10. Documentacao final (`README.md`, `VALIDATION.md`, changelog se houver padrao).
+5. Niches (registry/service/hooks/guards).
+6. Components.
+7. Pages.
+8. Rotas/lazy imports.
+9. Testes.
+10. Validacao final + docs.
 
 ---
 
-## 15) Prompt pronto para delegar para outra IA
+## 17) Roadmap futuro (escalabilidade)
 
-Copie e envie exatamente:
+## 17.1 Fase futura academica
+- frequencia
+- boletim
+- diario
+
+## 17.2 Fase futura responsavel em tempo real
+- status entrada/saida
+- notificacoes aos pais
+
+## 17.3 Gate de entrada para fases futuras
+Iniciar apenas se:
+- demanda recorrente de clientes pagantes;
+- impacto em venda/churn comprovado;
+- maturidade operacional e juridica (LGPD para menores);
+- infraestrutura de eventos/notificacoes confiavel.
+
+---
+
+## 18) Prompt pronto para delegar para outra IA
 
 ```txt
-Implemente o modulo src/modules/education neste repositorio seguindo estritamente o documento:
+Implemente o modulo src/modules/business/education seguindo estritamente:
 docs/EDUCATION_MODULE_IMPLEMENTATION_CHECKLIST_SSOT.md
 
 Regras obrigatorias:
 1) Siga SSOT sem excecao.
-2) Proibido gambiarra, workaround temporario e duplicacao de dominio.
-3) Fluxo de dados obrigatorio: Database -> Service -> Hook -> Component/Page.
-4) Nao use query Supabase direta em componentes/paginas.
-5) Reaproveite servicos core existentes (BusinessService, BusinessOwnershipService, OpeningHoursService, core billing).
-6) Entregar somente escopo MVP comercial definido no documento (sem frequencia/boletim/diario).
-7) Criar migrations com RLS + indices.
-8) Criar testes para regras criticas de pipeline de leads.
-9) Executar validacoes finais (typecheck, lint, validate:ssot, check:ssot, validate:architecture:governance, build).
-10) Nao finalize ate tudo passar.
+2) Sem gambiarra e sem duplicacao de dominio.
+3) Fluxo: Database -> Service -> Hook -> Component/Page.
+4) Nao use query direta em componente/pagina.
+5) Reuse core: BusinessService, BusinessOwnershipService, OpeningHoursService, BusinessUrlService e core/billing.
+6) Respeite o namespace de rotas atual: /perfil/empresas/:businessId/...
+7) Integre premium site curto no modelo atual /p/:slug/* por entitlement.
+8) Implemente nichos de education (registry + service + hook + guard) no mesmo estilo arquitetural da gastronomia.
+9) Rode validacoes finais (typecheck, lint, validate:ssot, check:ssot, validate:architecture:governance, build).
+10) Nao finalizar ate tudo passar.
 
-No fim, entregue:
-- lista de arquivos criados/alterados;
-- resumo tecnico por fase;
-- resultado dos comandos de validacao;
-- riscos residuais (se houver).
+Entregar ao final:
+- arquivos criados/alterados;
+- resumo por fase;
+- resultado dos validadores;
+- riscos residuais.
 ```
-
----
-
-## 16) Nota final de estrategia
-
-Este plano foi desenhado para maximizar valor de negocio com baixo risco:
-- primeiro captura e conversao comercial de escolas;
-- depois, com tracao comprovada, evoluir para gestao academica completa.
-
----
-
-## 17) Roadmap futuro (ja previsto para expansao segura)
-
-Esta secao e obrigatoria como referencia de evolucao.  
-Nao implementar tudo agora. Preparar fundacao e liberar por fases.
-
-### 17.1 Principio de rollout
-- Implementar por modulos e liberar com feature flags por escola/plano.
-- Evitar "codigo completo oculto" sem uso real.
-- Entregar pequenos blocos com validacao real em producao.
-
-### 17.2 Fase futura A - Academico essencial
-- Frequencia por aula (presenca, atraso, falta justificada, falta nao justificada).
-- Diario de chamada digital por professor.
-- Fechamento de chamada com trilha de auditoria.
-- Notificacao de ausencia para responsavel (configuravel por escola).
-
-### 17.3 Fase futura B - Avaliacao e boletim
-- Lancamento de avaliacoes e notas por disciplina/periodo.
-- Regras de media, recuperacao, arredondamento e aprovacao configuraveis.
-- Geracao de boletim por periodo letivo.
-- Historico de alteracoes de nota (quem alterou, quando, motivo).
-
-### 17.4 Fase futura C - Jornada de entrada/saida e comunicacao em tempo real
-- Registro de entrada e saida do aluno.
-- Evento de "aula encerrada" e "aluno saiu".
-- Notificacoes para responsavel (push, email, whatsapp se integrado).
-- Status operacional para pais no app: `em_aula`, `intervalo`, `aguardando_saida`, `saiu`.
-
-### 17.5 Fase futura D - Presenca assistida por operacao (opcional avancado)
-- Integracao com portaria/catraca/leitor (quando existir).
-- Geofencing apenas com consentimento explicito e base legal valida.
-- Modo contingencia para operacao manual em caso de falha.
-
-### 17.6 Entidades futuras recomendadas (nao obrigatorio criar agora)
-- `academic_terms`
-- `school_classes`
-- `class_sessions`
-- `student_enrollments`
-- `attendance_records`
-- `attendance_events`
-- `assessments`
-- `grade_records`
-- `report_cards`
-- `student_presence_status`
-- `student_gate_events` (entrada/saida)
-- `guardian_notification_events`
-
-### 17.7 Contratos futuros recomendados (tipos TS)
-- `AttendanceStatus` (`present`, `late`, `absent_excused`, `absent_unexcused`)
-- `PresenceStatus` (`at_school`, `in_class`, `break`, `checkout_pending`, `left_school`)
-- `GradeType` (`exam`, `assignment`, `project`, `participation`, `recovery`)
-- `GuardianNotificationType` (`absence_alert`, `class_ended`, `checkin`, `checkout`)
-
-### 17.8 Regras de dominio obrigatorias para fases futuras
-- Nenhuma alteracao critica sem trilha de auditoria.
-- Registro de presenca/nota deve ser versionado (nao sobrescrever sem historico).
-- Toda automacao deve ter fallback manual.
-- Notificacao a pais nao pode ser tratada como confirmacao operacional absoluta.
-- Evento de saida deve ter origem rastreavel (manual, portaria, integracao).
-
-### 17.9 LGPD, seguranca e compliance (pre-requisitos de liberacao)
-- Consentimento explicito do responsavel para dados sensiveis e notificacoes.
-- Politica de retencao por tipo de dado (presenca, notas, eventos de portaria).
-- Controle de acesso estrito por perfil (professor, coordenacao, responsavel, admin).
-- RLS e auditoria obrigatorios para todas as tabelas academicas.
-- Log de acesso a dados de menores (quem consultou e quando).
-- Processo de revogacao de consentimento e efeito no produto.
-
-### 17.10 Operacao e confiabilidade (pre-requisitos de liberacao)
-- SLA interno de notificacao (latencia alvo e taxa minima de entrega).
-- Retentativa e fila para eventos de notificacao.
-- Painel de observabilidade (eventos enviados, entregues, falhas).
-- Procedimento de contingencia documentado para internet indisponivel.
-- Testes de carga em horarios de pico (entrada/saida e troca de turno).
-
-### 17.11 Feature flags e estrategia comercial
-- Flags por capacidade:
-  - `education_attendance_enabled`
-  - `education_report_cards_enabled`
-  - `education_guardian_realtime_enabled`
-  - `education_gate_integration_enabled`
-- Liberacao por plano:
-  - Plano base: comercial + leads + eventos.
-  - Plano intermediario: frequencia + alertas basicos.
-  - Plano avancado: boletim + realtime + integracoes.
-
-### 17.12 Checkpoint para decidir inicio da Fase A
-So iniciar academico interno quando TODOS forem verdade:
-- demanda recorrente de clientes pagantes;
-- perda de vendas comprovada por ausencia desses recursos;
-- capacidade operacional para suporte e implantacao;
-- base legal/LGPD definida com assessoria juridica;
-- infraestrutura pronta para eventos e notificacoes confiaveis.
-
-### 17.13 Decisao recomendada (importante)
-- Recomendado: deixar roadmap e arquitetura futura definidos agora.
-- Nao recomendado: implementar completo e esconder do publico.
-- Motivo: reduz risco tecnico, risco juridico e custo de manutencao prematuro.
-
----
-
-## 18) Admin, Profile e Area administrativa da escola (complemento obrigatorio)
-
-Este bloco define o que faltava para a IA nao errar na implementacao da administracao da escola.
-
-### 18.1 Perfis de acesso (RBAC minimo)
-- `school_owner`: dono da escola, acesso total ao modulo education daquela escola.
-- `school_manager`: gerencia comercial/operacional da escola (sem alterar ownership).
-- `school_staff`: operacao de leads/eventos (permissoes limitadas).
-- `guardian_view` (futuro): apenas visualizacao de dados autorizados do aluno.
-
-Regra:
-- Ninguem fora da escola pode acessar area administrativa da escola.
-- Permissao deve ser validada no backend (RLS/policies), nao apenas no frontend.
-
-### 18.2 Paginas administrativas obrigatorias (MVP)
-- `EducationSetupPage`: onboarding e configuracao inicial do perfil educacional.
-- `EducationDashboardPage`: KPI comercial, proximas acoes e resumo de pipeline.
-- `EducationLeadsPage`: lista/kanban de leads + filtros + mudanca de status.
-- `EducationEventsAdminPage` (ou secao dedicada em dashboard): CRUD de eventos/visitas.
-- `EducationProgramsAdminPage` (ou secao dedicada): CRUD de programas/turmas.
-- `EducationBillingPage`: assinatura e status do plano.
-- `EducationAnalyticsPage`: metricas de conversao.
-
-### 18.3 Pagina de profile da escola (publica)
-- URL canonica da escola na vertical education.
-- Blocos obrigatorios:
-  - capa + resumo institucional;
-  - programas/turmas;
-  - eventos abertos;
-  - contatos/whatsapp/endereco;
-  - CTA de interesse/matricula.
-- Estado de pagina desativada:
-  - mostrar mensagem padrao e evitar lead form ativo.
-
-### 18.4 Permissoes por recurso (checklist)
-- Perfil da escola:
-  - [ ] owner/manager editam
-  - [ ] staff apenas leitura (ou campos permitidos)
-- Programas:
-  - [ ] owner/manager CRUD
-  - [ ] staff create/update conforme regra definida
-- Leads:
-  - [ ] owner/manager/staff leitura
-  - [ ] transicao de status controlada por role
-- Billing:
-  - [ ] apenas owner (e opcional manager financeiro)
-- Analytics:
-  - [ ] owner/manager leitura
-  - [ ] staff leitura parcial (opcional)
-
-### 18.5 Sidebar e navegacao administrativa (obrigatorio)
-- Entrada unica no dashboard da escola:
-  - `/dashboard/business/:businessId/education/dashboard`
-- Menu minimo:
-  - Dashboard
-  - Leads
-  - Programas
-  - Eventos
-  - Analytics
-  - Billing/Plano
-  - Configuracoes
-- Regras:
-  - [ ] itens escondidos quando sem permissao
-  - [ ] guard de rota para acesso direto por URL
-
-### 18.6 Setup e onboarding da escola (obrigatorio)
-- Passos minimos:
-  1) dados institucionais
-  2) contato e canais
-  3) programas iniciais
-  4) publicacao do perfil
-- Criticos:
-  - [ ] salvar rascunho
-  - [ ] validacao de campos obrigatorios
-  - [ ] estado `draft` vs `published`
-  - [ ] bloqueio de publicacao sem minimo de dados
-
-### 18.7 Auditoria administrativa
-- Toda acao sensivel gera evento de auditoria:
-  - alteracao de perfil
-  - criacao/edicao de programa
-  - mudanca de status de lead
-  - alteracao de configuracao de notificacao
-- Campos minimos do log:
-  - `actor_user_id`, `action`, `resource_type`, `resource_id`, `payload_diff`, `created_at`
-
-### 18.8 Estados e UX obrigatorios nas telas admin
-- [ ] loading/skeleton
-- [ ] empty state com CTA util
-- [ ] erro com mensagem clara + retry
-- [ ] confirmacao para acoes destrutivas
-- [ ] feedback de sucesso padrao
-
-### 18.9 Checklist de testes especificos para admin/profile
-- [ ] usuario sem permissao nao entra em rotas admin da escola.
-- [ ] owner acessa tudo da propria escola.
-- [ ] owner de escola A nao acessa dados da escola B.
-- [ ] profile publico exibe apenas dados publicaveis.
-- [ ] lead form cria lead e registra evento de criacao.
-- [ ] billing so aparece para perfis autorizados.
-
-### 18.10 DoD adicional (admin/profile)
-So concluir se:
-- [ ] RBAC aplicado em frontend e backend.
-- [ ] Rotas administrativas protegidas.
-- [ ] Pagina publica e administrativa separadas corretamente.
-- [ ] Logs de auditoria funcionando para acoes sensiveis.
-- [ ] Testes de autorizacao e isolamento entre escolas passando.
-
----
-
-## 19) Beneficios por plano (globais x por vertical) + status de implementacao
-
-Esta secao evita ambiguidade de produto e garante implementacao consistente.
-
-### 19.1 Beneficios globais (todas empresas assinantes)
-- Perfil publico profissional.
-- URL canonica publica.
-- Link de compartilhamento curto (politica global definida por plano).
-- CTA de conversao.
-- Dashboard administrativo basico.
-- Billing/plano/assinatura.
-
-### 19.2 Beneficios especificos por vertical
-- Gastronomia:
-  - catalogo avancado de menu (categorias, itens, adicionais, disponibilidade, promocoes).
-  - fluxo operacional de pedidos/entrega.
-- Educacao:
-  - catalogo de programas/turmas (idade, turno, modalidade, vagas, faixa de preco).
-  - pipeline comercial de matricula (lead ate convertido).
-
-### 19.3 Status tecnico atual encontrado no repositorio (verdade de hoje)
-- Ja existe rota curta para empresas premium:
-  - `/p/:slug` em `src/core/routing/components/BusinessPremiumRoute.tsx`
-  - geracao de share URL via `BusinessUrlService.getShareUrl(...)`
-  - regra atual: `premium` curta; nao premium usa canonic.
-- URL canonica de empresa ja existe e segue SSOT em:
-  - `src/core/business/services/BusinessUrlService.ts`
-
-### 19.4 Decisao de produto obrigatoria (antes da execucao final)
-Definir uma regra unica:
-- Opcao A: link curto para todo assinante pago (recomendado para padronizacao comercial).
-- Opcao B: link curto somente para tiers premium.
-
-Sem esta decisao, nao fechar implementacao final de beneficios de assinatura.
-
-### 19.5 Checklist de implementacao para "link curto para todos assinantes"
-Executar apenas se a decisao for Opcao A.
-
-- [ ] Criar capacidade canonica de plano para short link (entitlement), sem hardcode de tier.
-- [ ] Atualizar `BusinessUrlService.getShareUrl` para respeitar entitlement de assinatura.
-- [ ] Manter `/p/:slug` como rota curta canonica (sem duplicar rotas).
-- [ ] Ajustar validacao em `BusinessPremiumRoute` para regra por entitlement (nao por flag isolada).
-- [ ] Adicionar testes:
-  - assinante com entitlement recebe short link;
-  - sem entitlement recebe canonical;
-  - redirecionamento da rota curta funciona apenas quando permitido.
-- [ ] Refletir na UI de plano/billing quais beneficios estao ativos.
-
-### 19.6 Checklist de implementacao para Education
-- [ ] `EducationUrlService` deve reutilizar estrategia canonica de URLs do projeto.
-- [ ] Share URL em education deve seguir a mesma politica global de link curto definida em 19.4.
-- [ ] Nao criar politica divergente entre verticals.
-
----
-
-## 20) Landing de assinante vs perfil padrao (regra oficial)
-
-Esta secao define exatamente como diferenciar "pagina premium de assinatura" de "perfil basico".
-
-### 20.1 Conceitos
-- `Perfil padrao`:
-  - pagina publica basica da escola;
-  - conteudo reduzido;
-  - sem blocos comerciais avancados.
-- `LandingPage de assinante`:
-  - pagina completa de conversao;
-  - inclui blocos premium e captacao de lead;
-  - pode usar link curto conforme entitlement do plano.
-
-### 20.2 Politica de URL (obrigatoria)
-- URL canonica sempre existe para toda escola publica.
-- Link curto e beneficio de assinatura (definido por entitlement global).
-- Landing completa deve ser publicada na URL canonica.
-- Link curto redireciona para a landing canonica quando permitido.
-
-### 20.3 Conteudo minimo do perfil padrao (free/basico)
-- nome da escola e resumo curto;
-- endereco e contatos basicos;
-- horario de atendimento;
-- 1 CTA simples de contato;
-- aviso visual de recursos premium indisponiveis (sem bloquear navegacao publica).
-
-### 20.4 Conteudo minimo da landing de assinante (premium)
-- Header com identidade da escola + CTA principal.
-- Hero com proposta de valor e chamadas de acao.
-- Bloco de programas/turmas com dados essenciais:
-  - faixa etaria;
-  - turno;
-  - modalidade;
-  - vagas;
-  - preco inicial/faixa.
-- Bloco de diferenciais da escola.
-- Bloco de eventos/visitas abertas.
-- Prova social (depoimentos/avaliacoes quando houver).
-- Formulario de lead (nome, contato, idade do aluno, interesse).
-- FAQ curta.
-- Rodape com mapa/contatos e canais oficiais.
-
-### 20.5 Recursos premium da landing (feature flags sugeridas)
-- `education_landing_enabled`
-- `education_lead_form_enabled`
-- `education_catalog_full_enabled`
-- `education_events_public_enabled`
-- `short_link_enabled` (global por assinatura)
-
-### 20.6 Regras de entitlement (obrigatorias)
-- Nao hardcodar "premium" em componente.
-- Verificar capacidades ativas do plano em camada de service/hook canonica.
-- UI deve ocultar/mostrar blocos conforme entitlement.
-- Backend/RLS deve impedir escrita de recursos premium por nao assinante.
-
-### 20.7 Checklist de implementacao
-- [ ] Criar modo de renderizacao `profile_basic` e `landing_premium`.
-- [ ] Garantir fallback automatico para `profile_basic` quando sem entitlement.
-- [ ] Garantir que formularios premium nao aparecam para quem nao tem direito.
-- [ ] Garantir que URL canonica funcione nos dois modos.
-- [ ] Garantir que link curto so funcione quando `short_link_enabled`.
-
-### 20.8 Checklist de testes
-- [ ] escola sem assinatura abre perfil padrao, sem blocos premium.
-- [ ] escola assinante abre landing completa.
-- [ ] revogacao de plano rebaixa landing para perfil padrao sem quebrar URL.
-- [ ] link curto ativo somente com entitlement.
-- [ ] submissao de lead permitida apenas quando bloco/form premium habilitado.
-
-### 20.9 Decisao de UX recomendada
-- Estrutura visual base unica para manter consistencia.
-- Diferenca entre planos por blocos/capacidades, nao por criar 2 apps diferentes.
-- Conteudo e identidade da escola continuam personalizados.
-
