@@ -11,6 +11,7 @@ import { useMenuCategories, useMenuItems, useGastronomyMenuId, useGastronomyProf
 import { CategoryList, CategoryForm, ItemCard, ItemForm } from '../components/menu';
 import { PizzaAdminPanel } from '../niches';
 import { UpgradePromptInline } from '../components';
+import { useSessionContext } from '@/core/session';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/components/ui/card';
 import { Button } from '@/shared/components/ui/button';
@@ -30,6 +31,7 @@ export default function MenuManagementPage() {
   const { businessId } = useParams<{ businessId: string }>();
   const navigate = useNavigate();
   const { entitlements, isLoading: loadingSubscription } = useBusinessSubscription(businessId!);
+  const { user } = useSessionContext();
 
   const { menuId, isLoading: loadingMenuId } = useGastronomyMenuId(businessId);
   const { data: gastronomyProfile } = useGastronomyProfile(businessId);
@@ -339,9 +341,9 @@ export default function MenuManagementPage() {
           </TabsContent>
         )}
 
-        {isPizzaria && businessId && (
+        {isPizzaria && businessId && user && (
           <TabsContent value="pizzaria">
-            <PizzaAdminPanel businessId={businessId} />
+            <PizzaAdminPanel businessId={businessId} userId={user.id} />
           </TabsContent>
         )}
       </Tabs>
@@ -369,9 +371,9 @@ export default function MenuManagementPage() {
         isSubmitting={creatingItem || updatingItem}
         allowCategorySelection={canUseCategories}
         allowImage={canUseImages}
+        isPizzaria={isPizzaria}
       />
     </div>
   );
 }
-
 

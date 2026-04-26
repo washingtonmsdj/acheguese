@@ -1,17 +1,22 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Button } from "@/shared/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/components/ui/card";
+import { Input } from "@/shared/components/ui/input";
 import { PizzaCartItemBuilder } from "../PizzaCartItemBuilder";
 import { PizzaPricingService } from "../PizzaPricingService";
 import { PizzaValidationService } from "../PizzaValidationService";
-import type { PizzaBuildSelection, PizzaCatalog } from "../types";
+import type { PizzaBuildSelection, PizzaCatalog, PizzaFlavor } from "../types";
 import type { MenuItemWithRelations } from "../../../types/menu";
+import { PizzaSliceVisualizer } from "./PizzaSliceVisualizer";
+import { findFlavorByMenuItemName } from "../utils/flavorMatch";
+import { resolvePizzaRenderSize, textHasPizzaCrustHint } from "../utils/pizzaVisualRules";
 
 interface Props {
   businessId: string;
   item: MenuItemWithRelations;
   catalog: PizzaCatalog;
   onAddToCart: (selection: PizzaBuildSelection) => void;
+  defaultEdgeId?: string | null;
 }
 
 function getEqualFractions(count: number): number[] {
@@ -19,11 +24,52 @@ function getEqualFractions(count: number): number[] {
   return Array.from({ length: count }, () => Number((1 / count).toFixed(4)));
 }
 
-export function PizzaBuilder({ businessId, item, catalog, onAddToCart }: Props) {
+export function PizzaBuilder({ businessId, item, catalog, onAddToCart, defaultEdgeId = null }: Props) {
   const [sizeId, setSizeId] = useState(catalog.sizes[0]?.id ?? "");
   const [flavorIds, setFlavorIds] = useState<string[]>([]);
-  const [edgeId, setEdgeId] = useState<string | null>(null);
+  const [flavorSearch, setFlavorSearch] = useState("");
+  const [edgeId, setEdgeId] = useState<string | null>(defaultEdgeId);
   const [doughId, setDoughId] = useState<string | null>(catalog.doughs[0]?.id ?? null);
+
+  const inferredFlavor = useMemo(
+    () =>
+      findFlavorByMenuItemName(catalog.flavors, item.name) ??
+      catalog.flavors.find((entry) => entry.is_available) ??
+      null,
+    [catalog.flavors, item.name],
+  );
+  const fallbackVisualFlavor = useMemo<PizzaFlavor>(
+    () => ({
+      id: `visual-flavor-${item.id}`,
+      business_id: businessId,
+      name: item.name,
+      description: "Visualizacao da pizza",
+      category: "visual",
+      base_price: item.base_price,
+      is_available: true,
+      is_vegetarian: item.is_vegetarian,
+      is_vegan: item.is_vegan,
+      is_spicy: item.is_spicy,
+      allergens: [],
+      ingredients: [],
+      display_order: 0,
+      created_at: "1970-01-01T00:00:00.000Z",
+      updated_at: "1970-01-01T00:00:00.000Z",
+    }),
+    [businessId, item.base_price, item.id, item.is_spicy, item.is_vegan, item.is_vegetarian, item.name],
+  );
+
+  useEffect(() => {
+    if (!inferredFlavor) {
+      setFlavorIds([]);
+      return;
+    }
+    setFlavorIds([inferredFlavor.id]);
+  }, [inferredFlavor, item.id]);
+
+  useEffect(() => {
+    setEdgeId(defaultEdgeId);
+  }, [defaultEdgeId, item.id]);
 
   const size = catalog.sizes.find((entry) => entry.id === sizeId) ?? null;
   const edge = edgeId ? catalog.edges.find((entry) => entry.id === edgeId) ?? null : null;
@@ -59,9 +105,40 @@ export function PizzaBuilder({ businessId, item, catalog, onAddToCart }: Props) 
     });
   }, [catalog, dough, edge, flavorSelection, size, validation.is_valid]);
 
+  const selectedFlavors = useMemo(
+    () =>
+      flavorIds
+        .map((flavorId) => catalog.flavors.find((flavor) => flavor.id === flavorId))
+        .filter((flavor): flavor is PizzaFlavor => Boolean(flavor)),
+    [catalog.flavors, flavorIds],
+  );
+  const filteredFlavors = useMemo(() => {
+    const normalizedSearch = flavorSearch.trim().toLowerCase();
+    const available = catalog.flavors.filter((entry) => entry.is_available);
+    if (!normalizedSearch) return available;
+    return available.filter((flavor) => {
+      const name = flavor.name.toLowerCase();
+      const ingredients = flavor.ingredients.join(" ").toLowerCase();
+      return name.includes(normalizedSearch) || ingredients.includes(normalizedSearch);
+    });
+  }, [catalog.flavors, flavorSearch]);
+  const visibleFlavors = useMemo(() => filteredFlavors.slice(0, 200), [filteredFlavors]);
+
+  const visualBaseFlavor = selectedFlavors[0] ?? inferredFlavor ?? fallbackVisualFlavor;
+  const visualAdditionalFlavors = selectedFlavors.slice(1);
+  const shouldShowCrust = Boolean(edgeId || textHasPizzaCrustHint(item.name, item.description));
+  const visualSize = resolvePizzaRenderSize({
+    sizeLabel: size?.name,
+    diameterCm: size?.diameter_cm ?? null,
+    slices: size?.slices ?? null,
+  });
+
   const toggleFlavor = (flavorId: string) => {
     setFlavorIds((current) => {
       if (current.includes(flavorId)) {
+        if (current.length === 1) {
+          return current;
+        }
         return current.filter((id) => id !== flavorId);
       }
 
@@ -116,8 +193,18 @@ export function PizzaBuilder({ businessId, item, catalog, onAddToCart }: Props) 
 
         <section className="space-y-2">
           <h3 className="font-medium">Sabores</h3>
+          <Input
+            value={flavorSearch}
+            onChange={(event) => setFlavorSearch(event.target.value)}
+            placeholder="Buscar sabor..."
+          />
+          {filteredFlavors.length > visibleFlavors.length && (
+            <p className="text-xs text-muted-foreground">
+              Exibindo os primeiros {visibleFlavors.length} sabores. Refine a busca.
+            </p>
+          )}
           <div className="grid gap-2 sm:grid-cols-2">
-            {catalog.flavors.filter((entry) => entry.is_available).map((flavor) => (
+            {visibleFlavors.map((flavor) => (
               <button
                 key={flavor.id}
                 type="button"
@@ -132,6 +219,21 @@ export function PizzaBuilder({ businessId, item, catalog, onAddToCart }: Props) 
             ))}
           </div>
         </section>
+
+        {size && visualBaseFlavor && (
+          <section className="rounded-lg border bg-muted/30 p-4">
+            <h4 className="mb-4 text-center text-sm font-medium">
+              {size.name} · {size.slices} fatias · {selectedFlavors.length || 1} sabor(es)
+            </h4>
+            <PizzaSliceVisualizer
+              baseFlavor={visualBaseFlavor}
+              additionalFlavors={visualAdditionalFlavors}
+              totalSlices={size.slices}
+              size={visualSize}
+              showCrust={shouldShowCrust}
+            />
+          </section>
+        )}
 
         <section className="space-y-2">
           <h3 className="font-medium">Borda</h3>

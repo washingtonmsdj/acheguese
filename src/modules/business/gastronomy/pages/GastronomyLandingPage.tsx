@@ -3,7 +3,7 @@
  *
  * Territory-aware gastronomy listing.
  * The active territorial selector and territorial route are the SSOT.
- * In development, dev mocks may be used only when real catalog is empty.
+ * Runtime usa somente dados reais (Supabase/SSOT).
  */
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
@@ -35,12 +35,6 @@ import {
   useGastronomyList,
   type BusinessSortKey,
 } from '../hooks';
-import {
-  getMockBusinessesForTerritory,
-  getMockFoodCatalogForTerritory,
-  getTerritoryGeoPaths,
-  isGastronomyDevMockEnabled,
-} from '../dev/devMockRuntime';
 import {
   useGastronomyFilters,
   usePagination,
@@ -192,48 +186,8 @@ export default function GastronomyLandingPage() {
     [businessesData],
   );
 
-  // Dev mocks fallback
-  const territoryGeoPaths = useMemo(() => getTerritoryGeoPaths(resolved), [resolved]);
-  const devMocksEnabled = isGastronomyDevMockEnabled();
-
-  const fallbackBusinesses = useMemo(() => {
-    if (
-      !shouldLoadCatalog ||
-      !devMocksEnabled ||
-      loadedBusinesses.length > 0 ||
-      territoryGeoPaths.length === 0
-    ) {
-      return [];
-    }
-
-    return getMockBusinessesForTerritory({
-      territoryGeoPaths,
-      filters,
-      searchQuery,
-    });
-  }, [devMocksEnabled, filters, loadedBusinesses.length, searchQuery, shouldLoadCatalog, territoryGeoPaths]);
-
-  const fallbackFoodCatalog = useMemo(() => {
-    if (
-      !shouldLoadCatalog ||
-      !devMocksEnabled ||
-      foodCatalog.length > 0 ||
-      territoryGeoPaths.length === 0
-    ) {
-      return [];
-    }
-
-    return getMockFoodCatalogForTerritory({
-      territoryGeoPaths,
-      searchQuery: searchQuery || undefined,
-      cuisineType: filters.cuisine_type,
-      deliveryEnabled: filters.delivery_enabled,
-      isOpenNow: filters.is_open_now,
-    });
-  }, [devMocksEnabled, filters, foodCatalog.length, searchQuery, shouldLoadCatalog, territoryGeoPaths]);
-
-  const effectiveBusinesses = loadedBusinesses.length > 0 ? loadedBusinesses : fallbackBusinesses;
-  const effectiveFoodCatalog = foodCatalog.length > 0 ? foodCatalog : fallbackFoodCatalog;
+  const effectiveBusinesses = loadedBusinesses;
+  const effectiveFoodCatalog = foodCatalog;
 
   // Sorting and proximity calculation (unified hook)
   const {

@@ -1,4 +1,5 @@
 import { callRPC } from "@/integrations/supabase/services/supabaseHelpers";
+import { SERVICE_MODES } from "@/core/business/constants";
 import { logger } from "@/shared/utils/logger";
 import type {
   PublicBusinessSnapshot,
@@ -8,6 +9,149 @@ import type {
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return Boolean(value) && typeof value === "object" && !Array.isArray(value);
+}
+
+function toNonEmptyString(value: unknown): string | undefined {
+  if (typeof value !== "string") return undefined;
+  const trimmed = value.trim();
+  return trimmed.length > 0 ? trimmed : undefined;
+}
+
+function toStringArray(value: unknown): string[] {
+  if (!Array.isArray(value)) return [];
+  return value
+    .map((item) => (typeof item === "string" ? item.trim() : ""))
+    .filter((item) => item.length > 0);
+}
+
+function toBoolean(value: unknown): boolean | undefined {
+  if (typeof value === "boolean") return value;
+  if (typeof value === "string") {
+    const normalized = value.trim().toLowerCase();
+    if (["true", "1", "sim", "yes"].includes(normalized)) return true;
+    if (["false", "0", "nao", "não", "no"].includes(normalized)) return false;
+  }
+  return undefined;
+}
+
+function resolveAddressText(business: Record<string, unknown>): string | null {
+  const businessAddress = toNonEmptyString(business.business_address);
+  if (businessAddress) return businessAddress;
+
+  const address = isRecord(business.address) ? business.address : null;
+  if (!address) return null;
+
+  const street = toNonEmptyString(address.street);
+  const number = toNonEmptyString(address.number);
+  const complement = toNonEmptyString(address.complement);
+  const composed = [street, number, complement].filter(Boolean).join(", ");
+  return composed || null;
+}
+
+function resolveLocationText(business: Record<string, unknown>): string | null {
+  const location = isRecord(business.location) ? business.location : null;
+  const fullName = location ? toNonEmptyString(location.full_name) : undefined;
+  if (fullName) return fullName;
+
+  const locationName = location ? toNonEmptyString(location.name) : undefined;
+  const city = toNonEmptyString(business.business_city);
+  const state = toNonEmptyString(business.business_state);
+  const cityState = [city, state].filter(Boolean).join(" - ");
+
+  return locationName ?? cityState ?? null;
+}
+
+const VALID_SERVICE_MODES = new Set(SERVICE_MODES.map((mode) => mode.id));
+
+function resolveServiceModes(business: Record<string, unknown>): string[] {
+  const metadata = isRecord(business.metadata) ? business.metadata : null;
+  const fromBusiness = toStringArray(business.modos_atendimento)
+    .filter((mode) => VALID_SERVICE_MODES.has(mode));
+  if (fromBusiness.length > 0) return [...new Set(fromBusiness)];
+
+  const fromMetadata = metadata
+    ? toStringArray(metadata.modos_atendimento).filter((mode) => VALID_SERVICE_MODES.has(mode))
+    : [];
+  if (fromMetadata.length > 0) return [...new Set(fromMetadata)];
+
+  const temDelivery =
+    toBoolean(business.tem_delivery) ??
+    (metadata ? toBoolean(metadata.tem_delivery) : undefined) ??
+    false;
+
+  return temDelivery ? ["presencial", "delivery"] : ["presencial"];
+}
+
+function normalizeInstitutionalBusinessSnapshot(
+  snapshot: PublicBusinessSnapshot,
+): PublicBusinessSnapshot {
+  const institutional = isRecord(snapshot.institutional) ? snapshot.institutional : null;
+  const business = institutional && isRecord(institutional.business)
+    ? institutional.business
+    : null;
+
+  if (!institutional || !business) return snapshot;
+
+  const metadata = isRecord(business.metadata) ? business.metadata : null;
+  const normalizedModes = resolveServiceModes(business);
+  const normalizedTemDelivery =
+    toBoolean(business.tem_delivery) ??
+    (metadata ? toBoolean(metadata.tem_delivery) : undefined) ??
+    normalizedModes.includes("delivery");
+  const normalizedPhone =
+    toNonEmptyString(institutional.phone) ??
+    toNonEmptyString(business.phone) ??
+    (metadata ? toNonEmptyString(metadata.phone) : undefined);
+  const normalizedWhatsapp =
+    toNonEmptyString(institutional.whatsapp) ??
+    toNonEmptyString(business.whatsapp) ??
+    (metadata ? toNonEmptyString(metadata.whatsapp) : undefined);
+
+  const normalizedBusiness = {
+    ...business,
+    modos_atendimento: normalizedModes,
+    tem_delivery: normalizedTemDelivery,
+  };
+
+  const nextInstitutional = {
+    ...institutional,
+    phone: normalizedPhone,
+    whatsapp: normalizedWhatsapp,
+    addressText: institutional.addressText ?? resolveAddressText(normalizedBusiness),
+    locationText: institutional.locationText ?? resolveLocationText(normalizedBusiness),
+    business: normalizedBusiness,
+  };
+
+  return {
+    ...snapshot,
+    institutional: nextInstitutional,
+  };
+}
+
+function normalizeGastronomyBusinessSnapshot(
+  snapshot: PublicGastronomySnapshot,
+): PublicGastronomySnapshot {
+  const base = normalizeInstitutionalBusinessSnapshot(snapshot);
+  const normalizedBusiness = base.institutional.business;
+
+  if (
+    !base.gastronomy.profile.delivery_enabled &&
+    Array.isArray(normalizedBusiness.modos_atendimento) &&
+    normalizedBusiness.modos_atendimento.includes("delivery")
+  ) {
+    return {
+      ...base,
+      gastronomy: {
+        ...base.gastronomy,
+        profile: {
+          ...base.gastronomy.profile,
+          delivery_enabled: true,
+        },
+      },
+    };
+  }
+
+  return base;
 }
 
 function isBusinessSnapshotLike(value: unknown): value is PublicBusinessSnapshot {
@@ -69,7 +213,7 @@ export class PublicSnapshotRpcService {
         return null;
       }
 
-      return data;
+      return normalizeInstitutionalBusinessSnapshot(data);
     } catch (error) {
       logger.warn("[PublicSnapshotRpcService] business snapshot RPC failed", error);
       return null;
@@ -109,7 +253,7 @@ export class PublicSnapshotRpcService {
         return null;
       }
 
-      return data;
+      return normalizeGastronomyBusinessSnapshot(data);
     } catch (error) {
       logger.warn("[PublicSnapshotRpcService] gastronomy snapshot RPC failed", error);
       return null;

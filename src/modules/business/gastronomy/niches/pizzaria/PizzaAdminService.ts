@@ -10,49 +10,6 @@ import type {
   PizzaSize,
 } from "./types";
 
-function isMockBusinessId(businessId: string): boolean {
-  return businessId.startsWith("mock-");
-}
-
-function buildMockPizzaCatalog(businessId: string): PizzaCatalog {
-  const now = "2026-01-01T00:00:00.000Z";
-
-  return {
-    config: {
-      id: `mock-pizza-config-${businessId}`,
-      business_id: businessId,
-      default_price_rule: "highest_price",
-      allow_half_half: true,
-      allow_three_flavors: true,
-      allow_four_flavors: true,
-      is_active: true,
-      created_at: now,
-      updated_at: now,
-    },
-    sizes: [
-      { id: `mock-size-${businessId}-broto`, business_id: businessId, name: "Broto", slug: "broto", slices: 4, diameter_cm: 20, base_price: 10, max_flavors: 1, display_order: 1, is_available: true, created_at: now, updated_at: now },
-      { id: `mock-size-${businessId}-media`, business_id: businessId, name: "Média", slug: "media", slices: 6, diameter_cm: 30, base_price: 15, max_flavors: 2, display_order: 2, is_available: true, created_at: now, updated_at: now },
-      { id: `mock-size-${businessId}-grande`, business_id: businessId, name: "Grande", slug: "grande", slices: 8, diameter_cm: 35, base_price: 20, max_flavors: 3, display_order: 3, is_available: true, created_at: now, updated_at: now },
-      { id: `mock-size-${businessId}-familia`, business_id: businessId, name: "Família", slug: "familia", slices: 12, diameter_cm: 45, base_price: 30, max_flavors: 4, display_order: 4, is_available: true, created_at: now, updated_at: now },
-    ],
-    flavors: [
-      { id: `mock-flavor-${businessId}-calabresa`, business_id: businessId, name: "Calabresa", description: "Calabresa, cebola e orégano.", category: "tradicional", base_price: 40, is_available: true, is_vegetarian: false, is_vegan: false, is_spicy: false, allergens: [], ingredients: ["calabresa", "cebola", "orégano"], display_order: 1, created_at: now, updated_at: now },
-      { id: `mock-flavor-${businessId}-portuguesa`, business_id: businessId, name: "Portuguesa", description: "Presunto, ovos, cebola, azeitona e queijo.", category: "tradicional", base_price: 50, is_available: true, is_vegetarian: false, is_vegan: false, is_spicy: false, allergens: ["ovo", "leite"], ingredients: ["presunto", "ovos", "cebola", "azeitona"], display_order: 2, created_at: now, updated_at: now },
-      { id: `mock-flavor-${businessId}-frango-catupiry`, business_id: businessId, name: "Frango com Catupiry", description: "Frango desfiado e catupiry.", category: "especial", base_price: 60, is_available: true, is_vegetarian: false, is_vegan: false, is_spicy: false, allergens: ["leite"], ingredients: ["frango", "catupiry"], display_order: 3, created_at: now, updated_at: now },
-      { id: `mock-flavor-${businessId}-marguerita`, business_id: businessId, name: "Marguerita", description: "Mozzarella, tomate e manjericão.", category: "vegetariana", base_price: 45, is_available: true, is_vegetarian: true, is_vegan: false, is_spicy: false, allergens: ["leite"], ingredients: ["mozzarella", "tomate", "manjericão"], display_order: 4, created_at: now, updated_at: now },
-    ],
-    edges: [
-      { id: `mock-edge-${businessId}-catupiry`, business_id: businessId, name: "Catupiry", description: "Borda recheada com catupiry.", price: 8, is_available: true, display_order: 1, created_at: now, updated_at: now },
-      { id: `mock-edge-${businessId}-cheddar`, business_id: businessId, name: "Cheddar", description: "Borda recheada com cheddar.", price: 8, is_available: true, display_order: 2, created_at: now, updated_at: now },
-    ],
-    doughs: [
-      { id: `mock-dough-${businessId}-tradicional`, business_id: businessId, name: "Tradicional", description: "Massa tradicional.", price_adjustment: 0, is_available: true, display_order: 1, created_at: now, updated_at: now },
-      { id: `mock-dough-${businessId}-fina`, business_id: businessId, name: "Fina", description: "Massa fina e crocante.", price_adjustment: 0, is_available: true, display_order: 2, created_at: now, updated_at: now },
-      { id: `mock-dough-${businessId}-pan`, business_id: businessId, name: "Pan", description: "Massa pan.", price_adjustment: 5, is_available: true, display_order: 3, created_at: now, updated_at: now },
-    ],
-  };
-}
-
 export interface UpsertPizzaConfigInput {
   default_price_rule?: PizzaPriceRuleType;
   allow_half_half?: boolean;
@@ -106,6 +63,16 @@ export interface UpsertPizzaDoughInput {
   display_order?: number;
 }
 
+export interface PizzaMenuItemConfig {
+  id: string;
+  business_id: string;
+  menu_item_id: string;
+  is_buildable: boolean;
+  default_size_id?: string | null;
+  default_edge_id?: string | null;
+  default_dough_id?: string | null;
+}
+
 async function requireOwnership(businessId: string, userId: string): Promise<void> {
   await BusinessOwnershipService.requireOwnership(businessId, userId);
 }
@@ -131,11 +98,22 @@ async function upsertTable<T>(
 }
 
 export class PizzaAdminService {
-  static async getCatalog(businessId: string): Promise<PizzaCatalog> {
-    if (isMockBusinessId(businessId)) {
-      return buildMockPizzaCatalog(businessId);
-    }
+  static async getMenuItemConfig(
+    businessId: string,
+    menuItemId: string,
+  ): Promise<PizzaMenuItemConfig | null> {
+    const { data, error } = await supabase
+      .from("pizza_menu_items")
+      .select("*")
+      .eq("business_id", businessId)
+      .eq("menu_item_id", menuItemId)
+      .maybeSingle();
 
+    if (error) throw error;
+    return (data as PizzaMenuItemConfig | null) ?? null;
+  }
+
+  static async getCatalog(businessId: string): Promise<PizzaCatalog> {
     const [configResult, sizesResult, flavorsResult, edgesResult, doughsResult] =
       await Promise.all([
         supabase

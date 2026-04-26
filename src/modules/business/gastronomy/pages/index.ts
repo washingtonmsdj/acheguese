@@ -3,7 +3,7 @@
  */
 
 export { default as GastronomyLandingPage } from './GastronomyLandingPage';
-export { default as GastronomyDetailPage } from './GastronomyDetailPage';
+export { default as GastronomyDetailPage } from './GastronomyDetailPageV2';
 export { default as MyFavoritesPage } from './MyFavoritesPage';
 export { default as GastronomySetupPage } from './GastronomySetupPage';
 export { default as GastronomyDashboardPage } from './GastronomyDashboardPage';

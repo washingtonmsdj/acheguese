@@ -115,7 +115,7 @@ export const PremiumBusinessCheckoutPage = lazy(() => import("@/modules/business
 // 🍽️ GASTRONOMIA
 // ============================================================
 export const GastronomyLandingPage = lazy(() => import("@/modules/business/gastronomy/pages/GastronomyLandingPage"));
-export const GastronomyDetailPage = lazy(() => import("@/modules/business/gastronomy/pages/GastronomyDetailPage"));
+export const GastronomyDetailPage = lazy(() => import("@/modules/business/gastronomy/pages/GastronomyDetailPageV2"));
 export const GastronomyPremiumDetailPage = lazy(() => import("@/modules/business/gastronomy/pages/GastronomyPremiumDetailPage"));
 export const MyFavoritesPage = lazy(() => import("@/modules/business/gastronomy/pages/MyFavoritesPage"));
 export const GastronomySetupPage = lazy(() => import("@/modules/business/gastronomy/pages/GastronomySetupPage"));

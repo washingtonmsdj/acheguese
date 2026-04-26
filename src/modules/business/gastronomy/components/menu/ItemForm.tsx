@@ -47,6 +47,9 @@ const itemSchema = z.object({
   is_featured: z.boolean().default(false),
   tags: z.string().optional(), // Será convertido para array
   allergens: z.string().optional(), // Será convertido para array
+  pizza_size_label: z.string().max(40).optional(),
+  pizza_slices: z.number().int().min(1).max(24).optional(),
+  pizza_diameter_cm: z.number().min(10).max(80).optional(),
 });
 
 type ItemFormValues = z.infer<typeof itemSchema>;
@@ -60,6 +63,7 @@ interface ItemFormProps {
   isSubmitting?: boolean;
   allowCategorySelection?: boolean;
   allowImage?: boolean;
+  isPizzaria?: boolean;
 }
 
 export function ItemForm({
@@ -71,7 +75,12 @@ export function ItemForm({
   isSubmitting = false,
   allowCategorySelection = true,
   allowImage = true,
+  isPizzaria = false,
 }: ItemFormProps) {
+  const pizzaVisual = item?.nutritional_info?.pizza_visual as
+    | { size_label?: string; slices?: number; diameter_cm?: number }
+    | undefined;
+
   const form = useForm<ItemFormValues>({
     resolver: zodResolver(itemSchema),
     defaultValues: {
@@ -84,21 +93,53 @@ export function ItemForm({
       is_featured: item?.is_featured || false,
       tags: item?.tags?.join(', ') || '',
       allergens: item?.allergens?.join(', ') || '',
+      pizza_size_label: pizzaVisual?.size_label || '',
+      pizza_slices: typeof pizzaVisual?.slices === 'number' ? pizzaVisual.slices : undefined,
+      pizza_diameter_cm:
+        typeof pizzaVisual?.diameter_cm === 'number' ? pizzaVisual.diameter_cm : undefined,
     },
   });
 
   const handleSubmit = (values: ItemFormValues) => {
+    const {
+      pizza_size_label: _pizzaSizeLabel,
+      pizza_slices: _pizzaSlices,
+      pizza_diameter_cm: _pizzaDiameterCm,
+      ...baseValues
+    } = values;
+
+    const baseNutritionalInfo =
+      item?.nutritional_info && typeof item.nutritional_info === 'object'
+        ? { ...item.nutritional_info }
+        : {};
+
+    const hasPizzaVisual =
+      Boolean(values.pizza_size_label?.trim()) ||
+      typeof values.pizza_slices === 'number' ||
+      typeof values.pizza_diameter_cm === 'number';
+
+    if (hasPizzaVisual) {
+      baseNutritionalInfo.pizza_visual = {
+        size_label: values.pizza_size_label?.trim() || undefined,
+        slices: values.pizza_slices,
+        diameter_cm: values.pizza_diameter_cm,
+      };
+    } else {
+      delete baseNutritionalInfo.pizza_visual;
+    }
+
     // Converter tags e allergens de string para array
     const processedValues = {
-      ...values,
-      tags: values.tags
-        ? values.tags.split(',').map((t) => t.trim()).filter(Boolean)
+      ...baseValues,
+      tags: baseValues.tags
+        ? baseValues.tags.split(',').map((t) => t.trim()).filter(Boolean)
         : [],
-      allergens: values.allergens
-        ? values.allergens.split(',').map((a) => a.trim()).filter(Boolean)
+      allergens: baseValues.allergens
+        ? baseValues.allergens.split(',').map((a) => a.trim()).filter(Boolean)
         : [],
-      image_url: allowImage ? values.image_url || undefined : undefined,
-      category_id: allowCategorySelection ? values.category_id || undefined : undefined,
+      image_url: allowImage ? baseValues.image_url || undefined : undefined,
+      category_id: allowCategorySelection ? baseValues.category_id || undefined : undefined,
+      nutritional_info: Object.keys(baseNutritionalInfo).length > 0 ? baseNutritionalInfo : undefined,
     };
 
     onSubmit(processedValues);
@@ -257,6 +298,74 @@ export function ItemForm({
                 )}
               />
             </div>
+
+            {isPizzaria && (
+              <div className="space-y-3 rounded-lg border p-4">
+                <div>
+                  <p className="font-medium">Configuracao de tamanho da pizza</p>
+                  <p className="text-sm text-muted-foreground">
+                    Esses dados deixam o visual da pizza coerente com o tamanho real.
+                  </p>
+                </div>
+                <div className="grid grid-cols-3 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="pizza_size_label"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Tamanho</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Ex: Media, Grande, Familia" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="pizza_slices"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Fatias</FormLabel>
+                        <FormControl>
+                          <Input
+                            type="number"
+                            placeholder="8"
+                            value={field.value ?? ''}
+                            onChange={(e) => {
+                              const val = e.target.value;
+                              field.onChange(val ? parseInt(val) : undefined);
+                            }}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="pizza_diameter_cm"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Diametro (cm)</FormLabel>
+                        <FormControl>
+                          <Input
+                            type="number"
+                            placeholder="35"
+                            value={field.value ?? ''}
+                            onChange={(e) => {
+                              const val = e.target.value;
+                              field.onChange(val ? parseFloat(val) : undefined);
+                            }}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              </div>
+            )}
 
             {/* Tags */}
             <FormField

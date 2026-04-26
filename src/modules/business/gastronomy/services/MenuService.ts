@@ -433,6 +433,7 @@ export const MenuService = {
     preparation_time_min?: number;
     tags?: string[];
     allergens?: string[];
+    nutritional_info?: Record<string, any>;
   }): Promise<ServiceResult<MenuItem>> {
     try {
       const context = await getPlanContextByMenuId(input.menu_id);
@@ -479,6 +480,7 @@ export const MenuService = {
           preparation_time_min: input.preparation_time_min || null,
           tags: input.tags || null,
           allergens: input.allergens || null,
+          nutritional_info: input.nutritional_info || null,
           is_available: true,
           is_featured: false,
           display_order: 0,
@@ -552,6 +554,7 @@ export const MenuService = {
       if (input.stock_quantity !== undefined) updates.stock_quantity = input.stock_quantity;
       if (input.tags !== undefined) updates.tags = input.tags;
       if (input.allergens !== undefined) updates.allergens = input.allergens;
+      if (input.nutritional_info !== undefined) updates.nutritional_info = input.nutritional_info;
 
       const { data, error } = await supabase
         .from('gastronomy_menu_items')

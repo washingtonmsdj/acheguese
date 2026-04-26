@@ -270,11 +270,8 @@ BEGIN
     ('c2222222-2222-2222-2222-222222222222', 'a2222222-2222-2222-2222-222222222222', 'Pizzas Especiais', 'Criações do chef', 1, true),
     ('c2222222-2222-2222-2222-222222222223', 'a2222222-2222-2222-2222-222222222222', 'Pizzas Premium', 'Ingredientes importados', 2, true),
     ('c2222222-2222-2222-2222-222222222224', 'a2222222-2222-2222-2222-222222222222', 'Pizzas Doces', 'Para adoçar seu dia', 3, true),
-    ('c2222222-2222-2222-2222-222222222225', 'a2222222-2222-2222-2222-222222222222', 'Refrigerantes', 'Bebidas geladas', 4, true),
-    ('c2222222-2222-2222-2222-222222222226', 'a2222222-2222-2222-2222-222222222222', 'Sucos e Águas', 'Naturais e refrescantes', 5, true),
-    ('c2222222-2222-2222-2222-222222222227', 'a2222222-2222-2222-2222-222222222222', 'Cervejas', 'Nacionais e importadas', 6, true),
-    ('c2222222-2222-2222-2222-222222222228', 'a2222222-2222-2222-2222-222222222222', 'Vinhos', 'Carta de vinhos selecionada', 7, true),
-    ('c2222222-2222-2222-2222-222222222229', 'a2222222-2222-2222-2222-222222222222', 'Sobremesas', 'Delícias italianas', 8, true)
+    ('c2222222-2222-2222-2222-222222222225', 'a2222222-2222-2222-2222-222222222222', 'Bebidas', 'Refrigerantes, sucos, águas, cervejas e vinhos', 4, true),
+    ('c2222222-2222-2222-2222-222222222229', 'a2222222-2222-2222-2222-222222222222', 'Sobremesas', 'Delícias italianas', 5, true)
   ON CONFLICT (id) DO UPDATE
   SET
     menu_id = EXCLUDED.menu_id,
@@ -282,6 +279,25 @@ BEGIN
     description = EXCLUDED.description,
     display_order = EXCLUDED.display_order,
     is_available = EXCLUDED.is_available;
+
+  -- Reaponta itens das antigas categorias de bebidas (Sucos/Cervejas/Vinhos)
+  -- para a categoria consolidada "Bebidas". Idempotente: se as antigas já não
+  -- existirem ou os itens já estiverem na nova, o UPDATE é no-op.
+  UPDATE menu_items
+     SET category_id = 'c2222222-2222-2222-2222-222222222225'
+   WHERE category_id IN (
+     'c2222222-2222-2222-2222-222222222226',
+     'c2222222-2222-2222-2222-222222222227',
+     'c2222222-2222-2222-2222-222222222228'
+   );
+
+  -- Remove categorias antigas órfãs após a migração dos itens.
+  DELETE FROM menu_categories
+   WHERE id IN (
+     'c2222222-2222-2222-2222-222222222226',
+     'c2222222-2222-2222-2222-222222222227',
+     'c2222222-2222-2222-2222-222222222228'
+   );
 
   -- 7) Itens (ids determinísticos para idempotência).
   -- PIZZAS TRADICIONAIS
@@ -331,32 +347,32 @@ BEGIN
     ('d2222222-2222-2222-2222-222222222242', 'c2222222-2222-2222-2222-222222222225', 'Coca-Cola 2L', 'Garrafa', 15.00, 0, 800, true, true, true, 7, NULL),
 
     -- SUCOS E ÁGUAS
-    ('d2222222-2222-2222-2222-222222222243', 'c2222222-2222-2222-2222-222222222226', 'Suco de Laranja Natural', 'Copo 300ml - espremido na hora', 10.00, 0, 120, true, true, true, 0, NULL),
-    ('d2222222-2222-2222-2222-222222222244', 'c2222222-2222-2222-2222-222222222226', 'Suco de Maracujá', 'Copo 300ml', 9.00, 0, 140, true, true, false, 1, NULL),
-    ('d2222222-2222-2222-2222-222222222245', 'c2222222-2222-2222-2222-222222222226', 'Suco de Abacaxi com Hortelã', 'Copo 300ml', 10.00, 0, 130, true, true, false, 2, NULL),
-    ('d2222222-2222-2222-2222-222222222246', 'c2222222-2222-2222-2222-222222222226', 'Suco de Morango', 'Copo 300ml', 11.00, 0, 110, true, true, false, 3, NULL),
-    ('d2222222-2222-2222-2222-222222222247', 'c2222222-2222-2222-2222-222222222226', 'Água Mineral sem Gás', '500ml', 4.00, 0, 0, true, true, false, 4, NULL),
-    ('d2222222-2222-2222-2222-222222222248', 'c2222222-2222-2222-2222-222222222226', 'Água Mineral com Gás', '500ml', 4.50, 0, 0, true, true, false, 5, NULL),
-    ('d2222222-2222-2222-2222-222222222249', 'c2222222-2222-2222-2222-222222222226', 'Água Tônica Schweppes', '350ml', 6.00, 0, 120, true, true, false, 6, NULL),
-    ('d2222222-2222-2222-2222-22222222224a', 'c2222222-2222-2222-2222-222222222226', 'Limonada Suíça', 'Jarra 1L', 22.00, 0, 180, true, true, true, 7, NULL),
+    ('d2222222-2222-2222-2222-222222222243', 'c2222222-2222-2222-2222-222222222225', 'Suco de Laranja Natural', 'Copo 300ml - espremido na hora', 10.00, 0, 120, true, true, true, 0, NULL),
+    ('d2222222-2222-2222-2222-222222222244', 'c2222222-2222-2222-2222-222222222225', 'Suco de Maracujá', 'Copo 300ml', 9.00, 0, 140, true, true, false, 1, NULL),
+    ('d2222222-2222-2222-2222-222222222245', 'c2222222-2222-2222-2222-222222222225', 'Suco de Abacaxi com Hortelã', 'Copo 300ml', 10.00, 0, 130, true, true, false, 2, NULL),
+    ('d2222222-2222-2222-2222-222222222246', 'c2222222-2222-2222-2222-222222222225', 'Suco de Morango', 'Copo 300ml', 11.00, 0, 110, true, true, false, 3, NULL),
+    ('d2222222-2222-2222-2222-222222222247', 'c2222222-2222-2222-2222-222222222225', 'Água Mineral sem Gás', '500ml', 4.00, 0, 0, true, true, false, 4, NULL),
+    ('d2222222-2222-2222-2222-222222222248', 'c2222222-2222-2222-2222-222222222225', 'Água Mineral com Gás', '500ml', 4.50, 0, 0, true, true, false, 5, NULL),
+    ('d2222222-2222-2222-2222-222222222249', 'c2222222-2222-2222-2222-222222222225', 'Água Tônica Schweppes', '350ml', 6.00, 0, 120, true, true, false, 6, NULL),
+    ('d2222222-2222-2222-2222-22222222224a', 'c2222222-2222-2222-2222-222222222225', 'Limonada Suíça', 'Jarra 1L', 22.00, 0, 180, true, true, true, 7, NULL),
 
     -- CERVEJAS
-    ('d2222222-2222-2222-2222-22222222224b', 'c2222222-2222-2222-2222-222222222227', 'Heineken', 'Long neck 330ml', 12.00, 0, 140, true, true, true, 0, NULL),
-    ('d2222222-2222-2222-2222-22222222224c', 'c2222222-2222-2222-2222-222222222227', 'Stella Artois', 'Long neck 330ml', 11.00, 0, 145, true, true, false, 1, NULL),
-    ('d2222222-2222-2222-2222-22222222224d', 'c2222222-2222-2222-2222-222222222227', 'Budweiser', 'Long neck 330ml', 10.00, 0, 135, true, true, false, 2, NULL),
-    ('d2222222-2222-2222-2222-22222222224e', 'c2222222-2222-2222-2222-222222222227', 'Corona', 'Long neck 330ml', 13.00, 0, 148, true, true, false, 3, NULL),
-    ('d2222222-2222-2222-2222-22222222224f', 'c2222222-2222-2222-2222-222222222227', 'Brahma Duplo Malte', 'Long neck 330ml', 9.00, 0, 140, true, true, false, 4, NULL),
-    ('d2222222-2222-2222-2222-222222222250', 'c2222222-2222-2222-2222-222222222227', 'Eisenbahn Pilsen', 'Long neck 355ml', 12.00, 0, 138, true, true, false, 5, NULL),
-    ('d2222222-2222-2222-2222-222222222251', 'c2222222-2222-2222-2222-222222222227', 'Heineken 0.0%', 'Long neck 330ml', 11.00, 0, 68, true, true, false, 6, NULL),
+    ('d2222222-2222-2222-2222-22222222224b', 'c2222222-2222-2222-2222-222222222225', 'Heineken', 'Long neck 330ml', 12.00, 0, 140, true, true, true, 0, NULL),
+    ('d2222222-2222-2222-2222-22222222224c', 'c2222222-2222-2222-2222-222222222225', 'Stella Artois', 'Long neck 330ml', 11.00, 0, 145, true, true, false, 1, NULL),
+    ('d2222222-2222-2222-2222-22222222224d', 'c2222222-2222-2222-2222-222222222225', 'Budweiser', 'Long neck 330ml', 10.00, 0, 135, true, true, false, 2, NULL),
+    ('d2222222-2222-2222-2222-22222222224e', 'c2222222-2222-2222-2222-222222222225', 'Corona', 'Long neck 330ml', 13.00, 0, 148, true, true, false, 3, NULL),
+    ('d2222222-2222-2222-2222-22222222224f', 'c2222222-2222-2222-2222-222222222225', 'Brahma Duplo Malte', 'Long neck 330ml', 9.00, 0, 140, true, true, false, 4, NULL),
+    ('d2222222-2222-2222-2222-222222222250', 'c2222222-2222-2222-2222-222222222225', 'Eisenbahn Pilsen', 'Long neck 355ml', 12.00, 0, 138, true, true, false, 5, NULL),
+    ('d2222222-2222-2222-2222-222222222251', 'c2222222-2222-2222-2222-222222222225', 'Heineken 0.0%', 'Long neck 330ml', 11.00, 0, 68, true, true, false, 6, NULL),
 
     -- VINHOS
-    ('d2222222-2222-2222-2222-222222222252', 'c2222222-2222-2222-2222-222222222228', 'Vinho Tinto Chianti Classico', 'Taça 150ml', 28.00, 0, 120, true, true, true, 0, NULL),
-    ('d2222222-2222-2222-2222-222222222253', 'c2222222-2222-2222-2222-222222222228', 'Vinho Tinto Chianti Classico', 'Garrafa 750ml', 120.00, 0, 600, true, true, true, 1, NULL),
-    ('d2222222-2222-2222-2222-222222222254', 'c2222222-2222-2222-2222-222222222228', 'Vinho Branco Pinot Grigio', 'Taça 150ml', 26.00, 0, 115, true, true, false, 2, NULL),
-    ('d2222222-2222-2222-2222-222222222255', 'c2222222-2222-2222-2222-222222222228', 'Vinho Branco Pinot Grigio', 'Garrafa 750ml', 110.00, 0, 575, true, true, false, 3, NULL),
-    ('d2222222-2222-2222-2222-222222222256', 'c2222222-2222-2222-2222-222222222228', 'Prosecco DOCG', 'Taça 150ml', 32.00, 0, 110, true, true, true, 4, NULL),
-    ('d2222222-2222-2222-2222-222222222257', 'c2222222-2222-2222-2222-222222222228', 'Prosecco DOCG', 'Garrafa 750ml', 140.00, 0, 550, true, true, true, 5, NULL),
-    ('d2222222-2222-2222-2222-222222222258', 'c2222222-2222-2222-2222-222222222228', 'Lambrusco Tinto', 'Garrafa 750ml', 85.00, 0, 480, true, true, false, 6, NULL),
+    ('d2222222-2222-2222-2222-222222222252', 'c2222222-2222-2222-2222-222222222225', 'Vinho Tinto Chianti Classico', 'Taça 150ml', 28.00, 0, 120, true, true, true, 0, NULL),
+    ('d2222222-2222-2222-2222-222222222253', 'c2222222-2222-2222-2222-222222222225', 'Vinho Tinto Chianti Classico', 'Garrafa 750ml', 120.00, 0, 600, true, true, true, 1, NULL),
+    ('d2222222-2222-2222-2222-222222222254', 'c2222222-2222-2222-2222-222222222225', 'Vinho Branco Pinot Grigio', 'Taça 150ml', 26.00, 0, 115, true, true, false, 2, NULL),
+    ('d2222222-2222-2222-2222-222222222255', 'c2222222-2222-2222-2222-222222222225', 'Vinho Branco Pinot Grigio', 'Garrafa 750ml', 110.00, 0, 575, true, true, false, 3, NULL),
+    ('d2222222-2222-2222-2222-222222222256', 'c2222222-2222-2222-2222-222222222225', 'Prosecco DOCG', 'Taça 150ml', 32.00, 0, 110, true, true, true, 4, NULL),
+    ('d2222222-2222-2222-2222-222222222257', 'c2222222-2222-2222-2222-222222222225', 'Prosecco DOCG', 'Garrafa 750ml', 140.00, 0, 550, true, true, true, 5, NULL),
+    ('d2222222-2222-2222-2222-222222222258', 'c2222222-2222-2222-2222-222222222225', 'Lambrusco Tinto', 'Garrafa 750ml', 85.00, 0, 480, true, true, false, 6, NULL),
 
     -- SOBREMESAS
     ('d2222222-2222-2222-2222-222222222259', 'c2222222-2222-2222-2222-222222222229', 'Tiramisù Clássico', 'Porção individual com café espresso', 22.00, 0, 450, true, true, true, 0, 'https://images.unsplash.com/photo-1571877227200-a0d98ea607e9?w=400'),
@@ -395,12 +411,20 @@ BEGIN
     is_available = EXCLUDED.is_available,
     display_order = EXCLUDED.display_order;
 
-  -- 9) Adicionais.
+  -- 9) Adicionais (bordas e extras de pizza).
   INSERT INTO menu_item_addons (id, item_id, name, description, price, max_quantity, is_available, display_order)
   VALUES
+    -- Bordas
     ('f2222222-2222-2222-2222-222222222221', 'd2222222-2222-2222-2222-222222222221', 'Borda Recheada (Catupiry)', 'Borda recheada com catupiry', 8.00, 1, true, 0),
     ('f2222222-2222-2222-2222-222222222222', 'd2222222-2222-2222-2222-222222222221', 'Borda Recheada (Cheddar)', 'Borda recheada com cheddar', 8.00, 1, true, 1),
-    ('f2222222-2222-2222-2222-222222222223', 'd2222222-2222-2222-2222-222222222221', 'Extra Queijo', 'Dobro de queijo', 10.00, 2, true, 2)
+    -- Extras / Toppings
+    ('f2222222-2222-2222-2222-222222222223', 'd2222222-2222-2222-2222-222222222221', 'Cebola', 'Cebola roxa em fatias', 3.00, 3, true, 2),
+    ('f2222222-2222-2222-2222-222222222224', 'd2222222-2222-2222-2222-222222222221', 'Milho', 'Milho verde em grãos', 3.00, 3, true, 3),
+    ('f2222222-2222-2222-2222-222222222225', 'd2222222-2222-2222-2222-222222222221', 'Bacon', 'Bacon em cubos crocantes', 5.00, 3, true, 4),
+    ('f2222222-2222-2222-2222-222222222226', 'd2222222-2222-2222-2222-222222222221', 'Azeitona', 'Azeitona preta sem caroço', 2.50, 3, true, 5),
+    ('f2222222-2222-2222-2222-222222222227', 'd2222222-2222-2222-2222-222222222221', 'Tomate Cereja', 'Tomate cereja fatiado', 2.50, 3, true, 6),
+    ('f2222222-2222-2222-2222-222222222228', 'd2222222-2222-2222-2222-222222222221', 'Catupiry Extra', 'Creme de catupiry cremoso', 6.00, 2, true, 7),
+    ('f2222222-2222-2222-2222-222222222229', 'd2222222-2222-2222-2222-222222222221', 'Orégano', 'Orégano seco temperado', 1.00, 1, true, 8)
   ON CONFLICT (id) DO UPDATE
   SET
     item_id = EXCLUDED.item_id,

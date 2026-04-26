@@ -9,17 +9,6 @@ import { MenuService, type MenuItem } from '@/modules/business/gastronomy/servic
 import { getMenuItem } from '@/modules/business/gastronomy/services/menu.queries';
 import { toast } from 'sonner';
 
-const DEV_MOCK_ID_PREFIX = 'mock-';
-const DEMO_UUID_PREFIXES = ['d1111111-', 'd2222222-', 'd3333333-', 'd4444444-'];
-
-function isMockMenuItemId(itemId?: string | null): boolean {
-  if (!itemId) return false;
-  return (
-    itemId.startsWith(DEV_MOCK_ID_PREFIX) ||
-    DEMO_UUID_PREFIXES.some((prefix) => itemId.startsWith(prefix))
-  );
-}
-
 export function useMenuItems(menuId: string, categoryId?: string) {
   const queryClient = useQueryClient();
 
@@ -45,6 +34,7 @@ export function useMenuItems(menuId: string, categoryId?: string) {
       preparation_time_min?: number;
       tags?: string[];
       allergens?: string[];
+      nutritional_info?: Record<string, any>;
     }) => {
       const result = await MenuService.createItem({
         menu_id: menuId,
@@ -137,10 +127,10 @@ export function useMenuItem(itemId: string | undefined) {
   const { data: item, isLoading, error } = useQuery({
     queryKey: ['menu-item', itemId],
     queryFn: async () => {
-      if (!itemId || isMockMenuItemId(itemId)) return null;
+      if (!itemId) return null;
       return getMenuItem(itemId);
     },
-    enabled: !!itemId && !isMockMenuItemId(itemId),
+    enabled: !!itemId,
   });
 
   return {

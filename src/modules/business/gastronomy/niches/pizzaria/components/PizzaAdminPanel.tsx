@@ -15,19 +15,27 @@ import {
 } from "@/shared/components/ui/dialog";
 import { PizzaAdminService } from "../PizzaAdminService";
 import { toast } from "sonner";
-import type { PizzaCatalog, PizzaSize, PizzaFlavor, PizzaEdge, PizzaDough } from "../types";
+import type { PizzaCatalog, PizzaSize, PizzaFlavor, PizzaEdge, PizzaDough, PizzaPriceRuleType } from "../types";
 
 interface Props {
   businessId: string;
+  userId: string;
 }
 
-type DialogType = "size" | "flavor" | "edge" | "dough" | null;
+type DialogType = "size" | "flavor" | "edge" | "dough" | "config" | null;
+
+interface ConfigFormData {
+  default_price_rule: PizzaPriceRuleType;
+  allow_half_half: boolean;
+  allow_three_flavors: boolean;
+  allow_four_flavors: boolean;
+}
 
 function EmptyState({ label }: { label: string }) {
   return <p className="text-sm text-muted-foreground">Nenhum registro em {label}.</p>;
 }
 
-export function PizzaAdminPanel({ businessId }: Props) {
+export function PizzaAdminPanel({ businessId, userId }: Props) {
   const [catalog, setCatalog] = useState<PizzaCatalog | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -37,11 +45,24 @@ export function PizzaAdminPanel({ businessId }: Props) {
 
   const [formData, setFormData] = useState({
     name: "",
+    description: "",
     base_price: "",
     max_flavors: "",
     price: "",
     price_adjustment: "",
     is_available: true,
+    ingredients: "",
+    allergens: "",
+    slices: "",
+    diameter_cm: "",
+    slug: "",
+  });
+
+  const [configForm, setConfigForm] = useState<ConfigFormData>({
+    default_price_rule: "highest_price",
+    allow_half_half: true,
+    allow_three_flavors: true,
+    allow_four_flavors: true,
   });
 
   const loadCatalog = async () => {
@@ -77,20 +98,32 @@ export function PizzaAdminPanel({ businessId }: Props) {
     if (item) {
       setFormData({
         name: item.name,
+        description: "description" in item && item.description ? item.description : "",
         base_price: "base_price" in item ? String(item.base_price) : "",
         max_flavors: "max_flavors" in item ? String(item.max_flavors) : "",
         price: "price" in item ? String(item.price) : "",
         price_adjustment: "price_adjustment" in item ? String(item.price_adjustment) : "",
         is_available: "is_available" in item ? item.is_available : true,
+        ingredients: "ingredients" in item && item.ingredients ? item.ingredients.join(", ") : "",
+        allergens: "allergens" in item && item.allergens ? item.allergens.join(", ") : "",
+        slices: "slices" in item && item.slices ? String(item.slices) : "",
+        diameter_cm: "diameter_cm" in item && item.diameter_cm ? String(item.diameter_cm) : "",
+        slug: "slug" in item && item.slug ? item.slug : "",
       });
     } else {
       setFormData({
         name: "",
+        description: "",
         base_price: "",
         max_flavors: "",
         price: "",
         price_adjustment: "",
         is_available: true,
+        ingredients: "",
+        allergens: "",
+        slices: "",
+        diameter_cm: "",
+        slug: "",
       });
     }
     setDialogOpen(true);
@@ -112,48 +145,65 @@ export function PizzaAdminPanel({ businessId }: Props) {
     try {
       switch (dialogType) {
         case "size":
-          await PizzaAdminService.upsertSize({
+          await PizzaAdminService.upsertSize(businessId, {
             id: editingItem?.id,
-            business_id: businessId,
             name: formData.name,
+            slug: formData.slug || formData.name.toLowerCase().replace(/\s+/g, "-"),
             base_price: Number(formData.base_price) || 0,
             max_flavors: Number(formData.max_flavors) || 1,
-            sort_order: editingItem && "sort_order" in editingItem ? editingItem.sort_order : catalog?.sizes.length || 0,
+            slices: formData.slices ? Number(formData.slices) : null,
+            diameter_cm: formData.diameter_cm ? Number(formData.diameter_cm) : null,
+            display_order: editingItem && "display_order" in editingItem ? editingItem.display_order : catalog?.sizes.length || 0,
             is_available: formData.is_available,
-          });
+          }, userId);
           toast.success(editingItem ? "Tamanho atualizado" : "Tamanho criado");
           break;
         case "flavor":
-          await PizzaAdminService.upsertFlavor({
+          await PizzaAdminService.upsertFlavor(businessId, {
             id: editingItem?.id,
-            business_id: businessId,
             name: formData.name,
+            description: formData.description || null,
             base_price: Number(formData.base_price) || 0,
-            ingredients: [],
-            allergens: [],
+            ingredients: formData.ingredients.split(",").map((i) => i.trim()).filter(Boolean),
+            allergens: formData.allergens.split(",").map((a) => a.trim()).filter(Boolean),
             is_available: formData.is_available,
-          });
+            is_vegetarian: false,
+            is_vegan: false,
+            is_spicy: false,
+            display_order: editingItem && "display_order" in editingItem ? editingItem.display_order : catalog?.flavors.length || 0,
+          }, userId);
           toast.success(editingItem ? "Sabor atualizado" : "Sabor criado");
           break;
         case "edge":
-          await PizzaAdminService.upsertEdge({
+          await PizzaAdminService.upsertEdge(businessId, {
             id: editingItem?.id,
-            business_id: businessId,
             name: formData.name,
+            description: formData.description || null,
             price: Number(formData.price) || 0,
             is_available: formData.is_available,
-          });
+            display_order: editingItem && "display_order" in editingItem ? editingItem.display_order : catalog?.edges.length || 0,
+          }, userId);
           toast.success(editingItem ? "Borda atualizada" : "Borda criada");
           break;
         case "dough":
-          await PizzaAdminService.upsertDough({
+          await PizzaAdminService.upsertDough(businessId, {
             id: editingItem?.id,
-            business_id: businessId,
             name: formData.name,
+            description: formData.description || null,
             price_adjustment: Number(formData.price_adjustment) || 0,
             is_available: formData.is_available,
-          });
+            display_order: editingItem && "display_order" in editingItem ? editingItem.display_order : catalog?.doughs.length || 0,
+          }, userId);
           toast.success(editingItem ? "Massa atualizada" : "Massa criada");
+          break;
+        case "config":
+          await PizzaAdminService.upsertConfig(businessId, {
+            default_price_rule: configForm.default_price_rule,
+            allow_half_half: configForm.allow_half_half,
+            allow_three_flavors: configForm.allow_three_flavors,
+            allow_four_flavors: configForm.allow_four_flavors,
+          }, userId);
+          toast.success("Configuracoes atualizadas");
           break;
       }
       await loadCatalog();
@@ -167,12 +217,32 @@ export function PizzaAdminPanel({ businessId }: Props) {
 
   const handleToggleAvailability = async (type: DialogType, item: PizzaSize | PizzaFlavor | PizzaEdge | PizzaDough) => {
     try {
-      await PizzaAdminService.setAvailability(type, item.id, !item.is_available);
+      const tableMap: Record<Exclude<DialogType, null>, "pizza_sizes" | "pizza_flavors" | "pizza_edges" | "pizza_doughs"> = {
+        size: "pizza_sizes",
+        flavor: "pizza_flavors",
+        edge: "pizza_edges",
+        dough: "pizza_doughs",
+        config: "pizza_sizes", // placeholder, nunca usado
+      };
+      if (!type || type === "config") return;
+      await PizzaAdminService.setAvailability(tableMap[type], item.id, !item.is_available, businessId, userId);
       await loadCatalog();
       toast.success("Status atualizado");
     } catch (err) {
       toast.error("Erro ao atualizar status");
     }
+  };
+
+  const openConfigDialog = () => {
+    if (!catalog) return;
+    setConfigForm({
+      default_price_rule: catalog.config.default_price_rule,
+      allow_half_half: catalog.config.allow_half_half,
+      allow_three_flavors: catalog.config.allow_three_flavors,
+      allow_four_flavors: catalog.config.allow_four_flavors,
+    });
+    setDialogType("config");
+    setDialogOpen(true);
   };
 
   if (error) {
@@ -203,15 +273,18 @@ export function PizzaAdminPanel({ businessId }: Props) {
   return (
     <div className="space-y-6">
       <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between gap-4">
-            <div>
-              <CardTitle>Nicho Pizzaria</CardTitle>
-              <CardDescription>
-                Configure tamanhos, sabores, limites, bordas, massas e regra de preco.
-              </CardDescription>
-            </div>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <div>
+            <CardTitle>Nicho Pizzaria</CardTitle>
+            <CardDescription>
+              Configure tamanhos, sabores, limites, bordas, massas e regra de preco.
+            </CardDescription>
+          </div>
+          <div className="flex items-center gap-2">
             <Badge>Completo</Badge>
+            <Button size="sm" variant="outline" onClick={openConfigDialog}>
+              Editar
+            </Button>
           </div>
         </CardHeader>
         <CardContent className="grid gap-3 md:grid-cols-2">
@@ -376,7 +449,7 @@ export function PizzaAdminPanel({ businessId }: Props) {
               Preencha os dados abaixo para {editingItem ? "atualizar" : "criar"} o item.
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-4 py-4">
+          <div className="space-y-4 py-4 max-h-[60vh] overflow-y-auto pr-2">
             <div className="space-y-2">
               <Label htmlFor="name">Nome</Label>
               <Input
@@ -386,6 +459,19 @@ export function PizzaAdminPanel({ businessId }: Props) {
                 placeholder="Ex: Calabresa"
               />
             </div>
+
+            {(dialogType === "flavor" || dialogType === "edge" || dialogType === "dough") && (
+              <div className="space-y-2">
+                <Label htmlFor="description">Descricao</Label>
+                <Input
+                  id="description"
+                  value={formData.description}
+                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  placeholder="Ex: Molho de tomate, mussarela e manjericao"
+                />
+              </div>
+            )}
+
             {(dialogType === "size" || dialogType === "flavor") && (
               <div className="space-y-2">
                 <Label htmlFor="base_price">Preco base (R$)</Label>
@@ -399,20 +485,82 @@ export function PizzaAdminPanel({ businessId }: Props) {
                 />
               </div>
             )}
+
             {dialogType === "size" && (
-              <div className="space-y-2">
-                <Label htmlFor="max_flavors">Maximo de sabores</Label>
-                <Input
-                  id="max_flavors"
-                  type="number"
-                  min={1}
-                  max={4}
-                  value={formData.max_flavors}
-                  onChange={(e) => setFormData({ ...formData, max_flavors: e.target.value })}
-                  placeholder="1"
-                />
-              </div>
+              <>
+                <div className="space-y-2">
+                  <Label htmlFor="slug">Slug (identificador unico)</Label>
+                  <Input
+                    id="slug"
+                    value={formData.slug}
+                    onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
+                    placeholder="Ex: grande-familia (opcional)"
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="max_flavors">Maximo de sabores</Label>
+                    <Input
+                      id="max_flavors"
+                      type="number"
+                      min={1}
+                      max={4}
+                      value={formData.max_flavors}
+                      onChange={(e) => setFormData({ ...formData, max_flavors: e.target.value })}
+                      placeholder="1"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="slices">Numero de fatias</Label>
+                    <Input
+                      id="slices"
+                      type="number"
+                      min={1}
+                      max={24}
+                      value={formData.slices}
+                      onChange={(e) => setFormData({ ...formData, slices: e.target.value })}
+                      placeholder="8"
+                    />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="diameter_cm">Diametro (cm)</Label>
+                  <Input
+                    id="diameter_cm"
+                    type="number"
+                    min={10}
+                    max={80}
+                    value={formData.diameter_cm}
+                    onChange={(e) => setFormData({ ...formData, diameter_cm: e.target.value })}
+                    placeholder="35"
+                  />
+                </div>
+              </>
             )}
+
+            {dialogType === "flavor" && (
+              <>
+                <div className="space-y-2">
+                  <Label htmlFor="ingredients">Ingredientes (separados por virgula)</Label>
+                  <Input
+                    id="ingredients"
+                    value={formData.ingredients}
+                    onChange={(e) => setFormData({ ...formData, ingredients: e.target.value })}
+                    placeholder="Ex: tomate, mussarela, manjericao"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="allergens">Alergenos (separados por virgula)</Label>
+                  <Input
+                    id="allergens"
+                    value={formData.allergens}
+                    onChange={(e) => setFormData({ ...formData, allergens: e.target.value })}
+                    placeholder="Ex: lactose, gluten"
+                  />
+                </div>
+              </>
+            )}
+
             {dialogType === "edge" && (
               <div className="space-y-2">
                 <Label htmlFor="price">Preco (R$)</Label>
@@ -426,6 +574,7 @@ export function PizzaAdminPanel({ businessId }: Props) {
                 />
               </div>
             )}
+
             {dialogType === "dough" && (
               <div className="space-y-2">
                 <Label htmlFor="price_adjustment">Ajuste de preco (R$)</Label>
@@ -439,7 +588,8 @@ export function PizzaAdminPanel({ businessId }: Props) {
                 />
               </div>
             )}
-            <div className="flex items-center gap-2">
+
+            <div className="flex items-center gap-2 pt-2">
               <Switch
                 id="is_available"
                 checked={formData.is_available}

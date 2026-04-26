@@ -22,7 +22,6 @@ import {
   PaymentCard,
   FacilitiesCard,
 } from '../components/info';
-import { AREAS_ATENDIDAS } from '../utils';
 import type { EmpresaInfoSectionProps } from './types';
 
 export function EmpresaInfoSection({
@@ -38,6 +37,19 @@ export function EmpresaInfoSection({
   onRoute,
   navigate,
 }: EmpresaInfoSectionProps) {
+  const serviceModes =
+    business.modos_atendimento && business.modos_atendimento.length > 0
+      ? business.modos_atendimento
+      : ["presencial"];
+
+  const deliveryAreas = Array.from(
+    new Set(
+      [business.location?.name, business.business_city]
+        .filter((value): value is string => Boolean(value && value.trim()))
+        .map((value) => value.trim()),
+    ),
+  );
+
   return (
     <section className="max-w-5xl mx-auto px-4 sm:px-6 w-full mt-4">
       <motion.div
@@ -75,7 +87,7 @@ export function EmpresaInfoSection({
               </h2>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
-              {business.modos_atendimento?.map((modo) => {
+              {serviceModes.map((modo) => {
                 const ModoIcon = getServiceModeIcon(modo);
                 const label = getServiceModeLabel(modo);
                 const color = getServiceModeColor(modo);
@@ -92,15 +104,15 @@ export function EmpresaInfoSection({
               })}
             </div>
             {/* Delivery areas */}
-            {isDeliveryBusiness && (
+            {isDeliveryBusiness && deliveryAreas.length > 0 && (
               <div className="pt-4 border-t border-border">
                 <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
                   Área de atendimento / delivery
                 </p>
                 <div className="flex flex-wrap gap-2">
-                  {AREAS_ATENDIDAS.map((area, i) => (
+                  {deliveryAreas.map((area) => (
                     <span
-                      key={i}
+                      key={area}
                       className="bg-secondary text-secondary-foreground text-xs font-medium px-3 py-1.5 rounded-lg"
                     >
                       <MapPinned className="h-3 w-3 inline-block mr-1 -mt-0.5" />

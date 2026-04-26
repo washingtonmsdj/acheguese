@@ -36,12 +36,6 @@ import type {
 // HELPERS INTERNOS
 // ============================================================
 
-const DEV_MOCK_ID_PREFIX = 'mock-';
-
-function isDevMockId(value?: string | null): boolean {
-  return typeof value === 'string' && value.startsWith(DEV_MOCK_ID_PREFIX);
-}
-
 /**
  * Mapeia item para formato público de catálogo
  */
@@ -120,7 +114,7 @@ function mapToPublicFoodItem(params: {
  */
 export async function getMenu(menuId: string): Promise<Menu | null> {
   try {
-    if (!isValidId(menuId) || isDevMockId(menuId)) {
+    if (!isValidId(menuId)) {
       logger.warn('[MenuQueries] Invalid menu ID provided:', menuId);
       return null;
     }
@@ -149,7 +143,7 @@ export async function getMenu(menuId: string): Promise<Menu | null> {
  */
 export async function getMenusByBusiness(businessId: string): Promise<Menu[]> {
   try {
-    if (!isValidId(businessId) || isDevMockId(businessId)) {
+    if (!isValidId(businessId)) {
       logger.warn('[MenuQueries] Invalid business ID provided:', businessId);
       return [];
     }
@@ -225,7 +219,7 @@ export async function getMenuWithCategories(menuId: string): Promise<MenuWithCat
  */
 export async function getMenuCategories(menuId: string): Promise<MenuCategory[]> {
   try {
-    if (!menuId || isDevMockId(menuId)) {
+    if (!menuId) {
       return [];
     }
 
@@ -253,7 +247,7 @@ export async function getMenuCategories(menuId: string): Promise<MenuCategory[]>
  */
 export async function getMenuCategory(categoryId: string): Promise<MenuCategory | null> {
   try {
-    if (!isValidId(categoryId) || isDevMockId(categoryId)) {
+    if (!isValidId(categoryId)) {
       return null;
     }
 
@@ -288,7 +282,7 @@ export async function getMenuItemsByCategory(
   filters?: MenuItemFilters,
 ): Promise<MenuItemWithRelations[]> {
   try {
-    if (!categoryId || isDevMockId(categoryId)) {
+    if (!categoryId) {
       return [];
     }
 
@@ -356,7 +350,7 @@ export async function getMenuItemsByCategory(
  */
 export async function getMenuItem(itemId: string): Promise<MenuItemWithRelations | null> {
   try {
-    if (!isValidId(itemId) || isDevMockId(itemId)) {
+    if (!isValidId(itemId)) {
       return null;
     }
 
@@ -450,7 +444,7 @@ export async function getFeaturedMenuItems(businessId: string): Promise<MenuItem
  */
 export async function getMenuItemVariants(itemId: string): Promise<MenuItemVariant[]> {
   try {
-    if (!isValidId(itemId) || isDevMockId(itemId)) {
+    if (!isValidId(itemId)) {
       return [];
     }
 
@@ -478,7 +472,7 @@ export async function getMenuItemVariants(itemId: string): Promise<MenuItemVaria
  */
 export async function getMenuItemAddons(itemId: string): Promise<MenuItemAddon[]> {
   try {
-    if (!isValidId(itemId) || isDevMockId(itemId)) {
+    if (!isValidId(itemId)) {
       return [];
     }
 
@@ -822,7 +816,7 @@ export async function getMenuUsageStats(businessId: string): Promise<{
   currentPromotions: number;
 }> {
   try {
-    if (!isValidId(businessId) || isDevMockId(businessId)) {
+    if (!isValidId(businessId)) {
       return {
         currentMenuItems: 0,
         currentImages: 0,

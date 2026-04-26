@@ -275,7 +275,7 @@ async function completeBellaMenu() {
             id: generateUUID(),
             category_id: categoryMap[drinkCategory.category],
             name: drink.name,
-            description: drink.name,
+            description: null,
             base_price: drink.price,
             is_available: true,
             display_order: drinkCategory.items.indexOf(drink),

@@ -6,11 +6,6 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { GastronomyFacade } from '../services';
-import {
-  getMockBusinessByIdentifier,
-  getMockBusinessByTerritoryAndSlug,
-  isGastronomyDevMockEnabled,
-} from '../dev/devMockRuntime';
 
 export interface GastronomyDetailRouteInput {
   slug?: string;
@@ -22,24 +17,12 @@ export interface GastronomyDetailRouteInput {
 export function useGastronomyDetail(params?: GastronomyDetailRouteInput) {
   const { slug, state, city, district } = params ?? {};
   const hasTerritorialRoute = Boolean(slug && state && city && district);
-  const shouldUseDevMocks = isGastronomyDevMockEnabled();
 
   return useQuery({
     queryKey: ['gastronomy', 'detail', slug, state, city, district],
     queryFn: async () => {
       if (hasTerritorialRoute && slug && state && city && district) {
-        const business = await GastronomyFacade.queries.getGastronomyBusinessByTerritorySlug({
-          slug,
-          state,
-          city,
-          district,
-        });
-
-        if (business || !shouldUseDevMocks) {
-          return business;
-        }
-
-        return getMockBusinessByTerritoryAndSlug({
+        return GastronomyFacade.queries.getGastronomyBusinessByTerritorySlug({
           slug,
           state,
           city,
@@ -51,12 +34,7 @@ export function useGastronomyDetail(params?: GastronomyDetailRouteInput) {
         return null;
       }
 
-      const business = await GastronomyFacade.queries.getGastronomyBusiness(slug);
-      if (business || !shouldUseDevMocks) {
-        return business;
-      }
-
-      return getMockBusinessByIdentifier(slug);
+      return GastronomyFacade.queries.getGastronomyBusiness(slug);
     },
     enabled: Boolean(slug),
   });

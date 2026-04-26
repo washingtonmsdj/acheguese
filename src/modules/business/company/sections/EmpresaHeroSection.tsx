@@ -40,6 +40,10 @@ export function EmpresaHeroSection({
   openStatus,
   yearsActive,
 }: EmpresaHeroSectionProps) {
+  const serviceModes =
+    business.modos_atendimento && business.modos_atendimento.length > 0
+      ? business.modos_atendimento
+      : ["presencial"];
   const locationText = business.location?.full_name || business.location?.name || null;
   const prioritizedFacilityIds = [
     'estacionamento',
@@ -281,28 +285,25 @@ export function EmpresaHeroSection({
               </div>
 
               {/* Service modes */}
-              {business.modos_atendimento &&
-                business.modos_atendimento.length > 0 && (
-                  <div className="flex flex-wrap gap-2">
-                    {business.modos_atendimento.map((modo) => {
-                      const ModoIcon = getServiceModeIcon(modo);
-                      const label = getServiceModeLabel(modo);
-                      const color = getServiceModeColor(modo);
-                      if (!ModoIcon) return null;
-                      return (
-                        <span
-                          key={modo}
-                          className={cn(
-                            "inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-medium border",
-                            color
-                          )}
-                        >
-                          <ModoIcon className="h-3 w-3" /> {label}
-                        </span>
-                      );
-                    })}
-                  </div>
-                )}
+              <div className="flex flex-wrap gap-2">
+                {serviceModes.map((modo) => {
+                  const ModoIcon = getServiceModeIcon(modo);
+                  const label = getServiceModeLabel(modo);
+                  const color = getServiceModeColor(modo);
+                  if (!ModoIcon) return null;
+                  return (
+                    <span
+                      key={modo}
+                      className={cn(
+                        "inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-medium border",
+                        color
+                      )}
+                    >
+                      <ModoIcon className="h-3 w-3" /> {label}
+                    </span>
+                  );
+                })}
+              </div>
             </div>
           </div>
         </motion.div>
