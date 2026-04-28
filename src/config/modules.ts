@@ -18,6 +18,7 @@ import {
   UtensilsCrossed,
   MapPin,
   Car,
+  GraduationCap,
 } from 'lucide-react';
 
 export interface ModuleConfig {
@@ -163,7 +164,19 @@ export const MODULES: Record<string, ModuleConfig> = {
     isActive: true,
     order: 9,
   },
-  
+
+  education: {
+    id: 'education',
+    name: 'Educação',
+    slug: 'educacao',
+    icon: GraduationCap,
+    contextMessage: 'Educação em',
+    color: 'hsl(var(--primary))',
+    isTerritorial: true,
+    isActive: true,
+    order: 10,
+  },
+
   map: {
     id: 'map',
     name: 'Mapa',
@@ -173,9 +186,9 @@ export const MODULES: Record<string, ModuleConfig> = {
     color: 'hsl(var(--primary))',
     isTerritorial: false,
     isActive: true,
-    order: 10,
+    order: 11,
   },
-  
+
   search: {
     id: 'search',
     name: 'Busca',
@@ -185,9 +198,9 @@ export const MODULES: Record<string, ModuleConfig> = {
     color: 'hsl(var(--primary))',
     isTerritorial: false,
     isActive: true,
-    order: 11,
+    order: 12,
   },
-  
+
   ranking: {
     id: 'ranking',
     name: 'Ranking',
@@ -195,9 +208,9 @@ export const MODULES: Record<string, ModuleConfig> = {
     icon: MapPin,
     contextMessage: 'Ranking de',
     color: 'hsl(var(--primary))',
-    isTerritorial: true,  // ✅ É territorial - mostra ranking do bairro/cidade
+    isTerritorial: true,
     isActive: true,
-    order: 12,
+    order: 13,
   },
 } as const;
 
@@ -236,6 +249,8 @@ function getModuleById(moduleId: string): ModuleConfig | null {
       return MODULES.touristPoints;
     case 'mobility':
       return MODULES.mobility;
+    case 'education':
+      return MODULES.education;
     case 'map':
       return MODULES.map;
     case 'search':

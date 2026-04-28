@@ -1,0 +1,369 @@
+/**
+ * Education Observability Service
+ * 
+ * Centraliza eventos de observabilidade, métricas e logging para o módulo Education.
+ * Integra com sistema de analytics e monitoring do projeto.
+ * 
+ * @module EducationObservabilityService
+ * @version 1.0.0
+ */
+
+import { logger } from '@/shared/utils/logger';
+import { supabase } from '@/integrations/supabase/client';
+
+// ═══════════════════════════════════════════════════════════════════════════
+// TYPES
+// ═══════════════════════════════════════════════════════════════════════════
+
+export type EducationEventType =
+  // Conversion Events
+  | 'education_profile_created'
+  | 'education_profile_published'
+  | 'education_lead_created'
+  | 'education_lead_converted'
+  | 'education_lead_lost'
+  | 'education_program_created'
+  | 'education_event_created'
+  // Error Events
+  | 'education_profile_save_failed'
+  | 'education_profile_publish_failed'
+  | 'education_lead_save_failed'
+  | 'education_program_save_failed'
+  | 'education_event_save_failed'
+  // User Journey Events
+  | 'education_landing_viewed'
+  | 'education_detail_viewed'
+  | 'education_lead_form_opened'
+  | 'education_lead_form_submitted'
+  | 'education_whatsapp_clicked'
+  // Performance Events
+  | 'education_page_load_slow'
+  | 'education_api_timeout';
+
+export interface EducationEventPayload {
+  eventType: EducationEventType;
+  profileId?: string;
+  businessId?: string;
+  leadId?: string;
+  programId?: string;
+  nicheKey?: string;
+  userId?: string;
+  metadata?: Record<string, unknown>;
+  error?: {
+    message: string;
+    code?: string;
+    stack?: string;
+  };
+  performance?: {
+    duration: number;
+    timestamp: number;
+  };
+}
+
+export interface EducationMetrics {
+  // Conversion Metrics
+  leadsCreatedToday: number;
+  leadsConvertedToday: number;
+  conversionRate: number;
+  // Performance Metrics
+  avgPageLoadTime: number;
+  apiErrorRate: number;
+  // Business Metrics
+  activeProfiles: number;
+  publishedProfiles: number;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// SERVICE
+// ═══════════════════════════════════════════════════════════════════════════
+
+class EducationObservabilityServiceClass {
+  /**
+   * Track conversion event
+   */
+  async trackConversion(payload: EducationEventPayload): Promise<void> {
+    try {
+      // Log to console in development
+      if (import.meta.env.DEV) {
+        logger.info('[Education Conversion]', payload);
+      }
+
+      // Save to analytics table
+      await this.saveAnalyticsEvent(payload);
+
+      // Send to external analytics (if configured)
+      await this.sendToExternalAnalytics(payload);
+    } catch (error) {
+      logger.error('[Education Observability] Failed to track conversion', error);
+    }
+  }
+
+  /**
+   * Track error event
+   */
+  async trackError(payload: EducationEventPayload): Promise<void> {
+    try {
+      // Always log errors
+      logger.error('[Education Error]', {
+        eventType: payload.eventType,
+        error: payload.error,
+        metadata: payload.metadata,
+      });
+
+      // Save to analytics table
+      await this.saveAnalyticsEvent(payload);
+
+      // Send to error tracking service (Sentry, etc)
+      await this.sendToErrorTracking(payload);
+    } catch (error) {
+      logger.error('[Education Observability] Failed to track error', error);
+    }
+  }
+
+  /**
+   * Track user journey event
+   */
+  async trackUserJourney(payload: EducationEventPayload): Promise<void> {
+    try {
+      if (import.meta.env.DEV) {
+        logger.info('[Education Journey]', payload);
+      }
+
+      // Save to analytics table
+      await this.saveAnalyticsEvent(payload);
+    } catch (error) {
+      logger.error('[Education Observability] Failed to track user journey', error);
+    }
+  }
+
+  /**
+   * Track performance event
+   */
+  async trackPerformance(payload: EducationEventPayload): Promise<void> {
+    try {
+      if (import.meta.env.DEV) {
+        logger.warn('[Education Performance]', payload);
+      }
+
+      // Save to analytics table
+      await this.saveAnalyticsEvent(payload);
+
+      // Alert if critical performance issue
+      if (payload.performance && payload.performance.duration > 5000) {
+        logger.error('[Education Performance] Critical slow page load', payload);
+      }
+    } catch (error) {
+      logger.error('[Education Observability] Failed to track performance', error);
+    }
+  }
+
+  /**
+   * Get current metrics
+   */
+  async getMetrics(profileId?: string): Promise<EducationMetrics> {
+    try {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      // Query leads created today
+      let leadsQuery = supabase
+        .from('education_leads')
+        .select('id, status', { count: 'exact' })
+        .gte('created_at', today.toISOString());
+
+      if (profileId) {
+        leadsQuery = leadsQuery.eq('education_profile_id', profileId);
+      }
+
+      const { data: leads, count: totalLeads } = await leadsQuery;
+
+      const leadsConverted = leads?.filter(l => l.status === 'enrolled').length ?? 0;
+      const conversionRate = totalLeads ? (leadsConverted / totalLeads) * 100 : 0;
+
+      // Query profiles
+      let profilesQuery = supabase
+        .from('education_profiles')
+        .select('id, status', { count: 'exact' });
+
+      if (profileId) {
+        profilesQuery = profilesQuery.eq('id', profileId);
+      }
+
+      const { data: profiles } = await profilesQuery;
+      const publishedProfiles = profiles?.filter(p => p.status === 'published').length ?? 0;
+
+      return {
+        leadsCreatedToday: totalLeads ?? 0,
+        leadsConvertedToday: leadsConverted,
+        conversionRate: Math.round(conversionRate * 100) / 100,
+        avgPageLoadTime: 0, // TODO: Calculate from performance events
+        apiErrorRate: 0, // TODO: Calculate from error events
+        activeProfiles: profiles?.length ?? 0,
+        publishedProfiles,
+      };
+    } catch (error) {
+      logger.error('[Education Observability] Failed to get metrics', error);
+      return {
+        leadsCreatedToday: 0,
+        leadsConvertedToday: 0,
+        conversionRate: 0,
+        avgPageLoadTime: 0,
+        apiErrorRate: 0,
+        activeProfiles: 0,
+        publishedProfiles: 0,
+      };
+    }
+  }
+
+  // ═════════════════════════════════════════════════════════════════════════
+  // PRIVATE METHODS
+  // ═════════════════════════════════════════════════════════════════════════
+
+  private async saveAnalyticsEvent(payload: EducationEventPayload): Promise<void> {
+    try {
+      const { error } = await supabase.from('education_analytics_events').insert({
+        education_profile_id: payload.profileId ?? null,
+        event_type: payload.eventType,
+        event_data: {
+          businessId: payload.businessId,
+          leadId: payload.leadId,
+          programId: payload.programId,
+          nicheKey: payload.nicheKey,
+          userId: payload.userId,
+          metadata: payload.metadata,
+          error: payload.error,
+          performance: payload.performance,
+        },
+        user_id: payload.userId ?? null,
+        session_id: this.getSessionId(),
+      });
+
+      if (error) {
+        logger.error('[Education Observability] Failed to save analytics event', error);
+      }
+    } catch (error) {
+      logger.error('[Education Observability] Exception saving analytics event', error);
+    }
+  }
+
+  private async sendToExternalAnalytics(payload: EducationEventPayload): Promise<void> {
+    // TODO: Integrate with Google Analytics, Mixpanel, etc
+    // Example:
+    // if (window.gtag) {
+    //   window.gtag('event', payload.eventType, {
+    //     profile_id: payload.profileId,
+    //     niche_key: payload.nicheKey,
+    //   });
+    // }
+  }
+
+  private async sendToErrorTracking(payload: EducationEventPayload): Promise<void> {
+    // TODO: Integrate with Sentry, Rollbar, etc
+    // Example:
+    // if (window.Sentry) {
+    //   window.Sentry.captureException(new Error(payload.error?.message), {
+    //     tags: {
+    //       module: 'education',
+    //       event_type: payload.eventType,
+    //     },
+    //     extra: payload.metadata,
+    //   });
+    // }
+  }
+
+  private getSessionId(): string | null {
+    // Get session ID from storage or generate new one
+    try {
+      let sessionId = sessionStorage.getItem('education_session_id');
+      if (!sessionId) {
+        sessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+        sessionStorage.setItem('education_session_id', sessionId);
+      }
+      return sessionId;
+    } catch {
+      return null;
+    }
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// EXPORT SINGLETON
+// ═══════════════════════════════════════════════════════════════════════════
+
+export const EducationObservabilityService = new EducationObservabilityServiceClass();
+
+// ═══════════════════════════════════════════════════════════════════════════
+// CONVENIENCE FUNCTIONS
+// ═══════════════════════════════════════════════════════════════════════════
+
+/**
+ * Track lead created event
+ */
+export async function trackLeadCreated(
+  profileId: string,
+  leadId: string,
+  nicheKey: string,
+  metadata?: Record<string, unknown>
+): Promise<void> {
+  await EducationObservabilityService.trackConversion({
+    eventType: 'education_lead_created',
+    profileId,
+    leadId,
+    nicheKey,
+    metadata,
+  });
+}
+
+/**
+ * Track lead converted event
+ */
+export async function trackLeadConverted(
+  profileId: string,
+  leadId: string,
+  nicheKey: string,
+  metadata?: Record<string, unknown>
+): Promise<void> {
+  await EducationObservabilityService.trackConversion({
+    eventType: 'education_lead_converted',
+    profileId,
+    leadId,
+    nicheKey,
+    metadata,
+  });
+}
+
+/**
+ * Track profile published event
+ */
+export async function trackProfilePublished(
+  profileId: string,
+  businessId: string,
+  nicheKey: string,
+  metadata?: Record<string, unknown>
+): Promise<void> {
+  await EducationObservabilityService.trackConversion({
+    eventType: 'education_profile_published',
+    profileId,
+    businessId,
+    nicheKey,
+    metadata,
+  });
+}
+
+/**
+ * Track error event
+ */
+export async function trackEducationError(
+  eventType: EducationEventType,
+  error: Error,
+  metadata?: Record<string, unknown>
+): Promise<void> {
+  await EducationObservabilityService.trackError({
+    eventType,
+    error: {
+      message: error.message,
+      stack: error.stack,
+    },
+    metadata,
+  });
+}

@@ -7,8 +7,21 @@
  * @version 1.0.0
  */
 
-import { Routes, Route, Navigate } from "react-router-dom";
+import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { LAUNCH_URLS } from "@/config/territory";
+
+/**
+ * Redireciona URLs antigas de Educacao (/educacao-v3, /educacao-v2, /educacao-explorer)
+ * para /educacao preservando o resto do caminho.
+ */
+function EducationLegacyRedirect() {
+  const { pathname, search, hash } = useLocation();
+  const newPath = pathname
+    .replace(/^\/educacao-v3/, '/educacao')
+    .replace(/^\/educacao-v2/, '/educacao')
+    .replace(/^\/educacao-explorer/, '/educacao');
+  return <Navigate to={`${newPath}${search}${hash}`} replace />;
+}
 
 // Territorial Components (eager - critical for routing)
 import { TerritorialLayout } from "@/core/routing/components/TerritorialLayout";
@@ -123,6 +136,19 @@ export function AppRoutes() {
           <Route path="gastronomia/entregas" element={<P.DeliveryManagementPage />} />
           <Route path="gastronomia/analytics" element={<P.AnalyticsPage />} />
           <Route path="gastronomia/promocoes" element={<P.GastronomyPromotionsPage />} />
+          
+          {/* Rotas de Education */}
+          <Route path="education" element={<P.EducationDashboardPage />} />
+          <Route path="education/setup" element={<P.EducationSetupPage />} />
+          <Route path="education/programas" element={<P.EducationProgramsPage />} />
+          <Route path="education/programs" element={<P.EducationProgramsPage />} />
+          <Route path="education/leads" element={<P.EducationLeadsPage />} />
+          <Route path="education/eventos" element={<P.EducationEventsPage />} />
+          <Route path="education/events" element={<P.EducationEventsPage />} />
+          <Route path="education/analytics" element={<P.EducationAnalyticsPage />} />
+          <Route path="education/planos" element={<P.EducationPlansPage />} />
+          <Route path="education/plans" element={<P.EducationPlansPage />} />
+          
           <Route path="planos" element={<P.BusinessPlansPage />} />
           <Route path="link-premium" element={<P.BusinessPremiumSitePage />} />
           <Route path="analytics" element={<P.BusinessAnalyticsPage />} />
@@ -183,6 +209,7 @@ export function AppRoutes() {
         <Route path="/create-driver" element={<P.CriarMotoristaPage />} />
 
         {/* Rotas legadas sem território */}
+        <Route path="/educacao" element={<Navigate to={LAUNCH_URLS.education} replace />} />
         <Route path="/comunidade" element={<Navigate to={LAUNCH_URLS.community} replace />} />
         <Route path="/comunidade/alertas" element={<Navigate to={`${LAUNCH_URLS.community}/alertas`} replace />} />
         <Route path="/comunidade/problemas" element={<Navigate to={`${LAUNCH_URLS.community}/problemas`} replace />} />
@@ -355,6 +382,27 @@ export function AppRoutes() {
 
         {/* Favoritos de gastronomia */}
         <Route path="/gastronomia/favoritos" element={<P.MyFavoritesPage />} />
+
+        {/* Rotas de Education — públicas territoriais (vitrine premium consolidada) */}
+        {/* Detalhe: /educacao/:uf/:cidade/:bairro/:slug */}
+        <Route path="/educacao/:state/:city/:district/:slug" element={<TerritorialLayout />}>
+          <Route index element={<P.EducationDetailPage />} />
+        </Route>
+
+        {/* Listagem bairro: /educacao/:uf/:cidade/:bairro */}
+        <Route path="/educacao/:state/:city/:groupSlugOrDistrict" element={<TerritorialLayout />}>
+          <Route index element={<P.EducationExplorerPage />} />
+        </Route>
+
+        {/* Listagem cidade: /educacao/:uf/:cidade */}
+        <Route path="/educacao/:state/:city" element={<TerritorialLayout />}>
+          <Route index element={<P.EducationExplorerPage />} />
+        </Route>
+
+        {/* Redirecionamentos de URLs antigas — preservam o caminho apos o prefixo */}
+        <Route path="/educacao-v3/*" element={<EducationLegacyRedirect />} />
+        <Route path="/educacao-v2/*" element={<EducationLegacyRedirect />} />
+        <Route path="/educacao-explorer/*" element={<EducationLegacyRedirect />} />
 
         {/* Rotas de comunidade */}
         <Route path="/comunidade/:state/:city/:groupSlugOrDistrict/alertas" element={<TerritorialLayout />}>

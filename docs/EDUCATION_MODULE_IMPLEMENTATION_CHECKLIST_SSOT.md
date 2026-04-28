@@ -31,6 +31,21 @@ Antes de implementar, assumir estas verdades do repositorio:
 Conclusao arquitetural:
 - Education deve seguir o mesmo encaixe da gastronomia: vertical dentro de `business`.
 
+### 2.1 Status de execucao (snapshot 2026-04-26)
+- As 13 fases foram majoritariamente executadas no codigo.
+- Modulo existente em `src/modules/business/education` com:
+  - services/queries/mutations;
+  - hooks;
+  - pages publicas e admin;
+  - nichos (`registry`, `service`, `hook`) + testes.
+- Migrations existentes:
+  - `20260426130000` ate `20260426130006` (profiles/programs/leads/lead_events/events/indexes/audit function).
+- Paginas ja criadas:
+  - publica: `EducationLandingPage`, `EducationDetailPage`;
+  - admin: `EducationDashboardPage`, `EducationSetupPage`, `EducationProgramsPage`, `EducationLeadsPage`, `EducationEventsPage`, `EducationAnalyticsPage`, `EducationPlansPage`.
+- Ajuste aplicado para robustez de rota:
+  - admin agora aceita aliases PT-BR e EN para `programas/programs`, `eventos/events`, `planos/plans`.
+
 ---
 
 ## 3) Escopo de produto (MVP 60-90 dias)
@@ -85,90 +100,67 @@ Conclusao arquitetural:
 
 ## 5) Estrutura alvo (atualizada para o projeto)
 
-Criar em:
+Estrutura implementada hoje (SSOT real):
 
 ```txt
 src/modules/business/education/
   index.ts
   README.md
   VALIDATION.md
-  types/
-    education.ts
-    lead.ts
-    catalog.ts
-    index.ts
-  constants/
-    index.ts
-    education.ts
-    ui-limits.ts
-    subscription-status.ts
-  utils/
-    index.ts
-    education.helpers.ts
+  types/index.ts
+  constants/index.ts
   services/
     index.ts
     education.queries.ts
     education.mutations.ts
-    education.helpers.ts
-    lead.queries.ts
-    lead.mutations.ts
     EducationService.ts
     EducationUrlService.ts
     education-subscription.service.ts
   hooks/
     index.ts
-    useEducationList.ts
-    useEducationDetail.ts
-    useEducationProfile.ts
-    useEducationSetup.ts
-    useEducationLeads.ts
-    useLeadPipeline.ts
-    useEducationEvents.ts
     useEducationAnalytics.ts
+    useEducationDetail.ts
+    useEducationEvents.ts
+    useEducationLeads.ts
+    useEducationList.ts
+    useEducationProfile.ts
+    useEducationPrograms.ts
     useEducationSubscription.ts
+    useLeadPipeline.ts
   components/
     index.ts
     EducationCard.tsx
-    EducationHero.tsx
-    EducationFilters.tsx
-    EducationCTA.tsx
+    EducationContactSidebar.tsx
     EducationLeadForm.tsx
-    EducationLeadPipeline.tsx
-    EducationEventsPanel.tsx
-    EducationPlanStatusWidget.tsx
-    dashboard/
-      EducationLeadsSummaryCard.tsx
-      EducationQuickActionsCard.tsx
+    EducationPipelineView.tsx
+    EducationProgramsSection.tsx
+    EducationStatusBadge.tsx
     analytics/
-      EducationAnalyticsOverviewCard.tsx
       EducationAnalyticsConversionCard.tsx
+      EducationAnalyticsOverviewCard.tsx
   pages/
     index.ts
     EducationLandingPage.tsx
     EducationDetailPage.tsx
-    EducationSetupPage.tsx
     EducationDashboardPage.tsx
+    EducationSetupPage.tsx
+    EducationProgramsPage.tsx
     EducationLeadsPage.tsx
-    EducationBillingPage.tsx
-    EducationPlansPage.tsx
+    EducationEventsPage.tsx
     EducationAnalyticsPage.tsx
+    EducationPlansPage.tsx
   niches/
     index.ts
-    README.md
     types.ts
     registry.ts
-    services/
-      EducationNicheConfigService.ts
-    hooks/
-      useEducationNiche.ts
-    versioning/
-      EducationNicheVersioningService.ts
-      hooks/
-        useEducationNicheVersioning.ts
-      components/
-        EducationAdminSectionGuard.tsx
-        EducationNicheUpgradeBanner.tsx
+    hooks/useEducationNiche.ts
+    services/EducationNicheConfigService.ts
 ```
+
+Expansao futura opcional (quando houver demanda real):
+- split de `types`/`constants` em multiplos arquivos;
+- guard/versionamento visual de nicho;
+- componentes extras de dashboard (summary widgets dedicados).
 
 ---
 
@@ -184,6 +176,10 @@ Adicionar em `AppRoutes` dentro de `/perfil/empresas/:businessId`:
 - `education/eventos`
 - `education/analytics`
 - `education/planos`
+- aliases de retrocompatibilidade aceitos:
+  - `education/programs`
+  - `education/events`
+  - `education/plans`
 
 ## 6.2 Rota publica da vertical
 Seguir padrao territorial:

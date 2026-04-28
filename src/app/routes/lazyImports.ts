@@ -130,7 +130,20 @@ export const AnalyticsPage = lazy(() => import("@/modules/business/gastronomy/pa
 export const GastronomyPromotionsPage = lazy(() => import("@/modules/business/gastronomy/pages/GastronomyPromotionsPage"));
 
 // ============================================================
-// 💼 SERVIÇOS E PROFISSIONAIS
+// � EDUCATION
+// ============================================================
+export const EducationExplorerPage = lazy(() => import("@/modules/business/education/pages/EducationExplorerPage"));
+export const EducationDetailPage = lazy(() => import("@/modules/business/education/pages/EducationDetailPage"));
+export const EducationDashboardPage = lazy(() => import("@/modules/business/education/pages/EducationDashboardPage"));
+export const EducationSetupPage = lazy(() => import("@/modules/business/education/pages/EducationSetupPage"));
+export const EducationLeadsPage = lazy(() => import("@/modules/business/education/pages/EducationLeadsPage"));
+export const EducationEventsPage = lazy(() => import("@/modules/business/education/pages/EducationEventsPage"));
+export const EducationProgramsPage = lazy(() => import("@/modules/business/education/pages/EducationProgramsPage"));
+export const EducationAnalyticsPage = lazy(() => import("@/modules/business/education/pages/EducationAnalyticsPage"));
+export const EducationPlansPage = lazy(() => import("@/modules/business/education/pages/EducationPlansPage"));
+
+// ============================================================
+// �� SERVIÇOS E PROFISSIONAIS
 // ============================================================
 export const ServicosLandingPage = lazy(() => import("@/modules/professionals/services/pages/ServicosLandingPage"));
 export const ProfissionalDetailPage = lazy(() => import("@/modules/professionals/services/pages/ProfissionalDetailPage"));

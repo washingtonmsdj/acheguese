@@ -83,6 +83,7 @@ export const LAUNCH_URLS = {
   services: `/servicos/${TERRITORY_CONFIG.launch.state}/${TERRITORY_CONFIG.launch.city}`,
   classifieds: `/classificados/${TERRITORY_CONFIG.launch.state}/${TERRITORY_CONFIG.launch.city}`,
   gastronomy: `/gastronomia/${TERRITORY_CONFIG.launch.state}/${TERRITORY_CONFIG.launch.city}`,
+  education: `/educacao/${TERRITORY_CONFIG.launch.state}/${TERRITORY_CONFIG.launch.city}`,
   events: `/eventos/${TERRITORY_CONFIG.launch.state}/${TERRITORY_CONFIG.launch.city}`,
   jobs: `/vagas/${TERRITORY_CONFIG.launch.state}/${TERRITORY_CONFIG.launch.city}`,
 } as const;
