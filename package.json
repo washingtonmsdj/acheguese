@@ -37,7 +37,7 @@
     "generate:service": "tsx scripts/generate-service-template.ts",
     "lint:ssot": "eslint . --config eslint.config.js",
     "generate:types": "bash scripts/generate-supabase-types.sh",
-    "prepare": "husky",
+    "prepare": "husky || true",
     "verify:deploy": "node scripts/verify-deploy-ready.mjs",
     "test": "vitest --run",
     "test:watch": "vitest",
