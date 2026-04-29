@@ -7,7 +7,7 @@ import {
   sanitizeUrl,
   validatePostContent,
 } from "@/shared/utils/textUtils";
-import { useCommunityInteractions } from "@/core/community/hooks/useCommunityInteractions";
+import { useCommunityInteractions } from "@/core/social/hooks/useCommunityInteractions";
 import { PostsFacade } from "@/core/posts/services"; // ✅ GATE 4A FASE 13 - SSOT v2.0
 
 /**

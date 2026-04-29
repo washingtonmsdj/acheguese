@@ -5,7 +5,7 @@
 
 import { useState } from "react";
 import { toast } from "sonner";
-import { useCommunityInteractions } from "@/core/community/hooks/useCommunityInteractions";
+import { useCommunityInteractions } from "@/core/social/hooks/useCommunityInteractions";
 import { logger } from "@/shared/utils/logger";
 import { commentService } from "@/core/comments/services";
 import { profileService } from "@/core/profiles/services/ProfileService";
