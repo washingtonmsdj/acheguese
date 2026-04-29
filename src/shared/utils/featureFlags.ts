@@ -85,6 +85,28 @@ export const FEATURE_FLAGS: Record<string, FeatureFlag> = {
     allowedUsers: ['admin', 'super_admin'],
     environments: ['development', 'staging', 'production'],
   },
+
+  // Education Module
+  EDUCATION_MODULE: {
+    key: 'education_module',
+    enabled: true, // Module ready for production
+    rolloutPercentage: 100,
+    environments: ['development', 'staging', 'production'],
+  },
+
+  EDUCATION_PREMIUM: {
+    key: 'education_premium',
+    enabled: true,
+    rolloutPercentage: 100,
+    environments: ['development', 'staging'],
+  },
+
+  EDUCATION_NICHES: {
+    key: 'education_niches',
+    enabled: true,
+    rolloutPercentage: 100,
+    environments: ['development', 'staging', 'production'],
+  },
 };
 
 /**

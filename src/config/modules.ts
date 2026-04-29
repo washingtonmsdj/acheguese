@@ -57,9 +57,9 @@ export interface ModuleConfig {
  * Qualquer novo módulo deve ser adicionado aqui.
  */
 export const MODULES: Record<string, ModuleConfig> = {
-  community: {
-    id: 'community',
-    name: 'Comunidade',
+  communityFeed: {
+    id: 'community-feed',
+    name: 'Feed da Comunidade',
     slug: 'comunidade',
     icon: Users,
     contextMessage: 'Comunidade de',
@@ -67,6 +67,66 @@ export const MODULES: Record<string, ModuleConfig> = {
     isTerritorial: true,
     isActive: true,
     order: 1,
+  },
+
+  communityAlerts: {
+    id: 'community-alerts',
+    name: 'Alertas da Comunidade',
+    slug: 'alertas',
+    icon: MapPin,
+    contextMessage: 'Alertas de',
+    color: 'hsl(var(--primary))',
+    isTerritorial: true,
+    isActive: true,
+    order: 2,
+  },
+
+  communityIssues: {
+    id: 'community-issues',
+    name: 'Problemas Urbanos',
+    slug: 'problemas',
+    icon: MapPin,
+    contextMessage: 'Problemas de',
+    color: 'hsl(var(--primary))',
+    isTerritorial: true,
+    isActive: true,
+    order: 3,
+  },
+
+  communityGroups: {
+    id: 'community-groups',
+    name: 'Grupos',
+    slug: 'grupos',
+    icon: Users,
+    contextMessage: 'Grupos de',
+    color: 'hsl(var(--primary))',
+    isTerritorial: true,
+    isActive: true,
+    order: 4,
+  },
+
+  communityRecommendations: {
+    id: 'community-recommendations',
+    name: 'Recomendações',
+    slug: 'recomendacoes',
+    icon: Users,
+    contextMessage: 'Recomendações de',
+    color: 'hsl(var(--primary))',
+    isTerritorial: true,
+    isActive: true,
+    order: 5,
+  },
+
+  communityLostFound: {
+    id: 'community-lost-found',
+    name: 'Achados e Perdidos',
+    slug: 'achados-perdidos',
+    icon: Tag,
+    contextMessage: 'Achados e perdidos de',
+    color: 'hsl(var(--primary))',
+    isTerritorial: true,
+    isActive: true,
+    order: 6,
   },
   
   business: {
@@ -78,7 +138,7 @@ export const MODULES: Record<string, ModuleConfig> = {
     color: 'hsl(var(--primary))',
     isTerritorial: true,
     isActive: true,
-    order: 2,
+    order: 7,
   },
   
   services: {
@@ -90,7 +150,7 @@ export const MODULES: Record<string, ModuleConfig> = {
     color: 'hsl(var(--primary))',
     isTerritorial: true,
     isActive: true,
-    order: 3,
+    order: 8,
   },
   
   classifieds: {
@@ -102,11 +162,11 @@ export const MODULES: Record<string, ModuleConfig> = {
     color: 'hsl(var(--primary))',
     isTerritorial: true,
     isActive: true,
-    order: 4,
+    order: 9,
   },
   
   events: {
-    id: 'events',
+    id: 'community-events',
     name: 'Eventos',
     slug: 'eventos',
     icon: Calendar,
@@ -114,7 +174,7 @@ export const MODULES: Record<string, ModuleConfig> = {
     color: 'hsl(var(--primary))',
     isTerritorial: true,
     isActive: true,
-    order: 5,
+    order: 10,
   },
   
   jobs: {
@@ -126,7 +186,7 @@ export const MODULES: Record<string, ModuleConfig> = {
     color: 'hsl(var(--primary))',
     isTerritorial: true,
     isActive: true,
-    order: 6,
+    order: 11,
   },
   
   gastronomy: {
@@ -138,7 +198,7 @@ export const MODULES: Record<string, ModuleConfig> = {
     color: 'hsl(var(--primary))',
     isTerritorial: true,
     isActive: true,
-    order: 7,
+    order: 12,
   },
   
   touristPoints: {
@@ -150,7 +210,7 @@ export const MODULES: Record<string, ModuleConfig> = {
     color: 'hsl(var(--primary))',
     isTerritorial: true,
     isActive: true,
-    order: 8,
+    order: 18,
   },
   
   mobility: {
@@ -162,7 +222,7 @@ export const MODULES: Record<string, ModuleConfig> = {
     color: 'hsl(var(--primary))',
     isTerritorial: true,
     isActive: true,
-    order: 9,
+    order: 14,
   },
 
   education: {
@@ -174,7 +234,7 @@ export const MODULES: Record<string, ModuleConfig> = {
     color: 'hsl(var(--primary))',
     isTerritorial: true,
     isActive: true,
-    order: 10,
+    order: 15,
   },
 
   map: {
@@ -186,7 +246,7 @@ export const MODULES: Record<string, ModuleConfig> = {
     color: 'hsl(var(--primary))',
     isTerritorial: false,
     isActive: true,
-    order: 11,
+    order: 16,
   },
 
   search: {
@@ -198,7 +258,7 @@ export const MODULES: Record<string, ModuleConfig> = {
     color: 'hsl(var(--primary))',
     isTerritorial: false,
     isActive: true,
-    order: 12,
+    order: 17,
   },
 
   ranking: {
@@ -232,15 +292,27 @@ export const TERRITORIAL_MODULES = MODULES_ARRAY.filter(m => m.isTerritorial);
 function getModuleById(moduleId: string): ModuleConfig | null {
   switch (moduleId) {
     case 'community':
-      return MODULES.community;
+    case 'community-feed':
+      return MODULES.communityFeed;
+    case 'community-alerts':
+      return MODULES.communityAlerts;
+    case 'community-issues':
+      return MODULES.communityIssues;
+    case 'community-groups':
+      return MODULES.communityGroups;
+    case 'community-events':
+    case 'events':
+      return MODULES.events;
+    case 'community-recommendations':
+      return MODULES.communityRecommendations;
+    case 'community-lost-found':
+      return MODULES.communityLostFound;
     case 'business':
       return MODULES.business;
     case 'services':
       return MODULES.services;
     case 'classifieds':
       return MODULES.classifieds;
-    case 'events':
-      return MODULES.events;
     case 'jobs':
       return MODULES.jobs;
     case 'gastronomy':

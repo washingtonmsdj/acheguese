@@ -27,6 +27,7 @@
     "validate:session-context": "tsx scripts/validate-session-context.ts",
     "validate:architecture:delivery": "tsx scripts/validate-delivery-architecture-boundaries.ts",
     "validate:architecture:governance": "tsx scripts/validate-architecture-governance.ts",
+    "validate:architecture:community": "tsx scripts/validate-community-transversal-boundaries.ts",
     "validate:taxonomy": "tsx scripts/validate-project-taxonomy.ts",
     "validate:architecture:incremental": "node scripts/validate-architecture-boundaries-incremental.mjs",
     "validate:docs-structure": "tsx scripts/validate-docs-structure.ts",

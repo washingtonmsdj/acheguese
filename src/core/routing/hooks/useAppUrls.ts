@@ -14,7 +14,7 @@
 import { useBusinessUrls } from '@/core/business/hooks/useBusinessUrls';
 import { useServiceUrls } from '@/core/professional/hooks/useServiceUrls';
 import { useClassifiedUrls } from '@/core/classifieds/hooks/useClassifiedUrls';
-import { useCommunityUrls } from '@/core/community/hooks/useCommunityUrls';
+import { useCommunityUrls } from './useCommunityUrls';
 import { useMobilityUrls } from '@/core/mobility/hooks/useMobilityUrls';
 import { useFriendlyModuleUrls } from './useFriendlyModuleUrls';
 import { LAUNCH_URLS } from '@/config/territory';

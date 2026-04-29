@@ -94,11 +94,11 @@ export default function ComunidadePage({ resolved }: ComunidadePageProps) {
   const modalCity =
     communityLocation.activeLocation?.type === "city"
       ? communityLocation.activeLocation.name
-      : homeCity?.name ?? profile.city ?? "";
+      : homeCity?.name ?? profile?.city ?? "";
   const modalNeighborhood =
     communityLocation.activeLocation?.type === "district"
       ? communityLocation.activeLocation.name
-      : homeDistrict?.name ?? profile.neighborhood;
+      : homeDistrict?.name ?? profile?.neighborhood;
 
   // Bloquear se não estiver logado
   if (!profile) {

@@ -14,7 +14,7 @@ import {
   AvatarImage,
 } from "@/shared/components/ui/avatar";
 import { Badge } from "@/shared/components/ui/badge";
-import { useCommunityProfile } from "@/core/community/hooks/useCommunityProfile";
+import { useCommunityProfile } from "@/core/profiles/hooks/useCommunityProfile";
 import { useSessionContext } from "@/core/session";
 import { AuthService } from "@/core/auth";
 

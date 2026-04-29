@@ -1,5 +1,5 @@
 import { Bookmark } from "lucide-react";
-import { PostCard, PostCardSkeleton } from "@/core/community";
+import { PostCard, PostCardSkeleton } from "@/core/posts/components";
 import { usePostActions } from "@/core/posts/hooks";
 import { InfiniteScrollTrigger } from "@/shared/components/ui";
 import { EmptyStateProfile } from "./EmptyStateProfile";

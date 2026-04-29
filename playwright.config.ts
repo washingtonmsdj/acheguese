@@ -1,10 +1,18 @@
 import dotenv from 'dotenv';
 import { defineConfig, devices } from '@playwright/test';
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
 
 dotenv.config({ path: '.env.test' });
 dotenv.config({ path: '.env.local', override: true });
 
 const baseURL = process.env.PLAYWRIGHT_BASE_URL || 'http://localhost:8080';
+
+// Compatível com ESM e CJS
+const __filename = typeof __dirname !== 'undefined' ? '' : fileURLToPath(import.meta.url);
+const __dirnameCompat = typeof __dirname !== 'undefined' ? __dirname : dirname(__filename);
+
+const EDUCATION_AUTH_FILE = join(__dirnameCompat, 'tests/e2e/education/.auth/education-owner.json');
 
 export default defineConfig({
   testDir: './tests/e2e',
@@ -29,8 +37,21 @@ export default defineConfig({
 
   projects: [
     {
+      name: 'setup-education',
+      testMatch: /education\/global-setup\.ts/,
+    },
+    {
       name: 'chromium',
       use: { ...devices['Desktop Chrome'] },
+      dependencies: [],
+    },
+    {
+      name: 'education-authenticated',
+      use: {
+        ...devices['Desktop Chrome'],
+        storageState: EDUCATION_AUTH_FILE,
+      },
+      testMatch: /education\/(education-setup|education-programs|education-leads|education-cookie-debug|education-network-debug|education-dashboard-debug)\.spec\.ts/,
     },
   ],
 });

@@ -10,7 +10,6 @@
  */
 
 import { supabase } from "@/integrations/supabase";
-import { CommunityService } from "@/core/community";
 import { trackError } from "@/shared/utils/errorTracking";
 import { logger } from "@/shared/utils/logger";
 import { SocialInteractionsService } from "./SocialInteractionsService";
@@ -48,7 +47,21 @@ export class GroupService {
    */
   static async getGroups(): Promise<Group[]> {
     try {
-      return await CommunityService.getGroups();
+      const { data, error } = await (supabase as any)
+        .from("groups")
+        .select(`
+          *,
+          profiles:created_by(name, avatar_url),
+          members_count:group_members_new(count)
+        `)
+        .order("created_at", { ascending: false });
+
+      if (error) throw error;
+
+      return (data || []).map((group: any) => ({
+        ...group,
+        members_count: group.members_count?.[0]?.count ?? 0,
+      }));
     } catch (error) {
       trackError(error as Error, {
         component: "GroupService",
@@ -80,7 +93,15 @@ export class GroupService {
    */
   static async getGroupById(groupId: string): Promise<Group | null> {
     try {
-      return await CommunityService.getGroupById(groupId);
+      const { data, error } = await (supabase as any)
+        .from("groups")
+        .select("*, profiles:created_by(name, avatar_url)")
+        .eq("id", groupId)
+        .single();
+
+      if (error) throw error;
+
+      return data;
     } catch (error) {
       trackError(error as Error, {
         component: "GroupService",
@@ -133,7 +154,15 @@ export class GroupService {
     created_by: string;
   }): Promise<Group> {
     try {
-      return await CommunityService.createGroup(data);
+      const { data: group, error } = await (supabase as any)
+        .from("groups")
+        .insert(data)
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      return group;
     } catch (error) {
       trackError(error as Error, {
         component: "GroupService",

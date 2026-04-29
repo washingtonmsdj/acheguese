@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Clock, FileText, TrendingUp } from "lucide-react";
-import { PostCard, PostCardSkeleton } from "@/core/community";
+import { PostCard, PostCardSkeleton } from "@/core/posts/components";
 import { usePostActions } from "@/core/posts/hooks";
 import { InfiniteScrollTrigger } from "@/shared/components/ui";
 import {

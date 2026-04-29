@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase";
+import { getGastronomyProfile } from "@/core/business/services/gastronomy.queries";
 import type {
   GastronomyActivationStatus,
   GastronomyProfileStatus,
@@ -11,14 +11,13 @@ export function useGastronomyStatus(businessId: string, isEligible: boolean) {
   const { data, isLoading } = useQuery({
     queryKey: ["gastronomy-status", businessId],
     queryFn: async (): Promise<GastronomyProfileStatus | null> => {
-      const { data: profile, error } = await supabase
-        .from("gastronomy_profiles")
-        .select("id, business_id, status")
-        .eq("business_id", businessId)
-        .maybeSingle();
-
-      if (error) throw error;
-      return profile as GastronomyProfileStatus | null;
+      const profile = await getGastronomyProfile(businessId);
+      if (!profile) return null;
+      return {
+        id: profile.id,
+        business_id: profile.business_id,
+        status: profile.status,
+      };
     },
     enabled: !!businessId && isEligible,
   });
@@ -41,4 +40,3 @@ export function useGastronomyStatus(businessId: string, isEligible: boolean) {
     isLoading: false,
   };
 }
-

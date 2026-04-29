@@ -9,19 +9,27 @@ const CANONICAL_MODULES = [
   "admin",
   "business",
   "classifieds",
-  "community",
+  "community-alerts",
+  "community-events",
+  "community-feed",
+  "community-groups",
+  "community-issues",
+  "community-lost-found",
+  "community-recommendations",
   "guide",
   "mobility",
   "professionals",
   "profile",
 ] as const;
 
+const DEPRECATED_COMPAT_MODULE_ROOTS = [
+  "community",
+] as const;
+
 const LEGACY_FORBIDDEN_MODULE_ROOTS = [
   "admin-identidade",
   "admin-motoristas",
   "analytics",
-  "community-alerts",
-  "community-issues",
   "dashboard",
   "delivery",
   "empresa",
@@ -41,8 +49,6 @@ const LEGACY_FORBIDDEN_CORE_ROOTS = [
   "admin-identidade",
   "admin-motoristas",
   "civic",
-  "community-alerts",
-  "community-issues",
   "events",
   "gastronomy",
   "landing",
@@ -60,8 +66,13 @@ const REQUIRED_NESTED_PATHS = [
   "src/modules/business/company",
   "src/modules/business/gastronomy",
   "src/modules/business/promotions",
-  "src/modules/community/alerts",
-  "src/modules/community/issues",
+  "src/modules/community-alerts",
+  "src/modules/community-events",
+  "src/modules/community-feed",
+  "src/modules/community-groups",
+  "src/modules/community-issues",
+  "src/modules/community-lost-found",
+  "src/modules/community-recommendations",
   "src/modules/mobility/delivery",
   "src/modules/classifieds/jobs",
   "src/modules/professionals/services",
@@ -75,8 +86,6 @@ const FORBIDDEN_LEGACY_PATH_LITERALS = [
   "src/modules/admin-identidade",
   "src/modules/admin-motoristas",
   "src/modules/analytics",
-  "src/modules/community-alerts",
-  "src/modules/community-issues",
   "src/modules/dashboard",
   "src/modules/delivery",
   "src/modules/empresa",
@@ -153,9 +162,10 @@ function main() {
   const moduleRoots = listDirectories("src/modules");
   const moduleRootSet = toSet(moduleRoots);
   const canonicalModuleSet = toSet(CANONICAL_MODULES);
+  const deprecatedCompatModuleSet = toSet(DEPRECATED_COMPAT_MODULE_ROOTS);
 
   for (const root of moduleRoots) {
-    if (!canonicalModuleSet.has(root)) {
+    if (!canonicalModuleSet.has(root) && !deprecatedCompatModuleSet.has(root)) {
       violations.push(
         `Modulo de topo fora do SSOT em src/modules: "${root}". Permitidos: ${CANONICAL_MODULES.join(", ")}`,
       );

@@ -942,9 +942,9 @@ export class ProfileServiceLegacy {
         "@/core/professional/services/ProfessionalService"
       );
       const { getUserClassifieds } = await import("@/modules/classifieds/services");
-      const { eventService } = await import("@/core/community/services/CommunityEventsRuntimeService");
-      const { communityAlertService } = await import("@/modules/community/alerts");
-      const { communityIssueService } = await import("@/core/community/issues/services/CommunityIssueService");
+      const { eventService } = await import("@/core/community-events/services/CommunityEventsRuntimeService");
+      const { communityAlertService } = await import("@/modules/community-alerts");
+      const { communityIssueService } = await import("@/core/community-issues/services/CommunityIssueService");
       const { notificationService } = await import("@/core/notifications/services");
 
       const profileContextPromise = this.getProfileContext(userId);

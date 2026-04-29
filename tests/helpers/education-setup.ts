@@ -44,6 +44,7 @@ export async function loginViaUI(page: Page): Promise<boolean> {
     return false;
   }
 
+  // Login via UI com as credenciais E2E
   await page.goto('/login');
   await page.locator('#login-identifier').fill(email);
   await page.locator('#login-password').fill(password);
@@ -53,6 +54,9 @@ export async function loginViaUI(page: Page): Promise<boolean> {
     .waitForURL((url) => !url.pathname.startsWith('/login'), { timeout: 15000 })
     .then(() => true)
     .catch(() => false);
+
+  // Aguardar o SessionService terminar de carregar
+  if (success) await page.waitForTimeout(2000);
 
   return success;
 }
@@ -157,41 +161,49 @@ export async function authenticateAsBusinessOwner(page: Page, businessId: string
   await page.locator('#login-password').fill(loginPassword);
   await page.getByRole('button', { name: 'Entrar' }).click();
 
+  // Aguardar redirecionamento após login
   await page.waitForURL((url) => !url.pathname.startsWith('/login'), { timeout: 15000 });
+
+  // Aguardar o SessionService terminar de carregar os perfis
+  // Isso evita o "Failed to fetch" que acontece quando navegamos muito rápido
+  await page.waitForTimeout(2000);
 }
 
 /**
  * Garante que um perfil de educação existe para o business.
- * Aceita tanto business_data.id quanto profile_id.
+ * O businessId deve ser o profile_id (usado nas URLs do dashboard).
  * Retorna o ID do education_profile.
  */
 export async function ensureEducationProfileExists(businessIdOrProfileId: string): Promise<string | null> {
   if (!admin) return null;
 
-  // Resolver o business_data.id a partir do profile_id (se necessário)
-  const bizDataId = await resolveBusinessDataId(businessIdOrProfileId);
-  if (!bizDataId) {
-    console.warn(`Não foi possível resolver business_data.id para: ${businessIdOrProfileId}`);
-    return null;
-  }
-
-  // Verificar se já existe
+  // O education_profiles.business_id referencia profiles(id) = profile_id
+  // Verificar se já existe com o profile_id direto
   const { data: existing } = await admin
     .from('education_profiles')
     .select('id')
-    .eq('business_id', bizDataId)
+    .eq('business_id', businessIdOrProfileId)
     .maybeSingle();
 
   if (existing) return existing.id;
+
+  // Tentar como business_data.id (resolver para profile_id)
+  const { data: bizData } = await admin
+    .from('business_data')
+    .select('profile_id')
+    .eq('id', businessIdOrProfileId)
+    .maybeSingle();
+
+  const profileId = bizData?.profile_id || businessIdOrProfileId;
 
   // Criar perfil básico
   const { data: profile, error } = await admin
     .from('education_profiles')
     .insert({
-      business_id: bizDataId,
+      business_id: profileId,
       institution_type: 'school',
       niche_key: 'regular_school',
-      status: 'draft',
+      status: 'published',
     })
     .select('id')
     .single();
@@ -206,6 +218,7 @@ export async function ensureEducationProfileExists(businessIdOrProfileId: string
 
 /**
  * Resolve o business_data.id a partir de um profile_id ou business_data.id.
+ * @deprecated Use profile_id diretamente
  */
 async function resolveBusinessDataId(idOrProfileId: string): Promise<string | null> {
   if (!admin) return null;
@@ -233,7 +246,7 @@ async function resolveBusinessDataId(idOrProfileId: string): Promise<string | nu
  * Cria um programa de teste para uma instituição.
  */
 export async function createTestProgram(
-  businessId: string,
+  businessIdOrProfileId: string,
   overrides?: Partial<{
     name: string;
     description: string;
@@ -246,7 +259,7 @@ export async function createTestProgram(
 ): Promise<string | null> {
   if (!admin) return null;
 
-  const profileId = await ensureEducationProfileExists(businessId);
+  const profileId = await ensureEducationProfileExists(businessIdOrProfileId);
   if (!profileId) return null;
 
   const { data: program, error } = await admin
@@ -277,7 +290,7 @@ export async function createTestProgram(
  * Cria um lead de teste para uma instituição.
  */
 export async function createTestLead(
-  businessId: string,
+  businessIdOrProfileId: string,
   overrides?: Partial<{
     parent_name: string;
     parent_email: string;
@@ -289,7 +302,7 @@ export async function createTestLead(
 ): Promise<string | null> {
   if (!admin) return null;
 
-  const profileId = await ensureEducationProfileExists(businessId);
+  const profileId = await ensureEducationProfileExists(businessIdOrProfileId);
   if (!profileId) return null;
 
   const { data: lead, error } = await admin
@@ -319,7 +332,7 @@ export async function createTestLead(
  * Cria um evento de teste para uma instituição.
  */
 export async function createTestEvent(
-  businessId: string,
+  businessIdOrProfileId: string,
   overrides?: Partial<{
     title: string;
     description: string;
@@ -331,7 +344,7 @@ export async function createTestEvent(
 ): Promise<string | null> {
   if (!admin) return null;
 
-  const profileId = await ensureEducationProfileExists(businessId);
+  const profileId = await ensureEducationProfileExists(businessIdOrProfileId);
   if (!profileId) return null;
 
   const startDate =
@@ -369,43 +382,39 @@ export async function createTestEvent(
 export async function publishEducationProfile(businessIdOrProfileId: string): Promise<void> {
   if (!admin) return;
 
-  const bizDataId = await resolveBusinessDataId(businessIdOrProfileId);
-  if (!bizDataId) return;
-
+  // Tentar como profile_id direto
   await admin
     .from('education_profiles')
     .update({ status: 'published' })
-    .eq('business_id', bizDataId);
+    .eq('business_id', businessIdOrProfileId);
 }
 
 /**
  * Limpa todos os dados de teste de uma instituição.
+ * NÃO deleta o education_profile — apenas os dados criados nos testes.
  */
 export async function cleanupEducationData(businessIdOrProfileId: string): Promise<void> {
   if (!admin) return;
 
-  const bizDataId = await resolveBusinessDataId(businessIdOrProfileId);
-  if (!bizDataId) return;
-
+  // Tentar como profile_id direto
   const { data: profile } = await admin
     .from('education_profiles')
     .select('id')
-    .eq('business_id', bizDataId)
+    .eq('business_id', businessIdOrProfileId)
     .maybeSingle();
 
   if (!profile) return;
 
-  // Deletar em ordem (respeitando foreign keys)
+  // Deletar apenas dados de teste (não o perfil em si)
   await admin.from('education_lead_events').delete().eq('education_profile_id', profile.id);
   await admin.from('education_leads').delete().eq('education_profile_id', profile.id);
   await admin.from('education_events').delete().eq('education_profile_id', profile.id);
   await admin.from('education_programs').delete().eq('education_profile_id', profile.id);
-  await admin.from('education_profiles').delete().eq('id', profile.id);
+  // NÃO deletar o education_profile — ele é necessário para os testes
 }
 
 /**
  * Verifica se o admin client está disponível.
- * Útil para pular testes que precisam de service_role.
  */
 export function hasAdminClient(): boolean {
   return admin !== null;
@@ -416,7 +425,56 @@ export function hasAdminClient(): boolean {
  */
 export function hasE2ECredentials(): boolean {
   return !!(
-    (process.env.E2E_USER_EMAIL || process.env.TEST_DRIVER_EMAIL) &&
-    (process.env.E2E_USER_PASSWORD || process.env.TEST_DRIVER_PASSWORD)
+    (process.env.E2E_EDUCATION_OWNER_EMAIL ||
+      process.env.E2E_USER_EMAIL ||
+      process.env.TEST_DRIVER_EMAIL) &&
+    (process.env.E2E_EDUCATION_OWNER_PASSWORD ||
+      process.env.E2E_USER_PASSWORD ||
+      process.env.TEST_DRIVER_PASSWORD)
   );
+}
+
+/**
+ * Navega para uma URL do dashboard e aguarda o conteúdo carregar.
+ * Aguarda o SessionService terminar de carregar antes de navegar.
+ */
+export async function waitForDashboard(page: Page, url: string): Promise<boolean> {
+  const businessSegment = url.split('/education')[0];
+
+  // Primeiro navegar para /perfil para garantir que o SessionService carregou
+  // Isso evita o "Failed to fetch" que acontece quando navegamos muito rápido após o login
+  const currentUrl = page.url();
+  if (!currentUrl.includes('/perfil') && !currentUrl.includes('/empresas')) {
+    await page.goto('/perfil', { waitUntil: 'domcontentloaded' });
+    await page.waitForTimeout(2000);
+  }
+
+  // Navegar para a URL do dashboard
+  await page.goto(url, { waitUntil: 'domcontentloaded' });
+
+  // Fechar banner de cookies se existir
+  const acceptBtn = page.getByRole('button', { name: /aceitar|accept/i }).first();
+  if (await acceptBtn.isVisible({ timeout: 2000 }).catch(() => false)) {
+    await acceptBtn.click();
+  }
+
+  // Aguardar estabilização
+  await page.waitForTimeout(4000);
+
+  // Se foi redirecionado, tentar novamente
+  const currentUrlAfter = page.url();
+  if (!currentUrlAfter.includes(businessSegment + '/education')) {
+    await page.waitForTimeout(2000);
+    await page.goto(url, { waitUntil: 'domcontentloaded' });
+    await page.waitForTimeout(4000);
+  }
+
+  const finalUrl = page.url();
+  const isOnDashboard = finalUrl.includes(businessSegment + '/education');
+  const hasContent = await page.locator('body').evaluate(
+    (el) => el.innerText.trim().length > 20
+  ).catch(() => false);
+
+  console.log(`waitForDashboard: url=${finalUrl}, onDashboard=${isOnDashboard}, hasContent=${hasContent}`);
+  return hasContent;
 }

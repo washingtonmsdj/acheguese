@@ -291,7 +291,7 @@ export class PostService {
     try {
       // ✅ FUNDAÇÃO 3: Validar dados de entrada
       const { updatePostSchema: UpdatePostSchema } =
-        await import("@/modules/community/schemas/postSchemas");
+        await import("@/core/posts/schemas/postSchemas");
       const validatedData = UpdatePostSchema.parse({
         content: data.content,
       });

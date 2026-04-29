@@ -1,0 +1,25 @@
+{
+  "cookies": [
+    {
+      "name": "sb-auth-token",
+      "value": "%7B%22access_token%22%3A%22eyJhbGciOiJFUzI1NiIsImtpZCI6ImNjNzM5MWQzLTlmYzQtNGQ3Yy04M2Q2LTEyMzE4MzdjYTJlNSIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJodHRwczovL3hoZG93emFjZnVqY2tqZWxxaHRkLnN1cGFiYXNlLmNvL2F1dGgvdjEiLCJzdWIiOiI2M2E2ODU5OC01OWU2LTRmZjQtYmU0OC0wOTg3NjNmM2U1ODYiLCJhdWQiOiJhdXRoZW50aWNhdGVkIiwiZXhwIjoxNzc3NDIwODk2LCJpYXQiOjE3Nzc0MTcyOTYsImVtYWlsIjoiZTJlLXNpZ251cC0xNzc2NDM5MjgwOTk0OTAxQGV4YW1wbGUuY29tIiwicGhvbmUiOiIiLCJhcHBfbWV0YWRhdGEiOnsicHJvdmlkZXIiOiJlbWFpbCIsInByb3ZpZGVycyI6WyJlbWFpbCJdfSwidXNlcl9tZXRhZGF0YSI6eyJjaXR5IjoiQ29uY2Vpw6fDo28gZG8gSmFjdcOtcGUiLCJkaXNwbGF5X25hbWUiOiJFMkUgQ2FkYXN0cm8iLCJlbWFpbCI6ImUyZS1zaWdudXAtMTc3NjQzOTI4MDk5NDkwMUBleGFtcGxlLmNvbSIsImVtYWlsX3ZlcmlmaWVkIjp0cnVlLCJoYW5kbGUiOiJlMmVjYWRhc3RybzE3NzY0MzkyODA5OTQ5MDEiLCJuYW1lIjoiRTJFIENhZGFzdHJvIiwibmVpZ2hib3Job29kIjoiQmVzc2EiLCJuZWlnaGJvcmhvb2RfaWQiOiJlOWIxZWU5ZC1jNzQ0LTQ4ODktYjc1NC1hMDhkODZkNTJhN2UiLCJwaG9uZV92ZXJpZmllZCI6ZmFsc2UsInN0YXRlIjoiQmFoaWEiLCJzdWIiOiI2M2E2ODU5OC01OWU2LTRmZjQtYmU0OC0wOTg3NjNmM2U1ODYifSwicm9sZSI6ImF1dGhlbnRpY2F0ZWQiLCJhYWwiOiJhYWwxIiwiYW1yIjpbeyJtZXRob2QiOiJwYXNzd29yZCIsInRpbWVzdGFtcCI6MTc3NzQxNzI5Nn1dLCJzZXNzaW9uX2lkIjoiOWFlNjkyZWEtNzY3Yy00MDA5LTk2MDYtZDE0ZTM1MDA5NTQzIiwiaXNfYW5vbnltb3VzIjpmYWxzZX0.mXvIbQE2AG4FCf9TFHoHzp8sytxQMfBr6dqRp0BB7nugkgnqKZlJh71d-uHJw0HRIWLXf70v2SVdjeVC2deRiA%22%2C%22token_type%22%3A%22bearer%22%2C%22expires_in%22%3A3600%2C%22expires_at%22%3A1777420896%2C%22refresh_token%22%3A%22u7mteoquuj6c%22%2C%22user%22%3A%7B%22id%22%3A%2263a68598-59e6-4ff4-be48-098763f3e586%22%2C%22aud%22%3A%22authenticated%22%2C%22role%22%3A%22authenticated%22%2C%22email%22%3A%22e2e-signup-1776439280994901%40example.com%22%2C%22email_confirmed_at%22%3A%222026-04-17T15%3A21%3A28.833112Z%22%2C%22phone%22%3A%22%22%2C%22confirmed_at%22%3A%222026-04-17T15%3A21%3A28.833112Z%22%2C%22last_sign_in_at%22%3A%222026-04-28T23%3A01%3A36.704297193Z%22%2C%22app_metadata%22%3A%7B%22provider%22%3A%22email%22%2C%22providers%22%3A%5B%22email%22%5D%7D%2C%22user_metadata%22%3A%7B%22city%22%3A%22Concei%C3%A7%C3%A3o%20do%20Jacu%C3%ADpe%22%2C%22display_name%22%3A%22E2E%20Cadastro%22%2C%22email%22%3A%22e2e-signup-1776439280994901%40example.com%22%2C%22email_verified%22%3Atrue%2C%22handle%22%3A%22e2ecadastro1776439280994901%22%2C%22name%22%3A%22E2E%20Cadastro%22%2C%22neighborhood%22%3A%22Bessa%22%2C%22neighborhood_id%22%3A%22e9b1ee9d-c744-4889-b754-a08d86d52a7e%22%2C%22phone_verified%22%3Afalse%2C%22state%22%3A%22Bahia%22%2C%22sub%22%3A%2263a68598-59e6-4ff4-be48-098763f3e586%22%7D%2C%22identities%22%3A%5B%7B%22identity_id%22%3A%2207ce9a41-18eb-4d03-9a94-784f4ceb540b%22%2C%22id%22%3A%2263a68598-59e6-4ff4-be48-098763f3e586%22%2C%22user_id%22%3A%2263a68598-59e6-4ff4-be48-098763f3e586%22%2C%22identity_data%22%3A%7B%22city%22%3A%22Concei%C3%A7%C3%A3o%20do%20Jacu%C3%ADpe%22%2C%22display_name%22%3A%22E2E%20Cadastro%22%2C%22email%22%3A%22e2e-signup-1776439280994901%40example.com%22%2C%22email_verified%22%3Afalse%2C%22handle%22%3A%22e2ecadastro1776439280994901%22%2C%22name%22%3A%22E2E%20Cadastro%22%2C%22neighborhood%22%3A%22Bessa%22%2C%22neighborhood_id%22%3A%22e9b1ee9d-c744-4889-b754-a08d86d52a7e%22%2C%22phone_verified%22%3Afalse%2C%22state%22%3A%22Bahia%22%2C%22sub%22%3A%2263a68598-59e6-4ff4-be48-098763f3e586%22%7D%2C%22provider%22%3A%22email%22%2C%22last_sign_in_at%22%3A%222026-04-17T15%3A21%3A28.821637Z%22%2C%22created_at%22%3A%222026-04-17T15%3A21%3A28.821683Z%22%2C%22updated_at%22%3A%222026-04-17T15%3A21%3A28.821683Z%22%2C%22email%22%3A%22e2e-signup-1776439280994901%40example.com%22%7D%5D%2C%22created_at%22%3A%222026-04-17T15%3A21%3A28.485844Z%22%2C%22updated_at%22%3A%222026-04-28T23%3A01%3A36.706332Z%22%2C%22is_anonymous%22%3Afalse%7D%2C%22weak_password%22%3Anull%7D",
+      "domain": "localhost",
+      "path": "/",
+      "expires": 1778022096.010543,
+      "httpOnly": false,
+      "secure": false,
+      "sameSite": "Strict"
+    }
+  ],
+  "origins": [
+    {
+      "origin": "http://localhost:8080",
+      "localStorage": [
+        {
+          "name": "lgpd-consent",
+          "value": "[{\"consent_type\":\"cookies\",\"granted\":true},{\"consent_type\":\"analytics\",\"granted\":true},{\"consent_type\":\"marketing\",\"granted\":true},{\"consent_type\":\"geolocation\",\"granted\":true},{\"consent_type\":\"privacy_policy\",\"granted\":true}]"
+        }
+      ]
+    }
+  ]
+}

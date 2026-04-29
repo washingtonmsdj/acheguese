@@ -8,8 +8,13 @@ export interface DomainRegistryEntry {
     | "business"
     | "gastronomy"
     | "professionals-services"
-    | "community-posts"
+    | "community-feed"
     | "community-alerts"
+    | "community-issues"
+    | "community-groups"
+    | "community-events"
+    | "community-recommendations"
+    | "community-lost-found"
     | "map"
     | "classifieds"
     | "mobility"
@@ -279,33 +284,27 @@ export const DOMAIN_REGISTRY: DomainRegistryEntry[] = [
       "ProfessionalService, ServicesService e VagasService formam o eixo SSOT em core para professionals/services/vagas, com composicao oficial em modules/professionals/services e modules/classifieds/jobs.",
   },
   {
-    id: "community-posts",
-    label: "community/posts",
+    id: "community-feed",
+    label: "community-feed",
     sourceRoots: [
-      "src/core/community",
       "src/core/posts",
       "src/core/comments",
       "src/core/social",
       "src/core/favorites",
       "src/core/feed",
-      "src/modules/community",
+      "src/modules/community-feed",
     ],
     docsPaths: [
-      "src/modules/community/README.md",
+      "src/modules/community-feed/README.md",
       "docs/posts",
-      "docs/qa",
     ],
     ssotPaths: [
-      "src/core/community/services/CommunityService.ts",
       "src/core/posts/services/PostService.ts",
       "src/core/comments/services/CommentService.ts",
     ],
     routePrefixes: [
       "/comunidade/:state/:city",
-      "/recomendacoes",
-      "/achados-perdidos",
-      "/grupos",
-      "/eventos/:id",
+      "/novo-post",
     ],
     adminRoutePrefixes: ["/admin/moderacao", "/admin/moderacao-completa", "/admin/zeladoria"],
     criticality: "critical",
@@ -316,30 +315,27 @@ export const DOMAIN_REGISTRY: DomainRegistryEntry[] = [
     docsSummary:
       "Parcial. Ha README do modulo e pastas em docs/posts e docs/qa, mas falta documento mestre do dominio comunidade com SSOT, ownership e backlog de legado.",
     ssotSummary:
-      "O SSOT de dados esta espalhado entre core/community, core/posts, core/comments e core/social. A camada de modulo ainda agrega feeds, modais e ranking com alto acoplamento de UI.",
+      "Feed transversal usa core/posts, core/comments, core/social e core/feed. O legado em core/community ainda precisa ser drenado para contratos de core, mas modules/community-feed e o ponto canonico de UI.",
   },
   {
     id: "community-alerts",
     label: "community-alerts",
     sourceRoots: [
       "src/core/alerts",
-      "src/core/civic",
-      "src/core/community-alerts",
-      "src/core/community-issues",
+      "src/core/community/alerts",
+      "src/modules/community-alerts",
     ],
     docsPaths: [],
     ssotPaths: [
       "src/core/alerts/services/AlertService.ts",
-      "src/core/community-alerts/services/CommunityAlertService.ts",
-      "src/core/community-issues/services/CommunityIssueService.ts",
+      "src/core/community/alerts/services/CommunityAlertService.ts",
     ],
-    routePrefixes: ["/comunidade/alertas", "/comunidade/problemas"],
-    adminRoutePrefixes: ["/admin/community-alerts", "/admin/community-issues", "/admin/alertas"],
+    routePrefixes: ["/comunidade/:state/:city/alertas"],
+    adminRoutePrefixes: ["/admin/community-alerts", "/admin/alertas"],
     criticality: "high",
     canonicalServiceBasenames: [
       "AlertService.ts",
       "CommunityAlertService.ts",
-      "CommunityIssueService.ts",
     ],
     canonicalTypeBasenames: ["types.ts"],
     adminSummary:
@@ -347,7 +343,90 @@ export const DOMAIN_REGISTRY: DomainRegistryEntry[] = [
     docsSummary:
       "Fraca. Existe implementacao e SQL no modulo, mas nao ha documento canonico ativo consolidando alertas, issues e civic reports num dominio unico.",
     ssotSummary:
-      "O dominio ainda convive com duas linhas: core/alerts/core/civic e os modulos community-alerts/community-issues. Isso precisa de contrato explicito para nao virar duplicacao funcional.",
+      "Alertas comunitarios ficam isolados em community-alerts e consomem core/community/alerts. O contrato territorial deve ser location_id; nomes de cidade/bairro sao apresentacao.",
+  },
+  {
+    id: "community-issues",
+    label: "community-issues",
+    sourceRoots: [
+      "src/core/community/issues",
+      "src/modules/community-issues",
+    ],
+    docsPaths: ["src/modules/community-issues/README.md"],
+    ssotPaths: [
+      "src/core/community/issues/services/CommunityIssueService.ts",
+    ],
+    routePrefixes: ["/comunidade/:state/:city/problemas"],
+    adminRoutePrefixes: ["/admin/community-issues"],
+    criticality: "high",
+    canonicalServiceBasenames: ["CommunityIssueService.ts"],
+    canonicalTypeBasenames: ["types.ts"],
+    adminSummary:
+      "Boa cobertura administrativa para issues. O modulo transversal agora e separado de alertas e feed.",
+    docsSummary:
+      "Inicial. README local documenta boundary e dependencia em location_id.",
+    ssotSummary:
+      "Issues comunitarias consomem core/community/issues e nao devem importar outros modulos.",
+  },
+  {
+    id: "community-groups",
+    label: "community-groups",
+    sourceRoots: ["src/core/social", "src/modules/community-groups"],
+    docsPaths: ["src/modules/community-groups/README.md"],
+    ssotPaths: ["src/core/social/services/GroupService.ts"],
+    routePrefixes: ["/grupos", "/grupos/:id"],
+    adminRoutePrefixes: [],
+    criticality: "medium",
+    canonicalServiceBasenames: ["GroupService.ts"],
+    canonicalTypeBasenames: ["types.ts"],
+    adminSummary: "Pendente. Ainda nao ha superficie administrativa dedicada a grupos comunitarios.",
+    docsSummary: "Inicial. Boundary separado do antigo agregador community.",
+    ssotSummary: "Grupos devem depender de core/social e location_id quando territoriais.",
+  },
+  {
+    id: "community-events",
+    label: "community-events",
+    sourceRoots: ["src/modules/community-events", "src/core/community/services"],
+    docsPaths: ["src/modules/community-events/README.md"],
+    ssotPaths: ["src/core/community/services/CommunityEventsRuntimeService.ts"],
+    routePrefixes: ["/eventos/:state/:city", "/eventos/:id"],
+    adminRoutePrefixes: ["/admin/eventos"],
+    criticality: "medium",
+    canonicalServiceBasenames: ["CommunityEventsRuntimeService.ts"],
+    canonicalTypeBasenames: ["types.ts"],
+    adminSummary: "Parcial. Admin eventos existe, mas o ownership precisa ser separado do feed.",
+    docsSummary: "Inicial. Boundary transversal criado.",
+    ssotSummary: "Eventos comunitarios devem consumir core e location_id, sem depender do agregador community.",
+  },
+  {
+    id: "community-recommendations",
+    label: "community-recommendations",
+    sourceRoots: ["src/modules/community-recommendations", "src/core/community"],
+    docsPaths: ["src/modules/community-recommendations/README.md", "docs/qa"],
+    ssotPaths: ["src/core/community/services/CommunityQAService.ts"],
+    routePrefixes: ["/recomendacoes", "/recomendacoes/nova", "/recomendacoes/:id"],
+    adminRoutePrefixes: ["/admin/moderacao"],
+    criticality: "medium",
+    canonicalServiceBasenames: ["CommunityQAService.ts"],
+    canonicalTypeBasenames: ["qa-types.ts"],
+    adminSummary: "Parcial. Moderacao cobre parte do ciclo.",
+    docsSummary: "Parcial. QA ja possui documentos, mas precisa remover prefixo conceitual community.",
+    ssotSummary: "Recomendacoes dependem do contrato QA em core e location_id.",
+  },
+  {
+    id: "community-lost-found",
+    label: "community-lost-found",
+    sourceRoots: ["src/modules/community-lost-found", "src/core/community/services"],
+    docsPaths: ["src/modules/community-lost-found/README.md"],
+    ssotPaths: ["src/core/community/services/LostFoundRuntimeService.ts"],
+    routePrefixes: ["/achados-perdidos", "/achados-perdidos/novo", "/achados-perdidos/:id"],
+    adminRoutePrefixes: [],
+    criticality: "medium",
+    canonicalServiceBasenames: ["LostFoundRuntimeService.ts"],
+    canonicalTypeBasenames: ["types.ts"],
+    adminSummary: "Pendente. Sem superficie administrativa dedicada.",
+    docsSummary: "Inicial. Boundary separado do antigo agregador community.",
+    ssotSummary: "Achados e perdidos deve depender de core e location_id.",
   },
   {
     id: "map",

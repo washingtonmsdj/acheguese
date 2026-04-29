@@ -173,20 +173,20 @@ export const VagaDetailPublicPage = lazy(() => import("@/modules/classifieds/job
 // ============================================================
 // 👥 COMUNIDADE (GRUPOS, EVENTOS, POSTS)
 // ============================================================
-export const GruposPage = lazy(() => import("@/modules/community/pages/GruposPage"));
-export const GrupoDetailPage = lazy(() => import("@/modules/community/pages/GrupoDetailPage"));
-export const EventosPage = lazy(() => import("@/modules/community/pages/EventosPage"));
-export const EventoDetailPage = lazy(() => import("@/modules/community/pages/EventoDetailPage"));
-export const RecomendacoesPage = lazy(() => import("@/modules/community/pages/RecomendacoesPage"));
-export const NovaRecomendacaoPage = lazy(() => import("@/modules/community/pages/NovaRecomendacaoPage"));
-export const RecomendacaoDetailPage = lazy(() => import("@/modules/community/pages/RecomendacaoDetailPage"));
-export const AchadosPerdidosPage = lazy(() => import("@/modules/community/pages/AchadosPerdidosPage"));
-export const NovoAchadoPerdidoPage = lazy(() => import("@/modules/community/pages/NovoAchadoPerdidoPage"));
-export const AchadoPerdidoDetailPage = lazy(() => import("@/modules/community/pages/AchadoPerdidoDetailPage"));
-export const AlertasPage = lazy(() => import("@/modules/community/pages/AlertasPage"));
-export const ProblemasPage = lazy(() => import("@/modules/community/issues/pages/ProblemasPage"));
-export const NovoPostPage = lazy(() => import("@/modules/community/pages/NovoPostPage"));
-export const ExamplePostPage = lazy(() => import("@/modules/community/pages/ExamplePostPage"));
+export const GruposPage = lazy(() => import("@/modules/community-groups/pages/GruposPage"));
+export const GrupoDetailPage = lazy(() => import("@/modules/community-groups/pages/GrupoDetailPage"));
+export const EventosPage = lazy(() => import("@/modules/community-events/pages/EventosPage"));
+export const EventoDetailPage = lazy(() => import("@/modules/community-events/pages/EventoDetailPage"));
+export const RecomendacoesPage = lazy(() => import("@/modules/community-recommendations/pages/RecomendacoesPage"));
+export const NovaRecomendacaoPage = lazy(() => import("@/modules/community-recommendations/pages/NovaRecomendacaoPage"));
+export const RecomendacaoDetailPage = lazy(() => import("@/modules/community-recommendations/pages/RecomendacaoDetailPage"));
+export const AchadosPerdidosPage = lazy(() => import("@/modules/community-lost-found/pages/AchadosPerdidosPage"));
+export const NovoAchadoPerdidoPage = lazy(() => import("@/modules/community-lost-found/pages/NovoAchadoPerdidoPage"));
+export const AchadoPerdidoDetailPage = lazy(() => import("@/modules/community-lost-found/pages/AchadoPerdidoDetailPage"));
+export const AlertasPage = lazy(() => import("@/modules/community-alerts/pages/AlertasPage"));
+export const ProblemasPage = lazy(() => import("@/modules/community-issues/pages/ProblemasPage"));
+export const NovoPostPage = lazy(() => import("@/modules/community-feed/pages/NovoPostPage"));
+export const ExamplePostPage = lazy(() => import("@/modules/community-feed/pages/ExamplePostPage"));
 
 // ============================================================
 // 🚗 MOBILIDADE (CORRIDAS, MOTORISTAS, MOTOBOY)

@@ -21,13 +21,11 @@ import {
 } from "@/shared/components/ui/tabs";
 // TODO: Estes componentes devem ser movidos para core/gamification ou core/community
 // Por enquanto, mantém imports de modules (violações documentadas)
-import {
-  CommunityProfileCard,
-  Leaderboard,
-  BadgeGrid,
-  UserLevelBadge,
-} from '@/core/community';
-import { useCommunityProfile } from "@/core/community/hooks/useCommunityProfile";
+import { BadgeGrid } from "@/core/gamification/components/BadgeDisplay";
+import { CommunityProfileCard } from "@/core/gamification/components/CommunityProfileCard";
+import { Leaderboard } from "@/core/gamification/components/Leaderboard";
+import { UserLevelBadge } from "@/core/gamification/components/UserLevelBadge";
+import { useCommunityProfile } from "@/core/profiles/hooks/useCommunityProfile";
 import { Link } from "react-router-dom";
 import { LAUNCH_URLS } from "@/config/territory";
 

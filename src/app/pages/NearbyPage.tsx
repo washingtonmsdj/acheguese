@@ -15,8 +15,8 @@ import { useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { motion } from 'framer-motion';
 import { CanonicalHero } from '@/shared/components/hero/CanonicalHero';
-import { useNearbyEntities } from '@/modules/community/nearby/hooks/useNearbyEntities';
-import type { NearbyEntity } from '@/modules/community/nearby/hooks/useNearbyEntities';
+import { useNearbyEntities } from '@/core/nearby/hooks/useNearbyEntities';
+import type { NearbyEntity } from '@/core/nearby/hooks/useNearbyEntities';
 import {
   NearbyCard,
   NearbySection,
@@ -24,8 +24,8 @@ import {
   NearbyClassifiedsSection,
   NearbyFilters,
   QUICK_CATEGORIES,
-} from '@/modules/community/nearby/components';
-import type { QuickCategoryKey } from '@/modules/community/nearby/components';
+} from '@/core/nearby/components';
+import type { QuickCategoryKey } from '@/core/nearby/components';
 import { Button } from '@/shared/components/ui/button';
 import {
   useLocationContext,

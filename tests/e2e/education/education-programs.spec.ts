@@ -1,25 +1,26 @@
 /**
  * E2E Tests - Education Module: Programs Management
  *
- * Testa o fluxo completo de gestão de programas educacionais.
- * Requer: E2E_EDUCATION_OWNER_EMAIL + E2E_EDUCATION_OWNER_PASSWORD no .env.local
+ * Usa storageState do projeto 'education-authenticated' para autenticação.
  */
 
 import { test, expect } from '@playwright/test';
 import {
-  authenticateAsBusinessOwner,
   ensureEducationProfileExists,
   createTestProgram,
   cleanupEducationData,
-  hasE2ECredentials,
+  loginViaUI,
 } from '../../helpers/education-setup';
+import { gotoAuthenticated } from '../../helpers/education-auth-inject';
 
-const businessId = '7ed16389-6768-4eda-904d-ebaec0d2f400'; // profile_id do E2E business criado via UI
+const businessId = '7ed16389-6768-4eda-904d-ebaec0d2f400';
 const programsUrl = `/perfil/empresas/${businessId}/education/programas`;
 
 async function gotoAndWait(page: import('@playwright/test').Page, url: string) {
+  // Navegar para a URL e aguardar carregamento completo
   await page.goto(url, { waitUntil: 'domcontentloaded' });
-  await page.waitForTimeout(2000);
+  // Aguardar que o app carregue e as requisições do Supabase completem
+  await page.waitForTimeout(5000);
   const acceptBtn = page.getByRole('button', { name: /aceitar|accept/i }).first();
   if (await acceptBtn.isVisible({ timeout: 2000 }).catch(() => false)) {
     await acceptBtn.click();
@@ -29,10 +30,38 @@ async function gotoAndWait(page: import('@playwright/test').Page, url: string) {
 
 test.describe('Education Programs Management', () => {
   test.beforeEach(async ({ page }) => {
-    test.skip(!hasE2ECredentials(), 'Credenciais E2E não configuradas');
-    await authenticateAsBusinessOwner(page, businessId);
+    // Login via UI e navegar diretamente para a URL de destino
+    const email = process.env.E2E_EDUCATION_OWNER_EMAIL;
+    const password = process.env.E2E_EDUCATION_OWNER_PASSWORD;
+    
+    if (!email || !password) {
+      test.skip(true, 'Credenciais E2E não configuradas');
+    }
+
+    await page.goto('/login', { waitUntil: 'domcontentloaded' });
+    const acceptBtn = page.getByRole('button', { name: /aceitar|accept/i }).first();
+    if (await acceptBtn.isVisible({ timeout: 2000 }).catch(() => false)) {
+      await acceptBtn.click();
+    }
+    await page.locator('#login-identifier').fill(email!);
+    await page.locator('#login-password').fill(password!);
+    await page.getByRole('button', { name: 'Entrar' }).click();
+    await page.waitForURL(url => !url.pathname.startsWith('/login'), { timeout: 20000 });
+    
+    // Aguardar que o SessionService carregue completamente
+    // Verificar que o usuário está logado (perfil carregado)
+    await page.waitForFunction(() => {
+      // Verificar se há algum elemento que indica que o usuário está logado
+      const body = document.body.innerText;
+      return body.includes('@e2ecadastro') || body.includes('Empresas') || body.includes('Perfil');
+    }, { timeout: 15000 }).catch(() => {
+      console.log('[beforeEach] Warning: Session may not be fully loaded');
+    });
+    
+    // Aguardar mais um pouco para garantir
+    await page.waitForTimeout(2000);
+    
     await ensureEducationProfileExists(businessId);
-  });
 
   test.afterEach(async () => {
     await cleanupEducationData(businessId);
@@ -44,7 +73,7 @@ test.describe('Education Programs Management', () => {
     const currentUrl = page.url();
     console.log('Current URL:', currentUrl);
 
-    const hasContent = await page.locator('body').evaluate(el => el.innerText.length > 10).catch(() => false);
+    const hasContent = await page.locator('body').evaluate(el => el.innerText.trim().length > 10).catch(() => false);
     expect(hasContent).toBe(true);
   });
 
@@ -62,12 +91,19 @@ test.describe('Education Programs Management', () => {
 
     await gotoAndWait(page, programsUrl);
 
-    const hasContent = await page.locator('body').evaluate(el => el.innerText.length > 10).catch(() => false);
+    const hasContent = await page.locator('body').evaluate(el => el.innerText.trim().length > 10).catch(() => false);
     expect(hasContent).toBe(true);
   });
 
   test('should open create program form if button exists', async ({ page }) => {
     await gotoAndWait(page, programsUrl);
+
+    // Log page content for debugging
+    const bodyText = await page.locator('body').evaluate(el => el.innerText.substring(0, 500));
+    console.log('[debug] Page text:', bodyText.substring(0, 200));
+    
+    const buttons = await page.getByRole('button').allTextContents();
+    console.log('[debug] Buttons:', buttons);
 
     const addBtn = page.getByRole('button', { name: /novo programa|adicionar|criar/i }).first();
     if (!(await addBtn.isVisible({ timeout: 5000 }).catch(() => false))) {
@@ -132,7 +168,7 @@ test.describe('Education Programs Management', () => {
 
     await gotoAndWait(page, programsUrl);
 
-    const hasContent = await page.locator('body').evaluate(el => el.innerText.length > 10).catch(() => false);
+    const hasContent = await page.locator('body').evaluate(el => el.innerText.trim().length > 10).catch(() => false);
     expect(hasContent).toBe(true);
   });
 

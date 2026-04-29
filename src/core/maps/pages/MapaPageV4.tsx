@@ -21,7 +21,7 @@ import { mapEntityProjection } from '../services/MapEntityProjectionService';
 import { DEFAULT_TILE_STYLE } from '../providers/MapProvider';
 import { MAP_RUNTIME_LAYER_KEYS } from '../config/runtimeConfig';
 import { BusinessService } from '@/core/business/services/BusinessService';
-import { communityEventsRuntimeService, type CommunityEvent } from '@/core/community/services/CommunityEventsRuntimeService';
+import { communityEventsRuntimeService, type CommunityEvent } from '@/core/community-events/services/CommunityEventsRuntimeService';
 import { mapLayerRuntimeService } from '@/core/maps/services/MapLayerRuntimeService';
 import { useTerritoryFilter, territoryFilterKey, useResolvedUserLocation } from '@/core/location';
 import { useTerritoryPolygon } from '../hooks/useTerritoryPolygon';

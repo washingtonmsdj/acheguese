@@ -331,12 +331,13 @@ export const MapLibreAdapter = forwardRef<MapLibreAdapterHandle, MapLibreAdapter
       });
 
       // Evento: erro do mapa
-      map.on('error', (e) => {
+      map.on('error', (e: any) => {
         // Suprimir avisos de dados de tiles com valores null (comum em tiles OSM)
         const errorMessage = e.error?.message || '';
         if (errorMessage.includes('Expected value to be of type number, but found null')) {
           // Aviso conhecido: tiles do OSM podem ter propriedades null
           // Não afeta renderização do mapa, apenas log silencioso
+          e.preventDefault?.();
           return;
         }
 
