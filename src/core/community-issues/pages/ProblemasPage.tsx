@@ -7,12 +7,12 @@ import { useSessionContext } from "@/core/session";
 import { buildCommunityTerritoryPresentation } from "@/core/community/utils/communityTerritoryPresentation";
 import { Button } from "@/shared/components/ui/button";
 import { TooltipProvider } from "@/shared/components/ui/tooltip";
-import { CreateIssueModal } from "../components/CreateIssueModal";
-import { IssueCard } from "../components/IssueCard";
-import { IssueCardSkeleton } from "../components/IssueCardSkeleton";
-import { ISSUE_STATUS_LABELS } from "../config/issueConfig";
-import type { IssueStatus } from "../domain/types";
-import { useIssues } from "../hooks/useIssues";
+import { CreateIssueModal } from "@/core/community/issues/components/CreateIssueModal";
+import { IssueCard } from "@/core/community/issues/components/IssueCard";
+import { IssueCardSkeleton } from "@/core/community/issues/components/IssueCardSkeleton";
+import { ISSUE_STATUS_LABELS } from "@/core/community/issues/config/issueConfig";
+import type { IssueStatus } from "@/core/community/issues/domain/types";
+import { useIssues } from "@/core/community/issues/hooks/useIssues";
 
 interface ProblemasPageProps {
   resolved?: ResolvedTerritory;
