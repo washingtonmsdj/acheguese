@@ -1,1 +1,1 @@
-export { default } from "@/core/community/issues/pages/ProblemasPage";
+export { default } from "@/modules/community/issues/pages/ProblemasPage";
