@@ -1,6 +1,16 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Send, User, Mail, Phone, MessageSquare, Check, GraduationCap, Clock } from 'lucide-react';
+import {
+  Send,
+  User,
+  Mail,
+  Phone,
+  MessageSquare,
+  Check,
+  GraduationCap,
+  Clock,
+  LifeBuoy,
+} from 'lucide-react';
 import { Button } from '@/shared/components/ui/button';
 import { Input } from '@/shared/components/ui/input';
 import { Label } from '@/shared/components/ui/label';
@@ -8,6 +18,7 @@ import { Textarea } from '@/shared/components/ui/textarea';
 import { cn } from '@/shared/utils/cn';
 import { useLabels } from '../hooks/useEducationLabels';
 import type { SchoolShift } from '../types';
+import { getSchoolStageOptions, SCHOOL_STAGE_OTHER_VALUE } from '../constants/schoolStageOptions';
 
 export interface EducationLeadFormProps {
   educationProfileId: string;
@@ -16,7 +27,6 @@ export interface EducationLeadFormProps {
   onLeadCreated?: (leadId: string, data: LeadFormData) => void;
   className?: string;
 }
-
 export interface LeadFormData {
   fullName: string;
   email: string;
@@ -24,7 +34,6 @@ export interface LeadFormData {
   childName?: string;
   childAge?: number;
   interestNote?: string;
-  // Campos específicos para matrícula escolar
   guardianName?: string;
   studentName?: string;
   studentAge?: number;
@@ -33,7 +42,7 @@ export interface LeadFormData {
 }
 
 const SHIFT_OPTIONS: { value: SchoolShift; label: string }[] = [
-  { value: 'morning', label: 'Manhã' },
+  { value: 'morning', label: 'Manha' },
   { value: 'afternoon', label: 'Tarde' },
   { value: 'evening', label: 'Noite' },
   { value: 'full_day', label: 'Integral' },
@@ -45,8 +54,10 @@ export function EducationLeadForm({
   onSubmit,
   className,
 }: EducationLeadFormProps) {
+  void educationProfileId;
   const labels = useLabels(nicheKey);
   const isSchoolContext = nicheKey === 'regular_school' || nicheKey === 'daycare';
+  const stageOptions = getSchoolStageOptions(nicheKey ?? undefined);
 
   const [formData, setFormData] = useState<LeadFormData>({
     fullName: '',
@@ -63,6 +74,7 @@ export function EducationLeadForm({
   });
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [desiredStageOption, setDesiredStageOption] = useState('');
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>,
@@ -73,7 +85,7 @@ export function EducationLeadForm({
       [name]:
         name === 'childAge' || name === 'studentAge'
           ? value
-            ? parseInt(value)
+            ? parseInt(value, 10)
             : undefined
           : value,
     }));
@@ -88,7 +100,7 @@ export function EducationLeadForm({
       await onSubmit?.(formData);
       setIsSubmitted(true);
     } catch {
-      // Error handled by parent
+      // handled by parent
     } finally {
       setIsLoading(false);
     }
@@ -99,18 +111,13 @@ export function EducationLeadForm({
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
-        className={cn(
-          'bg-green-50 border border-green-200 rounded-xl p-6 text-center',
-          className,
-        )}
+        className={cn('rounded-xl border border-green-200 bg-green-50 p-6 text-center', className)}
       >
-        <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3">
-          <Check className="w-6 h-6 text-green-600" />
+        <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-green-100">
+          <Check className="h-6 w-6 text-green-600" />
         </div>
-        <h3 className="font-semibold text-green-800 mb-1">Interesse registrado!</h3>
-        <p className="text-sm text-green-600">
-          Entraremos em contato em breve.
-        </p>
+        <h3 className="mb-1 font-semibold text-green-800">Interesse registrado!</h3>
+        <p className="text-sm text-green-600">Entraremos em contato em breve.</p>
       </motion.div>
     );
   }
@@ -122,8 +129,8 @@ export function EducationLeadForm({
       onSubmit={handleSubmit}
       className={cn('space-y-4', className)}
     >
-      <h3 className="font-semibold text-gray-900 flex items-center gap-2">
-        <MessageSquare className="w-5 h-5 text-blue-500" />
+      <h3 className="flex items-center gap-2 font-semibold text-gray-900">
+        <MessageSquare className="h-5 w-5 text-blue-500" />
         {isSchoolContext ? labels.enrollmentLabel : 'Solicitar Informacoes'}
       </h3>
 
@@ -134,7 +141,7 @@ export function EducationLeadForm({
               Nome do responsavel
             </Label>
             <div className="relative mt-1">
-              <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <User className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
               <Input
                 id="guardianName"
                 name="guardianName"
@@ -152,7 +159,7 @@ export function EducationLeadForm({
             Nome completo *
           </Label>
           <div className="relative mt-1">
-            <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <User className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
             <Input
               id="fullName"
               name="fullName"
@@ -170,7 +177,7 @@ export function EducationLeadForm({
             E-mail *
           </Label>
           <div className="relative mt-1">
-            <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
             <Input
               id="email"
               name="email"
@@ -189,14 +196,14 @@ export function EducationLeadForm({
             Telefone *
           </Label>
           <div className="relative mt-1">
-            <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <Phone className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
             <Input
               id="phone"
               name="phone"
               type="tel"
               value={formData.phone}
               onChange={handleChange}
-              placeholder="(88) 99999-9999"
+              placeholder="(71) 99999-9999"
               className="pl-10"
               required
             />
@@ -206,7 +213,7 @@ export function EducationLeadForm({
         <div className="grid grid-cols-2 gap-3">
           <div>
             <Label htmlFor={isSchoolContext ? 'studentName' : 'childName'} className="text-sm">
-              {isSchoolContext ? 'Nome do aluno' : 'Nome do aluno'}
+              Nome do aluno
             </Label>
             <Input
               id={isSchoolContext ? 'studentName' : 'childName'}
@@ -238,22 +245,51 @@ export function EducationLeadForm({
         {isSchoolContext && (
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <Label htmlFor="desiredGrade" className="text-sm flex items-center gap-1">
-                <GraduationCap className="w-3.5 h-3.5 text-gray-400" />
+              <Label htmlFor="desiredStageOption" className="flex items-center gap-1 text-sm">
+                <GraduationCap className="h-3.5 w-3.5 text-gray-400" />
                 {labels.gradeLabel} desejada
               </Label>
-              <Input
-                id="desiredGrade"
-                name="desiredGrade"
-                value={formData.desiredGrade ?? ''}
-                onChange={handleChange}
-                placeholder="Ex: 1º ano, 6º ano"
-                className="mt-1"
-              />
+              <select
+                id="desiredStageOption"
+                value={desiredStageOption}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  setDesiredStageOption(value);
+                  if (value === SCHOOL_STAGE_OTHER_VALUE) return;
+                  const selected = stageOptions.find((opt) => opt.value === value);
+                  setFormData((prev) => ({ ...prev, desiredGrade: selected?.label ?? '' }));
+                }}
+                className="mt-1 h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              >
+                <option value="">Selecione...</option>
+                {stageOptions.map((opt) => (
+                  <option key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </option>
+                ))}
+                <option value={SCHOOL_STAGE_OTHER_VALUE}>Outros (informar manualmente)</option>
+              </select>
+              {desiredStageOption === SCHOOL_STAGE_OTHER_VALUE && (
+                <div className="mt-2 space-y-2">
+                  <Input
+                    id="desiredGrade"
+                    name="desiredGrade"
+                    value={formData.desiredGrade ?? ''}
+                    onChange={handleChange}
+                    placeholder="Informe a etapa/série"
+                  />
+                  <Button type="button" variant="outline" size="sm" asChild className="gap-2">
+                    <a href="/contato">
+                      <LifeBuoy className="h-4 w-4" />
+                      Contatar suporte
+                    </a>
+                  </Button>
+                </div>
+              )}
             </div>
             <div>
-              <Label htmlFor="desiredShift" className="text-sm flex items-center gap-1">
-                <Clock className="w-3.5 h-3.5 text-gray-400" />
+              <Label htmlFor="desiredShift" className="flex items-center gap-1 text-sm">
+                <Clock className="h-3.5 w-3.5 text-gray-400" />
                 {labels.shiftLabel} desejado
               </Label>
               <select
@@ -261,7 +297,7 @@ export function EducationLeadForm({
                 name="desiredShift"
                 value={formData.desiredShift ?? ''}
                 onChange={handleChange}
-                className="mt-1 w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                className="mt-1 h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
               >
                 <option value="">Selecione...</option>
                 {SHIFT_OPTIONS.map((opt) => (
@@ -276,7 +312,7 @@ export function EducationLeadForm({
 
         <div>
           <Label htmlFor="interestNote" className="text-sm">
-            Observações
+            Observacoes
           </Label>
           <Textarea
             id="interestNote"
@@ -290,16 +326,12 @@ export function EducationLeadForm({
         </div>
       </div>
 
-      <Button
-        type="submit"
-        className="w-full bg-blue-600 hover:bg-blue-700"
-        disabled={isLoading}
-      >
+      <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700" disabled={isLoading}>
         {isLoading ? (
           <span className="animate-pulse">Enviando...</span>
         ) : (
           <>
-            <Send className="w-4 h-4 mr-2" />
+            <Send className="mr-2 h-4 w-4" />
             {isSchoolContext ? labels.enrollmentCTA : 'Solicitar informacoes'}
           </>
         )}

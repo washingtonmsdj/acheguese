@@ -8,7 +8,7 @@ import { RolloutService } from '@/core/rollout/services/RolloutService';
 import { createRolloutRepository } from '@/core/rollout/repositories/createRolloutRepository';
 import { createLocationRepository } from '@/core/location/repositories/createLocationRepository';
 import { communityLocationService } from './CommunityLocationService';
-import { ModuleKey } from '@/core/rollout/types';
+import { ModuleKey, RolloutStatus } from '@/core/rollout/types';
 import type { EffectiveRollout } from '@/core/rollout/types';
 import type { ResolvedTerritory } from '@/core/routing/hooks/useResolveTerritoryFromUrl';
 
@@ -32,6 +32,20 @@ export class CommunityRolloutService {
 
   async isCommunityActive(resolved?: ResolvedTerritory): Promise<boolean> {
     const locationId = this.resolveLocationId(resolved);
+    if (!locationId) return false;
+
+    try {
+      const result = await this.rolloutService.isModuleActive({
+        module_key: ModuleKey.COMMUNITY,
+        location_id: locationId,
+      });
+      return result.is_active;
+    } catch {
+      return false;
+    }
+  }
+
+  async isCommunityActiveForLocation(locationId: string): Promise<boolean> {
     if (!locationId) return false;
 
     try {
@@ -88,6 +102,23 @@ export class CommunityRolloutService {
     } catch {
       return null;
     }
+  }
+
+  async setCommunityEnabled(locationId: string, enabled: boolean): Promise<void> {
+    const effective = await this.rolloutService.getEffectiveRollout({
+      module_key: ModuleKey.COMMUNITY,
+      location_id: locationId,
+    });
+
+    await this.rolloutService.setModuleRollout({
+      module_key: ModuleKey.COMMUNITY,
+      location_id: locationId,
+      status: enabled ? RolloutStatus.ACTIVE : RolloutStatus.INACTIVE,
+      config:
+        effective.effective_rollout.config && typeof effective.effective_rollout.config === 'object'
+          ? effective.effective_rollout.config
+          : null,
+    });
   }
 }
 

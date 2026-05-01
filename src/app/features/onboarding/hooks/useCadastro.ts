@@ -20,6 +20,7 @@ export interface CadastroFormData {
   cityName: string;
   neighborhoodId: string;
   neighborhoodName: string;
+  street: string;
 }
 
 const initialFormData: CadastroFormData = {
@@ -34,6 +35,7 @@ const initialFormData: CadastroFormData = {
   cityName: '',
   neighborhoodId: '',
   neighborhoodName: '',
+  street: '',
 };
 
 export function useCadastro() {
@@ -159,6 +161,7 @@ export function useCadastro() {
         city: formData.cityName,
         neighborhood: formData.neighborhoodName,
         state: formData.stateName,
+        street: formData.street.trim(),
         // UUID canônico — cria user_residence com integridade referencial
         neighborhood_id: formData.neighborhoodId || undefined,
       });

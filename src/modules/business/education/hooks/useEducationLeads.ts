@@ -8,17 +8,20 @@ export interface LeadFilters {
   pageSize?: number;
 }
 
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
 export function useEducationLeads(profileId?: string, filters: LeadFilters = {}) {
   const queryClient = useQueryClient();
   const { status, page = 1, pageSize = 25 } = filters;
+  const hasValidProfileId = Boolean(profileId && UUID_REGEX.test(profileId));
 
   const query = useQuery({
     queryKey: ['education', 'leads', profileId, status, page],
     queryFn: async () => {
-      if (!profileId) return { leads: [], totalCount: 0 };
+      if (!hasValidProfileId || !profileId) return { leads: [], totalCount: 0 };
       return educationQueries.listEducationLeads(profileId, { status, page, pageSize });
     },
-    enabled: Boolean(profileId),
+    enabled: hasValidProfileId,
   });
 
   const createMutation = useMutation({
@@ -37,7 +40,7 @@ export function useEducationLeads(profileId?: string, filters: LeadFilters = {})
       desiredGrade?: string;
       desiredShift?: SchoolShift;
     }) => {
-      if (!profileId) throw new Error('Profile ID required');
+      if (!hasValidProfileId || !profileId) throw new Error('Valid profile ID required');
       const result = await educationMutations.createEducationLead({
         education_profile_id: profileId,
         full_name: payload.fullName,

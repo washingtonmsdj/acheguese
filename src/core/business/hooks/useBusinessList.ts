@@ -24,6 +24,7 @@ import { useTerritoryFilter, isTerritoryFilterReady, territoryFilterKey } from "
 import type { Business } from "@/core/business/types/Business";
 import type { BusinessFilters } from "@/core/business/types";
 import type { ResolvedTerritory } from "@/core/routing/hooks/useResolveTerritoryFromUrl";
+import type { TerritoryFilter } from "@/core/location/types";
 
 interface UseBusinessListOptions {
   category?: string;
@@ -35,6 +36,7 @@ interface UseBusinessListOptions {
   routeResolved?: ResolvedTerritory | null;
   /** IDs dos membros ativos do grupo (quando routeResolved.kind === 'group') */
   activeMemberIds?: string[];
+  territoryFilter?: TerritoryFilter;
 }
 
 // 🎯 CONSTANTS
@@ -67,12 +69,14 @@ export function useBusinessList({
   pageSize = DEFAULT_PAGE_SIZE,
   routeResolved,
   activeMemberIds,
+  territoryFilter,
 }: UseBusinessListOptions = {}) {
   const queryClient = useQueryClient();
   const prefetchedRef = useRef(new Set<string>());
 
   // Filtro territorial canônico — suporta location e group
-  const filter = useTerritoryFilter(routeResolved, activeMemberIds);
+  const routeFilter = useTerritoryFilter(routeResolved, activeMemberIds);
+  const filter = territoryFilter ?? routeFilter;
   const filterReady = isTerritoryFilterReady(filter);
   const filterKey = territoryFilterKey(filter);
 

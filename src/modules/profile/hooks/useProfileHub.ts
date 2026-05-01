@@ -32,7 +32,6 @@ import {
 import { useAuth } from '@/core/auth/hooks/useAuth';
 import { useMultiProfileContext } from '@/core/profiles/contexts/multi-profile-runtime-context';
 import { useAppUrls } from '@/core/routing/hooks/useAppUrls';
-import { useFriendlyModuleUrls } from '@/core/routing/hooks/useFriendlyModuleUrls';
 import { BusinessUrlService } from '@/core/business/services/BusinessUrlService';
 import { useDriverProfileIdentity } from '@/core/profiles/services/useDriverProfileIdentity';
 import { usePerfilPageV3 } from './usePerfilPageV3';
@@ -41,12 +40,24 @@ import { canProfileHaveMembers, isProfileVerified } from '../utils/profileDomain
 
 import type { Business } from '@/core/profiles/services/types';
 
+const GLOBAL_MODULE_URLS = {
+  business: '/empresas',
+  services: '/servicos',
+  gastronomy: '/gastronomia',
+  gastronomyFavorites: '/gastronomia/favoritos',
+  community: '/comunidade',
+  jobs: '/vagas',
+  events: '/eventos',
+  touristPoints: '/pontos-turisticos',
+  ranking: '/ranking',
+  analytics: '/analytics',
+} as const;
+
 export function useProfileHub() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { activeProfile, allProfiles, switchProfile } = useMultiProfileContext();
   const appUrls = useAppUrls();
-  const moduleUrls = useFriendlyModuleUrls();
 
   const {
     profile,
@@ -271,58 +282,58 @@ export function useProfileHub() {
         icon: Building2,
         title: 'Empresas do territorio',
         description: 'Explore empresas, presenca local e operacao publica ja ativa.',
-        onClick: () => navigate(moduleUrls.business),
+        onClick: () => navigate('/empresas'),
       },
       {
         icon: Wrench,
         title: 'Servicos',
         description: 'Descubra profissionais e servicos publicados no territorio atual.',
-        onClick: () => navigate(moduleUrls.services),
+        onClick: () => navigate('/servicos'),
       },
       {
         icon: UtensilsCrossed,
         title: 'Gastronomia',
         description: 'Acesse a vitrine gastronomica e os negocios com vertical ativa.',
-        onClick: () => navigate(moduleUrls.gastronomy),
+        onClick: () => navigate('/gastronomia'),
       },
       {
         icon: Bookmark,
         title: 'Favoritos gastro',
         description: 'Entrada rapida para seus favoritos de gastronomia.',
-        onClick: () => navigate(moduleUrls.gastronomyFavorites),
+        onClick: () => navigate('/gastronomia/favoritos'),
       },
       {
         icon: MessageSquare,
         title: 'Comunidade',
         description: 'Postagens, recomendacoes, conversas e conteudo territorial.',
-        onClick: () => navigate(moduleUrls.community),
+        onClick: () => navigate('/comunidade'),
       },
       {
         icon: Briefcase,
         title: 'Vagas',
         description: 'Veja oportunidades e movimentacao economica local.',
-        onClick: () => navigate(moduleUrls.jobs),
+        onClick: () => navigate('/vagas'),
       },
       {
         icon: CalendarDays,
         title: 'Eventos',
         description: 'Acompanhe eventos ativos e programacao territorial existente.',
-        onClick: () => navigate(moduleUrls.events),
+        onClick: () => navigate('/eventos'),
       },
       {
         icon: Globe,
         title: 'Pontos turisticos',
         description: 'Vertical publica de pontos turisticos e conteudo territorial.',
-        onClick: () => navigate(moduleUrls.touristPoints),
+        onClick: () => navigate('/pontos-turisticos'),
       },
       {
         icon: Crown,
         title: 'Ranking local',
         description: 'Acesse ranking, relevancia e sinais de destaque do territorio.',
-        onClick: () => navigate(moduleUrls.ranking),
+        onClick: () => navigate('/ranking'),
       },
     ],
-    [navigate, moduleUrls],
+    [navigate],
   );
 
   // Próximas ações
@@ -505,6 +516,6 @@ export function useProfileHub() {
     refreshWorkspace,
     navigate,
     appUrls,
-    moduleUrls,
+    moduleUrls: GLOBAL_MODULE_URLS,
   };
 }

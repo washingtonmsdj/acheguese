@@ -17,6 +17,12 @@ import type {
   EducationEvent,
 } from '../types';
 
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+function isValidUuid(value?: string | null): value is string {
+  return Boolean(value && UUID_REGEX.test(value));
+}
+
 // ============================================================
 // TIPOS INTERNOS
 // ============================================================
@@ -186,6 +192,9 @@ export async function listEducationLeads(
     pageSize?: number;
   } = {},
 ): Promise<{ leads: EducationLead[]; totalCount: number }> {
+  if (!isValidUuid(profileId)) {
+    return { leads: [], totalCount: 0 };
+  }
   const { status, page = 1, pageSize = 25 } = options;
 
   let query = supabase
@@ -355,6 +364,9 @@ export interface EventTypeCounts {
  * Conta leads por status para analytics
  */
 export async function countLeadsByStatus(profileId: string): Promise<LeadStatusCounts> {
+  if (!isValidUuid(profileId)) {
+    return { total: 0, new: 0, contacted: 0, visit_scheduled: 0, proposal_sent: 0, enrolled: 0, lost: 0 };
+  }
   const { data, error } = await supabase
     .from('education_leads')
     .select('status')
@@ -390,6 +402,7 @@ export async function countLeadsByStatus(profileId: string): Promise<LeadStatusC
  * Calcula métricas de leads por série (desired_grade)
  */
 export async function getLeadsByGradeMetrics(profileId: string): Promise<GradeLeadMetrics[]> {
+  if (!isValidUuid(profileId)) return [];
   const { data, error } = await supabase
     .from('education_leads')
     .select('desired_grade, status')
@@ -426,6 +439,7 @@ export async function getLeadsByGradeMetrics(profileId: string): Promise<GradeLe
  * Calcula métricas de leads por turno (desired_shift)
  */
 export async function getLeadsByShiftMetrics(profileId: string): Promise<ShiftLeadMetrics[]> {
+  if (!isValidUuid(profileId)) return [];
   const { data, error } = await supabase
     .from('education_leads')
     .select('desired_shift, status')
@@ -470,6 +484,9 @@ export async function getLeadsByShiftMetrics(profileId: string): Promise<ShiftLe
  * Calcula métricas de matrícula nos programas (using max_capacity e current_enrollment)
  */
 export async function getProgramEnrollmentMetrics(profileId: string): Promise<ProgramEnrollmentMetrics> {
+  if (!isValidUuid(profileId)) {
+    return { total: 0, active: 0, totalVacancies: 0, filledVacancies: 0 };
+  }
   const { data, error } = await supabase
     .from('education_programs')
     .select('is_active, max_capacity, current_enrollment')
@@ -505,6 +522,9 @@ export async function getProgramEnrollmentMetrics(profileId: string): Promise<Pr
  * Conta eventos por tipo (school_event_type)
  */
 export async function countEventsByType(profileId: string): Promise<EventTypeCounts> {
+  if (!isValidUuid(profileId)) {
+    return { total: 0, upcoming: 0, schoolToursCount: 0, openHouseCount: 0, enrollmentFairCount: 0 };
+  }
   const { data, error } = await supabase
     .from('education_events')
     .select('school_event_type, starts_at')
@@ -543,6 +563,7 @@ export async function countEventsByType(profileId: string): Promise<EventTypeCou
  * Calcula taxa de conversão de leads
  */
 export async function getLeadConversionRate(profileId: string): Promise<{ rate: number; avgDays: number }> {
+  if (!isValidUuid(profileId)) return { rate: 0, avgDays: 0 };
   const { data, error } = await supabase
     .from('education_leads')
     .select('status, first_contact_at, created_at')
@@ -693,6 +714,9 @@ export interface EventMetrics {
  * Conta visualizacoes de perfil
  */
 export async function getProfileViewMetrics(profileId: string): Promise<ProfileViewMetrics> {
+  if (!isValidUuid(profileId)) {
+    return { totalViews: 0, uniqueSessions: 0, viewsLast7Days: 0, viewsLast30Days: 0 };
+  }
   const now = new Date();
   const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString();
   const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString();
@@ -723,6 +747,12 @@ export async function getProfileViewMetrics(profileId: string): Promise<ProfileV
  * Calcula funil de conversao
  */
 export async function getConversionFunnel(profileId: string): Promise<ConversionFunnelMetrics> {
+  if (!isValidUuid(profileId)) {
+    return {
+      profileViews: 0, whatsappClicks: 0, ctaClicks: 0, leadsSubmitted: 0,
+      leadsContacted: 0, leadsVisited: 0, leadsEnrolled: 0, leadsLost: 0,
+    };
+  }
   const { data, error } = await supabase
     .from('education_analytics_events')
     .select('event_type, lead_id')
@@ -770,6 +800,7 @@ export async function getConversionFunnel(profileId: string): Promise<Conversion
  * Calcula views e conversao por programa
  */
 export async function getProgramViewMetrics(profileId: string): Promise<ProgramViewMetrics[]> {
+  if (!isValidUuid(profileId)) return [];
   const { data: programs, error: progError } = await supabase
     .from('education_programs')
     .select('id, name')
@@ -819,6 +850,7 @@ export async function getProgramViewMetrics(profileId: string): Promise<ProgramV
  * Calcula views e interesse por evento
  */
 export async function getEventMetrics(profileId: string): Promise<EventMetrics[]> {
+  if (!isValidUuid(profileId)) return [];
   const { data: events, error: eventError } = await supabase
     .from('education_events')
     .select('id, title')

@@ -1,13 +1,15 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { CommunityService } from "@/core/community/services/CommunityService"; // ✅ LOTE 7
+import { CommunityService } from "@/core/community/services/CommunityService";
+import type { TerritoryFilter } from "@/core/location";
 
 export interface NewGroupData {
   name: string;
   description: string;
   category: string;
   is_private: boolean;
+  location_id?: string;
 }
 
 interface Group {
@@ -19,10 +21,17 @@ interface Group {
   created_at: string;
   is_member: boolean;
   is_private: boolean;
+  location_id?: string | null;
 }
 
-export function useGrupos() {
+interface UseGruposOptions {
+  territoryFilter?: TerritoryFilter;
+  defaultLocationId?: string;
+}
+
+export function useGrupos(options: UseGruposOptions = {}) {
   const queryClient = useQueryClient();
+  const { territoryFilter, defaultLocationId } = options;
   const [searchQuery, setSearchQuery] = useState("");
   const [tab, setTab] = useState("all");
   const [showCreate, setShowCreate] = useState(false);
@@ -32,13 +41,18 @@ export function useGrupos() {
     description: "",
     category: "",
     is_private: false,
+    location_id: defaultLocationId,
   });
 
+  useEffect(() => {
+    if (!defaultLocationId) return;
+    setNewGroup((prev) => ({ ...prev, location_id: prev.location_id ?? defaultLocationId }));
+  }, [defaultLocationId]);
+
   const { data: groups = [], isLoading } = useQuery({
-    queryKey: ["grupos", searchQuery, tab],
+    queryKey: ["grupos", searchQuery, tab, territoryFilter],
     queryFn: async () => {
-      // ✅ LOTE 7 - CommunityService.getGroups
-      const data = await CommunityService.getGroups(searchQuery || undefined);
+      const data = await CommunityService.getGroups(searchQuery || undefined, territoryFilter);
       return (data || []) as Group[];
     },
   });
@@ -49,13 +63,21 @@ export function useGrupos() {
 
   const handleCreate = useCallback(async () => {
     if (!newGroup.name) {
-      toast.error("Nome obrigatório");
+      toast.error("Nome obrigatorio");
       return;
     }
+
+    if (!newGroup.location_id && !defaultLocationId) {
+      toast.error("Bairro obrigatorio para criar grupo");
+      return;
+    }
+
     setCreating(true);
     try {
-      // ✅ LOTE 7 - CommunityService.createGroup
-      const result = await CommunityService.createGroup(newGroup);
+      const result = await CommunityService.createGroup({
+        ...newGroup,
+        location_id: newGroup.location_id ?? defaultLocationId,
+      });
       if (!result) throw new Error("Erro ao criar grupo");
       toast.success("Grupo criado!");
       setShowCreate(false);
@@ -64,6 +86,7 @@ export function useGrupos() {
         description: "",
         category: "",
         is_private: false,
+        location_id: defaultLocationId,
       });
       queryClient.invalidateQueries({ queryKey: ["grupos"] });
     } catch {
@@ -71,7 +94,7 @@ export function useGrupos() {
     } finally {
       setCreating(false);
     }
-  }, [newGroup, queryClient]);
+  }, [defaultLocationId, newGroup, queryClient]);
 
   const handleJoin = useCallback(async (_groupId: string) => {
     toast.info("Funcionalidade em desenvolvimento");

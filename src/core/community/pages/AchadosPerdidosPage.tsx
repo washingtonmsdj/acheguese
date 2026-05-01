@@ -1,6 +1,6 @@
 import React from "react";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Search,
@@ -73,7 +73,13 @@ export default function AchadosPerdidosPage() {
 
   // âœ… VerificaÃ§Ã£o de autenticaÃ§Ã£o
   const { activeProfile } = useSessionContext();
-  const { hasHome, loading: territoryLoading } = useUserTerritory();
+  const { hasHome, homeDistrict, loading: territoryLoading } = useUserTerritory();
+  const territoryFilter = useMemo(
+    () => homeDistrict
+      ? { scope: "location" as const, location_id: homeDistrict.id }
+      : { scope: "none" as const },
+    [homeDistrict],
+  );
 
   const {
     items,
@@ -97,7 +103,7 @@ export default function AchadosPerdidosPage() {
 
       // âœ… LOTE 9A - Usar lostFoundService.getPostsPage (SSOT para lost_found_posts)
       const data = await lostFoundService.getPostsPage(
-        { tipo: filterTipo, categoria: filterCategoria },
+        { tipo: filterTipo, categoria: filterCategoria, territoryFilter },
         from,
         to,
       );
@@ -127,6 +133,7 @@ export default function AchadosPerdidosPage() {
     [
       filterTipo,
       filterCategoria,
+      territoryFilter,
       PAGE_SIZE,
       setLoading,
       setInitialLoading,
@@ -137,10 +144,10 @@ export default function AchadosPerdidosPage() {
   useEffect(() => {
     reset();
     fetchPage(0);
-  }, [filterTipo, filterCategoria]);
+  }, [filterTipo, filterCategoria, reset, fetchPage]);
   useEffect(() => {
     if (page > 0) fetchPage(page);
-  }, [page]);
+  }, [page, fetchPage]);
 
   const { sentinelRef } = useInfiniteScroll({
     hasMore,
@@ -199,13 +206,13 @@ export default function AchadosPerdidosPage() {
           <div className="text-center p-8 max-w-md">
             <Users className="h-16 w-16 text-amber-400 mx-auto mb-4" />
             <h2 className="text-xl font-semibold text-white mb-4">
-              Complete seu cadastro
+              Escolha seu bairro
             </h2>
             <p className="text-gray-400 mb-6">
-              Para acessar os achados e perdidos, vocÃª precisa cadastrar seu bairro no perfil.
+              Para acessar achados e perdidos da comunidade, escolha seu bairro principal.
             </p>
-            <Button onClick={() => window.location.href = appUrls.profile.central} className="bg-teal-500 hover:bg-teal-400">
-              Completar Perfil
+            <Button onClick={() => navigate(appUrls.community.home)} className="bg-teal-500 hover:bg-teal-400">
+              Escolher meu bairro
             </Button>
           </div>
         </div>

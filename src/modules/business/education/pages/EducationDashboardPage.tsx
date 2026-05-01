@@ -165,6 +165,32 @@ export function EducationDashboardPage() {
         </div>
       )}
 
+      {profile && (
+        <Card className="mb-8">
+          <CardHeader>
+            <CardTitle className="text-base">Infraestrutura cadastrada</CardTitle>
+          </CardHeader>
+          <CardContent className="grid grid-cols-2 gap-3 md:grid-cols-4">
+            <div className="rounded-lg border p-3">
+              <div className="text-xs text-muted-foreground">Recursos basicos</div>
+              <div className="text-xl font-bold">{profile.school_basic_resources?.length ?? 0}</div>
+            </div>
+            <div className="rounded-lg border p-3">
+              <div className="text-xs text-muted-foreground">Acessibilidade</div>
+              <div className="text-xl font-bold">{profile.school_accessibility_features?.length ?? 0}</div>
+            </div>
+            <div className="rounded-lg border p-3">
+              <div className="text-xs text-muted-foreground">Equipamentos</div>
+              <div className="text-xl font-bold">{profile.school_equipment_features?.length ?? 0}</div>
+            </div>
+            <div className="rounded-lg border p-3">
+              <div className="text-xs text-muted-foreground">Instalacoes</div>
+              <div className="text-xl font-bold">{profile.school_facility_features?.length ?? 0}</div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Menu */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {menuItems.map((item, index) => (

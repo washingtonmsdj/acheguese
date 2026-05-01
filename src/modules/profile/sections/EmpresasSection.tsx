@@ -27,7 +27,6 @@ export function EmpresasSection({
   showBusinessOnboarding,
   navigate,
   appUrls,
-  moduleUrls,
   handleBusinessClick,
   copyToClipboard,
 }: EmpresasSectionProps) {
@@ -67,13 +66,13 @@ export function EmpresasSection({
             icon={ArrowRight}
             title="Explorar empresas do territorio"
             description="Ver ecossistema de empresas e referencias locais."
-            onClick={() => navigate(moduleUrls.business)}
+            onClick={() => navigate("/empresas")}
           />
           <HubLinkCard
             icon={Briefcase}
             title="Publicar vaga"
             description="Abra uma vaga e publique no modulo de empregos."
-            onClick={() => navigate(moduleUrls.jobs || "/vagas/publicar")}
+            onClick={() => navigate("/vagas/publicar")}
           />
           <HubLinkCard
             icon={LayoutGrid}
@@ -85,7 +84,7 @@ export function EmpresasSection({
             icon={BarChart3}
             title="Analytics geral"
             description="Acesse indicadores agregados e visitantes."
-            onClick={() => navigate(moduleUrls.analytics || "/analytics")}
+            onClick={() => navigate("/analytics")}
           />
           {primaryBusinessModule ? (
             <HubLinkCard

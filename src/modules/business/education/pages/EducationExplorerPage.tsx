@@ -13,7 +13,7 @@
  * Consome SSOT existente:
  *  - useEducationList (hook)
  *  - getPublicNiches / getNicheByKey (registry)
- *  - educationLandingPreviewProfiles (mocks de preview, isolados em /mocks)
+ *  - educationLandingPreviewProfiles (base publica inicial, isolada em /mocks)
  *
  * @module education
  * @version 3.0.0
@@ -35,7 +35,6 @@ import {
   ChevronRight,
   Layers,
   Users,
-  Clock,
   Shield,
   Building2,
   School,
@@ -75,6 +74,7 @@ import { Switch } from '@/shared/components/ui/switch';
 import { Label } from '@/shared/components/ui/label';
 import { ScrollArea } from '@/shared/components/ui/scroll-area';
 import { cn } from '@/shared/utils/cn';
+import { useResolveTerritoryFromUrl } from '@/core/routing/hooks/useResolveTerritoryFromUrl';
 
 import { useEducationList } from '../hooks/useEducationList';
 import { getPublicNiches, getNicheByKey } from '../niches/registry';
@@ -125,6 +125,30 @@ const AUDIENCES = [
   { key: 'all', label: 'Todas as idades' },
 ] as const;
 
+const SCHOOL_NETWORK_FILTERS = [
+  { key: 'municipal', label: 'Municipal' },
+  { key: 'state', label: 'Estadual' },
+  { key: 'federal', label: 'Federal' },
+  { key: 'private', label: 'Privada' },
+] as const;
+
+const INSTITUTION_TYPE_FILTERS = [
+  { key: 'cmei', label: 'CMEI' },
+  { key: 'creche', label: 'Creche' },
+  { key: 'escola', label: 'Escola' },
+  { key: 'colegio', label: 'Colegio' },
+  { key: 'curso', label: 'Curso' },
+] as const;
+
+const INFRASTRUCTURE_FILTERS = [
+  { key: 'library', label: 'Biblioteca' },
+  { key: 'laboratory', label: 'Laboratorio' },
+  { key: 'sports_court', label: 'Quadra' },
+  { key: 'pool', label: 'Piscina' },
+  { key: 'accessibility', label: 'Acessibilidade' },
+  { key: 'internet', label: 'Internet' },
+] as const;
+
 const SORTERS = [
   { key: 'relevance', label: 'Relevancia' },
   { key: 'name_asc', label: 'A-Z' },
@@ -137,26 +161,116 @@ type ViewMode = 'grid' | 'list';
 interface FilterState {
   query: string;
   niches: string[];
+  schoolNetworks: string[];
+  institutionTypes: string[];
+  infrastructure: string[];
   modalities: string[];
   audiences: string[];
   district: string | null;
   priceRange: [number, number];
   onlyAvailable: boolean;
-  minRating: number;
   sort: SortKey;
 }
 
 const INITIAL_FILTERS: FilterState = {
   query: '',
   niches: [],
+  schoolNetworks: [],
+  institutionTypes: [],
+  infrastructure: [],
   modalities: [],
   audiences: [],
   district: null,
   priceRange: [0, 3000],
   onlyAvailable: false,
-  minRating: 0,
   sort: 'relevance',
 };
+
+const SCHOOL_NETWORK_LABELS: Record<string, string> = {
+  municipal: 'Municipal',
+  state: 'Estadual',
+  federal: 'Federal',
+  private: 'Privada',
+};
+
+const CARD_HIDDEN_STAT_LABELS = new Set(['ensino', 'fonte']);
+
+function sanitizePublicEducationText(value?: string | null): string {
+  if (!value) return '';
+  return value
+    .replace(/dados iniciais baseados[^.]*\./gi, '')
+    .replace(/lista de espera/gi, '')
+    .replace(/consultar valor/gi, '')
+    .replace(/saber mais/gi, '')
+    .replace(/\s{2,}/g, ' ')
+    .trim();
+}
+
+function getInstitutionTypeKey(profile: EducationProfile): string {
+  const name = profile.institution_type.toLowerCase();
+  const niche = profile.niche_key;
+
+  if (name.includes('centro municipal de educacao infantil') || name.includes('cmei')) {
+    return 'cmei';
+  }
+
+  if (niche === 'daycare' || name.includes('creche')) {
+    return 'creche';
+  }
+
+  if (name.includes('colegio') || name.includes('colégio')) {
+    return 'colegio';
+  }
+
+  if (name.includes('curso') || niche === 'prep_course' || niche === 'language_school') {
+    return 'curso';
+  }
+
+  return 'escola';
+}
+
+function labelFromOptions(options: readonly { key: string; label: string }[], key: string) {
+  return options.find((option) => option.key === key)?.label ?? key;
+}
+
+function profileHasInfrastructure(profile: EducationProfile, key: string): boolean {
+  const facilities = profile.school_facility_features ?? [];
+  const access = profile.school_accessibility_features ?? [];
+  const equipment = profile.school_equipment_features ?? [];
+  if (key === 'library') return facilities.includes('library') || facilities.includes('reading_room');
+  if (key === 'laboratory') return facilities.includes('science_lab') || facilities.includes('computer_lab');
+  if (key === 'sports_court') return facilities.includes('sports_court') || facilities.includes('covered_sports_court') || facilities.includes('open_sports_court');
+  if (key === 'pool') return facilities.includes('pool');
+  if (key === 'accessibility') return access.length > 0;
+  if (key === 'internet') return equipment.includes('internet');
+  return false;
+}
+
+function buildWhatsAppHref(phone?: string | null): string | null {
+  if (!phone) return null;
+
+  const digits = phone.replace(/\D/g, '');
+  if (!digits) return null;
+
+  const normalized = digits.startsWith('55') ? digits : `55${digits.replace(/^0+/, '')}`;
+  return `https://wa.me/${normalized}`;
+}
+
+function slugToLabel(slug: string): string {
+  const LOWERCASE_WORDS = new Set(['de', 'da', 'do', 'das', 'dos', 'e', 'em', 'a', 'o']);
+  return slug
+    .split('-')
+    .map((word, i) =>
+      i === 0 || !LOWERCASE_WORDS.has(word)
+        ? word.charAt(0).toUpperCase() + word.slice(1)
+        : word
+    )
+    .join(' ');
+}
+
+function normalizeSlug(value?: string | null): string {
+  return (value ?? '').trim().toLowerCase().replace(/\s+/g, '-');
+}
 
 // ============================================================================
 // COMPONENTES INTERNOS
@@ -228,12 +342,15 @@ function EditorialCard({
     ? `/educacao/${route.state}/${route.city}/${route.district}/${route.slug}`
     : '#';
 
-  const whatsappHref = profile.whatsapp_number
-    ? `https://wa.me/${profile.whatsapp_number.replace(/\D/g, '')}`
-    : null;
+  const whatsappHref = buildWhatsAppHref(profile.whatsapp_number);
 
   const programs = preview?.programs ?? [];
   const stats = preview?.stats ?? [];
+  const visibleStats = stats.filter(
+    (stat) =>
+      !CARD_HIDDEN_STAT_LABELS.has(stat.label.toLowerCase()) &&
+      !(profile.school_network && stat.label.toLowerCase() === 'rede')
+  );
 
   if (view === 'list') {
     return (
@@ -252,7 +369,7 @@ function EditorialCard({
           <Icon className="h-12 w-12 text-white drop-shadow" />
           {isPreviewSource && (
             <Badge className="absolute left-3 top-3 border-white/30 bg-white/20 text-[10px] uppercase tracking-wide text-white backdrop-blur-sm">
-              Preview
+              Censo Escolar
             </Badge>
           )}
         </div>
@@ -273,7 +390,7 @@ function EditorialCard({
               {profile.institution_type}
             </h3>
             <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">
-              {profile.summary ?? 'Instituicao educacional cadastrada na vitrine.'}
+              {sanitizePublicEducationText(profile.summary) || 'Instituicao educacional cadastrada na vitrine.'}
             </p>
             {programs.length > 0 && (
               <div className="mt-3 flex flex-wrap gap-1.5">
@@ -297,12 +414,6 @@ function EditorialCard({
                 <MapPin className="h-3.5 w-3.5" /> {route.district}
               </span>
             )}
-            <span className="inline-flex items-center gap-1">
-              <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" /> 4.8
-            </span>
-            <span className="inline-flex items-center gap-1">
-              <Clock className="h-3.5 w-3.5" /> Resposta em ate 24h
-            </span>
           </div>
         </div>
 
@@ -341,103 +452,100 @@ function EditorialCard({
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: Math.min(index * 0.04, 0.3) }}
-      className="group relative flex h-full flex-col overflow-hidden rounded-3xl border border-border bg-card transition-all hover:-translate-y-1 hover:border-primary/30 hover:shadow-xl"
+      className="group relative flex h-full flex-col overflow-hidden rounded-xl border border-border bg-card transition-all hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-lg"
     >
-      <div className={cn('relative h-32 bg-gradient-to-br p-5', gradient)}>
-        <div className="flex items-start justify-between">
-          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/20 backdrop-blur-sm">
-            <Icon className="h-6 w-6 text-white" />
+      <div className={cn('h-1 bg-gradient-to-r', gradient)} />
+
+      <div className="flex flex-1 flex-col p-3">
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0 space-y-2">
+            <div
+              className="flex h-12 w-12 items-center justify-center rounded-lg border border-border bg-background text-primary shadow-sm"
+              aria-label="Espaco para logo da escola"
+            >
+              <Icon className="h-5 w-5" />
+            </div>
+            <div className="flex min-w-0 flex-wrap items-center gap-1.5">
+              <Badge variant="secondary" className="px-2 py-0 text-[10px]">
+                {profile.school_network
+                  ? SCHOOL_NETWORK_LABELS[profile.school_network] ?? 'Escola'
+                  : nicheConfig?.displayName ?? profile.niche_key}
+              </Badge>
+              {isPreviewSource && (
+                <Badge variant="outline" className="px-1.5 py-0 text-[9px] uppercase tracking-wide">
+                  Publica
+                </Badge>
+              )}
+            </div>
           </div>
           <button
             type="button"
             onClick={() => onCompareToggle(profile.id)}
             className={cn(
-              'inline-flex h-8 w-8 items-center justify-center rounded-full border transition',
+              'inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border transition',
               comparing
-                ? 'border-white bg-white text-primary'
-                : 'border-white/40 bg-white/10 text-white hover:bg-white/20'
+                ? 'border-primary bg-primary text-primary-foreground'
+                : 'border-border text-muted-foreground hover:border-primary/40 hover:text-primary'
             )}
             aria-label={comparing ? 'Remover do comparador' : 'Adicionar ao comparador'}
           >
             {comparing ? <Check className="h-4 w-4" /> : <Heart className="h-4 w-4" />}
           </button>
         </div>
-        {isPreviewSource && (
-          <Badge className="absolute bottom-3 left-5 border-white/30 bg-white/20 text-[10px] uppercase tracking-wide text-white backdrop-blur-sm">
-            Preview
-          </Badge>
-        )}
-      </div>
 
-      <div className="flex flex-1 flex-col p-5">
-        <div className="flex flex-wrap items-center gap-2">
-          <Badge variant="secondary" className="text-[11px]">
-            {nicheConfig?.displayName ?? profile.niche_key}
-          </Badge>
-          {nicheConfig?.isBeta && (
-            <Badge variant="outline" className="text-[11px]">
-              Beta
-            </Badge>
-          )}
-        </div>
-        <h3 className="mt-2 text-lg font-bold text-foreground transition-colors group-hover:text-primary">
-          {profile.institution_type}
-        </h3>
-        <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">
-          {profile.summary ?? 'Instituicao educacional cadastrada na vitrine.'}
-        </p>
+        <Link to={detailHref} className="mt-3 block">
+          <h3 className="line-clamp-2 break-words text-[15px] font-bold leading-5 text-foreground transition-colors group-hover:text-primary">
+            {profile.institution_type}
+          </h3>
+        </Link>
 
-        {stats.length > 0 && (
-          <div className="mt-4 grid grid-cols-2 gap-2">
-            {stats.slice(0, 2).map((s) => (
+        {visibleStats.length > 0 && (
+          <div className="mt-3 grid grid-cols-2 gap-1.5">
+            {visibleStats.slice(0, 2).map((s) => (
               <div
                 key={s.label}
-                className="rounded-xl bg-muted/60 px-3 py-2 transition-colors group-hover:bg-muted"
+                className="min-w-0 rounded-lg border border-border/60 bg-muted/40 px-2 py-1.5 transition-colors group-hover:bg-muted/70"
               >
-                <div className="text-base font-bold text-foreground">{s.value}</div>
-                <div className="text-[11px] text-muted-foreground">{s.label}</div>
+                <div className="truncate text-xs font-bold capitalize text-foreground">{s.value}</div>
+                <div className="truncate text-[10px] text-muted-foreground">{s.label}</div>
               </div>
             ))}
           </div>
         )}
 
         {programs.length > 0 && (
-          <div className="mt-4 space-y-1.5">
-            {programs.slice(0, 2).map((p) => (
-              <div key={p.id} className="flex items-start gap-2 text-xs text-muted-foreground">
-                <Check className="mt-0.5 h-3.5 w-3.5 shrink-0 text-emerald-500" />
+          <div className="mt-3 space-y-1">
+            {programs.slice(0, 1).map((p) => (
+              <div key={p.id} className="flex items-start gap-1.5 text-xs leading-5 text-muted-foreground">
+                <Check className="mt-0.5 h-3 w-3 shrink-0 text-emerald-500" />
                 <span className="line-clamp-1">{p.name}</span>
               </div>
             ))}
           </div>
         )}
 
-        <div className="mt-auto flex items-center justify-between pt-5 text-xs text-muted-foreground">
+        <div className="mt-auto flex items-center justify-between gap-2 pt-4 text-[11px] text-muted-foreground">
           {route?.district ? (
-            <span className="inline-flex items-center gap-1">
-              <MapPin className="h-3 w-3" />
-              {route.district}
+            <span className="inline-flex min-w-0 items-center gap-1">
+              <MapPin className="h-3 w-3 shrink-0" />
+              <span className="truncate capitalize">{route.district.replace(/-/g, ' ')}</span>
             </span>
           ) : (
             <span />
           )}
-          <span className="inline-flex items-center gap-1">
-            <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
-            4.8
-          </span>
         </div>
 
-        <div className="mt-4 flex gap-2">
+        <div className="mt-3 flex gap-1.5 border-t border-border/60 pt-3">
           <Link to={detailHref} className="flex-1">
-            <Button size="sm" className="w-full rounded-full">
-              Ver detalhes
-              <ChevronRight className="ml-1 h-4 w-4" />
+            <Button size="sm" className="h-8 w-full rounded-full px-3 text-xs">
+              Detalhes
+              <ChevronRight className="ml-1 h-3.5 w-3.5" />
             </Button>
           </Link>
           {whatsappHref && (
             <a href={whatsappHref} target="_blank" rel="noreferrer">
-              <Button size="sm" variant="outline" className="rounded-full">
-                <MessageCircle className="h-4 w-4" />
+              <Button size="sm" variant="outline" className="h-8 rounded-full px-2.5">
+                <MessageCircle className="h-3.5 w-3.5" />
               </Button>
             </a>
           )}
@@ -449,14 +557,13 @@ function EditorialCard({
 
 function SkeletonCard() {
   return (
-    <div className="overflow-hidden rounded-3xl border border-border bg-card">
-      <Skeleton className="h-32 w-full" />
-      <div className="space-y-3 p-5">
+    <div className="overflow-hidden rounded-2xl border border-border bg-card">
+      <Skeleton className="h-20 w-full" />
+      <div className="space-y-2.5 p-3.5">
         <Skeleton className="h-4 w-1/3" />
         <Skeleton className="h-5 w-3/4" />
         <Skeleton className="h-4 w-full" />
-        <Skeleton className="h-4 w-5/6" />
-        <Skeleton className="h-9 w-full rounded-full" />
+        <Skeleton className="h-8 w-full rounded-full" />
       </div>
     </div>
   );
@@ -477,7 +584,7 @@ function FilterPanel({
   resultsCount: number;
   onClear: () => void;
 }) {
-  const toggle = <K extends 'niches' | 'modalities' | 'audiences'>(
+  const toggle = <K extends 'niches' | 'schoolNetworks' | 'institutionTypes' | 'infrastructure' | 'modalities' | 'audiences'>(
     key: K,
     value: string
   ) => {
@@ -514,6 +621,84 @@ function FilterPanel({
               >
                 <Icon className="h-4 w-4 shrink-0" />
                 <span className="line-clamp-1">{n.displayName}</span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      <Separator />
+
+      <div>
+        <h3 className="text-sm font-semibold text-foreground">Rede</h3>
+        <div className="mt-3 flex flex-wrap gap-2">
+          {SCHOOL_NETWORK_FILTERS.map((network) => {
+            const active = filters.schoolNetworks.includes(network.key);
+            return (
+              <button
+                key={network.key}
+                type="button"
+                onClick={() => toggle('schoolNetworks', network.key)}
+                className={cn(
+                  'rounded-full border px-3 py-1 text-xs transition',
+                  active
+                    ? 'border-primary bg-primary/10 text-primary'
+                    : 'border-border/70 hover:border-primary/30'
+                )}
+              >
+                {network.label}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      <Separator />
+
+      <div>
+        <h3 className="text-sm font-semibold text-foreground">Tipo de unidade</h3>
+        <div className="mt-3 flex flex-wrap gap-2">
+          {INSTITUTION_TYPE_FILTERS.map((type) => {
+            const active = filters.institutionTypes.includes(type.key);
+            return (
+              <button
+                key={type.key}
+                type="button"
+                onClick={() => toggle('institutionTypes', type.key)}
+                className={cn(
+                  'rounded-full border px-3 py-1 text-xs transition',
+                  active
+                    ? 'border-primary bg-primary/10 text-primary'
+                    : 'border-border/70 hover:border-primary/30'
+                )}
+              >
+                {type.label}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      <Separator />
+
+      <div>
+        <h3 className="text-sm font-semibold text-foreground">Infraestrutura</h3>
+        <div className="mt-3 flex flex-wrap gap-2">
+          {INFRASTRUCTURE_FILTERS.map((infra) => {
+            const active = filters.infrastructure.includes(infra.key);
+            return (
+              <button
+                key={infra.key}
+                type="button"
+                onClick={() => toggle('infrastructure', infra.key)}
+                className={cn(
+                  'rounded-full border px-3 py-1 text-xs transition',
+                  active
+                    ? 'border-primary bg-primary/10 text-primary'
+                    : 'border-border/70 hover:border-primary/30'
+                )}
+              >
+                {infra.label}
               </button>
             );
           })}
@@ -625,29 +810,6 @@ function FilterPanel({
             setFilters((prev) => ({ ...prev, priceRange: [v[0], v[1]] as [number, number] }))
           }
         />
-      </div>
-
-      <Separator />
-
-      <div>
-        <h3 className="text-sm font-semibold text-foreground">Avaliacao minima</h3>
-        <div className="mt-3 flex gap-1">
-          {[0, 3, 4, 4.5, 5].map((rating) => (
-            <button
-              key={rating}
-              type="button"
-              onClick={() => setFilters((prev) => ({ ...prev, minRating: rating }))}
-              className={cn(
-                'flex-1 rounded-md border px-2 py-1.5 text-xs transition',
-                filters.minRating === rating
-                  ? 'border-primary bg-primary/10 text-primary'
-                  : 'border-border/70 hover:border-primary/30'
-              )}
-            >
-              {rating === 0 ? 'Todas' : `${rating}+`}
-            </button>
-          ))}
-        </div>
       </div>
 
       <Separator />
@@ -802,7 +964,7 @@ function FilterBar({
   resultsCount,
   onClear,
 }: FilterBarProps) {
-  const toggle = <K extends 'niches' | 'modalities' | 'audiences'>(
+  const toggle = <K extends 'niches' | 'schoolNetworks' | 'institutionTypes' | 'infrastructure' | 'modalities' | 'audiences'>(
     key: K,
     value: string
   ) => {
@@ -816,13 +978,15 @@ function FilterBar({
 
   const priceActive =
     filters.priceRange[0] > 0 || filters.priceRange[1] < 3000;
-  const ratingActive = filters.minRating > 0;
   const availableActive = filters.onlyAvailable;
   const advancedCount =
-    (priceActive ? 1 : 0) + (ratingActive ? 1 : 0) + (availableActive ? 1 : 0);
+    (priceActive ? 1 : 0) + (availableActive ? 1 : 0);
 
   const totalActive =
     filters.niches.length +
+    filters.schoolNetworks.length +
+    filters.institutionTypes.length +
+    filters.infrastructure.length +
     filters.modalities.length +
     filters.audiences.length +
     (filters.district ? 1 : 0) +
@@ -889,6 +1053,95 @@ function FilterBar({
                   />
                 ))}
               </div>
+            </div>
+          </FilterPill>
+
+          {/* Rede */}
+          <FilterPill
+            icon={Building2}
+            label="Rede"
+            active={filters.schoolNetworks.length > 0}
+            count={filters.schoolNetworks.length}
+            onClear={() => setFilters((prev) => ({ ...prev, schoolNetworks: [] }))}
+          >
+            <div className="space-y-1">
+              <div className="px-3 pb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                Rede administrativa
+              </div>
+              {SCHOOL_NETWORK_FILTERS.map((network) => (
+                <CheckOption
+                  key={network.key}
+                  active={filters.schoolNetworks.includes(network.key)}
+                  label={network.label}
+                  description={
+                    network.key === 'municipal'
+                      ? 'Unidades da prefeitura'
+                      : network.key === 'state'
+                      ? 'Unidades do estado'
+                      : network.key === 'federal'
+                      ? 'Unidades federais'
+                      : 'Instituicoes privadas'
+                  }
+                  onClick={() => toggle('schoolNetworks', network.key)}
+                />
+              ))}
+            </div>
+          </FilterPill>
+
+          {/* Tipo */}
+          <FilterPill
+            icon={School}
+            label="Tipo"
+            active={filters.institutionTypes.length > 0}
+            count={filters.institutionTypes.length}
+            onClear={() => setFilters((prev) => ({ ...prev, institutionTypes: [] }))}
+          >
+            <div className="space-y-1">
+              <div className="px-3 pb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                Tipo de unidade
+              </div>
+              {INSTITUTION_TYPE_FILTERS.map((type) => (
+                <CheckOption
+                  key={type.key}
+                  active={filters.institutionTypes.includes(type.key)}
+                  label={type.label}
+                  description={
+                    type.key === 'cmei'
+                      ? 'Centro municipal de educacao infantil'
+                      : type.key === 'creche'
+                      ? 'Atendimento de primeira infancia'
+                      : type.key === 'colegio'
+                      ? 'Unidade com series mais amplas'
+                      : type.key === 'curso'
+                      ? 'Cursos e formacoes livres'
+                      : 'Escolas regulares'
+                  }
+                  onClick={() => toggle('institutionTypes', type.key)}
+                />
+              ))}
+            </div>
+          </FilterPill>
+
+          {/* Infraestrutura */}
+          <FilterPill
+            icon={Building2}
+            label="Infra"
+            active={filters.infrastructure.length > 0}
+            count={filters.infrastructure.length}
+            onClear={() => setFilters((prev) => ({ ...prev, infrastructure: [] }))}
+          >
+            <div className="space-y-1">
+              <div className="px-3 pb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                Estrutura da unidade
+              </div>
+              {INFRASTRUCTURE_FILTERS.map((infra) => (
+                <CheckOption
+                  key={infra.key}
+                  active={filters.infrastructure.includes(infra.key)}
+                  label={infra.label}
+                  onClick={() => toggle('infrastructure', infra.key)}
+                />
+              ))}
             </div>
           </FilterPill>
 
@@ -1007,40 +1260,6 @@ function FilterBar({
                   );
                 })}
               </div>
-            </div>
-          </FilterPill>
-
-          {/* Avaliacao */}
-          <FilterPill
-            icon={Star}
-            label="Avaliacao"
-            active={ratingActive}
-            count={ratingActive ? 1 : 0}
-            onClear={() => setFilters((prev) => ({ ...prev, minRating: 0 }))}
-          >
-            <div className="space-y-1">
-              <div className="px-3 pb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                Avaliacao minima
-              </div>
-              {[5, 4.5, 4, 3, 0].map((r) => (
-                <CheckOption
-                  key={r}
-                  active={filters.minRating === r}
-                  label={r === 0 ? 'Qualquer avaliacao' : `${r}+ estrelas`}
-                  description={
-                    r === 5
-                      ? 'Apenas as melhores'
-                      : r === 4.5
-                      ? 'Excelentes'
-                      : r === 4
-                      ? 'Muito boas'
-                      : r === 3
-                      ? 'Acima da media'
-                      : undefined
-                  }
-                  onClick={() => setFilters((prev) => ({ ...prev, minRating: r }))}
-                />
-              ))}
             </div>
           </FilterPill>
 
@@ -1221,8 +1440,14 @@ function FilterBar({
 // ============================================================================
 
 export function EducationExplorerPage() {
-  const { state = 'ba', city = 'salvador', district } = useParams();
+  const {
+    state = 'ba',
+    city = 'salvador',
+    district,
+    groupSlugOrDistrict,
+  } = useParams();
   const niches = useMemo(() => getPublicNiches(), []);
+  const { resolved } = useResolveTerritoryFromUrl();
 
   const { data, isLoading, isError, refetch } = useEducationList({});
   const realProfiles: EducationProfile[] = useMemo(
@@ -1230,14 +1455,19 @@ export function EducationExplorerPage() {
     [data]
   );
   const hasRealData = realProfiles.length > 0;
-  const allowPreviewFallback = import.meta.env.DEV;
+  const allowPreviewFallback = true;
   
   const sourceProfiles: EducationProfile[] = useMemo(() => {
-    return hasRealData
-      ? realProfiles
-      : allowPreviewFallback
-        ? educationLandingPreviewProfiles
-        : [];
+    if (!allowPreviewFallback) return realProfiles;
+
+    const realKeys = new Set(
+      realProfiles.map((profile) => profile.school_inep_code ?? profile.id)
+    );
+    const publicProfilesNotPersisted = educationLandingPreviewProfiles.filter(
+      (profile) => !realKeys.has(profile.school_inep_code ?? profile.id)
+    );
+
+    return [...realProfiles, ...publicProfilesNotPersisted];
   }, [hasRealData, realProfiles, allowPreviewFallback]);
 
   const [filters, setFilters] = useState<FilterState>(INITIAL_FILTERS);
@@ -1250,8 +1480,20 @@ export function EducationExplorerPage() {
   useEffect(() => {
     if (district) {
       setFilters((prev) => ({ ...prev, district }));
+      return;
     }
-  }, [district]);
+
+    if (resolved?.kind === 'location' && resolved.location.type === 'district') {
+      const districtSlug = resolved.location.slug ?? groupSlugOrDistrict;
+      if (districtSlug) {
+        setFilters((prev) => ({ ...prev, district: districtSlug }));
+      }
+      return;
+    }
+
+    // URL de grupo territorial: nao aplicar filtro de bairro fixo
+    setFilters((prev) => ({ ...prev, district: null }));
+  }, [district, groupSlugOrDistrict, resolved]);
 
   const districts = useMemo(() => {
     if (!allowPreviewFallback) return [];
@@ -1277,13 +1519,33 @@ export function EducationExplorerPage() {
       list = list.filter(
         ({ profile, preview }) =>
           profile.institution_type.toLowerCase().includes(q) ||
-          (profile.summary ?? '').toLowerCase().includes(q) ||
+          sanitizePublicEducationText(profile.summary).toLowerCase().includes(q) ||
           (preview?.programs ?? []).some((p) => p.name.toLowerCase().includes(q))
       );
     }
 
     if (filters.niches.length > 0) {
       list = list.filter(({ profile }) => filters.niches.includes(profile.niche_key));
+    }
+
+    if (filters.schoolNetworks.length > 0) {
+      list = list.filter(
+        ({ profile }) =>
+          Boolean(profile.school_network) &&
+          filters.schoolNetworks.includes(profile.school_network as string)
+      );
+    }
+
+    if (filters.institutionTypes.length > 0) {
+      list = list.filter(({ profile }) =>
+        filters.institutionTypes.includes(getInstitutionTypeKey(profile))
+      );
+    }
+
+    if (filters.infrastructure.length > 0) {
+      list = list.filter(({ profile }) =>
+        filters.infrastructure.every((infra) => profileHasInfrastructure(profile, infra))
+      );
     }
 
     if (filters.modalities.length > 0) {
@@ -1297,7 +1559,18 @@ export function EducationExplorerPage() {
     }
 
     if (filters.district) {
-      list = list.filter(({ route }) => route?.district === filters.district);
+      const filterDistrict = normalizeSlug(filters.district);
+      list = list.filter(({ route, preview }) => {
+        const routeDistrict = normalizeSlug(route?.district);
+        const previewDistrict = normalizeSlug(preview?.district);
+
+        if (routeDistrict || previewDistrict) {
+          return routeDistrict === filterDistrict || previewDistrict === filterDistrict;
+        }
+
+        // Perfis reais sem metadado territorial no read model nao devem sumir da vitrine
+        return true;
+      });
     }
 
     if (filters.onlyAvailable) {
@@ -1342,20 +1615,29 @@ export function EducationExplorerPage() {
 
   const clearFilters = () => setFilters(INITIAL_FILTERS);
 
-  const featured = useMemo(
-    () => (allowPreviewFallback ? Object.values(educationDetailPreviewMap).slice(0, 3) : []),
-    [allowPreviewFallback]
-  );
+  const featured = useMemo(() => {
+    if (!allowPreviewFallback) return [];
+
+    return Object.values(educationDetailPreviewMap).slice(0, 6);
+  }, [allowPreviewFallback]);
 
   const cityLabel = city.replace(/-/g, ' ');
+  const territoryLabel = useMemo(() => {
+    if (resolved?.kind === 'group') return resolved.group.name;
+    if (resolved?.kind === 'location' && resolved.location.type === 'district') {
+      return resolved.location.name;
+    }
+    if (groupSlugOrDistrict) return slugToLabel(groupSlugOrDistrict);
+    return slugToLabel(city);
+  }, [city, groupSlugOrDistrict, resolved]);
 
   return (
     <div className="min-h-screen bg-background">
       <Helmet>
-        <title>Educacao em {cityLabel} â€” Vitrine V3 | Acheguese</title>
+        <title>Educacao em {territoryLabel} â€” Vitrine V3 | Acheguese</title>
         <meta
           name="description"
-          content={`Explore escolas, cursos, professores e instituicoes educacionais em ${cityLabel} com filtros avancados, comparador e contato direto.`}
+          content={`Explore escolas, cursos, professores e instituicoes educacionais em ${territoryLabel} com filtros avancados, comparador e contato direto.`}
         />
       </Helmet>
 
@@ -1381,7 +1663,7 @@ export function EducationExplorerPage() {
               <h1 className="text-balance text-4xl font-bold tracking-tight text-foreground md:text-5xl lg:text-6xl">
                 Encontre a escola, curso ou professor ideal em{' '}
                 <span className="bg-gradient-to-r from-primary via-primary/80 to-primary/60 bg-clip-text text-transparent capitalize">
-                  {cityLabel}
+                  {territoryLabel}
                 </span>
               </h1>
               <p className="mt-4 max-w-xl text-balance text-base text-muted-foreground md:text-lg">
@@ -1517,7 +1799,7 @@ export function EducationExplorerPage() {
       {/* MAIN LAYOUT */}
       <section className="container mx-auto px-4 py-10">
         <div>
-            {/* Toolbar (apenas contador + preview badge) */}
+            {/* Toolbar (apenas contador + indicador de fonte inicial) */}
             <div className="mb-5 flex flex-wrap items-center gap-3">
               <div className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-4 py-1.5 text-sm">
                 <Building2 className="h-4 w-4 text-muted-foreground" />
@@ -1529,13 +1811,16 @@ export function EducationExplorerPage() {
               {!hasRealData && (
                 <Badge variant="outline" className="text-[10px]">
                   <Info className="mr-1 h-3 w-3" />
-                  Modo preview
+              Base publica inicial
                 </Badge>
               )}
             </div>
 
             {/* Active filter chips */}
             {(filters.niches.length > 0 ||
+              filters.schoolNetworks.length > 0 ||
+              filters.institutionTypes.length > 0 ||
+              filters.infrastructure.length > 0 ||
               filters.modalities.length > 0 ||
               filters.audiences.length > 0 ||
               filters.district ||
@@ -1549,6 +1834,54 @@ export function EducationExplorerPage() {
                         setFilters((prev) => ({
                           ...prev,
                           niches: prev.niches.filter((v) => v !== n),
+                        }))
+                      }
+                      aria-label="Remover filtro"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </Badge>
+                ))}
+                {filters.schoolNetworks.map((network) => (
+                  <Badge key={network} variant="secondary" className="gap-1">
+                    {labelFromOptions(SCHOOL_NETWORK_FILTERS, network)}
+                    <button
+                      onClick={() =>
+                        setFilters((prev) => ({
+                          ...prev,
+                          schoolNetworks: prev.schoolNetworks.filter((v) => v !== network),
+                        }))
+                      }
+                      aria-label="Remover filtro"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </Badge>
+                ))}
+                {filters.institutionTypes.map((type) => (
+                  <Badge key={type} variant="secondary" className="gap-1">
+                    {labelFromOptions(INSTITUTION_TYPE_FILTERS, type)}
+                    <button
+                      onClick={() =>
+                        setFilters((prev) => ({
+                          ...prev,
+                          institutionTypes: prev.institutionTypes.filter((v) => v !== type),
+                        }))
+                      }
+                      aria-label="Remover filtro"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </Badge>
+                ))}
+                {filters.infrastructure.map((infra) => (
+                  <Badge key={infra} variant="secondary" className="gap-1">
+                    {labelFromOptions(INFRASTRUCTURE_FILTERS, infra)}
+                    <button
+                      onClick={() =>
+                        setFilters((prev) => ({
+                          ...prev,
+                          infrastructure: prev.infrastructure.filter((v) => v !== infra),
                         }))
                       }
                       aria-label="Remover filtro"
@@ -1620,7 +1953,7 @@ export function EducationExplorerPage() {
               <div
                 className={cn(
                   view === 'grid'
-                    ? 'grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-3'
+                    ? 'grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4 2xl:grid-cols-5 min-[1800px]:grid-cols-6'
                     : 'flex flex-col gap-4'
                 )}
               >
@@ -1645,7 +1978,7 @@ export function EducationExplorerPage() {
               <div
                 className={cn(
                   view === 'grid'
-                    ? 'grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-3'
+                    ? 'grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4 2xl:grid-cols-5 min-[1800px]:grid-cols-6'
                     : 'flex flex-col gap-4'
                 )}
               >
@@ -1655,7 +1988,7 @@ export function EducationExplorerPage() {
                     profile={profile}
                     preview={preview}
                     index={i}
-                    isPreviewSource={!hasRealData && allowPreviewFallback}
+                    isPreviewSource={Boolean(preview)}
                     onCompareToggle={toggleCompare}
                     comparing={comparing.includes(profile.id)}
                     view={view}
@@ -1735,10 +2068,10 @@ export function EducationExplorerPage() {
                 Instituicoes em Destaque
               </Badge>
               <h2 className="text-3xl font-bold capitalize text-foreground">
-                As melhores opcoes em {cityLabel}
+                Instituicoes em destaque em {territoryLabel}
               </h2>
               <p className="mt-2 max-w-2xl text-muted-foreground">
-                Instituicoes verificadas com alta taxa de resposta e avaliacoes positivas.
+                Curadoria com base em dados territoriais e informacoes institucionais publicas.
               </p>
             </div>
             <Button
@@ -1751,7 +2084,7 @@ export function EducationExplorerPage() {
             </Button>
           </div>
 
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 2xl:grid-cols-5 min-[1800px]:grid-cols-6">
             {featured.map((preview, index) => {
               const FeaturedIcon =
                 NICHE_ICONS[preview.profile.niche_key] ?? GraduationCap;
@@ -1795,14 +2128,17 @@ export function EducationExplorerPage() {
                     <h3 className="mt-2 text-lg font-bold text-foreground transition-colors group-hover:text-primary">
                       {preview.institutionName}
                     </h3>
-                    {preview.profile.summary && (
+                    {sanitizePublicEducationText(preview.profile.summary) && (
                       <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">
-                        {preview.profile.summary}
+                        {sanitizePublicEducationText(preview.profile.summary)}
                       </p>
                     )}
 
                     <div className="mt-4 grid grid-cols-2 gap-2">
-                      {preview.stats.slice(0, 4).map((stat) => (
+                      {preview.stats
+                        .filter((stat) => !CARD_HIDDEN_STAT_LABELS.has(stat.label.toLowerCase()))
+                        .slice(0, 4)
+                        .map((stat) => (
                         <div
                           key={stat.label}
                           className="rounded-xl bg-muted/60 px-3 py-2 transition-colors group-hover:bg-muted"
@@ -1848,6 +2184,21 @@ export function EducationExplorerPage() {
                 </motion.article>
               );
             })}
+          </div>
+        </div>
+      </section>
+
+      <section className="border-t border-border bg-background py-6">
+        <div className="container mx-auto px-4">
+          <div className="flex flex-col gap-2 rounded-2xl border border-border bg-muted/30 p-4 text-xs leading-5 text-muted-foreground md:flex-row md:items-start md:gap-3">
+            <Info className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+            <p>
+              Os dados iniciais das escolas publicas sao organizados a partir de bases
+              publicas e consultas institucionais. Podem existir divergencias,
+              desatualizacoes ou inconsistencias em horarios, contatos, etapas ofertadas e
+              demais informacoes. Recomendamos confirmar os dados diretamente com a
+              instituicao antes de tomar qualquer decisao.
+            </p>
           </div>
         </div>
       </section>
@@ -1905,19 +2256,19 @@ export function EducationExplorerPage() {
                   </ul>
 
                   <div className="mt-7 flex flex-col gap-3 sm:flex-row">
-                    <Link to="/education/setup">
+                    <Link to="/empresas/criar-empresa">
                       <Button size="lg" className="w-full rounded-full sm:w-auto">
                         Cadastrar instituicao
                         <ArrowUpRight className="ml-2 h-4 w-4" />
                       </Button>
                     </Link>
-                    <Link to="/education/planos">
+                    <Link to="/empresas">
                       <Button
                         size="lg"
                         variant="outline"
                         className="w-full rounded-full sm:w-auto"
                       >
-                        Ver planos
+                        Ver empresas
                       </Button>
                     </Link>
                   </div>
@@ -1931,10 +2282,6 @@ export function EducationExplorerPage() {
                   <div className="absolute -right-3 -top-3 inline-flex items-center gap-1 rounded-full border border-border bg-card px-3 py-1.5 text-xs font-semibold shadow-md">
                     <Sparkles className="h-3 w-3 text-amber-500" />
                     Premium
-                  </div>
-                  <div className="absolute -bottom-3 -left-3 inline-flex items-center gap-1 rounded-full border border-border bg-card px-3 py-1.5 text-xs font-semibold shadow-md">
-                    <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
-                    4.8
                   </div>
                 </div>
               </div>
@@ -1995,4 +2342,3 @@ export function EducationExplorerPage() {
 }
 
 export default EducationExplorerPage;
-

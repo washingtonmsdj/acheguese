@@ -3,7 +3,6 @@ import { useLocation, Link } from "react-router-dom";
 import { ChevronRight, Home } from "lucide-react";
 import { cn } from "@/shared/utils/cn";
 import { USER_ROLE } from "@/shared/types/constants";
-import { useFriendlyModuleUrls } from "@/core/routing/hooks/useFriendlyModuleUrls";
 
 const routeNames: Record<string, string> = {
   "": "Feed",
@@ -92,7 +91,6 @@ function resolveRouteName(name: string): string | undefined {
 
 export function Breadcrumbs() {
   const location = useLocation();
-  const urls = useFriendlyModuleUrls();
   const pathnames = location.pathname.split("/").filter((x) => x);
 
   // Não mostrar breadcrumbs na home
@@ -101,7 +99,7 @@ export function Breadcrumbs() {
   return (
     <nav className="flex items-center gap-2 text-sm mb-4">
       <Link
-        to={urls.landing}
+        to="/"
         className="flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors"
       >
         <Home className="h-4 w-4" />

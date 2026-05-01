@@ -27,6 +27,7 @@ export interface SignUpData {
   city?: string;
   neighborhood?: string;
   state?: string;
+  street?: string;
   // UUID canônico do bairro (tabela locations) — SSOT territorial
   neighborhood_id?: string;
 }

@@ -19,6 +19,8 @@ import type {
   EducationNicheKey,
 } from '../types';
 
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
 export interface TrackEventOptions {
   educationProfileId: string;
   businessId?: string;
@@ -57,6 +59,19 @@ export const EducationTrackingService = {
    */
   async trackEvent(options: TrackEventOptions): Promise<void> {
     try {
+      if (!UUID_REGEX.test(options.educationProfileId)) {
+        return;
+      }
+      if (options.programId && !UUID_REGEX.test(options.programId)) {
+        return;
+      }
+      if (options.educationEventId && !UUID_REGEX.test(options.educationEventId)) {
+        return;
+      }
+      if (options.leadId && !UUID_REGEX.test(options.leadId)) {
+        return;
+      }
+
       // Fire-and-forget: nao esperamos resposta
       supabase
         .from('education_analytics_events')

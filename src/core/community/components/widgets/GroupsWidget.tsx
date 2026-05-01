@@ -7,7 +7,6 @@ import { Button } from "@/shared/components/ui/button";
 import { Badge } from "@/shared/components/ui/badge";
 import { useFavoriteGroups } from "../../hooks/useFavoriteGroups";
 import { WidgetSkeleton } from "./WidgetSkeleton";
-import { useFriendlyModuleUrls } from "@/core/routing/hooks/useFriendlyModuleUrls";
 
 /**
  * Widget de Grupos Favoritos Melhorado
@@ -15,7 +14,6 @@ import { useFriendlyModuleUrls } from "@/core/routing/hooks/useFriendlyModuleUrl
  */
 export const GroupsWidget = memo(() => {
   const { data: groups, isLoading } = useFavoriteGroups();
-  const moduleUrls = useFriendlyModuleUrls();
 
   if (isLoading) {
     return <WidgetSkeleton hasHeader itemCount={3} />;
@@ -54,7 +52,7 @@ export const GroupsWidget = memo(() => {
               return (
                 <Link
                   key={group.id}
-                  to={`${moduleUrls.community}/grupo/${group.id}`}
+                  to={`/comunidade/grupo/${group.id}`}
                   className="flex items-center gap-2 p-2 rounded-lg bg-secondary/50 hover:bg-secondary transition-all duration-200 hover:scale-[1.01] active:scale-[0.99] group"
                 >
                   {/* Avatar do Grupo */}

@@ -70,6 +70,13 @@ export { useActiveTerritory } from './hooks/useActiveTerritory';
 export { useLocationContext } from './hooks/useLocationContext';
 export { useUserTerritory } from './hooks/useUserTerritory';
 export { useTerritoryFilter, isTerritoryFilterReady, territoryFilterKey } from './hooks/useTerritoryFilter';
+export { useModuleTerritoryFilter } from './hooks/useModuleTerritoryFilter';
+export type {
+  ModuleTerritoryFilterResult,
+  ModuleTerritorySource,
+  ModuleTerritoryUiFilter,
+  UseModuleTerritoryFilterOptions,
+} from './hooks/useModuleTerritoryFilter';
 export { useTerritoryModeInitializer } from './hooks/useTerritoryModeInitializer';
 export { useModuleLocation } from './hooks/useModuleLocation'; // Hook genérico SSOT
 export { useTerritoryLabels } from './hooks/useTerritoryLabels';
@@ -81,6 +88,7 @@ export type { LocationResolutionStatus, UseResolvedUserLocationReturn } from './
 // ============================================
 export { TerritoryModeInitializer } from './components/TerritoryModeInitializer';
 export { TerritoryIndicator } from './components/TerritoryIndicator';
+export { ModuleLocationDialog } from './components/ModuleLocationDialog';
 
 // ============================================
 // PUBLIC UTILS

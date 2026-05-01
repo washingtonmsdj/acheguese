@@ -466,7 +466,7 @@ export default function AchadoPerdidoDetailPage() {
           )}
 
           <div className="bg-card rounded-xl border p-4 space-y-3">
-            <h3 className="font-semibold text-sm">InformaÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Âµes</h3>
+            <h3 className="font-semibold text-sm">Informações</h3>
             <div className="space-y-2 text-sm">
               <div className="flex items-center justify-between">
                 <span className="text-muted-foreground">Status:</span>

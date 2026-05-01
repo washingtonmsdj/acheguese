@@ -18,6 +18,7 @@ import {
   Clock,
   DollarSign,
   MoreVertical,
+  LifeBuoy,
 } from 'lucide-react';
 import { Button } from '@/shared/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/components/ui/card';
@@ -46,7 +47,12 @@ import { useEducationPrograms } from '../hooks/useEducationPrograms';
 import { useEducationNicheBilling } from '../niches/hooks/useEducationNicheBilling';
 import { EducationUpgradeBanner } from '../niches/components/EducationUpgradeBanner';
 import { getNicheByKey } from '../niches/registry';
-import type { EducationProgram } from '../types';
+import type { EducationLevel, EducationProgram } from '../types';
+import {
+  getSchoolStageOptions,
+  isSchoolNiche,
+  SCHOOL_STAGE_OTHER_VALUE,
+} from '../constants/schoolStageOptions';
 
 const SHIFTS = [
   { value: 'morning', label: 'Manhã' },
@@ -97,7 +103,33 @@ export function EducationProgramsPage() {
     availableSlots: 0,
     priceFrom: 0,
     isActive: true,
+    gradeOption: '',
+    customGrade: '',
   });
+
+  const isSchoolContext = isSchoolNiche(profile?.niche_key);
+  const schoolStageOptions = getSchoolStageOptions(profile?.niche_key);
+
+  const resolveStagePayload = () => {
+    if (!isSchoolContext) {
+      return {
+        name: formData.name.trim(),
+        grade: formData.name.trim(),
+        educationLevel: undefined as EducationLevel | undefined,
+      };
+    }
+
+    if (formData.gradeOption === SCHOOL_STAGE_OTHER_VALUE) {
+      const custom = formData.customGrade.trim();
+      return { name: custom, grade: custom, educationLevel: undefined as EducationLevel | undefined };
+    }
+
+    const selected = schoolStageOptions.find((opt) => opt.value === formData.gradeOption);
+    if (!selected) {
+      return { name: '', grade: '', educationLevel: undefined as EducationLevel | undefined };
+    }
+    return { name: selected.label, grade: selected.label, educationLevel: selected.educationLevel };
+  };
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -123,14 +155,25 @@ export function EducationProgramsPage() {
     }
     
     try {
+      const stage = resolveStagePayload();
+      if (!stage.name) {
+        toast({
+          title: 'Campo obrigatório',
+          description: 'Selecione ou informe a etapa/série.',
+          variant: 'destructive',
+        });
+        return;
+      }
       await create({
-        name: formData.name,
+        name: stage.name,
         description: formData.description,
         ageGroup: formData.ageGroup,
         shift: formData.shift,
         modality: formData.modality,
         availableSlots: formData.availableSlots,
         priceFrom: formData.priceFrom,
+        grade: stage.grade,
+        educationLevel: stage.educationLevel,
       });
       toast({ title: 'Programa criado', description: 'O programa foi criado com sucesso.' });
       setIsDialogOpen(false);
@@ -144,9 +187,29 @@ export function EducationProgramsPage() {
     e.preventDefault();
     if (!editingProgram) return;
     try {
+      const stage = resolveStagePayload();
+      if (!stage.name) {
+        toast({
+          title: 'Campo obrigatório',
+          description: 'Selecione ou informe a etapa/série.',
+          variant: 'destructive',
+        });
+        return;
+      }
       await update({
         programId: editingProgram.id,
-        payload: formData,
+        payload: {
+          name: isSchoolContext ? stage.name : formData.name,
+          grade: isSchoolContext ? stage.grade : formData.name,
+          education_level: isSchoolContext ? stage.educationLevel ?? null : null,
+          description: formData.description || null,
+          age_group: formData.ageGroup || null,
+          shift: formData.shift || null,
+          modality: formData.modality || null,
+          available_slots: formData.availableSlots || null,
+          price_from: formData.priceFrom || null,
+          is_active: formData.isActive,
+        } as Partial<EducationProgram>,
       });
       toast({ title: 'Programa atualizado', description: 'As alterações foram salvas.' });
       setIsDialogOpen(false);
@@ -169,7 +232,7 @@ export function EducationProgramsPage() {
 
   const openEditDialog = (program: EducationProgram) => {
     setEditingProgram(program);
-    setFormData({
+      setFormData({
       name: program.name,
       description: program.description || '',
       ageGroup: program.age_group || '',
@@ -178,7 +241,21 @@ export function EducationProgramsPage() {
       availableSlots: program.available_slots || 0,
       priceFrom: program.price_from || 0,
       isActive: program.is_active,
+      gradeOption: '',
+      customGrade: '',
     });
+
+    if (isSchoolNiche(profile?.niche_key)) {
+      const stageOptions = getSchoolStageOptions(profile?.niche_key);
+      const match = stageOptions.find(
+        (opt) => opt.label.toLowerCase() === (program.grade || program.name || '').toLowerCase()
+      );
+      setFormData((prev) => ({
+        ...prev,
+        gradeOption: match ? match.value : SCHOOL_STAGE_OTHER_VALUE,
+        customGrade: match ? '' : (program.grade || program.name || ''),
+      }));
+    }
     setIsDialogOpen(true);
   };
 
@@ -192,6 +269,8 @@ export function EducationProgramsPage() {
       availableSlots: 0,
       priceFrom: 0,
       isActive: true,
+      gradeOption: '',
+      customGrade: '',
     });
   };
 
@@ -393,16 +472,58 @@ export function EducationProgramsPage() {
             onSubmit={editingProgram ? handleUpdate : handleCreate}
             className="space-y-4"
           >
-            <div>
-              <Label htmlFor="name">Nome *</Label>
-              <Input
-                id="name"
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                placeholder="Ex: Ensino Fundamental I"
-                required
-              />
-            </div>
+            {isSchoolContext ? (
+              <>
+                <div>
+                  <Label htmlFor="gradeOption">Etapa/Série *</Label>
+                  <select
+                    id="gradeOption"
+                    value={formData.gradeOption}
+                    onChange={(e) => setFormData({ ...formData, gradeOption: e.target.value })}
+                    className="w-full h-10 px-3 rounded-md border border-input bg-background"
+                    required
+                  >
+                    <option value="">Selecione...</option>
+                    {schoolStageOptions.map((opt) => (
+                      <option key={opt.value} value={opt.value}>
+                        {opt.label}
+                      </option>
+                    ))}
+                    <option value={SCHOOL_STAGE_OTHER_VALUE}>Outros (informar manualmente)</option>
+                  </select>
+                </div>
+
+                {formData.gradeOption === SCHOOL_STAGE_OTHER_VALUE && (
+                  <div className="space-y-2">
+                    <Label htmlFor="customGrade">Informe a etapa/série *</Label>
+                    <Input
+                      id="customGrade"
+                      value={formData.customGrade}
+                      onChange={(e) => setFormData({ ...formData, customGrade: e.target.value })}
+                      placeholder="Ex: Classe hospitalar, multisseriada..."
+                      required
+                    />
+                    <Button type="button" variant="outline" size="sm" asChild className="gap-2">
+                      <a href="/contato">
+                        <LifeBuoy className="w-4 h-4" />
+                        Contatar suporte para adicionar opção oficial
+                      </a>
+                    </Button>
+                  </div>
+                )}
+              </>
+            ) : (
+              <div>
+                <Label htmlFor="name">Nome *</Label>
+                <Input
+                  id="name"
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  placeholder="Ex: Curso Intensivo"
+                  required
+                />
+              </div>
+            )}
 
             <div>
               <Label htmlFor="description">Descrição</Label>

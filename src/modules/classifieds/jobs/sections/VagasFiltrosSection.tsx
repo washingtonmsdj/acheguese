@@ -8,7 +8,6 @@
 import { useMemo } from "react";
 import { Search, X, ChevronDown } from "lucide-react";
 import { Input } from "@/shared/components/ui/input";
-import { Button } from "@/shared/components/ui/button";
 import { ActiveFilterChip, ExpandedFilters } from "../components/filters";
 import type { VagasFiltrosSectionProps } from "./types";
 import {

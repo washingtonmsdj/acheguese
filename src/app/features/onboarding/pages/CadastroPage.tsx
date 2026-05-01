@@ -352,6 +352,18 @@ export default function CadastroPage() {
                     {errors.neighborhoodId && <p className="text-xs text-destructive">{errors.neighborhoodId}</p>}
                   </div>
 
+                  <div className="space-y-1.5">
+                    <Label htmlFor="cadastro-street">Rua</Label>
+                    <Input
+                      id="cadastro-street"
+                      value={formData.street}
+                      onChange={(e) => updateField('street', e.target.value)}
+                      placeholder="Ex: Rua Afonso Lopes"
+                      className={cn('h-11', errors.street && 'border-destructive')}
+                    />
+                    {errors.street && <p className="text-xs text-destructive">{errors.street}</p>}
+                  </div>
+
                   {formData.neighborhoodName && (
                     <motion.div
                       initial={{ opacity: 0, y: 8 }}
@@ -414,6 +426,9 @@ export default function CadastroPage() {
                         <p className="text-sm font-medium text-foreground">
                           {formData.neighborhoodName}, {formData.cityName} — {formData.stateName}
                         </p>
+                        {formData.street && (
+                          <p className="text-xs text-muted-foreground">{formData.street}</p>
+                        )}
                       </div>
                     </div>
                   </div>

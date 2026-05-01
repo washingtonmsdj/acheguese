@@ -19,6 +19,7 @@
     "security:migrate": "node scripts/migrate-scripts-to-env.mjs",
     "validate:deps": "tsx scripts/validate-dependencies.ts",
     "validate:ssot": "tsx scripts/validate-ssot-compliance.ts",
+    "validate:education-mocks": "tsx scripts/audit-education-mock-schools.ts",
     "audit:ssot-violations": "tsx scripts/validate-ssot-compliance.ts",
     "report:ssot-compliance": "tsx scripts/validate-ssot-compliance.ts",
     "audit:architecture": "tsx scripts/generate-architecture-audit.ts",

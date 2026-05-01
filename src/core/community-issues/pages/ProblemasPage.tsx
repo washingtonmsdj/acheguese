@@ -1,8 +1,10 @@
 import { useState } from "react";
 import { Wrench } from "lucide-react";
 import { useLocationContext } from "@/core/location";
+import { useUserTerritory } from "@/core/location/hooks/useUserTerritory";
 import { useTerritoryFilter } from "@/core/location/hooks/useTerritoryFilter";
 import type { ResolvedTerritory } from "@/core/routing/hooks/useResolveTerritoryFromUrl";
+import type { TerritoryFilter } from "@/core/location";
 import { useSessionContext } from "@/core/session";
 import { buildCommunityTerritoryPresentation } from "@/core/community/utils/communityTerritoryPresentation";
 import { Button } from "@/shared/components/ui/button";
@@ -21,7 +23,13 @@ interface ProblemasPageProps {
 export default function ProblemasPage({ resolved }: ProblemasPageProps) {
   const { activeProfile: profile } = useSessionContext();
   const { activeLocation } = useLocationContext();
-  const territoryFilter = useTerritoryFilter(resolved);
+  const { homeDistrict, homeCity } = useUserTerritory();
+  const routeTerritoryFilter = useTerritoryFilter(resolved);
+  const territoryFilter: TerritoryFilter = resolved
+    ? routeTerritoryFilter
+    : homeDistrict
+      ? { scope: "location", location_id: homeDistrict.id }
+      : routeTerritoryFilter;
   const [modalOpen, setModalOpen] = useState(false);
   const [filterStatus, setFilterStatus] = useState<IssueStatus | undefined>("aberto");
 
@@ -31,11 +39,18 @@ export default function ProblemasPage({ resolved }: ProblemasPageProps) {
       : resolved?.kind === "group"
         ? resolved.group.members[0]
         : null;
-  const territoryPresentation = buildCommunityTerritoryPresentation({
+  const routeTerritoryPresentation = buildCommunityTerritoryPresentation({
     resolvedLocation,
     activeLocation,
     profile,
   });
+  const territoryPresentation = !resolved && homeDistrict
+    ? {
+      city: homeCity?.name ?? profile?.city ?? "",
+      neighborhood: homeDistrict.name,
+      locationId: homeDistrict.id,
+    }
+    : routeTerritoryPresentation;
 
   const { data: issues = [], isLoading } = useIssues({
     territoryFilter,

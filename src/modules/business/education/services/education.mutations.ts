@@ -9,6 +9,11 @@
 
 import { supabase } from '@/integrations/supabase';
 import { logger } from '@/shared/utils/logger';
+import {
+  getSchoolStageOptions,
+  isSchoolNiche,
+  SCHOOL_STAGE_OTHER_VALUE,
+} from '../constants/schoolStageOptions';
 import type {
   EducationProfile,
   EducationProgram,
@@ -32,6 +37,34 @@ interface ValidationError {
   message: string;
 }
 
+function normalizeStageText(value: string | null | undefined): string | null {
+  if (!value) return null;
+  const normalized = value.trim().replace(/\s+/g, ' ');
+  return normalized.length > 0 ? normalized : null;
+}
+
+function validateCustomStageText(value: string): boolean {
+  return value.length >= 3 && value.length <= 120 && value !== SCHOOL_STAGE_OTHER_VALUE;
+}
+
+function isOfficialStageLabel(value: string, nicheKey: string): boolean {
+  const options = getSchoolStageOptions(nicheKey as any);
+  return options.some((option) => option.label.toLowerCase() === value.toLowerCase());
+}
+
+async function getProfileNicheKey(profileId: string): Promise<string | null> {
+  const { data, error } = await supabase
+    .from('education_profiles')
+    .select('niche_key')
+    .eq('id', profileId)
+    .single();
+  if (error) {
+    logger.error('[EducationMutations] Error loading profile niche:', error);
+    return null;
+  }
+  return (data?.niche_key as string | undefined) ?? null;
+}
+
 // ============================================================
 // VALIDACAO
 // ============================================================
@@ -53,6 +86,16 @@ function validateProfilePayload(payload: Partial<EducationProfile>): ValidationE
   ];
   if (payload.niche_key !== undefined && !validNiches.includes(payload.niche_key)) {
     errors.push({ field: 'niche_key', message: 'Nicho invalido' });
+  }
+
+  const validSchoolTypes = ['public', 'private', 'charter', 'community'];
+  if (payload.school_type !== undefined && payload.school_type !== null && !validSchoolTypes.includes(payload.school_type)) {
+    errors.push({ field: 'school_type', message: 'Tipo de escola invalido' });
+  }
+
+  const validSchoolNetworks = ['municipal', 'state', 'federal', 'private'];
+  if (payload.school_network !== undefined && payload.school_network !== null && !validSchoolNetworks.includes(payload.school_network)) {
+    errors.push({ field: 'school_network', message: 'Rede administrativa invalida' });
   }
 
   const validStatuses: EducationProfileStatus[] = ['draft', 'published', 'paused'];
@@ -160,6 +203,29 @@ export async function pauseEducationProfile(
 export async function createEducationProgram(
   payload: Omit<EducationProgram, 'id' | 'created_at' | 'updated_at'>,
 ): Promise<MutationResult<EducationProgram>> {
+  const nicheKey = await getProfileNicheKey(payload.education_profile_id);
+  if (!nicheKey) {
+    return { data: null, error: new Error('Perfil de educacao nao encontrado') };
+  }
+
+  if (isSchoolNiche(nicheKey)) {
+    const stageName = normalizeStageText(payload.name);
+    const stageGrade = normalizeStageText(payload.grade ?? null);
+
+    if (!stageName) {
+      return { data: null, error: new Error('Etapa/série obrigatória para escolas') };
+    }
+
+    const official = isOfficialStageLabel(stageName, nicheKey);
+    const custom = validateCustomStageText(stageName);
+    if (!official && !custom) {
+      return { data: null, error: new Error('Etapa/série inválida para o padrão oficial') };
+    }
+
+    payload.name = stageName;
+    payload.grade = stageGrade ?? stageName;
+  }
+
   const { data, error } = await supabase
     .from('education_programs')
     .insert(payload)
@@ -181,6 +247,37 @@ export async function updateEducationProgram(
   id: string,
   payload: Partial<EducationProgram>,
 ): Promise<MutationResult<EducationProgram>> {
+  const { data: existingProgram, error: existingProgramError } = await supabase
+    .from('education_programs')
+    .select('education_profile_id')
+    .eq('id', id)
+    .single();
+
+  if (existingProgramError || !existingProgram?.education_profile_id) {
+    return { data: null, error: new Error('Programa não encontrado') };
+  }
+
+  const nicheKey = await getProfileNicheKey(existingProgram.education_profile_id);
+  if (!nicheKey) {
+    return { data: null, error: new Error('Perfil de educacao nao encontrado') };
+  }
+
+  if (isSchoolNiche(nicheKey)) {
+    const updatedName = normalizeStageText((payload as any).name ?? null);
+    const updatedGrade = normalizeStageText((payload as any).grade ?? null);
+    const candidate = updatedName ?? updatedGrade;
+
+    if (candidate) {
+      const official = isOfficialStageLabel(candidate, nicheKey);
+      const custom = validateCustomStageText(candidate);
+      if (!official && !custom) {
+        return { data: null, error: new Error('Etapa/série inválida para o padrão oficial') };
+      }
+      (payload as any).name = updatedName ?? candidate;
+      (payload as any).grade = updatedGrade ?? candidate;
+    }
+  }
+
   const { data, error } = await supabase
     .from('education_programs')
     .update(payload)
@@ -225,6 +322,23 @@ export async function deleteEducationProgram(
 export async function createEducationLead(
   payload: Omit<EducationLead, 'id' | 'created_at' | 'updated_at'>,
 ): Promise<MutationResult<EducationLead>> {
+  const nicheKey = await getProfileNicheKey(payload.education_profile_id);
+  if (!nicheKey) {
+    return { data: null, error: new Error('Perfil de educacao nao encontrado') };
+  }
+
+  if (isSchoolNiche(nicheKey)) {
+    const desired = normalizeStageText(payload.desired_grade ?? null);
+    if (desired) {
+      const official = isOfficialStageLabel(desired, nicheKey);
+      const custom = validateCustomStageText(desired);
+      if (!official && !custom) {
+        return { data: null, error: new Error('Série/etapa desejada inválida') };
+      }
+      payload.desired_grade = desired;
+    }
+  }
+
   const { data, error } = await supabase
     .from('education_leads')
     .insert(payload)

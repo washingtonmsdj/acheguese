@@ -16,7 +16,6 @@ import {
   Truck,
 } from 'lucide-react';
 
-import { useFriendlyModuleUrls } from '@/core/routing/hooks/useFriendlyModuleUrls';
 import { useSessionContext } from '@/core/session';
 import { Badge } from '@/shared/components/ui/badge';
 import { Button } from '@/shared/components/ui/button';
@@ -41,7 +40,6 @@ type SortMode = 'mais-pedidos' | 'menor-preco' | 'maior-preco';
 export default function GastronomyPremiumDetailPage() {
   const { state, city, district, slug } = useParams();
   const navigate = useNavigate();
-  const moduleUrls = useFriendlyModuleUrls();
   const { user } = useSessionContext();
 
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
@@ -168,7 +166,7 @@ export default function GastronomyPremiumDetailPage() {
           Esse link premium não está ativo para o território informado.
         </p>
         <Button asChild className="mt-6">
-          <Link to={moduleUrls.gastronomy}>Voltar para gastronomia</Link>
+          <Link to="/gastronomia">Voltar para gastronomia</Link>
         </Button>
       </div>
     );

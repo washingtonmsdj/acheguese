@@ -1,10 +1,10 @@
 /**
  * CreatePostModal - Modal para criação de posts
- * 
- * ✅ SSOT - Usa postService via hook
- * ✅ UX - Validação em tempo real
- * ✅ Performance - Memoização de componentes
- * ✅ Acessibilidade - ARIA labels completos
+ *
+ * SSOT - Usa postService via hook
+ * UX - Validação em tempo real
+ * Performance - Memoização de componentes
+ * Acessibilidade - ARIA labels completos
  */
 
 import React from "react";
@@ -113,17 +113,17 @@ const POST_TYPES: {
   description: string;
   color: string;
 }[] = [
-  { value: "discussao",    label: "Discussão",    icon: MessageSquare, description: "Inicie uma conversa com a vizinhança", color: "text-blue-400" },
-  { value: "recomendacao", label: "Recomendação", icon: MapPin,        description: "Indique um lugar, serviço ou pessoa",  color: "text-green-400" },
-  { value: "evento",       label: "Evento",       icon: Calendar,      description: "Divulgue um evento local",             color: "text-purple-400" },
-  { value: "noticia",      label: "Notícia",      icon: Newspaper,     description: "Compartilhe uma notícia do bairro",    color: "text-yellow-400" },
-  { value: "enquete",      label: "Enquete",      icon: BarChart2,     description: "Crie uma votação para a comunidade",   color: "text-orange-400" },
+  { value: "discussao", label: "Discussão", icon: MessageSquare, description: "Inicie uma conversa com a vizinhança", color: "text-blue-400" },
+  { value: "recomendacao", label: "Recomendação", icon: MapPin, description: "Indique um lugar, serviço ou pessoa", color: "text-green-400" },
+  { value: "evento", label: "Evento", icon: Calendar, description: "Divulgue um evento local", color: "text-purple-400" },
+  { value: "noticia", label: "Notícia", icon: Newspaper, description: "Compartilhe uma notícia do bairro", color: "text-yellow-400" },
+  { value: "enquete", label: "Enquete", icon: BarChart2, description: "Crie uma votação para a comunidade", color: "text-orange-400" },
 ];
 
 const REACH_OPTIONS = [
-  { value: "street",       label: "Minha rua",  icon: Navigation, description: "Visível apenas para moradores da sua rua" },
-  { value: "neighborhood", label: "Meu bairro", icon: Home,       description: "Visível para todo o bairro" },
-  { value: "city",         label: "Cidade",     icon: Globe,      description: "Visível para toda a cidade" },
+  { value: "street", label: "Minha rua", icon: Navigation, description: "Visível apenas para moradores da sua rua" },
+  { value: "neighborhood", label: "Meu bairro", icon: Home, description: "Visível para todo o bairro" },
+  { value: "city", label: "Cidade", icon: Globe, description: "Visível para toda a cidade" },
 ];
 
 export function CreatePostModal({ open, onClose, defaultType }: CreatePostModalProps) {
@@ -150,23 +150,28 @@ export function CreatePostModal({ open, onClose, defaultType }: CreatePostModalP
   const charPercent = (form.characterCount / 2000) * 100;
   const charColor = charPercent > 90 ? "text-red-400" : charPercent > 70 ? "text-yellow-400" : "text-muted-foreground/50";
 
-  // ============================================================================
   // SPRINT 2 FASE 3: Resolução de location_id para criação
-  // ============================================================================
   const getLocationIdForPost = (): { location_id: string | null; error: string | null } => {
-    // 1. Se território ativo for group, bloquear
-    if (territoryFilter.scope === 'group') {
+    // 1. Se território ativo for group, usar localização do perfil quando disponível
+    if (territoryFilter.scope === "group") {
+      if (profile?.locationId) {
+        return {
+          location_id: profile.locationId,
+          error: null,
+        };
+      }
+
       return {
         location_id: null,
-        error: "Selecione uma cidade ou bairro específico para publicar"
+        error: "Selecione um bairro/cidade no filtro ou atualize sua localização no perfil",
       };
     }
 
     // 2. Se território ativo for location, usar
-    if (territoryFilter.scope === 'location') {
+    if (territoryFilter.scope === "location") {
       return {
         location_id: territoryFilter.location_id,
-        error: null
+        error: null,
       };
     }
 
@@ -174,14 +179,14 @@ export function CreatePostModal({ open, onClose, defaultType }: CreatePostModalP
     if (profile?.locationId) {
       return {
         location_id: profile.locationId,
-        error: null
+        error: null,
       };
     }
 
     // 4. Sem localização disponível
     return {
       location_id: null,
-      error: "Configure sua localização no perfil antes de publicar"
+      error: "Configure sua localização no perfil antes de publicar",
     };
   };
 
@@ -190,9 +195,9 @@ export function CreatePostModal({ open, onClose, defaultType }: CreatePostModalP
 
   const handlePublish = async () => {
     if (!form.validateForm()) return;
-    if (!profile) { 
-      toast.error("Faça login para publicar"); 
-      return; 
+    if (!profile) {
+      toast.error("Faça login para publicar");
+      return;
     }
 
     if (locationError) {
@@ -208,8 +213,8 @@ export function CreatePostModal({ open, onClose, defaultType }: CreatePostModalP
     setPublishing(true);
     try {
       const data = form.getFormData();
-      
-      // ✅ SPRINT 2 FASE 3: Usar createPost() com location_id
+
+      // SPRINT 2 FASE 3: Usar createPost() com location_id
       await postService.createPost({
         author_profile_id: profile.id,
         content: data.content,
@@ -218,7 +223,7 @@ export function CreatePostModal({ open, onClose, defaultType }: CreatePostModalP
         reach: data.reach,
         images: data.images,
       });
-      
+
       toast.success("Post publicado!");
       form.resetForm();
       onClose();
@@ -231,9 +236,9 @@ export function CreatePostModal({ open, onClose, defaultType }: CreatePostModalP
           ? (error as { code: string }).code
           : null;
       // Tratar erros específicos do service
-      if (errorCode === 'INVALID_LOCATION_TYPE') {
+      if (errorCode === "INVALID_LOCATION_TYPE") {
         toast.error("Esta localização não permite criação de posts");
-      } else if (errorCode === 'INACTIVE_LOCATION') {
+      } else if (errorCode === "INACTIVE_LOCATION") {
         toast.error("Localização inativa");
       } else {
         toast.error("Erro ao publicar");
@@ -243,12 +248,14 @@ export function CreatePostModal({ open, onClose, defaultType }: CreatePostModalP
     }
   };
 
-  const handleClose = () => { form.resetForm(); onClose(); };
+  const handleClose = () => {
+    form.resetForm();
+    onClose();
+  };
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-[540px] bg-card border-border p-0 gap-0 overflow-hidden">
-
         {/* Header */}
         <DialogHeader className="px-5 py-4 border-b border-border bg-card">
           <DialogTitle className="text-base font-semibold text-foreground">
@@ -259,8 +266,7 @@ export function CreatePostModal({ open, onClose, defaultType }: CreatePostModalP
         {/* Form */}
         <>
           <div className="px-5 py-4 flex flex-col gap-4 max-h-[65vh] overflow-y-auto">
-
-            {/* ✅ SPRINT 2 FASE 3: Alerta de bloqueio territorial */}
+            {/* SPRINT 2 FASE 3: Alerta de bloqueio territorial */}
             {locationError && (
               <Alert variant="destructive" className="border-destructive/50 bg-destructive/10">
                 <AlertCircle className="h-4 w-4" />
@@ -295,8 +301,8 @@ export function CreatePostModal({ open, onClose, defaultType }: CreatePostModalP
                   </div>
                 </div>
               </div>
-              {/* Badge de autoria — visível quando não é o perfil personal padrão */}
-              {effectiveProfile && effectiveProfile.profile_type !== 'personal' && (
+              {/* Badge de autoria - visível quando não é o perfil personal padrão */}
+              {effectiveProfile && effectiveProfile.profile_type !== "personal" && (
                 <ActiveProfileBadge profile={effectiveProfile} action="publicando como" />
               )}
             </div>
@@ -390,15 +396,21 @@ export function CreatePostModal({ open, onClose, defaultType }: CreatePostModalP
                 {form.images.map((img, i) => (
                   <div key={i} className="relative group">
                     <img src={img} alt="" className="h-16 w-16 object-cover rounded-lg border border-border" />
-                    <button type="button" onClick={() => form.handleRemoveImage(i)}
-                      className="absolute -top-1.5 -right-1.5 h-5 w-5 rounded-full bg-destructive text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button
+                      type="button"
+                      onClick={() => form.handleRemoveImage(i)}
+                      className="absolute -top-1.5 -right-1.5 h-5 w-5 rounded-full bg-destructive text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
                       <X className="h-3 w-3" />
                     </button>
                   </div>
                 ))}
                 {form.images.length < 3 && (
-                  <button type="button" onClick={form.handleAddImage}
-                    className="h-16 w-16 rounded-lg border-2 border-dashed border-border text-muted-foreground hover:border-primary/50 hover:text-primary transition-colors flex items-center justify-center">
+                  <button
+                    type="button"
+                    onClick={form.handleAddImage}
+                    className="h-16 w-16 rounded-lg border-2 border-dashed border-border text-muted-foreground hover:border-primary/50 hover:text-primary transition-colors flex items-center justify-center"
+                  >
                     <Image className="h-5 w-5" />
                   </button>
                 )}
@@ -410,11 +422,10 @@ export function CreatePostModal({ open, onClose, defaultType }: CreatePostModalP
           <div className="px-5 py-3 border-t border-border flex items-center justify-between">
             <p className="text-xs text-muted-foreground">
               {locationError
-                ? "⚠️ Localização inválida"
+                ? "Localização inválida"
                 : form.isValid
-                ? "✓ Pronto para publicar"
-                : `Mínimo 20 caracteres (${Math.max(0, 20 - form.characterCount)} restantes)`
-              }
+                  ? "Pronto para publicar"
+                  : `Mínimo 20 caracteres (${Math.max(0, 20 - form.characterCount)} restantes)`}
             </p>
             <div className="flex gap-2">
               <Button variant="ghost" size="sm" onClick={handleClose} className="text-muted-foreground text-xs">

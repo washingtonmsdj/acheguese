@@ -1,9 +1,15 @@
 import { logger } from '@/shared/utils/logger';
 import { useQuery } from "@tanstack/react-query";
 import { ClassifiedsFacade, mapToClassificadoList } from "@/modules/classifieds/services";
-import { useTerritoryFilter, isTerritoryFilterReady, territoryFilterKey } from "@/core/location";
+import {
+  useModuleTerritoryFilter,
+  isTerritoryFilterReady,
+  territoryFilterKey,
+  type ModuleTerritoryUiFilter,
+} from "@/core/location";
 import type { ResolvedTerritory } from "@/core/routing/hooks/useResolveTerritoryFromUrl";
 import type { ClassifiedData } from "../services/types";
+import type { TerritoryFilter } from "@/core/location/types";
 export interface ClassificadoWithVendedor {
   id: string;
   public_id: string;
@@ -31,6 +37,7 @@ export interface ClassificadoWithVendedor {
 }
 
 interface UseClassificadosOptions {
+  enabled?: boolean;
   filters?: {
     category?: string;
     search?: string;
@@ -43,13 +50,19 @@ interface UseClassificadosOptions {
   routeResolved?: ResolvedTerritory | null;
   /** IDs dos membros ativos do grupo (quando routeResolved.kind === 'group') */
   activeMemberIds?: string[];
+  territoryFilter?: TerritoryFilter;
+  uiTerritoryFilter?: ModuleTerritoryUiFilter;
 }
 
 export function useClassificados(options: UseClassificadosOptions = {}) {
-  const { filters, routeResolved, activeMemberIds } = options;
+  const { filters, routeResolved } = options;
 
   // Filtro territorial canônico — suporta location e group
-  const filter = useTerritoryFilter(routeResolved, activeMemberIds);
+  const moduleTerritory = useModuleTerritoryFilter({
+    routeResolved,
+    uiFilter: options.uiTerritoryFilter,
+  });
+  const filter = options.territoryFilter ?? moduleTerritory.territoryFilter;
   const filterReady = isTerritoryFilterReady(filter);
   const filterKey = territoryFilterKey(filter);
 
@@ -95,7 +108,7 @@ export function useClassificados(options: UseClassificadosOptions = {}) {
       }
       return mapped as ClassificadoWithVendedor[];
     },
-    enabled: true, // Sempre executa - filtro territorial é opcional
+    enabled: options.enabled ?? true, // Sempre executa por padrao - filtro territorial e opcional
   });
 
   return {

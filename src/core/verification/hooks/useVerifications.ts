@@ -12,6 +12,14 @@ const QUERY_KEYS = {
   stats: ["verifications", "stats"] as const,
 };
 
+const RELATED_QUERY_KEYS = [
+  ["resident-verification"],
+  ["profile-hub"],
+  ["profile"],
+  ["profiles"],
+  ["user-territory-resolved"],
+] as const;
+
 export function useVerifications() {
   const queryClient = useQueryClient();
 
@@ -25,6 +33,11 @@ export function useVerifications() {
     queryFn: () => ProfileVerificationAdminService.getVerifiedProfiles(),
   });
 
+  const { data: rejected = [], isLoading: loadingRejected } = useQuery({
+    queryKey: ["verifications", "rejected"],
+    queryFn: () => ProfileVerificationAdminService.getRejectedProfiles(),
+  });
+
   const { data: stats } = useQuery({
     queryKey: QUERY_KEYS.stats,
     queryFn: () => ProfileVerificationAdminService.getVerificationStats(),
@@ -35,7 +48,11 @@ export function useVerifications() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.pending });
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.verified });
+      queryClient.invalidateQueries({ queryKey: ["verifications", "rejected"] });
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.stats });
+      RELATED_QUERY_KEYS.forEach((queryKey) => {
+        queryClient.invalidateQueries({ queryKey });
+      });
       toast.success("Verificacao aprovada com sucesso");
     },
     onError: (error) => {
@@ -49,7 +66,12 @@ export function useVerifications() {
       ProfileVerificationAdminService.rejectVerification(profileId, reason),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.pending });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.verified });
+      queryClient.invalidateQueries({ queryKey: ["verifications", "rejected"] });
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.stats });
+      RELATED_QUERY_KEYS.forEach((queryKey) => {
+        queryClient.invalidateQueries({ queryKey });
+      });
       toast.success("Verificacao rejeitada");
     },
     onError: (error) => {
@@ -62,7 +84,12 @@ export function useVerifications() {
     mutationFn: (profileId: string) => ProfileVerificationAdminService.revokeVerification(profileId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.verified });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.pending });
+      queryClient.invalidateQueries({ queryKey: ["verifications", "rejected"] });
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.stats });
+      RELATED_QUERY_KEYS.forEach((queryKey) => {
+        queryClient.invalidateQueries({ queryKey });
+      });
       toast.success("Verificacao revogada");
     },
     onError: (error) => {
@@ -74,9 +101,11 @@ export function useVerifications() {
   return {
     pending,
     verified,
+    rejected,
     stats,
     loadingPending,
     loadingVerified,
+    loadingRejected,
     isApproving: approveMutation.isPending,
     isRejecting: rejectMutation.isPending,
     isRevoking: revokeMutation.isPending,
@@ -85,4 +114,3 @@ export function useVerifications() {
     revoke: revokeMutation.mutate,
   };
 }
-

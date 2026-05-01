@@ -22,6 +22,9 @@ export interface ClassificadosFilters {
   delivery: string;       // entrega | retirada | todos
   hasPhoto: boolean;
   sellerType: string;     // profissional | particular | todos
+  stateSlug: string;
+  citySlug: string;
+  locationSlug: string;
 }
 
 interface UseClassificadosPageOptions {
@@ -40,6 +43,9 @@ const DEFAULT_FILTERS: ClassificadosFilters = {
   delivery: "todos",
   hasPhoto: false,
   sellerType: "todos",
+  stateSlug: "",
+  citySlug: "",
+  locationSlug: "",
 };
 
 export function useClassificadosPage(options: UseClassificadosPageOptions = {}) {
@@ -59,6 +65,14 @@ export function useClassificadosPage(options: UseClassificadosPageOptions = {}) 
     },
     routeResolved,
     activeMemberIds,
+    uiTerritoryFilter:
+      filters.stateSlug && filters.citySlug
+        ? {
+            stateSlug: filters.stateSlug,
+            citySlug: filters.citySlug,
+            locationSlug: filters.locationSlug || undefined,
+          }
+        : undefined,
   });
 
   const { vendedores, isLoading: isLoadingVendedores } = useVendedores({
@@ -67,7 +81,7 @@ export function useClassificadosPage(options: UseClassificadosPageOptions = {}) 
     search: filters.search || undefined,
   });
 
-  // Filtros locais adicionais (condição, foto, tipo vendedor)
+  // Filtros locais adicionais (condiÃ§Ã£o, foto, tipo vendedor)
   const filteredClassificados = classificados.filter((c) => {
     if (filters.hasPhoto && (!c.fotos || c.fotos.length === 0)) return false;
     if (filters.condition !== "todos" && c.condition && c.condition !== filters.condition) return false;
@@ -114,6 +128,29 @@ export function useClassificadosPage(options: UseClassificadosPageOptions = {}) 
   );
   const handleClearFilters = useCallback(
     () => setFilters(DEFAULT_FILTERS),
+    [],
+  );
+  const handleStateSlugChange = useCallback(
+    (value: string) =>
+      setFilters((f) => ({
+        ...f,
+        stateSlug: value,
+        citySlug: value === f.stateSlug ? f.citySlug : "",
+        locationSlug: "",
+      })),
+    [],
+  );
+  const handleCitySlugChange = useCallback(
+    (value: string) =>
+      setFilters((f) => ({
+        ...f,
+        citySlug: value,
+        locationSlug: "",
+      })),
+    [],
+  );
+  const handleLocationSlugChange = useCallback(
+    (value: string) => setFilters((f) => ({ ...f, locationSlug: value })),
     [],
   );
   const handleClassificadoClick = useCallback(
@@ -166,6 +203,9 @@ export function useClassificadosPage(options: UseClassificadosPageOptions = {}) 
     handleDeliveryChange,
     handleHasPhotoChange,
     handleSellerTypeChange,
+    handleStateSlugChange,
+    handleCitySlugChange,
+    handleLocationSlugChange,
     handleClearFilters,
 
     // Actions

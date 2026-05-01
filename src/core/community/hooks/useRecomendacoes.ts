@@ -5,15 +5,19 @@
  * Usa useTerritoryFilter para resolver o território ativo.
  */
 
-import { useEffect, useCallback } from "react";
+import { useEffect, useCallback, useRef } from "react";
 import {
   useInfiniteScroll,
   usePaginatedState,
 } from "@/shared/hooks/useInfiniteScroll";
 import { CommunityQAService } from "@/core/community/services/CommunityQAService";
-import { useTerritoryFilter } from "@/core/location/hooks/useTerritoryFilter";
+import {
+  territoryFilterKey,
+  useTerritoryFilter,
+} from "@/core/location/hooks/useTerritoryFilter";
 import type { CommunityQuestion, QuestionFilters } from "@/core/community/qa-types";
 import type { ResolvedTerritory } from "@/core/routing/hooks/useResolveTerritoryFromUrl";
+import type { TerritoryFilter } from "@/core/location";
 
 export type QuestionItem = CommunityQuestion;
 
@@ -22,6 +26,7 @@ interface UseRecomendacoesProps {
   search?: string;
   routeResolved?: ResolvedTerritory | null;
   activeMemberIds?: string[];
+  territoryFilter?: TerritoryFilter;
 }
 
 export function useRecomendacoes({
@@ -29,6 +34,7 @@ export function useRecomendacoes({
   search = "",
   routeResolved,
   activeMemberIds,
+  territoryFilter,
 }: UseRecomendacoesProps = {}) {
   const {
     items: questions,
@@ -45,12 +51,21 @@ export function useRecomendacoes({
   } = usePaginatedState<CommunityQuestion>();
 
   // Filtro territorial canônico — suporta location e group
-  const territoryFilter = useTerritoryFilter(routeResolved, activeMemberIds);
+  const routeTerritoryFilter = useTerritoryFilter(routeResolved, activeMemberIds);
+  const activeTerritoryFilter = territoryFilter ?? routeTerritoryFilter;
+  const activeTerritoryFilterKey = territoryFilterKey(activeTerritoryFilter);
+  const activeTerritoryFilterRef = useRef(activeTerritoryFilter);
+
+  useEffect(() => {
+    activeTerritoryFilterRef.current = activeTerritoryFilter;
+  }, [activeTerritoryFilterKey, activeTerritoryFilter]);
 
   const fetchPage = useCallback(
     async (pageNum: number) => {
+      const resolvedTerritoryFilter = activeTerritoryFilterRef.current;
+
       // Não buscar sem território resolvido
-      if (territoryFilter.scope === 'none') {
+      if (resolvedTerritoryFilter.scope === 'none') {
         setInitialLoading(false);
         return;
       }
@@ -63,9 +78,9 @@ export function useRecomendacoes({
         limit: PAGE_SIZE,
         offset: from,
         // Filtro territorial
-        ...(territoryFilter.scope === 'location'
-          ? { location_id: territoryFilter.location_id }
-          : { location_ids: territoryFilter.location_ids }),
+        ...(resolvedTerritoryFilter.scope === 'location'
+          ? { location_id: resolvedTerritoryFilter.location_id }
+          : { location_ids: resolvedTerritoryFilter.location_ids }),
       };
 
       const data = await CommunityQAService.getQuestions(filters);
@@ -74,13 +89,13 @@ export function useRecomendacoes({
       setLoading(false);
       setInitialLoading(false);
     },
-    [filter, PAGE_SIZE, territoryFilter, setLoading, setInitialLoading, appendItems],
+    [filter, PAGE_SIZE, activeTerritoryFilterKey, setLoading, setInitialLoading, appendItems],
   );
 
   useEffect(() => {
     reset();
     fetchPage(0);
-  }, [filter, territoryFilter, reset, fetchPage]);
+  }, [reset, fetchPage]);
 
   useEffect(() => {
     if (page > 0) fetchPage(page);

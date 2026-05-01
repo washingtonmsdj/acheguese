@@ -29,7 +29,7 @@ import {
 } from "@/shared/components/ui/sheet";
 import { useSessionContext } from "@/core/session";
 import { useAppUrls } from "@/core/routing/hooks/useAppUrls";
-import { useTerritoryLabels } from "@/core/location";
+import { ModuleLocationDialog, useTerritoryLabels } from "@/core/location";
 import { useClassificados } from "@/modules/classifieds/hooks/useClassificados";
 import { CLASSIFIED_CATEGORIES, getCategoryEmoji } from "@/modules/classifieds/constants/categories";
 import { classifiedUrlService } from "@/modules/classifieds/services/ClassifiedUrlService";
@@ -109,12 +109,28 @@ export default function ClassificadosLandingPage({ resolved, activeMemberIds }: 
   const appUrls = useAppUrls(resolved);
   const territoryLabels = useTerritoryLabels(resolved);
   const [viewMode, setViewMode] = useState<ViewMode>("anuncios");
+  const [locationDialogOpen, setLocationDialogOpen] = useState(false);
   const [filters, setFilters] = useState<Filters>(DEFAULT_FILTERS);
 
   // ✅ SSOT: Nome do território
   const territoryName = useMemo(() => {
     return territoryLabels.name || "sua região";
   }, [territoryLabels]);
+  const initialSlugs = useMemo(() => {
+    const geoPath =
+      resolved?.kind === "location"
+        ? resolved.location.geographic_path
+        : resolved?.kind === "group"
+          ? resolved.group.members[0]?.geographic_path
+          : null;
+    if (!geoPath) return {};
+    const parts = geoPath.split("/").filter(Boolean);
+    return {
+      stateSlug: parts[1] ?? null,
+      citySlug: parts[2] ?? null,
+      districtSlug: parts[3] ?? null,
+    };
+  }, [resolved]);
 
   const { classificados, isLoading } = useClassificados({
     filters: {
@@ -227,6 +243,34 @@ export default function ClassificadosLandingPage({ resolved, activeMemberIds }: 
         onConditionChange={(v) => updateFilter("condition", v)}
         onHasPhotoChange={(v) => updateFilter("hasPhoto", v)}
         onClearFilters={clearFilters}
+      />
+
+      <section className="max-w-7xl mx-auto w-full px-4 sm:px-6 mt-2">
+        <div className="rounded-xl border-2 border-primary/30 bg-primary/5 p-3.5 shadow-sm flex items-center justify-between gap-3">
+          <div className="min-w-0">
+            <p className="text-[11px] uppercase tracking-wide text-primary font-semibold flex items-center gap-1.5">
+              <MapPin className="h-3.5 w-3.5" />
+              Localização ativa
+            </p>
+            <p className="text-sm font-bold truncate">{territoryName}</p>
+          </div>
+          <Button
+            type="button"
+            variant="outline"
+            className="h-8 rounded-lg px-3 text-xs font-semibold"
+            onClick={() => setLocationDialogOpen(true)}
+          >
+            Alterar local
+          </Button>
+        </div>
+      </section>
+
+      <ModuleLocationDialog
+        open={locationDialogOpen}
+        onOpenChange={setLocationDialogOpen}
+        moduleBasePath="/classificados"
+        initialSlugs={initialSlugs}
+        onApplyPath={(path) => navigate(path)}
       />
 
       {/* ── Category Chips ────────────────────────────── */}

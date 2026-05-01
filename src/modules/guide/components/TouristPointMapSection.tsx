@@ -20,7 +20,6 @@ import {
 } from '@/shared/components/ui/dialog';
 import { MiniMap } from '@/shared/components/maps/MiniMap';
 import { toast } from '@/shared/components/ui/use-toast';
-import { useFriendlyModuleUrls } from '@/core/routing/hooks/useFriendlyModuleUrls';
 
 interface TouristPointMapSectionProps {
   latitude: number;
@@ -44,9 +43,6 @@ export function TouristPointMapSection({
   const wazeUrl = `https://waze.com/ul?ll=${latitude},${longitude}&navigate=yes`;
 
   // URL territorial do mapa — SSOT via useFriendlyModuleUrls
-  const moduleUrls = useFriendlyModuleUrls();
-  const internalMapUrl = moduleUrls.map;
-
   const handleCopyCoordinates = () => {
     const coords = `${latitude}, ${longitude}`;
     navigator.clipboard.writeText(coords);
@@ -91,7 +87,7 @@ export function TouristPointMapSection({
               variant="default"
               className="w-full"
             >
-              <a href={internalMapUrl}>
+              <a href="/mapa">
                 <MapIcon className="h-3.5 w-3.5 mr-1.5" />
                 Ver no Mapa
               </a>

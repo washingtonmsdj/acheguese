@@ -257,6 +257,7 @@ export class AuthService {
           city: data.city || undefined,
           neighborhood: data.neighborhood || undefined,
           state: data.state || undefined,
+          street: data.street || undefined,
           // UUID canônico — vínculo territorial imutável
           neighborhood_id: data.neighborhood_id || undefined,
         },

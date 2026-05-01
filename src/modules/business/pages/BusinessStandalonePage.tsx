@@ -4,10 +4,8 @@ import React from "react";
  */
 
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 import { BusinessService } from "@/core/business/services/BusinessService";
 import { BusinessUrlService } from "@/core/business/services/BusinessUrlService";
-import { useFriendlyModuleUrls } from '@/core/routing/hooks/useFriendlyModuleUrls';
 import type { Business } from "@/modules/business/types";
 import { Skeleton } from "@/shared/components/ui/skeleton";
 import { Store } from "lucide-react";
@@ -29,8 +27,6 @@ interface BusinessStandalonePageProps {
 export default function BusinessStandalonePage({
   businessId,
 }: BusinessStandalonePageProps) {
-  const navigate = useNavigate();
-  const moduleUrls = useFriendlyModuleUrls();
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
   const [business, setBusiness] = useState<Business | null>(null);
@@ -101,7 +97,7 @@ export default function BusinessStandalonePage({
         is_premium: business.is_premium,
         geographic_path: (business as Business & { geographic_path?: string | null }).geographic_path ?? null,
       })
-    : moduleUrls.business;
+    : "/empresas";
 
   return (
     <>

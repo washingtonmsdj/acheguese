@@ -35,8 +35,6 @@ import {
 import { useToast } from "@/shared/hooks/use-toast";
 import { ALERT_STATUS } from "@/shared/types/constants";
 import { messagingService } from "@/core/messaging";
-import { useClassifiedUrls } from "@/core/classifieds/hooks/useClassifiedUrls";
-import { useFriendlyModuleUrls } from "@/core/routing/hooks/useFriendlyModuleUrls";
 import type { Message, ConversationWithDetails } from "@/core/messaging/types";
 
 /**
@@ -49,8 +47,6 @@ export default function ChatPage() {
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
   const { toast } = useToast();
-  const classifiedUrls = useClassifiedUrls();
-  const moduleUrls = useFriendlyModuleUrls();
   const [conversation, setConversation] =
     useState<ConversationWithDetails | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -267,7 +263,7 @@ export default function ChatPage() {
         <div
           className="flex items-center gap-2.5 flex-1 min-w-0 cursor-pointer"
           onClick={() =>
-            navigate(`${moduleUrls.classifieds}/${conversation.classified_id}`)
+            navigate(`/classificados/${conversation.classified_id}`)
           }
         >
           <div className="h-10 w-10 rounded-lg bg-secondary overflow-hidden shrink-0">
@@ -303,7 +299,7 @@ export default function ChatPage() {
           <DropdownMenuContent align="end">
             <DropdownMenuItem
               onClick={() =>
-                navigate(`${moduleUrls.classifieds}/${conversation.classified_id}`)
+                navigate(`/classificados/${conversation.classified_id}`)
               }
             >
               Ver anúncio

@@ -48,7 +48,6 @@ export function DadosPessoaisSection({
   setActiveSection,
   navigate,
   appUrls,
-  moduleUrls,
   handleBusinessClick,
 }: DadosPessoaisSectionProps) {
   return (
@@ -103,7 +102,7 @@ export function DadosPessoaisSection({
           />
           <GamificationCard
             profile={personalProfile}
-            onViewRanking={() => navigate(moduleUrls.ranking || "/ranking")}
+            onViewRanking={() => navigate("/ranking")}
           />
         </div>
       ) : null}
@@ -188,7 +187,7 @@ export function DadosPessoaisSection({
           userId={user.id}
           profileId={personalProfileId}
           favorites={favorites}
-          onPostClick={(id) => navigate(`${moduleUrls.community}/post/${id}`)}
+          onPostClick={(id) => navigate(`/comunidade/post/${id}`)}
           onBusinessClick={handleBusinessClick}
           onExplore={() => navigate(appUrls.business.list)}
           onCreateService={() => navigate(appUrls.services.register)}
@@ -207,7 +206,7 @@ export function DadosPessoaisSection({
           <ActivityTimeline
             userId={user.id}
             profileId={personalProfileId}
-            onPostClick={(id) => navigate(`${moduleUrls.community}/post/${id}`)}
+            onPostClick={(id) => navigate(`/comunidade/post/${id}`)}
           />
         </SectionFrame>
       ) : null}

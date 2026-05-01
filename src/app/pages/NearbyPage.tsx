@@ -33,9 +33,7 @@ import {
   TerritoryIndicator,
   useResolvedUserLocation,
 } from '@/core/location';
-import { TerritorySelectorV2 } from '@/core/location/components/TerritorySelectorV2';
 import type { ResolvedTerritory } from '@/core/routing/hooks/useResolveTerritoryFromUrl';
-import { useFriendlyModuleUrls } from '@/core/routing/hooks/useFriendlyModuleUrls';
 import {
   MapPin, Navigation, Loader2, Store, Calendar, AlertTriangle,
   Landmark, Compass, ChevronRight, TrendingUp, Sparkles,
@@ -128,7 +126,6 @@ function groupByType(entities: NearbyEntity[]) {
 
 export default function NearbyPage() {
   const navigate = useNavigate();
-  const moduleUrls = useFriendlyModuleUrls();
 
   // ── SSOT: Contexto territorial ativo ───────────────────────────────
   const { activeLocation, activeTerritory } = useLocationContext();
@@ -239,12 +236,10 @@ export default function NearbyPage() {
         />
 
         {/* ================================================================
-            TERRITORY SELECTOR & LOCATION SOURCE INDICATOR
+            LOCATION SOURCE INDICATOR
         ================================================================ */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-border/30">
-          <div className="flex items-center gap-3">
-            <TerritorySelectorV2 compact={false} />
-          </div>
+          <div className="text-sm text-muted-foreground">{sourceMessage}</div>
           <div className="flex items-center gap-3">
             {activeLocation && (
               <TerritoryIndicator resolved={resolved} />
@@ -359,7 +354,7 @@ export default function NearbyPage() {
               count={businesses.length}
               isEmpty={businesses.length === 0}
               isLoading={isLoading}
-              onSeeAll={businesses.length > 6 ? () => navigate(moduleUrls.business) : undefined}
+              onSeeAll={businesses.length > 6 ? () => navigate('/empresas') : undefined}
             >
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {businesses.slice(0, 6).map((e) => (
@@ -376,7 +371,7 @@ export default function NearbyPage() {
               iconColorClass="bg-orange-500/10 text-orange-500"
               count={businesses.filter((b) => b.metadata?.category === 'food' || b.metadata?.gastronomy_profile).length}
               isEmpty={businesses.filter((b) => b.metadata?.category === 'food' || b.metadata?.gastronomy_profile).length === 0}
-              onSeeAll={() => navigate(moduleUrls.gastronomy)}
+              onSeeAll={() => navigate('/gastronomia')}
             >
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {businesses
@@ -396,7 +391,7 @@ export default function NearbyPage() {
               iconColorClass="bg-indigo-500/10 text-indigo-500"
               count={businesses.filter((b) => b.metadata?.category === 'services').length}
               isEmpty={businesses.filter((b) => b.metadata?.category === 'services').length === 0}
-              onSeeAll={() => navigate(moduleUrls.services)}
+              onSeeAll={() => navigate('/servicos')}
             >
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {businesses
@@ -426,7 +421,7 @@ export default function NearbyPage() {
               count={events.length}
               isEmpty={events.length === 0}
               isLoading={isLoading}
-              onSeeAll={events.length > 6 ? () => navigate(moduleUrls.events) : undefined}
+              onSeeAll={events.length > 6 ? () => navigate('/eventos') : undefined}
             >
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {events.slice(0, 6).map((e) => (
@@ -444,7 +439,7 @@ export default function NearbyPage() {
               count={touristPoints.length}
               isEmpty={touristPoints.length === 0}
               isLoading={isLoading}
-              onSeeAll={touristPoints.length > 6 ? () => navigate(moduleUrls.touristPoints) : undefined}
+              onSeeAll={touristPoints.length > 6 ? () => navigate('/pontos-turisticos') : undefined}
             >
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {touristPoints.slice(0, 6).map((e) => (

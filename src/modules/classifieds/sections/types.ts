@@ -48,6 +48,9 @@ export interface ClassifiedsFilters {
   readonly priceMax: string;
   readonly condition: string;
   readonly hasPhoto: boolean;
+  readonly stateSlug: string;
+  readonly citySlug: string;
+  readonly locationSlug: string;
 }
 
 // ============================================
@@ -152,6 +155,9 @@ export interface ClassifiedsFiltrosSectionProps extends BaseSectionProps {
   readonly onPriceMaxChange: (value: string) => void;
   readonly onConditionChange: (condition: string) => void;
   readonly onHasPhotoChange: (hasPhoto: boolean) => void;
+  readonly onStateSlugChange: (stateSlug: string) => void;
+  readonly onCitySlugChange: (citySlug: string) => void;
+  readonly onLocationSlugChange: (locationSlug: string) => void;
   readonly onClearFilters: () => void;
   readonly onCategoryChange: (categoryId: string) => void;
 }

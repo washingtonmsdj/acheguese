@@ -8,16 +8,21 @@
  * ✅ Bottom nav apenas no mobile
  */
 
+import { useEffect } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import { SidebarProvider } from '@/shared/components/ui/sidebar';
 import { AppSidebar } from './navigation/AppSidebar';
 import { BottomNav } from './BottomNav';
 import { TerritoryMismatchBanner } from '@/core/location/components/TerritoryMismatchBanner';
 import { useIsMobile } from '@/shared/hooks/use-mobile';
+import { scheduleIdleRouteWarmup } from '@/app/routes/prefetch';
 
 export function AppLayoutSidebar() {
   const isMobile = useIsMobile();
   const { pathname } = useLocation();
+  useEffect(() => {
+    scheduleIdleRouteWarmup();
+  }, []);
   
   // Ocultar sidebar na página de perfil (que tem sua própria sidebar)
   const hideGlobalSidebar = pathname.startsWith('/perfil');

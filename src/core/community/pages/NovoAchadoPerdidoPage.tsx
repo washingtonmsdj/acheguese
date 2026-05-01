@@ -27,6 +27,7 @@ import { LocationPickerSheet } from "@/shared/components/LocationPickerSheet";
 import { useToast } from "@/shared/hooks/use-toast";
 import { lostFoundRuntimeService as lostFoundService } from "@/core/community/services/LostFoundRuntimeService";
 import { useAuth } from "@/core/auth/hooks/useAuth";
+import { useUserTerritory } from "@/core/location/hooks/useUserTerritory";
 import { cn } from "@/shared/utils/cn";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -69,6 +70,7 @@ export default function NovoAchadoPerdidoPage() {
   const appUrls = useAppUrls(); // âœ… SSOT URLs
   const { toast } = useToast();
   const { user } = useAuth();
+  const { homeDistrict, loading: territoryLoading } = useUserTerritory();
   const [loading, setLoading] = useState(false);
   const [photoPreview, setFotoPreview] = useState<string | null>(null);
   const [photoFile, setFotoFile] = useState<File | null>(null);
@@ -118,6 +120,12 @@ export default function NovoAchadoPerdidoPage() {
       return;
     }
 
+    if (!homeDistrict?.id) {
+      toast({ title: "Escolha seu bairro antes de publicar", variant: "destructive" });
+      navigate(appUrls.community.home);
+      return;
+    }
+
     setLoading(true);
     try {
       let photoUrl = "";
@@ -137,6 +145,7 @@ export default function NovoAchadoPerdidoPage() {
         imagens: photoUrl ? [photoUrl] : [],
         local_perdido: data.localizacaoAprox?.trim() ?? "",
         data_perdido: format(data.dateOcorrido, "yyyy-MM-dd"),
+        location_id: homeDistrict.id,
         resolvido: false,
       });
 
@@ -393,7 +402,7 @@ export default function NovoAchadoPerdidoPage() {
         <Button
           type="submit"
           className="w-full"
-          disabled={loading}
+          disabled={loading || territoryLoading}
         >
           {loading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
           Publicar

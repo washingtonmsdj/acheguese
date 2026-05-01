@@ -17,6 +17,9 @@ export function ClassifiedsFiltrosSection({
   onPriceMaxChange,
   onConditionChange,
   onHasPhotoChange,
+  onStateSlugChange,
+  onCitySlugChange,
+  onLocationSlugChange,
   onClearFilters,
   onCategoryChange,
 }: ClassifiedsFiltrosSectionProps) {
@@ -31,6 +34,9 @@ export function ClassifiedsFiltrosSection({
         onPriceMaxChange={onPriceMaxChange}
         onConditionChange={onConditionChange}
         onHasPhotoChange={onHasPhotoChange}
+        onStateSlugChange={onStateSlugChange}
+        onCitySlugChange={onCitySlugChange}
+        onLocationSlugChange={onLocationSlugChange}
         onClearFilters={onClearFilters}
       />
 

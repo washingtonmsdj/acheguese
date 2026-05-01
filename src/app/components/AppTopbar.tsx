@@ -1,28 +1,14 @@
-/**
- * AppTopbar - Header Global Moderno
- * 
- * Design amigável e responsivo com:
- * - Logo com gradiente
- * - Seletor de território centralizado
- * - Ícones de ação com tooltips visuais
- * - Avatar com hover suave
- * - Badges de notificação animados
- */
-
-import { useState, useEffect, useSyncExternalStore } from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { MessageCircle, Home, Bell, User, LogIn } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { Home, LogIn, MessageCircle } from 'lucide-react';
 import { Button } from '@/shared/components/ui/button';
 import { UnifiedNotificationBellV2 } from '@/core/notifications';
 import { MessagingService } from '@/core/messaging';
 import { useAuth } from '@/core/auth/hooks/useAuth';
 import { useSessionContext } from '@/core/session';
-import { useFriendlyModuleUrls } from '@/core/routing/hooks/useFriendlyModuleUrls';
-import { lastTerritoryStore } from '@/core/routing/stores/LastTerritoryStore';
-import { useIsMobile } from '@/shared/hooks/use-mobile';
 import { Avatar, AvatarFallback, AvatarImage } from '@/shared/components/ui/avatar';
-import { TerritorySelectorV2 } from '@/core/location/components/TerritorySelectorV2';
 import { useSiteSettings } from '@/core/admin/hooks/useSiteSettings';
+import { prefetchRouteByHref } from '@/app/routes/prefetch';
 import {
   Tooltip,
   TooltipContent,
@@ -32,67 +18,57 @@ import {
 
 export function AppTopbar() {
   const navigate = useNavigate();
-  const { pathname } = useLocation();
-  const isMobile = useIsMobile();
   const { user } = useAuth();
   const { activeProfile } = useSessionContext();
-  const urls = useFriendlyModuleUrls();
   const [unreadMessages, setUnreadMessages] = useState(0);
   const { data: siteSettings } = useSiteSettings();
 
-  // Usa lastTerritoryStore para obter o nome correto do território
-  const lastTerritory = useSyncExternalStore(
-    lastTerritoryStore.subscribe.bind(lastTerritoryStore),
-    lastTerritoryStore.get.bind(lastTerritoryStore),
-  ) as import('@/core/routing/stores/LastTerritoryStore').LastTerritory | null;
-
   useEffect(() => {
-    if (!user) { setUnreadMessages(0); return; }
+    if (!user) {
+      setUnreadMessages(0);
+      return;
+    }
+
     const fetchUnread = async () => {
       try {
         const count = await MessagingService.getUnreadMessagesCount(user.id);
         setUnreadMessages(count);
-      } catch { setUnreadMessages(0); }
+      } catch {
+        setUnreadMessages(0);
+      }
     };
+
     fetchUnread();
     const sub = MessagingService.subscribeToMessages(user.id, () => fetchUnread());
-    return () => { if (sub) MessagingService.unsubscribeFromMessages(sub); };
+    return () => {
+      if (sub) MessagingService.unsubscribeFromMessages(sub);
+    };
   }, [user]);
 
   const getInitials = (name?: string | null): string => {
     if (!name) return 'U';
-    return name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
+    return name
+      .split(' ')
+      .map((word) => word[0])
+      .join('')
+      .toUpperCase()
+      .slice(0, 2);
   };
-
-  // Funções de busca removidas - busca agora está apenas na página de gastronomia
-
-  // ✅ URL dinâmica para a logo - vai para landing do território ativo (mesmo que botão "Início")
-  const getHomeUrl = (): string => {
-    // Se há território ativo (cidade ou bairro), usa o baseUrl dele
-    if (lastTerritory?.baseUrl) {
-      return lastTerritory.baseUrl;
-    }
-
-    // Fallback: URL territorial resolvida dinamicamente
-    return urls.base || '/';
-  };
-
-  // ✅ SSOT: Detectar módulo e mensagem contextual de forma centralizada
-  // Nota: contextMessage não é mais passado como prop - o seletor detecta automaticamente
 
   return (
     <header className="sticky top-0 w-full bg-gradient-to-r from-card/98 via-card/95 to-card/98 backdrop-blur-lg border-b border-border/60 shadow-sm flex-shrink-0 z-30">
       <div className="flex items-center h-16 gap-3 px-3 sm:px-6 max-w-[1600px] mx-auto">
-        {/* Logo customizada + Nome */}
         <Link
-          to={getHomeUrl()}
+          to="/"
+          onMouseEnter={() => prefetchRouteByHref('/')}
+          onFocus={() => prefetchRouteByHref('/')}
+          onTouchStart={() => prefetchRouteByHref('/')}
           className="flex items-center gap-2 hover:scale-105 transition-transform duration-200 flex-shrink-0 group"
         >
           {siteSettings?.logo_url ? (
-            // Logo customizada + Nome
             <>
-              <img 
-                src={siteSettings.logo_url} 
+              <img
+                src={siteSettings.logo_url}
                 alt={siteSettings.site_name || 'Logo'}
                 className="h-10 w-auto object-contain"
               />
@@ -101,7 +77,6 @@ export function AppTopbar() {
               </span>
             </>
           ) : (
-            // Logo padrão (fallback)
             <>
               <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-primary via-primary to-primary/80 flex items-center justify-center shadow-md group-hover:shadow-lg transition-shadow">
                 <Home className="h-4.5 w-4.5 text-primary-foreground" />
@@ -113,17 +88,10 @@ export function AppTopbar() {
           )}
         </Link>
 
-        {/* Territory Selector — centralizado */}
-        <div className="flex min-w-0 flex-1 items-center justify-center gap-2">
-          <div className="flex shrink-0">
-            <TerritorySelectorV2 compact={true} />
-          </div>
-        </div>
+        <div className="flex min-w-0 flex-1" />
 
-        {/* Actions com tooltips */}
         <TooltipProvider delayDuration={300}>
           <div className="flex items-center gap-1.5 ml-auto">
-            {/* Mensagens */}
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button
@@ -131,7 +99,10 @@ export function AppTopbar() {
                   size="icon"
                   className="relative h-10 w-10 hover:bg-primary/10 transition-colors rounded-xl"
                   onClick={() => navigate('/mensagens')}
-                  aria-label={`Mensagens${unreadMessages > 0 ? ` (${unreadMessages} não lidas)` : ''}`}
+                  onMouseEnter={() => prefetchRouteByHref('/mensagens')}
+                  onFocus={() => prefetchRouteByHref('/mensagens')}
+                  onTouchStart={() => prefetchRouteByHref('/mensagens')}
+                  aria-label={`Mensagens${unreadMessages > 0 ? ` (${unreadMessages} nao lidas)` : ''}`}
                 >
                   <MessageCircle className="h-5 w-5 text-foreground/80" />
                   {unreadMessages > 0 && (
@@ -146,14 +117,18 @@ export function AppTopbar() {
               </TooltipContent>
             </Tooltip>
 
-            {/* Notificações */}
             <UnifiedNotificationBellV2 />
 
-            {/* Perfil / Login */}
             {user ? (
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Link to="/perfil" className="ml-1">
+                  <Link
+                    to="/perfil"
+                    className="ml-1"
+                    onMouseEnter={() => prefetchRouteByHref('/perfil')}
+                    onFocus={() => prefetchRouteByHref('/perfil')}
+                    onTouchStart={() => prefetchRouteByHref('/perfil')}
+                  >
                     <Avatar className="h-9 w-9 border-2 border-primary/20 hover:border-primary/60 transition-all duration-200 hover:scale-105 cursor-pointer ring-offset-2 hover:ring-2 hover:ring-primary/30">
                       <AvatarImage src={activeProfile?.avatarUrl || undefined} />
                       <AvatarFallback className="text-xs bg-gradient-to-br from-primary/20 to-primary/10 text-primary font-bold">
@@ -168,7 +143,13 @@ export function AppTopbar() {
               </Tooltip>
             ) : (
               <Button
-                onClick={() => navigate('/login')}
+                onClick={() => {
+                  prefetchRouteByHref('/login');
+                  navigate('/login');
+                }}
+                onMouseEnter={() => prefetchRouteByHref('/login')}
+                onFocus={() => prefetchRouteByHref('/login')}
+                onTouchStart={() => prefetchRouteByHref('/login')}
                 className="bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary/80 text-primary-foreground font-semibold text-sm h-10 px-5 rounded-xl ml-1 shadow-md hover:shadow-lg transition-all duration-200 gap-2"
               >
                 <LogIn className="h-4 w-4" />

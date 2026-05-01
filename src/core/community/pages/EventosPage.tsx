@@ -23,6 +23,7 @@ import { useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useEventos, type Evento } from "@/core/community/hooks/useEventos";
 import { useCommunityUrls } from "@/core/community/hooks/useCommunityUrls";
+import { ModuleLocationDialog, useModuleTerritoryFilter } from "@/core/location";
 
 /**
  * ✅ SSOT COMPLIANT - EventosPage migrada
@@ -39,7 +40,9 @@ interface EventosPageProps {
 
 export default function EventosPage({ resolved }: EventosPageProps) {
   const navigate = useNavigate();
-  const communityUrls = useCommunityUrls();
+  const communityUrls = useCommunityUrls(resolved);
+  const moduleTerritory = useModuleTerritoryFilter({ routeResolved: resolved });
+  const [locationDialogOpen, setLocationDialogOpen] = useState(false);
 
   // Filters state
   const [category, setCategory] = useState("todos");
@@ -77,6 +80,22 @@ export default function EventosPage({ resolved }: EventosPageProps) {
     }
   }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
+  const initialSlugs = (() => {
+    const geoPath =
+      resolved?.kind === "location"
+        ? resolved.location.geographic_path
+        : resolved?.kind === "group"
+          ? resolved.group.members[0]?.geographic_path
+          : null;
+    if (!geoPath) return {};
+    const parts = geoPath.split("/").filter(Boolean);
+    return {
+      stateSlug: parts[1] ?? null,
+      citySlug: parts[2] ?? null,
+      districtSlug: parts[3] ?? null,
+    };
+  })();
+
   return (
     <div className="flex flex-col min-h-screen">
 
@@ -84,9 +103,36 @@ export default function EventosPage({ resolved }: EventosPageProps) {
       <div className="px-4 pt-4 pb-2">
         <h1 className="text-xl font-bold font-display">Eventos Locais</h1>
         <p className="text-sm text-muted-foreground">
-          O que está acontecendo no seu bairro
+          O que está acontecendo em {moduleTerritory.displayLabel}
         </p>
       </div>
+
+      {/* Localização ativa (separada dos filtros) */}
+      <div className="px-4 pb-2">
+        <div className="rounded-xl border-2 border-primary/30 bg-primary/5 p-3.5 shadow-sm flex items-center justify-between gap-3">
+          <div className="min-w-0">
+            <p className="text-[11px] uppercase tracking-wide text-primary font-semibold">
+              Localização ativa
+            </p>
+            <p className="text-sm font-bold truncate">{moduleTerritory.displayLabel}</p>
+          </div>
+          <button
+            type="button"
+            className="h-8 rounded-lg px-3 text-xs font-semibold border border-border bg-background hover:bg-muted transition-colors"
+            onClick={() => setLocationDialogOpen(true)}
+          >
+            Alterar local
+          </button>
+        </div>
+      </div>
+
+      <ModuleLocationDialog
+        open={locationDialogOpen}
+        onOpenChange={setLocationDialogOpen}
+        moduleBasePath="/eventos"
+        initialSlugs={initialSlugs}
+        onApplyPath={(path) => navigate(path)}
+      />
 
       {/* Filters */}
       <div className="px-4 py-2">

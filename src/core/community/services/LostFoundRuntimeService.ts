@@ -1,5 +1,6 @@
 import { supabase } from "@/integrations/supabase";
 import { logger } from "@/shared/utils/logger";
+import type { TerritoryFilter } from "@/core/location";
 
 export interface LostFoundPost {
   id: string;
@@ -13,6 +14,7 @@ export interface LostFoundPost {
   imagens?: string[];
   contato_telefone?: string;
   contato_email?: string;
+  location_id?: string | null;
   resolvido: boolean;
   created_at: string;
   updated_at: string;
@@ -33,6 +35,7 @@ class LostFoundRuntimeService {
       tipo?: "perdido" | "achado";
       categoria?: string;
       resolvido?: boolean;
+      territoryFilter?: TerritoryFilter;
     } = {},
   ): Promise<LostFoundPost[]> {
     try {
@@ -44,6 +47,14 @@ class LostFoundRuntimeService {
       if (filters.tipo) query = query.eq("tipo", filters.tipo);
       if (filters.categoria) query = query.eq("categoria", filters.categoria);
       if (filters.resolvido !== undefined) query = query.eq("resolvido", filters.resolvido);
+      if (filters.territoryFilter?.scope === "location") {
+        query = query.eq("location_id", filters.territoryFilter.location_id);
+      } else if (
+        filters.territoryFilter?.scope === "group" &&
+        filters.territoryFilter.location_ids.length > 0
+      ) {
+        query = query.in("location_id", filters.territoryFilter.location_ids);
+      }
 
       const { data, error } = await query;
       if (error) throw error;
@@ -144,7 +155,7 @@ class LostFoundRuntimeService {
   }
 
   async getPostsPage(
-    filters: { tipo?: string; categoria?: string } = {},
+    filters: { tipo?: string; categoria?: string; territoryFilter?: TerritoryFilter } = {},
     from: number,
     to: number,
   ): Promise<any[]> {
@@ -157,6 +168,14 @@ class LostFoundRuntimeService {
 
       if (filters.tipo && filters.tipo !== "todos") query = query.eq("tipo", filters.tipo);
       if (filters.categoria && filters.categoria !== "todos") query = query.eq("category", filters.categoria);
+      if (filters.territoryFilter?.scope === "location") {
+        query = query.eq("location_id", filters.territoryFilter.location_id);
+      } else if (
+        filters.territoryFilter?.scope === "group" &&
+        filters.territoryFilter.location_ids.length > 0
+      ) {
+        query = query.in("location_id", filters.territoryFilter.location_ids);
+      }
 
       const { data, error } = await query;
       if (error) throw error;

@@ -6,12 +6,11 @@
  */
 
 import { useState } from 'react';
-import { Link, Navigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { Heart, Loader2, Search, Tag, X } from 'lucide-react';
 
 import { useSessionContext } from '@/core/session';
-import { useFriendlyModuleUrls } from '@/core/routing/hooks/useFriendlyModuleUrls';
 import { Badge } from '@/shared/components/ui/badge';
 import { Button } from '@/shared/components/ui/button';
 import { Input } from '@/shared/components/ui/input';
@@ -20,7 +19,6 @@ import { useUserFavorites } from '../hooks/useFavorites';
 
 export default function MyFavoritesPage() {
   const { user } = useSessionContext();
-  const moduleUrls = useFriendlyModuleUrls();
 
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
@@ -33,11 +31,25 @@ export default function MyFavoritesPage() {
   // Redirecionar para login se não autenticado
   if (!user) {
     return (
-      <Navigate
-        to="/auth/login"
-        state={{ redirectTo: '/gastronomia/favoritos' }}
-        replace
-      />
+      <div className="flex min-h-screen items-center justify-center bg-background px-4">
+        <div className="max-w-md rounded-xl border border-dashed p-8 text-center">
+          <Heart className="mx-auto h-12 w-12 text-muted-foreground/30" />
+          <h1 className="mt-4 text-xl font-semibold">Entre para ver seus favoritos</h1>
+          <p className="mt-2 text-sm text-muted-foreground">
+            Seus restaurantes salvos ficam disponiveis depois do login.
+          </p>
+          <div className="mt-6 flex flex-col justify-center gap-3 sm:flex-row">
+            <Button asChild>
+              <Link to="/login" state={{ redirectTo: '/gastronomia/favoritos' }}>
+                Entrar
+              </Link>
+            </Button>
+            <Button asChild variant="outline">
+              <Link to="/gastronomia">Explorar gastronomia</Link>
+            </Button>
+          </div>
+        </div>
+      </div>
     );
   }
 
@@ -194,7 +206,7 @@ export default function MyFavoritesPage() {
                 Salve restaurantes para acessá-los rapidamente
               </p>
               <Button asChild className="mt-4">
-                <Link to={moduleUrls.gastronomy}>Explorar gastronomia</Link>
+                <Link to="/gastronomia">Explorar gastronomia</Link>
               </Button>
             </div>
           )}

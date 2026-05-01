@@ -1,24 +1,20 @@
 /**
  * BottomNavV2
  * 
- * Nova bottom nav mobile com seletor de localidade integrado
- * e badges de notificação para mensagens e alertas.
+ * Nova bottom nav mobile com badges de notificação para mensagens e alertas.
  * Coexiste com BottomNav original.
  */
 
 import React, { useState, useEffect } from 'react';
-import { useSyncExternalStore } from 'react';
 import {
   Users, Building2, Wrench, Tag, Home,
   MoreHorizontal, Calendar, Car, Map, Search,
-  MessageCircle, Bell, Briefcase,
+  MessageCircle, Bell, Briefcase, GraduationCap,
 } from 'lucide-react';
 import { useNavigate, useLocation as useRouterLocation } from 'react-router-dom';
 import { cn } from '@/shared/utils/cn';
-import { useFriendlyModuleUrls } from '@/core/routing/hooks/useFriendlyModuleUrls';
+import { prefetchRouteByHref } from '@/app/routes/prefetch';
 import { useAppUrls } from '@/core/routing/hooks/useAppUrls';
-import { lastTerritoryStore } from '@/core/routing/stores/LastTerritoryStore';
-import { TerritorySelectorV2 } from '@/core/location/components/TerritorySelectorV2';
 import { MessagingService } from '@/core/messaging';
 import { useAuth } from '@/core/auth/hooks/useAuth';
 import { useUnifiedNotifications } from '@/core/notifications/useUnifiedNotifications';
@@ -42,17 +38,10 @@ function BadgeDot({ count }: { count: number }) {
 export function BottomNav() {
   const navigate = useNavigate();
   const { pathname } = useRouterLocation();
-  const urls = useFriendlyModuleUrls();
   const appUrls = useAppUrls();
   const { user } = useAuth();
   const [moreOpen, setMoreOpen] = useState(false);
   const [unreadMessages, setUnreadMessages] = useState(0);
-
-  // Usa lastTerritoryStore para obter o nome correto do território
-  const lastTerritory = useSyncExternalStore(
-    lastTerritoryStore.subscribe.bind(lastTerritoryStore),
-    lastTerritoryStore.get.bind(lastTerritoryStore),
-  ) as import('@/core/routing/stores/LastTerritoryStore').LastTerritory | null;
 
   // Notificações
   const { unreadCount: unreadNotifications } = useUnifiedNotifications({ enableRealtime: true });
@@ -84,24 +73,26 @@ export function BottomNav() {
   };
 
   const mainTabs = [
-    { path: urls.landing, label: 'Início', icon: Home, badge: 0 },
-    { path: urls.business, label: 'Empresas', icon: Building2, badge: 0 },
-    { path: urls.community, label: 'Comunidade', icon: Users, badge: 0 },
-    { path: urls.classifieds, label: 'Anúncios', icon: Tag, badge: 0 },
+    { path: '/', label: 'Início', icon: Home, badge: 0 },
+    { path: '/empresas', label: 'Empresas', icon: Building2, badge: 0 },
+    { path: '/comunidade', label: 'Bairro', icon: Users, badge: 0 },
+    { path: '/classificados', label: 'Anúncios', icon: Tag, badge: 0 },
   ];
 
   const moreItems = [
-    { path: urls.services, label: 'Serviços', icon: Wrench, badge: 0 },
-    { path: urls.events, label: 'Eventos', icon: Calendar, badge: 0 },
-    { path: urls.jobs, label: 'Vagas', icon: Briefcase, badge: 0 },
+    { path: '/servicos', label: 'Serviços', icon: Wrench, badge: 0 },
+    { path: '/educacao', label: 'Educacao', icon: GraduationCap, badge: 0 },
+    { path: '/eventos', label: 'Eventos', icon: Calendar, badge: 0 },
+    { path: '/vagas', label: 'Vagas', icon: Briefcase, badge: 0 },
     { path: appUrls.messages, label: 'Mensagens', icon: MessageCircle, badge: unreadMessages },
     { path: appUrls.notifications, label: 'Notificações', icon: Bell, badge: unreadNotifications ?? 0 },
-    { path: urls.map, label: 'Mapa', icon: Map, badge: 0 },
+    { path: '/mapa', label: 'Mapa', icon: Map, badge: 0 },
     { path: appUrls.mobility.home, label: 'Mobilidade', icon: Car, badge: 0 },
     { path: appUrls.search, label: 'Busca', icon: Search, badge: 0 },
   ];
 
   const handleNavigate = (path: string) => {
+    prefetchRouteByHref(path);
     navigate(path);
     setMoreOpen(false);
   };
@@ -114,7 +105,13 @@ export function BottomNav() {
           return (
             <button
               key={label}
-              onClick={() => navigate(path)}
+              onClick={() => {
+                prefetchRouteByHref(path);
+                navigate(path);
+              }}
+              onMouseEnter={() => prefetchRouteByHref(path)}
+              onFocus={() => prefetchRouteByHref(path)}
+              onTouchStart={() => prefetchRouteByHref(path)}
               className={cn(
                 'relative flex flex-col items-center justify-center gap-0.5 flex-1 py-1.5 transition-colors rounded-lg mx-0.5',
                 active ? 'text-primary' : 'text-muted-foreground active:text-foreground'
@@ -131,14 +128,6 @@ export function BottomNav() {
             </button>
           );
         })}
-
-        {/* Localidade */}
-        <div className="flex flex-col items-center justify-center flex-1 mx-0.5">
-          <TerritorySelectorV2
-            compact
-          />
-          <span className="text-[10px] leading-tight font-medium text-muted-foreground mt-0.5">Local</span>
-        </div>
 
         {/* Mais — com badge agregado */}
         <Sheet open={moreOpen} onOpenChange={setMoreOpen}>
@@ -165,6 +154,9 @@ export function BottomNav() {
                   <button
                     key={label}
                     onClick={() => handleNavigate(path)}
+                    onMouseEnter={() => prefetchRouteByHref(path)}
+                    onFocus={() => prefetchRouteByHref(path)}
+                    onTouchStart={() => prefetchRouteByHref(path)}
                     className={cn(
                       'flex flex-col items-center gap-2 p-3 rounded-xl transition-colors',
                       active ? 'bg-primary/10 text-primary' : 'text-foreground hover:bg-accent active:bg-accent'

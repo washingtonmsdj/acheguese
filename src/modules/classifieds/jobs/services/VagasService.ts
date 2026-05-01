@@ -150,17 +150,30 @@ export class VagasService {
     return ((data ?? []) as VagaRow[]).map(mapRowToVaga);
   }
 
+  private static applyLocationIds<T extends { eq: (column: string, value: string) => T; in: (column: string, values: string[]) => T }>(
+    query: T,
+    locationIds: string[],
+  ): T {
+    const uniqueLocationIds = Array.from(new Set(locationIds.filter(Boolean)));
+    if (uniqueLocationIds.length <= 1) {
+      return query.eq('location_id', uniqueLocationIds[0] ?? '');
+    }
+    return query.in('location_id', uniqueLocationIds);
+  }
+
   /**
    * Listar vagas com filtros territoriais e ordenação
    * Página pública canônica: /vagas/:uf/:cidade
    */
   static async getVagas(params: VagasQueryParams): Promise<VagasPaginatedResult> {
-    const { locationId, filters, sort = 'newest', limit = this.DEFAULT_LIMIT, offset = 0 } = params;
+    const { locationId, locationIds, filters, sort = 'newest', limit = this.DEFAULT_LIMIT, offset = 0 } = params;
+    const resolvedLocationIds = locationIds?.length ? locationIds : [locationId];
     
     try {
-      let query = this.getPublicQuery()
-        .select('*', { count: 'exact' })
-        .eq('location_id', locationId);
+      let query = this.applyLocationIds(
+        this.getPublicQuery().select('*', { count: 'exact' }),
+        resolvedLocationIds,
+      );
 
       // Aplicar filtros
       if (filters) {
@@ -197,9 +210,9 @@ export class VagasService {
           query = query.eq('nivel', filters.nivel);
         }
 
-        // Bairro
+        // Bairro: filtro visual resolvido para locations.id; query canônica em location_id.
         if (filters.bairroId) {
-          query = query.eq('bairro_id', filters.bairroId);
+          query = query.eq('location_id', filters.bairroId);
         }
 
         // Faixa salarial
@@ -515,33 +528,48 @@ export class VagasService {
   /**
    * Buscar bairros com vagas ativas (para filtros territoriais)
    */
-  static async getBairrosComVagas(locationId: string): Promise<{ id: string; nome: string; count: number }[]> {
+  static async getBairrosComVagas(
+    locationId: string,
+    locationIds?: string[],
+  ): Promise<{ id: string; nome: string; count: number }[]> {
     try {
-      const { data, error } = await supabase
-        .from('vagas')
-        .select('bairro_id, bairro_nome')
-        .eq('location_id', locationId)
-        .not('bairro_id', 'is', null);
+      const resolvedLocationIds = locationIds?.length ? locationIds : [locationId];
+      const { data, error } = await this.applyLocationIds(
+        supabase.from('vagas').select('location_id'),
+        resolvedLocationIds,
+      );
 
       if (error) {
         logger.error('[VagasService] Erro ao buscar bairros:', error);
         return [];
       }
 
-      // Agrupar e contar
-      const grouped = new Map<string, { nome: string; count: number }>();
-      
-      (data ?? []).forEach((row: { bairro_id: string; bairro_nome: string }) => {
-        const existing = grouped.get(row.bairro_id);
-        if (existing) {
-          existing.count++;
-        } else {
-          grouped.set(row.bairro_id, { nome: row.bairro_nome, count: 1 });
-        }
+      const counts = new Map<string, number>();
+      (data ?? []).forEach((row: { location_id: string | null }) => {
+        if (!row.location_id) return;
+        counts.set(row.location_id, (counts.get(row.location_id) ?? 0) + 1);
       });
 
-      return Array.from(grouped.entries())
-        .map(([id, info]) => ({ id, nome: info.nome, count: info.count }))
+      const countedIds = Array.from(counts.keys());
+      if (countedIds.length === 0) return [];
+
+      const { data: locations, error: locationsError } = await supabase
+        .from('locations')
+        .select('id, name, type')
+        .in('id', countedIds)
+        .eq('type', 'district');
+
+      if (locationsError) {
+        logger.error('[VagasService] Erro ao resolver bairros:', locationsError);
+        return [];
+      }
+
+      return ((locations ?? []) as Array<{ id: string; name: string }>)
+        .map((location) => ({
+          id: location.id,
+          nome: location.name,
+          count: counts.get(location.id) ?? 0,
+        }))
         .sort((a, b) => b.count - a.count);
     } catch (error) {
       logger.error('[VagasService] Erro:', error);

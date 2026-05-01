@@ -18,13 +18,11 @@ import { useVendedorPerfil } from "../hooks/useVendedorPerfil";
 import { Skeleton } from "@/shared/components/ui/skeleton";
 import { VendedorAdFilters, applyAdFilters, type AdFilters } from "../components/profile/VendedorAdFilters";
 import { VendedorContactBar } from "../components/profile/VendedorContactBar";
-import { useFriendlyModuleUrls } from "@/core/routing/hooks/useFriendlyModuleUrls";
 
 export default function VendedorPerfilPage() {
   const { sellerId } = useParams<{ sellerId: string }>();
   const navigate = useNavigate();
   const { vendedor, isLoading } = useVendedorPerfil(sellerId);
-  const moduleUrls = useFriendlyModuleUrls(); // ✅ SSOT para URLs territoriais
 
   const [filters, setFilters] = useState<AdFilters>({
     category: "todos",
@@ -184,7 +182,7 @@ export default function VendedorPerfilPage() {
                   initial={{ opacity: 0, y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: i * 0.04 }}
-                  onClick={() => navigate(`${moduleUrls.classifieds}/${ad.id}`)}
+                  onClick={() => navigate(`/classificados/${ad.id}`)}
                   className="group bg-card border border-border rounded-xl overflow-hidden cursor-pointer hover:shadow-lg hover:shadow-primary/5 transition-all hover:-translate-y-0.5"
                 >
                   <div className="relative aspect-[4/3] bg-secondary">

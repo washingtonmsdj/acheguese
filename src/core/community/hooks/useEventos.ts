@@ -7,24 +7,28 @@ import {
   communityEventsRuntimeService,
   type CommunityEvent,
 } from "@/core/community/services/CommunityEventsRuntimeService";
-import { useTerritoryFilter } from "@/core/location/hooks/useTerritoryFilter";
+import { useModuleTerritoryFilter } from "@/core/location/hooks/useModuleTerritoryFilter";
+import type { TerritoryFilter } from "@/core/location/types";
 import type { RouteResolved } from "@/core/routing/types";
 
 export type Evento = CommunityEvent;
 
 interface UseEventosOptions {
   routeResolved?: RouteResolved;
+  enabled?: boolean;
   filters?: {
     category?: string;
     search?: string;
     sortBy?: string;
     sortOrder?: string;
   };
+  territoryFilter?: TerritoryFilter;
 }
 
 export function useEventos(options: UseEventosOptions = {}) {
   const { filters, routeResolved } = options;
-  const territoryFilter = useTerritoryFilter(routeResolved);
+  const moduleTerritory = useModuleTerritoryFilter({ routeResolved });
+  const territoryFilter = options.territoryFilter ?? moduleTerritory.territoryFilter;
 
   const query = useQuery({
     queryKey: ["eventos", filters, territoryFilter],
@@ -45,6 +49,7 @@ export function useEventos(options: UseEventosOptions = {}) {
         event.description.toLowerCase().includes(searchLower),
       );
     },
+    enabled: options.enabled ?? true,
   });
 
   return {

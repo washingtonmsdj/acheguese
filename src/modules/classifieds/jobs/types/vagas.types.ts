@@ -205,6 +205,7 @@ export type VagaSortOption =
 /** Parâmetros de query */
 export interface VagasQueryParams {
   locationId: string;
+  locationIds?: string[];
   filters?: VagaFilters;
   sort?: VagaSortOption;
   limit?: number;

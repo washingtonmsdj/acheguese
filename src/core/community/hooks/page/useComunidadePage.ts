@@ -13,6 +13,7 @@ import { toast } from "sonner";
 import { useCommunityFiltersAAA } from "@/core/community/hooks/useCommunityFiltersAAA";
 import { usePostActions } from "@/core/posts/hooks";
 import { useSessionContext } from "@/core/session";
+import { useMultiProfileContext } from "@/core/profiles/contexts/multi-profile-runtime-context";
 import { usePostById } from "@/core/community/hooks/usePostById";
 import { useCommunityLocation } from "@/core/community/hooks/useCommunityLocation";
 import { logger } from "@/shared/utils/logger";
@@ -20,6 +21,68 @@ import { logger } from "@/shared/utils/logger";
 interface ModalState {
   type: "comment" | "post" | "unified" | "report" | "create" | null;
   data: any;
+}
+
+interface CommunityActorProfile {
+  id: string;
+  user_id: string;
+  userId: string;
+  display_name: string;
+  displayName: string;
+  city: string | null;
+  neighborhood: string | null;
+  location_id: string | null;
+  locationId: string | null;
+  verified: boolean;
+  profile_type: string | null;
+}
+
+function toCommunityActorProfile(input: unknown): CommunityActorProfile | null {
+  if (!input || typeof input !== "object") return null;
+  const record = input as Record<string, unknown>;
+
+  const id = typeof record.id === "string" ? record.id : null;
+  const userId =
+    (typeof record.user_id === "string" && record.user_id) ||
+    (typeof record.userId === "string" && record.userId) ||
+    null;
+  if (!id || !userId) return null;
+
+  const displayName =
+    (typeof record.display_name === "string" && record.display_name) ||
+    (typeof record.displayName === "string" && record.displayName) ||
+    (typeof record.name === "string" && record.name) ||
+    "Usuario";
+
+  const city =
+    (typeof record.city === "string" && record.city) ||
+    null;
+  const neighborhood =
+    (typeof record.neighborhood === "string" && record.neighborhood) ||
+    null;
+  const locationId =
+    (typeof record.location_id === "string" && record.location_id) ||
+    (typeof record.locationId === "string" && record.locationId) ||
+    null;
+  const verified = typeof record.verified === "boolean" ? record.verified : false;
+  const profileType =
+    (typeof record.profile_type === "string" && record.profile_type) ||
+    (typeof record.profileType === "string" && record.profileType) ||
+    null;
+
+  return {
+    id,
+    user_id: userId,
+    userId,
+    display_name: displayName,
+    displayName,
+    city,
+    neighborhood,
+    location_id: locationId,
+    locationId,
+    verified,
+    profile_type: profileType,
+  };
 }
 
 export function useComunidadePage() {
@@ -30,7 +93,9 @@ export function useComunidadePage() {
 
   const { setTagFilter, immediateFilters, setLocationScope } = useCommunityFiltersAAA();
   const { likePost, savePost, sharePost } = usePostActions();
-  const { activeProfile: profile } = useSessionContext();
+  const { activeProfile: sessionProfile } = useSessionContext();
+  const { effectiveProfile } = useMultiProfileContext();
+  const profile = toCommunityActorProfile(effectiveProfile ?? sessionProfile);
   
   // IntegraÃ§Ã£o com fundaÃ§Ã£o geogrÃ¡fica
   const communityLocation = useCommunityLocation();
@@ -39,14 +104,17 @@ export function useComunidadePage() {
   const { data: postData, isLoading: isLoadingPost } = usePostById(postId);
 
   const handleOpenCreatePost = useCallback((defaultType?: string) => {
+    const hasProfileLocation = Boolean(profile?.location_id || profile?.locationId);
+    const canCreatePost = communityLocation.canCreateContent || hasProfileLocation;
+
     // Verificar se pode criar conteÃºdo
-    if (!communityLocation.canCreateContent) {
-      toast.error("Selecione uma localizaÃ§Ã£o para criar posts");
+    if (!canCreatePost) {
+      toast.error("Selecione uma localizacao no filtro ou atualize seu bairro no perfil");
       return;
     }
 
     setModalState({ type: "create", data: { defaultType: defaultType || "discussao" } });
-  }, [communityLocation.canCreateContent]);
+  }, [communityLocation.canCreateContent, profile?.location_id, profile?.locationId]);
 
   const handleOpenAlertModal = useCallback(() => setAlertModalOpen(true), []);
   const handleCloseAlertModal = useCallback(() => setAlertModalOpen(false), []);

@@ -35,7 +35,10 @@ export interface MultiProfileRecord {
   phone?: string;
   website?: string;
   location?: string;
+  location_id?: string | null;
   city?: string;
+  neighborhood?: string;
+  street?: string;
   state?: string;
   country: string;
   is_active: boolean;
@@ -161,7 +164,10 @@ export interface UpdateProfileInput {
   phone?: string;
   website?: string;
   location?: string;
+  location_id?: string;
   city?: string;
+  neighborhood?: string;
+  street?: string;
   state?: string;
   is_public?: boolean;
   show_contact_email?: boolean;

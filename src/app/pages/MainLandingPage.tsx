@@ -12,7 +12,6 @@ import {
   Users, ArrowRight, MapPin, Clock,
 } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
-import { TERRITORY_CONFIG } from "@/config/territory";
 import { useAuth } from "@/core/auth/hooks/useAuth";
 
 // Imagens profissionais
@@ -54,50 +53,50 @@ const MODULOS = [
     label: "Empresas Locais",
     color: "text-orange-400",
     bg: "bg-orange-500/15 border-orange-500/20",
-    path: "/empresas/ba/salvador",
+    path: "/empresas",
   },
   {
     icon: Wrench,
     label: "Serviços",
     color: "text-sky-400",
     bg: "bg-sky-500/15 border-sky-500/20",
-    path: "/servicos/ba/salvador",
+    path: "/servicos",
   },
   {
     icon: Briefcase,
     label: "Vagas",
     color: "text-emerald-400",
     bg: "bg-emerald-500/15 border-emerald-500/20",
-    path: "/vagas/ba/salvador",
+    path: "/vagas",
   },
   {
     icon: Tag,
     label: "Classificados",
     color: "text-amber-400",
     bg: "bg-amber-500/15 border-amber-500/20",
-    path: "/classificados/ba/salvador",
+    path: "/classificados",
   },
   {
     icon: Calendar,
     label: "Eventos",
     color: "text-rose-400",
     bg: "bg-rose-500/15 border-rose-500/20",
-    path: "/comunidade/ba/salvador",
+    path: "/eventos",
   },
   {
     icon: Users,
     label: "Comunidade",
     color: "text-primary",
     bg: "bg-primary/15 border-primary/20",
-    path: "/comunidade/ba/salvador",
+    path: "/comunidade",
   },
 ];
 
 const BAIRROS_ATIVOS = [
-  { name: "Santa Cruz", image: santaCruz, slug: "santa-cruz", populacao: "~12.000 hab." },
-  { name: "Nordeste", image: nordeste, slug: "nordeste-de-amaralina", populacao: "~25.000 hab." },
-  { name: "Vale das Pedrinhas", image: valePedrinhas, slug: "vale-das-pedrinhas", populacao: "~18.000 hab." },
-  { name: "Chapada", image: chapada, slug: "chapada-do-rio-vermelho", populacao: "~8.000 hab." },
+  { name: "Santa Cruz", image: santaCruz, slug: "santa-cruz", populacao: "27.083 hab." },
+  { name: "Nordeste", image: nordeste, slug: "nordeste-de-amaralina", populacao: "21.887 hab." },
+  { name: "Vale das Pedrinhas", image: valePedrinhas, slug: "vale-das-pedrinhas", populacao: "5.162 hab." },
+  { name: "Chapada", image: chapada, slug: "chapada-do-rio-vermelho", populacao: "21.955 hab." },
 ];
 
 const BAIRROS_EM_BREVE = [
@@ -214,7 +213,7 @@ export default function MainLandingPage() {
                 size="lg"
                 variant="outline"
                 className="border-white/25 text-white hover:bg-white/10 hover:border-white/40 font-semibold text-base px-8 h-13 backdrop-blur-md w-full sm:w-auto rounded-xl"
-                onClick={() => navigate("/empresas/ba/salvador")}
+                onClick={() => navigate("/empresas")}
               >
                 Divulgar meu negócio
               </Button>
@@ -222,7 +221,7 @@ export default function MainLandingPage() {
                 size="lg"
                 variant="outline"
                 className="border-white/25 text-white hover:bg-white/10 hover:border-white/40 font-semibold text-base px-8 h-13 backdrop-blur-md w-full sm:w-auto rounded-xl"
-                onClick={() => navigate("/vagas/ba/salvador")}
+                onClick={() => navigate("/vagas")}
               >
                 Ver Vagas
               </Button>

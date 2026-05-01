@@ -8,23 +8,18 @@
 import { Link, useLocation } from 'react-router-dom';
 import { Camera } from 'lucide-react';
 import { SidebarMenuButton, SidebarMenuItem } from '@/shared/components/ui/sidebar';
-import { useActiveTerritory } from '@/core/location/hooks/useActiveTerritory';
-import { useFriendlyModuleUrls } from '@/core/routing/hooks/useFriendlyModuleUrls';
 
 export function GuideSidebarItem() {
-  const { activeLocation } = useActiveTerritory();
   const { pathname } = useLocation();
-  const urls = useFriendlyModuleUrls();
 
   // ✅ Sempre exibe o item, mesmo sem território ativo
   // A URL do SSOT já tem fallback para cidade padrão
-  const touristPointsUrl = urls.touristPoints;
   const isActive = pathname.startsWith('/pontos-turisticos');
 
   return (
     <SidebarMenuItem>
       <SidebarMenuButton asChild isActive={isActive} tooltip="Pontos turísticos">
-        <Link to={touristPointsUrl}>
+        <Link to="/pontos-turisticos">
           <Camera className="h-4 w-4" />
           <span>Pontos turísticos</span>
         </Link>

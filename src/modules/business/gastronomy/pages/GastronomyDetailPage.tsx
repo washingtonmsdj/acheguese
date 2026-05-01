@@ -16,7 +16,6 @@ import {
   UtensilsCrossed,
 } from 'lucide-react';
 
-import { useFriendlyModuleUrls } from '@/core/routing/hooks/useFriendlyModuleUrls';
 import { useSessionContext } from '@/core/session';
 import { Badge } from '@/shared/components/ui/badge';
 import { Button } from '@/shared/components/ui/button';
@@ -43,7 +42,6 @@ import { businessManagementRoutes } from '@/core/business/utils/businessManageme
 export default function GastronomyDetailPage() {
   const { state, city, district, slug } = useParams();
   const navigate = useNavigate();
-  const moduleUrls = useFriendlyModuleUrls();
   const { user, activeProfile, profiles } = useSessionContext();
 
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
@@ -75,14 +73,6 @@ export default function GastronomyDetailPage() {
     `${business?.description ?? ''} - cardapio, precos e pedidos.`;
   const seoRobots = snapshot?.seo.robots ?? 'index, follow';
 
-  useEffect(() => {
-    if (!snapshot?.routing.redirectToCanonical) {
-      return;
-    }
-
-    navigate(snapshot.routing.redirectToCanonical, { replace: true });
-  }, [navigate, snapshot?.routing.redirectToCanonical]);
-
   const { isFavorited, toggleFavorite, isToggling } = useFavoritesManager(
     business?.business_data_id,
   );
@@ -113,7 +103,7 @@ export default function GastronomyDetailPage() {
           O endereco informado nao pertence a um estabelecimento ativo neste territorio.
         </p>
         <Button asChild className="mt-6">
-          <Link to={moduleUrls.gastronomy}>Voltar para gastronomia</Link>
+          <Link to="/gastronomia">Voltar para gastronomia</Link>
         </Button>
       </div>
     );
@@ -189,7 +179,7 @@ export default function GastronomyDetailPage() {
               '@type': 'ListItem',
               position: 2,
               name: 'Gastronomia',
-              item: `${window.location.origin}${moduleUrls.gastronomy}`,
+              item: `${window.location.origin}/gastronomia`,
             },
             {
               '@type': 'ListItem',

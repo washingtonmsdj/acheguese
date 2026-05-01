@@ -1,5 +1,6 @@
 ﻿import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useMemo } from "react";
 import { Search, Plus, Users } from "lucide-react";
 import { Input } from "@/shared/components/ui/input";
 import { Button } from "@/shared/components/ui/button";
@@ -10,6 +11,7 @@ import { useUserTerritory } from "@/core/location/hooks/useUserTerritory";
 import { useSessionContext } from "@/core/session";
 import { CategoryFilters } from "@/shared/components/recomendacoes/CategoryFilters";
 import { QuestionsList } from "@/core/community/components/QuestionsList";
+import type { TerritoryFilter } from "@/core/location";
 
 export default function RecomendacoesPage() {
   const navigate = useNavigate();
@@ -19,11 +21,19 @@ export default function RecomendacoesPage() {
 
   // âœ… VerificaÃ§Ã£o de autenticaÃ§Ã£o
   const { activeProfile } = useSessionContext();
-  const { hasHome, loading: territoryLoading } = useUserTerritory();
+  const { hasHome, homeDistrict, loading: territoryLoading } = useUserTerritory();
+  const territoryFilter = useMemo<TerritoryFilter>(
+    () =>
+      homeDistrict
+        ? { scope: "location", location_id: homeDistrict.id }
+        : { scope: "none" },
+    [homeDistrict?.id],
+  );
 
   const { questions, loading, initialLoading, sentinelRef } = useRecomendacoes({
     filter,
     search,
+    territoryFilter,
   });
 
   // Bloquear se nÃ£o estiver logado
@@ -65,13 +75,13 @@ export default function RecomendacoesPage() {
           <div className="text-center p-8 max-w-md">
             <Users className="h-16 w-16 text-amber-400 mx-auto mb-4" />
             <h2 className="text-xl font-semibold text-white mb-4">
-              Complete seu cadastro
+              Escolha seu bairro
             </h2>
             <p className="text-gray-400 mb-6">
-              Para acessar as recomendaÃ§Ãµes, vocÃª precisa cadastrar seu bairro no perfil.
+              Para acessar recomendações hiperlocais, escolha seu bairro principal na comunidade.
             </p>
-            <Button onClick={() => window.location.href = appUrls.profile.central} className="bg-teal-500 hover:bg-teal-400">
-              Completar Perfil
+            <Button onClick={() => navigate(appUrls.community.home)} className="bg-teal-500 hover:bg-teal-400">
+              Escolher meu bairro
             </Button>
           </div>
         </div>

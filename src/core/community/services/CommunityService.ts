@@ -18,6 +18,7 @@ import { supabase } from "@/integrations/supabase";
 import { GamificationService } from "@/core/gamification/services/GamificationService";
 import { trackError } from "@/shared/utils/errorTracking";
 import { logger } from "@/shared/utils/logger";
+import type { TerritoryFilter } from "@/core/location";
 
 // Helper para verificar erros do Postgres de forma type-safe
 interface PostgresError {
@@ -217,7 +218,7 @@ class CommunityServiceClass {
   /**
    * Busca lista de grupos, com filtro opcional por nome
    */
-  async getGroups(search?: string): Promise<any[]> {
+  async getGroups(search?: string, territoryFilter?: TerritoryFilter): Promise<any[]> {
     try {
       let query = (supabase as any)
         .from("groups")
@@ -230,6 +231,12 @@ class CommunityServiceClass {
 
       if (search) {
         query = query.ilike("name", `%${search}%`);
+      }
+
+      if (territoryFilter?.scope === "location") {
+        query = query.eq("location_id", territoryFilter.location_id);
+      } else if (territoryFilter?.scope === "group" && territoryFilter.location_ids.length > 0) {
+        query = query.in("location_id", territoryFilter.location_ids);
       }
 
       const { data, error } = await query;
@@ -279,12 +286,26 @@ class CommunityServiceClass {
     description?: string;
     category?: string;
     is_private?: boolean;
+    location_id?: string;
     [key: string]: any;
   }): Promise<any | null> {
     try {
+      const groupType =
+        groupData.category === "vizinhanca"
+          ? "neighborhood"
+          : groupData.category
+            ? "interest"
+            : "community";
+      const payload = {
+        name: groupData.name,
+        description: groupData.description,
+        type: groupType,
+        location_id: groupData.location_id,
+      };
+
       const { data, error } = await (supabase as any)
         .from("groups")
-        .insert(groupData)
+        .insert(payload)
         .select()
         .single();
 
@@ -636,17 +657,13 @@ class CommunityServiceClass {
    */
   async getLeaderboard(
     limit: number = 10,
-    city?: string,
+    _city?: string,
   ): Promise<CommunityProfile[]> {
     try {
-      let query = (supabase as any)
+      const query = (supabase as any)
         .from("community_profiles")
         .select("*")
         .order("total_points", { ascending: false });
-
-      if (city) {
-        query = query.eq("city", city);
-      }
 
       const { data, error } = await query.limit(limit);
 

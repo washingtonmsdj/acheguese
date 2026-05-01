@@ -1,5 +1,6 @@
-﻿import React from "react";
+import React, { useMemo } from "react";
 import { useGrupos } from "@/core/community/hooks/useGrupos";
+import { useUserTerritory } from "@/core/location/hooks/useUserTerritory";
 import { GruposHeader } from "@/shared/components/grupos/GruposHeader";
 import { GruposSearch } from "@/shared/components/grupos/GruposSearch";
 import { GruposTabs } from "@/shared/components/grupos/GruposTabs";
@@ -7,26 +8,31 @@ import { GruposList } from "@/shared/components/grupos/GruposList";
 import { CreateGroupDialog } from "@/shared/components/grupos/CreateGroupDialog";
 
 export default function GruposPage() {
+  const { homeDistrict } = useUserTerritory();
+  const territoryFilter = useMemo(
+    () => homeDistrict
+      ? { scope: "location" as const, location_id: homeDistrict.id }
+      : { scope: "none" as const },
+    [homeDistrict],
+  );
   const {
-    // Data
     groups,
     isLoading,
-
-    // State
     searchQuery,
     tab,
     showCreate,
     creating,
     newGroup,
-
-    // Actions
     setSearchQuery,
     setTab,
     setShowCreate,
     updateNewGroup,
     handleCreate,
     handleJoin,
-  } = useGrupos();
+  } = useGrupos({
+    territoryFilter,
+    defaultLocationId: homeDistrict?.id,
+  });
 
   return (
     <div className="bg-background">
@@ -64,4 +70,3 @@ export default function GruposPage() {
     </div>
   );
 }
-

@@ -1,10 +1,8 @@
 import { useState } from "react";
 import { toast } from "sonner";
-import { GamificationService } from "@/core/gamification/services/GamificationService";
+import { CommunityService } from "@/core/community/services/CommunityService";
 import { useSessionContext } from "@/core/session";
-import { supabase } from "@/integrations/supabase";
 import type { FlexibleMetadata } from "@/shared/types/supabase.types";
-import { trackError } from "@/shared/utils/errorTracking";
 import { logger } from "@/shared/utils/logger";
 
 export type InteractionType =
@@ -19,121 +17,6 @@ export type InteractionType =
   | "ride_completed"
   | "profile_completed";
 
-interface CommunityInteraction {
-  id: string;
-  user_id: string;
-  interaction_type: InteractionType;
-  target_type?: string;
-  target_id?: string;
-  points: number;
-  metadata?: FlexibleMetadata;
-  created_at: string;
-}
-
-const INTERACTION_POINTS: Record<InteractionType, number> = {
-  post_created: 10,
-  comment_added: 5,
-  helpful_vote: 2,
-  review_written: 15,
-  recommendation_made: 8,
-  event_attended: 12,
-  business_created: 50,
-  service_offered: 30,
-  ride_completed: 20,
-  profile_completed: 25,
-};
-
-const BADGE_REQUIREMENTS = {
-  first_post: { interaction_type: "post_created", count: 1 },
-  active_commenter: { interaction_type: "comment_added", count: 10 },
-  helpful_neighbor: { interaction_type: "helpful_vote", count: 25 },
-  community_leader: { total_points: 500 },
-  super_contributor: { total_interactions: 100 },
-} as const;
-
-interface UserStats {
-  totalInteractions: number;
-  totalPoints: number;
-  interactionsByType: Record<string, number>;
-}
-
-function getInteractionPoints(interactionType: InteractionType): number {
-  return INTERACTION_POINTS[interactionType] ?? 0;
-}
-
-async function getUserStats(userId: string): Promise<UserStats> {
-  const { data, error } = await (supabase as any)
-    .from("community_interactions")
-    .select("interaction_type, points")
-    .eq("user_id", userId);
-
-  if (error) {
-    trackError(error, {
-      component: "SocialCommunityInteractions",
-      action: "getUserStats",
-    });
-    return {
-      totalInteractions: 0,
-      totalPoints: 0,
-      interactionsByType: {},
-    };
-  }
-
-  const interactions = data || [];
-  return {
-    totalInteractions: interactions.length,
-    totalPoints: interactions.reduce((sum: number, row: any) => sum + (row.points || 0), 0),
-    interactionsByType: interactions.reduce((acc: Record<string, number>, row: any) => {
-      acc[row.interaction_type] = (acc[row.interaction_type] || 0) + 1;
-      return acc;
-    }, {}),
-  };
-}
-
-async function awardBadge(userId: string, badgeCode: string) {
-  const { data: badge, error } = await (supabase as any)
-    .from("community_badges")
-    .select("id")
-    .eq("code", badgeCode)
-    .single();
-
-  if (error || !badge) {
-    return;
-  }
-
-  await GamificationService.grantAchievement(userId, badgeCode);
-}
-
-async function checkAndAwardBadges(userId: string) {
-  try {
-    const stats = await getUserStats(userId);
-    const earnedAchievements = await GamificationService.getUserAchievements(userId);
-    const earnedCodes = new Set(earnedAchievements.map((achievement) => achievement.achievement_code));
-
-    for (const [badgeCode, requirement] of Object.entries(BADGE_REQUIREMENTS)) {
-      if (earnedCodes.has(badgeCode)) continue;
-
-      let shouldAward = false;
-      if ("interaction_type" in requirement) {
-        shouldAward = (stats.interactionsByType[requirement.interaction_type] || 0) >= requirement.count;
-      } else if ("total_interactions" in requirement) {
-        shouldAward = stats.totalInteractions >= requirement.total_interactions;
-      } else if ("total_points" in requirement) {
-        shouldAward = stats.totalPoints >= requirement.total_points;
-      }
-
-      if (shouldAward) {
-        await awardBadge(userId, badgeCode);
-      }
-    }
-  } catch (error) {
-    trackError(error as Error, {
-      component: "SocialCommunityInteractions",
-      action: "checkAndAwardBadges",
-    });
-  }
-}
-
 async function recordCommunityInteraction(
   userId: string,
   interactionType: InteractionType,
@@ -146,39 +29,13 @@ async function recordCommunityInteraction(
   points?: number;
   error?: string;
 }> {
-  try {
-    const points = getInteractionPoints(interactionType);
-    const { data: interaction, error } = await (supabase as any)
-      .from("community_interactions")
-      .insert({
-        user_id: userId,
-        interaction_type: interactionType,
-        target_type: targetType,
-        target_id: targetId,
-        points,
-        metadata,
-      })
-      .select()
-      .single();
-
-    if (error) {
-      trackError(error, {
-        component: "SocialCommunityInteractions",
-        action: "recordCommunityInteraction",
-      });
-      return { success: false, error: error.message };
-    }
-
-    await checkAndAwardBadges(userId);
-
-    return { success: true, interaction, points };
-  } catch (error) {
-    trackError(error as Error, {
-      component: "SocialCommunityInteractions",
-      action: "recordCommunityInteraction",
-    });
-    return { success: false, error: (error as Error).message };
-  }
+  return CommunityService.recordInteraction(
+    userId,
+    interactionType,
+    targetType,
+    targetId,
+    metadata,
+  );
 }
 
 export function useCommunityInteractions() {

@@ -67,6 +67,7 @@ export const PerfilEditarPage = lazy(() => import("@/modules/profile/pages/Perfi
 export const PerfilIdentidadesPage = lazy(() => import("@/modules/profile/pages/PerfilIdentidadesPage"));
 export const PerfilContaPage = lazy(() => import("@/modules/profile/pages/PerfilContaPage"));
 export const FamiliaPage = lazy(() => import("@/modules/profile/pages/FamiliaPage"));
+export const ResidentVerificationPage = lazy(() => import("@/modules/profile/pages/ResidentVerificationPage"));
 
 // ============================================================
 // 💳 BILLING E ASSINATURAS
@@ -155,6 +156,7 @@ export const EditarServicoPage = lazy(() => import("@/modules/professionals/serv
 // 📢 CLASSIFICADOS
 // ============================================================
 export const ClassificadoDetailPage = lazy(() => import("@/modules/classifieds/pages/ClassificadoDetailPage"));
+export const ClassificadosPage = lazy(() => import("@/modules/classifieds/pages/ClassificadosPage"));
 export const ClassificadoDetailLandingPage = lazy(() => import("@/app/pages/ClassificadoDetailLandingPage"));
 export const ClassificadoChatLandingPage = lazy(() => import("@/app/pages/ClassificadoChatLandingPage"));
 export const NovoClassificadoPage = lazy(() => import("@/modules/classifieds/pages/NovoClassificadoPage"));
@@ -167,6 +169,7 @@ export const ClassifiedShortRoute = lazy(() => import("@/core/routing/components
 // 💼 VAGAS/EMPREGOS
 // ============================================================
 export const PublicarVagaPage = lazy(() => import("@/modules/classifieds/jobs/pages/PublicarVagaPage"));
+export const VagasPublicPage = lazy(() => import("@/modules/classifieds/jobs/pages/VagasPublicPage"));
 export const VagaDetailPage = lazy(() => import("@/modules/classifieds/jobs/pages/VagaDetailPage"));
 export const VagaDetailPublicPage = lazy(() => import("@/modules/classifieds/jobs/pages/VagaDetailPublicPage"));
 
@@ -174,6 +177,7 @@ export const VagaDetailPublicPage = lazy(() => import("@/modules/classifieds/job
 // 👥 COMUNIDADE (GRUPOS, EVENTOS, POSTS)
 // ============================================================
 export const GruposPage = lazy(() => import("@/modules/community-groups/pages/GruposPage"));
+export const ComunidadePage = lazy(() => import("@/modules/community-feed/pages/ComunidadePage"));
 export const GrupoDetailPage = lazy(() => import("@/modules/community-groups/pages/GrupoDetailPage"));
 export const EventosPage = lazy(() => import("@/modules/community-events/pages/EventosPage"));
 export const EventoDetailPage = lazy(() => import("@/modules/community-events/pages/EventoDetailPage"));

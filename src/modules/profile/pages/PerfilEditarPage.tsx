@@ -26,6 +26,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { ArrowLeft, Loader2, Save, ShieldAlert } from 'lucide-react';
 import { toast } from 'sonner';
 import { ProfileUsernameSection } from '@/modules/profile/components/identity/ProfileUsernameSection';
+import { LocationFields } from '@/modules/profile/components/edit-form/LocationFields';
 import { useProfileUsernameSaveGuard } from '@/modules/profile/components/identity/useProfileUsernameSaveGuard';
 import { IdentityChangeConfirmDialog } from '@/core/public-identity/components/IdentityChangeConfirmDialog';
 import { useIdentitySaveLogger } from '@/core/public-identity/hooks/useIdentitySaveLogger';
@@ -78,7 +79,7 @@ function BusinessSection({ data, onChange }: {
     <div className="space-y-4">
       <SectionTitle>Dados da empresa</SectionTitle>
 
-      <Field id="legal_name" label="RazÃ£o social *">
+      <Field id="legal_name" label="Razão social *">
         <Input id="legal_name" value={data.legal_name ?? ''} onChange={e => set('legal_name', e.target.value)} placeholder="Nome legal da empresa" />
       </Field>
 
@@ -100,14 +101,14 @@ function BusinessSection({ data, onChange }: {
         </Field>
       </div>
 
-      <Field id="industry" label="Setor / IndÃºstria">
-        <Input id="industry" value={data.industry ?? ''} onChange={e => set('industry', e.target.value)} placeholder="Ex: AlimentaÃ§Ã£o, Tecnologia, SaÃºde" />
+      <Field id="industry" label="Setor / Indústria">
+        <Input id="industry" value={data.industry ?? ''} onChange={e => set('industry', e.target.value)} placeholder="Ex: Alimentação, Tecnologia, Saúde" />
       </Field>
 
-      <SectionTitle>EndereÃ§o comercial</SectionTitle>
+      <SectionTitle>Endereço comercial</SectionTitle>
 
-      <Field id="business_address" label="EndereÃ§o">
-        <Input id="business_address" value={data.business_address ?? ''} onChange={e => set('business_address', e.target.value)} placeholder="Rua, nÃºmero, complemento" />
+      <Field id="business_address" label="Endereço">
+        <Input id="business_address" value={data.business_address ?? ''} onChange={e => set('business_address', e.target.value)} placeholder="Rua, número, complemento" />
       </Field>
 
       <div className="grid grid-cols-2 gap-3">
@@ -142,12 +143,12 @@ function ProfessionalSection({ data, onChange }: {
     <div className="space-y-4">
       <SectionTitle>Dados profissionais</SectionTitle>
 
-      <Field id="profession" label="ProfissÃ£o *">
+      <Field id="profession" label="Profissão *">
         <Input id="profession" value={data.profession ?? ''} onChange={e => set('profession', e.target.value)} placeholder="Ex: Eletricista, Designer, Advogado" />
       </Field>
 
       <div className="grid grid-cols-2 gap-3">
-        <Field id="years_experience" label="Anos de experiÃªncia">
+        <Field id="years_experience" label="Anos de experiência">
           <Input id="years_experience" type="number" min={0} max={60}
             value={data.years_experience ?? ''}
             onChange={e => set('years_experience', Number(e.target.value))} />
@@ -159,29 +160,29 @@ function ProfessionalSection({ data, onChange }: {
         </Field>
       </div>
 
-      <Field id="specialties" label="Especialidades" hint="Separe por vÃ­rgula">
+      <Field id="specialties" label="Especialidades" hint="Separe por vírgula">
         <Input id="specialties" value={arrToStr(data.specialties)}
           onChange={e => set('specialties', strToArr(e.target.value))}
-          placeholder="Ex: InstalaÃ§Ã£o elÃ©trica, ManutenÃ§Ã£o predial" />
+          placeholder="Ex: Instalação elétrica, Manutenção predial" />
       </Field>
 
-      <Field id="services_offered" label="ServiÃ§os oferecidos" hint="Separe por vÃ­rgula">
+      <Field id="services_offered" label="Serviços oferecidos" hint="Separe por vírgula">
         <Input id="services_offered" value={arrToStr(data.services_offered)}
           onChange={e => set('services_offered', strToArr(e.target.value))}
-          placeholder="Ex: Visita tÃ©cnica, OrÃ§amento gratuito" />
+          placeholder="Ex: Visita técnica, Orçamento gratuito" />
       </Field>
 
-      <Field id="service_area" label="Ãreas de atendimento" hint="Separe por vÃ­rgula">
+      <Field id="service_area" label="Áreas de atendimento" hint="Separe por vírgula">
         <Input id="service_area" value={arrToStr(data.service_area)}
           onChange={e => set('service_area', strToArr(e.target.value))}
           placeholder="Ex: Nordeste de Amaralina, Pituba, Barra" />
       </Field>
 
-      <Field id="education" label="FormaÃ§Ã£o">
-        <Input id="education" value={data.education ?? ''} onChange={e => set('education', e.target.value)} placeholder="Ex: TÃ©cnico em EletrotÃ©cnica â€” SENAI" />
+      <Field id="education" label="Formação">
+        <Input id="education" value={data.education ?? ''} onChange={e => set('education', e.target.value)} placeholder="Ex: Técnico em Eletrotécnica - SENAI" />
       </Field>
 
-      <Field id="certifications" label="CertificaÃ§Ãµes" hint="Separe por vÃ­rgula">
+      <Field id="certifications" label="Certificações" hint="Separe por vírgula">
         <Input id="certifications" value={arrToStr(data.certifications)}
           onChange={e => set('certifications', strToArr(e.target.value))}
           placeholder="Ex: NR10, NR35" />
@@ -190,7 +191,7 @@ function ProfessionalSection({ data, onChange }: {
       <SectionTitle>Registro profissional</SectionTitle>
 
       <div className="grid grid-cols-2 gap-3">
-        <Field id="license_number" label="NÃºmero do registro">
+        <Field id="license_number" label="Número do registro">
           <Input id="license_number" value={data.license_number ?? ''} onChange={e => set('license_number', e.target.value)} placeholder="CRM, CREA, OAB..." />
         </Field>
         <Field id="license_state" label="Estado do registro">
@@ -200,7 +201,7 @@ function ProfessionalSection({ data, onChange }: {
 
       <ToggleRow
         label="Atende remotamente"
-        description="Aceita clientes fora da Ã¡rea de atendimento presencial"
+        description="Aceita clientes fora da área de atendimento presencial"
         checked={data.accepts_remote ?? false}
         onChange={v => set('accepts_remote', v)}
       />
@@ -218,10 +219,10 @@ function DriverSection({ data, onChange }: {
 
   return (
     <div className="space-y-4">
-      <SectionTitle>HabilitaÃ§Ã£o</SectionTitle>
+      <SectionTitle>Habilitação</SectionTitle>
 
       <div className="grid grid-cols-2 gap-3">
-        <Field id="license_number" label="NÃºmero da CNH *">
+        <Field id="license_number" label="Número da CNH *">
           <Input id="license_number" value={data.license_number ?? ''} onChange={e => set('license_number', e.target.value)} placeholder="00000000000" />
         </Field>
         <Field id="license_category" label="Categoria *">
@@ -245,7 +246,7 @@ function DriverSection({ data, onChange }: {
         </Field>
       </div>
 
-      <SectionTitle>VeÃ­culo</SectionTitle>
+      <SectionTitle>Veículo</SectionTitle>
 
       <div className="grid grid-cols-2 gap-3">
         <Field id="vehicle_type" label="Tipo">
@@ -255,7 +256,7 @@ function DriverSection({ data, onChange }: {
               <SelectItem value="car">Carro</SelectItem>
               <SelectItem value="motorcycle">Moto</SelectItem>
               <SelectItem value="van">Van</SelectItem>
-              <SelectItem value="truck">CaminhÃ£o</SelectItem>
+              <SelectItem value="truck">Caminhão</SelectItem>
             </SelectContent>
           </Select>
         </Field>
@@ -280,7 +281,7 @@ function DriverSection({ data, onChange }: {
       </Field>
 
       <ToggleRow
-        label="DisponÃ­vel para corridas"
+        label="Disponível para corridas"
         checked={data.is_available ?? false}
         onChange={v => set('is_available', v)}
       />
@@ -375,7 +376,7 @@ export default function PerfilEditarPage() {
         <ShieldAlert className="h-12 w-12 mx-auto text-destructive" />
         <h2 className="text-lg font-semibold">Acesso negado</h2>
         <p className="text-sm text-muted-foreground">
-          VocÃª nÃ£o tem permissÃ£o para editar este perfil.
+          Você não tem permissão para editar este perfil.
         </p>
         <Button variant="outline" onClick={() => navigate(appUrls.profile.central)}>Voltar</Button>
       </div>
@@ -412,7 +413,7 @@ export default function PerfilEditarPage() {
     return (
       <div className="max-w-xl mx-auto px-4 py-8 text-center space-y-3">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto" />
-        <p className="text-sm text-muted-foreground">Verificando permissÃµes...</p>
+        <p className="text-sm text-muted-foreground">Verificando permissões...</p>
       </div>
     );
   }
@@ -431,7 +432,7 @@ export default function PerfilEditarPage() {
         <div>
           <h1 className="text-lg font-semibold">Editar perfil</h1>
           <p className="text-xs text-muted-foreground">
-            {profile.display_name} Â· {getProfileTypeLabel(profile)}
+            {profile.display_name} · {getProfileTypeLabel(profile)}
           </p>
         </div>
       </div>
@@ -440,30 +441,37 @@ export default function PerfilEditarPage() {
 
       {/* Campos base */}
       <div className="space-y-4">
-        <SectionTitle>InformaÃ§Ãµes bÃ¡sicas</SectionTitle>
+        <SectionTitle>Informações básicas</SectionTitle>
 
-        <Field id="display_name" label="Nome de exibiÃ§Ã£o *">
+        <Field id="display_name" label="Nome de exibição *">
           <Input id="display_name" value={baseForm.display_name ?? ''} onChange={e => setBaseField('display_name', e.target.value)} />
         </Field>
 
         <Field id="bio" label="Bio">
-          <Textarea id="bio" value={baseForm.bio ?? ''} onChange={e => setBaseField('bio', e.target.value)} rows={3} placeholder="Conte um pouco sobre vocÃª ou seu negÃ³cio" />
+          <Textarea id="bio" value={baseForm.bio ?? ''} onChange={e => setBaseField('bio', e.target.value)} rows={3} placeholder="Conte um pouco sobre você ou seu negócio" />
         </Field>
 
         <Field id="website" label="Website">
           <Input id="website" type="url" value={baseForm.website ?? ''} onChange={e => setBaseField('website', e.target.value)} placeholder="https://" />
         </Field>
 
-        <div className="grid grid-cols-2 gap-3">
-          <Field id="city" label="Cidade">
-            <Input id="city" value={baseForm.city ?? ''} onChange={e => setBaseField('city', e.target.value)} placeholder="Salvador" />
-          </Field>
-          <Field id="state" label="Estado">
-            <Input id="state" value={baseForm.state ?? ''} onChange={e => setBaseField('state', e.target.value)} placeholder="BA" maxLength={2} />
-          </Field>
-        </div>
+        <Field id="location_id" label="Bairro (canônico)">
+          <LocationFields
+            locationId={baseForm.location_id ?? null}
+            onChange={(locationId) => setBaseField('location_id', locationId ?? undefined)}
+          />
+        </Field>
 
-        <SectionTitle>Contato pÃºblico</SectionTitle>
+        <Field id="street" label="Rua">
+          <Input
+            id="street"
+            value={baseForm.street ?? ''}
+            onChange={e => setBaseField('street', e.target.value)}
+            placeholder="Ex: Rua Afonso Lopes"
+          />
+        </Field>
+
+        <SectionTitle>Contato público</SectionTitle>
 
         <Field id="contact_email" label="E-mail de contato" hint="Diferente do e-mail de login">
           <Input id="contact_email" type="email" value={baseForm.contact_email ?? ''} onChange={e => setBaseField('contact_email', e.target.value)} />
@@ -475,13 +483,13 @@ export default function PerfilEditarPage() {
 
         <SectionTitle>Visibilidade</SectionTitle>
 
-        <ToggleRow label="Perfil pÃºblico" description="Aparece em buscas e na URL /u/:username"
+        <ToggleRow label="Perfil público" description="Aparece em buscas e na URL /u/:username"
           checked={baseForm.is_public ?? false} onChange={v => setBaseField('is_public', v)} />
         <ToggleRow label="Mostrar e-mail de contato"
           checked={baseForm.show_contact_email ?? false} onChange={v => setBaseField('show_contact_email', v)} />
         <ToggleRow label="Mostrar telefone"
           checked={baseForm.show_phone ?? false} onChange={v => setBaseField('show_phone', v)} />
-        <ToggleRow label="Mostrar vÃ­nculos"
+        <ToggleRow label="Mostrar vínculos"
           checked={baseForm.show_linked_profiles ?? false} onChange={v => setBaseField('show_linked_profiles', v)} />
       </div>
 
@@ -501,7 +509,7 @@ export default function PerfilEditarPage() {
 
       {/* ExtensÃ£o por tipo */}      {extLoading ? (
         <div className="flex items-center gap-2 text-sm text-muted-foreground py-4">
-          <Loader2 className="h-4 w-4 animate-spin" />Carregando dados especÃ­ficos...
+          <Loader2 className="h-4 w-4 animate-spin" />Carregando dados específicos...
         </div>
       ) : (
         <>

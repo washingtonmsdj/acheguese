@@ -5,22 +5,22 @@ import type { SponsoredAd } from "@/core/community/types";
 export function useSponsoredAdsRuntime(placementKey = "sidebar_widget") {
   const query = useQuery({
     queryKey: ["sponsored-ad", placementKey],
-    queryFn: async (): Promise<SponsoredAd | undefined> => {
+    queryFn: async (): Promise<SponsoredAd | null> => {
       const { data, error } = await (supabase as any)
         .from("ad_campaigns")
-        .select("id, title, content, image_url, cta_url")
+        .select("id, title, description, image_url, cta_url")
         .eq("status", "active")
         .eq("placement_key", placementKey)
         .order("updated_at", { ascending: false })
         .limit(1)
         .maybeSingle();
 
-      if (error || !data) return undefined;
+      if (error || !data) return null;
 
       return {
         id: data.id,
         title: data.title,
-        description: data.content,
+        description: data.description ?? "",
         imageUrl: data.image_url ?? "",
         link: data.cta_url ?? "",
       };

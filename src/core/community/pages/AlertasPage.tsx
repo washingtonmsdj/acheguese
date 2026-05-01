@@ -5,10 +5,12 @@
 import { TooltipProvider } from "@/shared/components/ui/tooltip";
 import { AlertFeedSection } from "@/core/community/alerts";
 import { useLocationContext } from "@/core/location";
+import { useUserTerritory } from "@/core/location/hooks/useUserTerritory";
 import { useSessionContext } from "@/core/session";
 import { useTerritoryFilter } from "@/core/location/hooks/useTerritoryFilter";
 import { buildCommunityTerritoryPresentation } from "@/core/community/utils/communityTerritoryPresentation";
 import type { ResolvedTerritory } from "@/core/routing/hooks/useResolveTerritoryFromUrl";
+import type { TerritoryFilter } from "@/core/location";
 
 interface AlertasPageProps {
   resolved?: ResolvedTerritory;
@@ -17,7 +19,13 @@ interface AlertasPageProps {
 export default function AlertasPage({ resolved }: AlertasPageProps) {
   const { activeLocation } = useLocationContext();
   const { activeProfile } = useSessionContext();
-  const territoryFilter = useTerritoryFilter(resolved);
+  const { homeDistrict, homeCity } = useUserTerritory();
+  const routeTerritoryFilter = useTerritoryFilter(resolved);
+  const territoryFilter: TerritoryFilter = resolved
+    ? routeTerritoryFilter
+    : homeDistrict
+      ? { scope: "location", location_id: homeDistrict.id }
+      : routeTerritoryFilter;
 
   const resolvedLocation =
     resolved?.kind === "location"
@@ -26,11 +34,18 @@ export default function AlertasPage({ resolved }: AlertasPageProps) {
         ? resolved.group.members[0]
         : null;
 
-  const territoryPresentation = buildCommunityTerritoryPresentation({
+  const routeTerritoryPresentation = buildCommunityTerritoryPresentation({
     resolvedLocation,
     activeLocation,
     profile: activeProfile,
   });
+  const territoryPresentation = !resolved && homeDistrict
+    ? {
+      city: homeCity?.name ?? activeProfile?.city ?? "",
+      neighborhood: homeDistrict.name,
+      locationId: homeDistrict.id,
+    }
+    : routeTerritoryPresentation;
 
   return (
     <TooltipProvider>

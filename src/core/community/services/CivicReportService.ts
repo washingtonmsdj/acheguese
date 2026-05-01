@@ -53,7 +53,6 @@ export const CivicReportService = {
     if (options?.limit) q = q.limit(options.limit);
     if (options?.status) q = q.eq("status", options.status);
     if (options?.type) q = q.eq("problem_type", options.type);
-    if (options?.city) q = q.eq("city", options.city);
     const { data, error } = await q;
     if (error) throw error;
     return (data || []).map((r: any) => ({

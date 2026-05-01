@@ -49,7 +49,10 @@ export class MultiProfileService {
       phone: profile.phone ?? '',
       website: profile.website ?? '',
       location: profile.location ?? '',
+      location_id: profile.location_id ?? undefined,
       city: profile.city ?? '',
+      neighborhood: profile.neighborhood ?? '',
+      street: profile.street ?? '',
       state: profile.state ?? '',
       is_public: profile.is_public,
       show_contact_email: profile.show_contact_email,
@@ -393,9 +396,13 @@ export class MultiProfileService {
         };
       }
 
+      // Sempre hidrata o editor com o registro canônico completo da tabela profiles.
+      // O snapshot de `availableProfiles` pode ser resumido e omitir campos opcionais
+      // (ex.: bio, contato, localização), causando formulário "vazio" ao reabrir.
+      const profileFromDb = await this.getProfileById(profileId);
       const profile =
-        availableProfiles.find((candidate) => candidate.id === profileId) ||
-        await this.getProfileById(profileId);
+        profileFromDb ||
+        availableProfiles.find((candidate) => candidate.id === profileId);
 
       if (!profile) {
         return {

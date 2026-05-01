@@ -33,7 +33,6 @@ import { Button } from '@/shared/components/ui/button';
 import { Card } from '@/shared/components/ui/card';
 import { Separator } from '@/shared/components/ui/separator';
 import { MiniMap } from '@/shared/components/maps/MiniMap';
-import { useFriendlyModuleUrls } from '@/core/routing/hooks/useFriendlyModuleUrls';
 import { normalizePublicTerritoryPath } from '@/core/routing/utils/territoryUrls';
 import { GastronomyShareDialog } from './GastronomyShareDialog';
 import { useGastronomySimilar } from '../hooks/useGastronomySimilar';
@@ -48,7 +47,6 @@ interface GastronomyContactSidebarProps {
 
 export function GastronomyContactSidebar({ business }: GastronomyContactSidebarProps) {
   const navigate = useNavigate();
-  const moduleUrls = useFriendlyModuleUrls();
   const [shareOpen, setShareOpen] = useState(false);
 
   const profile = business.gastronomy_profile;
@@ -390,7 +388,7 @@ export function GastronomyContactSidebar({ business }: GastronomyContactSidebarP
                           `/gastronomia${normalizePublicTerritoryPath(sim.geographic_path)}/${sim.slug}`,
                         );
                       } else {
-                        navigate(moduleUrls.gastronomy);
+                        navigate('/gastronomia');
                       }
                     }}
                     className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-secondary/80 transition-all group cursor-pointer border border-transparent hover:border-primary/20 text-left"

@@ -4,7 +4,6 @@ import { memo } from "react";
 import { Bell, MessageCircle, Heart, UserPlus, ExternalLink } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/shared/components/ui/avatar";
 import { Button } from "@/shared/components/ui/button";
-import { useFriendlyModuleUrls } from "@/core/routing/hooks/useFriendlyModuleUrls";
 
 /**
  * Widget de Atividade Recente
@@ -28,7 +27,6 @@ const mockActivities: Activity[] = [];
 
 export const ActivityWidget = memo(() => {
   const activities = mockActivities;
-  const moduleUrls = useFriendlyModuleUrls();
 
   const getIcon = (type: Activity["type"]) => {
     switch (type) {
@@ -78,7 +76,7 @@ export const ActivityWidget = memo(() => {
         {activities.map((activity) => (
           <Link
             key={activity.id}
-            to={activity.postId ? `${moduleUrls.community}/post/${activity.postId}` : "/notificacoes"}
+            to={activity.postId ? `/comunidade/post/${activity.postId}` : "/notificacoes"}
             className="flex items-start gap-2 p-2 rounded-lg hover:bg-secondary/50 transition-all duration-200 group"
           >
             {/* Avatar */}

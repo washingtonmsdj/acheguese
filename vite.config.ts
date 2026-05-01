@@ -47,6 +47,34 @@ function getVendorChunk(id: string): string | undefined {
     return "vendor-supabase";
   }
 
+  if (
+    id.includes("react-router-dom") ||
+    id.includes("@tanstack/react-query") ||
+    id.includes("zustand")
+  ) {
+    return "vendor-runtime";
+  }
+
+  if (id.includes("@radix-ui")) {
+    return "vendor-radix";
+  }
+
+  if (id.includes("framer-motion")) {
+    return "vendor-motion";
+  }
+
+  if (id.includes("lucide-react")) {
+    return "vendor-icons";
+  }
+
+  if (
+    id.includes("date-fns") ||
+    id.includes("zod") ||
+    id.includes("lodash-es")
+  ) {
+    return "vendor-utils";
+  }
+
   return undefined;
 }
 

@@ -14,6 +14,8 @@
 
 import { useState, useMemo } from 'react';
 import { Button } from '@/shared/components/ui/button';
+import { Switch } from '@/shared/components/ui/switch';
+import { Badge } from '@/shared/components/ui/badge';
 import { useAdminTerritoryManagement } from '../hooks/useAdminTerritoryManagement';
 import { GroupFormDialog } from '../components/dialogs';
 import { detectVisualDuplicates, detectSlugDuplicates } from '../utils';
@@ -53,6 +55,9 @@ export default function AdminTerritoryManagement() {
     toggleLocationFlag,
     toggleGroupFlag,
     isToggling,
+    districtCommunityMetrics,
+    toggleCommunityRollout,
+    isTogglingCommunityRollout,
   } = useAdminTerritoryManagement();
 
   // ============================================
@@ -70,6 +75,23 @@ export default function AdminTerritoryManagement() {
       groupsCount: groups.length,
     };
   }, [locations, groups]);
+
+  const districtRows = useMemo(
+    () =>
+      locations
+        .filter((location) => location.type === 'district')
+        .map((district) => ({
+          district,
+          metrics:
+            districtCommunityMetrics.get(district.id) ?? {
+              residentsCount: 0,
+              isCommunityEnabled: false,
+              source: 'default' as const,
+            },
+        }))
+        .sort((a, b) => b.metrics.residentsCount - a.metrics.residentsCount || a.district.name.localeCompare(b.district.name)),
+    [locations, districtCommunityMetrics]
+  );
 
   // ============================================
   // Event Handlers
@@ -166,6 +188,51 @@ export default function AdminTerritoryManagement() {
         onToggleGroupFlag={toggleGroupFlag}
         onEditGroup={handleEditGroup}
       />
+
+      <div className="bg-card border rounded-xl p-5 shadow-sm">
+        <div className="mb-4 flex items-center justify-between gap-3">
+          <div>
+            <h3 className="text-base font-semibold">Comunidade por bairro</h3>
+            <p className="text-sm text-muted-foreground">
+              Controle de liberação da comunidade com base em adesão real de moradores por bairro.
+            </p>
+          </div>
+          <Badge variant="outline">{districtRows.length} bairros</Badge>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b text-left text-muted-foreground">
+                <th className="py-2 pr-3 font-medium">Bairro</th>
+                <th className="py-2 pr-3 font-medium">Moradores (cadastro primário)</th>
+                <th className="py-2 pr-3 font-medium">Origem rollout</th>
+                <th className="py-2 pr-3 font-medium text-right">Comunidade ativa</th>
+              </tr>
+            </thead>
+            <tbody>
+              {districtRows.map(({ district, metrics }) => (
+                <tr key={district.id} className="border-b last:border-b-0">
+                  <td className="py-3 pr-3">
+                    <div className="font-medium">{district.name}</div>
+                    <div className="text-xs text-muted-foreground">{district.slug}</div>
+                  </td>
+                  <td className="py-3 pr-3">{metrics.residentsCount}</td>
+                  <td className="py-3 pr-3">
+                    <Badge variant="secondary">{metrics.source}</Badge>
+                  </td>
+                  <td className="py-3 pr-3 text-right">
+                    <Switch
+                      checked={metrics.isCommunityEnabled}
+                      disabled={isTogglingCommunityRollout || district.status !== 'active'}
+                      onCheckedChange={(checked) => toggleCommunityRollout(district.id, checked)}
+                    />
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
 
       {/* Dialog de criação/edição de grupo territorial */}
       <GroupFormDialog

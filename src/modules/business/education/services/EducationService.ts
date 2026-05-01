@@ -25,9 +25,14 @@ import type {
   EducationLeadStatus,
   EducationProfileStatus,
   SchoolType,
+  SchoolNetwork,
   EducationLevel,
   SchoolShift,
   SchoolEventType,
+  SchoolBasicResourceKey,
+  SchoolAccessibilityFeatureKey,
+  SchoolEquipmentFeatureKey,
+  SchoolFacilityFeatureKey,
 } from '../types';
 import * as queries from './education.queries';
 import * as mutations from './education.mutations';
@@ -44,11 +49,18 @@ export interface EducationSetupPayload {
   whatsappNumber?: string;
   // Campos específicos para escolas regulares
   schoolType?: SchoolType;
+  schoolNetwork?: SchoolNetwork;
+  schoolInepCode?: string;
+  schoolSourceUrl?: string;
   educationLevels?: EducationLevel[];
   shifts?: SchoolShift[];
   ageRangeMin?: number;
   ageRangeMax?: number;
   enrollmentOpen?: boolean;
+  schoolBasicResources?: SchoolBasicResourceKey[];
+  schoolAccessibilityFeatures?: SchoolAccessibilityFeatureKey[];
+  schoolEquipmentFeatures?: SchoolEquipmentFeatureKey[];
+  schoolFacilityFeatures?: SchoolFacilityFeatureKey[];
 }
 
 export interface CreateLeadPayload {
@@ -119,11 +131,19 @@ export const EducationService = {
       published_at: null,
       niche_config_overrides: {},
       school_type: null,
+      school_network: null,
+      school_inep_code: null,
+      school_source_url: null,
+      school_source_updated_at: null,
       education_levels: null,
       shifts: null,
       age_range_min: null,
       age_range_max: null,
       enrollment_open: false,
+      school_basic_resources: null,
+      school_accessibility_features: null,
+      school_equipment_features: null,
+      school_facility_features: null,
     });
 
     if (error) {
@@ -149,11 +169,19 @@ export const EducationService = {
       summary: payload.summary ?? null,
       whatsapp_number: payload.whatsappNumber ?? null,
       school_type: payload.schoolType ?? null,
+      school_network: payload.schoolNetwork ?? null,
+      school_inep_code: payload.schoolInepCode ?? null,
+      school_source_url: payload.schoolSourceUrl ?? null,
+      school_source_updated_at: payload.schoolSourceUrl ? new Date().toISOString() : null,
       education_levels: payload.educationLevels ?? null,
       shifts: payload.shifts ?? null,
       age_range_min: payload.ageRangeMin ?? null,
       age_range_max: payload.ageRangeMax ?? null,
       enrollment_open: payload.enrollmentOpen ?? false,
+      school_basic_resources: payload.schoolBasicResources ?? null,
+      school_accessibility_features: payload.schoolAccessibilityFeatures ?? null,
+      school_equipment_features: payload.schoolEquipmentFeatures ?? null,
+      school_facility_features: payload.schoolFacilityFeatures ?? null,
       support_level: 'basic_enabled',
     });
 

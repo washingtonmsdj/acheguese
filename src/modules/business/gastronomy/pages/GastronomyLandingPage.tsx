@@ -13,10 +13,9 @@ import { motion } from 'framer-motion';
 import { Loader2 } from 'lucide-react';
 
 import gastronomyHeroBg from '@/assets/gastronomy-hero-bg.jpg';
-import { useTerritoryFilter } from '@/core/location';
+import { useModuleTerritoryFilter } from '@/core/location';
 import { useAppUrls } from '@/core/routing/hooks';
-import { useFriendlyModuleUrls } from '@/core/routing/hooks/useFriendlyModuleUrls';
-import { useTerritorialContext } from '@/core/routing/components/TerritorialLayout';
+import { useTerritorialContextOptional } from '@/core/routing/components/TerritorialLayout';
 import { useSessionContext } from '@/core/session';
 import { CanonicalHero } from '@/shared/components/hero/CanonicalHero';
 import { HeroBannerCarousel, type HeroBanner } from '@/shared/components/hero/HeroBannerCarousel';
@@ -85,12 +84,12 @@ const GASTRO_CATEGORIES = [
 
 export default function GastronomyLandingPage() {
   const navigate = useNavigate();
-  const territorialContext = useTerritorialContext();
+  const territorialContext = useTerritorialContextOptional();
   const resolved = territorialContext?.resolved ?? null;
   const appUrls = useAppUrls(resolved);
-  const moduleUrls = useFriendlyModuleUrls();
   const { user } = useSessionContext();
-  const territoryFilter = useTerritoryFilter(resolved, territorialContext?.activeMemberIds);
+  const moduleTerritory = useModuleTerritoryFilter({ routeResolved: resolved });
+  const territoryFilter = moduleTerritory.territoryFilter;
 
   // Estado local
   const [displayLayout, setDisplayLayout] = useState<DisplayLayout>('grid');
@@ -147,10 +146,11 @@ export default function GastronomyLandingPage() {
       ? resolved.location.name
       : resolved?.kind === 'group'
         ? resolved.group.name
-        : 'Sua regiao';
+        : moduleTerritory.displayLabel;
 
-  const isDestinationRequired = !deliveryDestination;
-  const shouldLoadCatalog = !isDestinationRequired;
+  const hasDeliveryContext = Boolean(deliveryDestination);
+  const isDestinationRequired = !hasDeliveryContext;
+  const shouldLoadCatalog = hasDeliveryContext && territoryFilter.scope !== 'none';
 
   // Active filters for queries
   const activeFilters = useMemo(
@@ -272,7 +272,7 @@ export default function GastronomyLandingPage() {
         : 'Defina um destino de entrega para ordenar por distancia real.';
 
   const isProximitySortActive = sortBy === 'nearest';
-  const isLoading = !isDestinationRequired && businessesLoading && sortedBusinesses.length === 0;
+  const isLoading = businessesLoading && sortedBusinesses.length === 0;
 
   // Handlers
   const handleGoToLogin = useCallback(() => {
@@ -423,8 +423,37 @@ export default function GastronomyLandingPage() {
           />
         )}
 
-        {!isDestinationRequired && (
+        {hasDeliveryContext && (
           <>
+            <section className="container mx-auto px-4 pt-4">
+              <motion.div
+                initial="hidden"
+                whileInView="visible"
+                viewport={{ once: true }}
+                variants={fadeIn}
+                className="mb-4"
+              >
+                <GastronomyDeliveryDestinationPanel
+                  destinationLabel={deliveryDestination?.label ?? null}
+                  destinationSourceLabel={destinationSourceLabel}
+                  isEditing={showDestinationEditor}
+                  addressQuery={destinationAddressQuery}
+                  isResolvingAddress={isResolvingDestinationAddress}
+                  isLocatingUser={isLocatingUser}
+                  hasSavedAddressOption={hasSavedResidence}
+                  savedAddressLabel={savedResidenceLabel}
+                  isAuthenticated={Boolean(user)}
+                  errorMessage={destinationErrorMessage}
+                  onAddressQueryChange={setDestinationAddressQuery}
+                  onSubmitAddress={handleSubmitAddressDestination}
+                  onUseCurrentLocation={handleActivateLocation}
+                  onUseSavedAddress={handleUseSavedResidence}
+                  onOpenEditor={() => setShowDestinationEditor(true)}
+                  onCloseEditor={() => setShowDestinationEditor(false)}
+                  onGoToLogin={handleGoToLogin}
+                />
+              </motion.div>
+            </section>
             {/* ── ATIVIDADE DOS VIZINHOS (SSOT) ──────────────────────────── */}
             <GastronomyActivityFeed 
               territoryFilter={territoryFilter}
@@ -542,35 +571,6 @@ export default function GastronomyLandingPage() {
           </>
         )}
 
-        {/* ── Destino de entrega (movido para o final) ─────────── */}
-        <section className="container mx-auto px-4 py-6">
-          <motion.div
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true }}
-            variants={fadeIn}
-          >
-            <GastronomyDeliveryDestinationPanel
-              destinationLabel={deliveryDestination?.label ?? null}
-              destinationSourceLabel={destinationSourceLabel}
-              isEditing={showDestinationEditor}
-              addressQuery={destinationAddressQuery}
-              isResolvingAddress={isResolvingDestinationAddress}
-              isLocatingUser={isLocatingUser}
-              hasSavedAddressOption={hasSavedResidence}
-              savedAddressLabel={savedResidenceLabel}
-              isAuthenticated={Boolean(user)}
-              errorMessage={destinationErrorMessage}
-              onAddressQueryChange={setDestinationAddressQuery}
-              onSubmitAddress={handleSubmitAddressDestination}
-              onUseCurrentLocation={handleActivateLocation}
-              onUseSavedAddress={handleUseSavedResidence}
-              onOpenEditor={() => setShowDestinationEditor(true)}
-              onCloseEditor={() => setShowDestinationEditor(false)}
-              onGoToLogin={handleGoToLogin}
-            />
-          </motion.div>
-        </section>
       </div>
     </>
   );

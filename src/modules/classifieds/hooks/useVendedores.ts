@@ -4,8 +4,9 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { ClassifiedsFacade } from "@/modules/classifieds/services";
-import { useTerritoryFilter, territoryFilterKey } from "@/core/location";
+import { useModuleTerritoryFilter, territoryFilterKey } from "@/core/location";
 import type { ResolvedTerritory } from "@/core/routing/hooks/useResolveTerritoryFromUrl";
+import type { TerritoryFilter } from "@/core/location/types";
 
 export interface VendedorWithAds {
   id: string;
@@ -25,11 +26,13 @@ export interface UseVendedoresOptions {
   routeResolved?: ResolvedTerritory | null;
   activeMemberIds?: string[];
   search?: string;
+  territoryFilter?: TerritoryFilter;
 }
 
 export function useVendedores(options: UseVendedoresOptions = {}) {
-  const { routeResolved, activeMemberIds, search } = options;
-  const filter = useTerritoryFilter(routeResolved, activeMemberIds);
+  const { routeResolved, search } = options;
+  const moduleTerritory = useModuleTerritoryFilter({ routeResolved });
+  const filter = options.territoryFilter ?? moduleTerritory.territoryFilter;
   const filterKey = territoryFilterKey(filter);
 
   const query = useQuery({

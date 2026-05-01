@@ -1,4 +1,4 @@
-import { useEffect, useState, useSyncExternalStore } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Bell, LogIn, MessageCircle, Settings } from 'lucide-react';
 import {
@@ -21,15 +21,10 @@ import { cn } from '@/shared/utils/cn';
 import { useSessionContext } from '@/core/session';
 import { useAuth } from '@/core/auth/hooks/useAuth';
 import { useAppUrls } from '@/core/routing/hooks/useAppUrls';
-import { useFriendlyModuleUrls } from '@/core/routing/hooks/useFriendlyModuleUrls';
-import {
-  lastTerritoryStore,
-  type LastTerritory,
-} from '@/core/routing/stores/LastTerritoryStore';
 import { useSiteSettings } from '@/core/admin/hooks/useSiteSettings';
-import { TerritorySelectorV2 } from '@/core/location/components/TerritorySelectorV2';
 import { MessagingService } from '@/core/messaging';
 import { GuideSidebarItem } from '@/modules/guide/components/GuideSidebarItem';
+import { prefetchRouteByHref } from '@/app/routes/prefetch';
 import { NAV_SECTIONS, type NavItem } from './navigation.config';
 
 function getInitials(value?: string | null): string {
@@ -50,14 +45,8 @@ export function AppSidebar() {
   const { user } = useAuth();
   const { activeProfile } = useSessionContext();
   const appUrls = useAppUrls();
-  const moduleUrls = useFriendlyModuleUrls();
   const { data: siteSettings, isLoading: isSiteSettingsLoading } = useSiteSettings();
   const [unreadMessages, setUnreadMessages] = useState(0);
-
-  const lastTerritory = useSyncExternalStore<LastTerritory | null>(
-    lastTerritoryStore.subscribe.bind(lastTerritoryStore),
-    lastTerritoryStore.get.bind(lastTerritoryStore),
-  );
 
   useEffect(() => {
     if (!user) {
@@ -82,36 +71,12 @@ export function AppSidebar() {
     };
   }, [user]);
 
-  const homeHref = lastTerritory?.baseUrl || '/';
+  const homeHref = '/';
 
   const getNavHref = (item: NavItem): string => {
     switch (item.id) {
       case 'home':
         return homeHref;
-      case 'business':
-        return moduleUrls.business;
-      case 'services':
-        return moduleUrls.services;
-      case 'classifieds':
-        return moduleUrls.classifieds;
-      case 'gastronomy':
-        return moduleUrls.gastronomy;
-      case 'events':
-        return moduleUrls.events;
-      case 'jobs':
-        return moduleUrls.jobs;
-      case 'neighborhood':
-        return moduleUrls.community;
-      case 'feed':
-        return `${moduleUrls.community}${moduleUrls.community.includes('?') ? '&' : '?'}tab=feed`;
-      case 'community-alerts':
-        return `${moduleUrls.community}/alertas`;
-      case 'community-issues':
-        return `${moduleUrls.community}/problemas`;
-      case 'ranking':
-        return moduleUrls.ranking;
-      case 'map':
-        return moduleUrls.map;
       default:
         return item.href;
     }
@@ -136,7 +101,12 @@ export function AppSidebar() {
         return (
           <SidebarMenuItem key={item.id}>
             <SidebarMenuButton asChild isActive={isActiveHref(href)} tooltip={item.label}>
-              <Link to={href}>
+              <Link
+                to={href}
+                onMouseEnter={() => prefetchRouteByHref(href)}
+                onFocus={() => prefetchRouteByHref(href)}
+                onTouchStart={() => prefetchRouteByHref(href)}
+              >
                 <item.icon className="h-4 w-4" />
                 <span>{item.label}</span>
               </Link>
@@ -196,11 +166,6 @@ export function AppSidebar() {
           )}
         </Link>
 
-        {!collapsed ? (
-          <div className="px-3 pb-2 pt-1">
-            <TerritorySelectorV2 compact />
-          </div>
-        ) : null}
       </SidebarHeader>
 
       <SidebarContent className="gap-0">
@@ -221,7 +186,12 @@ export function AppSidebar() {
                         location.pathname.startsWith('/chat/')
                       }
                     >
-                      <Link to={appUrls.messages}>
+                      <Link
+                        to={appUrls.messages}
+                        onMouseEnter={() => prefetchRouteByHref(appUrls.messages)}
+                        onFocus={() => prefetchRouteByHref(appUrls.messages)}
+                        onTouchStart={() => prefetchRouteByHref(appUrls.messages)}
+                      >
                         <MessageCircle className="h-4 w-4" />
                         <span>Mensagens</span>
                         {!collapsed && unreadMessages > 0 ? (
@@ -244,7 +214,12 @@ export function AppSidebar() {
                         location.pathname.startsWith(appUrls.notifications)
                       }
                     >
-                      <Link to={appUrls.notifications}>
+                      <Link
+                        to={appUrls.notifications}
+                        onMouseEnter={() => prefetchRouteByHref(appUrls.notifications)}
+                        onFocus={() => prefetchRouteByHref(appUrls.notifications)}
+                        onTouchStart={() => prefetchRouteByHref(appUrls.notifications)}
+                      >
                         <Bell className="h-4 w-4" />
                         <span>Notificacoes</span>
                       </Link>
@@ -259,7 +234,7 @@ export function AppSidebar() {
               (item) => !item.requiresAuth || Boolean(user),
             );
             const hasVisibleItems = visibleItems.length > 0;
-            const showGuestCommunityCta = section.id === 'community' && !user;
+            const showGuestCommunityCta = section.id === 'main' && !user;
 
             if (!hasVisibleItems && !showGuestCommunityCta) return null;
 
@@ -271,7 +246,7 @@ export function AppSidebar() {
                 <SidebarGroupContent>
                   {renderSectionItems(section.items)}
 
-                  {section.id === 'explore' ? (
+                  {section.id === 'main' ? (
                     <SidebarMenu>
                       <GuideSidebarItem />
                     </SidebarMenu>
@@ -281,7 +256,12 @@ export function AppSidebar() {
                     <SidebarMenu className="mt-1">
                       <SidebarMenuItem>
                         <SidebarMenuButton asChild tooltip="Entrar">
-                          <Link to="/login">
+                          <Link
+                            to="/login"
+                            onMouseEnter={() => prefetchRouteByHref('/login')}
+                            onFocus={() => prefetchRouteByHref('/login')}
+                            onTouchStart={() => prefetchRouteByHref('/login')}
+                          >
                             <LogIn className="h-4 w-4" />
                             <span>Entrar na comunidade</span>
                           </Link>
@@ -301,7 +281,12 @@ export function AppSidebar() {
           <SidebarMenu>
             <SidebarMenuItem>
               <SidebarMenuButton asChild tooltip="Meu perfil">
-                <Link to={appUrls.profile.central}>
+                <Link
+                  to={appUrls.profile.central}
+                  onMouseEnter={() => prefetchRouteByHref(appUrls.profile.central)}
+                  onFocus={() => prefetchRouteByHref(appUrls.profile.central)}
+                  onTouchStart={() => prefetchRouteByHref(appUrls.profile.central)}
+                >
                   <Avatar className="h-6 w-6 shrink-0">
                     <AvatarImage src={activeProfile?.avatarUrl || undefined} />
                     <AvatarFallback className="text-[10px]">
@@ -323,7 +308,12 @@ export function AppSidebar() {
             </SidebarMenuItem>
             <SidebarMenuItem>
               <SidebarMenuButton asChild tooltip="Configuracoes">
-                <Link to={appUrls.settings}>
+                <Link
+                  to={appUrls.settings}
+                  onMouseEnter={() => prefetchRouteByHref(appUrls.settings)}
+                  onFocus={() => prefetchRouteByHref(appUrls.settings)}
+                  onTouchStart={() => prefetchRouteByHref(appUrls.settings)}
+                >
                   <Settings className="h-4 w-4" />
                   <span>Configuracoes</span>
                 </Link>
@@ -334,7 +324,12 @@ export function AppSidebar() {
           <SidebarMenu>
             <SidebarMenuItem>
               <SidebarMenuButton asChild tooltip="Entrar">
-                <Link to="/login">
+                <Link
+                  to="/login"
+                  onMouseEnter={() => prefetchRouteByHref('/login')}
+                  onFocus={() => prefetchRouteByHref('/login')}
+                  onTouchStart={() => prefetchRouteByHref('/login')}
+                >
                   <LogIn className="h-4 w-4" />
                   <span>Entrar / Criar conta</span>
                 </Link>

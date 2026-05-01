@@ -17,6 +17,13 @@ const CARD_ANIMATION = {
   transition: { duration: 0.3 },
 };
 
+const SCHOOL_NETWORK_LABELS: Record<string, string> = {
+  municipal: 'Municipal',
+  state: 'Estadual',
+  federal: 'Federal',
+  private: 'Privada',
+};
+
 export const EducationCard = memo(function EducationCard({
   profile,
   variant = 'grid',
@@ -44,7 +51,9 @@ export const EducationCard = memo(function EducationCard({
           </div>
           {profile.status === 'published' && (
             <Badge variant="secondary" className="text-xs">
-              Ativo
+              {profile.school_network
+                ? SCHOOL_NETWORK_LABELS[profile.school_network] ?? 'Ativo'
+                : 'Ativo'}
             </Badge>
           )}
         </div>
@@ -68,6 +77,9 @@ export const EducationCard = memo(function EducationCard({
             <MapPin className="h-3 w-3" />
             {profile.niche_key.replaceAll('_', ' ')}
           </span>
+          {profile.school_inep_code && (
+            <span>INEP {profile.school_inep_code}</span>
+          )}
           {profile.whatsapp_number && (
             <span className="flex items-center gap-1">
               <Phone className="h-3 w-3" />

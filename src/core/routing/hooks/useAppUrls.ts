@@ -16,8 +16,6 @@ import { useServiceUrls } from '@/core/professional/hooks/useServiceUrls';
 import { useClassifiedUrls } from '@/core/classifieds/hooks/useClassifiedUrls';
 import { useCommunityUrls } from './useCommunityUrls';
 import { useMobilityUrls } from '@/core/mobility/hooks/useMobilityUrls';
-import { useFriendlyModuleUrls } from './useFriendlyModuleUrls';
-import { LAUNCH_URLS } from '@/config/territory';
 import { buildProfileEditUrl, buildProfileSettingsUrl } from '@/core/profiles/utils/publicProfileUrl';
 import type { ResolvedTerritory } from './useResolveTerritoryFromUrl';
 
@@ -89,7 +87,6 @@ export function useAppUrls(routeResolved?: ResolvedTerritory | null): AppUrls {
   const classifieds = useClassifiedUrls(routeResolved);
   const community = useCommunityUrls(routeResolved);
   const mobility = useMobilityUrls();
-  const moduleUrls = useFriendlyModuleUrls();
 
   return {
     // Módulos
@@ -142,12 +139,12 @@ export function useAppUrls(routeResolved?: ResolvedTerritory | null): AppUrls {
     settings: '/configuracoes',
     messages: '/mensagens',
     chat: (conversationId: string) => `/chat/${conversationId}`,
-    map: moduleUrls.map,   // ← territorial via useFriendlyModuleUrls
-    ranking: moduleUrls.ranking,
+    map: '/mapa',
+    ranking: '/ranking',
     gamification: '/gamificacao',
     search: '/busca',
     notifications: '/notificacoes',
-    jobs: LAUNCH_URLS.jobs,
+    jobs: '/vagas',
     family: {
       home: '/perfil/familia',
     },

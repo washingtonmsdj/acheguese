@@ -20,6 +20,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/shared/components/ui
 import { Input } from '@/shared/components/ui/input';
 import { Label } from '@/shared/components/ui/label';
 import { Textarea } from '@/shared/components/ui/textarea';
+import { Checkbox } from '@/shared/components/ui/checkbox';
 import {
   Select,
   SelectContent,
@@ -31,6 +32,16 @@ import { Skeleton } from '@/shared/components/ui/skeleton';
 import { useToast } from '@/shared/hooks/use-toast';
 import { useEducationProfile } from '../hooks/useEducationProfile';
 import { EducationService } from '../services/EducationService';
+import type {
+  EducationLevel,
+  SchoolShift,
+  SchoolNetwork,
+  SchoolType,
+  SchoolBasicResourceKey,
+  SchoolAccessibilityFeatureKey,
+  SchoolEquipmentFeatureKey,
+  SchoolFacilityFeatureKey,
+} from '../types';
 import { getSelectableNiches, getNicheByKey } from '../niches/registry';
 import { EducationUpgradeBanner } from '../niches/components/EducationUpgradeBanner';
 import { Badge } from '@/shared/components/ui/badge';
@@ -45,6 +56,110 @@ const INSTITUTION_TYPES = [
   { value: 'other', label: 'Outro' },
 ];
 
+const SCHOOL_TYPES = [
+  { value: 'public', label: 'Publica' },
+  { value: 'private', label: 'Privada' },
+  { value: 'community', label: 'Comunitaria' },
+  { value: 'charter', label: 'Conveniada' },
+];
+
+const SCHOOL_NETWORKS = [
+  { value: 'municipal', label: 'Municipal' },
+  { value: 'state', label: 'Estadual' },
+  { value: 'federal', label: 'Federal' },
+  { value: 'private', label: 'Privada' },
+];
+
+const EDUCATION_LEVEL_OPTIONS: { key: EducationLevel; label: string }[] = [
+  { key: 'early_childhood', label: 'Educacao Infantil' },
+  { key: 'elementary_1', label: 'Ensino Fundamental - Anos Iniciais' },
+  { key: 'elementary_2', label: 'Ensino Fundamental - Anos Finais' },
+  { key: 'middle_school', label: 'EJA' },
+  { key: 'high_school', label: 'Ensino Medio' },
+  { key: 'technical', label: 'Tecnico' },
+];
+
+const SHIFT_OPTIONS: { key: SchoolShift; label: string }[] = [
+  { key: 'morning', label: 'Manha' },
+  { key: 'afternoon', label: 'Tarde' },
+  { key: 'evening', label: 'Noite' },
+  { key: 'full_day', label: 'Integral' },
+];
+
+const BASIC_RESOURCE_OPTIONS: { key: SchoolBasicResourceKey; label: string }[] = [
+  { key: 'water_supply', label: 'Abastecimento de agua' },
+  { key: 'electricity', label: 'Energia eletrica' },
+  { key: 'sewage', label: 'Esgoto' },
+  { key: 'waste_collection', label: 'Coleta de lixo' },
+];
+
+const ACCESSIBILITY_OPTIONS: { key: SchoolAccessibilityFeatureKey; label: string }[] = [
+  { key: 'handrails_guardrails', label: 'Corrimao e guarda-corpos' },
+  { key: 'elevator', label: 'Elevador' },
+  { key: 'tactile_flooring', label: 'Pisos tateis' },
+  { key: 'wide_doors_80cm', label: 'Portas com vao livre >= 80cm' },
+  { key: 'ramps', label: 'Rampas' },
+  { key: 'sound_signage', label: 'Sinalizacao sonora' },
+  { key: 'tactile_signage', label: 'Sinalizacao tatil' },
+  { key: 'visual_signage', label: 'Sinalizacao visual' },
+];
+
+const EQUIPMENT_OPTIONS: { key: SchoolEquipmentFeatureKey; label: string }[] = [
+  { key: 'computer', label: 'Computador' },
+  { key: 'copier', label: 'Copiadora' },
+  { key: 'printer', label: 'Impressora' },
+  { key: 'multifunction_printer', label: 'Impressora multifuncional' },
+  { key: 'scanner', label: 'Scanner' },
+  { key: 'dvd_player', label: 'DVD' },
+  { key: 'sound_system', label: 'Aparelho de som' },
+  { key: 'television', label: 'Aparelho de televisao' },
+  { key: 'digital_whiteboard', label: 'Lousa digital' },
+  { key: 'multimedia_projector', label: 'Projetor multimidia' },
+  { key: 'desktop_computer', label: 'Computador desktop' },
+  { key: 'notebook', label: 'Notebook' },
+  { key: 'tablet', label: 'Tablet' },
+  { key: 'internet', label: 'Internet' },
+  { key: 'satellite_dish', label: 'Antena parabolica' },
+];
+
+const FACILITY_OPTIONS: { key: SchoolFacilityFeatureKey; label: string }[] = [
+  { key: 'library', label: 'Biblioteca' },
+  { key: 'reading_room', label: 'Sala de leitura' },
+  { key: 'science_lab', label: 'Laboratorio de ciencias' },
+  { key: 'computer_lab', label: 'Laboratorio de informatica' },
+  { key: 'kitchen', label: 'Cozinha' },
+  { key: 'cafeteria', label: 'Refeitorio' },
+  { key: 'pool', label: 'Piscina' },
+  { key: 'playground', label: 'Parque infantil' },
+  { key: 'sports_court', label: 'Quadra de esportes' },
+  { key: 'covered_sports_court', label: 'Quadra coberta' },
+  { key: 'open_sports_court', label: 'Quadra descoberta' },
+  { key: 'covered_courtyard', label: 'Patio coberto' },
+  { key: 'open_courtyard', label: 'Patio descoberto' },
+  { key: 'auditorium', label: 'Auditorio' },
+  { key: 'green_area', label: 'Area verde' },
+  { key: 'multiuse_room', label: 'Sala multiuso' },
+  { key: 'art_room', label: 'Sala/atelie de artes' },
+  { key: 'music_room', label: 'Sala de musica/coral' },
+  { key: 'dance_studio', label: 'Sala de danca' },
+  { key: 'principal_office', label: 'Sala de diretoria' },
+  { key: 'secretary_office', label: 'Sala de secretaria' },
+  { key: 'teacher_room', label: 'Sala de professores' },
+  { key: 'student_rest_room', label: 'Sala de repouso para alunos' },
+  { key: 'aee_resource_room', label: 'Sala de recursos AEE' },
+  { key: 'bathroom', label: 'Banheiro' },
+  { key: 'child_bathroom', label: 'Banheiro infantil' },
+  { key: 'accessible_bathroom_pcd', label: 'Banheiro acessivel PCD' },
+  { key: 'staff_bathroom', label: 'Banheiro exclusivo funcionarios' },
+  { key: 'bathroom_with_shower', label: 'Banheiro/vestiario com chuveiro' },
+  { key: 'pantry', label: 'Despensa' },
+  { key: 'warehouse', label: 'Almoxarifado' },
+  { key: 'student_dormitory', label: 'Dormitorio de aluno' },
+  { key: 'teacher_dormitory', label: 'Dormitorio de professor' },
+  { key: 'open_recreation_area', label: 'Terreirao (area aberta de recreacao)' },
+  { key: 'animal_nursery', label: 'Viveiro/criacao de animais' },
+];
+
 export function EducationSetupPage() {
   const { businessId } = useParams<{ businessId: string }>();
   const navigate = useNavigate();
@@ -54,6 +169,19 @@ export function EducationSetupPage() {
   const [formData, setFormData] = useState({
     institutionType: '',
     nicheKey: '',
+    schoolType: '',
+    schoolNetwork: '',
+    schoolInepCode: '',
+    schoolSourceUrl: '',
+    educationLevels: [] as EducationLevel[],
+    shifts: [] as SchoolShift[],
+    ageRangeMin: '',
+    ageRangeMax: '',
+    enrollmentOpen: false,
+    schoolBasicResources: [] as SchoolBasicResourceKey[],
+    schoolAccessibilityFeatures: [] as SchoolAccessibilityFeatureKey[],
+    schoolEquipmentFeatures: [] as SchoolEquipmentFeatureKey[],
+    schoolFacilityFeatures: [] as SchoolFacilityFeatureKey[],
     summary: '',
     whatsappNumber: '',
   });
@@ -65,10 +193,65 @@ export function EducationSetupPage() {
     setFormData({
       institutionType: profile.institution_type ?? '',
       nicheKey: profile.niche_key ?? '',
+      schoolType: profile.school_type ?? '',
+      schoolNetwork: profile.school_network ?? '',
+      schoolInepCode: profile.school_inep_code ?? '',
+      schoolSourceUrl: profile.school_source_url ?? '',
+      educationLevels: profile.education_levels ?? [],
+      shifts: profile.shifts ?? [],
+      ageRangeMin: profile.age_range_min?.toString() ?? '',
+      ageRangeMax: profile.age_range_max?.toString() ?? '',
+      enrollmentOpen: profile.enrollment_open ?? false,
+      schoolBasicResources: profile.school_basic_resources ?? [],
+      schoolAccessibilityFeatures: profile.school_accessibility_features ?? [],
+      schoolEquipmentFeatures: profile.school_equipment_features ?? [],
+      schoolFacilityFeatures: profile.school_facility_features ?? [],
       summary: profile.summary ?? '',
       whatsappNumber: profile.whatsapp_number ?? '',
     });
   }, [profile]);
+
+  const toggleArrayField = <T extends string>(field: keyof typeof formData, value: T) => {
+    setFormData((prev) => {
+      const current = prev[field] as T[];
+      return {
+        ...prev,
+        [field]: current.includes(value)
+          ? current.filter((item) => item !== value)
+          : [...current, value],
+      };
+    });
+  };
+
+  const applyInfrastructurePreset = (preset: 'daycare' | 'basic_school' | 'accessible') => {
+    if (preset === 'daycare') {
+      setFormData((prev) => ({
+        ...prev,
+        schoolBasicResources: ['water_supply', 'electricity', 'sewage', 'waste_collection'],
+        schoolAccessibilityFeatures: ['ramps', 'wide_doors_80cm'],
+        schoolEquipmentFeatures: ['computer', 'internet', 'printer'],
+        schoolFacilityFeatures: ['bathroom', 'child_bathroom', 'playground', 'kitchen', 'cafeteria', 'library'],
+      }));
+      return;
+    }
+    if (preset === 'basic_school') {
+      setFormData((prev) => ({
+        ...prev,
+        schoolBasicResources: ['water_supply', 'electricity', 'sewage', 'waste_collection'],
+        schoolAccessibilityFeatures: ['ramps'],
+        schoolEquipmentFeatures: ['computer', 'internet', 'multimedia_projector', 'printer'],
+        schoolFacilityFeatures: ['bathroom', 'library', 'science_lab', 'computer_lab', 'sports_court', 'cafeteria'],
+      }));
+      return;
+    }
+    setFormData((prev) => ({
+      ...prev,
+      schoolBasicResources: ['water_supply', 'electricity', 'sewage', 'waste_collection'],
+      schoolAccessibilityFeatures: ['ramps', 'wide_doors_80cm', 'tactile_flooring', 'visual_signage', 'accessible_bathroom_pcd'],
+      schoolEquipmentFeatures: ['computer', 'internet', 'multimedia_projector'],
+      schoolFacilityFeatures: ['bathroom', 'accessible_bathroom_pcd', 'library', 'computer_lab', 'multiuse_room'],
+    }));
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -88,6 +271,19 @@ export function EducationSetupPage() {
         businessId,
         institutionType: formData.institutionType,
         nicheKey: formData.nicheKey,
+        schoolType: (formData.schoolType || undefined) as SchoolType | undefined,
+        schoolNetwork: (formData.schoolNetwork || undefined) as SchoolNetwork | undefined,
+        schoolInepCode: formData.schoolInepCode || undefined,
+        schoolSourceUrl: formData.schoolSourceUrl || undefined,
+        educationLevels: formData.educationLevels,
+        shifts: formData.shifts,
+        ageRangeMin: formData.ageRangeMin ? Number(formData.ageRangeMin) : undefined,
+        ageRangeMax: formData.ageRangeMax ? Number(formData.ageRangeMax) : undefined,
+        enrollmentOpen: formData.enrollmentOpen,
+        schoolBasicResources: formData.schoolBasicResources,
+        schoolAccessibilityFeatures: formData.schoolAccessibilityFeatures,
+        schoolEquipmentFeatures: formData.schoolEquipmentFeatures,
+        schoolFacilityFeatures: formData.schoolFacilityFeatures,
         summary: formData.summary,
         whatsappNumber: formData.whatsappNumber,
       });
@@ -261,6 +457,240 @@ export function EducationSetupPage() {
               )}
             </CardContent>
           </Card>
+
+          {/* Dados escolares */}
+          {(formData.nicheKey === 'regular_school' || formData.nicheKey === 'daycare') && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <School className="w-5 h-5 text-blue-500" />
+                  Dados da Escola
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid gap-4 md:grid-cols-2">
+                  <div>
+                    <Label htmlFor="schoolType">Tipo</Label>
+                    <Select
+                      value={formData.schoolType}
+                      onValueChange={(value) =>
+                        setFormData({ ...formData, schoolType: value })
+                      }
+                    >
+                      <SelectTrigger id="schoolType">
+                        <SelectValue placeholder="Publica, privada..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {SCHOOL_TYPES.map((type) => (
+                          <SelectItem key={type.value} value={type.value}>
+                            {type.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div>
+                    <Label htmlFor="schoolNetwork">Rede administrativa</Label>
+                    <Select
+                      value={formData.schoolNetwork}
+                      onValueChange={(value) =>
+                        setFormData({ ...formData, schoolNetwork: value })
+                      }
+                    >
+                      <SelectTrigger id="schoolNetwork">
+                        <SelectValue placeholder="Municipal, estadual..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {SCHOOL_NETWORKS.map((network) => (
+                          <SelectItem key={network.value} value={network.value}>
+                            {network.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                <div className="grid gap-4 md:grid-cols-2">
+                  <div>
+                    <Label htmlFor="schoolInepCode">Codigo INEP</Label>
+                    <Input
+                      id="schoolInepCode"
+                      value={formData.schoolInepCode}
+                      onChange={(e) =>
+                        setFormData({ ...formData, schoolInepCode: e.target.value })
+                      }
+                      placeholder="Ex: 29193559"
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="schoolSourceUrl">Fonte publica</Label>
+                    <Input
+                      id="schoolSourceUrl"
+                      value={formData.schoolSourceUrl}
+                      onChange={(e) =>
+                        setFormData({ ...formData, schoolSourceUrl: e.target.value })
+                      }
+                      placeholder="URL do Censo, secretaria ou diretorio publico"
+                    />
+                  </div>
+                </div>
+
+                <Separator />
+
+                <div className="space-y-5">
+                  <div>
+                    <h4 className="text-sm font-semibold">Niveis educacionais</h4>
+                    <div className="mt-3 grid gap-2 md:grid-cols-2">
+                      {EDUCATION_LEVEL_OPTIONS.map((option) => (
+                        <label key={option.key} className="flex items-center gap-2 rounded-md border px-3 py-2">
+                          <Checkbox
+                            checked={formData.educationLevels.includes(option.key)}
+                            onCheckedChange={() => toggleArrayField('educationLevels', option.key)}
+                          />
+                          <span className="text-sm">{option.label}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div>
+                    <h4 className="text-sm font-semibold">Turnos ofertados</h4>
+                    <div className="mt-3 grid gap-2 md:grid-cols-2">
+                      {SHIFT_OPTIONS.map((option) => (
+                        <label key={option.key} className="flex items-center gap-2 rounded-md border px-3 py-2">
+                          <Checkbox
+                            checked={formData.shifts.includes(option.key)}
+                            onCheckedChange={() => toggleArrayField('shifts', option.key)}
+                          />
+                          <span className="text-sm">{option.label}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="grid gap-4 md:grid-cols-3">
+                    <div>
+                      <Label htmlFor="ageRangeMin">Idade minima (anos)</Label>
+                      <Input
+                        id="ageRangeMin"
+                        type="number"
+                        min={0}
+                        max={120}
+                        value={formData.ageRangeMin}
+                        onChange={(e) => setFormData({ ...formData, ageRangeMin: e.target.value })}
+                        placeholder="Ex: 4"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="ageRangeMax">Idade maxima (anos)</Label>
+                      <Input
+                        id="ageRangeMax"
+                        type="number"
+                        min={0}
+                        max={120}
+                        value={formData.ageRangeMax}
+                        onChange={(e) => setFormData({ ...formData, ageRangeMax: e.target.value })}
+                        placeholder="Ex: 17"
+                      />
+                    </div>
+                    <div className="flex items-end">
+                      <label className="flex items-center gap-2 rounded-md border px-3 py-2">
+                        <Checkbox
+                          checked={formData.enrollmentOpen}
+                          onCheckedChange={(checked) => setFormData({ ...formData, enrollmentOpen: Boolean(checked) })}
+                        />
+                        <span className="text-sm">Matricula aberta</span>
+                      </label>
+                    </div>
+                  </div>
+                </div>
+
+                <Separator />
+
+                <div className="space-y-2">
+                  <h4 className="text-sm font-semibold">Presets rapidos</h4>
+                  <div className="flex flex-wrap gap-2">
+                    <Button type="button" variant="outline" size="sm" onClick={() => applyInfrastructurePreset('daycare')}>
+                      Creche/CMEI
+                    </Button>
+                    <Button type="button" variant="outline" size="sm" onClick={() => applyInfrastructurePreset('basic_school')}>
+                      Escola basica
+                    </Button>
+                    <Button type="button" variant="outline" size="sm" onClick={() => applyInfrastructurePreset('accessible')}>
+                      Escola acessivel
+                    </Button>
+                  </div>
+                </div>
+
+                <Separator />
+
+                <div className="space-y-5">
+                  <div>
+                    <h4 className="text-sm font-semibold">Recursos basicos</h4>
+                    <div className="mt-3 grid gap-2 md:grid-cols-2">
+                      {BASIC_RESOURCE_OPTIONS.map((option) => (
+                        <label key={option.key} className="flex items-center gap-2 rounded-md border px-3 py-2">
+                          <Checkbox
+                            checked={formData.schoolBasicResources.includes(option.key)}
+                            onCheckedChange={() => toggleArrayField('schoolBasicResources', option.key)}
+                          />
+                          <span className="text-sm">{option.label}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div>
+                    <h4 className="text-sm font-semibold">Acessibilidade</h4>
+                    <div className="mt-3 grid gap-2 md:grid-cols-2">
+                      {ACCESSIBILITY_OPTIONS.map((option) => (
+                        <label key={option.key} className="flex items-center gap-2 rounded-md border px-3 py-2">
+                          <Checkbox
+                            checked={formData.schoolAccessibilityFeatures.includes(option.key)}
+                            onCheckedChange={() => toggleArrayField('schoolAccessibilityFeatures', option.key)}
+                          />
+                          <span className="text-sm">{option.label}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div>
+                    <h4 className="text-sm font-semibold">Equipamentos</h4>
+                    <div className="mt-3 grid gap-2 md:grid-cols-2">
+                      {EQUIPMENT_OPTIONS.map((option) => (
+                        <label key={option.key} className="flex items-center gap-2 rounded-md border px-3 py-2">
+                          <Checkbox
+                            checked={formData.schoolEquipmentFeatures.includes(option.key)}
+                            onCheckedChange={() => toggleArrayField('schoolEquipmentFeatures', option.key)}
+                          />
+                          <span className="text-sm">{option.label}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div>
+                    <h4 className="text-sm font-semibold">Instalacoes</h4>
+                    <div className="mt-3 grid gap-2 md:grid-cols-2">
+                      {FACILITY_OPTIONS.map((option) => (
+                        <label key={option.key} className="flex items-center gap-2 rounded-md border px-3 py-2">
+                          <Checkbox
+                            checked={formData.schoolFacilityFeatures.includes(option.key)}
+                            onCheckedChange={() => toggleArrayField('schoolFacilityFeatures', option.key)}
+                          />
+                          <span className="text-sm">{option.label}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
           {/* DescriÃ§Ã£o */}
           <Card>

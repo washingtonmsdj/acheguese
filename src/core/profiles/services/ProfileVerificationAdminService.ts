@@ -15,6 +15,10 @@ export interface PendingVerification {
   avatar_url: string | null;
   requested_at: string;
   type: string;
+  status?: "pending" | "verified" | "rejected" | "none";
+  decision_at?: string | null;
+  decision_by?: string | null;
+  rejection_reason?: string | null;
 }
 
 export interface VerificationStats {
@@ -37,8 +41,12 @@ export class ProfileVerificationAdminService {
         profile_id: p.id,
         display_name: p.display_name || 'Sem nome',
         avatar_url: p.avatar_url,
-        requested_at: p.updated_at,
+        requested_at: p.verification_requested_at || p.updated_at,
         type: 'profile',
+        status: "pending",
+        decision_at: p.verified_at ?? null,
+        decision_by: p.verified_by ?? null,
+        rejection_reason: p.verification_rejection_reason ?? null,
       }));
     } catch (err) {
       logger.error('ProfileVerificationAdminService.getPendingVerifications failed:', err);
@@ -56,9 +64,34 @@ export class ProfileVerificationAdminService {
         avatar_url: p.avatar_url,
         requested_at: p.updated_at,
         type: 'profile',
+        status: "verified",
+        decision_at: p.verified_at ?? p.updated_at ?? null,
+        decision_by: p.verified_by ?? null,
+        rejection_reason: p.verification_rejection_reason ?? null,
       }));
     } catch (err) {
       logger.error('ProfileVerificationAdminService.getVerifiedProfiles failed:', err);
+      return [];
+    }
+  }
+
+  static async getRejectedProfiles(): Promise<PendingVerification[]> {
+    try {
+      const profiles = await profileService.getProfilesByVerificationStatus('rejected');
+      return profiles.map((p: any) => ({
+        id: p.id,
+        profile_id: p.id,
+        display_name: p.display_name || 'Sem nome',
+        avatar_url: p.avatar_url,
+        requested_at: p.updated_at,
+        type: 'profile',
+        status: "rejected",
+        decision_at: p.updated_at ?? null,
+        decision_by: p.verified_by ?? null,
+        rejection_reason: p.verification_rejection_reason ?? null,
+      }));
+    } catch (err) {
+      logger.error('ProfileVerificationAdminService.getRejectedProfiles failed:', err);
       return [];
     }
   }

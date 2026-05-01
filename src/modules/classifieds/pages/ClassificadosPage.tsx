@@ -125,6 +125,9 @@ export default function ClassificadosPage({
     handlePriceMaxChange,
     handleConditionChange,
     handleHasPhotoChange,
+    handleStateSlugChange,
+    handleCitySlugChange,
+    handleLocationSlugChange,
     handleClearFilters,
     handleClassificadoClick,
     handleNewClassificado,
@@ -203,6 +206,9 @@ export default function ClassificadosPage({
         onPriceMaxChange={handlePriceMaxChange}
         onConditionChange={handleConditionChange}
         onHasPhotoChange={handleHasPhotoChange}
+        onStateSlugChange={handleStateSlugChange}
+        onCitySlugChange={handleCitySlugChange}
+        onLocationSlugChange={handleLocationSlugChange}
         onClearFilters={handleClearFilters}
         onCategoryChange={handleCategoryChange}
       />

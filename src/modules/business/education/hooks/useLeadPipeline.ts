@@ -1,7 +1,6 @@
-﻿import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { educationMutations } from '../services';
-import { supabase } from '@/integrations/supabase';
-import type { EducationLeadStatus, EducationLead } from '../types';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { educationMutations, educationQueries } from '../services';
+import type { EducationLeadStatus } from '../types';
 
 export interface PipelineMove {
   leadId: string;
@@ -10,33 +9,33 @@ export interface PipelineMove {
   ownerUserId?: string | null;
 }
 
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
 export function useLeadPipeline(profileId?: string) {
   const queryClient = useQueryClient();
+  const hasValidProfileId = Boolean(profileId && UUID_REGEX.test(profileId));
 
   const summaryQuery = useQuery({
     queryKey: ['education', 'pipeline', profileId],
     queryFn: async () => {
-      if (!profileId) return { total: 0, byStatus: {} as Record<string, number> };
-      const { data, error } = await supabase
-        .from('education_leads')
-        .select('status')
-        .eq('education_profile_id', profileId);
+      if (!hasValidProfileId || !profileId) return { total: 0, byStatus: {} as Record<string, number> };
 
-      if (error) {
-        throw error;
-      }
-
-      const byStatus: Record<string, number> = {};
-      for (const lead of (data ?? []) as Array<Pick<EducationLead, 'status'>>) {
-        byStatus[lead.status] = (byStatus[lead.status] ?? 0) + 1;
-      }
+      const counts = await educationQueries.countLeadsByStatus(profileId);
+      const byStatus: Record<string, number> = {
+        new: counts.new,
+        contacted: counts.contacted,
+        visit_scheduled: counts.visit_scheduled,
+        proposal_sent: counts.proposal_sent,
+        enrolled: counts.enrolled,
+        lost: counts.lost,
+      };
 
       return {
-        total: (data ?? []).length,
+        total: counts.total,
         byStatus,
       };
     },
-    enabled: Boolean(profileId),
+    enabled: hasValidProfileId,
   });
 
   const moveMutation = useMutation({
@@ -47,7 +46,7 @@ export function useLeadPipeline(profileId?: string) {
         {
           lostReason: move.lostReason,
           ownerUserId: move.ownerUserId,
-        }
+        },
       );
       if (result.error) throw result.error;
       return result.data!;
@@ -65,4 +64,3 @@ export function useLeadPipeline(profileId?: string) {
     isMoving: moveMutation.isPending,
   };
 }
-

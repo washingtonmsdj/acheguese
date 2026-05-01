@@ -5,7 +5,6 @@
  *
  * Território obtido via useTerritorialContext() — SSOT canônico.
  * Usuário via useSessionContext() — SSOT canônico.
- * URL de favoritos via useFriendlyModuleUrls() — SSOT canônico.
  * Search integrado via props (gerenciado pelo useGastronomyFilters da página).
  */
 
@@ -13,9 +12,8 @@ import { Link } from 'react-router-dom';
 import { Search, UtensilsCrossed, X, Heart } from 'lucide-react';
 import { Input } from '@/shared/components/ui/input';
 import { Button } from '@/shared/components/ui/button';
-import { useTerritorialContext } from '@/core/routing/components/TerritorialLayout';
+import { useTerritorialContextOptional } from '@/core/routing/components/TerritorialLayout';
 import { useSessionContext } from '@/core/session';
-import { useFriendlyModuleUrls } from '@/core/routing/hooks/useFriendlyModuleUrls';
 
 interface GastronomyHeaderProps {
   searchQuery: string;
@@ -44,10 +42,9 @@ function getTagline(territoryName?: string): string {
 }
 
 export function GastronomyHeader({ searchQuery, onSearchChange }: GastronomyHeaderProps) {
-  const territorialContext = useTerritorialContext();
+  const territorialContext = useTerritorialContextOptional();
   const resolved = territorialContext?.resolved ?? null;
   const { user } = useSessionContext();
-  const moduleUrls = useFriendlyModuleUrls();
 
   const territoryName =
     resolved?.kind === 'location'
@@ -110,7 +107,7 @@ export function GastronomyHeader({ searchQuery, onSearchChange }: GastronomyHead
             size="sm"
             className="shrink-0 gap-1.5 rounded-full hover:bg-primary/10 hover:border-primary/50 transition-all duration-200 hidden sm:flex"
           >
-            <Link to={moduleUrls.gastronomyFavorites}>
+            <Link to="/gastronomia/favoritos">
               <Heart className="h-3.5 w-3.5" />
               <span className="hidden md:inline">Favoritos</span>
             </Link>

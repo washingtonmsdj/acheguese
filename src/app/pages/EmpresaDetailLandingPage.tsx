@@ -74,14 +74,6 @@ export default function EmpresaDetailLandingPage(
   );
   const { reviews: rawReviews } = useBusinessReviews(business?.id);
 
-  useEffect(() => {
-    if (!snapshot?.routing.redirectToCanonical) {
-      return;
-    }
-
-    navigate(snapshot.routing.redirectToCanonical, { replace: true });
-  }, [snapshot?.routing.redirectToCanonical, navigate]);
-
   const products = useMemo<CompanyProduct[]>(
     () =>
       rawProducts.map((product) => ({

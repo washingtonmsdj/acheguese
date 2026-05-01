@@ -10,10 +10,11 @@
 
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { postService } from "@/core/posts/services";
-import { useTerritoryFilter, isTerritoryFilterReady, territoryFilterKey } from "@/core/location";
+import { useModuleTerritoryFilter, isTerritoryFilterReady, territoryFilterKey } from "@/core/location";
 import type { Post, FeedParams } from "@/core/posts/types";
 import type { LocationScope } from "@/core/community/hooks/feed/useFeedFilters";
 import type { ResolvedTerritory } from "@/core/routing/hooks/useResolveTerritoryFromUrl";
+import type { TerritoryFilter } from "@/core/location";
 
 interface UseCommunityFeedOptions {
   locationScope?: LocationScope;
@@ -21,13 +22,15 @@ interface UseCommunityFeedOptions {
   limit?: number;
   /** TerritÃ³rio resolvido pela rota â€” passar quando dentro de TerritorialLayout */
   routeResolved?: ResolvedTerritory | null;
+  /** Filtro territorial canÃ´nico resolvido pela pÃ¡gina */
+  territoryFilter?: TerritoryFilter;
 }
 
 export function useCommunityFeedSimple(options: UseCommunityFeedOptions = {}) {
-  const { locationScope = "city", context = "all", limit = 20, routeResolved } = options;
+  const { locationScope = "city", context = "all", limit = 20, routeResolved, territoryFilter } = options;
 
-  // Filtro territorial canÃ´nico â€” suporta location e group
-  const filter = useTerritoryFilter(routeResolved);
+  const moduleTerritory = useModuleTerritoryFilter({ routeResolved });
+  const filter = territoryFilter ?? moduleTerritory.territoryFilter;
   const filterReady = isTerritoryFilterReady(filter);
   const filterKey = territoryFilterKey(filter);
 

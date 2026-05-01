@@ -5,7 +5,6 @@ import { Lightbulb, Users, Calendar, TrendingUp } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/shared/components/ui/avatar";
 import { Button } from "@/shared/components/ui/button";
 import { Badge } from "@/shared/components/ui/badge";
-import { useFriendlyModuleUrls } from "@/core/routing/hooks/useFriendlyModuleUrls";
 
 /**
  * Widget de Sugestões
@@ -28,7 +27,6 @@ const mockSuggestions: Suggestion[] = [];
 
 export const SuggestionsWidget = memo(() => {
   const suggestions = mockSuggestions;
-  const moduleUrls = useFriendlyModuleUrls();
 
   const getIcon = (type: Suggestion["type"]) => {
     switch (type) {
@@ -40,8 +38,8 @@ export const SuggestionsWidget = memo(() => {
 
   const getLink = (suggestion: Suggestion) => {
     switch (suggestion.type) {
-      case "group": return `${moduleUrls.community}/grupo/${suggestion.id}`;
-      case "event": return `${moduleUrls.events}/${suggestion.id}`;
+      case "group": return `/comunidade/grupo/${suggestion.id}`;
+      case "event": return `/eventos/${suggestion.id}`;
       case "person": return `/profile/${suggestion.id}`;
     }
   };

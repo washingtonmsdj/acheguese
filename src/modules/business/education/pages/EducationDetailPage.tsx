@@ -27,7 +27,6 @@ import {
   GraduationCap,
   MapPin,
   Phone,
-  Clock,
   Users,
   Star,
   ChevronLeft,
@@ -89,7 +88,15 @@ import {
   educationDetailPreviewMap,
   type EducationDetailPreview,
 } from '../mocks/publicEducationPage.mock';
-import type { EducationProgram, EducationEvent, EducationProfile } from '../types';
+import type {
+  EducationProgram,
+  EducationEvent,
+  EducationProfile,
+  SchoolBasicResourceKey,
+  SchoolAccessibilityFeatureKey,
+  SchoolEquipmentFeatureKey,
+  SchoolFacilityFeatureKey,
+} from '../types';
 
 // ============================================================================
 // MAPAS DE PRESENTACAO
@@ -117,9 +124,20 @@ const NICHE_GRADIENTS: Record<string, string> = {
   sports_school: 'from-lime-500 via-green-400 to-emerald-600',
 };
 
+function buildWhatsAppHref(phone?: string | null): string | null {
+  if (!phone) return null;
+
+  const digits = phone.replace(/\D/g, '');
+  if (!digits) return null;
+
+  const normalized = digits.startsWith('55') ? digits : `55${digits.replace(/^0+/, '')}`;
+  return `https://wa.me/${normalized}`;
+}
+
 function getSections(labels: ReturnType<typeof useLabels>) {
   return [
     { id: 'overview', label: 'Visao geral', icon: Compass },
+    { id: 'infrastructure', label: 'Infraestrutura', icon: Building2 },
     { id: 'programs', label: labels.programPlural, icon: BookOpen },
     { id: 'modalities', label: 'Modalidades', icon: Globe },
     { id: 'team', label: 'Equipe', icon: Users },
@@ -131,35 +149,10 @@ function getSections(labels: ReturnType<typeof useLabels>) {
   ] as const;
 }
 
-const FALLBACK_TEAM = [
-  { name: 'Coordenacao Pedagogica', role: 'Coordenacao', initials: 'CP' },
-  { name: 'Equipe de Professores', role: 'Docentes', initials: 'EP' },
-  { name: 'Equipe Multidisciplinar', role: 'Apoio', initials: 'EM' },
-];
-
-const FALLBACK_TESTIMONIALS = [
-  {
-    name: 'Familia Souza',
-    role: 'Pais',
-    quote:
-      'O acompanhamento individual transformou a rotina dos nossos filhos. Comunicacao excelente.',
-  },
-  {
-    name: 'Marina Lima',
-    role: 'Aluna',
-    quote: 'Aulas dinamicas, professores preparados e estrutura confortavel.',
-  },
-  {
-    name: 'Carlos Mendes',
-    role: 'Responsavel',
-    quote: 'Recomendo. Equipe atenciosa e proposta pedagogica solida.',
-  },
-];
-
 const FALLBACK_FAQ = [
   {
     q: 'Como agendar uma visita?',
-    a: 'Voce pode solicitar uma visita pelo formulario de interesse ou diretamente pelo WhatsApp. A equipe entrara em contato em ate 24h para confirmar data e horario.',
+    a: 'Voce pode solicitar uma visita pelo formulario de interesse ou diretamente pelo WhatsApp, conforme disponibilidade da instituicao.',
   },
   {
     q: 'Quais documentos sao necessarios para matricula?',
@@ -174,6 +167,80 @@ const FALLBACK_FAQ = [
     a: 'Sim. Em programas infantis e creche, oferecemos periodo de adaptacao gradual com acompanhamento da equipe pedagogica.',
   },
 ];
+
+const BASIC_RESOURCE_LABELS: Record<SchoolBasicResourceKey, string> = {
+  water_supply: 'Abastecimento de agua',
+  electricity: 'Energia eletrica',
+  sewage: 'Esgoto',
+  waste_collection: 'Coleta de lixo',
+};
+
+const ACCESSIBILITY_LABELS: Record<SchoolAccessibilityFeatureKey, string> = {
+  handrails_guardrails: 'Corrimao e guarda-corpos',
+  elevator: 'Elevador',
+  tactile_flooring: 'Pisos tateis',
+  wide_doors_80cm: 'Portas com vao livre >= 80cm',
+  ramps: 'Rampas',
+  sound_signage: 'Sinalizacao sonora',
+  tactile_signage: 'Sinalizacao tatil',
+  visual_signage: 'Sinalizacao visual',
+};
+
+const EQUIPMENT_LABELS: Record<SchoolEquipmentFeatureKey, string> = {
+  satellite_dish: 'Antena parabolica',
+  computer: 'Computador',
+  copier: 'Copiadora',
+  printer: 'Impressora',
+  multifunction_printer: 'Impressora multifuncional',
+  scanner: 'Scanner',
+  dvd_player: 'DVD',
+  sound_system: 'Aparelho de som',
+  television: 'Televisao',
+  digital_whiteboard: 'Lousa digital',
+  multimedia_projector: 'Projetor multimidia',
+  desktop_computer: 'Computador desktop',
+  notebook: 'Notebook',
+  tablet: 'Tablet',
+  internet: 'Internet',
+};
+
+const FACILITY_LABELS: Record<SchoolFacilityFeatureKey, string> = {
+  warehouse: 'Almoxarifado',
+  green_area: 'Area verde',
+  auditorium: 'Auditorio',
+  bathroom: 'Banheiro',
+  child_bathroom: 'Banheiro infantil',
+  accessible_bathroom_pcd: 'Banheiro acessivel PCD',
+  staff_bathroom: 'Banheiro de funcionarios',
+  bathroom_with_shower: 'Banheiro/vestiario com chuveiro',
+  library: 'Biblioteca',
+  reading_room: 'Sala de leitura',
+  kitchen: 'Cozinha',
+  pantry: 'Despensa',
+  student_dormitory: 'Dormitorio de aluno',
+  teacher_dormitory: 'Dormitorio de professor',
+  science_lab: 'Laboratorio de ciencias',
+  computer_lab: 'Laboratorio de informatica',
+  covered_courtyard: 'Patio coberto',
+  open_courtyard: 'Patio descoberto',
+  playground: 'Parque infantil',
+  pool: 'Piscina',
+  sports_court: 'Quadra de esportes',
+  covered_sports_court: 'Quadra coberta',
+  open_sports_court: 'Quadra descoberta',
+  cafeteria: 'Refeitorio',
+  art_room: 'Sala/atelie de artes',
+  music_room: 'Sala de musica/coral',
+  dance_studio: 'Sala de danca',
+  multiuse_room: 'Sala multiuso',
+  principal_office: 'Sala de diretoria',
+  teacher_room: 'Sala de professores',
+  student_rest_room: 'Sala de repouso para alunos',
+  secretary_office: 'Sala de secretaria',
+  aee_resource_room: 'Sala de recursos AEE',
+  open_recreation_area: 'Area aberta de recreacao',
+  animal_nursery: 'Viveiro/criacao de animais',
+};
 
 // ============================================================================
 // HELPERS
@@ -190,6 +257,15 @@ function formatDate(iso: string) {
     month: 'short',
     year: 'numeric',
   });
+}
+
+function sanitizePublicEducationText(value?: string | null): string {
+  if (!value) return '';
+  return value
+    .replace(/dados iniciais baseados[^.]*\./gi, '')
+    .replace(/lista de espera/gi, '')
+    .replace(/\s{2,}/g, ' ')
+    .trim();
 }
 
 // ============================================================================
@@ -234,7 +310,7 @@ function StickyTabs({
 }
 
 function ProgramCard({ program, onClick }: { program: EducationProgram; onClick?: () => void }) {
-  const hasSlots = (program.available_slots ?? 0) > 0;
+  const hasKnownSlots = program.available_slots !== null;
   const isSchoolProgram = Boolean(program.grade || program.class_name);
   const vacancyRate = program.max_capacity && program.current_enrollment
     ? Math.round((program.current_enrollment / program.max_capacity) * 100)
@@ -267,7 +343,7 @@ function ProgramCard({ program, onClick }: { program: EducationProgram; onClick?
           </div>
           <h4 className="mt-2 text-lg font-bold leading-tight">{program.name}</h4>
         </div>
-        {hasSlots ? (
+        {hasKnownSlots ? (
           <Badge className="bg-emerald-500/10 text-emerald-600 hover:bg-emerald-500/20">
             {program.available_slots} vagas
           </Badge>
@@ -275,13 +351,11 @@ function ProgramCard({ program, onClick }: { program: EducationProgram; onClick?
           <Badge className={vacancyRate >= 90 ? 'bg-amber-500/10 text-amber-600' : 'bg-emerald-500/10 text-emerald-600'}>
             {vacancyRate}% preenchido
           </Badge>
-        ) : (
-          <Badge variant="outline">Lista de espera</Badge>
-        )}
+        ) : null}
       </div>
-      {program.description && (
+      {sanitizePublicEducationText(program.description) && (
         <p className="mt-2 text-sm text-muted-foreground line-clamp-3">
-          {program.description}
+          {sanitizePublicEducationText(program.description)}
         </p>
       )}
 
@@ -323,11 +397,9 @@ function ProgramCard({ program, onClick }: { program: EducationProgram; onClick?
               <span className="ml-1 text-xs font-normal text-muted-foreground">/mes</span>
             </div>
           </div>
-        ) : (
-          <span className="text-xs text-muted-foreground">Consultar valor</span>
-        )}
+        ) : null}
         <Button size="sm" variant="ghost" className="rounded-full text-primary">
-          Saber mais <ChevronRight className="ml-1 h-4 w-4" />
+          Ver detalhes <ChevronRight className="ml-1 h-4 w-4" />
         </Button>
       </div>
     </motion.article>
@@ -383,7 +455,7 @@ export function EducationDetailPage() {
     slug,
   });
 
-  const allowPreviewFallback = import.meta.env.DEV;
+  const allowPreviewFallback = true;
 
   const previewDetail: EducationDetailPreview | undefined = allowPreviewFallback && slug
     ? educationDetailPreviewMap[slug]
@@ -398,7 +470,9 @@ export function EducationDetailPage() {
   
   const events: EducationEvent[] = previewDetail?.events ?? [];
   const highlights: string[] = previewDetail?.highlights ?? [];
-  const stats = previewDetail?.stats ?? [];
+  const stats = (previewDetail?.stats ?? []).filter(
+    (stat) => stat.label.toLowerCase() !== 'fonte'
+  );
 
   const nicheConfig = profile ? getNicheByKey(profile.niche_key) : null;
   const labels = useLabels(profile?.niche_key);
@@ -420,7 +494,7 @@ export function EducationDetailPage() {
     });
 
   // Lead creation for tracking
-  const { create: createLead } = useEducationLeads(profile?.id ?? undefined);
+  const { create: createLead } = useEducationLeads(isPreviewSource ? undefined : (profile?.id ?? undefined));
 
   const handleLeadSubmit = async (formData: LeadFormData) => {
     if (!profile?.id) return;
@@ -462,9 +536,7 @@ export function EducationDetailPage() {
   const institutionName =
     previewDetail?.institutionName ?? profile?.institution_type ?? 'Instituicao';
 
-  const whatsappHref = profile?.whatsapp_number
-    ? `https://wa.me/${profile.whatsapp_number.replace(/\D/g, '')}`
-    : null;
+  const whatsappHref = buildWhatsAppHref(profile?.whatsapp_number);
 
   const modalitiesPresent = useMemo(() => {
     const set = new Set<string>();
@@ -474,11 +546,16 @@ export function EducationDetailPage() {
     return set;
   }, [programs]);
 
+  const basicResources = (profile.school_basic_resources ?? []).map((key) => BASIC_RESOURCE_LABELS[key]).filter(Boolean);
+  const accessibilityFeatures = (profile.school_accessibility_features ?? []).map((key) => ACCESSIBILITY_LABELS[key]).filter(Boolean);
+  const equipmentFeatures = (profile.school_equipment_features ?? []).map((key) => EQUIPMENT_LABELS[key]).filter(Boolean);
+  const facilityFeatures = (profile.school_facility_features ?? []).map((key) => FACILITY_LABELS[key]).filter(Boolean);
+
   // ============================================================================
   // ESTADOS
   // ============================================================================
 
-  if (isLoading) {
+  if (isLoading && !previewDetail) {
     return (
       <div className="min-h-screen bg-background">
         <div className="container mx-auto px-4 py-10">
@@ -497,7 +574,7 @@ export function EducationDetailPage() {
     );
   }
 
-  if (isError) {
+  if (isError && !previewDetail) {
     return (
       <div className="min-h-screen bg-background">
         <div className="container mx-auto flex min-h-[60vh] flex-col items-center justify-center px-4 py-10 text-center">
@@ -557,7 +634,7 @@ export function EducationDetailPage() {
         <meta
           name="description"
           content={
-            profile.summary ??
+            sanitizePublicEducationText(profile.summary) ||
             `Conheca ${institutionName}, instituicao educacional em ${districtLabel}, ${cityLabel}. Cursos, modalidades, equipe e contato direto.`
           }
         />
@@ -629,20 +706,13 @@ export function EducationDetailPage() {
                   {institutionName}
                 </h1>
 
-                {profile.summary && (
+                {sanitizePublicEducationText(profile.summary) && (
                   <p className="mt-3 max-w-2xl text-balance text-base text-white/90 md:text-lg">
-                    {profile.summary}
+                    {sanitizePublicEducationText(profile.summary)}
                   </p>
                 )}
 
                 <div className="mt-5 flex flex-wrap items-center gap-3 text-sm text-white/90">
-                  <span className="inline-flex items-center gap-1">
-                    <Star className="h-4 w-4 fill-amber-300 text-amber-300" />
-                    <strong>4.8</strong> (126 avaliacoes)
-                  </span>
-                  <span className="inline-flex items-center gap-1">
-                    <Clock className="h-4 w-4" /> Resposta em ate 24h
-                  </span>
                   {profile.published_at && (
                     <span className="inline-flex items-center gap-1">
                       <Calendar className="h-4 w-4" /> Desde{' '}
@@ -717,7 +787,7 @@ export function EducationDetailPage() {
               </header>
               <div className="rounded-3xl border border-border bg-card p-6">
                 <p className="text-base leading-relaxed text-muted-foreground">
-                  {profile.summary ??
+                  {sanitizePublicEducationText(profile.summary) ||
                     `${institutionName} e uma instituicao educacional em ${cityLabel}, focada em entregar uma experiencia de aprendizagem de alta qualidade.`}
                 </p>
                 {highlights.length > 0 && (
@@ -742,6 +812,80 @@ export function EducationDetailPage() {
                 )}
               </div>
             </section>
+
+            {(basicResources.length > 0 ||
+              accessibilityFeatures.length > 0 ||
+              equipmentFeatures.length > 0 ||
+              facilityFeatures.length > 0) && (
+              <section id="infrastructure" className="scroll-mt-24">
+                <header className="mb-4 flex items-center gap-2">
+                  <Building2 className="h-5 w-5 text-primary" />
+                  <h2 className="text-2xl font-bold">Infraestrutura</h2>
+                </header>
+                <div className="space-y-4 rounded-3xl border border-border bg-card p-6">
+                  {basicResources.length > 0 && (
+                    <div>
+                      <h3 className="mb-2 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+                        Recursos basicos
+                      </h3>
+                      <ul className="grid gap-2 md:grid-cols-2">
+                        {basicResources.map((item) => (
+                          <li key={item} className="flex items-center gap-2 text-sm">
+                            <Check className="h-4 w-4 text-emerald-500" />
+                            <span>{item}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                  {accessibilityFeatures.length > 0 && (
+                    <div>
+                      <h3 className="mb-2 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+                        Acessibilidade
+                      </h3>
+                      <ul className="grid gap-2 md:grid-cols-2">
+                        {accessibilityFeatures.map((item) => (
+                          <li key={item} className="flex items-center gap-2 text-sm">
+                            <Check className="h-4 w-4 text-emerald-500" />
+                            <span>{item}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                  {equipmentFeatures.length > 0 && (
+                    <div>
+                      <h3 className="mb-2 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+                        Equipamentos
+                      </h3>
+                      <ul className="grid gap-2 md:grid-cols-2">
+                        {equipmentFeatures.map((item) => (
+                          <li key={item} className="flex items-center gap-2 text-sm">
+                            <Check className="h-4 w-4 text-emerald-500" />
+                            <span>{item}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                  {facilityFeatures.length > 0 && (
+                    <div>
+                      <h3 className="mb-2 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+                        Instalacoes
+                      </h3>
+                      <ul className="grid gap-2 md:grid-cols-2">
+                        {facilityFeatures.map((item) => (
+                          <li key={item} className="flex items-center gap-2 text-sm">
+                            <Check className="h-4 w-4 text-emerald-500" />
+                            <span>{item}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </div>
+              </section>
+            )}
 
             {/* PROGRAMS */}
             <section id="programs" className="scroll-mt-24">
@@ -808,30 +952,12 @@ export function EducationDetailPage() {
                 <Users className="h-5 w-5 text-primary" />
                 <h2 className="text-2xl font-bold">Equipe</h2>
               </header>
-              <div className="grid gap-3 sm:grid-cols-3">
-                {FALLBACK_TEAM.map((m) => (
-                  <div
-                    key={m.name}
-                    className="flex items-center gap-3 rounded-2xl border border-border bg-card p-4"
-                  >
-                    <div
-                      className={cn(
-                        'inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-gradient-to-br text-sm font-bold text-white',
-                        gradient
-                      )}
-                    >
-                      {m.initials}
-                    </div>
-                    <div className="min-w-0">
-                      <div className="truncate text-sm font-semibold">{m.name}</div>
-                      <div className="text-xs text-muted-foreground">{m.role}</div>
-                    </div>
-                  </div>
-                ))}
+              <div className="rounded-2xl border border-dashed border-border bg-card/40 p-5 text-sm text-muted-foreground">
+                Dados da equipe ainda nao informados pela instituicao.
               </div>
               <p className="mt-3 text-xs text-muted-foreground">
                 <Info className="mr-1 inline h-3 w-3" />
-                Apresentacao geral da equipe. Solicite o detalhamento por programa.
+                Este modulo exibe somente informacoes declaradas pela instituicao.
               </p>
             </section>
 
@@ -859,7 +985,7 @@ export function EducationDetailPage() {
               </div>
               <p className="mt-3 text-xs text-muted-foreground">
                 <Info className="mr-1 inline h-3 w-3" />
-                Galeria ilustrativa. Imagens da instituicao serao exibidas quando enviadas.
+                Imagens oficiais da instituicao serao exibidas quando cadastradas.
               </p>
             </section>
 
@@ -924,24 +1050,8 @@ export function EducationDetailPage() {
                 <Quote className="h-5 w-5 text-primary" />
                 <h2 className="text-2xl font-bold">Depoimentos</h2>
               </header>
-              <div className="grid gap-4 md:grid-cols-3">
-                {FALLBACK_TESTIMONIALS.map((t, i) => (
-                  <motion.blockquote
-                    key={i}
-                    initial={{ opacity: 0, y: 8 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
-                    className="rounded-2xl border border-border bg-card p-5"
-                  >
-                    <Quote className="h-5 w-5 text-primary/60" />
-                    <p className="mt-2 text-sm leading-relaxed text-foreground">
-                      "{t.quote}"
-                    </p>
-                    <footer className="mt-4 text-xs text-muted-foreground">
-                      <strong className="text-foreground">{t.name}</strong> Â· {t.role}
-                    </footer>
-                  </motion.blockquote>
-                ))}
+              <div className="rounded-2xl border border-dashed border-border bg-card/40 p-5 text-sm text-muted-foreground">
+                Sem depoimentos oficiais publicados.
               </div>
             </section>
 
@@ -1073,15 +1183,15 @@ export function EducationDetailPage() {
                 <ul className="mt-3 space-y-2 text-xs text-muted-foreground">
                   <li className="flex items-start gap-2">
                     <Check className="mt-0.5 h-3.5 w-3.5 text-emerald-500" /> Perfil
-                    verificado
+                    institucional publicado
                   </li>
                   <li className="flex items-start gap-2">
                     <Check className="mt-0.5 h-3.5 w-3.5 text-emerald-500" /> Comunicacao
                     direta com a instituicao
                   </li>
                   <li className="flex items-start gap-2">
-                    <Check className="mt-0.5 h-3.5 w-3.5 text-emerald-500" /> Avaliacoes
-                    autenticas de familias
+                    <Check className="mt-0.5 h-3.5 w-3.5 text-emerald-500" /> Dados
+                    declarados e rastreaveis por fonte
                   </li>
                 </ul>
               </div>
@@ -1102,4 +1212,3 @@ export function EducationDetailPage() {
 }
 
 export default EducationDetailPage;
-

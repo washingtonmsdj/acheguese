@@ -19,7 +19,6 @@ import { useBusinessNavigation } from "@/modules/business/hooks/useBusinessNavig
 import { BusinessService } from "@/core/business/services/BusinessService";
 import type { BizData } from "@/modules/business/types";
 import { logger } from "@/shared/utils/logger";
-import { useFriendlyModuleUrls } from "@/core/routing/hooks/useFriendlyModuleUrls";
 
 interface SimilarBusiness {
   id: string;
@@ -46,7 +45,6 @@ export function BusinessSidebar({
 }: BusinessSidebarProps) {
   const navigate = useNavigate();
   const { navigateToBusiness } = useBusinessNavigation();
-  const moduleUrls = useFriendlyModuleUrls();
   const [similarBusinesses, setSimilarBusinesses] = useState<SimilarBusiness[]>(
     [],
   );
@@ -97,7 +95,7 @@ export function BusinessSidebar({
           "_blank",
         );
       } else {
-        navigate(moduleUrls.map);
+        navigate("/mapa");
       }
     }
   };

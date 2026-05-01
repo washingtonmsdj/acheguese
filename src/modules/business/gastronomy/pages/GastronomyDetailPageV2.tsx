@@ -18,7 +18,6 @@ import {
   X,
 } from 'lucide-react';
 
-import { useFriendlyModuleUrls } from '@/core/routing/hooks/useFriendlyModuleUrls';
 import { useSessionContext } from '@/core/session';
 import { Badge } from '@/shared/components/ui/badge';
 import { Button } from '@/shared/components/ui/button';
@@ -605,7 +604,6 @@ function BusinessInfoSidebar({ business, openingStatus, onNavigate }: BusinessIn
 export default function GastronomyDetailPageV2() {
   const { state, city, district, slug } = useParams();
   const navigate = useNavigate();
-  const moduleUrls = useFriendlyModuleUrls();
   const { user, activeProfile, profiles } = useSessionContext();
 
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
@@ -693,7 +691,7 @@ export default function GastronomyDetailPageV2() {
         '@type': 'ListItem',
         position: 2,
         name: 'Gastronomia',
-        item: `${window.location.origin}${moduleUrls.gastronomy}`,
+        item: `${window.location.origin}/gastronomia`,
       },
       {
         '@type': 'ListItem',
@@ -715,7 +713,7 @@ export default function GastronomyDetailPageV2() {
           O endereço informado não pertence a um estabelecimento ativo neste território.
         </p>
         <Button asChild className="mt-6">
-          <Link to={moduleUrls.gastronomy}>Voltar para gastronomia</Link>
+          <Link to="/gastronomia">Voltar para gastronomia</Link>
         </Button>
       </div>
     );

@@ -14,7 +14,7 @@ import { useQuery } from "@tanstack/react-query";
 import { VagasService } from "../services/VagasService";
 import type { Vaga, VagaContrato, VagaModalidade, VagaNivel } from "../types/vagas.types";
 import { VAGA_CATEGORIAS } from "../types/vagas.types";
-import { useTerritoryFilter } from "@/core/location";
+import { useModuleTerritoryFilter } from "@/core/location";
 import type { ResolvedTerritory } from "@/core/routing/hooks/useResolveTerritoryFromUrl";
 
 interface UseVagasParams {
@@ -23,7 +23,7 @@ interface UseVagasParams {
 }
 
 export function useVagas(params: UseVagasParams = {}) {
-  const { resolved, activeMemberIds } = params;
+  const { resolved } = params;
   
   const [search, setSearch] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
@@ -31,16 +31,23 @@ export function useVagas(params: UseVagasParams = {}) {
   const [selectedModality, setSelectedModality] = useState<VagaModalidade | null>(null);
   const [selectedLevel, setSelectedLevel] = useState<VagaNivel | null>(null);
 
-  // ✅ SSOT: Filtro territorial canônico — suporta location e group
-  const territoryFilter = useTerritoryFilter(resolved, activeMemberIds);
+  const moduleTerritory = useModuleTerritoryFilter({ routeResolved: resolved });
+  const locationId = moduleTerritory.resolvedLocationIds[0] ?? "";
+  const locationIds = moduleTerritory.resolvedLocationIds;
 
-  // ✅ SSOT: Busca vagas do banco de dados
-  const { data: allVagas = [], isLoading, isError } = useQuery({
-    queryKey: ['vagas', territoryFilter],
-    queryFn: () => VagasService.getVagas({ territoryFilter }),
+  const { data, isLoading: isVagasLoading, isError } = useQuery({
+    queryKey: ['vagas', locationIds],
+    queryFn: () =>
+      VagasService.getVagas({
+        locationId,
+        locationIds,
+        limit: 200,
+      }),
     staleTime: 5 * 60 * 1000, // 5 minutos
-    enabled: true,
+    enabled: locationIds.length > 0,
   });
+
+  const allVagas = useMemo(() => data?.vagas ?? [], [data?.vagas]);
 
   // Filtros client-side (busca textual e categorias)
   const filteredVagas = useMemo(() => {
@@ -49,7 +56,7 @@ export function useVagas(params: UseVagasParams = {}) {
         const q = search.toLowerCase();
         const match =
           vaga.titulo.toLowerCase().includes(q) ||
-          vaga.empresa.toLowerCase().includes(q) ||
+          vaga.empresaNome.toLowerCase().includes(q) ||
           vaga.tags.some(t => t.toLowerCase().includes(q));
         if (!match) return false;
       }
@@ -73,7 +80,7 @@ export function useVagas(params: UseVagasParams = {}) {
 
   const urgentVagas = useMemo(() => allVagas.filter(v => v.urgencia === "urgente"), [allVagas]);
   const recentVagas = useMemo(() => [...allVagas].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).slice(0, 4), [allVagas]);
-  const featuredVagas = useMemo(() => allVagas.filter(v => v.destaque), [allVagas]);
+  const featuredVagas = useMemo(() => allVagas.filter(v => v.highlightType !== "none"), [allVagas]);
 
   const clearFilters = useCallback(() => {
     setSearch("");
@@ -109,7 +116,7 @@ export function useVagas(params: UseVagasParams = {}) {
     clearFilters,
     getRelatedVagas,
     getVagaById,
-    isLoading,
+    isLoading: moduleTerritory.isLoading || isVagasLoading,
     isError,
   };
 }

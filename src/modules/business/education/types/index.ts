@@ -6,6 +6,7 @@
 
 // Tipos específicos para escolas regulares
 export type SchoolType = 'public' | 'private' | 'charter' | 'community';
+export type SchoolNetwork = 'municipal' | 'state' | 'federal' | 'private';
 
 // Nichos do módulo Education
 export type EducationNicheKey =
@@ -28,6 +29,76 @@ export type EducationLevel =
 
 export type SchoolShift = 'morning' | 'afternoon' | 'evening' | 'full_day';
 
+export type SchoolBasicResourceKey =
+  | 'water_supply'
+  | 'electricity'
+  | 'sewage'
+  | 'waste_collection';
+
+export type SchoolAccessibilityFeatureKey =
+  | 'handrails_guardrails'
+  | 'elevator'
+  | 'tactile_flooring'
+  | 'wide_doors_80cm'
+  | 'ramps'
+  | 'sound_signage'
+  | 'tactile_signage'
+  | 'visual_signage';
+
+export type SchoolEquipmentFeatureKey =
+  | 'satellite_dish'
+  | 'computer'
+  | 'copier'
+  | 'printer'
+  | 'multifunction_printer'
+  | 'scanner'
+  | 'dvd_player'
+  | 'sound_system'
+  | 'television'
+  | 'digital_whiteboard'
+  | 'multimedia_projector'
+  | 'desktop_computer'
+  | 'notebook'
+  | 'tablet'
+  | 'internet';
+
+export type SchoolFacilityFeatureKey =
+  | 'warehouse'
+  | 'green_area'
+  | 'auditorium'
+  | 'bathroom'
+  | 'child_bathroom'
+  | 'accessible_bathroom_pcd'
+  | 'staff_bathroom'
+  | 'bathroom_with_shower'
+  | 'library'
+  | 'reading_room'
+  | 'kitchen'
+  | 'pantry'
+  | 'student_dormitory'
+  | 'teacher_dormitory'
+  | 'science_lab'
+  | 'computer_lab'
+  | 'covered_courtyard'
+  | 'open_courtyard'
+  | 'playground'
+  | 'pool'
+  | 'sports_court'
+  | 'covered_sports_court'
+  | 'open_sports_court'
+  | 'cafeteria'
+  | 'art_room'
+  | 'music_room'
+  | 'dance_studio'
+  | 'multiuse_room'
+  | 'principal_office'
+  | 'teacher_room'
+  | 'student_rest_room'
+  | 'secretary_office'
+  | 'aee_resource_room'
+  | 'open_recreation_area'
+  | 'animal_nursery';
+
 export interface SchoolAgeRange {
   min: number;
   max: number;
@@ -49,11 +120,19 @@ export interface EducationProfile {
   
   // Campos específicos para escolas regulares (regular_school)
   school_type?: SchoolType | null;
+  school_network?: SchoolNetwork | null;
+  school_inep_code?: string | null;
+  school_source_url?: string | null;
+  school_source_updated_at?: string | null;
   education_levels?: EducationLevel[] | null;
   shifts?: SchoolShift[] | null;
   age_range_min?: number | null;
   age_range_max?: number | null;
   enrollment_open?: boolean | null;
+  school_basic_resources?: SchoolBasicResourceKey[] | null;
+  school_accessibility_features?: SchoolAccessibilityFeatureKey[] | null;
+  school_equipment_features?: SchoolEquipmentFeatureKey[] | null;
+  school_facility_features?: SchoolFacilityFeatureKey[] | null;
 }
 
 export interface EducationProgram {

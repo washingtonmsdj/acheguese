@@ -18,6 +18,18 @@ interface VerificationCardProps {
   showActions?: boolean;
 }
 
+function getStatusTone(status?: PendingVerification["status"]) {
+  if (status === "verified") return "bg-green-500/10 text-green-600 border-green-500/20";
+  if (status === "rejected") return "bg-red-500/10 text-red-600 border-red-500/20";
+  return "bg-blue-500/10 text-blue-600 border-blue-500/20";
+}
+
+function getStatusLabel(status?: PendingVerification["status"]) {
+  if (status === "verified") return "Verificado";
+  if (status === "rejected") return "Rejeitado";
+  return "Pendente";
+}
+
 function getInitials(name: string) {
   return name
     .split(" ")
@@ -50,8 +62,8 @@ export function VerificationCard({
                 <h3 className="font-semibold text-sm truncate">{verification.display_name}</h3>
                 <p className="text-xs text-muted-foreground">ID: {verification.profile_id}</p>
               </div>
-              <span className="text-xs px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-600 border border-blue-500/20 flex-shrink-0">
-                {verification.type}
+              <span className={`text-xs px-2 py-0.5 rounded-full border flex-shrink-0 ${getStatusTone(verification.status)}`}>
+                {getStatusLabel(verification.status)}
               </span>
             </div>
 
@@ -65,6 +77,24 @@ export function VerificationCard({
                 })}
               </span>
             </div>
+
+            {(verification.decision_at || verification.decision_by || verification.rejection_reason) ? (
+              <div className="mb-3 rounded-md border border-border bg-muted/30 p-2 text-xs text-muted-foreground space-y-1">
+                {verification.decision_at ? (
+                  <p>
+                    Decisao{" "}
+                    {formatDistanceToNow(new Date(verification.decision_at), {
+                      addSuffix: true,
+                      locale: ptBR,
+                    })}
+                  </p>
+                ) : null}
+                <p>Responsavel: {verification.decision_by || "Administrador"}</p>
+                {verification.rejection_reason ? (
+                  <p className="text-red-600">Motivo: {verification.rejection_reason}</p>
+                ) : null}
+              </div>
+            ) : null}
 
             {showActions ? (
               <div className="flex gap-2">
@@ -100,4 +130,3 @@ export function VerificationCard({
     </Card>
   );
 }
-

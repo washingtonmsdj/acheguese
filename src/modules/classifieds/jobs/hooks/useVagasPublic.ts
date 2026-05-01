@@ -30,6 +30,7 @@ import type {
 
 interface UseVagasPublicParams {
   locationId: string;
+  locationIds?: string[];
   initialFilters?: VagaFilters;
   initialSort?: VagaSortOption;
   pageSize?: number;
@@ -78,6 +79,7 @@ const STALE_TIME = 5 * 60 * 1000; // 5 minutos
 export function useVagasPublic(params: UseVagasPublicParams): UseVagasPublicReturn {
   const {
     locationId,
+    locationIds,
     initialFilters = {},
     initialSort = 'newest',
     pageSize = DEFAULT_PAGE_SIZE,
@@ -89,8 +91,8 @@ export function useVagasPublic(params: UseVagasPublicParams): UseVagasPublicRetu
 
   // Query key baseada em todos os parâmetros
   const queryKey = useMemo(() => 
-    ['vagas', locationId, filters, sort],
-    [locationId, filters, sort]
+    ['vagas', locationId, locationIds, filters, sort],
+    [locationId, locationIds, filters, sort]
   );
 
   // Infinite query para paginação
@@ -108,6 +110,7 @@ export function useVagasPublic(params: UseVagasPublicParams): UseVagasPublicRetu
     queryFn: async ({ pageParam = 0 }) => {
       const result = await VagasService.getVagas({
         locationId,
+        locationIds,
         filters,
         sort,
         limit: pageSize,
@@ -220,10 +223,10 @@ export function useVagasDestaque(locationId: string, limit = 6) {
 // HOOK ESPECIALIZADO: Bairros com Vagas
 // ═══════════════════════════════════════════════════════════════════════════════
 
-export function useBairrosComVagas(locationId: string) {
+export function useBairrosComVagas(locationId: string, locationIds?: string[]) {
   return useQuery({
-    queryKey: ['bairros-vagas', locationId],
-    queryFn: () => VagasService.getBairrosComVagas(locationId),
+    queryKey: ['bairros-vagas', locationId, locationIds],
+    queryFn: () => VagasService.getBairrosComVagas(locationId, locationIds),
     staleTime: STALE_TIME * 2, // Cache mais longo
     enabled: !!locationId,
   });

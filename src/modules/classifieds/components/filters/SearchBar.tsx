@@ -6,7 +6,7 @@
  */
 
 import React from "react";
-import { Search, SlidersHorizontal, ArrowUpDown, Package, Camera } from "lucide-react";
+import { Search, SlidersHorizontal, ArrowUpDown, Package, Camera, MapPin, X } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import {
@@ -16,9 +16,23 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/shared/components/ui/sheet";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/shared/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/shared/components/ui/select";
 import { cn } from "@/shared/utils/cn";
 import { SORT_OPTIONS, CONDITION_OPTIONS } from "../../sections/types";
 import type { ClassifiedsFilters } from "../../sections/types";
+import { useLocationCascade } from "@/core/location/hooks/useLocationCascade";
 
 // ============================================
 // Props
@@ -32,6 +46,9 @@ export interface SearchBarProps {
   readonly onPriceMaxChange: (value: string) => void;
   readonly onConditionChange: (condition: string) => void;
   readonly onHasPhotoChange: (hasPhoto: boolean) => void;
+  readonly onStateSlugChange: (stateSlug: string) => void;
+  readonly onCitySlugChange: (citySlug: string) => void;
+  readonly onLocationSlugChange: (locationSlug: string) => void;
   readonly onClearFilters: () => void;
 }
 
@@ -47,11 +64,28 @@ export function SearchBar({
   onPriceMaxChange,
   onConditionChange,
   onHasPhotoChange,
+  onStateSlugChange,
+  onCitySlugChange,
+  onLocationSlugChange,
   onClearFilters,
 }: SearchBarProps) {
   const [localSearch, setLocalSearch] = React.useState(filters.search || "");
   const [searchFocused, setSearchFocused] = React.useState(false);
   const [filtersOpen, setFiltersOpen] = React.useState(false);
+  const [territoryOpen, setTerritoryOpen] = React.useState(false);
+  const [selectedStateId, setSelectedStateId] = React.useState<string | null>(null);
+  const [selectedCityId, setSelectedCityId] = React.useState<string | null>(null);
+  const { states, cities, neighborhoods } = useLocationCascade(selectedStateId, selectedCityId);
+
+  React.useEffect(() => {
+    const state = states.find((item) => item.slug === filters.stateSlug);
+    setSelectedStateId(state?.id ?? null);
+  }, [filters.stateSlug, states]);
+
+  React.useEffect(() => {
+    const city = cities.find((item) => item.slug === filters.citySlug);
+    setSelectedCityId(city?.id ?? null);
+  }, [filters.citySlug, cities]);
 
   React.useEffect(() => {
     const timer = setTimeout(() => onSearchChange(localSearch), 300);
@@ -64,7 +98,25 @@ export function SearchBar({
     filters.priceMax ? 1 : 0,
     filters.condition !== "todos" ? 1 : 0,
     filters.hasPhoto ? 1 : 0,
+    filters.stateSlug ? 1 : 0,
+    filters.citySlug ? 1 : 0,
+    filters.locationSlug ? 1 : 0,
   ].reduce((a, b) => a + b, 0);
+
+  const selectedStateName =
+    states.find((state) => state.slug === filters.stateSlug)?.name ?? "";
+  const selectedCityName =
+    cities.find((city) => city.slug === filters.citySlug)?.name ?? "";
+  const selectedDistrictName =
+    neighborhoods.find((district) => district.slug === filters.locationSlug)?.name ?? "";
+
+  const territorySummary = selectedDistrictName
+    ? `${selectedDistrictName}, ${selectedCityName || "Cidade"}`
+    : selectedCityName
+      ? `${selectedCityName}${selectedStateName ? `, ${selectedStateName}` : ""}`
+      : "Perto de você (automático)";
+
+  const hasManualTerritoryFilter = Boolean(filters.stateSlug || filters.citySlug || filters.locationSlug);
 
   return (
     <div className="px-4 mt-3 mb-2">
@@ -101,11 +153,11 @@ export function SearchBar({
           <SheetTrigger asChild>
             <Button
               variant="outline"
-              size="icon"
-              className="h-11 w-11 rounded-xl border-2 relative shrink-0"
+              className="h-11 rounded-xl border-2 relative shrink-0 px-3 gap-2"
               aria-label="Filtros avançados"
             >
               <SlidersHorizontal className="h-4 w-4" />
+              <span className="text-sm font-medium">Filtros</span>
               {activeFiltersCount > 0 && (
                 <span className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-primary text-primary-foreground text-[9px] font-bold flex items-center justify-center">
                   {activeFiltersCount}
@@ -119,11 +171,10 @@ export function SearchBar({
             className="rounded-t-2xl max-h-[85vh] overflow-y-auto"
           >
             <SheetHeader>
-              <SheetTitle className="font-display">Filtros Avançados</SheetTitle>
+              <SheetTitle className="font-display">Filtros e Ordenação</SheetTitle>
             </SheetHeader>
 
             <div className="space-y-5 py-4">
-              {/* Ordenar */}
               <div className="space-y-2">
                 <label className="text-sm font-semibold flex items-center gap-1.5 text-foreground">
                   <ArrowUpDown className="h-3.5 w-3.5" /> Ordenar por
@@ -238,6 +289,132 @@ export function SearchBar({
           </SheetContent>
         </Sheet>
       </div>
+      <div className="mt-3 rounded-xl border-2 border-primary/30 bg-primary/5 p-3.5 shadow-sm flex items-center justify-between gap-3">
+        <div className="min-w-0">
+          <p className="text-[11px] uppercase tracking-wide text-primary font-semibold flex items-center gap-1.5">
+            <MapPin className="h-3.5 w-3.5" />
+            Localização ativa
+          </p>
+          <p className="text-sm font-bold truncate text-foreground">{territorySummary}</p>
+        </div>
+        <div className="flex items-center gap-2 shrink-0">
+          {hasManualTerritoryFilter && (
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8"
+              onClick={() => {
+                onStateSlugChange("");
+                onCitySlugChange("");
+                onLocationSlugChange("");
+              }}
+              aria-label="Limpar localização"
+              title="Limpar localização"
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          )}
+          <Button
+            type="button"
+            className="h-8 rounded-lg px-3 text-xs font-semibold"
+            onClick={() => setTerritoryOpen(true)}
+          >
+            <MapPin className="h-3.5 w-3.5 mr-1.5" />
+            Alterar local
+          </Button>
+        </div>
+      </div>
+
+      <Dialog open={territoryOpen} onOpenChange={setTerritoryOpen}>
+        <DialogContent className="max-w-lg p-0 overflow-hidden">
+          <DialogHeader className="px-6 pt-6">
+            <DialogTitle className="font-display">Localização dos resultados</DialogTitle>
+          </DialogHeader>
+          <div className="px-6 pb-6">
+          <div className="space-y-5 py-4">
+            <div className="space-y-2">
+              <label className="text-sm font-semibold text-foreground">Estado</label>
+              <Select
+                value={filters.stateSlug || "__all__"}
+                onValueChange={(value) => onStateSlugChange(value === "__all__" ? "" : value)}
+              >
+                <SelectTrigger className="h-10 rounded-xl">
+                  <SelectValue placeholder="Todos os estados" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__all__">Todos os estados</SelectItem>
+                  {states.map((state) => (
+                    <SelectItem key={state.id} value={state.slug}>
+                      {state.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-semibold text-foreground">Cidade</label>
+              <Select
+                value={filters.citySlug || "__all__"}
+                onValueChange={(value) => onCitySlugChange(value === "__all__" ? "" : value)}
+                disabled={!filters.stateSlug}
+              >
+                <SelectTrigger className="h-10 rounded-xl">
+                  <SelectValue placeholder="Todas as cidades" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__all__">Todas as cidades</SelectItem>
+                  {cities.map((city) => (
+                    <SelectItem key={city.id} value={city.slug}>
+                      {city.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-semibold text-foreground">Bairro</label>
+              <Select
+                value={filters.locationSlug || "__all__"}
+                onValueChange={(value) => onLocationSlugChange(value === "__all__" ? "" : value)}
+                disabled={!filters.citySlug}
+              >
+                <SelectTrigger className="h-10 rounded-xl">
+                  <SelectValue placeholder="Todos os bairros" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__all__">Todos os bairros</SelectItem>
+                  {neighborhoods.map((district) => (
+                    <SelectItem key={district.id} value={district.slug}>
+                      {district.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="flex gap-2 pt-2">
+              <Button
+                variant="outline"
+                className="flex-1 rounded-xl"
+                onClick={() => {
+                  onStateSlugChange("");
+                  onCitySlugChange("");
+                  onLocationSlugChange("");
+                }}
+              >
+                Limpar localização
+              </Button>
+              <Button className="flex-1 rounded-xl" onClick={() => setTerritoryOpen(false)}>
+                Aplicar
+              </Button>
+            </div>
+          </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

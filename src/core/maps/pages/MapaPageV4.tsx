@@ -452,7 +452,7 @@ export default function MapaPageV4({ resolved, activeMemberIds = [] }: MapaPageV
             territory: {
               enabled: true,
               position: 'top-right',
-              showSelector: true,
+              showSelector: false,
               showIndicator: territoryFilter.scope !== 'none',
               compact: true,
             },

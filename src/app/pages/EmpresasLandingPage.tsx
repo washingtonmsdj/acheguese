@@ -11,6 +11,7 @@
 
 import { useNavigate } from "react-router-dom";
 import { useState, useMemo, useEffect } from "react";
+import { MapPin } from "lucide-react";
 import { useAuth } from "@/core/auth/hooks/useAuth";
 import { useBusinessList } from "@/modules/business/hooks/useBusinessList";
 import { useBusinessUrls } from "@/modules/business/hooks/useBusinessUrls";
@@ -18,7 +19,11 @@ import { useFriendlyModuleUrls } from '@/core/routing/hooks/useFriendlyModuleUrl
 import { useTerritorialContextOptional } from '@/core/routing/components/TerritorialLayout';
 import type { ResolvedTerritory } from "@/core/routing/hooks/useResolveTerritoryFromUrl";
 import { useTerritoryPolygon } from "@/core/maps/hooks/useTerritoryPolygon";
-import { useTerritoryLabels } from "@/core/location";
+import {
+  ModuleLocationDialog,
+  useModuleTerritoryFilter,
+  useTerritoryLabels,
+} from "@/core/location";
 import { useNearbyEntities } from "@/core/geospatial/hooks/useSpatialSearch";
 import { useRobustGeolocation } from "@/shared/hooks";
 
@@ -73,6 +78,7 @@ export default function EmpresasLandingPage({
   const activeMemberIds = territorialContext?.activeMemberIds ?? activeMemberIdsProp;
   
   const territoryLabels = useTerritoryLabels(resolved);
+  const moduleTerritory = useModuleTerritoryFilter({ routeResolved: resolved });
   const businessUrls = useBusinessUrls(resolved);
   const moduleUrls = useFriendlyModuleUrls();
   
@@ -83,6 +89,7 @@ export default function EmpresasLandingPage({
   const [activeFilters, setActiveFilters] = useState<string[]>([]);
   const [savedBusinesses, setSavedBusinesses] = useState<Set<string>>(new Set());
   const [nearbyMode, setNearbyMode] = useState(false);
+  const [locationDialogOpen, setLocationDialogOpen] = useState(false);
   const [currentBannerIndex, setCurrentBannerIndex] = useState(0);
   
   // ============================================
@@ -100,9 +107,10 @@ export default function EmpresasLandingPage({
   
   const { businesses: realBusinesses } = useBusinessList({
     searchQuery: searchQuery.trim() || undefined,
-    enabled: !!resolved,
+    enabled: true,
     routeResolved: resolved,
     activeMemberIds,
+    territoryFilter: moduleTerritory.territoryFilter,
   });
   
   const { polygons: territoryPolygons, isLoading: isLoadingBounds } = useTerritoryPolygon(resolved ?? null);
@@ -110,11 +118,29 @@ export default function EmpresasLandingPage({
   // ============================================
   // Computed Values
   // ============================================
-  const territoryName = useMemo(() => getTerritoryName(resolved), [resolved]);
+  const territoryName = useMemo(
+    () => resolved ? getTerritoryName(resolved) : moduleTerritory.displayLabel,
+    [moduleTerritory.displayLabel, resolved],
+  );
   const territoryNameShort = useMemo(() => getTerritoryNameShort(territoryName), [territoryName]);
   const territoryPreposition = useMemo(() => getTerritoryPreposition(territoryName), [territoryName]);
   
   const bannerImages = useMemo(() => [heroImg, heroImg2, heroImg3], []);
+  const initialSlugs = useMemo(() => {
+    const geoPath =
+      resolved?.kind === "location"
+        ? resolved.location.geographic_path
+        : resolved?.kind === "group"
+          ? resolved.group.members[0]?.geographic_path
+          : null;
+    if (!geoPath) return {};
+    const parts = geoPath.split("/").filter(Boolean);
+    return {
+      stateSlug: parts[1] ?? null,
+      citySlug: parts[2] ?? null,
+      districtSlug: parts[3] ?? null,
+    };
+  }, [resolved]);
   
   // Usar empresas reais se disponíveis, senão usar mocks
   const businessesToShow = useMemo(() => {
@@ -259,6 +285,40 @@ export default function EmpresasLandingPage({
         onNextBanner={handleNextBanner}
         onBannerSelect={setCurrentBannerIndex}
         navigate={navigate}
+      />
+
+      <section className="max-w-7xl mx-auto w-full px-4 sm:px-6 mt-3">
+        <div className="rounded-xl border-2 border-primary/30 bg-primary/5 p-3.5 shadow-sm flex items-center justify-between gap-3">
+          <div className="min-w-0">
+            <p className="text-[11px] uppercase tracking-wide text-primary font-semibold flex items-center gap-1.5">
+              <MapPin className="h-3.5 w-3.5" />
+              Localização ativa
+            </p>
+            <p className="text-sm font-bold truncate">{territoryName}</p>
+          </div>
+          <button
+            type="button"
+            className="h-8 rounded-lg px-3 text-xs font-semibold border border-border bg-background hover:bg-muted transition-colors"
+            onClick={() => setNearbyMode((v) => !v)}
+          >
+            {nearbyMode ? "Remover perto de você" : "Perto de você"}
+          </button>
+          <button
+            type="button"
+            className="h-8 rounded-lg px-3 text-xs font-semibold border border-border bg-background hover:bg-muted transition-colors"
+            onClick={() => setLocationDialogOpen(true)}
+          >
+            Alterar local
+          </button>
+        </div>
+      </section>
+
+      <ModuleLocationDialog
+        open={locationDialogOpen}
+        onOpenChange={setLocationDialogOpen}
+        moduleBasePath="/empresas"
+        initialSlugs={initialSlugs}
+        onApplyPath={(path) => navigate(path)}
       />
       
       {/* Filtros Rápidos */}
