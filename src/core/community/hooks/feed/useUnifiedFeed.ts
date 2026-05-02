@@ -7,7 +7,7 @@ interface UseUnifiedFeedProps {
   civicReports?: any[];
   communityPosts?: any[];
   feedPosts?: any[];
-  sortCriteria?: "recent" | "popular" | "nearby";
+  sortCriteria?: "recent" | "popular" | "nearby" | "most_commented";
   filterType?:
     | "all"
     | "civic_report"
@@ -53,10 +53,14 @@ export function useUnifiedFeed({
     [unifiedPosts, filterType],
   );
 
-  const sortedPosts = useMemo(
-    () => PostAdapter.sortPosts(filteredPosts, sortCriteria, userLocation),
-    [filteredPosts, sortCriteria, userLocation],
-  );
+  const sortedPosts = useMemo(() => {
+    if (sortCriteria === "most_commented") {
+      return [...filteredPosts].sort(
+        (a, b) => (b.comments_count ?? 0) - (a.comments_count ?? 0),
+      );
+    }
+    return PostAdapter.sortPosts(filteredPosts, sortCriteria, userLocation);
+  }, [filteredPosts, sortCriteria, userLocation]);
 
   return { sortedPosts };
 }

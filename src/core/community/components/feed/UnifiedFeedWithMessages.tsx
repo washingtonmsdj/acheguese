@@ -10,7 +10,7 @@ interface UnifiedFeedWithMessagesProps {
   communityPosts?: any[];
   feedPosts?: any[];
   currentUserId?: string;
-  sortCriteria?: "recent" | "popular" | "nearby";
+  sortCriteria?: "recent" | "popular" | "nearby" | "most_commented";
   filterType?:
     | "all"
     | "civic_report"
@@ -95,10 +95,11 @@ const UnifiedFeedWithMessages = React.forwardRef<
 
     return (
       <>
-        <div className="space-y-4">
+        <div className="space-y-5">
           {sortedPosts.length === 0 ? (
-            <div className="text-center py-8 text-gray-400">
-              <p>Nenhuma postagem encontrada</p>
+            <div className="rounded-2xl border border-dashed border-white/10 bg-white/[0.03] px-4 py-10 text-center text-gray-400">
+              <p className="text-sm font-semibold text-white/75">Nenhuma postagem encontrada</p>
+              <p className="mt-1 text-xs text-white/45">Mude o filtro ou seja a primeira pessoa a publicar neste fluxo.</p>
             </div>
           ) : (
             sortedPosts.map((post) => (

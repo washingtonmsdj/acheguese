@@ -71,6 +71,11 @@ export interface GroupMessage {
   group_id: string;
   sender_profile_id: string;
   content: string;
+  message_type?: "text" | "image" | "audio" | "poll" | "system";
+  media_url?: string | null;
+  media_mime_type?: string | null;
+  audio_duration_seconds?: number | null;
+  metadata?: Record<string, unknown>;
   created_at: string;
 }
 
@@ -85,6 +90,11 @@ export interface GroupMessageWithProfile extends GroupMessage {
 export interface CreateGroupMessageData {
   groupId: string;
   content: string;
+  messageType?: "text" | "image" | "audio" | "poll" | "system";
+  mediaUrl?: string;
+  mediaMimeType?: string;
+  audioDurationSeconds?: number;
+  metadata?: Record<string, unknown>;
 }
 
 // ============================================================================

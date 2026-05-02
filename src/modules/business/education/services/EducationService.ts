@@ -10,6 +10,7 @@
 import { logger } from '@/shared/utils/logger';
 import { BusinessService } from '@/core/business/services/BusinessService';
 import { BusinessOwnershipService } from '@/core/business/services/BusinessOwnershipService';
+import { EDUCATION_LEAD_STATUS, EDUCATION_PROFILE_STATUS } from '../constants';
 import {
   EducationObservabilityService,
   trackLeadCreated,
@@ -85,6 +86,17 @@ export interface LeadPipelineMove {
   toStatus: EducationLeadStatus;
   lostReason?: string;
   ownerUserId?: string;
+}
+
+export interface EducationLeadsListOptions {
+  status?: string;
+  page?: number;
+  pageSize?: number;
+}
+
+export interface EducationEventsListOptions {
+  isPublic?: boolean;
+  upcoming?: boolean;
 }
 
 // ============================================================
@@ -256,6 +268,27 @@ export const EducationService = {
    */
   async listActivePrograms(profileId: string): Promise<EducationProgram[]> {
     return queries.listEducationPrograms(profileId, { isActive: true });
+  },
+
+  async updateProgram(
+    programId: string,
+    payload: Partial<EducationProgram>,
+  ): Promise<EducationProgram | null> {
+    const { data, error } = await mutations.updateEducationProgram(programId, payload);
+    if (error) {
+      logger.error('[EducationService] Error updating program:', error);
+      return null;
+    }
+    return data;
+  },
+
+  async deleteProgram(programId: string): Promise<boolean> {
+    const { error } = await mutations.deleteEducationProgram(programId);
+    if (error) {
+      logger.error('[EducationService] Error deleting program:', error);
+      return false;
+    }
+    return true;
   },
 
   /**
@@ -445,6 +478,25 @@ export const EducationService = {
     return { total: totalCount, byStatus };
   },
 
+  async listLeads(
+    profileId: string,
+    options: EducationLeadsListOptions = {},
+  ): Promise<{ leads: EducationLead[]; totalCount: number }> {
+    return queries.listEducationLeads(profileId, options);
+  },
+
+  async updateLead(
+    leadId: string,
+    payload: Partial<EducationLead>,
+  ): Promise<EducationLead | null> {
+    const { data, error } = await mutations.updateEducationLead(leadId, payload);
+    if (error) {
+      logger.error('[EducationService] Error updating lead:', error);
+      return null;
+    }
+    return data;
+  },
+
   // ==========================================================
   // EVENTS
   // ==========================================================
@@ -454,6 +506,13 @@ export const EducationService = {
    */
   async listUpcomingPublicEvents(profileId: string): Promise<EducationEvent[]> {
     return queries.listEducationEvents(profileId, { isPublic: true, upcoming: true });
+  },
+
+  async listEvents(
+    profileId: string,
+    options: EducationEventsListOptions = {},
+  ): Promise<EducationEvent[]> {
+    return queries.listEducationEvents(profileId, options);
   },
 
   /**
@@ -495,6 +554,27 @@ export const EducationService = {
     return data;
   },
 
+  async updateEvent(
+    eventId: string,
+    payload: Partial<EducationEvent>,
+  ): Promise<EducationEvent | null> {
+    const { data, error } = await mutations.updateEducationEvent(eventId, payload);
+    if (error) {
+      logger.error('[EducationService] Error updating event:', error);
+      return null;
+    }
+    return data;
+  },
+
+  async deleteEvent(eventId: string): Promise<boolean> {
+    const { error } = await mutations.deleteEducationEvent(eventId);
+    if (error) {
+      logger.error('[EducationService] Error deleting event:', error);
+      return false;
+    }
+    return true;
+  },
+
   // ==========================================================
   // AUXILIARY / UTILITY METHODS (Business Logic)
   // ==========================================================
@@ -511,22 +591,12 @@ export const EducationService = {
 
   /** Retorna label do status do perfil */
   getProfileStatusLabel(status: EducationProfileStatus): string {
-    const labels: Record<EducationProfileStatus, string> = {
-      draft: 'Rascunho',
-      published: 'Publicado',
-      paused: 'Pausado',
-    };
-    return labels[status] ?? status;
+    return EDUCATION_PROFILE_STATUS[status]?.label ?? status;
   },
 
   /** Retorna cor do status do perfil */
   getProfileStatusColor(status: EducationProfileStatus): string {
-    const colors: Record<EducationProfileStatus, string> = {
-      draft: 'gray',
-      published: 'green',
-      paused: 'yellow',
-    };
-    return colors[status] ?? 'gray';
+    return EDUCATION_PROFILE_STATUS[status]?.color ?? 'gray';
   },
 
   /** Verifica se programa está disponível (ativo e com vagas) */
@@ -548,28 +618,12 @@ export const EducationService = {
 
   /** Retorna label do status do lead */
   getLeadStatusLabel(status: EducationLeadStatus): string {
-    const labels: Record<EducationLeadStatus, string> = {
-      new: 'Novo',
-      contacted: 'Contactado',
-      visit_scheduled: 'Visita Agendada',
-      proposal_sent: 'Proposta Enviada',
-      enrolled: 'Matriculado',
-      lost: 'Perdido',
-    };
-    return labels[status] ?? status;
+    return EDUCATION_LEAD_STATUS[status]?.label ?? status;
   },
 
   /** Retorna cor do status do lead */
   getLeadStatusColor(status: EducationLeadStatus): string {
-    const colors: Record<EducationLeadStatus, string> = {
-      new: 'blue',
-      contacted: 'purple',
-      visit_scheduled: 'orange',
-      proposal_sent: 'cyan',
-      enrolled: 'green',
-      lost: 'red',
-    };
-    return colors[status] ?? 'gray';
+    return EDUCATION_LEAD_STATUS[status]?.color ?? 'gray';
   },
 
   /** Verifica se lead está em status ativo (não terminal) */

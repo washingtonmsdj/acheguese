@@ -5,3 +5,4 @@ export { RouteEstimateCard } from "./RouteEstimateCard";
 export { RouteEstimateCardSkeleton } from "./RouteEstimateCardEnhanced";
 export { RideRequestCard } from "./RideRequestCard";
 export { DriverOfferCard } from "./DriverOfferCard";
+export { MobilidadeHeader } from "./MobilidadeHeader";

@@ -1,8 +1,14 @@
-import { useState, useCallback, useEffect } from "react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useState, useCallback, useEffect, useMemo } from "react";
+import { useInfiniteQuery, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { CommunityService } from "@/core/community/services/CommunityService";
 import type { TerritoryFilter } from "@/core/location";
+import { useSessionContext } from "@/core/session";
+import { SocialInteractionsService } from "@/core/social/services/SocialInteractionsService";
+import { DEFAULT_GROUP_RULES } from "@/shared/constants/groupTaxonomy";
+
+export type GroupTab = "todos" | "meus";
+export type GroupSort = "recentes" | "populares" | "relevancia";
 
 export interface NewGroupData {
   name: string;
@@ -10,6 +16,11 @@ export interface NewGroupData {
   category: string;
   is_private: boolean;
   location_id?: string;
+  join_policy?: string;
+  posting_policy?: string;
+  member_visibility?: string;
+  media_policy?: string;
+  rules?: string;
 }
 
 interface Group {
@@ -17,7 +28,8 @@ interface Group {
   name: string;
   description: string;
   category: string;
-  member_count: number;
+  members_count?: number;
+  posts_count?: number;
   created_at: string;
   is_member: boolean;
   is_private: boolean;
@@ -29,11 +41,16 @@ interface UseGruposOptions {
   defaultLocationId?: string;
 }
 
+const GROUPS_PAGE_SIZE = 20;
+
 export function useGrupos(options: UseGruposOptions = {}) {
   const queryClient = useQueryClient();
+  const { activeProfile } = useSessionContext();
   const { territoryFilter, defaultLocationId } = options;
   const [searchQuery, setSearchQuery] = useState("");
-  const [tab, setTab] = useState("all");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [tab, setTab] = useState<GroupTab>("todos");
+  const [sortBy, setSortBy] = useState<GroupSort>("recentes");
   const [showCreate, setShowCreate] = useState(false);
   const [creating, setCreating] = useState(false);
   const [newGroup, setNewGroup] = useState<NewGroupData>({
@@ -42,20 +59,85 @@ export function useGrupos(options: UseGruposOptions = {}) {
     category: "",
     is_private: false,
     location_id: defaultLocationId,
+    join_policy: "open",
+    posting_policy: "members",
+    member_visibility: "members_count_public",
+    media_policy: "manual_download",
+    rules: DEFAULT_GROUP_RULES.join("\n"),
   });
+
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedSearch(searchQuery.trim()), 250);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
 
   useEffect(() => {
     if (!defaultLocationId) return;
     setNewGroup((prev) => ({ ...prev, location_id: prev.location_id ?? defaultLocationId }));
   }, [defaultLocationId]);
 
-  const { data: groups = [], isLoading } = useQuery({
-    queryKey: ["grupos", searchQuery, tab, territoryFilter],
-    queryFn: async () => {
-      const data = await CommunityService.getGroups(searchQuery || undefined, territoryFilter);
-      return (data || []) as Group[];
-    },
+  const { data: memberGroupIds = [] } = useQuery({
+    queryKey: ["user-group-ids", activeProfile?.userId],
+    queryFn: () => SocialInteractionsService.getUserGroupIds(activeProfile?.userId),
+    enabled: !!activeProfile?.userId && tab === "meus",
+    staleTime: 60_000,
   });
+
+  const {
+    data,
+    isLoading,
+    isFetchingNextPage,
+    hasNextPage,
+    fetchNextPage,
+  } = useInfiniteQuery({
+    queryKey: ["grupos", debouncedSearch, tab, sortBy, territoryFilter, memberGroupIds],
+    queryFn: async ({ pageParam }) => {
+      if (tab === "meus" && memberGroupIds.length === 0) {
+        return { items: [], totalCount: 0, hasMore: false, nextOffset: null };
+      }
+
+      return CommunityService.getGroupsPage({
+        search: debouncedSearch || undefined,
+        territoryFilter,
+        offset: pageParam as number,
+        limit: GROUPS_PAGE_SIZE,
+        groupIds: tab === "meus" ? memberGroupIds : undefined,
+        sortBy,
+      });
+    },
+    initialPageParam: 0,
+    getNextPageParam: (lastPage) => lastPage.nextOffset ?? undefined,
+    staleTime: 30_000,
+  });
+
+  const rawGroups = useMemo(
+    () => ((data?.pages || []).flatMap((page) => page.items) || []) as Group[],
+    [data?.pages],
+  );
+  const groups = useMemo(() => {
+    const items = [...rawGroups];
+    if (sortBy === "relevancia" && debouncedSearch) {
+      const q = debouncedSearch.toLowerCase();
+      const score = (g: Group) => {
+        const n = (g.name || "").toLowerCase();
+        let s = 0;
+        if (n.startsWith(q)) s += 3;
+        else if (n.includes(q)) s += 1;
+        s += Math.min((g.members_count || 0) / 50, 2);
+        return s;
+      };
+      return items.sort((a, b) => score(b) - score(a));
+    }
+    // Para recentes/populares, o backend ja retornou ordenado por pagina.
+    return items;
+  }, [debouncedSearch, rawGroups, sortBy]);
+  const totalCount = data?.pages?.[0]?.totalCount ?? rawGroups.length;
+  const hasMore = !!hasNextPage;
+
+  const loadMore = useCallback(() => {
+    if (!hasNextPage || isFetchingNextPage) return;
+    fetchNextPage();
+  }, [fetchNextPage, hasNextPage, isFetchingNextPage]);
 
   const updateNewGroup = useCallback((updates: Partial<NewGroupData>) => {
     setNewGroup((prev) => ({ ...prev, ...updates }));
@@ -87,8 +169,14 @@ export function useGrupos(options: UseGruposOptions = {}) {
         category: "",
         is_private: false,
         location_id: defaultLocationId,
+        join_policy: "open",
+        posting_policy: "members",
+        member_visibility: "members_count_public",
+        media_policy: "manual_download",
+        rules: DEFAULT_GROUP_RULES.join("\n"),
       });
       queryClient.invalidateQueries({ queryKey: ["grupos"] });
+      queryClient.invalidateQueries({ queryKey: ["user-group-ids"] });
     } catch {
       toast.error("Erro ao criar grupo");
     } finally {
@@ -96,13 +184,36 @@ export function useGrupos(options: UseGruposOptions = {}) {
     }
   }, [defaultLocationId, newGroup, queryClient]);
 
-  const handleJoin = useCallback(async (_groupId: string) => {
-    toast.info("Funcionalidade em desenvolvimento");
-  }, []);
+  const handleJoin = useCallback(async (groupId: string) => {
+    if (groupId.startsWith("mock-")) {
+      toast.info("Grupo mock: rode o seed para persistir e habilitar entrada real");
+      return;
+    }
+
+    if (!activeProfile) {
+      toast.error("Faca login para entrar no grupo");
+      return;
+    }
+
+    const result = await SocialInteractionsService.joinGroup(groupId, activeProfile.userId, "member");
+    if (!result.success) {
+      toast.error(result.error || "Erro ao entrar no grupo");
+      return;
+    }
+
+    toast.success("Voce entrou no grupo");
+    queryClient.invalidateQueries({ queryKey: ["grupos"] });
+    queryClient.invalidateQueries({ queryKey: ["groups"] });
+    queryClient.invalidateQueries({ queryKey: ["user-group-ids"] });
+  }, [activeProfile, queryClient]);
 
   return {
     groups,
+    totalCount,
+    hasMore,
     isLoading,
+    isLoadingMore: isFetchingNextPage,
+    loadMore,
     searchQuery,
     tab,
     showCreate,
@@ -110,6 +221,8 @@ export function useGrupos(options: UseGruposOptions = {}) {
     newGroup,
     setSearchQuery,
     setTab,
+    sortBy,
+    setSortBy,
     setShowCreate,
     updateNewGroup,
     handleCreate,

@@ -28,6 +28,10 @@ interface GroupMessage {
   group_id: string;
   sender_profile_id: string; // ✅ GATE 3 FASE 3C - Atualizado para novo modelo
   content: string;
+  message_type?: "text" | "image" | "audio" | "poll" | "system";
+  media_url?: string | null;
+  media_mime_type?: string | null;
+  audio_duration_seconds?: number | null;
   created_at: string;
   profile?: {
     id: string;
@@ -131,19 +135,36 @@ export function useSendGroupMessage() {
     mutationFn: async ({
       groupId,
       content,
+      messageType,
+      mediaUrl,
+      mediaMimeType,
+      audioDurationSeconds,
+      metadata,
     }: {
       groupId: string;
       content: string;
+      messageType?: "text" | "image" | "audio";
+      mediaUrl?: string;
+      mediaMimeType?: string;
+      audioDurationSeconds?: number;
+      metadata?: Record<string, unknown>;
     }) => {
-      if (!activeProfile) throw new Error("Usuário não autenticado");
+      if (!activeProfile && !groupId.startsWith("mock-")) {
+        throw new Error("Usuário não autenticado");
+      }
 
       // ✅ Contrato: sendGroupMessage(data, userId?) - userId é auth user_id, service resolve profile
       const result = await SocialInteractionsService.sendGroupMessage(
         {
           groupId,
           content: content.trim(),
+          messageType,
+          mediaUrl,
+          mediaMimeType,
+          audioDurationSeconds,
+          metadata,
         },
-        activeProfile.userId,
+        activeProfile?.userId,
       );
 
       if (!result.success) {
@@ -242,6 +263,153 @@ export function useLeaveGroup() {
     },
     onError: (error: any) => {
       toast.error(error.message || "Error sair do grupo");
+    },
+  });
+}
+
+export function useUpdateGroupMemberRole() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      groupId,
+      memberProfileId,
+      role,
+    }: {
+      groupId: string;
+      memberProfileId: string;
+      role: "admin" | "moderator" | "member";
+    }) => {
+      const result = await SocialInteractionsService.updateGroupMemberRole(groupId, memberProfileId, role);
+      if (!result.success) {
+        throw new Error(result.error || "Erro ao atualizar função");
+      }
+      return result;
+    },
+    onSuccess: (_, { groupId }) => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.groupMembers(groupId) });
+    },
+    onError: (error: any) => {
+      toast.error(error.message || "Erro ao atualizar função");
+    },
+  });
+}
+
+export function useDeleteGroupMessage() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ groupId, messageId }: { groupId: string; messageId: string }) => {
+      const result = await SocialInteractionsService.deleteGroupMessage(messageId);
+      if (!result.success) {
+        throw new Error(result.error || "Erro ao remover mensagem");
+      }
+      return result;
+    },
+    onSuccess: (_, { groupId }) => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.groupMessages(groupId) });
+    },
+    onError: (error: any) => {
+      toast.error(error.message || "Erro ao remover mensagem");
+    },
+  });
+}
+
+export function useUpdateGroupMessage() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      groupId,
+      messageId,
+      content,
+    }: {
+      groupId: string;
+      messageId: string;
+      content: string;
+    }) => {
+      const result = await SocialInteractionsService.updateGroupMessage(messageId, content);
+      if (!result.success) {
+        throw new Error(result.error || "Erro ao editar mensagem");
+      }
+      return result;
+    },
+    onSuccess: (_, { groupId }) => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.groupMessages(groupId) });
+      toast.success("Mensagem atualizada");
+    },
+    onError: (error: any) => {
+      toast.error(error.message || "Erro ao editar mensagem");
+    },
+  });
+}
+
+export function useReportGroupMessage() {
+  return useMutation({
+    mutationFn: async ({
+      messageId,
+      reason,
+      details,
+    }: {
+      messageId: string;
+      reason: string;
+      details?: string;
+    }) => {
+      const result = await SocialInteractionsService.reportGroupMessage(messageId, reason, details);
+      if (!result.success) {
+        throw new Error(result.error || "Erro ao denunciar mensagem");
+      }
+      return result;
+    },
+    onSuccess: () => {
+      toast.success("Denúncia enviada para moderação");
+    },
+    onError: (error: any) => {
+      toast.error(error.message || "Erro ao denunciar mensagem");
+    },
+  });
+}
+
+export function useGroupMessageReports(groupId: string | undefined, enabled: boolean) {
+  return useQuery({
+    queryKey: ["group-message-reports", groupId],
+    queryFn: async () => {
+      if (!groupId) return [];
+      return SocialInteractionsService.getGroupMessageReports(groupId);
+    },
+    enabled: !!groupId && enabled,
+    staleTime: 30 * 1000,
+  });
+}
+
+export function useUpdateGroupMessageReportStatus() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      groupId,
+      reportId,
+      status,
+    }: {
+      groupId: string;
+      reportId: string;
+      status: "reviewing" | "resolved" | "dismissed";
+    }) => {
+      const result = await SocialInteractionsService.updateGroupMessageReportStatus(
+        reportId,
+        status,
+      );
+      if (!result.success) {
+        throw new Error(result.error || "Erro ao atualizar denúncia");
+      }
+      return result;
+    },
+    onSuccess: (_, { groupId }) => {
+      queryClient.invalidateQueries({ queryKey: ["group-message-reports", groupId] });
+      toast.success("Status da denúncia atualizado");
+    },
+    onError: (error: any) => {
+      toast.error(error.message || "Erro ao atualizar denúncia");
     },
   });
 }

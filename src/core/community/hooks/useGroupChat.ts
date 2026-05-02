@@ -21,6 +21,10 @@ export interface GroupMessage {
   group_id: string;
   sender_profile_id: string; // âœ… GATE 3 FASE 3C - Atualizado para novo modelo
   content: string;
+  message_type?: "text" | "image" | "audio" | "poll" | "system";
+  media_url?: string | null;
+  media_mime_type?: string | null;
+  audio_duration_seconds?: number | null;
   created_at: string;
   profile?: {
     id: string;

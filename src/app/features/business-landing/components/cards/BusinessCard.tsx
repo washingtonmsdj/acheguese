@@ -1,16 +1,39 @@
 /**
- * BusinessCard
+ * BusinessCard - Estilo compacto horizontal
  * 
- * Card de empresa com informações completas
+ * Padronizado com GastronomyCard:
+ * - Layout horizontal (88px altura)
+ * - Imagem/emoji à esquerda
+ * - Informações compactas à direita
+ * - Badges e status no mesmo padrão
  */
 
 import { motion } from "framer-motion";
 import {
-  Crown, BadgeCheck, Navigation, ThumbsUp, Star,
-  Bookmark, Share2, Phone, Route,
+  Crown, BadgeCheck, MapPin, Star, Store, Clock,
 } from "lucide-react";
-import { DistanceBadge } from "@/core/geospatial/components/DistanceBadge";
+import { Badge } from "@/shared/components/ui/badge";
+import { cn } from "@/shared/utils/cn";
 import type { BusinessCardProps } from "../../sections/types";
+
+// Mapa de emojis por categoria
+const CATEGORY_EMOJI: Record<string, string> = {
+  "Restaurante": "🍽️",
+  "Lanchonete": "🍔",
+  "Padaria": "🥖",
+  "Mercado": "🛒",
+  "Farmácia": "💊",
+  "Salão": "💇",
+  "Academia": "💪",
+  "Pet Shop": "🐾",
+  "Loja": "🏪",
+  "Serviços": "🔧",
+  "Outros": "🏢",
+};
+
+function getCategoryEmoji(category: string): string {
+  return CATEGORY_EMOJI[category] || "🏢";
+}
 
 export function BusinessCard({
   business,
@@ -20,121 +43,109 @@ export function BusinessCard({
   nearbyMode,
   index,
 }: BusinessCardProps) {
+  const emoji = getCategoryEmoji(business.category);
+  const hasDistance = business.distanceMeters !== undefined && nearbyMode;
+  const distanceKm = hasDistance ? (business.distanceMeters! / 1000).toFixed(1) : null;
+
   return (
-    <motion.div
+    <motion.article
       initial={{ opacity: 0, y: 16 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
-      transition={{ delay: index * 0.05 }}
+      transition={{ delay: Math.min(index, 10) * 0.05 }}
+      whileHover={{ scale: 1.02 }}
+      whileTap={{ scale: 0.98 }}
       onClick={onClick}
-      className="bg-card border border-border rounded-xl p-5 hover:shadow-xl hover:border-primary/30 transition-all cursor-pointer group relative"
+      className={cn(
+        "group relative flex flex-row overflow-hidden rounded-xl border border-border/50 bg-card transition-all duration-300 hover:border-primary/30 hover:shadow-md cursor-pointer h-[88px]",
+        business.premium && "ring-2 ring-primary/20"
+      )}
+      role="article"
+      aria-label={`${business.name} - ${business.category}`}
     >
-      {/* Top row */}
-      <div className="flex items-start justify-between mb-3">
-        <div className="flex items-center gap-3">
-          <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center text-lg font-bold text-primary-foreground shrink-0 relative">
-            {business.name.split(" ").slice(0, 2).map((w) => w[0]).join("").toUpperCase()}
-            {business.premium && (
-              <div className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-warning flex items-center justify-center">
-                <Crown className="h-2.5 w-2.5 text-warning-foreground" />
-              </div>
-            )}
-          </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <h3 className="font-bold text-foreground group-hover:text-primary transition-colors font-heading">
-                {business.name}
-              </h3>
-              {business.is_verified && <BadgeCheck className="h-4 w-4 text-primary" />}
-            </div>
-            <div className="flex items-center gap-2 text-xs text-muted-foreground">
-              <span>{business.category}</span>
-              <span>·</span>
-              <span className={business.isOpen ? "text-success font-medium" : "text-destructive"}>
-                {business.isOpen ? "Aberto" : "Fechado"}
-              </span>
-            </div>
-          </div>
+      {/* Imagem/Emoji à esquerda */}
+      <div className="relative h-full w-[88px] shrink-0 overflow-hidden">
+        <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-primary/10 to-accent/10">
+          <span className="text-4xl">{emoji}</span>
         </div>
 
-        {/* Distance badge */}
-        <div className="flex flex-col items-end gap-1">
-          {business.distanceMeters !== undefined && nearbyMode ? (
-            <DistanceBadge distanceMeters={business.distanceMeters} showIcon={true} />
-          ) : (
-            <div className="flex items-center gap-1 bg-primary/10 px-2.5 py-1 rounded-lg">
-              <Navigation className="h-3 w-3 text-primary" />
-              <span className="text-sm font-bold text-primary">{business.distance}</span>
-            </div>
+        {/* Premium/Verified badge */}
+        {(business.premium || business.is_verified) && (
+          <div className="absolute top-1 left-1">
+            {business.premium ? (
+              <Crown className="h-3.5 w-3.5 text-warning fill-warning" />
+            ) : (
+              <div className="h-1.5 w-1.5 rounded-full bg-primary" />
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* Conteúdo à direita */}
+      <div className="flex min-w-0 flex-1 flex-col justify-between px-2.5 py-2">
+        {/* Nome + verificado */}
+        <div className="flex items-start justify-between gap-1">
+          <h3 className="line-clamp-1 text-sm font-bold leading-tight text-foreground transition-colors group-hover:text-primary">
+            {business.name}
+          </h3>
+          {business.is_verified && (
+            <BadgeCheck className="h-3.5 w-3.5 shrink-0 text-primary mt-0.5" />
           )}
+        </div>
+
+        {/* Categoria */}
+        <p className="text-[11px] text-muted-foreground truncate">{business.category}</p>
+
+        {/* Rating + badges */}
+        <div className="flex items-center gap-2">
+          {business.rating > 0 && (
+            <span className="flex items-center gap-0.5 text-[11px] font-semibold">
+              <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
+              {business.rating.toFixed(1)}
+              <span className="text-muted-foreground">({business.reviews})</span>
+            </span>
+          )}
+          {business.neighborRecs > 0 && (
+            <Badge variant="outline" className="h-4 px-1.5 py-0 text-[10px] font-medium">
+              {business.neighborRecs} 👍
+            </Badge>
+          )}
+        </div>
+
+        {/* Status + Distância/Localização */}
+        <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
+          <span className={cn(
+            "flex items-center gap-0.5 font-medium shrink-0",
+            business.isOpen ? "text-emerald-600 dark:text-emerald-400" : "text-red-500"
+          )}>
+            <Clock className="h-2.5 w-2.5" />
+            {business.isOpen ? "Aberto" : "Fechado"}
+          </span>
+          
+          {hasDistance && distanceKm ? (
+            <span className="flex items-center gap-0.5">
+              <MapPin className="h-2.5 w-2.5 shrink-0" />
+              {distanceKm} km
+            </span>
+          ) : business.distance !== "N/A" ? (
+            <span className="flex items-center gap-0.5">
+              <MapPin className="h-2.5 w-2.5 shrink-0" />
+              {business.distance}
+            </span>
+          ) : null}
+
           {business.walkTime !== "N/A" && (
-            <span className="text-[10px] text-muted-foreground flex items-center gap-0.5">
+            <span className="flex items-center gap-0.5 shrink-0">
               🚶 {business.walkTime}
             </span>
           )}
         </div>
       </div>
 
-      <p className="text-sm text-muted-foreground mb-3 leading-relaxed">{business.description}</p>
-
-      {/* Community signal */}
-      <div className="flex items-center gap-1.5 mb-3 bg-secondary/50 rounded-lg px-3 py-2">
-        <ThumbsUp className="h-3.5 w-3.5 text-primary" />
-        <span className="text-xs text-muted-foreground">
-          <span className="font-semibold text-foreground">{business.neighborRecs} vizinhos</span> recomendam · {business.lastVisit}
-        </span>
+      {/* Hover Glow */}
+      <div className="pointer-events-none absolute inset-0 opacity-0 transition-opacity group-hover:opacity-100">
+        <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-transparent" />
       </div>
-
-      {/* Tags + Actions */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          {business.tags.map((tag) => (
-            <span
-              key={tag}
-              className="bg-secondary text-secondary-foreground text-xs font-medium px-2.5 py-0.5 rounded-full border border-border"
-            >
-              {tag}
-            </span>
-          ))}
-          <span className="flex items-center gap-0.5 text-xs text-warning">
-            <Star className="h-3 w-3 fill-warning" /> {business.rating}
-            <span className="text-muted-foreground ml-0.5">({business.reviews})</span>
-          </span>
-        </div>
-
-        <div className="flex items-center gap-1">
-          <button
-            onClick={(e) => onToggleSave(business.id, e)}
-            className="p-1.5 rounded-lg hover:bg-secondary transition-colors"
-            title="Salvar"
-          >
-            <Bookmark
-              className={`h-4 w-4 ${isSaved ? "text-primary fill-primary" : "text-muted-foreground"}`}
-            />
-          </button>
-          <button
-            onClick={(e) => { e.stopPropagation(); }}
-            className="p-1.5 rounded-lg hover:bg-secondary transition-colors"
-            title="Compartilhar"
-          >
-            <Share2 className="h-4 w-4 text-muted-foreground" />
-          </button>
-          <button
-            onClick={(e) => { e.stopPropagation(); }}
-            className="p-1.5 rounded-lg hover:bg-secondary transition-colors"
-            title="Ligar"
-          >
-            <Phone className="h-4 w-4 text-muted-foreground" />
-          </button>
-          <button
-            onClick={(e) => { e.stopPropagation(); onClick(); }}
-            className="p-1.5 rounded-lg hover:bg-primary/10 transition-colors"
-            title="Traçar rota"
-          >
-            <Route className="h-4 w-4 text-primary" />
-          </button>
-        </div>
-      </div>
-    </motion.div>
+    </motion.article>
   );
 }

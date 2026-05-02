@@ -18,6 +18,7 @@ import { useAppUrls } from '@/core/routing/hooks/useAppUrls';
 import { MessagingService } from '@/core/messaging';
 import { useAuth } from '@/core/auth/hooks/useAuth';
 import { useUnifiedNotifications } from '@/core/notifications/useUnifiedNotifications';
+import { LAUNCH_TERRITORIES, LAUNCH_URLS } from '@/config/territory';
 import {
   Sheet,
   SheetContent,
@@ -66,6 +67,12 @@ export function BottomNav() {
 
   // Total de badges no "Mais" (mensagens + notificações)
   const moreBadgeTotal = unreadMessages + (unreadNotifications ?? 0);
+  const launchCommunityHref =
+    LAUNCH_TERRITORIES.find(
+      (territory) =>
+        territory.kind === 'group' &&
+        territory.slug === 'complexo-do-nordeste-de-amaralina',
+    )?.path ?? '/ba/salvador/complexo-do-nordeste-de-amaralina';
 
   const isActive = (path: string) => {
     if (path === '/') return pathname === '/';
@@ -74,19 +81,19 @@ export function BottomNav() {
 
   const mainTabs = [
     { path: '/', label: 'Início', icon: Home, badge: 0 },
-    { path: '/empresas', label: 'Empresas', icon: Building2, badge: 0 },
-    { path: '/comunidade', label: 'Bairro', icon: Users, badge: 0 },
-    { path: '/classificados', label: 'Anúncios', icon: Tag, badge: 0 },
+    { path: LAUNCH_URLS.business, label: 'Empresas', icon: Building2, badge: 0 },
+    { path: `/comunidade${launchCommunityHref}`, label: 'Bairro', icon: Users, badge: 0 },
+    { path: LAUNCH_URLS.classifieds, label: 'Anúncios', icon: Tag, badge: 0 },
   ];
 
   const moreItems = [
-    { path: '/servicos', label: 'Serviços', icon: Wrench, badge: 0 },
-    { path: '/educacao', label: 'Educacao', icon: GraduationCap, badge: 0 },
-    { path: '/eventos', label: 'Eventos', icon: Calendar, badge: 0 },
-    { path: '/vagas', label: 'Vagas', icon: Briefcase, badge: 0 },
+    { path: LAUNCH_URLS.services, label: 'Serviços', icon: Wrench, badge: 0 },
+    { path: LAUNCH_URLS.education, label: 'Educacao', icon: GraduationCap, badge: 0 },
+    { path: LAUNCH_URLS.events, label: 'Eventos', icon: Calendar, badge: 0 },
+    { path: LAUNCH_URLS.jobs, label: 'Vagas', icon: Briefcase, badge: 0 },
     { path: appUrls.messages, label: 'Mensagens', icon: MessageCircle, badge: unreadMessages },
     { path: appUrls.notifications, label: 'Notificações', icon: Bell, badge: unreadNotifications ?? 0 },
-    { path: '/mapa', label: 'Mapa', icon: Map, badge: 0 },
+    { path: `/mapa/${LAUNCH_URLS.community.replace('/comunidade/', '')}`, label: 'Mapa', icon: Map, badge: 0 },
     { path: appUrls.mobility.home, label: 'Mobilidade', icon: Car, badge: 0 },
     { path: appUrls.search, label: 'Busca', icon: Search, badge: 0 },
   ];

@@ -70,8 +70,8 @@ export function QuickActionButtons() {
   };
 
   return (
-    <div className="w-full overflow-x-auto pb-2 scrollbar-hide">
-      <div className="flex gap-3 px-4 py-3 min-w-max">
+    <div className="w-full max-w-full overflow-hidden pb-2">
+      <div className="flex max-w-full flex-wrap gap-3 px-4 py-3">
         {quickActions.map((action) => {
           const Icon = action.icon;
           const isActive = activeAction === action.id;
@@ -82,7 +82,7 @@ export function QuickActionButtons() {
               onClick={() => handleActionClick(action)}
               className={cn(
                 // Base styles - formato pílula (50px radius)
-                "relative flex items-center gap-2 px-6 py-3 rounded-[50px]",
+                "relative flex min-w-0 items-center gap-2 px-4 py-3 rounded-[50px] sm:px-6",
                 "transition-all duration-300 ease-out",
                 "min-h-[44px] touch-manipulation",
                 "font-medium text-sm",
@@ -117,7 +117,7 @@ export function QuickActionButtons() {
               />
 
               {/* Label */}
-              <span className="whitespace-nowrap">{action.label}</span>
+              <span className="truncate">{action.label}</span>
 
               {/* Efeito de brilho ao ativar */}
               {isActive && (

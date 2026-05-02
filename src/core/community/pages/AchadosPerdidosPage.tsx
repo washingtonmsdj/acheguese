@@ -180,7 +180,7 @@ export default function AchadosPerdidosPage() {
             <p className="text-gray-400 mb-6">
               Os achados e perdidos sÃ£o exclusivos para moradores cadastrados do bairro.
             </p>
-            <Button onClick={() => window.location.href = appUrls.auth.login} className="bg-teal-500 hover:bg-teal-400">
+            <Button onClick={() => navigate(appUrls.auth.login)} className="bg-teal-500 hover:bg-teal-400">
               Fazer Login
             </Button>
           </div>

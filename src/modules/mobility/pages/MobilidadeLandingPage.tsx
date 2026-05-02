@@ -12,7 +12,7 @@ import {
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { CanonicalHero } from "@/shared/components/hero/CanonicalHero";
 import { Button } from "@/shared/components/ui/button";
 import { Card, CardContent } from "@/shared/components/ui/card";
@@ -20,12 +20,13 @@ import { Badge } from "@/shared/components/ui/badge";
 import { BannerDisplay } from "@/core/banners/components/BannerDisplay";
 import { TerritoryIndicator, useTerritoryLabels } from "@/core/location";
 import { useMobilityUrls } from "@/modules/mobility/hooks/useMobilityUrls";
+import { MobilidadeHeader } from "@/modules/mobility/components";
 import type { ResolvedTerritory } from "@/core/routing/hooks/useResolveTerritoryFromUrl";
 
 /**
  * ? SSOT COMPLIANT - MobilidadeLandingPage migrada
- * Usa useMobilityUrls para navegação
- * Atualizada com separação motorista x motoboy
+ * Usa useMobilityUrls para navegaï¿½ï¿½o
+ * Atualizada com separaï¿½ï¿½o motorista x motoboy
  */
 
 interface MobilidadeLandingPageProps {
@@ -45,35 +46,35 @@ const steps = [
   {
     icon: MapPin,
     title: "Solicite",
-    desc: "Informe origem, destino e horário desejado.",
+    desc: "Informe origem, destino e horï¿½rio desejado.",
   },
   {
     icon: Users,
     title: "Conecte",
-    desc: "Motoristas vizinhos recebem sua solicitação.",
+    desc: "Motoristas vizinhos recebem sua solicitaï¿½ï¿½o.",
   },
   {
     icon: Shield,
     title: "Combine",
-    desc: "Acordo direto, sem taxas de intermediário.",
+    desc: "Acordo direto, sem taxas de intermediï¿½rio.",
   },
 ];
 
 const benefits = [
   {
     icon: Zap,
-    title: "Rápido & Local",
-    desc: "Motoristas da sua região, sempre por perto.",
+    title: "Rï¿½pido & Local",
+    desc: "Motoristas da sua regiï¿½o, sempre por perto.",
   },
   {
     icon: Star,
-    title: "Avaliações",
-    desc: "Ranking comunitário com reputação real.",
+    title: "Avaliaï¿½ï¿½es",
+    desc: "Ranking comunitï¿½rio com reputaï¿½ï¿½o real.",
   },
   {
     icon: Clock,
     title: "Agendamento",
-    desc: "Programe viagens com antecedência.",
+    desc: "Programe viagens com antecedï¿½ncia.",
   },
   {
     icon: Package,
@@ -94,7 +95,7 @@ const userTypes = [
   {
     icon: Car,
     title: "Motorista",
-    desc: "Faça corridas de passageiros e ganhe dinheiro",
+    desc: "Faï¿½a corridas de passageiros e ganhe dinheiro",
     color: "blue",
     route: "driver",
     badge: "Corridas",
@@ -102,7 +103,7 @@ const userTypes = [
   {
     icon: Bike,
     title: "Motoboy",
-    desc: "Faça entregas rápidas de pacotes e encomendas",
+    desc: "Faï¿½a entregas rï¿½pidas de pacotes e encomendas",
     color: "orange",
     route: "motoboy",
     badge: "Entregas",
@@ -113,24 +114,31 @@ export default function MobilidadeLandingPage({ resolved }: MobilidadeLandingPag
   const navigate = useNavigate();
   const mobilityUrls = useMobilityUrls();
   const territoryLabels = useTerritoryLabels(resolved);
+  const [searchQuery, setSearchQuery] = useState("");
 
-  // ? SSOT: Nome do território
+  // ? SSOT: Nome do territï¿½rio
   const territoryName = useMemo(() => {
-    return territoryLabels.name || "sua região";
+    return territoryLabels.name || "sua regiï¿½o";
   }, [territoryLabels]);
 
   return (
     <div className="w-full min-h-full bg-background overflow-y-auto">
 
-      {/* ------- HERO — CanonicalHero ------- */}
+      {/* ------- HEADER COM BUSCA ------- */}
+      <MobilidadeHeader
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
+      />
+
+      {/* ------- HERO ï¿½ CanonicalHero ------- */}
       <CanonicalHero
         moduleName="Mobilidade"
         moduleIcon={Car}
         territoryName={territoryName}
-        territoryFallback="Sua Região"
+        territoryFallback="Sua Regiï¿½o"
         title={`${territoryName}`}
         titleHighlight="em movimento"
-        subtitle="Caronas e entregas entre vizinhos. Rápido, local e sem taxas de aplicativo."
+        subtitle="Caronas e entregas entre vizinhos. Rï¿½pido, local e sem taxas de aplicativo."
         primaryCTA={{
           label: "Pedir Viagem",
           icon: MapPin,
@@ -144,7 +152,7 @@ export default function MobilidadeLandingPage({ resolved }: MobilidadeLandingPag
         }}
       />
 
-      {/* ------- ESCOLHA SEU PERFIL — 3 cards ------- */}
+      {/* ------- ESCOLHA SEU PERFIL ï¿½ 3 cards ------- */}
       <section className="w-full px-4 py-10 md:py-14 bg-gradient-to-b from-background to-secondary/30">
         <div className="max-w-5xl mx-auto">
           <motion.div
@@ -230,7 +238,7 @@ export default function MobilidadeLandingPage({ resolved }: MobilidadeLandingPag
         </div>
       </section>
 
-      {/* ------- COMO FUNCIONA — 3 passos ------- */}
+      {/* ------- COMO FUNCIONA ï¿½ 3 passos ------- */}
       <section className="w-full px-4 py-10 md:py-14 bg-secondary/30">
         <div className="max-w-5xl mx-auto">
           <motion.h2
@@ -272,7 +280,7 @@ export default function MobilidadeLandingPage({ resolved }: MobilidadeLandingPag
         </div>
       </section>
 
-      {/* ------- BENEFÍCIOS — 2 colunas grid ------- */}
+      {/* ------- BENEFï¿½CIOS ï¿½ 2 colunas grid ------- */}
       <section className="w-full px-4 py-10 md:py-14">
         <div className="max-w-5xl mx-auto">
           <motion.h2
@@ -326,11 +334,11 @@ export default function MobilidadeLandingPage({ resolved }: MobilidadeLandingPag
           transition={{ duration: 0.5 }}
         >
           <h2 className="text-xl md:text-2xl font-bold text-foreground mb-3">
-            Pronto para começar?
+            Pronto para comeï¿½ar?
           </h2>
           <p className="text-sm md:text-base text-muted-foreground mb-6 max-w-md mx-auto">
-            Junte-se aos vizinhos que já economizam tempo e dinheiro com a
-            mobilidade comunitária.
+            Junte-se aos vizinhos que jï¿½ economizam tempo e dinheiro com a
+            mobilidade comunitï¿½ria.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <Button

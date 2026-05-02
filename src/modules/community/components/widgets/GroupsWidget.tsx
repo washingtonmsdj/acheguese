@@ -52,7 +52,7 @@ export const GroupsWidget = memo(() => {
               return (
                 <Link
                   key={group.id}
-                  to={`/comunidade/grupo/${group.id}`}
+                  to={`/comunidade/grupos/${group.id}`}
                   className="flex items-center gap-2 p-2 rounded-lg bg-secondary/50 hover:bg-secondary transition-all duration-200 hover:scale-[1.01] active:scale-[0.99] group"
                 >
                   {/* Avatar do Grupo */}

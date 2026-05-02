@@ -26,6 +26,7 @@ import { TerritoryIndicator, useTerritoryLabels } from "@/core/location";
 import { useAppUrls } from "@/core/routing/hooks/useAppUrls";
 import { useServicos } from "@/modules/professionals/services/hooks/useServicos";
 import { useTopRatedProfessionals } from "@/modules/professionals/services/hooks/useTopRatedProfessionals";
+import { ServicosHeader } from "@/modules/professionals/services/components";
 import {
   SERVICE_CATEGORY_OPTIONS,
   getServiceCategoryIcon,
@@ -60,69 +61,126 @@ const BENEFITS = [
 
 // ── Componentes auxiliares ────────────────────────────────────────────
 
-function CategoryPill({ cat, isActive, onClick }: { cat: (typeof SERVICE_CATEGORY_OPTIONS)[number]; isActive: boolean; onClick: () => void }) {
-  return (
-    <button
-      onClick={onClick}
-      className={`flex flex-col items-center gap-1.5 px-4 py-3 rounded-2xl border transition-all flex-shrink-0 min-w-[80px] ${
-        isActive ? "bg-primary/15 border-primary/50 shadow-lg shadow-primary/10" : "bg-card border-border hover:border-primary/30 hover:bg-card/80"
-      }`}
-    >
-      <span className="text-2xl">{cat.icone}</span>
-      <span className={`text-[11px] font-semibold whitespace-nowrap ${isActive ? "text-primary" : "text-muted-foreground"}`}>
-        {cat.name}
-      </span>
-    </button>
-  );
-}
+// Categorias de serviços (estilo gastronomia - filtros visuais)
+const SERVICOS_CATEGORIES = [
+  { id: 'eletricista',  emoji: '⚡', label: 'Eletricista',   categoryFilter: 'Eletricista',   color: 'text-yellow-400',  bg: 'bg-yellow-500/15 border-yellow-500/20' },
+  { id: 'encanador',    emoji: '🔧', label: 'Encanador',     categoryFilter: 'Encanador',     color: 'text-blue-400',    bg: 'bg-blue-500/15 border-blue-500/20' },
+  { id: 'pintor',       emoji: '🎨', label: 'Pintor',        categoryFilter: 'Pintor',        color: 'text-purple-400',  bg: 'bg-purple-500/15 border-purple-500/20' },
+  { id: 'diarista',     emoji: '🧹', label: 'Diarista',      categoryFilter: 'Diarista',      color: 'text-pink-400',    bg: 'bg-pink-500/15 border-pink-500/20' },
+  { id: 'jardineiro',   emoji: '🌱', label: 'Jardineiro',    categoryFilter: 'Jardineiro',    color: 'text-green-400',   bg: 'bg-green-500/15 border-green-500/20' },
+  { id: 'marceneiro',   emoji: '🪚', label: 'Marceneiro',    categoryFilter: 'Marceneiro',    color: 'text-amber-400',   bg: 'bg-amber-500/15 border-amber-500/20' },
+  { id: 'pedreiro',     emoji: '🧱', label: 'Pedreiro',      categoryFilter: 'Pedreiro',      color: 'text-orange-400',  bg: 'bg-orange-500/15 border-orange-500/20' },
+  { id: 'mecanico',     emoji: '🔩', label: 'Mecânico',      categoryFilter: 'Mecânico',      color: 'text-gray-400',    bg: 'bg-gray-500/15 border-gray-500/20' },
+  { id: 'eletronico',   emoji: '📱', label: 'Eletrônico',    categoryFilter: 'Técnico em Eletrônicos', color: 'text-cyan-400', bg: 'bg-cyan-500/15 border-cyan-500/20' },
+  { id: 'chaveiro',     emoji: '🔑', label: 'Chaveiro',      categoryFilter: 'Chaveiro',      color: 'text-yellow-500',  bg: 'bg-yellow-600/15 border-yellow-600/20' },
+  { id: 'vidraceiro',   emoji: '🪟', label: 'Vidraceiro',    categoryFilter: 'Vidraceiro',    color: 'text-sky-400',     bg: 'bg-sky-500/15 border-sky-500/20' },
+  { id: 'serralheiro',  emoji: '⚒️', label: 'Serralheiro',   categoryFilter: 'Serralheiro',   color: 'text-slate-400',   bg: 'bg-slate-500/15 border-slate-500/20' },
+  { id: 'dedetizador',  emoji: '🦟', label: 'Dedetizador',   categoryFilter: 'Dedetizador',   color: 'text-lime-400',    bg: 'bg-lime-500/15 border-lime-500/20' },
+  { id: 'ar',           emoji: '❄️', label: 'Ar Condicionado', categoryFilter: 'Técnico em Ar Condicionado', color: 'text-blue-300', bg: 'bg-blue-400/15 border-blue-400/20' },
+  { id: 'informatica',  emoji: '💻', label: 'Informática',   categoryFilter: 'Técnico em Informática', color: 'text-indigo-400', bg: 'bg-indigo-500/15 border-indigo-500/20' },
+  { id: 'costureira',   emoji: '🧵', label: 'Costureira',    categoryFilter: 'Costureira',    color: 'text-rose-400',    bg: 'bg-rose-500/15 border-rose-500/20' },
+];
+
 
 function ProfessionalCard({ pro, index, onClick }: { pro: ProfessionalItem; index: number; onClick: () => void }) {
   const categoryEmoji = getServiceCategoryIcon(pro.category);
+  const hasRating = pro.rating && pro.rating > 0;
+  const hasWhatsApp = !!pro.whatsapp;
+
+  const handleWhatsAppClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (hasWhatsApp) {
+      const cleanNumber = pro.whatsapp!.replace(/\D/g, '');
+      window.open(`https://wa.me/55${cleanNumber}`, '_blank');
+    }
+  };
+
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
-      transition={{ delay: Math.min(index, 6) * 0.05 }}
+    <motion.article
+      initial={{ opacity: 0, y: 12 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true }}
+      transition={{ delay: Math.min(index, 10) * 0.05 }}
+      whileHover={{ scale: 1.02 }}
+      whileTap={{ scale: 0.98 }}
       onClick={onClick}
-      className="bg-card border border-border rounded-2xl overflow-hidden hover:shadow-xl hover:border-primary/30 transition-all cursor-pointer group"
+      className="group relative flex flex-row overflow-hidden rounded-xl border border-border/50 bg-card transition-all duration-300 hover:border-primary/30 hover:shadow-md cursor-pointer h-[88px]"
+      role="article"
+      aria-label={`${pro.name} - ${pro.category}`}
     >
-      <div className="relative h-36 overflow-hidden bg-secondary">
+      {/* Emoji/Foto à esquerda */}
+      <div className="relative h-full w-[88px] shrink-0 overflow-hidden">
         {pro.photo ? (
-          <img src={pro.photo} alt={pro.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" loading="lazy" />
+          <img
+            src={pro.photo}
+            alt={pro.name}
+            loading="lazy"
+            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+          />
         ) : (
-          <div className="w-full h-full flex items-center justify-center text-5xl bg-gradient-to-br from-primary/10 to-accent/10">{categoryEmoji}</div>
-        )}
-        {pro.rating > 0 && (
-          <div className="absolute top-2 right-2 flex items-center gap-1 bg-card/90 backdrop-blur-sm border border-border rounded-full px-2 py-1">
-            <Star className="h-3 w-3 text-warning fill-warning" />
-            <span className="text-xs font-bold text-foreground">{pro.rating.toFixed(1)}</span>
+          <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-primary/10 to-accent/10">
+            <span className="text-4xl">{categoryEmoji}</span>
           </div>
         )}
-        <div className="absolute bottom-2 left-2 bg-primary/90 backdrop-blur-sm text-primary-foreground text-[10px] font-semibold px-2 py-1 rounded-md">
-          {pro.service || pro.category}
+
+        {/* Verificado badge */}
+        <div className="absolute top-1 left-1">
+          <BadgeCheck className="h-3.5 w-3.5 text-primary fill-primary/20" />
         </div>
       </div>
-      <div className="p-4">
-        <div className="flex items-center gap-1.5 mb-1">
-          <h3 className="text-sm font-bold text-foreground truncate group-hover:text-primary transition-colors">{pro.name}</h3>
-          <BadgeCheck className="h-3.5 w-3.5 text-primary flex-shrink-0" />
-        </div>
-        <div className="flex items-center gap-1.5 text-xs text-muted-foreground mb-3">
-          <MapPin className="h-3 w-3" />
-          <span className="truncate">{pro.neighborhood}{pro.city ? `, ${pro.city}` : ""}</span>
-        </div>
-        <div className="flex items-center justify-between">
-          <span className="text-sm font-bold text-primary">{pro.priceMedio || "Sob consulta"}</span>
-          {pro.whatsapp && (
-            <a href={`https://wa.me/55${pro.whatsapp}`} target="_blank" rel="noopener noreferrer"
-              onClick={(e) => e.stopPropagation()}
-              className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-success/10 text-success text-xs font-medium hover:bg-success/20 transition-colors">
-              <MessageCircle className="h-3 w-3" /> WhatsApp
-            </a>
+
+      {/* Conteúdo à direita */}
+      <div className="flex min-w-0 flex-1 flex-col justify-between px-2.5 py-2">
+        {/* Nome */}
+        <h3 className="line-clamp-1 text-sm font-bold leading-tight text-foreground transition-colors group-hover:text-primary">
+          {pro.name}
+        </h3>
+
+        {/* Categoria */}
+        <p className="text-[11px] text-muted-foreground truncate">{pro.category}</p>
+
+        {/* Rating + preço */}
+        <div className="flex items-center gap-2">
+          {hasRating && (
+            <span className="flex items-center gap-0.5 text-[11px] font-semibold">
+              <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
+              {pro.rating!.toFixed(1)}
+              {pro.totalAvaliacoes && (
+                <span className="text-muted-foreground">({pro.totalAvaliacoes})</span>
+              )}
+            </span>
+          )}
+          {pro.priceMedio && (
+            <span className="text-[11px] font-semibold text-primary">{pro.priceMedio}</span>
           )}
         </div>
-        {pro.totalAvaliacoes > 0 && <p className="text-[11px] text-muted-foreground mt-2">{pro.totalAvaliacoes} avaliações</p>}
+
+        {/* Localização + WhatsApp */}
+        <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
+          {pro.neighborhood && (
+            <span className="flex items-center gap-0.5 truncate">
+              <MapPin className="h-2.5 w-2.5 shrink-0" />
+              <span className="truncate">{pro.neighborhood}</span>
+            </span>
+          )}
+
+          {hasWhatsApp && (
+            <button
+              onClick={handleWhatsAppClick}
+              className="flex items-center gap-0.5 shrink-0 text-emerald-600 dark:text-emerald-400 hover:underline font-medium"
+            >
+              <MessageCircle className="h-2.5 w-2.5" />
+              WhatsApp
+            </button>
+          )}
+        </div>
       </div>
-    </motion.div>
+
+      {/* Hover Glow */}
+      <div className="pointer-events-none absolute inset-0 opacity-0 transition-opacity group-hover:opacity-100">
+        <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-transparent" />
+      </div>
+    </motion.article>
   );
 }
 
@@ -201,6 +259,42 @@ export default function ServicosLandingPage({ resolved, activeMemberIds }: Servi
 
   return (
     <div className="min-h-screen w-full bg-background text-foreground flex flex-col">
+
+      {/* ── HEADER COM BUSCA ──────────────────────────────────────── */}
+      <ServicosHeader
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
+      />
+
+      {/* ── CATEGORIAS (ESTILO GASTRONOMIA - TOPO) ───────────────── */}
+      <section className="w-full bg-card/50 border-b border-border py-4">
+        <div className="w-full overflow-x-auto scrollbar-hide">
+          <div className="flex justify-center gap-3 pb-1 px-4 min-w-max mx-auto">
+            {SERVICOS_CATEGORIES.map((cat, i) => {
+              const isActive = selectedCategory === cat.categoryFilter;
+              return (
+                <motion.button
+                  key={cat.id}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.03 * i }}
+                  whileHover={{ scale: 1.08, y: -4 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => setSelectedCategory(isActive ? "todos" : cat.categoryFilter)}
+                  className={`flex flex-col items-center gap-1.5 p-2.5 rounded-xl border bg-card/80 backdrop-blur-sm transition-colors duration-200 group shrink-0 min-w-[60px] ${cat.bg} ${isActive ? 'ring-2 ring-primary/40' : ''}`}
+                >
+                  <motion.div whileHover={{ rotate: [0, -10, 10, 0] }} transition={{ duration: 0.4 }}>
+                    <span className={`text-2xl ${cat.color}`}>{cat.emoji}</span>
+                  </motion.div>
+                  <span className="text-[10px] font-semibold text-foreground leading-tight text-center whitespace-nowrap">
+                    {cat.label}
+                  </span>
+                </motion.button>
+              );
+            })}
+          </div>
+        </div>
+      </section>
 
       {/* ── BANNER PROMOCIONAL ────────────────────────────────────── */}
       <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}
@@ -281,30 +375,15 @@ export default function ServicosLandingPage({ resolved, activeMemberIds }: Servi
         </section>
       )}
 
-      {/* ── CATEGORIAS ────────────────────────────────────────────── */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 pb-10 md:pb-14 w-full">
-        <div className="bg-secondary/50 border border-border rounded-2xl p-5 md:p-8">
-          <div className="flex items-center justify-between mb-5">
-            <div>
-              <h2 className="text-xl font-bold text-foreground font-heading">Categorias de Serviços</h2>
-              <p className="text-sm text-muted-foreground mt-1">Encontre exatamente o que você precisa</p>
-            </div>
-            <Filter className="h-5 w-5 text-muted-foreground" />
-          </div>
-          <div className="flex gap-3 overflow-x-auto pb-2 -mx-2 px-2 scrollbar-hide">
-            {SERVICE_CATEGORY_OPTIONS.map((cat) => (
-              <CategoryPill key={cat.id} cat={cat} isActive={selectedCategory === cat.id} onClick={() => setSelectedCategory(cat.id)} />
-            ))}
-          </div>
-        </div>
-      </section>
-
       {/* ── PROFISSIONAIS ─────────────────────────────────────────── */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 pb-10 md:pb-14 w-full">
         <div className="flex items-center justify-between mb-6">
           <div>
             <h2 className="text-xl md:text-2xl font-bold text-foreground font-heading">
-              {selectedCategory === "todos" ? "Profissionais Disponíveis" : getServiceCategoryLabel(selectedCategory) || "Profissionais"}
+              {selectedCategory === "todos" 
+                ? "Profissionais Disponíveis" 
+                : SERVICOS_CATEGORIES.find(c => c.categoryFilter === selectedCategory)?.label || selectedCategory
+              }
             </h2>
             <p className="text-sm text-muted-foreground mt-1">{professionals.length} profissionais encontrados</p>
           </div>
@@ -330,7 +409,7 @@ export default function ServicosLandingPage({ resolved, activeMemberIds }: Servi
           <div className="bg-card border border-dashed border-border rounded-2xl px-6 py-12 text-center">
             <Wrench className="h-8 w-8 text-muted-foreground mx-auto mb-3" />
             <p className="text-sm text-muted-foreground">Nenhum profissional encontrado nesta categoria.</p>
-            <Button variant="outline" onClick={() => setSelectedCategory("todos")} className="mt-3">Ver todas as categorias</Button>
+            <Button variant="outline" onClick={() => setSelectedCategory("todos")} className="mt-3">Ver todos os profissionais</Button>
           </div>
         )}
 

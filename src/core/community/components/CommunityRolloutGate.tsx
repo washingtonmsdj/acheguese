@@ -17,6 +17,7 @@ import { useCommunityRollout } from '../hooks/useCommunityRollout';
 import { useCommunityLocation } from '../hooks/useCommunityLocation';
 import { Button } from '@/shared/components/ui/button';
 import { useNavigate } from 'react-router-dom';
+import { useAppUrls } from '@/core/routing/hooks';
 
 interface CommunityRolloutGateProps {
   children: ReactNode;
@@ -26,6 +27,7 @@ export function CommunityRolloutGate({ children }: CommunityRolloutGateProps) {
   const { hasActiveLocation, locationName } = useCommunityLocation();
   const { isBlocked, blockReason, isLoading } = useCommunityRollout();
   const navigate = useNavigate();
+  const appUrls = useAppUrls();
 
   if (isLoading) {
     return (
@@ -60,7 +62,7 @@ export function CommunityRolloutGate({ children }: CommunityRolloutGateProps) {
           )}
 
           <Button 
-            onClick={() => navigate('/perfil/endereco')}
+            onClick={() => navigate(appUrls.profile.settings())}
             className="w-full"
           >
             Confirmar Endereço

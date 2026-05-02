@@ -20,6 +20,7 @@ import { MapPin } from "lucide-react";
 import { ModuleLocationDialog, useModuleTerritoryFilter, useTerritoryLabels } from "@/core/location";
 import type { ResolvedTerritory } from "@/core/routing/hooks/useResolveTerritoryFromUrl";
 import { VagasPublicLayout } from "./VagasPublicLayout";
+import { VagasHeader } from "../components";
 import {
   VagasHeroSection,
   VagasFiltrosSection,
@@ -137,7 +138,14 @@ export default function VagasPublicPage({ resolved }: VagasPublicPageProps = {})
   // ============================================
 
   return (
-    <VagasPublicLayout pageTitle={pageTitle} pageDescription={pageDescription}>
+    <>
+      {/* Header com busca */}
+      <VagasHeader
+        searchQuery={filters.search || ""}
+        onSearchChange={(value) => updateFilter("search", value)}
+      />
+      
+      <VagasPublicLayout pageTitle={pageTitle} pageDescription={pageDescription}>
       {/* Hero e Banner */}
       <VagasHeroSection
         cityName={cityName}
@@ -237,5 +245,6 @@ export default function VagasPublicPage({ resolved }: VagasPublicPageProps = {})
         modulePath="/vagas"
       />
     </VagasPublicLayout>
+    </>
   );
 }

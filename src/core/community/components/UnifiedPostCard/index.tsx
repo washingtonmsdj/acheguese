@@ -20,8 +20,6 @@ import {
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import {
-  getCardClasses,
-  getCardBackground,
   SPACING,
 } from "../styles/communityDesignSystem";
 // Sub-componentes
@@ -238,8 +236,7 @@ const UnifiedPostCardComponent = ({
 
   return (
     <Card
-      className={`${getCardClasses("default")} hover:-translate-y-0.5 transition-all duration-200`}
-      style={getCardBackground("card")}
+      className="overflow-hidden rounded-2xl border border-white/10 bg-[#10191d] shadow-xl shadow-black/10 transition-all duration-200 hover:-translate-y-0.5 hover:border-white/20"
       role="article"
       aria-label={`Post de ${post.author_name}: ${typeConfig.badge}`}
     >

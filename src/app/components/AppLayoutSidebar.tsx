@@ -23,18 +23,42 @@ export function AppLayoutSidebar() {
   useEffect(() => {
     scheduleIdleRouteWarmup();
   }, []);
-  
+
+  const pathSegments = pathname.split('/').filter(Boolean);
+  const isCommunityTerritorialPath =
+    pathSegments[0] === 'comunidade' &&
+    pathSegments.length >= 4 &&
+    !['alertas', 'problemas'].includes(pathSegments[3]);
+
   // Ocultar sidebar na página de perfil (que tem sua própria sidebar)
   const hideGlobalSidebar = pathname.startsWith('/perfil');
+
+  const isInternalGroupRoute =
+    pathSegments[0] === 'grupos' && pathSegments.length >= 2;
+  const isConversationRoute =
+    pathSegments[0] === 'chat' && pathSegments.length >= 2;
+  const hideMobileBottomNav = isInternalGroupRoute || isConversationRoute;
+
+  if (isCommunityTerritorialPath) {
+    return (
+      <div className="h-screen w-full overflow-hidden bg-background">
+        <Outlet />
+      </div>
+    );
+  }
 
   if (isMobile) {
     return (
       <div className="h-screen bg-background flex flex-col w-full overflow-hidden">
         <TerritoryMismatchBanner />
-        <main id="main-content" className="flex-1 overflow-y-auto pb-16" tabIndex={-1}>
+        <main
+          id="main-content"
+          className={`flex-1 overflow-y-auto ${hideMobileBottomNav ? 'pb-0' : 'pb-16'}`}
+          tabIndex={-1}
+        >
           <Outlet />
         </main>
-        <BottomNav />
+        {!hideMobileBottomNav ? <BottomNav /> : null}
       </div>
     );
   }

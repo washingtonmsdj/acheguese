@@ -11,7 +11,6 @@ import {
   type PostUrgency,
 } from "@/shared/constants/statusConfig";
 import { type PostType } from "@/shared/constants/postTypeConfig";
-import { INLINE_STYLES } from "../styles/communityDesignSystem";
 
 const civicTypeConfigMap = new Map(
   Object.entries(CIVIC_PROBLEM_TYPES) as Array<
@@ -70,16 +69,16 @@ export const PostContent = memo<PostContentProps>(
           </div>
         )}
 
-        <p className="text-sm leading-relaxed mb-3" style={INLINE_STYLES.textSecondary}>
+        <p className="mb-4 whitespace-pre-wrap break-words text-[15px] leading-7 text-white/82">
           {content}
         </p>
 
         {image && (
-          <div className="mb-3 rounded-lg overflow-hidden">
+          <div className="mb-4 overflow-hidden rounded-xl border border-white/10 bg-black/20">
             <img
               src={image}
               alt={`Imagem anexada ao post: ${content.substring(0, 100)}${content.length > 100 ? "..." : ""}`}
-              className="w-full h-48 object-cover"
+              className="aspect-[4/5] max-h-[680px] w-full object-cover sm:aspect-[1/1]"
             />
           </div>
         )}

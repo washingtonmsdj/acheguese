@@ -10,6 +10,7 @@ import { motion } from "framer-motion";
 import {
   Store, Wrench, Briefcase, Tag, Calendar,
   Users, ArrowRight, MapPin, Clock,
+  ShieldCheck, Sparkles,
 } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import { useAuth } from "@/core/auth/hooks/useAuth";
@@ -106,6 +107,24 @@ const BAIRROS_EM_BREVE = [
   { name: "Itaigara", populacao: "~20.000 hab." },
 ];
 
+const FASES_COMPLEXO = [
+  {
+    icon: ShieldCheck,
+    title: "Meu Bairro",
+    description: "Área prioritária para moradores do Complexo acompanharem alertas, serviços, vagas e oportunidades locais.",
+  },
+  {
+    icon: Store,
+    title: "Comércio local",
+    description: "Negócios e prestadores do território ganham destaque para serem encontrados por quem mora perto.",
+  },
+  {
+    icon: Sparkles,
+    title: "Território fundador",
+    description: "O Complexo abre a primeira fase antes da expansão gradual para outros bairros de Salvador.",
+  },
+];
+
 const PERSONAS = [
   {
     image: personaMorador,
@@ -136,6 +155,10 @@ export default function MainLandingPage() {
   const { user } = useAuth();
   const handleExplorar = () => {
     navigate(`/ba/salvador/complexo-do-nordeste-de-amaralina`);
+  };
+
+  const handleExpansao = () => {
+    navigate("/contato");
   };
 
   return (
@@ -189,15 +212,15 @@ export default function MainLandingPage() {
             transition={{ duration: 0.7, ease: "easeOut" }}
           >
             <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-white leading-[1.15] mb-5 font-heading">
-              Tudo o que importa no seu território,{" "}
-              <span className="text-primary">em um só lugar.</span>
+              O Achegue-se começa pelo{" "}
+              <span className="text-primary">Complexo.</span>
             </h1>
 
             <p className="text-base sm:text-lg md:text-xl text-white/85 mb-2 max-w-2xl mx-auto">
-              Empresas, serviços, vagas, classificados, eventos e informações úteis da sua região.
+              Moradores, comerciantes e prestadores do Nordeste de Amaralina, Santa Cruz, Vale das Pedrinhas e Chapada do Rio Vermelho têm prioridade nesta primeira fase.
             </p>
             <p className="text-sm text-white/60 mb-10">
-              Começando pelo <span className="text-primary/90 font-medium">Complexo do Nordeste de Amaralina</span>.
+              O <span className="text-primary/90 font-medium">Complexo do Nordeste de Amaralina</span> é o território fundador da plataforma.
             </p>
 
             {/* CTAs */}
@@ -207,7 +230,7 @@ export default function MainLandingPage() {
                 className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-base px-8 h-13 shadow-2xl shadow-primary/25 w-full sm:w-auto rounded-xl"
                 onClick={handleExplorar}
               >
-                Explorar o Complexo
+                Entrar no Meu Bairro
               </Button>
               <Button
                 size="lg"
@@ -215,15 +238,15 @@ export default function MainLandingPage() {
                 className="border-white/25 text-white hover:bg-white/10 hover:border-white/40 font-semibold text-base px-8 h-13 backdrop-blur-md w-full sm:w-auto rounded-xl"
                 onClick={() => navigate("/empresas")}
               >
-                Divulgar meu negócio
+                Cadastrar meu negócio
               </Button>
               <Button
                 size="lg"
-                variant="outline"
-                className="border-white/25 text-white hover:bg-white/10 hover:border-white/40 font-semibold text-base px-8 h-13 backdrop-blur-md w-full sm:w-auto rounded-xl"
-                onClick={() => navigate("/vagas")}
+                variant="ghost"
+                className="text-white/75 hover:text-white hover:bg-white/10 font-semibold text-base px-8 h-13 w-full sm:w-auto rounded-xl"
+                onClick={handleExpansao}
               >
-                Ver Vagas
+                Sou de outro bairro
               </Button>
             </div>
           </motion.div>
@@ -277,13 +300,13 @@ export default function MainLandingPage() {
         <motion.div {...fadeUp} className="text-center mb-10">
           <div className="inline-flex items-center gap-2 bg-primary/10 border border-primary/20 rounded-full px-4 py-1.5 mb-5">
             <MapPin className="h-3.5 w-3.5 text-primary" />
-            <span className="text-xs font-semibold text-primary">Território ativo</span>
+            <span className="text-xs font-semibold text-primary">Território fundador</span>
           </div>
           <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-foreground mb-3 font-heading">
-            Estamos começando por um território real.
+            O primeiro acesso é para quem vive o Complexo.
           </h2>
           <p className="text-base text-muted-foreground max-w-xl mx-auto">
-            O primeiro território é o <span className="text-primary font-semibold">Complexo do Nordeste de Amaralina</span> em Salvador.
+            A plataforma nasce no <span className="text-primary font-semibold">Complexo do Nordeste de Amaralina</span> para fortalecer a vida local antes de chegar a outros bairros.
           </p>
         </motion.div>
 
@@ -332,7 +355,38 @@ export default function MainLandingPage() {
         </div>
       </section>
 
-      {/* ── EM BREVE ──────────────────────────────────────────────── */}
+      {/* Por que o Complexo */}
+      <section className="max-w-6xl mx-auto px-4 sm:px-6 py-16">
+        <motion.div {...fadeUp} className="text-center mb-10">
+          <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-foreground mb-3 font-heading">
+            Por que o Complexo primeiro?
+          </h2>
+          <p className="text-base text-muted-foreground max-w-2xl mx-auto">
+            Porque o Achegue-se precisa nascer em um território real, com identidade, comércio, serviços, cultura e moradores ativos.
+          </p>
+        </motion.div>
+
+        <div className="grid md:grid-cols-3 gap-4">
+          {FASES_COMPLEXO.map((item, i) => (
+            <motion.div
+              key={item.title}
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: i * 0.08, duration: 0.4 }}
+              className="rounded-2xl bg-card border border-border p-6"
+            >
+              <div className="h-11 w-11 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center mb-5">
+                <item.icon className="h-5 w-5 text-primary" />
+              </div>
+              <h3 className="text-lg font-bold text-foreground mb-2">{item.title}</h3>
+              <p className="text-sm text-muted-foreground leading-relaxed">{item.description}</p>
+            </motion.div>
+          ))}
+        </div>
+      </section>
+
+      {/* Em breve */}
       <section className="w-full py-14 bg-muted/20 border-y border-border">
         <div className="max-w-5xl mx-auto px-4 sm:px-6">
           <motion.div {...fadeUp} className="text-center mb-8">
@@ -341,10 +395,10 @@ export default function MainLandingPage() {
               <span className="text-xs font-semibold text-amber-400">Em breve</span>
             </div>
             <h2 className="text-2xl sm:text-3xl font-bold text-foreground font-heading">
-              Próximos bairros
+              Outros bairros entram nas próximas fases
             </h2>
             <p className="text-sm text-muted-foreground mt-2">
-              Estamos expandindo para outros bairros de Salvador.
+              Se você é de outro bairro de Salvador, pode demonstrar interesse. A expansão será feita por demanda local e participação da comunidade.
             </p>
           </motion.div>
 
@@ -371,10 +425,25 @@ export default function MainLandingPage() {
               </motion.div>
             ))}
           </div>
+
+          <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3">
+            <Button
+              size="lg"
+              variant="outline"
+              className="border-primary/30 text-primary hover:bg-primary/10 font-semibold rounded-xl w-full sm:w-auto"
+              onClick={handleExpansao}
+            >
+              Quero meu bairro na próxima fase
+              <ArrowRight className="h-4 w-4 ml-2" />
+            </Button>
+            <p className="text-xs text-muted-foreground text-center sm:text-left">
+              O foco inicial continua sendo o Complexo.
+            </p>
+          </div>
         </div>
       </section>
 
-      {/* ── PARA VOCÊ ─────────────────────────────────────────────── */}
+      {/* Para você */}
       <section className="max-w-6xl mx-auto px-4 sm:px-6 py-16">
         <motion.div {...fadeUp} className="text-center mb-12">
           <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-foreground font-heading">
@@ -437,11 +506,11 @@ export default function MainLandingPage() {
             transition={{ duration: 0.6 }}
           >
             <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white mb-4 font-heading leading-tight">
-              Não é mais uma rede social.{" "}
-              <span className="text-primary">É uma plataforma territorial.</span>
+              O Complexo é o ponto de partida.{" "}
+              <span className="text-primary">Quem é daqui entra primeiro.</span>
             </h2>
             <p className="text-base text-white/70 mb-8 max-w-xl mx-auto">
-              Encontre, divulgue e acompanhe o que importa no seu território.
+              Encontre, divulgue e acompanhe o que importa no seu bairro com prioridade para moradores e negócios locais.
             </p>
 
             <Button
@@ -449,7 +518,7 @@ export default function MainLandingPage() {
               className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-base px-10 h-14 shadow-2xl shadow-primary/30 rounded-xl"
               onClick={handleExplorar}
             >
-              Entrar no Complexo do Nordeste
+              Entrar no Meu Bairro
               <ArrowRight className="h-5 w-5 ml-2" />
             </Button>
           </motion.div>

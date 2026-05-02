@@ -38,7 +38,7 @@ export const SuggestionsWidget = memo(() => {
 
   const getLink = (suggestion: Suggestion) => {
     switch (suggestion.type) {
-      case "group": return `/comunidade/grupo/${suggestion.id}`;
+      case "group": return `/comunidade/grupos/${suggestion.id}`;
       case "event": return `/eventos/${suggestion.id}`;
       case "person": return `/profile/${suggestion.id}`;
     }

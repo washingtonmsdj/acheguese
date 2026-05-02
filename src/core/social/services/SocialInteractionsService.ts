@@ -26,7 +26,129 @@ import type {
   SocialInteractionStats,
 } from "../../../services/social/types";
 
+const MOCK_GROUP_MESSAGES: GroupMessage[] = [
+  {
+    id: "mock-msg-1",
+    group_id: "mock-avisos-complexo",
+    sender_profile_id: "mock-admin-profile",
+    content: "Bom dia, pessoal. Hoje teremos limpeza comunitaria na praca principal as 08h.",
+    message_type: "text",
+    created_at: new Date(Date.now() - 1000 * 60 * 45).toISOString(),
+    profile: {
+      id: "mock-admin-profile",
+      name: "Admin Comunidade",
+      avatar_url: "https://api.dicebear.com/9.x/initials/svg?seed=Admin%20Comunidade",
+    },
+  },
+  {
+    id: "mock-msg-2",
+    group_id: "mock-avisos-complexo",
+    sender_profile_id: "mock-mod-1",
+    content: "Mapa do ponto de encontro:",
+    message_type: "image",
+    media_url: "https://images.unsplash.com/photo-1489515217757-5fd1be406fef?w=1200&q=80&auto=format&fit=crop",
+    media_mime_type: "image/jpeg",
+    created_at: new Date(Date.now() - 1000 * 60 * 32).toISOString(),
+    profile: {
+      id: "mock-mod-1",
+      name: "Lideranca Nordeste",
+      avatar_url: "https://api.dicebear.com/9.x/initials/svg?seed=Lideranca%20Nordeste",
+    },
+  },
+  {
+    id: "mock-msg-3",
+    group_id: "mock-avisos-complexo",
+    sender_profile_id: "mock-member-2",
+    content: "Atualizacao em audio da ronda comunitaria",
+    message_type: "audio",
+    media_url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3",
+    media_mime_type: "audio/mpeg",
+    audio_duration_seconds: 18,
+    created_at: new Date(Date.now() - 1000 * 60 * 12).toISOString(),
+    profile: {
+      id: "mock-member-2",
+      name: "Carlos Vale",
+      avatar_url: "https://api.dicebear.com/9.x/initials/svg?seed=Carlos%20Vale",
+    },
+  },
+  {
+    id: "mock-msg-4",
+    group_id: "mock-empreendedores-servicos",
+    sender_profile_id: "mock-admin-2",
+    content: "Feira local de empreendedores confirmada para sabado.",
+    message_type: "text",
+    created_at: new Date(Date.now() - 1000 * 60 * 55).toISOString(),
+    profile: {
+      id: "mock-admin-2",
+      name: "Rede de Comerciantes",
+      avatar_url: "https://api.dicebear.com/9.x/initials/svg?seed=Rede%20de%20Comerciantes",
+    },
+  },
+  {
+    id: "mock-msg-5",
+    group_id: "mock-empreendedores-servicos",
+    sender_profile_id: "mock-member-3",
+    content: "Cardapio novo da semana:",
+    message_type: "image",
+    media_url: "https://images.unsplash.com/photo-1513104890138-7c749659a591?w=1200&q=80&auto=format&fit=crop",
+    media_mime_type: "image/jpeg",
+    created_at: new Date(Date.now() - 1000 * 60 * 25).toISOString(),
+    profile: {
+      id: "mock-member-3",
+      name: "Morador Empreendedor",
+      avatar_url: "https://api.dicebear.com/9.x/initials/svg?seed=Morador%20Empreendedor",
+    },
+  },
+];
+
+const MOCK_GROUP_MESSAGE_REPORTS: Array<{
+  id: string;
+  group_id: string;
+  message_id: string;
+  reporter_profile_id: string;
+  reason: string;
+  details: string | null;
+  status: "pending" | "reviewing" | "resolved" | "dismissed";
+  moderation_history?: Array<{
+    at: string;
+    status: string;
+    moderator_profile_id?: string;
+  }>;
+  created_at: string;
+}> = [];
+
 export class SocialInteractionsService {
+  private static async resolveGroupContext(groupId: string, userId?: string) {
+    const { data: groupRow } = await (supabase as any)
+      .from("groups")
+      .select("id, posting_policy, join_policy")
+      .eq("id", groupId)
+      .maybeSingle();
+
+    if (!groupRow) {
+      return {
+        group: null,
+        role: null as "admin" | "moderator" | "member" | null,
+      };
+    }
+
+    const activeProfile = userId
+      ? await profileService.getRequiredActiveProfile(userId)
+      : await profileService.getRequiredActiveProfile();
+
+    const { data: membership } = await (supabase as any)
+      .from("group_members_new")
+      .select("role")
+      .eq("group_id", groupId)
+      .eq("member_profile_id", activeProfile.id)
+      .maybeSingle();
+
+    return {
+      group: groupRow as { id: string; posting_policy?: string; join_policy?: string },
+      role: (membership?.role as "admin" | "moderator" | "member" | undefined) || null,
+      activeProfileId: activeProfile.id,
+    };
+  }
   // ============================================================================
   // POST LIKES - Curtidas de Posts
   // ============================================================================
@@ -396,6 +518,45 @@ export class SocialInteractionsService {
     }
   }
 
+  static async updateGroupMemberRole(
+    groupId: string,
+    memberProfileId: string,
+    role: "admin" | "moderator" | "member",
+  ): Promise<{ success: boolean; error?: string }> {
+    try {
+      const activeProfile = await profileService.getRequiredActiveProfile();
+
+      const { data: requesterMembership, error: requesterError } = await (supabase as any)
+        .from("group_members_new")
+        .select("role")
+        .eq("group_id", groupId)
+        .eq("member_profile_id", activeProfile.id)
+        .single();
+
+      if (requesterError) throw requesterError;
+      if (!["admin", "moderator"].includes(requesterMembership?.role)) {
+        return { success: false, error: "Apenas admins ou moderadores podem alterar funcoes" };
+      }
+
+      const { error } = await (supabase as any)
+        .from("group_members_new")
+        .update({ role })
+        .eq("group_id", groupId)
+        .eq("member_profile_id", memberProfileId);
+
+      if (error) throw error;
+      return { success: true };
+    } catch (error) {
+      const err = error as Error;
+      trackError(err, {
+        component: "SocialInteractionsService",
+        action: "updateGroupMemberRole",
+        metadata: { groupId, memberProfileId, role },
+      });
+      return { success: false, error: err.message };
+    }
+  }
+
   /**
    * Verificar se profile é membro de um grupo
    */
@@ -468,16 +629,82 @@ export class SocialInteractionsService {
     userId?: string,
   ): Promise<{ success: boolean; message?: GroupMessage; error?: string }> {
     try {
+      if (data.groupId.startsWith("mock-")) {
+        const now = new Date().toISOString();
+        const mockMessage: GroupMessage = {
+          id: `mock-local-${Date.now()}`,
+          group_id: data.groupId,
+          sender_profile_id: "mock-current-user",
+          content: data.content,
+          message_type: data.messageType || "text",
+          media_url: data.mediaUrl || null,
+          media_mime_type: data.mediaMimeType || null,
+          audio_duration_seconds:
+            typeof data.audioDurationSeconds === "number"
+              ? data.audioDurationSeconds
+              : null,
+          created_at: now,
+          profile: {
+            id: "mock-current-user",
+            name: "Você",
+            avatar_url:
+              "https://api.dicebear.com/9.x/initials/svg?seed=Voce%20Morador",
+          },
+        };
+        MOCK_GROUP_MESSAGES.push(mockMessage);
+        return { success: true, message: mockMessage };
+      }
+
       const activeProfile =
         await profileService.getRequiredActiveProfile(userId);
 
+      const { data: groupPolicy } = await (supabase as any)
+        .from("groups")
+        .select("posting_policy")
+        .eq("id", data.groupId)
+        .maybeSingle();
+      const { data: membership } = await (supabase as any)
+        .from("group_members_new")
+        .select("role")
+        .eq("group_id", data.groupId)
+        .eq("member_profile_id", activeProfile.id)
+        .maybeSingle();
+
+      if (!membership) {
+        return { success: false, error: "Voce precisa entrar no grupo para postar" };
+      }
+
+      const role = membership.role as "admin" | "moderator" | "member";
+      const postingPolicy = groupPolicy?.posting_policy || "members";
+      const canPost =
+        postingPolicy === "members" ||
+        (postingPolicy === "moderators" && ["admin", "moderator"].includes(role)) ||
+        (postingPolicy === "admins" && role === "admin");
+
+      if (!canPost) {
+        return {
+          success: false,
+          error: "Este grupo limita postagens por funcao. Verifique as regras do grupo.",
+        };
+      }
+
+      const payload: Record<string, unknown> = {
+        group_id: data.groupId,
+        sender_profile_id: activeProfile.id,
+        content: data.content,
+      };
+
+      if (data.messageType && data.messageType !== "text") payload.message_type = data.messageType;
+      if (data.mediaUrl) payload.media_url = data.mediaUrl;
+      if (data.mediaMimeType) payload.media_mime_type = data.mediaMimeType;
+      if (typeof data.audioDurationSeconds === "number") {
+        payload.audio_duration_seconds = data.audioDurationSeconds;
+      }
+      if (data.metadata) payload.metadata = data.metadata;
+
       const { data: message, error } = await (supabase as any)
         .from("group_messages_new")
-        .insert({
-          group_id: data.groupId,
-          sender_profile_id: activeProfile.id,
-          content: data.content,
-        })
+        .insert(payload)
         .select(
           `
           *,
@@ -523,6 +750,13 @@ export class SocialInteractionsService {
 
       if (error) throw error;
 
+      if ((!data || data.length === 0) && groupId.startsWith("mock-")) {
+        return MOCK_GROUP_MESSAGES
+          .filter((message) => message.group_id === groupId)
+          .sort((a, b) => (a.created_at < b.created_at ? 1 : -1))
+          .slice(offset, offset + limit);
+      }
+
       return data || [];
     } catch (error) {
       trackError(error as Error, {
@@ -530,6 +764,12 @@ export class SocialInteractionsService {
         action: "getGroupMessages",
         metadata: { groupId, limit, offset },
       });
+      if (groupId.startsWith("mock-")) {
+        return MOCK_GROUP_MESSAGES
+          .filter((message) => message.group_id === groupId)
+          .sort((a, b) => (a.created_at < b.created_at ? 1 : -1))
+          .slice(offset, offset + limit);
+      }
       return [];
     }
   }
@@ -545,11 +785,33 @@ export class SocialInteractionsService {
       const activeProfile =
         await profileService.getRequiredActiveProfile(userId);
 
+      const { data: messageRow, error: messageFetchError } = await (supabase as any)
+        .from("group_messages_new")
+        .select("id, group_id, sender_profile_id")
+        .eq("id", messageId)
+        .maybeSingle();
+
+      if (messageFetchError) throw messageFetchError;
+      if (!messageRow) return { success: false, error: "Mensagem nao encontrada" };
+
+      const { data: membership } = await (supabase as any)
+        .from("group_members_new")
+        .select("role")
+        .eq("group_id", messageRow.group_id)
+        .eq("member_profile_id", activeProfile.id)
+        .maybeSingle();
+
+      const isOwn = messageRow.sender_profile_id === activeProfile.id;
+      const canModerate = ["admin", "moderator"].includes(membership?.role || "");
+      if (!isOwn && !canModerate) {
+        return { success: false, error: "Sem permissao para remover esta mensagem" };
+      }
+
       const { error } = await (supabase as any)
         .from("group_messages_new")
         .delete()
         .eq("id", messageId)
-        .eq("sender_profile_id", activeProfile.id);
+        .eq("id", messageId);
 
       if (error) throw error;
 
@@ -562,6 +824,276 @@ export class SocialInteractionsService {
         metadata: { messageId, userId },
       });
       return { success: false, error: err.message };
+    }
+  }
+
+  static async updateGroupMessage(
+    messageId: string,
+    content: string,
+    userId?: string,
+  ): Promise<{ success: boolean; error?: string }> {
+    try {
+      if (!content.trim()) {
+        return { success: false, error: "Mensagem vazia" };
+      }
+
+      const mockMessage = MOCK_GROUP_MESSAGES.find((message) => message.id === messageId);
+      if (mockMessage) {
+        mockMessage.content = content.trim();
+        mockMessage.metadata = {
+          ...(mockMessage.metadata || {}),
+          edited: true,
+          edited_at: new Date().toISOString(),
+        };
+        return { success: true };
+      }
+
+      const activeProfile =
+        await profileService.getRequiredActiveProfile(userId);
+      const { data: messageRow, error: messageError } = await (supabase as any)
+        .from("group_messages_new")
+        .select("id, sender_profile_id")
+        .eq("id", messageId)
+        .maybeSingle();
+      if (messageError) throw messageError;
+      if (!messageRow) return { success: false, error: "Mensagem nao encontrada" };
+      if (messageRow.sender_profile_id !== activeProfile.id) {
+        return { success: false, error: "Somente o autor pode editar a mensagem" };
+      }
+
+      const { error } = await (supabase as any)
+        .from("group_messages_new")
+        .update({
+          content: content.trim(),
+          metadata: {
+            edited: true,
+            edited_at: new Date().toISOString(),
+          },
+        })
+        .eq("id", messageId)
+        .eq("sender_profile_id", activeProfile.id);
+      if (error) throw error;
+      return { success: true };
+    } catch (error) {
+      trackError(error as Error, {
+        component: "SocialInteractionsService",
+        action: "updateGroupMessage",
+        metadata: { messageId },
+      });
+      return { success: false, error: (error as Error).message };
+    }
+  }
+
+  static async reportGroupMessage(
+    messageId: string,
+    reason: string,
+    details?: string,
+    userId?: string,
+  ): Promise<{ success: boolean; error?: string }> {
+    try {
+      if (!reason || reason.trim().length < 3) {
+        return { success: false, error: "Motivo da denuncia muito curto" };
+      }
+
+      const mockMessage = MOCK_GROUP_MESSAGES.find((message) => message.id === messageId);
+      if (mockMessage) {
+        MOCK_GROUP_MESSAGE_REPORTS.push({
+          id: `mock-report-${Date.now()}`,
+          group_id: mockMessage.group_id,
+          message_id: messageId,
+          reporter_profile_id: "mock-current-user",
+          reason: reason.trim(),
+          details: details?.trim() || null,
+          status: "pending",
+          created_at: new Date().toISOString(),
+        });
+        return { success: true };
+      }
+
+      const activeProfile =
+        await profileService.getRequiredActiveProfile(userId);
+      const { data: messageRow, error: messageError } = await (supabase as any)
+        .from("group_messages_new")
+        .select("id, group_id, sender_profile_id")
+        .eq("id", messageId)
+        .maybeSingle();
+
+      if (messageError) throw messageError;
+      if (!messageRow) return { success: false, error: "Mensagem nao encontrada" };
+
+      if (messageRow.sender_profile_id === activeProfile.id) {
+        return { success: false, error: "Nao e possivel denunciar a propria mensagem" };
+      }
+
+      const payload = {
+        group_id: messageRow.group_id,
+        message_id: messageId,
+        reporter_profile_id: activeProfile.id,
+        reason: reason.trim(),
+        details: details?.trim() || null,
+      };
+
+      const { error } = await (supabase as any).from("group_message_reports").insert(payload);
+      if (error) {
+        if (error.code === "23505") {
+          return { success: false, error: "Voce ja denunciou esta mensagem" };
+        }
+        throw error;
+      }
+      return { success: true };
+    } catch (error) {
+      const err = error as Error;
+      trackError(err, {
+        component: "SocialInteractionsService",
+        action: "reportGroupMessage",
+        metadata: { messageId },
+      });
+      return { success: false, error: err.message };
+    }
+  }
+
+  static async getGroupMessageReports(
+    groupId: string,
+    userId?: string,
+  ): Promise<
+    Array<{
+      id: string;
+      message_id: string;
+      reason: string;
+      details?: string | null;
+      status: string;
+      created_at: string;
+      moderation_history?: Array<{
+        at: string;
+        status: string;
+        moderator_profile_id?: string;
+      }>;
+      message?: {
+        id: string;
+        content: string;
+        message_type?: string;
+        created_at: string;
+        sender_profile_id: string;
+        profile?: { id: string; name: string; avatar_url?: string | null };
+      } | null;
+    }>
+  > {
+    try {
+      if (groupId.startsWith("mock-")) {
+        return MOCK_GROUP_MESSAGE_REPORTS.filter((r) => r.group_id === groupId);
+      }
+
+      const activeProfile =
+        await profileService.getRequiredActiveProfile(userId);
+      const { data: membership } = await (supabase as any)
+        .from("group_members_new")
+        .select("role")
+        .eq("group_id", groupId)
+        .eq("member_profile_id", activeProfile.id)
+        .maybeSingle();
+
+      if (!["admin", "moderator"].includes(membership?.role || "")) {
+        return [];
+      }
+
+      const { data, error } = await (supabase as any)
+        .from("group_message_reports")
+        .select(`
+          id,
+          message_id,
+          reason,
+          details,
+          status,
+          moderation_history,
+          created_at,
+          message:group_messages_new!group_message_reports_message_id_fkey(
+            id,
+            content,
+            message_type,
+            created_at,
+            sender_profile_id,
+            profile:profiles!group_messages_new_sender_profile_id_fkey(id,name,avatar_url)
+          )
+        `)
+        .eq("group_id", groupId)
+        .order("created_at", { ascending: false })
+        .limit(50);
+      if (error) throw error;
+      return data || [];
+    } catch (error) {
+      trackError(error as Error, {
+        component: "SocialInteractionsService",
+        action: "getGroupMessageReports",
+        metadata: { groupId },
+      });
+      return [];
+    }
+  }
+
+  static async updateGroupMessageReportStatus(
+    reportId: string,
+    status: "reviewing" | "resolved" | "dismissed",
+    userId?: string,
+  ): Promise<{ success: boolean; error?: string }> {
+    try {
+      const activeProfile =
+        await profileService.getRequiredActiveProfile(userId);
+
+      const { data: reportRow, error: reportError } = await (supabase as any)
+        .from("group_message_reports")
+        .select("id, group_id")
+        .eq("id", reportId)
+        .maybeSingle();
+      if (reportError) throw reportError;
+      if (!reportRow) return { success: false, error: "Denuncia nao encontrada" };
+
+      const { data: membership } = await (supabase as any)
+        .from("group_members_new")
+        .select("role")
+        .eq("group_id", reportRow.group_id)
+        .eq("member_profile_id", activeProfile.id)
+        .maybeSingle();
+      if (!["admin", "moderator"].includes(membership?.role || "")) {
+        return { success: false, error: "Sem permissao para moderar denuncias" };
+      }
+
+      const { data: currentReport, error: currentReportError } = await (supabase as any)
+        .from("group_message_reports")
+        .select("moderation_history")
+        .eq("id", reportId)
+        .maybeSingle();
+      if (currentReportError) throw currentReportError;
+
+      const previousHistory = Array.isArray(currentReport?.moderation_history)
+        ? currentReport.moderation_history
+        : [];
+      const nextHistory = [
+        ...previousHistory,
+        {
+          at: new Date().toISOString(),
+          status,
+          moderator_profile_id: activeProfile.id,
+        },
+      ];
+
+      const { error } = await (supabase as any)
+        .from("group_message_reports")
+        .update({
+          status,
+          reviewed_by: activeProfile.id,
+          reviewed_at: new Date().toISOString(),
+          moderation_history: nextHistory,
+        })
+        .eq("id", reportId);
+      if (error) throw error;
+      return { success: true };
+    } catch (error) {
+      trackError(error as Error, {
+        component: "SocialInteractionsService",
+        action: "updateGroupMessageReportStatus",
+        metadata: { reportId, status },
+      });
+      return { success: false, error: (error as Error).message };
     }
   }
 
@@ -804,13 +1336,18 @@ export const SocialInteractionsFacade = {
   joinGroup: SocialInteractionsService.joinGroup,
   leaveGroup: SocialInteractionsService.leaveGroup,
   getGroupMembers: SocialInteractionsService.getGroupMembers,
+  updateGroupMemberRole: SocialInteractionsService.updateGroupMemberRole,
   getUserGroupIds: SocialInteractionsService.getUserGroupIds,
 
   // Group Messages
   sendGroupMessage: SocialInteractionsService.sendGroupMessage,
   getGroupMessages: SocialInteractionsService.getGroupMessages,
   deleteGroupMessage: SocialInteractionsService.deleteGroupMessage,
+  updateGroupMessage: SocialInteractionsService.updateGroupMessage,
   getGroupMessageById: SocialInteractionsService.getGroupMessageById,
+  reportGroupMessage: SocialInteractionsService.reportGroupMessage,
+  getGroupMessageReports: SocialInteractionsService.getGroupMessageReports,
+  updateGroupMessageReportStatus: SocialInteractionsService.updateGroupMessageReportStatus,
 
   // Comment Likes
   likeComment: SocialInteractionsService.likeComment,

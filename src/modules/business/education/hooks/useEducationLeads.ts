@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { educationQueries, educationMutations } from '../services';
+import { EducationService } from '../services';
 import type { EducationLead, EducationLeadStatus, SchoolShift } from '../types';
 
 export interface LeadFilters {
@@ -19,7 +19,7 @@ export function useEducationLeads(profileId?: string, filters: LeadFilters = {})
     queryKey: ['education', 'leads', profileId, status, page],
     queryFn: async () => {
       if (!hasValidProfileId || !profileId) return { leads: [], totalCount: 0 };
-      return educationQueries.listEducationLeads(profileId, { status, page, pageSize });
+      return EducationService.listLeads(profileId, { status, page, pageSize });
     },
     enabled: hasValidProfileId,
   });
@@ -41,27 +41,23 @@ export function useEducationLeads(profileId?: string, filters: LeadFilters = {})
       desiredShift?: SchoolShift;
     }) => {
       if (!hasValidProfileId || !profileId) throw new Error('Valid profile ID required');
-      const result = await educationMutations.createEducationLead({
-        education_profile_id: profileId,
-        full_name: payload.fullName,
+      const created = await EducationService.createLead({
+        educationProfileId: profileId,
+        fullName: payload.fullName,
         email: payload.email,
         phone: payload.phone,
-        child_name: payload.childName ?? null,
-        child_age: payload.childAge ?? null,
-        interest_note: payload.interestNote ?? null,
-        source_channel: payload.sourceChannel ?? 'website',
-        status: 'new',
-        owner_user_id: null,
-        first_contact_at: null,
-        lost_reason: null,
-        guardian_name: payload.guardianName ?? null,
-        student_name: payload.studentName ?? null,
-        student_age: payload.studentAge ?? null,
-        desired_grade: payload.desiredGrade ?? null,
-        desired_shift: payload.desiredShift ?? null,
+        childName: payload.childName,
+        childAge: payload.childAge,
+        interestNote: payload.interestNote,
+        sourceChannel: payload.sourceChannel,
+        guardianName: payload.guardianName,
+        studentName: payload.studentName,
+        studentAge: payload.studentAge,
+        desiredGrade: payload.desiredGrade,
+        desiredShift: payload.desiredShift,
       });
-      if (result.error) throw result.error;
-      return result.data!;
+      if (!created) throw new Error('Falha ao criar lead');
+      return created;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['education', 'leads', profileId] });
@@ -76,9 +72,9 @@ export function useEducationLeads(profileId?: string, filters: LeadFilters = {})
       leadId: string;
       payload: Partial<EducationLead>;
     }) => {
-      const result = await educationMutations.updateEducationLead(leadId, payload);
-      if (result.error) throw result.error;
-      return result.data!;
+      const updated = await EducationService.updateLead(leadId, payload);
+      if (!updated) throw new Error('Falha ao atualizar lead');
+      return updated;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['education', 'leads', profileId] });

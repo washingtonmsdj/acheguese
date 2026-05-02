@@ -4,30 +4,31 @@ interface GruposTabsProps {
   tab: "todos" | "meus";
   onTabChange: (tab: "todos" | "meus") => void;
   groupsCount: number;
+  myGroupsCount?: number;
 }
 
-export function GruposTabs({ tab, onTabChange, groupsCount }: GruposTabsProps) {
+export function GruposTabs({ tab, onTabChange, groupsCount, myGroupsCount = groupsCount }: GruposTabsProps) {
   return (
-    <div className="flex gap-1 p-1 bg-white/5 rounded-xl">
+    <div className="grid min-w-0 grid-cols-2 gap-1 rounded-xl bg-white/5 p-1">
       <button
         onClick={() => onTabChange("todos")}
-        className={`flex-1 py-2 text-sm font-medium rounded-lg transition-colors ${
+        className={`min-h-10 min-w-0 rounded-lg px-2 py-2 text-sm font-medium transition-colors ${
           tab === "todos"
             ? "bg-teal-500/20 text-teal-400"
             : "text-gray-400 hover:text-white"
         }`}
       >
-        Todos ({groupsCount})
+        <span className="block truncate">Todos ({groupsCount})</span>
       </button>
       <button
         onClick={() => onTabChange("meus")}
-        className={`flex-1 py-2 text-sm font-medium rounded-lg transition-colors ${
+        className={`min-h-10 min-w-0 rounded-lg px-2 py-2 text-sm font-medium transition-colors ${
           tab === "meus"
             ? "bg-teal-500/20 text-teal-400"
             : "text-gray-400 hover:text-white"
         }`}
       >
-        Meus Grupos ({groupsCount})
+        <span className="block truncate">Meus ({myGroupsCount})</span>
       </button>
     </div>
   );

@@ -68,12 +68,12 @@ export const PostActions = memo<PostActionsProps>(
 
     return (
       <div
-        className="flex items-center justify-between w-full pt-2"
+        className="flex w-full min-w-0 flex-wrap items-center justify-between gap-2 pt-2"
         style={{ borderTop: "1px solid rgba(255, 255, 255, 0.1)" }}
         role="group"
         aria-label="Ações do post"
       >
-        <div className="flex items-center gap-4">
+        <div className="flex min-w-0 flex-wrap items-center gap-2">
           {/* Like/Upvote */}
           <Button
             variant="ghost"
@@ -87,7 +87,7 @@ export const PostActions = memo<PostActionsProps>(
               }
             }}
             disabled={isProcessing}
-            className={`h-8 px-3 text-xs transition-colors ${
+            className={`h-9 rounded-full px-3 text-xs transition-colors ${
               isLikeActive
                 ? "bg-orange-500/10 text-orange-400"
                 : "text-gray-400 hover:text-orange-400 hover:bg-orange-500/5"
@@ -128,7 +128,7 @@ export const PostActions = memo<PostActionsProps>(
               e.stopPropagation();
               onComment();
             }}
-            className="h-8 px-3 text-xs text-gray-400 hover:text-blue-400 hover:bg-blue-500/5 transition-colors"
+            className="h-9 rounded-full px-3 text-xs text-gray-400 transition-colors hover:bg-blue-500/5 hover:text-blue-400"
             aria-label={`Comentar no post. ${commentsCount} comentários`}
           >
             <MessageCircle className="w-4 h-4 mr-1" aria-hidden="true" />
@@ -144,7 +144,7 @@ export const PostActions = memo<PostActionsProps>(
                 e.stopPropagation();
                 onSendMessage?.();
               }}
-              className="h-8 px-3 text-xs text-gray-400 hover:text-orange-400 hover:bg-orange-500/5 transition-colors"
+              className="h-9 rounded-full px-3 text-xs text-gray-400 transition-colors hover:bg-orange-500/5 hover:text-orange-400"
               aria-label={`Enviar mensagem privada para ${authorName}`}
             >
               <Send className="w-4 h-4 mr-1" aria-hidden="true" />
@@ -153,7 +153,7 @@ export const PostActions = memo<PostActionsProps>(
           )}
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex shrink-0 items-center gap-1">
           {/* Salvar */}
           <Button
             variant="ghost"
@@ -163,7 +163,7 @@ export const PostActions = memo<PostActionsProps>(
               onSave();
             }}
             disabled={isProcessing}
-            className={`h-8 w-8 p-0 transition-colors ${
+            className={`h-9 w-9 rounded-full p-0 transition-colors ${
               isSaved
                 ? "text-yellow-400"
                 : "text-gray-400 hover:text-yellow-400"
@@ -185,7 +185,7 @@ export const PostActions = memo<PostActionsProps>(
               e.stopPropagation();
               onShare();
             }}
-            className="h-8 w-8 p-0 text-gray-400 hover:text-green-400 hover:bg-green-500/5 transition-colors"
+            className="h-9 w-9 rounded-full p-0 text-gray-400 transition-colors hover:bg-green-500/5 hover:text-green-400"
             aria-label="Compartilhar post"
           >
             <Share2 className="w-4 h-4" aria-hidden="true" />

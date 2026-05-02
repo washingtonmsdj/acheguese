@@ -12,8 +12,6 @@ export function EmpresasHeroSection({
   territoryName,
   territoryNameShort,
   territoryPreposition,
-  searchQuery,
-  onSearchChange,
   currentBannerIndex,
   bannerImages,
   onPrevBanner,
@@ -34,11 +32,6 @@ export function EmpresasHeroSection({
         titleHighlight={territoryNameShort}
         subtitle="Descubra, avalie e recomende negócios perto de você. Veja o que seus vizinhos estão indicando."
         backgroundImage={activeBannerImage}
-        search={{
-          placeholder: "Buscar empresa, categoria...",
-          value: searchQuery,
-          onChange: onSearchChange,
-        }}
         primaryCTA={{ 
           label: "Cadastrar Empresa", 
           icon: Plus,

@@ -1,51 +1,127 @@
 /**
- * TopBusinessCard
+ * TopBusinessCard - Estilo compacto para ranking
  * 
- * Card de empresa no ranking top 3
+ * Padronizado com GastronomyCard:
+ * - Layout horizontal compacto
+ * - Emoji por categoria
+ * - Informações essenciais
  */
 
 import { motion } from "framer-motion";
-import { Star, ThumbsUp, Navigation } from "lucide-react";
+import { Star, MapPin, Crown, BadgeCheck } from "lucide-react";
+import { cn } from "@/shared/utils/cn";
 import type { TopBusinessCardProps } from "../../sections/types";
 
+// Mapa de emojis por categoria
+const CATEGORY_EMOJI: Record<string, string> = {
+  "Restaurante": "🍽️",
+  "Lanchonete": "🍔",
+  "Padaria": "🥖",
+  "Mercado": "🛒",
+  "Farmácia": "💊",
+  "Salão": "💇",
+  "Academia": "💪",
+  "Pet Shop": "🐾",
+  "Loja": "🏪",
+  "Serviços": "🔧",
+  "Outros": "🏢",
+};
+
+function getCategoryEmoji(category: string): string {
+  return CATEGORY_EMOJI[category] || "🏢";
+}
+
 export function TopBusinessCard({ business, rank, onClick }: TopBusinessCardProps) {
+  const emoji = getCategoryEmoji(business.category);
+  
   const getRankColor = (rank: number) => {
-    if (rank === 1) return "text-warning";
-    if (rank === 2) return "text-muted-foreground";
-    return "text-amber-700";
+    if (rank === 1) return "from-amber-500 to-yellow-500";
+    if (rank === 2) return "from-gray-400 to-gray-500";
+    return "from-amber-700 to-amber-800";
+  };
+
+  const getRankBadge = (rank: number) => {
+    if (rank === 1) return "🥇";
+    if (rank === 2) return "🥈";
+    return "🥉";
   };
 
   return (
-    <motion.div
+    <motion.article
       initial={{ opacity: 0, scale: 0.95 }}
       whileInView={{ opacity: 1, scale: 1 }}
       viewport={{ once: true }}
       transition={{ delay: rank * 0.1 }}
+      whileHover={{ scale: 1.02 }}
+      whileTap={{ scale: 0.98 }}
       onClick={onClick}
-      className="bg-card border border-border rounded-xl p-4 cursor-pointer hover:border-primary/40 hover:shadow-lg transition-all group"
+      className="group relative flex flex-row overflow-hidden rounded-xl border border-border/50 bg-card transition-all duration-300 hover:border-primary/30 hover:shadow-md cursor-pointer h-[88px]"
+      role="article"
+      aria-label={`${business.name} - Posição ${rank}`}
     >
-      <div className="flex items-center justify-between mb-2">
-        <div className="flex items-center gap-2">
-          <span className={`text-lg font-bold ${getRankColor(rank)}`}>
-            #{rank}
-          </span>
-          <h4 className="font-bold text-foreground group-hover:text-primary transition-colors text-sm">
-            {business.name}
-          </h4>
+      {/* Emoji/Rank à esquerda */}
+      <div className="relative h-full w-[88px] shrink-0 overflow-hidden">
+        <div className="flex h-full w-full flex-col items-center justify-center bg-gradient-to-br from-primary/10 to-accent/10">
+          <span className="text-3xl mb-1">{emoji}</span>
+          <span className="text-lg">{getRankBadge(rank)}</span>
         </div>
-        <span className="flex items-center gap-0.5 text-xs text-warning">
-          <Star className="h-3 w-3 fill-warning" /> {business.rating}
-        </span>
+
+        {/* Premium badge */}
+        {business.premium && (
+          <div className="absolute top-1 right-1">
+            <Crown className="h-3.5 w-3.5 text-warning fill-warning" />
+          </div>
+        )}
       </div>
-      <div className="flex items-center justify-between">
-        <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
-          <ThumbsUp className="h-3 w-3 text-primary" />
-          <span className="font-semibold text-foreground">{business.neighborRecs}</span> recomendações
-        </span>
-        <span className="text-xs text-muted-foreground flex items-center gap-0.5">
-          <Navigation className="h-3 w-3" /> {business.distance}
-        </span>
+
+      {/* Conteúdo à direita */}
+      <div className="flex min-w-0 flex-1 flex-col justify-between px-2.5 py-2">
+        {/* Rank + Nome */}
+        <div className="flex items-start gap-1.5">
+          <div className={cn(
+            "flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-gradient-to-br text-[10px] font-bold text-white",
+            getRankColor(rank)
+          )}>
+            {rank}
+          </div>
+          <div className="min-w-0 flex-1">
+            <h3 className="line-clamp-1 text-sm font-bold leading-tight text-foreground transition-colors group-hover:text-primary">
+              {business.name}
+              {business.is_verified && (
+                <BadgeCheck className="ml-1 inline h-3.5 w-3.5 text-primary" />
+              )}
+            </h3>
+            <p className="text-[11px] text-muted-foreground truncate">{business.category}</p>
+          </div>
+        </div>
+
+        {/* Rating */}
+        <div className="flex items-center gap-2">
+          <span className="flex items-center gap-0.5 text-[11px] font-semibold">
+            <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
+            {business.rating.toFixed(1)}
+            <span className="text-muted-foreground">({business.reviews})</span>
+          </span>
+        </div>
+
+        {/* Recomendações + Distância */}
+        <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
+          <span className="flex items-center gap-0.5 font-medium text-primary">
+            👍 {business.neighborRecs} vizinhos
+          </span>
+          {business.distance !== "N/A" && (
+            <span className="flex items-center gap-0.5">
+              <MapPin className="h-2.5 w-2.5 shrink-0" />
+              {business.distance}
+            </span>
+          )}
+        </div>
       </div>
-    </motion.div>
+
+      {/* Hover Glow */}
+      <div className="pointer-events-none absolute inset-0 opacity-0 transition-opacity group-hover:opacity-100">
+        <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-transparent" />
+      </div>
+    </motion.article>
   );
 }

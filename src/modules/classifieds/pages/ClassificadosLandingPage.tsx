@@ -33,8 +33,7 @@ import { ModuleLocationDialog, useTerritoryLabels } from "@/core/location";
 import { useClassificados } from "@/modules/classifieds/hooks/useClassificados";
 import { CLASSIFIED_CATEGORIES, getCategoryEmoji } from "@/modules/classifieds/constants/categories";
 import { classifiedUrlService } from "@/modules/classifieds/services/ClassifiedUrlService";
-import { ClassifiedsViewToggle } from "@/modules/classifieds/components/ClassifiedsViewToggle";
-import { VendedorCard } from "@/modules/classifieds/components/VendedorCard";
+import { ClassifiedsViewToggle, VendedorCard, ClassificadosHeader, AdvancedFilters } from "@/modules/classifieds/components";
 import { cn } from "@/shared/utils/cn";
 import type { ClassificadoWithVendedor } from "@/modules/classifieds/hooks/useClassificados";
 import type { ResolvedTerritory } from "@/core/routing/hooks/useResolveTerritoryFromUrl";
@@ -194,6 +193,12 @@ export default function ClassificadosLandingPage({ resolved, activeMemberIds }: 
   return (
     <div className="flex flex-col min-h-screen bg-background">
 
+      {/* ── HEADER COM BUSCA ──────────────────────────────────────── */}
+      <ClassificadosHeader
+        searchQuery={filters.search}
+        onSearchChange={(value) => updateFilter("search", value)}
+      />
+
       {/* ── Promo Banner ──────────────────────────────── */}
       <motion.div
         initial={{ opacity: 0, y: -8 }}
@@ -233,48 +238,40 @@ export default function ClassificadosLandingPage({ resolved, activeMemberIds }: 
         stats={[{ value: `${activeAds.length}`, label: "anúncios ativos" }]}
       />
 
-      {/* ── Search + Filters ──────────────────────────── */}
-      <SearchBar
-        filters={filters}
-        onSearchChange={(s) => updateFilter("search", s)}
-        onSortChange={(s) => updateFilter("sort", s)}
-        onPriceMinChange={(v) => updateFilter("priceMin", v)}
-        onPriceMaxChange={(v) => updateFilter("priceMax", v)}
-        onConditionChange={(v) => updateFilter("condition", v)}
-        onHasPhotoChange={(v) => updateFilter("hasPhoto", v)}
-        onClearFilters={clearFilters}
-      />
+      {/* ── Filtros Avançados + Localização ──────────── */}
+      <section className="max-w-7xl mx-auto w-full px-4 sm:px-6 mt-4">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+          {/* Filtros avançados */}
+          <AdvancedFilters
+            filters={filters}
+            onSortChange={(s) => updateFilter("sort", s)}
+            onPriceMinChange={(v) => updateFilter("priceMin", v)}
+            onPriceMaxChange={(v) => updateFilter("priceMax", v)}
+            onConditionChange={(v) => updateFilter("condition", v)}
+            onHasPhotoChange={(v) => updateFilter("hasPhoto", v)}
+            onClearFilters={clearFilters}
+          />
 
-      <section className="max-w-7xl mx-auto w-full px-4 sm:px-6 mt-2">
-        <div className="rounded-xl border-2 border-primary/30 bg-primary/5 p-3.5 shadow-sm flex items-center justify-between gap-3">
-          <div className="min-w-0">
-            <p className="text-[11px] uppercase tracking-wide text-primary font-semibold flex items-center gap-1.5">
-              <MapPin className="h-3.5 w-3.5" />
-              Localização ativa
-            </p>
-            <p className="text-sm font-bold truncate">{territoryName}</p>
+          {/* Localização ativa */}
+          <div className="flex items-center gap-2 text-sm">
+            <MapPin className="h-4 w-4 text-primary" />
+            <span className="text-muted-foreground">em</span>
+            <span className="font-semibold text-foreground">{territoryName}</span>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={() => setLocationDialogOpen(true)}
+              className="h-7 text-xs"
+            >
+              Alterar
+            </Button>
           </div>
-          <Button
-            type="button"
-            variant="outline"
-            className="h-8 rounded-lg px-3 text-xs font-semibold"
-            onClick={() => setLocationDialogOpen(true)}
-          >
-            Alterar local
-          </Button>
         </div>
       </section>
 
-      <ModuleLocationDialog
-        open={locationDialogOpen}
-        onOpenChange={setLocationDialogOpen}
-        moduleBasePath="/classificados"
-        initialSlugs={initialSlugs}
-        onApplyPath={(path) => navigate(path)}
-      />
-
       {/* ── Category Chips ────────────────────────────── */}
-      <section className="max-w-7xl mx-auto w-full px-4 sm:px-6 mt-1" aria-label="Categorias">
+      <section className="max-w-7xl mx-auto w-full px-4 sm:px-6 mt-4" aria-label="Categorias">
         <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1">
           {CLASSIFIED_CATEGORIES.map((cat) => {
             const isActive = filters.category === cat.id;
@@ -298,6 +295,14 @@ export default function ClassificadosLandingPage({ resolved, activeMemberIds }: 
           })}
         </div>
       </section>
+
+      <ModuleLocationDialog
+        open={locationDialogOpen}
+        onOpenChange={setLocationDialogOpen}
+        moduleBasePath="/classificados"
+        initialSlugs={initialSlugs}
+        onApplyPath={(path) => navigate(path)}
+      />
 
       {/* ── Featured Ads ──────────────────────────────── */}
       {featuredAds.length > 0 && !isLoading && viewMode === "anuncios" && (

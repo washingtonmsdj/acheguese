@@ -44,6 +44,7 @@ import {
   EmpresasCTASection,
 } from "@/app/features/business-landing/sections";
 import { EmpresasLandingLayout } from "@/app/features/business-landing/pages/EmpresasLandingLayout";
+import { EmpresasHeader } from "@/app/features/business-landing/components";
 import {
   CATEGORIES,
   FEATURED_BUSINESSES,
@@ -265,6 +266,12 @@ export default function EmpresasLandingPage({
   // ============================================
   return (
     <EmpresasLandingLayout>
+      {/* Header exclusivo com busca */}
+      <EmpresasHeader
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
+      />
+      
       {/* Categorias no Topo */}
       <EmpresasCategoriasSection
         categories={CATEGORIES}
@@ -277,8 +284,6 @@ export default function EmpresasLandingPage({
         territoryName={territoryName}
         territoryNameShort={territoryNameShort}
         territoryPreposition={territoryPreposition}
-        searchQuery={searchQuery}
-        onSearchChange={setSearchQuery}
         currentBannerIndex={currentBannerIndex}
         bannerImages={bannerImages}
         onPrevBanner={handlePrevBanner}

@@ -6,19 +6,19 @@
 
 import type { EducationLeadStatus, EducationProfileStatus } from '../types';
 
-export const EDUCATION_PROFILE_STATUS: Record<EducationProfileStatus, { label: string; color: string }> = {
-  draft: { label: 'Rascunho', color: 'gray' },
-  published: { label: 'Publicado', color: 'green' },
-  paused: { label: 'Pausado', color: 'yellow' },
+export const EDUCATION_PROFILE_STATUS: Record<EducationProfileStatus, { label: string; color: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }> = {
+  draft: { label: 'Rascunho', color: 'gray', variant: 'secondary' },
+  published: { label: 'Publicado', color: 'green', variant: 'default' },
+  paused: { label: 'Pausado', color: 'yellow', variant: 'destructive' },
 };
 
-export const EDUCATION_LEAD_STATUS: Record<EducationLeadStatus, { label: string; color: string; order: number }> = {
-  new: { label: 'Novo', color: 'blue', order: 1 },
-  contacted: { label: 'Contactado', color: 'purple', order: 2 },
-  visit_scheduled: { label: 'Visita Agendada', color: 'orange', order: 3 },
-  proposal_sent: { label: 'Proposta Enviada', color: 'cyan', order: 4 },
-  enrolled: { label: 'Matriculado', color: 'green', order: 5 },
-  lost: { label: 'Perdido', color: 'red', order: 6 },
+export const EDUCATION_LEAD_STATUS: Record<EducationLeadStatus, { label: string; color: string; order: number; variant: 'default' | 'secondary' | 'destructive' | 'outline' }> = {
+  new: { label: 'Novo', color: 'blue', order: 1, variant: 'default' },
+  contacted: { label: 'Contactado', color: 'purple', order: 2, variant: 'secondary' },
+  visit_scheduled: { label: 'Visita Agendada', color: 'orange', order: 3, variant: 'outline' },
+  proposal_sent: { label: 'Proposta Enviada', color: 'cyan', order: 4, variant: 'outline' },
+  enrolled: { label: 'Matriculado', color: 'green', order: 5, variant: 'default' },
+  lost: { label: 'Perdido', color: 'red', order: 6, variant: 'destructive' },
 };
 
 export const EDUCATION_SUPPORT_LEVELS = {

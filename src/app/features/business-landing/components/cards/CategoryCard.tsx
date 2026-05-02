@@ -7,8 +7,18 @@
 import { motion } from "framer-motion";
 import type { CategoryCardProps } from "../../sections/types";
 
+const EMOJI_BY_CATEGORY_SLUG: Record<string, string> = {
+  restaurantes: "🍽️",
+  mercados: "🛒",
+  saude: "💙",
+  educacao: "📚",
+  servicos: "🔧",
+  outros: "🏪",
+};
+
 export function CategoryCard({ category, onClick, index }: CategoryCardProps) {
   const Icon = category.icon;
+  const emoji = EMOJI_BY_CATEGORY_SLUG[category.slug];
   
   return (
     <motion.button
@@ -18,15 +28,21 @@ export function CategoryCard({ category, onClick, index }: CategoryCardProps) {
       whileHover={{ scale: 1.08, y: -4 }}
       whileTap={{ scale: 0.95 }}
       onClick={onClick}
-      className={`flex flex-col items-center gap-2.5 p-4 rounded-2xl border bg-card/80 backdrop-blur-sm transition-colors duration-200 group ${category.bg}`}
+      className={`flex shrink-0 min-w-[60px] flex-col items-center gap-1.5 rounded-xl border bg-card/80 p-2.5 backdrop-blur-sm transition-colors duration-200 group ${category.bg}`}
     >
       <motion.div
         whileHover={{ rotate: [0, -10, 10, 0] }}
         transition={{ duration: 0.4 }}
       >
-        <Icon className={`h-7 w-7 ${category.iconColor}`} />
+        {emoji ? (
+          <span className={category.iconColor} style={{ fontSize: "1.25rem", lineHeight: 1 }}>
+            {emoji}
+          </span>
+        ) : (
+          <Icon className={`h-5 w-5 ${category.iconColor}`} />
+        )}
       </motion.div>
-      <span className="text-xs font-semibold text-foreground leading-tight text-center">
+      <span className="whitespace-nowrap text-center text-[10px] font-semibold leading-tight text-foreground">
         {category.label}
       </span>
     </motion.button>

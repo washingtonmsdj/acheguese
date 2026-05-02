@@ -5,6 +5,7 @@ import { Users, Plus, ExternalLink, Sparkles } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/shared/components/ui/avatar";
 import { Button } from "@/shared/components/ui/button";
 import { Badge } from "@/shared/components/ui/badge";
+import { useAppUrls } from "@/core/routing/hooks";
 import { useFavoriteGroups } from "../../hooks/useFavoriteGroups";
 import { WidgetSkeleton } from "./WidgetSkeleton";
 
@@ -14,6 +15,7 @@ import { WidgetSkeleton } from "./WidgetSkeleton";
  */
 export const GroupsWidget = memo(() => {
   const { data: groups, isLoading } = useFavoriteGroups();
+  const appUrls = useAppUrls();
 
   if (isLoading) {
     return <WidgetSkeleton hasHeader itemCount={3} />;
@@ -33,7 +35,7 @@ export const GroupsWidget = memo(() => {
         </div>
         {groups && groups.length > 0 && (
           <Link 
-            to="/grupos" 
+            to={appUrls.community.groups}
             className="text-xs text-muted-foreground hover:text-primary transition-colors flex items-center gap-0.5 flex-shrink-0"
           >
             Ver todos
@@ -52,7 +54,7 @@ export const GroupsWidget = memo(() => {
               return (
                 <Link
                   key={group.id}
-                  to={`/comunidade/grupo/${group.id}`}
+                  to={appUrls.community.groupDetail(group.id)}
                   className="flex items-center gap-2 p-2 rounded-lg bg-secondary/50 hover:bg-secondary transition-all duration-200 hover:scale-[1.01] active:scale-[0.99] group"
                 >
                   {/* Avatar do Grupo */}
@@ -105,7 +107,7 @@ export const GroupsWidget = memo(() => {
               className="w-full h-8 text-xs"
               asChild
             >
-              <Link to="/grupos">
+              <Link to={appUrls.community.groups}>
                 <Plus className="h-3.5 w-3.5 mr-1.5" />
                 Explorar Grupos
               </Link>
@@ -122,7 +124,7 @@ export const GroupsWidget = memo(() => {
           className="w-full mt-2.5 h-8 text-xs"
           asChild
         >
-          <Link to="/grupos/criar">
+          <Link to={appUrls.community.groups}>
             <Plus className="h-3.5 w-3.5 mr-1.5" />
             Criar Novo Grupo
           </Link>

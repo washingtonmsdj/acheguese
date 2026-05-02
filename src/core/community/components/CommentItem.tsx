@@ -6,7 +6,14 @@ import {
   AvatarImage,
 } from "@/shared/components/ui/avatar";
 import { Button } from "@/shared/components/ui/button";
-import { Heart, MessageSquare, Edit, Trash2, Flag } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/shared/components/ui/dropdown-menu";
+import { Heart, MessageSquare, Edit, Trash2, Flag, MoreVertical } from "lucide-react";
 import { Comment, canEditComment } from "@/shared/utils/commentTree";
 import { formatRelativeTime } from "@/shared/utils/textUtils";
 import { useCommentActions } from "@/core/community/hooks/useCommentActions";
@@ -17,24 +24,24 @@ import { ReportModal } from "./ReportModal";
 import { ReportReason } from "@/core/community/types";
 import { cn } from "@/shared/utils/cn";
 /**
- * Item de comentÃ¡rio (recursivo)
+ * Item de comentário (recursivo)
  *
- * Requirement 6: Sistema de ComentÃ¡rios
- * Requirement 12: Sistema de ModeraÃ§Ã£o
- * Requirement 16: Estrutura recursiva (mÃ¡ximo 5 nÃ­veis)
+ * Requirement 6: Sistema de Comentários
+ * Requirement 12: Sistema de Moderação
+ * Requirement 16: Estrutura recursiva (máximo 5 níveis)
  *
  * Funcionalidades:
  * - Avatar e name do autor
- * - ConteÃºdo do comentÃ¡rio
+ * - Conteúdo do comentário
  * - Timestamp relactive
  * - Indicador de "editado"
- * - BotÃ£o de curtir
- * - BotÃ£o de responder
- * - BotÃ£o de edit (apenas autor, dentro de 24h)
- * - BotÃ£o de excluir (apenas autor)
- * - BotÃ£o de denunciar
+ * - Botão de curtir
+ * - Botão de responder
+ * - Botão de edit (apenas autor, dentro de 24h)
+ * - Botão de excluir (apenas autor)
+ * - Botão de denunciar
  * - Renderizar respostas recursivamente
- * - IndentaÃ§Ã£o visual por nÃ­vel
+ * - Indentação visual por nível
  */
 
 interface CommentItemProps {
@@ -104,20 +111,75 @@ export function CommentItem({ comment, maxDepth = 5 }: CommentItemProps) {
             {comment.is_edited && (
               <span className="text-xs text-muted-foreground">(editado)</span>
             )}
+            <div className="ml-auto">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 text-muted-foreground"
+                    aria-label="Abrir ações do comentário"
+                  >
+                    <MoreVertical className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="min-w-[150px]">
+                  {canReply && (
+                    <DropdownMenuItem
+                      onClick={() => setIsReplying(!isReplying)}
+                      className="text-xs"
+                    >
+                      <MessageSquare className="mr-2 h-3.5 w-3.5" />
+                      Responder
+                    </DropdownMenuItem>
+                  )}
+                  {canEdit && (
+                    <DropdownMenuItem
+                      onClick={() => setIsEditing(!isEditing)}
+                      className="text-xs"
+                    >
+                      <Edit className="mr-2 h-3.5 w-3.5" />
+                      Editar
+                    </DropdownMenuItem>
+                  )}
+                  {(canReply || canEdit) && (
+                    <DropdownMenuSeparator />
+                  )}
+                  {isAuthor && (
+                    <DropdownMenuItem
+                      onClick={handleDelete}
+                      className="text-xs text-destructive focus:text-destructive"
+                    >
+                      <Trash2 className="mr-2 h-3.5 w-3.5" />
+                      Excluir
+                    </DropdownMenuItem>
+                  )}
+                  {!isAuthor && (
+                    <DropdownMenuItem
+                      onClick={() => setShowReportModal(true)}
+                      className="text-xs text-destructive focus:text-destructive"
+                    >
+                      <Flag className="mr-2 h-3.5 w-3.5" />
+                      Denunciar
+                    </DropdownMenuItem>
+                  )}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
           </div>
 
           {/* Content */}
           {isEditing ? (
             <div className="mt-2">
-              {/* TODO: Implementar ediÃ§Ã£o inline */}
-              <p className="text-sm">EdiÃ§Ã£o em desenvolvimento...</p>
+              {/* TODO: Implementar edição inline */}
+              <p className="text-sm">Edição em desenvolvimento...</p>
             </div>
           ) : (
             <p className="text-sm whitespace-pre-wrap">{comment.content}</p>
           )}
 
           {/* Actions */}
-          <div className="flex items-center gap-1 flex-wrap pt-1">
+          <div className="flex items-center gap-1 pt-1">
             <Button
               variant="ghost"
               size="sm"
@@ -134,55 +196,6 @@ export function CommentItem({ comment, maxDepth = 5 }: CommentItemProps) {
                 {comment.likes_count > 0 && comment.likes_count}
               </span>
             </Button>
-
-            {canReply && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setIsReplying(!isReplying)}
-                className="h-9 min-h-[44px] min-w-[44px] gap-1 text-xs"
-              >
-                <MessageSquare className="h-3 w-3" />
-                <span className="hidden sm:inline">Responder</span>
-              </Button>
-            )}
-
-            {canEdit && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setIsEditing(!isEditing)}
-                className="h-9 min-h-[44px] min-w-[44px] gap-1 text-xs"
-              >
-                <Edit className="h-3 w-3" />
-                <span className="hidden sm:inline">Editar</span>
-              </Button>
-            )}
-
-            {isAuthor && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleDelete}
-                className="h-9 min-h-[44px] min-w-[44px] gap-1 text-xs text-destructive hover:text-destructive"
-              >
-                <Trash2 className="h-3 w-3" />
-                <span className="hidden sm:inline">Excluir</span>
-              </Button>
-            )}
-
-            {/* Denunciar (apenas se nÃ£o for o autor) */}
-            {!isAuthor && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setShowReportModal(true)}
-                className="h-9 min-h-[44px] min-w-[44px] gap-1 text-xs text-muted-foreground hover:text-destructive"
-              >
-                <Flag className="h-3 w-3" />
-                <span className="hidden sm:inline">Denunciar</span>
-              </Button>
-            )}
           </div>
 
           {/* Reply Form */}

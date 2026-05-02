@@ -12,7 +12,7 @@
  * Consome SSOT existente:
  *  - useEducationDetail (hook)
  *  - getNicheByKey (registry)
- *  - educationDetailPreviewMap (mocks de preview, isolados em /mocks)
+ *  - preview runtime centralizado em /mocks/educationPreviewRuntime
  *  - EducationLeadForm (componente compartilhado)
  *
  * @module education
@@ -85,9 +85,10 @@ import { useEducationLeads } from '../hooks/useEducationLeads';
 import { EducationLeadForm } from '../components/EducationLeadForm';
 import type { LeadFormData } from '../components/EducationLeadForm';
 import {
-  educationDetailPreviewMap,
-  type EducationDetailPreview,
-} from '../mocks/publicEducationPage.mock';
+  getEducationPreviewDetailBySlug,
+  isEducationPreviewEnabled,
+} from '../mocks/educationPreviewRuntime';
+import type { EducationDetailPreview } from '../mocks/publicEducationPage.mock';
 import type {
   EducationProgram,
   EducationEvent,
@@ -455,10 +456,10 @@ export function EducationDetailPage() {
     slug,
   });
 
-  const allowPreviewFallback = true;
+  const allowPreviewFallback = isEducationPreviewEnabled();
 
-  const previewDetail: EducationDetailPreview | undefined = allowPreviewFallback && slug
-    ? educationDetailPreviewMap[slug]
+  const previewDetail: EducationDetailPreview | undefined = allowPreviewFallback
+    ? getEducationPreviewDetailBySlug(slug)
     : undefined;
 
   const isPreviewSource = !realProfile && Boolean(previewDetail);

@@ -50,13 +50,13 @@ interface Props {
 
 export function FeedCategoryFilter({ filter, onFilterChange }: Props) {
   return (
-    <div className="flex gap-2 px-4 py-3 overflow-x-auto scrollbar-hide">
+    <div className="flex max-w-full flex-wrap gap-2 overflow-hidden px-4 py-3">
       {categories.map((cat) => (
         <button
           key={cat.id}
           onClick={() => onFilterChange(cat.id)}
           className={cn(
-            "px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap border transition-all",
+            "max-w-full px-3 py-1.5 rounded-full text-xs font-medium whitespace-normal border transition-all",
             filter === cat.id
               ? "bg-primary text-primary-foreground border-primary"
               : "bg-secondary text-secondary-foreground border-border",

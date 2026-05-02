@@ -22,10 +22,8 @@ import { Input } from "@/shared/components/ui/input";
 import { useAppUrls } from "@/core/routing/hooks/useAppUrls";
 import { useAuth } from "@/core/auth/hooks/useAuth";
 import { useVagas } from "../hooks/useVagas";
-import { VagaCardEnhanced } from "../components/VagaCardEnhanced";
 import { useVagasLocation } from "../hooks/useVagasLocation";
-import { VagasFilters } from "../components/VagasFilters";
-import { VagasLoading, VagasEmpty, VagasError } from "../components/VagasStates";
+import { VagasHeader, VagaCardEnhanced, VagasFilters, VagasLoading, VagasEmpty, VagasError } from "../components";
 import type { ResolvedTerritory } from "@/core/routing/hooks/useResolveTerritoryFromUrl";
 
 import heroImg from "@/assets/empresas-hero.jpg";
@@ -95,6 +93,12 @@ export default function VagasListingPage({ resolved, activeMemberIds }: VagasLis
 
   return (
     <div className="min-h-screen w-full bg-background text-foreground flex flex-col">
+      {/* ── HEADER COM BUSCA ─────────────────────────────────── */}
+      <VagasHeader
+        searchQuery={search}
+        onSearchChange={setSearch}
+      />
+
       {/* ── PROMO BANNER ─────────────────────────────────────── */}
       <motion.div
         initial={{ opacity: 0, y: -10 }}

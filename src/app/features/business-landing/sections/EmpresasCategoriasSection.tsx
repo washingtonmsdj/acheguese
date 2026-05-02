@@ -14,8 +14,8 @@ export function EmpresasCategoriasSection({
 }: EmpresasCategoriasSectionProps) {
   return (
     <section className="w-full bg-card/50 border-b border-border py-4">
-      <div className="max-w-7xl mx-auto px-4">
-        <div className="grid grid-cols-3 md:grid-cols-6 gap-3">
+      <div className="w-full overflow-x-auto scrollbar-hide">
+        <div className="mx-auto flex min-w-max justify-center gap-3 px-4 pb-1">
           {categories.map((cat, i) => (
             <CategoryCard
               key={cat.label}

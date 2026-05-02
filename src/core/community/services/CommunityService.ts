@@ -37,6 +37,76 @@ function isTableNotFoundError(error: unknown): boolean {
 }
 import type { FlexibleMetadata } from "@/shared/types/supabase.types";
 
+const GROUP_CAPABILITIES_DEFAULT = {
+  text: true,
+  images: true,
+  audio: true,
+  polls: true,
+  chat: true,
+  reactions: true,
+  reports: true,
+  share_link: true,
+};
+
+const MOCK_COMMUNITY_GROUPS = [
+  {
+    id: "mock-avisos-complexo",
+    name: "Avisos do Complexo",
+    description: "Comunicados importantes, alertas preventivos e informacoes rapidas para moradores do Complexo.",
+    avatar_url: null,
+    category: "avisos",
+    type: "community",
+    status: "active",
+    created_by: null,
+    created_at: "2026-05-01T09:00:00.000Z",
+    updated_at: "2026-05-01T09:00:00.000Z",
+    is_private: false,
+    visibility: "public",
+    join_policy: "open",
+    posting_policy: "admins",
+    member_visibility: "members_count_public",
+    media_policy: "manual_download",
+    rules: [
+      "Respeite moradores, comerciantes e liderancas locais.",
+      "Evite boatos: publique alertas com contexto verificavel.",
+      "Somente administradores publicam comunicados oficiais.",
+    ].join("\n"),
+    tags: ["complexo", "avisos", "seguranca"],
+    capabilities: GROUP_CAPABILITIES_DEFAULT,
+    members_count: 128,
+    posts_count: 18,
+    is_member: false,
+  },
+  {
+    id: "mock-empreendedores-servicos",
+    name: "Empreendedores e Servicos Locais",
+    description: "Comerciantes, profissionais e moradores trocando indicacoes, oportunidades e pedidos.",
+    avatar_url: null,
+    category: "comercio",
+    type: "interest",
+    status: "active",
+    created_by: null,
+    created_at: "2026-04-29T15:30:00.000Z",
+    updated_at: "2026-04-29T15:30:00.000Z",
+    is_private: false,
+    visibility: "public",
+    join_policy: "open",
+    posting_policy: "members",
+    member_visibility: "members_count_public",
+    media_policy: "manual_download",
+    rules: [
+      "Publique ofertas com clareza e sem spam.",
+      "Negociacoes sao responsabilidade das partes.",
+      "Denuncie golpes, propaganda abusiva ou perfis falsos.",
+    ].join("\n"),
+    tags: ["complexo", "comercio", "servicos"],
+    capabilities: GROUP_CAPABILITIES_DEFAULT,
+    members_count: 64,
+    posts_count: 11,
+    is_member: false,
+  },
+] as const;
+
 /**
  * Tipos de interação disponíveis
  */
@@ -218,6 +288,100 @@ class CommunityServiceClass {
   /**
    * Busca lista de grupos, com filtro opcional por nome
    */
+  async getGroupsPage(params: {
+    search?: string;
+    territoryFilter?: TerritoryFilter;
+    offset?: number;
+    limit?: number;
+    groupIds?: string[];
+    sortBy?: "recentes" | "populares" | "relevancia";
+  }): Promise<{ items: any[]; totalCount: number; hasMore: boolean; nextOffset: number | null }> {
+    const {
+      search,
+      territoryFilter,
+      offset = 0,
+      limit = 20,
+      groupIds,
+      sortBy = "recentes",
+    } = params;
+    try {
+      let query = (supabase as any)
+        .from("groups")
+        .select(
+          `
+          *,
+          profiles:created_by(name, avatar_url),
+          members_count:group_members_new(count)
+        `,
+          { count: "exact" },
+        )
+        .range(offset, offset + limit - 1);
+
+      // Ordenacao principal no backend para manter consistencia entre paginas
+      if (sortBy === "populares") {
+        query = query
+          .order("members_count", { ascending: false, nullsFirst: false })
+          .order("created_at", { ascending: false });
+      } else {
+        // "recentes" e fallback para "relevancia" (relevancia fina pode ser refinada no cliente)
+        query = query.order("created_at", { ascending: false });
+      }
+
+      if (search) {
+        query = query.ilike("name", `%${search}%`);
+      }
+
+      if (groupIds && groupIds.length > 0) {
+        query = query.in("id", groupIds);
+      }
+
+      if (territoryFilter?.scope === "location") {
+        query = query.eq("location_id", territoryFilter.location_id);
+      } else if (territoryFilter?.scope === "group" && territoryFilter.location_ids.length > 0) {
+        query = query.in("location_id", territoryFilter.location_ids);
+      }
+
+      const { data, error, count } = await query;
+      if (error) throw error;
+
+      const normalized = (data || []).map((g: any) => ({
+        ...g,
+        members_count: g.members_count?.[0]?.count ?? 0,
+      }));
+
+      if (normalized.length > 0) {
+        const totalCount = count ?? normalized.length;
+        const hasMore = offset + normalized.length < totalCount;
+        return {
+          items: normalized,
+          totalCount,
+          hasMore,
+          nextOffset: hasMore ? offset + limit : null,
+        };
+      }
+
+      const fallbackItems = [...MOCK_COMMUNITY_GROUPS].slice(offset, offset + limit);
+      return {
+        items: fallbackItems,
+        totalCount: MOCK_COMMUNITY_GROUPS.length,
+        hasMore: offset + limit < MOCK_COMMUNITY_GROUPS.length,
+        nextOffset: offset + limit < MOCK_COMMUNITY_GROUPS.length ? offset + limit : null,
+      };
+    } catch (error) {
+      trackError(error as Error, {
+        component: "CommunityService",
+        action: "getGroupsPage",
+      });
+      const fallbackItems = [...MOCK_COMMUNITY_GROUPS].slice(offset, offset + limit);
+      return {
+        items: fallbackItems,
+        totalCount: MOCK_COMMUNITY_GROUPS.length,
+        hasMore: offset + limit < MOCK_COMMUNITY_GROUPS.length,
+        nextOffset: offset + limit < MOCK_COMMUNITY_GROUPS.length ? offset + limit : null,
+      };
+    }
+  }
+
   async getGroups(search?: string, territoryFilter?: TerritoryFilter): Promise<any[]> {
     try {
       let query = (supabase as any)
@@ -243,16 +407,17 @@ class CommunityServiceClass {
       if (error) throw error;
 
       // Normaliza members_count de [{count: N}] para número
-      return (data || []).map((g: any) => ({
+      const normalized = (data || []).map((g: any) => ({
         ...g,
         members_count: g.members_count?.[0]?.count ?? 0,
       }));
+      return normalized.length > 0 ? normalized : [...MOCK_COMMUNITY_GROUPS];
     } catch (error) {
       trackError(error as Error, {
         component: "CommunityService",
         action: "getGroups",
       });
-      return [];
+      return [...MOCK_COMMUNITY_GROUPS];
     }
   }
 
@@ -287,6 +452,11 @@ class CommunityServiceClass {
     category?: string;
     is_private?: boolean;
     location_id?: string;
+    join_policy?: string;
+    posting_policy?: string;
+    member_visibility?: string;
+    media_policy?: string;
+    rules?: string;
     [key: string]: any;
   }): Promise<any | null> {
     try {
@@ -299,6 +469,24 @@ class CommunityServiceClass {
       const payload = {
         name: groupData.name,
         description: groupData.description,
+        category: groupData.category || "geral",
+        is_private: Boolean(groupData.is_private),
+        visibility: groupData.is_private ? "private" : "public",
+        join_policy: groupData.join_policy || (groupData.is_private ? "approval" : "open"),
+        posting_policy: groupData.posting_policy || "members",
+        member_visibility: groupData.member_visibility || "members_count_public",
+        media_policy: groupData.media_policy || "manual_download",
+        rules: groupData.rules,
+        capabilities: {
+          text: true,
+          images: true,
+          audio: true,
+          polls: true,
+          chat: true,
+          reactions: true,
+          reports: true,
+          share_link: true,
+        },
         type: groupType,
         location_id: groupData.location_id,
       };

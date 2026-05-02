@@ -138,8 +138,6 @@ export interface EmpresasHeroSectionProps extends BaseSectionProps {
   readonly territoryName: string;
   readonly territoryNameShort: string;
   readonly territoryPreposition: string;
-  readonly searchQuery: string;
-  readonly onSearchChange: (value: string) => void;
   readonly currentBannerIndex: number;
   readonly bannerImages: readonly string[];
   readonly onPrevBanner: () => void;

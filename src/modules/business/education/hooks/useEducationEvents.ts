@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { educationQueries, educationMutations } from '../services';
+import { EducationService } from '../services';
 import type { EducationEvent, SchoolEventType } from '../types';
 
 export interface EventFilters {
@@ -15,7 +15,7 @@ export function useEducationEvents(profileId?: string, filters: EventFilters = {
     queryKey: ['education', 'events', profileId, isPublic, upcoming],
     queryFn: async () => {
       if (!profileId) return [];
-      return educationQueries.listEducationEvents(profileId, { isPublic, upcoming });
+      return EducationService.listEvents(profileId, { isPublic, upcoming });
     },
     enabled: Boolean(profileId),
   });
@@ -31,18 +31,17 @@ export function useEducationEvents(profileId?: string, filters: EventFilters = {
       schoolEventType?: SchoolEventType;
     }) => {
       if (!profileId) throw new Error('Profile ID required');
-      const result = await educationMutations.createEducationEvent({
-        education_profile_id: profileId,
+      const created = await EducationService.createEvent(profileId, {
         title: payload.title,
-        description: payload.description ?? null,
-        starts_at: payload.startsAt,
-        ends_at: payload.endsAt ?? null,
-        location: payload.location ?? null,
-        is_public: payload.isPublic ?? true,
-        school_event_type: payload.schoolEventType ?? null,
+        description: payload.description,
+        startsAt: payload.startsAt,
+        endsAt: payload.endsAt,
+        location: payload.location,
+        isPublic: payload.isPublic,
+        schoolEventType: payload.schoolEventType,
       });
-      if (result.error) throw result.error;
-      return result.data!;
+      if (!created) throw new Error('Falha ao criar evento');
+      return created;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['education', 'events', profileId] });
@@ -57,9 +56,9 @@ export function useEducationEvents(profileId?: string, filters: EventFilters = {
       eventId: string;
       payload: Partial<EducationEvent>;
     }) => {
-      const result = await educationMutations.updateEducationEvent(eventId, payload);
-      if (result.error) throw result.error;
-      return result.data!;
+      const updated = await EducationService.updateEvent(eventId, payload);
+      if (!updated) throw new Error('Falha ao atualizar evento');
+      return updated;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['education', 'events', profileId] });
@@ -68,8 +67,8 @@ export function useEducationEvents(profileId?: string, filters: EventFilters = {
 
   const deleteMutation = useMutation({
     mutationFn: async (eventId: string) => {
-      const result = await educationMutations.deleteEducationEvent(eventId);
-      if (result.error) throw result.error;
+      const removed = await EducationService.deleteEvent(eventId);
+      if (!removed) throw new Error('Falha ao remover evento');
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['education', 'events', profileId] });

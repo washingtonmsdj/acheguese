@@ -1,6 +1,8 @@
 import React from "react";
+import { useNavigate } from "react-router-dom";
 import { Users, Loader2 } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
+import { useAppUrls } from "@/core/routing/hooks";
 import { GrupoCardEnhanced } from "./GrupoCardEnhanced";
 
 interface GroupLike {
@@ -14,6 +16,11 @@ interface GroupLike {
   description?: string | null;
   is_private: boolean;
   is_member: boolean;
+  join_policy?: string | null;
+  posting_policy?: string | null;
+  member_visibility?: string | null;
+  media_policy?: string | null;
+  capabilities?: Record<string, boolean> | null;
 }
 
 interface GruposListProps {
@@ -31,6 +38,9 @@ export function GruposList({
   onJoin,
   onTabChange,
 }: GruposListProps) {
+  const navigate = useNavigate();
+  const appUrls = useAppUrls();
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-16">
@@ -41,7 +51,7 @@ export function GruposList({
 
   if (groups.length === 0) {
     return (
-      <div className="py-16 text-center">
+      <div className="rounded-2xl border border-dashed border-white/10 bg-white/[0.03] px-4 py-16 text-center">
         <Users className="mx-auto mb-4 h-16 w-16 text-gray-600" />
         <h3 className="mb-2 text-lg font-semibold text-white">
           {tab === "meus"
@@ -68,14 +78,14 @@ export function GruposList({
   }
 
   return (
-    <div className="space-y-3">
+    <div className="grid min-w-0 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
       {groups.map((group, index) => (
         <GrupoCardEnhanced
           key={group.id}
           group={group}
-          variant="list"
+          variant="grid"
           index={index}
-          onClick={() => {}}
+          onClick={() => navigate(appUrls.community.groupDetail(group.id))}
           onJoin={onJoin}
         />
       ))}

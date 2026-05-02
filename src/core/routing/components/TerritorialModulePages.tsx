@@ -18,9 +18,11 @@ import { ModulePageLoader } from '@/shared/components/loading/PageLoader';
 const ComunidadePage       = lazy(() => import('@/modules/community-feed/pages/ComunidadePage'));
 const AlertasPage          = lazy(() => import('@/modules/community-alerts/pages/AlertasPage'));
 const ProblemasPage        = lazy(() => import('@/modules/community-issues/pages/ProblemasPage'));
+const EmpresasPage         = lazy(() => import('@/app/pages/EmpresasLandingPage'));
 const ServicosPage         = lazy(() => import('@/modules/professionals/services/pages/ServicosLandingPage'));
 const ClassificadosPage    = lazy(() => import('@/modules/classifieds/pages/ClassificadosPage'));
 const EventosPage          = lazy(() => import('@/modules/community-events/pages/EventosPage'));
+const GastronomyPage        = lazy(() => import('@/modules/business/gastronomy/pages/GastronomyLandingPage'));
 const MobilidadePage       = lazy(() => import('@/modules/mobility/pages/MobilidadeLandingPage'));
 const VagasPage            = lazy(() => import('@/modules/classifieds/jobs/pages/VagasPublicPage'));
 const CategoryBusinessPage = lazy(() => import('@/core/business/pages/CategoryBusinessPage'));
@@ -61,6 +63,15 @@ export function TerritorialCommunityIssuesPage() {
   );
 }
 
+export function TerritorialBusinessPage() {
+  const { resolved, activeMemberIds } = useTerritorialContext();
+  return (
+    <Suspense fallback={<ModulePageLoader />}>
+      <EmpresasPage resolved={resolved} activeMemberIds={activeMemberIds} />
+    </Suspense>
+  );
+}
+
 export function TerritorialServicesPage() {
   const { resolved, activeMemberIds } = useTerritorialContext();
   return (
@@ -84,6 +95,14 @@ export function TerritorialEventosPage() {
   return (
     <Suspense fallback={<ModulePageLoader />}>
       <EventosPage resolved={resolved} />
+    </Suspense>
+  );
+}
+
+export function TerritorialGastronomyPage() {
+  return (
+    <Suspense fallback={<ModulePageLoader />}>
+      <GastronomyPage />
     </Suspense>
   );
 }

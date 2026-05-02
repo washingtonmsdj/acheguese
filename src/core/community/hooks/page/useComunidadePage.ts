@@ -92,7 +92,7 @@ export function useComunidadePage() {
   const [issueModalOpen, setIssueModalOpen] = useState(false);
 
   const { setTagFilter, immediateFilters, setLocationScope } = useCommunityFiltersAAA();
-  const { likePost, savePost, sharePost } = usePostActions();
+  const { likePost, savePost, sharePost, reportPost, deletePost } = usePostActions();
   const { activeProfile: sessionProfile } = useSessionContext();
   const { effectiveProfile } = useMultiProfileContext();
   const profile = toCommunityActorProfile(effectiveProfile ?? sessionProfile);
@@ -152,20 +152,22 @@ export function useComunidadePage() {
   );
 
   const handleReportPost = useCallback((postId: string) => {
-    if (import.meta.env.DEV) logger.info("Report post:", postId);
-    toast.info("Funcionalidade de denÃºncia em desenvolvimento");
-  }, []);
+    reportPost({
+      postId,
+      reason: "inappropriate_content",
+      description: "Denuncia enviada pelo fluxo da comunidade",
+    });
+  }, [reportPost]);
 
   const handleDeletePost = useCallback((postId: string) => {
     if (confirm("Tem certeza que deseja excluir este post? Esta aÃ§Ã£o nÃ£o pode ser desfeita.")) {
-      if (import.meta.env.DEV) logger.info("Delete post:", postId);
-      toast.success("Post excluÃ­do com sucesso");
+      deletePost(postId);
     }
-  }, []);
+  }, [deletePost]);
 
   const handleEditPost = useCallback((postId: string) => {
     if (import.meta.env.DEV) logger.info("Edit post:", postId);
-    toast.info("Funcionalidade de ediÃ§Ã£o em desenvolvimento");
+    toast.info("Edicao de post sera liberada na proxima iteracao");
   }, []);
 
   const handleReportClick = useCallback((reportId: string) => {

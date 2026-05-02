@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { educationQueries, educationMutations } from '../services';
-import type { EducationProgram } from '../types';
+import { EducationService, educationQueries } from '../services';
+import type { EducationLevel, EducationProgram } from '../types';
 
 export function useEducationPrograms(profileId?: string) {
   const queryClient = useQueryClient();
@@ -24,7 +24,7 @@ export function useEducationPrograms(profileId?: string) {
       availableSlots?: number;
       priceFrom?: number;
       // Campos específicos para escola regular
-      educationLevel?: string;
+      educationLevel?: EducationLevel;
       grade?: string;
       className?: string;
       maxCapacity?: number;
@@ -32,26 +32,9 @@ export function useEducationPrograms(profileId?: string) {
       schedule?: string;
     }) => {
       if (!profileId) throw new Error('Profile ID required');
-      const result = await educationMutations.createEducationProgram({
-        education_profile_id: profileId,
-        name: payload.name,
-        description: payload.description ?? null,
-        age_group: payload.ageGroup ?? null,
-        shift: payload.shift ?? null,
-        modality: payload.modality ?? null,
-        available_slots: payload.availableSlots ?? null,
-        price_from: payload.priceFrom ?? null,
-        is_active: true,
-        display_order: 0,
-        education_level: payload.educationLevel ?? null,
-        grade: payload.grade ?? null,
-        class_name: payload.className ?? null,
-        max_capacity: payload.maxCapacity ?? null,
-        current_enrollment: payload.currentEnrollment ?? null,
-        schedule: payload.schedule ?? null,
-      });
-      if (result.error) throw result.error;
-      return result.data!;
+      const created = await EducationService.createProgram(profileId, payload);
+      if (!created) throw new Error('Falha ao criar programa');
+      return created;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['education', 'programs', profileId] });
@@ -66,9 +49,9 @@ export function useEducationPrograms(profileId?: string) {
       programId: string;
       payload: Partial<EducationProgram>;
     }) => {
-      const result = await educationMutations.updateEducationProgram(programId, payload);
-      if (result.error) throw result.error;
-      return result.data!;
+      const updated = await EducationService.updateProgram(programId, payload);
+      if (!updated) throw new Error('Falha ao atualizar programa');
+      return updated;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['education', 'programs', profileId] });
@@ -77,8 +60,8 @@ export function useEducationPrograms(profileId?: string) {
 
   const deleteMutation = useMutation({
     mutationFn: async (programId: string) => {
-      const result = await educationMutations.deleteEducationProgram(programId);
-      if (result.error) throw result.error;
+      const removed = await EducationService.deleteProgram(programId);
+      if (!removed) throw new Error('Falha ao remover programa');
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['education', 'programs', profileId] });

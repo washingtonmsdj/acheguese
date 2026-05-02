@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { educationMutations, educationQueries } from '../services';
+import { EducationService } from '../services';
 import type { EducationLeadStatus } from '../types';
 
 export interface PipelineMove {
@@ -19,37 +19,16 @@ export function useLeadPipeline(profileId?: string) {
     queryKey: ['education', 'pipeline', profileId],
     queryFn: async () => {
       if (!hasValidProfileId || !profileId) return { total: 0, byStatus: {} as Record<string, number> };
-
-      const counts = await educationQueries.countLeadsByStatus(profileId);
-      const byStatus: Record<string, number> = {
-        new: counts.new,
-        contacted: counts.contacted,
-        visit_scheduled: counts.visit_scheduled,
-        proposal_sent: counts.proposal_sent,
-        enrolled: counts.enrolled,
-        lost: counts.lost,
-      };
-
-      return {
-        total: counts.total,
-        byStatus,
-      };
+      return EducationService.getLeadsPipelineSummary(profileId);
     },
     enabled: hasValidProfileId,
   });
 
   const moveMutation = useMutation({
     mutationFn: async (move: PipelineMove) => {
-      const result = await educationMutations.moveLeadToStatus(
-        move.leadId,
-        move.toStatus,
-        {
-          lostReason: move.lostReason,
-          ownerUserId: move.ownerUserId,
-        },
-      );
-      if (result.error) throw result.error;
-      return result.data!;
+      const updated = await EducationService.moveLeadInPipeline(move);
+      if (!updated) throw new Error('Falha ao mover lead no pipeline');
+      return updated;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['education', 'leads', profileId] });

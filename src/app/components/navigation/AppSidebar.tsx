@@ -25,6 +25,7 @@ import { useSiteSettings } from '@/core/admin/hooks/useSiteSettings';
 import { MessagingService } from '@/core/messaging';
 import { GuideSidebarItem } from '@/modules/guide/components/GuideSidebarItem';
 import { prefetchRouteByHref } from '@/app/routes/prefetch';
+import { LAUNCH_TERRITORIES, LAUNCH_URLS } from '@/config/territory';
 import { NAV_SECTIONS, type NavItem } from './navigation.config';
 
 function getInitials(value?: string | null): string {
@@ -72,11 +73,35 @@ export function AppSidebar() {
   }, [user]);
 
   const homeHref = '/';
+  const launchCommunityHref =
+    LAUNCH_TERRITORIES.find(
+      (territory) =>
+        territory.kind === 'group' &&
+        territory.slug === 'complexo-do-nordeste-de-amaralina',
+    )?.path ?? '/ba/salvador/complexo-do-nordeste-de-amaralina';
 
   const getNavHref = (item: NavItem): string => {
     switch (item.id) {
       case 'home':
         return homeHref;
+      case 'neighborhood':
+        return `/comunidade${launchCommunityHref}`;
+      case 'business':
+        return LAUNCH_URLS.business;
+      case 'gastronomy':
+        return LAUNCH_URLS.gastronomy;
+      case 'services':
+        return LAUNCH_URLS.services;
+      case 'education':
+        return LAUNCH_URLS.education;
+      case 'classifieds':
+        return LAUNCH_URLS.classifieds;
+      case 'jobs':
+        return LAUNCH_URLS.jobs;
+      case 'events':
+        return LAUNCH_URLS.events;
+      case 'map':
+        return `/mapa/${LAUNCH_URLS.community.replace('/comunidade/', '')}`;
       default:
         return item.href;
     }
