@@ -208,6 +208,57 @@ export type Database = {
         }
         Relationships: []
       }
+      tryon_generations: {
+        Row: {
+          category: string
+          created_at: string
+          error_message: string | null
+          generated_urls: Json
+          id: string
+          metadata: Json
+          product_image_url: string
+          provider: string
+          selected_url: string | null
+          status: string
+          style: string
+          target_gender: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          error_message?: string | null
+          generated_urls?: Json
+          id?: string
+          metadata?: Json
+          product_image_url: string
+          provider?: string
+          selected_url?: string | null
+          status?: string
+          style?: string
+          target_gender?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          error_message?: string | null
+          generated_urls?: Json
+          id?: string
+          metadata?: Json
+          product_image_url?: string
+          provider?: string
+          selected_url?: string | null
+          status?: string
+          style?: string
+          target_gender?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
