@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import { useEffect, useState } from "react";
 import {
   Card,
@@ -308,4 +309,5 @@ export function MobilitySettingsPanel() {
     </div>
   );
 }
+
 

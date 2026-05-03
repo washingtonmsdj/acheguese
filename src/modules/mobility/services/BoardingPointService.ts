@@ -1,5 +1,5 @@
-import { supabase } from "@/integrations/supabase";
 import { logger } from "@/shared/utils/logger";
+import { MobilityService } from "@/modules/mobility/services/MobilityService.impl";
 
 export interface BoardingPointSuggestionInput {
   name: string;
@@ -27,9 +27,9 @@ interface PickupLocationJoin {
 function classifyLocationType(locationName: string, locationType?: string): BoardingPointSummary["type"] {
   const normalized = `${locationType ?? ""} ${locationName}`.toLowerCase();
   if (normalized.includes("mercado") || normalized.includes("supermercado")) return "mercado";
-  if (normalized.includes("pra�a") || normalized.includes("praca") || normalized.includes("parque")) return "praca";
+  if (normalized.includes("praÃ§a") || normalized.includes("praca") || normalized.includes("parque")) return "praca";
   if (normalized.includes("padaria")) return "padaria";
-  if (normalized.includes("escola") || normalized.includes("col�gio") || normalized.includes("colegio")) return "escola";
+  if (normalized.includes("escola") || normalized.includes("colÃ©gio") || normalized.includes("colegio")) return "escola";
   if (normalized.includes("igreja") || normalized.includes("templo")) return "igreja";
   if (normalized.includes("cafe") || normalized.includes("cafeteria")) return "cafe";
   return "outro";
@@ -38,28 +38,7 @@ function classifyLocationType(locationName: string, locationType?: string): Boar
 export class BoardingPointService {
   static async listMostUsedPoints(limit = 20): Promise<BoardingPointSummary[]> {
     try {
-      const { data, error } = await supabase
-        .from("ride_requests")
-        .select(
-          `
-            pickup_location_id,
-            pickup_location:locations!ride_requests_pickup_location_id_fkey (
-              id,
-              name,
-              full_name,
-              type,
-              geographic_path
-            )
-          `,
-        )
-        .not("pickup_location_id", "is", null)
-        .order("created_at", { ascending: false })
-        .limit(300);
-
-      if (error) {
-        logger.error("[BoardingPointService] Error fetching ride pickup points:", error);
-        return [];
-      }
+      const data = await MobilityService.listRecentRidePickupLocations(300);
 
       const aggregate = new Map<string, { location: PickupLocationJoin; ridesCount: number }>();
       for (const rawRow of data ?? []) {
@@ -86,7 +65,7 @@ export class BoardingPointService {
           return {
             id,
             name: locationName,
-            description: `Ponto recorrente de embarque na regi�o`,
+            description: `Ponto recorrente de embarque na regiÃ£o`,
             type: classifyLocationType(locationName, value.location.type),
             address,
             popular: value.ridesCount >= 5,
@@ -102,9 +81,11 @@ export class BoardingPointService {
   }
 
   static async submitSuggestion(_input: BoardingPointSuggestionInput): Promise<{ accepted: boolean }> {
-    // Sem tabela can�nica de sugest�es no banco no momento.
+    // Sem tabela canÃ´nica de sugestÃµes no banco no momento.
     return { accepted: false };
   }
 }
+
+
 
 

@@ -10,6 +10,7 @@
 
 import { logger } from '@/shared/utils/logger';
 import { supabase } from '@/integrations/supabase/supabase';
+import { SessionService } from '@/core/session/services/SessionService';
 export interface Notification {
   id: string;
   user_id: string;
@@ -71,7 +72,7 @@ export class NotificationService {
    * Obtém notificações do usuário atual
    */
   static async getUserNotifications(filters?: NotificationFilters): Promise<Notification[]> {
-    const { data: { user } } = await supabase.auth.getUser();
+    const user = await SessionService.getCurrentUser();
     
     if (!user) {
       throw new Error('User not authenticated');
@@ -127,7 +128,7 @@ export class NotificationService {
    * Marca todas as notificações como lidas
    */
   static async markAllAsRead(): Promise<number> {
-    const { data: { user } } = await supabase.auth.getUser();
+    const user = await SessionService.getCurrentUser();
     
     if (!user) {
       throw new Error('User not authenticated');
@@ -164,7 +165,7 @@ export class NotificationService {
    * Obtém contagem de notificações não lidas
    */
   static async getUnreadCount(): Promise<number> {
-    const { data: { user } } = await supabase.auth.getUser();
+    const user = await SessionService.getCurrentUser();
     
     if (!user) {
       return 0;

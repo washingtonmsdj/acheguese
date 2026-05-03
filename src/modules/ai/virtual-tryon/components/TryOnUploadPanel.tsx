@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { UploadCloud, X } from 'lucide-react';
 import { Button } from '@/shared/components/ui/button';
 import { Card } from '@/shared/components/ui/card';
@@ -48,9 +48,16 @@ export function TryOnUploadPanel({ onSubmit, disabled }: Props) {
     if (!f) return;
     if (!ACCEPTED.includes(f.type)) { setError('Formato inválido. Use PNG, JPG ou WEBP.'); return; }
     if (f.size > MAX_BYTES) { setError('Arquivo muito grande (máx 8MB).'); return; }
+    if (preview) URL.revokeObjectURL(preview);
     setFile(f);
     setPreview(URL.createObjectURL(f));
-  }, []);
+  }, [preview]);
+
+  useEffect(() => {
+    return () => {
+      if (preview) URL.revokeObjectURL(preview);
+    };
+  }, [preview]);
 
   const onDrop = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
@@ -71,7 +78,12 @@ export function TryOnUploadPanel({ onSubmit, disabled }: Props) {
             <button
               type="button"
               className="absolute -top-2 -right-2 bg-destructive text-destructive-foreground rounded-full p-1"
-              onClick={(e) => { e.stopPropagation(); setFile(null); setPreview(null); }}
+              onClick={(e) => {
+                e.stopPropagation();
+                if (preview) URL.revokeObjectURL(preview);
+                setFile(null);
+                setPreview(null);
+              }}
               aria-label="Remover"
             >
               <X className="h-4 w-4" />

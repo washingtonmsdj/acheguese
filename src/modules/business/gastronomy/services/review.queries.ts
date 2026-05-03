@@ -127,20 +127,14 @@ export class ReviewQueryService {
    */
   static async createReview(input: CreateReviewInput): Promise<{ id: string }> {
     try {
-      const { data, error } = await supabase
-        .from('reviews')
-        .insert({
-          reviewed_profile_id: input.reviewed_profile_id,
-          reviewer_profile_id: input.reviewer_profile_id,
-          rating: input.rating,
-          comment: input.comment || null,
-          photos: input.photos || [],
-          order_id: input.order_id || null,
-          review_type: 'business',
-          status: EntityStatus.ACTIVE,
-        })
-        .select('id')
-        .single();
+      const { data, error } = await supabase.rpc('create_business_review', {
+        p_reviewed_profile_id: input.reviewed_profile_id,
+        p_reviewer_profile_id: input.reviewer_profile_id,
+        p_rating: input.rating,
+        p_comment: input.comment || null,
+        p_photos: input.photos || [],
+        p_order_id: input.order_id || null,
+      });
 
       if (error) {
         logger.error('Failed to create review', error, input);
@@ -151,8 +145,8 @@ export class ReviewQueryService {
         throw new Error('No data returned from review creation');
       }
 
-      logger.info('Review created successfully', { reviewId: data.id });
-      return { id: data.id };
+      logger.info('Review created successfully', { reviewId: data.id ?? data.review_id });
+      return { id: data.id ?? data.review_id };
     } catch (error) {
       logger.error('Error in createReview', error);
       throw error;
@@ -167,15 +161,12 @@ export class ReviewQueryService {
     input: UpdateReviewInput,
   ): Promise<void> {
     try {
-      const { error } = await supabase
-        .from('reviews')
-        .update({
-          rating: input.rating,
-          comment: input.comment,
-          photos: input.photos,
-          updated_at: new Date().toISOString(),
-        })
-        .eq('id', reviewId);
+      const { error } = await supabase.rpc('update_business_review', {
+        p_review_id: reviewId,
+        p_rating: input.rating ?? null,
+        p_comment: input.comment ?? null,
+        p_photos: input.photos ?? null,
+      });
 
       if (error) {
         logger.error('Failed to update review', error, { reviewId, input });
@@ -194,10 +185,9 @@ export class ReviewQueryService {
    */
   static async deleteReview(reviewId: string): Promise<void> {
     try {
-      const { error } = await supabase
-        .from('reviews')
-        .delete()
-        .eq('id', reviewId);
+      const { error } = await supabase.rpc('delete_business_review', {
+        p_review_id: reviewId,
+      });
 
       if (error) {
         logger.error('Failed to delete review', error, { reviewId });
@@ -219,13 +209,10 @@ export class ReviewQueryService {
     input: BusinessResponseInput,
   ): Promise<void> {
     try {
-      const { error } = await supabase
-        .from('reviews')
-        .update({
-          business_response: input.business_response,
-          business_response_at: new Date().toISOString(),
-        })
-        .eq('id', reviewId);
+      const { error } = await supabase.rpc('add_business_review_response', {
+        p_review_id: reviewId,
+        p_business_response: input.business_response,
+      });
 
       if (error) {
         logger.error('Failed to add business response', error, { reviewId });
@@ -339,12 +326,9 @@ export class ReviewQueryService {
     distribution: Record<number, number>;
   }> {
     try {
-      const { data, error } = await supabase
-        .from('reviews')
-        .select('rating')
-        .eq('reviewed_profile_id', businessProfileId)
-        .eq('status', EntityStatus.ACTIVE)
-        .eq('review_type', 'business');
+      const { data, error } = await supabase.rpc('get_business_review_ratings', {
+        p_business_profile_id: businessProfileId,
+      });
 
       if (error) {
         logger.error('Failed to get review stats', error, { businessProfileId });

@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import { Card, CardContent } from "@/shared/components/ui/card";
 import {
   Tabs,

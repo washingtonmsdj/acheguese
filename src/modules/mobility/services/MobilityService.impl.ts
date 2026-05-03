@@ -19,6 +19,150 @@ type DriverDataRecord = Tables<"driver_data">;
 // ─── Static (leitura / admin) ────────────────────────────────────────────────
 
 export class MobilityService {
+  static async getLatestRideBySource(sourceType: string, sourceId: string): Promise<unknown | null> {
+    const { data, error } = await (supabase as any)
+      .from("ride_requests")
+      .select("*")
+      .eq("source_type", sourceType)
+      .eq("source_id", sourceId)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (error) throw error;
+    return data || null;
+  }
+
+  static async getRideSourceIdById(rideId: string, sourceType?: string): Promise<string | null> {
+    let query = (supabase as any)
+      .from("ride_requests")
+      .select("source_id")
+      .eq("id", rideId);
+
+    if (sourceType) {
+      query = query.eq("source_type", sourceType);
+    }
+
+    const { data, error } = await query.maybeSingle();
+    if (error) throw error;
+    return data?.source_id || null;
+  }
+
+  static async listMotoboyDeliveries(filters: {
+    status?: string;
+    sourceType?: string;
+    limit?: number;
+  }): Promise<unknown[]> {
+    let query = (supabase as any)
+      .from("ride_requests")
+      .select(
+        "id, status, source_type, source_id, recipient_name, package_size, suggested_price, created_at, updated_at, driver_profile_id, pickup_location_id, delivery_notes, failed_delivery_reason",
+      )
+      .eq("ride_mode", "motoboy")
+      .order("created_at", { ascending: false })
+      .limit(filters.limit ?? 200);
+
+    if (filters.status && filters.status !== "all") {
+      query = query.eq("status", filters.status);
+    }
+    if (filters.sourceType && filters.sourceType !== "all") {
+      query = query.eq("source_type", filters.sourceType);
+    }
+
+    const { data, error } = await query;
+    if (error) throw error;
+    return data || [];
+  }
+
+  static async listMotoboyStatsRows(): Promise<Array<{ status: string; created_at: string; driver_profile_id: string | null }>> {
+    const { data, error } = await (supabase as any)
+      .from("ride_requests")
+      .select("id, status, created_at, driver_profile_id")
+      .eq("ride_mode", "motoboy");
+
+    if (error) throw error;
+    return (data as Array<{ status: string; created_at: string; driver_profile_id: string | null }>) || [];
+  }
+
+  static async countDeliveredBySource(sourceType: string, sourceId: string): Promise<number> {
+    const { count, error } = await (supabase as any)
+      .from("ride_requests")
+      .select("id", { count: "exact", head: true })
+      .eq("ride_mode", "motoboy")
+      .eq("source_type", sourceType)
+      .eq("source_id", sourceId)
+      .eq("status", "delivered");
+
+    if (error) throw error;
+    return count || 0;
+  }
+
+  static async countDeliveredMotoboyRides(): Promise<number> {
+    const { count, error } = await (supabase as any)
+      .from("ride_requests")
+      .select("id", { count: "exact", head: true })
+      .eq("ride_mode", "motoboy")
+      .eq("status", "delivered");
+
+    if (error) throw error;
+    return count || 0;
+  }
+
+  static async ensureDriverDataRow(
+    profileId: string,
+    defaults?: { canDoDelivery?: boolean; canDoRides?: boolean },
+  ): Promise<void> {
+    const { data: existing, error: readError } = await (supabase as any)
+      .from("driver_data")
+      .select("profile_id")
+      .eq("profile_id", profileId)
+      .maybeSingle();
+    if (readError) throw readError;
+    if (existing) return;
+
+    const payload: Record<string, unknown> = { profile_id: profileId };
+    if (defaults?.canDoDelivery !== undefined) payload.can_do_delivery = defaults.canDoDelivery;
+    if (defaults?.canDoRides !== undefined) payload.can_do_rides = defaults.canDoRides;
+
+    const { error } = await (supabase as any).from("driver_data").insert(payload);
+    if (error && error.code !== "23505") throw error;
+  }
+
+  static async getDriverRideSessions(driverProfileId: string, limit = 300): Promise<Array<{ started_at: string | null; completed_at: string | null }>> {
+    const { data, error } = await (supabase as any)
+      .from("ride_requests")
+      .select("started_at, completed_at")
+      .eq("driver_profile_id", driverProfileId)
+      .not("started_at", "is", null)
+      .not("completed_at", "is", null)
+      .order("completed_at", { ascending: false })
+      .limit(limit);
+
+    if (error) throw error;
+    return data || [];
+  }
+
+  static async listRecentRidePickupLocations(limit = 300): Promise<unknown[]> {
+    const { data, error } = await (supabase as any)
+      .from("ride_requests")
+      .select(`
+        pickup_location_id,
+        pickup_location:locations!ride_requests_pickup_location_id_fkey (
+          id,
+          name,
+          full_name,
+          type,
+          geographic_path
+        )
+      `)
+      .not("pickup_location_id", "is", null)
+      .order("created_at", { ascending: false })
+      .limit(limit);
+
+    if (error) throw error;
+    return data || [];
+  }
+
   static async getActiveRides(): Promise<unknown[]> {
     try {
       const activeStatuses = [
@@ -810,6 +954,23 @@ class MobilityServiceInstance {
       logger.error("mobilityService.getRideById", error as Error);
       return null;
     }
+  }
+
+  async confirmRideCompletionByPassenger(rideId: string, passengerProfileId: string): Promise<void> {
+    const now = new Date().toISOString();
+    const { data, error } = await (supabase as any)
+      .from("ride_requests")
+      .update({
+        passenger_confirmed_at: now,
+        updated_at: now,
+      })
+      .eq("id", rideId)
+      .eq("passenger_profile_id", passengerProfileId)
+      .select("id")
+      .maybeSingle();
+
+    if (error) throw error;
+    if (!data) throw new Error("Ride not found or passenger not authorized");
   }
 
   async getRideWithAddresses(rideId: string): Promise<unknown | null> {

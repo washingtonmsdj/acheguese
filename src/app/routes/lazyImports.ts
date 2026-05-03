@@ -33,6 +33,7 @@ export const BuscaPage = lazy(() => import("@/app/pages/BuscaPage"));
 export const NearbyPage = lazy(() => import("@/app/pages/NearbyPage"));
 export const NotFound = lazy(() => import("@/app/pages/NotFound"));
 export const StatusPage = lazy(() => import("@/app/pages/StatusPage"));
+export const VirtualTryOnPage = lazy(() => import("@/app/pages/VirtualTryOnPage"));
 
 // ============================================================
 // 🔐 AUTENTICAÇÃO E ONBOARDING

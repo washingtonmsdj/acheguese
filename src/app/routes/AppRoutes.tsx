@@ -17,6 +17,7 @@ import { StateLandingPage } from "@/core/routing/components/StateLandingPage";
 import { CountryLandingPage } from "@/core/routing/components/CountryLandingPage";
 import { BrasilShowcasePage } from "@/core/routing/components/BrasilShowcasePage";
 import {
+  TerritorialCommunityHomePage,
   TerritorialCommunityPage,
   TerritorialCommunityAlertsPage,
   TerritorialCommunityIssuesPage,
@@ -189,6 +190,7 @@ export function AppRoutes() {
         <Route path="/novo-post" element={<P.NovoPostPage />} />
         <Route path="/exemplo-post" element={<P.ExamplePostPage />} />
         <Route path="/busca" element={<P.BuscaPage />} />
+        <Route path="/ai/virtual-try-on" element={<P.VirtualTryOnPage />} />
         <Route path="/regras" element={<P.RegrasPage />} />
         <Route path="/termos" element={<P.TermosPage />} />
         <Route path="/privacidade" element={<P.PrivacidadePage />} />
@@ -434,8 +436,14 @@ export function AppRoutes() {
         <Route path="/comunidade/:state/:city/problemas" element={<TerritorialLayout />}>
           <Route index element={<TerritorialCommunityIssuesPage />} />
         </Route>
-        <Route path="/comunidade/:state/:city/:groupSlugOrDistrict" element={<CommunityTerritorialShell />}>
+        <Route path="/comunidade/:state/:city/:groupSlugOrDistrict/feed" element={<CommunityTerritorialShell />}>
           <Route index element={<TerritorialCommunityPage />} />
+        </Route>
+        <Route path="/comunidade/:state/:city/:groupSlugOrDistrict/grupos" element={<CommunityTerritorialShell />}>
+          <Route index element={<TerritorialCommunityPage />} />
+        </Route>
+        <Route path="/comunidade/:state/:city/:groupSlugOrDistrict" element={<CommunityTerritorialShell />}>
+          <Route index element={<TerritorialCommunityHomePage />} />
         </Route>
         <Route path="/comunidade/:state/:city" element={<TerritorialLayout />}>
           <Route index element={<TerritorialCommunityPage />} />

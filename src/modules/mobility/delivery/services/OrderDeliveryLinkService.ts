@@ -12,9 +12,9 @@
  * - Vínculo: ride_requests.source_type = 'gastronomy' + source_id = order.id
  */
 
-import { supabase } from "@/integrations/supabase";
 import { logger } from "@/shared/utils/logger";
 import type { RideRequest } from "@/modules/mobility/types/types";
+import { MobilityService } from "@/modules/mobility/services/MobilityService.impl";
 
 export interface OrderDeliveryLink {
   order_id: string;
@@ -28,24 +28,8 @@ export class OrderDeliveryLinkService {
    */
   static async getRideRequestByOrderId(orderId: string): Promise<RideRequest | null> {
     try {
-      const { data, error } = await supabase
-        .from('ride_requests')
-        .select('*')
-        .eq('source_type', 'gastronomy')
-        .eq('source_id', orderId)
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .single();
-
-      if (error) {
-        if (error.code === 'PGRST116') {
-          // Nenhum ride_request encontrado (normal para pedidos sem delivery)
-          return null;
-        }
-        throw error;
-      }
-
-      return data as RideRequest;
+      const ride = await MobilityService.getLatestRideBySource('gastronomy', orderId);
+      return (ride as RideRequest | null) ?? null;
     } catch (error) {
       logger.error('[OrderDeliveryLinkService] Erro ao buscar ride_request', error as Error, {
         order_id: orderId,
@@ -59,21 +43,7 @@ export class OrderDeliveryLinkService {
    */
   static async getOrderByRideRequestId(rideRequestId: string): Promise<string | null> {
     try {
-      const { data, error } = await supabase
-        .from('ride_requests')
-        .select('source_id')
-        .eq('id', rideRequestId)
-        .eq('source_type', 'gastronomy')
-        .single();
-
-      if (error) {
-        if (error.code === 'PGRST116') {
-          return null;
-        }
-        throw error;
-      }
-
-      return data?.source_id || null;
+      return await MobilityService.getRideSourceIdById(rideRequestId, 'gastronomy');
     } catch (error) {
       logger.error('[OrderDeliveryLinkService] Erro ao buscar order', error as Error, {
         ride_request_id: rideRequestId,

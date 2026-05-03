@@ -4,6 +4,8 @@ import { RolloutService } from "@/core/rollout/services/RolloutService";
 import { createRolloutRepository } from "@/core/rollout/repositories/createRolloutRepository";
 import { createLocationRepository } from "@/core/location/repositories/createLocationRepository";
 import { ModuleKey, RolloutStatus } from "@/core/rollout/types";
+import { profileService } from "@/core/profiles/services/ProfileService";
+import { mobilityService } from "@/modules/mobility/services/MobilityService.impl";
 
 const supabaseAny = supabase as any;
 const MOTOBOY_ENABLED_CONFIG_KEY = "motoboy_enabled";
@@ -50,15 +52,15 @@ async function hydrateAdminNames(events: DriverModerationEvent[]): Promise<Drive
     return events.map((event) => ({ ...event, admin_name: "Admin" }));
   }
 
-  const { data, error } = await supabaseAny.from("profiles").select("id, name").in("id", adminProfileIds);
-  if (error) {
+  const adminMap = new Map<string, string>();
+  try {
+    const profiles = await profileService.getProfilesByIds(adminProfileIds);
+    for (const profile of profiles) {
+      adminMap.set(profile.id, profile.name || "Admin");
+    }
+  } catch (error) {
     logger.warn("AdminMobilityRuntimeService.hydrateAdminNames", error);
     return events.map((event) => ({ ...event, admin_name: "Admin" }));
-  }
-
-  const adminMap = new Map<string, string>();
-  for (const profile of (data || []) as Array<{ id: string; name?: string | null }>) {
-    adminMap.set(profile.id, profile.name || "Admin");
   }
 
   return events.map((event) => ({
@@ -108,16 +110,7 @@ export class AdminMobilityRuntimeService {
   }
 
   async updateDriverOnlineStatus(driverProfileId: string, isOnline: boolean): Promise<void> {
-    const { error } = await supabaseAny
-      .from("driver_data")
-      .update({
-        is_online: isOnline,
-        ...(isOnline ? {} : { is_available: false }),
-        updated_at: new Date().toISOString(),
-      })
-      .eq("profile_id", driverProfileId);
-
-    if (error) throw error;
+    await mobilityService.updateDriverOnlineStatus(driverProfileId, isOnline);
   }
 
   async createDriverModerationEvent(input: {

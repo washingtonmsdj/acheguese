@@ -1,7 +1,8 @@
-import { readFile } from 'fs/promises';
+﻿import { readFile } from 'fs/promises';
 import { resolve } from 'path';
 import { createHash, timingSafeEqual } from 'crypto';
-import { createClient } from '@supabase/supabase-js';
+import { createServiceSupabaseClient } from '../../src/core/supabase/services/adminClient';
+import { profileService } from '../../src/core/profiles/services/ProfileService';
 
 type ReqBody = {
   mode?: 'dry-run' | 'apply';
@@ -256,20 +257,11 @@ async function slugExists(supabase: ReturnType<typeof createClient>, slug: strin
 }
 
 async function profileHandleExists(
-  supabase: ReturnType<typeof createClient>,
+  _supabase: ReturnType<typeof createClient>,
   handle: string,
 ): Promise<boolean> {
-  const found = await supabase
-    .from('profiles')
-    .select('id')
-    .eq('handle', handle)
-    .limit(1)
-    .maybeSingle();
-
-  if (found.error) {
-    throw new Error(`Erro ao consultar handle ${handle}: ${found.error.message}`);
-  }
-  return Boolean(found.data);
+  const available = await profileService.isUsernameAvailable(handle);
+  return !available;
 }
 
 async function createUniqueSlug(
@@ -426,34 +418,25 @@ export default async function handler(req: RequestLike, res: ResponseLike) {
       }
 
       const handle = await createUniqueHandle(supabase, slug);
-      const profile = await supabase
-        .from('profiles')
-        .insert({
-          user_id: ownerUserId,
-          profile_type: 'business',
-          name,
-          display_name: name,
-          handle,
-          username: handle,
-          city: 'Salvador',
-          state: 'BA',
-          phone: item.phone,
-          location: item.address,
-          is_active: true,
-          is_public: true,
-          verified: false,
-        })
-        .select('id')
-        .single();
-
-      if (profile.error || !profile.data?.id) {
-        throw new Error(`Erro ao criar profile: ${profile.error?.message}`);
-      }
+      const profile = await profileService.createProfile({
+        user_id: ownerUserId,
+        profile_type: 'business',
+        name,
+        display_name: name,
+        username: handle,
+        city: 'Salvador',
+        state: 'BA',
+        phone: item.phone || undefined,
+        location: item.address || undefined,
+        is_active: true,
+        is_public: true,
+        verified: false,
+      });
 
       const business = await supabase
         .from('business_data')
         .insert({
-          profile_id: profile.data.id,
+          profile_id: profile.id,
           business_name: name,
           business_city: 'Salvador',
           business_state: 'BA',
@@ -488,7 +471,7 @@ export default async function handler(req: RequestLike, res: ResponseLike) {
       }
 
       created.push({
-        profile_id: profile.data.id as string,
+        profile_id: profile.id as string,
         business_id: business.data.id as string,
         slug,
         name: item.name,
@@ -516,3 +499,5 @@ export default async function handler(req: RequestLike, res: ResponseLike) {
     });
   }
 }
+
+

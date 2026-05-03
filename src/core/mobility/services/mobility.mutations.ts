@@ -1,60 +1,25 @@
-/**
- * ✏️ MOBILITY MUTATIONS — Operações de escrita (Core SSOT)
+﻿/**
+ * Mobility Mutations (Core Facade)
  *
- * Responsabilidade única: criar, atualizar e deletar dados
- * - Sem queries de leitura (exceto necessárias para validação)
- * - Orquestração de múltiplas tabelas quando necessário
- * - Movido de modules/mobility/services para core/mobility/services
- *
- * @version 3.0.0 - Core SSOT
+ * SSOT: este módulo delega para o serviço canônico de mobilidade.
  */
 
-import { supabase } from "@/integrations/supabase";
 import { logger } from "@/shared/utils/logger";
-import { profileService } from "@/core/profiles/services/ProfileService";
+import { MobilityService } from "@/modules/mobility/services/MobilityService.impl";
 import { RIDE_STATUS } from "./mobility.constants";
 
-const supabaseAny = supabase as any;
-
-/**
- * Criar nova corrida
- */
 export async function createRide(data: Record<string, unknown>): Promise<unknown> {
-  const { data: ride, error } = await supabaseAny
-    .from("ride_requests")
-    .insert(data)
-    .select()
-    .single();
-
-  if (error) throw error;
-  return ride;
+  return MobilityService.createRide(data);
 }
 
-/**
- * Criar solicitação de corrida (alias para createRide)
- */
 export async function createRideRequest(data: Record<string, unknown>): Promise<unknown> {
   return createRide({ ...data, status: RIDE_STATUS.PENDING });
 }
 
-/**
- * Atualizar corrida
- */
 export async function updateRide(rideId: string, updates: Record<string, unknown>): Promise<unknown> {
-  const { data, error } = await supabaseAny
-    .from("ride_requests")
-    .update(updates)
-    .eq("id", rideId)
-    .select()
-    .single();
-
-  if (error) throw error;
-  return data;
+  return MobilityService.updateRide(rideId, updates);
 }
 
-/**
- * Atualizar corrida com guards (validações de estado)
- */
 export async function updateRideWithGuards(
   rideId: string,
   updates: Record<string, unknown>,
@@ -63,47 +28,17 @@ export async function updateRideWithGuards(
     driverProfileIdEq?: string;
   } = {},
 ): Promise<boolean> {
-  let query = supabaseAny
-    .from("ride_requests")
-    .update(updates)
-    .eq("id", rideId);
-
-  if (guards.statusEq) {
-    query = query.eq("status", guards.statusEq);
-  }
-
-  if (guards.driverProfileIdEq) {
-    query = query.eq("driver_profile_id", guards.driverProfileIdEq);
-  }
-
-  const { data, error } = await query.select("id").maybeSingle();
-  if (error) throw error;
-  return !!data;
+  return MobilityService.updateRideWithGuards(rideId, updates, guards);
 }
 
-/**
- * Atualizar corrida apenas se status permitido
- */
 export async function updateRideIfStatusIn(
   rideId: string,
   updates: Record<string, unknown>,
   allowedStatuses: string[],
 ): Promise<boolean> {
-  const { data, error } = await supabaseAny
-    .from("ride_requests")
-    .update(updates)
-    .eq("id", rideId)
-    .in("status", allowedStatuses)
-    .select("id")
-    .maybeSingle();
-
-  if (error) throw error;
-  return !!data;
+  return MobilityService.updateRideIfStatusIn(rideId, updates, allowedStatuses);
 }
 
-/**
- * Aceitar corrida
- */
 export async function acceptRide(rideId: string, driverProfileId: string): Promise<void> {
   await updateRide(rideId, {
     driver_profile_id: driverProfileId,
@@ -111,248 +46,86 @@ export async function acceptRide(rideId: string, driverProfileId: string): Promi
   });
 }
 
-/**
- * Iniciar corrida
- */
 export async function startRide(rideId: string): Promise<void> {
   await updateRide(rideId, { status: RIDE_STATUS.IN_PROGRESS });
 }
 
-/**
- * Completar corrida
- */
 export async function completeRide(
   rideId: string,
   actualFare?: number,
   distanceKm?: number,
   durationMinutes?: number,
 ): Promise<void> {
-  const updates: Record<string, unknown> = {
-    status: RIDE_STATUS.COMPLETED,
-  };
+  const updates: Record<string, unknown> = { status: RIDE_STATUS.COMPLETED };
   if (actualFare !== undefined) updates.actual_fare = actualFare;
   if (distanceKm !== undefined) updates.distance_km = distanceKm;
   if (durationMinutes !== undefined) updates.duration_minutes = durationMinutes;
-
   await updateRide(rideId, updates);
 }
 
-/**
- * Confirmar corrida (passageiro)
- */
 export async function confirmRide(rideId: string): Promise<void> {
   await updateRide(rideId, { status: RIDE_STATUS.CONFIRMED });
 }
 
-/**
- * Cancelar corrida
- */
 export async function cancelRide(rideId: string): Promise<void> {
   await updateRide(rideId, { status: RIDE_STATUS.CANCELLED });
 }
 
-/**
- * Criar alerta de emergência
- */
 export async function createEmergencyAlert(
   rideId: string,
   userId: string,
   location: { lat: number; lng: number },
 ): Promise<void> {
-  await supabaseAny
-    .from("emergency_alerts")
-    .insert({ ride_id: rideId, user_id: userId, location })
-    .throwOnError();
+  return MobilityService.createEmergencyAlert(rideId, userId, location);
 }
 
-/**
- * Incrementar contador de visualizações
- */
 export async function incrementRideViewCount(rideId: string): Promise<void> {
-  try {
-    await supabaseAny.rpc("increment_ride_view_count", { ride_id: rideId });
-  } catch (error) {
-    logger.warn("MobilityMutations.incrementRideViewCount", error);
-  }
+  const dynamic = await import("@/modules/mobility/services/MobilityService");
+  await dynamic.mobilityService.incrementRideViewCount(rideId);
 }
 
-/**
- * Decrementar assentos disponíveis
- */
 export async function decrementRideSeats(rideId: string): Promise<void> {
-  const { error } = await supabaseAny.rpc("decrement_ride_seats", { ride_id: rideId });
-  if (error) {
-    logger.error("MobilityMutations.decrementRideSeats", error);
-    throw error;
-  }
+  const dynamic = await import("@/modules/mobility/services/MobilityService");
+  await dynamic.mobilityService.decrementRideSeats(rideId);
 }
 
-/**
- * Remover bairro aceito pelo motorista
- */
 export async function deleteDriverNeighborhood(id: string): Promise<{ success: boolean; error?: unknown }> {
-  try {
-    const { error } = await supabaseAny
-      .from("driver_accepted_neighborhoods")
-      .delete()
-      .eq("id", id);
-
-    if (error) {
-      logger.error("MobilityMutations.deleteDriverNeighborhood", { id, error });
-      return { success: false, error };
-    }
-
-    return { success: true };
-  } catch (error) {
-    logger.error("MobilityMutations.deleteDriverNeighborhood", { id, error });
-    return { success: false, error };
-  }
+  return MobilityService.deleteDriverNeighborhood(id);
 }
 
-/**
- * Remover área de serviço do motorista
- */
 export async function deleteDriverServiceArea(
   table: string,
   id: string,
 ): Promise<{ success: boolean; error?: unknown }> {
-  try {
-    const { error } = await supabaseAny.from(table).delete().eq("id", id);
-
-    if (error) {
-      logger.error("MobilityMutations.deleteDriverServiceArea", { table, id, error });
-      return { success: false, error };
-    }
-
-    return { success: true };
-  } catch (error) {
-    logger.error("MobilityMutations.deleteDriverServiceArea", { table, id, error });
-    return { success: false, error };
-  }
+  return MobilityService.deleteDriverServiceArea(table, id);
 }
 
-/**
- * Criar perfil de motorista via admin
- */
 export async function createAdminDriverProfile(userId: string): Promise<unknown | null> {
-  try {
-    const driverProfile = await profileService.ensureDriverProfileForUser(userId);
-    if (!driverProfile?.id) return null;
-
-    const { data: existing } = await supabaseAny
-      .from("driver_data")
-      .select("*")
-      .eq("profile_id", driverProfile.id)
-      .maybeSingle();
-
-    if (existing) return existing;
-
-    const { data: driverData, error: driverError } = await supabaseAny
-      .from("driver_data")
-      .insert({
-        profile_id: driverProfile.id,
-        is_online: false,
-        is_verified: true,
-        subscription_active: true,
-        rating: 5.0,
-        total_rides: 0,
-        total_rides_completed: 0,
-        total_rides_cancelled: 0,
-        acceptance_rate: 100.0,
-        cancellation_rate: 0.0,
-      })
-      .select("*")
-      .single();
-
-    if (driverError) throw driverError;
-
-    logger.info("MobilityMutations.createAdminDriverProfile - created", { userId, profileId: driverProfile.id });
-    return driverData;
-  } catch (error) {
-    logger.error("MobilityMutations.createAdminDriverProfile", error as Error);
-    return null;
-  }
+  const dynamic = await import("@/modules/mobility/services/MobilityService");
+  return dynamic.mobilityService.createAdminDriverProfile(userId);
 }
 
-/**
- * Atualizar status online do motorista
- */
 export async function updateDriverOnlineStatus(driverProfileId: string, isOnline: boolean): Promise<void> {
-  await updateDriverData(driverProfileId, {
-    is_online: isOnline,
-    is_available: isOnline ? undefined : false,
-    updated_at: new Date().toISOString(),
-  });
+  const dynamic = await import("@/modules/mobility/services/MobilityService");
+  await dynamic.mobilityService.updateDriverOnlineStatus(driverProfileId, isOnline);
 }
 
-/**
- * Atualizar dados do motorista
- */
 export async function updateDriverData(
   identifier: string,
   updates: Record<string, unknown>,
 ): Promise<unknown | null> {
-  try {
-    // Resolver profile_id se necessário
-    let driverProfileId = identifier;
-    const profile = await profileService.getProfileById(identifier);
-    if (profile?.profile_type === "driver") {
-      driverProfileId = profile.id;
-    } else {
-      const driverProfile = await profileService.getProfileByType(identifier, "driver");
-      if (!driverProfile?.id) {
-        throw new Error("Driver profile not found");
-      }
-      driverProfileId = driverProfile.id;
-    }
-
-    const { data, error } = await supabaseAny
-      .from("driver_data")
-      .update(updates)
-      .eq("profile_id", driverProfileId)
-      .select("*")
-      .single();
-
-    if (error) throw error;
-    return data;
-  } catch (error) {
-    logger.error("MobilityMutations.updateDriverData", error as Error, { identifier, updates });
-    throw error;
-  }
+  const dynamic = await import("@/modules/mobility/services/MobilityService");
+  return dynamic.mobilityService.updateDriverData(identifier, updates);
 }
 
-/**
- * Verificar expiração de suspensão
- */
 export async function checkSuspensionExpiry(profileId: string): Promise<void> {
-  try {
-    const profile = await profileService.getProfileById(profileId);
-
-    if (!profile?.is_suspended || !profile?.suspended_until) return;
-
-    const suspendedUntil = new Date(profile.suspended_until);
-    if (suspendedUntil < new Date()) {
-      await profileService.updateProfile(profileId, {
-        is_suspended: false,
-        suspended: false,
-        suspended_until: null,
-      });
-
-      logger.info("MobilityMutations.checkSuspensionExpiry - suspension lifted", { profileId });
-    }
-  } catch (error) {
-    logger.error("MobilityMutations.checkSuspensionExpiry", error as Error);
-  }
+  const dynamic = await import("@/modules/mobility/services/MobilityService");
+  await dynamic.mobilityService.checkSuspensionExpiry(profileId);
 }
 
-/**
- * Atualizar localização do motorista
- * @deprecated Implementação futura - usar serviço de GPS tracking
- */
 export async function updateDriverLocation(
   _driverProfileId: string,
   _location: { latitude: number; longitude: number },
 ): Promise<void> {
-  logger.warn("MobilityMutations.updateDriverLocation - não implementado, usar GPS tracking");
-  // Implementação futura: enviar para serviço de localização em tempo real
+  logger.warn("MobilityMutations.updateDriverLocation - nao implementado, usar GPS tracking");
 }

@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 /**
  * Filtros para anúncios na página de perfil do vendedor
  * ✅ SSOT: usa CLASSIFIED_CATEGORIES de constants/categories

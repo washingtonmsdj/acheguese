@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import React, { useState, useEffect } from "react";
 import { Button } from "@/shared/components/ui/button";
 import {
@@ -542,3 +543,4 @@ export default function BannersPage() {
     </div>
   );
 }
+

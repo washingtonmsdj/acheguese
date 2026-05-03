@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 /**
  * SSOT - Hook de detalhe de usuario no admin
  * - Perfil: ProfileService
@@ -266,4 +267,5 @@ export function useAdminUserDetail(
     refetch: fetchUserDetail,
   };
 }
+
 

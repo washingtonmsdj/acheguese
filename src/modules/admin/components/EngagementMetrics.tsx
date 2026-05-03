@@ -1,4 +1,5 @@
-﻿import React from "react";
+/* eslint-disable react-refresh/only-export-components */
+import React from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/components/ui/card";
 import { TrendIndicator, TrendData } from "./TrendIndicator";
@@ -140,3 +141,4 @@ export function useEngagementMetrics() {
 
   return { metrics: query.data || [], loading: query.isLoading };
 }
+

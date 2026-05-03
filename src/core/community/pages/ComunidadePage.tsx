@@ -8,7 +8,7 @@
  */
 
 import React, { lazy, Suspense, useCallback } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import {
   AlertTriangle,
   LayoutList,
@@ -94,9 +94,15 @@ interface ComunidadePageProps {
 
 export default function ComunidadePage({ resolved }: ComunidadePageProps) {
   const navigate = useNavigate();
+  const location = useLocation();
   const queryClient = useQueryClient();
   const [searchParams, setSearchParams] = useSearchParams();
-  const activeTab = (searchParams.get("tab") as CommunityTab) || "feed";
+  const routeTab = location.pathname.endsWith("/grupos")
+    ? "grupos"
+    : location.pathname.endsWith("/feed")
+      ? "feed"
+      : null;
+  const activeTab = routeTab ?? ((searchParams.get("tab") as CommunityTab) || "feed");
   const [feedView, setFeedView] = React.useState<FeedView>("posts");
   const [showBanner, setShowBanner] = React.useState(true);
   const [chooseDistrictOpen, setChooseDistrictOpen] = React.useState(false);
@@ -123,6 +129,16 @@ export default function ComunidadePage({ resolved }: ComunidadePageProps) {
     staleTime: 5 * 60 * 1000,
   });
   const setTab = (tab: CommunityTab) => {
+    const match = location.pathname.match(/^\/comunidade\/([^/]+)\/([^/]+)\/([^/]+)/);
+    if (match) {
+      const [, state, city, territory] = match;
+      const canonicalPath = tab === "feed"
+        ? `/comunidade/${state}/${city}/${territory}/feed`
+        : `/comunidade/${state}/${city}/${territory}/grupos`;
+      navigate(canonicalPath);
+      return;
+    }
+
     setSearchParams(tab === "feed" ? {} : { tab });
   };
 

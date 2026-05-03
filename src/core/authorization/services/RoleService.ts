@@ -12,6 +12,8 @@
  */
 import { logger } from '@/shared/utils/logger';
 import { supabase } from '@/integrations/supabase/supabase';
+import { SessionService } from '@/core/session/services/SessionService';
+import { adminRolesService } from '@/core/admin/services/AdminRolesService';
 import type {
   AppRole,
   UserRole,
@@ -104,19 +106,13 @@ export class RoleService {
    * Inclui metadados, datas, etc.
    */
   static async getUserRoleDetails(userId: string): Promise<UserRole[]> {
-    const { data, error } = await supabase
-      .from('user_roles')
-      .select('*')
-      .eq('user_id', userId)
-      .is('revoked_at', null)
-      .order('granted_at', { ascending: false });
-
-    if (error) {
+    try {
+      const roles = await adminRolesService.getUserRoles(userId);
+      return roles as unknown as UserRole[];
+    } catch (error) {
       logger.error('Erro ao buscar detalhes de roles:', error);
       return [];
     }
-
-    return data || [];
   }
 
   /**
@@ -129,33 +125,21 @@ export class RoleService {
     error?: string;
     role?: UserRole;
   }> {
-    const { data: currentUser } = await supabase.auth.getUser();
-    
-    if (!currentUser.user) {
+    const currentUser = await SessionService.getCurrentUser();
+    if (!currentUser) {
       return { success: false, error: 'Usuário não autenticado' };
     }
 
-    const { data, error } = await supabase
-      .from('user_roles')
-      .insert({
-        user_id: request.user_id,
-        role: request.role,
-        granted_by: currentUser.user.id,
-        reason: request.reason || null,
-        metadata: request.metadata || {}
-      })
-      .select()
-      .single();
-
-    if (error) {
-      logger.error('Erro ao conceder role:', error);
-      return { 
-        success: false, 
-        error: error.message || 'Erro ao conceder role' 
-      };
+    const success = await adminRolesService.grantRole({
+      userId: request.user_id,
+      role: request.role,
+      grantedBy: currentUser.id,
+      reason: request.reason,
+    });
+    if (!success) {
+      return { success: false, error: 'Erro ao conceder role' };
     }
-
-    return { success: true, role: data };
+    return { success: true };
   }
 
   /**
@@ -167,47 +151,19 @@ export class RoleService {
     success: boolean;
     error?: string;
   }> {
-    const { data: currentUser } = await supabase.auth.getUser();
-    
-    if (!currentUser.user) {
+    const currentUser = await SessionService.getCurrentUser();
+    if (!currentUser) {
       return { success: false, error: 'Usuário não autenticado' };
     }
-
-    // Buscar o role ativo
-    const { data: existingRole, error: fetchError } = await supabase
-      .from('user_roles')
-      .select('id')
-      .eq('user_id', request.user_id)
-      .eq('role', request.role)
-      .is('revoked_at', null)
-      .single();
-
-    if (fetchError || !existingRole) {
-      return { 
-        success: false, 
-        error: 'Role não encontrado ou já revogado' 
-      };
-    }
-
-    // Revogar o role
-    const { error } = await supabase
-      .from('user_roles')
-      .update({
-        revoked_at: new Date().toISOString(),
-        revoked_by: currentUser.user.id,
-        reason: request.reason || null
-      })
-      .eq('id', existingRole.id);
-
-    if (error) {
-      logger.error('Erro ao revogar role:', error);
-      return { 
-        success: false, 
-        error: error.message || 'Erro ao revogar role' 
-      };
-    }
-
-    return { success: true };
+    const success = await adminRolesService.revokeRole({
+      userId: request.user_id,
+      role: request.role,
+      revokedBy: currentUser.id,
+      reason: request.reason,
+    });
+    return success
+      ? { success: true }
+      : { success: false, error: 'Role não encontrado ou já revogado' };
   }
 
   /**
@@ -216,18 +172,13 @@ export class RoleService {
    * Visível para o próprio usuário e admins (via RLS).
    */
   static async getRoleHistory(userId: string): Promise<RoleHistory[]> {
-    const { data, error } = await supabase
-      .from('role_history')
-      .select('*')
-      .eq('user_id', userId)
-      .order('performed_at', { ascending: false });
-
-    if (error) {
+    try {
+      const data = await adminRolesService.getUserRoleHistory(userId);
+      return data as unknown as RoleHistory[];
+    } catch (error) {
       logger.error('Erro ao buscar histórico de roles:', error);
       return [];
     }
-
-    return data || [];
   }
 
   /**
@@ -259,22 +210,16 @@ export class RoleService {
     userId: string, 
     role: AppRole
   ): Promise<RoleCheckResult> {
-    const { data, error } = await supabase
-      .from('user_roles')
-      .select('granted_at')
-      .eq('user_id', userId)
-      .eq('role', role)
-      .is('revoked_at', null)
-      .single();
-
-    if (error || !data) {
+    const roles = await this.getUserRoleDetails(userId);
+    const roleInfo = roles.find((r) => r.role === role);
+    if (!roleInfo) {
       return { hasRole: false };
     }
 
     return {
       hasRole: true,
       role,
-      grantedAt: data.granted_at
+      grantedAt: roleInfo.granted_at
     };
   }
 
@@ -284,19 +229,13 @@ export class RoleService {
    * REQUER: admin role (verificado via RLS).
    */
   static async getUsersByRole(role: AppRole): Promise<UserRole[]> {
-    const { data, error } = await supabase
-      .from('user_roles')
-      .select('*')
-      .eq('role', role)
-      .is('revoked_at', null)
-      .order('granted_at', { ascending: false });
-
-    if (error) {
+    try {
+      const data = await adminRolesService.getUsersByRole(role);
+      return data as unknown as UserRole[];
+    } catch (error) {
       logger.error('Erro ao buscar usuários por role:', error);
       return [];
     }
-
-    return data || [];
   }
 
   /**
@@ -305,18 +244,8 @@ export class RoleService {
    * REQUER: admin role (verificado via RLS).
    */
   static async countUsersByRole(role: AppRole): Promise<number> {
-    const { count, error } = await supabase
-      .from('user_roles')
-      .select('*', { count: 'exact', head: true })
-      .eq('role', role)
-      .is('revoked_at', null);
-
-    if (error) {
-      logger.error('Erro ao contar usuários por role:', error);
-      return 0;
-    }
-
-    return count || 0;
+    const users = await this.getUsersByRole(role);
+    return users.length;
   }
 }
 

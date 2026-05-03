@@ -9,6 +9,7 @@ import {
   selectLooseRows,
 } from "@/integrations/supabase/services/supabaseHelpers";
 import { logger } from "@/shared/utils/logger";
+import { SessionService } from "@/core/session/services/SessionService";
 import type {
   CommunityAlertAudit,
   CommunityAlertReport,
@@ -20,9 +21,7 @@ type CommunityAlertsRow = Database["public"]["Tables"]["community_alerts"]["Row"
 class AlertModerationServiceClass {
   async reportAlert(payload: CreateAlertReportPayload): Promise<boolean> {
     try {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
+      const user = await SessionService.getCurrentUser();
       if (!user) throw new Error("not_authenticated");
 
       const { error } = await supabase.from("community_alert_reports").insert({
@@ -86,9 +85,7 @@ class AlertModerationServiceClass {
 
   async clearUnderReview(alertId: string): Promise<boolean> {
     try {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
+      const user = await SessionService.getCurrentUser();
       if (!user) throw new Error("not_authenticated");
 
       const { error } = await supabase

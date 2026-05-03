@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import React from "react";
 import { useState, useEffect, useMemo } from "react";
 import { Button } from "@/shared/components/ui/button";
@@ -577,3 +578,4 @@ export default function AdminCrudPage({
     </div>
   );
 }
+

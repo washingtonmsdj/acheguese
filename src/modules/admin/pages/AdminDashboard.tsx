@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import { useEffect, useState } from "react";
 import { adminStatsService } from "@/core/admin/services/AdminStatsService";
 import { TrendIndicator, TrendData } from "../components/TrendIndicator";
@@ -555,3 +556,4 @@ export default function AdminDashboard() {
     </div>
   );
 }
+

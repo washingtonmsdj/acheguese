@@ -119,11 +119,9 @@ const MOCK_GROUP_MESSAGE_REPORTS: Array<{
 
 export class SocialInteractionsService {
   private static async resolveGroupContext(groupId: string, userId?: string) {
-    const { data: groupRow } = await (supabase as any)
-      .from("groups")
-      .select("id, posting_policy, join_policy")
-      .eq("id", groupId)
-      .maybeSingle();
+    const { data: groupRow } = await (supabase as any).rpc("get_community_group_by_id", {
+      p_group_id: groupId,
+    });
 
     if (!groupRow) {
       return {
@@ -658,11 +656,9 @@ export class SocialInteractionsService {
       const activeProfile =
         await profileService.getRequiredActiveProfile(userId);
 
-      const { data: groupPolicy } = await (supabase as any)
-        .from("groups")
-        .select("posting_policy")
-        .eq("id", data.groupId)
-        .maybeSingle();
+      const { data: groupPolicy } = await (supabase as any).rpc("get_community_group_by_id", {
+        p_group_id: data.groupId,
+      });
       const { data: membership } = await (supabase as any)
         .from("group_members_new")
         .select("role")

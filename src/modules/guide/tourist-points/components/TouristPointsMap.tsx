@@ -91,8 +91,9 @@ export function TouristPointsMap({ points, selectedId, onSelect, className = '' 
     });
 
     mapRef.current = map;
+    const markers = markersRef.current;
     return () => {
-      markersRef.current.clear();
+      markers.clear();
       map.remove();
       mapRef.current = null;
     };
@@ -115,3 +116,5 @@ export function TouristPointsMap({ points, selectedId, onSelect, className = '' 
 
   return <div ref={containerRef} className={`rounded-2xl border border-border z-0 ${className}`} style={{ minHeight: '100%' }} />;
 }
+
+

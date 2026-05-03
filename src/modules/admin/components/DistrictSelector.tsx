@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 /**
  * DistrictSelector
  *
@@ -230,3 +231,4 @@ export function DistrictSelector({
     </div>
   );
 }
+

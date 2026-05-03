@@ -22,6 +22,7 @@
 
 import { logger } from '@/shared/utils/logger';
 import { supabase } from '@/integrations/supabase/supabase';
+import { getAllClassifieds } from '@/modules/classifieds/services/classifieds.queries';
 
 // ─── Tipos ────────────────────────────────────────────────────────────────────
 
@@ -126,33 +127,13 @@ export class ClassifiedUrlService {
    */
   static async resolveByPublicId(publicId: string): Promise<ClassifiedResolution | null> {
     try {
-      const { data, error } = await supabase
-        .from('classifieds')
-        .select(`
-          id,
-          public_id,
-          slug,
-          location_id,
-          category_id,
-          subcategory_id,
-          locations(geographic_path),
-          classified_categories(slug),
-          classified_subcategories(slug)
-        `)
-        .eq('public_id', publicId)
-        .eq('status', 'active')
-        .single();
-
-      if (error || !data) {
+      const classifieds = await getAllClassifieds({ scope: 'none' });
+      const data = classifieds.find((item) => item.public_id === publicId);
+      if (!data) {
         logger.warn(`[ClassifiedUrlService] Classificado não encontrado: ${publicId}`);
         return null;
       }
-
-      const location = (data as any).locations;
-      const category = (data as any).classified_categories;
-      const subcategory = (data as any).classified_subcategories;
-
-      if (!location?.geographic_path || !category?.slug || !subcategory?.slug) {
+      if (!data.geographic_path || !data.category_slug || !data.subcategory_slug) {
         logger.error(`[ClassifiedUrlService] Dados incompletos para ${publicId}`);
         return null;
       }
@@ -161,9 +142,9 @@ export class ClassifiedUrlService {
         id: data.id,
         public_id: data.public_id,
         slug: data.slug,
-        geographic_path: location.geographic_path,
-        category_slug: category.slug,
-        subcategory_slug: subcategory.slug,
+        geographic_path: data.geographic_path,
+        category_slug: data.category_slug,
+        subcategory_slug: data.subcategory_slug,
       });
 
       return {
@@ -231,38 +212,19 @@ export class ClassifiedUrlService {
       }
 
       // Busca classificado atual
-      const { data: classified, error: classifiedError } = await supabase
-        .from('classifieds')
-        .select(`
-          id,
-          public_id,
-          slug,
-          location_id,
-          category_id,
-          subcategory_id,
-          locations(geographic_path),
-          classified_categories(slug),
-          classified_subcategories(slug)
-        `)
-        .eq('id', data.classified_id)
-        .eq('status', 'active')
-        .single();
-
-      if (classifiedError || !classified) {
+      const classifieds = await getAllClassifieds({ scope: 'none' });
+      const classified = classifieds.find((item) => item.id === data.classified_id);
+      if (!classified || !classified.geographic_path || !classified.category_slug || !classified.subcategory_slug) {
         return null;
       }
-
-      const location = (classified as any).locations;
-      const category = (classified as any).classified_categories;
-      const subcategory = (classified as any).classified_subcategories;
 
       const urls = this.buildUrls({
         id: classified.id,
         public_id: classified.public_id,
         slug: classified.slug,
-        geographic_path: location.geographic_path,
-        category_slug: category.slug,
-        subcategory_slug: subcategory.slug,
+        geographic_path: classified.geographic_path,
+        category_slug: classified.category_slug,
+        subcategory_slug: classified.subcategory_slug,
       });
 
       return {
@@ -290,31 +252,12 @@ export class ClassifiedUrlService {
    */
   static async getUrlContext(classifiedId: string): Promise<ClassifiedUrlContext | null> {
     try {
-      const { data, error } = await supabase
-        .from('classifieds')
-        .select(`
-          id,
-          public_id,
-          slug,
-          location_id,
-          category_id,
-          subcategory_id,
-          locations(geographic_path),
-          classified_categories(slug),
-          classified_subcategories(slug)
-        `)
-        .eq('id', classifiedId)
-        .single();
-
-      if (error || !data) {
+      const classifieds = await getAllClassifieds({ scope: 'none' });
+      const data = classifieds.find((item) => item.id === classifiedId);
+      if (!data) {
         return null;
       }
-
-      const location = (data as any).locations;
-      const category = (data as any).classified_categories;
-      const subcategory = (data as any).classified_subcategories;
-
-      if (!location?.geographic_path || !category?.slug || !subcategory?.slug) {
+      if (!data.geographic_path || !data.category_slug || !data.subcategory_slug) {
         return null;
       }
 
@@ -322,9 +265,9 @@ export class ClassifiedUrlService {
         id: data.id,
         public_id: data.public_id,
         slug: data.slug,
-        geographic_path: location.geographic_path,
-        category_slug: category.slug,
-        subcategory_slug: subcategory.slug,
+        geographic_path: data.geographic_path,
+        category_slug: data.category_slug,
+        subcategory_slug: data.subcategory_slug,
       };
     } catch (error) {
       logger.error('[ClassifiedUrlService] Erro ao buscar contexto:', error);

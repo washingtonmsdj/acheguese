@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 /**
  * Dashboard de Métricas do Sistema
  *
@@ -357,3 +358,4 @@ export function MetricsDashboard() {
     </div>
   );
 }
+

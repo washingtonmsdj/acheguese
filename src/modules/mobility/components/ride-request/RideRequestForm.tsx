@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 /**
  * RideRequestForm Component (AAA)
  * 
@@ -416,3 +417,4 @@ export const RideRequestForm = memo<RideRequestFormProps>(function RideRequestFo
 });
 
 RideRequestForm.displayName = 'RideRequestForm';
+

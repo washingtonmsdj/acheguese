@@ -14,6 +14,7 @@ import { supabase } from "@/integrations/supabase";
 import { profileService } from "@/core/profiles/services/ProfileService";
 import { logger } from "@/shared/utils/logger";
 import { mobilityRolloutService } from "./MobilityRolloutService";
+import { MobilityService, mobilityService } from "./MobilityService.impl";
 
 const supabaseAny = supabase as any;
 const MODERATOR_ROLES = ["owner", "admin"] as const;
@@ -120,18 +121,11 @@ export class MotoboyAuthorizationService {
 
   static async canOperateDelivery(driverProfileId: string): Promise<AuthorizationResult> {
     try {
-      const [driverResult, profile] = await Promise.all([
-        supabaseAny
-          .from("driver_data")
-          .select("is_verified, subscription_active, can_do_delivery, is_online")
-          .eq("profile_id", driverProfileId)
-          .maybeSingle(),
+      const [driverData, profile] = await Promise.all([
+        mobilityService.getDriverData(driverProfileId),
         profileService.getProfileById(driverProfileId).catch(() => null),
       ]);
-
-      const { data, error } = driverResult;
-
-      if (error || !data) {
+      if (!driverData) {
         return {
           allowed: false,
           reason: "Perfil de motorista nao encontrado.",
@@ -153,7 +147,7 @@ export class MotoboyAuthorizationService {
         };
       }
 
-      if (!data.can_do_delivery) {
+      if (!driverData.can_do_delivery) {
         return {
           allowed: false,
           reason: "Motorista nao habilitado para entregas.",
@@ -161,7 +155,7 @@ export class MotoboyAuthorizationService {
         };
       }
 
-      if (!data.is_online) {
+      if (!driverData.is_online) {
         return {
           allowed: false,
           reason: "Motorista offline.",
@@ -192,13 +186,8 @@ export class MotoboyAuthorizationService {
     }
 
     try {
-      const { data, error } = await supabaseAny
-        .from("ride_requests")
-        .select("passenger_profile_id, source_id, source_type")
-        .eq("id", rideId)
-        .maybeSingle();
-
-      if (error || !data) {
+      const data = await MobilityService.getRideById(rideId) as { passenger_profile_id?: string } | null;
+      if (!data) {
         return {
           allowed: false,
           reason: "Entrega nao encontrada.",
@@ -578,21 +567,8 @@ export class MotoboyAuthorizationService {
     }
 
     try {
-      const { data: structuralOwnership, error: structuralError } = await supabaseAny
-        .from("profiles")
-        .select("id")
-        .eq("user_id", userId)
-        .in("id", profileIds)
-        .limit(1)
-        .maybeSingle();
-      if (structuralError) {
-        logger.warn("MotoboyAuthorizationService.hasProfileAccess.structural", {
-          userId,
-          profileIds,
-          error: structuralError,
-        });
-      }
-      if (structuralOwnership) {
+      const ownedProfiles = await profileService.getProfilesByUserId(userId);
+      if (ownedProfiles.some((profile) => profileIds.includes(profile.id))) {
         return true;
       }
 
@@ -686,15 +662,8 @@ export class MotoboyAuthorizationService {
     serviceId: string,
   ): Promise<boolean> {
     try {
-      const { data, error } = await supabaseAny
-        .from("profiles")
-        .select("id")
-        .eq("user_id", userId)
-        .eq("id", serviceId)
-        .maybeSingle();
-
-      if (error) return false;
-      return !!data;
+      const profiles = await profileService.getProfilesByUserId(userId);
+      return profiles.some((profile) => profile.id === serviceId);
     } catch {
       return false;
     }

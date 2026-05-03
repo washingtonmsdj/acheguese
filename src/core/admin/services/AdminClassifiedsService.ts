@@ -10,6 +10,7 @@ import { supabase } from "@/integrations/supabase";
 import { logger } from "@/shared/utils/logger";
 import { REPORT_STATUS } from "@/shared/types/constants";
 import { CLASSIFIED_STATUS } from "@/modules/classifieds/constants/statuses";
+import { profileService } from "@/core/profiles/services/ProfileService";
 
 export interface AdminClassifiedData {
   [key: string]: unknown;
@@ -322,15 +323,9 @@ class AdminClassifiedsServiceClass {
       let profileMap = new Map<string, { name: string | null; phone: string | null; whatsapp: string | null }>();
 
       if (sellerIds.length > 0) {
-        const { data: profileRows, error: profileError } = await supabase
-          .from("profiles")
-          .select("id, name, phone, whatsapp")
-          .in("id", sellerIds);
-
-        if (profileError) throw profileError;
-
+        const profileRows = await profileService.getProfilesByIds(sellerIds);
         profileMap = new Map(
-          (profileRows || []).map((profile) => [
+          (profileRows || []).map((profile: any) => [
             profile.id,
             {
               name: profile.name ?? null,

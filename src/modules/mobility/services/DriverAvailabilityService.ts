@@ -18,6 +18,7 @@
 import { logger } from '@/shared/utils/logger';
 import { supabase as supabaseClient } from '@/integrations/supabase';
 import { getDriverDataByProfileIds } from './mobility.queries';
+import { MobilityService } from './MobilityService.impl';
 
 // No browser, sempre usa o cliente público com RLS.
 // Em testes Node, o arquivo de setup deve injetar um cliente com service role
@@ -91,35 +92,19 @@ export class DriverAvailabilityService {
   private static async ensureDriverDataRow(
     driverProfileId: string
   ): Promise<void> {
-    const insertWithCapabilities = async () =>
-      supabase
-        .from('driver_data')
-        .insert({
-          profile_id: driverProfileId,
-          can_do_delivery: true,
-          can_do_rides: true,
-        });
-
-    const insertLegacy = async () =>
-      supabase
-        .from('driver_data')
-        .insert({
-          profile_id: driverProfileId,
-        });
-
-    const firstAttempt = await insertWithCapabilities();
-    if (!firstAttempt.error) return;
-    if (this.isDuplicateKeyError(firstAttempt.error)) return;
-
-    if (this.isMissingColumnError(firstAttempt.error)) {
-      const legacyAttempt = await insertLegacy();
-      if (!legacyAttempt.error || this.isDuplicateKeyError(legacyAttempt.error)) {
+    try {
+      await MobilityService.ensureDriverDataRow(driverProfileId, {
+        canDoDelivery: true,
+        canDoRides: true,
+      });
+    } catch (error) {
+      if (this.isMissingColumnError(error)) {
+        await MobilityService.ensureDriverDataRow(driverProfileId);
         return;
       }
-      throw legacyAttempt.error;
+      if (this.isDuplicateKeyError(error)) return;
+      throw error;
     }
-
-    throw firstAttempt.error;
   }
 
   /**

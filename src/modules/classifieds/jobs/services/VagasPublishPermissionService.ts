@@ -1,6 +1,7 @@
-﻿import { AuthService } from "@/core/auth/services/AuthService";
+import { AuthService } from "@/core/auth/services/AuthService";
 import { supabase } from "@/integrations/supabase/supabase";
 import { logger } from "@/shared/utils/logger";
+import { profileService } from "@/core/profiles/services/ProfileService";
 
 export type VagaPublishDeniedReason =
   | "NOT_AUTHENTICATED"
@@ -25,26 +26,24 @@ export interface VagaPublishPermission {
 
 interface EvaluatePublishPermissionInput {
   userId: string | null | undefined;
-  activeProfileId: string | null | undefined;
-  activeProfileType?: string | null;
-  activeLocationId?: string | null;
+  activeProfileId: string | null | undefined;  activeLocationId?: string | null;
 }
 
 const DENIED_MESSAGES: Record<VagaPublishDeniedReason, string> = {
-  NOT_AUTHENTICATED: "Fa�a login para publicar vagas.",
+  NOT_AUTHENTICATED: "Fa?a login para publicar vagas.",
   NO_ACTIVE_PROFILE: "Selecione um perfil ativo para publicar vagas.",
-  NO_ACTIVE_LOCATION: "Selecione um territ�rio ativo para publicar vagas.",
+  NO_ACTIVE_LOCATION: "Selecione um territ?rio ativo para publicar vagas.",
   PROFILE_NOT_BUSINESS:
     "Somente perfis do tipo empresa podem publicar vagas.",
   INSUFFICIENT_PROFILE_ROLE:
-    "Voc� precisa ser owner/admin do perfil para publicar vagas.",
+    "Voc? precisa ser owner/admin do perfil para publicar vagas.",
   BUSINESS_NOT_FOUND:
     "Complete o cadastro da empresa antes de publicar vagas.",
   BUSINESS_INACTIVE:
     "A empresa precisa estar ativa para publicar vagas.",
   BUSINESS_POSTING_DISABLED:
-    "A publica��o de vagas foi desativada para esta empresa. Contate o administrador.",
-  UNKNOWN: "N�o foi poss�vel validar as permiss�es para publicar vagas.",
+    "A publica??o de vagas foi desativada para esta empresa. Contate o administrador.",
+  UNKNOWN: "N?o foi poss?vel validar as permiss?es para publicar vagas.",
 };
 
 function getDeniedMessageByReason(reason: VagaPublishDeniedReason): string {
@@ -103,28 +102,20 @@ export class VagasPublishPermissionService {
     }
 
     try {
-      const { data: profileData, error: profileError } = await supabase
-        .from("profiles")
-        .select("user_id, profile_type")
-        .eq("id", activeProfileId)
-        .maybeSingle();
+      const profileData = await profileService.getProfileById(activeProfileId);
 
-      if (profileError) {
-        logger.error(
-          "[VagasPublishPermissionService] Erro ao carregar profile",
-          profileError,
-        );
+      if (!profileData) {
+        logger.error(`[VagasPublishPermissionService] Erro ao carregar profile`, { activeProfileId });
         return this.denied("UNKNOWN", isAdmin);
       }
 
-      const profileType =
-        input.activeProfileType ?? profileData?.profile_type ?? null;
+      const profileType = (profileData as any)?.profile_type ?? null;
 
       if (!isAdmin && profileType !== "business") {
         return this.denied("PROFILE_NOT_BUSINESS", isAdmin);
       }
 
-      const isStructuralOwner = profileData?.user_id === userId;
+      const isStructuralOwner = (profileData as any)?.user_id === userId;
       let isManager = isStructuralOwner;
 
       if (!isManager) {
@@ -195,8 +186,8 @@ export class VagasPublishPermissionService {
         canPublish: true,
         isAdmin,
         message: isAdmin
-          ? "Permiss�o liberada (admin)."
-          : "Permiss�o liberada para publicar vagas.",
+          ? "Permiss?o liberada (admin)."
+          : "Permiss?o liberada para publicar vagas.",
         activeProfileId,
         businessId: businessDataTyped?.id ?? undefined,
         businessName,
@@ -225,4 +216,6 @@ export class VagasPublishPermissionService {
 }
 
 export const vagasPublishPermissionService = VagasPublishPermissionService;
+
+
 

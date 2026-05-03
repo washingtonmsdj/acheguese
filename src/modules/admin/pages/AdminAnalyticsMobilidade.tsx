@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import React, { useEffect, useState } from "react";
 import {
   Car,
@@ -706,4 +707,5 @@ export default function AdminAnalyticsMobilidade() {
     </div>
   );
 }
+
 

@@ -8,7 +8,6 @@ import type { TryOnProvider, TryOnProviderRequest, TryOnProviderResult } from '.
 export class LovableAIProvider implements TryOnProvider {
   readonly id = 'lovable-ai';
   // Provider abstrato; a chamada concreta é feita pela edge function.
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async generate(_req: TryOnProviderRequest): Promise<TryOnProviderResult> {
     throw new Error('LovableAIProvider.generate must be invoked via edge function');
   }

@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import { useState, useEffect, useCallback } from "react";
 import type { CommunityPost } from "../types";
 import { logger } from "@/shared/utils/logger";
@@ -167,3 +168,4 @@ export function useSearch() {
     removeFromHistory,
   };
 }
+

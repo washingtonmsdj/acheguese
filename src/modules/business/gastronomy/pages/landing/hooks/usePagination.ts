@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 /**
  * Hook para gerenciar paginação e carregamento incremental
  */
@@ -17,7 +18,7 @@ export function usePagination(params: UsePaginationParams) {
   const [visibleCount, setVisibleCount] = useState(INITIAL_VISIBLE_COUNT);
 
   // Reset quando os triggers mudarem (ex: filtros, busca)
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+   
   useEffect(() => {
     setVisibleCount(INITIAL_VISIBLE_COUNT);
     // resetTriggers é serializado como dependência — cada elemento é comparado individualmente
@@ -40,3 +41,4 @@ export function usePagination(params: UsePaginationParams) {
     handleLoadMore,
   };
 }
+

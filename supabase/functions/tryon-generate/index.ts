@@ -111,6 +111,18 @@ function dataUrlToBytes(dataUrl: string): { bytes: Uint8Array; mime: string } {
   return { bytes, mime };
 }
 
+async function imageRefToBytes(imageRef: string): Promise<{ bytes: Uint8Array; mime: string }> {
+  if (imageRef.startsWith("data:")) return dataUrlToBytes(imageRef);
+
+  const imgResp = await fetch(imageRef);
+  if (!imgResp.ok) {
+    throw new Error(`Falha ao baixar imagem gerada: HTTP ${imgResp.status}`);
+  }
+  const mime = imgResp.headers.get("content-type")?.split(";")[0] || "image/png";
+  const bytes = new Uint8Array(await imgResp.arrayBuffer());
+  return { bytes, mime };
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
@@ -164,8 +176,8 @@ Deno.serve(async (req) => {
 
         const generatedUrls: string[] = [];
         for (let i = 0; i < variations; i++) {
-          const dataUrl = await callLovableImage(gen.product_image_url, prompt);
-          const { bytes, mime } = dataUrlToBytes(dataUrl);
+          const imageRef = await callLovableImage(gen.product_image_url, prompt);
+          const { bytes, mime } = await imageRefToBytes(imageRef);
           const ext = mime === "image/png" ? "png" : (mime === "image/jpeg" ? "jpg" : "png");
           const path = `${user.id}/outputs/${generationId}/${i}-${crypto.randomUUID()}.${ext}`;
           const { error: upErr } = await admin.storage.from("tryon").upload(path, bytes, {

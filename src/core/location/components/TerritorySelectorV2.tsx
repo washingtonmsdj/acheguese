@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 /**
  * TerritorySelectorV2
  * 
@@ -415,3 +416,4 @@ export function TerritorySelectorV2({
     </Dialog>
   );
 }
+

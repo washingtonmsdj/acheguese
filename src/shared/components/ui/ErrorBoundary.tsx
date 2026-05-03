@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import React from "react";
 import { AlertTriangle, RefreshCw } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";

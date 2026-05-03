@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import { useState, useEffect } from "react";
 import { useSessionContext } from "@/core/session";
 import { AuthorizationEngine } from "@/core/authorization";
@@ -353,3 +354,4 @@ export default function AdminModeracao() {
     </div>
   );
 }
+

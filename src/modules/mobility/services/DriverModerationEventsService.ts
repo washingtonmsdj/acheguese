@@ -1,5 +1,6 @@
-﻿import { supabase } from "@/integrations/supabase";
+import { supabase } from "@/integrations/supabase";
 import { logger } from "@/shared/utils/logger";
+import { profileService } from "@/core/profiles/services/ProfileService";
 
 const supabaseAny = supabase as any;
 
@@ -61,18 +62,16 @@ async function hydrateAdminNames(
     return events.map((event) => ({ ...event, admin_name: "Admin" }));
   }
 
-  const { data: adminProfiles, error } = await supabaseAny
-    .from("profiles")
-    .select("id, name")
-    .in("id", adminProfileIds);
-
-  if (error) {
+  let adminProfiles: Array<{ id: string; name?: string | null }> = [];
+  try {
+    adminProfiles = (await profileService.getProfilesByIds(adminProfileIds)) as Array<{ id: string; name?: string | null }>;
+  } catch (error) {
     logger.warn("DriverModerationEventsService.hydrateAdminNames", error);
     return events.map((event) => ({ ...event, admin_name: "Admin" }));
   }
 
   const adminMap = new Map<string, string>();
-  for (const profile of (adminProfiles || []) as Array<{ id: string; name?: string | null }>) {
+  for (const profile of adminProfiles) {
     adminMap.set(profile.id, profile.name || "Admin");
   }
 
@@ -125,4 +124,6 @@ export class DriverModerationEventsService {
     return hydrateAdminNames((data || []) as DriverModerationEvent[]);
   }
 }
+
+
 

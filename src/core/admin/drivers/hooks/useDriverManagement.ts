@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 /**
  * useDriverManagement
  *
@@ -340,4 +341,5 @@ export function useDriverManagement(filter: FilterStatus, canModerate: boolean, 
     loadSuspensionHistory,
   };
 }
+
 

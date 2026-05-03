@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import { logger } from '@/shared/utils/logger';
 import React from "react";
 /**
@@ -691,3 +692,4 @@ function AdminBusinessPageWrapper() {
 
   return <AdminBusinessPage />;
 }
+

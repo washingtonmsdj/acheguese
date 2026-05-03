@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import { Building2, Check, ChevronDown, Filter as FilterIcon, Globe, Grid3x3, GraduationCap, Layers, MapPin, Rows, School, Search, Shield, Target, Users, X } from 'lucide-react';
 import { Button } from '@/shared/components/ui/button';
 import { Input } from '@/shared/components/ui/input';

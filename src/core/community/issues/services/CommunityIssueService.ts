@@ -12,6 +12,8 @@ import { supabase } from "@/integrations/supabase";
 import { callRPC } from "@/integrations/supabase/services/supabaseHelpers";
 import { logger } from "@/shared/utils/logger";
 import type { TerritoryFilter } from "@/core/location/types";
+import { SessionService } from "@/core/session/services/SessionService";
+import { profileService } from "@/core/profiles/services/ProfileService";
 import type {
   CommunityIssuePublic,
   CreateIssuePayload,
@@ -288,9 +290,7 @@ class CommunityIssueServiceClass {
    */
   async reportIssue(payload: CreateIssueReportPayload): Promise<boolean> {
     try {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
+      const user = await SessionService.getCurrentUser();
       if (!user) return false;
       const profileId = await this._getActiveProfileIdByUserId(user.id);
       if (!profileId) return false;
@@ -323,9 +323,7 @@ class CommunityIssueServiceClass {
     metadata: Record<string, unknown>
   ): Promise<void> {
     try {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
+      const user = await SessionService.getCurrentUser();
       if (!user) return;
 
       await supabase.from("community_issue_audit").insert({
@@ -341,21 +339,13 @@ class CommunityIssueServiceClass {
   }
 
   private async _getActiveProfileIdByUserId(userId: string): Promise<string | null> {
-    const { data, error } = await supabase
-      .from("profiles")
-      .select("id")
-      .eq("user_id", userId)
-      .eq("is_active", true)
-      .order("created_at", { ascending: true })
-      .limit(1)
-      .maybeSingle();
-
-    if (error) {
+    try {
+      const profile = await profileService.getActiveProfile(userId);
+      return profile?.id ?? null;
+    } catch (error) {
       logger.error("CommunityIssueService._getActiveProfileIdByUserId", error);
       return null;
     }
-
-    return data?.id ?? null;
   }
 }
 

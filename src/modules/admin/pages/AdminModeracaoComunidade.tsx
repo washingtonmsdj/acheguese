@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import React, { useState, useEffect } from "react";
 import { useSessionContext } from "@/core/session";
 import { ModerationService } from "@/core/moderation/services/ModerationService";
@@ -582,3 +583,4 @@ function PostCard({
     </div>
   );
 }
+

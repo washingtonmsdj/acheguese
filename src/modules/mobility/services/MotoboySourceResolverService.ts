@@ -1,6 +1,7 @@
-﻿import { supabase } from "@/integrations/supabase";
+import { supabase } from "@/integrations/supabase";
 import { logger } from "@/shared/utils/logger";
 import type { SourceType } from "../constants";
+import { profileService } from "@/core/profiles/services/ProfileService";
 
 const supabaseAny = supabase as any;
 
@@ -113,18 +114,20 @@ export class MotoboySourceResolverService {
   static async getProfileSummaryById(
     sourceId: string,
   ): Promise<SourceProfileSummary | null> {
-    const { data, error } = await supabaseAny
-      .from("profiles")
-      .select("id, name, city, neighborhood, location_id")
-      .eq("id", sourceId)
-      .maybeSingle();
-
-    if (error) {
+    try {
+      const profile = await profileService.getProfileById(sourceId);
+      if (!profile) return null;
+      return {
+        id: profile.id,
+        name: profile.name ?? null,
+        city: (profile as any).city ?? null,
+        neighborhood: (profile as any).neighborhood ?? null,
+        location_id: (profile as any).location_id ?? null,
+      };
+    } catch (error) {
       logger.warn("MotoboySourceResolverService.getProfileSummaryById", error);
       return null;
     }
-
-    return (data as SourceProfileSummary | null) ?? null;
   }
 
   static async getBusinessDataFromSource(
@@ -205,3 +208,6 @@ export class MotoboySourceResolverService {
     return (data as SourceBusinessDataSummary | null) ?? null;
   }
 }
+
+
+

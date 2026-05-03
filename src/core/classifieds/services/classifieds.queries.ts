@@ -1,6 +1,7 @@
 import { supabase } from "@/integrations/supabase";
 import { trackError } from "@/shared/utils/errorTracking";
 import { logger } from "@/shared/utils/logger";
+import * as moduleClassifiedQueries from "@/modules/classifieds/services/classifieds.queries";
 
 export interface ClassifiedData {
   id: string;
@@ -32,46 +33,5 @@ export interface ClassifiedData {
 }
 
 export async function getClassifiedById(id: string): Promise<ClassifiedData | null> {
-  try {
-    const { data, error } = await supabase
-      .from("classifieds")
-      .select(
-        `
-        *,
-        seller:profiles!seller_id (
-          id,
-          name,
-          avatar_url,
-          phone,
-          whatsapp
-        )
-      `,
-      )
-      .eq("id", id)
-      .single();
-
-    if (error) {
-      if (error.code === "PGRST116") {
-        return null;
-      }
-      logger.error("Error fetching classified:", error);
-      throw error;
-    }
-
-    return {
-      ...data,
-      seller_name: data.seller?.name,
-      seller_avatar: data.seller?.avatar_url,
-      seller_phone: data.seller?.phone,
-      seller_whatsapp: data.seller?.whatsapp,
-    } as ClassifiedData;
-  } catch (error) {
-    logger.error("Error in getClassifiedById:", error);
-    trackError(error as Error, {
-      component: "CoreClassifiedsQueries",
-      action: "getClassifiedById",
-    });
-    throw error;
-  }
+  return moduleClassifiedQueries.getClassifiedById(id);
 }
-

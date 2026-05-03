@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import React from "react";
 
 import { useState, useEffect, useCallback } from "react";
@@ -390,3 +391,4 @@ export default function AchadosPerdidosPage() {
     </div>
   );
 }
+

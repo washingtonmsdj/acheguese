@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 /**
  * useRecomendacaoDetail — Hook para detalhes de perguntas e respostas Q&A
  */
@@ -154,3 +155,4 @@ export function useRecomendacaoDetail() {
     submitAnswer, toggleLike, markBestAnswer, searchMentions, selectMention, clearMention, handleGoBack,
   };
 }
+

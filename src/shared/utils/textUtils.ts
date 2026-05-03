@@ -80,7 +80,7 @@ export function sanitizeUrl(url: string): string {
   if (!url) return "";
 
   // Remove espaços e caracteres de controle
-  // eslint-disable-next-line no-control-regex
+   
   const trimmed = url.trim();
   let cleaned = "";
   for (let i = 0; i < trimmed.length; i += 1) {

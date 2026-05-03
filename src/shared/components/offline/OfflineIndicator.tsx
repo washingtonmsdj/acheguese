@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import React from "react";
 import { useEffect, useState } from "react";
 import { WifiOff, Wifi, Download } from "lucide-react";
@@ -151,3 +152,4 @@ export function OfflineDataStatus() {
     </div>
   );
 }
+

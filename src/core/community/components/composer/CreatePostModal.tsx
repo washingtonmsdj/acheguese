@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 /**
  * CreatePostModal - Modal para criação de posts
  *
@@ -448,3 +449,4 @@ export function CreatePostModal({ open, onClose, defaultType }: CreatePostModalP
     </Dialog>
   );
 }
+

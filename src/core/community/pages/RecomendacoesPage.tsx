@@ -1,11 +1,12 @@
-﻿import React, { useState } from "react";
+/* eslint-disable react-hooks/exhaustive-deps */
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useMemo } from "react";
 import { Search, Plus, Users } from "lucide-react";
 import { Input } from "@/shared/components/ui/input";
 import { Button } from "@/shared/components/ui/button";
 import { TooltipProvider } from "@/shared/components/ui/tooltip";
-import { useAppUrls } from "@/core/routing/hooks"; // âœ… SSOT URLs
+import { useAppUrls } from "@/core/routing/hooks"; // ✅ SSOT URLs
 import { useRecomendacoes } from "@/core/community/hooks/useRecomendacoes";
 import { useUserTerritory } from "@/core/location/hooks/useUserTerritory";
 import { useSessionContext } from "@/core/session";
@@ -15,11 +16,11 @@ import type { TerritoryFilter } from "@/core/location";
 
 export default function RecomendacoesPage() {
   const navigate = useNavigate();
-  const appUrls = useAppUrls(); // âœ… SSOT URLs
+  const appUrls = useAppUrls(); // ✅ SSOT URLs
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("todos");
 
-  // âœ… VerificaÃ§Ã£o de autenticaÃ§Ã£o
+  // ✅ Verificação de autenticação
   const { activeProfile } = useSessionContext();
   const { hasHome, homeDistrict, loading: territoryLoading } = useUserTerritory();
   const territoryFilter = useMemo<TerritoryFilter>(
@@ -36,7 +37,7 @@ export default function RecomendacoesPage() {
     territoryFilter,
   });
 
-  // Bloquear se nÃ£o estiver logado
+  // Bloquear se não estiver logado
   if (!activeProfile) {
     return (
       <TooltipProvider>
@@ -44,10 +45,10 @@ export default function RecomendacoesPage() {
           <div className="text-center p-8 max-w-md">
             <Users className="h-16 w-16 text-teal-400 mx-auto mb-4" />
             <h2 className="text-xl font-semibold text-white mb-4">
-              FaÃ§a login para acessar recomendaÃ§Ãµes
+              Faça login para acessar recomendações
             </h2>
             <p className="text-gray-400 mb-6">
-              As recomendaÃ§Ãµes sÃ£o exclusivas para moradores cadastrados do bairro.
+              As recomendações são exclusivas para moradores cadastrados do bairro.
             </p>
             <Button onClick={() => navigate(appUrls.auth.login)} className="bg-teal-500 hover:bg-teal-400">
               Fazer Login
@@ -58,7 +59,7 @@ export default function RecomendacoesPage() {
     );
   }
 
-  // Aguardar resoluÃ§Ã£o do territÃ³rio
+  // Aguardar resolução do território
   if (territoryLoading) {
     return (
       <div className="min-h-screen bg-[#12181B] flex items-center justify-center">
@@ -67,7 +68,7 @@ export default function RecomendacoesPage() {
     );
   }
 
-  // Bloquear se nÃ£o tiver bairro cadastrado
+  // Bloquear se não tiver bairro cadastrado
   if (!hasHome) {
     return (
       <TooltipProvider>
@@ -78,7 +79,7 @@ export default function RecomendacoesPage() {
               Escolha seu bairro
             </h2>
             <p className="text-gray-400 mb-6">
-              Para acessar recomendações hiperlocais, escolha seu bairro principal na comunidade.
+              Para acessar recomenda��es hiperlocais, escolha seu bairro principal na comunidade.
             </p>
             <Button onClick={() => navigate(appUrls.community.home)} className="bg-teal-500 hover:bg-teal-400">
               Escolher meu bairro
@@ -99,10 +100,10 @@ export default function RecomendacoesPage() {
               Perguntar ao Bairro
             </h1>
             <p className="text-sm text-muted-foreground">
-              PeÃ§a recomendaÃ§Ãµes da comunidade
+              Peça recomendações da comunidade
             </p>
           </div>
-          <Button size="sm" onClick={() => navigate(appUrls.community.newRecommendation)}> {/* âœ… SSOT */}
+          <Button size="sm" onClick={() => navigate(appUrls.community.newRecommendation)}> {/* ✅ SSOT */}
             <Plus className="h-4 w-4 mr-1" /> Perguntar
           </Button>
         </div>
@@ -132,4 +133,5 @@ export default function RecomendacoesPage() {
     </div>
   );
 }
+
 

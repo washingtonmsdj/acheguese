@@ -1,33 +1,9 @@
-import { supabase } from "@/integrations/supabase";
-import { logger } from "@/shared/utils/logger";
 import type { TerritoryFilter } from "@/core/location";
-
-export interface LostFoundPost {
-  id: string;
-  autor_id: string;
-  tipo: "perdido" | "achado";
-  titulo: string;
-  descricao: string;
-  categoria: string;
-  local_perdido?: string;
-  data_perdido?: string;
-  imagens?: string[];
-  contato_telefone?: string;
-  contato_email?: string;
-  location_id?: string | null;
-  resolvido: boolean;
-  created_at: string;
-  updated_at: string;
-}
-
-export interface LostFoundComment {
-  id: string;
-  post_id: string;
-  autor_id: string;
-  conteudo: string;
-  texto?: string;
-  created_at: string;
-}
+import {
+  lostFoundService,
+  type LostFoundComment,
+  type LostFoundPost,
+} from "@/modules/community/lostfound/services/LostFoundService";
 
 class LostFoundRuntimeService {
   async getPosts(
@@ -38,80 +14,21 @@ class LostFoundRuntimeService {
       territoryFilter?: TerritoryFilter;
     } = {},
   ): Promise<LostFoundPost[]> {
-    try {
-      let query = (supabase as any)
-        .from("lost_found_posts")
-        .select("*")
-        .order("created_at", { ascending: false });
-
-      if (filters.tipo) query = query.eq("tipo", filters.tipo);
-      if (filters.categoria) query = query.eq("categoria", filters.categoria);
-      if (filters.resolvido !== undefined) query = query.eq("resolvido", filters.resolvido);
-      if (filters.territoryFilter?.scope === "location") {
-        query = query.eq("location_id", filters.territoryFilter.location_id);
-      } else if (
-        filters.territoryFilter?.scope === "group" &&
-        filters.territoryFilter.location_ids.length > 0
-      ) {
-        query = query.in("location_id", filters.territoryFilter.location_ids);
-      }
-
-      const { data, error } = await query;
-      if (error) throw error;
-      return data || [];
-    } catch (error) {
-      logger.error("LostFoundRuntimeService.getPosts", error);
-      return [];
-    }
+    return lostFoundService.getPosts(filters);
   }
 
   async getPostById(id: string): Promise<LostFoundPost | null> {
-    try {
-      const { data, error } = await (supabase as any)
-        .from("lost_found_posts")
-        .select("*")
-        .eq("id", id)
-        .maybeSingle();
-
-      if (error) throw error;
-      return data;
-    } catch (error) {
-      logger.error("LostFoundRuntimeService.getPostById", error);
-      return null;
-    }
+    return lostFoundService.getPostById(id);
   }
 
   async createPost(
     postData: Omit<LostFoundPost, "id" | "created_at" | "updated_at">,
   ): Promise<LostFoundPost | null> {
-    try {
-      const { data, error } = await (supabase as any)
-        .from("lost_found_posts")
-        .insert([postData])
-        .select()
-        .single();
-
-      if (error) throw error;
-      return data;
-    } catch (error) {
-      logger.error("LostFoundRuntimeService.createPost", error);
-      return null;
-    }
+    return lostFoundService.createPost(postData);
   }
 
   async updatePost(id: string, updates: Partial<LostFoundPost>): Promise<boolean> {
-    try {
-      const { error } = await (supabase as any)
-        .from("lost_found_posts")
-        .update({ ...updates, updated_at: new Date().toISOString() })
-        .eq("id", id);
-
-      if (error) throw error;
-      return true;
-    } catch (error) {
-      logger.error("LostFoundRuntimeService.updatePost", error);
-      return false;
-    }
+    return lostFoundService.updatePost(id, updates);
   }
 
   async toggleResolved(id: string): Promise<boolean> {
@@ -121,72 +38,25 @@ class LostFoundRuntimeService {
   }
 
   async getComments(postId: string): Promise<LostFoundComment[]> {
-    try {
-      const { data, error } = await (supabase as any)
-        .from("lost_found_comments")
-        .select("*")
-        .eq("post_id", postId)
-        .order("created_at", { ascending: true });
-
-      if (error) throw error;
-      return data || [];
-    } catch (error) {
-      logger.error("LostFoundRuntimeService.getComments", error);
-      return [];
-    }
+    return lostFoundService.getComments(postId);
   }
 
   async createComment(
     commentData: Omit<LostFoundComment, "id" | "created_at">,
   ): Promise<LostFoundComment | null> {
-    try {
-      const { data, error } = await (supabase as any)
-        .from("lost_found_comments")
-        .insert([commentData])
-        .select()
-        .single();
-
-      if (error) throw error;
-      return data;
-    } catch (error) {
-      logger.error("LostFoundRuntimeService.createComment", error);
-      return null;
-    }
+    return lostFoundService.createComment(commentData);
   }
 
   async getPostsPage(
     filters: { tipo?: string; categoria?: string; territoryFilter?: TerritoryFilter } = {},
     from: number,
     to: number,
-  ): Promise<any[]> {
-    try {
-      let query = (supabase as any)
-        .from("lost_found_posts")
-        .select("*")
-        .order("created_at", { ascending: false })
-        .range(from, to);
-
-      if (filters.tipo && filters.tipo !== "todos") query = query.eq("tipo", filters.tipo);
-      if (filters.categoria && filters.categoria !== "todos") query = query.eq("category", filters.categoria);
-      if (filters.territoryFilter?.scope === "location") {
-        query = query.eq("location_id", filters.territoryFilter.location_id);
-      } else if (
-        filters.territoryFilter?.scope === "group" &&
-        filters.territoryFilter.location_ids.length > 0
-      ) {
-        query = query.in("location_id", filters.territoryFilter.location_ids);
-      }
-
-      const { data, error } = await query;
-      if (error) throw error;
-      return data || [];
-    } catch (error) {
-      logger.error("LostFoundRuntimeService.getPostsPage", error);
-      return [];
-    }
+  ): Promise<LostFoundPost[]> {
+    return lostFoundService.getPostsPage(filters, from, to);
   }
 }
 
 export const lostFoundRuntimeService = new LostFoundRuntimeService();
-export const lostFoundService = lostFoundRuntimeService;
+export { lostFoundService };
 export { lostFoundRuntimeService as LostFoundService };
+export type { LostFoundComment, LostFoundPost };

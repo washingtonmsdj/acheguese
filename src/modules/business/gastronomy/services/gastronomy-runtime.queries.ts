@@ -35,30 +35,21 @@ export async function fetchGastronomyQuickMetrics(
   const now = new Date();
   const weekAgo = new Date(now.getTime() - 7 * 86_400_000).toISOString();
 
-  const [totalRes, weekRes, reviewsRes, viewsLast7Res] = await Promise.all([
-    supabase
-      .from("business_views")
-      .select("*", { count: "exact", head: true })
-      .eq("business_id", businessProfileId),
-    supabase
-      .from("business_views")
-      .select("*", { count: "exact", head: true })
-      .eq("business_id", businessProfileId)
-      .gte("viewed_at", weekAgo),
-    supabase
-      .from("reviews")
-      .select("rating")
-      .eq("reviewed_profile_id", businessProfileId)
-      .eq("review_type", "business")
-      .eq("status", "active"),
-    supabase
-      .from("business_views")
-      .select("viewed_at")
-      .eq("business_id", businessProfileId)
-      .gte("viewed_at", weekAgo),
+  const [summaryRes, reviewsRes, viewsLast7Res] = await Promise.all([
+    supabase.rpc("get_business_views_summary", {
+      p_business_profile_id: businessProfileId,
+      p_week_start: weekAgo,
+    }),
+    supabase.rpc("get_business_review_ratings", {
+      p_business_profile_id: businessProfileId,
+    }),
+    supabase.rpc("get_business_views_last_7_days", {
+      p_business_profile_id: businessProfileId,
+      p_week_start: weekAgo,
+    }),
   ]);
 
-  if (totalRes.error) logger.error("[gastronomy-runtime] views error", totalRes.error);
+  if (summaryRes.error) logger.error("[gastronomy-runtime] views error", summaryRes.error);
   if (reviewsRes.error) logger.error("[gastronomy-runtime] reviews error", reviewsRes.error);
 
   const dayMap = new Map<string, number>();
@@ -81,9 +72,11 @@ export async function fetchGastronomyQuickMetrics(
       ? reviews.reduce((sum, review) => sum + review.rating, 0) / reviews.length
       : 0;
 
+  const summary = (summaryRes.data?.[0] ?? {}) as { total_views?: number; views_this_week?: number };
+
   return {
-    totalViews: totalRes.count ?? 0,
-    viewsThisWeek: weekRes.count ?? 0,
+    totalViews: summary.total_views ?? 0,
+    viewsThisWeek: summary.views_this_week ?? 0,
     totalReviews: reviews.length,
     avgRating: Math.round(avgRating * 10) / 10,
     recentViews: Array.from(dayMap.entries()).map(([date, count]) => ({ date, count })),

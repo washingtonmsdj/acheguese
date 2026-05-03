@@ -1,5 +1,6 @@
 import { supabase } from "@/integrations/supabase";
 import { logger } from "@/shared/utils/logger";
+import { profileService } from "@/core/profiles/services/ProfileService";
 
 export interface DriverModerationRow {
   id: string;
@@ -43,14 +44,10 @@ export class AdminDriverModerationService {
   static async getModerationRows(profileIds: string[]): Promise<Map<string, DriverModerationRow>> {
     if (profileIds.length === 0) return new Map<string, DriverModerationRow>();
 
-    const { data, error } = await supabase
-      .from("profiles")
-      .select(
-        "id, verification_status, verification_rejection_reason, is_suspended, suspended_at, suspended_until, suspension_reason, updated_at",
-      )
-      .in("id", profileIds);
-
-    if (error) {
+    let data: DriverModerationRow[] = [];
+    try {
+      data = (await profileService.getProfilesByIds(profileIds)) as DriverModerationRow[];
+    } catch (error) {
       logger.warn("AdminDriverModerationService.getModerationRows", error);
       return new Map<string, DriverModerationRow>();
     }
@@ -61,16 +58,14 @@ export class AdminDriverModerationService {
   static async getFallbackSuspensionHistory(
     driverProfileId: string,
   ): Promise<SuspensionHistoryEntry[]> {
-    const { data, error } = await supabase
-      .from("profiles")
-      .select("id, is_suspended, suspended_at, suspended_until, suspension_reason, updated_at")
-      .eq("id", driverProfileId)
-      .maybeSingle();
-
-    if (error || !data) {
-      if (error) {
-        logger.warn("AdminDriverModerationService.getFallbackSuspensionHistory", error);
-      }
+    let data: any = null;
+    try {
+      data = await profileService.getProfileById(driverProfileId);
+    } catch (error) {
+      logger.warn("AdminDriverModerationService.getFallbackSuspensionHistory", error);
+      return [];
+    }
+    if (!data) {
       return [];
     }
 
@@ -98,4 +93,3 @@ export class AdminDriverModerationService {
     return history.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
   }
 }
-

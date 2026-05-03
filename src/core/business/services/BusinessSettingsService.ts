@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase";
 export class BusinessSettingsService {
   static async getBusinessById(businessId: string): Promise<Record<string, unknown> | null> {
     const { data, error } = await supabase
-      .from("businesses")
+      .from("business_data")
       .select("*")
       .eq("id", businessId)
       .single();
@@ -38,7 +38,7 @@ export class BusinessSettingsService {
     payload: Record<string, unknown>,
   ): Promise<void> {
     const { error } = await supabase
-      .from("businesses")
+      .from("business_data")
       .update({
         ...payload,
         updated_at: new Date().toISOString(),

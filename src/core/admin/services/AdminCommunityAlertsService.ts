@@ -11,6 +11,7 @@
  */
 import { logger } from '@/shared/utils/logger';
 import { supabase } from "@/integrations/supabase";
+import { SessionService } from '@/core/session/services/SessionService';
 
 type AlertCategory =
   | "tiroteio_disparos"
@@ -199,7 +200,6 @@ class AdminCommunityAlertsServiceClass {
         limit = 20,
       } = filters;
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       let query = (supabase as any)
         .from(this.TABLE)
         .select(`
@@ -455,9 +455,7 @@ class AdminCommunityAlertsServiceClass {
     actionType: string,
     metadata: Record<string, unknown>,
   ): Promise<void> {
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+    const user = await SessionService.getCurrentUser();
 
     if (!user) {
       return;

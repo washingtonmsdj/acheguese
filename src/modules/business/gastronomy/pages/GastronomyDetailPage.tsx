@@ -118,17 +118,14 @@ export default function GastronomyDetailPage() {
   }
 
   const activeCategoryData = sortedCategories.find((c) => c.id === activeCategory);
-  
-  const activeItems = useMemo(() => {
-    const allCategoryItems = activeCategoryData?.items ?? [];
-    return allCategoryItems.filter((item) => {
-      if (veganOnly && !item.is_vegan) return false;
-      if (vegetarianOnly && !item.is_vegetarian) return false;
-      if (glutenFreeOnly && !item.is_gluten_free) return false;
-      if (lactoseFreeOnly && !item.is_lactose_free) return false;
-      return true;
-    });
-  }, [activeCategoryData?.items, veganOnly, vegetarianOnly, glutenFreeOnly, lactoseFreeOnly]);
+  const allCategoryItems = activeCategoryData?.items ?? [];
+  const activeItems = allCategoryItems.filter((item) => {
+    if (veganOnly && !item.is_vegan) return false;
+    if (vegetarianOnly && !item.is_vegetarian) return false;
+    if (glutenFreeOnly && !item.is_gluten_free) return false;
+    if (lactoseFreeOnly && !item.is_lactose_free) return false;
+    return true;
+  });
   
   const cuisineLabel = getCuisineLabel(profile.cuisine_type);
   const averageRating = business.rating.toFixed(1);

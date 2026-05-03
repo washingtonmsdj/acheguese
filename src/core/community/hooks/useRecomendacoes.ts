@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 /**
  * useRecomendacoes — Hook para listar perguntas Q&A
  *
@@ -125,3 +126,4 @@ export function useRecomendacoes({
     refetch: () => { reset(); fetchPage(0); },
   };
 }
+

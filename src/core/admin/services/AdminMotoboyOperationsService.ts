@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase";
+import { MobilityService } from "@/modules/mobility/services/MobilityService.impl";
 
 const supabaseAny = supabase as any;
 
@@ -23,47 +24,19 @@ export class AdminMotoboyOperationsService {
     status?: string;
     sourceType?: string;
   }): Promise<AdminMotoboyDelivery[]> {
-    let query = supabaseAny
-      .from("ride_requests")
-      .select(
-        "id, status, source_type, source_id, recipient_name, package_size, suggested_price, created_at, updated_at, driver_profile_id, pickup_location_id, delivery_notes, failed_delivery_reason",
-      )
-      .eq("ride_mode", "motoboy")
-      .order("created_at", { ascending: false })
-      .limit(200);
-
-    if (filters.status && filters.status !== "all") {
-      query = query.eq("status", filters.status);
-    }
-    if (filters.sourceType && filters.sourceType !== "all") {
-      query = query.eq("source_type", filters.sourceType);
-    }
-
-    const { data, error } = await query;
-    if (error) throw error;
+    const data = await MobilityService.listMotoboyDeliveries(filters);
     return (data as AdminMotoboyDelivery[]) || [];
   }
 
   static async listStatsRows(): Promise<Array<{ status: string; created_at: string; driver_profile_id: string | null }>> {
-    const { data, error } = await supabaseAny
-      .from("ride_requests")
-      .select("id, status, created_at, driver_profile_id")
-      .eq("ride_mode", "motoboy");
-
-    if (error) throw error;
-    return (data as Array<{ status: string; created_at: string; driver_profile_id: string | null }>) || [];
+    return MobilityService.listMotoboyStatsRows();
   }
 
   static async cancelOperational(rideId: string, reason: string): Promise<boolean> {
-    const { error } = await supabaseAny
-      .from("ride_requests")
-      .update({
+    await MobilityService.updateRide(rideId, {
         status: "cancelled_by_passenger",
         updated_at: new Date().toISOString(),
-      })
-      .eq("id", rideId);
-
-    if (error) throw error;
+    });
 
     await this.logRideStateChange({
       rideId,
@@ -77,14 +50,11 @@ export class AdminMotoboyOperationsService {
   }
 
   static async redispatch(rideId: string): Promise<void> {
-    await supabaseAny
-      .from("ride_requests")
-      .update({
-        status: "searching_driver",
-        driver_profile_id: null,
-        updated_at: new Date().toISOString(),
-      })
-      .eq("id", rideId);
+    await MobilityService.updateRide(rideId, {
+      status: "searching_driver",
+      driver_profile_id: null,
+      updated_at: new Date().toISOString(),
+    });
 
     await this.logRideStateChange({
       rideId,

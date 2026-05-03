@@ -14,14 +14,12 @@ export function useVagaPublishPermission() {
       "publish-permission",
       user?.id ?? null,
       activeProfile?.id ?? null,
-      activeProfile?.profileType ?? null,
       activeLocationId ?? null,
     ],
     queryFn: () =>
       VagasPublishPermissionService.evaluate({
         userId: user?.id,
         activeProfileId: activeProfile?.id,
-        activeProfileType: activeProfile?.profileType,
         activeLocationId,
       }),
     staleTime: 60_000,

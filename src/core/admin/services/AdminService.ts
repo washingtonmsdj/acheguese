@@ -14,6 +14,7 @@
 import { logger } from '@/shared/utils/logger';
 import { supabase } from '@/integrations/supabase';
 import type { AdminSupabaseClient } from '../types/adminDatabase.types';
+import { MobilityService } from '@/modules/mobility/services/MobilityService.impl';
 
 const supabaseTyped = supabase as unknown as AdminSupabaseClient;
 
@@ -131,17 +132,10 @@ export const AdminService = {
             .eq('status', 'completed');
 
           // Busca estatísticas de entregas
-          const { data: deliveryStats } = await supabase
-            .from('ride_requests')
-            .select('id')
-            .eq('ride_mode', 'motoboy')
-            .eq('source_type', 'business')
-            .eq('source_id', business.id)
-            .eq('status', 'delivered');
+          const totalDeliveries = await MobilityService.countDeliveredBySource('business', business.id);
 
           const totalOrders = orderStats?.length || 0;
           const totalRevenue = orderStats?.reduce((sum, o) => sum + o.total, 0) || 0;
-          const totalDeliveries = deliveryStats?.length || 0;
 
           return {
             ...business,
@@ -198,11 +192,12 @@ export const AdminService = {
   }): Promise<ServiceResult<ProfileSummary[]>> {
     try {
       let query = supabase
-        .from('profiles')
+        .from('profile_complete')
         .select(`
           id,
           username,
           full_name,
+          email,
           created_at
         `)
         .order('created_at', { ascending: false });
@@ -224,11 +219,7 @@ export const AdminService = {
 
       // Busca email e total de empresas de cada perfil
       const profilesWithStats = await Promise.all(
-        (profiles || []).map(async (profile) => {
-          // Busca email do auth.users
-          const { data: user } = await supabase.auth.admin.getUserById(profile.id);
-
-          // Busca total de empresas
+        (profiles || []).map(async (profile: any) => {
           const { data: businesses } = await supabase
             .from('profile_links')
             .select('id')
@@ -237,7 +228,7 @@ export const AdminService = {
 
           return {
             ...profile,
-            email: user?.user?.email || '',
+            email: profile.email || '',
             total_businesses: businesses?.length || 0,
           };
         })
@@ -368,7 +359,7 @@ export const AdminService = {
 
       // Total de usuários
       const { count: totalUsers } = await supabase
-        .from('profiles')
+        .from('profile_complete')
         .select('*', { count: 'exact', head: true });
 
       // Total de pedidos
@@ -381,11 +372,7 @@ export const AdminService = {
       const totalRevenue = completedOrders.reduce((sum, o) => sum + o.total, 0);
 
       // Total de entregas
-      const { count: totalDeliveries } = await supabase
-        .from('ride_requests')
-        .select('*', { count: 'exact', head: true })
-        .eq('ride_mode', 'motoboy')
-        .eq('status', 'delivered');
+      const totalDeliveries = await MobilityService.countDeliveredMotoboyRides();
 
       // Distribuição de planos
       const { data: subscriptions } = await supabase

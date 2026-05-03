@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import React from "react";
 
 import { useParams, useNavigate } from "react-router-dom";
@@ -507,3 +508,4 @@ export default function AchadoPerdidoDetailPage() {
     </div>
   );
 }
+

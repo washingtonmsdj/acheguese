@@ -1,5 +1,6 @@
 import { supabase } from "@/integrations/supabase";
 import { logger } from "@/shared/utils/logger";
+import { profileService } from "@/core/profiles/services/ProfileService";
 import {
   ADMIN_USER_REPORT_STATUS,
   type AdminUserReportStatus,
@@ -143,12 +144,10 @@ export class AdminUserDetailService {
   private static async loadReporterNames(profileIds: string[]): Promise<Map<string, string>> {
     if (profileIds.length === 0) return new Map<string, string>();
 
-    const { data, error } = await supabase
-      .from("profiles")
-      .select("id, name")
-      .in("id", profileIds);
-
-    if (error) {
+    let data: Array<{ id: string; name?: string | null }> = [];
+    try {
+      data = (await profileService.getProfilesByIds(profileIds)) as Array<{ id: string; name?: string | null }>;
+    } catch (error) {
       logger.warn("AdminUserDetailService.loadReporterNames", error);
       return new Map<string, string>();
     }

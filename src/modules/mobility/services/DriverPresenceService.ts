@@ -1,5 +1,5 @@
-import { supabase } from "@/integrations/supabase";
 import { logger } from "@/shared/utils/logger";
+import { mobilityService, MobilityService } from "@/modules/mobility/services/MobilityService.impl";
 
 export interface DriverPresenceStats {
   is_currently_online: boolean;
@@ -30,36 +30,16 @@ export class DriverPresenceService {
   static async getDriverPresenceStats(driverProfileId: string): Promise<DriverPresenceStats | null> {
     try {
       const [driverDataResult, rideResult] = await Promise.all([
-        supabase
-          .from("driver_data")
-          .select("is_online, last_location_update")
-          .eq("profile_id", driverProfileId)
-          .maybeSingle(),
-        supabase
-          .from("ride_requests")
-          .select("started_at, completed_at")
-          .eq("driver_profile_id", driverProfileId)
-          .not("started_at", "is", null)
-          .not("completed_at", "is", null)
-          .order("completed_at", { ascending: false })
-          .limit(300),
+        mobilityService.getDriverData(driverProfileId),
+        MobilityService.getDriverRideSessions(driverProfileId, 300),
       ]);
 
-      if (driverDataResult.error) {
-        logger.error("[DriverPresenceService] Error fetching driver_data:", driverDataResult.error);
-        return null;
-      }
-      if (rideResult.error) {
-        logger.error("[DriverPresenceService] Error fetching ride sessions:", rideResult.error);
-        return null;
-      }
-
       const nowIso = new Date().toISOString();
-      const isCurrentlyOnline = Boolean(driverDataResult.data?.is_online);
-      const onlineSince = isCurrentlyOnline ? driverDataResult.data?.last_location_update ?? null : null;
+      const isCurrentlyOnline = Boolean(driverDataResult?.is_online);
+      const onlineSince = isCurrentlyOnline ? driverDataResult?.last_location_update ?? null : null;
       const currentSessionMinutes = onlineSince ? minutesBetween(onlineSince, nowIso) : 0;
 
-      const rides = (rideResult.data ?? []) as Array<{ started_at: string | null; completed_at: string | null }>;
+      const rides = (rideResult ?? []) as Array<{ started_at: string | null; completed_at: string | null }>;
       const rideDurations = rides
         .map((ride) => {
           if (!ride.started_at || !ride.completed_at) return 0;

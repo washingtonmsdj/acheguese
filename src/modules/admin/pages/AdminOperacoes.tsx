@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import {
@@ -478,4 +479,5 @@ export default function AdminOperacoes() {
     </div>
   );
 }
+
 

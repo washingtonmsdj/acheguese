@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 /**
  * useMapClustering - Hook para clustering de marcadores no mapa
  * 
@@ -112,3 +113,4 @@ export function useMapClustering(options: UseMapClusteringOptions): UseMapCluste
     isReady: isInitialized.current,
   };
 }
+

@@ -11,6 +11,7 @@ import { supabase } from "@/integrations/supabase";
 import { callRPC, insertLooseRow } from "@/integrations/supabase/services/supabaseHelpers";
 import type { Database } from "@/integrations/supabase/types.generated";
 import { logger } from "@/shared/utils/logger";
+import { SessionService } from "@/core/session/services/SessionService";
 import type {
   AlertCategory,
   AlertFeedFilters,
@@ -379,9 +380,7 @@ class CommunityAlertServiceClass {
     metadata: Record<string, unknown>
   ): Promise<void> {
     try {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
+      const user = await SessionService.getCurrentUser();
       if (!user) return;
 
       const { error } = await insertLooseRow("community_alert_audit", {

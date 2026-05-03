@@ -1,11 +1,11 @@
-﻿/**
- * ðŸ“ PUBLICAR VAGA PAGE â€” FormulÃ¡rio completo multi-step
+/**
+ * 📝 PUBLICAR VAGA PAGE — Formulário completo multi-step
  *
- * âœ… 6 seÃ§Ãµes: InformaÃ§Ãµes â†’ Detalhes â†’ SalÃ¡rio â†’ LocalizaÃ§Ã£o â†’ Contato â†’ RevisÃ£o
- * âœ… SSOT â€” tipos de vagas.types.ts
- * âœ… PadrÃ£o visual consistente com NovoClassificadoPage
- * âœ… Mobile-first + desktop responsivo
- * âœ… Design system tokens
+ * ✅ 6 seções: Informações → Detalhes → Salário → Localização → Contato → Revisão
+ * ✅ SSOT — tipos de vagas.types.ts
+ * ✅ Padrão visual consistente com NovoClassificadoPage
+ * ✅ Mobile-first + desktop responsivo
+ * ✅ Design system tokens
  */
 
 import React, { useState, useCallback, useMemo } from "react";
@@ -43,14 +43,14 @@ import {
   type VagaSalaryMode,
 } from "../types/vagas.types";
 
-// â”€â”€â”€ Steps â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Steps ────────────────────────────────────────────────────
 const STEPS = [
-  { id: "info",      label: "InformaÃ§Ãµes",  icon: Briefcase, number: 1 },
+  { id: "info",      label: "Informações",  icon: Briefcase, number: 1 },
   { id: "details",   label: "Detalhes",     icon: Tag,       number: 2 },
-  { id: "salary",    label: "SalÃ¡rio",      icon: DollarSign, number: 3 },
-  { id: "location",  label: "LocalizaÃ§Ã£o",  icon: MapPin,    number: 4 },
+  { id: "salary",    label: "Salário",      icon: DollarSign, number: 3 },
+  { id: "location",  label: "Localização",  icon: MapPin,    number: 4 },
   { id: "contact",   label: "Contato",      icon: Phone,     number: 5 },
-  { id: "preview",   label: "RevisÃ£o",      icon: Eye,       number: 6 },
+  { id: "preview",   label: "Revisão",      icon: Eye,       number: 6 },
 ] as const;
 
 type StepId = typeof STEPS[number]["id"];
@@ -65,14 +65,14 @@ const nivelLabelsMap = new Map(
   Object.entries(NIVEL_LABELS) as Array<[VagaNivel, string]>,
 );
 
-// â”€â”€â”€ Suggested benefits â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Suggested benefits ──────────────────────────────────────
 const SUGGESTED_BENEFITS = [
-  "Vale RefeiÃ§Ã£o", "Vale Transporte", "Plano de SaÃºde", "Plano OdontolÃ³gico",
-  "Seguro de Vida", "Gympass", "Day Off AniversÃ¡rio", "PLR",
-  "Home Office", "HorÃ¡rio FlexÃ­vel", "Estacionamento", "AuxÃ­lio Creche",
+  "Vale Refeição", "Vale Transporte", "Plano de Saúde", "Plano Odontológico",
+  "Seguro de Vida", "Gympass", "Day Off Aniversário", "PLR",
+  "Home Office", "Horário Flexível", "Estacionamento", "Auxílio Creche",
 ];
 
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// ═════════════════════════════════════════════════════════════
 export default function PublicarVagaPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -101,7 +101,7 @@ export default function PublicarVagaPage() {
   const [ocultarSalario, setOcultarSalario] = useState(false);
 
   // Location (SSOT) - gerenciado pelo hook useVagasLocation
-  // NÃ£o precisa de state local - usa activeLocationId diretamente
+  // Não precisa de state local - usa activeLocationId diretamente
 
   // Arrays
   const [tags, setTags] = useState<string[]>([]);
@@ -128,7 +128,7 @@ export default function PublicarVagaPage() {
 
   const currentStepIndex = STEPS.findIndex((s) => s.id === currentStep);
 
-  // â”€â”€â”€ Helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── Helpers ────────────────────────────────────
   const addToList = useCallback(
     (list: string[], setList: (v: string[]) => void, input: string, setInput: (v: string) => void) => {
       const trimmed = input.trim();
@@ -153,25 +153,25 @@ export default function PublicarVagaPage() {
     );
   }, []);
 
-  // â”€â”€â”€ Step validation â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── Step validation ───────────────────────────
   const validateStep = useCallback(
     (step: StepId): boolean => {
       const newErrors: Record<string, string> = {};
 
       switch (step) {
         case "info":
-          if (!titulo.trim()) newErrors.titulo = "TÃ­tulo obrigatÃ³rio";
-          else if (titulo.trim().length < 5) newErrors.titulo = "MÃ­nimo 5 caracteres";
-          if (!empresa.trim()) newErrors.empresa = "Nome da empresa obrigatÃ³rio";
-          if (!descricao.trim()) newErrors.descricao = "DescriÃ§Ã£o obrigatÃ³ria";
-          else if (descricao.trim().length < 20) newErrors.descricao = "MÃ­nimo 20 caracteres";
+          if (!titulo.trim()) newErrors.titulo = "Título obrigatório";
+          else if (titulo.trim().length < 5) newErrors.titulo = "Mínimo 5 caracteres";
+          if (!empresa.trim()) newErrors.empresa = "Nome da empresa obrigatório";
+          if (!descricao.trim()) newErrors.descricao = "Descrição obrigatória";
+          else if (descricao.trim().length < 20) newErrors.descricao = "Mínimo 20 caracteres";
           break;
         case "location":
           if (!hasActiveLocation) {
-            newErrors.location = "Selecione uma localização ativa no sistema";
+            newErrors.location = "Selecione uma localiza��o ativa no sistema";
           }
           if (isLoadingPermission) {
-            newErrors.publishPermission = "Aguarde a validação das permissões.";
+            newErrors.publishPermission = "Aguarde a valida��o das permiss�es.";
           } else if (!permission.canPublish) {
             newErrors.publishPermission = permission.message;
           }
@@ -201,7 +201,7 @@ export default function PublicarVagaPage() {
     ]
   );
 
-  // â”€â”€â”€ Navigation â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── Navigation ─────────────────────────────────
   const goNext = useCallback(() => {
     if (!validateStep(currentStep)) return;
     const nextIdx = currentStepIndex + 1;
@@ -228,7 +228,7 @@ export default function PublicarVagaPage() {
     [currentStepIndex, currentStep, validateStep]
   );
 
-  // â”€â”€â”€ Completeness â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── Completeness ───────────────────────────────
   const completeness = useMemo(() => {
     let filled = 0;
     const total = 8;
@@ -293,10 +293,10 @@ export default function PublicarVagaPage() {
     [ocultarSalario],
   );
 
-  // â”€â”€â”€ Submit â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── Submit ─────────────────────────────────────
   const handlePublish = useCallback(async () => {
     if (!titulo.trim() || !empresa.trim() || !descricao.trim()) {
-      toast.error("Preencha todos os campos obrigatÃ³rios");
+      toast.error("Preencha todos os campos obrigatórios");
       setCurrentStep("info");
       return;
     }
@@ -308,7 +308,7 @@ export default function PublicarVagaPage() {
     }
 
     if (isLoadingPermission) {
-      toast.error("Aguarde a validação das permissões para publicar.");
+      toast.error("Aguarde a valida��o das permiss�es para publicar.");
       setCurrentStep("location");
       return;
     }
@@ -320,7 +320,7 @@ export default function PublicarVagaPage() {
     }
 
     if (!permission.isAdmin && !permission.businessId) {
-      toast.error("Empresa vinculada não encontrada para publicação.");
+      toast.error("Empresa vinculada n�o encontrada para publica��o.");
       setCurrentStep("location");
       return;
     }
@@ -332,7 +332,7 @@ export default function PublicarVagaPage() {
     }
 
     if (!activeLocationId) {
-      toast.error("Selecione um território ativo para publicar.");
+      toast.error("Selecione um territ�rio ativo para publicar.");
       setCurrentStep("location");
       return;
     }
@@ -398,7 +398,7 @@ export default function PublicarVagaPage() {
         ogImageUrl: undefined,
       });
 
-      toast.success("Vaga enviada para revisão com sucesso.");
+      toast.success("Vaga enviada para revis�o com sucesso.");
       navigate("/vagas");
     } catch (error) {
       const errorMessage =
@@ -442,7 +442,7 @@ export default function PublicarVagaPage() {
   // Redirect if not logged in
   React.useEffect(() => {
     if (!user) {
-      toast.error("FaÃ§a login para publicar uma vaga");
+      toast.error("Faça login para publicar uma vaga");
       navigate("/login");
     }
   }, [user, navigate]);
@@ -462,17 +462,17 @@ export default function PublicarVagaPage() {
   const salaryDisplay = ocultarSalario
     ? "A combinar"
     : salarioMin && salarioMax
-    ? `R$ ${Number(salarioMin).toLocaleString("pt-BR")} â€“ R$ ${Number(salarioMax).toLocaleString("pt-BR")}`
+    ? `R$ ${Number(salarioMin).toLocaleString("pt-BR")} – R$ ${Number(salarioMax).toLocaleString("pt-BR")}`
     : salarioMin
     ? `A partir de R$ ${Number(salarioMin).toLocaleString("pt-BR")}`
     : salarioMax
-    ? `AtÃ© R$ ${Number(salarioMax).toLocaleString("pt-BR")}`
+    ? `Até R$ ${Number(salarioMax).toLocaleString("pt-BR")}`
     : "A combinar";
 
-  // â”€â”€â”€ Render â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── Render ─────────────────────────────────────
   return (
     <div className="flex flex-col min-h-full bg-background">
-      {/* â”€â”€â”€ Header â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+      {/* ─── Header ────────────────────────────────── */}
       <header className="sticky top-0 z-20 border-b border-border bg-card/95 backdrop-blur-sm">
         <div className="flex items-center gap-3 px-4 py-3 max-w-3xl mx-auto">
           <motion.button
@@ -489,7 +489,7 @@ export default function PublicarVagaPage() {
               {STEPS.at(currentStepIndex)?.label ?? "Etapa"}
             </h1>
             <p className="text-[10px] text-muted-foreground">
-              Passo {currentStepIndex + 1} de {STEPS.length} Â· {completeness}% preenchido
+              Passo {currentStepIndex + 1} de {STEPS.length} · {completeness}% preenchido
             </p>
           </div>
           <div className="w-16 h-1.5 rounded-full bg-muted overflow-hidden shrink-0">
@@ -541,28 +541,28 @@ export default function PublicarVagaPage() {
           <div className="space-y-1">
             <p className="text-sm font-semibold text-foreground">
               {isLoadingPermission
-                ? "Validando permissão para publicar..."
+                ? "Validando permiss�o para publicar..."
                 : permission.canPublish
-                  ? "Publicação liberada"
-                  : "Publicação bloqueada"}
+                  ? "Publica��o liberada"
+                  : "Publica��o bloqueada"}
             </p>
             <p className="text-xs text-muted-foreground">
               {isLoadingPermission
-                ? "Aguarde a validação do perfil/empresa."
+                ? "Aguarde a valida��o do perfil/empresa."
                 : permission.message}
             </p>
             {!isLoadingPermission && permission.canPublish && (
               <p className="text-[11px] text-muted-foreground">
-                Perfil ativo: <strong>{activeProfile?.profileType || "—"}</strong>
-                {" · "}
-                Empresa: <strong>{permission.businessName || empresa || "—"}</strong>
+                Perfil ativo selecionado
+                {" � "}
+                Empresa: <strong>{permission.businessName || empresa || "�"}</strong>
               </p>
             )}
           </div>
         </div>
       </div>
 
-      {/* â”€â”€â”€ Step Content â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+      {/* ─── Step Content ──────────────────────────── */}
       <AnimatePresence mode="wait">
         <motion.div
           key={currentStep}
@@ -572,11 +572,11 @@ export default function PublicarVagaPage() {
           transition={{ duration: 0.2 }}
           className="flex-1 px-4 py-5 pb-28 max-w-3xl mx-auto w-full"
         >
-          {/* â•â•â• STEP 1: InformaÃ§Ãµes â•â•â• */}
+          {/* ═══ STEP 1: Informações ═══ */}
           {currentStep === "info" && (
             <div className="space-y-5">
-              {/* TÃ­tulo */}
-              <FormField label="TÃ­tulo da Vaga" error={errors.titulo} counter={`${titulo.length}/${JOB_FORM_LIMITS.MAX_TITLE}`} required>
+              {/* Título */}
+              <FormField label="Título da Vaga" error={errors.titulo} counter={`${titulo.length}/${JOB_FORM_LIMITS.MAX_TITLE}`} required>
                 <Input
                   placeholder="Ex: Desenvolvedor Full Stack, Vendedor Externo..."
                   value={titulo}
@@ -600,8 +600,8 @@ export default function PublicarVagaPage() {
                 </div>
               </FormField>
 
-              {/* DescriÃ§Ã£o */}
-              <FormField label="DescriÃ§Ã£o da Vaga" error={errors.descricao} counter={`${descricao.length}/${JOB_FORM_LIMITS.MAX_DESCRIPTION}`} required>
+              {/* Descrição */}
+              <FormField label="Descrição da Vaga" error={errors.descricao} counter={`${descricao.length}/${JOB_FORM_LIMITS.MAX_DESCRIPTION}`} required>
                 <Textarea
                   placeholder="Descreva as responsabilidades, ambiente de trabalho, diferenciais..."
                   rows={5}
@@ -612,7 +612,7 @@ export default function PublicarVagaPage() {
                 />
               </FormField>
 
-              {/* Contrato / Modalidade / NÃ­vel */}
+              {/* Contrato / Modalidade / Nível */}
               <div className="space-y-4">
                 {/* Contrato */}
                 <div className="space-y-2">
@@ -656,9 +656,9 @@ export default function PublicarVagaPage() {
                   </div>
                 </div>
 
-                {/* NÃ­vel */}
+                {/* Nível */}
                 <div className="space-y-2">
-                  <label className="text-sm font-semibold text-foreground">NÃ­vel</label>
+                  <label className="text-sm font-semibold text-foreground">Nível</label>
                   <div className="flex flex-wrap gap-1.5">
                     {(Object.entries(NIVEL_LABELS) as [VagaNivel, string][]).map(([key, label]) => (
                       <button
@@ -717,7 +717,7 @@ export default function PublicarVagaPage() {
             </div>
           )}
 
-          {/* â•â•â• STEP 2: Detalhes â•â•â• */}
+          {/* ═══ STEP 2: Detalhes ═══ */}
           {currentStep === "details" && (
             <div className="space-y-6">
               {/* Tags / Habilidades */}
@@ -766,7 +766,7 @@ export default function PublicarVagaPage() {
                 </label>
                 <div className="flex gap-2">
                   <Input
-                    placeholder="Ex: 3+ anos de experiÃªncia, CNH B..."
+                    placeholder="Ex: 3+ anos de experiência, CNH B..."
                     value={reqInput}
                     onChange={(e) => setReqInput(e.target.value)}
                     onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addToList(requisitos, setRequisitos, reqInput, setReqInput))}
@@ -787,7 +787,7 @@ export default function PublicarVagaPage() {
                     {requisitos.map((r, i) => (
                       <li key={i} className="text-xs text-muted-foreground flex items-center justify-between bg-card border border-border rounded-lg px-3 py-2">
                         <span className="flex items-center gap-2">
-                          <span className="text-accent">â€¢</span>{r}
+                          <span className="text-accent">•</span>{r}
                         </span>
                         <button onClick={() => removeFromList(requisitos, setRequisitos, i)} aria-label={`Remover ${r}`}>
                           <X className="h-3 w-3 text-muted-foreground hover:text-destructive" />
@@ -798,14 +798,14 @@ export default function PublicarVagaPage() {
                 )}
               </div>
 
-              {/* BenefÃ­cios */}
+              {/* Benefícios */}
               <div className="space-y-2">
                 <label className="text-sm font-semibold text-foreground flex items-center gap-1.5">
                   <Award className="h-4 w-4 text-success" />
-                  BenefÃ­cios
+                  Benefícios
                 </label>
 
-                {/* SugestÃµes rÃ¡pidas */}
+                {/* Sugestões rápidas */}
                 <div className="flex flex-wrap gap-1.5">
                   {SUGGESTED_BENEFITS.map((b) => (
                     <button
@@ -818,7 +818,7 @@ export default function PublicarVagaPage() {
                           : "bg-card border-border text-muted-foreground hover:border-success/30"
                       )}
                     >
-                      {beneficios.includes(b) ? "âœ“ " : ""}{b}
+                      {beneficios.includes(b) ? "✓ " : ""}{b}
                     </button>
                   ))}
                 </div>
@@ -826,7 +826,7 @@ export default function PublicarVagaPage() {
                 {/* Input customizado */}
                 <div className="flex gap-2 mt-1">
                   <Input
-                    placeholder="Outro benefÃ­cio..."
+                    placeholder="Outro benefício..."
                     value={benInput}
                     onChange={(e) => setBenInput(e.target.value)}
                     onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addToList(beneficios, setBeneficios, benInput, setBenInput))}
@@ -860,12 +860,12 @@ export default function PublicarVagaPage() {
             </div>
           )}
 
-          {/* â•â•â• STEP 3: SalÃ¡rio â•â•â• */}
+          {/* ═══ STEP 3: Salário ═══ */}
           {currentStep === "salary" && (
             <div className="space-y-5">
               <div className="flex items-center justify-between p-4 rounded-xl bg-card border border-border">
                 <div>
-                  <p className="text-sm font-semibold text-foreground">Ocultar salÃ¡rio</p>
+                  <p className="text-sm font-semibold text-foreground">Ocultar salário</p>
                   <p className="text-[10px] text-muted-foreground">
                     Exibir como "A combinar" para candidatos
                   </p>
@@ -881,7 +881,7 @@ export default function PublicarVagaPage() {
                         <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                         <Input
                           type="number"
-                          placeholder="MÃ­nimo"
+                          placeholder="Mínimo"
                           value={salarioMin}
                           onChange={(e) => setSalarioMin(e.target.value)}
                           className="pl-9 h-12 text-sm rounded-xl"
@@ -892,7 +892,7 @@ export default function PublicarVagaPage() {
                         <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                         <Input
                           type="number"
-                          placeholder="MÃ¡ximo"
+                          placeholder="Máximo"
                           value={salarioMax}
                           onChange={(e) => setSalarioMax(e.target.value)}
                           className="pl-9 h-12 text-sm rounded-xl"
@@ -903,14 +903,14 @@ export default function PublicarVagaPage() {
                   </FormField>
 
                   <p className="text-xs text-muted-foreground px-1">
-                    ðŸ’¡ Vagas com salÃ¡rio informado recebem atÃ© 3x mais candidaturas
+                    💡 Vagas com salário informado recebem até 3x mais candidaturas
                   </p>
                 </div>
               )}
 
               {/* Preview */}
               <div className="p-4 rounded-xl bg-primary/5 border border-primary/20">
-                <p className="text-xs text-muted-foreground mb-1">PrÃ©via do salÃ¡rio:</p>
+                <p className="text-xs text-muted-foreground mb-1">Prévia do salário:</p>
                 <p className="text-lg font-bold text-primary">{salaryDisplay}</p>
               </div>
 
@@ -922,7 +922,7 @@ export default function PublicarVagaPage() {
                     Vaga Urgente
                   </p>
                   <p className="text-[10px] text-muted-foreground">
-                    Destaca com selo de urgÃªncia na listagem
+                    Destaca com selo de urgência na listagem
                   </p>
                 </div>
                 <Switch checked={urgente} onCheckedChange={setUrgente} />
@@ -944,7 +944,7 @@ export default function PublicarVagaPage() {
             </div>
           )}
 
-          {/* â•â•â• STEP 4: LocalizaÃ§Ã£o â•â•â• */}
+          {/* ═══ STEP 4: Localização ═══ */}
           {currentStep === "location" && (
             <div className="space-y-5">
               {/* Location status - SSOT */}
@@ -966,16 +966,16 @@ export default function PublicarVagaPage() {
                   {hasActiveLocation ? (
                     <>
                       <p className="text-sm font-semibold text-foreground">
-                        ðŸ“ {activeLocationName}
+                        📍 {activeLocationName}
                       </p>
                       <p className="text-[10px] text-muted-foreground">
-                        LocalizaÃ§Ã£o ativa â€” sua vaga aparecerÃ¡ nesta regiÃ£o
+                        Localização ativa — sua vaga aparecerá nesta região
                       </p>
                     </>
                   ) : (
                     <>
                       <p className="text-sm font-semibold text-destructive">
-                        Nenhuma localizaÃ§Ã£o ativa
+                        Nenhuma localização ativa
                       </p>
                       <p className="text-[10px] text-muted-foreground">
                         Selecione uma comunidade/cidade para publicar sua vaga
@@ -1012,7 +1012,7 @@ export default function PublicarVagaPage() {
             </div>
           )}
 
-          {/* â•â•â• STEP 5: Contato â•â•â• */}
+          {/* ═══ STEP 5: Contato ═══ */}
           {currentStep === "contact" && (
             <div className="space-y-5">
               <p className="text-xs text-muted-foreground">
@@ -1077,18 +1077,18 @@ export default function PublicarVagaPage() {
             </div>
           )}
 
-          {/* â•â•â• STEP 6: RevisÃ£o â•â•â• */}
+          {/* ═══ STEP 6: Revisão ═══ */}
           {currentStep === "preview" && (
             <div className="space-y-4">
               <div className="flex items-center gap-2 mb-2">
                 <Eye className="h-5 w-5 text-warning" />
-                <h2 className="text-lg font-bold text-foreground">RevisÃ£o da Vaga</h2>
+                <h2 className="text-lg font-bold text-foreground">Revisão da Vaga</h2>
               </div>
 
               {/* Main info */}
               <div className="bg-card border border-border rounded-xl p-4 space-y-3">
                 <div>
-                  <h3 className="text-base font-bold text-foreground">{titulo || "Sem tÃ­tulo"}</h3>
+                  <h3 className="text-base font-bold text-foreground">{titulo || "Sem título"}</h3>
                   <p className="text-sm text-muted-foreground flex items-center gap-1 mt-0.5">
                     <Building2 className="h-3.5 w-3.5" />
                     {empresa || "Sem empresa"}
@@ -1119,16 +1119,16 @@ export default function PublicarVagaPage() {
                 )}
               </div>
 
-              {/* SalÃ¡rio */}
+              {/* Salário */}
               <div className="bg-card border border-border rounded-xl p-4">
-                <p className="text-xs font-bold text-foreground uppercase tracking-wider mb-1">SalÃ¡rio</p>
+                <p className="text-xs font-bold text-foreground uppercase tracking-wider mb-1">Salário</p>
                 <p className="text-sm text-primary font-bold">{salaryDisplay}</p>
               </div>
 
-              {/* DescriÃ§Ã£o */}
+              {/* Descrição */}
               <div className="bg-card border border-border rounded-xl p-4">
-                <p className="text-xs font-bold text-foreground uppercase tracking-wider mb-1">DescriÃ§Ã£o</p>
-                <p className="text-sm text-muted-foreground whitespace-pre-line">{descricao || "â€”"}</p>
+                <p className="text-xs font-bold text-foreground uppercase tracking-wider mb-1">Descrição</p>
+                <p className="text-sm text-muted-foreground whitespace-pre-line">{descricao || "—"}</p>
               </div>
 
               {/* Tags */}
@@ -1149,16 +1149,16 @@ export default function PublicarVagaPage() {
                   <p className="text-xs font-bold text-foreground uppercase tracking-wider mb-2">Requisitos</p>
                   <ul className="space-y-1">
                     {requisitos.map((r) => (
-                      <li key={r} className="text-sm text-muted-foreground">â€¢ {r}</li>
+                      <li key={r} className="text-sm text-muted-foreground">• {r}</li>
                     ))}
                   </ul>
                 </div>
               )}
 
-              {/* BenefÃ­cios */}
+              {/* Benefícios */}
               {beneficios.length > 0 && (
                 <div className="bg-card border border-border rounded-xl p-4">
-                  <p className="text-xs font-bold text-foreground uppercase tracking-wider mb-2">BenefÃ­cios</p>
+                  <p className="text-xs font-bold text-foreground uppercase tracking-wider mb-2">Benefícios</p>
                   <div className="flex flex-wrap gap-1.5">
                     {beneficios.map((b) => (
                       <span key={b} className="text-xs bg-success/10 text-success px-2 py-0.5 rounded-full">{b}</span>
@@ -1183,7 +1183,7 @@ export default function PublicarVagaPage() {
 
               {vagasQtd && (
                 <div className="bg-card border border-border rounded-xl p-4">
-                  <p className="text-xs font-bold text-foreground uppercase tracking-wider mb-1">Vagas disponÃ­veis</p>
+                  <p className="text-xs font-bold text-foreground uppercase tracking-wider mb-1">Vagas disponíveis</p>
                   <p className="text-sm text-foreground font-semibold">{vagasQtd} vaga(s)</p>
                 </div>
               )}
@@ -1192,7 +1192,7 @@ export default function PublicarVagaPage() {
         </motion.div>
       </AnimatePresence>
 
-      {/* â”€â”€â”€ Fixed Bottom Actions â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+      {/* ─── Fixed Bottom Actions ──────────────────── */}
       <div className="fixed bottom-0 left-0 right-0 p-4 bg-background/95 backdrop-blur-sm border-t border-border z-20">
         <div className="max-w-3xl mx-auto">
           {currentStep === "preview" ? (
@@ -1222,7 +1222,7 @@ export default function PublicarVagaPage() {
                 ) : !permission.canPublish ? (
                   <>
                     <Shield className="h-4 w-4 mr-2" />
-                    Publicação bloqueada
+                    Publica��o bloqueada
                   </>
                 ) : (
                   <>
@@ -1248,7 +1248,7 @@ export default function PublicarVagaPage() {
                 className="flex-1 h-12 text-base font-semibold rounded-xl"
                 onClick={goNext}
               >
-                {currentStepIndex === STEPS.length - 2 ? "Revisar" : "PrÃ³ximo"}
+                {currentStepIndex === STEPS.length - 2 ? "Revisar" : "Próximo"}
                 <ChevronRight className="h-4 w-4 ml-1" />
               </Button>
             </div>
@@ -1259,7 +1259,7 @@ export default function PublicarVagaPage() {
   );
 }
 
-// â”€â”€â”€ Reusable Form Field â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Reusable Form Field ──────────────────────────────────────
 function FormField({
   label,
   error,
@@ -1299,4 +1299,5 @@ function FormField({
     </div>
   );
 }
+
 

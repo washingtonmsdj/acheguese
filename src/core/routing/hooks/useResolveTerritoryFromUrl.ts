@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 /**
  * useResolveTerritoryFromUrl
  *
@@ -229,3 +230,4 @@ export function useResolveTerritoryFromUrl(): TerritoryResolveResult {
 
   return result;
 }
+

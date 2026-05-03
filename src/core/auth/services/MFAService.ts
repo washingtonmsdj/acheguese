@@ -7,6 +7,7 @@
 
 import { logger } from '@/shared/utils/logger';
 import { supabase } from '@/integrations/supabase';
+import { SessionService } from '@/core/session/services/SessionService';
 
 export interface MFAStatus {
   mfaEnabled: boolean;
@@ -38,7 +39,7 @@ class MFAService {
    */
   async checkMFARequired(): Promise<MFARequirement> {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const user = await SessionService.getCurrentUser();
       
       if (!user) {
         return { required: false, gracePeriodExpiresAt: null, daysRemaining: null };
@@ -86,7 +87,7 @@ class MFAService {
    */
   async getMFAStatus(): Promise<MFAStatus | null> {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const user = await SessionService.getCurrentUser();
       
       if (!user) {
         return null;
@@ -190,7 +191,7 @@ class MFAService {
       }
 
       // Atualizar status no banco
-      const { data: { user } } = await supabase.auth.getUser();
+      const user = await SessionService.getCurrentUser();
       
       if (user) {
         await supabase
@@ -228,7 +229,7 @@ class MFAService {
       }
 
       // Atualizar status no banco
-      const { data: { user } } = await supabase.auth.getUser();
+      const user = await SessionService.getCurrentUser();
       
       if (user) {
         await supabase
@@ -320,7 +321,7 @@ class MFAService {
       }
 
       // Atualizar last_verified_at
-      const { data: { user } } = await supabase.auth.getUser();
+      const user = await SessionService.getCurrentUser();
       
       if (user) {
         await supabase

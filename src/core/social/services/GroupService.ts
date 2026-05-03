@@ -191,14 +191,7 @@ export class GroupService {
    */
   static async getGroups(): Promise<Group[]> {
     try {
-      const { data, error } = await (supabase as any)
-        .from("groups")
-        .select(`
-          *,
-          profiles:created_by(name, avatar_url),
-          members_count:group_members_new(count)
-        `)
-        .order("created_at", { ascending: false });
+      const { data, error } = await (supabase as any).rpc("get_community_groups");
 
       if (error) throw error;
 
@@ -237,11 +230,9 @@ export class GroupService {
    */
   static async getGroupById(groupId: string): Promise<Group | null> {
     try {
-      const { data, error } = await (supabase as any)
-        .from("groups")
-        .select("*, profiles:created_by(name, avatar_url)")
-        .eq("id", groupId)
-        .single();
+      const { data, error } = await (supabase as any).rpc("get_community_group_by_id", {
+        p_group_id: groupId,
+      });
 
       if (error) throw error;
 
@@ -301,11 +292,13 @@ export class GroupService {
     created_by: string;
   }): Promise<Group> {
     try {
-      const { data: group, error } = await (supabase as any)
-        .from("groups")
-        .insert(data)
-        .select()
-        .single();
+      const { data: group, error } = await (supabase as any).rpc("create_community_group", {
+        p_name: data.name,
+        p_description: data.description ?? null,
+        p_category: data.category ?? null,
+        p_is_private: data.is_private ?? false,
+        p_created_by: data.created_by,
+      });
 
       if (error) throw error;
 

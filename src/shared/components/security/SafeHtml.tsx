@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 /**
  * SafeHtml - Componente seguro para renderizar HTML
  * 

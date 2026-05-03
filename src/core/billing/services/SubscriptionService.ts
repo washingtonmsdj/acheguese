@@ -10,6 +10,7 @@
 
 import { logger } from '@/shared/utils/logger';
 import { supabase } from '@/integrations/supabase/supabase';
+import { SessionService } from '@/core/session/services/SessionService';
 export interface UserSubscription {
   id: string;
   user_id: string;
@@ -43,7 +44,7 @@ export class SubscriptionService {
    * Obtém a assinatura do usuário atual
    */
   static async getCurrentUserSubscription(): Promise<UserSubscription | null> {
-    const { data: { user } } = await supabase.auth.getUser();
+    const user = await SessionService.getCurrentUser();
     
     if (!user) {
       throw new Error('User not authenticated');
@@ -71,7 +72,7 @@ export class SubscriptionService {
    * Obtém a assinatura ativa do usuário (via função SQL)
    */
   static async getActiveSubscription(): Promise<ActiveSubscription | null> {
-    const { data: { user } } = await supabase.auth.getUser();
+    const user = await SessionService.getCurrentUser();
     
     if (!user) {
       throw new Error('User not authenticated');
@@ -93,7 +94,7 @@ export class SubscriptionService {
    * Verifica se o usuário tem um plano específico
    */
   static async hasPlano(planCode: string): Promise<boolean> {
-    const { data: { user } } = await supabase.auth.getUser();
+    const user = await SessionService.getCurrentUser();
     
     if (!user) {
       return false;
@@ -116,7 +117,7 @@ export class SubscriptionService {
    * Verifica se o usuário tem acesso a uma feature
    */
   static async hasFeature(feature: string): Promise<boolean> {
-    const { data: { user } } = await supabase.auth.getUser();
+    const user = await SessionService.getCurrentUser();
     
     if (!user) {
       return false;
@@ -139,7 +140,7 @@ export class SubscriptionService {
    * Obtém o limite de um entitlement
    */
   static async getEntitlementLimit(entitlement: string): Promise<number> {
-    const { data: { user } } = await supabase.auth.getUser();
+    const user = await SessionService.getCurrentUser();
     
     if (!user) {
       return 0;

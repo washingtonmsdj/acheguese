@@ -30,12 +30,12 @@ export const MOBILITY_QUERY_KEYS = {
   adminMotoboyOperations: (filters?: any) => ["admin-motoboy-operations", filters] as const,
   
   // Driver
-  driverRides: (driverId: string) => ["driver-rides", driverId] as const,
-  driverAvailability: (driverId: string) => ["driver-availability", driverId] as const,
+  driverRides: (driverProfileId: string) => ["driver-rides", driverProfileId] as const,
+  driverAvailability: (driverProfileId: string) => ["driver-availability", driverProfileId] as const,
   
   // Ratings
   rideRating: (rideId: string) => ["ride-rating", rideId] as const,
-  driverRatings: (driverId: string) => ["driver-ratings", driverId] as const,
+  driverRatings: (driverProfileId: string) => ["driver-ratings", driverProfileId] as const,
   
   // Locations
   locations: () => ["locations"] as const,

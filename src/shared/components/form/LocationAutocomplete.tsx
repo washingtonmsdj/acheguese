@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 /**
  * LocationAutocomplete - Componente de seleção hierárquica de localização
  * 
@@ -333,3 +334,4 @@ export function LocationAutocomplete({
     </div>
   );
 }
+

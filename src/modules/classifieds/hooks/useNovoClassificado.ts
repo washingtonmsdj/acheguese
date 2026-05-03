@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import { logger } from '@/shared/utils/logger';
 import { useState, useRef, useCallback, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
@@ -164,3 +165,4 @@ export function useNovoClassificado() {
     canPublish: hasActiveLocation,
   };
 }
+

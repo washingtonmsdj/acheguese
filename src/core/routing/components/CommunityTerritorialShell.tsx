@@ -65,7 +65,7 @@ function normalizeModulePath(pathname: string): string {
 
   if (module === "comunidade") {
     if (parts[4]) return parts[4];
-    return "feed";
+    return "home";
   }
 
   return module;
@@ -100,10 +100,18 @@ export function CommunityTerritorialShell() {
   const navItems = useMemo<CommunityNavItem[]>(
     () => [
       {
+        id: "home",
+        label: "Inicio",
+        description: "Panorama da comunidade",
+        href: communityBase,
+        icon: Home,
+        group: "community",
+      },
+      {
         id: "feed",
         label: "Feed",
         description: "Conversas do Complexo",
-        href: communityBase,
+        href: `${communityBase}/feed`,
         icon: LayoutList,
         group: "community",
       },
@@ -111,7 +119,7 @@ export function CommunityTerritorialShell() {
         id: "grupos",
         label: "Grupos",
         description: "Nucleos e interesses locais",
-        href: `${communityBase}?tab=grupos`,
+        href: `${communityBase}/grupos`,
         icon: Users,
         group: "community",
       },
@@ -256,12 +264,7 @@ export function CommunityTerritorialShell() {
               </p>
               <nav className="space-y-1">
                 {items.map((item) => {
-                  const isActive =
-                    item.id === "grupos"
-                      ? location.pathname === communityBase && new URLSearchParams(location.search).get("tab") === "grupos"
-                      : item.href === communityBase
-                      ? activeKey === "feed"
-                      : location.pathname.startsWith(item.href) || activeKey === item.id;
+                  const isActive = activeKey === item.id || (item.id === "home" && location.pathname === communityBase);
                   return (
                     <Link
                       key={item.href}
@@ -348,12 +351,7 @@ export function CommunityTerritorialShell() {
 
         <div className="grid w-full min-w-0 grid-cols-3 gap-2 border-b border-white/10 bg-[#071316]/90 px-3 py-2 min-[380px]:grid-cols-4 lg:hidden">
           {navItems.map((item) => {
-            const isActive =
-              item.id === "grupos"
-                ? location.pathname === communityBase && new URLSearchParams(location.search).get("tab") === "grupos"
-                : item.href === communityBase
-                ? activeKey === "feed"
-                : location.pathname.startsWith(item.href) || activeKey === item.id;
+            const isActive = activeKey === item.id || (item.id === "home" && location.pathname === communityBase);
 
             return (
               <Link
