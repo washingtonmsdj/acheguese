@@ -15,7 +15,6 @@ const corsHeaders = {
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY")!;
-const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY")!;
 
 type Category =
   | "clothing_upper" | "clothing_lower" | "clothing_full"
@@ -67,10 +66,18 @@ function buildPrompt(category: Category, gender: string, style: string): string 
 
 async function callLovableImage(productImageUrl: string, prompt: string): Promise<string> {
   // Retorna data URL base64 PNG.
+  const lovableApiKey = Deno.env.get("LOVABLE_API_KEY")?.trim();
+  if (!lovableApiKey) {
+    throw new Error("LOVABLE_API_KEY não está configurada no backend.");
+  }
+  if (!lovableApiKey.startsWith("sk_")) {
+    throw new Error("LOVABLE_API_KEY inválida no backend. Rotacione a chave de IA e redeploye a função.");
+  }
+
   const resp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
     method: "POST",
     headers: {
-      Authorization: `Bearer ${LOVABLE_API_KEY}`,
+      Authorization: `Bearer ${lovableApiKey}`,
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
