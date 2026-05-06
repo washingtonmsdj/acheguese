@@ -463,6 +463,7 @@ ide_requests por order.id pelo OrderDeliveryLinkService.
 - [x] Comprovante do motoboy agora sincroniza de `ride_requests.proof_of_delivery` para `orders.proof_of_delivery` e aparece no detalhe do pedido.
 ide_requests.proof_of_delivery para orders.proof_of_delivery e aparece no detalhe do pedido.
 - [x] Criada comunicacao operacional derivada do SSOT: `OrderDeliveryNotificationService` notifica cliente, loja e motoboy em criacao/mudanca de status sem quebrar o fluxo se notificacao falhar.
+- [x] Detalhe do pedido ganhou painel operacional da loja via `OrderService`: aceitar, iniciar preparo, marcar pronto, despachar/entregar e cancelar com motivo auditavel no SSOT.
 
 ## Tarefa 3.2: Substituir `confirm()` nativo
 

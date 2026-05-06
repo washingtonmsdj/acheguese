@@ -42,6 +42,8 @@ Estado observado em `src/modules/business/gastronomy/niches/registry.ts`:
 - [x] P0: alinhar front de pedidos/entregas da loja ao SSOT de `orders`/`ride_requests`.
 ide_requests.
 - [ ] P0: validar fluxo restaurante completo: receber pedido, aceitar, preparar, despachar, cancelar, pausar loja, ajustar tempo e esgotar item.
+  - [x] Aceitar, iniciar preparo, marcar pronto, despachar/entregar e cancelar com motivo foram conectados no detalhe do pedido via `OrderService`/SSOT.
+  - [ ] Ainda falta validar visualmente, com dados reais/autenticados, pausa de loja, ajuste de tempo operacional e pausa/esgotamento de item.
 - [x] P0: integrar pedido com motoboy quando for delivery proprio/plataforma.
 - [x] P0: trocar `confirm()` nativo em delecao de categoria, item, area de entrega e excecoes de horario.
 - [x] P0: resolver arquivos deprecated de billing/permissoes/feature flags ou arquivar claramente.
@@ -73,6 +75,7 @@ ide_requests.
 - `src/modules/business/gastronomy/components/hours/ExceptionsManager.tsx`: `confirm()` removido; usa `ConfirmActionDialog`.
 - `src/modules/mobility/delivery/services/OrderDeliveryLinkService.ts`: sincroniza `ride_requests` de motoboy/gastronomia com `orders.logistics_status`.
 - `src/modules/mobility/core/RideOperationalService.ts`: aciona sincronizacao do pedido ao aceitar, cancelar, retirar, iniciar, entregar ou falhar entrega.
+- `src/modules/business/gastronomy/components/orders/OrderOperationsPanel.tsx`: painel operacional da loja para avancar pedido por status e cancelar com motivo auditavel no SSOT.
 - `src/modules/business/gastronomy/billing/legacy/StripeService.ts`: arquivado fora do export publico; SSOT atual em `@/core/billing`.
 - `src/modules/business/gastronomy/billing/legacy/permissions.ts`: arquivado fora do export publico; SSOT atual em `@/core/billing`.
 - `src/modules/business/gastronomy/billing/legacy/featureFlags.ts`: arquivado fora do export publico; SSOT atual em `@/core/billing`.

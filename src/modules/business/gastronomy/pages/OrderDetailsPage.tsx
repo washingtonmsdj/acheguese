@@ -19,6 +19,7 @@ import {
 import { useOrderDetails } from '../hooks';
 import { OrderStatusBadge } from '../components/orders/OrderStatusBadge';
 import { OrderTrackingCard } from '../components/orders/OrderTrackingCard';
+import { OrderOperationsPanel } from '../components/orders/OrderOperationsPanel';
 import { Button } from '@/shared/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/components/ui/card';
 import { Separator } from '@/shared/components/ui/separator';
@@ -102,6 +103,8 @@ export default function OrderDetailsPage() {
       </div>
 
       {order.order_type === 'delivery' && <OrderTrackingCard order={order} />}
+
+      <OrderOperationsPanel order={order} businessId={businessId} />
 
       <div className="grid md:grid-cols-2 gap-6">
         <Card>
