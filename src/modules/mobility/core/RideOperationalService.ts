@@ -25,6 +25,7 @@ import { mobilityRolloutService } from "../services/MobilityRolloutService";
 import { mobilityAuditService } from "../services/MobilityAuditService";
 import { MotoboyAuthorizationService } from "../services/MotoboyAuthorizationService";
 import { profileService } from "@/core/profiles/services/ProfileService";
+import { OrderDeliveryLinkService } from "@/modules/mobility/delivery/services/OrderDeliveryLinkService";
 
 // ============================================
 // TIPOS
@@ -57,6 +58,8 @@ export interface CreateDeliveryInput extends Omit<CreateRideInput, 'mode'> {
   // Origem da solicitacao
   sourceType: 'passenger' | 'business' | 'gastronomy' | 'service';
   sourceId?: string;
+  // Fonte usada apenas para autorizacao. A sourceId persistida continua sendo a entidade operacional.
+  authorizationSourceId?: string;
   // Dados da entrega
   recipientName: string;
   recipientPhone?: string;
@@ -376,6 +379,13 @@ export class RideOperationalService {
       // Registrar auditoria
       await this.logStateChange(rideId, fromState, toState, actor, reason);
 
+      await OrderDeliveryLinkService.syncRideStatusToOrder({
+        rideId,
+        rideStatus: toState,
+        actorProfileId: actor,
+        reason,
+      });
+
       // Acoes ps-transicao
       await this.handlePostTransition(rideId, toState, ride);
 
@@ -653,6 +663,15 @@ export class RideOperationalService {
   ): Promise<TransitionResult> {
     const result = await RideDispatchService.acceptRide(rideId, driverProfileId);
 
+    if (result.success && result.rideId) {
+      await OrderDeliveryLinkService.syncRideStatusToOrder({
+        rideId: result.rideId,
+        rideStatus: RIDE_STATE.DRIVER_ACCEPTED,
+        actorProfileId: driverProfileId,
+        reason: "Motoboy aceitou a entrega",
+      });
+    }
+
     return {
       success: result.success,
       rideId: result.rideId,
@@ -686,10 +705,12 @@ export class RideOperationalService {
         };
       }
 
+      const authorizationSourceId = input.authorizationSourceId ?? input.sourceId;
+
       // GATE AUTH: Verificar autorizao centralizada por source_type/source_id
       const authResult = await MotoboyAuthorizationService.canRequestDelivery({
         sourceType: input.sourceType,
-        sourceId: input.sourceId,
+        sourceId: authorizationSourceId,
         locationId: input.pickupLocationId,
         userId: input.requestingUserId,
       });
@@ -698,6 +719,7 @@ export class RideOperationalService {
         logger.warn('RideOperationalService.createDelivery - authorization denied', {
           sourceType: input.sourceType,
           sourceId: input.sourceId,
+          authorizationSourceId,
           code: authResult.code,
           reason: authResult.reason,
         });
@@ -1198,4 +1220,3 @@ export class RideOperationalService {
     }
   }
 }
-

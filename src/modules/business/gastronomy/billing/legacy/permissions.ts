@@ -33,7 +33,7 @@
  */
 
 import { GastronomyFeatureFlags } from './featureFlags';
-import { GastronomyPlanTier, GastronomyFeature } from './types';
+import { GastronomyPlanTier, GastronomyFeature } from '../types';
 
 // ── PERMISSIONS ───────────────────────────────────────────────────────────
 

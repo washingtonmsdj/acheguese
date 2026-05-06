@@ -7,6 +7,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { OrderService, type Order, type OrderStatus, type OrderType } from '@/modules/business/gastronomy/services/OrderService';
 import { toast } from 'sonner';
+import { useSessionContext } from '@/core/session';
 
 interface UseOrdersFilters {
   status?: OrderStatus;
@@ -18,6 +19,7 @@ interface UseOrdersFilters {
 
 export function useOrders(businessId: string, filters?: UseOrdersFilters) {
   const queryClient = useQueryClient();
+  const { activeProfile } = useSessionContext();
 
   // Query: Listar pedidos
   const { data: orders, isLoading, error, refetch } = useQuery({
@@ -54,7 +56,8 @@ export function useOrders(businessId: string, filters?: UseOrdersFilters) {
       const result = await OrderService.updateOrderStatus(
         input.orderId,
         input.status,
-        input.notes
+        input.notes,
+        activeProfile?.id
       );
       if (result.error) throw new Error(result.error);
       return result.data;
@@ -73,7 +76,7 @@ export function useOrders(businessId: string, filters?: UseOrdersFilters) {
   // Mutation: Cancelar pedido
   const cancelOrderMutation = useMutation({
     mutationFn: async (input: { orderId: string; reason: string }) => {
-      const result = await OrderService.cancelOrder(input.orderId, input.reason);
+      const result = await OrderService.cancelOrder(input.orderId, input.reason, activeProfile?.id);
       if (result.error) throw new Error(result.error);
       return result.data;
     },

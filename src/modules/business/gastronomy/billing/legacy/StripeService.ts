@@ -31,7 +31,7 @@
  */
 import { logger } from '@/shared/utils/logger';
 import Stripe from 'stripe';
-import { GastronomyPlanTier } from './types';
+import { GastronomyPlanTier } from '../types';
 // ══════════════════════════════════════════════════════════════════════════
 // CONFIGURAÇÃO
 // ══════════════════════════════════════════════════════════════════════════

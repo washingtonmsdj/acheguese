@@ -6,6 +6,7 @@
 
 import { logger } from '@/shared/utils/logger';
 import { useParams, useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
 import { useBusinessSubscription } from '@/core/billing';
 import { useBillingPlans } from '@/core/billing/hooks/useBillingPlans';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/shared/components/ui/card';
@@ -33,7 +34,7 @@ export default function GastronomyPlansPage() {
 
   const handleUpgrade = (targetPlanCode: string) => {
     logger.debug('Upgrade solicitado para:', targetPlanCode);
-    alert(`Upgrade para ${targetPlanCode} sera implementado em breve!`);
+    toast.info(`Upgrade para ${targetPlanCode} sera implementado em breve.`);
   };
 
   return (

@@ -46,7 +46,7 @@ export function useMotoristaPageV2() {
 
   const handleGoToPickup = useCallback(async (rideId: string, driverProfileId: string) => {
     if (!driverProfileId) {
-      toast.error("Perfil de motorista nÃ£o encontrado");
+      toast.error("Perfil de motorista nao encontrado");
       return;
     }
 
@@ -68,7 +68,7 @@ export function useMotoristaPageV2() {
 
   const handleConfirmPickup = useCallback(async (rideId: string, driverProfileId: string) => {
     if (!driverProfileId) {
-      toast.error("Perfil de motorista não encontrado");
+      toast.error("Perfil de motorista nao encontrado");
       return;
     }
 
@@ -85,7 +85,7 @@ export function useMotoristaPageV2() {
 
   const handleStartDelivery = useCallback(async (rideId: string, driverProfileId: string) => {
     if (!driverProfileId) {
-      toast.error("Perfil de motorista não encontrado");
+      toast.error("Perfil de motorista nao encontrado");
       return;
     }
 
@@ -107,7 +107,7 @@ export function useMotoristaPageV2() {
     finalPrice?: number,
   ) => {
     if (!driverProfileId) {
-      toast.error("Perfil de motorista não encontrado");
+      toast.error("Perfil de motorista nao encontrado");
       return;
     }
 
@@ -133,7 +133,7 @@ export function useMotoristaPageV2() {
     reason: string,
   ) => {
     if (!driverProfileId) {
-      toast.error("Perfil de motorista não encontrado");
+      toast.error("Perfil de motorista nao encontrado");
       return;
     }
 

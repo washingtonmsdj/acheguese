@@ -39,6 +39,18 @@ export interface CreateGastronomyCheckoutOrderInput {
   cart: Cart;
   payment_method?: string;
   notes?: string;
+  customer_snapshot?: {
+    full_name?: string | null;
+    phone?: string | null;
+    email?: string | null;
+  };
+  delivery_snapshot?: {
+    address_id?: string | null;
+    lat?: number | null;
+    lng?: number | null;
+    recipient_name?: string | null;
+    phone?: string | null;
+  };
 }
 
 /**
@@ -83,6 +95,8 @@ export class GastronomyCheckoutService {
         cart: input.cart,
         payment_method: input.payment_method,
         notes: input.notes,
+        customer_snapshot: input.customer_snapshot,
+        delivery_snapshot: input.delivery_snapshot,
       });
 
       // Cria pedido usando SSOT

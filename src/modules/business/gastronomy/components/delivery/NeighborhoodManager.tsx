@@ -12,6 +12,7 @@ import { Button } from '@/shared/components/ui/button';
 import { Input } from '@/shared/components/ui/input';
 import { Label } from '@/shared/components/ui/label';
 import { Badge } from '@/shared/components/ui/badge';
+import { ConfirmActionDialog } from '@/shared/components/ConfirmActionDialog';
 import { MapPin, Plus, Trash2, X, Edit2 } from 'lucide-react';
 import type { DeliveryArea, DeliveryNeighborhood } from '@/modules/business/gastronomy/services/DeliveryAreaService';
 
@@ -32,6 +33,7 @@ export function NeighborhoodManager({ area, onClose }: NeighborhoodManagerProps)
 
   const [isAddingState, setIsAddingState] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [neighborhoodToDelete, setNeighborhoodToDelete] = useState<DeliveryNeighborhood | null>(null);
   const [formData, setFormData] = useState({
     neighborhood_name: '',
     city: '',
@@ -73,10 +75,10 @@ export function NeighborhoodManager({ area, onClose }: NeighborhoodManagerProps)
     setIsAddingState(false);
   };
 
-  const handleDelete = (neighborhoodId: string, name: string) => {
-    if (confirm(`Deseja realmente remover o bairro "${name}"?`)) {
-      deleteNeighborhood(neighborhoodId);
-    }
+  const handleConfirmDelete = () => {
+    if (!neighborhoodToDelete) return;
+    deleteNeighborhood(neighborhoodToDelete.id);
+    setNeighborhoodToDelete(null);
   };
 
   return (
@@ -171,7 +173,7 @@ export function NeighborhoodManager({ area, onClose }: NeighborhoodManagerProps)
                   <Button
                     variant="ghost"
                     size="icon"
-                    onClick={() => handleDelete(n.id, n.neighborhood_name)}
+                    onClick={() => setNeighborhoodToDelete(n)}
                     disabled={isDeleting}
                   >
                     <Trash2 className="w-4 h-4 text-destructive" />
@@ -339,6 +341,18 @@ export function NeighborhoodManager({ area, onClose }: NeighborhoodManagerProps)
             Adicionar Bairro
           </Button>
         )}
+
+        <ConfirmActionDialog
+          open={!!neighborhoodToDelete}
+          onOpenChange={(open) => {
+            if (!open) setNeighborhoodToDelete(null);
+          }}
+          title="Remover bairro"
+          description={`O bairro "${neighborhoodToDelete?.neighborhood_name ?? ''}" deixara de ser atendido por esta area.`}
+          confirmLabel="Remover bairro"
+          onConfirm={handleConfirmDelete}
+          disabled={isDeleting}
+        />
       </CardContent>
     </Card>
   );

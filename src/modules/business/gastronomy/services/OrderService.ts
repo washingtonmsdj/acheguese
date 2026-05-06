@@ -1,20 +1,17 @@
 /**
- * OrderService — SSOT canônico de pedidos
+ * OrderService - facade de pedidos da gastronomia.
  *
- * Centraliza toda a lógica de negócio de pedidos.
- * Hooks e componentes NÃO acessam Supabase diretamente — consomem este service.
- *
- * Responsabilidades:
- * - CRUD de pedidos
- * - Gerenciamento de status
- * - Cálculo de totais
- * - Validações de negócio
+ * O SSOT real de pedidos/entregas e OrderDeliverySSOTService. Este facade mantem
+ * o contrato historico das telas de gastronomia enquanto converte leitura e
+ * operacoes para orders/order_items/order_timeline_events canonicos.
  */
 
 import { logger } from '@/shared/utils/logger';
 import { supabase } from '@/integrations/supabase';
-
-// ── Tipos ─────────────────────────────────────────────────────────────────
+import { OrderDeliverySSOTService } from '@/modules/mobility/delivery/services/OrderDeliverySSOTService';
+import { LOGISTICS_STATUS, type LogisticsStatus } from '@/modules/mobility/delivery/logistics/types';
+import { ORDER_SOURCE_TYPE, type OrderItemRecord, type OrderRecord } from '@/modules/mobility/delivery/order/types';
+import type { OrderTimelineEvent } from '@/modules/mobility/delivery/audit-timeline/types';
 
 export interface ServiceResult<T> {
   data: T | null;
@@ -32,7 +29,6 @@ export type OrderStatus =
   | 'cancelled';
 
 export type OrderType = 'pickup' | 'delivery' | 'dine_in';
-
 export type PaymentMethod = 'cash' | 'debit_card' | 'credit_card' | 'pix' | 'online';
 
 export interface Order {
@@ -40,7 +36,7 @@ export interface Order {
   business_id: string;
   customer_id: string | null;
   delivery_area_id: string | null;
-  order_number: number;
+  order_number: string;
   order_type: OrderType;
   status: OrderStatus;
   customer_name: string;
@@ -50,6 +46,7 @@ export interface Order {
   delivery_neighborhood: string | null;
   delivery_city: string | null;
   delivery_state: string | null;
+  delivery_zipcode: string | null;
   delivery_complement: string | null;
   delivery_reference: string | null;
   subtotal: number;
@@ -81,6 +78,7 @@ export interface OrderItem {
   order_id: string;
   menu_item_id: string | null;
   item_name: string;
+  name: string;
   item_description: string | null;
   item_image_url: string | null;
   variation_id: string | null;
@@ -88,6 +86,7 @@ export interface OrderItem {
   quantity: number;
   unit_price: number;
   subtotal: number;
+  total: number;
   notes: string | null;
   created_at: string;
 }
@@ -117,17 +116,158 @@ export interface OrderWithItems extends Order {
   status_history: OrderStatusHistory[];
 }
 
-// ── Service ───────────────────────────────────────────────────────────────
+function toErrorMessage(error: unknown): string {
+  if (error instanceof Error) return error.message;
+  if (typeof error === 'string') return error;
+  return 'Erro inesperado no modulo de pedidos de gastronomia.';
+}
+
+function logisticsToOrderStatus(status: LogisticsStatus): OrderStatus {
+  switch (status) {
+    case LOGISTICS_STATUS.ACCEPTED:
+      return 'confirmed';
+    case LOGISTICS_STATUS.PREPARING:
+      return 'preparing';
+    case LOGISTICS_STATUS.READY_FOR_PICKUP:
+      return 'ready';
+    case LOGISTICS_STATUS.PICKED_UP:
+      return 'out_for_delivery';
+    case LOGISTICS_STATUS.DELIVERED:
+      return 'delivered';
+    case LOGISTICS_STATUS.CANCELED:
+    case LOGISTICS_STATUS.FAILED:
+      return 'cancelled';
+    case LOGISTICS_STATUS.PENDING:
+    default:
+      return 'pending';
+  }
+}
+
+function orderStatusToLogistics(status: OrderStatus): LogisticsStatus {
+  switch (status) {
+    case 'confirmed':
+      return LOGISTICS_STATUS.ACCEPTED;
+    case 'preparing':
+      return LOGISTICS_STATUS.PREPARING;
+    case 'ready':
+      return LOGISTICS_STATUS.READY_FOR_PICKUP;
+    case 'out_for_delivery':
+      return LOGISTICS_STATUS.PICKED_UP;
+    case 'delivered':
+    case 'completed':
+      return LOGISTICS_STATUS.DELIVERED;
+    case 'cancelled':
+      return LOGISTICS_STATUS.CANCELED;
+    case 'pending':
+    default:
+      return LOGISTICS_STATUS.PENDING;
+  }
+}
+
+function orderDisplayNumber(orderId: string): string {
+  return orderId.slice(0, 8).toUpperCase();
+}
+
+function getMetadataString(order: OrderRecord, key: string): string | null {
+  const value = order.source_context.source_metadata?.[key];
+  return typeof value === 'string' && value.trim() ? value : null;
+}
+
+function mapOrderItem(item: OrderItemRecord): OrderItem & { addons: OrderItemAddon[] } {
+  return {
+    id: item.id,
+    order_id: item.order_id,
+    menu_item_id: item.source_item_id ?? null,
+    item_name: item.name,
+    name: item.name,
+    item_description: item.item_snapshot.description ?? null,
+    item_image_url: null,
+    variation_id: item.item_snapshot.variant?.variant_id ?? null,
+    variation_name: item.item_snapshot.variant?.name ?? null,
+    quantity: item.quantity,
+    unit_price: item.unit_price,
+    subtotal: item.line_total,
+    total: item.line_total,
+    notes: item.notes ?? item.item_snapshot.special_instructions ?? null,
+    created_at: item.created_at,
+    addons: (item.item_snapshot.addons ?? []).map((addon, index) => ({
+      id: `${item.id}:addon:${index}`,
+      order_item_id: item.id,
+      addon_id: addon.addon_id ?? null,
+      addon_name: addon.name,
+      addon_price: addon.unit_price,
+      quantity: addon.quantity,
+      created_at: item.created_at,
+    })),
+  };
+}
+
+function mapTimelineEvent(event: OrderTimelineEvent): OrderStatusHistory {
+  return {
+    id: event.id,
+    order_id: event.order_id,
+    from_status: event.from_logistics_status
+      ? logisticsToOrderStatus(event.from_logistics_status)
+      : null,
+    to_status: event.to_logistics_status
+      ? logisticsToOrderStatus(event.to_logistics_status)
+      : 'pending',
+    changed_by: event.actor_profile_id,
+    notes: event.reason,
+    created_at: event.created_at,
+  };
+}
+
+function mapOrder(order: OrderRecord): OrderWithItems {
+  const businessId = order.source_context.source_id ?? order.merchant_profile_id;
+  const status = logisticsToOrderStatus(order.logistics_status);
+
+  return {
+    id: order.id,
+    business_id: businessId,
+    customer_id: order.customer_profile_id,
+    delivery_area_id: null,
+    order_number: orderDisplayNumber(order.id),
+    order_type: 'delivery',
+    status,
+    customer_name: getMetadataString(order, 'customer_name') ?? `Cliente ${order.customer_profile_id.slice(0, 8)}`,
+    customer_phone: getMetadataString(order, 'customer_phone') ?? '',
+    customer_email: getMetadataString(order, 'customer_email'),
+    delivery_address: getMetadataString(order, 'delivery_address'),
+    delivery_neighborhood: getMetadataString(order, 'delivery_neighborhood'),
+    delivery_city: getMetadataString(order, 'delivery_city'),
+    delivery_state: getMetadataString(order, 'delivery_state'),
+    delivery_zipcode: getMetadataString(order, 'delivery_zipcode'),
+    delivery_complement: getMetadataString(order, 'delivery_complement'),
+    delivery_reference: getMetadataString(order, 'delivery_reference'),
+    subtotal: order.financial_breakdown.items_total,
+    delivery_fee: order.financial_breakdown.delivery_fee,
+    discount: order.financial_breakdown.discount_total,
+    total: order.financial_breakdown.order_total,
+    payment_method: (order.payment_method as PaymentMethod | null) ?? null,
+    payment_status: order.financial_status,
+    change_for: null,
+    notes: order.notes,
+    internal_notes: null,
+    estimated_preparation_time: null,
+    estimated_delivery_time: null,
+    scheduled_for: null,
+    confirmed_at: order.accepted_at ?? null,
+    preparing_at: order.preparing_at ?? null,
+    ready_at: order.ready_for_pickup_at ?? null,
+    out_for_delivery_at: order.picked_up_at ?? null,
+    delivered_at: order.delivered_at ?? null,
+    completed_at: status === 'completed' ? order.delivered_at ?? null : null,
+    cancelled_at: order.canceled_at ?? order.failed_at ?? null,
+    cancellation_reason: order.failure_reason ?? null,
+    created_at: order.created_at,
+    updated_at: order.updated_at,
+    items: order.items.map(mapOrderItem),
+    status_history: [],
+  };
+}
 
 export const OrderService = {
-  
-  // ══════════════════════════════════════════════════════════════════════════
-  // PEDIDOS
-  // ══════════════════════════════════════════════════════════════════════════
-  
-  /**
-   * Lista pedidos de uma empresa
-   */
   async listOrders(
     businessId: string,
     filters?: {
@@ -136,380 +276,172 @@ export const OrderService = {
       date_from?: string;
       date_to?: string;
       limit?: number;
-    }
+    },
   ): Promise<ServiceResult<Order[]>> {
     try {
-      let query = supabase
-        .from('orders')
-        .select('*')
-        .eq('business_id', businessId)
-        .order('created_at', { ascending: false });
+      const result = await OrderDeliverySSOTService.listOrdersBySource(
+        ORDER_SOURCE_TYPE.GASTRONOMY,
+        businessId,
+        {
+          logistics_status: filters?.status
+            ? orderStatusToLogistics(filters.status)
+            : undefined,
+          date_from: filters?.date_from,
+          date_to: filters?.date_to,
+          limit: filters?.limit,
+        },
+      );
 
-      if (filters?.status) {
-        query = query.eq('status', filters.status);
+      if (!result.success) {
+        return { data: null, error: result.error ?? 'Erro ao listar pedidos.' };
       }
 
-      if (filters?.order_type) {
-        query = query.eq('order_type', filters.order_type);
-      }
+      const orders = (result.data ?? [])
+        .map(mapOrder)
+        .filter((order) => !filters?.order_type || order.order_type === filters.order_type);
 
-      if (filters?.date_from) {
-        query = query.gte('created_at', filters.date_from);
-      }
-
-      if (filters?.date_to) {
-        query = query.lte('created_at', filters.date_to);
-      }
-
-      if (filters?.limit) {
-        query = query.limit(filters.limit);
-      }
-
-      const { data, error } = await query;
-
-      if (error) {
-        logger.error('[OrderService] listOrders error', error);
-        return { data: null, error: error.message };
-      }
-
-      return { data: data as Order[], error: null };
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : String(err);
-      return { data: null, error: msg };
+      return { data: orders, error: null };
+    } catch (error) {
+      const message = toErrorMessage(error);
+      logger.error('[OrderService] listOrders error', error as Error, { businessId });
+      return { data: null, error: message };
     }
   },
 
-  /**
-   * Busca um pedido específico com itens
-   */
   async getOrder(orderId: string): Promise<ServiceResult<OrderWithItems>> {
     try {
-      // Busca pedido
-      const { data: order, error: orderError } = await supabase
-        .from('orders')
-        .select('*')
-        .eq('id', orderId)
-        .single();
-
-      if (orderError) {
-        logger.error('[OrderService] getOrder error', orderError);
-        return { data: null, error: orderError.message };
+      const result = await OrderDeliverySSOTService.getOrderById(orderId);
+      if (!result.success || !result.data) {
+        return { data: null, error: result.error ?? 'Pedido nao encontrado.' };
       }
 
-      // Busca itens
-      const { data: items, error: itemsError } = await supabase
-        .from('order_items')
-        .select('*')
-        .eq('order_id', orderId);
+      const order = mapOrder(result.data);
+      const timeline = await OrderDeliverySSOTService.listTimeline(orderId);
+      order.status_history = timeline.success
+        ? (timeline.data ?? []).map(mapTimelineEvent)
+        : [];
 
-      if (itemsError) {
-        logger.error('[OrderService] getOrder items error', itemsError);
-        return { data: null, error: itemsError.message };
-      }
-
-      // Busca adicionais de cada item
-      const itemsWithAddons = await Promise.all(
-        (items || []).map(async (item) => {
-          const { data: addons } = await supabase
-            .from('order_item_addons')
-            .select('*')
-            .eq('order_item_id', item.id);
-
-          return {
-            ...item,
-            addons: (addons || []) as OrderItemAddon[],
-          };
-        })
-      );
-
-      // Busca histórico de status
-      const { data: history } = await supabase
-        .from('order_status_history')
-        .select('*')
-        .eq('order_id', orderId)
-        .order('created_at', { ascending: true });
-
-      return {
-        data: {
-          ...(order as Order),
-          items: itemsWithAddons as (OrderItem & { addons: OrderItemAddon[] })[],
-          status_history: (history || []) as OrderStatusHistory[],
-        },
-        error: null,
-      };
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : String(err);
-      return { data: null, error: msg };
+      return { data: order, error: null };
+    } catch (error) {
+      const message = toErrorMessage(error);
+      logger.error('[OrderService] getOrder error', error as Error, { orderId });
+      return { data: null, error: message };
     }
   },
 
-  /**
-   * Cria um novo pedido
-   */
-  async createOrder(input: {
-    business_id: string;
-    customer_id?: string;
-    order_type: OrderType;
-    customer_name: string;
-    customer_phone: string;
-    customer_email?: string;
-    delivery_address?: string;
-    delivery_neighborhood?: string;
-    delivery_city?: string;
-    delivery_state?: string;
-    delivery_complement?: string;
-    delivery_reference?: string;
-    delivery_area_id?: string;
-    delivery_fee?: number;
-    discount?: number;
-    payment_method?: PaymentMethod;
-    change_for?: number;
-    notes?: string;
-    estimated_preparation_time?: number;
-    estimated_delivery_time?: number;
-    scheduled_for?: string;
-    items: Array<{
-      menu_item_id: string;
-      item_name: string;
-      item_description?: string;
-      item_image_url?: string;
-      variation_id?: string;
-      variation_name?: string;
-      quantity: number;
-      unit_price: number;
-      notes?: string;
-      addons?: Array<{
-        addon_id: string;
-        addon_name: string;
-        addon_price: number;
-        quantity: number;
-      }>;
-    }>;
-  }): Promise<ServiceResult<OrderWithItems>> {
-    try {
-      // Busca próximo número de pedido
-      const { data: nextNumber, error: numberError } = await supabase.rpc(
-        'get_next_order_number',
-        { p_business_id: input.business_id }
-      );
-
-      if (numberError) {
-        logger.error('[OrderService] get_next_order_number error', numberError);
-        return { data: null, error: numberError.message };
-      }
-
-      // Calcula subtotal dos itens
-      const subtotal = input.items.reduce((sum, item) => {
-        const itemTotal = item.quantity * item.unit_price;
-        const addonsTotal = (item.addons || []).reduce(
-          (addonSum, addon) => addonSum + addon.addon_price * addon.quantity,
-          0
-        );
-        return sum + itemTotal + addonsTotal;
-      }, 0);
-
-      const deliveryFee = input.delivery_fee || 0;
-      const discount = input.discount || 0;
-      const total = subtotal + deliveryFee - discount;
-
-      // Cria pedido
-      const { data: order, error: orderError } = await supabase
-        .from('orders')
-        .insert({
-          business_id: input.business_id,
-          customer_id: input.customer_id || null,
-          order_number: nextNumber,
-          order_type: input.order_type,
-          customer_name: input.customer_name,
-          customer_phone: input.customer_phone,
-          customer_email: input.customer_email || null,
-          delivery_address: input.delivery_address || null,
-          delivery_neighborhood: input.delivery_neighborhood || null,
-          delivery_city: input.delivery_city || null,
-          delivery_state: input.delivery_state || null,
-          delivery_complement: input.delivery_complement || null,
-          delivery_reference: input.delivery_reference || null,
-          delivery_area_id: input.delivery_area_id || null,
-          subtotal,
-          delivery_fee: deliveryFee,
-          discount,
-          total,
-          payment_method: input.payment_method || null,
-          change_for: input.change_for || null,
-          notes: input.notes || null,
-          estimated_preparation_time: input.estimated_preparation_time || null,
-          estimated_delivery_time: input.estimated_delivery_time || null,
-          scheduled_for: input.scheduled_for || null,
-        })
-        .select()
-        .single();
-
-      if (orderError) {
-        logger.error('[OrderService] createOrder error', orderError);
-        return { data: null, error: orderError.message };
-      }
-
-      // Cria itens
-      const itemsToInsert = input.items.map((item) => ({
-        order_id: order.id,
-        menu_item_id: item.menu_item_id,
-        item_name: item.item_name,
-        item_description: item.item_description || null,
-        item_image_url: item.item_image_url || null,
-        variation_id: item.variation_id || null,
-        variation_name: item.variation_name || null,
-        quantity: item.quantity,
-        unit_price: item.unit_price,
-        subtotal: item.quantity * item.unit_price,
-        notes: item.notes || null,
-      }));
-
-      const { data: createdItems, error: itemsError } = await supabase
-        .from('order_items')
-        .insert(itemsToInsert)
-        .select();
-
-      if (itemsError) {
-        logger.error('[OrderService] createOrder items error', itemsError);
-        return { data: null, error: itemsError.message };
-      }
-
-      // Cria adicionais
-      const addonsToInsert: any[] = [];
-      input.items.forEach((item, index) => {
-        if (item.addons && item.addons.length > 0) {
-          const orderItemId = createdItems[index].id;
-          item.addons.forEach((addon) => {
-            addonsToInsert.push({
-              order_item_id: orderItemId,
-              addon_id: addon.addon_id,
-              addon_name: addon.addon_name,
-              addon_price: addon.addon_price,
-              quantity: addon.quantity,
-            });
-          });
-        }
-      });
-
-      if (addonsToInsert.length > 0) {
-        await supabase.from('order_item_addons').insert(addonsToInsert);
-      }
-
-      // Retorna pedido completo
-      return this.getOrder(order.id);
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : String(err);
-      return { data: null, error: msg };
-    }
+  async createOrder(): Promise<ServiceResult<OrderWithItems>> {
+    return {
+      data: null,
+      error: 'Cria��o de pedido de gastronomia deve usar GastronomyCheckoutService/OrderDeliverySSOTService.',
+    };
   },
 
-  /**
-   * Atualiza status de um pedido
-   */
   async updateOrderStatus(
     orderId: string,
     status: OrderStatus,
-    notes?: string
+    notes?: string,
+    actorProfileId?: string,
   ): Promise<ServiceResult<Order>> {
     try {
-      const { data, error } = await supabase
-        .from('orders')
-        .update({ status })
-        .eq('id', orderId)
-        .select()
-        .single();
-
-      if (error) {
-        logger.error('[OrderService] updateOrderStatus error', error);
-        return { data: null, error: error.message };
+      if (!actorProfileId) {
+        return { data: null, error: 'Perfil ativo obrigatorio para atualizar pedido.' };
       }
 
-      // Adiciona nota ao histórico se fornecida
-      if (notes) {
-        await supabase
-          .from('order_status_history')
-          .update({ notes })
-          .eq('order_id', orderId)
-          .eq('to_status', status)
-          .order('created_at', { ascending: false })
-          .limit(1);
+      const current = await OrderDeliverySSOTService.getOrderById(orderId);
+      if (!current.success || !current.data) {
+        return { data: null, error: current.error ?? 'Pedido nao encontrado.' };
       }
 
-      return { data: data as Order, error: null };
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : String(err);
-      return { data: null, error: msg };
+      const target = orderStatusToLogistics(status);
+      if (current.data.logistics_status === target) {
+        return { data: mapOrder(current.data), error: null };
+      }
+
+      const result = status === 'cancelled'
+        ? await OrderDeliverySSOTService.cancelOrder({
+            order_id: orderId,
+            reason: notes,
+            actor_profile_id: actorProfileId,
+          })
+        : status === 'delivered' || status === 'completed'
+          ? await OrderDeliverySSOTService.markDelivered({
+              order_id: orderId,
+              reason: notes,
+              actor_profile_id: actorProfileId,
+            })
+          : status === 'out_for_delivery'
+            ? await OrderDeliverySSOTService.markPickedUp({
+                order_id: orderId,
+                actor_profile_id: actorProfileId,
+              })
+            : await OrderDeliverySSOTService.transitionLogisticsStatus({
+                order_id: orderId,
+                to_status: target,
+                reason: notes,
+                actor_profile_id: actorProfileId,
+              });
+
+      if (!result.success || !result.data) {
+        return { data: null, error: result.error ?? 'Erro ao atualizar status.' };
+      }
+
+      return { data: mapOrder(result.data), error: null };
+    } catch (error) {
+      const message = toErrorMessage(error);
+      logger.error('[OrderService] updateOrderStatus error', error as Error, { orderId, status });
+      return { data: null, error: message };
     }
   },
 
-  /**
-   * Cancela um pedido
-   */
   async cancelOrder(
     orderId: string,
-    reason: string
+    reason: string,
+    actorProfileId?: string,
   ): Promise<ServiceResult<Order>> {
-    try {
-      const { data, error } = await supabase
-        .from('orders')
-        .update({
-          status: 'cancelled',
-          cancellation_reason: reason,
-        })
-        .eq('id', orderId)
-        .select()
-        .single();
-
-      if (error) {
-        logger.error('[OrderService] cancelOrder error', error);
-        return { data: null, error: error.message };
-      }
-
-      return { data: data as Order, error: null };
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : String(err);
-      return { data: null, error: msg };
+    if (!actorProfileId) {
+      return { data: null, error: 'Perfil ativo obrigatorio para cancelar pedido.' };
     }
+
+    const result = await OrderDeliverySSOTService.cancelOrder({
+      order_id: orderId,
+      reason,
+      actor_profile_id: actorProfileId,
+    });
+
+    if (!result.success || !result.data) {
+      return { data: null, error: result.error ?? 'Erro ao cancelar pedido.' };
+    }
+
+    return { data: mapOrder(result.data), error: null };
   },
 
-  /**
-   * Atualiza notas internas de um pedido
-   */
   async updateInternalNotes(
     orderId: string,
-    notes: string
+    notes: string,
   ): Promise<ServiceResult<Order>> {
     try {
-      const { data, error } = await supabase
+      const { error } = await (supabase as any)
         .from('orders')
-        .update({ internal_notes: notes })
-        .eq('id', orderId)
-        .select()
-        .single();
+        .update({ notes })
+        .eq('id', orderId);
 
       if (error) {
-        logger.error('[OrderService] updateInternalNotes error', error);
         return { data: null, error: error.message };
       }
 
-      return { data: data as Order, error: null };
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : String(err);
-      return { data: null, error: msg };
+      const updated = await this.getOrder(orderId);
+      return { data: updated.data, error: updated.error };
+    } catch (error) {
+      const message = toErrorMessage(error);
+      logger.error('[OrderService] updateInternalNotes error', error as Error, { orderId });
+      return { data: null, error: message };
     }
   },
 
-  // ══════════════════════════════════════════════════════════════════════════
-  // ESTATÍSTICAS
-  // ══════════════════════════════════════════════════════════════════════════
-
-  /**
-   * Retorna estatísticas de pedidos
-   */
   async getOrderStats(
     businessId: string,
     dateFrom?: string,
-    dateTo?: string
+    dateTo?: string,
   ): Promise<ServiceResult<{
     total_orders: number;
     pending_orders: number;
@@ -518,46 +450,33 @@ export const OrderService = {
     total_revenue: number;
     average_order_value: number;
   }>> {
-    try {
-      let query = supabase
-        .from('orders')
-        .select('status, total')
-        .eq('business_id', businessId);
+    const result = await this.listOrders(businessId, {
+      date_from: dateFrom,
+      date_to: dateTo,
+    });
 
-      if (dateFrom) {
-        query = query.gte('created_at', dateFrom);
-      }
-
-      if (dateTo) {
-        query = query.lte('created_at', dateTo);
-      }
-
-      const { data, error } = await query;
-
-      if (error) {
-        logger.error('[OrderService] getOrderStats error', error);
-        return { data: null, error: error.message };
-      }
-
-      const stats = {
-        total_orders: data.length,
-        pending_orders: data.filter((o) => o.status === 'pending').length,
-        completed_orders: data.filter((o) => o.status === 'completed').length,
-        cancelled_orders: data.filter((o) => o.status === 'cancelled').length,
-        total_revenue: data
-          .filter((o) => o.status === 'completed')
-          .reduce((sum, o) => sum + o.total, 0),
-        average_order_value:
-          data.length > 0
-            ? data.reduce((sum, o) => sum + o.total, 0) / data.length
-            : 0,
-      };
-
-      return { data: stats, error: null };
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : String(err);
-      return { data: null, error: msg };
+    if (result.error || !result.data) {
+      return { data: null, error: result.error ?? 'Erro ao buscar estatisticas.' };
     }
+
+    const orders = result.data;
+    const completed = orders.filter((order) =>
+      order.status === 'delivered' || order.status === 'completed',
+    );
+    const totalRevenue = completed.reduce((sum, order) => sum + order.total, 0);
+
+    return {
+      data: {
+        total_orders: orders.length,
+        pending_orders: orders.filter((order) => order.status === 'pending').length,
+        completed_orders: completed.length,
+        cancelled_orders: orders.filter((order) => order.status === 'cancelled').length,
+        total_revenue: totalRevenue,
+        average_order_value: orders.length > 0
+          ? orders.reduce((sum, order) => sum + order.total, 0) / orders.length
+          : 0,
+      },
+      error: null,
+    };
   },
 };
-

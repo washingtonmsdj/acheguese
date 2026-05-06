@@ -417,6 +417,8 @@ Criterio de aceite:
 
 ## Tarefa 3.1: Fechar pedido E2E
 
+Status: em andamento.
+
 Objetivo: cliente compra, restaurante opera, motoboy entrega e todos veem status correto.
 
 Arquivos provaveis:
@@ -447,7 +449,24 @@ Criterio de aceite:
 - Pedido cancelado notifica cliente/restaurante/motoboy conforme contexto.
 - Nao ha dados mockados em fluxo principal de pedido.
 
+Implementado nesta fase:
+
+- [x] Corrigido contrato de criacao de entrega gastronomica: `ride_requests.source_id` passa a receber `orders.id`, permitindo que `OrderDeliveryLinkService.getRideRequestByOrderId(orderId)` encontre a entrega correta.
+- [x] Separada a chave de autorizacao (`authorizationSourceId`) da entidade operacional persistida (`sourceId`), evitando quebrar a autorizacao por restaurante no `MotoboyAuthorizationService`.
+- [x] Criada sincronizacao central `OrderDeliveryLinkService.syncRideStatusToOrder`, acionada por `RideOperationalService.transitionTo` e `acceptRide`.
+- [x] Status do motoboy agora avanca o pedido SSOT em caminho logistico seguro: aceito, preparando, pronto, retirado, entregue, cancelado ou falhou.
+- [x] Front da loja passou a listar pedidos pelo `OrderDeliverySSOTService` via `OrderService`, removendo dependencia das colunas legadas `orders.business_id/status/order_type`.
+- [x] Tela de pedidos e detalhes usam rotas canonicas da Central para navegacao e exibem dados adaptados de `orders/order_items/order_timeline_events`.
+- [x] Tela de entregas da loja combina entregas manuais com entregas vinculadas a pedidos, buscando `ride_requests` por `order.id` pelo `OrderDeliveryLinkService`.
+ide_requests por order.id pelo OrderDeliveryLinkService.
+- [x] Checkout grava snapshot operacional de cliente/entrega em `orders.source_metadata` para a loja listar pedidos com dados uteis sem depender de tabela legada.
+- [x] Comprovante do motoboy agora sincroniza de `ride_requests.proof_of_delivery` para `orders.proof_of_delivery` e aparece no detalhe do pedido.
+ide_requests.proof_of_delivery para orders.proof_of_delivery e aparece no detalhe do pedido.
+- [x] Criada comunicacao operacional derivada do SSOT: `OrderDeliveryNotificationService` notifica cliente, loja e motoboy em criacao/mudanca de status sem quebrar o fluxo se notificacao falhar.
+
 ## Tarefa 3.2: Substituir `confirm()` nativo
+
+Status: concluida.
 
 Objetivo: acoes destrutivas devem usar dialog do design system.
 
@@ -466,10 +485,13 @@ Passos:
 
 Criterio de aceite:
 
-- `rg -n "confirm\\("` nao encontra esses casos.
-- UX mobile continua usavel.
+- [x] `rg -n "confirm\\(" src/modules/business/gastronomy -S` nao encontra esses casos.
+- [x] Acoes destrutivas usam `ConfirmActionDialog`, baseado em `AlertDialog` do design system.
+- [x] Dialogs preservam estado pendente e bloqueiam confirmacao quando ha operacao destrutiva em andamento.
 
 ## Tarefa 3.3: Controlar nichos beta
+
+Status: validado parcialmente.
 
 Objetivo: nichos incompletos nao podem aparecer como completos.
 
@@ -487,6 +509,13 @@ Criterio de aceite:
 
 - Usuario final nao ve nicho beta como produto completo.
 - Admin consegue identificar maturidade do nicho.
+
+Estado atual validado:
+
+- [x] `pizza` esta como `full_enabled`, `isSelectable: true`, `isPublic: true`.
+- [x] `sushi`, `acai`, `pastel`, `churrascaria` e `bares` estao como `beta_enabled`, `isSelectable: false`, `isPublic: false`.
+- [x] Placeholder `pizza_sizes` removido do painel/admin de pizzaria.
+- [x] Billing legado de gastronomia arquivado em `src/modules/business/gastronomy/billing/legacy` e removido do barrel publico.
 
 ---
 
@@ -975,9 +1004,9 @@ Criterio de aceite:
 
 - [ ] P0: pedido E2E.
 - [ ] P0: restaurante E2E.
-- [ ] P0: integracao com motoboy.
-- [ ] P0: remover `confirm()` nativo.
-- [ ] P0: controlar deprecated/beta.
+- [x] P0: integracao com motoboy.
+- [x] P0: remover `confirm()` nativo.
+- [x] P0: controlar deprecated/beta.
 - [ ] P1: SLA de pedido.
 - [ ] P1: painel realtime.
 - [ ] P1: regras de area de entrega.

@@ -217,14 +217,15 @@ export function PizzaAdminPanel({ businessId, userId }: Props) {
 
   const handleToggleAvailability = async (type: DialogType, item: PizzaSize | PizzaFlavor | PizzaEdge | PizzaDough) => {
     try {
-      const tableMap: Record<Exclude<DialogType, null>, "pizza_sizes" | "pizza_flavors" | "pizza_edges" | "pizza_doughs"> = {
+      if (!type || type === "config") return;
+
+      const tableMap: Record<Exclude<DialogType, null | "config">, "pizza_sizes" | "pizza_flavors" | "pizza_edges" | "pizza_doughs"> = {
         size: "pizza_sizes",
         flavor: "pizza_flavors",
         edge: "pizza_edges",
         dough: "pizza_doughs",
-        config: "pizza_sizes", // placeholder, nunca usado
       };
-      if (!type || type === "config") return;
+
       await PizzaAdminService.setAvailability(tableMap[type], item.id, !item.is_available, businessId, userId);
       await loadCatalog();
       toast.success("Status atualizado");

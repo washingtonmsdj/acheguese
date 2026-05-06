@@ -61,6 +61,20 @@ export function useGastronomyCheckout() {
         cart: input.cart,
         payment_method: input.payment_method,
         notes: input.notes,
+        customer_snapshot: {
+          full_name: activeProfile.full_name,
+          phone: activeProfile.phone,
+          email: activeProfile.email,
+        },
+        delivery_snapshot: input.deliveryAddress
+          ? {
+              address_id: input.deliveryAddress.id,
+              lat: input.deliveryAddress.lat,
+              lng: input.deliveryAddress.lng,
+              recipient_name: input.deliveryAddress.recipient_name,
+              phone: input.deliveryAddress.phone,
+            }
+          : undefined,
       });
 
       logger.info('[useGastronomyCheckout] Pedido criado', {
@@ -112,7 +126,8 @@ export function useGastronomyCheckout() {
             
             // Origem da solicitação
             sourceType: 'gastronomy',
-            sourceId: input.business.business_data_id,
+            sourceId: order.id,
+            authorizationSourceId: input.business.business_data_id,
             
             // Pagamento
             paymentMethod: input.payment_method,
@@ -161,4 +176,3 @@ export function useGastronomyCheckout() {
     hasActiveProfile: !!activeProfile?.id,
   };
 }
-

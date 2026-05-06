@@ -6,8 +6,8 @@
  *
  * Uso:
  *   // Em módulo de gastronomia
- *   const motoboy = useMotoboy({ sourceType: 'gastronomy', sourceId: restaurantId });
- *   await motoboy.requestDelivery(data);
+ *   const motoboy = useMotoboy({ sourceType: 'gastronomy', sourceId: orderId });
+ *   await motoboy.requestDelivery({ ...data, authorizationSourceId: restaurantId });
  *
  *   // Em módulo de empresas
  *   const motoboy = useMotoboy({ sourceType: 'business', sourceId: businessId });

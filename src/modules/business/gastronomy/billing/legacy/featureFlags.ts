@@ -30,13 +30,13 @@
  * - Listar features disponíveis para upgrade
  */
 
-import { GASTRONOMY_PLANS } from './plans';
+import { GASTRONOMY_PLANS } from '../plans';
 import {
   GastronomyPlanTier,
   GastronomyFeature,
   type GastronomyLimits,
   type GastronomyPlan,
-} from './types';
+} from '../types';
 
 // ── FEATURE FLAGS ─────────────────────────────────────────────────────────
 

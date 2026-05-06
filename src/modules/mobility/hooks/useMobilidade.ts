@@ -89,7 +89,7 @@ export function useMobilidade() {
       // NotificaÃ§Ãµes baseadas no evento
       switch (event.type) {
         case 'driver_assigned':
-          toast.success("Motorista encontrado! Aguardando confirmaÃ§Ã£o...");
+          toast.success("Motorista encontrado! Aguardando confirmacao...");
           break;
         case 'driver_accepted':
           toast.success("Motorista confirmou! Preparando corrida...");
@@ -143,7 +143,7 @@ export function useMobilidade() {
     async (rideData: CreateRideRequestData) => {
       try {
         if (!user) {
-          toast.error("UsuÃ¡rio nÃ£o autenticado");
+          toast.error("Usuario nao autenticado");
           throw new Error("User not authenticated");
         }
 
@@ -153,7 +153,7 @@ export function useMobilidade() {
 
         if (!passengerProfile?.id) {
           logger.error("useMobilidade.createRide - profile not found", new Error("No profile"), { userId: user.id });
-          toast.error("Perfil nÃ£o encontrado. Verifique seu cadastro.");
+          toast.error("Perfil nao encontrado. Verifique seu cadastro.");
           throw new Error("Profile not found");
         }
 
@@ -171,7 +171,7 @@ export function useMobilidade() {
           !isValidCoordinate(rideData.destination_lat) ||
           !isValidCoordinate(rideData.destination_lng)
         ) {
-          toast.error("Coordenadas sÃ£o obrigatÃ³rias para cÃ¡lculo de preÃ§o. Selecione endereÃ§os vÃ¡lidos no mapa.");
+          toast.error("Coordenadas sao obrigatorias para calculo de preco. Selecione enderecos validos no mapa.");
           throw new Error("Coordinates required for official pricing calculation");
         }
 
@@ -203,7 +203,7 @@ export function useMobilidade() {
           });
         } catch (pricingError) {
           logger.error("useMobilidade.createRide - OFFICIAL pricing failed", pricingError as Error);
-          toast.error("Erro no cÃ¡lculo de preÃ§o. Tente novamente ou contate o suporte.");
+          toast.error("Erro no calculo de preco. Tente novamente ou contate o suporte.");
           throw new Error("Official pricing calculation failed");
         }
 
@@ -248,7 +248,7 @@ export function useMobilidade() {
         
         // Toast com preÃ§o calculado OFICIAL
         if (normalizedSuggestedPrice !== undefined) {
-          toast.success(`Corrida solicitada! PreÃ§o oficial: R$ ${normalizedSuggestedPrice.toFixed(2)}`);
+          toast.success(`Corrida solicitada! Preco oficial: R$ ${normalizedSuggestedPrice.toFixed(2)}`);
         } else {
           toast.success("Corrida solicitada!");
         }
@@ -268,7 +268,7 @@ export function useMobilidade() {
         logger.info("useMobilidade.cancelRide - iniciando", { rideId, userId: user?.id });
         
         if (!user) {
-          toast.error("UsuÃ¡rio nÃ£o autenticado");
+          toast.error("Usuario nao autenticado");
           return false;
         }
 
@@ -278,12 +278,12 @@ export function useMobilidade() {
           (await profileService.getActiveProfile(user.id));
 
         if (!userProfile?.id) {
-          logger.error("useMobilidade.cancelRide - perfil nÃ£o encontrado", new Error("No profile"), { userId: user.id });
-          toast.error("Perfil nÃ£o encontrado");
+          logger.error("useMobilidade.cancelRide - perfil nao encontrado", new Error("No profile"), { userId: user.id });
+          toast.error("Perfil nao encontrado");
           return false;
         }
 
-        logger.info("useMobilidade.cancelRide - perfil do usuÃ¡rio", {
+        logger.info("useMobilidade.cancelRide - perfil do usuario", {
           userId: user.id,
           profileId: userProfile.id
         });
@@ -291,8 +291,8 @@ export function useMobilidade() {
         // Buscar corrida para saber quem estÃ¡ cancelando
         const ride: RideRequest | null = await getRideById(rideId);
         if (!ride) {
-          logger.warn("useMobilidade.cancelRide - corrida nÃ£o encontrada", { rideId });
-          toast.error("Corrida nÃ£o encontrada");
+          logger.warn("useMobilidade.cancelRide - corrida nao encontrada", { rideId });
+          toast.error("Corrida nao encontrada");
           return false;
         }
 
@@ -308,13 +308,13 @@ export function useMobilidade() {
         const isDriver = ride.driver_profile_id === userProfile.id;
 
         if (!isPassenger && !isDriver) {
-          logger.warn("useMobilidade.cancelRide - usuÃ¡rio nÃ£o autorizado", { 
+          logger.warn("useMobilidade.cancelRide - usuario nao autorizado", {
             rideId, 
             userProfileId: userProfile.id,
             passengerId: ride.passenger_profile_id,
             driverProfileId: ride.driver_profile_id
           });
-          toast.error("VocÃª nÃ£o pode cancelar esta corrida");
+          toast.error("Voce nao pode cancelar esta corrida");
           return false;
         }
 
@@ -344,11 +344,11 @@ export function useMobilidade() {
           let errorMessage = result.error || "Erro ao cancelar corrida";
           
           if (errorMessage.includes("Cannot cancel ride in state")) {
-            errorMessage = `NÃ£o Ã© possÃ­vel cancelar a corrida no estado atual (${ride?.status})`;
+            errorMessage = `Nao e possivel cancelar a corrida no estado atual (${ride?.status})`;
           } else if (errorMessage.includes("Passenger cannot cancel at this stage")) {
-            errorMessage = "VocÃª nÃ£o pode mais cancelar esta corrida neste momento";
+            errorMessage = "Voce nao pode mais cancelar esta corrida neste momento";
           } else if (errorMessage.includes("Driver cannot cancel at this stage")) {
-            errorMessage = "Motorista nÃ£o pode cancelar neste momento";
+            errorMessage = "Motorista nao pode cancelar neste momento";
           }
           
           toast.error(errorMessage);
@@ -380,13 +380,13 @@ export function useMobilidade() {
     async (rideId: string) => {
       try {
         if (!user) {
-          toast.error("UsuÃ¡rio nÃ£o autenticado");
+          toast.error("Usuario nao autenticado");
           return null;
         }
 
         const driverProfile = await profileService.getProfileByType(user.id, "driver");
         if (!driverProfile?.id) {
-          toast.error("Perfil de motorista nÃ£o encontrado");
+          toast.error("Perfil de motorista nao encontrado");
           return null;
         }
 
@@ -395,11 +395,11 @@ export function useMobilidade() {
 
         if (!result.success) {
           if (result.reason === 'already_accepted') {
-            toast.error("Esta corrida jÃ¡ foi aceita por outro motorista");
+            toast.error("Esta corrida ja foi aceita por outro motorista");
           } else if (result.reason === 'invalid_state') {
-            toast.error("Esta corrida nÃ£o estÃ¡ disponÃ­vel para aceite");
+            toast.error("Esta corrida nao esta disponivel para aceite");
           } else if (result.reason === 'driver_busy') {
-            toast.error("VocÃª jÃ¡ tem uma corrida ativa");
+            toast.error("Voce ja tem uma corrida ativa");
           } else if (result.reason === 'expired') {
             toast.error("Esta corrida expirou");
           } else {
@@ -532,7 +532,7 @@ export function useMobilidade() {
     async (rideId: string) => {
       try {
         if (!user) {
-          toast.error("UsuÃ¡rio nÃ£o autenticado");
+          toast.error("Usuario nao autenticado");
           return { success: false };
         }
 
@@ -541,7 +541,7 @@ export function useMobilidade() {
           (await profileService.getActiveProfile(user.id));
 
         if (!passengerProfile?.id) {
-          toast.error("Perfil nÃ£o encontrado");
+          toast.error("Perfil nao encontrado");
           return { success: false };
         }
         await RidePassengerService.confirmRideCompletion(
@@ -565,7 +565,7 @@ export function useMobilidade() {
     async (rideId: string, description: string, reportType: string = "other", severity: string = "medium") => {
       try {
         if (!user) {
-          toast.error("UsuÃ¡rio nÃ£o autenticado");
+          toast.error("Usuario nao autenticado");
           return { success: false };
         }
 
@@ -574,7 +574,7 @@ export function useMobilidade() {
           (await profileService.getActiveProfile(user.id));
 
         if (!passengerProfile?.id) {
-          toast.error("Perfil nÃ£o encontrado");
+          toast.error("Perfil nao encontrado");
           return { success: false };
         }
 const result = await RideReportsService.createReport({

@@ -1,7 +1,7 @@
 /**
  * PROFILE.1.3b - BURN-DOWN AGRESSIVO
  *
- * TrackRidePage migrado para usar ProfileService como fonte Ãºnica de verdade
+ * TrackRidePage migrado para usar ProfileService como fonte unica de verdade
  * Elimina regras manuais: is_verified
  * Score original: 84 (7 regras manuais)
  */
@@ -48,7 +48,7 @@ interface RideTrackingData {
     vehicle_color: string;
     vehicle_plate: string;
     rating: number;
-    // âœ… MIGRADO - Removida regra manual is_verified, dados vÃªm do ProfileService
+    // MIGRADO - Removida regra manual is_verified, dados vem do ProfileService
     profileContext?: ProfileContext; // Contexto completo do ProfileService
   } | null;
   passenger_info: {
@@ -72,11 +72,11 @@ export default function TrackRidePage() {
       const rideData = await getRideByShareToken(token!);
 
       if (!rideData) {
-        setError("Link invÃ¡lido ou expirado");
+        setError("Link invalido ou expirado");
         return;
       }
 
-      // Verificar expiraÃ§Ã£o
+      // Verificar expiracao
       if (
         rideData.share_expires_at &&
         new Date(rideData.share_expires_at) < new Date()
@@ -85,7 +85,7 @@ export default function TrackRidePage() {
         return;
       }
 
-      // âœ… MIGRADO - Buscar dados do passageiro usando ProfileService
+      // MIGRADO - Buscar dados do passageiro usando ProfileService
       const passengerProfiles = await profileService.getProfilesSummary([
         rideData.passenger_profile_id,
       ]);
@@ -94,7 +94,7 @@ export default function TrackRidePage() {
       // SSOT: Buscar dados do motorista (se houver)
       let driverData = null;
       if (rideData.driver_profile_id) {
-        // âœ… MIGRADO - Buscar profile do motorista usando ProfileService
+        // MIGRADO - Buscar profile do motorista usando ProfileService
         const driverProfiles = await profileService.getProfilesSummary([
           rideData.driver_profile_id,
         ]);
@@ -143,7 +143,7 @@ export default function TrackRidePage() {
               vehicle_color: driverData.vehicle_color,
               vehicle_plate: driverData.vehicle_plate,
               rating: driverData.rating,
-              profileContext: driverData.profileContext, // âœ… MIGRADO - Contexto completo do ProfileService
+              profileContext: driverData.profileContext, // MIGRADO - Contexto completo do ProfileService
             }
           : null,
         passenger_info: {
@@ -214,9 +214,9 @@ export default function TrackRidePage() {
           <div className="w-20 h-20 rounded-full bg-red-500/20 border-4 border-red-500/40 flex items-center justify-center mx-auto">
             <AlertTriangle className="h-10 w-10 text-red-400" />
           </div>
-          <h1 className="text-2xl font-bold text-foreground">Link InvÃ¡lido</h1>
+          <h1 className="text-2xl font-bold text-foreground">Link invalido</h1>
           <p className="text-muted-foreground">
-            {error || "Este link de rastreamento nÃ£o existe ou expirou."}
+            {error || "Este link de rastreamento nao existe ou expirou."}
           </p>
         </div>
       </div>
@@ -329,16 +329,16 @@ export default function TrackRidePage() {
               </div>
               <div className="flex items-center gap-4 text-sm text-muted-foreground">
                 <span>{data.driver_info.vehicle_model}</span>
-                <span>â€¢</span>
+                <span>/</span>
                 <span>{data.driver_info.vehicle_color}</span>
-                <span>â€¢</span>
+                <span>/</span>
                 <span className="font-mono">
                   {data.driver_info.vehicle_plate}
                 </span>
               </div>
               {data.driver_info.rating && (
                 <div className="flex items-center gap-1">
-                  <span className="text-yellow-400">â˜…</span>
+                  <span className="text-yellow-400">*</span>
                   <span className="text-sm font-medium text-foreground">
                     {data.driver_info.rating.toFixed(1)}
                   </span>
@@ -381,7 +381,7 @@ export default function TrackRidePage() {
         <div className="bg-card border border-border rounded-2xl p-4">
           <div className="flex items-center gap-3 mb-3">
             <Clock className="h-5 w-5 text-muted-foreground" />
-            <h2 className="font-semibold text-foreground">HorÃ¡rios</h2>
+            <h2 className="font-semibold text-foreground">Horarios</h2>
           </div>
           <div className="space-y-2 text-sm">
             <div className="flex justify-between">
@@ -392,7 +392,7 @@ export default function TrackRidePage() {
             </div>
             <div className="flex justify-between">
               <span className="text-muted-foreground">
-                Ãšltima atualizaÃ§Ã£o:
+                Ultima atualizacao:
               </span>
               <span className="text-foreground font-medium">
                 {new Date(data.ride_updated_at).toLocaleString("pt-BR")}
@@ -413,7 +413,7 @@ export default function TrackRidePage() {
             <div className="flex items-center gap-3">
               <div className="w-3 h-3 rounded-full bg-emerald-400 animate-pulse" />
               <p className="text-sm font-semibold text-emerald-400">
-                ðŸ”´ Rastreamento ao vivo â€¢ AtualizaÃ§Ãµes em tempo real
+                Rastreamento ao vivo / Atualizacoes em tempo real
               </p>
             </div>
           </div>
@@ -422,7 +422,7 @@ export default function TrackRidePage() {
         {/* Footer */}
         <div className="text-center pt-4 pb-8">
           <p className="text-xs text-muted-foreground">
-            Este link Ã© privado e expira automaticamente apÃ³s 24 horas
+            Este link e privado e expira automaticamente apos 24 horas
           </p>
         </div>
       </div>

@@ -13,6 +13,7 @@ import { Input } from '@/shared/components/ui/input';
 import { Label } from '@/shared/components/ui/label';
 import { Switch } from '@/shared/components/ui/switch';
 import { Textarea } from '@/shared/components/ui/textarea';
+import { ConfirmActionDialog } from '@/shared/components/ConfirmActionDialog';
 import { Calendar, Plus, Trash2, X } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -25,6 +26,7 @@ export function ExceptionsManager({ businessId }: ExceptionsManagerProps) {
   const { exceptions, isLoading, setException, deleteException, isSettingException } = useBusinessExceptions(businessId);
 
   const [isAdding, setIsAdding] = useState(false);
+  const [exceptionToDelete, setExceptionToDelete] = useState<string | null>(null);
   const [newException, setNewException] = useState({
     date: '',
     opens_at: '08:00',
@@ -56,10 +58,10 @@ export function ExceptionsManager({ businessId }: ExceptionsManagerProps) {
     setIsAdding(false);
   };
 
-  const handleDelete = (exceptionId: string) => {
-    if (confirm('Deseja realmente deletar esta exceção?')) {
-      deleteException(exceptionId);
-    }
+  const handleConfirmDelete = () => {
+    if (!exceptionToDelete) return;
+    deleteException(exceptionToDelete);
+    setExceptionToDelete(null);
   };
 
   if (isLoading) {
@@ -112,7 +114,7 @@ export function ExceptionsManager({ businessId }: ExceptionsManagerProps) {
                 <Button
                   variant="ghost"
                   size="icon"
-                  onClick={() => handleDelete(exception.id)}
+                  onClick={() => setExceptionToDelete(exception.id)}
                 >
                   <Trash2 className="w-4 h-4 text-destructive" />
                 </Button>
@@ -216,6 +218,17 @@ export function ExceptionsManager({ businessId }: ExceptionsManagerProps) {
             Adicionar Exceção
           </Button>
         )}
+
+        <ConfirmActionDialog
+          open={!!exceptionToDelete}
+          onOpenChange={(open) => {
+            if (!open) setExceptionToDelete(null);
+          }}
+          title="Deletar excecao"
+          description="Esta excecao de horario sera removida e o dia voltara a seguir a configuracao padrao."
+          confirmLabel="Deletar excecao"
+          onConfirm={handleConfirmDelete}
+        />
       </CardContent>
     </Card>
   );

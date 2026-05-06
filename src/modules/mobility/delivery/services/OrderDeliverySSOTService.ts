@@ -45,6 +45,7 @@ import {
 import type { DeliveryProof } from "../proof-of-delivery/types";
 import { LOGISTICS_STATUS, type LogisticsStatus } from "../logistics/types";
 import { SettlementContextService } from "../settlement-context/SettlementContextService";
+import { OrderDeliveryNotificationService } from "./OrderDeliveryNotificationService";
 import type { OrderFinancialBreakdown } from "../settlement-context/types";
 
 const ORDER_TABLE = "orders";
@@ -390,6 +391,7 @@ export class OrderDeliverySSOTService {
         p_actor_profile_id: actorProfileId,
       });
 
+      await OrderDeliveryNotificationService.notifyOrderCreated(order);
       return { success: true, data: order };
     } catch (error) {
       logger.error("OrderDeliverySSOTService.createOrder", error as Error, {
@@ -415,6 +417,59 @@ export class OrderDeliverySSOTService {
     }
   }
 
+  static async listOrdersBySource(
+    sourceType: OrderSourceContext["source_type"],
+    sourceId: string,
+    filters?: {
+      logistics_status?: LogisticsStatus;
+      date_from?: string;
+      date_to?: string;
+      limit?: number;
+    },
+  ): Promise<OrderOperationResult<OrderRecord[]>> {
+    try {
+      let query = (supabase as any)
+        .from(ORDER_TABLE)
+        .select("*")
+        .eq("source_type", sourceType)
+        .eq("source_id", sourceId)
+        .order("created_at", { ascending: false });
+
+      if (filters?.logistics_status) {
+        query = query.eq("logistics_status", filters.logistics_status);
+      }
+
+      if (filters?.date_from) {
+        query = query.gte("created_at", filters.date_from);
+      }
+
+      if (filters?.date_to) {
+        query = query.lte("created_at", filters.date_to);
+      }
+
+      if (filters?.limit) {
+        query = query.limit(filters.limit);
+      }
+
+      const { data, error } = await query;
+
+      if (error) throw error;
+
+      const orders = await Promise.all(
+        ((data ?? []) as Record<string, unknown>[]).map((row) =>
+          this.hydrateOrderRecord(row),
+        ),
+      );
+
+      return { success: true, data: orders };
+    } catch (error) {
+      logger.error("OrderDeliverySSOTService.listOrdersBySource", error as Error, {
+        sourceType,
+        sourceId,
+      });
+      return { success: false, error: toErrorMessage(error) };
+    }
+  }
   static async transitionLogisticsStatus(
     input: TransitionLogisticsStatusInput,
   ): Promise<OrderOperationResult<OrderRecord>> {
@@ -431,6 +486,7 @@ export class OrderDeliverySSOTService {
         },
       );
 
+      await OrderDeliveryNotificationService.notifyOrderStatusChanged(order);
       return { success: true, data: order };
     } catch (error) {
       logger.error(
@@ -493,6 +549,7 @@ export class OrderDeliverySSOTService {
         p_reason: params.reason ?? null,
       });
 
+      await OrderDeliveryNotificationService.notifyOrderStatusChanged(order);
       return { success: true, data: order };
     } catch (error) {
       logger.error("OrderDeliverySSOTService.markPickedUp", error as Error, params);
@@ -511,6 +568,7 @@ export class OrderDeliverySSOTService {
         p_proof: normalizeProofInput(input.proof),
       });
 
+      await OrderDeliveryNotificationService.notifyOrderStatusChanged(order, "delivery_proof_attached");
       return { success: true, data: order };
     } catch (error) {
       logger.error("OrderDeliverySSOTService.attachDeliveryProof", error as Error, {
@@ -535,6 +593,7 @@ export class OrderDeliverySSOTService {
         p_proof: normalizeProofInput(input.proof),
       });
 
+      await OrderDeliveryNotificationService.notifyOrderStatusChanged(order);
       return { success: true, data: order };
     } catch (error) {
       logger.error("OrderDeliverySSOTService.markDelivered", error as Error, {

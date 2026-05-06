@@ -165,7 +165,7 @@ export function useDriverDashboardBase({
     staleTime: TIMEOUTS.CACHE_STALE_TIME_MEDIUM,
   });
 
-  // GATE: Usar MobilityOfferService ao invÃ©s de getAvailableRides genÃ©rico
+  // GATE: Usar MobilityOfferService ao inves de getAvailableRides generico
   const availableRidesQuery = useQuery({
     queryKey: [
       "driver-dashboard",
@@ -299,7 +299,7 @@ export function useDriverDashboardBase({
       switch (event.type) {
         case "driver_assigned":
           if (event.driverProfileId === driverProfileId) {
-            toast.success("Nova corrida disponÃ­vel! Verifique suas ofertas.");
+            toast.success("Nova corrida disponivel! Verifique suas ofertas.");
           }
           break;
         case "driver_accepted":
@@ -381,7 +381,7 @@ export function useDriverDashboardBase({
   const acceptRide = useCallback(
     async (rideId: string) => {
       if (!driverProfileId) {
-        toast.error("Perfil de motorista nÃ£o encontrado");
+        toast.error("Perfil de motorista nao encontrado");
         return;
       }
 
@@ -391,25 +391,25 @@ export function useDriverDashboardBase({
         const { MobilityOfferService } = await import('@/modules/mobility/services/MobilityOfferService');
         const { MobilityDispatchConfigService } = await import('@/modules/mobility/services/MobilityDispatchConfigService');
         
-        // Buscar dados da corrida para determinar estratÃ©gia
+        // Buscar dados da corrida para determinar estrategia.
         const rideData = await getRideDispatchContextById(rideId);
         
         if (!rideData) {
-          toast.error("Corrida nÃ£o encontrada");
+          toast.error("Corrida nao encontrada");
           return;
         }
 
         if (rideData.ride_mode === "motoboy" && !canAcceptDeliveryOffers) {
-          toast.error("Perfil sem permissÃ£o para entregas");
+          toast.error("Perfil sem permissao para entregas");
           return;
         }
 
         if (rideData.ride_mode !== "motoboy" && !canAcceptRideOffers) {
-          toast.error("Perfil sem permissÃ£o para corridas");
+          toast.error("Perfil sem permissao para corridas");
           return;
         }
         
-        // Determinar estratÃ©gia
+        // Determinar estrategia.
         const context = MobilityDispatchConfigService.createContext(rideData);
         const strategy = MobilityDispatchConfigService.determineStrategy(context);
         
@@ -419,16 +419,16 @@ export function useDriverDashboardBase({
         if (!result.success) {
           switch (result.reason) {
             case 'already_accepted':
-              toast.error("Esta corrida jÃ¡ foi aceita por outro motorista");
+              toast.error("Esta corrida ja foi aceita por outro motorista");
               break;
             case 'expired':
               toast.error("Esta oferta expirou");
               break;
             case 'driver_busy':
-              toast.error("VocÃª jÃ¡ tem uma corrida ativa");
+              toast.error("Voce ja tem uma corrida ativa");
               break;
             case 'not_eligible':
-              toast.error(`NÃ£o elegÃ­vel: ${result.error}`);
+              toast.error(`Nao elegivel: ${result.error}`);
               break;
             default:
               toast.error("Erro ao aceitar corrida");

@@ -498,7 +498,7 @@ export class MobilityOfferService {
     // TODO: Implementar extraÃ§Ã£o inteligente de bairro
     // Por enquanto, retorna primeiras palavras
     const parts = address.split(',');
-    return parts[parts.length - 2]?.trim() || 'RegiÃ£o';
+    return parts[parts.length - 2]?.trim() || 'Regiao';
   }
 
   /**

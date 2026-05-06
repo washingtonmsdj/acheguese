@@ -52,6 +52,8 @@ export interface CreateDeliveryData {
   // Origem da solicitacao
   sourceType: SourceType;
   sourceId?: string;
+  // Usado apenas para autorizacao quando a entidade operacional difere do dono.
+  authorizationSourceId?: string;
   // Pagamento
   paymentMethod?: string;
   observation?: string;

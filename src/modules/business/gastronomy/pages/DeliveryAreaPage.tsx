@@ -13,6 +13,7 @@ import { DeliveryAreaForm } from '../components/delivery/DeliveryAreaForm';
 import { NeighborhoodManager } from '../components/delivery/NeighborhoodManager';
 import { DeliverySummaryWidget } from '../components/delivery/DeliverySummaryWidget';
 import { Button } from '@/shared/components/ui/button';
+import { ConfirmActionDialog } from '@/shared/components/ConfirmActionDialog';
 import { MapPin, Plus } from 'lucide-react';
 import type { DeliveryArea } from '@/modules/business/gastronomy/services/DeliveryAreaService';
 
@@ -31,6 +32,7 @@ export default function DeliveryAreaPage() {
   const [isCreatingNew, setIsCreatingNew] = useState(false);
   const [editingArea, setEditingArea] = useState<DeliveryArea | null>(null);
   const [managingNeighborhoods, setManagingNeighborhoods] = useState<DeliveryArea | null>(null);
+  const [areaToDelete, setAreaToDelete] = useState<string | null>(null);
 
   if (!businessId) {
     return (
@@ -62,10 +64,10 @@ export default function DeliveryAreaPage() {
     }
   };
 
-  const handleDeleteArea = (areaId: string) => {
-    if (confirm('Deseja realmente deletar esta área? Todos os bairros serão removidos.')) {
-      deleteArea(areaId);
-    }
+  const handleConfirmDeleteArea = () => {
+    if (!areaToDelete) return;
+    deleteArea(areaToDelete);
+    setAreaToDelete(null);
   };
 
   // Se está gerenciando bairros, mostra apenas o manager
@@ -133,7 +135,7 @@ export default function DeliveryAreaPage() {
                 key={area.id}
                 area={area}
                 onEdit={setEditingArea}
-                onDelete={handleDeleteArea}
+                onDelete={setAreaToDelete}
                 onManageNeighborhoods={setManagingNeighborhoods}
               />
             ))}
@@ -152,6 +154,17 @@ export default function DeliveryAreaPage() {
           </Button>
         </div>
       )}
+
+      <ConfirmActionDialog
+        open={!!areaToDelete}
+        onOpenChange={(open) => {
+          if (!open) setAreaToDelete(null);
+        }}
+        title="Deletar area de entrega"
+        description="Esta acao remove a area e todos os bairros vinculados. Evite remover coberturas usadas por pedidos em andamento."
+        confirmLabel="Deletar area"
+        onConfirm={handleConfirmDeleteArea}
+      />
     </div>
   );
 }

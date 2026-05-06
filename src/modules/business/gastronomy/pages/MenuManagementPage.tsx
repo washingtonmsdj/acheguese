@@ -16,6 +16,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/components/ui
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/components/ui/card';
 import { Button } from '@/shared/components/ui/button';
 import { Input } from '@/shared/components/ui/input';
+import { ConfirmActionDialog } from '@/shared/components/ConfirmActionDialog';
 import {
   Select,
   SelectContent,
@@ -42,6 +43,8 @@ export default function MenuManagementPage() {
   const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [filterCategory, setFilterCategory] = useState<string>('all');
+  const [categoryToDelete, setCategoryToDelete] = useState<string | null>(null);
+  const [itemToDelete, setItemToDelete] = useState<string | null>(null);
 
   const {
     categories,
@@ -104,10 +107,10 @@ export default function MenuManagementPage() {
     setSelectedCategory(null);
   };
 
-  const handleDeleteCategory = (categoryId: string) => {
-    if (confirm('Tem certeza que deseja deletar esta categoria?')) {
-      deleteCategory(categoryId);
-    }
+  const handleConfirmDeleteCategory = () => {
+    if (!categoryToDelete) return;
+    deleteCategory(categoryToDelete);
+    setCategoryToDelete(null);
   };
 
   const handleCreateItem = () => {
@@ -138,10 +141,10 @@ export default function MenuManagementPage() {
     setSelectedItem(null);
   };
 
-  const handleDeleteItem = (itemId: string) => {
-    if (confirm('Tem certeza que deseja deletar este item?')) {
-      deleteItem(itemId);
-    }
+  const handleConfirmDeleteItem = () => {
+    if (!itemToDelete) return;
+    deleteItem(itemToDelete);
+    setItemToDelete(null);
   };
 
   const filteredItems =
@@ -307,7 +310,7 @@ export default function MenuManagementPage() {
                   key={item.id}
                   item={item}
                   onEdit={handleEditItem}
-                  onDelete={handleDeleteItem}
+                  onDelete={setItemToDelete}
                   onToggleAvailability={toggleAvailability}
                 />
               ))}
@@ -327,7 +330,7 @@ export default function MenuManagementPage() {
               <CategoryList
                 categories={categories || []}
                 onEdit={handleEditCategory}
-                onDelete={handleDeleteCategory}
+                onDelete={setCategoryToDelete}
                 onCreate={handleCreateCategory}
                 onReorder={reorderCategories}
                 canCreate={canAddMoreCategories}
@@ -372,6 +375,29 @@ export default function MenuManagementPage() {
         allowCategorySelection={canUseCategories}
         allowImage={canUseImages}
         isPizzaria={isPizzaria}
+      />
+
+
+      <ConfirmActionDialog
+        open={!!categoryToDelete}
+        onOpenChange={(open) => {
+          if (!open) setCategoryToDelete(null);
+        }}
+        title="Deletar categoria"
+        description="A categoria sera removida do cardapio. Confira antes se existem itens dependentes dela."
+        confirmLabel="Deletar categoria"
+        onConfirm={handleConfirmDeleteCategory}
+      />
+
+      <ConfirmActionDialog
+        open={!!itemToDelete}
+        onOpenChange={(open) => {
+          if (!open) setItemToDelete(null);
+        }}
+        title="Deletar item"
+        description="O item sera removido do cardapio e deixara de aparecer para clientes."
+        confirmLabel="Deletar item"
+        onConfirm={handleConfirmDeleteItem}
       />
     </div>
   );

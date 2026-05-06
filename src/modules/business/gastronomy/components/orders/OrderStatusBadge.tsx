@@ -1,19 +1,18 @@
 /**
- * OrderStatusBadge — Badge de status do pedido
- *
- * Mostra status com cor e ícone apropriados.
+ * OrderStatusBadge - badge de status do pedido.
  */
 
-import { Badge } from '@/shared/components/ui/badge';
+import type { ComponentType } from 'react';
 import {
-  Clock,
   CheckCircle,
+  CheckCircle2,
   ChefHat,
+  Clock,
   Package,
   Truck,
-  CheckCircle2,
   XCircle,
 } from 'lucide-react';
+import { Badge } from '@/shared/components/ui/badge';
 import type { OrderStatus } from '@/modules/business/gastronomy/services/OrderService';
 
 interface OrderStatusBadgeProps {
@@ -26,7 +25,7 @@ const STATUS_CONFIG: Record<
   {
     label: string;
     variant: 'default' | 'secondary' | 'destructive' | 'outline';
-    icon: React.ComponentType<{ className?: string }>;
+    icon: ComponentType<{ className?: string }>;
     color: string;
   }
 > = {
@@ -55,7 +54,7 @@ const STATUS_CONFIG: Record<
     color: 'text-purple-600',
   },
   out_for_delivery: {
-    label: 'Saiu para Entrega',
+    label: 'Saiu para entrega',
     variant: 'default',
     icon: Truck,
     color: 'text-indigo-600',
@@ -67,7 +66,7 @@ const STATUS_CONFIG: Record<
     color: 'text-green-600',
   },
   completed: {
-    label: 'Concluído',
+    label: 'Concluido',
     variant: 'outline',
     icon: CheckCircle2,
     color: 'text-green-600',
@@ -80,40 +79,34 @@ const STATUS_CONFIG: Record<
   },
 };
 
-function getStatusConfig(status: OrderStatus) {
-  switch (status) {
-    case 'pending': return STATUS_CONFIG.pending;
-    case 'confirmed': return STATUS_CONFIG.confirmed;
-    case 'preparing': return STATUS_CONFIG.preparing;
-    case 'ready': return STATUS_CONFIG.ready;
-    case 'out_for_delivery': return STATUS_CONFIG.out_for_delivery;
-    case 'delivered': return STATUS_CONFIG.delivered;
-    case 'completed': return STATUS_CONFIG.completed;
-    case 'cancelled': return STATUS_CONFIG.cancelled;
-    default: return STATUS_CONFIG.pending;
-  }
-}
-
 function getSizeClass(size: 'sm' | 'md' | 'lg'): string {
   switch (size) {
-    case 'sm': return 'text-xs';
-    case 'md': return 'text-sm';
-    case 'lg': return 'text-base';
-    default: return 'text-sm';
+    case 'sm':
+      return 'text-xs';
+    case 'md':
+      return 'text-sm';
+    case 'lg':
+      return 'text-base';
+    default:
+      return 'text-sm';
   }
 }
 
 function getIconSizeClass(size: 'sm' | 'md' | 'lg'): string {
   switch (size) {
-    case 'sm': return 'w-3 h-3';
-    case 'md': return 'w-4 h-4';
-    case 'lg': return 'w-5 h-5';
-    default: return 'w-4 h-4';
+    case 'sm':
+      return 'w-3 h-3';
+    case 'md':
+      return 'w-4 h-4';
+    case 'lg':
+      return 'w-5 h-5';
+    default:
+      return 'w-4 h-4';
   }
 }
 
 export function OrderStatusBadge({ status, size = 'md' }: OrderStatusBadgeProps) {
-  const config = getStatusConfig(status);
+  const config = STATUS_CONFIG[status] ?? STATUS_CONFIG.pending;
   const Icon = config.icon;
 
   return (
@@ -123,4 +116,3 @@ export function OrderStatusBadge({ status, size = 'md' }: OrderStatusBadgeProps)
     </Badge>
   );
 }
-

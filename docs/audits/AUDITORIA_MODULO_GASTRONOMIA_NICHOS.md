@@ -13,14 +13,15 @@ Atue como auditor senior de produto, operacao e arquitetura para um modulo hiper
 
 Gastronomia e um dos modulos mais ricos do projeto, mas ainda nao deve ser tratado como fechado. A estrutura existe, ha muitos componentes de cardapio, checkout, entrega, dashboard, pedidos e nichos. O risco principal esta na maturidade desigual dos nichos e na integracao operacional com motoboy.
 
-Pizza parece o nicho mais avancado. Sushi, acai, pastel, churrascaria e bares aparecem como nichos complexos/beta. Os demais nichos basicos existem mais como categorizacao/presets do que como operacao especializada.
+Pizza aparece como nicho completo no SSOT atual. Sushi, acai, pastel, churrascaria e bares aparecem como nichos complexos/beta. Os demais nichos basicos existem mais como categorizacao/presets do que como operacao especializada.
 
 ## Nichos Mapeados
 
 Estado observado em `src/modules/business/gastronomy/niches/registry.ts`:
 
 - Basicos/publicos: lanches, hamburguer, brasileira, arabe, saudavel, salgados, padaria, doces, cafes.
-- Complexos/beta: pizza, sushi, acai, pastel, churrascaria, bares.
+- Completo/publico: pizza.
+- Complexos/beta: sushi, acai, pastel, churrascaria, bares.
 
 ## Matriz de Maturidade
 
@@ -38,11 +39,13 @@ Estado observado em `src/modules/business/gastronomy/niches/registry.ts`:
 ## Lacunas P0
 
 - [ ] P0: validar fluxo cliente completo: ver restaurante, montar pedido, carrinho, checkout, pagamento/confirmacao, status, entrega/retirada e avaliacao.
+- [x] P0: alinhar front de pedidos/entregas da loja ao SSOT de `orders`/`ride_requests`.
+ide_requests.
 - [ ] P0: validar fluxo restaurante completo: receber pedido, aceitar, preparar, despachar, cancelar, pausar loja, ajustar tempo e esgotar item.
-- [ ] P0: integrar pedido com motoboy quando for delivery proprio/plataforma.
-- [ ] P0: trocar `confirm()` nativo em delecao de categoria, item, area de entrega e excecoes de horario.
-- [ ] P0: resolver arquivos deprecated de billing/permissoes/feature flags ou arquivar claramente.
-- [ ] P0: definir se nichos beta aparecem para usuario final ou apenas admin/feature flag.
+- [x] P0: integrar pedido com motoboy quando for delivery proprio/plataforma.
+- [x] P0: trocar `confirm()` nativo em delecao de categoria, item, area de entrega e excecoes de horario.
+- [x] P0: resolver arquivos deprecated de billing/permissoes/feature flags ou arquivar claramente.
+- [x] P0: definir se nichos beta aparecem para usuario final ou apenas admin/feature flag.
 
 ## Lacunas P1
 
@@ -51,7 +54,7 @@ Estado observado em `src/modules/business/gastronomy/niches/registry.ts`:
 - [ ] P1: criar regras por area de entrega: taxa, tempo, pedido minimo e raio/bairro.
 - [ ] P1: criar pausa de loja/item com motivo e tempo.
 - [ ] P1: criar reputacao de restaurante: entrega, qualidade, atraso, cancelamento, avaliacao.
-- [ ] P1: criar comprovante e comunicacao cliente/restaurante/motoboy.
+- [x] P1: criar comprovante e comunicacao cliente/restaurante/motoboy para o fluxo operacional base.
 - [ ] P1: criar testes E2E para pizza e um nicho basico.
 
 ## Lacunas P2
@@ -64,14 +67,16 @@ Estado observado em `src/modules/business/gastronomy/niches/registry.ts`:
 
 ## Evidencias Tecnicas
 
-- `src/modules/business/gastronomy/pages/DeliveryAreaPage.tsx`: uso de `confirm()`.
-- `src/modules/business/gastronomy/pages/MenuManagementPage.tsx`: uso de `confirm()` para categoria/item.
-- `src/modules/business/gastronomy/components/delivery/NeighborhoodManager.tsx`: uso de `confirm()`.
-- `src/modules/business/gastronomy/components/hours/ExceptionsManager.tsx`: uso de `confirm()`.
-- `src/modules/business/gastronomy/billing/StripeService.ts`: marcado como deprecated.
-- `src/modules/business/gastronomy/billing/permissions.ts`: marcado como deprecated.
-- `src/modules/business/gastronomy/billing/featureFlags.ts`: marcado como deprecated.
-- `src/modules/business/gastronomy/niches/pizza/components/PizzaAdminPanel.tsx`: contem placeholder de configuracao `pizza_sizes`.
+- `src/modules/business/gastronomy/pages/DeliveryAreaPage.tsx`: `confirm()` removido; usa `ConfirmActionDialog`.
+- `src/modules/business/gastronomy/pages/MenuManagementPage.tsx`: `confirm()` removido para categoria/item; usa `ConfirmActionDialog`.
+- `src/modules/business/gastronomy/components/delivery/NeighborhoodManager.tsx`: `confirm()` removido; usa `ConfirmActionDialog`.
+- `src/modules/business/gastronomy/components/hours/ExceptionsManager.tsx`: `confirm()` removido; usa `ConfirmActionDialog`.
+- `src/modules/mobility/delivery/services/OrderDeliveryLinkService.ts`: sincroniza `ride_requests` de motoboy/gastronomia com `orders.logistics_status`.
+- `src/modules/mobility/core/RideOperationalService.ts`: aciona sincronizacao do pedido ao aceitar, cancelar, retirar, iniciar, entregar ou falhar entrega.
+- `src/modules/business/gastronomy/billing/legacy/StripeService.ts`: arquivado fora do export publico; SSOT atual em `@/core/billing`.
+- `src/modules/business/gastronomy/billing/legacy/permissions.ts`: arquivado fora do export publico; SSOT atual em `@/core/billing`.
+- `src/modules/business/gastronomy/billing/legacy/featureFlags.ts`: arquivado fora do export publico; SSOT atual em `@/core/billing`.
+- `src/modules/business/gastronomy/niches/pizzaria/components/PizzaAdminPanel.tsx`: placeholder `pizza_sizes` removido do `tableMap`; configuracao nao usa tabela falsa.
 
 ## Definicao de Pronto
 

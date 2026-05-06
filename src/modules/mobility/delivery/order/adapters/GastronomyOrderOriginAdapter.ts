@@ -25,6 +25,18 @@ export interface CreateGastronomyOrderDraftInput {
   external_payment_reference?: string;
   notes?: string;
   initial_financial_status?: FinancialStatus;
+  customer_snapshot?: {
+    full_name?: string | null;
+    phone?: string | null;
+    email?: string | null;
+  };
+  delivery_snapshot?: {
+    address_id?: string | null;
+    lat?: number | null;
+    lng?: number | null;
+    recipient_name?: string | null;
+    phone?: string | null;
+  };
 }
 
 export class GastronomyOrderOriginAdapter {
@@ -143,6 +155,12 @@ export class GastronomyOrderOriginAdapter {
           business_name: business.name,
           cuisine_type: business.gastronomy_profile.cuisine_type,
           delivery_enabled: business.gastronomy_profile.delivery_enabled,
+          customer_name: input.delivery_snapshot?.recipient_name ?? input.customer_snapshot?.full_name ?? null,
+          customer_phone: input.delivery_snapshot?.phone ?? input.customer_snapshot?.phone ?? null,
+          customer_email: input.customer_snapshot?.email ?? null,
+          delivery_address_id: input.delivery_snapshot?.address_id ?? null,
+          delivery_lat: input.delivery_snapshot?.lat ?? null,
+          delivery_lng: input.delivery_snapshot?.lng ?? null,
         },
       },
       payment_mode: PAYMENT_MODE.DIRECT_TO_MERCHANT,

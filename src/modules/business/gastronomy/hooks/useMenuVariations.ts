@@ -38,10 +38,10 @@ export function useMenuVariations(itemId: string) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['menu-variations', itemId] });
-      toast.success('VariaÃ§Ã£o criada com sucesso!');
+      toast.success('Variacao criada com sucesso!');
     },
     onError: (error: Error) => {
-      toast.error(`Erro ao criar variaÃ§Ã£o: ${error.message}`);
+      toast.error(`Erro ao criar variacao: ${error.message}`);
     },
   });
 
@@ -54,10 +54,10 @@ export function useMenuVariations(itemId: string) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['menu-variations', itemId] });
-      toast.success('VariaÃ§Ã£o deletada com sucesso!');
+      toast.success('Variacao deletada com sucesso!');
     },
     onError: (error: Error) => {
-      toast.error(`Erro ao deletar variaÃ§Ã£o: ${error.message}`);
+      toast.error(`Erro ao deletar variacao: ${error.message}`);
     },
   });
 

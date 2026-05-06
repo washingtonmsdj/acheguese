@@ -6,10 +6,11 @@
  */
 
 import { useMemo, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
+import { useNavigate, useParams } from 'react-router-dom';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { Package, Loader2, Plus, Phone, User, Clock, MapPin, DollarSign } from 'lucide-react';
+import { AlertCircle, DollarSign, ExternalLink, Loader2, MapPin, Package, Phone, Plus, User, Clock } from 'lucide-react';
 import { Badge } from '@/shared/components/ui/badge';
 import { Button } from '@/shared/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/components/ui/card';
@@ -29,7 +30,9 @@ import { Label } from '@/shared/components/ui/label';
 import { CreateDeliveryModal } from '@/shared/services/mobilityDelivery';
 import { useDelivery } from '@/shared/services/mobilityDelivery';
 import { useLocationContext } from '@/core/location/hooks/useLocationContext';
-import { RideOperationalService } from '@/shared/services/mobilityDelivery';
+import { useOrders } from '../hooks/useOrders';
+import { OrderDeliveryLinkService } from '@/modules/mobility/delivery/services/OrderDeliveryLinkService';
+import { businessManagementRoutes } from '@/core/business/utils/businessManagementRoutes';
 
 type DeliveryFilterTab = 'all' | 'pending' | 'in_progress' | 'delivered' | 'failed' | 'cancelled';
 
@@ -46,6 +49,8 @@ interface DeliveryRide {
   final_price?: number | null;
   origin?: string | null;
   destination?: string | null;
+  source_type?: string | null;
+  source_id?: string | null;
 }
 
 function mapRideStatus(status: string): DeliveryFilterTab {
@@ -105,6 +110,7 @@ function formatMoney(value?: number | null): string {
 
 export default function DeliveryManagementPage() {
   const { businessId } = useParams<{ businessId: string }>();
+  const navigate = useNavigate();
   const { activeLocation } = useLocationContext();
 
   const [activeTab, setActiveTab] = useState<DeliveryFilterTab>('all');
@@ -113,12 +119,34 @@ export default function DeliveryManagementPage() {
   const [cancellationReason, setCancellationReason] = useState('');
   const [createModalOpen, setCreateModalOpen] = useState(false);
 
-  const { deliveries, isLoading, isSubmitting, createDelivery, cancelDelivery } = useDelivery('gastronomy', businessId);
+  const { deliveries, isLoading: manualDeliveriesLoading, isSubmitting, createDelivery, cancelDelivery } = useDelivery('gastronomy', businessId);
+  const { orders = [], isLoading: ordersLoading } = useOrders(businessId ?? '', { order_type: 'delivery' });
 
-  const typedDeliveries = useMemo(
-    () => (deliveries as unknown as DeliveryRide[]).filter((ride) => ride?.id),
-    [deliveries],
-  );
+  const linkedDeliveriesQuery = useQuery({
+    queryKey: ['gastronomy', 'delivery-rides-by-orders', businessId, orders.map((order) => order.id)],
+    queryFn: async () => {
+      const rides = await Promise.all(
+        orders.map((order) => OrderDeliveryLinkService.getRideRequestByOrderId(order.id)),
+      );
+      return rides.filter((ride): ride is NonNullable<typeof ride> => Boolean(ride));
+    },
+    enabled: !!businessId && orders.length > 0,
+    refetchInterval: 15000,
+  });
+
+  const isLoading = manualDeliveriesLoading || ordersLoading || linkedDeliveriesQuery.isLoading;
+
+  const typedDeliveries = useMemo(() => {
+    const byId = new Map<string, DeliveryRide>();
+    const manualRides = (deliveries as unknown as DeliveryRide[]).filter((ride) => ride?.id);
+    const orderRides = (linkedDeliveriesQuery.data as unknown as DeliveryRide[] | undefined)?.filter((ride) => ride?.id) ?? [];
+
+    for (const ride of [...manualRides, ...orderRides]) {
+      byId.set(ride.id, ride);
+    }
+
+    return Array.from(byId.values());
+  }, [deliveries, linkedDeliveriesQuery.data]);
 
   const filteredDeliveries = useMemo(() => {
     if (activeTab === 'all') return typedDeliveries;
@@ -177,12 +205,12 @@ export default function DeliveryManagementPage() {
 
   return (
     <div className="container mx-auto p-6 space-y-6">
-      <div className="flex items-center justify-between gap-3">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <h1 className="text-3xl font-bold">Gestao de Entregas</h1>
-          <p className="text-muted-foreground">Painel da rede de motoboys da operacao.</p>
+          <h1 className="text-2xl sm:text-3xl font-bold">Gestao de Entregas</h1>
+          <p className="text-muted-foreground">Painel da rede de motoboys da operacao, integrado aos pedidos.</p>
         </div>
-        <Button onClick={() => setCreateModalOpen(true)} className="gap-2" disabled={!activeLocation}>
+        <Button onClick={() => setCreateModalOpen(true)} className="gap-2 w-full sm:w-auto" disabled={!activeLocation}>
           <Plus className="h-4 w-4" />
           Solicitar Motoboy
         </Button>
@@ -238,6 +266,20 @@ export default function DeliveryManagementPage() {
         </TabsList>
 
         <TabsContent value={activeTab} className="space-y-4 mt-6">
+          {linkedDeliveriesQuery.isError && (
+            <Card className="border-destructive/40 bg-destructive/5">
+              <CardContent className="pt-5 flex items-start gap-3 text-sm">
+                <AlertCircle className="h-5 w-5 text-destructive mt-0.5" />
+                <div>
+                  <p className="font-medium">Falha ao carregar entregas vinculadas aos pedidos.</p>
+                  <p className="text-muted-foreground">
+                    As entregas manuais continuam visiveis, mas o acompanhamento de pedidos pode estar incompleto.
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
           {isLoading ? (
             <div className="flex items-center justify-center py-12">
               <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
@@ -249,7 +291,12 @@ export default function DeliveryManagementPage() {
                   <CardHeader>
                     <div className="flex items-start justify-between gap-3">
                       <div>
-                        <CardTitle className="text-lg">Entrega #{ride.id.slice(0, 8)}</CardTitle>
+                        <div className="flex flex-wrap items-center gap-2">
+                          <CardTitle className="text-lg">Entrega #{ride.id.slice(0, 8)}</CardTitle>
+                          <Badge variant="outline">
+                            {ride.source_id && ride.source_id !== businessId ? 'Pedido' : 'Manual'}
+                          </Badge>
+                        </div>
                         <p className="text-sm text-muted-foreground">
                           {ride.created_at
                             ? formatDistanceToNow(new Date(ride.created_at), {
@@ -295,13 +342,24 @@ export default function DeliveryManagementPage() {
                       </div>
                     </div>
 
-                    {canCancel(ride.status) && (
-                      <div className="flex justify-end">
+                    <div className="flex flex-col gap-2 sm:flex-row sm:justify-end">
+                      {ride.source_id && ride.source_id !== businessId && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => navigate(businessManagementRoutes.gastronomyPedidoDetalhe(businessId, ride.source_id!))}
+                          className="gap-2"
+                        >
+                          <ExternalLink className="h-4 w-4" />
+                          Abrir pedido
+                        </Button>
+                      )}
+                      {canCancel(ride.status) && (
                         <Button variant="destructive" size="sm" onClick={() => handleCancelClick(ride.id)}>
                           Cancelar entrega
                         </Button>
-                      </div>
-                    )}
+                      )}
+                    </div>
                   </CardContent>
                 </Card>
               ))}

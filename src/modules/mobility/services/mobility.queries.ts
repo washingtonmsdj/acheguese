@@ -778,8 +778,8 @@ export async function getAvailableRides(limit: number = 10): Promise<unknown[]> 
       };
       return {
         ...typed,
-        origin: typed.origin || typed.pickup_address?.street || "Origem nÃ£o informada",
-        destination: typed.destination || typed.dropoff_address?.street || "Destino nÃ£o informado",
+        origin: typed.origin || typed.pickup_address?.street || "Origem nao informada",
+        destination: typed.destination || typed.dropoff_address?.street || "Destino nao informado",
         origin_lat: typed.origin_lat || typed.pickup_address?.latitude,
         origin_lng: typed.origin_lng || typed.pickup_address?.longitude,
         destination_lat: typed.destination_lat || typed.dropoff_address?.latitude,
@@ -1062,7 +1062,7 @@ export async function getRideHistory(
  * @deprecated NÃ£o implementado - usar GPS tracking diretamente
  */
 export async function getDriverLocation(_driverProfileId: string): Promise<unknown | null> {
-  logger.warn("MobilityQueries.getDriverLocation - nÃ£o implementado, usar GPS tracking");
+  logger.warn("MobilityQueries.getDriverLocation - nao implementado, usar GPS tracking");
   return null;
 }
 
