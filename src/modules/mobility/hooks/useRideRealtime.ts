@@ -13,7 +13,16 @@ import {
 import { DB_TABLES, REALTIME_CHANNELS } from '../constants';
 
 export interface RideRealtimeEvent {
-  type: 'state_change' | 'driver_assigned' | 'driver_accepted' | 'expired' | 'cancelled';
+  type:
+    | 'state_change'
+    | 'driver_assigned'
+    | 'driver_accepted'
+    | 'in_progress'
+    | 'in_delivery'
+    | 'completed'
+    | 'delivered'
+    | 'expired'
+    | 'cancelled';
   rideId: string;
   newState?: string;
   driverProfileId?: string;
@@ -84,6 +93,14 @@ export function useRideRealtime(options: UseRideRealtimeOptions) {
             eventType = 'driver_assigned';
           } else if (newData.status === 'driver_accepted') {
             eventType = 'driver_accepted';
+          } else if (newData.status === 'in_progress') {
+            eventType = 'in_progress';
+          } else if (newData.status === 'in_delivery') {
+            eventType = 'in_delivery';
+          } else if (newData.status === 'delivered') {
+            eventType = 'delivered';
+          } else if (newData.status === 'completed') {
+            eventType = 'completed';
           } else if (newData.status === 'expired') {
             eventType = 'expired';
           } else if (newData.status?.includes('cancelled')) {

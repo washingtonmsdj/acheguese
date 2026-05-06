@@ -29,7 +29,7 @@ import { createLocationRepository } from '@/core/location/repositories/createLoc
 import { createTerritorialGroupRepository } from '@/core/location/repositories/createTerritorialGroupRepository';
 import { locationContextStore } from '@/core/location/stores/LocationContextStore';
 import { TERRITORY_CONFIG } from '@/config/territory';
-import type { Location, TerritorialGroupWithMembers } from '@/core/location';
+import type { Location, TerritorialGroupWithMembers } from '@/core/location/types';
 import { isTerritoryPubliclyNavigable } from '../utils/territoryVisibility';
 
 export const TERRITORY_RESOLVE_STATUS = {

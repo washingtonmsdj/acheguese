@@ -14,6 +14,7 @@ import { locationContextStore } from "@/core/location/stores/LocationContextStor
 import { mediaService } from "@/core/media/services/MediaService";
 import { PublicIdentityService } from "@/core/public-identity/services/PublicIdentityService";
 import type { CreateBusinessInput } from "@/modules/business/types";
+import { BusinessUrlService } from "@/core/business/services/BusinessUrlService";
 
 export interface BusinessCreateResult {
   profile_id: string;
@@ -110,7 +111,6 @@ export function useBusinessCreateMultiProfile(
       }
 
       const normalizedInput = validation.data;
-      const { BusinessUrlService } = await import("@/core/business/services/BusinessUrlService");
 
       let finalSlug = normalizedInput.slug;
       if (finalSlug) {

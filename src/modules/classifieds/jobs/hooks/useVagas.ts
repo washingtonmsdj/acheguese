@@ -14,7 +14,7 @@ import { useQuery } from "@tanstack/react-query";
 import { VagasService } from "../services/VagasService";
 import type { Vaga, VagaContrato, VagaModalidade, VagaNivel } from "../types/vagas.types";
 import { VAGA_CATEGORIAS } from "../types/vagas.types";
-import { useModuleTerritoryFilter } from "@/core/location";
+import { useModuleTerritoryFilter } from "@/core/location/hooks/useModuleTerritoryFilter";
 import type { ResolvedTerritory } from "@/core/routing/hooks/useResolveTerritoryFromUrl";
 
 interface UseVagasParams {

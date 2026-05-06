@@ -6,7 +6,7 @@
  */
 
 import { useQuery } from '@tanstack/react-query';
-import { createLandingFeaturedService } from '@/core/landing/hooks/createLandingFeaturedService';
+import { createLandingFeaturedService } from '@/app/features/landing/hooks/createLandingFeaturedService';
 import type { TerritoryFilter } from '@/core/location/types';
 
 const STALE_TIME = 5 * 60 * 1000;
@@ -16,9 +16,8 @@ export function useCityFeatured(state: string = 'ba', city: string = 'salvador')
   
   // Cria filtro para cidade inteira (sem bairro específico)
   const filter: TerritoryFilter = {
-    state: state.toUpperCase(),
-    city: city.toLowerCase(),
-    districts: [], // Vazio = toda a cidade
+    scope: "group",
+    location_ids: [], // Vazio = toda a cidade
   };
 
   const businesses = useQuery({

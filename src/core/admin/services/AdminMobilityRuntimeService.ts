@@ -6,6 +6,7 @@ import { createLocationRepository } from "@/core/location/repositories/createLoc
 import { ModuleKey, RolloutStatus } from "@/core/rollout/types";
 import { profileService } from "@/core/profiles/services/ProfileService";
 import { mobilityService } from "@/modules/mobility/services/MobilityService.impl";
+import { DriverAvailabilityService } from "@/modules/mobility/services/DriverAvailabilityService";
 
 const supabaseAny = supabase as any;
 const MOTOBOY_ENABLED_CONFIG_KEY = "motoboy_enabled";
@@ -111,6 +112,15 @@ export class AdminMobilityRuntimeService {
 
   async updateDriverOnlineStatus(driverProfileId: string, isOnline: boolean): Promise<void> {
     await mobilityService.updateDriverOnlineStatus(driverProfileId, isOnline);
+    if (!isOnline) {
+      const result = await DriverAvailabilityService.goOffline(driverProfileId);
+      if (!result.success) {
+        logger.warn("AdminMobilityRuntimeService.updateDriverOnlineStatus.availability", {
+          driverProfileId,
+          error: result.error,
+        });
+      }
+    }
   }
 
   async createDriverModerationEvent(input: {

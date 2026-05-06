@@ -1,12 +1,12 @@
 /**
  * RIDE OPERATIONAL SERVICE - Orquestrador do Motor Operacional
  *
- * Centraliza todas as operações críticas da corrida:
- * - Criação com state machine
- * - Transições de estado validadas
+ * Centraliza todas as operacoes criticas da corrida:
+ * - Criacao com state machine
+ * - Transicoes de estado validadas
  * - Cancelamentos
  * - Completar corrida
- * - Integração com dispatch
+ * - Integracao com dispatch
  */
 
 import { logger } from "@/shared/utils/logger";
@@ -24,6 +24,7 @@ import { OperationalVerificationService } from "../services/OperationalVerificat
 import { mobilityRolloutService } from "../services/MobilityRolloutService";
 import { mobilityAuditService } from "../services/MobilityAuditService";
 import { MotoboyAuthorizationService } from "../services/MotoboyAuthorizationService";
+import { profileService } from "@/core/profiles/services/ProfileService";
 
 // ============================================
 // TIPOS
@@ -31,7 +32,7 @@ import { MotoboyAuthorizationService } from "../services/MotoboyAuthorizationSer
 
 export interface CreateRideInput {
   passengerProfileId: string;
-  // Campos canônicos (schema real do banco)
+  // Campos canonicos (schema real do banco)
   pickupAddressId: string;
   dropoffAddressId: string;
   pickupLocationId: string;
@@ -51,9 +52,9 @@ export interface CreateRideInput {
   departureTime?: string;
 }
 
-// Campos específicos de entrega motoboy
+// Campos especificos de entrega motoboy
 export interface CreateDeliveryInput extends Omit<CreateRideInput, 'mode'> {
-  // Origem da solicitação
+  // Origem da solicitacao
   sourceType: 'passenger' | 'business' | 'gastronomy' | 'service';
   sourceId?: string;
   // Dados da entrega
@@ -62,7 +63,7 @@ export interface CreateDeliveryInput extends Omit<CreateRideInput, 'mode'> {
   deliveryNotes?: string;
   packageDescription?: string;
   packageSize?: 'small' | 'medium' | 'large';
-  // Autorização (passados pelo hook, não pelo componente)
+  // Autorizacao (passados pelo hook, nao pelo componente)
   requestingUserId?: string;
   planTier?: string;
 }
@@ -88,6 +89,37 @@ interface CancelInput {
 // ============================================
 
 export class RideOperationalService {
+  private static isProfileSuspended(profile: Record<string, unknown> | null): boolean {
+    const suspended = Boolean(profile?.is_suspended ?? profile?.suspended ?? false);
+    if (!suspended) return false;
+
+    const suspendedUntil = typeof profile?.suspended_until === "string" ? profile.suspended_until : null;
+    if (!suspendedUntil) return true;
+
+    const until = new Date(suspendedUntil);
+    return Number.isNaN(until.getTime()) || until > new Date();
+  }
+
+  private static async ensureProfileCanRequest(profileId: string): Promise<TransitionResult | null> {
+    const profile = await profileService.getProfileById(profileId).catch(() => null);
+    if (!profile) {
+      return { success: false, error: "Perfil solicitante nao encontrado." };
+    }
+    if (this.isProfileSuspended(profile as Record<string, unknown> | null)) {
+      return { success: false, error: "Usuario suspenso nao pode solicitar chamadas." };
+    }
+    return null;
+  }
+
+  private static async ensureMotoboyCanOperate(driverProfileId: string): Promise<TransitionResult | null> {
+    const authResult = await MotoboyAuthorizationService.canOperateDelivery(driverProfileId);
+    if (authResult.allowed) return null;
+    return {
+      success: false,
+      error: authResult.reason || "Motoboy nao autorizado a operar entrega.",
+    };
+  }
+
   private static isValidLatitude(value: number): boolean {
     return Number.isFinite(value) && value >= -90 && value <= 90;
   }
@@ -117,6 +149,9 @@ export class RideOperationalService {
     try {
       const initialState = RIDE_STATE.REQUESTED;
 
+      const requesterBlock = await this.ensureProfileCanRequest(input.passengerProfileId);
+      if (requesterBlock) return requesterBlock;
+
       if (
         !input.pickupAddressId?.trim() ||
         !input.dropoffAddressId?.trim() ||
@@ -134,7 +169,7 @@ export class RideOperationalService {
       if (!this.hasValidRouteCoordinates(input)) {
         return {
           success: false,
-          error: 'Coordenadas são obrigatórias para cálculo de preço oficial. Selecione endereços válidos no mapa.',
+          error: 'Coordenadas so obrigatrias para calculo de preco oficial. Selecione enderecos validos no mapa.',
         };
       }
 
@@ -142,13 +177,13 @@ export class RideOperationalService {
       if (input.suggestedPrice && input.suggestedPrice < 5.00) {
         return {
           success: false,
-          error: 'Preço mínimo é R$ 5,00 conforme regras de pricing.',
+          error: 'Preo minimo  R$ 5,00 conforme regras de pricing.',
         };
       }
 
       const ride = await createRide({
           passenger_profile_id: input.passengerProfileId,
-          // Campos canônicos NOT NULL
+          // Campos canonicos NAOT NULL
           pickup_address_id: input.pickupAddressId,
           dropoff_address_id: input.dropoffAddressId,
           pickup_location_id: input.pickupLocationId,
@@ -168,10 +203,10 @@ export class RideOperationalService {
       // Registrar auditoria
       await this.logStateChange(ride.id, null, initialState, input.passengerProfileId, 'Ride created');
 
-      // GATE 7 FASE 2.5: Resolver se PIN é exigido e criar verificação automaticamente
+      // GATE 7 FASE 2.5: Resolver se PIN  exigido e criar verificacao automaticamente
       const pinRequirement = await OperationalVerificationService.resolveRidePINRequirement({
         passengerId: input.passengerProfileId,
-        driverProfileId: undefined, // Motorista ainda não atribuído
+        driverProfileId: undefined, // Motorista ainda no atribuido
       });
 
       if (pinRequirement.isRequired && pinRequirement.requiredBy) {
@@ -220,10 +255,10 @@ export class RideOperationalService {
     toState: RideState,
     actor: string,
     reason?: string,
-    pin?: string // GATE 7: PIN opcional para validação
+    pin?: string // GATE 7: PIN opcional para validacao
   ): Promise<TransitionResult> {
     try {
-      // DIAGNOSTICO GATE 7: Log antes do .single()
+      // DIAGNAOSTICO GATE 7: Log antes do .single()
       logger.info('RideOperationalService.transitionTo - BEFORE .single()', {
         method: 'transitionTo',
         step: 'fetch_current_state',
@@ -238,7 +273,7 @@ export class RideOperationalService {
         driver_profile_id?: string | null;
       } | null;
 
-      // DIAGNOSTICO GATE 7: Log apos o .single()
+      // DIAGNAOSTICO GATE 7: Log apos o .single()
       logger.info('RideOperationalService.transitionTo - AFTER .single()', {
         method: 'transitionTo',
         step: 'fetch_current_state',
@@ -277,7 +312,7 @@ export class RideOperationalService {
               await this.logStateChange(
                 rideId,
                 fromState,
-                fromState, // Não transiciona
+                fromState, // No transiciona
                 actor,
                 `PIN verification failed: ${verifyResult.error || 'Invalid PIN'}`
               );
@@ -288,16 +323,16 @@ export class RideOperationalService {
               };
             }
 
-            // PIN válido, registrar na auditoria
+            // PIN valido, registrar na auditoria
             await this.logStateChange(
               rideId,
               fromState,
-              fromState, // Ainda não transicionou
+              fromState, // Ainda no transicionou
               actor,
               'PIN verified successfully'
             );
           } else {
-            // PIN exigido mas não fornecido
+            // PIN exigido mas no fornecido
             return {
               success: false,
               error: 'PIN verification required before boarding',
@@ -306,17 +341,17 @@ export class RideOperationalService {
         }
       }
 
-      // Validar transição
+      // Validar transicao
       RideStateMachine.assertCanTransition(fromState, toState);
 
-      // Executar transição
+      // Executar transicao
       const updates: any = {
         status: toState,
         updated_at: new Date().toISOString(),
       };
 
-      // Adicionar timestamps específicos apenas se a coluna existir
-      // Nota: Algumas colunas podem não existir dependendo da migração
+      // Adicionar timestamps especificos apenas se a coluna existir
+      // Nota: Algumas colunas podem no existir dependendo da migrao
       if (toState === RIDE_STATE.PASSENGER_BOARDED) {
         updates.passenger_boarded_at = new Date().toISOString();
       } else if (toState === RIDE_STATE.IN_PROGRESS) {
@@ -341,7 +376,7 @@ export class RideOperationalService {
       // Registrar auditoria
       await this.logStateChange(rideId, fromState, toState, actor, reason);
 
-      // Ações pós-transição
+      // Acoes ps-transicao
       await this.handlePostTransition(rideId, toState, ride);
 
       return {
@@ -352,7 +387,7 @@ export class RideOperationalService {
         newState: toState,
       };
     } catch (error) {
-      // Serializar erro completo para diagnóstico
+      // Serializar erro completo para diagnostico
       const errorDetails = {
         message: (error as Error).message,
         name: (error as Error).name,
@@ -427,14 +462,14 @@ export class RideOperationalService {
 
       // Validar se pode cancelar
       const isCancellable = RideStateMachine.isCancellable(currentState);
-      logger.info('RideOperationalService.cancelRide - verificando se é cancelável', {
+      logger.info('RideOperationalService.cancelRide - verificando se  cancelavel', {
         rideId: input.rideId,
         currentState,
         isCancellable
       });
       
       if (!isCancellable) {
-        logger.warn('RideOperationalService.cancelRide - estado não cancelável', {
+        logger.warn('RideOperationalService.cancelRide - estado no cancelavel', {
           rideId: input.rideId,
           currentState
         });
@@ -444,10 +479,10 @@ export class RideOperationalService {
         };
       }
 
-      // Validar quem está cancelando
+      // Validar quem esta cancelando
       if (input.cancelledBy === 'passenger') {
         if (ride.passenger_profile_id !== input.profileId) {
-          logger.warn('RideOperationalService.cancelRide - perfil não é o passageiro', {
+          logger.warn('RideOperationalService.cancelRide - perfil no  o passageiro', {
             rideId: input.rideId,
             profileId: input.profileId,
             passengerId: ride.passenger_profile_id
@@ -466,7 +501,7 @@ export class RideOperationalService {
         });
         
         if (!canPassengerCancel) {
-          logger.warn('RideOperationalService.cancelRide - passageiro não pode cancelar neste estado', {
+          logger.warn('RideOperationalService.cancelRide - passageiro no pode cancelar neste estado', {
             rideId: input.rideId,
             currentState
           });
@@ -490,14 +525,14 @@ export class RideOperationalService {
         }
       }
 
-      // GATE 3: Determinar novo estado com semântica correta
+      // GATE 3: Determinar novo estado com semantica correta
       let newState: RideState;
 
       if (input.cancelledBy === 'passenger') {
         newState = RIDE_STATE.CANCELLED_BY_PASSENGER;
       } else {
         // Motorista cancelando
-        // Se está em IN_DELIVERY, isso é FALHA operacional, não cancelamento simples
+        // Se est em IN_DELIVERY, isso  FALHA operacional, no cancelamento simples
         if (currentState === RIDE_STATE.IN_DELIVERY) {
           return {
             success: false,
@@ -593,7 +628,7 @@ export class RideOperationalService {
         'Ride completed successfully'
       );
 
-      // GATE 5: Liberar motorista com validação de corrida correta
+      // GATE 5: Liberar motorista com validacao de corrida correta
       if (result.success) {
         const { DriverAvailabilityService } = await import('@/modules/mobility/services/DriverAvailabilityService');
         await DriverAvailabilityService.releaseBusy(driverProfileId, rideId);
@@ -631,10 +666,10 @@ export class RideOperationalService {
   // ============================================
 
   /**
-   * Cria solicitação de entrega (motoboy)
+   * Cria solicitacao de entrega (motoboy)
    * Reutiliza o motor de corrida com ride_mode = 'motoboy'
    *
-   * GATE AUTH: Autorização centralizada via MotoboyAuthorizationService antes de qualquer escrita.
+   * GATE AUTH: Autorizacao centralizada via MotoboyAuthorizationService antes de qualquer escrita.
    */
   static async createDelivery(input: CreateDeliveryInput): Promise<TransitionResult> {
     try {
@@ -651,12 +686,11 @@ export class RideOperationalService {
         };
       }
 
-      // GATE AUTH: Verificar autorização centralizada por source_type/source_id
+      // GATE AUTH: Verificar autorizao centralizada por source_type/source_id
       const authResult = await MotoboyAuthorizationService.canRequestDelivery({
         sourceType: input.sourceType,
         sourceId: input.sourceId,
         locationId: input.pickupLocationId,
-        planTier: input.planTier,
         userId: input.requestingUserId,
       });
 
@@ -669,20 +703,23 @@ export class RideOperationalService {
         });
         return {
           success: false,
-          error: authResult.reason || 'Não autorizado a solicitar entrega.',
+          error: authResult.reason || 'No autorizado a solicitar entrega.',
         };
       }
 
+      const requesterBlock = await this.ensureProfileCanRequest(input.passengerProfileId);
+      if (requesterBlock) return requesterBlock;
+
       if (!this.hasValidRouteCoordinates(input)) {
-        return { success: false, error: 'Coordenadas são obrigatórias para cálculo de preço.' };
+        return { success: false, error: 'Coordenadas so obrigatrias para calculo de preco.' };
       }
 
       if (!input.recipientName?.trim()) {
-        return { success: false, error: 'Nome do destinatário é obrigatório.' };
+        return { success: false, error: 'Nome do destinatario  obrigatorio.' };
       }
 
       if (input.suggestedPrice && input.suggestedPrice < 5.00) {
-        return { success: false, error: 'Preço mínimo é R$ 5,00.' };
+        return { success: false, error: 'Preo minimo  R$ 5,00.' };
       }
 
       const ride = await createRide({
@@ -713,10 +750,10 @@ export class RideOperationalService {
 
       await this.logStateChange(ride.id, null, RIDE_STATE.REQUESTED, input.passengerProfileId, 'Delivery created');
 
-      // GATE 7 FASE 2.5: Resolver se PIN é exigido e criar verificação automaticamente
+      // GATE 7 FASE 2.5: Resolver se PIN  exigido e criar verificacao automaticamente
       const pinRequirement = await OperationalVerificationService.resolveDeliveryPINRequirement({
-        senderProfileId: input.passengerProfileId, // Remetente é o passenger_profile_id
-        operationId: input.sourceId, // Se houver operação associada
+        senderProfileId: input.passengerProfileId, // Remetente  o passenger_profile_id
+        operationId: input.sourceId, // Se houver operacao associada
       });
 
       if (pinRequirement.isRequired && pinRequirement.requiredBy) {
@@ -764,9 +801,12 @@ export class RideOperationalService {
         ride_mode?: string | null;
       } | null;
 
-      if (!ride) return { success: false, error: 'Entrega não encontrada.' };
-      if (ride.ride_mode !== 'motoboy') return { success: false, error: 'Operação exclusiva de motoboy.' };
-      if (ride.driver_profile_id !== driverProfileId) return { success: false, error: 'Apenas o motoboy atribuído pode confirmar coleta.' };
+      if (!ride) return { success: false, error: 'Entrega no encontrada.' };
+      if (ride.ride_mode !== 'motoboy') return { success: false, error: 'Operao exclusiva de motoboy.' };
+      if (ride.driver_profile_id !== driverProfileId) return { success: false, error: 'Apenas o motoboy atribuido pode confirmar coleta.' };
+
+      const operatorBlock = await this.ensureMotoboyCanOperate(driverProfileId);
+      if (operatorBlock) return operatorBlock;
 
       await updateRideMutation(rideId, { pickup_confirmed_at: new Date().toISOString() });
 
@@ -791,9 +831,12 @@ export class RideOperationalService {
         ride_mode?: string | null;
       } | null;
 
-      if (!ride) return { success: false, error: 'Entrega não encontrada.' };
-      if (ride.ride_mode !== 'motoboy') return { success: false, error: 'Operação exclusiva de motoboy.' };
-      if (ride.driver_profile_id !== driverProfileId) return { success: false, error: 'Apenas o motoboy atribuído pode iniciar entrega.' };
+      if (!ride) return { success: false, error: 'Entrega no encontrada.' };
+      if (ride.ride_mode !== 'motoboy') return { success: false, error: 'Operao exclusiva de motoboy.' };
+      if (ride.driver_profile_id !== driverProfileId) return { success: false, error: 'Apenas o motoboy atribuido pode iniciar entrega.' };
+
+      const operatorBlock = await this.ensureMotoboyCanOperate(driverProfileId);
+      if (operatorBlock) return operatorBlock;
 
       return await this.transitionTo(rideId, RIDE_STATE.IN_DELIVERY, driverProfileId, 'Delivery started');
     } catch (error) {
@@ -815,7 +858,7 @@ export class RideOperationalService {
       observation?: string;
     },
     finalPrice?: number,
-    pin?: string // GATE 7: PIN opcional para validação
+    pin?: string // GATE 7: PIN opcional para validacao
   ): Promise<TransitionResult> {
     try {
       const ride = await getRideById(rideId) as {
@@ -824,9 +867,12 @@ export class RideOperationalService {
         ride_mode?: string | null;
       } | null;
 
-      if (!ride) return { success: false, error: 'Entrega não encontrada.' };
-      if (ride.ride_mode !== 'motoboy') return { success: false, error: 'Operação exclusiva de motoboy.' };
-      if (ride.driver_profile_id !== driverProfileId) return { success: false, error: 'Apenas o motoboy atribuído pode confirmar entrega.' };
+      if (!ride) return { success: false, error: 'Entrega no encontrada.' };
+      if (ride.ride_mode !== 'motoboy') return { success: false, error: 'Operao exclusiva de motoboy.' };
+      if (ride.driver_profile_id !== driverProfileId) return { success: false, error: 'Apenas o motoboy atribuido pode confirmar entrega.' };
+
+      const operatorBlock = await this.ensureMotoboyCanOperate(driverProfileId);
+      if (operatorBlock) return operatorBlock;
 
       // GATE 7: Validar PIN se exigido
       const verification = await OperationalVerificationService.getVerificationStatus(rideId);
@@ -875,7 +921,7 @@ export class RideOperationalService {
 
   /**
    * Motoboy registra falha na entrega
-   * GATE 3: Snapshot obrigatório da falha
+   * GATE 3: Snaposhot obrigatorio da falha
    */
   static async failDelivery(
     rideId: string,
@@ -889,12 +935,15 @@ export class RideOperationalService {
         ride_mode?: string | null;
       } | null;
 
-      if (!ride) return { success: false, error: 'Entrega não encontrada.' };
-      if (ride.ride_mode !== 'motoboy') return { success: false, error: 'Operação exclusiva de motoboy.' };
-      if (ride.driver_profile_id !== driverProfileId) return { success: false, error: 'Apenas o motoboy atribuído pode registrar falha.' };
+      if (!ride) return { success: false, error: 'Entrega no encontrada.' };
+      if (ride.ride_mode !== 'motoboy') return { success: false, error: 'Operao exclusiva de motoboy.' };
+      if (ride.driver_profile_id !== driverProfileId) return { success: false, error: 'Apenas o motoboy atribuido pode registrar falha.' };
 
-      // GATE 3: Validar snapshot obrigatório
-      this.validateFailedDeliverySnapshot(metadata);
+      const operatorBlock = await this.ensureMotoboyCanOperate(driverProfileId);
+      if (operatorBlock) return operatorBlock;
+
+      // GATE 3: Validar snaposhot obrigatorio
+      this.validateFailedDeliverySnaposhot(metadata);
 
       // Garantir default de resolution_status
       if (!metadata.resolution_status) {
@@ -915,45 +964,45 @@ export class RideOperationalService {
   }
 
   /**
-   * Valida snapshot obrigatório da falha
-   * GATE 3: Validação de campos obrigatórios e condicionais
+   * Valida snaposhot obrigatorio da falha
+   * GATE 3: Validao de campos obrigatorios e condicionais
    */
-  private static validateFailedDeliverySnapshot(
+  private static validateFailedDeliverySnaposhot(
     metadata: FailedDeliveryMetadata
   ): void {
-    // Campos obrigatórios
+    // Campos obrigatorios
     if (!metadata.failure_reason || !metadata.item_destination ||
         !metadata.item_current_holder || !metadata.timestamp) {
-      throw new Error('Campos obrigatórios do snapshot ausentes: failure_reason, item_destination, item_current_holder, timestamp');
+      throw new Error('Campos obrigatorios do snaposhot ausentes: failure_reason, item_destination, item_current_holder, timestamp');
     }
 
     // Validar enums
     if (!VALID_FAILURE_REASONS.includes(metadata.failure_reason)) {
-      throw new Error(`failure_reason inválido: ${metadata.failure_reason}`);
+      throw new Error(`failure_reason invalido: ${metadata.failure_reason}`);
     }
 
     if (!VALID_ITEM_DESTINATIONS.includes(metadata.item_destination)) {
-      throw new Error(`item_destination inválido: ${metadata.item_destination}`);
+      throw new Error(`item_destination invalido: ${metadata.item_destination}`);
     }
 
     if (!VALID_ITEM_HOLDERS.includes(metadata.item_current_holder)) {
-      throw new Error(`item_current_holder inválido: ${metadata.item_current_holder}`);
+      throw new Error(`item_current_holder invalido: ${metadata.item_current_holder}`);
     }
 
-    // resolution_notes obrigatório se failure_reason = 'other'
+    // resolution_notes obrigatorio se failure_reason = 'other'
     if (metadata.failure_reason === 'other' && !metadata.resolution_notes) {
-      throw new Error('resolution_notes obrigatório quando failure_reason = other');
+      throw new Error('resolution_notes obrigatorio quando failure_reason = other');
     }
 
-    // item_current_holder não pode ser 'recipient' em failed_delivery
+    // item_current_holder no pode ser 'recipient' em failed_delivery
     if (metadata.item_current_holder === 'recipient' as any) {
-      throw new Error('item_current_holder não pode ser recipient em failed_delivery');
+      throw new Error('item_current_holder no pode ser recipient em failed_delivery');
     }
   }
 
   /**
-   * Atualiza resolução de falha de entrega
-   * GATE 3: Resolução posterior assíncrona
+   * Atualiza resolucao de falha de entrega
+   * GATE 3: Resoluo posterior assincrona
    */
   static async updateFailedDeliveryResolution(
     rideId: string,
@@ -973,18 +1022,18 @@ export class RideOperationalService {
         failed_delivery_metadata?: Record<string, unknown> | null;
       } | null;
       if (!ride) {
-        return { success: false, error: 'Corrida não encontrada' };
+        return { success: false, error: 'Corrida no encontrada' };
       }
 
       if (ride.status !== RIDE_STATE.FAILED_DELIVERY) {
-        return { success: false, error: 'Corrida não está em failed_delivery' };
+        return { success: false, error: 'Corrida no est em failed_delivery' };
       }
 
       if (!ride.failed_delivery_metadata) {
-        return { success: false, error: 'Metadata de falha não encontrada' };
+        return { success: false, error: 'Metadata de falha no encontrada' };
       }
 
-      // Validar resolução
+      // Validar resolucao
       this.validateFailedDeliveryResolution(resolutionUpdate);
 
       // Merge com metadata existente
@@ -1009,8 +1058,8 @@ export class RideOperationalService {
   }
 
   /**
-   * Valida atualização de resolução
-   * GATE 3: Validação de campos de resolução
+   * Valida atualizacao de resolucao
+   * GATE 3: Validao de campos de resolucao
    */
   private static validateFailedDeliveryResolution(
     resolutionUpdate: {
@@ -1021,17 +1070,17 @@ export class RideOperationalService {
   ): void {
     // resolved exige resolved_at
     if (resolutionUpdate.resolution_status === 'resolved' && !resolutionUpdate.resolved_at) {
-      throw new Error('resolved_at obrigatório quando resolution_status = resolved');
+      throw new Error('resolved_at obrigatorio quando resolution_status = resolved');
     }
 
     // escalated exige manual_resolution_owner_profile_id
     if (resolutionUpdate.resolution_status === 'escalated' && !resolutionUpdate.manual_resolution_owner_profile_id) {
-      throw new Error('manual_resolution_owner_profile_id obrigatório quando resolution_status = escalated');
+      throw new Error('manual_resolution_owner_profile_id obrigatorio quando resolution_status = escalated');
     }
   }
 
   /**
-   * Ações pós-transição
+   * Acoes ps-transicao
    */
   private static async handlePostTransition(
     rideId: string,
@@ -1039,21 +1088,91 @@ export class RideOperationalService {
     ride: any
   ): Promise<void> {
     try {
-      // GATE 5: Liberar motorista quando corrida é cancelada ou completada
+      // GATE 5: Liberar motorista quando corrida e cancelada ou completada
       if (RideStateMachine.isFinalState(newState) && ride.driver_profile_id) {
         const { DriverAvailabilityService } = await import('@/modules/mobility/services/DriverAvailabilityService');
         await DriverAvailabilityService.releaseBusy(ride.driver_profile_id, rideId);
       }
 
-      // TODO: Enviar notificações realtime
-      // TODO: Enviar notificações push
+      const passengerProfileId = typeof ride?.passenger_profile_id === "string" ? ride.passenger_profile_id : null;
+      const driverProfileId = typeof ride?.driver_profile_id === "string" ? ride.driver_profile_id : null;
+      const { NotificationService } = await import("@/core/notifications/services/NotificationService");
+
+      const notify = async (
+        userId: string | null,
+        type: "info" | "success" | "warning" | "error",
+        title: string,
+        message: string,
+      ) => {
+        if (!userId) return;
+        try {
+          await NotificationService.createNotification({
+            user_id: userId,
+            type,
+            category: "transactional",
+            title,
+            message,
+            metadata: { rideId, state: newState },
+            action_url: `/mobilidade/buscando/${rideId}`,
+            action_label: "Ver detalhes",
+          });
+        } catch (error) {
+          logger.warn("RideOperationalService.handlePostTransition.notification", {
+            userId,
+            rideId,
+            state: newState,
+            error: (error as Error).message,
+          });
+        }
+      };
+
+      if (newState === RIDE_STATE.DRIVER_ACCEPTED) {
+        await notify(
+          passengerProfileId,
+          "success",
+          "Motorista confirmou a corrida",
+          "Seu motorista confirmou o aceite e vai iniciar em breve.",
+        );
+        return;
+      }
+
+      if (newState === RIDE_STATE.IN_PROGRESS) {
+        await notify(passengerProfileId, "info", "Corrida iniciada", "Sua corrida foi iniciada.");
+        return;
+      }
+
+      if (newState === RIDE_STATE.IN_DELIVERY) {
+        await notify(passengerProfileId, "info", "Entrega em rota", "Seu motoboy iniciou a rota.");
+        return;
+      }
+
+      if (newState === RIDE_STATE.DELIVERED || newState === RIDE_STATE.COMPLETED) {
+        await notify(
+          passengerProfileId,
+          "success",
+          newState === RIDE_STATE.DELIVERED ? "Entrega concluida" : "Corrida concluida",
+          "Operacao finalizada com sucesso.",
+        );
+        await notify(
+          driverProfileId,
+          "success",
+          "Operacao concluida",
+          "A operacao foi finalizada e registrada no historico.",
+        );
+        return;
+      }
+
+      if (newState === RIDE_STATE.CANCELLED_BY_DRIVER || newState === RIDE_STATE.CANCELLED_BY_PASSENGER) {
+        await notify(passengerProfileId, "warning", "Corrida cancelada", "A corrida foi cancelada.");
+        await notify(driverProfileId, "warning", "Corrida cancelada", "A corrida foi cancelada.");
+      }
     } catch (error) {
       logger.error('RideOperationalService.handlePostTransition', error as Error, { rideId, newState });
     }
   }
 
   /**
-   * Registra mudança de estado
+   * Registra mudanca de estado
    */
   private static async logStateChange(
     rideId: string,
@@ -1079,7 +1198,4 @@ export class RideOperationalService {
     }
   }
 }
-
-
-
 

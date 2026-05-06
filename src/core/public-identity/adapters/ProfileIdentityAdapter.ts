@@ -8,6 +8,7 @@
  * ✅ SSOT COMPLIANT: Delega todas as queries para ProfileService
  */
 import { logger } from '@/shared/utils/logger';
+import { ProfileService } from '@/core/profiles/services/ProfileService';
 import { ProfileIdentityPolicy } from '../policies/ProfileIdentityPolicy';
 import type { IdentityAdapter } from '../domain/IdentityAdapter';
 import type { 
@@ -37,8 +38,7 @@ export class ProfileIdentityAdapter implements IdentityAdapter {
     // Normaliza o username antes de checar (mesma normalização da policy)
     const normalizedUsername = this.policy.normalize(username);
 
-    // ✅ SSOT: Delega para ProfileService
-    const { ProfileService } = await import('@/core/profiles/services/ProfileService');
+    // ✅ SSOT: Delega para ProfileService
     return await ProfileService.checkUsernameExists(normalizedUsername, excludeEntityId);
   }
 
@@ -51,8 +51,7 @@ export class ProfileIdentityAdapter implements IdentityAdapter {
    * @throws Error se infraestrutura falhar
    */
   async getExistingSimilar(username: string): Promise<string[]> {
-    // ✅ SSOT: Delega para ProfileService
-    const { ProfileService } = await import('@/core/profiles/services/ProfileService');
+    // ✅ SSOT: Delega para ProfileService
     return await ProfileService.getSimilarUsernames(username, 20);
   }
 
@@ -78,8 +77,7 @@ export class ProfileIdentityAdapter implements IdentityAdapter {
    * @throws Error se falhar
    */
   async getHistory(entityId: EntityId): Promise<IdentityChangeRecord[]> {
-    // ✅ SSOT: Delega para ProfileService
-    const { ProfileService } = await import('@/core/profiles/services/ProfileService');
+    // ✅ SSOT: Delega para ProfileService
     const history = await ProfileService.getUsernameHistory(entityId);
 
     return history.map((record) => ({

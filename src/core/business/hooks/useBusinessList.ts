@@ -20,7 +20,7 @@
 import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import { BusinessService } from "@/core/business/services/BusinessService";
 import { useCallback, useMemo, useRef, useEffect } from "react";
-import { useTerritoryFilter, isTerritoryFilterReady, territoryFilterKey } from "@/core/location";
+import { useTerritoryFilter, isTerritoryFilterReady, territoryFilterKey } from "@/core/location/hooks/useTerritoryFilter";
 import type { Business } from "@/core/business/types/Business";
 import type { BusinessFilters } from "@/core/business/types";
 import type { ResolvedTerritory } from "@/core/routing/hooks/useResolveTerritoryFromUrl";

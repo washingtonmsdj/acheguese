@@ -12,6 +12,7 @@ import { logger } from "@/shared/utils/logger";
 import { trackError } from "@/shared/utils/errorTracking";
 import type { ClassifiedData, CreateClassifiedInput, UpdateClassifiedInput } from "./types";
 import { CLASSIFIED_STATUS } from "../constants/statuses";
+import { slugify } from "./ClassifiedUrlService";
 
 // ============================================================
 // HELPERS INTERNOS
@@ -21,7 +22,6 @@ import { CLASSIFIED_STATUS } from "../constants/statuses";
  * Gera slug a partir do título (importado dinamicamente do ClassifiedUrlService)
  */
 async function generateSlug(title: string): Promise<string> {
-  const { slugify } = await import("./ClassifiedUrlService");
   return slugify(title);
 }
 

@@ -7,6 +7,7 @@
 
 import { logger } from "@/shared/utils/logger";
 import { MobilityAdminQueryService } from "@/core/admin/services/MobilityAdminQueryService";
+import { profileService } from "@/core/profiles/services/ProfileService";
 
 export interface AdminDriverData {
   id: string;
@@ -67,7 +68,6 @@ export interface AdminMobilityOperationalSnapshot {
 class AdminMobilityServiceClass {
   async getDriversWithStats(): Promise<AdminDriverData[]> {
     try {
-      const { profileService } = await import("@/core/profiles/services/ProfileService");
 
       // ✅ Delegado para MobilityAdminQueryService
       const data = await MobilityAdminQueryService.getDriversRaw();
@@ -191,7 +191,7 @@ class AdminMobilityServiceClass {
     const [drivers, rides, profileService] = await Promise.all([
       MobilityAdminQueryService.getActiveDriversForMap(),
       MobilityAdminQueryService.getActiveRidesForMap(),
-      import("@/core/profiles/services/ProfileService").then((m) => m.profileService),
+      Promise.resolve(profileService),
     ]);
 
     const profileIds = [

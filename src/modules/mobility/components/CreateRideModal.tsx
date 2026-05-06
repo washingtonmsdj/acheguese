@@ -56,12 +56,13 @@ interface CreateRideModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSubmit: (data: CreateRideRequestData) => void | Promise<void>;
+  initialType?: RideType;
 }
 
-export function CreateRideModal({ open, onOpenChange, onSubmit }: CreateRideModalProps) {
+export function CreateRideModal({ open, onOpenChange, onSubmit, initialType = "viagem" }: CreateRideModalProps) {
   const addressService = new AddressService();
 
-  const [type, setType] = useState<RideType>("viagem");
+  const [type, setType] = useState<RideType>(initialType);
   const [showPointSelector, setShowPointSelector] = useState(false);
   const [selectedPoint, setSelectedPoint] = useState<BoardingPoint | null>(null);
 
@@ -87,6 +88,13 @@ export function CreateRideModal({ open, onOpenChange, onSubmit }: CreateRideModa
   const [trustPreference, setTrustPreference] = useState<TrustPreference>("qualquer");
   const [userEditedPrice, setUserEditedPrice] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    if (!open) {
+      return;
+    }
+    setType(initialType);
+  }, [initialType, open]);
 
   // Auto-capturar GPS na origem ao abrir o modal
   // Auto-preencher horário para viagens imediatas

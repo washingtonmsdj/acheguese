@@ -28,7 +28,7 @@ const PREFETCHERS: Array<{ test: (path: string) => boolean; load: () => Promise<
   },
   {
     test: (path) => path.startsWith("/eventos"),
-    load: () => import("@/core/community/pages/EventosPage"),
+    load: () => import("@/core/community-events/pages/EventosPage"),
   },
   {
     test: (path) => path.startsWith("/vagas"),
@@ -36,7 +36,7 @@ const PREFETCHERS: Array<{ test: (path: string) => boolean; load: () => Promise<
   },
   {
     test: (path) => path.startsWith("/comunidade"),
-    load: () => import("@/core/community/pages/ComunidadePage"),
+    load: () => import("@/core/community-feed/pages/ComunidadePage"),
   },
   {
     test: (path) => path.startsWith("/mapa"),

@@ -17,7 +17,7 @@ import { createLocationRepository } from '@/core/location/repositories/createLoc
 import { boundaryService } from '@/core/geospatial';
 import { NEIGHBORHOOD_COLORS } from '../providers/MapProvider';
 import type { TerritoryPolygon } from './useTerritoryPolygon';
-import type { Location } from '@/core/location';
+import type { Location } from '@/core/location/types';
 import { LocationType, LocationStatus } from '@/core/location/types';
 
 interface UseCityNeighborhoodsPolygonsOptions {

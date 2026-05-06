@@ -19,11 +19,9 @@ import { useFriendlyModuleUrls } from '@/core/routing/hooks/useFriendlyModuleUrl
 import { useTerritorialContextOptional } from '@/core/routing/components/TerritorialLayout';
 import type { ResolvedTerritory } from "@/core/routing/hooks/useResolveTerritoryFromUrl";
 import { useTerritoryPolygon } from "@/core/maps/hooks/useTerritoryPolygon";
-import {
-  ModuleLocationDialog,
-  useModuleTerritoryFilter,
-  useTerritoryLabels,
-} from "@/core/location";
+import { ModuleLocationDialog } from "@/core/location/components/ModuleLocationDialog";
+import { useModuleTerritoryFilter } from "@/core/location/hooks/useModuleTerritoryFilter";
+import { useTerritoryLabels } from "@/core/location/hooks/useTerritoryLabels";
 import { useNearbyEntities } from "@/core/geospatial/hooks/useSpatialSearch";
 import { useRobustGeolocation } from "@/shared/hooks";
 

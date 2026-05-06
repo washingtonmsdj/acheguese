@@ -7,7 +7,7 @@ import { Input } from '@/shared/components/ui/input';
 import { InlineFieldError } from '@/shared/components/ui/InlineFieldError';
 import { CheckCircle, Eye, EyeOff, Key, Loader2 } from 'lucide-react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { AuthService } from '@/core/auth';
+import { AuthService } from '@/core/auth/services/AuthService';
 import { useAuth } from '@/core/auth/hooks/useAuth';
 import { getAuthErrorMessage } from '@/core/auth/utils/authMessages';
 import { getAuthPasswordRequirementStatus } from '@/core/auth/utils/passwordPolicy';

@@ -21,7 +21,7 @@ import {
 } from '@/shared/components/ui/dropdown-menu';
 import { useClassificados } from '@/shared/services/classifieds';
 import { classifiedUrlService } from '@/shared/services/classifieds';
-import { useTerritoryLabels } from '@/core/location';
+import { useTerritoryLabels } from '@/core/location/hooks/useTerritoryLabels';
 import type { ClassificadoWithVendedor } from '@/shared/services/classifieds';
 import type { ResolvedTerritory } from '@/core/routing/hooks/useResolveTerritoryFromUrl';
 import { cn } from '@/shared/utils/cn';

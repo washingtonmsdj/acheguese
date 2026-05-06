@@ -15,6 +15,10 @@ export function useMotoristaPage() {
       RIDE_STATUS.PASSENGER_ON_BOARD,
       RIDE_STATUS.IN_PROGRESS,
     ],
-    completedStatuses: [RIDE_STATUS.COMPLETED],
+    completedStatuses: [
+      RIDE_STATUS.COMPLETED,
+      RIDE_STATUS.DELIVERED,
+      RIDE_STATUS.FAILED_DELIVERY,
+    ],
   });
 }

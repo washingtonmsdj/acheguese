@@ -134,6 +134,14 @@ export function useDelivery(sourceType: SourceType, sourceId?: string) {
         case "driver_accepted":
           toast.success("Motoboy a caminho para coleta!");
           break;
+        case "in_delivery":
+          toast.info("Entrega em rota para o destino");
+          break;
+        case "delivered":
+        case "completed":
+          toast.success("Entrega concluida");
+          setActiveDelivery(null);
+          break;
         case "cancelled":
           toast.info("Entrega cancelada.");
           setActiveDelivery(null);

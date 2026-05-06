@@ -3,7 +3,7 @@ import {
   lostFoundService,
   type LostFoundComment,
   type LostFoundPost,
-} from "@/modules/community/lostfound/services/LostFoundService";
+} from "@/core/community-lost-found/services/LostFoundService";
 
 class LostFoundRuntimeService {
   async getPosts(

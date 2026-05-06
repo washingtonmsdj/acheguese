@@ -23,7 +23,8 @@ import { useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useEventos, type Evento } from "@/core/community/hooks/useEventos";
 import { useCommunityUrls } from "@/core/community/hooks/useCommunityUrls";
-import { ModuleLocationDialog, useModuleTerritoryFilter } from "@/core/location";
+import { ModuleLocationDialog } from "@/core/location/components/ModuleLocationDialog";
+import { useModuleTerritoryFilter } from "@/core/location/hooks/useModuleTerritoryFilter";
 
 /**
  * ✅ SSOT COMPLIANT - EventosPage migrada
@@ -31,7 +32,7 @@ import { ModuleLocationDialog, useModuleTerritoryFilter } from "@/core/location"
  */
 import { EventFilters } from "@/shared/components/eventos/EventFilters";
 import { EventGrid } from "@/shared/components/eventos/EventGrid";
-import { TerritoryIndicator } from "@/core/location";
+import { TerritoryIndicator } from "@/core/location/components/TerritoryIndicator";
 import type { RouteResolved } from "@/core/routing/types";
 
 interface EventosPageProps {

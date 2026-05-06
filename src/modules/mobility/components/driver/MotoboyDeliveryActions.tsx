@@ -1,8 +1,8 @@
-/**
- * MotoboyDeliveryActions — Ações do motoboy durante a entrega
+﻿/**
+ * MotoboyDeliveryActions â€” AÃ§Ãµes do motoboy durante a entrega
  *
  * Exibido no dashboard do motorista quando ride_mode = 'motoboy'.
- * Controla: confirmar coleta → iniciar entrega → confirmar entrega / registrar falha.
+ * Controla: confirmar coleta â†’ iniciar entrega â†’ confirmar entrega / registrar falha.
  */
 
 import React, { useState } from "react";
@@ -16,6 +16,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/shared/components/ui/dialog";
+import { RadioGroup, RadioGroupItem } from "@/shared/components/ui/radio-group";
 import {
   Package,
   CheckCircle2,
@@ -74,8 +75,19 @@ export function MotoboyDeliveryActions({
   const [failDialogOpen, setFailDialogOpen] = useState(false);
   const [proofCode, setProofCode] = useState("");
   const [proofObservation, setProofObservation] = useState("");
-  const [failReason, setFailReason] = useState("");
+  const [failReasonCode, setFailReasonCode] = useState("");
+  const [failReasonNotes, setFailReasonNotes] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+
+  const FAIL_REASON_OPTIONS: Array<{ value: string; label: string }> = [
+    { value: "recipient_unavailable", label: "Destinatario ausente" },
+    { value: "address_not_found", label: "Endereco nao encontrado" },
+    { value: "address_inaccessible", label: "Endereco inacessivel" },
+    { value: "package_damaged", label: "Pacote danificado" },
+    { value: "safety_issue", label: "Risco de seguranca" },
+    { value: "vehicle_issue", label: "Problema no veiculo" },
+    { value: "other", label: "Outro motivo" },
+  ];
 
   if (ride.ride_mode !== 'motoboy') return null;
 
@@ -109,10 +121,13 @@ export function MotoboyDeliveryActions({
   };
 
   const handleFailDelivery = async () => {
-    if (!failReason.trim()) return;
+    const reason = failReasonCode === "other" ? failReasonNotes.trim() : failReasonCode;
+    if (!reason.trim()) return;
     setIsLoading(true);
-    await onFailDelivery(ride.id, driverProfileId, failReason.trim());
+    await onFailDelivery(ride.id, driverProfileId, reason);
     setFailDialogOpen(false);
+    setFailReasonCode("");
+    setFailReasonNotes("");
     setIsLoading(false);
   };
 
@@ -128,7 +143,7 @@ export function MotoboyDeliveryActions({
         {ride.recipient_name && (
           <div className="flex items-center gap-2 text-sm">
             <User className="h-4 w-4 text-muted-foreground" />
-            <span className="text-muted-foreground">Destinatário:</span>
+            <span className="text-muted-foreground">DestinatÃ¡rio:</span>
             <span className="font-medium">{ride.recipient_name}</span>
           </div>
         )}
@@ -164,7 +179,7 @@ export function MotoboyDeliveryActions({
         )}
       </div>
 
-      {/* Ações por estado */}
+      {/* AÃ§Ãµes por estado */}
       {ride.status === RIDE_STATUS.DRIVER_ACCEPTED && (
         <Button
           className="w-full"
@@ -230,24 +245,24 @@ export function MotoboyDeliveryActions({
             <div>
               <Label htmlFor="proofCode" className="flex items-center gap-2">
                 <Hash className="h-4 w-4" />
-                Código de confirmação (opcional)
+                CÃ³digo de confirmaÃ§Ã£o (opcional)
               </Label>
               <Input
                 id="proofCode"
                 value={proofCode}
                 onChange={(e) => setProofCode(e.target.value)}
-                placeholder="Código fornecido pelo destinatário"
+                placeholder="CÃ³digo fornecido pelo destinatÃ¡rio"
               />
             </div>
             <div>
               <Label htmlFor="proofObs">
-                Observação <span className="text-destructive">*</span>
+                ObservaÃ§Ã£o <span className="text-destructive">*</span>
               </Label>
               <Textarea
                 id="proofObs"
                 value={proofObservation}
                 onChange={(e) => setProofObservation(e.target.value)}
-                placeholder="Ex: Entregue pessoalmente, deixei com porteiro, destinatário assinou..."
+                placeholder="Ex: Entregue pessoalmente, deixei com porteiro, destinatÃ¡rio assinou..."
                 rows={3}
                 required
               />
@@ -279,16 +294,35 @@ export function MotoboyDeliveryActions({
           </DialogHeader>
           <div className="space-y-4 pt-2">
             <div>
-              <Label htmlFor="failReason">Motivo *</Label>
-              <Textarea
-                id="failReason"
-                value={failReason}
-                onChange={(e) => setFailReason(e.target.value)}
-                placeholder="Destinatário ausente, endereço não encontrado..."
-                rows={3}
-                required
-              />
+              <Label>Motivo da falha *</Label>
+              <RadioGroup
+                value={failReasonCode}
+                onValueChange={setFailReasonCode}
+                className="space-y-2 mt-2"
+              >
+                {FAIL_REASON_OPTIONS.map((option) => (
+                  <div key={option.value} className="flex items-center space-x-2">
+                    <RadioGroupItem value={option.value} id={`fail-${option.value}`} />
+                    <Label htmlFor={`fail-${option.value}`} className="text-sm font-normal">
+                      {option.label}
+                    </Label>
+                  </div>
+                ))}
+              </RadioGroup>
             </div>
+            {failReasonCode === "other" && (
+              <div>
+                <Label htmlFor="failReasonNotes">Descreva o motivo *</Label>
+                <Textarea
+                  id="failReasonNotes"
+                  value={failReasonNotes}
+                  onChange={(e) => setFailReasonNotes(e.target.value)}
+                  placeholder="Descreva o incidente..."
+                  rows={3}
+                  required
+                />
+              </div>
+            )}
             <div className="flex gap-3">
               <Button variant="outline" className="flex-1" onClick={() => setFailDialogOpen(false)}>
                 Cancelar
@@ -297,7 +331,7 @@ export function MotoboyDeliveryActions({
                 variant="destructive"
                 className="flex-1"
                 onClick={handleFailDelivery}
-                disabled={isLoading || !failReason.trim()}
+                disabled={isLoading || !failReasonCode || (failReasonCode === "other" && !failReasonNotes.trim())}
               >
                 Registrar Falha
               </Button>
@@ -308,3 +342,4 @@ export function MotoboyDeliveryActions({
     </div>
   );
 }
+

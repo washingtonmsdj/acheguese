@@ -13,7 +13,7 @@ import { motion } from 'framer-motion';
 import { Loader2 } from 'lucide-react';
 
 import gastronomyHeroBg from '@/assets/gastronomy-hero-bg.jpg';
-import { useModuleTerritoryFilter } from '@/core/location';
+import { useModuleTerritoryFilter } from '@/core/location/hooks/useModuleTerritoryFilter';
 import { useAppUrls } from '@/core/routing/hooks';
 import { useTerritorialContextOptional } from '@/core/routing/components/TerritorialLayout';
 import { useSessionContext } from '@/core/session';

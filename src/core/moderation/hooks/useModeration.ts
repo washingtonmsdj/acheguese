@@ -3,7 +3,7 @@ import { postService } from "@/core/posts/services";
 import { ModerationService } from "@/core/moderation/services/ModerationService";
 import { ModerationAction } from "@/core/moderation/types";
 import { useToast } from "@/shared/hooks/use-toast";
-import { AuthService } from "@/core/auth";
+import { AuthService } from "@/core/auth/services/AuthService";
 
 interface ModerationActionParams {
   targetType: "post" | "comment" | "user";

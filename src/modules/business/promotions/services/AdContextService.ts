@@ -11,7 +11,7 @@
  * Não usa CoverageService.
  */
 
-import { locationContextStore } from '@/core/location';
+import { locationContextStore } from '@/core/location/stores/LocationContextStore';
 import { LocationService } from '@/core/location/services/LocationService';
 import { createLocationRepository } from '@/core/location/repositories/createLocationRepository';
 import type { ILocationRepository } from '@/core/location/repositories/ILocationRepository';

@@ -5,8 +5,8 @@
  * Exporta queries e types organizados.
  * 
  * @example
- * import { getCountryData, getActiveStates, getPlatformStats } from '@/app/features/landing/services/LandingService';
- * import type { CountryData, StateData, PlatformStats } from '@/app/features/landing/services/LandingService';
+ * import { getCountryData, getActiveStates, getPlatformStats } from './LandingService';
+ * import type { CountryData, StateData, PlatformStats } from './LandingService';
  */
 
 // ============================================================
@@ -27,7 +27,7 @@ export {
   getNationalClassifieds,
   getNationalStats,
   getActiveTerritoriesWithLanding,
-} from '@/core/landing/services/landing.queries';
+} from './landing.queries';
 
 // ============================================================
 // TYPES
@@ -39,12 +39,12 @@ export type {
   TerritorialGroupData,
   PlatformStats,
   VerifiedBusiness,
-} from '@/core/landing/services/types';
+} from './types';
 
 // ============================================================
 // FACADE UNIFICADA (compatibilidade legada)
 // ============================================================
-import * as landingQueries from '@/core/landing/services/landing.queries';
+import * as landingQueries from './landing.queries';
 
 /**
  * LandingFacade - Fachada unificada para operações de landing

@@ -1,7 +1,7 @@
 import { useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { ServicesService } from "../services/ServicesService";
-import { useTerritoryFilter, isTerritoryFilterReady, territoryFilterKey } from "@/core/location";
+import { useTerritoryFilter, isTerritoryFilterReady, territoryFilterKey } from "@/core/location/hooks/useTerritoryFilter";
 import { mapProfessionalToItem } from "@/modules/professionals/services/domain/professionalViewModels";
 import type { ProfessionalItem } from "@/modules/professionals/services/domain/professionalViewModels";
 import type { ResolvedTerritory } from "@/core/routing/hooks/useResolveTerritoryFromUrl";

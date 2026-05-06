@@ -10,6 +10,7 @@ import { logger } from "@/shared/utils/logger";
 import { BusinessService } from "@/core/business/services/BusinessService";
 import { ReviewsService } from "@/core/reviews/services/ReviewsService";
 import { ADMIN_PLACEHOLDER_IDS } from "@/core/admin/config/identifiers";
+import { profileService } from "@/core/profiles/services/ProfileService";
 
 export interface AdminBusinessData {
   id: string;
@@ -275,7 +276,6 @@ class AdminBusinessServiceClass {
     userId: string,
   ) {
     try {
-      const { profileService } = await import("@/core/profiles/services/ProfileService");
 
       // 1. Criar profile usando ProfileService
       const profile = await profileService.createProfile({

@@ -21,6 +21,8 @@ import { supabase } from "@/integrations/supabase";
 import { logger } from "@/shared/utils/logger";
 import { trackError } from "@/shared/utils/errorTracking";
 import { FavoritesService } from "@/core/favorites/services/FavoritesService";
+import { ProfessionalService } from "@/core/professional/services/ProfessionalService";
+import { BusinessUrlService } from "@/core/business/services/BusinessUrlService";
 import { publicIdentityService, PublicIdentityService } from "@/core/public-identity";
 import { createTypedQuery, callRPC } from "@/integrations/supabase/services/supabaseHelpers";
 import { businessManagementRoutes } from "@/core/business/utils/businessManagementRoutes";
@@ -931,15 +933,9 @@ export class ProfileServiceLegacy {
       }
 
       const { postService } = await import("@/core/posts/services");
-      const { FavoritesService } = await import(
-        "@/core/favorites/services/FavoritesService"
-      );
       const { getActiveRide, getUserRides } = await import("@/modules/mobility/services");
       const { VerificationService } = await import(
         "@/core/verification/services/VerificationService"
-      );
-      const { ProfessionalService } = await import(
-        "@/core/professional/services/ProfessionalService"
       );
       const { getUserClassifieds } = await import("@/modules/classifieds/services");
       const { eventService } = await import("@/core/community-events/services/CommunityEventsRuntimeService");
@@ -1027,14 +1023,12 @@ export class ProfileServiceLegacy {
             { getEligibleVerticals },
             { QrCodeService },
             { QrEntityType },
-            { BusinessUrlService },
           ] = await Promise.all([
             import("@/core/billing"),
             import("@/modules/business/gastronomy"),
             import("@/core/verticals/config"),
             import("@/core/qr"),
             import("@/core/qr/types"),
-            import("@/core/business/services/BusinessUrlService"),
           ]);
 
           const [subscriptionResult, gastronomyResult, qrCodeResult] = await Promise.all([
@@ -1396,10 +1390,7 @@ export class ProfileServiceLegacy {
       // ✅ SSOT - Usar método interno getUserLikesCount
       this.getUserLikesCount(activeProfile.id),
       // ✅ SSOT - Usar FavoritesService
-      import("@/core/favorites/services/FavoritesService").then(
-        ({ FavoritesService }) =>
-          FavoritesService.getFavoriteStats(activeProfile.id),
-      ),
+      FavoritesService.getFavoriteStats(activeProfile.id),
     ]);
 
     return {

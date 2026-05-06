@@ -4,7 +4,8 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { ClassifiedsFacade } from "@/modules/classifieds/services";
-import { useModuleTerritoryFilter, territoryFilterKey } from "@/core/location";
+import { useModuleTerritoryFilter } from "@/core/location/hooks/useModuleTerritoryFilter";
+import { territoryFilterKey } from "@/core/location/hooks/useTerritoryFilter";
 import type { ResolvedTerritory } from "@/core/routing/hooks/useResolveTerritoryFromUrl";
 import type { TerritoryFilter } from "@/core/location/types";
 

@@ -28,7 +28,7 @@ import { Input } from '@/shared/components/ui/input';
 import { Label } from '@/shared/components/ui/label';
 import { CreateDeliveryModal } from '@/shared/services/mobilityDelivery';
 import { useDelivery } from '@/shared/services/mobilityDelivery';
-import { useLocationContext } from '@/core/location';
+import { useLocationContext } from '@/core/location/hooks/useLocationContext';
 import { RideOperationalService } from '@/shared/services/mobilityDelivery';
 
 type DeliveryFilterTab = 'all' | 'pending' | 'in_progress' | 'delivered' | 'failed' | 'cancelled';

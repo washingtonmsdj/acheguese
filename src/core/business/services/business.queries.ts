@@ -9,7 +9,8 @@
 
 import { supabase } from "@/integrations/supabase";
 import { logger } from "@/shared/utils/logger";
-import { applyTerritoryFilter } from "@/core/location";
+import { applyTerritoryFilter } from "@/core/location/utils";
+import { profileService } from "@/core/profiles/services/ProfileService";
 import type { AdminSupabaseClient } from "@/core/admin/types/adminDatabase.types";
 
 const supabaseTyped = supabase as unknown as AdminSupabaseClient;
@@ -152,7 +153,6 @@ export async function getBusinesses(
 
     if (profileIds.length > 0) {
       // Importação dinâmica para evitar circular dependency
-      const { profileService } = await import("@/core/profiles/services/ProfileService");
       const profilesData = await profileService.getProfilesByIds(profileIds);
       profilesData.forEach((p: { id: string; name: string; phone?: string; whatsapp?: string }) =>
         profilesMap.set(p.id, p),
@@ -310,7 +310,6 @@ export async function getBusinessesList(params: {
     const profilesMap = new Map<string, { id: string; name: string }>();
 
     if (profileIds.length > 0) {
-      const { profileService } = await import("@/core/profiles/services/ProfileService");
       const profilesData = await profileService.getProfilesByIds(profileIds);
       profilesData.forEach((p: { id: string; name: string }) => profilesMap.set(p.id, p));
     }

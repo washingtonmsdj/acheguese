@@ -208,8 +208,27 @@ export function DriverRidesList({
   return (
     <div className="space-y-2">
       {rides.map((ride) => {
-        const isEntrega = ride.type === "entrega";
+        const isEntrega = ride.ride_mode === "motoboy" || ride.type === "entrega";
         const isActionLoading = loadingAction === ride.id;
+        const canStartRide = [
+          RIDE_STATUS.DRIVER_ASSIGNED,
+          RIDE_STATUS.DRIVER_ACCEPTED,
+          RIDE_STATUS.DRIVER_ARRIVING,
+          RIDE_STATUS.DRIVER_ARRIVED,
+          RIDE_STATUS.PASSENGER_BOARDED,
+          RIDE_STATUS.PASSENGER_ON_BOARD,
+        ].includes(ride.status as string);
+        const canCompleteRide = ride.status === RIDE_STATUS.IN_PROGRESS;
+        const canCancelRide = [
+          RIDE_STATUS.REQUESTED,
+          RIDE_STATUS.SEARCHING_DRIVER,
+          RIDE_STATUS.DRIVER_ASSIGNED,
+          RIDE_STATUS.DRIVER_ACCEPTED,
+          RIDE_STATUS.DRIVER_ARRIVING,
+          RIDE_STATUS.DRIVER_ARRIVED,
+          RIDE_STATUS.PASSENGER_BOARDED,
+          RIDE_STATUS.PASSENGER_ON_BOARD,
+        ].includes(ride.status as string);
         return (
           <div
             key={ride.id}
@@ -342,7 +361,7 @@ export function DriverRidesList({
                 ) : (
                   <Car className="h-4 w-4 mr-2" />
                 )}
-                {isActionLoading ? "Aceitando..." : "Aceitar Corrida"}
+                {isActionLoading ? "Aceitando..." : isEntrega ? "Aceitar Entrega" : "Aceitar Corrida"}
               </Button>
             )}
 
@@ -372,7 +391,7 @@ export function DriverRidesList({
                   )}
                 </div>
                 <div className="grid grid-cols-2 gap-2">
-                  {ride.status === RIDE_STATUS.DRIVER_ASSIGNED && onStart && (
+                  {canStartRide && onStart && (
                     <Button
                       onClick={() => handleAction(onStart, ride.id)}
                       disabled={isActionLoading}
@@ -386,7 +405,7 @@ export function DriverRidesList({
                       Iniciar
                     </Button>
                   )}
-                  {ride.status === RIDE_STATUS.IN_PROGRESS && onComplete && (
+                  {canCompleteRide && onComplete && (
                     <Button
                       onClick={() => handleAction(onComplete, ride.id, ride)}
                       disabled={isActionLoading}
@@ -400,7 +419,7 @@ export function DriverRidesList({
                       Concluir
                     </Button>
                   )}
-                  {onCancel && (
+                  {canCancelRide && onCancel && (
                     <Button
                       onClick={() => handleAction(onCancel, ride.id)}
                       disabled={isActionLoading}

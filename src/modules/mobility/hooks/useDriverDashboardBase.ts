@@ -84,6 +84,10 @@ function sumRideAmounts(
   }, 0);
 }
 
+function isPayableRide(ride: MobilityRide): boolean {
+  return ride.status === RIDE_STATUS.COMPLETED || ride.status === RIDE_STATUS.DELIVERED;
+}
+
 function clampRating(value: number): number {
   if (!Number.isFinite(value)) return 5;
   return Math.max(1, Math.min(5, Math.round(value)));
@@ -303,6 +307,18 @@ export function useDriverDashboardBase({
             toast.success("Corrida aceita! Indo buscar passageiro...");
           }
           break;
+        case "in_progress":
+          toast.info("Corrida iniciada");
+          break;
+        case "in_delivery":
+          toast.info("Entrega em rota");
+          break;
+        case "delivered":
+          toast.success("Entrega concluida");
+          break;
+        case "completed":
+          toast.success("Operacao finalizada");
+          break;
         case "cancelled":
           toast.info("Corrida foi cancelada");
           break;
@@ -326,6 +342,7 @@ export function useDriverDashboardBase({
   const availableRides = filterOffersByMode(capabilityFilteredOffers);
   const acceptedByMe = rides.filter((ride) => activeStatuses.includes(ride.status));
   const completedByMe = rides.filter((ride) => completedStatuses.includes(ride.status));
+  const payableCompletedByMe = completedByMe.filter(isPayableRide);
   const inProgressCount = acceptedByMe.length;
 
   const now = new Date();
@@ -334,22 +351,22 @@ export function useDriverDashboardBase({
   startOfWeek.setDate(now.getDate() - 7);
 
   const driverEarnings = {
-    today: sumRideAmounts(completedByMe, (rideDate) => rideDate >= startOfToday),
-    week: sumRideAmounts(completedByMe, (rideDate) => rideDate >= startOfWeek),
+    today: sumRideAmounts(payableCompletedByMe, (rideDate) => rideDate >= startOfToday),
+    week: sumRideAmounts(payableCompletedByMe, (rideDate) => rideDate >= startOfWeek),
     month: sumRideAmounts(
-      completedByMe,
+      payableCompletedByMe,
       (rideDate) =>
         rideDate.getMonth() === now.getMonth() &&
         rideDate.getFullYear() === now.getFullYear(),
     ),
-    total: sumRideAmounts(completedByMe),
+    total: sumRideAmounts(payableCompletedByMe),
   };
 
   const driverStats = {
     avgRating: driverData?.rating ?? 5.0,
     totalRides: driverData?.total_rides ?? completedByMe.length,
     acceptanceRate: driverData?.acceptance_rate ?? 100,
-    completedRides: driverData?.total_rides_completed ?? completedByMe.length,
+    completedRides: driverData?.total_rides_completed ?? payableCompletedByMe.length,
     cancelledRides:
       driverData?.total_rides_cancelled ??
       rides.filter((ride) => ride.status === RIDE_STATUS.CANCELLED).length,
@@ -477,14 +494,14 @@ export function useDriverDashboardBase({
     }
   }, [refetchDashboard, rideToComplete]);
 
-  const handleCancelRide = useCallback(async () => {
+  const handleCancelRide = useCallback(async (reason: string) => {
     if (!rideToCancel) {
       return;
     }
 
     setActionsLoading(true);
     try {
-      await cancelRide(rideToCancel.id);
+      await cancelRide(rideToCancel.id, reason);
       setCancelDialogOpen(false);
       await refetchDashboard();
       toast.success("Corrida cancelada");
@@ -602,7 +619,7 @@ export function useDriverDashboardBase({
     isUpdatingStatus: operationalStatus.isUpdatingStatus,
     handleGoBack,
     toggleDriverOnline: operationalStatus.toggleDriverOnline,
-    toggleTracking: () => undefined,
+    toggleTracking: operationalStatus.toggleTracking,
     acceptRide,
     startRide,
     completeDialogOpen,

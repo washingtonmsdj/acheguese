@@ -27,12 +27,10 @@ import {
 } from '@/core/nearby/components';
 import type { QuickCategoryKey } from '@/core/nearby/components';
 import { Button } from '@/shared/components/ui/button';
-import {
-  useLocationContext,
-  useTerritoryLabels,
-  TerritoryIndicator,
-  useResolvedUserLocation,
-} from '@/core/location';
+import { TerritoryIndicator } from '@/core/location/components/TerritoryIndicator';
+import { useLocationContext } from '@/core/location/hooks/useLocationContext';
+import { useResolvedUserLocation } from '@/core/location/hooks/useResolvedUserLocation';
+import { useTerritoryLabels } from '@/core/location/hooks/useTerritoryLabels';
 import type { ResolvedTerritory } from '@/core/routing/hooks/useResolveTerritoryFromUrl';
 import {
   MapPin, Navigation, Loader2, Store, Calendar, AlertTriangle,

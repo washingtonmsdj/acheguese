@@ -10,11 +10,9 @@
  */
 import { logger } from '@/shared/utils/logger';
 import { supabase } from '@/integrations/supabase';
-import {
-  createLocationRepository,
-  type ILocationRepository,
-  type Location,
-} from '@/core/location';
+import { createLocationRepository } from '@/core/location/repositories/createLocationRepository';
+import type { ILocationRepository } from '@/core/location/repositories/ILocationRepository';
+import type { Location } from '@/core/location/types';
 import { LocationStatus, LocationType } from '@/core/location/types';
 
 export interface BoundsResult {

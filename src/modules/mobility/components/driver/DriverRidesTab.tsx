@@ -60,16 +60,20 @@ export function DriverRidesTab({
   onCompleteRide,
   onCancelRide,
 }: DriverRidesTabProps) {
+  const acceptedPassengerRides = acceptedRides.filter(
+    (ride) => !(ride.ride_mode === "motoboy" || ride.type === "entrega"),
+  );
+
   return (
     <div className="space-y-1.5">
-      {acceptedRides.length > 0 && (
+      {acceptedPassengerRides.length > 0 && (
         <div>
           <h3 className="mb-1 flex items-center gap-1.5 text-xs font-bold text-foreground">
             <div className="h-2 w-2 animate-pulse rounded-full bg-success" />
-            Corridas Ativas ({acceptedRides.length})
+            Corridas Ativas ({acceptedPassengerRides.length})
           </h3>
           <DriverRidesList
-            rides={acceptedRides}
+            rides={acceptedPassengerRides}
             type={RIDE_STATUS.ACCEPTED}
             onStart={onStartRide}
             onComplete={onCompleteRide}

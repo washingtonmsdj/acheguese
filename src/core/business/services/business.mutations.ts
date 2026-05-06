@@ -24,6 +24,8 @@ import {
 import { isValidBusinessId } from "./validators";
 import { toBusinessData, mapBusinessDataToBusiness } from "./business.mappers";
 import { generateBusinessUsername } from "./business.helpers";
+import { BusinessUrlService } from "./BusinessUrlService";
+import { profileService } from "@/core/profiles/services/ProfileService";
 import type {
   Business,
   BusinessDataWithProfiles,
@@ -283,7 +285,6 @@ export async function createBusiness(
 ): Promise<Business> {
   try {
     const validatedInput = sanitizeAndValidateInput(input, false) as CreateBusinessInput;
-    const { BusinessUrlService } = await import("./BusinessUrlService");
     let slug = validatedInput.slug;
     if (slug) {
       const availability = await PublicIdentityService.checkAvailability({
@@ -303,8 +304,6 @@ export async function createBusiness(
     }
 
     const addressId = await syncAddress(validatedInput);
-
-    const { profileService } = await import("@/core/profiles/services/ProfileService");
     const profile = await profileService.createProfile({
       profile_type: "business",
       name: validatedInput.name,
@@ -426,7 +425,6 @@ export async function updateBusiness(
     }
 
     if (validatedInput.name || validatedInput.description || validatedInput.logo_url || validatedInput.city) {
-      const { profileService } = await import("@/core/profiles/services/ProfileService");
       await profileService.updateProfile(id, {
         ...(validatedInput.name !== undefined ? { name: validatedInput.name } : {}),
         ...(validatedInput.description !== undefined ? { bio: validatedInput.description } : {}),
@@ -524,8 +522,6 @@ export async function deleteBusiness(id: string): Promise<void> {
       .eq("profile_id", id);
 
     if (error) throw error;
-
-      const { profileService } = await import("@/core/profiles/services/ProfileService");
     await profileService.updateProfile(id, {
       is_active: false,
     });
@@ -599,4 +595,3 @@ export async function incrementViews(businessId: string): Promise<void> {
     logger.warn("Failed to increment views:", error);
   }
 }
-

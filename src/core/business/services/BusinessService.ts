@@ -137,6 +137,8 @@ import * as BusinessLegacy from "./business.legacy";
 import * as BusinessHelpers from "./business.helpers";
 import type { BusinessStats } from "../types";
 import { ReviewsService } from "@/core/reviews/services/ReviewsService";
+import { FavoritesService } from "@/core/favorites/services/FavoritesService";
+import { profileService } from "@/core/profiles/services/ProfileService";
 /**
  * 🏢 BusinessFacade - Interface SSOT unificada v2.0
  *
@@ -218,7 +220,6 @@ export class BusinessService {
    * @deprecated Use FavoritesService diretamente
    */
   static async toggleFavorite(businessId: string, profileId: string): Promise<boolean> {
-    const { FavoritesService } = await import("@/core/favorites/services/FavoritesService");
     return FavoritesService.toggleBusinessFavorite(businessId, profileId);
   }
 
@@ -226,7 +227,6 @@ export class BusinessService {
    * @deprecated Use FavoritesService diretamente
    */
   static async getFavorites(profileId: string): Promise<string[]> {
-    const { FavoritesService } = await import("@/core/favorites/services/FavoritesService");
     return FavoritesService.getUserBusinessFavorites(profileId);
   }
 
@@ -246,7 +246,6 @@ export class BusinessService {
    * @deprecated Use ReviewsService diretamente
    */
   static async getMyReview(businessId: string, userId: string) {
-    const { profileService } = await import("@/core/profiles/services/ProfileService");
     const activeProfile = await profileService.getProfileContext(userId);
     if (!activeProfile) return null;
 
@@ -262,7 +261,6 @@ export class BusinessService {
     rating: number,
     comment?: string,
   ): Promise<void> {
-    const { profileService } = await import("@/core/profiles/services/ProfileService");
     const activeProfile = await profileService.getProfileContext(userId);
     if (!activeProfile) {
       throw new Error("Perfil ativo não encontrado");

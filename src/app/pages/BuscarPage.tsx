@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { AISearchBox, AISearchResults, useAISearch } from "@/core/ai";
 import { useModuleTerritoryFilter } from "@/core/location/hooks/useModuleTerritoryFilter";
-import { useUserTerritory } from "@/core/location";
+import { useUserTerritory } from "@/core/location/hooks/useUserTerritory";
 
 export default function BuscarPage() {
   const moduleTerritory = useModuleTerritoryFilter({ nearbyEnabled: true });

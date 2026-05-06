@@ -2,6 +2,7 @@ import { supabase } from "@/integrations/supabase";
 import { logger } from "@/shared/utils/logger";
 import type { AdminSupabaseClient, CommunityIssue, ProfessionalReport, ProfessionalData } from "../types/adminDatabase.types";
 import { MobilityAdminQueryService } from "@/core/admin/services/MobilityAdminQueryService";
+import { profileService } from "@/core/profiles/services/ProfileService";
 
 export interface ModerationStats {
   total_posts: number;
@@ -55,7 +56,6 @@ class AdminCommunityService {
     filter?: "pending" | "approved" | "rejected" | "flagged",
   ): Promise<CommunityPost[]> {
     try {
-      const { profileService } = await import("@/core/profiles/services/ProfileService");
 
       // ✅ Delegado para MobilityAdminQueryService
       const data = await MobilityAdminQueryService.getCommunityPosts(filter);
@@ -90,7 +90,6 @@ class AdminCommunityService {
 
   async getPostFlags(postId: string): Promise<PostFlag[]> {
     try {
-      const { profileService } = await import("@/core/profiles/services/ProfileService");
 
       // ✅ Delegado para MobilityAdminQueryService
       const data = await MobilityAdminQueryService.getPostFlags(postId);

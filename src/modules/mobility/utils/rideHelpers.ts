@@ -34,7 +34,7 @@ export interface RideRequest {
  * Verifica se corrida está pendente (aguardando motorista)
  */
 export function isRidePending(ride: RideRequest): boolean {
-  return ride.status === 'pending' || ride.status === 'searching';
+  return ['pending', 'requested', 'searching', 'searching_driver'].includes(ride.status);
 }
 
 /**
@@ -43,8 +43,15 @@ export function isRidePending(ride: RideRequest): boolean {
 export function isRideActive(ride: RideRequest): boolean {
   return [
     'driver_assigned',
+    'driver_accepted',
     'driver_arriving',
+    'driver_on_the_way',
+    'driver_arrived',
+    'passenger_boarded',
+    'passenger_on_board',
     'in_progress',
+    'pickup_confirmed',
+    'in_delivery',
   ].includes(ride.status);
 }
 
@@ -59,14 +66,14 @@ export function isRideCompleted(ride: RideRequest): boolean {
  * Verifica se corrida foi cancelada
  */
 export function isRideCancelled(ride: RideRequest): boolean {
-  return ride.status === 'cancelled';
+  return ['cancelled', 'cancelled_by_driver', 'cancelled_by_passenger'].includes(ride.status);
 }
 
 /**
  * Verifica se corrida está finalizada (completa ou cancelada)
  */
 export function isRideFinished(ride: RideRequest): boolean {
-  return isRideCompleted(ride) || isRideCancelled(ride);
+  return isRideCompleted(ride) || isRideCancelled(ride) || ride.status === 'failed_delivery' || ride.status === 'failed' || ride.status === 'expired';
 }
 
 /**

@@ -17,7 +17,7 @@
  */
 import { logger } from '@/shared/utils/logger';
 import { supabase as supabaseClient } from '@/integrations/supabase';
-import { getDriverDataByProfileIds } from './mobility.queries';
+import { getDriverDataByProfileIds, getDriverOfferCapabilities } from './mobility.queries';
 import { MobilityService } from './MobilityService.impl';
 
 // No browser, sempre usa o cliente público com RLS.
@@ -107,6 +107,26 @@ export class DriverAvailabilityService {
     }
   }
 
+  private static async getOperationalBlockReason(
+    driverProfileId: string,
+    rideMode?: 'ride' | 'motoboy',
+  ): Promise<string | null> {
+    const capabilities = await getDriverOfferCapabilities(driverProfileId);
+
+    if (!capabilities) return 'Perfil de motorista nao encontrado.';
+    if (capabilities.is_suspended) return 'Motorista suspenso.';
+    if (capabilities.is_verified !== true) return 'Motorista nao verificado.';
+    if (capabilities.subscription_active !== true) return 'Assinatura inativa.';
+    if (rideMode === 'motoboy' && capabilities.can_do_delivery !== true) {
+      return 'Motorista nao habilitado para entregas.';
+    }
+    if (rideMode === 'ride' && capabilities.can_do_rides === false) {
+      return 'Motorista nao habilitado para corridas.';
+    }
+
+    return null;
+  }
+
   /**
    * Motorista fica online (sem disponibilidade ainda)
    * Transição: offline → online_warming_up
@@ -114,11 +134,17 @@ export class DriverAvailabilityService {
    * Bootstrap: cria registro se não existir
    */
   static async goOnline(
-    driverProfileId: string
+    driverProfileId: string,
+    rideMode?: 'ride' | 'motoboy'
   ): Promise<{ success: boolean; error?: string }> {
     try {
       // Bootstrap de capacidades operacionais (SSOT)
       await this.ensureDriverDataRow(driverProfileId);
+
+      const blockReason = await this.getOperationalBlockReason(driverProfileId, rideMode);
+      if (blockReason) {
+        return { success: false, error: blockReason };
+      }
 
       // GATE 5: Bootstrap - upsert para criar se não existir
       const { error } = await supabase
@@ -209,7 +235,8 @@ export class DriverAvailabilityService {
    */
   static async setAvailable(
     driverProfileId: string,
-    location: { lat: number; lng: number }
+    location: { lat: number; lng: number },
+    rideMode?: 'ride' | 'motoboy'
   ): Promise<{ success: boolean; error?: string }> {
     try {
       if (!location || !location.lat || !location.lng) {
@@ -217,6 +244,11 @@ export class DriverAvailabilityService {
           success: false,
           error: 'Location is required to become available',
         };
+      }
+
+      const blockReason = await this.getOperationalBlockReason(driverProfileId, rideMode);
+      if (blockReason) {
+        return { success: false, error: blockReason };
       }
 
       // GATE 5: Transação atômica - só succeed se is_online = true AND is_available = false AND active_ride_id IS NULL
@@ -267,6 +299,11 @@ export class DriverAvailabilityService {
     rideMode: 'ride' | 'motoboy'
   ): Promise<{ success: boolean; error?: string }> {
     try {
+      const blockReason = await this.getOperationalBlockReason(driverProfileId, rideMode);
+      if (blockReason) {
+        return { success: false, error: blockReason };
+      }
+
       // GATE 5: Transação atômica - só succeed se is_online = true AND is_available = true AND active_ride_id IS NULL
       const { data, error } = await supabase
         .from('driver_availability')
@@ -627,6 +664,9 @@ export class DriverAvailabilityService {
         rating?: number | null;
         can_do_delivery?: boolean | null;
         can_do_rides?: boolean | null;
+        is_verified?: boolean | null;
+        is_suspended?: boolean | null;
+        subscription_active?: boolean | null;
       }>;
 
       // Criar mapa de driver_data por profile_id
@@ -638,6 +678,9 @@ export class DriverAvailabilityService {
       for (const d of drivers) {
         const data = dataMap.get(d.profile_id);
         if (!data) continue; // Ignorar motoristas sem driver_data
+        if (data.is_suspended) continue;
+        if (data.is_verified !== true) continue;
+        if (data.subscription_active !== true) continue;
 
         // Escopo territorial canônico: dispatch só pode atribuir motorista do mesmo location_id da solicitação
         if (locationId) {

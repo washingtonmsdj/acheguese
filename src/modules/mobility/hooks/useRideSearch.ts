@@ -11,7 +11,7 @@ import { useRideRealtime } from './useRideRealtime';
 
 interface RideSearchStatus {
   rideId: string;
-  status: 'searching' | 'driver_found' | 'driver_accepted' | 'expired' | 'cancelled';
+  status: 'searching' | 'driver_found' | 'driver_accepted' | 'in_progress' | 'completed' | 'expired' | 'cancelled';
   driverProfileId?: string;
   message: string;
   timestamp: string;
@@ -68,6 +68,12 @@ export function useRideSearch(options: UseRideSearchOptions) {
         case 'driver_accepted':
           updateStatus('driver_accepted', event.driverProfileId);
           break;
+        case 'in_progress':
+          updateStatus('in_progress', event.driverProfileId, 'Corrida iniciada.');
+          break;
+        case 'completed':
+          updateStatus('completed', event.driverProfileId, 'Corrida concluida.');
+          break;
         case 'expired':
           updateStatus('expired');
           break;
@@ -95,6 +101,10 @@ export function useRideSearch(options: UseRideSearchOptions) {
           updateStatus('driver_found', ride.driver_profile_id);
         } else if (ride.status === 'driver_accepted') {
           updateStatus('driver_accepted', ride.driver_profile_id);
+        } else if (ride.status === 'in_progress') {
+          updateStatus('in_progress', ride.driver_profile_id, 'Corrida iniciada.');
+        } else if (ride.status === 'completed') {
+          updateStatus('completed', ride.driver_profile_id, 'Corrida concluida.');
         } else if (ride.status === 'expired') {
           updateStatus('expired');
         } else if (ride.status?.includes('cancelled')) {
@@ -122,6 +132,10 @@ function getDefaultMessage(status: RideSearchStatus['status']): string {
       return 'Motorista encontrado! Aguardando confirmacao...';
     case 'driver_accepted':
       return 'Motorista confirmou! Preparando corrida...';
+    case 'in_progress':
+      return 'Corrida iniciada.';
+    case 'completed':
+      return 'Corrida concluida.';
     case 'expired':
       return 'Nao encontramos motorista disponivel. Tente novamente.';
     case 'cancelled':

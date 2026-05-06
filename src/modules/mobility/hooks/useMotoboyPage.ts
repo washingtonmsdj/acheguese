@@ -26,6 +26,7 @@ export function useMotoboyPage() {
     completedStatuses: [
       RIDE_STATUS.COMPLETED,
       RIDE_STATUS.DELIVERED,
+      RIDE_STATUS.FAILED_DELIVERY,
     ],
   });
 

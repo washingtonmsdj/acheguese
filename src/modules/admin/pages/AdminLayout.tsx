@@ -5,7 +5,7 @@ import { ArrowLeft, Menu, Shield, X } from "lucide-react";
 import { cn } from "@/shared/utils/cn";
 import { Button } from "@/shared/components/ui/button";
 import { useSessionContext } from "@/core/session";
-import { AuthService } from "@/core/auth";
+import { AuthService } from "@/core/auth/services/AuthService";
 import { classifiedReportService } from "@/shared/services/classifiedReports";
 import { logger } from "@/shared/utils/logger";
 import { AdminPageLoader } from "@/shared/components/loading/PageLoader";

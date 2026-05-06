@@ -66,6 +66,13 @@ export function DriverAvailabilityLayout({ service }: DriverAvailabilityLayoutPr
   const otherServiceMessage = isMotorista 
     ? "Configure entregas apenas na area Motoboy."
     : "Configure corridas apenas na area Motorista.";
+  const operationalMode = isMotorista ? "ride" : "motoboy";
+  const serviceEnabled = isMotorista
+    ? driverData?.can_do_rides !== false
+    : driverData?.can_do_delivery === true;
+  const serviceBlockMessage = isMotorista
+    ? "Corridas estao desabilitadas para este perfil."
+    : "Entregas estao desabilitadas para este perfil.";
 
   return (
     <div className="space-y-4">
@@ -116,8 +123,18 @@ export function DriverAvailabilityLayout({ service }: DriverAvailabilityLayoutPr
               </div>
             ) : null}
 
+            {!serviceEnabled ? (
+              <div className="rounded-2xl border border-destructive/20 bg-destructive/10 p-3 text-sm text-destructive">
+                {serviceBlockMessage}
+              </div>
+            ) : null}
+
             <div className="flex flex-wrap gap-2">
-              <Button onClick={shell.toggleDriverOnline} className="gap-2" disabled={shell.isUpdatingStatus}>
+              <Button
+                onClick={() => shell.toggleDriverOnline(operationalMode)}
+                className="gap-2"
+                disabled={shell.isUpdatingStatus || (!shell.isDriverOnline && !serviceEnabled)}
+              >
                 {shell.isDriverOnline ? <ToggleLeft className="h-4 w-4" /> : <ToggleRight className="h-4 w-4" />}
                 {shell.isDriverOnline ? "Ficar offline" : "Ficar online"}
               </Button>

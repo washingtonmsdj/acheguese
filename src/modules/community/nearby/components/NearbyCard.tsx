@@ -14,7 +14,7 @@ import { Card } from '@/shared/components/ui/card';
 import { Badge } from '@/shared/components/ui/badge';
 import { Store, Calendar, AlertTriangle, Landmark, Navigation, Clock, MapPin } from 'lucide-react';
 import type { NearbyEntity } from '../hooks/useNearbyEntities';
-import { resolveDistanceLabel } from '@/core/location';
+import { resolveDistanceLabel } from '@/core/location/utils/entityLocationDisplay';
 
 interface NearbyCardProps {
   entity: NearbyEntity;

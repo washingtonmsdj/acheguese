@@ -59,6 +59,35 @@ const stagger = {
 
 type ActiveTab = "ativas" | "historico" | "seguranca";
 
+const ACTIVE_RIDE_STATUSES: string[] = [
+  RIDE_STATUS.PENDING,
+  RIDE_STATUS.REQUESTED,
+  RIDE_STATUS.SEARCHING_DRIVER,
+  RIDE_STATUS.DRIVER_ASSIGNED,
+  RIDE_STATUS.DRIVER_ACCEPTED,
+  RIDE_STATUS.DRIVER_ARRIVING,
+  RIDE_STATUS.DRIVER_ON_THE_WAY,
+  RIDE_STATUS.DRIVER_ARRIVED,
+  RIDE_STATUS.PASSENGER_BOARDED,
+  RIDE_STATUS.PASSENGER_ON_BOARD,
+  RIDE_STATUS.IN_PROGRESS,
+];
+
+const SEARCHING_RIDE_STATUSES: string[] = [
+  RIDE_STATUS.SEARCHING_DRIVER,
+  RIDE_STATUS.REQUESTED,
+];
+
+const TRACKABLE_RIDE_STATUSES: string[] = [
+  RIDE_STATUS.DRIVER_ACCEPTED,
+  RIDE_STATUS.DRIVER_ARRIVING,
+  RIDE_STATUS.PASSENGER_BOARDED,
+  RIDE_STATUS.DRIVER_ASSIGNED,
+  RIDE_STATUS.DRIVER_ON_THE_WAY,
+  RIDE_STATUS.DRIVER_ARRIVED,
+  RIDE_STATUS.IN_PROGRESS,
+];
+
 export default function PassageiroPage() {
   const navigate = useNavigate();
   const mobilityUrls = useMobilityUrls();
@@ -74,27 +103,14 @@ export default function PassageiroPage() {
     passengerRating = 5.0, // ✅ SSOT - Rating vem do hook
   } = useMobilidade();
   const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [createModalInitialType, setCreateModalInitialType] = useState<"viagem" | "entrega">("viagem");
   const [ratingRide, setRatingRide] = useState<RideRequest | null>(null);
   const [confirmationRide, setConfirmationRide] = useState<RideRequest | null>(null);
   const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
   const [rideToCancel, setRideToCancel] = useState<RideRequest | null>(null);
   const [activeTab, setActiveTab] = useState<ActiveTab>("ativas");
 
-  const activeRides = myRides.filter((r) =>
-    [
-      RIDE_STATUS.REQUESTED,
-      RIDE_STATUS.SEARCHING_DRIVER,
-      RIDE_STATUS.DRIVER_ASSIGNED,
-      RIDE_STATUS.DRIVER_ACCEPTED,
-      RIDE_STATUS.DRIVER_ARRIVING,
-      RIDE_STATUS.PASSENGER_BOARDED,
-      RIDE_STATUS.PENDING,
-      RIDE_STATUS.DRIVER_ON_THE_WAY,
-      RIDE_STATUS.DRIVER_ARRIVED,
-      RIDE_STATUS.PASSENGER_ON_BOARD,
-      RIDE_STATUS.IN_PROGRESS,
-    ].includes(r.status as any),
-  );
+  const activeRides = myRides.filter((r) => ACTIVE_RIDE_STATUSES.includes(r.status));
 
   // Auto-switch para aba "Ativas" quando há corrida ativa
   useEffect(() => {
@@ -208,7 +224,10 @@ export default function PassageiroPage() {
               </div>
             </div>
             <Button
-              onClick={() => setIsCreateOpen(true)}
+              onClick={() => {
+                setCreateModalInitialType("viagem");
+                setIsCreateOpen(true);
+              }}
               size="sm"
               className="bg-gradient-to-r from-primary to-accent text-primary-foreground rounded-xl text-xs h-9 px-4 font-bold shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/30 transition-all"
             >
@@ -227,7 +246,10 @@ export default function PassageiroPage() {
           {/* Quick Actions â€” Uber-style large CTAs */}
           <motion.div variants={fadeUp} className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-5">
             <button
-              onClick={() => setIsCreateOpen(true)}
+              onClick={() => {
+                setCreateModalInitialType("viagem");
+                setIsCreateOpen(true);
+              }}
               className="relative overflow-hidden rounded-2xl p-4 text-left bg-gradient-to-br from-primary/15 to-primary/5 border border-primary/20 hover:border-primary/40 transition-all group active:scale-[0.98]"
               aria-label={PASSENGER_PAGE_LABELS.ACTION_REQUEST_RIDE_ARIA}
             >
@@ -246,8 +268,8 @@ export default function PassageiroPage() {
             </button>
             <button
               onClick={() => {
+                setCreateModalInitialType("entrega");
                 setIsCreateOpen(true);
-                // Could set a default type to delivery
               }}
               className="relative overflow-hidden rounded-2xl p-4 text-left bg-gradient-to-br from-accent/15 to-accent/5 border border-accent/20 hover:border-accent/40 transition-all group active:scale-[0.98]"
               aria-label={PASSENGER_PAGE_LABELS.ACTION_SEND_DELIVERY_ARIA}
@@ -404,7 +426,10 @@ export default function PassageiroPage() {
                       {PASSENGER_PAGE_LABELS.ACTIVE_EMPTY_SUBTITLE}
                     </p>
                     <Button
-                      onClick={() => setIsCreateOpen(true)}
+                      onClick={() => {
+                        setCreateModalInitialType("viagem");
+                        setIsCreateOpen(true);
+                      }}
                       className="bg-gradient-to-r from-primary to-accent text-primary-foreground rounded-xl font-bold shadow-lg shadow-primary/20"
                     >
                       <Zap className="h-4 w-4 mr-2" /> {PASSENGER_PAGE_LABELS.ACTIVE_EMPTY_BUTTON}
@@ -419,7 +444,7 @@ export default function PassageiroPage() {
                       className="space-y-3"
                     >
                       {/* Card de busca proeminente para searching_driver/requested */}
-                      {[RIDE_STATUS.SEARCHING_DRIVER, RIDE_STATUS.REQUESTED].includes(ride.status as any) && (
+                      {SEARCHING_RIDE_STATUSES.includes(ride.status) && (
                         <div className="rounded-2xl border border-primary/30 bg-gradient-to-br from-primary/10 to-accent/10 p-5 text-center">
                           <div className="flex items-center justify-center mb-3">
                             <div className="relative">
@@ -453,7 +478,7 @@ export default function PassageiroPage() {
                       )}
 
                       {/* Card normal para outros estados */}
-                      {![RIDE_STATUS.SEARCHING_DRIVER, RIDE_STATUS.REQUESTED].includes(ride.status as any) && (
+                      {!SEARCHING_RIDE_STATUSES.includes(ride.status) && (
                         <ActiveRideCard
                           ride={ride}
                           onCancel={(id) => {
@@ -465,15 +490,7 @@ export default function PassageiroPage() {
                       )}
 
                       {ride.driver_profile_id &&
-                        [
-                          RIDE_STATUS.DRIVER_ACCEPTED,
-                          RIDE_STATUS.DRIVER_ARRIVING,
-                          RIDE_STATUS.PASSENGER_BOARDED,
-                          RIDE_STATUS.DRIVER_ASSIGNED,
-                          RIDE_STATUS.DRIVER_ON_THE_WAY,
-                          RIDE_STATUS.DRIVER_ARRIVED,
-                          RIDE_STATUS.IN_PROGRESS,
-                        ].includes(ride.status as any) && (
+                        TRACKABLE_RIDE_STATUSES.includes(ride.status) && (
                           <div className="rounded-2xl overflow-hidden border border-border">
                             <RideTrackingMap
                               driverProfileId={ride.driver_profile_id}
@@ -530,7 +547,10 @@ export default function PassageiroPage() {
             className="fixed bottom-20 right-4 z-40"
           >
             <Button
-              onClick={() => setIsCreateOpen(true)}
+              onClick={() => {
+                setCreateModalInitialType("viagem");
+                setIsCreateOpen(true);
+              }}
               className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary to-accent text-primary-foreground shadow-2xl shadow-primary/30 hover:shadow-primary/50 transition-all"
               size="icon"
             >
@@ -542,6 +562,7 @@ export default function PassageiroPage() {
         <CreateRideModal
           open={isCreateOpen}
           onOpenChange={setIsCreateOpen}
+          initialType={createModalInitialType}
           onSubmit={async (data) => {
             const ride = await createRideRequest(data);
             if (ride?.id) {

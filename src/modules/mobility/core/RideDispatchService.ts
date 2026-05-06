@@ -1,17 +1,18 @@
 /**
- * RIDE DISPATCH SERVICE - Atribuição e Aceite de Corridas
+ * RIDE DISPATCH SERVICE - Atribuicao e Aceite de Corridas
  * 
  * Gerencia:
- * - Busca de motorista elegível
+ * - Busca de motorista elegivel
  * - Aceite com lock/garantia de unicidade
  * - Timeout de aceite
- * - Expiração da solicitação
+ * - Expiracao da solicitacao
  */
 
 import { logger } from "@/shared/utils/logger";
 import { RIDE_STATE, RideStateMachine, type RideState } from "./RideStateMachine";
 import {
   getActiveRideByDriverProfile,
+  getDriverOfferCapabilities,
   getRideById,
 } from "../services/mobility.queries";
 import { updateRideWithGuards } from "../services/mobility.mutations";
@@ -19,7 +20,7 @@ import { DriverAvailabilityService } from "../services/DriverAvailabilityService
 import { mobilityAuditService } from "../services/MobilityAuditService";
 
 // ============================================
-// CONFIGURAÇÕES
+// CONFIGURACOES
 // ============================================
 
 const CONFIG = {
@@ -51,7 +52,7 @@ interface AcceptResult {
   success: boolean;
   rideId?: string;
   error?: string;
-  reason?: 'already_accepted' | 'invalid_state' | 'driver_busy' | 'expired' | 'unknown';
+  reason?: 'already_accepted' | 'invalid_state' | 'driver_busy' | 'driver_not_eligible' | 'expired' | 'unknown';
 }
 
 // ============================================
@@ -60,10 +61,10 @@ interface AcceptResult {
 
 export class RideDispatchService {
   /**
-   * Busca motoristas elegíveis para uma corrida
+   * Busca motoristas elegiveis para uma corrida
    * 
    * GATE 5: Usa DriverAvailabilityService como SSOT
-   * @param rideMode 'ride' | 'motoboy' — filtra can_do_delivery quando motoboy
+   * @param rideMode 'ride' | 'motoboy' - filtra can_do_delivery quando motoboy
    */
   static async findEligibleDrivers(
     rideId: string,
@@ -74,7 +75,7 @@ export class RideDispatchService {
     pickupLocationId?: string | null
   ): Promise<DriverEligibility[]> {
     try {
-      // GATE 5: Usar service oficial ao invés de acesso direto
+      // GATE 5: Usar service oficial ao inves de acesso direto
       const { DriverAvailabilityService } = await import('@/modules/mobility/services/DriverAvailabilityService');
       
       const availableDrivers = await DriverAvailabilityService.findAvailableDrivers(
@@ -92,7 +93,7 @@ export class RideDispatchService {
         profileId: d.profileId,
         distance: d.distance,
         isAvailable: true, // Sempre true pois vem do service
-        hasActiveRide: false, // Sempre false pois service já filtra
+        hasActiveRide: false, // Sempre false pois service ja filtra
         rating: d.rating,
       }));
 
@@ -112,7 +113,7 @@ export class RideDispatchService {
     currentState: RideState
   ): Promise<DispatchResult> {
     try {
-      // Validar transição
+      // Validar transicao
       if (!RideStateMachine.canTransition(currentState, RIDE_STATE.DRIVER_ASSIGNED)) {
         return {
           success: false,
@@ -120,7 +121,7 @@ export class RideDispatchService {
         };
       }
 
-      // DIAGNÓSTICO GATE 7: Log antes do .single()
+      // DIAGNAOSTICO GATE 7: Log antes do .single()
       logger.info('RideDispatchService.assignDriver - BEFORE .single()', {
         method: 'assignDriver',
         step: 'check_driver_availability',
@@ -128,12 +129,12 @@ export class RideDispatchService {
         driverProfileId,
       });
 
-      // Verificar se motorista está disponível via SSOT
+      // Verificar se motorista esta disponivel via SSOT
       const availability = await DriverAvailabilityService.getStatus(driverProfileId);
       const availError = null;
       const availCount = availability ? 1 : 0;
 
-      // DIAGNÓSTICO GATE 7: Log após o .single()
+      // DIAGNAOSTICO GATE 7: Log apos o .single()
       logger.info('RideDispatchService.assignDriver - AFTER .single()', {
         method: 'assignDriver',
         step: 'check_driver_availability',
@@ -156,7 +157,7 @@ export class RideDispatchService {
         };
       }
 
-      // Verificar se motorista já tem corrida ativa
+      // Verificar se motorista j tem corrida ativa
       const activeRide = await getActiveRideByDriverProfile(
         driverProfileId,
         [
@@ -223,7 +224,7 @@ export class RideDispatchService {
     driverProfileId: string
   ): Promise<AcceptResult> {
     try {
-      // DIAGNÓSTICO GATE 7: Log estruturado antes do .single()
+      // DIAGNAOSTICO GATE 7: Log estruturado antes do .single()
       logger.info('RideDispatchService.acceptRide - BEFORE .single()', {
         method: 'acceptRide',
         step: 'fetch_ride_state',
@@ -239,7 +240,7 @@ export class RideDispatchService {
         ride_mode?: string | null;
       } | null;
 
-      // DIAGNÓSTICO GATE 7: Log estruturado após o .single()
+      // DIAGNAOSTICO GATE 7: Log estruturado apos o .single()
       logger.info('RideDispatchService.acceptRide - AFTER .single()', {
         method: 'acceptRide',
         step: 'fetch_ride_state',
@@ -263,9 +264,9 @@ export class RideDispatchService {
       // Verificar se corrida expirou
       const createdAt = new Date(ride.created_at || new Date().toISOString());
       const now = new Date();
-      const minutesElapsed = (now.getTime() - createdAt.getTime()) / (1000 * 60);
+      const minutesElaposed = (now.getTime() - createdAt.getTime()) / (1000 * 60);
       
-      if (minutesElapsed > CONFIG.REQUEST_EXPIRATION_MINUTES) {
+      if (minutesElaposed > CONFIG.REQUEST_EXPIRATION_MINUTES) {
         await this.expireRide(rideId, currentState);
         return {
           success: false,
@@ -283,7 +284,7 @@ export class RideDispatchService {
         };
       }
 
-      // Verificar se é o motorista atribuído
+      // Verificar se e o motorista atribuido
       if (ride.driver_profile_id !== driverProfileId) {
         return {
           success: false,
@@ -292,7 +293,52 @@ export class RideDispatchService {
         };
       }
 
-      // Verificar se motorista já tem corrida ativa
+      const rideMode = (ride.ride_mode || 'ride') as 'ride' | 'motoboy';
+      const capabilities = await getDriverOfferCapabilities(driverProfileId);
+      if (!capabilities) {
+        return {
+          success: false,
+          error: 'Driver profile not found',
+          reason: 'driver_not_eligible',
+        };
+      }
+      if (capabilities.is_suspended) {
+        return {
+          success: false,
+          error: 'Driver is suspended',
+          reason: 'driver_not_eligible',
+        };
+      }
+      if (capabilities.is_verified !== true) {
+        return {
+          success: false,
+          error: 'Driver is not verified',
+          reason: 'driver_not_eligible',
+        };
+      }
+      if (capabilities.subscription_active !== true) {
+        return {
+          success: false,
+          error: 'Driver subscription is inactive',
+          reason: 'driver_not_eligible',
+        };
+      }
+      if (rideMode === 'motoboy' && capabilities.can_do_delivery !== true) {
+        return {
+          success: false,
+          error: 'Driver cannot accept deliveries',
+          reason: 'driver_not_eligible',
+        };
+      }
+      if (rideMode === 'ride' && capabilities.can_do_rides === false) {
+        return {
+          success: false,
+          error: 'Driver cannot accept rides',
+          reason: 'driver_not_eligible',
+        };
+      }
+
+      // Verificar se motorista j tem corrida ativa
       const activeRide = await getActiveRideByDriverProfile(
         driverProfileId,
         [
@@ -336,7 +382,6 @@ export class RideDispatchService {
 
       // GATE 5: Marcar motorista como busy com active_ride_id
       const { DriverAvailabilityService } = await import('@/modules/mobility/services/DriverAvailabilityService');
-      const rideMode = ride.ride_mode || 'ride';
       await DriverAvailabilityService.setBusy(driverProfileId, rideId, rideMode as 'ride' | 'motoboy');
 
       // Registrar auditoria
@@ -393,7 +438,7 @@ export class RideDispatchService {
   }
 
   /**
-   * Registra mudança de estado na auditoria
+   * Registra mudanca de estado na auditoria
    */
   private static async logStateChange(
     rideId: string,
@@ -418,10 +463,10 @@ export class RideDispatchService {
   }
 
   /**
-   * Calcula distância entre dois pontos (Haversine)
+   * Calcula distancia entre dois pontos (Haversine)
    * 
-   * GATE 1: Mantido apenas como fallback de emergência para busca de motoristas
-   * NÃO deve ser usado para ETA ou pricing
+   * GATE 1: Mantido apenas como fallback de emergencia para busca de motoristas
+   * NAO deve ser usado para ETA ou pricing
    */
   private static calculateDistanceFallback(
     lat1: number,

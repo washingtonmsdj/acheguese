@@ -10,6 +10,7 @@ import { supabase } from "@/integrations/supabase";
 import { logger } from "@/shared/utils/logger";
 import { profileService } from "@/core/profiles/services/ProfileService";
 import { RIDE_STATUS } from "../constants";
+import { DriverAvailabilityService } from "@/modules/mobility/services/DriverAvailabilityService";
 
 const supabaseAny = supabase as any;
 
@@ -144,8 +145,13 @@ export async function confirmRide(rideId: string): Promise<void> {
 /**
  * Cancelar corrida
  */
-export async function cancelRide(rideId: string): Promise<void> {
-  await updateRide(rideId, { status: RIDE_STATUS.CANCELLED });
+export async function cancelRide(rideId: string, reason?: string): Promise<void> {
+  const trimmedReason = reason?.trim();
+  await updateRide(rideId, {
+    status: RIDE_STATUS.CANCELLED,
+    cancellation_reason: trimmedReason || null,
+    cancelled_at: new Date().toISOString(),
+  });
 }
 
 /**
@@ -347,9 +353,37 @@ export async function checkSuspensionExpiry(profileId: string): Promise<void> {
  * @deprecated Implementação futura - usar serviço de GPS tracking
  */
 export async function updateDriverLocation(
-  _driverProfileId: string,
-  _location: { latitude: number; longitude: number },
+  driverProfileId: string,
+  location: { latitude: number; longitude: number },
 ): Promise<void> {
-  logger.warn("MobilityMutations.updateDriverLocation - não implementado, usar GPS tracking");
-  // Implementação futura: enviar para serviço de localização em tempo real
+  const { latitude, longitude } = location;
+  if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) {
+    throw new Error("Coordenadas invalidas para updateDriverLocation");
+  }
+
+  const nowIso = new Date().toISOString();
+  const { error } = await supabaseAny
+    .from("driver_availability")
+    .update({
+      current_lat: latitude,
+      current_lng: longitude,
+      last_location_update: nowIso,
+      last_seen_at: nowIso,
+      updated_at: nowIso,
+    })
+    .eq("profile_id", driverProfileId);
+
+  if (error) {
+    logger.error("MobilityMutations.updateDriverLocation", error, {
+      driverProfileId,
+      location,
+    });
+    throw error;
+  }
+
+  await updateDriverData(driverProfileId, {
+    last_location_update: nowIso,
+    updated_at: nowIso,
+  });
+  await DriverAvailabilityService.markLastSeen(driverProfileId);
 }

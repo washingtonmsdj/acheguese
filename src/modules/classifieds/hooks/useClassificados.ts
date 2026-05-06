@@ -3,10 +3,12 @@ import { useQuery } from "@tanstack/react-query";
 import { ClassifiedsFacade, mapToClassificadoList } from "@/modules/classifieds/services";
 import {
   useModuleTerritoryFilter,
+  type ModuleTerritoryUiFilter,
+} from "@/core/location/hooks/useModuleTerritoryFilter";
+import {
   isTerritoryFilterReady,
   territoryFilterKey,
-  type ModuleTerritoryUiFilter,
-} from "@/core/location";
+} from "@/core/location/hooks/useTerritoryFilter";
 import type { ResolvedTerritory } from "@/core/routing/hooks/useResolveTerritoryFromUrl";
 import type { ClassifiedData } from "../services/types";
 import type { TerritoryFilter } from "@/core/location/types";

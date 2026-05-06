@@ -7,7 +7,7 @@ Objetivo: transformar as auditorias em um plano que qualquer IA/agente consiga e
 ## Prompt Mestre Para Outra IA
 
 ```text
-Voce e uma IA engenheira senior trabalhando no repositorio Achegue-se. Execute o plano em docs/PLANO_ACAO_EXECUTAVEL_AUDITORIA_HIPERLOCAL.md com disciplina de engenharia.
+Voce e uma IA engenheira senior trabalhando no repositorio Achegue-se. Execute o plano em docs/ACAO_EXECUTAVEL_AUDITORIA_HIPERLOCAL.md com disciplina de engenharia.
 
 Regras obrigatorias:
 1. Antes de editar, leia os documentos vivos listados neste plano.
@@ -21,6 +21,19 @@ Regras obrigatorias:
 9. Ao finalizar uma fase, rode as validacoes da fase e atualize `docs/STATUS_ATUAL.md`.
 10. Priorize P0 antes de P1, P1 antes de P2, P2 antes de P3.
 ```
+
+## Progresso Atual
+
+- [x] Fase 0: Preparacao e baseline
+- [x] Fase 1: Arquitetura, taxonomia e rotas canonicas
+- [x] Fase 2: Mobilidade, motorista e motoboy
+- [ ] Fase 3: Gastronomia e delivery integrado
+- [ ] Fase 4: Profissionais e servicos
+- [ ] Fase 5: Marketplace social/local e comunidade
+- [ ] Fase 6: Confianca, identidade, reputacao e notificacoes
+- [ ] Fase 7: Admin, moderacao, billing e operacao
+- [ ] Fase 8: SEO, mobile, performance, busca e IA
+- [ ] Fase 9: Documentacao viva e encerramento
 
 ## Fontes de Verdade
 
@@ -101,7 +114,10 @@ Nao pule P0. Se precisar reordenar, documente o motivo.
 
 # Fase 0: Preparacao e Baseline
 
+Status: concluida em 2026-05-06
+
 ## Tarefa 0.1: Registrar estado inicial
+Status: concluida
 
 Objetivo: evitar que a IA misture problemas preexistentes com problemas criados por ela.
 
@@ -124,6 +140,7 @@ Criterio de aceite:
 - Nao alterar codigo nesta tarefa, exceto o documento de status.
 
 ## Tarefa 0.2: Criar formato de acompanhamento
+Status: concluida
 
 Objetivo: manter execucao auditavel.
 
@@ -145,7 +162,10 @@ Criterio de aceite:
 
 # Fase 1: Arquitetura, Taxonomia e Rotas Canonicas
 
+Status: concluida em 2026-05-06
+
 ## Tarefa 1.1: Corrigir arquitetura da comunidade
+Status: concluida
 
 Objetivo: fazer `npm run validate:architecture:community` passar.
 
@@ -169,6 +189,7 @@ Criterio de aceite:
 - Nenhum import circular novo.
 
 ## Tarefa 1.2: Corrigir taxonomia do projeto
+Status: concluida
 
 Objetivo: fazer `npm run validate:taxonomy` passar ou atualizar SSOT de forma intencional.
 
@@ -195,6 +216,7 @@ Criterio de aceite:
 - Decisao documentada em `docs/STATUS_ATUAL.md`.
 
 ## Tarefa 1.3: Consolidar rotas canonicas da Central
+Status: concluida
 
 Objetivo: Central deve ser cockpit operacional; Perfil deve ser identidade/configuracao; Mobilidade publica deve ser aquisicao/landing.
 
@@ -223,8 +245,10 @@ Criterio de aceite:
 ---
 
 # Fase 2: Mobilidade, Motorista e Motoboy
+Status: `CONCLUIDA` em 2026-05-06
 
 ## Tarefa 2.1: Fechar tracking real do motorista/motoboy
+Status: `CONCLUIDA` em 2026-05-06
 
 Objetivo: remover `noop` e conectar disponibilidade/tracking ao estado real.
 
@@ -250,8 +274,11 @@ Criterio de aceite:
 - UI reflete estado persistido.
 - Falha de permissao/localizacao nao quebra dashboard.
 - `npm run typecheck` passa.
+- Implementado: `toggleTracking` real no `useDriverOperationalStatus` e wiring no `useDriverDashboardBase`.
+- Implementado: `updateDriverLocation` deixou de ser `noop` e agora persiste em `driver_availability` + heartbeat.
 
 ## Tarefa 2.2: Fechar realtime/push operacional
+Status: `CONCLUIDA` em 2026-05-06
 
 Objetivo: motorista, motoboy e passageiro recebem mudancas criticas sem reload.
 
@@ -278,8 +305,12 @@ Criterio de aceite:
 - Realtime atualiza dashboards ativos.
 - Notificacao transacional e criada para eventos criticos.
 - Falha de realtime tem fallback por refetch controlado.
+- Implementado: `useRideRealtime` agora emite `in_progress`, `in_delivery`, `delivered` e `completed`.
+- Implementado: `useDriverDashboardBase`, `useRideSearch` e `useDelivery` reagem aos novos eventos em tempo real.
+- Implementado: `RideOperationalService.handlePostTransition` cria notificacoes transacionais para passageiro/motorista nos eventos criticos.
 
 ## Tarefa 2.3: Passageiro E2E
+Status: `CONCLUIDA` em 2026-05-06
 
 Objetivo: passageiro deve conseguir usar corrida e entrega sem ambiguidade.
 
@@ -303,8 +334,11 @@ Criterio de aceite:
 - Criar entrega nao cria corrida por engano.
 - Status exibido corresponde ao status canonico.
 - Cancelamento exige motivo quando a regra de negocio exigir.
+- Implementado: `CreateRideModal` com `initialType` e `PassageiroPage` abrindo entrega com tipo `entrega`.
+- Implementado: `PassageiroPage` usa conjuntos canonicos de status sem casts `as any` para busca, rastreamento e corridas ativas.
 
 ## Tarefa 2.4: Motorista E2E
+Status: `CONCLUIDA` em 2026-05-06
 
 Objetivo: motorista deve aceitar, iniciar, concluir, cancelar e ver ganhos com consistencia.
 
@@ -320,8 +354,14 @@ Criterio de aceite:
 - Dashboard nao mostra acoes impossiveis para o status atual.
 - Ganhos batem com corridas concluidas.
 - Cancelamento gera evento e notificacao.
+- Implementado: lista ativa de motorista agora exclui entregas motoboy (evita acoes incorretas de corrida em entregas).
+- Implementado: estados `cancelled_by_driver` e `cancelled_by_passenger` tratados na UI de acoes do motorista.
+- Implementado: `DriverRidesList` agora exibe iniciar/concluir/cancelar apenas para estados permitidos (sem acao impossivel para status final ou invalido).
+- Implementado: helpers puros de mobilidade alinhados aos estados canonicos (`cancelled_by_*`, `failed_delivery`, `expired`, entrega em rota).
+- Implementado: ganhos calculados apenas sobre estados pagaveis (`completed` e `delivered`), mantendo `failed_delivery` no historico sem inflar receita.
 
 ## Tarefa 2.5: Motoboy E2E
+Status: `CONCLUIDA` em 2026-05-06
 
 Objetivo: motoboy deve operar entrega como fluxo proprio, nao como corrida renomeada.
 
@@ -337,6 +377,39 @@ Criterio de aceite:
 - Motoboy ve apenas entregas compativeis com sua permissao/capacidade.
 - Entrega tem linha do tempo propria.
 - Restaurante, cliente e motoboy compartilham status coerente.
+- Implementado: dialog de falha da entrega com motivos estruturados canonicos (auditoria/SLA), evitando motivo livre inconsistente.
+- Implementado: estado terminal `failed_delivery` incluído no histórico/fechamento de motorista e motoboy (não some da operação após incidente).
+- Implementado: hook legado de motorista tambem reconhece `delivered` e `failed_delivery` como estados de fechamento operacional.
+- Implementado: `OrderDeliveryLinkService` mapeia `failed_delivery`, `driver_on_the_way` e `driver_arrived` para status de pedido/logistica.
+
+## Tarefa 2.6: Bloqueio e suspensao operacional
+Status: `CONCLUIDA` em 2026-05-06
+
+Objetivo: garantir que usuario, motorista ou motoboy bloqueado/suspenso nao consiga solicitar, receber ou aceitar chamados por brecha de UI/API.
+
+Passos:
+
+- Validar suspensao do perfil solicitante antes de criar corrida comum.
+- Validar suspensao do solicitante antes de criar entrega motoboy, incluindo fontes `passenger`, `business`, `gastronomy` e `service`.
+- Validar suspensao, verificacao, assinatura ativa e capacidade operacional antes de motorista/motoboy ficar online/disponivel.
+- Filtrar motoristas/motoboys suspensos, nao verificados, sem assinatura ativa ou sem capacidade do modo na busca de dispatch.
+- Validar as mesmas regras no aceite direto da corrida/entrega, sem depender apenas da interface.
+- Validar motoboy atribuido antes de coleta, inicio da rota, confirmacao de entrega e falha de entrega.
+
+Criterio de aceite:
+
+- Usuario suspenso nao cria corrida nem entrega.
+- Motorista/motoboy suspenso nao entra na fila de disponibilidade.
+- Motorista/motoboy suspenso, nao verificado, sem assinatura ativa ou sem capacidade do modo nao aparece para dispatch.
+- Aceite direto bloqueia motorista/motoboy inelegivel mesmo se a UI for burlada.
+- `npm run typecheck` passa.
+- Implementado: `RideOperationalService` bloqueia solicitante suspenso em corrida e entrega.
+- Implementado: `MotoboyAuthorizationService` bloqueia usuario suspenso em todas as fontes de solicitacao de entrega.
+- Implementado: `DriverAvailabilityService` bloqueia disponibilidade e dispatch de motorista/motoboy inelegivel.
+- Implementado: `RideDispatchService.acceptRide` valida suspensao, verificacao, assinatura e capacidade antes do aceite.
+- Implementado: operacoes de motoboy validam elegibilidade antes de coleta, rota, entrega e falha.
+- Implementado: telas de disponibilidade da Central e Perfil passam o modo operacional correto (`ride`/`motoboy`) ao SSOT e bloqueiam ativacao quando a capacidade do modo esta desabilitada.
+- Implementado: acao admin de colocar motorista offline tambem sincroniza `driver_availability`, nao apenas `driver_data`.
 
 ---
 

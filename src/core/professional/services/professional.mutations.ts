@@ -23,6 +23,7 @@ import type {
   CreateProfessionalJobInput,
 } from "../types";
 import type { z } from "zod";
+import { sanitizeString, sanitizeArray, sanitizeUrl, sanitizeEmail, sanitizePhone } from "@/shared/utils/sanitization";
 
 // Re-exportar tipos para conveniência
 export type { Professional, CreateProfessionalInput, UpdateProfessionalInput };
@@ -31,23 +32,7 @@ export type { Professional, CreateProfessionalInput, UpdateProfessionalInput };
 // 🔧 VALIDATION HELPERS
 // ============================================================================
 
-// Importação dinâmica dos sanitizadores
-async function getSanitizers() {
-  const {
-    sanitizeString,
-    sanitizeArray,
-    sanitizeUrl,
-    sanitizeEmail,
-    sanitizePhone,
-  } = await import("@/shared/utils/sanitization");
-  return {
-    sanitizeString,
-    sanitizeArray,
-    sanitizeUrl,
-    sanitizeEmail,
-    sanitizePhone,
-  };
-}
+const getSanitizers = () => ({ sanitizeString, sanitizeArray, sanitizeUrl, sanitizeEmail, sanitizePhone });
 
 // ============================================================================
 // 🎯 CREATE MUTATIONS
@@ -62,7 +47,7 @@ export async function createProfessional(
 ): Promise<Professional> {
   try {
     // 1. Sanitização
-    const sanitizers = await getSanitizers();
+    const sanitizers = getSanitizers();
     const sanitized = {
       ...input,
       name: sanitizers.sanitizeString(input.name),
@@ -171,7 +156,7 @@ export async function updateProfessional(
 ): Promise<Professional> {
   try {
     // 1. Sanitização
-    const sanitizers = await getSanitizers();
+    const sanitizers = getSanitizers();
     const sanitized: Record<string, any> = {};
 
     if (input.name !== undefined) {

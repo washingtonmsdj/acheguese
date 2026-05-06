@@ -19,6 +19,17 @@ function isMissingColumnError(error: unknown): boolean {
   return typed.code === "42703" || typed.message?.toLowerCase().includes("column") === true;
 }
 
+function isProfileSuspended(profile: Record<string, unknown> | null): boolean {
+  const suspended = Boolean(profile?.is_suspended ?? profile?.suspended ?? false);
+  if (!suspended) return false;
+
+  const suspendedUntil = typeof profile?.suspended_until === "string" ? profile.suspended_until : null;
+  if (!suspendedUntil) return true;
+
+  const until = new Date(suspendedUntil);
+  return Number.isNaN(until.getTime()) || until > new Date();
+}
+
 export interface RideDispatchContextRow {
   ride_mode: string | null;
   source_type: string | null;
@@ -400,7 +411,7 @@ export async function getDriverOfferCapabilities(
     const profile = await profilePromise;
     return {
       ...(queryWithRideCapability.data as Omit<DriverOfferCapabilitiesRow, "is_suspended">),
-      is_suspended: Boolean((profile as Record<string, unknown> | null)?.is_suspended ?? (profile as Record<string, unknown> | null)?.suspended ?? false),
+      is_suspended: isProfileSuspended(profile as Record<string, unknown> | null),
     };
   }
 
@@ -421,7 +432,7 @@ export async function getDriverOfferCapabilities(
   return {
     ...(legacyQuery.data as Omit<DriverOfferCapabilitiesRow, "can_do_rides" | "is_suspended">),
     can_do_rides: true,
-    is_suspended: Boolean((profile as Record<string, unknown> | null)?.is_suspended ?? (profile as Record<string, unknown> | null)?.suspended ?? false),
+    is_suspended: isProfileSuspended(profile as Record<string, unknown> | null),
   };
 }
 
@@ -449,11 +460,24 @@ export async function getDriverDataByProfileIds(profileIds: string[]): Promise<u
 
   const queryWithRideCapability = await supabaseClient
     .from("driver_data")
-    .select("profile_id, rating, can_do_delivery, can_do_rides")
+    .select("profile_id, rating, can_do_delivery, can_do_rides, is_verified, subscription_active")
     .in("profile_id", profileIds);
 
   if (!queryWithRideCapability.error) {
-    return queryWithRideCapability.data || [];
+    const profiles = await Promise.all(
+      profileIds.map((profileId) => profileService.getProfileById(profileId).catch(() => null)),
+    );
+    const suspensionMap = new Map(
+      profileIds.map((profileId, index) => [
+        profileId,
+        isProfileSuspended(profiles[index] as Record<string, unknown> | null),
+      ]),
+    );
+
+    return (queryWithRideCapability.data || []).map((row: { [key: string]: unknown }) => ({
+      ...row,
+      is_suspended: suspensionMap.get(String(row.profile_id)) ?? false,
+    }));
   }
 
   if (!isMissingColumnError(queryWithRideCapability.error)) {
@@ -462,14 +486,25 @@ export async function getDriverDataByProfileIds(profileIds: string[]): Promise<u
 
   const legacyQuery = await supabaseClient
     .from("driver_data")
-    .select("profile_id, rating, can_do_delivery")
+    .select("profile_id, rating, can_do_delivery, is_verified, subscription_active")
     .in("profile_id", profileIds);
 
   if (legacyQuery.error) throw legacyQuery.error;
 
+  const profiles = await Promise.all(
+    profileIds.map((profileId) => profileService.getProfileById(profileId).catch(() => null)),
+  );
+  const suspensionMap = new Map(
+    profileIds.map((profileId, index) => [
+      profileId,
+      isProfileSuspended(profiles[index] as Record<string, unknown> | null),
+    ]),
+  );
+
   return (legacyQuery.data || []).map((row: { [key: string]: unknown }) => ({
     ...row,
     can_do_rides: true,
+    is_suspended: suspensionMap.get(String(row.profile_id)) ?? false,
   }));
 }
 

@@ -257,7 +257,11 @@ export function DriverRideActions({
   }
 
   // Status: cancelled - Corrida cancelada
-  if (status === RIDE_STATUS.CANCELLED) {
+  if (
+    status === RIDE_STATUS.CANCELLED ||
+    status === RIDE_STATUS.CANCELLED_BY_DRIVER ||
+    status === RIDE_STATUS.CANCELLED_BY_PASSENGER
+  ) {
     return (
       <div className="px-3 py-2 rounded-xl bg-red-500/10 border border-red-500/20 text-center">
         <p className="text-xs text-red-400 font-semibold">

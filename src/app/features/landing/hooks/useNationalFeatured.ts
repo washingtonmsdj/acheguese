@@ -13,7 +13,7 @@ import {
   getNationalClassifieds,
   getNationalStats,
   getActiveTerritoriesWithLanding,
-} from '@/core/landing/services/LandingService';
+} from '../services/LandingService';
 
 const STALE_TIME = 5 * 60 * 1000;
 

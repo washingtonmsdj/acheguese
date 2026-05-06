@@ -19,9 +19,14 @@ export function isRideActive(status: string): boolean {
     RIDE_STATUS.SEARCHING_DRIVER,
     RIDE_STATUS.DRIVER_ASSIGNED,
     RIDE_STATUS.DRIVER_ACCEPTED,
-    RIDE_STATUS.IN_PROGRESS,
     RIDE_STATUS.DRIVER_ARRIVING,
+    RIDE_STATUS.DRIVER_ON_THE_WAY,
+    RIDE_STATUS.DRIVER_ARRIVED,
     RIDE_STATUS.PASSENGER_BOARDED,
+    RIDE_STATUS.PASSENGER_ON_BOARD,
+    RIDE_STATUS.IN_PROGRESS,
+    RIDE_STATUS.PICKUP_CONFIRMED,
+    RIDE_STATUS.IN_DELIVERY,
   ];
   return activeStatuses.includes(status);
 }
@@ -37,24 +42,40 @@ export function canAcceptRide(status: string): boolean {
  * Verificar se corrida pode ser iniciada
  */
 export function canStartRide(status: string): boolean {
-  return status === RIDE_STATUS.DRIVER_ACCEPTED || status === RIDE_STATUS.DRIVER_ARRIVING;
+  return [
+    RIDE_STATUS.DRIVER_ASSIGNED,
+    RIDE_STATUS.DRIVER_ACCEPTED,
+    RIDE_STATUS.DRIVER_ARRIVING,
+    RIDE_STATUS.DRIVER_ON_THE_WAY,
+    RIDE_STATUS.DRIVER_ARRIVED,
+    RIDE_STATUS.PASSENGER_BOARDED,
+    RIDE_STATUS.PASSENGER_ON_BOARD,
+  ].includes(status);
 }
 
 /**
  * Verificar se corrida pode ser completada
  */
 export function canCompleteRide(status: string): boolean {
-  return status === RIDE_STATUS.IN_PROGRESS || status === RIDE_STATUS.PASSENGER_BOARDED;
+  return status === RIDE_STATUS.IN_PROGRESS;
 }
 
 /**
  * Verificar se corrida pode ser cancelada
  */
 export function canCancelRide(status: string): boolean {
-  return ![
-    RIDE_STATUS.COMPLETED,
-    RIDE_STATUS.CANCELLED,
-    RIDE_STATUS.REJECTED,
+  return [
+    RIDE_STATUS.PENDING,
+    RIDE_STATUS.REQUESTED,
+    RIDE_STATUS.SEARCHING_DRIVER,
+    RIDE_STATUS.DRIVER_ASSIGNED,
+    RIDE_STATUS.DRIVER_ACCEPTED,
+    RIDE_STATUS.DRIVER_ARRIVING,
+    RIDE_STATUS.DRIVER_ON_THE_WAY,
+    RIDE_STATUS.DRIVER_ARRIVED,
+    RIDE_STATUS.PASSENGER_BOARDED,
+    RIDE_STATUS.PASSENGER_ON_BOARD,
+    RIDE_STATUS.PICKUP_CONFIRMED,
   ].includes(status);
 }
 
@@ -178,12 +199,28 @@ export function getRideStatusLabel(status: string): string {
       return "Motorista chegando";
     case RIDE_STATUS.PASSENGER_BOARDED:
       return "Passageiro a bordo";
+    case RIDE_STATUS.PASSENGER_ON_BOARD:
+      return "Passageiro a bordo";
+    case RIDE_STATUS.PICKUP_CONFIRMED:
+      return "Coleta confirmada";
+    case RIDE_STATUS.IN_DELIVERY:
+      return "Em entrega";
+    case RIDE_STATUS.DELIVERED:
+      return "Entregue";
+    case RIDE_STATUS.FAILED_DELIVERY:
+      return "Falha na entrega";
     case RIDE_STATUS.COMPLETED:
       return "Concluída";
     case RIDE_STATUS.CANCELLED:
       return "Cancelada";
-    case RIDE_STATUS.REJECTED:
-      return "Rejeitada";
+    case RIDE_STATUS.CANCELLED_BY_DRIVER:
+      return "Cancelada pelo motorista";
+    case RIDE_STATUS.CANCELLED_BY_PASSENGER:
+      return "Cancelada pelo passageiro";
+    case RIDE_STATUS.EXPIRED:
+      return "Expirada";
+    case RIDE_STATUS.FAILED:
+      return "Falhou";
     default:
       return status;
   }
@@ -204,11 +241,19 @@ export function getRideStatusColor(status: string): string {
     case RIDE_STATUS.IN_PROGRESS:
     case RIDE_STATUS.DRIVER_ARRIVING:
     case RIDE_STATUS.PASSENGER_BOARDED:
+    case RIDE_STATUS.PASSENGER_ON_BOARD:
+    case RIDE_STATUS.PICKUP_CONFIRMED:
       return "green";
+    case RIDE_STATUS.IN_DELIVERY:
+      return "purple";
     case RIDE_STATUS.COMPLETED:
+    case RIDE_STATUS.DELIVERED:
       return "gray";
     case RIDE_STATUS.CANCELLED:
-    case RIDE_STATUS.REJECTED:
+    case RIDE_STATUS.CANCELLED_BY_DRIVER:
+    case RIDE_STATUS.CANCELLED_BY_PASSENGER:
+    case RIDE_STATUS.FAILED:
+    case RIDE_STATUS.FAILED_DELIVERY:
       return "red";
     default:
       return "gray";

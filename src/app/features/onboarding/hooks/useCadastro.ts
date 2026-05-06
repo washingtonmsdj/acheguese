@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { AuthService } from '@/core/auth';
+import { AuthService } from '@/core/auth/services/AuthService';
 import { HibpService } from '@/core/auth/services/HibpService';
 import { getAuthErrorMessage } from '@/core/auth/utils/authMessages';
 import { setPendingSignupEmail } from '@/core/auth/utils/pendingSignup';

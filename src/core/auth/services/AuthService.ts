@@ -10,6 +10,7 @@ import { supabase } from "@/integrations/supabase";
 import { SessionService } from "@/core/session/services/SessionService";
 import { logger } from "@/shared/utils/logger";
 import { USER_ROLE } from "@/shared/types/constants";
+import { profileService } from "@/core/profiles/services/ProfileService";
 import type { User, Session, AuthChangeEvent, Subscription } from "@supabase/supabase-js";
 import type { AdminSupabaseClient } from "@/core/admin/types/adminDatabase.types";
 
@@ -376,7 +377,6 @@ export class AuthService {
     const avatarUrl = `${urlData.publicUrl}?t=${Date.now()}`;
 
     // Atualizar profile usando ProfileService
-    const { profileService } = await import("@/core/profiles/services/ProfileService");
     await profileService.updateProfile(userId, { avatar_url: avatarUrl });
 
     return avatarUrl;

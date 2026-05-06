@@ -28,7 +28,11 @@ export function useMotoristaPageV2() {
       RIDE_STATUS.PICKUP_CONFIRMED,
       RIDE_STATUS.IN_DELIVERY,
     ],
-    completedStatuses: [RIDE_STATUS.COMPLETED, RIDE_STATUS.DELIVERED],
+    completedStatuses: [
+      RIDE_STATUS.COMPLETED,
+      RIDE_STATUS.DELIVERED,
+      RIDE_STATUS.FAILED_DELIVERY,
+    ],
   });
   const [deliveryActionsLoading, setDeliveryActionsLoading] = useState(false);
   const { refetch } = base;

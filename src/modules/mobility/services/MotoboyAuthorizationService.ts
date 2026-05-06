@@ -34,6 +34,7 @@ export interface AuthorizationResult {
 export type MotoboyAuthErrorCode =
   | "NOT_AUTHENTICATED"
   | "PROFILE_NOT_FOUND"
+  | "USER_SUSPENDED"
   | "ROLLOUT_DISABLED"
   | "MOTOBOY_DISABLED"
   | "PLAN_NOT_ALLOWED"
@@ -133,13 +134,7 @@ export class MotoboyAuthorizationService {
         };
       }
 
-      const isSuspended = Boolean(
-        (profile as Record<string, unknown> | null)?.is_suspended ??
-          (profile as Record<string, unknown> | null)?.suspended ??
-          false,
-      );
-
-      if (isSuspended) {
+      if (this.isProfileSuspended(profile as Record<string, unknown> | null)) {
         return {
           allowed: false,
           reason: "Motorista suspenso.",
@@ -228,6 +223,41 @@ export class MotoboyAuthorizationService {
     }
   }
 
+  private static isProfileSuspended(profile: Record<string, unknown> | null): boolean {
+    const suspended = Boolean(profile?.is_suspended ?? profile?.suspended ?? false);
+    if (!suspended) return false;
+
+    const suspendedUntil = typeof profile?.suspended_until === "string" ? profile.suspended_until : null;
+    if (!suspendedUntil) return true;
+
+    const until = new Date(suspendedUntil);
+    return Number.isNaN(until.getTime()) || until > new Date();
+  }
+
+  private static async ensureRequesterNotSuspended(userId: string): Promise<AuthorizationResult | null> {
+    const profile =
+      (await profileService.getProfileByType(userId, "personal").catch(() => null)) ??
+      (await profileService.getActiveProfile(userId).catch(() => null));
+
+    if (!profile) {
+      return {
+        allowed: false,
+        reason: "Perfil do usuario nao encontrado.",
+        code: "PROFILE_NOT_FOUND",
+      };
+    }
+
+    if (this.isProfileSuspended(profile as Record<string, unknown> | null)) {
+      return {
+        allowed: false,
+        reason: "Usuario suspenso.",
+        code: "USER_SUSPENDED",
+      };
+    }
+
+    return null;
+  }
+
   private static async authorizePassenger(userId?: string): Promise<AuthorizationResult> {
     if (!userId) {
       return {
@@ -236,6 +266,9 @@ export class MotoboyAuthorizationService {
         code: "NOT_AUTHENTICATED",
       };
     }
+
+    const suspended = await this.ensureRequesterNotSuspended(userId);
+    if (suspended) return suspended;
 
     return { allowed: true };
   }
@@ -259,6 +292,9 @@ export class MotoboyAuthorizationService {
         code: "NOT_AUTHENTICATED",
       };
     }
+
+    const suspended = await this.ensureRequesterNotSuspended(userId);
+    if (suspended) return suspended;
 
     const businessContext = await this.resolveBusinessContext(businessId);
     const hasAssociation = await this.checkBusinessAssociation(userId, businessContext);
@@ -328,6 +364,9 @@ export class MotoboyAuthorizationService {
       };
     }
 
+    const suspended = await this.ensureRequesterNotSuspended(userId);
+    if (suspended) return suspended;
+
     const gastronomyContext = await this.resolveGastronomyContext(gastronomyId);
     const hasAssociation = await this.checkGastronomyAssociation(userId, gastronomyContext);
     if (!hasAssociation) {
@@ -387,6 +426,9 @@ export class MotoboyAuthorizationService {
         code: "ASSOCIATION_NOT_FOUND",
       };
     }
+
+    const suspended = await this.ensureRequesterNotSuspended(userId);
+    if (suspended) return suspended;
 
     const hasAssociation = await this.checkServiceAssociation(userId, serviceId);
     if (!hasAssociation) {

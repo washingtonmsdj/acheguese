@@ -11,7 +11,7 @@ import { supabase } from "@/integrations/supabase";
 import { trackError } from "@/shared/utils/errorTracking";
 import { logger } from "@/shared/utils/logger";
 import { profileService } from "@/core/profiles/services";
-import { getClassifiedById } from "@/core/classifieds/services";
+import { getClassifiedById } from "@/modules/classifieds/services";
 import { ALERT_STATUS } from "@/shared/types/constants";
 import type {
   Conversation,

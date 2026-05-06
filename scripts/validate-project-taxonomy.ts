@@ -7,7 +7,9 @@ const ROOT = process.cwd();
 
 const CANONICAL_MODULES = [
   "admin",
+  "ai",
   "business",
+  "central",
   "classifieds",
   "community-alerts",
   "community-events",

@@ -1825,7 +1825,6 @@ export class PostService {
   }> {
     try {
       // Resolver profile_id a partir do user_id via ProfileService (SSOT)
-      const { profileService } = await import("@/core/profiles/services/ProfileService");
       const activeProfile = await profileService.getActiveProfile(userId);
       const profileId = activeProfile?.id;
 

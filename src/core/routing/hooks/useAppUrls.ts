@@ -13,9 +13,9 @@
 
 import { useBusinessUrls } from '@/core/business/hooks/useBusinessUrls';
 import { useServiceUrls } from '@/core/professional/hooks/useServiceUrls';
-import { useClassifiedUrls } from '@/core/classifieds/hooks/useClassifiedUrls';
+import { useClassifiedUrls } from '@/modules/classifieds/hooks/useClassifiedUrls';
 import { useCommunityUrls } from './useCommunityUrls';
-import { useMobilityUrls } from '@/core/mobility/hooks/useMobilityUrls';
+import { useMobilityUrls } from '@/modules/mobility/hooks/useMobilityUrls';
 import { buildProfileEditUrl, buildProfileSettingsUrl } from '@/core/profiles/utils/publicProfileUrl';
 import type { ResolvedTerritory } from './useResolveTerritoryFromUrl';
 
