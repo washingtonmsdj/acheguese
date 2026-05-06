@@ -20,6 +20,7 @@ import {
   Shield,
   UserRound,
   Users,
+  LayoutDashboard,
 } from "lucide-react";
 
 import {
@@ -221,7 +222,33 @@ export function ResumoSection({
       </SectionFrame>
 
       {/* Próximas ações sugeridas */}
-      <NextActionsPanel actions={nextActions} />
+      <NextActionsPanel actions={nextActions as any} />
+
+      {/* Bloco discreto - Acessar Central */}
+      <div className="rounded-2xl border border-dashed border-primary/30 bg-primary/5 p-4">
+        <div className="flex items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="rounded-xl bg-primary/10 p-2">
+              <LayoutDashboard className="h-5 w-5 text-primary" />
+            </div>
+            <div>
+              <h3 className="text-sm font-semibold text-foreground">
+                Áreas de Gestão
+              </h3>
+              <p className="text-xs text-muted-foreground">
+                Empresas, profissional, mobilidade e administração
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => navigate("/central")}
+            className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors"
+          >
+            Acessar Central
+          </button>
+        </div>
+      </div>
 
       {/* Atalhos principais - Foco no perfil pessoal */}
       <SectionFrame
@@ -233,19 +260,19 @@ export function ResumoSection({
             icon={Building2}
             title="Minhas empresas"
             description="Lista de empresas e acesso ao painel de gestão."
-            onClick={() => navigate("/perfil/empresas")}
+            onClick={() => navigate("/central/empresas")}
           />
           <HubLinkCard
             icon={Car}
             title="Mobilidade"
             description={`Motorista: ${motoristaStatus}. Motoboy: ${motoboyStatus}.`}
-            onClick={() => navigate(appUrls.profile.mobilidade.home)}
+            onClick={() => navigate("/central/motorista")}
           />
           <HubLinkCard
             icon={Bike}
             title="Motoboy"
             description="Area separada para entregas dentro de Mobilidade."
-            onClick={() => navigate(appUrls.profile.mobilidade.motoboy.home)}
+            onClick={() => navigate("/central/motoboy")}
           />
           <HubLinkCard
             icon={Briefcase}

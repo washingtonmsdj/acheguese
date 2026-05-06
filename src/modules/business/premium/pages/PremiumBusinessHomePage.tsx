@@ -20,6 +20,14 @@ export default function PremiumBusinessHomePage() {
   const previewItems = businessSnapshot.gastronomyPreview.slice(0, 3);
   const absoluteCanonical =
     typeof window !== "undefined" ? `${window.location.origin}${routes.home}` : undefined;
+  const openStatusLabel =
+    businessSnapshot.institutional.openStatus.open === true
+      ? "Aberto"
+      : businessSnapshot.institutional.openStatus.open === false
+        ? "Fechado"
+        : "Horario nao informado";
+  const openStatusVariant =
+    businessSnapshot.institutional.openStatus.open === true ? "default" : "secondary";
 
   return (
     <>
@@ -53,11 +61,7 @@ export default function PremiumBusinessHomePage() {
                 </p>
               </div>
 
-              <Badge
-                variant={businessSnapshot.institutional.openStatus.open ? "default" : "secondary"}
-              >
-                {businessSnapshot.institutional.openStatus.open ? "Aberto" : "Fechado"}
-              </Badge>
+              <Badge variant={openStatusVariant}>{openStatusLabel}</Badge>
             </div>
 
             <p className="text-sm leading-relaxed text-muted-foreground">
@@ -206,4 +210,3 @@ export default function PremiumBusinessHomePage() {
     </>
   );
 }
-

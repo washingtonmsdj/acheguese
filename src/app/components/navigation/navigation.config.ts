@@ -19,8 +19,10 @@ import {
   Search,
   MapPin,
   GraduationCap,
+  LayoutGrid,
   type LucideIcon,
 } from 'lucide-react';
+import { TERRITORY_CONFIG } from '@/config/territory';
 
 export interface NavItem {
   id: string;
@@ -102,6 +104,20 @@ export const NAV_SECTIONS: NavSection[] = [
     ],
   },
   {
+    id: 'management',
+    label: 'Gestão',
+    items: [
+      {
+        id: 'central',
+        icon: LayoutGrid,
+        label: 'Central',
+        href: '/central',
+        description: 'Hub de gestão e operação',
+        requiresAuth: true,
+      },
+    ],
+  },
+  {
     id: 'opportunities',
     label: 'Oportunidades',
     items: [
@@ -150,8 +166,8 @@ export const NAV_SECTIONS: NavSection[] = [
         id: 'search',
         icon: Search,
         label: 'Busca',
-        href: '/busca',
-        description: 'Buscar no Achegue-se',
+        href: `/buscar/${TERRITORY_CONFIG.launch.state}/${TERRITORY_CONFIG.launch.city}`,
+        description: 'Busca inteligente territorial',
       },
     ],
   },

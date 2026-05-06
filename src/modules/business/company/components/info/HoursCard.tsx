@@ -19,6 +19,31 @@ export function HoursCard({
   showAllHours,
   onToggleShowAll,
 }: HoursCardProps) {
+  const openStatusLabel =
+    openStatus.open === true
+      ? "Aberto agora"
+      : openStatus.open === false
+        ? "Fechado"
+        : "Horario nao informado";
+  const openStatusContainerClass =
+    openStatus.open === true
+      ? "bg-emerald-500/10 border border-emerald-500/20"
+      : openStatus.open === false
+        ? "bg-destructive/10 border border-destructive/20"
+        : "bg-slate-500/10 border border-slate-500/20";
+  const openStatusDotClass =
+    openStatus.open === true
+      ? "bg-emerald-500 animate-pulse"
+      : openStatus.open === false
+        ? "bg-destructive"
+        : "bg-slate-400";
+  const openStatusTextClass =
+    openStatus.open === true
+      ? "text-emerald-400"
+      : openStatus.open === false
+        ? "text-destructive"
+        : "text-slate-300";
+
   return (
     <div className="bg-card border border-border rounded-xl p-5">
       <button
@@ -39,25 +64,11 @@ export function HoursCard({
       </button>
 
       {/* Today's status */}
-      <div
-        className={`flex items-center gap-2 mb-3 p-2.5 rounded-lg ${
-          openStatus.open
-            ? "bg-emerald-500/10 border border-emerald-500/20"
-            : "bg-destructive/10 border border-destructive/20"
-        }`}
-      >
+      <div className={`flex items-center gap-2 mb-3 p-2.5 rounded-lg ${openStatusContainerClass}`}>
         <div
-          className={`h-2 w-2 rounded-full ${
-            openStatus.open ? "bg-emerald-500 animate-pulse" : "bg-destructive"
-          }`}
+          className={`h-2 w-2 rounded-full ${openStatusDotClass}`}
         />
-        <span
-          className={`text-sm font-semibold ${
-            openStatus.open ? "text-emerald-400" : "text-destructive"
-          }`}
-        >
-          {openStatus.open ? "Aberto agora" : "Fechado"}
-        </span>
+        <span className={`text-sm font-semibold ${openStatusTextClass}`}>{openStatusLabel}</span>
         {openStatus.todayHours && (
           <span className="text-sm text-muted-foreground">
             · Hoje: {openStatus.todayHours}

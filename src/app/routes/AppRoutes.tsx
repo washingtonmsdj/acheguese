@@ -7,7 +7,7 @@
  * @version 1.0.0
  */
 
-import { Routes, Route, Navigate } from "react-router-dom";
+import { Routes, Route, Navigate, Outlet, useParams } from "react-router-dom";
 
 // Territorial Components (eager - critical for routing)
 import { TerritorialLayout } from "@/core/routing/components/TerritorialLayout";
@@ -34,6 +34,15 @@ import {
 
 // Lazy imports organizados por domínio
 import * as P from "./lazyImports";
+
+// Componentes de redirecionamento para rotas legadas
+function BusinessRedirect() {
+  const { businessId } = useParams<{ businessId: string }>();
+  const location = window.location;
+  const remainingPath = location.pathname.replace(/^\/perfil\/empresas\/[^/]+/, '');
+  const targetPath = `/central/empresas/${businessId}${remainingPath}`;
+  return <Navigate to={targetPath} replace />;
+}
 
 export function AppRoutes() {
   return (
@@ -117,6 +126,27 @@ export function AppRoutes() {
         <Route path="/empresas" element={<P.EmpresasLandingPage />} />
         <Route path="/empresas/criar-empresa" element={<P.CriarEmpresaPage />} />
         <Route path="/edit-business/:profileId" element={<P.EditarEmpresaPage />} />
+        
+        {/* Redirecionamentos legados de empresas para Central */}
+        <Route path="/perfil/empresas" element={<Navigate to="/central/empresas" replace />} />
+        <Route path="/perfil/empresas/:businessId" element={<BusinessRedirect />} />
+        <Route path="/perfil/empresas/:businessId/*" element={<BusinessRedirect />} />
+        
+        {/* Redirecionamentos legados de mobilidade para Central */}
+        <Route path="/perfil/mobilidade/motorista" element={<Navigate to="/central/motorista" replace />} />
+        <Route path="/perfil/mobilidade/motorista/cadastro" element={<Navigate to="/central/motorista/cadastro" replace />} />
+        <Route path="/perfil/mobilidade/motorista/disponibilidade" element={<Navigate to="/central/motorista/disponibilidade" replace />} />
+        <Route path="/perfil/mobilidade/motorista/corridas" element={<Navigate to="/central/motorista/corridas" replace />} />
+        <Route path="/perfil/mobilidade/motorista/ganhos" element={<Navigate to="/central/motorista/ganhos" replace />} />
+        <Route path="/perfil/mobilidade/motorista/configuracoes" element={<Navigate to="/central/motorista/configuracoes" replace />} />
+        
+        <Route path="/perfil/mobilidade/motoboy" element={<Navigate to="/central/motoboy" replace />} />
+        <Route path="/perfil/mobilidade/motoboy/cadastro" element={<Navigate to="/central/motoboy/cadastro" replace />} />
+        <Route path="/perfil/mobilidade/motoboy/disponibilidade" element={<Navigate to="/central/motoboy/disponibilidade" replace />} />
+        <Route path="/perfil/mobilidade/motoboy/entregas" element={<Navigate to="/central/motoboy/entregas" replace />} />
+        <Route path="/perfil/mobilidade/motoboy/ganhos" element={<Navigate to="/central/motoboy/ganhos" replace />} />
+        <Route path="/perfil/mobilidade/motoboy/configuracoes" element={<Navigate to="/central/motoboy/configuracoes" replace />} />
+        
         <Route path="/perfil/empresas/:businessId" element={<P.BusinessDashboardShellPage />}>
           <Route index element={<P.BusinessOverviewPage />} />
           <Route path="dados" element={<P.BusinessDetailsPage />} />
@@ -169,6 +199,62 @@ export function AppRoutes() {
           <Route path="ganhos" element={<P.PerfilMobilidadeMotoristaGanhosPage />} />
           <Route path="configuracoes" element={<P.PerfilMobilidadeMotoristaConfiguracoesPage />} />
         </Route>
+        <Route path="/central" element={<P.CentralLayout />}>
+          <Route element={<P.CentralAccessGuard />}>
+            <Route index element={<P.CentralHubPage />} />
+            <Route path="empresas" element={<P.CentralEmpresasPage />} />
+            <Route path="empresas/:businessId" element={<P.BusinessAdminGuard />}>
+              <Route element={<P.BusinessDashboardShellPage />}>
+                <Route index element={<P.BusinessOverviewPage />} />
+                <Route path="dados" element={<P.BusinessDetailsPage />} />
+                <Route path="gastronomia" element={<P.GastronomyDashboardPage />} />
+                <Route path="gastronomia/setup" element={<P.GastronomySetupPage />} />
+                <Route path="gastronomia/cardapio" element={<P.MenuManagementPage />} />
+                <Route path="gastronomia/horarios" element={<P.BusinessHoursPage />} />
+                <Route path="gastronomia/area-entrega" element={<P.DeliveryAreaPage />} />
+                <Route path="gastronomia/pedidos" element={<P.OrdersPage />} />
+                <Route path="gastronomia/pedidos/:orderId" element={<P.OrderDetailsPage />} />
+                <Route path="gastronomia/entregas" element={<P.DeliveryManagementPage />} />
+                <Route path="gastronomia/analytics" element={<P.AnalyticsPage />} />
+                <Route path="gastronomia/promocoes" element={<P.GastronomyPromotionsPage />} />
+                <Route path="education" element={<P.EducationDashboardPage />} />
+                <Route path="education/setup" element={<P.EducationSetupPage />} />
+                <Route path="education/programas" element={<P.EducationProgramsPage />} />
+                <Route path="education/programs" element={<P.EducationProgramsPage />} />
+                <Route path="education/leads" element={<P.EducationLeadsPage />} />
+                <Route path="education/eventos" element={<P.EducationEventsPage />} />
+                <Route path="education/events" element={<P.EducationEventsPage />} />
+                <Route path="education/analytics" element={<P.EducationAnalyticsPage />} />
+                <Route path="education/planos" element={<P.EducationPlansPage />} />
+                <Route path="education/plans" element={<P.EducationPlansPage />} />
+                <Route path="planos" element={<P.BusinessPlansPage />} />
+                <Route path="link-premium" element={<P.BusinessPremiumSitePage />} />
+                <Route path="analytics" element={<P.BusinessAnalyticsPage />} />
+                <Route path="configuracoes" element={<P.BusinessSettingsPage />} />
+              </Route>
+            </Route>
+            <Route path="profissional" element={<P.ProfessionalGuard />}>
+              <Route element={<P.CentralProfissionalPage />} />
+            </Route>
+            <Route path="motorista" element={<P.DriverGuard service="motorista" />}>
+              <Route element={<P.CentralMotoristaPage />} />
+              <Route path="cadastro" element={<P.CentralMotoristaCadastroPage />} />
+              <Route path="disponibilidade" element={<P.CentralMotoristaDisponibilidadePage />} />
+              <Route path="corridas" element={<P.CentralMotoristaCorridasPage />} />
+              <Route path="ganhos" element={<P.CentralMotoristaGanhosPage />} />
+              <Route path="configuracoes" element={<P.CentralMotoristaConfiguracoesPage />} />
+            </Route>
+            <Route path="motoboy" element={<P.DriverGuard service="motoboy" />}>
+              <Route element={<P.CentralMotoboyPage />} />
+              <Route path="cadastro" element={<P.CentralMotoboyCadastroPage />} />
+              <Route path="disponibilidade" element={<P.CentralMotoboyDisponibilidadePage />} />
+              <Route path="entregas" element={<P.CentralMotoboyEntregasPage />} />
+              <Route path="ganhos" element={<P.CentralMotoboyGanhosPage />} />
+              <Route path="configuracoes" element={<P.CentralMotoboyConfiguracoesPage />} />
+            </Route>
+          </Route>
+        </Route>
+
         <Route path="/admin/dashboard" element={<P.AdminDashboardPage />} />
         <Route path="/admin/businesses" element={<P.AdminBusinessesPage />} />
         <Route path="/admin/plans" element={<P.AdminPlansPage />} />
@@ -190,6 +276,9 @@ export function AppRoutes() {
         <Route path="/novo-post" element={<P.NovoPostPage />} />
         <Route path="/exemplo-post" element={<P.ExamplePostPage />} />
         <Route path="/busca" element={<P.BuscaPage />} />
+        <Route path="/buscar" element={<P.BuscarPage />} />
+        <Route path="/buscar/:state/:city" element={<P.BuscarPage />} />
+        <Route path="/buscar/:state/:city/:district" element={<P.BuscarPage />} />
         <Route path="/ai/virtual-try-on" element={<P.VirtualTryOnPage />} />
         <Route path="/regras" element={<P.RegrasPage />} />
         <Route path="/termos" element={<P.TermosPage />} />
@@ -469,7 +558,6 @@ export function AppRoutes() {
 
         {/* Rotas de perfil */}
         <Route path="/perfil" element={<P.PerfilPage />} />
-        <Route path="/perfil/empresas" element={<P.PerfilEmpresasPage />} />
         <Route path="/perfil/planos" element={<P.PerfilPlanosPage />} />
         <Route path="/perfil/gerenciar" element={<P.PerfilIdentidadesPage />} />
         <Route path="/perfil/editar/:profileId" element={<P.PerfilEditarPage />} />

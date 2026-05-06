@@ -1,118 +1,216 @@
 // Edge Function: tryon-generate
-// Processa uma geração de Virtual Try-On de forma assíncrona.
-// Lê o registro em `tryon_generations`, marca como processing, chama o
-// Lovable AI gateway (image edit) com a foto do produto + prompt construído,
-// faz upload das imagens geradas no bucket `tryon` e atualiza o status.
+// Processes Virtual Try-On generations asynchronously.
+// Provider: Replicate / cuuupid/idm-vton.
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY")!;
 
+const REPLICATE_MODEL_VERSION = "0513734a452173b8173e907e3a59d19a36266e55b48528559432bd21c7d7e985";
+const DEFAULT_HUMAN_IMAGE_URLS = [
+  "https://replicate.delivery/pbxt/KgwTlhCMvDagRrcVzZJbuozNJ8esPqiNAIJS3eMgHrYuHmW4/KakaoTalk_Photo_2024-04-04-21-44-45.png",
+];
+
 type Category =
-  | "clothing_upper" | "clothing_lower" | "clothing_full"
-  | "footwear" | "accessory_eyewear" | "accessory_headwear"
-  | "accessory_other" | "swimwear";
+  | "clothing_upper"
+  | "clothing_lower"
+  | "clothing_full"
+  | "footwear"
+  | "accessory_eyewear"
+  | "accessory_headwear"
+  | "accessory_other"
+  | "swimwear";
 
-const targetInstruction: Record<string, string> = {
-  upper_body: "wearing the exact garment from the reference image on the upper body",
-  lower_body: "wearing the exact garment from the reference image on the lower body",
-  full_body: "wearing the exact outfit from the reference image, full body visible",
-  feet: "wearing the exact footwear from the reference image, feet clearly visible",
-  head: "wearing the exact headwear from the reference image, face and head visible",
-  eyes: "wearing the exact eyewear from the reference image on the face",
-  hand: "using the exact accessory from the reference image, hands visible",
-};
-
-function categoryToBodyTarget(c: Category): string {
-  switch (c) {
-    case "clothing_upper": return "upper_body";
-    case "clothing_lower": return "lower_body";
+function categoryToReplicateCategory(category: Category): "upper_body" | "lower_body" | "dresses" {
+  switch (category) {
+    case "clothing_upper":
+      return "upper_body";
+    case "clothing_lower":
+      return "lower_body";
     case "clothing_full":
-    case "swimwear": return "full_body";
-    case "footwear": return "feet";
-    case "accessory_eyewear": return "eyes";
-    case "accessory_headwear": return "head";
-    case "accessory_other": return "hand";
+    case "swimwear":
+      return "dresses";
+    default:
+      throw new Error(
+        "Provider Replicate atual suporta apenas roupas superiores, inferiores, corpo inteiro e moda praia.",
+      );
   }
 }
 
-function buildPrompt(category: Category, gender: string, style: string): string {
-  const subject =
-    gender === "male" ? "a young adult male model"
-      : gender === "female" ? "a young adult female model"
-        : "a young adult androgynous model";
-  const tgt = targetInstruction[categoryToBodyTarget(category)];
-  const ctx = category === "swimwear"
-    ? "beach photoshoot, tasteful fashion editorial, fully appropriate"
-    : `${style} fashion photoshoot, studio quality lighting`;
-  return [
-    `Photorealistic editorial photograph of ${subject}, ${tgt}.`,
-    "Preserve the product color, texture, pattern and shape with high fidelity.",
-    "Realistic body proportions, natural pose, coherent shadows and scale.",
-    `Scene: ${ctx}.`,
-    "Sharp focus, high resolution, professional fashion photography, 85mm lens.",
-    "The generated person must be a synthetic model (not a real identifiable person).",
-    "No nudity, no explicit content, no minors.",
-  ].join(" ");
+function parseUrlList(value: string | undefined): string[] {
+  return (value ?? "")
+    .split(",")
+    .map((item) => item.trim())
+    .filter(Boolean);
 }
 
-async function callLovableImage(productImageUrl: string, prompt: string): Promise<string> {
-  // Retorna data URL base64 PNG.
-  const lovableApiKey = Deno.env.get("LOVABLE_API_KEY")?.trim();
-  if (!lovableApiKey) {
-    throw new Error("LOVABLE_API_KEY não está configurada no backend.");
-  }
-  if (!lovableApiKey.startsWith("sk_")) {
-    throw new Error("LOVABLE_API_KEY inválida no backend. Rotacione a chave de IA e redeploye a função.");
-  }
+function humanImageForGender(gender: string, index: number): string {
+  const genderKey =
+    gender === "male"
+      ? "TRYON_REPLICATE_HUMAN_IMAGE_MALE_URL"
+      : gender === "female"
+        ? "TRYON_REPLICATE_HUMAN_IMAGE_FEMALE_URL"
+        : "TRYON_REPLICATE_HUMAN_IMAGE_NEUTRAL_URL";
 
-  const resp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-    method: "POST",
+  const urls = [
+    ...parseUrlList(Deno.env.get(genderKey)),
+    ...parseUrlList(Deno.env.get("TRYON_REPLICATE_HUMAN_IMAGE_URL")),
+    ...DEFAULT_HUMAN_IMAGE_URLS,
+  ];
+
+  return urls[index % urls.length];
+}
+
+function garmentDescription(category: Category, style: string): string {
+  switch (category) {
+    case "clothing_upper":
+      return `${style} upper-body garment`;
+    case "clothing_lower":
+      return `${style} lower-body garment`;
+    case "clothing_full":
+      return `${style} full-body outfit or dress`;
+    case "swimwear":
+      return "tasteful fashion swimwear";
+    default:
+      return `${style} fashion garment`;
+  }
+}
+
+function outputUrl(output: unknown): string | null {
+  if (typeof output === "string") return output;
+  if (Array.isArray(output)) {
+    const first = output.find((item) => typeof item === "string");
+    return typeof first === "string" ? first : null;
+  }
+  if (output && typeof output === "object") {
+    const first = Object.values(output as Record<string, unknown>).find((item) => typeof item === "string");
+    return typeof first === "string" ? first : null;
+  }
+  return null;
+}
+
+async function replicateRequest(path: string, init?: RequestInit): Promise<any> {
+  const token = Deno.env.get("REPLICATE_API_TOKEN")?.trim();
+  if (!token) throw new Error("REPLICATE_API_TOKEN nao esta configurado no backend.");
+  if (!token.startsWith("r8_")) throw new Error("REPLICATE_API_TOKEN invalido no backend.");
+
+  const resp = await fetch(`https://api.replicate.com/v1${path}`, {
+    ...init,
     headers: {
-      Authorization: `Bearer ${lovableApiKey}`,
+      Authorization: `Bearer ${token}`,
       "Content-Type": "application/json",
+      ...(init?.headers ?? {}),
     },
-    body: JSON.stringify({
-      model: "google/gemini-2.5-flash-image",
-      messages: [
-        {
-          role: "user",
-          content: [
-            { type: "text", text: prompt },
-            { type: "image_url", image_url: { url: productImageUrl } },
-          ],
-        },
-      ],
-      modalities: ["image", "text"],
-    }),
   });
 
   const text = await resp.text();
-  if (!resp.ok) {
-    if (resp.status === 429) throw new Error("Rate limit do AI gateway. Tente em instantes.");
-    if (resp.status === 402) throw new Error("Créditos da IA esgotados. Adicione créditos no workspace.");
-    throw new Error(`AI gateway erro ${resp.status}: ${text.slice(0, 200)}`);
+  let data: any = null;
+  if (text) {
+    try {
+      data = JSON.parse(text);
+    } catch {
+      data = { raw: text };
+    }
   }
-  let data: any;
-  try { data = JSON.parse(text); } catch { throw new Error("Resposta inválida do AI gateway"); }
-  const url: string | undefined = data?.choices?.[0]?.message?.images?.[0]?.image_url?.url;
-  if (!url) throw new Error("AI gateway não retornou imagem");
+
+  if (!resp.ok) {
+    if (resp.status === 401) throw new Error("Replicate recusou a API key. Verifique REPLICATE_API_TOKEN.");
+    if (resp.status === 402) throw new Error("Replicate sem creditos suficientes para gerar a imagem.");
+    if (resp.status === 429) throw new Error("Rate limit do Replicate. Tente novamente em instantes.");
+    throw new Error(`Replicate erro ${resp.status}: ${text.slice(0, 240)}`);
+  }
+
+  return data;
+}
+
+async function makeImageAvailableToReplicate(imageUrl: string): Promise<string> {
+  const sourceResp = await fetch(imageUrl, {
+    headers: {
+      "User-Agent": "acheguese-tryon/1.0",
+      Accept: "image/*",
+    },
+  });
+  if (!sourceResp.ok) {
+    throw new Error(`Falha ao ler imagem do produto no storage: HTTP ${sourceResp.status}`);
+  }
+
+  const contentType = sourceResp.headers.get("content-type")?.split(";")[0] || "image/jpeg";
+  const bytes = await sourceResp.arrayBuffer();
+  if (bytes.byteLength < 1024) {
+    throw new Error("Imagem do produto parece invalida ou vazia.");
+  }
+
+  let binary = "";
+  const chunk = 0x8000;
+  const data = new Uint8Array(bytes);
+  for (let i = 0; i < data.length; i += chunk) {
+    binary += String.fromCharCode(...data.subarray(i, i + chunk));
+  }
+
+  return `data:${contentType};base64,${btoa(binary)}`;
+}
+
+async function waitForPrediction(prediction: any): Promise<any> {
+  let current = prediction;
+
+  for (let attempt = 0; attempt < 36; attempt++) {
+    if (current.status === "succeeded") return current;
+    if (current.status === "failed" || current.status === "canceled") {
+      throw new Error(`Replicate falhou: ${current.error ?? "erro desconhecido"}`);
+    }
+    if (!current.urls?.get) break;
+
+    await new Promise((resolve) => setTimeout(resolve, 5000));
+    const path = current.urls.get.replace("https://api.replicate.com/v1", "");
+    current = await replicateRequest(path);
+  }
+
+  throw new Error("Replicate demorou mais que o limite para concluir a geracao.");
+}
+
+async function callReplicateTryOn(
+  productImageUrl: string,
+  category: Category,
+  gender: string,
+  style: string,
+  seed: number,
+): Promise<string> {
+  const prediction = await replicateRequest("/predictions", {
+    method: "POST",
+    headers: { Prefer: "wait=60" },
+    body: JSON.stringify({
+      version: REPLICATE_MODEL_VERSION,
+      input: {
+        crop: true,
+        seed,
+        steps: 30,
+        garm_img: await makeImageAvailableToReplicate(productImageUrl),
+        human_img: humanImageForGender(gender, seed),
+        category: categoryToReplicateCategory(category),
+        garment_des: garmentDescription(category, style),
+      },
+    }),
+  });
+
+  const completed = await waitForPrediction(prediction);
+  const url = outputUrl(completed.output);
+  if (!url) throw new Error("Replicate nao retornou URL de imagem.");
   return url;
 }
 
 function dataUrlToBytes(dataUrl: string): { bytes: Uint8Array; mime: string } {
-  const m = dataUrl.match(/^data:([^;]+);base64,(.*)$/);
-  if (!m) throw new Error("data URL inválida");
-  const mime = m[1];
-  const bin = atob(m[2]);
+  const match = dataUrl.match(/^data:([^;]+);base64,(.*)$/);
+  if (!match) throw new Error("data URL invalida");
+
+  const mime = match[1];
+  const bin = atob(match[2]);
   const bytes = new Uint8Array(bin.length);
   for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
   return { bytes, mime };
@@ -122,9 +220,8 @@ async function imageRefToBytes(imageRef: string): Promise<{ bytes: Uint8Array; m
   if (imageRef.startsWith("data:")) return dataUrlToBytes(imageRef);
 
   const imgResp = await fetch(imageRef);
-  if (!imgResp.ok) {
-    throw new Error(`Falha ao baixar imagem gerada: HTTP ${imgResp.status}`);
-  }
+  if (!imgResp.ok) throw new Error(`Falha ao baixar imagem gerada: HTTP ${imgResp.status}`);
+
   const mime = imgResp.headers.get("content-type")?.split(";")[0] || "image/png";
   const bytes = new Uint8Array(await imgResp.arrayBuffer());
   return { bytes, mime };
@@ -138,88 +235,119 @@ Deno.serve(async (req) => {
     const userClient = createClient(SUPABASE_URL, ANON_KEY, {
       global: { headers: { Authorization: authHeader } },
     });
+
     const { data: userRes } = await userClient.auth.getUser();
     const user = userRes?.user;
     if (!user) {
       return new Response(JSON.stringify({ error: "unauthorized" }), {
-        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
     const { generationId } = await req.json();
     if (!generationId || typeof generationId !== "string") {
       return new Response(JSON.stringify({ error: "generationId required" }), {
-        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
     const admin = createClient(SUPABASE_URL, SERVICE_ROLE);
 
-    // Carrega a geração e valida ownership
-    const { data: gen, error: gErr } = await admin
-      .from("tryon_generations").select("*").eq("id", generationId).maybeSingle();
-    if (gErr) throw gErr;
+    const { data: gen, error: genError } = await admin
+      .from("tryon_generations")
+      .select("*")
+      .eq("id", generationId)
+      .maybeSingle();
+    if (genError) throw genError;
+
     if (!gen) {
       return new Response(JSON.stringify({ error: "not found" }), {
-        status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 404,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+
     if (gen.user_id !== user.id) {
       return new Response(JSON.stringify({ error: "forbidden" }), {
-        status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 403,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    // Marca processing
-    await admin.from("tryon_generations").update({
-      status: "processing", error_message: null, generated_urls: [],
-    }).eq("id", generationId);
+    await admin
+      .from("tryon_generations")
+      .update({
+        status: "processing",
+        provider: "replicate",
+        error_message: null,
+        generated_urls: [],
+      })
+      .eq("id", generationId);
 
-    // Resposta imediata (assíncrono para o cliente — Realtime atualizará UI)
     const work = (async () => {
       try {
         const variations = Math.min(5, Math.max(1, Number(gen.metadata?.variations ?? 4)));
-        const prompt = buildPrompt(gen.category as Category, gen.target_gender, gen.style);
-
         const generatedUrls: string[] = [];
+
         for (let i = 0; i < variations; i++) {
-          const imageRef = await callLovableImage(gen.product_image_url, prompt);
+          const imageRef = await callReplicateTryOn(
+            gen.product_image_url,
+            gen.category as Category,
+            gen.target_gender,
+            gen.style,
+            Date.now() + i,
+          );
+
           const { bytes, mime } = await imageRefToBytes(imageRef);
-          const ext = mime === "image/png" ? "png" : (mime === "image/jpeg" ? "jpg" : "png");
+          const ext = mime === "image/jpeg" ? "jpg" : mime === "image/webp" ? "webp" : "png";
           const path = `${user.id}/outputs/${generationId}/${i}-${crypto.randomUUID()}.${ext}`;
-          const { error: upErr } = await admin.storage.from("tryon").upload(path, bytes, {
-            contentType: mime, upsert: false,
+          const { error: uploadError } = await admin.storage.from("tryon").upload(path, bytes, {
+            contentType: mime,
+            upsert: false,
           });
-          if (upErr) throw upErr;
+          if (uploadError) throw uploadError;
+
           const url = admin.storage.from("tryon").getPublicUrl(path).data.publicUrl;
           generatedUrls.push(url);
-          // atualização incremental
-          await admin.from("tryon_generations").update({ generated_urls: generatedUrls }).eq("id", generationId);
+
+          await admin
+            .from("tryon_generations")
+            .update({ generated_urls: generatedUrls })
+            .eq("id", generationId);
         }
 
-        await admin.from("tryon_generations").update({
-          status: "completed", generated_urls: generatedUrls,
-        }).eq("id", generationId);
+        await admin
+          .from("tryon_generations")
+          .update({ status: "completed", provider: "replicate", generated_urls: generatedUrls })
+          .eq("id", generationId);
       } catch (err) {
         console.error("tryon-generate worker error", err);
-        await admin.from("tryon_generations").update({
-          status: "failed",
-          error_message: err instanceof Error ? err.message : String(err),
-        }).eq("id", generationId);
+        await admin
+          .from("tryon_generations")
+          .update({
+            status: "failed",
+            provider: "replicate",
+            error_message: err instanceof Error ? err.message : String(err),
+          })
+          .eq("id", generationId);
       }
     })();
-    // Garante que o runtime não derrube antes
-    // @ts-ignore EdgeRuntime global no Supabase
+
+    // @ts-ignore EdgeRuntime is available in Supabase Edge Functions.
     if (typeof EdgeRuntime !== "undefined") EdgeRuntime.waitUntil(work);
     else await work;
 
-    return new Response(JSON.stringify({ ok: true, generationId }), {
-      status: 202, headers: { ...corsHeaders, "Content-Type": "application/json" },
+    return new Response(JSON.stringify({ ok: true, generationId, provider: "replicate" }), {
+      status: 202,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
-  } catch (e) {
-    console.error("tryon-generate fatal", e);
-    return new Response(JSON.stringify({ error: e instanceof Error ? e.message : "unknown" }), {
-      status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
+  } catch (err) {
+    console.error("tryon-generate fatal", err);
+    return new Response(JSON.stringify({ error: err instanceof Error ? err.message : "unknown" }), {
+      status: 500,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
 });

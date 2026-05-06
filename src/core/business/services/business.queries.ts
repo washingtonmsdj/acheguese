@@ -179,6 +179,7 @@ export async function getBusinesses(
 
 /**
  * Buscar empresas com paginação (para infinite scroll)
+ * FASE 1 IA: Usa public_business_search (view pública segura)
  */
 export async function getBusinessesList(params: {
   pageParam?: number;
@@ -209,22 +210,22 @@ export async function getBusinessesList(params: {
   }
 
   try {
-    const checkResult = await supabaseTyped.from("business_data")
+    // FASE 1 IA: Usar view pública segura
+    const checkResult = await supabaseTyped.from("public_business_search")
       .select("profile_id")
       .limit(1);
 
     if (checkResult.error) {
-      logger.warn("⚠️ business_data table not accessible:", checkResult.error.message);
+      logger.warn("⚠️ public_business_search view not accessible:", checkResult.error.message);
       return { businesses: [], nextPage: undefined };
     }
 
-    let query = supabaseTyped.from("business_data")
+    let query = supabaseTyped.from("public_business_search")
       .select(`
         *,
         address:addresses!address_id(*),
         location:locations!location_id(*)
       `)
-      .eq("status", "active")
       .in("business_role", ["standalone", "branch"])
       .range(pageParam * pageSize, (pageParam + 1) * pageSize - 1);
 
@@ -619,6 +620,7 @@ export async function resolveOldSlug(oldSlug: string): Promise<{
 
 /**
  * Buscar businesses por IDs (para uso em serviços agregadores)
+ * FASE 1 IA: Usa public_business_search (view pública segura)
  */
 export async function getBusinessesByIds(
   ids: string[],
@@ -641,7 +643,7 @@ export async function getBusinessesByIds(
   if (ids.length === 0) return [];
 
   try {
-    const { data, error } = await supabaseTyped.from("business_data")
+    const { data, error } = await supabaseTyped.from("public_business_search")
       .select(`
         profile_id,
         business_name,
@@ -652,8 +654,7 @@ export async function getBusinessesByIds(
         is_premium,
         is_verified,
         metadata,
-        profiles(name, neighborhood, city),
-        location:locations!location_id(geographic_path)
+        geographic_path
       `)
       .in("profile_id", ids);
 
@@ -666,11 +667,8 @@ export async function getBusinessesByIds(
       const typed = b as {
         profile_id?: string;
         business_name?: string;
-        profiles?: { name?: string; neighborhood?: string; city?: string };
         category?: string;
         slug?: string;
-        neighborhood?: string;
-        city?: string;
         metadata?: {
           neighborhood?: string;
           city?: string;
@@ -679,22 +677,22 @@ export async function getBusinessesByIds(
         rating?: number;
         is_verified?: boolean;
         is_premium?: boolean;
-        location?: { geographic_path?: string | null };
+        geographic_path?: string | null;
         description?: string;
       };
 
       return {
         id: typed.profile_id || "",
-        name: typed.business_name || typed.profiles?.name || "",
+        name: typed.business_name || "",
         category: typed.category || "",
         slug: typed.slug,
-        neighborhood: typed.profiles?.neighborhood || typed.metadata?.neighborhood,
-        city: typed.profiles?.city || typed.metadata?.city,
+        neighborhood: typed.metadata?.neighborhood,
+        city: typed.metadata?.city,
         logo: typed.metadata?.logo_url || undefined,
         rating: typeof typed.rating === "number" ? typed.rating : 0,
         verified: Boolean(typed.is_verified),
         is_premium: Boolean(typed.is_premium),
-        geographic_path: typed.location?.geographic_path ?? null,
+        geographic_path: typed.geographic_path ?? null,
         description: typed.description || undefined,
       };
     });

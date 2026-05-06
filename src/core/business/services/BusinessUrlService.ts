@@ -25,6 +25,11 @@ export interface BusinessUrlContext {
   geographic_path: string;
 }
 
+export interface BusinessUrlOptions {
+  /** Destino da URL de gestão: "central" (padrão) ou "legacy" (/perfil) */
+  target?: "central" | "legacy";
+}
+
 export interface ResolvedBusinessUrl {
   /** URL canônica pública: /empresas/ba/salvador/pituba/tonecos-studios */
   canonical: string;
@@ -32,7 +37,7 @@ export interface ResolvedBusinessUrl {
   premium: string | null;
   /** URL legado controlado: /business/tonecos-studios */
   legacy: string;
-  /** URL interna de gestao: /perfil/empresas/:id */
+  /** URL interna de gestao: /central/empresas/:id (padrão) ou /perfil/empresas/:id (legacy) */
   dashboard: string;
 }
 
@@ -70,8 +75,11 @@ export class BusinessUrlService {
    * 
    * OBRIGATÓRIO: geographic_path deve incluir bairro.
    * Empresas sem bairro são inválidas e retornam erro.
+   * 
+   * @param ctx - Contexto da empresa
+   * @param opts - Opções de destino da URL de gestão (padrão: "central")
    */
-  static buildUrls(ctx: BusinessUrlContext): ResolvedBusinessUrl {
+  static buildUrls(ctx: BusinessUrlContext, opts?: BusinessUrlOptions): ResolvedBusinessUrl {
     const { id, slug, is_premium, geographic_path } = ctx;
 
     if (!geographic_path) {
@@ -91,12 +99,13 @@ export class BusinessUrlService {
     }
 
     const canonical = `/empresas/${territory.uf}/${territory.cidade}/${territory.bairro}/${slug}`;
+    const dashboard = opts?.target === "legacy" ? `/perfil/empresas/${id}` : `/central/empresas/${id}`;
 
     return {
       canonical,
       premium: is_premium ? `/p/${slug}` : null,
       legacy: `/business/${slug}`,
-      dashboard: `/perfil/empresas/${id}`,
+      dashboard,
     };
   }
 

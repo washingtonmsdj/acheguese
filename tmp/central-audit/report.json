@@ -1,0 +1,148 @@
+{
+  "at": "2026-05-06T00:44:34.426Z",
+  "baseURL": "http://localhost:8081",
+  "desktop": {
+    "label": "desktop",
+    "loggedIn": false,
+    "routes": {
+      "/central": {
+        "finalUrl": "http://localhost:8081/login",
+        "hasOops": false,
+        "redirectedToLogin": true,
+        "hasCentralWord": false
+      },
+      "/central/empresas": {
+        "finalUrl": "http://localhost:8081/login",
+        "hasOops": false,
+        "redirectedToLogin": true,
+        "hasCentralWord": false
+      },
+      "/central/motorista": {
+        "finalUrl": "http://localhost:8081/login",
+        "hasOops": false,
+        "redirectedToLogin": true,
+        "hasCentralWord": false
+      },
+      "/central/motorista/disponibilidade": {
+        "finalUrl": "http://localhost:8081/login",
+        "hasOops": false,
+        "redirectedToLogin": true,
+        "hasCentralWord": false
+      },
+      "/central/motorista/ganhos": {
+        "finalUrl": "http://localhost:8081/login",
+        "hasOops": false,
+        "redirectedToLogin": true,
+        "hasCentralWord": false
+      },
+      "/central/motoboy": {
+        "finalUrl": "http://localhost:8081/login",
+        "hasOops": false,
+        "redirectedToLogin": true,
+        "hasCentralWord": false
+      },
+      "/central/motoboy/entregas": {
+        "finalUrl": "http://localhost:8081/login",
+        "hasOops": false,
+        "redirectedToLogin": true,
+        "hasCentralWord": false
+      },
+      "/central/profissional": {
+        "finalUrl": "http://localhost:8081/login",
+        "hasOops": false,
+        "redirectedToLogin": true,
+        "hasCentralWord": false
+      }
+    },
+    "consoleErrors": [
+      "[ERROR] Erro ao buscar configurações do site | {\"code\":\"\",\"details\":\"TypeError: Failed to fetch\\n    at http://localhost:8081/node_modules/.vite/deps/@supabase_supabase-js.js?v=46421e23:15124:23\\n    at http://localhost:8081/node_modules/.vite/deps/@supabase_supabase-js.js?v=46421e23:15138:12\\n    at async SiteSettingsServiceClass.getAllSettings (http://localhost:8081/src/core/admin/services/SiteSettingsService.ts:19:37)\",\"hint\":\"\"} Error: TypeError: Failed to fetch\n    at Logger.normalizeError (http://localhost:8081/src/shared/utils/logger.ts:51:37)\n    at Logger.error (http://localhost:8081/src/shared/utils/logger.ts:34:33)\n    at SiteSettingsServiceClass.getAllSettings (http://localhost:8081/src/core/admin/services/SiteSettingsService.ts:21:24)",
+      "[ERROR] Erro ao obter configurações do site | {\"code\":\"\",\"details\":\"TypeError: Failed to fetch\\n    at http://localhost:8081/node_modules/.vite/deps/@supabase_supabase-js.js?v=46421e23:15124:23\\n    at http://localhost:8081/node_modules/.vite/deps/@supabase_supabase-js.js?v=46421e23:15138:12\\n    at async SiteSettingsServiceClass.getAllSettings (http://localhost:8081/src/core/admin/services/SiteSettingsService.ts:19:37)\",\"hint\":\"\"} Error: TypeError: Failed to fetch\n    at Logger.normalizeError (http://localhost:8081/src/shared/utils/logger.ts:51:37)\n    at Logger.error (http://localhost:8081/src/shared/utils/logger.ts:34:33)\n    at SiteSettingsServiceClass.getAllSettings (http://localhost:8081/src/core/admin/services/SiteSettingsService.ts:33:20)",
+      "[ERROR] Query error: | {\"code\":\"\",\"details\":\"TypeError: Failed to fetch\\n    at http://localhost:8081/node_modules/.vite/deps/@supabase_supabase-js.js?v=46421e23:15124:23\\n    at http://localhost:8081/node_modules/.vite/deps/@supabase_supabase-js.js?v=46421e23:15138:12\\n    at async SiteSettingsServiceClass.getAllSettings (http://localhost:8081/src/core/admin/services/SiteSettingsService.ts:19:37)\",\"hint\":\"\"} Error: TypeError: Failed to fetch\n    at Logger.normalizeError (http://localhost:8081/src/shared/utils/logger.ts:51:37)\n    at Logger.error (http://localhost:8081/src/shared/utils/logger.ts:34:33)\n    at Object.onError (http://localhost:8081/src/config/reactQuery.config.ts:220:20)\n    at _a5.fetch (http://localhost:8081/node_modules/.vite/deps/@tanstack_react-query.js?v=46421e23:1228:85)",
+      "[ERROR] Erro ao buscar configurações do site | {\"code\":\"\",\"details\":\"TypeError: Failed to fetch\\n    at http://localhost:8081/node_modules/.vite/deps/@supabase_supabase-js.js?v=46421e23:15124:23\\n    at http://localhost:8081/node_modules/.vite/deps/@supabase_supabase-js.js?v=46421e23:15138:12\\n    at async SiteSettingsServiceClass.getAllSettings (http://localhost:8081/src/core/admin/services/SiteSettingsService.ts:19:37)\",\"hint\":\"\"} Error: TypeError: Failed to fetch\n    at Logger.normalizeError (http://localhost:8081/src/shared/utils/logger.ts:51:37)\n    at Logger.error (http://localhost:8081/src/shared/utils/logger.ts:34:33)\n    at SiteSettingsServiceClass.getAllSettings (http://localhost:8081/src/core/admin/services/SiteSettingsService.ts:21:24)",
+      "[ERROR] Erro ao obter configurações do site | {\"code\":\"\",\"details\":\"TypeError: Failed to fetch\\n    at http://localhost:8081/node_modules/.vite/deps/@supabase_supabase-js.js?v=46421e23:15124:23\\n    at http://localhost:8081/node_modules/.vite/deps/@supabase_supabase-js.js?v=46421e23:15138:12\\n    at async SiteSettingsServiceClass.getAllSettings (http://localhost:8081/src/core/admin/services/SiteSettingsService.ts:19:37)\",\"hint\":\"\"} Error: TypeError: Failed to fetch\n    at Logger.normalizeError (http://localhost:8081/src/shared/utils/logger.ts:51:37)\n    at Logger.error (http://localhost:8081/src/shared/utils/logger.ts:34:33)\n    at SiteSettingsServiceClass.getAllSettings (http://localhost:8081/src/core/admin/services/SiteSettingsService.ts:33:20)",
+      "[ERROR] Query error: | {\"code\":\"\",\"details\":\"TypeError: Failed to fetch\\n    at http://localhost:8081/node_modules/.vite/deps/@supabase_supabase-js.js?v=46421e23:15124:23\\n    at http://localhost:8081/node_modules/.vite/deps/@supabase_supabase-js.js?v=46421e23:15138:12\\n    at async SiteSettingsServiceClass.getAllSettings (http://localhost:8081/src/core/admin/services/SiteSettingsService.ts:19:37)\",\"hint\":\"\"} Error: TypeError: Failed to fetch\n    at Logger.normalizeError (http://localhost:8081/src/shared/utils/logger.ts:51:37)\n    at Logger.error (http://localhost:8081/src/shared/utils/logger.ts:34:33)\n    at Object.onError (http://localhost:8081/src/config/reactQuery.config.ts:220:20)\n    at _a5.fetch (http://localhost:8081/node_modules/.vite/deps/@tanstack_react-query.js?v=46421e23:1228:85)"
+    ],
+    "screenshots": [
+      "C:\\Users\\Casa\\Documents\\Novo github\\acheguese\\tmp\\central-audit\\desktop-central.png",
+      "C:\\Users\\Casa\\Documents\\Novo github\\acheguese\\tmp\\central-audit\\desktop-central_empresas.png",
+      "C:\\Users\\Casa\\Documents\\Novo github\\acheguese\\tmp\\central-audit\\desktop-central_motorista.png",
+      "C:\\Users\\Casa\\Documents\\Novo github\\acheguese\\tmp\\central-audit\\desktop-central_motorista_disponibilidade.png",
+      "C:\\Users\\Casa\\Documents\\Novo github\\acheguese\\tmp\\central-audit\\desktop-central_motorista_ganhos.png",
+      "C:\\Users\\Casa\\Documents\\Novo github\\acheguese\\tmp\\central-audit\\desktop-central_motoboy.png",
+      "C:\\Users\\Casa\\Documents\\Novo github\\acheguese\\tmp\\central-audit\\desktop-central_motoboy_entregas.png",
+      "C:\\Users\\Casa\\Documents\\Novo github\\acheguese\\tmp\\central-audit\\desktop-central_profissional.png"
+    ]
+  },
+  "mobile": {
+    "label": "mobile",
+    "loggedIn": false,
+    "routes": {
+      "/central": {
+        "finalUrl": "http://localhost:8081/login",
+        "hasOops": false,
+        "redirectedToLogin": true,
+        "hasCentralWord": false
+      },
+      "/central/empresas": {
+        "finalUrl": "http://localhost:8081/login",
+        "hasOops": false,
+        "redirectedToLogin": true,
+        "hasCentralWord": false
+      },
+      "/central/motorista": {
+        "finalUrl": "http://localhost:8081/login",
+        "hasOops": false,
+        "redirectedToLogin": true,
+        "hasCentralWord": false
+      },
+      "/central/motorista/disponibilidade": {
+        "finalUrl": "http://localhost:8081/login",
+        "hasOops": false,
+        "redirectedToLogin": true,
+        "hasCentralWord": false
+      },
+      "/central/motorista/ganhos": {
+        "finalUrl": "http://localhost:8081/login",
+        "hasOops": false,
+        "redirectedToLogin": true,
+        "hasCentralWord": false
+      },
+      "/central/motoboy": {
+        "finalUrl": "http://localhost:8081/login",
+        "hasOops": false,
+        "redirectedToLogin": true,
+        "hasCentralWord": false
+      },
+      "/central/motoboy/entregas": {
+        "finalUrl": "http://localhost:8081/login",
+        "hasOops": false,
+        "redirectedToLogin": true,
+        "hasCentralWord": false
+      },
+      "/central/profissional": {
+        "finalUrl": "http://localhost:8081/login",
+        "hasOops": false,
+        "redirectedToLogin": true,
+        "hasCentralWord": false
+      }
+    },
+    "consoleErrors": [
+      "[ERROR] Erro ao buscar configurações do site | {\"code\":\"\",\"details\":\"TypeError: Failed to fetch\",\"hint\":\"\"} Error: TypeError: Failed to fetch\n    at Logger.normalizeError (http://localhost:8081/src/shared/utils/logger.ts:51:37)\n    at Logger.error (http://localhost:8081/src/shared/utils/logger.ts:34:33)\n    at SiteSettingsServiceClass.getAllSettings (http://localhost:8081/src/core/admin/services/SiteSettingsService.ts:21:24)",
+      "[ERROR] Erro ao obter configurações do site | {\"code\":\"\",\"details\":\"TypeError: Failed to fetch\",\"hint\":\"\"} Error: TypeError: Failed to fetch\n    at Logger.normalizeError (http://localhost:8081/src/shared/utils/logger.ts:51:37)\n    at Logger.error (http://localhost:8081/src/shared/utils/logger.ts:34:33)\n    at SiteSettingsServiceClass.getAllSettings (http://localhost:8081/src/core/admin/services/SiteSettingsService.ts:33:20)",
+      "[ERROR] Query error: | {\"code\":\"\",\"details\":\"TypeError: Failed to fetch\",\"hint\":\"\"} Error: TypeError: Failed to fetch\n    at Logger.normalizeError (http://localhost:8081/src/shared/utils/logger.ts:51:37)\n    at Logger.error (http://localhost:8081/src/shared/utils/logger.ts:34:33)\n    at Object.onError (http://localhost:8081/src/config/reactQuery.config.ts:220:20)\n    at _a5.fetch (http://localhost:8081/node_modules/.vite/deps/@tanstack_react-query.js?v=46421e23:1228:85)",
+      "[ERROR] Erro ao buscar configurações do site | {\"code\":\"\",\"details\":\"TypeError: Failed to fetch\\n    at http://localhost:8081/node_modules/.vite/deps/@supabase_supabase-js.js?v=46421e23:15124:23\\n    at http://localhost:8081/node_modules/.vite/deps/@supabase_supabase-js.js?v=46421e23:15138:12\\n    at async SiteSettingsServiceClass.getAllSettings (http://localhost:8081/src/core/admin/services/SiteSettingsService.ts:19:37)\",\"hint\":\"\"} Error: TypeError: Failed to fetch\n    at Logger.normalizeError (http://localhost:8081/src/shared/utils/logger.ts:51:37)\n    at Logger.error (http://localhost:8081/src/shared/utils/logger.ts:34:33)\n    at SiteSettingsServiceClass.getAllSettings (http://localhost:8081/src/core/admin/services/SiteSettingsService.ts:21:24)",
+      "[ERROR] Erro ao obter configurações do site | {\"code\":\"\",\"details\":\"TypeError: Failed to fetch\\n    at http://localhost:8081/node_modules/.vite/deps/@supabase_supabase-js.js?v=46421e23:15124:23\\n    at http://localhost:8081/node_modules/.vite/deps/@supabase_supabase-js.js?v=46421e23:15138:12\\n    at async SiteSettingsServiceClass.getAllSettings (http://localhost:8081/src/core/admin/services/SiteSettingsService.ts:19:37)\",\"hint\":\"\"} Error: TypeError: Failed to fetch\n    at Logger.normalizeError (http://localhost:8081/src/shared/utils/logger.ts:51:37)\n    at Logger.error (http://localhost:8081/src/shared/utils/logger.ts:34:33)\n    at SiteSettingsServiceClass.getAllSettings (http://localhost:8081/src/core/admin/services/SiteSettingsService.ts:33:20)",
+      "[ERROR] Query error: | {\"code\":\"\",\"details\":\"TypeError: Failed to fetch\\n    at http://localhost:8081/node_modules/.vite/deps/@supabase_supabase-js.js?v=46421e23:15124:23\\n    at http://localhost:8081/node_modules/.vite/deps/@supabase_supabase-js.js?v=46421e23:15138:12\\n    at async SiteSettingsServiceClass.getAllSettings (http://localhost:8081/src/core/admin/services/SiteSettingsService.ts:19:37)\",\"hint\":\"\"} Error: TypeError: Failed to fetch\n    at Logger.normalizeError (http://localhost:8081/src/shared/utils/logger.ts:51:37)\n    at Logger.error (http://localhost:8081/src/shared/utils/logger.ts:34:33)\n    at Object.onError (http://localhost:8081/src/config/reactQuery.config.ts:220:20)\n    at _a5.fetch (http://localhost:8081/node_modules/.vite/deps/@tanstack_react-query.js?v=46421e23:1228:85)"
+    ],
+    "screenshots": [
+      "C:\\Users\\Casa\\Documents\\Novo github\\acheguese\\tmp\\central-audit\\mobile-central.png",
+      "C:\\Users\\Casa\\Documents\\Novo github\\acheguese\\tmp\\central-audit\\mobile-central_empresas.png",
+      "C:\\Users\\Casa\\Documents\\Novo github\\acheguese\\tmp\\central-audit\\mobile-central_motorista.png",
+      "C:\\Users\\Casa\\Documents\\Novo github\\acheguese\\tmp\\central-audit\\mobile-central_motorista_disponibilidade.png",
+      "C:\\Users\\Casa\\Documents\\Novo github\\acheguese\\tmp\\central-audit\\mobile-central_motorista_ganhos.png",
+      "C:\\Users\\Casa\\Documents\\Novo github\\acheguese\\tmp\\central-audit\\mobile-central_motoboy.png",
+      "C:\\Users\\Casa\\Documents\\Novo github\\acheguese\\tmp\\central-audit\\mobile-central_motoboy_entregas.png",
+      "C:\\Users\\Casa\\Documents\\Novo github\\acheguese\\tmp\\central-audit\\mobile-central_profissional.png"
+    ]
+  }
+}

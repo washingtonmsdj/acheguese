@@ -53,7 +53,7 @@ class TryOnService {
         target_gender: input.targetGender ?? 'neutral',
         style: input.style ?? 'casual',
         status: 'pending',
-        provider: 'lovable-ai',
+        provider: 'replicate',
         metadata: { variations: input.variations ?? 4 },
       })
       .select()

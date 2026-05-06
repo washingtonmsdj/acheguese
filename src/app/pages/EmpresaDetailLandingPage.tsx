@@ -7,6 +7,7 @@ import { Skeleton } from "@/shared/components/ui/skeleton";
 import BusinessSEO from "@/shared/components/seo/BusinessSEO";
 import BranchNetworkBlock from "@/core/business/components/BranchNetworkBlock";
 import { BusinessService } from "@/core/business/services/BusinessService";
+import { BusinessHoursService } from "@/core/business";
 import { useAuth } from "@/core/auth/hooks/useAuth";
 import { useBusinessFavorite } from "@/modules/business/hooks/useBusinessFavorite";
 import { useBusinessProducts } from "@/modules/business/hooks/useBusinessProducts";
@@ -34,6 +35,7 @@ import type {
   Review as CompanyReview,
 } from "@/modules/business/company/sections/types";
 import type { ReviewWithProfiles } from "@/shared/types/reviews";
+import type { BusinessOperationConfig } from "@/core/business/BusinessHoursService";
 
 interface EmpresaDetailLandingPageProps {
   businessId?: string;
@@ -57,6 +59,7 @@ export default function EmpresaDetailLandingPage(
   const [showRouteOptions, setShowRouteOptions] = useState(false);
   const [selectedProductCategory, setSelectedProductCategory] = useState("todos");
   const [nearbyBusinesses, setNearbyBusinesses] = useState<NearbyBusiness[]>([]);
+  const [operationConfig, setOperationConfig] = useState<BusinessOperationConfig | null>(null);
 
   const { data: snapshot, isLoading } = usePublicBusinessSnapshot({
     state,
@@ -103,6 +106,93 @@ export default function EmpresaDetailLandingPage(
       })),
     [rawReviews],
   );
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadOperationConfig = async () => {
+      if (!business?.id) {
+        setOperationConfig(null);
+        return;
+      }
+
+      const { data, error } = await BusinessHoursService.getOperationConfig(business.id);
+      if (cancelled) return;
+
+      if (error) {
+        setOperationConfig(null);
+        return;
+      }
+
+      setOperationConfig(data);
+    };
+
+    void loadOperationConfig();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [business?.id]);
+
+  const resolvedOpenStatus = useMemo(() => {
+    const base = snapshot?.institutional.openStatus ?? { open: null, todayHours: null };
+    const openingHours = snapshot?.institutional.openingHours ?? business?.horario_funcionamento;
+
+    const temporaryClosureActive = Boolean(
+      operationConfig?.is_temporarily_closed &&
+      (!operationConfig.temporarily_closed_until ||
+        new Date(operationConfig.temporarily_closed_until).getTime() > Date.now()),
+    );
+
+    if (temporaryClosureActive) {
+      return {
+        open: false as const,
+        todayHours: operationConfig?.temporarily_closed_reason || "Fechado temporariamente",
+      };
+    }
+
+    if (!openingHours || typeof openingHours !== "object") {
+      return { open: null as const, todayHours: null };
+    }
+
+    const days = ["domingo", "segunda", "terca", "quarta", "quinta", "sexta", "sabado"];
+    const dayKey = days[new Date().getDay()];
+    const today = (openingHours as Record<string, { open?: string; close?: string; closed?: boolean }>)[dayKey];
+
+    if (!today) {
+      return { open: null as const, todayHours: null };
+    }
+
+    if (today.closed) {
+      return { open: false as const, todayHours: "Fechado hoje" };
+    }
+
+    if (!today.open || !today.close) {
+      return { open: null as const, todayHours: null };
+    }
+
+    const [openH, openM] = today.open.split(":").map(Number);
+    const [closeH, closeM] = today.close.split(":").map(Number);
+
+    if (
+      Number.isNaN(openH) ||
+      Number.isNaN(openM) ||
+      Number.isNaN(closeH) ||
+      Number.isNaN(closeM)
+    ) {
+      return base;
+    }
+
+    const currentMinutes = new Date().getHours() * 60 + new Date().getMinutes();
+    const openMinutes = openH * 60 + openM;
+    const closeMinutes = closeH * 60 + closeM;
+    const isOpenNow = currentMinutes >= openMinutes && currentMinutes <= closeMinutes;
+
+    return {
+      open: isOpenNow,
+      todayHours: `${today.open} - ${today.close}`,
+    };
+  }, [business?.horario_funcionamento, operationConfig, snapshot]);
 
   useEffect(() => {
     let cancelled = false;
@@ -274,7 +364,7 @@ export default function EmpresaDetailLandingPage(
       <EmpresaDetailLayout>
         <EmpresaHeroSection
           business={business}
-          openStatus={snapshot.institutional.openStatus}
+          openStatus={resolvedOpenStatus}
           yearsActive={yearsActive}
         />
 
@@ -298,7 +388,7 @@ export default function EmpresaDetailLandingPage(
 
         <EmpresaInfoSection
           business={business}
-          openStatus={snapshot.institutional.openStatus}
+          openStatus={resolvedOpenStatus}
           addressText={snapshot.institutional.addressText}
           locationText={snapshot.institutional.locationText}
           isDeliveryBusiness={Boolean(isDeliveryBusiness)}

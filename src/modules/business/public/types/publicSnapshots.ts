@@ -30,7 +30,7 @@ export interface PublicSnapshotInstitutional {
   readonly email?: string;
   readonly website?: string;
   readonly openStatus: {
-    readonly open: boolean;
+    readonly open: boolean | null;
     readonly todayHours: string | null;
   };
   readonly openingHours?: Business["horario_funcionamento"];

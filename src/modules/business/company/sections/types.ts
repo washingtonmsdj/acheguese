@@ -81,7 +81,7 @@ export interface NearbyBusiness {
 // ============================================
 
 export interface OpenStatus {
-  readonly open: boolean;
+  readonly open: boolean | null;
   readonly todayHours: string | null;
 }
 

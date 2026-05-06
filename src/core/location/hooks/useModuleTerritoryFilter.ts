@@ -109,7 +109,11 @@ export function useModuleTerritoryFilter({
   const filterPath = buildSlugPath({
     stateSlug: uiFilter?.stateSlug ?? routeParams.state,
     citySlug: uiFilter?.citySlug ?? routeParams.city,
-    locationSlug: uiFilter?.locationSlug ?? queryLocationSlug,
+    locationSlug:
+      uiFilter?.locationSlug ??
+      routeParams.district ??
+      routeParams.groupSlugOrDistrict ??
+      queryLocationSlug,
   });
 
   const { data: filterLocation, isLoading: isFilterLoading } = useQuery({

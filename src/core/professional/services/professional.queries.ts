@@ -31,20 +31,23 @@ import type {
 /**
  * Buscar profissionais com filtros
  */
+/**
+ * Buscar profissionais com filtros
+ * FASE 1 IA: Usa public_professional_search (view pública segura)
+ */
 export async function getProfessionals(
   filters: ProfessionalFilters = {},
 ): Promise<Professional[]> {
   try {
     let query = (supabase as any)
-      .from("professional_data")
+      .from("public_professional_search")
       .select(
         `
         *,
         profiles:profile_id(id, name, avatar_url, verified),
         addresses:address_id(*)
       `,
-      )
-      .eq("is_accepting_clients", true);
+      );
 
     // Aplicar filtro territorial
     if (filters.territory) {
@@ -462,15 +465,19 @@ export async function searchProfessionals(
       .select(
         `
         *,
-        profiles:profile_id(id, name, avatar_url, verified)
+        profiles!professional_data_profile_id_fkey(id, name, avatar_url, verified),
+        address:addresses!address_id(id, location_id, postal_code, street, number, complement, latitude, longitude),
+        location:locations!location_id(id, name, full_name, type, slug)
       `,
       )
       .eq("is_accepting_clients", true);
 
     // Busca textual em múltiplos campos
-    dbQuery = dbQuery.or(
-      `professional_name.ilike.%${sanitizedQuery}%,description.ilike.%${sanitizedQuery}%,service_category.ilike.%${sanitizedQuery}%`,
-    );
+    if (sanitizedQuery) {
+      dbQuery = dbQuery.or(
+        `professional_name.ilike.%${sanitizedQuery}%,description.ilike.%${sanitizedQuery}%,service_category.ilike.%${sanitizedQuery}%`,
+      );
+    }
 
     if (filters.territory) {
       dbQuery = applyTerritoryFilter(dbQuery, filters.territory);
@@ -479,6 +486,11 @@ export async function searchProfessionals(
     if (filters.category) {
       dbQuery = dbQuery.eq("service_category", filters.category);
     }
+
+    // Ordenação
+    dbQuery = dbQuery
+      .order("rating", { ascending: false })
+      .order("created_at", { ascending: false });
 
     const { data, error } = await dbQuery.limit(PAGINATION.DEFAULT_LIMIT);
 

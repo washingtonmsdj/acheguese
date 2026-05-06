@@ -17,7 +17,7 @@ export function getProfileSectionPath(section: ProfileSectionId): string {
     case "resumo":
       return "/perfil";
     case "empresas":
-      return "/perfil/empresas";
+      return "/central/empresas";
     case "mobilidade":
       return "/perfil/mobilidade";
     case "planos":

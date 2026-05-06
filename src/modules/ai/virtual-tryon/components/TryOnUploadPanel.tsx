@@ -3,6 +3,7 @@ import { UploadCloud, X } from 'lucide-react';
 import { Button } from '@/shared/components/ui/button';
 import { Card } from '@/shared/components/ui/card';
 import { Label } from '@/shared/components/ui/label';
+import { Slider } from '@/shared/components/ui/slider';
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/shared/components/ui/select';
@@ -24,14 +25,10 @@ interface Props {
   disabled?: boolean;
 }
 
-const categoryLabels: Record<TryOnCategory, string> = {
+const categoryLabels: Partial<Record<TryOnCategory, string>> = {
   clothing_upper: 'Camiseta / Blusa (parte de cima)',
   clothing_lower: 'Calça / Saia (parte de baixo)',
   clothing_full: 'Vestido / Conjunto (corpo inteiro)',
-  footwear: 'Calçado',
-  accessory_eyewear: 'Óculos',
-  accessory_headwear: 'Chapéu / Boné',
-  accessory_other: 'Acessório de mão',
   swimwear: 'Moda praia (biquíni / sunga)',
 };
 
@@ -41,6 +38,7 @@ export function TryOnUploadPanel({ onSubmit, disabled }: Props) {
   const [category, setCategory] = useState<TryOnCategory>(TryOnCategory.CLOTHING_UPPER);
   const [gender, setGender] = useState<TryOnGender>(TryOnGender.NEUTRAL);
   const [style, setStyle] = useState<TryOnStyle>('casual');
+  const [variations, setVariations] = useState(1);
   const [error, setError] = useState<string | null>(null);
 
   const accept = useCallback((f: File | null) => {
@@ -146,10 +144,27 @@ export function TryOnUploadPanel({ onSubmit, disabled }: Props) {
         </div>
       </div>
 
+      <div className="space-y-3">
+        <div className="flex items-center justify-between gap-3">
+          <Label>Variações</Label>
+          <span className="text-sm font-medium">{variations}</span>
+        </div>
+        <Slider
+          value={[variations]}
+          min={1}
+          max={4}
+          step={1}
+          onValueChange={([value]) => setVariations(value)}
+        />
+        <p className="text-xs text-muted-foreground">
+          Cada variação executa uma geração no Replicate e aumenta o custo proporcionalmente.
+        </p>
+      </div>
+
       <Button
         className="w-full"
         disabled={!file || disabled}
-        onClick={() => file && onSubmit(file, { category, targetGender: gender, style, variations: 4 })}
+        onClick={() => file && onSubmit(file, { category, targetGender: gender, style, variations })}
       >
         Gerar imagens com IA
       </Button>

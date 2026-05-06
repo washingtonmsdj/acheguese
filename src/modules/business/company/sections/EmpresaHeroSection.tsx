@@ -40,6 +40,31 @@ export function EmpresaHeroSection({
   openStatus,
   yearsActive,
 }: EmpresaHeroSectionProps) {
+  const openStatusLabel =
+    openStatus.open === true
+      ? "Aberto agora"
+      : openStatus.open === false
+        ? "Fechado"
+        : "Horario nao informado";
+  const openStatusBadgeClass =
+    openStatus.open === true
+      ? "bg-emerald-500/90 text-white"
+      : openStatus.open === false
+        ? "bg-destructive/90 text-destructive-foreground"
+        : "bg-slate-500/90 text-white";
+  const openStatusCardClass =
+    openStatus.open === true
+      ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
+      : openStatus.open === false
+        ? "bg-destructive/10 text-destructive border-destructive/20"
+        : "bg-slate-500/10 text-slate-300 border-slate-500/20";
+  const openStatusDotClass =
+    openStatus.open === true
+      ? "bg-emerald-500 animate-pulse"
+      : openStatus.open === false
+        ? "bg-destructive"
+        : "bg-slate-400";
+
   const serviceModes =
     business.modos_atendimento && business.modos_atendimento.length > 0
       ? business.modos_atendimento
@@ -104,16 +129,12 @@ export function EmpresaHeroSection({
 
           {/* Status badges on banner */}
           <div className="absolute top-3 left-3 flex gap-2">
-            {openStatus.open ? (
-              <Badge className="bg-emerald-500/90 text-white border-0 shadow-lg px-3 py-1.5 text-xs">
-                <div className="h-1.5 w-1.5 rounded-full bg-white animate-pulse mr-1.5" />{" "}
-                Aberto agora
-              </Badge>
-            ) : (
-              <Badge className="bg-destructive/90 text-destructive-foreground border-0 shadow-lg px-3 py-1.5 text-xs">
-                Fechado
-              </Badge>
-            )}
+            <Badge className={cn("border-0 shadow-lg px-3 py-1.5 text-xs", openStatusBadgeClass)}>
+              {openStatus.open === true && (
+                <div className="h-1.5 w-1.5 rounded-full bg-white animate-pulse mr-1.5" />
+              )}
+              {openStatusLabel}
+            </Badge>
             {openStatus.todayHours && (
               <Badge className="hidden sm:inline-flex bg-background/80 backdrop-blur-sm text-foreground border border-border shadow-lg px-3 py-1.5 text-xs">
                 <Clock className="h-3 w-3 mr-1" /> {openStatus.todayHours}
@@ -216,18 +237,16 @@ export function EmpresaHeroSection({
                   <span
                     className={cn(
                       "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold border",
-                      openStatus.open
-                        ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
-                        : "bg-destructive/10 text-destructive border-destructive/20",
+                      openStatusCardClass,
                     )}
                   >
                     <div
                       className={cn(
                         "h-1.5 w-1.5 rounded-full",
-                        openStatus.open ? "bg-emerald-500 animate-pulse" : "bg-destructive",
+                        openStatusDotClass,
                       )}
                     />
-                    {openStatus.open ? "Aberto agora" : "Fechado"}
+                    {openStatusLabel}
                   </span>
                   {openStatus.todayHours && (
                     <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium border border-border bg-background/70 text-foreground">

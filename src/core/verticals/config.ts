@@ -15,7 +15,7 @@
 import type { BusinessCategory } from "@/core/business/types/Business";
 
 // Identificadores canonicos de vertical (estado atual do projeto)
-export type VerticalKey = "gastronomy";
+export type VerticalKey = "gastronomy" | "education";
 
 export interface VerticalConfig {
   key: VerticalKey;
@@ -38,6 +38,14 @@ export const VERTICAL_CONFIGS: Record<VerticalKey, VerticalConfig> = {
     setupRoute: (businessId) => `/perfil/empresas/${businessId}/gastronomia/setup`,
     dashboardRoute: (businessId) => `/perfil/empresas/${businessId}/gastronomia`,
   },
+  education: {
+    key: "education",
+    label: "Education",
+    description: "Gestao de instituicoes de ensino, programas, leads e eventos",
+    eligibleCategories: ["educacao"],
+    setupRoute: (businessId) => `/perfil/empresas/${businessId}/education/setup`,
+    dashboardRoute: (businessId) => `/perfil/empresas/${businessId}/education`,
+  },
 };
 
 /**
@@ -59,6 +67,8 @@ export function isEligibleForVertical(
   switch (vertical) {
     case "gastronomy":
       return VERTICAL_CONFIGS.gastronomy.eligibleCategories.includes(category);
+    case "education":
+      return VERTICAL_CONFIGS.education.eligibleCategories.includes(category);
     default:
       return false;
   }

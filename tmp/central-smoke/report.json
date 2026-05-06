@@ -1,0 +1,104 @@
+{
+  "at": "2026-05-06T00:38:36.150Z",
+  "baseURL": "http://localhost:8081",
+  "desktop": {
+    "label": "desktop",
+    "checks": {
+      "sidebar_no_overlap": null,
+      "breadcrumb_height": null,
+      "has_company_link": false
+    },
+    "routes": {
+      "/central/motorista": {
+        "url": "http://localhost:8081/login",
+        "denied": false,
+        "emptyState": false
+      },
+      "/central/motorista/disponibilidade": {
+        "url": "http://localhost:8081/login",
+        "denied": false,
+        "emptyState": false
+      },
+      "/central/motorista/ganhos": {
+        "url": "http://localhost:8081/login",
+        "denied": false,
+        "emptyState": false
+      },
+      "/central/motoboy": {
+        "url": "http://localhost:8081/login",
+        "denied": false,
+        "emptyState": false
+      },
+      "/central/motoboy/entregas": {
+        "url": "http://localhost:8081/login",
+        "denied": false,
+        "emptyState": false
+      },
+      "/central/profissional": {
+        "url": "http://localhost:8081/login",
+        "denied": false,
+        "emptyState": false
+      }
+    },
+    "screenshots": [
+      "C:\\Users\\Casa\\Documents\\Novo github\\acheguese\\tmp\\central-smoke\\desktop-central.png",
+      "C:\\Users\\Casa\\Documents\\Novo github\\acheguese\\tmp\\central-smoke\\desktop-empresas.png",
+      "C:\\Users\\Casa\\Documents\\Novo github\\acheguese\\tmp\\central-smoke\\desktop-central_motorista.png",
+      "C:\\Users\\Casa\\Documents\\Novo github\\acheguese\\tmp\\central-smoke\\desktop-central_motorista_disponibilidade.png",
+      "C:\\Users\\Casa\\Documents\\Novo github\\acheguese\\tmp\\central-smoke\\desktop-central_motorista_ganhos.png",
+      "C:\\Users\\Casa\\Documents\\Novo github\\acheguese\\tmp\\central-smoke\\desktop-central_motoboy.png",
+      "C:\\Users\\Casa\\Documents\\Novo github\\acheguese\\tmp\\central-smoke\\desktop-central_motoboy_entregas.png",
+      "C:\\Users\\Casa\\Documents\\Novo github\\acheguese\\tmp\\central-smoke\\desktop-central_profissional.png"
+    ]
+  },
+  "mobile": {
+    "label": "mobile",
+    "checks": {
+      "sidebar_no_overlap": null,
+      "breadcrumb_height": null,
+      "has_company_link": false
+    },
+    "routes": {
+      "/central/motorista": {
+        "url": "http://localhost:8081/login",
+        "denied": false,
+        "emptyState": false
+      },
+      "/central/motorista/disponibilidade": {
+        "url": "http://localhost:8081/login",
+        "denied": false,
+        "emptyState": false
+      },
+      "/central/motorista/ganhos": {
+        "url": "http://localhost:8081/login",
+        "denied": false,
+        "emptyState": false
+      },
+      "/central/motoboy": {
+        "url": "http://localhost:8081/login",
+        "denied": false,
+        "emptyState": false
+      },
+      "/central/motoboy/entregas": {
+        "url": "http://localhost:8081/login",
+        "denied": false,
+        "emptyState": false
+      },
+      "/central/profissional": {
+        "url": "http://localhost:8081/login",
+        "denied": false,
+        "emptyState": false
+      }
+    },
+    "screenshots": [
+      "C:\\Users\\Casa\\Documents\\Novo github\\acheguese\\tmp\\central-smoke\\mobile-central.png",
+      "C:\\Users\\Casa\\Documents\\Novo github\\acheguese\\tmp\\central-smoke\\mobile-empresas.png",
+      "C:\\Users\\Casa\\Documents\\Novo github\\acheguese\\tmp\\central-smoke\\mobile-central_motorista.png",
+      "C:\\Users\\Casa\\Documents\\Novo github\\acheguese\\tmp\\central-smoke\\mobile-central_motorista_disponibilidade.png",
+      "C:\\Users\\Casa\\Documents\\Novo github\\acheguese\\tmp\\central-smoke\\mobile-central_motorista_ganhos.png",
+      "C:\\Users\\Casa\\Documents\\Novo github\\acheguese\\tmp\\central-smoke\\mobile-central_motoboy.png",
+      "C:\\Users\\Casa\\Documents\\Novo github\\acheguese\\tmp\\central-smoke\\mobile-central_motoboy_entregas.png",
+      "C:\\Users\\Casa\\Documents\\Novo github\\acheguese\\tmp\\central-smoke\\mobile-central_profissional.png"
+    ]
+  }
+}

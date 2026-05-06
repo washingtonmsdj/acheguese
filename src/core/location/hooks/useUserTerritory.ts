@@ -11,6 +11,8 @@
 import { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '@/core/auth/hooks/useAuth';
+import { LocationType } from '@/core/location/types';
+import { profileService } from '@/core/profiles/services/ProfileService';
 import { createLocationRepository } from '../repositories/createLocationRepository';
 import { residenceService } from '@/core/residence/services/ResidenceService';
 
@@ -52,28 +54,48 @@ export function useUserTerritory(): UserTerritory {
     staleTime: 5 * 60 * 1000,
   });
 
+  // 1.1 Fallback SSOT: location_id do perfil ativo (quando não há residência primária)
+  const { data: profileLocation, isLoading: profileLoading } = useQuery({
+    queryKey: ['user-profile-location', user?.id],
+    queryFn: async () => {
+      if (!user?.id) return null;
+      const profile = await profileService.getActiveProfile(user.id);
+      if (!profile?.location_id) return null;
+      return { location_id: profile.location_id } as { location_id: string };
+    },
+    enabled: !!user?.id && !residence?.location_id,
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const effectiveLocationId = residence?.location_id ?? profileLocation?.location_id ?? null;
+
   // 2. Resolver o district e seu parent (city) pelo UUID
   const { data: resolved, isLoading: locationLoading } = useQuery({
-    queryKey: ['user-territory-resolved', residence?.location_id],
+    queryKey: ['user-territory-resolved', effectiveLocationId],
     queryFn: async () => {
-      if (!residence?.location_id) return null;
+      if (!effectiveLocationId) return null;
       const repo = createLocationRepository();
 
-      // Busca o district
-      const district = await repo.findById(residence.location_id);
-      if (!district) return null;
+      const location = await repo.findById(effectiveLocationId);
+      if (!location) return null;
 
-      // Busca a cidade (parent direto do district)
-      const city = district.parent_id ? await repo.findById(district.parent_id) : null;
+      if (location.type === LocationType.DISTRICT) {
+        const city = location.parent_id ? await repo.findById(location.parent_id) : null;
+        return { district: location, city };
+      }
 
-      return { district, city };
+      if (location.type === LocationType.CITY) {
+        return { district: null, city: location };
+      }
+
+      return null;
     },
-    enabled: !!residence?.location_id,
+    enabled: !!effectiveLocationId,
     staleTime: 10 * 60 * 1000,
   });
 
   return useMemo(() => {
-    const loading = residenceLoading || locationLoading;
+    const loading = residenceLoading || profileLoading || locationLoading;
 
     if (!user) return { homeDistrict: null, homeCity: null, hasHome: false, loading: false };
     if (loading) return { homeDistrict: null, homeCity: null, hasHome: false, loading: true };
@@ -82,18 +104,20 @@ export function useUserTerritory(): UserTerritory {
     const { district, city } = resolved;
 
     return {
-      homeDistrict: {
-        id: district.id,
-        name: district.name,
-        path: toPublicPath(district.geographic_path),
-      },
+      homeDistrict: district
+        ? {
+            id: district.id,
+            name: district.name,
+            path: toPublicPath(district.geographic_path),
+          }
+        : null,
       homeCity: city ? {
         id: city.id,
         name: city.name,
         path: toPublicPath(city.geographic_path),
       } : null,
-      hasHome: true,
+      hasHome: Boolean(district || city),
       loading: false,
     };
-  }, [user, resolved, residenceLoading, locationLoading]);
+  }, [user, resolved, residenceLoading, profileLoading, locationLoading]);
 }

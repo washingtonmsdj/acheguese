@@ -72,6 +72,7 @@ export const PROFILE_SECTIONS: readonly ProfileSectionItem[] = [
     category: "business",
     order: 3,
     requiresAuth: true,
+    hiddenInNavigation: true,
   },
   {
     id: "mobilidade",
@@ -81,6 +82,7 @@ export const PROFILE_SECTIONS: readonly ProfileSectionItem[] = [
     category: "operations",
     order: 4,
     requiresAuth: true,
+    hiddenInNavigation: true,
   },
   {
     id: "delivery",

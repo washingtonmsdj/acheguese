@@ -30,6 +30,7 @@ export const ContactPage = lazy(() => import("@/app/pages/ContactPage"));
 export const SplashPage = lazy(() => import("@/app/pages/SplashPage"));
 export const OnboardingPage = lazy(() => import("@/app/pages/OnboardingPage"));
 export const BuscaPage = lazy(() => import("@/app/pages/BuscaPage"));
+export const BuscarPage = lazy(() => import("@/app/pages/BuscarPage"));
 export const NearbyPage = lazy(() => import("@/app/pages/NearbyPage"));
 export const NotFound = lazy(() => import("@/app/pages/NotFound"));
 export const StatusPage = lazy(() => import("@/app/pages/StatusPage"));
@@ -336,3 +337,31 @@ export const AdminCityMetadata = lazy(() => import("@/modules/admin/pages/AdminC
 export const AdminTerritoryManagement = lazy(() => import("@/modules/admin/pages/AdminTerritoryManagement"));
 export const AdminGooglePlacesImport = lazy(() => import("@/modules/admin/pages/AdminGooglePlacesImport"));
 
+// ============================================================
+// 🏢 CENTRAL - Gestão e Operação
+// ============================================================
+export const CentralHubPage = lazy(() => import("@/modules/central/pages/CentralHubPage"));
+export const CentralEmpresasPage = lazy(() => import("@/modules/central/pages/CentralEmpresasPage"));
+export const CentralProfissionalPage = lazy(() => import("@/modules/central/pages/CentralProfissionalPage"));
+export const CentralMotoristaPage = lazy(() => import("@/modules/central/pages/CentralMotoristaPage"));
+export const CentralMotoboyPage = lazy(() => import("@/modules/central/pages/CentralMotoboyPage"));
+// Sub-rotas de motorista
+export const CentralMotoristaCadastroPage = lazy(() => import("@/modules/central/pages/motorista/CentralMotoristaCadastroPage"));
+export const CentralMotoristaDisponibilidadePage = lazy(() => import("@/modules/central/pages/motorista/CentralMotoristaDisponibilidadePage"));
+export const CentralMotoristaCorridasPage = lazy(() => import("@/modules/central/pages/motorista/CentralMotoristaCorridasPage"));
+export const CentralMotoristaGanhosPage = lazy(() => import("@/modules/central/pages/motorista/CentralMotoristaGanhosPage"));
+export const CentralMotoristaConfiguracoesPage = lazy(() => import("@/modules/central/pages/motorista/CentralMotoristaConfiguracoesPage"));
+// Sub-rotas de motoboy
+export const CentralMotoboyCadastroPage = lazy(() => import("@/modules/central/pages/motoboy/CentralMotoboyCadastroPage"));
+export const CentralMotoboyDisponibilidadePage = lazy(() => import("@/modules/central/pages/motoboy/CentralMotoboyDisponibilidadePage"));
+export const CentralMotoboyEntregasPage = lazy(() => import("@/modules/central/pages/motoboy/CentralMotoboyEntregasPage"));
+export const CentralMotoboyGanhosPage = lazy(() => import("@/modules/central/pages/motoboy/CentralMotoboyGanhosPage"));
+export const CentralMotoboyConfiguracoesPage = lazy(() => import("@/modules/central/pages/motoboy/CentralMotoboyConfiguracoesPage"));
+// Layout e guards
+export const CentralLayout = lazy(() =>
+  import("@/modules/central/components/CentralLayout").then((m) => ({ default: m.CentralLayout }))
+);
+export const CentralAccessGuard = lazy(() => import("@/modules/central/guards/CentralAccessGuard").then(m => ({ default: m.CentralAccessGuard })));
+export const BusinessAdminGuard = lazy(() => import("@/modules/central/guards/BusinessAdminGuard").then(m => ({ default: m.BusinessAdminGuard })));
+export const ProfessionalGuard = lazy(() => import("@/modules/central/guards/ProfessionalGuard").then(m => ({ default: m.ProfessionalGuard })));
+export const DriverGuard = lazy(() => import("@/modules/central/guards/DriverGuard").then(m => ({ default: m.DriverGuard })));
