@@ -14,6 +14,7 @@ import {
   updateRide,
   createEmergencyAlert,
 } from './mobility.mutations';
+import { TRUST_ACTOR_ROLES, TrustEventService } from '@/core/trust';
 import { RIDE_STATUS } from '../constants';
 
 export interface RideRequest {
@@ -48,6 +49,14 @@ interface CompleteRideData extends UpdateRideData {
 
 export class RideService {
   async createRide(data: CreateRideData & { passenger_profile_id: string }): Promise<RideRequest> {
+    const trustGate = await TrustEventService.canReceiveOperationalCall(
+      data.passenger_profile_id,
+      TRUST_ACTOR_ROLES.CUSTOMER,
+    );
+    if (!trustGate.allowed) {
+      throw new Error(trustGate.reason || "Cliente bloqueado para novos chamados ate revisao admin.");
+    }
+
     const ride = await createRide({ ...data, status: RIDE_STATUS.PENDING });
     return ride as RideRequest;
   }
@@ -73,6 +82,14 @@ export class RideService {
   }
 
   async acceptRide(rideId: string, driverProfileId: string): Promise<RideRequest> {
+    const trustGate = await TrustEventService.canReceiveOperationalCall(
+      driverProfileId,
+      TRUST_ACTOR_ROLES.DRIVER,
+    );
+    if (!trustGate.allowed) {
+      throw new Error(trustGate.reason || "Motorista bloqueado para novos chamados ate revisao admin.");
+    }
+
     return this.updateRide(rideId, { driver_profile_id: driverProfileId, status: 'accepted' });
   }
 

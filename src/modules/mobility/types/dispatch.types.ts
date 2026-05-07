@@ -8,6 +8,7 @@
  */
 
 import { RIDE_MODE, SOURCE_TYPE } from '../constants';
+import type { TrustDispatchPolicy, TrustRiskLevel } from '@/core/trust';
 
 // ============================================
 // DISPATCH STRATEGY
@@ -79,6 +80,10 @@ export interface ExclusiveOffer {
   paymentMethod: string;
   passengerRating?: number;
   passengerTrustLevel?: string;
+  driverTrustRiskLevel?: TrustRiskLevel;
+  driverDispatchPolicy?: TrustDispatchPolicy;
+  passengerTrustRiskLevel?: TrustRiskLevel;
+  passengerDispatchPolicy?: TrustDispatchPolicy;
 }
 
 /**
@@ -110,11 +115,16 @@ export interface OpenBoardOffer {
   requiredVehicleType?: string;
   requiredCapacity?: string;
   priority: number;
+  trustAdjustedPriority?: number;
+  driverTrustRiskLevel?: TrustRiskLevel;
+  driverDispatchPolicy?: TrustDispatchPolicy;
   
   // Cliente
   customerName: string;
   customerRating?: number;
   customerPhone?: string; // Apenas após aceite
+  customerTrustRiskLevel?: TrustRiskLevel;
+  customerDispatchPolicy?: TrustDispatchPolicy;
 }
 
 /**
@@ -144,6 +154,10 @@ export interface ReservationOffer {
   passengerName: string;
   passengerRating?: number;
   passengerPhone?: string; // Apenas após aceite
+  driverTrustRiskLevel?: TrustRiskLevel;
+  driverDispatchPolicy?: TrustDispatchPolicy;
+  passengerTrustRiskLevel?: TrustRiskLevel;
+  passengerDispatchPolicy?: TrustDispatchPolicy;
   
   // Status
   acceptedBy?: string;

@@ -8,7 +8,7 @@ import { Card, CardContent } from '@/shared/components/ui/card';
 import { Button } from '@/shared/components/ui/button';
 import { Badge } from '@/shared/components/ui/badge';
 import { Switch } from '@/shared/components/ui/switch';
-import { Pencil, Trash2, Image as ImageIcon, Clock } from 'lucide-react';
+import { Pencil, Trash2, Image as ImageIcon, Clock, PackageX } from 'lucide-react';
 import type { MenuItem } from '@/modules/business/gastronomy/services/MenuService';
 
 interface ItemCardProps {
@@ -16,6 +16,7 @@ interface ItemCardProps {
   onEdit: (item: MenuItem) => void;
   onDelete: (itemId: string) => void;
   onToggleAvailability: (itemId: string, isAvailable: boolean) => void;
+  onMarkSoldOut: (itemId: string) => void;
 }
 
 export function ItemCard({
@@ -23,7 +24,15 @@ export function ItemCard({
   onEdit,
   onDelete,
   onToggleAvailability,
+  onMarkSoldOut,
 }: ItemCardProps) {
+  const isSoldOut = item.stock_quantity === 0;
+  const hasLowStock =
+    typeof item.stock_quantity === 'number' &&
+    typeof item.stock_alert_threshold === 'number' &&
+    item.stock_quantity > 0 &&
+    item.stock_quantity <= item.stock_alert_threshold;
+
   return (
     <Card>
       <CardContent className="p-4">
@@ -51,7 +60,17 @@ export function ItemCard({
                     <Badge variant="secondary">Destaque</Badge>
                   )}
                   {!item.is_available && (
-                    <Badge variant="outline">Indisponível</Badge>
+                    <Badge variant="outline">Pausado</Badge>
+                  )}
+                  {isSoldOut && (
+                    <Badge variant="outline" className="border-red-200 bg-red-50 text-red-700">
+                      Esgotado
+                    </Badge>
+                  )}
+                  {hasLowStock && (
+                    <Badge variant="outline" className="border-amber-200 bg-amber-50 text-amber-700">
+                      Estoque baixo
+                    </Badge>
                   )}
                 </div>
                 {item.description && (
@@ -93,7 +112,7 @@ export function ItemCard({
               )}
 
               {item.stock_quantity !== null && (
-                <span className="text-sm text-muted-foreground">
+                <span className={isSoldOut ? 'text-sm font-medium text-red-700' : 'text-sm text-muted-foreground'}>
                   Estoque: {item.stock_quantity}
                 </span>
               )}
@@ -134,16 +153,29 @@ export function ItemCard({
             </div>
 
             {/* Toggle Disponibilidade */}
-            <div className="flex items-center gap-2 mt-3 pt-3 border-t">
-              <Switch
-                checked={item.is_available}
-                onCheckedChange={(checked) =>
-                  onToggleAvailability(item.id, checked)
-                }
-              />
-              <span className="text-sm text-muted-foreground">
-                {item.is_available ? 'Disponível' : 'Indisponível'}
-              </span>
+            <div className="flex flex-wrap items-center justify-between gap-3 mt-3 pt-3 border-t">
+              <div className="flex items-center gap-2">
+                <Switch
+                  checked={item.is_available}
+                  onCheckedChange={(checked) =>
+                    onToggleAvailability(item.id, checked)
+                  }
+                />
+                <span className="text-sm text-muted-foreground">
+                  {item.is_available ? 'Disponivel para venda' : 'Pausado no cardapio'}
+                </span>
+              </div>
+              {!isSoldOut && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => onMarkSoldOut(item.id)}
+                >
+                  <PackageX className="w-4 h-4 mr-2" />
+                  Marcar esgotado
+                </Button>
+              )}
             </div>
           </div>
         </div>

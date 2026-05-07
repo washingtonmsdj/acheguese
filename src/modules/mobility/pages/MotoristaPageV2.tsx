@@ -67,9 +67,9 @@ export default function MotoristaPageV2() {
   // ✅ SSOT COMPLIANT: Redirecionar para cadastro se não for motorista
   React.useEffect(() => {
     if (!hook.loading && !hook.isDriver) {
-      navigate(mobilityUrls.createDriver);
+      navigate(mobilityUrls.motorista.cadastro);
     }
-  }, [hook.isDriver, hook.loading, navigate, mobilityUrls.createDriver]);
+  }, [hook.isDriver, hook.loading, navigate, mobilityUrls.motorista.cadastro]);
 
   if (hook.error) {
     return (

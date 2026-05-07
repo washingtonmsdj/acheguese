@@ -431,6 +431,9 @@ export const MenuService = {
     price: number;
     image_url?: string;
     preparation_time_min?: number;
+    stock_quantity?: number;
+    stock_alert_threshold?: number;
+    is_available?: boolean;
     tags?: string[];
     allergens?: string[];
     nutritional_info?: Record<string, any>;
@@ -477,11 +480,13 @@ export const MenuService = {
           description: input.description ? sanitizeString(input.description) : null,
           price: input.price,
           image_url: input.image_url || null,
-          preparation_time_min: input.preparation_time_min || null,
+          preparation_time_min: input.preparation_time_min ?? null,
+          stock_quantity: input.stock_quantity ?? null,
+          stock_alert_threshold: input.stock_alert_threshold ?? null,
           tags: input.tags || null,
           allergens: input.allergens || null,
           nutritional_info: input.nutritional_info || null,
-          is_available: true,
+          is_available: input.is_available ?? true,
           is_featured: false,
           display_order: 0,
         })

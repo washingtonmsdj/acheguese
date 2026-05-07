@@ -6,7 +6,7 @@ const sections = [
   {
     icon: Shield,
     title: "1. Introdução e Controlador dos Dados",
-    content: `Esta Política de Privacidade ("Política") descreve como a Comunidade Conectada ("Plataforma", "nós") coleta, usa, armazena, compartilha e protege os dados pessoais dos usuários ("Usuário", "você"), em conformidade com a Lei Geral de Proteção de Dados Pessoais (LGPD — Lei nº 13.709/2018) e demais normas aplicáveis.
+    content: `Esta Política de Privacidade ("Política") descreve como o Achegue-se ("Plataforma", "nós") coleta, usa, armazena, compartilha e protege os dados pessoais dos usuários ("Usuário", "você"), em conformidade com a Lei Geral de Proteção de Dados Pessoais (LGPD — Lei nº 13.709/2018) e demais normas aplicáveis.
 
 A Plataforma atua como Controladora dos dados pessoais coletados, sendo responsável pelas decisões referentes ao tratamento de tais dados.
 
@@ -159,7 +159,7 @@ export default function PrivacidadePage() {
         </div>
       </header>
 
-      <div className="px-4 py-6 max-w-2xl mx-auto">
+      <main id="main-content" tabIndex={-1} className="px-4 py-6 max-w-2xl mx-auto focus:outline-none">
         {/* Hero */}
         <div className="flex items-center gap-4 mb-6">
           <div className="h-14 w-14 rounded-2xl bg-primary/10 flex items-center justify-center shrink-0">
@@ -222,7 +222,7 @@ export default function PrivacidadePage() {
             Dúvidas sobre seus dados? Entre em contato pelo suporte da plataforma.
           </p>
         </div>
-      </div>
+      </main>
     </div>
   );
 }

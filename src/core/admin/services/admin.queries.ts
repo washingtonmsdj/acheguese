@@ -481,7 +481,7 @@ export async function getOperationalOverview(
       moduleCoverage(
         "businesses",
         "Empresas",
-        "/admin/businesss",
+        "/admin/empresas",
         stats.businesses,
         0,
         "business_data",

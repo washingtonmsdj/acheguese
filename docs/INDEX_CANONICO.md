@@ -1,14 +1,15 @@
 # INDEX CANONICO DE DOCUMENTACAO
 
-Data de referencia: 2026-04-20
+Data de referencia: 2026-05-06
 
 ## Leitura inicial obrigatoria
 1. [README da documentacao](./README.md)
 2. [Regras vigentes](./CURRENT_RULES.md)
 3. [Arquitetura](./ARCHITECTURE.md)
-4. [Status oficial](./STATUS.md)
-5. [Auditoria estrutural global](./AUDITORIA_ESTRUTURAL_GLOBAL.md)
-6. [Auditoria estrutural de modulos](./AUDITORIA_ESTRUTURAL_MODULOS.md)
+4. [Status atual](./STATUS_ATUAL.md)
+5. [Plano executavel da auditoria hiperlocal](./ACAO_EXECUTAVEL_AUDITORIA_HIPERLOCAL.md)
+6. [Auditoria estrutural global](./AUDITORIA_ESTRUTURAL_GLOBAL.md)
+7. [Auditoria estrutural de modulos](./AUDITORIA_ESTRUTURAL_MODULOS.md)
 
 ## Fontes ativas por tema
 - Regras SSOT e governanca: [CURRENT_RULES.md](./CURRENT_RULES.md)
@@ -19,7 +20,8 @@ Data de referencia: 2026-04-20
 - Auditoria estrutural global: [AUDITORIA_ESTRUTURAL_GLOBAL.md](./AUDITORIA_ESTRUTURAL_GLOBAL.md)
 - Taxonomia vertical oficial: `src/core/verticals/config.ts` e `src/core/verticals/README.md`
 - Mapa de ownership por assunto: [CANONICAL_MAP.md](./CANONICAL_MAP.md)
-- Estado operacional atual: [STATUS.md](./STATUS.md)
+- Estado operacional atual: [STATUS_ATUAL.md](./STATUS_ATUAL.md)
+- Plano operacional atual: [ACAO_EXECUTAVEL_AUDITORIA_HIPERLOCAL.md](./ACAO_EXECUTAVEL_AUDITORIA_HIPERLOCAL.md)
 - Auditoria estrutural e plano de correcao: [AUDITORIA_ESTRUTURAL_MODULOS.md](./AUDITORIA_ESTRUTURAL_MODULOS.md)
 - Migracoes e banco: [MIGRATIONS.md](./MIGRATIONS.md)
 - Seguranca: [SECURITY.md](./SECURITY.md)
@@ -33,7 +35,8 @@ Data de referencia: 2026-04-20
 - [tasks/SSOT_EXECUCAO_CONTINUIDADE_2026-04-20.md](./tasks/SSOT_EXECUCAO_CONTINUIDADE_2026-04-20.md)
 
 Observacao:
-- Auditorias podem citar caminhos legados por contexto historico; para decisao atual, prevalecem `CURRENT_RULES.md`, `STATUS.md` e `AUDITORIA_ESTRUTURAL_MODULOS.md`.
+- Auditorias podem citar caminhos legados por contexto historico; para decisao atual, prevalecem `CURRENT_RULES.md`, `STATUS_ATUAL.md` e `ACAO_EXECUTAVEL_AUDITORIA_HIPERLOCAL.md`.
+- `STATUS.md` e documentos com `FINAL`, `100%`, `completo` ou `pronto para producao` no texto/nome sao historicos ate revalidacao explicita em `STATUS_ATUAL.md`.
 
 ## Historico e legado
 - Historico consolidado: `docs/historico/`

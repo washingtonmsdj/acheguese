@@ -151,6 +151,7 @@ export const EducationPlansPage = lazy(() => import("@/modules/business/educatio
 export const ServicosLandingPage = lazy(() => import("@/modules/professionals/services/pages/ServicosLandingPage"));
 export const ProfissionalDetailPage = lazy(() => import("@/modules/professionals/services/pages/ProfissionalDetailPage"));
 export const ProfissionalPublicPage = lazy(() => import("@/modules/professionals/pages/ProfissionalPublicPage"));
+export const ProfessionalLeadTrackingPage = lazy(() => import("@/modules/professionals/pages/ProfessionalLeadTrackingPage"));
 export const CadastrarServicoPage = lazy(() => import("@/modules/professionals/services/pages/CadastrarServicoPage"));
 export const EditarServicoPage = lazy(() => import("@/modules/professionals/services/pages/EditarServicoPage"));
 

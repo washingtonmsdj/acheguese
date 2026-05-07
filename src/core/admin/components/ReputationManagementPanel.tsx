@@ -5,11 +5,11 @@ import {
   TabsList,
   TabsTrigger,
 } from "@/shared/components/ui/tabs";
-import { Card } from "@/shared/components/ui/card";
-import { Trophy, Ban, Users, Star } from "lucide-react";
+import { Trophy, Ban, ShieldAlert, Star } from "lucide-react";
 import { ReputationRankings } from "./ReputationRankings";
 import { ReputationBanishments } from "./ReputationBanishments";
 import { ReputationStats } from "./ReputationStats";
+import { TrustEventsQueue } from "./TrustEventsQueue";
 
 export function ReputationManagementPanel() {
   const [activeTab, setActiveTab] = useState("rankings");
@@ -17,10 +17,14 @@ export function ReputationManagementPanel() {
   return (
     <div className="space-y-6">
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="rankings" className="gap-2">
             <Trophy className="h-4 w-4" />
             Rankings
+          </TabsTrigger>
+          <TabsTrigger value="trust-events" className="gap-2">
+            <ShieldAlert className="h-4 w-4" />
+            Confianca
           </TabsTrigger>
           <TabsTrigger value="banishments" className="gap-2">
             <Ban className="h-4 w-4" />
@@ -34,6 +38,10 @@ export function ReputationManagementPanel() {
 
         <TabsContent value="rankings" className="space-y-6 mt-6">
           <ReputationRankings />
+        </TabsContent>
+
+        <TabsContent value="trust-events" className="space-y-6 mt-6">
+          <TrustEventsQueue />
         </TabsContent>
 
         <TabsContent value="banishments" className="space-y-6 mt-6">

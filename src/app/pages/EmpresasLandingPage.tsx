@@ -11,6 +11,7 @@
 
 import { useNavigate } from "react-router-dom";
 import { useState, useMemo, useEffect } from "react";
+import { Helmet } from "react-helmet-async";
 import { MapPin } from "lucide-react";
 import { useAuth } from "@/core/auth/hooks/useAuth";
 import { useBusinessList } from "@/modules/business/hooks/useBusinessList";
@@ -264,6 +265,16 @@ export default function EmpresasLandingPage({
   // ============================================
   return (
     <EmpresasLandingLayout>
+      {!resolved && (
+        <Helmet>
+          <title>Empresas locais | Achegue-se</title>
+          <meta
+            name="description"
+            content="Descubra empresas, lojas e negocios locais no Achegue-se. Encontre comercios perto de voce, recomendacoes da comunidade e rotas canonicas por territorio."
+          />
+        </Helmet>
+      )}
+
       {/* Header exclusivo com busca */}
       <EmpresasHeader
         searchQuery={searchQuery}

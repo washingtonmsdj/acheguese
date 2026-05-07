@@ -52,6 +52,7 @@ export {
 // 🏛️ FACADE - Interface unificada (SSOT v2.0)
 // ============================================================
 export { ProfessionalService, ProfessionalFacade } from "./ProfessionalService";
+export { ProfessionalLeadService, type ServiceResult } from "./ProfessionalLeadService";
 
 // ============================================================
 // 🔧 LEGACY COMPATIBILITY

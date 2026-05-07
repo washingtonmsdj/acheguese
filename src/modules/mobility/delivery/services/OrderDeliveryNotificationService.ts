@@ -56,6 +56,11 @@ function merchantOrderUrl(order: OrderRecord): string | null {
   return `/central/empresas/${businessId}/gastronomia/pedidos/${order.id}`;
 }
 
+function customerOrderUrl(order: OrderRecord): string | null {
+  if (order.source_context.source_type !== "gastronomy") return null;
+  return `/gastronomia/pedidos/${order.id}`;
+}
+
 function notificationMetadata(order: OrderRecord, event: string): Record<string, unknown> {
   return {
     event,
@@ -113,6 +118,7 @@ export class OrderDeliveryNotificationService {
       const title = `${STATUS_LABELS[status]} #${orderShortId(order.id)}`;
       const metadata = notificationMetadata(order, event);
       const actionUrl = merchantOrderUrl(order);
+      const customerActionUrl = customerOrderUrl(order);
 
       const notifications: NotificationPayload[] = [];
 
@@ -121,8 +127,8 @@ export class OrderDeliveryNotificationService {
           userId: customerUserId,
           title,
           message: CUSTOMER_MESSAGES[status],
-          actionUrl: null,
-          actionLabel: null,
+          actionUrl: customerActionUrl,
+          actionLabel: customerActionUrl ? "Abrir pedido" : null,
           metadata: { ...metadata, audience: "customer" },
         });
       }

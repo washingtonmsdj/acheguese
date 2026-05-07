@@ -1,6 +1,8 @@
-import { Phone, MessageCircle, Star, Share2, Mail } from "lucide-react";
+import { useState } from "react";
+import { Phone, MessageCircle, Star, Share2, Mail, Send } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import { useToast } from "@/shared/hooks/use-toast";
+import { ProfessionalLeadRequestDialog } from "@/modules/professionals/components/ProfessionalLeadRequestDialog";
 import type { ProfessionalData } from "@/modules/professionals/services/hooks/useProfessionalDetail";
 
 interface ProfessionalActionButtonsProps {
@@ -13,6 +15,7 @@ export function ProfessionalActionButtons({
   onReviewClick,
 }: ProfessionalActionButtonsProps) {
   const { toast } = useToast();
+  const [leadDialogOpen, setLeadDialogOpen] = useState(false);
 
   const handleShare = async () => {
     const url = window.location.href;
@@ -32,6 +35,15 @@ export function ProfessionalActionButtons({
   return (
     <div className="px-4 py-3 border-b">
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+        <Button
+          size="sm"
+          onClick={() => setLeadDialogOpen(true)}
+          disabled={!professional.is_accepting_clients}
+        >
+          <Send className="h-4 w-4 mr-1.5" />
+          Orcamento
+        </Button>
+
         {hasWhatsapp && (
           <Button
             asChild
@@ -77,6 +89,15 @@ export function ProfessionalActionButtons({
           Compartilhar
         </Button>
       </div>
+
+      <ProfessionalLeadRequestDialog
+        open={leadDialogOpen}
+        onOpenChange={setLeadDialogOpen}
+        professionalId={professional.professional_data_id}
+        professionalName={professional.name}
+        defaultService={professional.service || professional.category}
+        sourceChannel="legacy_detail"
+      />
     </div>
   );
 }

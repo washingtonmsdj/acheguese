@@ -27,7 +27,7 @@ export function mapToClassificadoWithVendedor(
     categoria: data.category,
     condition: data.condition || undefined,
     fotos: data.photos,
-    status: data.is_active ? "active" : "inactive",
+    status: data.status || (data.is_active ? "active" : "inactive"),
     bairro: data.neighborhood || "",
     created_at: data.created_at,
     geographic_path: data.geographic_path,

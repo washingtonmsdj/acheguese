@@ -48,6 +48,7 @@ export class SessionService {
   private static initPromise: Promise<void> = new Promise(
     (resolve) => { SessionService.initResolve = resolve; }
   );
+  private static initFallbackStarted = false;
 
   // ── cancelPendingLoads ─────────────────────────────────────────────────────
   private static cancelPendingLoads(): void {
@@ -55,6 +56,7 @@ export class SessionService {
   }
 
   private static resetInitPromise(): void {
+    SessionService.initFallbackStarted = false;
     SessionService.initPromise = new Promise((resolve) => {
       SessionService.initResolve = resolve;
     });
@@ -146,6 +148,35 @@ export class SessionService {
 
     // Armazena subscription para cleanup futuro se necessário
     SessionService.authSubscription = subscription;
+
+    void SessionService.ensureInitialSessionFallback();
+  }
+
+  private static async ensureInitialSessionFallback(): Promise<void> {
+    if (SessionService.initFallbackStarted) return;
+    SessionService.initFallbackStarted = true;
+
+    try {
+      const { data, error } = await supabase.auth.getSession();
+      if (error) {
+        SessionService.debug("[SessionService] getSession fallback failed", error);
+        SessionService.resolveInit();
+        return;
+      }
+
+      const session = data.session;
+      SessionService.currentSession = session;
+
+      if (session) {
+        await SessionService.loadFromSession(session, true);
+      } else {
+        SessionState.setState({ user: null, activeProfile: null, profiles: [] });
+      }
+    } catch (error) {
+      SessionService.debug("[SessionService] getSession fallback threw", error);
+    } finally {
+      SessionService.resolveInit();
+    }
   }
 
   // ── loadFromSession ────────────────────────────────────────────────────────

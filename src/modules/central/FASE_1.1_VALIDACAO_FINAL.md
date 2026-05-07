@@ -43,7 +43,7 @@
 - ✅ Motoboy acessa `/central/motoboy` → Permite acesso (se `can_do_delivery === true`)
 - ✅ Motorista tenta `/central/motoboy` → Empty state "Perfil não habilitado para Motoboy"
 - ✅ Motoboy tenta `/central/motorista` → Empty state "Perfil não habilitado para Motorista"
-- ✅ Usuário sem driver_data → Empty state com CTA para `/create-driver`
+- ✅ Usuário sem driver_data → Empty state com CTA canônico da Central (`/central/motorista/cadastro` ou `/central/motoboy/cadastro`)
 - ✅ Validação de modo correto implementada
 
 ---

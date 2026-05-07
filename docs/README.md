@@ -7,8 +7,9 @@ Centralizar a documentacao viva em `docs/`, manter contratos tecnicos junto do d
 1. [INDEX_CANONICO.md](./INDEX_CANONICO.md)
 2. [CURRENT_RULES.md](./CURRENT_RULES.md)
 3. [ARCHITECTURE.md](./ARCHITECTURE.md)
-4. [STATUS.md](./STATUS.md)
-5. [audits/MASTER_REPORT.md](./audits/MASTER_REPORT.md)
+4. [STATUS_ATUAL.md](./STATUS_ATUAL.md)
+5. [ACAO_EXECUTAVEL_AUDITORIA_HIPERLOCAL.md](./ACAO_EXECUTAVEL_AUDITORIA_HIPERLOCAL.md)
+6. [audits/MASTER_REPORT.md](./audits/MASTER_REPORT.md)
 
 ## Estrutura Oficial
 - `docs/`: regras globais, arquitetura, seguranca, manutencao e mapa canonico.
@@ -28,6 +29,8 @@ Centralizar a documentacao viva em `docs/`, manter contratos tecnicos junto do d
 ## Navegacao
 - Indice canonico: [INDEX_CANONICO.md](./INDEX_CANONICO.md)
 - Indice mestre legado: [DOCUMENTATION_INDEX.md](./DOCUMENTATION_INDEX.md)
+- Status atual: [STATUS_ATUAL.md](./STATUS_ATUAL.md)
+- Plano executavel atual: [ACAO_EXECUTAVEL_AUDITORIA_HIPERLOCAL.md](./ACAO_EXECUTAVEL_AUDITORIA_HIPERLOCAL.md)
 - Mapa canonico: [CANONICAL_MAP.md](./CANONICAL_MAP.md)
 - Documentos substituidos: [DOCUMENT_REPLACEMENTS.md](./DOCUMENT_REPLACEMENTS.md)
 - Arquivo historico: [ARCHIVE_INDEX.md](./ARCHIVE_INDEX.md)

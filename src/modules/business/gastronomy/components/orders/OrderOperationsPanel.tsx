@@ -17,6 +17,13 @@ import { Button } from '@/shared/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/components/ui/card';
 import { Textarea } from '@/shared/components/ui/textarea';
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/shared/components/ui/select';
+import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -46,6 +53,34 @@ interface OrderAction {
 }
 
 const TERMINAL_STATUSES: OrderStatus[] = ['delivered', 'completed', 'cancelled'];
+
+const CANCELLATION_REASONS = [
+  {
+    code: 'merchant_item_unavailable',
+    label: 'Item indisponivel / problema da loja',
+    helper: 'Registra apenas auditoria do pedido, sem penalizar cliente.',
+  },
+  {
+    code: 'merchant_emergency',
+    label: 'Emergencia operacional da loja',
+    helper: 'Registra apenas auditoria do pedido, sem penalizar cliente.',
+  },
+  {
+    code: 'customer_requested_before_preparation',
+    label: 'Cliente solicitou antes do preparo',
+    helper: 'Cancelamento comum, sem evento de risco para o cliente.',
+  },
+  {
+    code: 'customer_requested_late_cancel',
+    label: 'Cliente solicitou depois do preparo/pronto',
+    helper: 'Se o pedido ja estava em preparo, pronto ou saiu para entrega, cria evento privado de confianca para admin.',
+  },
+  {
+    code: 'payment_or_fraud_issue',
+    label: 'Pagamento, fraude ou seguranca',
+    helper: 'Registra motivo sensivel para auditoria operacional.',
+  },
+] as const;
 
 function getPrimaryAction(order: OrderWithItems): OrderAction | null {
   switch (order.status) {
@@ -101,8 +136,12 @@ export function OrderOperationsPanel({ order, businessId }: OrderOperationsPanel
   const { activeProfile } = useSessionContext();
   const [cancelOpen, setCancelOpen] = useState(false);
   const [cancelReason, setCancelReason] = useState('');
+  const [cancelReasonCode, setCancelReasonCode] = useState(CANCELLATION_REASONS[0].code);
   const primaryAction = useMemo(() => getPrimaryAction(order), [order]);
   const canCancel = !TERMINAL_STATUSES.includes(order.status);
+  const selectedCancelReason = CANCELLATION_REASONS.find(
+    (reason) => reason.code === cancelReasonCode,
+  );
 
   const invalidateOrder = async () => {
     await Promise.all([
@@ -134,7 +173,9 @@ export function OrderOperationsPanel({ order, businessId }: OrderOperationsPanel
 
   const cancelMutation = useMutation({
     mutationFn: async (reason: string) => {
-      const result = await OrderService.cancelOrder(order.id, reason, activeProfile?.id);
+      const result = await OrderService.cancelOrder(order.id, reason, activeProfile?.id, {
+        reasonCode: cancelReasonCode,
+      });
       if (result.error) throw new Error(result.error);
       return result.data;
     },
@@ -228,6 +269,29 @@ export function OrderOperationsPanel({ order, businessId }: OrderOperationsPanel
               Informe o motivo. Ele sera registrado na linha do tempo e usado nas notificacoes operacionais.
             </AlertDialogDescription>
           </AlertDialogHeader>
+          <div className="space-y-2">
+            <Select
+              value={cancelReasonCode}
+              onValueChange={(value) =>
+                setCancelReasonCode(value as (typeof CANCELLATION_REASONS)[number]['code'])
+              }
+              disabled={isBusy}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Motivo estruturado" />
+              </SelectTrigger>
+              <SelectContent>
+                {CANCELLATION_REASONS.map((reason) => (
+                  <SelectItem key={reason.code} value={reason.code}>
+                    {reason.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {selectedCancelReason && (
+              <p className="text-xs text-muted-foreground">{selectedCancelReason.helper}</p>
+            )}
+          </div>
           <Textarea
             value={cancelReason}
             onChange={(event) => setCancelReason(event.target.value)}

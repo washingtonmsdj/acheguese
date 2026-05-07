@@ -20,7 +20,7 @@
 
 **Como Usuário B:**
 
-1. Acessar `/create-driver?type=motoboy`
+1. Acessar `/central/motoboy/cadastro`
 2. Preencher formulário de cadastro
 3. Submeter
 

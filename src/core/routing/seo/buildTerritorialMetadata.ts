@@ -13,6 +13,7 @@
 
 import type { Location, TerritorialGroupWithMembers } from '@/core/location/types';
 import type { ModuleSlug } from '../utils/territoryUrls';
+import { MODULE_SLUGS } from '../utils/territoryUrls';
 
 // ── Textos para a landing hub (sem módulo) ───────────────────────────────────
 
@@ -161,8 +162,12 @@ function buildLocationMetadata(
   // Extrai cidade do geographic_path: /br/ba/salvador/nordeste-de-amaralina → Salvador
   const cityName = extractCityName(location.geographic_path);
 
-  const title = `${BRAND} ${location.name} | ${copy.label} em ${cityName}`;
-  const description = `${copy.descriptionSuffix} ${location.name}, ${cityName}.`;
+  const title = module
+    ? `${BRAND} ${location.name} | ${copy.label} em ${cityName}`
+    : `${location.name} | ${BRAND}`;
+  const description = module
+    ? `${copy.descriptionSuffix} ${location.name}, ${cityName}.`
+    : `Conheça ${location.name}, ${cityName}. ${copy.descriptionSuffix}`;
 
   return buildMetadata(title, description, canonical);
 }
@@ -174,7 +179,7 @@ function buildGroupMetadata(
   copy: ModuleCopy,
   canonical: string,
 ): TerritorialMetadata {
-  const { group } = input;
+  const { group, module } = input;
 
   // Lista de bairros membros para enriquecer a description
   const memberNames = group.members.map((m) => m.name);
@@ -185,8 +190,12 @@ function buildGroupMetadata(
   // Extrai cidade do canonical path: /ba/salvador/... → Salvador
   const cityName = extractCityNameFromGroupPath(input.canonicalPath);
 
-  const title = `${BRAND} ${group.name} | ${copy.label} em ${cityName}`;
-  const description = `${copy.descriptionSuffix} ${group.name}, ${cityName}.${membersText}`;
+  const title = module
+    ? `${BRAND} ${group.name} | ${copy.label} em ${cityName}`
+    : `${group.name} | ${BRAND}`;
+  const description = module
+    ? `${copy.descriptionSuffix} ${group.name}, ${cityName}.${membersText}`
+    : `Conheça ${group.name}, ${cityName}. ${copy.descriptionSuffix}${membersText}`;
 
   return buildMetadata(title, description, canonical);
 }
@@ -239,8 +248,11 @@ function extractCityName(geographicPath: string): string {
  */
 function extractCityNameFromGroupPath(canonicalPath: string): string {
   const parts = canonicalPath.split('/').filter(Boolean);
-  // parts: ['ba', 'salvador', 'complexo-...', 'module']
-  const citySlug = parts[1] ?? '';
+  // Hub:    ['ba', 'salvador', 'complexo-...']
+  // Modulo: ['empresas', 'ba', 'salvador', 'complexo-...']
+  const moduleSlugs = new Set<string>(Object.values(MODULE_SLUGS));
+  const offset = moduleSlugs.has(parts[0] ?? '') ? 1 : 0;
+  const citySlug = parts[offset + 1] ?? '';
   return slugToTitle(citySlug);
 }
 

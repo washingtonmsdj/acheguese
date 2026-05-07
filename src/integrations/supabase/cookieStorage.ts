@@ -324,7 +324,7 @@ export function createSecureStorage(): SupportedStorage {
   // Em desenvolvimento, permitir localStorage para facilitar debug
   // mas avisar sobre migração futura
   if (import.meta.env.DEV) {
-    devWarn(
+    devDebug(
       '[Security] Usando localStorage em desenvolvimento. ' +
       'Em produção, tokens serão armazenados em cookies seguros.'
     );

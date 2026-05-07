@@ -567,6 +567,7 @@ export const SECURE_COOKIE_CONFIG = {
  * Helps identify and manage auth cookies.
  */
 export const AUTH_COOKIE_PREFIX = 'sb-auth' as const;
+export const AUTH_STORAGE_KEY = 'acheguese-auth-token' as const;
 
 /**
  * Rate Limiting Configuration

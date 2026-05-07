@@ -33,21 +33,17 @@ useEffect(() => {
 
 ---
 
-### 2. `/central/motorista` → `/perfil/mobilidade/motorista`
+### 2. `/central/motorista` → rota canônica da Central
 
 **Arquivo:** `src/modules/central/pages/CentralMotoristaPage.tsx`
 
 **Motivo:**
-- As páginas de mobilidade (motorista/motoboy) não foram migradas para a Central nesta fase
-- Reutilização das páginas legadas existentes em `/perfil/mobilidade/*`
-- Evita duplicação de código
+- Fluxo migrado para páginas canônicas da Central com guard dedicado.
+- Não depende mais de wrapper redirecionando para `/perfil/mobilidade/*`.
 
-**Redirecionamento:**
-```typescript
-useEffect(() => {
-  navigate("/perfil/mobilidade/motorista", { replace: true });
-}, [navigate]);
-```
+**Status Atual:**
+- Usa layout/páginas de motorista em `/central/motorista/*`.
+- Onboarding canônico em `/central/motorista/cadastro`.
 
 **Rota Final Futura:**
 - Migrar `PerfilMobilidadeMotoristaHomePage` e sub-rotas para a Central
@@ -58,21 +54,17 @@ useEffect(() => {
 
 ---
 
-### 3. `/central/motoboy` → `/perfil/mobilidade/motoboy`
+### 3. `/central/motoboy` → rota canônica da Central
 
 **Arquivo:** `src/modules/central/pages/CentralMotoboyPage.tsx`
 
 **Motivo:**
-- Mesmo motivo que `/central/motorista`
-- Reutilização das páginas legadas existentes em `/perfil/mobilidade/*`
-- Evita duplicação de código
+- Fluxo migrado para páginas canônicas da Central com guard dedicado.
+- Não depende mais de wrapper redirecionando para `/perfil/mobilidade/*`.
 
-**Redirecionamento:**
-```typescript
-useEffect(() => {
-  navigate("/perfil/mobilidade/motoboy", { replace: true });
-}, [navigate]);
-```
+**Status Atual:**
+- Usa layout/páginas de motoboy em `/central/motoboy/*`.
+- Onboarding canônico em `/central/motoboy/cadastro`.
 
 **Rota Final Futura:**
 - Migrar `PerfilMobilidadeMotoboyHomePage` e sub-rotas para a Central
@@ -118,10 +110,10 @@ useEffect(() => {
 
 **Comportamento:**
 - Valida se usuário tem `driver_data`
-- Se não tiver, mostra empty state com CTA para `/create-driver`
-- Redireciona para `/perfil/mobilidade/motorista` (wrapper)
+- Se não tiver, mostra empty state com CTA para `/central/motorista/cadastro`
+- Permanece no fluxo da Central (sem wrapper de perfil)
 
-**Status:** ⚠️ Protegido, mas ainda redireciona para `/perfil`
+**Status:** ✅ Protegido e canônico na Central
 
 ---
 
@@ -131,10 +123,10 @@ useEffect(() => {
 
 **Comportamento:**
 - Valida se usuário tem `driver_data`
-- Se não tiver, mostra empty state com CTA para `/create-driver`
-- Redireciona para `/perfil/mobilidade/motoboy` (wrapper)
+- Se não tiver, mostra empty state com CTA para `/central/motoboy/cadastro`
+- Permanece no fluxo da Central (sem wrapper de perfil)
 
-**Status:** ⚠️ Protegido, mas ainda redireciona para `/perfil`
+**Status:** ✅ Protegido e canônico na Central
 
 ---
 
@@ -142,14 +134,12 @@ useEffect(() => {
 
 **Rotas com Redirecionamento Ativo:**
 - `/central/empresas` → `/perfil/empresas`
-- `/central/motorista` → `/perfil/mobilidade/motorista`
-- `/central/motoboy` → `/perfil/mobilidade/motoboy`
 
 **Rotas Protegidas (Sem Redirecionamento):**
 - `/central/empresas/:businessId/*` - BusinessAdminGuard
 - `/central/profissional` - ProfessionalGuard
-- `/central/motorista` - DriverGuard (mas wrapper redireciona)
-- `/central/motoboy` - DriverGuard (mas wrapper redireciona)
+- `/central/motorista` - DriverGuard + rotas canônicas `/central/motorista/*`
+- `/central/motoboy` - DriverGuard + rotas canônicas `/central/motoboy/*`
 
 **Rota Hub:**
 - `/central` - CentralAccessGuard (autenticação apenas)
@@ -166,7 +156,7 @@ useEffect(() => {
 2. **Redirecionamentos São Temporários:**
    - Os redirecionamentos atuais são wrappers para reutilização
    - A validação de acesso já está implementada via guards
-   - Futuramente as páginas serão migradas para eliminar redirecionamentos
+- Mobilidade já foi migrada; pendência principal restante é `/central/empresas` legado.
 
 3. **Sem Regressão em Rotas Legadas:**
    - Rotas `/perfil/empresas/*` e `/perfil/mobilidade/*` continuam funcionando
@@ -182,11 +172,6 @@ useEffect(() => {
    - Integrar com `useBusinessModules`
    - Eliminar redirecionamento para `/perfil/empresas`
 
-2. **Migrar `/central/motorista` e `/central/motoboy`**
-   - Migrar páginas de mobilidade para a Central
-   - Criar layout próprio para mobilidade
-   - Eliminar redirecionamentos para `/perfil/mobilidade/*`
-
-3. **Migrar Links Internos**
+2. **Migrar Links Internos**
    - Atualizar serviços para usar rotas da Central
    - Preservar compatibilidade com rotas legadas

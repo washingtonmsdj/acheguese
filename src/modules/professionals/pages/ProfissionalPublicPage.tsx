@@ -11,18 +11,20 @@
  */
 
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, BadgeCheck, MapPin, Briefcase, Clock } from 'lucide-react';
+import { ArrowLeft, BadgeCheck, MapPin, Briefcase, Clock, Send } from 'lucide-react';
 import { Button } from '@/shared/components/ui/button';
 import { Badge } from '@/shared/components/ui/badge';
 import { Skeleton } from '@/shared/components/ui/skeleton';
 import { Avatar, AvatarFallback, AvatarImage } from '@/shared/components/ui/avatar';
 import { useProfessionalBySlug } from '../hooks/useProfessionalBySlug';
+import { ProfessionalLeadRequestDialog } from '../components/ProfessionalLeadRequestDialog';
 import { logPageNotFound } from '@/core/public-identity/utils/identity-logger';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
 export default function ProfissionalPublicPage() {
   const { uf, cidade, slug } = useParams<{ uf: string; cidade: string; slug: string }>();
   const navigate = useNavigate();
+  const [leadDialogOpen, setLeadDialogOpen] = useState(false);
 
   const { data: professional, isLoading, error } = useProfessionalBySlug({
     uf: uf ?? '',
@@ -128,6 +130,20 @@ export default function ProfissionalPublicPage() {
             Não aceitando clientes
           </Badge>
         )}
+
+        <div className="w-full max-w-sm pt-2">
+          <Button
+            className="w-full"
+            onClick={() => setLeadDialogOpen(true)}
+            disabled={!professional.is_accepting_clients}
+          >
+            <Send className="h-4 w-4 mr-2" />
+            Solicitar orcamento
+          </Button>
+          <p className="mt-2 text-center text-xs text-muted-foreground">
+            Pedido registrado na central do profissional, sem expor contato publico.
+          </p>
+        </div>
       </div>
 
       {/* Bio / Descrição */}
@@ -165,6 +181,15 @@ export default function ProfissionalPublicPage() {
           </div>
         )}
       </div>
+
+      <ProfessionalLeadRequestDialog
+        open={leadDialogOpen}
+        onOpenChange={setLeadDialogOpen}
+        professionalId={professional.id}
+        professionalName={professional.professional_name}
+        defaultService={professional.service_subcategory ?? professional.service_category}
+        sourceChannel="public_profile"
+      />
     </div>
   );
 }

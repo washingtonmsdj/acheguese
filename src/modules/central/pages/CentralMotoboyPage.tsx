@@ -47,7 +47,10 @@ export default function CentralMotoboyPage() {
                 Você ainda não ativou seu perfil de motoboy. Cadastre-se para começar a receber solicitações de entregas.
               </p>
             </div>
-            <Button onClick={() => navigate(appUrls.mobility.createDriver)} className="gap-2">
+            <Button
+              onClick={() => navigate(appUrls.profile.mobilidade.motoboy.cadastro)}
+              className="gap-2"
+            >
               <Package className="h-4 w-4" />
               Cadastrar como motoboy
             </Button>

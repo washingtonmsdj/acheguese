@@ -10,13 +10,14 @@
  * ? Mobile-first, responsivo para desktop
  */
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  ArrowLeft, Share2, Heart, MapPin, Clock, Eye,
-  MessageCircle, Phone, Star, ChevronLeft, ChevronRight,
-  X, Shield, BadgeCheck, Tag, Flag, Camera, Package,
+  ArrowLeft, Share2, Heart, MapPin, Clock,
+  MessageCircle, Phone, ChevronLeft, ChevronRight,
+  X, Shield, Tag, Flag, Camera, Package,
   ExternalLink, Zap,
 } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
@@ -27,7 +28,14 @@ import { useClassificadoDetail } from "@/modules/classifieds/hooks/useClassifica
 import { useClassificados } from "@/modules/classifieds/hooks/useClassificados";
 import { useSellerAds } from "@/modules/classifieds/hooks/useSellerAds";
 import { getCategoryEmoji } from "@/modules/classifieds/constants/categories";
-import { classifiedReportService, classifiedUrlService } from "@/modules/classifieds/services";
+import { ClassifiedCommentsSection } from "@/modules/classifieds/components/detail/ClassifiedCommentsSection";
+import {
+  classifiedReportService,
+  classifiedUrlService,
+  markAsSold,
+  reactivateClassified,
+  updateClassified,
+} from "@/modules/classifieds/services";
 import { useToast } from "@/shared/components/ui/use-toast";
 import { cn } from "@/shared/utils/cn";
 import { formatDistanceToNow } from "date-fns";
@@ -41,6 +49,8 @@ interface ClassificadoDetailPageProps {
   classifiedId?: string;
 }
 
+const CLASSIFIED_FAVORITES_KEY = "classifieds:favorites";
+
 // -- Page ------------------------------------------------------
 
 export default function ClassificadoDetailPage({ classifiedId: propId }: ClassificadoDetailPageProps = {}) {
@@ -48,9 +58,10 @@ export default function ClassificadoDetailPage({ classifiedId: propId }: Classif
   const id = propId || paramId;
 
   const navigate = useNavigate();
-  const { user } = useSessionContext();
+  const { user, activeProfile } = useSessionContext();
   const appUrls = useAppUrls();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   const [imgIdx, setImgIdx] = useState(0);
   const [galleryOpen, setGalleryOpen] = useState(false);
@@ -59,15 +70,50 @@ export default function ClassificadoDetailPage({ classifiedId: propId }: Classif
   const [reportReason, setReportReason] = useState("");
   const [submittingReport, setSubmittingReport] = useState(false);
 
-  const { classificado, isLoading, error } = useClassificadoDetail(id!);
+  const { classificado, isLoading, error, refetch } = useClassificadoDetail(id!);
 
   const { classificados: relacionados } = useClassificados({
     filters: { category: classificado?.categoria, sortBy: "recente" },
   });
 
   const { sellerAds } = useSellerAds(classificado?.vendedor?.id, id);
+  const { data: sellerReputation } = useSellerReputation(classificado?.vendedor?.id);
+  const isOwner = Boolean(activeProfile?.id && classificado?.vendedor?.id === activeProfile.id);
+  const statusMutation = useMutation({
+    mutationFn: async (nextStatus: "active" | "inactive" | "sold") => {
+      if (!id || !activeProfile?.id) throw new Error("Perfil ativo ausente");
+      if (nextStatus === "sold") return markAsSold(id, activeProfile.id);
+      if (nextStatus === "active") return reactivateClassified(id, activeProfile.id);
+      return updateClassified(id, activeProfile.id, { status: "inactive" });
+    },
+    onSuccess: async () => {
+      toast({ title: "Status do anuncio atualizado" });
+      await Promise.all([
+        refetch(),
+        queryClient.invalidateQueries({ queryKey: ["classificados"] }),
+        queryClient.invalidateQueries({ queryKey: ["seller-ads", classificado?.vendedor?.id] }),
+      ]);
+    },
+    onError: () => {
+      toast({
+        title: "Erro ao atualizar status",
+        description: "Tente novamente em instantes.",
+        variant: "destructive",
+      });
+    },
+  });
 
   const anunciosRelacionados = relacionados.filter((ad) => ad.id !== id).slice(0, 4);
+  useEffect(() => {
+    if (!id || typeof window === "undefined") return;
+    try {
+      const parsed = JSON.parse(window.localStorage.getItem(CLASSIFIED_FAVORITES_KEY) || "[]");
+      const favoriteIds = Array.isArray(parsed) ? parsed : [];
+      setIsFav(favoriteIds.includes(id));
+    } catch {
+      setIsFav(false);
+    }
+  }, [id]);
 
   // -- Handlers ----------------------------------------
 
@@ -96,13 +142,54 @@ export default function ClassificadoDetailPage({ classifiedId: propId }: Classif
 
   const handleShare = useCallback(async () => {
     const url = window.location.href;
-    if (navigator.share) {
-      await navigator.share({ title: classificado?.titulo, text: classificado?.descricao, url });
-    } else {
-      navigator.clipboard.writeText(url);
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: classificado?.titulo, text: classificado?.descricao, url });
+        return;
+      }
+    } catch {
+      // Ignore native share errors and fallback to clipboard.
+    }
+
+    try {
+      await navigator.clipboard.writeText(url);
       toast({ title: "Link copiado!" });
+    } catch {
+      toast({
+        title: "Nao foi possivel compartilhar",
+        description: "Copie o link direto da barra do navegador.",
+        variant: "destructive",
+      });
     }
   }, [classificado, toast]);
+
+  const handleToggleFavorite = useCallback(() => {
+    if (!id || typeof window === "undefined") return;
+
+    try {
+      const parsed = JSON.parse(window.localStorage.getItem(CLASSIFIED_FAVORITES_KEY) || "[]");
+      const favoriteIds: string[] = Array.isArray(parsed) ? parsed : [];
+      const nextIsFav = !favoriteIds.includes(id);
+      const nextFavorites = nextIsFav
+        ? [...favoriteIds, id]
+        : favoriteIds.filter((favoriteId) => favoriteId !== id);
+
+      window.localStorage.setItem(CLASSIFIED_FAVORITES_KEY, JSON.stringify(nextFavorites));
+      setIsFav(nextIsFav);
+      toast({
+        title: nextIsFav ? "Anuncio salvo" : "Anuncio removido",
+        description: nextIsFav
+          ? "Voce pode acessar depois em seus favoritos."
+          : "O anuncio foi removido dos favoritos.",
+      });
+    } catch {
+      toast({
+        title: "Nao foi possivel atualizar favoritos",
+        description: "Tente novamente em alguns instantes.",
+        variant: "destructive",
+      });
+    }
+  }, [id, toast]);
 
   const handleReport = useCallback(async () => {
     if (!reportReason.trim()) return;
@@ -196,7 +283,7 @@ export default function ClassificadoDetailPage({ classifiedId: propId }: Classif
             <Button
               variant="ghost"
               size="icon"
-              onClick={() => setIsFav(!isFav)}
+              onClick={handleToggleFavorite}
               className="rounded-full h-9 w-9"
             >
               <Heart className={cn("h-4 w-4", isFav && "fill-red-500 text-red-500")} />
@@ -321,8 +408,15 @@ export default function ClassificadoDetailPage({ classifiedId: propId }: Classif
               <MetaChip icon={Tag} text={classificado.categoria} />
               <MetaChip icon={MapPin} text={classificado.bairro || "Não informado"} />
               <MetaChip icon={Clock} text={timeAgo} />
-              <MetaChip icon={Eye} text={`${Math.floor(Math.random() * 100) + 20} views`} />
             </motion.div>
+
+            {isOwner && (
+              <ClassifiedStatusOwnerPanel
+                status={classificado.status}
+                isPending={statusMutation.isPending}
+                onStatusChange={(nextStatus) => statusMutation.mutate(nextStatus)}
+              />
+            )}
 
             {/* Mobile: Seller + CTA (appears above description on mobile) */}
             <div className="lg:hidden">
@@ -330,6 +424,9 @@ export default function ClassificadoDetailPage({ classifiedId: propId }: Classif
                 vendedor={classificado.vendedor}
                 onWhatsApp={handleWhatsApp}
                 onChat={handleChat}
+              activeAdsCount={sellerAds.length + 1}
+                averageRating={sellerReputation?.averageRating ?? 0}
+                totalReviews={sellerReputation?.totalReviews ?? 0}
               />
             </div>
 
@@ -362,6 +459,7 @@ export default function ClassificadoDetailPage({ classifiedId: propId }: Classif
                 : "? Usado"
               } />
               <DetailBox label="Localização" value={classificado.bairro || "—"} />
+              <DetailBox label="Status" value={getClassifiedStatusLabel(classificado.status)} />
               <DetailBox label="Publicado" value={timeAgo} />
             </motion.div>
 
@@ -378,6 +476,9 @@ export default function ClassificadoDetailPage({ classifiedId: propId }: Classif
                 vendedor={classificado.vendedor}
                 onWhatsApp={handleWhatsApp}
                 onChat={handleChat}
+              activeAdsCount={sellerAds.length + 1}
+                averageRating={sellerReputation?.averageRating ?? 0}
+                totalReviews={sellerReputation?.totalReviews ?? 0}
               />
               <div className="mt-4">
                 <SafetyTips />
@@ -392,6 +493,11 @@ export default function ClassificadoDetailPage({ classifiedId: propId }: Classif
             </div>
           </div>
         </div>
+
+        <ClassifiedCommentsSection
+          classifiedId={id!}
+          sellerProfileId={classificado?.vendedor?.id ?? null}
+        />
 
         {/* -- Seller's other ads ------------------------ */}
         {sellerAds.length > 0 && (
@@ -588,14 +694,81 @@ function DetailBox({ label, value }: { label: string; value: string }) {
   );
 }
 
+function getClassifiedStatusLabel(status?: string) {
+  const labels: Record<string, string> = {
+    active: "ativo",
+    inactive: "pausado",
+    sold: "vendido",
+    pending: "em analise",
+    rejected: "rejeitado",
+    expired: "expirado",
+    deleted: "removido",
+  };
+
+  return labels[status || ""] || "nao informado";
+}
+
+function ClassifiedStatusOwnerPanel({
+  status,
+  isPending,
+  onStatusChange,
+}: {
+  status?: string;
+  isPending: boolean;
+  onStatusChange: (status: "active" | "inactive" | "sold") => void;
+}) {
+  return (
+    <div className="rounded-2xl border border-border bg-card p-4">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <p className="text-sm font-bold text-foreground">Status do anuncio</p>
+          <p className="text-xs text-muted-foreground">
+            Atual: {getClassifiedStatusLabel(status)}
+          </p>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            disabled={isPending || status === "inactive"}
+            onClick={() => onStatusChange("inactive")}
+          >
+            Pausar
+          </Button>
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            disabled={isPending || status === "active"}
+            onClick={() => onStatusChange("active")}
+          >
+            Reativar
+          </Button>
+          <Button
+            type="button"
+            size="sm"
+            disabled={isPending || status === "sold"}
+            onClick={() => onStatusChange("sold")}
+          >
+            Marcar vendido
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function SellerCard({
   vendedor,
   onWhatsApp,
   onChat,
+  activeAdsCount,
 }: {
   vendedor: any;
   onWhatsApp: () => void;
   onChat: () => void;
+  activeAdsCount: number;
 }) {
   return (
     <motion.div
@@ -613,11 +786,10 @@ function SellerCard({
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-1.5">
             <p className="font-bold text-foreground text-sm truncate">{vendedor?.nome || "Vendedor"}</p>
-            <BadgeCheck className="h-3.5 w-3.5 text-primary shrink-0" />
           </div>
           <div className="flex items-center gap-1 text-xs text-muted-foreground">
-            <Star className="h-3 w-3 fill-warning text-warning" />
-            <span>4.8 · 23 avaliações</span>
+            <Package className="h-3 w-3" />
+            <span>{activeAdsCount} anuncio{activeAdsCount === 1 ? "" : "s"} ativo{activeAdsCount === 1 ? "" : "s"}</span>
           </div>
         </div>
       </div>
@@ -730,4 +902,27 @@ function getRelativeTime(dateStr: string): string {
     return "";
   }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 

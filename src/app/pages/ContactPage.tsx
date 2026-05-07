@@ -30,7 +30,7 @@ export default function ContactPage() {
       </header>
 
       {/* Conteúdo */}
-      <main className="w-full max-w-4xl mx-auto px-4 sm:px-6 py-12">
+      <main id="main-content" tabIndex={-1} className="w-full max-w-4xl mx-auto px-4 sm:px-6 py-12 focus:outline-none">
         <div className="space-y-8">
           {/* Título */}
           <div className="text-center">

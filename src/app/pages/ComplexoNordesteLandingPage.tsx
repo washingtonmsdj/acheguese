@@ -20,6 +20,7 @@
  */
 
 import { useNavigate } from 'react-router-dom';
+import { Helmet } from 'react-helmet-async';
 import { motion } from 'framer-motion';
 import {
   MapPin, Users, Store, Wrench, Tag, ArrowRight,
@@ -219,6 +220,13 @@ export default function ComplexoNordesteLandingPage() {
 
   return (
     <div className="relative min-h-screen w-full bg-background text-foreground overflow-x-hidden">
+      <Helmet>
+        <title>Complexo do Nordeste de Amaralina | Achegue-se</title>
+        <meta
+          name="description"
+          content="Conheça o Complexo do Nordeste de Amaralina no Achegue-se: comunidade, empresas locais, serviços, classificados e destaques culturais do território."
+        />
+      </Helmet>
 
       {/* â”€â”€ A. HERO PARALLAX â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       <section className="relative w-full min-h-[90vh] flex items-center justify-center overflow-hidden">

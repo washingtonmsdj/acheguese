@@ -25,7 +25,10 @@ const MODULE_ROUTES: Record<string, ProfileType> = {
   '/mobilidade/motorista': 'driver',
   '/perfil/mobilidade/motorista': 'driver',
   '/perfil/mobilidade/motoboy': 'driver',
-  '/create-driver': 'driver',
+  '/central/motorista': 'driver',
+  '/central/motoboy': 'driver',
+  '/central/empresas': 'business',
+  '/central/profissional': 'professional',
 };
 
 const ACTIVE_PROFILE_KEY = 'active_profile_id';

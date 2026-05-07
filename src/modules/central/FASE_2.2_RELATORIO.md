@@ -180,7 +180,7 @@ return null;
 
 ### 6. Usuário sem driver_data vê empty state
 **Resultado:** ✅
-- `DriverGuard` mostra empty state com CTA para `/create-driver`
+- `DriverGuard` mostra empty state com CTA para `/central/motorista/cadastro` ou `/central/motoboy/cadastro`
 - Mensagem específica para motorista ou motoboy
 
 ### 7. Usuário sem perfil profissional continua bloqueado em `/central/profissional`

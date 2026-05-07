@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Helmet } from "react-helmet-async";
 import { Link, Navigate, useNavigate } from "react-router-dom";
 import { Button } from "@/shared/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/components/ui/card";
 import { GastronomyCheckoutSheet } from "@/modules/business/gastronomy/components";
+import type { GastronomyCheckoutOrderRecord } from "@/modules/business/gastronomy/services/GastronomyCheckoutService";
 import { usePremiumBusinessSiteContext } from "@/modules/business/premium/context/PremiumBusinessSiteContext";
 import { useGastronomyCart } from "@/modules/business/gastronomy/hooks";
 
@@ -11,6 +12,7 @@ export default function PremiumBusinessCheckoutPage() {
   const { hasGastronomy, gastronomySnapshot, routes } = usePremiumBusinessSiteContext();
   const navigate = useNavigate();
   const [sheetOpen, setSheetOpen] = useState(true);
+  const createdOrderIdRef = useRef<string | null>(null);
   const business = gastronomySnapshot?.gastronomy.business ?? null;
   const { hasCart } = useGastronomyCart(business);
 
@@ -52,9 +54,18 @@ export default function PremiumBusinessCheckoutPage() {
       <GastronomyCheckoutSheet
         business={business}
         open={sheetOpen}
+        onOrderCreated={(order: GastronomyCheckoutOrderRecord) => {
+          createdOrderIdRef.current = order.id;
+        }}
         onOpenChange={(open) => {
           setSheetOpen(open);
           if (!open) {
+            if (createdOrderIdRef.current) {
+              navigate(`/gastronomia/pedidos/${createdOrderIdRef.current}`);
+              createdOrderIdRef.current = null;
+              return;
+            }
+
             navigate(routes.cart);
           }
         }}

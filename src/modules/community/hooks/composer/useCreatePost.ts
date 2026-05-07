@@ -58,12 +58,18 @@ export function useCreatePost() {
       const sanitizedImages =
         data.images?.map(sanitizeUrl).filter((url) => url !== "") || [];
 
+      const resolvedLocationId =
+        activeProfile.locationId || activeProfile.location_id || null;
+      if (!resolvedLocationId) {
+        throw new Error("Configure seu bairro no perfil antes de publicar");
+      }
+
       // ✅ CLEANUP PÓS-SPRINT2: Usar PostsFacade.mutations.createPost() com location_id do profile
       const newPost = await PostsFacade.mutations.createPost({
         author_profile_id: activeProfile.id,
         content: sanitizedContent,
         type: data.type,
-        location_id: activeProfile.locationId,
+        location_id: resolvedLocationId,
         images: sanitizedImages,
         tags: data.tags || [],
         reach: data.reach || "neighborhood",

@@ -20,6 +20,13 @@ import {
 import { logger } from "@/shared/utils/logger";
 import { RIDE_STATUS, TIMEOUTS } from "../constants";
 import { RideRatingService } from "@/modules/mobility/services/RideRatingService";
+import {
+  TRUST_ACTOR_ROLES,
+  TRUST_CONTEXT_TYPES,
+  TRUST_EVENT_TYPES,
+  TRUST_VISIBILITIES,
+  TrustEventService,
+} from "@/core/trust";
 
 interface MobilityRide {
   id: string;
@@ -199,12 +206,21 @@ export function useDriverDashboardBase({
               name: "Passageiro",
               rating: exclusiveOffer.passengerRating,
             },
+            driver_trust_risk_level: exclusiveOffer.driverTrustRiskLevel,
+            driver_dispatch_policy: exclusiveOffer.driverDispatchPolicy,
+            passenger_trust_risk_level: exclusiveOffer.passengerTrustRiskLevel,
+            passenger_dispatch_policy: exclusiveOffer.passengerDispatchPolicy,
           });
         }
       }
 
       if (canAcceptDeliveryOffers) {
-        const openOffers = await MobilityOfferService.getOpenBoardOffers(driverProfileId, undefined, undefined, 10);
+        const openOffers = await MobilityOfferService.getOpenBoardOffers(
+          driverProfileId,
+          undefined,
+          { sortBy: "priority", order: "desc" },
+          10,
+        );
         for (const offer of openOffers) {
           rides.push({
             id: offer.rideId,
@@ -222,6 +238,12 @@ export function useDriverDashboardBase({
             created_at: offer.createdAt,
             package_size: offer.packageSize,
             package_description: offer.packageDescription,
+            priority: offer.priority,
+            trust_adjusted_priority: offer.trustAdjustedPriority,
+            driver_trust_risk_level: offer.driverTrustRiskLevel,
+            driver_dispatch_policy: offer.driverDispatchPolicy,
+            customer_trust_risk_level: offer.customerTrustRiskLevel,
+            customer_dispatch_policy: offer.customerDispatchPolicy,
           });
         }
       }
@@ -560,6 +582,38 @@ export function useDriverDashboardBase({
           rating,
           comment: composedComment || null,
         });
+
+        const trustResult = await TrustEventService.upsertOperationalFeedback({
+          actor_profile_id: driverProfileId,
+          actor_role:
+            rideToRate.ride_mode === "motoboy"
+              ? TRUST_ACTOR_ROLES.COURIER
+              : TRUST_ACTOR_ROLES.DRIVER,
+          subject_profile_id: passengerProfileId,
+          subject_role: TRUST_ACTOR_ROLES.CUSTOMER,
+          context_type: TRUST_CONTEXT_TYPES.RIDE,
+          context_id: rideToRate.id,
+          event_type: TRUST_EVENT_TYPES.OPERATIONAL_FEEDBACK,
+          rating,
+          reason_code: rating >= 4 ? "smooth_operation" : "driver_reported_issue",
+          severity: rating <= 2 ? "high" : rating === 3 ? "medium" : "low",
+          visibility: TRUST_VISIBILITIES.PRIVATE,
+          description: comment || null,
+          evidence: {
+            behavior_rating: behavior,
+            punctuality_rating: punctuality,
+            payment_rating: payment,
+            ride_mode: rideToRate.ride_mode,
+          },
+        });
+
+        if (trustResult.error) {
+          logger.error("useDriverDashboardBase.handleRatePassenger.trust", new Error(trustResult.error), {
+            rideId: rideToRate.id,
+            driverProfileId,
+            passengerProfileId,
+          });
+        }
 
         toast.success("Avaliacao enviada!");
         setRatePassengerOpen(false);

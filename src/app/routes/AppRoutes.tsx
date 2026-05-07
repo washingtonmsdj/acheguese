@@ -8,6 +8,7 @@
  */
 
 import { Routes, Route, Navigate, Outlet, useParams } from "react-router-dom";
+import { LAUNCH_TERRITORIES } from "@/config/territory";
 
 // Territorial Components (eager - critical for routing)
 import { TerritorialLayout } from "@/core/routing/components/TerritorialLayout";
@@ -44,7 +45,17 @@ function BusinessRedirect() {
   return <Navigate to={targetPath} replace />;
 }
 
+function LegacyBusinessCatalogRedirect() {
+  const { id } = useParams<{ id: string }>();
+  return <Navigate to={`/empresas/${id}/catalogo`} replace />;
+}
+
+
 export function AppRoutes() {
+  const launchComplexoPath =
+    LAUNCH_TERRITORIES.find((territory) => territory.slug === "complexo-do-nordeste-de-amaralina")?.path ??
+    "/ba/salvador/complexo-do-nordeste-de-amaralina";
+
   return (
     <Routes>
       {/* QR Code Resolver - DEVE VIR ANTES DE OUTRAS ROTAS */}
@@ -62,7 +73,8 @@ export function AppRoutes() {
       <Route path="/contato" element={<P.ContactPage />} />
       <Route path="/onboarding" element={<P.OnboardingPage />} />
       <Route path="/reset-password" element={<P.ResetPasswordPage />} />
-        <Route path="/businesss/:id/catalogo" element={<P.EmpresaCatalogoPublicoPage />} />
+        <Route path="/businesss/:id/catalogo" element={<LegacyBusinessCatalogRedirect />} />
+        <Route path="/empresas/:id/catalogo" element={<P.EmpresaCatalogoPublicoPage />} />
         <Route path="/servicos" element={<P.ServicosLandingPage />} />
         <Route path="/p/:slug/*" element={<P.PremiumBusinessSiteRoute />}>
         <Route index element={<P.PremiumBusinessHomePage />} />
@@ -75,6 +87,7 @@ export function AppRoutes() {
       <Route element={<P.AppLayoutSidebar />}>
         {/* Página inicial */}
         <Route path="/" element={<P.MainLandingPage />} />
+        <Route path="/complexo" element={<Navigate to={launchComplexoPath} replace />} />
         <Route path="/home-v2" element={<P.HomePageV2 />} />
         <Route path="/home-v1" element={<P.HomePage />} />
         
@@ -105,6 +118,7 @@ export function AppRoutes() {
         <Route path="/services/cadastrar" element={<P.CadastrarServicoPage />} />
         <Route path="/services/:id/editar" element={<P.EditarServicoPage />} />
         <Route path="/services/:id" element={<P.ProfissionalDetailPage />} />
+        <Route path="/servicos/orcamentos/:leadId" element={<P.ProfessionalLeadTrackingPage />} />
         <Route path="/classificados/novo" element={<P.NovoClassificadoPage />} />
         <Route path="/classificados/editar/:id" element={<P.EditarClassificadoPage />} />
         <Route path="/classificados/vendedor/:sellerId" element={<P.VendedorPerfilPage />} />
@@ -289,7 +303,6 @@ export function AppRoutes() {
         <Route path="/conta/privacidade" element={<P.PrivacySettingsPage />} />
         <Route path="/dpo" element={<P.DPOContactPage />} />
         <Route path="/motorista-legacy" element={<P.MotoristaPage />} />
-        <Route path="/create-driver" element={<P.CriarMotoristaPage />} />
 
         {/* Rotas legadas sem território */}
         <Route path="/educacao" element={<P.EducationExplorerPage />} />
@@ -297,7 +310,7 @@ export function AppRoutes() {
         <Route path="/comunidade/alertas" element={<P.AlertasPage />} />
         <Route path="/comunidade/problemas" element={<P.ProblemasPage />} />
         <Route path="/alertas" element={<P.AlertasPage />} />
-        <Route path="/businesss" element={<P.EmpresasLandingPage />} />
+        <Route path="/businesss" element={<Navigate to="/empresas" replace />} />
         <Route path="/services" element={<P.ServicosLandingPage />} />
         <Route path="/classificados" element={<P.ClassificadosPage />} />
         <Route path="/mobilidade/passageiro" element={<P.PassageiroPage />} />
@@ -466,6 +479,7 @@ export function AppRoutes() {
 
         {/* Favoritos de gastronomia */}
         <Route path="/gastronomia/favoritos" element={<P.MyFavoritesPage />} />
+        <Route path="/gastronomia/pedidos/:orderId" element={<P.OrderDetailsPage />} />
 
         {/* Rotas de Education — públicas territoriais (vitrine premium consolidada) */}
         {/* Detalhe: /educacao/:uf/:cidade/:bairro/:slug */}
@@ -578,7 +592,7 @@ export function AppRoutes() {
         <Route path="banners" element={<P.AdminBanners />} />
         <Route path="empresas" element={<P.AdminEmpresas />} />
         {/* Redirect do typo histórico */}
-        <Route path="businesss" element={<P.AdminEmpresas />} />
+        <Route path="businesss" element={<Navigate to="/admin/empresas" replace />} />
         <Route path="gastronomia" element={<P.AdminGastronomia />} />
         <Route path="services" element={<P.AdminServicos />} />
         <Route path="classificados" element={<P.AdminClassificados />} />

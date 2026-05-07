@@ -12,6 +12,17 @@ import { OrderDeliverySSOTService } from '@/modules/mobility/delivery/services/O
 import { LOGISTICS_STATUS, type LogisticsStatus } from '@/modules/mobility/delivery/logistics/types';
 import { ORDER_SOURCE_TYPE, type OrderItemRecord, type OrderRecord } from '@/modules/mobility/delivery/order/types';
 import type { OrderTimelineEvent } from '@/modules/mobility/delivery/audit-timeline/types';
+import type { DeliveryProof } from '@/modules/mobility/delivery/proof-of-delivery/types';
+import {
+  TRUST_ACTOR_ROLES,
+  TRUST_CONTEXT_TYPES,
+  TRUST_EVENT_STATUSES,
+  TRUST_EVENT_TYPES,
+  TRUST_VISIBILITIES,
+  TrustEventService,
+  type TrustActorRole,
+  type TrustSeverity,
+} from '@/core/trust';
 
 export interface ServiceResult<T> {
   data: T | null;
@@ -35,6 +46,7 @@ export interface Order {
   id: string;
   business_id: string;
   customer_id: string | null;
+  courier_profile_id: string | null;
   delivery_area_id: string | null;
   order_number: string;
   order_type: OrderType;
@@ -69,6 +81,7 @@ export interface Order {
   completed_at: string | null;
   cancelled_at: string | null;
   cancellation_reason: string | null;
+  proof_of_delivery: DeliveryProof | null;
   created_at: string;
   updated_at: string;
 }
@@ -168,6 +181,30 @@ function orderDisplayNumber(orderId: string): string {
   return orderId.slice(0, 8).toUpperCase();
 }
 
+function getCancellationSeverity(status: OrderStatus): TrustSeverity {
+  switch (status) {
+    case 'out_for_delivery':
+      return 'critical';
+    case 'ready':
+      return 'high';
+    case 'preparing':
+      return 'medium';
+    default:
+      return 'low';
+  }
+}
+
+function shouldCreateCustomerLateCancellationEvent(
+  previousStatus: OrderStatus,
+  reasonCode?: string,
+): boolean {
+  const impactStatuses: OrderStatus[] = ['preparing', 'ready', 'out_for_delivery'];
+  return (
+    impactStatuses.includes(previousStatus) &&
+    reasonCode === 'customer_requested_late_cancel'
+  );
+}
+
 function getMetadataString(order: OrderRecord, key: string): string | null {
   const value = order.source_context.source_metadata?.[key];
   return typeof value === 'string' && value.trim() ? value : null;
@@ -226,6 +263,7 @@ function mapOrder(order: OrderRecord): OrderWithItems {
     id: order.id,
     business_id: businessId,
     customer_id: order.customer_profile_id,
+    courier_profile_id: order.courier_profile_id ?? null,
     delivery_area_id: null,
     order_number: orderDisplayNumber(order.id),
     order_type: 'delivery',
@@ -260,6 +298,7 @@ function mapOrder(order: OrderRecord): OrderWithItems {
     completed_at: status === 'completed' ? order.delivered_at ?? null : null,
     cancelled_at: order.canceled_at ?? order.failed_at ?? null,
     cancellation_reason: order.failure_reason ?? null,
+    proof_of_delivery: order.proof_of_delivery ?? null,
     created_at: order.created_at,
     updated_at: order.updated_at,
     items: order.items.map(mapOrderItem),
@@ -332,7 +371,7 @@ export const OrderService = {
   async createOrder(): Promise<ServiceResult<OrderWithItems>> {
     return {
       data: null,
-      error: 'Criação de pedido de gastronomia deve usar GastronomyCheckoutService/OrderDeliverySSOTService.',
+      error: 'CriaÃ§Ã£o de pedido de gastronomia deve usar GastronomyCheckoutService/OrderDeliverySSOTService.',
     };
   },
 
@@ -397,10 +436,22 @@ export const OrderService = {
     orderId: string,
     reason: string,
     actorProfileId?: string,
+    options?: {
+      actorRole?: TrustActorRole;
+      reasonCode?: string;
+    },
   ): Promise<ServiceResult<Order>> {
     if (!actorProfileId) {
       return { data: null, error: 'Perfil ativo obrigatorio para cancelar pedido.' };
     }
+
+    const current = await OrderDeliverySSOTService.getOrderById(orderId);
+    if (!current.success || !current.data) {
+      return { data: null, error: current.error ?? 'Pedido nao encontrado.' };
+    }
+
+    const previousOrder = mapOrder(current.data);
+    const actorRole = options?.actorRole ?? TRUST_ACTOR_ROLES.MERCHANT;
 
     const result = await OrderDeliverySSOTService.cancelOrder({
       order_id: orderId,
@@ -410,6 +461,41 @@ export const OrderService = {
 
     if (!result.success || !result.data) {
       return { data: null, error: result.error ?? 'Erro ao cancelar pedido.' };
+    }
+
+    if (
+      previousOrder.customer_id &&
+      shouldCreateCustomerLateCancellationEvent(previousOrder.status, options?.reasonCode)
+    ) {
+      const trustResult = await TrustEventService.createEvent({
+        actor_profile_id: actorProfileId,
+        actor_role: actorRole,
+        subject_profile_id: previousOrder.customer_id,
+        subject_role: TRUST_ACTOR_ROLES.CUSTOMER,
+        context_type: TRUST_CONTEXT_TYPES.ORDER,
+        context_id: orderId,
+        event_type: TRUST_EVENT_TYPES.LATE_CANCELLATION,
+        reason_code: options?.reasonCode ?? 'customer_requested_late_cancel',
+        severity: getCancellationSeverity(previousOrder.status),
+        visibility: TRUST_VISIBILITIES.ADMIN_ONLY,
+        status:
+          previousOrder.status === 'out_for_delivery'
+            ? TRUST_EVENT_STATUSES.UNDER_REVIEW
+            : TRUST_EVENT_STATUSES.ACTIVE,
+        description: reason,
+        evidence: {
+          previous_status: previousOrder.status,
+          order_total: previousOrder.total,
+          courier_profile_id: previousOrder.courier_profile_id,
+          source: 'gastronomy_order_cancel',
+        },
+      });
+
+      if (trustResult.error) {
+        logger.error('[OrderService] trust late cancellation event error', new Error(trustResult.error), {
+          orderId,
+        });
+      }
     }
 
     return { data: mapOrder(result.data), error: null };

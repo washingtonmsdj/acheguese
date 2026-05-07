@@ -6,7 +6,7 @@ const sections = [
   {
     icon: Users,
     title: "1. Aceitação dos Termos",
-    content: `Ao acessar ou utilizar a plataforma Comunidade Conectada ("Plataforma"), você ("Usuário") declara ter lido, compreendido e concordado integralmente com estes Termos de Uso ("Termos"), bem como com nossa Política de Privacidade e Regras da Comunidade, que integram este instrumento por referência.
+    content: `Ao acessar ou utilizar a plataforma Achegue-se ("Plataforma"), você ("Usuário") declara ter lido, compreendido e concordado integralmente com estes Termos de Uso ("Termos"), bem como com nossa Política de Privacidade e Regras da Comunidade, que integram este instrumento por referência.
 
 Se você não concordar com qualquer disposição destes Termos, não utilize a Plataforma. O uso continuado após alterações nos Termos constitui aceitação tácita das novas condições.
 
@@ -15,7 +15,7 @@ A Plataforma é destinada exclusivamente a maiores de 18 anos ou a menores de 18
   {
     icon: FileText,
     title: "2. Descrição do Serviço",
-    content: `A Comunidade Conectada é uma plataforma digital de comunicação comunitária que permite a usuários cadastrados publicar, compartilhar e interagir com conteúdos relacionados ao seu bairro e cidade.
+    content: `A Achegue-se é uma plataforma digital de comunicação comunitária que permite a usuários cadastrados publicar, compartilhar e interagir com conteúdos relacionados ao seu bairro e cidade.
 
 Os serviços incluem, mas não se limitam a: publicação de posts e alertas comunitários, listagem de negócios e serviços locais, classificados, eventos, grupos de discussão e sistema de mensagens entre usuários.
 
@@ -117,7 +117,7 @@ export default function TermosPage() {
         </div>
       </header>
 
-      <div className="px-4 py-6 max-w-2xl mx-auto">
+      <main id="main-content" tabIndex={-1} className="px-4 py-6 max-w-2xl mx-auto focus:outline-none">
         {/* Hero */}
         <div className="flex items-center gap-4 mb-6">
           <div className="h-14 w-14 rounded-2xl bg-primary/10 flex items-center justify-center shrink-0">
@@ -134,7 +134,7 @@ export default function TermosPage() {
         {/* Aviso de destaque */}
         <div className="bg-primary/5 border border-primary/20 rounded-xl p-4 mb-8">
           <p className="text-sm text-foreground leading-relaxed">
-            Ao utilizar a Comunidade Conectada, você concorda com estes Termos de Uso. Leia com atenção antes de criar sua conta ou continuar usando a plataforma.
+            Ao utilizar o Achegue-se, você concorda com estes Termos de Uso. Leia com atenção antes de criar sua conta ou continuar usando a plataforma.
           </p>
         </div>
 
@@ -178,7 +178,7 @@ export default function TermosPage() {
             Dúvidas? Entre em contato pelo suporte da plataforma.
           </p>
         </div>
-      </div>
+      </main>
     </div>
   );
 }

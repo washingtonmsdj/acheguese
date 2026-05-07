@@ -14,9 +14,9 @@ Auditar a Central após as fases 1.1 até 3.1 para garantir que a estrutura fico
 ## Arquivos Modificados (1)
 
 **1. src/modules/central/guards/DriverGuard.tsx**
-- Corrigido CTA para usuários sem driver_data: /create-driver → /create-driver?type={service}
-- Corrigido CTA para usuários com modo incorreto: /central/profissional → /create-driver?type={service}
-- Motivo: CTA deve apontar para fluxo correto de criação/habilitação de driver, não para profissional
+- Corrigido CTA para usuários sem driver_data: fluxo legado → `/central/{motorista|motoboy}/cadastro`
+- Corrigido CTA para usuários com modo incorreto: fluxo legado → `/central/{motorista|motoboy}/cadastro`
+- Motivo: CTA deve apontar para fluxo canônico de criação/habilitação de driver na Central.
 
 ---
 
@@ -286,7 +286,7 @@ Auditar a Central após as fases 1.1 até 3.1 para garantir que a estrutura fico
 - Motoboy: can_do_delivery === true
 - Se não tiver perfil de driver, mostra empty state com CTA
 - Se modo incorreto, mostra empty state com CTA
-- CTA corrigido: /create-driver?type={service} (ambos os casos)
+- CTA corrigido: `/central/motorista/cadastro` ou `/central/motoboy/cadastro` (ambos os casos)
 - Antecede rotas de motorista/motoboy (/central/motorista/*, /central/motoboy/*)
 
 **Conclusão:** ✅ Motorista/motoboy continuam diferenciados, CTA corrigido
@@ -300,14 +300,14 @@ Auditar a Central após as fases 1.1 até 3.1 para garantir que a estrutura fico
 **Arquivo:** src/modules/central/guards/DriverGuard.tsx
 
 **Correção 1 (usuários sem driver_data):**
-- Antes: navigate("/create-driver")
-- Depois: navigate(`/create-driver?type=${service}`)
-- Motivo: CriarMotoristaPage usa parâmetro type para diferenciar motorista vs motoboy
+- Antes: fluxo legados fora da Central
+- Depois: `navigate(appUrls.profile.mobilidade.{service}.cadastro)`
+- Motivo: onboarding canônico unificado na Central.
 
 **Correção 2 (usuários com modo incorreto):**
-- Antes: navigate("/central/profissional")
-- Depois: navigate(`/create-driver?type=${service}`)
-- Motivo: Profissional de serviços não é o mesmo fluxo de motorista/motoboy
+- Antes: caminhos não canônicos
+- Depois: `navigate(appUrls.profile.mobilidade.{service}.cadastro)`
+- Motivo: habilitação deve permanecer no domínio de mobilidade da Central.
 
 **Conclusão:** ✅ Correções aplicadas com sucesso
 

@@ -23,6 +23,10 @@ export default function PerfilMobilidadeCadastroPage() {
   });
 
   const snapshot = driverData as any;
+  const cadastroPath =
+    snapshot?.can_do_delivery && snapshot?.can_do_rides === false
+      ? "/central/motoboy/cadastro"
+      : "/central/motorista/cadastro";
 
   const missingItems = useMemo(
     () => [
@@ -161,7 +165,7 @@ export default function PerfilMobilidadeCadastroPage() {
               Ir para disponibilidade
               <ArrowRight className="h-4 w-4" />
             </Button>
-            <Button variant="outline" className="w-full justify-between" onClick={() => navigate("/create-driver")}>
+            <Button variant="outline" className="w-full justify-between" onClick={() => navigate(cadastroPath)}>
               Reenviar documentos
               <RotateCcw className="h-4 w-4" />
             </Button>

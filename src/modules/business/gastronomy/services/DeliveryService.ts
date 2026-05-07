@@ -14,6 +14,7 @@
 
 import { logger } from '@/shared/utils/logger';
 import { supabase } from '@/integrations/supabase';
+import { TRUST_ACTOR_ROLES, TrustEventService } from '@/core/trust';
 
 // ── Tipos ─────────────────────────────────────────────────────────────────
 
@@ -401,6 +402,17 @@ export const DeliveryService = {
     driverPayment?: number
   ): Promise<ServiceResult<DeliveryRequest>> {
     try {
+      const trustGate = await TrustEventService.canReceiveOperationalCall(
+        driverProfileId,
+        TRUST_ACTOR_ROLES.COURIER,
+      );
+      if (!trustGate.allowed) {
+        return {
+          data: null,
+          error: trustGate.reason || 'Motoboy bloqueado para novas entregas ate revisao admin.',
+        };
+      }
+
       const { data, error } = await supabase
         .from('delivery_requests')
         .update({

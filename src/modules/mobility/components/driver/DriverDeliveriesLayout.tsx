@@ -13,6 +13,18 @@ function isDeliveryRide(ride: any): boolean {
   return ride?.ride_mode === "motoboy" || ride?.type === "entrega";
 }
 
+const TRUST_RISK_LABELS: Record<string, string> = {
+  watchlist: "Cliente em observacao",
+  restricted: "Prioridade reduzida",
+  critical: "Revisao admin",
+};
+
+function getTrustRiskLabel(delivery: any): string | null {
+  const risk = delivery?.customer_trust_risk_level;
+  if (typeof risk !== "string" || risk === "trusted") return null;
+  return TRUST_RISK_LABELS[risk] ?? risk;
+}
+
 /**
  * DriverDeliveriesLayout
  * 
@@ -114,6 +126,11 @@ export function DriverDeliveriesLayout() {
                 <div>
                   <p className="text-sm font-medium text-foreground">{delivery.origin} {"->"} {delivery.destination}</p>
                   <p className="text-xs text-muted-foreground">{delivery.package_description || "Pacote"}</p>
+                  {getTrustRiskLabel(delivery) ? (
+                    <Badge variant="outline" className="mt-2">
+                      {getTrustRiskLabel(delivery)}
+                    </Badge>
+                  ) : null}
                 </div>
                 <Badge variant="outline">
                   {typeof delivery.suggested_price === "number" ? `R$ ${delivery.suggested_price.toFixed(2)}` : "Sem valor"}

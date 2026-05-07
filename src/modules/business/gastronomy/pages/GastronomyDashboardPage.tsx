@@ -13,7 +13,15 @@
 import { useParams, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { useEntitlements } from '@/core/billing/hooks/useEntitlements';
-import { PlanStatusWidget, UpgradePromptInline } from '../components';
+import {
+  DeliverySummaryCard,
+  MenuSummaryCard,
+  OperationalStatusCard,
+  PlanStatusWidget,
+  QuickActionsCard,
+  TodayOrdersCard,
+  UpgradePromptInline,
+} from '../components';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/components/ui/card';
 import { Button } from '@/shared/components/ui/button';
 import { getMenuUsageStats } from '@/modules/business/gastronomy/services';
@@ -68,6 +76,15 @@ export default function GastronomyDashboardPage() {
         currentPromotions={usageStats?.currentPromotions ?? 0}
       />
 
+      <div className="grid gap-6 lg:grid-cols-2">
+        <OperationalStatusCard businessId={businessId!} />
+        <TodayOrdersCard businessId={businessId!} />
+        <MenuSummaryCard businessId={businessId!} />
+        <DeliverySummaryCard businessId={businessId!} />
+      </div>
+
+      <QuickActionsCard businessId={businessId!} />
+
       {/* Grid de Recursos */}
       <div className="grid md:grid-cols-2 gap-6">
         {/* Cardápio */}
@@ -85,8 +102,8 @@ export default function GastronomyDashboardPage() {
             {can('canUseAdvancedCatalog') ? (
               <>
                 <div className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground">Itens cadastrados</span>
-                  <span className="font-medium">0</span>
+                  <span className="text-muted-foreground">Itens disponiveis</span>
+                  <span className="font-medium">{usageStats?.currentMenuItems ?? 0}</span>
                 </div>
                 <Link to={businessManagementRoutes.gastronomyCardapio(businessId!)}>
                   <Button className="w-full">
@@ -118,7 +135,7 @@ export default function GastronomyDashboardPage() {
           <CardContent className="space-y-4">
             <div className="flex items-center justify-between text-sm">
               <span className="text-muted-foreground">Scans totais</span>
-              <span className="font-medium">0</span>
+              <span className="font-medium">Nao rastreado</span>
             </div>
             <Link to={businessManagementRoutes.linkPremium(businessId!)}>
               <Button className="w-full" variant="outline">
@@ -149,7 +166,7 @@ export default function GastronomyDashboardPage() {
               <>
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-muted-foreground">Promoções ativas</span>
-                  <span className="font-medium">0</span>
+                  <span className="font-medium">{usageStats?.currentPromotions ?? 0}</span>
                 </div>
                 <Link to={businessManagementRoutes.gastronomyPromocoes(businessId!)}>
                   <Button className="w-full">
@@ -183,7 +200,7 @@ export default function GastronomyDashboardPage() {
               <>
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-muted-foreground">Pedidos hoje</span>
-                  <span className="font-medium">0</span>
+                  <span className="font-medium">Resumo acima</span>
                 </div>
                 <Link to={businessManagementRoutes.gastronomyPedidos(businessId!)}>
                   <Button className="w-full">
@@ -217,7 +234,7 @@ export default function GastronomyDashboardPage() {
               <>
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-muted-foreground">Entregas hoje</span>
-                  <span className="font-medium">0</span>
+                  <span className="font-medium">Resumo acima</span>
                 </div>
                 <Link to={businessManagementRoutes.gastronomyEntregas(businessId!)}>
                   <Button className="w-full">
@@ -251,7 +268,7 @@ export default function GastronomyDashboardPage() {
               <>
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-muted-foreground">Visualizações</span>
-                  <span className="font-medium">0</span>
+                  <span className="font-medium">Abrir relatorios</span>
                 </div>
                 <Link to={businessManagementRoutes.gastronomyAnalytics(businessId!)}>
                   <Button className="w-full" variant="outline">
@@ -288,7 +305,7 @@ export default function GastronomyDashboardPage() {
           <CardContent className="space-y-4">
             <div className="flex items-center justify-between text-sm">
               <span className="text-muted-foreground">Status</span>
-              <span className="font-medium text-green-600">Aberto</span>
+              <span className="font-medium">Resumo acima</span>
             </div>
             <Link to={businessManagementRoutes.gastronomyHorarios(businessId!)}>
               <Button className="w-full" variant="outline">
@@ -314,7 +331,7 @@ export default function GastronomyDashboardPage() {
               <>
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-muted-foreground">Bairros atendidos</span>
-                  <span className="font-medium">0</span>
+                  <span className="font-medium">Resumo acima</span>
                 </div>
                 <Link to={businessManagementRoutes.gastronomyAreaEntrega(businessId!)}>
                   <Button className="w-full" variant="outline">

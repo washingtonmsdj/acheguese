@@ -27,9 +27,10 @@ export function useComunidadePage() {
   const [modalState, setModalState] = useState<ModalState>({ type: null, data: null });
   const [alertModalOpen, setAlertModalOpen] = useState(false);
   const [issueModalOpen, setIssueModalOpen] = useState(false);
+  const [deletePostId, setDeletePostId] = useState<string | null>(null);
 
   const { setTagFilter, immediateFilters, setLocationScope } = useCommunityFiltersAAA();
-  const { likePost, savePost, sharePost } = usePostActions();
+  const { likePost, savePost, sharePost, deletePost, isDeleting } = usePostActions();
   const { activeProfile: profile } = useSessionContext();
   
   // Integração com fundação geográfica
@@ -89,11 +90,21 @@ export function useComunidadePage() {
   }, []);
 
   const handleDeletePost = useCallback((postId: string) => {
-    if (confirm("Tem certeza que deseja excluir este post? Esta ação não pode ser desfeita.")) {
-      if (import.meta.env.DEV) logger.info("Delete post:", postId);
-      toast.success("Post excluído com sucesso");
-    }
+    setDeletePostId(postId);
   }, []);
+
+  const handleCancelDeletePost = useCallback(() => {
+    if (!isDeleting) setDeletePostId(null);
+  }, [isDeleting]);
+
+  const handleConfirmDeletePost = useCallback(() => {
+    if (!deletePostId) return;
+
+    if (import.meta.env.DEV) logger.info("Delete post:", deletePostId);
+    deletePost(deletePostId, {
+      onSettled: () => setDeletePostId(null),
+    });
+  }, [deletePost, deletePostId]);
 
   const handleEditPost = useCallback((postId: string) => {
     if (import.meta.env.DEV) logger.info("Edit post:", postId);
@@ -132,9 +143,13 @@ export function useComunidadePage() {
     handleTagClick,
     handleReportPost,
     handleDeletePost,
+    handleCancelDeletePost,
+    handleConfirmDeletePost,
     handleEditPost,
     handleReportClick,
     handleCloseModal,
+    deletePostDialogOpen: Boolean(deletePostId),
+    isDeletingPost: isDeleting,
     
     // Integração com fundação geográfica
     communityLocation,

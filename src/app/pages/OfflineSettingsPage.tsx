@@ -24,7 +24,9 @@ import {
 } from "lucide-react";
 import { useOfflineMode } from "@/shared/hooks/useOfflineMode";
 import { OfflineDataStatus } from "@/shared/components/offline/OfflineIndicator";
+import { ConfirmActionDialog } from "@/shared/components/ConfirmActionDialog";
 import { toast } from "sonner";
+
 export default function OfflineSettingsPage() {
   const {
     isOnline,
@@ -63,6 +65,8 @@ export default function OfflineSettingsPage() {
     cep: "29055-000",
   });
 
+  const [clearCacheDialogOpen, setClearCacheDialogOpen] = useState(false);
+
   const handleSaveCriticalData = async () => {
     const success = await cacheCriticalData({
       emergencyContacts,
@@ -76,11 +80,10 @@ export default function OfflineSettingsPage() {
   };
 
   const handleClearCache = async () => {
-    if (confirm("Tem certeza que deseja limpar todos os dados offline?")) {
-      const success = await clearCache();
-      if (success) {
-        toast.success("Cache limpo com sucesso");
-      }
+    const success = await clearCache();
+    if (success) {
+      toast.success("Cache limpo com sucesso");
+      setClearCacheDialogOpen(false);
     }
   };
 
@@ -248,6 +251,15 @@ export default function OfflineSettingsPage() {
             ))}
           </CardContent>
         </Card>
+        <ConfirmActionDialog
+          open={clearCacheDialogOpen}
+          onOpenChange={setClearCacheDialogOpen}
+          title="Limpar dados offline?"
+          description="Esta acao remove os dados salvos para uso sem internet neste dispositivo. Voce podera salvar novamente depois."
+          confirmLabel="Limpar dados"
+          cancelLabel="Manter dados"
+          onConfirm={handleClearCache}
+        />
 
         {/* Informações do Prédio */}
         <Card>
@@ -307,7 +319,7 @@ export default function OfflineSettingsPage() {
           </Button>
 
           <Button
-            onClick={handleClearCache}
+            onClick={() => setClearCacheDialogOpen(true)}
             disabled={!hasCriticalData}
             variant="outline"
             size="lg"
@@ -316,6 +328,15 @@ export default function OfflineSettingsPage() {
             Limpar Cache
           </Button>
         </div>
+        <ConfirmActionDialog
+          open={clearCacheDialogOpen}
+          onOpenChange={setClearCacheDialogOpen}
+          title="Limpar dados offline?"
+          description="Esta acao remove os dados salvos para uso sem internet neste dispositivo. Voce podera salvar novamente depois."
+          confirmLabel="Limpar dados"
+          cancelLabel="Manter dados"
+          onConfirm={handleClearCache}
+        />
 
         {/* Informações */}
         <div className="p-4 bg-blue-500/10 rounded-lg border border-blue-500/30">

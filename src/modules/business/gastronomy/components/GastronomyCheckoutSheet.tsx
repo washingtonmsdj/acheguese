@@ -15,6 +15,7 @@ import {
 import { Separator } from "@/shared/components/ui/separator";
 import { Textarea } from "@/shared/components/ui/textarea";
 import { useGastronomyCart, useGastronomyCheckout } from "../hooks";
+import type { GastronomyCheckoutOrderRecord } from "../services/GastronomyCheckoutService";
 import type { GastronomyBusiness } from "../types/gastronomy";
 import type { CartItem } from "../types/menu";
 
@@ -22,6 +23,7 @@ interface Props {
   business: GastronomyBusiness;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onOrderCreated?: (order: GastronomyCheckoutOrderRecord) => void;
 }
 
 const PAYMENT_OPTIONS = [
@@ -97,6 +99,7 @@ export function GastronomyCheckoutSheet({
   business,
   open,
   onOpenChange,
+  onOrderCreated,
 }: Props) {
   const {
     cart,
@@ -126,6 +129,7 @@ export function GastronomyCheckoutSheet({
         notes: customerNotes.trim() || undefined,
       });
 
+      onOrderCreated?.(order);
       onOpenChange(false);
       setCustomerNotes("");
       toast.success(`Pedido ${order.id.slice(0, 8)} criado com sucesso.`);
@@ -302,4 +306,3 @@ export function GastronomyCheckoutSheet({
     </Sheet>
   );
 }
-

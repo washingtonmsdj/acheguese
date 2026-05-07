@@ -20,6 +20,8 @@ import { useOrderDetails } from '../hooks';
 import { OrderStatusBadge } from '../components/orders/OrderStatusBadge';
 import { OrderTrackingCard } from '../components/orders/OrderTrackingCard';
 import { OrderOperationsPanel } from '../components/orders/OrderOperationsPanel';
+import { OrderTrustFeedbackPanel } from '../components/orders/OrderTrustFeedbackPanel';
+import { OrderPublicReviewPanel } from '../components/orders/OrderPublicReviewPanel';
 import { Button } from '@/shared/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/components/ui/card';
 import { Separator } from '@/shared/components/ui/separator';
@@ -42,7 +44,7 @@ export default function OrderDetailsPage() {
   const { order, isLoading } = useOrderDetails(orderId!);
   const proof = order?.proof_of_delivery;
 
-  if (!businessId || !orderId) {
+  if (!orderId) {
     return (
       <div className="container max-w-6xl py-8">
         <p className="text-center text-destructive">Parametros invalidos</p>
@@ -72,13 +74,19 @@ export default function OrderDetailsPage() {
     );
   }
 
+  const isBusinessRoute = Boolean(businessId);
+  const effectiveBusinessId = businessId ?? order.business_id;
+  const backTarget = isBusinessRoute
+    ? businessManagementRoutes.gastronomyPedidos(effectiveBusinessId)
+    : '/gastronomia';
+
   return (
     <div className="container max-w-6xl py-6 sm:py-8 space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
         <Button
           variant="ghost"
           size="icon"
-          onClick={() => navigate(businessManagementRoutes.gastronomyPedidos(businessId))}
+          onClick={() => navigate(backTarget)}
           aria-label="Voltar para pedidos"
         >
           <ArrowLeft className="h-5 w-5" />
@@ -104,7 +112,15 @@ export default function OrderDetailsPage() {
 
       {order.order_type === 'delivery' && <OrderTrackingCard order={order} />}
 
-      <OrderOperationsPanel order={order} businessId={businessId} />
+      {isBusinessRoute && (
+        <>
+          <OrderOperationsPanel order={order} businessId={effectiveBusinessId} />
+
+          <OrderTrustFeedbackPanel order={order} />
+        </>
+      )}
+
+      <OrderPublicReviewPanel order={order} />
 
       <div className="grid md:grid-cols-2 gap-6">
         <Card>

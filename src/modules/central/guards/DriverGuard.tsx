@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { useNavigate, Outlet } from "react-router-dom";
 import { useDriverProfileIdentity } from "@/modules/mobility/hooks/useDriverProfileIdentity";
+import { useAppUrls } from "@/core/routing/hooks/useAppUrls";
 import { Car, Bike, Plus } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import { Card, CardContent } from "@/shared/components/ui/card";
@@ -20,10 +21,11 @@ interface DriverGuardProps {
  * - Motoboy: can_do_delivery === true
  *
  * Se não tiver perfil de driver ou modo incorreto, mostra empty state com CTA
- * para ativar usando fluxo atual (/create-driver).
+ * para ativar no fluxo canonico da Central (/central/motorista/cadastro ou /central/motoboy/cadastro).
  */
 export function DriverGuard({ service }: DriverGuardProps) {
   const navigate = useNavigate();
+  const appUrls = useAppUrls();
   const { driverData, isRegistered, isLoading } = useDriverProfileIdentity({
     queryScope: "central-driver-guard",
   });
@@ -64,7 +66,13 @@ export function DriverGuard({ service }: DriverGuardProps) {
               </p>
             </div>
             <Button
-              onClick={() => navigate(`/create-driver?type=${service}`)}
+              onClick={() =>
+                navigate(
+                  service === "motorista"
+                    ? appUrls.profile.mobilidade.motorista.cadastro
+                    : appUrls.profile.mobilidade.motoboy.cadastro,
+                )
+              }
               className="gap-2"
             >
               <Plus className="h-4 w-4" />
@@ -101,7 +109,13 @@ export function DriverGuard({ service }: DriverGuardProps) {
               </p>
             </div>
             <Button
-              onClick={() => navigate(`/create-driver?type=${service}`)}
+              onClick={() =>
+                navigate(
+                  service === "motorista"
+                    ? appUrls.profile.mobilidade.motorista.cadastro
+                    : appUrls.profile.mobilidade.motoboy.cadastro,
+                )
+              }
               variant="outline"
               className="gap-2"
             >

@@ -29,6 +29,25 @@ import { toast } from "sonner";
 import { logger } from "@/shared/utils/logger";
 import { profileService } from "@/core/profiles/services";
 import { mobilityService } from "@/modules/mobility/services/MobilityService";
+import { DriverTrustFeedbackPanel } from "./DriverTrustFeedbackPanel";
+
+const TRUST_RISK_LABELS: Record<string, string> = {
+  trusted: "Confiavel",
+  watchlist: "Observacao",
+  restricted: "Prioridade reduzida",
+  critical: "Revisao admin",
+};
+
+function getTrustRiskValue(ride: MobilityRide): string | null {
+  const risk =
+    typeof ride.passenger_trust_risk_level === "string"
+      ? ride.passenger_trust_risk_level
+      : typeof ride.customer_trust_risk_level === "string"
+        ? ride.customer_trust_risk_level
+        : null;
+
+  return risk && risk !== "trusted" ? risk : null;
+}
 
 interface DriverRidesListProps {
   rides: MobilityRide[];
@@ -229,6 +248,10 @@ export function DriverRidesList({
           RIDE_STATUS.PASSENGER_BOARDED,
           RIDE_STATUS.PASSENGER_ON_BOARD,
         ].includes(ride.status as string);
+        const canTrustFeedback =
+          type === "history" &&
+          (ride.status === RIDE_STATUS.COMPLETED || ride.status === RIDE_STATUS.DELIVERED);
+        const trustRisk = type === "available" ? getTrustRiskValue(ride) : null;
         return (
           <div
             key={ride.id}
@@ -272,6 +295,11 @@ export function DriverRidesList({
                         className="text-[0.6rem]"
                       />
                     )}
+                  {trustRisk && (
+                    <Badge variant="outline" className="text-[0.6rem]">
+                      {TRUST_RISK_LABELS[trustRisk] ?? trustRisk}
+                    </Badge>
+                  )}
                 </div>
                 <span className="text-xs text-muted-foreground">
                   {(ride.passenger?.neighborhood as string | undefined) ?? (ride.origin as string | undefined)} ·{" "}
@@ -444,6 +472,12 @@ export function DriverRidesList({
                 <span className="text-xs text-success font-semibold">
                   Concluída
                 </span>
+              </div>
+            )}
+
+            {canTrustFeedback && (
+              <div className="mt-3">
+                <DriverTrustFeedbackPanel ride={ride} />
               </div>
             )}
           </div>

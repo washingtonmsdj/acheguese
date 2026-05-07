@@ -7,6 +7,9 @@ dotenv.config({ path: '.env.test' });
 dotenv.config({ path: '.env.local', override: true });
 
 const baseURL = process.env.PLAYWRIGHT_BASE_URL || 'http://localhost:8080';
+const parsedBaseURL = new URL(baseURL);
+const webServerHost = parsedBaseURL.hostname;
+const webServerPort = parsedBaseURL.port || (parsedBaseURL.protocol === 'https:' ? '443' : '80');
 
 // Compatível com ESM e CJS
 const __filename = typeof __dirname !== 'undefined' ? '' : fileURLToPath(import.meta.url);
@@ -29,7 +32,7 @@ export default defineConfig({
   },
 
   webServer: {
-    command: 'npm run dev -- --host localhost --port 8080',
+    command: `npm run dev -- --host ${webServerHost} --port ${webServerPort} --strictPort`,
     url: baseURL,
     reuseExistingServer: !process.env.CI,
     timeout: 120000,

@@ -10,6 +10,7 @@
 import { logger } from '@/shared/utils/logger';
 import { supabase } from '@/integrations/supabase';
 import { profileService } from '@/core/profiles/services/ProfileService';
+import { TRUST_ACTOR_ROLES, TrustEventService } from '@/core/trust';
 import { MobilityDispatchConfigService } from './MobilityDispatchConfigService';
 import { DriverAvailabilityService } from './DriverAvailabilityService';
 import {
@@ -18,6 +19,12 @@ import {
   getOpenBoardOfferRides,
   getReservationOfferRides,
 } from './mobility.queries';
+import type {
+  TrustActorRole,
+  TrustDispatchPolicy,
+  TrustPolicyDecision,
+  TrustRiskLevel,
+} from '@/core/trust';
 import type {
   DispatchStrategy,
   ExclusiveOffer,
@@ -36,6 +43,63 @@ import { DISPATCH_ATTEMPT_STATUS } from '../constants/dispatchStatus';
 // ============================================
 
 export class MobilityOfferService {
+  private static getTrustPriorityMultiplier(decision: TrustPolicyDecision | null): number {
+    if (!decision) return 1;
+    if (decision.risk_level === 'critical') return 0.35;
+    if (decision.risk_level === 'restricted') return 0.55;
+    if (decision.risk_level === 'watchlist') return 0.8;
+    return 1;
+  }
+
+  private static getTrustOfferMetadata(decision: TrustPolicyDecision | null): {
+    driverTrustRiskLevel?: TrustRiskLevel;
+    driverDispatchPolicy?: TrustDispatchPolicy;
+  } {
+    return {
+      driverTrustRiskLevel: decision?.risk_level,
+      driverDispatchPolicy: decision?.dispatch_policy,
+    };
+  }
+
+  private static async getSubjectTrustDecision(
+    profileId: string | null | undefined,
+    role: TrustActorRole,
+  ): Promise<TrustPolicyDecision | null> {
+    if (!profileId) return null;
+
+    const result = await TrustEventService.getPolicyDecision(profileId, role);
+    if (result.error) {
+      logger.warn('Subject trust policy unavailable for offer priority', {
+        profileId,
+        role,
+        error: result.error,
+      });
+      return null;
+    }
+
+    return result.data;
+  }
+
+  private static getPassengerTrustOfferMetadata(decision: TrustPolicyDecision | null): {
+    passengerTrustRiskLevel?: TrustRiskLevel;
+    passengerDispatchPolicy?: TrustDispatchPolicy;
+  } {
+    return {
+      passengerTrustRiskLevel: decision?.risk_level,
+      passengerDispatchPolicy: decision?.dispatch_policy,
+    };
+  }
+
+  private static getCustomerTrustOfferMetadata(decision: TrustPolicyDecision | null): {
+    customerTrustRiskLevel?: TrustRiskLevel;
+    customerDispatchPolicy?: TrustDispatchPolicy;
+  } {
+    return {
+      customerTrustRiskLevel: decision?.risk_level,
+      customerDispatchPolicy: decision?.dispatch_policy,
+    };
+  }
+
   /**
    * Busca oferta exclusiva para motorista especÃ­fico
    * Usado em: Corrida imediata de passageiro
@@ -46,6 +110,19 @@ export class MobilityOfferService {
     try {
       const ride = await getExclusiveOfferRideForDriver(driverProfileId);
       if (!ride) return null;
+
+      const trustGate = await TrustEventService.canReceiveOperationalCall(
+        driverProfileId,
+        TRUST_ACTOR_ROLES.DRIVER,
+      );
+      if (!trustGate.allowed) {
+        logger.warn('Exclusive offer hidden by trust policy', {
+          driverProfileId,
+          reason: trustGate.reason,
+        });
+        return null;
+      }
+      const trustMetadata = this.getTrustOfferMetadata(trustGate.decision);
 
       // Calcular expiraÃ§Ã£o
       const config = MobilityDispatchConfigService.getConfig('exclusive_offer');
@@ -69,6 +146,12 @@ export class MobilityOfferService {
       const passengerTrustLevelValue = passengerMeta?.passenger_trust_level;
       const passengerTrustLevel =
         typeof passengerTrustLevelValue === 'string' ? passengerTrustLevelValue : undefined;
+      const passengerTrustDecision = await this.getSubjectTrustDecision(
+        ride.passenger_profile_id,
+        TRUST_ACTOR_ROLES.CUSTOMER,
+      );
+      const passengerTrustMetadata =
+        this.getPassengerTrustOfferMetadata(passengerTrustDecision);
 
       // Extrair bairros (proteger endereÃ§os completos)
       const originNeighborhood = this.extractNeighborhood(ride.origin);
@@ -113,6 +196,8 @@ export class MobilityOfferService {
         paymentMethod: ride.payment_method,
         passengerRating,
         passengerTrustLevel,
+        ...trustMetadata,
+        ...passengerTrustMetadata,
       };
     } catch (error) {
       logger.error('MobilityOfferService.getExclusiveOffer', error as Error, { driverProfileId });
@@ -131,6 +216,20 @@ export class MobilityOfferService {
     limit: number = 10
   ): Promise<OpenBoardOffer[]> {
     try {
+      const trustGate = await TrustEventService.canReceiveOperationalCall(
+        driverProfileId,
+        TRUST_ACTOR_ROLES.COURIER,
+      );
+      if (!trustGate.allowed) {
+        logger.warn('Open board hidden by trust policy', {
+          driverProfileId,
+          reason: trustGate.reason,
+        });
+        return [];
+      }
+      const trustPriorityMultiplier = this.getTrustPriorityMultiplier(trustGate.decision);
+      const trustMetadata = this.getTrustOfferMetadata(trustGate.decision);
+
       const driverData = await this.getDriverCapabilities(driverProfileId);
       if (!driverData?.can_do_delivery) {
         logger.info('Driver has no delivery capability enabled', { driverProfileId });
@@ -201,11 +300,24 @@ export class MobilityOfferService {
         const customerRatingValue = customerRecord?.rating;
         const customerRating =
           typeof customerRatingValue === 'number' ? customerRatingValue : undefined;
+        const customerTrustDecision = await this.getSubjectTrustDecision(
+          ride.source_id,
+          TRUST_ACTOR_ROLES.CUSTOMER,
+        );
+        const customerTrustMetadata =
+          this.getCustomerTrustOfferMetadata(customerTrustDecision);
 
         // Calcular expiraÃ§Ã£o
         const config = MobilityDispatchConfigService.getConfig('open_board');
         const createdAt = new Date(ride.created_at);
         const expiresAt = new Date(createdAt.getTime() + config.offerTimeoutSeconds * 1000);
+
+        const basePriority = 100;
+        const subjectPriorityMultiplier =
+          this.getTrustPriorityMultiplier(customerTrustDecision);
+        const trustAdjustedPriority = Math.round(
+          basePriority * trustPriorityMultiplier * subjectPriorityMultiplier,
+        );
 
         offers.push({
           id: `offer_${ride.id}`,
@@ -230,11 +342,14 @@ export class MobilityOfferService {
           paymentMethod: ride.payment_method,
           
           // Filtros
-          priority: 1, // TODO: calcular prioridade
+          priority: trustAdjustedPriority,
+          trustAdjustedPriority,
+          ...trustMetadata,
           
           // Cliente
           customerName: customerDisplayName,
           customerRating,
+          ...customerTrustMetadata,
         });
       }
 
@@ -243,6 +358,11 @@ export class MobilityOfferService {
           sortOrder === 'asc'
             ? a.estimatedDistance - b.estimatedDistance
             : b.estimatedDistance - a.estimatedDistance,
+        );
+      }
+      if (sortBy === 'priority' || sortBy === 'score') {
+        offers.sort((a, b) =>
+          sortOrder === 'asc' ? a.priority - b.priority : b.priority - a.priority,
         );
       }
 
@@ -262,6 +382,19 @@ export class MobilityOfferService {
     limit: number = 10
   ): Promise<ReservationOffer[]> {
     try {
+      const trustGate = await TrustEventService.canReceiveOperationalCall(
+        driverProfileId,
+        TRUST_ACTOR_ROLES.DRIVER,
+      );
+      if (!trustGate.allowed) {
+        logger.warn('Reservation offers hidden by trust policy', {
+          driverProfileId,
+          reason: trustGate.reason,
+        });
+        return [];
+      }
+      const trustMetadata = this.getTrustOfferMetadata(trustGate.decision);
+
       const rides = await getReservationOfferRides(limit);
       if (rides.length === 0) return [];
 
@@ -294,6 +427,12 @@ export class MobilityOfferService {
         const passengerRatingValue = passengerRecord?.passenger_rating;
         const passengerRating =
           typeof passengerRatingValue === 'number' ? passengerRatingValue : undefined;
+        const passengerTrustDecision = await this.getSubjectTrustDecision(
+          ride.passenger_profile_id,
+          TRUST_ACTOR_ROLES.CUSTOMER,
+        );
+        const passengerTrustMetadata =
+          this.getPassengerTrustOfferMetadata(passengerTrustDecision);
 
         // Determinar status
         let status: 'open' | 'reserved' | 'confirmed' | 'cancelled' = 'open';
@@ -324,6 +463,8 @@ export class MobilityOfferService {
           // Passageiro
           passengerName,
           passengerRating,
+          ...trustMetadata,
+          ...passengerTrustMetadata,
           
           // Status
           acceptedBy: ride.driver_profile_id,
@@ -474,6 +615,16 @@ export class MobilityOfferService {
 
       if (strategy !== 'open_board' && driverData.can_do_rides === false) {
         reasons.push('Driver cannot do rides');
+      }
+
+      const trustRole =
+        strategy === 'open_board' ? TRUST_ACTOR_ROLES.COURIER : TRUST_ACTOR_ROLES.DRIVER;
+      const trustGate = await TrustEventService.canReceiveOperationalCall(
+        driverProfileId,
+        trustRole,
+      );
+      if (!trustGate.allowed) {
+        reasons.push(trustGate.reason || 'Driver blocked by trust policy');
       }
 
       return {

@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from 'react';
+import { Helmet } from 'react-helmet-async';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { ArrowRight, Home, Loader2, MailCheck, RefreshCcw } from 'lucide-react';
 import { Button } from '@/shared/components/ui/button';
@@ -50,7 +51,15 @@ export default function CadastroConfirmacaoPage() {
 
   return (
     <div className="min-h-screen bg-background flex flex-col items-center justify-center px-4">
-      <div className="w-full max-w-sm space-y-6 text-center">
+      <Helmet>
+        <title>Confirmar email | Achegue-se</title>
+        <meta
+          name="description"
+          content="Confirme seu email para ativar sua conta Achegue-se e concluir seu acesso à comunidade."
+        />
+      </Helmet>
+
+      <main id="main-content" tabIndex={-1} className="w-full max-w-sm space-y-6 text-center focus:outline-none">
         <div className="mx-auto w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center">
           <MailCheck className="h-10 w-10 text-primary" />
         </div>
@@ -77,7 +86,7 @@ export default function CadastroConfirmacaoPage() {
           <ol className="space-y-2">
             {[
               'Abra sua caixa de entrada',
-              'Procure o email da Comunidade Conectada',
+              'Procure o email do Achegue-se',
               'Clique em "Confirmar email"',
               'Volte para fazer login ou continuar autenticado',
             ].map((step, index) => (
@@ -135,7 +144,7 @@ export default function CadastroConfirmacaoPage() {
           </button>
           .
         </p>
-      </div>
+      </main>
     </div>
   );
 }

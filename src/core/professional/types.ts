@@ -381,3 +381,162 @@ export interface CreateProfessionalJobInput {
   destaque?: boolean;
   ativo?: boolean;
 }
+
+// ============================================================================
+// LEAD / QUOTE REQUEST TYPES
+// ============================================================================
+
+export type ProfessionalLeadStatus =
+  | "new"
+  | "contacted"
+  | "quoted"
+  | "scheduled"
+  | "completed"
+  | "cancelled"
+  | "archived";
+
+export type ProfessionalLeadPriority = "low" | "normal" | "high" | "urgent";
+
+export interface ProfessionalLeadRecord {
+  id: string;
+  professional_id: string;
+  requester_user_id: string | null;
+  requester_profile_id: string | null;
+  requester_name: string;
+  requester_phone: string | null;
+  requester_email: string | null;
+  service_needed: string;
+  description: string;
+  preferred_date: string | null;
+  preferred_time_window: string | null;
+  neighborhood: string | null;
+  location_id: string | null;
+  source_channel: string;
+  status: ProfessionalLeadStatus;
+  priority: ProfessionalLeadPriority;
+  metadata: Record<string, unknown>;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ProfessionalLeadMessageRecord {
+  id: string;
+  lead_id: string;
+  sender_user_id: string | null;
+  sender_role: "requester" | "professional" | "system";
+  message: string;
+  metadata: Record<string, unknown>;
+  read_at: string | null;
+  created_at: string;
+}
+
+export type ProfessionalLeadQuoteStatus =
+  | "sent"
+  | "accepted"
+  | "declined"
+  | "expired"
+  | "cancelled";
+
+export interface ProfessionalLeadQuoteRecord {
+  id: string;
+  lead_id: string;
+  professional_user_id: string | null;
+  amount_cents: number;
+  currency: string;
+  description: string;
+  estimated_start_date: string | null;
+  estimated_duration: string | null;
+  status: ProfessionalLeadQuoteStatus;
+  metadata: Record<string, unknown>;
+  created_at: string;
+  updated_at: string;
+}
+
+export type ProfessionalServiceEngagementStatus =
+  | "scheduled"
+  | "in_progress"
+  | "completed"
+  | "cancelled";
+
+export interface ProfessionalServiceEngagementRecord {
+  id: string;
+  lead_id: string;
+  quote_id: string;
+  professional_id: string;
+  professional_user_id: string | null;
+  requester_user_id: string | null;
+  requester_profile_id: string | null;
+  amount_cents: number;
+  currency: string;
+  service_description: string;
+  scheduled_date: string | null;
+  estimated_duration: string | null;
+  status: ProfessionalServiceEngagementStatus;
+  completed_at: string | null;
+  cancelled_at: string | null;
+  metadata: Record<string, unknown>;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ProfessionalLeadDetails extends ProfessionalLeadRecord {
+  professional?: {
+    id: string;
+    professional_name: string | null;
+    service_category: string | null;
+    service_subcategory: string | null;
+    profile_id: string;
+  } | null;
+}
+
+export interface CreateProfessionalLeadInput {
+  professionalId: string;
+  requesterName: string;
+  requesterPhone?: string;
+  requesterEmail?: string;
+  serviceNeeded: string;
+  description: string;
+  preferredDate?: string;
+  preferredTimeWindow?: string;
+  neighborhood?: string;
+  locationId?: string;
+  sourceChannel?: "public_profile" | "legacy_detail" | "central" | string;
+  priority?: ProfessionalLeadPriority;
+  metadata?: Record<string, unknown>;
+}
+
+export interface UpdateProfessionalLeadStatusInput {
+  leadId: string;
+  status: ProfessionalLeadStatus;
+  note?: string;
+}
+
+export interface SendProfessionalLeadMessageInput {
+  leadId: string;
+  message: string;
+}
+
+export interface CreateProfessionalLeadQuoteInput {
+  leadId: string;
+  amountCents: number;
+  description: string;
+  estimatedStartDate?: string;
+  estimatedDuration?: string;
+}
+
+export interface UpdateProfessionalLeadQuoteStatusInput {
+  quoteId: string;
+  status: Extract<ProfessionalLeadQuoteStatus, "accepted" | "declined" | "cancelled">;
+}
+
+export interface UpdateProfessionalServiceEngagementStatusInput {
+  engagementId: string;
+  status: ProfessionalServiceEngagementStatus;
+  note?: string;
+}
+
+export interface SubmitProfessionalEngagementReviewInput {
+  engagementId: string;
+  rating: number;
+  comment?: string;
+}

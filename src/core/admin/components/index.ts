@@ -11,4 +11,5 @@ export { AdminTable } from "./AdminTable";
 export { DriverEarningsMetrics } from "./DriverEarningsMetrics";
 export { DriverCancellationMetrics } from "./DriverCancellationMetrics";
 export { ReputationManagementPanel } from "./ReputationManagementPanel";
+export { TrustEventsQueue } from "./TrustEventsQueue";
 export { MobilitySettingsPanel } from "./MobilitySettingsPanel";

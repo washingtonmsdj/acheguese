@@ -32,6 +32,9 @@ export function useMenuItems(menuId: string, categoryId?: string) {
       price: number;
       image_url?: string;
       preparation_time_min?: number;
+      stock_quantity?: number;
+      stock_alert_threshold?: number;
+      is_available?: boolean;
       tags?: string[];
       allergens?: string[];
       nutritional_info?: Record<string, any>;

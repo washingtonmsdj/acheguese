@@ -1,19 +1,12 @@
 /* eslint-disable react-refresh/only-export-components */
 import { logger } from '@/shared/utils/logger';
-import React, { createContext, useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { SessionState } from "../state/SessionState";
 import { SessionService } from "../services/SessionService";
+import { SessionReactContext } from "./SessionReactContext";
 import type { SessionContext } from "../types";
-/**
- * SessionReactContext - The React context object.
- * Exported so useSessionContext.ts can import it.
- *
- * NOTE: The TypeScript interface `SessionContext` (from ../types) and this
- * context object are intentionally named differently to avoid collision.
- */
-export const SessionReactContext = createContext<SessionContext | undefined>(
-  undefined,
-);
+
+const AUTH_INIT_TIMEOUT_MS = 7000;
 /**
  * SessionProvider - React provider that reads from SessionState (SSOT).
  *
@@ -42,12 +35,13 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
     // O SessionService atualiza o SessionState via subscribe acima
     SessionService.initialize();
 
-    // Aguarda o primeiro evento de auth para liberar o isLoading
-    // Timeout de segurança caso o SDK não dispare nenhum evento
+    // Aguarda o primeiro evento de auth para liberar o isLoading.
+    // Em dev, o Supabase pode levar alguns segundos para recuperar um lock
+    // de sessao; abaixo disso a UI gera falso positivo de timeout.
     const timeout = setTimeout(() => {
       logger.warn("⚠️ SessionProvider: auth init timeout — liberando UI");
       setIsLoading(false);
-    }, 3000);
+    }, AUTH_INIT_TIMEOUT_MS);
 
     SessionService.initializeSession().then(() => {
       clearTimeout(timeout);

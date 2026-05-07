@@ -241,6 +241,8 @@ Criterio de aceite:
 - Central Motoboy nao navega para caminhos antigos de perfil quando a acao e operacional.
 - Rotas antigas, se existirem, redirecionam sem quebrar links.
 - `npm run typecheck` passa.
+- Implementado: onboarding de motorista/motoboy na Central e Perfil foi consolidado em `/central/motorista/cadastro` e `/central/motoboy/cadastro`, sem uso operacional de `/create-driver`.
+- Implementado: rota legada `/create-driver` removida do runtime de `src` (rotas e contexto), com teste de blindagem anti-regressao.
 
 ---
 
@@ -460,10 +462,17 @@ Implementado nesta fase:
 - [x] Tela de entregas da loja combina entregas manuais com entregas vinculadas a pedidos, buscando `ride_requests` por `order.id` pelo `OrderDeliveryLinkService`.
 ide_requests por order.id pelo OrderDeliveryLinkService.
 - [x] Checkout grava snapshot operacional de cliente/entrega em `orders.source_metadata` para a loja listar pedidos com dados uteis sem depender de tabela legada.
+- [x] Checkout premium agora envia o cliente ao detalhe canonico do pedido criado (`/gastronomia/pedidos/:orderId`) em vez de fecha-lo de volta no carrinho; comportamento blindado em `src/modules/business/premium/pages/PremiumBusinessCheckoutPage.spec.tsx`.
+- [x] Bootstrap de auth/session em dev foi endurecido: `storageKey` do Supabase saiu do lock generico `token`, `SessionService` ganhou fallback inicial por `getSession()` e o aviso esperado de storage em dev deixou de poluir o console como `warn`.
 - [x] Comprovante do motoboy agora sincroniza de `ride_requests.proof_of_delivery` para `orders.proof_of_delivery` e aparece no detalhe do pedido.
 ide_requests.proof_of_delivery para orders.proof_of_delivery e aparece no detalhe do pedido.
 - [x] Criada comunicacao operacional derivada do SSOT: `OrderDeliveryNotificationService` notifica cliente, loja e motoboy em criacao/mudanca de status sem quebrar o fluxo se notificacao falhar.
 - [x] Detalhe do pedido ganhou painel operacional da loja via `OrderService`: aceitar, iniciar preparo, marcar pronto, despachar/entregar e cancelar com motivo auditavel no SSOT.
+- [x] Cardapio da loja ganhou controle operacional de disponibilidade, estoque atual, alerta de estoque baixo e acao rapida "marcar esgotado", todos persistidos por `MenuService`/`useMenuItems`.
+- [x] Smoke `GastronomyOperationalSSOT.test.ts` cobre a operacao de estoque/disponibilidade do cardapio para evitar retorno de estado paralelo ou UI sem SSOT.
+- [x] Playwright `tests/e2e/gastronomy-operational.spec.ts` criado para validar a tela autenticada de cardapio com `E2E_GASTRONOMY_BUSINESS_ID` real.
+- [x] `npm run validate:e2e` passou a carregar `.env.local` com precedencia sobre `.env.test`, evitando que placeholders mascarem o Supabase real local.
+- [ ] Limitado localmente: `SUPABASE_SERVICE_ROLE_KEY` ausente; asserts administrativos e seeds automaticos continuam pulados.
 
 ## Tarefa 3.2: Substituir `confirm()` nativo
 
@@ -477,6 +486,11 @@ Arquivos com evidencia:
 - `src/modules/business/gastronomy/pages/MenuManagementPage.tsx`
 - `src/modules/business/gastronomy/components/delivery/NeighborhoodManager.tsx`
 - `src/modules/business/gastronomy/components/hours/ExceptionsManager.tsx`
+- `src/app/pages/OfflineSettingsPage.tsx`
+- `src/core/community/pages/ComunidadePage.tsx`
+- `src/core/community/components/CommentsModal.tsx`
+- `src/core/community/components/CommentItem.tsx`
+- `src/modules/community/components/CommentsModal.tsx`
 
 Passos:
 
@@ -487,6 +501,7 @@ Passos:
 Criterio de aceite:
 
 - [x] `rg -n "confirm\\(" src/modules/business/gastronomy -S` nao encontra esses casos.
+- [x] `rg -n "confirm\\(" src/app/pages/OfflineSettingsPage.tsx src/core/community src/modules/community -g "*.tsx" -g "*.ts"` nao encontra casos nos fluxos auditados.
 - [x] Acoes destrutivas usam `ConfirmActionDialog`, baseado em `AlertDialog` do design system.
 - [x] Dialogs preservam estado pendente e bloqueiam confirmacao quando ha operacao destrutiva em andamento.
 
@@ -524,6 +539,8 @@ Estado atual validado:
 
 ## Tarefa 4.1: Substituir Central Profissional placeholder
 
+Status: concluida parcialmente em 2026-05-06.
+
 Objetivo: profissional precisa de cockpit real.
 
 Arquivo principal:
@@ -543,11 +560,14 @@ Dashboard minimo:
 
 Criterio de aceite:
 
-- Arquivo nao declara mais que e placeholder.
-- Central Profissional exibe dados reais ou estados vazios honestos.
-- Nao ha mock apresentado como dado real.
+- [x] Arquivo nao declara mais que e placeholder.
+- [x] Central Profissional exibe dados reais ou estados vazios honestos.
+- [x] Nao ha mock apresentado como dado real.
+- [x] Central mostra servicos, disponibilidade, metricas e pedidos de orcamento pelo SSOT.
 
 ## Tarefa 4.2: Criar funil de lead/orcamento
+
+Status: concluida parcialmente em 2026-05-06.
 
 Objetivo: cliente deve pedir orcamento e profissional deve responder.
 
@@ -568,10 +588,20 @@ Passos:
 
 Criterio de aceite:
 
-- Cliente solicita orcamento.
-- Profissional recebe e muda status.
-- Cliente acompanha resposta.
-- Evento aparece no centro de notificacoes.
+- [x] Cliente solicita orcamento no perfil publico e no detalhe legado de servico.
+- [x] Lead e persistido em `professional_leads` com historico automatico em `professional_lead_events`.
+- [x] Profissional recebe notificacao transacional apontando para `/central/profissional`.
+- [x] Central Profissional lista pedidos recebidos sem acessar tabela diretamente pela UI.
+- [x] Profissional muda status do lead pela UI da central.
+- [x] Cliente autenticado acompanha resposta/status em `/servicos/orcamentos/:leadId`.
+- [x] Resposta/mensagem do profissional para o cliente via `professional_lead_messages`.
+- [x] Proposta estruturada com preco, prazo e aceite/recusa do cliente via `professional_lead_quotes`.
+- [x] Transformar proposta aceita em servico contratado/agendado via `professional_service_engagements`.
+- [x] Central Profissional lista atendimentos contratados e permite iniciar/concluir/cancelar pelo `ProfessionalLeadService`.
+- [x] Cliente visualiza o atendimento contratado na tela de acompanhamento do orcamento.
+- [x] Cliente avalia profissional somente apos atendimento concluido, via `ProfessionalLeadService.submitEngagementReview` e `ReviewsService`.
+- [x] Smoke Playwright `tests/e2e/professional-operational.spec.ts` cobre `/servicos` e `/servicos/orcamentos/:leadId`, garantindo que as rotas saem do Suspense global.
+- [x] `/servicos` expoe `main#main-content`, mantendo o skip-link global e o landmark semantico da vitrine publica.
 
 ## Tarefa 4.3: Reputacao, verificacao e area de atendimento
 
@@ -595,6 +625,7 @@ Criterio de aceite:
 # Fase 5: Marketplace Social/Local e Comunidade
 
 ## Tarefa 5.1: Socializar classificados
+Status: parcialmente concluida em 2026-05-07
 
 Objetivo: classificado deve ser entidade social/local, nao apenas listagem.
 
@@ -615,6 +646,9 @@ Criterio de aceite:
 - Anuncio circula no bairro com controle anti-spam.
 - Vendedor tem sinais de confianca.
 - Conversa privada tem contexto do anuncio.
+- Implementado: comentarios/perguntas publicas no detalhe do anuncio (`classified_comments`) com envio autenticado, exclusao do autor e RLS por migration.
+- Implementado: reputacao transacional privada bilateral no pos-negocio (comprador-vendedor) condicionada a participantes reais de conversa e status vendido.
+- Implementado: trilha administrativa dedicada na fila unica de confianca para comentarios/perguntas denunciados (contexto enriquecido, filtros rapidos, contadores e atalhos para anuncio e fila de denuncias).
 
 ## Tarefa 5.2: Feed unificado do bairro
 
@@ -685,6 +719,7 @@ Criterio de aceite:
 - Backend/RLS/servico tambem valida permissao.
 
 ## Tarefa 6.2: Reputacao unificada
+Status: parcialmente concluida em 2026-05-07
 
 Entidades:
 
@@ -711,6 +746,9 @@ Criterio de aceite:
 - Reputacao nao e apenas visual.
 - Ranking local usa reputacao como sinal.
 - Denuncias afetam risco/moderacao.
+- Implementado: score operacional por persona em `core/trust`, reincidencia 30/90 dias, risco e impacto no dispatch.
+- Implementado: eventos de confianca para pedidos/mobilidade/classificados com fila admin operacional e acoes administrativas auditadas.
+- Pendente: consolidar reputacao unificada com peso territorial completo em ranking transversal de feed/busca.
 
 ## Tarefa 6.3: Matriz de notificacoes
 
@@ -803,14 +841,30 @@ Criterio de aceite:
 
 # Fase 8: SEO, Mobile, Performance, Busca e IA
 
+Status: em andamento transversal.
+
 ## Tarefa 8.1: SEO e rotas publicas
 
 Itens:
 
 - corrigir rota com typo `businesss` ou manter redirect canonico controlado;
+- [x] Implementado: `/businesss` redireciona para `/empresas`, `/businesss/:id/catalogo` redireciona para `/empresas/:id/catalogo`, admin `/admin/businesss` redireciona para `/admin/empresas`, breadcrumbs usam somente `empresas` como rota canonica.
 - sitemap dinamico com URLs reais;
 - canonicals para empresas, servicos, gastronomia, classificados, educacao e turismo;
 - schema.org para LocalBusiness, Product/Offer, Event, JobPosting, Place e FAQ.
+
+Implementado transversalmente:
+
+- [x] Onboarding publico `/cadastro` e `/cadastro/confirmacao` alinhado com a marca `Achegue-se`.
+- [x] Onboarding publico expoe `main#main-content`, preservando skip-link global e landmark acessivel.
+- [x] Smoke Playwright `tests/e2e/onboarding-public.spec.ts` cobre as rotas publicas de cadastro e confirmacao fora do Suspense global.
+- [x] Paginas institucionais `/sobre`, `/contato`, `/termos` e `/privacidade` alinhadas com a marca `Achegue-se`.
+- [x] Paginas institucionais expoem `main#main-content`, preservando skip-link global e landmark acessivel.
+- [x] Smoke Playwright `tests/e2e/institutional-public.spec.ts` cobre marca canonica e landmark nas paginas institucionais.
+- [x] SEO territorial do hub canonico foi corrigido no SSOT `buildTerritorialMetadata`: landing de bairro/grupo usa titulo editorial `Territorio | Achegue-se`, enquanto modulos mantem titulo operacional por contexto.
+- [x] Smoke Playwright `tests/e2e/landing-public.spec.ts` valida home publica e a rota curta `/complexo` resolvendo para a landing canonica do Complexo sem erro territorial.
+- [x] SEO territorial de modulos com prefixo (`/empresas/...`, `/servicos/...`) extrai cidade corretamente e evita titulos como `em Ba`.
+- [x] Landings raiz `/empresas` e `/servicos` possuem metadados proprios e cobertura Playwright contra loader global e titulo generico.
 
 Criterio de aceite:
 
@@ -867,6 +921,8 @@ Conteudo minimo:
 Criterio de aceite:
 
 - Nenhum documento antigo e necessario para saber estado atual.
+- [x] Implementado: `docs/STATUS_ATUAL.md` e a fonte operacional unica para estado, validacoes, P0 abertos e proximas tarefas.
+- [x] Implementado: indices principais (`README`, `INDEX`, `DOCUMENTATION_INDEX`, `INDEX_CANONICO`) apontam para `STATUS_ATUAL.md`.
 
 ## Tarefa 9.2: Marcar ou arquivar docs obsoletos
 
@@ -889,6 +945,8 @@ Passos:
 Criterio de aceite:
 
 - Documentos obsoletos nao competem com documentos vivos.
+- [x] Implementado parcial P0: `docs/STATUS.md` e `docs/VALIDACAO_FINAL_E_PROXIMOS_PASSOS.md` foram convertidos em redirecionamentos historicos.
+- [x] Implementado parcial P0: `docs/DOCUMENT_REPLACEMENTS.md` registra substituicao por `STATUS_ATUAL.md` e plano executavel atual.
 
 ## Tarefa 9.3: Atualizar auditorias
 
@@ -909,8 +967,9 @@ Criterio de aceite:
 
 ## Comunidade / Feed
 
-- [ ] P0: garantir `location_id`, escopo territorial e politica de visibilidade em todo post.
-- [ ] P0: finalizar comentarios onde houver TODO.
+- [x] P0 parcial: criacao de post exige `location_id` resolvido no composer (`locationId`/`location_id`) e `reach` persiste tambem no caminho `PostsFacade.mutations.createPost`; falta auditoria final de todos os pontos de leitura/filtro territorial.
+- [x] P0 parcial: finalizar TODO critico de comentarios no feed principal (edicao inline com persistencia, salvar/cancelar e indicador de editado).
+- [x] P0 parcial: remover `confirm()` nativo de exclusao de post/comentario nos fluxos auditados e usar `ConfirmActionDialog`.
 - [ ] P1: feed "Tudo do bairro".
 - [ ] P1: ranking por proximidade, reputacao, urgencia, recencia e interesses.
 - [ ] P1: tipos claros de publicacao.
@@ -921,10 +980,10 @@ Criterio de aceite:
 
 ## Marketplace / Classificados
 
-- [ ] P0: comentarios/perguntas publicas.
-- [ ] P0: salvar, compartilhar e report.
-- [ ] P0: reputacao comprador/vendedor.
-- [ ] P0: status do anuncio.
+- [x] P0 parcial: comentarios/perguntas publicas no detalhe do anuncio implementados com `classified_comments` (migration + RLS), listagem, envio autenticado e exclusao pelo autor; falta evoluir moderacao/fila unificada para esse canal.
+- [x] P0 parcial: detalhe de classificado com salvar persistente (favoritos locais), compartilhar com fallback robusto e report funcional via `classified_reports`; falta consolidar comentarios/perguntas publicas no anuncio.
+- [x] P0 parcial: reputacao comprador/vendedor sem dado fake no detalhe; card do vendedor mostra sinal real de anuncios ativos e nota real quando existir review publica, faltando avaliacao transacional comprador/vendedor apos venda confirmada.
+- [x] P0: status do anuncio preserva valor real do banco no mapper e o vendedor pode pausar, reativar ou marcar como vendido pelo detalhe do anuncio.
 - [ ] P1: distribuir no feed/grupos com limite.
 - [ ] P1: bairro verificado e taxa de resposta.
 - [ ] P1: protecoes anti-golpe.
@@ -945,8 +1004,14 @@ Criterio de aceite:
 ## Servicos / Profissionais
 
 - [ ] P0: verificar identidade, telefone e area.
-- [ ] P0: substituir Central Profissional placeholder.
-- [ ] P0: lead/orcamento/notificacao.
+- [x] P0 parcial: substituir Central Profissional placeholder por painel conectado ao `ProfessionalFacade`.
+- [x] P0 parcial: lead/orcamento/notificacao com schema, RLS, CTA publico, notificacao e painel de recebidos.
+- [x] P0 parcial: acao de status do lead pela central profissional.
+- [x] P0 parcial: resposta/mensagem do lead e acompanhamento pelo cliente autenticado.
+- [x] P1 parcial: proposta estruturada com preco, prazo e aceite.
+- [x] P1 parcial: smoke E2E publico de servicos/profissionais e landmark `main#main-content` na vitrine.
+- [x] P1 parcial: aceite de proposta gera atendimento contratado em `professional_service_engagements`.
+- [x] P1 parcial: avaliacao pos-servico controlada por atendimento concluido.
 - [ ] P1: agenda/disponibilidade.
 - [ ] P1: recomendacao conectada ao perfil.
 - [ ] P1: avaliacoes pos-servico.
@@ -1008,20 +1073,21 @@ Criterio de aceite:
 - [x] P0: integracao com motoboy.
 - [x] P0: remover `confirm()` nativo.
 - [x] P0: controlar deprecated/beta.
+- [x] P0 parcial: loja controla pausa/esgotamento/estoque de item por SSOT canonico de cardapio.
 - [ ] P1: SLA de pedido.
 - [ ] P1: painel realtime.
 - [ ] P1: regras de area de entrega.
 - [ ] P1: reputacao de restaurante.
-- [ ] P2: recorrencia, estoque, analytics e campanhas.
+- [ ] P2: recorrencia, analytics e campanhas.
 
 ## Mobilidade / Motoboy
 
-- [ ] P0: tracking real.
-- [ ] P0: realtime/push.
-- [ ] P0: passageiro E2E.
-- [ ] P0: motorista E2E.
-- [ ] P0: motoboy E2E.
-- [ ] P0: rotas Central/Perfil/Mobilidade.
+- [x] P0: tracking real.
+- [x] P0: realtime/push.
+- [x] P0: passageiro E2E.
+- [x] P0: motorista E2E.
+- [x] P0: motoboy E2E.
+- [x] P0: rotas Central/Perfil/Mobilidade.
 - [ ] P1: precificacao e comprovante.
 - [ ] P1: disputas, cancelamentos e SLA.
 - [ ] P2: ranking de motoristas/motoboys.
@@ -1075,11 +1141,29 @@ Criterio de aceite:
 ## Admin / Moderacao
 
 - [ ] P0: consolidar admin legado/duplicado.
-- [ ] P0: fila unica de moderacao.
+- [x] P0 parcial: criar fila admin inicial para eventos privados de confianca operacional (`trust_events`).
+- [ ] P0: consolidar fila unica de moderacao.
 - [ ] P0: audit log.
 - [ ] P1: painel por bairro.
 - [ ] P1: SLAs.
 - [ ] P1: anti-fraude.
+
+## Confianca Operacional / Reputacao 360
+
+- [x] P0: criar SSOT transversal `core/trust` para eventos privados/publicos de confianca operacional.
+- [x] P0: criar migration `trust_events` com contexto, ator, alvo, severidade, visibilidade, status e evidencias.
+- [x] P0: loja registra feedback privado sobre cliente e motoboy no detalhe do pedido.
+- [x] P0: cancelamento tardio solicitado pelo cliente cria evento privado/admin quando prejudica loja ou motoboy.
+- [x] P0: admin visualiza fila de eventos de confianca e pode marcar como em analise, confirmado, descartado ou penalizado.
+- [x] P0 parcial: cliente/passageiro registra feedback privado sobre motorista/motoboy no historico de mobilidade.
+- [x] P0 parcial: motoboy/motorista registra feedback privado sobre cliente/passageiro no historico operacional.
+- [x] P0 parcial: motoboy registra feedback privado sobre loja quando a entrega esta vinculada a pedido de gastronomia.
+- [x] P0: cliente avaliar loja no pos-entrega usando review publico canonico + trust privado quando necessario.
+- [x] P1: score operacional por persona: cliente, loja, motoboy, motorista.
+- [x] P1: regras de reincidencia 30/90 dias e sugestao automatica de aviso/penalidade.
+- [x] P2 parcial: impacto controlado em dispatch/chamados para risco critico, sem punicao cega por evento unico.
+- [x] P1: persistir acoes administrativas formais: aviso, restricao temporaria, desbloqueio e auditoria.
+- [x] P1: aplicar impacto graduado para risco `watchlist`/`restricted` em prioridade, sem bloqueio automatico.
 
 ## Billing / Monetizacao
 
@@ -1097,7 +1181,9 @@ Criterio de aceite:
 
 ## SEO / Rotas
 
-- [ ] P0: corrigir `businesss` ou redirect canonico.
+- [x] P0: corrigir `businesss` com redirects canonicos e breadcrumb sem rota canonica errada.
+- [x] P0 parcial: rotas publicas de onboarding cobertas por smoke E2E e marca canonica.
+- [x] P0 parcial: rotas institucionais publicas cobertas por smoke E2E e marca canonica.
 - [ ] P0: sitemap dinamico real.
 - [ ] P1: canonicals por modulo.
 - [ ] P1: schema.org.

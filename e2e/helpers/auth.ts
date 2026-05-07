@@ -21,8 +21,17 @@ export async function login(page: Page, email: string, password: string) {
 
   await page.locator("#login-identifier").fill(email);
   await page.locator("#login-password").fill(password);
+  const cookieAccept = page.getByRole("button", { name: /aceitar todos/i });
+  if (await cookieAccept.isVisible().catch(() => false)) {
+    await cookieAccept.click().catch(() => undefined);
+  }
 
-  await page.getByRole("button", { name: /^Entrar$/i }).click();
+  const submitButton = page.getByRole("button", { name: /^Entrar$/i });
+  await submitButton.waitFor({ state: "visible", timeout: 10_000 });
+  await submitButton.click({ trial: true }).catch(() => undefined);
+  await submitButton.click().catch(async () => {
+    await page.locator("#login-password").press("Enter");
+  });
 
   await page.waitForURL((url) => !url.pathname.includes("/login"), {
     timeout: 15_000,

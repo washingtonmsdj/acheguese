@@ -20,7 +20,7 @@ interface OperationConfigFormProps {
 }
 
 export function OperationConfigForm({ businessId }: OperationConfigFormProps) {
-  const { config, isLoading, setConfig, isSettingConfig } = useOperationConfig(businessId);
+  const { config, isLoading, updateConfig, isUpdating } = useOperationConfig(businessId);
 
   const [formData, setFormData] = useState({
     accepts_pickup: true,
@@ -54,7 +54,7 @@ export function OperationConfigForm({ businessId }: OperationConfigFormProps) {
   }, [config]);
 
   const handleSave = () => {
-    setConfig({
+    updateConfig({
       business_id: businessId,
       ...formData,
       temporarily_closed_reason: formData.temporarily_closed_reason || null,
@@ -277,11 +277,11 @@ export function OperationConfigForm({ businessId }: OperationConfigFormProps) {
 
         <Button
           onClick={handleSave}
-          disabled={isSettingConfig}
+          disabled={isUpdating}
           className="w-full"
         >
           <Save className="w-4 h-4 mr-2" />
-          {isSettingConfig ? 'Salvando...' : 'Salvar Configurações'}
+          {isUpdating ? 'Salvando...' : 'Salvar Configurações'}
         </Button>
       </CardContent>
     </Card>

@@ -6,7 +6,7 @@ import { USER_ROLE } from "@/shared/types/constants";
 
 const routeNames: Record<string, string> = {
   "": "Feed",
-  businesss: "Empresas",
+  empresas: "Empresas",
   services: "Serviços",
   classificados: "Classificados",
   eventos: "Eventos",
@@ -36,8 +36,8 @@ function resolveRouteName(name: string): string | undefined {
   switch (name) {
     case "":
       return routeNames[""];
-    case "businesss":
-      return routeNames.businesss;
+    case "empresas":
+      return routeNames.empresas;
     case "services":
       return routeNames.services;
     case "classificados":

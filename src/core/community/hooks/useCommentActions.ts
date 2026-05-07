@@ -96,9 +96,6 @@ export function useCommentActions(
   };
 
   const deleteComment = async (commentId: string): Promise<boolean> => {
-    if (!confirm("Tem certeza que deseja excluir este comentário?"))
-      return false;
-
     try {
       await commentService.deleteComment(commentId);
       toast.success("Comentário excluído");
@@ -110,5 +107,33 @@ export function useCommentActions(
     }
   };
 
-  return { submitting, submitComment, deleteComment };
+  const updateComment = async (
+    commentId: string,
+    content: string,
+  ): Promise<boolean> => {
+    if (!content.trim()) {
+      toast.error("Comentario nao pode ficar vazio");
+      return false;
+    }
+
+    try {
+      const updated = await commentService.updateComment(commentId, {
+        content: content.trim(),
+      });
+
+      if (!updated) {
+        toast.error("Erro ao atualizar comentario");
+        return false;
+      }
+
+      toast.success("Comentario atualizado");
+      return true;
+    } catch (error) {
+      logger.error("Error updating comment:", error);
+      toast.error("Erro ao atualizar comentario");
+      return false;
+    }
+  };
+
+  return { submitting, submitComment, deleteComment, updateComment };
 }

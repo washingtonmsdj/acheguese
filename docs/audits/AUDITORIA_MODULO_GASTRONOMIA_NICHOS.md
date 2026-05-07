@@ -39,10 +39,17 @@ Estado observado em `src/modules/business/gastronomy/niches/registry.ts`:
 ## Lacunas P0
 
 - [ ] P0: validar fluxo cliente completo: ver restaurante, montar pedido, carrinho, checkout, pagamento/confirmacao, status, entrega/retirada e avaliacao.
+  - [x] Cliente possui rota publica de detalhe do pedido, notificacao com link e avaliacao pos-entrega conectada ao `ReviewQueryService`; nota baixa tambem cria evento privado em `core/trust`.
+  - [x] Smoke de contrato SSOT cobre rota publica do pedido, notificacao, avaliacao pos-entrega, guard de operacao da loja e dashboard real.
 - [x] P0: alinhar front de pedidos/entregas da loja ao SSOT de `orders`/`ride_requests`.
-ide_requests.
 - [ ] P0: validar fluxo restaurante completo: receber pedido, aceitar, preparar, despachar, cancelar, pausar loja, ajustar tempo e esgotar item.
   - [x] Aceitar, iniciar preparo, marcar pronto, despachar/entregar e cancelar com motivo foram conectados no detalhe do pedido via `OrderService`/SSOT.
+  - [x] Cancelamento com motivo estruturado agora pode gerar evento privado de confianca quando o cliente cancela tarde e prejudica loja/motoboy.
+  - [x] Loja pode registrar feedback operacional privado sobre cliente e motoboy no detalhe do pedido.
+  - [x] Dashboard da loja exibe status operacional real, pedidos de hoje, cardapio e areas de entrega por hooks canonicos.
+  - [x] Configuracao operacional de pausa de loja/tempo de preparo foi realinhada ao contrato canonico de `useOperationConfig`.
+  - [x] Cardapio da loja expoe disponibilidade, estoque atual, alerta de estoque baixo e acao rapida de esgotar item via `MenuService`/`useMenuItems`.
+  - [x] Playwright operacional criado para validar cardapio autenticado com loja real (`tests/e2e/gastronomy-operational.spec.ts`).
   - [ ] Ainda falta validar visualmente, com dados reais/autenticados, pausa de loja, ajuste de tempo operacional e pausa/esgotamento de item.
 - [x] P0: integrar pedido com motoboy quando for delivery proprio/plataforma.
 - [x] P0: trocar `confirm()` nativo em delecao de categoria, item, area de entrega e excecoes de horario.
@@ -55,7 +62,12 @@ ide_requests.
 - [ ] P1: criar painel operacional de restaurante com fila de pedidos em tempo real.
 - [ ] P1: criar regras por area de entrega: taxa, tempo, pedido minimo e raio/bairro.
 - [ ] P1: criar pausa de loja/item com motivo e tempo.
-- [ ] P1: criar reputacao de restaurante: entrega, qualidade, atraso, cancelamento, avaliacao.
+- [x] P1 parcial: iniciar reputacao operacional privada via `core/trust` e `trust_events`.
+- [x] P1 parcial: cliente/passageiro -> motoboy e motoboy -> loja/cliente foram conectados ao SSOT privado.
+- [x] P1: criar score operacional, reincidencia 30/90 dias e acao recomendada por persona no SSOT de confianca.
+- [x] P1: criar acoes administrativas formais com aviso, restricao temporaria, desbloqueio e auditoria.
+- [x] P1: aplicar impacto graduado em prioridade operacional para `watchlist`/`restricted`, mantendo bloqueio automatico apenas para risco critico.
+- [x] P1: completar reviews publicos cliente -> loja no pos-entrega.
 - [x] P1: criar comprovante e comunicacao cliente/restaurante/motoboy para o fluxo operacional base.
 - [ ] P1: criar testes E2E para pizza e um nicho basico.
 
@@ -64,7 +76,7 @@ ide_requests.
 - [ ] P2: criar campanha local: cupom por bairro, frete gratis, horario ocioso.
 - [ ] P2: criar recorrencia/encomenda: bolo, salgados, marmita semanal, pao/assinatura.
 - [ ] P2: criar analytics de cardapio: itens vistos, adicionados, removidos, vendidos e margem.
-- [ ] P2: criar estoque simples para itens limitados.
+- [x] P2: criar estoque simples para itens limitados.
 - [ ] P2: criar ranking local por relevancia, nao apenas ordem manual.
 
 ## Evidencias Tecnicas
@@ -76,6 +88,25 @@ ide_requests.
 - `src/modules/mobility/delivery/services/OrderDeliveryLinkService.ts`: sincroniza `ride_requests` de motoboy/gastronomia com `orders.logistics_status`.
 - `src/modules/mobility/core/RideOperationalService.ts`: aciona sincronizacao do pedido ao aceitar, cancelar, retirar, iniciar, entregar ou falhar entrega.
 - `src/modules/business/gastronomy/components/orders/OrderOperationsPanel.tsx`: painel operacional da loja para avancar pedido por status e cancelar com motivo auditavel no SSOT.
+- `src/modules/business/gastronomy/components/orders/OrderTrustFeedbackPanel.tsx`: feedback privado da loja sobre cliente/motoboy integrado ao SSOT de confianca.
+- `src/modules/business/gastronomy/components/orders/OrderPublicReviewPanel.tsx`: avaliacao publica cliente -> loja no pos-entrega usando `ReviewQueryService` e evento privado em `core/trust` quando necessario.
+- `src/modules/mobility/delivery/services/OrderDeliveryNotificationService.ts`: notificacao do cliente agora abre `/gastronomia/pedidos/:orderId`.
+- `src/modules/business/gastronomy/pages/GastronomyDashboardPage.tsx`: substitui contadores fixos por cards operacionais conectados aos hooks canonicos.
+- `src/modules/business/gastronomy/components/hours/OperationConfigForm.tsx`: usa `updateConfig`/`isUpdating` do hook canonico para salvar pausa e tempo operacional.
+- `src/modules/business/gastronomy/__tests__/GastronomyOperationalSSOT.test.ts`: teste de contrato para impedir regressao do fluxo operacional SSOT de gastronomia.
+- `tests/e2e/gastronomy-operational.spec.ts`: Playwright autenticado para validar cardapio da loja quando houver `E2E_GASTRONOMY_BUSINESS_ID` real.
+- `src/core/trust/services/TrustEventService.ts`: servico canonico para eventos de confianca operacional.
+- `src/core/trust/services/TrustPolicyService.ts`: politica canonica de score, reincidencia, risco e bloqueio de chamados criticos.
+- `src/core/trust/components/TrustFeedbackForm.tsx`: formulario reutilizavel para feedback privado por contexto/participante.
+- `src/core/admin/components/TrustEventsQueue.tsx`: fila admin exibe eventos, score por perfil, reincidencia e acao recomendada.
+- `trust_admin_actions`: tabela de auditoria para avisos, restricoes temporarias e desbloqueios aplicados pelo admin.
+- `src/modules/mobility/components/RideHistoryUnified.tsx`: cliente/passageiro registra feedback privado sobre motorista/motoboy.
+- `src/modules/mobility/components/driver/DriverTrustFeedbackPanel.tsx`: motorista/motoboy registra feedback privado sobre cliente e loja.
+- `src/modules/mobility/services/MobilityOfferService.ts`: ofertas/aceite de motorista e motoboy passam pelo gate de confianca critica.
+- `src/modules/mobility/hooks/useDriverDashboardBase.ts`: ofertas abertas de motoboy sao ordenadas por prioridade ajustada de confianca.
+- `src/modules/mobility/components/driver/DriverRidesLayout.tsx` e `DriverDeliveriesLayout.tsx`: UI mostra quando a solicitacao tem prioridade reduzida por confianca.
+- `src/modules/business/gastronomy/services/DeliveryService.ts`: aceite de entrega canonica bloqueia motoboy em risco critico.
+- `supabase/migrations/20260506090000_create_trust_events.sql`: tabela `trust_events` com RLS e fila admin.
 - `src/modules/business/gastronomy/billing/legacy/StripeService.ts`: arquivado fora do export publico; SSOT atual em `@/core/billing`.
 - `src/modules/business/gastronomy/billing/legacy/permissions.ts`: arquivado fora do export publico; SSOT atual em `@/core/billing`.
 - `src/modules/business/gastronomy/billing/legacy/featureFlags.ts`: arquivado fora do export publico; SSOT atual em `@/core/billing`.

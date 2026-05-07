@@ -47,7 +47,7 @@ export default function CentralMotoristaPage() {
                 Você ainda não ativou seu perfil de motorista. Cadastre-se para começar a receber solicitações de corridas.
               </p>
             </div>
-            <Button onClick={() => navigate(appUrls.mobility.createDriver)} className="gap-2">
+            <Button onClick={() => navigate(appUrls.profile.mobilidade.motorista.cadastro)} className="gap-2">
               <Car className="h-4 w-4" />
               Cadastrar como motorista
             </Button>

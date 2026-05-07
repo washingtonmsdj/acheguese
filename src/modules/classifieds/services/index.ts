@@ -63,6 +63,13 @@ export type {
 } from "../../../modules/classifieds/services/ClassifiedReportService";
 
 export {
+  classifiedCommentService,
+} from "./ClassifiedCommentService";
+export type {
+  ClassifiedComment,
+} from "./ClassifiedCommentService";
+
+export {
   classifiedsLocationService,
   ClassifiedsLocationService,
 } from "./ClassifiedsLocationService";
@@ -71,3 +78,5 @@ export {
   classifiedsRolloutService,
   ClassifiedsRolloutService,
 } from "./ClassifiedsRolloutService";
+
+export { ClassifiedTrustService } from "./ClassifiedTrustService";

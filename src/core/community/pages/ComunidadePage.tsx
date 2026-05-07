@@ -21,6 +21,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { TooltipProvider } from "@/shared/components/ui/tooltip";
 import { Button } from "@/shared/components/ui/button";
+import { ConfirmActionDialog } from "@/shared/components/ConfirmActionDialog";
 import {
   Dialog,
   DialogContent,
@@ -166,9 +167,13 @@ export default function ComunidadePage({ resolved }: ComunidadePageProps) {
     handleTagClick,
     handleReportPost,
     handleDeletePost,
+    handleCancelDeletePost,
+    handleConfirmDeletePost,
     handleEditPost,
     handleReportClick,
     handleCloseModal,
+    deletePostDialogOpen,
+    isDeletingPost,
     communityLocation,
   } = useComunidadePage();
   const {
@@ -587,6 +592,19 @@ export default function ComunidadePage({ resolved }: ComunidadePageProps) {
           onShare={sharePost}
           onReport={handleReportPost}
           onTagClick={handleTagClick}
+        />
+
+        <ConfirmActionDialog
+          open={deletePostDialogOpen}
+          onOpenChange={(open) => {
+            if (!open) handleCancelDeletePost();
+          }}
+          title="Excluir publicacao?"
+          description="Esta acao remove a publicacao do feed. Use apenas quando tiver certeza de que ela nao deve continuar visivel."
+          confirmLabel="Excluir publicacao"
+          cancelLabel="Manter publicacao"
+          onConfirm={handleConfirmDeletePost}
+          disabled={isDeletingPost}
         />
       </div>
     </TooltipProvider>

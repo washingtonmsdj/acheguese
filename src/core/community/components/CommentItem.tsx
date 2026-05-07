@@ -23,6 +23,7 @@ import { CommentForm } from "./CommentForm";
 import { ReportModal } from "./ReportModal";
 import { ReportReason } from "@/core/community/types";
 import { cn } from "@/shared/utils/cn";
+import { ConfirmActionDialog } from "@/shared/components/ConfirmActionDialog";
 /**
  * Item de comentário (recursivo)
  *
@@ -51,11 +52,16 @@ interface CommentItemProps {
 
 export function CommentItem({ comment, maxDepth = 5 }: CommentItemProps) {
   const { user, activeProfile } = useSessionContext();
-  const { deleteComment } = useCommentActions(comment.post_id);
+  const { deleteComment, updateComment } = useCommentActions(comment.post_id);
   const { reportComment, isReportingComment } = useModeration();
   const [isReplying, setIsReplying] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [showReportModal, setShowReportModal] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [editedContent, setEditedContent] = useState(comment.content);
+  const [displayContent, setDisplayContent] = useState(comment.content);
+  const [editedFlag, setEditedFlag] = useState(comment.is_edited);
+  const [isSavingEdit, setIsSavingEdit] = useState(false);
 
   const isAuthor = activeProfile?.id === comment.author_profile_id;
   const canEdit =
@@ -80,7 +86,12 @@ export function CommentItem({ comment, maxDepth = 5 }: CommentItemProps) {
   };
 
   const handleDelete = () => {
-    deleteComment(comment.id);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    const success = await deleteComment(comment.id);
+    if (success) setDeleteDialogOpen(false);
   };
 
   const handleReport = (reason: ReportReason, description?: string) => {
@@ -91,6 +102,28 @@ export function CommentItem({ comment, maxDepth = 5 }: CommentItemProps) {
       description,
     });
     setShowReportModal(false);
+  };
+
+  const handleStartEdit = () => {
+    setEditedContent(displayContent);
+    setIsEditing(true);
+  };
+
+  const handleCancelEdit = () => {
+    setEditedContent(displayContent);
+    setIsEditing(false);
+  };
+
+  const handleSaveEdit = async () => {
+    if (isSavingEdit) return;
+    setIsSavingEdit(true);
+    const success = await updateComment(comment.id, editedContent);
+    if (success) {
+      setDisplayContent(editedContent.trim());
+      setEditedFlag(true);
+      setIsEditing(false);
+    }
+    setIsSavingEdit(false);
   };
 
   return (
@@ -108,7 +141,7 @@ export function CommentItem({ comment, maxDepth = 5 }: CommentItemProps) {
             <span className="text-muted-foreground">
               {formatRelativeTime(comment.created_at)}
             </span>
-            {comment.is_edited && (
+            {editedFlag && (
               <span className="text-xs text-muted-foreground">(editado)</span>
             )}
             <div className="ml-auto">
@@ -135,7 +168,7 @@ export function CommentItem({ comment, maxDepth = 5 }: CommentItemProps) {
                   )}
                   {canEdit && (
                     <DropdownMenuItem
-                      onClick={() => setIsEditing(!isEditing)}
+                      onClick={handleStartEdit}
                       className="text-xs"
                     >
                       <Edit className="mr-2 h-3.5 w-3.5" />
@@ -171,11 +204,35 @@ export function CommentItem({ comment, maxDepth = 5 }: CommentItemProps) {
           {/* Content */}
           {isEditing ? (
             <div className="mt-2">
-              {/* TODO: Implementar edição inline */}
-              <p className="text-sm">Edição em desenvolvimento...</p>
+              <textarea
+                value={editedContent}
+                onChange={(event) => setEditedContent(event.target.value)}
+                rows={3}
+                maxLength={1000}
+                className="w-full rounded-md border border-white/15 bg-black/20 px-3 py-2 text-sm text-white outline-none focus:border-teal-400"
+              />
+              <div className="mt-2 flex items-center justify-end gap-2">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleCancelEdit}
+                  disabled={isSavingEdit}
+                >
+                  Cancelar
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  onClick={handleSaveEdit}
+                  disabled={isSavingEdit || editedContent.trim().length === 0}
+                >
+                  {isSavingEdit ? "Salvando..." : "Salvar"}
+                </Button>
+              </div>
             </div>
           ) : (
-            <p className="text-sm whitespace-pre-wrap">{comment.content}</p>
+            <p className="text-sm whitespace-pre-wrap">{displayContent}</p>
           )}
 
           {/* Actions */}
@@ -230,6 +287,17 @@ export function CommentItem({ comment, maxDepth = 5 }: CommentItemProps) {
         onSubmit={handleReport}
         isSubmitting={isReportingComment}
         contentType="comment"
+      />
+
+      <ConfirmActionDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        title="Excluir comentario?"
+        description="Essa acao remove o comentario e suas respostas vinculadas. Nao e possivel desfazer."
+        confirmLabel="Excluir"
+        cancelLabel="Cancelar"
+        variant="destructive"
+        onConfirm={handleConfirmDelete}
       />
     </div>
   );

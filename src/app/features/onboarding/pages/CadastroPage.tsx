@@ -7,6 +7,7 @@
  */
 
 import React, { useEffect } from 'react';
+import { Helmet } from 'react-helmet-async';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -80,31 +81,45 @@ export default function CadastroPage() {
   const stepId = activeStep.id;
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
-      <header className="border-b border-border bg-card/80 backdrop-blur-md">
-        <div className="max-w-lg mx-auto px-4 h-14 flex items-center justify-between">
-          <button
-            onClick={() => navigate('/')}
-            className="flex items-center gap-2 hover:opacity-80 transition-opacity"
-          >
-            <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center">
-              <Home className="h-4 w-4 text-primary-foreground" />
-            </div>
-            <span className="text-base font-bold text-foreground font-heading">
-              Comunidade <span className="text-primary">Conectada</span>
-            </span>
-          </button>
-          <button
-            onClick={() => navigate('/login')}
-            className="text-sm font-medium text-primary hover:underline"
-          >
-            Já tenho conta
-          </button>
-        </div>
-      </header>
+    <>
+      <Helmet>
+        <title>Criar conta | Achegue-se</title>
+        <meta
+          name="description"
+          content="Crie sua conta Achegue-se para participar da comunidade, conectar-se ao seu bairro e acessar servicos e negocios locais."
+        />
+      </Helmet>
 
-      <main className="flex-1 flex items-start justify-center px-4 py-8">
-        <div className="w-full max-w-lg space-y-8">
+      <div className="min-h-screen bg-background flex flex-col">
+        <header className="border-b border-border bg-card/80 backdrop-blur-md">
+          <div className="max-w-lg mx-auto px-4 h-14 flex items-center justify-between">
+            <button
+              onClick={() => navigate('/')}
+              className="flex items-center gap-2 hover:opacity-80 transition-opacity"
+              aria-label="Voltar ao inicio"
+            >
+              <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center">
+                <Home className="h-4 w-4 text-primary-foreground" />
+              </div>
+              <span className="text-base font-bold text-foreground font-heading">
+                Achegue<span className="text-primary">-se</span>
+              </span>
+            </button>
+            <button
+              onClick={() => navigate('/login')}
+              className="text-sm font-medium text-primary hover:underline"
+            >
+              Já tenho conta
+            </button>
+          </div>
+        </header>
+
+        <main
+          id="main-content"
+          tabIndex={-1}
+          className="flex-1 flex items-start justify-center px-4 py-8 focus:outline-none"
+        >
+          <div className="w-full max-w-lg space-y-8">
 
           {/* Step indicator */}
           <div className="flex items-center justify-center gap-2">
@@ -120,6 +135,7 @@ export default function CadastroPage() {
                   <button
                     onClick={() => idx < currentStep && handleBack()}
                     disabled={idx > currentStep}
+                    aria-label={step.label}
                     className={cn(
                       'flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all',
                       isActive && 'bg-primary/10 text-primary border border-primary/30',
@@ -476,8 +492,9 @@ export default function CadastroPage() {
               </div>
             </motion.div>
           </AnimatePresence>
-        </div>
-      </main>
-    </div>
+          </div>
+        </main>
+      </div>
+    </>
   );
 }

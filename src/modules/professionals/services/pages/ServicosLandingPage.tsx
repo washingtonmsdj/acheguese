@@ -12,6 +12,7 @@
 
 import { useState, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
+import { Helmet } from "react-helmet-async";
 import { motion } from "framer-motion";
 import {
   Search, Wrench, Star, MapPin, ChevronRight, ArrowRight,
@@ -258,7 +259,20 @@ export default function ServicosLandingPage({ resolved, activeMemberIds }: Servi
   );
 
   return (
-    <div className="min-h-screen w-full bg-background text-foreground flex flex-col">
+    <main
+      id="main-content"
+      tabIndex={-1}
+      className="min-h-screen w-full bg-background text-foreground flex flex-col focus:outline-none"
+    >
+      {!resolved && (
+        <Helmet>
+          <title>Servicos locais | Achegue-se</title>
+          <meta
+            name="description"
+            content="Encontre profissionais e servicos locais no Achegue-se. Busque prestadores avaliados pela comunidade, acompanhe orcamentos e navegue por territorio."
+          />
+        </Helmet>
+      )}
 
       {/* ── HEADER COM BUSCA ──────────────────────────────────────── */}
       <ServicosHeader
@@ -523,7 +537,7 @@ export default function ServicosLandingPage({ resolved, activeMemberIds }: Servi
         </div>
       </footer>
 
-    </div>
+    </main>
   );
 }
 

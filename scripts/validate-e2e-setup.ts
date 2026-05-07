@@ -12,7 +12,7 @@ import dotenv from "dotenv";
 import fetch from "node-fetch";
 
 dotenv.config({ path: ".env.test" });
-dotenv.config({ path: ".env.local" });
+dotenv.config({ path: ".env.local", override: true });
 
 interface ValidationResult {
   name: string;
@@ -39,6 +39,11 @@ function getLoginCredential() {
   return { email, password };
 }
 
+function isPlaceholderSupabaseUrl(value: string | undefined): boolean {
+  if (!value) return false;
+  return /your-project\.supabase\.co|placeholder\.supabase\.co/i.test(value);
+}
+
 async function validateEnvironment() {
   console.log("Validando configuracao E2E\n");
   console.log("=".repeat(60));
@@ -53,12 +58,17 @@ async function validateEnvironment() {
   const adminEmail = process.env.E2E_ADMIN_EMAIL || null;
   const adminPassword = process.env.E2E_ADMIN_PASSWORD || null;
   const recoveryEmail = process.env.E2E_RECOVERY_EMAIL || "e2e-recovery@example.com";
+  const hasValidSupabaseUrl = Boolean(supabaseUrl) && !isPlaceholderSupabaseUrl(supabaseUrl);
 
   const envChecks: ValidationResult[] = [
     {
       name: "VITE_SUPABASE_URL",
-      status: supabaseUrl ? "PASS" : "FAIL",
-      message: supabaseUrl ? "Configurada" : "Nao configurada",
+      status: hasValidSupabaseUrl ? "PASS" : "FAIL",
+      message: !supabaseUrl
+        ? "Nao configurada"
+        : hasValidSupabaseUrl
+          ? "Configurada"
+          : `Placeholder invalido (${supabaseUrl})`,
     },
     {
       name: "VITE_SUPABASE_PUBLISHABLE_KEY",
@@ -125,11 +135,13 @@ async function validateEnvironment() {
   console.log("\n3. Auth anonimo");
   console.log("-".repeat(60));
 
-  if (!supabaseUrl || !anonKey) {
+  if (!hasValidSupabaseUrl || !anonKey) {
     const result: ValidationResult = {
       name: "Cliente anonimo",
       status: "FAIL",
-      message: "Credenciais anonimas ausentes",
+      message: !hasValidSupabaseUrl
+        ? "VITE_SUPABASE_URL precisa apontar para um projeto Supabase real"
+        : "Credenciais anonimas ausentes",
     };
     addResult(result.name, result.status, result.message);
     logResult(result);
@@ -142,22 +154,28 @@ async function validateEnvironment() {
     });
 
     if (loginCredential.email && loginCredential.password) {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email: loginCredential.email,
-        password: loginCredential.password,
-      });
+      let result: ValidationResult;
+      const { data, error } = await supabase.auth
+        .signInWithPassword({
+          email: loginCredential.email,
+          password: loginCredential.password,
+        })
+        .catch((authError) => ({
+          data: { user: null, session: null },
+          error: authError instanceof Error ? authError : new Error(String(authError)),
+        }));
 
-      const result: ValidationResult = error
+      result = error
         ? {
-            name: "Login anonimo",
-            status: "FAIL",
-            message: error.message,
-          }
+          name: "Login anonimo",
+          status: "FAIL",
+          message: error.message,
+        }
         : {
-            name: "Login anonimo",
-            status: "PASS",
-            message: `Sessao valida para ${data.user?.email ?? loginCredential.email}`,
-          };
+          name: "Login anonimo",
+          status: "PASS",
+          message: `Sessao valida para ${data.user?.email ?? loginCredential.email}`,
+        };
       addResult(result.name, result.status, result.message);
       logResult(result);
 
@@ -166,9 +184,14 @@ async function validateEnvironment() {
       }
     }
 
-    const { error: recoveryError } = await supabase.auth.resetPasswordForEmail(recoveryEmail, {
-      redirectTo: `${baseUrl}/reset-password?mode=recovery`,
-    });
+    const { error: recoveryError } = await supabase.auth
+      .resetPasswordForEmail(recoveryEmail, {
+        redirectTo: `${baseUrl}/reset-password?mode=recovery`,
+      })
+      .catch((authError) => ({
+        data: null,
+        error: authError instanceof Error ? authError : new Error(String(authError)),
+      }));
 
     const recoveryResult: ValidationResult = recoveryError
       ? {
@@ -188,11 +211,13 @@ async function validateEnvironment() {
   console.log("\n4. Camada administrativa");
   console.log("-".repeat(60));
 
-  if (!supabaseUrl || !serviceRoleKey) {
+  if (!hasValidSupabaseUrl || !serviceRoleKey) {
     const result: ValidationResult = {
       name: "Admin checks",
       status: "WARN",
-      message: "Pulados. SUPABASE_SERVICE_ROLE_KEY ausente",
+      message: !hasValidSupabaseUrl
+        ? "Pulados. VITE_SUPABASE_URL nao aponta para projeto real"
+        : "Pulados. SUPABASE_SERVICE_ROLE_KEY ausente",
     };
     addResult(result.name, result.status, result.message);
     logResult(result);

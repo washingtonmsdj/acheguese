@@ -71,9 +71,9 @@ export default function MotoboyPage() {
   // ✅ SSOT COMPLIANT: Redirecionar para cadastro se não for motoboy
   React.useEffect(() => {
     if (!hook.loading && !hook.isDriver) {
-      navigate(`${mobilityUrls.createDriver}?type=motoboy`);
+      navigate(mobilityUrls.motoboy.cadastro);
     }
-  }, [hook.isDriver, hook.loading, navigate, mobilityUrls.createDriver]);
+  }, [hook.isDriver, hook.loading, navigate, mobilityUrls.motoboy.cadastro]);
 
   // ✅ SSOT COMPLIANT: Verificar se tem capacidade de entrega
   React.useEffect(() => {

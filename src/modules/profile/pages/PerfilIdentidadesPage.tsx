@@ -157,7 +157,7 @@ export default function PerfilIdentidadesPage() {
     { type: 'personal', createPath: '', createLabel: '', subtitle: 'Sua identidade principal' },
     { type: 'business', createPath: '/empresas/criar-empresa', createLabel: 'Nova empresa', subtitle: 'Empresas e negócios' },
     { type: 'professional', createPath: '/services/cadastrar', createLabel: 'Novo serviço', subtitle: 'Profissionais autônomos' },
-    { type: 'driver', createPath: '/create-driver', createLabel: 'Ser motorista', subtitle: 'Motoristas e motoboys' },
+    { type: 'driver', createPath: '/central/motorista/cadastro', createLabel: 'Ser motorista', subtitle: 'Motoristas e motoboys' },
   ];
 
   return (
@@ -222,7 +222,7 @@ export default function PerfilIdentidadesPage() {
                       size="sm" 
                       variant="outline" 
                       className="gap-1.5 text-xs h-7 border-orange-200 hover:bg-orange-100"
-                      onClick={() => navigate('/create-driver?type=motoboy')}
+                      onClick={() => navigate('/central/motoboy/cadastro')}
                     >
                       <Package className="h-3 w-3" />
                       Ser motoboy

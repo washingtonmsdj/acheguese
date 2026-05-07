@@ -147,6 +147,10 @@ export default function MenuManagementPage() {
     setItemToDelete(null);
   };
 
+  const handleMarkItemSoldOut = (itemId: string) => {
+    updateItem({ itemId, stock_quantity: 0, is_available: false });
+  };
+
   const filteredItems =
     items?.filter((item) =>
       item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -312,6 +316,7 @@ export default function MenuManagementPage() {
                   onEdit={handleEditItem}
                   onDelete={setItemToDelete}
                   onToggleAvailability={toggleAvailability}
+                  onMarkSoldOut={handleMarkItemSoldOut}
                 />
               ))}
             </div>
@@ -402,4 +407,3 @@ export default function MenuManagementPage() {
     </div>
   );
 }
-

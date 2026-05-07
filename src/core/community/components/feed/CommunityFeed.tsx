@@ -10,6 +10,7 @@ import { AlertCircle, BarChart3, Clock3, Flame, MessageCircle, ThumbsUp } from "
 import { Alert, AlertDescription } from "@/shared/components/ui/alert";
 import { SPACING } from "../styles/communityDesignSystem";
 import type { TerritoryFilter } from "@/core/location";
+import { usePostActions } from "@/core/posts/hooks";
 
 type FeedSortType = "recent" | "popular" | "most_commented";
 type FeedPostType =
@@ -63,6 +64,7 @@ export function CommunityFeed({
   territoryFilter,
 }: CommunityFeedProps) {
   const { activeProfile } = useSessionContext();
+  const { likePost, savePost, sharePost, reportPost } = usePostActions();
   const {
     posts,
     isLoading,
@@ -79,8 +81,8 @@ export function CommunityFeed({
 
   // Handlers
   const handleLike = useCallback((postId: string) => {
-    // Delegated to usePostActions via page-level handler
-  }, []);
+    likePost(postId);
+  }, [likePost]);
 
   const handleComment = useCallback(
     (postId: string) => {
@@ -89,9 +91,21 @@ export function CommunityFeed({
     [onCommentClick],
   );
 
-  const handleSave = useCallback((postId: string) => {}, []);
-  const handleShare = useCallback((postId: string) => {}, []);
-  const handleReport = useCallback((postId: string) => {}, []);
+  const handleSave = useCallback((postId: string) => {
+    savePost(postId);
+  }, [savePost]);
+
+  const handleShare = useCallback((postId: string) => {
+    sharePost(postId);
+  }, [sharePost]);
+
+  const handleReport = useCallback((postId: string) => {
+    reportPost({
+      postId,
+      reason: "inappropriate_content",
+      description: "Denuncia enviada pelo fluxo principal do feed",
+    });
+  }, [reportPost]);
 
   const handleTagClick = useCallback(
     (tag: string) => {

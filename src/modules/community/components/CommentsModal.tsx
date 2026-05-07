@@ -14,6 +14,7 @@ import { useCommentActions } from "@/modules/community/hooks/useCommentActions";
 import { CommentsList } from "./comments/CommentsList";
 import { CommentForm } from "./comments/CommentForm";
 import { INLINE_STYLES } from "./styles/communityDesignSystem";
+import { ConfirmActionDialog } from "@/shared/components/ConfirmActionDialog";
 interface CommentsModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -47,6 +48,7 @@ export function CommentsModal({
   const [replyTo, setReplyTo] = useState<{ id: string; name: string } | null>(
     null,
   );
+  const [deleteCommentId, setDeleteCommentId] = useState<string | null>(null);
 
   const handleFetchComments = useCallback(async () => {
     const fetchedComments = await fetchComments();
@@ -80,10 +82,17 @@ export function CommentsModal({
     }
   };
 
-  const handleDeleteComment = async (commentId: string) => {
-    const success = await deleteComment(commentId);
+  const handleDeleteComment = (commentId: string) => {
+    setDeleteCommentId(commentId);
+  };
+
+  const handleConfirmDeleteComment = async () => {
+    if (!deleteCommentId) return;
+
+    const success = await deleteComment(deleteCommentId);
     if (success) {
-      removeComment(commentId);
+      removeComment(deleteCommentId);
+      setDeleteCommentId(null);
     }
   };
 
@@ -93,6 +102,7 @@ export function CommentsModal({
   );
 
   return (
+    <>
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
         className="rounded-[20px] shadow-2xl max-w-2xl max-h-[90vh] flex flex-col border-0 p-0 gap-0 overflow-hidden"
@@ -153,5 +163,18 @@ export function CommentsModal({
         />
       </DialogContent>
     </Dialog>
+      <ConfirmActionDialog
+        open={Boolean(deleteCommentId)}
+        onOpenChange={(dialogOpen) => {
+          if (!dialogOpen) setDeleteCommentId(null);
+        }}
+        title="Excluir comentario?"
+        description="Essa acao remove o comentario e suas respostas vinculadas. Nao e possivel desfazer."
+        confirmLabel="Excluir"
+        cancelLabel="Cancelar"
+        variant="destructive"
+        onConfirm={handleConfirmDeleteComment}
+      />
+    </>
   );
 }

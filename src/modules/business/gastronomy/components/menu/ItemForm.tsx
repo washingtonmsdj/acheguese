@@ -44,6 +44,9 @@ const itemSchema = z.object({
   category_id: z.string().optional(),
   image_url: z.string().url('URL inválida').optional().or(z.literal('')),
   preparation_time_min: z.number().min(0).optional(),
+  stock_quantity: z.number().int().min(0).optional(),
+  stock_alert_threshold: z.number().int().min(0).optional(),
+  is_available: z.boolean().default(true),
   calories: z.number().min(0).optional(),
   is_featured: z.boolean().default(false),
   is_vegetarian: z.boolean().default(false),
@@ -98,6 +101,9 @@ export function ItemForm({
       category_id: item?.category_id || '',
       image_url: item?.image_url || '',
       preparation_time_min: item?.preparation_time_min || undefined,
+      stock_quantity: item?.stock_quantity ?? undefined,
+      stock_alert_threshold: item?.stock_alert_threshold ?? undefined,
+      is_available: item?.is_available ?? true,
       calories: item?.calories || undefined,
       is_featured: item?.is_featured || false,
       is_vegetarian: item?.is_vegetarian || false,
@@ -316,6 +322,88 @@ export function ItemForm({
                   </FormItem>
                 )}
               />
+            </div>
+
+            {/* Operacao e Estoque */}
+            <div className="space-y-3 rounded-lg border p-4">
+              <div>
+                <p className="font-medium">Operacao e estoque</p>
+                <p className="text-sm text-muted-foreground">
+                  Controle se o item aparece para o cliente e quando deve ser tratado como esgotado.
+                </p>
+              </div>
+
+              <FormField
+                control={form.control}
+                name="is_available"
+                render={({ field }) => (
+                  <FormItem className="flex items-center justify-between rounded-lg border p-3">
+                    <div className="space-y-0.5">
+                      <FormLabel className="text-sm">Disponivel para venda</FormLabel>
+                      <FormDescription>
+                        Ao desativar, o item fica pausado no cardapio do cliente.
+                      </FormDescription>
+                    </div>
+                    <FormControl>
+                      <Switch checked={field.value} onCheckedChange={field.onChange} />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+
+              <div className="grid grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="stock_quantity"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Estoque atual</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="number"
+                          min="0"
+                          placeholder="Ex: 12"
+                          value={field.value ?? ''}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            field.onChange(val === '' ? undefined : parseInt(val));
+                          }}
+                        />
+                      </FormControl>
+                      <FormDescription>
+                        Use 0 para marcar como esgotado.
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="stock_alert_threshold"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Alerta de estoque baixo</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="number"
+                          min="0"
+                          placeholder="Ex: 3"
+                          value={field.value ?? ''}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            field.onChange(val === '' ? undefined : parseInt(val));
+                          }}
+                        />
+                      </FormControl>
+                      <FormDescription>
+                        Valor usado para destacar reposicao no painel da loja.
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
             </div>
 
             {/* Calorias */}

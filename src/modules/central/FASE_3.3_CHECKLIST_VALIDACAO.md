@@ -243,23 +243,23 @@
 
 ### 6.4 Usuário sem driver_data em /central/motorista
 - [ ] Empty state visível
-- [ ] CTA "Cadastrar como Motorista" aponta para /create-driver?type=motorista
+- [x] CTA "Cadastrar como Motorista" aponta para /central/motorista/cadastro
 - [ ] Breadcrumb "Central > Motorista" correto
 
 ### 6.5 Usuário sem driver_data em /central/motoboy
 - [ ] Empty state visível
-- [ ] CTA "Cadastrar como Motoboy" aponta para /create-driver?type=motoboy
+- [x] CTA "Cadastrar como Motoboy" aponta para /central/motoboy/cadastro
 - [ ] Breadcrumb "Central > Motoboy" correto
 
 ### 6.6 Motorista sem motoboy não acessa /central/motoboy
 - [ ] Empty state visível
 - [ ] Mensagem "Perfil não habilitado para Motoboy"
-- [ ] CTA "Habilitar modo Motoboy" aponta para /create-driver?type=motoboy
+- [x] CTA "Habilitar modo Motoboy" aponta para /central/motoboy/cadastro
 
 ### 6.7 Motoboy sem motorista não acessa /central/motorista
 - [ ] Empty state visível
 - [ ] Mensagem "Perfil não habilitado para Motorista"
-- [ ] CTA "Habilitar modo Motorista" aponta para /create-driver?type=motorista
+- [x] CTA "Habilitar modo Motorista" aponta para /central/motorista/cadastro
 
 ### 6.8 Usuário sem acesso a empresa é bloqueado
 - [ ] Redireciona para /central/empresas

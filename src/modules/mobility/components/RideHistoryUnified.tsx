@@ -40,6 +40,23 @@ import { ptBR } from "date-fns/locale";
 import { cn } from "@/shared/utils/cn";
 import { RIDE_STATUS, RIDE_MODE, MOBILITY_QUERY_KEYS } from "@/modules/mobility/constants";
 import type { RideRequest } from "@/modules/mobility/types/types";
+import {
+  TRUST_ACTOR_ROLES,
+  TRUST_CONTEXT_TYPES,
+  TrustFeedbackForm,
+  type TrustFeedbackReason,
+  type TrustFeedbackTarget,
+} from "@/core/trust";
+
+const PASSENGER_FEEDBACK_REASONS: TrustFeedbackReason[] = [
+  { value: "smooth_operation", label: "Atendimento correto / sem problema", severity: "low" },
+  { value: "driver_delay", label: "Motorista/motoboy atrasou", severity: "medium" },
+  { value: "unsafe_behavior", label: "Conduta insegura", severity: "critical" },
+  { value: "route_or_delivery_issue", label: "Problema na rota ou entrega", severity: "medium" },
+  { value: "package_or_vehicle_issue", label: "Problema com pacote ou veiculo", severity: "high" },
+  { value: "abusive_behavior", label: "Conduta abusiva", severity: "critical" },
+  { value: "other_operational_issue", label: "Outro problema operacional", severity: "medium" },
+];
 
 interface RideHistoryUnifiedProps {
   /** Callback para avaliar corrida */
@@ -389,6 +406,18 @@ export function RideHistoryUnified({
             const isCancelled = ride.status === RIDE_STATUS.CANCELLED;
             const isMotoboy = ride.ride_mode === RIDE_MODE.MOTOBOY;
             const needsRating = isCompleted && onRate && !ride.driver_rating;
+            const driverProfileId =
+              typeof ride.driver_profile_id === "string" ? ride.driver_profile_id : null;
+            const feedbackTargets: TrustFeedbackTarget[] = driverProfileId
+              ? [
+                  {
+                    id: driverProfileId,
+                    label: isMotoboy ? "Motoboy da entrega" : "Motorista da corrida",
+                    subjectRole: isMotoboy ? TRUST_ACTOR_ROLES.COURIER : TRUST_ACTOR_ROLES.DRIVER,
+                    helper: "Feedback privado para confianca operacional e analise admin.",
+                  },
+                ]
+              : [];
 
             return (
               <Card
@@ -469,6 +498,29 @@ export function RideHistoryUnified({
                     >
                       <Star className="h-4 w-4 mr-2" /> Avaliar Motorista
                     </Button>
+                  )}
+
+                  {isCompleted && feedbackTargets.length > 0 && (
+                    <div className="mt-4">
+                      <TrustFeedbackForm
+                        title={isMotoboy ? "Avaliar motoboy" : "Avaliar motorista"}
+                        notice="Feedback privado operacional. Reviews publicos e nota operacional continuam separados."
+                        actorRole={TRUST_ACTOR_ROLES.CUSTOMER}
+                        contextType={TRUST_CONTEXT_TYPES.RIDE}
+                        contextId={ride.id}
+                        targets={feedbackTargets}
+                        reasons={PASSENGER_FEEDBACK_REASONS}
+                        enabled={isCompleted}
+                        compact
+                        evidence={{
+                          ride_mode: ride.ride_mode,
+                          ride_status: ride.status,
+                          final_price: ride.final_price || ride.suggested_price || 0,
+                          passenger_profile_id: ride.passenger_profile_id,
+                          driver_profile_id: driverProfileId,
+                        }}
+                      />
+                    </div>
                   )}
                 </CardContent>
               </Card>

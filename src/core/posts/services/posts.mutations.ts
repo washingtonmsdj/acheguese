@@ -80,6 +80,7 @@ export async function createPost(data: {
         content: data.content,
         type: data.type,
         location_id: data.location_id,
+        reach: data.reach || "neighborhood",
         images: data.images || [],
         tags: data.tags || [],
         is_published: true,
