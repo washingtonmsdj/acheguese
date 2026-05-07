@@ -1,5 +1,5 @@
 import { useActiveTerritory } from "@/core/location/hooks/useActiveTerritory";
-import { geoPathToPublicUrl } from "@/core/routing/utils/territoryUrls";
+import { buildGroupBaseUrl, buildModuleTerritoryUrl, geoPathToPublicUrl, MODULE_SLUGS } from "@/core/routing/utils/territoryUrls";
 import { TERRITORY_CONFIG } from "@/config/territory";
 import type { ResolvedTerritory } from "@/core/routing/hooks/useResolveTerritoryFromUrl";
 
@@ -20,7 +20,8 @@ export function useServiceUrls(routeResolved?: ResolvedTerritory | null): Servic
       const firstMember = routeResolved.group.members[0];
       if (firstMember?.geographic_path) {
         const parts = firstMember.geographic_path.split("/").filter(Boolean);
-        listUrl = `/servicos/${parts[1]}/${parts[2]}/${routeResolved.group.slug}`;
+        const groupBase = buildGroupBaseUrl(routeResolved.group, `/${parts[0]}/${parts[1]}/${parts[2]}`);
+        listUrl = buildModuleTerritoryUrl(MODULE_SLUGS.services, groupBase);
       } else {
         listUrl = `/servicos/${TERRITORY_CONFIG.launch.state}/${TERRITORY_CONFIG.launch.city}`;
       }

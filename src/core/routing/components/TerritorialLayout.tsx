@@ -16,7 +16,7 @@ import { useEffect } from 'react';
 import { useResolveTerritoryFromUrl } from '../hooks/useResolveTerritoryFromUrl';
 import { TerritorialNotFound } from './TerritorialNotFound';
 import { TerritorialSEO } from '../seo/TerritorialSEO';
-import { MODULE_SLUGS, isEntityDetailRoute } from '../utils/territoryUrls';
+import { MODULE_SLUGS, buildGroupBaseUrl, isEntityDetailRoute } from '../utils/territoryUrls';
 import { useGroupAvailability } from '@/core/territorial/hooks/useGroupAvailability';
 import { ModuleKey } from '@/core/rollout/types';
 import { lastTerritoryStore } from '../stores/LastTerritoryStore';
@@ -32,7 +32,7 @@ export type TerritorialLayoutContext = {
   /**
    * URL base do território atual, calculada deterministicamente via useParams.
    * Ex: /ba/salvador/nordeste-de-amaralina
-   *     /ba/salvador/complexo-do-nordeste-de-amaralina
+   *     /ba/salvador/area/complexo-do-nordeste-de-amaralina
    *
    * NUNCA depende da ordem dos membros do grupo.
    * Usar este valor em vez de recalcular baseUrl dentro dos filhos.
@@ -132,12 +132,13 @@ export function TerritorialLayout() {
   const { pathname } = useLocation();
   const params = useParams<{
     country?: string; state?: string; city?: string;
+    groupSlug?: string;
     groupSlugOrDistrict?: string;
   }>();
 
   const state = params.state;
   const city = params.city;
-  const slug = params.groupSlugOrDistrict;
+  const slug = params.groupSlug ?? params.groupSlugOrDistrict;
 
   const isFriendlyModule = pathname.startsWith('/empresas/') || 
       pathname.startsWith('/servicos/') || 
@@ -164,9 +165,9 @@ export function TerritorialLayout() {
       ? (() => {
           // Para grupo: pega a cidade âncora do primeiro membro
           const firstMember = resolved.group.members[0];
-          if (!firstMember?.geographic_path) return `/${state}/${city}/${resolved.group.slug}`;
+          if (!firstMember?.geographic_path) return `/${state}/${city}/area/${resolved.group.slug}`;
           const parts = firstMember.geographic_path.split('/').filter(Boolean);
-          return `/${parts[1]}/${parts[2]}/${resolved.group.slug}`;
+          return buildGroupBaseUrl(resolved.group, `/${parts[0]}/${parts[1]}/${parts[2]}`);
         })()
       : (() => {
           // Para location: usa geographic_path removendo /br

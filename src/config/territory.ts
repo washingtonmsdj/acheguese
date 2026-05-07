@@ -62,7 +62,7 @@ export const LAUNCH_TERRITORIES: LaunchTerritory[] = [
     kind: 'group',
     slug: 'complexo-do-nordeste-de-amaralina',
     name: 'Complexo do Nordeste de Amaralina',
-    path: `/${TERRITORY_CONFIG.launch.state}/${TERRITORY_CONFIG.launch.city}/complexo-do-nordeste-de-amaralina`,
+    path: `/${TERRITORY_CONFIG.launch.state}/${TERRITORY_CONFIG.launch.city}/area/complexo-do-nordeste-de-amaralina`,
     description: 'Território destacado de lançamento',
   },
   {

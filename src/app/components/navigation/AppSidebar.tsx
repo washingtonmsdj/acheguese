@@ -78,7 +78,7 @@ export function AppSidebar() {
       (territory) =>
         territory.kind === 'group' &&
         territory.slug === 'complexo-do-nordeste-de-amaralina',
-    )?.path ?? '/ba/salvador/complexo-do-nordeste-de-amaralina';
+    )?.path ?? '/ba/salvador/area/complexo-do-nordeste-de-amaralina';
 
   const getNavHref = (item: NavItem): string => {
     switch (item.id) {

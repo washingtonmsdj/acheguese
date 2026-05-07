@@ -39,6 +39,46 @@ function resolveCurrentModule(pathname: string, baseUrl: string): ModuleSlug | n
   return known.includes(segment) ? (segment as ModuleSlug) : null;
 }
 
+function resolveSeoPolicy(pathname: string): {
+  canonicalPath: string;
+  robots: string;
+} {
+  const cleanPath = pathname.endsWith('/') ? pathname.slice(0, -1) : pathname;
+  const parts = cleanPath.split('/').filter(Boolean);
+  const embeddedCommunityModules = new Set<string>([
+    MODULE_SLUGS.business,
+    MODULE_SLUGS.services,
+    MODULE_SLUGS.classifieds,
+    MODULE_SLUGS.gastronomy,
+    MODULE_SLUGS.jobs,
+    MODULE_SLUGS.events,
+    MODULE_SLUGS.map,
+    MODULE_SLUGS.mobility,
+  ]);
+
+  if (parts[0] === MODULE_SLUGS.community && parts[1] && parts[2]) {
+    const isGroup = parts[3] === 'area';
+    const moduleIndex = isGroup ? 5 : 4;
+    const embeddedModule = parts[moduleIndex];
+
+    if (embeddedModule && embeddedCommunityModules.has(embeddedModule)) {
+      const territoryParts = isGroup
+        ? parts.slice(1, 5)
+        : parts.slice(1, 4);
+
+      return {
+        canonicalPath: `/${embeddedModule}/${territoryParts.join('/')}`,
+        robots: 'noindex, follow',
+      };
+    }
+  }
+
+  return {
+    canonicalPath: cleanPath,
+    robots: 'index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1',
+  };
+}
+
 /**
  * Gera structured data (JSON-LD) para o território
  */
@@ -118,9 +158,8 @@ export function TerritorialSEO({ resolved, baseUrl }: TerritorialSEOProps) {
   if (!resolved) return null;
 
   const module = resolveCurrentModule(pathname, baseUrl);
-  const canonicalPath = pathname.endsWith('/')
-    ? pathname.slice(0, -1)
-    : pathname;
+  const seoPolicy = resolveSeoPolicy(pathname);
+  const canonicalPath = seoPolicy.canonicalPath;
 
   const meta = resolved.kind === 'location'
     ? buildTerritorialMetadata({
@@ -182,8 +221,7 @@ export function TerritorialSEO({ resolved, baseUrl }: TerritorialSEOProps) {
       <meta name="twitter:description" content={meta.twitter.description} />
       <meta name="twitter:image"       content={meta.twitter.image} />
 
-      {/* Robots: rotas territoriais são indexáveis */}
-      <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
+      <meta name="robots" content={seoPolicy.robots} />
 
       {/* Structured Data (JSON-LD) */}
       <script type="application/ld+json">

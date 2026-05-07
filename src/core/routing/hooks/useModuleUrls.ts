@@ -1,5 +1,6 @@
 import { useParams } from 'react-router-dom';
 import { isReservedSlug } from '@/core/routing/reservedSlugs';
+import { buildCommunityTerritoryUrl, buildModuleTerritoryUrl, MODULE_SLUGS } from '@/core/routing/utils/territoryUrls';
 
 export interface ModuleUrls {
   community: string;
@@ -11,15 +12,20 @@ export interface ModuleUrls {
 }
 
 export function useModuleUrls(): ModuleUrls {
-  const { state, city, groupSlugOrDistrict } = useParams<{
+  const { state, city, groupSlug, groupSlugOrDistrict } = useParams<{
     state?: string;
     city?: string;
+    groupSlug?: string;
     groupSlugOrDistrict?: string;
   }>();
 
   if (state && city && !isReservedSlug(state)) {
-    const base = groupSlugOrDistrict ? `/${state}/${city}/${groupSlugOrDistrict}` : `/${state}/${city}`;
-    const territoryName = slugToTitle(groupSlugOrDistrict ?? city);
+    const base = groupSlug
+      ? `/${state}/${city}/area/${groupSlug}`
+      : groupSlugOrDistrict
+        ? `/${state}/${city}/${groupSlugOrDistrict}`
+        : `/${state}/${city}`;
+    const territoryName = slugToTitle(groupSlug ?? groupSlugOrDistrict ?? city);
     return buildTerritorialModuleUrls(base, territoryName);
   }
 
@@ -37,10 +43,10 @@ function buildTerritorialModuleUrls(base: string, territoryName: string | null):
   return {
     base,
     territoryName,
-    community: `/comunidade${base}`,
-    business: `/empresas${base}`,
-    services: `/servicos${base}`,
-    classifieds: `/classificados${base}`,
+    community: buildCommunityTerritoryUrl(base),
+    business: buildModuleTerritoryUrl(MODULE_SLUGS.business, base),
+    services: buildModuleTerritoryUrl(MODULE_SLUGS.services, base),
+    classifieds: buildModuleTerritoryUrl(MODULE_SLUGS.classifieds, base),
   };
 }
 

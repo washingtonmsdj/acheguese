@@ -111,11 +111,12 @@ Fase 3: Gastronomia e delivery integrado.
 - Redundancia da moderacao em lote removida: a barra fixa virou ponto unico de comando (analise, confirmar, penalizar, aviso, restricao 7/30d e desbloqueio), simplificando UX admin sem perda de capacidade.
 - Acoes destrutivas em lote da fila admin agora exigem confirmacao explicita via `ConfirmActionDialog` (penalizar, restringir 7/30 dias e desbloquear), com controle de estado pendente e sem `confirm()` nativo.
 - SEO territorial das landings canonicas foi corrigido no SSOT: hubs de bairro/grupo agora usam titulo editorial (`Territorio | Achegue-se`) e modulos seguem com titulo operacional; a regra ficou blindada por `src/core/routing/seo/__tests__/buildTerritorialMetadata.spec.ts`.
-- Rota publica curta `/complexo` foi revalidada end-to-end contra a landing canonica `/ba/salvador/complexo-do-nordeste-de-amaralina`, sem erro territorial e com metadados corretos.
+- Rota publica curta `/complexo` foi revalidada end-to-end contra a landing canonica `/ba/salvador/area/complexo-do-nordeste-de-amaralina`, sem erro territorial e com metadados corretos.
 - SEO territorial dos modulos publicos foi corrigido para rotas com prefixo (`/empresas/...`, `/servicos/...`): o parser agora extrai `Salvador` corretamente, em vez de tratar `ba` como cidade.
 - Landings raiz `/empresas` e `/servicos` ganharam Helmet proprio e foram cobertas no smoke publico; a suite tambem valida titulos territoriais finais para empresas e servicos no Complexo.
 - Smoke de profissionais/servicos removeu espera fixa por tempo e passou a validar saida real do loader global por polling.
 - Decisao de produto/arquitetura para roteamento territorial registrada em `docs/DECISAO_ROTEAMENTO_TERRITORIAL.md`: cidade/site geral, modulos publicos e comunidade local agora possuem papeis distintos documentados.
+- Roteamento territorial v2 aplicado: grupos territoriais usam `/area/:groupSlug` no site publico, modulos, comunidade, helpers, SEO e sitemap.
 
 ## P0 Abertos
 
@@ -129,7 +130,7 @@ Fase 3: Gastronomia e delivery integrado.
 - Admin/Moderacao: consolidar fila unica, audit log e moderacao transversal alem da fila inicial de confianca operacional.
 - Notificacoes: matriz completa por evento/canal/preferencia.
 - SEO/Rotas: sitemap dinamico.
-- SEO/Rotas: definir canonical/robots quando rota direta de modulo e rota dentro de `/comunidade` exibirem conteudo equivalente.
+- SEO/Rotas: conectar sitemap dinamico ao banco para producao; estrutura canonica com `/area` ja foi aplicada no gerador.
 
 ## P1 Abertos
 

@@ -6,7 +6,7 @@
  */
 
 import { useActiveTerritory } from '@/core/location/hooks/useActiveTerritory';
-import { geoPathToPublicUrl } from '@/core/routing/utils/territoryUrls';
+import { buildGroupBaseUrl, geoPathToPublicUrl } from '@/core/routing/utils/territoryUrls';
 import { TERRITORY_CONFIG } from '@/config/territory';
 import type { ResolvedTerritory } from '@/core/routing/hooks/useResolveTerritoryFromUrl';
 
@@ -35,7 +35,7 @@ export function useGuideUrls(routeResolved?: ResolvedTerritory | null): GuideUrl
       const firstMember = routeResolved.group.members[0];
       if (firstMember?.geographic_path) {
         const parts = firstMember.geographic_path.split('/').filter(Boolean);
-        return buildGuideUrls(`/${parts[1]}/${parts[2]}/${routeResolved.group.slug}`);
+        return buildGuideUrls(buildGroupBaseUrl(routeResolved.group, `/${parts[0]}/${parts[1]}/${parts[2]}`));
       }
     } else {
       return buildGuideUrls(geoPathToPublicUrl(routeResolved.location.geographic_path));

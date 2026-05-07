@@ -7,8 +7,9 @@
  * Padrões canônicos (públicos):
  *   Cidade:  /:state/:city
  *   Bairro:  /:state/:city/:district
- *   Grupo:   /:state/:city/:groupSlug
+ *   Grupo:   /:state/:city/area/:groupSlug
  *   Módulo:  /[modulo]/:state/:city/:district?
+ *   Grupo em módulo: /[modulo]/:state/:city/area/:groupSlug
  */
 
 import type { Location, TerritorialGroup } from '@/core/location/types';
@@ -89,7 +90,7 @@ export function buildLocationBaseUrl(location: Location): string {
  */
 export function buildGroupBaseUrl(group: TerritorialGroup, cityPath: string): string {
   const publicCity = geoPathToPublicUrl(cityPath);
-  return `${publicCity}/${group.slug}`;
+  return `${publicCity}/area/${group.slug}`;
 }
 
 /**
@@ -134,6 +135,15 @@ export function buildTerritoryModuleUrl(
   module: ModuleSlug,
 ): string {
   return `${buildTerritoryBaseUrl(territory)}/${module}`;
+}
+
+export function buildModuleTerritoryUrl(module: ModuleSlug, territoryBaseUrl: string): string {
+  return `/${module}${normalizePublicTerritoryPath(territoryBaseUrl)}`;
+}
+
+export function buildCommunityTerritoryUrl(territoryBaseUrl: string, suffix = ''): string {
+  const normalizedSuffix = suffix ? `/${suffix.replace(/^\/+/, '')}` : '';
+  return buildModuleTerritoryUrl(MODULE_SLUGS.community, territoryBaseUrl) + normalizedSuffix;
 }
 
 // ── Route Context Extraction ─────────────────────────────────────────────────

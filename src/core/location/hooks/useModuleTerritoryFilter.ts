@@ -39,6 +39,7 @@ interface RouteParams {
   state?: string;
   city?: string;
   district?: string;
+  groupSlug?: string;
   groupSlugOrDistrict?: string;
 }
 

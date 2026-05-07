@@ -72,7 +72,7 @@ export function BottomNav() {
       (territory) =>
         territory.kind === 'group' &&
         territory.slug === 'complexo-do-nordeste-de-amaralina',
-    )?.path ?? '/ba/salvador/complexo-do-nordeste-de-amaralina';
+    )?.path ?? '/ba/salvador/area/complexo-do-nordeste-de-amaralina';
 
   const isActive = (path: string) => {
     if (path === '/') return pathname === '/';

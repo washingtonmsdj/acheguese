@@ -1,4 +1,3 @@
-/* eslint-disable react-refresh/only-export-components */
 import { logger } from '@/shared/utils/logger';
 import React, { useState, useEffect } from "react";
 import { SessionState } from "../state/SessionState";

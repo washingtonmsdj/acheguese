@@ -867,12 +867,14 @@ Implementado transversalmente:
 - [x] SEO territorial de modulos com prefixo (`/empresas/...`, `/servicos/...`) extrai cidade corretamente e evita titulos como `em Ba`.
 - [x] Landings raiz `/empresas` e `/servicos` possuem metadados proprios e cobertura Playwright contra loader global e titulo generico.
 - [x] Decisao canonica de roteamento territorial documentada em `docs/DECISAO_ROTEAMENTO_TERRITORIAL.md`: site geral por cidade, modulos publicos por cidade/territorio e comunidade como experiencia social de bairro/grupo.
+- [x] Roteamento territorial v2 aplicado: grupo territorial usa `/area/:groupSlug` em site geral, modulos publicos, comunidade, helpers canonicos, SEO/canonical e sitemap.
 
 Criterio de aceite:
 
 - Rotas canonicas nao competem entre si.
 - Sitemap nao depende de TODO para URLs principais.
 - Rotas diretas de modulo e rotas dentro de `/comunidade` possuem intencao distinta documentada.
+- Grupo territorial nao compete com slug de bairro; o contrato canonico exige `/area/:groupSlug`.
 
 ## Tarefa 8.2: Mobile/PWA
 
@@ -1188,6 +1190,7 @@ Criterio de aceite:
 - [x] P0 parcial: rotas publicas de onboarding cobertas por smoke E2E e marca canonica.
 - [x] P0 parcial: rotas institucionais publicas cobertas por smoke E2E e marca canonica.
 - [x] P0 parcial: decisao de produto para roteamento cidade/modulo/comunidade documentada.
+- [x] P0 parcial: padrao `/area/:groupSlug` aplicado para separar grupo territorial de bairro.
 - [ ] P0: sitemap dinamico real.
 - [ ] P1: canonicals por modulo.
 - [ ] P1: schema.org.

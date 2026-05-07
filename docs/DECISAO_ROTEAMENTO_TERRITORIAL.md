@@ -24,14 +24,14 @@ Rotas canonicas:
 ```text
 /ba/salvador
 /ba/salvador/nordeste-de-amaralina
-/ba/salvador/complexo-do-nordeste-de-amaralina
+/ba/salvador/area/complexo-do-nordeste-de-amaralina
 ```
 
 Papel:
 
 - `/ba/salvador` representa a cidade.
 - `/ba/salvador/:bairro` representa um bairro.
-- `/ba/salvador/:grupo` representa um grupo territorial, como o Complexo.
+- `/ba/salvador/area/:grupo` representa um grupo territorial, como o Complexo.
 
 ## Camada 2: Modulos Publicos
 
@@ -48,14 +48,15 @@ Rotas canonicas:
 /empresas/ba/salvador/nordeste-de-amaralina
 /servicos/ba/salvador/nordeste-de-amaralina
 
-/empresas/ba/salvador/complexo-do-nordeste-de-amaralina
-/servicos/ba/salvador/complexo-do-nordeste-de-amaralina
+/empresas/ba/salvador/area/complexo-do-nordeste-de-amaralina
+/servicos/ba/salvador/area/complexo-do-nordeste-de-amaralina
 ```
 
 Papel:
 
 - Cidade: listagem ampla do modulo na cidade.
 - Bairro/grupo: listagem publica filtrada por territorio, util para SEO e descoberta direta.
+- Grupo territorial sempre usa `/area/:groupSlug`; nunca deve competir com slug de bairro.
 - Essas rotas nao devem tentar substituir o feed comunitario.
 
 Regra de titulo SEO:
@@ -81,12 +82,12 @@ Rotas canonicas:
 ```text
 /comunidade/ba/salvador
 /comunidade/ba/salvador/nordeste-de-amaralina
-/comunidade/ba/salvador/complexo-do-nordeste-de-amaralina
+/comunidade/ba/salvador/area/complexo-do-nordeste-de-amaralina
 
-/comunidade/ba/salvador/complexo-do-nordeste-de-amaralina/feed
-/comunidade/ba/salvador/complexo-do-nordeste-de-amaralina/grupos
-/comunidade/ba/salvador/complexo-do-nordeste-de-amaralina/alertas
-/comunidade/ba/salvador/complexo-do-nordeste-de-amaralina/problemas
+/comunidade/ba/salvador/area/complexo-do-nordeste-de-amaralina/feed
+/comunidade/ba/salvador/area/complexo-do-nordeste-de-amaralina/grupos
+/comunidade/ba/salvador/area/complexo-do-nordeste-de-amaralina/alertas
+/comunidade/ba/salvador/area/complexo-do-nordeste-de-amaralina/problemas
 ```
 
 Papel:
@@ -100,9 +101,9 @@ Papel:
 Rotas como estas podem existir:
 
 ```text
-/comunidade/ba/salvador/complexo-do-nordeste-de-amaralina/empresas
-/comunidade/ba/salvador/complexo-do-nordeste-de-amaralina/servicos
-/comunidade/ba/salvador/complexo-do-nordeste-de-amaralina/classificados
+/comunidade/ba/salvador/area/complexo-do-nordeste-de-amaralina/empresas
+/comunidade/ba/salvador/area/complexo-do-nordeste-de-amaralina/servicos
+/comunidade/ba/salvador/area/complexo-do-nordeste-de-amaralina/classificados
 ```
 
 Mas o papel delas e diferente das rotas publicas diretas:
@@ -111,6 +112,12 @@ Mas o papel delas e diferente das rotas publicas diretas:
 - `/comunidade/.../empresas`: visao contextual da comunidade, com navegacao comunitaria, sinais sociais e retorno ao bairro.
 
 Se uma tela nao entregar contexto comunitario adicional, ela deve preferir linkar para a rota publica direta em vez de duplicar experiencia.
+
+## SEO e Canonical
+
+- Rotas publicas de modulo (`/empresas/...`, `/servicos/...`, `/classificados/...`) usam `index, follow` e canonical self.
+- Rotas comunitarias com conteudo social proprio (`/comunidade/...`, `/feed`, `/grupos`, `/alertas`, `/problemas`) usam `index, follow` e canonical self.
+- Rotas de modulo embutidas dentro da comunidade (`/comunidade/.../empresas`, `/servicos`, `/classificados`, etc.) usam `noindex, follow` e canonical para a rota publica equivalente enquanto nao tiverem conteudo comunitario exclusivo suficiente.
 
 ## Decisao de Produto
 
@@ -139,5 +146,4 @@ Antes de criar uma rota nova, responder:
 
 - Criar testes E2E para cidade, bairro e grupo nas rotas de comunidade.
 - Revisar se `/comunidade/.../empresas` e `/comunidade/.../servicos` entregam contexto comunitario real ou apenas duplicam vitrines.
-- Definir canonical/robots quando duas rotas exibirem a mesma lista com intencoes diferentes.
-- Atualizar sitemap dinamico para respeitar esta separacao.
+- Atualizar sitemap dinamico conectado ao banco para respeitar esta separacao em producao.

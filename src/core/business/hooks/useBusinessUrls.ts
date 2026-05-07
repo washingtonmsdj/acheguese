@@ -12,14 +12,14 @@
  */
 
 import { useActiveTerritory } from '@/core/location/hooks/useActiveTerritory';
-import { geoPathToPublicUrl } from '@/core/routing/utils/territoryUrls';
+import { buildGroupBaseUrl, buildModuleTerritoryUrl, geoPathToPublicUrl, MODULE_SLUGS } from '@/core/routing/utils/territoryUrls';
 import { TERRITORY_CONFIG } from '@/config/territory';
 import { BusinessUrlService } from '@/core/business/services/BusinessUrlService';
 import type { BusinessUrlContext } from '@/core/business/services/BusinessUrlService';
 import type { ResolvedTerritory } from '@/core/routing/hooks/useResolveTerritoryFromUrl';
 
 export interface BusinessUrls {
-  /** Lista de empresas: /empresas/ba/salvador ou /empresas/ba/salvador/complexo-do-nordeste */
+  /** Lista de empresas: /empresas/ba/salvador ou /empresas/ba/salvador/area/complexo-do-nordeste */
   list: string;
   /**
    * URL canônica pública da empresa: /empresas/:uf/:cidade/:slug
@@ -47,11 +47,12 @@ export function useBusinessUrls(routeResolved?: ResolvedTerritory | null): Busin
   
   if (routeResolved) {
     if (routeResolved.kind === 'group') {
-      // Grupo: /empresas/ba/salvador/complexo-do-nordeste-de-amaralina
+      // Grupo: /empresas/ba/salvador/area/complexo-do-nordeste-de-amaralina
       const firstMember = routeResolved.group.members[0];
       if (firstMember?.geographic_path) {
         const parts = firstMember.geographic_path.split('/').filter(Boolean);
-        listUrl = `/empresas/${parts[1]}/${parts[2]}/${routeResolved.group.slug}`;
+        const groupBase = buildGroupBaseUrl(routeResolved.group, `/${parts[0]}/${parts[1]}/${parts[2]}`);
+        listUrl = buildModuleTerritoryUrl(MODULE_SLUGS.business, groupBase);
       } else {
         listUrl = `/empresas/${TERRITORY_CONFIG.launch.state}/${TERRITORY_CONFIG.launch.city}`;
       }

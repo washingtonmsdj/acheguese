@@ -19,6 +19,7 @@ import { Button } from "@/shared/components/ui/button";
 import { cn } from "@/shared/utils/cn";
 import { prefetchRouteByHref } from "@/app/routes/prefetch";
 import { TerritorialLayout } from "./TerritorialLayout";
+import { buildCommunityTerritoryUrl } from "@/core/routing/utils/territoryUrls";
 
 type CommunityNavItem = {
   id: string;
@@ -64,6 +65,7 @@ function normalizeModulePath(pathname: string): string {
   const module = parts[0] ?? "";
 
   if (module === "comunidade") {
+    if (parts[3] === "area") return parts[5] ?? "home";
     if (parts[4]) return parts[4];
     return "home";
   }
@@ -84,14 +86,20 @@ export function CommunityTerritorialShell() {
   const params = useParams<{
     state?: string;
     city?: string;
+    groupSlug?: string;
     groupSlugOrDistrict?: string;
   }>();
   const [transitionMessage, setTransitionMessage] = useState<string | null>(null);
 
   const state = params.state ?? "ba";
   const city = params.city ?? "salvador";
-  const territorySlug = params.groupSlugOrDistrict ?? COMPLEXO_SLUG;
-  const communityBase = `/comunidade/${state}/${city}/${territorySlug}`;
+  const territorySlug = params.groupSlug ?? params.groupSlugOrDistrict ?? COMPLEXO_SLUG;
+  const territoryBase = params.groupSlug
+    ? `/${state}/${city}/area/${params.groupSlug}`
+    : params.groupSlugOrDistrict
+      ? `/${state}/${city}/${params.groupSlugOrDistrict}`
+      : `/${state}/${city}`;
+  const communityBase = buildCommunityTerritoryUrl(territoryBase);
   const cityHref = `/${state}/${city}`;
   const territoryName = titleFromSlug(territorySlug);
   const cityName = cityLabelFromSlug(city);

@@ -59,7 +59,7 @@ export class SelectorTerritoryService {
       .map((group) => {
         const anchorCity = locationById.get(group.anchor_city_id);
         const anchorPath = anchorCity?.geographic_path?.replace(/^\/br/, '') || '';
-        const path = anchorPath ? `${anchorPath}/${group.slug}` : `/${group.slug}`;
+        const path = anchorPath ? `${anchorPath}/area/${group.slug}` : `/area/${group.slug}`;
 
         return {
           kind: 'group' as const,

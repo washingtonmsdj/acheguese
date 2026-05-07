@@ -12,7 +12,7 @@
  */
 
 import { useActiveTerritory } from '@/core/location/hooks/useActiveTerritory';
-import { geoPathToPublicUrl } from '@/core/routing/utils/territoryUrls';
+import { buildGroupBaseUrl, buildModuleTerritoryUrl, geoPathToPublicUrl, MODULE_SLUGS } from '@/core/routing/utils/territoryUrls';
 import { TERRITORY_CONFIG } from '@/config/territory';
 import { classifiedUrlService } from '@/modules/classifieds/services';
 import type { ResolvedTerritory } from '@/core/routing/hooks/useResolveTerritoryFromUrl';
@@ -43,11 +43,12 @@ export function useClassifiedUrls(routeResolved?: ResolvedTerritory | null): Cla
   
   if (routeResolved) {
     if (routeResolved.kind === 'group') {
-      // Grupo: /classificados/ba/salvador/complexo-do-nordeste-de-amaralina
+      // Grupo: /classificados/ba/salvador/area/complexo-do-nordeste-de-amaralina
       const firstMember = routeResolved.group.members[0];
       if (firstMember?.geographic_path) {
         const parts = firstMember.geographic_path.split('/').filter(Boolean);
-        listUrl = `/classificados/${parts[1]}/${parts[2]}/${routeResolved.group.slug}`;
+        const groupBase = buildGroupBaseUrl(routeResolved.group, `/${parts[0]}/${parts[1]}/${parts[2]}`);
+        listUrl = buildModuleTerritoryUrl(MODULE_SLUGS.classifieds, groupBase);
       } else {
         listUrl = `/classificados/${TERRITORY_CONFIG.launch.state}/${TERRITORY_CONFIG.launch.city}`;
       }

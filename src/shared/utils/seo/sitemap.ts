@@ -55,6 +55,36 @@ const STATIC_PAGES: SitemapURL[] = [
     priority: 0.8,
   },
   {
+    loc: '/ba/salvador',
+    changefreq: 'daily',
+    priority: 0.9,
+  },
+  {
+    loc: '/ba/salvador/nordeste-de-amaralina',
+    changefreq: 'daily',
+    priority: 0.8,
+  },
+  {
+    loc: '/ba/salvador/area/complexo-do-nordeste-de-amaralina',
+    changefreq: 'daily',
+    priority: 0.9,
+  },
+  {
+    loc: '/empresas/ba/salvador/area/complexo-do-nordeste-de-amaralina',
+    changefreq: 'daily',
+    priority: 0.8,
+  },
+  {
+    loc: '/servicos/ba/salvador/area/complexo-do-nordeste-de-amaralina',
+    changefreq: 'daily',
+    priority: 0.8,
+  },
+  {
+    loc: '/comunidade/ba/salvador/area/complexo-do-nordeste-de-amaralina/feed',
+    changefreq: 'hourly',
+    priority: 0.8,
+  },
+  {
     loc: '/profissionais',
     changefreq: 'daily',
     priority: 0.8,

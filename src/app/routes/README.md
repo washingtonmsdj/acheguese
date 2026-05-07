@@ -77,13 +77,15 @@ No arquivo `AppRoutes.tsx`, adicione dentro do componente `Routes`:
 ```
 /:state/:city                                  # Hub publico da cidade
 /:state/:city/:district                       # Hub publico do bairro
-/:state/:city/:groupSlug                      # Hub publico do grupo territorial
+/:state/:city/area/:groupSlug                 # Hub publico do grupo territorial
 /empresas/:state/:city                        # Vitrine publica do modulo na cidade
-/empresas/:state/:city/:districtOrGroup       # Vitrine publica do modulo no bairro/grupo
+/empresas/:state/:city/:district              # Vitrine publica do modulo no bairro
+/empresas/:state/:city/area/:groupSlug        # Vitrine publica do modulo no grupo
 /comunidade/:state/:city                      # Comunidade da cidade
-/comunidade/:state/:city/:districtOrGroup     # Comunidade do bairro/grupo
-/comunidade/:state/:city/:districtOrGroup/feed # Feed comunitario do territorio
-/empresas/:state/:city/:districtOrGroup/:businessSlug # Detalhe especifico de empresa
+/comunidade/:state/:city/:district            # Comunidade do bairro
+/comunidade/:state/:city/area/:groupSlug      # Comunidade do grupo
+/comunidade/:state/:city/area/:groupSlug/feed # Feed comunitario do grupo
+/empresas/:state/:city/:district/:businessSlug # Detalhe especifico de empresa
 ```
 
 Regra de intencao:

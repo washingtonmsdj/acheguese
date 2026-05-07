@@ -1,12 +1,18 @@
-/**
- * generateSitemap - Gerador de sitemap dinâmico
- * 
- * Gera sitemap.xml com todas as rotas territoriais e páginas públicas.
- * Deve ser executado em build time ou via API route.
+﻿/**
+ * generateSitemap - Gerador de sitemap dinamico
+ *
+ * Gera sitemap.xml com rotas territoriais canonicas e paginas publicas.
  */
 
 import { logger } from '@/shared/utils/logger';
 import type { Location, TerritorialGroupWithMembers } from '@/core/location/types';
+import {
+  MODULE_SLUGS,
+  buildGroupBaseUrl,
+  buildModuleTerritoryUrl,
+  geoPathToPublicUrl,
+} from '@/core/routing/utils/territoryUrls';
+
 interface SitemapUrl {
   loc: string;
   lastmod?: string;
@@ -14,55 +20,66 @@ interface SitemapUrl {
   priority?: number;
 }
 
-/**
- * Gera URLs do sitemap para um território (location ou group)
- */
 function generateTerritoryUrls(
   baseUrl: string,
-  geographicPath: string,
-  isGroup: boolean
+  publicPath: string,
+  isGroup: boolean,
 ): SitemapUrl[] {
-  const urls: SitemapUrl[] = [];
-  const path = geographicPath.replace('/br', ''); // Remove /br do início
+  const urls: SitemapUrl[] = [
+    {
+      loc: `${baseUrl}${publicPath}`,
+      changefreq: 'daily',
+      priority: isGroup ? 0.9 : 0.8,
+    },
+  ];
 
-  // Landing page do território
-  urls.push({
-    loc: `${baseUrl}${path}`,
-    changefreq: 'daily',
-    priority: isGroup ? 0.9 : 0.8,
-  });
+  const modules = [
+    MODULE_SLUGS.business,
+    MODULE_SLUGS.services,
+    MODULE_SLUGS.classifieds,
+    MODULE_SLUGS.community,
+    MODULE_SLUGS.mobility,
+  ];
 
-  // Módulos do território
-  const modules = ['empresas', 'servicos', 'classificados', 'comunidade', 'mobilidade'];
-  modules.forEach(module => {
+  modules.forEach((module) => {
     urls.push({
-      loc: `${baseUrl}${path}/${module}`,
+      loc: `${baseUrl}${buildModuleTerritoryUrl(module, publicPath)}`,
       changefreq: 'daily',
       priority: 0.7,
     });
   });
 
+  if (isGroup) {
+    urls.push(
+      {
+        loc: `${baseUrl}${buildModuleTerritoryUrl(MODULE_SLUGS.community, publicPath)}/feed`,
+        changefreq: 'hourly',
+        priority: 0.8,
+      },
+      {
+        loc: `${baseUrl}${buildModuleTerritoryUrl(MODULE_SLUGS.community, publicPath)}/grupos`,
+        changefreq: 'daily',
+        priority: 0.7,
+      },
+    );
+  }
+
   return urls;
 }
 
-/**
- * Gera sitemap completo
- */
 export function generateSitemap(
   locations: Location[],
   groups: TerritorialGroupWithMembers[],
-  baseUrl = 'https://acheguese.com.br'
+  baseUrl = 'https://acheguese.com.br',
 ): string {
-  const urls: SitemapUrl[] = [];
+  const urls: SitemapUrl[] = [
+    {
+      loc: baseUrl,
+      changefreq: 'daily',
+      priority: 1.0,
+    },
+  ];
 
-  // Homepage
-  urls.push({
-    loc: baseUrl,
-    changefreq: 'daily',
-    priority: 1.0,
-  });
-
-  // Páginas estáticas
   const staticPages = [
     { path: '/sobre', priority: 0.6 },
     { path: '/contato', priority: 0.6 },
@@ -70,7 +87,7 @@ export function generateSitemap(
     { path: '/privacidade', priority: 0.3 },
   ];
 
-  staticPages.forEach(page => {
+  staticPages.forEach((page) => {
     urls.push({
       loc: `${baseUrl}${page.path}`,
       changefreq: 'monthly',
@@ -78,36 +95,26 @@ export function generateSitemap(
     });
   });
 
-  // Territórios - Locations
   locations
-    .filter(loc => loc.status === 'active')
-    .forEach(location => {
-      const territoryUrls = generateTerritoryUrls(
-        baseUrl,
-        location.geographic_path,
-        false
-      );
-      urls.push(...territoryUrls);
+    .filter((location) => location.status === 'active')
+    .forEach((location) => {
+      urls.push(...generateTerritoryUrls(baseUrl, geoPathToPublicUrl(location.geographic_path), false));
     });
 
-  // Territórios - Groups
   groups
-    .filter(group => group.status === 'active')
-    .forEach(group => {
-      // Usar geographic_path do primeiro membro + slug do grupo
+    .filter((group) => group.status === 'active')
+    .forEach((group) => {
       const firstMember = group.members?.[0];
       if (firstMember?.geographic_path) {
         const parts = firstMember.geographic_path.split('/').filter(Boolean);
-        const groupPath = `/${parts[1]}/${parts[2]}/${group.slug}`;
-        const territoryUrls = generateTerritoryUrls(baseUrl, groupPath, true);
-        urls.push(...territoryUrls);
+        const groupPath = buildGroupBaseUrl(group, `/${parts[0]}/${parts[1]}/${parts[2]}`);
+        urls.push(...generateTerritoryUrls(baseUrl, groupPath, true));
       }
     });
 
-  // Gerar XML
   const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-${urls.map(url => `  <url>
+${urls.map((url) => `  <url>
     <loc>${url.loc}</loc>
     ${url.lastmod ? `<lastmod>${url.lastmod}</lastmod>` : ''}
     ${url.changefreq ? `<changefreq>${url.changefreq}</changefreq>` : ''}
@@ -118,16 +125,7 @@ ${urls.map(url => `  <url>
   return xml;
 }
 
-/**
- * Exemplo de uso em API route ou build script
- */
 export async function generateAndSaveSitemap() {
-  // TODO: Buscar locations e groups do banco
-  // const locations = await fetchLocations();
-  // const groups = await fetchGroups();
-  // const xml = generateSitemap(locations, groups);
-  // await fs.writeFile('public/sitemap.xml', xml);
-  
   logger.debug('Sitemap generation not implemented yet');
   logger.debug('TODO: Integrate with database to fetch locations and groups');
 }

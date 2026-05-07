@@ -12,7 +12,7 @@
  */
 
 import { useActiveTerritory } from '@/core/location/hooks/useActiveTerritory';
-import { geoPathToPublicUrl } from '@/core/routing/utils/territoryUrls';
+import { buildCommunityTerritoryUrl, buildGroupBaseUrl, buildModuleTerritoryUrl, geoPathToPublicUrl, MODULE_SLUGS } from '@/core/routing/utils/territoryUrls';
 import { TERRITORY_CONFIG } from '@/config/territory';
 import type { ResolvedTerritory } from '@/core/routing/hooks/useResolveTerritoryFromUrl';
 
@@ -45,22 +45,22 @@ export function useCommunityUrls(routeResolved?: ResolvedTerritory | null): Comm
       const firstMember = routeResolved.group.members[0];
       if (firstMember?.geographic_path) {
         const parts = firstMember.geographic_path.split('/').filter(Boolean);
-        const groupPath = `/${parts[1]}/${parts[2]}/${routeResolved.group.slug}`;
-        feedUrl = `/comunidade${groupPath}`;
-        eventsUrl = `/eventos${groupPath}`;
+        const groupPath = buildGroupBaseUrl(routeResolved.group, `/${parts[0]}/${parts[1]}/${parts[2]}`);
+        feedUrl = buildCommunityTerritoryUrl(groupPath);
+        eventsUrl = buildModuleTerritoryUrl(MODULE_SLUGS.events, groupPath);
       } else {
         feedUrl = `/comunidade/${TERRITORY_CONFIG.launch.state}/${TERRITORY_CONFIG.launch.city}`;
         eventsUrl = `/eventos/${TERRITORY_CONFIG.launch.state}/${TERRITORY_CONFIG.launch.city}`;
       }
     } else {
       const geoUrl = geoPathToPublicUrl(routeResolved.location.geographic_path);
-      feedUrl = `/comunidade${geoUrl}`;
-      eventsUrl = `/eventos${geoUrl}`;
+      feedUrl = buildCommunityTerritoryUrl(geoUrl);
+      eventsUrl = buildModuleTerritoryUrl(MODULE_SLUGS.events, geoUrl);
     }
   } else if (activeLocation?.geographic_path) {
     const geoUrl = geoPathToPublicUrl(activeLocation.geographic_path);
-    feedUrl = `/comunidade${geoUrl}`;
-    eventsUrl = `/eventos${geoUrl}`;
+    feedUrl = buildCommunityTerritoryUrl(geoUrl);
+    eventsUrl = buildModuleTerritoryUrl(MODULE_SLUGS.events, geoUrl);
   } else {
     feedUrl = `/comunidade/${TERRITORY_CONFIG.launch.state}/${TERRITORY_CONFIG.launch.city}`;
     eventsUrl = `/eventos/${TERRITORY_CONFIG.launch.state}/${TERRITORY_CONFIG.launch.city}`;

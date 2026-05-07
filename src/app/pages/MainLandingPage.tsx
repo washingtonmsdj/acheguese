@@ -154,7 +154,7 @@ export default function MainLandingPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const handleExplorar = () => {
-    navigate(`/ba/salvador/complexo-do-nordeste-de-amaralina`);
+    navigate(`/ba/salvador/area/complexo-do-nordeste-de-amaralina`);
   };
 
   const handleExpansao = () => {

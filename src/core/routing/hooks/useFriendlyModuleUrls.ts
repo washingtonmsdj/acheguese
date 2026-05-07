@@ -1,9 +1,11 @@
 import { useParams } from "react-router-dom";
 import { isReservedSlug } from "@/core/routing/reservedSlugs";
+import { buildCommunityTerritoryUrl, buildModuleTerritoryUrl, MODULE_SLUGS } from "@/core/routing/utils/territoryUrls";
 
 interface FriendlyRouteParams {
   state?: string;
   city?: string;
+  groupSlug?: string;
   groupSlugOrDistrict?: string;
 }
 
@@ -25,17 +27,19 @@ export interface FriendlyModuleUrls {
 }
 
 export function useFriendlyModuleUrls(): FriendlyModuleUrls {
-  const { state, city, groupSlugOrDistrict } = useParams<FriendlyRouteParams>();
+  const { state, city, groupSlug, groupSlugOrDistrict } = useParams<FriendlyRouteParams>();
   const hasTerritoryParams = Boolean(state && city && !isReservedSlug(state));
 
   if (hasTerritoryParams && state && city) {
-    const territoryBase = groupSlugOrDistrict
-      ? `/${state}/${city}/${groupSlugOrDistrict}`
-      : `/${state}/${city}`;
+    const territoryBase = groupSlug
+      ? `/${state}/${city}/area/${groupSlug}`
+      : groupSlugOrDistrict
+        ? `/${state}/${city}/${groupSlugOrDistrict}`
+        : `/${state}/${city}`;
 
     return buildTerritorialUrls(
       territoryBase,
-      slugToTitle(groupSlugOrDistrict ?? city),
+      slugToTitle(groupSlug ?? groupSlugOrDistrict ?? city),
     );
   }
 
@@ -62,17 +66,17 @@ function buildTerritorialUrls(basePath: string, territoryName: string | null): F
     base: basePath,
     landing: basePath,
     territoryName,
-    community: `/comunidade${basePath}`,
-    business: `/empresas${basePath}`,
-    services: `/servicos${basePath}`,
-    classifieds: `/classificados${basePath}`,
-    gastronomy: `/gastronomia${basePath}`,
+    community: buildCommunityTerritoryUrl(basePath),
+    business: buildModuleTerritoryUrl(MODULE_SLUGS.business, basePath),
+    services: buildModuleTerritoryUrl(MODULE_SLUGS.services, basePath),
+    classifieds: buildModuleTerritoryUrl(MODULE_SLUGS.classifieds, basePath),
+    gastronomy: buildModuleTerritoryUrl(MODULE_SLUGS.gastronomy, basePath),
     gastronomyFavorites: "/gastronomia/favoritos",
-    events: `/eventos${basePath}`,
-    jobs: `/vagas${basePath}`,
+    events: buildModuleTerritoryUrl(MODULE_SLUGS.events, basePath),
+    jobs: buildModuleTerritoryUrl(MODULE_SLUGS.jobs, basePath),
     touristPoints: `/pontos-turisticos${basePath}`,
-    ranking: `/ranking${basePath}`,
-    map: `/mapa${basePath}`,
+    ranking: buildModuleTerritoryUrl(MODULE_SLUGS.ranking, basePath),
+    map: buildModuleTerritoryUrl(MODULE_SLUGS.map, basePath),
   };
 }
 

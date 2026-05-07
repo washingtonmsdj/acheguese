@@ -8,8 +8,8 @@ Documentação da fundação territorial do projeto — Etapas 1–9.
 
 O sistema territorial resolve qual conteúdo exibir com base na localização geográfica do usuário. Suporta dois modos:
 
-- **Location** — bairro individual (ex: `/br/ba/salvador/nordeste-de-amaralina`)
-- **Group** — agrupamento de bairros (ex: `/br/ba/salvador/area/complexo-nordeste-amaralina`)
+- **Location** — bairro individual (ex: `/ba/salvador/nordeste-de-amaralina`)
+- **Group** — agrupamento de bairros (ex: `/ba/salvador/area/complexo-do-nordeste-de-amaralina`)
 
 ---
 
@@ -101,7 +101,7 @@ Acesso ao store de território ativo (fora de rota territorial).
 /                                          → HomePage (institucional)
 /:state/:city                              → TerritorialLayout (city)
 /:state/:city/:district                    → TerritorialLayout (location)
-/:state/:city/:groupSlug                   → TerritorialLayout (group)
+/:state/:city/area/:groupSlug              → TerritorialLayout (group)
 ```
 
 Decisao de produto/SEO vigente: `docs/DECISAO_ROTEAMENTO_TERRITORIAL.md`.
@@ -111,19 +111,21 @@ Modelo publico atual:
 ```text
 /:state/:city                              -> hub publico da cidade
 /:state/:city/:district                    -> hub publico do bairro
-/:state/:city/:groupSlug                   -> hub publico do grupo territorial
+/:state/:city/area/:groupSlug              -> hub publico do grupo territorial
 /empresas/:state/:city                     -> vitrine publica do modulo na cidade
-/empresas/:state/:city/:districtOrGroup    -> vitrine publica do modulo no bairro/grupo
-/comunidade/:state/:city/:districtOrGroup  -> experiencia social/local do territorio
+/empresas/:state/:city/:district           -> vitrine publica do modulo no bairro
+/empresas/:state/:city/area/:groupSlug     -> vitrine publica do modulo no grupo
+/comunidade/:state/:city/:district         -> experiencia social/local do bairro
+/comunidade/:state/:city/area/:groupSlug   -> experiencia social/local do territorio
 ```
 
 Exemplo real:
 ```
-/ba/salvador/complexo-do-nordeste-de-amaralina     → Complexo do Nordeste
+/ba/salvador/area/complexo-do-nordeste-de-amaralina     → Complexo do Nordeste
 /ba/salvador/nordeste-de-amaralina                 → Nordeste de Amaralina
 ```
 
-Rotas antigas com `/:country/...`, `/area/:groupSlug`, `/community` ou `/feed` nao devem ser usadas em implementacoes novas.
+Rotas antigas com `/:country/...`, grupo sem `/area`, `/community` ou `/feed` nao devem ser usadas em implementacoes novas.
 
 ---
 

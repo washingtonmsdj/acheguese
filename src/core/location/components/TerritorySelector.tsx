@@ -56,7 +56,7 @@ export function TerritorySelector({ currentTerritoryName, currentPath }: Territo
     const pathParts = anchorCity.geographic_path.split('/').filter(Boolean);
     if (pathParts.length < 3) return '#';
     const [, state, city] = pathParts; // ignora country
-    return `/${state}/${city}/${group.slug}`;
+    return `/${state}/${city}/area/${group.slug}`;
   };
 
   const filteredCities = useMemo(() => {

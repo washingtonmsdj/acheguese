@@ -266,7 +266,7 @@ Contratos definidos, sem acoplamento prematuro.
 3. ✅ Providers (OSM, Nominatim, Mock)
 4. ✅ Hooks React
 5. ✅ Componentes de mapa
-6. ✅ Página `/mapa/:state/:city` e `/mapa/:state/:city/:groupSlugOrDistrict`
+6. ✅ Página `/mapa/:state/:city`, `/mapa/:state/:city/:district` e `/mapa/:state/:city/area/:groupSlug`
 7. ✅ Integração com módulos existentes (businesses, gastronomy, events, alerts, tourist points)
 8. ⏳ Provider real de routing (OSRM/Valhalla)
 9. ✅ Clustering nativo
