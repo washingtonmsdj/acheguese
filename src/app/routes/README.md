@@ -75,11 +75,23 @@ No arquivo `AppRoutes.tsx`, adicione dentro do componente `Routes`:
 ### Territorial (Geográfica)
 
 ```
-/:state/:city                    # Hub da cidade
-/:state/:city/:district         # Hub do bairro
-/empresas/:state/:city          # Listagem por cidade
-/empresas/:state/:city/:slug    # Detalhe específico
+/:state/:city                                  # Hub publico da cidade
+/:state/:city/:district                       # Hub publico do bairro
+/:state/:city/:groupSlug                      # Hub publico do grupo territorial
+/empresas/:state/:city                        # Vitrine publica do modulo na cidade
+/empresas/:state/:city/:districtOrGroup       # Vitrine publica do modulo no bairro/grupo
+/comunidade/:state/:city                      # Comunidade da cidade
+/comunidade/:state/:city/:districtOrGroup     # Comunidade do bairro/grupo
+/comunidade/:state/:city/:districtOrGroup/feed # Feed comunitario do territorio
+/empresas/:state/:city/:districtOrGroup/:businessSlug # Detalhe especifico de empresa
 ```
+
+Regra de intencao:
+
+- Rotas diretas de modulo (`/empresas/...`, `/servicos/...`) sao vitrines publicas e SEO.
+- Rotas dentro de `/comunidade/...` sao experiencia social/local com contexto comunitario.
+- Rotas operacionais ficam em `/central`.
+- Rotas de identidade/configuracao pessoal ficam em `/perfil`.
 
 ### Admin
 

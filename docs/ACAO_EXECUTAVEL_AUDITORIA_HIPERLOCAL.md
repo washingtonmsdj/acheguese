@@ -44,6 +44,7 @@ Leia antes de executar:
 - `docs/audits/AUDITORIA_MODULO_PROFISSIONAIS.md`
 - `docs/audits/AUDITORIA_MODULO_GASTRONOMIA_NICHOS.md`
 - `docs/audits/AUDITORIA_DOCS_OBSOLETOS.md`
+- `docs/DECISAO_ROTEAMENTO_TERRITORIAL.md`
 - `package.json`
 
 Documentos que nao devem ser tratados como verdade sem revisao:
@@ -865,11 +866,13 @@ Implementado transversalmente:
 - [x] Smoke Playwright `tests/e2e/landing-public.spec.ts` valida home publica e a rota curta `/complexo` resolvendo para a landing canonica do Complexo sem erro territorial.
 - [x] SEO territorial de modulos com prefixo (`/empresas/...`, `/servicos/...`) extrai cidade corretamente e evita titulos como `em Ba`.
 - [x] Landings raiz `/empresas` e `/servicos` possuem metadados proprios e cobertura Playwright contra loader global e titulo generico.
+- [x] Decisao canonica de roteamento territorial documentada em `docs/DECISAO_ROTEAMENTO_TERRITORIAL.md`: site geral por cidade, modulos publicos por cidade/territorio e comunidade como experiencia social de bairro/grupo.
 
 Criterio de aceite:
 
 - Rotas canonicas nao competem entre si.
 - Sitemap nao depende de TODO para URLs principais.
+- Rotas diretas de modulo e rotas dentro de `/comunidade` possuem intencao distinta documentada.
 
 ## Tarefa 8.2: Mobile/PWA
 
@@ -1184,6 +1187,7 @@ Criterio de aceite:
 - [x] P0: corrigir `businesss` com redirects canonicos e breadcrumb sem rota canonica errada.
 - [x] P0 parcial: rotas publicas de onboarding cobertas por smoke E2E e marca canonica.
 - [x] P0 parcial: rotas institucionais publicas cobertas por smoke E2E e marca canonica.
+- [x] P0 parcial: decisao de produto para roteamento cidade/modulo/comunidade documentada.
 - [ ] P0: sitemap dinamico real.
 - [ ] P1: canonicals por modulo.
 - [ ] P1: schema.org.

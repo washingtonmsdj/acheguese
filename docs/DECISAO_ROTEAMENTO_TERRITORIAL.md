@@ -1,0 +1,143 @@
+# Decisao Canonica: Roteamento Territorial
+
+Data: 2026-05-07
+Status: ativo
+
+Este documento define a separacao entre site publico de cidade, modulos publicos e experiencia de comunidade. Use como SSOT de produto/SEO antes de criar ou alterar rotas territoriais.
+
+## Regra Principal
+
+O Achegue-se tem tres camadas publicas:
+
+1. Site geral da cidade.
+2. Modulos publicos por cidade ou territorio.
+3. Comunidade local por bairro ou grupo territorial.
+
+Essas camadas podem apontar para os mesmos dados, mas nao devem ter a mesma intencao de produto.
+
+## Camada 1: Site Geral
+
+Uso: porta publica ampla, SEO de cidade, descoberta inicial e navegacao institucional.
+
+Rotas canonicas:
+
+```text
+/ba/salvador
+/ba/salvador/nordeste-de-amaralina
+/ba/salvador/complexo-do-nordeste-de-amaralina
+```
+
+Papel:
+
+- `/ba/salvador` representa a cidade.
+- `/ba/salvador/:bairro` representa um bairro.
+- `/ba/salvador/:grupo` representa um grupo territorial, como o Complexo.
+
+## Camada 2: Modulos Publicos
+
+Uso: vitrine/listagem transacional e SEO por modulo.
+
+Rotas canonicas:
+
+```text
+/empresas/ba/salvador
+/servicos/ba/salvador
+/classificados/ba/salvador
+/gastronomia/ba/salvador
+
+/empresas/ba/salvador/nordeste-de-amaralina
+/servicos/ba/salvador/nordeste-de-amaralina
+
+/empresas/ba/salvador/complexo-do-nordeste-de-amaralina
+/servicos/ba/salvador/complexo-do-nordeste-de-amaralina
+```
+
+Papel:
+
+- Cidade: listagem ampla do modulo na cidade.
+- Bairro/grupo: listagem publica filtrada por territorio, util para SEO e descoberta direta.
+- Essas rotas nao devem tentar substituir o feed comunitario.
+
+Regra de titulo SEO:
+
+```text
+Hub:     Territorio | Achegue-se
+Modulo:  Achegue-se Territorio | Modulo em Cidade
+```
+
+Exemplos:
+
+```text
+Complexo do Nordeste de Amaralina | Achegue-se
+Achegue-se Complexo do Nordeste de Amaralina | Servicos em Salvador
+```
+
+## Camada 3: Comunidade
+
+Uso: experiencia social/local, vida de bairro, feed, grupos, alertas, problemas, recomendacoes e contexto comunitario.
+
+Rotas canonicas:
+
+```text
+/comunidade/ba/salvador
+/comunidade/ba/salvador/nordeste-de-amaralina
+/comunidade/ba/salvador/complexo-do-nordeste-de-amaralina
+
+/comunidade/ba/salvador/complexo-do-nordeste-de-amaralina/feed
+/comunidade/ba/salvador/complexo-do-nordeste-de-amaralina/grupos
+/comunidade/ba/salvador/complexo-do-nordeste-de-amaralina/alertas
+/comunidade/ba/salvador/complexo-do-nordeste-de-amaralina/problemas
+```
+
+Papel:
+
+- A comunidade e a experiencia principal de bairro/grupo.
+- Todo conteudo social deve ter territorio claro.
+- Feed, grupos, alertas, problemas urbanos, eventos comunitarios, recomendacoes e achados/perdidos pertencem primeiro a esta camada.
+
+## Rotas de Modulo Dentro da Comunidade
+
+Rotas como estas podem existir:
+
+```text
+/comunidade/ba/salvador/complexo-do-nordeste-de-amaralina/empresas
+/comunidade/ba/salvador/complexo-do-nordeste-de-amaralina/servicos
+/comunidade/ba/salvador/complexo-do-nordeste-de-amaralina/classificados
+```
+
+Mas o papel delas e diferente das rotas publicas diretas:
+
+- `/empresas/...`: vitrine publica e SEO.
+- `/comunidade/.../empresas`: visao contextual da comunidade, com navegacao comunitaria, sinais sociais e retorno ao bairro.
+
+Se uma tela nao entregar contexto comunitario adicional, ela deve preferir linkar para a rota publica direta em vez de duplicar experiencia.
+
+## Decisao de Produto
+
+O site geral nao deve ser somente a comunidade. A cidade precisa ter uma vitrine publica ampla para descoberta, SEO e entrada de visitantes.
+
+A comunidade deve ser a experiencia mais forte para bairro/grupo, especialmente para moradores autenticados ou visitantes que querem acompanhar a vida local.
+
+Portanto:
+
+- Manter rotas diretas por cidade para modulos publicos.
+- Manter rotas diretas por bairro/grupo quando houver valor de SEO/listagem territorial.
+- Fortalecer `/comunidade/...` como cockpit social do territorio.
+- Evitar telas duplicadas sem diferenca clara de contexto.
+
+## Criterios Para Novas Rotas
+
+Antes de criar uma rota nova, responder:
+
+1. A rota e uma vitrine publica/SEO? Use prefixo de modulo direto.
+2. A rota e social/comunitaria? Use prefixo `/comunidade`.
+3. A rota e operacional para dono/motorista/motoboy/profissional? Use `/central`.
+4. A rota e configuracao de identidade pessoal? Use `/perfil`.
+5. A rota exige dados territoriais? Deve passar por `TerritorialLayout` ou usar helper canonico de URL territorial.
+
+## Pendencias
+
+- Criar testes E2E para cidade, bairro e grupo nas rotas de comunidade.
+- Revisar se `/comunidade/.../empresas` e `/comunidade/.../servicos` entregam contexto comunitario real ou apenas duplicam vitrines.
+- Definir canonical/robots quando duas rotas exibirem a mesma lista com intencoes diferentes.
+- Atualizar sitemap dinamico para respeitar esta separacao.

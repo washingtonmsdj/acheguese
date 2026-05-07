@@ -99,17 +99,31 @@ Acesso ao store de território ativo (fora de rota territorial).
 
 ```
 /                                          → HomePage (institucional)
-/:country/:state/:city/area/:groupSlug     → TerritorialLayout (group)
-/:country/:state/:city/:district           → TerritorialLayout (location)
+/:state/:city                              → TerritorialLayout (city)
+/:state/:city/:district                    → TerritorialLayout (location)
+/:state/:city/:groupSlug                   → TerritorialLayout (group)
+```
+
+Decisao de produto/SEO vigente: `docs/DECISAO_ROTEAMENTO_TERRITORIAL.md`.
+
+Modelo publico atual:
+
+```text
+/:state/:city                              -> hub publico da cidade
+/:state/:city/:district                    -> hub publico do bairro
+/:state/:city/:groupSlug                   -> hub publico do grupo territorial
+/empresas/:state/:city                     -> vitrine publica do modulo na cidade
+/empresas/:state/:city/:districtOrGroup    -> vitrine publica do modulo no bairro/grupo
+/comunidade/:state/:city/:districtOrGroup  -> experiencia social/local do territorio
 ```
 
 Exemplo real:
 ```
-/br/ba/salvador/area/complexo-nordeste-amaralina   → Complexo do Nordeste
-/br/ba/salvador/nordeste-de-amaralina              → Nordeste de Amaralina
+/ba/salvador/complexo-do-nordeste-de-amaralina     → Complexo do Nordeste
+/ba/salvador/nordeste-de-amaralina                 → Nordeste de Amaralina
 ```
 
-Rotas legadas (`/community`, `/feed`, etc.) redirecionam para o território de lançamento.
+Rotas antigas com `/:country/...`, `/area/:groupSlug`, `/community` ou `/feed` nao devem ser usadas em implementacoes novas.
 
 ---
 

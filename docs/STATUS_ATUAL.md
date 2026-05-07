@@ -115,6 +115,7 @@ Fase 3: Gastronomia e delivery integrado.
 - SEO territorial dos modulos publicos foi corrigido para rotas com prefixo (`/empresas/...`, `/servicos/...`): o parser agora extrai `Salvador` corretamente, em vez de tratar `ba` como cidade.
 - Landings raiz `/empresas` e `/servicos` ganharam Helmet proprio e foram cobertas no smoke publico; a suite tambem valida titulos territoriais finais para empresas e servicos no Complexo.
 - Smoke de profissionais/servicos removeu espera fixa por tempo e passou a validar saida real do loader global por polling.
+- Decisao de produto/arquitetura para roteamento territorial registrada em `docs/DECISAO_ROTEAMENTO_TERRITORIAL.md`: cidade/site geral, modulos publicos e comunidade local agora possuem papeis distintos documentados.
 
 ## P0 Abertos
 
@@ -128,6 +129,7 @@ Fase 3: Gastronomia e delivery integrado.
 - Admin/Moderacao: consolidar fila unica, audit log e moderacao transversal alem da fila inicial de confianca operacional.
 - Notificacoes: matriz completa por evento/canal/preferencia.
 - SEO/Rotas: sitemap dinamico.
+- SEO/Rotas: definir canonical/robots quando rota direta de modulo e rota dentro de `/comunidade` exibirem conteudo equivalente.
 
 ## P1 Abertos
 
