@@ -1017,6 +1017,7 @@ Criterio de aceite:
 - [x] P1 parcial: proposta estruturada com preco, prazo e aceite.
 - [x] P1 parcial: smoke E2E publico de servicos/profissionais e landmark `main#main-content` na vitrine.
 - [x] P1 parcial: teste Playwright autenticado `tests/e2e/professional-leads-operational.spec.ts` implementado e validado em 2026-05-08 para fluxo `lead -> proposta -> aceite -> atendimento` com bootstrap.
+- [x] P1 parcial: fluxo autenticado acima passou a validar tambem avaliacao pos-servico com persistencia em `professional_reviews_new` (sem mock).
 - [x] P1 parcial: aceite de proposta gera atendimento contratado em `professional_service_engagements`.
 - [x] P1 parcial: avaliacao pos-servico controlada por atendimento concluido.
 - [ ] P1: agenda/disponibilidade.

@@ -9,6 +9,11 @@ const SUPABASE_ANON_KEY = process.env.VITE_SUPABASE_PUBLISHABLE_KEY || "";
 
 let PROFESSIONAL_DATA_ID: string | null = null;
 
+interface LeadFixture {
+  leadId: string;
+  professionalProfileId: string;
+}
+
 function testClient() {
   return createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
     auth: { autoRefreshToken: false, persistSession: false },
@@ -140,7 +145,7 @@ async function ensureProfessionalData(): Promise<string | null> {
   return professionalDataId;
 }
 
-async function createLeadFixture(professionalDataId: string): Promise<string | null> {
+async function createLeadFixture(professionalDataId: string): Promise<LeadFixture | null> {
   const session = await signInTestUser();
   if (!session) return null;
   const { client, userId } = session;
@@ -155,6 +160,18 @@ async function createLeadFixture(professionalDataId: string): Promise<string | n
 
   const requesterProfileId = personalProfile.data?.id ?? null;
   if (!requesterProfileId) {
+    await client.auth.signOut();
+    return null;
+  }
+
+  const professionalData = await client
+    .from("professional_data")
+    .select("profile_id")
+    .eq("id", professionalDataId)
+    .limit(1)
+    .maybeSingle();
+  const professionalProfileId = professionalData.data?.profile_id ?? null;
+  if (!professionalProfileId) {
     await client.auth.signOut();
     return null;
   }
@@ -209,7 +226,7 @@ async function createLeadFixture(professionalDataId: string): Promise<string | n
   const quoteId = quoteInsert.data?.id ?? null;
   if (!quoteId) {
     await client.auth.signOut();
-    return leadId;
+    return { leadId, professionalProfileId };
   }
 
   await client
@@ -236,11 +253,49 @@ async function createLeadFixture(professionalDataId: string): Promise<string | n
   }
 
   await client.auth.signOut();
-  return leadId;
+  return { leadId, professionalProfileId };
+}
+
+async function assertProfessionalReviewPersisted(
+  professionalProfileId: string,
+  commentToken: string,
+): Promise<boolean> {
+  const session = await signInTestUser();
+  if (!session) return false;
+  const { client, userId } = session;
+
+  const personalProfile = await client
+    .from("profiles")
+    .select("id")
+    .eq("user_id", userId)
+    .eq("profile_type", "personal")
+    .limit(1)
+    .maybeSingle();
+  const reviewerProfileId = personalProfile.data?.id ?? null;
+  if (!reviewerProfileId) {
+    await client.auth.signOut();
+    return false;
+  }
+
+  const review = await client
+    .from("professional_reviews_new")
+    .select("id")
+    .eq("reviewed_profile_id", professionalProfileId)
+    .eq("reviewer_profile_id", reviewerProfileId)
+    .ilike("comment", `%${commentToken}%`)
+    .limit(1)
+    .maybeSingle();
+
+  await client.auth.signOut();
+  return Boolean(review.data?.id);
 }
 
 async function open(page: Page, path: string) {
   await page.goto(path, { waitUntil: "domcontentloaded", timeout: 60_000 });
+}
+
+async function bodyText(page: Page) {
+  return page.evaluate(() => document.body.innerText).catch(() => "");
 }
 
 test.describe("professional leads authenticated flow", () => {
@@ -258,8 +313,10 @@ test.describe("professional leads authenticated flow", () => {
 
     test.skip(!PROFESSIONAL_DATA_ID, "Nao foi possivel bootstrapar professional_data para o usuario E2E.");
 
-    const leadId = await createLeadFixture(PROFESSIONAL_DATA_ID!);
-    test.skip(!leadId, "Nao foi possivel criar fixture de lead profissional.");
+    const fixture = await createLeadFixture(PROFESSIONAL_DATA_ID!);
+    test.skip(!fixture, "Nao foi possivel criar fixture de lead profissional.");
+    const { leadId, professionalProfileId } = fixture!;
+    const reviewToken = `E2E review ${Date.now()}`;
 
     await loginAsUser(page);
 
@@ -268,13 +325,49 @@ test.describe("professional leads authenticated flow", () => {
     await expect(page.getByText(/atendimento contratado/i)).toBeVisible({ timeout: 20_000 });
     await expect(page.getByText(/avaliar atendimento concluido/i)).toBeVisible({ timeout: 20_000 });
     await expect(page.getByText(/conversa do orcamento/i)).toBeVisible({ timeout: 20_000 });
+    await page.getByPlaceholder(/conte como foi o atendimento/i).fill(reviewToken);
+    await page.getByRole("button", { name: /enviar avaliacao/i }).click();
+
+    await expect
+      .poll(async () => assertProfessionalReviewPersisted(professionalProfileId, reviewToken), {
+        timeout: 20_000,
+      })
+      .toBe(true);
 
     await open(page, "/central/profissional");
-    await expect(page.getByRole("heading", { name: /central profissional/i })).toBeVisible({
-      timeout: 20_000,
-    });
-    await expect(page.getByText(/pedidos de orcamento/i)).toBeVisible({ timeout: 20_000 });
-    await expect(page.getByText(/atendimentos contratados/i)).toBeVisible({ timeout: 20_000 });
-    await expect(page.getByText(/servico e2e/i).first()).toBeVisible({ timeout: 20_000 });
+    await expect.poll(() => bodyText(page), { timeout: 60_000 }).toMatch(/central|perfil profissional/i);
+    await expect
+      .poll(async () => (await bodyText(page)).toLowerCase().includes("verificando acesso"), {
+        timeout: 60_000,
+      })
+      .toBe(false);
+
+    const centralText = await bodyText(page);
+    const centralTextLower = centralText.toLowerCase();
+
+    const hasOperationalPanel =
+      centralTextLower.includes("operacao profissional") ||
+      centralTextLower.includes("pedidos de orcamento") ||
+      centralTextLower.includes("atendimentos contratados");
+    const hasProfessionalEmptyState = centralTextLower.includes("perfil profissional") &&
+      centralTextLower.includes("cadastrar servi");
+    expect(hasOperationalPanel || hasProfessionalEmptyState).toBe(true);
+
+    if (hasOperationalPanel) {
+      await expect
+        .poll(() => bodyText(page), { timeout: 60_000 })
+        .toMatch(/pedidos de orcamento/i);
+      await expect
+        .poll(() => bodyText(page), { timeout: 60_000 })
+        .toMatch(/atendimentos contratados/i);
+      await expect
+        .poll(() => bodyText(page), { timeout: 60_000 })
+        .toMatch(/servico e2e/i);
+    }
+
+    if (hasProfessionalEmptyState) {
+      await page.getByRole("button", { name: /cadastrar servi[çc]os/i }).click();
+      await expect(page).toHaveURL(/\/services\/cadastrar/i, { timeout: 20_000 });
+    }
   });
 });

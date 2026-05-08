@@ -21,6 +21,24 @@ function getTableName(type: ReviewType): string {
   return type === "business" ? "business_reviews_new" : "professional_reviews_new";
 }
 
+function buildReviewInsertPayload(data: CreateReviewData) {
+  return {
+    reviewed_profile_id: data.reviewed_profile_id,
+    reviewer_profile_id: data.reviewer_profile_id,
+    rating: data.rating,
+    comment: data.comment ?? null,
+  };
+}
+
+function buildReviewUpdatePayload(
+  updates: Partial<Pick<CreateReviewData, "rating" | "comment" | "job_type">>,
+) {
+  return {
+    rating: updates.rating,
+    comment: updates.comment,
+  };
+}
+
 // ============================================================================
 // ✏️ MUTATION OPERATIONS
 // ============================================================================
@@ -35,9 +53,11 @@ export async function addReview(
   try {
     const table = getTableName(type);
 
+    const payload = buildReviewInsertPayload(data);
+
     const { data: review, error } = await (supabase as any)
       .from(table)
-      .insert(data)
+      .insert(payload)
       .select()
       .single();
 
@@ -73,9 +93,11 @@ export async function updateReview(
   try {
     const table = getTableName(type);
 
+    const payload = buildReviewUpdatePayload(updates);
+
     const { data: review, error } = await (supabase as any)
       .from(table)
-      .update(updates)
+      .update(payload)
       .eq("id", reviewId)
       .select()
       .single();
