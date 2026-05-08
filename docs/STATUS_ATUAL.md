@@ -31,7 +31,7 @@ Ultimo commit base: 7e62a86 `Normaliza parametro de bairro nas rotas territoriai
 - `npx playwright test tests/e2e/professional-operational.spec.ts --project=chromium --reporter=list`: passou em 2026-05-07 com 2 testes.
 - `npx playwright test tests/e2e/gastronomy-operational.spec.ts --reporter=list`: passou em 2026-05-08 com `4/4`, cobrindo fluxo autenticado cliente->loja (pedido ate estado terminal) e acesso operacional do motoboy.
 - `npx playwright test tests/e2e/professional-operational.spec.ts --reporter=list`: passou em 2026-05-08 com `2/2`.
-- `npx playwright test tests/e2e/professional-leads-operational.spec.ts --reporter=list`: executado em 2026-05-08, bloqueado por schema do ambiente (`public.professional_leads` ausente no banco conectado), mantendo o teste em `skip` controlado.
+- `npx playwright test tests/e2e/professional-leads-operational.spec.ts --reporter=list`: passou em 2026-05-08 com `1/1`, cobrindo fluxo autenticado `lead -> proposta -> aceite -> atendimento` e validacao da Central Profissional.
 
 ## Modulos/Fases Concluidos
 
@@ -84,6 +84,9 @@ Fase 3: Gastronomia e delivery integrado.
 - Suíte E2E da Central (`tests/e2e/central/central-validation.spec.ts`) foi revalidada com cenário de compatibilidade legado explícito e está 100% verde (`28 passed`), cobrindo rotas principais, subrotas de mobilidade, regras de acesso e UX básica.
 - Sincronizacao de status pedido->entrega foi blindada com teste unitario dedicado em `src/modules/mobility/delivery/__tests__/OrderDeliveryLinkService.spec.ts`, cobrindo mapeamentos canonicos e regras de transicao (avanço progressivo, bloqueio de reversao e terminais, cancelamento/falha direta).
 - Smoke de contrato SSOT `GastronomyOperationalSSOT.test.ts` cobre rota publica do pedido, notificacao com link, review publico + trust privado, guard de operacoes da loja, dashboard sem contadores falsos e operacao de estoque/disponibilidade do cardapio.
+- Funil SSOT de profissionais foi destravado no banco com migrations pendentes (`20260506100000_create_professional_leads.sql`) e ajuste de RLS em `professional_service_engagements` (`20260508120000_fix_professional_engagement_insert_rls.sql`), eliminando falha de trigger no aceite da proposta.
+- Rota canonica `/central/profissional` foi corrigida em `AppRoutes` para renderizar `CentralProfissionalPage` via filho `index`, removendo estado em branco apenas com menu/lateral.
+- E2E autenticado de profissionais `tests/e2e/professional-leads-operational.spec.ts` ficou verde (`1 passed`) com bootstrap de perfil profissional, fixture de lead/proposta/aceite e validacao de tracking + Central.
 - Central Profissional deixou de ser placeholder: `/central/profissional` agora usa `ProfessionalFacade` para listar servicos do perfil, disponibilidade, metricas, avaliacao e acoes de edicao/visualizacao.
 - Servicos/Profissionais ganhou funil canonico de orcamento em `core/professional`: `professional_leads`, `professional_lead_messages`, `professional_lead_quotes`, `professional_service_engagements`, eventos de historico, RLS, notificacao transacional, CTA no perfil publico/legado, acompanhamento do cliente e atualizacao de status pela Central.
 - Central Profissional agora mostra pedidos de orcamento recebidos pelo `ProfessionalLeadService`, com resposta ao cliente, proposta estruturada de valor/prazo/escopo, aceite convertido automaticamente em atendimento contratado e acoes de contatado/orcamento enviado/concluido/arquivado, sem acesso direto de UI a tabelas.
@@ -150,7 +153,6 @@ Fase 3: Gastronomia e delivery integrado.
 - Criacao automatica de pedido fixture E2E ainda e sensivel a permissao de insert em `orders` para a conta de teste; quando negada pelo ambiente, o teste pode perder profundidade de assert no fluxo pedido->entrega.
 - `SUPABASE_SERVICE_ROLE_KEY` ausente continua como limitador para asserts administrativos profundos e seeds transversais controladas entre personas (cliente/loja/motoboy) em um unico cenario E2E.
 - `SUPABASE_SERVICE_ROLE_KEY` ausente limita asserts administrativos e criacao/limpeza automatica de usuarios, empresas e seeds para testes autenticados.
-- O banco conectado no ambiente local ainda nao possui a migration do funil SSOT de profissionais (`professional_leads`, `professional_lead_quotes`, `professional_service_engagements`), bloqueando o E2E autenticado ponta a ponta de Servicos/Profissionais mesmo com bootstrap em teste.
 - Para rodar o Playwright de gastronomia, configurar `E2E_USER_EMAIL` e `E2E_USER_PASSWORD`; `E2E_GASTRONOMY_BUSINESS_ID` virou opcional.
 - Algumas validacoes historicas do Playwright existentes no repositorio podem depender de ambiente/seed especifico.
 - Docs historicos em `docs/archive`, `docs/historico` e relatorios antigos ainda contem afirmacoes antigas; usar este arquivo e `docs/ACAO_EXECUTAVEL_AUDITORIA_HIPERLOCAL.md` como fonte viva.

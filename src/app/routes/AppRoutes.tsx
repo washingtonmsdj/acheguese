@@ -247,8 +247,8 @@ export function AppRoutes() {
                 <Route path="configuracoes" element={<P.BusinessSettingsPage />} />
               </Route>
             </Route>
-            <Route path="profissional" element={<P.ProfessionalGuard />}>
-              <Route element={<P.CentralProfissionalPage />} />
+        <Route path="profissional" element={<P.ProfessionalGuard />}>
+              <Route index element={<P.CentralProfissionalPage />} />
             </Route>
             <Route path="motorista" element={<P.DriverGuard service="motorista" />}>
               <Route element={<P.CentralMotoristaPage />} />

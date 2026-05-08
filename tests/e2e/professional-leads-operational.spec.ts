@@ -88,6 +88,15 @@ async function ensureProfessionalData(): Promise<string | null> {
     return null;
   }
 
+  await client.from("profile_members").upsert(
+    {
+      profile_id: professionalProfileId,
+      user_id: userId,
+      role: "owner",
+    },
+    { onConflict: "profile_id,user_id" },
+  );
+
   const existingProfessionalData = await client
     .from("professional_data")
     .select("id")
@@ -266,6 +275,6 @@ test.describe("professional leads authenticated flow", () => {
     });
     await expect(page.getByText(/pedidos de orcamento/i)).toBeVisible({ timeout: 20_000 });
     await expect(page.getByText(/atendimentos contratados/i)).toBeVisible({ timeout: 20_000 });
-    await expect(page.getByText(/servico e2e/i)).toBeVisible({ timeout: 20_000 });
+    await expect(page.getByText(/servico e2e/i).first()).toBeVisible({ timeout: 20_000 });
   });
 });
