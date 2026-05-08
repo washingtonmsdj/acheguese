@@ -411,4 +411,27 @@ export class TrustEventService {
       return { data: null, error: message };
     }
   }
+
+  static async listAdminActions(limit = 100): Promise<{
+    data: TrustAdminAction[];
+    error: string | null;
+  }> {
+    try {
+      const { data, error } = await (supabase as any)
+        .from(TRUST_ADMIN_ACTIONS_TABLE)
+        .select("*")
+        .order("created_at", { ascending: false })
+        .limit(limit);
+
+      if (error) return { data: [], error: error.message };
+      return {
+        data: ((data as TrustEventRow[] | null) ?? []).map(mapTrustAdminAction),
+        error: null,
+      };
+    } catch (error) {
+      const message = toErrorMessage(error);
+      logger.error("[TrustEventService] listAdminActions", error as Error, { limit });
+      return { data: [], error: message };
+    }
+  }
 }

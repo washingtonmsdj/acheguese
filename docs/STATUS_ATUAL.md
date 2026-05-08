@@ -137,6 +137,7 @@ Fase 3: Gastronomia e delivery integrado.
 - Central Profissional agora exibe bloco operacional com campos reais de `professional_data` (raio de atendimento, areas e disponibilidade), sem placeholder; E2E autenticado foi atualizado para validar esses dados no fluxo `lead -> proposta -> aceite -> atendimento -> avaliacao`.
 - Avaliacao pos-servico profissional esta protegida por regra de backend no SSOT (`ProfessionalLeadService.submitEngagementReview`): apenas cliente do atendimento concluido pode avaliar; o E2E autenticado valida envio e persistencia real em `professional_reviews_new`.
 - Moderacao de comentarios/perguntas de classificados foi consolidada na mesma trilha administrativa de confianca: `/admin/classificados/denuncias` agora usa `TrustEventsQueue` com filtro travado em `trust_events` de contexto `classified` + `reason_code` de comentario, removendo fila operacional paralela para esse fluxo.
+- Admin/Moderacao foi consolidado em fila unica SSOT: `AdminModeracao` e `AdminModeracaoCompleta` agora usam `TrustEventsQueue` + audit log real de `trust_admin_actions` (via `TrustEventService.listAdminActions`), removendo dependencias legadas de trilhas sem fonte canonica de dados.
 
 ## P0 Abertos
 
@@ -145,7 +146,7 @@ Fase 3: Gastronomia e delivery integrado.
 - Marketplace/Classificados: consolidar moderacao dedicada para comentarios/perguntas publicas de anuncios na mesma trilha administrativa de confianca. ✅
 - Comunidade/Feed: concluir hardening territorial/visibilidade em todos os pontos restantes e remover mocks reais.
 - Comunidade/Feed: concluir edicao inline/historico de comentarios e validar visualmente exclusao com dados reais apos migracao de `confirm()` para dialog acessivel.
-- Admin/Moderacao: consolidar fila unica, audit log e moderacao transversal alem da fila inicial de confianca operacional.
+- Admin/Moderacao: consolidar fila unica, audit log e moderacao transversal alem da fila inicial de confianca operacional. ✅
 - Notificacoes: matriz completa por evento/canal/preferencia.
 - SEO/Rotas: sitemap dinamico.
 - SEO/Rotas: conectar sitemap dinamico ao banco para producao; estrutura canonica com `/area` ja foi aplicada no gerador.
