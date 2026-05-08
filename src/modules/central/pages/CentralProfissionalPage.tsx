@@ -38,6 +38,23 @@ function formatCategory(value: string | undefined) {
   return value.replace(/_/g, " ").replace(/\b\w/g, (letter) => letter.toUpperCase());
 }
 
+function formatOperationalHours(availableHours: Professional["available_hours"]): string {
+  if (!availableHours || typeof availableHours !== "object") {
+    return "Nao informado";
+  }
+
+  const entries = Object.entries(availableHours as Record<string, unknown>)
+    .filter(([, value]) => typeof value === "string" && value.trim().length > 0)
+    .slice(0, 3)
+    .map(([day, value]) => `${day}: ${value as string}`);
+
+  if (!entries.length) {
+    return "Nao informado";
+  }
+
+  return entries.join(" | ");
+}
+
 function StatCard({
   title,
   value,
@@ -775,6 +792,37 @@ export default function CentralProfissionalPage() {
               <ServiceCard key={service.id} service={service} />
             ))}
           </div>
+
+          {primaryService && (
+            <div className="rounded-xl border bg-muted/20 p-4">
+              <h3 className="text-sm font-semibold">Dados operacionais do perfil</h3>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Campos reais de `professional_data` usados na operacao (sem placeholders).
+              </p>
+              <div className="mt-3 grid gap-3 sm:grid-cols-3">
+                <div className="rounded-lg border bg-background p-3">
+                  <p className="text-xs text-muted-foreground">Raio de atendimento</p>
+                  <p className="font-semibold">
+                    {typeof primaryService.service_radius_km === "number"
+                      ? `${primaryService.service_radius_km} km`
+                      : "Nao informado"}
+                  </p>
+                </div>
+                <div className="rounded-lg border bg-background p-3 sm:col-span-2">
+                  <p className="text-xs text-muted-foreground">Areas de atendimento</p>
+                  <p className="font-semibold">
+                    {primaryService.service_areas?.length
+                      ? primaryService.service_areas.join(", ")
+                      : "Nao informado"}
+                  </p>
+                </div>
+                <div className="rounded-lg border bg-background p-3 sm:col-span-3">
+                  <p className="text-xs text-muted-foreground">Disponibilidade</p>
+                  <p className="font-semibold">{formatOperationalHours(primaryService.available_hours)}</p>
+                </div>
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
 

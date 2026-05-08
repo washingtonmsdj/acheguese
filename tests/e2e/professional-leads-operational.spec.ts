@@ -121,6 +121,12 @@ async function ensureProfessionalData(): Promise<string | null> {
         service_category: "manutencao",
         service_subcategory: "eletricista",
         description: "Profissional para fluxo E2E.",
+        service_radius_km: 7,
+        service_areas: ["Nordeste de Amaralina", "Santa Cruz"],
+        available_hours: {
+          segunda: "08:00-18:00",
+          terca: "08:00-18:00",
+        },
         is_verified: false,
         is_accepting_clients: true,
         status: "active",
@@ -137,6 +143,12 @@ async function ensureProfessionalData(): Promise<string | null> {
         status: "active",
         location_id: locationId,
         profession: "Eletricista",
+        service_radius_km: 7,
+        service_areas: ["Nordeste de Amaralina", "Santa Cruz"],
+        available_hours: {
+          segunda: "08:00-18:00",
+          terca: "08:00-18:00",
+        },
       })
       .eq("id", professionalDataId);
   }
@@ -375,6 +387,21 @@ test.describe("professional leads authenticated flow", () => {
       await expect
         .poll(() => bodyText(page), { timeout: 60_000 })
         .toMatch(/servico e2e/i);
+      await expect
+        .poll(() => bodyText(page), { timeout: 60_000 })
+        .toMatch(/dados operacionais do perfil/i);
+      await expect
+        .poll(() => bodyText(page), { timeout: 60_000 })
+        .toMatch(/raio de atendimento/i);
+      await expect
+        .poll(() => bodyText(page), { timeout: 60_000 })
+        .toMatch(/7 km/i);
+      await expect
+        .poll(() => bodyText(page), { timeout: 60_000 })
+        .toMatch(/nordeste de amaralina/i);
+      await expect
+        .poll(() => bodyText(page), { timeout: 60_000 })
+        .toMatch(/segunda: 08:00-18:00/i);
     }
 
     if (hasNoServiceState) {
