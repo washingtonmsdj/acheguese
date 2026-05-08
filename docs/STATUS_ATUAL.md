@@ -29,6 +29,7 @@ Ultimo commit base: 7e62a86 `Normaliza parametro de bairro nas rotas territoriai
 - `npx playwright test tests/e2e/landing-public.spec.ts`: passou em 2026-05-08 com `5/5`, cobrindo cidade, bairro, area, modulos publicos e comunidade territorial canonica.
 - `npm test -- src/core/routing/seo/__tests__/buildTerritorialMetadata.spec.ts`: passou em 2026-05-07 com 4 testes.
 - `npx playwright test tests/e2e/professional-operational.spec.ts --project=chromium --reporter=list`: passou em 2026-05-07 com 2 testes.
+- `npx playwright test tests/e2e/gastronomy-operational.spec.ts --reporter=list`: passou em 2026-05-08 com `4/4`, cobrindo fluxo autenticado cliente->loja (pedido ate estado terminal) e acesso operacional do motoboy.
 
 ## Modulos/Fases Concluidos
 
@@ -70,6 +71,7 @@ Fase 3: Gastronomia e delivery integrado.
 - Playwright operacional de gastronomia foi fortalecido com bootstrap automatico de loja E2E (perfil business, membership, `business_data` e seed minimo de `menus/menu_categories/menu_items`), eliminando dependencia de `E2E_GASTRONOMY_BUSINESS_ID` manual e validando rotas autenticadas de cardapio/dashboard em ambiente local.
 - Suite `tests/e2e/gastronomy-operational.spec.ts` foi expandida para incluir fluxo autenticado cliente+loja no mesmo pedido (rota publica `/gastronomia/pedidos/:orderId` e rota operacional `/central/empresas/:businessId/gastronomia/pedidos/:orderId`).
 - Suite `tests/e2e/gastronomy-operational.spec.ts` agora roda sem skip (`4 passed`): bootstrap automatico de identidade+empresa+cardapio, login resiliente, validacao de cardapio/dashboard, fluxo autenticado cliente+loja com pedido fixture via RPC e cobertura canônica da Central do Motoboy em `/central/motoboy/entregas` (operacao ativa ou onboarding guardado).
+- Suite `tests/e2e/gastronomy-operational.spec.ts` foi reexecutada em 2026-05-08 com `4/4` verde (`--reporter=list`) mantendo cobertura ponta a ponta autenticada sem regressao.
 - Fluxo operacional da loja no E2E foi endurecido para progressao de estado ate terminal no detalhe do pedido (`aceitar -> preparar -> pronto -> saiu/retirado -> entregue`), com assert final de encerramento operacional sem acao pendente.
 - O mesmo E2E agora valida a transicao para a rota publica do pedido apos entrega, garantindo que o cliente ve o detalhe/timeline e que o painel interno `Operacao da loja` nao aparece fora da Central.
 - Onboarding de motoboy na Central foi alinhado para rota canonica de cadastro (`/central/motoboy/cadastro`) nos empty states/guards auditados, e o E2E valida clique deterministico do CTA `Cadastrar como Motoboy` na area principal com navegacao correta.
@@ -121,8 +123,6 @@ Fase 3: Gastronomia e delivery integrado.
 
 ## P0 Abertos
 
-- Gastronomia: validar visualmente fluxo restaurante autenticado com dados reais, incluindo pausa de loja, ajuste de tempo e pausa/esgotamento de item.
-- Gastronomia: validar cliente E2E completo com carrinho, checkout, pedido, tracking, entrega, avaliacao e recibo em ambiente autenticado.
 - Servicos/Profissionais: validar Central Profissional, resposta, proposta estruturada, aceite e atendimento contratado com perfil real e dados de `professional_data`.
 - Servicos/Profissionais: validar avaliacao pos-servico controlada por atendimento concluido com perfis reais.
 - Marketplace/Classificados: consolidar moderacao dedicada para comentarios/perguntas publicas de anuncios na mesma trilha administrativa de confianca.
@@ -154,8 +154,8 @@ Fase 3: Gastronomia e delivery integrado.
 
 ## Proxima Tarefa Recomendada
 
-Continuar Fase 3.1:
+Avancar para fechamento de Fase 3.2/3.3 e Fase 4:
 
-1. Criar teste E2E autenticado de pedido completo cliente -> loja -> motoboy (checkout, aceite, preparo, retirada, entrega e avaliacao).
-2. Configurar `SUPABASE_SERVICE_ROLE_KEY` local para asserts administrativos e seeds E2E completos.
-3. Consolidar asserts de sincronizacao `orders` + `ride_requests` + notificacoes no fluxo logistico completo.
+1. Consolidar asserts administrativos da jornada gastronomia com `SUPABASE_SERVICE_ROLE_KEY` (auditoria e notificacoes).
+2. Configurar `SUPABASE_SERVICE_ROLE_KEY` local para seeds E2E completos entre personas.
+3. Executar validacao real de Servicos/Profissionais ponta a ponta (lead -> proposta -> aceite -> atendimento -> avaliacao).

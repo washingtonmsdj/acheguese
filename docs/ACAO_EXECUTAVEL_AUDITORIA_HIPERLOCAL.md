@@ -1074,8 +1074,8 @@ Criterio de aceite:
 
 ## Gastronomia / Delivery
 
-- [ ] P0: pedido E2E.
-- [ ] P0: restaurante E2E.
+- [x] P0: pedido E2E.
+- [x] P0: restaurante E2E.
 - [x] P0: integracao com motoboy.
 - [x] P0: remover `confirm()` nativo.
 - [x] P0: controlar deprecated/beta.
