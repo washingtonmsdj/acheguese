@@ -98,16 +98,36 @@ function asString(value: unknown): string | null {
   return typeof value === "string" && value.trim().length > 0 ? value : null;
 }
 
-export function TrustEventsQueue() {
+export interface TrustEventsQueueProps {
+  initialContextFilter?: TrustContextFilter;
+  lockContextFilter?: boolean;
+  initialOnlyOpenEvents?: boolean;
+  lockOnlyOpenEvents?: boolean;
+  initialOnlyClassifiedCommentReports?: boolean;
+  lockOnlyClassifiedCommentReports?: boolean;
+  hideScoreSummary?: boolean;
+}
+
+export function TrustEventsQueue({
+  initialContextFilter = "all",
+  lockContextFilter = false,
+  initialOnlyOpenEvents = true,
+  lockOnlyOpenEvents = false,
+  initialOnlyClassifiedCommentReports = false,
+  lockOnlyClassifiedCommentReports = false,
+  hideScoreSummary = false,
+}: TrustEventsQueueProps = {}) {
   const { activeProfile } = useSessionContext();
   const [events, setEvents] = useState<TrustEvent[]>([]);
   const [loading, setLoading] = useState(true);
   const [reviewingId, setReviewingId] = useState<string | null>(null);
   const [resolutionNotes, setResolutionNotes] = useState<Record<string, string>>({});
-  const [contextFilter, setContextFilter] = useState<TrustContextFilter>("all");
+  const [contextFilter, setContextFilter] = useState<TrustContextFilter>(initialContextFilter);
   const [selectedEventIds, setSelectedEventIds] = useState<string[]>([]);
-  const [onlyOpenEvents, setOnlyOpenEvents] = useState(true);
-  const [onlyClassifiedCommentReports, setOnlyClassifiedCommentReports] = useState(false);
+  const [onlyOpenEvents, setOnlyOpenEvents] = useState(initialOnlyOpenEvents);
+  const [onlyClassifiedCommentReports, setOnlyClassifiedCommentReports] = useState(
+    initialOnlyClassifiedCommentReports,
+  );
   const [bulkConfirmAction, setBulkConfirmAction] = useState<
     | null
     | {
@@ -217,6 +237,21 @@ export function TrustEventsQueue() {
   useEffect(() => {
     loadEvents();
   }, []);
+  useEffect(() => {
+    if (lockContextFilter) {
+      setContextFilter(initialContextFilter);
+    }
+  }, [lockContextFilter, initialContextFilter]);
+  useEffect(() => {
+    if (lockOnlyOpenEvents) {
+      setOnlyOpenEvents(initialOnlyOpenEvents);
+    }
+  }, [lockOnlyOpenEvents, initialOnlyOpenEvents]);
+  useEffect(() => {
+    if (lockOnlyClassifiedCommentReports) {
+      setOnlyClassifiedCommentReports(initialOnlyClassifiedCommentReports);
+    }
+  }, [lockOnlyClassifiedCommentReports, initialOnlyClassifiedCommentReports]);
   useEffect(() => {
     setSelectedEventIds([]);
   }, [contextFilter, onlyOpenEvents, onlyClassifiedCommentReports]);
@@ -370,82 +405,84 @@ export function TrustEventsQueue() {
 
   return (
     <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <TrendingDown className="h-5 w-5 text-amber-600" />
-            Score e reincidencia operacional ({decisions.length})
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          {attentionQueue.length === 0 ? (
-            <p className="py-6 text-center text-muted-foreground">
-              Nenhum perfil com risco operacional relevante nos eventos carregados.
-            </p>
-          ) : (
-            <div className="grid gap-3 lg:grid-cols-2">
-              {attentionQueue.map((decision) => (
-                <div
-                  key={`${decision.profile_id}:${decision.role}`}
-                  className="rounded-lg border p-4"
-                >
-                  <div className="flex flex-wrap items-start justify-between gap-3">
-                    <div>
-                      <div className="flex flex-wrap items-center gap-2">
-                        <Badge variant={getRiskVariant(decision.risk_level)}>
-                          {RISK_LABELS[decision.risk_level]}
-                        </Badge>
-                        <Badge variant="outline">{decision.role}</Badge>
+      {!hideScoreSummary && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <TrendingDown className="h-5 w-5 text-amber-600" />
+              Score e reincidencia operacional ({decisions.length})
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {attentionQueue.length === 0 ? (
+              <p className="py-6 text-center text-muted-foreground">
+                Nenhum perfil com risco operacional relevante nos eventos carregados.
+              </p>
+            ) : (
+              <div className="grid gap-3 lg:grid-cols-2">
+                {attentionQueue.map((decision) => (
+                  <div
+                    key={`${decision.profile_id}:${decision.role}`}
+                    className="rounded-lg border p-4"
+                  >
+                    <div className="flex flex-wrap items-start justify-between gap-3">
+                      <div>
+                        <div className="flex flex-wrap items-center gap-2">
+                          <Badge variant={getRiskVariant(decision.risk_level)}>
+                            {RISK_LABELS[decision.risk_level]}
+                          </Badge>
+                          <Badge variant="outline">{decision.role}</Badge>
+                        </div>
+                        <p className="mt-2 text-sm font-medium">
+                          Perfil #{renderProfileShortId(decision.profile_id)}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          Politica de despacho: {decision.dispatch_policy}
+                        </p>
                       </div>
-                      <p className="mt-2 text-sm font-medium">
-                        Perfil #{renderProfileShortId(decision.profile_id)}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        Politica de despacho: {decision.dispatch_policy}
-                      </p>
+                      <div className="text-right">
+                        <p className="text-2xl font-semibold">
+                          {decision.summary.reliability_score}
+                        </p>
+                        <p className="text-xs text-muted-foreground">score</p>
+                      </div>
                     </div>
-                    <div className="text-right">
-                      <p className="text-2xl font-semibold">
-                        {decision.summary.reliability_score}
-                      </p>
-                      <p className="text-xs text-muted-foreground">score</p>
-                    </div>
-                  </div>
 
-                  <div className="mt-3 grid grid-cols-3 gap-2 text-center text-xs">
-                    <div className="rounded-md bg-muted p-2">
-                      <p className="font-semibold">{decision.recurrence_30d}</p>
-                      <p className="text-muted-foreground">30 dias</p>
+                    <div className="mt-3 grid grid-cols-3 gap-2 text-center text-xs">
+                      <div className="rounded-md bg-muted p-2">
+                        <p className="font-semibold">{decision.recurrence_30d}</p>
+                        <p className="text-muted-foreground">30 dias</p>
+                      </div>
+                      <div className="rounded-md bg-muted p-2">
+                        <p className="font-semibold">{decision.recurrence_90d}</p>
+                        <p className="text-muted-foreground">90 dias</p>
+                      </div>
+                      <div className="rounded-md bg-muted p-2">
+                        <p className="font-semibold">
+                          {decision.summary.average_rating?.toFixed(1) ?? "-"}
+                        </p>
+                        <p className="text-muted-foreground">media</p>
+                      </div>
                     </div>
-                    <div className="rounded-md bg-muted p-2">
-                      <p className="font-semibold">{decision.recurrence_90d}</p>
-                      <p className="text-muted-foreground">90 dias</p>
-                    </div>
-                    <div className="rounded-md bg-muted p-2">
-                      <p className="font-semibold">
-                        {decision.summary.average_rating?.toFixed(1) ?? "-"}
-                      </p>
-                      <p className="text-muted-foreground">media</p>
-                    </div>
-                  </div>
 
-                  <p className="mt-3 text-sm">
-                    Acao recomendada:{" "}
-                    <span className="font-medium">
-                      {ACTION_LABELS[decision.recommended_action]}
-                    </span>
-                  </p>
-                  {decision.reasons.length > 0 && (
-                    <p className="mt-1 text-xs text-muted-foreground">
-                      Motivos: {decision.reasons.join(", ")}
+                    <p className="mt-3 text-sm">
+                      Acao recomendada:{" "}
+                      <span className="font-medium">
+                        {ACTION_LABELS[decision.recommended_action]}
+                      </span>
                     </p>
-                  )}
-                </div>
-              ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
+                    {decision.reasons.length > 0 && (
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        Motivos: {decision.reasons.join(", ")}
+                      </p>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
 
       <Card>
         <CardHeader>
@@ -578,21 +615,22 @@ export function TrustEventsQueue() {
               <Filter className="h-3.5 w-3.5" />
               Filtrar contexto
             </div>
-            {Object.keys(CONTEXT_LABELS).map((key) => {
-              const filter = key as TrustContextFilter;
-              return (
-                <Button
-                  key={filter}
-                  type="button"
-                  size="sm"
-                  variant={contextFilter === filter ? "default" : "outline"}
-                  onClick={() => setContextFilter(filter)}
-                  className="h-8"
-                >
-                  {CONTEXT_LABELS[filter]} ({contextCounts[filter]})
-                </Button>
-              );
-            })}
+            {!lockContextFilter &&
+              Object.keys(CONTEXT_LABELS).map((key) => {
+                const filter = key as TrustContextFilter;
+                return (
+                  <Button
+                    key={filter}
+                    type="button"
+                    size="sm"
+                    variant={contextFilter === filter ? "default" : "outline"}
+                    onClick={() => setContextFilter(filter)}
+                    className="h-8"
+                  >
+                    {CONTEXT_LABELS[filter]} ({contextCounts[filter]})
+                  </Button>
+                );
+              })}
             <Button
               type="button"
               size="sm"
@@ -607,29 +645,33 @@ export function TrustEventsQueue() {
               )}
               Selecionar todos ({selectedEvents.length})
             </Button>
-            <div className="ml-auto flex items-center gap-2 rounded-md border px-2 py-1">
-              <Switch
-                id="trust-queue-only-open"
-                checked={onlyOpenEvents}
-                onCheckedChange={setOnlyOpenEvents}
-              />
-              <Label htmlFor="trust-queue-only-open" className="text-xs text-muted-foreground">
-                Apenas pendentes
-              </Label>
-            </div>
-            <div className="flex items-center gap-2 rounded-md border px-2 py-1">
-              <Switch
-                id="trust-queue-only-classified-comment-reports"
-                checked={onlyClassifiedCommentReports}
-                onCheckedChange={setOnlyClassifiedCommentReports}
-              />
-              <Label
-                htmlFor="trust-queue-only-classified-comment-reports"
-                className="text-xs text-muted-foreground"
-              >
-                Apenas denuncias de comentario
-              </Label>
-            </div>
+            {!lockOnlyOpenEvents && (
+              <div className="ml-auto flex items-center gap-2 rounded-md border px-2 py-1">
+                <Switch
+                  id="trust-queue-only-open"
+                  checked={onlyOpenEvents}
+                  onCheckedChange={setOnlyOpenEvents}
+                />
+                <Label htmlFor="trust-queue-only-open" className="text-xs text-muted-foreground">
+                  Apenas pendentes
+                </Label>
+              </div>
+            )}
+            {!lockOnlyClassifiedCommentReports && (
+              <div className="flex items-center gap-2 rounded-md border px-2 py-1">
+                <Switch
+                  id="trust-queue-only-classified-comment-reports"
+                  checked={onlyClassifiedCommentReports}
+                  onCheckedChange={setOnlyClassifiedCommentReports}
+                />
+                <Label
+                  htmlFor="trust-queue-only-classified-comment-reports"
+                  className="text-xs text-muted-foreground"
+                >
+                  Apenas denuncias de comentario
+                </Label>
+              </div>
+            )}
           </div>
 
           {filteredEvents.length === 0 ? (
