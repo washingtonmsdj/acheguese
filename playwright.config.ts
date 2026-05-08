@@ -6,7 +6,7 @@ import { dirname, join } from 'path';
 dotenv.config({ path: '.env.test' });
 dotenv.config({ path: '.env.local', override: true });
 
-const baseURL = process.env.PLAYWRIGHT_BASE_URL || 'http://localhost:8080';
+const baseURL = process.env.PLAYWRIGHT_BASE_URL || 'http://127.0.0.1:8099';
 const parsedBaseURL = new URL(baseURL);
 const webServerHost = parsedBaseURL.hostname;
 const webServerPort = parsedBaseURL.port || (parsedBaseURL.protocol === 'https:' ? '443' : '80');
@@ -34,7 +34,7 @@ export default defineConfig({
   webServer: {
     command: `npm run dev -- --host ${webServerHost} --port ${webServerPort} --strictPort`,
     url: baseURL,
-    reuseExistingServer: !process.env.CI,
+    reuseExistingServer: false,
     timeout: 120000,
   },
 

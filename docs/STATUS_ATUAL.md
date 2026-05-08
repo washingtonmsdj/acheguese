@@ -32,6 +32,8 @@ Ultimo commit base: 7e62a86 `Normaliza parametro de bairro nas rotas territoriai
 - `npx playwright test tests/e2e/gastronomy-operational.spec.ts --reporter=list`: passou em 2026-05-08 com `4/4`, cobrindo fluxo autenticado cliente->loja (pedido ate estado terminal) e acesso operacional do motoboy.
 - `npx playwright test tests/e2e/professional-operational.spec.ts --reporter=list`: passou em 2026-05-08 com `2/2`.
 - `npx playwright test tests/e2e/professional-leads-operational.spec.ts --reporter=list`: passou em 2026-05-08 com `1/1`, cobrindo fluxo autenticado `lead -> proposta -> aceite -> atendimento` e validacao da Central Profissional.
+- `npx playwright test tests/e2e/landing-public.spec.ts -g "complexo short route resolves" --reporter=list`: passou em 2026-05-08 com `1/1`, validando alias curto `/complexo` redirecionando para rota canonica territorial.
+- `npx playwright test tests/e2e/professional-leads-operational.spec.ts --reporter=list`: reexecutado em 2026-05-08 com `1/1` verde apos hardening de ambiente E2E.
 
 ## Modulos/Fases Concluidos
 
@@ -129,6 +131,7 @@ Fase 3: Gastronomia e delivery integrado.
 - Smoke de profissionais/servicos removeu espera fixa por tempo e passou a validar saida real do loader global por polling.
 - Decisao de produto/arquitetura para roteamento territorial registrada em `docs/DECISAO_ROTEAMENTO_TERRITORIAL.md`: cidade/site geral, modulos publicos e comunidade local agora possuem papeis distintos documentados.
 - Roteamento territorial v2 aplicado: grupos territoriais usam `/area/:groupSlug` no site publico, modulos, comunidade, helpers, SEO e sitemap.
+- Ambiente Playwright ficou deterministico no SSOT: `PLAYWRIGHT_BASE_URL` padrao em `http://127.0.0.1:8099` e `webServer.reuseExistingServer=false` para evitar suite rodar contra servidor stale/manual em dev.
 
 ## P0 Abertos
 

@@ -73,6 +73,7 @@ export function AppRoutes() {
       <Route path="/contato" element={<P.ContactPage />} />
       <Route path="/onboarding" element={<P.OnboardingPage />} />
       <Route path="/reset-password" element={<P.ResetPasswordPage />} />
+      <Route path="/complexo" element={<Navigate to={launchComplexoPath} replace />} />
         <Route path="/businesss/:id/catalogo" element={<LegacyBusinessCatalogRedirect />} />
         <Route path="/empresas/:id/catalogo" element={<P.EmpresaCatalogoPublicoPage />} />
         <Route path="/servicos" element={<P.ServicosLandingPage />} />
@@ -87,7 +88,6 @@ export function AppRoutes() {
       <Route element={<P.AppLayoutSidebar />}>
         {/* Página inicial */}
         <Route path="/" element={<P.MainLandingPage />} />
-        <Route path="/complexo" element={<Navigate to={launchComplexoPath} replace />} />
         <Route path="/home-v2" element={<P.HomePageV2 />} />
         <Route path="/home-v1" element={<P.HomePage />} />
         
