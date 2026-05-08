@@ -1,8 +1,8 @@
 # Status Atual do Projeto
 
-Data: 2026-05-07
+Data: 2026-05-08
 Branch: main
-Ultimo commit base: e50d46a `Adiciona operacao de pedidos da loja`
+Ultimo commit base: 7e62a86 `Normaliza parametro de bairro nas rotas territoriais`
 
 ## Validacoes Recentes
 
@@ -26,6 +26,7 @@ Ultimo commit base: e50d46a `Adiciona operacao de pedidos da loja`
 - `npm test -- src/integrations/supabase/__tests__/supabaseConfig.spec.ts`: passou em 2026-05-07.
 - `npx vitest --run src/core/routing/seo/__tests__/buildTerritorialMetadata.spec.ts`: passou em 2026-05-07.
 - `npx playwright test tests/e2e/landing-public.spec.ts --project=chromium --reporter=list`: passou em 2026-05-07.
+- `npx playwright test tests/e2e/landing-public.spec.ts`: passou em 2026-05-08 com `5/5`, cobrindo cidade, bairro, area, modulos publicos e comunidade territorial canonica.
 - `npm test -- src/core/routing/seo/__tests__/buildTerritorialMetadata.spec.ts`: passou em 2026-05-07 com 4 testes.
 - `npx playwright test tests/e2e/professional-operational.spec.ts --project=chromium --reporter=list`: passou em 2026-05-07 com 2 testes.
 
