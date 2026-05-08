@@ -86,6 +86,7 @@ export function CommunityTerritorialShell() {
   const params = useParams<{
     state?: string;
     city?: string;
+    district?: string;
     groupSlug?: string;
     groupSlugOrDistrict?: string;
   }>();
@@ -93,11 +94,13 @@ export function CommunityTerritorialShell() {
 
   const state = params.state ?? "ba";
   const city = params.city ?? "salvador";
-  const territorySlug = params.groupSlug ?? params.groupSlugOrDistrict ?? COMPLEXO_SLUG;
+  const territorySlug = params.groupSlug ?? params.district ?? params.groupSlugOrDistrict ?? COMPLEXO_SLUG;
   const territoryBase = params.groupSlug
     ? `/${state}/${city}/area/${params.groupSlug}`
-    : params.groupSlugOrDistrict
-      ? `/${state}/${city}/${params.groupSlugOrDistrict}`
+    : params.district
+      ? `/${state}/${city}/${params.district}`
+      : params.groupSlugOrDistrict
+        ? `/${state}/${city}/${params.groupSlugOrDistrict}`
       : `/${state}/${city}`;
   const communityBase = buildCommunityTerritoryUrl(territoryBase);
   const cityHref = `/${state}/${city}`;

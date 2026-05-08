@@ -132,13 +132,14 @@ export function TerritorialLayout() {
   const { pathname } = useLocation();
   const params = useParams<{
     country?: string; state?: string; city?: string;
+    district?: string;
     groupSlug?: string;
     groupSlugOrDistrict?: string;
   }>();
 
   const state = params.state;
   const city = params.city;
-  const slug = params.groupSlug ?? params.groupSlugOrDistrict;
+  const slug = params.groupSlug ?? params.district ?? params.groupSlugOrDistrict;
 
   const isFriendlyModule = pathname.startsWith('/empresas/') || 
       pathname.startsWith('/servicos/') || 

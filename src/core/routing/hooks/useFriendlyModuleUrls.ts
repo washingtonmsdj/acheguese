@@ -5,6 +5,7 @@ import { buildCommunityTerritoryUrl, buildModuleTerritoryUrl, MODULE_SLUGS } fro
 interface FriendlyRouteParams {
   state?: string;
   city?: string;
+  district?: string;
   groupSlug?: string;
   groupSlugOrDistrict?: string;
 }
@@ -27,19 +28,21 @@ export interface FriendlyModuleUrls {
 }
 
 export function useFriendlyModuleUrls(): FriendlyModuleUrls {
-  const { state, city, groupSlug, groupSlugOrDistrict } = useParams<FriendlyRouteParams>();
+  const { state, city, district, groupSlug, groupSlugOrDistrict } = useParams<FriendlyRouteParams>();
   const hasTerritoryParams = Boolean(state && city && !isReservedSlug(state));
 
   if (hasTerritoryParams && state && city) {
     const territoryBase = groupSlug
       ? `/${state}/${city}/area/${groupSlug}`
+      : district
+        ? `/${state}/${city}/${district}`
       : groupSlugOrDistrict
         ? `/${state}/${city}/${groupSlugOrDistrict}`
         : `/${state}/${city}`;
 
     return buildTerritorialUrls(
       territoryBase,
-      slugToTitle(groupSlug ?? groupSlugOrDistrict ?? city),
+      slugToTitle(groupSlug ?? district ?? groupSlugOrDistrict ?? city),
     );
   }
 

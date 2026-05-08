@@ -12,9 +12,10 @@ export interface ModuleUrls {
 }
 
 export function useModuleUrls(): ModuleUrls {
-  const { state, city, groupSlug, groupSlugOrDistrict } = useParams<{
+  const { state, city, district, groupSlug, groupSlugOrDistrict } = useParams<{
     state?: string;
     city?: string;
+    district?: string;
     groupSlug?: string;
     groupSlugOrDistrict?: string;
   }>();
@@ -22,10 +23,12 @@ export function useModuleUrls(): ModuleUrls {
   if (state && city && !isReservedSlug(state)) {
     const base = groupSlug
       ? `/${state}/${city}/area/${groupSlug}`
+      : district
+        ? `/${state}/${city}/${district}`
       : groupSlugOrDistrict
         ? `/${state}/${city}/${groupSlugOrDistrict}`
         : `/${state}/${city}`;
-    const territoryName = slugToTitle(groupSlug ?? groupSlugOrDistrict ?? city);
+    const territoryName = slugToTitle(groupSlug ?? district ?? groupSlugOrDistrict ?? city);
     return buildTerritorialModuleUrls(base, territoryName);
   }
 
