@@ -30,6 +30,8 @@ Ultimo commit base: 7e62a86 `Normaliza parametro de bairro nas rotas territoriai
 - `npm test -- src/core/routing/seo/__tests__/buildTerritorialMetadata.spec.ts`: passou em 2026-05-07 com 4 testes.
 - `npx playwright test tests/e2e/professional-operational.spec.ts --project=chromium --reporter=list`: passou em 2026-05-07 com 2 testes.
 - `npx playwright test tests/e2e/gastronomy-operational.spec.ts --reporter=list`: passou em 2026-05-08 com `4/4`, cobrindo fluxo autenticado cliente->loja (pedido ate estado terminal) e acesso operacional do motoboy.
+- `npx playwright test tests/e2e/professional-operational.spec.ts --reporter=list`: passou em 2026-05-08 com `2/2`.
+- `npx playwright test tests/e2e/professional-leads-operational.spec.ts --reporter=list`: executado em 2026-05-08, bloqueado por schema do ambiente (`public.professional_leads` ausente no banco conectado), mantendo o teste em `skip` controlado.
 
 ## Modulos/Fases Concluidos
 
@@ -148,6 +150,7 @@ Fase 3: Gastronomia e delivery integrado.
 - Criacao automatica de pedido fixture E2E ainda e sensivel a permissao de insert em `orders` para a conta de teste; quando negada pelo ambiente, o teste pode perder profundidade de assert no fluxo pedido->entrega.
 - `SUPABASE_SERVICE_ROLE_KEY` ausente continua como limitador para asserts administrativos profundos e seeds transversais controladas entre personas (cliente/loja/motoboy) em um unico cenario E2E.
 - `SUPABASE_SERVICE_ROLE_KEY` ausente limita asserts administrativos e criacao/limpeza automatica de usuarios, empresas e seeds para testes autenticados.
+- O banco conectado no ambiente local ainda nao possui a migration do funil SSOT de profissionais (`professional_leads`, `professional_lead_quotes`, `professional_service_engagements`), bloqueando o E2E autenticado ponta a ponta de Servicos/Profissionais mesmo com bootstrap em teste.
 - Para rodar o Playwright de gastronomia, configurar `E2E_USER_EMAIL` e `E2E_USER_PASSWORD`; `E2E_GASTRONOMY_BUSINESS_ID` virou opcional.
 - Algumas validacoes historicas do Playwright existentes no repositorio podem depender de ambiente/seed especifico.
 - Docs historicos em `docs/archive`, `docs/historico` e relatorios antigos ainda contem afirmacoes antigas; usar este arquivo e `docs/ACAO_EXECUTAVEL_AUDITORIA_HIPERLOCAL.md` como fonte viva.
