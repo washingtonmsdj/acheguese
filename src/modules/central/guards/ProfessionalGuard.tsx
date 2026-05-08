@@ -1,6 +1,8 @@
 import { useEffect } from "react";
 import { useNavigate, Outlet } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 import { useSessionContext } from "@/core/session";
+import { SessionService } from "@/core/session/services/SessionService";
 import { Building2, Plus } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import { Card, CardContent } from "@/shared/components/ui/card";
@@ -16,17 +18,30 @@ import { Card, CardContent } from "@/shared/components/ui/card";
  */
 export function ProfessionalGuard() {
   const navigate = useNavigate();
-  const { profiles, isLoading: sessionLoading } = useSessionContext();
-  
-  const professionalProfile = profiles?.find((p) => p.profileType === "professional");
-  const hasProfessionalProfile = !!professionalProfile;
+  const { user, profiles, isLoading: sessionLoading } = useSessionContext();
+
+  const freshProfilesQuery = useQuery({
+    queryKey: ["central", "professional-guard", "profiles", user?.id],
+    queryFn: async () => {
+      if (!user?.id) return [];
+      return SessionService.getUserProfiles(user.id);
+    },
+    enabled: Boolean(user?.id) && !sessionLoading,
+    staleTime: 30_000,
+  });
+
+  const effectiveProfiles =
+    freshProfilesQuery.data && freshProfilesQuery.data.length > 0
+      ? freshProfilesQuery.data
+      : profiles ?? [];
+  const hasProfessionalProfile = effectiveProfiles.some((p) => p.profileType === "professional");
 
   useEffect(() => {
     // Redirecionamento não é necessário aqui, mostraremos empty state
   }, []);
 
   // Mostrar loading enquanto verifica
-  if (sessionLoading) {
+  if (sessionLoading || (user && freshProfilesQuery.isLoading)) {
     return (
       <div className="flex min-h-[60vh] items-center justify-center px-4">
         <div className="space-y-3 text-center">

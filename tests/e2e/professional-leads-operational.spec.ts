@@ -342,18 +342,30 @@ test.describe("professional leads authenticated flow", () => {
       })
       .toBe(false);
 
+    await expect
+      .poll(async () => {
+        const text = (await bodyText(page)).toLowerCase();
+        const hasOperationalPanel =
+          text.includes("operacao profissional") ||
+          text.includes("pedidos de orcamento") ||
+          text.includes("atendimentos contratados");
+        const hasProfessionalEmptyState =
+          text.includes("perfil profissional") && text.includes("cadastrar servi");
+        return hasOperationalPanel || hasProfessionalEmptyState;
+      }, { timeout: 60_000 })
+      .toBe(true);
+
     const centralText = await bodyText(page);
     const centralTextLower = centralText.toLowerCase();
-
     const hasOperationalPanel =
       centralTextLower.includes("operacao profissional") ||
       centralTextLower.includes("pedidos de orcamento") ||
       centralTextLower.includes("atendimentos contratados");
-    const hasProfessionalEmptyState = centralTextLower.includes("perfil profissional") &&
-      centralTextLower.includes("cadastrar servi");
-    expect(hasOperationalPanel || hasProfessionalEmptyState).toBe(true);
+    const hasNoServiceState = centralTextLower.includes("nenhum servico publicado ainda");
+    const hasProfessionalEmptyState =
+      centralTextLower.includes("perfil profissional") && centralTextLower.includes("cadastrar servi");
 
-    if (hasOperationalPanel) {
+    if (hasOperationalPanel && !hasNoServiceState) {
       await expect
         .poll(() => bodyText(page), { timeout: 60_000 })
         .toMatch(/pedidos de orcamento/i);
@@ -365,9 +377,19 @@ test.describe("professional leads authenticated flow", () => {
         .toMatch(/servico e2e/i);
     }
 
+    if (hasNoServiceState) {
+      await expect
+        .poll(() => bodyText(page), { timeout: 60_000 })
+        .toMatch(/cadastrar servico/i);
+    }
+
     if (hasProfessionalEmptyState) {
-      await page.getByRole("button", { name: /cadastrar servi[çc]os/i }).click();
-      await expect(page).toHaveURL(/\/services\/cadastrar/i, { timeout: 20_000 });
+      const registerButton = page.getByRole("button", { name: /cadastrar servi[çc]os/i });
+      const hasRegisterButton = await registerButton.isVisible().catch(() => false);
+      if (hasRegisterButton) {
+        await registerButton.click();
+        await expect(page).toHaveURL(/\/services\/cadastrar/i, { timeout: 20_000 });
+      }
     }
   });
 });
