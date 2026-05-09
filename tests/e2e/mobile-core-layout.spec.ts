@@ -1,0 +1,51 @@
+import { expect, test } from '@playwright/test';
+
+const MOBILE_VIEWPORT = { width: 360, height: 800 };
+
+test.setTimeout(90_000);
+
+async function assertCoreMobileLayout(page: import('@playwright/test').Page, path: string) {
+  await page.setViewportSize(MOBILE_VIEWPORT);
+  for (let attempt = 1; attempt <= 2; attempt += 1) {
+    try {
+      await page.goto(path, { waitUntil: 'domcontentloaded', timeout: 90_000 });
+      break;
+    } catch (error) {
+      if (attempt === 2) throw error;
+      await page.waitForTimeout(1_500);
+    }
+  }
+
+  await expect
+    .poll(
+      async () => {
+        const mainVisible = await page.locator('main').first().isVisible().catch(() => false);
+        const hasText = await page
+          .evaluate(() => (document.body?.innerText ?? '').trim().length > 80)
+          .catch(() => false);
+        return mainVisible || hasText;
+      },
+      { timeout: 30_000 },
+    )
+    .toBe(true);
+
+  const hasHorizontalOverflow = await page.evaluate(() => {
+    const root = document.documentElement;
+    return root.scrollWidth > root.clientWidth + 2;
+  });
+  expect(hasHorizontalOverflow).toBe(false);
+}
+
+test.describe('Mobile core public layout', () => {
+  test('landing principal em 360px', async ({ page }) => {
+    await assertCoreMobileLayout(page, '/');
+  });
+
+  test('cadastro em 360px', async ({ page }) => {
+    await assertCoreMobileLayout(page, '/cadastro');
+  });
+
+  test('servicos territorial em 360px', async ({ page }) => {
+    await assertCoreMobileLayout(page, '/servicos/ba/salvador/area/complexo-do-nordeste-de-amaralina');
+  });
+});

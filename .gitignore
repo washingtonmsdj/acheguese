@@ -12,6 +12,7 @@ src/test/
 !src/modules/business/gastronomy/components/GastronomyCheckoutSheet.spec.tsx
 !tests/e2e/gastronomy-operational.spec.ts
 !tests/e2e/mobility-operational.spec.ts
+!tests/e2e/mobile-core-layout.spec.ts
 !tests/e2e/professional-operational.spec.ts
 !tests/e2e/onboarding-public.spec.ts
 !tests/e2e/institutional-public.spec.ts
