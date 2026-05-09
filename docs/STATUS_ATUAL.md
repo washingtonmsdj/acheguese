@@ -305,3 +305,14 @@ Avancar para fechamento total da Fase 3 (sem abrir Fase 4):
   - `npm run test:e2e:mobility-operational`: passou em 2026-05-09 com `2/2`.
   - `npm run typecheck`: passou em 2026-05-09.
   - `npm run lint`: passou em 2026-05-09.
+
+## Atualizacao 2026-05-09 (Mobile Core Layout 360px)
+
+- Nova suite E2E mobile adicionada: `tests/e2e/mobile-core-layout.spec.ts`.
+- Validacao de layout em viewport `360x800` para rotas publicas criticas:
+  - `/`
+  - `/cadastro`
+  - `/servicos/ba/salvador/area/complexo-do-nordeste-de-amaralina`
+- Cada cenario valida renderizacao util (main/conteudo) e ausencia de overflow horizontal no documento.
+- O fluxo de navegacao foi endurecido com retry curto de `goto` para reduzir falso negativo por instabilidade transitoria de carregamento.
+- `npx playwright test tests/e2e/mobile-core-layout.spec.ts --project=chromium --reporter=list`: passou em 2026-05-09 com `3/3`.
