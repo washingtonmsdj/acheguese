@@ -51,6 +51,7 @@ import { VerificationBanner } from "@/core/verification";
 import { cn } from "@/shared/utils/cn";
 import type { ResolvedTerritory } from "@/core/routing/hooks/useResolveTerritoryFromUrl";
 import type { TerritoryFilter } from "@/core/location";
+import { buildCommunityTabUrlFromPath } from "@/core/routing/utils/territoryUrls";
 
 const GruposPage = lazy(() => import("./GruposPage"));
 
@@ -130,12 +131,8 @@ export default function ComunidadePage({ resolved }: ComunidadePageProps) {
     staleTime: 5 * 60 * 1000,
   });
   const setTab = (tab: CommunityTab) => {
-    const match = location.pathname.match(/^\/comunidade\/([^/]+)\/([^/]+)\/([^/]+)/);
-    if (match) {
-      const [, state, city, territory] = match;
-      const canonicalPath = tab === "feed"
-        ? `/comunidade/${state}/${city}/${territory}/feed`
-        : `/comunidade/${state}/${city}/${territory}/grupos`;
+    const canonicalPath = buildCommunityTabUrlFromPath(location.pathname, tab);
+    if (canonicalPath) {
       navigate(canonicalPath);
       return;
     }
@@ -558,6 +555,10 @@ export default function ComunidadePage({ resolved }: ComunidadePageProps) {
           open={modalState.type === "create"}
           onClose={handleCloseModal}
           defaultType={modalState.data?.defaultType}
+          editPostId={modalState.data?.editPostId}
+          initialContent={modalState.data?.initialContent}
+          initialType={modalState.data?.initialType}
+          initialReach={modalState.data?.initialReach}
         />
 
         {/* Modal de Criar Alerta */}

@@ -34,6 +34,17 @@ interface RequestLocationOptions {
 
 const CACHE_KEY = "robust_geolocation_cache_v1";
 
+function isPermissionDeniedError(error: unknown): boolean {
+  const errorLike = error as { code?: unknown; message?: unknown } | null;
+  const message = String(errorLike?.message ?? "").toLowerCase();
+  return (
+    errorLike?.code === 1 ||
+    errorLike?.code === "PERMISSION_DENIED" ||
+    message.includes("permission denied") ||
+    message.includes("user denied")
+  );
+}
+
 function readCache(): GeolocationCoords | null {
   try {
     const raw = localStorage.getItem(CACHE_KEY);
@@ -143,7 +154,11 @@ export function useRobustGeolocation(options: UseRobustGeolocationOptions = {}) 
         onSuccessRef.current?.(coords);
       } catch (error: any) {
         const msg = error?.message ?? "Nao foi possivel obter localizacao.";
-        logger.warn("[useRobustGeolocation] requestLocation failed", { msg });
+        if (isPermissionDeniedError(error)) {
+          logger.info("[useRobustGeolocation] requestLocation denied by user", { msg });
+        } else {
+          logger.warn("[useRobustGeolocation] requestLocation failed", { msg });
+        }
         setState((prev) => ({
           ...prev,
           loading: false,
@@ -184,7 +199,11 @@ export function useRobustGeolocation(options: UseRobustGeolocationOptions = {}) 
       },
       (error) => {
         const msg = error?.message ?? "Falha ao acompanhar localizacao.";
-        logger.warn("[useRobustGeolocation] watch failed", { msg });
+        if (isPermissionDeniedError(error)) {
+          logger.info("[useRobustGeolocation] watch denied by user", { msg });
+        } else {
+          logger.warn("[useRobustGeolocation] watch failed", { msg });
+        }
         setState((prev) => ({ ...prev, error: msg, permissionState: "denied" }));
         onErrorRef.current?.(msg);
       },

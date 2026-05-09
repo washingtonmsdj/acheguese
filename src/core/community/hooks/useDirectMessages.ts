@@ -6,6 +6,7 @@ import { useState, useEffect } from "react";
 import { realtimeService } from "@/core/realtime";
 import { messagingService } from "@/core/messaging";
 import { useSessionContext } from "@/core/session";
+import { TRUST_ACTOR_ROLES, TrustEventService } from "@/core/trust";
 import type {
   ConversationPreview,
   Message,
@@ -26,6 +27,12 @@ export type { Message as DirectMessage } from "@/core/messaging/types";
 export function useDirectMessages(_currentUserId?: string) {
   const { activeProfile } = useSessionContext();
   const profileId = activeProfile?.id;
+  const actorRole =
+    activeProfile?.profile_type === "driver"
+      ? TRUST_ACTOR_ROLES.DRIVER
+      : activeProfile?.profile_type === "business"
+        ? TRUST_ACTOR_ROLES.MERCHANT
+        : TRUST_ACTOR_ROLES.CUSTOMER;
 
   const [conversations, setConversations] = useState<ConversationPreview[]>([]);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -108,14 +115,37 @@ export function useDirectMessages(_currentUserId?: string) {
 
   const reportConversation = async (
     conversationId: string,
-    reportedUserId: string,
+    _reportedUserId: string,
     reason: string,
     description?: string,
   ) => {
     if (!profileId) return false;
     try {
-      // TODO: Criar ReportService no core para centralizar reports
-      // Por enquanto, usar messagingService para reports de conversa
+      const trustResult = await TrustEventService.createEvent({
+        actor_profile_id: profileId,
+        actor_role: actorRole,
+        subject_profile_id: profileId,
+        subject_role: actorRole,
+        context_type: "community",
+        context_id: conversationId,
+        event_type: "incident",
+        reason_code: "conversation_report",
+        severity: "medium",
+        visibility: "admin_only",
+        description: description?.trim() || reason.trim(),
+        evidence: {
+          conversation_id: conversationId,
+          reason,
+          description: description ?? null,
+        },
+        status: "under_review",
+      });
+
+      if (trustResult.error) {
+        setError(trustResult.error);
+        return false;
+      }
+
       await messagingService.blockConversation({
         conversation_id: conversationId,
         blocked_by: "buyer",

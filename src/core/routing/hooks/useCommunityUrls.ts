@@ -55,6 +55,7 @@ export function useCommunityUrls(routeResolved?: ResolvedTerritory | null): Comm
 
   const alertsUrl = `${feedUrl}/alertas`;
   const issuesUrl = `${feedUrl}/problemas`;
+  const groupsUrl = `${feedUrl}/grupos`;
 
   return {
     feed: feedUrl,
@@ -62,7 +63,7 @@ export function useCommunityUrls(routeResolved?: ResolvedTerritory | null): Comm
     issues: issuesUrl,
     events: eventsUrl,
     eventDetail: (id: string) => `/eventos/${id}`,
-    groups: "/comunidade/grupos",
+    groups: groupsUrl,
     groupDetail: (id: string) => `/comunidade/grupos/${id}`,
     recommendations: "/recomendacoes",
     newRecommendation: "/recomendacoes/nova",

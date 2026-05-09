@@ -1,5 +1,4 @@
-import React from "react";
-
+import React, { useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -24,12 +23,10 @@ import {
   SPACING,
 } from "../styles/communityDesignSystem";
 import { Send } from "lucide-react";
-import { useState } from "react";
 import { logger } from "@/shared/utils/logger";
-/**
- * Modal de detalhes do post com seção de comentários
- * Permite visualizar o post completo e interagir com comentários
- */
+import { commentService } from "@/core/comments/services/CommentService";
+import { useSessionContext } from "@/core/session";
+import { toast } from "sonner";
 
 interface Comment {
   id: string;
@@ -83,8 +80,10 @@ export function PostDetailModal({
   onReport,
   onTagClick,
 }: PostDetailModalProps) {
+  const { activeProfile } = useSessionContext();
   const [commentText, setCommentText] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [localComments, setLocalComments] = useState<Comment[]>(comments);
 
   const { state, isProcessing, handleLike, handleSave, handleShare } =
     usePostInteractions(post.id, {
@@ -102,23 +101,48 @@ export function PostDetailModal({
     const diffDays = Math.floor(diffMs / 86400000);
 
     if (diffMins < 1) return "agora";
-    if (diffMins < 60) return `há ${diffMins} minuto${diffMins > 1 ? "s" : ""}`;
-    if (diffHours < 24)
-      return `há ${diffHours} time${diffHours > 1 ? "s" : ""}`;
-    if (diffDays < 7) return `há ${diffDays} dia${diffDays > 1 ? "s" : ""}`;
+    if (diffMins < 60) return `ha ${diffMins} minuto${diffMins > 1 ? "s" : ""}`;
+    if (diffHours < 24) return `ha ${diffHours} hora${diffHours > 1 ? "s" : ""}`;
+    if (diffDays < 7) return `ha ${diffDays} dia${diffDays > 1 ? "s" : ""}`;
     return date.toLocaleDateString("pt-BR");
   };
 
   const handleSubmitComment = async () => {
     if (!commentText.trim() || isSubmitting) return;
+    if (!activeProfile?.id) {
+      toast.error("Voce precisa estar logado para comentar.");
+      return;
+    }
 
     setIsSubmitting(true);
     try {
-      // TODO: Implementar envio de comentário
-      await new Promise((resolve) => setTimeout(resolve, 500));
+      const createdComment = await commentService.createComment({
+        post_id: post.id,
+        author_profile_id: activeProfile.id,
+        content: commentText.trim(),
+      });
+
+      if (!createdComment) {
+        toast.error("Nao foi possivel enviar o comentario.");
+        return;
+      }
+
+      setLocalComments((prev) => [
+        ...prev,
+        {
+          id: createdComment.id,
+          author_name: activeProfile.display_name?.trim() || "Usuario",
+          author_avatar: activeProfile.avatar_url,
+          content: createdComment.content,
+          created_at: createdComment.created_at,
+          likes_count: createdComment.likes_count ?? 0,
+        },
+      ]);
       setCommentText("");
+      toast.success("Comentario enviado.");
     } catch (error) {
-      logger.error("Error send comentário:", error);
+      logger.error("Error sending comment:", error);
+      toast.error("Erro ao enviar comentario.");
     } finally {
       setIsSubmitting(false);
     }
@@ -132,20 +156,13 @@ export function PostDetailModal({
         aria-describedby="dialog-description"
       >
         <DialogHeader className="p-4 pb-0">
-          <DialogTitle style={INLINE_STYLES.textPrimary}>
-            Detalhes do Post
-          </DialogTitle>
-          <span id="dialog-description" className="sr-only">
-            Conteúdo do diálogo
-          </span>
+          <DialogTitle style={INLINE_STYLES.textPrimary}>Detalhes do Post</DialogTitle>
+          <span id="dialog-description" className="sr-only">Conteudo do dialogo</span>
         </DialogHeader>
-        <DialogDescription className="sr-only">
-          Detalhes completos da publicação
-        </DialogDescription>
+        <DialogDescription className="sr-only">Detalhes completos da publicacao</DialogDescription>
 
         <ScrollArea className="flex-1 px-4">
           <div className={SPACING.sectionGap}>
-            {/* Post Header */}
             <div className="pt-2">
               <PostHeader
                 authorName={post.author_name}
@@ -162,21 +179,16 @@ export function PostDetailModal({
               )}
             </div>
 
-            {/* Post Content */}
             <PostContent content={post.content} images={post.images} />
 
-            {/* Enquete (se existir) */}
             {post.poll && post.type === "enquete" && (
               <div className="mt-4">
                 <PollCard pollId={post.poll.id} poll={post.poll} />
               </div>
             )}
 
-            {post.tags.length > 0 && (
-              <PostTags tags={post.tags} onTagClick={onTagClick} />
-            )}
+            {post.tags.length > 0 && <PostTags tags={post.tags} onTagClick={onTagClick} />}
 
-            {/* Post Metrics */}
             <PostMetrics
               likesCount={state.likesCount}
               commentsCount={post.comments_count}
@@ -190,29 +202,18 @@ export function PostDetailModal({
               disabled={isProcessing}
             />
 
-            {/* Comentários */}
             <div className="space-y-3 pb-4">
-              <h3
-                className="font-bold text-sm"
-                style={INLINE_STYLES.textPrimary}
-              >
-                Comentários ({comments.length})
+              <h3 className="font-bold text-sm" style={INLINE_STYLES.textPrimary}>
+                Comentarios ({localComments.length})
               </h3>
 
-              {comments.length === 0 ? (
-                <p
-                  className="text-sm text-center py-6"
-                  style={INLINE_STYLES.textSecondary}
-                >
-                  Nenhum comentário ainda. Seja o primeiro!
+              {localComments.length === 0 ? (
+                <p className="text-sm text-center py-6" style={INLINE_STYLES.textSecondary}>
+                  Nenhum comentario ainda. Seja o primeiro!
                 </p>
               ) : (
-                comments.map((comment) => (
-                  <div
-                    key={comment.id}
-                    className="p-3 rounded-lg"
-                    style={{ backgroundColor: "rgba(255, 255, 255, 0.05)" }}
-                  >
+                localComments.map((comment) => (
+                  <div key={comment.id} className="p-3 rounded-lg" style={{ backgroundColor: "rgba(255, 255, 255, 0.05)" }}>
                     <div className="flex items-start gap-3">
                       <img
                         src={comment.author_avatar || "/default-avatar.png"}
@@ -221,25 +222,14 @@ export function PostDetailModal({
                       />
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-1">
-                          <span
-                            className="font-bold text-sm"
-                            style={INLINE_STYLES.textPrimary}
-                          >
+                          <span className="font-bold text-sm" style={INLINE_STYLES.textPrimary}>
                             {comment.author_name}
                           </span>
-                          <span
-                            className="text-xs"
-                            style={INLINE_STYLES.textMuted}
-                          >
+                          <span className="text-xs" style={INLINE_STYLES.textMuted}>
                             {getRelativeTime(comment.created_at)}
                           </span>
                         </div>
-                        <p
-                          className="text-sm"
-                          style={INLINE_STYLES.textPrimary}
-                        >
-                          {comment.content}
-                        </p>
+                        <p className="text-sm" style={INLINE_STYLES.textPrimary}>{comment.content}</p>
                       </div>
                     </div>
                   </div>
@@ -249,21 +239,14 @@ export function PostDetailModal({
           </div>
         </ScrollArea>
 
-        {/* Input de comentário fixo no rodapé */}
-        <div
-          className="p-4 border-t"
-          style={{ borderColor: "rgba(255, 255, 255, 0.1)" }}
-        >
+        <div className="p-4 border-t" style={{ borderColor: "rgba(255, 255, 255, 0.1)" }}>
           <div className="flex gap-2">
             <Textarea
               value={commentText}
               onChange={(e) => setCommentText(e.target.value)}
-              placeholder="Escreva um comentário..."
+              placeholder="Escreva um comentario..."
               className="flex-1 min-h-[80px] resize-none border-white/10"
-              style={{
-                backgroundColor: "rgba(255, 255, 255, 0.05)",
-                color: "#FFFFFF",
-              }}
+              style={{ backgroundColor: "rgba(255, 255, 255, 0.05)", color: "#FFFFFF" }}
               disabled={isSubmitting}
             />
             <Button

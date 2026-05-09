@@ -16,7 +16,9 @@ import { useSessionContext } from "@/core/session";
 import { useMultiProfileContext } from "@/core/profiles/contexts/multi-profile-runtime-context";
 import { usePostById } from "@/core/community/hooks/usePostById";
 import { useCommunityLocation } from "@/core/community/hooks/useCommunityLocation";
+import { postService } from "@/core/posts/services";
 import { logger } from "@/shared/utils/logger";
+import type { PostType } from "@/core/posts/types/Post";
 
 interface ModalState {
   type: "comment" | "post" | "unified" | "report" | "create" | null;
@@ -175,9 +177,27 @@ export function useComunidadePage() {
     });
   }, [deletePost, deletePostId]);
 
-  const handleEditPost = useCallback((postId: string) => {
-    if (import.meta.env.DEV) logger.info("Edit post:", postId);
-    toast.info("Edicao de post sera liberada na proxima iteracao");
+  const handleEditPost = useCallback(async (postId: string) => {
+    try {
+      const post = await postService.getPostById(postId);
+      if (!post) {
+        toast.error("Post nao encontrado");
+        return;
+      }
+
+      setModalState({
+        type: "create",
+        data: {
+          editPostId: postId,
+          initialContent: post.content ?? "",
+          initialType: (post.type as PostType) ?? "discussao",
+          initialReach: (post.reach as "street" | "neighborhood" | "city") ?? "neighborhood",
+        },
+      });
+    } catch (error) {
+      logger.error("Error opening edit post modal", error as Error, { postId });
+      toast.error("Nao foi possivel abrir edicao do post");
+    }
   }, []);
 
   const handleReportClick = useCallback((reportId: string) => {

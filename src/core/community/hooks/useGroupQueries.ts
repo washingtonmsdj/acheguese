@@ -149,7 +149,7 @@ export function useSendGroupMessage() {
       audioDurationSeconds?: number;
       metadata?: Record<string, unknown>;
     }) => {
-      if (!activeProfile && !groupId.startsWith("mock-")) {
+      if (!activeProfile) {
         throw new Error("Usuário não autenticado");
       }
 

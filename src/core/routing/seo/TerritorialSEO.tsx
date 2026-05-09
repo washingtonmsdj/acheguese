@@ -1,15 +1,15 @@
-/**
+﻿/**
  * TerritorialSEO
  *
  * Componente React que aplica os metadados SEO territoriais via react-helmet-async.
- * Usa buildTerritorialMetadata() como única fonte de verdade.
+ * Usa buildTerritorialMetadata() como Ãºnica fonte de verdade.
  *
  * Melhorias v2:
  * - Structured Data (JSON-LD) para LocalBusiness e Place
  * - Meta tags adicionais (geo, author, etc)
  * - Breadcrumb structured data
  *
- * Uso: renderizar dentro de TerritorialLayout, após o território estar resolvido.
+ * Uso: renderizar dentro de TerritorialLayout, apÃ³s o territÃ³rio estar resolvido.
  */
 
 import { Helmet } from 'react-helmet-async';
@@ -18,17 +18,18 @@ import { buildTerritorialMetadata } from './buildTerritorialMetadata';
 import type { ResolvedTerritory } from '../hooks/useResolveTerritoryFromUrl';
 import type { ModuleSlug } from '../utils/territoryUrls';
 import { MODULE_SLUGS } from '../utils/territoryUrls';
+import { resolveSeoPolicy } from './territorialSeoPolicy';
 
 interface TerritorialSEOProps {
   resolved: ResolvedTerritory;
-  /** URL base do território, ex: /ba/salvador/complexo-... */
+  /** URL base do territÃ³rio, ex: /ba/salvador/complexo-... */
   baseUrl: string;
 }
 
 /**
- * Extrai o módulo atual a partir do pathname.
- * /ba/salvador/complexo.../community → 'community'
- * /ba/salvador/complexo-...          → null (landing hub)
+ * Extrai o mÃ³dulo atual a partir do pathname.
+ * /ba/salvador/complexo.../community â†’ 'community'
+ * /ba/salvador/complexo-...          â†’ null (landing hub)
  */
 function resolveCurrentModule(pathname: string, baseUrl: string): ModuleSlug | null {
   const suffix = pathname.replace(baseUrl, '').replace(/^\//, '');
@@ -39,60 +40,20 @@ function resolveCurrentModule(pathname: string, baseUrl: string): ModuleSlug | n
   return known.includes(segment) ? (segment as ModuleSlug) : null;
 }
 
-function resolveSeoPolicy(pathname: string): {
-  canonicalPath: string;
-  robots: string;
-} {
-  const cleanPath = pathname.endsWith('/') ? pathname.slice(0, -1) : pathname;
-  const parts = cleanPath.split('/').filter(Boolean);
-  const embeddedCommunityModules = new Set<string>([
-    MODULE_SLUGS.business,
-    MODULE_SLUGS.services,
-    MODULE_SLUGS.classifieds,
-    MODULE_SLUGS.gastronomy,
-    MODULE_SLUGS.jobs,
-    MODULE_SLUGS.events,
-    MODULE_SLUGS.map,
-    MODULE_SLUGS.mobility,
-  ]);
-
-  if (parts[0] === MODULE_SLUGS.community && parts[1] && parts[2]) {
-    const isGroup = parts[3] === 'area';
-    const moduleIndex = isGroup ? 5 : 4;
-    const embeddedModule = parts[moduleIndex];
-
-    if (embeddedModule && embeddedCommunityModules.has(embeddedModule)) {
-      const territoryParts = isGroup
-        ? parts.slice(1, 5)
-        : parts.slice(1, 4);
-
-      return {
-        canonicalPath: `/${embeddedModule}/${territoryParts.join('/')}`,
-        robots: 'noindex, follow',
-      };
-    }
-  }
-
-  return {
-    canonicalPath: cleanPath,
-    robots: 'index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1',
-  };
-}
-
 /**
- * Gera structured data (JSON-LD) para o território
+ * Gera structured data (JSON-LD) para o territÃ³rio
  */
 function generateStructuredData(resolved: ResolvedTerritory, canonicalUrl: string, module: ModuleSlug | null) {
   const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'https://acheguese.com.br';
   
-  // Place schema para território
+  // Place schema para territÃ³rio
   const placeSchema = {
     '@context': 'https://schema.org',
     '@type': 'Place',
     name: resolved.kind === 'location' ? resolved.location.name : resolved.group.name,
     description: resolved.kind === 'location' 
-      ? `Informações, serviços e comunidade de ${resolved.location.name}`
-      : `Informações, serviços e comunidade do ${resolved.group.name}`,
+      ? `InformaÃ§Ãµes, serviÃ§os e comunidade de ${resolved.location.name}`
+      : `InformaÃ§Ãµes, serviÃ§os e comunidade do ${resolved.group.name}`,
     address: {
       '@type': 'PostalAddress',
       addressLocality: resolved.kind === 'location' 
@@ -133,7 +94,7 @@ function generateStructuredData(resolved: ResolvedTerritory, canonicalUrl: strin
     '@context': 'https://schema.org',
     '@type': 'WebSite',
     name: 'Achegue-se',
-    description: 'Plataforma hiperlocal de serviços e comunidade',
+    description: 'Plataforma hiperlocal de serviÃ§os e comunidade',
     url: baseUrl,
     potentialAction: {
       '@type': 'SearchAction',
@@ -177,7 +138,7 @@ export function TerritorialSEO({ resolved, baseUrl }: TerritorialSEOProps) {
 
   const structuredData = generateStructuredData(resolved, canonicalPath, module);
 
-  // Geo tags para localização
+  // Geo tags para localizaÃ§Ã£o
   const geoTags = resolved.kind === 'location' && 
     (resolved.location.metadata?.latitude as number) && 
     (resolved.location.metadata?.longitude as number) ? {
@@ -235,6 +196,23 @@ export function TerritorialSEO({ resolved, baseUrl }: TerritorialSEOProps) {
           {JSON.stringify(structuredData.website)}
         </script>
       )}
+    </Helmet>
+  );
+}
+
+interface TerritorialFallbackSEOProps {
+  pathname: string;
+}
+
+export function TerritorialFallbackSEO({ pathname }: TerritorialFallbackSEOProps) {
+  const policy = resolveSeoPolicy(pathname);
+  const origin = typeof window !== "undefined" ? window.location.origin : "https://acheguese.com.br";
+  const canonical = `${origin}${policy.canonicalPath}`;
+
+  return (
+    <Helmet>
+      <link rel="canonical" href={canonical} />
+      <meta name="robots" content={policy.robots} />
     </Helmet>
   );
 }

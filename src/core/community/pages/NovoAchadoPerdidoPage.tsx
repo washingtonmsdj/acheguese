@@ -122,7 +122,7 @@ export default function NovoAchadoPerdidoPage() {
 
     if (!homeDistrict?.id) {
       toast({ title: "Escolha seu bairro antes de publicar", variant: "destructive" });
-      navigate(appUrls.community.home);
+      navigate(appUrls.community.feed);
       return;
     }
 

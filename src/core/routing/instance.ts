@@ -26,7 +26,16 @@ osrmProvider.validate().then((isValid) => {
   if (isValid) {
     logger.info('[RoutingService] OSRM provider validado com sucesso');
   } else {
-    logger.warn('[RoutingService] OSRM provider indisponível');
+    const isDev =
+      typeof import.meta !== 'undefined' &&
+      typeof import.meta.env !== 'undefined' &&
+      Boolean(import.meta.env.DEV);
+    const message = '[RoutingService] OSRM provider indisponível';
+    if (isDev) {
+      logger.info(message);
+    } else {
+      logger.warn(message);
+    }
   }
 }).catch((error) => {
   logger.error('[RoutingService] Erro ao validar OSRM provider', error);

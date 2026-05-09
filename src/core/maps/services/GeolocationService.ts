@@ -69,6 +69,17 @@ class GeolocationServiceClass {
     );
   }
 
+  private isPermissionDeniedError(error: unknown): boolean {
+    const errorLike = error as { code?: unknown; message?: unknown } | null;
+    const message = String(errorLike?.message ?? '').toLowerCase();
+    return (
+      errorLike?.code === 1 ||
+      errorLike?.code === 'PERMISSION_DENIED' ||
+      message.includes('permission denied') ||
+      message.includes('user denied')
+    );
+  }
+
   private isMobileDevice(): boolean {
     return (
       /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
@@ -201,10 +212,16 @@ class GeolocationServiceClass {
         });
         return coords;
       } catch (error: any) {
-        logger.warn(`[GeolocationService] GPS attempt ${i + 1} failed`, {
+        const logContext = {
           code: error?.code,
           message: error?.message,
-        });
+        };
+
+        if (this.isPermissionDeniedError(error)) {
+          logger.info(`[GeolocationService] GPS attempt ${i + 1} denied by user`, logContext);
+        } else {
+          logger.warn(`[GeolocationService] GPS attempt ${i + 1} failed`, logContext);
+        }
 
         if (this.isInsecureContextError(error)) {
           throw this.createGeolocationError(
@@ -213,7 +230,7 @@ class GeolocationServiceClass {
           );
         }
 
-        if (error?.code === 1) {
+        if (this.isPermissionDeniedError(error)) {
           throw this.createGeolocationError(
             'PERMISSION_DENIED',
             'Location permission denied by browser.',
@@ -343,9 +360,9 @@ class GeolocationServiceClass {
           throw error;
         }
 
-        if (error?.code === 'PERMISSION_DENIED' || error?.code === 1) {
+        if (this.isPermissionDeniedError(error)) {
           permissionDenied = true;
-          logger.warn('[GeolocationService] Permission denied');
+          logger.info('[GeolocationService] Permission denied by user');
           throw this.createGeolocationError(
             'PERMISSION_DENIED',
             'Location permission denied by browser.',

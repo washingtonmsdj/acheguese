@@ -145,16 +145,10 @@ export function useGroupDetail(groupId: string | undefined) {
         if (membership) {
           setIsMember(true);
           setUserRole(membership?.role || null);
-        } else if (groupId.startsWith("mock-")) {
-          setIsMember(true);
-          setUserRole("admin");
         } else {
           setIsMember(false);
           setUserRole(null);
         }
-      } else if (groupId.startsWith("mock-")) {
-        setIsMember(true);
-        setUserRole("admin");
       }
     } catch (err) {
       logger.error("Error loading group:", err);

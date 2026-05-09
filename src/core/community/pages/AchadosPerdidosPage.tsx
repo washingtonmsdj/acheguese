@@ -211,7 +211,7 @@ export default function AchadosPerdidosPage() {
             <p className="text-gray-400 mb-6">
               Para acessar achados e perdidos da comunidade, escolha seu bairro principal.
             </p>
-            <Button onClick={() => navigate(appUrls.community.home)} className="bg-teal-500 hover:bg-teal-400">
+            <Button onClick={() => navigate(appUrls.community.feed)} className="bg-teal-500 hover:bg-teal-400">
               Escolher meu bairro
             </Button>
           </div>

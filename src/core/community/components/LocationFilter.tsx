@@ -1,4 +1,3 @@
- 
 import React from "react";
 import { MapPin } from "lucide-react";
 import {
@@ -9,15 +8,7 @@ import {
   SelectValue,
 } from "@/shared/components/ui/select";
 import type { LocationScope } from "../hooks/feed/useFeedFilters";
-import { useAuth } from "@/core/auth/hooks/useAuth";
-/**
- * Componente de filtro de localização geográfica
- *
- * Requirement 1: Filtro de Localização
- * - Permite selecionar: Cidade, Bairro ou Rua
- * - Mostra localização atual do usuário
- * - Filtra posts baseado no escopo selecionado
- */
+import { useSessionContext } from "@/core/session";
 
 interface LocationFilterProps {
   value: LocationScope;
@@ -25,25 +16,12 @@ interface LocationFilterProps {
 }
 
 export function LocationFilter({ value, onChange }: LocationFilterProps) {
-  const { user } = useAuth();
+  const { activeProfile } = useSessionContext();
 
-  // Obter localização do usuário (assumindo que está no profile)
-  // TODO: Integrar com dados reais do profile quando disponível
   const userLocation = {
-    city: user?.user_metadata?.city || "Sua city",
-    neighborhood: user?.user_metadata?.neighborhood || "Seu neighborhood",
-    street: user?.user_metadata?.street || "Sua rua",
-  };
-
-  const getLocationLabel = (scope: LocationScope): string => {
-    switch (scope) {
-      case "city":
-        return `Cidade: ${userLocation.city}`;
-      case "neighborhood":
-        return `Bairro: ${userLocation.neighborhood}`;
-      case "street":
-        return `Rua: ${userLocation.street}`;
-    }
+    city: activeProfile?.city?.trim() || "Sua cidade",
+    neighborhood: activeProfile?.neighborhood?.trim() || "Seu bairro",
+    street: activeProfile?.street?.trim() || "Sua rua",
   };
 
   return (

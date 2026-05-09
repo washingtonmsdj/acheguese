@@ -161,10 +161,34 @@ export async function createReplyNotification(
   _supabaseClient?: unknown,
 ): Promise<void> {
   try {
-    logger.info(
-      "Reply notification skipped (not implemented in CommentService)",
-      { parentCommentId, actorId },
-    );
+    const parentComment = await commentService.getCommentById(parentCommentId);
+    if (!parentComment) {
+      logger.warn("Parent comment not found for reply notification", {
+        parentCommentId,
+        postId,
+      });
+      return;
+    }
+
+    if (parentComment.author_profile_id === actorId) {
+      return;
+    }
+
+    const actor = await profileService.getProfileById(actorId);
+    await notificationService.createNotification({
+      user_id: parentComment.author_profile_id,
+      type: "community" as NotificationType,
+      title: "Nova resposta no comentario",
+      message: `${actor?.name || "Alguem"} respondeu seu comentario`,
+      priority: "medium" as NotificationPriority,
+      metadata: {
+        post_id: postId,
+        parent_comment_id: parentCommentId,
+        actor_id: actorId,
+        actor_name: actor?.name || "Usuario",
+        content_preview: replyContent.substring(0, 100),
+      },
+    });
   } catch (error) {
     logger.error("Error in createReplyNotification", error as Error, {
       postId,

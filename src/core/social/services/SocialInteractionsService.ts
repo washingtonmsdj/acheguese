@@ -26,97 +26,6 @@ import type {
   SocialInteractionStats,
 } from "../../../services/social/types";
 
-const MOCK_GROUP_MESSAGES: GroupMessage[] = [
-  {
-    id: "mock-msg-1",
-    group_id: "mock-avisos-complexo",
-    sender_profile_id: "mock-admin-profile",
-    content: "Bom dia, pessoal. Hoje teremos limpeza comunitaria na praca principal as 08h.",
-    message_type: "text",
-    created_at: new Date(Date.now() - 1000 * 60 * 45).toISOString(),
-    profile: {
-      id: "mock-admin-profile",
-      name: "Admin Comunidade",
-      avatar_url: "https://api.dicebear.com/9.x/initials/svg?seed=Admin%20Comunidade",
-    },
-  },
-  {
-    id: "mock-msg-2",
-    group_id: "mock-avisos-complexo",
-    sender_profile_id: "mock-mod-1",
-    content: "Mapa do ponto de encontro:",
-    message_type: "image",
-    media_url: "https://images.unsplash.com/photo-1489515217757-5fd1be406fef?w=1200&q=80&auto=format&fit=crop",
-    media_mime_type: "image/jpeg",
-    created_at: new Date(Date.now() - 1000 * 60 * 32).toISOString(),
-    profile: {
-      id: "mock-mod-1",
-      name: "Lideranca Nordeste",
-      avatar_url: "https://api.dicebear.com/9.x/initials/svg?seed=Lideranca%20Nordeste",
-    },
-  },
-  {
-    id: "mock-msg-3",
-    group_id: "mock-avisos-complexo",
-    sender_profile_id: "mock-member-2",
-    content: "Atualizacao em audio da ronda comunitaria",
-    message_type: "audio",
-    media_url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3",
-    media_mime_type: "audio/mpeg",
-    audio_duration_seconds: 18,
-    created_at: new Date(Date.now() - 1000 * 60 * 12).toISOString(),
-    profile: {
-      id: "mock-member-2",
-      name: "Carlos Vale",
-      avatar_url: "https://api.dicebear.com/9.x/initials/svg?seed=Carlos%20Vale",
-    },
-  },
-  {
-    id: "mock-msg-4",
-    group_id: "mock-empreendedores-servicos",
-    sender_profile_id: "mock-admin-2",
-    content: "Feira local de empreendedores confirmada para sabado.",
-    message_type: "text",
-    created_at: new Date(Date.now() - 1000 * 60 * 55).toISOString(),
-    profile: {
-      id: "mock-admin-2",
-      name: "Rede de Comerciantes",
-      avatar_url: "https://api.dicebear.com/9.x/initials/svg?seed=Rede%20de%20Comerciantes",
-    },
-  },
-  {
-    id: "mock-msg-5",
-    group_id: "mock-empreendedores-servicos",
-    sender_profile_id: "mock-member-3",
-    content: "Cardapio novo da semana:",
-    message_type: "image",
-    media_url: "https://images.unsplash.com/photo-1513104890138-7c749659a591?w=1200&q=80&auto=format&fit=crop",
-    media_mime_type: "image/jpeg",
-    created_at: new Date(Date.now() - 1000 * 60 * 25).toISOString(),
-    profile: {
-      id: "mock-member-3",
-      name: "Morador Empreendedor",
-      avatar_url: "https://api.dicebear.com/9.x/initials/svg?seed=Morador%20Empreendedor",
-    },
-  },
-];
-
-const MOCK_GROUP_MESSAGE_REPORTS: Array<{
-  id: string;
-  group_id: string;
-  message_id: string;
-  reporter_profile_id: string;
-  reason: string;
-  details: string | null;
-  status: "pending" | "reviewing" | "resolved" | "dismissed";
-  moderation_history?: Array<{
-    at: string;
-    status: string;
-    moderator_profile_id?: string;
-  }>;
-  created_at: string;
-}> = [];
-
 export class SocialInteractionsService {
   private static async resolveGroupContext(groupId: string, userId?: string) {
     const { data: groupRow } = await (supabase as any).rpc("get_community_group_by_id", {
@@ -627,32 +536,6 @@ export class SocialInteractionsService {
     userId?: string,
   ): Promise<{ success: boolean; message?: GroupMessage; error?: string }> {
     try {
-      if (data.groupId.startsWith("mock-")) {
-        const now = new Date().toISOString();
-        const mockMessage: GroupMessage = {
-          id: `mock-local-${Date.now()}`,
-          group_id: data.groupId,
-          sender_profile_id: "mock-current-user",
-          content: data.content,
-          message_type: data.messageType || "text",
-          media_url: data.mediaUrl || null,
-          media_mime_type: data.mediaMimeType || null,
-          audio_duration_seconds:
-            typeof data.audioDurationSeconds === "number"
-              ? data.audioDurationSeconds
-              : null,
-          created_at: now,
-          profile: {
-            id: "mock-current-user",
-            name: "Você",
-            avatar_url:
-              "https://api.dicebear.com/9.x/initials/svg?seed=Voce%20Morador",
-          },
-        };
-        MOCK_GROUP_MESSAGES.push(mockMessage);
-        return { success: true, message: mockMessage };
-      }
-
       const activeProfile =
         await profileService.getRequiredActiveProfile(userId);
 
@@ -745,14 +628,6 @@ export class SocialInteractionsService {
         .range(offset, offset + limit - 1);
 
       if (error) throw error;
-
-      if ((!data || data.length === 0) && groupId.startsWith("mock-")) {
-        return MOCK_GROUP_MESSAGES
-          .filter((message) => message.group_id === groupId)
-          .sort((a, b) => (a.created_at < b.created_at ? 1 : -1))
-          .slice(offset, offset + limit);
-      }
-
       return data || [];
     } catch (error) {
       trackError(error as Error, {
@@ -760,12 +635,6 @@ export class SocialInteractionsService {
         action: "getGroupMessages",
         metadata: { groupId, limit, offset },
       });
-      if (groupId.startsWith("mock-")) {
-        return MOCK_GROUP_MESSAGES
-          .filter((message) => message.group_id === groupId)
-          .sort((a, b) => (a.created_at < b.created_at ? 1 : -1))
-          .slice(offset, offset + limit);
-      }
       return [];
     }
   }
@@ -832,18 +701,6 @@ export class SocialInteractionsService {
       if (!content.trim()) {
         return { success: false, error: "Mensagem vazia" };
       }
-
-      const mockMessage = MOCK_GROUP_MESSAGES.find((message) => message.id === messageId);
-      if (mockMessage) {
-        mockMessage.content = content.trim();
-        mockMessage.metadata = {
-          ...(mockMessage.metadata || {}),
-          edited: true,
-          edited_at: new Date().toISOString(),
-        };
-        return { success: true };
-      }
-
       const activeProfile =
         await profileService.getRequiredActiveProfile(userId);
       const { data: messageRow, error: messageError } = await (supabase as any)
@@ -890,22 +747,6 @@ export class SocialInteractionsService {
       if (!reason || reason.trim().length < 3) {
         return { success: false, error: "Motivo da denuncia muito curto" };
       }
-
-      const mockMessage = MOCK_GROUP_MESSAGES.find((message) => message.id === messageId);
-      if (mockMessage) {
-        MOCK_GROUP_MESSAGE_REPORTS.push({
-          id: `mock-report-${Date.now()}`,
-          group_id: mockMessage.group_id,
-          message_id: messageId,
-          reporter_profile_id: "mock-current-user",
-          reason: reason.trim(),
-          details: details?.trim() || null,
-          status: "pending",
-          created_at: new Date().toISOString(),
-        });
-        return { success: true };
-      }
-
       const activeProfile =
         await profileService.getRequiredActiveProfile(userId);
       const { data: messageRow, error: messageError } = await (supabase as any)
@@ -975,10 +816,6 @@ export class SocialInteractionsService {
     }>
   > {
     try {
-      if (groupId.startsWith("mock-")) {
-        return MOCK_GROUP_MESSAGE_REPORTS.filter((r) => r.group_id === groupId);
-      }
-
       const activeProfile =
         await profileService.getRequiredActiveProfile(userId);
       const { data: membership } = await (supabase as any)

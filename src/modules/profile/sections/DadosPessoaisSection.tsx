@@ -187,7 +187,7 @@ export function DadosPessoaisSection({
           userId={user.id}
           profileId={personalProfileId}
           favorites={favorites}
-          onPostClick={(id) => navigate(`/comunidade/post/${id}`)}
+          onPostClick={(id) => navigate(`${appUrls.community.feed}?post=${id}`)}
           onBusinessClick={handleBusinessClick}
           onExplore={() => navigate(appUrls.business.list)}
           onCreateService={() => navigate(appUrls.services.register)}
@@ -206,7 +206,7 @@ export function DadosPessoaisSection({
           <ActivityTimeline
             userId={user.id}
             profileId={personalProfileId}
-            onPostClick={(id) => navigate(`/comunidade/post/${id}`)}
+            onPostClick={(id) => navigate(`${appUrls.community.feed}?post=${id}`)}
           />
         </SectionFrame>
       ) : null}

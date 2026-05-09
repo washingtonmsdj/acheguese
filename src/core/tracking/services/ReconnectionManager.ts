@@ -209,7 +209,7 @@ export class ReconnectionManager {
       const isStale = this.isConnectionStale();
       
       if (isStale && this.connectionState.status === 'connected') {
-        logger.warn('[ReconnectionManager] Connection is stale, triggering reconnect');
+        logger.info('[ReconnectionManager] Connection is stale, triggering reconnect');
         this.handleDisconnection();
         return;
       }
@@ -263,7 +263,7 @@ export class ReconnectionManager {
       return; // Já está tratando
     }
 
-    logger.warn('[ReconnectionManager] Connection lost, starting reconnection');
+    logger.info('[ReconnectionManager] Connection lost, starting reconnection');
     
     this.updateConnectionState('disconnected');
     this.startReconnect();

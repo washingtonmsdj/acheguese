@@ -2,7 +2,7 @@
 
 Data: 2026-05-08
 Branch: main
-Ultimo commit base: 7e62a86 `Normaliza parametro de bairro nas rotas territoriais`
+Ultimo commit base: 0c8701a `Consolida moderacao admin em fila unica e audit log trust`
 
 ## Validacoes Recentes
 
@@ -36,7 +36,35 @@ Ultimo commit base: 7e62a86 `Normaliza parametro de bairro nas rotas territoriai
 - `npx playwright test tests/e2e/professional-leads-operational.spec.ts --reporter=list`: reexecutado em 2026-05-08 com `1/1` verde apos hardening de ambiente E2E.
 - `npx playwright test tests/e2e/professional-leads-operational.spec.ts --reporter=list`: passou em 2026-05-08 com `1/1` apos incluir assert de dados reais de `professional_data` (raio, areas e disponibilidade) na Central Profissional.
 - `npx playwright test tests/e2e/professional-leads-operational.spec.ts --reporter=list`: revalidado em 2026-05-08 com `1/1` apos hardening do bloco operacional da Central Profissional e persistencia de avaliacao pos-servico.
+- `npm run typecheck`: passou em 2026-05-08 apos limpeza SSOT de comunidade/grupos.
+- `npm run lint`: passou em 2026-05-08 apos limpeza SSOT de comunidade/grupos.
+- `npm run build`: passou em 2026-05-08 apos limpeza SSOT de comunidade/grupos.
+- `npm run typecheck`: passou em 2026-05-08 apos integracoes reais de comentarios/contestacao/moderacao na comunidade.
+- `npm run lint`: passou em 2026-05-08 apos integracoes reais de comentarios/contestacao/moderacao na comunidade.
+- `npm run build`: passou em 2026-05-08 apos integracoes reais de comentarios/contestacao/moderacao na comunidade.
+- `npm run typecheck`: passou em 2026-05-08 apos hardening de rotas canonicas da comunidade (city/district/area) via helper SSOT.
+- `npm run lint`: passou em 2026-05-08 apos hardening de rotas canonicas da comunidade (city/district/area) via helper SSOT.
+- `npm run build`: passou em 2026-05-08 apos hardening de rotas canonicas da comunidade (city/district/area) via helper SSOT.
 
+- `npx playwright test tests/e2e/community-territorial-operational.spec.ts --project=chromium --reporter=list`: passou em 2026-05-08 com `3/3`, cobrindo comunidade territorial em cidade, bairro e area (`feed/grupos`) sem lock no suspense global.
+- `npm run typecheck`: passou em 2026-05-08 apos limpeza final de hardcodes de rota da comunidade (widgets/perfil/achados/recomendacoes).
+- `npm run lint`: passou em 2026-05-08 apos limpeza final de hardcodes de rota da comunidade (widgets/perfil/achados/recomendacoes).
+- `npm run build`: passou em 2026-05-08 apos limpeza final de hardcodes de rota da comunidade (widgets/perfil/achados/recomendacoes).
+- `npm run generate:sitemap`: passou em 2026-05-08 com escrita real de `public/sitemap.xml` via Supabase (`locations=134`, `groups=1`).
+- `npx playwright test tests/e2e/community-territorial-operational.spec.ts --project=chromium --reporter=list`: revalidado em 2026-05-08 com `3/3` verde apos hardening de prontidao territorial.
+- `npm test -- src/core/routing/seo/__tests__/TerritorialSEO.spec.ts`: passou em 2026-05-08 com `3/3`, blindando politica canonical/noindex de rotas comunitarias duplicadas vs rotas sociais proprias.
+- `npm run lint`: passou em 2026-05-08 sem warnings apos extrair policy de SEO territorial para util dedicado.
+- `npx playwright test tests/e2e/territorial-seo.spec.ts --project=chromium --reporter=list`: passou em 2026-05-08 com `3/3`, validando indexabilidade de rotas territoriais publicas/sociais e politica obrigatoria de `noindex + canonical publico` nas rotas comunitarias duplicadas de modulo.
+- `npx playwright test tests/e2e/territorial-seo.spec.ts --project=chromium --reporter=list`: ampliado e revalidado em 2026-05-08 com `4/4` (publico indexavel + duplicacoes comunitarias `empresas/servicos/classificados` com `noindex`, incluindo canonical publico validado em classificado).
+- `npx playwright test tests/e2e/territorial-seo.spec.ts --project=chromium --reporter=list`: ampliado novamente em 2026-05-08 com `6/6`, cobrindo duplicacoes comunitarias `servicos`, `classificados`, `vagas`, `eventos` e `mobilidade` com politica `noindex` (e canonical publico validado em `classificados`) sem regressao de rota publica indexavel.
+- `npx playwright test tests/e2e/community-social-seo.spec.ts --project=chromium --reporter=list`: passou em 2026-05-08 com `2/2`, cobrindo rotas sociais da comunidade (`feed` e `grupos`) sem forcar `noindex` e mantendo canonical proprio (quando presente no head).
+- `npm run test:e2e:seo`: passou em 2026-05-08 com `8/8`, consolidando regressao SEO territorial/comunidade em comando unico (`territorial-seo.spec.ts` + `community-social-seo.spec.ts`).
+- `npm run validate:seo:phase`: passou em 2026-05-08 (`typecheck + lint + test:e2e:seo`), virando gate operacional da etapa SEO.
+- `npm run validate:operations:phase`: passou em 2026-05-08 (`typecheck + lint + test:e2e:operations`) com `35/35` nos cenarios operacionais de central/mobilidade, gastronomia e profissionais.
+- `npm run validate:phase:core`: passou em 2026-05-08, consolidando gate unico de release tecnica interna (`typecheck` + `lint` + `test:e2e:phase-core`).
+- CI SSOT atualizado em 2026-05-08: `.github/workflows/ssot-tests.yml` agora exige `npm run validate:phase:core` no status final do workflow.
+- `npm run validate:phase:core`: reexecutado em 2026-05-08 apos consolidar o gate em uma unica partida Playwright; passou com `46/46` E2E (`SEO + comunidade territorial + central/mobilidade + gastronomia + profissionais`).
+- `npm run validate:phase:core`: reexecutado novamente em 2026-05-08 apos limpar warnings transitórios de reconexao/OSRM e estabilizar o E2E do motoboy; passou com `46/46` E2E.
 ## Modulos/Fases Concluidos
 
 - Fase 0: Preparacao e baseline.
@@ -46,6 +74,8 @@ Ultimo commit base: 7e62a86 `Normaliza parametro de bairro nas rotas territoriai
 ## Fase Atual
 
 Fase 3: Gastronomia e delivery integrado.
+
+Plano mestre de execucao por fases: `docs/PLANO_MESTRE_EXECUCAO_INTEGRAL_SSOT.md`.
 
 ### Concluido Na Fase 3
 
@@ -138,18 +168,40 @@ Fase 3: Gastronomia e delivery integrado.
 - Avaliacao pos-servico profissional esta protegida por regra de backend no SSOT (`ProfessionalLeadService.submitEngagementReview`): apenas cliente do atendimento concluido pode avaliar; o E2E autenticado valida envio e persistencia real em `professional_reviews_new`.
 - Moderacao de comentarios/perguntas de classificados foi consolidada na mesma trilha administrativa de confianca: `/admin/classificados/denuncias` agora usa `TrustEventsQueue` com filtro travado em `trust_events` de contexto `classified` + `reason_code` de comentario, removendo fila operacional paralela para esse fluxo.
 - Admin/Moderacao foi consolidado em fila unica SSOT: `AdminModeracao` e `AdminModeracaoCompleta` agora usam `TrustEventsQueue` + audit log real de `trust_admin_actions` (via `TrustEventService.listAdminActions`), removendo dependencias legadas de trilhas sem fonte canonica de dados.
+- Comunidade/Grupos removeu fallback mock em runtime no SSOT: `CommunityService.getGroups/getGroupsPage`, `GroupService.getGroupById/getGroupMembers` e `SocialInteractionsService` (mensagens/denuncias de grupo) agora operam somente com persistencia real, retornando estado vazio controlado em erro/ausencia de dados.
+- Comunidade removeu TODOs funcionais criticos: `PostDetailModal` envia comentario real via `commentService`; `useUnifiedDetailModal` cria comentario/upvote real em `CivicReportService`; `DisputeMentionModal` gera `trust_events` reais para moderacao; `useDirectMessages.reportConversation` registra incidente em `TrustEventService` e bloqueia conversa de forma auditavel.
+- `LocationFilter` foi alinhado ao perfil ativo do SSOT (`useSessionContext`), removendo dependencia de `user_metadata` legado para cidade/bairro/rua.
+- Hooks legados duplicados em `modules/community` foram consolidados para SSOT por re-export canÃ´nico (`useGrupos` e `useComunidadePage`), removendo divergÃªncia funcional entre `core` e `modules`.
+- `createReplyNotification` em `communityBusinessLogic` foi implementado com fluxo real: busca comentÃ¡rio pai via `commentService`, evita auto-notificaÃ§Ã£o e cria notificaÃ§Ã£o de resposta para o autor original.
+- Edicao de post da comunidade foi concluida no fluxo real (sem placeholder): `handleEditPost` abre `CreatePostModal` em modo edicao com dados iniciais do post, e o submit persiste via `postService.updatePost`.
+- `CreatePostModal` agora suporta modo criacao/edicao no mesmo SSOT, com estado inicial (`content/type/reach`) e CTA/contexto visual especifico para salvar alteracoes.
+- `npm run typecheck`, `npx eslint` pontual nos arquivos alterados e `npm run build` passaram em 2026-05-08 apos entrega da edicao de post.
+- Navegacao de abas em `ComunidadePage` deixou de montar URL manual por regex e passou a usar helper canonico (`buildCommunityTabUrlFromPath`), cobrindo cidade, bairro e grupo em `/area/:groupSlug`.
+- `useCommunityUrls` (core/routing e core/community) foi alinhado ao SSOT territorial para `groups`, usando rota contextual `${feed}/grupos` em vez de caminhos soltos/fora de contexto.
+- Sitemap dinamico foi fechado no SSOT de roteamento territorial: `generateAndSaveSitemap` agora consulta Supabase (`locations` + `territorial_groups` + membros), gera URLs canônicas de cidade/bairro/area + módulos/comunidade e persiste em `public/sitemap.xml` via script `npm run generate:sitemap`.
+- Runtime compartilhado para script/SPA foi endurecido sem gambiarra: `logger` e bootstrap `supabase` ficaram compatíveis com ambiente Node (`process.env`) e Vite (`import.meta.env`) sem quebrar frontend.
+- Regra de SEO territorial virou SSOT isolado em `src/core/routing/seo/territorialSeoPolicy.ts`: rotas `/comunidade/.../:modulo-publico` recebem `noindex, follow` + canonical da rota publica equivalente; rotas sociais proprias (`feed/grupos`) mantem `index, follow`.
+- `TerritorialLayout` ganhou `TerritorialFallbackSEO` para manter emissao minima de `robots/canonical` quando a resolucao territorial entra em fallback de erro, sem quebrar renderizacao das paginas.
+- `CommunityTerritorialShell` passou a emitir fallback de `canonical/robots` via `territorialSeoPolicy` no shell, reforcando consistencia SEO durante transicoes/hidratacao das rotas comunitarias.
+- Suite E2E operacional da Central foi endurecida com `goto` resiliente (`waitUntil=commit`, retry curto) e validacao de conteudo via polling de landmarks/texto em vez de `networkidle`, eliminando flakiness de bootstrap no ambiente local.
+- Cenário operacional do motoboy em gastronomia foi estabilizado para aceitar prontidao real de layout (`main/header/texto`) sem falso negativo de elemento oculto em transicao de UI.
+- Comunidade territorial entrou no gate de fase: `npm run validate:community:phase` cobre cidade, bairro e grupo territorial (`/area/:groupSlug`) via Playwright e agora compoe `npm run validate:phase:core`.
+- Rotas de comunidade em nivel cidade foram alinhadas ao `CommunityTerritorialShell`: `/comunidade/:state/:city`, `/feed`, `/grupos`, `/alertas` e `/problemas` usam o cockpit social canônico em vez de cair no layout territorial generico.
+- Geolocalizacao publica deixou de tratar permissao negada pelo usuario como `warn` no console; o estado esperado agora e log informativo, mantendo warnings para falhas inesperadas.
+- Gate core foi consolidado em uma unica execucao Playwright (`npm run test:e2e:phase-core`) para evitar multiplas partidas frias do Vite no mesmo comando de release.
+- ReconnectionManager deixou de emitir `warn` para estados transitórios esperados de stale/lost connection; erros reais e limite de reconexao seguem como erro/warning.
+- Validacao do OSRM publico em dev deixou de emitir `warn` quando o provider externo esta indisponivel; em producao a indisponibilidade continua como warning.
 
 ## P0 Abertos
 
 - Servicos/Profissionais: validar Central Profissional, resposta, proposta estruturada, aceite e atendimento contratado com perfil real e dados de `professional_data`. âœ…
 - Servicos/Profissionais: validar avaliacao pos-servico controlada por atendimento concluido com perfis reais. âœ…
 - Marketplace/Classificados: consolidar moderacao dedicada para comentarios/perguntas publicas de anuncios na mesma trilha administrativa de confianca. âœ…
-- Comunidade/Feed: concluir hardening territorial/visibilidade em todos os pontos restantes e remover mocks reais.
-- Comunidade/Feed: concluir edicao inline/historico de comentarios e validar visualmente exclusao com dados reais apos migracao de `confirm()` para dialog acessivel.
+- Comunidade/Feed: concluir hardening territorial/visibilidade em todos os pontos restantes (mocks runtime dos services-base foram removidos; faltam hooks/widgets/paginas residuais).
+- Comunidade/Feed: revalidar visualmente fluxo de edicao/exclusao/comentarios em browser apos fechamento dos TODOs funcionais e da edicao de post.
 - Admin/Moderacao: consolidar fila unica, audit log e moderacao transversal alem da fila inicial de confianca operacional. âœ…
 - Notificacoes: matriz completa por evento/canal/preferencia.
-- SEO/Rotas: sitemap dinamico.
-- SEO/Rotas: conectar sitemap dinamico ao banco para producao; estrutura canonica com `/area` ja foi aplicada no gerador.
+- SEO/Rotas: validar politica final de indexacao por rota (publica/comunidade duplicada) e canonical cross-modulo em producao.
 
 ## P1 Abertos
 

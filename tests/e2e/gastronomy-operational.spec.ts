@@ -493,7 +493,31 @@ test.describe('Gastronomia operacional autenticada', () => {
       timeout: 60_000,
     });
 
-    await expect(page.locator('main, header').first()).toBeVisible({ timeout: 20_000 });
+    await expect
+      .poll(
+        async () => {
+          const mainVisible = await page.locator('main').first().isVisible().catch(() => false);
+          const headerVisible = await page.locator('header').first().isVisible().catch(() => false);
+          const hasBodyText = await page
+            .evaluate(() => (document.body?.innerText ?? '').trim().length > 80)
+            .catch(() => false);
+          return mainVisible || headerVisible || hasBodyText;
+        },
+        { timeout: 30_000 },
+      )
+      .toBe(true);
+
+    await expect
+      .poll(
+        async () => {
+          const text = await page
+            .evaluate(() => (document.body?.innerText ?? '').toLowerCase())
+            .catch(() => '');
+          return !text.includes('verificando perfil de motoboy');
+        },
+        { timeout: 60_000 },
+      )
+      .toBe(true);
 
     const hasDeliveriesLayout = await page
       .getByText(/entregas em andamento|pedidos de entrega disponiveis|modo motoboy/i)

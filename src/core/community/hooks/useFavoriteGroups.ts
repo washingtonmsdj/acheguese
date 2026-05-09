@@ -1,13 +1,11 @@
-﻿import { useQuery } from "@tanstack/react-query";
-import { FavoriteGroup } from "@/core/community/types";
+import { useQuery } from "@tanstack/react-query";
+import { FavoriteGroup } from "@/shared/types/community";
 import { useSessionContext } from "@/core/session";
+import { SocialInteractionsService } from "@/core/social/services/SocialInteractionsService";
+import { CommunityService } from "@/core/community/services/CommunityService";
 
 /**
- * Hook for search grupos favoritos do usuÃ¡rio
- *
- * TODO: Implementar query real quando sistema de grupos estiver pronto
- * Estrutura esperada: tabela 'groups' e 'user_favorite_groups'
- * Quando implementar, usar FavoritesService para acesso ao banco
+ * Hook for search grupos do usuario.
  */
 export function useFavoriteGroups() {
   const { user, activeProfile } = useSessionContext();
@@ -15,18 +13,25 @@ export function useFavoriteGroups() {
   return useQuery({
     queryKey: ["favorite-groups", activeProfile?.id],
     queryFn: async (): Promise<FavoriteGroup[]> => {
-      if (!activeProfile?.id) return [];
+      if (!activeProfile?.userId) return [];
 
-      // TODO: Substituir por query real usando FavoritesService
-      // const favoriteGroups = await favoritesService.getFavoriteGroups(activeProfile.id);
-      // return favoriteGroups;
+      const groupIds = await SocialInteractionsService.getUserGroupIds(activeProfile.userId);
+      if (groupIds.length === 0) return [];
 
-      // Retornar dados vazios atÃ© implementar
-      return [];
+      const groups = await CommunityService.getGroups(undefined, undefined);
+      const byMembership = groups
+        .filter((group: any) => groupIds.includes(group.id))
+        .sort((a: any, b: any) => (b.members_count || 0) - (a.members_count || 0));
+
+      return byMembership.map((group: any) => ({
+        id: group.id,
+        name: group.name || "Grupo",
+        members: String(group.members_count || 0),
+        icon: group.avatar_url || "??",
+      }));
     },
     enabled: !!user && !!activeProfile?.id,
-    staleTime: 5 * 60 * 1000, // 5 minutos
-    gcTime: 10 * 60 * 1000, // 10 minutos
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
   });
 }
-

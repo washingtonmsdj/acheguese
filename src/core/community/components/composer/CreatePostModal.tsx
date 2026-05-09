@@ -1,4 +1,3 @@
-/* eslint-disable react-hooks/exhaustive-deps */
 /**
  * CreatePostModal - Modal para criação de posts
  *
@@ -58,6 +57,10 @@ interface CreatePostModalProps {
   open: boolean;
   onClose: () => void;
   defaultType?: PostType;
+  editPostId?: string;
+  initialContent?: string;
+  initialType?: PostType;
+  initialReach?: "street" | "neighborhood" | "city";
 }
 
 interface ProfileForPost {
@@ -127,7 +130,15 @@ const REACH_OPTIONS = [
   { value: "city", label: "Cidade", icon: Globe, description: "Visível para toda a cidade" },
 ];
 
-export function CreatePostModal({ open, onClose, defaultType }: CreatePostModalProps) {
+export function CreatePostModal({
+  open,
+  onClose,
+  defaultType,
+  editPostId,
+  initialContent,
+  initialType,
+  initialReach,
+}: CreatePostModalProps) {
   const { activeProfile: sessionProfile } = useSessionContext();
   const { effectiveProfile } = useMultiProfileContext();
   // effectiveProfile = contextual (business/professional/driver) ?? personal
@@ -139,9 +150,11 @@ export function CreatePostModal({ open, onClose, defaultType }: CreatePostModalP
 
   React.useEffect(() => {
     if (open) {
-      form.setType(defaultType ?? "discussao");
+      form.setType(initialType ?? defaultType ?? "discussao");
+      form.setReach(initialReach ?? "neighborhood");
+      form.setContent(initialContent ?? "");
     }
-  }, [open, defaultType]);
+  }, [open, defaultType, form, initialContent, initialReach, initialType]);
 
   const displayName = profile?.displayName || "Usuário";
   const initials = displayName.split(" ").map((n: string) => n[0]).join("").toUpperCase().slice(0, 2);
@@ -215,17 +228,23 @@ export function CreatePostModal({ open, onClose, defaultType }: CreatePostModalP
     try {
       const data = form.getFormData();
 
-      // SPRINT 2 FASE 3: Usar createPost() com location_id
-      await postService.createPost({
-        author_profile_id: profile.id,
-        content: data.content,
-        type: data.type,
-        location_id: resolvedLocationId,
-        reach: data.reach,
-        images: data.images,
-      });
-
-      toast.success("Post publicado!");
+      if (editPostId) {
+        await postService.updatePost(editPostId, {
+          content: data.content,
+        });
+        toast.success("Post atualizado!");
+      } else {
+        // SPRINT 2 FASE 3: Usar createPost() com location_id
+        await postService.createPost({
+          author_profile_id: profile.id,
+          content: data.content,
+          type: data.type,
+          location_id: resolvedLocationId,
+          reach: data.reach,
+          images: data.images,
+        });
+        toast.success("Post publicado!");
+      }
       form.resetForm();
       onClose();
     } catch (error: unknown) {
@@ -260,7 +279,7 @@ export function CreatePostModal({ open, onClose, defaultType }: CreatePostModalP
         {/* Header */}
         <DialogHeader className="px-5 py-4 border-b border-border bg-card">
           <DialogTitle className="text-base font-semibold text-foreground">
-            Criar novo post
+            {editPostId ? "Editar post" : "Criar novo post"}
           </DialogTitle>
         </DialogHeader>
 
@@ -438,7 +457,7 @@ export function CreatePostModal({ open, onClose, defaultType }: CreatePostModalP
                 disabled={!canPublish}
                 className="text-xs font-semibold min-w-[100px] bg-primary hover:bg-primary/90 text-primary-foreground"
               >
-                {publishing ? "Publicando..." : "Publicar"}
+                {publishing ? (editPostId ? "Salvando..." : "Publicando...") : (editPostId ? "Salvar" : "Publicar")}
               </Button>
             </div>
           </div>

@@ -701,19 +701,23 @@ export default function GrupoDetailPage() {
   const handleCopyShareLink = async () => {
     const shareUrl = `${window.location.origin}${appUrls.community.groupDetail(id || "")}`;
     try {
+      if (navigator.share && capabilities.share_link) {
+        await navigator.share({
+          title: `Grupo ${group?.name || "Comunidade"}`,
+          text: "Participe deste grupo na comunidade",
+          url: shareUrl,
+        });
+        return;
+      }
+
       await navigator.clipboard.writeText(shareUrl);
       toast.success("Link do grupo copiado");
     } catch {
-      toast.info(shareUrl);
+      toast.error("Nao foi possivel compartilhar o link do grupo");
     }
   };
 
   const handleJoin = async () => {
-    if (id?.startsWith("mock-")) {
-      toast.info("Grupo mock: rode o seed para habilitar entrada real");
-      return;
-    }
-
     if (!user) {
       toast.error("Faça login primeiro");
       return;
@@ -728,11 +732,6 @@ export default function GrupoDetailPage() {
   };
 
   const handleLeave = async () => {
-    if (id?.startsWith("mock-")) {
-      toast.info("Grupo mock: rode o seed para habilitar saida real");
-      return;
-    }
-
     try {
       await leaveGroupMutation.mutateAsync(id!);
       toast.success("Você saiu do grupo");

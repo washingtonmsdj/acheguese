@@ -146,6 +146,30 @@ export function buildCommunityTerritoryUrl(territoryBaseUrl: string, suffix = ''
   return buildModuleTerritoryUrl(MODULE_SLUGS.community, territoryBaseUrl) + normalizedSuffix;
 }
 
+export type CommunityTabSuffix = 'feed' | 'grupos';
+
+/**
+ * Deriva URL canônica de aba da comunidade a partir de uma rota territorial atual.
+ * Suporta:
+ * - /comunidade/:state/:city
+ * - /comunidade/:state/:city/:district
+ * - /comunidade/:state/:city/area/:groupSlug
+ * e seus subcaminhos.
+ */
+export function buildCommunityTabUrlFromPath(pathname: string, tab: CommunityTabSuffix): string | null {
+  const parts = pathname.split('/').filter(Boolean);
+  if (parts[0] !== MODULE_SLUGS.community || parts.length < 3) return null;
+
+  const base = ['comunidade', parts[1], parts[2]];
+  if (parts[3] === 'area' && parts[4]) {
+    base.push('area', parts[4]);
+  } else if (parts[3] && parts[3] !== 'feed' && parts[3] !== 'grupos') {
+    base.push(parts[3]);
+  }
+
+  return `/${base.join('/')}/${tab}`;
+}
+
 // ── Route Context Extraction ─────────────────────────────────────────────────
 
 /**

@@ -2,16 +2,7 @@
 import { useState, useEffect, useCallback } from "react";
 import type { CommunityPost } from "../types";
 import { logger } from "@/shared/utils/logger";
-/**
- * Hook profissional para busca de posts
- *
- * Features:
- * - Busca em tempo real com debounce
- * - Filtros: texto, tags, autor, tipo
- * - Histórico de buscas
- * - Sugestões inteligentes
- * - Performance otimizada
- */
+import { postService } from "@/core/posts/services";
 
 interface SearchFilters {
   query: string;
@@ -41,9 +32,6 @@ export function useSearch() {
   const [isSearching, setIsSearching] = useState(false);
   const [searchHistory, setSearchHistory] = useState<string[]>([]);
 
-  /**
-   * Debounce para evitar buscas excessivas
-   */
   const debounce = <T extends (...args: any[]) => any>(
     func: T,
     wait: number,
@@ -55,9 +43,6 @@ export function useSearch() {
     };
   };
 
-  /**
-   * Executa a busca
-   */
   const performSearch = async (searchFilters: SearchFilters) => {
     if (!searchFilters.query.trim()) {
       setResults({ posts: [], total: 0, suggestions: [] });
@@ -67,35 +52,48 @@ export function useSearch() {
     setIsSearching(true);
 
     try {
-      // TODO: Implementar chamada à API real do Supabase
-      // const response = await searchPosts(searchFilters);
+      const q = searchFilters.query.trim();
+      const postTypes = ["post", "alert", "help_request", "recommendation", "event"];
+      const batches = await Promise.all(
+        postTypes.map((type) => postService.getPostsByType(type, { search: q })),
+      );
+      const posts = batches
+        .flat()
+        .sort((a: any, b: any) => {
+          const aDate = new Date(a.created_at || 0).getTime();
+          const bDate = new Date(b.created_at || 0).getTime();
+          return bDate - aDate;
+        })
+        .slice(0, 20) as CommunityPost[];
+      const hashtagCounts = new Map<string, number>();
+      for (const post of posts as Array<{ content?: string | null }>) {
+        const content = post.content || "";
+        const tags = content.match(/#[\p{L}\p{N}_-]+/gu) || [];
+        for (const tag of tags) {
+          const normalized = tag.toLowerCase();
+          hashtagCounts.set(normalized, (hashtagCounts.get(normalized) || 0) + 1);
+        }
+      }
 
-      // Simular delay de rede
-      await new Promise((resolve) => setTimeout(resolve, 300));
-
-      // Retornar resultados vazios até implementar busca real
-      const mockResults: CommunityPost[] = [];
-      const mockSuggestions: string[] = [];
+      const suggestions = Array.from(hashtagCounts.entries())
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 6)
+        .map(([tag]) => tag);
 
       setResults({
-        posts: mockResults,
-        total: mockResults.length,
-        suggestions: mockSuggestions,
+        posts,
+        total: posts.length,
+        suggestions,
       });
 
-      // Adicionar ao histórico
-      if (searchFilters.query.trim()) {
-        setSearchHistory((prev) => {
-          const newHistory = [
-            searchFilters.query,
-            ...prev.filter((q) => q !== searchFilters.query),
-          ].slice(0, 5); // Manter apenas 5 últimas
-
-          // Salvar no localStorage
-          localStorage.setItem("search_history", JSON.stringify(newHistory));
-          return newHistory;
-        });
-      }
+      setSearchHistory((prev) => {
+        const newHistory = [
+          searchFilters.query,
+          ...prev.filter((existing) => existing !== searchFilters.query),
+        ].slice(0, 5);
+        localStorage.setItem("search_history", JSON.stringify(newHistory));
+        return newHistory;
+      });
     } catch (error) {
       logger.error("Erro na busca:", error);
       setResults({ posts: [], total: 0, suggestions: [] });
@@ -104,9 +102,6 @@ export function useSearch() {
     }
   };
 
-  /**
-   * Busca com debounce
-   */
   const debouncedSearch = useCallback(
     debounce((searchFilters: SearchFilters) => {
       performSearch(searchFilters);
@@ -114,9 +109,6 @@ export function useSearch() {
     [],
   );
 
-  /**
-   * Atualiza query e dispara busca
-   */
   const search = (newQuery: string) => {
     setQuery(newQuery);
     const newFilters = { ...filters, query: newQuery };
@@ -124,18 +116,12 @@ export function useSearch() {
     debouncedSearch(newFilters);
   };
 
-  /**
-   * Limpa busca
-   */
   const clearSearch = () => {
     setQuery("");
     setFilters({ query: "" });
     setResults({ posts: [], total: 0, suggestions: [] });
   };
 
-  /**
-   * Remove item do histórico
-   */
   const removeFromHistory = (item: string) => {
     setSearchHistory((prev) => {
       const newHistory = prev.filter((q) => q !== item);
@@ -144,16 +130,13 @@ export function useSearch() {
     });
   };
 
-  /**
-   * Carrega histórico do localStorage
-   */
   useEffect(() => {
     const saved = localStorage.getItem("search_history");
     if (saved) {
       try {
         setSearchHistory(JSON.parse(saved));
       } catch (error) {
-        logger.error("Error load histórico:", error);
+        logger.error("Error load historico:", error);
       }
     }
   }, []);
@@ -168,4 +151,3 @@ export function useSearch() {
     removeFromHistory,
   };
 }
-

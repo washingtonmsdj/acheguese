@@ -1,23 +1,23 @@
-﻿import { useQuery } from "@tanstack/react-query";
-import { RankingUser } from "@/core/community/types";
+import { useQuery } from "@tanstack/react-query";
+import { RankingUser } from "@/shared/types/community";
+import { CommunityService } from "@/core/community/services/CommunityService";
 
 /**
- * Hook for search ranking de vizinhos
- *
- * TODO: Implementar query real quando tabela de pontuaÃ§Ã£o estiver pronta
- * Estrutura esperada: profiles com campo 'points' ou tabela separada 'user_points'
+ * Hook for search ranking de vizinhos via SSOT.
  */
 export function useRankingUsers(limit: number = 3) {
   return useQuery({
     queryKey: ["ranking-users", limit],
     queryFn: async (): Promise<RankingUser[]> => {
-      // TODO: Substituir por ranking centralizado via serviÃ§o SSOT de comunidade/perfis.
-
-      // Retornar dados vazios atÃ© implementar
-      return [];
+      const leaderboard = await CommunityService.getLeaderboard(limit);
+      return leaderboard.map((user, index) => ({
+        id: user.id,
+        name: user.display_name || "Usuario",
+        points: user.total_points || 0,
+        position: index + 1,
+      }));
     },
-    staleTime: 5 * 60 * 1000, // 5 minutos
-    gcTime: 10 * 60 * 1000, // 10 minutos
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
   });
 }
-

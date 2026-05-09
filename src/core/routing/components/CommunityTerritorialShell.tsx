@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
+import { Helmet } from "react-helmet-async";
 import {
   ArrowLeftRight,
   Briefcase,
@@ -20,6 +21,7 @@ import { cn } from "@/shared/utils/cn";
 import { prefetchRouteByHref } from "@/app/routes/prefetch";
 import { TerritorialLayout } from "./TerritorialLayout";
 import { buildCommunityTerritoryUrl } from "@/core/routing/utils/territoryUrls";
+import { resolveSeoPolicy } from "@/core/routing/seo/territorialSeoPolicy";
 
 type CommunityNavItem = {
   id: string;
@@ -220,6 +222,10 @@ export function CommunityTerritorialShell() {
   }, [territoryName]);
 
   const activeKey = normalizeModulePath(location.pathname);
+  const seoPolicy = resolveSeoPolicy(location.pathname);
+  const canonicalHref = typeof window !== "undefined"
+    ? `${window.location.origin}${seoPolicy.canonicalPath}`
+    : seoPolicy.canonicalPath;
 
   const handleExitToCity = () => {
     setTransitionMessage(`Saindo do ${territoryName}`);
@@ -227,7 +233,12 @@ export function CommunityTerritorialShell() {
   };
 
   return (
-    <div className="relative flex h-screen w-full overflow-hidden bg-[#081114] text-foreground">
+    <>
+      <Helmet>
+        <link rel="canonical" href={canonicalHref} />
+        <meta name="robots" content={seoPolicy.robots} />
+      </Helmet>
+      <div className="relative flex h-screen w-full overflow-hidden bg-[#081114] text-foreground">
       {transitionMessage ? (
         <div className="pointer-events-none fixed inset-0 z-50 flex items-center justify-center bg-background/85 backdrop-blur-md">
           <div className="w-[min(90vw,420px)] rounded-2xl border border-primary/25 bg-card/95 p-6 text-center shadow-2xl shadow-primary/10">
@@ -404,6 +415,7 @@ export function CommunityTerritorialShell() {
           <TerritorialLayout />
         </main>
       </div>
-    </div>
+      </div>
+    </>
   );
 }

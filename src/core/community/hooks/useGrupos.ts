@@ -185,11 +185,6 @@ export function useGrupos(options: UseGruposOptions = {}) {
   }, [defaultLocationId, newGroup, queryClient]);
 
   const handleJoin = useCallback(async (groupId: string) => {
-    if (groupId.startsWith("mock-")) {
-      toast.info("Grupo mock: rode o seed para persistir e habilitar entrada real");
-      return;
-    }
-
     if (!activeProfile) {
       toast.error("Faca login para entrar no grupo");
       return;

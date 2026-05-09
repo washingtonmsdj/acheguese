@@ -12,6 +12,10 @@ import {
   buildModuleTerritoryUrl,
   geoPathToPublicUrl,
 } from '@/core/routing/utils/territoryUrls';
+import { supabase } from '@/integrations/supabase';
+import { isTerritoryVisibleInLanding } from '@/core/routing/utils/territoryVisibility';
+import { writeFile } from 'node:fs/promises';
+import { resolve } from 'node:path';
 
 interface SitemapUrl {
   loc: string;
@@ -112,20 +116,95 @@ export function generateSitemap(
       }
     });
 
-  const xml = `<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-${urls.map((url) => `  <url>
-    <loc>${url.loc}</loc>
-    ${url.lastmod ? `<lastmod>${url.lastmod}</lastmod>` : ''}
-    ${url.changefreq ? `<changefreq>${url.changefreq}</changefreq>` : ''}
-    ${url.priority !== undefined ? `<priority>${url.priority}</priority>` : ''}
-  </url>`).join('\n')}
-</urlset>`;
+  const xml = [
+    '<?xml version="1.0" encoding="UTF-8"?>',
+    '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
+    ...urls.map((url) =>
+      [
+        '  <url>',
+        `    <loc>${url.loc}</loc>`,
+        url.lastmod ? `    <lastmod>${url.lastmod}</lastmod>` : null,
+        url.changefreq ? `    <changefreq>${url.changefreq}</changefreq>` : null,
+        url.priority !== undefined ? `    <priority>${url.priority}</priority>` : null,
+        '  </url>',
+      ]
+        .filter((line): line is string => line !== null)
+        .join('\n'),
+    ),
+    '</urlset>',
+  ].join('\n');
 
   return xml;
 }
 
 export async function generateAndSaveSitemap() {
-  logger.debug('Sitemap generation not implemented yet');
-  logger.debug('TODO: Integrate with database to fetch locations and groups');
+  const { data: locationsRows, error: locationsError } = await supabase
+    .from('locations')
+    .select('*')
+    .in('type', ['city', 'district'])
+    .eq('status', 'active');
+
+  if (locationsError) {
+    logger.error('generateAndSaveSitemap.locations', locationsError);
+    throw locationsError;
+  }
+
+  const locations = ((locationsRows as Location[] | null) ?? []).filter((location) =>
+    isTerritoryVisibleInLanding(location.metadata),
+  );
+
+  const { data: groupsRows, error: groupsError } = await supabase
+    .from('territorial_groups')
+    .select('*')
+    .eq('status', 'active');
+
+  if (groupsError) {
+    logger.error('generateAndSaveSitemap.groups', groupsError);
+    throw groupsError;
+  }
+
+  const activeGroups = (groupsRows ?? []).filter((group) =>
+    isTerritoryVisibleInLanding(group.metadata),
+  );
+
+  const groupIds = activeGroups.map((group) => group.id);
+  const membersByGroup = new Map<string, Location[]>();
+
+  if (groupIds.length > 0) {
+    const { data: membersRows, error: membersError } = await supabase
+      .from('territorial_group_members')
+      .select('group_id, location:locations!location_id(*)')
+      .in('group_id', groupIds);
+
+    if (membersError) {
+      logger.error('generateAndSaveSitemap.groupMembers', membersError);
+      throw membersError;
+    }
+
+    for (const member of membersRows ?? []) {
+      const row = member as {
+        group_id: string;
+        location?: Location | null;
+      };
+      if (!row.group_id || !row.location) continue;
+      const current = membersByGroup.get(row.group_id) ?? [];
+      current.push(row.location);
+      membersByGroup.set(row.group_id, current);
+    }
+  }
+
+  const groups: TerritorialGroupWithMembers[] = activeGroups.map((group) => ({
+    ...(group as TerritorialGroupWithMembers),
+    members: membersByGroup.get(group.id) ?? [],
+  }));
+
+  const sitemap = generateSitemap(locations, groups);
+  const outputPath = resolve(process.cwd(), 'public', 'sitemap.xml');
+  await writeFile(outputPath, sitemap, 'utf8');
+
+  logger.info('generateAndSaveSitemap.success', {
+    outputPath,
+    locations: locations.length,
+    groups: groups.length,
+  });
 }

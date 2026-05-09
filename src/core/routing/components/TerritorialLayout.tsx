@@ -15,7 +15,7 @@ import { Outlet, useOutletContext, useParams, useLocation } from 'react-router-d
 import { useEffect } from 'react';
 import { useResolveTerritoryFromUrl } from '../hooks/useResolveTerritoryFromUrl';
 import { TerritorialNotFound } from './TerritorialNotFound';
-import { TerritorialSEO } from '../seo/TerritorialSEO';
+import { TerritorialFallbackSEO, TerritorialSEO } from '../seo/TerritorialSEO';
 import { MODULE_SLUGS, buildGroupBaseUrl, isEntityDetailRoute } from '../utils/territoryUrls';
 import { useGroupAvailability } from '@/core/territorial/hooks/useGroupAvailability';
 import { ModuleKey } from '@/core/rollout/types';
@@ -261,9 +261,12 @@ export function TerritorialLayout() {
       activeMemberIds: [],
     };
     return (
-      <ErrorBoundary>
-        <Outlet context={fallbackContext} />
-      </ErrorBoundary>
+      <>
+        <TerritorialFallbackSEO pathname={pathname} />
+        <ErrorBoundary>
+          <Outlet context={fallbackContext} />
+        </ErrorBoundary>
+      </>
     );
   }
 

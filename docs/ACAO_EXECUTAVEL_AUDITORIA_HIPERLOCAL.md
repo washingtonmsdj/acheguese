@@ -40,6 +40,7 @@ Regras obrigatorias:
 Leia antes de executar:
 
 - `docs/AUDITORIA_PRODUTO_HIPERLOCAL_CHECKLIST.md`
+- `docs/PLANO_MESTRE_EXECUCAO_INTEGRAL_SSOT.md`
 - `docs/audits/AUDITORIA_MODULO_MOBILIDADE.md`
 - `docs/audits/AUDITORIA_MODULO_PROFISSIONAIS.md`
 - `docs/audits/AUDITORIA_MODULO_GASTRONOMIA_NICHOS.md`
@@ -1194,7 +1195,10 @@ Criterio de aceite:
 - [x] P0 parcial: rotas institucionais publicas cobertas por smoke E2E e marca canonica.
 - [x] P0 parcial: decisao de produto para roteamento cidade/modulo/comunidade documentada.
 - [x] P0 parcial: padrao `/area/:groupSlug` aplicado para separar grupo territorial de bairro.
-- [ ] P0: sitemap dinamico real.
+- [x] P0 parcial: comunidade em nivel cidade alinhada ao cockpit social (`CommunityTerritorialShell`) com rotas canonicas `/feed` e `/grupos`.
+- [x] P0: sitemap dinamico real.
+- [x] P0: suite E2E SEO territorial/comunidade consolidada em comando unico (`npm run test:e2e:seo`).
+- [x] P0: gate de fase SEO operacional (`npm run validate:seo:phase` = typecheck + lint + e2e seo).
 - [ ] P1: canonicals por modulo.
 - [ ] P1: schema.org.
 
@@ -1202,6 +1206,11 @@ Criterio de aceite:
 
 - [ ] P0: reduzir `as any` em fronteiras criticas.
 - [ ] P0: remover mocks de producao.
+- [x] P1 parcial: gate operacional consolidado em comando unico (`npm run test:e2e:operations`) cobrindo central/mobilidade, gastronomia e profissionais.
+- [x] P1 parcial: validacao operacional de fase em comando unico (`npm run validate:operations:phase` = typecheck + lint + e2e operacionais).
+- [x] P1 parcial: gate de comunidade territorial (`npm run validate:community:phase`) cobrindo cidade, bairro e grupo territorial em `/area/:groupSlug`.
+- [x] P1 parcial: gate unificado de release tecnica interna (`npm run validate:phase:core` = `typecheck` + `lint` + `test:e2e:phase-core` em uma unica execucao Playwright).
+- [x] P1 parcial: workflow de CI SSOT (`.github/workflows/ssot-tests.yml`) atualizado para exigir `validate:phase:core` no status final.
 - [ ] P1: E2E para comunidade, empresa, gastronomia, mobilidade e alertas.
 - [ ] P2: performance budget e Sentry/analytics.
 

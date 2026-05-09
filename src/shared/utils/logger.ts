@@ -29,7 +29,12 @@ class Logger {
   private readonly maxLogs = 1000;
 
   constructor() {
-    this.isDevelopment = import.meta.env.DEV;
+    const viteDev =
+      typeof import.meta !== "undefined" &&
+      typeof import.meta.env !== "undefined" &&
+      Boolean(import.meta.env.DEV);
+    const nodeDev = typeof process !== "undefined" && process.env.NODE_ENV !== "production";
+    this.isDevelopment = viteDev || nodeDev;
     this.minLevel = this.isDevelopment ? LogLevel.DEBUG : LogLevel.INFO;
   }
 

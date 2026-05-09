@@ -229,7 +229,9 @@ export function usePostInteractions(
    * Usa Web Share API quando disponível, fallback para copiar link
    */
   const handleShare = async () => {
-    const shareUrl = `${window.location.origin}/comunidade/post/${postId}`;
+    const currentUrl = new URL(window.location.href);
+    currentUrl.searchParams.set("post", postId);
+    const shareUrl = currentUrl.toString();
     const shareData = {
       title: "Post da Comunidade",
       text: "Confira este post no Achegue-se",
