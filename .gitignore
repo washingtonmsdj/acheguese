@@ -9,6 +9,7 @@ src/test/
 !src/core/maps/**/*.spec.ts
 !src/core/professional/__tests__/ProfessionalLeadSSOT.test.ts
 !src/modules/business/gastronomy/__tests__/GastronomyOperationalSSOT.test.ts
+!src/modules/business/gastronomy/components/GastronomyCheckoutSheet.spec.tsx
 !tests/e2e/gastronomy-operational.spec.ts
 !tests/e2e/professional-operational.spec.ts
 !tests/e2e/onboarding-public.spec.ts
