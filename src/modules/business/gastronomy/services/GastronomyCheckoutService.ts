@@ -16,6 +16,7 @@ import type { GastronomyBusiness } from "../types/gastronomy";
 import { OrderDeliverySSOTService } from "@/modules/mobility/delivery/services/OrderDeliverySSOTService";
 import { GastronomyOrderOriginAdapter } from "@/modules/mobility/delivery/order/adapters/GastronomyOrderOriginAdapter";
 import type { OrderRecord } from "@/modules/mobility/delivery/order/types";
+import { DeliveryAreaService } from "./DeliveryAreaService";
 
 export interface GastronomyCheckoutOrderRecord {
   id: string;
@@ -50,6 +51,9 @@ export interface CreateGastronomyCheckoutOrderInput {
     lng?: number | null;
     recipient_name?: string | null;
     phone?: string | null;
+    neighborhood?: string | null;
+    city?: string | null;
+    state?: string | null;
   };
 }
 
@@ -87,6 +91,40 @@ export class GastronomyCheckoutService {
     input: CreateGastronomyCheckoutOrderInput,
   ): Promise<GastronomyCheckoutOrderRecord> {
     try {
+      if (input.business.gastronomy_profile.delivery_enabled) {
+        const neighborhood = input.delivery_snapshot?.neighborhood?.trim();
+        const city = input.delivery_snapshot?.city?.trim();
+        const state = input.delivery_snapshot?.state?.trim();
+
+        if (!neighborhood || !city || !state) {
+          throw new Error(
+            "Destino de entrega incompleto. Informe bairro, cidade e estado para validar a area.",
+          );
+        }
+
+        const eligibilityResult = await DeliveryAreaService.checkEligibility(
+          input.business.business_data_id,
+          neighborhood,
+          city,
+          state,
+          input.cart.total,
+        );
+
+        if (eligibilityResult.error || !eligibilityResult.data) {
+          throw new Error(
+            eligibilityResult.error ||
+              "Nao foi possivel validar sua area de entrega no momento.",
+          );
+        }
+
+        if (!eligibilityResult.data.is_eligible) {
+          throw new Error(
+            eligibilityResult.data.message ||
+              "Este endereco esta fora da area de entrega deste estabelecimento.",
+          );
+        }
+      }
+
       // Converte cart de gastronomia para input de pedido SSOT
       const createOrderInput = GastronomyOrderOriginAdapter.toCreateOrderInput({
         customer_profile_id: input.customer_profile_id,
@@ -124,5 +162,4 @@ export class GastronomyCheckoutService {
     }
   }
 }
-
 

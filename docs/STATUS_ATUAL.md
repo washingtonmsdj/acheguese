@@ -64,7 +64,7 @@ Ultimo commit base: 0c8701a `Consolida moderacao admin em fila unica e audit log
 - `npm run validate:phase:core`: passou em 2026-05-08, consolidando gate unico de release tecnica interna (`typecheck` + `lint` + `test:e2e:phase-core`).
 - CI SSOT atualizado em 2026-05-08: `.github/workflows/ssot-tests.yml` agora exige `npm run validate:phase:core` no status final do workflow.
 - `npm run validate:phase:core`: reexecutado em 2026-05-08 apos consolidar o gate em uma unica partida Playwright; passou com `46/46` E2E (`SEO + comunidade territorial + central/mobilidade + gastronomia + profissionais`).
-- `npm run validate:phase:core`: reexecutado novamente em 2026-05-08 apos limpar warnings transit�rios de reconexao/OSRM e estabilizar o E2E do motoboy; passou com `46/46` E2E.
+- `npm run validate:phase:core`: reexecutado novamente em 2026-05-08 apos limpar warnings transitorios de reconexao/OSRM e estabilizar o E2E do motoboy; passou com `46/46` E2E.
 ## Modulos/Fases Concluidos
 
 - Fase 0: Preparacao e baseline.
@@ -106,17 +106,17 @@ Plano mestre de execucao por fases: `docs/PLANO_MESTRE_EXECUCAO_INTEGRAL_SSOT.md
 - Playwright operacional de gastronomia criado em `tests/e2e/gastronomy-operational.spec.ts`; ele valida a tela autenticada de cardapio quando `E2E_GASTRONOMY_BUSINESS_ID` aponta para loja real com cardapio configurado.
 - Playwright operacional de gastronomia foi fortalecido com bootstrap automatico de loja E2E (perfil business, membership, `business_data` e seed minimo de `menus/menu_categories/menu_items`), eliminando dependencia de `E2E_GASTRONOMY_BUSINESS_ID` manual e validando rotas autenticadas de cardapio/dashboard em ambiente local.
 - Suite `tests/e2e/gastronomy-operational.spec.ts` foi expandida para incluir fluxo autenticado cliente+loja no mesmo pedido (rota publica `/gastronomia/pedidos/:orderId` e rota operacional `/central/empresas/:businessId/gastronomia/pedidos/:orderId`).
-- Suite `tests/e2e/gastronomy-operational.spec.ts` agora roda sem skip (`4 passed`): bootstrap automatico de identidade+empresa+cardapio, login resiliente, validacao de cardapio/dashboard, fluxo autenticado cliente+loja com pedido fixture via RPC e cobertura canônica da Central do Motoboy em `/central/motoboy/entregas` (operacao ativa ou onboarding guardado).
+- Suite `tests/e2e/gastronomy-operational.spec.ts` agora roda sem skip (`4 passed`): bootstrap automatico de identidade+empresa+cardapio, login resiliente, validacao de cardapio/dashboard, fluxo autenticado cliente+loja com pedido fixture via RPC e cobertura canonica da Central do Motoboy em `/central/motoboy/entregas` (operacao ativa ou onboarding guardado).
 - Suite `tests/e2e/gastronomy-operational.spec.ts` foi reexecutada em 2026-05-08 com `4/4` verde (`--reporter=list`) mantendo cobertura ponta a ponta autenticada sem regressao.
 - Fluxo operacional da loja no E2E foi endurecido para progressao de estado ate terminal no detalhe do pedido (`aceitar -> preparar -> pronto -> saiu/retirado -> entregue`), com assert final de encerramento operacional sem acao pendente.
 - O mesmo E2E agora valida a transicao para a rota publica do pedido apos entrega, garantindo que o cliente ve o detalhe/timeline e que o painel interno `Operacao da loja` nao aparece fora da Central.
 - Onboarding de motoboy na Central foi alinhado para rota canonica de cadastro (`/central/motoboy/cadastro`) nos empty states/guards auditados, e o E2E valida clique deterministico do CTA `Cadastrar como Motoboy` na area principal com navegacao correta.
 - CTAs restantes de onboarding de mobilidade na Central/Perfil foram migrados de `/create-driver` para rotas canonicas da Central (`/central/motorista/cadastro` e `/central/motoboy/cadastro`), com varredura de TSX nesses modulos sem referencias residuais ao caminho legado.
-- Rota legada `/create-driver` foi removida do runtime canônico (rotas e sincronização de contexto) e o `src` não possui mais referência ativa a esse caminho.
-- Blindagem anti-regressão adicionada em `src/modules/mobility/__tests__/MobilityCanonicalOnboardingRoutes.test.ts`, validando que `/create-driver` não reaparece no runtime e que CTAs críticos permanecem nas rotas canônicas da Central.
-- Documentação técnica viva da Central/Mobilidade foi alinhada ao estado atual (sem `/create-driver` operacional) em guias e relatórios internos auditados.
-- Suíte E2E da Central (`tests/e2e/central/central-validation.spec.ts`) foi revalidada com cenário de compatibilidade legado explícito e está 100% verde (`28 passed`), cobrindo rotas principais, subrotas de mobilidade, regras de acesso e UX básica.
-- Sincronizacao de status pedido->entrega foi blindada com teste unitario dedicado em `src/modules/mobility/delivery/__tests__/OrderDeliveryLinkService.spec.ts`, cobrindo mapeamentos canonicos e regras de transicao (avanço progressivo, bloqueio de reversao e terminais, cancelamento/falha direta).
+- Rota legada `/create-driver` foi removida do runtime canonico (rotas e sincronizacao de contexto) e o `src` nao possui mais referencia ativa a esse caminho.
+- Blindagem anti-regressao adicionada em `src/modules/mobility/__tests__/MobilityCanonicalOnboardingRoutes.test.ts`, validando que `/create-driver` nao reaparece no runtime e que CTAs criticos permanecem nas rotas canonicas da Central.
+- Documentacao tecnica viva da Central/Mobilidade foi alinhada ao estado atual (sem `/create-driver` operacional) em guias e relatorios internos auditados.
+- Suite E2E da Central (`tests/e2e/central/central-validation.spec.ts`) foi revalidada com cenario de compatibilidade legado explicito e esta 100% verde (`28 passed`), cobrindo rotas principais, subrotas de mobilidade, regras de acesso e UX basica.
+- Sincronizacao de status pedido->entrega foi blindada com teste unitario dedicado em `src/modules/mobility/delivery/__tests__/OrderDeliveryLinkService.spec.ts`, cobrindo mapeamentos canonicos e regras de transicao (avanco progressivo, bloqueio de reversao e terminais, cancelamento/falha direta).
 - Smoke de contrato SSOT `GastronomyOperationalSSOT.test.ts` cobre rota publica do pedido, notificacao com link, review publico + trust privado, guard de operacoes da loja, dashboard sem contadores falsos e operacao de estoque/disponibilidade do cardapio.
 - Funil SSOT de profissionais foi destravado no banco com migrations pendentes (`20260506100000_create_professional_leads.sql`) e ajuste de RLS em `professional_service_engagements` (`20260508120000_fix_professional_engagement_insert_rls.sql`), eliminando falha de trigger no aceite da proposta.
 - Rota canonica `/central/profissional` foi corrigida em `AppRoutes` para renderizar `CentralProfissionalPage` via filho `index`, removendo estado em branco apenas com menu/lateral.
@@ -171,50 +171,50 @@ Plano mestre de execucao por fases: `docs/PLANO_MESTRE_EXECUCAO_INTEGRAL_SSOT.md
 - Comunidade/Grupos removeu fallback mock em runtime no SSOT: `CommunityService.getGroups/getGroupsPage`, `GroupService.getGroupById/getGroupMembers` e `SocialInteractionsService` (mensagens/denuncias de grupo) agora operam somente com persistencia real, retornando estado vazio controlado em erro/ausencia de dados.
 - Comunidade removeu TODOs funcionais criticos: `PostDetailModal` envia comentario real via `commentService`; `useUnifiedDetailModal` cria comentario/upvote real em `CivicReportService`; `DisputeMentionModal` gera `trust_events` reais para moderacao; `useDirectMessages.reportConversation` registra incidente em `TrustEventService` e bloqueia conversa de forma auditavel.
 - `LocationFilter` foi alinhado ao perfil ativo do SSOT (`useSessionContext`), removendo dependencia de `user_metadata` legado para cidade/bairro/rua.
-- Hooks legados duplicados em `modules/community` foram consolidados para SSOT por re-export canônico (`useGrupos` e `useComunidadePage`), removendo divergência funcional entre `core` e `modules`.
-- `createReplyNotification` em `communityBusinessLogic` foi implementado com fluxo real: busca comentário pai via `commentService`, evita auto-notificação e cria notificação de resposta para o autor original.
+- Hooks legados duplicados em `modules/community` foram consolidados para SSOT por re-export canonico (`useGrupos` e `useComunidadePage`), removendo divergencia funcional entre `core` e `modules`.
+- `createReplyNotification` em `communityBusinessLogic` foi implementado com fluxo real: busca comentario pai via `commentService`, evita auto-notificacao e cria notificacao de resposta para o autor original.
 - Edicao de post da comunidade foi concluida no fluxo real (sem placeholder): `handleEditPost` abre `CreatePostModal` em modo edicao com dados iniciais do post, e o submit persiste via `postService.updatePost`.
 - `CreatePostModal` agora suporta modo criacao/edicao no mesmo SSOT, com estado inicial (`content/type/reach`) e CTA/contexto visual especifico para salvar alteracoes.
 - `npm run typecheck`, `npx eslint` pontual nos arquivos alterados e `npm run build` passaram em 2026-05-08 apos entrega da edicao de post.
 - Navegacao de abas em `ComunidadePage` deixou de montar URL manual por regex e passou a usar helper canonico (`buildCommunityTabUrlFromPath`), cobrindo cidade, bairro e grupo em `/area/:groupSlug`.
 - `useCommunityUrls` (core/routing e core/community) foi alinhado ao SSOT territorial para `groups`, usando rota contextual `${feed}/grupos` em vez de caminhos soltos/fora de contexto.
-- Sitemap dinamico foi fechado no SSOT de roteamento territorial: `generateAndSaveSitemap` agora consulta Supabase (`locations` + `territorial_groups` + membros), gera URLs can�nicas de cidade/bairro/area + m�dulos/comunidade e persiste em `public/sitemap.xml` via script `npm run generate:sitemap`.
-- Runtime compartilhado para script/SPA foi endurecido sem gambiarra: `logger` e bootstrap `supabase` ficaram compat�veis com ambiente Node (`process.env`) e Vite (`import.meta.env`) sem quebrar frontend.
+- Sitemap dinamico foi fechado no SSOT de roteamento territorial: `generateAndSaveSitemap` agora consulta Supabase (`locations` + `territorial_groups` + membros), gera URLs canonicas de cidade/bairro/area + modulos/comunidade e persiste em `public/sitemap.xml` via script `npm run generate:sitemap`.
+- Runtime compartilhado para script/SPA foi endurecido sem gambiarra: `logger` e bootstrap `supabase` ficaram compativeis com ambiente Node (`process.env`) e Vite (`import.meta.env`) sem quebrar frontend.
 - Regra de SEO territorial virou SSOT isolado em `src/core/routing/seo/territorialSeoPolicy.ts`: rotas `/comunidade/.../:modulo-publico` recebem `noindex, follow` + canonical da rota publica equivalente; rotas sociais proprias (`feed/grupos`) mantem `index, follow`.
 - `TerritorialLayout` ganhou `TerritorialFallbackSEO` para manter emissao minima de `robots/canonical` quando a resolucao territorial entra em fallback de erro, sem quebrar renderizacao das paginas.
 - `CommunityTerritorialShell` passou a emitir fallback de `canonical/robots` via `territorialSeoPolicy` no shell, reforcando consistencia SEO durante transicoes/hidratacao das rotas comunitarias.
 - Suite E2E operacional da Central foi endurecida com `goto` resiliente (`waitUntil=commit`, retry curto) e validacao de conteudo via polling de landmarks/texto em vez de `networkidle`, eliminando flakiness de bootstrap no ambiente local.
-- Cen�rio operacional do motoboy em gastronomia foi estabilizado para aceitar prontidao real de layout (`main/header/texto`) sem falso negativo de elemento oculto em transicao de UI.
+- Cenario operacional do motoboy em gastronomia foi estabilizado para aceitar prontidao real de layout (`main/header/texto`) sem falso negativo de elemento oculto em transicao de UI.
 - Comunidade territorial entrou no gate de fase: `npm run validate:community:phase` cobre cidade, bairro e grupo territorial (`/area/:groupSlug`) via Playwright e agora compoe `npm run validate:phase:core`.
-- Rotas de comunidade em nivel cidade foram alinhadas ao `CommunityTerritorialShell`: `/comunidade/:state/:city`, `/feed`, `/grupos`, `/alertas` e `/problemas` usam o cockpit social can�nico em vez de cair no layout territorial generico.
+- Rotas de comunidade em nivel cidade foram alinhadas ao `CommunityTerritorialShell`: `/comunidade/:state/:city`, `/feed`, `/grupos`, `/alertas` e `/problemas` usam o cockpit social canonico em vez de cair no layout territorial generico.
 - Geolocalizacao publica deixou de tratar permissao negada pelo usuario como `warn` no console; o estado esperado agora e log informativo, mantendo warnings para falhas inesperadas.
 - Gate core foi consolidado em uma unica execucao Playwright (`npm run test:e2e:phase-core`) para evitar multiplas partidas frias do Vite no mesmo comando de release.
-- ReconnectionManager deixou de emitir `warn` para estados transit�rios esperados de stale/lost connection; erros reais e limite de reconexao seguem como erro/warning.
+- ReconnectionManager deixou de emitir `warn` para estados transitorios esperados de stale/lost connection; erros reais e limite de reconexao seguem como erro/warning.
 - Validacao do OSRM publico em dev deixou de emitir `warn` quando o provider externo esta indisponivel; em producao a indisponibilidade continua como warning.
 
 ## Atualizacao Operacional Da Fase 3
 
 - Fase ativa permanece Gastronomia e delivery integrado; nao abrir nova fase antes do gate.
 - P0 ja validados no gate core: Servicos/Profissionais, Marketplace/Classificados e Admin/Moderacao.
-- P0 ainda abertos na Fase 3: asserts administrativos profundos, matriz de notificacoes, realtime da loja e regras completas de area de entrega.
+- P0 de Gastronomia/Delivery fechados nesta etapa: matriz de notificacoes, realtime da loja e elegibilidade de area no checkout (hook + service + componente + testes).
 - `SUPABASE_SERVICE_ROLE_KEY` e bloqueio real apenas para asserts administrativos/seeds multi-persona; o fluxo funcional autenticado nao deve ser mascarado por skip amplo.
 - Hooks de pedidos de gastronomia agora invalidam `orders` e `order_timeline_events` por realtime Supabase; notificacoes de status de pedido agora carregam audiencia e metadata auditavel.
 
 ## P0 Abertos
 
-- Servicos/Profissionais: validar Central Profissional, resposta, proposta estruturada, aceite e atendimento contratado com perfil real e dados de `professional_data`. ✅
-- Servicos/Profissionais: validar avaliacao pos-servico controlada por atendimento concluido com perfis reais. ✅
-- Marketplace/Classificados: consolidar moderacao dedicada para comentarios/perguntas publicas de anuncios na mesma trilha administrativa de confianca. ✅
+- [CONCLUIDO] Servicos/Profissionais: validar Central Profissional, resposta, proposta estruturada, aceite e atendimento contratado com perfil real e dados de `professional_data`.
+- [CONCLUIDO] Servicos/Profissionais: validar avaliacao pos-servico controlada por atendimento concluido com perfis reais.
+- [CONCLUIDO] Marketplace/Classificados: consolidar moderacao dedicada para comentarios/perguntas publicas de anuncios na mesma trilha administrativa de confianca.
 - Comunidade/Feed: concluir hardening territorial/visibilidade em todos os pontos restantes (mocks runtime dos services-base foram removidos; faltam hooks/widgets/paginas residuais).
 - Comunidade/Feed: revalidar visualmente fluxo de edicao/exclusao/comentarios em browser apos fechamento dos TODOs funcionais e da edicao de post.
-- Admin/Moderacao: consolidar fila unica, audit log e moderacao transversal alem da fila inicial de confianca operacional. ✅
-- Notificacoes: matriz completa por evento/canal/preferencia.
+- [CONCLUIDO] Admin/Moderacao: consolidar fila unica, audit log e moderacao transversal alem da fila inicial de confianca operacional.
+- [CONCLUIDO] Notificacoes: matriz completa por evento/audiencia/rota canonica consolidada em `docs/MATRIZ_NOTIFICACOES_FASE3_SSOT.md` e blindada por contrato E2E/SSOT.
 - SEO/Rotas: validar politica final de indexacao por rota (publica/comunidade duplicada) e canonical cross-modulo em producao.
 
 ## P1 Abertos
 
-- Gastronomia: painel realtime de fila da loja.
-- Gastronomia: regras completas de area de entrega.
+- [CONCLUIDO] Gastronomia: painel realtime de fila da loja.
+- [CONCLUIDO] Gastronomia: validacao visual final do fluxo de elegibilidade de area no checkout (bloqueio sem destino + habilitacao com destino).
 - Mobile/PWA: validar dashboards complexos em telas pequenas.
 - E2E: adicionar specs autenticadas para gastronomia e mobilidade operacional.
 
@@ -232,8 +232,63 @@ Plano mestre de execucao por fases: `docs/PLANO_MESTRE_EXECUCAO_INTEGRAL_SSOT.md
 
 ## Proxima Tarefa Recomendada
 
-Avancar para fechamento de Fase 3.2/3.3 e Fase 4:
+Avancar para fechamento total da Fase 3 (sem abrir Fase 4):
 
-1. Consolidar asserts administrativos da jornada gastronomia com `SUPABASE_SERVICE_ROLE_KEY` (auditoria e notificacoes).
-2. Configurar `SUPABASE_SERVICE_ROLE_KEY` local para seeds E2E completos entre personas.
-3. Executar validacao real de Servicos/Profissionais ponta a ponta (lead -> proposta -> aceite -> atendimento -> avaliacao).
+1. Fechar matriz completa de notificacoes operacionais por persona/canal em gastronomia e mobilidade.
+2. Consolidar evidencias visuais finais do realtime da fila da loja e sincronizacao de estado cliente/loja/motoboy sem polling paralelo.
+3. Executar validacao visual final de area de entrega e bloqueio de checkout fora da area em todos os fluxos.
+4. Rodar gate final da fase (`typecheck`, `lint`, `test:e2e:phase-core`, `build`) e atualizar status final da fase.
+
+## Atualizacao 2026-05-08 (Checkout Delivery SSOT)
+
+- `npm run typecheck`: passou apos reforco do checkout de gastronomia com validacao canonica de area de entrega antes de criar pedido.
+- `npm run lint`: passou apos reforco do checkout de gastronomia com validacao canonica de area de entrega antes de criar pedido.
+- `npm test -- src/modules/business/gastronomy/__tests__/GastronomyOperationalSSOT.test.ts`: passou com `7/7` apos reforco do checkout de gastronomia.
+- `npm run build`: passou apos reforco do checkout de gastronomia com bloqueio de endereco fora da area.
+- Checkout de gastronomia agora usa destino salvo no fluxo de confirmacao e valida elegibilidade por bairro/cidade/estado via `DeliveryAreaService.checkEligibility` antes de criar pedido SSOT.
+- Pedido delivery agora e bloqueado com mensagem explicita quando o endereco esta fora da area configurada pela loja.
+- TrustEventService agora notifica envolvidos quando um `trust_event` e criado/atualizado (ator e sujeito, sem auto-notificacao duplicada), com metadata auditavel e link canonico por contexto.
+- TrustEventService agora notifica sujeito e admin quando uma `trust_admin_action` e aplicada, preservando fluxo principal mesmo quando notificacao falha (falha isolada com log `warn`).
+- `npm run typecheck`: passou em 2026-05-08 apos integracao de notificacoes no SSOT de confianca.
+- `npm run build`: passou em 2026-05-08 apos integracao de notificacoes no SSOT de confianca.
+- Matriz de notificacoes operacionais de delivery foi detalhada no SSOT com eventos explicitos (`order_accepted`, `order_preparing`, `order_ready_for_pickup`, `courier_picked_up`, `order_delivered`, `order_canceled_by_merchant`, `delivery_failed`, `delivery_proof_attached`, etc.).
+- `OrderDeliverySSOTService` agora dispara eventos semanticos no ponto operacional correto (coleta, entrega e transicoes), mantendo links canonicos para cliente, loja e motoboy.
+- `npm run typecheck`: passou em 2026-05-09 apos detalhamento da matriz de notificacoes operacionais.
+- `npm run build`: passou em 2026-05-09 apos detalhamento da matriz de notificacoes operacionais.
+- E2E administrativo de gastronomia foi aprofundado em `assertAdministrativeOrderEvidence`: agora valida estado terminal em `order_timeline_events`, evento semantico em `notifications.metadata.event` e consulta de trilha `trust_admin_actions` quando existir `trust_event` do pedido.
+- Resiliencia dos testes de UI da Central foi reforcada para estados intermediarios de shell: fallback valida URL canonica e ausencia de suspense global, evitando falso negativo por `main` temporariamente oculto.
+- `npx playwright test tests/e2e/gastronomy-operational.spec.ts --project=chromium --reporter=list`: passou em 2026-05-09 com `4/4` apos reforco de asserts administrativos + hardening de estabilidade do spec.
+- `npx playwright test tests/e2e/central/central-validation.spec.ts --project=chromium --reporter=list`: passou em 2026-05-09 com `28/28` e `1 skipped` esperado (auditoria admin profunda de mobilidade condicionada a `SUPABASE_SERVICE_ROLE_KEY`).
+- `tests/e2e/central/central-validation.spec.ts` ganhou bloco `Central - Auditoria Admin de Mobilidade` para validar trilha canonica (`ride_requests`, `notifications`, `trust_events`, `trust_admin_actions`) com skip explicito quando credencial admin nao estiver presente.
+
+## Atualizacao 2026-05-09 (Notificacoes Semanticas de Cancelamento)
+
+- `npm run typecheck`: passou em 2026-05-09 apos ajuste de evento semantico de cancelamento por ator no SSOT de delivery.
+- `npx playwright test tests/e2e/gastronomy-operational.spec.ts --project=chromium --reporter=list`: passou em 2026-05-09 com `4/4` apos ajuste de notificacao semantica no cancelamento.
+- OrderDeliverySSOTService.transitionLogisticsStatus agora diferencia `order_canceled_by_customer` vs `order_canceled_by_merchant` conforme `actor_profile_id`, evitando evento incorreto na trilha operacional e administrativa.
+- TrustEventService.notifyTrustAdminAction agora resolve URL de contexto para o sujeito via `trust_event` vinculado (quando existir), evitando envio indevido de usuario comum para `/admin/moderacao`; admin permanece com rota de fila administrativa.
+- `useOrders` e `useOrderDetails` removeram `refetchInterval` fixo e mantiveram sincronizacao por canal realtime + invalidacao de query no SSOT.
+- `npm run test:e2e:phase-core`: passou em 2026-05-09 com `46 passed` e `1 skipped` esperado (auditoria admin profunda condicionada a `SUPABASE_SERVICE_ROLE_KEY`).
+- `npm run build`: passou em 2026-05-09 apos hardening de realtime-first e limpeza de encoding.
+- Teste de contrato GastronomyOperationalSSOT.test.ts foi ampliado para blindar realtime-first sem polling fixo e obrigatoriedade de DeliveryAreaService.checkEligibility no checkout delivery.
+- `npm test -- src/modules/business/gastronomy/__tests__/GastronomyOperationalSSOT.test.ts`: passou em 2026-05-09 com `9/9` apos ampliacao de cobertura SSOT.
+- Matriz formal de notificacoes da fase foi consolidada em `docs/MATRIZ_NOTIFICACOES_FASE3_SSOT.md` (eventos, audiencia e rotas canonicas por persona).
+
+## Atualizacao 2026-05-09 (Checkout Delivery - Bloqueio Visual de Destino)
+
+- `GastronomyCheckoutSheet` agora exibe bloco de `Destino de entrega` no checkout quando a loja opera com delivery.
+- Sem destino valido, o botao de confirmar pedido fica bloqueado antes do submit e a UI mostra mensagem explicita.
+- O fluxo continua validando elegibilidade no hook e no service (SSOT), sem fonte paralela.
+- `npm run typecheck`: passou em 2026-05-09.
+- `npm run lint`: passou em 2026-05-09.
+- `npx playwright test tests/e2e/gastronomy-operational.spec.ts --project=chromium --reporter=list`: passou em 2026-05-09 com `4/4`.
+
+## Atualizacao 2026-05-09 (Checkout Delivery - Cenarios de Elegibilidade)
+
+- Testes de componente do checkout agora cobrem os dois cenarios principais de elegibilidade no frontend:
+  - sem destino de entrega valido: botao de confirmar permanece bloqueado com mensagem explicita;
+  - com destino de entrega salvo: botao de confirmar fica habilitado.
+- Arquivo de teste: `src/modules/business/gastronomy/components/GastronomyCheckoutSheet.spec.tsx`.
+- `npm test -- src/modules/business/gastronomy/components/GastronomyCheckoutSheet.spec.tsx`: passou em 2026-05-09 com `2/2`.
+- `npm run typecheck`: passou em 2026-05-09.
+- `npm run lint`: passou em 2026-05-09.

@@ -41,7 +41,7 @@ function formatDateTime(value: string) {
 export default function OrderDetailsPage() {
   const { businessId, orderId } = useParams<{ businessId: string; orderId: string }>();
   const navigate = useNavigate();
-  const { order, isLoading } = useOrderDetails(orderId!);
+  const { order, isLoading, isRealtimeConnected } = useOrderDetails(orderId!);
   const proof = order?.proof_of_delivery;
 
   if (!orderId) {
@@ -102,6 +102,16 @@ export default function OrderDetailsPage() {
               locale: ptBR,
             })}
           </p>
+          {isBusinessRoute && (
+            <span
+              className={`mt-2 inline-flex items-center gap-1 rounded-full border px-2 py-1 text-xs ${
+                isRealtimeConnected ? 'border-emerald-300 text-emerald-700' : 'border-amber-300 text-amber-700'
+              }`}
+            >
+              <span className={`h-1.5 w-1.5 rounded-full ${isRealtimeConnected ? 'bg-emerald-500' : 'bg-amber-500'}`} />
+              {isRealtimeConnected ? 'Timeline em tempo real' : 'Reconectando timeline'}
+            </span>
+          )}
         </div>
 
         <div className="sm:text-right">

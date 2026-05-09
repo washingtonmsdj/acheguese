@@ -1118,13 +1118,20 @@ export class RideOperationalService {
 
       const passengerProfileId = typeof ride?.passenger_profile_id === "string" ? ride.passenger_profile_id : null;
       const driverProfileId = typeof ride?.driver_profile_id === "string" ? ride.driver_profile_id : null;
+      const isDeliveryMode = ride?.ride_mode === "motoboy";
       const { NotificationService } = await import("@/core/notifications/services/NotificationService");
+      const [passengerUserId, driverUserId] = await Promise.all([
+        this.resolveUserIdFromProfileId(passengerProfileId),
+        this.resolveUserIdFromProfileId(driverProfileId),
+      ]);
 
       const notify = async (
         userId: string | null,
         type: "info" | "success" | "warning" | "error",
         title: string,
         message: string,
+        event: string,
+        actionUrl: string,
       ) => {
         if (!userId) return;
         try {
@@ -1134,8 +1141,8 @@ export class RideOperationalService {
             category: "transactional",
             title,
             message,
-            metadata: { rideId, state: newState },
-            action_url: `/mobilidade/buscando/${rideId}`,
+            metadata: { rideId, state: newState, event },
+            action_url: actionUrl,
             action_label: "Ver detalhes",
           });
         } catch (error) {
@@ -1150,46 +1157,95 @@ export class RideOperationalService {
 
       if (newState === RIDE_STATE.DRIVER_ACCEPTED) {
         await notify(
-          passengerProfileId,
+          passengerUserId,
           "success",
           "Motorista confirmou a corrida",
           "Seu motorista confirmou o aceite e vai iniciar em breve.",
+          "ride_driver_accepted",
+          `/mobilidade/buscando/${rideId}`,
         );
         return;
       }
 
       if (newState === RIDE_STATE.IN_PROGRESS) {
-        await notify(passengerProfileId, "info", "Corrida iniciada", "Sua corrida foi iniciada.");
+        await notify(
+          passengerUserId,
+          "info",
+          "Corrida iniciada",
+          "Sua corrida foi iniciada.",
+          "ride_in_progress",
+          `/mobilidade/buscando/${rideId}`,
+        );
         return;
       }
 
       if (newState === RIDE_STATE.IN_DELIVERY) {
-        await notify(passengerProfileId, "info", "Entrega em rota", "Seu motoboy iniciou a rota.");
+        await notify(
+          passengerUserId,
+          "info",
+          "Entrega em rota",
+          "Seu motoboy iniciou a rota.",
+          "delivery_in_route",
+          `/mobilidade/buscando/${rideId}`,
+        );
         return;
       }
 
       if (newState === RIDE_STATE.DELIVERED || newState === RIDE_STATE.COMPLETED) {
         await notify(
-          passengerProfileId,
+          passengerUserId,
           "success",
           newState === RIDE_STATE.DELIVERED ? "Entrega concluida" : "Corrida concluida",
           "Operacao finalizada com sucesso.",
+          newState === RIDE_STATE.DELIVERED ? "delivery_completed" : "ride_completed",
+          `/mobilidade/buscando/${rideId}`,
         );
         await notify(
-          driverProfileId,
+          driverUserId,
           "success",
           "Operacao concluida",
           "A operacao foi finalizada e registrada no historico.",
+          "operation_completed",
+          isDeliveryMode ? "/central/motoboy/entregas" : "/central/motorista/corridas",
         );
         return;
       }
 
       if (newState === RIDE_STATE.CANCELLED_BY_DRIVER || newState === RIDE_STATE.CANCELLED_BY_PASSENGER) {
-        await notify(passengerProfileId, "warning", "Corrida cancelada", "A corrida foi cancelada.");
-        await notify(driverProfileId, "warning", "Corrida cancelada", "A corrida foi cancelada.");
+        await notify(
+          passengerUserId,
+          "warning",
+          "Corrida cancelada",
+          "A corrida foi cancelada.",
+          "ride_canceled",
+          `/mobilidade/buscando/${rideId}`,
+        );
+        await notify(
+          driverUserId,
+          "warning",
+          "Corrida cancelada",
+          "A corrida foi cancelada.",
+          "ride_canceled",
+          isDeliveryMode ? "/central/motoboy/entregas" : "/central/motorista/corridas",
+        );
       }
     } catch (error) {
       logger.error('RideOperationalService.handlePostTransition', error as Error, { rideId, newState });
+    }
+  }
+
+  private static async resolveUserIdFromProfileId(profileId: string | null): Promise<string | null> {
+    if (!profileId) return null;
+
+    try {
+      const profile = await profileService.getProfileById(profileId);
+      return typeof profile?.user_id === "string" ? profile.user_id : null;
+    } catch (error) {
+      logger.warn("RideOperationalService.resolveUserIdFromProfileId", {
+        profileId,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      return null;
     }
   }
 

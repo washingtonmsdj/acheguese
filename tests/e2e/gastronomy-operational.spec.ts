@@ -320,16 +320,45 @@ async function assertAdministrativeOrderEvidence(orderId: string): Promise<void>
   expect(trustResult.error).toBeNull();
 
   expect(timelineResult.data?.length ?? 0).toBeGreaterThan(0);
+  expect(
+    (timelineResult.data ?? []).some((event) =>
+      ['delivered', 'canceled', 'failed'].includes(String(event.to_logistics_status ?? '')),
+    ),
+  ).toBe(true);
   expect(notificationResult.data?.length ?? 0).toBeGreaterThan(0);
   expect(
     (notificationResult.data ?? []).some((notification) =>
       String(notification.action_url ?? '').includes(`/gastronomia/pedidos/${orderId}`),
     ),
   ).toBe(true);
+  expect(
+    (notificationResult.data ?? []).some((notification) =>
+      [
+        'order_created',
+        'order_accepted',
+        'order_preparing',
+        'order_ready_for_pickup',
+        'courier_picked_up',
+        'order_delivered',
+        'delivery_proof_attached',
+      ].includes(String((notification.metadata as Record<string, unknown>)?.event ?? '')),
+    ),
+  ).toBe(true);
 
   // Trust events are contextual: not every successful order creates risk feedback.
   // The service-role assertion still proves the admin surface is queryable for this order.
   expect(Array.isArray(trustResult.data)).toBe(true);
+
+  const trustEventIds = (trustResult.data ?? []).map((event) => String(event.id));
+  if (trustEventIds.length > 0) {
+    const adminActionsResult = await admin
+      .from('trust_admin_actions')
+      .select('id, trust_event_id, subject_profile_id, action_type, metadata, created_at')
+      .in('trust_event_id', trustEventIds);
+
+    expect(adminActionsResult.error).toBeNull();
+    expect(Array.isArray(adminActionsResult.data)).toBe(true);
+  }
 }
 
 async function resolveBusinessId(page: Page) {
@@ -428,7 +457,7 @@ test.describe('Gastronomia operacional autenticada', () => {
         await expect(page.getByText(/nenhum item cadastrado ainda|nenhum item encontrado/i)).toBeVisible();
       }
     } else {
-      await expect(page.locator('main').first()).toBeVisible({
+      await expect(page).toHaveURL(new RegExp(`/central/empresas/${businessId}/gastronomia/cardapio`), {
         timeout: 20_000,
       });
       await expect(page.getByText(/preparando a casa para voce se achegar/i)).toHaveCount(0);
@@ -455,7 +484,9 @@ test.describe('Gastronomia operacional autenticada', () => {
       .catch(() => false);
 
     if (!hasDashboardHeading) {
-      await expect(page.locator('main').first()).toBeVisible({ timeout: 20_000 });
+      await expect(page).toHaveURL(new RegExp(`/central/empresas/${businessId}/gastronomia`), {
+        timeout: 20_000,
+      });
       await expect(page.getByText(/preparando a casa para voce se achegar/i)).toHaveCount(0);
       return;
     }
@@ -497,6 +528,9 @@ test.describe('Gastronomia operacional autenticada', () => {
       timeout: 60_000,
     });
     await expect(page.getByText(/operacao da loja/i)).toBeVisible({ timeout: 20_000 });
+    await expect(
+      page.getByText(/timeline em tempo real|reconectando timeline/i).first(),
+    ).toBeVisible({ timeout: 20_000 });
 
     const actionSequence = [
       /aceitar pedido/i,
@@ -527,6 +561,14 @@ test.describe('Gastronomia operacional autenticada', () => {
     await expect(page.getByText(/linha do tempo|itens do pedido/i).first()).toBeVisible({
       timeout: 20_000,
     });
+
+    await page.goto(`/central/empresas/${businessId}/gastronomia/pedidos`, {
+      waitUntil: 'domcontentloaded',
+      timeout: 60_000,
+    });
+    await expect(
+      page.getByText(/tempo real ativo|reconectando tempo real/i).first(),
+    ).toBeVisible({ timeout: 20_000 });
 
     await assertAdministrativeOrderEvidence(orderId);
   });

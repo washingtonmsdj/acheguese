@@ -14,6 +14,20 @@ interface NotificationPayload {
   metadata: Record<string, unknown>;
 }
 
+type OrderNotificationEvent =
+  | "order_created"
+  | "order_accepted"
+  | "order_preparing"
+  | "order_ready_for_pickup"
+  | "courier_assigned"
+  | "courier_picked_up"
+  | "order_delivered"
+  | "order_canceled_by_customer"
+  | "order_canceled_by_merchant"
+  | "delivery_failed"
+  | "delivery_proof_attached"
+  | "order_status_changed";
+
 const STATUS_LABELS: Record<LogisticsStatus, string> = {
   [LOGISTICS_STATUS.PENDING]: "Pedido recebido",
   [LOGISTICS_STATUS.ACCEPTED]: "Pedido aceito",
@@ -58,8 +72,17 @@ const COURIER_MESSAGES: Record<LogisticsStatus, string> = {
   [LOGISTICS_STATUS.FAILED]: "Falha de entrega registrada. Revise o incidente no painel.",
 };
 
-const EVENT_LABELS: Record<string, string> = {
+const EVENT_LABELS: Record<OrderNotificationEvent, string> = {
   order_created: "Pedido criado",
+  order_accepted: "Pedido aceito pela loja",
+  order_preparing: "Pedido em preparo",
+  order_ready_for_pickup: "Pedido pronto para coleta",
+  courier_assigned: "Motoboy atribuido",
+  courier_picked_up: "Pedido retirado",
+  order_delivered: "Pedido entregue",
+  order_canceled_by_customer: "Pedido cancelado pelo cliente",
+  order_canceled_by_merchant: "Pedido cancelado pela loja",
+  delivery_failed: "Falha de entrega",
   order_status_changed: "Status atualizado",
   delivery_proof_attached: "Comprovante anexado",
 };
@@ -79,7 +102,7 @@ function customerOrderUrl(order: OrderRecord): string | null {
   return `/gastronomia/pedidos/${order.id}`;
 }
 
-function notificationMetadata(order: OrderRecord, event: string): Record<string, unknown> {
+function notificationMetadata(order: OrderRecord, event: OrderNotificationEvent): Record<string, unknown> {
   return {
     event,
     event_label: EVENT_LABELS[event] ?? event,
@@ -135,11 +158,35 @@ export class OrderDeliveryNotificationService {
     if (error) throw error;
   }
 
+  private static resolveDefaultEvent(order: OrderRecord): OrderNotificationEvent {
+    switch (order.logistics_status) {
+      case LOGISTICS_STATUS.ACCEPTED:
+        return "order_accepted";
+      case LOGISTICS_STATUS.PREPARING:
+        return "order_preparing";
+      case LOGISTICS_STATUS.READY_FOR_PICKUP:
+        return "order_ready_for_pickup";
+      case LOGISTICS_STATUS.PICKED_UP:
+        return order.courier_profile_id ? "courier_picked_up" : "courier_assigned";
+      case LOGISTICS_STATUS.DELIVERED:
+        return "order_delivered";
+      case LOGISTICS_STATUS.CANCELED:
+        return "order_canceled_by_merchant";
+      case LOGISTICS_STATUS.FAILED:
+        return "delivery_failed";
+      default:
+        return "order_status_changed";
+    }
+  }
+
   static async notifyOrderCreated(order: OrderRecord): Promise<void> {
     await this.notifyOrderStatusChanged(order, "order_created");
   }
 
-  static async notifyOrderStatusChanged(order: OrderRecord, event = "order_status_changed"): Promise<void> {
+  static async notifyOrderStatusChanged(
+    order: OrderRecord,
+    event?: OrderNotificationEvent,
+  ): Promise<void> {
     try {
       const [customerUserId, merchantUserId, courierUserId] = await Promise.all([
         this.getUserIdByProfileId(order.customer_profile_id),
@@ -148,8 +195,9 @@ export class OrderDeliveryNotificationService {
       ]);
 
       const status = order.logistics_status;
+      const resolvedEvent = event ?? this.resolveDefaultEvent(order);
       const title = `${STATUS_LABELS[status]} #${orderShortId(order.id)}`;
-      const metadata = notificationMetadata(order, event);
+      const metadata = notificationMetadata(order, resolvedEvent);
       const actionUrl = merchantOrderUrl(order);
       const customerActionUrl = customerOrderUrl(order);
 
@@ -160,7 +208,7 @@ export class OrderDeliveryNotificationService {
           userId: customerUserId,
           audience: "customer",
           title,
-          message: CUSTOMER_MESSAGES[status],
+          message: `${CUSTOMER_MESSAGES[status]} (${EVENT_LABELS[resolvedEvent]}).`,
           actionUrl: customerActionUrl,
           actionLabel: customerActionUrl ? "Abrir pedido" : null,
           metadata: { ...metadata, audience: "customer" },
@@ -172,7 +220,7 @@ export class OrderDeliveryNotificationService {
           userId: merchantUserId,
           audience: "merchant",
           title,
-          message: MERCHANT_MESSAGES[status],
+          message: `${MERCHANT_MESSAGES[status]} (${EVENT_LABELS[resolvedEvent]}).`,
           actionUrl,
           actionLabel: actionUrl ? "Abrir pedido" : null,
           metadata: { ...metadata, audience: "merchant" },
@@ -184,7 +232,7 @@ export class OrderDeliveryNotificationService {
           userId: courierUserId,
           audience: "courier",
           title,
-          message: COURIER_MESSAGES[status],
+          message: `${COURIER_MESSAGES[status]} (${EVENT_LABELS[resolvedEvent]}).`,
           actionUrl: "/central/motoboy/entregas",
           actionLabel: "Abrir entregas",
           metadata: { ...metadata, audience: "courier" },
@@ -199,6 +247,7 @@ export class OrderDeliveryNotificationService {
     } catch (error) {
       logger.warn("OrderDeliveryNotificationService.notifyOrderStatusChanged", {
         order_id: order.id,
+        event: event ?? null,
         error: error instanceof Error ? error.message : String(error),
       });
     }

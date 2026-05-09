@@ -36,6 +36,9 @@ export interface CreateGastronomyOrderDraftInput {
     lng?: number | null;
     recipient_name?: string | null;
     phone?: string | null;
+    neighborhood?: string | null;
+    city?: string | null;
+    state?: string | null;
   };
 }
 
@@ -161,6 +164,9 @@ export class GastronomyOrderOriginAdapter {
           delivery_address_id: input.delivery_snapshot?.address_id ?? null,
           delivery_lat: input.delivery_snapshot?.lat ?? null,
           delivery_lng: input.delivery_snapshot?.lng ?? null,
+          delivery_neighborhood: input.delivery_snapshot?.neighborhood ?? null,
+          delivery_city: input.delivery_snapshot?.city ?? null,
+          delivery_state: input.delivery_snapshot?.state ?? null,
         },
       },
       payment_mode: PAYMENT_MODE.DIRECT_TO_MERCHANT,

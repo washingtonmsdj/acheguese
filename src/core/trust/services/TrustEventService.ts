@@ -1,5 +1,6 @@
 import { supabase } from "@/integrations/supabase";
 import { profileService } from "@/core/profiles/services/ProfileService";
+import { NotificationService } from "@/core/notifications/services/NotificationService";
 import { logger } from "@/shared/utils/logger";
 import {
   TRUST_ADMIN_ACTION_TYPES,
@@ -87,7 +88,145 @@ function assertRating(rating?: number | null): void {
   }
 }
 
+function trustContextActionUrl(event: Pick<TrustEvent, "context_type" | "context_id">): string {
+  if (event.context_type === "order") {
+    return `/gastronomia/pedidos/${event.context_id}`;
+  }
+  if (event.context_type === "delivery" || event.context_type === "ride") {
+    return "/central/motoboy/entregas";
+  }
+  if (event.context_type === "classified") {
+    return `/classificados/${event.context_id}`;
+  }
+  if (event.context_type === "service") {
+    return "/central/profissional";
+  }
+  if (event.context_type === "community") {
+    return "/comunidade";
+  }
+  return "/admin/moderacao";
+}
+
 export class TrustEventService {
+  private static async getTrustEventById(eventId: string): Promise<TrustEvent | null> {
+    try {
+      const { data, error } = await (supabase as any)
+        .from(TRUST_EVENTS_TABLE)
+        .select("*")
+        .eq("id", eventId)
+        .maybeSingle();
+      if (error || !data) return null;
+      return mapTrustEvent(data);
+    } catch {
+      return null;
+    }
+  }
+
+  private static async getUserIdForProfile(profileId?: string | null): Promise<string | null> {
+    if (!profileId) return null;
+    try {
+      const profile = await profileService.getProfileById(profileId);
+      return typeof profile?.user_id === "string" ? profile.user_id : null;
+    } catch {
+      return null;
+    }
+  }
+
+  private static async notifyTrustEventCreated(event: TrustEvent): Promise<void> {
+    const [subjectUserId, actorUserId] = await Promise.all([
+      this.getUserIdForProfile(event.subject_profile_id),
+      this.getUserIdForProfile(event.actor_profile_id),
+    ]);
+
+    const baseMetadata = {
+      source: "trust_event",
+      trust_event_id: event.id,
+      context_type: event.context_type,
+      context_id: event.context_id,
+      event_type: event.event_type,
+      reason_code: event.reason_code,
+      severity: event.severity,
+      status: event.status,
+    };
+
+    if (subjectUserId) {
+      await NotificationService.createNotification({
+        user_id: subjectUserId,
+        type: event.severity === "critical" || event.severity === "high" ? "warning" : "info",
+        category: "system",
+        title: "Evento de confianca registrado",
+        message:
+          "Um evento operacional foi registrado no seu perfil e pode impactar prioridade de chamados.",
+        action_url: trustContextActionUrl(event),
+        action_label: "Ver contexto",
+        metadata: { ...baseMetadata, audience: "subject" },
+      });
+    }
+
+    if (actorUserId && actorUserId !== subjectUserId) {
+      await NotificationService.createNotification({
+        user_id: actorUserId,
+        type: "info",
+        category: "system",
+        title: "Feedback registrado",
+        message: "Seu feedback operacional foi recebido para analise administrativa.",
+        action_url: trustContextActionUrl(event),
+        action_label: "Ver contexto",
+        metadata: { ...baseMetadata, audience: "actor" },
+      });
+    }
+  }
+
+  private static async notifyTrustAdminAction(action: TrustAdminAction): Promise<void> {
+    const [subjectUserId, adminUserId] = await Promise.all([
+      this.getUserIdForProfile(action.subject_profile_id),
+      this.getUserIdForProfile(action.applied_by_profile_id),
+    ]);
+
+    const linkedEvent = action.trust_event_id
+      ? await this.getTrustEventById(action.trust_event_id)
+      : null;
+    const subjectActionUrl = linkedEvent ? trustContextActionUrl(linkedEvent) : "/perfil";
+    const adminActionUrl = "/admin/moderacao";
+    const metadata = {
+      source: "trust_admin_action",
+      trust_admin_action_id: action.id,
+      trust_event_id: action.trust_event_id,
+      subject_profile_id: action.subject_profile_id,
+      subject_role: action.subject_role,
+      action_type: action.action_type,
+    };
+
+    if (subjectUserId) {
+      await NotificationService.createNotification({
+        user_id: subjectUserId,
+        type: action.action_type === TRUST_ADMIN_ACTION_TYPES.CLEAR_RESTRICTION ? "success" : "warning",
+        category: "system",
+        title: "Atualizacao administrativa de confianca",
+        message:
+          action.action_type === TRUST_ADMIN_ACTION_TYPES.CLEAR_RESTRICTION
+            ? "Sua restricao operacional foi removida."
+            : "Uma acao administrativa foi aplicada no seu perfil.",
+        action_url: subjectActionUrl,
+        action_label: "Ver contexto",
+        metadata: { ...metadata, audience: "subject" },
+      });
+    }
+
+    if (adminUserId && adminUserId !== subjectUserId) {
+      await NotificationService.createNotification({
+        user_id: adminUserId,
+        type: "success",
+        category: "system",
+        title: "Acao administrativa aplicada",
+        message: "A acao de confianca foi registrada com sucesso no SSOT.",
+        action_url: adminActionUrl,
+        action_label: "Ver fila",
+        metadata: { ...metadata, audience: "admin" },
+      });
+    }
+  }
+
   static async createEvent(input: CreateTrustEventInput): Promise<{
     data: TrustEvent | null;
     error: string | null;
@@ -119,7 +258,15 @@ export class TrustEventService {
         .single();
 
       if (error) return { data: null, error: error.message };
-      return { data: mapTrustEvent(data), error: null };
+      const createdEvent = mapTrustEvent(data);
+      await this.notifyTrustEventCreated(createdEvent).catch((notifyError) => {
+        logger.warn("[TrustEventService] notifyTrustEventCreated", {
+          trust_event_id: createdEvent.id,
+          error:
+            notifyError instanceof Error ? notifyError.message : String(notifyError),
+        });
+      });
+      return { data: createdEvent, error: null };
     } catch (error) {
       const message = toErrorMessage(error);
       logger.error("[TrustEventService] createEvent", error as Error, input);
@@ -183,7 +330,15 @@ export class TrustEventService {
       const { data, error } = await mutation;
 
       if (error) return { data: null, error: error.message };
-      return { data: mapTrustEvent(data), error: null };
+      const mapped = mapTrustEvent(data);
+      await this.notifyTrustEventCreated(mapped).catch((notifyError) => {
+        logger.warn("[TrustEventService] notifyTrustEventCreated", {
+          trust_event_id: mapped.id,
+          error:
+            notifyError instanceof Error ? notifyError.message : String(notifyError),
+        });
+      });
+      return { data: mapped, error: null };
     } catch (error) {
       const message = toErrorMessage(error);
       logger.error("[TrustEventService] upsertOperationalFeedback", error as Error, input);
@@ -404,7 +559,15 @@ export class TrustEventService {
         });
       }
 
-      return { data: mapTrustAdminAction(data), error: null };
+      const adminAction = mapTrustAdminAction(data);
+      await this.notifyTrustAdminAction(adminAction).catch((notifyError) => {
+        logger.warn("[TrustEventService] notifyTrustAdminAction", {
+          trust_admin_action_id: adminAction.id,
+          error:
+            notifyError instanceof Error ? notifyError.message : String(notifyError),
+        });
+      });
+      return { data: adminAction, error: null };
     } catch (error) {
       const message = toErrorMessage(error);
       logger.error("[TrustEventService] applyAdminAction", error as Error, input);

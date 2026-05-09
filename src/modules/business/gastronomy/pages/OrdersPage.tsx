@@ -5,6 +5,8 @@
 import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Package, RefreshCw } from 'lucide-react';
+import { formatDistanceToNowStrict } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 import { useOrders } from '../hooks';
 import { OrderCard } from '../components/orders/OrderCard';
 import { OrderStatsWidget } from '../components/orders/OrderStatsWidget';
@@ -25,7 +27,7 @@ export default function OrdersPage() {
   const navigate = useNavigate();
   const [statusFilter, setStatusFilter] = useState<OrderStatus | 'all'>('all');
 
-  const { orders, isLoading, refetch } = useOrders(
+  const { orders, isLoading, refetch, isRealtimeConnected, lastRealtimeEventAt } = useOrders(
     businessId!,
     statusFilter !== 'all' ? { status: statusFilter } : undefined,
   );
@@ -53,6 +55,25 @@ export default function OrdersPage() {
           <p className="text-muted-foreground mt-2">
             Acompanhe fila, preparo, entrega e finalizacao dos pedidos.
           </p>
+          <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">
+            <span
+              className={`inline-flex items-center gap-1 rounded-full border px-2 py-1 ${
+                isRealtimeConnected ? 'border-emerald-300 text-emerald-700' : 'border-amber-300 text-amber-700'
+              }`}
+            >
+              <span className={`h-1.5 w-1.5 rounded-full ${isRealtimeConnected ? 'bg-emerald-500' : 'bg-amber-500'}`} />
+              {isRealtimeConnected ? 'Tempo real ativo' : 'Reconectando tempo real'}
+            </span>
+            {lastRealtimeEventAt && (
+              <span className="text-muted-foreground">
+                Ultima atualizacao ha{' '}
+                {formatDistanceToNowStrict(new Date(lastRealtimeEventAt), {
+                  addSuffix: false,
+                  locale: ptBR,
+                })}
+              </span>
+            )}
+          </div>
         </div>
         <Button onClick={() => refetch()} disabled={isLoading} className="w-full sm:w-auto">
           <RefreshCw className={`w-4 h-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />

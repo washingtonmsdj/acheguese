@@ -42,6 +42,8 @@ describe("gastronomy operational SSOT flow", () => {
     expect(orderDetailsHookSource).toContain("gastronomy-order:${orderId}");
     expect(orderDetailsHookSource).toContain("filter: `id=eq.${orderId}`");
     expect(orderDetailsHookSource).toContain("filter: `order_id=eq.${orderId}`");
+    expect(ordersHookSource).not.toContain("refetchInterval:");
+    expect(orderDetailsHookSource).not.toContain("refetchInterval:");
   });
 
   it("uses the canonical review service and private trust SSOT after delivery", () => {
@@ -58,6 +60,28 @@ describe("gastronomy operational SSOT flow", () => {
     expect(panelSource).not.toContain('.from("reviews")');
     expect(panelSource).not.toContain(".from('trust_events')");
     expect(panelSource).not.toContain('.from("trust_events")');
+  });
+
+  it("keeps trust notifications with canonical audience URLs", () => {
+    const trustSource = readProjectFile("src/core/trust/services/TrustEventService.ts");
+
+    expect(trustSource).toContain("const subjectActionUrl = linkedEvent ? trustContextActionUrl(linkedEvent) : \"/perfil\"");
+    expect(trustSource).toContain("const adminActionUrl = \"/admin/moderacao\"");
+    expect(trustSource).toContain("action_url: subjectActionUrl");
+    expect(trustSource).toContain("action_url: adminActionUrl");
+    expect(trustSource).toContain("action_label: \"Ver contexto\"");
+    expect(trustSource).toContain("action_label: \"Ver fila\"");
+  });
+
+  it("enforces delivery eligibility check before creating delivery orders", () => {
+    const checkoutHookSource = readProjectFile(
+      "src/modules/business/gastronomy/hooks/useGastronomyCheckout.ts",
+    );
+
+    expect(checkoutHookSource).toContain("DeliveryAreaService.checkEligibility");
+    expect(checkoutHookSource).toContain("if (!eligibilityResult.data.is_eligible)");
+    expect(checkoutHookSource).toContain("Este endereco esta fora da area de entrega deste estabelecimento.");
+    expect(checkoutHookSource).toContain("if (input.business.gastronomy_profile.delivery_enabled)");
   });
 
   it("keeps merchant-only order operations out of the public customer order route", () => {

@@ -18,6 +18,7 @@ import { useGastronomyCart, useGastronomyCheckout } from "../hooks";
 import type { GastronomyCheckoutOrderRecord } from "../services/GastronomyCheckoutService";
 import type { GastronomyBusiness } from "../types/gastronomy";
 import type { CartItem } from "../types/menu";
+import { readStoredDeliveryDestination } from "../utils/deliveryDestination";
 
 interface Props {
   business: GastronomyBusiness;
@@ -112,8 +113,30 @@ export function GastronomyCheckoutSheet({
   const [paymentMethod, setPaymentMethod] = useState<string>("pix");
   const [customerNotes, setCustomerNotes] = useState("");
 
+  const deliveryAddress = useMemo(() => {
+    const destination = readStoredDeliveryDestination();
+    if (!destination) {
+      return undefined;
+    }
+
+    return {
+      id: `destination:${destination.source}`,
+      lat: destination.latitude,
+      lng: destination.longitude,
+      recipient_name: undefined,
+      phone: undefined,
+      label: destination.label,
+    };
+  }, []);
+
+  const requiresDeliveryDestination = business.gastronomy_profile.delivery_enabled;
+  const hasDeliveryDestination = Boolean(deliveryAddress);
   const isCheckoutDisabled =
-    !hasCart || !minimumOrderReached || isSubmitting || !hasActiveProfile;
+    !hasCart ||
+    !minimumOrderReached ||
+    isSubmitting ||
+    !hasActiveProfile ||
+    (requiresDeliveryDestination && !hasDeliveryDestination);
 
   const minimumOrderLabel = useMemo(() => {
     if (minimumOrderRemaining <= 0) return null;
@@ -127,6 +150,7 @@ export function GastronomyCheckoutSheet({
         cart,
         payment_method: paymentMethod,
         notes: customerNotes.trim() || undefined,
+        deliveryAddress,
       });
 
       onOrderCreated?.(order);
@@ -254,6 +278,19 @@ export function GastronomyCheckoutSheet({
           </section>
 
           <section className="space-y-3">
+            {requiresDeliveryDestination && (
+              <div className="rounded-xl border bg-background p-3">
+                <p className="text-sm font-medium">Destino de entrega</p>
+                {hasDeliveryDestination ? (
+                  <p className="mt-1 text-sm text-muted-foreground">{deliveryAddress?.label}</p>
+                ) : (
+                  <p className="mt-1 text-sm text-amber-700">
+                    Defina um destino de entrega na pagina de gastronomia antes de confirmar o pedido.
+                  </p>
+                )}
+              </div>
+            )}
+
             <h3 className="font-semibold">Observacoes do pedido</h3>
             <Textarea
               placeholder="Ex.: interfone 12, troco para 100, entregar na portaria."
@@ -286,6 +323,11 @@ export function GastronomyCheckoutSheet({
             {!hasActiveProfile && (
               <p className="mt-3 text-sm text-amber-700">
                 Selecione um perfil ativo para concluir o pedido.
+              </p>
+            )}
+            {requiresDeliveryDestination && !hasDeliveryDestination && (
+              <p className="mt-3 text-sm text-amber-700">
+                Sem destino de entrega valido, o checkout de delivery permanece bloqueado.
               </p>
             )}
           </section>

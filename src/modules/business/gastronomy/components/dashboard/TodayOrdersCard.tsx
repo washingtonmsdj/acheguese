@@ -1,5 +1,5 @@
-/**
- * TodayOrdersCard — Card de pedidos do dia
+﻿/**
+ * TodayOrdersCard - Card de pedidos do dia
  *
  * Mostra resumo dos pedidos de hoje.
  * SSOT: Usa useOrders
@@ -19,7 +19,7 @@ interface TodayOrdersCardProps {
 
 export function TodayOrdersCard({ businessId }: TodayOrdersCardProps) {
   const today = new Date();
-  const { orders, isLoading } = useOrders(businessId, {
+  const { orders, isLoading, isRealtimeConnected } = useOrders(businessId, {
     date_from: startOfDay(today).toISOString(),
     date_to: endOfDay(today).toISOString(),
   });
@@ -39,9 +39,8 @@ export function TodayOrdersCard({ businessId }: TodayOrdersCardProps) {
   const preparingOrders = orders?.filter((o) => o.status === 'preparing').length ?? 0;
   const completedOrders = orders?.filter((o) => o.status === 'completed').length ?? 0;
 
-  const totalRevenue = orders
-    ?.filter((o) => o.status === 'completed')
-    .reduce((sum, o) => sum + o.total, 0) ?? 0;
+  const totalRevenue =
+    orders?.filter((o) => o.status === 'completed').reduce((sum, o) => sum + o.total, 0) ?? 0;
 
   return (
     <Card>
@@ -50,15 +49,16 @@ export function TodayOrdersCard({ businessId }: TodayOrdersCardProps) {
           <Package className="w-5 h-5" />
           Pedidos de Hoje
         </CardTitle>
+        <p className={`text-xs ${isRealtimeConnected ? 'text-emerald-700' : 'text-amber-700'}`}>
+          {isRealtimeConnected ? 'Atualizacao automatica ativa' : 'Reconectando atualizacao automatica'}
+        </p>
       </CardHeader>
       <CardContent className="space-y-4">
-        {/* Total */}
         <div className="text-center p-4 bg-muted rounded-lg">
           <p className="text-4xl font-bold">{totalOrders}</p>
           <p className="text-sm text-muted-foreground">pedidos recebidos</p>
         </div>
 
-        {/* Breakdown */}
         <div className="grid grid-cols-3 gap-4 text-center">
           <div>
             <p className="text-2xl font-bold text-yellow-600">{pendingOrders}</p>
@@ -70,11 +70,10 @@ export function TodayOrdersCard({ businessId }: TodayOrdersCardProps) {
           </div>
           <div>
             <p className="text-2xl font-bold text-green-600">{completedOrders}</p>
-            <p className="text-xs text-muted-foreground">Concluídos</p>
+            <p className="text-xs text-muted-foreground">Concluidos</p>
           </div>
         </div>
 
-        {/* Receita */}
         <div className="pt-4 border-t">
           <div className="flex items-center justify-between">
             <span className="text-sm text-muted-foreground">Receita do dia:</span>
@@ -82,7 +81,6 @@ export function TodayOrdersCard({ businessId }: TodayOrdersCardProps) {
           </div>
         </div>
 
-        {/* Link para página de pedidos */}
         <Link to={businessManagementRoutes.gastronomyPedidos(businessId)}>
           <Button variant="outline" className="w-full">
             Ver Todos os Pedidos

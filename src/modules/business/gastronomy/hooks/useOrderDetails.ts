@@ -4,7 +4,7 @@
  * SSOT: Consome OrderService do core/orders
  */
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { OrderService } from '@/modules/business/gastronomy/services/OrderService';
 import { toast } from 'sonner';
@@ -12,6 +12,7 @@ import { supabase } from '@/integrations/supabase';
 
 export function useOrderDetails(orderId: string) {
   const queryClient = useQueryClient();
+  const [isRealtimeConnected, setIsRealtimeConnected] = useState(false);
 
   // Query: Buscar pedido completo
   const { data: order, isLoading, error, refetch } = useQuery({
@@ -22,7 +23,6 @@ export function useOrderDetails(orderId: string) {
       return result.data;
     },
     enabled: !!orderId,
-    refetchInterval: 30000,
   });
 
   useEffect(() => {
@@ -54,9 +54,12 @@ export function useOrderDetails(orderId: string) {
         },
         invalidateOrder,
       )
-      .subscribe();
+      .subscribe((status) => {
+        setIsRealtimeConnected(status === 'SUBSCRIBED');
+      });
 
     return () => {
+      setIsRealtimeConnected(false);
       void supabase.removeChannel(channel);
     };
   }, [orderId, queryClient]);
@@ -84,6 +87,7 @@ export function useOrderDetails(orderId: string) {
     refetch,
     updateNotes: updateNotesMutation.mutate,
     isUpdatingNotes: updateNotesMutation.isPending,
+    isRealtimeConnected,
   };
 }
 

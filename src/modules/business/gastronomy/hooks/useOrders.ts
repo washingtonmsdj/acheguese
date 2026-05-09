@@ -4,7 +4,7 @@
  * SSOT: Consome OrderService do core/orders
  */
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { OrderService, type Order, type OrderStatus, type OrderType } from '@/modules/business/gastronomy/services/OrderService';
 import { toast } from 'sonner';
@@ -23,6 +23,8 @@ export function useOrders(businessId: string, filters?: UseOrdersFilters) {
   const queryClient = useQueryClient();
   const { activeProfile } = useSessionContext();
   const ordersQueryKey = ['orders', businessId, filters] as const;
+  const [isRealtimeConnected, setIsRealtimeConnected] = useState(false);
+  const [lastRealtimeEventAt, setLastRealtimeEventAt] = useState<string | null>(null);
 
   // Query: Listar pedidos
   const { data: orders, isLoading, error, refetch } = useQuery({
@@ -33,13 +35,13 @@ export function useOrders(businessId: string, filters?: UseOrdersFilters) {
       return result.data || [];
     },
     enabled: !!businessId,
-    refetchInterval: 30000,
   });
 
   useEffect(() => {
     if (!businessId) return;
 
     const invalidateOrders = () => {
+      setLastRealtimeEventAt(new Date().toISOString());
       void queryClient.invalidateQueries({ queryKey: ['orders', businessId] });
       void queryClient.invalidateQueries({ queryKey: ['order-stats', businessId] });
     };
@@ -65,9 +67,12 @@ export function useOrders(businessId: string, filters?: UseOrdersFilters) {
         },
         invalidateOrders,
       )
-      .subscribe();
+      .subscribe((status) => {
+        setIsRealtimeConnected(status === 'SUBSCRIBED');
+      });
 
     return () => {
+      setIsRealtimeConnected(false);
       void supabase.removeChannel(channel);
     };
   }, [businessId, queryClient]);
@@ -141,6 +146,8 @@ export function useOrders(businessId: string, filters?: UseOrdersFilters) {
     isCreating: createOrderMutation.isPending,
     isUpdatingStatus: updateStatusMutation.isPending,
     isCancelling: cancelOrderMutation.isPending,
+    isRealtimeConnected,
+    lastRealtimeEventAt,
   };
 }
 

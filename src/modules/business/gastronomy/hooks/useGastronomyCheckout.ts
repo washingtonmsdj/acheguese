@@ -1,22 +1,29 @@
-import { useMutation } from "@tanstack/react-query";
+﻿import { useMutation } from "@tanstack/react-query";
 import { useShallow } from "zustand/react/shallow";
 
+import { locationGeocodingService } from "@/core/location/services/LocationGeocodingService";
 import { useSessionContext } from "@/core/session";
+import { useMotoboy } from "@/modules/mobility/hooks/useMotoboy";
+import { toast } from "sonner";
 import { useGastronomyCartStore } from "../cart/useGastronomyCartStore";
+import { DeliveryAreaService } from "../services/DeliveryAreaService";
 import {
   GastronomyCheckoutService,
   type GastronomyCheckoutOrderRecord,
 } from "../services/GastronomyCheckoutService";
 import type { GastronomyBusiness } from "../types/gastronomy";
 import type { Cart } from "../types/menu";
-import { useMotoboy } from "@/modules/mobility/hooks/useMotoboy";
 import { logger } from "@/shared/utils/logger";
-import { toast } from "sonner";
 
 export interface DeliveryAddress {
   id: string;
   lat: number;
   lng: number;
+  label?: string;
+  locationId?: string;
+  neighborhood?: string;
+  city?: string;
+  state?: string;
   recipient_name?: string;
   phone?: string;
 }
@@ -29,16 +36,54 @@ export interface GastronomyCheckoutInput {
   deliveryAddress?: DeliveryAddress;
 }
 
+async function resolveDeliveryLocationInfo(deliveryAddress: DeliveryAddress): Promise<{
+  neighborhood: string;
+  city: string;
+  state: string;
+}> {
+  if (deliveryAddress.neighborhood && deliveryAddress.city && deliveryAddress.state) {
+    return {
+      neighborhood: deliveryAddress.neighborhood,
+      city: deliveryAddress.city,
+      state: deliveryAddress.state,
+    };
+  }
+
+  const reverse = await locationGeocodingService.reverseGeocode({
+    latitude: deliveryAddress.lat,
+    longitude: deliveryAddress.lng,
+    detailLevel: "full",
+  });
+
+  if (!reverse) {
+    throw new Error(
+      "Nao foi possivel validar o endereco de entrega. Informe um endereco mais completo.",
+    );
+  }
+
+  const info = locationGeocodingService.extractLocationInfo(reverse);
+  if (!info.neighborhood || !info.city || !info.state) {
+    throw new Error(
+      "Endereco sem bairro, cidade e estado validos para calcular area de entrega.",
+    );
+  }
+
+  return {
+    neighborhood: info.neighborhood,
+    city: info.city,
+    state: info.state,
+  };
+}
+
 export function useGastronomyCheckout() {
   const { activeProfile } = useSessionContext();
   const clearCart = useGastronomyCartStore(
     useShallow((state) => state.clearCart),
   );
 
-  // Hook de mobilidade para criar ride_request
   const motoboy = useMotoboy({
-    sourceType: 'gastronomy',
-    sourceId: undefined, // Será definido por pedido
+    sourceType: "gastronomy",
+    sourceId: undefined,
   });
 
   const mutation = useMutation({
@@ -53,7 +98,44 @@ export function useGastronomyCheckout() {
         throw new Error("O carrinho precisa ter pelo menos um item.");
       }
 
-      // 1. Criar pedido no SSOT (orders table)
+      let deliveryLocationInfo:
+        | { neighborhood: string; city: string; state: string }
+        | null = null;
+
+      if (input.business.gastronomy_profile.delivery_enabled) {
+        if (!input.deliveryAddress) {
+          throw new Error(
+            "Defina um destino de entrega valido antes de concluir o pedido.",
+          );
+        }
+
+        deliveryLocationInfo = await resolveDeliveryLocationInfo(
+          input.deliveryAddress,
+        );
+
+        const eligibilityResult = await DeliveryAreaService.checkEligibility(
+          input.business.business_data_id,
+          deliveryLocationInfo.neighborhood,
+          deliveryLocationInfo.city,
+          deliveryLocationInfo.state,
+          input.cart.total,
+        );
+
+        if (eligibilityResult.error || !eligibilityResult.data) {
+          throw new Error(
+            eligibilityResult.error ||
+              "Nao foi possivel validar sua area de entrega no momento.",
+          );
+        }
+
+        if (!eligibilityResult.data.is_eligible) {
+          throw new Error(
+            eligibilityResult.data.message ||
+              "Este endereco esta fora da area de entrega deste estabelecimento.",
+          );
+        }
+      }
+
       const order = await GastronomyCheckoutService.createOrder({
         customer_profile_id: activeProfile.id,
         actor_profile_id: activeProfile.id,
@@ -73,90 +155,90 @@ export function useGastronomyCheckout() {
               lng: input.deliveryAddress.lng,
               recipient_name: input.deliveryAddress.recipient_name,
               phone: input.deliveryAddress.phone,
+              neighborhood: deliveryLocationInfo?.neighborhood,
+              city: deliveryLocationInfo?.city,
+              state: deliveryLocationInfo?.state,
             }
           : undefined,
       });
 
-      logger.info('[useGastronomyCheckout] Pedido criado', {
+      logger.info("[useGastronomyCheckout] Pedido criado", {
         order_id: order.id,
         business_id: input.business.business_data_id,
         delivery_enabled: input.business.gastronomy_profile.delivery_enabled,
       });
 
-      // 2. Se delivery habilitado, criar ride_request para rastreamento GPS
-      if (input.business.gastronomy_profile.delivery_enabled && input.deliveryAddress) {
+      if (
+        input.business.gastronomy_profile.delivery_enabled &&
+        input.deliveryAddress &&
+        input.business.address_id &&
+        input.business.location_id
+      ) {
         try {
-          // Validar dados necessários
-          if (!input.business.address_id) {
-            throw new Error('Estabelecimento sem address_id configurado');
-          }
-          if (!input.business.location_id) {
-            throw new Error('Estabelecimento sem location_id configurado');
-          }
           if (!input.business.lat || !input.business.lng) {
-            throw new Error('Estabelecimento sem coordenadas configuradas');
+            throw new Error("Estabelecimento sem coordenadas configuradas");
           }
 
-          logger.info('[useGastronomyCheckout] Criando ride_request para rastreamento', {
+          logger.info("[useGastronomyCheckout] Criando ride_request para rastreamento", {
             order_id: order.id,
             pickup: { lat: input.business.lat, lng: input.business.lng },
             dropoff: { lat: input.deliveryAddress.lat, lng: input.deliveryAddress.lng },
           });
 
-          // Criar ride_request (rastreamento GPS)
           const deliveryResult = await motoboy.requestDelivery({
-            // Endereços canônicos
             pickupAddressId: input.business.address_id,
             dropoffAddressId: input.deliveryAddress.id,
             pickupLocationId: input.business.location_id,
-            dropoffLocationId: input.business.location_id, // Mesma cidade
-            
-            // Coordenadas (obrigatórias para pricing e rota)
+            dropoffLocationId:
+              input.deliveryAddress.locationId || input.business.location_id,
+
             originLat: input.business.lat,
             originLng: input.business.lng,
             destinationLat: input.deliveryAddress.lat,
             destinationLng: input.deliveryAddress.lng,
-            
-            // Dados da entrega
-            recipientName: input.deliveryAddress.recipient_name || activeProfile.full_name || 'Cliente',
+
+            recipientName:
+              input.deliveryAddress.recipient_name ||
+              activeProfile.full_name ||
+              "Cliente",
             recipientPhone: input.deliveryAddress.phone || activeProfile.phone,
             deliveryNotes: input.notes,
             packageDescription: `Pedido #${order.id} - ${input.business.name}`,
-            packageSize: 'medium',
-            
-            // Origem da solicitação
-            sourceType: 'gastronomy',
+            packageSize: "medium",
+
+            sourceType: "gastronomy",
             sourceId: order.id,
             authorizationSourceId: input.business.business_data_id,
-            
-            // Pagamento
+
             paymentMethod: input.payment_method,
           });
 
           if (deliveryResult.success) {
-            logger.info('[useGastronomyCheckout] Rastreamento GPS ativado com sucesso', {
+            logger.info("[useGastronomyCheckout] Rastreamento GPS ativado com sucesso", {
               order_id: order.id,
               ride_id: deliveryResult.data?.id,
             });
-            
-            toast.success('Pedido criado! Buscando entregador...');
+
+            toast.success("Pedido criado! Buscando entregador...");
           } else {
-            // Não falhar o pedido se rastreamento falhar
-            logger.warn('[useGastronomyCheckout] Rastreamento não disponível', {
+            logger.warn("[useGastronomyCheckout] Rastreamento nao disponivel", {
               order_id: order.id,
               error: deliveryResult.error,
             });
-            
-            toast.warning('Pedido criado, mas rastreamento não disponível no momento');
+
+            toast.warning("Pedido criado, mas rastreamento nao disponivel no momento");
           }
         } catch (deliveryError) {
-          // Não falhar o pedido se rastreamento falhar
-          logger.error('[useGastronomyCheckout] Erro ao ativar rastreamento', deliveryError as Error, {
-            order_id: order.id,
-            business_id: input.business.business_data_id,
-          });
-          
-          toast.warning('Pedido criado, mas rastreamento não disponível no momento');
+          logger.error(
+            "[useGastronomyCheckout] Erro ao ativar rastreamento",
+            deliveryError as Error,
+            {
+              order_id: order.id,
+              business_id: input.business.business_data_id,
+            },
+          );
+
+          toast.warning("Pedido criado, mas rastreamento nao disponivel no momento");
         }
       }
 
