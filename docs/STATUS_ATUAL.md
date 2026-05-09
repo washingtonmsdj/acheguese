@@ -292,3 +292,16 @@ Avancar para fechamento total da Fase 3 (sem abrir Fase 4):
 - `npm test -- src/modules/business/gastronomy/components/GastronomyCheckoutSheet.spec.tsx`: passou em 2026-05-09 com `2/2`.
 - `npm run typecheck`: passou em 2026-05-09.
 - `npm run lint`: passou em 2026-05-09.
+
+## Atualizacao 2026-05-09 (Mobilidade E2E Operacional Dedicada)
+
+- Nova suite autenticada de mobilidade criada: `tests/e2e/mobility-operational.spec.ts`.
+- Cobertura adicionada:
+  - motorista em `/central/motorista/corridas` com readiness de layout e ausencia de lock transitorio;
+  - motoboy em `/central/motoboy/entregas` com dois caminhos validos: operacao ativa ou onboarding canonico (`/central/motoboy/cadastro`).
+- Novo script: `npm run test:e2e:mobility-operational`.
+- `npm run test:e2e:operations` passou a incluir a suite de mobilidade dedicada.
+- Validacoes executadas:
+  - `npm run test:e2e:mobility-operational`: passou em 2026-05-09 com `2/2`.
+  - `npm run typecheck`: passou em 2026-05-09.
+  - `npm run lint`: passou em 2026-05-09.
