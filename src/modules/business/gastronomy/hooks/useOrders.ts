@@ -4,10 +4,12 @@
  * SSOT: Consome OrderService do core/orders
  */
 
+import { useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { OrderService, type Order, type OrderStatus, type OrderType } from '@/modules/business/gastronomy/services/OrderService';
 import { toast } from 'sonner';
 import { useSessionContext } from '@/core/session';
+import { supabase } from '@/integrations/supabase';
 
 interface UseOrdersFilters {
   status?: OrderStatus;
@@ -20,18 +22,55 @@ interface UseOrdersFilters {
 export function useOrders(businessId: string, filters?: UseOrdersFilters) {
   const queryClient = useQueryClient();
   const { activeProfile } = useSessionContext();
+  const ordersQueryKey = ['orders', businessId, filters] as const;
 
   // Query: Listar pedidos
   const { data: orders, isLoading, error, refetch } = useQuery({
-    queryKey: ['orders', businessId, filters],
+    queryKey: ordersQueryKey,
     queryFn: async () => {
       const result = await OrderService.listOrders(businessId, filters);
       if (result.error) throw new Error(result.error);
       return result.data || [];
     },
     enabled: !!businessId,
-    refetchInterval: 30000, // Refetch a cada 30 segundos
+    refetchInterval: 30000,
   });
+
+  useEffect(() => {
+    if (!businessId) return;
+
+    const invalidateOrders = () => {
+      void queryClient.invalidateQueries({ queryKey: ['orders', businessId] });
+      void queryClient.invalidateQueries({ queryKey: ['order-stats', businessId] });
+    };
+
+    const channel = supabase
+      .channel(`gastronomy-orders:${businessId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'orders',
+          filter: `source_id=eq.${businessId}`,
+        },
+        invalidateOrders,
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'order_timeline_events',
+        },
+        invalidateOrders,
+      )
+      .subscribe();
+
+    return () => {
+      void supabase.removeChannel(channel);
+    };
+  }, [businessId, queryClient]);
 
   // Mutation: Criar pedido
   const createOrderMutation = useMutation({

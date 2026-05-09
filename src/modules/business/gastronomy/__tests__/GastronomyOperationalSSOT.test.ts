@@ -22,6 +22,26 @@ describe("gastronomy operational SSOT flow", () => {
     expect(notificationSource).toContain("customerOrderUrl");
     expect(notificationSource).toContain("`/gastronomia/pedidos/${order.id}`");
     expect(notificationSource).toContain('actionLabel: customerActionUrl ? "Abrir pedido" : null');
+    expect(notificationSource).toContain('actionUrl: "/central/motoboy/entregas"');
+    expect(notificationSource).toContain("dedupeNotifications");
+    expect(notificationSource).toContain("event_label");
+  });
+
+  it("keeps order screens subscribed to canonical order and timeline updates", () => {
+    const ordersHookSource = readProjectFile(
+      "src/modules/business/gastronomy/hooks/useOrders.ts",
+    );
+    const orderDetailsHookSource = readProjectFile(
+      "src/modules/business/gastronomy/hooks/useOrderDetails.ts",
+    );
+
+    expect(ordersHookSource).toContain("gastronomy-orders:${businessId}");
+    expect(ordersHookSource).toContain("table: 'orders'");
+    expect(ordersHookSource).toContain("filter: `source_id=eq.${businessId}`");
+    expect(ordersHookSource).toContain("table: 'order_timeline_events'");
+    expect(orderDetailsHookSource).toContain("gastronomy-order:${orderId}");
+    expect(orderDetailsHookSource).toContain("filter: `id=eq.${orderId}`");
+    expect(orderDetailsHookSource).toContain("filter: `order_id=eq.${orderId}`");
   });
 
   it("uses the canonical review service and private trust SSOT after delivery", () => {

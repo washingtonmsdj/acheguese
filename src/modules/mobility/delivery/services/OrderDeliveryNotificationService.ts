@@ -6,6 +6,7 @@ import { LOGISTICS_STATUS, type LogisticsStatus } from "../logistics/types";
 
 interface NotificationPayload {
   userId: string;
+  audience: "customer" | "merchant" | "courier";
   title: string;
   message: string;
   actionUrl?: string | null;
@@ -46,6 +47,23 @@ const MERCHANT_MESSAGES: Record<LogisticsStatus, string> = {
   [LOGISTICS_STATUS.FAILED]: "Falha registrada na entrega do pedido.",
 };
 
+const COURIER_MESSAGES: Record<LogisticsStatus, string> = {
+  [LOGISTICS_STATUS.PENDING]: "Pedido ainda aguarda operacao da loja.",
+  [LOGISTICS_STATUS.ACCEPTED]: "Pedido aceito pela loja. Acompanhe a fila de entregas.",
+  [LOGISTICS_STATUS.PREPARING]: "Pedido em preparo. Prepare-se para a coleta quando for chamado.",
+  [LOGISTICS_STATUS.READY_FOR_PICKUP]: "Pedido pronto para coleta.",
+  [LOGISTICS_STATUS.PICKED_UP]: "Entrega em rota. Mantenha o cliente informado.",
+  [LOGISTICS_STATUS.DELIVERED]: "Entrega concluida.",
+  [LOGISTICS_STATUS.CANCELED]: "Pedido cancelado. Verifique se ha acao pendente.",
+  [LOGISTICS_STATUS.FAILED]: "Falha de entrega registrada. Revise o incidente no painel.",
+};
+
+const EVENT_LABELS: Record<string, string> = {
+  order_created: "Pedido criado",
+  order_status_changed: "Status atualizado",
+  delivery_proof_attached: "Comprovante anexado",
+};
+
 function orderShortId(orderId: string): string {
   return orderId.slice(0, 8).toUpperCase();
 }
@@ -64,11 +82,26 @@ function customerOrderUrl(order: OrderRecord): string | null {
 function notificationMetadata(order: OrderRecord, event: string): Record<string, unknown> {
   return {
     event,
+    event_label: EVENT_LABELS[event] ?? event,
     order_id: order.id,
     order_status: order.logistics_status,
     source_type: order.source_context.source_type,
     source_id: order.source_context.source_id ?? null,
+    merchant_profile_id: order.merchant_profile_id,
+    customer_profile_id: order.customer_profile_id,
+    courier_profile_id: order.courier_profile_id ?? null,
   };
+}
+
+function dedupeNotifications(notifications: NotificationPayload[]): NotificationPayload[] {
+  const seen = new Set<string>();
+
+  return notifications.filter((notification) => {
+    const key = `${notification.userId}:${notification.audience}:${notification.metadata.event}:${notification.metadata.order_status}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
 }
 
 export class OrderDeliveryNotificationService {
@@ -125,6 +158,7 @@ export class OrderDeliveryNotificationService {
       if (customerUserId) {
         notifications.push({
           userId: customerUserId,
+          audience: "customer",
           title,
           message: CUSTOMER_MESSAGES[status],
           actionUrl: customerActionUrl,
@@ -136,6 +170,7 @@ export class OrderDeliveryNotificationService {
       if (merchantUserId) {
         notifications.push({
           userId: merchantUserId,
+          audience: "merchant",
           title,
           message: MERCHANT_MESSAGES[status],
           actionUrl,
@@ -147,15 +182,20 @@ export class OrderDeliveryNotificationService {
       if (courierUserId && status !== LOGISTICS_STATUS.PENDING) {
         notifications.push({
           userId: courierUserId,
+          audience: "courier",
           title,
-          message: `Status do pedido atualizado: ${STATUS_LABELS[status]}.`,
+          message: COURIER_MESSAGES[status],
           actionUrl: "/central/motoboy/entregas",
           actionLabel: "Abrir entregas",
           metadata: { ...metadata, audience: "courier" },
         });
       }
 
-      await Promise.all(notifications.map((notification) => this.createNotification(notification)));
+      await Promise.all(
+        dedupeNotifications(notifications).map((notification) =>
+          this.createNotification(notification),
+        ),
+      );
     } catch (error) {
       logger.warn("OrderDeliveryNotificationService.notifyOrderStatusChanged", {
         order_id: order.id,

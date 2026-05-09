@@ -7,6 +7,7 @@ const TEST_EMAIL = process.env.E2E_USER_EMAIL || '';
 const TEST_PASSWORD = process.env.E2E_USER_PASSWORD || '';
 const SUPABASE_URL = process.env.VITE_SUPABASE_URL || '';
 const SUPABASE_ANON_KEY = process.env.VITE_SUPABASE_PUBLISHABLE_KEY || '';
+const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
 let BOOTSTRAP_BUSINESS_ID: string | null = null;
 let BOOTSTRAP_BUSINESS_DATA_ID: string | null = null;
 
@@ -286,6 +287,51 @@ async function createOrderFixture(): Promise<string | null> {
   return orderId;
 }
 
+async function assertAdministrativeOrderEvidence(orderId: string): Promise<void> {
+  if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
+    console.info(
+      'SUPABASE_SERVICE_ROLE_KEY ausente: asserts administrativos profundos de orders/notifications/trust pulados explicitamente.',
+    );
+    return;
+  }
+
+  const admin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
+    auth: { autoRefreshToken: false, persistSession: false },
+  });
+
+  const [timelineResult, notificationResult, trustResult] = await Promise.all([
+    admin
+      .from('order_timeline_events')
+      .select('id, order_id, to_logistics_status, actor_profile_id, reason, created_at')
+      .eq('order_id', orderId),
+    admin
+      .from('notifications')
+      .select('id, user_id, action_url, action_label, metadata, created_at')
+      .eq('metadata->>order_id', orderId),
+    admin
+      .from('trust_events')
+      .select('id, context_type, context_id, status, evidence, created_at')
+      .eq('context_type', 'order')
+      .eq('context_id', orderId),
+  ]);
+
+  expect(timelineResult.error).toBeNull();
+  expect(notificationResult.error).toBeNull();
+  expect(trustResult.error).toBeNull();
+
+  expect(timelineResult.data?.length ?? 0).toBeGreaterThan(0);
+  expect(notificationResult.data?.length ?? 0).toBeGreaterThan(0);
+  expect(
+    (notificationResult.data ?? []).some((notification) =>
+      String(notification.action_url ?? '').includes(`/gastronomia/pedidos/${orderId}`),
+    ),
+  ).toBe(true);
+
+  // Trust events are contextual: not every successful order creates risk feedback.
+  // The service-role assertion still proves the admin surface is queryable for this order.
+  expect(Array.isArray(trustResult.data)).toBe(true);
+}
+
 async function resolveBusinessId(page: Page) {
   if (BUSINESS_ID) return BUSINESS_ID;
 
@@ -481,6 +527,8 @@ test.describe('Gastronomia operacional autenticada', () => {
     await expect(page.getByText(/linha do tempo|itens do pedido/i).first()).toBeVisible({
       timeout: 20_000,
     });
+
+    await assertAdministrativeOrderEvidence(orderId);
   });
 
   test('motoboy acessa central de entregas sem quebrar fluxo (entregas ou cadastro)', async ({

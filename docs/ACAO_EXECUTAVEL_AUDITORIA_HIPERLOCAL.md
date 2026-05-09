@@ -4,6 +4,23 @@ Data: 2026-05-06
 Status: documento vivo
 Objetivo: transformar as auditorias em um plano que qualquer IA/agente consiga executar com baixo risco, sem depender do contexto da conversa.
 
+## Atualizacao Operacional - Fase 3
+
+Estado atual:
+
+- Fase 0, Fase 1 e Fase 2 estao validadas pelo gate core.
+- Fase 3 permanece ativa ate fechar Gastronomia/Admin, notificacoes, realtime da loja e area de entrega.
+- Servicos/Profissionais, Marketplace/Classificados e Admin/Moderacao ja possuem baseline P0 validado e devem ser tratados como regressao, nao como proxima frente principal.
+- `SUPABASE_SERVICE_ROLE_KEY` e bloqueio real apenas para asserts administrativos profundos e seeds multi-persona; fluxo funcional autenticado nao deve ser mascarado por skip amplo.
+
+Ordem obrigatoria para a proxima execucao:
+
+1. Gastronomia/Admin e Trust: provar `orders`, `order_timeline_events`, `notifications`, `trust_events` e `trust_admin_actions` quando service role existir.
+2. Gastronomia/Notificacoes: fechar matriz por evento/persona/canal/preferencia.
+3. Gastronomia/Realtime: validar loja, cliente e motoboy acompanhando o mesmo pedido sem reload manual.
+4. Gastronomia/Area de entrega: impedir checkout fora da area com mensagem clara e regra persistida no SSOT.
+5. Browser/mobile: validar cliente, loja, motoboy e admin antes de encerrar a fase.
+
 ## Prompt Mestre Para Outra IA
 
 ```text

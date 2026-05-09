@@ -192,6 +192,14 @@ Plano mestre de execucao por fases: `docs/PLANO_MESTRE_EXECUCAO_INTEGRAL_SSOT.md
 - ReconnectionManager deixou de emitir `warn` para estados transitórios esperados de stale/lost connection; erros reais e limite de reconexao seguem como erro/warning.
 - Validacao do OSRM publico em dev deixou de emitir `warn` quando o provider externo esta indisponivel; em producao a indisponibilidade continua como warning.
 
+## Atualizacao Operacional Da Fase 3
+
+- Fase ativa permanece Gastronomia e delivery integrado; nao abrir nova fase antes do gate.
+- P0 ja validados no gate core: Servicos/Profissionais, Marketplace/Classificados e Admin/Moderacao.
+- P0 ainda abertos na Fase 3: asserts administrativos profundos, matriz de notificacoes, realtime da loja e regras completas de area de entrega.
+- `SUPABASE_SERVICE_ROLE_KEY` e bloqueio real apenas para asserts administrativos/seeds multi-persona; o fluxo funcional autenticado nao deve ser mascarado por skip amplo.
+- Hooks de pedidos de gastronomia agora invalidam `orders` e `order_timeline_events` por realtime Supabase; notificacoes de status de pedido agora carregam audiencia e metadata auditavel.
+
 ## P0 Abertos
 
 - Servicos/Profissionais: validar Central Profissional, resposta, proposta estruturada, aceite e atendimento contratado com perfil real e dados de `professional_data`. âœ…
