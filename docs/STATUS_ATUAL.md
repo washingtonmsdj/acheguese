@@ -1,6 +1,6 @@
 # Status Atual do Projeto
 
-Data: 2026-05-08
+Data: 2026-05-11
 Branch: main
 Ultimo commit base: 0c8701a `Consolida moderacao admin em fila unica e audit log trust`
 
@@ -65,6 +65,10 @@ Ultimo commit base: 0c8701a `Consolida moderacao admin em fila unica e audit log
 - CI SSOT atualizado em 2026-05-08: `.github/workflows/ssot-tests.yml` agora exige `npm run validate:phase:core` no status final do workflow.
 - `npm run validate:phase:core`: reexecutado em 2026-05-08 apos consolidar o gate em uma unica partida Playwright; passou com `46/46` E2E (`SEO + comunidade territorial + central/mobilidade + gastronomia + profissionais`).
 - `npm run validate:phase:core`: reexecutado novamente em 2026-05-08 apos limpar warnings transitorios de reconexao/OSRM e estabilizar o E2E do motoboy; passou com `46/46` E2E.
+- `npx playwright test tests/e2e/gastronomy-operational.spec.ts --project=chromium --reporter=list`: passou em 2026-05-11 com `4/4`.
+- `npm run build`: passou em 2026-05-11.
+- `npm run validate:phase:core`: passou em 2026-05-11 com `52 passed`, `4 skipped` (skips esperados condicionados a credenciais/ambiente administrativo), cobrindo SEO territorial, comunidade social, comunidade territorial, central, gastronomia, profissionais e mobile auth dashboards.
+
 ## Modulos/Fases Concluidos
 
 - Fase 0: Preparacao e baseline.
@@ -215,8 +219,8 @@ Plano mestre de execucao por fases: `docs/PLANO_MESTRE_EXECUCAO_INTEGRAL_SSOT.md
 
 - [CONCLUIDO] Gastronomia: painel realtime de fila da loja.
 - [CONCLUIDO] Gastronomia: validacao visual final do fluxo de elegibilidade de area no checkout (bloqueio sem destino + habilitacao com destino).
-- Mobile/PWA: validar dashboards complexos em telas pequenas.
-- E2E: adicionar specs autenticadas para gastronomia e mobilidade operacional.
+- [CONCLUIDO] Mobile/PWA: validar dashboards complexos autenticados em telas pequenas (core publico + central autenticada em 360px).
+- [CONCLUIDO] E2E: adicionar specs autenticadas para gastronomia e mobilidade operacional.
 
 ## Bloqueios/Riscos
 
@@ -316,3 +320,57 @@ Avancar para fechamento total da Fase 3 (sem abrir Fase 4):
 - Cada cenario valida renderizacao util (main/conteudo) e ausencia de overflow horizontal no documento.
 - O fluxo de navegacao foi endurecido com retry curto de `goto` para reduzir falso negativo por instabilidade transitoria de carregamento.
 - `npx playwright test tests/e2e/mobile-core-layout.spec.ts --project=chromium --reporter=list`: passou em 2026-05-09 com `3/3`.
+
+## Atualizacao 2026-05-09 (Gate Core com Mobile)
+
+- `package.json` ganhou script dedicado `test:e2e:mobile-core-layout` para execucao isolada da suite mobile.
+- `test:e2e:phase-core` passou a incluir `tests/e2e/mobile-core-layout.spec.ts` no gate canonico da fase.
+- `test:e2e:phase-core` agora tambem inclui `tests/e2e/mobile-auth-dashboards.spec.ts` (cobertura autenticada da Central em 360px).
+- Resultado pratico: validacao mobile publica (360px) deixa de ser check avulso e passa a bloquear regressao no pipeline principal (`validate:phase:core`).
+- `npm run validate:phase:core`: reexecutado em 2026-05-09 apos integracao mobile autenticada; passou com `53 passed` e `1 skipped` esperado.
+- `npx playwright test tests/e2e/territorial-seo.spec.ts --project=chromium --reporter=list`: ampliado em 2026-05-09 para blindar tambem `empresas` duplicado na comunidade (bairro + area) com `noindex + canonical publico`; passou com `8/8`.
+- `npm run validate:phase:core`: reexecutado em 2026-05-09 apos ampliacao SEO de `empresas` duplicado na comunidade; passou com `55 passed` e `1 skipped` esperado.
+- `npm run typecheck`: passou em 2026-05-10 apos hardening de tipagem em hooks de comunidade (`useGroupChat`, `useGroups`, `useCommunityRollout` em `core/modules`).
+- `npm run lint`: passou em 2026-05-10 apos o mesmo hardening de tipagem.
+- `npm run validate:phase:core`: reexecutado em 2026-05-10; passou com `55 passed` e `1 skipped` esperado (assert admin profundo condicionado a `SUPABASE_SERVICE_ROLE_KEY`).
+
+## Atualizacao 2026-05-09 (Mobile Autenticado na Central)
+
+- Nova suite E2E: `tests/e2e/mobile-auth-dashboards.spec.ts`.
+- Cobertura autenticada em viewport `360x800`:
+  - `/central`
+  - `/central/empresas`
+  - `/central/motorista/corridas`
+  - `/central/motoboy/entregas` (com fallback canonico de onboarding quando aplicavel).
+- Novo script dedicado: `npm run test:e2e:mobile-auth-dashboards`.
+- Novo agregado mobile: `npm run test:e2e:mobile`.
+- Novo gate de fase mobile: `npm run validate:mobile:phase` (`typecheck` + `lint` + `test:e2e:mobile`).
+- Validacao executada:
+  - `npm run validate:mobile:phase`: passou em 2026-05-09 com `7/7` E2E mobile.
+
+## Atualizacao 2026-05-09 (Hardening de Tipagem - Comunidade Feed)
+
+- `communityBusinessLogic` foi refatorado para remover `as any` repetido em notificacoes de comentario/curtida:
+  - novo helper `getPostOwnerProfileId` centraliza regra de dono do post;
+  - fluxo de notificacao evita duplicidade de fallback e mantem bloqueio de auto-notificacao.
+- Hooks espelho `useUnifiedFeed` em `core` e `modules` foram tipados com derivacao canonicamente ancorada no `PostAdapter`:
+  - arrays de entrada deixaram de usar `any[]`;
+  - filtro por tipo removeu cast `as any` desnecessario.
+- Validacoes executadas apos o hardening:
+  - `npm run typecheck`: passou em 2026-05-09.
+  - `npm run lint`: passou em 2026-05-09.
+  - `npm run validate:phase:core`: passou em 2026-05-09 com `55 passed` e `1 skipped` esperado.
+
+## Atualizacao 2026-05-10 (Hardening de Tipagem - Servicos de Comunidade)
+
+- src/core/community/services/CommunityQAService.ts recebeu tipagem explicita para rows de perguntas/respostas/likes e removeu casts ny no fluxo principal de leitura/criacao/like/mencoes.
+- src/core/community/services/CommunityService.ts teve boundary de grupos tipado (GroupRow, GroupCreateInput) e remoção de casts supabase as any no arquivo.
+- `npm run validate:phase:core`: reexecutado em 2026-05-10 apos limpeza residual de tipagem em `core/modules community`; passou com `55 passed` e `1 skipped` esperado.
+- Limpeza residual concluida em comunidade: `modules/community/services/CommunityRolloutService`, `modules/community/nearby/hooks/useNearbyEntities`, `core/community/components/cards/PostCard` e `core/community/components/Leaderboard` sem `any`/`as any` nesses pontos.
+- `landing/services` hardening em 2026-05-10: `types.ts`, `landing.queries.ts` e `LandingFeaturedService.ts` tipados sem `any` residual no modulo; `npm run validate:phase:core` manteve `55 passed` e `1 skipped` esperado.
+
+
+
+- `npm run validate:phase:core`: revalidado em 2026-05-11 apos ajuste canonico dos scripts Playwright com `node --use-system-ca`; passou com `55 passed` e `1 skipped` esperado, sem erro TLS ao final da suite.
+- `npm run validate:operations:phase`: revalidado em 2026-05-11; passou com `37 passed` e `1 skipped` esperado.
+- `npm run validate:mobile:phase`: revalidado em 2026-05-11; passou com `7 passed`.

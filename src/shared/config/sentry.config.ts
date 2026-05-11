@@ -9,11 +9,19 @@ export interface SentryConfig {
   replaysOnErrorSampleRate: number;
 }
 
+function isAutomatedRuntime(): boolean {
+  if (typeof navigator !== "undefined" && navigator.webdriver) return true;
+  if (typeof window !== "undefined" && "__PLAYWRIGHT__" in window) return true;
+  return false;
+}
+
 export function getSentryConfig(): SentryConfig {
+  const automatedRuntime = isAutomatedRuntime();
+
   return {
     dsn: import.meta.env.VITE_SENTRY_DSN || "",
     environment: import.meta.env.MODE || "development",
-    enabled: import.meta.env.PROD && !!import.meta.env.VITE_SENTRY_DSN,
+    enabled: import.meta.env.PROD && !!import.meta.env.VITE_SENTRY_DSN && !automatedRuntime,
     tracesSampleRate: import.meta.env.PROD ? 0.1 : 1.0,
     replaysSessionSampleRate: 0.1,
     replaysOnErrorSampleRate: 1.0,
