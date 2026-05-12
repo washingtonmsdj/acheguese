@@ -24,6 +24,9 @@ import type { TerritoryFilter } from "@/core/location";
 interface PostgresError {
   code?: string;
   message: string;
+  details?: string;
+  hint?: string;
+  status?: number;
 }
 
 function isPostgresError(error: unknown): error is PostgresError {
@@ -33,7 +36,15 @@ function isPostgresError(error: unknown): error is PostgresError {
 function isTableNotFoundError(error: unknown): boolean {
   if (!isPostgresError(error)) return false;
   const code = error.code;
-  return code === "PGRST204" || code === "PGRST116" || code === "42P01";
+  const message = `${error.message ?? ""} ${error.details ?? ""} ${error.hint ?? ""}`.toLowerCase();
+  const status = typeof error.status === "number" ? error.status : null;
+
+  if (code === "PGRST204" || code === "PGRST116" || code === "42P01") return true;
+  if (status === 404) return true;
+  if (message.includes("relation") && message.includes("does not exist")) return true;
+  if (message.includes("table") && message.includes("not found")) return true;
+  if (message.includes("community_profiles") && message.includes("not")) return true;
+  return false;
 }
 import type { FlexibleMetadata } from "@/shared/types/supabase.types";
 
@@ -246,6 +257,7 @@ const BADGE_REQUIREMENTS = {
 };
 
 class CommunityServiceClass {
+  private leaderboardTableAvailable: boolean | null = null;
   // ============================================================================
   // GRUPOS — Boundary canônico para tabela `groups`
   // ✅ LOTE 7
@@ -790,6 +802,10 @@ class CommunityServiceClass {
     limit: number = 10,
     _city?: string,
   ): Promise<CommunityProfile[]> {
+    if (this.leaderboardTableAvailable === false) {
+      return [];
+    }
+
     try {
       const query = supabase
         .from("community_profiles")
@@ -799,6 +815,11 @@ class CommunityServiceClass {
       const { data, error } = await query.limit(limit);
 
       if (error) {
+        if (isTableNotFoundError(error)) {
+          this.leaderboardTableAvailable = false;
+          logger.warn("[CommunityService] community_profiles not available; returning empty leaderboard");
+          return [];
+        }
         trackError(error, {
           component: "CommunityService",
           action: "getLeaderboard",
@@ -806,8 +827,14 @@ class CommunityServiceClass {
         return [];
       }
 
+      this.leaderboardTableAvailable = true;
       return data || [];
     } catch (error) {
+      if (isTableNotFoundError(error)) {
+        this.leaderboardTableAvailable = false;
+        logger.warn("[CommunityService] community_profiles not available; returning empty leaderboard");
+        return [];
+      }
       trackError(error as Error, {
         component: "CommunityService",
         action: "getLeaderboard",

@@ -80,7 +80,7 @@ const STATIC_PAGES: SitemapURL[] = [
     priority: 0.8,
   },
   {
-    loc: '/comunidade/ba/salvador/area/complexo-do-nordeste-de-amaralina/feed',
+    loc: '/comunidade/ba/salvador/complexo-do-nordeste-de-amaralina/feed',
     changefreq: 'hourly',
     priority: 0.8,
   },

@@ -9,9 +9,11 @@ import {
   ChevronRight,
   Home,
   LayoutList,
+  LocateFixed,
   Map,
   MapPin,
   MessageSquare,
+  Search,
   Tag,
   UtensilsCrossed,
   Users,
@@ -19,8 +21,9 @@ import {
 import { Button } from "@/shared/components/ui/button";
 import { cn } from "@/shared/utils/cn";
 import { prefetchRouteByHref } from "@/app/routes/prefetch";
+import { useCommunityScopeResolver } from "@/core/community/hooks/useCommunityScopeResolver";
 import { TerritorialLayout } from "./TerritorialLayout";
-import { buildCommunityTerritoryUrl } from "@/core/routing/utils/territoryUrls";
+import { buildCommunityTerritoryUrl, buildModuleTerritoryUrl, MODULE_SLUGS } from "@/core/routing/utils/territoryUrls";
 import { resolveSeoPolicy } from "@/core/routing/seo/territorialSeoPolicy";
 
 type CommunityNavItem = {
@@ -33,19 +36,8 @@ type CommunityNavItem = {
 };
 
 const TRANSITION_MS = 720;
-const COMPLEXO_SLUG = "complexo-do-nordeste-de-amaralina";
-
-const COMPLEXO_BAIRROS = [
-  { label: "Todos", slug: null },
-  { label: "Nordeste", slug: "nordeste-de-amaralina" },
-  { label: "Santa Cruz", slug: "santa-cruz" },
-  { label: "Vale das Pedrinhas", slug: "vale-das-pedrinhas" },
-  { label: "Chapada", slug: "chapada-do-rio-vermelho" },
-] as const;
-
 function titleFromSlug(value?: string): string {
   if (!value) return "Comunidade local";
-  if (value === COMPLEXO_SLUG) return "Complexo do Nordeste de Amaralina";
   return value
     .split("-")
     .filter(Boolean)
@@ -67,7 +59,6 @@ function normalizeModulePath(pathname: string): string {
   const module = parts[0] ?? "";
 
   if (module === "comunidade") {
-    if (parts[3] === "area") return parts[5] ?? "home";
     if (parts[4]) return parts[4];
     return "home";
   }
@@ -103,37 +94,36 @@ const NAV_GROUP_LABELS: Record<CommunityNavItem["group"], string> = {
 export function CommunityTerritorialShell() {
   const navigate = useNavigate();
   const location = useLocation();
+  const { resolved, resolvedScope } = useCommunityScopeResolver();
   const params = useParams<{
     state?: string;
     city?: string;
-    district?: string;
-    groupSlug?: string;
-    groupSlugOrDistrict?: string;
+    territorySlug?: string;
   }>();
   const [transitionMessage, setTransitionMessage] = useState<string | null>(null);
 
   const state = params.state ?? "ba";
   const city = params.city ?? "salvador";
-  const territorySlug = params.groupSlug ?? params.district ?? params.groupSlugOrDistrict ?? COMPLEXO_SLUG;
-  const territoryBase = params.groupSlug
-    ? `/${state}/${city}/area/${params.groupSlug}`
-    : params.district
-      ? `/${state}/${city}/${params.district}`
-      : params.groupSlugOrDistrict
-        ? `/${state}/${city}/${params.groupSlugOrDistrict}`
-      : `/${state}/${city}`;
+  const territorySlug = params.territorySlug ?? city;
+  const territoryBase = `/${state}/${city}/${territorySlug}`;
   const communityBase = buildCommunityTerritoryUrl(territoryBase);
   const cityHref = `/${state}/${city}`;
-  const territoryName = titleFromSlug(territorySlug);
+  const territoryName = resolved
+    ? resolved.kind === "group"
+      ? resolved.group.name
+      : resolved.location.name
+    : titleFromSlug(territorySlug);
   const cityName = cityLabelFromSlug(city);
-  const isComplexo = territorySlug === COMPLEXO_SLUG;
+  const scopeLabel = "Meu Bairro";
+  const territorySubtitle = "Comunidade local";
+  const localContentDescription = "Panorama da comunidade local";
 
   const navItems = useMemo<CommunityNavItem[]>(
     () => [
       {
         id: "home",
-        label: "Inicio",
-        description: "Panorama da comunidade",
+        label: "Meu Bairro",
+        description: localContentDescription,
         href: communityBase,
         icon: Home,
         group: "community",
@@ -141,7 +131,7 @@ export function CommunityTerritorialShell() {
       {
         id: "feed",
         label: "Feed",
-        description: "Conversas do Complexo",
+        description: "Conversas locais",
         href: `${communityBase}/feed`,
         icon: LayoutList,
         group: "community",
@@ -155,10 +145,34 @@ export function CommunityTerritorialShell() {
         group: "community",
       },
       {
+        id: "alertas",
+        label: "Alertas",
+        description: "Alertas do territorio",
+        href: `${communityBase}/alertas`,
+        icon: MapPin,
+        group: "community",
+      },
+      {
+        id: "problemas",
+        label: "Problemas",
+        description: "Problemas da regiao",
+        href: `${communityBase}/problemas`,
+        icon: MessageSquare,
+        group: "community",
+      },
+      {
+        id: "achados-e-perdidos",
+        label: "Achados e Perdidos",
+        description: "Itens perdidos e encontrados",
+        href: `${communityBase}/achados-e-perdidos`,
+        icon: Search,
+        group: "community",
+      },
+      {
         id: "empresas",
         label: "Empresas",
         description: "Negocios locais",
-        href: `${communityBase}/empresas`,
+        href: buildModuleTerritoryUrl(MODULE_SLUGS.business, territoryBase),
         icon: Building2,
         group: "local",
       },
@@ -166,7 +180,7 @@ export function CommunityTerritorialShell() {
         id: "gastronomia",
         label: "Gastronomia",
         description: "Restaurantes e cardapios locais",
-        href: `${communityBase}/gastronomia`,
+        href: buildModuleTerritoryUrl(MODULE_SLUGS.gastronomy, territoryBase),
         icon: UtensilsCrossed,
         group: "local",
       },
@@ -174,7 +188,7 @@ export function CommunityTerritorialShell() {
         id: "servicos",
         label: "Servicos",
         description: "Prestadores locais",
-        href: `${communityBase}/servicos`,
+        href: buildModuleTerritoryUrl(MODULE_SLUGS.services, territoryBase),
         icon: Briefcase,
         group: "local",
       },
@@ -182,7 +196,7 @@ export function CommunityTerritorialShell() {
         id: "classificados",
         label: "Classificados",
         description: "Anuncios da comunidade",
-        href: `${communityBase}/classificados`,
+        href: buildModuleTerritoryUrl(MODULE_SLUGS.classifieds, territoryBase),
         icon: Tag,
         group: "opportunities",
       },
@@ -190,7 +204,7 @@ export function CommunityTerritorialShell() {
         id: "vagas",
         label: "Vagas",
         description: "Oportunidades locais",
-        href: `${communityBase}/vagas`,
+        href: buildModuleTerritoryUrl(MODULE_SLUGS.jobs, territoryBase),
         icon: Briefcase,
         group: "opportunities",
       },
@@ -198,28 +212,44 @@ export function CommunityTerritorialShell() {
         id: "eventos",
         label: "Eventos",
         description: "Agenda do territorio",
-        href: `${communityBase}/eventos`,
+        href: buildModuleTerritoryUrl(MODULE_SLUGS.events, territoryBase),
         icon: MapPin,
         group: "opportunities",
       },
       {
         id: "mapa",
         label: "Mapa",
-        description: "Camadas do Complexo",
-        href: `${communityBase}/mapa`,
+        description: "Camadas territoriais",
+        href: buildModuleTerritoryUrl(MODULE_SLUGS.map, territoryBase),
         icon: Map,
+        group: "tools",
+      },
+      {
+        id: "buscar",
+        label: "Busca",
+        description: "Busca no contexto local",
+        href: `/buscar/${state}/${city}`,
+        icon: Search,
+        group: "tools",
+      },
+      {
+        id: "perto-de-mim",
+        label: "Perto de Mim",
+        description: "Explorar o que esta por perto",
+        href: "/perto-de-mim",
+        icon: LocateFixed,
         group: "tools",
       },
       {
         id: "mobilidade",
         label: "Mobilidade",
         description: "Caronas e entregas locais",
-        href: `${communityBase}/mobilidade`,
+        href: buildModuleTerritoryUrl(MODULE_SLUGS.mobility, territoryBase),
         icon: Car,
         group: "tools",
       },
     ],
-    [communityBase],
+    [city, communityBase, localContentDescription, state, territoryBase],
   );
 
   const navGroups = useMemo(
@@ -231,6 +261,17 @@ export function CommunityTerritorialShell() {
         }))
         .filter((section) => section.items.length > 0),
     [navItems],
+  );
+  const mobilePrimaryItems = useMemo(
+    () => navItems.filter((item) => item.group === "community"),
+    [navItems],
+  );
+  const mobileSecondaryGroups = useMemo(
+    () =>
+      navGroups.filter(
+        (section) => section.group === "local" || section.group === "opportunities" || section.group === "tools",
+      ),
+    [navGroups],
   );
 
   useEffect(() => {
@@ -292,7 +333,7 @@ export function CommunityTerritorialShell() {
             <div className="min-w-0">
               <p className="text-xs font-semibold uppercase tracking-wide text-primary">Comunidade</p>
               <p className="truncate text-sm font-bold text-white">{territoryName}</p>
-              <p className="mt-0.5 text-xs text-white/55">Território fundador</p>
+              <p className="mt-0.5 text-xs text-white/55">{territorySubtitle}</p>
             </div>
           </Link>
         </div>
@@ -306,14 +347,16 @@ export function CommunityTerritorialShell() {
               <nav className="space-y-1">
                 {items.map((item) => {
                   const isActive = activeKey === item.id || (item.id === "home" && location.pathname === communityBase);
+                  const isHomeItem = item.id === "home";
                   return (
                     <Link
-                      key={item.href}
+                      key={item.id}
                       to={item.href}
                       onMouseEnter={() => prefetchRouteByHref(item.href)}
                       onFocus={() => prefetchRouteByHref(item.href)}
                       className={cn(
                         "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-colors",
+                        isHomeItem && "border border-primary/30 bg-primary/12",
                         isActive
                           ? "bg-primary/15 text-white ring-1 ring-primary/25"
                           : "text-white/70 hover:bg-white/10 hover:text-white",
@@ -332,30 +375,6 @@ export function CommunityTerritorialShell() {
             </div>
           ))}
 
-          {isComplexo ? (
-            <div className="mt-5 border-t border-white/10 pt-4">
-              <p className="px-3 py-2 text-[11px] font-semibold uppercase tracking-wide text-white/45">
-                Bairros internos
-              </p>
-              <div className="grid grid-cols-1 gap-1">
-                {COMPLEXO_BAIRROS.map((bairro) => {
-                  const href = bairro.slug
-                    ? `${communityBase}?bairro=${bairro.slug}`
-                    : communityBase;
-                  return (
-                    <Link
-                      key={bairro.label}
-                      to={href}
-                      className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-white/65 transition-colors hover:bg-white/10 hover:text-white"
-                    >
-                      <MapPin className="h-3.5 w-3.5 text-primary/80" />
-                      <span>{bairro.label}</span>
-                    </Link>
-                  );
-                })}
-              </div>
-            </div>
-          ) : null}
         </div>
 
         <div className="border-t border-white/10 p-3">
@@ -382,7 +401,7 @@ export function CommunityTerritorialShell() {
             <MessageSquare className="h-4 w-4" />
           </div>
           <div className="min-w-0 flex-1">
-            <p className="text-xs font-semibold uppercase tracking-wide text-primary">Meu Bairro</p>
+            <p className="text-xs font-semibold uppercase tracking-wide text-primary">{scopeLabel}</p>
             <p className="truncate text-sm font-bold text-white">{territoryName}</p>
           </div>
           <Button size="sm" variant="outline" className="shrink-0 px-3" onClick={handleExitToCity}>
@@ -390,45 +409,65 @@ export function CommunityTerritorialShell() {
           </Button>
         </header>
 
-        <div className="grid w-full min-w-0 grid-cols-3 gap-2 border-b border-white/10 bg-[#071316]/90 px-3 py-2 min-[380px]:grid-cols-4 lg:hidden">
-          {navItems.map((item) => {
-            const isActive = activeKey === item.id || (item.id === "home" && location.pathname === communityBase);
+        <div className="border-b border-white/10 bg-[#071316]/90 px-3 py-3 lg:hidden">
+          <div className="mb-3">
+            <nav className="grid grid-cols-3 gap-2">
+              {mobilePrimaryItems.map((item) => {
+                const isActive = activeKey === item.id || (item.id === "home" && location.pathname === communityBase);
+                const isHomeItem = item.id === "home";
 
-            return (
-              <Link
-                key={item.href}
-                to={item.href}
-                className={cn(
-                  "flex min-h-10 min-w-0 flex-col items-center justify-center gap-1 overflow-hidden rounded-xl border px-1.5 py-2 text-[10px] font-semibold leading-none min-[360px]:text-[11px]",
-                  isActive
-                    ? "border-primary/40 bg-primary/15 text-white"
-                    : "border-white/10 bg-white/5 text-white/75"
-                )}
-              >
-                <item.icon className="h-3.5 w-3.5" />
-                <span className="block w-full truncate text-center">{item.label}</span>
-              </Link>
-            );
-          })}
-        </div>
-
-        {isComplexo ? (
-          <div className="flex w-full min-w-0 max-w-full flex-wrap gap-2 overflow-hidden border-b border-white/10 bg-[#081114] px-3 py-2 lg:hidden">
-            {COMPLEXO_BAIRROS.map((bairro) => {
-              const href = bairro.slug ? `${communityBase}?bairro=${bairro.slug}` : communityBase;
-              return (
-                <Link
-                  key={bairro.label}
-                  to={href}
-                  className="flex min-w-0 max-w-full items-center gap-1.5 rounded-full bg-white/5 px-3 py-1.5 text-xs font-medium text-white/65 ring-1 ring-white/10"
-                >
-                  {bairro.slug ? <MapPin className="h-3 w-3" /> : <Users className="h-3 w-3" />}
-                  <span className="truncate">{bairro.label}</span>
-                </Link>
-              );
-            })}
+                return (
+                  <Link
+                    key={item.id}
+                    to={item.href}
+                    className={cn(
+                      "flex min-h-11 min-w-0 items-center gap-2 rounded-xl border px-2.5 py-2 text-[11px] font-semibold",
+                      isHomeItem && "border-primary/35 bg-primary/12",
+                      isActive
+                        ? "border-primary/45 bg-primary/20 text-white"
+                        : "border-white/10 bg-white/5 text-white/80"
+                    )}
+                  >
+                    <item.icon className="h-3.5 w-3.5 shrink-0" />
+                    <span className="truncate">{item.label}</span>
+                  </Link>
+                );
+              })}
+            </nav>
           </div>
-        ) : null}
+
+          <div className="space-y-2">
+            {mobileSecondaryGroups.map(({ group, items }) => (
+              <div key={group}>
+                <p className="mb-1 px-1 text-[10px] font-semibold uppercase tracking-wide text-white/45">
+                  {NAV_GROUP_LABELS[group]}
+                </p>
+                <div className="overflow-x-auto pb-1">
+                  <nav className="flex min-w-max gap-2">
+                    {items.map((item) => {
+                      const isActive = activeKey === item.id;
+                      return (
+                        <Link
+                          key={item.id}
+                          to={item.href}
+                          className={cn(
+                            "flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-[11px] font-medium whitespace-nowrap",
+                            isActive
+                              ? "border-primary/40 bg-primary/15 text-white"
+                              : "border-white/10 bg-white/5 text-white/70"
+                          )}
+                        >
+                          <item.icon className="h-3 w-3 shrink-0" />
+                          <span>{item.label}</span>
+                        </Link>
+                      );
+                    })}
+                  </nav>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
 
         <main id="main-content" className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto" tabIndex={-1}>
           <TerritorialLayout />

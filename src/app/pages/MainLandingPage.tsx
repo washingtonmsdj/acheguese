@@ -6,21 +6,18 @@
  */
 
 import { useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   Store, Wrench, Briefcase, Tag, Calendar,
-  Users, ArrowRight, MapPin,
+  Users, ArrowRight, MapPin, Loader2,
 } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import { useAuth } from "@/core/auth/hooks/useAuth";
 import { TERRITORY_CONFIG } from "@/config/territory";
+import { useState, useEffect } from "react";
 
 // Imagens profissionais
 import heroImg from "@/assets/hero-landing-main.jpg";
-import santaCruz from "@/assets/bairro-santa-cruz.jpg";
-import nordeste from "@/assets/bairro-nordeste.jpg";
-import valePedrinhas from "@/assets/bairro-vale-pedrinhas.jpg";
-import chapada from "@/assets/bairro-chapada.jpg";
 import personaMorador from "@/assets/persona-morador.jpg";
 import personaComerciante from "@/assets/persona-comerciante.jpg";
 import personaPrestador from "@/assets/persona-prestador.jpg";
@@ -48,56 +45,65 @@ const staggerItem = {
 
 // ── Dados ────────────────────────────────────────────────────────────
 
+const LOADING_PHRASES_SALVADOR = [
+  "Passando protetor solar... ☀️",
+  "Preparando o acarajé... 🔥",
+  "Afinando o berimbau... 🎵",
+  "Organizando o trio elétrico... 🎉",
+  "Conferindo a maré... 🌊",
+  "Chamando os vizinhos... 👋",
+];
+
 const MODULOS = [
   {
     icon: Store,
     label: "Empresas Locais",
     color: "text-orange-400",
     bg: "bg-orange-500/15 border-orange-500/20",
-    path: "/empresas",
+    path: "/comunidade/ba/salvador",
   },
   {
     icon: Wrench,
     label: "Serviços",
     color: "text-sky-400",
     bg: "bg-sky-500/15 border-sky-500/20",
-    path: "/servicos",
+    path: "/comunidade/ba/salvador",
   },
   {
     icon: Briefcase,
     label: "Vagas",
     color: "text-emerald-400",
     bg: "bg-emerald-500/15 border-emerald-500/20",
-    path: "/vagas",
+    path: "/comunidade/ba/salvador",
   },
   {
     icon: Tag,
     label: "Classificados",
     color: "text-amber-400",
     bg: "bg-amber-500/15 border-amber-500/20",
-    path: "/classificados",
+    path: "/comunidade/ba/salvador",
   },
   {
     icon: Calendar,
     label: "Eventos",
     color: "text-rose-400",
     bg: "bg-rose-500/15 border-rose-500/20",
-    path: "/eventos",
+    path: "/comunidade/ba/salvador",
   },
   {
     icon: Users,
     label: "Comunidade",
     color: "text-primary",
     bg: "bg-primary/15 border-primary/20",
-    path: "/comunidade",
+    path: "/comunidade/ba/salvador",
   },
 ];
 
 const BAIRROS_ATIVOS = [
-  { name: "Santa Cruz", image: santaCruz, slug: "santa-cruz", populacao: "27.083 hab." },
-  { name: "Nordeste", image: nordeste, slug: "nordeste-de-amaralina", populacao: "21.887 hab." },
-  { name: "Vale das Pedrinhas", image: valePedrinhas, slug: "vale-das-pedrinhas", populacao: "5.162 hab." },
-  { name: "Chapada", image: chapada, slug: "chapada-do-rio-vermelho", populacao: "21.955 hab." },
+  { name: "Santa Cruz", slug: "santa-cruz", populacao: "27.083 hab." },
+  { name: "Nordeste", slug: "nordeste-de-amaralina", populacao: "21.887 hab." },
+  { name: "Vale das Pedrinhas", slug: "vale-das-pedrinhas", populacao: "5.162 hab." },
+  { name: "Chapada", slug: "chapada-do-rio-vermelho", populacao: "21.955 hab." },
 ];
 
 
@@ -105,22 +111,22 @@ const PERSONAS = [
   {
     image: personaMorador,
     label: "Moradores",
-    description: "Conecte-se com vizinhos e fique por dentro do que acontece no seu bairro.",
+    description: "Vizinhos, eventos e tudo do bairro num só lugar.",
   },
   {
     image: personaComerciante,
     label: "Comerciantes",
-    description: "Divulgue seu negócio e alcance mais clientes na sua região.",
+    description: "Mais visibilidade para o seu negócio local.",
   },
   {
     image: personaPrestador,
     label: "Prestadores",
-    description: "Ofereça seus serviços e encontre clientes perto de você.",
+    description: "Clientes perto de você, sem intermediários.",
   },
   {
     image: personaEmprego,
     label: "Quem busca emprego",
-    description: "Encontre vagas de trabalho reais na sua comunidade.",
+    description: "Vagas reais, na sua comunidade.",
   },
 ];
 
@@ -130,15 +136,90 @@ export default function MainLandingPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const launchCityPath = `/${TERRITORY_CONFIG.launch.state}/${TERRITORY_CONFIG.launch.city}`;
+  const [isLoadingCity, setIsLoadingCity] = useState(false);
+  const [currentPhraseIndex, setCurrentPhraseIndex] = useState(0);
+
+  // Carrossel de frases durante o loading
+  useEffect(() => {
+    if (!isLoadingCity) return;
+
+    const interval = setInterval(() => {
+      setCurrentPhraseIndex((prev) => (prev + 1) % LOADING_PHRASES_SALVADOR.length);
+    }, 1600); // ~1.6s por frase = 10s total para 6 frases
+
+    return () => clearInterval(interval);
+  }, [isLoadingCity]);
+
   const handleExplorar = () => {
-    navigate(`/ba/salvador/area/complexo-do-nordeste-de-amaralina`);
+    navigate(`/comunidade/ba/salvador/complexo-do-nordeste-de-amaralina`);
+  };
+
+  const handleEntrarCidade = () => {
+    setIsLoadingCity(true);
+    setCurrentPhraseIndex(0);
+    
+    // 10 segundos de loading
+    setTimeout(() => {
+      navigate(launchCityPath);
+    }, 10000);
   };
 
   return (
     <div className="relative min-h-screen w-full bg-background text-foreground overflow-x-hidden">
+      {/* Loading overlay em tela cheia */}
+      <AnimatePresence>
+        {isLoadingCity && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-background p-6"
+          >
+            <motion.div
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ delay: 0.1, duration: 0.4 }}
+              className="text-center w-full max-w-4xl"
+            >
+              <motion.div
+                animate={{ rotate: 360 }}
+                transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+                className="mb-8"
+              >
+                <div className="w-20 h-20 mx-auto rounded-full border-4 border-primary/20 border-t-primary" />
+              </motion.div>
+              
+              {/* Carrossel de frases */}
+              <div className="relative min-h-[4rem] flex items-center justify-center mb-6 px-4">
+                <AnimatePresence mode="wait">
+                  <motion.h2
+                    key={currentPhraseIndex}
+                    initial={{ x: 100, opacity: 0 }}
+                    animate={{ x: 0, opacity: 1 }}
+                    exit={{ x: -100, opacity: 0 }}
+                    transition={{ duration: 0.4, ease: "easeInOut" }}
+                    className="text-xl sm:text-2xl md:text-3xl font-bold text-foreground whitespace-nowrap"
+                  >
+                    {LOADING_PHRASES_SALVADOR[currentPhraseIndex]}
+                  </motion.h2>
+                </AnimatePresence>
+              </div>
+
+              <motion.p
+                initial={{ y: 10, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ delay: 0.3 }}
+                className="text-sm sm:text-base text-muted-foreground"
+              >
+                Preparando Salvador pra você...
+              </motion.p>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* ── HERO ──────────────────────────────────────────────────── */}
-      <section className="relative w-full min-h-[52vh] md:min-h-[48vh] flex items-center justify-center overflow-hidden">
+      <section className="relative w-full min-h-[38vh] md:min-h-[36vh] flex items-center justify-center overflow-hidden">
         {/* Parallax background image */}
         <motion.div className="absolute inset-0">
           <img
@@ -149,48 +230,28 @@ export default function MainLandingPage() {
             height={1080}
           />
         </motion.div>
-        <motion.div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/40 to-background" />
+        <motion.div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/55 to-background" />
         {/* Extra gradient that always stays for readability */}
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-background" />
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-black/20 to-background" />
 
         {/* Header */}
         <header className="absolute top-0 left-0 right-0 z-20 flex items-center justify-between px-4 sm:px-6 lg:px-8 py-5">
-          <span className="text-xl sm:text-2xl font-bold text-white font-heading tracking-tight">
-            Achegue<span className="text-primary">-se</span>
-          </span>
-          <div className="flex items-center gap-2">
-            <Button
-              variant="ghost"
-              size="sm"
-              className="text-white/70 hover:text-white hover:bg-white/10 hidden sm:inline-flex"
-              onClick={() => navigate("/sobre")}
-            >
-              Sobre
-            </Button>
-            <Button
-              size="sm"
-              className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold rounded-lg"
-              onClick={() => navigate(user ? "/perfil" : "/login")}
-            >
-              {user ? "Meu Perfil" : "Entrar"}
-            </Button>
-          </div>
+          {/* Header vazio - logo principal está no hero */}
         </header>
 
         {/* Hero content */}
-        <div className="relative z-10 text-center px-4 max-w-3xl mx-auto py-16 md:py-20">
+        <div className="relative z-10 text-center px-4 max-w-3xl mx-auto py-10 md:py-12">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, ease: "easeOut" }}
           >
-            <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-white leading-[1.15] mb-4 font-heading">
-              A plataforma local para
-              <span className="text-primary"> conectar sua cidade.</span>
+            <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold text-white leading-[1.05] mb-6 tracking-tight">
+              Achegue<span className="text-primary">-</span>se
             </h1>
 
-            <p className="text-sm sm:text-base md:text-lg text-white/85 mb-2 max-w-2xl mx-auto">
-              Empresas, serviços, vagas, eventos, classificados e comunidade em uma experiência territorial simples e escalável.
+            <p className="text-sm sm:text-base md:text-lg text-white/95 mb-2 max-w-2xl mx-auto drop-shadow-lg">
+              Uma infraestrutura territorial que conecta quem vive, trabalha e constrói o bairro — sem intermediários, sem ruído.
             </p>
             <p className="text-xs sm:text-sm text-white/60 mb-6">
               Começamos por <span className="text-primary/90 font-medium">Salvador, BA</span> e expandimos por fases.
@@ -198,35 +259,49 @@ export default function MainLandingPage() {
 
             {/* CTAs */}
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
-              <Button
-                size="lg"
-                variant="outline"
-                className="border-white/25 text-white hover:bg-white/10 hover:border-white/40 font-semibold text-sm px-6 h-11 backdrop-blur-md w-full sm:w-auto rounded-xl"
-                onClick={() => navigate(launchCityPath)}
+              <motion.div
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                className="w-full sm:w-auto"
               >
-                Entrar na minha cidade
-              </Button>
-              <Button
-                size="lg"
-                className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-sm px-6 h-11 shadow-2xl shadow-primary/25 w-full sm:w-auto rounded-xl"
-                onClick={handleExplorar}
+                <Button
+                  size="lg"
+                  variant="outline"
+                  className="border-white/25 text-white hover:bg-white/10 hover:border-white/40 font-semibold text-sm px-6 h-11 backdrop-blur-md w-full sm:w-auto rounded-xl transition-all duration-200"
+                  onClick={handleEntrarCidade}
+                  disabled={isLoadingCity}
+                >
+                  Entrar na minha cidade
+                </Button>
+              </motion.div>
+              <motion.div
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                className="w-full sm:w-auto"
               >
-                Entrar no meu bairro
-              </Button>
+                <Button
+                  size="lg"
+                  className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-sm px-6 h-11 shadow-2xl shadow-primary/25 w-full sm:w-auto rounded-xl transition-all duration-200"
+                  onClick={handleExplorar}
+                >
+                  Entrar no meu bairro
+                </Button>
+              </motion.div>
             </div>
           </motion.div>
         </div>
 
-        {/* Scroll indicator */}
-        <motion.div
-          className="absolute bottom-6 left-1/2 -translate-x-1/2 z-10"
-          animate={{ y: [0, 8, 0] }}
-          transition={{ repeat: Infinity, duration: 2 }}
-        >
-          <div className="w-6 h-10 rounded-full border-2 border-white/30 flex items-start justify-center p-1.5">
-            <div className="w-1.5 h-2.5 rounded-full bg-white/60" />
-          </div>
-        </motion.div>
+        {/* Scroll indicator - container isolado */}
+        <div className="absolute -bottom-2 left-0 right-0 flex justify-center z-10 pointer-events-none">
+          <motion.div
+            animate={{ y: [0, 8, 0] }}
+            transition={{ repeat: Infinity, duration: 2 }}
+          >
+            <div className="w-6 h-10 rounded-full border-2 border-white/30 flex items-start justify-center p-1.5">
+              <div className="w-1.5 h-2.5 rounded-full bg-white/60" />
+            </div>
+          </motion.div>
+        </div>
       </section>
 
       {/* ── MÓDULOS ───────────────────────────────────────────────── */}
@@ -268,55 +343,46 @@ export default function MainLandingPage() {
             <span className="text-xs font-semibold text-primary">Território fundador</span>
           </div>
           <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-foreground mb-2 font-heading">
-            Primeiro território ativo: Salvador.
+            Salvador é onde tudo começa.
           </h2>
           <p className="text-sm text-muted-foreground max-w-xl mx-auto">
-            Começamos pela capital baiana, com ativação por bairros e expansão gradual para novos territórios.
+            Ativamos bairro por bairro, de dentro pra fora — e cada comunidade que entra fortalece a próxima.
           </p>
         </motion.div>
 
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5">
-          {BAIRROS_ATIVOS.map((bairro, i) => (
-            <motion.div
-              key={bairro.name}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: i * 0.1, duration: 0.4 }}
-              whileHover={{ y: -6 }}
-              onClick={() => navigate(`/ba/salvador/${bairro.slug}`)}
-              className="relative aspect-[4/4.2] rounded-lg overflow-hidden cursor-pointer group shadow-lg"
-            >
-              <motion.img
-                src={bairro.image}
-                alt={bairro.name}
-                loading="lazy"
-                width={800}
-                height={600}
-                className="w-full h-full object-cover"
-                whileHover={{ scale: 1.1 }}
-                transition={{ duration: 0.7 }}
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-              <div className="absolute bottom-0 left-0 right-0 p-2.5">
-                <h3 className="text-white font-bold text-xs sm:text-sm drop-shadow-md">{bairro.name}</h3>
-                <div className="flex items-center gap-1 mt-1">
-                  <Users className="h-3 w-3 text-primary/80" />
-                  <span className="text-primary/90 text-[10px] font-semibold">{bairro.populacao}</span>
+        <div className="max-w-6xl mx-auto px-4 sm:px-6">
+          <motion.button
+            {...fadeUp}
+            onClick={() => navigate(`/comunidade/ba/salvador/area/complexo-do-nordeste-de-amaralina`)}
+            whileHover={{ y: -6, scale: 1.01 }}
+            whileTap={{ scale: 0.99 }}
+            className="w-full p-5 sm:p-6 rounded-xl bg-card border-2 border-border hover:border-primary/40 transition-all duration-300 text-left group grid grid-cols-1 gap-5"
+          >
+            {/* Header - Linha 1 */}
+            <div className="flex items-center justify-center">
+              <h3 className="text-base sm:text-lg md:text-xl font-bold text-foreground group-hover:text-primary transition-colors text-center">
+                Complexo do Nordeste de Amaralina
+              </h3>
+            </div>
+
+            {/* Bairros grid - Linha 2 */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3">
+              {BAIRROS_ATIVOS.map((bairro) => (
+                <div
+                  key={bairro.name}
+                  className="p-2.5 sm:p-3 rounded-lg bg-background/50 border border-border/50"
+                >
+                  <h4 className="text-xs sm:text-sm font-bold text-foreground mb-1 sm:mb-1.5 leading-tight">
+                    {bairro.name}
+                  </h4>
+                  <div className="flex items-center gap-1 text-[10px] sm:text-xs text-muted-foreground">
+                    <Users className="h-2.5 w-2.5 sm:h-3 sm:w-3 flex-shrink-0" />
+                    <span className="truncate">{bairro.populacao}</span>
+                  </div>
                 </div>
-                <p className="text-white/50 text-[9px] mt-0.5">Salvador, BA</p>
-              </div>
-              {/* Hover overlay with glow */}
-              <div className="absolute inset-0 bg-primary/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-              {/* Hover arrow */}
-              <motion.div
-                className="absolute top-3 right-3 bg-primary/90 rounded-full p-1.5 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-                whileHover={{ scale: 1.2 }}
-              >
-                <ArrowRight className="h-3.5 w-3.5 text-primary-foreground" />
-              </motion.div>
-            </motion.div>
-          ))}
+              ))}
+            </div>
+          </motion.button>
         </div>
       </section>
 
@@ -324,10 +390,10 @@ export default function MainLandingPage() {
       <section className="max-w-6xl mx-auto px-4 sm:px-6 py-10">
         <motion.div {...fadeUp} className="text-center mb-12">
           <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-foreground font-heading">
-            Para Você
+            Feito pra quem vive o bairro
           </h2>
           <p className="text-sm text-muted-foreground mt-2">
-            Uma plataforma feita para quem vive, trabalha e constrói o bairro.
+            Morador, comerciante, prestador ou em busca de oportunidade — tem espaço pra você aqui.
           </p>
         </motion.div>
 
@@ -383,7 +449,8 @@ export default function MainLandingPage() {
             transition={{ duration: 0.6 }}
           >
             <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white mb-4 font-heading leading-tight">
-              O Complexo é o ponto de partida.{" "}
+              O Complexo é o ponto de partida.
+              <br />
               <span className="text-primary">Quem é daqui entra primeiro.</span>
             </h2>
             <p className="text-base text-white/70 mb-8 max-w-xl mx-auto">
@@ -403,24 +470,38 @@ export default function MainLandingPage() {
       </section>
 
       {/* ── FOOTER ────────────────────────────────────────────────── */}
-      <footer className="w-full bg-card border-t border-border py-8">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-            <span className="text-lg font-bold text-foreground font-heading">
-              Achegue<span className="text-primary">-se</span>
-              <span className="text-xs text-muted-foreground ml-2 font-normal">· Salvador, BA</span>
-            </span>
-
-            <div className="flex items-center gap-6 text-sm text-muted-foreground">
-              <button onClick={() => navigate("/")} className="hover:text-primary transition-colors">Início</button>
-              <button onClick={() => navigate("/sobre")} className="hover:text-primary transition-colors">Sobre</button>
-              <button onClick={() => navigate("/contato")} className="hover:text-primary transition-colors">Contato</button>
-              <button onClick={() => navigate("/privacidade")} className="hover:text-primary transition-colors">Privacidade</button>
+      <footer className="w-full bg-card/50 backdrop-blur-sm border-t border-border">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8">
+          {/* Main footer content */}
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 mb-6">
+            {/* Links */}
+            <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
+              <button onClick={() => navigate("/comunidade/ba/salvador")} className="text-sm text-muted-foreground hover:text-primary transition-colors">
+                Explorar Salvador
+              </button>
+              <button onClick={() => navigate("/sobre")} className="text-sm text-muted-foreground hover:text-primary transition-colors">
+                Sobre
+              </button>
+              <button onClick={() => navigate("/contato")} className="text-sm text-muted-foreground hover:text-primary transition-colors">
+                Contato
+              </button>
+              <button onClick={() => navigate("/termos")} className="text-sm text-muted-foreground hover:text-primary transition-colors">
+                Termos
+              </button>
+              <button onClick={() => navigate("/privacidade")} className="text-sm text-muted-foreground hover:text-primary transition-colors">
+                Privacidade
+              </button>
             </div>
+          </div>
 
+          {/* Bottom bar */}
+          <div className="pt-6 border-t border-border flex flex-col sm:flex-row items-center justify-between gap-4">
             <p className="text-xs text-muted-foreground">
-              © 2025 Achegue-se · Todos os direitos reservados
+              © {new Date().getFullYear()} Achegue-se. Todos os direitos reservados.
             </p>
+            <span className="text-xs text-muted-foreground">
+              Feito com ❤️ para as comunidades locais
+            </span>
           </div>
         </div>
       </footer>

@@ -57,6 +57,20 @@ export function TerritorialCommunityHomePage() {
   );
 }
 
+export function TerritorialCommunityEntryPage() {
+  const { resolved } = useTerritorialContext();
+
+  if (resolved.kind === "group") {
+    return <TerritorialCommunityPage />;
+  }
+
+  if (resolved.location.type === "city") {
+    return <TerritorialCommunityHomePage />;
+  }
+
+  return <TerritorialCommunityPage />;
+}
+
 export function TerritorialCommunityAlertsPage() {
   const { resolved } = useTerritorialContext();
   return (

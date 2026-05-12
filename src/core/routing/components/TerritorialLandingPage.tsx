@@ -394,21 +394,31 @@ export function TerritorialLandingPage() {
       </div>
 
       {/* ── A. HERO ──────────────────────────────────────────────────────── */}
-      <section className="relative w-full overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-teal-500/12 via-teal-500/6 to-transparent">
-          <div className="absolute top-0 right-0 w-96 h-96 bg-teal-500/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
-          <div className="absolute bottom-0 left-0 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2" />
+      <section className="relative w-full min-h-[45vh] flex items-center overflow-hidden">
+        {/* Background gradient */}
+        <div className="absolute inset-0 bg-gradient-to-br from-teal-500/15 via-blue-500/10 to-violet-500/15">
+          <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-teal-500/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
+          <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-blue-500/20 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2" />
+          <div className="absolute top-1/2 left-1/2 w-[400px] h-[400px] bg-violet-500/15 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2" />
         </div>
 
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 py-12 md:py-20">
-          <div className="max-w-2xl">
-            <p className="text-teal-500 font-semibold text-sm tracking-wide uppercase mb-2">
-              {subtitle}
-            </p>
-            <h1 className="text-3xl md:text-5xl font-bold text-foreground leading-tight mb-4 font-heading">
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 py-16 md:py-20 w-full">
+          <div className="max-w-3xl mx-auto text-center">
+            {/* Badge */}
+            <div className="inline-flex items-center gap-2 bg-teal-500/10 border border-teal-500/20 rounded-full px-4 py-2 mb-6">
+              <MapPin className="h-4 w-4 text-teal-500" />
+              <span className="text-sm font-semibold text-teal-600 dark:text-teal-400">
+                {subtitle}
+              </span>
+            </div>
+
+            {/* Title */}
+            <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold text-foreground leading-[1.1] mb-6 tracking-tight">
               {name}
             </h1>
-            <p className="text-muted-foreground text-base md:text-lg mb-6">
+
+            {/* Description */}
+            <p className="text-base sm:text-lg text-muted-foreground mb-8 max-w-2xl mx-auto leading-relaxed">
               {isGroup 
                 ? `Agrupamento de ${memberList.length} bairros com tudo que você precisa: empresas, serviços, eventos e comunidade.`
                 : 'Seu bairro conectado: empresas locais, serviços, eventos e tudo que acontece na comunidade.'
@@ -417,47 +427,41 @@ export function TerritorialLandingPage() {
 
             {/* Bairros do grupo */}
             {isGroup && memberList.length > 0 && (
-              <div className="flex flex-wrap gap-2 mb-6">
+              <div className="flex flex-wrap justify-center gap-2 mb-8">
                 {memberList.slice(0, 6).map((m) => (
                   <span
                     key={m}
-                    className="text-xs bg-teal-500/12 text-teal-600 dark:text-teal-400 px-3 py-1.5 rounded-full border border-teal-500/25 font-medium"
+                    className="text-xs bg-card/80 backdrop-blur-sm text-foreground px-3 py-1.5 rounded-full border border-border font-medium hover:border-teal-500/50 transition-colors"
                   >
                     {m}
                   </span>
                 ))}
                 {memberList.length > 6 && (
-                  <span className="text-xs bg-muted text-muted-foreground px-3 py-1.5 rounded-full border border-border font-medium">
+                  <span className="text-xs bg-card/80 backdrop-blur-sm text-muted-foreground px-3 py-1.5 rounded-full border border-border font-medium">
                     +{memberList.length - 6} bairros
                   </span>
                 )}
               </div>
             )}
 
-            {/* Quick chips */}
-            <div className="flex flex-wrap gap-2">
+            {/* Quick access chips */}
+            <div className="flex flex-wrap justify-center gap-2.5">
               {[
-                { icon: Users, label: 'Comunidade', url: moduleUrls.community },
-                { icon: Store, label: 'Empresas', url: moduleUrls.business },
-                { icon: Wrench, label: 'Serviços', url: moduleUrls.services },
-                { icon: Tag, label: 'Classificados', url: moduleUrls.classifieds },
+                { icon: Users, label: 'Comunidade', url: moduleUrls.community, color: 'hover:border-teal-500/50 hover:text-teal-500' },
+                { icon: Store, label: 'Empresas', url: moduleUrls.business, color: 'hover:border-blue-500/50 hover:text-blue-500' },
+                { icon: Wrench, label: 'Serviços', url: moduleUrls.services, color: 'hover:border-violet-500/50 hover:text-violet-500' },
+                { icon: Tag, label: 'Classificados', url: moduleUrls.classifieds, color: 'hover:border-orange-500/50 hover:text-orange-500' },
               ].map((chip) => (
                 <button
                   key={chip.label}
                   onClick={() => navigate(chip.url)}
-                  className="flex items-center gap-1.5 bg-card/80 backdrop-blur-sm border border-border rounded-full px-3 py-1.5 text-xs font-medium text-muted-foreground hover:border-teal-500/50 hover:text-teal-500 transition-colors"
+                  className={`flex items-center gap-2 bg-card/80 backdrop-blur-sm border border-border rounded-xl px-4 py-2.5 text-sm font-medium text-muted-foreground transition-all ${chip.color}`}
                 >
-                  <chip.icon className="h-3.5 w-3.5" />
+                  <chip.icon className="h-4 w-4" />
                   {chip.label}
                 </button>
               ))}
             </div>
-          </div>
-
-          {/* Location badge */}
-          <div className="absolute bottom-4 right-4 sm:right-6 hidden sm:flex items-center gap-1.5 bg-card/90 backdrop-blur-sm border border-border rounded-full px-3 py-1.5 text-xs text-muted-foreground">
-            <MapPin className="h-3.5 w-3.5 text-teal-500" />
-            {name}
           </div>
         </div>
       </section>
@@ -473,65 +477,76 @@ export function TerritorialLandingPage() {
           </p>
         </div>
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
-          <div className="bg-gradient-to-br from-teal-500/8 to-teal-500/4 border border-teal-500/20 rounded-2xl p-4 text-center hover:scale-105 transition-transform">
-            <div className="flex justify-center mb-2">
-              <div className="h-10 w-10 rounded-xl bg-teal-500/15 flex items-center justify-center">
-                <Users className="h-5 w-5 text-teal-500" />
-              </div>
+          {/* Habitantes */}
+          <div className="flex items-center gap-2 p-2.5 rounded-lg bg-card border border-border hover:border-teal-500/40 hover:bg-accent transition-all">
+            <div className="h-10 w-10 rounded-lg bg-muted flex-shrink-0 overflow-hidden flex items-center justify-center text-xl">
+              👥
             </div>
-            <p className="text-xl md:text-2xl font-bold text-foreground">
-              {statsLoading ? '—' : territoryStats?.population ? `~${(territoryStats.population / 1000).toFixed(0)}mil` : '—'}
-            </p>
-            <p className="text-[11px] text-muted-foreground mt-1 font-medium">Habitantes</p>
+            <div className="flex-1 min-w-0">
+              <p className="text-xs font-bold text-foreground truncate">
+                {statsLoading ? '—' : territoryStats?.population ? `~${(territoryStats.population / 1000).toFixed(0)}mil` : '—'}
+              </p>
+              <p className="text-[10px] text-muted-foreground truncate">Habitantes</p>
+            </div>
           </div>
-          <div className="bg-gradient-to-br from-blue-500/8 to-blue-500/4 border border-blue-500/20 rounded-2xl p-4 text-center hover:scale-105 transition-transform">
-            <div className="flex justify-center mb-2">
-              <div className="h-10 w-10 rounded-xl bg-blue-500/15 flex items-center justify-center">
-                <Store className="h-5 w-5 text-blue-500" />
-              </div>
+
+          {/* Empresas */}
+          <div className="flex items-center gap-2 p-2.5 rounded-lg bg-card border border-border hover:border-blue-500/40 hover:bg-accent transition-all">
+            <div className="h-10 w-10 rounded-lg bg-muted flex-shrink-0 overflow-hidden flex items-center justify-center text-xl">
+              🏪
             </div>
-            <p className="text-xl md:text-2xl font-bold text-foreground">{isLoading ? '—' : stats.businesses}</p>
-            <p className="text-[11px] text-muted-foreground mt-1 font-medium">Empresas ativas</p>
+            <div className="flex-1 min-w-0">
+              <p className="text-xs font-bold text-foreground truncate">{isLoading ? '—' : stats.businesses}</p>
+              <p className="text-[10px] text-muted-foreground truncate">Empresas</p>
+            </div>
           </div>
-          <div className="bg-gradient-to-br from-violet-500/8 to-violet-500/4 border border-violet-500/20 rounded-2xl p-4 text-center hover:scale-105 transition-transform">
-            <div className="flex justify-center mb-2">
-              <div className="h-10 w-10 rounded-xl bg-violet-500/15 flex items-center justify-center">
-                <Wrench className="h-5 w-5 text-violet-500" />
-              </div>
+
+          {/* Profissionais */}
+          <div className="flex items-center gap-2 p-2.5 rounded-lg bg-card border border-border hover:border-violet-500/40 hover:bg-accent transition-all">
+            <div className="h-10 w-10 rounded-lg bg-muted flex-shrink-0 overflow-hidden flex items-center justify-center text-xl">
+              🔧
             </div>
-            <p className="text-xl md:text-2xl font-bold text-foreground">{isLoading ? '—' : stats.services}</p>
-            <p className="text-[11px] text-muted-foreground mt-1 font-medium">Profissionais</p>
+            <div className="flex-1 min-w-0">
+              <p className="text-xs font-bold text-foreground truncate">{isLoading ? '—' : stats.services}</p>
+              <p className="text-[10px] text-muted-foreground truncate">Profissionais</p>
+            </div>
           </div>
-          <div className="bg-gradient-to-br from-orange-500/8 to-orange-500/4 border border-orange-500/20 rounded-2xl p-4 text-center hover:scale-105 transition-transform">
-            <div className="flex justify-center mb-2">
-              <div className="h-10 w-10 rounded-xl bg-orange-500/15 flex items-center justify-center">
-                <Tag className="h-5 w-5 text-orange-500" />
-              </div>
+
+          {/* Anúncios */}
+          <div className="flex items-center gap-2 p-2.5 rounded-lg bg-card border border-border hover:border-orange-500/40 hover:bg-accent transition-all">
+            <div className="h-10 w-10 rounded-lg bg-muted flex-shrink-0 overflow-hidden flex items-center justify-center text-xl">
+              🏷️
             </div>
-            <p className="text-xl md:text-2xl font-bold text-foreground">{isLoading ? '—' : stats.classifieds}</p>
-            <p className="text-[11px] text-muted-foreground mt-1 font-medium">Anúncios ativos</p>
+            <div className="flex-1 min-w-0">
+              <p className="text-xs font-bold text-foreground truncate">{isLoading ? '—' : stats.classifieds}</p>
+              <p className="text-[10px] text-muted-foreground truncate">Anúncios</p>
+            </div>
           </div>
-          <div className="bg-gradient-to-br from-green-500/8 to-green-500/4 border border-green-500/20 rounded-2xl p-4 text-center hover:scale-105 transition-transform">
-            <div className="flex justify-center mb-2">
-              <div className="h-10 w-10 rounded-xl bg-green-500/15 flex items-center justify-center">
-                <GraduationCap className="h-5 w-5 text-green-500" />
-              </div>
+
+          {/* Escolas */}
+          <div className="flex items-center gap-2 p-2.5 rounded-lg bg-card border border-border hover:border-green-500/40 hover:bg-accent transition-all">
+            <div className="h-10 w-10 rounded-lg bg-muted flex-shrink-0 overflow-hidden flex items-center justify-center text-xl">
+              🎓
             </div>
-            <p className="text-xl md:text-2xl font-bold text-foreground">
-              {statsLoading ? '—' : territoryStats?.schools ?? '—'}
-            </p>
-            <p className="text-[11px] text-muted-foreground mt-1 font-medium">Escolas</p>
+            <div className="flex-1 min-w-0">
+              <p className="text-xs font-bold text-foreground truncate">
+                {statsLoading ? '—' : territoryStats?.schools ?? '—'}
+              </p>
+              <p className="text-[10px] text-muted-foreground truncate">Escolas</p>
+            </div>
           </div>
-          <div className="bg-gradient-to-br from-rose-500/8 to-rose-500/4 border border-rose-500/20 rounded-2xl p-4 text-center hover:scale-105 transition-transform">
-            <div className="flex justify-center mb-2">
-              <div className="h-10 w-10 rounded-xl bg-rose-500/15 flex items-center justify-center">
-                <Bus className="h-5 w-5 text-rose-500" />
-              </div>
+
+          {/* Linhas de ônibus */}
+          <div className="flex items-center gap-2 p-2.5 rounded-lg bg-card border border-border hover:border-rose-500/40 hover:bg-accent transition-all">
+            <div className="h-10 w-10 rounded-lg bg-muted flex-shrink-0 overflow-hidden flex items-center justify-center text-xl">
+              🚌
             </div>
-            <p className="text-xl md:text-2xl font-bold text-foreground">
-              {statsLoading ? '—' : territoryStats?.bus_lines ?? '—'}
-            </p>
-            <p className="text-[11px] text-muted-foreground mt-1 font-medium">Linhas de ônibus</p>
+            <div className="flex-1 min-w-0">
+              <p className="text-xs font-bold text-foreground truncate">
+                {statsLoading ? '—' : territoryStats?.bus_lines ?? '—'}
+              </p>
+              <p className="text-[10px] text-muted-foreground truncate">Linhas</p>
+            </div>
           </div>
         </div>
       </section>

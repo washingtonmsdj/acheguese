@@ -27,8 +27,7 @@ export function AppLayoutSidebar() {
   const pathSegments = pathname.split('/').filter(Boolean);
   const isCommunityTerritorialPath =
     pathSegments[0] === 'comunidade' &&
-    pathSegments.length >= 4 &&
-    !['alertas', 'problemas'].includes(pathSegments[3]);
+    pathSegments.length >= 3;
 
   // Ocultar sidebar na home e na página de perfil (que tem sua própria sidebar)
   const hideGlobalSidebar = pathname === '/' || pathname.startsWith('/perfil');

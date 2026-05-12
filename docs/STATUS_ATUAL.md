@@ -905,4 +905,22 @@ npm run validate:phase:core: passou em 2026-05-11 com 55 passed, 1 skipped apos 
   - `npm run lint`: passou.
   - `npm run validate:phase:core`: passou em 2026-05-12 com `56 passed`, `1 skipped` (skip admin condicional por `SUPABASE_SERVICE_ROLE_KEY`).
 
+## Atualizacao 2026-05-12 (P0 Governanca Docs - Validador Automatico De Links Vivos)
+
+- Criado validador automatizado de links dos documentos vivos:
+  - Script: `scripts/validate-doc-live-links.ts`
+  - Comando: `npm run validate:docs-live-links`
+- Escopo do validador:
+  - `docs/README.md`
+  - `docs/INDEX_CANONICO.md`
+  - `docs/DOCUMENTATION_INDEX.md`
+  - `docs/STATUS.md`
+  - `docs/VALIDACAO_FINAL_E_PROXIMOS_PASSOS.md`
+- Objetivo: impedir regressao de navegacao/documentacao apos limpeza de docs e movimentacoes para historico.
+- Validacoes executadas:
+  - `npm run validate:docs-live-links`: passou.
+  - `npm run typecheck`: passou.
+  - `npm run lint`: passou.
+  - `npm run validate:phase:core`: passou em 2026-05-12 com `56 passed`, `1 skipped` (skip admin condicional por `SUPABASE_SERVICE_ROLE_KEY`).
+
 

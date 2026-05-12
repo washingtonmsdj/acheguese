@@ -68,6 +68,7 @@ export function useResolveTerritoryFromUrl(): TerritoryResolveResult {
   if (districtSlug === '_') districtSlug = undefined;
 
   const isGuideRoute = pathname.startsWith('/pontos-turisticos/') || pathname.startsWith('/guia/pontos-turisticos/');
+  const isCommunityRoute = pathname.startsWith('/comunidade/');
 
   const [result, setResult] = useState<TerritoryResolveResult>({
     status: TERRITORY_RESOLVE_STATUS.IDLE,
@@ -152,6 +153,24 @@ export function useResolveTerritoryFromUrl(): TerritoryResolveResult {
           return;
         }
 
+        if (isCommunityRoute && districtSlug) {
+          const groupRepo = createTerritorialGroupRepository();
+          const group = await groupRepo.findBySlugAndCity(districtSlug, cityLocation.id);
+          if (group && group.status === 'active' && isTerritoryPubliclyNavigable(group.metadata)) {
+            const withMembers = await groupRepo.findWithMembers(group.id);
+            if (withMembers) {
+              if (!cancelled) {
+                setResult({
+                  status: TERRITORY_RESOLVE_STATUS.RESOLVED_GROUP,
+                  resolved: { kind: 'group', group: withMembers },
+                  error: null,
+                });
+              }
+              return;
+            }
+          }
+        }
+
         const districtPath = `${cityPath}/${districtSlug}`;
         const districtLocation = await locationRepo.findByPath(districtPath);
 
@@ -198,7 +217,7 @@ export function useResolveTerritoryFromUrl(): TerritoryResolveResult {
 
     resolve();
     return () => { cancelled = true; };
-  }, [country, state, city, groupSlug, districtSlug]);
+  }, [country, state, city, groupSlug, districtSlug, isCommunityRoute]);
 
   return result;
 }

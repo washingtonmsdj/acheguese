@@ -142,8 +142,14 @@ export function buildModuleTerritoryUrl(module: ModuleSlug, territoryBaseUrl: st
 }
 
 export function buildCommunityTerritoryUrl(territoryBaseUrl: string, suffix = ''): string {
+  const normalizedBase = normalizePublicTerritoryPath(territoryBaseUrl);
+  const parts = normalizedBase.split("/").filter(Boolean);
+  const canonicalCommunityBase =
+    parts.length >= 4 && parts[2] === "area"
+      ? `/${parts[0]}/${parts[1]}/${parts[3]}`
+      : normalizedBase;
   const normalizedSuffix = suffix ? `/${suffix.replace(/^\/+/, '')}` : '';
-  return buildModuleTerritoryUrl(MODULE_SLUGS.community, territoryBaseUrl) + normalizedSuffix;
+  return buildModuleTerritoryUrl(MODULE_SLUGS.community, canonicalCommunityBase) + normalizedSuffix;
 }
 
 export type CommunityTabSuffix = 'feed' | 'grupos';
@@ -153,7 +159,7 @@ export type CommunityTabSuffix = 'feed' | 'grupos';
  * Suporta:
  * - /comunidade/:state/:city
  * - /comunidade/:state/:city/:district
- * - /comunidade/:state/:city/area/:groupSlug
+ * - /comunidade/:state/:city/:territorySlug
  * e seus subcaminhos.
  */
 export function buildCommunityTabUrlFromPath(pathname: string, tab: CommunityTabSuffix): string | null {
@@ -161,9 +167,7 @@ export function buildCommunityTabUrlFromPath(pathname: string, tab: CommunityTab
   if (parts[0] !== MODULE_SLUGS.community || parts.length < 3) return null;
 
   const base = ['comunidade', parts[1], parts[2]];
-  if (parts[3] === 'area' && parts[4]) {
-    base.push('area', parts[4]);
-  } else if (parts[3] && parts[3] !== 'feed' && parts[3] !== 'grupos') {
+  if (parts[3] && !['feed', 'grupos', 'alertas', 'problemas', 'achados-e-perdidos'].includes(parts[3])) {
     base.push(parts[3]);
   }
 
