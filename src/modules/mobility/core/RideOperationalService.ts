@@ -1142,6 +1142,7 @@ export class RideOperationalService {
       const passengerTrackingUrl = mobilityRoutes.passageiro.buscando(rideId);
 
       const notify = async (
+        audience: "passenger" | "driver",
         userId: string | null,
         type: "info" | "success" | "warning" | "error",
         title: string,
@@ -1157,7 +1158,13 @@ export class RideOperationalService {
             category: "transactional",
             title,
             message,
-            metadata: { rideId, state: newState, event },
+            metadata: {
+              ride_id: rideId,
+              state: newState,
+              event,
+              audience,
+              ride_mode: isDeliveryMode ? "motoboy" : "ride",
+            },
             action_url: actionUrl,
             action_label: "Ver detalhes",
           });
@@ -1173,6 +1180,7 @@ export class RideOperationalService {
 
       if (newState === RIDE_STATE.DRIVER_ACCEPTED) {
         await notify(
+          "passenger",
           passengerUserId,
           "success",
           "Motorista confirmou a corrida",
@@ -1185,6 +1193,7 @@ export class RideOperationalService {
 
       if (newState === RIDE_STATE.IN_PROGRESS) {
         await notify(
+          "passenger",
           passengerUserId,
           "info",
           "Corrida iniciada",
@@ -1197,6 +1206,7 @@ export class RideOperationalService {
 
       if (newState === RIDE_STATE.IN_DELIVERY) {
         await notify(
+          "passenger",
           passengerUserId,
           "info",
           "Entrega em rota",
@@ -1209,6 +1219,7 @@ export class RideOperationalService {
 
       if (newState === RIDE_STATE.DELIVERED || newState === RIDE_STATE.COMPLETED) {
         await notify(
+          "passenger",
           passengerUserId,
           "success",
           newState === RIDE_STATE.DELIVERED ? "Entrega concluida" : "Corrida concluida",
@@ -1217,6 +1228,7 @@ export class RideOperationalService {
           passengerTrackingUrl,
         );
         await notify(
+          "driver",
           driverUserId,
           "success",
           "Operacao concluida",
@@ -1229,19 +1241,25 @@ export class RideOperationalService {
 
       if (newState === RIDE_STATE.CANCELLED_BY_DRIVER || newState === RIDE_STATE.CANCELLED_BY_PASSENGER) {
         await notify(
+          "passenger",
           passengerUserId,
           "warning",
           "Corrida cancelada",
           "A corrida foi cancelada.",
-          "ride_canceled",
+          newState === RIDE_STATE.CANCELLED_BY_DRIVER
+            ? "ride_canceled_by_driver"
+            : "ride_canceled_by_passenger",
           passengerTrackingUrl,
         );
         await notify(
+          "driver",
           driverUserId,
           "warning",
           "Corrida cancelada",
           "A corrida foi cancelada.",
-          "ride_canceled",
+          newState === RIDE_STATE.CANCELLED_BY_DRIVER
+            ? "ride_canceled_by_driver"
+            : "ride_canceled_by_passenger",
           isDeliveryMode ? mobilityRoutes.motoboy.entregas : mobilityRoutes.motorista.corridas,
         );
       }

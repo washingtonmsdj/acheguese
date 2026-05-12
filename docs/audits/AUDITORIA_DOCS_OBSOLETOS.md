@@ -35,7 +35,7 @@ O projeto precisa separar claramente:
 
 - [x] P0 parcial: impedir que relatorios antigos na raiz virem fonte de verdade via `docs/INDEX_CANONICO.md`, `docs/README.md`, `docs/DOCUMENTATION_INDEX.md` e `docs/DOCUMENT_REPLACEMENTS.md`.
 - [x] P0: criar um unico indice de status atual: `docs/STATUS_ATUAL.md`.
-- [ ] P1: mover relatorios historicos para `docs/archive` ou marcar explicitamente como historicos.
+- [x] P1 parcial: mover relatorios historicos da raiz para `docs/historico/root-markdown-2026-05-cleanup/` (108 arquivos de analise/refatoracao/progresso/sessao).
 - [ ] P1: adicionar data, dono, status e validade em docs decisorios.
 - [ ] P1: criar regra: nenhum documento pode declarar "completo" se `typecheck`, validacoes de arquitetura/taxonomia e checklist P0 estiverem falhando.
 - [ ] P2: criar changelog de auditoria por modulo.
@@ -62,7 +62,7 @@ Documentos historicos:
 
 - [x] P0: criar `docs/STATUS_ATUAL.md` com estado real, nao marketing interno.
 - [x] P0 parcial: marcar docs obsoletos de maior risco com banner no topo: `docs/STATUS.md` e `docs/VALIDACAO_FINAL_E_PROXIMOS_PASSOS.md`.
-- [ ] P1: mover docs soltos da raiz para `docs/archive` quando nao forem operacionais.
+- [x] P1 parcial: mover docs soltos da raiz (analises/refatoracoes/sessoes/progresso/resumos) para historico datado.
 - [ ] P1: manter no maximo um documento de auditoria atual por tema.
 - [ ] P1: linkar cada doc vivo a evidencias: scripts, arquivos e data da ultima verificacao.
 - [ ] P2: automatizar checagem de termos perigosos em docs: "100%", "final", "pronto para producao", "zero TODO".

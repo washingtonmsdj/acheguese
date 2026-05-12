@@ -30,8 +30,8 @@ export function AppLayoutSidebar() {
     pathSegments.length >= 4 &&
     !['alertas', 'problemas'].includes(pathSegments[3]);
 
-  // Ocultar sidebar na página de perfil (que tem sua própria sidebar)
-  const hideGlobalSidebar = pathname.startsWith('/perfil');
+  // Ocultar sidebar na home e na página de perfil (que tem sua própria sidebar)
+  const hideGlobalSidebar = pathname === '/' || pathname.startsWith('/perfil');
 
   const isInternalGroupRoute =
     pathSegments[0] === 'grupos' && pathSegments.length >= 2;

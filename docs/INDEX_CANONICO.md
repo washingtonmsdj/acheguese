@@ -42,6 +42,7 @@ Observacao:
 - Historico consolidado: `docs/historico/`
 - Arquivo de legado e sessoes: `docs/archive/`
 - Lote movido da raiz em 2026-04-20: `docs/historico/root-markdown/`
+- Lote movido da raiz em 2026-05-12 (analises/refatoracoes/sessoes/progresso): `docs/historico/root-markdown-2026-05-cleanup/`
 - Lote pre-launch consolidado em 2026-04-20: `docs/historico/pre-launch/2026-04-20/`
 - Lote gastronomia legado consolidado em 2026-04-22: `docs/archive/2026-04-22-gastronomy-legacy/`
 - Ponte historica de pre-launch: `docs/pre-launch/README.md` e `docs/pre-launch/INDEX.md`

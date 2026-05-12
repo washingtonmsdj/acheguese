@@ -89,6 +89,10 @@ describe("gastronomy operational SSOT flow", () => {
     expect(trustSource).toContain("action_url: adminActionUrl");
     expect(trustSource).toContain("action_label: \"Ver contexto\"");
     expect(trustSource).toContain("action_label: \"Ver fila\"");
+    expect(trustSource).toContain('metadata: { ...baseMetadata, audience: "subject" }');
+    expect(trustSource).toContain('metadata: { ...baseMetadata, audience: "actor" }');
+    expect(trustSource).toContain('metadata: { ...metadata, audience: "subject" }');
+    expect(trustSource).toContain('metadata: { ...metadata, audience: "admin" }');
   });
 
   it("enforces transactional notification category across delivery and trust flows", () => {
@@ -101,6 +105,9 @@ describe("gastronomy operational SSOT flow", () => {
     );
 
     expect(deliveryNotificationSource).toContain('category: "transactional"');
+    expect(deliveryNotificationSource).toContain('metadata: { ...metadata, audience: "customer" }');
+    expect(deliveryNotificationSource).toContain('metadata: { ...metadata, audience: "merchant" }');
+    expect(deliveryNotificationSource).toContain('metadata: { ...metadata, audience: "courier" }');
     expect(deliveryNotificationSource).toContain("p_type: payload.type");
     expect(deliveryNotificationSource).toContain("p_category: payload.category");
     expect(deliveryNotificationSource).not.toContain('p_category: "system"');

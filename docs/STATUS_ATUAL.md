@@ -861,4 +861,48 @@ npm run validate:phase:core: passou em 2026-05-11 com 55 passed, 1 skipped apos 
   - `npm run typecheck`: passou.
   - `npm run lint`: passou.
 
+## Atualizacao 2026-05-12 (P0 Mobilidade - Matriz De Notificacao Operacional Auditavel)
+
+- Hardening aplicado em `src/modules/mobility/core/RideOperationalService.ts` para trilha de notificacoes operacionais:
+  - Metadata de notificacao agora inclui `ride_id`, `state`, `event`, `audience` e `ride_mode` (corrida comum ou motoboy).
+  - Cancelamentos agora usam evento semantico por ator (`ride_canceled_by_driver` / `ride_canceled_by_passenger`) em vez de evento generico unico.
+  - Mantido SSOT de rota canonica por helper (`mobilityRoutes.passageiro.buscando(rideId)` e rotas centrais de motorista/motoboy).
+- Anti-regressao adicionada em `src/modules/mobility/__tests__/MobilityOperationalNotificationsSSOT.test.ts`.
+- Validacoes executadas nesta etapa:
+  - `npx vitest --run src/modules/mobility/__tests__/MobilityOperationalNotificationsSSOT.test.ts src/modules/mobility/__tests__/MobilityCanonicalOnboardingRoutes.test.ts src/modules/mobility/delivery/__tests__/DeliverySSOTGuard.test.ts`: passou com `5 passed`.
+  - `npm run typecheck`: passou.
+  - `npm run lint`: passou.
+  - `npm run validate:phase:core`: passou em 2026-05-12 com `56 passed`, `1 skipped` (skip admin condicional por `SUPABASE_SERVICE_ROLE_KEY`).
+
+## Atualizacao 2026-05-12 (P0 Governanca De Docs - Limpeza Estrutural Da Raiz)
+
+- Executado pente-fino de documentacao obsoleta na raiz de `docs/` sem apagar historico:
+  - `108` arquivos de analise/refatoracao/sessao/progresso/resumo foram movidos para `docs/historico/root-markdown-2026-05-cleanup/`.
+  - Politica de navegacao atualizada em `docs/README.md` e `docs/INDEX_CANONICO.md` apontando o novo lote historico.
+  - `docs/audits/AUDITORIA_DOCS_OBSOLETOS.md` atualizado com marcacoes de concluido parcial da limpeza.
+- Objetivo cumprido: reduzir ruido de SSOT e impedir que snapshot antigo concorra com `docs/STATUS_ATUAL.md`.
+
+## Atualizacao 2026-05-12 (P0 Frontend + E2E Admin Mobilidade)
+
+- Frontend foi revalidado com foco em responsividade e fluxo operacional real:
+  - `tests/e2e/mobile-core-layout.spec.ts` + `tests/e2e/mobile-auth-dashboards.spec.ts` passaram com `7/7` (360px, landing/cadastro/servicos e dashboards centrais de empresa/motorista/motoboy).
+- Auditoria E2E da Central de mobilidade foi endurecida em `tests/e2e/central/central-validation.spec.ts`:
+  - Assert administrativo agora aceita rotas canonicas de passageiro/motoboy/motorista.
+  - Notificacoes auditadas por metadata semantica (`audience`, `ride_mode`) e eventos de cancelamento por ator quando presentes.
+- Validacoes executadas nesta etapa:
+  - `node --use-system-ca ./node_modules/playwright/cli.js test tests/e2e/central/central-validation.spec.ts --project=chromium --reporter=list`: passou com `28 passed`, `1 skipped` condicional de service role.
+  - `npm run typecheck`: passou.
+  - `npm run lint`: passou.
+
+## Atualizacao 2026-05-12 (P0 Contrato Trust/Notificacao - Hardening Anti-Regressao)
+
+- Teste SSOT de gastronomia endurecido em `src/modules/business/gastronomy/__tests__/GastronomyOperationalSSOT.test.ts`:
+  - Agora exige metadados de audiencia em notificacoes transacionais de delivery (`customer`, `merchant`, `courier`).
+  - Agora exige metadados de audiencia na trilha trust (`subject`, `actor`, `admin`) com links canonicos ja validados.
+- Validacoes executadas:
+  - `npm test -- src/modules/business/gastronomy/__tests__/GastronomyOperationalSSOT.test.ts`: passou com `11 passed`.
+  - `npm run typecheck`: passou.
+  - `npm run lint`: passou.
+  - `npm run validate:phase:core`: passou em 2026-05-12 com `56 passed`, `1 skipped` (skip admin condicional por `SUPABASE_SERVICE_ROLE_KEY`).
+
 

@@ -16,6 +16,7 @@ Centralizar a documentacao viva em `docs/`, manter contratos tecnicos junto do d
 - `docs/audits/`: inventario estrutural, relatorio mestre, checklist, quick wins e backlog pos-prontidao.
 - `docs/archive/`: relatorios antigos, sessoes, snapshots e materiais que nao regem o estado atual.
 - `docs/historico/`: arvores historicas consolidadas, incluindo `architecture-fix/`.
+- `docs/historico/root-markdown-2026-05-cleanup/`: lote de documentos de sessao/progresso/refatoracao retirados da raiz em 2026-05-12.
 - `docs/temp-work-*`: rascunhos temporarios de execucao. Nao sao fonte SSOT e devem ser limpos/arquivados apos consolidacao.
 - `src/<dominio>/README.md` e `src/<dominio>/docs/`: contratos vivos de dominio.
 
