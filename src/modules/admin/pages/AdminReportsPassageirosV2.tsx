@@ -43,6 +43,7 @@ import {
   Ban,
   Search,
 } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import { cn } from "@/shared/utils/cn";
 
 const REPORT_TYPE_LABELS: Record<string, string> = {
@@ -57,7 +58,7 @@ const REPORT_TYPE_LABELS: Record<string, string> = {
   other: "Outro",
 };
 
-const REPORT_TYPE_ICONS: Record<string, any> = {
+const REPORT_TYPE_ICONS: Record<string, LucideIcon> = {
   safety_concern: Shield,
   driver_behavior: User,
   passenger_behavior: User,
@@ -102,7 +103,7 @@ export default function AdminReportsPassageirosV2() {
   const { data: reports = [], isLoading } = useQuery({
     queryKey: ["admin-ride-reports", statusFilter, severityFilter],
     queryFn: async () => {
-      const filters: any = {};
+      const filters: Record<string, unknown> = {};
       if (statusFilter !== "all") filters.status = statusFilter;
       if (severityFilter !== "all") filters.severity = severityFilter;
       return RideReportsService.listReports(filters);
@@ -121,7 +122,7 @@ export default function AdminReportsPassageirosV2() {
 
   // Mutation para atualizar report
   const updateReportMutation = useMutation({
-    mutationFn: ({ reportId, updates }: { reportId: string; updates: any }) =>
+    mutationFn: ({ reportId, updates }: { reportId: string; updates: Partial<RideReport> }) =>
       RideReportsService.updateReport(reportId, updates),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin-ride-reports"] });
@@ -267,7 +268,7 @@ export default function AdminReportsPassageirosV2() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="space-y-2">
               <label className="text-sm font-medium">Status</label>
-              <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as any)}>
+              <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as ReportStatus | "all")}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
@@ -283,7 +284,7 @@ export default function AdminReportsPassageirosV2() {
 
             <div className="space-y-2">
               <label className="text-sm font-medium">Severidade</label>
-              <Select value={severityFilter} onValueChange={(v) => setSeverityFilter(v as any)}>
+              <Select value={severityFilter} onValueChange={(v) => setSeverityFilter(v as ReportSeverity | "all")}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>

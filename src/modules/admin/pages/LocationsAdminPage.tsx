@@ -35,6 +35,8 @@ interface Location {
     coordinates_source?: string;
     coordinates_confidence?: string;
     coordinates_needs_refinement?: boolean;
+    coordinates_updated_at?: string;
+    [key: string]: unknown;
   };
   children?: Location[];
 }
@@ -136,7 +138,7 @@ export default function LocationsAdminPage() {
       const geographicPath = parentPath ? `${parentPath}/${formData.slug}` : `/${formData.slug}`;
 
       // Preparar metadata
-      const metadata: any = {};
+      const metadata: Location['metadata'] = {};
       if (formData.latitude && formData.longitude) {
         metadata.center_latitude = parseFloat(formData.latitude);
         metadata.center_longitude = parseFloat(formData.longitude);
@@ -171,11 +173,11 @@ export default function LocationsAdminPage() {
       });
       setShowAddForm(false);
       loadLocations();
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('Error adding location:', error);
       toast({
         title: 'Erro ao adicionar location',
-        description: error.message || 'Não foi possível adicionar o location.',
+        description: error instanceof Error ? error.message : 'Não foi possível adicionar o location.',
         variant: 'destructive',
       });
     }
@@ -186,7 +188,7 @@ export default function LocationsAdminPage() {
 
     try {
       // Preparar metadata
-      const metadata: any = { ...editingLocation.metadata };
+      const metadata: Location['metadata'] = { ...editingLocation.metadata };
       if (formData.latitude && formData.longitude) {
         metadata.center_latitude = parseFloat(formData.latitude);
         metadata.center_longitude = parseFloat(formData.longitude);
@@ -219,11 +221,11 @@ export default function LocationsAdminPage() {
         longitude: '',
       });
       loadLocations();
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('Error updating location:', error);
       toast({
         title: 'Erro ao atualizar location',
-        description: error.message || 'Não foi possível atualizar o location.',
+        description: error instanceof Error ? error.message : 'Não foi possível atualizar o location.',
         variant: 'destructive',
       });
     }
@@ -288,11 +290,11 @@ export default function LocationsAdminPage() {
 
       // Recarregar lista
       loadLocations();
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('Error refining coordinates:', error);
       toast({
         title: 'Erro ao refinar coordenadas',
-        description: error.message || 'Não foi possível obter coordenadas precisas.',
+        description: error instanceof Error ? error.message : 'Não foi possível obter coordenadas precisas.',
         variant: 'destructive',
       });
     }
@@ -491,7 +493,7 @@ export default function LocationsAdminPage() {
                 <Label htmlFor="type">Tipo</Label>
                 <Select
                   value={formData.type}
-                  onValueChange={(value: any) => setFormData({ ...formData, type: value })}
+                  onValueChange={(value: Location['type']) => setFormData({ ...formData, type: value })}
                 >
                   <SelectTrigger>
                     <SelectValue />

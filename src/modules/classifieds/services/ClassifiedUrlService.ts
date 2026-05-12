@@ -93,6 +93,17 @@ export function slugify(text: string): string {
 
 export class ClassifiedUrlService {
   /**
+   * Gera URL curta canônica para classificado.
+   */
+  static buildShortUrl(publicId: string): string {
+    const normalized = String(publicId ?? '').trim();
+    if (!normalized) {
+      throw new Error('[ClassifiedUrlService] publicId inválido para URL curta');
+    }
+    return `/c/${normalized}`;
+  }
+
+  /**
    * Gera todas as URLs para um classificado a partir do contexto.
    */
   static buildUrls(ctx: ClassifiedUrlContext): ResolvedClassifiedUrl {
@@ -115,7 +126,7 @@ export class ClassifiedUrlService {
     const { uf, cidade, bairro } = territory;
 
     const canonical = `/classificados/${uf}/${cidade}/${bairro}/${category_slug}/${subcategory_slug}/${slug}/${public_id}`;
-    const short = `/c/${public_id}`;
+    const short = this.buildShortUrl(public_id);
     const edit = `/classificados/editar/${id}`;
 
     return { canonical, short, edit };
@@ -277,4 +288,3 @@ export class ClassifiedUrlService {
 }
 
 export const classifiedUrlService = ClassifiedUrlService;
-

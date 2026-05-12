@@ -84,6 +84,47 @@ export interface GetVagasParams {
   destaque?: boolean;
 }
 
+type VagaRow = {
+  id: string;
+  titulo: string;
+  empresa_nome?: string | null;
+  empresa?: string | null;
+  descricao: string;
+  location_id: string;
+  location?: { id: string; name: string; type: string } | null;
+  contrato: VagaContrato;
+  modalidade: VagaModalidade;
+  nivel: VagaNivel;
+  tags?: string[] | null;
+  salario_texto?: string | null;
+  salario_min?: number | null;
+  salario_max?: number | null;
+  beneficios?: string[] | null;
+  application_email?: string | null;
+  contato_email?: string | null;
+  application_whatsapp?: string | null;
+  contato_whatsapp?: string | null;
+  application_url?: string | null;
+  contato_url?: string | null;
+  status: VagaStatus;
+  urgencia?: VagaUrgencia | null;
+  highlight_type?: VagaHighlightType | null;
+  destaque?: boolean | null;
+  created_at: string;
+  updated_at: string;
+  published_at?: string | null;
+  expires_at?: string | null;
+};
+
+type VagaStatsRow = {
+  status: VagaStatus | "pending_review";
+  urgencia?: VagaUrgencia | null;
+  highlight_type?: VagaHighlightType | null;
+  contrato?: string | null;
+  modalidade?: string | null;
+  nivel?: string | null;
+};
+
 export class AdminVagasService {
   static async getStats(): Promise<VagaStats> {
     try {
@@ -110,7 +151,7 @@ export class AdminVagasService {
         byNivel: {},
       };
 
-      (data || []).forEach((row: any) => {
+      ((data as VagaStatsRow[] | null) || []).forEach((row) => {
         if (row.status === "pending_review") stats.pendingReview += 1;
         else if (row.status in stats) (stats as unknown as Record<string, number>)[row.status] += 1;
         if (row.urgencia === "urgente" || row.urgencia === "extrema") stats.urgentes += 1;
@@ -160,7 +201,7 @@ export class AdminVagasService {
       if (error) throw error;
 
       return {
-        data: (data ?? []).map((row: any) => this.mapRowToAdminVaga(row)),
+        data: ((data as VagaRow[] | null) ?? []).map((row) => this.mapRowToAdminVaga(row)),
         count: count ?? 0,
         page,
         limit,
@@ -285,14 +326,14 @@ export class AdminVagasService {
 
       if (error) throw error;
 
-      return (data ?? []).map((row: any) => this.mapRowToAdminVaga(row));
+      return ((data as VagaRow[] | null) ?? []).map((row) => this.mapRowToAdminVaga(row));
     } catch (error) {
       logger.error("[AdminVagasService] Erro ao buscar vagas expirando", error);
       return [];
     }
   }
 
-  private static mapRowToAdminVaga(row: any): AdminVaga {
+  private static mapRowToAdminVaga(row: VagaRow): AdminVaga {
     return {
       id: row.id,
       titulo: row.titulo,

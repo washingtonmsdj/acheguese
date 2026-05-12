@@ -64,6 +64,18 @@ export interface AdminAlertsListResult {
   total: number;
 }
 
+type AdminAlertPostRaw = {
+  id: string;
+  content?: string | null;
+  type?: string | null;
+  author_profile_id?: string | null;
+  created_at?: string | null;
+  likes_count?: number | null;
+  comments_count?: number | null;
+  hidden?: boolean | null;
+  tags?: string[] | null;
+};
+
 // ============================================================================
 // 🏛️ ADMIN ALERTS SERVICE
 // ============================================================================
@@ -92,7 +104,7 @@ class AdminAlertsService {
       const allUsers = await profileService.getAllUsers();
 
       // Converte para tipo AdminAlertPost
-      const adminAlerts: AdminAlertPost[] = allPosts.map((post) => ({
+      const adminAlerts: AdminAlertPost[] = (allPosts as AdminAlertPostRaw[]).map((post) => ({
         id: post.id,
         texto: post.content || "",
         category: post.type || "", // Mapeia type para category
@@ -100,12 +112,12 @@ class AdminAlertsService {
         autor_id: post.author_profile_id || "",
         created_at: post.created_at || "",
         expires_at: null, // Post não tem expires_at
-        hidden: (post as any).hidden || false, // Campo adicionado via type assertion
+        hidden: post.hidden || false,
         curtidas: post.likes_count || 0,
         comments_count: post.comments_count || 0,
         latitude: null, // Post não tem latitude
         longitude: null, // Post não tem longitude
-        hashtags: (post as any).tags || null, // Mapeia tags para hashtags
+        hashtags: post.tags || null,
       }));
 
       // Converte para tipo AdminAlertProfile

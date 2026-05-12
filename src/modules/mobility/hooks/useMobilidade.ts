@@ -3,6 +3,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/core/auth";
 import { profileService } from "@/core/profiles/services/ProfileService";
 import { RidePassengerService, RideRatingService, RideReportsService } from "@/modules/mobility/services";
+import type { ReportSeverity, ReportType } from "@/modules/mobility/services/RideReportsService";
 import { toast } from "sonner";
 import { getUserRides, getRideById, getPassengerRating } from "@/modules/mobility/services/mobility.queries";
 import type { RideRequest } from "@/modules/mobility/types/types";
@@ -35,6 +36,28 @@ export interface CreateRideRequestData {
 
 function isValidCoordinate(value: number): boolean {
   return Number.isFinite(value);
+}
+
+const REPORT_TYPES: readonly ReportType[] = [
+  "safety_concern",
+  "driver_behavior",
+  "passenger_behavior",
+  "route_issue",
+  "payment_issue",
+  "vehicle_condition",
+  "cancellation_abuse",
+  "fraud_suspicion",
+  "other",
+];
+
+const REPORT_SEVERITIES: readonly ReportSeverity[] = ["low", "medium", "high", "critical"];
+
+function parseReportType(value: string): ReportType {
+  return REPORT_TYPES.includes(value as ReportType) ? (value as ReportType) : "other";
+}
+
+function parseReportSeverity(value: string): ReportSeverity {
+  return REPORT_SEVERITIES.includes(value as ReportSeverity) ? (value as ReportSeverity) : "medium";
 }
 
 export function useMobilidade() {
@@ -577,12 +600,12 @@ export function useMobilidade() {
           toast.error("Perfil nao encontrado");
           return { success: false };
         }
-const result = await RideReportsService.createReport({
+        const result = await RideReportsService.createReport({
           rideId,
           reporterProfileId: passengerProfile.id,
           reporterType: "passenger",
-          reportType: reportType as any,
-          severity: severity as any,
+          reportType: parseReportType(reportType),
+          severity: parseReportSeverity(severity),
           title: "Problema reportado",
           description: description.trim(),
         });

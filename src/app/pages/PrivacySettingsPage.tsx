@@ -203,11 +203,11 @@ export default function PrivacySettingsPage() {
       });
 
       setShowDeleteConfirm(false);
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast({
         title: 'Erro',
         description:
-          error.message || 'Não foi possível solicitar a exclusão da conta.',
+          (error instanceof Error ? error.message : null) || 'Não foi possível solicitar a exclusão da conta.',
         variant: 'destructive',
       });
     }

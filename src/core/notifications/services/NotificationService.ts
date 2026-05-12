@@ -20,7 +20,7 @@ export interface Notification {
   message: string;
   action_url?: string;
   action_label?: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
   read: boolean;
   read_at?: string;
   created_at: string;
@@ -34,7 +34,7 @@ export interface CreateNotificationInput {
   message: string;
   action_url?: string;
   action_label?: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 export interface NotificationFilters {

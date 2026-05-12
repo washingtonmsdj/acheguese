@@ -11,7 +11,7 @@
  */
 
 import { supabase } from "@/integrations/supabase";
-import { postService } from "@/core/posts/services"; // ✅ SSOT - Usar PostService
+import { postService } from "@/core/posts/services"; // ✅ SSOT - Usar PostService`r`nimport { SessionService } from "@/core/session/services/SessionService";
 import type {
   Post,
   FeedParams,
@@ -39,9 +39,7 @@ class FeedService {
       } = params;
 
       // Verifica autenticação para contextos específicos
-      const {
-        data: { user },
-      } = await (supabase as any).auth.getUser();
+      const user = await SessionService.getCurrentUser();
 
       if ((context === "my_posts" || context === "saved") && !user) {
         throw new FeedError("User not authenticated", "UNAUTHENTICATED", 401);

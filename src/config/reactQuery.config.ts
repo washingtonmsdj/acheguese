@@ -13,6 +13,20 @@ import { logger } from '@/shared/utils/logger';
 import { QueryClient, DefaultOptions, QueryCache, MutationCache } from '@tanstack/react-query';
 import { captureSentryMessage, addSentryBreadcrumb } from '@/shared/config/sentry.config';
 
+type AppErrorLike = {
+  status?: number;
+  code?: string;
+  message?: string;
+  stack?: string;
+};
+
+function toAppErrorLike(error: unknown): AppErrorLike {
+  if (typeof error === 'object' && error !== null) {
+    return error as AppErrorLike;
+  }
+  return { message: String(error) };
+}
+
 /**
  * Cache strategies por tipo de dado
  */
@@ -70,7 +84,7 @@ export const QUERY_KEYS = {
   // Businesses
   businesses: {
     all: ['businesses'] as const,
-    list: (filters: Record<string, any>) => ['businesses', 'list', filters] as const,
+    list: (filters: Record<string, unknown>) => ['businesses', 'list', filters] as const,
     byId: (id: string) => ['businesses', id] as const,
     bySlug: (slug: string) => ['businesses', 'slug', slug] as const,
     stats: (id: string) => ['businesses', id, 'stats'] as const,
@@ -85,7 +99,7 @@ export const QUERY_KEYS = {
   // Mobility
   mobility: {
     rideRequests: (userId: string) => ['mobility', 'ride-requests', userId] as const,
-    rideOffers: (filters: Record<string, any>) => ['mobility', 'ride-offers', filters] as const,
+    rideOffers: (filters: Record<string, unknown>) => ['mobility', 'ride-offers', filters] as const,
   },
   
   // Notifications (realtime)
@@ -113,13 +127,14 @@ const defaultOptions: DefaultOptions = {
     gcTime: CACHE_STRATEGIES.USER.gcTime,
     
     // Retry logic
-    retry: (failureCount, error: any) => {
+    retry: (failureCount, error: unknown) => {
+      const appError = toAppErrorLike(error);
       // Não retry em erros 4xx (client errors)
-      if (error?.status >= 400 && error?.status < 500) {
+      if ((appError.status ?? 0) >= 400 && (appError.status ?? 0) < 500) {
         return false;
       }
       // Não retry em erros de contrato/schema do PostgREST/PostgreSQL
-      const errorCode = typeof error?.code === 'string' ? error.code : '';
+      const errorCode = typeof appError.code === 'string' ? appError.code : '';
       if (errorCode.startsWith('PGRST') || /^[0-9A-Z]{5}$/.test(errorCode)) {
         return false;
       }
@@ -151,22 +166,23 @@ const defaultOptions: DefaultOptions = {
  * QueryCache global com handlers de erro/sucesso (TanStack Query v5)
  */
 const queryCache = new QueryCache({
-  onError: (error: any) => {
+  onError: (error: unknown) => {
+    const appError = toAppErrorLike(error);
     if (import.meta.env.PROD) {
       captureSentryMessage(
-        `Query error: ${error?.message || 'Unknown error'}`,
+        `Query error: ${appError.message || 'Unknown error'}`,
         'error',
         {
-          error: error?.message,
-          status: error?.status,
-          stack: error?.stack,
+          error: appError.message,
+          status: appError.status,
+          stack: appError.stack,
         }
       );
     } else {
       logger.error('Query error:', error);
     }
   },
-  onSuccess: (data: any, query: any) => {
+  onSuccess: (data: unknown, query) => {
     const queryKey = query.queryKey;
     const dataUpdatedAt = query.state?.dataUpdatedAt || Date.now();
     const duration = Date.now() - dataUpdatedAt;
@@ -200,22 +216,23 @@ const queryCache = new QueryCache({
  * MutationCache global com handlers de erro/sucesso (TanStack Query v5)
  */
 const mutationCache = new MutationCache({
-  onError: (error: any) => {
+  onError: (error: unknown) => {
+    const appError = toAppErrorLike(error);
     if (import.meta.env.PROD) {
       captureSentryMessage(
-        `Mutation error: ${error?.message || 'Unknown error'}`,
+        `Mutation error: ${appError.message || 'Unknown error'}`,
         'error',
         {
-          error: error?.message,
-          status: error?.status,
-          stack: error?.stack,
+          error: appError.message,
+          status: appError.status,
+          stack: appError.stack,
         }
       );
     } else {
       logger.error('Mutation error:', error);
     }
   },
-  onSuccess: (data: any, variables: any, context: any, mutation: any) => {
+  onSuccess: (_data: unknown, _variables: unknown, _context: unknown, mutation) => {
     const mutationKey = mutation.options?.mutationKey;
     const duration = Date.now() - (mutation.state?.submittedAt || Date.now());
     

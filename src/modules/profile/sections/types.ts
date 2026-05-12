@@ -9,6 +9,7 @@ import type { NavigateFunction } from "react-router-dom";
 import type { MultiProfileRecord } from "@/core/profiles/services/multi-profile/types";
 import type { ProfileBusinessModuleItem } from "@/core/profiles/services/types";
 import type { AppUrls } from "@/core/routing/types";
+import type { Tables } from "@/integrations/supabase/types.generated";
 import type { ProfileSectionId } from "@/modules/profile/config/profile-sections.config";
 
 // ============================================
@@ -50,7 +51,7 @@ export interface Notifications {
   readonly highPriority: number;
   readonly urgentPriority: number;
   readonly total: number;
-  readonly recent?: readonly any[];
+  readonly recent?: readonly Record<string, unknown>[];
 }
 
 // ============================================
@@ -128,7 +129,7 @@ export interface Ride {
 export interface Favorite {
   readonly id: string;
   readonly type: string;
-  readonly item: any;
+  readonly item: Record<string, unknown>;
 }
 
 // ============================================
@@ -163,7 +164,7 @@ export interface ResumoSectionProps extends BaseSectionProps {
   readonly hasActiveRide: boolean;
   readonly activeRide?: Ride;
   readonly driverProfileId: string | null;
-  readonly driverData?: any;
+  readonly driverData?: Tables<"driver_data"> | null;
   readonly setActiveSection: (section: ProfileSectionId) => void;
 }
 
@@ -192,7 +193,7 @@ export interface MobilidadeSectionProps extends BaseSectionProps {
   readonly hasDriverProfile: boolean;
   readonly driverProfile: MultiProfileRecord | null;
   readonly driverProfileId: string | null;
-  readonly driverData: any;
+  readonly driverData: Tables<"driver_data"> | null;
   readonly driverDataLoading: boolean;
   readonly operations: Operations;
   readonly hasActiveRide: boolean;

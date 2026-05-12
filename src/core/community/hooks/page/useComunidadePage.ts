@@ -22,7 +22,18 @@ import type { PostType } from "@/core/posts/types/Post";
 
 interface ModalState {
   type: "comment" | "post" | "unified" | "report" | "create" | null;
-  data: any;
+  data:
+    | null
+    | { defaultType: string }
+    | { post: string }
+    | { postId: string; authorProfileId: string; authorName: string }
+    | { type: "civic_report"; reportId: string }
+    | {
+        editPostId: string;
+        initialContent: string;
+        initialType: PostType;
+        initialReach: "street" | "neighborhood" | "city";
+      };
 }
 
 interface CommunityActorProfile {
@@ -63,9 +74,8 @@ function toCommunityActorProfile(input: unknown): CommunityActorProfile | null {
     (typeof record.neighborhood === "string" && record.neighborhood) ||
     null;
   const locationId =
-    (typeof record.location_id === "string" && record.location_id) ||
-    (typeof record.locationId === "string" && record.locationId) ||
-    null;
+    (typeof record.locationId === "string" ? record.locationId : null) ??
+    (typeof record.location_id === "string" ? record.location_id : null);
   const verified = typeof record.verified === "boolean" ? record.verified : false;
   const profileType =
     (typeof record.profile_type === "string" && record.profile_type) ||
@@ -107,7 +117,7 @@ export function useComunidadePage() {
   const { data: postData, isLoading: isLoadingPost } = usePostById(postId);
 
   const handleOpenCreatePost = useCallback((defaultType?: string) => {
-    const hasProfileLocation = Boolean(profile?.location_id || profile?.locationId);
+    const hasProfileLocation = Boolean(profile?.locationId ?? profile?.location_id);
     const canCreatePost = communityLocation.canCreateContent || hasProfileLocation;
 
     // Verificar se pode criar conteÃºdo

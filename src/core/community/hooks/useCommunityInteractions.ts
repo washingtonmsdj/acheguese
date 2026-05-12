@@ -26,7 +26,7 @@ export function useCommunityInteractions() {
     interactionType: InteractionType,
     targetType?: string,
     targetId?: string,
-    metadata?: Record<string, any>,
+    metadata?: Record<string, unknown>,
     options?: {
       showToast?: boolean;
       showBadgeNotification?: boolean;
@@ -61,9 +61,9 @@ export function useCommunityInteractions() {
       }
 
       return result;
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error("Error recording interaction:", error);
-      return { success: false, error: error.message };
+      return { success: false, error: error instanceof Error ? error.message : "Erro ao registrar interacao" };
     } finally {
       setRecording(false);
     }
@@ -77,7 +77,7 @@ export function useCommunityInteractions() {
       type: InteractionType;
       targetType?: string;
       targetId?: string;
-      metadata?: Record<string, any>;
+      metadata?: Record<string, unknown>;
     }>,
   ) {
     if (!user || !activeProfile) {
@@ -108,9 +108,9 @@ export function useCommunityInteractions() {
       }
 
       return { success: true, results, totalPoints };
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error("Error recording bulk interactions:", error);
-      return { success: false, error: error.message };
+      return { success: false, error: error instanceof Error ? error.message : "Erro ao registrar interacao" };
     } finally {
       setRecording(false);
     }

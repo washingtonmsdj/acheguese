@@ -1,7 +1,8 @@
-﻿import React, { Suspense, lazy } from "react";
+import React, { Suspense, lazy } from "react";
 import { AnimatePresence } from "framer-motion";
-import { toast } from "sonner";
 import { logger } from "@/shared/utils/logger";
+import type { PostType } from "@/shared/constants/postTypeConfig";
+import type { Poll } from "@/shared/types/poll";
 
 const CommentsModal = lazy(() =>
   import("@/core/community/components/CommentsModal").then((m) => ({
@@ -19,15 +20,42 @@ const UnifiedDetailModal = lazy(() =>
   })),
 );
 
+interface ModalCommentData {
+  postId?: string;
+  authorProfileId?: string;
+  authorName?: string;
+}
+
 interface ModalState {
   type: "comment" | "post" | "unified" | "report" | "create" | null;
-  data: any;
+  data: ModalCommentData | string | null;
+}
+
+interface PostDetailData {
+  id: string;
+  author_profile_id: string;
+  author_name: string;
+  author_avatar?: string;
+  type: PostType;
+  content: string;
+  images?: string[];
+  poll?: Poll;
+  tags: string[];
+  city: string;
+  neighborhood: string;
+  rua: string;
+  created_at: string;
+  likes_count: number;
+  comments_count: number;
+  is_liked?: boolean;
+  is_saved?: boolean;
+  is_verified?: boolean;
 }
 
 interface CommunityModalsProps {
   modalState: ModalState;
   postId: string | null;
-  postData: any;
+  postData: PostDetailData | null;
   isLoadingPost: boolean;
   profileId?: string;
   onCloseModal: () => void;
@@ -60,9 +88,21 @@ export function CommunityModals({
           <CommentsModal
             open={true}
             onOpenChange={onCloseModal}
-            postId={modalState.data?.postId || modalState.data}
-            postAuthorId={modalState.data?.authorProfileId || ""}
-            postAuthorName={modalState.data?.authorName || "Autor"}
+            postId={
+              typeof modalState.data === "string"
+                ? modalState.data
+                : modalState.data?.postId || ""
+            }
+            postAuthorId={
+              typeof modalState.data === "string"
+                ? ""
+                : modalState.data?.authorProfileId || ""
+            }
+            postAuthorName={
+              typeof modalState.data === "string"
+                ? "Autor"
+                : modalState.data?.authorName || "Autor"
+            }
             currentUserId={profileId}
           />
         </Suspense>
@@ -73,7 +113,7 @@ export function CommunityModals({
           <PostDetailModal
             isOpen={true}
             onClose={onClosePostDetail}
-            post={postData as any}
+            post={postData}
             comments={[]}
             onLike={onLike}
             onSave={onSave}
@@ -103,4 +143,3 @@ export function CommunityModals({
     </AnimatePresence>
   );
 }
-

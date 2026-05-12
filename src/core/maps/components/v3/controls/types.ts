@@ -14,7 +14,7 @@ export interface SearchControlConfig {
   position?: ControlPosition;
   placeholder?: string;
   onSearch?: (query: string) => void;
-  entityFilter?: (entities: any[], query: string) => any[];
+  entityFilter?: <T>(entities: T[], query: string) => T[];
   debounceMs?: number;
 }
 

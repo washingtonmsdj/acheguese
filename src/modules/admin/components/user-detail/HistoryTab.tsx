@@ -16,18 +16,23 @@ import { Badge } from "@/shared/components/ui/badge";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { cn } from "@/shared/utils/cn";
+import type { LucideIcon } from "lucide-react";
 import type { SuspensionHistory } from "@/modules/admin/hooks/useAdminUserDetail";
 
 interface HistoryTabProps {
   suspensionHistory: SuspensionHistory[];
-  user: any;
+  user: {
+    created_at?: string | null;
+    verified_at?: string | null;
+    is_verified_resident?: boolean | null;
+  } | null;
 }
 
 export function HistoryTab({ suspensionHistory, user }: HistoryTabProps) {
   // Criar timeline de eventos
   const events: Array<{
     type: string;
-    icon: any;
+    icon: LucideIcon;
     color: string;
     title: string;
     description: string;

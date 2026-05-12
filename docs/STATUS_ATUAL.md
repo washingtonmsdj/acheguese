@@ -68,6 +68,7 @@ Ultimo commit base: 0c8701a `Consolida moderacao admin em fila unica e audit log
 - `npx playwright test tests/e2e/gastronomy-operational.spec.ts --project=chromium --reporter=list`: passou em 2026-05-11 com `4/4`.
 - `npm run build`: passou em 2026-05-11.
 - `npm run validate:phase:core`: passou em 2026-05-11 com `52 passed`, `4 skipped` (skips esperados condicionados a credenciais/ambiente administrativo), cobrindo SEO territorial, comunidade social, comunidade territorial, central, gastronomia, profissionais e mobile auth dashboards.
+- `npm run validate:phase:core`: passou em 2026-05-12 com `55 passed`, `1 skipped` (skip administrativo esperado condicionado a `SUPABASE_SERVICE_ROLE_KEY`), cobrindo SEO territorial, comunidade social, comunidade territorial, central, gastronomia, profissionais e mobile auth dashboards.
 
 ## Modulos/Fases Concluidos
 
@@ -203,6 +204,80 @@ Plano mestre de execucao por fases: `docs/PLANO_MESTRE_EXECUCAO_INTEGRAL_SSOT.md
 - P0 de Gastronomia/Delivery fechados nesta etapa: matriz de notificacoes, realtime da loja e elegibilidade de area no checkout (hook + service + componente + testes).
 - `SUPABASE_SERVICE_ROLE_KEY` e bloqueio real apenas para asserts administrativos/seeds multi-persona; o fluxo funcional autenticado nao deve ser mascarado por skip amplo.
 - Hooks de pedidos de gastronomia agora invalidam `orders` e `order_timeline_events` por realtime Supabase; notificacoes de status de pedido agora carregam audiencia e metadata auditavel.
+
+## Atualizacao 2026-05-12 (Gate Core Revalidado)
+
+- Gate principal reexecutado de ponta a ponta sem regressao:
+1. `npm run typecheck`: passou.
+2. `npm run lint`: passou.
+3. `npm run test:e2e:phase-core`: passou com `55 passed`, `1 skipped`.
+4. `npm run build`: passou.
+- Cobertura validada no ciclo:
+1. SEO territorial (`territorial-seo.spec.ts`).
+2. Comunidade social e territorial (`community-social-seo.spec.ts`, `community-territorial-operational.spec.ts`).
+3. Gastronomia operacional autenticada.
+4. Central (incluindo subrotas motorista/motoboy e compatibilidade legada controlada).
+5. Profissionais (landing/tracking + funil autenticado de leads).
+6. Mobile público e mobile autenticado em dashboards centrais.
+- Fase ativa permanece `Fase 3: Gastronomia e delivery integrado`.
+
+## Atualizacao 2026-05-12 (SEO Territorial - Hardening Comunidade)
+
+- `resolveSeoPolicy` foi corrigido para classificar duplicacao de modulo publico dentro da comunidade tambem no nivel cidade:
+1. cidade: `/comunidade/:state/:city/:modulo-publico`
+2. bairro: `/comunidade/:state/:city/:district/:modulo-publico`
+3. area: `/comunidade/:state/:city/area/:groupSlug/:modulo-publico`
+- Todas as tres variacoes agora aplicam `robots: noindex, follow` e `canonical` para a rota publica equivalente do modulo.
+- Blindagem adicionada em teste unitario de policy:
+1. `src/core/routing/seo/__tests__/TerritorialSEO.spec.ts` ganhou caso explicito de nivel cidade (`/comunidade/ba/salvador/empresas -> /empresas/ba/salvador`).
+- Validacoes desta entrega:
+1. `npm test -- src/core/routing/seo/__tests__/TerritorialSEO.spec.ts`: passou (4/4).
+2. `npx playwright test tests/e2e/territorial-seo.spec.ts --project=chromium --reporter=list`: passou (8/8).
+3. `npm run validate:phase:core`: passou com `55 passed`, `1 skipped` esperado.
+4. Cobertura E2E ampliada para nivel cidade em `tests/e2e/territorial-seo.spec.ts` (`/comunidade/ba/salvador/empresas`).
+5. `npx playwright test tests/e2e/territorial-seo.spec.ts --project=chromium --reporter=list`: reexecutado com cobertura ampliada e passou (9/9).
+6. `npm run validate:phase:core`: reexecutado apos ampliar cobertura, passou com `56 passed`, `1 skipped` esperado.
+
+## Atualizacao 2026-05-12 (Comunidade - Widgets e Rotas Canonicas)
+
+- Classificados proximos (core/modules) agora usam rota territorial canonica no CTA de listagem (`useModuleUrls().classifieds`) e fallback curto via `classifiedUrlService.buildShortUrl(...)`, removendo navegacao generica fixa.
+- Widgets de ranking da comunidade (core/modules) deixaram hardcodes de rota:
+1. `"/ranking"` foi migrado para `useAppUrls().ranking`.
+2. `"/profile/:id"` foi migrado para `useAppUrls().profile.public(...)`.
+- Cards de perfil mencionado (core/modules) deixaram rota legada `"/profile/:id"` e passaram para helper canonico de perfil publico (`buildPublicProfileUrl`).
+- Widget de sugestoes da sidebar foi consolidado em implementacao canônica nova (`SuggestionsWidgetSSOT`) para eliminar hardcode residual de perfil e CTA:
+1. perfil pessoa: helper `buildPublicProfileUrl(...)`.
+2. CTA `Explorar Mais`: `appUrls.search`.
+3. Sidebars de comunidade (core/modules) apontam para o widget SSOT.
+- Validacoes desta entrega:
+1. `npm run typecheck`: passou.
+2. `npm run lint`: passou.
+3. `npm run validate:phase:core`: passou com `56 passed`, `1 skipped` esperado.
+
+## Atualizacao 2026-05-12 (Blindagem Anti-Regressao de Rotas)
+
+- Novos testes SSOT para impedir reintroducao de rotas hardcoded legadas em componentes ativos da comunidade:
+1. `src/core/community/__tests__/CommunityRouteSSOT.test.ts`:
+   valida ausencia de `"/profile/"` em fontes ativas de `core/modules community` (com excecao controlada do arquivo legado travado).
+2. `src/core/community/__tests__/CommunityNavigationSSOT.test.ts`:
+   valida ausencia de hardcodes `"/classificados"` e `"/ranking"` nos componentes ativos de nearby/ranking auditados.
+- Validacoes desta etapa:
+1. `npm test -- src/core/community/__tests__/CommunityRouteSSOT.test.ts src/core/community/__tests__/CommunityNavigationSSOT.test.ts`: passou (`2/2`).
+2. `npm run validate:phase:core`: passou com `56 passed`, `1 skipped` esperado.
+
+## Atualizacao 2026-05-12 (Gate Oficial com SSOT de Comunidade)
+
+- O gate oficial da fase (`validate:phase:core`) foi fortalecido para incluir blindagens de rota da comunidade como etapa obrigatoria:
+1. novo script `test:ssot:community` em `package.json`.
+2. `validate:phase:core` agora executa: `typecheck` + `lint` + `test:ssot:community` + `test:e2e:phase-core`.
+- Suite `test:ssot:community` consolidada com 3 testes:
+1. `CommunityRouteSSOT.test.ts`.
+2. `CommunityNavigationSSOT.test.ts`.
+3. `CommunityLegacyIsolationSSOT.test.ts`.
+- Ajuste de robustez aplicado em `CommunityLegacyIsolationSSOT` para ignorar arquivo ponte (re-export), evitando falso positivo sem relaxar regra de runtime.
+- Validacoes desta etapa:
+1. `npm run validate:phase:core`: passou com `56 passed`, `1 skipped` esperado.
+2. `npm run build`: passou.
 
 ## P0 Abertos
 
@@ -364,7 +439,7 @@ Avancar para fechamento total da Fase 3 (sem abrir Fase 4):
 ## Atualizacao 2026-05-10 (Hardening de Tipagem - Servicos de Comunidade)
 
 - src/core/community/services/CommunityQAService.ts recebeu tipagem explicita para rows de perguntas/respostas/likes e removeu casts ny no fluxo principal de leitura/criacao/like/mencoes.
-- src/core/community/services/CommunityService.ts teve boundary de grupos tipado (GroupRow, GroupCreateInput) e remo��o de casts supabase as any no arquivo.
+- src/core/community/services/CommunityService.ts teve boundary de grupos tipado (GroupRow, GroupCreateInput) e remoÃ§Ã£o de casts supabase as any no arquivo.
 - `npm run validate:phase:core`: reexecutado em 2026-05-10 apos limpeza residual de tipagem em `core/modules community`; passou com `55 passed` e `1 skipped` esperado.
 - Limpeza residual concluida em comunidade: `modules/community/services/CommunityRolloutService`, `modules/community/nearby/hooks/useNearbyEntities`, `core/community/components/cards/PostCard` e `core/community/components/Leaderboard` sem `any`/`as any` nesses pontos.
 - `landing/services` hardening em 2026-05-10: `types.ts`, `landing.queries.ts` e `LandingFeaturedService.ts` tipados sem `any` residual no modulo; `npm run validate:phase:core` manteve `55 passed` e `1 skipped` esperado.
@@ -374,3 +449,416 @@ Avancar para fechamento total da Fase 3 (sem abrir Fase 4):
 - `npm run validate:phase:core`: revalidado em 2026-05-11 apos ajuste canonico dos scripts Playwright com `node --use-system-ca`; passou com `55 passed` e `1 skipped` esperado, sem erro TLS ao final da suite.
 - `npm run validate:operations:phase`: revalidado em 2026-05-11; passou com `37 passed` e `1 skipped` esperado.
 - `npm run validate:mobile:phase`: revalidado em 2026-05-11; passou com `7 passed`.
+
+## Atualizacao Continua 2026-05-11 (lote tipagem/qualidade)
+
+- Limpeza estrita de tipagem em hooks de mobilidade (useRideChat, useMobility, useGeolocation, useDriverLocation, useCommunityPosts, useMobilidade) removendo ny/as any residual e mantendo contratos SSOT.
+- Limpeza estrita de tipagem em gastronomia (useMenuItems, useDeliveryRequests, useAnalytics, MenuService, NicheVersioningService, illing/types) com substituicao de ny por tipos explicitos/unknown e guards de union.
+-
+npm run typecheck: passou em 2026-05-11 apos os ajustes.
+-
+npm run lint: passou em 2026-05-11 apos os ajustes.
+-
+npm run test:e2e:phase-core: passou em 2026-05-11 com 55 passed, 1 skipped (skip esperado por credencial/ambiente admin).
+
+- 2026-05-11 (continuidade): corrigido SSOT de area de entrega em DeliveryAreaService para preservar valores  (uso de ?? em vez de ||), normalizacao de endereco na elegibilidade e hardening UX no GastronomyDeliveryDestinationPanel (submit bloqueado com endereco vazio).
+-
+npm run typecheck: passou em 2026-05-11.
+-
+npm run lint: passou em 2026-05-11.
+-
+px playwright test tests/e2e/gastronomy-operational.spec.ts --project=chromium --reporter=list: passou em 2026-05-11 com 2 passed, 2 skipped (skips condicionais de ambiente/certificado), mantendo fluxo operacional cliente/loja/motoboy verde.
+
+- 2026-05-11 (notificacoes/trust hardening): OrderDeliveryNotificationService agora usa entrega parcial resiliente (Promise.allSettled) e deduplicacao por usuario+evento+status para reduzir auto-notificacao duplicada. TrustEventService tambem foi endurecido com envio resiliente em
+otifyTrustEventCreated e
+otifyTrustAdminAction, sem bloquear notificacoes restantes em caso de falha isolada.
+-
+npm run typecheck: passou em 2026-05-11.
+-
+npm run lint: passou em 2026-05-11.
+-
+px playwright test tests/e2e/gastronomy-operational.spec.ts --project=chromium --reporter=list: passou em 2026-05-11 com 2 passed, 2 skipped (skips condicionais de ambiente/certificado).
+
+- 2026-05-11 (realtime fila da loja): useOrders endurecido para nao invalidar fila de uma loja com eventos globais de order_timeline_events; agora o hook invalida apenas quando o order_id do evento pertence aos pedidos carregados da loja (Set memoizado), mantendo SSOT e reduzindo ruido/reloads desnecessarios.
+-
+npm run typecheck: passou em 2026-05-11.
+-
+npm run lint: passou em 2026-05-11.
+-
+px playwright test tests/e2e/gastronomy-operational.spec.ts --project=chromium --reporter=list: passou em 2026-05-11 com 2 passed, 2 skipped (skips condicionais de ambiente/certificado).
+
+- 2026-05-11 (eligibilidade hardening): useDeliveryEligibility agora normaliza
+eighborhood/city/state com 	rim(), usa chave de cache normalizada e bloqueia fetch com campos apenas de espaco em branco, evitando inconsistencias de elegibilidade e cache duplicado.
+-
+npm run typecheck: passou em 2026-05-11.
+-
+npm run lint: passou em 2026-05-11.
+-
+px playwright test tests/e2e/gastronomy-operational.spec.ts --project=chromium --reporter=list: passou em 2026-05-11 com 2 passed, 2 skipped (skips condicionais de ambiente/certificado).
+
+-
+npm run validate:phase:core: passou em 2026-05-11 apos os hardenings recentes (realtime, elegibilidade e notificacoes), com 55 passed e 1 skipped (skip esperado por credencial admin/service-role).
+
+- 2026-05-11 (consistencia de cache no detalhe): useOrderDetails passou a invalidar tambem ['orders', businessId] e ['order-stats', businessId] apos atualizar notas internas, evitando divergencia entre detalhe e fila/indicadores da loja.
+-
+npm run typecheck: passou em 2026-05-11.
+-
+npm run lint: passou em 2026-05-11.
+-
+px playwright test tests/e2e/gastronomy-operational.spec.ts --project=chromium --reporter=list: passou em 2026-05-11 com 2 passed, 2 skipped (skips condicionais de ambiente/certificado).
+
+- 2026-05-11 (ux operacional motoboy+tracking): MotoboyDeliveryActions agora impede fechamento de dialogs durante acao em andamento (isLoading) e desabilita cancelamento nesses estados para evitar interrupcao de operacoes criticas. OrderTrackingCard foi endurecido para nao renderizar mapa com coordenadas invalidas (0/0); quando coordenadas faltam, exibe estado explicito aguardando dados no SSOT.
+-
+npm run typecheck: passou em 2026-05-11.
+-
+npm run lint: passou em 2026-05-11.
+-
+px playwright test tests/e2e/gastronomy-operational.spec.ts --project=chromium --reporter=list: passou em 2026-05-11 com 2 passed, 2 skipped (skips condicionais de ambiente/certificado).
+
+- 2026-05-11 (tracking realtime SSOT): useOrderTracking migrou para subscription realtime de
+ide_requests (filtro source_type='gastronomy' + match por source_id=orderId) com polling apenas como fallback leve. Tambem foi corrigida a tipagem de
+efetch para retorno assÃ­ncrono e eliminada duplicacao de status ativos em constante unica.
+-
+npm run typecheck: passou em 2026-05-11.
+-
+npm run lint: passou em 2026-05-11.
+-
+px playwright test tests/e2e/gastronomy-operational.spec.ts --project=chromium --reporter=list: passou em 2026-05-11 com 2 passed, 2 skipped (skips condicionais de ambiente/certificado).
+
+- 2026-05-11 (contrato SSOT delivery link): corrigido OrderDeliveryLinkService.applyOrderTransition para nao enviar proof em cancelOrder/failOrder (contrato canÃ´nico aceita prova apenas em markDelivered), removendo inconsistÃªncia de payload e mantendo tipagem/semÃ¢ntica do SSOT.
+-
+npm run typecheck: passou em 2026-05-11.
+-
+npm run lint: passou em 2026-05-11.
+-
+px playwright test tests/e2e/gastronomy-operational.spec.ts --project=chromium --reporter=list: passou em 2026-05-11 com 2 passed, 2 skipped (skips condicionais de ambiente/certificado).
+
+- 2026-05-11 (realtime lista filtrada): useOrders corrigido para validar eventos de order_timeline_events por vinculo canonical (orders.id + source_id=businessId) antes de invalidar cache. Isso evita ruido global sem perder pedidos que entram no filtro atual por mudanca de status.
+-
+npm run typecheck: passou em 2026-05-11.
+-
+npm run lint: passou em 2026-05-11.
+-
+px playwright test tests/e2e/gastronomy-operational.spec.ts --project=chromium --reporter=list: passou em 2026-05-11 com 2 passed, 2 skipped (skips condicionais de ambiente/certificado).
+
+- 2026-05-11 (react-query v5 contract): corrigido useOrderTracking para assinatura canÃ´nica de
+efetchInterval no TanStack Query v5 (query => query.state.data), eliminando uso de assinatura antiga e garantindo fallback polling correto por status ativo.
+-
+npm run typecheck: passou em 2026-05-11.
+-
+npm run lint: passou em 2026-05-11.
+-
+px playwright test tests/e2e/gastronomy-operational.spec.ts --project=chromium --reporter=list: passou em 2026-05-11 com 2 passed, 2 skipped (skips condicionais de ambiente/certificado).
+
+- 2026-05-11 (otimizacao canal tracking): useOrderTracking passou a assinar
+ide_requests com filtro direto por source_id=orderId e validacao de source_type='gastronomy' no payload. Reduz processamento de eventos nao relacionados sem abrir excecao de contexto.
+-
+npm run typecheck: passou em 2026-05-11.
+-
+npm run lint: passou em 2026-05-11.
+-
+px playwright test tests/e2e/gastronomy-operational.spec.ts --project=chromium --reporter=list: passou em 2026-05-11 com 2 passed, 2 skipped (skips condicionais de ambiente/certificado).
+
+- 2026-05-11 (debounce realtime pedidos): useOrders recebeu coalescencia de invalidacao (250ms) para eventos em rajada de orders/order_timeline_events, reduzindo refetch redundante sem perder consistencia do SSOT. Cleanup do timer incluido no unmount do canal realtime.
+-
+npm run typecheck: passou em 2026-05-11.
+-
+npm run lint: passou em 2026-05-11.
+-
+px playwright test tests/e2e/gastronomy-operational.spec.ts --project=chromium --reporter=list: passou em 2026-05-11 com 2 passed, 2 skipped (skips condicionais de ambiente/certificado).
+
+- 2026-05-11 (debounce realtime detalhe): useOrderDetails recebeu coalescencia de invalidacao (250ms) para eventos em rajada de orders/order_timeline_events, reduzindo refetch redundante na tela de detalhe e mantendo consistencia SSOT. Timer tambem limpo no unmount.
+-
+npm run typecheck: passou em 2026-05-11.
+-
+npm run lint: passou em 2026-05-11.
+-
+px playwright test tests/e2e/gastronomy-operational.spec.ts --project=chromium --reporter=list: passou em 2026-05-11 com 2 passed, 2 skipped (skips condicionais de ambiente/certificado).
+
+- 2026-05-11 (cache realtime timeline): useOrders passou a memorizar order_id ja verificados como pertencentes ao usinessId no canal de timeline, reduzindo consultas repetidas de validacao canÃ´nica (orders.id + source_id) sem abrir excecao de SSOT.
+-
+npm run typecheck: passou em 2026-05-11.
+-
+npm run lint: passou em 2026-05-11 (reexecucao com timeout maior).
+-
+px playwright test tests/e2e/gastronomy-operational.spec.ts --project=chromium --reporter=list: passou em 2026-05-11 com 2 passed, 2 skipped (skips condicionais de ambiente/certificado).
+
+- 2026-05-11 (blindagem SSOT realtime): testes de arquitetura operacional em GastronomyOperationalSSOT.test.ts foram ampliados para travar regressao de realtime/coalescencia em useOrders, useOrderDetails e useOrderTracking (filtro canonical por source_id, debounce de invalidacao, assinatura React Query v5 e fallback polling controlado).
+-
+pm test -- src/modules/business/gastronomy/__tests__/GastronomyOperationalSSOT.test.ts: passou em 2026-05-11 com 10/10 testes.
+-
+npm run typecheck: passou em 2026-05-11.
+-
+npm run lint: passou em 2026-05-11.
+
+- 2026-05-11 (estabilizacao E2E profissionais): corrigido professional-leads-operational.spec.ts para verificar persistencia de avaliacao com sessao unica de consulta (sem login repetido a cada poll), reduzindo flakiness do fluxo autenticado de leads/propostas/engagement.
+-
+npm run validate:phase:core: passou em 2026-05-11 com 55 passed, 1 skipped apos a estabilizacao do E2E de profissionais.
+
+
+## Atualizacao 2026-05-11 (Gate Core + Build)
+
+- `npm run build`: passou em 2026-05-11.
+- `npm run typecheck`: passou em 2026-05-11.
+- `npm run lint`: passou em 2026-05-11.
+- `npm run validate:phase:core`: passou em 2026-05-11 com `55 passed`, `1 skipped` (skip administrativo condicional de `SUPABASE_SERVICE_ROLE_KEY`).
+- Suite `tests/e2e/mobile-auth-dashboards.spec.ts` entrou no gate core e passou (`4/4`), cobrindo `central`, `central/empresas`, `central/motorista/corridas` e `central/motoboy/entregas` em 360px.
+- Hardening SSOT de Gastronomia concluido nesta etapa: debounce/coalescencia de invalidacao realtime em pedidos/timeline/tracking, sincronizacao canÃ´nica por `ride_requests` (`source_type='gastronomy'`, `source_id=orderId`) e resiliencia de notificacoes/trust com falha isolada sem quebrar fluxo principal.
+
+### Proximo Bloco Tecnico (sem abrir nova fase)
+
+1. Fechar P0 de Comunidade/Feed que permanece aberto no status vivo: hardening territorial/visibilidade em pontos residuais de hooks/widgets/paginas.
+2. Revalidar browser fluxo de comunidade (edicao/exclusao/comentarios) em rotas canonicas territoriais.
+3. Reexecutar gate final da etapa apos ajustes (`typecheck`, `lint`, `validate:phase:core`, `build`).
+
+## Atualizacao 2026-05-11 (P0 Comunidade - Widgets Territoriais)
+
+- Falha real corrigida em widgets da comunidade: `TopPostsWidget` e `PopularTagsWidget` (core e modules) dependiam de `filters.location_id` inexistente no hook de filtros local, podendo desativar consulta silenciosamente.
+- CorreÃ§Ã£o SSOT aplicada: widgets agora usam `useTerritoryFilter` canÃ´nico, cobrindo escopo `location` e `group` com agregacao de resultados por `location_id` (sem campo legado).
+- Arquivos atualizados:
+  - `src/core/community/components/PopularTagsWidget.tsx`
+  - `src/core/community/components/TopPostsWidget.tsx`
+  - `src/modules/community/components/PopularTagsWidget.tsx`
+  - `src/modules/community/components/TopPostsWidget.tsx`
+- Validacoes apos correcao:
+  - `npm run typecheck`: passou.
+  - `npm run lint`: passou.
+  - `npm run validate:phase:core`: passou com `55 passed`, `1 skipped` condicional de service role.
+
+## Atualizacao 2026-05-11 (P0 Comunidade - Ranking Territorial de Usuarios)
+
+- Falha real corrigida no `TopUsersWidget` (core/modules): ranking ainda filtrava por `user_metadata.city/neighborhood`, fora do SSOT territorial ativo.
+- CorreÃ§Ã£o aplicada: widget agora resolve cidade/bairro via contexto territorial canÃ´nico (`useTerritorialContextOptional`) com fallback de localizacao ativa (`useCommunityLocation`), sem dependencia de metadado legado de usuario.
+- Escopo de bairro respeita somente quando o territorio resolvido/ativo for `district`; em grupo/cidade, consulta usa contexto de cidade.
+- Arquivos atualizados:
+  - `src/core/community/components/TopUsersWidget.tsx`
+  - `src/modules/community/components/TopUsersWidget.tsx`
+- Validacoes apos correcao:
+  - `npm run typecheck`: passou.
+  - `npm run lint`: passou.
+  - `npm run validate:phase:core`: passou com `55 passed`, `1 skipped` condicional de service role.
+
+## Atualizacao 2026-05-11 (P0 Comunidade - Contrato de Feed Territorial)
+
+- Inconsistencia corrigida no `CommunityFeed` da camada `modules`: o componente nao expunha `territoryFilter` no contrato, diferindo da versao canonica em `core`.
+- Risco eliminado: em cenarios de grupo territorial com cobertura parcial, o feed podia perder o recorte territorial explicitamente injetado pela pagina/chamada.
+- Correcao aplicada:
+  - `src/modules/community/components/feed/CommunityFeed.tsx` agora aceita `territoryFilter?: TerritoryFilter` e repassa para `useCommunityFeedSimple`.
+- Validacoes apos correcao:
+  - `npm run typecheck`: passou.
+  - `npm run lint`: passou.
+  - `npm run validate:phase:core`: passou com `55 passed`, `1 skipped` condicional de service role.
+
+## Atualizacao 2026-05-11 (P0 Comunidade - Sincronia Hook Modules)
+
+- Divergencia estrutural corrigida: `src/modules/community/hooks/feed/useCommunityFeed.ts` estava em versao anterior, sem suporte explicito a `territoryFilter` injetado pela pagina/componente.
+- Hook sincronizado com contrato canÃ´nico de `core`: agora aceita `territoryFilter`, usa `useModuleTerritoryFilter` como fallback e mantem chave/enable por `territoryFilterKey` + `isTerritoryFilterReady`.
+- Ajuste complementar: `src/modules/community/components/feed/CommunityFeed.tsx` passou a enviar `userLocation.location_id` com fallback para ambos formatos (`locationId` e `location_id`).
+- Validacoes apos sincronizacao:
+  - `npm run typecheck`: passou.
+  - `npm run lint`: passou.
+  - `npm run validate:phase:core`: passou com `55 passed`, `1 skipped` condicional de service role.
+
+## Atualizacao 2026-05-11 (P0 Comunidade - Fallback de Identidade Territorial no Feed Core)
+
+- Ajuste de consistencia `core/modules` aplicado em `src/core/community/components/feed/CommunityFeed.tsx`.
+- `userLocation.location_id` agora usa fallback para ambos formatos de perfil (`locationId` e `location_id`), evitando divergencia silenciosa entre camadas e reduzindo risco de feed sem contexto territorial em runtime.
+- Validacoes apos ajuste:
+  - `npm run typecheck`: passou.
+  - `npm run lint`: passou.
+  - `npm run validate:phase:core`: passou com `55 passed`, `1 skipped` condicional de service role.
+
+## Atualizacao 2026-05-11 (P0 Comunidade - Hook de Territorio do Morador)
+
+- Divergencia `core/modules` corrigida em `useCommunityTerritory`:
+  - versao `core` lia apenas `activeProfile.locationId`;
+  - versao `modules` lia apenas `activeProfile.location_id`.
+- As duas versoes agora usam fallback canÃ´nico unico (`locationId ?? location_id`) para resolver o territorio do morador sem falso vazio por formato de payload.
+- Arquivos atualizados:
+  - `src/core/community/hooks/useCommunityTerritory.ts`
+  - `src/modules/community/hooks/useCommunityTerritory.ts`
+- Validacoes apos correcao:
+  - `npm run typecheck`: passou.
+  - `npm run lint`: passou.
+  - `npm run validate:phase:core`: passou com `55 passed`, `1 skipped` condicional de service role.
+
+## Atualizacao 2026-05-11 (P0 Comunidade - Presentation Territorial)
+
+- Correcao aplicada em `src/core/community/utils/communityTerritoryPresentation.ts` para fallback completo de identificador territorial de perfil.
+- `ProfileLike` passou a aceitar `location_id` alem de `locationId`.
+- Resolucao de `locationId` no retorno agora usa `locationId ?? location_id`, evitando perda de contexto quando payload vier em snake_case.
+- Validacoes apos correcao:
+  - `npm run typecheck`: passou.
+  - `npm run lint`: passou.
+  - `npm run validate:phase:core`: passou com `55 passed`, `1 skipped` condicional de service role.
+
+## Atualizacao 2026-05-11 (P0 Comunidade - Alerta de Panico em Modules)
+
+- Falha real corrigida em `src/modules/community/components/PanicAlertButton.tsx`.
+- O fluxo de envio de alerta exigia apenas `profile.location_id`, podendo falhar quando o perfil viesse no formato `locationId`.
+- Correcao aplicada: adicionado `resolveProfileLocationId(profile)` com fallback canÃ´nico (`locationId` -> `location_id`) e uso desse valor no `createPost` de seguranca.
+- Validacoes apos correcao:
+  - `npm run typecheck`: passou.
+  - `npm run lint`: passou.
+  - `npm run validate:phase:core`: passou com `55 passed`, `1 skipped` condicional de service role.
+
+## Atualizacao 2026-05-11 (Gate Core Revalidado em Execucao Continua)
+
+- Revalidacao completa executada sem paliativos para fechar o ciclo atual antes do proximo bloco de implementacao.
+- Resultado do gate:
+  - `npm run typecheck`: passou.
+  - `npm run lint`: passou.
+  - `npm run test:e2e:phase-core`: passou com `55 passed`, `1 skipped` (skip condicional por `SUPABASE_SERVICE_ROLE_KEY`).
+  - `npm run validate:phase:core`: passou (execucao completa em ~10 min).
+- Observacao operacional:
+  - O comando `validate:phase:core` precisa timeout maior em ambiente local por incluir a suite E2E completa; nao e falha funcional.
+- Proximo foco P0:
+  - continuar pente-fino de consistencia territorial `core/modules` em comunidade/mobilidade sem introduzir novas fontes de verdade.
+
+## Atualizacao 2026-05-11 (P0 Mobilidade - Resolver Territorial de Motoboy)
+
+- Inconsistencia real corrigida em `src/modules/mobility/services/MotoboySourceResolverService.ts`.
+- `getProfileSummaryById` lia apenas `location_id`; quando o payload vinha em `locationId`, o fluxo de resolucao territorial podia retornar vazio e degradar elegibilidade/roteamento operacional.
+- Correcao aplicada: fallback canÃ´nico unico `locationId ?? location_id` antes de expor `location_id` no summary.
+- Validacoes apos correcao:
+  - `npm run typecheck`: passou.
+  - `npm run lint -- src/modules/mobility/services/MotoboySourceResolverService.ts`: passou.
+
+## Atualizacao 2026-05-11 (P0 Mobilidade - Navegacao e Coleta Motoboy)
+
+- Inconsistencia de navegacao operacional corrigida em `src/modules/profile/utils/profileNavigation.ts`.
+- A secao `delivery` do perfil apontava diretamente para a rota legada `/perfil/mobilidade/motoboy/entregas`; agora usa `profileMobilityRoutes.motoboy.entregas`, que resolve para a rota canonica `/central/motoboy/entregas`.
+- Ajuste de consistencia aplicado em `src/modules/mobility/components/CreateDeliveryModal.tsx`: fallback de `location_id` passou de `||` para `??`, preservando o valor resolvido e tratando fallback apenas quando o dado esta realmente ausente.
+- Validacoes apos correcao:
+  - `npm run typecheck`: passou.
+  - `npm run lint -- src/modules/profile/utils/profileNavigation.ts src/modules/mobility/components/CreateDeliveryModal.tsx src/modules/mobility/services/MotoboySourceResolverService.ts`: passou.
+  - `node --use-system-ca ./node_modules/playwright/cli.js test tests/e2e/central/central-validation.spec.ts tests/e2e/mobile-auth-dashboards.spec.ts --project=chromium --reporter=list`: passou com `32 passed`, `1 skipped` condicional de service role.
+
+## Atualizacao 2026-05-11 (P0 Delivery - Remocao de Ilha Legada `delivery_requests`)
+
+- Removida a ilha antiga de gastronomia que ainda expunha `DeliveryService`, `useDeliveryRequests`, `DeliveryRequestCard` e `CreateDeliveryRequestDialog` sobre a tabela legada `delivery_requests`.
+- O fluxo operacional atual permanece no SSOT: `orders` para pedido e `ride_requests` com `ride_mode='motoboy'` para entrega/motoboy, via `useDelivery`, `RideOperationalService` e `OrderDeliveryLinkService`.
+- Ajustes complementares de fallback territorial:
+  - `src/core/community/utils/communityTerritoryPresentation.ts`
+  - `src/core/community/hooks/composer/useCreatePost.ts`
+  - `src/modules/community/hooks/composer/useCreatePost.ts`
+  - `src/modules/mobility/services/MotoboySourceResolverService.ts`
+- Validacoes apos correcao:
+  - `npm run typecheck`: passou.
+  - `npm run lint -- src/core/community/utils/communityTerritoryPresentation.ts src/core/community/hooks/composer/useCreatePost.ts src/modules/community/hooks/composer/useCreatePost.ts src/modules/mobility/services/MotoboySourceResolverService.ts src/modules/business/gastronomy/pages/DeliveryManagementPage.tsx`: passou.
+  - `node --use-system-ca ./node_modules/playwright/cli.js test tests/e2e/gastronomy-operational.spec.ts --project=chromium --reporter=list`: passou com `4 passed`.
+
+## Atualizacao 2026-05-11 (P0 Rotas/Fallbacks - SSOT Global)
+
+- `src/core/routing/hooks/useAppUrls.ts` deixou de duplicar manualmente as rotas de motorista/motoboy da Central e agora reutiliza `useMobilityUrls()` como fonte unica para `profile.mobilidade.motorista` e `profile.mobilidade.motoboy`.
+- `src/core/community/hooks/page/useComunidadePage.ts` alinhou a resolucao de territorio do perfil para `locationId ?? location_id`, mantendo o mesmo contrato usado nos demais hooks/componentes de comunidade.
+- Validacoes apos correcao:
+  - `npm run typecheck`: passou.
+  - `npm run lint -- src/core/routing/hooks/useAppUrls.ts src/core/community/hooks/page/useComunidadePage.ts src/core/community/utils/communityTerritoryPresentation.ts src/core/community/hooks/composer/useCreatePost.ts src/modules/community/hooks/composer/useCreatePost.ts src/modules/mobility/services/MotoboySourceResolverService.ts`: passou.
+  - `node --use-system-ca ./node_modules/playwright/cli.js test tests/e2e/community-territorial-operational.spec.ts tests/e2e/central/central-validation.spec.ts --project=chromium --reporter=list`: passou com `31 passed`, `1 skipped` condicional de service role.
+
+## Atualizacao 2026-05-11 (P0 Mobilidade - Rotas Canonicas em Constante Pura)
+
+- Criado `src/modules/mobility/routes/mobilityRoutes.ts` como fonte pura e reutilizavel das rotas canonicas de motorista, motoboy e passageiro.
+- `useMobilityUrls`, `profileMobilityRoutes`, navegacao da Central, atalhos do perfil e notificacoes operacionais deixaram de repetir strings de `/central/motorista/*` e `/central/motoboy/*`.
+- `OrderDeliveryNotificationService` e `RideOperationalService` agora usam `mobilityRoutes` para links de motoboy/motorista, permitindo uso do mesmo SSOT fora de componentes React.
+- Validacoes apos correcao:
+  - `npm run typecheck`: passou.
+  - `npm run lint -- src/modules/mobility/routes/mobilityRoutes.ts src/modules/mobility/hooks/useMobilityUrls.ts src/modules/profile/utils/profileMobilityNavigation.ts src/modules/mobility/delivery/services/OrderDeliveryNotificationService.ts src/modules/mobility/core/RideOperationalService.ts src/modules/central/components/centralNavigation.config.ts src/modules/central/pages/CentralHubPage.tsx src/modules/profile/sections/ResumoSection.tsx src/modules/profile/pages/PerfilIdentidadesPage.tsx src/modules/profile/pages/mobilidade/PerfilMobilidadeCadastroPage.tsx src/modules/mobility/components/ActiveRideWidget.tsx src/modules/mobility/__tests__/MobilityCanonicalOnboardingRoutes.test.ts`: passou.
+  - `npm test -- src/modules/mobility/__tests__/MobilityCanonicalOnboardingRoutes.test.ts`: passou com `2 passed`.
+  - `node --use-system-ca ./node_modules/playwright/cli.js test tests/e2e/central/central-validation.spec.ts --project=chromium --reporter=list`: passou com `28 passed`, `1 skipped` condicional de service role.
+
+## Atualizacao 2026-05-11 (P0 Rotas/SEO - Empresas, Gastronomia e Comunidade)
+
+- Consolidada navegacao runtime de empresas/gastronomia para `businessManagementRoutes`:
+  - redirecionamento legado de empresa em `AppRoutes`;
+  - `BusinessAdminGuard`;
+  - `useAppUrls().profile.businesses`;
+  - `BusinessUrlService.buildUrls().dashboard`;
+  - `useBusinessUrls().dashboard`;
+  - links operacionais de pedido em notificacoes, trust e checkout premium.
+- Mantido SSOT de motoboy via `mobilityRoutes`, inclusive no redirect legado de entregas.
+- Corrigida falha real de SEO em rota comunitaria duplicada de vagas: `VagasPublicLayout` deixa de emitir SEO proprio quando renderizado dentro de `/comunidade/...`, evitando sobrescrever o `noindex, follow` do shell comunitario.
+- Fortalecido `CommunityTerritorialShell` para sincronizar canonical/robots a partir de `resolveSeoPolicy`, mantendo a comunidade como fonte de SEO para rotas duplicadas embutidas.
+- E2E territorial ajustado para aguardar `domcontentloaded` e polling de head com margem real de SPA, sem alterar as assercoes de canonical/noindex.
+- Limpeza complementar: removidos trailing spaces/linhas extras de EOF apontados por `git diff --check` em arquivos ja modificados no worktree.
+- Validacoes apos correcao:
+  - `npm run typecheck`: passou.
+  - `npx eslint` nos arquivos tocados de rota/SEO: passou.
+  - `npm test -- src/modules/business/gastronomy/__tests__/GastronomyOperationalSSOT.test.ts src/modules/business/premium/pages/PremiumBusinessCheckoutPage.spec.tsx`: passou com `12 passed`.
+  - `node --use-system-ca ./node_modules/playwright/cli.js test tests/e2e/territorial-seo.spec.ts --project=chromium --reporter=list`: passou com `8 passed`.
+  - `npm run validate:phase:core`: passou com `55 passed`, `1 skipped` condicional de service role.
+
+
+
+## Atualizacao 2026-05-11 (Gate Core Revalidado + Higiene de Docs)
+
+- Revalidacao tecnica concluida sem regressao:
+  - `npm run validate:phase:core`: passou com `55 passed`, `1 skipped` (skip administrativo condicional por `SUPABASE_SERVICE_ROLE_KEY`).
+- Higiene estrutural aplicada em documentacao viva:
+  - `docs/STATUS_ATUAL.md` sanitizado para remover bytes nulos (`\0`) e manter leitura por tooling (`rg`, validadores e auditoria automatica).
+- Proximo passo P0 em execucao:
+  - continuar fechamento de pendencias residuais de Comunidade/Feed + SEO/canonical em producao, mantendo Fase C ativa ate zerar pendencias criticas.
+
+## Atualizacao 2026-05-12 (P0 Comunidade - Saneamento de Detalhe Achados/Perdidos)
+
+- Hardening aplicado no fluxo de detalhe de Achados/Perdidos em `core`:
+  - `src/core/community/pages/AchadoPerdidoDetailPage.tsx` foi sincronizado com a implementacao canonica de `modules`, removendo regressao de encoding/mojibake em textos e estados visiveis da tela.
+  - O detalhe continua usando servico/layer SSOT (`lostFoundService`) e componentes canonicos de localizacao (`LostFoundMiniMap`, `LostFoundLocationCard`).
+- Validacoes executadas apos o ajuste:
+  - `npm run typecheck`: passou.
+  - `npx eslint src/core/community/pages/AchadoPerdidoDetailPage.tsx`: passou.
+  - `npx playwright test tests/e2e/community-territorial-operational.spec.ts tests/e2e/community-social-seo.spec.ts --project=chromium --reporter=list`: passou com `5/5`.
+
+## Atualizacao 2026-05-12 (P0 Comunidade - Saneamento de Recomendacao Detail em Core)
+
+- Saneamento seguro aplicado em `src/core/community/pages/RecomendacaoDetailPage.tsx`:
+  - Correcoes de encoding/mojibake em textos e comentarios visiveis.
+  - Sem alteracao de regra de negocio, filtros territoriais ou permissao.
+- Validacoes executadas:
+  - `npm run typecheck`: passou.
+  - `npx eslint src/core/community/pages/RecomendacaoDetailPage.tsx`: passou.
+  - `npx playwright test tests/e2e/community-social-seo.spec.ts --project=chromium --reporter=list`: passou com `2/2`.
+
+## Atualizacao 2026-05-12 (P0 Comunidade - Saneamento de Achados/Evento em Core)
+
+- Saneamento de UX aplicado sem alterar regra territorial:
+  - `src/core/community/pages/AchadosPerdidosPage.tsx`: textos/emoji/comentarios corrigidos (mojibake removido), mantendo filtros e `territoryFilter` atuais.
+  - `src/core/community/pages/EventoDetailPage.tsx`: encoding corrigido e alinhamento SSOT para `EventsService` canonico de `modules/community/events`.
+- Validacoes executadas:
+  - `npm run typecheck`: passou.
+  - `npx eslint src/core/community/pages/EventoDetailPage.tsx src/core/community/pages/AchadosPerdidosPage.tsx`: passou.
+  - `npx playwright test tests/e2e/territorial-seo.spec.ts --project=chromium --reporter=list`: passou com `8/8`.
+
+## Atualizacao 2026-05-12 (P0 Comunidade - Hardening E2E Territorial/SEO)
+
+- Estabilizacao dos specs de comunidade sem afrouxar regra:
+  - `tests/e2e/community-territorial-operational.spec.ts`: `open()` agora usa `domcontentloaded`, remove banner de consentimento quando presente e valida resolucao com caminho comunitario + landmark/conteudo.
+  - `tests/e2e/community-social-seo.spec.ts`: `openRoute()` passou a aguardar `domcontentloaded` e fechar consent banner para evitar falso negativo de canonical/robots.
+- Resultado:
+  - `npx playwright test tests/e2e/community-territorial-operational.spec.ts tests/e2e/community-social-seo.spec.ts --project=chromium --reporter=list`: passou com `5/5`.
+  - `npm run typecheck`: passou.
+
+## Atualizacao 2026-05-12 (P0 Mobilidade - Tracking URL Canonica No Motor Operacional)
+
+- Hardening SSOT aplicado em `src/modules/mobility/core/RideOperationalService.ts`:
+  - Notificacoes de transicao operacional para passageiro deixaram de montar `"/mobilidade/buscando/${rideId}"` manualmente.
+  - Agora usam `mobilityRoutes.passageiro.buscando(rideId)` como fonte canonica unica de rota.
+- Anti-regressao adicionada em `src/modules/mobility/__tests__/MobilityCanonicalOnboardingRoutes.test.ts`:
+  - Garante presenca do helper canonico e bloqueia retorno de template string hardcoded da rota.
+- Validacoes executadas nesta etapa:
+  - `npx vitest --run src/modules/mobility/__tests__/MobilityCanonicalOnboardingRoutes.test.ts`: passou com `3 passed`.
+  - `npm run typecheck`: passou.
+  - `npm run lint`: passou.
+  - `npm run validate:phase:core`: passou em 2026-05-12 com `56 passed`, `1 skipped` (skip admin condicional por `SUPABASE_SERVICE_ROLE_KEY`).
+
+## Atualizacao 2026-05-12 (P0 Delivery - Guard Anti-Regressao Da Tabela Legada)
+
+- Novo teste de contrato SSOT criado em `src/modules/mobility/delivery/__tests__/DeliverySSOTGuard.test.ts` para bloquear reintroducao de acesso real a `delivery_requests` no fluxo ativo de delivery.
+- O guard audita os pontos canonicos (`OrderDeliverySSOTService`, `OrderDeliveryLinkService`, checkout de gastronomia e `DeliveryManagementPage`) e exige manutencao do fluxo via `ride_requests`/motoboy.
+- Validacoes executadas:
+  - `npx vitest --run src/modules/mobility/delivery/__tests__/DeliverySSOTGuard.test.ts src/modules/mobility/__tests__/MobilityCanonicalOnboardingRoutes.test.ts`: passou com `4 passed`.
+  - `npm run typecheck`: passou.
+  - `npm run lint`: passou.
+
+

@@ -32,15 +32,9 @@ export function useModeration() {
         details: description,
       });
     },
-    onSuccess: (data: any) => {
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["community-feed"] });
-      if (data.reportCount >= 5) {
-        toast.success(
-          "DenÃºncia enviada. O post foi ocultado automaticamente devido ao nÃºmero de denÃºncias.",
-        );
-      } else {
-        toast.success("DenÃºncia enviada. Nossa equipe irÃ¡ revisar o conteÃºdo.");
-      }
+      toast.success("DenÃºncia enviada. Nossa equipe irÃ¡ revisar o conteÃºdo.");
     },
     onError: (error: Error) => {
       toast.error(error.message);
@@ -63,15 +57,9 @@ export function useModeration() {
         details: description,
       });
     },
-    onSuccess: (data: any) => {
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["comments"] });
-      if (data.reportCount >= 5) {
-        toast.success(
-          "DenÃºncia enviada. O comentÃ¡rio foi ocultado automaticamente.",
-        );
-      } else {
-        toast.success("DenÃºncia enviada. Nossa equipe irÃ¡ revisar o conteÃºdo.");
-      }
+      toast.success("DenÃºncia enviada. Nossa equipe irÃ¡ revisar o conteÃºdo.");
     },
     onError: (error: Error) => {
       toast.error(error.message);

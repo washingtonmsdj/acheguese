@@ -265,7 +265,7 @@ export class PricingService {
       }
 
       // Atualizar outros campos (se houver)
-      const updateData: any = {};
+      const updateData: Record<string, unknown> = {};
       
       if (updates.name !== undefined) updateData.name = updates.name;
       if (updates.baseFare !== undefined) updateData.base_fare = updates.baseFare;
@@ -303,10 +303,14 @@ export class PricingService {
 
       // Limpar cache
       this.rulesCache.clear();
-    } catch (error: any) {
-      const errorMessage = error?.message || String(error);
-      const errorCode = error?.code || '';
-      const errorHint = error?.hint || '';
+    } catch (error: unknown) {
+      const providerError =
+        error && typeof error === "object"
+          ? (error as { message?: string; code?: string; hint?: string })
+          : undefined;
+      const errorMessage = providerError?.message || String(error);
+      const errorCode = providerError?.code || '';
+      const errorHint = providerError?.hint || '';
       
       logger.error('[PricingService] Error updating rule:', errorMessage);
       
@@ -532,10 +536,14 @@ export class PricingService {
       this.rulesCache.clear();
 
       return data.id;
-    } catch (error: any) {
-      const errorMessage = error?.message || String(error);
-      const errorCode = error?.code || '';
-      const errorHint = error?.hint || '';
+    } catch (error: unknown) {
+      const providerError =
+        error && typeof error === "object"
+          ? (error as { message?: string; code?: string; hint?: string })
+          : undefined;
+      const errorMessage = providerError?.message || String(error);
+      const errorCode = providerError?.code || '';
+      const errorHint = providerError?.hint || '';
       
       logger.error('[PricingService] Error creating rule:', errorMessage);
       
@@ -649,11 +657,11 @@ export class PricingService {
    * Mapeia dados do banco para PricingRule
    */
   private mapToRule(
-    data: any,
-    multipliers: any[],
-    fees: any[]
+    data: Record<string, unknown>,
+    multipliers: Record<string, unknown>[],
+    fees: Record<string, unknown>[]
   ): PricingRule {
-    const peakHourMultipliers: any = {};
+    const peakHourMultipliers: Record<string, number> = {};
     
     multipliers.forEach((m) => {
       if (m.period_type === 'morning') peakHourMultipliers.morning = Number(m.multiplier);
@@ -840,7 +848,7 @@ export class PricingService {
   /**
    * Obtém log de auditoria de pricing
    */
-  async getAuditLog(limit: number = 20): Promise<any[]> {
+  async getAuditLog(limit: number = 20): Promise<Record<string, unknown>[]> {
     try {
       const { data, error } = await supabase
         .from('pricing_audit_log')

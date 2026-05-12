@@ -7,6 +7,7 @@ import { GastronomyCheckoutSheet } from "@/modules/business/gastronomy/component
 import type { GastronomyCheckoutOrderRecord } from "@/modules/business/gastronomy/services/GastronomyCheckoutService";
 import { usePremiumBusinessSiteContext } from "@/modules/business/premium/context/PremiumBusinessSiteContext";
 import { useGastronomyCart } from "@/modules/business/gastronomy/hooks";
+import { businessManagementRoutes } from "@/core/business/utils/businessManagementRoutes";
 
 export default function PremiumBusinessCheckoutPage() {
   const { hasGastronomy, gastronomySnapshot, routes } = usePremiumBusinessSiteContext();
@@ -61,7 +62,7 @@ export default function PremiumBusinessCheckoutPage() {
           setSheetOpen(open);
           if (!open) {
             if (createdOrderIdRef.current) {
-              navigate(`/gastronomia/pedidos/${createdOrderIdRef.current}`);
+              navigate(businessManagementRoutes.gastronomyPedidoPublico(createdOrderIdRef.current));
               createdOrderIdRef.current = null;
               return;
             }

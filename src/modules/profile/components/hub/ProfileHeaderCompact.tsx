@@ -47,6 +47,7 @@ import { ProfileCompletenessWidget } from "@/modules/profile/components/ProfileC
 
 import type { MultiProfileRecord } from "@/core/profiles/services/multi-profile/types";
 import type { ProfileAccountSnapshot } from "@/core/profiles/views/ProfileAccountSnapshot";
+import type { Context, Identity } from "@/modules/profile/sections/types";
 
 interface ProfileHeaderCompactProps {
   activeProfile: MultiProfileRecord | null;
@@ -54,8 +55,8 @@ interface ProfileHeaderCompactProps {
   allProfiles?: MultiProfileRecord[];
   userEmail: string;
   accountSnapshot: ProfileAccountSnapshot;
-  identity: any;
-  context: any;
+  identity: Identity | null;
+  context: Context | null;
   notifications: { unread: number; highPriority: number; urgentPriority: number };
   isVerified: boolean;
   canOpenPublicProfile: boolean;

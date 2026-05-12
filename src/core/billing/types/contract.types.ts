@@ -91,8 +91,8 @@ export interface ContractSnapshotDTO {
   
   // Overrides específicos do contrato (se houver)
   overrides?: {
-    entitlements?: Partial<any>;
-    pricing?: Partial<any>;
+    entitlements?: Partial<Record<string, unknown>>;
+    pricing?: Partial<Record<string, unknown>>;
   };
   
   // Histórico de mudanças
@@ -107,8 +107,8 @@ export interface ContractChangeDTO {
   changed_by: string;
   change_type: 'upgrade' | 'downgrade' | 'addon_added' | 'addon_removed' | 'status_change' | 'cancellation';
   reason?: string;
-  previous_value?: any;
-  new_value?: any;
+  previous_value?: unknown;
+  new_value?: unknown;
 }
 
 /**
@@ -125,7 +125,7 @@ export interface CreateContractParamsDTO {
   // Opcional
   trial_period_days?: number;
   coupon_code?: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 /**
@@ -163,7 +163,7 @@ export interface SubscriptionStatusTimelineDTO {
   reason?: string;
   changed_at: string;
   changed_by?: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 /**
@@ -179,7 +179,7 @@ export interface UsageEventDTO {
   total_price_cents: number;
   currency: string;
   occurred_at: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 /**
@@ -193,5 +193,5 @@ export interface TransactionChargeRuleDTO {
   unit_price_cents: number;
   currency: string;
   calculation_method: 'fixed' | 'percentage' | 'tiered';
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }

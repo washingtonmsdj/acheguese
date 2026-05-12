@@ -2,8 +2,6 @@ import { supabase } from "@/integrations/supabase";
 import { logger } from "@/shared/utils/logger";
 import { profileService } from "@/core/profiles/services/ProfileService";
 
-const supabaseAny = supabase as any;
-
 const MISSING_TABLE_ERROR_CODES = new Set(["42P01", "PGRST116", "PGRST205"]);
 
 export type DriverModerationAction =
@@ -91,7 +89,7 @@ export class DriverModerationEventsService {
       metadata: input.metadata ?? {},
     };
 
-    const { error } = await supabaseAny.from("driver_moderation_events").insert(payload);
+    const { error } = await supabase.from("driver_moderation_events").insert(payload);
 
     if (error) {
       if (isMissingTableError(error)) {
@@ -106,7 +104,7 @@ export class DriverModerationEventsService {
   }
 
   static async listByDriverProfile(driverProfileId: string): Promise<DriverModerationEvent[]> {
-    const { data, error } = await supabaseAny
+    const { data, error } = await supabase
       .from("driver_moderation_events")
       .select("id, driver_profile_id, admin_profile_id, action, reason, metadata, created_at")
       .eq("driver_profile_id", driverProfileId)

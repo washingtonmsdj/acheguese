@@ -506,7 +506,7 @@ export const OrderService = {
     notes: string,
   ): Promise<ServiceResult<Order>> {
     try {
-      const { error } = await (supabase as any)
+      const { error } = await supabase
         .from('orders')
         .update({ notes })
         .eq('id', orderId);

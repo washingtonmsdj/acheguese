@@ -71,7 +71,7 @@ export class AdminUserService {
 
       // A edge function já retorna no formato correto
       return data as AdminUserListResult;
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error("AdminUserService.listUsers error:", error);
       throw error;
     }
@@ -92,7 +92,7 @@ export class AdminUserService {
 
       // A edge function já retorna no formato correto
       return data?.user as AdminUser | null;
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error("AdminUserService.getUserById error:", error);
       return null;
     }

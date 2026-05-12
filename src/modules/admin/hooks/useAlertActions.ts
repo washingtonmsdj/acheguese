@@ -26,8 +26,12 @@ export function useAlertActions({
         prev.map((p) => (p.id === post.id ? { ...p, hidden: !post.hidden } : p)),
       );
       toast({ title: post.hidden ? "Alerta reexibido" : "Alerta ocultado" });
-    } catch (e: any) {
-      toast({ title: "Erro", description: e.message, variant: "destructive" });
+    } catch (e: unknown) {
+      toast({
+        title: "Erro",
+        description: e instanceof Error ? e.message : "Erro ao ocultar alerta",
+        variant: "destructive",
+      });
     } finally {
       setActionLoading(null);
     }
@@ -41,8 +45,12 @@ export function useAlertActions({
       await adminAlertsService.deleteAlert(postId);
       setAlertPosts((prev) => prev.filter((p) => p.id !== postId));
       toast({ title: "Alerta excluído" });
-    } catch (e: any) {
-      toast({ title: "Erro", description: e.message, variant: "destructive" });
+    } catch (e: unknown) {
+      toast({
+        title: "Erro",
+        description: e instanceof Error ? e.message : "Erro ao excluir alerta",
+        variant: "destructive",
+      });
     } finally {
       setActionLoading(null);
     }
@@ -66,8 +74,12 @@ export function useAlertActions({
           ? `${profile.name} pode criar alertas novamente`
           : `${profile.name} não poderá mais criar alertas`,
       });
-    } catch (e: any) {
-      toast({ title: "Erro", description: e.message, variant: "destructive" });
+    } catch (e: unknown) {
+      toast({
+        title: "Erro",
+        description: e instanceof Error ? e.message : "Erro ao atualizar banimento",
+        variant: "destructive",
+      });
     } finally {
       setActionLoading(null);
     }
@@ -87,8 +99,12 @@ export function useAlertActions({
         description: "Sistema de reports ainda não implementado",
         variant: "destructive" 
       });
-    } catch (e: any) {
-      toast({ title: "Erro", description: e.message, variant: "destructive" });
+    } catch (e: unknown) {
+      toast({
+        title: "Erro",
+        description: e instanceof Error ? e.message : "Erro ao resolver denúncia",
+        variant: "destructive",
+      });
     } finally {
       setActionLoading(null);
     }

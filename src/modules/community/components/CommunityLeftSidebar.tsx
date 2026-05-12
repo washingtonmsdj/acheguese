@@ -4,7 +4,7 @@ import { UserProfileWidget } from "./widgets/UserProfileWidget";
 import { RankingWidget } from "./widgets/RankingWidget";
 import { GroupsWidget } from "./widgets/GroupsWidget";
 import { ActivityWidget } from "./widgets/ActivityWidget";
-import { SuggestionsWidget } from "./widgets/SuggestionsWidget";
+import { SuggestionsWidgetSSOT } from "./widgets/SuggestionsWidget";
 import { WidgetErrorBoundary } from "./WidgetErrorBoundary";
 
 /**
@@ -54,7 +54,7 @@ export const CommunityLeftSidebar = memo(() => {
 
       {/* Widget de Sugestões */}
       <WidgetErrorBoundary widgetName="SuggestionsWidget">
-        <SuggestionsWidget />
+        <SuggestionsWidgetSSOT />
       </WidgetErrorBoundary>
     </div>
   );

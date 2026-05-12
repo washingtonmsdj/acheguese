@@ -7,6 +7,7 @@
 import { useState, useEffect } from 'react';
 import { trackingService } from '../services/TrackingService';
 import type { ConnectionState } from '../services/ReconnectionManager';
+import type { TrackingPosition } from '../types';
 
 export interface UseConnectionStateReturn {
   /** Estado atual da conexão */
@@ -24,7 +25,10 @@ export interface UseConnectionStateReturn {
   /** Força reconexão manual */
   forceReconnect: () => Promise<void>;
   /** Sincroniza estado após reconexão */
-  syncState: (entityId: string, entityType?: 'driver' | 'user' | 'vehicle' | 'device') => Promise<any>;
+  syncState: (
+    entityId: string,
+    entityType?: 'driver' | 'user' | 'vehicle' | 'device',
+  ) => Promise<TrackingPosition | null>;
 }
 
 /**

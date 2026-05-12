@@ -26,6 +26,7 @@ import { mobilityAuditService } from "../services/MobilityAuditService";
 import { MotoboyAuthorizationService } from "../services/MotoboyAuthorizationService";
 import { profileService } from "@/core/profiles/services/ProfileService";
 import { OrderDeliveryLinkService } from "@/modules/mobility/delivery/services/OrderDeliveryLinkService";
+import { mobilityRoutes } from "@/modules/mobility/routes/mobilityRoutes";
 
 // ============================================
 // TIPOS
@@ -85,6 +86,18 @@ interface CancelInput {
   cancelledBy: 'passenger' | 'driver';
   profileId: string;
   reason?: string;
+}
+
+interface ProviderErrorShape {
+  code?: string;
+  details?: string;
+  hint?: string;
+}
+
+interface RidePostTransitionSnapshot {
+  passenger_profile_id?: string | null;
+  driver_profile_id?: string | null;
+  ride_mode?: string | null;
 }
 
 // ============================================
@@ -348,7 +361,7 @@ export class RideOperationalService {
       RideStateMachine.assertCanTransition(fromState, toState);
 
       // Executar transicao
-      const updates: any = {
+      const updates: Record<string, unknown> = {
         status: toState,
         updated_at: new Date().toISOString(),
       };
@@ -398,14 +411,16 @@ export class RideOperationalService {
       };
     } catch (error) {
       // Serializar erro completo para diagnostico
+      const providerError =
+        error && typeof error === "object" ? (error as ProviderErrorShape) : undefined;
       const errorDetails = {
         message: (error as Error).message,
         name: (error as Error).name,
         stack: (error as Error).stack,
         // Provider errors podem expor campos adicionais
-        code: (error as any).code,
-        details: (error as any).details,
-        hint: (error as any).hint,
+        code: providerError?.code,
+        details: providerError?.details,
+        hint: providerError?.hint,
       };
 
       logger.error('RideOperationalService.transitionTo', error as Error, {
@@ -922,7 +937,7 @@ export class RideOperationalService {
         }
       }
 
-      const updates: any = {
+      const updates: Record<string, unknown> = {
         delivered_at: new Date().toISOString(),
         proof_of_delivery: { ...proof, signed_at: new Date().toISOString() },
       };
@@ -1017,7 +1032,7 @@ export class RideOperationalService {
     }
 
     // item_current_holder no pode ser 'recipient' em failed_delivery
-    if (metadata.item_current_holder === 'recipient' as any) {
+    if (metadata.item_current_holder === 'recipient') {
       throw new Error('item_current_holder no pode ser recipient em failed_delivery');
     }
   }
@@ -1107,7 +1122,7 @@ export class RideOperationalService {
   private static async handlePostTransition(
     rideId: string,
     newState: RideState,
-    ride: any
+    ride: RidePostTransitionSnapshot
   ): Promise<void> {
     try {
       // GATE 5: Liberar motorista quando corrida e cancelada ou completada
@@ -1124,6 +1139,7 @@ export class RideOperationalService {
         this.resolveUserIdFromProfileId(passengerProfileId),
         this.resolveUserIdFromProfileId(driverProfileId),
       ]);
+      const passengerTrackingUrl = mobilityRoutes.passageiro.buscando(rideId);
 
       const notify = async (
         userId: string | null,
@@ -1162,7 +1178,7 @@ export class RideOperationalService {
           "Motorista confirmou a corrida",
           "Seu motorista confirmou o aceite e vai iniciar em breve.",
           "ride_driver_accepted",
-          `/mobilidade/buscando/${rideId}`,
+          passengerTrackingUrl,
         );
         return;
       }
@@ -1174,7 +1190,7 @@ export class RideOperationalService {
           "Corrida iniciada",
           "Sua corrida foi iniciada.",
           "ride_in_progress",
-          `/mobilidade/buscando/${rideId}`,
+          passengerTrackingUrl,
         );
         return;
       }
@@ -1186,7 +1202,7 @@ export class RideOperationalService {
           "Entrega em rota",
           "Seu motoboy iniciou a rota.",
           "delivery_in_route",
-          `/mobilidade/buscando/${rideId}`,
+          passengerTrackingUrl,
         );
         return;
       }
@@ -1198,7 +1214,7 @@ export class RideOperationalService {
           newState === RIDE_STATE.DELIVERED ? "Entrega concluida" : "Corrida concluida",
           "Operacao finalizada com sucesso.",
           newState === RIDE_STATE.DELIVERED ? "delivery_completed" : "ride_completed",
-          `/mobilidade/buscando/${rideId}`,
+          passengerTrackingUrl,
         );
         await notify(
           driverUserId,
@@ -1206,7 +1222,7 @@ export class RideOperationalService {
           "Operacao concluida",
           "A operacao foi finalizada e registrada no historico.",
           "operation_completed",
-          isDeliveryMode ? "/central/motoboy/entregas" : "/central/motorista/corridas",
+          isDeliveryMode ? mobilityRoutes.motoboy.entregas : mobilityRoutes.motorista.corridas,
         );
         return;
       }
@@ -1218,7 +1234,7 @@ export class RideOperationalService {
           "Corrida cancelada",
           "A corrida foi cancelada.",
           "ride_canceled",
-          `/mobilidade/buscando/${rideId}`,
+          passengerTrackingUrl,
         );
         await notify(
           driverUserId,
@@ -1226,7 +1242,7 @@ export class RideOperationalService {
           "Corrida cancelada",
           "A corrida foi cancelada.",
           "ride_canceled",
-          isDeliveryMode ? "/central/motoboy/entregas" : "/central/motorista/corridas",
+          isDeliveryMode ? mobilityRoutes.motoboy.entregas : mobilityRoutes.motorista.corridas,
         );
       }
     } catch (error) {

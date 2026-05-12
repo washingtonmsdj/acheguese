@@ -63,6 +63,35 @@ interface EmpresasLandingPageProps {
   activeMemberIds?: string[];
 }
 
+type NearbyBusinessResult = {
+  id?: string;
+  entity_id?: string;
+  slug?: string;
+  latitude?: number;
+  longitude?: number;
+  distance_meters?: number;
+  entity_data?: {
+    name?: string;
+    category?: string;
+    rating?: number;
+    total_reviews?: number;
+    description?: string;
+    is_premium?: boolean;
+    phone?: string;
+    slug?: string;
+    geographic_path?: string;
+    address?: {
+      latitude?: number;
+      longitude?: number;
+    };
+  };
+};
+
+type BusinessAddressLike = {
+  latitude?: number;
+  longitude?: number;
+};
+
 export default function EmpresasLandingPage({
   resolved: resolvedProp,
   activeMemberIds: activeMemberIdsProp,
@@ -146,7 +175,7 @@ export default function EmpresasLandingPage({
   const businessesToShow = useMemo(() => {
     // Se modo "perto de mim" ativo e temos resultados, usar nearbyBusinesses
     if (nearbyMode && nearbyBusinesses && nearbyBusinesses.length > 0) {
-      return nearbyBusinesses.map((result: any) => ({
+      return (nearbyBusinesses as NearbyBusinessResult[]).map((result) => ({
         id: result.entity_id || result.id,
         name: result.entity_data?.name || result.name || 'Empresa',
         category: result.entity_data?.category || "Outros",
@@ -188,11 +217,14 @@ export default function EmpresasLandingPage({
           isOpen: true,
           neighborRecs: 0,
           lastVisit: "",
-          coords: { lat: (b.address as any)?.latitude || 0, lng: (b.address as any)?.longitude || 0 },
+          coords: {
+            lat: (b.address as BusinessAddressLike | undefined)?.latitude || 0,
+            lng: (b.address as BusinessAddressLike | undefined)?.longitude || 0,
+          },
           phone: b.phone || "",
           slug: b.slug,
           is_premium: b.is_premium,
-          geographic_path: (b as any).geographic_path,
+          geographic_path: (b as { geographic_path?: string }).geographic_path,
         })) as Business[]
       : FEATURED_BUSINESSES as Business[];
   }, [nearbyMode, nearbyBusinesses, realBusinesses]);

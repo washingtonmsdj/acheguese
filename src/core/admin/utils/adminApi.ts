@@ -28,7 +28,13 @@ import { adminStatsService } from "@/core/admin/services/AdminStatsService";
 import { adminCrudService } from "@/core/admin/services/AdminCrudService";
 import type { TableStats, ActivityData, RecentActivity } from "@/core/admin/services/AdminStatsService";
 
-export async function adminList(table: string, options?: any) {
+type AdminListOptions = {
+  select?: string;
+  orderBy?: string;
+  ascending?: boolean;
+};
+
+export async function adminList(table: string, options?: AdminListOptions) {
   return await adminCrudService.list(table, {
     select: options?.select || "*",
     orderBy: options?.orderBy ?? "created_at",
@@ -36,11 +42,11 @@ export async function adminList(table: string, options?: any) {
   });
 }
 
-export async function adminCreate(table: string, data: any) {
+export async function adminCreate(table: string, data: Record<string, unknown>) {
   return await adminCrudService.create(table, data);
 }
 
-export async function adminUpdate(table: string, id: string, data: any) {
+export async function adminUpdate(table: string, id: string, data: Record<string, unknown>) {
   return await adminCrudService.update(table, id, data);
 }
 

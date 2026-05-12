@@ -152,8 +152,8 @@ export function useRobustGeolocation(options: UseRobustGeolocationOptions = {}) 
           source: "gps",
         });
         onSuccessRef.current?.(coords);
-      } catch (error: any) {
-        const msg = error?.message ?? "Nao foi possivel obter localizacao.";
+      } catch (error: unknown) {
+        const msg = error instanceof Error ? error.message : "Nao foi possivel obter localizacao.";
         if (isPermissionDeniedError(error)) {
           logger.info("[useRobustGeolocation] requestLocation denied by user", { msg });
         } else {

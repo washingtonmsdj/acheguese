@@ -336,7 +336,7 @@ export default function AdminReportsPassageiros() {
       )}
 
       {/* Tabs */}
-      <Tabs value={activeTab} onValueChange={(v: any) => setActiveTab(v)}>
+      <Tabs value={activeTab} onValueChange={(v: string) => setActiveTab(v as ReportStatus)}>
         <TabsList className="bg-[#1E2529] border border-white/10">
           <TabsTrigger value={RIDE_STATUS.PENDING}>
             Pendentes ({stats?.pending || 0})

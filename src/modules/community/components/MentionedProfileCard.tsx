@@ -9,6 +9,7 @@ import {
 import { Star, MapPin, Phone, MessageCircle, Shield } from "lucide-react";
 import { Link } from "react-router-dom";
 import { DisputeMentionModal } from "./DisputeMentionModal";
+import { buildPublicProfileUrl } from "@/core/profiles/utils/publicProfileUrl";
 interface MentionedProfile {
   id: string;
   name: string;
@@ -76,7 +77,7 @@ export function MentionedProfileCard({
 
   return (
     <Link
-      to={`/profile/${profile.id}`}
+      to={buildPublicProfileUrl(profile.id)}
       className={`block p-3 rounded-lg border transition-all ${
         rank === 1
           ? "border-yellow-500/30 bg-gradient-to-r from-yellow-500/10 to-yellow-600/10 hover:from-yellow-500/15 hover:to-yellow-600/15 ring-2 ring-yellow-500/20"

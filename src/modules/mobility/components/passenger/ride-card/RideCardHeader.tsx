@@ -9,10 +9,15 @@ interface RideCardHeaderProps {
   isEntrega: boolean;
 }
 
+function toRideStatus(status: string): RideStatus {
+  const allowed = new Set<string>(Object.values(RIDE_STATUS));
+  return (allowed.has(status) ? status : RIDE_STATUS.PENDING) as RideStatus;
+}
+
 export const RideCardHeader = ({ status, isEntrega }: RideCardHeaderProps) => {
   return (
     <div className="flex items-center justify-between mb-4">
-      <StatusBadge status={status as any} size="md" />
+      <StatusBadge status={toRideStatus(status)} size="md" />
       <Badge
         className={cn(
           "text-[0.6rem] px-2 rounded-full",

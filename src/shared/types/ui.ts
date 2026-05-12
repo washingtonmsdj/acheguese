@@ -27,10 +27,10 @@ export interface SortState {
 }
 
 export interface FilterState {
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
-export interface FormState<T = any> {
+export interface FormState<T = unknown> {
   data: T;
   errors: Record<string, string>;
   isSubmitting: boolean;
@@ -39,7 +39,7 @@ export interface FormState<T = any> {
 
 export interface ModalState {
   isOpen: boolean;
-  data?: any;
+  data?: unknown;
 }
 
 export interface ToastMessage {
@@ -56,17 +56,17 @@ export interface SelectOption {
   disabled?: boolean;
 }
 
-export interface TableColumn<T = any> {
+export interface TableColumn<T = unknown> {
   key: keyof T;
   label: string;
   sortable?: boolean;
   width?: string;
-  render?: (value: any, row: T) => React.ReactNode;
+  render?: (value: unknown, row: T) => React.ReactNode;
 }
 
 export interface ActionButton {
   label: string;
-  icon?: React.ComponentType<any>;
+  icon?: React.ComponentType<Record<string, unknown>>;
   onClick: () => void;
   variant?:
     | "default"

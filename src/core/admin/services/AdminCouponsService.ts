@@ -45,6 +45,16 @@ export interface CouponsListResult {
   totalPages: number;
 }
 
+interface CouponStatsRow {
+  is_active: boolean;
+  usos_count: number | null;
+  validade: string | null;
+}
+
+interface CouponWithBusinessRow extends CouponData {
+  business?: { business_name?: string; logo_url?: string } | null;
+}
+
 class AdminCouponsServiceClass {
   /**
    * Busca estatísticas de cupons
@@ -61,11 +71,12 @@ class AdminCouponsServiceClass {
       }
 
       const now = new Date().toISOString();
+      const rows: CouponStatsRow[] = data || [];
       const stats: CouponsStats = {
-        total: data?.length || 0,
-        active: data?.filter((c: any) => c.is_active && (!c.validade || c.validade > now)).length || 0,
-        expired: data?.filter((c: any) => !c.is_active || (c.validade && c.validade <= now)).length || 0,
-        totalUsage: data?.reduce((sum: number, c: any) => sum + (c.usos_count || 0), 0) || 0,
+        total: rows.length,
+        active: rows.filter((c) => c.is_active && (!c.validade || c.validade > now)).length,
+        expired: rows.filter((c) => !c.is_active || (c.validade && c.validade <= now)).length,
+        totalUsage: rows.reduce((sum, c) => sum + (c.usos_count || 0), 0),
       };
 
       return stats;
@@ -123,7 +134,8 @@ class AdminCouponsServiceClass {
       }
 
       // Map database response to CouponData interface
-      const coupons = (data || []).map((item: any) => ({
+      const rows: CouponWithBusinessRow[] = data || [];
+      const coupons = rows.map((item) => ({
         ...item,
         business_name: item.business?.business_name,
         business_logo: item.business?.logo_url,
@@ -161,7 +173,7 @@ class AdminCouponsServiceClass {
    */
   async createCoupon(data: Partial<CouponData>): Promise<CouponData> {
     try {
-      const { data: newCoupon, error } = await (supabase as any)
+      const { data: newCoupon, error } = await supabase
         .from("coupons")
         .insert({
           codigo: data.codigo,
@@ -199,7 +211,7 @@ class AdminCouponsServiceClass {
   ): Promise<CouponData | null> {
     try {
       // Map standard field names to actual schema
-      const schemaUpdates: any = {};
+      const schemaUpdates: Record<string, unknown> = {};
       if (updates.codigo !== undefined) schemaUpdates.codigo = updates.codigo;
       if (updates.description !== undefined) schemaUpdates.description = updates.description;
       if (updates.desconto !== undefined) schemaUpdates.desconto = updates.desconto;
@@ -210,7 +222,7 @@ class AdminCouponsServiceClass {
       if (updates.validade !== undefined) schemaUpdates.validade = updates.validade;
       if (updates.business_id !== undefined) schemaUpdates.business_id = updates.business_id;
 
-      const { data, error } = await (supabase as any)
+      const { data, error } = await supabase
         .from("coupons")
         .update(schemaUpdates)
         .eq("id", id)
@@ -234,7 +246,7 @@ class AdminCouponsServiceClass {
    */
   async deleteCoupon(id: string): Promise<boolean> {
     try {
-      const { error } = await (supabase as any)
+      const { error } = await supabase
         .from("coupons")
         .delete()
         .eq("id", id);
@@ -256,7 +268,7 @@ class AdminCouponsServiceClass {
    */
   async toggleActive(id: string, isActive: boolean): Promise<boolean> {
     try {
-      const { error } = await (supabase as any)
+      const { error } = await supabase
         .from("coupons")
         .update({ is_active: isActive })
         .eq("id", id);

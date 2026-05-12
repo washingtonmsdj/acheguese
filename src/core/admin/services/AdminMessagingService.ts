@@ -41,6 +41,17 @@ export interface ConversationsListResult {
   totalPages: number;
 }
 
+interface ConversationStatsRow {
+  status: string | null;
+  is_active: boolean | null;
+}
+
+interface ConversationListRow extends AdminConversationData {
+  buyer?: { name?: string | null; avatar_url?: string | null } | null;
+  seller?: { name?: string | null; avatar_url?: string | null } | null;
+  classified?: { title?: string | null; price?: number | null } | null;
+}
+
 class AdminMessagingServiceClass {
   /**
    * Busca estatísticas de mensagens
@@ -62,10 +73,11 @@ class AdminMessagingServiceClass {
         throw msgResult.error;
       }
 
+      const rows: ConversationStatsRow[] = convResult.data || [];
       const stats: MessagingStats = {
-        totalConversations: convResult.data?.length || 0,
-        activeConversations: convResult.data?.filter((c: any) => c.is_active).length || 0,
-        blockedConversations: convResult.data?.filter((c: any) => c.status === "blocked").length || 0,
+        totalConversations: rows.length,
+        activeConversations: rows.filter((c) => c.is_active).length,
+        blockedConversations: rows.filter((c) => c.status === "blocked").length,
         totalMessages: msgResult.count || 0,
       };
 
@@ -128,8 +140,9 @@ class AdminMessagingServiceClass {
       }
 
       // Buscar contagem de mensagens para cada conversa
+      const rows: ConversationListRow[] = data || [];
       const conversationsWithCounts = await Promise.all(
-        (data || []).map(async (conv: any) => {
+        rows.map(async (conv) => {
           const { count: msgCount } = await supabase
             .from("messages")
             .select("id", { count: "exact", head: true })

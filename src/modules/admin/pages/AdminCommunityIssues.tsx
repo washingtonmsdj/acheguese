@@ -61,6 +61,8 @@ import {
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import type { BadgeProps } from "@/shared/components/ui/badge";
+import type { LucideIcon } from "lucide-react";
 import {
   ISSUE_CATEGORY_LABELS,
   ISSUE_STATUS_LABELS,
@@ -68,6 +70,22 @@ import {
   ISSUE_REPORT_REASON_LABELS,
 } from "@/shared/services/communityIssues";
 import type { IssueCategory, IssueStatus, IssuePriority } from "@/shared/services/communityIssues";
+
+type IssueAdminItem = {
+  id: string;
+  title: string;
+  description: string;
+  category: IssueCategory;
+  neighborhood_display: string;
+  city: string;
+  status: IssueStatus;
+  priority: IssuePriority;
+  support_count?: number;
+  report_count: number;
+  created_at: string;
+  under_review?: boolean;
+  reports?: Array<{ id: string; reason: keyof typeof ISSUE_REPORT_REASON_LABELS }>;
+};
 
 export default function AdminCommunityIssues() {
   const queryClient = useQueryClient();
@@ -79,7 +97,7 @@ export default function AdminCommunityIssues() {
   const [priorityFilter, setPriorityFilter] = useState<IssuePriority | "">("");
   
   // Dialogs
-  const [selectedIssue, setSelectedIssue] = useState<any>(null);
+  const [selectedIssue, setSelectedIssue] = useState<IssueAdminItem | null>(null);
   const [showRemoveDialog, setShowRemoveDialog] = useState(false);
   const [removalReason, setRemovalReason] = useState("");
   const [showStatusDialog, setShowStatusDialog] = useState(false);
@@ -202,7 +220,7 @@ export default function AdminCommunityIssues() {
   });
 
   const getStatusBadge = (status: IssueStatus) => {
-    const variants: Record<IssueStatus, { variant: any; label: string }> = {
+    const variants: Record<IssueStatus, { variant: BadgeProps["variant"]; label: string }> = {
       aberto: { variant: "default", label: "Aberto" },
       em_analise: { variant: "secondary", label: "Em Análise" },
       em_andamento: { variant: "outline", label: "Em Andamento" },
@@ -229,7 +247,7 @@ export default function AdminCommunityIssues() {
   };
 
   const getPriorityBadge = (priority: IssuePriority) => {
-    const variants: Record<IssuePriority, { variant: any; icon: any }> = {
+    const variants: Record<IssuePriority, { variant: BadgeProps["variant"]; icon: LucideIcon | null }> = {
       baixa: { variant: "outline", icon: ArrowDown },
       media: { variant: "secondary", icon: null },
       alta: { variant: "default", icon: ArrowUp },
@@ -452,7 +470,7 @@ export default function AdminCommunityIssues() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {issuesData?.data?.map((issue: any) => (
+                      {issuesData?.data?.map((issue: IssueAdminItem) => (
                         <TableRow key={issue.id}>
                           <TableCell className="font-medium max-w-xs">
                             <div className="truncate">{issue.title}</div>
@@ -570,7 +588,7 @@ export default function AdminCommunityIssues() {
             <CardContent>
               {reviewIssues && reviewIssues.length > 0 ? (
                 <div className="space-y-4">
-                  {reviewIssues.map((issue: any) => (
+                  {reviewIssues.map((issue: IssueAdminItem) => (
                     <div key={issue.id} className="border rounded-lg p-4">
                       <div className="flex items-start justify-between">
                         <div className="flex-1">
@@ -591,7 +609,7 @@ export default function AdminCommunityIssues() {
                             <div className="mt-3 pt-3 border-t">
                               <p className="text-sm font-medium mb-2">Motivos dos Reports:</p>
                               <div className="flex flex-wrap gap-2">
-                                {issue.reports.map((report: any) => (
+                                {issue.reports.map((report: { id: string; reason: keyof typeof ISSUE_REPORT_REASON_LABELS }) => (
                                   <Badge key={report.id} variant="outline">
                                     {ISSUE_REPORT_REASON_LABELS[report.reason]}
                                   </Badge>
@@ -667,7 +685,7 @@ export default function AdminCommunityIssues() {
               <CardContent>
                 {topSupported && topSupported.length > 0 ? (
                   <div className="space-y-3">
-                    {topSupported.slice(0, 5).map((issue: any, index: number) => (
+                    {topSupported.slice(0, 5).map((issue: IssueAdminItem, index: number) => (
                       <div key={issue.id} className="flex items-center justify-between">
                         <div className="flex-1">
                           <p className="text-sm font-medium truncate">

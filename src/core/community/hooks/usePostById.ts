@@ -3,6 +3,29 @@ import { profileService } from "@/core/profiles/services/ProfileService";
 import type { CommunityPost } from "../types";
 import { postService } from "@/core/posts/services";
 
+interface CommunityPostRecord {
+  id: string;
+  author_profile_id: string;
+  type: string;
+  content: string;
+  images?: string[];
+  tags?: string[];
+  location_id?: string;
+  location?: string;
+  created_at: string;
+  likes_count: number;
+  comments_count: number;
+  confirmations_count?: number;
+  is_edited?: boolean;
+}
+
+interface CommunityPostInteractions {
+  isLiked: boolean;
+  isSaved: boolean;
+  hasConfirmed: boolean;
+  pollVoteOptionId: string | null;
+}
+
 export function usePostById(postId: string | null) {
   return useQuery({
     queryKey: ["community-post", postId],
@@ -12,20 +35,20 @@ export function usePostById(postId: string | null) {
       // ✅ FASE 2: Usar ProfileService.getActiveProfile() para contexto social (opcional)
       const activeProfile = await profileService.getActiveProfile();
 
-      const post = await postService.getCommunityPostById(postId);
+      const post = (await postService.getCommunityPostById(
+        postId,
+      )) as CommunityPostRecord | null;
       if (!post) return null;
 
-      const authorProfile = await profileService.getProfilesSummary([
-        (post as any).author_profile_id,
-      ]);
+      const authorProfile = await profileService.getProfilesSummary([post.author_profile_id]);
       const profile = authorProfile[0];
 
       // ✅ SSOT — interações via PostService
-      const interactions = activeProfile
+      const interactions: CommunityPostInteractions = activeProfile
         ? await postService.getPostUserInteractions(
             postId,
             activeProfile.userId,
-            (post as any).type,
+            post.type,
           )
         : {
             isLiked: false,
@@ -36,7 +59,7 @@ export function usePostById(postId: string | null) {
 
       // Buscar poll se existir
       const pollData = await postService.getPollByPostId(post.id);
-      let enrichedPoll: any = pollData;
+      let enrichedPoll = pollData;
       if (pollData && interactions.pollVoteOptionId) {
         enrichedPoll = {
           ...pollData,
@@ -56,27 +79,26 @@ export function usePostById(postId: string | null) {
 
       return {
         id: post.id,
-        author_profile_id: (post as any).author_profile_id,
+        author_profile_id: post.author_profile_id,
         author_name: profile?.name || "Usuário",
-        author_avatar:
-          (profile as any)?.avatarUrl || (profile as any)?.avatar_url,
-        author_reputation: (profile as any)?.reputation || 0,
+        author_avatar: profile?.avatarUrl,
+        author_reputation: 0,
         is_verified_resident: profile?.verified || false,
-        type: (post as any).type,
-        content: (post as any).content,
-        images: (post as any).images || [],
-        tags: (post as any).tags || [],
-        location_id: (post as any).location_id,
-        location: (post as any).location,
-        created_at: (post as any).created_at,
-        likes_count: (post as any).likes_count,
-        comments_count: (post as any).comments_count,
-        confirmations_count: (post as any).confirmations_count || 0,
+        type: post.type,
+        content: post.content,
+        images: post.images || [],
+        tags: post.tags || [],
+        location_id: post.location_id,
+        location: post.location,
+        created_at: post.created_at,
+        likes_count: post.likes_count,
+        comments_count: post.comments_count,
+        confirmations_count: post.confirmations_count || 0,
         is_verified: profile?.verified || false,
         is_liked: interactions.isLiked,
         is_saved: interactions.isSaved,
         has_user_confirmed: interactions.hasConfirmed,
-        is_edited: (post as any).is_edited || false,
+        is_edited: post.is_edited || false,
         poll: enrichedPoll,
         mentioned_profiles: mentionedProfiles,
       } as CommunityPost;

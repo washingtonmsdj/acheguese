@@ -3,9 +3,13 @@ import { Badge } from "@/shared/components/ui/badge";
 import { cn } from "@/shared/utils/cn";
 
 interface WarningCardProps {
-  warning: any;
-  targetUser: any;
-  adminUser: any;
+  warning: {
+    tipo: "advertencia" | "suspensao_7d" | "suspensao_permanente";
+    created_at?: string | null;
+    motivo?: string | null;
+  };
+  targetUser?: { name?: string | null } | null;
+  adminUser?: { name?: string | null } | null;
 }
 
 export function WarningCard({

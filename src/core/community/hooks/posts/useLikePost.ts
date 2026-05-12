@@ -25,8 +25,8 @@ export function useLikePost() {
       if (previousPost) {
         queryClient.setQueryData(["post", postId], {
           ...previousPost,
-          likes_count: (previousPost as any).likes_count + 1,
-        } as any);
+          likes_count: previousPost.likes_count + 1,
+        });
       }
 
       return { previousPost };

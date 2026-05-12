@@ -32,11 +32,23 @@ interface FraudEvidence {
   zero_distance_count?: number;
   [key: string]: string | number | boolean | undefined;
 }
+type FraudRideSummary = {
+  id: string;
+  origin?: string | null;
+  destination?: string | null;
+};
+type FraudDriverSummary = {
+  profile?: { name?: string | null } | null;
+};
+type FraudAlertExtended = FraudAlert & {
+  ride?: FraudRideSummary | null;
+  driver?: FraudDriverSummary | null;
+};
 
 export function FraudDetectionPanel() {
-  const [alerts, setAlerts] = useState<(FraudAlert & { ride?: any; driver?: any })[]>([]);
+  const [alerts, setAlerts] = useState<FraudAlertExtended[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedAlert, setSelectedAlert] = useState<(FraudAlert & { ride?: any; driver?: any }) | null>(null);
+  const [selectedAlert, setSelectedAlert] = useState<FraudAlertExtended | null>(null);
   const [resolutionNotes, setResolutionNotes] = useState("");
   const [stats, setStats] = useState({
     total: 0,
@@ -59,7 +71,7 @@ export function FraudDetectionPanel() {
       const [ridesData, driversData] = await Promise.all([
         rideIds.length > 0
           ? adminMobilityService.getUserRides(driverProfileIds[0] || "").then((data) => ({ data }))
-          : Promise.resolve({ data: [] as any[] }),
+          : Promise.resolve({ data: [] as FraudRideSummary[] }),
         profileService.getProfilesSummary(driverProfileIds as string[]),
       ]);
 

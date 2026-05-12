@@ -19,13 +19,13 @@ export interface CreateReviewData {
   reviewer_profile_id: string;
   rating: number;
   comment?: string;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 export interface UpdateReviewData {
   rating?: number;
   comment?: string;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 export interface ReviewStats {

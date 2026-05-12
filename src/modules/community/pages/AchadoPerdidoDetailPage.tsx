@@ -36,6 +36,11 @@ import { ptBR } from "date-fns/locale";
 import { cn } from "@/shared/utils/cn";
 import { motion } from "framer-motion";
 import { ProfileService } from "@/core/profiles/services/ProfileService";
+import type {
+  Profile,
+  ProfileSummary,
+} from "@/core/profiles/services/types";
+import type { LostFoundComment } from "@/core/community-lost-found/services";
 
 const profileServiceInstance = new ProfileService();
 
@@ -103,7 +108,9 @@ export default function AchadoPerdidoDetailPage() {
       return;
     }
 
-    const profile = await profileServiceInstance.getProfileById(data.autor_id);
+    const profile = (await profileServiceInstance.getProfileById(
+      data.autor_id,
+    )) as Profile | null;
 
     setPost({
       id: data.id,
@@ -124,7 +131,7 @@ export default function AchadoPerdidoDetailPage() {
         ? {
             name: profile.name,
             avatar_url: profile.avatar_url || "",
-            whatsapp: (profile as any).whatsapp || "",
+            whatsapp: profile.whatsapp || "",
           }
         : null,
     });
@@ -139,22 +146,24 @@ export default function AchadoPerdidoDetailPage() {
 
     if (!data) return;
 
-    const autorIds = [...new Set(data.map((c: any) => c.autor_id))];
+    const autorIds = [...new Set(data.map((c: LostFoundComment) => c.autor_id))];
     const profiles =
       autorIds.length > 0
-        ? await profileServiceInstance.getProfilesSummary(autorIds)
+        ? ((await profileServiceInstance.getProfilesSummary(
+            autorIds,
+          )) as ProfileSummary[])
         : [];
 
     const profileMap = new Map(
-      profiles.map((p: any) => [
+      profiles.map((p) => [
         p.id,
-        { name: p.name, avatar_url: p.avatarUrl || p.avatar_url || "" },
+        { name: p.name, avatar_url: p.avatarUrl || "" },
       ]),
     );
     setComments(
-      data.map((c: any) => ({
+      data.map((c) => ({
         id: c.id,
-        texto: c.texto,
+        texto: c.texto || c.conteudo || "",
         created_at: c.created_at || "",
         autor: (profileMap.get(c.autor_id) as {
           name: string;

@@ -6,6 +6,7 @@ import { logger } from "@/shared/utils/logger";
 import { useSessionContext } from "@/core/session";
 import { CivicReportService } from "@/core/community/services/CivicReportService";
 import { commentService } from "@/core/comments/services/CommentService";
+import type { Poll } from "@/shared/types/poll";
 
 interface CommunityPost {
   id: string;
@@ -15,7 +16,7 @@ interface CommunityPost {
   type: string;
   content: string;
   images?: string[];
-  poll?: any;
+  poll?: Poll;
   tags: string[];
   city: string;
   neighborhood: string;
@@ -32,6 +33,14 @@ type UnifiedContent =
   | { type: "post"; date: CommunityPost; data?: CommunityPost }
   | { type: "civic_report"; reportId: string };
 
+type CivicReportData = {
+  id: string;
+  created_at: string;
+  description?: string;
+  location?: string;
+  profile?: { name?: string; avatar_url?: string };
+};
+
 export const useUnifiedDetailModal = (content: UnifiedContent) => {
   const { activeProfile } = useSessionContext();
   const queryClient = useQueryClient();
@@ -40,12 +49,11 @@ export const useUnifiedDetailModal = (content: UnifiedContent) => {
   const isPost = content.type === "post";
   const civicReportId =
     content.type === "civic_report" ? content.reportId : null;
-  const postData = isPost
-    ? (((content as any).data || (content as any).date) as CommunityPost)
-    : null;
+  const postData = isPost ? (content.data || content.date) : null;
 
   const { data: civicReportData, isLoading: isLoadingReport } =
     useCivicReportById(civicReportId);
+  const civicReport = civicReportData as CivicReportData | null;
 
   const { state, isProcessing, handleLike, handleSave, handleShare } =
     usePostInteractions(postData?.id || "", {
@@ -57,16 +65,16 @@ export const useUnifiedDetailModal = (content: UnifiedContent) => {
   const id = postData?.id || civicReportData?.id || "";
   const authorName =
     postData?.author_name ||
-    (civicReportData as any)?.profile?.name ||
+    civicReport?.profile?.name ||
     "Usuario";
   const authorAvatar =
-    postData?.author_avatar || (civicReportData as any)?.profile?.avatar_url;
+    postData?.author_avatar || civicReport?.profile?.avatar_url;
   const createdAt = postData?.created_at || civicReportData?.created_at || "";
   const description =
-    postData?.content || (civicReportData as any)?.description || "";
+    postData?.content || civicReport?.description || "";
   const location = postData
     ? `${postData.neighborhood}, ${postData.city}`
-    : (civicReportData as any)?.location || "";
+    : civicReport?.location || "";
 
   const handleSubmitComment = async () => {
     if (!commentText.trim() || !activeProfile?.id) return;

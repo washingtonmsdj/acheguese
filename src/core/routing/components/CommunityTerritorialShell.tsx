@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useState } from "react";
 import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import {
@@ -73,6 +73,24 @@ function normalizeModulePath(pathname: string): string {
   }
 
   return module;
+}
+
+function useCommunitySeoHead(canonicalHref: string, robots: string) {
+  useLayoutEffect(() => {
+    const canonical =
+      document.querySelector<HTMLLinkElement>("link[rel='canonical']") ??
+      document.head.appendChild(document.createElement("link"));
+
+    canonical.setAttribute("rel", "canonical");
+    canonical.setAttribute("href", canonicalHref);
+
+    const robotsMeta =
+      document.querySelector<HTMLMetaElement>("meta[name='robots']") ??
+      document.head.appendChild(document.createElement("meta"));
+
+    robotsMeta.setAttribute("name", "robots");
+    robotsMeta.setAttribute("content", robots);
+  }, [canonicalHref, robots]);
 }
 
 const NAV_GROUP_LABELS: Record<CommunityNavItem["group"], string> = {
@@ -226,6 +244,7 @@ export function CommunityTerritorialShell() {
   const canonicalHref = typeof window !== "undefined"
     ? `${window.location.origin}${seoPolicy.canonicalPath}`
     : seoPolicy.canonicalPath;
+  useCommunitySeoHead(canonicalHref, seoPolicy.robots);
 
   const handleExitToCity = () => {
     setTransitionMessage(`Saindo do ${territoryName}`);

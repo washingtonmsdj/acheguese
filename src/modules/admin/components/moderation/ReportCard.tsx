@@ -34,9 +34,19 @@ const CATEGORY_COLORS: Record<string, string> = {
 };
 
 interface ReportCardProps {
-  report: any;
-  content: any;
-  author: any;
+  report: {
+    status: string;
+    motivo: string;
+    created_at?: string | null;
+    detalhes?: string | null;
+  };
+  content?: {
+    category?: string;
+    texto?: string;
+    name?: string;
+    suspended?: boolean;
+  } | null;
+  author?: { name?: string; warning_count?: number } | null;
   type: "post" | "comment" | "profile";
   onView: () => void;
 }

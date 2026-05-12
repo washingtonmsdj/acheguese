@@ -48,7 +48,7 @@ export async function getFavoritesByProfile(
   favoritingProfileId: string,
 ): Promise<string[]> {
   try {
-    const { data, error } = await (supabase as any)
+    const { data, error } = await supabase
       .from(TABLE)
       .select("favorited_profile_id")
       .eq("favoriting_profile_id", favoritingProfileId);
@@ -74,7 +74,7 @@ export async function getFavoritersOfProfile(
   favoritedProfileId: string,
 ): Promise<string[]> {
   try {
-    const { data, error } = await (supabase as any)
+    const { data, error } = await supabase
       .from(TABLE)
       .select("favoriting_profile_id")
       .eq("favorited_profile_id", favoritedProfileId);
@@ -132,7 +132,7 @@ export async function getFavoriteStats(profileId: string): Promise<FavoriteStats
  */
 export async function getFavoritesWithProfiles(favoritingProfileId: string) {
   try {
-    const { data, error } = await (supabase as any)
+    const { data, error } = await supabase
       .from(TABLE)
       .select(
         `
@@ -175,7 +175,7 @@ export async function isBusinessFavorited(
   userId: string,
 ): Promise<boolean> {
   try {
-    const { data, error } = await (supabase as any)
+    const { data, error } = await supabase
       .from(BUSINESS_FAVORITES_TABLE)
       .select("id")
       .eq("business_id", businessId)
@@ -203,7 +203,7 @@ export async function isBusinessFavorited(
  */
 export async function getUserBusinessFavorites(userId: string): Promise<string[]> {
   try {
-    const { data, error } = await (supabase as any)
+    const { data, error } = await supabase
       .from(BUSINESS_FAVORITES_TABLE)
       .select("business_id")
       .eq("profile_id", userId);

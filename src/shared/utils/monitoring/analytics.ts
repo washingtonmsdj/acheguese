@@ -12,7 +12,7 @@ import { logger } from "@/shared/utils/logger";
 interface AnalyticsEvent {
   name: string;
   category: "page_view" | "user_action" | "error" | "performance" | "business";
-  properties?: Record<string, any>;
+  properties?: Record<string, unknown>;
   timestamp: number;
   userId?: string;
   sessionId: string;
@@ -89,7 +89,7 @@ class AnalyticsService {
   trackEvent(
     name: string,
     category: AnalyticsEvent["category"],
-    properties?: Record<string, any>,
+    properties?: Record<string, unknown>,
   ): void {
     if (!this.enabled) return;
 
@@ -118,7 +118,7 @@ class AnalyticsService {
   /**
    * Rastreia visualização de página
    */
-  trackPageView(pageName: string, properties?: Record<string, any>): void {
+  trackPageView(pageName: string, properties?: Record<string, unknown>): void {
     this.session.pageViews++;
     this.trackEvent(`page_view:${pageName}`, "page_view", properties);
   }
@@ -126,14 +126,14 @@ class AnalyticsService {
   /**
    * Rastreia ação do usuário
    */
-  trackUserAction(action: string, properties?: Record<string, any>): void {
+  trackUserAction(action: string, properties?: Record<string, unknown>): void {
     this.trackEvent(`user_action:${action}`, "user_action", properties);
   }
 
   /**
    * Rastreia erro
    */
-  trackError(error: Error, context?: Record<string, any>): void {
+  trackError(error: Error, context?: Record<string, unknown>): void {
     this.trackEvent("error", "error", {
       message: error.message,
       stack: error.stack,
@@ -147,7 +147,7 @@ class AnalyticsService {
   trackPerformance(
     metric: string,
     value: number,
-    properties?: Record<string, any>,
+    properties?: Record<string, unknown>,
   ): void {
     this.trackEvent(`performance:${metric}`, "performance", {
       value,
@@ -158,7 +158,7 @@ class AnalyticsService {
   /**
    * Rastreia evento de negócio
    */
-  trackBusinessEvent(event: string, properties?: Record<string, any>): void {
+  trackBusinessEvent(event: string, properties?: Record<string, unknown>): void {
     this.trackEvent(`business:${event}`, "business", properties);
   }
 

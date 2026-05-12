@@ -31,17 +31,17 @@ export interface FormField {
     minLength?: number;
     maxLength?: number;
     pattern?: string;
-    custom?: (value: any) => string | null;
+    custom?: (value: unknown) => string | null;
   };
 }
 
-export interface FormConfig {
+export interface FormConfig<TData = Record<string, unknown>> {
   fields: FormField[];
   submitLabel?: string;
   cancelLabel?: string;
-  onSubmit: (data: any) => Promise<void> | void;
+  onSubmit: (data: TData) => Promise<void> | void;
   onCancel?: () => void;
-  initialData?: any;
+  initialData?: Partial<TData>;
 }
 
 export interface ValidationError {
@@ -52,7 +52,7 @@ export interface ValidationError {
 export interface FormSubmissionResult {
   success: boolean;
   errors?: ValidationError[];
-  data?: any;
+  data?: unknown;
 }
 
 export interface AddressFormData {

@@ -14,7 +14,10 @@ function formatMoney(value?: number | null): string {
   return `R$ ${value.toFixed(0)}`;
 }
 
-function isDeliveryRide(ride: any): boolean {
+type RideLike = { ride_mode?: string | null; type?: string | null };
+type DriverEarningsLike = { month?: number | null };
+
+function isDeliveryRide(ride: RideLike): boolean {
   return ride?.ride_mode === "motoboy" || ride?.type === "entrega";
 }
 
@@ -23,11 +26,11 @@ export default function PerfilMobilidadeMotoboyHomePage() {
   const shell = useMotoristaPageV2();
 
   const availableDeliveries = useMemo(
-    () => (shell.availableRides || []).filter((ride: any) => isDeliveryRide(ride)),
+    () => (shell.availableRides || []).filter((ride: RideLike) => isDeliveryRide(ride)),
     [shell.availableRides],
   );
   const activeDeliveries = useMemo(
-    () => (shell.activeDeliveries || []).filter((ride: any) => isDeliveryRide(ride)),
+    () => (shell.activeDeliveries || []).filter((ride: RideLike) => isDeliveryRide(ride)),
     [shell.activeDeliveries],
   );
 
@@ -61,7 +64,7 @@ export default function PerfilMobilidadeMotoboyHomePage() {
             </Badge>
             <Badge variant="outline" className="gap-1">
               <Wallet className="h-3 w-3" />
-              {formatMoney((shell.driverEarnings as any)?.month ?? 0)}
+              {formatMoney((shell.driverEarnings as DriverEarningsLike | null)?.month ?? 0)}
             </Badge>
           </div>
         </CardContent>

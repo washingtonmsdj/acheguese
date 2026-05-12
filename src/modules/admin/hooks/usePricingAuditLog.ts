@@ -3,7 +3,7 @@ import { pricingService } from "@/core/pricing/services/PricingService";
 import { logger } from "@/shared/utils/logger";
 
 export function usePricingAuditLog(limit: number = 20) {
-  const [logs, setLogs] = useState<any[]>([]);
+  const [logs, setLogs] = useState<Record<string, unknown>[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 

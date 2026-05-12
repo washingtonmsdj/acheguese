@@ -26,7 +26,7 @@ export interface StateData {
   slug: string;
   type: 'state';
   geographic_path: string;
-  metadata: Record<string, any>;
+  metadata: Record<string, unknown>;
   status?: string;
   city_count: number;
 }
@@ -44,7 +44,7 @@ export interface CityData {
   parent_id: string;
   parent_name?: string;
   district_count?: number;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 /**
@@ -84,4 +84,69 @@ export interface VerifiedBusiness {
   rating: number;
   city_name?: string;
   geographic_path: string;
+}
+
+export interface NationalBusiness {
+  id: string;
+  name: string;
+  category: string;
+  logo_url?: string | null;
+  rating: number;
+  is_premium: boolean;
+  is_verified: boolean;
+  slug?: string | null;
+  geographic_path?: string | null;
+  city_name?: string | null;
+}
+
+export interface NationalService {
+  id: string;
+  name: string;
+  category: string;
+  logo_url?: string | null;
+  rating: number;
+  is_verified: boolean;
+  price_range: string;
+  city_name?: string | null;
+}
+
+export interface NationalClassified {
+  id: string;
+  titulo: string;
+  category: string;
+  price: number;
+  photos: string[];
+  created_at: string;
+  public_id?: string | null;
+  slug?: string | null;
+  geographic_path?: string | null;
+  category_slug?: string | null;
+  subcategory_slug?: string | null;
+}
+
+export interface NationalStats {
+  businesses: number;
+  services: number;
+  classifieds: number;
+  cities: number;
+  districts: number;
+}
+
+export interface ActiveTerritoriesWithLanding {
+  locations: Array<{
+    id: string;
+    name: string;
+    slug: string;
+    type: string;
+    geographic_path: string;
+    parent_name?: string | null;
+  }>;
+  groups: Array<{
+    id: string;
+    name: string;
+    slug: string;
+    description?: string | null;
+    member_count: number;
+    anchor_path?: string | null;
+  }>;
 }

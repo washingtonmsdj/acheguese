@@ -22,8 +22,8 @@ export function useUnlikePost() {
       if (previousPost) {
         queryClient.setQueryData(["post", postId], {
           ...previousPost,
-          likes_count: Math.max(0, (previousPost as any).likes_count - 1),
-        } as any);
+          likes_count: Math.max(0, previousPost.likes_count - 1),
+        });
       }
 
       return { previousPost };

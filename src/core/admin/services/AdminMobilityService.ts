@@ -65,6 +65,12 @@ export interface AdminMobilityOperationalSnapshot {
   items: AdminMobilityOperationalItem[];
 }
 
+type ProfileSummaryWithAvatar = {
+  name?: string | null;
+  avatar_url?: string | null;
+  avatarUrl?: string | null;
+};
+
 class AdminMobilityServiceClass {
   async getDriversWithStats(): Promise<AdminDriverData[]> {
     try {
@@ -95,12 +101,13 @@ class AdminMobilityServiceClass {
           // ✅ Delegado para MobilityAdminQueryService
           const suspensionCount = await MobilityAdminQueryService.countDriverSuspensions(driver.user_id);
 
+          const profileWithAvatar = profile as ProfileSummaryWithAvatar | undefined;
           return {
             id: driver.id,
             profile_id: driver.profile_id,
             user_id: driver.user_id,
             name: profile?.name || "Motorista",
-            avatar_url: (profile as any)?.avatarUrl,
+            avatar_url: profileWithAvatar?.avatar_url ?? profileWithAvatar?.avatarUrl ?? undefined,
             rating: driver.rating || 0,
             total_rides: driver.total_rides || 0,
             total_earnings: driver.total_earnings || 0,

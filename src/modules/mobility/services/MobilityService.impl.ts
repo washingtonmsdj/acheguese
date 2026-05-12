@@ -1,11 +1,11 @@
-﻿/**
+/**
  * MobilityService - SSOT core/mobility
  *
- * Único ponto de acesso ao banco para operações de mobilidade.
+ * �nico ponto de acesso ao banco para opera��es de mobilidade.
  *
  * Exporta:
- *   - MobilityService (classe estática) — leitura / admin
- *   - mobilityService (instância singleton) — escrita / runtime
+ *   - MobilityService (classe est�tica) � leitura / admin
+ *   - mobilityService (inst�ncia singleton) � escrita / runtime
  */
 
 import { supabase } from "@/integrations/supabase";
@@ -15,12 +15,16 @@ import { profileService } from "@/core/profiles/services/ProfileService";
 import { RIDE_STATUS } from "../constants";
 
 type DriverDataRecord = Tables<"driver_data">;
+type RideRequestRecord = Tables<"ride_requests">;
+type DriverCompleteProfileRecord = Tables<"driver_complete_profile">;
+type MobilityConversationRecord = Tables<"mobility_conversations">;
+type MobilityMessageRecord = Tables<"mobility_messages">;
 
-// ─── Static (leitura / admin) ────────────────────────────────────────────────
+// --- Static (leitura / admin) ------------------------------------------------
 
 export class MobilityService {
   static async getLatestRideBySource(sourceType: string, sourceId: string): Promise<unknown | null> {
-    const { data, error } = await (supabase as any)
+    const { data, error } = await supabase
       .from("ride_requests")
       .select("*")
       .eq("source_type", sourceType)
@@ -34,7 +38,7 @@ export class MobilityService {
   }
 
   static async getRideSourceIdById(rideId: string, sourceType?: string): Promise<string | null> {
-    let query = (supabase as any)
+    let query = supabase
       .from("ride_requests")
       .select("source_id")
       .eq("id", rideId);
@@ -53,7 +57,7 @@ export class MobilityService {
     sourceType?: string;
     limit?: number;
   }): Promise<unknown[]> {
-    let query = (supabase as any)
+    let query = supabase
       .from("ride_requests")
       .select(
         "id, status, source_type, source_id, recipient_name, package_size, suggested_price, created_at, updated_at, driver_profile_id, pickup_location_id, delivery_notes, failed_delivery_reason",
@@ -75,7 +79,7 @@ export class MobilityService {
   }
 
   static async listMotoboyStatsRows(): Promise<Array<{ status: string; created_at: string; driver_profile_id: string | null }>> {
-    const { data, error } = await (supabase as any)
+    const { data, error } = await supabase
       .from("ride_requests")
       .select("id, status, created_at, driver_profile_id")
       .eq("ride_mode", "motoboy");
@@ -85,7 +89,7 @@ export class MobilityService {
   }
 
   static async countDeliveredBySource(sourceType: string, sourceId: string): Promise<number> {
-    const { count, error } = await (supabase as any)
+    const { count, error } = await supabase
       .from("ride_requests")
       .select("id", { count: "exact", head: true })
       .eq("ride_mode", "motoboy")
@@ -98,7 +102,7 @@ export class MobilityService {
   }
 
   static async countDeliveredMotoboyRides(): Promise<number> {
-    const { count, error } = await (supabase as any)
+    const { count, error } = await supabase
       .from("ride_requests")
       .select("id", { count: "exact", head: true })
       .eq("ride_mode", "motoboy")
@@ -112,7 +116,7 @@ export class MobilityService {
     profileId: string,
     defaults?: { canDoDelivery?: boolean; canDoRides?: boolean },
   ): Promise<void> {
-    const { data: existing, error: readError } = await (supabase as any)
+    const { data: existing, error: readError } = await supabase
       .from("driver_data")
       .select("profile_id")
       .eq("profile_id", profileId)
@@ -124,12 +128,12 @@ export class MobilityService {
     if (defaults?.canDoDelivery !== undefined) payload.can_do_delivery = defaults.canDoDelivery;
     if (defaults?.canDoRides !== undefined) payload.can_do_rides = defaults.canDoRides;
 
-    const { error } = await (supabase as any).from("driver_data").insert(payload);
+    const { error } = await supabase.from("driver_data").insert(payload);
     if (error && error.code !== "23505") throw error;
   }
 
   static async getDriverRideSessions(driverProfileId: string, limit = 300): Promise<Array<{ started_at: string | null; completed_at: string | null }>> {
-    const { data, error } = await (supabase as any)
+    const { data, error } = await supabase
       .from("ride_requests")
       .select("started_at, completed_at")
       .eq("driver_profile_id", driverProfileId)
@@ -143,7 +147,7 @@ export class MobilityService {
   }
 
   static async listRecentRidePickupLocations(limit = 300): Promise<unknown[]> {
-    const { data, error } = await (supabase as any)
+    const { data, error } = await supabase
       .from("ride_requests")
       .select(`
         pickup_location_id,
@@ -177,7 +181,7 @@ export class MobilityService {
         RIDE_STATUS.PASSENGER_BOARDED,
       ].filter(Boolean) as string[];
 
-      const { data, error } = await (supabase as any)
+      const { data, error } = await supabase
         .from("ride_requests")
         .select("*")
         .in("status", activeStatuses)
@@ -193,7 +197,7 @@ export class MobilityService {
 
   static async getRideById(id: string): Promise<unknown | null> {
     try {
-      const { data, error } = await (supabase as any)
+      const { data, error } = await supabase
         .from("ride_requests")
         .select("*")
         .eq("id", id)
@@ -208,7 +212,7 @@ export class MobilityService {
   }
 
   static async createRide(data: Record<string, unknown>): Promise<unknown> {
-    const { data: ride, error } = await (supabase as any)
+    const { data: ride, error } = await supabase
       .from("ride_requests")
       .insert(data)
       .select()
@@ -219,7 +223,7 @@ export class MobilityService {
   }
 
   static async getAllRideRequests(): Promise<unknown[]> {
-    const { data, error } = await (supabase as any)
+    const { data, error } = await supabase
       .from("ride_requests")
       .select("*")
       .order("created_at");
@@ -229,7 +233,7 @@ export class MobilityService {
   }
 
   static async getRidesByPassenger(passengerProfileId: string): Promise<unknown[]> {
-    const { data, error } = await (supabase as any)
+    const { data, error } = await supabase
       .from("ride_requests")
       .select("*")
       .eq("passenger_profile_id", passengerProfileId)
@@ -240,7 +244,7 @@ export class MobilityService {
   }
 
   static async getRidesByDriverProfile(driverProfileId: string): Promise<unknown[]> {
-    const { data, error } = await (supabase as any)
+    const { data, error } = await supabase
       .from("ride_requests")
       .select("*")
       .eq("driver_profile_id", driverProfileId)
@@ -255,7 +259,7 @@ export class MobilityService {
     statuses: string[],
     excludeRideId?: string,
   ): Promise<unknown | null> {
-    let query = (supabase as any)
+    let query = supabase
       .from("ride_requests")
       .select("id")
       .eq("driver_profile_id", driverProfileId)
@@ -271,7 +275,7 @@ export class MobilityService {
   }
 
   static async getActiveRide(userProfileId: string): Promise<unknown | null> {
-    const { data, error } = await (supabase as any)
+    const { data, error } = await supabase
       .from("ride_requests")
       .select("*")
       .or(`passenger_profile_id.eq.${userProfileId},driver_profile_id.eq.${userProfileId}`)
@@ -285,7 +289,7 @@ export class MobilityService {
   }
 
   static async updateRide(rideId: string, updates: Record<string, unknown>): Promise<unknown> {
-    const { data, error } = await (supabase as any)
+    const { data, error } = await supabase
       .from("ride_requests")
       .update(updates)
       .eq("id", rideId)
@@ -304,7 +308,7 @@ export class MobilityService {
       driverProfileIdEq?: string;
     } = {},
   ): Promise<boolean> {
-    let query = (supabase as any)
+    let query = supabase
       .from("ride_requests")
       .update(updates)
       .eq("id", rideId);
@@ -327,7 +331,7 @@ export class MobilityService {
     updates: Record<string, unknown>,
     allowedStatuses: string[],
   ): Promise<boolean> {
-    const { data, error } = await (supabase as any)
+    const { data, error } = await supabase
       .from("ride_requests")
       .update(updates)
       .eq("id", rideId)
@@ -340,7 +344,7 @@ export class MobilityService {
   }
 
   static async getRideDispatchData(rideId: string): Promise<unknown | null> {
-    const { data, error } = await (supabase as any)
+    const { data, error } = await supabase
       .from("ride_requests")
       .select(`
         id,
@@ -363,7 +367,7 @@ export class MobilityService {
     userId: string,
     location: { lat: number; lng: number },
   ): Promise<void> {
-    await (supabase as any)
+    await supabase
       .from("emergency_alerts")
       .insert({ ride_id: rideId, user_id: userId, location })
       .throwOnError();
@@ -371,7 +375,7 @@ export class MobilityService {
 
   static async getDriverProfiles(): Promise<{ data: unknown[]; error: unknown }> {
     try {
-      const { data, error } = await (supabase as any)
+      const { data, error } = await supabase
         .from("driver_complete_profile")
         .select("*")
         .order("created_at", { ascending: false });
@@ -385,7 +389,7 @@ export class MobilityService {
   static async getDriverDataByProfileIds(profileIds: string[]): Promise<unknown[]> {
     if (!profileIds.length) return [];
 
-    const { data, error } = await (supabase as any)
+    const { data, error } = await supabase
       .from("driver_data")
       .select("profile_id, rating, can_do_delivery")
       .in("profile_id", profileIds);
@@ -397,7 +401,7 @@ export class MobilityService {
   static async getTopDrivers(opts: { minRides?: number; limit?: number } = {}): Promise<unknown[]> {
     try {
       const { minRides = 1, limit = 10 } = opts;
-      const { data, error } = await (supabase as any)
+      const { data, error } = await supabase
         .from("driver_complete_profile")
         .select("profile_id, display_name, avg_rating, total_rides, avatar_url")
         .gte("total_rides", minRides)
@@ -405,7 +409,8 @@ export class MobilityService {
         .limit(limit);
 
       if (error) throw error;
-      return (data || []).map((d: any) => ({
+      const rows: DriverCompleteProfileRecord[] = data || [];
+      return rows.map((d) => ({
         id: d.profile_id,
         name: d.display_name,
         rating: d.avg_rating,
@@ -421,8 +426,8 @@ export class MobilityService {
   static async getMobilityStats(): Promise<{ total_drivers: number; total_rides: number }> {
     try {
       const [driversResult, ridesResult] = await Promise.all([
-        (supabase as any).from("driver_data").select("id", { count: "exact", head: true }),
-        (supabase as any).from("ride_requests").select("id", { count: "exact", head: true }),
+        supabase.from("driver_data").select("id", { count: "exact", head: true }),
+        supabase.from("ride_requests").select("id", { count: "exact", head: true }),
       ]);
 
       return {
@@ -435,10 +440,10 @@ export class MobilityService {
     }
   }
 
-  /** Retorna corridas concluídas para cálculo de ganhos (uso no WeeklyEarningsChart). */
+  /** Retorna corridas conclu�das para c�lculo de ganhos (uso no WeeklyEarningsChart). */
   static async getDriverEarnings(driverProfileId: string): Promise<unknown[]> {
     try {
-      const { data, error } = await (supabase as any)
+      const { data, error } = await supabase
         .from("ride_requests")
         .select("final_price, completed_at, updated_at")
         .eq("driver_profile_id", driverProfileId)
@@ -446,7 +451,8 @@ export class MobilityService {
         .order("updated_at", { ascending: false});
 
       if (error) throw error;
-      return (data || []).map((r: any) => ({
+      const rows: Pick<RideRequestRecord, "final_price" | "completed_at" | "updated_at">[] = data || [];
+      return rows.map((r) => ({
         ...r,
         completed_at: r.completed_at || r.updated_at,
       }));
@@ -460,7 +466,7 @@ export class MobilityService {
     driverProfileId: string,
     sinceIso?: string,
   ): Promise<unknown[]> {
-    let query = (supabase as any)
+    let query = supabase
       .from("ride_requests")
       .select("created_at, actual_fare, final_price")
       .eq("driver_profile_id", driverProfileId)
@@ -487,7 +493,7 @@ export class MobilityService {
     avg_rating: number;
   } | null> {
     try {
-      const { data, error } = await (supabase as any)
+      const { data, error } = await supabase
         .from("driver_complete_profile")
         .select("display_name, vehicle_model, vehicle_color, vehicle_plate, avg_rating")
         .eq("profile_id", profileId)
@@ -502,12 +508,12 @@ export class MobilityService {
   }
 
   /**
-   * Busca avaliação média do passageiro
+   * Busca avalia��o m�dia do passageiro
    * Usado em: PassageiroPage
    */
   static async getPassengerRating(profileId: string): Promise<number> {
     try {
-      const { data, error } = await (supabase as any)
+      const { data, error } = await supabase
         .from("ride_ratings")
         .select("rating")
         .eq("rated_id", profileId);
@@ -539,9 +545,9 @@ export class MobilityService {
    * Remove bairro aceito pelo motorista
    * Usado em: ServiceAreaSettings
    */
-  static async deleteDriverNeighborhood(id: string): Promise<{ success: boolean; error?: any }> {
+  static async deleteDriverNeighborhood(id: string): Promise<{ success: boolean; error?: unknown }> {
     try {
-      const { error } = await (supabase as any)
+      const { error } = await supabase
         .from('driver_accepted_neighborhoods')
         .delete()
         .eq('id', id);
@@ -559,12 +565,12 @@ export class MobilityService {
   }
 
   /**
-   * Remove área de serviço do motorista (genérico)
+   * Remove �rea de servi�o do motorista (gen�rico)
    * Usado em: ServiceAreaSettings
    */
-  static async deleteDriverServiceArea(table: string, id: string): Promise<{ success: boolean; error?: any }> {
+  static async deleteDriverServiceArea(table: string, id: string): Promise<{ success: boolean; error?: unknown }> {
     try {
-      const { error } = await (supabase as any)
+      const { error } = await supabase
         .from(table)
         .delete()
         .eq('id', id);
@@ -585,9 +591,9 @@ export class MobilityService {
    * Busca conversas de mobilidade do perfil
    * Usado em: MobilityChatList
    */
-  static async getMobilityConversations(profileId: string): Promise<any[]> {
+  static async getMobilityConversations(profileId: string): Promise<MobilityConversationRecord[]> {
     try {
-      const { data, error } = await (supabase as any)
+      const { data, error } = await supabase
         .from("mobility_conversations")
         .select(`
           id,
@@ -609,12 +615,12 @@ export class MobilityService {
   }
 
   /**
-   * Busca última mensagem de uma conversa
+   * Busca �ltima mensagem de uma conversa
    * Usado em: MobilityChatList
    */
-  static async getLastMessage(conversationId: string): Promise<any | null> {
+  static async getLastMessage(conversationId: string): Promise<Pick<MobilityMessageRecord, "message"> | null> {
     try {
-      const { data, error } = await (supabase as any)
+      const { data, error } = await supabase
         .from("mobility_messages")
         .select("message")
         .eq("conversation_id", conversationId)
@@ -631,12 +637,12 @@ export class MobilityService {
   }
 
   /**
-   * Conta mensagens não lidas de uma conversa
+   * Conta mensagens n�o lidas de uma conversa
    * Usado em: MobilityChatList
    */
   static async getUnreadCount(conversationId: string, profileId: string): Promise<number> {
     try {
-      const { count, error } = await (supabase as any)
+      const { count, error } = await supabase
         .from("mobility_messages")
         .select("*", { count: "exact", head: true })
         .eq("conversation_id", conversationId)
@@ -652,7 +658,7 @@ export class MobilityService {
   }
 }
 
-// ─── Instance (escrita / runtime) ────────────────────────────────────────────
+// --- Instance (escrita / runtime) --------------------------------------------
 
 class MobilityServiceInstance {
   private async resolveDriverProfileId(identifier: string): Promise<string | null> {
@@ -681,11 +687,11 @@ class MobilityServiceInstance {
     }
   }
 
-  // ── Driver ──────────────────────────────────────────────────────────────
+  // -- Driver --------------------------------------------------------------
 
   async getAvailableRides(): Promise<unknown[]> {
     try {
-      const { data, error } = await (supabase as any)
+      const { data, error } = await supabase
         .from("ride_requests")
         .select(`
           *,
@@ -698,11 +704,16 @@ class MobilityServiceInstance {
 
       if (error) throw error;
 
-      // Normalizar campos de endereço para compatibilidade com DriverRidesList
-      return (data || []).map((r: any) => ({
+      // Normalizar campos de endere�o para compatibilidade com DriverRidesList
+      type RideWithAddress = RideRequestRecord & {
+        pickup_address?: { street: string | null; latitude: number | null; longitude: number | null } | null;
+        dropoff_address?: { street: string | null; latitude: number | null; longitude: number | null } | null;
+      };
+      const rows: RideWithAddress[] = data || [];
+      return rows.map((r) => ({
         ...r,
-        origin: r.origin || r.pickup_address?.street || "Origem não informada",
-        destination: r.destination || r.dropoff_address?.street || "Destino não informado",
+        origin: r.origin || r.pickup_address?.street || "Origem nao informada",
+        destination: r.destination || r.dropoff_address?.street || "Destino n�o informado",
         origin_lat: r.origin_lat || r.pickup_address?.latitude,
         origin_lng: r.origin_lng || r.pickup_address?.longitude,
         destination_lat: r.destination_lat || r.dropoff_address?.latitude,
@@ -716,12 +727,12 @@ class MobilityServiceInstance {
 
   async createAdminDriverProfile(userId: string): Promise<unknown | null> {
     try {
-      // Buscar ou criar profile de motorista via serviço canônico de perfis
+      // Buscar ou criar profile de motorista via servi�o can�nico de perfis
       const driverProfile = await profileService.ensureDriverProfileForUser(userId);
       if (!driverProfile?.id) return null;
 
-      // Criar driver_data se não existir
-      const { data: existing } = await (supabase as any)
+      // Criar driver_data se n�o existir
+      const { data: existing } = await supabase
         .from('driver_data')
         .select('*')
         .eq('profile_id', driverProfile.id)
@@ -729,7 +740,7 @@ class MobilityServiceInstance {
 
       if (existing) return existing;
 
-      const { data: driverData, error: driverError } = await (supabase as any)
+      const { data: driverData, error: driverError } = await supabase
         .from('driver_data')
         .insert({
           profile_id: driverProfile.id,
@@ -761,7 +772,7 @@ class MobilityServiceInstance {
       const driverProfileId = await this.resolveDriverProfileId(identifier);
       if (!driverProfileId) return null;
 
-      const { data, error } = await (supabase as any)
+      const { data, error } = await supabase
         .from("driver_data")
         .select("*")
         .eq("profile_id", driverProfileId)
@@ -785,7 +796,7 @@ class MobilityServiceInstance {
         throw new Error("Driver profile not found");
       }
 
-      const { data, error } = await (supabase as any)
+      const { data, error } = await supabase
         .from("driver_data")
         .update(updates)
         .eq("profile_id", driverProfileId)
@@ -808,7 +819,7 @@ class MobilityServiceInstance {
       const driverProfileId = await this.resolveDriverProfileId(identifier);
       if (!driverProfileId) return [];
 
-      const { data, error } = await (supabase as any)
+      const { data, error } = await supabase
         .from("ride_requests")
         .select("*")
         .eq("driver_profile_id", driverProfileId)
@@ -826,7 +837,7 @@ class MobilityServiceInstance {
     return MobilityService.getDriverProfiles();
   }
 
-  // ── Ride actions (delegam para RideService) ──────────────────────────────
+  // -- Ride actions (delegam para RideService) ------------------------------
 
   async acceptRide(rideId: string, driverProfileId: string): Promise<void> {
     const { rideService } = await import('./RideService');
@@ -850,7 +861,7 @@ class MobilityServiceInstance {
 
   async checkSuspensionExpiry(profileId: string): Promise<void> {
     try {
-      // Verificar se suspensão expirou e reativar se necessário
+      // Verificar se suspens�o expirou e reativar se necess�rio
       const profile = await profileService.getProfileById(profileId);
 
       if (!profile?.is_suspended || !profile?.suspended_until) return;
@@ -880,7 +891,7 @@ class MobilityServiceInstance {
 
   async getDriverStatsDetailed(driverProfileId: string): Promise<unknown | null> {
     try {
-      const { data, error } = await (supabase as any)
+      const { data, error } = await supabase
         .from("driver_data")
         .select("rating, total_rides, total_rides_completed, total_rides_cancelled, acceptance_rate, cancellation_rate, is_online, is_verified, subscription_active")
         .eq("profile_id", driverProfileId)
@@ -900,7 +911,7 @@ class MobilityServiceInstance {
     subscription_active: boolean;
   }> {
     try {
-      const { data, error } = await (supabase as any)
+      const { data, error } = await supabase
         .from("driver_data")
         .select("is_verified, is_online, subscription_active")
         .eq("profile_id", driverProfileId)
@@ -923,7 +934,7 @@ class MobilityServiceInstance {
       const since = new Date();
       since.setDate(since.getDate() - days);
 
-      const { data, error } = await (supabase as any)
+      const { data, error } = await supabase
         .from("ride_requests")
         .select("final_price")
         .eq("driver_profile_id", driverProfileId)
@@ -931,18 +942,19 @@ class MobilityServiceInstance {
         .gte("updated_at", since.toISOString());
 
       if (error) throw error;
-      return (data || []).reduce((sum: number, r: any) => sum + (r.final_price || 0), 0);
+      const rows: Pick<RideRequestRecord, "final_price">[] = data || [];
+      return rows.reduce((sum: number, r) => sum + (r.final_price || 0), 0);
     } catch (error) {
       logger.error("mobilityService.getDriverEarnings", error as Error);
       return 0;
     }
   }
 
-  // ── Ride ────────────────────────────────────────────────────────────────
+  // -- Ride ----------------------------------------------------------------
 
   async getRideById(rideId: string): Promise<unknown | null> {
     try {
-      const { data, error } = await (supabase as any)
+      const { data, error } = await supabase
         .from("ride_requests")
         .select("*")
         .eq("id", rideId)
@@ -958,7 +970,7 @@ class MobilityServiceInstance {
 
   async confirmRideCompletionByPassenger(rideId: string, passengerProfileId: string): Promise<void> {
     const now = new Date().toISOString();
-    const { data, error } = await (supabase as any)
+    const { data, error } = await supabase
       .from("ride_requests")
       .update({
         passenger_confirmed_at: now,
@@ -975,7 +987,7 @@ class MobilityServiceInstance {
 
   async getRideWithAddresses(rideId: string): Promise<unknown | null> {
     try {
-      const { data, error } = await (supabase as any)
+      const { data, error } = await supabase
         .from("ride_requests")
         .select(`
           *,
@@ -1000,7 +1012,7 @@ class MobilityServiceInstance {
       const activeProfile = await profileService.getActiveProfile(userId);
       if (!activeProfile?.id) return [];
 
-      const { data, error } = await (supabase as any)
+      const { data, error } = await supabase
         .from("ride_requests")
         .select("*")
         .or(`passenger_profile_id.eq.${activeProfile.id},driver_profile_id.eq.${activeProfile.id}`)
@@ -1016,7 +1028,7 @@ class MobilityServiceInstance {
 
   async getRideBasicInfo(rideId: string): Promise<unknown | null> {
     try {
-      const { data, error } = await (supabase as any)
+      const { data, error } = await supabase
         .from("ride_requests")
         .select("id, origin, destination, status, final_price, suggested_price")
         .eq("id", rideId)
@@ -1032,7 +1044,7 @@ class MobilityServiceInstance {
 
   async getRideByShareToken(token: string): Promise<unknown | null> {
     try {
-      const { data, error } = await (supabase as any)
+      const { data, error } = await supabase
         .from("ride_requests")
         .select("*")
         .eq("share_token", token)
@@ -1050,17 +1062,17 @@ class MobilityServiceInstance {
 
   async incrementRideViewCount(rideId: string): Promise<void> {
     try {
-      await (supabase as any).rpc("increment_ride_view_count", { ride_id: rideId });
+      await supabase.rpc("increment_ride_view_count", { ride_id: rideId });
     } catch (error) {
       logger.warn("mobilityService.incrementRideViewCount", error);
     }
   }
 
-  // ── Seats ────────────────────────────────────────────────────────────────
+  // -- Seats ----------------------------------------------------------------
 
   async getRideAvailableSeats(rideId: string): Promise<number> {
     try {
-      const { data, error } = await (supabase as any)
+      const { data, error } = await supabase
         .from("ride_requests")
         .select("available_seats")
         .eq("id", rideId)
@@ -1075,7 +1087,7 @@ class MobilityServiceInstance {
   }
 
   async decrementRideSeats(rideId: string): Promise<void> {
-    const { error } = await (supabase as any).rpc("decrement_ride_seats", { ride_id: rideId });
+    const { error } = await supabase.rpc("decrement_ride_seats", { ride_id: rideId });
     if (error) {
       logger.error("mobilityService.decrementRideSeats", error);
       throw error;
@@ -1084,5 +1096,3 @@ class MobilityServiceInstance {
 }
 
 export const mobilityService = new MobilityServiceInstance();
-
-

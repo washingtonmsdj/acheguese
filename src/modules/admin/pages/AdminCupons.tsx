@@ -66,8 +66,12 @@ export default function AdminCupons() {
       queryClient.invalidateQueries({ queryKey: ["admin-coupons"] });
       toast({ title: "Status atualizado com sucesso" });
     },
-    onError: (error: any) => {
-      toast({ title: "Erro ao atualizar status", description: error.message, variant: "destructive" });
+    onError: (error: unknown) => {
+      toast({
+        title: "Erro ao atualizar status",
+        description: error instanceof Error ? error.message : "Falha ao atualizar status",
+        variant: "destructive",
+      });
     },
   });
 
@@ -79,8 +83,12 @@ export default function AdminCupons() {
       toast({ title: "Cupom excluído com sucesso" });
       setSelectedCoupon(null);
     },
-    onError: (error: any) => {
-      toast({ title: "Erro ao excluir cupom", description: error.message, variant: "destructive" });
+    onError: (error: unknown) => {
+      toast({
+        title: "Erro ao excluir cupom",
+        description: error instanceof Error ? error.message : "Falha ao excluir cupom",
+        variant: "destructive",
+      });
     },
   });
 

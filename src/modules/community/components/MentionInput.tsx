@@ -11,6 +11,7 @@ import { Input } from "@/shared/components/ui/input";
 import { logger } from "@/shared/utils/logger";
 import { profileService } from "@/core/profiles/services";
 import type { MentionableProfileView } from "@/core/profiles/views/MentionableProfileView";
+import type { Profile } from "@/core/profiles/services/types";
 
 interface MentionInputProps {
   onMentionSelect: (profile: MentionableProfileView) => void;
@@ -61,7 +62,7 @@ export function MentionInput({
         );
 
         // Mapear para MentionableProfileView (camelCase, sem shape legado)
-        const profiles: MentionableProfileView[] = rawProfiles.map((p: any) => ({
+        const profiles: MentionableProfileView[] = (rawProfiles as Profile[]).map((p) => ({
           id: p.id,
           displayName: p.display_name ?? p.name,
           avatarUrl: p.avatar_url ?? null,

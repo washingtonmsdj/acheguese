@@ -19,6 +19,7 @@ import {
   Car,
   Navigation,
 } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import {
   Card,
   CardContent,
@@ -46,7 +47,7 @@ import { logger } from "@/shared/utils/logger";
 const statConfig: {
   key: string;
   label: string;
-  icon: any;
+  icon: LucideIcon;
   color: string;
   route?: string;
 }[] = [
@@ -123,7 +124,7 @@ const chartConfig = {
   classificados: { label: "Classificados", color: "hsl(160 60% 45%)" },
 };
 
-const activityIcons: Record<string, { icon: any; color: string }> = {
+const activityIcons: Record<string, { icon: LucideIcon; color: string }> = {
   post: { icon: FileText, color: "text-rose-500" },
   business: { icon: Building2, color: "text-primary" },
   event: { icon: Calendar, color: "text-violet-500" },
@@ -136,8 +137,8 @@ const activityIcons: Record<string, { icon: any; color: string }> = {
 export default function AdminDashboard() {
   const [stats, setStats] = useState<Record<string, number>>({});
   const [trends, setTrends] = useState<Record<string, TrendData>>({});
-  const [activity, setActivity] = useState<any[]>([]);
-  const [recent, setRecent] = useState<any[]>([]);
+  const [activity, setActivity] = useState<Record<string, unknown>[]>([]);
+  const [recent, setRecent] = useState<Array<{ type?: string; label?: string; date?: string }>>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [days, setDays] = useState(30);

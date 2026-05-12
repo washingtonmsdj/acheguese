@@ -16,6 +16,7 @@ import type { ReactNode } from "react";
 
 import { ProfileHeaderCompact, ProfileSectionsNav } from "@/modules/profile/components/hub";
 import type { MultiProfileRecord } from "@/core/profiles/services/multi-profile/types";
+import type { Context, Identity } from "@/modules/profile/sections/types";
 import type { ProfileSectionId } from "@/modules/profile/sections/types";
 import type { SectionNavItem } from "@/modules/profile/components/hub/ProfileSectionsNav";
 
@@ -43,8 +44,8 @@ export interface PerfilHubLayoutProps {
     readonly verificationStatus: string;
     readonly verificationRejectionReason?: string;
   };
-  readonly identity: any;
-  readonly context: any;
+  readonly identity: Identity | null;
+  readonly context: Context | null;
   readonly notifications: {
     readonly unread: number;
     readonly highPriority: number;

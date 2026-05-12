@@ -149,7 +149,7 @@ export async function addBusinessFavorite(
   userId: string,
 ): Promise<void> {
   try {
-    const { error } = await (supabase as any)
+    const { error } = await supabase
       .from(BUSINESS_FAVORITES_TABLE)
       .insert({ business_id: businessId, profile_id: userId });
 
@@ -175,7 +175,7 @@ export async function removeBusinessFavorite(
   userId: string,
 ): Promise<void> {
   try {
-    const { error } = await (supabase as any)
+    const { error } = await supabase
       .from(BUSINESS_FAVORITES_TABLE)
       .delete()
       .eq("business_id", businessId)

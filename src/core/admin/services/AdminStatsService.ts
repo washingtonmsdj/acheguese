@@ -57,6 +57,12 @@ export interface RecentActivity {
   date: string;
 }
 
+type RecentComment = {
+  content?: string | null;
+  texto?: string | null;
+  created_at: string;
+};
+
 // ============================================================================
 // SERVICE
 // ============================================================================
@@ -369,7 +375,7 @@ class AdminStatsService {
       });
 
       // Adicionar comentários
-      comments.forEach((c: any) => {
+      (comments as RecentComment[]).forEach((c) => {
         const content = c.content || c.texto || "";
         const preview =
           content.length > 40 ? content.substring(0, 40) + "..." : content;

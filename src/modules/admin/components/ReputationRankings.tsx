@@ -17,9 +17,12 @@ import { logger } from "@/shared/utils/logger";
 import { profileService } from "@/core/profiles/services/ProfileService"; // ✅ SSOT - Usa instância do ProfileService
 import { MobilityService } from "@/shared/services/mobilityAdmin"; // ✅ SSOT - Importa MobilityService correto
 
+type TopPassenger = Awaited<ReturnType<typeof profileService.getTopPassengers>>[number];
+type TopDriver = Awaited<ReturnType<typeof MobilityService.getTopDrivers>>[number];
+
 export function ReputationRankings() {
-  const [topPassengers, setTopPassengers] = useState<any[]>([]);
-  const [topDrivers, setTopDrivers] = useState<any[]>([]);
+  const [topPassengers, setTopPassengers] = useState<TopPassenger[]>([]);
+  const [topDrivers, setTopDrivers] = useState<TopDriver[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {

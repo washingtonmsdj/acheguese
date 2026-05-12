@@ -6,7 +6,7 @@ interface CacheEntry<T> {
 }
 
 class SimpleCache {
-  private cache = new Map<string, CacheEntry<any>>();
+  private cache = new Map<string, CacheEntry<unknown>>();
 
   set<T>(key: string, date: T, ttl = 5 * 60 * 1000) {
     // 5 minutos padrão
@@ -27,7 +27,7 @@ class SimpleCache {
       return null;
     }
 
-    return entry.date;
+    return entry.date as T;
   }
 
   has(key: string): boolean {

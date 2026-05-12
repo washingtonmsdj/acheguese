@@ -3,9 +3,11 @@ import { Badge } from "@/shared/components/ui/badge";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { usePricingAuditLog } from "../../hooks/usePricingAuditLog";
+import type { ComponentProps } from "react";
 
 export function PricingAuditLog() {
   const { logs, loading } = usePricingAuditLog(20);
+  type BadgeVariant = ComponentProps<typeof Badge>["variant"];
 
   if (loading) {
     return (
@@ -35,7 +37,7 @@ export function PricingAuditLog() {
     return Object.entries(labels).find(([key]) => key === action)?.[1] ?? action;
   };
 
-  const getActionColor = (action: string) => {
+  const getActionColor = (action: string): BadgeVariant => {
     if (action === "rule_created") return "default";
     if (action === "rule_activated") return "success";
     if (action === "rule_deactivated") return "destructive";
@@ -54,7 +56,7 @@ export function PricingAuditLog() {
             className="p-3 rounded-lg border bg-card text-sm space-y-1"
           >
             <div className="flex items-center justify-between">
-              <Badge variant={getActionColor(log.action) as any}>
+              <Badge variant={getActionColor(log.action)}>
                 {getActionLabel(log.action)}
               </Badge>
               <span className="text-xs text-muted-foreground">

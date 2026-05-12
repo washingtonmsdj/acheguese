@@ -47,7 +47,11 @@ async function searchGeocoding(query: string): Promise<GeoResult[]> {
 interface MapSearchControlProps extends SearchControlConfig {
   onResultSelect?: (lat: number, lng: number) => void;
   onSearch?: (query: string) => void;
-  entities?: any[];
+  entities?: Array<{
+    title?: string;
+    name?: string;
+    metadata?: { category?: string };
+  }>;
   className?: string;
 }
 
@@ -134,7 +138,7 @@ export function MapSearchControl({
     if (entityFilter) return entityFilter(entities, query);
     const q = query.toLowerCase();
     return entities.filter(
-      (e: any) =>
+      (e) =>
         e.title?.toLowerCase().includes(q) ||
         e.name?.toLowerCase().includes(q) ||
         (e.metadata?.category as string | undefined)?.toLowerCase().includes(q),

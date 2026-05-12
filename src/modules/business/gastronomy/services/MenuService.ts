@@ -42,7 +42,7 @@ export interface MenuItem {
   stock_alert_threshold: number | null;
   tags: string[] | null;
   allergens: string[] | null;
-  nutritional_info: Record<string, any> | null;
+  nutritional_info: Record<string, unknown> | null;
   created_at: string;
   updated_at: string;
 }
@@ -163,7 +163,7 @@ async function getEntitlementsForBusiness(businessId: string): Promise<PlanEntit
     return dynamicEntitlements;
   }
 
-  return EntitlementsService.getAll(planTier as any);
+  return EntitlementsService.getAll(planTier);
 }
 
 async function getPlanContextByMenuId(menuId: string): Promise<PlanContext | null> {
@@ -299,7 +299,7 @@ export const MenuService = {
         return { data: null, error: 'Seu plano nao permite gerenciar categorias.' };
       }
 
-      const updates: Record<string, any> = { updated_at: new Date().toISOString() };
+      const updates: Record<string, unknown> = { updated_at: new Date().toISOString() };
 
       if (input.name !== undefined) updates.name = sanitizeString(input.name);
       if (input.description !== undefined) updates.description = input.description ? sanitizeString(input.description) : null;
@@ -436,7 +436,7 @@ export const MenuService = {
     is_available?: boolean;
     tags?: string[];
     allergens?: string[];
-    nutritional_info?: Record<string, any>;
+    nutritional_info?: Record<string, unknown>;
   }): Promise<ServiceResult<MenuItem>> {
     try {
       const context = await getPlanContextByMenuId(input.menu_id);
@@ -545,7 +545,7 @@ export const MenuService = {
         return { data: null, error: 'Seu plano nao permite gerenciar disponibilidade.' };
       }
 
-      const updates: Record<string, any> = { updated_at: new Date().toISOString() };
+      const updates: Record<string, unknown> = { updated_at: new Date().toISOString() };
 
       if (input.name !== undefined) updates.name = sanitizeString(input.name);
       if (input.description !== undefined) updates.description = input.description ? sanitizeString(input.description) : null;

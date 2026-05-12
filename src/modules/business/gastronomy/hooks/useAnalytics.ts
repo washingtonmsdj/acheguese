@@ -95,7 +95,7 @@ export function useTrackEvent() {
       entity_type: string;
       entity_id: string;
       event_type: AnalyticsEventType;
-      metadata?: Record<string, any>;
+      metadata?: Record<string, unknown>;
     }) => {
       const result = await AnalyticsService.trackEvent(input);
       if (result.error) throw new Error(result.error);

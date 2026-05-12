@@ -9,6 +9,7 @@ type ProfileLike = {
   city?: string | null;
   neighborhood?: string | null;
   locationId?: string | null;
+  location_id?: string | null;
 } | null;
 
 function formatSlug(slug?: string): string {
@@ -46,11 +47,11 @@ export function buildCommunityTerritoryPresentation(params: {
   const locationId =
     locationForUi?.type === "district"
       ? locationForUi.id
-      : params.profile?.locationId || undefined;
+      : params.profile?.locationId ?? params.profile?.location_id ?? undefined;
 
   return {
     city,
     neighborhood: neighborhood || undefined,
-    locationId: locationId || undefined,
+    locationId: locationId ?? undefined,
   };
 }

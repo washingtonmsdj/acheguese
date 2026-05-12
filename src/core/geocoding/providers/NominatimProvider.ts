@@ -44,7 +44,7 @@ interface NominatimResult {
   boundingbox?: [string, string, string, string]; // [south, north, west, east]
   geojson?: {
     type: string;
-    coordinates: any;
+    coordinates: unknown;
   };
 }
 

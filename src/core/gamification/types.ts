@@ -15,7 +15,7 @@ export interface Badge {
   category: string;
   rarity: "common" | "rare" | "epic" | "legendary";
   points_reward: number;
-  requirements: Record<string, any>;
+  requirements: Record<string, unknown>;
   is_active: boolean;
   created_at: string;
 }
@@ -38,7 +38,7 @@ export interface Quest {
   difficulty: "easy" | "medium" | "hard" | "expert";
   points_reward: number;
   experience_reward: number;
-  requirements: Record<string, any>;
+  requirements: Record<string, unknown>;
   duration_days?: number;
   is_active: boolean;
   created_at: string;
@@ -61,7 +61,7 @@ export interface Reward {
   name: string;
   description: string;
   type: "points" | "badge" | "item" | "discount" | "feature";
-  value: Record<string, any>;
+  value: Record<string, unknown>;
   cost_points: number;
   is_active: boolean;
   created_at: string;

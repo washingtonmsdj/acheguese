@@ -7,7 +7,6 @@ import { logger } from '@/shared/utils/logger';
 import { supabase } from '@/integrations/supabase';
 import type { ITerritorialHighlightRepository } from './ITerritorialHighlightRepository';
 import type { TerritorialHighlight, CreateHighlightInput, HighlightQuery } from './types';
-const db: any = supabase;
 
 export class TerritorialHighlightRepositorySupabase
   implements ITerritorialHighlightRepository
@@ -16,7 +15,7 @@ export class TerritorialHighlightRepositorySupabase
     const onlyValid = query.only_valid !== false;
     const now = new Date().toISOString();
 
-    let q = db
+    let q = supabase
       .from('territorial_highlights')
       .select('*')
       .eq('territory_type', query.territory_type);
@@ -48,7 +47,7 @@ export class TerritorialHighlightRepositorySupabase
   }
 
   async findById(id: string): Promise<TerritorialHighlight | null> {
-    const { data, error } = await db
+    const { data, error } = await supabase
       .from('territorial_highlights')
       .select('*')
       .eq('id', id)
@@ -58,7 +57,7 @@ export class TerritorialHighlightRepositorySupabase
   }
 
   async create(input: CreateHighlightInput): Promise<TerritorialHighlight> {
-    const { data, error } = await db
+    const { data, error } = await supabase
       .from('territorial_highlights')
       .insert({
         territory_type:   input.territory_type,
@@ -82,7 +81,7 @@ export class TerritorialHighlightRepositorySupabase
   }
 
   async update(id: string, input: Partial<CreateHighlightInput>): Promise<TerritorialHighlight> {
-    const { data, error } = await db
+    const { data, error } = await supabase
       .from('territorial_highlights')
       .update({ ...input, updated_at: new Date().toISOString() })
       .eq('id', id)
@@ -93,7 +92,7 @@ export class TerritorialHighlightRepositorySupabase
   }
 
   async delete(id: string): Promise<void> {
-    const { error } = await db
+    const { error } = await supabase
       .from('territorial_highlights')
       .delete()
       .eq('id', id);

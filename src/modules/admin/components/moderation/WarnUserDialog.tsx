@@ -29,6 +29,7 @@ interface WarnUserDialogProps {
     motivo: string,
   ) => Promise<boolean>;
 }
+type WarnType = "advertencia" | "suspensao_7d" | "suspensao_permanente";
 
 export function WarnUserDialog({
   isOpen,
@@ -38,9 +39,7 @@ export function WarnUserDialog({
   onClose,
   onWarn,
 }: WarnUserDialogProps) {
-  const [warnType, setWarnType] = useState<
-    "advertencia" | "suspensao_7d" | "suspensao_permanente"
-  >("advertencia");
+  const [warnType, setWarnType] = useState<WarnType>("advertencia");
   const [motivo, setMotivo] = useState("");
 
   const handleWarn = async () => {
@@ -74,7 +73,7 @@ export function WarnUserDialog({
             </p>
             <Select
               value={warnType}
-              onValueChange={(v) => setWarnType(v as any)}
+              onValueChange={(v: WarnType) => setWarnType(v)}
             >
               <SelectTrigger className="h-9">
                 <SelectValue />

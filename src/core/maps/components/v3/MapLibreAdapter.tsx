@@ -34,6 +34,30 @@ import type { TerritoryPolygon } from '../../hooks/useTerritoryPolygon';
 import type { CircleArea } from '../../providers/types';
 import type { MapControlsConfig, UserLocationMarkerConfig } from './controls/types';
 import type { ResolvedTerritory } from '../../routing/hooks/useResolveTerritoryFromUrl';
+
+type MapRuntimeState = {
+  loaded?: boolean;
+  tilesLoaded?: boolean;
+  idle?: boolean;
+  zoom?: number;
+  lastCenter?: { lat: number; lng: number };
+  errors?: string[];
+  webglContextLost?: boolean;
+};
+
+type WindowWithMapState = Window & { __mapState?: MapRuntimeState };
+
+function readMapState(): MapRuntimeState {
+  if (typeof window === 'undefined') return {};
+  const typedWindow = window as WindowWithMapState;
+  return typedWindow.__mapState ?? {};
+}
+
+function writeMapState(state: MapRuntimeState): void {
+  if (typeof window === 'undefined') return;
+  const typedWindow = window as WindowWithMapState;
+  typedWindow.__mapState = state;
+}
 export interface MapLibreAdapterHandle {
   /** Acesso direto à instância MapLibre (para casos avançados) */
   getMap: () => maplibregl.Map | null;
@@ -319,19 +343,19 @@ export const MapLibreAdapter = forwardRef<MapLibreAdapterHandle, MapLibreAdapter
       map.on('idle', () => {
         onLoad?.(); // compatibilidade
         if (typeof window !== 'undefined') {
-          const s = (window as any).__mapState || {};
+          const s = readMapState();
           s.loaded = map.loaded();
           s.tilesLoaded = map.areTilesLoaded();
           s.idle = true;
           s.zoom = map.getZoom();
           const c = map.getCenter();
           s.lastCenter = { lat: c.lat, lng: c.lng };
-          (window as any).__mapState = s;
+          writeMapState(s);
         }
       });
 
       // Evento: erro do mapa
-      map.on('error', (e: any) => {
+      map.on('error', (e: { error?: { message?: string }; preventDefault?: () => void }) => {
         // Suprimir avisos de dados de tiles com valores null (comum em tiles OSM)
         const errorMessage = e.error?.message || '';
         if (errorMessage.includes('Expected value to be of type number, but found null')) {
@@ -345,18 +369,18 @@ export const MapLibreAdapter = forwardRef<MapLibreAdapterHandle, MapLibreAdapter
         logger.warn('[MapLibreAdapter] Map error:', errorMessage);
 
         if (typeof window !== 'undefined') {
-          const s = (window as any).__mapState || {};
+          const s = readMapState();
           (s.errors = s.errors || []).push(errorMessage || 'unknown');
-          (window as any).__mapState = s;
+          writeMapState(s);
         }
       });
 
       // Evento: perda de contexto WebGL — via map.on, não listener manual no canvas
       map.on('webglcontextlost', () => {
         if (typeof window !== 'undefined') {
-          const s = (window as any).__mapState || {};
+          const s = readMapState();
           s.webglContextLost = true;
-          (window as any).__mapState = s;
+          writeMapState(s);
         }
       });
 
@@ -386,10 +410,10 @@ export const MapLibreAdapter = forwardRef<MapLibreAdapterHandle, MapLibreAdapter
 
         // Atualizar __mapState para testes de pan/zoom
         if (typeof window !== 'undefined') {
-          const s = (window as any).__mapState || {};
+          const s = readMapState();
           s.zoom = zoom;
           s.lastCenter = { lat: center.lat, lng: center.lng };
-          (window as any).__mapState = s;
+          writeMapState(s);
         }
       });
 

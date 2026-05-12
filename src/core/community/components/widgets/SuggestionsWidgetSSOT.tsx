@@ -1,6 +1,5 @@
-import React from "react";
+import React, { memo } from "react";
 import { Link } from "react-router-dom";
-import { memo } from "react";
 import { Lightbulb, Users, Calendar, TrendingUp } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/shared/components/ui/avatar";
 import { Button } from "@/shared/components/ui/button";
@@ -8,6 +7,7 @@ import { Badge } from "@/shared/components/ui/badge";
 import { useFavoriteGroups } from "../../hooks/useFavoriteGroups";
 import { useTrendingTopics } from "../../hooks/useTrendingTopics";
 import { useAppUrls } from "@/core/routing/hooks";
+import { buildPublicProfileUrl } from "@/core/profiles/utils/publicProfileUrl";
 
 interface Suggestion {
   id: string;
@@ -18,7 +18,7 @@ interface Suggestion {
   trending?: boolean;
 }
 
-export const SuggestionsWidget = memo(() => {
+export const SuggestionsWidgetSSOT = memo(() => {
   const { data: groups = [] } = useFavoriteGroups();
   const { data: topics = [] } = useTrendingTopics(3);
   const appUrls = useAppUrls();
@@ -35,35 +35,40 @@ export const SuggestionsWidget = memo(() => {
       id: topic.id,
       type: "event" as const,
       name: topic.title,
-      description: `${topic.mentions} menções`,
+      description: `${topic.mentions} mencoes`,
       trending: true,
     })),
   ];
 
   const getIcon = (type: Suggestion["type"]) => {
     switch (type) {
-      case "group": return <Users className="h-3.5 w-3.5" />;
-      case "event": return <Calendar className="h-3.5 w-3.5" />;
-      case "person": return <Users className="h-3.5 w-3.5" />;
+      case "group":
+        return <Users className="h-3.5 w-3.5" />;
+      case "event":
+        return <Calendar className="h-3.5 w-3.5" />;
+      case "person":
+        return <Users className="h-3.5 w-3.5" />;
     }
   };
 
   const getLink = (suggestion: Suggestion) => {
     switch (suggestion.type) {
-      case "group": return appUrls.community.groupDetail(suggestion.id);
-      case "event": return appUrls.community.feed;
-      case "person": return `/profile/${suggestion.id}`;
+      case "group":
+        return appUrls.community.groupDetail(suggestion.id);
+      case "event":
+        return appUrls.community.feed;
+      case "person":
+        return buildPublicProfileUrl(suggestion.id);
     }
   };
 
-  const getInitials = (name: string): string => {
-    return name
+  const getInitials = (name: string): string =>
+    name
       .split(" ")
       .map((word) => word[0])
       .join("")
       .toUpperCase()
       .slice(0, 2);
-  };
 
   if (suggestions.length === 0) {
     return null;
@@ -96,7 +101,10 @@ export const SuggestionsWidget = memo(() => {
                   {suggestion.name}
                 </p>
                 {suggestion.trending && (
-                  <Badge variant="secondary" className="h-3.5 px-1 text-[9px] bg-orange-500/20 text-orange-500 flex-shrink-0">
+                  <Badge
+                    variant="secondary"
+                    className="h-3.5 px-1 text-[9px] bg-orange-500/20 text-orange-500 flex-shrink-0"
+                  >
                     <TrendingUp className="h-2 w-2 mr-0.5" />
                     Em alta
                   </Badge>
@@ -116,10 +124,10 @@ export const SuggestionsWidget = memo(() => {
       </div>
 
       <Button variant="outline" size="sm" className="w-full mt-2.5 h-8 text-xs" asChild>
-        <Link to="/explorar">Explorar Mais</Link>
+        <Link to={appUrls.search}>Explorar Mais</Link>
       </Button>
     </div>
   );
 });
 
-SuggestionsWidget.displayName = "SuggestionsWidget";
+SuggestionsWidgetSSOT.displayName = "SuggestionsWidgetSSOT";

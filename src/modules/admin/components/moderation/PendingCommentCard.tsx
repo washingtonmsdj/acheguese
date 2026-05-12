@@ -79,6 +79,13 @@ export function PendingCommentCard({ comment }: PendingCommentCardProps) {
     });
   };
 
+  const extendedComment = comment as unknown as {
+    author?: { reputation?: number };
+    post?: { content?: string };
+  };
+  const authorReputation = extendedComment.author?.reputation ?? 0;
+  const originalPostContent = extendedComment.post?.content ?? comment.content;
+
   return (
     <Card className="hover:shadow-lg transition-shadow">
       <CardHeader className="pb-3">
@@ -95,7 +102,7 @@ export function PendingCommentCard({ comment }: PendingCommentCardProps) {
                   {comment.author_name}
                 </span>
                 <Badge variant="outline" className="text-xs">
-                  Rep: {(comment as any).author?.reputation || 0}
+                  Rep: {authorReputation}
                 </Badge>
               </div>
               <p className="text-xs text-muted-foreground">
@@ -138,8 +145,8 @@ export function PendingCommentCard({ comment }: PendingCommentCardProps) {
         <div>
           <h4 className="text-sm font-semibold mb-2">Post Original</h4>
           <div className="p-3 bg-muted/50 rounded-lg text-sm text-muted-foreground">
-            {(comment as any).post?.content?.substring(0, 150) || comment.content.substring(0, 150)}
-            {((comment as any).post?.content?.length || comment.content.length) > 150 && "..."}
+            {originalPostContent.substring(0, 150)}
+            {originalPostContent.length > 150 && "..."}
           </div>
         </div>
 

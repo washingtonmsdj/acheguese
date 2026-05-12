@@ -45,7 +45,7 @@ class AdminAuditService {
    */
   async getAllAuditLogs(limit = 100): Promise<AdminAuditLog[]> {
     try {
-      const { data, error } = await (supabase as any)
+      const { data, error } = await supabase
         .from(this.TABLE)
         .select("*")
         .order("created_at", { ascending: false })
@@ -68,7 +68,7 @@ class AdminAuditService {
    */
   async getAdminAuditLogs(adminId: string, limit = 100): Promise<AdminAuditLog[]> {
     try {
-      const { data, error } = await (supabase as any)
+      const { data, error } = await supabase
         .from(this.TABLE)
         .select("*")
         .eq("admin_id", adminId)
@@ -93,7 +93,7 @@ class AdminAuditService {
    */
   async createAuditLog(data: CreateAdminAuditLogData): Promise<AdminAuditLog> {
     try {
-      const { data: auditLog, error } = await (supabase as any)
+      const { data: auditLog, error } = await supabase
         .from(this.TABLE)
         .insert(data)
         .select()

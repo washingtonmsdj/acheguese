@@ -15,6 +15,8 @@ import { Badge } from "@/shared/components/ui/badge";
 import { useSessionContext } from "@/core/session";
 import { useProfileHub } from "@/modules/profile/hooks/useProfileHub";
 import { useDriverProfileIdentity } from "@/modules/mobility/hooks/useDriverProfileIdentity";
+import { mobilityRoutes } from "@/modules/mobility/routes/mobilityRoutes";
+import { businessManagementRoutes } from "@/core/business/utils/businessManagementRoutes";
 
 /**
  * CentralHubPage
@@ -80,7 +82,7 @@ export default function CentralHubPage() {
                 <CardContent>
                   <div className="flex items-center justify-between">
                     <Badge variant="secondary">{profileHub.businessModules.length} ativa(s)</Badge>
-                    <Button onClick={() => navigate("/central/empresas")}>
+                    <Button onClick={() => navigate(businessManagementRoutes.list())}>
                       Acessar
                     </Button>
                   </div>
@@ -121,7 +123,7 @@ export default function CentralHubPage() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <Button onClick={() => navigate("/central/motorista")}>
+                  <Button onClick={() => navigate(mobilityRoutes.motorista.home)}>
                     Acessar
                   </Button>
                 </CardContent>
@@ -141,7 +143,7 @@ export default function CentralHubPage() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <Button onClick={() => navigate("/central/motoboy")}>
+                  <Button onClick={() => navigate(mobilityRoutes.motoboy.home)}>
                     Acessar
                   </Button>
                 </CardContent>
@@ -237,7 +239,7 @@ export default function CentralHubPage() {
                 <Button
                   className="w-full"
                   variant="outline"
-                  onClick={() => navigate("/central/motorista/cadastro")}
+                  onClick={() => navigate(mobilityRoutes.motorista.cadastro)}
                 >
                   <Sparkles className="mr-2 h-4 w-4" />
                   Cadastrar Motorista
@@ -260,7 +262,7 @@ export default function CentralHubPage() {
                 <Button
                   className="w-full"
                   variant="outline"
-                  onClick={() => navigate("/central/motoboy/cadastro")}
+                  onClick={() => navigate(mobilityRoutes.motoboy.cadastro)}
                 >
                   <Sparkles className="mr-2 h-4 w-4" />
                   Cadastrar Motoboy

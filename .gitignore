@@ -13,6 +13,7 @@ src/test/
 !tests/e2e/gastronomy-operational.spec.ts
 !tests/e2e/mobility-operational.spec.ts
 !tests/e2e/mobile-core-layout.spec.ts
+!tests/e2e/mobile-auth-dashboards.spec.ts
 !tests/e2e/professional-operational.spec.ts
 !tests/e2e/onboarding-public.spec.ts
 !tests/e2e/institutional-public.spec.ts

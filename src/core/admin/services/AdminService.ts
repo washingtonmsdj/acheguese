@@ -62,9 +62,23 @@ export interface AuditLog {
   entity_id: string;
   action: string;
   user_id: string;
-  changes: Record<string, any>;
+  changes: Record<string, unknown>;
   created_at: string;
 }
+
+type ProfileListRow = {
+  id: string;
+  username: string | null;
+  full_name: string | null;
+  email: string | null;
+  created_at: string;
+};
+
+type PlanUsageSubscriptionRow = {
+  business_id: string;
+  plan_tier: string;
+  business_data?: { name?: string | null } | null;
+};
 
 // ── Service ───────────────────────────────────────────────────────────────
 
@@ -219,7 +233,7 @@ export const AdminService = {
 
       // Busca email e total de empresas de cada perfil
       const profilesWithStats = await Promise.all(
-        (profiles || []).map(async (profile: any) => {
+        ((profiles as ProfileListRow[] | null) || []).map(async (profile) => {
           const { data: businesses } = await supabase
             .from('profile_links')
             .select('id')
@@ -267,7 +281,7 @@ export const AdminService = {
 
       // Busca estatísticas de cada empresa
       const usageData = await Promise.all(
-        (subscriptions || []).map(async (sub: any) => {
+        ((subscriptions as PlanUsageSubscriptionRow[] | null) || []).map(async (sub) => {
           // Busca pedidos
           const { data: orders } = await supabase
             .from('orders')

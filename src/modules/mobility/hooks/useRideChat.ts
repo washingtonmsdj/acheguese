@@ -6,6 +6,12 @@
 import { logger } from '@/shared/utils/logger';
 import { useState, useEffect, useCallback } from "react";
 import { ChatService, type ChatMessage, type RideChat } from "../services/ChatService";
+
+function getErrorMessage(error: unknown, fallback: string): string {
+  if (error instanceof Error && error.message) return error.message;
+  return fallback;
+}
+
 interface UseRideChatOptions {
   rideId: string;
   userId: string;
@@ -38,9 +44,9 @@ export function useRideChat({ rideId, userId, enabled = true }: UseRideChatOptio
           const messagesData = await ChatService.getMessages(chatData.id);
           setMessages(messagesData || []);
         }
-      } catch (err: any) {
+      } catch (err: unknown) {
         logger.error("Erro ao carregar chat:", err);
-        setError(err.message || "Erro ao carregar chat");
+        setError(getErrorMessage(err, "Erro ao carregar chat"));
       } finally {
         setLoading(false);
       }
@@ -67,9 +73,9 @@ export function useRideChat({ rideId, userId, enabled = true }: UseRideChatOptio
 
         // Adicionar mensagem localmente
         setMessages((prev) => [...prev, data]);
-      } catch (err: any) {
+      } catch (err: unknown) {
         logger.error("Erro ao enviar mensagem:", err);
-        setError(err.message || "Erro ao enviar mensagem");
+        setError(getErrorMessage(err, "Erro ao enviar mensagem"));
         throw err;
       } finally {
         setSending(false);

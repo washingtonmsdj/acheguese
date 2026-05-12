@@ -104,6 +104,8 @@ export default function AdminAssinaturas() {
       toast.error("Erro ao reativar assinatura");
     },
   });
+  type SubscriptionItem = NonNullable<typeof subscriptionsData>["data"][number];
+  type ExpiringSubscriptionItem = NonNullable<typeof expiringSubscriptions>[number];
 
   const filters: FilterOption[] = [
     {
@@ -265,7 +267,7 @@ export default function AdminAssinaturas() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {subscriptionsData?.data?.map((sub: any) => (
+                      {subscriptionsData?.data?.map((sub: SubscriptionItem) => (
                         <TableRow key={sub.id}>
                           <TableCell className="font-medium">
                             {sub.user?.email || sub.user_id}
@@ -350,7 +352,7 @@ export default function AdminAssinaturas() {
             <CardContent className="pt-6">
               {expiringSubscriptions && expiringSubscriptions.length > 0 ? (
                 <div className="space-y-4">
-                  {expiringSubscriptions.map((sub: any) => (
+                  {expiringSubscriptions.map((sub: ExpiringSubscriptionItem) => (
                     <div key={sub.id} className="border rounded-lg p-4">
                       <div className="flex items-start justify-between">
                         <div className="flex-1">

@@ -27,6 +27,9 @@ class AdminCrudError extends Error {
 
 /** @deprecated Use domain-specific admin services instead */
 export class AdminCrudService {
+  private getTableQuery(table: string) {
+    return supabase.from(table as never);
+  }
   /**
    * Lista todos os registros de uma tabela
    */
@@ -37,12 +40,12 @@ export class AdminCrudService {
       orderBy?: string;
       ascending?: boolean;
     },
-  ): Promise<any[]> {
+  ): Promise<Record<string, unknown>[]> {
     try {
       const select = options?.select || "*";
       const orderBy = options?.orderBy ?? "created_at";
       const ascending = options?.ascending ?? false;
-      const query = (supabase as any).from(table).select(select);
+      const query = this.getTableQuery(table).select(select);
 
       // Tentar ordenar por created_at se a coluna existir
       try {
@@ -57,10 +60,8 @@ export class AdminCrudService {
             logger.info(
               `Table '${table}' does not have '${orderBy}' column, fetching without ordering`,
             );
-            const { data: unorderedData, error: unorderedError } = await (
-              supabase as any
-            )
-              .from(table)
+            const { data: unorderedData, error: unorderedError } = await this
+              .getTableQuery(table)
               .select(select);
 
             if (unorderedError) throw unorderedError;
@@ -80,10 +81,8 @@ export class AdminCrudService {
           logger.info(
             `Table '${table}' does not have '${orderBy}' column, fetching without ordering`,
           );
-          const { data: unorderedData, error: unorderedError } = await (
-            supabase as any
-          )
-            .from(table)
+          const { data: unorderedData, error: unorderedError } = await this
+            .getTableQuery(table)
             .select(select);
 
           if (unorderedError) throw unorderedError;
@@ -114,10 +113,9 @@ export class AdminCrudService {
   /**
    * Obtém um registro específico por ID
    */
-  async get(table: string, id: string): Promise<any> {
+  async get(table: string, id: string): Promise<Record<string, unknown>> {
     try {
-      const { data, error } = await (supabase as any)
-        .from(table)
+      const { data, error } = await this.getTableQuery(table)
         .select("*")
         .eq("id", id)
         .single();
@@ -149,10 +147,9 @@ export class AdminCrudService {
   /**
    * Cria um novo registro
    */
-  async create(table: string, data: Record<string, unknown>): Promise<any> {
+  async create(table: string, data: Record<string, unknown>): Promise<Record<string, unknown>> {
     try {
-      const { data: result, error } = await (supabase as any)
-        .from(table)
+      const { data: result, error } = await this.getTableQuery(table)
         .insert(data)
         .select()
         .single();
@@ -188,11 +185,10 @@ export class AdminCrudService {
     table: string,
     id: string,
     data: Record<string, unknown>,
-  ): Promise<any> {
+  ): Promise<Record<string, unknown>> {
     try {
       // Primeiro fazer o update sem select
-      const { error: updateError } = await (supabase as any)
-        .from(table)
+      const { error: updateError } = await this.getTableQuery(table)
         .update(data)
         .eq("id", id);
 
@@ -209,8 +205,7 @@ export class AdminCrudService {
       }
 
       // Depois buscar o registro atualizado
-      const { data: result, error: selectError } = await (supabase as any)
-        .from(table)
+      const { data: result, error: selectError } = await this.getTableQuery(table)
         .select("*")
         .eq("id", id)
         .single();
@@ -246,9 +241,8 @@ export class AdminCrudService {
    * Deleta um registro
    */
   async delete(table: string, id: string): Promise<{ success: boolean }> {
-    try {
-      const { error } = await (supabase as any)
-        .from(table)
+      try {
+      const { error } = await this.getTableQuery(table)
         .delete()
         .eq("id", id);
 

@@ -39,6 +39,7 @@ import {
   Sparkles,
   TrendingUp,
 } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import { cn } from "@/shared/utils/cn";
 import type { RideRequest } from "@/modules/mobility/types";
 import { ErrorBoundary, ErrorState } from "../components/ErrorBoundary";
@@ -189,7 +190,7 @@ export default function PassageiroPage() {
     );
   }
 
-  const tabs: { id: ActiveTab; label: string; icon: any; count?: number }[] = [
+  const tabs: { id: ActiveTab; label: string; icon: LucideIcon; count?: number }[] = [
     {
       id: "ativas",
       label: PASSENGER_PAGE_LABELS.TAB_ACTIVE,

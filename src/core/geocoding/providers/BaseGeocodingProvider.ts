@@ -23,7 +23,7 @@ export abstract class BaseGeocodingProvider implements GeocodingProvider {
   abstract readonly isAvailable: boolean;
 
   // Cache simples em memória
-  private cache = new Map<string, { data: any; timestamp: number }>();
+  private cache = new Map<string, { data: unknown; timestamp: number }>();
   
   /**
    * Configuração do provider
@@ -144,7 +144,7 @@ export abstract class BaseGeocodingProvider implements GeocodingProvider {
   /**
    * Cache helper
    */
-  protected setToCache(key: string, data: any): void {
+  protected setToCache(key: string, data: unknown): void {
     this.cache.set(key, {
       data,
       timestamp: Date.now(),
@@ -154,7 +154,7 @@ export abstract class BaseGeocodingProvider implements GeocodingProvider {
   /**
    * Gera chave de cache para uma requisição
    */
-  protected generateCacheKey(operation: string, params: Record<string, any>): string {
+  protected generateCacheKey(operation: string, params: Record<string, unknown>): string {
     return `${this.id}:${operation}:${JSON.stringify(params)}`;
   }
 
@@ -211,7 +211,7 @@ export abstract class BaseGeocodingProvider implements GeocodingProvider {
   /**
    * Log helper
    */
-  protected log(level: 'info' | 'warn' | 'error', message: string, data?: Record<string, any>): void {
+  protected log(level: 'info' | 'warn' | 'error', message: string, data?: Record<string, unknown>): void {
     const logEntry = {
       timestamp: new Date().toISOString(),
       provider: this.id,

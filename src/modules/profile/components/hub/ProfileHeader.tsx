@@ -18,14 +18,15 @@ import { useAppUrls } from '@/core/routing/hooks/useAppUrls';
 
 import type { MultiProfileRecord } from '@/core/profiles/services/multi-profile/types';
 import type { ProfileAccountSnapshot } from '@/core/profiles/views/ProfileAccountSnapshot';
+import type { Context, Identity } from '@/modules/profile/sections/types';
 
 interface ProfileHeaderProps {
   activeProfile: MultiProfileRecord | null;
   profile: MultiProfileRecord | null;
   userEmail: string;
   accountSnapshot: ProfileAccountSnapshot;
-  identity: any;
-  context: any;
+  identity: Identity | null;
+  context: Context | null;
   notifications: { unread: number; highPriority: number; urgentPriority: number };
   allProfilesCount: number;
   isVerified: boolean;

@@ -264,7 +264,7 @@ export default function NotificationPreferencesPage() {
           <CardContent>
             <Select
               value={preferences.frequency}
-              onValueChange={(value: any) =>
+              onValueChange={(value: NotificationPreferences['frequency']) =>
                 setPreferences({ ...preferences, frequency: value })
               }
             >

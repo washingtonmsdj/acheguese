@@ -115,7 +115,7 @@ export default function AdminZeladoria() {
     setLoading(true);
     try {
       const mapped = await adminCommunityService.getCivicReports(activeTab);
-      setReports(mapped as any);
+      setReports(mapped);
     } catch (error) {
       logger.error("Erro ao buscar reportes:", error);
       toast.error("Erro ao carregar reportes");
@@ -127,7 +127,7 @@ export default function AdminZeladoria() {
   const fetchStats = async () => {
     try {
       const stats = await adminCommunityService.getCivicReportStats();
-      setStats(stats as any);
+      setStats(stats);
     } catch (error) {
       logger.error("Erro ao buscar estatísticas:", error);
     }

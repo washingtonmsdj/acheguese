@@ -6,6 +6,13 @@ import { SocialInteractionsService } from "@/core/social/services/SocialInteract
 import { CommunityService } from "@/core/community/services/CommunityService"; // ✅ LOTE 7
 // Hooks are defined below and exported directly
 
+function getErrorMessage(error: unknown, fallback: string): string {
+  if (error instanceof Error && error.message.trim().length > 0) {
+    return error.message;
+  }
+  return fallback;
+}
+
 // Types
 interface Group {
   id: string;
@@ -157,8 +164,8 @@ export function useSendGroupMessage() {
         queryKey: queryKeys.groupMessages(groupId),
       });
     },
-    onError: (error: any) => {
-      toast.error(error.message || "Error send mensagem");
+    onError: (error: unknown) => {
+      toast.error(getErrorMessage(error, "Error send mensagem"));
     },
   });
 }
@@ -199,8 +206,8 @@ export function useJoinGroup() {
 
       toast.success("Você entrou no grupo!");
     },
-    onError: (error: any) => {
-      toast.error(error.message || "Error entrar no grupo");
+    onError: (error: unknown) => {
+      toast.error(getErrorMessage(error, "Error entrar no grupo"));
     },
   });
 }
@@ -240,8 +247,8 @@ export function useLeaveGroup() {
 
       toast.success("Você saiu do grupo");
     },
-    onError: (error: any) => {
-      toast.error(error.message || "Error sair do grupo");
+    onError: (error: unknown) => {
+      toast.error(getErrorMessage(error, "Error sair do grupo"));
     },
   });
 }

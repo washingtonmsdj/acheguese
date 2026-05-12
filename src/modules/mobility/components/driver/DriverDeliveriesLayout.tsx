@@ -9,7 +9,18 @@ import { MotoboyDeliveryActions } from "@/modules/mobility/components/driver/Mot
 import { useMotoristaPageV2 } from "@/modules/mobility/hooks/useMotoristaPageV2";
 import { getProfileMobilityServicePath } from "@/modules/profile/utils/profileMobilityNavigation";
 
-function isDeliveryRide(ride: any): boolean {
+type DeliveryLike = {
+  id: string;
+  origin?: string | null;
+  destination?: string | null;
+  suggested_price?: number | null;
+  package_description?: string | null;
+  customer_trust_risk_level?: string | null;
+  ride_mode?: string | null;
+  type?: string | null;
+};
+
+function isDeliveryRide(ride: DeliveryLike): boolean {
   return ride?.ride_mode === "motoboy" || ride?.type === "entrega";
 }
 
@@ -19,7 +30,7 @@ const TRUST_RISK_LABELS: Record<string, string> = {
   critical: "Revisao admin",
 };
 
-function getTrustRiskLabel(delivery: any): string | null {
+function getTrustRiskLabel(delivery: DeliveryLike): string | null {
   const risk = delivery?.customer_trust_risk_level;
   if (typeof risk !== "string" || risk === "trusted") return null;
   return TRUST_RISK_LABELS[risk] ?? risk;
@@ -81,7 +92,7 @@ export function DriverDeliveriesLayout() {
             <CardDescription>Fluxo de coleta, partida, entrega e comprovante.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
-            {activeDeliveries.length > 0 ? activeDeliveries.map((delivery: any) => (
+            {activeDeliveries.length > 0 ? activeDeliveries.map((delivery: DeliveryLike) => (
               <MotoboyDeliveryActions
                 key={delivery.id}
                 ride={delivery}
@@ -120,7 +131,7 @@ export function DriverDeliveriesLayout() {
           <CardDescription>Marketplace aberto de entregas para motoboy.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-3">
-          {availableDeliveries.length > 0 ? availableDeliveries.map((delivery: any) => (
+          {availableDeliveries.length > 0 ? availableDeliveries.map((delivery: DeliveryLike) => (
             <div key={delivery.id} className="rounded-2xl border border-border bg-background p-4 space-y-3">
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>

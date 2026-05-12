@@ -289,7 +289,19 @@ export default function BuscandoMotoristaPage() {
     // ✅ REALTIME: Removido polling, dados atualizados via subscription
     staleTime: TIMEOUTS.CACHE_STALE_TIME_MEDIUM,
   });
-  const rideStatus = (ride as any)?.status;
+  type RideWithAddresses = {
+    status?: string | null;
+    pickup_address?: { latitude?: number | null; longitude?: number | null; street?: string | null } | null;
+    dropoff_address?: { latitude?: number | null; longitude?: number | null; street?: string | null } | null;
+    pickup_location?: { name?: string | null } | null;
+    dropoff_location?: { name?: string | null } | null;
+    origin?: string | null;
+    destination?: string | null;
+    estimated_fare?: number | null;
+    final_price?: number | null;
+  };
+  const rideData = ride as RideWithAddresses | null | undefined;
+  const rideStatus = rideData?.status;
 
   // Navegar quando motorista aceitar ou corrida terminar
   useEffect(() => {
@@ -330,7 +342,7 @@ export default function BuscandoMotoristaPage() {
     return ok;
   };
 
-  const r = ride as any;
+  const r = rideData;
 
   // Coordenadas — vêm da tabela addresses (join)
   const originLat = r?.pickup_address?.latitude;

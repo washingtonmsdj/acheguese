@@ -58,6 +58,16 @@ const BRAZILIAN_STATES = [
   { value: 'sp', label: 'SP' }, { value: 'se', label: 'SE' }, { value: 'to', label: 'TO' },
 ];
 
+type FormPayload = Partial<CreateTouristPointInput> & Record<string, unknown>;
+type LocationSelection = {
+  stateId: string;
+  cityId: string;
+  neighborhoodId: string;
+  stateName: string;
+  cityName: string;
+  neighborhoodName: string;
+};
+
 export default function AdminPontosTuristicos() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -100,13 +110,13 @@ export default function AdminPontosTuristicos() {
       setDialogOpen(false);
       toast({ title: 'Sucesso!', description: 'Ponto turístico criado.' });
     },
-    onError: (err: any) =>
-      toast({ title: 'Erro', description: err.message, variant: 'destructive' }),
+    onError: (err: unknown) =>
+      toast({ title: 'Erro', description: err instanceof Error ? err.message : 'Erro ao criar', variant: 'destructive' }),
   });
 
   // Update
   const updateMutation = useMutation({
-    mutationFn: ({ id, data }: { id: string; data: any }) =>
+    mutationFn: ({ id, data }: { id: string; data: FormPayload }) =>
       TouristPointService.update(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-tourist-points'] });
@@ -115,8 +125,8 @@ export default function AdminPontosTuristicos() {
       setEditingPoint(null);
       toast({ title: 'Sucesso!', description: 'Ponto turístico atualizado.' });
     },
-    onError: (err: any) =>
-      toast({ title: 'Erro', description: err.message, variant: 'destructive' }),
+    onError: (err: unknown) =>
+      toast({ title: 'Erro', description: err instanceof Error ? err.message : 'Erro ao atualizar', variant: 'destructive' }),
   });
 
   // Delete
@@ -139,15 +149,15 @@ export default function AdminPontosTuristicos() {
   });
 
   const handleSubmit = (
-    data: any,
-    locationData: { stateId: string; cityId: string; neighborhoodId: string; stateName: string; cityName: string; neighborhoodName: string } | null
+    data: FormPayload,
+    locationData: LocationSelection | null
   ) => {
     if (!locationData) {
       toast({ title: 'Erro', description: 'Selecione o território (estado, cidade e bairro)', variant: 'destructive' });
       return;
     }
 
-    const payload: any = {
+    const payload: FormPayload = {
       ...data,
       // SSOT territorial
       location_id: locationData.neighborhoodId,
@@ -390,17 +400,17 @@ function TouristPointForm({
   isLoading,
 }: {
   point: TouristPoint | null;
-  onSubmit: (data: any, locationData: any) => void;
+  onSubmit: (data: FormPayload, locationData: LocationSelection | null) => void;
   isLoading: boolean;
 }) {
-  const [formData, setFormData] = useState<any>({});
-  const [locationData, setLocationData] = useState<any>(null);
+  const [formData, setFormData] = useState<Record<string, unknown>>({});
+  const [locationData, setLocationData] = useState<LocationSelection | null>(null);
 
   const handleFormSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const fd = new FormData(e.currentTarget);
 
-    const data: any = {
+    const data: FormPayload = {
       name: fd.get('name') as string,
       description: fd.get('description') as string,
       short_description: (fd.get('short_description') as string) || undefined,

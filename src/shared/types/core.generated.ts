@@ -69,7 +69,7 @@ export interface Notification {
   title: string;
   message: string;
   read: boolean;
-  data: Record<string, any> | null;
+  data: Record<string, unknown> | null;
   created_at: string;
 }
 

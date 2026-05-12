@@ -157,7 +157,7 @@ export default function NearbyPage() {
   // ── Data (SSOT) ────────────────────────────────────────────────────
   const { entities, isLoading: entitiesLoading, isError } = useNearbyEntities({
     radiusKm,
-    entityTypes: entityTypes as any,
+    entityTypes,
     center: userLocation,
     locationId: activeLocation?.id,
     limit: 100,
@@ -191,7 +191,7 @@ export default function NearbyPage() {
     setVisibleCount((v) => v + 12);
   }, []);
 
-  const handleShowClassifiedInMap = useCallback((ad: any) => {
+  const handleShowClassifiedInMap = useCallback((ad: { id: string }) => {
     const mapSection = document.querySelector('[aria-label="Mapa"]');
     if (mapSection) {
       mapSection.scrollIntoView({ behavior: 'smooth', block: 'center' });

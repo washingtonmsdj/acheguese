@@ -3,8 +3,6 @@ import { logger } from "@/shared/utils/logger";
 import type { SourceType } from "../constants";
 import { profileService } from "@/core/profiles/services/ProfileService";
 
-const supabaseAny = supabase as any;
-
 export interface SourceBusinessDataSummary {
   id: string;
   profile_id: string | null;
@@ -38,7 +36,7 @@ export class MotoboySourceResolverService {
     const businessByProfile = await this.getBusinessDataByProfileId(sourceId);
     if (businessByProfile?.id) return businessByProfile.id;
 
-    const { data: gastronomyById, error: gastronomyByIdError } = await supabaseAny
+    const { data: gastronomyById, error: gastronomyByIdError } = await supabase
       .from("gastronomy_profiles")
       .select("business_id")
       .eq("id", sourceId)
@@ -64,7 +62,7 @@ export class MotoboySourceResolverService {
       return undefined;
     }
 
-    const { data: currentPlan, error: currentPlanError } = await supabaseAny
+    const { data: currentPlan, error: currentPlanError } = await supabase
       .from("business_subscriptions")
       .select("plan_tier")
       .eq("business_id", businessDataId)
@@ -78,7 +76,7 @@ export class MotoboySourceResolverService {
       return currentPlan.plan_tier;
     }
 
-    const { data: legacyPlan, error: legacyPlanError } = await supabaseAny
+    const { data: legacyPlan, error: legacyPlanError } = await supabase
       .from("gastronomy_subscriptions")
       .select("plan_tier")
       .eq("business_id", businessDataId)
@@ -108,7 +106,7 @@ export class MotoboySourceResolverService {
     }
 
     const businessData = await this.getBusinessDataByBusinessId(businessDataId);
-    return businessData?.location_id || undefined;
+    return businessData?.location_id ?? undefined;
   }
 
   static async getProfileSummaryById(
@@ -117,12 +115,21 @@ export class MotoboySourceResolverService {
     try {
       const profile = await profileService.getProfileById(sourceId);
       if (!profile) return null;
+      const profileRecord = profile as {
+        id: string;
+        name?: string | null;
+        city?: string | null;
+        neighborhood?: string | null;
+        locationId?: string | null;
+        location_id?: string | null;
+      };
+      const resolvedLocationId = profileRecord.locationId ?? profileRecord.location_id ?? null;
       return {
         id: profile.id,
         name: profile.name ?? null,
-        city: (profile as any).city ?? null,
-        neighborhood: (profile as any).neighborhood ?? null,
-        location_id: (profile as any).location_id ?? null,
+        city: profileRecord.city ?? null,
+        neighborhood: profileRecord.neighborhood ?? null,
+        location_id: resolvedLocationId,
       };
     } catch (error) {
       logger.warn("MotoboySourceResolverService.getProfileSummaryById", error);
@@ -139,7 +146,7 @@ export class MotoboySourceResolverService {
     const byProfileId = await this.getBusinessDataByProfileId(sourceId);
     if (byProfileId) return byProfileId;
 
-    const { data: byGastronomyProfileId, error: byGastronomyProfileIdError } = await supabaseAny
+    const { data: byGastronomyProfileId, error: byGastronomyProfileIdError } = await supabase
       .from("gastronomy_profiles")
       .select("business_id")
       .eq("id", sourceId)
@@ -160,7 +167,7 @@ export class MotoboySourceResolverService {
   static async getLocationSummaryById(
     locationId: string,
   ): Promise<SourceLocationSummary | null> {
-    const { data, error } = await supabaseAny
+    const { data, error } = await supabase
       .from("locations")
       .select("id, name, full_name, metadata")
       .eq("id", locationId)
@@ -177,7 +184,7 @@ export class MotoboySourceResolverService {
   private static async getBusinessDataByBusinessId(
     businessId: string,
   ): Promise<SourceBusinessDataSummary | null> {
-    const { data, error } = await supabaseAny
+    const { data, error } = await supabase
       .from("business_data")
       .select("id, profile_id, business_name, location_id, business_city")
       .eq("id", businessId)
@@ -194,7 +201,7 @@ export class MotoboySourceResolverService {
   private static async getBusinessDataByProfileId(
     profileId: string,
   ): Promise<SourceBusinessDataSummary | null> {
-    const { data, error } = await supabaseAny
+    const { data, error } = await supabase
       .from("business_data")
       .select("id, profile_id, business_name, location_id, business_city")
       .eq("profile_id", profileId)

@@ -15,12 +15,17 @@ import {
 import { logger } from "@/shared/utils/logger";
 import { SocialInteractionsService } from "@/core/social/services/SocialInteractionsService"; // ✅ SSOT
 import { GroupService } from "@/core/social/services/GroupService"; // ✅ SSOT
+import type { RealtimeChannel } from "@supabase/supabase-js";
 
 export interface GroupMessage {
   id: string;
   group_id: string;
   sender_profile_id: string; // ✅ GATE 3 FASE 3C - Atualizado para novo modelo
   content: string;
+  message_type?: "text" | "image" | "audio" | "poll" | "system";
+  media_url?: string | null;
+  media_mime_type?: string | null;
+  audio_duration_seconds?: number | null;
   created_at: string;
   profile?: {
     id: string;
@@ -34,7 +39,7 @@ export function useGroupChat(groupId: string | undefined) {
   const [messages, setMessages] = useState<GroupMessage[]>([]);
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
-  const subscriptionRef = useRef<any>(null);
+  const subscriptionRef = useRef<RealtimeChannel | null>(null);
 
   // Load initial messages
   const loadMessages = useCallback(async () => {

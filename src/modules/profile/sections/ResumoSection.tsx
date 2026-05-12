@@ -37,6 +37,7 @@ import {
 
 import type { ResumoSectionProps } from "./types";
 import { getMobilityServiceStatus } from "@/modules/profile/utils/mobilityServiceStatus";
+import type { MobilityRide } from "@/modules/mobility/components/driver/DriverRidesTab";
 
 export function ResumoSection({
   operations,
@@ -65,7 +66,7 @@ export function ResumoSection({
     <div className="space-y-6">
       {/* Corrida ativa (se houver) - Destaque no topo */}
       {hasActiveRide && activeRide ? (
-        <ProfileActiveRideCard ride={activeRide as any} />
+        <ProfileActiveRideCard ride={activeRide as MobilityRide} />
       ) : null}
 
       {/* Dashboard: Métricas principais consolidadas */}
@@ -222,7 +223,7 @@ export function ResumoSection({
       </SectionFrame>
 
       {/* Próximas ações sugeridas */}
-      <NextActionsPanel actions={nextActions as any} />
+      <NextActionsPanel actions={nextActions} />
 
       {/* Bloco discreto - Acessar Central */}
       <div className="rounded-2xl border border-dashed border-primary/30 bg-primary/5 p-4">
@@ -260,19 +261,19 @@ export function ResumoSection({
             icon={Building2}
             title="Minhas empresas"
             description="Lista de empresas e acesso ao painel de gestão."
-            onClick={() => navigate("/central/empresas")}
+            onClick={() => navigate(appUrls.profile.businesses)}
           />
           <HubLinkCard
             icon={Car}
             title="Mobilidade"
             description={`Motorista: ${motoristaStatus}. Motoboy: ${motoboyStatus}.`}
-            onClick={() => navigate("/central/motorista")}
+            onClick={() => navigate(appUrls.profile.mobilidade.motorista.home)}
           />
           <HubLinkCard
             icon={Bike}
             title="Motoboy"
             description="Area separada para entregas dentro de Mobilidade."
-            onClick={() => navigate("/central/motoboy")}
+            onClick={() => navigate(appUrls.profile.mobilidade.motoboy.home)}
           />
           <HubLinkCard
             icon={Briefcase}

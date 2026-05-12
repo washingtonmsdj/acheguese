@@ -33,6 +33,23 @@ import type {
 } from '../types';
 import { ReconnectionManager, type ConnectionState } from './ReconnectionManager';
 
+interface TrackingRow {
+  id?: string;
+  lat: number;
+  lng: number;
+  accuracy?: number | null;
+  heading?: number | null;
+  speed?: number | null;
+  altitude?: number | null;
+  updated_at?: string | null;
+  timestamp?: string | null;
+  created_at?: string | null;
+  source?: string | null;
+  driver_profile_id?: string | null;
+  user_id?: string | null;
+  vehicle_id?: string | null;
+}
+
 export class TrackingService {
   private static instance: TrackingService;
   private subscriptions = new Map<string, TrackingSubscription>();
@@ -551,15 +568,29 @@ export class TrackingService {
     for (const operation of pending) {
       try {
         if (operation.type === 'position_update') {
-          const { entityId, position, entityType, metadata } = operation.payload;
-          await this.updatePosition(entityId, position, entityType, metadata);
+          const payload = operation.payload as {
+            entityId: string;
+            position: Omit<TrackingPosition, 'timestamp'>;
+            entityType: 'driver' | 'user' | 'vehicle' | 'device';
+            metadata?: Record<string, unknown>;
+          };
+          await this.updatePosition(
+            payload.entityId,
+            payload.position,
+            payload.entityType,
+            payload.metadata,
+          );
           this.reconnectionManager.removePendingOperation(operation.id);
         } else if (operation.type === 'presence_update') {
-          const { entityId, status, entityType } = operation.payload;
-          await this.updatePresence(entityId, status, entityType);
+          const payload = operation.payload as {
+            entityId: string;
+            status: PresenceStatus;
+            entityType: 'driver' | 'user' | 'vehicle' | 'device';
+          };
+          await this.updatePresence(payload.entityId, payload.status, payload.entityType);
           this.reconnectionManager.removePendingOperation(operation.id);
         } else if (operation.type === 'heartbeat') {
-          await this.sendHeartbeat(operation.payload);
+          await this.sendHeartbeat(operation.payload as HeartbeatPayload);
           this.reconnectionManager.removePendingOperation(operation.id);
         }
       } catch (error) {
@@ -630,7 +661,7 @@ export class TrackingService {
    * - lat → latitude
    * - lng → longitude
    */
-  private mapToPosition(data: any): TrackingPosition {
+  private mapToPosition(data: TrackingRow): TrackingPosition {
     return {
       latitude: data.lat,              // BANCO lat → APP latitude
       longitude: data.lng,             // BANCO lng → APP longitude
@@ -642,12 +673,12 @@ export class TrackingService {
     };
   }
 
-  private mapToHistoryEntry(data: any): TrackingHistoryEntry {
+  private mapToHistoryEntry(data: TrackingRow): TrackingHistoryEntry {
     return {
-      id: data.id,
-      entityId: data.driver_profile_id || data.user_id || data.vehicle_id,
+      id: data.id ?? '',
+      entityId: data.driver_profile_id || data.user_id || data.vehicle_id || '',
       position: this.mapToPosition(data),
-      recordedAt: data.created_at || data.updated_at,
+      recordedAt: data.created_at || data.updated_at || new Date().toISOString(),
       source: data.source || 'gps',
     };
   }

@@ -18,6 +18,24 @@ interface UserMentionsGridProps {
   onPostClick?: (postId: string) => void;
 }
 
+interface MentionItem {
+  id: string;
+  rank?: number;
+  post: {
+    id: string;
+    type: string;
+    content: string;
+    created_at: string;
+    likes_count: number;
+    comments_count: number;
+    author: {
+      id: string;
+      name: string;
+      avatar_url: string;
+    };
+  };
+}
+
 const POST_TYPE_LABELS: Record<string, string> = {
   discussao: "Discussão",
   pergunta: "Pergunta",
@@ -80,7 +98,7 @@ export function UserMentionsGrid({
 
   return (
     <div className="space-y-4">
-      {mentions.map((mention: any) => (
+      {(mentions as MentionItem[]).map((mention) => (
         <Card
           key={mention.id}
           className="hover:shadow-md transition-shadow cursor-pointer"

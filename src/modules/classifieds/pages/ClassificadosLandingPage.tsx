@@ -182,8 +182,8 @@ export default function ClassificadosLandingPage({ resolved, activeMemberIds }: 
       navigate(urls.canonical);
       return;
     }
-    // Fallback para URL curta
-    navigate(`/c/${ad.public_id || ad.id}`);
+    // Fallback para URL curta canônica via SSOT
+    navigate(classifiedUrlService.buildShortUrl(ad.public_id || ad.id));
   }, [navigate]);
 
   const handleNewAd = useCallback(() => {

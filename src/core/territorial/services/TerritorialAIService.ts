@@ -19,7 +19,7 @@ export interface TerritoryAIContent {
   territory_name: string;
   description: string | null;
   history: string | null;
-  demographics: Record<string, any>;
+  demographics: Record<string, unknown>;
   events: Array<{
     name: string;
     description: string;
@@ -31,6 +31,11 @@ export interface TerritoryAIContent {
   is_manual_override: boolean;
   created_at: string;
   updated_at: string;
+}
+
+interface TerritoryAIGenerateResponse {
+  error?: string;
+  [key: string]: unknown;
 }
 
 export class TerritorialAIService {
@@ -70,7 +75,7 @@ export class TerritorialAIService {
     territory_slug: string;
     territory_name: string;
     members?: string[];
-  }): Promise<any> {
+  }): Promise<TerritoryAIGenerateResponse> {
     try {
       const { data, error } = await supabase.functions.invoke('territory-ai-content', {
         body: params,
@@ -81,11 +86,12 @@ export class TerritorialAIService {
         throw error;
       }
 
-      if (data?.error) {
-        throw new Error(data.error);
+      const response = (data ?? {}) as TerritoryAIGenerateResponse;
+      if (response.error) {
+        throw new Error(response.error);
       }
 
-      return data;
+      return response;
     } catch (err) {
       trackError(err as Error, {
         component: "TerritorialAIService",

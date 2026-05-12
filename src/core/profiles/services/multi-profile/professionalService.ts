@@ -8,6 +8,10 @@
 import { logger } from '@/shared/utils/logger';
 import { supabase } from '@/integrations/supabase/supabase';
 import type { ProfessionalData, ServiceResponse } from './types';
+
+const errorMessage = (error: unknown, fallback: string): string =>
+  error instanceof Error ? error.message : fallback;
+
 export class ProfessionalService {
   /**
    * Buscar professional_data (via RLS)
@@ -22,8 +26,8 @@ export class ProfessionalService {
 
       if (error) throw error;
       return data as ProfessionalData;
-    } catch (err: any) {
-      logger.error('[ProfessionalService] getProfessionalData:', err.message);
+    } catch (err: unknown) {
+      logger.error('[ProfessionalService] getProfessionalData:', errorMessage(err, 'unknown_error'));
       return null;
     }
   }
@@ -45,8 +49,8 @@ export class ProfessionalService {
 
       if (error) throw error;
       return { success: true, data: data as ProfessionalData };
-    } catch (err: any) {
-      return { success: false, error: err.message || 'Failed to update professional data' };
+    } catch (err: unknown) {
+      return { success: false, error: errorMessage(err, 'Failed to update professional data') };
     }
   }
 }

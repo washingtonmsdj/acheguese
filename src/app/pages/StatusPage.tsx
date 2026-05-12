@@ -26,7 +26,10 @@ interface CheckResult {
   status: 'healthy' | 'unhealthy';
   duration_ms: number;
   error?: string;
-  details?: Record<string, any>;
+  details?: {
+    response_time_category?: string;
+    [key: string]: unknown;
+  };
 }
 
 export default function StatusPage() {

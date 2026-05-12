@@ -17,6 +17,7 @@ export interface VagasPublicLayoutProps {
   // SEO
   readonly pageTitle: string;
   readonly pageDescription: string;
+  readonly emitSeo?: boolean;
 
   // Conteúdo
   readonly children: ReactNode;
@@ -25,11 +26,12 @@ export interface VagasPublicLayoutProps {
 export function VagasPublicLayout({
   pageTitle,
   pageDescription,
+  emitSeo = true,
   children,
 }: VagasPublicLayoutProps) {
   return (
     <div className="min-h-screen w-full bg-background text-foreground flex flex-col">
-      <SEO title={pageTitle} description={pageDescription} />
+      {emitSeo ? <SEO title={pageTitle} description={pageDescription} /> : null}
       {children}
     </div>
   );

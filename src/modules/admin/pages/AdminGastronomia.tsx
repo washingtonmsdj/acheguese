@@ -161,6 +161,9 @@ export default function AdminGastronomia() {
     },
     onError: () => toast.error("Erro ao atualizar menu"),
   });
+  type ProfileItem = NonNullable<typeof profilesData>["data"][number];
+  type MenuItem = NonNullable<typeof menusData>["data"][number];
+  type CatalogItem = NonNullable<typeof itemsData>["data"][number];
 
   return (
     <div className="space-y-6">
@@ -321,7 +324,7 @@ export default function AdminGastronomia() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {profilesData?.data?.map((profile: any) => (
+                      {profilesData?.data?.map((profile: ProfileItem) => (
                         <TableRow key={profile.id}>
                           <TableCell className="font-medium">{profile.business?.name || "-"}</TableCell>
                           <TableCell>{profile.cuisine_type}</TableCell>
@@ -399,7 +402,7 @@ export default function AdminGastronomia() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {menusData?.data?.map((menu: any) => (
+                    {menusData?.data?.map((menu: MenuItem) => (
                       <TableRow key={menu.id}>
                         <TableCell className="font-medium">{menu.name}</TableCell>
                         <TableCell>{menu.businessName || "-"}</TableCell>
@@ -455,7 +458,7 @@ export default function AdminGastronomia() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {itemsData?.data?.map((item: any) => (
+                    {itemsData?.data?.map((item: CatalogItem) => (
                       <TableRow key={item.id}>
                         <TableCell className="font-medium">{item.name}</TableCell>
                         <TableCell>{item.categoryName || "-"}</TableCell>

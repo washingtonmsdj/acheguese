@@ -14,12 +14,16 @@ vi.mock("../utils/deliveryDestination", () => ({
 
 import { useGastronomyCart, useGastronomyCheckout } from "../hooks";
 import { readStoredDeliveryDestination } from "../utils/deliveryDestination";
+import type { GastronomyBusiness } from "../types/gastronomy";
 
 const mockedUseGastronomyCart = vi.mocked(useGastronomyCart);
 const mockedUseGastronomyCheckout = vi.mocked(useGastronomyCheckout);
 const mockedReadStoredDeliveryDestination = vi.mocked(readStoredDeliveryDestination);
 
 describe("GastronomyCheckoutSheet", () => {
+  type CartHookResult = ReturnType<typeof useGastronomyCart>;
+  type CheckoutHookResult = ReturnType<typeof useGastronomyCheckout>;
+
   const baseCartMock = {
     cart: {
       items: [
@@ -41,13 +45,45 @@ describe("GastronomyCheckoutSheet", () => {
     minimumOrderReached: true,
     minimumOrderRemaining: 0,
     removeItem: vi.fn(),
-  } as any;
+  } as unknown as CartHookResult;
 
   const baseCheckoutMock = {
     checkout: vi.fn(),
     isSubmitting: false,
     hasActiveProfile: true,
-  } as any;
+  } as CheckoutHookResult;
+
+  const businessMock: GastronomyBusiness = {
+    business_data_id: "business-1",
+    name: "Loja Teste",
+    slug: "loja-teste",
+    city: "Salvador",
+    neighborhood: "Nordeste de Amaralina",
+    profile_photo_url: null,
+    cover_photo_url: null,
+    gastronomy_profile: {
+      business_id: "business-1",
+      cuisine_type: null,
+      min_order_value: 0,
+      average_prep_time_min: 30,
+      accepts_orders: true,
+      delivery_enabled: true,
+      pickup_enabled: false,
+      has_menu: true,
+      is_open: true,
+      opening_hours: null,
+      status: "approved",
+      active_subscription: null,
+      trial_ends_at: null,
+      plan_limits: null,
+      setup_completed: true,
+      setup_completed_at: null,
+      featured_until: null,
+      service_radius_km: null,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    },
+  };
 
   it("bloqueia checkout de delivery quando nao ha destino de entrega valido", () => {
     mockedReadStoredDeliveryDestination.mockReturnValue(null);
@@ -57,15 +93,7 @@ describe("GastronomyCheckoutSheet", () => {
 
     render(
       <GastronomyCheckoutSheet
-        business={
-          {
-            business_data_id: "business-1",
-            name: "Loja Teste",
-            gastronomy_profile: {
-              delivery_enabled: true,
-            },
-          } as any
-        }
+        business={businessMock}
         open
         onOpenChange={vi.fn()}
       />,
@@ -96,15 +124,7 @@ describe("GastronomyCheckoutSheet", () => {
 
     render(
       <GastronomyCheckoutSheet
-        business={
-          {
-            business_data_id: "business-1",
-            name: "Loja Teste",
-            gastronomy_profile: {
-              delivery_enabled: true,
-            },
-          } as any
-        }
+        business={businessMock}
         open
         onOpenChange={vi.fn()}
       />,

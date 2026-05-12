@@ -66,8 +66,12 @@ export default function AdminMensagens() {
       queryClient.invalidateQueries({ queryKey: ["admin-conversations"] });
       toast({ title: "Conversa bloqueada com sucesso" });
     },
-    onError: (error: any) => {
-      toast({ title: "Erro ao bloquear conversa", description: error.message, variant: "destructive" });
+    onError: (error: unknown) => {
+      toast({
+        title: "Erro ao bloquear conversa",
+        description: error instanceof Error ? error.message : "Falha ao bloquear conversa",
+        variant: "destructive",
+      });
     },
   });
 
@@ -78,8 +82,12 @@ export default function AdminMensagens() {
       queryClient.invalidateQueries({ queryKey: ["admin-conversations"] });
       toast({ title: "Conversa desbloqueada com sucesso" });
     },
-    onError: (error: any) => {
-      toast({ title: "Erro ao desbloquear conversa", description: error.message, variant: "destructive" });
+    onError: (error: unknown) => {
+      toast({
+        title: "Erro ao desbloquear conversa",
+        description: error instanceof Error ? error.message : "Falha ao desbloquear conversa",
+        variant: "destructive",
+      });
     },
   });
 
@@ -91,8 +99,12 @@ export default function AdminMensagens() {
       toast({ title: "Conversa excluída com sucesso" });
       setSelectedConversation(null);
     },
-    onError: (error: any) => {
-      toast({ title: "Erro ao excluir conversa", description: error.message, variant: "destructive" });
+    onError: (error: unknown) => {
+      toast({
+        title: "Erro ao excluir conversa",
+        description: error instanceof Error ? error.message : "Falha ao excluir conversa",
+        variant: "destructive",
+      });
     },
   });
 

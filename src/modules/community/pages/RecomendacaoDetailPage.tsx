@@ -11,6 +11,11 @@ import { QuestionCard } from "@/shared/components/recomendacoes/QuestionCard";
 import { AnswersList } from "@/shared/components/recomendacoes/AnswersList";
 import { AnswerForm } from "@/shared/components/recomendacoes/AnswerForm";
 
+interface NavigableBusiness {
+  id?: string | null;
+  slug?: string | null;
+}
+
 export default function RecomendacaoDetailPage() {
   const navigate = useNavigate();
   const appUrls = useAppUrls(); // ✅ SSOT URLs
@@ -65,7 +70,7 @@ export default function RecomendacaoDetailPage() {
     navigate(`/services/${professionalId}`);
   };
 
-  const handleNavigateToBusiness = (business: any) => {
+  const handleNavigateToBusiness = (business: NavigableBusiness) => {
     navigateToBusiness({
       id: business.id || "",
       slug: business.slug || "",

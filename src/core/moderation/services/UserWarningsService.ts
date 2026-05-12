@@ -10,6 +10,7 @@
 import { supabase } from "@/integrations/supabase";
 import { logger } from "@/shared/utils/logger";
 import { trackError } from "@/shared/utils/errorTracking";
+import type { AdminSupabaseClient } from "@/core/admin/types/adminDatabase.types";
 
 // ============================================================================
 // 📦 TIPOS
@@ -37,20 +38,23 @@ export interface CreateUserWarningData {
 
 class UserWarningsService {
   private readonly TABLE = "user_warnings";
+  private db(): AdminSupabaseClient {
+    return supabase as unknown as AdminSupabaseClient;
+  }
 
   /**
    * Busca todos os warnings
    */
   async getAllWarnings(limit = 1000): Promise<UserWarning[]> {
     try {
-      const { data, error } = await (supabase as any)
+      const { data, error } = await this.db()
         .from(this.TABLE)
         .select("*")
         .order("created_at", { ascending: false })
         .limit(limit);
 
       if (error) throw error;
-      return data || [];
+      return (data as UserWarning[]) || [];
     } catch (error) {
       trackError(error as Error, {
         component: "UserWarningsService",
@@ -66,14 +70,14 @@ class UserWarningsService {
    */
   async getUserWarnings(userId: string): Promise<UserWarning[]> {
     try {
-      const { data, error } = await (supabase as any)
+      const { data, error } = await this.db()
         .from(this.TABLE)
         .select("*")
         .eq("user_id", userId)
         .order("created_at", { ascending: false });
 
       if (error) throw error;
-      return data || [];
+      return (data as UserWarning[]) || [];
     } catch (error) {
       trackError(error as Error, {
         component: "UserWarningsService",
@@ -90,7 +94,7 @@ class UserWarningsService {
    */
   async createWarning(data: CreateUserWarningData): Promise<UserWarning> {
     try {
-      const { data: warning, error } = await (supabase as any)
+      const { data: warning, error } = await this.db()
         .from(this.TABLE)
         .insert(data)
         .select()
@@ -98,7 +102,7 @@ class UserWarningsService {
 
       if (error) throw error;
       logger.info(`Warning criado para usuário ${data.user_id} por admin ${data.admin_id}`);
-      return warning;
+      return warning as UserWarning;
     } catch (error) {
       trackError(error as Error, {
         component: "UserWarningsService",
@@ -115,7 +119,7 @@ class UserWarningsService {
    */
   async getUserWarningCount(userId: string): Promise<number> {
     try {
-      const { count, error } = await (supabase as any)
+      const { count, error } = await this.db()
         .from(this.TABLE)
         .select("*", { count: "exact", head: true })
         .eq("user_id", userId);

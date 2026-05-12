@@ -131,8 +131,10 @@ export default function AdminPontosEmbarque() {
     try {
       const data = await adminPickupPointsService.getAllPickupPoints();
       setPoints(data);
-    } catch (error: any) {
-      toast.error("Erro ao carregar pontos", { description: error.message });
+    } catch (error: unknown) {
+      toast.error("Erro ao carregar pontos", {
+        description: error instanceof Error ? error.message : "Falha ao carregar pontos",
+      });
     } finally {
       setLoading(false);
     }
@@ -157,8 +159,10 @@ export default function AdminPontosEmbarque() {
       setEditingPoint(null);
       resetForm();
       fetchPoints();
-    } catch (error: any) {
-      toast.error("Erro ao salvar ponto", { description: error.message });
+    } catch (error: unknown) {
+      toast.error("Erro ao salvar ponto", {
+        description: error instanceof Error ? error.message : "Falha ao salvar ponto",
+      });
     }
   };
 
@@ -190,8 +194,10 @@ export default function AdminPontosEmbarque() {
       await adminPickupPointsService.deletePickupPoint(id);
       toast.success("Ponto excluído com sucesso!");
       fetchPoints();
-    } catch (error: any) {
-      toast.error("Erro ao excluir ponto", { description: error.message });
+    } catch (error: unknown) {
+      toast.error("Erro ao excluir ponto", {
+        description: error instanceof Error ? error.message : "Falha ao excluir ponto",
+      });
     }
   };
 
@@ -203,8 +209,10 @@ export default function AdminPontosEmbarque() {
       );
       toast.success(point.active ? "Ponto desativado" : "Ponto ativado");
       fetchPoints();
-    } catch (error: any) {
-      toast.error("Erro ao atualizar status", { description: error.message });
+    } catch (error: unknown) {
+      toast.error("Erro ao atualizar status", {
+        description: error instanceof Error ? error.message : "Falha ao atualizar status",
+      });
     }
   };
 

@@ -103,8 +103,8 @@ export function useResidentAddress(userId: string | undefined) {
           ? `CEP reconciliado em ${locationLabel}`
           : 'CEP encontrado, mas o territÃ³rio ainda nÃ£o estÃ¡ cadastrado no SSOT.',
       );
-    } catch (error: any) {
-      toast.error(error.message || 'Erro ao consultar CEP');
+    } catch (error: unknown) {
+      toast.error(error instanceof Error ? error.message : 'Erro ao consultar CEP');
       setForm((prev) => ({ ...prev, cepLoading: false }));
     }
   }, []);

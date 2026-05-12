@@ -1,1 +1,1 @@
-﻿export { SuggestionsWidget } from "@/core/community/components/widgets/SuggestionsWidget";
+export { SuggestionsWidgetSSOT } from "@/core/community/components/widgets/SuggestionsWidgetSSOT";

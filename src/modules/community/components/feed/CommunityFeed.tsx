@@ -11,6 +11,7 @@ import { AlertCircle } from "lucide-react";
 import { Alert, AlertDescription } from "@/shared/components/ui/alert";
 import { SPACING } from "../styles/communityDesignSystem";
 import { usePostActions } from "@/core/posts/hooks";
+import type { TerritoryFilter } from "@/core/location";
 
 type FeedSortType = "recent" | "popular" | "most_commented";
 type FeedPostType =
@@ -32,6 +33,7 @@ interface CommunityFeedProps {
   onReportClick?: (reportId: string) => void;
   locationScope?: LocationScope;
   defaultPostType?: FeedPostType;
+  territoryFilter?: TerritoryFilter;
 }
 
 export function CommunityFeed({
@@ -47,6 +49,7 @@ export function CommunityFeed({
   onReportClick,
   locationScope = "city",
   defaultPostType = "all",
+  territoryFilter,
 }: CommunityFeedProps) {
   const { activeProfile } = useSessionContext();
   const { likePost, savePost, sharePost, reportPost } = usePostActions();
@@ -58,7 +61,7 @@ export function CommunityFeed({
     hasNextPage,
     isFetchingNextPage,
     loadMore,
-  } = useCommunityFeedSimple({ locationScope });
+  } = useCommunityFeedSimple({ locationScope, territoryFilter });
 
   // Local filter states
   const [sortType, setSortType] = useState<FeedSortType>("recent");
@@ -160,7 +163,7 @@ export function CommunityFeed({
         sortCriteria={sortCriteria}
         filterType={filterType}
         userLocation={{
-          location_id: activeProfile?.location_id,
+          location_id: activeProfile?.locationId ?? activeProfile?.location_id,
         }}
         onLike={handleLike}
         onComment={handleComment}

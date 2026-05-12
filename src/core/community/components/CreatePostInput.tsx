@@ -37,6 +37,13 @@ const CreatePostInput = React.forwardRef<HTMLDivElement, CreatePostInputProps>(
     ref,
   ) => {
     const { activeProfile: profile } = useSessionContext();
+    const profileData = {
+      name: profile?.name ?? null,
+      city: profile?.city ?? null,
+      street: profile?.street ?? null,
+      neighborhood: profile?.neighborhood ?? null,
+      avatarUrl: profile?.avatarUrl ?? null,
+    };
     const getInitials = (name?: string | null) => {
       if (!name) return "U";
       return name
@@ -48,25 +55,24 @@ const CreatePostInput = React.forwardRef<HTMLDivElement, CreatePostInputProps>(
     };
 
     const getLocationData = () => {
-      const p = profile as any;
       switch (locationScope) {
         case "city":
           return {
             preposition: "na",
-            location: p?.city || p?.city || "sua city",
+            location: profileData.city || "sua cidade",
           };
         case "street":
-          return { preposition: "na", location: p?.street || "sua rua" };
+          return { preposition: "na", location: profileData.street || "sua rua" };
         default:
           return {
             preposition: "no",
-            location: p?.neighborhood || p?.neighborhood || "seu neighborhood",
+            location: profileData.neighborhood || "seu bairro",
           };
       }
     };
 
     const { preposition, location } = getLocationData();
-    const displayName = (profile as any)?.name || (profile as any)?.name;
+    const displayName = profileData.name || "Usuário";
     const placeholderText = showQuickActions
       ? `O que tá acontecendo ${preposition} ${location}?`
       : `O que você viu de bom ${preposition} ${location} hoje?`;
@@ -80,7 +86,7 @@ const CreatePostInput = React.forwardRef<HTMLDivElement, CreatePostInputProps>(
           <div className="flex items-center gap-2 mb-3">
             <Avatar className="w-11 h-11 ring-2 ring-teal-400/30">
               <AvatarImage
-                src={profile?.avatarUrl ?? undefined}
+                src={profileData.avatarUrl ?? undefined}
                 alt={displayName}
               />
               <AvatarFallback className="bg-gradient-to-br from-teal-400 to-pink-400 text-white font-semibold text-sm">

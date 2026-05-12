@@ -17,6 +17,7 @@ import { UserServicesSection } from '../UserServicesSection';
 import { UserClassifiedsSection } from '../UserClassifiedsSection';
 
 import type { Business } from '@/core/profiles/services/types';
+import type { Favorite } from '@/modules/profile/sections/types';
 
 const CONTENT_TABS = [
   { id: 'posts', label: 'Posts', icon: FileText },
@@ -31,7 +32,10 @@ type ContentTab = (typeof CONTENT_TABS)[number]['id'];
 interface ContentTabsSectionProps {
   userId: string;
   profileId: string;
-  favorites: any;
+  favorites: {
+    favorites: Favorite[];
+    loading: boolean;
+  };
   onPostClick: (id: string) => void;
   onBusinessClick: (business: Business) => void;
   onExplore: () => void;

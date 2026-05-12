@@ -21,14 +21,14 @@ export function useModeration() {
   const { user } = useAuth();
   const { toast } = useToast();
 
-  const [posts, setPosts] = useState<any[]>([]);
-  const [comments, setComments] = useState<any[]>([]);
-  const [profiles, setProfiles] = useState<any[]>([]);
-  const [postReports, setPostReports] = useState<any[]>([]);
-  const [commentReports, setCommentReports] = useState<any[]>([]);
-  const [profileReports, setProfileReports] = useState<any[]>([]);
-  const [warnings, setWarnings] = useState<any[]>([]);
-  const [auditLogs, setAuditLogs] = useState<any[]>([]);
+  const [posts, setPosts] = useState<Record<string, unknown>[]>([]);
+  const [comments, setComments] = useState<Record<string, unknown>[]>([]);
+  const [profiles, setProfiles] = useState<Record<string, unknown>[]>([]);
+  const [postReports, setPostReports] = useState<Record<string, unknown>[]>([]);
+  const [commentReports, setCommentReports] = useState<Record<string, unknown>[]>([]);
+  const [profileReports, setProfileReports] = useState<Record<string, unknown>[]>([]);
+  const [warnings, setWarnings] = useState<Record<string, unknown>[]>([]);
+  const [auditLogs, setAuditLogs] = useState<Record<string, unknown>[]>([]);
   const [loading, setLoading] = useState(true);
 
   const fetchAll = async () => {
@@ -56,10 +56,13 @@ export function useModeration() {
     fetchAll();
   }, []);
 
-  const getProfile = (userId: string) => profiles.find((p) => p.id === userId);
-  const getPost = (postId: string) => posts.find((p) => p.id === postId);
+  const getId = (value: Record<string, unknown>): string | null =>
+    typeof value.id === "string" ? value.id : null;
+
+  const getProfile = (userId: string) => profiles.find((p) => getId(p) === userId);
+  const getPost = (postId: string) => posts.find((p) => getId(p) === postId);
   const getComment = (commentId: string) =>
-    comments.find((c) => c.id === commentId);
+    comments.find((c) => getId(c) === commentId);
 
   const handleReportAction = async (
     reportId: string,
@@ -72,8 +75,9 @@ export function useModeration() {
       // Esta função não faz nada pois não há tabela de reports
       toast({ title: `Ação registrada` });
       return true;
-    } catch (e: any) {
-      toast({ title: "Erro", description: e.message, variant: "destructive" });
+    } catch (e: unknown) {
+      const message = e instanceof Error ? e.message : "Erro";
+      toast({ title: "Erro", description: message, variant: "destructive" });
       return false;
     }
   };
@@ -81,7 +85,7 @@ export function useModeration() {
   const handleDeleteContent = async (
     type: "post" | "comment",
     id: string,
-    report?: any,
+    report?: Record<string, unknown>,
     adminNotes?: string,
   ) => {
     try {
@@ -98,8 +102,9 @@ export function useModeration() {
 
       toast({ title: `${type === "post" ? "Post" : "Comentário"} excluído` });
       return true;
-    } catch (e: any) {
-      toast({ title: "Erro", description: e.message, variant: "destructive" });
+    } catch (e: unknown) {
+      const message = e instanceof Error ? e.message : "Erro";
+      toast({ title: "Erro", description: message, variant: "destructive" });
       return false;
     }
   };
@@ -125,8 +130,9 @@ export function useModeration() {
 
       await fetchAll();
       return true;
-    } catch (e: any) {
-      toast({ title: "Erro", description: e.message, variant: "destructive" });
+    } catch (e: unknown) {
+      const message = e instanceof Error ? e.message : "Erro";
+      toast({ title: "Erro", description: message, variant: "destructive" });
       return false;
     }
   };

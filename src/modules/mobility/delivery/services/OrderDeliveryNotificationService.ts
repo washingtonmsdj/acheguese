@@ -3,10 +3,14 @@ import { profileService } from "@/core/profiles/services/ProfileService";
 import { logger } from "@/shared/utils/logger";
 import type { OrderRecord } from "../order/types";
 import { LOGISTICS_STATUS, type LogisticsStatus } from "../logistics/types";
+import { mobilityRoutes } from "@/modules/mobility/routes/mobilityRoutes";
+import { businessManagementRoutes } from "@/core/business/utils/businessManagementRoutes";
 
 interface NotificationPayload {
   userId: string;
   audience: "customer" | "merchant" | "courier";
+  type: "info" | "success" | "warning" | "error";
+  category: "transactional" | "social" | "system" | "marketing";
   title: string;
   message: string;
   actionUrl?: string | null;
@@ -87,6 +91,32 @@ const EVENT_LABELS: Record<OrderNotificationEvent, string> = {
   delivery_proof_attached: "Comprovante anexado",
 };
 
+function resolveNotificationType(
+  event: OrderNotificationEvent,
+  status: LogisticsStatus,
+): "info" | "success" | "warning" | "error" {
+  if (status === LOGISTICS_STATUS.DELIVERED || event === "order_delivered") {
+    return "success";
+  }
+
+  if (
+    status === LOGISTICS_STATUS.FAILED ||
+    event === "delivery_failed"
+  ) {
+    return "error";
+  }
+
+  if (
+    status === LOGISTICS_STATUS.CANCELED ||
+    event === "order_canceled_by_customer" ||
+    event === "order_canceled_by_merchant"
+  ) {
+    return "warning";
+  }
+
+  return "info";
+}
+
 function orderShortId(orderId: string): string {
   return orderId.slice(0, 8).toUpperCase();
 }
@@ -94,12 +124,12 @@ function orderShortId(orderId: string): string {
 function merchantOrderUrl(order: OrderRecord): string | null {
   const businessId = order.source_context.source_id;
   if (!businessId || order.source_context.source_type !== "gastronomy") return null;
-  return `/central/empresas/${businessId}/gastronomia/pedidos/${order.id}`;
+  return businessManagementRoutes.gastronomyPedidoDetalhe(businessId, order.id);
 }
 
 function customerOrderUrl(order: OrderRecord): string | null {
   if (order.source_context.source_type !== "gastronomy") return null;
-  return `/gastronomia/pedidos/${order.id}`;
+  return businessManagementRoutes.gastronomyPedidoPublico(order.id);
 }
 
 function notificationMetadata(order: OrderRecord, event: OrderNotificationEvent): Record<string, unknown> {
@@ -120,7 +150,7 @@ function dedupeNotifications(notifications: NotificationPayload[]): Notification
   const seen = new Set<string>();
 
   return notifications.filter((notification) => {
-    const key = `${notification.userId}:${notification.audience}:${notification.metadata.event}:${notification.metadata.order_status}`;
+    const key = `${notification.userId}:${notification.metadata.event}:${notification.metadata.order_status}`;
     if (seen.has(key)) return false;
     seen.add(key);
     return true;
@@ -144,10 +174,10 @@ export class OrderDeliveryNotificationService {
   }
 
   private static async createNotification(payload: NotificationPayload): Promise<void> {
-    const { error } = await (supabase as any).rpc("create_notification", {
+    const { error } = await supabase.rpc("create_notification", {
       p_user_id: payload.userId,
-      p_type: "order_update",
-      p_category: "system",
+      p_type: payload.type,
+      p_category: payload.category,
       p_title: payload.title,
       p_message: payload.message,
       p_action_url: payload.actionUrl ?? null,
@@ -197,6 +227,7 @@ export class OrderDeliveryNotificationService {
       const status = order.logistics_status;
       const resolvedEvent = event ?? this.resolveDefaultEvent(order);
       const title = `${STATUS_LABELS[status]} #${orderShortId(order.id)}`;
+      const type = resolveNotificationType(resolvedEvent, status);
       const metadata = notificationMetadata(order, resolvedEvent);
       const actionUrl = merchantOrderUrl(order);
       const customerActionUrl = customerOrderUrl(order);
@@ -207,6 +238,8 @@ export class OrderDeliveryNotificationService {
         notifications.push({
           userId: customerUserId,
           audience: "customer",
+          type,
+          category: "transactional",
           title,
           message: `${CUSTOMER_MESSAGES[status]} (${EVENT_LABELS[resolvedEvent]}).`,
           actionUrl: customerActionUrl,
@@ -219,6 +252,8 @@ export class OrderDeliveryNotificationService {
         notifications.push({
           userId: merchantUserId,
           audience: "merchant",
+          type,
+          category: "transactional",
           title,
           message: `${MERCHANT_MESSAGES[status]} (${EVENT_LABELS[resolvedEvent]}).`,
           actionUrl,
@@ -231,19 +266,30 @@ export class OrderDeliveryNotificationService {
         notifications.push({
           userId: courierUserId,
           audience: "courier",
+          type,
+          category: "transactional",
           title,
           message: `${COURIER_MESSAGES[status]} (${EVENT_LABELS[resolvedEvent]}).`,
-          actionUrl: "/central/motoboy/entregas",
+          actionUrl: mobilityRoutes.motoboy.entregas,
           actionLabel: "Abrir entregas",
           metadata: { ...metadata, audience: "courier" },
         });
       }
 
-      await Promise.all(
+      const results = await Promise.allSettled(
         dedupeNotifications(notifications).map((notification) =>
           this.createNotification(notification),
         ),
       );
+      const failedCount = results.filter((result) => result.status === "rejected").length;
+      if (failedCount > 0) {
+        logger.warn("OrderDeliveryNotificationService.notifyOrderStatusChanged.partial_failure", {
+          order_id: order.id,
+          event: resolvedEvent,
+          failed_count: failedCount,
+          total: results.length,
+        });
+      }
     } catch (error) {
       logger.warn("OrderDeliveryNotificationService.notifyOrderStatusChanged", {
         order_id: order.id,

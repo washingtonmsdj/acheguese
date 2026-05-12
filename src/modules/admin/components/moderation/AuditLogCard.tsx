@@ -2,8 +2,13 @@ import { History } from "lucide-react";
 import { Badge } from "@/shared/components/ui/badge";
 
 interface AuditLogCardProps {
-  log: any;
-  adminUser: any;
+  log: {
+    action_type?: string | null;
+    target_type?: string | null;
+    created_at?: string | null;
+    details?: string | null;
+  };
+  adminUser?: { name?: string | null } | null;
 }
 
 export function AuditLogCard({ log, adminUser }: AuditLogCardProps) {

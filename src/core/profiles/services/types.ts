@@ -134,7 +134,7 @@ export interface Profile {
   allow_messages?: boolean;
   show_activity?: boolean;
   show_businesses?: boolean;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
   created_at: string;
   updated_at: string;
 }
@@ -165,7 +165,7 @@ export interface UpdateProfileData {
   neighborhood?: string;
   street?: string;
   is_active?: boolean;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
   telefone?: string;
   whatsapp?: string;
   phone?: string;
@@ -181,7 +181,7 @@ export interface UpdateProfileData {
   verified?: boolean;
   verified_at?: string | null;
   active_ride_id?: string | null;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 export class ProfileError extends Error {

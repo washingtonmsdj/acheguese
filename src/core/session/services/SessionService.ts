@@ -321,7 +321,7 @@ export class SessionService {
         return [];
       }
 
-      return data.map((row: any) => SessionService.mapProfileFromDb(row as DbProfileRow));
+      return data.map((row) => SessionService.mapProfileFromDb(row as DbProfileRow));
     } catch (error) {
       logger.error('SessionService.getUserProfiles failed:', error);
       return [];

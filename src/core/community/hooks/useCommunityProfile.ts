@@ -78,9 +78,9 @@ export function useCommunityProfile() {
         badges_count: 0,
         rank: undefined,
       });
-    } catch (err: any) {
+    } catch (err: unknown) {
       logger.error("Error fetching community profile:", err);
-      setError(err.message || "Erro ao carregar perfil comunitário");
+      setError(err instanceof Error ? err.message : "Erro ao carregar perfil comunitario");
     } finally {
       setLoading(false);
     }
@@ -101,9 +101,9 @@ export function useCommunityProfile() {
       await communityService.updateCommunityProfile(user.id, updates);
       setProfile({ ...profile, ...updates });
       return { success: true };
-    } catch (err: any) {
+    } catch (err: unknown) {
       logger.error("Error updating community profile:", err);
-      return { success: false, error: err.message };
+      return { success: false, error: err instanceof Error ? err.message : "Erro ao atualizar perfil" };
     }
   }
 

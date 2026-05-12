@@ -61,6 +61,20 @@ export interface CatalogItem {
   };
 }
 
+type CatalogRow = {
+  id: string;
+  item_code: string;
+  item_name: string;
+  item_type: 'base_plan' | 'vertical_package' | 'addon';
+  plan_tier: string;
+  entity_family: string;
+  vertical: string;
+  pricing_model: 'free' | 'subscription' | 'transactional' | 'hybrid';
+  status: string;
+  catalog_entitlement_policy?: CatalogItem['entitlement_policy'][];
+  catalog_pricing_policy?: CatalogItem['pricing_policy'][];
+};
+
 export interface EligibleCatalog {
   base_plans: CatalogItem[];
   vertical_packages: CatalogItem[];
@@ -296,7 +310,7 @@ export class CatalogService {
   /**
    * Mapeia item do banco para DTO.
    */
-  private static mapCatalogItem(item: any): CatalogItem {
+  private static mapCatalogItem(item: CatalogRow): CatalogItem {
     return {
       id: item.id,
       item_code: item.item_code,

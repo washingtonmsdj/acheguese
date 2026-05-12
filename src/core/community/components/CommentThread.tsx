@@ -12,6 +12,7 @@ import { useComments } from "@/core/community/hooks/useComments";
 import { CommentItem } from "./CommentItem";
 import { CommentForm } from "./CommentForm";
 import { Loader2 } from "lucide-react";
+import type { Comment } from "@/shared/utils/commentTree";
 /**
  * Thread de comentÃ¡rios
  *
@@ -31,6 +32,7 @@ interface CommentThreadProps {
 export function CommentThread({ postId }: CommentThreadProps) {
   const [sortBy, setSortBy] = useState<"relevantes" | "recentes">("relevantes");
   const { comments, loading: isLoading } = useComments(postId);
+  const typedComments = comments as Comment[];
 
   if (isLoading) {
     return (
@@ -53,7 +55,10 @@ export function CommentThread({ postId }: CommentThreadProps) {
         </h3>
 
         {comments.length > 0 && (
-          <Select value={sortBy} onValueChange={(v: any) => setSortBy(v)}>
+          <Select
+            value={sortBy}
+            onValueChange={(value: "relevantes" | "recentes") => setSortBy(value)}
+          >
             <SelectTrigger className="w-[180px]">
               <SelectValue />
             </SelectTrigger>
@@ -79,8 +84,8 @@ export function CommentThread({ postId }: CommentThreadProps) {
         </p>
       ) : (
         <div className="space-y-4">
-          {comments.map((comment) => (
-            <CommentItem key={comment.id} comment={comment as any} />
+          {typedComments.map((comment) => (
+            <CommentItem key={comment.id} comment={comment} />
           ))}
         </div>
       )}

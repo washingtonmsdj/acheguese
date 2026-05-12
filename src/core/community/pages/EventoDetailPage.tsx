@@ -1,11 +1,11 @@
 /**
- * ðŸ“… EVENTO DETAIL PAGE - REFATORADA PARA SSOT
+ * 📅 EVENTO DETAIL PAGE - REFATORADA PARA SSOT
  * 
- * PÃ¡gina de detalhes de um evento especÃ­fico
+ * Página de detalhes de um evento específico
  * 
- * âœ… SSOT: Usa EventsService ao invÃ©s de Supabase direto
- * âœ… Type-safe com interface Event do service
- * âœ… Segue arquitetura oficial
+ * ✅ SSOT: Usa EventsService ao invés de Supabase direto
+ * ✅ Type-safe com interface Event do service
+ * ✅ Segue arquitetura oficial
  * 
  * @version 2.0.0 - SSOT Compliant
  */
@@ -25,12 +25,12 @@ import {
 import { Button } from "@/shared/components/ui/button";
 import { Badge } from "@/shared/components/ui/badge";
 import { Skeleton } from "@/shared/components/ui/skeleton";
-import { communityEventsRuntimeService, type CommunityEvent } from "@/core/community/services/CommunityEventsRuntimeService";
+import { EventsService, type Event } from "@/modules/community/events";
 
 export default function EventoDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const [evento, setEvento] = useState<CommunityEvent | null>(null);
+  const [evento, setEvento] = useState<Event | null>(null);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
   const [confirmado, setConfirmado] = useState(false);
@@ -43,8 +43,8 @@ export default function EventoDetailPage() {
         return;
       }
 
-      // âœ… SSOT: Usa EventsService ao invÃ©s de Supabase direto
-      const data = await communityEventsRuntimeService.getEventById(id);
+      // ✅ SSOT: Usa EventsService ao invés de Supabase direto
+      const data = await EventsService.getEventById(id);
 
       if (data) {
         setEvento(data);
@@ -71,7 +71,7 @@ export default function EventoDetailPage() {
     );
 
   if (notFound || !evento)
-    return <div className="p-4">Evento nÃ£o encontrado.</div>;
+    return <div className="p-4">Evento não encontrado.</div>;
 
   return (
     <div className="flex flex-col">
@@ -84,7 +84,7 @@ export default function EventoDetailPage() {
           />
         ) : (
           <div className="w-full h-full bg-secondary flex items-center justify-center text-5xl">
-            ðŸŽ‰
+            🎉
           </div>
         )}
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
@@ -129,7 +129,7 @@ export default function EventoDetailPage() {
           <div className="flex items-center gap-2 bg-secondary rounded-xl p-3">
             <Clock className="h-5 w-5 text-primary" />
             <div>
-              <p className="text-[11px] text-muted-foreground">HorÃ¡rio</p>
+              <p className="text-[11px] text-muted-foreground">Horário</p>
               <p className="text-xs font-semibold">
                 {new Date(evento.date).toLocaleTimeString("pt-BR", {
                   hour: "2-digit",
@@ -175,10 +175,10 @@ export default function EventoDetailPage() {
           >
             {confirmado ? (
               <>
-                <CheckCircle2 className="h-4 w-4 mr-1" /> PresenÃ§a confirmada
+                <CheckCircle2 className="h-4 w-4 mr-1" /> Presença confirmada
               </>
             ) : (
-              "Confirmar presenÃ§a"
+              "Confirmar presença"
             )}
           </Button>
           <Button variant="outline" size="icon">

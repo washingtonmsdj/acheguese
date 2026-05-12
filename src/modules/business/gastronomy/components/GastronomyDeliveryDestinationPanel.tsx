@@ -42,6 +42,7 @@ export function GastronomyDeliveryDestinationPanel({
   onGoToLogin,
 }: Props) {
   const isBusy = isResolvingAddress || isLocatingUser;
+  const hasAddressQuery = addressQuery.trim().length > 0;
   const shouldShowEditor = isEditing || !destinationLabel;
 
   if (!shouldShowEditor && destinationLabel) {
@@ -131,7 +132,7 @@ export function GastronomyDeliveryDestinationPanel({
         <Button
           type="button"
           onClick={onSubmitAddress}
-          disabled={isResolvingAddress}
+          disabled={isResolvingAddress || !hasAddressQuery}
           className="h-10 rounded-xl px-4 text-sm"
         >
           {isResolvingAddress ? (

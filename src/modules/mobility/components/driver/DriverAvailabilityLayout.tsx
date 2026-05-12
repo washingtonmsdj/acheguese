@@ -34,7 +34,7 @@ export function DriverAvailabilityLayout({ service }: DriverAvailabilityLayoutPr
   const navigate = useNavigate();
   const shell = useMotoristaPageV2();
 
-  const driverData = shell.driverData as any;
+  const driverData = shell.driverData;
   const isMotorista = service === "motorista";
   
   const modeLabel = useMemo(

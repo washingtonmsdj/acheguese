@@ -1,7 +1,7 @@
 /**
  * Hooks otimizados para CommunityService
  * Usa TanStack Query para cache e estado
- * 
+ *
  * ✅ Geographic Foundation - Integrado com fundação geográfica
  */
 
@@ -66,10 +66,10 @@ export function useCommunityBadges(userId: string | undefined) {
  */
 export function useCommunityLeaderboard(limit: number = 10, city?: string) {
   const { activeLocation } = useCommunityLocation();
-  
+
   // Usar localização ativa da fundação geográfica se disponível
   const effectiveCity = city || (activeLocation?.type === 'city' ? activeLocation.name : undefined);
-  
+
   return useQuery({
     queryKey: COMMUNITY_KEYS.leaderboard(effectiveCity),
     queryFn: () => CommunityService.getLeaderboard(limit, effectiveCity),
@@ -96,7 +96,7 @@ export function useRecordInteraction() {
       interactionType: InteractionType;
       targetType?: string;
       targetId?: string;
-      metadata?: Record<string, any>;
+      metadata?: Record<string, unknown>;
     }) =>
       CommunityService.recordInteraction(
         userId,

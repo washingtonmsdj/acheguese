@@ -8,7 +8,7 @@
  */
 
 import { supabase } from '@/integrations/supabase/client';
-import type { NicheCapability } from '../types';
+import type { NicheCapability, NicheStatus } from '../types';
 import type {
   AddCapabilityParams,
   AddCapabilityResult,
@@ -17,13 +17,33 @@ import type {
   MarkNeedsUpgradeResult,
   MultiCapabilityCheckResult,
   ProfileNicheConfig,
+  OperationalMode,
   UpgradeNicheParams,
   UpgradeNicheResult,
   NicheUpgradeHistory,
   GastronomyProfileWithNiche,
+  UpgradeType,
 } from './types';
 
 export class NicheVersioningService {
+  private static toNicheStatus(value: unknown): NicheStatus {
+    const valid: NicheStatus[] = ['full_enabled', 'basic_enabled', 'beta_enabled', 'hidden', 'coming_soon'];
+    return valid.includes(value as NicheStatus) ? (value as NicheStatus) : 'basic_enabled';
+  }
+
+  private static toOperationalMode(value: unknown): OperationalMode {
+    const valid: OperationalMode[] = [
+      'basic_menu', 'menu_variants', 'menu_addons', 'menu_combos', 'pizzaria_full',
+      'sushi_full', 'acai_full', 'pastel_full', 'churrascaria_full', 'bar_full',
+    ];
+    return valid.includes(value as OperationalMode) ? (value as OperationalMode) : 'basic_menu';
+  }
+
+  private static toUpgradeType(value: unknown): UpgradeType {
+    const valid: UpgradeType[] = ['automatic', 'manual', 'admin'];
+    return valid.includes(value as UpgradeType) ? (value as UpgradeType) : 'manual';
+  }
+
   /**
    * Verifica se um perfil tem uma capability específica
    */
@@ -267,8 +287,8 @@ export class NicheVersioningService {
     return {
       primary_niche_key: data.primary_niche_key as string,
       niche_config_version: data.niche_config_version as string,
-      support_level: data.support_level as any,
-      operational_mode: data.operational_mode as any,
+      support_level: this.toNicheStatus(data.support_level),
+      operational_mode: this.toOperationalMode(data.operational_mode),
       enabled_capabilities: (data.enabled_capabilities as string[]) || [],
       missing_capabilities: (data.missing_capabilities as string[]) || [],
       needs_niche_upgrade: data.needs_niche_upgrade as boolean,
@@ -317,9 +337,9 @@ export class NicheVersioningService {
       from_version: record.from_version,
       to_version: record.to_version,
       added_capabilities: (record.added_capabilities as string[]) || [],
-      from_operational_mode: record.from_operational_mode as any,
-      to_operational_mode: record.to_operational_mode as any,
-      upgrade_type: record.upgrade_type as any,
+      from_operational_mode: this.toOperationalMode(record.from_operational_mode),
+      to_operational_mode: this.toOperationalMode(record.to_operational_mode),
+      upgrade_type: this.toUpgradeType(record.upgrade_type),
       notes: record.notes,
       upgraded_at: record.upgraded_at,
       upgraded_by: record.upgraded_by,

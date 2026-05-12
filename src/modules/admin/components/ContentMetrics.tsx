@@ -2,6 +2,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/components/ui/card";
 import { Badge } from "@/shared/components/ui/badge";
 import { Building2, Calendar, FileText } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import { cn } from "@/shared/utils/cn";
 
 interface ContentCategory {
@@ -14,10 +15,16 @@ interface ContentCategory {
 interface ContentMetricsProps {
   title: string;
   description: string;
-  icon: any;
+  icon: LucideIcon;
   categories: ContentCategory[];
   total: number;
   loading?: boolean;
+}
+
+interface ContentMetricsInput {
+  byCategory?: Record<string, number>;
+  byType?: Record<string, number>;
+  byMonth?: Record<string, number>;
 }
 
 function toCategoriesFromCountMap(
@@ -106,7 +113,7 @@ export function ContentMetrics({
   );
 }
 
-export function BusinessesByNichoMetrics({ data, loading }: { data?: any; loading?: boolean }) {
+export function BusinessesByNichoMetrics({ data, loading }: { data?: ContentMetricsInput; loading?: boolean }) {
   const fallback = {
     Alimentacao: 0,
     Servicos: 0,
@@ -136,7 +143,7 @@ export function BusinessesByNichoMetrics({ data, loading }: { data?: any; loadin
   );
 }
 
-export function PostsByCategoryMetrics({ data, loading }: { data?: any; loading?: boolean }) {
+export function PostsByCategoryMetrics({ data, loading }: { data?: ContentMetricsInput; loading?: boolean }) {
   const fallback = {
     Discussao: 0,
     Recomendacao: 0,
@@ -164,7 +171,7 @@ export function PostsByCategoryMetrics({ data, loading }: { data?: any; loading?
   );
 }
 
-export function EventsByMonthMetrics({ data, loading }: { data?: any; loading?: boolean }) {
+export function EventsByMonthMetrics({ data, loading }: { data?: ContentMetricsInput; loading?: boolean }) {
   const fallback = {
     Janeiro: 0,
     Fevereiro: 0,

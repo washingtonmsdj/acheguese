@@ -15,13 +15,14 @@ import type { Location } from '@/core/location/types';
 
 export function useCommunityTerritory() {
   const { activeProfile } = useSessionContext();
+  const profileLocationId = activeProfile?.locationId ?? activeProfile?.location_id ?? null;
   const [userLocation, setUserLocation] = useState<Location | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
   useEffect(() => {
     const loadUserLocation = async () => {
-      if (!activeProfile?.location_id) {
+      if (!profileLocationId) {
         setUserLocation(null);
         setIsLoading(false);
         return;
@@ -29,7 +30,7 @@ export function useCommunityTerritory() {
 
       try {
         setIsLoading(true);
-        const location = await LocationService.getLocationById(activeProfile.location_id);
+        const location = await LocationService.getLocationById(profileLocationId);
         setUserLocation(location);
         setError(null);
       } catch (err) {
@@ -41,7 +42,7 @@ export function useCommunityTerritory() {
     };
 
     loadUserLocation();
-  }, [activeProfile?.location_id]);
+  }, [profileLocationId]);
 
   return {
     userLocation,

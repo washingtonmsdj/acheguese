@@ -39,7 +39,7 @@ class LostFoundServiceClass {
     } = {},
   ): Promise<LostFoundPost[]> {
     try {
-      let query = (supabase as any)
+      let query = supabase
         .from("lost_found_posts")
         .select("*")
         .order("created_at", { ascending: false });
@@ -64,7 +64,7 @@ class LostFoundServiceClass {
 
   async getPostById(id: string): Promise<LostFoundPost | null> {
     try {
-      const { data, error } = await (supabase as any)
+      const { data, error } = await supabase
         .from("lost_found_posts")
         .select("*")
         .eq("id", id)
@@ -80,7 +80,7 @@ class LostFoundServiceClass {
 
   async createPost(postData: Omit<LostFoundPost, "id" | "created_at" | "updated_at">): Promise<LostFoundPost | null> {
     try {
-      const { data, error } = await (supabase as any)
+      const { data, error } = await supabase
         .from("lost_found_posts")
         .insert([postData])
         .select()
@@ -96,7 +96,7 @@ class LostFoundServiceClass {
 
   async updatePost(id: string, updates: Partial<LostFoundPost>): Promise<boolean> {
     try {
-      const { error } = await (supabase as any)
+      const { error } = await supabase
         .from("lost_found_posts")
         .update({ ...updates, updated_at: new Date().toISOString() })
         .eq("id", id);
@@ -111,7 +111,7 @@ class LostFoundServiceClass {
 
   async getComments(postId: string): Promise<LostFoundComment[]> {
     try {
-      const { data, error } = await (supabase as any)
+      const { data, error } = await supabase
         .from("lost_found_comments")
         .select("*")
         .eq("post_id", postId)
@@ -127,7 +127,7 @@ class LostFoundServiceClass {
 
   async createComment(commentData: Omit<LostFoundComment, "id" | "created_at">): Promise<LostFoundComment | null> {
     try {
-      const { data, error } = await (supabase as any)
+      const { data, error } = await supabase
         .from("lost_found_comments")
         .insert([commentData])
         .select()
@@ -147,7 +147,7 @@ class LostFoundServiceClass {
     to: number,
   ): Promise<LostFoundPost[]> {
     try {
-      let query = (supabase as any)
+      let query = supabase
         .from("lost_found_posts")
         .select("*")
         .order("created_at", { ascending: false })

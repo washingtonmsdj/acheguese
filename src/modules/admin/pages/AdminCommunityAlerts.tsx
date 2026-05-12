@@ -69,11 +69,31 @@ import {
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import type { BadgeProps } from "@/shared/components/ui/badge";
 import {
   ALERT_CATEGORY_LABELS,
   ALERT_REPORT_REASON_LABELS,
 } from "@/shared/services/communityAlerts";
 import type { AlertCategory, AlertStatus } from "@/shared/services/communityAlerts";
+
+type AlertAdminItem = {
+  id: string;
+  category: AlertCategory;
+  neighborhood_display: string;
+  city: string;
+  description: string;
+  status: AlertStatus;
+  under_review?: boolean;
+  report_count: number;
+  created_at: string;
+  reports?: Array<{ id: string; reason: keyof typeof ALERT_REPORT_REASON_LABELS }>;
+};
+
+type BlockedTermItem = {
+  id: string;
+  term: string;
+  is_active: boolean;
+};
 
 export default function AdminCommunityAlerts() {
   const queryClient = useQueryClient();
@@ -84,7 +104,7 @@ export default function AdminCommunityAlerts() {
   const [categoryFilter, setCategoryFilter] = useState<AlertCategory | "">("");
   
   // Dialogs
-  const [selectedAlert, setSelectedAlert] = useState<any>(null);
+  const [selectedAlert, setSelectedAlert] = useState<AlertAdminItem | null>(null);
   const [showRemoveDialog, setShowRemoveDialog] = useState(false);
   const [removalReason, setRemovalReason] = useState("");
   const [showBlockedTermsDialog, setShowBlockedTermsDialog] = useState(false);
@@ -224,7 +244,7 @@ export default function AdminCommunityAlerts() {
   };
 
   const getStatusBadge = (status: AlertStatus) => {
-    const variants: Record<AlertStatus, { variant: any; label: string }> = {
+    const variants: Record<AlertStatus, { variant: BadgeProps["variant"]; label: string }> = {
       ativo: { variant: "default", label: "Ativo" },
       encerrado: { variant: "secondary", label: "Encerrado" },
       expirado: { variant: "outline", label: "Expirado" },
@@ -398,7 +418,7 @@ export default function AdminCommunityAlerts() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {alertsData?.data?.map((alert: any) => (
+                      {alertsData?.data?.map((alert: AlertAdminItem) => (
                         <TableRow key={alert.id}>
                           <TableCell className="font-medium">
                             {ALERT_CATEGORY_LABELS[alert.category as AlertCategory]}
@@ -517,7 +537,7 @@ export default function AdminCommunityAlerts() {
             <CardContent>
               {reviewAlerts && reviewAlerts.length > 0 ? (
                 <div className="space-y-4">
-                  {reviewAlerts.map((alert: any) => (
+                  {reviewAlerts.map((alert: AlertAdminItem) => (
                     <div key={alert.id} className="border rounded-lg p-4">
                       <div className="flex items-start justify-between">
                         <div className="flex-1">
@@ -536,7 +556,7 @@ export default function AdminCommunityAlerts() {
                             <div className="mt-3 pt-3 border-t">
                               <p className="text-sm font-medium mb-2">Motivos dos Reports:</p>
                               <div className="flex flex-wrap gap-2">
-                                {alert.reports.map((report: any) => (
+                                {alert.reports.map((report: { id: string; reason: keyof typeof ALERT_REPORT_REASON_LABELS }) => (
                                   <Badge key={report.id} variant="outline">
                                     {ALERT_REPORT_REASON_LABELS[report.reason]}
                                   </Badge>
@@ -595,7 +615,7 @@ export default function AdminCommunityAlerts() {
               <CardContent>
                 {topReported && topReported.length > 0 ? (
                   <div className="space-y-3">
-                    {topReported.map((alert: any, index: number) => (
+                    {topReported.map((alert: AlertAdminItem, index: number) => (
                       <div key={alert.id} className="flex items-center justify-between">
                         <div className="flex-1">
                           <p className="text-sm font-medium">
@@ -685,7 +705,7 @@ export default function AdminCommunityAlerts() {
               {/* Lista de Termos */}
               {blockedTerms && blockedTerms.length > 0 ? (
                 <div className="space-y-2">
-                  {blockedTerms.map((term: any) => (
+                  {blockedTerms.map((term: BlockedTermItem) => (
                     <div
                       key={term.id}
                       className="flex items-center justify-between p-3 border rounded-lg"

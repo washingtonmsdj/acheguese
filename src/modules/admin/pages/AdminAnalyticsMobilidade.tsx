@@ -71,6 +71,19 @@ interface DailyData {
   completed: number;
   cancelled: number;
 }
+type DriverAggregation = {
+  driver?: {
+    id: string;
+    name?: string;
+    profile?: {
+      name?: string;
+      avatar_url?: string;
+      neighborhood?: string;
+    };
+  };
+  count: number;
+  revenue: number;
+};
 
 const PIE_COLORS = [
   "hsl(var(--primary))",
@@ -211,10 +224,7 @@ export default function AdminAnalyticsMobilidade() {
       setDailyData(Array.from(dailyMap.values()));
 
       // Top drivers by completed rides
-      const driverRideCount = new Map<
-        string,
-        { driver: any; count: number; revenue: number }
-      >();
+      const driverRideCount = new Map<string, DriverAggregation>();
       completed.forEach((r) => {
         const driverProfileId =
           (r as RideRequest).driver_profile_id || r.driver_profile_id;

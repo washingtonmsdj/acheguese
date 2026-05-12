@@ -42,9 +42,25 @@ const CATEGORY_COLORS: Record<string, string> = {
 };
 
 interface ReportDetailDialogProps {
-  report: any;
-  content: any;
-  author: any;
+  report: {
+    id: string;
+    status: string;
+    motivo: string;
+    detalhes?: string | null;
+    admin_notes?: string | null;
+    post_id?: string;
+    comment_id?: string;
+  } | null;
+  content?:
+    | {
+        category?: string;
+        texto?: string;
+        image_url?: string | null;
+        name?: string;
+        suspended?: boolean;
+      }
+    | null;
+  author?: { id: string; name: string; warning_count?: number } | null;
   type: "post" | "comment" | "profile";
   table: string;
   isOpen: boolean;
@@ -59,7 +75,7 @@ interface ReportDetailDialogProps {
   onDelete: (
     type: "post" | "comment",
     id: string,
-    report: any,
+    report: NonNullable<ReportDetailDialogProps["report"]>,
     notes: string,
   ) => Promise<boolean>;
   onWarn: (userId: string, userName: string) => void;
@@ -93,6 +109,7 @@ export function ReportDetailDialog({
       return;
 
     const contentId = type === "post" ? report.post_id : report.comment_id;
+    if (!contentId) return;
     const success = await onDelete(
       type as "post" | "comment",
       contentId,

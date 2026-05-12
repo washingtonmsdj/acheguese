@@ -14,6 +14,8 @@ import { InfiniteScrollTrigger } from "@/shared/components/ui";
 import { Filter, AlertTriangle, MessageSquare } from "lucide-react";
 import { ModerationFilters } from "@/core/moderation/types";
 import { RIDE_STATUS } from "@/shared/types/constants";
+
+type ModerationStatusFilter = NonNullable<ModerationFilters["status"]>;
 export function PendingCommentsQueue() {
   const [filters, setFilters] = useState<ModerationFilters>({});
 
@@ -37,7 +39,7 @@ export function PendingCommentsQueue() {
   const handleStatusChange = (value: string) => {
     setFilters((prev) => ({
       ...prev,
-      status: value === "all" ? undefined : [value as any],
+      status: value === "all" ? undefined : [value] as ModerationStatusFilter,
     }));
   };
 

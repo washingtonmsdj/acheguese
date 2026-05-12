@@ -51,8 +51,8 @@ export function useGeolocation() {
         permissionGranted: true,
       });
       return true;
-    } catch (error: any) {
-      const message = error?.message ?? "Erro ao obter localizacao";
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : "Erro ao obter localizacao";
       setState((prev) => ({
         ...prev,
         loading: false,

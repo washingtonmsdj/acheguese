@@ -15,6 +15,7 @@ import {
   X,
   Shield,
 } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -55,11 +56,11 @@ export interface FieldConfig {
 export interface QuickAction {
   key: string;
   label: string;
-  icon: any;
+  icon: LucideIcon;
   activeColor?: string;
   inactiveColor?: string;
-  getValue: (item: any) => boolean;
-  getNextValue?: (item: any) => any;
+  getValue: (item: Record<string, unknown>) => boolean;
+  getNextValue?: (item: Record<string, unknown>) => unknown;
 }
 
 export interface FilterConfig {
@@ -91,11 +92,14 @@ export default function AdminCrudPage({
   filters,
   disableCreate = false,
 }: AdminCrudPageProps) {
-  const [items, setItems] = useState<any[]>([]);
+  const getItemId = (item: Record<string, unknown>): string =>
+    typeof item.id === "string" ? item.id : "";
+
+  const [items, setItems] = useState<Record<string, unknown>[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [editing, setEditing] = useState<any | null>(null);
-  const [form, setForm] = useState<Record<string, any>>({});
+  const [editing, setEditing] = useState<Record<string, unknown> | null>(null);
+  const [form, setForm] = useState<Record<string, unknown>>({});
   const [saving, setSaving] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [page, setPage] = useState(0);
@@ -110,11 +114,13 @@ export default function AdminCrudPage({
     try {
       const data = await adminCrudService.list(table);
       setItems(data || []);
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error("Error loading data:", error);
+      const message =
+        error instanceof Error ? error.message : "Falha ao carregar registros.";
       toast({
         title: "Erro ao carregar dados",
-        description: error?.message ?? "Falha ao carregar registros.",
+        description: message,
         variant: "destructive",
       });
     } finally {
@@ -186,7 +192,7 @@ export default function AdminCrudPage({
 
   const openNew = () => {
     setEditing(null);
-    const empty: Record<string, any> = {};
+    const empty: Record<string, unknown> = {};
     fields.forEach((f) => {
       empty[f.key] =
         f.type === "boolean" ? false : f.type === "number" ? 0 : "";
@@ -195,9 +201,9 @@ export default function AdminCrudPage({
     setDialogOpen(true);
   };
 
-  const openEdit = (item: any) => {
+  const openEdit = (item: Record<string, unknown>) => {
     setEditing(item);
-    const filled: Record<string, any> = {};
+    const filled: Record<string, unknown> = {};
     fields.forEach((f) => {
       filled[f.key] = item[f.key] ?? (f.type === "boolean" ? false : "");
     });
@@ -209,7 +215,7 @@ export default function AdminCrudPage({
     setSaving(true);
     try {
       if (editing) {
-        await adminCrudService.update(table, editing.id, form);
+        await adminCrudService.update(table, getItemId(editing), form);
         toast({ title: "Atualizado com sucesso" });
       } else {
         await adminCrudService.create(table, form);
@@ -217,8 +223,9 @@ export default function AdminCrudPage({
       }
       setDialogOpen(false);
       await load();
-    } catch (e: any) {
-      toast({ title: "Erro", description: e.message, variant: "destructive" });
+    } catch (e: unknown) {
+      const message = e instanceof Error ? e.message : "Erro";
+      toast({ title: "Erro", description: message, variant: "destructive" });
     }
     setSaving(false);
   };
@@ -229,35 +236,38 @@ export default function AdminCrudPage({
       await adminCrudService.delete(table, id);
       toast({ title: "Excluído com sucesso" });
       await load();
-    } catch (e: any) {
-      toast({ title: "Erro", description: e.message, variant: "destructive" });
+    } catch (e: unknown) {
+      const message = e instanceof Error ? e.message : "Erro";
+      toast({ title: "Erro", description: message, variant: "destructive" });
     }
   };
 
-  const handleQuickToggle = async (item: any, action: QuickAction) => {
-    setTogglingId(`${item.id}-${action.key}`);
+  const handleQuickToggle = async (item: Record<string, unknown>, action: QuickAction) => {
+    const itemId = getItemId(item);
+    setTogglingId(`${itemId}-${action.key}`);
     try {
       // Use custom getNextValue if provided, otherwise toggle boolean
       const newValue = action.getNextValue
         ? action.getNextValue(item)
         : !action.getValue(item);
 
-      await adminCrudService.update(table, item.id, { [action.key]: newValue });
+      await adminCrudService.update(table, itemId, { [action.key]: newValue });
       setItems((prev) =>
         prev.map((i) =>
-          i.id === item.id ? { ...i, [action.key]: newValue } : i,
+          getItemId(i) === itemId ? { ...i, [action.key]: newValue } : i,
         ),
       );
       toast({
         title: `${action.label}: ${action.getNextValue ? String(newValue) : newValue ? "Ativado" : "Desativado"}`,
       });
-    } catch (e: any) {
-      toast({ title: "Erro", description: e.message, variant: "destructive" });
+    } catch (e: unknown) {
+      const message = e instanceof Error ? e.message : "Erro";
+      toast({ title: "Erro", description: message, variant: "destructive" });
     }
     setTogglingId(null);
   };
 
-  const renderCellValue = (item: any, f: FieldConfig) => {
+  const renderCellValue = (item: Record<string, unknown>, f: FieldConfig) => {
     const val = item[f.key];
     if (f.type === "boolean") {
       return val ? (
@@ -386,7 +396,7 @@ export default function AdminCrudPage({
                 <tbody>
                   {paged.map((item) => (
                     <tr
-                      key={item.id}
+                      key={getItemId(item)}
                       className="border-b last:border-0 hover:bg-muted/30 transition-colors"
                     >
                       {visibleFields.map((f) => (
@@ -400,7 +410,7 @@ export default function AdminCrudPage({
                             {quickActions.map((action) => {
                               const isActive = action.getValue(item);
                               const isToggling =
-                                togglingId === `${item.id}-${action.key}`;
+                                togglingId === `${getItemId(item)}-${action.key}`;
                               const Icon = action.icon;
                               return (
                                 <Button
@@ -446,7 +456,7 @@ export default function AdminCrudPage({
                             variant="ghost"
                             size="icon"
                             className="h-7 w-7 text-destructive hover:text-destructive"
-                            onClick={() => handleDelete(item.id)}
+                            onClick={() => handleDelete(getItemId(item))}
                           >
                             <Trash2 className="h-3.5 w-3.5" />
                           </Button>

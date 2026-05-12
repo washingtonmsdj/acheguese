@@ -41,6 +41,10 @@ export interface MentionedProfile {
 
 export type ReportReason =
   | "spam"
+  | "propaganda"
+  | "conteúdo_ofensivo"
+  | "conteudo_ofensivo"
+  | "links_maliciosos"
   | "inappropriate"
   | "harassment"
   | "misinformation"

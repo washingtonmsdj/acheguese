@@ -73,7 +73,8 @@ function BusinessSection({ data, onChange }: {
   data: Partial<BusinessData>;
   onChange: (updates: Partial<BusinessData>) => void;
 }) {
-  const set = (key: keyof BusinessData, value: any) => onChange({ [key]: value });
+  const set = <K extends keyof BusinessData>(key: K, value: BusinessData[K]) =>
+    onChange({ [key]: value } as Partial<BusinessData>);
 
   return (
     <div className="space-y-4">
@@ -133,7 +134,8 @@ function ProfessionalSection({ data, onChange }: {
   data: Partial<ProfessionalData>;
   onChange: (updates: Partial<ProfessionalData>) => void;
 }) {
-  const set = (key: keyof ProfessionalData, value: any) => onChange({ [key]: value });
+  const set = <K extends keyof ProfessionalData>(key: K, value: ProfessionalData[K]) =>
+    onChange({ [key]: value } as Partial<ProfessionalData>);
 
   // Arrays como texto separado por vÃ­rgula
   const arrToStr = (arr?: string[]) => arr?.join(', ') ?? '';
@@ -215,7 +217,8 @@ function DriverSection({ data, onChange }: {
   data: Partial<DriverData>;
   onChange: (updates: Partial<DriverData>) => void;
 }) {
-  const set = (key: keyof DriverData, value: any) => onChange({ [key]: value });
+  const set = <K extends keyof DriverData>(key: K, value: DriverData[K]) =>
+    onChange({ [key]: value } as Partial<DriverData>);
 
   return (
     <div className="space-y-4">
@@ -349,11 +352,16 @@ export default function PerfilEditarPage() {
 
       toast.success('Perfil atualizado');
       navigate(appUrls.profile.central);
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const errMessage = err instanceof Error ? err.message : 'Erro ao salvar';
+      const errCode =
+        err && typeof err === 'object' && 'code' in err
+          ? String((err as { code?: unknown }).code ?? '')
+          : undefined;
       if (hasUsernameChange) {
-        logError(originalUsername, username, err.message ?? 'Erro ao salvar', err.code);
+        logError(originalUsername, username, errMessage, errCode);
       }
-      toast.error(err.message ?? 'Erro ao salvar');
+      toast.error(errMessage);
     }
   };
 

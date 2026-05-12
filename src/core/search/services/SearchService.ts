@@ -38,11 +38,11 @@ export interface SearchFilters {
 }
 
 export interface SearchResults {
-  businesses: any[]; // Simplified for now
-  professionals: any[]; // Simplified for now
-  classifieds: any[];
-  events: any[];
-  coupons: any[];
+  businesses: Business[];
+  professionals: Professional[];
+  classifieds: Record<string, unknown>[];
+  events: Record<string, unknown>[];
+  coupons: Record<string, unknown>[];
   total: number;
 }
 
@@ -103,7 +103,7 @@ export class SearchService {
   private static async searchBusinesses(
     query: string,
     filters: SearchFilters,
-  ): Promise<any[]> {
+  ): Promise<Business[]> {
     try {
       return await BusinessService.searchBusinessesLegacy(query, 20);
     } catch (error) {
@@ -118,14 +118,14 @@ export class SearchService {
   private static async searchProfessionals(
     query: string,
     filters: SearchFilters,
-  ): Promise<any[]> {
+  ): Promise<Professional[]> {
     try {
       const results = await ProfessionalService.searchProfessionals(query, {
         city: filters.city,
         neighborhood: filters.neighborhood,
         min_rating: filters.minRating,
       });
-      return results as any[];
+      return results as Professional[];
     } catch (error) {
       logger.error("Error searching professionals:", error);
       return [];

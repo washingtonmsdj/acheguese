@@ -13,6 +13,7 @@
 import { logger } from '@/shared/utils/logger';
 import { supabase } from '@/integrations/supabase';
 import { PublicIdentityService } from '@/core/public-identity/services/PublicIdentityService';
+import { businessManagementRoutes } from '@/core/business/utils/businessManagementRoutes';
 
 // ─── Tipos ────────────────────────────────────────────────────────────────────
 
@@ -99,7 +100,7 @@ export class BusinessUrlService {
     }
 
     const canonical = `/empresas/${territory.uf}/${territory.cidade}/${territory.bairro}/${slug}`;
-    const dashboard = opts?.target === "legacy" ? `/perfil/empresas/${id}` : `/central/empresas/${id}`;
+    const dashboard = businessManagementRoutes.overview(id, opts);
 
     return {
       canonical,

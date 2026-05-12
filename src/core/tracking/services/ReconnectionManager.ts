@@ -40,7 +40,7 @@ export interface ConnectionState {
 export interface PendingOperation {
   id: string;
   type: 'position_update' | 'presence_update' | 'heartbeat';
-  payload: any;
+  payload: Record<string, unknown>;
   timestamp: string;
   retries: number;
 }
@@ -488,7 +488,7 @@ export class ReconnectionManager {
   /**
    * Trata erro de canal
    */
-  private handleChannelError(channelId: string, payload: any): void {
+  private handleChannelError(channelId: string, payload: unknown): void {
     logger.error('[ReconnectionManager] Channel error', { channelId, payload });
     this.handleDisconnection();
   }

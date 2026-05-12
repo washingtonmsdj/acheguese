@@ -120,6 +120,42 @@ export interface ClassifiedPolicySummary {
   withLegacyCategoryOnly: number;
 }
 
+interface ClassifiedStatusRow {
+  status: string | null;
+}
+
+interface SellerProfileRow {
+  id: string;
+  name?: string | null;
+  phone?: string | null;
+  whatsapp?: string | null;
+}
+
+interface ClassifiedUrlHistoryRow {
+  id: string;
+  changed_at: string;
+  change_reason: string;
+  old_canonical_url: string;
+  old_slug: string | null;
+  classified_id: string;
+  classifieds?: {
+    title?: string | null;
+    public_id?: string | null;
+    status?: string | null;
+  } | null;
+}
+
+interface ClassifiedListRow extends AdminClassifiedData {
+  seller?: {
+    name?: string | null;
+    avatar_url?: string | null;
+    phone?: string | null;
+    whatsapp?: string | null;
+  } | null;
+  classified_categories?: { slug?: string | null } | null;
+  classified_subcategories?: { slug?: string | null } | null;
+}
+
 class AdminClassifiedsServiceClass {
   async getTotalClassifiedsCount(): Promise<number> {
     const { count, error } = await supabase
@@ -193,13 +229,14 @@ class AdminClassifiedsServiceClass {
         throw error;
       }
 
+      const rows: ClassifiedStatusRow[] = data || [];
       const stats: ClassifiedsStats = {
-        total: data?.length || 0,
-        active: data?.filter((c: any) => c.status === CLASSIFIED_STATUS.ACTIVE).length || 0,
-        inactive: data?.filter((c: any) => c.status === CLASSIFIED_STATUS.INACTIVE).length || 0,
-        sold: data?.filter((c: any) => c.status === CLASSIFIED_STATUS.SOLD).length || 0,
-        pending: data?.filter((c: any) => c.status === CLASSIFIED_STATUS.PENDING).length || 0,
-        rejected: data?.filter((c: any) => c.status === CLASSIFIED_STATUS.REJECTED).length || 0,
+        total: rows.length,
+        active: rows.filter((c) => c.status === CLASSIFIED_STATUS.ACTIVE).length,
+        inactive: rows.filter((c) => c.status === CLASSIFIED_STATUS.INACTIVE).length,
+        sold: rows.filter((c) => c.status === CLASSIFIED_STATUS.SOLD).length,
+        pending: rows.filter((c) => c.status === CLASSIFIED_STATUS.PENDING).length,
+        rejected: rows.filter((c) => c.status === CLASSIFIED_STATUS.REJECTED).length,
       };
 
       return stats;
@@ -324,8 +361,9 @@ class AdminClassifiedsServiceClass {
 
       if (sellerIds.length > 0) {
         const profileRows = await profileService.getProfilesByIds(sellerIds);
+        const rows: SellerProfileRow[] = profileRows || [];
         profileMap = new Map(
-          (profileRows || []).map((profile: any) => [
+          rows.map((profile) => [
             profile.id,
             {
               name: profile.name ?? null,
@@ -390,7 +428,8 @@ class AdminClassifiedsServiceClass {
 
       if (error) throw error;
 
-      const entries: ClassifiedUrlHistoryItem[] = (data || []).map((row: any) => ({
+      const rows: ClassifiedUrlHistoryRow[] = data || [];
+      const entries: ClassifiedUrlHistoryItem[] = rows.map((row) => ({
         id: row.id,
         changedAt: row.changed_at,
         changeReason: row.change_reason,
@@ -499,7 +538,8 @@ class AdminClassifiedsServiceClass {
         throw error;
       }
 
-      const classifieds: AdminClassifiedData[] = (data || []).map((item: any) => ({
+      const rows: ClassifiedListRow[] = data || [];
+      const classifieds: AdminClassifiedData[] = rows.map((item) => ({
         ...item,
         seller_name: item.seller?.name,
         seller_avatar: item.seller?.avatar_url,

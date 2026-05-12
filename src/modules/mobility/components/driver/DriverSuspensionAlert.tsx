@@ -23,11 +23,23 @@ interface DriverStatus {
   total_rides_accepted: number;
   total_rides_cancelled: number;
 }
+type DriverContext = { id: string };
+type DriverProfileSnapshot = {
+  id: string;
+  is_suspended?: boolean | null;
+  suspension_reason?: string | null;
+  suspended_until?: string | null;
+};
+type DriverStatsDetailed = {
+  cancellation_rate?: number;
+  total_rides?: number;
+  total_rides_cancelled?: number;
+};
 
 export function DriverSuspensionAlert() {
   const { effectiveProfile } = useMultiProfileContext();
   const [status, setStatus] = useState<DriverStatus | null>(null);
-  const [context, setContext] = useState<any>(null);
+  const [context, setContext] = useState<DriverContext | null>(null);
   const [loading, setLoading] = useState(true);
   const [showDetails, setShowDetails] = useState(false);
   const userId = effectiveProfile?.user_id;
@@ -46,7 +58,7 @@ export function DriverSuspensionAlert() {
       const driverProfile =
         (effectiveDriverProfileId
           ? await profileService.getProfileById(effectiveDriverProfileId)
-          : await profileService.getProfileByType(userId, "driver")) as any;
+          : await profileService.getProfileByType(userId, "driver")) as DriverProfileSnapshot | null;
 
       if (!driverProfile) {
         setStatus(null);
@@ -59,7 +71,7 @@ export function DriverSuspensionAlert() {
 
       const driverData = (await mobilityService.getDriverStatsDetailed(
         driverProfile.id,
-      )) as any;
+      )) as DriverStatsDetailed | null;
 
       setStatus({
         is_suspended: driverProfile.is_suspended ?? false,

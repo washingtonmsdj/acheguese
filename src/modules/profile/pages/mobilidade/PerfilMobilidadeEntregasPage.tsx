@@ -9,7 +9,17 @@ import { MotoboyDeliveryActions } from "@/modules/mobility/components/driver/Mot
 import { useMotoristaPageV2 } from "@/modules/mobility/hooks/useMotoristaPageV2";
 import { getProfileMobilitySectionPath } from "@/modules/profile/utils/profileMobilityNavigation";
 
-function isDeliveryRide(ride: any): boolean {
+type RideLike = {
+  id: string;
+  origin?: string | null;
+  destination?: string | null;
+  suggested_price?: number | null;
+  package_description?: string | null;
+  ride_mode?: string | null;
+  type?: string | null;
+};
+
+function isDeliveryRide(ride: RideLike): boolean {
   return ride?.ride_mode === "motoboy" || ride?.type === "entrega";
 }
 
@@ -67,7 +77,7 @@ export default function PerfilMobilidadeEntregasPage() {
           </CardHeader>
           <CardContent className="space-y-3">
             {activeDeliveries.length > 0 ? (
-              activeDeliveries.map((delivery: any) => (
+              activeDeliveries.map((delivery: RideLike) => (
                 <MotoboyDeliveryActions
                   key={delivery.id}
                   ride={delivery}
@@ -114,7 +124,7 @@ export default function PerfilMobilidadeEntregasPage() {
         </CardHeader>
         <CardContent className="space-y-3">
           {availableDeliveries.length > 0 ? (
-            availableDeliveries.map((delivery: any) => (
+            availableDeliveries.map((delivery: RideLike) => (
               <div key={delivery.id} className="rounded-2xl border border-border bg-background p-4 space-y-3">
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div>

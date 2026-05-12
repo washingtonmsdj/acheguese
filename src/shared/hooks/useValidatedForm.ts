@@ -9,24 +9,24 @@ import {
   useForm,
   UseFormProps,
   UseFormReturn,
-  FieldValues,
+  FieldErrors,
 } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
 
 interface UseValidatedFormOptions<
-  TSchema extends z.ZodType<any, any>,
+  TSchema extends z.ZodType<unknown>,
 > extends Omit<UseFormProps<z.infer<TSchema>>, "resolver"> {
   schema: TSchema;
   onSubmit: (data: z.infer<TSchema>) => Promise<void> | void;
-  onError?: (errors: any) => void;
+  onError?: (errors: unknown) => void;
   successMessage?: string;
   errorMessage?: string;
 }
 
 interface UseValidatedFormReturn<
-  TSchema extends z.ZodType<any, any>,
+  TSchema extends z.ZodType<unknown>,
 > extends UseFormReturn<z.infer<TSchema>> {
   handleSubmitWithToast: (e?: React.BaseSyntheticEvent) => Promise<void>;
   isSubmitting: boolean;
@@ -53,7 +53,7 @@ interface UseValidatedFormReturn<
  * );
  * ```
  */
-export function useValidatedForm<TSchema extends z.ZodType<any, any>>({
+export function useValidatedForm<TSchema extends z.ZodType<unknown>>({
   schema,
   onSubmit,
   onError,
@@ -81,7 +81,7 @@ export function useValidatedForm<TSchema extends z.ZodType<any, any>>({
         }
       }
     },
-    (errors) => {
+    (errors: FieldErrors<z.infer<TSchema>>) => {
       logger.error("Form validation errors:", errors);
 
       // Mostrar primeiro erro encontrado

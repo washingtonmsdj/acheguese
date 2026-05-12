@@ -37,7 +37,7 @@ export class CoverageRepositorySupabase implements ICoverageRepository {
   async createMany(
     coverages: Omit<ServiceArea, 'id' | 'created_at' | 'updated_at'>[]
   ): Promise<ServiceArea[]> {
-    const { data, error } = await (supabase as any)
+    const { data, error } = await supabase
       .from(TABLE)
       .insert(coverages)
       .select();
@@ -51,7 +51,7 @@ export class CoverageRepositorySupabase implements ICoverageRepository {
     entity_id: string,
     status?: CoverageStatus
   ): Promise<ServiceArea[]> {
-    let query = (supabase as any)
+    let query = supabase
       .from(TABLE)
       .select('*')
       .eq('entity_type', entity_type)
@@ -71,7 +71,7 @@ export class CoverageRepositorySupabase implements ICoverageRepository {
     entity_type: EntityType,
     entity_id: string
   ): Promise<ServiceArea | null> {
-    const { data, error } = await (supabase as any)
+    const { data, error } = await supabase
       .from(TABLE)
       .select('*')
       .eq('entity_type', entity_type)
@@ -93,7 +93,7 @@ export class CoverageRepositorySupabase implements ICoverageRepository {
     const page_size = options.page_size ?? COVERAGE_PAGINATION.DEFAULT_PAGE_SIZE;
     const offset = (page - 1) * page_size;
 
-    let query = (supabase as any)
+    let query = supabase
       .from(TABLE)
       .select('entity_id', { count: 'exact' })
       .eq('entity_type', entity_type)
@@ -116,7 +116,7 @@ export class CoverageRepositorySupabase implements ICoverageRepository {
     entity_id: string,
     coverage_id?: string
   ): Promise<number> {
-    let query = (supabase as any)
+    let query = supabase
       .from(TABLE)
       .delete()
       .eq('entity_type', entity_type)
@@ -132,7 +132,7 @@ export class CoverageRepositorySupabase implements ICoverageRepository {
   }
 
   async updateStatus(coverage_id: string, status: CoverageStatus): Promise<void> {
-    const { error } = await (supabase as any)
+    const { error } = await supabase
       .from(TABLE)
       .update({ status, updated_at: new Date().toISOString() })
       .eq('id', coverage_id);
@@ -141,7 +141,7 @@ export class CoverageRepositorySupabase implements ICoverageRepository {
   }
 
   async findById(coverage_id: string): Promise<ServiceArea | null> {
-    const { data, error } = await (supabase as any)
+    const { data, error } = await supabase
       .from(TABLE)
       .select('*')
       .eq('id', coverage_id)

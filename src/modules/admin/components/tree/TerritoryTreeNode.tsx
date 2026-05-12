@@ -13,6 +13,7 @@ import {
   MapPin, Building2, ChevronRight, ChevronDown,
   Globe, Layers,
 } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
 import { cn } from '@/shared/utils/cn';
 import { Badge } from '@/shared/components/ui/badge';
 import { Switch } from '@/shared/components/ui/switch';
@@ -87,7 +88,7 @@ export function TerritoryTreeNode({
   // Auto-expand when searching
   const isExpanded = searchQuery ? true : expanded;
 
-  const typeIcons: Record<string, any> = {
+  const typeIcons: Record<string, LucideIcon> = {
     country: Globe,
     state: Layers,
     city: Building2,

@@ -4,7 +4,11 @@ import { useSessionContext } from "@/core/session";
 import { USER_ROLE } from "@/shared/types/constants";
 import { logger } from "@/shared/utils/logger";
 import { SocialInteractionsService } from "@/core/social/services/SocialInteractionsService";
-import { GroupService, type Group } from "@/core/social/services/GroupService";
+import {
+  GroupService,
+  type Group,
+  type GroupMemberDetail,
+} from "@/core/social/services/GroupService";
 
 export type { Group };
 
@@ -122,7 +126,7 @@ export function useGroups() {
 export function useGroupDetail(groupId: string | undefined) {
   const { user, activeProfile } = useSessionContext();
   const [group, setGroup] = useState<Group | null>(null);
-  const [members, setMembers] = useState<any[]>([]);
+  const [members, setMembers] = useState<GroupMemberDetail[]>([]);
   const [isMember, setIsMember] = useState(false);
   const [userRole, setUserRole] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -140,12 +144,12 @@ export function useGroupDetail(groupId: string | undefined) {
 
       if (activeProfile) {
         const membership = enrichedMembers.find(
-          (m: any) => m.member_profile_id === activeProfile.id,
+          (m) => m.member_profile_id === activeProfile.id,
         );
         setIsMember(!!membership);
         setUserRole(membership?.role || null);
       }
-    } catch (err) {
+    } catch (err: unknown) {
       logger.error("Error loading group:", err);
     } finally {
       setLoading(false);

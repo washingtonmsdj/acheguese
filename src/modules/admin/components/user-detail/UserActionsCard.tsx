@@ -24,7 +24,16 @@ import { profileService } from "@/core/profiles/services/ProfileService";
 import { buildPublicProfileUrl } from "@/core/profiles/utils/publicProfileUrl";
 
 interface UserActionsCardProps {
-  user: any;
+  user: {
+    id: string;
+    name?: string | null;
+    username?: string | null;
+    email?: string | null;
+    phone?: string | null;
+    is_verified_resident?: boolean | null;
+    suspended?: boolean | null;
+    suspended_until?: string | null;
+  };
   onUpdate: () => void;
 }
 

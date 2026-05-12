@@ -13,6 +13,7 @@ import { logger } from "@/shared/utils/logger";
 import { profileService } from "@/core/profiles/services";
 import { getClassifiedById } from "@/modules/classifieds/services";
 import { ALERT_STATUS } from "@/shared/types/constants";
+import type { RealtimeChannel } from "@supabase/supabase-js";
 import type {
   Conversation,
   Message,
@@ -23,6 +24,15 @@ import type {
   BlockConversationInput,
 } from "../types";
 
+type ClassifiedSummary = {
+  id: string;
+  title?: string | null;
+  price?: number | null;
+  photos?: string[] | null;
+};
+
+type ConversationRow = Conversation;
+
 class MessagingService {
   /**
    * Busca conversas de um usuário com detalhes
@@ -32,7 +42,7 @@ class MessagingService {
   ): Promise<ConversationPreview[]> {
     try {
       // Buscar conversas do usuário
-      const { data: conversations, error } = await (supabase as any)
+      const { data: conversations, error } = await supabase
         .from("conversations")
         .select("*")
         .or(`buyer_id.eq.${userId},seller_id.eq.${userId}`)
@@ -43,11 +53,11 @@ class MessagingService {
 
       // Coletar IDs únicos
       const classifiedIds = [
-        ...new Set(conversations.map((c: any) => c.classified_id)),
+        ...new Set(conversations.map((c) => c.classified_id)),
       ] as string[];
       const otherUserIds = [
         ...new Set(
-          conversations.map((c: any) =>
+          conversations.map((c) =>
             c.buyer_id === userId ? c.seller_id : c.buyer_id,
           ),
         ),
@@ -111,7 +121,7 @@ class MessagingService {
     userId: string,
   ): Promise<ConversationWithDetails | null> {
     try {
-      const { data: conversation, error } = await (supabase as any)
+      const { data: conversation, error } = await supabase
         .from("conversations")
         .select("*")
         .eq("id", conversationId)
@@ -155,7 +165,7 @@ class MessagingService {
    */
   async getMessages(conversationId: string): Promise<Message[]> {
     try {
-      const { data, error } = await (supabase as any)
+      const { data, error } = await supabase
         .from("messages")
         .select("*")
         .eq("conversation_id", conversationId)
@@ -178,7 +188,7 @@ class MessagingService {
    */
   async getLastMessage(conversationId: string): Promise<Message | null> {
     try {
-      const { data, error } = await (supabase as any)
+      const { data, error } = await supabase
         .from("messages")
         .select("*")
         .eq("conversation_id", conversationId)
@@ -202,7 +212,7 @@ class MessagingService {
     userId: string,
   ): Promise<number> {
     try {
-      const { count, error } = await (supabase as any)
+      const { count, error } = await supabase
         .from("messages")
         .select("*", { count: "exact", head: true })
         .eq("conversation_id", conversationId)
@@ -260,7 +270,7 @@ class MessagingService {
   /**
    * Subscreve a mudanças em mensagens para um usuário
    */
-  subscribeToMessages(userId: string, callback: () => void): any {
+  subscribeToMessages(userId: string, callback: () => void): RealtimeChannel | null {
     try {
       const channel = supabase
         .channel(`messages-${userId}`)
@@ -288,7 +298,7 @@ class MessagingService {
   subscribeToConversationMessages(
     conversationId: string,
     callback: (message: Message) => void,
-  ): any {
+  ): RealtimeChannel | null {
     try {
       const channel = supabase
         .channel(`chat-${conversationId}`)
@@ -316,7 +326,7 @@ class MessagingService {
   /**
    * Remove subscrição de mensagens
    */
-  unsubscribeFromMessages(subscription: any): void {
+  unsubscribeFromMessages(subscription: RealtimeChannel | null): void {
     try {
       if (subscription) {
         supabase.removeChannel(subscription);
@@ -329,7 +339,7 @@ class MessagingService {
   /**
    * Remove qualquer canal de realtime criado pelo MessagingService
    */
-  unsubscribeChannel(subscription: any): void {
+  unsubscribeChannel(subscription: RealtimeChannel | null): void {
     this.unsubscribeFromMessages(subscription);
   }
 
@@ -340,7 +350,7 @@ class MessagingService {
     input: CreateConversationInput,
   ): Promise<Conversation | null> {
     try {
-      const { data, error } = await (supabase as any)
+      const { data, error } = await supabase
         .from("conversations")
         .insert({
           classified_id: input.classified_id,
@@ -374,7 +384,7 @@ class MessagingService {
   ): Promise<Conversation | null> {
     try {
       // Tentar encontrar conversa existente
-      const { data: existing, error: findError } = await (supabase as any)
+      const { data: existing, error: findError } = await supabase
         .from("conversations")
         .select("*")
         .eq("classified_id", classifiedId)
@@ -407,7 +417,7 @@ class MessagingService {
    */
   async sendMessage(input: SendMessageInput): Promise<Message | null> {
     try {
-      const { data, error } = await (supabase as any)
+      const { data, error } = await supabase
         .from("messages")
         .insert({
           conversation_id: input.conversation_id,
@@ -420,7 +430,7 @@ class MessagingService {
       if (error) throw error;
 
       // Atualizar timestamp da conversa
-      await (supabase as any)
+      await supabase
         .from("conversations")
         .update({ last_message_at: new Date().toISOString() })
         .eq("id", input.conversation_id);
@@ -444,7 +454,7 @@ class MessagingService {
     userId: string,
   ): Promise<void> {
     try {
-      const { error } = await (supabase as any)
+      const { error } = await supabase
         .from("messages")
         .update({ read_at: new Date().toISOString() })
         .eq("conversation_id", conversationId)
@@ -467,7 +477,7 @@ class MessagingService {
    */
   async blockConversation(input: BlockConversationInput): Promise<void> {
     try {
-      const { error } = await (supabase as any)
+      const { error } = await supabase
         .from("conversations")
         .update({
           status: "blocked",
@@ -496,7 +506,7 @@ class MessagingService {
     reason: string,
   ): Promise<void> {
     try {
-      const { error } = await (supabase as any).from("message_reports").insert({
+      const { error } = await supabase.from("message_reports").insert({
         message_id: messageId,
         reporter_id: reporterId,
         reason: reason,
@@ -519,7 +529,7 @@ class MessagingService {
    */
   async closeConversation(conversationId: string): Promise<void> {
     try {
-      const { error } = await (supabase as any)
+      const { error } = await supabase
         .from("conversations")
         .update({ is_active: false })
         .eq("id", conversationId);
@@ -540,7 +550,7 @@ class MessagingService {
    */
   async isConversationBlocked(conversationId: string): Promise<boolean> {
     try {
-      const { data, error } = await (supabase as any)
+      const { data, error } = await supabase
         .from("conversations")
         .select("status")
         .eq("id", conversationId)
@@ -560,7 +570,7 @@ class MessagingService {
    */
   async unblockConversation(conversationId: string): Promise<void> {
     try {
-      const { error } = await (supabase as any)
+      const { error } = await supabase
         .from("conversations")
         .update({
           status: ALERT_STATUS.ACTIVE,
@@ -587,7 +597,7 @@ class MessagingService {
    */
   async reopenConversation(conversationId: string): Promise<void> {
     try {
-      const { error } = await (supabase as any)
+      const { error } = await supabase
         .from("conversations")
         .update({ is_active: true })
         .eq("id", conversationId);
@@ -610,7 +620,7 @@ class MessagingService {
    */
   async deleteConversation(conversationId: string): Promise<void> {
     try {
-      const { error } = await (supabase as any)
+      const { error } = await supabase
         .from("conversations")
         .delete()
         .eq("id", conversationId);
@@ -630,7 +640,7 @@ class MessagingService {
   /**
    * Métodos auxiliares privados para buscar classificados via ClassifiedService
    */
-  private async getClassifiedById(id: string): Promise<any | null> {
+  private async getClassifiedById(id: string): Promise<ClassifiedSummary | null> {
     try {
       // ✅ SSOT — usa queries diretas
       return await getClassifiedById(id);
@@ -640,13 +650,13 @@ class MessagingService {
     }
   }
 
-  private async getClassifiedsByIds(ids: string[]): Promise<any[]> {
+  private async getClassifiedsByIds(ids: string[]): Promise<ClassifiedSummary[]> {
     try {
       // ✅ SSOT — usa queries diretas
       const results = await Promise.all(
         ids.map((id) => getClassifiedById(id)),
       );
-      return results.filter(Boolean);
+      return results.filter((item): item is ClassifiedSummary => Boolean(item));
     } catch (error) {
       logger.error("Error fetching classifieds:", error);
       return [];

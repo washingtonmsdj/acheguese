@@ -18,6 +18,7 @@ import {
 const DEFAULT_SLUG = 'complexo-do-nordeste-de-amaralina';
 const DEFAULT_NAME = 'Complexo do Nordeste de Amaralina';
 const DEFAULT_MEMBERS = ['Nordeste de Amaralina', 'Santa Cruz', 'Vale das Pedrinhas'];
+type TerritoryEvent = NonNullable<TerritoryAIContent['events']>[number];
 
 export default function AdminTerritoryContent() {
   const [slug, setSlug] = useState(DEFAULT_SLUG);
@@ -31,7 +32,7 @@ export default function AdminTerritoryContent() {
   const [population, setPopulation] = useState('');
   const [area, setArea] = useState('');
   const [characteristics, setCharacteristics] = useState('');
-  const [events, setEvents] = useState<any[]>([]);
+  const [events, setEvents] = useState<TerritoryEvent[]>([]);
 
   useEffect(() => {
     if (content) {
@@ -60,8 +61,8 @@ export default function AdminTerritoryContent() {
         events,
       });
       toast.success('Conteúdo salvo com sucesso!');
-    } catch (e: any) {
-      toast.error(e.message || 'Erro ao salvar');
+    } catch (e: unknown) {
+      toast.error(e instanceof Error ? e.message : 'Erro ao salvar');
     }
   };
 
@@ -73,8 +74,8 @@ export default function AdminTerritoryContent() {
         members: DEFAULT_MEMBERS,
       });
       toast.success('Conteúdo regenerado com IA!');
-    } catch (e: any) {
-      toast.error(e.message || 'Erro ao gerar conteúdo');
+    } catch (e: unknown) {
+      toast.error(e instanceof Error ? e.message : 'Erro ao gerar conteúdo');
     }
   };
 

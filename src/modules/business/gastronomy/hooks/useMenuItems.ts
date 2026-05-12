@@ -37,7 +37,7 @@ export function useMenuItems(menuId: string, categoryId?: string) {
       is_available?: boolean;
       tags?: string[];
       allergens?: string[];
-      nutritional_info?: Record<string, any>;
+      nutritional_info?: Record<string, unknown>;
     }) => {
       const result = await MenuService.createItem({
         menu_id: menuId,

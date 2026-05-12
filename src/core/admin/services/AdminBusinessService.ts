@@ -27,6 +27,9 @@ export interface AdminBusinessData {
 }
 
 class AdminBusinessServiceClass {
+  private buildUsernameFromName(name: string): string {
+    return name.toLowerCase().replace(/\s+/g, "-");
+  }
   /**
    * Busca todos os negócios
    * ✅ SSOT: Delega para BusinessService
@@ -98,7 +101,7 @@ class AdminBusinessServiceClass {
   ): Promise<AdminBusinessData | null> {
     try {
       // Mapear AdminBusinessData para formato do BusinessService
-      const businessUpdates: Record<string, any> = {};
+      const businessUpdates: Record<string, unknown> = {};
       
       if (updates.name) businessUpdates.name = updates.name;
       if (updates.description !== undefined) businessUpdates.description = updates.description;
@@ -271,8 +274,13 @@ class AdminBusinessServiceClass {
    * ✅ SSOT: Usa ProfileService e BusinessService
    */
   async createBusinessProfile(
-    profileData: any,
-    businessData: any,
+    profileData: {
+      name: string;
+      phone?: string;
+      bio?: string;
+      avatar_url?: string;
+    },
+    businessData: Record<string, unknown>,
     userId: string,
   ) {
     try {
@@ -281,7 +289,7 @@ class AdminBusinessServiceClass {
       const profile = await profileService.createProfile({
         profile_type: "business",
         name: profileData.name,
-        username: profileData.name.toLowerCase().replace(/\s+/g, "-"),
+        username: this.buildUsernameFromName(profileData.name),
         city: profileData.phone || "Não informado",
         bio: profileData.bio,
         avatar_url: profileData.avatar_url,
@@ -309,7 +317,7 @@ class AdminBusinessServiceClass {
    * Atualiza um business profile
    * ✅ SSOT: Usa BusinessService
    */
-  async updateBusinessProfile(profileId: string, businessData: any) {
+  async updateBusinessProfile(profileId: string, businessData: Record<string, unknown>) {
     try {
       await BusinessService.updateBusiness(profileId, businessData);
       return true;

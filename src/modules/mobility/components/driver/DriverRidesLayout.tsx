@@ -8,8 +8,15 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/sha
 import { DriverRidesList } from "@/modules/mobility/components/driver/DriverRidesList";
 import { useMotoristaPageV2 } from "@/modules/mobility/hooks/useMotoristaPageV2";
 import { getProfileMobilityServicePath } from "@/modules/profile/utils/profileMobilityNavigation";
+import type { MobilityRide } from "@/modules/mobility/components/driver/DriverRidesTab";
 
-function isDeliveryRide(ride: any): boolean {
+type RideLike = MobilityRide & {
+  ride_mode?: string | null;
+  type?: string | null;
+  passenger_trust_risk_level?: string | null;
+};
+
+function isDeliveryRide(ride: RideLike): boolean {
   return ride?.ride_mode === "motoboy" || ride?.type === "entrega";
 }
 
@@ -19,7 +26,7 @@ const TRUST_RISK_LABELS: Record<string, string> = {
   critical: "Revisao admin",
 };
 
-function getTrustRiskLabel(ride: any): string | null {
+function getTrustRiskLabel(ride: RideLike): string | null {
   const risk = ride?.passenger_trust_risk_level;
   if (typeof risk !== "string" || risk === "trusted") return null;
   return TRUST_RISK_LABELS[risk] ?? risk;
@@ -39,15 +46,15 @@ export function DriverRidesLayout() {
   const shell = useMotoristaPageV2();
 
   const availableRides = useMemo(
-    () => (shell.availableRides || []).filter((ride: any) => !isDeliveryRide(ride)),
+    () => (shell.availableRides || []).filter((ride: RideLike) => !isDeliveryRide(ride)),
     [shell.availableRides],
   );
   const acceptedRides = useMemo(
-    () => (shell.activeRides || []).filter((ride: any) => !isDeliveryRide(ride)),
+    () => (shell.activeRides || []).filter((ride: RideLike) => !isDeliveryRide(ride)),
     [shell.activeRides],
   );
   const historyRides = useMemo(
-    () => (shell.completedByMe || []).filter((ride: any) => !isDeliveryRide(ride)),
+    () => (shell.completedByMe || []).filter((ride: RideLike) => !isDeliveryRide(ride)),
     [shell.completedByMe],
   );
 
@@ -88,15 +95,15 @@ export function DriverRidesLayout() {
           </CardHeader>
           <CardContent>
             <DriverRidesList
-              rides={acceptedRides as any}
+              rides={acceptedRides as MobilityRide[]}
               type="accepted"
               loading={shell.loading}
               onStart={(rideId) => shell.startRide(rideId)}
               onComplete={(_, ride) => {
-                if (ride) shell.handleOpenCompleteDialog(ride as any);
+                if (ride) shell.handleOpenCompleteDialog(ride as MobilityRide);
               }}
               onCancel={(_, ride) => {
-                if (ride) shell.handleOpenCancelDialog(ride as any);
+                if (ride) shell.handleOpenCancelDialog(ride as MobilityRide);
               }}
             />
 
@@ -104,7 +111,7 @@ export function DriverRidesLayout() {
               <h3 className="text-sm font-semibold text-foreground">Pedidos disponiveis</h3>
               <div className="space-y-3">
                 {availableRides.length > 0 ? (
-                  availableRides.map((ride: any) => (
+                  availableRides.map((ride: RideLike) => (
                     <div key={ride.id} className="rounded-2xl border border-border bg-background p-4 space-y-3">
                       <div className="flex flex-wrap items-start justify-between gap-3">
                         <div>
@@ -160,7 +167,7 @@ export function DriverRidesLayout() {
           <CardDescription>Corridas concluidas e desempenho recente.</CardDescription>
         </CardHeader>
         <CardContent>
-          <DriverRidesList rides={historyRides as any} type="history" loading={shell.loading} />
+          <DriverRidesList rides={historyRides as MobilityRide[]} type="history" loading={shell.loading} />
         </CardContent>
       </Card>
     </div>

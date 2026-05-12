@@ -53,9 +53,9 @@ export interface AdminAuditLog {
 }
 
 export interface AdminModerationData {
-  posts: any[];
-  comments: any[];
-  profiles: any[];
+  posts: unknown[];
+  comments: unknown[];
+  profiles: unknown[];
   warnings: AdminWarning[];
   auditLogs: AdminAuditLog[];
 }
@@ -155,10 +155,17 @@ class AdminModerationService {
 
       // ✅ SSOT AAA - Usa ProfileService para atualizar perfil
       const profile = await profileService.getProfileById(userId);
-      const currentWarningCount = (profile as any)?.warning_count ?? 0;
+      const currentWarningCount =
+        typeof (profile as { warning_count?: unknown } | null)?.warning_count === "number"
+          ? ((profile as { warning_count?: number }).warning_count ?? 0)
+          : 0;
       const newWarningCount = currentWarningCount + 1;
 
-      const updateData: any = { warning_count: newWarningCount };
+      const updateData: {
+        warning_count: number;
+        suspended?: boolean;
+        suspended_until?: string | null;
+      } = { warning_count: newWarningCount };
 
       if (warnType === "suspensao_7d") {
         const suspendedUntil = new Date();

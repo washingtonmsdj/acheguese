@@ -16,7 +16,7 @@ function normalizeMetadata(value: unknown, legacyValue: unknown): NotificationMe
   return {};
 }
 
-export function normalizeNotification(record: Record<string, any>): Notification {
+export function normalizeNotification(record: Record<string, unknown>): Notification {
   return {
     id: String(record.id ?? ""),
     user_id: String(record.user_id ?? ""),

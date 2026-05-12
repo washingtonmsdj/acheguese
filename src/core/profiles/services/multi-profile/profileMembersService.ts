@@ -7,6 +7,10 @@ import { logger } from '@/shared/utils/logger';
 import { supabase } from '@/integrations/supabase/supabase';
 import { SessionService } from '@/core/session/services/SessionService';
 import type { ProfileMember, ProfileRole, ServiceResponse } from './types';
+
+const errorMessage = (error: unknown, fallback: string): string =>
+  error instanceof Error ? error.message : fallback;
+
 export class ProfileMembersService {
   /**
    * Listar membros de um perfil (via RLS)
@@ -22,7 +26,7 @@ export class ProfileMembersService {
       if (error) throw error;
 
       return (data || []) as ProfileMember[];
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('Error fetching profile members:', error);
       return [];
     }
@@ -56,10 +60,10 @@ export class ProfileMembersService {
         success: true,
         data: data as ProfileMember,
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
       return {
         success: false,
-        error: error.message || 'Failed to add member',
+        error: errorMessage(error, 'Failed to add member'),
       };
     }
   }
@@ -96,10 +100,10 @@ export class ProfileMembersService {
           message: result.message,
         },
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
       return {
         success: false,
-        error: error.message || 'Failed to invite member',
+        error: errorMessage(error, 'Failed to invite member'),
       };
     }
   }
@@ -118,10 +122,10 @@ export class ProfileMembersService {
       if (error) throw error;
 
       return { success: true };
-    } catch (error: any) {
+    } catch (error: unknown) {
       return {
         success: false,
-        error: error.message || 'Failed to remove member',
+        error: errorMessage(error, 'Failed to remove member'),
       };
     }
   }
@@ -149,10 +153,10 @@ export class ProfileMembersService {
         success: true,
         data: data as ProfileMember,
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
       return {
         success: false,
-        error: error.message || 'Failed to update member role',
+        error: errorMessage(error, 'Failed to update member role'),
       };
     }
   }
@@ -181,7 +185,7 @@ export class ProfileMembersService {
       if (error) return false;
 
       return !!data;
-    } catch (error: any) {
+    } catch (error: unknown) {
       return false;
     }
   }

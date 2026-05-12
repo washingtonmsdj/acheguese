@@ -13,7 +13,7 @@ export async function switchProfile(
   userId: string,
   profileId: string,
 ): Promise<void> {
-  const { data, error } = await (supabase as any).rpc("switch_active_profile", {
+  const { data, error } = await supabase.rpc("switch_active_profile", {
     p_user_id: userId,
     p_profile_id: profileId,
   });
@@ -22,7 +22,7 @@ export async function switchProfile(
     throw new Error(`Erro ao trocar perfil: ${error.message}`);
   }
 
-  return data;
+  void data;
 }
 
 /**

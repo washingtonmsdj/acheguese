@@ -5,6 +5,16 @@ import type { UnifiedPost } from "@/shared/types/posts";
 import type { DirectMessageRecipientView } from "@/core/profiles/views/DirectMessageRecipientView";
 import { logger } from "@/shared/utils/logger";
 
+type ConversationPostContext = Parameters<
+  ReturnType<typeof useDirectMessages>["createOrGetConversation"]
+>[0];
+
+const postTypeMap: Partial<Record<UnifiedPost["type"], ConversationPostContext["type"]>> = {
+  civic_report: "civic_report",
+  recomendacao: "recomendacao",
+  alerta: "alerta",
+};
+
 export function useMessageModal(currentUserId?: string) {
   const [isOpen, setIsOpen] = useState(false);
   const [selectedPost, setSelectedPost] = useState<UnifiedPost | null>(null);
@@ -36,19 +46,6 @@ export function useMessageModal(currentUserId?: string) {
       const post = sortedPosts.find((p) => p.id === postId);
       if (!post) return;
 
-      const postTypeMap = {
-        civic_report: "civic_report",
-        discussao: "discussao",
-        alerta: "alerta",
-        recomendacao: "recomendacao",
-        enquete: "enquete",
-        pergunta: "pergunta",
-        achados: "achados",
-        favor: "favor",
-        evento: "evento",
-        desapego: "desapego",
-      };
-
       const newConversationId = await createOrGetConversation(
         {
           id: postId,
@@ -56,7 +53,7 @@ export function useMessageModal(currentUserId?: string) {
             post.content.substring(0, 50) +
             (post.content.length > 50 ? "..." : ""),
           imageUrl: post.images?.[0] || post.image_url,
-          type: postTypeMap[post.type] as any,
+          type: postTypeMap[post.type] ?? "recomendacao",
         },
         recipientProfileId,
       );

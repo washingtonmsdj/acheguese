@@ -32,11 +32,11 @@ export default function AdminSetupPage() {
         logger.error('❌ Erro:', response.message);
       }
 
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('❌ Erro:', error);
       setResult({
         success: false,
-        message: error.message || 'Erro desconhecido'
+        message: error instanceof Error ? error.message : 'Erro desconhecido'
       });
     } finally {
       setLoading(false);

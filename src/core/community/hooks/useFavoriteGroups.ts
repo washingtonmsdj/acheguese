@@ -4,6 +4,13 @@ import { useSessionContext } from "@/core/session";
 import { SocialInteractionsService } from "@/core/social/services/SocialInteractionsService";
 import { CommunityService } from "@/core/community/services/CommunityService";
 
+interface CommunityGroupListItem {
+  id: string;
+  name?: string | null;
+  members_count?: number | null;
+  avatar_url?: string | null;
+}
+
 /**
  * Hook for search grupos do usuario.
  */
@@ -19,11 +26,11 @@ export function useFavoriteGroups() {
       if (groupIds.length === 0) return [];
 
       const groups = await CommunityService.getGroups(undefined, undefined);
-      const byMembership = groups
-        .filter((group: any) => groupIds.includes(group.id))
-        .sort((a: any, b: any) => (b.members_count || 0) - (a.members_count || 0));
+      const byMembership = (groups as CommunityGroupListItem[])
+        .filter((group) => groupIds.includes(group.id))
+        .sort((a, b) => (b.members_count || 0) - (a.members_count || 0));
 
-      return byMembership.map((group: any) => ({
+      return byMembership.map((group) => ({
         id: group.id,
         name: group.name || "Grupo",
         members: String(group.members_count || 0),

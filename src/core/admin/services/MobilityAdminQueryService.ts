@@ -88,7 +88,7 @@ export class MobilityAdminQueryService {
     filter?: "pending" | "approved" | "rejected" | "flagged",
   ): Promise<RawCommunityPost[]> {
     try {
-      let query = (supabase as any)
+      let query = supabase
         .from("community_ride_posts")
         .select(
           "id, author_profile_id, content, intent, destination, moderation_status, flag_count, interested_count, created_at, moderated_at, moderation_reason",
@@ -108,7 +108,7 @@ export class MobilityAdminQueryService {
 
   static async getPostFlags(postId: string): Promise<RawPostFlag[]> {
     try {
-      const { data, error } = await (supabase as any)
+      const { data, error } = await supabase
         .from("community_post_flags")
         .select("id, reason, description, flagged_by, created_at")
         .eq("post_id", postId);
@@ -125,7 +125,7 @@ export class MobilityAdminQueryService {
 
   static async getDriversRaw(): Promise<RawDriverProfile[]> {
     try {
-      const { data, error } = await (supabase as any)
+      const { data, error } = await supabase
         .from("driver_data")
         .select(`
           id,
@@ -138,7 +138,7 @@ export class MobilityAdminQueryService {
         .order("total_rides", { ascending: false });
 
       if (error) throw error;
-      return (data || []).map((driver: any) => ({
+      return (data || []).map((driver) => ({
         id: driver.id,
         profile_id: driver.profile_id,
         user_id: driver.profiles?.user_id,
@@ -155,7 +155,7 @@ export class MobilityAdminQueryService {
 
   static async getDriverRideStatuses(profileId: string): Promise<{ status: string }[]> {
     try {
-      const { data, error } = await (supabase as any)
+      const { data, error } = await supabase
         .from("ride_requests")
         .select("status")
         .eq("driver_profile_id", profileId);
@@ -170,7 +170,7 @@ export class MobilityAdminQueryService {
 
   static async countDriverSuspensions(userId: string): Promise<number> {
     try {
-      const { count, error } = await (supabase as any)
+      const { count, error } = await supabase
         .from("profiles")
         .select("*", { count: "exact", head: true })
         .eq("user_id", userId)
@@ -187,7 +187,7 @@ export class MobilityAdminQueryService {
 
   static async getAllDriversComplete(): Promise<unknown[]> {
     try {
-      const { data, error } = await (supabase as any)
+      const { data, error } = await supabase
         .from("driver_complete_profile")
         .select("*");
 
@@ -203,7 +203,7 @@ export class MobilityAdminQueryService {
 
   static async getRideStats(): Promise<{ status: string; final_price?: number }[]> {
     try {
-      const { data, error } = await (supabase as any)
+      const { data, error } = await supabase
         .from("ride_requests")
         .select("status, final_price");
 
@@ -217,7 +217,7 @@ export class MobilityAdminQueryService {
 
   static async getRecentRides(limit = 50): Promise<RawRide[]> {
     try {
-      const { data, error } = await (supabase as any)
+      const { data, error } = await supabase
         .from("ride_requests")
         .select("*")
         .order("created_at", { ascending: false })
@@ -233,7 +233,7 @@ export class MobilityAdminQueryService {
 
   static async getUserRides(userId: string): Promise<RawRide[]> {
     try {
-      const { data: profiles, error: profileError } = await (supabase as any)
+      const { data: profiles, error: profileError } = await supabase
         .from("profiles")
         .select("id")
         .eq("user_id", userId);
@@ -252,7 +252,7 @@ export class MobilityAdminQueryService {
         ])
         .join(",");
 
-      const { data, error } = await (supabase as any)
+      const { data, error } = await supabase
         .from("ride_requests")
         .select("*")
         .or(rideFilters)
@@ -268,7 +268,7 @@ export class MobilityAdminQueryService {
 
   static async getAllRides(): Promise<RawRide[]> {
     try {
-      const { data, error } = await (supabase as any)
+      const { data, error } = await supabase
         .from("ride_requests")
         .select("*")
         .order("created_at", { ascending: false });
@@ -283,7 +283,7 @@ export class MobilityAdminQueryService {
 
   static async getAllRideRatings(): Promise<{ rating: number }[]> {
     try {
-      const { data, error } = await (supabase as any)
+      const { data, error } = await supabase
         .from("ride_ratings")
         .select("rating");
 
@@ -297,7 +297,7 @@ export class MobilityAdminQueryService {
 
   static async getActiveDriversForMap(): Promise<RawActiveDriver[]> {
     try {
-      const { data, error } = await (supabase as any)
+      const { data, error } = await supabase
         .from("driver_data")
         .select(
           "profile_id, is_online, is_available, can_do_delivery, last_location_update, current_location",
@@ -330,7 +330,7 @@ export class MobilityAdminQueryService {
         "in_delivery",
       ];
 
-      const { data, error } = await (supabase as any)
+      const { data, error } = await supabase
         .from("ride_requests")
         .select(
           "id, status, ride_mode, driver_profile_id, passenger_profile_id, updated_at, created_at",

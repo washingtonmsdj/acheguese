@@ -28,7 +28,7 @@ interface RouteLayerProps {
   /** Opacidade da linha (padrão: 0.8) */
   lineOpacity?: number;
   /** Callback quando rota é calculada */
-  onRouteCalculated?: (route: any) => void;
+  onRouteCalculated?: (route: unknown) => void;
   /** Callback quando ocorre erro */
   onError?: (error: Error) => void;
 }
@@ -64,7 +64,8 @@ export function RouteLayer({
   const routeSourceRef = useRef<string | null>(null);
 
   useEffect(() => {
-    const map = (window as any)[`maplibre-map-${mapId}`] as maplibregl.Map;
+    const mapRegistry = window as Window & Record<string, unknown>;
+    const map = mapRegistry[`maplibre-map-${mapId}`] as maplibregl.Map | undefined;
     if (!map) {
       logger.warn(`[RouteLayer] Mapa ${mapId} não encontrado`);
       return;

@@ -57,6 +57,12 @@ export interface RejectVerificationParams {
   verified_by: string;
 }
 
+interface VerificationStatsRow {
+  verified: boolean | null;
+  verification_type: VerificationType;
+  rejection_reason: string | null;
+}
+
 /**
  * Serviço de Verificações - SSOT
  */
@@ -68,7 +74,7 @@ export class VerificationService {
     profileId: string,
   ): Promise<Verification[]> {
     try {
-      const { data, error } = await (supabase as any)
+      const { data, error } = await supabase
         .from("verification")
         .select("*")
         .eq("profile_id", profileId)
@@ -95,7 +101,7 @@ export class VerificationService {
     verificationType: VerificationType,
   ): Promise<Verification | null> {
     try {
-      const { data, error } = await (supabase as any)
+      const { data, error } = await supabase
         .from("verification")
         .select("*")
         .eq("profile_id", profileId)
@@ -151,7 +157,7 @@ export class VerificationService {
     error?: string;
   }> {
     try {
-      const { data, error } = await (supabase as any)
+      const { data, error } = await supabase
         .from("verification")
         .insert({
           profile_id: params.profile_id,
@@ -200,7 +206,7 @@ export class VerificationService {
     params: ApproveVerificationParams,
   ): Promise<{ success: boolean; error?: string }> {
     try {
-      const { error } = await (supabase as any)
+      const { error } = await supabase
         .from("verification")
         .update({
           verified: true,
@@ -239,7 +245,7 @@ export class VerificationService {
     params: RejectVerificationParams,
   ): Promise<{ success: boolean; error?: string }> {
     try {
-      const { error } = await (supabase as any)
+      const { error } = await supabase
         .from("verification")
         .update({
           verified: false,
@@ -278,7 +284,7 @@ export class VerificationService {
     verificationType?: VerificationType,
   ): Promise<Verification[]> {
     try {
-      let query = (supabase as any)
+      let query = supabase
         .from("verification")
         .select("*")
         .eq("verified", false)
@@ -315,25 +321,26 @@ export class VerificationService {
     by_type: Record<VerificationType, number>;
   }> {
     try {
-      const { data, error } = await (supabase as any)
+      const { data, error } = await supabase
         .from("verification")
         .select("verified, verification_type, rejection_reason");
 
       if (error) throw error;
 
+      const rows = (data || []) as VerificationStatsRow[];
       const stats = {
-        total: data?.length || 0,
-        verified: data?.filter((v) => v.verified).length || 0,
+        total: rows.length,
+        verified: rows.filter((v) => v.verified).length,
         pending:
-          data?.filter((v) => !v.verified && !v.rejection_reason).length || 0,
-        rejected: data?.filter((v) => v.rejection_reason).length || 0,
+          rows.filter((v) => !v.verified && !v.rejection_reason).length,
+        rejected: rows.filter((v) => v.rejection_reason).length,
         by_type: {} as Record<VerificationType, number>,
       };
 
       // Contar por tipo
       const typeCounter = new Map<VerificationType, number>();
-      data?.forEach((v) => {
-        const type = v.verification_type as VerificationType;
+      rows.forEach((v) => {
+        const type = v.verification_type;
         const currentCount = typeCounter.get(type) ?? 0;
         typeCounter.set(type, currentCount + 1);
       });
@@ -366,7 +373,7 @@ export class VerificationService {
     verificationType: VerificationType,
   ): Promise<{ success: boolean; error?: string }> {
     try {
-      const { error } = await (supabase as any)
+      const { error } = await supabase
         .from("verification")
         .delete()
         .eq("profile_id", profileId)

@@ -1,7 +1,7 @@
-/**
+﻿/**
  * useGeolocation (mobility)
  *
- * Hook de geolocalização para o módulo de mobilidade.
+ * Hook de geolocalizaÃ§Ã£o para o mÃ³dulo de mobilidade.
  * Delega ao GeolocationService (SSOT).
  */
 
@@ -14,6 +14,12 @@ export interface GeolocationCoordinates {
   accuracy: number;
 }
 
+function getErrorMessage(error: unknown): string {
+  if (error instanceof Error && error.message) return error.message;
+  return 'Erro ao obter localização';
+}
+
+
 export function useGeolocation() {
   const [coordinates, setCoordinates] = useState<GeolocationCoordinates | null>(null);
   const [loading, setLoading] = useState(false);
@@ -22,7 +28,7 @@ export function useGeolocation() {
 
   const requestLocation = useCallback(async (): Promise<GeolocationCoordinates | null> => {
     if (!supported) {
-      setError({ message: 'Geolocalização não suportada' });
+      setError({ message: 'GeolocalizaÃ§Ã£o nÃ£o suportada' });
       return null;
     }
 
@@ -38,8 +44,8 @@ export function useGeolocation() {
       };
       setCoordinates(coords);
       return coords;
-    } catch (err: any) {
-      setError({ message: err?.message ?? 'Erro ao obter localização' });
+    } catch (err: unknown) {
+      setError({ message: getErrorMessage(err) });
       return null;
     } finally {
       setLoading(false);

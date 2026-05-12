@@ -71,7 +71,7 @@ class SiteSettingsServiceClass {
   /**
    * Obtém uma configuração específica por chave
    */
-  async getSetting(key: string): Promise<any> {
+  async getSetting(key: string): Promise<unknown> {
     try {
       const { data, error } = await supabase.rpc('get_site_setting', { p_key: key });
 

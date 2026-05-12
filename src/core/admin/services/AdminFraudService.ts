@@ -15,6 +15,12 @@ export interface FraudStats {
   critical: number;
 }
 
+type FraudAlertUpdate = {
+  status: FraudAlert["status"];
+  resolution_notes: string | null;
+  reviewed_at: string;
+};
+
 export class AdminFraudService {
   static async getAlerts(limit = 50): Promise<FraudAlert[]> {
     try {
@@ -60,7 +66,7 @@ export class AdminFraudService {
         status,
         resolution_notes: resolutionNotes || null,
         reviewed_at: new Date().toISOString(),
-      } as any)
+      } as FraudAlertUpdate)
       .eq("id", alertId);
 
     if (error) throw error;

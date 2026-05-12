@@ -91,15 +91,20 @@ export function PricingRuleDialog({
       }
 
       onSuccess();
-    } catch (err: any) {
-      const errorMessage = err?.message || String(err);
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : String(err);
       logger.error("Error saving pricing rule:", errorMessage);
 
       if (err instanceof PricingError && err.isConflict()) {
         toast.error("Conflito: ja existe regra ativa para este modo");
       } else if (errorMessage.includes("Conflito") || errorMessage.includes("conflito")) {
         toast.error("Ja existe uma regra ativa para esta modalidade");
-      } else if (err?.code === "23514" || err?.hint?.includes("validate_single_active_rule")) {
+      } else if (
+        typeof err === "object" &&
+        err !== null &&
+        "code" in err &&
+        (err as { code?: string }).code === "23514"
+      ) {
         toast.error("Ja existe uma regra ativa para esta modalidade");
       } else {
         toast.error(errorMessage || "Erro ao salvar regra");

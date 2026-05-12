@@ -2,11 +2,13 @@ import { useMemo } from "react";
 import { PostAdapter } from "@/core/posts/adapters/PostAdapter";
 import type { UnifiedPost } from "@/shared/types/posts";
 
+type AdapterItem = Parameters<typeof PostAdapter.convertArray>[0][number];
+
 interface UseUnifiedFeedProps {
-  posts?: any[];
-  civicReports?: any[];
-  communityPosts?: any[];
-  feedPosts?: any[];
+  posts?: AdapterItem[];
+  civicReports?: AdapterItem[];
+  communityPosts?: AdapterItem[];
+  feedPosts?: AdapterItem[];
   sortCriteria?: "recent" | "popular" | "nearby";
   filterType?:
     | "all"
@@ -49,7 +51,7 @@ export function useUnifiedFeed({
     () =>
       filterType === "all"
         ? unifiedPosts
-        : PostAdapter.filterByType(unifiedPosts, filterType as any),
+        : PostAdapter.filterByType(unifiedPosts, filterType),
     [unifiedPosts, filterType],
   );
 

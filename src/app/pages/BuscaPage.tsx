@@ -45,6 +45,31 @@ interface FilterOption {
   icon: React.ReactNode;
 }
 
+interface BusinessSearchItem {
+  id: string;
+  name: string;
+  logo_url?: string | null;
+  category?: string | null;
+  neighborhood?: string | null;
+  rating?: number | null;
+}
+
+interface ProfessionalSearchItem {
+  id: string;
+  name: string;
+  logo_url?: string | null;
+  category?: string | null;
+  city?: string | null;
+  rating?: number | null;
+  total_reviews?: number | null;
+}
+
+interface SearchResultsViewModel {
+  businesses: BusinessSearchItem[];
+  professionals: ProfessionalSearchItem[];
+  total: number;
+}
+
 // ============================================================================
 // CONSTANTS
 // ============================================================================
@@ -268,9 +293,9 @@ function ResultsView({
   onBusinessClick,
   onProfessionalClick,
 }: {
-  results: any;
+  results: SearchResultsViewModel;
   activeFilter: SearchCategory;
-  onBusinessClick: (business: any) => void;
+  onBusinessClick: (business: BusinessSearchItem) => void;
   onProfessionalClick: (id: string) => void;
 }) {
   return (
@@ -292,7 +317,7 @@ function ResultsView({
             title="Empresas"
             icon={<Store className="h-4 w-4 text-primary" />}
           >
-            {results.businesses.map((business: any) => (
+            {results.businesses.map((business) => (
               <BusinessCard
                 key={business.id}
                 business={business}
@@ -308,7 +333,7 @@ function ResultsView({
             title="Profissionais"
             icon={<Wrench className="h-4 w-4 text-primary" />}
           >
-            {results.professionals.map((professional: any) => (
+            {results.professionals.map((professional) => (
               <ProfessionalCard
                 key={professional.id}
                 professional={professional}
@@ -346,7 +371,7 @@ function BusinessCard({
   business,
   onClick,
 }: {
-  business: any;
+  business: BusinessSearchItem;
   onClick: () => void;
 }) {
   return (
@@ -373,11 +398,11 @@ function BusinessCard({
             </>
           )}
         </div>
-        {business.rating > 0 && (
+        {(business.rating ?? 0) > 0 && (
           <div className="flex items-center gap-1 mt-1">
             <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
             <span className="text-xs font-medium">
-              {business.rating.toFixed(1)}
+              {(business.rating ?? 0).toFixed(1)}
             </span>
           </div>
         )}
@@ -390,7 +415,7 @@ function ProfessionalCard({
   professional,
   onClick,
 }: {
-  professional: any;
+  professional: ProfessionalSearchItem;
   onClick: () => void;
 }) {
   return (
@@ -418,13 +443,13 @@ function ProfessionalCard({
             </>
           )}
         </div>
-        {professional.rating > 0 && (
+        {(professional.rating ?? 0) > 0 && (
           <div className="flex items-center gap-1 mt-1">
             <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
             <span className="text-xs font-medium">
-              {professional.rating.toFixed(1)}
+              {(professional.rating ?? 0).toFixed(1)}
             </span>
-            {professional.total_reviews > 0 && (
+            {(professional.total_reviews ?? 0) > 0 && (
               <span className="text-xs text-muted-foreground">
                 ({professional.total_reviews})
               </span>

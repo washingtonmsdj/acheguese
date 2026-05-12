@@ -15,6 +15,10 @@ import { postService } from "@/core/posts/services/PostService";
 import { BusinessService } from "@/core/business/services/BusinessService";
 import { ReviewsService } from "@/core/reviews/services/ReviewsService";
 
+function toError(error: unknown): Error {
+  return error instanceof Error ? error : new Error(String(error));
+}
+
 export interface RealtimeMetrics {
   activeUsers: number;
   activeSessions: number;
@@ -56,8 +60,8 @@ export class MetricsService {
         totalPosts: posts || 0,
         totalBusinesses: businesses || 0
       };
-    } catch (error: any) {
-      logger.error('Error fetching realtime metrics:', error);
+    } catch (error: unknown) {
+      logger.error('Error fetching realtime metrics:', toError(error));
       return {
         activeUsers: 0,
         activeSessions: 0,
@@ -131,8 +135,8 @@ export class MetricsService {
         averageRating,
         badges
       };
-    } catch (error: any) {
-      logger.error('Error fetching reputation stats:', error);
+    } catch (error: unknown) {
+      logger.error('Error fetching reputation stats:', toError(error));
       return null;
     }
   }
@@ -146,8 +150,8 @@ export class MetricsService {
         metric_name: metric, 
         increment_value: value 
       });
-    } catch (error: any) {
-      logger.error(`Error incrementing metric ${metric}:`, error);
+    } catch (error: unknown) {
+      logger.error(`Error incrementing metric ${metric}:`, toError(error));
     }
   }
 
@@ -170,8 +174,8 @@ export class MetricsService {
 
       if (error) throw error;
       return data || [];
-    } catch (error: any) {
-      logger.error('Error fetching metrics history:', error);
+    } catch (error: unknown) {
+      logger.error('Error fetching metrics history:', toError(error));
       return [];
     }
   }

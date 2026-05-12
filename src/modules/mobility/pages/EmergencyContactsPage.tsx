@@ -10,6 +10,7 @@ import { logger } from "@/shared/utils/logger";
 export default function EmergencyContactsPage() {
   const { activeProfile } = useSessionContext();
   const { contacts, loading, createContact, updateContact, deleteContact } = useEmergencyContacts(activeProfile?.id);
+  type EmergencyContactItem = (typeof contacts)[number];
   const [isAdding, setIsAdding] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [contactToDelete, setContactToDelete] = useState<string | null>(null);
@@ -58,7 +59,7 @@ export default function EmergencyContactsPage() {
     }
   };
 
-  const handleEdit = (contact: any) => {
+  const handleEdit = (contact: EmergencyContactItem) => {
     setEditingId(contact.id);
     setFormData({
       name: contact.name,

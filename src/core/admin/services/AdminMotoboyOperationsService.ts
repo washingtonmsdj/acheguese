@@ -1,8 +1,6 @@
 import { supabase } from "@/integrations/supabase";
 import { MobilityService } from "@/modules/mobility/services/MobilityService.impl";
 
-const supabaseAny = supabase as any;
-
 export interface AdminMotoboyDelivery {
   id: string;
   status: string;
@@ -72,7 +70,7 @@ export class AdminMotoboyOperationsService {
     changedBy: string;
     reason: string;
   }): Promise<void> {
-    await supabaseAny.from("ride_state_audit").insert({
+    await supabase.from("ride_state_audit").insert({
       ride_id: input.rideId,
       from_state: input.fromState ?? "none",
       to_state: input.toState,

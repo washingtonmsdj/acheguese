@@ -73,6 +73,29 @@ export interface StaleDriversResult {
 // ============================================
 
 export class DriverAvailabilityService {
+  private static getErrorDetails(error: unknown): {
+    message?: string;
+    code?: string;
+    details?: string;
+    hint?: string;
+  } {
+    if (!error || typeof error !== 'object') {
+      return {};
+    }
+    const candidate = error as {
+      message?: unknown;
+      code?: unknown;
+      details?: unknown;
+      hint?: unknown;
+    };
+    return {
+      message: typeof candidate.message === 'string' ? candidate.message : undefined,
+      code: typeof candidate.code === 'string' ? candidate.code : undefined,
+      details: typeof candidate.details === 'string' ? candidate.details : undefined,
+      hint: typeof candidate.hint === 'string' ? candidate.hint : undefined,
+    };
+  }
+
   private static isMissingColumnError(error: unknown): boolean {
     if (!error || typeof error !== 'object') return false;
     const typed = error as { code?: string; message?: string };
@@ -168,14 +191,12 @@ export class DriverAvailabilityService {
 
       return { success: true };
     } catch (error) {
+      const errorDetails = this.getErrorDetails(error);
       // Log detalhado do erro
       logger.error('❌ [ERROR] DriverAvailabilityService.goOnline |', {
         driverProfileId,
         error: error,
-        message: (error as any)?.message,
-        code: (error as any)?.code,
-        details: (error as any)?.details,
-        hint: (error as any)?.hint,
+        ...errorDetails,
       });
       
       logger.error('DriverAvailabilityService.goOnline', error as Error, { driverProfileId });
@@ -334,16 +355,14 @@ export class DriverAvailabilityService {
 
       return { success: true };
     } catch (error) {
+      const errorDetails = this.getErrorDetails(error);
       // Log detalhado do erro
       logger.error('❌ [ERROR] DriverAvailabilityService.setBusy |', {
         driverProfileId,
         rideId,
         rideMode,
         error: error,
-        message: (error as any)?.message,
-        code: (error as any)?.code,
-        details: (error as any)?.details,
-        hint: (error as any)?.hint,
+        ...errorDetails,
       });
       
       logger.error('DriverAvailabilityService.setBusy', error as Error, { driverProfileId, rideId });
@@ -731,12 +750,10 @@ export class DriverAvailabilityService {
 
       return available;
     } catch (error) {
+      const errorDetails = this.getErrorDetails(error);
       logger.error('❌ [ERROR] DriverAvailabilityService.findAvailableDrivers |', {
         error: error,
-        message: (error as any)?.message,
-        code: (error as any)?.code,
-        details: (error as any)?.details,
-        hint: (error as any)?.hint,
+        ...errorDetails,
       });
       logger.error('DriverAvailabilityService.findAvailableDrivers', error as Error);
       return [];

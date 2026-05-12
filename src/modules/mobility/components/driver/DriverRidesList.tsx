@@ -38,6 +38,16 @@ const TRUST_RISK_LABELS: Record<string, string> = {
   critical: "Revisao admin",
 };
 
+type PassengerTrustInfo = {
+  passenger_trust_level?: string | null;
+  passenger_rating?: number | null;
+  passenger_completed_rides?: number | null;
+};
+
+function getPassengerTrustInfo(ride: MobilityRide): PassengerTrustInfo {
+  return (ride.passenger as PassengerTrustInfo | null) ?? {};
+}
+
 function getTrustRiskValue(ride: MobilityRide): string | null {
   const risk =
     typeof ride.passenger_trust_risk_level === "string"
@@ -227,6 +237,7 @@ export function DriverRidesList({
   return (
     <div className="space-y-2">
       {rides.map((ride) => {
+        const passengerTrust = getPassengerTrustInfo(ride);
         const isEntrega = ride.ride_mode === "motoboy" || ride.type === "entrega";
         const isActionLoading = loadingAction === ride.id;
         const canStartRide = [
@@ -283,15 +294,11 @@ export function DriverRidesList({
                     </div>
                   )}
                   {type === "available" &&
-                    (ride.passenger as any)?.passenger_trust_level && (
+                    passengerTrust.passenger_trust_level && (
                       <PassengerTrustBadge
-                        trustLevel={
-                          (ride.passenger as any).passenger_trust_level
-                        }
-                        rating={(ride.passenger as any).passenger_rating}
-                        totalRides={
-                          (ride.passenger as any).passenger_completed_rides
-                        }
+                        trustLevel={passengerTrust.passenger_trust_level}
+                        rating={passengerTrust.passenger_rating}
+                        totalRides={passengerTrust.passenger_completed_rides}
                         className="text-[0.6rem]"
                       />
                     )}

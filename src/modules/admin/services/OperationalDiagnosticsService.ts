@@ -38,7 +38,7 @@ class OperationalDiagnosticsService {
   async checkTables(definitions: OperationalTable[]): Promise<OperationalTableResult[]> {
     const checks = await Promise.all(
       definitions.map(async (definition): Promise<OperationalTableResult> => {
-        const { error, count } = await (supabase as any)
+        const { error, count } = await supabase
           .from(definition.table)
           .select("*", { head: true, count: "exact" });
 

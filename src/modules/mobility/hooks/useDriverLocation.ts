@@ -21,6 +21,13 @@ interface DriverLocationData {
   timestamp: string;
 }
 
+interface DriverEtaData {
+  eta_minutes: number;
+  distance_km: number;
+  duration_seconds: number;
+  distance_meters: number;
+}
+
 export function useDriverLocation(
   params:
     | string
@@ -33,7 +40,7 @@ export function useDriverLocation(
   const [location, setLocation] = useState<DriverLocationData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [eta, setEta] = useState<string | null>(null);
+  const [eta, setEta] = useState<DriverEtaData | null>(null);
   const [isConnected, setIsConnected] = useState(false);
 
   useEffect(() => {
@@ -107,7 +114,7 @@ export function useDriverLocation(
             distance_km: parseFloat(distanceKm),
             duration_seconds: response.durationSeconds,
             distance_meters: response.distanceMeters,
-          } as any);
+          });
         }
       } catch (error) {
         logger.error('[useDriverLocation] Erro ao calcular ETA via routing real:', error);

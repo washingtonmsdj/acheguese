@@ -68,7 +68,7 @@ type ItemFormValues = z.infer<typeof itemSchema>;
 interface ItemFormProps {
   open: boolean;
   onClose: () => void;
-  onSubmit: (values: any) => void;
+  onSubmit: (values: ItemFormValues) => void;
   item?: MenuItem | null;
   categories: MenuCategory[];
   isSubmitting?: boolean;

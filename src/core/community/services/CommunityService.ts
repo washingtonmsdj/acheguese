@@ -122,6 +122,42 @@ export interface EngagementScoreEntry {
   period_start?: string;
 }
 
+interface GroupProfileInfo {
+  name: string | null;
+  avatar_url: string | null;
+}
+
+interface GroupMemberCountRow {
+  count: number | null;
+}
+
+interface GroupRow {
+  id: string;
+  name: string;
+  description: string | null;
+  category: string | null;
+  is_private: boolean | null;
+  created_at: string;
+  created_by: string | null;
+  location_id: string | null;
+  profiles?: GroupProfileInfo | null;
+  members_count?: GroupMemberCountRow[] | null;
+  [key: string]: unknown;
+}
+
+type GroupCreateInput = {
+  name: string;
+  description?: string;
+  category?: string;
+  is_private?: boolean;
+  location_id?: string;
+  join_policy?: string;
+  posting_policy?: string;
+  member_visibility?: string;
+  media_policy?: string;
+  rules?: string;
+};
+
 /**
  * Pontuação por tipo de interação
  */
@@ -225,7 +261,7 @@ class CommunityServiceClass {
     limit?: number;
     groupIds?: string[];
     sortBy?: "recentes" | "populares" | "relevancia";
-  }): Promise<{ items: any[]; totalCount: number; hasMore: boolean; nextOffset: number | null }> {
+  }): Promise<{ items: GroupRow[]; totalCount: number; hasMore: boolean; nextOffset: number | null }> {
     const {
       search,
       territoryFilter,
@@ -235,7 +271,7 @@ class CommunityServiceClass {
       sortBy = "recentes",
     } = params;
     try {
-      let query = (supabase as any)
+      let query = supabase
         .from("groups")
         .select(
           `
@@ -274,10 +310,10 @@ class CommunityServiceClass {
       const { data, error, count } = await query;
       if (error) throw error;
 
-      const normalized = (data || []).map((g: any) => ({
+      const normalized = ((data || []) as GroupRow[]).map((g) => ({
         ...g,
         members_count: g.members_count?.[0]?.count ?? 0,
-      }));
+      })) as GroupRow[];
 
       const totalCount = count ?? normalized.length;
       const hasMore = offset + normalized.length < totalCount;
@@ -301,9 +337,9 @@ class CommunityServiceClass {
     }
   }
 
-  async getGroups(search?: string, territoryFilter?: TerritoryFilter): Promise<any[]> {
+  async getGroups(search?: string, territoryFilter?: TerritoryFilter): Promise<GroupRow[]> {
     try {
-      let query = (supabase as any)
+      let query = supabase
         .from("groups")
         .select(`
           *,
@@ -326,10 +362,10 @@ class CommunityServiceClass {
       if (error) throw error;
 
       // Normaliza members_count de [{count: N}] para número
-      const normalized = (data || []).map((g: any) => ({
+      const normalized = ((data || []) as GroupRow[]).map((g) => ({
         ...g,
         members_count: g.members_count?.[0]?.count ?? 0,
-      }));
+      })) as GroupRow[];
       return normalized;
     } catch (error) {
       trackError(error as Error, {
@@ -343,13 +379,13 @@ class CommunityServiceClass {
   /**
    * Busca um grupo por ID
    */
-  async getGroupById(groupId: string): Promise<any | null> {
+  async getGroupById(groupId: string): Promise<GroupRow | null> {
     try {
-      const { data, error } = await (supabase as any)
+      const { data, error } = await supabase
         .from("groups")
         .select("*, profiles:created_by(name, avatar_url)")
         .eq("id", groupId)
-        .single();
+        .single<GroupRow>();
 
       if (error) throw error;
       return data;
@@ -365,19 +401,7 @@ class CommunityServiceClass {
   /**
    * Cria um novo grupo
    */
-  async createGroup(groupData: {
-    name: string;
-    description?: string;
-    category?: string;
-    is_private?: boolean;
-    location_id?: string;
-    join_policy?: string;
-    posting_policy?: string;
-    member_visibility?: string;
-    media_policy?: string;
-    rules?: string;
-    [key: string]: any;
-  }): Promise<any | null> {
+  async createGroup(groupData: GroupCreateInput): Promise<GroupRow | null> {
     try {
       const groupType =
         groupData.category === "vizinhanca"
@@ -410,11 +434,11 @@ class CommunityServiceClass {
         location_id: groupData.location_id,
       };
 
-      const { data, error } = await (supabase as any)
+      const { data, error } = await supabase
         .from("groups")
         .insert(payload)
         .select()
-        .single();
+        .single<GroupRow>();
 
       if (error) throw error;
       return data;
@@ -449,7 +473,7 @@ class CommunityServiceClass {
     try {
       const points = getInteractionPoints(interactionType);
 
-      const { data: interaction, error } = await (supabase as any)
+      const { data: interaction, error } = await supabase
         .from("community_interactions")
         .insert({
           user_id: userId,
@@ -488,7 +512,7 @@ class CommunityServiceClass {
    */
   async getUserStats(userId: string): Promise<CommunityStats> {
     try {
-      const { data: interactions, error } = await (supabase as any)
+      const { data: interactions, error } = await supabase
         .from("community_interactions")
         .select("interaction_type, points")
         .eq("user_id", userId);
@@ -596,7 +620,7 @@ class CommunityServiceClass {
     error?: string;
   }> {
     try {
-      const { data: badge, error } = await (supabase as any)
+      const { data: badge, error } = await supabase
         .from("community_badges")
         .select("id")
         .eq("code", badgeCode)
@@ -634,7 +658,7 @@ class CommunityServiceClass {
    */
   async getAvailableBadges(userId: string): Promise<UserBadge[]> {
     try {
-      const { data: allBadges, error } = await (supabase as any)
+      const { data: allBadges, error } = await supabase
         .from("community_badges")
         .select("*")
         .eq("is_active", true)
@@ -685,7 +709,7 @@ class CommunityServiceClass {
     stats: CommunityStats;
   } | null> {
     try {
-      const { data: profile, error: profileError } = await (supabase as any)
+      const { data: profile, error: profileError } = await supabase
         .from("community_profiles")
         .select("*")
         .eq("user_id", userId)
@@ -730,7 +754,7 @@ class CommunityServiceClass {
     >,
   ): Promise<{ success: boolean; profile?: CommunityProfile; error?: string }> {
     try {
-      const { data, error } = await (supabase as any)
+      const { data, error } = await supabase
         .from("community_profiles")
         .update({ ...updates, updated_at: new Date().toISOString() })
         .eq("user_id", userId)
@@ -767,7 +791,7 @@ class CommunityServiceClass {
     _city?: string,
   ): Promise<CommunityProfile[]> {
     try {
-      const query = (supabase as any)
+      const query = supabase
         .from("community_profiles")
         .select("*")
         .order("total_points", { ascending: false });
@@ -806,7 +830,7 @@ class CommunityServiceClass {
     const limit = options?.limit ?? 10;
 
     try {
-      let query = (supabase as any)
+      let query = supabase
         .from("civic_engagement_scores")
         .select("*")
         .eq("entity_type", entityType)

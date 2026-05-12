@@ -1,38 +1,39 @@
 /**
- * useCommunityRollout - Hook para integra√ß√£o com sistema de rollout
- * 
- * Respons√°vel por:
- * - Verificar se community est√° ativo na localiza√ß√£o
+ * useCommunityRollout - Hook para integraÁ„o com sistema de rollout
+ *
+ * Respons·vel por:
+ * - Verificar se community est· ativo na localizaÁ„o
  * - Bloquear funcionalidades quando inativo
- * - Fornecer configura√ß√£o do m√≥dulo
+ * - Fornecer configuraÁ„o do mÛdulo
  */
-import { logger } from '@/shared/utils/logger';
-import { useState, useEffect, useCallback } from 'react';
-import { communityRolloutService } from '../services';
-import { useCommunityLocation } from './useCommunityLocation';
-import type { EffectiveRollout } from '@/core/rollout/types';
-import type { ResolvedTerritory } from '@/core/routing/hooks/useResolveTerritoryFromUrl';
+import { logger } from "@/shared/utils/logger";
+import { useState, useEffect, useCallback } from "react";
+import { communityRolloutService } from "../services";
+import { useCommunityLocation } from "./useCommunityLocation";
+import type { EffectiveRollout } from "@/core/rollout/types";
+import type { ResolvedTerritory } from "@/core/routing/hooks/useResolveTerritoryFromUrl";
+
+type CommunityRolloutConfig = Record<string, unknown>;
+
 export function useCommunityRollout(resolved?: ResolvedTerritory) {
   const [isActive, setIsActive] = useState<boolean>(false);
   const [rollout, setRollout] = useState<EffectiveRollout | null>(null);
-  const [config, setConfig] = useState<Record<string, any> | null>(null);
+  const [config, setConfig] = useState<CommunityRolloutConfig | null>(null);
   const [accessCheck, setAccessCheck] = useState<{ blocked: boolean; reason?: string }>({ blocked: false });
   const [isLoading, setIsLoading] = useState(true);
-  
+
   const { activeLocationId } = useCommunityLocation();
 
-  // Verificar status do rollout
   const checkRolloutStatus = useCallback(async () => {
-    // Para grupos, resolved j√° cont√©m os membros ‚Äî n√£o depende do store
     const hasContext = resolved
-      ? (resolved.kind === 'location' || (resolved.kind === 'group' && resolved.group.members.length > 0))
+      ? (resolved.kind === "location" || (resolved.kind === "group" && resolved.group.members.length > 0))
       : !!activeLocationId;
 
     if (!hasContext) {
       setIsActive(false);
       setRollout(null);
       setConfig(null);
-      setAccessCheck({ blocked: true, reason: 'Localiza√ß√£o n√£o selecionada' });
+      setAccessCheck({ blocked: true, reason: "LocalizaÁ„o n„o selecionada" });
       setIsLoading(false);
       return;
     }
@@ -50,41 +51,33 @@ export function useCommunityRollout(resolved?: ResolvedTerritory) {
 
       const access = await communityRolloutService.checkAccess(resolved);
       setAccessCheck(access);
-    } catch (error) {
-      logger.error('Error checking community rollout:', error);
+    } catch (error: unknown) {
+      logger.error("Error checking community rollout:", error);
       setIsActive(false);
       setRollout(null);
       setConfig(null);
-      setAccessCheck({ blocked: true, reason: 'Erro ao verificar disponibilidade' });
+      setAccessCheck({ blocked: true, reason: "Erro ao verificar disponibilidade" });
     } finally {
       setIsLoading(false);
     }
   }, [activeLocationId, resolved]);
 
-  // Atualizar quando localiza√ß√£o mudar
   useEffect(() => {
     checkRolloutStatus();
   }, [checkRolloutStatus]);
 
   return {
-    // Estado
     isActive,
     rollout,
     config,
     isLoading,
-    
-    // Acesso
     isBlocked: accessCheck.blocked,
     blockReason: accessCheck.reason,
     canUseFeatures: !accessCheck.blocked,
-    
-    // M√©todos
     refresh: checkRolloutStatus,
-    
-    // Computed
     rolloutSource: rollout?.source || null,
-    isInherited: rollout?.source === 'inherited',
-    isLocal: rollout?.source === 'local',
+    isInherited: rollout?.source === "inherited",
+    isLocal: rollout?.source === "local",
     inheritedFrom: rollout?.inherited_from || null,
   };
 }

@@ -58,13 +58,18 @@ class UserLocationResolverClass {
           locationName: null,
           confidence: result.isHighAccuracy ? 'high' : result.source === 'ip' ? 'low' : 'medium',
         };
-      } catch (error: any) {
-        const isDenied = error?.code === 1 || error?.message?.includes('negada') || error?.message?.includes('denied');
+      } catch (error: unknown) {
+        const normalizedError =
+          typeof error === "object" && error !== null
+            ? (error as { code?: number; message?: string })
+            : {};
+        const message = normalizedError.message ?? "";
+        const isDenied = normalizedError.code === 1 || message.includes('negada') || message.includes('denied');
         
         if (isDenied) {
           logger.info('[UserLocationResolver] GPS negado, usando fallback territorial');
         } else {
-          logger.warn('[UserLocationResolver] GPS falhou, usando fallback territorial', error?.message);
+          logger.warn('[UserLocationResolver] GPS falhou, usando fallback territorial', message);
         }
       }
     }

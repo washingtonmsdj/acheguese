@@ -200,7 +200,7 @@ export function CreateDeliveryModal({
         const sourceProfile = await MotoboySourceResolverService.getProfileSummaryById(sourceId);
 
         if (sourceProfile) {
-          locationId = sourceProfile.location_id || locationId;
+          locationId = sourceProfile.location_id ?? locationId;
           if (!pickupLabel) {
             const parts = [sourceProfile.name, sourceProfile.neighborhood, sourceProfile.city].filter(Boolean);
             pickupLabel = parts.join(" - ");
@@ -208,7 +208,7 @@ export function CreateDeliveryModal({
         } else {
           const sourceBusiness = await MotoboySourceResolverService.getBusinessDataFromSource(sourceId);
           if (sourceBusiness) {
-            locationId = sourceBusiness.location_id || locationId;
+            locationId = sourceBusiness.location_id ?? locationId;
             if (!pickupLabel) {
               const parts = [sourceBusiness.business_name, sourceBusiness.business_city].filter(Boolean);
               pickupLabel = parts.join(" - ");
@@ -420,9 +420,9 @@ export function CreateDeliveryModal({
         setModalOpen(false);
         resetForm();
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       logger.error("CreateDeliveryModal.handleSubmit", err);
-      toast.error(err?.message || "Erro ao solicitar entrega.");
+      toast.error(err instanceof Error ? err.message : "Erro ao solicitar entrega.");
     } finally {
       setSubmitting(false);
     }

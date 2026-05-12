@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { ShoppingBag } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import { useTerritoryLabels } from "@/core/location";
+import { useModuleUrls } from "@/core/routing/hooks/useModuleUrls";
 import type { ResolvedTerritory } from "@/core/routing/hooks/useResolveTerritoryFromUrl";
 import {
   classifiedUrlService,
@@ -26,6 +27,7 @@ export function NearbyClassifiedsSection({
   onShowInMap,
 }: NearbyClassifiedsSectionProps) {
   const navigate = useNavigate();
+  const moduleUrls = useModuleUrls();
   const territoryLabels = useTerritoryLabels(resolved);
   const { classificados, isLoading } = useClassificados({
     filters: { sortBy: "recente" },
@@ -63,7 +65,7 @@ export function NearbyClassifiedsSection({
       return;
     }
 
-    navigate(`/c/${ad.public_id || ad.id}`);
+    navigate(classifiedUrlService.buildShortUrl(ad.public_id || ad.id));
   };
 
   return (
@@ -75,7 +77,7 @@ export function NearbyClassifiedsSection({
       count={nearbyClassifieds.length}
       isEmpty={nearbyClassifieds.length === 0}
       isLoading={isLoading}
-      onSeeAll={nearbyClassifieds.length > 0 ? () => navigate("/classificados") : undefined}
+      onSeeAll={nearbyClassifieds.length > 0 ? () => navigate(moduleUrls.classifieds) : undefined}
     >
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
         {nearbyClassifieds.map((ad) => (

@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/components/ui/card";
 import { TrendIndicator, TrendData } from "./TrendIndicator";
 import { Users, MessageSquare, Heart, Layers, TrendingUp } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import { cn } from "@/shared/utils/cn";
 import { adminStatsService } from "@/core/admin/services/AdminStatsService";
 import { postService } from "@/core/posts/services/PostService";
@@ -11,7 +12,7 @@ import { postService } from "@/core/posts/services/PostService";
 interface EngagementMetric {
   label: string;
   value: number;
-  icon: any;
+  icon: LucideIcon;
   color: string;
   trend?: TrendData;
   suffix?: string;

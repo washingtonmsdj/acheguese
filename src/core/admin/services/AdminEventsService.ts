@@ -48,6 +48,14 @@ export interface EventsListResult {
   totalPages: number;
 }
 
+interface EventStatusRow {
+  status: string | null;
+}
+
+interface EventListRow extends AdminEventData {
+  organizer?: { name?: string | null; avatar_url?: string | null } | null;
+}
+
 class AdminEventsServiceClass {
   /**
    * Busca estatísticas de eventos
@@ -63,12 +71,13 @@ class AdminEventsServiceClass {
         throw error;
       }
 
+      const rows: EventStatusRow[] = data || [];
       const stats: EventsStats = {
-        total: data?.length || 0,
-        upcoming: data?.filter((e: any) => e.status === "upcoming").length || 0,
-        ongoing: data?.filter((e: any) => e.status === "ongoing").length || 0,
-        completed: data?.filter((e: any) => e.status === "completed").length || 0,
-        cancelled: data?.filter((e: any) => e.status === "cancelled").length || 0,
+        total: rows.length,
+        upcoming: rows.filter((e) => e.status === "upcoming").length,
+        ongoing: rows.filter((e) => e.status === "ongoing").length,
+        completed: rows.filter((e) => e.status === "completed").length,
+        cancelled: rows.filter((e) => e.status === "cancelled").length,
       };
 
       return stats;
@@ -129,7 +138,8 @@ class AdminEventsServiceClass {
         throw error;
       }
 
-      const events: AdminEventData[] = (data || []).map((item: any) => ({
+      const rows: EventListRow[] = data || [];
+      const events: AdminEventData[] = rows.map((item) => ({
         ...item,
         organizer_name: item.organizer?.name,
         organizer_avatar: item.organizer?.avatar_url,

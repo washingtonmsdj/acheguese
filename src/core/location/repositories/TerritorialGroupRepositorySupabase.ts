@@ -50,7 +50,9 @@ export class TerritorialGroupRepositorySupabase implements ITerritorialGroupRepo
       .select('locations(*)')
       .eq('group_id', groupId);
     if (error) throw error;
-    return (data ?? []).map((row: any) => row.locations).filter(Boolean);
+    return (data ?? [])
+      .map((row: { locations: Location | null }) => row.locations)
+      .filter((location): location is Location => Boolean(location));
   }
 
   async findGroupsContainingLocation(locationId: string): Promise<TerritorialGroup[]> {
@@ -59,7 +61,9 @@ export class TerritorialGroupRepositorySupabase implements ITerritorialGroupRepo
       .select('territorial_groups(*)')
       .eq('location_id', locationId);
     if (error) throw error;
-    return (data ?? []).map((row: any) => row.territorial_groups).filter(Boolean);
+    return (data ?? [])
+      .map((row: { territorial_groups: TerritorialGroup | null }) => row.territorial_groups)
+      .filter((group): group is TerritorialGroup => Boolean(group));
   }
 
   async listAll(): Promise<TerritorialGroupWithMembers[]> {

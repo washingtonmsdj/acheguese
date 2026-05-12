@@ -42,6 +42,26 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useSessionContext } from "@/core/session";
 
+type RoleMutationInput = {
+  userId: string;
+  role: string;
+  revokedBy?: string;
+  renewedBy?: string;
+  reason?: string;
+  newExpiresAt?: string;
+};
+
+type RoleDataItem = {
+  id: string;
+  user_id: string;
+  role: string;
+  granted_at: string;
+  expires_at?: string | null;
+  is_active: boolean;
+  user?: { email?: string | null } | null;
+  granter?: { email?: string | null } | null;
+};
+
 export default function AdminRoles() {
   const queryClient = useQueryClient();
   const { user, activeProfile } = useSessionContext();
@@ -77,7 +97,7 @@ export default function AdminRoles() {
 
   // Mutations
   const revokeMutation = useMutation({
-    mutationFn: ({ userId, role, revokedBy, reason }: any) =>
+    mutationFn: ({ userId, role, revokedBy, reason }: RoleMutationInput) =>
       adminRolesService.revokeRole({ userId, role, revokedBy, reason }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin-roles"] });
@@ -90,7 +110,7 @@ export default function AdminRoles() {
   });
 
   const renewMutation = useMutation({
-    mutationFn: ({ userId, role, newExpiresAt, renewedBy }: any) =>
+    mutationFn: ({ userId, role, newExpiresAt, renewedBy }: RoleMutationInput) =>
       adminRolesService.renewRole({ userId, role, newExpiresAt, renewedBy }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin-roles"] });
@@ -283,7 +303,7 @@ export default function AdminRoles() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {rolesData?.data?.map((roleData: any) => (
+                      {rolesData?.data?.map((roleData: RoleDataItem) => (
                         <TableRow key={roleData.id}>
                           <TableCell className="font-medium">
                             {roleData.user?.email || roleData.user_id}
@@ -375,7 +395,7 @@ export default function AdminRoles() {
             <CardContent className="pt-6">
               {expiringRoles && expiringRoles.length > 0 ? (
                 <div className="space-y-4">
-                  {expiringRoles.map((roleData: any) => (
+                  {expiringRoles.map((roleData: RoleDataItem) => (
                     <div key={roleData.id} className="border rounded-lg p-4">
                       <div className="flex items-start justify-between">
                         <div className="flex-1">

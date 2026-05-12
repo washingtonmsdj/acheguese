@@ -48,9 +48,9 @@ export default function SimpleLoginPage() {
       logger.debug("🔄 Redirecionando...");
       window.location.href = "/";
 
-    } catch (err: any) {
+    } catch (err: unknown) {
       logger.error("❌ Erro:", err);
-      setError(err.message || "Erro ao fazer login");
+      setError(err instanceof Error ? err.message : "Erro ao fazer login");
       setLoading(false);
     }
   };

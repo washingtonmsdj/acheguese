@@ -162,13 +162,13 @@ const HOTSPOT_PRIORITY: Record<AdminMapGovernanceIssue, number> = {
   selector_hidden: 5,
 };
 
-function hasCoordinates(metadata: Record<string, any> | null | undefined): boolean {
+function hasCoordinates(metadata: Record<string, unknown> | null | undefined): boolean {
   if (!metadata) return false;
   return metadata.center_latitude != null && metadata.center_longitude != null;
 }
 
 function getCoordinatesSource(
-  metadata: Record<string, any> | null | undefined,
+  metadata: Record<string, unknown> | null | undefined,
 ): string | null {
   const source = metadata?.coordinates_source;
   return typeof source === "string" && source.trim().length > 0 ? source : null;

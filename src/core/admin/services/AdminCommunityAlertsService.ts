@@ -200,7 +200,7 @@ class AdminCommunityAlertsServiceClass {
         limit = 20,
       } = filters;
 
-      let query = (supabase as any)
+      let query = supabase
         .from(this.TABLE)
         .select(`
           *,
@@ -436,7 +436,7 @@ class AdminCommunityAlertsServiceClass {
    */
   async getAuditLog(alertId: string) {
     try {
-      const { data, error } = await (supabase as any)
+      const { data, error } = await supabase
         .from('community_alert_audit')
         .select('*')
         .eq('alert_id', alertId)
@@ -461,7 +461,7 @@ class AdminCommunityAlertsServiceClass {
       return;
     }
 
-    const { error } = await (supabase as any)
+    const { error } = await supabase
       .from('community_alert_audit')
       .insert({
         alert_id: alertId,
@@ -579,7 +579,7 @@ class AdminCommunityAlertsServiceClass {
    */
   async getTopReportedAlerts(limit: number = 10): Promise<AlertWithDetails[]> {
     try {
-      const { data, error } = await (supabase as any)
+      const { data, error } = await supabase
         .from(this.TABLE)
         .select(`
           *,

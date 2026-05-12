@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { useNavigate, useParams, Outlet } from "react-router-dom";
 import { useBusiness } from "@/core/business/hooks/useBusiness";
 import { useDashboardAccess } from "@/core/business/hooks/useDashboardAccess";
+import { businessManagementRoutes } from "@/core/business/utils/businessManagementRoutes";
 import { toast } from "sonner";
 
 /**
@@ -24,13 +25,13 @@ export function BusinessAdminGuard() {
 
     if (!businessId || !business) {
       toast.error("Empresa não encontrada.");
-      navigate("/central/empresas", { replace: true });
+      navigate(businessManagementRoutes.list(), { replace: true });
       return;
     }
 
     if (!permissions.hasAccess) {
       toast.error("Você não tem permissão para gerenciar esta empresa.");
-      navigate("/central/empresas", { replace: true });
+      navigate(businessManagementRoutes.list(), { replace: true });
     }
   }, [businessId, business, loadingBusiness, loadingAccess, permissions.hasAccess, navigate]);
 

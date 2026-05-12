@@ -7,6 +7,7 @@ import { Button } from "@/shared/components/ui/button";
 import { useRankingUsers } from "../../hooks/useRankingUsers";
 import { WidgetSkeleton } from "./WidgetSkeleton";
 import { useSessionContext } from "@/core/session";
+import { useAppUrls } from "@/core/routing/hooks";
 
 /**
  * Widget de Ranking Melhorado
@@ -15,6 +16,7 @@ import { useSessionContext } from "@/core/session";
 export const RankingWidget = memo(() => {
   const { data: users, isLoading } = useRankingUsers(5);
   const { activeProfile } = useSessionContext();
+  const appUrls = useAppUrls();
 
   if (isLoading) {
     return <WidgetSkeleton hasHeader itemCount={3} />;
@@ -55,7 +57,7 @@ export const RankingWidget = memo(() => {
           </h3>
         </div>
         <Link 
-          to="/ranking" 
+          to={appUrls.ranking}
           className="text-xs text-muted-foreground hover:text-primary transition-colors flex items-center gap-0.5 flex-shrink-0"
         >
           Ver todos
@@ -72,7 +74,7 @@ export const RankingWidget = memo(() => {
           return (
             <Link
               key={user.id}
-              to={`/profile/${user.id}`}
+              to={appUrls.profile.public(user.id)}
               className={`flex items-center gap-2 p-2 rounded-lg transition-all duration-200 hover:scale-[1.01] active:scale-[0.99] ${
                 isCurrentUser 
                   ? "bg-primary/10 border border-primary/30" 
@@ -123,7 +125,7 @@ export const RankingWidget = memo(() => {
         className="w-full mt-2.5 h-8 text-xs"
         asChild
       >
-        <Link to="/ranking">
+        <Link to={appUrls.ranking}>
           Ver Ranking Completo
         </Link>
       </Button>

@@ -98,7 +98,12 @@ export default function AdminUsuarios() {
         AdminUserService.getUserById(vars.userId).then((u) => u && setSelectedUser(u));
       }
     },
-    onError: (e: any) => toast({ title: "Erro ao suspender", description: e.message, variant: "destructive" }),
+    onError: (e: unknown) =>
+      toast({
+        title: "Erro ao suspender",
+        description: e instanceof Error ? e.message : "Falha ao suspender usuário",
+        variant: "destructive",
+      }),
   });
 
   const unsuspendMutation = useMutation({
@@ -110,7 +115,12 @@ export default function AdminUsuarios() {
         AdminUserService.getUserById(userId).then((u) => u && setSelectedUser(u));
       }
     },
-    onError: (e: any) => toast({ title: "Erro", description: e.message, variant: "destructive" }),
+    onError: (e: unknown) =>
+      toast({
+        title: "Erro",
+        description: e instanceof Error ? e.message : "Falha ao remover suspensão",
+        variant: "destructive",
+      }),
   });
 
   const verifyMutation = useMutation({
@@ -122,7 +132,12 @@ export default function AdminUsuarios() {
         AdminUserService.getUserById(selectedUser.user_id).then((u) => u && setSelectedUser(u));
       }
     },
-    onError: (e: any) => toast({ title: "Erro", description: e.message, variant: "destructive" }),
+    onError: (e: unknown) =>
+      toast({
+        title: "Erro",
+        description: e instanceof Error ? e.message : "Falha ao verificar perfil",
+        variant: "destructive",
+      }),
   });
 
   const totalPages = Math.max(1, Math.ceil((data?.total ?? 0) / PAGE_SIZE));

@@ -202,7 +202,7 @@ export class RideReportsService {
     try {
       logger.info("RideReportsService.updateReport", { reportId, updates });
 
-      const updateData: any = {};
+      const updateData: Record<string, unknown> = {};
 
       if (updates.status) {
         updateData.status = updates.status;

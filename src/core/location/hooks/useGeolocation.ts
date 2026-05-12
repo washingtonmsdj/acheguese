@@ -82,9 +82,9 @@ export function useGeolocation(): UseGeolocationResult {
           ? toPublicUrl(reverseResult.territory.city.geographic_path)
           : null,
       });
-    } catch (err: any) {
-      if (err.name !== 'AbortError') {
-        setError(err?.message ?? 'Erro ao detectar localizaÃ§Ã£o');
+    } catch (err: unknown) {
+      if (!(err instanceof Error && err.name === 'AbortError')) {
+        setError(err instanceof Error ? err.message : 'Erro ao detectar localização');
       }
     } finally {
       setLoading(false);

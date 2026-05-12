@@ -13,6 +13,13 @@ export interface CommunityPost {
   comments_count: number;
 }
 
+interface CreateCommunityPostInput {
+  author_profile_id: string;
+  content: string;
+  location_id: string;
+  reach?: 'city' | 'neighborhood' | 'group';
+}
+
 export function useCommunityPosts(filters?: {
   search?: string;
   category?: string;
@@ -28,7 +35,7 @@ export function useCommunityPosts(filters?: {
     },
   });
 
-  const createPost = async (postData: any) => {
+  const createPost = async (postData: CreateCommunityPostInput) => {
     // ✅ CLEANUP PÓS-SPRINT2: createPost() com location_id do postData
     // postData deve incluir author_profile_id e location_id
     await postService.createPost({

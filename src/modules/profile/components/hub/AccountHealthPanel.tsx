@@ -10,13 +10,21 @@ import { getProfileTypeLabel } from '@/modules/profile/utils/profileDomainRules'
 
 import type { MultiProfileRecord } from '@/core/profiles/services/multi-profile/types';
 import type { ProfileAccountSnapshot } from '@/core/profiles/views/ProfileAccountSnapshot';
+import type { Context, Identity } from '@/modules/profile/sections/types';
+
+type EffectivePermission = {
+  key: string;
+  label: string;
+  allowed: boolean;
+};
 
 interface AccountHealthPanelProps {
   accountSnapshot: ProfileAccountSnapshot;
-  identity: any;
-  context: any;
+  identity: Identity | null;
+  context: Context | null;
   activeProfile: MultiProfileRecord | null;
   roles: string[];
+  permissions?: EffectivePermission[];
 }
 
 function formatPlanLabel(value?: string | null): string {
@@ -70,6 +78,7 @@ export function AccountHealthPanel({
   context,
   activeProfile,
   roles,
+  permissions = [],
 }: AccountHealthPanelProps) {
   return (
     <SectionFrame
@@ -143,7 +152,7 @@ export function AccountHealthPanel({
         <div className="rounded-2xl border border-border bg-background p-4">
           <p className="text-xs uppercase tracking-wide text-muted-foreground">Permissoes efetivas</p>
           <div className="mt-3 flex flex-wrap gap-2">
-            {identity?.permissions?.map((permission: any) => (
+            {permissions.map((permission) => (
               <Badge
                 key={permission.key}
                 variant={permission.allowed ? 'default' : 'outline'}

@@ -30,6 +30,13 @@ import type {
   ProfessionalData,
   DriverData,
 } from './types';
+
+type PublicProfileRecord = Record<string, unknown>;
+
+function errorMessage(error: unknown, fallback: string): string {
+  return error instanceof Error ? error.message : fallback;
+}
+
 export class MultiProfileService {
   private static getEditablePersonalHandle(
     profile?: Pick<Profile, 'profile_type' | 'handle'> | null,
@@ -157,10 +164,10 @@ export class MultiProfileService {
       }
 
       return { success: true };
-    } catch (error: any) {
+    } catch (error: unknown) {
       return {
         success: false,
-        error: error.message || 'Failed to save profile extension',
+        error: errorMessage(error, 'Failed to save profile extension'),
       };
     }
   }
@@ -182,10 +189,10 @@ export class MultiProfileService {
       if (error) throw error;
 
       return data as ServiceResponse<{ profile_id: string; handle: string }>;
-    } catch (error: any) {
+    } catch (error: unknown) {
       return {
         success: false,
-        error: error.message || 'Failed to create profile',
+        error: errorMessage(error, 'Failed to create profile'),
       };
     }
   }
@@ -207,7 +214,7 @@ export class MultiProfileService {
       if (error) throw error;
 
       return (data || []) as Profile[];
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('Error fetching my profiles:', error);
       return [];
     }
@@ -227,7 +234,7 @@ export class MultiProfileService {
       if (error) throw error;
 
       return data as Profile;
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('Error fetching profile by id:', error);
       return null;
     }
@@ -236,7 +243,7 @@ export class MultiProfileService {
   /**
    * Buscar perfil público por handle (via view pública)
    */
-  static async getPublicProfileByHandle(handle: string): Promise<any | null> {
+  static async getPublicProfileByHandle(handle: string): Promise<PublicProfileRecord | null> {
     try {
       const { data, error } = await supabase
         .from('public_profiles')
@@ -247,7 +254,7 @@ export class MultiProfileService {
       if (error) throw error;
 
       return data;
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('Error fetching public profile:', error);
       return null;
     }
@@ -256,7 +263,7 @@ export class MultiProfileService {
   /**
    * Buscar perfil público business por handle
    */
-  static async getPublicBusinessProfile(handle: string): Promise<any | null> {
+  static async getPublicBusinessProfile(handle: string): Promise<PublicProfileRecord | null> {
     try {
       const { data, error } = await supabase
         .from('public_business_profiles')
@@ -267,7 +274,7 @@ export class MultiProfileService {
       if (error) throw error;
 
       return data;
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('Error fetching public business profile:', error);
       return null;
     }
@@ -276,7 +283,7 @@ export class MultiProfileService {
   /**
    * Buscar perfil público professional por handle
    */
-  static async getPublicProfessionalProfile(handle: string): Promise<any | null> {
+  static async getPublicProfessionalProfile(handle: string): Promise<PublicProfileRecord | null> {
     try {
       const { data, error } = await supabase
         .from('public_professional_profiles')
@@ -287,7 +294,7 @@ export class MultiProfileService {
       if (error) throw error;
 
       return data;
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('Error fetching public professional profile:', error);
       return null;
     }
@@ -296,7 +303,7 @@ export class MultiProfileService {
   /**
    * Buscar perfil público driver por handle
    */
-  static async getPublicDriverProfile(handle: string): Promise<any | null> {
+  static async getPublicDriverProfile(handle: string): Promise<PublicProfileRecord | null> {
     try {
       const { data, error } = await supabase
         .from('public_driver_profiles')
@@ -307,7 +314,7 @@ export class MultiProfileService {
       if (error) throw error;
 
       return data;
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('Error fetching public driver profile:', error);
       return null;
     }
@@ -331,10 +338,10 @@ export class MultiProfileService {
         success: true,
         data: data as Profile,
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
       return {
         success: false,
-        error: error.message || 'Failed to update profile',
+        error: errorMessage(error, 'Failed to update profile'),
       };
     }
   }
@@ -352,10 +359,10 @@ export class MultiProfileService {
       if (error) throw error;
 
       return data as ServiceResponse<{ handle: string }>;
-    } catch (error: any) {
+    } catch (error: unknown) {
       return {
         success: false,
-        error: error.message || 'Failed to update handle',
+        error: errorMessage(error, 'Failed to update handle'),
       };
     }
   }
@@ -425,10 +432,10 @@ export class MultiProfileService {
           ...extensionForms,
         },
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
       return {
         success: false,
-        error: error.message || 'Failed to load profile editor',
+        error: errorMessage(error, 'Failed to load profile editor'),
       };
     }
   }
@@ -498,10 +505,10 @@ export class MultiProfileService {
               : baseResult.data.handle,
         },
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
       return {
         success: false,
-        error: error.message || 'Failed to save profile editor',
+        error: errorMessage(error, 'Failed to save profile editor'),
       };
     }
   }
@@ -518,10 +525,10 @@ export class MultiProfileService {
       if (error) throw error;
 
       return data as ServiceResponse<{ profile_id: string }>;
-    } catch (error: any) {
+    } catch (error: unknown) {
       return {
         success: false,
-        error: error.message || 'Failed to delete profile',
+        error: errorMessage(error, 'Failed to delete profile'),
       };
     }
   }
@@ -539,10 +546,10 @@ export class MultiProfileService {
       if (error) throw error;
 
       return data as ServiceResponse<{ profile_id: string }>;
-    } catch (error: any) {
+    } catch (error: unknown) {
       return {
         success: false,
-        error: error.message || 'Failed to transfer ownership',
+        error: errorMessage(error, 'Failed to transfer ownership'),
       };
     }
   }

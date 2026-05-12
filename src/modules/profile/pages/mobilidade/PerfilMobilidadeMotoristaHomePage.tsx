@@ -15,7 +15,11 @@ function formatMoney(value?: number | null): string {
   return `R$ ${value.toFixed(0)}`;
 }
 
-function isDeliveryRide(ride: any): boolean {
+type RideLike = { ride_mode?: string | null; type?: string | null };
+type DriverEarningsLike = { month?: number | null };
+type DriverStatsLike = { avgRating?: number | null };
+
+function isDeliveryRide(ride: RideLike): boolean {
   return ride?.ride_mode === "motoboy" || ride?.type === "entrega";
 }
 
@@ -24,15 +28,15 @@ export default function PerfilMobilidadeMotoristaHomePage() {
   const shell = useMotoristaPageV2();
 
   const availableRides = useMemo(
-    () => (shell.availableRides || []).filter((ride: any) => !isDeliveryRide(ride)),
+    () => (shell.availableRides || []).filter((ride: RideLike) => !isDeliveryRide(ride)),
     [shell.availableRides],
   );
   const activeRides = useMemo(
-    () => (shell.activeRides || []).filter((ride: any) => !isDeliveryRide(ride)),
+    () => (shell.activeRides || []).filter((ride: RideLike) => !isDeliveryRide(ride)),
     [shell.activeRides],
   );
   const historyRides = useMemo(
-    () => (shell.completedByMe || []).filter((ride: any) => !isDeliveryRide(ride)),
+    () => (shell.completedByMe || []).filter((ride: RideLike) => !isDeliveryRide(ride)),
     [shell.completedByMe],
   );
 
@@ -68,7 +72,7 @@ export default function PerfilMobilidadeMotoristaHomePage() {
             </Badge>
             <Badge variant="outline" className="gap-1">
               <Wallet className="h-3 w-3" />
-              {formatMoney((shell.driverEarnings as any)?.month ?? 0)}
+              {formatMoney((shell.driverEarnings as DriverEarningsLike | null)?.month ?? 0)}
             </Badge>
           </div>
         </CardContent>
@@ -79,7 +83,7 @@ export default function PerfilMobilidadeMotoristaHomePage() {
           { label: "Corridas disponiveis", value: availableRides.length },
           { label: "Corridas ativas", value: activeRides.length },
           { label: "Historico", value: historyRides.length },
-          { label: "Avaliacao", value: typeof (shell.driverStats as any)?.avgRating === "number" ? (shell.driverStats as any).avgRating.toFixed(1) : "0.0" },
+          { label: "Avaliacao", value: typeof (shell.driverStats as DriverStatsLike | null)?.avgRating === "number" ? (shell.driverStats as DriverStatsLike).avgRating!.toFixed(1) : "0.0" },
         ].map((item) => (
           <Card key={item.label} className="border-border">
             <CardContent className="p-4">

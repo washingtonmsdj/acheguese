@@ -81,6 +81,16 @@ export function MotoboyDeliveryActions({
 
   if (ride.ride_mode !== 'motoboy') return null;
 
+  const handleProofDialogChange = (open: boolean) => {
+    if (isLoading) return;
+    setProofDialogOpen(open);
+  };
+
+  const handleFailDialogChange = (open: boolean) => {
+    if (isLoading) return;
+    setFailDialogOpen(open);
+  };
+
   const runAction = async (action: () => Promise<void>) => {
     setIsLoading(true);
     try {
@@ -218,7 +228,7 @@ export function MotoboyDeliveryActions({
         </div>
       )}
 
-      <Dialog open={proofDialogOpen} onOpenChange={setProofDialogOpen}>
+      <Dialog open={proofDialogOpen} onOpenChange={handleProofDialogChange}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Confirmar entrega</DialogTitle>
@@ -253,7 +263,7 @@ export function MotoboyDeliveryActions({
               </p>
             </div>
             <div className="flex flex-col gap-3 sm:flex-row">
-              <Button variant="outline" className="flex-1" onClick={() => setProofDialogOpen(false)}>
+              <Button variant="outline" className="flex-1" onClick={() => setProofDialogOpen(false)} disabled={isLoading}>
                 Cancelar
               </Button>
               <Button
@@ -268,7 +278,7 @@ export function MotoboyDeliveryActions({
         </DialogContent>
       </Dialog>
 
-      <Dialog open={failDialogOpen} onOpenChange={setFailDialogOpen}>
+      <Dialog open={failDialogOpen} onOpenChange={handleFailDialogChange}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Registrar falha na entrega</DialogTitle>
@@ -305,7 +315,7 @@ export function MotoboyDeliveryActions({
               </div>
             )}
             <div className="flex flex-col gap-3 sm:flex-row">
-              <Button variant="outline" className="flex-1" onClick={() => setFailDialogOpen(false)}>
+              <Button variant="outline" className="flex-1" onClick={() => setFailDialogOpen(false)} disabled={isLoading}>
                 Cancelar
               </Button>
               <Button

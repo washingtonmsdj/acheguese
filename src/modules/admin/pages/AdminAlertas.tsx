@@ -114,7 +114,7 @@ export default function AdminAlertas() {
 
       <Tabs
         value={tab}
-        onValueChange={(v) => setTab(v as any)}
+        onValueChange={(v: "alertas" | "denuncias" | "users") => setTab(v)}
         className="mb-4"
       >
         <TabsList className="w-full sm:w-auto">

@@ -71,14 +71,14 @@ export interface CatalogItemCreateInput {
   pricing_model: PricingModel;
   requires_item_codes?: string[]; // Dependencies
   is_active: boolean;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 export interface CatalogItemUpdateInput {
   display_name?: string;
   description?: string;
   is_active?: boolean;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
   // Note: Cannot update item_code, item_type, pricing_model after publish
 }
 
@@ -96,7 +96,7 @@ export interface CatalogItemWithPolicies {
   pricing_model: PricingModel;
   requires_item_codes: string[];
   is_active: boolean;
-  metadata: Record<string, any>;
+  metadata: Record<string, unknown>;
   created_at: string;
   updated_at: string;
   
@@ -116,7 +116,7 @@ export interface CatalogEligibilityRuleInput {
   allowed_actor_types?: string[];
   min_business_age_days?: number;
   requires_verification?: boolean;
-  custom_rules?: Record<string, any>;
+  custom_rules?: Record<string, unknown>;
 }
 
 // ============================================================================
@@ -160,7 +160,7 @@ export interface CatalogEntitlementPolicyInput {
   max_locations?: number;
   
   // Additional entitlements (flexible)
-  additional_entitlements?: Record<string, any>;
+  additional_entitlements?: Record<string, unknown>;
 }
 
 // ============================================================================
@@ -175,7 +175,7 @@ export interface CatalogPricingPolicyInput {
   setup_fee_cents?: number;
   stripe_price_id?: string;
   stripe_lookup_key?: string;
-  pricing_metadata?: Record<string, any>;
+  pricing_metadata?: Record<string, unknown>;
 }
 
 // ============================================================================
@@ -253,9 +253,9 @@ export interface CatalogAuditEntry {
   changed_by: string; // user_id
   changed_at: string;
   changes: {
-    before: Record<string, any>;
-    after: Record<string, any>;
-    diff: Record<string, { old: any; new: any }>;
+    before: Record<string, unknown>;
+    after: Record<string, unknown>;
+    diff: Record<string, { old: unknown; new: unknown }>;
   };
   reason?: string;
 }

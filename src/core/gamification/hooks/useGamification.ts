@@ -117,7 +117,7 @@ export function useAddPoints() {
       points: number;
       source: string;
       description: string;
-      metadata?: Record<string, any>;
+      metadata?: Record<string, unknown>;
     }) =>
       GamificationService.addPoints(
         userId,
@@ -200,7 +200,7 @@ export function useProcessUserAction() {
     }: {
       userId: string;
       action: string;
-      metadata?: Record<string, any>;
+      metadata?: Record<string, unknown>;
     }) => GamificationService.processUserAction(userId, action, metadata),
     onSuccess: (result, variables) => {
       if (result.points > 0) {

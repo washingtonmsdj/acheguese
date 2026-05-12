@@ -12,6 +12,11 @@ import { logger } from '@/shared/utils/logger';
 import { supabase } from '@/integrations/supabase/supabase';
 import { SessionService } from '@/core/session/services/SessionService';
 import type { ServiceResponse } from './types';
+
+type ProfileAuditLogRecord = Record<string, unknown>;
+const errorMessage = (error: unknown, fallback: string): string =>
+  error instanceof Error ? error.message : fallback;
+
 export class AdminService {
   /**
    * Verificar perfil (via edge function)
@@ -61,10 +66,10 @@ export class AdminService {
       }
 
       return data;
-    } catch (error: any) {
+    } catch (error: unknown) {
       return {
         success: false,
-        error: error.message || 'Failed to verify profile',
+        error: errorMessage(error, 'Failed to verify profile'),
       };
     }
   }
@@ -124,10 +129,10 @@ export class AdminService {
       }
 
       return data;
-    } catch (error: any) {
+    } catch (error: unknown) {
       return {
         success: false,
-        error: error.message || 'Failed to suspend profile',
+        error: errorMessage(error, 'Failed to suspend profile'),
       };
     }
   }
@@ -156,7 +161,7 @@ export class AdminService {
   /**
    * Buscar audit log de um perfil
    */
-  static async getProfileAuditLog(profileId: string): Promise<any[]> {
+  static async getProfileAuditLog(profileId: string): Promise<ProfileAuditLogRecord[]> {
     try {
       const { data, error } = await supabase
         .from('profile_audit_log')
@@ -167,7 +172,7 @@ export class AdminService {
       if (error) throw error;
 
       return data || [];
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('Error fetching audit log:', error);
       return [];
     }

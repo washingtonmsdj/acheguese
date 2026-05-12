@@ -114,7 +114,7 @@ export class ResidentAddressService {
     addressId: string,
     input: Partial<RegisterResidentAddressInput>,
   ): Promise<Address> {
-    const updateData: any = {};
+    const updateData: Partial<RegisterResidentAddressInput> = {};
 
     if (input.postal_code) {
       const cepData = await locationGeocodingService.lookupPostalCode({

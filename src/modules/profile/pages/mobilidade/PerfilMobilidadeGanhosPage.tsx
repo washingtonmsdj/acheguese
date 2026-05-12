@@ -16,7 +16,12 @@ function formatMoney(value?: number | null): string {
 export default function PerfilMobilidadeGanhosPage() {
   const navigate = useNavigate();
   const shell = useMotoristaPageV2();
-  const driverEarnings = shell.driverEarnings as any;
+  const driverEarnings = shell.driverEarnings as {
+    today?: number | null;
+    week?: number | null;
+    month?: number | null;
+    total?: number | null;
+  } | null;
 
   return (
     <div className="space-y-4">

@@ -49,7 +49,7 @@ export interface Achievement {
   icon: string;
   category: string;
   points_reward: number;
-  requirements: Record<string, any>;
+  requirements: Record<string, unknown>;
   is_active: boolean;
   created_at: string;
 }
@@ -70,8 +70,15 @@ export interface PointTransaction {
   transaction_type: "earned" | "spent" | "bonus" | "penalty";
   source: string;
   description: string;
-  metadata: Record<string, any>;
+  metadata: Record<string, unknown>;
   created_at: string;
+}
+
+interface LeaderboardRow {
+  user_id: string;
+  total_points: number;
+  level: number;
+  profiles?: { name?: string; avatar_url?: string } | null;
 }
 
 export interface UserGamificationStats {
@@ -93,7 +100,7 @@ export class GamificationService {
    */
   static async getUserLevel(userId: string): Promise<UserLevel | null> {
     try {
-      const { data, error } = await (supabase as any)
+      const { data, error } = await supabase
         .from("user_levels")
         .select("*")
         .eq("user_id", userId)
@@ -119,11 +126,11 @@ export class GamificationService {
     points: number,
     source: string,
     description: string,
-    metadata: Record<string, any> = {},
+    metadata: Record<string, unknown> = {},
   ): Promise<boolean> {
     try {
       // Registrar transação
-      const { error: transactionError } = await (supabase as any)
+      const { error: transactionError } = await supabase
         .from("point_transactions")
         .insert({
           user_id: userId,
@@ -137,7 +144,7 @@ export class GamificationService {
       if (transactionError) throw transactionError;
 
       // Atualizar nível do usuário
-      const { error: levelError } = await (supabase as any).rpc(
+      const { error: levelError } = await supabase.rpc(
         "update_user_level",
         {
           p_user_id: userId,
@@ -163,7 +170,7 @@ export class GamificationService {
    */
   static async getAvailableAchievements(): Promise<Achievement[]> {
     try {
-      const { data, error } = await (supabase as any)
+      const { data, error } = await supabase
         .from("achievements")
         .select("*")
         .eq("is_active", true)
@@ -199,7 +206,7 @@ export class GamificationService {
    */
   static async getUserAchievements(userId: string): Promise<UserAchievement[]> {
     try {
-      const { data, error } = await (supabase as any)
+      const { data, error } = await supabase
         .from("user_achievements")
         .select(
           `
@@ -250,9 +257,7 @@ export class GamificationService {
   ): Promise<boolean> {
     try {
       // Buscar achievement
-      const { data: achievement, error: achievementError } = await (
-        supabase as any
-      )
+      const { data: achievement, error: achievementError } = await supabase
         .from("achievements")
         .select("id, points_reward")
         .eq("code", achievementCode)
@@ -263,7 +268,7 @@ export class GamificationService {
         throw new Error("Achievement not found");
 
       // Verificar se já possui
-      const { data: existing } = await (supabase as any)
+      const { data: existing } = await supabase
         .from("user_achievements")
         .select("id")
         .eq("user_id", userId)
@@ -273,7 +278,7 @@ export class GamificationService {
       if (existing) return true; // Já possui
 
       // Conceder achievement
-      const { error: grantError } = await (supabase as any)
+      const { error: grantError } = await supabase
         .from("user_achievements")
         .insert({
           user_id: userId,
@@ -309,9 +314,9 @@ export class GamificationService {
   /**
    * Busca leaderboard de pontuação
    */
-  static async getLeaderboard(limit: number = PAGINATION.SMALL_LIMIT): Promise<any[]> {
+  static async getLeaderboard(limit: number = PAGINATION.SMALL_LIMIT): Promise<LeaderboardRow[]> {
     try {
-      const { data, error } = await (supabase as any)
+      const { data, error } = await supabase
         .from("user_levels")
         .select(
           `
@@ -343,9 +348,9 @@ export class GamificationService {
     city: string,
     neighborhood: string | null = null,
     limit: number = PAGINATION.SMALL_LIMIT / 2,
-  ): Promise<any[]> {
+  ): Promise<Array<Record<string, unknown>>> {
     try {
-      const { data, error } = await (supabase as any).rpc(
+      const { data, error } = await supabase.rpc(
         "get_top_users_by_location",
         {
           p_city: city,
@@ -374,7 +379,7 @@ export class GamificationService {
     limit: number = PAGINATION.DEFAULT_LIMIT,
   ): Promise<PointTransaction[]> {
     try {
-      const { data, error } = await (supabase as any)
+      const { data, error } = await supabase
         .from("point_transactions")
         .select("*")
         .eq("user_id", userId)
@@ -481,7 +486,7 @@ export class GamificationService {
   static async processUserAction(
     userId: string,
     action: string,
-    metadata: Record<string, any> = {},
+    metadata: Record<string, unknown> = {},
   ): Promise<{ points: number; achievements: string[] }> {
     try {
       const result = { points: 0, achievements: [] as string[] };

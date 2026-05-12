@@ -12,7 +12,7 @@
  */
 
 import { useCallback, useMemo, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { toast } from "sonner";
 import { useAuth } from "@/core/auth/hooks/useAuth";
 import { Button } from "@/shared/components/ui/button";
@@ -47,6 +47,7 @@ interface VagasPublicPageProps {
 
 export default function VagasPublicPage({ resolved }: VagasPublicPageProps = {}) {
   const navigate = useNavigate();
+  const location = useLocation();
   const { state = "ba", city = "salvador" } = useParams<{ state: string; city: string }>();
   const { user } = useAuth();
   const [locationDialogOpen, setLocationDialogOpen] = useState(false);
@@ -91,6 +92,7 @@ export default function VagasPublicPage({ resolved }: VagasPublicPageProps = {})
   // SEO
   const pageTitle = `Vagas de Emprego em ${cityName} | AcheGuese`;
   const pageDescription = `Encontre vagas de emprego em ${cityName}. ${total} oportunidades de trabalho disponíveis. Candidate-se agora!`;
+  const isEmbeddedCommunityRoute = location.pathname.startsWith("/comunidade/");
 
   // Handlers
   const handleVagaClick = useCallback(
@@ -147,7 +149,11 @@ export default function VagasPublicPage({ resolved }: VagasPublicPageProps = {})
         onSearchChange={(value) => updateFilter("search", value)}
       />
       
-      <VagasPublicLayout pageTitle={pageTitle} pageDescription={pageDescription}>
+      <VagasPublicLayout
+        pageTitle={pageTitle}
+        pageDescription={pageDescription}
+        emitSeo={!isEmbeddedCommunityRoute}
+      >
       {/* Hero e Banner */}
       <VagasHeroSection
         cityName={cityName}

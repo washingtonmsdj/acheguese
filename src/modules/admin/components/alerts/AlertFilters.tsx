@@ -10,11 +10,11 @@ import {
 import { ALERT_STATUS } from "@/shared/types/constants";
 interface AlertFiltersProps {
   filterStatus: string;
-  onFilterStatusChange: (value: any) => void;
+  onFilterStatusChange: (value: string) => void;
   filterBairro: string;
   onFilterBairroChange: (value: string) => void;
   filterDenuncias: string;
-  onFilterDenunciasChange: (value: any) => void;
+  onFilterDenunciasChange: (value: string) => void;
   uniqueBairros: string[];
   hasActiveFilters: boolean;
   onClearFilters: () => void;

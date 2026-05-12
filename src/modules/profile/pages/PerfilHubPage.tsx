@@ -51,7 +51,7 @@ const SECTION_MAP = {
   notificacoes: NotificacoesSection,
   configuracoes: ConfiguracoesSection,
   seguranca: SegurancaSection,
-} as const satisfies Record<ProfileSectionId, React.ComponentType<any>>;
+} as const satisfies Record<ProfileSectionId, React.ComponentType<SectionPropsMap[ProfileSectionId]>>;
 
 // ============================================
 // Helper: Construir Props por Section
@@ -60,11 +60,11 @@ const SECTION_MAP = {
 function buildSectionProps(
   section: ProfileSectionId,
   data: ReturnType<typeof useProfileHub> & {
-    personalProfile: any;
+    personalProfile: ReturnType<typeof useProfileHub>["profile"];
     personalProfileId: string | null;
     setActiveSection: (section: ProfileSectionId) => void;
   }
-): any {
+): SectionPropsMap[ProfileSectionId] {
   const baseProps = {
     user: data.user!,
     personalProfile: data.personalProfile,
@@ -338,7 +338,7 @@ export default function PerfilHubPage() {
       reputation={data.identity?.reputation || data.context?.reputation}
       onAvatarChange={data.handleAvatarChange}
     >
-      <ActiveSection {...(sectionProps as any)} />
+      <ActiveSection {...(sectionProps as SectionPropsMap[ProfileSectionId])} />
     </PerfilHubLayout>
   );
 }

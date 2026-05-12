@@ -87,6 +87,12 @@ interface Report {
   professional: { name: string } | null;
 }
 
+type ProfessionalSimple = { id: string; name?: string | null };
+type ReviewRecord = {
+  reviewer_profile_id: string;
+  reviewed_profile_id: string;
+} & Record<string, unknown>;
+
 export default function AdminServicos() {
   const { canModerate, isChecking } = useAdminGuard();
   const { toast } = useToast();
@@ -133,20 +139,20 @@ export default function AdminServicos() {
           profiles.map((p) => [p.id, { name: p.name, avatar_url: p.avatarUrl }]),
         );
         const proMap = new Map(
-          (prosData || []).map((p: any) => [p.id, p] as [string, any]),
+          (prosData || []).map((p: ProfessionalSimple) => [p.id, p] as const),
         );
 
         setReviews(
-          revs.map((r: any) => ({
+          revs.map((r: ReviewRecord) => ({
             ...r,
-            reviewer: (profileMap.get(r.reviewer_profile_id) as any) || {
+            reviewer: profileMap.get(r.reviewer_profile_id) || {
               name: "Usuário",
               avatar_url: "",
             },
-            professional: (proMap.get(r.reviewed_profile_id) as any) || {
+            professional: proMap.get(r.reviewed_profile_id) || {
               name: "Desconhecido",
             },
-          })),
+          })) as Review[],
         );
       } else {
         setReviews([]);
@@ -164,7 +170,7 @@ export default function AdminServicos() {
               )
             : [];
         const proMap = new Map(
-          (prosData || []).map((p: any) => [p.id, p] as [string, any]),
+          (prosData || []).map((p: ProfessionalSimple) => [p.id, p] as const),
         );
 
         setReports(

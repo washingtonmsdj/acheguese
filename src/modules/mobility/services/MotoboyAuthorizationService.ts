@@ -16,7 +16,6 @@ import { logger } from "@/shared/utils/logger";
 import { mobilityRolloutService } from "./MobilityRolloutService";
 import { MobilityService, mobilityService } from "./MobilityService.impl";
 
-const supabaseAny = supabase as any;
 const MODERATOR_ROLES = ["owner", "admin"] as const;
 
 export type MotoboySourceType =
@@ -211,7 +210,7 @@ export class MotoboyAuthorizationService {
 
   private static async resolveAuthenticatedUserId(): Promise<string | undefined> {
     try {
-      const authApi = supabaseAny?.auth;
+      const authApi = supabase?.auth;
       if (!authApi || typeof authApi.getUser !== "function") {
         return undefined;
       }

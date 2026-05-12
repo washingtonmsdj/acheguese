@@ -324,6 +324,6 @@ export function isNotEmpty<T>(array: T[]): boolean {
  * isObjectNotEmpty({}); // false
  * ```
  */
-export function isObjectNotEmpty(obj: Record<string, any>): boolean {
+export function isObjectNotEmpty(obj: Record<string, unknown>): boolean {
   return Object.keys(obj).length > 0;
 }

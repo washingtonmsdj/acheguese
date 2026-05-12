@@ -24,6 +24,14 @@ import {
   getProfileTypeLabel,
   isProfileVerified,
 } from '@/modules/profile/utils/profileDomainRules';
+import { mobilityRoutes } from '@/modules/mobility/routes/mobilityRoutes';
+
+type DriverProfileExtra = {
+  vehicle_type?: string | null;
+  can_do_delivery?: boolean | null;
+  vehicle_model?: string | null;
+  vehicle_plate?: string | null;
+};
 
 // Helpers para mapear tipo de perfil para ícone e label
 function typeIcon(type: ProfileType) {
@@ -50,11 +58,12 @@ function IdentityCard({ profile, isActive, onActivate, profileSettingsUrl }: {
   // ✅ SSOT: Usar função canônica para verificar se pode ter URL pública
   const publicUrl = buildCanonicalPublicUrl(profile);
   const canOpenPublicProfile = Boolean(publicUrl);
+  const driverExtra = profile as MultiProfileRecord & DriverProfileExtra;
   
   // Verificar se é motoboy (motorista com moto habilitado para entregas)
-  const isMotoboy = profile.profile_type === 'driver' && 
-    (profile as any).vehicle_type === 'motorcycle' && 
-    (profile as any).can_do_delivery !== false;
+  const isMotoboy = profile.profile_type === 'driver' &&
+    driverExtra.vehicle_type === 'motorcycle' &&
+    driverExtra.can_do_delivery !== false;
 
   return (
     <Card className={`transition-all ${isActive ? 'border-primary bg-primary/5' : 'hover:border-primary/30'}`}>
@@ -87,9 +96,9 @@ function IdentityCard({ profile, isActive, onActivate, profileSettingsUrl }: {
               }
             </div>
             {profile.bio && <p className="text-xs text-muted-foreground line-clamp-1">{profile.bio}</p>}
-            {profile.profile_type === 'driver' && (profile as any).vehicle_model && (
+            {profile.profile_type === 'driver' && driverExtra.vehicle_model && (
               <p className="text-xs text-muted-foreground">
-                {(profile as any).vehicle_model} {(profile as any).vehicle_plate && `(${(profile as any).vehicle_plate})`}
+                {driverExtra.vehicle_model} {driverExtra.vehicle_plate && `(${driverExtra.vehicle_plate})`}
               </p>
             )}
           </div>
@@ -157,7 +166,7 @@ export default function PerfilIdentidadesPage() {
     { type: 'personal', createPath: '', createLabel: '', subtitle: 'Sua identidade principal' },
     { type: 'business', createPath: '/empresas/criar-empresa', createLabel: 'Nova empresa', subtitle: 'Empresas e negócios' },
     { type: 'professional', createPath: '/services/cadastrar', createLabel: 'Novo serviço', subtitle: 'Profissionais autônomos' },
-    { type: 'driver', createPath: '/central/motorista/cadastro', createLabel: 'Ser motorista', subtitle: 'Motoristas e motoboys' },
+    { type: 'driver', createPath: mobilityRoutes.motorista.cadastro, createLabel: 'Ser motorista', subtitle: 'Motoristas e motoboys' },
   ];
 
   return (
@@ -222,7 +231,7 @@ export default function PerfilIdentidadesPage() {
                       size="sm" 
                       variant="outline" 
                       className="gap-1.5 text-xs h-7 border-orange-200 hover:bg-orange-100"
-                      onClick={() => navigate('/central/motoboy/cadastro')}
+                      onClick={() => navigate(mobilityRoutes.motoboy.cadastro)}
                     >
                       <Package className="h-3 w-3" />
                       Ser motoboy

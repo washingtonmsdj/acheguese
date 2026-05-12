@@ -35,7 +35,7 @@ export class RolloutRepositorySupabase implements IRolloutRepository {
     module_key: ModuleKey,
     location_id: string
   ): Promise<ModuleRollout | null> {
-    const { data, error } = await (supabase as any)
+    const { data, error } = await supabase
       .from(TABLE)
       .select('*')
       .eq('module_key', module_key)
@@ -53,7 +53,7 @@ export class RolloutRepositorySupabase implements IRolloutRepository {
   ): Promise<Map<string, ModuleRollout>> {
     if (location_ids.length === 0) return new Map();
 
-    const { data, error } = await (supabase as any)
+    const { data, error } = await supabase
       .from(TABLE)
       .select('*')
       .eq('module_key', module_key)
@@ -77,7 +77,7 @@ export class RolloutRepositorySupabase implements IRolloutRepository {
     const page_size = options.page_size ?? ROLLOUT_PAGINATION.DEFAULT_PAGE_SIZE;
     const offset = (page - 1) * page_size;
 
-    let query = (supabase as any)
+    let query = supabase
       .from(TABLE)
       .select('*', { count: 'exact' })
       .eq('module_key', module_key)
@@ -98,7 +98,7 @@ export class RolloutRepositorySupabase implements IRolloutRepository {
   }
 
   async findByLocation(location_id: string): Promise<ModuleRollout[]> {
-    const { data, error } = await (supabase as any)
+    const { data, error } = await supabase
       .from(TABLE)
       .select('*')
       .eq('location_id', location_id)
@@ -117,7 +117,7 @@ export class RolloutRepositorySupabase implements IRolloutRepository {
   ): Promise<ModuleRollout> {
     const now = new Date().toISOString();
 
-    const { data, error } = await (supabase as any)
+    const { data, error } = await supabase
       .from(TABLE)
       .upsert(
         {
@@ -137,7 +137,7 @@ export class RolloutRepositorySupabase implements IRolloutRepository {
   }
 
   async delete(module_key: ModuleKey, location_id: string): Promise<void> {
-    const { error } = await (supabase as any)
+    const { error } = await supabase
       .from(TABLE)
       .delete()
       .eq('module_key', module_key)

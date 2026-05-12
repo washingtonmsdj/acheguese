@@ -77,6 +77,17 @@ export interface SearchHybridInput {
   limit?: number;
 }
 
+interface SpatialSearchRow {
+  id: string;
+  name: string;
+  latitude: number;
+  longitude: number;
+  distance_meters?: number | null;
+  location_id?: string | null;
+  in_territory?: boolean | null;
+  slug?: string | null;
+}
+
 // ============================================
 // SERVICE
 // ============================================
@@ -295,7 +306,7 @@ export class SpatialSearchService {
     }
   }
 
-  private mapResult(row: any): SpatialSearchResult {
+  private mapResult(row: SpatialSearchRow): SpatialSearchResult {
     return {
       id: row.id,
       name: row.name,

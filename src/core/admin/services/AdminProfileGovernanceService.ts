@@ -25,7 +25,7 @@ import type {
 } from "@/core/profiles/contracts/ProfileRuntimeContracts";
 // ✅ Fronteira de camada correta: service importa de contracts/, não de views/
 
-type RawRecord = Record<string, any>;
+type RawRecord = Record<string, unknown>;
 
 export type AdminProfileIdentityIssue =
   | "public_without_username"
@@ -1645,7 +1645,7 @@ class AdminProfileGovernanceService {
       }
       // Driver data agora vem do ProfileService, não precisa verificar erro
       
-      const roles = ((rolesData.data as any[]) ?? []).map((row) => ({
+      const roles = ((rolesData.data as RawRecord[]) ?? []).map((row) => ({
         id: typeof row === 'string' ? row : row.id,
         role: typeof row === 'string' ? row : row.role,
         isActive: typeof row === 'string' ? true : (row.is_active !== false),

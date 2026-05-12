@@ -167,7 +167,7 @@ export function useCadastro() {
       });
       setPendingSignupEmail(formData.email);
       navigate('/cadastro/confirmacao', { state: { email: formData.email } });
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast({
         title: 'Erro ao criar conta',
         description: getAuthErrorMessage(error, 'Tente novamente.'),

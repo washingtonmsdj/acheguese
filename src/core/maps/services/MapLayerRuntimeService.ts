@@ -64,7 +64,7 @@ class MapLayerRuntimeService {
     try {
       if (territoryFilter?.scope === "none") return [];
 
-      let query = (supabase as any)
+      let query = supabase
         .from("business_data")
         .select(
           `

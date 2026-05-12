@@ -1,5 +1,7 @@
-﻿import { SessionService } from "@/core/session/services/SessionService";
+import { SessionService } from "@/core/session/services/SessionService";
 import { supabase } from "@/integrations/supabase";
+import type { Database } from "@/integrations/supabase/types";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import type {
   FamilyConnection,
   FamilyCoverageSummary,
@@ -11,7 +13,7 @@ import type {
 } from "@/core/family/types";
 import { FAMILY_CONNECTION_STATUS, FAMILY_TABLES } from "@/core/family/types";
 
-const db = supabase as any;
+const db = supabase as SupabaseClient<Database>;
 const CONNECTION_SELECT = `
   id,
   parent_id,
@@ -403,7 +405,7 @@ export class FamilyService {
 
   static async getCoverageSummaryByUserId(
     userId: string,
-    client: any = db,
+    client: SupabaseClient<Database> = db,
   ): Promise<FamilyCoverageSummary> {
     const { data, error } = await client
       .from(FAMILY_TABLES.connections)

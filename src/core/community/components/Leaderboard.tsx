@@ -31,6 +31,20 @@ interface LeaderboardProps {
   compact?: boolean;
 }
 
+interface LeaderboardSourceEntry {
+  id?: string;
+  user_id?: string;
+  name?: string;
+  display_name?: string;
+  avatar_url?: string | null;
+  city?: string;
+  neighborhood?: string;
+  verified_resident?: boolean;
+  total_points?: number;
+  total_interactions?: number;
+  badges_count?: number;
+}
+
 export function Leaderboard({
   limit = 10,
   city,
@@ -45,8 +59,8 @@ export function Leaderboard({
       setLoading(true);
       const data = await CommunityService.getLeaderboard(limit, city);
       setEntries(
-        data.map((d: any) => ({
-          user_id: d.user_id || d.id,
+        (data as LeaderboardSourceEntry[]).map((d) => ({
+          user_id: d.user_id || d.id || "",
           display_name: d.display_name || d.name || "Usuário",
           avatar_url: d.avatar_url || null,
           city: d.city || "",

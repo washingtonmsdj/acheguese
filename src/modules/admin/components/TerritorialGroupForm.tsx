@@ -18,10 +18,26 @@ import { toast } from 'sonner';
 import { Loader2, MapPin, Users, X, Hash, FileText, Building2 } from 'lucide-react';
 import { DistrictSelector } from './DistrictSelector';
 interface TerritorialGroupFormProps {
-  group?: any;
+  group?: {
+    id: string;
+    name?: string | null;
+    slug?: string | null;
+    description?: string | null;
+    parent_id?: string | null;
+    status?: string | null;
+    member_ids?: string[];
+  };
   onSuccess: () => void;
   onCancel: () => void;
 }
+
+type GroupFormPayload = {
+  name: string;
+  slug: string;
+  description?: string;
+  anchor_city_id: string;
+  member_location_ids: string[];
+};
 
 const service = new TerritorialGroupService();
 
@@ -84,7 +100,7 @@ export function TerritorialGroupForm({ group, onSuccess, onCancel }: Territorial
   }, [group]);
 
   const createMutation = useMutation({
-    mutationFn: async (data: any) => {
+    mutationFn: async (data: GroupFormPayload) => {
       return service.createGroup({
         name: data.name,
         slug: data.slug,
@@ -99,14 +115,15 @@ export function TerritorialGroupForm({ group, onSuccess, onCancel }: Territorial
       toast.success('Grupo criado com sucesso');
       onSuccess();
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
       logger.error('Error creating group:', error);
-      toast.error(error.message || 'Erro ao criar grupo');
+      const message = error instanceof Error ? error.message : 'Erro ao criar grupo';
+      toast.error(message);
     },
   });
 
   const updateMutation = useMutation({
-    mutationFn: async (data: any) => {
+    mutationFn: async (data: GroupFormPayload) => {
       await service.updateGroup(group.id, {
         name: data.name,
         slug: data.slug,
@@ -120,8 +137,9 @@ export function TerritorialGroupForm({ group, onSuccess, onCancel }: Territorial
       toast.success('Grupo atualizado com sucesso');
       onSuccess();
     },
-    onError: (error: any) => {
-      toast.error(error.message || 'Erro ao atualizar grupo');
+    onError: (error: unknown) => {
+      const message = error instanceof Error ? error.message : 'Erro ao atualizar grupo';
+      toast.error(message);
     },
   });
 

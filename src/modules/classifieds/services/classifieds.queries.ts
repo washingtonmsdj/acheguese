@@ -19,6 +19,36 @@ import type { ClassifiedData, NeighborhoodWithClassifiedCount } from "./types";
 // Instância do LocationService com repositório
 const locationService = new LocationService(createLocationRepository());
 
+type ClassifiedSellerRow = {
+  name?: string | null;
+  avatar_url?: string | null;
+  phone?: string | null;
+  whatsapp?: string | null;
+};
+
+type ClassifiedCategoryRow = { slug?: string | null };
+
+type ClassifiedLocationPathRow = { geographic_path?: string | null };
+
+type ClassifiedWithRelationsRow = ClassifiedData & {
+  seller?: ClassifiedSellerRow | null;
+  locations?: ClassifiedLocationPathRow | null;
+  classified_categories?: ClassifiedCategoryRow | null;
+  classified_subcategories?: ClassifiedCategoryRow | null;
+};
+
+type NeighborhoodLocationRow = {
+  id: string;
+  name: string;
+  slug: string;
+  parent_id: string | null;
+};
+
+type NeighborhoodClassifiedRow = {
+  location_id: string;
+  locations: NeighborhoodLocationRow | null;
+};
+
 // ============================================================
 // HELPERS INTERNOS
 // ============================================================
@@ -26,7 +56,7 @@ const locationService = new LocationService(createLocationRepository());
 /**
  * Mapeia resposta do Supabase para ClassifiedData com seller info
  */
-function mapClassifiedWithSeller(item: any): ClassifiedData {
+function mapClassifiedWithSeller(item: ClassifiedWithRelationsRow): ClassifiedData {
   return {
     ...item,
     seller_name: item.seller?.name,
@@ -67,8 +97,8 @@ export async function getNeighborhoodsWithClassifieds(
 
   const countMap = new Map<string, { name: string; slug: string; count: number }>();
 
-  data.forEach((item) => {
-    const location = item.locations as any;
+  (data as NeighborhoodClassifiedRow[]).forEach((item) => {
+    const location = item.locations;
     if (!location) return;
 
     const existing = countMap.get(location.id);

@@ -51,6 +51,36 @@ interface Conversation {
   unread_count?: number;
 }
 
+type DirectMessagePostType =
+  | "civic_report"
+  | "discussao"
+  | "alerta"
+  | "recomendacao"
+  | "enquete"
+  | "pergunta"
+  | "achados"
+  | "favor"
+  | "evento"
+  | "desapego";
+
+function toDirectMessagePostType(postType?: string): DirectMessagePostType {
+  const allowed: DirectMessagePostType[] = [
+    "civic_report",
+    "discussao",
+    "alerta",
+    "recomendacao",
+    "enquete",
+    "pergunta",
+    "achados",
+    "favor",
+    "evento",
+    "desapego",
+  ];
+  return postType && allowed.includes(postType as DirectMessagePostType)
+    ? (postType as DirectMessagePostType)
+    : "civic_report";
+}
+
 interface MessagesInboxProps {
   currentUserId: string;
 }
@@ -354,9 +384,9 @@ export function MessagesInbox({ currentUserId }: MessagesInboxProps) {
                 ?.post_title || "",
             imageUrl: conversations.find((c) => c.id === selectedConversation)
               ?.post_image_url,
-            type:
-              (conversations.find((c) => c.id === selectedConversation)
-                ?.post_type as any) || "civic_report",
+            type: toDirectMessagePostType(
+              conversations.find((c) => c.id === selectedConversation)?.post_type,
+            ),
           }}
           recipientProfile={
             getOtherParticipant(

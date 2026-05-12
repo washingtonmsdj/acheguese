@@ -13,6 +13,11 @@ interface DailyEarning {
   amount: number;
 }
 
+interface EarningRow {
+  completed_at: string | null;
+  final_price: number | null;
+}
+
 export function WeeklyEarningsChart({
   driverProfileId,
 }: WeeklyEarningsChartProps) {
@@ -25,8 +30,7 @@ export function WeeklyEarningsChart({
 
       try {
         // SSOT: Buscar ganhos semanais usando MobilityService
-        const earnings =
-          await MobilityService.getDriverEarnings(driverProfileId);
+        const earnings = (await MobilityService.getDriverEarnings(driverProfileId)) as EarningRow[];
 
         // Processar dados para formato do gráfico
         const dayNames = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
@@ -39,13 +43,13 @@ export function WeeklyEarningsChart({
           const dayName = dayNames[date.getDay()];
 
           // Buscar ganhos deste dia específico
-          const dayEarnings = earnings.filter((e: any) => {
+          const dayEarnings = earnings.filter((e) => {
             const earnDate = new Date(e.completed_at);
             return earnDate.toDateString() === date.toDateString();
           });
 
           const amount = dayEarnings.reduce(
-            (sum: number, e: any) => sum + (e.final_price || 0),
+            (sum: number, e) => sum + (e.final_price || 0),
             0,
           );
 

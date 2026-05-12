@@ -26,6 +26,13 @@ const EVENT_CATEGORY_COLORS: Record<string, string> = {
   comunitário: 'bg-teal-500/10 text-teal-600 dark:text-teal-400 border-teal-500/20',
 };
 
+interface TerritoryEvent {
+  name: string;
+  description: string;
+  frequency: string;
+  category: string;
+}
+
 export function TerritoryAIContentSection({ territorySlug, territoryName, members, isGroup }: Props) {
   const { content, isLoading, generateWithAI } = useTerritoryAIContent(territorySlug);
 
@@ -63,7 +70,7 @@ export function TerritoryAIContentSection({ territorySlug, territoryName, member
   if (!content) return null;
 
   const demographics = content.demographics || {};
-  const events = content.events || [];
+  const events = (content.events || []) as TerritoryEvent[];
 
   return (
     <>
@@ -152,7 +159,7 @@ export function TerritoryAIContentSection({ territorySlug, territoryName, member
             Eventos e cultura
           </h2>
           <div className="space-y-2">
-            {events.map((event: any, i: number) => {
+            {events.map((event, i: number) => {
               const colorClass = EVENT_CATEGORY_COLORS[event.category] || EVENT_CATEGORY_COLORS.comunitário;
               return (
                 <div

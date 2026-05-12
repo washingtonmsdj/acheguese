@@ -18,11 +18,13 @@ import {
 import { usePlanUsage } from '@/modules/admin/hooks/useAdmin';
 import { Building2, ShoppingCart, DollarSign, Eye, QrCode } from 'lucide-react';
 import { Skeleton } from '@/shared/components/ui/skeleton';
+import type { ComponentProps } from 'react';
 
 export function AdminPlansPage() {
   const { data: planUsage, isLoading } = usePlanUsage();
+  type BadgeVariant = ComponentProps<typeof Badge>['variant'];
 
-  const planColors: Record<string, string> = {
+  const planColors: Record<string, BadgeVariant> = {
     free: 'secondary',
     pro: 'default',
     delivery: 'destructive',
@@ -47,7 +49,7 @@ export function AdminPlansPage() {
     }
   };
 
-  const getPlanBadgeVariant = (plan: string) => {
+  const getPlanBadgeVariant = (plan: string): BadgeVariant => {
     switch (plan) {
       case "free":
         return planColors.free;
@@ -83,7 +85,7 @@ export function AdminPlansPage() {
                 <CardHeader>
                   <CardTitle className="flex items-center justify-between">
                     <span>Plano {getPlanLabel(plan)}</span>
-                    <Badge variant={getPlanBadgeVariant(plan) as any}>
+                    <Badge variant={getPlanBadgeVariant(plan)}>
                       {businesses.length} empresas
                     </Badge>
                   </CardTitle>
@@ -154,7 +156,7 @@ export function AdminPlansPage() {
                         </div>
                       </TableCell>
                       <TableCell>
-                        <Badge variant={planColors[usage.plan_tier] as any}>
+                        <Badge variant={planColors[usage.plan_tier] ?? "secondary"}>
                           {planLabels[usage.plan_tier]}
                         </Badge>
                       </TableCell>

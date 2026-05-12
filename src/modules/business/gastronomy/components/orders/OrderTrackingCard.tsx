@@ -34,6 +34,11 @@ const STATUS_LABELS: Record<string, string> = {
 export function OrderTrackingCard({ order, className }: OrderTrackingCardProps) {
   const { rideRequest, hasTracking, isActive, isLoading, refetch } = useOrderTracking(order.id);
   const hasDriver = !!rideRequest?.driver_profile_id;
+  const hasRouteCoordinates =
+    typeof rideRequest?.pickup_location?.lat === 'number' &&
+    typeof rideRequest?.pickup_location?.lng === 'number' &&
+    typeof rideRequest?.dropoff_location?.lat === 'number' &&
+    typeof rideRequest?.dropoff_location?.lng === 'number';
   const statusLabel = rideRequest ? STATUS_LABELS[rideRequest.status] || rideRequest.status : 'Entrega ainda nao vinculada';
 
   return (
@@ -69,17 +74,22 @@ export function OrderTrackingCard({ order, className }: OrderTrackingCardProps) 
       </CardHeader>
 
       <CardContent className="space-y-4">
-        {hasDriver && rideRequest && (
+        {hasDriver && rideRequest && hasRouteCoordinates && (
           <RideTrackingMap
             driverProfileId={rideRequest.driver_profile_id!}
             rideId={rideRequest.id}
-            destinationLat={rideRequest.dropoff_location?.lat || 0}
-            destinationLon={rideRequest.dropoff_location?.lng || 0}
-            originLat={rideRequest.pickup_location?.lat || 0}
-            originLon={rideRequest.pickup_location?.lng || 0}
+            destinationLat={rideRequest.dropoff_location!.lat}
+            destinationLon={rideRequest.dropoff_location!.lng}
+            originLat={rideRequest.pickup_location!.lat}
+            originLon={rideRequest.pickup_location!.lng}
             showETA
             className="h-72 sm:h-96 rounded-lg overflow-hidden"
           />
+        )}
+        {hasDriver && rideRequest && !hasRouteCoordinates && (
+          <div className="rounded-lg border border-dashed bg-muted/40 px-4 py-6 text-sm text-muted-foreground">
+            Mapa indisponivel no momento: aguardando coordenadas completas de coleta e entrega no SSOT.
+          </div>
         )}
 
         <div className="grid gap-4 md:grid-cols-2">

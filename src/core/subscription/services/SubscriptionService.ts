@@ -36,8 +36,8 @@ export interface Subscription {
   next_payment_at: string | null;
   amount_cents: number | null;
   currency: string;
-  features: Record<string, any>;
-  metadata: Record<string, any>;
+  features: Record<string, unknown>;
+  metadata: Record<string, unknown>;
   created_at: string;
   updated_at: string;
 }
@@ -48,8 +48,8 @@ export interface CreateSubscriptionParams {
   expires_at?: string | null;
   payment_method?: string;
   amount_cents?: number;
-  features?: Record<string, any>;
-  metadata?: Record<string, any>;
+  features?: Record<string, unknown>;
+  metadata?: Record<string, unknown>;
 }
 
 export interface UpdateSubscriptionParams {
@@ -58,14 +58,14 @@ export interface UpdateSubscriptionParams {
   expires_at?: string | null;
   payment_method?: string;
   amount_cents?: number;
-  features?: Record<string, any>;
-  metadata?: Record<string, any>;
+  features?: Record<string, unknown>;
+  metadata?: Record<string, unknown>;
 }
 
 /**
  * Features padrão por plano
  */
-const PLAN_FEATURES: Record<PlanType, Record<string, any>> = {
+const PLAN_FEATURES: Record<PlanType, Record<string, unknown>> = {
   free: {
     max_businesses: 1,
     max_posts: 10,
@@ -106,7 +106,7 @@ const PLAN_FEATURES: Record<PlanType, Record<string, any>> = {
   },
 };
 
-function getPlanFeatureSet(planType: PlanType): Record<string, any> {
+function getPlanFeatureSet(planType: PlanType): Record<string, unknown> {
   switch (planType) {
     case "free":
       return PLAN_FEATURES.free;
@@ -121,13 +121,24 @@ function getPlanFeatureSet(planType: PlanType): Record<string, any> {
   }
 }
 
-function getFeatureValue(features: Record<string, any>, featureName: string): any {
+function getFeatureValue(features: Record<string, unknown>, featureName: string): unknown {
   for (const [key, value] of Object.entries(features)) {
     if (key === featureName) {
       return value;
     }
   }
   return undefined;
+}
+
+function featureToBoolean(value: unknown): boolean {
+  return typeof value === "boolean" ? value : false;
+}
+
+interface SubscriptionStatsRow {
+  plan_type: PlanType;
+  status: SubscriptionStatus;
+  active: boolean;
+  amount_cents: number | null;
 }
 
 /**
@@ -141,7 +152,7 @@ export class SubscriptionService {
     userId: string,
   ): Promise<Subscription | null> {
     try {
-      const { data, error } = await (supabase as any)
+      const { data, error } = await supabase
         .from("user_subscriptions")
         .select("*")
         .eq("user_id", userId)
@@ -168,7 +179,7 @@ export class SubscriptionService {
    */
   static async getSubscriptionHistory(userId: string): Promise<Subscription[]> {
     try {
-      const { data, error } = await (supabase as any)
+      const { data, error } = await supabase
         .from("user_subscriptions")
         .select("*")
         .eq("user_id", userId)
@@ -197,7 +208,7 @@ export class SubscriptionService {
   }> {
     try {
       // Desativar assinaturas antigas
-      await (supabase as any)
+      await supabase
         .from("user_subscriptions")
         .update({ active: false })
         .eq("user_id", params.user_id)
@@ -206,7 +217,7 @@ export class SubscriptionService {
       // Criar nova assinatura
       const features = params.features || PLAN_FEATURES[params.plan_type];
 
-      const { data, error } = await (supabase as any)
+      const { data, error } = await supabase
         .from("user_subscriptions")
         .insert({
           user_id: params.user_id,
@@ -249,7 +260,7 @@ export class SubscriptionService {
     updates: UpdateSubscriptionParams,
   ): Promise<{ success: boolean; error?: string }> {
     try {
-      const { error } = await (supabase as any)
+      const { error } = await supabase
         .from("user_subscriptions")
         .update(updates)
         .eq("user_id", userId)
@@ -278,7 +289,12 @@ export class SubscriptionService {
     immediate: boolean = false,
   ): Promise<{ success: boolean; error?: string }> {
     try {
-      const updates: any = {
+      const updates: {
+        status: SubscriptionStatus;
+        cancelled_at: string;
+        active?: boolean;
+        expires_at?: string;
+      } = {
         status: USER_SUBSCRIPTION_STATUS.CANCELLED,
         cancelled_at: new Date().toISOString(),
       };
@@ -288,7 +304,7 @@ export class SubscriptionService {
         updates.expires_at = new Date().toISOString();
       }
 
-      const { error } = await (supabase as any)
+      const { error } = await supabase
         .from("user_subscriptions")
         .update(updates)
         .eq("user_id", userId)
@@ -318,7 +334,7 @@ export class SubscriptionService {
     amountCents?: number,
   ): Promise<{ success: boolean; error?: string }> {
     try {
-      const { error } = await (supabase as any)
+      const { error } = await supabase
         .from("user_subscriptions")
         .update({
           status: USER_SUBSCRIPTION_STATUS.ACTIVE,
@@ -357,10 +373,10 @@ export class SubscriptionService {
 
       if (!subscription) {
         // Sem assinatura = plano free
-        return getFeatureValue(PLAN_FEATURES.free, featureName) || false;
+        return featureToBoolean(getFeatureValue(PLAN_FEATURES.free, featureName));
       }
 
-      return getFeatureValue(subscription.features, featureName) || false;
+      return featureToBoolean(getFeatureValue(subscription.features, featureName));
     } catch (error) {
       trackError(error as Error, {
         component: "SubscriptionService",
@@ -374,7 +390,7 @@ export class SubscriptionService {
   /**
    * Busca features do plano do usuário
    */
-  static async getUserFeatures(userId: string): Promise<Record<string, any>> {
+  static async getUserFeatures(userId: string): Promise<Record<string, unknown>> {
     try {
       const subscription = await this.getActiveSubscription(userId);
 
@@ -404,21 +420,22 @@ export class SubscriptionService {
     revenue_monthly: number;
   }> {
     try {
-      const { data, error } = await (supabase as any)
+      const { data, error } = await supabase
         .from("user_subscriptions")
         .select("plan_type, status, active, amount_cents");
 
       if (error) throw error;
 
+      const rows = (data || []) as SubscriptionStatsRow[];
       const stats = {
-        total: data?.length || 0,
-        active: data?.filter((s) => s.active).length || 0,
+        total: rows.length,
+        active: rows.filter((s) => s.active).length,
         by_plan: {} as Record<PlanType, number>,
         by_status: {} as Record<SubscriptionStatus, number>,
         revenue_monthly: 0,
       };
 
-      data?.forEach((s) => {
+      rows.forEach((s) => {
         // Contar por plano
         stats.by_plan[s.plan_type as PlanType] =
           (stats.by_plan[s.plan_type as PlanType] || 0) + 1;
@@ -457,7 +474,7 @@ export class SubscriptionService {
     expired: number;
   }> {
     try {
-      const { data, error } = await (supabase as any)
+      const { data, error } = await supabase
         .from("user_subscriptions")
         .update({
           status: USER_SUBSCRIPTION_STATUS.EXPIRED,
@@ -486,7 +503,7 @@ export class SubscriptionService {
   /**
    * Busca features padrão de um plano
    */
-  static getPlanFeatures(planType: PlanType): Record<string, any> {
+  static getPlanFeatures(planType: PlanType): Record<string, unknown> {
     return getPlanFeatureSet(planType);
   }
 }

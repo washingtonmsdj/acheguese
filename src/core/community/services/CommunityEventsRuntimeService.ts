@@ -39,6 +39,9 @@ export interface CreateEventInput {
 }
 
 class CommunityEventsRuntimeService {
+  private getErrorMessage(error: unknown): string {
+    return error instanceof Error ? error.message : "erro desconhecido";
+  }
   async getEventById(id: string): Promise<CommunityEvent | null> {
     try {
       const { data, error } = await supabase
@@ -132,9 +135,9 @@ class CommunityEventsRuntimeService {
 
       if (error) throw error;
       return data as CommunityEvent;
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error("CommunityEventsRuntimeService.createEvent", error);
-      throw new Error(`Erro ao criar evento: ${error.message}`);
+      throw new Error(`Erro ao criar evento: ${this.getErrorMessage(error)}`);
     }
   }
 
@@ -149,9 +152,9 @@ class CommunityEventsRuntimeService {
 
       if (error) throw error;
       return data as CommunityEvent;
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error("CommunityEventsRuntimeService.updateEvent", error);
-      throw new Error(`Erro ao atualizar evento: ${error.message}`);
+      throw new Error(`Erro ao atualizar evento: ${this.getErrorMessage(error)}`);
     }
   }
 
@@ -159,9 +162,9 @@ class CommunityEventsRuntimeService {
     try {
       const { error } = await supabase.from("events").delete().eq("id", id);
       if (error) throw error;
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error("CommunityEventsRuntimeService.deleteEvent", error);
-      throw new Error(`Erro ao deletar evento: ${error.message}`);
+      throw new Error(`Erro ao deletar evento: ${this.getErrorMessage(error)}`);
     }
   }
 
@@ -172,10 +175,10 @@ class CommunityEventsRuntimeService {
         .insert({ event_id: eventId, profile_id: profileId });
 
       if (error) throw error;
-      await supabase.rpc("increment_event_participants", { event_id: eventId } as any);
-    } catch (error: any) {
+      await supabase.rpc("increment_event_participants", { event_id: eventId });
+    } catch (error: unknown) {
       logger.error("CommunityEventsRuntimeService.joinEvent", error);
-      throw new Error(`Erro ao participar do evento: ${error.message}`);
+      throw new Error(`Erro ao participar do evento: ${this.getErrorMessage(error)}`);
     }
   }
 
@@ -188,10 +191,10 @@ class CommunityEventsRuntimeService {
         .eq("profile_id", profileId);
 
       if (error) throw error;
-      await supabase.rpc("decrement_event_participants", { event_id: eventId } as any);
-    } catch (error: any) {
+      await supabase.rpc("decrement_event_participants", { event_id: eventId });
+    } catch (error: unknown) {
       logger.error("CommunityEventsRuntimeService.leaveEvent", error);
-      throw new Error(`Erro ao sair do evento: ${error.message}`);
+      throw new Error(`Erro ao sair do evento: ${this.getErrorMessage(error)}`);
     }
   }
 

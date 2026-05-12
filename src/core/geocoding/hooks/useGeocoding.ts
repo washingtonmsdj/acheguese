@@ -48,7 +48,7 @@ export function useGeocoding(options: UseGeocodingOptions = {}) {
   } = options;
 
   // Cache local do hook
-  const cacheRef = useRef(new Map<string, { data: any; timestamp: number }>());
+  const cacheRef = useRef(new Map<string, { data: unknown; timestamp: number }>());
   
   // Estado para geocoding
   const [geocodeState, setGeocodeState] = useState<GeocodingState<GeocodeResult[]>>({
@@ -96,7 +96,7 @@ export function useGeocoding(options: UseGeocodingOptions = {}) {
     return cached.data as T;
   }, [enableLocalCache, localCacheTtlMs]);
 
-  const setToLocalCache = useCallback((key: string, data: any): void => {
+  const setToLocalCache = useCallback((key: string, data: unknown): void => {
     if (!enableLocalCache) return;
     
     cacheRef.current.set(key, {
@@ -105,7 +105,7 @@ export function useGeocoding(options: UseGeocodingOptions = {}) {
     });
   }, [enableLocalCache]);
 
-  const generateCacheKey = useCallback((operation: string, params: any): string => {
+  const generateCacheKey = useCallback((operation: string, params: unknown): string => {
     return `${operation}:${JSON.stringify(params)}`;
   }, []);
 

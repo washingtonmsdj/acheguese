@@ -89,7 +89,9 @@ export class CommunityRolloutService {
     return { blocked: false };
   }
 
-  async getCommunityConfig(resolved?: ResolvedTerritory): Promise<Record<string, any> | null> {
+  async getCommunityConfig(
+    resolved?: ResolvedTerritory,
+  ): Promise<Record<string, unknown> | null> {
     const locationId = this.resolveLocationId(resolved);
     if (!locationId) return null;
 

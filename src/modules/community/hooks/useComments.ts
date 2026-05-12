@@ -17,6 +17,40 @@ interface Comment {
   replies?: Comment[];
 }
 
+interface CommentProfile {
+  name?: string | null;
+  avatar_url?: string | null;
+}
+
+interface RawComment {
+  id: string;
+  post_id: string;
+  author_profile_id?: string | null;
+  profile_id?: string | null;
+  profile?: CommentProfile | null;
+  content: string;
+  parent_id: string | null;
+  created_at: string;
+  likes_count: number;
+  replies?: RawComment[];
+}
+
+function mapRawComment(raw: RawComment): Comment {
+  return {
+    id: raw.id,
+    post_id: raw.post_id,
+    author_profile_id: raw.author_profile_id || raw.profile_id || "",
+    author_name: raw.profile?.name || "Usuário",
+    author_avatar: raw.profile?.avatar_url ?? undefined,
+    content: raw.content,
+    parent_id: raw.parent_id,
+    created_at: raw.created_at,
+    likes_count: raw.likes_count,
+    is_liked: false,
+    replies: (raw.replies || []).map(mapRawComment),
+  };
+}
+
 export function useComments(postId: string | null, _userId?: string) {
   const [comments, setComments] = useState<Comment[]>([]);
   const [loading, setLoading] = useState(false);
@@ -26,41 +60,14 @@ export function useComments(postId: string | null, _userId?: string) {
 
     setLoading(true);
     try {
-      const commentsWithReplies =
-        await commentService.getCommentsByPost(postId);
-
-      const formattedComments: Comment[] = commentsWithReplies.map(
-        (comment: any) => ({
-          id: comment.id,
-          post_id: comment.post_id,
-          author_profile_id: comment.author_profile_id || comment.profile_id,
-          author_name: comment.profile?.name || "UsuÃ¡rio",
-          author_avatar: comment.profile?.avatar_url,
-          content: comment.content,
-          parent_id: comment.parent_id,
-          created_at: comment.created_at,
-          likes_count: comment.likes_count,
-          is_liked: false,
-          replies: (comment.replies || []).map((reply: any) => ({
-            id: reply.id,
-            post_id: reply.post_id,
-            author_profile_id: reply.author_profile_id || reply.profile_id,
-            author_name: reply.profile?.name || "UsuÃ¡rio",
-            author_avatar: reply.profile?.avatar_url,
-            content: reply.content,
-            parent_id: reply.parent_id,
-            created_at: reply.created_at,
-            likes_count: reply.likes_count,
-            is_liked: false,
-          })),
-        }),
-      );
+      const commentsWithReplies = await commentService.getCommentsByPost(postId);
+      const formattedComments = (commentsWithReplies as RawComment[]).map(mapRawComment);
 
       setComments(formattedComments);
       return formattedComments;
     } catch (error) {
       logger.error("Error fetching comments:", error);
-      toast.error("Erro ao carregar comentÃ¡rios");
+      toast.error("Erro ao carregar comentários");
       return [];
     } finally {
       setLoading(false);
@@ -84,13 +91,12 @@ export function useComments(postId: string | null, _userId?: string) {
 
   const removeComment = (commentId: string) => {
     setComments((prev) =>
-      prev.filter((c) => {
-        if (c.id === commentId) return false;
-        if (c.replies) {
-          c.replies = c.replies.filter((r) => r.id !== commentId);
-        }
-        return true;
-      }),
+      prev
+        .filter((c) => c.id !== commentId)
+        .map((c) => ({
+          ...c,
+          replies: c.replies?.filter((r) => r.id !== commentId),
+        })),
     );
   };
 

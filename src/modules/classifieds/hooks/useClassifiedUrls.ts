@@ -72,7 +72,7 @@ export function useClassifiedUrls(routeResolved?: ResolvedTerritory | null): Cla
     edit: (id: string) => `/classificados/editar/${id}`,
     seller: (sellerId: string) => `/classificados/vendedor/${sellerId}`,
     canonical: (ctx: ClassifiedUrlContext) => classifiedUrlService.buildUrls(ctx).canonical,
-    short: (publicId: string) => `/c/${publicId}`,
+    short: (publicId: string) => classifiedUrlService.buildShortUrl(publicId),
   };
 }
 

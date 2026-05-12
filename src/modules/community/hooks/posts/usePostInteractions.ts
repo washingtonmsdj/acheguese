@@ -135,7 +135,7 @@ export function usePostInteractions(
       if (import.meta.env.DEV) {
         logger.info("✅ Cache invalidado");
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       // Rollback em caso de erro
       if (import.meta.env.DEV) {
         logger.error("❌ Erro no handleLike:", error);
@@ -144,7 +144,7 @@ export function usePostInteractions(
       setState(state); // Restaurar state original
 
       // Mensagem de erro específica
-      if (error?.code === "23503") {
+      if ((error as { code?: string })?.code === "23503") {
         toast.error("Este post não está mais disponível");
         // Limpar cache para remove post órfão
         queryClient.invalidateQueries({ queryKey: ["community-feed"] });

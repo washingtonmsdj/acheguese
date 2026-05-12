@@ -14,6 +14,14 @@ import { commentService } from "@/core/comments/services";
 import { postService } from "@/core/posts/services";
 import { AuthorizationEngine } from "@/core/authorization/services/AuthorizationEngine";
 import { profileService } from "@/core/profiles/services/ProfileService";
+import type { Post } from "@/core/posts/types";
+
+type PostOwnershipShape = Pick<Post, "author_profile_id" | "profile_id">;
+
+function getPostOwnerProfileId(post: PostOwnershipShape | null): string | null {
+  if (!post) return null;
+  return post.author_profile_id ?? post.profile_id ?? null;
+}
 
 /**
  * Verificar se perfil pode criar post (rate limit + permissões)
@@ -115,21 +123,15 @@ export async function createCommentNotification(
       return;
     }
 
-    if (
-      (post as any).author_profile_id === actorId ||
-      (post as any).profile_id === actorId ||
-      (post as any).author_profile_id === actorId
-    ) {
+    const postOwnerProfileId = getPostOwnerProfileId(post);
+    if (!postOwnerProfileId || postOwnerProfileId === actorId) {
       return;
     }
 
     const actor = await profileService.getProfileById(actorId);
 
     await notificationService.createNotification({
-      user_id:
-        (post as any).author_profile_id ||
-        (post as any).profile_id ||
-        (post as any).author_profile_id,
+      user_id: postOwnerProfileId,
       type: "community" as NotificationType,
       title: "Novo comentário",
       message: `${actor?.name || "Alguém"} comentou no seu post`,
@@ -213,21 +215,15 @@ export async function createLikeNotification(
       return;
     }
 
-    if (
-      (post as any).author_profile_id === actorId ||
-      (post as any).profile_id === actorId ||
-      (post as any).author_profile_id === actorId
-    ) {
+    const postOwnerProfileId = getPostOwnerProfileId(post);
+    if (!postOwnerProfileId || postOwnerProfileId === actorId) {
       return;
     }
 
     const actor = await profileService.getProfileById(actorId);
 
     await notificationService.createNotification({
-      user_id:
-        (post as any).author_profile_id ||
-        (post as any).profile_id ||
-        (post as any).author_profile_id,
+      user_id: postOwnerProfileId,
       type: "community" as NotificationType,
       title: "Nova curtida",
       message: `${actor?.name || "Alguém"} curtiu seu post`,

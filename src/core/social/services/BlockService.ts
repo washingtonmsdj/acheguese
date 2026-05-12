@@ -9,6 +9,7 @@
 import { supabase } from "@/integrations/supabase";
 import { logger } from "@/shared/utils/logger";
 import { trackError } from "@/shared/utils/errorTracking";
+import type { AdminSupabaseClient } from "@/core/admin/types/adminDatabase.types";
 
 export interface BlockedUser {
   id: string;
@@ -32,13 +33,14 @@ export interface BlockStats {
 
 class BlockService {
   private readonly TABLE = "user_blocks";
+  private readonly db = supabase as unknown as AdminSupabaseClient;
 
   /**
    * ✅ SSOT: Obter lista de usuários bloqueados
    */
   async getBlockedUsers(userId: string): Promise<BlockedUser[]> {
     try {
-      const { data, error } = await (supabase as any)
+      const { data, error } = await this.db
         .from(this.TABLE)
         .select(
           `
@@ -77,7 +79,7 @@ class BlockService {
   ): Promise<boolean> {
     try {
       // Verificar se já está bloqueado
-      const { data: existing } = await (supabase as any)
+      const { data: existing } = await this.db
         .from(this.TABLE)
         .select("id")
         .eq("blocker_user_id", blockerUserId)
@@ -89,7 +91,7 @@ class BlockService {
       }
 
       // Criar bloqueio
-      const { error } = await (supabase as any).from(this.TABLE).insert({
+      const { error } = await this.db.from(this.TABLE).insert({
         blocker_user_id: blockerUserId,
         blocked_user_id: blockedUserId,
         reason,
@@ -118,7 +120,7 @@ class BlockService {
     blockedUserId: string,
   ): Promise<boolean> {
     try {
-      const { error } = await (supabase as any)
+      const { error } = await this.db
         .from(this.TABLE)
         .delete()
         .eq("blocker_user_id", blockerUserId)
@@ -146,7 +148,7 @@ class BlockService {
     blockedUserId: string,
   ): Promise<boolean> {
     try {
-      const { data, error } = await (supabase as any)
+      const { data, error } = await this.db
         .from(this.TABLE)
         .select("id")
         .eq("blocker_user_id", blockerUserId)
@@ -175,7 +177,7 @@ class BlockService {
     userId2: string,
   ): Promise<boolean> {
     try {
-      const { data, error } = await (supabase as any)
+      const { data, error } = await this.db
         .from(this.TABLE)
         .select("id")
         .or(
@@ -203,11 +205,11 @@ class BlockService {
   async getBlockStats(userId: string): Promise<BlockStats> {
     try {
       const [blockedByMe, blockedMe] = await Promise.all([
-        (supabase as any)
+        this.db
           .from(this.TABLE)
           .select("id", { count: "exact", head: true })
           .eq("blocker_user_id", userId),
-        (supabase as any)
+        this.db
           .from(this.TABLE)
           .select("id", { count: "exact", head: true })
           .eq("blocked_user_id", userId),
@@ -237,14 +239,14 @@ class BlockService {
    */
   async getBlockedUserIds(userId: string): Promise<string[]> {
     try {
-      const { data, error } = await (supabase as any)
+      const { data, error } = await this.db
         .from(this.TABLE)
         .select("blocked_user_id")
         .eq("blocker_user_id", userId);
 
       if (error) throw error;
 
-      return (data || []).map((row: any) => row.blocked_user_id);
+      return ((data || []) as Array<{ blocked_user_id: string }>).map((row) => row.blocked_user_id);
     } catch (error) {
       logger.error("Error fetching blocked user IDs", error as Error, {
         service: "BlockService",

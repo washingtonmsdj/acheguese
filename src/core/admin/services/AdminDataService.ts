@@ -33,9 +33,11 @@ export class AdminDataService {
         user_roles: roles.map(r => ({ role: r.role })),
         profile_members: [], // TODO: Implementar via serviço apropriado se necessário
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('Error fetching user details:', error);
-      throw new Error(`Erro ao buscar detalhes do usuário: ${error.message}`);
+      throw new Error(
+        `Erro ao buscar detalhes do usuário: ${error instanceof Error ? error.message : String(error)}`,
+      );
     }
   }
 
@@ -43,7 +45,7 @@ export class AdminDataService {
    * Atualizar dados de usuário (admin only)
    * ✅ SSOT: Delega para ProfileService
    */
-  static async updateUserData(userId: string, updates: Record<string, any>) {
+  static async updateUserData(userId: string, updates: Record<string, unknown>) {
     try {
       // Buscar perfil ativo do usuário
       const profile = await profileService.getProfileContext(userId);
@@ -53,9 +55,11 @@ export class AdminDataService {
 
       // Atualizar via ProfileService
       return await profileService.updateProfile(profile.id, updates);
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('Error updating user data:', error);
-      throw new Error(`Erro ao atualizar usuário: ${error.message}`);
+      throw new Error(
+        `Erro ao atualizar usuário: ${error instanceof Error ? error.message : String(error)}`,
+      );
     }
   }
 
@@ -67,7 +71,7 @@ export class AdminDataService {
     try {
       const roles = await adminRolesService.getUserRoles(userId);
       return roles.map(r => r.role);
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('Error fetching user roles:', error);
       return [];
     }
@@ -87,9 +91,11 @@ export class AdminDataService {
       if (!success) {
         throw new Error('Failed to grant role');
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('Error updating user role:', error);
-      throw new Error(`Erro ao atualizar role: ${error.message}`);
+      throw new Error(
+        `Erro ao atualizar role: ${error instanceof Error ? error.message : String(error)}`,
+      );
     }
   }
 
@@ -109,9 +115,11 @@ export class AdminDataService {
         total: result.total || 0,
         hasMore: result.total ? result.total > (page + 1) * pageSize : false,
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('Error fetching all users:', error);
-      throw new Error(`Erro ao buscar usuários: ${error.message}`);
+      throw new Error(
+        `Erro ao buscar usuários: ${error instanceof Error ? error.message : String(error)}`,
+      );
     }
   }
 }

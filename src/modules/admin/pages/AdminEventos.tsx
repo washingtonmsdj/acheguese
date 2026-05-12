@@ -67,8 +67,12 @@ export default function AdminEventos() {
       queryClient.invalidateQueries({ queryKey: ["admin-events"] });
       toast({ title: "Evento cancelado com sucesso" });
     },
-    onError: (error: any) => {
-      toast({ title: "Erro ao cancelar evento", description: error.message, variant: "destructive" });
+    onError: (error: unknown) => {
+      toast({
+        title: "Erro ao cancelar evento",
+        description: error instanceof Error ? error.message : "Falha ao cancelar evento",
+        variant: "destructive",
+      });
     },
   });
 
@@ -79,8 +83,12 @@ export default function AdminEventos() {
       queryClient.invalidateQueries({ queryKey: ["admin-events"] });
       toast({ title: "Evento marcado como concluído" });
     },
-    onError: (error: any) => {
-      toast({ title: "Erro ao atualizar evento", description: error.message, variant: "destructive" });
+    onError: (error: unknown) => {
+      toast({
+        title: "Erro ao atualizar evento",
+        description: error instanceof Error ? error.message : "Falha ao atualizar evento",
+        variant: "destructive",
+      });
     },
   });
 
@@ -92,8 +100,12 @@ export default function AdminEventos() {
       toast({ title: "Evento excluído com sucesso" });
       setSelectedEvent(null);
     },
-    onError: (error: any) => {
-      toast({ title: "Erro ao excluir evento", description: error.message, variant: "destructive" });
+    onError: (error: unknown) => {
+      toast({
+        title: "Erro ao excluir evento",
+        description: error instanceof Error ? error.message : "Falha ao excluir evento",
+        variant: "destructive",
+      });
     },
   });
 

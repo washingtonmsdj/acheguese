@@ -21,6 +21,57 @@ import type {
   MentionResult,
 } from "@/core/community/qa-types";
 
+interface QuestionLocationRow {
+  id: string;
+  name: string;
+  type?: string;
+}
+
+interface CommunityQuestionRow {
+  id: string;
+  title: string | null;
+  description: string | null;
+  category: string | null;
+  answers_count: number | null;
+  resolved: boolean | null;
+  created_at: string;
+  author_profile_id: string;
+  location_id: string | null;
+  location?: QuestionLocationRow | null;
+}
+
+interface QuestionAnswerRow {
+  id: string;
+  question_id: string;
+  content: string;
+  likes_count: number | null;
+  is_best_answer: boolean | null;
+  created_at: string;
+  author_profile_id: string;
+  professional_id: string | null;
+  business_id: string | null;
+}
+
+interface QuestionAnswerLikeRow {
+  answer_id: string;
+}
+
+interface MentionProfessional {
+  id: string;
+  name: string;
+  category?: string;
+  service?: string;
+  rating?: number;
+}
+
+interface MentionBusiness {
+  id: string;
+  name: string;
+  category?: string;
+  slug?: string;
+  neighborhood?: string;
+}
+
 export class CommunityQAService {
   // ── Perguntas ──────────────────────────────────────────────────────────────
 
@@ -28,12 +79,12 @@ export class CommunityQAService {
     questionId: string,
   ): Promise<CommunityQuestion | null> {
     try {
-      const { data, error } = await (supabase as any)
+      const { data, error } = await supabase
         .from("community_questions")
         .select("*, location:locations(id, name, type)")
         .eq("id", questionId)
         .eq("type", "question")
-        .maybeSingle();
+        .maybeSingle<CommunityQuestionRow>();
 
       if (error) throw error;
       if (!data) return null;
@@ -74,7 +125,7 @@ export class CommunityQAService {
         throw new Error("location_id é obrigatório para criar uma pergunta");
       }
 
-      const { data, error } = await (supabase as any)
+      const { data, error } = await supabase
         .from("community_questions")
         .insert({
           author_profile_id: input.autor_id,
@@ -86,7 +137,7 @@ export class CommunityQAService {
           location_id: input.location_id,
         })
         .select()
-        .single();
+        .single<CommunityQuestionRow>();
 
       if (error) throw error;
 
@@ -117,7 +168,7 @@ export class CommunityQAService {
     filters: QuestionFilters = {},
   ): Promise<CommunityQuestion[]> {
     try {
-      let query = (supabase as any)
+      let query = supabase
         .from("community_questions")
         .select("*, location:locations(id, name, type)")
         .eq("type", "question")
@@ -141,7 +192,8 @@ export class CommunityQAService {
       if (error) throw error;
       if (!data || data.length === 0) return [];
 
-      const autorIds = [...new Set(data.map((q) => q.author_profile_id))];
+      const questions = data as CommunityQuestionRow[];
+      const autorIds = [...new Set(questions.map((q) => q.author_profile_id))];
       const profiles = autorIds.length > 0
         ? await profileService.getProfilesSummary(autorIds as string[])
         : [];
@@ -149,7 +201,7 @@ export class CommunityQAService {
         profiles.map((p) => [p.id, { id: p.id, name: p.name, avatar_url: p.avatarUrl }]),
       );
 
-      return data.map((question) => ({
+      return questions.map((question) => ({
         id: question.id,
         titulo: question.title || "",
         description: question.description || "",
@@ -181,11 +233,12 @@ export class CommunityQAService {
     userId?: string,
   ): Promise<CommunityAnswer[]> {
     try {
-      const { data, error } = await (supabase as any)
+      const { data, error } = await supabase
         .from("question_answers")
         .select("*")
         .eq("question_id", questionId)
-        .order("created_at", { ascending: true });
+        .order("created_at", { ascending: true })
+        .returns<QuestionAnswerRow[]>();
 
       if (error) throw error;
       if (!data || data.length === 0) return [];
@@ -200,25 +253,45 @@ export class CommunityQAService {
         proIds.length > 0 ? ProfessionalService.getProfessionalsByIds(proIds) : [],
         bizIds.length > 0 ? BusinessService.getBusinessesByIds(bizIds) : [],
         userId && answerIds.length > 0
-          ? (supabase as any)
+          ? supabase
               .from("question_answer_likes")
               .select("answer_id")
               .eq("user_id", userId)
               .in("answer_id", answerIds)
-              .then(({ data: likes }: any) =>
-                new Set((likes ?? []).map((l: any) => l.answer_id))
+              .returns<QuestionAnswerLikeRow[]>()
+              .then(({ data: likes }) =>
+                new Set((likes ?? []).map((l) => l.answer_id))
               )
           : Promise.resolve(new Set<string>()),
       ]);
 
-      const profileMap = new Map<string, any>();
+      const profileMap = new Map<
+        string,
+        { id: string; name: string; avatar_url: string }
+      >();
       profiles.forEach((p) => profileMap.set(p.id, { id: p.id, name: p.name, avatar_url: p.avatarUrl }));
-      const proMap = new Map<string, any>();
-      (professionals as any[]).forEach((p: any) => proMap.set(p.id, p));
-      const bizMap = new Map<string, any>();
-      (businesses as any[]).forEach((b: any) => bizMap.set(b.id, b));
+      const proMap = new Map<string, MentionProfessional>();
+      professionals.forEach((p) => {
+        proMap.set(p.id, {
+          id: p.id,
+          name: p.name,
+          category: p.category,
+          service: "service" in p ? p.service : undefined,
+          rating: p.rating,
+        });
+      });
+      const bizMap = new Map<string, MentionBusiness>();
+      businesses.forEach((b) => {
+        bizMap.set(b.id, {
+          id: b.id,
+          name: b.name,
+          category: b.category,
+          slug: "slug" in b ? b.slug : undefined,
+          neighborhood: "neighborhood" in b ? b.neighborhood : undefined,
+        });
+      });
 
-      return data.map((answer: any) => ({
+      return data.map((answer) => ({
         id: answer.id,
         question_id: answer.question_id,
         texto: answer.content,
@@ -248,7 +321,7 @@ export class CommunityQAService {
     input: CreateAnswerInput,
   ): Promise<CommunityAnswer | null> {
     try {
-      const { data, error } = await (supabase as any)
+      const { data, error } = await supabase
         .from("question_answers")
         .insert({
           question_id: input.question_id,
@@ -258,7 +331,7 @@ export class CommunityQAService {
           business_id: input.business_id || null,
         })
         .select()
-        .single();
+        .single<QuestionAnswerRow>();
 
       if (error) throw error;
 
@@ -293,7 +366,7 @@ export class CommunityQAService {
     answerId: string,
   ): Promise<boolean> {
     try {
-      const { error } = await (supabase as any).rpc("mark_best_answer", {
+      const { error } = await supabase.rpc("mark_best_answer", {
         _question_id: questionId,
         _answer_id: answerId,
       });
@@ -315,32 +388,32 @@ export class CommunityQAService {
     userId: string,
   ): Promise<{ liked: boolean; newCount: number } | null> {
     try {
-      const { data: existing } = await (supabase as any)
+      const { data: existing } = await supabase
         .from("question_answer_likes")
         .select("id")
         .eq("answer_id", answerId)
         .eq("user_id", userId)
-        .maybeSingle();
+        .maybeSingle<{ id: string }>();
 
       if (existing) {
-        const { error } = await (supabase as any)
+        const { error } = await supabase
           .from("question_answer_likes")
           .delete()
           .eq("answer_id", answerId)
           .eq("user_id", userId);
         if (error) throw error;
       } else {
-        const { error } = await (supabase as any)
+        const { error } = await supabase
           .from("question_answer_likes")
           .insert({ answer_id: answerId, user_id: userId });
         if (error) throw error;
       }
 
-      const { data: updated } = await (supabase as any)
+      const { data: updated } = await supabase
         .from("question_answers")
         .select("likes_count")
         .eq("id", answerId)
-        .single();
+        .single<{ likes_count: number | null }>();
 
       return {
         liked: !existing,
@@ -366,14 +439,16 @@ export class CommunityQAService {
         ProfessionalService.searchProfessionals(query),
         BusinessService.searchBusinessesByName(query),
       ]);
+      const typedProfessionals = professionals as MentionProfessional[];
+      const typedBusinesses = businesses as MentionBusiness[];
       return [
-        ...professionals.map((p) => ({
+        ...typedProfessionals.map((p) => ({
           id: p.id, name: p.name, type: "professional" as const,
-          category: p.category, service: (p as any).service, rating: p.rating,
+          category: p.category, service: p.service, rating: p.rating,
         })),
-        ...businesses.map((b) => ({
+        ...typedBusinesses.map((b) => ({
           id: b.id, name: b.name, type: "business" as const,
-          category: b.category, slug: (b as any).slug, neighborhood: (b as any).neighborhood,
+          category: b.category, slug: b.slug, neighborhood: b.neighborhood,
         })),
       ];
     } catch (error) {

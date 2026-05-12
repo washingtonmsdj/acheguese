@@ -14,6 +14,7 @@ import {
 import type { MobilidadeSectionProps } from "./types";
 import type { Tables } from "@/integrations/supabase";
 import { getMobilityServiceStatus } from "@/modules/profile/utils/mobilityServiceStatus";
+import type { MobilityRide } from "@/modules/mobility/components/driver/DriverRidesTab";
 
 type DriverDataRecord = Tables<"driver_data">;
 
@@ -114,7 +115,7 @@ export function MobilidadeSection({
       )}
 
       {hasActiveRide && activeRide ? (
-        <ProfileActiveRideCard ride={activeRide as any} />
+        <ProfileActiveRideCard ride={activeRide as MobilityRide} />
       ) : (
         <EmptyPanel
           title="Nenhuma operacao ativa"

@@ -1,24 +1,11 @@
 ﻿import { Car, FileText, MapPinned, Package, Route, Settings2, Wallet } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
+import { mobilityRoutes } from "@/modules/mobility/routes/mobilityRoutes";
 
 export const profileMobilityRoutes = {
   home: "/perfil/mobilidade",
-  motorista: {
-    home: "/central/motorista",
-    cadastro: "/central/motorista/cadastro",
-    disponibilidade: "/central/motorista/disponibilidade",
-    corridas: "/central/motorista/corridas",
-    ganhos: "/central/motorista/ganhos",
-    configuracoes: "/central/motorista/configuracoes",
-  },
-  motoboy: {
-    home: "/central/motoboy",
-    cadastro: "/central/motoboy/cadastro",
-    disponibilidade: "/central/motoboy/disponibilidade",
-    entregas: "/central/motoboy/entregas",
-    ganhos: "/central/motoboy/ganhos",
-    configuracoes: "/central/motoboy/configuracoes",
-  },
+  motorista: mobilityRoutes.motorista,
+  motoboy: mobilityRoutes.motoboy,
 } as const;
 
 export type MobilityServiceType = "motorista" | "motoboy";

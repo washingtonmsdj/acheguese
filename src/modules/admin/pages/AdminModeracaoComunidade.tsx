@@ -35,6 +35,7 @@ import { Textarea } from "@/shared/components/ui/textarea";
 import { Label } from "@/shared/components/ui/label";
 import { RIDE_STATUS, USER_ROLE } from "@/shared/types/constants";
 import { logger } from "@/shared/utils/logger";
+import type { LucideIcon } from "lucide-react";
 
 type FilterStatus = "all" | "pending" | "flagged" | "approved" | "rejected";
 type ModerationAction = "approve" | "reject" | "flag" | "delete";
@@ -489,7 +490,7 @@ function StatCard({
 }: {
   label: string;
   value: number;
-  icon: any;
+  icon: LucideIcon;
   color: string;
 }) {
   return (

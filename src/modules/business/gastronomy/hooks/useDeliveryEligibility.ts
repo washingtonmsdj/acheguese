@@ -24,20 +24,37 @@ export function useDeliveryEligibility({
   orderValue = 0,
   enabled = true,
 }: UseDeliveryEligibilityParams) {
+  const normalizedNeighborhood = neighborhood.trim();
+  const normalizedCity = city.trim();
+  const normalizedState = state.trim();
+  const shouldFetch =
+    enabled &&
+    !!businessId &&
+    normalizedNeighborhood.length > 0 &&
+    normalizedCity.length > 0 &&
+    normalizedState.length > 0;
+
   const { data: eligibility, isLoading, error } = useQuery({
-    queryKey: ['delivery-eligibility', businessId, neighborhood, city, state, orderValue],
+    queryKey: [
+      'delivery-eligibility',
+      businessId,
+      normalizedNeighborhood,
+      normalizedCity,
+      normalizedState,
+      orderValue,
+    ],
     queryFn: async () => {
       const result = await DeliveryAreaService.checkEligibility(
         businessId,
-        neighborhood,
-        city,
-        state,
+        normalizedNeighborhood,
+        normalizedCity,
+        normalizedState,
         orderValue
       );
       if (result.error) throw new Error(result.error);
       return result.data;
     },
-    enabled: enabled && !!businessId && !!neighborhood && !!city && !!state,
+    enabled: shouldFetch,
     staleTime: 5 * 60 * 1000, // 5 minutos
   });
 

@@ -81,7 +81,7 @@ const TAP_SCALE = 0.98;
  * Gera texto de status operacional inteligente
  */
 function getSmartOpeningStatus(
-  horarioFuncionamento: any,
+  horarioFuncionamento: Parameters<typeof OpeningHoursService.calculateStatus>[0],
 ): {
   isOpen: boolean;
   statusText: string;

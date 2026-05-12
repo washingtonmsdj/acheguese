@@ -283,7 +283,7 @@ export class OrderDeliverySSOTService {
   private static async getOrderRow(
     orderId: string,
   ): Promise<Record<string, unknown>> {
-    const { data, error } = await (supabase as any)
+    const { data, error } = await supabase
       .from(ORDER_TABLE)
       .select("*")
       .eq("id", orderId)
@@ -296,7 +296,7 @@ export class OrderDeliverySSOTService {
   private static async getOrderItems(
     orderId: string,
   ): Promise<OrderItemRecord[]> {
-    const { data, error } = await (supabase as any)
+    const { data, error } = await supabase
       .from(ORDER_ITEMS_TABLE)
       .select("*")
       .eq("order_id", orderId)
@@ -319,7 +319,7 @@ export class OrderDeliverySSOTService {
     rpcName: string,
     args: Record<string, unknown>,
   ): Promise<OrderRecord> {
-    const { data, error } = await (supabase as any).rpc(rpcName, args);
+    const { data, error } = await supabase.rpc(rpcName, args);
 
     if (error) throw error;
 
@@ -330,7 +330,7 @@ export class OrderDeliverySSOTService {
     rpcName: string,
     args: Record<string, unknown>,
   ): Promise<DeliveryOccurrence> {
-    const { data, error } = await (supabase as any).rpc(rpcName, args);
+    const { data, error } = await supabase.rpc(rpcName, args);
 
     if (error) throw error;
 
@@ -428,7 +428,7 @@ export class OrderDeliverySSOTService {
     },
   ): Promise<OrderOperationResult<OrderRecord[]>> {
     try {
-      let query = (supabase as any)
+      let query = supabase
         .from(ORDER_TABLE)
         .select("*")
         .eq("source_type", sourceType)
@@ -739,7 +739,7 @@ export class OrderDeliverySSOTService {
     orderId: string,
   ): Promise<OrderOperationResult<OrderTimelineEvent[]>> {
     try {
-      const { data, error } = await (supabase as any)
+      const { data, error } = await supabase
         .from(ORDER_TIMELINE_TABLE)
         .select("*")
         .eq("order_id", orderId)
@@ -764,7 +764,7 @@ export class OrderDeliverySSOTService {
     orderId: string,
   ): Promise<OrderOperationResult<DeliveryOccurrence[]>> {
     try {
-      const { data, error } = await (supabase as any)
+      const { data, error } = await supabase
         .from(DELIVERY_OCCURRENCES_TABLE)
         .select("*")
         .eq("order_id", orderId)

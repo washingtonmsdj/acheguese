@@ -9,7 +9,7 @@ import { Badge } from "@/shared/components/ui/badge";
 import { CheckCircle2, Flag } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
-// Question type definido localmente abaixo
+import type { CommunityQuestion as Question } from "@/core/community/services/CommunityQAService";
 
 interface QuestionCardProps {
   question: Question;

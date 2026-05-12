@@ -55,6 +55,13 @@ interface AcceptResult {
   reason?: 'already_accepted' | 'invalid_state' | 'driver_busy' | 'driver_not_eligible' | 'expired' | 'unknown';
 }
 
+interface ProviderErrorShape {
+  code?: string;
+  message?: string;
+  details?: string;
+  hint?: string;
+}
+
 // ============================================
 // RIDE DISPATCH SERVICE
 // ============================================
@@ -135,6 +142,9 @@ export class RideDispatchService {
       const availCount = availability ? 1 : 0;
 
       // DIAGNAOSTICO GATE 7: Log apos o .single()
+      const providerError =
+        availError && typeof availError === "object" ? (availError as ProviderErrorShape) : undefined;
+
       logger.info('RideDispatchService.assignDriver - AFTER .single()', {
         method: 'assignDriver',
         step: 'check_driver_availability',
@@ -143,10 +153,10 @@ export class RideDispatchService {
         rowsReturned: availCount,
         hasData: !!availability,
         hasError: !!availError,
-        errorCode: (availError as any)?.code,
-        errorMessage: (availError as any)?.message,
-        errorDetails: (availError as any)?.details,
-        errorHint: (availError as any)?.hint,
+        errorCode: providerError?.code,
+        errorMessage: providerError?.message,
+        errorDetails: providerError?.details,
+        errorHint: providerError?.hint,
       });
 
       if (availError) throw availError;

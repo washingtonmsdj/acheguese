@@ -19,6 +19,13 @@ import type {
   CooldownResult 
 } from '../domain/types';
 
+interface BusinessSlugHistoryRow {
+  id: string;
+  old_slug: string;
+  change_reason: string;
+  created_at: string;
+}
+
 export class BusinessIdentityAdapter implements IdentityAdapter {
   readonly entityType: EntityType = 'business';
   readonly policy = new BusinessIdentityPolicy();
@@ -89,7 +96,7 @@ export class BusinessIdentityAdapter implements IdentityAdapter {
     try {
       const history = await BusinessService.getSlugHistory(entityId);
 
-      return history.map((record: any) => ({
+      return (history as BusinessSlugHistoryRow[]).map((record) => ({
         id: record.id,
         entityType: 'business' as EntityType,
         entityId: entityId,

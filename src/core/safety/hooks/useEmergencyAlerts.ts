@@ -6,7 +6,12 @@
 import { logger } from '@/shared/utils/logger';
 import { useState, useEffect, useCallback } from 'react';
 import { safetyService } from '../instance';
-import type { EmergencyAlert, CreateEmergencyAlertInput, SafetyFilter } from '../types';
+import type {
+  EmergencyAlert,
+  CreateEmergencyAlertInput,
+  SafetyFilter,
+  EmergencyAlertStatus,
+} from '../types';
 
 export function useEmergencyAlerts(filter?: SafetyFilter) {
   const [alerts, setAlerts] = useState<EmergencyAlert[]>([]);
@@ -39,7 +44,7 @@ export function useEmergencyAlerts(filter?: SafetyFilter) {
     return result;
   };
 
-  const updateStatus = async (alertId: string, status: any, performedBy: string) => {
+  const updateStatus = async (alertId: string, status: EmergencyAlertStatus, performedBy: string) => {
     const result = await safetyService.updateAlertStatus(alertId, status, performedBy);
     if (result.success) {
       await fetchAlerts();

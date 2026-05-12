@@ -17,6 +17,7 @@ import { Badge } from "@/shared/components/ui/badge";
 import { motion } from "framer-motion";
 import { cn } from "@/shared/utils/cn";
 import type { RideRequest } from "@/modules/mobility/types";
+import { mobilityRoutes } from "@/modules/mobility/routes/mobilityRoutes";
 
 interface ActiveRideWidgetProps {
   ride: RideRequest;
@@ -73,9 +74,9 @@ export const ActiveRideWidget = memo(
 
     const handleClick = () => {
       if (isDriver) {
-        navigate("/central/motorista");
+        navigate(mobilityRoutes.motorista.home);
       } else {
-        navigate("/mobilidade/passageiro");
+        navigate(mobilityRoutes.passageiro.home);
       }
     };
 

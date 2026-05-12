@@ -243,7 +243,7 @@ export class OrderDeliveryLinkService {
     actorProfileId: string;
     courierProfileId?: string;
     reason: string;
-      proof?: DeliveryProof;
+    proof?: DeliveryProof;
   }): Promise<boolean> {
     const metadata = { source: "ride_request_sync" };
     const result =
@@ -259,21 +259,19 @@ export class OrderDeliveryLinkService {
               order_id: params.orderId,
               actor_profile_id: params.actorProfileId,
               reason: params.reason,
-                          proof: params.proof,
+              proof: params.proof,
             })
           : params.status === LOGISTICS_STATUS.CANCELED
             ? await OrderDeliverySSOTService.cancelOrder({
                 order_id: params.orderId,
                 actor_profile_id: params.actorProfileId,
                 reason: params.reason,
-                            proof: params.proof,
             })
             : params.status === LOGISTICS_STATUS.FAILED
               ? await OrderDeliverySSOTService.failOrder({
                   order_id: params.orderId,
                   actor_profile_id: params.actorProfileId,
                   reason: params.reason,
-                              proof: params.proof,
             })
               : await OrderDeliverySSOTService.transitionLogisticsStatus({
                   order_id: params.orderId,

@@ -354,7 +354,7 @@ function PremiumDriverHeader({
   inProgressCount: number;
   handleGoBack: () => void;
   toggleDriverOnline: () => void;
-  hook: any;
+  hook: ReturnType<typeof useMotoristaPage>;
 }) {
   const { unreadCount } = useUnifiedNotifications({
     enableRealtime: true,

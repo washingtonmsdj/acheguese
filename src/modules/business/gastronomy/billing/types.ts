@@ -119,7 +119,7 @@ export interface BillingEvent {
   event_type: BillingEventType;
   amount: number;
   currency: 'BRL';
-  metadata: Record<string, any>;
+  metadata: Record<string, unknown>;
   created_at: string;
 }
 

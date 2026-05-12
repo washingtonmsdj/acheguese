@@ -339,7 +339,12 @@ export function useProfileHub() {
   // Próximas ações
   const showBusinessOnboarding =
     !hasBusinesses &&
-    Boolean(identity?.permissions.some((item: any) => item.key === 'canCreateBusiness' && item.allowed));
+    Boolean(
+      identity?.permissions.some(
+        (item: { key: string; allowed: boolean }) =>
+          item.key === 'canCreateBusiness' && item.allowed,
+      ),
+    );
 
   const nextActions = useMemo(
     () =>

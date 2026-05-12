@@ -11,6 +11,7 @@ import {
   X,
   Package,
 } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import { Badge } from "@/shared/components/ui/badge";
 import { Button } from "@/shared/components/ui/button";
 import {
@@ -27,7 +28,7 @@ import { ptBR } from "date-fns/locale";
 
 const typeConfig: Record<
   string,
-  { icon: any; color: string; bg: string; border: string }
+  { icon: LucideIcon; color: string; bg: string; border: string }
 > = {
   ride_request: {
     icon: Car,

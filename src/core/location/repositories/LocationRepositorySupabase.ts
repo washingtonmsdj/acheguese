@@ -34,7 +34,7 @@ function rowToLocation(row: Record<string, unknown>): Location {
 
 export class LocationRepositorySupabase implements ILocationRepository {
   async findById(id: string): Promise<Location | null> {
-    const { data, error } = await (supabase as any)
+    const { data, error } = await supabase
       .from(TABLE)
       .select('*')
       .eq('id', id)
@@ -46,7 +46,7 @@ export class LocationRepositorySupabase implements ILocationRepository {
   }
 
   async findByPath(path: string): Promise<Location | null> {
-    const { data, error } = await (supabase as any)
+    const { data, error } = await supabase
       .from(TABLE)
       .select('*')
       .eq('geographic_path', path)
@@ -58,7 +58,7 @@ export class LocationRepositorySupabase implements ILocationRepository {
   }
 
   async findBySlugWithinParent(slug: string, parent_id: string): Promise<Location | null> {
-    const { data, error } = await (supabase as any)
+    const { data, error } = await supabase
       .from(TABLE)
       .select('*')
       .eq('slug', slug)
@@ -111,7 +111,7 @@ export class LocationRepositorySupabase implements ILocationRepository {
 
     const pathPrefix = self.geographic_path + '/';
 
-    let query = (supabase as any)
+    let query = supabase
       .from(TABLE)
       .select('*', { count: 'exact' })
       .like('geographic_path', `${pathPrefix}%`)
@@ -120,7 +120,7 @@ export class LocationRepositorySupabase implements ILocationRepository {
 
     if (options.include_self) {
       // Inclui o próprio nó: path = pathPrefix sem trailing slash OU começa com pathPrefix
-      query = (supabase as any)
+      query = supabase
         .from(TABLE)
         .select('*', { count: 'exact' })
         .or(`geographic_path.eq.${self.geographic_path},geographic_path.like.${pathPrefix}%`)
@@ -157,7 +157,7 @@ export class LocationRepositorySupabase implements ILocationRepository {
     const page_size = options.page_size ?? LOCATION_PAGINATION.DEFAULT_PAGE_SIZE;
     const offset = (page - 1) * page_size;
 
-    let query = (supabase as any)
+    let query = supabase
       .from(TABLE)
       .select('*', { count: 'exact' })
       .eq('parent_id', location_id)
@@ -182,7 +182,7 @@ export class LocationRepositorySupabase implements ILocationRepository {
   }
 
   async findAll(): Promise<Location[]> {
-    const { data, error } = await (supabase as any)
+    const { data, error } = await supabase
       .from(TABLE)
       .select('*')
       .order('geographic_path', { ascending: true });

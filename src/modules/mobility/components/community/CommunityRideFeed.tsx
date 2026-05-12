@@ -18,6 +18,11 @@ interface CommunityRideFeedProps {
   onCreateRide?: (post: CommunityRidePostData) => void;
 }
 
+type PublishPayload = Omit<
+  CommunityRidePostData,
+  "id" | "authorName" | "authorAvatar" | "createdAt" | "interestedCount" | "hasJoined"
+>;
+
 export function CommunityRideFeed({
   currentUserId,
   onCreateRide,
@@ -31,7 +36,7 @@ export function CommunityRideFeed({
   const { posts, loading, error, createPost, likePost, refetch } =
     useCommunityPosts(filter !== "all" ? { category: filter } : undefined);
 
-  const handlePublish = async (data: any) => {
+  const handlePublish = async (data: PublishPayload) => {
     await createPost({
       content: data.content,
       ...data,
@@ -58,7 +63,7 @@ export function CommunityRideFeed({
   };
 
   // Map posts to component format with safe access
-  const mappedPosts: CommunityRidePostData[] = posts.map((p: any) => ({
+  const mappedPosts: CommunityRidePostData[] = posts.map((p) => ({
     id: p.id,
     authorName: p.author_name || "Vizinho",
     authorAvatar: p.author_avatar || "",

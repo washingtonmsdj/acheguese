@@ -40,8 +40,10 @@ export function useTerritorialGroups() {
           : 'Grupo ativado com sucesso'
       );
     },
-    onError: (error: any) => {
-      toast.error(error.message || 'Erro ao alterar status do grupo');
+    onError: (error: unknown) => {
+      const message =
+        error instanceof Error ? error.message : 'Erro ao alterar status do grupo';
+      toast.error(message);
     },
   });
 

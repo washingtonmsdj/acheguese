@@ -19,6 +19,14 @@ import type {
   CooldownResult,
 } from '../domain/types';
 
+interface ProfessionalSlugHistoryRow {
+  id: string;
+  old_slug: string;
+  new_slug: string | null;
+  change_reason: string;
+  created_at: string;
+}
+
 export class ProfessionalIdentityAdapter implements IdentityAdapter {
   readonly entityType: EntityType = 'professional';
   readonly policy = new ProfessionalIdentityPolicy();
@@ -81,7 +89,7 @@ export class ProfessionalIdentityAdapter implements IdentityAdapter {
     try {
       const history = await ProfessionalService.getSlugHistory(entityId);
 
-      return history.map((record: any) => ({
+      return (history as ProfessionalSlugHistoryRow[]).map((record) => ({
         id: record.id,
         entityType: 'professional' as EntityType,
         entityId: entityId,

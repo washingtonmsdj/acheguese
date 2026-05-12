@@ -66,6 +66,50 @@ export interface TerritoryStats {
   classifieds: number;
 }
 
+interface FeaturedBusinessRow {
+  profile_id: string;
+  business_name: string | null;
+  category: string | null;
+  metadata?: { logo_url?: string } | null;
+  rating: number | null;
+  is_premium: boolean | null;
+  is_verified: boolean | null;
+  slug: string | null;
+  location?: { geographic_path?: string | null } | null;
+}
+
+interface FeaturedServiceRow {
+  id: string;
+  professional_name: string | null;
+  service_category: string | null;
+  metadata?: { logo_url?: string } | null;
+  rating: number | null;
+  is_verified: boolean | null;
+  price_range: string | null;
+  price_type: string | null;
+  hourly_rate: number | null;
+}
+
+interface FeaturedClassifiedRow {
+  id: string;
+  title: string | null;
+  description: string | null;
+  category: string | null;
+  price: number | null;
+  photos: string[] | null;
+  created_at: string | null;
+  public_id: string | null;
+  slug: string | null;
+  locations?: { geographic_path?: string | null } | null;
+  classified_categories?: { slug?: string | null } | null;
+  classified_subcategories?: { slug?: string | null } | null;
+}
+
+function getErrorMessage(err: unknown): string {
+  if (err instanceof Error) return getErrorMessage(err);
+  return String(err);
+}
+
 // ✅ SSOT - Função applyTerritoryFilter movida para @/core/location/utils
 // Agora importada de lá para evitar duplicação
 
@@ -83,7 +127,7 @@ export class LandingFeaturedService {
   ): Promise<FeaturedBusiness[]> {
     if (filter.scope === 'none') return [];
     try {
-      let query = (supabase as any)
+      let query = supabase
         .from('business_data')
         .select('profile_id, business_name, category, metadata, rating, is_premium, is_verified, slug, location:locations!location_id(geographic_path)')
         .eq('status', 'active')
@@ -102,7 +146,7 @@ export class LandingFeaturedService {
         return [];
       }
 
-      return (data || []).map((d: any): FeaturedBusiness => ({
+      return (data || []).map((d: FeaturedBusinessRow): FeaturedBusiness => ({
         id: d.profile_id,
         name: d.business_name ?? '',
         category: d.category ?? '',
@@ -113,8 +157,8 @@ export class LandingFeaturedService {
         slug: d.slug ?? undefined,
         geographic_path: d.location?.geographic_path ?? null,
       }));
-    } catch (err: any) {
-      logger.warn('⚠️ LandingFeaturedService.getFeaturedBusinesses unexpected:', err.message);
+    } catch (err: unknown) {
+      logger.warn('⚠️ LandingFeaturedService.getFeaturedBusinesses unexpected:', getErrorMessage(err));
       return [];
     }
   }
@@ -130,7 +174,7 @@ export class LandingFeaturedService {
     if (filter.scope === 'none') return [];
 
     try {
-      let query = (supabase as any)
+      let query = supabase
         .from('professional_data')
         .select('id, professional_name, service_category, metadata, rating, is_verified, price_range, price_type, hourly_rate')
         .eq('is_accepting_clients', true)
@@ -149,10 +193,10 @@ export class LandingFeaturedService {
         return [];
       }
 
-      return (data || []).map((d: any): FeaturedService => {
+      return (data || []).map((d: FeaturedServiceRow): FeaturedService => {
         // Formata o preço baseado no tipo
         let priceDisplay = 'A combinar';
-        
+
         if (d.price_type === 'hourly' && d.hourly_rate) {
           priceDisplay = `R$ ${d.hourly_rate}/h`;
         } else if (d.price_type === 'fixed' && d.price_range) {
@@ -179,8 +223,8 @@ export class LandingFeaturedService {
           price_range: priceDisplay,
         };
       });
-    } catch (err: any) {
-      logger.warn('⚠️ LandingFeaturedService.getFeaturedServices unexpected:', err.message);
+    } catch (err: unknown) {
+      logger.warn('⚠️ LandingFeaturedService.getFeaturedServices unexpected:', getErrorMessage(err));
       return [];
     }
   }
@@ -198,15 +242,15 @@ export class LandingFeaturedService {
 
     try {
       // eslint-disable-next-line ssot/no-direct-classified-access
-      let query = (supabase as any)
+      let query = supabase
         .from('classifieds')
         .select(`
-          id, 
-          title, 
+          id,
+          title,
           description,
-          category, 
-          price, 
-          photos, 
+          category,
+          price,
+          photos,
           created_at,
           public_id,
           slug,
@@ -226,7 +270,7 @@ export class LandingFeaturedService {
         return [];
       }
 
-      return (data || []).map((d: any): FeaturedClassified => ({
+      return (data || []).map((d: FeaturedClassifiedRow): FeaturedClassified => ({
         id: d.id,
         titulo: d.title ?? d.description ?? 'Classificado',
         category: d.category ?? '',
@@ -240,8 +284,8 @@ export class LandingFeaturedService {
         category_slug: d.classified_categories?.slug ?? undefined,
         subcategory_slug: d.classified_subcategories?.slug ?? undefined,
       }));
-    } catch (err: any) {
-      logger.warn('⚠️ LandingFeaturedService.getFeaturedClassifieds unexpected:', err.message);
+    } catch (err: unknown) {
+      logger.warn('⚠️ LandingFeaturedService.getFeaturedClassifieds unexpected:', getErrorMessage(err));
       return [];
     }
   }
@@ -254,11 +298,11 @@ export class LandingFeaturedService {
   static async getTerritoryStats(filter: TerritoryFilter): Promise<TerritoryStats> {
     if (filter.scope === 'none') return { businesses: 0, services: 0, classifieds: 0 };
 
-    const db: any = supabase;
+
 
     const [businessRes, serviceRes, classifiedRes] = await Promise.allSettled([
       (() => {
-        let q = db.from('business_data')
+        let q = supabase.from('business_data')
           .select('profile_id', { count: 'exact', head: true })
           .eq('status', 'active')
           .not('location_id', 'is', null);
@@ -266,7 +310,7 @@ export class LandingFeaturedService {
         return q;
       })(),
       (() => {
-        let q = db.from('professional_data')
+        let q = supabase.from('professional_data')
           .select('id', { count: 'exact', head: true })
           .eq('is_accepting_clients', true)
           .not('location_id', 'is', null);
@@ -275,7 +319,7 @@ export class LandingFeaturedService {
       })(),
       (() => {
         // eslint-disable-next-line ssot/no-direct-classified-access
-        let q = db.from('classifieds')
+        let q = supabase.from('classifieds')
           .select('id', { count: 'exact', head: true })
           .eq('status', 'active');
         q = applyTerritoryFilter(q, filter);

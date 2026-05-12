@@ -14,6 +14,29 @@ import { logger } from "@/shared/utils/logger";
 import { SocialInteractionsService } from "@/core/social/services/SocialInteractionsService";
 import { ModerationService } from "@/core/moderation";
 
+interface FeedLikeablePost {
+  id?: string;
+  is_liked?: boolean;
+  likes_count?: number;
+}
+
+interface FeedItemWithEmbeddedPost {
+  type?: string;
+  data?: FeedLikeablePost;
+  id?: string;
+}
+
+type FeedItem = FeedItemWithEmbeddedPost | FeedLikeablePost;
+
+interface CommunityFeedPage {
+  feed?: FeedItem[];
+  posts?: FeedItem[];
+}
+
+interface CommunityFeedCache {
+  pages?: CommunityFeedPage[];
+}
+
 // Helper para criar notificação de like
 async function createLikeNotification(postId: string, userId: string) {
   try {
@@ -107,15 +130,16 @@ export function usePostActions() {
 
       queryClient.setQueriesData(
         { queryKey: ["community-feed"] },
-        (old: any) => {
+        (old: CommunityFeedCache | undefined) => {
           if (!old?.pages) return old;
 
           return {
             ...old,
-            pages: old.pages.map((page: any) => ({
+            pages: old.pages.map((page) => ({
               ...page,
-              feed: (page.feed || page.posts || []).map((item: any) => {
-                const postData = item.type === "post" ? item.data : item;
+              feed: (page.feed || page.posts || []).map((item) => {
+                const postData =
+                  "type" in item && item.type === "post" ? item.data : item;
                 const postId2 = postData?.id || item?.id;
                 if (postId2 === postId) {
                   const isCurrentlyLiked = postData.is_liked;
@@ -126,7 +150,7 @@ export function usePostActions() {
                       ? (postData.likes_count || 1) - 1
                       : (postData.likes_count || 0) + 1,
                   };
-                  return item.type === "post"
+                  return "type" in item && item.type === "post"
                     ? { ...item, data: updated }
                     : updated;
                 }

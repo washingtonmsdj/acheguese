@@ -11,6 +11,7 @@ import { Button } from "@/shared/components/ui/button";
 import { Label } from "@/shared/components/ui/label";
 import { Textarea } from "@/shared/components/ui/textarea";
 import { Star, User, Clock, DollarSign, Loader2 } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import { cn } from "@/shared/utils/cn";
 
 interface RatePassengerDialogProps {
@@ -24,6 +25,13 @@ interface RatePassengerDialogProps {
     comment: string;
   }) => Promise<void>;
   passengerName: string;
+}
+
+interface StarRatingProps {
+  value: number;
+  onChange: (value: number) => void;
+  label: string;
+  icon: LucideIcon;
 }
 
 export function RatePassengerDialog({
@@ -61,7 +69,7 @@ export function RatePassengerDialog({
     }
   };
 
-  const StarRating = ({ value, onChange, label, icon: Icon }: any) => (
+  const StarRating = ({ value, onChange, label, icon: Icon }: StarRatingProps) => (
     <div className="space-y-2">
       <div className="flex items-center gap-2">
         <Icon className="h-4 w-4 text-muted-foreground" />

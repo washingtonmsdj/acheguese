@@ -38,6 +38,7 @@ import {
   AdminPagination,
   type FilterOption,
 } from "@/modules/admin/components";
+import type { Promotion } from "@/core/admin/services/AdminPromotionsService";
 
 export default function AdminPromocoes() {
   const queryClient = useQueryClient();
@@ -62,7 +63,7 @@ export default function AdminPromocoes() {
         limit: 20,
         search,
         type: typeFilter || undefined,
-        status: activeTab === "all" ? statusFilter || undefined : activeTab as any,
+        status: activeTab === "all" ? (statusFilter || undefined) : statusFromTab(activeTab),
       }),
   });
 
@@ -142,7 +143,7 @@ export default function AdminPromocoes() {
     }
   };
 
-  const getStatusBadge = (promotion: any) => {
+  const getStatusBadge = (promotion: Promotion) => {
     const now = new Date();
     const startsAt = new Date(promotion.starts_at);
     const expiresAt = promotion.expires_at ? new Date(promotion.expires_at) : null;
@@ -275,7 +276,7 @@ export default function AdminPromocoes() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {promotionsData?.data?.map((promo: any) => (
+                      {promotionsData?.data?.map((promo: Promotion) => (
                         <TableRow key={promo.id}>
                           <TableCell className="font-mono font-bold">
                             {promo.code}
@@ -363,7 +364,7 @@ export default function AdminPromocoes() {
             <CardContent className="pt-6">
               {expiringPromotions && expiringPromotions.length > 0 ? (
                 <div className="space-y-4">
-                  {expiringPromotions.map((promo: any) => (
+                  {expiringPromotions.map((promo: Promotion) => (
                     <div key={promo.id} className="border rounded-lg p-4">
                       <div className="flex items-start justify-between">
                         <div className="flex-1">
@@ -414,7 +415,7 @@ export default function AdminPromocoes() {
             <CardContent className="pt-6">
               {topPromotions && topPromotions.length > 0 ? (
                 <div className="space-y-4">
-                  {topPromotions.map((promo: any, index: number) => (
+                  {topPromotions.map((promo: Promotion, index: number) => (
                     <div key={promo.id} className="border rounded-lg p-4">
                       <div className="flex items-start gap-4">
                         <div className="flex items-center justify-center w-10 h-10 rounded-full bg-primary/10 text-primary font-bold">
@@ -455,3 +456,5 @@ export default function AdminPromocoes() {
     </div>
   );
 }
+  const statusFromTab = (tab: string): "active" | "expired" | "scheduled" | "all" =>
+    tab === "active" || tab === "expired" || tab === "scheduled" ? tab : "all";

@@ -3,12 +3,13 @@ import { UnifiedPostCard } from "../UnifiedPostCard";
 import { DirectMessageModal } from "../DirectMessageModal";
 import { useUnifiedFeed } from "../../hooks/feed/useUnifiedFeed";
 import { useMessageModal } from "../../hooks/useMessageModal";
+import type { UnifiedPost } from "@/shared/types/posts";
 
 interface UnifiedFeedWithMessagesProps {
-  posts?: any[];
-  civicReports?: any[];
-  communityPosts?: any[];
-  feedPosts?: any[];
+  posts?: UnifiedPost[];
+  civicReports?: UnifiedPost[];
+  communityPosts?: UnifiedPost[];
+  feedPosts?: UnifiedPost[];
   currentUserId?: string;
   sortCriteria?: "recent" | "popular" | "nearby" | "most_commented";
   filterType?:
@@ -30,6 +31,36 @@ interface UnifiedFeedWithMessagesProps {
   onDelete?: (postId: string) => void;
   onEdit?: (postId: string) => void;
   onTagClick?: (tag: string) => void;
+}
+
+type DirectMessagePostType =
+  | "civic_report"
+  | "discussao"
+  | "alerta"
+  | "recomendacao"
+  | "enquete"
+  | "pergunta"
+  | "achados"
+  | "favor"
+  | "evento"
+  | "desapego";
+
+function toDirectMessagePostType(type: UnifiedPost["type"]): DirectMessagePostType {
+  const allowed: DirectMessagePostType[] = [
+    "civic_report",
+    "discussao",
+    "alerta",
+    "recomendacao",
+    "enquete",
+    "pergunta",
+    "achados",
+    "favor",
+    "evento",
+    "desapego",
+  ];
+  return allowed.includes(type as DirectMessagePostType)
+    ? (type as DirectMessagePostType)
+    : "recomendacao";
 }
 
 const UnifiedFeedWithMessages = React.forwardRef<
@@ -134,7 +165,7 @@ const UnifiedFeedWithMessages = React.forwardRef<
                 selectedPost.content.substring(0, 50) +
                 (selectedPost.content.length > 50 ? "..." : ""),
               imageUrl: selectedPost.images?.[0] || selectedPost.image_url,
-              type: selectedPost.type as any,
+              type: toDirectMessagePostType(selectedPost.type),
             }}
             recipientProfile={recipientProfile}
             currentUserId={currentUserId || ""}

@@ -9,7 +9,10 @@ import type { PostData } from "@/core/community/hooks/useNovoPost";
 
 interface PostFormProps {
   postData: PostData;
-  currentProfile: any;
+  currentProfile: {
+    name?: string | null;
+    avatar_url?: string | null;
+  } | null;
   onTextChange: (text: string) => void;
 }
 

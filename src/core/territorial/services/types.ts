@@ -27,7 +27,7 @@ export interface TerritoryNode {
   member_count?: number;
   anchor_city_name?: string;
   member_ids?: string[];
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 /**

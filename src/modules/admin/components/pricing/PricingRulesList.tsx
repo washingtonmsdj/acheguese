@@ -43,8 +43,8 @@ export function PricingRulesList({
         rule.isActive ? "Regra desativada" : "Regra ativada"
       );
       onRefetch();
-    } catch (err: any) {
-      const errorMessage = err?.message || String(err);
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : String(err);
       logger.error("Error toggling rule:", errorMessage);
       
       // Detectar conflito via tipo de erro
@@ -52,7 +52,12 @@ export function PricingRulesList({
         toast.error("Conflito: jÃ¡ existe regra ativa para este modo");
       } else if (errorMessage.includes('Conflito') || errorMessage.includes('conflito')) {
         toast.error("NÃ£o Ã© possÃ­vel desativar a Ãºnica regra ativa desta modalidade");
-      } else if (err?.code === '23514' || err?.hint?.includes('validate_single_active_rule')) {
+      } else if (
+        typeof err === "object" &&
+        err !== null &&
+        "code" in err &&
+        (err as { code?: string }).code === "23514"
+      ) {
         toast.error("NÃ£o Ã© possÃ­vel desativar a Ãºnica regra ativa desta modalidade");
       } else {
         toast.error(errorMessage || "Erro ao alterar regra");

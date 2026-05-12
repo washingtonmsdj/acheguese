@@ -21,6 +21,8 @@ interface SearchResult {
   suggestions: string[];
 }
 
+type SearchPostLike = CommunityPost & { created_at?: string | null };
+
 export function useSearch() {
   const [query, setQuery] = useState("");
   const [filters, setFilters] = useState<SearchFilters>({ query: "" });
@@ -32,12 +34,12 @@ export function useSearch() {
   const [isSearching, setIsSearching] = useState(false);
   const [searchHistory, setSearchHistory] = useState<string[]>([]);
 
-  const debounce = <T extends (...args: any[]) => any>(
-    func: T,
+  const debounce = <TArgs extends unknown[]>(
+    func: (...args: TArgs) => void | Promise<void>,
     wait: number,
-  ): ((...args: Parameters<T>) => void) => {
+  ): ((...args: TArgs) => void) => {
     let timeout: NodeJS.Timeout;
-    return (...args: Parameters<T>) => {
+    return (...args: TArgs) => {
       clearTimeout(timeout);
       timeout = setTimeout(() => func(...args), wait);
     };
@@ -59,7 +61,7 @@ export function useSearch() {
       );
       const posts = batches
         .flat()
-        .sort((a: any, b: any) => {
+        .sort((a: SearchPostLike, b: SearchPostLike) => {
           const aDate = new Date(a.created_at || 0).getTime();
           const bDate = new Date(b.created_at || 0).getTime();
           return bDate - aDate;

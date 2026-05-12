@@ -486,10 +486,15 @@ ide_requests por order.id pelo OrderDeliveryLinkService.
 - [x] Comprovante do motoboy agora sincroniza de `ride_requests.proof_of_delivery` para `orders.proof_of_delivery` e aparece no detalhe do pedido.
 ide_requests.proof_of_delivery para orders.proof_of_delivery e aparece no detalhe do pedido.
 - [x] Criada comunicacao operacional derivada do SSOT: `OrderDeliveryNotificationService` notifica cliente, loja e motoboy em criacao/mudanca de status sem quebrar o fluxo se notificacao falhar.
+- [x] Matriz transacional reforcada sem paralelo: `OrderDeliveryNotificationService` passou a enviar `p_category='transactional'` e `p_type` coerente por evento (info/success/warning/error), removendo hardcode `system/order_update`.
+- [x] Fechada lacuna estrutural no banco: migration `supabase/migrations/20260511183000_create_notification_transactional_preference.sql` atualiza `create_notification(...)` para respeitar `notification_preferences.transactional_enabled`.
 - [x] Detalhe do pedido ganhou painel operacional da loja via `OrderService`: aceitar, iniciar preparo, marcar pronto, despachar/entregar e cancelar com motivo auditavel no SSOT.
 - [x] Cardapio da loja ganhou controle operacional de disponibilidade, estoque atual, alerta de estoque baixo e acao rapida "marcar esgotado", todos persistidos por `MenuService`/`useMenuItems`.
 - [x] Smoke `GastronomyOperationalSSOT.test.ts` cobre a operacao de estoque/disponibilidade do cardapio para evitar retorno de estado paralelo ou UI sem SSOT.
+- [x] Smoke `GastronomyOperationalSSOT.test.ts` expandido para blindar matriz de notificacao transacional (pedido + trust/admin + preferencia `transactional_enabled` no SQL), prevenindo regressao para hardcode `system/order_update`.
 - [x] Playwright `tests/e2e/gastronomy-operational.spec.ts` criado para validar a tela autenticada de cardapio com `E2E_GASTRONOMY_BUSINESS_ID` real.
+- [x] Playwright `tests/e2e/gastronomy-operational.spec.ts` endurecido no assert administrativo: notificacoes por `order_id` devem sair em categoria `transactional`, com `type` valido (`info|success|warning|error`) e `metadata.audience` operacional (`customer|merchant|courier`).
+- [x] Playwright administrativo tambem valida trilha de `trust_admin_actions` quando existir acao vinculada ao pedido: notificacoes dessa trilha devem manter categoria `transactional`, audiencia `subject|admin` e `action_url` canonica (`/perfil` ou `/admin/moderacao`).
 - [x] `npm run validate:e2e` passou a carregar `.env.local` com precedencia sobre `.env.test`, evitando que placeholders mascarem o Supabase real local.
 - [ ] Limitado localmente: `SUPABASE_SERVICE_ROLE_KEY` ausente; asserts administrativos e seeds automaticos continuam pulados.
 
@@ -1260,3 +1265,10 @@ Docs atualizados: docs/STATUS_ATUAL.md, ...
 ## Regra Final
 
 Nao considerar o projeto pronto porque a UI existe. Considerar pronto apenas quando o fluxo operacional, as permissoes, os dados, as notificacoes, a moderacao, os estados vazios, os erros, o mobile e as validacoes tecnicas estiverem fechados.
+
+## Atualizacao 2026-05-11 (Execucao)
+
+- Validacoes completas executadas: `typecheck`, `lint`, `build` e `validate:phase:core`.
+- Resultado: gate core aprovado com `55 passed`, `1 skipped` (skip condicional administrativo por ausencia de `SUPABASE_SERVICE_ROLE_KEY`).
+- `mobile-auth-dashboards` validado no gate principal (360px) para rotas autenticadas da Central.
+- Proxima tarefa obrigatoria continua sendo fechamento dos P0 residuais de Comunidade/Feed antes de abrir qualquer nova fase.

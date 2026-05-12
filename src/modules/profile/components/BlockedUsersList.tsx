@@ -11,6 +11,16 @@ interface BlockedUsersListProps {
   onUnblock: () => void;
 }
 
+interface BlockedUserItem {
+  id: string;
+  blocked_user_id: string;
+  blocked_profile?: {
+    avatar_url?: string | null;
+    name?: string | null;
+    username?: string | null;
+  } | null;
+}
+
 const fadeUp = {
   initial: { opacity: 0, y: 12 },
   animate: { opacity: 1, y: 0 },
@@ -87,7 +97,7 @@ export function BlockedUsersList({ userId, onUnblock }: BlockedUsersListProps) {
           className="rounded-2xl border border-border bg-card overflow-hidden"
         >
           <div className="divide-y divide-border">
-            {blockedUsers.map((block: any) => (
+            {(blockedUsers as BlockedUserItem[]).map((block) => (
               <div
                 key={block.id}
                 className="flex items-center justify-between p-4 hover:bg-secondary/30 transition-colors"

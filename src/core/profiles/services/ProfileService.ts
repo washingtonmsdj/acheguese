@@ -20,6 +20,7 @@
 import { supabase } from "@/integrations/supabase";
 import { logger } from "@/shared/utils/logger";
 import { trackError } from "@/shared/utils/errorTracking";
+import { SessionService } from "@/core/session/services/SessionService";
 import { FavoritesService } from "@/core/favorites/services/FavoritesService";
 import { ProfessionalService } from "@/core/professional/services/ProfessionalService";
 import { BusinessUrlService } from "@/core/business/services/BusinessUrlService";
@@ -56,6 +57,128 @@ import type {
 } from "@/core/profiles/contracts/ProfileRuntimeContracts";
 
 type VerificationWorkflowStatus = "pending" | "verified" | "rejected" | "none";
+type BannedUserLike = BannedUser | null;
+type UserSubscriptionLike = {
+  active?: boolean | null;
+  plan_type?: string | null;
+  expires_at?: string | null;
+} | null;
+type ProfileWithAlertBanRow = {
+  id: string;
+  alert_banned?: boolean | null;
+  neighborhood?: string | null;
+  created_at?: string | null;
+};
+type BusinessRow = {
+  profile_id: string;
+  business_name: string;
+  metadata?: { logo_url?: string | null } | null;
+  logo?: string | null;
+  category?: string | null;
+  rating?: number | null;
+  profiles?: { neighborhood?: string | null; city?: string | null } | null;
+  is_verified?: boolean | null;
+  verified?: boolean | null;
+  slug?: string | null;
+  geographic_path?: string | null;
+  is_premium?: boolean | null;
+  aberto?: boolean | null;
+  description?: string | null;
+};
+type RecentProfileRow = {
+  id: string;
+  name: string | null;
+  username: string | null;
+  avatar_url: string | null;
+  created_at: string;
+};
+type ProfileSummaryRow = {
+  id: string;
+  user_id: string;
+  name: string;
+  avatar_url: string | null;
+  verified?: boolean | null;
+};
+type ProfileSummaryExtendedRow = {
+  id: string;
+  name: string;
+  avatar_url: string | null;
+  verified?: boolean | null;
+  neighborhood?: string | null;
+  whatsapp?: string | null;
+};
+type AdminProfileListRow = {
+  id: string;
+  name: string;
+  username: string | null;
+  avatar_url: string | null;
+  verified?: boolean | null;
+  is_suspended?: boolean | null;
+  created_at: string;
+  profile_type: string;
+};
+type ProfileFilterRow = {
+  id: string;
+  user_id: string;
+  created_at: string;
+  profile_type: string;
+  is_public?: boolean | null;
+  username?: string | null;
+  name?: string | null;
+  display_name?: string | null;
+};
+type ActiveRideIdRow = { active_ride_id: string | null };
+type RideProfileRow = {
+  id: string;
+  name: string | null;
+  avatar_url: string | null;
+  city?: string | null;
+  neighborhood?: string | null;
+  street?: string | null;
+  pontos?: number | null;
+  telefone?: string | null;
+};
+type UserListRow = {
+  id: string;
+  name: string;
+  avatar_url?: string | null;
+  is_active?: boolean | null;
+  is_suspended?: boolean | null;
+  suspended_at?: string | null;
+  suspension_reason?: string | null;
+  suspended_until?: string | null;
+  verified?: boolean | null;
+  reputation?: number | null;
+};
+type ProfileIdRow = { id: string };
+type RankingRow = {
+  id: string;
+  name: string | null;
+  avatar_url: string | null;
+  pontos: number | null;
+};
+type MentionRow = {
+  id: string;
+  rank: number;
+  created_at: string;
+  post: {
+    id: string;
+    type: string;
+    content: string;
+    created_at: string;
+    likes_count: number;
+    comments_count: number;
+    author: { id: string; name: string; avatar_url: string | null };
+  };
+};
+type PassengerRatingRow = {
+  id: string;
+  name: string | null;
+  avatar_url: string | null;
+  passenger_rating: number | null;
+  passenger_trust_level: string | null;
+  passenger_completed_rides: number | null;
+};
 
 export class ProfileServiceLegacy {
   // ============================================================================
@@ -129,7 +252,7 @@ export class ProfileServiceLegacy {
    */
   private _calculateProfileStatus(
     profile: Profile,
-    bannedUser: any,
+    bannedUser: BannedUserLike,
   ): ProfileStatus {
     const isBanned = !!bannedUser;
     const isSuspended = profile.is_suspended || false;
@@ -201,7 +324,7 @@ export class ProfileServiceLegacy {
   /**
    * Calcula plano do usuário
    */
-  private _calculatePlan(subscription: any): ProfilePlan {
+  private _calculatePlan(subscription: UserSubscriptionLike): ProfilePlan {
     if (!subscription || !subscription.active) {
       return {
         type: "basic",
@@ -241,7 +364,7 @@ export class ProfileServiceLegacy {
    * Busca status de usuário banido
    * ✅ LOTE 9A - Delegado para ModerationService (SSOT para banned_users)
    */
-  private async _getBannedUserStatus(userId: string): Promise<any | null> {
+  private async _getBannedUserStatus(userId: string): Promise<BannedUserLike> {
     try {
       const { ModerationService } =
         await import("@/core/moderation/services/ModerationService");
@@ -257,7 +380,7 @@ export class ProfileServiceLegacy {
    */
   private async _getUserSubscription(userId: string) {
     try {
-      const { data, error } = await (supabase as any)
+      const { data, error } = await supabase
         .from("user_subscriptions")
         .select("*")
         .eq("user_id", userId)
@@ -305,7 +428,7 @@ export class ProfileServiceLegacy {
    * @param profileId - ID do perfil
    */
   async getProfileById(profileId: string): Promise<Profile | null> {
-    const { data, error } = await (supabase as any)
+    const { data, error } = await supabase
       .from("profiles")
       .select("*")
       .eq("id", profileId)
@@ -331,9 +454,7 @@ export class ProfileServiceLegacy {
     let targetUserId = userId;
 
     if (!targetUserId) {
-      const {
-        data: { user },
-      } = await (supabase as any).auth.getUser();
+      const user = await SessionService.getCurrentUser();
       if (!user) return null;
       targetUserId = user.id;
     }
@@ -364,14 +485,12 @@ export class ProfileServiceLegacy {
     let targetUserId = userId;
 
     if (!targetUserId) {
-      const {
-        data: { user },
-      } = await (supabase as any).auth.getUser();
+      const user = await SessionService.getCurrentUser();
       if (!user) return [];
       targetUserId = user.id;
     }
 
-    const { data, error } = await (supabase as any)
+    const { data, error } = await supabase
       .from("profiles")
       .select("*")
       .eq("user_id", targetUserId)
@@ -399,7 +518,7 @@ export class ProfileServiceLegacy {
     profileType: "personal" | "driver" | "business" | "professional",
   ): Promise<Profile | null> {
     // ✅ CORREÇÃO: Buscar todos e pegar o primeiro (caso haja duplicados)
-    const { data, error } = await (supabase as any)
+    const { data, error } = await supabase
       .from("profiles")
       .select("*")
       .eq("user_id", userId)
@@ -433,7 +552,7 @@ export class ProfileServiceLegacy {
 
       const personalProfile = await this.getProfileByType(userId, "personal");
 
-      const { data, error } = await (supabase as any)
+      const { data, error } = await supabase
         .from("profiles")
         .insert({
           user_id: userId,
@@ -521,9 +640,7 @@ export class ProfileServiceLegacy {
    * @param profile - Dados do perfil
    */
   async createProfile(profile: CreateProfileData): Promise<Profile> {
-    const {
-      data: { user },
-    } = await (supabase as any).auth.getUser();
+    const user = await SessionService.getCurrentUser();
     if (!user) throw new Error("Not authenticated");
 
     // Validar campos obrigatórios da nova arquitetura
@@ -560,7 +677,7 @@ export class ProfileServiceLegacy {
       throw new Error('Username already in use');
     }
 
-    const { data, error } = await (supabase as any)
+    const { data, error } = await supabase
       .from("profiles")
       .insert({
         user_id: user.id,
@@ -689,7 +806,7 @@ export class ProfileServiceLegacy {
     profileId: string,
     updates: UpdateProfileData,
   ): Promise<Profile> {
-    const { data, error } = await (supabase as any)
+    const { data, error } = await supabase
       .from("profiles")
       .update(updates)
       .eq("id", profileId)
@@ -715,7 +832,7 @@ export class ProfileServiceLegacy {
     profileId: string,
     settings: ProfilePrivacySettingsInput,
   ): Promise<Profile> {
-    const { data, error } = await (supabase as any)
+    const { data, error } = await supabase
       .from("profiles")
       .update(settings)
       .eq("id", profileId)
@@ -742,7 +859,7 @@ export class ProfileServiceLegacy {
     profileId: string,
     alertBanned: boolean,
   ): Promise<Profile> {
-    const { data, error } = await (supabase as any)
+    const { data, error } = await supabase
       .from("profiles")
       .update({ alert_banned: alertBanned })
       .eq("id", profileId)
@@ -765,7 +882,7 @@ export class ProfileServiceLegacy {
    * Deleta profile
    */
   async deleteProfile(profileId: string): Promise<void> {
-    const { error } = await (supabase as any)
+    const { error } = await supabase
       .from("profiles")
       .delete()
       .eq("id", profileId);
@@ -795,7 +912,7 @@ export class ProfileServiceLegacy {
     if (profileIds.length === 0) return [];
 
     try {
-      const { data, error } = await (supabase as any)
+      const { data, error } = await supabase
         .from("profiles")
         .select("id, alert_banned, neighborhood, created_at")
         .in("id", profileIds);
@@ -809,7 +926,7 @@ export class ProfileServiceLegacy {
         throw error;
       }
 
-      return (data || []).map((p: any) => ({
+      return ((data as ProfileWithAlertBanRow[] | null) || []).map((p) => ({
         id: p.id,
         alert_banned: p.alert_banned || false,
         neighborhood: p.neighborhood || null,
@@ -852,8 +969,8 @@ export class ProfileServiceLegacy {
     return { status: PROFILE_VERIFICATION_STATUS.PENDING };
   }
 
-  private _mapBusinessRecords(records: any[]): Business[] {
-    return records.map((business: any) => ({
+  private _mapBusinessRecords(records: BusinessRow[]): Business[] {
+    return records.map((business) => ({
       id: business.profile_id,
       name: business.business_name,
       logo: business.metadata?.logo_url || business.logo || "",
@@ -1412,7 +1529,7 @@ export class ProfileServiceLegacy {
    */
   async getTotalProfilesCount(): Promise<number> {
     try {
-      const { count, error } = await (supabase as any)
+      const { count, error } = await supabase
         .from("profiles")
         .select("*", { count: "exact", head: true });
 
@@ -1441,9 +1558,9 @@ export class ProfileServiceLegacy {
    * @param limit - Número máximo de resultados (padrão: 10)
    * @returns Lista de usuários recentes
    */
-  async getRecentProfiles(limit = 10): Promise<any[]> {
+  async getRecentProfiles(limit = 10): Promise<RecentProfileRow[]> {
     try {
-      const { data, error } = await (supabase as any)
+      const { data, error } = await supabase
         .from("profiles")
         .select("id, name, username, avatar_url, created_at")
         .order("created_at", { ascending: false })
@@ -1458,7 +1575,7 @@ export class ProfileServiceLegacy {
         return [];
       }
 
-      return data || [];
+      return (data as RecentProfileRow[] | null) || [];
     } catch (error) {
       logger.error("Error getting recent profiles", error as Error, {
         service: "ProfileService",
@@ -1481,7 +1598,7 @@ export class ProfileServiceLegacy {
     endDate: Date,
   ): Promise<number> {
     try {
-      const { count, error } = await (supabase as any)
+      const { count, error } = await supabase
         .from("profiles")
         .select("*", { count: "exact", head: true })
         .gte("created_at", startDate.toISOString())
@@ -1515,7 +1632,7 @@ export class ProfileServiceLegacy {
     const fileName = `${userId}-${Date.now()}.${fileExt}`;
     const filePath = `avatars/${fileName}`;
 
-    const { error: uploadError } = await (supabase as any).storage
+    const { error: uploadError } = await supabase.storage
       .from("profile-images")
       .upload(filePath, file, { upsert: true });
 
@@ -1614,7 +1731,7 @@ export class ProfileServiceLegacy {
 
     const uniqueIds = [...new Set(ids)];
 
-    const { data, error } = await (supabase as any)
+    const { data, error } = await supabase
       .from("profiles")
       .select("id, user_id, name, avatar_url, verified")
       .in("id", uniqueIds);
@@ -1629,7 +1746,7 @@ export class ProfileServiceLegacy {
     }
 
     // Mapear para shape de domínio (camelCase)
-    return (data || []).map((profile) => ({
+    return ((data as ProfileSummaryRow[] | null) || []).map((profile) => ({
       id: profile.id,
       userId: profile.user_id,
       name: profile.name,
@@ -1649,7 +1766,7 @@ export class ProfileServiceLegacy {
 
     const uniqueIds = [...new Set(ids)];
 
-    const { data, error } = await (supabase as any)
+    const { data, error } = await supabase
       .from("profiles")
       .select("id, name, avatar_url, verified, neighborhood, whatsapp")
       .in("id", uniqueIds);
@@ -1664,7 +1781,7 @@ export class ProfileServiceLegacy {
     }
 
     // Mapear para shape de domínio (camelCase)
-    return (data || []).map((profile) => ({
+    return ((data as ProfileSummaryExtendedRow[] | null) || []).map((profile) => ({
       id: profile.id,
       name: profile.name,
       avatarUrl: profile.avatar_url,
@@ -1681,7 +1798,7 @@ export class ProfileServiceLegacy {
   async getAdminProfilesList(
     filters?: AdminFilters,
   ): Promise<AdminProfileListItem[]> {
-    let query = (supabase as any)
+    let query = supabase
       .from("profiles")
       .select(
         "id, name, username, avatar_url, verified, is_suspended, created_at, profile_type",
@@ -1717,7 +1834,7 @@ export class ProfileServiceLegacy {
     }
 
     // Mapear para shape de domínio (camelCase)
-    return (data || []).map((profile) => ({
+    return ((data as AdminProfileListRow[] | null) || []).map((profile) => ({
       id: profile.id,
       name: profile.name,
       username: profile.username,
@@ -1739,10 +1856,10 @@ export class ProfileServiceLegacy {
     visibility?: "all" | "public" | "private";
     page?: number;
     limit?: number;
-  }): Promise<{ data: any[]; total: number }> {
+  }): Promise<{ data: ProfileFilterRow[]; total: number }> {
     const { search, profileType, visibility = "all", page = 1, limit = 20 } = filters;
 
-    let query = (supabase as any)
+    let query = supabase
       .from("profiles")
       .select(
         "id, user_id, created_at, profile_type, is_public, username, name, display_name",
@@ -1781,14 +1898,14 @@ export class ProfileServiceLegacy {
       return { data: [], total: 0 };
     }
 
-    return { data: data ?? [], total: count ?? 0 };
+    return { data: (data as ProfileFilterRow[] | null) ?? [], total: count ?? 0 };
   }
 
   /**
    * Busca todos os IDs de profiles para uso administrativo.
    */
   async getAllProfileIds(): Promise<string[]> {
-    const { data, error } = await (supabase as any)
+    const { data, error } = await supabase
       .from("profiles")
       .select("id");
 
@@ -1835,14 +1952,14 @@ export class ProfileServiceLegacy {
    * TEMPORÁRIO: Este campo deveria estar em tabela separada de estado de mobilidade
    */
   async getActiveRideId(profileId: string): Promise<string | null> {
-    const { data, error } = await (supabase as any)
+    const { data, error } = await supabase
       .from("profiles")
       .select("active_ride_id")
       .eq("id", profileId)
       .single();
 
     if (error) return null;
-    return data?.active_ride_id || null;
+    return (data as ActiveRideIdRow | null)?.active_ride_id || null;
   }
 
   /**
@@ -1853,7 +1970,7 @@ export class ProfileServiceLegacy {
     profileId: string,
     rideId: string | null,
   ): Promise<void> {
-    const { error } = await (supabase as any)
+    const { error } = await supabase
       .from("profiles")
       .update({ active_ride_id: rideId })
       .eq("id", profileId);
@@ -1873,7 +1990,7 @@ export class ProfileServiceLegacy {
    * TEMPORÁRIO: Este campo deveria estar em tabela separada de estado de mobilidade
    */
   async clearActiveRideId(profileId: string, rideId: string): Promise<void> {
-    const { error } = await (supabase as any)
+    const { error } = await supabase
       .from("profiles")
       .update({ active_ride_id: null })
       .eq("id", profileId)
@@ -1904,7 +2021,7 @@ export class ProfileServiceLegacy {
         ? "id, name, avatar_url, city, neighborhood, street, pontos, telefone"
         : "id, name, avatar_url";
 
-    const { data, error } = await (supabase as any)
+    const { data, error } = await supabase
       .from("profiles")
       .select(selectFields)
       .in("id", ids);
@@ -1918,7 +2035,7 @@ export class ProfileServiceLegacy {
       return [];
     }
 
-    return data || [];
+    return ((data as RideProfileRow[] | null) || []) as ProfileLikeActivityRecord[];
   }
   /**
    * Remove suspensão de um usuário
@@ -1937,7 +2054,7 @@ export class ProfileServiceLegacy {
    */
   async verifyUser(userId: string): Promise<void> {
     try {
-      const { error } = await (supabase as any)
+      const { error } = await supabase
         .from("profiles")
         .update({
           is_verified: true,
@@ -1969,7 +2086,7 @@ export class ProfileServiceLegacy {
     }
   ): Promise<Profile[]> {
     try {
-      let query = (supabase as any)
+      let query = supabase
         .from('profiles')
         .select('*')
         .eq('verification_status', status);
@@ -2017,15 +2134,15 @@ export class ProfileServiceLegacy {
   }> {
     try {
       const [pending, verified, rejected] = await Promise.all([
-        (supabase as any)
+        supabase
           .from('profiles')
           .select('*', { count: 'exact', head: true })
           .eq('verification_status', 'pending'),
-        (supabase as any)
+        supabase
           .from('profiles')
           .select('*', { count: 'exact', head: true })
           .eq('verification_status', 'verified'),
-        (supabase as any)
+        supabase
           .from('profiles')
           .select('*', { count: 'exact', head: true })
           .eq('verification_status', 'rejected'),
@@ -2056,7 +2173,7 @@ export class ProfileServiceLegacy {
     reason?: string
   ): Promise<void> {
     try {
-      const updates: any = {
+      const updates: Record<string, unknown> = {
         verification_status: status,
       };
 
@@ -2067,7 +2184,7 @@ export class ProfileServiceLegacy {
         updates.verification_rejection_reason = reason;
       }
 
-      const { error } = await (supabase as any)
+      const { error } = await supabase
         .from('profiles')
         .update(updates)
         .eq('id', profileId);
@@ -2118,7 +2235,7 @@ export class ProfileServiceLegacy {
     try {
       const suspendedUntil = this._calculateSuspensionEnd(duration);
 
-      const { error } = await (supabase as any)
+      const { error } = await supabase
         .from("profiles")
         .update({
           is_suspended: true,
@@ -2173,7 +2290,7 @@ export class ProfileServiceLegacy {
       reputation: number;
     }>
   > {
-    const { data, error } = await (supabase as any)
+    const { data, error } = await supabase
       .from("profiles")
       .select(
         "id, name, avatar_url, is_active, is_suspended, suspended_at, suspension_reason, suspended_until, verified, reputation",
@@ -2189,7 +2306,7 @@ export class ProfileServiceLegacy {
       return [];
     }
 
-    return (data || []).map((p) => ({
+    return ((data as UserListRow[] | null) || []).map((p) => ({
       id: p.id,
       name: p.name,
       avatar_url: p.avatar_url,
@@ -2263,7 +2380,7 @@ export class ProfileServiceLegacy {
    */
   async getUserFavoritesCount(userId: string): Promise<number> {
     try {
-      const { data: byUserId, error: byUserIdError } = await (supabase as any)
+      const { data: byUserId, error: byUserIdError } = await supabase
         .from("profiles")
         .select("id")
         .eq("user_id", userId);
@@ -2273,7 +2390,7 @@ export class ProfileServiceLegacy {
       let profileIds = ((byUserId as Array<{ id: string }> | null) || []).map((p) => p.id);
 
       if (profileIds.length === 0) {
-        const { data: byProfileId, error: byProfileIdError } = await (supabase as any)
+        const { data: byProfileId, error: byProfileIdError } = await supabase
           .from("profiles")
           .select("id")
           .eq("id", userId)
@@ -2285,7 +2402,7 @@ export class ProfileServiceLegacy {
 
       if (profileIds.length === 0) return 0;
 
-      const { count, error } = await (supabase as any)
+      const { count, error } = await supabase
         .from("profile_favorites_new")
         .select("*", { count: "exact", head: true })
         .in("favoriting_profile_id", profileIds);
@@ -2300,10 +2417,10 @@ export class ProfileServiceLegacy {
   /**
    * Busca businesses de múltiplos perfis (para useProfile)
    */
-  async getUserBusinessesByProfiles(profileIds: string[]): Promise<any[]> {
+  async getUserBusinessesByProfiles(profileIds: string[]): Promise<BusinessRow[]> {
     if (!profileIds.length) return [];
 
-    const { data, error } = await (supabase as any)
+    const { data, error } = await supabase
       .from("business_data")
       .select(
         `
@@ -2331,14 +2448,14 @@ export class ProfileServiceLegacy {
       return [];
     }
 
-    return data || [];
+    return (data as BusinessRow[] | null) || [];
   }
 
   /**
    * Busca businesses de um perfil
    */
-  async getUserBusinesses(profileId: string): Promise<any[]> {
-    const { data, error } = await (supabase as any)
+  async getUserBusinesses(profileId: string): Promise<BusinessRow[]> {
+    const { data, error } = await supabase
       .from("business_data")
       .select(
         `
@@ -2366,14 +2483,14 @@ export class ProfileServiceLegacy {
       return [];
     }
 
-    return data || [];
+    return (data as BusinessRow[] | null) || [];
   }
 
   /**
    * Busca favoritos de negócios de um usuário
    */
-  async getUserFavoriteBusinesses(userId: string): Promise<any[]> {
-    const { data: profileRows, error: profileError } = await (supabase as any)
+  async getUserFavoriteBusinesses(userId: string): Promise<BusinessRow[]> {
+    const { data: profileRows, error: profileError } = await supabase
       .from("profiles")
       .select("id")
       .eq("user_id", userId);
@@ -2382,7 +2499,7 @@ export class ProfileServiceLegacy {
 
     let ownerProfileIds = ((profileRows as Array<{ id: string }> | null) || []).map((row) => row.id);
     if (ownerProfileIds.length === 0) {
-      const { data: profileById, error: profileByIdError } = await (supabase as any)
+      const { data: profileById, error: profileByIdError } = await supabase
         .from("profiles")
         .select("id")
         .eq("id", userId)
@@ -2401,7 +2518,7 @@ export class ProfileServiceLegacy {
     const businessIds = [...new Set(businessIdGroups.flat().filter(Boolean))];
     if (!businessIds.length) return [];
 
-    const { data: businesses, error: bizError } = await (supabase as any)
+    const { data: businesses, error: bizError } = await supabase
       .from("business_data")
       .select(
         `
@@ -2420,7 +2537,7 @@ export class ProfileServiceLegacy {
       .eq("status", "active");
 
     if (bizError) return [];
-    return businesses || [];
+    return (businesses as BusinessRow[] | null) || [];
   }
 
   /**
@@ -2431,7 +2548,7 @@ export class ProfileServiceLegacy {
   ): Promise<
     Array<{ id: string; name: string; avatar_url: string; pontos: number }>
   > {
-    const { data, error } = await (supabase as any)
+    const { data, error } = await supabase
       .from("profiles")
       .select("id, name, avatar_url, pontos")
       .order("pontos", { ascending: false })
@@ -2446,7 +2563,7 @@ export class ProfileServiceLegacy {
       return [];
     }
 
-    return (data || []).map((p) => ({
+    return ((data as RankingRow[] | null) || []).map((p) => ({
       id: p.id,
       name: p.name || "Usuário",
       avatar_url: p.avatar_url || "",
@@ -2458,7 +2575,7 @@ export class ProfileServiceLegacy {
    * Busca dados de motorista de um perfil (admin)
    * ✅ LOTE 9A - Delegado para MobilityService (SSOT para driver_data)
    */
-  async getDriverData(profileId: string): Promise<any | null> {
+  async getDriverData(profileId: string): Promise<unknown | null> {
     try {
       const { mobilityService } = await import("@/modules/mobility/services");
       return await mobilityService.getDriverData(profileId);
@@ -2479,7 +2596,7 @@ export class ProfileServiceLegacy {
     from: number,
     to: number,
   ): Promise<ProfileLikeActivityRecord[]> {
-    const { data, error } = await (supabase as any)
+    const { data, error } = await supabase
       .from("community_post_mentions")
       .select(
         `
@@ -2495,7 +2612,7 @@ export class ProfileServiceLegacy {
       .range(from, to);
 
     if (error) return [];
-    return (data || []).map((mention: any) => ({
+    return ((data as MentionRow[] | null) || []).map((mention) => ({
       id: mention.id,
       rank: mention.rank,
       created_at: mention.created_at,
@@ -2586,7 +2703,7 @@ export class ProfileServiceLegacy {
     to: number,
   ): Promise<ProfilePollVoteActivityRecord[]> {
     // community_polls.post_id agora referencia posts.id (Sprint Q&A Fase 1)
-    const { data, error } = await (supabase as any)
+    const { data, error } = await supabase
       .from("community_poll_votes")
       .select(
         `
@@ -2609,9 +2726,9 @@ export class ProfileServiceLegacy {
     maxRating: number;
     minRides: number;
     limit: number;
-  }): Promise<any[]> {
+  }): Promise<PassengerRatingRow[]> {
     try {
-      const { data, error } = await (supabase as any)
+      const { data, error } = await supabase
         .from("profiles")
         .select(
           "id, name, avatar_url, passenger_rating, passenger_trust_level, passenger_completed_rides",
@@ -2622,7 +2739,7 @@ export class ProfileServiceLegacy {
         .limit(params.limit);
 
       if (error) throw error;
-      return data || [];
+      return (data as PassengerRatingRow[] | null) || [];
     } catch (error) {
       logger.error("Error fetching low rated users:", error);
       return [];
@@ -2635,9 +2752,9 @@ export class ProfileServiceLegacy {
   async getTopPassengers(params: {
     minRides: number;
     limit: number;
-  }): Promise<any[]> {
+  }): Promise<PassengerRatingRow[]> {
     try {
-      const { data, error } = await (supabase as any)
+      const { data, error } = await supabase
         .from("profiles")
         .select(
           "id, name, avatar_url, passenger_rating, passenger_trust_level, passenger_completed_rides",
@@ -2647,7 +2764,7 @@ export class ProfileServiceLegacy {
         .limit(params.limit);
 
       if (error) throw error;
-      return data || [];
+      return (data as PassengerRatingRow[] | null) || [];
     } catch (error) {
       logger.error("Error fetching top passengers:", error);
       return [];
@@ -2662,7 +2779,7 @@ export class ProfileServiceLegacy {
     maxResults: number = 10,
   ): Promise<Profile[]> {
     try {
-      const { data, error } = await (supabase as any).rpc(
+      const { data, error } = await supabase.rpc(
         "search_profiles_by_name",
         {
           search_query: searchQuery,
@@ -2689,7 +2806,7 @@ export class ProfileServiceLegacy {
     profileId: string,
   ): Promise<Array<{ user_id: string; role: string }>> {
     try {
-      const { data, error } = await (supabase as any)
+      const { data, error } = await supabase
         .from("profile_members")
         .select("user_id, role")
         .eq("profile_id", profileId);
@@ -2708,7 +2825,7 @@ export class ProfileServiceLegacy {
 
   async isProfileOwner(profileId: string, userId: string): Promise<boolean> {
     try {
-      const { data, error } = await (supabase as any)
+      const { data, error } = await supabase
         .from("profile_members")
         .select("id")
         .eq("profile_id", profileId)
@@ -2738,7 +2855,7 @@ export class ProfileServiceLegacy {
     role: "owner" | "admin" | "member" = "member",
   ): Promise<void> {
     try {
-      const { error } = await (supabase as any)
+      const { error } = await supabase
         .from("profile_members")
         .insert({ profile_id: profileId, user_id: userId, role });
 
@@ -2770,7 +2887,7 @@ export class ProfileServiceLegacy {
     excludeId?: string
   ): Promise<boolean> {
     try {
-      let query = (supabase as any)
+      let query = supabase
         .from('profiles')
         .select('id')
         .eq('username', username)
@@ -2810,7 +2927,7 @@ export class ProfileServiceLegacy {
     limit = 20
   ): Promise<string[]> {
     try {
-      const { data, error } = await (supabase as any)
+      const { data, error } = await supabase
         .from('profiles')
         .select('username')
         .ilike('username', `${username}%`)
@@ -2849,7 +2966,7 @@ export class ProfileServiceLegacy {
     changed_at: string;
   }>> {
     try {
-      const { data, error } = await (supabase as any)
+      const { data, error } = await supabase
         .from('profile_username_history')
         .select('*')
         .eq('profile_id', profileId)
@@ -2942,10 +3059,3 @@ export const profileService = new ProfileServiceLegacy();
  * Alias para ProfileServiceLegacy mantido para compatibilidade
  */
 export { ProfileServiceLegacy as ProfileService };
-
-
-
-
-
-
-

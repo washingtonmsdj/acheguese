@@ -26,6 +26,12 @@ interface LiveTrackingMapProps {
   className?: string;
 }
 
+const ON_THE_WAY_STATUSES = new Set<string>([
+  RIDE_STATUS.DRIVER_ASSIGNED,
+  RIDE_STATUS.DRIVER_ON_THE_WAY,
+  RIDE_STATUS.DRIVER_ARRIVED,
+]);
+
 function makeSvgMarker(color: string, shape: 'circle' | 'car'): HTMLElement {
   const el = document.createElement('div');
   el.style.cssText = `width:32px;height:32px;border-radius:50%;background:${color};border:3px solid white;box-shadow:0 2px 8px rgba(0,0,0,0.3);display:flex;align-items:center;justify-content:center;`;
@@ -191,12 +197,12 @@ export function LiveTrackingMap({
   // ── Status text ────────────────────────────────────────────────
   useEffect(() => {
     if (rideStatus === RIDE_STATUS.IN_PROGRESS) setStatusText('Viagem em andamento');
-    else if ([RIDE_STATUS.DRIVER_ASSIGNED, RIDE_STATUS.DRIVER_ON_THE_WAY, RIDE_STATUS.DRIVER_ARRIVED].includes(rideStatus as any)) setStatusText('Motorista a caminho');
+    else if (ON_THE_WAY_STATUSES.has(rideStatus)) setStatusText('Motorista a caminho');
     else setStatusText('Aguardando motorista');
   }, [rideStatus]);
 
   const isActive = rideStatus === RIDE_STATUS.IN_PROGRESS;
-  const isOnWay  = [RIDE_STATUS.DRIVER_ASSIGNED, RIDE_STATUS.DRIVER_ON_THE_WAY, RIDE_STATUS.DRIVER_ARRIVED].includes(rideStatus as any);
+  const isOnWay  = ON_THE_WAY_STATUSES.has(rideStatus);
 
   return (
     <div className={cn('relative rounded-2xl overflow-hidden border border-white/10', className)}>

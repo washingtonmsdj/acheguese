@@ -17,6 +17,7 @@
 import { supabase } from "@/integrations/supabase";
 import { profileService } from "@/core/profiles/services/ProfileService";
 import { trackError } from "@/shared/utils/errorTracking";
+import type { AdminSupabaseClient } from "@/core/admin/types/adminDatabase.types";
 import type {
   PostLike,
   SavedPost,
@@ -27,8 +28,9 @@ import type {
 } from "../../../services/social/types";
 
 export class SocialInteractionsService {
+  private static readonly db = supabase as unknown as AdminSupabaseClient;
   private static async resolveGroupContext(groupId: string, userId?: string) {
-    const { data: groupRow } = await (supabase as any).rpc("get_community_group_by_id", {
+    const { data: groupRow } = await this.db.rpc("get_community_group_by_id", {
       p_group_id: groupId,
     });
 
@@ -43,7 +45,7 @@ export class SocialInteractionsService {
       ? await profileService.getRequiredActiveProfile(userId)
       : await profileService.getRequiredActiveProfile();
 
-    const { data: membership } = await (supabase as any)
+    const { data: membership } = await this.db
       .from("group_members_new")
       .select("role")
       .eq("group_id", groupId)
@@ -71,7 +73,7 @@ export class SocialInteractionsService {
       const activeProfile =
         await profileService.getRequiredActiveProfile(userId);
 
-      const { error } = await (supabase as any).from("post_likes_new").insert({
+      const { error } = await this.db.from("post_likes_new").insert({
         post_id: postId,
         liker_profile_id: activeProfile.id,
       });
@@ -107,7 +109,7 @@ export class SocialInteractionsService {
       const activeProfile =
         await profileService.getRequiredActiveProfile(userId);
 
-      const { error } = await (supabase as any)
+      const { error } = await this.db
         .from("post_likes_new")
         .delete()
         .eq("post_id", postId)
@@ -135,7 +137,7 @@ export class SocialInteractionsService {
       const activeProfile =
         await profileService.getRequiredActiveProfile(userId);
 
-      const { data, error } = await (supabase as any)
+      const { data, error } = await this.db
         .from("post_likes_new")
         .select("id")
         .eq("post_id", postId)
@@ -168,7 +170,7 @@ export class SocialInteractionsService {
       const activeProfile =
         await profileService.getRequiredActiveProfile(userId);
 
-      const { data, error } = await (supabase as any)
+      const { data, error } = await this.db
         .from("post_likes_new")
         .select("post_id")
         .eq("liker_profile_id", activeProfile.id)
@@ -202,7 +204,7 @@ export class SocialInteractionsService {
       const activeProfile =
         await profileService.getRequiredActiveProfile(userId);
 
-      const { error } = await (supabase as any).from("saved_posts_new").insert({
+      const { error } = await this.db.from("saved_posts_new").insert({
         post_id: postId,
         saver_profile_id: activeProfile.id,
       });
@@ -238,7 +240,7 @@ export class SocialInteractionsService {
       const activeProfile =
         await profileService.getRequiredActiveProfile(userId);
 
-      const { error } = await (supabase as any)
+      const { error } = await this.db
         .from("saved_posts_new")
         .delete()
         .eq("post_id", postId)
@@ -266,7 +268,7 @@ export class SocialInteractionsService {
       const activeProfile =
         await profileService.getRequiredActiveProfile(userId);
 
-      const { data, error } = await (supabase as any)
+      const { data, error } = await this.db
         .from("saved_posts_new")
         .select("id")
         .eq("post_id", postId)
@@ -299,7 +301,7 @@ export class SocialInteractionsService {
       const activeProfile =
         await profileService.getRequiredActiveProfile(userId);
 
-      const { data, error } = await (supabase as any)
+      const { data, error } = await this.db
         .from("saved_posts_new")
         .select("post_id")
         .eq("saver_profile_id", activeProfile.id)
@@ -330,7 +332,7 @@ export class SocialInteractionsService {
       const activeProfile =
         await profileService.getRequiredActiveProfile(userId);
 
-      const { data, error } = await (supabase as any)
+      const { data, error } = await this.db
         .from("saved_posts_new")
         .select("*")
         .eq("saver_profile_id", activeProfile.id)
@@ -366,7 +368,7 @@ export class SocialInteractionsService {
       const activeProfile =
         await profileService.getRequiredActiveProfile(userId);
 
-      const { error } = await (supabase as any)
+      const { error } = await this.db
         .from("group_members_new")
         .insert({
           group_id: groupId,
@@ -405,7 +407,7 @@ export class SocialInteractionsService {
       const activeProfile =
         await profileService.getRequiredActiveProfile(userId);
 
-      const { error } = await (supabase as any)
+      const { error } = await this.db
         .from("group_members_new")
         .delete()
         .eq("group_id", groupId)
@@ -433,7 +435,7 @@ export class SocialInteractionsService {
     try {
       const activeProfile = await profileService.getRequiredActiveProfile();
 
-      const { data: requesterMembership, error: requesterError } = await (supabase as any)
+      const { data: requesterMembership, error: requesterError } = await this.db
         .from("group_members_new")
         .select("role")
         .eq("group_id", groupId)
@@ -445,7 +447,7 @@ export class SocialInteractionsService {
         return { success: false, error: "Apenas admins ou moderadores podem alterar funcoes" };
       }
 
-      const { error } = await (supabase as any)
+      const { error } = await this.db
         .from("group_members_new")
         .update({ role })
         .eq("group_id", groupId)
@@ -475,7 +477,7 @@ export class SocialInteractionsService {
       const activeProfile =
         await profileService.getRequiredActiveProfile(userId);
 
-      const { data, error } = await (supabase as any)
+      const { data, error } = await this.db
         .from("group_members_new")
         .select("id")
         .eq("group_id", groupId)
@@ -500,7 +502,7 @@ export class SocialInteractionsService {
    */
   static async getGroupMembers(groupId: string): Promise<GroupMember[]> {
     try {
-      const { data, error } = await (supabase as any)
+      const { data, error } = await this.db
         .from("group_members_new")
         .select(
           `
@@ -539,10 +541,10 @@ export class SocialInteractionsService {
       const activeProfile =
         await profileService.getRequiredActiveProfile(userId);
 
-      const { data: groupPolicy } = await (supabase as any).rpc("get_community_group_by_id", {
+      const { data: groupPolicy } = await this.db.rpc("get_community_group_by_id", {
         p_group_id: data.groupId,
       });
-      const { data: membership } = await (supabase as any)
+      const { data: membership } = await this.db
         .from("group_members_new")
         .select("role")
         .eq("group_id", data.groupId)
@@ -581,7 +583,7 @@ export class SocialInteractionsService {
       }
       if (data.metadata) payload.metadata = data.metadata;
 
-      const { data: message, error } = await (supabase as any)
+      const { data: message, error } = await this.db
         .from("group_messages_new")
         .insert(payload)
         .select(
@@ -615,7 +617,7 @@ export class SocialInteractionsService {
     offset: number = 0,
   ): Promise<GroupMessage[]> {
     try {
-      const { data, error } = await (supabase as any)
+      const { data, error } = await this.db
         .from("group_messages_new")
         .select(
           `
@@ -650,7 +652,7 @@ export class SocialInteractionsService {
       const activeProfile =
         await profileService.getRequiredActiveProfile(userId);
 
-      const { data: messageRow, error: messageFetchError } = await (supabase as any)
+      const { data: messageRow, error: messageFetchError } = await this.db
         .from("group_messages_new")
         .select("id, group_id, sender_profile_id")
         .eq("id", messageId)
@@ -659,7 +661,7 @@ export class SocialInteractionsService {
       if (messageFetchError) throw messageFetchError;
       if (!messageRow) return { success: false, error: "Mensagem nao encontrada" };
 
-      const { data: membership } = await (supabase as any)
+      const { data: membership } = await this.db
         .from("group_members_new")
         .select("role")
         .eq("group_id", messageRow.group_id)
@@ -672,7 +674,7 @@ export class SocialInteractionsService {
         return { success: false, error: "Sem permissao para remover esta mensagem" };
       }
 
-      const { error } = await (supabase as any)
+      const { error } = await this.db
         .from("group_messages_new")
         .delete()
         .eq("id", messageId)
@@ -703,7 +705,7 @@ export class SocialInteractionsService {
       }
       const activeProfile =
         await profileService.getRequiredActiveProfile(userId);
-      const { data: messageRow, error: messageError } = await (supabase as any)
+      const { data: messageRow, error: messageError } = await this.db
         .from("group_messages_new")
         .select("id, sender_profile_id")
         .eq("id", messageId)
@@ -714,7 +716,7 @@ export class SocialInteractionsService {
         return { success: false, error: "Somente o autor pode editar a mensagem" };
       }
 
-      const { error } = await (supabase as any)
+      const { error } = await this.db
         .from("group_messages_new")
         .update({
           content: content.trim(),
@@ -749,7 +751,7 @@ export class SocialInteractionsService {
       }
       const activeProfile =
         await profileService.getRequiredActiveProfile(userId);
-      const { data: messageRow, error: messageError } = await (supabase as any)
+      const { data: messageRow, error: messageError } = await this.db
         .from("group_messages_new")
         .select("id, group_id, sender_profile_id")
         .eq("id", messageId)
@@ -770,7 +772,7 @@ export class SocialInteractionsService {
         details: details?.trim() || null,
       };
 
-      const { error } = await (supabase as any).from("group_message_reports").insert(payload);
+      const { error } = await this.db.from("group_message_reports").insert(payload);
       if (error) {
         if (error.code === "23505") {
           return { success: false, error: "Voce ja denunciou esta mensagem" };
@@ -818,7 +820,7 @@ export class SocialInteractionsService {
     try {
       const activeProfile =
         await profileService.getRequiredActiveProfile(userId);
-      const { data: membership } = await (supabase as any)
+      const { data: membership } = await this.db
         .from("group_members_new")
         .select("role")
         .eq("group_id", groupId)
@@ -829,7 +831,7 @@ export class SocialInteractionsService {
         return [];
       }
 
-      const { data, error } = await (supabase as any)
+      const { data, error } = await this.db
         .from("group_message_reports")
         .select(`
           id,
@@ -872,7 +874,7 @@ export class SocialInteractionsService {
       const activeProfile =
         await profileService.getRequiredActiveProfile(userId);
 
-      const { data: reportRow, error: reportError } = await (supabase as any)
+      const { data: reportRow, error: reportError } = await this.db
         .from("group_message_reports")
         .select("id, group_id")
         .eq("id", reportId)
@@ -880,7 +882,7 @@ export class SocialInteractionsService {
       if (reportError) throw reportError;
       if (!reportRow) return { success: false, error: "Denuncia nao encontrada" };
 
-      const { data: membership } = await (supabase as any)
+      const { data: membership } = await this.db
         .from("group_members_new")
         .select("role")
         .eq("group_id", reportRow.group_id)
@@ -890,7 +892,7 @@ export class SocialInteractionsService {
         return { success: false, error: "Sem permissao para moderar denuncias" };
       }
 
-      const { data: currentReport, error: currentReportError } = await (supabase as any)
+      const { data: currentReport, error: currentReportError } = await this.db
         .from("group_message_reports")
         .select("moderation_history")
         .eq("id", reportId)
@@ -909,7 +911,7 @@ export class SocialInteractionsService {
         },
       ];
 
-      const { error } = await (supabase as any)
+      const { error } = await this.db
         .from("group_message_reports")
         .update({
           status,
@@ -1018,7 +1020,7 @@ export class SocialInteractionsService {
     followingId: string,
   ): Promise<boolean> {
     try {
-      const { data } = await (supabase as any)
+      const { data } = await this.db
         .from("user_follows")
         .select("id")
         .eq("follower_id", followerId)
@@ -1038,7 +1040,7 @@ export class SocialInteractionsService {
     followingId: string,
   ): Promise<{ action: "follow" | "unfollow"; error?: string }> {
     try {
-      const { data: existing } = await (supabase as any)
+      const { data: existing } = await this.db
         .from("user_follows")
         .select("id")
         .eq("follower_id", followerId)
@@ -1046,21 +1048,22 @@ export class SocialInteractionsService {
         .maybeSingle();
 
       if (existing) {
-        const { error } = await (supabase as any)
+        const { error } = await this.db
           .from("user_follows")
           .delete()
           .eq("id", existing.id);
         if (error) throw error;
         return { action: "unfollow" };
       } else {
-        const { error } = await (supabase as any)
+        const { error } = await this.db
           .from("user_follows")
           .insert({ follower_id: followerId, following_id: followingId });
         if (error) throw error;
         return { action: "follow" };
       }
-    } catch (error: any) {
-      return { action: "follow", error: error.message };
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : "erro desconhecido";
+      return { action: "follow", error: message };
     }
   }
 
@@ -1069,7 +1072,7 @@ export class SocialInteractionsService {
    */
   static async getFollowedUserIds(userId: string): Promise<string[]> {
     try {
-      const { data } = await (supabase as any)
+      const { data } = await this.db
         .from("user_follows")
         .select("following_id")
         .eq("follower_id", userId);
@@ -1087,7 +1090,7 @@ export class SocialInteractionsService {
       const activeProfile =
         await profileService.getRequiredActiveProfile(userId);
 
-      const { data, error } = await (supabase as any)
+      const { data, error } = await this.db
         .from("group_members_new")
         .select("group_id")
         .eq("member_profile_id", activeProfile.id);
@@ -1108,9 +1111,9 @@ export class SocialInteractionsService {
   /**
    * Busca mensagem de grupo por ID
    */
-  static async getGroupMessageById(messageId: string): Promise<any | null> {
+  static async getGroupMessageById(messageId: string): Promise<Record<string, unknown> | null> {
     try {
-      const { data, error } = await (supabase as any)
+      const { data, error } = await this.db
         .from("group_messages_new")
         .select("*, profile:sender_profile_id(id, name, avatar_url)")
         .eq("id", messageId)

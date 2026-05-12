@@ -56,7 +56,7 @@ class LocationServiceClass {
     locationData: Omit<LocationHistory, "id" | "created_at">,
   ): Promise<LocationHistory | null> {
     try {
-      const { data, error } = await (supabase as any)
+      const { data, error } = await supabase
         .from("location_history")
         .insert([locationData])
         .select()
@@ -78,7 +78,7 @@ class LocationServiceClass {
     limit: number = 100,
   ): Promise<LocationHistory[]> {
     try {
-      const { data, error } = await (supabase as any)
+      const { data, error } = await supabase
         .from("location_history")
         .select("*")
         .eq("profile_id", profileId)
@@ -98,7 +98,7 @@ class LocationServiceClass {
    */
   async getLastLocation(profileId: string): Promise<LocationHistory | null> {
     try {
-      const { data, error } = await (supabase as any)
+      const { data, error } = await supabase
         .from("location_history")
         .select("*")
         .eq("profile_id", profileId)
@@ -122,7 +122,7 @@ class LocationServiceClass {
       const cutoffDate = new Date();
       cutoffDate.setDate(cutoffDate.getDate() - daysOld);
 
-      const { error } = await (supabase as any)
+      const { error } = await supabase
         .from("location_history")
         .delete()
         .lt("created_at", cutoffDate.toISOString());
@@ -143,8 +143,12 @@ class LocationServiceClass {
       const primaryResidence = await residenceService.getPrimaryResidenceWithRelations(userId);
       if (!primaryResidence) return null;
 
-      const location = (primaryResidence as any).location;
-      const address = (primaryResidence as any).address;
+      const residence = primaryResidence as {
+        location?: { name?: string; full_name?: string; metadata?: { state_code?: string } };
+        address?: { street?: string };
+      };
+      const location = residence.location;
+      const address = residence.address;
       return {
         id: primaryResidence.id,
         user_id: primaryResidence.user_id,
@@ -190,7 +194,7 @@ class LocationServiceClass {
         if (!residence) return null;
 
         // ETAPA 12: Usar apenas modelo canônico
-        const location = (residence as any).location;
+        const location = (residence as { location?: { name?: string; full_name?: string; metadata?: { state_code?: string } } }).location;
         return {
           neighborhood: location.name,
           city: location.full_name.split(' - ')[1] || location.name,

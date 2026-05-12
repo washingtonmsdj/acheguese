@@ -3,7 +3,6 @@ import { useToast } from "@/shared/hooks/use-toast";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { PostsFacade } from "@/core/posts/services"; // ✅ SSOT v2.0
 import { Poll, PollOption } from "@/shared/types/poll";
-import { logger } from "@/shared/utils/logger";
 import { profileService } from "@/core/profiles/services/ProfileService";
 /**
  * Hook para gerenciar votação em enquetes
@@ -20,6 +19,12 @@ interface PollState {
   poll: Poll;
   isVoting: boolean;
   hasVoted: boolean;
+}
+
+interface VoteMutationResult {
+  options: PollOption[];
+  total_votes: number;
+  optionId: string;
 }
 
 export function usePollVote({ pollId, initialPoll }: UsePollVoteProps) {
@@ -65,7 +70,12 @@ export function usePollVote({ pollId, initialPoll }: UsePollVoteProps) {
   /**
    * Mutation para registrar voto (apenas uma vez)
    */
-  const voteMutation = useMutation({
+  const voteMutation = useMutation<
+    VoteMutationResult,
+    Error,
+    string,
+    { previousState: PollState }
+  >({
     mutationFn: async (optionId: string) => {
       // ✅ FASE 2: Usar ProfileService.getRequiredActiveProfile() para contexto social
       const activeProfile = await profileService.getRequiredActiveProfile();
@@ -111,16 +121,16 @@ export function usePollVote({ pollId, initialPoll }: UsePollVoteProps) {
 
       return { previousState };
     },
-    onSuccess: (date) => {
+    onSuccess: (data) => {
       // Atualizar com dados reais do servidor
       const optionsWithPercentages = calculatePercentages(
-        date.options.map((opt: any) => ({
+        data.options.map((opt) => ({
           id: opt.id,
           text: opt.text,
           votes: opt.votes || 0,
           percentage: 0,
         })),
-        date.total_votes,
+        data.total_votes,
       );
 
       setState((prev) => ({
@@ -128,9 +138,9 @@ export function usePollVote({ pollId, initialPoll }: UsePollVoteProps) {
         poll: {
           ...prev.poll,
           options: optionsWithPercentages,
-          total_votes: date.total_votes,
+          total_votes: data.total_votes,
           user_voted: true,
-          user_vote_option_id: date.optionId, // Manter opção votada
+          user_vote_option_id: data.optionId, // Manter opção votada
         },
         isVoting: false,
       }));
@@ -210,7 +220,7 @@ export function usePollVote({ pollId, initialPoll }: UsePollVoteProps) {
     }
 
     if (diffHours > 0) {
-      return `${diffHours} time${diffHours > 1 ? "s" : ""} restante${diffHours > 1 ? "s" : ""}`;
+      return `${diffHours} hora${diffHours > 1 ? "s" : ""} restante${diffHours > 1 ? "s" : ""}`;
     }
 
     const diffMins = Math.floor(diffMs / (1000 * 60));

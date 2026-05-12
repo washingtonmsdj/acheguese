@@ -1,5 +1,4 @@
-import React from "react";
-
+import React, { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { GamificationService } from "@/core/gamification/services/GamificationService";
 import {
@@ -15,32 +14,62 @@ import {
 } from "@/shared/components/ui/avatar";
 import { Trophy } from "lucide-react";
 import { useCommunityFilters } from "../hooks/feed/useFeedFilters";
-import { useAuth } from "@/core/auth/hooks/useAuth";
+import { useCommunityLocation } from "../hooks/useCommunityLocation";
+import { useTerritorialContextOptional } from "@/core/routing/components/TerritorialLayout";
+import { getCityStateFromLocation, getCityStateFromResolved } from "@/core/location/utils/territoryHelpers";
+import { LocationType } from "@/core/location/types";
+
+interface TopUserItem {
+  id: string;
+  name: string;
+  avatar_url?: string | null;
+  reputation?: number | null;
+}
 
 export function TopUsersWidget() {
   const { filters } = useCommunityFilters();
-  const { user } = useAuth();
+  const territorialContext = useTerritorialContextOptional();
+  const { activeLocation } = useCommunityLocation();
 
-  const userLocation = {
-    city: user?.user_metadata?.city || "",
-    neighborhood: user?.user_metadata?.neighborhood || "",
-    street: user?.user_metadata?.street || "",
-  };
+  const { city, neighborhood } = useMemo(() => {
+    if (territorialContext?.resolved) {
+      const cityState = getCityStateFromResolved(territorialContext.resolved);
+      const neighborhoodName =
+        filters.locationScope === "neighborhood" &&
+        territorialContext.resolved.kind === "location" &&
+        territorialContext.resolved.location.type === LocationType.DISTRICT
+          ? territorialContext.resolved.location.name
+          : null;
 
-  const { data: topUsers, isLoading } = useQuery({
-    queryKey: ["top-users", filters.locationScope, userLocation],
+      return {
+        city: cityState.city,
+        neighborhood: neighborhoodName,
+      };
+    }
+
+    if (activeLocation) {
+      const cityState = getCityStateFromLocation(activeLocation);
+      const neighborhoodName =
+        filters.locationScope === "neighborhood" && activeLocation.type === LocationType.DISTRICT
+          ? activeLocation.name
+          : null;
+
+      return {
+        city: cityState.city,
+        neighborhood: neighborhoodName,
+      };
+    }
+
+    return { city: "", neighborhood: null as string | null };
+  }, [territorialContext, activeLocation, filters.locationScope]);
+
+  const { data: topUsers, isLoading } = useQuery<TopUserItem[]>({
+    queryKey: ["top-users", city, neighborhood],
     queryFn: async () => {
-      // ✅ SSOT - Usar GamificationService
-      return await GamificationService.getTopUsersByLocation(
-        userLocation.city,
-        filters.locationScope === "neighborhood"
-          ? userLocation.neighborhood
-          : null,
-        5,
-      );
+      return await GamificationService.getTopUsersByLocation(city, neighborhood, 5);
     },
     staleTime: 5 * 60 * 1000,
-    enabled: !!userLocation.city,
+    enabled: city.length > 0,
   });
 
   if (isLoading || !topUsers || topUsers.length === 0) return null;
@@ -50,26 +79,26 @@ export function TopUsersWidget() {
       <CardHeader>
         <CardTitle className="text-sm flex items-center gap-2">
           <Trophy className="w-4 h-4 text-yellow-500" />
-          Usuários Destaque
+          Usuarios Destaque
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-3">
-        {topUsers.map((user: any, index: number) => (
+        {topUsers.map((topUser, index: number) => (
           <div
-            key={user.id}
+            key={topUser.id}
             className="flex items-center gap-3 cursor-pointer hover:bg-accent p-2 rounded-md transition-colors"
           >
             <span className="text-xs font-bold text-muted-foreground w-4">
               #{index + 1}
             </span>
             <Avatar className="w-8 h-8">
-              <AvatarImage src={user.avatar_url} />
-              <AvatarFallback>{user.name?.[0]}</AvatarFallback>
+              <AvatarImage src={topUser.avatar_url ?? undefined} />
+              <AvatarFallback>{topUser.name?.[0]}</AvatarFallback>
             </Avatar>
             <div className="flex-1 min-w-0">
-              <p className="text-xs font-medium truncate">{user.name}</p>
+              <p className="text-xs font-medium truncate">{topUser.name}</p>
               <p className="text-xs text-muted-foreground">
-                {user.reputation || 0} pontos
+                {topUser.reputation || 0} pontos
               </p>
             </div>
           </div>

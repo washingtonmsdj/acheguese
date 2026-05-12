@@ -25,6 +25,7 @@ import {
   ChevronRight,
   X,
 } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import {
@@ -62,11 +63,11 @@ interface FieldConfig {
 interface QuickAction {
   key: string;
   label: string;
-  icon: any;
+  icon: LucideIcon;
   activeColor?: string;
   inactiveColor?: string;
   getValue: (item: Business) => boolean;
-  getNextValue?: (item: Business) => any;
+  getNextValue?: (item: Business) => unknown;
 }
 
 interface FilterConfig {
@@ -89,7 +90,7 @@ export default function AdminBusinessPage() {
   const [totalLoaded, setTotalLoaded] = useState(0);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<Business | null>(null);
-  const [form, setForm] = useState<Record<string, any>>({});
+  const [form, setForm] = useState<Record<string, unknown>>({});
   const [saving, setSaving] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [togglingId, setTogglingId] = useState<string | null>(null);
@@ -101,6 +102,10 @@ export default function AdminBusinessPage() {
   const fields = ADMIN_BUSINESS_FIELDS;
   const quickActions = ADMIN_BUSINESS_ACTIONS;
   const filters = ADMIN_BUSINESS_FILTERS;
+  const getFieldValue = (business: Business, key: string): unknown =>
+    Object.entries(business as Record<string, unknown>).find(
+      ([entryKey]) => entryKey === key,
+    )?.[1];
 
   // 🎯 LOAD DATA usando BusinessService com PAGINAÇÃO
   const loadBusinesses = async (pageParam = 0, append = false) => {
@@ -169,7 +174,7 @@ export default function AdminBusinessPage() {
         const unique = [
           ...new Set(
             businesses
-              .map((b) => String((b as any)[f.key] ?? ""))
+              .map((b) => String(getFieldValue(b, f.key) ?? ""))
               .filter(Boolean),
           ),
         ].sort();
@@ -202,7 +207,7 @@ export default function AdminBusinessPage() {
       const q = searchQuery.toLowerCase();
       result = result.filter((business) =>
         fields.some((f) =>
-          String((business as any)[f.key] ?? "")
+          String(getFieldValue(business, f.key) ?? "")
             .toLowerCase()
             .includes(q),
         ),
@@ -222,7 +227,7 @@ export default function AdminBusinessPage() {
   // 🎯 FORM HANDLERS - SEM MAPPER (BusinessService faz tudo)
   const openNew = () => {
     setEditing(null);
-    const empty: Record<string, any> = {};
+    const empty: Record<string, unknown> = {};
     fields.forEach((f) => {
       empty[f.key] =
         f.type === "boolean" ? false : f.type === "number" ? 0 : "";
@@ -233,10 +238,10 @@ export default function AdminBusinessPage() {
 
   const openEdit = (business: Business) => {
     setEditing(business);
-    const filled: Record<string, any> = {};
+    const filled: Record<string, unknown> = {};
     fields.forEach((f) => {
       filled[f.key] =
-        (business as any)[f.key] ?? (f.type === "boolean" ? false : "");
+        getFieldValue(business, f.key) ?? (f.type === "boolean" ? false : "");
     });
     setForm(filled);
     setDialogOpen(true);
@@ -321,9 +326,9 @@ export default function AdminBusinessPage() {
         : !action.getValue(business);
 
       // Create update input with only the changed field
-      const updateInput: UpdateBusinessInput = {
+      const updateInput = {
         [action.key]: newValue,
-      } as any;
+      } as unknown as UpdateBusinessInput;
 
       const updated = await BusinessService.updateBusiness(
         business.id,
@@ -357,7 +362,7 @@ export default function AdminBusinessPage() {
 
   // 🎯 RENDER CELL VALUE
   const renderCellValue = (business: Business, f: FieldConfig) => {
-    const val = (business as any)[f.key];
+    const val = getFieldValue(business, f.key);
     if (f.type === "boolean") {
       return val ? (
         <Badge

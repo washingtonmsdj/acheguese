@@ -58,7 +58,7 @@ export class AdminDriverModerationService {
   static async getFallbackSuspensionHistory(
     driverProfileId: string,
   ): Promise<SuspensionHistoryEntry[]> {
-    let data: any = null;
+    let data: { suspended_at?: string | null; suspension_reason?: string | null } | null = null;
     try {
       data = await profileService.getProfileById(driverProfileId);
     } catch (error) {

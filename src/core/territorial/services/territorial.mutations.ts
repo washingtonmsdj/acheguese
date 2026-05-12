@@ -19,7 +19,7 @@ export async function updateMetadataFlag(
   id: string,
   flag: VisibilityFlag,
   value: boolean
-): Promise<any> {
+): Promise<Record<string, unknown>> {
   try {
     const functionName = table === 'locations' 
       ? 'territorial-update-location-visibility'
@@ -46,7 +46,7 @@ export async function updateMetadataFlag(
       value,
     });
 
-    return data;
+    return (data ?? {}) as Record<string, unknown>;
   } catch (error) {
     logger.error('territorial.mutations.updateMetadataFlag', error);
     throw error;

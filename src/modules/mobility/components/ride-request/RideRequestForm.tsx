@@ -192,9 +192,9 @@ export const RideRequestForm = memo<RideRequestFormProps>(function RideRequestFo
 
         // Reset form
         actions.reset();
-      } catch (err: any) {
+      } catch (err: unknown) {
         logger.error('RideRequestForm.handleSubmit', err);
-        toast.error(err?.message || 'Erro ao criar corrida. Tente novamente.');
+        toast.error(err instanceof Error ? err.message : 'Erro ao criar corrida. Tente novamente.');
       } finally {
         actions.setSubmitting(false);
       }

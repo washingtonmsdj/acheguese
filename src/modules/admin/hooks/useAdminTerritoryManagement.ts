@@ -29,6 +29,10 @@ type DistrictCommunityMetric = {
   source: RolloutSource;
 };
 
+type TerritoryManagementData = Awaited<
+  ReturnType<typeof TerritorialManagementService.fetchTerritoryTree>
+>;
+
 export function useAdminTerritoryManagement() {
   const queryClient = useQueryClient();
 
@@ -98,9 +102,9 @@ export function useAdminTerritoryManagement() {
       queryClient.invalidateQueries({ queryKey: ['admin', 'community-district-metrics'] });
       toast.success('Rollout da comunidade atualizado para o bairro');
     },
-    onError: (err: any) => {
+    onError: (err: unknown) => {
       logger.error('Erro ao atualizar rollout de comunidade por bairro', err);
-      toast.error(err?.message || 'Erro ao atualizar rollout da comunidade');
+      toast.error(err instanceof Error ? err.message : 'Erro ao atualizar rollout da comunidade');
     },
   });
 
@@ -119,10 +123,10 @@ export function useAdminTerritoryManagement() {
       await queryClient.cancelQueries({ queryKey: ['admin', 'territory-management'] });
       
       // Snapshot previous value
-      const previousData = queryClient.getQueryData(['admin', 'territory-management']);
+      const previousData = queryClient.getQueryData<TerritoryManagementData>(['admin', 'territory-management']);
       
       // Optimistically update
-      queryClient.setQueryData(['admin', 'territory-management'], (old: any) => {
+      queryClient.setQueryData<TerritoryManagementData>(['admin', 'territory-management'], (old) => {
         if (!old) return old;
         
         return {
@@ -135,13 +139,13 @@ export function useAdminTerritoryManagement() {
       
       return { previousData };
     },
-    onError: (err: any, variables, context) => {
+    onError: (err: unknown, variables, context) => {
       // Rollback on error
       if (context?.previousData) {
         queryClient.setQueryData(['admin', 'territory-management'], context.previousData);
       }
       logger.error('❌ Mutation error:', err);
-      toast.error(err.message || 'Erro ao atualizar visibilidade');
+      toast.error(err instanceof Error ? err.message : 'Erro ao atualizar visibilidade');
     },
     onSuccess: () => {
       logger.debug('✅ Mutation success, invalidating queries...');
@@ -171,10 +175,10 @@ export function useAdminTerritoryManagement() {
       await queryClient.cancelQueries({ queryKey: ['admin', 'territory-management'] });
       
       // Snapshot previous value
-      const previousData = queryClient.getQueryData(['admin', 'territory-management']);
+      const previousData = queryClient.getQueryData<TerritoryManagementData>(['admin', 'territory-management']);
       
       // Optimistically update
-      queryClient.setQueryData(['admin', 'territory-management'], (old: any) => {
+      queryClient.setQueryData<TerritoryManagementData>(['admin', 'territory-management'], (old) => {
         if (!old) return old;
         
         return {
@@ -187,13 +191,13 @@ export function useAdminTerritoryManagement() {
       
       return { previousData };
     },
-    onError: (err: any, variables, context) => {
+    onError: (err: unknown, variables, context) => {
       // Rollback on error
       if (context?.previousData) {
         queryClient.setQueryData(['admin', 'territory-management'], context.previousData);
       }
       logger.error('❌ Mutation error:', err);
-      toast.error(err.message || 'Erro ao atualizar visibilidade do grupo');
+      toast.error(err instanceof Error ? err.message : 'Erro ao atualizar visibilidade do grupo');
     },
     onSuccess: () => {
       logger.debug('✅ Mutation success, invalidating queries...');

@@ -94,6 +94,18 @@ export interface PizzaCatalogSummary {
   doughsCount: number;
 }
 
+type NicheBusinessRow = {
+  business_id: string;
+  niche_key: string | null;
+  cuisine_type: string | null;
+  status: string;
+  created_at: string;
+  business?: {
+    name?: string | null;
+    slug?: string | null;
+  } | null;
+};
+
 class AdminGastronomyServiceClass {
   async getStats(): Promise<GastronomyStats> {
     try {
@@ -653,7 +665,7 @@ class AdminGastronomyServiceClass {
 
       if (error) throw error;
 
-      const businesses: BusinessWithNiche[] = (data || []).map((row: any) => ({
+      const businesses: BusinessWithNiche[] = ((data as NicheBusinessRow[] | null) || []).map((row) => ({
         id: row.business_id,
         name: row.business?.name || "",
         slug: row.business?.slug || "",

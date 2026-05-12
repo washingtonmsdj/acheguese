@@ -12,6 +12,7 @@
  */
 
 import { useBusinessUrls } from '@/core/business/hooks/useBusinessUrls';
+import { businessManagementRoutes } from '@/core/business/utils/businessManagementRoutes';
 import { useServiceUrls } from '@/core/professional/hooks/useServiceUrls';
 import { useClassifiedUrls } from '@/modules/classifieds/hooks/useClassifiedUrls';
 import { useCommunityUrls } from './useCommunityUrls';
@@ -99,26 +100,12 @@ export function useAppUrls(routeResolved?: ResolvedTerritory | null): AppUrls {
     // Perfil
     profile: {
       central: '/central',
-      businesses: '/central/empresas',
+      businesses: businessManagementRoutes.list(),
       billing: '/perfil/planos',
       mobilidade: {
         home: '/perfil/mobilidade',
-        motorista: {
-          home: '/central/motorista',
-          cadastro: '/central/motorista/cadastro',
-          disponibilidade: '/central/motorista/disponibilidade',
-          corridas: '/central/motorista/corridas',
-          ganhos: '/central/motorista/ganhos',
-          configuracoes: '/central/motorista/configuracoes',
-        },
-        motoboy: {
-          home: '/central/motoboy',
-          cadastro: '/central/motoboy/cadastro',
-          disponibilidade: '/central/motoboy/disponibilidade',
-          entregas: '/central/motoboy/entregas',
-          ganhos: '/central/motoboy/ganhos',
-          configuracoes: '/central/motoboy/configuracoes',
-        },
+        motorista: mobility.motorista,
+        motoboy: mobility.motoboy,
       },
       public: (username: string) => `/u/${username}`,
       manage: '/perfil/identidades',

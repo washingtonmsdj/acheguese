@@ -77,6 +77,24 @@ export interface FindEntitiesWithCoverageInput {
   limit?: number;
 }
 
+interface CoverageEntityRow {
+  entity_id: string;
+  coverage_type: CoverageType;
+  distance_meters?: number | null;
+}
+
+interface CoverageAreaRow {
+  id: string;
+  coverage_type: CoverageType;
+  location_id?: string | null;
+  location_name?: string | null;
+  center_latitude?: number | null;
+  center_longitude?: number | null;
+  radius_km?: number | null;
+  is_active?: boolean | null;
+  status?: string | null;
+}
+
 // ============================================
 // SERVICE
 // ============================================
@@ -303,7 +321,7 @@ export class CoverageService {
       throw new Error(`Erro ao buscar entidades com cobertura: ${error.message}`);
     }
 
-    return (data || []).map((row: any) => ({
+    return ((data || []) as CoverageEntityRow[]).map((row) => ({
       entity_id: row.entity_id,
       coverage_type: row.coverage_type,
       distance_meters: row.distance_meters ?? undefined,
@@ -407,7 +425,7 @@ export class CoverageService {
     }
   }
 
-  private mapCoverageArea(row: any): CoverageArea {
+  private mapCoverageArea(row: CoverageAreaRow): CoverageArea {
     const isActive =
       typeof row.is_active === 'boolean'
         ? row.is_active

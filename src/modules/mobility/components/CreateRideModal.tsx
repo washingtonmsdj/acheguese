@@ -351,9 +351,9 @@ export function CreateRideModal({ open, onOpenChange, onSubmit, initialType = "v
       setTrustPreference("qualquer"); setOriginCoords(null); setDestinationCoords(null);
       setOriginLocationId(""); setDestinationLocationId(""); setUserEditedPrice(false);
       onOpenChange(false);
-    } catch (err: any) {
+    } catch (err: unknown) {
       logger.error("CreateRideModal.handleSubmit", err);
-      toast.error(err?.message || "Erro ao criar corrida. Tente novamente.");
+      toast.error(err instanceof Error ? err.message : "Erro ao criar corrida. Tente novamente.");
     } finally {
       setSubmitting(false);
     }

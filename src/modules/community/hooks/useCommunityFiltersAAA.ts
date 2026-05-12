@@ -55,16 +55,20 @@ const getInitialFilters = (): CommunityFilters => {
 };
 
 // 🎯 TYPE GUARD - Validação rigorosa
-const isValidFilters = (obj: any): obj is CommunityFilters => {
+const isValidFilters = (obj: unknown): obj is CommunityFilters => {
+  if (!obj || typeof obj !== "object") return false;
+
+  const candidate = obj as Partial<CommunityFilters> & {
+    locationScope?: string;
+    sortBy?: string;
+  };
   return (
-    obj &&
-    typeof obj === "object" &&
-    ["city", "neighborhood", "rua"].includes(obj.locationScope) &&
-    ["recentes", "populares", "mais_comentados"].includes(obj.sortBy) &&
-    (obj.tagFilter === null || typeof obj.tagFilter === "string") &&
-    (obj.postTypeFilter === null ||
+    ["city", "neighborhood", "street"].includes(candidate.locationScope ?? "") &&
+    ["recentes", "populares", "mais_comentados"].includes(candidate.sortBy ?? "") &&
+    (candidate.tagFilter === null || typeof candidate.tagFilter === "string" || typeof candidate.tagFilter === "undefined") &&
+    (candidate.postTypeFilter === null ||
       ["Pergunta", "Alerta", "Discussão", "Recomendação"].includes(
-        obj.postTypeFilter,
+        candidate.postTypeFilter,
       ))
   );
 };

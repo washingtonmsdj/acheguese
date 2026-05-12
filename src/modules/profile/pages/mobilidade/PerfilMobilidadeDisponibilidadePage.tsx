@@ -20,7 +20,7 @@ export default function PerfilMobilidadeDisponibilidadePage() {
   const shell = useMotoristaPageV2();
   const identity = useDriverProfileIdentity({ queryScope: "perfil-mobilidade-disponibilidade" });
 
-  const driverData = shell.driverData as any;
+  const driverData = shell.driverData as Record<string, unknown> | null;
   const modeLabel = useMemo(() => {
     const ride = driverData?.can_do_rides !== false;
     const delivery = driverData?.can_do_delivery === true;

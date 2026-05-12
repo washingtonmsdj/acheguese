@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase";
 import { logger } from "@/shared/utils/logger";
 import { trackError } from "@/shared/utils/errorTracking";
 import { createTypedQuery } from "@/integrations/supabase/services/supabaseHelpers";
+import { SessionService } from "@/core/session/services/SessionService";
 import type {
   AdminFilters,
   AdminProfileListItem,
@@ -21,11 +22,19 @@ import type {
 
 const TABLE = "profiles";
 
+type RecentProfileRow = {
+  id: string;
+  name: string | null;
+  username: string | null;
+  avatar_url: string | null;
+  created_at: string;
+};
+
 /**
  * Busca profile por ID
  */
 export async function getProfileById(profileId: string): Promise<Profile | null> {
-  const { data, error } = await (supabase as any)
+  const { data, error } = await supabase
     .from(TABLE)
     .select("*")
     .eq("id", profileId)
@@ -50,13 +59,13 @@ export async function getActiveProfile(userId?: string): Promise<Profile | null>
   let targetUserId = userId;
 
   if (!targetUserId) {
-    const { data: userData } = await (supabase as any).auth.getUser();
-    targetUserId = userData?.user?.id;
+    const currentUser = await SessionService.getCurrentUser();
+    targetUserId = currentUser?.id;
   }
 
   if (!targetUserId) return null;
 
-  const { data, error } = await (supabase as any)
+  const { data, error } = await supabase
     .from(TABLE)
     .select("*")
     .eq("user_id", targetUserId)
@@ -81,13 +90,13 @@ export async function getProfilesByUserId(userId?: string): Promise<Profile[]> {
   let targetUserId = userId;
 
   if (!targetUserId) {
-    const { data: userData } = await (supabase as any).auth.getUser();
-    targetUserId = userData?.user?.id;
+    const currentUser = await SessionService.getCurrentUser();
+    targetUserId = currentUser?.id;
   }
 
   if (!targetUserId) return [];
 
-  const { data, error } = await (supabase as any)
+  const { data, error } = await supabase
     .from(TABLE)
     .select("*")
     .eq("user_id", targetUserId)
@@ -113,7 +122,7 @@ export async function getProfileByType(
   userId: string,
   profileType: "personal" | "driver" | "business" | "professional",
 ): Promise<Profile | null> {
-  const { data, error } = await (supabase as any)
+  const { data, error } = await supabase
     .from(TABLE)
     .select("*")
     .eq("user_id", userId)
@@ -184,7 +193,7 @@ export async function getProfilesSummary(ids: string[]): Promise<ProfileSummary[
 
   const uniqueIds = [...new Set(ids)];
 
-  const { data, error } = await (supabase as any)
+  const { data, error } = await supabase
     .from(TABLE)
     .select("id, user_id, name, avatar_url, verified")
     .in("id", uniqueIds);
@@ -217,7 +226,7 @@ export async function getProfilesSummaryExtended(
 
   const uniqueIds = [...new Set(ids)];
 
-  const { data, error } = await (supabase as any)
+  const { data, error } = await supabase
     .from(TABLE)
     .select("id, name, avatar_url, verified, neighborhood, whatsapp")
     .in("id", uniqueIds);
@@ -247,7 +256,7 @@ export async function getProfilesSummaryExtended(
 export async function getAdminProfilesList(
   filters?: AdminFilters,
 ): Promise<AdminProfileListItem[]> {
-  let query = (supabase as any)
+  let query = supabase
     .from(TABLE)
     .select(
       "id, name, username, avatar_url, verified, is_suspended, created_at, profile_type",
@@ -307,11 +316,11 @@ export async function getStats(userId: string): Promise<ProfileStats | null> {
     postsResult,
     likesResult,
   ] = await Promise.all([
-    (supabase as any)
+    supabase
       .from("community_posts")
       .select("id", { count: "exact", head: true })
       .eq("profile_id", activeProfile.id),
-    (supabase as any)
+    supabase
       .from("post_likes_new")
       .select("id", { count: "exact", head: true })
       .eq("liker_profile_id", activeProfile.id),
@@ -343,7 +352,7 @@ export async function getStats(userId: string): Promise<ProfileStats | null> {
  */
 export async function getTotalProfilesCount(): Promise<number> {
   try {
-    const { count, error } = await (supabase as any)
+    const { count, error } = await supabase
       .from(TABLE)
       .select("*", { count: "exact", head: true });
 
@@ -368,9 +377,9 @@ export async function getTotalProfilesCount(): Promise<number> {
 /**
  * Profiles recentes
  */
-export async function getRecentProfiles(limit = 10): Promise<any[]> {
+export async function getRecentProfiles(limit = 10): Promise<RecentProfileRow[]> {
   try {
-    const { data, error } = await (supabase as any)
+    const { data, error } = await supabase
       .from(TABLE)
       .select("id, name, username, avatar_url, created_at")
       .order("created_at", { ascending: false })
@@ -385,7 +394,7 @@ export async function getRecentProfiles(limit = 10): Promise<any[]> {
       return [];
     }
 
-    return data || [];
+    return (data as RecentProfileRow[] | null) || [];
   } catch (error) {
     trackError(error as Error, {
       component: "profile.queries",
@@ -403,7 +412,7 @@ export async function getProfilesCreatedInPeriod(
   endDate: Date,
 ): Promise<number> {
   try {
-    const { count, error } = await (supabase as any)
+    const { count, error } = await supabase
       .from(TABLE)
       .select("*", { count: "exact", head: true })
       .gte("created_at", startDate.toISOString())
@@ -439,7 +448,7 @@ export async function isUsernameAvailable(
   excludeProfileId?: string,
 ): Promise<boolean> {
   try {
-    let query = (supabase as any).from(TABLE).select("id").eq("username", username);
+    let query = supabase.from(TABLE).select("id").eq("username", username);
 
     if (excludeProfileId) {
       query = query.neq("id", excludeProfileId);
@@ -467,7 +476,7 @@ export async function getSimilarUsernames(
   limit = 20,
 ): Promise<string[]> {
   try {
-    const { data, error } = await (supabase as any)
+    const { data, error } = await supabase
       .from(TABLE)
       .select("username")
       .ilike("username", `${username}%`)
@@ -501,7 +510,7 @@ export async function getUsernameHistory(profileId: string): Promise<
   }>
 > {
   try {
-    const { data, error } = await (supabase as any)
+    const { data, error } = await supabase
       .from("profile_username_history")
       .select("*")
       .eq("profile_id", profileId)

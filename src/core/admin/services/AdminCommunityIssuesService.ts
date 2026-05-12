@@ -365,7 +365,11 @@ class AdminCommunityIssuesServiceClass {
       const user = await SessionService.getCurrentUser();
       if (!user) throw new Error('not_authenticated');
 
-      const updateData: any = {
+      const updateData: {
+        status: IssueStatus;
+        updated_at: string;
+        resolved_at?: string;
+      } = {
         status,
         updated_at: new Date().toISOString(),
       };
@@ -401,7 +405,7 @@ class AdminCommunityIssuesServiceClass {
 
       const { error: auditError } = await (supabase as unknown as AdminSupabaseClient)
         .from(this.AUDIT_TABLE)
-        .insert([auditData] as any);
+        .insert([auditData]);
 
       if (auditError) throw auditError;
 
@@ -439,7 +443,7 @@ class AdminCommunityIssuesServiceClass {
         metadata: { priority },
       };
 
-      await (supabase as any).from(this.AUDIT_TABLE).insert([auditData]);
+      await (supabase as unknown as AdminSupabaseClient).from(this.AUDIT_TABLE).insert([auditData]);
 
       logger.info('AdminCommunityIssuesService.updatePriority', { issueId, priority });
       return true;
@@ -476,7 +480,7 @@ class AdminCommunityIssuesServiceClass {
         metadata: { reason },
       };
 
-      await (supabase as any).from(this.AUDIT_TABLE).insert([auditData]);
+      await (supabase as unknown as AdminSupabaseClient).from(this.AUDIT_TABLE).insert([auditData]);
 
       logger.info('AdminCommunityIssuesService.removeIssue', { issueId, reason });
       return true;
@@ -505,7 +509,7 @@ class AdminCommunityIssuesServiceClass {
       if (error) throw error;
 
       // Audit log
-      await (supabase as any).from(this.AUDIT_TABLE).insert({
+      await (supabase as unknown as AdminSupabaseClient).from(this.AUDIT_TABLE).insert({
         issue_id: issueId,
         actor_id: user.id,
         action: 'reviewed_cleared',

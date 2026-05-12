@@ -11,6 +11,24 @@ import type { Address } from '@/core/address/types';
 import type { Location } from '@/core/location/types';
 import type { RideRequestRecord, RideRequestWithRelations } from '../types';
 
+type LegacyLocationLike = {
+  address?: string;
+  neighborhood?: string;
+  city?: string;
+  state?: string;
+  cep?: string;
+  latitude?: number;
+  longitude?: number;
+  lat?: number;
+  lng?: number;
+  lon?: number;
+};
+
+type LegacyRideLike = {
+  origin?: LegacyLocationLike;
+  destination?: LegacyLocationLike;
+};
+
 /**
  * Verificar se corrida está migrada para modelo canônico
  */
@@ -106,7 +124,7 @@ export function getPickupCoordinates(
   }
 
   // Fallback para pickup_location legado
-  const pickup = ride.pickup_location as any;
+  const pickup = ride.pickup_location as LegacyLocationLike | null;
   if (pickup && typeof pickup === 'object') {
     const lat = pickup.latitude || pickup.lat;
     const lng = pickup.longitude || pickup.lng || pickup.lon;
@@ -116,7 +134,7 @@ export function getPickupCoordinates(
   }
 
   // Fallback para origin legado
-  const origin = (ride as any).origin;
+  const origin = (ride as LegacyRideLike).origin;
   if (origin && typeof origin === 'object') {
     const lat = origin.latitude || origin.lat;
     const lng = origin.longitude || origin.lng || origin.lon;
@@ -143,7 +161,7 @@ export function getDropoffCoordinates(
   }
 
   // Fallback para dropoff_location legado
-  const dropoff = ride.dropoff_location as any;
+  const dropoff = ride.dropoff_location as LegacyLocationLike | null;
   if (dropoff && typeof dropoff === 'object') {
     const lat = dropoff.latitude || dropoff.lat;
     const lng = dropoff.longitude || dropoff.lng || dropoff.lon;
@@ -153,7 +171,7 @@ export function getDropoffCoordinates(
   }
 
   // Fallback para destination legado
-  const destination = (ride as any).destination;
+  const destination = (ride as LegacyRideLike).destination;
   if (destination && typeof destination === 'object') {
     const lat = destination.latitude || destination.lat;
     const lng = destination.longitude || destination.lng || destination.lon;
@@ -191,14 +209,14 @@ export function getPickupTerritoryName(
   }
 
   // Fallback para pickup_location legado
-  const pickup = ride.pickup_location as any;
+  const pickup = ride.pickup_location as LegacyLocationLike | null;
   if (pickup && typeof pickup === 'object') {
     if (pickup.city) return pickup.city;
     if (pickup.neighborhood) return pickup.neighborhood;
   }
 
   // Fallback para origin legado
-  const origin = (ride as any).origin;
+  const origin = (ride as LegacyRideLike).origin;
   if (origin && typeof origin === 'object') {
     if (origin.city) return origin.city;
     if (origin.neighborhood) return origin.neighborhood;
@@ -219,14 +237,14 @@ export function getDropoffTerritoryName(
   }
 
   // Fallback para dropoff_location legado
-  const dropoff = ride.dropoff_location as any;
+  const dropoff = ride.dropoff_location as LegacyLocationLike | null;
   if (dropoff && typeof dropoff === 'object') {
     if (dropoff.city) return dropoff.city;
     if (dropoff.neighborhood) return dropoff.neighborhood;
   }
 
   // Fallback para destination legado
-  const destination = (ride as any).destination;
+  const destination = (ride as LegacyRideLike).destination;
   if (destination && typeof destination === 'object') {
     if (destination.city) return destination.city;
     if (destination.neighborhood) return destination.neighborhood;

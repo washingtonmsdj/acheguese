@@ -23,20 +23,37 @@ import { supabase } from "@/integrations/supabase";
 import { trackError } from "@/shared/utils/errorTracking";
 import { profileService } from "@/core/profiles/services/ProfileService";
 
+type ActiveRideRow = { active_ride_id: string | null };
+type PassengerStatsRow = {
+  passenger_rating: number | null;
+  passenger_trust_level: string | null;
+  is_suspended: boolean | null;
+};
+type PassengerRideProfileRow = {
+  id: string;
+  name: string | null;
+  avatar_url: string | null;
+  city: string | null;
+  neighborhood: string | null;
+  street: string | null;
+  pontos: number | null;
+  telefone: string | null;
+};
+
 export class ProfileMobilityAdapter {
   /**
    * Obtém active_ride_id de um perfil
    * TEMPORÁRIO: Este campo deveria estar em tabela separada de estado de mobilidade
    */
   async getActiveRideId(profileId: string): Promise<string | null> {
-    const { data, error } = await (supabase as any)
+    const { data, error } = await supabase
       .from("profiles")
       .select("active_ride_id")
       .eq("id", profileId)
       .single();
 
     if (error) return null;
-    return data?.active_ride_id || null;
+    return (data as ActiveRideRow | null)?.active_ride_id || null;
   }
 
   /**
@@ -47,7 +64,7 @@ export class ProfileMobilityAdapter {
     profileId: string,
     rideId: string | null,
   ): Promise<void> {
-    const { error } = await (supabase as any)
+    const { error } = await supabase
       .from("profiles")
       .update({ active_ride_id: rideId })
       .eq("id", profileId);
@@ -67,7 +84,7 @@ export class ProfileMobilityAdapter {
    * TEMPORÁRIO: Este campo deveria estar em tabela separada de estado de mobilidade
    */
   async clearActiveRideId(profileId: string, rideId: string): Promise<void> {
-    const { error } = await (supabase as any)
+    const { error } = await supabase
       .from("profiles")
       .update({ active_ride_id: null })
       .eq("id", profileId)
@@ -96,7 +113,7 @@ export class ProfileMobilityAdapter {
       is_suspended: boolean | null;
     }>
   > {
-    const { data, error } = await (supabase as any)
+    const { data, error } = await supabase
       .from("profiles")
       .select("passenger_rating, passenger_trust_level, is_suspended")
       .gte("passenger_completed_rides", 1);
@@ -108,7 +125,7 @@ export class ProfileMobilityAdapter {
       });
       return [];
     }
-    return data || [];
+    return (data as PassengerStatsRow[] | null) || [];
   }
 
   /**
@@ -122,7 +139,7 @@ export class ProfileMobilityAdapter {
   async getProfilesForRides(
     ids: string[],
     type: "passenger" | "driver",
-  ): Promise<any[]> {
+  ): Promise<PassengerRideProfileRow[] | Awaited<ReturnType<typeof profileService.getProfilesByIds>>> {
     if (ids.length === 0) return [];
 
     if (type === "driver") {
@@ -131,7 +148,7 @@ export class ProfileMobilityAdapter {
     }
 
     // Passageiro: campos de mobilidade não disponíveis em ProfileIdentityService
-    const { data, error } = await (supabase as any)
+    const { data, error } = await supabase
       .from("profiles")
       .select(
         "id, name, avatar_url, city, neighborhood, street, pontos, telefone",
@@ -147,7 +164,7 @@ export class ProfileMobilityAdapter {
       return [];
     }
 
-    return data || [];
+    return (data as PassengerRideProfileRow[] | null) || [];
   }
 }
 

@@ -1,4 +1,4 @@
-ï»¿import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { useAppUrls } from "@/core/routing/hooks"; // SSOT URLs
@@ -70,6 +70,45 @@ const getInitials = (name?: string | null) => {
     .slice(0, 2);
 };
 
+interface GroupMessageItem {
+  id: string;
+  content?: string | null;
+  message_type?: "text" | "image" | "audio" | "poll" | "system";
+  media_url?: string | null;
+  media_mime_type?: string | null;
+  audio_duration_seconds?: number | null;
+  created_at: string;
+  sender_profile_id?: string | null;
+  user_id?: string | null;
+  profile?: { name?: string | null; avatar_url?: string | null } | null;
+  metadata?: {
+    reply_to_message_id?: string;
+    reply_preview?: string;
+    reply_author_name?: string;
+  } | null;
+}
+
+interface GroupMemberItem {
+  member_profile_id: string;
+  role: string;
+  profile?: { name?: string | null; avatar_url?: string | null } | null;
+}
+
+interface GroupMessageReportItem {
+  id: string;
+  message_id: string;
+  reason: string;
+  details?: string | null;
+  status: "pending" | "reviewing" | "resolved" | "dismissed";
+  created_at: string;
+  message?: {
+    content?: string | null;
+    message_type?: string | null;
+    profile?: { name?: string | null } | null;
+  } | null;
+  moderation_history?: Array<{ at: string; status: string }> | null;
+}
+
 function GroupChat({
   groupId,
   isMember,
@@ -88,7 +127,7 @@ function GroupChat({
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [reportingMessageId, setReportingMessageId] = useState<string | null>(null);
   const [copiedMessageId, setCopiedMessageId] = useState<string | null>(null);
-  const [replyTo, setReplyTo] = useState<any | null>(null);
+  const [replyTo, setReplyTo] = useState<GroupMessageItem | null>(null);
   const [editingMessageId, setEditingMessageId] = useState<string | null>(null);
   const sendMessageMutation = useSendGroupMessage();
   const deleteMessageMutation = useDeleteGroupMessage();
@@ -126,7 +165,7 @@ function GroupChat({
 
   const handleSend = async () => {
     if (!canPost) {
-      toast.error("Este grupo limita postagens para sua funÃ§Ã£o");
+      toast.error("Este grupo limita postagens para sua função");
       return;
     }
     if (!text.trim()) return;
@@ -222,7 +261,7 @@ function GroupChat({
     }, 0);
   };
 
-  const handleCopyMessage = async (msg: any) => {
+  const handleCopyMessage = async (msg: GroupMessageItem) => {
     try {
       await navigator.clipboard.writeText(msg.content || "");
       setCopiedMessageId(msg.id);
@@ -233,7 +272,7 @@ function GroupChat({
     }
   };
 
-  const handleReplyMessage = (msg: any) => {
+  const handleReplyMessage = (msg: GroupMessageItem) => {
     setEditingMessageId(null);
     setReplyTo(msg);
     setTimeout(() => {
@@ -241,7 +280,7 @@ function GroupChat({
     }, 0);
   };
 
-  const handleEditMessage = (msg: any) => {
+  const handleEditMessage = (msg: GroupMessageItem) => {
     setReplyTo(null);
     setEditingMessageId(msg.id);
     setText(msg.content || "");
@@ -250,7 +289,7 @@ function GroupChat({
     }, 0);
   };
 
-  const renderMessageContent = (msg: any, isOwn: boolean) => {
+  const renderMessageContent = (msg: GroupMessageItem, isOwn: boolean) => {
     const bubbleClass = isOwn
       ? "bg-teal-500/20 text-teal-100 rounded-tr-sm"
       : "bg-white/5 text-gray-100 rounded-tl-sm";
@@ -322,20 +361,20 @@ function GroupChat({
             <MessageCircle className="w-12 h-12 text-gray-600 mx-auto mb-3" />
             <p className="text-sm text-gray-400">Nenhuma mensagem ainda</p>
             <p className="text-xs text-gray-500 mt-1">
-              Seja o primeiro a dizer olÃ¡!
+              Seja o primeiro a dizer olá!
             </p>
           </div>
         )}
-        {messages.map((msg, i) => {
+        {(messages as GroupMessageItem[]).map((msg, i) => {
           const isOwn =
-            (msg as any).user_id === user?.id ||
+            msg.user_id === user?.id ||
             msg.sender_profile_id === user?.id ||
             msg.sender_profile_id === activeProfile?.id;
           const showAvatar =
             i === 0 ||
-            ((messages[i - 1] as any)?.user_id ||
-              messages[i - 1]?.sender_profile_id) !==
-              ((msg as any).user_id || msg.sender_profile_id);
+            (((messages as GroupMessageItem[])[i - 1]?.user_id ||
+              (messages as GroupMessageItem[])[i - 1]?.sender_profile_id) !==
+              (msg.user_id || msg.sender_profile_id));
 
           return (
             <div
@@ -359,7 +398,7 @@ function GroupChat({
                   <p
                     className={`mb-0.5 text-[9px] text-gray-500 ${isOwn ? "text-right" : ""}`}
                   >
-                    {msg.profile?.name || "UsuÃ¡rio"}
+                    {msg.profile?.name || "Usuário"}
                   </p>
                 )}
                 <div className={`mt-0.5 flex w-full min-w-0 items-end gap-1.5 ${isOwn ? "justify-end" : "justify-start"}`}>
@@ -369,7 +408,7 @@ function GroupChat({
                         <button
                           type="button"
                           className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-white/5 text-gray-300 hover:bg-white/10"
-                          aria-label="Abrir aÃ§Ãµes da mensagem"
+                          aria-label="Abrir ações da mensagem"
                         >
                           <MoreVertical className="h-3 w-3" />
                         </button>
@@ -410,7 +449,7 @@ function GroupChat({
                         <button
                           type="button"
                           className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-white/5 text-gray-300 hover:bg-white/10"
-                          aria-label="Abrir aÃ§Ãµes da mensagem"
+                          aria-label="Abrir ações da mensagem"
                         >
                           <MoreVertical className="h-3 w-3" />
                         </button>
@@ -469,7 +508,7 @@ function GroupChat({
                 ) : (
                   <>
                     <p className="text-[10px] text-teal-300">
-                      Respondendo {replyTo.profile?.name || "UsuÃ¡rio"}
+                      Respondendo {replyTo.profile?.name || "Usuário"}
                     </p>
                     <p className="truncate text-xs text-gray-300">
                       {replyTo.content || "Mensagem"}
@@ -566,7 +605,7 @@ function GroupChat({
           </div>
           {!canPost ? (
             <p className="mt-2 text-xs text-amber-300/90">
-              Este grupo permite postagem apenas para o papel configurado na governanÃ§a.
+              Este grupo permite postagem apenas para o papel configurado na governança.
             </p>
           ) : null}
         </div>
@@ -587,7 +626,7 @@ function MembersPanel({
   currentProfileId,
   onRoleChange,
 }: {
-  members: any[];
+  members: GroupMemberItem[];
   canManageRoles: boolean;
   currentProfileId?: string;
   onRoleChange: (memberProfileId: string, role: "admin" | "moderator" | "member") => void;
@@ -607,7 +646,7 @@ function MembersPanel({
           </Avatar>
           <div className="flex-1 min-w-0">
             <p className="text-sm text-white truncate">
-              {m.profile?.name || "UsuÃ¡rio"}
+              {m.profile?.name || "Usuário"}
             </p>
             <p className="text-[10px] text-gray-500 capitalize">
               {m.role || "membro"}
@@ -627,7 +666,7 @@ function MembersPanel({
                   )
                 }
                 className="w-[108px] rounded-lg border border-white/10 bg-white/5 px-2 py-1 text-xs text-white outline-none"
-                aria-label={`Alterar funÃ§Ã£o de ${m.profile?.name || "membro"}`}
+                aria-label={`Alterar função de ${m.profile?.name || "membro"}`}
               >
                 <option className="bg-[#1E2529]" value="member">Membro</option>
                 <option className="bg-[#1E2529]" value="moderator">Moderador</option>
@@ -672,10 +711,10 @@ export default function GrupoDetailPage() {
   const { data: messageReports = [] } = useGroupMessageReports(id, canModerate);
   const updateReportStatusMutation = useUpdateGroupMessageReportStatus();
   const pendingReportsCount = messageReports.filter((report) => report.status === "pending").length;
-  const filteredReports = messageReports.filter((report: any) =>
+  const filteredReports = (messageReports as GroupMessageReportItem[]).filter((report) =>
     reportFilter === "all" ? true : report.status === reportFilter,
   );
-  const selectedReport = filteredReports.find((report: any) => report.id === selectedReportId) || null;
+  const selectedReport = filteredReports.find((report) => report.id === selectedReportId) || null;
   const handleUpdateReportStatus = async (
     reportId: string,
     status: "reviewing" | "resolved" | "dismissed",
@@ -719,14 +758,14 @@ export default function GrupoDetailPage() {
 
   const handleJoin = async () => {
     if (!user) {
-      toast.error("FaÃ§a login primeiro");
+      toast.error("Faça login primeiro");
       return;
     }
     try {
       await joinGroupMutation.mutateAsync(id!);
-      toast.success("VocÃª entrou no grupo!");
+      toast.success("Você entrou no grupo!");
       refetch();
-    } catch (err: any) {
+    } catch (err: unknown) {
       toast.error(err.message || "Error entrar");
     }
   };
@@ -734,9 +773,9 @@ export default function GrupoDetailPage() {
   const handleLeave = async () => {
     try {
       await leaveGroupMutation.mutateAsync(id!);
-      toast.success("VocÃª saiu do grupo");
+      toast.success("Você saiu do grupo");
       refetch();
-    } catch (err: any) {
+    } catch (err: unknown) {
       toast.error(err.message || "Error sair");
     }
   };
@@ -764,7 +803,7 @@ export default function GrupoDetailPage() {
       <div className="min-h-screen bg-[#12181B] flex flex-col items-center justify-center gap-4">
         <Users className="w-16 h-16 text-gray-600" />
         <h2 className="text-lg font-semibold text-white">
-          Grupo nÃ£o encontrado
+          Grupo não encontrado
         </h2>
         <Button
           onClick={() => navigate(appUrls.community.groups)} // SSOT
@@ -892,14 +931,14 @@ export default function GrupoDetailPage() {
                     className="w-full h-full rounded-2xl object-cover"
                   />
                 ) : (
-                  "Ã°Å¸â€˜Â¥"
+                  "ðŸ‘¥"
                 )}
               </div>
               <h2 className="text-xl font-bold text-white mb-1">
                 {group.name}
               </h2>
               <p className="text-sm text-gray-400">
-                {group.description || "Sem descriÃ§Ã£o"}
+                {group.description || "Sem descrição"}
               </p>
               <div className="mt-3 flex flex-wrap justify-center gap-2">
                 {[
@@ -908,7 +947,7 @@ export default function GrupoDetailPage() {
                   capabilities.audio && { label: GROUP_CAPABILITY_LABELS.audio, icon: Mic },
                   capabilities.polls && { label: GROUP_CAPABILITY_LABELS.polls, icon: BarChart3 },
                   capabilities.reports && { label: GROUP_CAPABILITY_LABELS.reports, icon: ShieldCheck },
-                ].filter(Boolean).map((item: any) => (
+                ].filter(Boolean) .map((item) => (
                   <span key={item.label} className="inline-flex items-center gap-1 rounded-full bg-white/5 px-2.5 py-1 text-xs text-gray-300">
                     <item.icon className="h-3 w-3 text-teal-300" />
                     {item.label}
@@ -947,7 +986,7 @@ export default function GrupoDetailPage() {
                       <Lock className="w-3 h-3" /> Privado
                     </>
                   ) : (
-                    "PÃºblico"
+                    "Público"
                   )}
                 </span>
               </div>
@@ -955,7 +994,7 @@ export default function GrupoDetailPage() {
                 <span className="text-sm text-gray-400">Entrada</span>
                 <span className="min-w-0 text-right text-xs sm:text-sm text-white">
                   {group.join_policy === "approval"
-                    ? "Por aprovaÃ§Ã£o"
+                    ? "Por aprovação"
                     : group.join_policy === "invite"
                       ? "Por convite"
                       : "Livre para moradores"}
@@ -1005,24 +1044,24 @@ export default function GrupoDetailPage() {
                 <div className="flex items-center justify-between gap-3 rounded-xl border border-amber-400/20 bg-amber-400/5 px-3 py-2">
                   <span className="flex items-center gap-2 text-sm text-amber-200">
                     <ShieldCheck className="h-4 w-4" />
-                    Fila de moderaÃ§Ã£o
+                    Fila de moderação
                   </span>
                   <span className="text-right text-sm text-amber-100">
-                    {pendingReportsCount} denÃºncia(s) pendente(s)
+                    {pendingReportsCount} denúncia(s) pendente(s)
                   </span>
                 </div>
               ) : null}
               {canModerate ? (
                 <div className="rounded-xl border border-white/10 bg-white/[0.03] p-3">
                   <div className="mb-2 flex items-center justify-between gap-2">
-                    <p className="text-sm font-semibold text-white">DenÃºncias recentes</p>
+                    <p className="text-sm font-semibold text-white">Denúncias recentes</p>
                     <span className="text-xs text-gray-400">{messageReports.length} no total</span>
                   </div>
                   <div className="mb-3 flex items-center gap-1 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                     {(
                       [
                         { key: "pending", label: "Pendentes" },
-                        { key: "reviewing", label: "Em anÃ¡lise" },
+                        { key: "reviewing", label: "Em análise" },
                         { key: "resolved", label: "Resolvidas" },
                         { key: "dismissed", label: "Dispensadas" },
                         { key: "all", label: "Todas" },
@@ -1043,7 +1082,7 @@ export default function GrupoDetailPage() {
                     ))}
                   </div>
                   <div className="space-y-2">
-                    {filteredReports.slice(0, 8).map((report: any) => (
+                    {filteredReports.slice(0, 8).map((report) => (
                       <div
                         key={report.id}
                         className={`rounded-lg border bg-black/10 p-2 ${
@@ -1070,7 +1109,7 @@ export default function GrupoDetailPage() {
                             onClick={() => handleUpdateReportStatus(report.id, "reviewing")}
                             className="rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-[10px] text-gray-200"
                           >
-                            Em anÃ¡lise
+                            Em análise
                           </button>
                           <button
                             type="button"
@@ -1090,14 +1129,14 @@ export default function GrupoDetailPage() {
                       </div>
                     ))}
                     {filteredReports.length === 0 ? (
-                      <p className="text-xs text-gray-500">Sem denÃºncias no momento.</p>
+                      <p className="text-xs text-gray-500">Sem denúncias no momento.</p>
                     ) : null}
                   </div>
                   {selectedReport ? (
                     <div className="mt-3 rounded-lg border border-white/10 bg-black/20 p-3">
                       <div className="mb-1 flex items-center gap-2 text-xs text-gray-300">
                         <Filter className="h-3.5 w-3.5 text-teal-300" />
-                        Detalhe da denÃºncia
+                        Detalhe da denúncia
                       </div>
                       <p className="text-xs text-white">{selectedReport.reason}</p>
                       <p className="mt-1 text-[11px] text-gray-400">
@@ -1118,7 +1157,7 @@ export default function GrupoDetailPage() {
                             {selectedReport.message.content || "(sem texto)"}
                           </p>
                           <p className="mt-1 text-[11px] text-gray-400">
-                            Autor: {selectedReport.message.profile?.name || "UsuÃ¡rio"}
+                            Autor: {selectedReport.message.profile?.name || "Usuário"}
                           </p>
                           <p className="text-[11px] text-gray-500">
                             Tipo: {selectedReport.message.message_type || "text"}
@@ -1126,12 +1165,12 @@ export default function GrupoDetailPage() {
                         </div>
                       ) : null}
                       <div className="mt-2">
-                        <p className="text-[10px] uppercase text-gray-400">HistÃ³rico de moderaÃ§Ã£o</p>
+                        <p className="text-[10px] uppercase text-gray-400">Histórico de moderação</p>
                         <div className="mt-1 space-y-1">
                           {(selectedReport.moderation_history || []).length === 0 ? (
-                            <p className="text-[11px] text-gray-500">Sem aÃ§Ãµes registradas.</p>
+                            <p className="text-[11px] text-gray-500">Sem ações registradas.</p>
                           ) : (
-                            (selectedReport.moderation_history || []).map((event: any, idx: number) => (
+                            (selectedReport.moderation_history || []).map((event, idx: number) => (
                               <p key={`${event.at}-${idx}`} className="text-[11px] text-gray-300">
                                 {new Date(event.at).toLocaleString("pt-BR")} - {event.status}
                               </p>
@@ -1160,7 +1199,7 @@ export default function GrupoDetailPage() {
             <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
               <div className="mb-3 flex items-center gap-2">
                 <ShieldCheck className="h-4 w-4 text-teal-300" />
-                <h3 className="text-sm font-semibold text-white">Regras e moderaÃ§Ã£o</h3>
+                <h3 className="text-sm font-semibold text-white">Regras e moderação</h3>
               </div>
               <ol className="space-y-2">
                 {ruleLines.map((rule, index) => (
@@ -1179,5 +1218,3 @@ export default function GrupoDetailPage() {
     </div>
   );
 }
-
-

@@ -6,7 +6,12 @@
 import { logger } from '@/shared/utils/logger';
 import { useState, useEffect, useCallback } from 'react';
 import { safetyService } from '../instance';
-import type { SafetyIncident, CreateSafetyIncidentInput, SafetyFilter } from '../types';
+import type {
+  SafetyIncident,
+  CreateSafetyIncidentInput,
+  SafetyFilter,
+  SafetyIncidentStatus,
+} from '../types';
 
 export function useSafetyIncidents(filter?: SafetyFilter) {
   const [incidents, setIncidents] = useState<SafetyIncident[]>([]);
@@ -39,7 +44,7 @@ export function useSafetyIncidents(filter?: SafetyFilter) {
     return result;
   };
 
-  const updateStatus = async (incidentId: string, status: any, performedBy: string) => {
+  const updateStatus = async (incidentId: string, status: SafetyIncidentStatus, performedBy: string) => {
     const result = await safetyService.updateIncidentStatus(incidentId, status, performedBy);
     if (result.success) {
       await fetchIncidents();

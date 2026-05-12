@@ -13,6 +13,7 @@ import { supabase } from "@/integrations/supabase";
 import { trackError } from "@/shared/utils/errorTracking";
 import { logger } from "@/shared/utils/logger";
 import { SocialInteractionsService } from "./SocialInteractionsService";
+import type { AdminSupabaseClient } from "@/core/admin/types/adminDatabase.types";
 
 export interface Group {
   id: string;
@@ -49,19 +50,22 @@ export interface GroupMemberDetail {
   profile: { id: string; name: string; avatar_url: string | null } | null;
 }
 
+type GroupRow = Group & { members_count?: Array<{ count?: number } | null> | number };
+
 export class GroupService {
+  private static readonly db = supabase as unknown as AdminSupabaseClient;
   /**
    * Busca todos os grupos ordenados por membros
    */
   static async getGroups(): Promise<Group[]> {
     try {
-      const { data, error } = await (supabase as any).rpc("get_community_groups");
+      const { data, error } = await this.db.rpc("get_community_groups");
 
       if (error) throw error;
 
-      return (data || []).map((group: any) => ({
+      return ((data || []) as GroupRow[]).map((group) => ({
         ...group,
-        members_count: group.members_count?.[0]?.count ?? 0,
+        members_count: Array.isArray(group.members_count) ? (group.members_count[0]?.count ?? 0) : (group.members_count ?? 0),
       }));
     } catch (error) {
       trackError(error as Error, {
@@ -94,13 +98,13 @@ export class GroupService {
    */
   static async getGroupById(groupId: string): Promise<Group | null> {
     try {
-      const { data, error } = await (supabase as any).rpc("get_community_group_by_id", {
+      const { data, error } = await this.db.rpc("get_community_group_by_id", {
         p_group_id: groupId,
       });
 
       if (error) throw error;
 
-      return data;
+      return (data as Group) || null;
     } catch (error) {
       trackError(error as Error, {
         component: "GroupService",
@@ -130,7 +134,7 @@ export class GroupService {
         member_profile_id: m.member_profile_id,
         role: m.role,
         joined_at: m.joined_at,
-        profile: (m as any).profile || null,
+        profile: ("profile" in m ? (m as GroupMemberDetail).profile : null) || null,
       }));
     } catch (error) {
       trackError(error as Error, {
@@ -153,7 +157,7 @@ export class GroupService {
     created_by: string;
   }): Promise<Group> {
     try {
-      const { data: group, error } = await (supabase as any).rpc("create_community_group", {
+      const { data: group, error } = await this.db.rpc("create_community_group", {
         p_name: data.name,
         p_description: data.description ?? null,
         p_category: data.category ?? null,
@@ -163,7 +167,7 @@ export class GroupService {
 
       if (error) throw error;
 
-      return group;
+      return group as Group;
     } catch (error) {
       trackError(error as Error, {
         component: "GroupService",
@@ -178,7 +182,7 @@ export class GroupService {
    */
   static async incrementMembersCount(groupId: string): Promise<void> {
     try {
-      await (supabase as any).rpc("increment_group_members", { gid: groupId });
+      await this.db.rpc("increment_group_members", { gid: groupId });
     } catch (error) {
       logger.warn("Failed to increment group members count:", error);
     }
@@ -188,7 +192,7 @@ export class GroupService {
    * Busca mensagem completa de grupo por ID (para realtime enrichment)
    * Migrado para usar SocialInteractionsService
    */
-  static async getGroupMessageById(messageId: string): Promise<any | null> {
+  static async getGroupMessageById(messageId: string): Promise<Record<string, unknown> | null> {
     try {
       // Usar SocialInteractionsService que agora tem este método
       return await SocialInteractionsService.getGroupMessageById(messageId);

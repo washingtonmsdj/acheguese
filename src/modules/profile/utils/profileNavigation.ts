@@ -1,6 +1,8 @@
 import { getAllProfileSections, type ProfileSectionId } from "@/modules/profile/config/profile-sections.config";
 import type { SectionNavItem } from "@/modules/profile/components/hub/ProfileSectionsNav";
 import type { ProfileBusinessModuleItem } from "@/core/profiles/services/types";
+import { profileMobilityRoutes } from "./profileMobilityNavigation";
+import { businessManagementRoutes } from "@/core/business/utils/businessManagementRoutes";
 
 interface ProfileNavigationSource {
   readonly businessModules: readonly ProfileBusinessModuleItem[];
@@ -17,13 +19,13 @@ export function getProfileSectionPath(section: ProfileSectionId): string {
     case "resumo":
       return "/perfil";
     case "empresas":
-      return "/central/empresas";
+      return businessManagementRoutes.list();
     case "mobilidade":
       return "/perfil/mobilidade";
     case "planos":
       return "/perfil/planos";
     case "delivery":
-      return "/perfil/mobilidade/motoboy/entregas";
+      return profileMobilityRoutes.motoboy.entregas;
     default:
       return "/perfil";
   }

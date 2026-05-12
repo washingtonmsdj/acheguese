@@ -1,43 +1,40 @@
 /**
  * Hook para feed da comunidade usando PostService.getFeed()
  *
- * ✅ SSOT — Usa PostService como fonte única
- * ✅ Infinite scroll com cursor pagination
- * ✅ Integração com filtros de localização
- * ✅ Geographic Foundation — Integrado com fundação geográfica
- * ✅ Etapa 5 — Suporte a TerritoryFilter (location e group)
+ * SSOT - Usa PostService como fonte unica
+ * Infinite scroll com cursor pagination
+ * Integracao com filtros de localizacao
+ * Geographic Foundation - Integrado com fundacao geografica
+ * Etapa 5 - Suporte a TerritoryFilter (location e group)
  */
 
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { postService } from "@/core/posts/services";
-import { useTerritoryFilter, isTerritoryFilterReady, territoryFilterKey } from "@/core/location";
+import { useModuleTerritoryFilter } from "@/core/location/hooks/useModuleTerritoryFilter";
+import { isTerritoryFilterReady, territoryFilterKey } from "@/core/location/hooks/useTerritoryFilter";
 import type { Post, FeedParams } from "@/core/posts/types";
 import type { LocationScope } from "@/modules/community/hooks/feed/useFeedFilters";
 import type { ResolvedTerritory } from "@/core/routing/hooks/useResolveTerritoryFromUrl";
+import type { TerritoryFilter } from "@/core/location/types";
 
 interface UseCommunityFeedOptions {
   locationScope?: LocationScope;
   context?: "all" | "my_posts" | "saved";
   limit?: number;
-  /** Território resolvido pela rota — passar quando dentro de TerritorialLayout */
   routeResolved?: ResolvedTerritory | null;
+  territoryFilter?: TerritoryFilter;
 }
 
 export function useCommunityFeedSimple(options: UseCommunityFeedOptions = {}) {
-  const { locationScope = "city", context = "all", limit = 20, routeResolved } = options;
+  const { locationScope = "city", context = "all", limit = 20, routeResolved, territoryFilter } = options;
 
-  // Filtro territorial canônico — suporta location e group
-  const filter = useTerritoryFilter(routeResolved);
+  const moduleTerritory = useModuleTerritoryFilter({ routeResolved });
+  const filter = territoryFilter ?? moduleTerritory.territoryFilter;
   const filterReady = isTerritoryFilterReady(filter);
   const filterKey = territoryFilterKey(filter);
 
   const query = useInfiniteQuery({
-    queryKey: [
-      "community-feed",
-      locationScope,
-      context,
-      filterKey,
-    ],
+    queryKey: ["community-feed", locationScope, context, filterKey],
     queryFn: async ({ pageParam }: { pageParam?: string }) => {
       const params: FeedParams = {
         context,
@@ -45,28 +42,24 @@ export function useCommunityFeedSimple(options: UseCommunityFeedOptions = {}) {
         limit,
       };
 
-      // Filtro territorial canônico — location ou group
-      if (filter.scope === 'location') {
+      if (filter.scope === "location") {
         params.location_id = filter.location_id;
         params.district_filter = true;
-      } else if (filter.scope === 'group') {
+      } else if (filter.scope === "group") {
         params.location_ids = filter.location_ids;
       }
-      // scope === 'none': sem território resolvido — query não executa (enabled: filterReady)
 
       return postService.getFeed(params);
     },
     initialPageParam: undefined as string | undefined,
     getNextPageParam: (lastPage) => lastPage.nextCursor,
-    enabled: filterReady, // Só executa se há território resolvido
+    enabled: filterReady,
     staleTime: 2 * 60 * 1000,
     gcTime: 5 * 60 * 1000,
   });
 
-  // Flatten all pages into a single list of posts
   const posts: Post[] = query.data?.pages.flatMap((page) => page.posts) ?? [];
 
-  // Convert to feed items format expected by current feed consumers
   const feedItems = posts.map((post) => ({
     type: "post" as const,
     data: post,

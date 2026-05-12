@@ -18,8 +18,11 @@ import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { logger } from "@/shared/utils/logger";
 import { adminMobilityService } from "@/core/admin"; // ✅ MIGRADO - Usa AdminMobilityService do core
-import { ProfileService } from "@/core/profiles/services/ProfileService";
 import { profileService } from "@/core/profiles/services";
+
+type AdminUser = Awaited<ReturnType<typeof profileService.getAllUsers>>[number];
+type LowRatedUser = Awaited<ReturnType<typeof profileService.getLowRatedUsers>>[number];
+type SuspendedDriver = AdminUser & { cancellation_rate: number };
 
 /**
  * FASE PROFILE.1.3 - FECHAMENTO REAL DA IDENTIDADE
@@ -29,8 +32,8 @@ import { profileService } from "@/core/profiles/services";
  */
 
 export function ReputationBanishments() {
-  const [suspendedDrivers, setSuspendedDrivers] = useState<any[]>([]);
-  const [lowRatedUsers, setLowRatedUsers] = useState<any[]>([]);
+  const [suspendedDrivers, setSuspendedDrivers] = useState<SuspendedDriver[]>([]);
+  const [lowRatedUsers, setLowRatedUsers] = useState<LowRatedUser[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {

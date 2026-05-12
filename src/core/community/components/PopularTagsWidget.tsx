@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
   Card,
@@ -8,8 +8,7 @@ import {
 } from "@/shared/components/ui/card";
 import { Badge } from "@/shared/components/ui/badge";
 import { Hash } from "lucide-react";
-import { useCommunityFilters } from "../hooks/feed/useFeedFilters";
-import { useAuth } from "@/core/auth/hooks/useAuth";
+import { useTerritoryFilter } from "@/core/location/hooks/useTerritoryFilter";
 import { postService } from "@/core/posts/services";
 
 interface PopularTagsWidgetProps {
@@ -17,17 +16,33 @@ interface PopularTagsWidgetProps {
 }
 
 export function PopularTagsWidget({ onTagClick }: PopularTagsWidgetProps) {
-  const { filters } = useCommunityFilters();
-  const { user } = useAuth();
+  const territoryFilter = useTerritoryFilter();
 
-  // ✅ SSOT: usa location_id do filtro ativo — sem campos legados
-  const locationId = filters.location_id as string | undefined;
+  const locationIds = useMemo(() => {
+    if (territoryFilter.scope === "location") return [territoryFilter.location_id];
+    if (territoryFilter.scope === "group") return territoryFilter.location_ids;
+    return [];
+  }, [territoryFilter]);
 
   const { data: popularTags, isLoading } = useQuery({
-    queryKey: ["popular-tags", locationId],
-    queryFn: () => postService.getPopularTags(locationId!, 10),
+    queryKey: ["popular-tags", locationIds],
+    queryFn: async () => {
+      const tagMap = new Map<string, number>();
+      const batches = await Promise.all(locationIds.map((locationId) => postService.getPopularTags(locationId, 10)));
+
+      for (const batch of batches) {
+        for (const entry of batch) {
+          tagMap.set(entry.tag, (tagMap.get(entry.tag) ?? 0) + entry.count);
+        }
+      }
+
+      return Array.from(tagMap.entries())
+        .map(([tag, count]) => ({ tag, count }))
+        .sort((a, b) => b.count - a.count)
+        .slice(0, 10);
+    },
     staleTime: 5 * 60 * 1000,
-    enabled: !!locationId,
+    enabled: locationIds.length > 0,
   });
 
   if (isLoading || !popularTags || popularTags.length === 0) return null;

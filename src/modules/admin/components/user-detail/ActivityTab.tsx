@@ -10,8 +10,19 @@ import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
 interface ActivityTabProps {
-  user: any;
-  driverData: any;
+  user: {
+    profile_type?: string | null;
+    created_at?: string | null;
+    updated_at?: string | null;
+    user_id?: string | null;
+  } | null;
+  driverData: {
+    last_online_at?: string | null;
+    is_online?: boolean | null;
+    current_lat?: number | null;
+    current_lng?: number | null;
+    last_location_update?: string | null;
+  } | null;
 }
 
 export function ActivityTab({ user, driverData }: ActivityTabProps) {

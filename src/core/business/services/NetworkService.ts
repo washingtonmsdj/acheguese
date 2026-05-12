@@ -39,16 +39,41 @@ export interface ConvertToNetworkResult {
   first_branch_id: string;
 }
 
+type BranchRow = {
+  id: string;
+  profile_id: string;
+  business_name: string;
+  unit_name: string | null;
+  slug: string;
+  location_id: string;
+  is_headquarters: boolean | null;
+  status: string;
+  location?: { name?: string | null } | null;
+};
+
+type BrandHubRow = {
+  id: string;
+  profile_id: string;
+  business_name: string;
+  slug: string;
+  category: string | null;
+  status: string;
+};
+
 // ─── Service ──────────────────────────────────────────────────────────────────
 
 export class NetworkService {
+  private static adminDb(): AdminSupabaseClient {
+    return supabase as unknown as AdminSupabaseClient;
+  }
+
 
   /**
    * Busca um brand_hub pelo profile_id.
    */
   static async getBrandHub(profileId: string): Promise<BusinessDataRecord | null> {
     try {
-      const { data, error } = await (supabase as unknown as AdminSupabaseClient)
+      const { data, error } = await this.adminDb()
         .from('business_data')
         .select('*')
         .eq('profile_id', profileId)
@@ -68,7 +93,7 @@ export class NetworkService {
    */
   static async getBrandBranches(brandHubId: string): Promise<BranchSummary[]> {
     try {
-      const { data, error } = await (supabase as unknown as AdminSupabaseClient)
+      const { data, error } = await this.adminDb()
         .from('business_data')
         .select(`
           id,
@@ -88,7 +113,7 @@ export class NetworkService {
 
       if (error) throw error;
 
-      return (data || []).map((row: any) => ({
+      return ((data || []) as BranchRow[]).map((row) => ({
         id: row.id,
         profile_id: row.profile_id,
         business_name: row.business_name,
@@ -119,7 +144,7 @@ export class NetworkService {
     unitName: string,
   ): Promise<ConvertToNetworkResult> {
     // 1. Buscar standalone e o user_id do perfil
-    const { data: standalone, error: fetchErr } = await (supabase as any)
+    const { data: standalone, error: fetchErr } = await this.adminDb()
       .from('business_data')
       .select('*')
       .eq('profile_id', standaloneProfileId)
@@ -156,7 +181,7 @@ export class NetworkService {
 
     // 3. Criar brand_hub com o NOVO profile_id
     const hubSlug = `${standalone.slug || standaloneProfileId}-rede`;
-    const { data: hub, error: hubErr } = await (supabase as any)
+    const { data: hub, error: hubErr } = await this.adminDb()
       .from('business_data')
       .insert({
         profile_id: hubProfile.id, // NOVO profile_id
@@ -188,7 +213,7 @@ export class NetworkService {
     }
 
     // 4. Adicionar o usuário como owner do brand_hub
-    const { error: memberErr } = await (supabase as any)
+    const { error: memberErr } = await this.adminDb()
       .from('profile_members')
       .insert({
         profile_id: hubProfile.id,
@@ -198,14 +223,14 @@ export class NetworkService {
 
     if (memberErr) {
       // Rollback: remover hub e perfil criados
-      await (supabase as any).from('business_data').delete().eq('id', hub.id);
+      await this.adminDb().from('business_data').delete().eq('id', hub.id);
       
       await profileService.deleteProfile(hubProfile.id);
       throw new Error(`Falha ao criar vínculo profile_members: ${memberErr.message}`);
     }
 
     // 5. Converter standalone → branch (mantém o profile_id original)
-    const { error: convertErr } = await (supabase as any)
+    const { error: convertErr } = await this.adminDb()
       .from('business_data')
       .update({
         business_role: 'branch',
@@ -217,8 +242,8 @@ export class NetworkService {
 
     if (convertErr) {
       // Rollback: remover hub, perfil e vínculo criados
-      await (supabase as any).from('profile_members').delete().eq('profile_id', hubProfile.id);
-      await (supabase as any).from('business_data').delete().eq('id', hub.id);
+      await this.adminDb().from('profile_members').delete().eq('profile_id', hubProfile.id);
+      await this.adminDb().from('business_data').delete().eq('id', hub.id);
       
       await profileService.deleteProfile(hubProfile.id);
       throw new Error(`Falha ao converter standalone em branch: ${convertErr.message}`);
@@ -240,7 +265,7 @@ export class NetworkService {
     isHeadquarters?: boolean;
   }): Promise<BusinessDataRecord> {
     // Validar que brand_hub existe
-    const { data: hub, error: hubErr } = await (supabase as any)
+    const { data: hub, error: hubErr } = await this.adminDb()
       .from('business_data')
       .select('id, category, subcategory, payment_methods, specialties, facilities, email, metadata')
       .eq('id', params.brandHubId)
@@ -253,7 +278,7 @@ export class NetworkService {
 
     // Se isHeadquarters, garantir que não existe outra headquarters
     if (params.isHeadquarters) {
-      const { data: existing } = await (supabase as any)
+      const { data: existing } = await this.adminDb()
         .from('business_data')
         .select('id')
         .eq('parent_business_id', params.brandHubId)
@@ -265,7 +290,7 @@ export class NetworkService {
       }
     }
 
-    const { data: branch, error: branchErr } = await (supabase as any)
+    const { data: branch, error: branchErr } = await this.adminDb()
       .from('business_data')
       .insert({
         profile_id: params.profileId,
@@ -301,7 +326,7 @@ export class NetworkService {
    */
   static async setHeadquarters(branchId: string, brandHubId: string): Promise<void> {
     // Remover headquarters atual
-    const { error: clearErr } = await (supabase as any)
+    const { error: clearErr } = await this.adminDb()
       .from('business_data')
       .update({ is_headquarters: false })
       .eq('parent_business_id', brandHubId)
@@ -310,7 +335,7 @@ export class NetworkService {
     if (clearErr) throw new Error(`Falha ao limpar headquarters: ${clearErr.message}`);
 
     // Definir nova headquarters
-    const { error: setErr } = await (supabase as any)
+    const { error: setErr } = await this.adminDb()
       .from('business_data')
       .update({ is_headquarters: true })
       .eq('id', branchId)
@@ -324,7 +349,7 @@ export class NetworkService {
    */
   static async getParentBrandHub(parentBusinessId: string): Promise<BusinessDataRecord | null> {
     try {
-      const { data, error } = await (supabase as unknown as AdminSupabaseClient)
+      const { data, error } = await this.adminDb()
         .from('business_data')
         .select('*')
         .eq('id', parentBusinessId)
@@ -344,7 +369,7 @@ export class NetworkService {
    */
   static async getProfileBrandHubs(profileId: string): Promise<BrandHubSummary[]> {
     try {
-      const { data, error } = await (supabase as unknown as AdminSupabaseClient)
+      const { data, error } = await this.adminDb()
         .from('business_data')
         .select('id, profile_id, business_name, slug, category, status')
         .eq('profile_id', profileId)
@@ -357,8 +382,8 @@ export class NetworkService {
 
       // Contar filiais para cada hub
       const withCounts = await Promise.all(
-        hubs.map(async (hub: any) => {
-          const { count } = await (supabase as any)
+        ((hubs || []) as BrandHubRow[]).map(async (hub) => {
+          const { count } = await this.adminDb()
             .from('business_data')
             .select('id', { count: 'exact', head: true })
             .eq('parent_business_id', hub.id)

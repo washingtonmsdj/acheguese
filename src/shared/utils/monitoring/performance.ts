@@ -24,6 +24,15 @@ interface PerformanceReport {
   };
 }
 
+interface LcpLikeEntry extends PerformanceEntry {
+  renderTime?: number;
+  loadTime?: number;
+}
+
+interface FidLikeEntry extends PerformanceEntry {
+  processingStart?: number;
+}
+
 class PerformanceMonitor {
   private metrics: PerformanceMetric[] = [];
   private maxMetrics = 1000;
@@ -206,11 +215,11 @@ class PerformanceMonitor {
       try {
         const lcpObserver = new PerformanceObserver((list) => {
           const entries = list.getEntries();
-          const lastEntry = entries[entries.length - 1] as any;
+          const lastEntry = entries[entries.length - 1] as LcpLikeEntry | undefined;
           if (lastEntry) {
             this.addMetric({
               name: "web-vitals:LCP",
-              value: lastEntry.renderTime || lastEntry.loadTime,
+              value: lastEntry.renderTime || lastEntry.loadTime || 0,
               timestamp: Date.now(),
               category: "custom",
             });
@@ -227,10 +236,11 @@ class PerformanceMonitor {
       try {
         const fidObserver = new PerformanceObserver((list) => {
           const entries = list.getEntries();
-          entries.forEach((entry: any) => {
+          entries.forEach((entry) => {
+            const fidEntry = entry as FidLikeEntry;
             this.addMetric({
               name: "web-vitals:FID",
-              value: entry.processingStart - entry.startTime,
+              value: (fidEntry.processingStart ?? entry.startTime) - entry.startTime,
               timestamp: Date.now(),
               category: "interaction",
             });

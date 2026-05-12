@@ -306,7 +306,7 @@ async function assertAdministrativeOrderEvidence(orderId: string): Promise<void>
       .eq('order_id', orderId),
     admin
       .from('notifications')
-      .select('id, user_id, action_url, action_label, metadata, created_at')
+      .select('id, user_id, type, category, action_url, action_label, metadata, created_at')
       .eq('metadata->>order_id', orderId),
     admin
       .from('trust_events')
@@ -327,8 +327,25 @@ async function assertAdministrativeOrderEvidence(orderId: string): Promise<void>
   ).toBe(true);
   expect(notificationResult.data?.length ?? 0).toBeGreaterThan(0);
   expect(
+    (notificationResult.data ?? []).every(
+      (notification) => String(notification.category ?? '') === 'transactional',
+    ),
+  ).toBe(true);
+  expect(
+    (notificationResult.data ?? []).some((notification) =>
+      ['info', 'success', 'warning', 'error'].includes(String(notification.type ?? '')),
+    ),
+  ).toBe(true);
+  expect(
     (notificationResult.data ?? []).some((notification) =>
       String(notification.action_url ?? '').includes(`/gastronomia/pedidos/${orderId}`),
+    ),
+  ).toBe(true);
+  expect(
+    (notificationResult.data ?? []).some((notification) =>
+      ['customer', 'merchant', 'courier'].includes(
+        String((notification.metadata as Record<string, unknown>)?.audience ?? ''),
+      ),
     ),
   ).toBe(true);
   expect(
@@ -358,6 +375,35 @@ async function assertAdministrativeOrderEvidence(orderId: string): Promise<void>
 
     expect(adminActionsResult.error).toBeNull();
     expect(Array.isArray(adminActionsResult.data)).toBe(true);
+
+    const adminActionIds = (adminActionsResult.data ?? []).map((action) => String(action.id));
+    if (adminActionIds.length > 0) {
+      const adminActionNotificationsResult = await admin
+        .from('notifications')
+        .select('id, type, category, action_url, action_label, metadata, created_at')
+        .in('metadata->>trust_admin_action_id', adminActionIds);
+
+      expect(adminActionNotificationsResult.error).toBeNull();
+      expect(
+        (adminActionNotificationsResult.data ?? []).every(
+          (notification) => String(notification.category ?? '') === 'transactional',
+        ),
+      ).toBe(true);
+      expect(
+        (adminActionNotificationsResult.data ?? []).some((notification) =>
+          ['subject', 'admin'].includes(
+            String((notification.metadata as Record<string, unknown>)?.audience ?? ''),
+          ),
+        ),
+      ).toBe(true);
+      expect(
+        (adminActionNotificationsResult.data ?? []).some((notification) =>
+          ['/admin/moderacao', '/perfil'].some((url) =>
+            String(notification.action_url ?? '').includes(url),
+          ),
+        ),
+      ).toBe(true);
+    }
   }
 }
 

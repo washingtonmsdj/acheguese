@@ -6,6 +6,10 @@
 import { logger } from '@/shared/utils/logger';
 import { supabase } from '@/integrations/supabase/supabase';
 import type { BusinessData, ServiceResponse } from './types';
+
+const errorMessage = (error: unknown, fallback: string): string =>
+  error instanceof Error ? error.message : fallback;
+
 export class BusinessService {
   /**
    * Buscar business data (via RLS)
@@ -21,7 +25,7 @@ export class BusinessService {
       if (error) throw error;
 
       return data as BusinessData;
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('Error fetching business data:', error);
       return null;
     }
@@ -48,10 +52,10 @@ export class BusinessService {
         success: true,
         data: data as BusinessData,
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
       return {
         success: false,
-        error: error.message || 'Failed to update business data',
+        error: errorMessage(error, 'Failed to update business data'),
       };
     }
   }

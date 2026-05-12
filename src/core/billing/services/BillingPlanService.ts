@@ -32,7 +32,7 @@ interface BillingPlanRow {
   currency: string;
   billing_period: string;
   features: string[];
-  entitlements: Record<string, any>;
+  entitlements: Record<string, unknown>;
   is_active: boolean;
   is_featured: boolean;
   display_order: number;
@@ -345,7 +345,7 @@ export class BillingPlanService {
         currency: plan.currency,
         billing_period: plan.billingPeriod,
         features: plan.features,
-        entitlements: plan.entitlements as any,
+        entitlements: plan.entitlements,
         is_active: plan.isActive,
         is_featured: plan.isFeatured,
         display_order: plan.displayOrder,
@@ -385,7 +385,7 @@ export class BillingPlanService {
       if (updates.currency !== undefined) row.currency = updates.currency;
       if (updates.billingPeriod !== undefined) row.billing_period = updates.billingPeriod;
       if (updates.features !== undefined) row.features = updates.features;
-      if (updates.entitlements !== undefined) row.entitlements = updates.entitlements as any;
+      if (updates.entitlements !== undefined) row.entitlements = updates.entitlements;
       if (updates.isActive !== undefined) row.is_active = updates.isActive;
       if (updates.isFeatured !== undefined) row.is_featured = updates.isFeatured;
       if (updates.displayOrder !== undefined) row.display_order = updates.displayOrder;

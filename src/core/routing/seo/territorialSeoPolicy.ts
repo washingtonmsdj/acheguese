@@ -20,15 +20,31 @@ export function resolveSeoPolicy(pathname: string): TerritorialSeoPolicy {
   ]);
 
   if (parts[0] === MODULE_SLUGS.community && parts[1] && parts[2]) {
-    const isGroup = parts[3] === "area";
-    const moduleIndex = isGroup ? 5 : 4;
-    const embeddedModule = parts[moduleIndex];
+    const part3 = parts[3];
+    const isGroup = part3 === "area" && Boolean(parts[4]);
+    const isCityEmbeddedModule = Boolean(part3 && embeddedCommunityModules.has(part3));
+    const isDistrictEmbeddedModule = Boolean(
+      !isGroup && parts[4] && embeddedCommunityModules.has(parts[4]),
+    );
 
-    if (embeddedModule && embeddedCommunityModules.has(embeddedModule)) {
-      const territoryParts = isGroup ? parts.slice(1, 5) : parts.slice(1, 4);
-
+    if (isGroup) {
+      const embeddedModule = parts[5];
+      if (embeddedModule && embeddedCommunityModules.has(embeddedModule)) {
+        const territoryParts = parts.slice(1, 5);
+        return {
+          canonicalPath: `/${embeddedModule}/${territoryParts.join("/")}`,
+          robots: "noindex, follow",
+        };
+      }
+    } else if (isCityEmbeddedModule) {
       return {
-        canonicalPath: `/${embeddedModule}/${territoryParts.join("/")}`,
+        canonicalPath: `/${part3}/${parts.slice(1, 3).join("/")}`,
+        robots: "noindex, follow",
+      };
+    } else if (isDistrictEmbeddedModule) {
+      const embeddedModule = parts[4];
+      return {
+        canonicalPath: `/${embeddedModule}/${parts.slice(1, 4).join("/")}`,
         robots: "noindex, follow",
       };
     }

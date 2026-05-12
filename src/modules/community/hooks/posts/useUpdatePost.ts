@@ -33,7 +33,7 @@ export function useUpdatePost() {
       return { previousPost };
     },
 
-    onError: (err, { postId }, context: any) => {
+    onError: (err, { postId }, context: { previousPost?: Post } | undefined) => {
       if (context?.previousPost) {
         queryClient.setQueryData(["post", postId], context.previousPost);
       }

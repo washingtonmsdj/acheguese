@@ -32,11 +32,22 @@ export interface VerificationStats {
   total_rejected: number;
 }
 
+type VerificationProfileRow = {
+  id: string;
+  display_name?: string | null;
+  avatar_url?: string | null;
+  verification_requested_at?: string | null;
+  updated_at?: string | null;
+  verified_at?: string | null;
+  verified_by?: string | null;
+  verification_rejection_reason?: string | null;
+};
+
 export class ProfileVerificationAdminService {
   static async getPendingVerifications(): Promise<PendingVerification[]> {
     try {
       const profiles = await profileService.getProfilesByVerificationStatus('pending');
-      return profiles.map((p: any) => ({
+      return (profiles as VerificationProfileRow[]).map((p) => ({
         id: p.id,
         profile_id: p.id,
         display_name: p.display_name || 'Sem nome',
@@ -57,7 +68,7 @@ export class ProfileVerificationAdminService {
   static async getVerifiedProfiles(): Promise<PendingVerification[]> {
     try {
       const profiles = await profileService.getProfilesByVerificationStatus('verified');
-      return profiles.map((p: any) => ({
+      return (profiles as VerificationProfileRow[]).map((p) => ({
         id: p.id,
         profile_id: p.id,
         display_name: p.display_name || 'Sem nome',
@@ -78,7 +89,7 @@ export class ProfileVerificationAdminService {
   static async getRejectedProfiles(): Promise<PendingVerification[]> {
     try {
       const profiles = await profileService.getProfilesByVerificationStatus('rejected');
-      return profiles.map((p: any) => ({
+      return (profiles as VerificationProfileRow[]).map((p) => ({
         id: p.id,
         profile_id: p.id,
         display_name: p.display_name || 'Sem nome',

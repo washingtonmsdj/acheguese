@@ -7,12 +7,7 @@ import { useAppUrls } from "@/core/routing/hooks/useAppUrls";
  * Usa useAppUrls para navegação (sem hardcoded URLs)
  */
 
-interface CommunityModalsState {
-  isSearchOpen: boolean;
-  isQuickReportOpen: boolean;
-  commentPostId: string | null;
-  selectedContent: any | null;
-}
+type SelectedContent = { type: "civic_report"; reportId: string } | null;
 
 export function useCommunityModals() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -20,7 +15,7 @@ export function useCommunityModals() {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isQuickReportOpen, setIsQuickReportOpen] = useState(false);
   const [commentPostId, setCommentPostId] = useState<string | null>(null);
-  const [selectedContent, setSelectedContent] = useState<any>(null);
+  const [selectedContent, setSelectedContent] = useState<SelectedContent>(null);
 
   const postId = searchParams.get("post");
   const isPostDetailOpen = !!postId;

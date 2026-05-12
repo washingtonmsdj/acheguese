@@ -41,7 +41,7 @@ export interface PostFlag {
 class AdminCommunityService {
   async getModerationStats(): Promise<ModerationStats | null> {
     try {
-      const { data, error } = await (supabase as any).rpc("get_moderation_stats");
+      const { data, error } = await supabase.rpc("get_moderation_stats");
       if (error) throw error;
       const rows = data as ModerationStats[] | null;
       if (!rows || rows.length === 0) return null;
@@ -159,7 +159,7 @@ class AdminCommunityService {
 
   async updateCivicReportStatus(reportId: string, status: CommunityIssue['status']): Promise<void> {
     try {
-      const { error } = await (supabase as any)
+      const { error } = await supabase
         .from("community_issues")
         .update({ status })
         .eq("id", reportId);
@@ -203,4 +203,3 @@ class AdminCommunityService {
 }
 
 export const adminCommunityService = new AdminCommunityService();
-

@@ -41,6 +41,64 @@ import type {
   SafetyFilter,
 } from '../types';
 
+type EmergencyAlertRow = {
+  id: string;
+  profile_id: string;
+  ride_id?: string | null;
+  alert_type: string;
+  status: string;
+  latitude?: number | null;
+  longitude?: number | null;
+  accuracy?: number | null;
+  metadata?: Record<string, unknown> | null;
+  description?: string | null;
+  created_at: string;
+  updated_at?: string | null;
+  resolved_at?: string | null;
+};
+
+type SafetyIncidentRow = {
+  id: string;
+  ride_id?: string | null;
+  reported_by: string;
+  incident_type: string;
+  severity: string;
+  status: string;
+  description?: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
+  evidence_ids?: string[] | null;
+  created_at: string;
+  updated_at?: string | null;
+  resolved_at?: string | null;
+};
+
+type SafetyEvidenceRow = {
+  id: string;
+  incident_id: string;
+  evidence_type: string;
+  file_url: string;
+  file_name: string;
+  file_size: number;
+  mime_type: string;
+  uploaded_by: string;
+  metadata?: Record<string, unknown> | null;
+  created_at: string;
+};
+
+type EmergencyContactRow = {
+  id: string;
+  profile_id: string;
+  name: string;
+  phone: string;
+  relationship: string;
+  is_primary: boolean;
+  is_active: boolean;
+  metadata?: Record<string, unknown> | null;
+  created_at: string;
+  updated_at: string;
+};
+
 export class SafetyService {
   private static instance: SafetyService;
   private config: SafetyServiceConfig;
@@ -204,7 +262,7 @@ export class SafetyService {
     performedBy: string
   ): Promise<SafetyResult<EmergencyAlert>> {
     try {
-      const updateData: any = {
+      const updateData: Record<string, unknown> = {
         status,
         updated_at: new Date().toISOString(),
       };
@@ -344,7 +402,9 @@ export class SafetyService {
 
       // Buscar dados da corrida via MobilityService (SSOT)
       const { MobilityService: MS } = await import('@/modules/mobility/services');
-      const rideData = await MS.getRideById(shareData.ride_id) as any;
+      const rideData = await MS.getRideById(shareData.ride_id) as
+        | { status?: string | null; driver_profile_id?: string | null; passenger_profile_id?: string | null }
+        | null;
       if (!rideData) return null;
 
       // Buscar dados do motorista
@@ -563,7 +623,7 @@ export class SafetyService {
     performedBy: string
   ): Promise<SafetyResult<SafetyIncident>> {
     try {
-      const updateData: any = {
+      const updateData: Record<string, unknown> = {
         status,
         updated_at: new Date().toISOString(),
       };
@@ -731,7 +791,7 @@ export class SafetyService {
     return token;
   }
 
-  private mapToEmergencyAlert(data: any): EmergencyAlert {
+  private mapToEmergencyAlert(data: EmergencyAlertRow): EmergencyAlert {
     const location = data.latitude && data.longitude ? {
       latitude: data.latitude,
       longitude: data.longitude,
@@ -753,7 +813,7 @@ export class SafetyService {
     };
   }
 
-  private mapToSafetyIncident(data: any): SafetyIncident {
+  private mapToSafetyIncident(data: SafetyIncidentRow): SafetyIncident {
     const location = data.latitude && data.longitude ? {
       latitude: data.latitude,
       longitude: data.longitude,
@@ -775,7 +835,7 @@ export class SafetyService {
     };
   }
 
-  private mapToSafetyEvidence(data: any): SafetyEvidence {
+  private mapToSafetyEvidence(data: SafetyEvidenceRow): SafetyEvidence {
     return {
       id: data.id,
       incidentId: data.incident_id,
@@ -862,7 +922,7 @@ export class SafetyService {
     updates: UpdateEmergencyContactInput
   ): Promise<SafetyResult<EmergencyContact>> {
     try {
-      const updateData: any = {
+      const updateData: Record<string, unknown> = {
         updated_at: new Date().toISOString(),
       };
 
@@ -938,7 +998,12 @@ export class SafetyService {
 
       const userProfile = {
         name: profileRecord?.name,
-        phone: (profileRecord as any)?.phone,
+        phone:
+          profileRecord &&
+          typeof profileRecord === 'object' &&
+          'phone' in profileRecord
+            ? (profileRecord as { phone?: string | null }).phone
+            : undefined,
       };
 
       // Enviar notificação para cada contato
@@ -1053,7 +1118,7 @@ export class SafetyService {
     }
   }
 
-  private mapToEmergencyContact(data: any): EmergencyContact {
+  private mapToEmergencyContact(data: EmergencyContactRow): EmergencyContact {
     return {
       id: data.id,
       profileId: data.profile_id,

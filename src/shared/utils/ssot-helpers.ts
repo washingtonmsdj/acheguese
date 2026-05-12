@@ -19,74 +19,81 @@ import { RIDE_STATUS } from "@/modules/mobility/constants";
  */
 
 export const SSOTValidators = {
+  isEnumValue: <T extends Record<string, string>>(
+    enumObj: T,
+    value: string,
+  ): value is T[keyof T] => {
+    return (Object.values(enumObj) as string[]).includes(value);
+  },
+
   // User Role
   isValidUserRole: (
     role: string,
   ): role is (typeof USER_ROLE)[keyof typeof USER_ROLE] => {
-    return Object.values(USER_ROLE).includes(role as any);
+    return SSOTValidators.isEnumValue(USER_ROLE, role);
   },
 
   // Ride Status
   isValidRideStatus: (
     status: string,
   ): status is (typeof RIDE_STATUS)[keyof typeof RIDE_STATUS] => {
-    return Object.values(RIDE_STATUS).includes(status as any);
+    return SSOTValidators.isEnumValue(RIDE_STATUS, status);
   },
 
   // Payment Method
   isValidPaymentMethod: (
     method: string,
   ): method is (typeof PAYMENT_METHOD)[keyof typeof PAYMENT_METHOD] => {
-    return Object.values(PAYMENT_METHOD).includes(method as any);
+    return SSOTValidators.isEnumValue(PAYMENT_METHOD, method);
   },
 
   // Driver Status
   isValidDriverStatus: (
     status: string,
   ): status is (typeof DRIVER_STATUS)[keyof typeof DRIVER_STATUS] => {
-    return Object.values(DRIVER_STATUS).includes(status as any);
+    return SSOTValidators.isEnumValue(DRIVER_STATUS, status);
   },
 
   // Verification Status
   isValidVerificationStatus: (
     status: string,
   ): status is (typeof VERIFICATION_STATUS)[keyof typeof VERIFICATION_STATUS] => {
-    return Object.values(VERIFICATION_STATUS).includes(status as any);
+    return SSOTValidators.isEnumValue(VERIFICATION_STATUS, status);
   },
 
   // Alert Status
   isValidAlertStatus: (
     status: string,
   ): status is (typeof ALERT_STATUS)[keyof typeof ALERT_STATUS] => {
-    return Object.values(ALERT_STATUS).includes(status as any);
+    return SSOTValidators.isEnumValue(ALERT_STATUS, status);
   },
 
   // Post Status
   isValidPostStatus: (
     status: string,
   ): status is (typeof POST_STATUS)[keyof typeof POST_STATUS] => {
-    return Object.values(POST_STATUS).includes(status as any);
+    return SSOTValidators.isEnumValue(POST_STATUS, status);
   },
 
   // Payment Status
   isValidPaymentStatus: (
     status: string,
   ): status is (typeof PAYMENT_STATUS)[keyof typeof PAYMENT_STATUS] => {
-    return Object.values(PAYMENT_STATUS).includes(status as any);
+    return SSOTValidators.isEnumValue(PAYMENT_STATUS, status);
   },
 
   // Report Status
   isValidReportStatus: (
     status: string,
   ): status is (typeof REPORT_STATUS)[keyof typeof REPORT_STATUS] => {
-    return Object.values(REPORT_STATUS).includes(status as any);
+    return SSOTValidators.isEnumValue(REPORT_STATUS, status);
   },
 
   // Subscription Plan
   isValidSubscriptionPlan: (
     plan: string,
   ): plan is (typeof SUBSCRIPTION_PLAN)[keyof typeof SUBSCRIPTION_PLAN] => {
-    return Object.values(SUBSCRIPTION_PLAN).includes(plan as any);
+    return SSOTValidators.isEnumValue(SUBSCRIPTION_PLAN, plan);
   },
 };
 

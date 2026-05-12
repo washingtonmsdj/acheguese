@@ -16,7 +16,7 @@ export class AddressRepositorySupabase implements IAddressRepository {
   async create(input: CreateAddressInput): Promise<Address> {
     const { data, error } = await supabase
       .from(this.tableName)
-      .insert(input as any)
+      .insert(input)
       .select()
       .single();
 
@@ -47,7 +47,7 @@ export class AddressRepositorySupabase implements IAddressRepository {
   async update(id: string, input: UpdateAddressInput): Promise<Address> {
     const { data, error } = await supabase
       .from(this.tableName)
-      .update(input as any)
+      .update(input)
       .eq('id', id)
       .select()
       .single();

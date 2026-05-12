@@ -4,16 +4,21 @@ import { ArrowLeft } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import { Skeleton } from "@/shared/components/ui/skeleton";
 import { ReportContentDialog } from "@/core/moderation/components/ReportContentDialog";
-import { useAppUrls } from "@/core/routing/hooks"; // âœ… SSOT URLs
+import { useAppUrls } from "@/core/routing/hooks"; // ✅ SSOT URLs
 import { useBusinessNavigation } from '@/core/business';
 import { useRecomendacaoDetail } from "@/core/community/hooks/useRecomendacaoDetail";
 import { QuestionCard } from "@/shared/components/recomendacoes/QuestionCard";
 import { AnswersList } from "@/shared/components/recomendacoes/AnswersList";
 import { AnswerForm } from "@/shared/components/recomendacoes/AnswerForm";
 
+interface NavigableBusiness {
+  id?: string | null;
+  slug?: string | null;
+}
+
 export default function RecomendacaoDetailPage() {
   const navigate = useNavigate();
-  const appUrls = useAppUrls(); // âœ… SSOT URLs
+  const appUrls = useAppUrls(); // ✅ SSOT URLs
   const { navigateToBusiness } = useBusinessNavigation();
 
   const {
@@ -65,7 +70,7 @@ export default function RecomendacaoDetailPage() {
     navigate(`/services/${professionalId}`);
   };
 
-  const handleNavigateToBusiness = (business: any) => {
+  const handleNavigateToBusiness = (business: NavigableBusiness) => {
     navigateToBusiness({
       id: business.id || "",
       slug: business.slug || "",
@@ -86,10 +91,10 @@ export default function RecomendacaoDetailPage() {
   if (notFound || !question) {
     return (
       <div className="p-4 text-center">
-        <p>Pergunta nÃ£o encontrada.</p>
+        <p>Pergunta não encontrada.</p>
         <Button
           variant="outline"
-          onClick={() => navigate(appUrls.community.recommendations)} // âœ… SSOT
+          onClick={() => navigate(appUrls.community.recommendations)} // ✅ SSOT
           className="mt-4"
         >
           Voltar

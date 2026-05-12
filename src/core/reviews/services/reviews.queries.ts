@@ -40,7 +40,7 @@ export async function hasReviewed(
   try {
     const table = getTableName(type);
 
-    const { data, error } = await (supabase as any)
+    const { data, error } = await supabase
       .from(table)
       .select("id")
       .eq("reviewed_profile_id", reviewedProfileId)
@@ -74,7 +74,7 @@ export async function getReviewByReviewer(
   try {
     const table = getTableName(type);
 
-    const { data, error } = await (supabase as any)
+    const { data, error } = await supabase
       .from(table)
       .select("*")
       .eq("reviewed_profile_id", reviewedProfileId)
@@ -107,7 +107,7 @@ export async function getReviewById(
   try {
     const table = getTableName(type);
 
-    const { data, error } = await (supabase as any)
+    const { data, error } = await supabase
       .from(table)
       .select("*")
       .eq("id", reviewId)
@@ -140,7 +140,7 @@ export async function getReviewsForProfile(
   try {
     const table = getTableName(type);
 
-    const { data, error } = await (supabase as any)
+    const { data, error } = await supabase
       .from(table)
       .select(
         `
@@ -186,7 +186,7 @@ export async function getReviewsByReviewer(
   try {
     const table = getTableName(type);
 
-    const { data, error } = await (supabase as any)
+    const { data, error } = await supabase
       .from(table)
       .select(
         `
@@ -231,7 +231,7 @@ export async function getReviewStats(
   try {
     const table = getTableName(type);
 
-    const { data, error } = await (supabase as any)
+    const { data, error } = await supabase
       .from(table)
       .select("rating")
       .eq("reviewed_profile_id", profileId);
@@ -290,7 +290,7 @@ export async function getReviewCount(
   try {
     const table = getTableName(type);
 
-    const { count, error } = await (supabase as any)
+    const { count, error } = await supabase
       .from(table)
       .select("*", { count: "exact", head: true })
       .eq("reviewed_profile_id", profileId);
@@ -316,7 +316,7 @@ export async function getAllReviews(type: ReviewType, limit = 100): Promise<Revi
   try {
     const table = getTableName(type);
 
-    const { data, error } = await (supabase as any)
+    const { data, error } = await supabase
       .from(table)
       .select("id, reviewed_profile_id, reviewer_profile_id, rating, comment, created_at")
       .order("created_at", { ascending: false })

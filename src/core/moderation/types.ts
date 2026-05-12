@@ -5,6 +5,8 @@
  */
 import type { ModerationReportStatus } from "./constants/reportStatus";
 
+type ModerationRelationship = Record<string, unknown>;
+
 export interface PostReport {
   id: string;
   post_id: string;
@@ -17,9 +19,9 @@ export interface PostReport {
   reviewed_by?: string;
 
   // Relacionamentos
-  post?: any;
-  reporter?: any;
-  reviewer?: any;
+  post?: ModerationRelationship;
+  reporter?: ModerationRelationship;
+  reviewer?: ModerationRelationship;
 }
 
 export interface CommentReport {
@@ -35,10 +37,10 @@ export interface CommentReport {
   reviewed_by?: string;
 
   // Relacionamentos
-  comment?: any;
-  post?: any;
-  reporter?: any;
-  reviewer?: any;
+  comment?: ModerationRelationship;
+  post?: ModerationRelationship;
+  reporter?: ModerationRelationship;
+  reviewer?: ModerationRelationship;
 }
 
 export interface ModerationLog {
@@ -52,7 +54,7 @@ export interface ModerationLog {
   created_at: string;
 
   // Relacionamentos
-  moderator?: any;
+  moderator?: ModerationRelationship;
 }
 
 export interface ModerationStats {
@@ -116,7 +118,7 @@ export interface PendingPost {
   author_avatar: string;
   author_reputation: number;
   author_previous_reports: number;
-  reports: any[];
+  reports: ModerationRelationship[];
   reports_count: number;
   priority: number;
   created_at: string;
@@ -130,7 +132,7 @@ export interface PendingComment {
   author_name: string;
   author_avatar: string;
   post_id: string;
-  reports: any[];
+  reports: ModerationRelationship[];
   reports_count: number;
   priority: number;
   created_at: string;

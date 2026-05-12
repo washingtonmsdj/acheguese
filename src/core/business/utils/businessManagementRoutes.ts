@@ -3,6 +3,8 @@ export interface BusinessRouteTarget {
 }
 
 export const businessManagementRoutes = {
+  list: (opts?: BusinessRouteTarget) =>
+    opts?.target === "legacy" ? "/perfil/empresas" : "/central/empresas",
   overview: (businessId: string, opts?: BusinessRouteTarget) =>
     opts?.target === "legacy" ? `/perfil/empresas/${businessId}` : `/central/empresas/${businessId}`,
   dados: (businessId: string, opts?: BusinessRouteTarget) =>
@@ -29,6 +31,8 @@ export const businessManagementRoutes = {
     opts?.target === "legacy" ? `/perfil/empresas/${businessId}/gastronomia/pedidos` : `/central/empresas/${businessId}/gastronomia/pedidos`,
   gastronomyPedidoDetalhe: (businessId: string, orderId: string, opts?: BusinessRouteTarget) =>
     `${businessManagementRoutes.gastronomyPedidos(businessId, opts)}/${orderId}`,
+  gastronomyPedidoPublico: (orderId: string) =>
+    `/gastronomia/pedidos/${orderId}`,
   gastronomyEntregas: (businessId: string, opts?: BusinessRouteTarget) =>
     opts?.target === "legacy" ? `/perfil/empresas/${businessId}/gastronomia/entregas` : `/central/empresas/${businessId}/gastronomia/entregas`,
   gastronomyAnalytics: (businessId: string, opts?: BusinessRouteTarget) =>

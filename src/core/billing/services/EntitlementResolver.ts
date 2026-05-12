@@ -91,7 +91,7 @@ interface SubscriptionData {
   plan_code: string;
   status_v2: string;
   subscription_scope: string;
-  contract_snapshot: any;
+  contract_snapshot: Record<string, unknown>;
 }
 
 // ─── Fallback Padrão (Free) ───────────────────────────────────────────────────

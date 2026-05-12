@@ -52,7 +52,7 @@ export class LocationAdminService {
   }
 
   static async createLocation(input: CreateAdminLocationInput): Promise<void> {
-    const { error } = await (supabase as any).from('locations').insert(input);
+    const { error } = await supabase.from('locations').insert(input);
     if (error) throw error;
   }
 
@@ -60,7 +60,7 @@ export class LocationAdminService {
     locationId: string,
     updates: Partial<Pick<AdminLocationRecord, 'name' | 'slug' | 'metadata'>>,
   ): Promise<void> {
-    const { error } = await (supabase as any)
+    const { error } = await supabase
       .from('locations')
       .update(updates)
       .eq('id', locationId);

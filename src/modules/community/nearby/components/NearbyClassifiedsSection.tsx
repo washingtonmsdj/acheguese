@@ -24,6 +24,7 @@ import { classifiedUrlService } from '@/shared/services/classifieds';
 import { useTerritoryLabels } from '@/core/location/hooks/useTerritoryLabels';
 import type { ClassificadoWithVendedor } from '@/shared/services/classifieds';
 import type { ResolvedTerritory } from '@/core/routing/hooks/useResolveTerritoryFromUrl';
+import { useModuleUrls } from '@/core/routing/hooks/useModuleUrls';
 import { cn } from '@/shared/utils/cn';
 
 interface NearbyClassifiedsSectionProps {
@@ -50,6 +51,7 @@ export function NearbyClassifiedsSection({
   onShowInMap,
 }: NearbyClassifiedsSectionProps) {
   const navigate = useNavigate();
+  const moduleUrls = useModuleUrls();
 
   // SSOT: labels territoriais
   const territoryLabels = useTerritoryLabels(resolved);
@@ -96,8 +98,8 @@ export function NearbyClassifiedsSection({
       navigate(urls.canonical);
       return;
     }
-    // Fallback para URL curta
-    navigate(`/c/${ad.public_id || ad.id}`);
+    // Fallback para URL curta canônica via SSOT
+    navigate(classifiedUrlService.buildShortUrl(ad.public_id || ad.id));
   };
 
   const handleShowInMap = (ad: ClassificadoWithVendedor, e: React.MouseEvent) => {
@@ -108,7 +110,7 @@ export function NearbyClassifiedsSection({
   };
 
   const handleSeeAll = () => {
-    navigate('/classificados');
+    navigate(moduleUrls.classifieds);
   };
 
   return (

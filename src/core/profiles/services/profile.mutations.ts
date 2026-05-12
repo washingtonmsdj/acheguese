@@ -7,6 +7,7 @@
 import { supabase } from "@/integrations/supabase";
 import { logger } from "@/shared/utils/logger";
 import { trackError } from "@/shared/utils/errorTracking";
+import { SessionService } from "@/core/session/services/SessionService";
 import type {
   CreateProfileData,
   Profile,
@@ -29,9 +30,7 @@ const TABLE = "profiles";
  * Cria um novo profile
  */
 export async function createProfile(profile: CreateProfileData): Promise<Profile> {
-  const {
-    data: { user },
-  } = await (supabase as any).auth.getUser();
+  const user = await SessionService.getCurrentUser();
 
   if (!user) {
     throw new Error("User must be authenticated to create a profile");
@@ -45,7 +44,7 @@ export async function createProfile(profile: CreateProfileData): Promise<Profile
     }
   }
 
-  const { data, error } = await (supabase as any)
+  const { data, error } = await supabase
     .from(TABLE)
     .insert({
       user_id: user.id,
@@ -92,7 +91,7 @@ export async function updateProfile(
     }
   }
 
-  const { data, error } = await (supabase as any)
+  const { data, error } = await supabase
     .from(TABLE)
     .update({
       name: updates.name,
@@ -126,7 +125,7 @@ export async function updatePrivacySettings(
   profileId: string,
   settings: ProfilePrivacySettingsInput,
 ): Promise<Profile> {
-  const { data, error } = await (supabase as any)
+  const { data, error } = await supabase
     .from(TABLE)
     .update({
       privacy_settings: settings,
@@ -156,7 +155,7 @@ export async function switchActiveProfile(
   profileId: string,
 ): Promise<void> {
   // Primeiro, desativa todos os profiles do usuário
-  const { error: deactivateError } = await (supabase as any)
+  const { error: deactivateError } = await supabase
     .from(TABLE)
     .update({ is_active: false })
     .eq("user_id", userId);
@@ -171,7 +170,7 @@ export async function switchActiveProfile(
   }
 
   // Ativa o profile selecionado
-  const { error: activateError } = await (supabase as any)
+  const { error: activateError } = await supabase
     .from(TABLE)
     .update({ is_active: true })
     .eq("id", profileId)
@@ -195,7 +194,7 @@ export async function switchActiveProfile(
  * Deleta um profile
  */
 export async function deleteProfile(profileId: string): Promise<void> {
-  const { error } = await (supabase as any)
+  const { error } = await supabase
     .from(TABLE)
     .delete()
     .eq("id", profileId);
@@ -223,7 +222,7 @@ export async function uploadAvatar(userId: string, file: File): Promise<string |
   const filePath = `avatars/${fileName}`;
 
   // Upload do arquivo
-  const { error: uploadError } = await (supabase as any).storage
+  const { error: uploadError } = await supabase.storage
     .from("avatars")
     .upload(filePath, file);
 
@@ -239,7 +238,7 @@ export async function uploadAvatar(userId: string, file: File): Promise<string |
   // Obter URL pública
   const {
     data: { publicUrl },
-  } = (supabase as any).storage.from("avatars").getPublicUrl(filePath);
+  } = supabase.storage.from("avatars").getPublicUrl(filePath);
 
   return publicUrl;
 }
@@ -266,7 +265,7 @@ export async function ensureDriverProfileForUser(userId: string): Promise<Profil
   }
 
   // Cria novo profile do tipo driver
-  const { data: newDriverProfile, error: createError } = await (supabase as any)
+  const { data: newDriverProfile, error: createError } = await supabase
     .from(TABLE)
     .insert({
       user_id: userId,

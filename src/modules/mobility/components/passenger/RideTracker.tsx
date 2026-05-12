@@ -6,22 +6,27 @@ interface RideTrackerProps {
   ride: RideRequest;
 }
 
+const DRIVER_ACCEPTED_STATUSES = new Set<string>([
+  RIDE_STATUS.ACCEPTED,
+  RIDE_STATUS.IN_PROGRESS,
+  RIDE_STATUS.COMPLETED,
+]);
+
+const IN_PROGRESS_STATUSES = new Set<string>([
+  RIDE_STATUS.IN_PROGRESS,
+  RIDE_STATUS.COMPLETED,
+]);
+
 export function RideTracker({ ride }: RideTrackerProps) {
   const steps = [
     { label: "Pedido criado", done: true },
     {
       label: "Motorista aceito",
-      done: [
-        RIDE_STATUS.ACCEPTED,
-        RIDE_STATUS.IN_PROGRESS,
-        RIDE_STATUS.COMPLETED,
-      ].includes(ride.status as any),
+      done: DRIVER_ACCEPTED_STATUSES.has(ride.status),
     },
     {
       label: "Em andamento",
-      done: [RIDE_STATUS.IN_PROGRESS, RIDE_STATUS.COMPLETED].includes(
-        ride.status as any,
-      ),
+      done: IN_PROGRESS_STATUSES.has(ride.status),
     },
     { label: "Concluída", done: ride.status === RIDE_STATUS.COMPLETED },
   ];

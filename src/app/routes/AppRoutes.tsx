@@ -8,6 +8,8 @@
  */
 
 import { Routes, Route, Navigate, Outlet, useParams } from "react-router-dom";
+import { businessManagementRoutes } from "@/core/business/utils/businessManagementRoutes";
+import { mobilityRoutes } from "@/modules/mobility/routes/mobilityRoutes";
 import { LAUNCH_TERRITORIES } from "@/config/territory";
 
 // Territorial Components (eager - critical for routing)
@@ -39,9 +41,13 @@ import * as P from "./lazyImports";
 // Componentes de redirecionamento para rotas legadas
 function BusinessRedirect() {
   const { businessId } = useParams<{ businessId: string }>();
+  if (!businessId) {
+    return <Navigate to={businessManagementRoutes.list()} replace />;
+  }
+
   const location = window.location;
   const remainingPath = location.pathname.replace(/^\/perfil\/empresas\/[^/]+/, '');
-  const targetPath = `/central/empresas/${businessId}${remainingPath}`;
+  const targetPath = `${businessManagementRoutes.overview(businessId)}${remainingPath}`;
   return <Navigate to={targetPath} replace />;
 }
 
@@ -142,7 +148,7 @@ export function AppRoutes() {
         <Route path="/edit-business/:profileId" element={<P.EditarEmpresaPage />} />
         
         {/* Redirecionamentos legados de empresas para Central */}
-        <Route path="/perfil/empresas" element={<Navigate to="/central/empresas" replace />} />
+        <Route path="/perfil/empresas" element={<Navigate to={businessManagementRoutes.list()} replace />} />
         <Route path="/perfil/empresas/:businessId" element={<BusinessRedirect />} />
         <Route path="/perfil/empresas/:businessId/*" element={<BusinessRedirect />} />
         
@@ -157,7 +163,7 @@ export function AppRoutes() {
         <Route path="/perfil/mobilidade/motoboy" element={<Navigate to="/central/motoboy" replace />} />
         <Route path="/perfil/mobilidade/motoboy/cadastro" element={<Navigate to="/central/motoboy/cadastro" replace />} />
         <Route path="/perfil/mobilidade/motoboy/disponibilidade" element={<Navigate to="/central/motoboy/disponibilidade" replace />} />
-        <Route path="/perfil/mobilidade/motoboy/entregas" element={<Navigate to="/central/motoboy/entregas" replace />} />
+        <Route path="/perfil/mobilidade/motoboy/entregas" element={<Navigate to={mobilityRoutes.motoboy.entregas} replace />} />
         <Route path="/perfil/mobilidade/motoboy/ganhos" element={<Navigate to="/central/motoboy/ganhos" replace />} />
         <Route path="/perfil/mobilidade/motoboy/configuracoes" element={<Navigate to="/central/motoboy/configuracoes" replace />} />
         

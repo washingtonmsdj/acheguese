@@ -46,17 +46,17 @@ const REPORT_CATEGORIES: {
     description: "Conteúdo repetitivo ou não solicitado",
   },
   {
-    value: "propaganda" as any,
+    value: "propaganda",
     label: "Propaganda",
     description: "Publicity não autorizada ou excessiva",
   },
   {
-    value: "conteúdo_ofensivo" as any,
+    value: "conteudo_ofensivo",
     label: "Conteúdo Ofensivo",
     description: "Linguagem ofensiva, assédio ou discriminação",
   },
   {
-    value: "links_maliciosos" as any,
+    value: "links_maliciosos",
     label: "Links Maliciosos",
     description: "Links suspeitos ou potencialmente perigosos",
   },

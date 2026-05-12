@@ -78,9 +78,12 @@ export function useCommunityInteractions() {
       }
 
       return result;
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error("Error recording interaction:", error);
-      return { success: false, error: error.message };
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : "Erro ao registrar interacao",
+      };
     } finally {
       setRecording(false);
     }
@@ -120,9 +123,12 @@ export function useCommunityInteractions() {
       }
 
       return { success: true, results, totalPoints };
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error("Error recording bulk interactions:", error);
-      return { success: false, error: error.message };
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : "Erro ao registrar interacoes",
+      };
     } finally {
       setRecording(false);
     }

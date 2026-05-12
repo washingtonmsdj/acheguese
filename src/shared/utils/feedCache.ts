@@ -11,7 +11,7 @@ interface CacheEntry<T> {
 }
 
 class FeedCache {
-  private cache = new Map<string, CacheEntry<any>>();
+  private cache = new Map<string, CacheEntry<unknown>>();
   private defaultTTL = 60000; // 60 segundos
 
   get<T>(key: string, ttl?: number): T | null {

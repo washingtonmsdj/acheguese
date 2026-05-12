@@ -24,6 +24,8 @@ type AdminProfileSummary = {
   profile_type: string | null;
 };
 
+type NotificationRawRow = Record<string, unknown>;
+
 export interface AdminNotificationRecord extends Notification {
   profile?: AdminProfileSummary;
 }
@@ -130,7 +132,7 @@ async function loadProfilesByUserId(userIds: string[]): Promise<Map<string, Admi
   try {
     const profiles = await profileService.getProfilesByIds(userIds);
     return new Map(
-      profiles.map((profile: any) => [
+      profiles.map((profile) => [
         profile.user_id,
         {
           user_id: profile.user_id,
@@ -138,7 +140,7 @@ async function loadProfilesByUserId(userIds: string[]): Promise<Map<string, Admi
           display_name: profile.display_name ?? null,
           username: profile.username ?? null,
           profile_type: profile.profile_type ?? null,
-        } as AdminProfileSummary,
+        },
       ]),
     );
   } catch (error) {
@@ -183,7 +185,7 @@ class AdminNotificationsService {
 
       const userIds = new Set<string>();
 
-      for (const rawItem of (data as Record<string, any>[]) || []) {
+      for (const rawItem of (data as NotificationRawRow[]) || []) {
         const item = normalizeNotification(rawItem);
         stats.total += 1;
         stats.byType[item.type] = (stats.byType[item.type] || 0) + 1;
@@ -366,7 +368,7 @@ class AdminNotificationsService {
 
       if (error) throw error;
 
-      const items = ((data as Record<string, any>[]) || []).map(normalizeNotification);
+      const items = ((data as NotificationRawRow[]) || []).map(normalizeNotification);
       const profileMap = await loadProfilesByUserId(
         [...new Set(items.map((item) => item.user_id).filter(Boolean))],
       );

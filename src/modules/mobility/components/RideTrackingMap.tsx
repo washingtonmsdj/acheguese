@@ -25,6 +25,11 @@ interface RideTrackingMapProps {
   showETA?: boolean;
 }
 
+type EtaSummary = {
+  eta_minutes?: number;
+  distance_km?: number;
+};
+
 export const RideTrackingMap = memo(function RideTrackingMap({
   driverProfileId,
   rideId,
@@ -236,7 +241,7 @@ export const RideTrackingMap = memo(function RideTrackingMap({
     );
   }
 
-  const etaObj = typeof eta === 'object' ? eta as any : null;
+  const etaObj: EtaSummary | null = typeof eta === 'object' && eta !== null ? (eta as EtaSummary) : null;
 
   return (
     <Card className={cn('border border-teal-500/30', className)}>

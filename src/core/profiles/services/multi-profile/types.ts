@@ -70,7 +70,7 @@ export interface BusinessData {
   business_city?: string;
   business_state?: string;
   business_zip?: string;
-  business_hours?: any;
+  business_hours?: Record<string, unknown> | null;
   created_at: string;
   updated_at: string;
 }
@@ -110,7 +110,7 @@ export interface DriverData {
   background_check_status?: 'pending' | 'approved' | 'rejected';
   background_check_date?: string;
   is_available: boolean;
-  current_location?: any;
+  current_location?: Record<string, unknown> | null;
   last_location_update?: string;
   created_at: string;
   updated_at: string;
@@ -151,7 +151,7 @@ export interface CreateProfileInput {
   display_name: string;
   avatar_url?: string;
   bio?: string;
-  extension_data?: Record<string, any>;
+  extension_data?: Record<string, unknown>;
 }
 
 // Dados para atualização

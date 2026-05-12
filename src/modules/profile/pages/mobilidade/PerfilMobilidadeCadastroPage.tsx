@@ -9,6 +9,7 @@ import { DriverOperationalSnapshotCard } from "@/modules/profile/components/card
 import { DriverVehicleDetailsCard } from "@/modules/profile/components/cards";
 import { useDriverProfileIdentity } from "@/modules/mobility/hooks/useDriverProfileIdentity";
 import { getProfileMobilitySectionPath } from "@/modules/profile/utils/profileMobilityNavigation";
+import { mobilityRoutes } from "@/modules/mobility/routes/mobilityRoutes";
 
 function formatValue(value: unknown): string {
   if (typeof value === "string" && value.trim()) return value;
@@ -22,11 +23,11 @@ export default function PerfilMobilidadeCadastroPage() {
     queryScope: "perfil-mobilidade-cadastro",
   });
 
-  const snapshot = driverData as any;
+  const snapshot = driverData as Record<string, unknown> | null;
   const cadastroPath =
     snapshot?.can_do_delivery && snapshot?.can_do_rides === false
-      ? "/central/motoboy/cadastro"
-      : "/central/motorista/cadastro";
+      ? mobilityRoutes.motoboy.cadastro
+      : mobilityRoutes.motorista.cadastro;
 
   const missingItems = useMemo(
     () => [

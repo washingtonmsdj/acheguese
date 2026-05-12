@@ -7,6 +7,8 @@
  * @returns Objeto com URLs do módulo de mobilidade
  */
 
+import { mobilityRoutes } from "@/modules/mobility/routes/mobilityRoutes";
+
 export interface MobilityUrls {
   motorista: {
     home: string;
@@ -32,25 +34,11 @@ export interface MobilityUrls {
 
 export function useMobilityUrls(): MobilityUrls {
   return {
-    motorista: {
-      home: '/central/motorista',
-      cadastro: '/central/motorista/cadastro',
-      disponibilidade: '/central/motorista/disponibilidade',
-      corridas: '/central/motorista/corridas',
-      ganhos: '/central/motorista/ganhos',
-      configuracoes: '/central/motorista/configuracoes',
-    },
-    motoboy: {
-      home: '/central/motoboy',
-      cadastro: '/central/motoboy/cadastro',
-      disponibilidade: '/central/motoboy/disponibilidade',
-      entregas: '/central/motoboy/entregas',
-      ganhos: '/central/motoboy/ganhos',
-      configuracoes: '/central/motoboy/configuracoes',
-    },
+    motorista: mobilityRoutes.motorista,
+    motoboy: mobilityRoutes.motoboy,
     passageiro: {
-      home: '/mobilidade/passageiro',
-      corridas: '/mobilidade/passageiro/corridas',
+      home: mobilityRoutes.passageiro.home,
+      corridas: mobilityRoutes.passageiro.corridas,
     },
   };
 }

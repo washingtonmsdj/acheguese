@@ -34,7 +34,7 @@ export interface UpdateContractParams {
   changes: {
     status_v2?: string;
     plan_code?: string;
-    contract_snapshot?: any;
+    contract_snapshot?: Record<string, unknown>;
   };
   reason?: string;
 }
@@ -54,7 +54,7 @@ export interface SubscriptionContract {
   entity_family: string;
   vertical: string;
   status_v2: string;
-  contract_snapshot: any;
+  contract_snapshot: Record<string, unknown>;
   created_at: string;
   updated_at: string;
   current_period_start?: string;
@@ -153,7 +153,7 @@ export class SubscriptionContractService {
     params: UpdateContractParams
   ): Promise<{ success: boolean; error?: string }> {
     try {
-      const updates: any = {
+      const updates: Record<string, unknown> = {
         updated_at: new Date().toISOString(),
       };
       
@@ -206,7 +206,7 @@ export class SubscriptionContractService {
     params: CancelContractParams
   ): Promise<{ success: boolean; error?: string }> {
     try {
-      const updates: any = {
+      const updates: Record<string, unknown> = {
         status_v2: 'canceled',
         canceled_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),

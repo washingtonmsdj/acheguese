@@ -20,9 +20,9 @@ describe("gastronomy operational SSOT flow", () => {
     expect(routesSource).toContain('path="/gastronomia/pedidos/:orderId"');
     expect(routesSource).toContain("<P.OrderDetailsPage />");
     expect(notificationSource).toContain("customerOrderUrl");
-    expect(notificationSource).toContain("`/gastronomia/pedidos/${order.id}`");
+    expect(notificationSource).toContain("businessManagementRoutes.gastronomyPedidoPublico(order.id)");
     expect(notificationSource).toContain('actionLabel: customerActionUrl ? "Abrir pedido" : null');
-    expect(notificationSource).toContain('actionUrl: "/central/motoboy/entregas"');
+    expect(notificationSource).toContain("actionUrl: mobilityRoutes.motoboy.entregas");
     expect(notificationSource).toContain("dedupeNotifications");
     expect(notificationSource).toContain("event_label");
   });
@@ -39,11 +39,29 @@ describe("gastronomy operational SSOT flow", () => {
     expect(ordersHookSource).toContain("table: 'orders'");
     expect(ordersHookSource).toContain("filter: `source_id=eq.${businessId}`");
     expect(ordersHookSource).toContain("table: 'order_timeline_events'");
+    expect(ordersHookSource).toContain(".eq('source_id', businessId)");
+    expect(ordersHookSource).toContain("setTimeout(() => {");
+    expect(ordersHookSource).toContain("verifiedBusinessOrderIdsRef");
     expect(orderDetailsHookSource).toContain("gastronomy-order:${orderId}");
     expect(orderDetailsHookSource).toContain("filter: `id=eq.${orderId}`");
     expect(orderDetailsHookSource).toContain("filter: `order_id=eq.${orderId}`");
+    expect(orderDetailsHookSource).toContain("setTimeout(() => {");
     expect(ordersHookSource).not.toContain("refetchInterval:");
     expect(orderDetailsHookSource).not.toContain("refetchInterval:");
+  });
+
+  it("keeps delivery tracking aligned with ride_requests realtime SSOT and fallback polling", () => {
+    const trackingHookSource = readProjectFile(
+      "src/modules/business/gastronomy/hooks/useOrderTracking.ts",
+    );
+
+    expect(trackingHookSource).toContain("table: 'ride_requests'");
+    expect(trackingHookSource).toContain("filter: `source_id=eq.${orderId}`");
+    expect(trackingHookSource).toContain("source_type");
+    expect(trackingHookSource).toContain("newSourceType === 'gastronomy' || oldSourceType === 'gastronomy'");
+    expect(trackingHookSource).toContain("refetchInterval: (query) => {");
+    expect(trackingHookSource).toContain("query.state.data");
+    expect(trackingHookSource).toContain("return 15000");
   });
 
   it("uses the canonical review service and private trust SSOT after delivery", () => {
@@ -71,6 +89,28 @@ describe("gastronomy operational SSOT flow", () => {
     expect(trustSource).toContain("action_url: adminActionUrl");
     expect(trustSource).toContain("action_label: \"Ver contexto\"");
     expect(trustSource).toContain("action_label: \"Ver fila\"");
+  });
+
+  it("enforces transactional notification category across delivery and trust flows", () => {
+    const deliveryNotificationSource = readProjectFile(
+      "src/modules/mobility/delivery/services/OrderDeliveryNotificationService.ts",
+    );
+    const trustSource = readProjectFile("src/core/trust/services/TrustEventService.ts");
+    const sqlSource = readProjectFile(
+      "supabase/migrations/20260511183000_create_notification_transactional_preference.sql",
+    );
+
+    expect(deliveryNotificationSource).toContain('category: "transactional"');
+    expect(deliveryNotificationSource).toContain("p_type: payload.type");
+    expect(deliveryNotificationSource).toContain("p_category: payload.category");
+    expect(deliveryNotificationSource).not.toContain('p_category: "system"');
+    expect(deliveryNotificationSource).not.toContain('p_type: "order_update"');
+
+    expect(trustSource).toContain('category: "transactional"');
+    expect(trustSource).not.toContain('category: "system"');
+
+    expect(sqlSource).toContain("IF p_category = 'transactional' AND NOT v_preferences.transactional_enabled THEN");
+    expect(sqlSource).toContain("RETURN NULL;");
   });
 
   it("enforces delivery eligibility check before creating delivery orders", () => {

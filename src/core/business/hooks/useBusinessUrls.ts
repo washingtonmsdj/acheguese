@@ -16,6 +16,7 @@ import { buildGroupBaseUrl, buildModuleTerritoryUrl, geoPathToPublicUrl, MODULE_
 import { TERRITORY_CONFIG } from '@/config/territory';
 import { BusinessUrlService } from '@/core/business/services/BusinessUrlService';
 import type { BusinessUrlContext } from '@/core/business/services/BusinessUrlService';
+import { businessManagementRoutes } from '@/core/business/utils/businessManagementRoutes';
 import type { ResolvedTerritory } from '@/core/routing/hooks/useResolveTerritoryFromUrl';
 
 export interface BusinessUrls {
@@ -74,7 +75,7 @@ export function useBusinessUrls(routeResolved?: ResolvedTerritory | null): Busin
     share: (ctx: BusinessUrlContext) => BusinessUrlService.getShareUrl(ctx),
     create: '/empresas/criar-empresa',
     edit: (businessId: string) => `/edit-business/${businessId}`,
-    dashboard: (businessId: string, opts?: { target?: "central" | "legacy" }) => 
-      opts?.target === "legacy" ? `/perfil/empresas/${businessId}` : `/central/empresas/${businessId}`,
+    dashboard: (businessId: string, opts?: { target?: "central" | "legacy" }) =>
+      businessManagementRoutes.overview(businessId, opts),
   };
 }

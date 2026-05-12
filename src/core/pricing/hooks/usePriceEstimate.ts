@@ -9,7 +9,7 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { pricingService } from '../services/PricingService';
-import type { PriceEstimateRequest, PriceEstimateResponse } from '../types';
+import type { PriceEstimateRequest, PricingMode } from '../types';
 
 export function usePriceEstimate(
   request: PriceEstimateRequest | null,
@@ -27,7 +27,7 @@ export function usePriceEstimate(
 }
 
 export function useQuickPriceEstimate(
-  mode: string,
+  mode: PricingMode | null,
   distanceKm: number | null,
   durationMinutes: number | null,
   options?: {
@@ -38,7 +38,7 @@ export function useQuickPriceEstimate(
     queryKey: ['quick-price-estimate', mode, distanceKm, durationMinutes],
     queryFn: () =>
       pricingService.calculateQuickEstimate(
-        mode as any,
+        mode!,
         distanceKm!,
         durationMinutes!
       ),

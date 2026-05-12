@@ -2,6 +2,8 @@ import { supabase } from "@/integrations/supabase";
 import { profileService } from "@/core/profiles/services/ProfileService";
 import { NotificationService } from "@/core/notifications/services/NotificationService";
 import { logger } from "@/shared/utils/logger";
+import { businessManagementRoutes } from "@/core/business/utils/businessManagementRoutes";
+import { mobilityRoutes } from "@/modules/mobility/routes/mobilityRoutes";
 import {
   TRUST_ADMIN_ACTION_TYPES,
   TRUST_EVENT_STATUSES,
@@ -90,10 +92,10 @@ function assertRating(rating?: number | null): void {
 
 function trustContextActionUrl(event: Pick<TrustEvent, "context_type" | "context_id">): string {
   if (event.context_type === "order") {
-    return `/gastronomia/pedidos/${event.context_id}`;
+    return businessManagementRoutes.gastronomyPedidoPublico(event.context_id);
   }
   if (event.context_type === "delivery" || event.context_type === "ride") {
-    return "/central/motoboy/entregas";
+    return mobilityRoutes.motoboy.entregas;
   }
   if (event.context_type === "classified") {
     return `/classificados/${event.context_id}`;
@@ -110,11 +112,11 @@ function trustContextActionUrl(event: Pick<TrustEvent, "context_type" | "context
 export class TrustEventService {
   private static async getTrustEventById(eventId: string): Promise<TrustEvent | null> {
     try {
-      const { data, error } = await (supabase as any)
+      const { data, error } = await supabase
         .from(TRUST_EVENTS_TABLE)
         .select("*")
         .eq("id", eventId)
-        .maybeSingle();
+        .maybeSingle<TrustEventRow>();
       if (error || !data) return null;
       return mapTrustEvent(data);
     } catch {
@@ -149,30 +151,43 @@ export class TrustEventService {
       status: event.status,
     };
 
+    const tasks: Promise<unknown>[] = [];
+
     if (subjectUserId) {
-      await NotificationService.createNotification({
+      tasks.push(NotificationService.createNotification({
         user_id: subjectUserId,
         type: event.severity === "critical" || event.severity === "high" ? "warning" : "info",
-        category: "system",
+        category: "transactional",
         title: "Evento de confianca registrado",
         message:
           "Um evento operacional foi registrado no seu perfil e pode impactar prioridade de chamados.",
         action_url: trustContextActionUrl(event),
         action_label: "Ver contexto",
         metadata: { ...baseMetadata, audience: "subject" },
-      });
+      }));
     }
 
     if (actorUserId && actorUserId !== subjectUserId) {
-      await NotificationService.createNotification({
+      tasks.push(NotificationService.createNotification({
         user_id: actorUserId,
         type: "info",
-        category: "system",
+        category: "transactional",
         title: "Feedback registrado",
         message: "Seu feedback operacional foi recebido para analise administrativa.",
         action_url: trustContextActionUrl(event),
         action_label: "Ver contexto",
         metadata: { ...baseMetadata, audience: "actor" },
+      }));
+    }
+
+    if (tasks.length === 0) return;
+    const results = await Promise.allSettled(tasks);
+    const failedCount = results.filter((result) => result.status === "rejected").length;
+    if (failedCount > 0) {
+      logger.warn("[TrustEventService] notifyTrustEventCreated.partial_failure", {
+        trust_event_id: event.id,
+        failed_count: failedCount,
+        total: tasks.length,
       });
     }
   }
@@ -197,11 +212,13 @@ export class TrustEventService {
       action_type: action.action_type,
     };
 
+    const tasks: Promise<unknown>[] = [];
+
     if (subjectUserId) {
-      await NotificationService.createNotification({
+      tasks.push(NotificationService.createNotification({
         user_id: subjectUserId,
         type: action.action_type === TRUST_ADMIN_ACTION_TYPES.CLEAR_RESTRICTION ? "success" : "warning",
-        category: "system",
+        category: "transactional",
         title: "Atualizacao administrativa de confianca",
         message:
           action.action_type === TRUST_ADMIN_ACTION_TYPES.CLEAR_RESTRICTION
@@ -210,19 +227,30 @@ export class TrustEventService {
         action_url: subjectActionUrl,
         action_label: "Ver contexto",
         metadata: { ...metadata, audience: "subject" },
-      });
+      }));
     }
 
     if (adminUserId && adminUserId !== subjectUserId) {
-      await NotificationService.createNotification({
+      tasks.push(NotificationService.createNotification({
         user_id: adminUserId,
         type: "success",
-        category: "system",
+        category: "transactional",
         title: "Acao administrativa aplicada",
         message: "A acao de confianca foi registrada com sucesso no SSOT.",
         action_url: adminActionUrl,
         action_label: "Ver fila",
         metadata: { ...metadata, audience: "admin" },
+      }));
+    }
+
+    if (tasks.length === 0) return;
+    const results = await Promise.allSettled(tasks);
+    const failedCount = results.filter((result) => result.status === "rejected").length;
+    if (failedCount > 0) {
+      logger.warn("[TrustEventService] notifyTrustAdminAction.partial_failure", {
+        trust_admin_action_id: action.id,
+        failed_count: failedCount,
+        total: tasks.length,
       });
     }
   }
@@ -251,11 +279,11 @@ export class TrustEventService {
         status: input.status ?? TRUST_EVENT_STATUSES.ACTIVE,
       };
 
-      const { data, error } = await (supabase as any)
+      const { data, error } = await supabase
         .from(TRUST_EVENTS_TABLE)
         .insert(payload)
         .select("*")
-        .single();
+        .single<TrustEventRow>();
 
       if (error) return { data: null, error: error.message };
       const createdEvent = mapTrustEvent(data);
@@ -298,7 +326,7 @@ export class TrustEventService {
         status: input.status ?? TRUST_EVENT_STATUSES.ACTIVE,
       };
 
-      const { data: existing, error: existingError } = await (supabase as any)
+      const { data: existing, error: existingError } = await supabase
         .from(TRUST_EVENTS_TABLE)
         .select("id")
         .eq("actor_profile_id", payload.actor_profile_id)
@@ -308,24 +336,24 @@ export class TrustEventService {
         .eq("context_type", payload.context_type)
         .eq("context_id", payload.context_id)
         .eq("event_type", payload.event_type)
-        .maybeSingle();
+        .maybeSingle<{ id: string }>();
 
       if (existingError) {
         return { data: null, error: existingError.message };
       }
 
       const mutation = existing?.id
-        ? (supabase as any)
+        ? supabase
             .from(TRUST_EVENTS_TABLE)
             .update(payload)
             .eq("id", existing.id)
             .select("*")
-            .single()
-        : (supabase as any)
+            .single<TrustEventRow>()
+        : supabase
             .from(TRUST_EVENTS_TABLE)
             .insert(payload)
             .select("*")
-            .single();
+            .single<TrustEventRow>();
 
       const { data, error } = await mutation;
 
@@ -351,7 +379,7 @@ export class TrustEventService {
     error: string | null;
   }> {
     try {
-      let query = (supabase as any)
+      let query = supabase
         .from(TRUST_EVENTS_TABLE)
         .select("*")
         .order("created_at", { ascending: false })
@@ -463,7 +491,7 @@ export class TrustEventService {
     },
   ): Promise<{ data: TrustEvent | null; error: string | null }> {
     try {
-      const { data, error } = await (supabase as any)
+      const { data, error } = await supabase
         .from(TRUST_EVENTS_TABLE)
         .update({
           status: input.status,
@@ -473,7 +501,7 @@ export class TrustEventService {
         })
         .eq("id", eventId)
         .select("*")
-        .single();
+        .single<TrustEventRow>();
 
       if (error) return { data: null, error: error.message };
       return { data: mapTrustEvent(data), error: null };
@@ -517,11 +545,11 @@ export class TrustEventService {
         metadata: input.metadata ?? {},
       };
 
-      const { data, error } = await (supabase as any)
+      const { data, error } = await supabase
         .from(TRUST_ADMIN_ACTIONS_TABLE)
         .insert(payload)
         .select("*")
-        .single();
+        .single<TrustEventRow>();
 
       if (error) return { data: null, error: error.message };
 
@@ -580,7 +608,7 @@ export class TrustEventService {
     error: string | null;
   }> {
     try {
-      const { data, error } = await (supabase as any)
+      const { data, error } = await supabase
         .from(TRUST_ADMIN_ACTIONS_TABLE)
         .select("*")
         .order("created_at", { ascending: false })

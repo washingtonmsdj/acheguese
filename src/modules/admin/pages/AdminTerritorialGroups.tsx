@@ -19,6 +19,8 @@ import {
   DialogTitle,
 } from '@/shared/components/ui/dialog';
 
+type GroupItem = ReturnType<typeof useTerritorialGroups>['groups'][number];
+
 export default function AdminTerritorialGroups() {
   const {
     groups,
@@ -29,14 +31,14 @@ export default function AdminTerritorialGroups() {
     toggleStatus,
   } = useTerritorialGroups();
   const [formOpen, setFormOpen] = useState(false);
-  const [editingGroup, setEditingGroup] = useState<any>(null);
+  const [editingGroup, setEditingGroup] = useState<GroupItem | null>(null);
 
   const handleCreate = () => {
     setEditingGroup(null);
     setFormOpen(true);
   };
 
-  const handleEdit = (group: any) => {
+  const handleEdit = (group: GroupItem) => {
     setEditingGroup(group);
     setFormOpen(true);
   };

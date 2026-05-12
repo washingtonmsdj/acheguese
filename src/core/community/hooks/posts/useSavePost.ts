@@ -22,7 +22,7 @@ export function useSavePost() {
       if (previousPost) {
         queryClient.setQueryData(["post", postId], {
           ...previousPost,
-        } as any);
+        });
       }
 
       return { previousPost };

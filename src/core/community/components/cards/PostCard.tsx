@@ -26,6 +26,7 @@ import {
 
 // ✅ Importar tipos de core/ (tipos compartilhados entre módulos)
 import type { EditHistory, CommunityPost } from "@/core/posts/types";
+import type { PostType } from "../PostBadge";
 
 interface PostCardProps {
   post: CommunityPost;
@@ -63,6 +64,19 @@ export function PostCard({
     });
   const isOwnPost = currentUserId === post.author_profile_id;
 
+  const getPostType = (value: string): PostType => {
+    switch (value) {
+      case "pergunta":
+      case "discussao":
+      case "recomendacao":
+      case "enquete":
+      case "achados_e_perdidos":
+        return value;
+      default:
+        return "discussao";
+    }
+  };
+
   const getRelativeTime = (dateString: string): string => {
     const date = new Date(dateString);
     const now = new Date();
@@ -95,7 +109,7 @@ export function PostCard({
           onEdit={onEdit ? () => onEdit(post.id) : undefined}
           onReport={() => onReport(post.id)}
         />
-        <PostBadge type={post.type as any} isVerified={post.is_verified} />
+        <PostBadge type={getPostType(post.type)} isVerified={post.is_verified} />
       </CardHeader>
       <CardContent
         className={`${SPACING.cardPadding} pt-0 pb-3 cursor-pointer`}

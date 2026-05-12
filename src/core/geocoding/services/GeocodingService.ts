@@ -466,7 +466,7 @@ export class GeocodingService {
     this.metrics.averageResponseTimeMs = (totalTime + responseTimeMs) / this.metrics.successfulRequests;
   }
 
-  private recordError(providerId: string, error: any): void {
+  private recordError(providerId: string, error: unknown): void {
     const errorCode = error instanceof GeocodingError ? error.code : 'UNKNOWN_ERROR';
     this.metrics.errorDistribution = this.incrementCounter(this.metrics.errorDistribution, errorCode);
   }

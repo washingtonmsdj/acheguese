@@ -198,7 +198,10 @@ export function useRideStats(
 /**
  * Hook para buscar histórico de corridas
  */
-export function useRideHistory(userId: string | undefined, filters: any = {}) {
+export function useRideHistory(
+  userId: string | undefined,
+  filters: Record<string, unknown> = {},
+) {
   return useQuery({
     queryKey: MOBILITY_KEYS.rides("history", userId!),
     queryFn: () => MobilityFacade.getRideHistory(userId!, filters),

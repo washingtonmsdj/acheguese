@@ -6,6 +6,11 @@
 import { logger } from '@/shared/utils/logger';
 import { supabase } from '@/integrations/supabase/supabase';
 import type { ProfileLink, LinkType, ServiceResponse } from './types';
+
+type PublicProfileLinkRecord = Record<string, unknown>;
+const errorMessage = (error: unknown, fallback: string): string =>
+  error instanceof Error ? error.message : fallback;
+
 export class ProfileLinksService {
   /**
    * Listar links de um perfil (via RLS)
@@ -21,7 +26,7 @@ export class ProfileLinksService {
       if (error) throw error;
 
       return (data || []) as ProfileLink[];
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('Error fetching profile links:', error);
       return [];
     }
@@ -30,7 +35,7 @@ export class ProfileLinksService {
   /**
    * Listar links públicos de um perfil (via view pública)
    */
-  static async getPublicProfileLinks(profileId: string): Promise<any[]> {
+  static async getPublicProfileLinks(profileId: string): Promise<PublicProfileLinkRecord[]> {
     try {
       const { data, error } = await supabase
         .from('public_profile_links')
@@ -41,7 +46,7 @@ export class ProfileLinksService {
       if (error) throw error;
 
       return data || [];
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('Error fetching public profile links:', error);
       return [];
     }
@@ -76,10 +81,10 @@ export class ProfileLinksService {
         success: true,
         data: data as ProfileLink,
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
       return {
         success: false,
-        error: error.message || 'Failed to create link',
+        error: errorMessage(error, 'Failed to create link'),
       };
     }
   }
@@ -105,10 +110,10 @@ export class ProfileLinksService {
         success: true,
         data: data as ProfileLink,
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
       return {
         success: false,
-        error: error.message || 'Failed to update link',
+        error: errorMessage(error, 'Failed to update link'),
       };
     }
   }
@@ -126,10 +131,10 @@ export class ProfileLinksService {
       if (error) throw error;
 
       return { success: true };
-    } catch (error: any) {
+    } catch (error: unknown) {
       return {
         success: false,
-        error: error.message || 'Failed to delete link',
+        error: errorMessage(error, 'Failed to delete link'),
       };
     }
   }
@@ -149,10 +154,10 @@ export class ProfileLinksService {
       await Promise.all(updates);
 
       return { success: true };
-    } catch (error: any) {
+    } catch (error: unknown) {
       return {
         success: false,
-        error: error.message || 'Failed to reorder links',
+        error: errorMessage(error, 'Failed to reorder links'),
       };
     }
   }

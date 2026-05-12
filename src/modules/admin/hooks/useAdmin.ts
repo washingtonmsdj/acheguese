@@ -13,8 +13,16 @@ import { toast } from 'sonner';
 
 export const adminKeys = {
   all: ['admin'] as const,
-  businesses: (filters?: any) => [...adminKeys.all, 'businesses', filters] as const,
-  profiles: (filters?: any) => [...adminKeys.all, 'profiles', filters] as const,
+  businesses: (filters?: {
+    plan_tier?: string;
+    is_active?: boolean;
+    search?: string;
+    limit?: number;
+  }) => [...adminKeys.all, 'businesses', filters] as const,
+  profiles: (filters?: {
+    search?: string;
+    limit?: number;
+  }) => [...adminKeys.all, 'profiles', filters] as const,
   planUsage: () => [...adminKeys.all, 'plan-usage'] as const,
   platformStats: () => [...adminKeys.all, 'platform-stats'] as const,
 };

@@ -55,7 +55,7 @@ export async function addReview(
 
     const payload = buildReviewInsertPayload(data);
 
-    const { data: review, error } = await (supabase as any)
+    const { data: review, error } = await supabase
       .from(table)
       .insert(payload)
       .select()
@@ -95,7 +95,7 @@ export async function updateReview(
 
     const payload = buildReviewUpdatePayload(updates);
 
-    const { data: review, error } = await (supabase as any)
+    const { data: review, error } = await supabase
       .from(table)
       .update(payload)
       .eq("id", reviewId)
@@ -125,7 +125,7 @@ export async function removeReview(reviewId: string, type: ReviewType): Promise<
   try {
     const table = getTableName(type);
 
-    const { error } = await (supabase as any)
+    const { error } = await supabase
       .from(table)
       .delete()
       .eq("id", reviewId);

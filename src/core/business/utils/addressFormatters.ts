@@ -4,13 +4,32 @@
  * Utilitários para formatação de endereços
  */
 
-import type { Business, BusinessDataWithProfiles } from '../types';
+import type { BusinessDataWithProfiles } from '../types';
+
+type AddressLike = {
+  street?: string | null;
+  number?: string | null;
+  complement?: string | null;
+  neighborhood?: string | null;
+  city?: string | null;
+  state?: string | null;
+  postal_code?: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
+  address_type?: 'exact' | 'approximate' | 'landmark' | null;
+};
+
+function getAddress(business: BusinessDataWithProfiles): AddressLike | null {
+  const candidate = (business as { address?: unknown }).address;
+  if (!candidate || typeof candidate !== 'object') return null;
+  return candidate as AddressLike;
+}
 
 /**
  * Formata endereço completo (modelo canônico)
  */
 export function formatFullAddress(business: BusinessDataWithProfiles): string {
-  const address = (business as any).address;
+  const address = getAddress(business);
   
   if (!address) {
     return '';
@@ -53,7 +72,7 @@ export function formatFullAddress(business: BusinessDataWithProfiles): string {
  * Formata endereço curto (rua + número)
  */
 export function formatShortAddress(business: BusinessDataWithProfiles): string {
-  const address = (business as any).address;
+  const address = getAddress(business);
   
   if (!address) {
     return '';
@@ -76,7 +95,7 @@ export function formatShortAddress(business: BusinessDataWithProfiles): string {
  * Formata endereço compacto (rua, bairro)
  */
 export function formatCompactAddress(business: BusinessDataWithProfiles): string {
-  const address = (business as any).address;
+  const address = getAddress(business);
   
   if (!address) {
     return '';
@@ -115,7 +134,7 @@ export function getAddressCoordinates(business: BusinessDataWithProfiles): {
   latitude: number;
   longitude: number;
 } | null {
-  const address = (business as any).address;
+  const address = getAddress(business);
   
   if (!address?.latitude || !address?.longitude) {
     return null;
@@ -147,7 +166,7 @@ export function hasValidCoordinates(business: BusinessDataWithProfiles): boolean
  * Formata endereço para exibição em uma linha
  */
 export function formatSingleLineAddress(business: BusinessDataWithProfiles): string {
-  const address = (business as any).address;
+  const address = getAddress(business);
   
   if (!address) {
     return '';
@@ -176,7 +195,7 @@ export function formatSingleLineAddress(business: BusinessDataWithProfiles): str
  * Obtém tipo de endereço
  */
 export function getAddressType(business: BusinessDataWithProfiles): 'exact' | 'approximate' | 'landmark' | null {
-  const address = (business as any).address;
+  const address = getAddress(business);
   
   if (!address) {
     return null;

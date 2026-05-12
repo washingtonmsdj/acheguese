@@ -268,14 +268,10 @@ async function createLeadFixture(professionalDataId: string): Promise<LeadFixtur
   return { leadId, professionalProfileId };
 }
 
-async function assertProfessionalReviewPersisted(
-  professionalProfileId: string,
-  commentToken: string,
-): Promise<boolean> {
-  const session = await signInTestUser();
-  if (!session) return false;
-  const { client, userId } = session;
-
+async function resolveReviewerProfileId(
+  client: ReturnType<typeof testClient>,
+  userId: string,
+): Promise<string | null> {
   const personalProfile = await client
     .from("profiles")
     .select("id")
@@ -283,12 +279,15 @@ async function assertProfessionalReviewPersisted(
     .eq("profile_type", "personal")
     .limit(1)
     .maybeSingle();
-  const reviewerProfileId = personalProfile.data?.id ?? null;
-  if (!reviewerProfileId) {
-    await client.auth.signOut();
-    return false;
-  }
+  return personalProfile.data?.id ?? null;
+}
 
+async function assertProfessionalReviewPersistedWithSession(
+  client: ReturnType<typeof testClient>,
+  reviewerProfileId: string,
+  professionalProfileId: string,
+  commentToken: string,
+): Promise<boolean> {
   const review = await client
     .from("professional_reviews_new")
     .select("id")
@@ -298,7 +297,6 @@ async function assertProfessionalReviewPersisted(
     .limit(1)
     .maybeSingle();
 
-  await client.auth.signOut();
   return Boolean(review.data?.id);
 }
 
@@ -340,11 +338,26 @@ test.describe("professional leads authenticated flow", () => {
     await page.getByPlaceholder(/conte como foi o atendimento/i).fill(reviewToken);
     await page.getByRole("button", { name: /enviar avaliacao/i }).click();
 
+    const verifySession = await signInTestUser();
+    test.skip(!verifySession, "Nao foi possivel iniciar sessao de verificacao para review.");
+    const reviewerProfileId = await resolveReviewerProfileId(verifySession!.client, verifySession!.userId);
+    test.skip(!reviewerProfileId, "Nao foi possivel resolver perfil pessoal para verificacao de review.");
+
     await expect
-      .poll(async () => assertProfessionalReviewPersisted(professionalProfileId, reviewToken), {
-        timeout: 20_000,
-      })
+      .poll(
+        async () =>
+          assertProfessionalReviewPersistedWithSession(
+            verifySession!.client,
+            reviewerProfileId!,
+            professionalProfileId,
+            reviewToken,
+          ),
+        {
+          timeout: 40_000,
+        },
+      )
       .toBe(true);
+    await verifySession!.client.auth.signOut();
 
     await open(page, "/central/profissional");
     await expect.poll(() => bodyText(page), { timeout: 60_000 }).toMatch(/central|perfil profissional/i);

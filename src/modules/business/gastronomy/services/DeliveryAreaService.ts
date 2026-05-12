@@ -153,12 +153,12 @@ export const DeliveryAreaService = {
           name: input.name,
           description: input.description || null,
           area_type: input.area_type || 'neighborhood',
-          radius_km: input.radius_km || null,
-          center_lat: input.center_lat || null,
-          center_lng: input.center_lng || null,
+          radius_km: input.radius_km ?? null,
+          center_lat: input.center_lat ?? null,
+          center_lng: input.center_lng ?? null,
           delivery_fee: input.delivery_fee,
-          minimum_order_value: input.minimum_order_value || null,
-          estimated_time_min: input.estimated_time_min || 30,
+          minimum_order_value: input.minimum_order_value ?? null,
+          estimated_time_min: input.estimated_time_min ?? 30,
           is_active: input.is_active ?? true,
           display_order: input.display_order ?? 0,
         })
@@ -306,9 +306,9 @@ export const DeliveryAreaService = {
           neighborhood_name: input.neighborhood_name,
           city: input.city,
           state: input.state,
-          custom_delivery_fee: input.custom_delivery_fee || null,
-          custom_minimum_order: input.custom_minimum_order || null,
-          custom_estimated_time: input.custom_estimated_time || null,
+          custom_delivery_fee: input.custom_delivery_fee ?? null,
+          custom_minimum_order: input.custom_minimum_order ?? null,
+          custom_estimated_time: input.custom_estimated_time ?? null,
           is_active: input.is_active ?? true,
         })
         .select()
@@ -425,11 +425,15 @@ export const DeliveryAreaService = {
     orderValue: number = 0
   ): Promise<ServiceResult<DeliveryEligibility>> {
     try {
+      const normalizedNeighborhood = neighborhood.trim();
+      const normalizedCity = city.trim();
+      const normalizedState = state.trim();
+
       const { data, error } = await supabase.rpc('check_delivery_eligibility', {
         p_business_id: businessId,
-        p_neighborhood: neighborhood,
-        p_city: city,
-        p_state: state,
+        p_neighborhood: normalizedNeighborhood,
+        p_city: normalizedCity,
+        p_state: normalizedState,
         p_order_value: orderValue,
       });
 

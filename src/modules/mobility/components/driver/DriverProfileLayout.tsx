@@ -38,7 +38,7 @@ export function DriverProfileLayout({ service }: DriverProfileLayoutProps) {
     queryScope: `driver-profile-layout-${service}`,
   });
 
-  const snapshot = driverData as any;
+  const snapshot = driverData as Record<string, unknown> | null;
   const status = getMobilityServiceStatus({ driverProfileId, driverData: snapshot, service });
 
   const isMotorista = service === "motorista";

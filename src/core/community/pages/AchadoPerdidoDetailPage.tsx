@@ -3,8 +3,8 @@ import React from "react";
 
 import { useParams, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
-import { lostFoundRuntimeService as lostFoundService } from "@/core/community/services/LostFoundRuntimeService";
-import { useAppUrls } from "@/core/routing/hooks"; // ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ SSOT URLs
+import { lostFoundService } from "@/modules/community/lostfound/services";
+import { useAppUrls } from "@/core/routing/hooks"; // ✅ SSOT URLs
 import {
   ArrowLeft,
   MapPin,
@@ -27,46 +27,33 @@ import { Skeleton } from "@/shared/components/ui/skeleton";
 import { useToast } from "@/shared/hooks/use-toast";
 import { useAuth } from "@/core/auth/hooks/useAuth";
 import { ReportContentDialog } from "@/core/moderation/components/ReportContentDialog";
+import {
+  LostFoundMiniMap,
+  LostFoundLocationCard,
+} from "@/modules/community/lostfound/components/LostFoundMiniMap";
 import { format, formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { cn } from "@/shared/utils/cn";
 import { motion } from "framer-motion";
 import { ProfileService } from "@/core/profiles/services/ProfileService";
+import type {
+  Profile,
+  ProfileSummary,
+} from "@/core/profiles/services/types";
+import type { LostFoundComment } from "@/core/community-lost-found/services";
 
 const profileServiceInstance = new ProfileService();
 
 const CAT_ICONS: Record<string, string> = {
-  animal: "ÃƒÂ°Ã…Â¸Ã‚ÂÃ‚Â¾",
-  celular: "ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã‚Â±",
-  documentos: "ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã¢â‚¬Å¾",
-  chaves: "ÃƒÂ°Ã…Â¸Ã¢â‚¬ÂÃ¢â‚¬Ëœ",
-  carteira: "ÃƒÂ°Ã…Â¸Ã¢â‚¬ËœÃ¢â‚¬Âº",
-  objetos: "ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã‚Â¦",
-  outro: "ÃƒÂ¢Ã‚ÂÃ¢â‚¬Å“",
+  animal: "🐾",
+  celular: "📱",
+  documentos: "📄",
+  chaves: "🔑",
+  carteira: "👛",
+  objetos: "📦",
+  outro: "❓",
 };
 
-function LostFoundMiniMap({ latitude, longitude, title, className }: { latitude: number; longitude: number; title: string; tipo: "perdido" | "encontrado"; className?: string }) {
-  return (
-    <div className={cn("rounded-xl border bg-card p-4", className)}>
-      <p className="text-sm font-semibold">{title}</p>
-      <p className="mt-2 text-xs text-muted-foreground">Localização aproximada: {latitude.toFixed(5)}, {longitude.toFixed(5)}</p>
-      <Button asChild variant="outline" size="sm" className="mt-3">
-        <a href={`https://www.google.com/maps?q=${latitude},${longitude}`} target="_blank" rel="noopener noreferrer">
-          Abrir no mapa
-        </a>
-      </Button>
-    </div>
-  );
-}
-
-function LostFoundLocationCard({ neighborhood, localizacaoAprox }: { neighborhood: string; localizacaoAprox: string }) {
-  return (
-    <div className="rounded-xl border bg-card p-4">
-      <p className="text-sm font-semibold">Localização</p>
-      <p className="mt-2 text-sm text-muted-foreground">{neighborhood || localizacaoAprox || "Não informada"}</p>
-    </div>
-  );
-}
 interface Post {
   id: string;
   tipo: string;
@@ -95,7 +82,7 @@ interface Comment {
 export default function AchadoPerdidoDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const appUrls = useAppUrls(); // ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ SSOT URLs
+  const appUrls = useAppUrls(); // ✅ SSOT URLs
   const { toast } = useToast();
   const { user } = useAuth();
 
@@ -121,7 +108,9 @@ export default function AchadoPerdidoDetailPage() {
       return;
     }
 
-    const profile = await profileServiceInstance.getProfileById(data.autor_id);
+    const profile = (await profileServiceInstance.getProfileById(
+      data.autor_id,
+    )) as Profile | null;
 
     setPost({
       id: data.id,
@@ -142,7 +131,7 @@ export default function AchadoPerdidoDetailPage() {
         ? {
             name: profile.name,
             avatar_url: profile.avatar_url || "",
-            whatsapp: (profile as any).whatsapp || "",
+            whatsapp: profile.whatsapp || "",
           }
         : null,
     });
@@ -157,34 +146,36 @@ export default function AchadoPerdidoDetailPage() {
 
     if (!data) return;
 
-    const autorIds = [...new Set(data.map((c: any) => c.autor_id))];
+    const autorIds = [...new Set(data.map((c: LostFoundComment) => c.autor_id))];
     const profiles =
       autorIds.length > 0
-        ? await profileServiceInstance.getProfilesSummary(autorIds)
+        ? ((await profileServiceInstance.getProfilesSummary(
+            autorIds,
+          )) as ProfileSummary[])
         : [];
 
     const profileMap = new Map(
-      profiles.map((p: any) => [
+      profiles.map((p) => [
         p.id,
-        { name: p.name, avatar_url: p.avatarUrl || p.avatar_url || "" },
+        { name: p.name, avatar_url: p.avatarUrl || "" },
       ]),
     );
     setComments(
-      data.map((c: any) => ({
+      data.map((c) => ({
         id: c.id,
-        texto: c.texto,
+        texto: c.texto || c.conteudo || "",
         created_at: c.created_at || "",
         autor: (profileMap.get(c.autor_id) as {
           name: string;
           avatar_url: string;
-        }) || { name: "UsuÃƒÆ’Ã‚Â¡rio", avatar_url: "" },
+        }) || { name: "Usuário", avatar_url: "" },
       })),
     );
   }
 
   async function handleComment() {
     if (!user) {
-      toast({ title: "FaÃƒÆ’Ã‚Â§a login para comentar", variant: "destructive" });
+      toast({ title: "Faça login para comentar", variant: "destructive" });
       return;
     }
     if (!commentText.trim()) return;
@@ -197,7 +188,7 @@ export default function AchadoPerdidoDetailPage() {
         conteudo: commentText.trim(),
       });
       setCommentText("");
-      toast({ title: "ComentÃƒÆ’Ã‚Â¡rio enviado!" });
+      toast({ title: "Comentário enviado!" });
       await loadComments();
     } catch {
       toast({ title: "Error comentar", variant: "destructive" });
@@ -211,7 +202,7 @@ export default function AchadoPerdidoDetailPage() {
     await lostFoundService.toggleResolved(post.id);
     toast({
       title: post.resolvido
-        ? "Marcado como nÃƒÆ’Ã‚Â£o resolvido"
+        ? "Marcado como não resolvido"
         : "Marcado como resolvido!",
     });
     loadPost();
@@ -229,10 +220,10 @@ export default function AchadoPerdidoDetailPage() {
   if (notFound || !post)
     return (
       <div className="p-4 text-center">
-        <p>PublicaÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o nÃƒÆ’Ã‚Â£o encontrada.</p>
+        <p>Publicação não encontrada.</p>
         <Button
           variant="outline"
-          onClick={() => navigate(appUrls.community.lostAndFound)} // ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ SSOT
+          onClick={() => navigate(appUrls.community.lostAndFound)} // ✅ SSOT
           className="mt-4"
         >
           Voltar
@@ -272,7 +263,7 @@ export default function AchadoPerdidoDetailPage() {
           />
         ) : (
           <div className="w-full h-40 bg-secondary flex items-center justify-center text-5xl">
-            {CAT_ICONS[post.category] || "ÃƒÂ¢Ã‚ÂÃ¢â‚¬Å“"}
+            {CAT_ICONS[post.category] || "❓"}
           </div>
         )}
 
@@ -281,7 +272,7 @@ export default function AchadoPerdidoDetailPage() {
             <Badge
               variant={post.tipo === "perdido" ? "destructive" : "default"}
             >
-              {post.tipo === "perdido" ? "ÃƒÂ°Ã…Â¸Ã¢â‚¬ÂÃ‚Â´ Perdido" : "ÃƒÂ°Ã…Â¸Ã…Â¸Ã‚Â¢ Encontrado"}
+              {post.tipo === "perdido" ? "🔴 Perdido" : "🟢 Encontrado"}
             </Badge>
             <Badge variant="secondary">
               {CAT_ICONS[post.category]} {post.category}
@@ -335,7 +326,7 @@ export default function AchadoPerdidoDetailPage() {
             </Avatar>
             <div className="flex-1">
               <p className="text-sm font-medium">
-                {post.autor?.name || "AnÃƒÆ’Ã‚Â´nimo"}
+                {post.autor?.name || "Anônimo"}
               </p>
               <p className="text-xs text-muted-foreground">
                 {formatDistanceToNow(new Date(post.created_at), {
@@ -376,11 +367,11 @@ export default function AchadoPerdidoDetailPage() {
 
           <div>
             <h3 className="text-sm font-bold mb-3">
-              ComentÃƒÆ’Ã‚Â¡rios ({comments.length})
+              Comentários ({comments.length})
             </h3>
             {comments.length === 0 ? (
               <p className="text-sm text-muted-foreground">
-                Nenhum comentÃƒÆ’Ã‚Â¡rio ainda.
+                Nenhum comentário ainda.
               </p>
             ) : (
               <div className="space-y-3">
@@ -400,7 +391,7 @@ export default function AchadoPerdidoDetailPage() {
                         </AvatarFallback>
                       </Avatar>
                       <span className="text-xs font-medium">
-                        {c.autor?.name || "AnÃƒÆ’Ã‚Â´nimo"}
+                        {c.autor?.name || "Anônimo"}
                       </span>
                       <span className="text-xs text-muted-foreground ml-auto">
                         {formatDistanceToNow(new Date(c.created_at), {
@@ -422,7 +413,7 @@ export default function AchadoPerdidoDetailPage() {
             <Textarea
               value={commentText}
               onChange={(e) => setCommentText(e.target.value.slice(0, 500))}
-              placeholder="Deixe um comentÃƒÆ’Ã‚Â¡rio..."
+              placeholder="Deixe um comentário..."
               className="min-h-[40px] max-h-[80px] text-sm resize-none flex-1"
               rows={1}
             />
@@ -515,10 +506,10 @@ export default function AchadoPerdidoDetailPage() {
 
           <div className="bg-blue-500/10 border border-blue-500/20 rounded-xl p-4">
             <p className="text-xs text-blue-500 leading-relaxed">
-              ÃƒÂ°Ã…Â¸Ã¢â‚¬â„¢Ã‚Â¡ <strong>Dica:</strong>{" "}
+              💡 <strong>Dica:</strong>{" "}
               {post.tipo === "perdido"
-                ? "Se vocÃƒÆ’Ã‚Âª encontrou este item, entre em contato com o autor pelo WhatsApp."
-                : "Se este item ÃƒÆ’Ã‚Â© seu, entre em contato com quem encontrou para combinar a devoluÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o."}
+                ? "Se você encontrou este item, entre em contato com o autor pelo WhatsApp."
+                : "Se este item é seu, entre em contato com quem encontrou para combinar a devolução."}
             </p>
           </div>
         </div>

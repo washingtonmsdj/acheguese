@@ -24,6 +24,10 @@ interface UseUnifiedNotificationsOptions {
   refreshInterval?: number;
 }
 
+type RealtimeChannelLike = {
+  unsubscribe?: () => void;
+};
+
 export function useUnifiedNotifications(
   options: UseUnifiedNotificationsOptions = {},
 ) {
@@ -46,7 +50,7 @@ export function useUnifiedNotifications(
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const channelRef = useRef<any | null>(null);
+  const channelRef = useRef<RealtimeChannelLike | null>(null);
   const refreshTimerRef = useRef<NodeJS.Timeout | null>(null);
   const filtersRef = useRef(filters);
   const isFetchingRef = useRef(false);

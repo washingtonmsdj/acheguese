@@ -24,6 +24,7 @@ import {
   Ban,
   AlertCircle,
 } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 
 interface CreateReportModalProps {
   isOpen: boolean;
@@ -32,7 +33,7 @@ interface CreateReportModalProps {
   rideSummary?: string; // Ex: "Origem → Destino"
 }
 
-const REPORT_TYPES: Array<{ value: ReportType; label: string; icon: any }> = [
+const REPORT_TYPES: Array<{ value: ReportType; label: string; icon: LucideIcon }> = [
   { value: "safety_concern", label: "Preocupação de Segurança", icon: Shield },
   { value: "driver_behavior", label: "Comportamento do Motorista", icon: User },
   { value: "passenger_behavior", label: "Comportamento do Passageiro", icon: User },

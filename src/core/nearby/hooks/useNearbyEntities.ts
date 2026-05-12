@@ -8,7 +8,7 @@ export interface NearbyEntity {
   distance: number;
   latitude: number;
   longitude: number;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 export interface UseNearbyEntitiesOptions {

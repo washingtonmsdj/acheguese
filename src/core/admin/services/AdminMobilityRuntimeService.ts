@@ -8,7 +8,6 @@ import { profileService } from "@/core/profiles/services/ProfileService";
 import { mobilityService } from "@/modules/mobility/services/MobilityService.impl";
 import { DriverAvailabilityService } from "@/modules/mobility/services/DriverAvailabilityService";
 
-const supabaseAny = supabase as any;
 const MOTOBOY_ENABLED_CONFIG_KEY = "motoboy_enabled";
 const DEFAULT_MOTOBOY_ENABLED = true;
 const MISSING_TABLE_ERROR_CODES = new Set(["42P01", "PGRST116", "PGRST205"]);
@@ -75,7 +74,7 @@ export class AdminMobilityRuntimeService {
 
   async getDriverProfiles(): Promise<{ data: unknown[]; error: unknown }> {
     try {
-      const { data, error } = await supabaseAny
+      const { data, error } = await supabase
         .from("driver_complete_profile")
         .select("*")
         .order("created_at", { ascending: false });
@@ -89,7 +88,7 @@ export class AdminMobilityRuntimeService {
   async getTopDrivers(opts: { minRides?: number; limit?: number } = {}): Promise<unknown[]> {
     try {
       const { minRides = 1, limit = 10 } = opts;
-      const { data, error } = await supabaseAny
+      const { data, error } = await supabase
         .from("driver_complete_profile")
         .select("profile_id, display_name, avg_rating, total_rides, avatar_url")
         .gte("total_rides", minRides)
@@ -97,7 +96,7 @@ export class AdminMobilityRuntimeService {
         .limit(limit);
 
       if (error) throw error;
-      return (data || []).map((driver: any) => ({
+      return (data || []).map((driver) => ({
         id: driver.profile_id,
         name: driver.display_name,
         rating: driver.avg_rating,
@@ -130,7 +129,7 @@ export class AdminMobilityRuntimeService {
     reason?: string;
     metadata?: Record<string, unknown>;
   }): Promise<void> {
-    const { error } = await supabaseAny.from("driver_moderation_events").insert({
+    const { error } = await supabase.from("driver_moderation_events").insert({
       driver_profile_id: input.driverProfileId,
       admin_profile_id: input.adminProfileId ?? null,
       action: input.action,
@@ -144,7 +143,7 @@ export class AdminMobilityRuntimeService {
   }
 
   async listDriverModerationEvents(driverProfileId: string): Promise<DriverModerationEvent[]> {
-    const { data, error } = await supabaseAny
+    const { data, error } = await supabase
       .from("driver_moderation_events")
       .select("id, driver_profile_id, admin_profile_id, action, reason, metadata, created_at")
       .eq("driver_profile_id", driverProfileId)

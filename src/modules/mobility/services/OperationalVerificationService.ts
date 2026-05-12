@@ -214,7 +214,7 @@ export class OperationalVerificationService {
         const newAttempts = verification.verification_attempts + 1;
         const attemptsRemaining = CONFIG.MAX_ATTEMPTS - newAttempts;
 
-        const updateData: any = {
+        const updateData: Record<string, unknown> = {
           verification_attempts: newAttempts,
           last_attempt_at: now,
         };
