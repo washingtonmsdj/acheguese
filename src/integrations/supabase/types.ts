@@ -14,6 +14,183 @@ export type Database = {
   }
   public: {
     Tables: {
+      ai_image_generations: {
+        Row: {
+          created_at: string
+          error_message: string | null
+          feature: string
+          generated_urls: Json
+          id: string
+          metadata: Json
+          mode: string
+          model: string
+          negative_prompt: string | null
+          prompt: string
+          reference_urls: Json
+          selected_url: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          error_message?: string | null
+          feature: string
+          generated_urls?: Json
+          id?: string
+          metadata?: Json
+          mode: string
+          model: string
+          negative_prompt?: string | null
+          prompt: string
+          reference_urls?: Json
+          selected_url?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          error_message?: string | null
+          feature?: string
+          generated_urls?: Json
+          id?: string
+          metadata?: Json
+          mode?: string
+          model?: string
+          negative_prompt?: string | null
+          prompt?: string
+          reference_urls?: Json
+          selected_url?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      ai_moderation_log: {
+        Row: {
+          blocked: boolean
+          created_at: string
+          feature: string
+          id: string
+          input_type: string
+          metadata: Json
+          reason: string | null
+          severity: string | null
+          user_id: string | null
+        }
+        Insert: {
+          blocked?: boolean
+          created_at?: string
+          feature: string
+          id?: string
+          input_type: string
+          metadata?: Json
+          reason?: string | null
+          severity?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          blocked?: boolean
+          created_at?: string
+          feature?: string
+          id?: string
+          input_type?: string
+          metadata?: Json
+          reason?: string | null
+          severity?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      ai_rate_limits: {
+        Row: {
+          count: number
+          created_at: string
+          feature: string
+          id: string
+          updated_at: string
+          user_id: string
+          window_seconds: number
+          window_start: string
+        }
+        Insert: {
+          count?: number
+          created_at?: string
+          feature: string
+          id?: string
+          updated_at?: string
+          user_id: string
+          window_seconds: number
+          window_start: string
+        }
+        Update: {
+          count?: number
+          created_at?: string
+          feature?: string
+          id?: string
+          updated_at?: string
+          user_id?: string
+          window_seconds?: number
+          window_start?: string
+        }
+        Relationships: []
+      }
+      ai_usage_log: {
+        Row: {
+          capability: string
+          cost_estimate: number | null
+          created_at: string
+          error_code: string | null
+          error_message: string | null
+          feature: string
+          id: string
+          latency_ms: number | null
+          metadata: Json
+          model: string
+          request_id: string | null
+          status: string
+          tokens_in: number | null
+          tokens_out: number | null
+          user_id: string | null
+        }
+        Insert: {
+          capability: string
+          cost_estimate?: number | null
+          created_at?: string
+          error_code?: string | null
+          error_message?: string | null
+          feature: string
+          id?: string
+          latency_ms?: number | null
+          metadata?: Json
+          model: string
+          request_id?: string | null
+          status: string
+          tokens_in?: number | null
+          tokens_out?: number | null
+          user_id?: string | null
+        }
+        Update: {
+          capability?: string
+          cost_estimate?: number | null
+          created_at?: string
+          error_code?: string | null
+          error_message?: string | null
+          feature?: string
+          id?: string
+          latency_ms?: number | null
+          metadata?: Json
+          model?: string
+          request_id?: string | null
+          status?: string
+          tokens_in?: number | null
+          tokens_out?: number | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       chat_messages: {
         Row: {
           content: string
