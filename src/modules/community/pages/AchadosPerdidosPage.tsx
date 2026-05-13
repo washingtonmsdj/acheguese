@@ -57,7 +57,7 @@ interface LostFoundItem {
   titulo: string;
   description: string;
   photo_url: string;
-  neighborhood: string;
+  publicNeighborhood: string;
   date_ocorrido: string;
   resolvido: boolean;
   created_at: string;
@@ -112,7 +112,7 @@ export default function AchadosPerdidosPage() {
             titulo: p.titulo,
             description: p.description || "",
             photo_url: p.photo_url || "",
-            neighborhood: p.neighborhood || "",
+            publicNeighborhood: p.neighborhood || "",
             date_ocorrido: p.data_ocorrido || "",
             resolvido: p.resolvido || false,
             created_at: p.created_at || "",
@@ -155,7 +155,7 @@ export default function AchadosPerdidosPage() {
       !search ||
       p.titulo.toLowerCase().includes(searchLower) ||
       p.description.toLowerCase().includes(searchLower) ||
-      p.neighborhood.toLowerCase().includes(searchLower),
+      p.publicNeighborhood.toLowerCase().includes(searchLower),
   );
 
   const getCatIcon = (cat: string) =>
@@ -205,7 +205,7 @@ export default function AchadosPerdidosPage() {
             <p className="text-gray-400 mb-6">
               Para acessar os achados e perdidos, você precisa cadastrar seu bairro no perfil.
             </p>
-            <Button onClick={() => window.location.href = appUrls.profile.central} className="bg-teal-500 hover:bg-teal-400">
+            <Button onClick={() => window.location.href = appUrls.profile.home} className="bg-teal-500 hover:bg-teal-400">
               Completar Perfil
             </Button>
           </div>
@@ -351,7 +351,7 @@ export default function AchadosPerdidosPage() {
                 <div className="flex items-center gap-3 mt-1.5 text-xs text-muted-foreground">
                   <span className="flex items-center gap-0.5">
                     <MapPin className="h-3 w-3" />
-                    {item.neighborhood || "Não informado"}
+                    {item.publicNeighborhood || "Não informado"}
                   </span>
                   {item.date_ocorrido && (
                     <span>

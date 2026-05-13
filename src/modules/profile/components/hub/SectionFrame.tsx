@@ -20,15 +20,18 @@ const fadeUp = {
 
 export function SectionFrame({ title, description, action, children }: SectionFrameProps) {
   return (
-    <motion.section variants={fadeUp} className="rounded-3xl border border-border bg-card shadow-sm">
-      <div className="flex items-start justify-between gap-4 border-b border-border px-5 py-4">
+    <motion.section
+      variants={fadeUp}
+      className="overflow-hidden rounded-[1.75rem] border border-border/70 bg-card/92 shadow-sm shadow-black/[0.025] backdrop-blur"
+    >
+      <div className="flex items-start justify-between gap-4 border-b border-border/70 bg-gradient-to-r from-background/70 to-muted/35 px-5 py-4">
         <div>
           <h2 className="text-lg font-semibold tracking-tight text-foreground">{title}</h2>
           <p className="mt-1 text-sm text-muted-foreground">{description}</p>
         </div>
         {action}
       </div>
-      <div className="p-5">{children}</div>
+      <div className="p-5 sm:p-6">{children}</div>
     </motion.section>
   );
 }

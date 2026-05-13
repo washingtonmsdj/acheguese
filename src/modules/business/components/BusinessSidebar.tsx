@@ -51,7 +51,7 @@ export function BusinessSidebar({
 
   useEffect(() => {
     async function fetchSimilar() {
-      // Não search businesss similares se for exemplo
+      // Não search empresas similares se for exemplo
       if (business.id === "exemplo-123") {
         setSimilarBusinesses([]);
         return;
@@ -78,7 +78,7 @@ export function BusinessSidebar({
         }));
         setSimilarBusinesses(mapped);
       } catch (err) {
-        logger.warn("Error search businesss similares:", err);
+        logger.warn("Error search empresas similares:", err);
         setSimilarBusinesses([]);
       }
     }
@@ -195,7 +195,7 @@ export function BusinessSidebar({
           {similarBusinesses.length > 0 ? (
             <>
               <p className="text-xs text-muted-foreground mb-3 capitalize">
-                Outras businesss de {business.category}
+                Outras empresas de {business.category}
               </p>
               <div className="space-y-2">
                 {similarBusinesses.map((sim) => (

@@ -12,6 +12,7 @@ import {
   Database,
   Globe,
   Lock,
+  MapPin,
   Settings2,
   Shield,
   UserRound,
@@ -50,6 +51,8 @@ export function DadosPessoaisSection({
   appUrls,
   handleBusinessClick,
 }: DadosPessoaisSectionProps) {
+  const publicHandle = profile?.username || profile?.handle || "";
+
   return (
     <div className="space-y-6">
       {/* Estatísticas Pessoais */}
@@ -82,17 +85,6 @@ export function DadosPessoaisSection({
         ]}
       />
 
-      {/* Completude e Verificação */}
-      <div className="grid gap-6 lg:grid-cols-2">
-        {profile ? (
-          <ResidentVerificationCard
-            profileId={profile.id}
-            currentStatus={verificationStatus}
-            rejectionReason={verificationRejectionReason}
-          />
-        ) : null}
-      </div>
-
       {/* Reputação e Gamificação */}
       {(identity?.reputation || context?.reputation) && personalProfile ? (
         <div className="grid gap-6 lg:grid-cols-2">
@@ -120,7 +112,7 @@ export function DadosPessoaisSection({
       {/* Ações Principais */}
       <SectionFrame
         title="Ações do perfil pessoal"
-        description="Gerencie sua identidade, privacidade e configurações."
+        description="Gerencie identidade, endereço pessoal, privacidade e configurações sem misturar operação da Central."
       >
         <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
           <HubLinkCard
@@ -133,6 +125,12 @@ export function DadosPessoaisSection({
             }}
           />
           <HubLinkCard
+            icon={MapPin}
+            title="Endereco pessoal"
+            description="Residencia, territorio e verificacao."
+            onClick={() => navigate("/configuracoes")}
+          />
+          <HubLinkCard
             icon={Shield}
             title="Privacidade"
             description="Visibilidade e exposição"
@@ -142,10 +140,10 @@ export function DadosPessoaisSection({
             icon={Globe}
             title="Perfil público"
             description="Ver versão pública"
-            badge={profile ? "Ativo" : "Indisponível"}
+            badge={publicHandle ? "Ativo" : "Indisponível"}
             onClick={() => {
-              if (!profile) return;
-              navigate(appUrls.profile.public(profile.username || ""));
+              if (!publicHandle) return;
+              navigate(appUrls.profile.public(publicHandle));
             }}
           />
           <HubLinkCard
@@ -178,6 +176,35 @@ export function DadosPessoaisSection({
             description="Exportar e gerenciar"
             onClick={() => setActiveSection("seguranca")}
           />
+        </div>
+      </SectionFrame>
+
+      <SectionFrame
+        title="Endereco e verificacao residencial"
+        description="Endereco pessoal fica no SSOT de residencia. Ele alimenta territorio, confianca e verificacao, sem expor o endereco completo publicamente."
+      >
+        <div className="grid gap-4 lg:grid-cols-[1fr_1.1fr]">
+          <div className="rounded-2xl border border-border/70 bg-muted/35 p-4">
+            <MapPin className="h-5 w-5 text-primary" />
+            <h3 className="mt-3 text-sm font-semibold text-foreground">Onde editar o endereco?</h3>
+            <p className="mt-1 text-sm leading-6 text-muted-foreground">
+              Use Configuracoes operacionais para atualizar residencia, territorio e comprovacao. O Perfil apenas resume e direciona para o local correto.
+            </p>
+            <button
+              type="button"
+              onClick={() => navigate("/configuracoes")}
+              className="mt-4 rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition hover:bg-primary/90"
+            >
+              Editar residencia
+            </button>
+          </div>
+          {profile ? (
+            <ResidentVerificationCard
+              profileId={profile.id}
+              currentStatus={verificationStatus}
+              rejectionReason={verificationRejectionReason}
+            />
+          ) : null}
         </div>
       </SectionFrame>
 

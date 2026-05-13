@@ -63,16 +63,16 @@ export default function DashboardEmpresaPageV2() {
     if (accessLoading || dataLoading) return;
     if (!permissions.hasAccess) {
       toast.error("Você não tem permissão para acessar este dashboard");
-      navigate(appUrls.profile.central);
+      navigate(appUrls.profile.home);
       return;
     }
     if (!business) {
       toast.error("Empresa não encontrada");
-      navigate(appUrls.profile.central);
+      navigate(appUrls.profile.home);
     }
   }, [accessLoading, dataLoading, permissions.hasAccess, business, navigate, appUrls]);
 
-  const handleBack = () => navigate(appUrls.profile.central);
+  const handleBack = () => navigate(appUrls.profile.home);
 
   const handleViewPublic = () => {
     if (business?.slug && business.geographic_path) {

@@ -107,9 +107,9 @@ Regra de intencao:
 
 ```
 /mobilidade/passageiro
-/perfil/mobilidade
-/perfil/mobilidade/motorista
-/perfil/mobilidade/motoboy
+/central
+/central/motorista
+/central/motoboy
 ```
 
 ---

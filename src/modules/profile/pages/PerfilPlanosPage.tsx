@@ -85,7 +85,7 @@ export default function PerfilPlanosPage() {
               </CardDescription>
             </CardHeader>
             <CardContent className="flex flex-wrap gap-2">
-              <Button variant="outline" className="gap-2" onClick={() => navigate("/perfil/empresas")}>
+              <Button variant="outline" className="gap-2" onClick={() => navigate("/central/empresas")}>
                 <ArrowLeft className="h-4 w-4" />
                 Voltar para empresas
               </Button>

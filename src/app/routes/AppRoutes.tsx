@@ -7,9 +7,7 @@
  * @version 1.0.0
  */
 
-import { Routes, Route, Navigate, Outlet, useLocation, useParams } from "react-router-dom";
-import { businessManagementRoutes } from "@/core/business/utils/businessManagementRoutes";
-import { mobilityRoutes } from "@/modules/mobility/routes/mobilityRoutes";
+import { Routes, Route, Navigate, Outlet } from "react-router-dom";
 import { LAUNCH_TERRITORIES } from "@/config/territory";
 
 // Territorial Components (eager - critical for routing)
@@ -37,39 +35,6 @@ import {
 // Lazy imports organizados por domínio
 import * as P from "./lazyImports";
 
-// Componentes de redirecionamento para rotas legadas
-function BusinessRedirect() {
-  const { businessId } = useParams<{ businessId: string }>();
-  if (!businessId) {
-    return <Navigate to={businessManagementRoutes.list()} replace />;
-  }
-
-  const location = window.location;
-  const remainingPath = location.pathname.replace(/^\/perfil\/empresas\/[^/]+/, '');
-  const targetPath = `${businessManagementRoutes.overview(businessId)}${remainingPath}`;
-  return <Navigate to={targetPath} replace />;
-}
-
-function LegacyBusinessCatalogRedirect() {
-  const { id } = useParams<{ id: string }>();
-  return <Navigate to={`/empresas/${id}/catalogo`} replace />;
-}
-
-function CommunityCanonicalRedirect() {
-  const location = useLocation();
-  const canonicalPath = location.pathname.replace(/^\/comunidade/, "");
-  return <Navigate to={`${canonicalPath}${location.search}`} replace />;
-}
-
-function LegacyCommunityAreaRedirect() {
-  const { state, city, groupSlug } = useParams<{ state: string; city: string; groupSlug: string }>();
-  if (!state || !city || !groupSlug) {
-    return <Navigate to="/comunidade" replace />;
-  }
-  return <Navigate to={`/comunidade/${state}/${city}/${groupSlug}`} replace />;
-}
-
-
 export function AppRoutes() {
   const launchComplexoPath =
     LAUNCH_TERRITORIES.find((territory) => territory.slug === "complexo-do-nordeste-de-amaralina")?.path ??
@@ -94,7 +59,6 @@ export function AppRoutes() {
       <Route path="/onboarding" element={<P.OnboardingPage />} />
       <Route path="/reset-password" element={<P.ResetPasswordPage />} />
       <Route path="/complexo" element={<Navigate to={launchComplexoPath} replace />} />
-        <Route path="/businesss/:id/catalogo" element={<LegacyBusinessCatalogRedirect />} />
         <Route path="/empresas/:id/catalogo" element={<P.EmpresaCatalogoPublicoPage />} />
         <Route path="/servicos" element={<P.ServicosLandingPage />} />
         <Route path="/p/:slug/*" element={<P.PremiumBusinessSiteRoute />}>
@@ -156,87 +120,14 @@ export function AppRoutes() {
         <Route path="/configuracoes" element={<P.ConfiguracoesPage />} />
         <Route path="/perfil/configuracoes" element={<P.ProfileSettingsPage />} />
         <Route path="/gamificacao" element={<P.GamificacaoPage />} />
-        <Route path="/create-business" element={<P.CriarEmpresaPage />} />
         <Route path="/empresas" element={<P.EmpresasLandingPage />} />
-        <Route path="/empresas/criar-empresa" element={<P.CriarEmpresaPage />} />
+        <Route path="/empresas/cadastrar" element={<P.EmpresasCadastroLandingPage />} />
         <Route path="/edit-business/:profileId" element={<P.EditarEmpresaPage />} />
-        
-        {/* Redirecionamentos legados de empresas para Central */}
-        <Route path="/perfil/empresas" element={<Navigate to={businessManagementRoutes.list()} replace />} />
-        <Route path="/perfil/empresas/:businessId" element={<BusinessRedirect />} />
-        <Route path="/perfil/empresas/:businessId/*" element={<BusinessRedirect />} />
-        
-        {/* Redirecionamentos legados de mobilidade para Central */}
-        <Route path="/perfil/mobilidade/motorista" element={<Navigate to="/central/motorista" replace />} />
-        <Route path="/perfil/mobilidade/motorista/cadastro" element={<Navigate to="/central/motorista/cadastro" replace />} />
-        <Route path="/perfil/mobilidade/motorista/disponibilidade" element={<Navigate to="/central/motorista/disponibilidade" replace />} />
-        <Route path="/perfil/mobilidade/motorista/corridas" element={<Navigate to="/central/motorista/corridas" replace />} />
-        <Route path="/perfil/mobilidade/motorista/ganhos" element={<Navigate to="/central/motorista/ganhos" replace />} />
-        <Route path="/perfil/mobilidade/motorista/configuracoes" element={<Navigate to="/central/motorista/configuracoes" replace />} />
-        
-        <Route path="/perfil/mobilidade/motoboy" element={<Navigate to="/central/motoboy" replace />} />
-        <Route path="/perfil/mobilidade/motoboy/cadastro" element={<Navigate to="/central/motoboy/cadastro" replace />} />
-        <Route path="/perfil/mobilidade/motoboy/disponibilidade" element={<Navigate to="/central/motoboy/disponibilidade" replace />} />
-        <Route path="/perfil/mobilidade/motoboy/entregas" element={<Navigate to={mobilityRoutes.motoboy.entregas} replace />} />
-        <Route path="/perfil/mobilidade/motoboy/ganhos" element={<Navigate to="/central/motoboy/ganhos" replace />} />
-        <Route path="/perfil/mobilidade/motoboy/configuracoes" element={<Navigate to="/central/motoboy/configuracoes" replace />} />
-        
-        <Route path="/perfil/empresas/:businessId" element={<P.BusinessDashboardShellPage />}>
-          <Route index element={<P.BusinessOverviewPage />} />
-          <Route path="dados" element={<P.BusinessDetailsPage />} />
-          <Route path="gastronomia" element={<P.GastronomyDashboardPage />} />
-          <Route path="gastronomia/setup" element={<P.GastronomySetupPage />} />
-          <Route path="gastronomia/cardapio" element={<P.MenuManagementPage />} />
-          <Route path="gastronomia/horarios" element={<P.BusinessHoursPage />} />
-          <Route path="gastronomia/area-entrega" element={<P.DeliveryAreaPage />} />
-          <Route path="gastronomia/pedidos" element={<P.OrdersPage />} />
-          <Route path="gastronomia/pedidos/:orderId" element={<P.OrderDetailsPage />} />
-          <Route path="gastronomia/entregas" element={<P.DeliveryManagementPage />} />
-          <Route path="gastronomia/analytics" element={<P.AnalyticsPage />} />
-          <Route path="gastronomia/promocoes" element={<P.GastronomyPromotionsPage />} />
-          
-          {/* Rotas de Education */}
-          <Route path="education" element={<P.EducationDashboardPage />} />
-          <Route path="education/setup" element={<P.EducationSetupPage />} />
-          <Route path="education/programas" element={<P.EducationProgramsPage />} />
-          <Route path="education/programs" element={<P.EducationProgramsPage />} />
-          <Route path="education/leads" element={<P.EducationLeadsPage />} />
-          <Route path="education/eventos" element={<P.EducationEventsPage />} />
-          <Route path="education/events" element={<P.EducationEventsPage />} />
-          <Route path="education/analytics" element={<P.EducationAnalyticsPage />} />
-          <Route path="education/planos" element={<P.EducationPlansPage />} />
-          <Route path="education/plans" element={<P.EducationPlansPage />} />
-          
-          <Route path="planos" element={<P.BusinessPlansPage />} />
-          <Route path="link-premium" element={<P.BusinessPremiumSitePage />} />
-          <Route path="analytics" element={<P.BusinessAnalyticsPage />} />
-          <Route path="configuracoes" element={<P.BusinessSettingsPage />} />
-        </Route>
-        <Route path="/perfil/mobilidade" element={<P.PerfilMobilidadeLayout />}>
-          <Route index element={<P.PerfilMobilidadeOverviewPage />} />
-          <Route path="motorista" element={<P.PerfilMobilidadeMotoristaHomePage />} />
-          <Route path="motorista/cadastro" element={<P.PerfilMobilidadeMotoristaCadastroPage />} />
-          <Route path="motorista/disponibilidade" element={<P.PerfilMobilidadeMotoristaDisponibilidadePage />} />
-          <Route path="motorista/corridas" element={<P.PerfilMobilidadeMotoristaCorridasPage />} />
-          <Route path="motorista/ganhos" element={<P.PerfilMobilidadeMotoristaGanhosPage />} />
-          <Route path="motorista/configuracoes" element={<P.PerfilMobilidadeMotoristaConfiguracoesPage />} />
-          <Route path="motoboy" element={<P.PerfilMobilidadeMotoboyHomePage />} />
-          <Route path="motoboy/cadastro" element={<P.PerfilMobilidadeMotoboyCadastroPage />} />
-          <Route path="motoboy/disponibilidade" element={<P.PerfilMobilidadeMotoboyDisponibilidadePage />} />
-          <Route path="motoboy/entregas" element={<P.PerfilMobilidadeMotoboyEntregasPage />} />
-          <Route path="motoboy/ganhos" element={<P.PerfilMobilidadeMotoboyGanhosPage />} />
-          <Route path="motoboy/configuracoes" element={<P.PerfilMobilidadeMotoboyConfiguracoesPage />} />
-          <Route path="cadastro" element={<P.PerfilMobilidadeMotoristaCadastroPage />} />
-          <Route path="disponibilidade" element={<P.PerfilMobilidadeMotoristaDisponibilidadePage />} />
-          <Route path="corridas" element={<P.PerfilMobilidadeMotoristaCorridasPage />} />
-          <Route path="entregas" element={<P.PerfilMobilidadeMotoboyEntregasPage />} />
-          <Route path="ganhos" element={<P.PerfilMobilidadeMotoristaGanhosPage />} />
-          <Route path="configuracoes" element={<P.PerfilMobilidadeMotoristaConfiguracoesPage />} />
-        </Route>
         <Route path="/central" element={<P.CentralLayout />}>
           <Route element={<P.CentralAccessGuard />}>
             <Route index element={<P.CentralHubPage />} />
             <Route path="empresas" element={<P.CentralEmpresasPage />} />
+            <Route path="empresas/nova" element={<P.CriarEmpresaPage />} />
             <Route path="empresas/:businessId" element={<P.BusinessAdminGuard />}>
               <Route element={<P.BusinessDashboardShellPage />}>
                 <Route index element={<P.BusinessOverviewPage />} />
@@ -330,7 +221,6 @@ export function AppRoutes() {
         <Route path="/comunidade/alertas" element={<P.AlertasPage />} />
         <Route path="/comunidade/problemas" element={<P.ProblemasPage />} />
         <Route path="/alertas" element={<P.AlertasPage />} />
-        <Route path="/businesss" element={<Navigate to="/empresas" replace />} />
         <Route path="/services" element={<P.ServicosLandingPage />} />
         <Route path="/classificados" element={<P.ClassificadosPage />} />
         <Route path="/mobilidade/passageiro" element={<P.PassageiroPage />} />
@@ -514,11 +404,13 @@ export function AppRoutes() {
         {/* Detalhe premium: /gastronomia-premium/:uf/:cidade/:bairro/:slug */}
         <Route path="/gastronomia-premium/:state/:city/:district/:slug" element={<TerritorialLayout />}>
           <Route index element={<P.GastronomyPremiumDetailPage />} />
+          <Route path="checkout" element={<P.GastronomyCheckoutPage />} />
         </Route>
 
         {/* Detalhe: /gastronomia/:uf/:cidade/:bairro/:slug */}
         <Route path="/gastronomia/:state/:city/:district/:slug" element={<TerritorialLayout />}>
           <Route index element={<P.GastronomyDetailPage />} />
+          <Route path="checkout" element={<P.GastronomyCheckoutPage />} />
         </Route>
         
         {/* Listagem bairro: /gastronomia/:uf/:cidade/:bairro */}
@@ -569,14 +461,30 @@ export function AppRoutes() {
         <Route path="/comunidade/:state/:city/:territorySlug/problemas" element={<CommunityTerritorialShell />}>
           <Route index element={<TerritorialCommunityIssuesPage />} />
         </Route>
-        <Route path="/comunidade/:state/:city/:territorySlug/empresas" element={<CommunityCanonicalRedirect />} />
-        <Route path="/comunidade/:state/:city/:territorySlug/servicos" element={<CommunityCanonicalRedirect />} />
-        <Route path="/comunidade/:state/:city/:territorySlug/classificados" element={<CommunityCanonicalRedirect />} />
-        <Route path="/comunidade/:state/:city/:territorySlug/gastronomia" element={<CommunityCanonicalRedirect />} />
-        <Route path="/comunidade/:state/:city/:territorySlug/vagas" element={<CommunityCanonicalRedirect />} />
-        <Route path="/comunidade/:state/:city/:territorySlug/eventos" element={<CommunityCanonicalRedirect />} />
-        <Route path="/comunidade/:state/:city/:territorySlug/mapa" element={<CommunityCanonicalRedirect />} />
-        <Route path="/comunidade/:state/:city/:territorySlug/mobilidade" element={<CommunityCanonicalRedirect />} />
+        <Route path="/comunidade/:state/:city/:territorySlug/empresas" element={<CommunityTerritorialShell />}>
+          <Route index element={<TerritorialBusinessPage />} />
+        </Route>
+        <Route path="/comunidade/:state/:city/:territorySlug/servicos" element={<CommunityTerritorialShell />}>
+          <Route index element={<TerritorialServicesPage />} />
+        </Route>
+        <Route path="/comunidade/:state/:city/:territorySlug/classificados" element={<CommunityTerritorialShell />}>
+          <Route index element={<TerritorialClassificadosPage />} />
+        </Route>
+        <Route path="/comunidade/:state/:city/:territorySlug/gastronomia" element={<CommunityTerritorialShell />}>
+          <Route index element={<TerritorialGastronomyPage />} />
+        </Route>
+        <Route path="/comunidade/:state/:city/:territorySlug/vagas" element={<CommunityTerritorialShell />}>
+          <Route index element={<TerritorialVagasPage />} />
+        </Route>
+        <Route path="/comunidade/:state/:city/:territorySlug/eventos" element={<CommunityTerritorialShell />}>
+          <Route index element={<TerritorialEventosPage />} />
+        </Route>
+        <Route path="/comunidade/:state/:city/:territorySlug/mapa" element={<CommunityTerritorialShell />}>
+          <Route index element={<TerritorialMapPage />} />
+        </Route>
+        <Route path="/comunidade/:state/:city/:territorySlug/mobilidade" element={<CommunityTerritorialShell />}>
+          <Route index element={<TerritorialMobilidadePage />} />
+        </Route>
         <Route path="/comunidade/:state/:city/:territorySlug/feed" element={<CommunityTerritorialShell />}>
           <Route index element={<TerritorialCommunityPage />} />
         </Route>
@@ -586,7 +494,48 @@ export function AppRoutes() {
         <Route path="/comunidade/:state/:city/:territorySlug/achados-e-perdidos" element={<CommunityTerritorialShell />}>
           <Route index element={<P.AchadosPerdidosPage />} />
         </Route>
-        <Route path="/comunidade/:state/:city/area/:groupSlug/*" element={<LegacyCommunityAreaRedirect />} />
+        <Route path="/comunidade/:state/:city/area/:groupSlug/alertas" element={<CommunityTerritorialShell />}>
+          <Route index element={<TerritorialCommunityAlertsPage />} />
+        </Route>
+        <Route path="/comunidade/:state/:city/area/:groupSlug/problemas" element={<CommunityTerritorialShell />}>
+          <Route index element={<TerritorialCommunityIssuesPage />} />
+        </Route>
+        <Route path="/comunidade/:state/:city/area/:groupSlug/empresas" element={<CommunityTerritorialShell />}>
+          <Route index element={<TerritorialBusinessPage />} />
+        </Route>
+        <Route path="/comunidade/:state/:city/area/:groupSlug/servicos" element={<CommunityTerritorialShell />}>
+          <Route index element={<TerritorialServicesPage />} />
+        </Route>
+        <Route path="/comunidade/:state/:city/area/:groupSlug/classificados" element={<CommunityTerritorialShell />}>
+          <Route index element={<TerritorialClassificadosPage />} />
+        </Route>
+        <Route path="/comunidade/:state/:city/area/:groupSlug/gastronomia" element={<CommunityTerritorialShell />}>
+          <Route index element={<TerritorialGastronomyPage />} />
+        </Route>
+        <Route path="/comunidade/:state/:city/area/:groupSlug/vagas" element={<CommunityTerritorialShell />}>
+          <Route index element={<TerritorialVagasPage />} />
+        </Route>
+        <Route path="/comunidade/:state/:city/area/:groupSlug/eventos" element={<CommunityTerritorialShell />}>
+          <Route index element={<TerritorialEventosPage />} />
+        </Route>
+        <Route path="/comunidade/:state/:city/area/:groupSlug/mapa" element={<CommunityTerritorialShell />}>
+          <Route index element={<TerritorialMapPage />} />
+        </Route>
+        <Route path="/comunidade/:state/:city/area/:groupSlug/mobilidade" element={<CommunityTerritorialShell />}>
+          <Route index element={<TerritorialMobilidadePage />} />
+        </Route>
+        <Route path="/comunidade/:state/:city/area/:groupSlug/feed" element={<CommunityTerritorialShell />}>
+          <Route index element={<TerritorialCommunityPage />} />
+        </Route>
+        <Route path="/comunidade/:state/:city/area/:groupSlug/grupos" element={<CommunityTerritorialShell />}>
+          <Route index element={<TerritorialCommunityPage />} />
+        </Route>
+        <Route path="/comunidade/:state/:city/area/:groupSlug/achados-e-perdidos" element={<CommunityTerritorialShell />}>
+          <Route index element={<P.AchadosPerdidosPage />} />
+        </Route>
+        <Route path="/comunidade/:state/:city/area/:groupSlug" element={<CommunityTerritorialShell />}>
+          <Route index element={<TerritorialCommunityPage />} />
+        </Route>
         <Route path="/comunidade/:state/:city/:territorySlug" element={<CommunityTerritorialShell />}>
           <Route index element={<TerritorialCommunityPage />} />
         </Route>
@@ -634,8 +583,6 @@ export function AppRoutes() {
         <Route index element={<P.AdminDashboard />} />
         <Route path="banners" element={<P.AdminBanners />} />
         <Route path="empresas" element={<P.AdminEmpresas />} />
-        {/* Redirect do typo histórico */}
-        <Route path="businesss" element={<Navigate to="/admin/empresas" replace />} />
         <Route path="gastronomia" element={<P.AdminGastronomia />} />
         <Route path="services" element={<P.AdminServicos />} />
         <Route path="classificados" element={<P.AdminClassificados />} />

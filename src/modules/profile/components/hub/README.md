@@ -229,7 +229,7 @@ import { EmptyPanel } from '@/modules/profile/components/hub';
   title="Nenhuma empresa cadastrada"
   description="Crie sua primeira empresa para começar"
   actionLabel="Criar Empresa"
-  onAction={() => navigate('/empresas/criar-empresa')}
+  onAction={() => navigate('/empresas/cadastrar')}
 />
 ```
 

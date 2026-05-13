@@ -30,7 +30,7 @@ export interface AppUrls {
   
   // Rotas globais - Perfil
   profile: {
-    central: string;
+    home: string;
     businesses: string;
     billing: string;
       mobilidade: {
@@ -99,11 +99,11 @@ export function useAppUrls(routeResolved?: ResolvedTerritory | null): AppUrls {
     
     // Perfil
     profile: {
-      central: '/central',
+      home: '/perfil',
       businesses: businessManagementRoutes.list(),
       billing: '/perfil/planos',
       mobilidade: {
-        home: '/perfil/mobilidade',
+        home: '/central',
         motorista: mobility.motorista,
         motoboy: mobility.motoboy,
       },

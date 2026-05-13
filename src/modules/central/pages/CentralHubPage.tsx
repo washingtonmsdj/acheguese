@@ -193,7 +193,7 @@ export default function CentralHubPage() {
                 <Button
                   className="w-full"
                   variant="outline"
-                  onClick={() => navigate("/create-business")}
+                  onClick={() => navigate("/central/empresas/nova")}
                 >
                   <Sparkles className="mr-2 h-4 w-4" />
                   Criar Empresa

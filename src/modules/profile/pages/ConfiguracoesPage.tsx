@@ -65,7 +65,7 @@ export function ConfiguracoesPage() {
             e areas de atuacao.
           </p>
           <div className="mt-6 flex justify-center">
-            <Button onClick={() => navigate(appUrls.profile.central)}>
+            <Button onClick={() => navigate(appUrls.profile.home)}>
               Voltar ao hub
             </Button>
           </div>
@@ -86,7 +86,7 @@ export function ConfiguracoesPage() {
 
       <div className="mx-auto max-w-6xl px-4 py-6">
         <div className="mb-6 flex items-start gap-3">
-          <Button variant="ghost" size="icon" onClick={() => navigate(appUrls.profile.central)}>
+          <Button variant="ghost" size="icon" onClick={() => navigate(appUrls.profile.home)}>
             <ArrowLeft className="h-5 w-5" />
           </Button>
           <div className="min-w-0">

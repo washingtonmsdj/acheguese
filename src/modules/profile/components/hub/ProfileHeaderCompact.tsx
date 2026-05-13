@@ -2,7 +2,7 @@
  * ProfileHeaderCompact - Header redesenhado, denso e responsivo
  *
  * Mobile-first. Avatar grande à esquerda, nome + badges principais visíveis,
- * badges secundários em popover, ações em menu compacto no canto.
+ * badges secundários em popover, acoes em menu compacto no canto.
  */
 
 import { useRef } from "react";
@@ -191,7 +191,7 @@ export function ProfileHeaderCompact({
       transition={{ duration: 0.3 }}
       className="relative overflow-hidden rounded-2xl border border-border bg-gradient-to-br from-primary/10 via-card to-accent/10 p-3 shadow-sm sm:rounded-3xl sm:p-5"
     >
-      {/* Topo: avatar + nome + ações */}
+      {/* Topo: avatar + nome + acoes */}
       <div className="flex items-start gap-3 sm:gap-4">
         <div className="relative shrink-0">
           <Avatar className="h-16 w-16 border-2 border-card shadow-md sm:h-20 sm:w-20 md:h-24 md:w-24 md:border-4">
@@ -244,7 +244,7 @@ export function ProfileHeaderCompact({
                 ) : (
                   <span className="font-medium">@{handle || "sem-handle"}</span>
                 )}
-                <span className="text-border">·</span>
+                <span className="text-border">�</span>
                 <Badge variant="secondary" className="h-4 text-[9px] font-medium sm:h-5 sm:text-[10px]">
                   {getProfileTypeLabel(activeProfile)}
                 </Badge>
@@ -261,7 +261,7 @@ export function ProfileHeaderCompact({
               )}
             </div>
 
-            {/* Ações: botão principal + menu dropdown */}
+            {/* Acoes: botão principal + menu dropdown */}
             <div className="flex shrink-0 items-center gap-1 sm:gap-1.5">
               <Button
                 size="sm"
@@ -283,7 +283,7 @@ export function ProfileHeaderCompact({
 
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button size="icon" variant="outline" className="h-8 w-8" aria-label="Mais opções">
+                  <Button size="icon" variant="outline" className="h-8 w-8" aria-label="Mais opcoes">
                     <MoreHorizontal className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                   </Button>
                 </DropdownMenuTrigger>
@@ -295,7 +295,7 @@ export function ProfileHeaderCompact({
                       onClick={() => navigate(buildPublicProfileUrl(handle))}
                     >
                       <Globe className="mr-2 h-4 w-4" />
-                      Abrir perfil público
+                      Abrir perfil publico
                     </DropdownMenuItem>
                   ) : null}
                   <DropdownMenuItem
@@ -321,7 +321,7 @@ export function ProfileHeaderCompact({
 
       {/* Linha de badges + meta - Responsiva e compacta */}
       <div className="mt-3 space-y-2 sm:mt-4 sm:space-y-3">
-        {/* Primeira linha: Status, Plano, Verificação, Reputação */}
+        {/* Primeira linha: Status, Plano, Verificacao, Reputacao */}
         <div className="flex flex-wrap items-center gap-1.5 text-[10px] sm:gap-2 sm:text-xs">
           {/* Status da conta */}
           <div className="flex items-center gap-1">
@@ -349,15 +349,15 @@ export function ProfileHeaderCompact({
               )}
             >
               {planLabel}
-              {(identity?.plan?.isPremium || context?.plan?.isPremium) ? " ⭐" : ""}
+              {(identity?.plan?.isPremium || context?.plan?.isPremium) ? " *" : ""}
             </Badge>
           </div>
 
           <span className="hidden text-muted-foreground/30 sm:inline">|</span>
 
-          {/* Verificação - oculta em mobile muito pequeno */}
+          {/* Verificacao - oculta em mobile muito pequeno */}
           <div className="hidden items-center gap-1 xs:flex">
-            <span className="hidden font-medium text-muted-foreground sm:inline">Verificação:</span>
+            <span className="hidden font-medium text-muted-foreground sm:inline">Verificacao:</span>
             <Badge
               variant="outline"
               className={cn(
@@ -369,7 +369,7 @@ export function ProfileHeaderCompact({
             </Badge>
           </div>
 
-          {/* Reputação (se houver) */}
+          {/* Reputacao (se houver) */}
           {reputation ? (
             <>
               <span className="hidden text-muted-foreground/30 md:inline">|</span>
@@ -379,13 +379,13 @@ export function ProfileHeaderCompact({
                   variant="outline"
                   className="h-5 gap-1 border-amber-500/30 bg-amber-500/10 text-[9px] font-semibold text-amber-700 dark:text-amber-400 sm:h-6 sm:text-[10px]"
                 >
-                  Nível {reputation.level} · {reputation.score} pts
+                  Nivel {reputation.level} � {reputation.score} pts
                 </Badge>
               </div>
             </>
           ) : null}
 
-          {/* Território - compacto em mobile */}
+          {/* Territorio - compacto em mobile */}
           {territoryLabel ? (
             <>
               <span className="hidden text-muted-foreground/30 lg:inline">|</span>
@@ -413,17 +413,17 @@ export function ProfileHeaderCompact({
               <div className="space-y-3">
                 <div>
                   <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                    Território
+                    Territorio
                   </p>
                   <p className="mt-1 text-sm font-medium text-foreground">
-                    {territoryLabel || "Não configurado"}
+                    {territoryLabel || "Nao configurado"}
                   </p>
                 </div>
                 
                 {(identity?.reputation || context?.reputation) ? (
                   <div>
                     <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                      Reputação completa
+                      Reputacao completa
                     </p>
                     <div className="mt-1 space-y-1 text-sm">
                       <p>
@@ -431,7 +431,7 @@ export function ProfileHeaderCompact({
                         {identity?.reputation?.score ?? context?.reputation?.score ?? 0}
                       </p>
                       <p>
-                        <span className="font-medium">Nível:</span>{" "}
+                        <span className="font-medium">Nivel:</span>{" "}
                         {identity?.reputation?.level ?? context?.reputation?.level ?? 1}
                       </p>
                       {(identity?.reputation?.rank || context?.reputation?.rank) ? (
@@ -446,13 +446,13 @@ export function ProfileHeaderCompact({
 
                 <div>
                   <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                    Notificações
+                    Notificacoes
                   </p>
                   <div className="mt-1 space-y-1 text-sm">
                     <p>
                       {notifications.unread > 0 ? (
                         <span className="font-semibold text-warning">
-                          {notifications.unread} não lidas
+                          {notifications.unread} nao lidas
                         </span>
                       ) : (
                         <span className="text-muted-foreground">Em dia</span>
@@ -501,7 +501,7 @@ export function ProfileHeaderCompact({
           </Popover>
         </div>
 
-        {/* Segunda linha: Informações adicionais - apenas desktop */}
+        {/* Segunda linha: Informacoes adicionais - apenas desktop */}
         <div className="hidden flex-wrap items-center gap-2 text-xs md:flex">
           {/* Total de perfis */}
           {activeProfile && (
@@ -516,13 +516,13 @@ export function ProfileHeaderCompact({
             </>
           )}
 
-          {/* Notificações não lidas */}
+          {/* Notificacoes nao lidas */}
           {notifications.unread > 0 ? (
             <>
               <div className="flex items-center gap-1.5">
                 <Bell className="h-3.5 w-3.5 text-warning" />
                 <span className="font-semibold text-warning">
-                  {notifications.unread} {notifications.unread === 1 ? "notificação" : "notificações"}
+                  {notifications.unread} {notifications.unread === 1 ? "notificacao" : "notificacoes"}
                 </span>
               </div>
               <span className="text-muted-foreground/30">|</span>
@@ -533,7 +533,7 @@ export function ProfileHeaderCompact({
           {totalAlerts > 0 ? (
             <div className="flex items-center gap-1.5">
               <span className="font-semibold text-destructive">
-                ⚠️ {totalAlerts} {totalAlerts === 1 ? "alerta" : "alertas"} prioritário{totalAlerts === 1 ? "" : "s"}
+                ! {totalAlerts} {totalAlerts === 1 ? "alerta" : "alertas"} prioritário{totalAlerts === 1 ? "" : "s"}
               </span>
             </div>
           ) : null}

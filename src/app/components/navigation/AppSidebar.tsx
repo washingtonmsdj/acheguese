@@ -307,10 +307,10 @@ export function AppSidebar() {
             <SidebarMenuItem>
               <SidebarMenuButton asChild tooltip="Meu perfil">
                 <Link
-                  to={appUrls.profile.central}
-                  onMouseEnter={() => prefetchRouteByHref(appUrls.profile.central)}
-                  onFocus={() => prefetchRouteByHref(appUrls.profile.central)}
-                  onTouchStart={() => prefetchRouteByHref(appUrls.profile.central)}
+                  to={appUrls.profile.home}
+                  onMouseEnter={() => prefetchRouteByHref(appUrls.profile.home)}
+                  onFocus={() => prefetchRouteByHref(appUrls.profile.home)}
+                  onTouchStart={() => prefetchRouteByHref(appUrls.profile.home)}
                 >
                   <Avatar className="h-6 w-6 shrink-0">
                     <AvatarImage src={activeProfile?.avatarUrl || undefined} />

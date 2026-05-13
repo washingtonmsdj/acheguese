@@ -1,15 +1,15 @@
 /**
- * /perfil/editar/:profileId â€” Editar perfil completo por tipo
+ * /perfil/editar/:profileId — Editar perfil completo por tipo
  *
- * SeguranÃ§a:
- *   - Verifica que o profileId pertence ao usuÃ¡rio logado (profiles.user_id = auth.uid)
- *   - Bloqueia acesso a perfis alheios com estado de erro explÃ­cito
- *   - Usa apenas service layer â€” zero acesso direto ao Supabase
+ * Segurança:
+ *   - Verifica que o profileId pertence ao usuário logado (profiles.user_id = auth.uid)
+ *   - Bloqueia acesso a perfis alheios com estado de erro explícito
+ *   - Usa apenas service layer — zero acesso direto ao Supabase
  *
- * Campos base (todos os tipos) + campos especÃ­ficos por tipo:
- *   business    â†’ legal_name, cnpj, company_type, industry, endereÃ§o, horÃ¡rios
- *   professional â†’ profession, specialties, license, experience, services, rate
- *   driver      â†’ license, vehicle
+ * Campos base (todos os tipos) + campos específicos por tipo:
+ *   business    → legal_name, cnpj, company_type, industry, endereço, horários
+ *   professional → profession, specialties, license, experience, services, rate
+ *   driver      → license, vehicle
  */
 
 import { useNavigate, useParams } from 'react-router-dom';
@@ -37,7 +37,7 @@ import type {
   BusinessData, ProfessionalData, DriverData,
 } from '@/core/profiles/services/multi-profile/types';
 
-// â”€â”€ helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── helpers ──────────────────────────────────────────────────────────
 
 function Field({ id, label, hint, children }: { id: string; label: string; hint?: string; children: React.ReactNode }) {
   return (
@@ -67,7 +67,7 @@ function SectionTitle({ children }: { children: React.ReactNode }) {
   return <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide pt-2">{children}</p>;
 }
 
-// â”€â”€ SeÃ§Ã£o Business â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── Seção Business ────────────────────────────────────────────────────
 
 function BusinessSection({ data, onChange }: {
   data: Partial<BusinessData>;
@@ -80,7 +80,7 @@ function BusinessSection({ data, onChange }: {
     <div className="space-y-4">
       <SectionTitle>Dados da empresa</SectionTitle>
 
-      <Field id="legal_name" label="Razão social *">
+      <Field id="legal_name" label="Raz�o social *">
         <Input id="legal_name" value={data.legal_name ?? ''} onChange={e => set('legal_name', e.target.value)} placeholder="Nome legal da empresa" />
       </Field>
 
@@ -102,14 +102,14 @@ function BusinessSection({ data, onChange }: {
         </Field>
       </div>
 
-      <Field id="industry" label="Setor / Indústria">
-        <Input id="industry" value={data.industry ?? ''} onChange={e => set('industry', e.target.value)} placeholder="Ex: Alimentação, Tecnologia, Saúde" />
+      <Field id="industry" label="Setor / Ind�stria">
+        <Input id="industry" value={data.industry ?? ''} onChange={e => set('industry', e.target.value)} placeholder="Ex: Alimenta��o, Tecnologia, Sa�de" />
       </Field>
 
-      <SectionTitle>Endereço comercial</SectionTitle>
+      <SectionTitle>Endere�o comercial</SectionTitle>
 
-      <Field id="business_address" label="Endereço">
-        <Input id="business_address" value={data.business_address ?? ''} onChange={e => set('business_address', e.target.value)} placeholder="Rua, número, complemento" />
+      <Field id="business_address" label="Endere�o">
+        <Input id="business_address" value={data.business_address ?? ''} onChange={e => set('business_address', e.target.value)} placeholder="Rua, n�mero, complemento" />
       </Field>
 
       <div className="grid grid-cols-2 gap-3">
@@ -128,7 +128,7 @@ function BusinessSection({ data, onChange }: {
   );
 }
 
-// â”€â”€ SeÃ§Ã£o Professional â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── Seção Professional ────────────────────────────────────────────────
 
 function ProfessionalSection({ data, onChange }: {
   data: Partial<ProfessionalData>;
@@ -137,7 +137,7 @@ function ProfessionalSection({ data, onChange }: {
   const set = <K extends keyof ProfessionalData>(key: K, value: ProfessionalData[K]) =>
     onChange({ [key]: value } as Partial<ProfessionalData>);
 
-  // Arrays como texto separado por vÃ­rgula
+  // Arrays como texto separado por vírgula
   const arrToStr = (arr?: string[]) => arr?.join(', ') ?? '';
   const strToArr = (s: string) => s.split(',').map(x => x.trim()).filter(Boolean);
 
@@ -145,12 +145,12 @@ function ProfessionalSection({ data, onChange }: {
     <div className="space-y-4">
       <SectionTitle>Dados profissionais</SectionTitle>
 
-      <Field id="profession" label="Profissão *">
+      <Field id="profession" label="Profiss�o *">
         <Input id="profession" value={data.profession ?? ''} onChange={e => set('profession', e.target.value)} placeholder="Ex: Eletricista, Designer, Advogado" />
       </Field>
 
       <div className="grid grid-cols-2 gap-3">
-        <Field id="years_experience" label="Anos de experiência">
+        <Field id="years_experience" label="Anos de experi�ncia">
           <Input id="years_experience" type="number" min={0} max={60}
             value={data.years_experience ?? ''}
             onChange={e => set('years_experience', Number(e.target.value))} />
@@ -162,29 +162,29 @@ function ProfessionalSection({ data, onChange }: {
         </Field>
       </div>
 
-      <Field id="specialties" label="Especialidades" hint="Separe por vírgula">
+      <Field id="specialties" label="Especialidades" hint="Separe por v�rgula">
         <Input id="specialties" value={arrToStr(data.specialties)}
           onChange={e => set('specialties', strToArr(e.target.value))}
-          placeholder="Ex: Instalação elétrica, Manutenção predial" />
+          placeholder="Ex: Instala��o el�trica, Manuten��o predial" />
       </Field>
 
-      <Field id="services_offered" label="Serviços oferecidos" hint="Separe por vírgula">
+      <Field id="services_offered" label="Servi�os oferecidos" hint="Separe por v�rgula">
         <Input id="services_offered" value={arrToStr(data.services_offered)}
           onChange={e => set('services_offered', strToArr(e.target.value))}
-          placeholder="Ex: Visita técnica, Orçamento gratuito" />
+          placeholder="Ex: Visita t�cnica, Or�amento gratuito" />
       </Field>
 
-      <Field id="service_area" label="Áreas de atendimento" hint="Separe por vírgula">
+      <Field id="service_area" label="�reas de atendimento" hint="Separe por v�rgula">
         <Input id="service_area" value={arrToStr(data.service_area)}
           onChange={e => set('service_area', strToArr(e.target.value))}
           placeholder="Ex: Nordeste de Amaralina, Pituba, Barra" />
       </Field>
 
-      <Field id="education" label="Formação">
-        <Input id="education" value={data.education ?? ''} onChange={e => set('education', e.target.value)} placeholder="Ex: Técnico em Eletrotécnica - SENAI" />
+      <Field id="education" label="Forma��o">
+        <Input id="education" value={data.education ?? ''} onChange={e => set('education', e.target.value)} placeholder="Ex: T�cnico em Eletrot�cnica - SENAI" />
       </Field>
 
-      <Field id="certifications" label="Certificações" hint="Separe por vírgula">
+      <Field id="certifications" label="Certifica��es" hint="Separe por v�rgula">
         <Input id="certifications" value={arrToStr(data.certifications)}
           onChange={e => set('certifications', strToArr(e.target.value))}
           placeholder="Ex: NR10, NR35" />
@@ -193,7 +193,7 @@ function ProfessionalSection({ data, onChange }: {
       <SectionTitle>Registro profissional</SectionTitle>
 
       <div className="grid grid-cols-2 gap-3">
-        <Field id="license_number" label="Número do registro">
+        <Field id="license_number" label="N�mero do registro">
           <Input id="license_number" value={data.license_number ?? ''} onChange={e => set('license_number', e.target.value)} placeholder="CRM, CREA, OAB..." />
         </Field>
         <Field id="license_state" label="Estado do registro">
@@ -203,7 +203,7 @@ function ProfessionalSection({ data, onChange }: {
 
       <ToggleRow
         label="Atende remotamente"
-        description="Aceita clientes fora da área de atendimento presencial"
+        description="Aceita clientes fora da �rea de atendimento presencial"
         checked={data.accepts_remote ?? false}
         onChange={v => set('accepts_remote', v)}
       />
@@ -211,7 +211,7 @@ function ProfessionalSection({ data, onChange }: {
   );
 }
 
-// â”€â”€ SeÃ§Ã£o Driver â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── Seção Driver ──────────────────────────────────────────────────────
 
 function DriverSection({ data, onChange }: {
   data: Partial<DriverData>;
@@ -222,10 +222,10 @@ function DriverSection({ data, onChange }: {
 
   return (
     <div className="space-y-4">
-      <SectionTitle>Habilitação</SectionTitle>
+      <SectionTitle>Habilita��o</SectionTitle>
 
       <div className="grid grid-cols-2 gap-3">
-        <Field id="license_number" label="Número da CNH *">
+        <Field id="license_number" label="N�mero da CNH *">
           <Input id="license_number" value={data.license_number ?? ''} onChange={e => set('license_number', e.target.value)} placeholder="00000000000" />
         </Field>
         <Field id="license_category" label="Categoria *">
@@ -249,7 +249,7 @@ function DriverSection({ data, onChange }: {
         </Field>
       </div>
 
-      <SectionTitle>Veículo</SectionTitle>
+      <SectionTitle>Ve�culo</SectionTitle>
 
       <div className="grid grid-cols-2 gap-3">
         <Field id="vehicle_type" label="Tipo">
@@ -259,7 +259,7 @@ function DriverSection({ data, onChange }: {
               <SelectItem value="car">Carro</SelectItem>
               <SelectItem value="motorcycle">Moto</SelectItem>
               <SelectItem value="van">Van</SelectItem>
-              <SelectItem value="truck">Caminhão</SelectItem>
+              <SelectItem value="truck">Caminh�o</SelectItem>
             </SelectContent>
           </Select>
         </Field>
@@ -284,7 +284,7 @@ function DriverSection({ data, onChange }: {
       </Field>
 
       <ToggleRow
-        label="Disponível para corridas"
+        label="Dispon�vel para corridas"
         checked={data.is_available ?? false}
         onChange={v => set('is_available', v)}
       />
@@ -292,7 +292,7 @@ function DriverSection({ data, onChange }: {
   );
 }
 
-// â”€â”€ Componente principal â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── Componente principal ──────────────────────────────────────────────
 
 export default function PerfilEditarPage() {
   const navigate = useNavigate();
@@ -329,11 +329,11 @@ export default function PerfilEditarPage() {
     page: 'PerfilEditarPage',
   });
 
-  // Função doSave definida antes do hook que a usa
+  // Fun��o doSave definida antes do hook que a usa
   const doSave = async () => {
     if (!profile) return;
     if (!baseForm.display_name?.trim()) {
-      toast.error('Nome de exibição é obrigatório');
+      toast.error('Nome de exibi��o � obrigat�rio');
       return;
     }
 
@@ -351,7 +351,7 @@ export default function PerfilEditarPage() {
       }
 
       toast.success('Perfil atualizado');
-      navigate(appUrls.profile.central);
+      navigate('/perfil');
     } catch (err: unknown) {
       const errMessage = err instanceof Error ? err.message : 'Erro ao salvar';
       const errCode =
@@ -365,28 +365,28 @@ export default function PerfilEditarPage() {
     }
   };
 
-  // Hook de confirmação - sempre chamado, independente do tipo de perfil
-  // A condição entra no render, não na chamada do hook
+  // Hook de confirma��o - sempre chamado, independente do tipo de perfil
+  // A condi��o entra no render, n�o na chamada do hook
   const { triggerSave: handleSave, confirmProps: usernameConfirmProps } = useProfileUsernameSaveGuard({
     username,
     originalUsername,
     onSave: doSave,
   });
 
-  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+  // ═══════════════════════════════════════════════════════════════════
   // EARLY RETURNS - somente apos todos os hooks e effects
-  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+  // ═══════════════════════════════════════════════════════════════════
 
-  // â”€â”€ Acesso negado â”€â”€
+  // ── Acesso negado ──
   if (state === 'denied') {
     return (
       <div className="max-w-xl mx-auto px-4 py-16 text-center space-y-4">
         <ShieldAlert className="h-12 w-12 mx-auto text-destructive" />
         <h2 className="text-lg font-semibold">Acesso negado</h2>
         <p className="text-sm text-muted-foreground">
-          Você não tem permissão para editar este perfil.
+          Voc� n�o tem permiss�o para editar este perfil.
         </p>
-        <Button variant="outline" onClick={() => navigate(appUrls.profile.central)}>Voltar</Button>
+        <Button variant="outline" onClick={() => navigate('/perfil')}>Voltar</Button>
       </div>
     );
   }
@@ -395,11 +395,11 @@ export default function PerfilEditarPage() {
     return (
       <div className="max-w-xl mx-auto px-4 py-16 text-center space-y-4">
         <ShieldAlert className="h-12 w-12 mx-auto text-muted-foreground" />
-        <h2 className="text-lg font-semibold">Perfil não encontrado</h2>
+        <h2 className="text-lg font-semibold">Perfil n�o encontrado</h2>
         <p className="text-sm text-muted-foreground">
-          O perfil solicitado não está disponível para edição neste contexto.
+          O perfil solicitado n�o est� dispon�vel para edi��o neste contexto.
         </p>
-        <Button variant="outline" onClick={() => navigate(appUrls.profile.central)}>Voltar</Button>
+        <Button variant="outline" onClick={() => navigate('/perfil')}>Voltar</Button>
       </div>
     );
   }
@@ -408,11 +408,11 @@ export default function PerfilEditarPage() {
     return (
       <div className="max-w-xl mx-auto px-4 py-16 text-center space-y-4">
         <ShieldAlert className="h-12 w-12 mx-auto text-destructive" />
-        <h2 className="text-lg font-semibold">Falha ao carregar edição</h2>
+        <h2 className="text-lg font-semibold">Falha ao carregar edi��o</h2>
         <p className="text-sm text-muted-foreground">
-          {error ?? 'Não foi possível carregar o agregado canônico de edição.'}
+          {error ?? 'N�o foi poss�vel carregar o agregado can�nico de edi��o.'}
         </p>
-        <Button variant="outline" onClick={() => navigate(appUrls.profile.central)}>Voltar</Button>
+        <Button variant="outline" onClick={() => navigate('/perfil')}>Voltar</Button>
       </div>
     );
   }
@@ -421,65 +421,107 @@ export default function PerfilEditarPage() {
     return (
       <div className="max-w-xl mx-auto px-4 py-8 text-center space-y-3">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto" />
-        <p className="text-sm text-muted-foreground">Verificando permissões...</p>
+        <p className="text-sm text-muted-foreground">Verificando permiss�es...</p>
       </div>
     );
   }
 
-  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+  // ═══════════════════════════════════════════════════════════════════
   // HELPERS E RENDER - DEPOIS DOS EARLY RETURNS
-  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+  // ═══════════════════════════════════════════════════════════════════
   return (
-    <div className="max-w-xl mx-auto px-4 py-6 space-y-6">
+    <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,hsl(var(--primary)/0.12),transparent_32%),linear-gradient(180deg,hsl(var(--background)),hsl(var(--muted)/0.35))]">
+      <div className="mx-auto max-w-5xl px-4 py-5 sm:px-6 lg:px-8">
 
       {/* Header */}
-      <div className="flex items-center gap-3">
-        <Button variant="ghost" size="icon" onClick={() => navigate(appUrls.profile.central)}>
-          <ArrowLeft className="h-5 w-5" />
-        </Button>
-        <div>
-          <h1 className="text-lg font-semibold">Editar perfil</h1>
-          <p className="text-xs text-muted-foreground">
-            {profile.display_name} · {getProfileTypeLabel(profile)}
-          </p>
+      <div className="sticky top-0 z-20 -mx-4 mb-5 border-b border-border/60 bg-background/85 px-4 py-3 backdrop-blur sm:static sm:mx-0 sm:mb-6 sm:rounded-3xl sm:border sm:bg-card/85 sm:px-5 sm:shadow-sm">
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex min-w-0 items-center gap-3">
+            <Button variant="ghost" size="icon" className="shrink-0 rounded-full" onClick={() => navigate('/perfil')}>
+              <ArrowLeft className="h-5 w-5" />
+            </Button>
+            <div className="min-w-0">
+              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Editor de identidade</p>
+              <h1 className="truncate text-xl font-bold tracking-tight text-foreground sm:text-2xl">Editar perfil</h1>
+              <p className="truncate text-xs text-muted-foreground">
+                {profile.display_name} ? {getProfileTypeLabel(profile)}
+              </p>
+            </div>
+          </div>
+
+          <div className="hidden shrink-0 gap-2 sm:flex">
+            <Button variant="outline" onClick={() => navigate('/perfil')}>Cancelar</Button>
+            <Button className="gap-2" onClick={handleSave} disabled={saving || extLoading}>
+              {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+              Salvar
+            </Button>
+          </div>
         </div>
       </div>
 
-      <Separator />
+      <div className="grid gap-5 lg:grid-cols-[260px_minmax(0,1fr)]">
+        <aside className="hidden lg:block">
+          <div className="sticky top-6 space-y-3 rounded-3xl border border-border/70 bg-card/85 p-4 shadow-sm backdrop-blur">
+            <p className="text-sm font-semibold text-foreground">Nesta tela</p>
+            <div className="space-y-2 text-sm text-muted-foreground">
+              <p>Identidade publica</p>
+              <p>Contato exibido</p>
+              <p>Visibilidade</p>
+              {editableUsername !== null && <p>URL publica</p>}
+              {profileType !== 'personal' && <p>Dados operacionais</p>}
+            </div>
+            <Separator />
+            <div className="rounded-2xl bg-muted/50 p-3 text-xs leading-5 text-muted-foreground">
+              Endereco residencial e entrega ficam em Configuracoes operacionais, nao neste formulario.
+            </div>
+          </div>
+        </aside>
 
+        <main className="space-y-5">
       {/* Campos base */}
+      <section className="rounded-3xl border border-border/70 bg-card/90 p-4 shadow-sm sm:p-6">
       <div className="space-y-4">
-        <SectionTitle>Informações básicas</SectionTitle>
+        <SectionTitle>Informa��es b�sicas</SectionTitle>
 
-        <Field id="display_name" label="Nome de exibição *">
+        <Field id="display_name" label="Nome de exibi��o *">
           <Input id="display_name" value={baseForm.display_name ?? ''} onChange={e => setBaseField('display_name', e.target.value)} />
         </Field>
 
         <Field id="bio" label="Bio">
-          <Textarea id="bio" value={baseForm.bio ?? ''} onChange={e => setBaseField('bio', e.target.value)} rows={3} placeholder="Conte um pouco sobre você ou seu negócio" />
+          <Textarea id="bio" value={baseForm.bio ?? ''} onChange={e => setBaseField('bio', e.target.value)} rows={3} placeholder="Conte um pouco sobre voc� ou seu neg�cio" />
         </Field>
 
         <Field id="website" label="Website">
           <Input id="website" type="url" value={baseForm.website ?? ''} onChange={e => setBaseField('website', e.target.value)} placeholder="https://" />
         </Field>
 
-        <Field id="location_id" label="Bairro (canônico)">
-          <LocationFields
-            locationId={baseForm.location_id ?? null}
-            onChange={(locationId) => setBaseField('location_id', locationId ?? undefined)}
-          />
-        </Field>
+        {profileType !== 'personal' && (
+          <Field id="location_id" label="Bairro (can�nico)">
+            <LocationFields
+              locationId={baseForm.location_id ?? null}
+              onChange={(locationId) => setBaseField('location_id', locationId ?? undefined)}
+            />
+          </Field>
+        )}
 
-        <Field id="street" label="Rua">
-          <Input
-            id="street"
-            value={baseForm.street ?? ''}
-            onChange={e => setBaseField('street', e.target.value)}
-            placeholder="Ex: Rua Afonso Lopes"
-          />
-        </Field>
+        <div className="rounded-xl border border-border bg-muted/30 p-3">
+          <p className="text-sm font-medium">Endere�o de entrega n�o � salvo aqui</p>
+          <p className="mt-1 text-xs text-muted-foreground">
+            Esta tela edita apenas identidade p�blica (ex.: bio e visibilidade de localiza��o).
+            Endere�o completo de entrega � restrito e fica somente em Configura��es operacionais.
+          </p>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="mt-3"
+            onClick={() => navigate("/configuracoes")}
+          >
+            Abrir configura��es operacionais
+          </Button>
+        </div>
 
-        <SectionTitle>Contato público</SectionTitle>
+        <SectionTitle>Contato p�blico</SectionTitle>
 
         <Field id="contact_email" label="E-mail de contato" hint="Diferente do e-mail de login">
           <Input id="contact_email" type="email" value={baseForm.contact_email ?? ''} onChange={e => setBaseField('contact_email', e.target.value)} />
@@ -491,20 +533,46 @@ export default function PerfilEditarPage() {
 
         <SectionTitle>Visibilidade</SectionTitle>
 
-        <ToggleRow label="Perfil público" description="Aparece em buscas e na URL /u/:username"
+        <ToggleRow label="Perfil p�blico" description="Aparece em buscas e na URL /u/:username"
           checked={baseForm.is_public ?? false} onChange={v => setBaseField('is_public', v)} />
+        {profileType === 'personal' && (
+          <Field
+            id="public_location_visibility"
+            label="Localiza��o p�blica"
+            hint="Cidade/bairro p�blico � derivado do endere�o residencial can�nico."
+          >
+            <Select
+              value={baseForm.public_location_visibility ?? 'city_only'}
+              onValueChange={(value) =>
+                setBaseField(
+                  'public_location_visibility',
+                  value as 'hidden' | 'city_only' | 'district',
+                )
+              }
+            >
+              <SelectTrigger id="public_location_visibility">
+                <SelectValue placeholder="Selecione a visibilidade" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="hidden">Ocultar localiza��o</SelectItem>
+                <SelectItem value="city_only">Mostrar somente cidade/UF</SelectItem>
+                <SelectItem value="district">Mostrar bairro + cidade/UF</SelectItem>
+              </SelectContent>
+            </Select>
+          </Field>
+        )}
         <ToggleRow label="Mostrar e-mail de contato"
           checked={baseForm.show_contact_email ?? false} onChange={v => setBaseField('show_contact_email', v)} />
         <ToggleRow label="Mostrar telefone"
           checked={baseForm.show_phone ?? false} onChange={v => setBaseField('show_phone', v)} />
-        <ToggleRow label="Mostrar vínculos"
+        <ToggleRow label="Mostrar v�nculos"
           checked={baseForm.show_linked_profiles ?? false} onChange={v => setBaseField('show_linked_profiles', v)} />
       </div>
+      </section>
 
-      {/* Username â€” apenas para perfil pessoal */}
+      {/* Username — apenas para perfil pessoal */}
       {editableUsername !== null && (
-        <>
-          <Separator />
+        <section className="rounded-3xl border border-border/70 bg-card/90 p-4 shadow-sm sm:p-6">
           <ProfileUsernameSection
             username={username}
             onUsernameChange={setUsername}
@@ -512,46 +580,43 @@ export default function PerfilEditarPage() {
             profileId={profile.id}
           />
           <IdentityChangeConfirmDialog {...usernameConfirmProps} />
-        </>
+        </section>
       )}
 
-      {/* ExtensÃ£o por tipo */}      {extLoading ? (
-        <div className="flex items-center gap-2 text-sm text-muted-foreground py-4">
-          <Loader2 className="h-4 w-4 animate-spin" />Carregando dados específicos...
+      {/* Extensão por tipo */}      {extLoading ? (
+        <div className="flex items-center gap-2 rounded-3xl border border-border/70 bg-card/90 p-5 text-sm text-muted-foreground shadow-sm">
+          <Loader2 className="h-4 w-4 animate-spin" />Carregando dados espec�ficos...
         </div>
       ) : (
         <>
           {profileType === 'business' && (
-            <>
-              <Separator />
+            <section className="rounded-3xl border border-border/70 bg-card/90 p-4 shadow-sm sm:p-6">
               <BusinessSection data={bizForm} onChange={u => setBizForm(prev => ({ ...prev, ...u }))} />
-            </>
+            </section>
           )}
           {profileType === 'professional' && (
-            <>
-              <Separator />
+            <section className="rounded-3xl border border-border/70 bg-card/90 p-4 shadow-sm sm:p-6">
               <ProfessionalSection data={proForm} onChange={u => setProForm(prev => ({ ...prev, ...u }))} />
-            </>
+            </section>
           )}
           {profileType === 'driver' && (
-            <>
-              <Separator />
+            <section className="rounded-3xl border border-border/70 bg-card/90 p-4 shadow-sm sm:p-6">
               <DriverSection data={drvForm} onChange={u => setDrvForm(prev => ({ ...prev, ...u }))} />
-            </>
+            </section>
           )}
         </>
       )}
 
-      <Separator />
-
-      <div className="flex gap-3 pb-8">
-        <Button variant="outline" className="flex-1" onClick={() => navigate(appUrls.profile.central)}>Cancelar</Button>
-        <Button className="flex-1 gap-2" onClick={handleSave} disabled={saving || extLoading}>
+      <div className="sticky bottom-0 -mx-4 flex gap-3 border-t border-border/70 bg-background/90 px-4 py-3 backdrop-blur sm:static sm:mx-0 sm:border-0 sm:bg-transparent sm:px-0 sm:pb-8 sm:pt-0">
+        <Button variant="outline" className="flex-1 rounded-2xl" onClick={() => navigate('/perfil')}>Cancelar</Button>
+        <Button className="flex-1 gap-2 rounded-2xl" onClick={handleSave} disabled={saving || extLoading}>
           {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
           Salvar
         </Button>
       </div>
+        </main>
+      </div>
+      </div>
     </div>
   );
 }
-

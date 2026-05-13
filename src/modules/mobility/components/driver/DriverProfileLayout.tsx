@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/sha
 import { DriverOperationalSnapshotCard, DriverVehicleDetailsCard } from "@/modules/profile/components/cards";
 import { useDriverProfileIdentity } from "@/modules/mobility/hooks/useDriverProfileIdentity";
 import { getMobilityServiceStatus } from "@/modules/profile/utils/mobilityServiceStatus";
-import { getProfileMobilityServicePath } from "@/modules/profile/utils/profileMobilityNavigation";
+import { getMobilityServicePath } from "@/modules/mobility/routes/mobilityNavigation";
 
 export interface DriverProfileLayoutProps {
   /**
@@ -29,8 +29,8 @@ function formatValue(value: unknown): string {
  * Layout compartilhado para página de cadastro de motorista/motoboy.
  * Reutiliza os componentes DriverOperationalSnapshotCard e DriverVehicleDetailsCard.
  * 
- * Este componente renderiza o mesmo layout que as páginas legadas
- * /perfil/mobilidade/motorista/cadastro e /perfil/mobilidade/motoboy/cadastro.
+ * Este componente renderiza o layout das rotas operacionais da Central.
+ * /central/motorista/cadastro e /central/motoboy/cadastro.
  */
 export function DriverProfileLayout({ service }: DriverProfileLayoutProps) {
   const navigate = useNavigate();
@@ -186,11 +186,11 @@ export function DriverProfileLayout({ service }: DriverProfileLayoutProps) {
               <CardDescription>{nextStepsDescription}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-2">
-              <Button className="w-full justify-between" onClick={() => navigate(getProfileMobilityServicePath(service, "disponibilidade"))}>
+              <Button className="w-full justify-between" onClick={() => navigate(getMobilityServicePath(service, "disponibilidade"))}>
                 {actionButtonLabel}
                 <ArrowRight className="h-4 w-4" />
               </Button>
-              <Button variant="outline" className="w-full justify-between" onClick={() => navigate(getProfileMobilityServicePath(service, "configuracoes"))}>
+              <Button variant="outline" className="w-full justify-between" onClick={() => navigate(getMobilityServicePath(service, "configuracoes"))}>
                 Revisar configuracoes
                 <ArrowRight className="h-4 w-4" />
               </Button>
@@ -213,7 +213,7 @@ export function DriverProfileLayout({ service }: DriverProfileLayoutProps) {
             </CardContent>
           </Card>
 
-          <Button className="w-full justify-between" onClick={() => navigate(getProfileMobilityServicePath(service, "disponibilidade"))}>
+          <Button className="w-full justify-between" onClick={() => navigate(getMobilityServicePath(service, "disponibilidade"))}>
             {actionButtonLabel}
             <ArrowRight className="h-4 w-4" />
           </Button>

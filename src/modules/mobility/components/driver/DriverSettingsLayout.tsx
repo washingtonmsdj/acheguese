@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/sha
 import { DriverNotifications } from "@/modules/mobility/components/driver/DriverNotifications";
 import { DriverSettingsPanel } from "@/modules/mobility/components/driver/DriverSettingsPanel";
 import { useDriverProfileIdentity } from "@/modules/mobility/hooks/useDriverProfileIdentity";
-import { getProfileMobilityServicePath } from "@/modules/profile/utils/profileMobilityNavigation";
+import { getMobilityServicePath } from "@/modules/mobility/routes/mobilityNavigation";
 
 export interface DriverSettingsLayoutProps {
   /**
@@ -21,8 +21,8 @@ export interface DriverSettingsLayoutProps {
  * Layout compartilhado para página de configurações de motorista/motoboy.
  * Reutiliza os componentes DriverSettingsPanel e DriverNotifications.
  * 
- * Este componente renderiza o mesmo layout que as páginas legadas
- * /perfil/mobilidade/motorista/configuracoes e /perfil/mobilidade/motoboy/configuracoes.
+ * Este componente renderiza o layout das rotas operacionais da Central.
+ * /central/motorista/configuracoes e /central/motoboy/configuracoes.
  */
 export function DriverSettingsLayout({ service }: DriverSettingsLayoutProps) {
   const navigate = useNavigate();
@@ -79,7 +79,7 @@ export function DriverSettingsLayout({ service }: DriverSettingsLayoutProps) {
             <Button 
               variant="outline" 
               className="w-full justify-between" 
-              onClick={() => navigate(getProfileMobilityServicePath(service, "disponibilidade"))}
+              onClick={() => navigate(getMobilityServicePath(service, "disponibilidade"))}
             >
               Ver disponibilidade
               <ShieldCheck className="h-4 w-4" />

@@ -20,7 +20,7 @@ export function ConfiguracoesSection({
     <div className="space-y-6">
       <SectionFrame
         title="Configuracoes"
-        description="Ajustes de perfil e operacao agrupados em uma area dedicada."
+        description="Preferencias pessoais do perfil. Rotinas operacionais continuam na Central."
       >
         <div className="grid gap-3 md:grid-cols-2">
           <HubLinkCard
@@ -45,9 +45,15 @@ export function ConfiguracoesSection({
           ) : null}
           <HubLinkCard
             icon={Settings2}
-            title="Configuracoes operacionais"
-            description="Residencia, area de atuacao e preferencias gerais."
+            title="Endereco e residencia"
+            description="Residencia, territorio e preferencias locais."
             onClick={() => navigate(appUrls.settings)}
+          />
+          <HubLinkCard
+            icon={Settings2}
+            title="Abrir Central"
+            description="Empresas, mobilidade, verticais e dashboards operacionais."
+            onClick={() => navigate("/central")}
           />
         </div>
       </SectionFrame>

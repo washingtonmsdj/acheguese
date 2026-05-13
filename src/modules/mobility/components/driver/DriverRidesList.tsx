@@ -38,6 +38,18 @@ const TRUST_RISK_LABELS: Record<string, string> = {
   critical: "Revisao admin",
 };
 
+function resolvePaymentBadgeLabel(paymentMethod: string): string {
+  if (paymentMethod === "pix" || paymentMethod === PAYMENT_METHOD.PIX) return "Pix";
+  if (paymentMethod === "dinheiro" || paymentMethod === "cash") return "Dinheiro";
+  if (paymentMethod === "cartao" || paymentMethod === "card_on_delivery") {
+    return "Cartao na entrega";
+  }
+  if (paymentMethod === "link" || paymentMethod === "payment_link") {
+    return "Link de pagamento";
+  }
+  return paymentMethod;
+}
+
 type PassengerTrustInfo = {
   passenger_trust_level?: string | null;
   passenger_rating?: number | null;
@@ -369,9 +381,7 @@ export function DriverRidesList({
               </div>
               {ride.payment_method && (
                 <Badge className="bg-secondary/50 text-muted-foreground text-[0.6rem] px-2 rounded-full border border-border">
-                  {ride.payment_method === PAYMENT_METHOD.PIX
-                    ? "💳 Pix"
-                    : "💵 Dinheiro"}
+                  {resolvePaymentBadgeLabel(ride.payment_method)}
                 </Badge>
               )}
             </div>

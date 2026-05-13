@@ -7,7 +7,7 @@ import { Button } from "@/shared/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/components/ui/card";
 import { DriverRidesList } from "@/modules/mobility/components/driver/DriverRidesList";
 import { useMotoristaPageV2 } from "@/modules/mobility/hooks/useMotoristaPageV2";
-import { getProfileMobilityServicePath } from "@/modules/profile/utils/profileMobilityNavigation";
+import { getMobilityServicePath } from "@/modules/mobility/routes/mobilityNavigation";
 import type { MobilityRide } from "@/modules/mobility/components/driver/DriverRidesTab";
 
 type RideLike = MobilityRide & {
@@ -39,7 +39,7 @@ function getTrustRiskLabel(ride: RideLike): string | null {
  * Reutiliza o componente DriverRidesList e o hook useMotoristaPageV2.
  * 
  * Este componente renderiza o mesmo layout que a página legada
- * /perfil/mobilidade/motorista/corridas.
+ * /central/motorista/corridas.
  */
 export function DriverRidesLayout() {
   const navigate = useNavigate();
@@ -149,11 +149,11 @@ export function DriverRidesLayout() {
             <CardDescription>Acompanhamento rapido da operacao de corridas.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
-            <Button className="w-full justify-between" onClick={() => navigate(getProfileMobilityServicePath("motorista", "disponibilidade"))}>
+            <Button className="w-full justify-between" onClick={() => navigate(getMobilityServicePath("motorista", "disponibilidade"))}>
               Ajustar disponibilidade
               <RotateCcw className="h-4 w-4" />
             </Button>
-            <Button variant="outline" className="w-full justify-between" onClick={() => navigate(getProfileMobilityServicePath("motorista", "ganhos"))}>
+            <Button variant="outline" className="w-full justify-between" onClick={() => navigate(getMobilityServicePath("motorista", "ganhos"))}>
               Ver ganhos
               <RotateCcw className="h-4 w-4" />
             </Button>

@@ -1,5 +1,5 @@
 /**
- * Hook profissional para navegação de businesss
+ * Hook profissional para navegação de empresas
  * Gerencia URLs canônicas de forma consistente via BusinessUrlService (SSOT)
  */
 
@@ -96,7 +96,7 @@ export function useBusinessNavigation() {
   }, [businessUrls.list]);
 
   /**
-   * Navega para listagem de businesss
+   * Navega para listagem de empresas
    */
   const navigateToBusinessList = useCallback(() => {
     navigate(businessUrls.list);

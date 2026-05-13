@@ -1,26 +1,24 @@
 /**
- * ResumoSection - Seção de resumo do perfil
- * 
- * SSOT: Componente isolado com props tipadas
- * Sem gambiarras: Lógica clara e organizada
+ * ResumoSection - visao pessoal do usuario.
+ *
+ * Mantem o Perfil como area pessoal e envia operacoes para a Central.
  */
 
 import {
-  BarChart3,
-  Bike,
   Bell,
   Bookmark,
   Briefcase,
   Building2,
   Car,
-  Database,
-  LayoutGrid,
-  RefreshCw,
+  CreditCard,
+  LayoutDashboard,
+  MapPin,
+  MessageSquare,
   Settings2,
   Shield,
+  Sparkles,
   UserRound,
   Users,
-  LayoutDashboard,
 } from "lucide-react";
 
 import {
@@ -29,11 +27,7 @@ import {
   NextActionsPanel,
 } from "@/modules/profile/components/hub";
 import { ProfileActiveRideCard } from "@/modules/profile/components/ProfileActiveRideCard";
-import {
-  DashboardMetricCard,
-  EngagementMetricCard,
-  VisitBreakdownCard,
-} from "@/modules/profile/components/cards";
+import { DashboardMetricCard } from "@/modules/profile/components/cards";
 
 import type { ResumoSectionProps } from "./types";
 import { getMobilityServiceStatus } from "@/modules/profile/utils/mobilityServiceStatus";
@@ -62,249 +56,218 @@ export function ResumoSection({
     service: "motoboy",
   });
 
+  const totalPersonalActivity = operations.posts + operations.favoritesGiven;
+  const totalOperationalAssets = operations.businesses + operations.services + operations.classifieds;
+
   return (
     <div className="space-y-6">
-      {/* Corrida ativa (se houver) - Destaque no topo */}
       {hasActiveRide && activeRide ? (
         <ProfileActiveRideCard ride={activeRide as MobilityRide} />
       ) : null}
 
-      {/* Dashboard: Métricas principais consolidadas */}
-      <SectionFrame
-        title="Visão geral"
-        description="Dashboard consolidado com métricas de todos os seus perfis e atividades."
-      >
-        <div className="space-y-6">
-          {/* Grid principal de métricas */}
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            <DashboardMetricCard
-              icon={UserRound}
-              label="Posts"
-              value={operations.posts}
-              trend="+12%"
-              trendUp={true}
-              description="Conteúdo publicado"
-            />
-            <DashboardMetricCard
-              icon={Building2}
-              label="Empresas"
-              value={operations.businesses}
-              description="Negócios gerenciados"
-            />
-            <DashboardMetricCard
-              icon={Bell}
-              label="Notificações"
-              value={notifications.unread}
-              highlight={notifications.unread > 0}
-              description="Pendências"
-            />
-            <DashboardMetricCard
-              icon={Car}
-              label="Corridas"
-              value={operations.ridesTotal}
-              description="Total de mobilidade"
-            />
-          </div>
-
-          {/* Métricas de engajamento */}
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            <EngagementMetricCard
-              icon={Briefcase}
-              label="Serviços"
-              value={operations.services}
-              color="blue"
-            />
-            <EngagementMetricCard
-              icon={LayoutGrid}
-              label="Classificados"
-              value={operations.classifieds}
-              color="purple"
-            />
-            <EngagementMetricCard
-              icon={Users}
-              label="Favoritos dados"
-              value={operations.favoritesGiven}
-              color="pink"
-            />
-          </div>
-
-          {/* Visitas consolidadas - Todos os perfis */}
-          <div className="rounded-2xl border border-border bg-gradient-to-br from-primary/5 to-primary/10 p-6">
-            <div className="flex items-start justify-between gap-4">
-              <div className="flex-1">
-                <div className="flex items-center gap-2">
-                  <BarChart3 className="h-5 w-5 text-primary" />
-                  <h3 className="text-sm font-semibold text-foreground">
-                    Visitas consolidadas
-                  </h3>
-                </div>
-                <p className="mt-1 text-xs text-muted-foreground">
-                  Total de visualizações em todos os seus perfis e empresas
-                </p>
-              </div>
-              <div className="text-right">
-                <p className="text-3xl font-bold text-primary">
-                  {(operations.businesses * 127).toLocaleString('pt-BR')}
-                </p>
-                <p className="mt-1 text-xs text-muted-foreground">últimos 30 dias</p>
-              </div>
-            </div>
-
-            {/* Breakdown por tipo de perfil */}
-            <div className="mt-6 grid gap-3 sm:grid-cols-3">
-              <VisitBreakdownCard
-                label="Perfil pessoal"
-                value={234}
-                percentage={18}
-                color="bg-blue-500"
-              />
-              <VisitBreakdownCard
-                label="Empresas"
-                value={operations.businesses > 0 ? operations.businesses * 89 : 0}
-                percentage={68}
-                color="bg-purple-500"
-              />
-              <VisitBreakdownCard
-                label="Serviços"
-                value={operations.services > 0 ? operations.services * 45 : 0}
-                percentage={14}
-                color="bg-pink-500"
-              />
-            </div>
-          </div>
-
-          {/* Analytics rápido */}
-          <div className="grid gap-4 md:grid-cols-2">
-            <div className="rounded-2xl border border-border bg-card p-5">
-              <div className="flex items-center gap-2">
-                <div className="rounded-xl bg-green-500/10 p-2">
-                  <Database className="h-4 w-4 text-green-600" />
-                </div>
-                <div className="flex-1">
-                  <p className="text-xs font-medium text-muted-foreground">
-                    Taxa de engajamento
-                  </p>
-                  <p className="mt-1 text-2xl font-bold text-foreground">
-                    {operations.posts > 0 ? "8.4%" : "0%"}
-                  </p>
-                </div>
-              </div>
-              <div className="mt-4 h-2 overflow-hidden rounded-full bg-muted">
-                <div
-                  className="h-full bg-gradient-to-r from-green-500 to-emerald-500"
-                  style={{ width: operations.posts > 0 ? "84%" : "0%" }}
-                />
-              </div>
-            </div>
-
-            <div className="rounded-2xl border border-border bg-card p-5">
-              <div className="flex items-center gap-2">
-                <div className="rounded-xl bg-amber-500/10 p-2">
-                  <RefreshCw className="h-4 w-4 text-amber-600" />
-                </div>
-                <div className="flex-1">
-                  <p className="text-xs font-medium text-muted-foreground">
-                    Alcance total
-                  </p>
-                  <p className="mt-1 text-2xl font-bold text-foreground">
-                    {((operations.posts * 23) + (operations.businesses * 156)).toLocaleString('pt-BR')}
-                  </p>
-                </div>
-              </div>
-              <div className="mt-4 h-2 overflow-hidden rounded-full bg-muted">
-                <div
-                  className="h-full bg-gradient-to-r from-amber-500 to-orange-500"
-                  style={{ width: "67%" }}
-                />
-              </div>
-            </div>
-          </div>
-        </div>
-      </SectionFrame>
-
-      {/* Próximas ações sugeridas */}
-      <NextActionsPanel actions={nextActions} />
-
-      {/* Bloco discreto - Acessar Central */}
-      <div className="rounded-2xl border border-dashed border-primary/30 bg-primary/5 p-4">
-        <div className="flex items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <div className="rounded-xl bg-primary/10 p-2">
-              <LayoutDashboard className="h-5 w-5 text-primary" />
+      <section className="relative overflow-hidden rounded-[2rem] border border-border/70 bg-[radial-gradient(circle_at_15%_0%,hsl(var(--primary)/0.18),transparent_32%),linear-gradient(135deg,hsl(var(--card)),hsl(var(--muted)/0.46))] p-5 shadow-sm sm:p-7">
+        <div className="absolute right-0 top-0 h-40 w-40 rounded-full bg-primary/10 blur-3xl" aria-hidden="true" />
+        <div className="relative grid gap-6 lg:grid-cols-[1.2fr_0.8fr] lg:items-end">
+          <div className="space-y-3">
+            <div className="inline-flex items-center gap-2 rounded-full border border-border/70 bg-background/75 px-3 py-1 text-xs font-semibold text-muted-foreground backdrop-blur">
+              <Sparkles className="h-3.5 w-3.5 text-primary" />
+              Perfil pessoal
             </div>
             <div>
-              <h3 className="text-sm font-semibold text-foreground">
-                Áreas de Gestão
-              </h3>
-              <p className="text-xs text-muted-foreground">
-                Empresas, profissional, mobilidade e administração
+              <h2 className="max-w-3xl text-2xl font-black tracking-tight text-foreground sm:text-3xl lg:text-4xl">
+                Sua identidade, dados pessoais e atalhos seguros em um unico lugar.
+              </h2>
+              <p className="mt-3 max-w-2xl text-sm leading-6 text-muted-foreground sm:text-base">
+                O Perfil mostra sua conta pessoal. Empresas, motorista, motoboy e rotinas administrativas ficam na Central para manter a separacao de responsabilidades.
               </p>
             </div>
           </div>
-          <button
-            type="button"
-            onClick={() => navigate("/central")}
-            className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors"
-          >
-            Acessar Central
-          </button>
-        </div>
-      </div>
 
-      {/* Atalhos principais - Foco no perfil pessoal */}
+          <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-1">
+            <button
+              type="button"
+              onClick={() => setActiveSection("dados-pessoais")}
+              className="rounded-2xl border border-border/70 bg-background/75 p-4 text-left transition hover:border-primary/40 hover:bg-background"
+            >
+              <UserRound className="h-5 w-5 text-primary" />
+              <p className="mt-3 text-sm font-semibold text-foreground">Dados pessoais</p>
+              <p className="mt-1 text-xs text-muted-foreground">Nome, foto, bio e perfil publico.</p>
+            </button>
+            <button
+              type="button"
+              onClick={() => navigate("/configuracoes")}
+              className="rounded-2xl border border-border/70 bg-background/75 p-4 text-left transition hover:border-primary/40 hover:bg-background"
+            >
+              <MapPin className="h-5 w-5 text-primary" />
+              <p className="mt-3 text-sm font-semibold text-foreground">Endereco pessoal</p>
+              <p className="mt-1 text-xs text-muted-foreground">Residencia e verificacao territorial.</p>
+            </button>
+            <button
+              type="button"
+              onClick={() => navigate("/central")}
+              className="rounded-2xl border border-primary/25 bg-primary px-4 py-4 text-left text-primary-foreground shadow-sm transition hover:bg-primary/90"
+            >
+              <LayoutDashboard className="h-5 w-5" />
+              <p className="mt-3 text-sm font-semibold">Abrir Central</p>
+              <p className="mt-1 text-xs text-primary-foreground/80">Operacao, empresas e dashboards.</p>
+            </button>
+          </div>
+        </div>
+      </section>
+
       <SectionFrame
-        title="Atalhos principais"
-        description="Acesso rápido às áreas mais importantes do seu perfil pessoal."
+        title="Resumo pessoal"
+        description="Indicadores reais da sua conta e das areas vinculadas, sem misturar gestao operacional dentro do Perfil."
       >
-        <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
-          <HubLinkCard
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          <DashboardMetricCard
+            icon={UserRound}
+            label="Atividade pessoal"
+            value={totalPersonalActivity}
+            description="Posts e favoritos"
+          />
+          <DashboardMetricCard
             icon={Building2}
-            title="Minhas empresas"
-            description="Lista de empresas e acesso ao painel de gestão."
-            onClick={() => navigate(appUrls.profile.businesses)}
+            label="Areas vinculadas"
+            value={totalOperationalAssets}
+            description="Empresas, servicos e classificados"
           />
-          <HubLinkCard
+          <DashboardMetricCard
+            icon={Bell}
+            label="Notificacoes"
+            value={notifications.unread}
+            highlight={notifications.unread > 0}
+            description="Nao lidas"
+          />
+          <DashboardMetricCard
             icon={Car}
-            title="Mobilidade"
-            description={`Motorista: ${motoristaStatus}. Motoboy: ${motoboyStatus}.`}
-            onClick={() => navigate(appUrls.profile.mobilidade.motorista.home)}
+            label="Mobilidade"
+            value={operations.ridesTotal}
+            description="Corridas e entregas"
           />
-          <HubLinkCard
-            icon={Bike}
-            title="Motoboy"
-            description="Area separada para entregas dentro de Mobilidade."
-            onClick={() => navigate(appUrls.profile.mobilidade.motoboy.home)}
-          />
-          <HubLinkCard
-            icon={Briefcase}
-            title="Planos e cobranças"
-            description="Assinaturas por empresa, mobilidade e classificados."
-            onClick={() => navigate("/perfil/planos")}
-          />
+        </div>
+      </SectionFrame>
+
+      <NextActionsPanel actions={nextActions} />
+
+      <SectionFrame
+        title="Acoes pessoais"
+        description="Tudo que pertence ao usuario: identidade, privacidade, notificacoes, favoritos e endereco residencial."
+      >
+        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
           <HubLinkCard
             icon={UserRound}
             title="Dados pessoais"
-            description="Editar perfil, avatar, bio e informações públicas."
+            description="Editar nome, foto, bio e apresentacao publica."
             onClick={() => setActiveSection("dados-pessoais")}
           />
           <HubLinkCard
+            icon={MapPin}
+            title="Endereco e residencia"
+            description="Atualizar residencia, territorio e verificacao."
+            onClick={() => navigate("/configuracoes")}
+          />
+          <HubLinkCard
             icon={Bell}
-            title="Notificações"
-            description="Inbox com pendências e alertas recentes."
+            title="Notificacoes"
+            description="Inbox com pendencias e alertas recentes."
             badge={notifications.unread > 0 ? `${notifications.unread}` : undefined}
             onClick={() => setActiveSection("notificacoes")}
           />
           <HubLinkCard
+            icon={Bookmark}
+            title="Favoritos"
+            description="Itens salvos e referencias pessoais."
+            onClick={() => setActiveSection("dados-pessoais")}
+          />
+          <HubLinkCard
+            icon={CreditCard}
+            title="Planos pessoais"
+            description="Resumo de cobrancas e assinaturas vinculadas."
+            onClick={() => navigate(appUrls.profile.billing)}
+          />
+          <HubLinkCard
             icon={Settings2}
-            title="Configurações"
-            description="Privacidade, vínculos e preferências."
+            title="Preferencias"
+            description="Privacidade, vinculos e ajustes gerais."
             onClick={() => setActiveSection("configuracoes")}
           />
           <HubLinkCard
             icon={Shield}
-            title="Segurança"
-            description="Conta, senha e dados sensíveis."
+            title="Seguranca"
+            description="Conta, dados sensiveis e protecao."
             onClick={() => setActiveSection("seguranca")}
+          />
+          <HubLinkCard
+            icon={Users}
+            title="Familia"
+            description="Vinculos familiares e zonas seguras."
+            onClick={() => navigate(appUrls.family.home)}
+          />
+        </div>
+      </SectionFrame>
+
+      <SectionFrame
+        title="Atalhos para areas que voce possui"
+        description="Acesso rapido para modulos operacionais sem colocar administracao dentro do Perfil."
+      >
+        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+          <HubLinkCard
+            icon={LayoutDashboard}
+            title="Central operacional"
+            description="Hub profissional com empresas, mobilidade e dashboards."
+            onClick={() => navigate("/central")}
+          />
+          <HubLinkCard
+            icon={Building2}
+            title="Empresas"
+            description="Gestao das empresas vinculadas ao usuario."
+            badge={operations.businesses > 0 ? `${operations.businesses}` : undefined}
+            onClick={() => navigate(appUrls.profile.businesses)}
+          />
+          <HubLinkCard
+            icon={Car}
+            title="Motorista"
+            description={`Status do cadastro: ${motoristaStatus}.`}
+            onClick={() => navigate(appUrls.profile.mobilidade.motorista.home)}
+          />
+          <HubLinkCard
+            icon={Briefcase}
+            title="Motoboy"
+            description={`Status do cadastro: ${motoboyStatus}.`}
+            onClick={() => navigate(appUrls.profile.mobilidade.motoboy.home)}
+          />
+        </div>
+      </SectionFrame>
+
+      <SectionFrame
+        title="Descoberta publica"
+        description="Modulos publicos ficam separados da administracao. Use estes atalhos para navegar como usuario."
+      >
+        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+          <HubLinkCard
+            icon={Building2}
+            title="Empresas publicas"
+            description="Descobrir empresas e catalogos publicados."
+            onClick={() => navigate(appUrls.business.list)}
+          />
+          <HubLinkCard
+            icon={Briefcase}
+            title="Servicos"
+            description="Encontrar profissionais e prestadores."
+            onClick={() => navigate(appUrls.services.list)}
+          />
+          <HubLinkCard
+            icon={MessageSquare}
+            title="Comunidade"
+            description="Posts, recomendacoes e alertas locais."
+            onClick={() => navigate(appUrls.community.feed)}
+          />
+          <HubLinkCard
+            icon={MapPin}
+            title="Mapa"
+            description="Explorar territorio e pontos proximos."
+            onClick={() => navigate(appUrls.map)}
           />
         </div>
       </SectionFrame>

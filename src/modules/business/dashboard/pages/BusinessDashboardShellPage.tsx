@@ -63,7 +63,7 @@ export default function BusinessDashboardShellPage() {
   useEffect(() => {
     if (!loadingAccess && business && !permissions.hasAccess) {
       toast.error("Voce nao tem permissao para gerenciar esta empresa.");
-      navigate("/perfil/empresas", { replace: true });
+      navigate("/central/empresas", { replace: true });
     }
   }, [business, loadingAccess, navigate, permissions.hasAccess]);
 
@@ -142,7 +142,7 @@ export default function BusinessDashboardShellPage() {
         <span>/</span>
         <button
           className="hover:text-foreground"
-          onClick={() => navigate("/perfil/empresas")}
+          onClick={() => navigate("/central/empresas")}
         >
           Empresas
         </button>
@@ -166,7 +166,7 @@ export default function BusinessDashboardShellPage() {
             <Button
               variant="outline"
               className="gap-2"
-              onClick={() => navigate("/perfil/empresas")}
+              onClick={() => navigate("/central/empresas")}
             >
               <ArrowLeft className="h-4 w-4" />
               Voltar para empresas

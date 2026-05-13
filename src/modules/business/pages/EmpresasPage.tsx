@@ -134,8 +134,8 @@ export default function EmpresasPage({ resolved, activeMemberIds }: EmpresasPage
   );
 
   const handleCreateBusiness = useCallback(() => {
-    navigate(appUrls.business.create);
-  }, [navigate, appUrls]);
+    navigate("/empresas/cadastrar");
+  }, [navigate]);
 
   // 🎯 TRANSFORM BUSINESSES FOR GRID - Match BusinessCardProps shape
   const transformedBusinesses = useMemo(() => {

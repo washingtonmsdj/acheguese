@@ -164,7 +164,7 @@ export default function PerfilIdentidadesPage() {
     subtitle?: string;
   }> = [
     { type: 'personal', createPath: '', createLabel: '', subtitle: 'Sua identidade principal' },
-    { type: 'business', createPath: '/empresas/criar-empresa', createLabel: 'Nova empresa', subtitle: 'Empresas e negócios' },
+    { type: 'business', createPath: appUrls.business.create, createLabel: 'Nova empresa', subtitle: 'Empresas e negócios' },
     { type: 'professional', createPath: '/services/cadastrar', createLabel: 'Novo serviço', subtitle: 'Profissionais autônomos' },
     { type: 'driver', createPath: mobilityRoutes.motorista.cadastro, createLabel: 'Ser motorista', subtitle: 'Motoristas e motoboys' },
   ];
@@ -173,7 +173,7 @@ export default function PerfilIdentidadesPage() {
     <div className="max-w-xl mx-auto px-4 py-6 space-y-6">
 
       <div className="flex items-center gap-3">
-        <Button variant="ghost" size="icon" onClick={() => navigate(appUrls.profile.central)}>
+        <Button variant="ghost" size="icon" onClick={() => navigate(appUrls.profile.home)}>
           <ArrowLeft className="h-5 w-5" />
         </Button>
         <div>
@@ -274,4 +274,3 @@ export default function PerfilIdentidadesPage() {
     </div>
   );
 }
-

@@ -95,10 +95,12 @@ export function PerfilHubLayout({
         <meta name="description" content={pageDescription} />
       </Helmet>
 
-      {/* Layout: sidebar fixa (desktop) + conteúdo scrollável */}
-      <div className="flex h-full min-h-0 overflow-hidden">
-        {/* Sidebar desktop - vai até o topo, conectando com a topbar */}
-        <aside className="hidden lg:flex lg:w-[240px] lg:shrink-0 lg:flex-col lg:border-r lg:border-border lg:bg-card xl:w-[260px]">
+      {/* Layout: sidebar fixa (desktop) + conteudo scrollavel */}
+      <div className="relative flex h-full min-h-0 overflow-hidden bg-[radial-gradient(circle_at_12%_0%,hsl(var(--primary)/0.14),transparent_30%),radial-gradient(circle_at_90%_10%,hsl(var(--accent)/0.24),transparent_34%),linear-gradient(180deg,hsl(var(--background)),hsl(var(--muted)/0.36))]">
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/35 to-transparent" />
+
+        {/* Sidebar desktop - area pessoal do usuario */}
+        <aside className="hidden lg:flex lg:w-[264px] lg:shrink-0 lg:flex-col lg:border-r lg:border-border/70 lg:bg-card/88 lg:shadow-[12px_0_40px_rgba(15,23,42,0.04)] lg:backdrop-blur-xl xl:w-[292px]">
           <ProfileSectionsNav
             items={sectionItems}
             activeId={activeSection}
@@ -114,8 +116,8 @@ export function PerfilHubLayout({
         {/* Área de conteúdo scrollável */}
         <main className="flex min-w-0 flex-1 flex-col overflow-hidden">
           <div className="flex-1 overflow-y-auto">
-            <div className="mx-auto max-w-7xl space-y-3 px-3 pb-20 pt-3 sm:space-y-4 sm:px-4 sm:pb-12 sm:pt-4 md:pt-6">
-              {/* Header compacto e responsivo - Sempre perfil PERSONAL */}
+            <div className="mx-auto max-w-7xl space-y-5 px-3 pb-20 pt-3 sm:px-5 sm:pb-12 sm:pt-5 md:space-y-6 lg:px-7 lg:pt-7">
+              {/* Header compacto e responsivo - sempre perfil pessoal */}
               <ProfileHeaderCompact
                 activeProfile={personalProfile}
                 profile={profile}
@@ -133,7 +135,7 @@ export function PerfilHubLayout({
                 onAvatarChange={onAvatarChange}
               />
 
-              {/* Tabs roláveis mobile */}
+              {/* Tabs rolaveis mobile */}
               <div className="lg:hidden">
                 <ProfileSectionsNav
                   items={sectionItems}
@@ -143,8 +145,8 @@ export function PerfilHubLayout({
                 />
               </div>
 
-              {/* Conteúdo das seções */}
-              <div className="space-y-3 sm:space-y-4 md:space-y-6">
+              {/* Conteudo das secoes */}
+              <div className="space-y-5 sm:space-y-6">
                 {children}
               </div>
             </div>

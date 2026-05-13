@@ -35,7 +35,7 @@ export function EmpresasHeroSection({
         primaryCTA={{ 
           label: "Cadastrar Empresa", 
           icon: Plus,
-          onClick: () => navigate("/empresas/criar-empresa")
+          onClick: () => navigate("/empresas/cadastrar")
         }}
       />
       

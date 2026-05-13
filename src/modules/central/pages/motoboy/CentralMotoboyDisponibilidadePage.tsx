@@ -6,9 +6,7 @@ import { DriverAvailabilityLayout } from "@/modules/mobility/components/driver/D
  * Página de disponibilidade de motoboy na Central (/central/motoboy/disponibilidade).
  * Renderiza o componente compartilhado DriverAvailabilityLayout com service="motoboy".
  * 
- * Esta página não é mais um wrapper - ela renderiza o conteúdo real.
- * O componente compartilhado DriverAvailabilityLayout também é usado pela página legada
- * /perfil/mobilidade/motoboy/disponibilidade para evitar duplicação de regra.
+ * Esta p�gina renderiza o conte�do real da rota can�nica da Central.
  */
 export default function CentralMotoboyDisponibilidadePage() {
   return <DriverAvailabilityLayout service="motoboy" />;

@@ -6,7 +6,7 @@ import { Badge } from "@/shared/components/ui/badge";
 import { Button } from "@/shared/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/components/ui/card";
 import { useMotoristaPageV2 } from "@/modules/mobility/hooks/useMotoristaPageV2";
-import { getProfileMobilityServicePath } from "@/modules/profile/utils/profileMobilityNavigation";
+import { getMobilityServicePath } from "@/modules/mobility/routes/mobilityNavigation";
 
 export interface DriverAvailabilityLayoutProps {
   /**
@@ -27,8 +27,8 @@ function formatValue(value: unknown): string {
  * Layout compartilhado para página de disponibilidade de motorista/motoboy.
  * Reutiliza o hook useMotoristaPageV2 e o layout da página legada.
  * 
- * Este componente renderiza o mesmo layout que as páginas legadas
- * /perfil/mobilidade/motorista/disponibilidade e /perfil/mobilidade/motoboy/disponibilidade.
+ * Este componente renderiza o layout das rotas operacionais da Central.
+ * /central/motorista/disponibilidade e /central/motoboy/disponibilidade.
  */
 export function DriverAvailabilityLayout({ service }: DriverAvailabilityLayoutProps) {
   const navigate = useNavigate();
@@ -138,7 +138,7 @@ export function DriverAvailabilityLayout({ service }: DriverAvailabilityLayoutPr
                 {shell.isDriverOnline ? <ToggleLeft className="h-4 w-4" /> : <ToggleRight className="h-4 w-4" />}
                 {shell.isDriverOnline ? "Ficar offline" : "Ficar online"}
               </Button>
-              <Button variant="outline" onClick={() => navigate(getProfileMobilityServicePath(service, actionSection))}>
+              <Button variant="outline" onClick={() => navigate(getMobilityServicePath(service, actionSection))}>
                 {actionLabel}
               </Button>
             </div>

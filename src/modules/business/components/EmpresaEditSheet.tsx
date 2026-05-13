@@ -244,7 +244,7 @@ export default function EmpresaEditSheet({
         !address.trim() &&
         !modosAtendimento.every((m) => m === DRIVER_STATUS.ONLINE)
       ) {
-        toast.error("Endereço é obrigatório para businesss presenciais");
+        toast.error("Endereço é obrigatório para empresas presenciais");
         return;
       }
     }

@@ -49,7 +49,7 @@ export function useProfileCompleteness(profile: MultiProfileRecord | null): Prof
     {
       id: 'location',
       label: 'Localização',
-      done: !!(profile.city?.trim() || profile.location?.trim()),
+      done: !!(profile.location_id || profile.location?.trim()),
       path: editPath,
       weight: 15,
     },

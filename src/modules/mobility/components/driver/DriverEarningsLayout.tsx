@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/sha
 import { DriverEarningsCard } from "@/modules/mobility/components/driver/DriverEarningsCard";
 import { WeeklyEarningsChart } from "@/modules/mobility/components/driver/WeeklyEarningsChart";
 import { useMotoristaPageV2 } from "@/modules/mobility/hooks/useMotoristaPageV2";
-import { getProfileMobilityServicePath } from "@/modules/profile/utils/profileMobilityNavigation";
+import { getMobilityServicePath } from "@/modules/mobility/routes/mobilityNavigation";
 
 export interface DriverEarningsLayoutProps {
   /**
@@ -26,8 +26,8 @@ function formatMoney(value?: number | null): string {
  * Layout compartilhado para página de ganhos de motorista/motoboy.
  * Reutiliza os componentes DriverEarningsCard e WeeklyEarningsChart.
  * 
- * Este componente renderiza o mesmo layout que as páginas legadas
- * /perfil/mobilidade/motorista/ganhos e /perfil/mobilidade/motoboy/ganhos.
+ * Este componente renderiza o layout das rotas operacionais da Central.
+ * /central/motorista/ganhos e /central/motoboy/ganhos.
  */
 export function DriverEarningsLayout({ service }: DriverEarningsLayoutProps) {
   const navigate = useNavigate();
@@ -104,7 +104,7 @@ export function DriverEarningsLayout({ service }: DriverEarningsLayoutProps) {
       <Button 
         variant="outline" 
         className="w-full justify-between" 
-        onClick={() => navigate(getProfileMobilityServicePath(service, "configuracoes"))}
+        onClick={() => navigate(getMobilityServicePath(service, "configuracoes"))}
       >
         {actionLabel}
         <RotateCcw className="h-4 w-4" />

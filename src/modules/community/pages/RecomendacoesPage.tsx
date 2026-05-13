@@ -70,7 +70,7 @@ export default function RecomendacoesPage() {
             <p className="text-gray-400 mb-6">
               Para acessar as recomendações, você precisa cadastrar seu bairro no perfil.
             </p>
-            <Button onClick={() => window.location.href = appUrls.profile.central} className="bg-teal-500 hover:bg-teal-400">
+            <Button onClick={() => window.location.href = appUrls.profile.home} className="bg-teal-500 hover:bg-teal-400">
               Completar Perfil
             </Button>
           </div>

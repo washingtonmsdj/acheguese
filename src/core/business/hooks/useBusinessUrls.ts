@@ -32,12 +32,12 @@ export interface BusinessUrls {
    * URL de compartilhamento: /p/:slug para premium, canônica para demais.
    */
   share: (ctx: BusinessUrlContext) => string;
-  /** Criar empresa: /empresas/criar-empresa */
+  /** Criar empresa: /central/empresas/nova */
   create: string;
   /** Editar empresa: /edit-business/{businessId} (global) */
   edit: (businessId: string) => string;
-  /** Gestao da empresa: /central/empresas/{businessId} (global) - usa Central por padrão */
-  dashboard: (businessId: string, opts?: { target?: "central" | "legacy" }) => string;
+  /** Gestao da empresa: /central/empresas/{businessId} (global) */
+  dashboard: (businessId: string) => string;
 }
 
 export function useBusinessUrls(routeResolved?: ResolvedTerritory | null): BusinessUrls {
@@ -73,9 +73,8 @@ export function useBusinessUrls(routeResolved?: ResolvedTerritory | null): Busin
     list: listUrl,
     canonical: (ctx: BusinessUrlContext) => BusinessUrlService.getCanonicalUrl(ctx),
     share: (ctx: BusinessUrlContext) => BusinessUrlService.getShareUrl(ctx),
-    create: '/empresas/criar-empresa',
+    create: businessManagementRoutes.create(),
     edit: (businessId: string) => `/edit-business/${businessId}`,
-    dashboard: (businessId: string, opts?: { target?: "central" | "legacy" }) =>
-      businessManagementRoutes.overview(businessId, opts),
+    dashboard: (businessId: string) => businessManagementRoutes.overview(businessId),
   };
 }

@@ -1,4 +1,4 @@
-﻿import { useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   ArrowLeft,
@@ -160,7 +160,7 @@ export default function FamiliaPage() {
               variant="ghost"
               size="icon"
               className="-ml-2"
-              onClick={() => navigate(appUrls.profile.central)}
+              onClick={() => navigate(appUrls.profile.home)}
             >
               <ArrowLeft className="h-5 w-5" />
             </Button>

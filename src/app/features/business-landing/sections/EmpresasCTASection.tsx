@@ -18,7 +18,7 @@ export function EmpresasCTASection({ user, navigate }: EmpresasCTASectionProps) 
           Conecte-se com milhares de clientes no seu bairro. Cadastro rápido, fácil e sem custo.
         </p>
         <Button
-          onClick={() => navigate(user ? "/empresas/criar-empresa" : "/login")}
+          onClick={() => navigate("/empresas/cadastrar")}
           className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-sm md:text-base h-11 px-8 rounded-lg shadow-lg"
         >
           Cadastrar Minha Empresa

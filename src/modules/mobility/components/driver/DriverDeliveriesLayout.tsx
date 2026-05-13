@@ -7,7 +7,7 @@ import { Button } from "@/shared/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/components/ui/card";
 import { MotoboyDeliveryActions } from "@/modules/mobility/components/driver/MotoboyDeliveryActions";
 import { useMotoristaPageV2 } from "@/modules/mobility/hooks/useMotoristaPageV2";
-import { getProfileMobilityServicePath } from "@/modules/profile/utils/profileMobilityNavigation";
+import { getMobilityServicePath } from "@/modules/mobility/routes/mobilityNavigation";
 
 type DeliveryLike = {
   id: string;
@@ -43,7 +43,7 @@ function getTrustRiskLabel(delivery: DeliveryLike): string | null {
  * Reutiliza o componente MotoboyDeliveryActions e o hook useMotoristaPageV2.
  * 
  * Este componente renderiza o mesmo layout que a página legada
- * /perfil/mobilidade/motoboy/entregas.
+ * /central/motoboy/entregas.
  */
 export function DriverDeliveriesLayout() {
   const navigate = useNavigate();
@@ -113,11 +113,11 @@ export function DriverDeliveriesLayout() {
             <CardDescription>Ajustes da operacao de motoboy.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-2">
-            <Button className="w-full justify-between" onClick={() => navigate(getProfileMobilityServicePath("motoboy", "disponibilidade"))}>
+            <Button className="w-full justify-between" onClick={() => navigate(getMobilityServicePath("motoboy", "disponibilidade"))}>
               Ajustar disponibilidade
               <RotateCcw className="h-4 w-4" />
             </Button>
-            <Button variant="outline" className="w-full justify-between" onClick={() => navigate(getProfileMobilityServicePath("motoboy", "cadastro"))}>
+            <Button variant="outline" className="w-full justify-between" onClick={() => navigate(getMobilityServicePath("motoboy", "cadastro"))}>
               Revisar cadastro
               <RotateCcw className="h-4 w-4" />
             </Button>
