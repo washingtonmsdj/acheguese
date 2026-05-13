@@ -6,7 +6,8 @@ Este documento substitui os mapas de transicao antigos. O sistema esta em desenv
 
 ## Separacao de responsabilidades
 
-- `/perfil`: area pessoal do usuario, dados pessoais, foto, bio, enderecos pessoais, notificacoes, favoritos e resumo/atalhos das areas que possui.
+- `/conta`: area privada do usuario, dados pessoais, foto, bio, enderecos pessoais, notificacoes, favoritos e resumo/atalhos das areas que possui.
+- `/u/:username`: perfil publico/social do usuario.
 - `/central`: area operacional/profissional, gestao de empresas, verticais, planos, motorista, motoboy, prestador e dashboards administrativos do usuario.
 - `/empresas`: modulo publico de descoberta/listagem de empresas.
 

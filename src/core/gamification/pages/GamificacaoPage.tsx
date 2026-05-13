@@ -576,7 +576,7 @@ export default function GamificacaoPage() {
               <Link to={LAUNCH_URLS.community}>Ir para Comunidade</Link>
             </Button>
             <Button asChild variant="outline" size="lg">
-              <Link to="/configuracoes">Configurar Perfil</Link>
+              <Link to="/conta/preferencias">Configurar Conta</Link>
             </Button>
           </div>
         </Card>

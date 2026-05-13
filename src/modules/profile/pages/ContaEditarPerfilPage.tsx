@@ -1,5 +1,5 @@
 /**
- * /perfil/editar/:profileId — Editar perfil completo por tipo
+ * /conta/editar/:profileId — Editar perfil completo por tipo
  *
  * Segurança:
  *   - Verifica que o profileId pertence ao usuário logado (profiles.user_id = auth.uid)
@@ -294,7 +294,7 @@ function DriverSection({ data, onChange }: {
 
 // ── Componente principal ──────────────────────────────────────────────
 
-export default function PerfilEditarPage() {
+export default function ContaEditarPerfilPage() {
   const navigate = useNavigate();
   const appUrls = useAppUrls();
   const { profileId } = useParams<{ profileId: string }>();
@@ -326,7 +326,7 @@ export default function PerfilEditarPage() {
     entityType: 'profile',
     entityId: profileId || '',
     userId: user?.id || '',
-    page: 'PerfilEditarPage',
+    page: 'ContaEditarPerfilPage',
   });
 
   // Fun��o doSave definida antes do hook que a usa
@@ -351,7 +351,7 @@ export default function PerfilEditarPage() {
       }
 
       toast.success('Perfil atualizado');
-      navigate('/perfil');
+      navigate('/conta');
     } catch (err: unknown) {
       const errMessage = err instanceof Error ? err.message : 'Erro ao salvar';
       const errCode =
@@ -386,7 +386,7 @@ export default function PerfilEditarPage() {
         <p className="text-sm text-muted-foreground">
           Voc� n�o tem permiss�o para editar este perfil.
         </p>
-        <Button variant="outline" onClick={() => navigate('/perfil')}>Voltar</Button>
+        <Button variant="outline" onClick={() => navigate('/conta')}>Voltar</Button>
       </div>
     );
   }
@@ -399,7 +399,7 @@ export default function PerfilEditarPage() {
         <p className="text-sm text-muted-foreground">
           O perfil solicitado n�o est� dispon�vel para edi��o neste contexto.
         </p>
-        <Button variant="outline" onClick={() => navigate('/perfil')}>Voltar</Button>
+        <Button variant="outline" onClick={() => navigate('/conta')}>Voltar</Button>
       </div>
     );
   }
@@ -412,7 +412,7 @@ export default function PerfilEditarPage() {
         <p className="text-sm text-muted-foreground">
           {error ?? 'N�o foi poss�vel carregar o agregado can�nico de edi��o.'}
         </p>
-        <Button variant="outline" onClick={() => navigate('/perfil')}>Voltar</Button>
+        <Button variant="outline" onClick={() => navigate('/conta')}>Voltar</Button>
       </div>
     );
   }
@@ -437,7 +437,7 @@ export default function PerfilEditarPage() {
       <div className="sticky top-0 z-20 -mx-4 mb-5 border-b border-border/60 bg-background/85 px-4 py-3 backdrop-blur sm:static sm:mx-0 sm:mb-6 sm:rounded-3xl sm:border sm:bg-card/85 sm:px-5 sm:shadow-sm">
         <div className="flex items-center justify-between gap-3">
           <div className="flex min-w-0 items-center gap-3">
-            <Button variant="ghost" size="icon" className="shrink-0 rounded-full" onClick={() => navigate('/perfil')}>
+            <Button variant="ghost" size="icon" className="shrink-0 rounded-full" onClick={() => navigate('/conta')}>
               <ArrowLeft className="h-5 w-5" />
             </Button>
             <div className="min-w-0">
@@ -450,7 +450,7 @@ export default function PerfilEditarPage() {
           </div>
 
           <div className="hidden shrink-0 gap-2 sm:flex">
-            <Button variant="outline" onClick={() => navigate('/perfil')}>Cancelar</Button>
+            <Button variant="outline" onClick={() => navigate('/conta')}>Cancelar</Button>
             <Button className="gap-2" onClick={handleSave} disabled={saving || extLoading}>
               {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
               Salvar
@@ -515,7 +515,7 @@ export default function PerfilEditarPage() {
             variant="outline"
             size="sm"
             className="mt-3"
-            onClick={() => navigate("/configuracoes")}
+            onClick={() => navigate("/conta/enderecos")}
           >
             Abrir configura��es operacionais
           </Button>
@@ -608,7 +608,7 @@ export default function PerfilEditarPage() {
       )}
 
       <div className="sticky bottom-0 -mx-4 flex gap-3 border-t border-border/70 bg-background/90 px-4 py-3 backdrop-blur sm:static sm:mx-0 sm:border-0 sm:bg-transparent sm:px-0 sm:pb-8 sm:pt-0">
-        <Button variant="outline" className="flex-1 rounded-2xl" onClick={() => navigate('/perfil')}>Cancelar</Button>
+        <Button variant="outline" className="flex-1 rounded-2xl" onClick={() => navigate('/conta')}>Cancelar</Button>
         <Button className="flex-1 gap-2 rounded-2xl" onClick={handleSave} disabled={saving || extLoading}>
           {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
           Salvar

@@ -1,6 +1,13 @@
 # Script PowerShell para aplicar migration via psql
+# Requer SUPABASE_DB_PASSWORD no ambiente.
 
-$env:PGPASSWORD = "Acheguese2024!"
+if (-not $env:SUPABASE_DB_PASSWORD) {
+    Write-Host "Erro: SUPABASE_DB_PASSWORD nao definida no ambiente." -ForegroundColor Red
+    Write-Host "Defina a variavel e execute novamente." -ForegroundColor Yellow
+    exit 1
+}
+
+$env:PGPASSWORD = $env:SUPABASE_DB_PASSWORD
 
 Write-Host "Aplicando migration..." -ForegroundColor Cyan
 Write-Host ""

@@ -16,6 +16,7 @@ export class AddressRepositoryMock implements IAddressRepository {
     const address: Address = {
       id,
       location_id: input.location_id,
+      metadata: input.metadata ?? {},
       postal_code: input.postal_code ?? null,
       street: input.street ?? null,
       number: input.number ?? null,

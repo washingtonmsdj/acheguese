@@ -1,7 +1,7 @@
 /**
  * useEcosystemSummary
  *
- * Busca contagens reais do ecossistema para o hub /perfil.
+ * Busca contagens reais do ecossistema para o hub /conta.
  * Usa apenas services existentes — zero acesso direto ao banco de dados.
  *
  * Strategy de loading:

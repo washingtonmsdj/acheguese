@@ -11,7 +11,7 @@
  *
  * @version 2.0.0 - Refatoração SSOT completa
  */
-
+	
 // ============================================================
 // 📦 QUERIES - Operações de Leitura
 // ============================================================
@@ -382,11 +382,22 @@ export class PostService {
   async getFeed(params: {
     location_id?: string;
     location_ids?: string[];
+    district_filter?: boolean;
+    city_filter?: boolean;
+    includeStreetReach?: boolean;
     limit?: number;
     cursor?: string;
   } = {}): Promise<FeedResult> {
     try {
-      const { location_id, location_ids, limit = PAGINATION.DEFAULT_LIMIT, cursor } = params;
+      const {
+        location_id,
+        location_ids,
+        district_filter = false,
+        city_filter = false,
+        includeStreetReach = false,
+        limit = PAGINATION.DEFAULT_LIMIT,
+        cursor,
+      } = params;
 
       // Validar que temos location_id ou location_ids
       if (!location_id && !location_ids?.length) {
@@ -395,11 +406,15 @@ export class PostService {
       }
 
       // Expandir território
-      const inputIds = location_ids?.length ? location_ids : [location_id!];
-      const expandedIds = await this.expandLocationIds(inputIds);
+      const expandedIds = await this.resolveFeedLocationIds({
+        location_id,
+        location_ids,
+        district_filter,
+        city_filter,
+      });
 
       if (expandedIds.length === 0) {
-        logger.warn('PostService: No valid locations after expansion', { inputIds });
+        logger.warn('PostService: No valid locations after expansion', { location_id, location_ids });
         return { posts: [], hasMore: false };
       }
 
@@ -439,6 +454,10 @@ export class PostService {
         .eq('is_published', true)
         .order('created_at', { ascending: false })
         .limit(limit + 1); // +1 para verificar hasMore
+
+      if (!includeStreetReach) {
+        query = query.or('reach.is.null,reach.neq.street');
+      }
 
       // Cursor pagination
       if (cursor) {
@@ -496,6 +515,40 @@ export class PostService {
    * - city: retorna cidade + todos os distritos ativos filhos
    * - district: retorna bairro + cidade-pai
    */
+  private async resolveFeedLocationIds(params: {
+    location_id?: string;
+    location_ids?: string[];
+    district_filter?: boolean;
+    city_filter?: boolean;
+  }): Promise<string[]> {
+    const { location_id, location_ids, district_filter, city_filter } = params;
+
+    if (location_ids?.length) {
+      return this.expandLocationIds(location_ids);
+    }
+
+    if (!location_id) {
+      return [];
+    }
+
+    if (district_filter) {
+      return [location_id];
+    }
+
+    if (city_filter) {
+      const { data: districts } = await supabase
+        .from('locations')
+        .select('id')
+        .eq('parent_id', location_id)
+        .eq('type', 'district')
+        .eq('status', 'active');
+
+      return [location_id, ...(districts ?? []).map((d) => d.id)];
+    }
+
+    return this.expandLocationIds([location_id]);
+  }
+
   private async expandLocationIds(locationIds: string[]): Promise<string[]> {
     const expanded: string[] = [];
 

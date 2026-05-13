@@ -261,9 +261,9 @@ export default function ComplexoNordesteLandingPage() {
             <Button
               size="sm"
               className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold rounded-lg"
-              onClick={() => navigate(user ? '/perfil' : '/login')}
+              onClick={() => navigate(user ? '/conta' : '/login')}
             >
-              {user ? 'Meu Perfil' : 'Entrar'}
+              {user ? 'Minha conta' : 'Entrar'}
             </Button>
           </div>
         </header>

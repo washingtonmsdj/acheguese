@@ -34,7 +34,7 @@ import { useMultiProfileContext } from '@/core/profiles/contexts/multi-profile-r
 import { useAppUrls } from '@/core/routing/hooks/useAppUrls';
 import { BusinessUrlService } from '@/core/business/services/BusinessUrlService';
 import { useDriverProfileIdentity } from '@/core/profiles/services/useDriverProfileIdentity';
-import { usePerfilPageV3 } from './usePerfilPageV3';
+import { useContaWorkspace } from './usePerfilPageV3';
 import { buildProfileEditUrl, buildPublicProfileUrl } from '@/core/profiles/utils/publicProfileUrl';
 import { canProfileHaveMembers, isProfileVerified } from '../utils/profileDomainRules';
 
@@ -91,7 +91,7 @@ export function useProfileHub() {
     handleDeleteAccount,
     handleAvatarChange,
     refreshWorkspace,
-  } = usePerfilPageV3();
+  } = useContaWorkspace();
 
   // Dados básicos
   const activeProfileId = activeProfile?.id ?? profile?.id ?? null;
@@ -353,7 +353,7 @@ export function useProfileHub() {
           ? {
               title: 'Definir residencia ou territorio',
               description: 'Ainda faltam sinais territoriais para personalizacao e descoberta local.',
-              actionLabel: 'Abrir configuracoes',
+              actionLabel: 'Abrir preferencias',
               onClick: () => navigate(appUrls.settings),
             }
           : null,

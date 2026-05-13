@@ -305,7 +305,7 @@ export function AppSidebar() {
         {user ? (
           <SidebarMenu>
             <SidebarMenuItem>
-              <SidebarMenuButton asChild tooltip="Meu perfil">
+              <SidebarMenuButton asChild tooltip="Minha conta">
                 <Link
                   to={appUrls.profile.home}
                   onMouseEnter={() => prefetchRouteByHref(appUrls.profile.home)}
@@ -324,7 +324,7 @@ export function AppSidebar() {
                         {activeProfile?.displayName || user.email?.split('@')[0]}
                       </p>
                       <p className="text-[11px] text-muted-foreground truncate">
-                        {activeProfile?.username ? `@${activeProfile.username}` : 'Ver perfil'}
+                        {activeProfile?.username ? `@${activeProfile.username}` : 'Abrir conta'}
                       </p>
                     </div>
                   ) : null}
@@ -332,7 +332,7 @@ export function AppSidebar() {
               </SidebarMenuButton>
             </SidebarMenuItem>
             <SidebarMenuItem>
-              <SidebarMenuButton asChild tooltip="Configuracoes">
+              <SidebarMenuButton asChild tooltip="Preferencias da conta">
                 <Link
                   to={appUrls.settings}
                   onMouseEnter={() => prefetchRouteByHref(appUrls.settings)}
@@ -340,7 +340,7 @@ export function AppSidebar() {
                   onTouchStart={() => prefetchRouteByHref(appUrls.settings)}
                 >
                   <Settings className="h-4 w-4" />
-                  <span>Configuracoes</span>
+                  <span>Preferencias da conta</span>
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>

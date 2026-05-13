@@ -1,7 +1,7 @@
-/**
+﻿/**
  * ResumoSection - visao pessoal do usuario.
  *
- * Mantem o Perfil como area pessoal e envia operacoes para a Central.
+ * Mantem a conta como area pessoal e envia operacoes para a Central.
  */
 
 import {
@@ -71,14 +71,14 @@ export function ResumoSection({
           <div className="space-y-3">
             <div className="inline-flex items-center gap-2 rounded-full border border-border/70 bg-background/75 px-3 py-1 text-xs font-semibold text-muted-foreground backdrop-blur">
               <Sparkles className="h-3.5 w-3.5 text-primary" />
-              Perfil pessoal
+              Minha conta
             </div>
             <div>
               <h2 className="max-w-3xl text-2xl font-black tracking-tight text-foreground sm:text-3xl lg:text-4xl">
                 Sua identidade, dados pessoais e atalhos seguros em um unico lugar.
               </h2>
               <p className="mt-3 max-w-2xl text-sm leading-6 text-muted-foreground sm:text-base">
-                O Perfil mostra sua conta pessoal. Empresas, motorista, motoboy e rotinas administrativas ficam na Central para manter a separacao de responsabilidades.
+                A conta mostra sua area pessoal. Empresas, motorista, motoboy e rotinas administrativas ficam na Central para manter a separacao de responsabilidades.
               </p>
             </div>
           </div>
@@ -95,7 +95,7 @@ export function ResumoSection({
             </button>
             <button
               type="button"
-              onClick={() => navigate("/configuracoes")}
+              onClick={() => navigate("/conta/enderecos")}
               className="rounded-2xl border border-border/70 bg-background/75 p-4 text-left transition hover:border-primary/40 hover:bg-background"
             >
               <MapPin className="h-5 w-5 text-primary" />
@@ -117,7 +117,7 @@ export function ResumoSection({
 
       <SectionFrame
         title="Resumo pessoal"
-        description="Indicadores reais da sua conta e das areas vinculadas, sem misturar gestao operacional dentro do Perfil."
+        description="Indicadores reais da sua conta e das areas vinculadas, sem misturar gestao operacional na area pessoal."
       >
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
           <DashboardMetricCard
@@ -165,7 +165,7 @@ export function ResumoSection({
             icon={MapPin}
             title="Endereco e residencia"
             description="Atualizar residencia, territorio e verificacao."
-            onClick={() => navigate("/configuracoes")}
+            onClick={() => navigate("/conta/enderecos")}
           />
           <HubLinkCard
             icon={Bell}
@@ -190,7 +190,7 @@ export function ResumoSection({
             icon={Settings2}
             title="Preferencias"
             description="Privacidade, vinculos e ajustes gerais."
-            onClick={() => setActiveSection("configuracoes")}
+            onClick={() => setActiveSection("preferencias")}
           />
           <HubLinkCard
             icon={Shield}
@@ -209,7 +209,7 @@ export function ResumoSection({
 
       <SectionFrame
         title="Atalhos para areas que voce possui"
-        description="Acesso rapido para modulos operacionais sem colocar administracao dentro do Perfil."
+        description="Acesso rapido para modulos operacionais sem colocar administracao dentro da conta."
       >
         <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
           <HubLinkCard
@@ -274,3 +274,4 @@ export function ResumoSection({
     </div>
   );
 }
+

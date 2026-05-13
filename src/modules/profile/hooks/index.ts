@@ -7,7 +7,7 @@
 
 export { useActivityStats } from './useActivityStats';
 export { useEcosystemSummary } from './useEcosystemSummary';
-export { usePerfilPageV3 } from './usePerfilPageV3';
+export { useContaWorkspace } from './usePerfilPageV3';
 export { useProfileCompleteness } from './useProfileCompleteness';
 export { useSavedPosts } from './useSavedPosts';
 export { useUserActivity } from './useUserActivity';

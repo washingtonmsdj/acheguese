@@ -202,7 +202,7 @@ import { Settings2 } from 'lucide-react';
   title="Configurações"
   description="Ajuste preferências e privacidade"
   badge="3 pendentes"
-  onClick={() => navigate('/perfil/configuracoes')}
+  onClick={() => navigate('/conta/preferencias')}
 />
 ```
 

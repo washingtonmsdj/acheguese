@@ -1,7 +1,11 @@
 const PROJECT_REF = 'xhdowzacfujckjelqhtd';
-const ACCESS_TOKEN = 'sbp_db5b6a29484375c7ceec51616d0c3ef56083a170';
-const SERVICE_KEY = 'process.env.SUPABASE_SERVICE_ROLE_KEY!';
-const SUPABASE_URL = process.env.VITE_SUPABASE_URL!;
+const ACCESS_TOKEN = process.env.SUPABASE_ACCESS_TOKEN;
+const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const SUPABASE_URL = process.env.VITE_SUPABASE_URL;
+
+if (!ACCESS_TOKEN) throw new Error('SUPABASE_ACCESS_TOKEN nao definida no ambiente.');
+if (!SERVICE_KEY) throw new Error('SUPABASE_SERVICE_ROLE_KEY nao definida no ambiente.');
+if (!SUPABASE_URL) throw new Error('VITE_SUPABASE_URL nao definida no ambiente.');
 
 async function query(sql) {
   const res = await fetch(`https://api.supabase.com/v1/projects/${PROJECT_REF}/database/query`, {

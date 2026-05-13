@@ -65,11 +65,11 @@ export function canHavePublicUrl(profile: Profile): boolean {
 }
 
 export function buildProfileEditUrl(profileId: string): string {
-  return `/perfil/editar/${profileId}`;
+  return `/conta/editar/${profileId}`;
 }
 
 export function buildProfileSettingsUrl(
   tab?: "privacy" | "links" | "members",
 ): string {
-  return tab ? `/perfil/configuracoes?tab=${tab}` : "/perfil/configuracoes";
+  return tab ? `/conta/preferencias?tab=${tab}` : "/conta/preferencias";
 }

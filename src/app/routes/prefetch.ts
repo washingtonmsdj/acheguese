@@ -67,8 +67,8 @@ const PREFETCHERS: Array<{ test: (path: string) => boolean; load: () => Promise<
     load: () => import("@/app/pages/NotificationsPage"),
   },
   {
-    test: (path) => path.startsWith("/perfil"),
-    load: () => import("@/modules/profile/pages/PerfilHubPage"),
+    test: (path) => path.startsWith("/conta"),
+    load: () => import("@/modules/profile/pages/ContaHubPage"),
   },
 ];
 
@@ -128,6 +128,7 @@ export function scheduleIdleRouteWarmup(): void {
       "/ranking",
       "/mensagens",
       "/notifications",
+      "/conta",
     ].forEach((href) => prefetchRouteByHref(href));
   });
 }

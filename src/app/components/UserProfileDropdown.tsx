@@ -104,16 +104,16 @@ export function UserProfileDropdown({ onLogout }: UserProfileDropdownProps) {
         <DropdownMenuSeparator />
 
         <DropdownMenuItem asChild>
-          <Link to="/perfil" className="cursor-pointer">
+          <Link to="/conta" className="cursor-pointer">
             <User className="mr-2 h-4 w-4" />
-            Meu Perfil
+            Minha conta
           </Link>
         </DropdownMenuItem>
 
         <DropdownMenuItem asChild>
-          <Link to="/configuracoes" className="cursor-pointer">
+          <Link to="/conta/preferencias" className="cursor-pointer">
             <Settings className="mr-2 h-4 w-4" />
-            Configurações
+            Preferencias
           </Link>
         </DropdownMenuItem>
 

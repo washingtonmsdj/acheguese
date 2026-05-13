@@ -38,7 +38,6 @@ import {
   Newspaper,
   Globe,
   Home,
-  Navigation,
   X,
   AlertCircle,
 } from "lucide-react";
@@ -125,7 +124,6 @@ const POST_TYPES: {
 ];
 
 const REACH_OPTIONS = [
-  { value: "street", label: "Minha rua", icon: Navigation, description: "Visível apenas para moradores da sua rua" },
   { value: "neighborhood", label: "Meu bairro", icon: Home, description: "Visível para todo o bairro" },
   { value: "city", label: "Cidade", icon: Globe, description: "Visível para toda a cidade" },
 ];
@@ -151,7 +149,7 @@ export function CreatePostModal({
   React.useEffect(() => {
     if (open) {
       form.setType(initialType ?? defaultType ?? "discussao");
-      form.setReach(initialReach ?? "neighborhood");
+      form.setReach(initialReach === "street" ? "neighborhood" : initialReach ?? "neighborhood");
       form.setContent(initialContent ?? "");
     }
   }, [open, defaultType, form, initialContent, initialReach, initialType]);

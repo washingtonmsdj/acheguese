@@ -56,7 +56,7 @@ export function ChangePasswordForm({ onSave, onCancel }: ChangePasswordFormProps
       await onSave(data);
       reset();
     } catch {
-      // Erro já tratado pelo onSave (toast no PerfilContaPage)
+      // Erro ja tratado pelo onSave (toast na pagina de seguranca da conta)
     }
   };
 

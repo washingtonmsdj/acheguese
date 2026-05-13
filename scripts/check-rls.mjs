@@ -1,5 +1,9 @@
 const PROJECT_REF = 'xhdowzacfujckjelqhtd';
-const ACCESS_TOKEN = 'sbp_296ec3010b43324ce6163eb5150c45facea545c4';
+const ACCESS_TOKEN = process.env.SUPABASE_ACCESS_TOKEN;
+
+if (!ACCESS_TOKEN) {
+  throw new Error('SUPABASE_ACCESS_TOKEN nao definida no ambiente.');
+}
 
 async function query(sql) {
   const res = await fetch(`https://api.supabase.com/v1/projects/${PROJECT_REF}/database/query`, {

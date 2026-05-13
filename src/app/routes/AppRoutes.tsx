@@ -117,8 +117,15 @@ export function AppRoutes() {
         <Route path="/eventos/:id" element={<P.EventoDetailPage />} />
         <Route path="/cupons" element={<P.CuponsPage />} />
         <Route path="/cupons/:id" element={<P.CupomDetailPage />} />
-        <Route path="/configuracoes" element={<P.ConfiguracoesPage />} />
-        <Route path="/perfil/configuracoes" element={<P.ProfileSettingsPage />} />
+        <Route path="/conta/preferencias" element={<P.ContaPreferenciasPage />} />
+        <Route path="/conta/notificacoes" element={<P.NotificationPreferencesPage />} />
+        <Route path="/conta/privacidade" element={<P.PrivacySettingsPage />} />
+        <Route path="/conta/seguranca" element={<P.ContaSegurancaPage />} />
+        <Route path="/conta/enderecos" element={<P.ContaEnderecosPage />} />
+        <Route path="/conta/profissional" element={<P.ContaProfissionalPage />} />
+        <Route path="/conta/editar" element={<P.ContaEditarPage />} />
+        <Route path="/conta/editar/:profileId" element={<P.ContaEditarPerfilPage />} />
+        <Route path="/conta" element={<P.ContaPage />} />
         <Route path="/gamificacao" element={<P.GamificacaoPage />} />
         <Route path="/empresas" element={<P.EmpresasLandingPage />} />
         <Route path="/empresas/cadastrar" element={<P.EmpresasCadastroLandingPage />} />
@@ -211,7 +218,6 @@ export function AppRoutes() {
         <Route path="/offline-settings" element={<P.OfflineSettingsPage />} />
         
         {/* 🔒 LGPD / Privacidade */}
-        <Route path="/conta/privacidade" element={<P.PrivacySettingsPage />} />
         <Route path="/dpo" element={<P.DPOContactPage />} />
         <Route path="/motorista-legacy" element={<P.MotoristaPage />} />
 
@@ -562,21 +568,7 @@ export function AppRoutes() {
           <Route index element={<TerritorialVagasPage />} />
         </Route>
 
-        {/* Rotas de perfil */}
-        <Route path="/perfil" element={<P.PerfilPage />} />
-        <Route path="/perfil/planos" element={<P.PerfilPlanosPage />} />
-        <Route path="/perfil/gerenciar" element={<P.PerfilIdentidadesPage />} />
-        <Route path="/perfil/editar/:profileId" element={<P.PerfilEditarPage />} />
-        <Route path="/perfil/verificacao-morador" element={<P.ResidentVerificationPage />} />
-        <Route path="/perfil/identidades" element={<P.PerfilIdentidadesPage />} />
-        <Route path="/perfil/conta" element={<P.PerfilContaPage />} />
-        <Route path="/perfil/familia" element={<P.FamiliaPage />} />
       </Route>
-
-      {/* Rotas fora do layout */}
-      <Route path="/profile" element={<P.PerfilPage />} />
-      <Route path="/profile/gerenciar" element={<P.PerfilIdentidadesPage />} />
-      <Route path="/profile/familia" element={<P.FamiliaPage />} />
 
       {/* Rotas de admin */}
       <Route path="/admin" element={<P.AdminLayout />}>

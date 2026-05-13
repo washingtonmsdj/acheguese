@@ -12,7 +12,8 @@ const routeNames: Record<string, string> = {
   eventos: "Eventos",
   cupons: "Cupons",
   mapa: "Mapa",
-  perfil: "Perfil",
+  perfil: "Conta",
+  conta: "Minha conta",
   mobilidade: "Mobilidade",
   motorista: "Motorista",
   motoboy: "Motoboy",
@@ -22,7 +23,7 @@ const routeNames: Record<string, string> = {
   disponibilidade: "Disponibilidade",
   ganhos: "Ganhos",
   configuracoes: "Configuracoes",
-  profile: "Perfil",
+  profile: "Conta",
   mensagens: "Mensagens",
   ranking: "Ranking",
   busca: "Buscar",
@@ -50,6 +51,8 @@ function resolveRouteName(name: string): string | undefined {
       return routeNames.mapa;
     case "perfil":
       return routeNames.perfil;
+    case "conta":
+      return routeNames.conta;
     case "mobilidade":
       return routeNames.mobilidade;
     case "motorista":

@@ -201,7 +201,7 @@ export class TrustEventService {
     const linkedEvent = action.trust_event_id
       ? await this.getTrustEventById(action.trust_event_id)
       : null;
-    const subjectActionUrl = linkedEvent ? trustContextActionUrl(linkedEvent) : "/perfil";
+    const subjectActionUrl = linkedEvent ? trustContextActionUrl(linkedEvent) : "/conta";
     const adminActionUrl = "/admin/moderacao";
     const metadata = {
       source: "trust_admin_action",

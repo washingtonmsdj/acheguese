@@ -5,7 +5,7 @@
  * Contém apenas dados que podem ser exibidos publicamente.
  * 
  * Casos de uso:
- * - Página pública de perfil (/perfil/:slug)
+ * - Página pública de perfil (/u/:username)
  * - Compartilhamento de perfil
  * - Preview de perfil em cards
  * 

@@ -136,8 +136,8 @@ export default function BusinessDashboardShellPage() {
   return (
     <div className="container mx-auto max-w-7xl space-y-4 px-4 py-6">
       <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
-        <button className="hover:text-foreground" onClick={() => navigate("/perfil")}>
-          Perfil
+        <button className="hover:text-foreground" onClick={() => navigate("/conta")}>
+          Conta
         </button>
         <span>/</span>
         <button

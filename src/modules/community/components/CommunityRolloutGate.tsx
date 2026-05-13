@@ -60,7 +60,7 @@ export function CommunityRolloutGate({ children }: CommunityRolloutGateProps) {
           )}
 
           <Button 
-            onClick={() => navigate('/perfil/endereco')}
+            onClick={() => navigate('/conta/enderecos')}
             className="w-full"
           >
             Confirmar Endereço

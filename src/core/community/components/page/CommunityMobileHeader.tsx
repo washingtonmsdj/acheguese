@@ -89,7 +89,7 @@ export function CommunityMobileHeader({
 
           <NotificationDropdown />
 
-          <Link to="/perfil" aria-label="Ir para meu perfil">
+          <Link to="/conta" aria-label="Ir para minha conta">
             <Avatar className="h-8 w-8 border-2 border-teal-400/30">
               <AvatarImage
                 src={avatarUrl || ""}

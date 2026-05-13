@@ -1011,7 +1011,7 @@ export class ProfileServiceLegacy {
   /**
    * Snapshot privado canônico do hub de perfil.
    *
-   * Consolida o estado privado usado por `/perfil` em um único agregado
+   * Consolida o estado privado usado por `/conta` em um único agregado
    * de service, sem espalhar orquestração por hook/página.
    */
   async getPrivateWorkspace(userId: string): Promise<ProfilePrivateWorkspace> {

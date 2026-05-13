@@ -9,7 +9,7 @@
  *
  * Usado por:
  * - ProfileService.getPrivateWorkspace() (retorna businessModules)
- * - usePerfilPageV3, useProfileHub (consomem businessModules)
+ * - useContaWorkspace, useProfileHub (consomem businessModules)
  * - BusinessList, FavoritesList, ContentTabsSection (exibem businesses)
  * - BusinessOwnerQuickAccess, BusinessModulesSection (exibem módulos)
  *

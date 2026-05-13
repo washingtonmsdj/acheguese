@@ -8,7 +8,11 @@ import { fileURLToPath } from 'url';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
 const PROJECT_REF = 'xhdowzacfujckjelqhtd';
-const ACCESS_TOKEN = 'sbp_296ec3010b43324ce6163eb5150c45facea545c4';
+const ACCESS_TOKEN = process.env.SUPABASE_ACCESS_TOKEN;
+
+if (!ACCESS_TOKEN) {
+  throw new Error('SUPABASE_ACCESS_TOKEN nao definida no ambiente.');
+}
 
 const migrationFile = process.argv[2];
 if (!migrationFile) {

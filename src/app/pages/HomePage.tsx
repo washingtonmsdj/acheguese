@@ -136,9 +136,9 @@ export default function HomePage() {
               <Button
                 size="sm"
                 className="bg-teal-500 hover:bg-teal-400 text-black font-semibold text-xs sm:text-sm !h-auto !py-1.5 px-1 sm:px-1.5 rounded-sm !leading-tight !min-h-0"
-                onClick={() => navigate(user ? '/perfil' : '/login')}
+                onClick={() => navigate(user ? '/conta' : '/login')}
               >
-                {user ? 'Meu perfil' : 'Entrar'}
+                {user ? 'Minha conta' : 'Entrar'}
               </Button>
             </div>
           </header>

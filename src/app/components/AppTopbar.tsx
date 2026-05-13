@@ -123,11 +123,11 @@ export function AppTopbar() {
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Link
-                    to="/perfil"
+                    to="/conta"
                     className="ml-1"
-                    onMouseEnter={() => prefetchRouteByHref('/perfil')}
-                    onFocus={() => prefetchRouteByHref('/perfil')}
-                    onTouchStart={() => prefetchRouteByHref('/perfil')}
+                    onMouseEnter={() => prefetchRouteByHref('/conta')}
+                    onFocus={() => prefetchRouteByHref('/conta')}
+                    onTouchStart={() => prefetchRouteByHref('/conta')}
                   >
                     <Avatar className="h-9 w-9 border-2 border-primary/20 hover:border-primary/60 transition-all duration-200 hover:scale-105 cursor-pointer ring-offset-2 hover:ring-2 hover:ring-primary/30">
                       <AvatarImage src={activeProfile?.avatarUrl || undefined} />
@@ -138,7 +138,7 @@ export function AppTopbar() {
                   </Link>
                 </TooltipTrigger>
                 <TooltipContent side="bottom" className="text-xs">
-                  <p>Meu Perfil</p>
+                  <p>Minha conta</p>
                 </TooltipContent>
               </Tooltip>
             ) : (

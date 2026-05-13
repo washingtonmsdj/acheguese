@@ -1,43 +1,52 @@
-import { useState, useEffect, useCallback } from "react";
-import { MapPin, Edit2, CheckCircle, AlertCircle } from "lucide-react";
+import { useState, useEffect, useCallback, type KeyboardEvent } from "react";
+import { MapPin, Edit2, CheckCircle, AlertCircle, Search, Loader2 } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import { Card } from "@/shared/components/ui/card";
 import { Input } from "@/shared/components/ui/input";
 import { Label } from "@/shared/components/ui/label";
 import { Badge } from "@/shared/components/ui/badge";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from "@/shared/components/ui/dialog";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/shared/components/ui/select";
-import {
   residenceService,
-  UserResidence,
   UserResidenceWithRelations,
 } from "@/core/residence/services/ResidenceService";
 import { AddressService } from "@/core/address/services/AddressService";
-import { useLocations } from "@/core/location/hooks/useLocations";
+import { TerritorialSelector } from "@/core/location/components/TerritorialSelector";
+import {
+  residentialLocalityService,
+  type ResidentialLocality,
+} from "@/core/location";
+import { createLocationRepository } from "@/core/location/repositories/createLocationRepository";
+import { LocationStatus, LocationType } from "@/core/location/types";
+import { canUseResidenceLocalReference } from "@/core/residence/config/residenceAddressPolicy";
+import { locationGeocodingService } from "@/core/location/services/LocationGeocodingService";
+import type { LocationGeocodingResult } from "@/core/location/services/LocationGeocodingService";
 import { toast } from "sonner";
 import { useSessionContext } from "@/core/session";
 import { logger } from "@/shared/utils/logger";
+
+type LookupStatus = "idle" | "loading" | "success" | "error";
+type AddressEntryMode = "cep" | "manual";
+
+function normalizeSearch(value: string): string {
+  return value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim();
+}
+
+function tryMatchDistrictName(input: string, candidate: string): boolean {
+  const a = normalizeSearch(input);
+  const b = normalizeSearch(candidate);
+  if (!a || !b) return false;
+  return a === b || a.includes(b) || b.includes(a);
+}
 
 export function ResidenceManager() {
   const { user } = useSessionContext();
   const [residence, setResidence] = useState<UserResidenceWithRelations | null>(null);
   const [loading, setLoading] = useState(true);
-  const [dialogOpen, setDialogOpen] = useState(false);
-
-  // ETAPA 11: Carregar locations disponíveis
-  const { data: allLocations = [] } = useLocations();
+  const [formOpen, setFormOpen] = useState(false);
   const addressService = new AddressService();
 
   // Form state - ETAPA 12: Apenas campos para criar address
@@ -45,10 +54,87 @@ export function ResidenceManager() {
   const [number, setNumber] = useState("");
   const [complement, setComplement] = useState("");
   const [postalCode, setPostalCode] = useState("");
+  const [localNeighborhood, setLocalNeighborhood] = useState("");
+  const [cityLocationId, setCityLocationId] = useState<string | null>(null);
+  const [localities, setLocalities] = useState<ResidentialLocality[]>([]);
+  const [loadingLocalities, setLoadingLocalities] = useState(false);
+  const [cepLookupStatus, setCepLookupStatus] = useState<LookupStatus>("idle");
+  const [cepLookupMessage, setCepLookupMessage] = useState<string>("");
+  const [cepAutoLookupDone, setCepAutoLookupDone] = useState("");
+  const [streetSuggestions, setStreetSuggestions] = useState<LocationGeocodingResult[]>([]);
+  const [streetLookupStatus, setStreetLookupStatus] = useState<LookupStatus>("idle");
   
   // ETAPA 11: Campos canônicos com seleção explícita
   const [addressId, setAddressId] = useState<string | null>(null);
   const [locationId, setLocationId] = useState<string | null>(null);
+  const [territorySummary, setTerritorySummary] = useState<string | null>(null);
+  const [territoryScope, setTerritoryScope] = useState<"city" | "district" | null>(null);
+  const [selectedStateName, setSelectedStateName] = useState<string | null>(null);
+  const [selectedCityName, setSelectedCityName] = useState<string | null>(null);
+  const [streetTouched, setStreetTouched] = useState(false);
+  const [localNeighborhoodTouched, setLocalNeighborhoodTouched] = useState(false);
+  const [territoryTouched, setTerritoryTouched] = useState(false);
+  const [showManualLocalityInput, setShowManualLocalityInput] = useState(false);
+  const [entryMode, setEntryMode] = useState<AddressEntryMode>("cep");
+  const [showTerritoryEditor, setShowTerritoryEditor] = useState(false);
+  const [territoryResolutionNeeded, setTerritoryResolutionNeeded] = useState(false);
+  const [highlightedSuggestionIndex, setHighlightedSuggestionIndex] = useState<number>(-1);
+  const normalizedInput = normalizeSearch(localNeighborhood);
+  const officialSuggestions = localities.filter((locality) =>
+    normalizeSearch(locality.name).includes(normalizedInput),
+  );
+  const isOfficialNeighborhood = localities.some(
+    (locality) => normalizeSearch(locality.name) === normalizedInput,
+  );
+
+  useEffect(() => {
+    setHighlightedSuggestionIndex(-1);
+  }, [localNeighborhood, cityLocationId]);
+
+  useEffect(() => {
+    if (entryMode === "manual") {
+      setCepLookupStatus("idle");
+      setCepLookupMessage("");
+      setShowTerritoryEditor(true);
+    } else {
+      setShowTerritoryEditor(false);
+    }
+    setShowManualLocalityInput(false);
+    setHighlightedSuggestionIndex(-1);
+  }, [entryMode]);
+
+  const visibleSuggestions = normalizedInput.length >= 2 ? officialSuggestions.slice(0, 8) : [];
+
+  function handleNeighborhoodKeyDown(event: KeyboardEvent<HTMLInputElement>) {
+    if (visibleSuggestions.length === 0) return;
+
+    if (event.key === "ArrowDown") {
+      event.preventDefault();
+      setHighlightedSuggestionIndex((prev) =>
+        prev < visibleSuggestions.length - 1 ? prev + 1 : 0,
+      );
+      return;
+    }
+
+    if (event.key === "ArrowUp") {
+      event.preventDefault();
+      setHighlightedSuggestionIndex((prev) =>
+        prev > 0 ? prev - 1 : visibleSuggestions.length - 1,
+      );
+      return;
+    }
+
+    if (event.key === "Enter" && highlightedSuggestionIndex >= 0) {
+      event.preventDefault();
+      setLocalNeighborhood(visibleSuggestions[highlightedSuggestionIndex].name);
+      setHighlightedSuggestionIndex(-1);
+      return;
+    }
+
+    if (event.key === "Escape") {
+      setHighlightedSuggestionIndex(-1);
+    }
+  }
 
   const fetchResidence = useCallback(async () => {
     if (!user) return;
@@ -77,21 +163,295 @@ export function ResidenceManager() {
       // ETAPA 12: Carregar dados do address canônico
       setAddressId(residence.address_id);
       setLocationId(residence.location_id);
+      setTerritorySummary(residence.location?.name ?? null);
+      setCityLocationId(null);
       // Campos do form serão carregados do address se necessário editar
       setStreet("");
       setNumber("");
       setComplement("");
       setPostalCode("");
+      setLocalNeighborhood(
+        typeof residence.address?.metadata?.local_neighborhood === "string"
+          ? residence.address.metadata.local_neighborhood
+          : "",
+      );
     } else {
       setStreet("");
       setNumber("");
       setComplement("");
       setPostalCode("");
+      setLocalNeighborhood("");
       setAddressId(null);
       setLocationId(null);
+      setTerritorySummary(null);
+      setTerritoryScope(null);
+      setCityLocationId(null);
     }
-    setDialogOpen(true);
+    setStreetTouched(false);
+    setLocalNeighborhoodTouched(false);
+    setTerritoryTouched(false);
+    setCepLookupStatus("idle");
+    setCepLookupMessage("");
+    setStreetLookupStatus("idle");
+    setStreetSuggestions([]);
+    setShowManualLocalityInput(false);
+    setEntryMode("cep");
+    setShowTerritoryEditor(false);
+    setTerritoryResolutionNeeded(false);
+    setFormOpen(true);
   }
+
+  const formatCep = useCallback((value: string): string => {
+    const digits = value.replace(/\D/g, "").slice(0, 8);
+    if (digits.length <= 5) return digits;
+    return `${digits.slice(0, 5)}-${digits.slice(5)}`;
+  }, []);
+
+  const applyLocationLookupResult = useCallback(
+    (result: Awaited<ReturnType<typeof locationGeocodingService.lookupPostalCode>>) => {
+      if (!result) return;
+
+      setPostalCode(result.postalCode);
+      setCepAutoLookupDone(result.postalCode.replace(/\D/g, ""));
+
+      // Preencher rua se disponível e não foi tocado pelo usuário
+      if (result.street && (!streetTouched || !street.trim())) {
+        setStreet(result.street);
+      }
+
+      // SSOT: Priorizar dados do território oficial (SSOT) sobre providerAddress
+      const resolvedNeighborhood =
+        result.territory.district?.name ??      // 1º: Bairro oficial do SSOT
+        result.territory.city?.name ??          // 2º: Cidade do SSOT (fallback)
+        result.neighborhood ??                  // 3º: Bairro do geocoding
+        result.providerAddress.neighborhood ??  // 4º: Bairro do provedor externo
+        "";
+      
+      if (resolvedNeighborhood && (!localNeighborhoodTouched || !localNeighborhood.trim())) {
+        setLocalNeighborhood(resolvedNeighborhood);
+      }
+
+      // Cenário ideal: locationId encontrado no SSOT
+      if (result.locationData?.locationId && !territoryTouched) {
+        setLocationId(result.locationData.locationId);
+        setCityLocationId(result.territory.city?.id ?? null);
+        setSelectedStateName(result.territory.state?.name ?? null);
+        setSelectedCityName(result.territory.city?.name ?? null);
+        setTerritoryScope(result.territory.district ? "district" : result.territory.city ? "city" : null);
+
+        if (result.territory.state && result.territory.city) {
+          const neighborhood = result.territory.district?.name ?? result.territory.city.name;
+          setTerritorySummary(
+            `${neighborhood}, ${result.territory.city.name} - ${result.territory.state.name}`,
+          );
+        }
+        setTerritoryResolutionNeeded(false);
+      } else {
+        // Cenário sem locationId: usar dados disponíveis do SSOT
+        // SSOT: Priorizar territory sobre providerAddress
+        const stateFromSSot = result.territory.state?.name;
+        const cityFromSSot = result.territory.city?.name;
+        
+        setSelectedStateName(stateFromSSot ?? result.providerAddress.state ?? null);
+        setSelectedCityName(cityFromSSot ?? result.providerAddress.city ?? null);
+        
+        // Verificar se tem dados mínimos do SSOT (não do provedor)
+        const hasSSotData = stateFromSSot && cityFromSSot;
+        const hasNeighborhood = result.territory.district?.name || result.neighborhood;
+        
+        if (hasSSotData && hasNeighborhood) {
+          // Criar summary com dados do SSOT
+          const neighborhood = result.territory.district?.name ?? 
+            result.neighborhood ?? 
+            cityFromSSot;
+          
+          setTerritorySummary(`${neighborhood}, ${cityFromSSot} - ${stateFromSSot}`);
+          setTerritoryResolutionNeeded(false);
+        } else if (hasSSotData) {
+          // Tem estado e cidade do SSOT, mas sem bairro
+          setTerritorySummary(`${cityFromSSot} - ${stateFromSSot}`);
+          setTerritoryResolutionNeeded(false);
+        } else {
+          // Dados insuficientes do SSOT - precisa resolução manual
+          setTerritorySummary(null);
+          setTerritoryResolutionNeeded(true);
+        }
+      }
+    },
+    [localNeighborhoodTouched, localNeighborhood, streetTouched, street, territoryTouched],
+  );
+
+  async function handleLookupCep() {
+    const cleanedCep = postalCode.replace(/\D/g, "");
+    if (cleanedCep.length !== 8) {
+      toast.error("CEP deve conter 8 digitos");
+      return;
+    }
+
+    try {
+      setCepLookupStatus("loading");
+      setCepLookupMessage("");
+      const result = await locationGeocodingService.lookupPostalCode({
+        postalCode: cleanedCep,
+      });
+
+      if (!result) {
+        setCepLookupStatus("error");
+        setCepLookupMessage("CEP nao encontrado.");
+        setTerritoryResolutionNeeded(true);
+        toast.error("CEP nao encontrado");
+        return;
+      }
+      applyLocationLookupResult(result);
+      setCepLookupStatus("success");
+      
+      // Mensagens baseadas na qualidade dos dados do SSOT
+      if (result.locationData?.locationId) {
+        // ✅ Correspondência exata no SSOT
+        setCepLookupMessage("CEP validado e endereço preenchido.");
+        toast.success("Endereço encontrado por CEP");
+      } else {
+        // Verificar se tem dados mínimos do SSOT (não do provedor)
+        const hasSSotData = result.territory.state && result.territory.city;
+        
+        if (hasSSotData) {
+          // ✅ Tem dados do SSOT (estado e cidade)
+          setCepLookupMessage("CEP validado. Dados preenchidos com sucesso.");
+          toast.success("Endereço encontrado por CEP");
+        } else {
+          // ⚠️ Sem dados suficientes do SSOT
+          setCepLookupMessage("CEP validado. Confirme o território oficial.");
+          toast.info("CEP encontrado. Selecione estado e cidade do SSOT.");
+        }
+      }
+    } catch (error) {
+      logger.error("Error looking up CEP:", error);
+      setCepLookupStatus("error");
+      setCepLookupMessage("Falha ao buscar CEP.");
+      toast.error("Erro ao buscar CEP. Tente novamente.");
+    } finally {
+      // status final já definido em success/error
+    }
+  }
+
+  const handleTerritoryChange = useCallback(
+    (
+      selectedLocationId: string | null,
+      locationData: {
+        stateName: string;
+        cityName: string;
+        neighborhoodName: string;
+        cityId?: string;
+      } | null,
+    ) => {
+      setTerritoryTouched(true);
+      setLocationId(selectedLocationId);
+      setCityLocationId(locationData?.cityId ?? null);
+      setSelectedStateName(locationData?.stateName ?? null);
+      setSelectedCityName(locationData?.cityName ?? null);
+      if (
+        selectedLocationId &&
+        locationData &&
+        selectedLocationId !== locationData.cityId &&
+        !localNeighborhoodTouched
+      ) {
+        setLocalNeighborhood(locationData.neighborhoodName);
+      }
+      setTerritoryScope(
+        selectedLocationId && locationData
+          ? selectedLocationId === locationData.cityId
+            ? "city"
+            : "district"
+          : null,
+      );
+      setTerritorySummary(
+        locationData
+          ? `${locationData.neighborhoodName}, ${locationData.cityName} - ${locationData.stateName}`
+          : null,
+      );
+    },
+    [localNeighborhoodTouched],
+  );
+
+  useEffect(() => {
+    const cleanedCep = postalCode.replace(/\D/g, "");
+    if (cleanedCep.length !== 8) return;
+    if (cepLookupStatus === "loading") return;
+    if (cleanedCep === cepAutoLookupDone) return;
+    void handleLookupCep();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [postalCode, cepLookupStatus, cepAutoLookupDone]);
+
+  useEffect(() => {
+    const query = street.trim();
+    if (!streetTouched || query.length < 4 || !selectedCityName || !selectedStateName) {
+      setStreetSuggestions([]);
+      return;
+    }
+
+    let cancelled = false;
+    setStreetLookupStatus("loading");
+
+    const timer = setTimeout(async () => {
+      try {
+        const suggestions = await locationGeocodingService.geocode({
+          query,
+          city: selectedCityName,
+          state: selectedStateName,
+          country: "BR",
+          limit: 5,
+        });
+
+        if (!cancelled) {
+          setStreetSuggestions(
+            suggestions.filter((item) => Boolean(item.systemAddress.street)).slice(0, 5),
+          );
+          setStreetLookupStatus("success");
+        }
+      } catch (error) {
+        logger.warn("Street autocomplete failed", error);
+        if (!cancelled) {
+          setStreetSuggestions([]);
+          setStreetLookupStatus("error");
+        }
+      } finally {
+        // status final já definido em success/error
+      }
+    }, 450);
+
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+  }, [street, streetTouched, selectedCityName, selectedStateName]);
+
+  useEffect(() => {
+    if (!cityLocationId) {
+      setLocalities([]);
+      return;
+    }
+
+    let isMounted = true;
+    setLoadingLocalities(true);
+
+    residentialLocalityService
+      .listActiveByCity(cityLocationId)
+      .then((items) => {
+        if (isMounted) setLocalities(items);
+      })
+      .catch((error) => {
+        logger.warn("Residential localities unavailable; using empty fallback", error);
+        if (isMounted) setLocalities([]);
+      })
+      .finally(() => {
+        if (isMounted) setLoadingLocalities(false);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [cityLocationId]);
+
 
   async function handleSave() {
     if (!user) {
@@ -101,16 +461,58 @@ export function ResidenceManager() {
 
     // ETAPA 12: Validar campos mínimos
     if (!locationId) {
-      toast.error("Selecione o território");
+      toast.error("Selecione estado e cidade da residencia");
       return;
     }
 
-    if (!street || !number || !postalCode) {
-      toast.error("Preencha rua, número e CEP");
+    const safeLocalNeighborhood = localNeighborhood.trim();
+    if (safeLocalNeighborhood.length > 80) {
+      toast.error("Localidade complementar (privada) deve ter ate 80 caracteres");
+      return;
+    }
+
+    if (!postalCode) {
+      toast.error("Preencha o CEP");
       return;
     }
 
     try {
+      let resolvedLocationId = locationId;
+
+      if (
+        resolvedLocationId &&
+        cityLocationId &&
+        resolvedLocationId === cityLocationId &&
+        safeLocalNeighborhood.length > 0
+      ) {
+        try {
+          const locationRepository = createLocationRepository();
+          const districts = await locationRepository.findChildren(cityLocationId, {
+            type: LocationType.DISTRICT,
+            status: LocationStatus.ACTIVE,
+            page: 1,
+            page_size: 500,
+          });
+
+          const matchedDistrict = districts.locations.find((district) =>
+            tryMatchDistrictName(safeLocalNeighborhood, district.name),
+          );
+
+          if (matchedDistrict) {
+            resolvedLocationId = matchedDistrict.id;
+            setLocationId(matchedDistrict.id);
+            setTerritoryScope("district");
+            if (selectedCityName && selectedStateName) {
+              setTerritorySummary(
+                `${matchedDistrict.name}, ${selectedCityName} - ${selectedStateName}`,
+              );
+            }
+          }
+        } catch (resolutionError) {
+          logger.warn("Failed to reconcile locality with official district before save", resolutionError);
+        }
+      }
+
       if (residence) {
         // ETAPA 12: Update apenas preserva canônico (não permite editar address inline)
         toast.info("Edição de endereço não implementada. Crie uma nova residência.");
@@ -125,15 +527,22 @@ export function ResidenceManager() {
           const addressType = hasStreetAndNumber ? 'exact' : 'approximate';
 
           const address = await addressService.createAddress({
-            location_id: locationId,
+            location_id: resolvedLocationId,
+            owner_user_id: user.id,
             street: street || null,
             number: number || null,
             complement: complement || null,
             postal_code: postalCode || null,
             address_type: addressType,
+            precision: territoryScope === "city" ? "city" : "district",
             geocoding_source: 'manual',
             latitude: null,
             longitude: null,
+            metadata: {
+              local_neighborhood: safeLocalNeighborhood || null,
+              canonical_scope: territoryScope ?? "district",
+              canonical_label: territorySummary,
+            },
           });
 
           createdAddressId = address.id;
@@ -147,13 +556,13 @@ export function ResidenceManager() {
         await residenceService.createResidence({
           user_id: user.id,
           address_id: createdAddressId,
-          location_id: locationId,
+          location_id: resolvedLocationId,
           country: "Brasil",
         });
         toast.success("Residência cadastrada");
       }
 
-      setDialogOpen(false);
+      setFormOpen(false);
       fetchResidence();
     } catch (error: any) {
       logger.error("Error saving residence:", error);
@@ -191,29 +600,41 @@ export function ResidenceManager() {
     );
   }
 
+  const residenceLocalNeighborhood =
+    typeof residence?.address?.metadata?.local_neighborhood === "string"
+      ? residence.address.metadata.local_neighborhood
+      : null;
+  const isCepMode = entryMode === "cep";
+  const hasManualTerritorySelection = Boolean(cityLocationId);
+  const hasTerritoryData = Boolean(selectedStateName && selectedCityName);
+  
+  // SIMPLES: Mostrar território quando tem dados OU modo manual
+  const shouldShowTerritorySection = hasTerritoryData || !isCepMode;
+  
+  // SIMPLES: Mostrar campos quando CEP teve sucesso OU modo manual com território
+  const shouldShowAddressFields = (isCepMode && cepLookupStatus === "success") || (!isCepMode && hasManualTerritorySelection);
+  const allowLocalReferenceByCity = canUseResidenceLocalReference(selectedCityName);
+  const shouldShowLocalReferenceField =
+    shouldShowAddressFields &&
+    allowLocalReferenceByCity &&
+    (showManualLocalityInput || (localNeighborhood.trim().length > 0 && !isOfficialNeighborhood));
+
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <div>
+    <div className="space-y-6">
+      <div className="flex items-center justify-between mb-2">
+        <div className="space-y-1">
           <h3 className="text-lg font-semibold">Minha Residência</h3>
           <p className="text-sm text-muted-foreground">Onde você mora</p>
         </div>
-        <Button onClick={openEditDialog} size="sm">
-          {residence ? (
-            <>
-              <Edit2 className="h-4 w-4 mr-2" />
-              Editar
-            </>
-          ) : (
-            <>
-              <MapPin className="h-4 w-4 mr-2" />
-              Cadastrar
-            </>
-          )}
-        </Button>
+        {residence ? (
+          <Button onClick={openEditDialog} size="sm">
+            <Edit2 className="h-4 w-4 mr-2" />
+            Editar
+          </Button>
+        ) : null}
       </div>
 
-      {!residence ? (
+      {!residence && !formOpen && (
         <Card className="p-6 text-center">
           <MapPin className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
           <p className="text-sm text-muted-foreground mb-4">
@@ -223,7 +644,9 @@ export function ResidenceManager() {
             Cadastrar Residência
           </Button>
         </Card>
-      ) : (
+      )}
+
+      {residence && (
         <Card className="p-4">
           <div className="flex items-start justify-between">
             <div className="flex-1">
@@ -253,6 +676,11 @@ export function ResidenceManager() {
                 <p className="text-muted-foreground">
                   {residence.location?.name}
                 </p>
+                {residenceLocalNeighborhood ? (
+                  <p className="text-muted-foreground">
+                    Localidade informada: {residenceLocalNeighborhood}
+                  </p>
+                ) : null}
                 <p className="text-muted-foreground">
                   CEP: {residence.address?.postal_code}
                 </p>
@@ -278,46 +706,219 @@ export function ResidenceManager() {
         </Card>
       )}
 
-      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>
-              {residence ? "Editar" : "Cadastrar"} Residência
-            </DialogTitle>
-            <DialogDescription>Informe seu endereço completo</DialogDescription>
-          </DialogHeader>
+      {formOpen && (
+        <Card className="p-6 mt-6 border-2 border-primary/20 shadow-lg">
+          <div className="mb-6 space-y-2">
+            <h4 className="text-lg font-semibold">
+              {residence ? "Editar" : "Cadastrar"} residência
+            </h4>
+            <p className="text-sm text-muted-foreground">
+              Defina seu endereço residencial de forma segura e validada.
+            </p>
+          </div>
 
           <div className="grid grid-cols-2 gap-4">
-            {/* ETAPA 12: Seletor de território obrigatório */}
-            <div className="col-span-2">
-              <Label>Território (Cidade/Bairro) *</Label>
-              <Select value={locationId || ""} onValueChange={setLocationId}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecione sua cidade ou bairro" />
-                </SelectTrigger>
-                <SelectContent>
-                  {allLocations
-                    .filter((loc) => loc.status === "active")
-                    .map((loc) => (
-                      <SelectItem key={loc.id} value={loc.id}>
-                        {loc.name} ({loc.type === "city" ? "Cidade" : "Bairro"})
-                      </SelectItem>
-                    ))}
-                </SelectContent>
-              </Select>
+            <div className="col-span-2 rounded-xl border border-border bg-muted/20 p-4 mb-2">
+              <p className="mb-3 text-sm font-medium text-foreground">
+                Como deseja preencher o endereço?
+              </p>
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  type="button"
+                  size="sm"
+                  variant={entryMode === "cep" ? "default" : "outline"}
+                  onClick={() => setEntryMode("cep")}
+                >
+                  Buscar por CEP (Recomendado)
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant={entryMode === "manual" ? "default" : "outline"}
+                  onClick={() => setEntryMode("manual")}
+                >
+                  Preencher manualmente
+                </Button>
+              </div>
             </div>
 
-            <div className="col-span-2">
-              <Label>Rua/Avenida *</Label>
+            <div className={`col-span-2 mt-2 ${!isCepMode ? "hidden" : ""}`}>
+              <Label className="text-sm font-medium mb-2 block">CEP *</Label>
+              <div className="flex gap-2">
+                <Input
+                  value={postalCode}
+                  onChange={(e) => setPostalCode(formatCep(e.target.value))}
+                  placeholder="Ex: 40000-000"
+                  maxLength={9}
+                  className="flex-1"
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={handleLookupCep}
+                  disabled={cepLookupStatus === "loading" || postalCode.replace(/\D/g, "").length !== 8}
+                  className="shrink-0"
+                >
+                  {cepLookupStatus === "loading" ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Search className="h-4 w-4" />
+                  )}
+                  <span className="ml-2">Buscar CEP</span>
+                </Button>
+              </div>
+              {cepLookupMessage ? (
+                <p className={`mt-2 text-xs ${cepLookupStatus === "error" ? "text-destructive" : "text-muted-foreground"}`}>
+                  {cepLookupMessage}
+                </p>
+              ) : null}
+              {isCepMode && territoryResolutionNeeded ? (
+                <div className="mt-3 flex items-center justify-between rounded-lg border border-amber-400/30 bg-amber-50 px-4 py-3">
+                  <p className="text-xs text-amber-700">
+                    Não validamos o território automaticamente. Confirme estado e cidade para concluir.
+                  </p>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="ghost"
+                    className="h-8 px-3 text-xs shrink-0 ml-2"
+                    onClick={() => setShowTerritoryEditor(true)}
+                  >
+                    Selecionar território
+                  </Button>
+                </div>
+              ) : (
+                <p className="mt-2 text-xs text-muted-foreground">
+                  Digite o CEP e complete o endereço se quiser melhorar a verificação.
+                </p>
+              )}
+            </div>
+
+            {/* SIMPLES: Território - Estado e Cidade */}
+            <div className={`col-span-2 mt-4 ${!shouldShowTerritorySection ? "hidden" : ""}`}>
+              <div className="rounded-2xl border border-border bg-muted/30 p-5">
+                <div className="mb-5 space-y-2">
+                  <p className="text-sm font-semibold text-foreground">
+                    Território da residência
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    Estado, cidade e bairro usados para comunidade e cobertura territorial.
+                  </p>
+                </div>
+
+                <TerritorialSelector
+                  initialLocationId={locationId}
+                  onLocationChange={handleTerritoryChange}
+                  allowCityOnly
+                  progressiveReveal={entryMode === "manual"}
+                  preferredStateName={selectedStateName}
+                  preferredCityName={selectedCityName}
+                  preferredNeighborhoodName={localNeighborhood}
+                  labels={{
+                    state: "Estado",
+                    city: "Cidade",
+                    neighborhood: "Bairro",
+                  }}
+                />
+
+                {territorySummary && (
+                  <div className="mt-4 rounded-xl border border-green-600/20 bg-green-50 dark:bg-green-950/20 px-4 py-3 text-xs text-green-700 dark:text-green-400">
+                    ✓ Território: {territorySummary}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Localidade complementar (privada) - apenas sob demanda */}
+            <div className={`col-span-2 mt-4 ${!shouldShowAddressFields || !allowLocalReferenceByCity ? "hidden" : ""}`}>
+              {!shouldShowLocalReferenceField ? (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowManualLocalityInput(true)}
+                >
+                  Nao encontrei na lista
+                </Button>
+              ) : null}
+            </div>
+            <div className={`col-span-2 mt-2 ${!shouldShowLocalReferenceField ? "hidden" : ""}`}>
+              <Label className="text-sm font-medium mb-2 block">Bairro/localidade (complementar e privado)</Label>
+              <Input
+                value={localNeighborhood}
+                onChange={(e) => {
+                  setLocalNeighborhoodTouched(true);
+                  setLocalNeighborhood(e.target.value);
+                }}
+                placeholder="Ex: Chapada do Rio Vermelho"
+                maxLength={80}
+              />
+              {localNeighborhood.trim() && !localNeighborhoodTouched ? (
+                <p className="mt-2 text-xs text-green-600">
+                  ✓ Preenchido automaticamente pelo CEP
+                </p>
+              ) : (
+                <p className="mt-2 text-xs text-muted-foreground">
+                  Use apenas quando sua localidade nao aparecer no bairro do territorio.
+                </p>
+              )}
+            </div>
+
+            <div className={`col-span-2 mt-4 ${!shouldShowAddressFields ? "hidden" : ""}`}>
+              <Label className="text-sm font-medium mb-2 block">Rua/Avenida</Label>
               <Input
                 value={street}
-                onChange={(e) => setStreet(e.target.value)}
+                onChange={(e) => {
+                  setStreetTouched(true);
+                  setStreet(e.target.value);
+                }}
                 placeholder="Ex: Rua das Flores"
               />
+              {streetLookupStatus === "loading" ? (
+                <p className="mt-2 text-xs text-muted-foreground">Buscando ruas...</p>
+              ) : null}
+              {streetTouched && streetSuggestions.length > 0 ? (
+                <div className="mt-2 rounded-lg border border-border bg-background p-2">
+                  <p className="mb-2 text-[11px] font-medium text-muted-foreground">
+                    Sugestoes de rua
+                  </p>
+                  <div className="space-y-1">
+                    {streetSuggestions.map((item) => (
+                      <button
+                        key={`${item.coordinates.latitude}-${item.coordinates.longitude}-${item.displayAddress}`}
+                        type="button"
+                        className="w-full rounded-md px-2 py-1 text-left text-xs hover:bg-muted"
+                        onClick={() => {
+                          if (item.systemAddress.street) setStreet(item.systemAddress.street);
+                          if (item.systemAddress.neighborhood && !localNeighborhood.trim()) {
+                            setLocalNeighborhood(item.systemAddress.neighborhood);
+                          }
+                          if (item.systemAddress.postalCode && !postalCode.trim()) {
+                            setPostalCode(formatCep(item.systemAddress.postalCode));
+                          }
+                          setStreetSuggestions([]);
+                        }}
+                      >
+                        <span className="font-medium">{item.systemAddress.street ?? item.displayAddress}</span>
+                        <span className="ml-1 text-muted-foreground">
+                          {item.systemAddress.neighborhood
+                            ? `- ${item.systemAddress.neighborhood}`
+                            : ""}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ) : null}
+              {street.trim().length > 0 && !selectedCityName ? (
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Selecione estado e cidade para habilitar sugestoes de rua.
+                </p>
+              ) : null}
             </div>
 
-            <div>
-              <Label>Número *</Label>
+            <div className={`mt-4 ${!shouldShowAddressFields ? "hidden" : ""}`}>
+              <Label className="text-sm font-medium mb-2 block">Número</Label>
               <Input
                 value={number}
                 onChange={(e) => setNumber(e.target.value)}
@@ -325,34 +926,25 @@ export function ResidenceManager() {
               />
             </div>
 
-            <div>
-              <Label>Complemento</Label>
+            <div className={`mt-4 ${!shouldShowAddressFields ? "hidden" : ""}`}>
+              <Label className="text-sm font-medium mb-2 block">Complemento</Label>
               <Input
                 value={complement}
                 onChange={(e) => setComplement(e.target.value)}
                 placeholder="Ex: Apto 101"
               />
             </div>
-
-            <div className="col-span-2">
-              <Label>CEP *</Label>
-              <Input
-                value={postalCode}
-                onChange={(e) => setPostalCode(e.target.value)}
-                placeholder="Ex: 40000-000"
-                maxLength={9}
-              />
-            </div>
           </div>
 
-          <div className="flex gap-2 justify-end mt-4">
-            <Button variant="outline" onClick={() => setDialogOpen(false)}>
+          <div className="flex gap-3 justify-end mt-6 pt-4 border-t">
+            <Button variant="outline" onClick={() => setFormOpen(false)}>
               Cancelar
             </Button>
             <Button onClick={handleSave}>Salvar</Button>
           </div>
-        </DialogContent>
-      </Dialog>
+        </Card>
+      )}
     </div>
   );
 }
+

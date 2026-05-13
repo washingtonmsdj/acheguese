@@ -5,17 +5,14 @@
  * Este modulo expoe apenas paginas e hooks especificos da experiencia de perfil.
  */
 
-export { default as ConfiguracoesPage } from './pages/ConfiguracoesPage';
-export { default as FamiliaPage } from './pages/FamiliaPage';
-export { default as PerfilContaPage } from './pages/PerfilContaPage';
-export { default as PerfilEditarPage } from './pages/PerfilEditarPage';
-export { default as PerfilHubPage } from './pages/PerfilHubPage';
-export { default as PerfilIdentidadesPage } from './pages/PerfilIdentidadesPage';
+export { default as ContaSegurancaPage } from './pages/ContaSegurancaPage';
+export { default as ContaEditarPerfilPage } from './pages/ContaEditarPerfilPage';
+export { default as ContaHubPage } from './pages/ContaHubPage';
 export { ProfilePublicPage } from './pages/ProfilePublicPage';
 
 export { useActivityStats } from './hooks/useActivityStats';
 export { useEcosystemSummary } from './hooks/useEcosystemSummary';
-export { usePerfilPageV3 } from './hooks/usePerfilPageV3';
+export { useContaWorkspace } from './hooks/usePerfilPageV3';
 export { useProfileCompleteness } from './hooks/useProfileCompleteness';
 export { useSavedPosts } from './hooks/useSavedPosts';
 export { useUserActivity } from './hooks/useUserActivity';

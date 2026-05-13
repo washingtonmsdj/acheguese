@@ -70,6 +70,7 @@ export async function getFeed(params: FeedParams): Promise<FeedResult> {
     location_ids,
     district_filter,
     city_filter,
+    includeStreetReach = false,
     context = "all",
     cursor,
     limit = PAGINATION.DEFAULT_LIMIT,
@@ -88,6 +89,10 @@ export async function getFeed(params: FeedParams): Promise<FeedResult> {
       .eq("is_published", true)
       .order("created_at", { ascending: false })
       .limit(limit);
+
+    if (!includeStreetReach) {
+      query = query.or("reach.is.null,reach.neq.street");
+    }
 
     // Aplicar filtros territoriais
     if (location_ids && location_ids.length > 0) {

@@ -93,7 +93,7 @@ Regra de intencao:
 - Rotas diretas de modulo (`/empresas/...`, `/servicos/...`) sao vitrines publicas e SEO.
 - Rotas dentro de `/comunidade/...` sao experiencia social/local com contexto comunitario.
 - Rotas operacionais ficam em `/central`.
-- Rotas de identidade/configuracao pessoal ficam em `/perfil`.
+- Rotas de identidade/configuracao pessoal ficam em `/conta`.
 
 ### Admin
 

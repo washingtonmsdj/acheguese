@@ -1,5 +1,5 @@
 /**
- * Types compartilhados para as sections do PerfilHub
+ * Types compartilhados para as sections do ContaHub
  * 
  * SSOT: Todas as sections recebem props tipadas e validadas
  * Sem gambiarras: Props explícitas, sem "any" ou "unknown"
@@ -215,7 +215,7 @@ export interface NotificacoesSectionProps extends BaseSectionProps {
   readonly notifications: Notifications;
 }
 
-export interface ConfiguracoesSectionProps extends BaseSectionProps {
+export interface PreferenciasSectionProps extends BaseSectionProps {
   readonly canManageProfileMembers: boolean;
 }
 
@@ -256,7 +256,7 @@ export type ProfileSectionId =
   | "delivery"
   | "planos"
   | "notificacoes"
-  | "configuracoes"
+  | "preferencias"
   | "seguranca";
 
 export type SectionPropsMap = {
@@ -267,6 +267,6 @@ export type SectionPropsMap = {
   readonly delivery: DeliverySectionProps;
   readonly planos: PlanosSectionProps;
   readonly notificacoes: NotificacoesSectionProps;
-  readonly configuracoes: ConfiguracoesSectionProps;
+  readonly preferencias: PreferenciasSectionProps;
   readonly seguranca: SegurancaSectionProps;
 };

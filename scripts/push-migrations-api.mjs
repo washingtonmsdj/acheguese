@@ -8,8 +8,12 @@ import { fileURLToPath } from 'url';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
 const PROJECT_REF = 'xhdowzacfujckjelqhtd';
-const ACCESS_TOKEN = 'sbp_296ec3010b43324ce6163eb5150c45facea545c4';
+const ACCESS_TOKEN = process.env.SUPABASE_ACCESS_TOKEN;
 const MIGRATIONS_DIR = join(__dirname, '..', 'supabase', 'migrations');
+
+if (!ACCESS_TOKEN) {
+  throw new Error('SUPABASE_ACCESS_TOKEN nao definida no ambiente.');
+}
 
 async function runSQL(sql) {
   const res = await fetch(`https://api.supabase.com/v1/projects/${PROJECT_REF}/database/query`, {

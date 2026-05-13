@@ -1,5 +1,5 @@
 /**
- * Sections - Barrel export para todas as sections do PerfilHub
+ * Sections - Barrel export para todas as sections do ContaHub
  * 
  * SSOT: Ponto único de exportação
  * Sem gambiarras: Exports explícitos
@@ -12,7 +12,7 @@ export { MobilidadeSection } from "./MobilidadeSection";
 export { DeliverySection } from "./DeliverySection";
 export { PlanosSection } from "./PlanosSection";
 export { NotificacoesSection } from "./NotificacoesSection";
-export { ConfiguracoesSection } from "./ConfiguracoesSection";
+export { PreferenciasSection } from "./PreferenciasSection";
 export { SegurancaSection } from "./SegurancaSection";
 
 export type {
@@ -25,6 +25,6 @@ export type {
   DeliverySectionProps,
   PlanosSectionProps,
   NotificacoesSectionProps,
-  ConfiguracoesSectionProps,
+  PreferenciasSectionProps,
   SegurancaSectionProps,
 } from "./types";

@@ -48,14 +48,13 @@ export const ResetPasswordPage = lazy(() => import("@/app/pages/ResetPasswordPag
 // ============================================================
 // 👤 PERFIL E CONFIGURAÇÕES
 // ============================================================
-export const PerfilPage = lazy(() => import("@/modules/profile/pages/PerfilHubPage"));
-export const PerfilEmpresasPage = lazy(() => import("@/modules/profile/pages/PerfilEmpresasPage"));
-export const PerfilPlanosPage = lazy(() => import("@/modules/profile/pages/PerfilPlanosPage"));
-export const PerfilEditarPage = lazy(() => import("@/modules/profile/pages/PerfilEditarPage"));
-export const PerfilIdentidadesPage = lazy(() => import("@/modules/profile/pages/PerfilIdentidadesPage"));
-export const PerfilContaPage = lazy(() => import("@/modules/profile/pages/PerfilContaPage"));
-export const FamiliaPage = lazy(() => import("@/modules/profile/pages/FamiliaPage"));
-export const ResidentVerificationPage = lazy(() => import("@/modules/profile/pages/ResidentVerificationPage"));
+export const ContaPage = lazy(() => import("@/modules/profile/pages/ContaHubPage"));
+export const ContaEditarPerfilPage = lazy(() => import("@/modules/profile/pages/ContaEditarPerfilPage"));
+export const ContaSegurancaPage = lazy(() => import("@/modules/profile/pages/ContaSegurancaPage"));
+export const ContaPreferenciasPage = lazy(() => import("@/modules/profile/pages/ContaPreferenciasPage"));
+export const ContaEnderecosPage = lazy(() => import("@/modules/profile/pages/ContaEnderecosPage"));
+export const ContaProfissionalPage = lazy(() => import("@/modules/profile/pages/ContaProfissionalPage"));
+export const ContaEditarPage = lazy(() => import("@/modules/profile/pages/ContaEditarPage"));
 
 // ============================================================
 // 💳 BILLING E ASSINATURAS
@@ -71,7 +70,6 @@ export const SubscriptionManagementPage = lazy(() => import("@/app/pages/Subscri
 export const NotificationsPage = lazy(() => import("@/app/pages/NotificationsPage"));
 export const NotificationPreferencesPage = lazy(() => import("@/app/pages/NotificationPreferencesPage"));
 export const EmailLogsPage = lazy(() => import("@/app/pages/EmailLogsPage"));
-export const ConfiguracoesPage = lazy(() => import("@/modules/profile/pages/ConfiguracoesPage"));
 export const ProfileSettingsPage = lazy(() => import("@/app/pages/ProfileSettingsPage"));
 export const ProfilePublicRoute = lazy(() => import("@/core/routing/components/ProfilePublicRoute"));
 

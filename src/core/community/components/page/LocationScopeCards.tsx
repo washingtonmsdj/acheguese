@@ -9,17 +9,20 @@ interface LocationScopeCardProps {
   value: string;
   isActive: boolean;
   onClick: () => void;
+  disabled?: boolean;
 }
 
 const LocationScopeCard = memo(
-  ({ icon: Icon, label, value, isActive, onClick }: LocationScopeCardProps) => (
+  ({ icon: Icon, label, value, isActive, onClick, disabled = false }: LocationScopeCardProps) => (
     <motion.button
       onClick={onClick}
-      whileHover={{ scale: 1.02 }}
-      whileTap={{ scale: 0.98 }}
+      whileHover={disabled ? undefined : { scale: 1.02 }}
+      whileTap={disabled ? undefined : { scale: 0.98 }}
       className={cn(
         "flex flex-col items-center gap-1.5 px-2 py-3 rounded-xl transition-all border-2 min-w-0",
-        isActive
+        disabled
+          ? "border-amber-300/20 bg-amber-300/[0.06] text-amber-100 hover:border-amber-300/35 hover:bg-amber-300/[0.1]"
+          : isActive
           ? "border-teal-400 bg-gradient-to-br from-teal-400/20 to-cyan-400/10 shadow-lg shadow-teal-400/20"
           : "border-white/10 bg-white/5 hover:bg-white/10 hover:border-white/20",
       )}
@@ -55,6 +58,8 @@ LocationScopeCard.displayName = "LocationScopeCard";
 interface LocationScopeCardsProps {
   city?: string | null;
   neighborhood?: string | null;
+  street?: string | null;
+  streetAvailable?: boolean;
   currentScope: string;
   onScopeChange: (scope: "city" | "neighborhood" | "street") => void;
 }
@@ -62,6 +67,8 @@ interface LocationScopeCardsProps {
 export function LocationScopeCards({
   city,
   neighborhood,
+  street,
+  streetAvailable = false,
   currentScope,
   onScopeChange,
 }: LocationScopeCardsProps) {
@@ -89,9 +96,10 @@ export function LocationScopeCards({
       <LocationScopeCard
         icon={Home}
         label="Minha rua"
-        value="Rua"
-        isActive={currentScope === "street"}
+        value={streetAvailable ? street || "Rua" : "Cadastre sua rua"}
+        isActive={streetAvailable && currentScope === "street"}
         onClick={() => onScopeChange("street")}
+        disabled={!streetAvailable}
       />
     </motion.div>
   );

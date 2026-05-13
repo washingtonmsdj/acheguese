@@ -1,8 +1,8 @@
-/**
- * DadosPessoaisSection - Seção de dados pessoais do perfil
+﻿/**
+ * DadosPessoaisSection - SeÃ§Ã£o de dados pessoais do perfil
  * 
  * SSOT: Componente isolado com props tipadas
- * Sem gambiarras: Lógica clara e organizada
+ * Sem gambiarras: LÃ³gica clara e organizada
  */
 
 import {
@@ -55,18 +55,18 @@ export function DadosPessoaisSection({
 
   return (
     <div className="space-y-6">
-      {/* Estatísticas Pessoais */}
+      {/* EstatÃ­sticas Pessoais */}
       <ProfileStats
         stats={[
           {
             icon: UserRound,
             label: "Posts",
             value: operations.posts,
-            hint: "Conteúdo publicado na comunidade",
+            hint: "ConteÃºdo publicado na comunidade",
           },
           {
             icon: Users,
-            label: "Conexões",
+            label: "ConexÃµes",
             value: (stats.followers || 0) + (stats.following || 0),
             hint: "Seguidores e seguindo",
           },
@@ -80,12 +80,12 @@ export function DadosPessoaisSection({
             icon: BarChart3,
             label: "Engajamento",
             value: operations.posts > 0 ? "Ativo" : "Baixo",
-            hint: "Nível de participação",
+            hint: "NÃ­vel de participaÃ§Ã£o",
           },
         ]}
       />
 
-      {/* Reputação e Gamificação */}
+      {/* ReputaÃ§Ã£o e GamificaÃ§Ã£o */}
       {(identity?.reputation || context?.reputation) && personalProfile ? (
         <div className="grid gap-6 lg:grid-cols-2">
           <ReputationLevelCard
@@ -99,7 +99,7 @@ export function DadosPessoaisSection({
         </div>
       ) : null}
 
-      {/* Engajamento Cívico */}
+      {/* Engajamento CÃ­vico */}
       {(stats.reportsCount || stats.supportsCount) ? (
         <CivicEngagementCard
           reportsCount={stats.reportsCount || 0}
@@ -109,16 +109,16 @@ export function DadosPessoaisSection({
         />
       ) : null}
 
-      {/* Ações Principais */}
+      {/* AÃ§Ãµes Principais */}
       <SectionFrame
-        title="Ações do perfil pessoal"
-        description="Gerencie identidade, endereço pessoal, privacidade e configurações sem misturar operação da Central."
+        title="Acoes da conta"
+        description="Gerencie identidade, endereco pessoal, privacidade e preferencias sem misturar operacao da Central."
       >
         <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
           <HubLinkCard
             icon={UserRound}
             title="Editar perfil"
-            description="Avatar, bio, dados públicos"
+            description="Avatar, bio, dados pÃºblicos"
             onClick={() => {
               if (!personalProfileId) return;
               navigate(appUrls.profile.edit(personalProfileId));
@@ -126,21 +126,21 @@ export function DadosPessoaisSection({
           />
           <HubLinkCard
             icon={MapPin}
-            title="Endereco pessoal"
-            description="Residencia, territorio e verificacao."
-            onClick={() => navigate("/configuracoes")}
+            title="Meus enderecos"
+            description="Endereco usado para entregas/corridas."
+            onClick={() => navigate("/conta/enderecos")}
           />
           <HubLinkCard
             icon={Shield}
             title="Privacidade"
-            description="Visibilidade e exposição"
+            description="Visibilidade e exposiÃ§Ã£o"
             onClick={() => navigate(appUrls.profile.settings("privacy"))}
           />
           <HubLinkCard
             icon={Globe}
-            title="Perfil público"
-            description="Ver versão pública"
-            badge={publicHandle ? "Ativo" : "Indisponível"}
+            title="Perfil pÃºblico"
+            description="Ver versÃ£o pÃºblica"
+            badge={publicHandle ? "Ativo" : "IndisponÃ­vel"}
             onClick={() => {
               if (!publicHandle) return;
               navigate(appUrls.profile.public(publicHandle));
@@ -148,25 +148,25 @@ export function DadosPessoaisSection({
           />
           <HubLinkCard
             icon={Settings2}
-            title="Configurações"
-            description="Preferências gerais"
-            onClick={() => navigate(appUrls.settings)}
+            title="Preferencias"
+            description="Ajustes gerais da conta"
+            onClick={() => navigate("/conta/preferencias")}
           />
           <HubLinkCard
             icon={Bell}
-            title="Notificações"
+            title="NotificaÃ§Ãµes"
             description="Alertas e inbox"
             onClick={() => navigate(appUrls.notifications)}
           />
           <HubLinkCard
             icon={Users}
-            title="Vínculos"
-            description="Conexões e relações"
+            title="VÃ­nculos"
+            description="ConexÃµes e relaÃ§Ãµes"
             onClick={() => navigate(appUrls.profile.settings("links"))}
           />
           <HubLinkCard
             icon={Lock}
-            title="Segurança"
+            title="SeguranÃ§a"
             description="Senha e conta"
             onClick={() => navigate(appUrls.profile.account)}
           />
@@ -181,18 +181,18 @@ export function DadosPessoaisSection({
 
       <SectionFrame
         title="Endereco e verificacao residencial"
-        description="Endereco pessoal fica no SSOT de residencia. Ele alimenta territorio, confianca e verificacao, sem expor o endereco completo publicamente."
+        description="Endereco pessoal fica no SSOT de residencia. Ele alimenta territorio, confianca e verificacao sem exposicao publica do endereco completo."
       >
         <div className="grid gap-4 lg:grid-cols-[1fr_1.1fr]">
           <div className="rounded-2xl border border-border/70 bg-muted/35 p-4">
             <MapPin className="h-5 w-5 text-primary" />
             <h3 className="mt-3 text-sm font-semibold text-foreground">Onde editar o endereco?</h3>
             <p className="mt-1 text-sm leading-6 text-muted-foreground">
-              Use Configuracoes operacionais para atualizar residencia, territorio e comprovacao. O Perfil apenas resume e direciona para o local correto.
+              Use Meus enderecos para atualizar residencia, territorio e comprovacao. A conta apenas resume e direciona para o local correto.
             </p>
             <button
               type="button"
-              onClick={() => navigate("/configuracoes")}
+              onClick={() => navigate("/conta/enderecos")}
               className="mt-4 rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition hover:bg-primary/90"
             >
               Editar residencia
@@ -208,7 +208,7 @@ export function DadosPessoaisSection({
         </div>
       </SectionFrame>
 
-      {/* Conteúdo Pessoal */}
+      {/* ConteÃºdo Pessoal */}
       {user && personalProfileId ? (
         <ContentTabsSection
           userId={user.id}
@@ -228,7 +228,7 @@ export function DadosPessoaisSection({
       {user && personalProfileId ? (
         <SectionFrame
           title="Atividade recente"
-          description="Linha do tempo das suas ações pessoais."
+          description="Linha do tempo das suas aÃ§Ãµes pessoais."
         >
           <ActivityTimeline
             userId={user.id}
@@ -240,3 +240,5 @@ export function DadosPessoaisSection({
     </div>
   );
 }
+
+

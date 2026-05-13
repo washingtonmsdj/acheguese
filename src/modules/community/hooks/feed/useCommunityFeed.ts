@@ -44,7 +44,11 @@ export function useCommunityFeedSimple(options: UseCommunityFeedOptions = {}) {
 
       if (filter.scope === "location") {
         params.location_id = filter.location_id;
-        params.district_filter = true;
+        if (locationScope === "city") {
+          params.city_filter = true;
+        } else {
+          params.district_filter = true;
+        }
       } else if (filter.scope === "group") {
         params.location_ids = filter.location_ids;
       }

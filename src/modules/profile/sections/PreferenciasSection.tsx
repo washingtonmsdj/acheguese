@@ -1,26 +1,26 @@
-/**
- * ConfiguracoesSection - Seção de configurações do perfil
- * 
+﻿/**
+ * PreferenciasSection - Secao de preferencias da conta
+ *
  * SSOT: Componente isolado com props tipadas
- * Sem gambiarras: Lógica clara e organizada
+ * Sem gambiarras: Logica clara e organizada
  */
 
 import { Settings2, Shield, Users } from "lucide-react";
 
 import { SectionFrame, HubLinkCard } from "@/modules/profile/components/hub";
 
-import type { ConfiguracoesSectionProps } from "./types";
+import type { PreferenciasSectionProps } from "./types";
 
-export function ConfiguracoesSection({
+export function PreferenciasSection({
   canManageProfileMembers,
   navigate,
   appUrls,
-}: ConfiguracoesSectionProps) {
+}: PreferenciasSectionProps) {
   return (
     <div className="space-y-6">
       <SectionFrame
-        title="Configuracoes"
-        description="Preferencias pessoais do perfil. Rotinas operacionais continuam na Central."
+        title="Preferencias"
+        description="Preferencias pessoais da conta. Rotinas operacionais continuam na Central."
       >
         <div className="grid gap-3 md:grid-cols-2">
           <HubLinkCard
@@ -45,15 +45,15 @@ export function ConfiguracoesSection({
           ) : null}
           <HubLinkCard
             icon={Settings2}
-            title="Endereco e residencia"
-            description="Residencia, territorio e preferencias locais."
-            onClick={() => navigate(appUrls.settings)}
+            title="Meus enderecos"
+            description="Endereco operacional privado da conta."
+            onClick={() => navigate("/conta/enderecos")}
           />
           <HubLinkCard
             icon={Settings2}
-            title="Abrir Central"
+            title="Central profissional"
             description="Empresas, mobilidade, verticais e dashboards operacionais."
-            onClick={() => navigate("/central")}
+            onClick={() => navigate("/conta/profissional")}
           />
         </div>
       </SectionFrame>

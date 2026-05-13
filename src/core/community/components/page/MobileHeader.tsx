@@ -50,7 +50,7 @@ export function MobileHeader({
             <NotificationDropdown />
           </Suspense>
 
-          <Link to="/perfil" aria-label="Meu perfil">
+          <Link to="/conta" aria-label="Minha conta">
             <Avatar className="h-8 w-8 border-2 border-teal-400/30">
               <AvatarImage src={avatarUrl || ""} alt={userName || "Avatar"} />
               <AvatarFallback className="text-xs bg-gradient-to-br from-teal-400 to-cyan-400 text-white">

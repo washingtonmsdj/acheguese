@@ -12,6 +12,18 @@ import {
 import { Loader2 } from "lucide-react";
 import { logger } from "@/shared/utils/logger";
 
+const normalizeValue = (value: string | null | undefined): string =>
+  (value ?? "")
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .trim();
+
+const tokenizeValue = (value: string | null | undefined): string[] =>
+  normalizeValue(value)
+    .split(/[\s,./-]+/)
+    .filter(Boolean);
+
 interface SelectedLocationData {
   stateId: string;
   cityId: string;
@@ -34,6 +46,10 @@ interface TerritorialSelectorProps {
     neighborhood?: string;
   };
   cityOnly?: boolean;
+  progressiveReveal?: boolean;
+  preferredStateName?: string | null;
+  preferredCityName?: string | null;
+  preferredNeighborhoodName?: string | null;
 }
 
 export function TerritorialSelector({
@@ -42,6 +58,10 @@ export function TerritorialSelector({
   allowCityOnly = false,
   labels = {},
   cityOnly = false,
+  progressiveReveal = false,
+  preferredStateName = null,
+  preferredCityName = null,
+  preferredNeighborhoodName = null,
 }: TerritorialSelectorProps) {
   const [selectedStateId, setSelectedStateId] = useState<string | null>(null);
   const [selectedCityId, setSelectedCityId] = useState<string | null>(null);
@@ -120,6 +140,75 @@ export function TerritorialSelector({
       isMounted = false;
     };
   }, [initialLocationId, selectedStateId, isResolvingLocation, cityOnly, allowCityOnly]);
+
+  useEffect(() => {
+    if (initialLocationId) return;
+    if (selectedStateId) return;
+    if (!preferredStateName) return;
+    if (loadingStates || states.length === 0) return;
+
+    const preferred = normalizeValue(preferredStateName);
+    const matched = states.find((item) => normalizeValue(item.name) === preferred);
+    if (matched) {
+      setSelectedStateId(matched.id);
+    }
+  }, [initialLocationId, selectedStateId, preferredStateName, loadingStates, states]);
+
+  useEffect(() => {
+    if (initialLocationId) return;
+    if (!selectedStateId || selectedCityId) return;
+    if (!preferredCityName) return;
+    if (loadingCities || cities.length === 0) return;
+
+    const preferred = normalizeValue(preferredCityName);
+    const matched = cities.find((item) => normalizeValue(item.name) === preferred);
+    if (matched) {
+      setSelectedCityId(matched.id);
+    }
+  }, [initialLocationId, selectedStateId, selectedCityId, preferredCityName, loadingCities, cities]);
+
+  useEffect(() => {
+    if (initialLocationId) return;
+    if (!selectedCityId || selectedNeighborhoodId) return;
+    if (!preferredNeighborhoodName) return;
+    if (loadingNeighborhoods || neighborhoods.length === 0) return;
+
+    const preferred = normalizeValue(preferredNeighborhoodName);
+    const preferredTokens = tokenizeValue(preferredNeighborhoodName);
+    const exact = neighborhoods.find((item) => normalizeValue(item.name) === preferred);
+    if (exact) {
+      setSelectedNeighborhoodId(exact.id);
+      return;
+    }
+
+    const partial = neighborhoods.find((item) => {
+      const name = normalizeValue(item.name);
+      return name.includes(preferred) || preferred.includes(name);
+    });
+    if (partial) {
+      setSelectedNeighborhoodId(partial.id);
+      return;
+    }
+
+    const byTokens = neighborhoods.find((item) => {
+      const nameTokens = tokenizeValue(item.name);
+      if (preferredTokens.length === 0 || nameTokens.length === 0) return false;
+      const matchedCount = preferredTokens.filter((token) =>
+        nameTokens.some((candidate) => candidate.includes(token) || token.includes(candidate)),
+      ).length;
+      return matchedCount >= Math.min(2, preferredTokens.length);
+    });
+    if (byTokens) {
+      setSelectedNeighborhoodId(byTokens.id);
+    }
+  }, [
+    initialLocationId,
+    selectedCityId,
+    selectedNeighborhoodId,
+    preferredNeighborhoodName,
+    loadingNeighborhoods,
+    neighborhoods,
+  ]);
 
   const selectedLocationData = useMemo<SelectedLocationData | null>(() => {
     const state = states.find((item) => item.id === selectedStateId);
@@ -245,41 +334,43 @@ export function TerritorialSelector({
         )}
       </div>
 
-      <div>
-        <Label htmlFor="territorial-city">{labels.city || "Cidade"} *</Label>
-        {loadingCities ? (
-          <div className="flex h-10 items-center gap-2 rounded-md border bg-muted px-3">
-            <Loader2 className="h-4 w-4 animate-spin" />
-            <span className="text-sm text-muted-foreground">Carregando cidades...</span>
-          </div>
-        ) : (
-          <Select
-            value={selectedCityId || "none"}
-            onValueChange={handleCityChange}
-            disabled={!selectedStateId || cities.length === 0}
-          >
-            <SelectTrigger id="territorial-city">
-              <SelectValue
-                placeholder={
-                  selectedStateId ? "Selecione a cidade" : "Selecione o estado primeiro"
-                }
-              />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="none" disabled>
-                Selecione a cidade
-              </SelectItem>
-              {cities.map((city) => (
-                <SelectItem key={city.id} value={city.id}>
-                  {city.name}
+      {(!progressiveReveal || Boolean(selectedStateId)) && (
+        <div>
+          <Label htmlFor="territorial-city">{labels.city || "Cidade"} *</Label>
+          {loadingCities ? (
+            <div className="flex h-10 items-center gap-2 rounded-md border bg-muted px-3">
+              <Loader2 className="h-4 w-4 animate-spin" />
+              <span className="text-sm text-muted-foreground">Carregando cidades...</span>
+            </div>
+          ) : (
+            <Select
+              value={selectedCityId || "none"}
+              onValueChange={handleCityChange}
+              disabled={!selectedStateId || cities.length === 0}
+            >
+              <SelectTrigger id="territorial-city">
+                <SelectValue
+                  placeholder={
+                    selectedStateId ? "Selecione a cidade" : "Selecione o estado primeiro"
+                  }
+                />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none" disabled>
+                  Selecione a cidade
                 </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        )}
-      </div>
+                {cities.map((city) => (
+                  <SelectItem key={city.id} value={city.id}>
+                    {city.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+        </div>
+      )}
 
-      {!cityOnly && (
+      {!cityOnly && (!progressiveReveal || Boolean(selectedCityId)) && (
         <div>
           <Label htmlFor="territorial-neighborhood">
             {labels.neighborhood || "Bairro"} {!allowCityOnly && "*"}

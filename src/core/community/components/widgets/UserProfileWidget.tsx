@@ -39,7 +39,7 @@ export const UserProfileWidget = memo(() => {
 
   return (
     <Link
-      to="/perfil"
+      to="/conta"
       className="block bg-card rounded-lg p-3 border border-border hover:border-primary/50 transition-all duration-200 hover:shadow-lg group"
     >
       <div className="flex items-start gap-2.5">

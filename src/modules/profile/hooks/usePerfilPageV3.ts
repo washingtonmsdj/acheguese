@@ -11,12 +11,12 @@ import type { Business } from "@/core/profiles/services/types";
 import { logger } from "@/shared/utils/logger";
 
 /**
- * ✅ SSOT COMPLIANT - Hook usePerfilPageV3 migrado
+ * ✅ SSOT COMPLIANT - Hook de workspace privado da conta
  * Usa AuthService via useAuth para logout
  * Usa useAppUrls para navegação (sem hardcoded URLs)
  */
 
-export function usePerfilPageV3() {
+export function useContaWorkspace() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const appUrls = useAppUrls();
@@ -126,7 +126,7 @@ export function usePerfilPageV3() {
 
   const handleBusinessClick = (business: Business) => {
     if (!business.slug) {
-      logger.warn("[usePerfilPageV3] Empresa sem slug para navegacao", {
+      logger.warn("[useContaWorkspace] Empresa sem slug para navegacao", {
         businessId: business.id,
       });
       return;

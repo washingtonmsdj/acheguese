@@ -35,7 +35,7 @@ interface DashboardHeaderProps {
 ```tsx
 <DashboardHeader
   business={business}
-  onBack={() => navigate("/perfil")}
+  onBack={() => navigate("/conta")}
   onViewPublic={() => navigate(`/empresas/${business.slug}`)}
 />
 ```

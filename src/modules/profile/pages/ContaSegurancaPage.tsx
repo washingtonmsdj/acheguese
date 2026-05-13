@@ -1,8 +1,8 @@
-/**
- * /perfil/conta - Configuracoes da conta, separado da identidade de perfil.
+﻿/**
+ * /conta/seguranca - Configuracoes da conta, separado da identidade publica.
  *
  * Conta = auth.users (email, senha, sessoes, exclusao)
- * Perfil = identidade publica/operacional
+ * Perfil publico = identidade publica/social visivel para outros usuarios
  */
 
 import { useState } from 'react';
@@ -19,7 +19,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/shared/components/ui
 import { Separator } from '@/shared/components/ui/separator';
 import type { UpdatePasswordInput } from '@/shared/validation/schemas/user.schema';
 
-export default function PerfilContaPage() {
+export default function ContaSegurancaPage() {
   const navigate = useNavigate();
   const appUrls = useAppUrls();
   const { user, updatePassword, resetPassword } = useAuth();
@@ -36,7 +36,7 @@ export default function PerfilContaPage() {
       toast.success('Senha alterada com sucesso');
     } catch (error) {
       toast.error(getAuthErrorMessage(error, 'Erro ao alterar senha'));
-      throw error; // Re-throw para que ChangePasswordForm não chame reset()
+      throw error; // Re-throw para que ChangePasswordForm nÃ£o chame reset()
     }
   };
 
@@ -100,7 +100,7 @@ export default function PerfilContaPage() {
           </CardContent>
         </Card>
 
-        {/* ChangePasswordForm agora gerencia seu próprio estado interno via RHF */}
+        {/* ChangePasswordForm agora gerencia seu prÃ³prio estado interno via RHF */}
         <ChangePasswordForm
           onSave={handleChangePassword}
           onCancel={() => {/* estado interno ao componente */}}
@@ -161,3 +161,4 @@ export default function PerfilContaPage() {
     </>
   );
 }
+

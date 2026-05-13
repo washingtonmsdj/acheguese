@@ -17,17 +17,17 @@ interface ProfileNavigationSource {
 export function getProfileSectionPath(section: ProfileSectionId): string {
   switch (section) {
     case "resumo":
-      return "/perfil";
+      return "/conta";
     case "empresas":
       return businessManagementRoutes.list();
     case "mobilidade":
       return "/central";
     case "planos":
-      return "/perfil/planos";
+      return "/conta";
     case "delivery":
       return mobilityRoutes.motoboy.entregas;
     default:
-      return "/perfil";
+      return "/conta";
   }
 }
 

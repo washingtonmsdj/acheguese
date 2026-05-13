@@ -99,18 +99,18 @@ export function useAppUrls(routeResolved?: ResolvedTerritory | null): AppUrls {
     
     // Perfil
     profile: {
-      home: '/perfil',
+      home: '/conta',
       businesses: businessManagementRoutes.list(),
-      billing: '/perfil/planos',
+      billing: '/conta',
       mobilidade: {
         home: '/central',
         motorista: mobility.motorista,
         motoboy: mobility.motoboy,
       },
       public: (username: string) => `/u/${username}`,
-      manage: '/perfil/identidades',
+      manage: '/conta',
       edit: (profileId: string) => buildProfileEditUrl(profileId),
-      account: '/perfil/conta',
+      account: '/conta/seguranca',
       settings: (tab) => buildProfileSettingsUrl(tab),
     },
     
@@ -123,7 +123,7 @@ export function useAppUrls(routeResolved?: ResolvedTerritory | null): AppUrls {
     
     // Globais
     home: '/',
-    settings: '/configuracoes',
+    settings: '/conta/preferencias',
     messages: '/mensagens',
     chat: (conversationId: string) => `/chat/${conversationId}`,
     map: '/mapa',
@@ -133,7 +133,7 @@ export function useAppUrls(routeResolved?: ResolvedTerritory | null): AppUrls {
     notifications: '/notificacoes',
     jobs: '/vagas',
     family: {
-      home: '/perfil/familia',
+      home: '/conta',
     },
   };
 }

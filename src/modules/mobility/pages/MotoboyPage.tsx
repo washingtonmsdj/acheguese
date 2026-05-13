@@ -79,7 +79,7 @@ export default function MotoboyPage() {
   React.useEffect(() => {
     if (!hook.loading && hook.isDriver && !hook.canAcceptDeliveryOffers) {
       // Redirecionar para habilitar entregas
-      navigate("/perfil/identidades");
+      navigate("/conta");
     }
   }, [hook.isDriver, hook.loading, hook.canAcceptDeliveryOffers, navigate]);
 

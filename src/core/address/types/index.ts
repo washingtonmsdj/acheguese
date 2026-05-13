@@ -15,6 +15,7 @@ export type GeocodingSource = 'viacep' | 'google' | 'manual' | 'gps' | 'migratio
 export interface Address {
   id: string;
   location_id: string;
+  metadata: Record<string, unknown>;
   postal_code: string | null;
   street: string | null;
   number: string | null;
@@ -38,6 +39,7 @@ export interface Address {
 
 export interface CreateAddressInput {
   location_id: string;
+  metadata?: Record<string, unknown> | null;
   postal_code?: string | null;
   street?: string | null;
   number?: string | null;
@@ -54,6 +56,7 @@ export interface CreateAddressInput {
 
 export interface UpdateAddressInput {
   location_id?: string;
+  metadata?: Record<string, unknown> | null;
   postal_code?: string | null;
   street?: string | null;
   number?: string | null;

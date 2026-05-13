@@ -1,5 +1,5 @@
 /**
- * PerfilHubPage - Página principal do hub de perfil (REFATORADA)
+ * ContaHubPage - Página principal do hub de conta (refatorada)
  * 
  * SSOT: Usa sections modulares e layout reutilizável
  * Sem gambiarras: Código limpo e organizado
@@ -18,7 +18,7 @@ import { CircleAlert, RefreshCw, Users } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 
 import { useProfileHub } from "@/modules/profile/hooks/useProfileHub";
-import { PerfilHubLayout } from "./PerfilHubLayout";
+import { ContaHubLayout } from "./ContaHubLayout";
 
 import {
   ResumoSection,
@@ -28,7 +28,7 @@ import {
   DeliverySection,
   PlanosSection,
   NotificacoesSection,
-  ConfiguracoesSection,
+  PreferenciasSection,
   SegurancaSection,
   type ProfileSectionId,
   type SectionPropsMap,
@@ -49,7 +49,7 @@ const SECTION_MAP = {
   delivery: DeliverySection,
   planos: PlanosSection,
   notificacoes: NotificacoesSection,
-  configuracoes: ConfiguracoesSection,
+  preferencias: PreferenciasSection,
   seguranca: SegurancaSection,
 } as const satisfies Record<ProfileSectionId, React.ComponentType<SectionPropsMap[ProfileSectionId]>>;
 
@@ -154,7 +154,7 @@ function buildSectionProps(
         notifications: data.notifications,
       };
 
-    case "configuracoes":
+    case "preferencias":
       return {
         ...baseProps,
         canManageProfileMembers: data.canManageProfileMembers,
@@ -196,7 +196,7 @@ function buildSectionProps(
 // Componente Principal
 // ============================================
 
-export default function PerfilHubPage() {
+export default function ContaHubPage() {
   const navigate = useNavigate();
   const [activeSection, setActiveSection] = useState<ProfileSectionId>("resumo");
   const data = useProfileHub();
@@ -209,7 +209,7 @@ export default function PerfilHubPage() {
   const handleSectionChange = (section: ProfileSectionId) => {
     const nextPath = getProfileSectionPath(section);
 
-    if (nextPath === "/perfil") {
+    if (nextPath === "/conta") {
       setActiveSection(section);
       return;
     }
@@ -239,7 +239,7 @@ export default function PerfilHubPage() {
       <div className="flex min-h-[60vh] items-center justify-center px-4">
         <div className="space-y-3 text-center">
           <div className="mx-auto h-9 w-9 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-          <p className="text-sm text-muted-foreground">Carregando area de perfil...</p>
+          <p className="text-sm text-muted-foreground">Carregando area da conta...</p>
         </div>
       </div>
     );
@@ -254,7 +254,7 @@ export default function PerfilHubPage() {
         <div className="w-full rounded-3xl border border-border bg-card p-8 text-center shadow-sm">
           <CircleAlert className="mx-auto h-10 w-10 text-amber-600" />
           <h1 className="mt-4 text-xl font-semibold text-foreground">
-            Nao foi possivel carregar o perfil
+            Nao foi possivel carregar a conta
           </h1>
           <p className="mt-2 text-sm text-muted-foreground">
             O snapshot privado falhou. Tente novamente para recuperar os dados.
@@ -311,7 +311,7 @@ export default function PerfilHubPage() {
   });
 
   return (
-    <PerfilHubLayout
+    <ContaHubLayout
       activeSection={activeSection}
       onSectionChange={handleSectionChange}
       sectionItems={sectionItems}
@@ -339,6 +339,6 @@ export default function PerfilHubPage() {
       onAvatarChange={data.handleAvatarChange}
     >
       <ActiveSection {...(sectionProps as SectionPropsMap[ProfileSectionId])} />
-    </PerfilHubLayout>
+    </ContaHubLayout>
   );
 }

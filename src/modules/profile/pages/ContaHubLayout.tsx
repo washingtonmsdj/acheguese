@@ -1,5 +1,5 @@
 /**
- * PerfilHubLayout - Layout principal do hub de perfil
+ * ContaHubLayout - Layout principal do hub de conta
  * 
  * SSOT: Layout reutilizável com props tipadas
  * Sem gambiarras: Separação clara de responsabilidades
@@ -20,7 +20,7 @@ import type { Context, Identity } from "@/modules/profile/sections/types";
 import type { ProfileSectionId } from "@/modules/profile/sections/types";
 import type { SectionNavItem } from "@/modules/profile/components/hub/ProfileSectionsNav";
 
-export interface PerfilHubLayoutProps {
+export interface ContaHubLayoutProps {
   // Navegação
   readonly activeSection: ProfileSectionId;
   readonly onSectionChange: (section: ProfileSectionId) => void;
@@ -66,7 +66,7 @@ export interface PerfilHubLayoutProps {
   readonly pageDescription?: string;
 }
 
-export function PerfilHubLayout({
+export function ContaHubLayout({
   activeSection,
   onSectionChange,
   sectionItems,
@@ -85,9 +85,9 @@ export function PerfilHubLayout({
   reputation,
   onAvatarChange,
   children,
-  pageTitle = "Perfil | Area organizada",
-  pageDescription = "Area de perfil com navegacao por secoes, resumo enxuto e conteudo segmentado por contexto.",
-}: PerfilHubLayoutProps) {
+  pageTitle = "Minha conta | Area organizada",
+  pageDescription = "Area privada da conta com navegacao por secoes, resumo enxuto e conteudo segmentado por contexto.",
+}: ContaHubLayoutProps) {
   return (
     <>
       <Helmet>

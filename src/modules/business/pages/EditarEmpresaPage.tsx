@@ -59,7 +59,7 @@ export default function EditarEmpresaPage() {
 
   const { updateBusiness, isLoading: saving } = useBusinessEdit({
     onSuccess: () => {
-      navigate("/perfil");
+      navigate("/conta");
     },
   });
   
@@ -257,7 +257,7 @@ export default function EditarEmpresaPage() {
         <div className="text-center">
           <h2 className="text-xl font-semibold mb-2">Empresa não encontrada</h2>
           <button
-            onClick={() => navigate("/perfil")}
+            onClick={() => navigate("/conta")}
             className="text-primary hover:underline"
           >
             Voltar ao perfil

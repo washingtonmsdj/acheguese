@@ -41,6 +41,7 @@ export interface FeedParams {
   location_ids?: string[];
   district_filter?: boolean;
   city_filter?: boolean;
+  includeStreetReach?: boolean;
 
   // Contexto do feed
   context?: FeedContext;

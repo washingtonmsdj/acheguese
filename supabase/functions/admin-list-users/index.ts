@@ -14,7 +14,7 @@ import { requireAdmin } from '../_shared/adminAuth.ts';
 import { validateBody, listUsersSchema, validationErrorResponse, type ListUsersBody } from '../_shared/validation.ts';
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL') ?? '';
-const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
+const SUPABASE_ADMIN_KEY = Deno.env.get('SUPABASE_SECRET_KEY') || Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '';
 
 interface AdminUser {
   user_id: string;
@@ -83,6 +83,34 @@ interface AuthUserRow {
   confirmed_at?: string | null;
 }
 
+const UUID_V4ISH_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+function isUuid(value: string): boolean {
+  return UUID_V4ISH_REGEX.test(value);
+}
+
+async function fetchAuthUsersById(
+  supabaseAdmin: ReturnType<typeof createClient>,
+  userIds: string[],
+): Promise<Map<string, AuthUserRow>> {
+  const authUserById = new Map<string, AuthUserRow>();
+
+  for (const userId of userIds) {
+    if (!isUuid(userId)) continue;
+
+    try {
+      const result = await supabaseAdmin.auth.admin.getUserById(userId);
+      if (!result.error && result.data?.user) {
+        authUserById.set(userId, result.data.user as AuthUserRow);
+      }
+    } catch (error) {
+      console.warn('[admin-list-users] failed to fetch auth user', { userId, error });
+    }
+  }
+
+  return authUserById;
+}
+
 function mapProfile(
   profile: ProfileRow,
   publicProfileById: Map<string, { public_city: string | null; public_neighborhood: string | null }>,
@@ -141,7 +169,15 @@ serve(async (req: Request) => {
     );
   }
 
-  const supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
+  if (!SUPABASE_URL || !SUPABASE_ADMIN_KEY) {
+    console.error('[admin-list-users] missing SUPABASE_URL or admin key env vars');
+    return new Response(
+      JSON.stringify({ error: 'Internal server error' }),
+      { status: 500, headers: getAllSecurityHeaders('POST, OPTIONS', req) },
+    );
+  }
+
+  const supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_ADMIN_KEY, {
     auth: { autoRefreshToken: false, persistSession: false },
   });
 
@@ -172,7 +208,7 @@ serve(async (req: Request) => {
       );
     }
 
-    const [profilesResult, publicProfilesResult, rolesResult, authUsersResults] = await Promise.all([
+    const [profilesResult, publicProfilesResult, rolesResult] = await Promise.all([
       supabaseAdmin
         .from('profiles')
         .select('id, user_id, profile_type, name, display_name, username, avatar_url, verified, is_active, is_suspended, suspended_until, suspension_reason, reputation, created_at')
@@ -183,7 +219,6 @@ serve(async (req: Request) => {
         .select('user_id, role_enum, granted_at')
         .in('user_id', userIds)
         .is('revoked_at', null),
-      Promise.all(userIds.map((userId) => supabaseAdmin.auth.admin.getUserById(userId))),
     ]);
 
     if (profilesResult.error) throw profilesResult.error;
@@ -200,12 +235,7 @@ serve(async (req: Request) => {
       ]),
     );
 
-    const authUserById = new Map<string, AuthUserRow>();
-    authUsersResults.forEach((result, index) => {
-      if (!result.error && result.data?.user) {
-        authUserById.set(userIds[index], result.data.user as AuthUserRow);
-      }
-    });
+    const authUserById = await fetchAuthUsersById(supabaseAdmin, userIds);
 
     let adminUsers: AdminUser[] = userIds.map((userId) => {
       const profiles = ((profilesResult.data ?? []) as ProfileRow[])

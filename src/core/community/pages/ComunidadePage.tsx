@@ -12,31 +12,21 @@ import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import {
   AlertTriangle,
   LayoutList,
-  Loader2,
   MapPin,
   MessageSquare,
   Users,
 } from "lucide-react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { TooltipProvider } from "@/shared/components/ui/tooltip";
 import { Button } from "@/shared/components/ui/button";
 import { ConfirmActionDialog } from "@/shared/components/ConfirmActionDialog";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/shared/components/ui/dialog";
 import { useIsAdmin } from "@/core/auth/hooks/useIsAdmin";
 import { useAppUrls } from "@/core/routing/hooks";
 import { useUserTerritory } from "@/core/location/hooks/useUserTerritory";
 import { useTerritoryFilter } from "@/core/location/hooks/useTerritoryFilter";
 import { useCommunityRollout } from "@/core/community/hooks/useCommunityRollout";
 import { communityRolloutService } from "@/core/community/services";
-import { TerritorialSelector } from "@/core/location/components/TerritorialSelector";
 import { residenceService } from "@/core/residence/services/ResidenceService";
 import { useComunidadePage } from "../hooks/page/useComunidadePage";
 import { CommunityFeed } from "../components/feed/CommunityFeed";
@@ -97,7 +87,6 @@ interface ComunidadePageProps {
 export default function ComunidadePage({ resolved }: ComunidadePageProps) {
   const navigate = useNavigate();
   const location = useLocation();
-  const queryClient = useQueryClient();
   const [searchParams, setSearchParams] = useSearchParams();
   const routeTab = location.pathname.endsWith("/grupos")
     ? "grupos"
@@ -107,15 +96,11 @@ export default function ComunidadePage({ resolved }: ComunidadePageProps) {
   const activeTab = routeTab ?? ((searchParams.get("tab") as CommunityTab) || "feed");
   const [feedView, setFeedView] = React.useState<FeedView>("posts");
   const [showBanner, setShowBanner] = React.useState(true);
-  const [chooseDistrictOpen, setChooseDistrictOpen] = React.useState(false);
-  const [selectedDistrictId, setSelectedDistrictId] = React.useState<string | null>(null);
-  const [selectedDistrictLabel, setSelectedDistrictLabel] = React.useState("");
-  const [savingDistrict, setSavingDistrict] = React.useState(false);
   const appUrls = useAppUrls(resolved); // ✅ SSOT URLs com contexto territorial
   const territoryFilter = useTerritoryFilter(resolved);
 
   // ✅ SSOT: guarda de acesso por UUID canônico, não por string de perfil
-  const { hasHome, homeDistrict, homeCity, loading: territoryLoading } = useUserTerritory();
+  const { homeDistrict, homeCity, loading: territoryLoading } = useUserTerritory();
   const { isAdmin, loading: adminLoading } = useIsAdmin();
   const { isLoading: rolloutLoading } = useCommunityRollout(resolved);
   const {
@@ -173,20 +158,6 @@ export default function ComunidadePage({ resolved }: ComunidadePageProps) {
     isDeletingPost,
     communityLocation,
   } = useComunidadePage();
-  const {
-    data: hasPrimaryStreet = false,
-    isLoading: streetCheckLoading,
-  } = useQuery({
-    queryKey: ["community-access", "primary-street", profile?.user_id],
-    queryFn: async () => {
-      if (!profile?.user_id) return false;
-      const residence = await residenceService.getPrimaryResidenceWithRelations(profile.user_id);
-      const street = residence?.address?.street ?? "";
-      return street.trim().length > 0;
-    },
-    enabled: !!profile?.user_id,
-    staleTime: 5 * 60 * 1000,
-  });
   const issueLocationId =
     communityLocation.activeLocation?.type === "district"
       ? communityLocation.activeLocation.id
@@ -199,64 +170,54 @@ export default function ComunidadePage({ resolved }: ComunidadePageProps) {
     communityLocation.activeLocation?.type === "district"
       ? communityLocation.activeLocation.name
       : homeDistrict?.name;
-  const communityTerritoryFilter: TerritoryFilter = homeDistrict
-    ? { scope: "location", location_id: homeDistrict.id }
-    : territoryFilter;
-  const handleDistrictSelectionChange = useCallback(
-    (
-      locationId: string | null,
-      locationData: { cityName: string; neighborhoodName: string } | null,
-    ) => {
-      setSelectedDistrictId(locationId);
-      setSelectedDistrictLabel(
-        locationData
-          ? `${locationData.neighborhoodName}, ${locationData.cityName}`
-          : "",
-      );
+  const communityTerritoryFilter: TerritoryFilter =
+    immediateFilters.locationScope === "city" && homeCity
+      ? { scope: "location", location_id: homeCity.id }
+      : homeDistrict
+        ? { scope: "location", location_id: homeDistrict.id }
+        : territoryFilter;
+  const {
+    data: primaryResidence,
+    isLoading: primaryResidenceLoading,
+  } = useQuery({
+    queryKey: ["user-residence", "primary-with-relations", profile?.user_id],
+    queryFn: async () => {
+      if (!profile?.user_id) return null;
+      return residenceService.getPrimaryResidenceWithRelations(profile.user_id);
     },
-    [],
-  );
+    enabled: !!profile?.user_id,
+    staleTime: 2 * 60 * 1000,
+  });
+  const primaryStreet = primaryResidence?.address?.street?.trim() ?? "";
+  const hasPrimaryStreet = primaryStreet.length > 0;
 
-  const handleSaveCommunityDistrict = useCallback(async () => {
-    if (!profile?.user_id || !selectedDistrictId) return;
+  React.useEffect(() => {
+    if (
+      !primaryResidenceLoading &&
+      immediateFilters.locationScope === "street" &&
+      !hasPrimaryStreet
+    ) {
+      setLocationScope("neighborhood");
+    }
+  }, [hasPrimaryStreet, immediateFilters.locationScope, primaryResidenceLoading, setLocationScope]);
 
-    setSavingDistrict(true);
-    try {
-      const residence = await residenceService.getPrimaryResidence(profile.user_id);
-
-      if (!residence?.id) {
-        toast.error(
-          "Nao foi encontrada uma residencia canonica para atualizar. Cadastre um endereco antes de escolher o bairro da comunidade.",
-        );
+  const handleScopeChange = useCallback(
+    (scope: "city" | "neighborhood" | "street") => {
+      if (scope === "street" && !hasPrimaryStreet) {
+        toast.info("Cadastre sua rua em Meus enderecos para acessar o feed da sua rua.");
+        navigate("/conta/enderecos");
         return;
       }
 
-      await residenceService.updateResidence(residence.id, {
-        location_id: selectedDistrictId,
-        is_primary: true,
-      });
+      if (scope === "street") {
+        toast.info("O feed por rua exige SSOT de logradouros antes de ser liberado com seguranca.");
+        return;
+      }
 
-      await Promise.all([
-        queryClient.invalidateQueries({
-          queryKey: ["user-residence", "primary", profile.user_id],
-        }),
-        queryClient.invalidateQueries({
-          queryKey: ["user-territory-resolved"],
-        }),
-        queryClient.invalidateQueries({
-          queryKey: ["user-residences", profile.user_id],
-        }),
-      ]);
-
-      toast.success("Bairro da comunidade atualizado");
-      setChooseDistrictOpen(false);
-      setSelectedDistrictId(null);
-    } catch {
-      toast.error("Nao foi possivel salvar o bairro da comunidade");
-    } finally {
-      setSavingDistrict(false);
-    }
-  }, [profile?.user_id, queryClient, selectedDistrictId]);
+      setLocationScope(scope);
+    },
+    [hasPrimaryStreet, navigate, setLocationScope],
+  );
 
   // Bloquear se não estiver logado
   if (!profile) {
@@ -281,7 +242,7 @@ export default function ComunidadePage({ resolved }: ComunidadePageProps) {
   }
 
   // Aguardar resolução do território antes de bloquear
-  if (territoryLoading || adminLoading || rolloutLoading || homeDistrictRolloutLoading || streetCheckLoading) {
+  if (territoryLoading || adminLoading || rolloutLoading || homeDistrictRolloutLoading) {
     return (
       <div className="min-h-screen w-full max-w-full overflow-x-hidden bg-[#12181B] flex items-center justify-center">
         <div className="w-6 h-6 border-2 border-teal-400 border-t-transparent rounded-full animate-spin" />
@@ -291,71 +252,29 @@ export default function ComunidadePage({ resolved }: ComunidadePageProps) {
 
   // ✅ SSOT: bloquear por ausência de user_residence (location_id), não por string de perfil
   // Admin e moderadores têm acesso mesmo sem bairro cadastrado
-  if (!hasHome && !isAdmin) {
+  if (!homeDistrict && !isAdmin) {
     return (
       <TooltipProvider>
         <div className="min-h-screen w-full max-w-full overflow-x-hidden bg-[#12181B] flex items-center justify-center" role="main">
           <div className="text-center p-8 max-w-md">
             <Users className="h-16 w-16 text-amber-400 mx-auto mb-4" />
             <h2 className="text-xl font-semibold text-white mb-4">
-              Escolha seu bairro
+              Defina seu bairro para acessar a comunidade
             </h2>
             <p className="text-gray-400 mb-6">
-              A comunidade e hiperlocal. Selecione seu bairro principal para ver feed,
-              alertas, grupos e problemas da sua regiao.
+              A comunidade e hiperlocal. Cadastre sua residencia com estado, cidade e bairro
+              para liberar feed, alertas, grupos e problemas da sua regiao.
             </p>
-            <Button onClick={() => setChooseDistrictOpen(true)} className="bg-teal-500 hover:bg-teal-400">
-              Escolher meu bairro
+            <Button onClick={() => navigate("/conta/enderecos")} className="bg-teal-500 hover:bg-teal-400">
+              Cadastrar endereco
             </Button>
           </div>
-          <Dialog open={chooseDistrictOpen} onOpenChange={setChooseDistrictOpen}>
-            <DialogContent className="border-white/10 bg-[#172126] text-white sm:max-w-md">
-              <DialogHeader>
-                <DialogTitle>Escolher meu bairro</DialogTitle>
-                <DialogDescription className="text-gray-400">
-                  Este bairro sera usado como base da sua comunidade.
-                </DialogDescription>
-              </DialogHeader>
-              <TerritorialSelector
-                initialLocationId={homeDistrict?.id}
-                allowCityOnly={false}
-                labels={{
-                  state: "Estado",
-                  city: "Cidade",
-                  neighborhood: "Bairro",
-                }}
-                onLocationChange={handleDistrictSelectionChange}
-              />
-              {selectedDistrictLabel && (
-                <p className="text-sm text-gray-300">
-                  Minha comunidade: {selectedDistrictLabel}
-                </p>
-              )}
-              <DialogFooter>
-                <Button
-                  variant="outline"
-                  onClick={() => setChooseDistrictOpen(false)}
-                  disabled={savingDistrict}
-                >
-                  Cancelar
-                </Button>
-                <Button
-                  onClick={handleSaveCommunityDistrict}
-                  disabled={!selectedDistrictId || savingDistrict}
-                  className="bg-teal-500 hover:bg-teal-400"
-                >
-                  {savingDistrict && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                  Salvar bairro
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
         </div>
       </TooltipProvider>
     );
   }
 
-  const hasApprovedCommunityAccess = isAdmin || (hasHome && isHomeDistrictApproved);
+  const hasApprovedCommunityAccess = isAdmin || Boolean(homeDistrict && isHomeDistrictApproved);
 
   if (!hasApprovedCommunityAccess) {
     return (
@@ -368,25 +287,6 @@ export default function ComunidadePage({ resolved }: ComunidadePageProps) {
               Seu bairro ainda nao foi aprovado no rollout da comunidade. Quando for liberado, os atalhos
               e conteudos locais serao ativados automaticamente.
             </p>
-          </div>
-        </div>
-      </TooltipProvider>
-    );
-  }
-
-  if (!isAdmin && !hasPrimaryStreet) {
-    return (
-      <TooltipProvider>
-        <div className="min-h-screen w-full max-w-full overflow-x-hidden bg-[#12181B] flex items-center justify-center" role="main">
-          <div className="text-center p-8 max-w-md">
-            <MapPin className="h-16 w-16 text-amber-400 mx-auto mb-4" />
-            <h2 className="text-xl font-semibold text-white mb-4">Informe sua rua para entrar</h2>
-            <p className="text-gray-400 mb-6">
-              Para acessar a comunidade do bairro, complete o endereco com rua no seu perfil.
-            </p>
-            <Button onClick={() => navigate(appUrls.profile.settings())} className="bg-teal-500 hover:bg-teal-400">
-              Atualizar endereco
-            </Button>
           </div>
         </div>
       </TooltipProvider>
@@ -437,7 +337,7 @@ export default function ComunidadePage({ resolved }: ComunidadePageProps) {
               {showVerificationBanner && showBanner && (
                 <VerificationBanner
                   onDismiss={() => setShowBanner(false)}
-                  onRequestVerification={() => navigate("/perfil/verificacao-morador")}
+                  onRequestVerification={() => navigate("/conta")}
                 />
               )}
 
@@ -490,8 +390,10 @@ export default function ComunidadePage({ resolved }: ComunidadePageProps) {
                   <LocationScopeCards
                     city={homeCity?.name}
                     neighborhood={homeDistrict?.name}
+                    street={primaryStreet}
+                    streetAvailable={hasPrimaryStreet}
                     currentScope={immediateFilters.locationScope}
-                    onScopeChange={setLocationScope}
+                    onScopeChange={handleScopeChange}
                   />
                   <CommunityFeed
                     currentUserId={profile?.id}

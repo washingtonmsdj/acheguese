@@ -26,7 +26,7 @@ export const PROFILE_SECTION_IDS = [
   "delivery",
   "planos",
   "notificacoes",
-  "configuracoes",
+  "preferencias",
   "seguranca",
 ] as const;
 
@@ -113,7 +113,7 @@ export const PROFILE_SECTIONS: readonly ProfileSectionItem[] = [
     requiresAuth: true,
   },
   {
-    id: "configuracoes",
+    id: "preferencias",
     icon: Settings2,
     label: "Configurações",
     description: "Preferências, vínculos e ajustes gerais.",

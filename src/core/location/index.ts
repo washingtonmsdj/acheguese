@@ -59,6 +59,8 @@ export { createTerritorialGroupRepository } from './repositories/createTerritori
 
 export { locationContextStore } from './stores/LocationContextStore';
 export { BaseLocationService } from './services/BaseLocationService';
+export { residentialLocalityService, ResidentialLocalityService } from './services/ResidentialLocalityService';
+export type { ResidentialLocality } from './services/ResidentialLocalityService';
 export { TerritorialGroupService } from './services/TerritorialGroupService';
 export { TerritoryModeManager } from './services/TerritoryModeManager'; // SSOT para lógica de modo territorial
 export type { MismatchInfo } from './services/TerritoryModeManager';

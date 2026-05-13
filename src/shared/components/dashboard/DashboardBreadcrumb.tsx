@@ -7,10 +7,10 @@ export function DashboardBreadcrumb() {
   return (
     <div className="mb-4 flex items-center gap-2 text-sm text-muted-foreground">
       <button
-        onClick={() => navigate("/perfil")}
+        onClick={() => navigate("/conta")}
         className="transition-colors hover:text-foreground"
       >
-        Perfil
+        Conta
       </button>
       <span>/</span>
       <span className="font-medium text-foreground">Dashboard da Empresa</span>

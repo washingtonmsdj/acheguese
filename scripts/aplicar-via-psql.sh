@@ -1,9 +1,15 @@
 #!/bin/bash
 
 # Script para aplicar migration via psql
-# Usa connection string direta
+# Requer SUPABASE_DB_PASSWORD no ambiente
 
-PGPASSWORD="Acheguese2024!" psql \
+if [ -z "${SUPABASE_DB_PASSWORD}" ]; then
+  echo "Erro: SUPABASE_DB_PASSWORD nao definida no ambiente."
+  echo "Defina a variavel e execute novamente."
+  exit 1
+fi
+
+PGPASSWORD="${SUPABASE_DB_PASSWORD}" psql \
   -h aws-0-sa-east-1.pooler.supabase.com \
   -p 5432 \
   -U postgres.xhdowzacfujckjelqhtd \
@@ -16,7 +22,7 @@ echo ""
 echo "🧪 Testando RPC..."
 echo ""
 
-PGPASSWORD="Acheguese2024!" psql \
+PGPASSWORD="${SUPABASE_DB_PASSWORD}" psql \
   -h aws-0-sa-east-1.pooler.supabase.com \
   -p 5432 \
   -U postgres.xhdowzacfujckjelqhtd \
