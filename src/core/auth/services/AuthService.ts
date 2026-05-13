@@ -11,6 +11,7 @@ import { SessionService } from "@/core/session/services/SessionService";
 import { logger } from "@/shared/utils/logger";
 import { USER_ROLE } from "@/shared/types/constants";
 import { profileService } from "@/core/profiles/services/ProfileService";
+import { mediaService } from "@/core/media/services/MediaService";
 import type { User, Session, AuthChangeEvent, Subscription } from "@supabase/supabase-js";
 import type { AdminSupabaseClient } from "@/core/admin/types/adminDatabase.types";
 
@@ -359,22 +360,8 @@ export class AuthService {
    * Faz upload da imagem para o storage e atualiza o perfil
    */
   static async uploadAvatar(userId: string, file: File): Promise<string> {
-    const fileExt = file.name.split(".").pop();
-    const filePath = `${userId}/avatar.${fileExt}`;
-
-    // Upload do arquivo
-    const { error: uploadError } = await (supabase as any).storage
-      .from("avatars")
-      .upload(filePath, file, { upsert: true });
-
-    if (uploadError) throw uploadError;
-
-    // Obter URL pública
-    const { data: urlData } = supabase.storage
-      .from("avatars")
-      .getPublicUrl(filePath);
-
-    const avatarUrl = `${urlData.publicUrl}?t=${Date.now()}`;
+    const upload = await mediaService.uploadAvatar(userId, file);
+    const avatarUrl = upload.url;
 
     // Atualizar profile usando ProfileService
     await profileService.updateProfile(userId, { avatar_url: avatarUrl });
@@ -432,27 +419,32 @@ export class AuthService {
       throw new Error("Imagem muito grande. Tamanho máximo: 5MB");
     }
 
-    // Gerar nome único para o arquivo
-    const fileExt = file.name.split(".").pop();
-    const fileName = `${userId}/${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+    const allowedBuckets = new Set([
+      "community-posts",
+      "tryon",
+      "classified-images",
+      "banners",
+      "business-images",
+      "posts",
+      "safety-evidence",
+    ]);
+    if (!allowedBuckets.has(bucket)) {
+      throw new Error("Bucket nao permitido para upload.");
+    }
 
-    // Upload para o Supabase Storage
-    const { data, error } = await (supabase as any).storage
-      .from(bucket)
-      .upload(fileName, file, {
-        cacheControl: "31536000", // 1 ano
-        upsert: false,
-        contentType: file.type,
-      });
-
-    if (error) throw error;
-
-    // Obter URL pública
-    const {
-      data: { publicUrl },
-    } = supabase.storage.from(bucket).getPublicUrl(fileName);
-
-    return publicUrl;
+    const upload = await mediaService.uploadToBucket(file, {
+      bucket: bucket as
+        | "community-posts"
+        | "tryon"
+        | "classified-images"
+        | "banners"
+        | "business-images"
+        | "posts"
+        | "safety-evidence",
+      pathPrefix: userId,
+      preset: "site_asset",
+      upsert: false,
+    });
+    return upload.url;
   }
 }
-

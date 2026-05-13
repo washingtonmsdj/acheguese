@@ -40,8 +40,10 @@ export async function fetchGastronomyQuickMetrics(
       p_business_profile_id: businessProfileId,
       p_week_start: weekAgo,
     }),
-    supabase.rpc("get_business_review_ratings", {
+    supabase.rpc("get_business_reviews", {
       p_business_profile_id: businessProfileId,
+      p_limit: 500,
+      p_offset: 0,
     }),
     supabase.rpc("get_business_views_last_7_days", {
       p_business_profile_id: businessProfileId,
@@ -66,7 +68,7 @@ export async function fetchGastronomyQuickMetrics(
     }
   });
 
-  const reviews: ReviewRecord[] = reviewsRes.data ?? [];
+  const reviews: ReviewRecord[] = Array.isArray(reviewsRes.data) ? reviewsRes.data : [];
   const avgRating =
     reviews.length > 0
       ? reviews.reduce((sum, review) => sum + review.rating, 0) / reviews.length

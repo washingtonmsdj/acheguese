@@ -32,6 +32,16 @@ import { UserReputationManager } from "@/modules/admin/components/UserReputation
 
 const PAGE_SIZE = 20;
 
+function getProfileDisplayCity(profile: AdminUserProfile): string {
+  return profile.public_city || "—";
+}
+
+function getProfileDisplayLocation(profile: AdminUserProfile): string {
+  const neighborhood = profile.public_neighborhood;
+  const city = profile.public_city;
+  return [neighborhood, city].filter(Boolean).join(", ") || "—";
+}
+
 const PROFILE_TYPE_CONFIG: Record<string, { label: string; icon: React.ElementType; color: string }> = {
   personal:     { label: "Pessoal",      icon: User,       color: "text-blue-500 bg-blue-500/10" },
   driver:       { label: "Motorista",    icon: Car,        color: "text-orange-500 bg-orange-500/10" },
@@ -474,7 +484,7 @@ function UserDetailPanel({ user, onClose, onSuspend, onUnsuspend, onVerify, onUp
             <InfoRow icon={Mail} label="Email" value={user.email || "—"} />
             <InfoRow icon={Phone} label="Telefone" value={user.phone || "—"} />
             <InfoRow icon={MapPin} label="Localização"
-              value={[p.neighborhood, p.city].filter(Boolean).join(", ") || "—"} />
+              value={getProfileDisplayLocation(p)} />
             <InfoRow icon={Calendar} label="Cadastro" value={fmt(user.created_at)} />
             <InfoRow icon={Clock} label="Último acesso" value={fmt(user.last_sign_in_at)} />
             <InfoRow icon={Star} label="Reputação" value={String(p.reputation)} />
@@ -577,7 +587,7 @@ function ProfileCard({ profile, onVerify }: { profile: AdminUserProfile; onVerif
           <p className="text-[10px] text-muted-foreground">Reputação</p>
         </div>
         <div>
-          <p className="text-xs font-semibold">{profile.city || "—"}</p>
+          <p className="text-xs font-semibold">{getProfileDisplayCity(profile)}</p>
           <p className="text-[10px] text-muted-foreground">Cidade</p>
         </div>
         <div>

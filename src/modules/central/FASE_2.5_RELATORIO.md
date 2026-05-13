@@ -269,7 +269,7 @@ Criar uma experiência visual e navegacional própria para /central, separando c
 
 ### Não Quebrado
 - ✅ Header/sidebar público existente
-- ✅ Rotas legadas em /perfil/mobilidade/*
+- ✅ Rotas legadas em /central/*
 - ✅ Guards existentes (CentralAccessGuard, BusinessAdminGuard, ProfessionalGuard, DriverGuard)
 - ✅ Sistema visual existente (shadcn/ui, cores, componentes)
 - ✅ Sub-rotas da Central (configuracoes, ganhos, disponibilidade, corridas/entregas, cadastro)

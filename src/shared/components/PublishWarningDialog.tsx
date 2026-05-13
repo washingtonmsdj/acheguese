@@ -38,7 +38,7 @@ export function PublishWarningDialog({
             <div className="space-y-3">
               <p className="text-sm leading-relaxed">
                 Você é responsável pelo conteúdo que publica. Não publique
-                acusações contra pessoas ou businesss. Conteúdos ofensivos ou
+                acusações contra pessoas ou empresas. Conteúdos ofensivos ou
                 ilegais podem ser removidos e levar à suspensão da conta.
               </p>
               {isAlert && (

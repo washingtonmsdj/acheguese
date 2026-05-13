@@ -69,8 +69,8 @@ export interface CommunityProfile {
   display_name?: string;
   avatar_url?: string;
   bio?: string;
-  city?: string;
-  neighborhood?: string;
+  public_city?: string;
+  public_neighborhood?: string;
   total_points: number;
   total_interactions: number;
   badges_count: number;
@@ -761,7 +761,7 @@ class CommunityServiceClass {
     updates: Partial<
       Pick<
         CommunityProfile,
-        "display_name" | "avatar_url" | "bio" | "city" | "neighborhood"
+        "display_name" | "avatar_url" | "bio"
       >
     >,
   ): Promise<{ success: boolean; profile?: CommunityProfile; error?: string }> {

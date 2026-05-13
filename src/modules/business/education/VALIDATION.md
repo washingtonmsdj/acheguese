@@ -347,13 +347,13 @@
 
 ### Admin
 
-- [x] `/perfil/empresas/:businessId/education` - Dashboard
-- [x] `/perfil/empresas/:businessId/education/setup` - Setup
-- [x] `/perfil/empresas/:businessId/education/programas` - Programas
-- [x] `/perfil/empresas/:businessId/education/leads` - Leads
-- [x] `/perfil/empresas/:businessId/education/eventos` - Eventos
-- [x] `/perfil/empresas/:businessId/education/analytics` - Analytics
-- [x] `/perfil/empresas/:businessId/education/planos` - Planos
+- [x] `/central/empresas/:businessId/education` - Dashboard
+- [x] `/central/empresas/:businessId/education/setup` - Setup
+- [x] `/central/empresas/:businessId/education/programas` - Programas
+- [x] `/central/empresas/:businessId/education/leads` - Leads
+- [x] `/central/empresas/:businessId/education/eventos` - Eventos
+- [x] `/central/empresas/:businessId/education/analytics` - Analytics
+- [x] `/central/empresas/:businessId/education/planos` - Planos
 
 ### Guards
 

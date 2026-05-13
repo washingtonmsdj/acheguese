@@ -1,11 +1,11 @@
-/**
+﻿/**
  * ContactCard
  * 
  * Card de contato com telefone, WhatsApp, email, website e redes sociais.
- * Botão de copiar telefone e CTA de reivindicar empresa.
+ * BotÃ£o de copiar telefone e CTA de reivindicar empresa.
  * 
  * SSOT: Props tipadas vindas de sections/types.ts
- * Sem gambiarras: Componente focado apenas em renderização
+ * Sem gambiarras: Componente focado apenas em renderizaÃ§Ã£o
  */
 
 import {
@@ -130,13 +130,13 @@ export function ContactCard({
       <div className="bg-gradient-to-br from-primary/10 via-accent/5 to-transparent border border-primary/20 rounded-xl p-5 text-center">
         <Award className="h-8 w-8 text-primary mx-auto mb-2" />
         <p className="text-sm font-semibold text-foreground mb-1">
-          Esta é a sua empresa?
+          Esta Ã© a sua empresa?
         </p>
         <p className="text-xs text-muted-foreground mb-3">
           Reivindique e gerencie seu perfil gratuitamente
         </p>
         <Button
-          onClick={() => navigate("/empresas/criar-empresa")}
+          onClick={() => navigate("/empresas/cadastrar")}
           className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-semibold text-sm rounded-lg h-9"
         >
           Reivindicar empresa
@@ -145,3 +145,4 @@ export function ContactCard({
     </div>
   );
 }
+

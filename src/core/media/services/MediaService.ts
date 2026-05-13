@@ -11,6 +11,7 @@
 import { supabase } from "@/integrations/supabase";
 import { logger } from "@/shared/utils/logger";
 import { MEDIA_UPLOAD_LIMITS } from "@/core/media/config/uploadLimits";
+import { getImageOptimizePreset, optimizeImage } from "@/shared/utils/imageOptimizer";
 
 export class MediaError extends Error {
   constructor(
@@ -27,6 +28,28 @@ export interface UploadResult {
   path: string;
 }
 
+interface UploadPostImageOptions {
+  preset?: "post_image" | "gastronomy_menu_item";
+  fit?: "cover" | "contain";
+  focalPointX?: number;
+  focalPointY?: number;
+}
+
+interface UploadToBucketOptions {
+  bucket:
+    | "banners"
+    | "business-images"
+    | "posts"
+    | "classified-images"
+    | "safety-evidence"
+    | "tryon"
+    | "community-posts";
+  pathPrefix?: string;
+  fileName?: string;
+  preset?: "site_asset" | "banner_image" | "post_image" | "classified_image" | "classified_thumbnail";
+  upsert?: boolean;
+}
+
 class MediaServiceClass {
   private readonly ALLOWED_IMAGE_TYPES = [
     "image/jpeg",
@@ -35,20 +58,48 @@ class MediaServiceClass {
     "image/gif",
   ];
 
+  private getSafeExtensionFromMime(mimeType: string): string {
+    if (mimeType === "image/jpeg") return "jpg";
+    if (mimeType === "image/png") return "png";
+    if (mimeType === "image/webp") return "webp";
+    if (mimeType === "image/gif") return "gif";
+    return "jpg";
+  }
+
+  private async optimizeForPreset(
+    file: File,
+    preset:
+      | "user_avatar"
+      | "post_image"
+      | "professional_logo"
+      | "professional_portfolio"
+      | "business_logo"
+      | "business_banner"
+      | "verification_photo",
+  ): Promise<File> {
+    try {
+      return await optimizeImage(file, getImageOptimizePreset(preset));
+    } catch (error) {
+      logger.warn("Image optimization failed, fallback to original file:", error);
+      return file;
+    }
+  }
+
   /**
    * Upload de avatar de usuário
    */
   async uploadAvatar(userId: string, file: File): Promise<UploadResult> {
     try {
+      const optimizedFile = await this.optimizeForPreset(file, "user_avatar");
       // Validações
-      if (file.size > MEDIA_UPLOAD_LIMITS.AVATAR_SIZE_BYTES) {
+      if (optimizedFile.size > MEDIA_UPLOAD_LIMITS.AVATAR_SIZE_BYTES) {
         throw new MediaError(
           "Avatar muito grande. Máximo 2MB",
           "FILE_TOO_LARGE",
         );
       }
 
-      if (!this.ALLOWED_IMAGE_TYPES.includes(file.type)) {
+      if (!this.ALLOWED_IMAGE_TYPES.includes(optimizedFile.type)) {
         throw new MediaError(
           "Tipo de arquivo não permitido. Use JPEG, PNG, WebP ou GIF",
           "INVALID_FILE_TYPE",
@@ -56,15 +107,15 @@ class MediaServiceClass {
       }
 
       // Gerar path único
-      const ext = file.name.split(".").pop();
+      const ext = this.getSafeExtensionFromMime(optimizedFile.type);
       const path = `${userId}/avatar.${ext}`;
 
       // Upload para storage
       const { error: uploadError } = await supabase.storage
         .from("avatars")
-        .upload(path, file, {
+        .upload(path, optimizedFile, {
           upsert: true,
-          contentType: file.type,
+          contentType: optimizedFile.type,
         });
 
       if (uploadError) {
@@ -94,17 +145,31 @@ class MediaServiceClass {
   /**
    * Upload de imagem de post/conteúdo
    */
-  async uploadPostImage(userId: string, file: File): Promise<UploadResult> {
+  async uploadPostImage(
+    userId: string,
+    file: File,
+    options: UploadPostImageOptions = {},
+  ): Promise<UploadResult> {
     try {
+      const preset = options.preset ?? "post_image";
+      const optimizedFile = await optimizeImage(file, {
+        ...getImageOptimizePreset(preset),
+        fit: options.fit ?? getImageOptimizePreset(preset).fit,
+        focalPointX: options.focalPointX ?? getImageOptimizePreset(preset).focalPointX,
+        focalPointY: options.focalPointY ?? getImageOptimizePreset(preset).focalPointY,
+      }).catch((error) => {
+        logger.warn("Image optimization failed, fallback to original file:", error);
+        return file;
+      });
       // Validações
-      if (file.size > MEDIA_UPLOAD_LIMITS.FILE_SIZE_BYTES) {
+      if (optimizedFile.size > MEDIA_UPLOAD_LIMITS.FILE_SIZE_BYTES) {
         throw new MediaError(
           "Imagem muito grande. Máximo 5MB",
           "FILE_TOO_LARGE",
         );
       }
 
-      if (!this.ALLOWED_IMAGE_TYPES.includes(file.type)) {
+      if (!this.ALLOWED_IMAGE_TYPES.includes(optimizedFile.type)) {
         throw new MediaError(
           "Tipo de arquivo não permitido",
           "INVALID_FILE_TYPE",
@@ -113,14 +178,14 @@ class MediaServiceClass {
 
       // Gerar path único
       const timestamp = Date.now();
-      const ext = file.name.split(".").pop();
+      const ext = this.getSafeExtensionFromMime(optimizedFile.type);
       const path = `${userId}/posts/${timestamp}.${ext}`;
 
       // Upload para storage
       const { error: uploadError } = await supabase.storage
         .from("post-images")
-        .upload(path, file, {
-          contentType: file.type,
+        .upload(path, optimizedFile, {
+          contentType: optimizedFile.type,
         });
 
       if (uploadError) {
@@ -197,15 +262,19 @@ class MediaServiceClass {
     type: "logo" | "portfolio",
   ): Promise<UploadResult> {
     try {
+      const optimizedFile = await this.optimizeForPreset(
+        file,
+        type === "logo" ? "professional_logo" : "professional_portfolio",
+      );
       // Validações
-      if (file.size > MEDIA_UPLOAD_LIMITS.FILE_SIZE_BYTES) {
+      if (optimizedFile.size > MEDIA_UPLOAD_LIMITS.FILE_SIZE_BYTES) {
         throw new MediaError(
           "Imagem muito grande. Máximo 5MB",
           "FILE_TOO_LARGE",
         );
       }
 
-      if (!this.ALLOWED_IMAGE_TYPES.includes(file.type)) {
+      if (!this.ALLOWED_IMAGE_TYPES.includes(optimizedFile.type)) {
         throw new MediaError(
           "Tipo de arquivo não permitido",
           "INVALID_FILE_TYPE",
@@ -215,15 +284,15 @@ class MediaServiceClass {
       // Gerar path único
       const timestamp = Date.now();
       const random = Math.random().toString(36).slice(2);
-      const ext = file.name.split(".").pop();
+      const ext = this.getSafeExtensionFromMime(optimizedFile.type);
       const folder = type === "logo" ? "" : "portfolio/";
       const path = `professionals/${userId}/${folder}${timestamp}-${random}.${ext}`;
 
       // Upload para storage
       const { error: uploadError } = await supabase.storage
         .from("avatars")
-        .upload(path, file, {
-          contentType: file.type,
+        .upload(path, optimizedFile, {
+          contentType: optimizedFile.type,
         });
 
       if (uploadError) {
@@ -256,15 +325,19 @@ class MediaServiceClass {
     type: "logo" | "capa",
   ): Promise<UploadResult> {
     try {
+      const optimizedFile = await this.optimizeForPreset(
+        file,
+        type === "logo" ? "business_logo" : "business_banner",
+      );
       // Validações
-      if (file.size > MEDIA_UPLOAD_LIMITS.FILE_SIZE_BYTES) {
+      if (optimizedFile.size > MEDIA_UPLOAD_LIMITS.FILE_SIZE_BYTES) {
         throw new MediaError(
           "Imagem muito grande. Máximo 5MB",
           "FILE_TOO_LARGE",
         );
       }
 
-      if (!this.ALLOWED_IMAGE_TYPES.includes(file.type)) {
+      if (!this.ALLOWED_IMAGE_TYPES.includes(optimizedFile.type)) {
         throw new MediaError(
           "Tipo de arquivo não permitido",
           "INVALID_FILE_TYPE",
@@ -273,15 +346,15 @@ class MediaServiceClass {
 
       // Gerar path único
       const timestamp = Date.now();
-      const ext = file.name.split(".").pop();
+      const ext = this.getSafeExtensionFromMime(optimizedFile.type);
       const folder = type === "logo" ? "logos" : "capas";
       const path = `${folder}/${profileId}/${timestamp}.${ext}`;
 
       // Upload para storage
       const { error: uploadError } = await supabase.storage
         .from("business-logos")
-        .upload(path, file, {
-          contentType: file.type,
+        .upload(path, optimizedFile, {
+          contentType: optimizedFile.type,
         });
 
       if (uploadError) {
@@ -324,8 +397,10 @@ class MediaServiceClass {
     type: "proof" | "photo"
   ): Promise<string> {
     try {
+      const optimizedFile =
+        type === "photo" ? await this.optimizeForPreset(file, "verification_photo") : file;
       // Validações
-      if (file.size > MEDIA_UPLOAD_LIMITS.FILE_SIZE_BYTES) {
+      if (optimizedFile.size > MEDIA_UPLOAD_LIMITS.FILE_SIZE_BYTES) {
         throw new MediaError(
           "Arquivo muito grande. Máximo 5MB",
           "FILE_TOO_LARGE",
@@ -333,12 +408,12 @@ class MediaServiceClass {
       }
 
       const timestamp = Date.now();
-      const fileName = `${type}_${timestamp}_${file.name}`;
-      const path = `${profileId}/${fileName}`;
+      const ext = this.getSafeExtensionFromMime(optimizedFile.type);
+      const path = `${profileId}/${type}_${timestamp}.${ext}`;
 
       const { error: uploadError } = await supabase.storage
         .from("verification-documents")
-        .upload(path, file, { upsert: true });
+        .upload(path, optimizedFile, { upsert: true, contentType: optimizedFile.type });
 
       if (uploadError) {
         logger.error("Error uploading verification document:", uploadError);
@@ -357,6 +432,62 @@ class MediaServiceClass {
         "Erro inesperado ao fazer upload",
         "UNEXPECTED_ERROR",
       );
+    }
+  }
+
+  async uploadToBucket(file: File, options: UploadToBucketOptions): Promise<UploadResult> {
+    const preset = options.preset ?? "site_asset";
+    const optimizedFile = await optimizeImage(file, getImageOptimizePreset(preset)).catch((error) => {
+      logger.warn("Image optimization failed, fallback to original file:", error);
+      return file;
+    });
+
+    if (!this.ALLOWED_IMAGE_TYPES.includes(optimizedFile.type)) {
+      throw new MediaError("Tipo de arquivo nao permitido", "INVALID_FILE_TYPE");
+    }
+
+    const ext = this.getSafeExtensionFromMime(optimizedFile.type);
+    const prefix = options.pathPrefix?.replace(/^\/+|\/+$/g, "") || "uploads";
+    const sanitizedFileName = options.fileName
+      ? options.fileName.replace(/[\\/]/g, "").replace(/\.+/g, ".")
+      : `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+    const ensuredName = sanitizedFileName.includes(".")
+      ? sanitizedFileName
+      : `${sanitizedFileName}.${ext}`;
+    const path = `${prefix}/${ensuredName}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from(options.bucket)
+      .upload(path, optimizedFile, {
+        upsert: options.upsert ?? true,
+        contentType: optimizedFile.type,
+      });
+
+    if (uploadError) {
+      logger.error("Error uploading bucket image:", uploadError);
+      throw new MediaError("Erro ao fazer upload da imagem", "UPLOAD_FAILED");
+    }
+
+    const { data: urlData } = supabase.storage.from(options.bucket).getPublicUrl(path);
+    return { url: urlData.publicUrl, path };
+  }
+
+  async deleteFromBucket(
+    bucket:
+      | "banners"
+      | "business-images"
+      | "posts"
+      | "classified-images"
+      | "safety-evidence"
+      | "tryon"
+      | "community-posts",
+    paths: string[],
+  ): Promise<void> {
+    if (!paths.length) return;
+    const { error } = await supabase.storage.from(bucket).remove(paths);
+    if (error) {
+      logger.error("Error deleting bucket files:", error);
+      throw new MediaError("Erro ao remover arquivos", "DELETE_FAILED");
     }
   }
 }

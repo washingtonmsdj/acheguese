@@ -194,11 +194,11 @@ export default function ComunidadePage({ resolved }: ComunidadePageProps) {
   const modalCity =
     communityLocation.activeLocation?.type === "city"
       ? communityLocation.activeLocation.name
-      : homeCity?.name ?? profile?.city ?? "";
+      : homeCity?.name ?? "";
   const modalNeighborhood =
     communityLocation.activeLocation?.type === "district"
       ? communityLocation.activeLocation.name
-      : homeDistrict?.name ?? profile?.neighborhood;
+      : homeDistrict?.name;
   const communityTerritoryFilter: TerritoryFilter = homeDistrict
     ? { scope: "location", location_id: homeDistrict.id }
     : territoryFilter;
@@ -488,8 +488,8 @@ export default function ComunidadePage({ resolved }: ComunidadePageProps) {
               {(feedView === "posts" || feedView === "all") && (
                 <>
                   <LocationScopeCards
-                    city={homeCity?.name ?? profile.city}
-                    neighborhood={homeDistrict?.name ?? profile.neighborhood}
+                    city={homeCity?.name}
+                    neighborhood={homeDistrict?.name}
                     currentScope={immediateFilters.locationScope}
                     onScopeChange={setLocationScope}
                   />
@@ -514,8 +514,8 @@ export default function ComunidadePage({ resolved }: ComunidadePageProps) {
                 <div className="rounded-2xl border border-red-400/20 bg-red-400/[0.04] p-4 md:p-5">
                   <AlertFeedSection
                     territoryFilter={communityTerritoryFilter}
-                    city={homeCity?.name ?? profile.city}
-                    neighborhood={homeDistrict?.name ?? profile.neighborhood}
+                    city={homeCity?.name}
+                    neighborhood={homeDistrict?.name}
                     locationId={issueLocationId}
                   />
                 </div>
@@ -525,8 +525,8 @@ export default function ComunidadePage({ resolved }: ComunidadePageProps) {
                 <div className="rounded-2xl border border-amber-400/20 bg-amber-400/[0.04] p-4 md:p-5">
                   <IssueFeedSection
                     territoryFilter={communityTerritoryFilter}
-                    city={homeCity?.name ?? profile.city}
-                    neighborhood={homeDistrict?.name ?? profile.neighborhood}
+                    city={homeCity?.name}
+                    neighborhood={homeDistrict?.name}
                     locationId={homeDistrict?.id}
                     profileId={profile.id}
                   />

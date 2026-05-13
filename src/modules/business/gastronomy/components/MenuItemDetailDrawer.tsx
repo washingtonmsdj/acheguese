@@ -175,10 +175,19 @@ export function MenuItemDetailDrawer({
     [addonQuantities, availableAddons],
   );
 
-  const lineTotal = useMemo(() => {
-    if (!resolvedItem) return 0;
-    return money((resolvedItem.base_price + (selectedVariant?.price_adjustment ?? 0)) * quantity + addonsTotal);
-  }, [addonsTotal, quantity, resolvedItem, selectedVariant?.price_adjustment]);
+  const basePrice = Number.isFinite(Number(resolvedItem?.base_price ?? 0))
+    ? Number(resolvedItem?.base_price ?? 0)
+    : 0;
+  const selectedVariantAdjustment = Number.isFinite(
+    Number(selectedVariant?.price_adjustment ?? 0),
+  )
+    ? Number(selectedVariant?.price_adjustment ?? 0)
+    : 0;
+
+  const lineTotal = useMemo(
+    () => money((basePrice + selectedVariantAdjustment) * quantity + addonsTotal),
+    [addonsTotal, basePrice, quantity, selectedVariantAdjustment],
+  );
 
   const fallbackSlices = useMemo(
     () => resolveSlicesCount(selectedVariant, availableVariants, resolvedItem),
@@ -256,6 +265,9 @@ export function MenuItemDetailDrawer({
 
   const deliveryEnabled = business.gastronomy_profile?.delivery_enabled ?? false;
   const businessDataId = business.business_data_id;
+  const handleSelectVariant = (variantId: string) => {
+    setSelectedVariantId((current) => (current === variantId ? current : variantId));
+  };
 
   const updateAddonQuantity = (addon: MenuItemAddon, delta: number) => {
     setAddonQuantities((current) => {
@@ -347,7 +359,7 @@ export function MenuItemDetailDrawer({
           </div>
         </SheetHeader>
 
-        <div className="mt-6 space-y-6">
+        <div className="mt-6 space-y-6 pb-28">
           {resolvedItem.image_url && (
             <img
               src={resolvedItem.image_url}
@@ -429,7 +441,7 @@ export function MenuItemDetailDrawer({
                         <button
                           key={variant.id}
                           type="button"
-                          onClick={() => setSelectedVariantId(variant.id)}
+                          onClick={() => handleSelectVariant(variant.id)}
                           className={`flex items-center justify-between rounded-xl border px-4 py-3 text-left transition-colors ${
                             isSelected ? "border-primary bg-primary/5" : "hover:border-primary/30"
                           }`}
@@ -545,7 +557,7 @@ export function MenuItemDetailDrawer({
                     <span className="text-muted-foreground">Base da linha</span>
                     <span>
                       R${" "}
-                      {money((resolvedItem.base_price + (selectedVariant?.price_adjustment ?? 0)) * quantity).toFixed(2)}
+                      {money((basePrice + selectedVariantAdjustment) * quantity).toFixed(2)}
                     </span>
                   </div>
                   <div className="flex items-center justify-between">
@@ -553,7 +565,7 @@ export function MenuItemDetailDrawer({
                     <span>R$ {addonsTotal.toFixed(2)}</span>
                   </div>
                   <div className="flex items-center justify-between text-base font-semibold">
-                    <span>Total da linha</span>
+                    <span>Total do item</span>
                     <span className="text-primary">R$ {lineTotal.toFixed(2)}</span>
                   </div>
                 </div>
@@ -563,16 +575,24 @@ export function MenuItemDetailDrawer({
         </div>
 
         {!shouldUsePizzaBuilder && (
-          <SheetFooter className="mt-6">
-            <Button
-              type="button"
-              className="w-full"
-              size="lg"
-              disabled={!resolvedItem.is_available || !deliveryEnabled}
-              onClick={handleAddToCart}
-            >
-              {deliveryEnabled ? "Adicionar ao carrinho" : "Delivery indisponivel"}
-            </Button>
+          <SheetFooter className="sticky bottom-0 z-20 -mx-6 mt-6 border-t bg-background/95 px-6 pb-[calc(1rem+env(safe-area-inset-bottom))] pt-4 backdrop-blur">
+            <div className="flex w-full items-center justify-between gap-3">
+              <div className="min-w-0">
+                <p className="text-xs text-muted-foreground">Total do item</p>
+                <p className="truncate text-lg font-semibold text-primary">
+                  R$ {lineTotal.toFixed(2)}
+                </p>
+              </div>
+              <Button
+                type="button"
+                className="shrink-0"
+                size="lg"
+                disabled={!resolvedItem.is_available || !deliveryEnabled}
+                onClick={handleAddToCart}
+              >
+                {deliveryEnabled ? "Adicionar ao carrinho" : "Delivery indisponivel"}
+              </Button>
+            </div>
           </SheetFooter>
         )}
       </SheetContent>

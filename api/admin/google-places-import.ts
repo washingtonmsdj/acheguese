@@ -1,8 +1,14 @@
 ﻿import { readFile } from 'fs/promises';
 import { resolve } from 'path';
-import { createHash, timingSafeEqual } from 'crypto';
+import { createHash, createHmac, timingSafeEqual } from 'crypto';
 import { createServiceSupabaseClient } from '../../src/core/supabase/services/adminClient';
 import { profileService } from '../../src/core/profiles/services/ProfileService';
+import {
+  checkRateLimit,
+  clearAuthFailures,
+  getAuthBackoffRemainingMs,
+  registerAuthFailure,
+} from '../_shared/securityStore';
 
 type ReqBody = {
   mode?: 'dry-run' | 'apply';
@@ -58,11 +64,17 @@ const DEFAULT_INPUT = resolve(process.cwd(), 'tests', 'fixtures', 'salvador', 'g
 const SALVADOR_GEO_PATH = '/br/ba/salvador';
 const UUID_V4_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const MAX_LIMIT = 100;
+const MAX_BODY_BYTES = 16 * 1024;
 const RATE_LIMIT_WINDOW_MS = 5 * 60 * 1000;
 const RATE_LIMIT_MAX = 20;
+const AUTH_FAIL_RATE_LIMIT_WINDOW_MS = 10 * 60 * 1000;
+const AUTH_FAIL_RATE_LIMIT_MAX = 10;
 const APPLY_RATE_LIMIT_WINDOW_MS = 15 * 60 * 1000;
 const APPLY_RATE_LIMIT_MAX = 5;
-const rateLimitStore = new Map<string, { count: number; resetAt: number }>();
+const AUTH_BACKOFF_BASE_MS = 30 * 1000;
+const AUTH_BACKOFF_MAX_MS = 15 * 60 * 1000;
+const SIGNATURE_MAX_SKEW_MS = 5 * 60 * 1000;
+type SupabaseServiceClient = ReturnType<typeof createServiceSupabaseClient>;
 
 function json(res: ResponseLike, status: number, payload: unknown) {
   res.status(status).setHeader('Content-Type', 'application/json');
@@ -96,42 +108,154 @@ function constantTimeEquals(left: string, right: string): boolean {
 
 function parseBody(rawBody: unknown): ReqBody {
   if (typeof rawBody === 'string') {
+    if (Buffer.byteLength(rawBody, 'utf8') > MAX_BODY_BYTES) {
+      throw new Error('Payload too large');
+    }
     return JSON.parse(rawBody || '{}') as ReqBody;
   }
   if (rawBody && typeof rawBody === 'object') {
+    const serialized = JSON.stringify(rawBody);
+    if (Buffer.byteLength(serialized, 'utf8') > MAX_BODY_BYTES) {
+      throw new Error('Payload too large');
+    }
     return rawBody as ReqBody;
   }
   return {};
 }
 
+function parseLimit(value: unknown, fallback: number): number {
+  if (typeof value !== 'number' || !Number.isFinite(value)) return fallback;
+  return Math.min(MAX_LIMIT, Math.max(1, Math.trunc(value)));
+}
+
 function getClientIp(req: RequestLike): string {
+  // Prefer provider-specific proxy header when available.
+  const vercelForwarded = getHeader(req, 'x-vercel-forwarded-for');
+  const firstVercelForwarded = vercelForwarded?.split(',')[0]?.trim();
+  if (firstVercelForwarded) return firstVercelForwarded;
+
+  const realIp = getHeader(req, 'x-real-ip')?.trim();
+  if (realIp) return realIp;
+
   const forwarded = getHeader(req, 'x-forwarded-for');
   const firstForwarded = forwarded?.split(',')[0]?.trim();
   if (firstForwarded) return firstForwarded;
-  return getHeader(req, 'x-real-ip') ?? 'unknown';
+
+  return 'unknown';
 }
 
-function checkRateLimit(
-  key: string,
-  maxRequests: number,
-  windowMs: number,
-): { allowed: boolean; retryAfterSeconds?: number } {
+function tokenFingerprint(value: string | null): string {
+  if (!value) return 'none';
+  return createHash('sha256').update(value).digest('hex').slice(0, 16);
+}
+
+function resolveAdminTokens(): { activeToken: string | null; previousToken: string | null } {
+  const activeToken =
+    process.env.IMPORT_ADMIN_TOKEN_ACTIVE?.trim() ||
+    process.env.IMPORT_ADMIN_TOKEN?.trim() ||
+    null;
+  const previousToken = process.env.IMPORT_ADMIN_TOKEN_PREVIOUS?.trim() || null;
+  return { activeToken, previousToken };
+}
+
+function matchesAnyToken(providedToken: string | null, tokens: string[]): boolean {
+  if (!providedToken) return false;
+  for (const token of tokens) {
+    if (constantTimeEquals(providedToken, token)) return true;
+  }
+  return false;
+}
+
+function parseBooleanEnv(value: string | undefined, fallback: boolean): boolean {
+  if (!value) return fallback;
+  const normalized = value.trim().toLowerCase();
+  if (normalized === 'true' || normalized === '1' || normalized === 'yes') return true;
+  if (normalized === 'false' || normalized === '0' || normalized === 'no') return false;
+  return fallback;
+}
+
+function safeTimeEqual(left: string, right: string): boolean {
+  const leftBuffer = Buffer.from(left);
+  const rightBuffer = Buffer.from(right);
+  if (leftBuffer.length !== rightBuffer.length) return false;
+  return timingSafeEqual(leftBuffer, rightBuffer);
+}
+
+function computeImportSignature(token: string, timestamp: string, nonce: string, body: unknown): string {
+  const serializedBody = typeof body === 'string' ? body : JSON.stringify(body ?? {});
+  const bodyHash = createHash('sha256').update(serializedBody).digest('hex');
+  const payload = `${timestamp}.${nonce}.${bodyHash}`;
+  return createHmac('sha256', token).update(payload).digest('hex');
+}
+
+async function verifySignedRequest(
+  req: RequestLike,
+  allowedTokens: string[],
+): Promise<{ ok: boolean; code: 400 | 401; reason: string }> {
+  const timestamp = getHeader(req, 'x-import-timestamp')?.trim() ?? '';
+  const nonce = getHeader(req, 'x-import-nonce')?.trim() ?? '';
+  const signature = getHeader(req, 'x-import-signature')?.trim() ?? '';
+
+  if (!timestamp || !nonce || !signature) {
+    return { ok: false, code: 401, reason: 'missing_signature_headers' };
+  }
+
+  const timestampMs = Number(timestamp);
+  if (!Number.isFinite(timestampMs)) {
+    return { ok: false, code: 400, reason: 'invalid_signature_timestamp' };
+  }
+
   const now = Date.now();
-  const current = rateLimitStore.get(key);
-
-  if (!current || current.resetAt <= now) {
-    rateLimitStore.set(key, { count: 1, resetAt: now + windowMs });
-    return { allowed: true };
+  const skewMs = Math.abs(now - timestampMs);
+  if (skewMs > SIGNATURE_MAX_SKEW_MS) {
+    return { ok: false, code: 401, reason: 'signature_timestamp_out_of_window' };
   }
 
-  if (current.count >= maxRequests) {
-    const retryAfterSeconds = Math.ceil((current.resetAt - now) / 1000);
-    return { allowed: false, retryAfterSeconds };
+  if (nonce.length < 12 || nonce.length > 128) {
+    return { ok: false, code: 400, reason: 'invalid_signature_nonce' };
   }
 
-  current.count += 1;
-  rateLimitStore.set(key, current);
-  return { allowed: true };
+  const replayRateLimit = await checkRateLimit(
+    `google-places-import:nonce:${timestamp}:${nonce}`,
+    1,
+    SIGNATURE_MAX_SKEW_MS,
+  );
+  if (!replayRateLimit.allowed) {
+    return { ok: false, code: 401, reason: 'signature_nonce_replay' };
+  }
+
+  let validSignature = false;
+  for (const token of allowedTokens) {
+    const expected = computeImportSignature(token, timestamp, nonce, req.body);
+    if (safeTimeEqual(signature.toLowerCase(), expected.toLowerCase())) {
+      validSignature = true;
+      break;
+    }
+  }
+  if (!validSignature) {
+    return { ok: false, code: 401, reason: 'invalid_signature' };
+  }
+
+  return { ok: true, code: 401, reason: 'ok' };
+}
+
+function getAuthPrincipalKey(requestIp: string, token: string | null): string {
+  return `${requestIp}:${tokenFingerprint(token)}`;
+}
+
+function auditSecurityEvent(
+  req: RequestLike,
+  event: string,
+  details: Record<string, string | number | boolean | null>,
+): void {
+  const requestId = getHeader(req, 'x-request-id') ?? null;
+  const entry = {
+    event,
+    request_id: requestId,
+    at: new Date().toISOString(),
+    ...details,
+  };
+  console.warn(JSON.stringify(entry));
 }
 
 function slugify(value: string): string {
@@ -197,7 +321,7 @@ async function readPreview(sample: boolean): Promise<PreviewFile> {
   return JSON.parse(raw) as PreviewFile;
 }
 
-async function resolveLocationId(supabase: ReturnType<typeof createClient>): Promise<string | null> {
+async function resolveLocationId(supabase: SupabaseServiceClient): Promise<string | null> {
   const byPath = await supabase
     .from('locations')
     .select('id')
@@ -225,7 +349,7 @@ async function resolveLocationId(supabase: ReturnType<typeof createClient>): Pro
 }
 
 async function getExistingByGooglePlaceId(
-  supabase: ReturnType<typeof createClient>,
+  supabase: SupabaseServiceClient,
   googlePlaceId: string,
 ): Promise<{ id: string } | null> {
   const found = await supabase
@@ -242,7 +366,7 @@ async function getExistingByGooglePlaceId(
   return (found.data as { id: string } | null) ?? null;
 }
 
-async function slugExists(supabase: ReturnType<typeof createClient>, slug: string): Promise<boolean> {
+async function slugExists(supabase: SupabaseServiceClient, slug: string): Promise<boolean> {
   const found = await supabase
     .from('business_data')
     .select('id')
@@ -257,7 +381,7 @@ async function slugExists(supabase: ReturnType<typeof createClient>, slug: strin
 }
 
 async function profileHandleExists(
-  _supabase: ReturnType<typeof createClient>,
+  _supabase: SupabaseServiceClient,
   handle: string,
 ): Promise<boolean> {
   const available = await profileService.isUsernameAvailable(handle);
@@ -265,7 +389,7 @@ async function profileHandleExists(
 }
 
 async function createUniqueSlug(
-  supabase: ReturnType<typeof createClient>,
+  supabase: SupabaseServiceClient,
   name: string,
   inRun: Set<string>,
 ): Promise<string> {
@@ -288,7 +412,7 @@ async function createUniqueSlug(
 }
 
 async function createUniqueHandle(
-  supabase: ReturnType<typeof createClient>,
+  supabase: SupabaseServiceClient,
   slug: string,
 ): Promise<string> {
   let attempt = 0;
@@ -307,24 +431,14 @@ export default async function handler(req: RequestLike, res: ResponseLike) {
       json(res, 405, { error: 'Method not allowed' });
       return;
     }
-
-    const adminToken = process.env.IMPORT_ADMIN_TOKEN;
-    const providedToken = extractProvidedToken(req);
-    if (!adminToken || !providedToken || !constantTimeEquals(providedToken, adminToken)) {
-      json(res, 401, { error: 'Unauthorized' });
-      return;
-    }
-
-    let body: ReqBody;
-    try {
-      body = parseBody(req.body);
-    } catch {
-      json(res, 400, { error: 'Invalid JSON body' });
+    const contentType = getHeader(req, 'content-type')?.toLowerCase() ?? '';
+    if (contentType && !contentType.includes('application/json')) {
+      json(res, 415, { error: 'Unsupported media type' });
       return;
     }
 
     const requestIp = getClientIp(req);
-    const globalRateLimit = checkRateLimit(
+    const globalRateLimit = await checkRateLimit(
       `google-places-import:global:${requestIp}`,
       RATE_LIMIT_MAX,
       RATE_LIMIT_WINDOW_MS,
@@ -335,13 +449,85 @@ export default async function handler(req: RequestLike, res: ResponseLike) {
       return;
     }
 
+    const { activeToken, previousToken } = resolveAdminTokens();
+    const allowedTokens = [activeToken, previousToken].filter(
+      (token): token is string => Boolean(token),
+    );
+    const providedToken = extractProvidedToken(req);
+    const principalKey = getAuthPrincipalKey(requestIp, providedToken);
+    const requireSignedAdminRequest = parseBooleanEnv(process.env.IMPORT_ADMIN_REQUIRE_HMAC, false);
+    const authBackoffRemainingMs = await getAuthBackoffRemainingMs(principalKey);
+    if (authBackoffRemainingMs > 0) {
+      const retryAfterSeconds = Math.ceil(authBackoffRemainingMs / 1000);
+      res.setHeader('Retry-After', String(retryAfterSeconds));
+      auditSecurityEvent(req, 'google_places_import_auth_backoff_block', {
+        ip: requestIp,
+        retry_after_seconds: retryAfterSeconds,
+      });
+      json(res, 429, { error: 'Too many authentication attempts' });
+      return;
+    }
+
+    const authRateLimit = await checkRateLimit(
+      `google-places-import:auth:${requestIp}:${tokenFingerprint(providedToken)}`,
+      AUTH_FAIL_RATE_LIMIT_MAX,
+      AUTH_FAIL_RATE_LIMIT_WINDOW_MS,
+    );
+    if (!authRateLimit.allowed) {
+      res.setHeader('Retry-After', String(authRateLimit.retryAfterSeconds ?? 120));
+      auditSecurityEvent(req, 'google_places_import_auth_rate_limited', {
+        ip: requestIp,
+        retry_after_seconds: authRateLimit.retryAfterSeconds ?? 120,
+      });
+      json(res, 429, { error: 'Too many authentication attempts' });
+      return;
+    }
+    if (allowedTokens.length === 0 || !matchesAnyToken(providedToken, allowedTokens)) {
+      const blockMs = await registerAuthFailure(principalKey, AUTH_BACKOFF_BASE_MS, AUTH_BACKOFF_MAX_MS);
+      const retryAfterSeconds = Math.ceil(blockMs / 1000);
+      res.setHeader('Retry-After', String(retryAfterSeconds));
+      auditSecurityEvent(req, 'google_places_import_auth_failed', {
+        ip: requestIp,
+        retry_after_seconds: retryAfterSeconds,
+      });
+      json(res, 401, { error: 'Unauthorized' });
+      return;
+    }
+
+    if (requireSignedAdminRequest) {
+      const signedRequest = await verifySignedRequest(req, allowedTokens);
+      if (!signedRequest.ok) {
+        auditSecurityEvent(req, 'google_places_import_signature_rejected', {
+          ip: requestIp,
+          reason: signedRequest.reason,
+        });
+        json(res, signedRequest.code, { error: 'Unauthorized' });
+        return;
+      }
+    }
+
+    await clearAuthFailures(principalKey);
+
+    let body: ReqBody;
+    try {
+      body = parseBody(req.body);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : '';
+      if (message === 'Payload too large') {
+        json(res, 413, { error: 'Payload too large' });
+        return;
+      }
+      json(res, 400, { error: 'Invalid JSON body' });
+      return;
+    }
+
     const mode = body.mode === 'apply' ? 'apply' : 'dry-run';
-    const limit = Number.isFinite(body.limit) ? Math.min(MAX_LIMIT, Math.max(1, Number(body.limit))) : 20;
+    const limit = parseLimit(body.limit, 20);
     const sample = Boolean(body.sample);
     const ownerUserId = body.ownerUserId?.trim();
 
     if (mode === 'apply') {
-      const applyRateLimit = checkRateLimit(
+      const applyRateLimit = await checkRateLimit(
         `google-places-import:apply:${requestIp}`,
         APPLY_RATE_LIMIT_MAX,
         APPLY_RATE_LIMIT_WINDOW_MS,
@@ -362,16 +548,12 @@ export default async function handler(req: RequestLike, res: ResponseLike) {
       return;
     }
 
-    const supabaseUrl = process.env.SUPABASE_URL ?? process.env.VITE_SUPABASE_URL;
-    const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-    if (!supabaseUrl || !serviceKey || !adminToken) {
+    if (!activeToken) {
       json(res, 500, { error: 'Server configuration error' });
       return;
     }
 
-    const supabase = createClient(supabaseUrl, serviceKey, {
-      auth: { autoRefreshToken: false, persistSession: false },
-    });
+    const supabase = createServiceSupabaseClient();
 
     if (mode === 'apply' && ownerUserId) {
       const ownerCheck = await supabase.auth.admin.getUserById(ownerUserId);
@@ -491,9 +673,20 @@ export default async function handler(req: RequestLike, res: ResponseLike) {
       created,
       generated_at: new Date().toISOString(),
     });
+    auditSecurityEvent(req, 'google_places_import_completed', {
+      ip: requestIp,
+      mode,
+      sample,
+      input_count: inputItems.length,
+      created_count: created.length,
+    });
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     const isProd = process.env.NODE_ENV === 'production';
+    auditSecurityEvent(req, 'google_places_import_internal_error', {
+      error_type: error instanceof Error ? error.name : 'UnknownError',
+      is_prod: isProd,
+    });
     json(res, 500, {
       error: isProd ? 'Internal server error' : message,
     });

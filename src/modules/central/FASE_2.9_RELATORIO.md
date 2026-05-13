@@ -15,7 +15,7 @@ Fazer com que rotas antigas de gestão em /perfil redirecionem para suas equival
 
 **src/app/routes/AppRoutes.tsx**
 - Adicionado import de useParams do react-router-dom
-- Criado componente BusinessRedirect para redirecionar com parâmetros dinâmicos
+- Criado componente roteamento central direto para redirecionar com parâmetros dinâmicos
 - Adicionados redirecionamentos legados de empresas para Central
 - Adicionados redirecionamentos legados de mobilidade para Central
 
@@ -25,67 +25,67 @@ Fazer com que rotas antigas de gestão em /perfil redirecionem para suas equival
 
 ### Redirecionamentos Legados de Empresas (3)
 
-1. **/perfil/empresas → /central/empresas**
+1. **/central/empresas → /central/empresas**
    - Tipo: Navigate com replace
    - Preserva: N/A (sem parâmetros)
 
-2. **/perfil/empresas/:businessId → /central/empresas/:businessId**
-   - Tipo: BusinessRedirect (componente wrapper)
+2. **/central/empresas/:businessId → /central/empresas/:businessId**
+   - Tipo: roteamento central direto (componente wrapper)
    - Preserva: businessId e path restante
 
-3. **/perfil/empresas/:businessId/* → /central/empresas/:businessId/**
-   - Tipo: BusinessRedirect (componente wrapper)
+3. **/central/empresas/:businessId/* → /central/empresas/:businessId/**
+   - Tipo: roteamento central direto (componente wrapper)
    - Preserva: businessId e path restante
 
 ### Redirecionamentos Legados de Motorista (6)
 
-1. **/perfil/mobilidade/motorista → /central/motorista**
+1. **/central/motorista → /central/motorista**
    - Tipo: Navigate com replace
    - Preserva: N/A (sem parâmetros)
 
-2. **/perfil/mobilidade/motorista/cadastro → /central/motorista/cadastro**
+2. **/central/motorista/cadastro → /central/motorista/cadastro**
    - Tipo: Navigate com replace
    - Preserva: N/A (sem parâmetros)
 
-3. **/perfil/mobilidade/motorista/disponibilidade → /central/motorista/disponibilidade**
+3. **/central/motorista/disponibilidade → /central/motorista/disponibilidade**
    - Tipo: Navigate com replace
    - Preserva: N/A (sem parâmetros)
 
-4. **/perfil/mobilidade/motorista/corridas → /central/motorista/corridas**
+4. **/central/motorista/corridas → /central/motorista/corridas**
    - Tipo: Navigate com replace
    - Preserva: N/A (sem parâmetros)
 
-5. **/perfil/mobilidade/motorista/ganhos → /central/motorista/ganhos**
+5. **/central/motorista/ganhos → /central/motorista/ganhos**
    - Tipo: Navigate com replace
    - Preserva: N/A (sem parâmetros)
 
-6. **/perfil/mobilidade/motorista/configuracoes → /central/motorista/configuracoes**
+6. **/central/motorista/configuracoes → /central/motorista/configuracoes**
    - Tipo: Navigate com replace
    - Preserva: N/A (sem parâmetros)
 
 ### Redirecionamentos Legados de Motoboy (6)
 
-1. **/perfil/mobilidade/motoboy → /central/motoboy**
+1. **/central/motoboy → /central/motoboy**
    - Tipo: Navigate com replace
    - Preserva: N/A (sem parâmetros)
 
-2. **/perfil/mobilidade/motoboy/cadastro → /central/motoboy/cadastro**
+2. **/central/motoboy/cadastro → /central/motoboy/cadastro**
    - Tipo: Navigate com replace
    - Preserva: N/A (sem parâmetros)
 
-3. **/perfil/mobilidade/motoboy/disponibilidade → /central/motoboy/disponibilidade**
+3. **/central/motoboy/disponibilidade → /central/motoboy/disponibilidade**
    - Tipo: Navigate com replace
    - Preserva: N/A (sem parâmetros)
 
-4. **/perfil/mobilidade/motoboy/entregas → /central/motoboy/entregas**
+4. **/central/motoboy/entregas → /central/motoboy/entregas**
    - Tipo: Navigate com replace
    - Preserva: N/A (sem parâmetros)
 
-5. **/perfil/mobilidade/motoboy/ganhos → /central/motoboy/ganhos**
+5. **/central/motoboy/ganhos → /central/motoboy/ganhos**
    - Tipo: Navigate com replace
    - Preserva: N/A (sem parâmetros)
 
-6. **/perfil/mobilidade/motoboy/configuracoes → /central/motoboy/configuracoes**
+6. **/central/motoboy/configuracoes → /central/motoboy/configuracoes**
    - Tipo: Navigate com replace
    - Preserva: N/A (sem parâmetros)
 
@@ -106,27 +106,27 @@ Fazer com que rotas antigas de gestão em /perfil redirecionem para suas equival
 - /perfil/conta ✅ (conta)
 - /perfil/familia ✅ (família)
 - /perfil/configuracoes ✅ (configurações pessoais)
-- /perfil/empresas/:businessId ✅ (dashboard shell - ainda usado internamente)
-- /perfil/mobilidade ✅ (layout de mobilidade - ainda usado internamente)
+- /central/empresas/:businessId ✅ (dashboard shell - ainda usado internamente)
+- /central ✅ (layout de mobilidade - ainda usado internamente)
 
-### Rotas de /perfil/mobilidade Mantidas (Não Redirecionadas)
+### Rotas de /central Mantidas (Não Redirecionadas)
 
-- /perfil/mobilidade (overview)
-- /perfil/mobilidade/cadastro
-- /perfil/mobilidade/disponibilidade
-- /perfil/mobilidade/corridas
-- /perfil/mobilidade/entregas
-- /perfil/mobilidade/ganhos
-- /perfil/mobilidade/configuracoes
+- /central (overview)
+- /central/cadastro
+- /central/disponibilidade
+- /central/corridas
+- /central/entregas
+- /central/ganhos
+- /central/configuracoes
 
 Essas rotas ainda existem para manter compatibilidade interna, mas os redirecionamentos específicos de motorista/motoboy apontam para Central.
 
 ---
 
-## Componente BusinessRedirect
+## Componente roteamento central direto
 
 ```typescript
-function BusinessRedirect() {
+function roteamento central direto() {
   const { businessId } = useParams<{ businessId: string }>();
   const location = window.location;
   const remainingPath = location.pathname.replace(/^\/perfil\/empresas\/[^/]+/, '');
@@ -137,13 +137,13 @@ function BusinessRedirect() {
 
 **Funcionalidade:**
 - Extrai businessId dos parâmetros da rota
-- Extrai o path restante após /perfil/empresas/:businessId
+- Extrai o path restante após /central/empresas/:businessId
 - Redireciona para /central/empresas/:businessId com o mesmo path restante
 - Usa replace para evitar acumulação no histórico
 
 **Exemplo:**
-- /perfil/empresas/abc123/gastronomia/cardapio → /central/empresas/abc123/gastronomia/cardapio
-- /perfil/empresas/abc123/dados → /central/empresas/abc123/dados
+- /central/empresas/abc123/gastronomia/cardapio → /central/empresas/abc123/gastronomia/cardapio
+- /central/empresas/abc123/dados → /central/empresas/abc123/dados
 
 ---
 
@@ -151,29 +151,29 @@ function BusinessRedirect() {
 
 ### Redirecionamentos de Empresas ✅
 
-**Teste 1: /perfil/empresas → /central/empresas**
+**Teste 1: /central/empresas → /central/empresas**
 - Esperado: Redireciona para /central/empresas
 - Status: ✅ Implementado
 
-**Teste 2: /perfil/empresas/:businessId → /central/empresas/:businessId**
+**Teste 2: /central/empresas/:businessId → /central/empresas/:businessId**
 - Esperado: Redireciona para /central/empresas/:businessId
-- Status: ✅ Implementado (BusinessRedirect)
+- Status: ✅ Implementado (roteamento central direto)
 
-**Teste 3: /perfil/empresas/:businessId/* → /central/empresas/:businessId/**
+**Teste 3: /central/empresas/:businessId/* → /central/empresas/:businessId/**
 - Esperado: Redireciona para /central/empresas/:businessId/* (preserva path)
-- Status: ✅ Implementado (BusinessRedirect)
+- Status: ✅ Implementado (roteamento central direto)
 
 ### Redirecionamentos de Mobilidade ✅
 
-**Teste 1: /perfil/mobilidade/motorista → /central/motorista**
+**Teste 1: /central/motorista → /central/motorista**
 - Esperado: Redireciona para /central/motorista
 - Status: ✅ Implementado
 
-**Teste 2: /perfil/mobilidade/motorista/corridas → /central/motorista/corridas**
+**Teste 2: /central/motorista/corridas → /central/motorista/corridas**
 - Esperado: Redireciona para /central/motorista/corridas
 - Status: ✅ Implementado
 
-**Teste 3: /perfil/mobilidade/motoboy/entregas → /central/motoboy/entregas**
+**Teste 3: /central/motoboy/entregas → /central/motoboy/entregas**
 - Esperado: Redireciona para /central/motoboy/entregas
 - Status: ✅ Implementado
 
@@ -218,9 +218,9 @@ function BusinessRedirect() {
 ## Benefícios da Fase 2.9
 
 ### Deep Links Antigos Funcionam
-- Links externos para /perfil/empresas ainda funcionam
-- Links externos para /perfil/mobilidade/motorista ainda funcionam
-- Links externos para /perfil/mobilidade/motoboy ainda funcionam
+- Links externos para /central/empresas ainda funcionam
+- Links externos para /central/motorista ainda funcionam
+- Links externos para /central/motoboy ainda funcionam
 - Deep links antigos não quebram
 
 ### Central Consolidada como Área Oficial de Gestão
@@ -240,13 +240,13 @@ function BusinessRedirect() {
 ## Limitações Conhecidas
 
 ### Rotas Internas Ainda Usam /perfil
-- /perfil/empresas/:businessId ainda existe (BusinessDashboardShellPage)
-- /perfil/mobilidade ainda existe (PerfilMobilidadeLayout)
+- /central/empresas/:businessId ainda existe (BusinessDashboardShellPage)
+- /central ainda existe (PerfilMobilidadeLayout)
 - Essas rotas são usadas internamente por componentes antigos
 - Redirecionamentos apontam para Central, mas rotas antigas ainda existem
 
 ### Query String Não Preservada
-- BusinessRedirect não preserva query string
+- roteamento central direto não preserva query string
 - Apenas path é preservado
 - Se necessário, pode ser implementado em fase futura
 
@@ -265,7 +265,7 @@ function BusinessRedirect() {
 - Transição suave para Central
 
 **Recomendações:**
-- Monitorar uso de rotas antigas (/perfil/empresas, /perfil/mobilidade)
+- Monitorar uso de rotas antigas (/central/empresas, /central)
 - Planejar remoção de rotas antigas em fase futura
 - Considerar preservar query string em redirecionamentos
 - Atualizar documentação interna para apontar para /central
@@ -276,18 +276,18 @@ function BusinessRedirect() {
 
 ### Fase 2.10 (Sugestão)
 1. Monitorar uso de rotas antigas
-   - Adicionar analytics para rastrear acessos a /perfil/empresas
-   - Adicionar analytics para rastrear acessos a /perfil/mobilidade
+   - Adicionar analytics para rastrear acessos a /central/empresas
+   - Adicionar analytics para rastrear acessos a /central
    - Identificar componentes que ainda usam rotas antigas
 
 2. Atualizar componentes internos
-   - Substituir links para /perfil/empresas por /central/empresas
-   - Substituir links para /perfil/mobilidade/motorista por /central/motorista
-   - Substituir links para /perfil/mobilidade/motoboy por /central/motoboy
+   - Substituir links para /central/empresas por /central/empresas
+   - Substituir links para /central/motorista por /central/motorista
+   - Substituir links para /central/motoboy por /central/motoboy
 
 3. Planejar remoção de rotas antigas
-   - Definir timeline para remoção de /perfil/empresas
-   - Definir timeline para remoção de /perfil/mobilidade
+   - Definir timeline para remoção de /central/empresas
+   - Definir timeline para remoção de /central
    - Comunicar mudança para usuários
 
 ### Notas Importantes

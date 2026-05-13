@@ -67,6 +67,12 @@ jobs:
       - name: Run TypeScript type check
         run: npm run typecheck
 
+      - name: Validate Upload SSOT Boundaries
+        run: npm run validate:upload:ssot
+
+      - name: Run Media SSOT Unit Tests
+        run: npm run test:media:ssot
+
       - name: Run architecture boundaries incremental validation
         run: npm run validate:architecture:incremental
 

@@ -112,20 +112,20 @@ Eliminar gradualmente os wrappers das sub-rotas de mobilidade, extraindo o conte
 ### Motorista (5)
 | Rota Central | Rota Legada | Componente Compartilhado | Status |
 |-------------|-------------|---------------------------|--------|
-| /central/motorista/cadastro | /perfil/mobilidade/motorista/cadastro | DriverProfileLayout | ✅ Migrado |
-| /central/motorista/disponibilidade | /perfil/mobilidade/motorista/disponibilidade | DriverAvailabilityLayout | ✅ Migrado |
-| /central/motorista/corridas | /perfil/mobilidade/motorista/corridas | DriverRidesLayout | ✅ Migrado |
-| /central/motorista/ganhos | /perfil/mobilidade/motorista/ganhos | DriverEarningsLayout | ✅ Migrado |
-| /central/motorista/configuracoes | /perfil/mobilidade/motorista/configuracoes | DriverSettingsLayout | ✅ Migrado |
+| /central/motorista/cadastro | /central/motorista/cadastro | DriverProfileLayout | ✅ Migrado |
+| /central/motorista/disponibilidade | /central/motorista/disponibilidade | DriverAvailabilityLayout | ✅ Migrado |
+| /central/motorista/corridas | /central/motorista/corridas | DriverRidesLayout | ✅ Migrado |
+| /central/motorista/ganhos | /central/motorista/ganhos | DriverEarningsLayout | ✅ Migrado |
+| /central/motorista/configuracoes | /central/motorista/configuracoes | DriverSettingsLayout | ✅ Migrado |
 
 ### Motoboy (5)
 | Rota Central | Rota Legada | Componente Compartilhado | Status |
 |-------------|-------------|---------------------------|--------|
-| /central/motoboy/cadastro | /perfil/mobilidade/motoboy/cadastro | DriverProfileLayout | ✅ Migrado |
-| /central/motoboy/disponibilidade | /perfil/mobilidade/motoboy/disponibilidade | DriverAvailabilityLayout | ✅ Migrado |
-| /central/motoboy/entregas | /perfil/mobilidade/motoboy/entregas | DriverDeliveriesLayout | ✅ Migrado |
-| /central/motoboy/ganhos | /perfil/mobilidade/motoboy/ganhos | DriverEarningsLayout | ✅ Migrado |
-| /central/motoboy/configuracoes | /perfil/mobilidade/motoboy/configuracoes | DriverSettingsLayout | ✅ Migrado |
+| /central/motoboy/cadastro | /central/motoboy/cadastro | DriverProfileLayout | ✅ Migrado |
+| /central/motoboy/disponibilidade | /central/motoboy/disponibilidade | DriverAvailabilityLayout | ✅ Migrado |
+| /central/motoboy/entregas | /central/motoboy/entregas | DriverDeliveriesLayout | ✅ Migrado |
+| /central/motoboy/ganhos | /central/motoboy/ganhos | DriverEarningsLayout | ✅ Migrado |
+| /central/motoboy/configuracoes | /central/motoboy/configuracoes | DriverSettingsLayout | ✅ Migrado |
 
 ---
 
@@ -140,16 +140,16 @@ Eliminar gradualmente os wrappers das sub-rotas de mobilidade, extraindo o conte
 - Hooks de URL já apontam para Central por padrão
 
 **Rotas Legadas Mantidas:**
-- /perfil/mobilidade/motorista/cadastro ✅ (usa DriverProfileLayout)
-- /perfil/mobilidade/motorista/disponibilidade ✅ (usa DriverAvailabilityLayout)
-- /perfil/mobilidade/motorista/corridas ✅ (usa DriverRidesLayout)
-- /perfil/mobilidade/motorista/ganhos ✅ (usa DriverEarningsLayout)
-- /perfil/mobilidade/motorista/configuracoes ✅ (usa DriverSettingsLayout)
-- /perfil/mobilidade/motoboy/cadastro ✅ (usa DriverProfileLayout)
-- /perfil/mobilidade/motoboy/disponibilidade ✅ (usa DriverAvailabilityLayout)
-- /perfil/mobilidade/motoboy/entregas ✅ (usa DriverDeliveriesLayout)
-- /perfil/mobilidade/motoboy/ganhos ✅ (usa DriverEarningsLayout)
-- /perfil/mobilidade/motoboy/configuracoes ✅ (usa DriverSettingsLayout)
+- /central/motorista/cadastro ✅ (usa DriverProfileLayout)
+- /central/motorista/disponibilidade ✅ (usa DriverAvailabilityLayout)
+- /central/motorista/corridas ✅ (usa DriverRidesLayout)
+- /central/motorista/ganhos ✅ (usa DriverEarningsLayout)
+- /central/motorista/configuracoes ✅ (usa DriverSettingsLayout)
+- /central/motoboy/cadastro ✅ (usa DriverProfileLayout)
+- /central/motoboy/disponibilidade ✅ (usa DriverAvailabilityLayout)
+- /central/motoboy/entregas ✅ (usa DriverDeliveriesLayout)
+- /central/motoboy/ganhos ✅ (usa DriverEarningsLayout)
+- /central/motoboy/configuracoes ✅ (usa DriverSettingsLayout)
 
 ---
 
@@ -227,8 +227,8 @@ Eliminar gradualmente os wrappers das sub-rotas de mobilidade, extraindo o conte
 
 ### 13. Rotas legadas continuam funcionando
 **Resultado:** ✅
-- /perfil/mobilidade/motorista/* continua funcionando
-- /perfil/mobilidade/motoboy/* continua funcionando
+- /central/motorista/* continua funcionando
+- /central/motoboy/* continua funcionando
 - Deep links antigos não quebram
 - Páginas legadas usam os mesmos componentes compartilhados
 
@@ -246,7 +246,7 @@ Eliminar gradualmente os wrappers das sub-rotas de mobilidade, extraindo o conte
 ## Compatibilidade Mantida
 
 ### Não Apagado
-- ✅ Rotas legadas em /perfil/mobilidade/*
+- ✅ Rotas legadas em /central/*
 - ✅ Sub-rotas específicas de mobilidade
 - ✅ Deep links antigos
 - ✅ Componentes existentes (DriverSettingsPanel, DriverEarningsCard, etc.)
@@ -307,7 +307,7 @@ Eliminar gradualmente os wrappers das sub-rotas de mobilidade, extraindo o conte
 
 2. Considerar redirecionamento de rotas legadas
    - Após validar que Central está funcionando corretamente
-   - Redirecionar /perfil/mobilidade/* para /central/*
+   - Redirecionar /central/* para /central/*
    - Manter apenas por um período de transição
 
 3. Remover componentes legados após transição

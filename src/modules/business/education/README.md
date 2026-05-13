@@ -245,13 +245,13 @@ function MyComponent({ nicheKey }) {
 
 ### Admin (Backoffice)
 
-- `/perfil/empresas/:businessId/education` - Dashboard
-- `/perfil/empresas/:businessId/education/setup` - Cadastro/configuração
-- `/perfil/empresas/:businessId/education/programas` - Gestão de programas
-- `/perfil/empresas/:businessId/education/leads` - Gestão de leads
-- `/perfil/empresas/:businessId/education/eventos` - Gestão de eventos
-- `/perfil/empresas/:businessId/education/analytics` - Analytics
-- `/perfil/empresas/:businessId/education/planos` - Gestão de planos
+- `/central/empresas/:businessId/education` - Dashboard
+- `/central/empresas/:businessId/education/setup` - Cadastro/configuração
+- `/central/empresas/:businessId/education/programas` - Gestão de programas
+- `/central/empresas/:businessId/education/leads` - Gestão de leads
+- `/central/empresas/:businessId/education/eventos` - Gestão de eventos
+- `/central/empresas/:businessId/education/analytics` - Analytics
+- `/central/empresas/:businessId/education/planos` - Gestão de planos
 
 ---
 

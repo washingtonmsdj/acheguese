@@ -17,7 +17,7 @@ import { useUserType } from "@/modules/community/hooks/useUserType";
  * - Textarea para conteúdo
  * - Botão de send
  * - Suporte para comentário top-level ou reply
- * - Validação de businesss (não podem comentar)
+ * - Validação de empresas (não podem comentar)
  */
 
 interface CommentFormProps {
@@ -45,7 +45,7 @@ export function CommentForm({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Requirement 29.1: Validar permissões de businesss
+    // Requirement 29.1: Validar permissões de empresas
     if (!canComment) {
       return;
     }

@@ -78,6 +78,7 @@ export default tseslint.config(
       "ssot/no-direct-lostfound-access": "error",
       "ssot/no-direct-location-access": "error",
       "ssot/no-direct-admin-access": "error",
+      "ssot/no-direct-storage-access": "error",
       // 🔐 SESSION CONTEXT RULES
       "session-context/no-direct-supabase-auth": "error",
       "session-context/no-permission-inference": "error",

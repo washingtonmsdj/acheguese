@@ -33,7 +33,7 @@ export function getCorsHeaders(methods = 'POST, OPTIONS', req?: Request): Record
   return {
     'Access-Control-Allow-Origin': allowedOrigin,
     'Access-Control-Allow-Methods': methods,
-    'Access-Control-Allow-Headers': 'authorization, content-type, x-client-info, stripe-signature',
+    'Access-Control-Allow-Headers': 'authorization, apikey, content-type, x-client-info, stripe-signature',
     'Access-Control-Max-Age': '86400', // 24 horas
     ...(allowedOrigin !== 'null' ? { 'Vary': 'Origin' } : {}),
   };

@@ -49,8 +49,8 @@ Legenda:
 - [x] Fallback de preview restrito a DEV (nao producao)
 
 ### Perfil/Empresa (Backoffice Education)
-- [x] Dashboard (`/perfil/empresas/:businessId/education`)
-- [x] Setup/Cadastro (`/perfil/empresas/:businessId/education/setup`)
+- [x] Dashboard (`/central/empresas/:businessId/education`)
+- [x] Setup/Cadastro (`/central/empresas/:businessId/education/setup`)
 - [x] Programas
 - [x] Leads
 - [x] Eventos
@@ -119,7 +119,7 @@ Legenda:
 **Requisitos**:
 - [x] Modulo `education` em `modules.ts`
 - [x] `LAUNCH_URLS.education` em `territory.ts`
-- [x] Rotas admin em `/perfil/empresas/:businessId/education/*`
+- [x] Rotas admin em `/central/empresas/:businessId/education/*`
 - [x] Rotas publicas `/educacao/:state/:city/*`
 - [x] Lazy imports education adicionados
 
@@ -371,7 +371,7 @@ Legenda:
 ## FASE 8: ROUTING & CONFIG (Prioridade: CRITICA)
 
 ### Task 8.1: Atualizar AppRoutes
-- [x] Rotas admin em `/perfil/empresas/:businessId/education/*`
+- [x] Rotas admin em `/central/empresas/:businessId/education/*`
 - [x] Rotas publicas territoriais em `/educacao/:state/:city/*`
 - [x] Nao quebrar namespace atual de business/gastronomy
 
@@ -509,7 +509,7 @@ npm run build
 - [x] Nichos implementados com registry/service/hook/guard
 
 ### Funcionalidades
-- [x] Rotas admin `/perfil/empresas/:businessId/education/*` funcionando
+- [x] Rotas admin `/central/empresas/:businessId/education/*` funcionando
 - [x] Rotas publicas `/educacao/:state/:city/*` funcionando
 - [x] Profile basic + landing premium por entitlement funcionando
 - [x] Pipeline de leads funcionando

@@ -7,7 +7,7 @@
 
 ## Objetivo
 
-Reduzir dependência das rotas legadas /perfil/mobilidade/* criando sub-rotas reais sob /central/motorista/* e /central/motoboy/*, mantendo compatibilidade com links antigos.
+Reduzir dependência das rotas legadas /central/* criando sub-rotas reais sob /central/motorista/* e /central/motoboy/*, mantendo compatibilidade com links antigos.
 
 ---
 
@@ -17,46 +17,46 @@ Reduzir dependência das rotas legadas /perfil/mobilidade/* criando sub-rotas re
 
 **1. src/modules/central/pages/motorista/CentralMotoristaCadastroPage.tsx**
 - Página wrapper para cadastro de motorista na Central (/central/motorista/cadastro)
-- Redireciona para /perfil/mobilidade/motorista/cadastro
+- Redireciona para /central/motorista/cadastro
 - Motivo: A migração completa do conteúdo é complexa e será feita em fases futuras
 
 **2. src/modules/central/pages/motorista/CentralMotoristaDisponibilidadePage.tsx**
 - Página wrapper para disponibilidade de motorista na Central (/central/motorista/disponibilidade)
-- Redireciona para /perfil/mobilidade/motorista/disponibilidade
+- Redireciona para /central/motorista/disponibilidade
 
 **3. src/modules/central/pages/motorista/CentralMotoristaCorridasPage.tsx**
 - Página wrapper para corridas de motorista na Central (/central/motorista/corridas)
-- Redireciona para /perfil/mobilidade/motorista/corridas
+- Redireciona para /central/motorista/corridas
 
 **4. src/modules/central/pages/motorista/CentralMotoristaGanhosPage.tsx**
 - Página wrapper para ganhos de motorista na Central (/central/motorista/ganhos)
-- Redireciona para /perfil/mobilidade/motorista/ganhos
+- Redireciona para /central/motorista/ganhos
 
 **5. src/modules/central/pages/motorista/CentralMotoristaConfiguracoesPage.tsx**
 - Página wrapper para configurações de motorista na Central (/central/motorista/configuracoes)
-- Redireciona para /perfil/mobilidade/motorista/configuracoes
+- Redireciona para /central/motorista/configuracoes
 
 ### Sub-rotas de Motoboy (5)
 
 **6. src/modules/central/pages/motoboy/CentralMotoboyCadastroPage.tsx**
 - Página wrapper para cadastro de motoboy na Central (/central/motoboy/cadastro)
-- Redireciona para /perfil/mobilidade/motoboy/cadastro
+- Redireciona para /central/motoboy/cadastro
 
 **7. src/modules/central/pages/motoboy/CentralMotoboyDisponibilidadePage.tsx**
 - Página wrapper para disponibilidade de motoboy na Central (/central/motoboy/disponibilidade)
-- Redireciona para /perfil/mobilidade/motoboy/disponibilidade
+- Redireciona para /central/motoboy/disponibilidade
 
 **8. src/modules/central/pages/motoboy/CentralMotoboyEntregasPage.tsx**
 - Página wrapper para entregas de motoboy na Central (/central/motoboy/entregas)
-- Redireciona para /perfil/mobilidade/motoboy/entregas
+- Redireciona para /central/motoboy/entregas
 
 **9. src/modules/central/pages/motoboy/CentralMotoboyGanhosPage.tsx**
 - Página wrapper para ganhos de motoboy na Central (/central/motoboy/ganhos)
-- Redireciona para /perfil/mobilidade/motoboy/ganhos
+- Redireciona para /central/motoboy/ganhos
 
 **10. src/modules/central/pages/motoboy/CentralMotoboyConfiguracoesPage.tsx**
 - Página wrapper para configurações de motoboy na Central (/central/motoboy/configuracoes)
-- Redireciona para /perfil/mobilidade/motoboy/configuracoes
+- Redireciona para /central/motoboy/configuracoes
 
 ---
 
@@ -146,20 +146,20 @@ Reduzir dependência das rotas legadas /perfil/mobilidade/* criando sub-rotas re
 ### Motorista (5 rotas)
 | Rota Central | Rota Legada | Status |
 |-------------|-------------|--------|
-| /central/motorista/cadastro | /perfil/mobilidade/motorista/cadastro | ✅ Wrapper |
-| /central/motorista/disponibilidade | /perfil/mobilidade/motorista/disponibilidade | ✅ Wrapper |
-| /central/motorista/corridas | /perfil/mobilidade/motorista/corridas | ✅ Wrapper |
-| /central/motorista/ganhos | /perfil/mobilidade/motorista/ganhos | ✅ Wrapper |
-| /central/motorista/configuracoes | /perfil/mobilidade/motorista/configuracoes | ✅ Wrapper |
+| /central/motorista/cadastro | /central/motorista/cadastro | ✅ Wrapper |
+| /central/motorista/disponibilidade | /central/motorista/disponibilidade | ✅ Wrapper |
+| /central/motorista/corridas | /central/motorista/corridas | ✅ Wrapper |
+| /central/motorista/ganhos | /central/motorista/ganhos | ✅ Wrapper |
+| /central/motorista/configuracoes | /central/motorista/configuracoes | ✅ Wrapper |
 
 ### Motoboy (5 rotas)
 | Rota Central | Rota Legada | Status |
 |-------------|-------------|--------|
-| /central/motoboy/cadastro | /perfil/mobilidade/motoboy/cadastro | ✅ Wrapper |
-| /central/motoboy/disponibilidade | /perfil/mobilidade/motoboy/disponibilidade | ✅ Wrapper |
-| /central/motoboy/entregas | /perfil/mobilidade/motoboy/entregas | ✅ Wrapper |
-| /central/motoboy/ganhos | /perfil/mobilidade/motoboy/ganhos | ✅ Wrapper |
-| /central/motoboy/configuracoes | /perfil/mobilidade/motoboy/configuracoes | ✅ Wrapper |
+| /central/motoboy/cadastro | /central/motoboy/cadastro | ✅ Wrapper |
+| /central/motoboy/disponibilidade | /central/motoboy/disponibilidade | ✅ Wrapper |
+| /central/motoboy/entregas | /central/motoboy/entregas | ✅ Wrapper |
+| /central/motoboy/ganhos | /central/motoboy/ganhos | ✅ Wrapper |
+| /central/motoboy/configuracoes | /central/motoboy/configuracoes | ✅ Wrapper |
 
 ---
 
@@ -168,19 +168,19 @@ Reduzir dependência das rotas legadas /perfil/mobilidade/* criando sub-rotas re
 ### Rotas Legadas que Continuam Funcionando
 | Rota Legada | Status | Motivo |
 |-------------|--------|--------|
-| /perfil/mobilidade | ✅ Ativa | Hub de mobilidade legado |
-| /perfil/mobilidade/motorista | ✅ Ativa | Fallback para links antigos |
-| /perfil/mobilidade/motorista/cadastro | ✅ Ativa | Página real usada pelo wrapper |
-| /perfil/mobilidade/motorista/disponibilidade | ✅ Ativa | Página real usada pelo wrapper |
-| /perfil/mobilidade/motorista/corridas | ✅ Ativa | Página real usada pelo wrapper |
-| /perfil/mobilidade/motorista/ganhos | ✅ Ativa | Página real usada pelo wrapper |
-| /perfil/mobilidade/motorista/configuracoes | ✅ Ativa | Página real usada pelo wrapper |
-| /perfil/mobilidade/motoboy | ✅ Ativa | Fallback para links antigos |
-| /perfil/mobilidade/motoboy/cadastro | ✅ Ativa | Página real usada pelo wrapper |
-| /perfil/mobilidade/motoboy/disponibilidade | ✅ Ativa | Página real usada pelo wrapper |
-| /perfil/mobilidade/motoboy/entregas | ✅ Ativa | Página real usada pelo wrapper |
-| /perfil/mobilidade/motoboy/ganhos | ✅ Ativa | Página real usada pelo wrapper |
-| /perfil/mobilidade/motoboy/configuracoes | ✅ Ativa | Página real usada pelo wrapper |
+| /central | ✅ Ativa | Hub de mobilidade legado |
+| /central/motorista | ✅ Ativa | Fallback para links antigos |
+| /central/motorista/cadastro | ✅ Ativa | Página real usada pelo wrapper |
+| /central/motorista/disponibilidade | ✅ Ativa | Página real usada pelo wrapper |
+| /central/motorista/corridas | ✅ Ativa | Página real usada pelo wrapper |
+| /central/motorista/ganhos | ✅ Ativa | Página real usada pelo wrapper |
+| /central/motorista/configuracoes | ✅ Ativa | Página real usada pelo wrapper |
+| /central/motoboy | ✅ Ativa | Fallback para links antigos |
+| /central/motoboy/cadastro | ✅ Ativa | Página real usada pelo wrapper |
+| /central/motoboy/disponibilidade | ✅ Ativa | Página real usada pelo wrapper |
+| /central/motoboy/entregas | ✅ Ativa | Página real usada pelo wrapper |
+| /central/motoboy/ganhos | ✅ Ativa | Página real usada pelo wrapper |
+| /central/motoboy/configuracoes | ✅ Ativa | Página real usada pelo wrapper |
 
 ---
 
@@ -188,61 +188,61 @@ Reduzir dependência das rotas legadas /perfil/mobilidade/* criando sub-rotas re
 
 ### 1. Motorista acessa /central/motorista/cadastro
 **Resultado:** ✅
-- Wrapper redireciona para /perfil/mobilidade/motorista/cadastro
+- Wrapper redireciona para /central/motorista/cadastro
 - DriverGuard valida modo correto (motorista vs motoboy)
 - Página legada é carregada
 
 ### 2. Motorista acessa /central/motorista/disponibilidade
 **Resultado:** ✅
-- Wrapper redireciona para /perfil/mobilidade/motorista/disponibilidade
+- Wrapper redireciona para /central/motorista/disponibilidade
 - DriverGuard valida modo correto
 - Página legada é carregada
 
 ### 3. Motorista acessa /central/motorista/corridas
 **Resultado:** ✅
-- Wrapper redireciona para /perfil/mobilidade/motorista/corridas
+- Wrapper redireciona para /central/motorista/corridas
 - DriverGuard valida modo correto
 - Página legada é carregada
 
 ### 4. Motorista acessa /central/motorista/ganhos
 **Resultado:** ✅
-- Wrapper redireciona para /perfil/mobilidade/motorista/ganhos
+- Wrapper redireciona para /central/motorista/ganhos
 - DriverGuard valida modo correto
 - Página legada é carregada
 
 ### 5. Motorista acessa /central/motorista/configuracoes
 **Resultado:** ✅
-- Wrapper redireciona para /perfil/mobilidade/motorista/configuracoes
+- Wrapper redireciona para /central/motorista/configuracoes
 - DriverGuard valida modo correto
 - Página legada é carregada
 
 ### 6. Motoboy acessa /central/motoboy/cadastro
 **Resultado:** ✅
-- Wrapper redireciona para /perfil/mobilidade/motoboy/cadastro
+- Wrapper redireciona para /central/motoboy/cadastro
 - DriverGuard valida modo correto (motoboy vs motorista)
 - Página legada é carregada
 
 ### 7. Motoboy acessa /central/motoboy/disponibilidade
 **Resultado:** ✅
-- Wrapper redireciona para /perfil/mobilidade/motoboy/disponibilidade
+- Wrapper redireciona para /central/motoboy/disponibilidade
 - DriverGuard valida modo correto
 - Página legada é carregada
 
 ### 8. Motoboy acessa /central/motoboy/entregas
 **Resultado:** ✅
-- Wrapper redireciona para /perfil/mobilidade/motoboy/entregas
+- Wrapper redireciona para /central/motoboy/entregas
 - DriverGuard valida modo correto
 - Página legada é carregada
 
 ### 9. Motoboy acessa /central/motoboy/ganhos
 **Resultado:** ✅
-- Wrapper redireciona para /perfil/mobilidade/motoboy/ganhos
+- Wrapper redireciona para /central/motoboy/ganhos
 - DriverGuard valida modo correto
 - Página legada é carregada
 
 ### 10. Motoboy acessa /central/motoboy/configuracoes
 **Resultado:** ✅
-- Wrapper redireciona para /perfil/mobilidade/motoboy/configuracoes
+- Wrapper redireciona para /central/motoboy/configuracoes
 - DriverGuard valida modo correto
 - Página legada é carregada
 
@@ -258,8 +258,8 @@ Reduzir dependência das rotas legadas /perfil/mobilidade/* criando sub-rotas re
 
 ### 13. Rotas legadas continuam funcionando
 **Resultado:** ✅
-- /perfil/mobilidade/motorista/* continua funcionando
-- /perfil/mobilidade/motoboy/* continua funcionando
+- /central/motorista/* continua funcionando
+- /central/motoboy/* continua funcionando
 - Deep links antigos não quebram
 
 ---
@@ -276,7 +276,7 @@ Reduzir dependência das rotas legadas /perfil/mobilidade/* criando sub-rotas re
 ## Compatibilidade Mantida
 
 ### Não Apagado
-- ✅ Rotas legadas em /perfil/mobilidade/*
+- ✅ Rotas legadas em /central/*
 - ✅ Sub-rotas específicas de mobilidade
 - ✅ Deep links antigos
 

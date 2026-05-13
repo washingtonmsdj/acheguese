@@ -8,7 +8,7 @@
 ## ✅ FLUXO 1: CADASTRO (Setup)
 
 ### Página: EducationSetupPage
-**Rota**: `/perfil/empresas/:businessId/education/setup`  
+**Rota**: `/central/empresas/:businessId/education/setup`  
 **Status**: ✅ **COMPLETO**
 
 **Funcionalidades**:
@@ -41,7 +41,7 @@
 
 ### 2.1 Dashboard Principal
 **Página**: EducationDashboardPage  
-**Rota**: `/perfil/empresas/:businessId/education`  
+**Rota**: `/central/empresas/:businessId/education`  
 **Status**: ✅ **COMPLETO**
 
 **Funcionalidades**:
@@ -60,8 +60,8 @@
 ### 2.2 Gestão de Programas
 **Página**: EducationProgramsPage  
 **Rotas**: 
-- `/perfil/empresas/:businessId/education/programas` (PT-BR)
-- `/perfil/empresas/:businessId/education/programs` (EN)
+- `/central/empresas/:businessId/education/programas` (PT-BR)
+- `/central/empresas/:businessId/education/programs` (EN)
 
 **Status**: ✅ **COMPLETO**
 
@@ -83,7 +83,7 @@
 
 ### 2.3 Gestão de Leads
 **Página**: EducationLeadsPage  
-**Rota**: `/perfil/empresas/:businessId/education/leads`  
+**Rota**: `/central/empresas/:businessId/education/leads`  
 **Status**: ✅ **COMPLETO**
 
 **Funcionalidades**:
@@ -107,8 +107,8 @@
 ### 2.4 Gestão de Eventos
 **Página**: EducationEventsPage  
 **Rotas**:
-- `/perfil/empresas/:businessId/education/eventos` (PT-BR)
-- `/perfil/empresas/:businessId/education/events` (EN)
+- `/central/empresas/:businessId/education/eventos` (PT-BR)
+- `/central/empresas/:businessId/education/events` (EN)
 
 **Status**: ✅ **COMPLETO**
 
@@ -129,7 +129,7 @@
 
 ### 2.5 Analytics
 **Página**: EducationAnalyticsPage  
-**Rota**: `/perfil/empresas/:businessId/education/analytics`  
+**Rota**: `/central/empresas/:businessId/education/analytics`  
 **Status**: ✅ **COMPLETO**
 
 **Funcionalidades**:
@@ -148,8 +148,8 @@
 ### 2.6 Gestão de Planos
 **Página**: EducationPlansPage  
 **Rotas**:
-- `/perfil/empresas/:businessId/education/planos` (PT-BR)
-- `/perfil/empresas/:businessId/education/plans` (EN)
+- `/central/empresas/:businessId/education/planos` (PT-BR)
+- `/central/empresas/:businessId/education/plans` (EN)
 
 **Status**: ✅ **COMPLETO**
 

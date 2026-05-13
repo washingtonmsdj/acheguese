@@ -64,10 +64,10 @@ export default function PremiumBusinessProductPage() {
               <img
                 src={item.image_url}
                 alt={item.name}
-                className="h-48 w-full rounded-xl border object-cover md:h-full"
+                className="aspect-[4/3] w-full rounded-xl border object-cover md:aspect-auto md:h-full"
               />
             ) : (
-              <div className="h-48 w-full rounded-xl border bg-muted md:h-full" />
+              <div className="aspect-[4/3] w-full rounded-xl border bg-muted md:aspect-auto md:h-full" />
             )}
             <div className="space-y-3">
               <h2 className="text-xl font-semibold text-foreground">{item.name}</h2>

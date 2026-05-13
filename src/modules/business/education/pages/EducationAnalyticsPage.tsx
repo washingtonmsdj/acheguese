@@ -2,7 +2,7 @@
  * EducationAnalyticsPage
  * 
  * Pagina de analytics da instituicao.
- * Rota: /perfil/empresas/:businessId/education/analytics
+ * Rota: /central/empresas/:businessId/education/analytics
  * 
  * Regra: capability final = nicho permite AND plano permite
  * - analytics_basic: disponível se o nicho + plano permitirem

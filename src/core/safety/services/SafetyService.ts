@@ -19,6 +19,7 @@ import { logger } from '@/shared/utils/logger';
 import { supabase } from '@/integrations/supabase';
 import { trackError } from '@/shared/utils/errorTracking';
 import { notificationService } from '@/core/notifications';
+import { mediaService } from '@/core/media/services/MediaService';
 import { emailNotificationProvider } from '../providers/EmailNotificationProvider';
 import {
   SAFETY_ALERT_STATUS,
@@ -674,27 +675,18 @@ export class SafetyService {
         };
       }
 
-      // Upload para storage
-      const fileName = `${input.incidentId}/${Date.now()}_${input.file.name}`;
-      const { data: uploadData, error: uploadError } = await supabase.storage
-        .from('safety-evidence')
-        .upload(fileName, input.file, {
-          cacheControl: '3600',
-          upsert: false,
-        });
-
-      if (uploadError) throw uploadError;
-
-      // Obter URL pública
-      const { data: urlData } = supabase.storage
-        .from('safety-evidence')
-        .getPublicUrl(fileName);
+      const upload = await mediaService.uploadToBucket(input.file, {
+        bucket: 'safety-evidence',
+        pathPrefix: input.incidentId,
+        preset: 'verification_photo',
+        upsert: false,
+      });
 
       // Salvar metadados no banco
       const evidenceData = {
         incident_id: input.incidentId,
         evidence_type: input.evidenceType,
-        file_url: urlData.publicUrl,
+        file_url: upload.url,
         file_name: input.file.name,
         file_size: input.file.size,
         mime_type: input.file.type,

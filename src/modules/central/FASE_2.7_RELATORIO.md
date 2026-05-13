@@ -262,7 +262,7 @@ Quando em /central/empresas/:businessId/gastronomia, exibe:
 ## Compatibilidade Mantida
 
 ### Não Quebrado
-- ✅ Rotas legadas em /perfil/empresas/*
+- ✅ Rotas legadas em /central/empresas/*
 - ✅ Guards existentes (CentralAccessGuard, BusinessAdminGuard)
 - ✅ Sistema visual existente (shadcn/ui, cores, componentes)
 - ✅ Sub-rotas da Central (motorista, motoboy, profissional)

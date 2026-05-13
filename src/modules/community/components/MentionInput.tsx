@@ -66,7 +66,8 @@ export function MentionInput({
           id: p.id,
           displayName: p.display_name ?? p.name,
           avatarUrl: p.avatar_url ?? null,
-          neighborhood: p.neighborhood ?? null,
+          publicNeighborhood:
+            (p as Profile & { public_neighborhood?: string | null }).public_neighborhood ?? null,
           profileType: p.profile_type ?? null,
         }));
 
@@ -166,9 +167,9 @@ export function MentionInput({
                   <p className="text-sm font-medium text-white truncate">
                     {profile.displayName}
                   </p>
-                  {profile.neighborhood && (
+                  {profile.publicNeighborhood && (
                     <p className="text-xs text-gray-400 truncate">
-                      {profile.neighborhood}
+                      {profile.publicNeighborhood}
                     </p>
                   )}
                 </div>

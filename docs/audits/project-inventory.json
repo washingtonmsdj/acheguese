@@ -361,7 +361,7 @@
         "/admin/analytics-mobilidade -> AdminAnalyticsMobilidade",
         "/admin/assinaturas -> AdminAssinaturas",
         "/admin/banners -> AdminBanners",
-        "/admin/businesss -> AdminEmpresas",
+        "/admin/empresas -> AdminEmpresas",
         "/admin/city-metadata -> AdminCityMetadata",
         "/admin/classificados -> AdminClassificados",
         "/admin/classificados/denuncias -> AdminClassificadosDenuncias",
@@ -490,8 +490,8 @@
         "src/modules/dashboard/pages/DashboardEmpresaPageV2.tsx"
       ],
       "routes": [
-        "/businesss/:id/catalogo -> EmpresaCatalogoPublicoPage",
-        "/create-business -> CriarEmpresaPage",
+        "/empresas/:id/catalogo -> EmpresaCatalogoPublicoPage",
+        "/central/empresas/nova -> CriarEmpresaPage",
         "/cupons -> CuponsPage",
         "/cupons/:id -> CupomDetailPage",
         "/dashboard/business/:profileId -> DashboardEmpresaPage",
@@ -1422,7 +1422,7 @@
       "domain": null
     },
     {
-      "path": "/businesss/:id/catalogo",
+      "path": "/empresas/:id/catalogo",
       "component": "EmpresaCatalogoPublicoPage",
       "file": "src/modules/business/pages/EmpresaCatalogoPublicoPage.tsx",
       "domain": "business"
@@ -1578,7 +1578,7 @@
       "domain": null
     },
     {
-      "path": "/create-business",
+      "path": "/central/empresas/nova",
       "component": "CriarEmpresaPage",
       "file": "src/modules/business/pages/CriarEmpresaPageV2.tsx",
       "domain": "business"
@@ -1764,7 +1764,7 @@
       "domain": null
     },
     {
-      "path": "/businesss",
+      "path": "/empresas",
       "component": "Navigate",
       "file": "react-router-dom",
       "domain": null
@@ -2082,7 +2082,7 @@
       "domain": "admin"
     },
     {
-      "path": "/admin/businesss",
+      "path": "/admin/empresas",
       "component": "AdminEmpresas",
       "file": "src/modules/admin/pages/AdminEmpresas.tsx",
       "domain": "admin"

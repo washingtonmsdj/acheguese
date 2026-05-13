@@ -308,7 +308,7 @@ Verificar:
 #### 4. Teste de Backoffice
 
 ```
-URL: https://seu-dominio.com/perfil/empresas/{businessId}/education
+URL: https://seu-dominio.com/central/empresas/{businessId}/education
 
 Verificar:
 - [ ] Dashboard carrega

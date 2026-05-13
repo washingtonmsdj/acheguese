@@ -210,7 +210,7 @@ WHERE education_profile_id = '550e8400-e29b-41d4-a716-446655440001';
     Write-Host "     /educacao/ba/salvador/escola-horizonte" -ForegroundColor White
     Write-Host ""
     Write-Host "  2. Acesse o dashboard de analytics:" -ForegroundColor Gray
-    Write-Host "     /perfil/empresas/550e8400-e29b-41d4-a716-446655440000/education/analytics" -ForegroundColor White
+    Write-Host "     /central/empresas/550e8400-e29b-41d4-a716-446655440000/education/analytics" -ForegroundColor White
     Write-Host ""
     Write-Host "  3. Verifique o funil de conversão com os dados simulados" -ForegroundColor Gray
     Write-Host ""

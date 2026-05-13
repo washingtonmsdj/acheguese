@@ -101,7 +101,7 @@ Prioridade estrategica: nao copiar o Nextdoor inteiro. O Achegue-se deve pegar d
 ## Empresas
 
 - Ja existe: landing, detalhe, cadastro/edicao, dashboard, analytics, planos, link premium, catalogo, cupons, promocoes, reivindicacao/admin.
-- [ ] P0: consolidar rotas legadas `businesss`, `empresa/:id`, canonicas territoriais e premium.
+- [ ] P0: consolidar rotas legadas `empresas`, `empresa/:id`, canonicas territoriais e premium.
 - [ ] P0: garantir reivindicacao/verificacao de empresa antes de recursos sensiveis.
 - [ ] P1: pagina de empresa com prova social do bairro: recomendacoes, vizinhos que favoritaram, posts recentes, cupons ativos.
 - [ ] P1: botao unico de conversao: chamar, WhatsApp, rota, pedido, agendar, mensagem.
@@ -312,7 +312,7 @@ Prioridade estrategica: nao copiar o Nextdoor inteiro. O Achegue-se deve pegar d
 ## SEO / Rotas / Descoberta
 
 - Ja existe: rotas canonicas territoriais, SEO components, sitemap util, redirects legados.
-- [ ] P0: eliminar rota com typo `businesss` ou manter redirect canonico controlado.
+- [ ] P0: eliminar rota com typo `empresas` ou manter redirect canonico controlado.
 - [ ] P0: sitemap dinamico ainda tem TODO para URLs do banco.
 - [ ] P1: canonicals por empresas, servicos, gastronomia, classificados, educacao, turismo.
 - [ ] P1: schema.org para LocalBusiness, Product/Offer, Event, JobPosting, Place, FAQ.

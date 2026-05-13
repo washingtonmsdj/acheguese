@@ -93,7 +93,7 @@ export const SUBSCRIPTION_PLANS: SubscriptionPlan[] = [
     id: "profissional",
     name: "Profissional",
     price: 79,
-    description: "Para businesss que querem crescer",
+    description: "Para empresas que querem crescer",
     recursos: [
       "Tudo do plano Básico",
       "Até 20 photos na galeria",

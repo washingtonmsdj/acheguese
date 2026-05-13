@@ -1,4 +1,4 @@
-// Types e interfaces para o sistema de dashboard de businesss
+// Types e interfaces para o sistema de dashboard de empresas
 
 export interface BusinessData {
   id: string;

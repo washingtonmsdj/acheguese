@@ -16,8 +16,8 @@ export interface CommunityProfile {
   display_name?: string;
   avatar_url: string | null;
   bio: string | null;
-  city?: string;
-  neighborhood?: string;
+  public_city?: string;
+  public_neighborhood?: string;
   verified_resident?: boolean;
   verified_at?: string | null;
   created_at: string;
@@ -64,17 +64,17 @@ export function useCommunityProfile() {
       const data = await communityService.getCommunityProfile(user.id);
 
       // Map service profile to local type (adding missing fields with defaults)
-      if (data.profile) {
+      if (data?.profile) {
         setProfile({
           ...data.profile,
           verified_resident: false,
           verified_at: null,
         } as CommunityProfile);
       }
-      setBadges(data.badges as unknown as CommunityBadge[]);
+      setBadges((data?.badges ?? []) as unknown as CommunityBadge[]);
       setStats({
-        total_interactions: data.stats?.totalInteractions ?? 0,
-        total_points: data.stats?.totalPoints ?? 0,
+        total_interactions: data?.stats?.totalInteractions ?? 0,
+        total_points: data?.stats?.totalPoints ?? 0,
         badges_count: 0,
         rank: undefined,
       });

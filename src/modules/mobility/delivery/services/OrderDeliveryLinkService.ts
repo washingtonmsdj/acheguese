@@ -18,6 +18,10 @@ import { MobilityService } from "@/modules/mobility/services/MobilityService.imp
 import { OrderDeliverySSOTService } from "./OrderDeliverySSOTService";
 import { LOGISTICS_STATUS, type LogisticsStatus } from "../logistics/types";
 import type { DeliveryProof } from "../proof-of-delivery/types";
+import {
+  asDeliveryOrderSourceMetadata,
+  buildDeliveryPricingSnapshot,
+} from "../order/sourceMetadata";
 
 export interface OrderDeliveryLink {
   order_id: string;
@@ -34,6 +38,8 @@ interface LinkedRideRecord {
   passenger_profile_id?: string | null;
   driver_profile_id?: string | null;
   proof_of_delivery?: DeliveryProof | null;
+  final_price?: number | null;
+  suggested_price?: number | null;
 }
 
 const FORWARD_LOGISTICS_PATH: LogisticsStatus[] = [
@@ -206,6 +212,14 @@ export class OrderDeliveryLinkService {
         if (!result) return false;
       }
 
+      if (targetStatus === LOGISTICS_STATUS.DELIVERED || targetStatus === LOGISTICS_STATUS.FAILED) {
+        await this.persistDeliveryFinancialSnapshot({
+          orderId: ride.source_id,
+          actorProfileId,
+          ride,
+        });
+      }
+
       return true;
     } catch (error) {
       logger.error("[OrderDeliveryLinkService] Erro ao sincronizar entrega com pedido", error as Error, {
@@ -291,5 +305,74 @@ export class OrderDeliveryLinkService {
     }
 
     return true;
+  }
+
+  private static async persistDeliveryFinancialSnapshot(params: {
+    orderId: string;
+    actorProfileId: string;
+    ride: LinkedRideRecord;
+  }): Promise<void> {
+    const orderResult = await OrderDeliverySSOTService.getOrderById(params.orderId);
+    if (!orderResult.success || !orderResult.data) {
+      logger.warn("[OrderDeliveryLinkService] Nao foi possivel carregar pedido para snapshot financeiro", {
+        order_id: params.orderId,
+        error: orderResult.error,
+      });
+      return;
+    }
+
+    const metadata = asDeliveryOrderSourceMetadata(
+      orderResult.data.source_context.source_type,
+      orderResult.data.source_context.source_metadata,
+    );
+    const pricing = metadata.delivery_pricing;
+
+    const feeCharged =
+      pricing &&
+      typeof pricing.fee_charged_to_customer === "number" &&
+      Number.isFinite(pricing.fee_charged_to_customer)
+        ? pricing.fee_charged_to_customer
+        : orderResult.data.financial_breakdown.delivery_fee;
+
+    const rawCourierCost =
+      typeof params.ride.final_price === "number" && Number.isFinite(params.ride.final_price)
+        ? params.ride.final_price
+        : typeof params.ride.suggested_price === "number" && Number.isFinite(params.ride.suggested_price)
+          ? params.ride.suggested_price
+          : null;
+
+    if (rawCourierCost === null) {
+      return;
+    }
+
+    const courierCost = Number(rawCourierCost.toFixed(2));
+    const margin = Number((feeCharged - courierCost).toFixed(2));
+
+    const patch = {
+      delivery_pricing: buildDeliveryPricingSnapshot({
+        itemsSubtotal:
+          pricing?.items_subtotal ?? orderResult.data.financial_breakdown.items_total,
+        feeChargedToCustomer: feeCharged,
+        orderTotal:
+          pricing?.order_total ?? orderResult.data.financial_breakdown.order_total,
+        courierCost,
+        margin,
+        finalizedAt: new Date().toISOString(),
+      }),
+      delivery_fee_customer: feeCharged,
+    } satisfies Record<string, unknown>;
+
+    const updateResult = await OrderDeliverySSOTService.updateOrderSourceMetadata({
+      order_id: params.orderId,
+      actor_profile_id: params.actorProfileId,
+      metadata_patch: patch,
+    });
+
+    if (!updateResult.success) {
+      logger.warn("[OrderDeliveryLinkService] Falha ao persistir snapshot financeiro da entrega", {
+        order_id: params.orderId,
+        error: updateResult.error,
+      });
+    }
   }
 }

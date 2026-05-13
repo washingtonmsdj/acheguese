@@ -326,8 +326,10 @@ export class ReviewQueryService {
     distribution: Record<number, number>;
   }> {
     try {
-      const { data, error } = await supabase.rpc('get_business_review_ratings', {
+      const { data, error } = await supabase.rpc('get_business_reviews', {
         p_business_profile_id: businessProfileId,
+        p_limit: 500,
+        p_offset: 0,
       });
 
       if (error) {
@@ -335,7 +337,7 @@ export class ReviewQueryService {
         throw error;
       }
 
-      const reviews = data || [];
+      const reviews = Array.isArray(data) ? data : [];
       const total = reviews.length;
 
       if (total === 0) {
@@ -346,13 +348,18 @@ export class ReviewQueryService {
         };
       }
 
-      const sum = reviews.reduce((acc, r) => acc + r.rating, 0);
+      const sum = reviews.reduce((acc, r) => {
+        const rating = Number(r?.rating ?? 0);
+        return acc + (Number.isFinite(rating) ? rating : 0);
+      }, 0);
       const average = sum / total;
 
       const distribution = reviews.reduce(
         (acc, r) => {
-          const currentCount = acc.get(r.rating) ?? 0;
-          acc.set(r.rating, currentCount + 1);
+          const rating = Number(r?.rating ?? 0);
+          const normalizedRating = Math.max(1, Math.min(5, Math.round(rating)));
+          const currentCount = acc.get(normalizedRating) ?? 0;
+          acc.set(normalizedRating, currentCount + 1);
           return acc;
         },
         new Map<number, number>(),

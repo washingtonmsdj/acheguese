@@ -48,6 +48,7 @@ As mutacoes operacionais acontecem via RPC transacional:
 - `delivery_attach_delivery_proof`
 - `delivery_mark_delivered`
 - `delivery_transition_financial_status`
+- `delivery_update_order_notes`
 - `delivery_report_occurrence`
 - `delivery_resolve_occurrence`
 

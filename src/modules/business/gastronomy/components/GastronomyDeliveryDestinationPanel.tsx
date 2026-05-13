@@ -20,6 +20,7 @@ interface Props {
   onOpenEditor: () => void;
   onCloseEditor: () => void;
   onGoToLogin: () => void;
+  showCurrentLocationAction?: boolean;
 }
 
 export function GastronomyDeliveryDestinationPanel({
@@ -40,6 +41,7 @@ export function GastronomyDeliveryDestinationPanel({
   onOpenEditor,
   onCloseEditor,
   onGoToLogin,
+  showCurrentLocationAction = true,
 }: Props) {
   const isBusy = isResolvingAddress || isLocatingUser;
   const hasAddressQuery = addressQuery.trim().length > 0;
@@ -61,27 +63,29 @@ export function GastronomyDeliveryDestinationPanel({
               <span className="line-clamp-1">{destinationLabel}</span>
             </div>
             <p className="text-xs text-muted-foreground">
-              Distancia e tempo dos cards sao calculados a partir deste ponto
-              {destinationSourceLabel ? ` (${destinationSourceLabel}).` : '.'}
+              Endereco usado para entrega deste pedido.
+              {destinationSourceLabel ? ` Fonte: ${destinationSourceLabel}.` : ''}
             </p>
           </div>
 
           <div className="flex items-center gap-2">
-            <Button
-              type="button"
-              size="sm"
-              variant="outline"
-              className="h-8 rounded-full px-3 text-xs"
-              onClick={onUseCurrentLocation}
-              disabled={isBusy}
-            >
-              {isLocatingUser ? (
-                <Loader2 className="mr-1 h-3.5 w-3.5 animate-spin" />
-              ) : (
-                <LocateFixed className="mr-1 h-3.5 w-3.5" />
-              )}
-              Atualizar
-            </Button>
+            {showCurrentLocationAction && (
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                className="h-8 rounded-full px-3 text-xs"
+                onClick={onUseCurrentLocation}
+                disabled={isBusy}
+              >
+                {isLocatingUser ? (
+                  <Loader2 className="mr-1 h-3.5 w-3.5 animate-spin" />
+                ) : (
+                  <LocateFixed className="mr-1 h-3.5 w-3.5" />
+                )}
+                Atualizar
+              </Button>
+            )}
             <Button
               type="button"
               size="sm"
@@ -108,10 +112,12 @@ export function GastronomyDeliveryDestinationPanel({
           Entrega personalizada
         </p>
         <h2 className="text-base font-bold text-foreground">
-          Defina onde devemos calcular seu pedido
+          Escolha o endereco de entrega
         </h2>
         <p className="text-xs text-muted-foreground">
-          Informe seu endereco ou use a localizacao atual para o sistema calcular km e minutos com precisao.
+          {showCurrentLocationAction
+            ? 'Use seu endereco salvo no perfil ou informe outro endereco para esta entrega.'
+            : 'Informe o endereco completo de entrega (CEP, rua, numero, bairro e cidade).'}
         </p>
       </div>
 
@@ -125,7 +131,11 @@ export function GastronomyDeliveryDestinationPanel({
               onSubmitAddress();
             }
           }}
-          placeholder="Rua, numero e bairro"
+          placeholder={
+            showCurrentLocationAction
+              ? 'Rua, numero e bairro'
+              : 'CEP, rua, numero, bairro e cidade'
+          }
           className="h-10 text-sm"
           aria-label="Endereco de entrega"
         />
@@ -150,21 +160,23 @@ export function GastronomyDeliveryDestinationPanel({
       </div>
 
       <div className="mt-3 flex flex-wrap items-center gap-2">
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          className="h-8 rounded-full px-3 text-xs"
-          onClick={onUseCurrentLocation}
-          disabled={isLocatingUser}
-        >
-          {isLocatingUser ? (
-            <Loader2 className="mr-1 h-3.5 w-3.5 animate-spin" />
-          ) : (
-            <LocateFixed className="mr-1 h-3.5 w-3.5" />
-          )}
-          Usar localizacao atual
-        </Button>
+        {showCurrentLocationAction && (
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="h-8 rounded-full px-3 text-xs"
+            onClick={onUseCurrentLocation}
+            disabled={isLocatingUser}
+          >
+            {isLocatingUser ? (
+              <Loader2 className="mr-1 h-3.5 w-3.5 animate-spin" />
+            ) : (
+              <LocateFixed className="mr-1 h-3.5 w-3.5" />
+            )}
+            Usar localizacao atual
+          </Button>
+        )}
 
         {hasSavedAddressOption && (
           <Button

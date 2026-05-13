@@ -2,7 +2,7 @@
  * EducationSetupPage
  * 
  * Pagina de configuracao inicial do perfil de educacao.
- * Rota: /perfil/empresas/:businessId/education/setup
+ * Rota: /central/empresas/:businessId/education/setup
  */
 
 import { useEffect, useState } from 'react';
@@ -293,7 +293,7 @@ export function EducationSetupPage() {
           description: 'As alteraÃ§Ãµes foram salvas com sucesso.',
         });
         refetch();
-        navigate(`/perfil/empresas/${businessId}/education`);
+        navigate(`/central/empresas/${businessId}/education`);
       } else {
         toast({
           title: 'Erro ao salvar',
@@ -352,7 +352,7 @@ export function EducationSetupPage() {
           variant="ghost"
           size="sm"
           className="mb-4"
-          onClick={() => navigate(`/perfil/empresas/${businessId}/education`)}
+          onClick={() => navigate(`/central/empresas/${businessId}/education`)}
         >
           <ArrowLeft className="w-4 h-4 mr-1" />
           Voltar
@@ -759,7 +759,7 @@ export function EducationSetupPage() {
             <Button
               type="button"
               variant="outline"
-              onClick={() => navigate(`/perfil/empresas/${businessId}/education`)}
+              onClick={() => navigate(`/central/empresas/${businessId}/education`)}
             >
               Cancelar
             </Button>
@@ -771,4 +771,5 @@ export function EducationSetupPage() {
 }
 
 export default EducationSetupPage;
+
 

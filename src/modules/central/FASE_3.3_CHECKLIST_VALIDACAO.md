@@ -163,32 +163,32 @@
 
 ## 4. Redirects Legados
 
-### 4.1 /perfil/empresas → /central/empresas
+### 4.1 /central/empresas → /central/empresas
 - [ ] Redireciona corretamente
 - [ ] URL muda para /central/empresas
 - [ ] CentralEmpresasPage renderiza
 
-### 4.2 /perfil/empresas/:businessId → /central/empresas/:businessId
+### 4.2 /central/empresas/:businessId → /central/empresas/:businessId
 - [ ] Redireciona corretamente
 - [ ] URL muda para /central/empresas/:businessId
 - [ ] BusinessDashboardShellPage renderiza
 
-### 4.3 /perfil/mobilidade/motorista → /central/motorista
+### 4.3 /central/motorista → /central/motorista
 - [ ] Redireciona corretamente
 - [ ] URL muda para /central/motorista
 - [ ] CentralMotoristaPage renderiza
 
-### 4.4 /perfil/mobilidade/motorista/corridas → /central/motorista/corridas
+### 4.4 /central/motorista/corridas → /central/motorista/corridas
 - [ ] Redireciona corretamente
 - [ ] URL muda para /central/motorista/corridas
 - [ ] CentralMotoristaCorridasPage renderiza
 
-### 4.5 /perfil/mobilidade/motoboy → /central/motoboy
+### 4.5 /central/motoboy → /central/motoboy
 - [ ] Redireciona corretamente
 - [ ] URL muda para /central/motoboy
 - [ ] CentralMotoboyPage renderiza
 
-### 4.6 /perfil/mobilidade/motoboy/entregas → /central/motoboy/entregas
+### 4.6 /central/motoboy/entregas → /central/motoboy/entregas
 - [ ] Redireciona corretamente
 - [ ] URL muda para /central/motoboy/entregas
 - [ ] CentralMotoboyEntregasPage renderiza

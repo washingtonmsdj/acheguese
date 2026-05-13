@@ -16,6 +16,14 @@ export interface DeliveryDestination {
   latitude: number;
   longitude: number;
   label: string;
+  street?: string | null;
+  number?: string | null;
+  complement?: string | null;
+  neighborhood?: string | null;
+  city?: string | null;
+  state?: string | null;
+  postalCode?: string | null;
+  reference?: string | null;
   updatedAt: string;
 }
 
@@ -52,6 +60,14 @@ export function readStoredDeliveryDestination(): DeliveryDestination | null {
       latitude: parsed.latitude,
       longitude: parsed.longitude,
       label: parsed.label,
+      street: typeof parsed.street === 'string' ? parsed.street : null,
+      number: typeof parsed.number === 'string' ? parsed.number : null,
+      complement: typeof parsed.complement === 'string' ? parsed.complement : null,
+      neighborhood: typeof parsed.neighborhood === 'string' ? parsed.neighborhood : null,
+      city: typeof parsed.city === 'string' ? parsed.city : null,
+      state: typeof parsed.state === 'string' ? parsed.state : null,
+      postalCode: typeof parsed.postalCode === 'string' ? parsed.postalCode : null,
+      reference: typeof parsed.reference === 'string' ? parsed.reference : null,
       updatedAt:
         typeof parsed.updatedAt === 'string'
           ? parsed.updatedAt

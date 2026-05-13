@@ -7,9 +7,14 @@
  */
 
 import { logger } from '@/shared/utils/logger';
-import { supabase } from '@/integrations/supabase';
 import { OrderDeliverySSOTService } from '@/modules/mobility/delivery/services/OrderDeliverySSOTService';
+import { MobilityService } from '@/modules/mobility/services/MobilityService.impl';
+import {
+  asDeliveryOrderSourceMetadata,
+  buildDeliveryPricingSnapshot,
+} from '@/modules/mobility/delivery/order/sourceMetadata';
 import { LOGISTICS_STATUS, type LogisticsStatus } from '@/modules/mobility/delivery/logistics/types';
+import { FINANCIAL_STATUS } from '@/modules/mobility/delivery/payment-context/types';
 import { ORDER_SOURCE_TYPE, type OrderItemRecord, type OrderRecord } from '@/modules/mobility/delivery/order/types';
 import type { OrderTimelineEvent } from '@/modules/mobility/delivery/audit-timeline/types';
 import type { DeliveryProof } from '@/modules/mobility/delivery/proof-of-delivery/types';
@@ -40,7 +45,14 @@ export type OrderStatus =
   | 'cancelled';
 
 export type OrderType = 'pickup' | 'delivery' | 'dine_in';
-export type PaymentMethod = 'cash' | 'debit_card' | 'credit_card' | 'pix' | 'online';
+export type PaymentMethod =
+  | 'cash'
+  | 'debit_card'
+  | 'credit_card'
+  | 'pix'
+  | 'online'
+  | 'card_on_delivery'
+  | 'payment_link';
 
 export interface Order {
   id: string;
@@ -61,6 +73,11 @@ export interface Order {
   delivery_zipcode: string | null;
   delivery_complement: string | null;
   delivery_reference: string | null;
+  delivery_items_subtotal: number | null;
+  delivery_fee_customer: number | null;
+  delivery_order_total: number | null;
+  delivery_courier_cost: number | null;
+  delivery_margin: number | null;
   subtotal: number;
   delivery_fee: number;
   discount: number;
@@ -117,8 +134,11 @@ export interface OrderItemAddon {
 export interface OrderStatusHistory {
   id: string;
   order_id: string;
+  event_type: string;
   from_status: OrderStatus | null;
-  to_status: OrderStatus;
+  to_status: OrderStatus | null;
+  from_financial_status: string | null;
+  to_financial_status: string | null;
   changed_by: string | null;
   notes: string | null;
   created_at: string;
@@ -210,6 +230,35 @@ function getMetadataString(order: OrderRecord, key: string): string | null {
   return typeof value === 'string' && value.trim() ? value : null;
 }
 
+function getMetadataStringFirst(order: OrderRecord, keys: readonly string[]): string | null {
+  for (const key of keys) {
+    const value = getMetadataString(order, key);
+    if (value) {
+      return value;
+    }
+  }
+  return null;
+}
+
+function getMetadataNumber(order: OrderRecord, key: string): number | null {
+  const value = order.source_context.source_metadata?.[key];
+  return typeof value === 'number' && Number.isFinite(value) ? value : null;
+}
+
+function getDeliveryPricingNumber(
+  order: OrderRecord,
+  key: 'courier_cost' | 'margin',
+): number | null {
+  const metadata = asDeliveryOrderSourceMetadata(
+    order.source_context.source_type,
+    order.source_context.source_metadata,
+  );
+  const pricing = metadata.delivery_pricing;
+  if (!pricing) return null;
+  const value = pricing[key];
+  return typeof value === 'number' && Number.isFinite(value) ? value : null;
+}
+
 function mapOrderItem(item: OrderItemRecord): OrderItem & { addons: OrderItemAddon[] } {
   return {
     id: item.id,
@@ -243,12 +292,15 @@ function mapTimelineEvent(event: OrderTimelineEvent): OrderStatusHistory {
   return {
     id: event.id,
     order_id: event.order_id,
+    event_type: event.event_type,
     from_status: event.from_logistics_status
       ? logisticsToOrderStatus(event.from_logistics_status)
       : null,
     to_status: event.to_logistics_status
       ? logisticsToOrderStatus(event.to_logistics_status)
-      : 'pending',
+      : null,
+    from_financial_status: event.from_financial_status ?? null,
+    to_financial_status: event.to_financial_status ?? null,
     changed_by: event.actor_profile_id,
     notes: event.reason,
     created_at: event.created_at,
@@ -271,13 +323,18 @@ function mapOrder(order: OrderRecord): OrderWithItems {
     customer_name: getMetadataString(order, 'customer_name') ?? `Cliente ${order.customer_profile_id.slice(0, 8)}`,
     customer_phone: getMetadataString(order, 'customer_phone') ?? '',
     customer_email: getMetadataString(order, 'customer_email'),
-    delivery_address: getMetadataString(order, 'delivery_address'),
+    delivery_address: getMetadataStringFirst(order, ['delivery_address', 'delivery_street']),
     delivery_neighborhood: getMetadataString(order, 'delivery_neighborhood'),
     delivery_city: getMetadataString(order, 'delivery_city'),
     delivery_state: getMetadataString(order, 'delivery_state'),
-    delivery_zipcode: getMetadataString(order, 'delivery_zipcode'),
+    delivery_zipcode: getMetadataStringFirst(order, ['delivery_zipcode', 'delivery_postal_code']),
     delivery_complement: getMetadataString(order, 'delivery_complement'),
     delivery_reference: getMetadataString(order, 'delivery_reference'),
+    delivery_items_subtotal: getMetadataNumber(order, 'delivery_items_subtotal'),
+    delivery_fee_customer: getMetadataNumber(order, 'delivery_fee_customer'),
+    delivery_order_total: getMetadataNumber(order, 'delivery_order_total'),
+    delivery_courier_cost: getDeliveryPricingNumber(order, 'courier_cost'),
+    delivery_margin: getDeliveryPricingNumber(order, 'margin'),
     subtotal: order.financial_breakdown.items_total,
     delivery_fee: order.financial_breakdown.delivery_fee,
     discount: order.financial_breakdown.discount_total,
@@ -304,6 +361,46 @@ function mapOrder(order: OrderRecord): OrderWithItems {
     items: order.items.map(mapOrderItem),
     status_history: [],
   };
+}
+
+async function enrichDeliveryFinancials<T extends Order>(orders: T[]): Promise<T[]> {
+  const enriched = await Promise.all(
+    orders.map(async (order) => {
+      const ride = (await MobilityService.getLatestRideBySource(
+        'gastronomy',
+        order.id,
+      )) as { final_price?: unknown; suggested_price?: unknown } | null;
+
+      const finalPrice =
+        ride && typeof ride.final_price === 'number' && Number.isFinite(ride.final_price)
+          ? ride.final_price
+          : null;
+      const suggestedPrice =
+        ride && typeof ride.suggested_price === 'number' && Number.isFinite(ride.suggested_price)
+          ? ride.suggested_price
+          : null;
+      const courierCost = order.delivery_courier_cost ?? finalPrice ?? suggestedPrice;
+
+      const feeCustomer = order.delivery_fee_customer ?? order.delivery_fee;
+      const margin =
+        courierCost !== null && Number.isFinite(feeCustomer) ? feeCustomer - courierCost : order.delivery_margin;
+      const pricingSnapshot = buildDeliveryPricingSnapshot({
+        itemsSubtotal: order.delivery_items_subtotal ?? order.subtotal,
+        feeChargedToCustomer: feeCustomer,
+        orderTotal: order.delivery_order_total ?? order.total,
+        courierCost,
+        margin,
+      });
+
+      return {
+        ...order,
+        delivery_courier_cost: courierCost,
+        delivery_margin: pricingSnapshot.margin,
+      };
+    }),
+  );
+
+  return enriched;
 }
 
 export const OrderService = {
@@ -339,7 +436,8 @@ export const OrderService = {
         .map(mapOrder)
         .filter((order) => !filters?.order_type || order.order_type === filters.order_type);
 
-      return { data: orders, error: null };
+      const ordersWithFinancials = await enrichDeliveryFinancials(orders);
+      return { data: ordersWithFinancials, error: null };
     } catch (error) {
       const message = toErrorMessage(error);
       logger.error('[OrderService] listOrders error', error as Error, { businessId });
@@ -355,12 +453,13 @@ export const OrderService = {
       }
 
       const order = mapOrder(result.data);
+      const [orderWithFinancials] = await enrichDeliveryFinancials([order]);
       const timeline = await OrderDeliverySSOTService.listTimeline(orderId);
       order.status_history = timeline.success
         ? (timeline.data ?? []).map(mapTimelineEvent)
         : [];
 
-      return { data: order, error: null };
+      return { data: orderWithFinancials, error: null };
     } catch (error) {
       const message = toErrorMessage(error);
       logger.error('[OrderService] getOrder error', error as Error, { orderId });
@@ -504,22 +603,99 @@ export const OrderService = {
   async updateInternalNotes(
     orderId: string,
     notes: string,
+    actorProfileId?: string,
   ): Promise<ServiceResult<Order>> {
     try {
-      const { error } = await supabase
-        .from('orders')
-        .update({ notes })
-        .eq('id', orderId);
-
-      if (error) {
-        return { data: null, error: error.message };
+      if (!actorProfileId) {
+        return { data: null, error: 'Perfil ativo obrigatorio para atualizar notas internas.' };
       }
 
-      const updated = await this.getOrder(orderId);
-      return { data: updated.data, error: updated.error };
+      const normalizedNotes = notes.trim();
+      if (!normalizedNotes) {
+        return { data: null, error: 'Informe uma nota valida para atualizar o pedido.' };
+      }
+
+      const result = await OrderDeliverySSOTService.updateOrderNotes({
+        order_id: orderId,
+        notes: normalizedNotes,
+        actor_profile_id: actorProfileId,
+        metadata: {
+          source: 'gastronomy_order_operations',
+          action: 'update_internal_notes',
+        },
+      });
+
+      if (!result.success || !result.data) {
+        return { data: null, error: result.error ?? 'Erro ao atualizar notas internas.' };
+      }
+
+      return { data: mapOrder(result.data), error: null };
     } catch (error) {
       const message = toErrorMessage(error);
       logger.error('[OrderService] updateInternalNotes error', error as Error, { orderId });
+      return { data: null, error: message };
+    }
+  },
+
+  async confirmOrderPayment(
+    orderId: string,
+    actorProfileId?: string,
+    notes?: string,
+  ): Promise<ServiceResult<Order>> {
+    try {
+      if (!actorProfileId) {
+        return { data: null, error: 'Perfil ativo obrigatorio para confirmar pagamento.' };
+      }
+
+      const current = await this.getOrder(orderId);
+      if (current.error || !current.data) {
+        return { data: null, error: current.error ?? 'Pedido nao encontrado.' };
+      }
+
+      const currentOrder = current.data;
+      if (!['pix', 'payment_link'].includes(currentOrder.payment_method ?? '')) {
+        return {
+          data: null,
+          error: 'Confirmacao manual disponivel apenas para PIX ou link de pagamento.',
+        };
+      }
+
+      if (currentOrder.payment_status === FINANCIAL_STATUS.PAID) {
+        return { data: currentOrder, error: null };
+      }
+
+      const allowedPendingStatuses = new Set([
+        FINANCIAL_STATUS.PENDING_PAYMENT,
+        FINANCIAL_STATUS.NOT_APPLICABLE,
+      ]);
+      if (!allowedPendingStatuses.has(currentOrder.payment_status as typeof FINANCIAL_STATUS[keyof typeof FINANCIAL_STATUS])) {
+        return {
+          data: null,
+          error: `Status financeiro atual (${currentOrder.payment_status}) nao permite confirmacao manual.`,
+        };
+      }
+
+      const safeReason = (notes ?? 'Pagamento confirmado pela loja').trim().slice(0, 240);
+      const result = await OrderDeliverySSOTService.transitionFinancialStatus({
+        order_id: orderId,
+        to_status: FINANCIAL_STATUS.PAID,
+        actor_profile_id: actorProfileId,
+        reason: safeReason,
+        metadata: {
+          source: 'gastronomy_order_operations',
+          action: 'confirm_payment',
+          from_status: currentOrder.payment_status,
+        },
+      });
+
+      if (!result.success || !result.data) {
+        return { data: null, error: result.error ?? 'Erro ao confirmar pagamento.' };
+      }
+
+      return { data: mapOrder(result.data), error: null };
+    } catch (error) {
+      const message = toErrorMessage(error);
+      logger.error('[OrderService] confirmOrderPayment error', error as Error, { orderId });
       return { data: null, error: message };
     }
   },

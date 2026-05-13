@@ -62,7 +62,7 @@ export default function GastronomyDashboardPage() {
     <div className="container max-w-6xl py-8 space-y-8">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold">Dashboard Gastronomia</h1>
+        <h1 className="text-3xl font-bold font-display">Dashboard Gastronomia</h1>
         <p className="text-muted-foreground mt-2">
           Gerencie seu perfil gastronômico e recursos
         </p>

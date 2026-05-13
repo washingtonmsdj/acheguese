@@ -15,19 +15,19 @@ Eliminar os wrappers/redirecionamentos principais para /perfil criando páginas 
 
 ### 1. src/modules/central/pages/CentralEmpresasPage.tsx
 **Alterações:**
-- Removido redirecionamento para `/perfil/empresas`
+- Removido redirecionamento para `/central/empresas`
 - Criada página real de lista de empresas
 - Usa `useProfileHub` e `BusinessModulesSection` (componente canônico existente)
 - Mostra lista de empresas do usuário com CTAs para:
   - Acessar painel da empresa: `/central/empresas/:businessId`
-  - Criar nova empresa: `/empresas/criar-empresa`
+  - Criar nova empresa: `/empresas/cadastrar`
   - Planos, Gastronomia, Link premium, Editar, etc.
 - Empty state se usuário não tiver empresas
 
 **Antes:**
 ```typescript
 useEffect(() => {
-  navigate("/perfil/empresas", { replace: true });
+  navigate("/central/empresas", { replace: true });
 }, [navigate]);
 return null;
 ```
@@ -43,7 +43,7 @@ return null;
 
 ### 2. src/modules/central/pages/CentralMotoristaPage.tsx
 **Alterações:**
-- Removido redirecionamento para `/perfil/mobilidade/motorista`
+- Removido redirecionamento para `/central/motorista`
 - Criada página hub para motorista
 - Usa `useDriverProfileIdentity` e `useAppUrls` (hooks canônicos existentes)
 - Mostra resumo operacional:
@@ -51,17 +51,17 @@ return null;
   - Taxa de aceitação
   - Capacidades (corridas/entregas)
 - Atalhos para sub-rotas legadas:
-  - Cadastro: `/perfil/mobilidade/motorista/cadastro`
-  - Disponibilidade: `/perfil/mobilidade/motorista/disponibilidade`
-  - Corridas: `/perfil/mobilidade/motorista/corridas`
-  - Ganhos: `/perfil/mobilidade/motorista/ganhos`
+  - Cadastro: `/central/motorista/cadastro`
+  - Disponibilidade: `/central/motorista/disponibilidade`
+  - Corridas: `/central/motorista/corridas`
+  - Ganhos: `/central/motorista/ganhos`
 - Aviso explicando que sub-rotas estão em migração
 - Empty state se usuário não tiver perfil de motorista
 
 **Antes:**
 ```typescript
 useEffect(() => {
-  navigate("/perfil/mobilidade/motorista", { replace: true });
+  navigate("/central/motorista", { replace: true });
 }, [navigate]);
 return null;
 ```
@@ -77,7 +77,7 @@ return null;
 
 ### 3. src/modules/central/pages/CentralMotoboyPage.tsx
 **Alterações:**
-- Removido redirecionamento para `/perfil/mobilidade/motoboy`
+- Removido redirecionamento para `/central/motoboy`
 - Criada página hub para motoboy
 - Usa `useDriverProfileIdentity` e `useAppUrls` (hooks canônicos existentes)
 - Mostra resumo operacional:
@@ -85,17 +85,17 @@ return null;
   - Taxa de aceitação
   - Capacidades (corridas/entregas)
 - Atalhos para sub-rotas legadas:
-  - Cadastro: `/perfil/mobilidade/motoboy/cadastro`
-  - Disponibilidade: `/perfil/mobilidade/motoboy/disponibilidade`
-  - Entregas: `/perfil/mobilidade/motoboy/entregas`
-  - Ganhos: `/perfil/mobilidade/motoboy/ganhos`
+  - Cadastro: `/central/motoboy/cadastro`
+  - Disponibilidade: `/central/motoboy/disponibilidade`
+  - Entregas: `/central/motoboy/entregas`
+  - Ganhos: `/central/motoboy/ganhos`
 - Aviso explicando que sub-rotas estão em migração
 - Empty state se usuário não tiver perfil de motoboy
 
 **Antes:**
 ```typescript
 useEffect(() => {
-  navigate("/perfil/mobilidade/motoboy", { replace: true });
+  navigate("/central/motoboy", { replace: true });
 }, [navigate]);
 return null;
 ```
@@ -113,9 +113,9 @@ return null;
 
 | Rota | Antes | Depois |
 |------|-------|--------|
-| `/central/empresas` | Redirecionava para `/perfil/empresas` | Página real com lista de empresas |
-| `/central/motorista` | Redirecionava para `/perfil/mobilidade/motorista` | Página hub com resumo operacional |
-| `/central/motoboy` | Redirecionava para `/perfil/mobilidade/motoboy` | Página hub com resumo operacional |
+| `/central/empresas` | Redirecionava para `/central/empresas` | Página real com lista de empresas |
+| `/central/motorista` | Redirecionava para `/central/motorista` | Página hub com resumo operacional |
+| `/central/motoboy` | Redirecionava para `/central/motoboy` | Página hub com resumo operacional |
 
 ---
 
@@ -124,20 +124,20 @@ return null;
 ### Rotas Legadas que Continuam Funcionando
 | Rota Legada | Status | Motivo |
 |-------------|--------|--------|
-| `/perfil/empresas` | ✅ Ativa | Fallback para usuários que ainda usam link direto |
-| `/perfil/mobilidade` | ✅ Ativa | Hub de mobilidade legado |
-| `/perfil/mobilidade/motorista` | ✅ Ativa | Sub-rotas específicas ainda não migradas |
-| `/perfil/mobilidade/motorista/cadastro` | ✅ Ativa | Fluxo específico |
-| `/perfil/mobilidade/motorista/disponibilidade` | ✅ Ativa | Fluxo específico |
-| `/perfil/mobilidade/motorista/corridas` | ✅ Ativa | Fluxo específico |
-| `/perfil/mobilidade/motorista/ganhos` | ✅ Ativa | Fluxo específico |
-| `/perfil/mobilidade/motorista/configuracoes` | ✅ Ativa | Fluxo específico |
-| `/perfil/mobilidade/motoboy` | ✅ Ativa | Sub-rotas específicas ainda não migradas |
-| `/perfil/mobilidade/motoboy/cadastro` | ✅ Ativa | Fluxo específico |
-| `/perfil/mobilidade/motoboy/disponibilidade` | ✅ Ativa | Fluxo específico |
-| `/perfil/mobilidade/motoboy/entregas` | ✅ Ativa | Fluxo específico |
-| `/perfil/mobilidade/motoboy/ganhos` | ✅ Ativa | Fluxo específico |
-| `/perfil/mobilidade/motoboy/configuracoes` | ✅ Ativa | Fluxo específico |
+| `/central/empresas` | ✅ Ativa | Fallback para usuários que ainda usam link direto |
+| `/central` | ✅ Ativa | Hub de mobilidade legado |
+| `/central/motorista` | ✅ Ativa | Sub-rotas específicas ainda não migradas |
+| `/central/motorista/cadastro` | ✅ Ativa | Fluxo específico |
+| `/central/motorista/disponibilidade` | ✅ Ativa | Fluxo específico |
+| `/central/motorista/corridas` | ✅ Ativa | Fluxo específico |
+| `/central/motorista/ganhos` | ✅ Ativa | Fluxo específico |
+| `/central/motorista/configuracoes` | ✅ Ativa | Fluxo específico |
+| `/central/motoboy` | ✅ Ativa | Sub-rotas específicas ainda não migradas |
+| `/central/motoboy/cadastro` | ✅ Ativa | Fluxo específico |
+| `/central/motoboy/disponibilidade` | ✅ Ativa | Fluxo específico |
+| `/central/motoboy/entregas` | ✅ Ativa | Fluxo específico |
+| `/central/motoboy/ganhos` | ✅ Ativa | Fluxo específico |
+| `/central/motoboy/configuracoes` | ✅ Ativa | Fluxo específico |
 
 ### Sub-rotas em Migração
 - Sub-rotas de mobilidade (cadastro, disponibilidade, corridas, entregas, ganhos, configuracoes)
@@ -152,7 +152,7 @@ return null;
 ### 1. Usuário sem empresa acessa `/central/empresas`
 **Resultado:** ✅
 - Mostra empty state com CTA para criar empresa
-- Redireciona para `/empresas/criar-empresa` ao clicar
+- Redireciona para `/empresas/cadastrar` ao clicar
 
 ### 2. Usuário com empresa acessa `/central/empresas`
 **Resultado:** ✅
@@ -190,8 +190,8 @@ return null;
 
 ### 8. Rotas legadas não quebram
 **Resultado:** ✅
-- `/perfil/empresas` continua funcionando
-- `/perfil/mobilidade` e sub-rotas continuam funcionando
+- `/central/empresas` continua funcionando
+- `/central` e sub-rotas continuam funcionando
 - Deep links existentes não quebram
 - Sub-rotas são acessíveis via atalhos nas páginas hub
 
@@ -209,8 +209,8 @@ return null;
 ## Compatibilidade Mantida
 
 ### Não Apagado
-- ✅ Rotas legadas em `/perfil/empresas`
-- ✅ Rotas legadas em `/perfil/mobilidade/*`
+- ✅ Rotas legadas em `/central/empresas`
+- ✅ Rotas legadas em `/central/*`
 - ✅ Sub-rotas específicas de mobilidade
 
 ### Não Feito

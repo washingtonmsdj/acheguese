@@ -66,6 +66,28 @@ function normalizeModulePath(pathname: string): string {
   return module;
 }
 
+function resolveCommunityTerritoryBase(
+  pathname: string,
+  fallbackState: string,
+  fallbackCity: string,
+): string {
+  const parts = pathname.split("/").filter(Boolean);
+  const state = parts[1] ?? fallbackState;
+  const city = parts[2] ?? fallbackCity;
+  const segment3 = parts[3];
+  const segment4 = parts[4];
+
+  if (segment3 === "area" && segment4) {
+    return `/${state}/${city}/area/${segment4}`;
+  }
+
+  if (segment3 && !Object.values(MODULE_SLUGS).includes(segment3 as (typeof MODULE_SLUGS)[keyof typeof MODULE_SLUGS])) {
+    return `/${state}/${city}/${segment3}`;
+  }
+
+  return `/${state}/${city}`;
+}
+
 function useCommunitySeoHead(canonicalHref: string, robots: string) {
   useLayoutEffect(() => {
     const canonical =
@@ -105,7 +127,7 @@ export function CommunityTerritorialShell() {
   const state = params.state ?? "ba";
   const city = params.city ?? "salvador";
   const territorySlug = params.territorySlug ?? city;
-  const territoryBase = `/${state}/${city}/${territorySlug}`;
+  const territoryBase = resolveCommunityTerritoryBase(location.pathname, state, city);
   const communityBase = buildCommunityTerritoryUrl(territoryBase);
   const cityHref = `/${state}/${city}`;
   const territoryName = resolved

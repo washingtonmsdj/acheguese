@@ -305,7 +305,7 @@ npm run lint
 **Status**: IMPLEMENTADO
 
 **Rotas Configuradas**:
-- ✅ Admin: `/perfil/empresas/:businessId/education/*`
+- ✅ Admin: `/central/empresas/:businessId/education/*`
 - ✅ Públicas: `/educacao/:state/:city/*`
 - ✅ Rotas bilíngues (PT-BR/EN): `programas/programs`, `eventos/events`, `planos/plans`
 - ✅ Lazy imports configurados

@@ -1,7 +1,6 @@
 import { useState, useRef } from "react";
 import { toast } from "sonner";
 import {
-  optimizeImage,
   validateImageFile,
 } from "@/shared/utils/imageOptimizer";
 import type { PostType } from "@/core/posts/types";
@@ -40,19 +39,13 @@ export function usePostForm() {
       }
 
       try {
-        const optimized = await optimizeImage(file, {
-          maxWidth: 1200,
-          maxHeight: 1200,
-          quality: 0.85,
-        });
-
-        setImagens((prev) => [...prev, optimized]);
+        setImagens((prev) => [...prev, file]);
 
         const reader = new FileReader();
         reader.onload = () => {
           setImagensPreview((prev) => [...prev, reader.result as string]);
         };
-        reader.readAsDataURL(optimized);
+        reader.readAsDataURL(file);
       } catch (err) {
         logger.error("Error optimizing image:", err);
         toast.error("Erro ao processar imagem");

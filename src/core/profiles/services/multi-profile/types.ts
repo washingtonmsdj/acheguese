@@ -39,6 +39,7 @@ export interface MultiProfileRecord {
   city?: string;
   neighborhood?: string;
   street?: string;
+  public_location_visibility?: 'hidden' | 'city_only' | 'district';
   state?: string;
   country: string;
   is_active: boolean;
@@ -168,6 +169,7 @@ export interface UpdateProfileInput {
   city?: string;
   neighborhood?: string;
   street?: string;
+  public_location_visibility?: 'hidden' | 'city_only' | 'district';
   state?: string;
   is_public?: boolean;
   show_contact_email?: boolean;

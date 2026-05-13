@@ -11,9 +11,9 @@
  * - Otimização de performance
  */
 import { logger } from '@/shared/utils/logger';
-import { supabase } from "@/integrations/supabase/supabase";
 import imageCompression from "browser-image-compression";
 import { CLASSIFIED_UPLOAD_LIMITS } from "../constants/upload-limits";
+import { mediaService } from "@/core/media/services/MediaService";
 // ─── Constants ────────────────────────────────────────────────
 
 const STORAGE_BUCKET = "classified-images";
@@ -134,29 +134,13 @@ export class ClassifiedImageService {
     userId: string,
     folder: "images" | "thumbnails"
   ): Promise<string> {
-    const fileExt = "webp"; // Sempre WebP após compressão
-    const timestamp = Date.now();
-    const random = Math.random().toString(36).substring(7);
-    const fileName = `${userId}/${folder}/${timestamp}-${random}.${fileExt}`;
-
-    const { data, error } = await supabase.storage
-      .from(STORAGE_BUCKET)
-      .upload(fileName, file, {
-        cacheControl: "31536000", // 1 ano
-        upsert: false,
-        contentType: "image/webp",
-      });
-
-    if (error) {
-      logger.error("Erro no upload:", error);
-      throw new Error(`Falha no upload: ${error.message}`);
-    }
-
-    const {
-      data: { publicUrl },
-    } = supabase.storage.from(STORAGE_BUCKET).getPublicUrl(fileName);
-
-    return publicUrl;
+    const upload = await mediaService.uploadToBucket(file, {
+      bucket: "classified-images",
+      pathPrefix: `${userId}/${folder}`,
+      preset: folder === "images" ? "classified_image" : "classified_thumbnail",
+      upsert: false,
+    });
+    return upload.url;
   }
 
   /**
@@ -280,23 +264,9 @@ export class ClassifiedImageService {
       const filePath = pathMatch[1];
 
       // Deletar imagem principal
-      const { error: imageError } = await supabase.storage
-        .from(STORAGE_BUCKET)
-        .remove([filePath]);
-
-      if (imageError) {
-        logger.error("Erro ao deletar imagem:", imageError);
-      }
-
       // Deletar thumbnail (substituir /images/ por /thumbnails/)
       const thumbnailPath = filePath.replace("/images/", "/thumbnails/");
-      const { error: thumbError } = await supabase.storage
-        .from(STORAGE_BUCKET)
-        .remove([thumbnailPath]);
-
-      if (thumbError) {
-        logger.error("Erro ao deletar thumbnail:", thumbError);
-      }
+      await mediaService.deleteFromBucket(STORAGE_BUCKET, [filePath, thumbnailPath]);
     } catch (error) {
       logger.error("Erro ao deletar imagem:", error);
       throw error;

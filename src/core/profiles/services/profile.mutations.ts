@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase";
 import { logger } from "@/shared/utils/logger";
 import { trackError } from "@/shared/utils/errorTracking";
 import { SessionService } from "@/core/session/services/SessionService";
+import { mediaService } from "@/core/media/services/MediaService";
 import type {
   CreateProfileData,
   Profile,
@@ -53,7 +54,6 @@ export async function createProfile(profile: CreateProfileData): Promise<Profile
       avatar_url: profile.avatarUrl,
       bio: profile.bio,
       profile_type: profile.profileType || "personal",
-      neighborhood: profile.neighborhood,
       whatsapp: profile.whatsapp,
       is_active: true,
     })
@@ -98,7 +98,6 @@ export async function updateProfile(
       username: updates.username,
       avatar_url: updates.avatarUrl,
       bio: updates.bio,
-      neighborhood: updates.neighborhood,
       whatsapp: updates.whatsapp,
       updated_at: new Date().toISOString(),
     })
@@ -217,30 +216,17 @@ export async function deleteProfile(profileId: string): Promise<void> {
  * Faz upload de avatar
  */
 export async function uploadAvatar(userId: string, file: File): Promise<string | null> {
-  const fileExt = file.name.split(".").pop();
-  const fileName = `${userId}-${Date.now()}.${fileExt}`;
-  const filePath = `avatars/${fileName}`;
-
-  // Upload do arquivo
-  const { error: uploadError } = await supabase.storage
-    .from("avatars")
-    .upload(filePath, file);
-
-  if (uploadError) {
-    trackError(uploadError, {
+  try {
+    const upload = await mediaService.uploadAvatar(userId, file);
+    return upload.url;
+  } catch (error) {
+    trackError(error, {
       component: "profile.mutations",
       action: "uploadAvatar",
-      metadata: { userId, filePath },
+      metadata: { userId },
     });
-    throw new Error(`Failed to upload avatar: ${uploadError.message}`);
+    throw error;
   }
-
-  // Obter URL pública
-  const {
-    data: { publicUrl },
-  } = supabase.storage.from("avatars").getPublicUrl(filePath);
-
-  return publicUrl;
 }
 
 // ============================================================================
@@ -274,7 +260,6 @@ export async function ensureDriverProfileForUser(userId: string): Promise<Profil
       avatar_url: activeProfile.avatar_url,
       profile_type: "driver",
       is_active: false, // Não ativa automaticamente
-      neighborhood: activeProfile.neighborhood,
       whatsapp: activeProfile.whatsapp,
     })
     .select()

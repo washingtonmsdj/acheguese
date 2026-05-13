@@ -913,7 +913,7 @@ export function EducationExplorerPage() {
                   </ul>
 
                   <div className="mt-7 flex flex-col gap-3 sm:flex-row">
-                    <Link to="/empresas/criar-empresa">
+                    <Link to="/empresas/cadastrar">
                       <Button size="lg" className="w-full rounded-full sm:w-auto">
                         Cadastrar instituicao
                         <ArrowUpRight className="ml-2 h-4 w-4" />
@@ -999,3 +999,4 @@ export function EducationExplorerPage() {
 }
 
 export default EducationExplorerPage;
+

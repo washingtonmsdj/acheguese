@@ -14,7 +14,7 @@ interface MentionedProfile {
   id: string;
   name: string;
   avatar_url?: string;
-  neighborhood?: string;
+  public_neighborhood?: string;
   user_type?: string;
   profissao?: string;
   telefone?: string;
@@ -119,10 +119,10 @@ export function MentionedProfileCard({
             <p className="text-xs text-gray-400 mb-1">{profile.profissao}</p>
           )}
 
-          {profile.neighborhood && (
+          {profile.public_neighborhood && (
             <div className="flex items-center gap-1 text-xs text-gray-500 mb-2">
               <MapPin className="w-3 h-3" />
-              <span>{profile.neighborhood}</span>
+              <span>{profile.public_neighborhood}</span>
             </div>
           )}
 

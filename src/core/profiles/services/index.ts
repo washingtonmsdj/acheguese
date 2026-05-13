@@ -22,6 +22,7 @@ export {
   getProfilesByUserId,
   getProfileByType,
   getByUsername,
+  getPublicProfileById,
   getProfilesByIds,
   getProfilesSummary,
   getProfilesSummaryExtended,

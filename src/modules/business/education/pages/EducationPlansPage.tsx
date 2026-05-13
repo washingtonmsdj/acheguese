@@ -2,7 +2,7 @@
  * EducationPlansPage
  * 
  * Pagina de planos e billing da instituicao.
- * Rota: /perfil/empresas/:businessId/education/planos
+ * Rota: /central/empresas/:businessId/education/planos
  */
 
 import { useParams, useNavigate } from 'react-router-dom';
@@ -128,7 +128,7 @@ export function EducationPlansPage() {
 
       await BillingService.redirectToCheckout({
         planCode: planId,
-        successUrl: `${window.location.origin}/perfil/empresas/${businessId}/education/planos?upgrade=success`,
+        successUrl: `${window.location.origin}/central/empresas/${businessId}/education/planos?upgrade=success`,
         cancelUrl: window.location.href,
       });
     } catch (error) {
@@ -185,7 +185,7 @@ export function EducationPlansPage() {
           variant="ghost"
           size="sm"
           className="mb-4"
-          onClick={() => navigate(`/perfil/empresas/${businessId}/education`)}
+          onClick={() => navigate(`/central/empresas/${businessId}/education`)}
         >
           <ArrowLeft className="w-4 h-4 mr-1" />
           Voltar
@@ -355,4 +355,5 @@ export function EducationPlansPage() {
 }
 
 export default EducationPlansPage;
+
 

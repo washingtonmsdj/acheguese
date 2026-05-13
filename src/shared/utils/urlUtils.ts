@@ -17,7 +17,7 @@ export const RESERVED_SLUGS = [
   "settings",
   "configuracoes",
   "business",
-  "businesss",
+  "empresas",
   "empresas",
   "services",
   "servicos",

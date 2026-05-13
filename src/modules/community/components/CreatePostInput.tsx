@@ -9,6 +9,7 @@ import {
 } from "@/shared/components/ui/avatar";
 import { Heart, Bell, Calendar, Wrench } from "lucide-react";
 import { useSessionContext } from "@/core/session";
+import { useUserTerritory } from "@/core/location/hooks/useUserTerritory";
 import {
   getCardClasses,
   getCardBackground,
@@ -37,11 +38,12 @@ const CreatePostInput = React.forwardRef<HTMLDivElement, CreatePostInputProps>(
     ref,
   ) => {
     const { activeProfile: profile } = useSessionContext();
+    const { homeCity, homeDistrict } = useUserTerritory();
     const profileData = {
       name: profile?.name ?? null,
-      city: profile?.city ?? null,
+      city: homeCity?.name ?? null,
       street: profile?.street ?? null,
-      neighborhood: profile?.neighborhood ?? null,
+      neighborhood: homeDistrict?.name ?? null,
       avatarUrl: profile?.avatarUrl ?? null,
     };
     const getInitials = (name?: string | null) => {

@@ -80,25 +80,25 @@ Auditar a Central após as fases 1.1 até 3.1 para garantir que a estrutura fico
 
 ## Auditoria de Links Internos
 
-### Links para /perfil/empresas
+### Links para /central/empresas
 
 **Arquivos encontrados:**
 - businessManagementRoutes.ts (SSOT de rotas - legítimo, suporta opts.target === "legacy")
 - useBusinessUrls.ts (SSOT de rotas - legítimo, suporta opts.target === "legacy")
 - BusinessUrlService.ts (SSOT de rotas - legítimo, suporta opts.target === "legacy")
-- verticals/config.ts (setupRoute usa /perfil/empresas - legítimo, compatibilidade)
+- verticals/config.ts (setupRoute usa /central/empresas - legítimo, compatibilidade)
 - AppRoutes.tsx (redirecionamentos legados - legítimo, preservam deep links)
 
 **Conclusão:** ✅ Todos os usos são legítimos (SSOT de rotas ou redirecionamentos legados)
 
-### Links para /perfil/mobilidade
+### Links para /central
 
 **Arquivos encontrados:**
 - AppRoutes.tsx (rotas legadas preservadas - legítimo, compatibilidade)
-- DriverGuard.tsx (link corrigido: /perfil/mobilidade → /central/profissional)
+- DriverGuard.tsx (link corrigido: /central → /central/profissional)
 - profileNavigation.ts (navegação de perfil pessoal - legítimo)
 - profileMobilityNavigation.ts (navegação de perfil pessoal - legítimo)
-- Páginas de /perfil/mobilidade (rotas legadas preservadas - legítimo)
+- Páginas de /central (rotas legadas preservadas - legítimo)
 
 **Conclusão:** ✅ Correção aplicada no DriverGuard, demais usos são legítimos
 
@@ -108,7 +108,7 @@ Auditar a Central após as fases 1.1 até 3.1 para garantir que a estrutura fico
 
 ### Páginas Wrapper
 
-**Páginas de /perfil/mobilidade (19 arquivos):**
+**Páginas de /central (19 arquivos):**
 - PerfilMobilidadeCadastroPage.tsx
 - PerfilMobilidadeConfiguracoesPage.tsx
 - PerfilMobilidadeCorridasPage.tsx
@@ -336,7 +336,7 @@ Auditar a Central após as fases 1.1 até 3.1 para garantir que a estrutura fico
 
 ## Itens Documentados para Futuro
 
-### Páginas de /perfil/mobilidade
+### Páginas de /central
 
 **Status:** Preservadas por compatibilidade
 
@@ -390,8 +390,8 @@ Auditar a Central após as fases 1.1 até 3.1 para garantir que a estrutura fico
 ## Limitações Conhecidas
 
 ### Rotas Legadas Preservadas
-- /perfil/mobilidade ainda existe (19 páginas)
-- /perfil/empresas ainda existe (redirecionamentos)
+- /central ainda existe (19 páginas)
+- /central/empresas ainda existe (redirecionamentos)
 - Compatibilidade mantida por enquanto
 
 ### Diferença de Status

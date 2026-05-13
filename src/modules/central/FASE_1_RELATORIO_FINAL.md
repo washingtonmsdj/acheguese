@@ -18,10 +18,10 @@ A Fase 1 foi implementada com sucesso, criando um hub centralizado em `/central`
 **Arquivos Criados:**
 - `src/modules/central/components/CentralLayout.tsx` - Layout principal reutilizando `AppLayoutSidebar`
 - `src/modules/central/pages/CentralHubPage.tsx` - Hub dinâmico com cards baseados em entidades do usuário
-- `src/modules/central/pages/CentralEmpresasPage.tsx` - Wrapper para empresas (redireciona para `/perfil/empresas`)
+- `src/modules/central/pages/CentralEmpresasPage.tsx` - Wrapper para empresas (redireciona para `/central/empresas`)
 - `src/modules/central/pages/CentralProfissionalPage.tsx` - Placeholder funcional com CTAs
-- `src/modules/central/pages/CentralMotoristaPage.tsx` - Wrapper para motorista (redireciona para `/perfil/mobilidade/motorista`)
-- `src/modules/central/pages/CentralMotoboyPage.tsx` - Wrapper para motoboy (redireciona para `/perfil/mobilidade/motoboy`)
+- `src/modules/central/pages/CentralMotoristaPage.tsx` - Wrapper para motorista (redireciona para `/central/motorista`)
+- `src/modules/central/pages/CentralMotoboyPage.tsx` - Wrapper para motoboy (redireciona para `/central/motoboy`)
 - `src/modules/central/guards/CentralAccessGuard.tsx` - Guard de autenticação para `/central/*`
 
 **Rotas Adicionadas em `src/app/routes/AppRoutes.tsx`:**
@@ -88,9 +88,9 @@ A Fase 1 foi implementada com sucesso, criando um hub centralizado em `/central`
 
 **ResumoSection (`src/modules/profile/sections/ResumoSection.tsx`):**
 - Links atualizados:
-  - "Minhas empresas": `/perfil/empresas` → `/central/empresas`
-  - "Mobilidade": `/perfil/mobilidade/motorista` → `/central/motorista`
-  - "Motoboy": `/perfil/mobilidade/motoboy` → `/central/motoboy`
+  - "Minhas empresas": `/central/empresas` → `/central/empresas`
+  - "Mobilidade": `/central/motorista` → `/central/motorista`
+  - "Motoboy": `/central/motoboy` → `/central/motoboy`
 - Adicionado bloco discreto "Acessar Central" com botão para `/central`
 
 ---
@@ -98,11 +98,11 @@ A Fase 1 foi implementada com sucesso, criando um hub centralizado em `/central`
 ### 6. Preservação de Rotas Legadas ✅
 
 **Rotas Preservadas:**
-- `/perfil/empresas` - Lista de empresas
-- `/perfil/empresas/:businessId/*` - Todas as sub-rotas de gestão de empresas
-- `/perfil/mobilidade` - Hub de mobilidade
-- `/perfil/mobilidade/motorista/*` - Todas as sub-rotas de motorista
-- `/perfil/mobilidade/motoboy/*` - Todas as sub-rotas de motoboy
+- `/central/empresas` - Lista de empresas
+- `/central/empresas/:businessId/*` - Todas as sub-rotas de gestão de empresas
+- `/central` - Hub de mobilidade
+- `/central/motorista/*` - Todas as sub-rotas de motorista
+- `/central/motoboy/*` - Todas as sub-rotas de motoboy
 
 **Sem Remoções:**
 - Nenhuma rota foi removida
@@ -199,8 +199,8 @@ A Fase 1 foi implementada com sucesso, criando um hub centralizado em `/central`
 - Usuário autenticado com empresas acessando `/central/empresas` → Vê lista de empresas
 - Usuário autenticado sem empresas acessando `/central/empresas` → Vê CTA para criar empresa
 - Usuário autenticado acessando `/central/profissional` → Vê placeholder funcional
-- Usuário autenticado acessando `/central/motorista` → Redireciona para `/perfil/mobilidade/motorista`
-- Usuário autenticado acessando `/central/motoboy` → Redireciona para `/perfil/mobilidade/motoboy`
+- Usuário autenticado acessando `/central/motorista` → Redireciona para `/central/motorista`
+- Usuário autenticado acessando `/central/motoboy` → Redireciona para `/central/motoboy`
 - `/perfil` continua focado em informações pessoais
 - Navegação contém apenas um item "Central"
 - `/buscar` e "meu bairro" funcionam corretamente
@@ -251,7 +251,7 @@ A Fase 1 foi implementada com sucesso, criando um hub centralizado em `/central`
 
 ### Risco 1: Confusão do Usuário com Duas Rotas
 
-**Descrição:** Usuários podem ficar confusos com rotas legadas (`/perfil/empresas`) e novas (`/central/empresas`).
+**Descrição:** Usuários podem ficar confusos com rotas legadas (`/central/empresas`) e novas (`/central/empresas`).
 
 **Mitigação:**
 - Todos os links principais apontam para `/central/*`
@@ -263,7 +263,7 @@ A Fase 1 foi implementada com sucesso, criando um hub centralizado em `/central`
 
 ### Risco 2: Redirecionamentos Causando Lentidão
 
-**Descrição:** Redirecionamentos de `/central/motorista` para `/perfil/mobilidade/motorista` podem causar lentidão perceptível.
+**Descrição:** Redirecionamentos de `/central/motorista` para `/central/motorista` podem causar lentidão perceptível.
 
 **Mitigação:**
 - Redirecionamentos são rápidos (client-side)

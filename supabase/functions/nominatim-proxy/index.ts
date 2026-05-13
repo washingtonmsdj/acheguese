@@ -19,7 +19,6 @@
 import { 
   getAllSecurityHeaders,
   rateLimitMiddleware,
-  errorResponse,
   sanitizeString,
 } from '../_shared/security.ts';
 import { withCache, CACHE_TTL, generateCacheKey } from '../_shared/cache.ts';
@@ -27,18 +26,51 @@ import { withCache, CACHE_TTL, generateCacheKey } from '../_shared/cache.ts';
 const NOMINATIM_BASE = 'https://nominatim.openstreetmap.org';
 
 function jsonResponse(body: unknown, status = 200): Response {
+  return jsonResponseWithRequest(body, status);
+}
+
+function jsonResponseWithRequest(body: unknown, status = 200, req?: Request): Response {
+  const requestOrigin = req?.headers.get('origin');
+  const isLocalhostOrigin =
+    requestOrigin?.startsWith('http://localhost:') ||
+    requestOrigin?.startsWith('http://127.0.0.1:');
   return new Response(JSON.stringify(body), {
     status,
-    headers: getAllSecurityHeaders('GET, OPTIONS'),
+    headers: {
+      ...getAllSecurityHeaders('GET, OPTIONS', req),
+      ...(isLocalhostOrigin && requestOrigin
+        ? {
+            'Access-Control-Allow-Origin': requestOrigin,
+            'Access-Control-Allow-Headers': 'authorization, apikey, content-type, x-client-info',
+            Vary: 'Origin',
+          }
+        : {}),
+    },
   });
 }
 
 Deno.serve(async (req: Request) => {
   // Handle CORS preflight
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { 
+    const requestOrigin = req.headers.get('origin');
+    const isLocalhostOrigin =
+      requestOrigin?.startsWith('http://localhost:') ||
+      requestOrigin?.startsWith('http://127.0.0.1:');
+    const allowLocalhost = isLocalhostOrigin;
+
+    const baseHeaders = getAllSecurityHeaders('GET, OPTIONS', req);
+    const headers = allowLocalhost && requestOrigin
+      ? {
+          ...baseHeaders,
+          'Access-Control-Allow-Origin': requestOrigin,
+          'Access-Control-Allow-Headers': 'authorization, apikey, content-type, x-client-info',
+          Vary: 'Origin',
+        }
+      : baseHeaders;
+
+    return new Response(null, {
       status: 204, 
-      headers: getAllSecurityHeaders('GET, OPTIONS'),
+      headers,
     });
   }
 
@@ -152,15 +184,30 @@ Deno.serve(async (req: Request) => {
       'geocoding'
     );
 
+    const requestOrigin = req.headers.get('origin');
+    const isLocalhostOrigin =
+      requestOrigin?.startsWith('http://localhost:') ||
+      requestOrigin?.startsWith('http://127.0.0.1:');
+    const allowLocalhost = isLocalhostOrigin;
+    const baseHeaders = getAllSecurityHeaders('GET, OPTIONS', req);
+    const headers = allowLocalhost && requestOrigin
+      ? {
+          ...baseHeaders,
+          'Access-Control-Allow-Origin': requestOrigin,
+          'Access-Control-Allow-Headers': 'authorization, apikey, content-type, x-client-info',
+          Vary: 'Origin',
+        }
+      : baseHeaders;
+
     return new Response(JSON.stringify(data), {
       status: 200,
       headers: {
-        ...getAllSecurityHeaders('GET, OPTIONS'),
+        ...headers,
         'Cache-Control': 'public, max-age=86400',
       },
     });
   } catch (err) {
-    return errorResponse('Falha ao consultar Nominatim', 502, err);
+    console.error('[nominatim-proxy] Falha ao consultar Nominatim', err);
+    return jsonResponseWithRequest({ error: 'Falha ao consultar Nominatim' }, 502, req);
   }
 });
-

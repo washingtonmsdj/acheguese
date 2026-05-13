@@ -4,6 +4,7 @@
  * Formulário completo para criar/editar itens
  */
 
+import { useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -35,7 +36,13 @@ import { Input } from '@/shared/components/ui/input';
 import { Textarea } from '@/shared/components/ui/textarea';
 import { Switch } from '@/shared/components/ui/switch';
 import { Button } from '@/shared/components/ui/button';
+import { mediaService } from '@/core/media/services/MediaService';
+import { useSessionContext } from '@/core/session';
+import { toast } from 'sonner';
+import { validateImageFile } from '@/shared/utils/imageOptimizer';
 import type { MenuItem, MenuCategory } from '@/modules/business/gastronomy/services/MenuService';
+
+const NO_CATEGORY_VALUE = '__none__';
 
 const itemSchema = z.object({
   name: z.string().min(1, 'Nome é obrigatório').max(100),
@@ -91,6 +98,14 @@ export function ItemForm({
   const pizzaVisual = item?.nutritional_info?.pizza_visual as
     | { size_label?: string; slices?: number; diameter_cm?: number }
     | undefined;
+
+  const { user } = useSessionContext();
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const [optimizeBeforeUpload, setOptimizeBeforeUpload] = useState(true);
+  const [imageFitMode, setImageFitMode] = useState<'cover' | 'contain'>('cover');
+  const [focalPointX, setFocalPointX] = useState(50);
+  const [focalPointY, setFocalPointY] = useState(50);
 
   const form = useForm<ItemFormValues>({
     resolver: zodResolver(itemSchema),
@@ -171,6 +186,36 @@ export function ItemForm({
     form.reset();
   };
 
+  const handleUploadImage = async (file?: File) => {
+    if (!file || !user?.id) {
+      toast.error('Nao foi possivel enviar a imagem.');
+      return;
+    }
+    const validation = validateImageFile(file);
+    if (!validation.valid) {
+      toast.error(validation.error || 'Arquivo de imagem invalido.');
+      return;
+    }
+
+    try {
+      setUploadingImage(true);
+      const upload = await mediaService.uploadPostImage(user.id, file, {
+        preset: optimizeBeforeUpload ? 'gastronomy_menu_item' : 'post_image',
+        fit: imageFitMode,
+        focalPointX: focalPointX / 100,
+        focalPointY: focalPointY / 100,
+      });
+      form.setValue('image_url', upload.url, { shouldDirty: true, shouldValidate: true });
+      toast.success('Imagem enviada com sucesso.');
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Erro ao enviar imagem.';
+      toast.error(message);
+    } finally {
+      setUploadingImage(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  };
+
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
@@ -235,7 +280,11 @@ export function ItemForm({
                         step="0.01"
                         placeholder="0.00"
                         {...field}
-                        onChange={(e) => field.onChange(parseFloat(e.target.value))}
+                        value={field.value ?? ''}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          field.onChange(val === '' ? 0 : Number(val));
+                        }}
                       />
                     </FormControl>
                     <FormMessage />
@@ -250,14 +299,17 @@ export function ItemForm({
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Categoria</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <Select
+                        value={field.value || NO_CATEGORY_VALUE}
+                        onValueChange={(value) => field.onChange(value === NO_CATEGORY_VALUE ? '' : value)}
+                      >
                         <FormControl>
                           <SelectTrigger>
                             <SelectValue placeholder="Selecione..." />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          <SelectItem value="">Sem categoria</SelectItem>
+                          <SelectItem value={NO_CATEGORY_VALUE}>Sem categoria</SelectItem>
                           {categories.map((cat) => (
                             <SelectItem key={cat.id} value={cat.id}>
                               {cat.name}
@@ -284,12 +336,107 @@ export function ItemForm({
                   name="image_url"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>URL da Imagem</FormLabel>
+                      <FormLabel>Imagem do item</FormLabel>
                       <FormControl>
-                        <Input placeholder="https://..." {...field} />
+                        <div className="space-y-2">
+                          <Input placeholder="https://..." {...field} />
+                          <div className="flex flex-wrap items-center gap-2">
+                            <input
+                              ref={fileInputRef}
+                              type="file"
+                              accept="image/jpeg,image/png,image/webp"
+                              className="hidden"
+                              onChange={(event) => {
+                                void handleUploadImage(event.target.files?.[0]);
+                              }}
+                            />
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant="outline"
+                              disabled={uploadingImage}
+                              onClick={() => fileInputRef.current?.click()}
+                            >
+                              {uploadingImage ? 'Enviando...' : 'Enviar arquivo'}
+                            </Button>
+                            {field.value ? (
+                              <Button
+                                type="button"
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => form.setValue('image_url', '', { shouldDirty: true })}
+                              >
+                                Remover imagem
+                              </Button>
+                            ) : null}
+                          </div>
+                          <div className="grid gap-2 rounded-md border border-dashed p-2 sm:grid-cols-2">
+                            <label className="flex items-center justify-between gap-2 text-xs text-muted-foreground">
+                              Otimizar antes do upload
+                              <Switch
+                                checked={optimizeBeforeUpload}
+                                onCheckedChange={(checked) => setOptimizeBeforeUpload(Boolean(checked))}
+                              />
+                            </label>
+                            <div className="text-xs">
+                              <Select
+                                value={imageFitMode}
+                                onValueChange={(value) =>
+                                  setImageFitMode(value === 'contain' ? 'contain' : 'cover')
+                                }
+                              >
+                                <SelectTrigger className="h-8">
+                                  <SelectValue placeholder="Ajuste da imagem" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="cover">Preencher area (cover)</SelectItem>
+                                  <SelectItem value="contain">Manter imagem inteira (contain)</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+                          </div>
+                          {optimizeBeforeUpload && imageFitMode === 'cover' ? (
+                            <div className="grid gap-2 rounded-md border border-dashed p-2">
+                              <label className="text-xs text-muted-foreground">
+                                Foco horizontal ({focalPointX}%)
+                              </label>
+                              <Input
+                                type="range"
+                                min={0}
+                                max={100}
+                                step={1}
+                                value={focalPointX}
+                                onChange={(event) => setFocalPointX(Number(event.target.value))}
+                              />
+                              <label className="text-xs text-muted-foreground">
+                                Foco vertical ({focalPointY}%)
+                              </label>
+                              <Input
+                                type="range"
+                                min={0}
+                                max={100}
+                                step={1}
+                                value={focalPointY}
+                                onChange={(event) => setFocalPointY(Number(event.target.value))}
+                              />
+                            </div>
+                          ) : null}
+                          {field.value ? (
+                            <img
+                              src={field.value}
+                              alt="Preview da imagem do item"
+                              className={`h-24 w-24 rounded-md border ${
+                                imageFitMode === 'cover' ? 'object-cover' : 'object-contain bg-muted/40 p-1'
+                              }`}
+                              style={{
+                                objectPosition: `${focalPointX}% ${focalPointY}%`,
+                              }}
+                            />
+                          ) : null}
+                        </div>
                       </FormControl>
                       <FormDescription>
-                        Link da imagem do item
+                        Cole a URL ou envie uma imagem do computador.
                       </FormDescription>
                       <FormMessage />
                     </FormItem>

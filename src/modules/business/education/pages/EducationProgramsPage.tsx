@@ -1,8 +1,8 @@
-/**
+﻿/**
  * EducationProgramsPage
  * 
  * Pagina de gestao de programas/turmas da instituicao.
- * Rota: /perfil/empresas/:businessId/education/programas
+ * Rota: /central/empresas/:businessId/education/programas
  */
 
 import { useState } from 'react';
@@ -55,7 +55,7 @@ import {
 } from '../constants/schoolStageOptions';
 
 const SHIFTS = [
-  { value: 'morning', label: 'Manhã' },
+  { value: 'morning', label: 'ManhÃ£' },
   { value: 'afternoon', label: 'Tarde' },
   { value: 'evening', label: 'Noite' },
   { value: 'full_day', label: 'Integral' },
@@ -64,7 +64,7 @@ const SHIFTS = [
 const MODALITIES = [
   { value: 'in_person', label: 'Presencial' },
   { value: 'online', label: 'Online' },
-  { value: 'hybrid', label: 'Híbrido' },
+  { value: 'hybrid', label: 'HÃ­brido' },
 ];
 
 export function EducationProgramsPage() {
@@ -74,7 +74,7 @@ export function EducationProgramsPage() {
   const { data: profile, isLoading: isProfileLoading } = useEducationProfile(businessId);
   const { programs, isLoading, create, update, remove } = useEducationPrograms(profile?.id);
   
-  // Integração nicho + billing
+  // IntegraÃ§Ã£o nicho + billing
   const nicheBilling = useEducationNicheBilling({
     nicheKey: profile?.niche_key,
     businessId: businessId || '',
@@ -134,7 +134,7 @@ export function EducationProgramsPage() {
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Validação de capability final = nicho permite AND plano permite
+    // ValidaÃ§Ã£o de capability final = nicho permite AND plano permite
     if (isProgramsBlocked) {
       toast({ 
         title: 'Recurso bloqueado', 
@@ -144,7 +144,7 @@ export function EducationProgramsPage() {
       return;
     }
     
-    // Validação de limite operacional
+    // ValidaÃ§Ã£o de limite operacional
     if (isLimitBlocked) {
       toast({ 
         title: 'Limite atingido', 
@@ -158,8 +158,8 @@ export function EducationProgramsPage() {
       const stage = resolveStagePayload();
       if (!stage.name) {
         toast({
-          title: 'Campo obrigatório',
-          description: 'Selecione ou informe a etapa/série.',
+          title: 'Campo obrigatÃ³rio',
+          description: 'Selecione ou informe a etapa/sÃ©rie.',
           variant: 'destructive',
         });
         return;
@@ -179,7 +179,7 @@ export function EducationProgramsPage() {
       setIsDialogOpen(false);
       resetForm();
     } catch (error) {
-      toast({ title: 'Erro', description: 'Não foi possível criar o programa.', variant: 'destructive' });
+      toast({ title: 'Erro', description: 'NÃ£o foi possÃ­vel criar o programa.', variant: 'destructive' });
     }
   };
 
@@ -190,8 +190,8 @@ export function EducationProgramsPage() {
       const stage = resolveStagePayload();
       if (!stage.name) {
         toast({
-          title: 'Campo obrigatório',
-          description: 'Selecione ou informe a etapa/série.',
+          title: 'Campo obrigatÃ³rio',
+          description: 'Selecione ou informe a etapa/sÃ©rie.',
           variant: 'destructive',
         });
         return;
@@ -211,12 +211,12 @@ export function EducationProgramsPage() {
           is_active: formData.isActive,
         } as Partial<EducationProgram>,
       });
-      toast({ title: 'Programa atualizado', description: 'As alterações foram salvas.' });
+      toast({ title: 'Programa atualizado', description: 'As alteraÃ§Ãµes foram salvas.' });
       setIsDialogOpen(false);
       setEditingProgram(null);
       resetForm();
     } catch (error) {
-      toast({ title: 'Erro', description: 'Não foi possível atualizar o programa.', variant: 'destructive' });
+      toast({ title: 'Erro', description: 'NÃ£o foi possÃ­vel atualizar o programa.', variant: 'destructive' });
     }
   };
 
@@ -224,9 +224,9 @@ export function EducationProgramsPage() {
     if (!confirm('Tem certeza que deseja excluir este programa?')) return;
     try {
       await remove(programId);
-      toast({ title: 'Programa excluído', description: 'O programa foi removido com sucesso.' });
+      toast({ title: 'Programa excluÃ­do', description: 'O programa foi removido com sucesso.' });
     } catch (error) {
-      toast({ title: 'Erro', description: 'Não foi possível excluir o programa.', variant: 'destructive' });
+      toast({ title: 'Erro', description: 'NÃ£o foi possÃ­vel excluir o programa.', variant: 'destructive' });
     }
   };
 
@@ -305,7 +305,7 @@ export function EducationProgramsPage() {
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => navigate(`/perfil/empresas/${businessId}/education`)}
+            onClick={() => navigate(`/central/empresas/${businessId}/education`)}
           >
             <ArrowLeft className="w-4 h-4 mr-1" />
           </Button>
@@ -315,7 +315,7 @@ export function EducationProgramsPage() {
           <div>
             <h1 className="text-2xl font-bold text-gray-900">Programas e Turmas</h1>
             <p className="text-sm text-gray-500">
-              Gerencie os programas oferecidos pela sua instituição
+              Gerencie os programas oferecidos pela sua instituiÃ§Ã£o
             </p>
           </div>
         </div>
@@ -373,7 +373,7 @@ export function EducationProgramsPage() {
               Nenhum programa cadastrado
             </h3>
             <p className="text-gray-500 mb-4">
-              Cadastre os programas e turmas que sua instituição oferece.
+              Cadastre os programas e turmas que sua instituiÃ§Ã£o oferece.
             </p>
             <Button 
               onClick={openNewDialog}
@@ -426,7 +426,7 @@ export function EducationProgramsPage() {
                 </CardHeader>
                 <CardContent>
                   <p className="text-sm text-gray-600 mb-4 line-clamp-2">
-                    {program.description || 'Sem descrição'}
+                    {program.description || 'Sem descriÃ§Ã£o'}
                   </p>
                   <div className="flex flex-wrap gap-2 text-sm text-gray-500">
                     {program.age_group && (
@@ -450,7 +450,7 @@ export function EducationProgramsPage() {
                   </div>
                   {program.available_slots !== null && (
                     <p className="text-sm text-gray-500 mt-2">
-                      {program.available_slots} vagas disponíveis
+                      {program.available_slots} vagas disponÃ­veis
                     </p>
                   )}
                 </CardContent>
@@ -475,7 +475,7 @@ export function EducationProgramsPage() {
             {isSchoolContext ? (
               <>
                 <div>
-                  <Label htmlFor="gradeOption">Etapa/Série *</Label>
+                  <Label htmlFor="gradeOption">Etapa/SÃ©rie *</Label>
                   <select
                     id="gradeOption"
                     value={formData.gradeOption}
@@ -495,7 +495,7 @@ export function EducationProgramsPage() {
 
                 {formData.gradeOption === SCHOOL_STAGE_OTHER_VALUE && (
                   <div className="space-y-2">
-                    <Label htmlFor="customGrade">Informe a etapa/série *</Label>
+                    <Label htmlFor="customGrade">Informe a etapa/sÃ©rie *</Label>
                     <Input
                       id="customGrade"
                       value={formData.customGrade}
@@ -506,7 +506,7 @@ export function EducationProgramsPage() {
                     <Button type="button" variant="outline" size="sm" asChild className="gap-2">
                       <a href="/contato">
                         <LifeBuoy className="w-4 h-4" />
-                        Contatar suporte para adicionar opção oficial
+                        Contatar suporte para adicionar opÃ§Ã£o oficial
                       </a>
                     </Button>
                   </div>
@@ -526,7 +526,7 @@ export function EducationProgramsPage() {
             )}
 
             <div>
-              <Label htmlFor="description">Descrição</Label>
+              <Label htmlFor="description">DescriÃ§Ã£o</Label>
               <Textarea
                 id="description"
                 value={formData.description}
@@ -538,7 +538,7 @@ export function EducationProgramsPage() {
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="ageGroup">Faixa Etária</Label>
+                <Label htmlFor="ageGroup">Faixa EtÃ¡ria</Label>
                 <Input
                   id="ageGroup"
                   value={formData.ageGroup}
@@ -582,7 +582,7 @@ export function EducationProgramsPage() {
                 </select>
               </div>
               <div>
-                <Label htmlFor="availableSlots">Vagas Disponíveis</Label>
+                <Label htmlFor="availableSlots">Vagas DisponÃ­veis</Label>
                 <Input
                   id="availableSlots"
                   type="number"
@@ -593,7 +593,7 @@ export function EducationProgramsPage() {
             </div>
 
             <div>
-              <Label htmlFor="priceFrom">Preço a partir de (R$)</Label>
+              <Label htmlFor="priceFrom">PreÃ§o a partir de (R$)</Label>
               <Input
                 id="priceFrom"
                 type="number"
@@ -616,7 +616,7 @@ export function EducationProgramsPage() {
 
             <div className="flex gap-4 pt-4">
               <Button type="submit" className="flex-1">
-                {editingProgram ? 'Salvar Alterações' : 'Criar Programa'}
+                {editingProgram ? 'Salvar AlteraÃ§Ãµes' : 'Criar Programa'}
               </Button>
               <Button
                 type="button"
@@ -637,3 +637,4 @@ export function EducationProgramsPage() {
 }
 
 export default EducationProgramsPage;
+

@@ -15,16 +15,12 @@ import {
 } from './multiProfileContext.shared';
 
 const MODULE_ROUTES: Record<string, ProfileType> = {
-  '/empresas/criar-empresa': 'business',
-  '/create-business': 'business',
+  '/central/empresas/nova': 'business',
   '/edit-business': 'business',
-  '/perfil/empresas': 'business',
   '/empresas': 'business',  // rotas territoriais de empresas
   '/services/cadastrar': 'professional',
   '/servicos': 'professional',  // rotas territoriais de serviÃ§os
   '/mobilidade/motorista': 'driver',
-  '/perfil/mobilidade/motorista': 'driver',
-  '/perfil/mobilidade/motoboy': 'driver',
   '/central/motorista': 'driver',
   '/central/motoboy': 'driver',
   '/central/empresas': 'business',

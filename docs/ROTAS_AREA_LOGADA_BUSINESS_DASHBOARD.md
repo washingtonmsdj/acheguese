@@ -1,88 +1,88 @@
 # Rotas da Area Logada
 
-Data: 25 de abril de 2026
+Data: 13 de maio de 2026
 
 ## Hierarquia canonica
 
-Usuario -> Perfil -> Empresas -> Empresa -> Verticais -> Recursos -> Planos
-Usuario -> Perfil -> Mobilidade -> Motorista | Motoboy
+- `/perfil`: area pessoal do usuario.
+- `/central`: area operacional/profissional do usuario.
+- `/empresas`: modulo publico de descoberta/listagem de empresas.
 
-## Rotas de perfil
+## Perfil pessoal
 
 - `/perfil`
-- `/perfil/empresas`
 - `/perfil/planos`
-- `/perfil/mobilidade`
+- `/perfil/gerenciar`
+- `/perfil/identidades`
+- `/perfil/conta`
+- `/perfil/familia`
+- `/perfil/configuracoes`
+- `/perfil/editar/:profileId`
+- `/perfil/verificacao-morador`
 
-## Regras do perfil
+Regras:
 
-- `Empresas` navega para `/perfil/empresas`.
-- `Planos e cobrancas` navega para `/perfil/planos`.
-- `Mobilidade` navega para `/perfil/mobilidade`.
-- `/perfil/cobrancas` nao e rota canonica da aplicacao.
-- `?sec=` permanece apenas para secoes internas do hub `/perfil`.
+- Perfil nao hospeda painel administrativo de empresa.
+- Perfil nao hospeda fluxo operacional de motorista, motoboy ou prestador.
+- Perfil pode exibir resumo e atalhos para areas que o usuario possui.
+- Atalhos operacionais saem para `/central`.
 
-## Rotas canonicas da empresa
+## Central operacional
 
-- `/perfil/empresas/:businessId`
-- `/perfil/empresas/:businessId/dados`
-- `/perfil/empresas/:businessId/gastronomia`
-- `/perfil/empresas/:businessId/planos`
-- `/perfil/empresas/:businessId/link-premium`
-- `/perfil/empresas/:businessId/analytics`
-- `/perfil/empresas/:businessId/configuracoes`
+- `/central`
+- `/central/empresas`
+- `/central/empresas/nova`
+- `/central/empresas/:businessId`
+- `/central/empresas/:businessId/dados`
+- `/central/empresas/:businessId/gastronomia`
+- `/central/empresas/:businessId/gastronomia/setup`
+- `/central/empresas/:businessId/gastronomia/cardapio`
+- `/central/empresas/:businessId/gastronomia/horarios`
+- `/central/empresas/:businessId/gastronomia/area-entrega`
+- `/central/empresas/:businessId/gastronomia/pedidos`
+- `/central/empresas/:businessId/gastronomia/pedidos/:orderId`
+- `/central/empresas/:businessId/gastronomia/entregas`
+- `/central/empresas/:businessId/gastronomia/analytics`
+- `/central/empresas/:businessId/gastronomia/promocoes`
+- `/central/empresas/:businessId/education`
+- `/central/empresas/:businessId/education/setup`
+- `/central/empresas/:businessId/education/programas`
+- `/central/empresas/:businessId/education/programs`
+- `/central/empresas/:businessId/education/leads`
+- `/central/empresas/:businessId/education/eventos`
+- `/central/empresas/:businessId/education/events`
+- `/central/empresas/:businessId/education/analytics`
+- `/central/empresas/:businessId/education/planos`
+- `/central/empresas/:businessId/education/plans`
+- `/central/empresas/:businessId/planos`
+- `/central/empresas/:businessId/link-premium`
+- `/central/empresas/:businessId/analytics`
+- `/central/empresas/:businessId/configuracoes`
+- `/central/motorista`
+- `/central/motorista/cadastro`
+- `/central/motorista/disponibilidade`
+- `/central/motorista/corridas`
+- `/central/motorista/ganhos`
+- `/central/motorista/configuracoes`
+- `/central/motoboy`
+- `/central/motoboy/cadastro`
+- `/central/motoboy/disponibilidade`
+- `/central/motoboy/entregas`
+- `/central/motoboy/ganhos`
+- `/central/motoboy/configuracoes`
 
-## Subrotas canonicas da gastronomia
+## Empresas publico
 
-- `/perfil/empresas/:businessId/gastronomia/setup`
-- `/perfil/empresas/:businessId/gastronomia/cardapio`
-- `/perfil/empresas/:businessId/gastronomia/horarios`
-- `/perfil/empresas/:businessId/gastronomia/area-entrega`
-- `/perfil/empresas/:businessId/gastronomia/pedidos`
-- `/perfil/empresas/:businessId/gastronomia/entregas`
-- `/perfil/empresas/:businessId/gastronomia/analytics`
-- `/perfil/empresas/:businessId/gastronomia/promocoes`
+- `/empresas`
+- `/empresas/cadastrar`
+- `/empresas/:id/catalogo`
+- `/empresas/:state/:city`
+- `/empresas/:state/:city/:district`
+- `/empresas/:state/:city/:district/:slug`
 
-## Rotas canonicas de mobilidade
+Regras:
 
-- `/perfil/mobilidade`
-- `/perfil/mobilidade/motorista`
-- `/perfil/mobilidade/motorista/cadastro`
-- `/perfil/mobilidade/motorista/disponibilidade`
-- `/perfil/mobilidade/motorista/corridas`
-- `/perfil/mobilidade/motorista/ganhos`
-- `/perfil/mobilidade/motorista/configuracoes`
-- `/perfil/mobilidade/motoboy`
-- `/perfil/mobilidade/motoboy/cadastro`
-- `/perfil/mobilidade/motoboy/disponibilidade`
-- `/perfil/mobilidade/motoboy/entregas`
-- `/perfil/mobilidade/motoboy/ganhos`
-- `/perfil/mobilidade/motoboy/configuracoes`
-
-## Rotas removidas da navegacao interna
-
-- `/dashboard/business/:businessId`
-- `/dashboard/business/:businessId/details`
-- `/dashboard/business/:businessId/gastronomy`
-- `/dashboard/business/:businessId/gastronomy/dashboard`
-- `/dashboard/business/:businessId/gastronomy/plans`
-- `/dashboard/business/:businessId/gastronomy/billing`
-- `/dashboard/business/:businessId/plans`
-- `/dashboard/business/:businessId/premium-site`
-- `/dashboard/business/:businessId/settings`
-- `/dashboard/driver`
-- `/dashboard/motoboy`
-- `/driver/dashboard`
-- `/motoboy/dashboard`
-- `/perfil/motorista`
-- `/perfil/motoboy`
-
-## Regras de produto aplicadas
-
-- Planos pertencem a empresa.
-- Gastronomia consome entitlements da empresa.
-- Link premium pertence a empresa.
-- CTA de upgrade dentro da gastronomia aponta para `/perfil/empresas/:businessId/planos`.
-- Mobilidade e um perfil operacional separado da empresa.
-- O shell da empresa vive em `/perfil/empresas/:businessId`.
-- O shell da mobilidade vive em `/perfil/mobilidade`.
+- `/empresas` e descoberta publica.
+- `/empresas/cadastrar` e landing comercial e encaminha para a Central.
+- Formulario real de criacao fica somente em `/central/empresas/nova`.
+- Nao ha redirects temporarios para rotas antigas de criacao.

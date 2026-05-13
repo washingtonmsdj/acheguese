@@ -1,7 +1,7 @@
 /**
  * Edge Function: admin-list-users
  *
- * Lista usuários com paginação (apenas para admins)
+ * Lista usuarios com paginacao (apenas para admins).
  *
  * @security Requer role admin ou super_admin
  * @rateLimit 100 req/min
@@ -9,7 +9,7 @@
 
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
-import { getAllSecurityHeaders, auditLog, getAuditInfo, errorResponse } from '../_shared/security.ts';
+import { getAllSecurityHeaders, getCorsHeaders, auditLog, getAuditInfo } from '../_shared/security.ts';
 import { requireAdmin } from '../_shared/adminAuth.ts';
 import { validateBody, listUsersSchema, validationErrorResponse, type ListUsersBody } from '../_shared/validation.ts';
 
@@ -17,33 +17,116 @@ const SUPABASE_URL = Deno.env.get('SUPABASE_URL') ?? '';
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
 
 interface AdminUser {
-  id: string;
+  user_id: string;
   email: string;
+  phone: string;
   created_at: string;
-  last_sign_in_at: string | null | undefined;
-  email_confirmed_at: string | null | undefined;
-  profiles: unknown[];
-  roles: unknown[];
+  last_sign_in_at: string | null;
+  email_confirmed: boolean;
+  primary_profile: AdminUserProfile;
+  profiles: AdminUserProfile[];
+  roles: string[];
+}
+
+interface AdminUserProfile {
+  id: string;
+  profile_type: string;
+  name: string;
+  username: string;
+  avatar_url: string | null;
+  public_neighborhood: string | null;
+  public_city: string | null;
+  verified: boolean;
+  is_active: boolean;
+  is_suspended: boolean;
+  suspended_until: string | null;
+  suspension_reason: string | null;
+  reputation: number;
+  created_at: string;
+}
+
+interface ProfileRow {
+  id: string;
+  user_id: string;
+  profile_type: string | null;
+  name: string | null;
+  display_name: string | null;
+  username: string | null;
+  avatar_url: string | null;
+  verified: boolean | null;
+  is_active: boolean | null;
+  is_suspended: boolean | null;
+  suspended_until: string | null;
+  suspension_reason: string | null;
+  reputation: number | null;
+  created_at: string | null;
+}
+
+interface PublicProfileRow {
+  id: string | null;
+  city: string | null;
+  neighborhood: string | null;
+}
+
+interface RoleRow {
+  user_id: string;
+  role_enum: string | null;
+}
+
+interface AuthUserRow {
+  id: string;
+  email?: string;
+  phone?: string;
+  created_at?: string;
+  last_sign_in_at?: string | null;
+  email_confirmed_at?: string | null;
+  confirmed_at?: string | null;
+}
+
+function mapProfile(
+  profile: ProfileRow,
+  publicProfileById: Map<string, { public_city: string | null; public_neighborhood: string | null }>,
+): AdminUserProfile {
+  const publicProfile = publicProfileById.get(profile.id);
+
+  return {
+    id: profile.id,
+    profile_type: profile.profile_type ?? 'personal',
+    name: profile.display_name || profile.name || profile.username || 'Usuario',
+    username: profile.username ?? '',
+    avatar_url: profile.avatar_url,
+    public_city: publicProfile?.public_city ?? null,
+    public_neighborhood: publicProfile?.public_neighborhood ?? null,
+    verified: profile.verified === true,
+    is_active: profile.is_active !== false,
+    is_suspended: profile.is_suspended === true,
+    suspended_until: profile.suspended_until,
+    suspension_reason: profile.suspension_reason,
+    reputation: profile.reputation ?? 0,
+    created_at: profile.created_at ?? '',
+  };
+}
+
+function choosePrimaryProfile(profiles: AdminUserProfile[]): AdminUserProfile | null {
+  return profiles.find((profile) => profile.profile_type === 'personal') ?? profiles[0] ?? null;
 }
 
 serve(async (req: Request) => {
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { status: 204, headers: getAllSecurityHeaders('POST, OPTIONS') });
+    return new Response(null, { status: 204, headers: getCorsHeaders('POST, OPTIONS', req) });
   }
 
   if (req.method !== 'POST') {
     return new Response(
       JSON.stringify({ error: 'Method not allowed' }),
-      { status: 405, headers: getAllSecurityHeaders() },
+      { status: 405, headers: getAllSecurityHeaders('POST, OPTIONS', req) },
     );
   }
 
-  // 1. Autenticação e autorização centralizadas
   const auth = await requireAdmin(req);
   if (auth instanceof Response) return auth;
   const { userId: requesterId } = auth;
 
-  // 2. Validar body
   const rawBody = await req.json();
   const validation = validateBody<ListUsersBody>(rawBody, listUsersSchema);
   if (!validation.ok) {
@@ -54,7 +137,7 @@ serve(async (req: Request) => {
   if (pageSize < 1 || pageSize > 100) {
     return new Response(
       JSON.stringify({ error: 'pageSize must be between 1 and 100' }),
-      { status: 400, headers: getAllSecurityHeaders() },
+      { status: 400, headers: getAllSecurityHeaders('POST, OPTIONS', req) },
     );
   }
 
@@ -63,71 +146,105 @@ serve(async (req: Request) => {
   });
 
   try {
-    // 3. Buscar usuários do auth
-    const { data: authData, error: authListError } = await supabaseAdmin.auth.admin.listUsers({
-      page: page + 1,
-      perPage: pageSize,
-    });
-
-    if (authListError) throw authListError;
-
-    const users = authData.users ?? [];
-    const userIds = users.map((u: { id: string }) => u.id);
-
-    // 4. Buscar perfis e roles em paralelo
-    let profilesQuery = supabaseAdmin
+    let profilesPageQuery = supabaseAdmin
       .from('profiles')
-      .select('id, user_id, username, full_name, avatar_url, created_at')
-      .in('user_id', userIds);
+      .select('id, user_id, profile_type, name, display_name, username, avatar_url, verified, is_active, is_suspended, suspended_until, suspension_reason, reputation, created_at', {
+        count: 'exact',
+      })
+      .order('created_at', { ascending: false });
 
     if (search) {
-      profilesQuery = profilesQuery.or(`username.ilike.%${search}%,full_name.ilike.%${search}%`);
+      const term = search.replaceAll('%', '').replaceAll(',', ' ').trim();
+      profilesPageQuery = profilesPageQuery.or(`username.ilike.%${term}%,name.ilike.%${term}%,display_name.ilike.%${term}%`);
     }
 
-    const [profilesResult, rolesResult] = await Promise.all([
-      profilesQuery,
+    const profilesPageResult = await profilesPageQuery.range(page * pageSize, page * pageSize + pageSize - 1);
+
+    if (profilesPageResult.error) throw profilesPageResult.error;
+
+    const profilePageRows = (profilesPageResult.data ?? []) as ProfileRow[];
+    const userIds = [...new Set(profilePageRows.map((profile) => profile.user_id))];
+
+    if (userIds.length === 0) {
+      return new Response(
+        JSON.stringify({ users: [], total: 0, page, pageSize }),
+        { status: 200, headers: getAllSecurityHeaders('POST, OPTIONS', req) },
+      );
+    }
+
+    const [profilesResult, publicProfilesResult, rolesResult, authUsersResults] = await Promise.all([
+      supabaseAdmin
+        .from('profiles')
+        .select('id, user_id, profile_type, name, display_name, username, avatar_url, verified, is_active, is_suspended, suspended_until, suspension_reason, reputation, created_at')
+        .in('user_id', userIds),
+      supabaseAdmin.from('public_profiles').select('id, city, neighborhood').in('user_id', userIds),
       supabaseAdmin
         .from('user_roles')
         .select('user_id, role_enum, granted_at')
         .in('user_id', userIds)
         .is('revoked_at', null),
+      Promise.all(userIds.map((userId) => supabaseAdmin.auth.admin.getUserById(userId))),
     ]);
 
     if (profilesResult.error) throw profilesResult.error;
+    if (publicProfilesResult.error) throw publicProfilesResult.error;
     if (rolesResult.error) throw rolesResult.error;
 
-    // 5. Combinar dados
-    let adminUsers: AdminUser[] = users.map((authUser: {
-      id: string;
-      email?: string;
-      created_at: string;
-      last_sign_in_at?: string | null;
-      email_confirmed_at?: string | null;
-    }) => ({
-      id: authUser.id,
-      email: authUser.email ?? '',
-      created_at: authUser.created_at,
-      last_sign_in_at: authUser.last_sign_in_at,
-      email_confirmed_at: authUser.email_confirmed_at,
-      profiles: (profilesResult.data ?? []).filter((p: { user_id: string }) => p.user_id === authUser.id),
-      roles: (rolesResult.data ?? []).filter((r: { user_id: string }) => r.user_id === authUser.id),
-    }));
+    const publicProfileById = new Map(
+      ((publicProfilesResult.data ?? []) as PublicProfileRow[]).filter((profile) => profile.id).map((profile) => [
+        profile.id as string,
+        {
+          public_city: profile.city,
+          public_neighborhood: profile.neighborhood,
+        },
+      ]),
+    );
 
-    // 6. Filtro de busca por email
+    const authUserById = new Map<string, AuthUserRow>();
+    authUsersResults.forEach((result, index) => {
+      if (!result.error && result.data?.user) {
+        authUserById.set(userIds[index], result.data.user as AuthUserRow);
+      }
+    });
+
+    let adminUsers: AdminUser[] = userIds.map((userId) => {
+      const profiles = ((profilesResult.data ?? []) as ProfileRow[])
+        .filter((profile) => profile.user_id === userId)
+        .map((profile) => mapProfile(profile, publicProfileById));
+
+      const primaryProfile = choosePrimaryProfile(profiles);
+      if (!primaryProfile) return null;
+
+      const authUser = authUserById.get(userId);
+
+      return {
+        user_id: userId,
+        email: authUser?.email ?? '',
+        phone: authUser?.phone ?? '',
+        created_at: authUser?.created_at ?? primaryProfile.created_at,
+        last_sign_in_at: authUser?.last_sign_in_at ?? null,
+        email_confirmed: Boolean(authUser?.email_confirmed_at ?? authUser?.confirmed_at),
+        primary_profile: primaryProfile,
+        profiles,
+        roles: ((rolesResult.data ?? []) as RoleRow[])
+          .filter((role) => role.user_id === userId && role.role_enum)
+          .map((role) => role.role_enum as string),
+      };
+    }).filter((user): user is AdminUser => user !== null);
+
     if (search) {
       const searchLower = search.toLowerCase();
       adminUsers = adminUsers.filter(
-        (u) =>
-          u.email.toLowerCase().includes(searchLower) ||
-          (u.profiles as Array<{ username?: string; full_name?: string }>).some(
-            (p) =>
-              p.username?.toLowerCase().includes(searchLower) ||
-              p.full_name?.toLowerCase().includes(searchLower),
+        (user) =>
+          user.email.toLowerCase().includes(searchLower) ||
+          user.profiles.some(
+            (profile) =>
+              profile.username.toLowerCase().includes(searchLower) ||
+              profile.name.toLowerCase().includes(searchLower),
           ),
       );
     }
 
-    // 7. Audit log
     auditLog({
       timestamp: new Date().toISOString(),
       userId: requesterId,
@@ -141,11 +258,11 @@ serve(async (req: Request) => {
     return new Response(
       JSON.stringify({
         users: adminUsers,
-        total: authData.total ?? 0,
+        total: search ? adminUsers.length : (profilesPageResult.count ?? adminUsers.length),
         page,
         pageSize,
       }),
-      { status: 200, headers: getAllSecurityHeaders() },
+      { status: 200, headers: getAllSecurityHeaders('POST, OPTIONS', req) },
     );
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : 'Unknown error';
@@ -158,6 +275,10 @@ serve(async (req: Request) => {
       details: { error: message },
       ...getAuditInfo(req),
     });
-    return errorResponse('Internal server error', 500, error);
+    console.error('[admin-list-users]', message, error);
+    return new Response(
+      JSON.stringify({ error: 'Internal server error' }),
+      { status: 500, headers: getAllSecurityHeaders('POST, OPTIONS', req) },
+    );
   }
 });

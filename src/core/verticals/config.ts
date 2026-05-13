@@ -1,4 +1,4 @@
-/**
+﻿/**
  * VERTICAL CONFIG - SSOT de taxonomia vertical.
  *
  * Regras oficiais:
@@ -35,16 +35,16 @@ export const VERTICAL_CONFIGS: Record<VerticalKey, VerticalConfig> = {
     label: "Gastronomia",
     description: "Cardapio, delivery, reservas e gestao gastronomica",
     eligibleCategories: ["restaurante", "lazer"], // lazer inclui bares, cafeterias, sorveterias, etc.
-    setupRoute: (businessId) => `/perfil/empresas/${businessId}/gastronomia/setup`,
-    dashboardRoute: (businessId) => `/perfil/empresas/${businessId}/gastronomia`,
+    setupRoute: (businessId) => `/central/empresas/${businessId}/gastronomia/setup`,
+    dashboardRoute: (businessId) => `/central/empresas/${businessId}/gastronomia`,
   },
   education: {
     key: "education",
     label: "Education",
     description: "Gestao de instituicoes de ensino, programas, leads e eventos",
     eligibleCategories: ["educacao"],
-    setupRoute: (businessId) => `/perfil/empresas/${businessId}/education/setup`,
-    dashboardRoute: (businessId) => `/perfil/empresas/${businessId}/education`,
+    setupRoute: (businessId) => `/central/empresas/${businessId}/education/setup`,
+    dashboardRoute: (businessId) => `/central/empresas/${businessId}/education`,
   },
 };
 
@@ -73,3 +73,4 @@ export function isEligibleForVertical(
       return false;
   }
 }
+

@@ -61,7 +61,7 @@ interface Post {
   titulo: string;
   description: string;
   photo_url: string;
-  neighborhood: string;
+  publicNeighborhood: string;
   localizacao_aprox: string;
   latitude: number | null;
   longitude: number | null;
@@ -119,7 +119,7 @@ export default function AchadoPerdidoDetailPage() {
       titulo: data.titulo,
       description: data.descricao || "",
       photo_url: data.imagens?.[0] || "",
-      neighborhood: "",
+      publicNeighborhood: "",
       localizacao_aprox: data.local_perdido || "",
       latitude: null,
       longitude: null,
@@ -296,11 +296,11 @@ export default function AchadoPerdidoDetailPage() {
           )}
 
           <div className="flex flex-col gap-2 text-sm">
-            {post.neighborhood && (
+            {post.publicNeighborhood && (
               <div className="flex items-center gap-2">
                 <MapPin className="h-4 w-4 text-muted-foreground" />
                 <span>
-                  {post.neighborhood}
+                  {post.publicNeighborhood}
                   {post.localizacao_aprox ? ` - ${post.localizacao_aprox}` : ""}
                 </span>
               </div>
@@ -452,7 +452,7 @@ export default function AchadoPerdidoDetailPage() {
             />
           ) : (
             <LostFoundLocationCard
-              neighborhood={post.neighborhood}
+              neighborhood={post.publicNeighborhood}
               localizacaoAprox={post.localizacao_aprox}
             />
           )}
@@ -484,10 +484,10 @@ export default function AchadoPerdidoDetailPage() {
                   {CAT_ICONS[post.category]} {post.category}
                 </span>
               </div>
-              {post.neighborhood && (
+              {post.publicNeighborhood && (
                 <div className="flex items-center justify-between">
                   <span className="text-muted-foreground">Bairro:</span>
-                  <span className="font-medium">{post.neighborhood}</span>
+                  <span className="font-medium">{post.publicNeighborhood}</span>
                 </div>
               )}
               {post.date_ocorrido && (

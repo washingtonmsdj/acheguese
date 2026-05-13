@@ -6,8 +6,8 @@ type LocationLike = {
 } | null;
 
 type ProfileLike = {
-  city?: string | null;
-  neighborhood?: string | null;
+  public_city?: string | null;
+  public_neighborhood?: string | null;
   locationId?: string | null;
   location_id?: string | null;
 } | null;
@@ -36,13 +36,13 @@ export function buildCommunityTerritoryPresentation(params: {
     locationForUi?.type === "city"
       ? locationForUi.name || ""
       : locationForUi?.type === "district"
-      ? formatSlug(pathParts[2]) || params.profile?.city || ""
-      : formatSlug(pathParts[2]) || params.profile?.city || "";
+      ? formatSlug(pathParts[2]) || params.profile?.public_city || ""
+      : formatSlug(pathParts[2]) || params.profile?.public_city || "";
 
   const neighborhood =
     locationForUi?.type === "district"
       ? locationForUi.name
-      : params.profile?.neighborhood || undefined;
+      : params.profile?.public_neighborhood || undefined;
 
   const locationId =
     locationForUi?.type === "district"

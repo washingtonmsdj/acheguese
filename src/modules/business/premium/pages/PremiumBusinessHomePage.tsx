@@ -2,11 +2,13 @@ import { Helmet } from "react-helmet-async";
 import { Link } from "react-router-dom";
 import {
   Clock3,
+  Globe,
   MapPin,
   Phone,
   Star,
   Store,
   UtensilsCrossed,
+  Wallet,
 } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import { Badge } from "@/shared/components/ui/badge";
@@ -17,6 +19,7 @@ import { usePremiumBusinessSiteContext } from "@/modules/business/premium/contex
 export default function PremiumBusinessHomePage() {
   const { businessSnapshot, hasGastronomy, routes } = usePremiumBusinessSiteContext();
   const business = businessSnapshot.institutional.business;
+  const commerce = hasGastronomy ? businessSnapshot.gastronomyPreview : [];
   const previewItems = businessSnapshot.gastronomyPreview.slice(0, 3);
   const absoluteCanonical =
     typeof window !== "undefined" ? `${window.location.origin}${routes.home}` : undefined;
@@ -101,6 +104,25 @@ export default function PremiumBusinessHomePage() {
         </div>
 
         <div className="grid gap-4 md:grid-cols-2">
+          {hasGastronomy && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base">Atendimento e pedido</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3 text-sm text-muted-foreground">
+                <div className="flex items-center justify-between">
+                  <span>Cardapio com itens</span>
+                  <Badge variant="outline">{commerce.length}</Badge>
+                </div>
+                <div className="flex gap-2">
+                  <Button asChild className="w-full">
+                    <Link to={routes.menu}>Pedir agora</Link>
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
           <Card>
             <CardHeader>
               <CardTitle className="text-base">Servicos disponiveis</CardTitle>
@@ -136,6 +158,58 @@ export default function PremiumBusinessHomePage() {
               ) : (
                 <p>Sem modulos ativos.</p>
               )}
+            </CardContent>
+          </Card>
+        </div>
+
+        <div className="grid gap-4 md:grid-cols-3">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-base">
+                <Phone className="h-4 w-4 text-primary" />
+                Contato rapido
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2 text-sm">
+              <p className="text-muted-foreground">{businessSnapshot.institutional.phone ?? "Nao informado"}</p>
+              {businessSnapshot.institutional.whatsapp ? (
+                <Button asChild size="sm" className="w-full">
+                  <a
+                    href={`https://wa.me/${businessSnapshot.institutional.whatsapp.replace(/\D/g, "")}`}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    Abrir WhatsApp
+                  </a>
+                </Button>
+              ) : null}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-base">
+                <Globe className="h-4 w-4 text-primary" />
+                Presenca online
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2 text-sm text-muted-foreground">
+              <p>{businessSnapshot.institutional.website ?? "Site nao informado"}</p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-base">
+                <Wallet className="h-4 w-4 text-primary" />
+                Credibilidade local
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-1 text-sm text-muted-foreground">
+              <p>
+                Nota {businessSnapshot.institutional.rating.toFixed(1)} com{" "}
+                {businessSnapshot.institutional.reviewCount} avaliacoes.
+              </p>
             </CardContent>
           </Card>
         </div>
@@ -184,10 +258,10 @@ export default function PremiumBusinessHomePage() {
                         <img
                           src={item.imageUrl}
                           alt={item.name}
-                          className="h-28 w-full object-cover"
+                          className="aspect-[4/3] w-full object-cover"
                         />
                       ) : (
-                        <div className="flex h-28 w-full items-center justify-center bg-muted">
+                        <div className="flex aspect-[4/3] w-full items-center justify-center bg-muted">
                           <Store className="h-5 w-5 text-muted-foreground/50" />
                         </div>
                       )}

@@ -13,7 +13,6 @@ import type {
   PlaceSuggestion,
   Coordinates,
 } from '@/core/maps/types';
-import { supabase } from '@/integrations/supabase';
 /**
  * Resposta do Nominatim
  */
@@ -33,12 +32,15 @@ interface NominatimResult {
  */
 export class NominatimGeocodingProvider implements GeocodingProvider {
   private readonly baseUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/nominatim-proxy`;
-  private async getAuthHeaders(): Promise<HeadersInit> {
-    const { data } = await supabase.auth.getSession();
-    const accessToken = data.session?.access_token ?? null;
-    return accessToken
-      ? { Authorization: `Bearer ${accessToken}` }
-      : {};
+  private readonly apiKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || null;
+  private getAuthHeaders(): HeadersInit {
+    if (!this.apiKey) {
+      return {};
+    }
+    return {
+      apikey: this.apiKey,
+      Authorization: `Bearer ${this.apiKey}`,
+    };
   }
 
   async geocode(address: string, options?: GeocodingOptions): Promise<GeocodeResult[]> {
@@ -61,7 +63,7 @@ export class NominatimGeocodingProvider implements GeocodingProvider {
       }
 
       const response = await fetch(`${this.baseUrl}?${params.toString()}`, {
-        headers: await this.getAuthHeaders(),
+        headers: this.getAuthHeaders(),
       });
 
       if (!response.ok) {
@@ -89,7 +91,7 @@ export class NominatimGeocodingProvider implements GeocodingProvider {
       });
 
       const response = await fetch(`${this.baseUrl}?${params.toString()}`, {
-        headers: await this.getAuthHeaders(),
+        headers: this.getAuthHeaders(),
       });
 
       if (!response.ok) {

@@ -107,6 +107,25 @@ export function OrderCard({ order, onViewDetails }: OrderCardProps) {
           )}
         </div>
 
+        {(order.delivery_courier_cost !== null || order.delivery_margin !== null) && (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs rounded-lg border bg-muted/30 p-3">
+            {order.delivery_courier_cost !== null && (
+              <div>
+                <p className="text-muted-foreground">Custo logistica (motoboy)</p>
+                <p className="font-medium">R$ {order.delivery_courier_cost.toFixed(2)}</p>
+              </div>
+            )}
+            {order.delivery_margin !== null && (
+              <div>
+                <p className="text-muted-foreground">Margem da taxa de entrega</p>
+                <p className={`font-medium ${order.delivery_margin >= 0 ? 'text-emerald-600' : 'text-destructive'}`}>
+                  R$ {order.delivery_margin.toFixed(2)}
+                </p>
+              </div>
+            )}
+          </div>
+        )}
+
         {order.notes && (
           <div className="text-sm p-2 bg-muted rounded">
             <p className="font-medium mb-1">Observacoes:</p>

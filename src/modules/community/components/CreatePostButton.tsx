@@ -23,7 +23,7 @@ export function CreatePostButton({ onOpenModal }: CreatePostButtonProps) {
     return null;
   }
 
-  // Não mostrar botão para businesss
+  // Não mostrar botão para empresas
   if (!canPost) {
     return null;
   }

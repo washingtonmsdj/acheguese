@@ -12,6 +12,7 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { logger } from '@/shared/utils/logger';
+import { mediaService } from '@/core/media/services/MediaService';
 import {
   SITE_SETTINGS_STORAGE,
   SITE_SETTING_KEYS,
@@ -119,28 +120,13 @@ class SiteSettingsServiceClass {
     file: File
   ): Promise<{ url: string; path: string }> {
     try {
-      // Upload do arquivo
-      const { data: uploadData, error: uploadError } = await supabase.storage
-        .from(bucket)
-        .upload(path, file, {
-          cacheControl: '3600',
-          upsert: true,
-        });
-
-      if (uploadError) {
-        logger.error('Erro ao fazer upload do arquivo', uploadError);
-        throw uploadError;
-      }
-
-      // Obter URL pública
-      const { data: urlData } = supabase.storage
-        .from(bucket)
-        .getPublicUrl(uploadData.path);
-
-      return {
-        url: urlData.publicUrl,
-        path: uploadData.path,
-      };
+      const upload = await mediaService.uploadToBucket(file, {
+        bucket: bucket === "banners" ? "banners" : "business-images",
+        pathPrefix: path.split("/").slice(0, -1).join("/"),
+        preset: "site_asset",
+        upsert: true,
+      });
+      return upload;
     } catch (error) {
       logger.error('Erro ao fazer upload de arquivo', error as Error);
       throw error;

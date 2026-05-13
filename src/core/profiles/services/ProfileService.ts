@@ -22,6 +22,7 @@ import { logger } from "@/shared/utils/logger";
 import { trackError } from "@/shared/utils/errorTracking";
 import { SessionService } from "@/core/session/services/SessionService";
 import { FavoritesService } from "@/core/favorites/services/FavoritesService";
+import { mediaService } from "@/core/media/services/MediaService";
 import { ProfessionalService } from "@/core/professional/services/ProfessionalService";
 import { BusinessUrlService } from "@/core/business/services/BusinessUrlService";
 import { publicIdentityService, PublicIdentityService } from "@/core/public-identity";
@@ -101,11 +102,13 @@ type ProfileSummaryRow = {
 };
 type ProfileSummaryExtendedRow = {
   id: string;
-  name: string;
+  display_name: string | null;
   avatar_url: string | null;
   verified?: boolean | null;
-  neighborhood?: string | null;
-  whatsapp?: string | null;
+  username?: string | null;
+  public_neighborhood?: string | null;
+  public_city?: string | null;
+  public_state?: string | null;
 };
 type AdminProfileListRow = {
   id: string;
@@ -602,7 +605,7 @@ export class ProfileServiceLegacy {
    * @param username - Username do perfil
    */
   async getByUsername(username: string): Promise<Profile | null> {
-    const { data, error } = await createTypedQuery('profiles')
+    const { data, error } = await createTypedQuery('public_profiles')
       .select()
       .eq("username", username)
       .single();
@@ -612,6 +615,27 @@ export class ProfileServiceLegacy {
         component: "ProfileService",
         action: "getByUsername",
         metadata: { username, error },
+      });
+      return null;
+    }
+
+    return data;
+  }
+
+  /**
+   * Busca perfil público por ID (view canônica public_profiles)
+   */
+  async getPublicProfileById(profileId: string): Promise<Profile | null> {
+    const { data, error } = await createTypedQuery('public_profiles')
+      .select()
+      .eq("id", profileId)
+      .single();
+
+    if (error) {
+      trackError(new Error("Error fetching public profile by id"), {
+        component: "ProfileService",
+        action: "getPublicProfileById",
+        metadata: { profileId, error },
       });
       return null;
     }
@@ -653,9 +677,6 @@ export class ProfileServiceLegacy {
     if (!profile.username) {
       throw new Error("username is required");
     }
-    if (!profile.city) {
-      throw new Error("city is required");
-    }
 
     // ✅ INTEGRAÇÃO: Validar username via PublicIdentityService
     const validation = PublicIdentityService.validateFormat(
@@ -685,7 +706,6 @@ export class ProfileServiceLegacy {
         name: profile.name,
         display_name: profile.display_name || profile.name,
         username: profile.username,
-        city: profile.city,
         avatar_url: profile.avatar_url,
         bio: profile.bio,
         is_active: true,
@@ -1335,10 +1355,18 @@ export class ProfileServiceLegacy {
         },
       ];
 
-      const territoryLabel =
-        [activeProfile.neighborhood, activeProfile.city, activeProfile.state]
-          .filter(Boolean)
-          .join(", ") || null;
+      let territoryLabel: string | null = null;
+      if (activeProfile.location_id) {
+        const { data: locationRow } = await supabase
+          .from("locations")
+          .select("full_name")
+          .eq("id", activeProfile.location_id)
+          .maybeSingle();
+        territoryLabel =
+          typeof locationRow?.full_name === "string" && locationRow.full_name.trim().length > 0
+            ? locationRow.full_name
+            : null;
+      }
 
       const verificationSummary = this._resolveVerificationStatus(verification);
       const stats: ProfileStats = {
@@ -1418,9 +1446,6 @@ export class ProfileServiceLegacy {
           verified: profileContext?.verified || Boolean(activeProfile.verified),
           territoryLabel,
           locationId: activeProfile.location_id,
-          city: activeProfile.city,
-          neighborhood: activeProfile.neighborhood,
-          state: activeProfile.state,
           status: profileStatus,
           plan: profilePlan,
           reputation: profileReputation,
@@ -1628,28 +1653,17 @@ export class ProfileServiceLegacy {
    * Upload de avatar
    */
   async uploadAvatar(userId: string, file: File): Promise<string | null> {
-    const fileExt = file.name.split(".").pop();
-    const fileName = `${userId}-${Date.now()}.${fileExt}`;
-    const filePath = `avatars/${fileName}`;
-
-    const { error: uploadError } = await supabase.storage
-      .from("profile-images")
-      .upload(filePath, file, { upsert: true });
-
-    if (uploadError) {
+    try {
+      const upload = await mediaService.uploadAvatar(userId, file);
+      return upload.url;
+    } catch (error) {
       trackError(new Error("Error uploading avatar"), {
         component: "ProfileService",
         action: "uploadAvatar",
-        metadata: { userId, fileName, error: uploadError },
+        metadata: { userId, error },
       });
-      throw uploadError;
+      throw error;
     }
-
-    const { data } = supabase.storage
-      .from("profile-images")
-      .getPublicUrl(filePath);
-
-    return data.publicUrl;
   }
 
   /**
@@ -1767,8 +1781,10 @@ export class ProfileServiceLegacy {
     const uniqueIds = [...new Set(ids)];
 
     const { data, error } = await supabase
-      .from("profiles")
-      .select("id, name, avatar_url, verified, neighborhood, whatsapp")
+      .from("public_profiles")
+      .select(
+        "id, display_name, avatar_url, verified, username, public_neighborhood:neighborhood, public_city:city, public_state:state",
+      )
       .in("id", uniqueIds);
 
     if (error) {
@@ -1783,11 +1799,11 @@ export class ProfileServiceLegacy {
     // Mapear para shape de domínio (camelCase)
     return ((data as ProfileSummaryExtendedRow[] | null) || []).map((profile) => ({
       id: profile.id,
-      name: profile.name,
+      name: profile.display_name,
       avatarUrl: profile.avatar_url,
       verified: profile.verified || false,
-      neighborhood: profile.neighborhood,
-      whatsapp: profile.whatsapp,
+      neighborhood: profile.public_neighborhood,
+      whatsapp: null,
     }));
   }
 
@@ -3020,6 +3036,7 @@ export const ProfileFacade = {
     getProfilesByUserId: profileQueries.getProfilesByUserId,
     getProfileByType: profileQueries.getProfileByType,
     getByUsername: profileQueries.getByUsername,
+    getPublicProfileById: profileQueries.getPublicProfileById,
     getProfilesByIds: profileQueries.getProfilesByIds,
     getProfilesSummary: profileQueries.getProfilesSummary,
     getProfilesSummaryExtended: profileQueries.getProfilesSummaryExtended,

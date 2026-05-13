@@ -77,6 +77,11 @@ const DOMAIN_RULES = {
   },
 };
 
+const STORAGE_CANONICAL_ALLOWLIST = [
+  'src/core/media/services/MediaService.ts',
+  'src/integrations/supabase',
+];
+
 /**
  * Factory: cria uma regra ESLint para um domínio SSOT
  */
@@ -222,3 +227,44 @@ const NAMING_PATTERN_RULE = {
 
 // Adicionar regra ao exports
 module.exports.rules['no-ambiguous-naming'] = NAMING_PATTERN_RULE;
+
+/**
+ * ========================================================================
+ * REGRA: Storage SSOT
+ * ========================================================================
+ * Proibe acesso direto a supabase.storage fora da camada canonica.
+ */
+module.exports.rules['no-direct-storage-access'] = {
+  meta: {
+    type: 'problem',
+    docs: {
+      description: 'Proibe acesso direto a supabase.storage fora do MediaService',
+      category: 'SSOT Violations',
+      recommended: true,
+    },
+    schema: [],
+  },
+  create(context) {
+    const filename = context.getFilename().replace(/\\/g, '/');
+    const isAllowed = STORAGE_CANONICAL_ALLOWLIST.some((allowed) => filename.includes(allowed));
+    if (isAllowed) return {};
+
+    return {
+      MemberExpression(node) {
+        if (
+          node.object &&
+          node.object.type === 'Identifier' &&
+          node.object.name === 'supabase' &&
+          node.property &&
+          node.property.type === 'Identifier' &&
+          node.property.name === 'storage'
+        ) {
+          context.report({
+            node,
+            message: '❌ SSOT Violation: acesso direto a supabase.storage nao permitido. Use MediaService.',
+          });
+        }
+      },
+    };
+  },
+};

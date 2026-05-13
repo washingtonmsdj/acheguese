@@ -38,7 +38,7 @@ export function ItemCard({
       <CardContent className="p-4">
         <div className="flex gap-4">
           {/* Imagem */}
-          <div className="w-20 h-20 rounded-lg bg-muted flex items-center justify-center flex-shrink-0 overflow-hidden">
+          <div className="w-24 rounded-lg bg-muted flex items-center justify-center flex-shrink-0 overflow-hidden aspect-[4/3]">
             {item.image_url ? (
               <img
                 src={item.image_url}

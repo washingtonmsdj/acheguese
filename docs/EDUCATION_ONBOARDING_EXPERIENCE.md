@@ -6,7 +6,7 @@
 
 ## 🎯 PÁGINA DE CADASTRO/SETUP
 
-**Rota**: `/perfil/empresas/:businessId/education/setup`
+**Rota**: `/central/empresas/:businessId/education/setup`
 
 ---
 
@@ -193,7 +193,7 @@ Selecione o tipo de instituição e o nicho.
 As alterações foram salvas com sucesso.
 ```
 
-**Redirecionamento**: `/perfil/empresas/:businessId/education` (Dashboard)
+**Redirecionamento**: `/central/empresas/:businessId/education` (Dashboard)
 
 ---
 

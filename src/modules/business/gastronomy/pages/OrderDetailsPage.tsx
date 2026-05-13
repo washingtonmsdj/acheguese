@@ -17,12 +17,14 @@ import {
   User,
 } from 'lucide-react';
 import { useOrderDetails } from '../hooks';
+import type { OrderWithItems } from '../services/OrderService';
 import { OrderStatusBadge } from '../components/orders/OrderStatusBadge';
 import { OrderTrackingCard } from '../components/orders/OrderTrackingCard';
 import { OrderOperationsPanel } from '../components/orders/OrderOperationsPanel';
 import { OrderTrustFeedbackPanel } from '../components/orders/OrderTrustFeedbackPanel';
 import { OrderPublicReviewPanel } from '../components/orders/OrderPublicReviewPanel';
 import { Button } from '@/shared/components/ui/button';
+import { Badge } from '@/shared/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/components/ui/card';
 import { Separator } from '@/shared/components/ui/separator';
 import { Skeleton } from '@/shared/components/ui/skeleton';
@@ -34,8 +36,74 @@ const ORDER_TYPE_LABELS = {
   dine_in: 'Consumo local',
 };
 
+const PAYMENT_METHOD_LABELS: Record<string, string> = {
+  pix: 'PIX na entrega/retirada',
+  card_on_delivery: 'Cartao na entrega/retirada',
+  debit_card: 'Cartao de debito',
+  credit_card: 'Cartao de credito',
+  cash: 'Dinheiro na entrega/retirada',
+  online: 'Pagamento online',
+  payment_link: 'Link de pagamento',
+};
+
+const PAYMENT_STATUS_LABELS: Record<string, string> = {
+  pending_payment: 'Pendente',
+  paid: 'Pago',
+  not_applicable: 'Nao aplicavel',
+  refunded: 'Reembolsado',
+  partially_refunded: 'Parcialmente reembolsado',
+};
+
+const ORDER_STATUS_LABELS: Record<string, string> = {
+  pending: 'Pendente',
+  confirmed: 'Confirmado',
+  preparing: 'Em preparo',
+  ready: 'Pronto',
+  out_for_delivery: 'Saiu para entrega',
+  delivered: 'Entregue',
+  completed: 'Concluido',
+  cancelled: 'Cancelado',
+};
+
 function formatDateTime(value: string) {
   return format(parseISO(value), "dd/MM/yyyy 'as' HH:mm", { locale: ptBR });
+}
+
+function resolvePaymentOperationalHint(paymentMethod: string | null): string {
+  if (paymentMethod === 'payment_link') {
+    return 'Envie o link ao cliente e confirme manualmente o recebimento antes de liberar entrega.';
+  }
+  if (paymentMethod === 'pix') {
+    return 'Confirme o recebimento do PIX antes de liberar o pedido para expedicao.';
+  }
+  if (paymentMethod === 'cash') {
+    return 'Validar troco quando informado nas observacoes do pedido.';
+  }
+  if (paymentMethod === 'card_on_delivery') {
+    return 'Garantir disponibilidade de maquineta no momento da entrega/retirada.';
+  }
+  return 'Pagamento realizado diretamente com o estabelecimento.';
+}
+
+function resolveTimelineTitle(event: OrderWithItems['status_history'][number]): string {
+  if (event.to_financial_status || event.from_financial_status) {
+    const fromFinancial = event.from_financial_status
+      ? PAYMENT_STATUS_LABELS[event.from_financial_status] ?? event.from_financial_status
+      : 'Nao definido';
+    const toFinancial = event.to_financial_status
+      ? PAYMENT_STATUS_LABELS[event.to_financial_status] ?? event.to_financial_status
+      : 'Nao definido';
+    return `Pagamento: ${fromFinancial} -> ${toFinancial}`;
+  }
+
+  const fromStatus = event.from_status
+    ? ORDER_STATUS_LABELS[event.from_status] ?? event.from_status
+    : null;
+  const toStatus = event.to_status
+    ? ORDER_STATUS_LABELS[event.to_status] ?? event.to_status
+    : 'Atualizacao operacional';
+
+  return fromStatus ? `${fromStatus} -> ${toStatus}` : toStatus;
 }
 
 export default function OrderDetailsPage() {
@@ -206,7 +274,25 @@ export default function OrderDetailsPage() {
           <CardContent className="space-y-3">
             <div>
               <p className="text-sm text-muted-foreground">Metodo</p>
-              <p className="font-medium">{order.payment_method || 'Nao informado'}</p>
+              <p className="font-medium">
+                {order.payment_method
+                  ? PAYMENT_METHOD_LABELS[order.payment_method] ?? order.payment_method
+                  : 'Nao informado'}
+              </p>
+              {order.payment_method === 'payment_link' && (
+                <Badge variant="outline" className="mt-2">
+                  Link opcional habilitado pela loja
+                </Badge>
+              )}
+              <p className="mt-2 text-sm text-muted-foreground">
+                {resolvePaymentOperationalHint(order.payment_method)}
+              </p>
+            </div>
+            <div>
+              <p className="text-sm text-muted-foreground">Status financeiro</p>
+              <p className="font-medium">
+                {PAYMENT_STATUS_LABELS[order.payment_status] ?? order.payment_status}
+              </p>
             </div>
             <Separator />
             <div className="space-y-2">
@@ -232,6 +318,30 @@ export default function OrderDetailsPage() {
                 <span>R$ {order.total.toFixed(2)}</span>
               </div>
             </div>
+            {(order.delivery_courier_cost !== null || order.delivery_margin !== null) && (
+              <>
+                <Separator />
+                <div className="space-y-2 rounded-lg border bg-muted/30 p-3">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                    Indicadores logísticos
+                  </p>
+                  {order.delivery_courier_cost !== null && (
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Custo logistica (motoboy)</span>
+                      <span className="font-medium">R$ {order.delivery_courier_cost.toFixed(2)}</span>
+                    </div>
+                  )}
+                  {order.delivery_margin !== null && (
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Margem da taxa de entrega</span>
+                      <span className={`font-medium ${order.delivery_margin >= 0 ? 'text-emerald-600' : 'text-destructive'}`}>
+                        R$ {order.delivery_margin.toFixed(2)}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              </>
+            )}
           </CardContent>
         </Card>
 
@@ -282,11 +392,13 @@ export default function OrderDetailsPage() {
               <div key={event.id} className="flex gap-3 rounded-lg border p-3">
                 <div className="mt-1 h-2.5 w-2.5 rounded-full bg-primary" />
                 <div className="min-w-0">
-                  <p className="font-medium">
-                    {event.from_status ? `${event.from_status} -> ` : ''}
-                    {event.to_status}
-                  </p>
+                  <p className="font-medium">{resolveTimelineTitle(event)}</p>
                   <p className="text-sm text-muted-foreground">{formatDateTime(event.created_at)}</p>
+                  {event.changed_by && (
+                    <p className="text-xs text-muted-foreground">
+                      Ator: {event.changed_by.slice(0, 8)}
+                    </p>
+                  )}
                   {event.notes && <p className="text-sm mt-1">{event.notes}</p>}
                 </div>
               </div>

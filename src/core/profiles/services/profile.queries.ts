@@ -144,7 +144,7 @@ export async function getProfileByType(
  * Busca profile por username
  */
 export async function getByUsername(username: string): Promise<Profile | null> {
-  const { data, error } = await createTypedQuery("profiles")
+  const { data, error } = await createTypedQuery("public_profiles")
     .select()
     .eq("username", username)
     .single();
@@ -154,6 +154,27 @@ export async function getByUsername(username: string): Promise<Profile | null> {
       component: "profile.queries",
       action: "getByUsername",
       metadata: { username },
+    });
+    return null;
+  }
+
+  return data;
+}
+
+/**
+ * Busca perfil público por ID (view canônica public_profiles)
+ */
+export async function getPublicProfileById(profileId: string): Promise<Profile | null> {
+  const { data, error } = await createTypedQuery("public_profiles")
+    .select()
+    .eq("id", profileId)
+    .single();
+
+  if (error) {
+    trackError(error as Error, {
+      component: "profile.queries",
+      action: "getPublicProfileById",
+      metadata: { profileId },
     });
     return null;
   }
@@ -227,8 +248,10 @@ export async function getProfilesSummaryExtended(
   const uniqueIds = [...new Set(ids)];
 
   const { data, error } = await supabase
-    .from(TABLE)
-    .select("id, name, avatar_url, verified, neighborhood, whatsapp")
+    .from("public_profiles")
+    .select(
+      "id, display_name, avatar_url, verified, username, public_neighborhood:neighborhood, public_city:city, public_state:state",
+    )
     .in("id", uniqueIds);
 
   if (error) {
@@ -242,11 +265,11 @@ export async function getProfilesSummaryExtended(
 
   return (data || []).map((profile) => ({
     id: profile.id,
-    name: profile.name,
+    name: profile.display_name,
     avatarUrl: profile.avatar_url,
     verified: profile.verified || false,
-    neighborhood: profile.neighborhood,
-    whatsapp: profile.whatsapp,
+    neighborhood: profile.public_neighborhood,
+    whatsapp: null,
   }));
 }
 

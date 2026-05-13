@@ -1,4 +1,4 @@
-/**
+﻿/**
  * GastronomyLandingPage - REFATORADA
  *
  * Territory-aware gastronomy listing.
@@ -57,29 +57,29 @@ const fadeIn = {
   visible: { opacity: 1, y: 0, transition: { duration: 0.45 } },
 };
 
-// ── Categorias de gastronomia (estilo empresa) ───────────────────────────────
-// Componente para emoji como ícone
+// â”€â”€ Categorias de gastronomia (estilo empresa) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// Componente para emoji como Ã­cone
 const EmojiIcon = ({ emoji, className }: { emoji: string; className?: string }) => (
   <span className={className} style={{ fontSize: '1.5rem', lineHeight: 1 }}>{emoji}</span>
 );
 
 const GASTRO_CATEGORIES = [
-  { id: 'lanches',    icon: () => <EmojiIcon emoji="🥪" />, label: 'Lanches',       cuisineFilter: 'lanchonete',   iconColor: 'text-amber-400',   bg: 'bg-amber-500/15 border-amber-500/20' },
-  { id: 'pizza',      icon: () => <EmojiIcon emoji="🍕" />, label: 'Pizza',         cuisineFilter: 'pizzaria',     iconColor: 'text-red-400',     bg: 'bg-red-500/15 border-red-500/20' },
-  { id: 'brasileira', icon: () => <EmojiIcon emoji="🍛" />, label: 'Brasileira',    cuisineFilter: 'brasileira',   iconColor: 'text-orange-400',  bg: 'bg-orange-500/15 border-orange-500/20' },
-  { id: 'arabe',      icon: () => <EmojiIcon emoji="🥙" />, label: 'Árabe',         cuisineFilter: 'arabe',        iconColor: 'text-yellow-400',  bg: 'bg-yellow-500/15 border-yellow-500/20' },
-  { id: 'sorveteria', icon: () => <EmojiIcon emoji="🍨" />, label: 'Açaí / Sorvete',cuisineFilter: 'sorveteria',   iconColor: 'text-purple-400',  bg: 'bg-purple-500/15 border-purple-500/20' },
-  { id: 'saudavel',   icon: () => <EmojiIcon emoji="🥗" />, label: 'Saudável',      cuisineFilter: 'vegetariana',  iconColor: 'text-green-400',   bg: 'bg-green-500/15 border-green-500/20' },
-  { id: 'japonesa',   icon: () => <EmojiIcon emoji="🍱" />, label: 'Japonesa',      cuisineFilter: 'japonesa',     iconColor: 'text-pink-400',    bg: 'bg-pink-500/15 border-pink-500/20' },
-  { id: 'salgados',   icon: () => <EmojiIcon emoji="🥟" />, label: 'Salgados',      cuisineFilter: 'outros',       iconColor: 'text-lime-400',    bg: 'bg-lime-500/15 border-lime-500/20' },
-  { id: 'pastel',     icon: () => <EmojiIcon emoji="🥐" />, label: 'Pastel',        cuisineFilter: 'pastel',       iconColor: 'text-orange-500',  bg: 'bg-orange-600/15 border-orange-600/20' },
-  { id: 'padaria',    icon: () => <EmojiIcon emoji="🥖" />, label: 'Padarias',      cuisineFilter: 'padaria',      iconColor: 'text-yellow-600',  bg: 'bg-yellow-600/15 border-yellow-600/20' },
-  { id: 'doceria',    icon: () => <EmojiIcon emoji="🍰" />, label: 'Doces & Bolos', cuisineFilter: 'doceria',      iconColor: 'text-fuchsia-400', bg: 'bg-fuchsia-500/15 border-fuchsia-500/20' },
-  { id: 'carnes',     icon: () => <EmojiIcon emoji="🥩" />, label: 'Carnes',        cuisineFilter: 'churrascaria', iconColor: 'text-red-500',     bg: 'bg-red-600/15 border-red-600/20' },
-  { id: 'marmita',    icon: () => <EmojiIcon emoji="🍲" />, label: 'Marmita',       cuisineFilter: 'regional',     iconColor: 'text-teal-400',    bg: 'bg-teal-500/15 border-teal-500/20' },
-  { id: 'bar',        icon: () => <EmojiIcon emoji="🍺" />, label: 'Bares',         cuisineFilter: 'bar',          iconColor: 'text-emerald-400', bg: 'bg-emerald-500/15 border-emerald-500/20' },
-  { id: 'cafeteria',  icon: () => <EmojiIcon emoji="☕" />, label: 'Cafés',         cuisineFilter: 'cafeteria',    iconColor: 'text-yellow-500',  bg: 'bg-yellow-500/15 border-yellow-500/20' },
-  { id: 'hamburger',  icon: () => <EmojiIcon emoji="🍔" />, label: 'Hambúrguer',    cuisineFilter: 'hamburguer',   iconColor: 'text-amber-500',   bg: 'bg-amber-600/15 border-amber-600/20' },
+  { id: 'lanches',    icon: () => <EmojiIcon emoji="ðŸ¥ª" />, label: 'Lanches',       cuisineFilter: 'lanchonete',   iconColor: 'text-amber-400',   bg: 'bg-amber-500/15 border-amber-500/20' },
+  { id: 'pizza',      icon: () => <EmojiIcon emoji="ðŸ•" />, label: 'Pizza',         cuisineFilter: 'pizzaria',     iconColor: 'text-red-400',     bg: 'bg-red-500/15 border-red-500/20' },
+  { id: 'brasileira', icon: () => <EmojiIcon emoji="ðŸ›" />, label: 'Brasileira',    cuisineFilter: 'brasileira',   iconColor: 'text-orange-400',  bg: 'bg-orange-500/15 border-orange-500/20' },
+  { id: 'arabe',      icon: () => <EmojiIcon emoji="ðŸ¥™" />, label: 'Ãrabe',         cuisineFilter: 'arabe',        iconColor: 'text-yellow-400',  bg: 'bg-yellow-500/15 border-yellow-500/20' },
+  { id: 'sorveteria', icon: () => <EmojiIcon emoji="ðŸ¨" />, label: 'AÃ§aÃ­ / Sorvete',cuisineFilter: 'sorveteria',   iconColor: 'text-purple-400',  bg: 'bg-purple-500/15 border-purple-500/20' },
+  { id: 'saudavel',   icon: () => <EmojiIcon emoji="ðŸ¥—" />, label: 'SaudÃ¡vel',      cuisineFilter: 'vegetariana',  iconColor: 'text-green-400',   bg: 'bg-green-500/15 border-green-500/20' },
+  { id: 'japonesa',   icon: () => <EmojiIcon emoji="ðŸ±" />, label: 'Japonesa',      cuisineFilter: 'japonesa',     iconColor: 'text-pink-400',    bg: 'bg-pink-500/15 border-pink-500/20' },
+  { id: 'salgados',   icon: () => <EmojiIcon emoji="ðŸ¥Ÿ" />, label: 'Salgados',      cuisineFilter: 'outros',       iconColor: 'text-lime-400',    bg: 'bg-lime-500/15 border-lime-500/20' },
+  { id: 'pastel',     icon: () => <EmojiIcon emoji="ðŸ¥" />, label: 'Pastel',        cuisineFilter: 'pastel',       iconColor: 'text-orange-500',  bg: 'bg-orange-600/15 border-orange-600/20' },
+  { id: 'padaria',    icon: () => <EmojiIcon emoji="ðŸ¥–" />, label: 'Padarias',      cuisineFilter: 'padaria',      iconColor: 'text-yellow-600',  bg: 'bg-yellow-600/15 border-yellow-600/20' },
+  { id: 'doceria',    icon: () => <EmojiIcon emoji="ðŸ°" />, label: 'Doces & Bolos', cuisineFilter: 'doceria',      iconColor: 'text-fuchsia-400', bg: 'bg-fuchsia-500/15 border-fuchsia-500/20' },
+  { id: 'carnes',     icon: () => <EmojiIcon emoji="ðŸ¥©" />, label: 'Carnes',        cuisineFilter: 'churrascaria', iconColor: 'text-red-500',     bg: 'bg-red-600/15 border-red-600/20' },
+  { id: 'marmita',    icon: () => <EmojiIcon emoji="ðŸ²" />, label: 'Marmita',       cuisineFilter: 'regional',     iconColor: 'text-teal-400',    bg: 'bg-teal-500/15 border-teal-500/20' },
+  { id: 'bar',        icon: () => <EmojiIcon emoji="ðŸº" />, label: 'Bares',         cuisineFilter: 'bar',          iconColor: 'text-emerald-400', bg: 'bg-emerald-500/15 border-emerald-500/20' },
+  { id: 'cafeteria',  icon: () => <EmojiIcon emoji="â˜•" />, label: 'CafÃ©s',         cuisineFilter: 'cafeteria',    iconColor: 'text-yellow-500',  bg: 'bg-yellow-500/15 border-yellow-500/20' },
+  { id: 'hamburger',  icon: () => <EmojiIcon emoji="ðŸ”" />, label: 'HambÃºrguer',    cuisineFilter: 'hamburguer',   iconColor: 'text-amber-500',   bg: 'bg-amber-600/15 border-amber-600/20' },
 ];
 
 export default function GastronomyLandingPage() {
@@ -264,7 +264,7 @@ export default function GastronomyLandingPage() {
         : 'Informe um endereco completo ou use sua localizacao atual para liberar restaurantes e cardapios.';
 
   const proximityFallbackMessage = distanceReferenceCoords
-    ? `Ainda estamos mapeando os restaurantes desta seleção. Em breve você verá os mais próximos do seu endereço.`
+    ? `Ainda estamos mapeando os restaurantes desta seleÃ§Ã£o. Em breve vocÃª verÃ¡ os mais prÃ³ximos do seu endereÃ§o.`
     : !canUseGeolocation
       ? INSECURE_CONTEXT_DESTINATION_MESSAGE
       : locationPermissionState === 'denied'
@@ -317,13 +317,13 @@ export default function GastronomyLandingPage() {
       </Helmet>
 
       <div className="min-h-screen bg-background">
-        {/* ── Header exclusivo ───────────────────────────────────── */}
+        {/* â”€â”€ Header exclusivo â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
         <GastronomyHeader
           searchQuery={searchQuery}
           onSearchChange={setSearchQuery}
         />
 
-        {/* ── Cards de Categorias (TOPO) ─────────────────────────── */}
+        {/* â”€â”€ Cards de Categorias (TOPO) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
         <section className="w-full bg-card/50 border-b border-border py-4">
           <div className="w-full overflow-x-auto scrollbar-hide">
             <div className="flex justify-center gap-3 pb-1 px-4 min-w-max mx-auto">
@@ -354,13 +354,13 @@ export default function GastronomyLandingPage() {
           </div>
         </section>
 
-        {/* ── Hero Carrossel de Banners ─────────────────────── */}
+        {/* â”€â”€ Hero Carrossel de Banners â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
         <HeroBannerCarousel
           banners={[
             {
               id: '1',
               image: gastronomyHeroBg,
-              title: 'Promoção Especial!',
+              title: 'PromoÃ§Ã£o Especial!',
               subtitle: 'Desconto de 20% em todos os pedidos acima de R$ 50',
               textPosition: 'center',
               cta: {
@@ -371,8 +371,8 @@ export default function GastronomyLandingPage() {
             {
               id: '2',
               image: gastronomyHeroBg,
-              title: 'Delivery Grátis',
-              subtitle: 'Frete grátis para pedidos acima de R$ 30',
+              title: 'Delivery GrÃ¡tis',
+              subtitle: 'Frete grÃ¡tis para pedidos acima de R$ 30',
               textPosition: 'center',
               cta: {
                 label: 'Pedir Agora',
@@ -383,7 +383,7 @@ export default function GastronomyLandingPage() {
               id: '3',
               image: gastronomyHeroBg,
               title: 'Novos Restaurantes',
-              subtitle: 'Conheça as novidades da sua região',
+              subtitle: 'ConheÃ§a as novidades da sua regiÃ£o',
               textPosition: 'center',
               cta: {
                 label: 'Explorar',
@@ -400,7 +400,7 @@ export default function GastronomyLandingPage() {
         />
 
         <section className="container mx-auto px-4 pt-4">
-          {/* ── Google AdSense ─────────────────────────────────── */}
+          {/* â”€â”€ Google AdSense â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
           <div className="mb-6 w-full rounded-xl">
             <div className="overflow-hidden rounded-xl max-h-[90px] min-h-[50px]">
               <AdSense 
@@ -454,7 +454,7 @@ export default function GastronomyLandingPage() {
                 />
               </motion.div>
             </section>
-            {/* ── ATIVIDADE DOS VIZINHOS (SSOT) ──────────────────────────── */}
+            {/* â”€â”€ ATIVIDADE DOS VIZINHOS (SSOT) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
             <GastronomyActivityFeed 
               territoryFilter={territoryFilter}
               limit={5}
@@ -548,7 +548,7 @@ export default function GastronomyLandingPage() {
                   className="rounded-2xl border border-primary/20 bg-gradient-to-br from-primary/10 via-card to-accent/5 p-8 text-center md:p-12"
                 >
                   <div className="mb-4 inline-block rounded-full bg-primary/10 p-3">
-                    <EmojiIcon emoji="🍽️" className="h-8 w-8 text-primary" />
+                    <EmojiIcon emoji="ðŸ½ï¸" className="h-8 w-8 text-primary" />
                   </div>
                   <h2 className="mb-3 text-2xl font-bold text-foreground md:text-3xl">
                     Tem um restaurante?
@@ -559,7 +559,7 @@ export default function GastronomyLandingPage() {
                   </p>
                   <div className="flex flex-col justify-center gap-3 sm:flex-row">
                     <Button asChild size="lg" className="rounded-full px-8 font-semibold">
-                      <Link to="/empresas/criar-empresa">Cadastrar Restaurante</Link>
+                      <Link to="/empresas/cadastrar">Cadastrar Restaurante</Link>
                     </Button>
                     <Button asChild variant="outline" size="lg" className="rounded-full px-8">
                       <Link to="/sobre">Saiba Mais</Link>
@@ -575,3 +575,4 @@ export default function GastronomyLandingPage() {
     </>
   );
 }
+

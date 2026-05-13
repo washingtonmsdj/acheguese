@@ -9,9 +9,11 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { OrderService } from '@/modules/business/gastronomy/services/OrderService';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase';
+import { useSessionContext } from '@/core/session';
 
 export function useOrderDetails(orderId: string) {
   const queryClient = useQueryClient();
+  const { activeProfile } = useSessionContext();
   const [isRealtimeConnected, setIsRealtimeConnected] = useState(false);
   const invalidateTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -78,7 +80,7 @@ export function useOrderDetails(orderId: string) {
   // Mutation: Atualizar notas internas
   const updateNotesMutation = useMutation({
     mutationFn: async (notes: string) => {
-      const result = await OrderService.updateInternalNotes(orderId, notes);
+      const result = await OrderService.updateInternalNotes(orderId, notes, activeProfile?.id);
       if (result.error) throw new Error(result.error);
       return result.data;
     },

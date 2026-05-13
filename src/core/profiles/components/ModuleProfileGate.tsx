@@ -7,7 +7,7 @@
  * Uso:
  *   <ModuleProfileGate
  *     type="business"
- *     createPath="/create-business"
+ *     createPath="/central/empresas/nova"
  *     createLabel="Criar empresa"
  *   >
  *     {(profile) => <MinhaPageDeEmpresa profile={profile} />}

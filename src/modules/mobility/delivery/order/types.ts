@@ -146,6 +146,13 @@ export interface TransitionFinancialStatusInput {
   metadata?: Record<string, unknown>;
 }
 
+export interface UpdateOrderNotesInput {
+  order_id: string;
+  notes: string;
+  actor_profile_id: string;
+  metadata?: Record<string, unknown>;
+}
+
 export interface ReportDeliveryOccurrenceInput {
   order_id: string;
   occurrence_type: DeliveryOccurrence["occurrence_type"];

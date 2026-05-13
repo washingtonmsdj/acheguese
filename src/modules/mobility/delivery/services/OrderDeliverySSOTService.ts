@@ -34,6 +34,7 @@ import type {
   ResolveDeliveryOccurrenceInput,
   TransitionFinancialStatusInput,
   TransitionLogisticsStatusInput,
+  UpdateOrderNotesInput,
 } from "../order/types";
 import { OrderDraftService } from "../order/OrderDraftService";
 import { PaymentContextService } from "../payment-context/PaymentContextService";
@@ -60,6 +61,8 @@ const DELIVERY_RPCS = {
   ATTACH_DELIVERY_PROOF: "delivery_attach_delivery_proof",
   MARK_DELIVERED: "delivery_mark_delivered",
   TRANSITION_FINANCIAL_STATUS: "delivery_transition_financial_status",
+  UPDATE_ORDER_NOTES: "delivery_update_order_notes",
+  UPDATE_ORDER_SOURCE_METADATA: "delivery_update_order_source_metadata",
   REPORT_OCCURRENCE: "delivery_report_occurrence",
   RESOLVE_OCCURRENCE: "delivery_resolve_occurrence",
 } as const;
@@ -680,6 +683,96 @@ export class OrderDeliverySSOTService {
         { order_id: input.order_id, to_status: input.to_status },
       );
       return { success: false, error: toErrorMessage(error) };
+    }
+  }
+
+  static async updateOrderNotes(
+    input: UpdateOrderNotesInput,
+  ): Promise<OrderOperationResult<OrderRecord>> {
+    try {
+      const actorProfileId = this.requireActorProfileId(input.actor_profile_id);
+      const normalizedNotes = input.notes.trim();
+      if (!normalizedNotes) {
+        throw new Error("notes e obrigatorio para atualizar observacoes do pedido.");
+      }
+
+      const order = await this.invokeOrderRpc(DELIVERY_RPCS.UPDATE_ORDER_NOTES, {
+        p_order_id: input.order_id,
+        p_notes: normalizedNotes,
+        p_actor_profile_id: actorProfileId,
+        p_metadata: input.metadata ?? {},
+      });
+
+      return { success: true, data: order };
+    } catch (error) {
+      logger.error("OrderDeliverySSOTService.updateOrderNotes", error as Error, {
+        order_id: input.order_id,
+      });
+
+      const message =
+        typeof error === "object" &&
+        error !== null &&
+        "message" in error &&
+        typeof (error as { message?: unknown }).message === "string"
+          ? ((error as { message: string }).message ?? "")
+          : toErrorMessage(error);
+      if (
+        message.includes("Could not find the function") ||
+        message.includes("does not exist")
+      ) {
+        return {
+          success: false,
+          error:
+            "RPC canonico delivery_update_order_notes ainda nao disponivel no backend. Atualizacao de notas permanece bloqueada por compliance SSOT.",
+        };
+      }
+
+      return { success: false, error: message };
+    }
+  }
+
+  static async updateOrderSourceMetadata(input: {
+    order_id: string;
+    actor_profile_id?: string;
+    metadata_patch: Record<string, unknown>;
+  }): Promise<OrderOperationResult<OrderRecord>> {
+    try {
+      const actorProfileId = this.requireActorProfileId(input.actor_profile_id);
+      const order = await this.invokeOrderRpc(
+        DELIVERY_RPCS.UPDATE_ORDER_SOURCE_METADATA,
+        {
+          p_order_id: input.order_id,
+          p_actor_profile_id: actorProfileId,
+          p_metadata_patch: input.metadata_patch ?? {},
+        },
+      );
+
+      return { success: true, data: order };
+    } catch (error) {
+      logger.error("OrderDeliverySSOTService.updateOrderSourceMetadata", error as Error, {
+        order_id: input.order_id,
+      });
+
+      const message =
+        typeof error === "object" &&
+        error !== null &&
+        "message" in error &&
+        typeof (error as { message?: unknown }).message === "string"
+          ? ((error as { message: string }).message ?? "")
+          : toErrorMessage(error);
+
+      if (
+        message.includes("Could not find the function") ||
+        message.includes("does not exist")
+      ) {
+        return {
+          success: false,
+          error:
+            "RPC canonico delivery_update_order_source_metadata ainda nao disponivel no backend.",
+        };
+      }
+
+      return { success: false, error: message };
     }
   }
 

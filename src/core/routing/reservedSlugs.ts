@@ -6,7 +6,7 @@
 export const RESERVED_SLUGS = [
   'admin', 'api', 'auth', 'login', 'logout', 'signup', 'register',
   'profile', 'perfil', 'settings', 'configuracoes',
-  'business', 'businesss', 'empresas', 'services', 'servicos',
+  'business', 'empresas', 'services', 'servicos',
   'professionals', 'profissionais', 'classifieds', 'classificados',
   'events', 'eventos', 'community', 'comunidade',
   'mobility', 'mobilidade', 'messages', 'mensagens',

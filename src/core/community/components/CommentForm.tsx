@@ -1,4 +1,4 @@
-﻿import React from "react";
+import React from "react";
 import { useState } from "react";
 import { Button } from "@/shared/components/ui/button";
 import { Textarea } from "@/shared/components/ui/textarea";
@@ -7,17 +7,17 @@ import { AlertCircle } from "lucide-react";
 import { useCommentActions } from "@/core/community/hooks/useCommentActions";
 import { useUserType } from "@/core/community/hooks/useUserType";
 /**
- * FormulÃ¡rio de comentÃ¡rio
+ * Formulário de comentário
  *
- * Requirement 6: Sistema de ComentÃ¡rios
- * Requirement 2: RestriÃ§Ã£o de Postagem para Empresas
- * Requirement 29: ValidaÃ§Ãµes e SeguranÃ§a
+ * Requirement 6: Sistema de Comentários
+ * Requirement 2: Restrição de Postagem para Empresas
+ * Requirement 29: Validações e Segurança
  *
  * Funcionalidades:
- * - Textarea para conteÃºdo
- * - BotÃ£o de send
- * - Suporte para comentÃ¡rio top-level ou reply
- * - ValidaÃ§Ã£o de businesss (nÃ£o podem comentar)
+ * - Textarea para conteúdo
+ * - Botão de send
+ * - Suporte para comentário top-level ou reply
+ * - Validação de empresas (não podem comentar)
  */
 
 interface CommentFormProps {
@@ -34,7 +34,7 @@ export function CommentForm({
   parentCommentId = null,
   onSuccess,
   onCancel,
-  placeholder = "Escreva seu comentÃ¡rio...",
+  placeholder = "Escreva seu comentário...",
   autoFocus = false,
 }: CommentFormProps) {
   const [content, setContent] = useState("");
@@ -45,7 +45,7 @@ export function CommentForm({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Requirement 29.1: Validar permissÃµes de businesss
+    // Requirement 29.1: Validar permissões de empresas
     if (!canComment) {
       return;
     }
@@ -62,7 +62,7 @@ export function CommentForm({
     }
   };
 
-  // Requirement 2: Empresas nÃ£o podem comentar
+  // Requirement 2: Empresas não podem comentar
   if (loading) {
     return (
       <div className="p-4 text-center text-muted-foreground">Loading...</div>
@@ -74,8 +74,8 @@ export function CommentForm({
       <Alert variant="destructive">
         <AlertCircle className="h-4 w-4" />
         <AlertDescription>
-          Empresas nÃ£o podem comentar na comunidade. Apenas pessoas fÃ­sicas
-          podem participar das discussÃµes.
+          Empresas não podem comentar na comunidade. Apenas pessoas físicas
+          podem participar das discussões.
         </AlertDescription>
       </Alert>
     );

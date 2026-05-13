@@ -2,7 +2,7 @@
  * MentionableProfileView — Dados de perfil para busca de @mentions
  * 
  * Usado em MentionInput para exibir resultados de busca de perfis
- * que podem ser mencionados em posts. Inclui neighborhood e profileType
+ * que podem ser mencionados em posts. Inclui publicNeighborhood e profileType
  * para filtro e exibição contextual.
  * 
  * ⚠️ NÃO usar fora do contexto de @mention.
@@ -29,8 +29,8 @@ export interface MentionableProfileView {
   /** URL do avatar */
   avatarUrl: string | null;
   
-  /** Bairro — exibido como contexto geográfico na busca */
-  neighborhood: string | null;
+  /** Bairro público (derivado de SSOT) exibido como contexto na busca */
+  publicNeighborhood: string | null;
   
   /**
    * Tipo de perfil — usado para exibir badge "Empresa" etc.

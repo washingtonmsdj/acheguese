@@ -13,7 +13,7 @@ import { useNavigate, Link } from "react-router-dom";
 const regras = [
   {
     icon: Ban,
-    title: "Não acusar pessoas ou businesss",
+    title: "Não acusar pessoas ou empresas",
     desc: "É proibido acusar qualquer pessoa ou business de crimes ou atividades ilegais. Denúncias devem ser feitas às autoridades competentes.",
   },
   {

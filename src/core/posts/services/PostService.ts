@@ -106,6 +106,7 @@ import { StructuredLogger } from "../utils/StructuredLogger";
 import { LocationType, EntityStatus } from "@/shared/types/enums";
 import { PAGINATION } from "@/shared/constants";
 import { resolveCityToLocationIds, resolveNeighborhoodInCity } from "@/core/location/helpers/territorialResolver";
+import { mediaService } from "@/core/media/services/MediaService";
 import type {
   Post,
   PostType,
@@ -1174,25 +1175,8 @@ export class PostService {
       const urls: string[] = [];
 
       for (const image of images) {
-        const ext = image.name.split(".").pop();
-        const path = `${profileId}/${Date.now()}-${Math.random()}.${ext}`;
-
-        const { error } = await (supabase as any).storage
-          .from("post-images")
-          .upload(path, image);
-
-        if (error) {
-          throw new PostError(
-            `Erro no upload da imagem: ${error.message}`,
-            "UPLOAD_FAILED",
-          );
-        }
-
-        const { data } = supabase.storage
-          .from("post-images")
-          .getPublicUrl(path);
-
-        urls.push(data.publicUrl);
+        const upload = await mediaService.uploadPostImage(profileId, image, { preset: "post_image" });
+        urls.push(upload.url);
       }
 
       return urls;
@@ -2080,7 +2064,7 @@ export class PostService {
    * Upload de imagem para o bucket 'posts' e retorno da URL pública.
    *
    * Canonical boundary: todo acesso ao storage bucket 'posts' deve passar por aqui.
-   * Nenhum módulo externo deve chamar supabase.storage.from('posts') diretamente.
+   * Nenhum modulo externo deve acessar storage de posts diretamente.
    *
    * Path: posts/{profileId}/{fileName}
    * Motivo do profileId no path:
@@ -2100,20 +2084,14 @@ export class PostService {
     fileName: string,
   ): Promise<string> {
     try {
-      const filePath = `posts/${profileId}/${fileName}`;
-
-      const { error: uploadError } = await (supabase as any).storage
-        .from("posts")
-        .upload(filePath, file);
-
-      if (uploadError)
-        throw new PostError(uploadError.message, "UPLOAD_FAILED");
-
-      const { data: urlData } = supabase.storage
-        .from("posts")
-        .getPublicUrl(filePath);
-
-      return urlData.publicUrl;
+      const upload = await mediaService.uploadToBucket(file, {
+        bucket: "posts",
+        pathPrefix: `posts/${profileId}`,
+        fileName,
+        preset: "post_image",
+        upsert: false,
+      });
+      return upload.url;
     } catch (error) {
       if (error instanceof PostError) throw error;
       trackError(error as Error, {

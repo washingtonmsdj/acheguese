@@ -51,6 +51,11 @@ export interface CreateGastronomyCheckoutOrderInput {
     lng?: number | null;
     recipient_name?: string | null;
     phone?: string | null;
+    postal_code?: string | null;
+    street?: string | null;
+    number?: string | null;
+    complement?: string | null;
+    reference?: string | null;
     neighborhood?: string | null;
     city?: string | null;
     state?: string | null;
@@ -162,4 +167,3 @@ export class GastronomyCheckoutService {
     }
   }
 }
-

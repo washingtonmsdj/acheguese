@@ -22,7 +22,7 @@ export function usePremiumBusinesses(
   maxPremiumDisplay: number = 4,
 ): UsePremiumBusinessesResult {
   return useMemo(() => {
-    // Separar businesss premium das normais
+    // Separar empresas premium das normais
     const premium = businesses.filter((b) => b.is_premium === true);
     const regular = businesses.filter((b) => b.is_premium !== true);
 
@@ -49,7 +49,7 @@ export function usePremiumBusinesses(
     );
     const rotationOffset = dayOfYear % sortedPremium.length;
 
-    // Rotaciona o array para que businesss diferentes apareçam a cada dia
+    // Rotaciona o array para que empresas diferentes apareçam a cada dia
     const rotatedPremium =
       sortedPremium.length > 0
         ? [

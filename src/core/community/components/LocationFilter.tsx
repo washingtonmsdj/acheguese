@@ -17,10 +17,14 @@ interface LocationFilterProps {
 
 export function LocationFilter({ value, onChange }: LocationFilterProps) {
   const { activeProfile } = useSessionContext();
+  const publicCity =
+    (activeProfile as { public_city?: string | null } | null)?.public_city ?? null;
+  const publicNeighborhood =
+    (activeProfile as { public_neighborhood?: string | null } | null)?.public_neighborhood ?? null;
 
   const userLocation = {
-    city: activeProfile?.city?.trim() || "Sua cidade",
-    neighborhood: activeProfile?.neighborhood?.trim() || "Seu bairro",
+    city: publicCity?.trim() || "Sua cidade",
+    neighborhood: publicNeighborhood?.trim() || "Seu bairro",
     street: activeProfile?.street?.trim() || "Sua rua",
   };
 

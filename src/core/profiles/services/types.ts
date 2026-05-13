@@ -109,6 +109,7 @@ export interface Profile {
   state?: string;
   location_id?: string;
   street?: string;
+  public_location_visibility?: "hidden" | "city_only" | "district";
   verified: boolean;
   is_verified?: boolean;
   reputation: number;
@@ -151,6 +152,7 @@ export interface CreateProfileData {
   avatar_url?: string;
   neighborhood?: string;
   street?: string;
+  public_location_visibility?: "hidden" | "city_only" | "district";
 }
 
 /** @deprecated Use UpdateProfileInput de @/core/profiles/operations/UpdateProfileInput */
@@ -260,9 +262,6 @@ export interface ProfileIdentitySnapshot {
   verified: boolean;
   territoryLabel: string | null;
   locationId?: string;
-  city?: string;
-  neighborhood?: string;
-  state?: string;
   status: import("@/core/profiles/contracts/ProfileRuntimeContracts").ProfileStatus;
   plan: import("@/core/profiles/contracts/ProfileRuntimeContracts").ProfilePlan;
   reputation: import("@/core/profiles/contracts/ProfileRuntimeContracts").ProfileReputation;

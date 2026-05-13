@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase";
+import { mediaService } from "@/core/media/services/MediaService";
 
 export class BusinessSettingsService {
   static async getBusinessById(businessId: string): Promise<Record<string, unknown> | null> {
@@ -17,20 +18,12 @@ export class BusinessSettingsService {
     file: File;
     type: "logo" | "banner" | "gallery";
   }): Promise<string> {
-    const fileExt = input.file.name.split(".").pop();
-    const fileName = `${input.businessId}/${input.type}-${Date.now()}.${fileExt}`;
-
-    const { error: uploadError } = await supabase.storage
-      .from("business-images")
-      .upload(fileName, input.file);
-
-    if (uploadError) throw uploadError;
-
-    const {
-      data: { publicUrl },
-    } = supabase.storage.from("business-images").getPublicUrl(fileName);
-
-    return publicUrl;
+    const upload = await mediaService.uploadBusinessImage(
+      input.businessId,
+      input.file,
+      input.type === "logo" ? "logo" : "capa",
+    );
+    return upload.url;
   }
 
   static async updateBusinessById(

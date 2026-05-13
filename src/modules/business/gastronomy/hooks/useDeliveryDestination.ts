@@ -32,16 +32,30 @@ interface UseDeliveryDestinationOptions {
   userId?: string;
   resolved: ResolvedTerritory | null;
   autoRequestLocation?: boolean;
+  navigateOnSavedResidenceApply?: boolean;
+  allowGpsDestination?: boolean;
 }
 
 export function useDeliveryDestination(options: UseDeliveryDestinationOptions) {
-  const { userId, resolved, autoRequestLocation = true } = options;
+  const {
+    userId,
+    resolved,
+    autoRequestLocation = true,
+    navigateOnSavedResidenceApply = true,
+    allowGpsDestination = true,
+  } = options;
   const navigate = useNavigate();
   const location = useLocation();
 
   // Estado local
   const [deliveryDestination, setDeliveryDestination] = useState<DeliveryDestination | null>(
-    () => readStoredDeliveryDestination(),
+    () => {
+      const stored = readStoredDeliveryDestination();
+      if (!allowGpsDestination && stored?.source === 'gps') {
+        return null;
+      }
+      return stored;
+    },
   );
   const [showDestinationEditor, setShowDestinationEditor] = useState(
     () => !readStoredDeliveryDestination(),
@@ -134,6 +148,9 @@ export function useDeliveryDestination(options: UseDeliveryDestinationOptions) {
 
   // Atualizar destino quando GPS mudar
   useEffect(() => {
+    if (!allowGpsDestination) {
+      return;
+    }
     if (!userCoords) {
       return;
     }
@@ -171,7 +188,7 @@ export function useDeliveryDestination(options: UseDeliveryDestinationOptions) {
 
       return shouldUpdate ? nextDestination : current;
     });
-  }, [userCoords, userLocationSource]);
+  }, [allowGpsDestination, userCoords, userLocationSource]);
 
   // Mensagens de erro contextuais
   useEffect(() => {
@@ -197,6 +214,9 @@ export function useDeliveryDestination(options: UseDeliveryDestinationOptions) {
 
   // Reverse geocoding para melhorar label do GPS
   useEffect(() => {
+    if (!allowGpsDestination) {
+      return;
+    }
     const gpsLatitude = userCoords?.latitude;
     const gpsLongitude = userCoords?.longitude;
 
@@ -259,7 +279,7 @@ export function useDeliveryDestination(options: UseDeliveryDestinationOptions) {
     return () => {
       disposed = true;
     };
-  }, [userCoords?.accuracy, userCoords?.latitude, userCoords?.longitude, userLocationSource]);
+  }, [allowGpsDestination, userCoords?.accuracy, userCoords?.latitude, userCoords?.longitude, userLocationSource]);
 
   // Request automático de localização
   useEffect(() => {
@@ -346,6 +366,14 @@ export function useDeliveryDestination(options: UseDeliveryDestinationOptions) {
         latitude: firstResult.coordinates.latitude,
         longitude: firstResult.coordinates.longitude,
         label: firstResult.displayAddress,
+        street: firstResult.systemAddress.street,
+        number: firstResult.systemAddress.number,
+        complement: firstResult.systemAddress.complement,
+        neighborhood: firstResult.systemAddress.neighborhood,
+        city: firstResult.systemAddress.city,
+        state: firstResult.systemAddress.stateCode ?? firstResult.systemAddress.state,
+        postalCode: firstResult.systemAddress.postalCode,
+        reference: null,
         updatedAt: new Date().toISOString(),
       });
       setShowDestinationEditor(false);
@@ -359,18 +387,52 @@ export function useDeliveryDestination(options: UseDeliveryDestinationOptions) {
     }
   }, [destinationAddressQuery, resolved]);
 
-  const handleUseSavedResidence = useCallback(() => {
+  const handleUseSavedResidence = useCallback(async () => {
     if (!primaryResidence) {
-      setDestinationErrorMessage('Nenhuma residencia principal encontrada para esta conta.');
+      setDestinationErrorMessage('Nenhum endereco residencial salvo para esta conta.');
       return;
     }
 
-    const coords = getResidenceReferenceCoords(primaryResidence);
+    let coords = getResidenceReferenceCoords(primaryResidence);
     if (!coords) {
-      setDestinationErrorMessage(
-        'Seu endereco salvo ainda nao possui coordenadas suficientes para calcular distancia.',
-      );
-      return;
+      const rawAddressParts = [
+        primaryResidence.address?.street,
+        primaryResidence.address?.number,
+        primaryResidence.address?.neighborhood,
+        primaryResidence.address?.city,
+        primaryResidence.address?.state,
+        primaryResidence.address?.postal_code,
+      ].filter((value): value is string => typeof value === 'string' && value.trim().length > 0);
+      const fallbackQuery = rawAddressParts.join(', ').trim();
+      if (!fallbackQuery) {
+        setDestinationErrorMessage(
+          'Seu endereco salvo no perfil esta incompleto. Atualize CEP, rua, numero, bairro, cidade e estado.',
+        );
+        return;
+      }
+      try {
+        const geocode = await locationGeocodingService.geocode({
+          query: fallbackQuery,
+          country: 'BR',
+          limit: 1,
+        });
+        const first = geocode[0];
+        if (!first) {
+          setDestinationErrorMessage(
+            'Nao foi possivel localizar seu endereco salvo. Revise os dados do perfil.',
+          );
+          return;
+        }
+        coords = {
+          latitude: first.coordinates.latitude,
+          longitude: first.coordinates.longitude,
+        };
+      } catch {
+        setDestinationErrorMessage(
+          'Falha ao localizar o endereco salvo do perfil. Tente novamente.',
+        );
+        return;
+      }
     }
 
     const label = getResidenceReferenceLabel(primaryResidence) || 'Residencia principal';
@@ -381,12 +443,23 @@ export function useDeliveryDestination(options: UseDeliveryDestinationOptions) {
       latitude: coords.latitude,
       longitude: coords.longitude,
       label,
+      street: primaryResidence.address?.street ?? null,
+      number: primaryResidence.address?.number ?? null,
+      complement: primaryResidence.address?.complement ?? null,
+      neighborhood: primaryResidence.location?.name ?? null,
+      city: primaryResidence.location?.metadata?.city_name ?? null,
+      state:
+        typeof primaryResidence.location?.metadata?.state_code === 'string'
+          ? primaryResidence.location.metadata.state_code
+          : null,
+      postalCode: primaryResidence.address?.postal_code ?? null,
+      reference: null,
       updatedAt: new Date().toISOString(),
     });
     setShowDestinationEditor(false);
 
     const geographicPath = primaryResidence.location?.geographic_path;
-    if (!geographicPath) {
+    if (!navigateOnSavedResidenceApply || !geographicPath) {
       return;
     }
 
@@ -396,7 +469,12 @@ export function useDeliveryDestination(options: UseDeliveryDestinationOptions) {
     if (location.pathname !== targetUrl) {
       navigate(targetUrl);
     }
-  }, [location.pathname, navigate, primaryResidence]);
+  }, [
+    location.pathname,
+    navigate,
+    navigateOnSavedResidenceApply,
+    primaryResidence,
+  ]);
 
   const handleClearDestination = useCallback(() => {
     setDeliveryDestination(null);
@@ -420,7 +498,7 @@ export function useDeliveryDestination(options: UseDeliveryDestinationOptions) {
     destinationSourceLabel,
     savedResidenceCoords,
     savedResidenceLabel,
-    hasSavedResidence: Boolean(primaryResidence && savedResidenceCoords),
+    hasSavedResidence: Boolean(primaryResidence),
 
     // Setters
     setShowDestinationEditor,

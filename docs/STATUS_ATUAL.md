@@ -924,3 +924,27 @@ npm run validate:phase:core: passou em 2026-05-11 com 55 passed, 1 skipped apos 
   - `npm run validate:phase:core`: passou em 2026-05-12 com `56 passed`, `1 skipped` (skip admin condicional por `SUPABASE_SERVICE_ROLE_KEY`).
 
 
+
+## Atualizacao 2026-05-12 (Correcao Definitiva de Rotas Comunitarias Area + SEO)
+
+- Rotas comunitarias duplicadas de modulo deixaram de usar redirecionamento (`Navigate`) e passaram a renderizar no `CommunityTerritorialShell`, preservando URL comunitaria para SEO canonico:
+1. distrito: `/comunidade/:state/:city/:territorySlug/:modulo`
+2. area: `/comunidade/:state/:city/area/:groupSlug/:modulo`
+- Redirecionamento legado que colapsava `area/:groupSlug` para `:territorySlug` foi removido do runtime.
+- Rotas de area foram explicitamente expandidas para `feed`, `grupos`, `alertas`, `problemas`, `achados-e-perdidos` e modulos duplicados (`empresas`, `servicos`, `classificados`, `gastronomia`, `vagas`, `eventos`, `mapa`, `mobilidade`).
+- Validacoes executadas apos a correcao:
+1. `npx playwright test tests/e2e/territorial-seo.spec.ts --project=chromium --reporter=list`: passou (9/9).
+2. `npm run validate:phase:core`: passou com `56 passed`, `1 skipped` esperado.
+3. `npm run validate:docs-live-links`: passou.
+- Resultado: canonical/noindex voltou a ficar consistente em cidade, bairro e area sem rota hardcoded e sem paliativo.
+
+## Atualizacao 2026-05-12 (Hardening SSOT de Notificacoes Operacionais)
+
+- Cobertura unitária adicionada para notificacoes transacionais do fluxo de pedidos:
+1. `src/modules/mobility/delivery/__tests__/OrderDeliveryNotificationService.spec.ts`.
+2. Valida audiencia (`customer|merchant|courier`) em metadata.
+3. Valida URLs de acao canonicas por persona (`/gastronomia/pedidos/:orderId`, `/central/empresas/:businessId/gastronomia/pedidos/:orderId`, `/central/motoboy/entregas`).
+4. Valida evento de cancelamento por cliente com tipo `warning` e contexto de evento preservado.
+- Validacoes executadas:
+1. `npm test -- src/modules/mobility/delivery/__tests__/OrderDeliveryNotificationService.spec.ts`: passou (2/2).
+2. `npm run validate:phase:core`: passou com `56 passed`, `1 skipped` esperado.

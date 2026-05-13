@@ -14,7 +14,7 @@ Validar visualmente e funcionalmente a Central após as fases de guards, rotas, 
 ## Arquivos Modificados (1)
 
 **1. src/app/routes/AppRoutes.tsx**
-- Removida duplicação de rota /perfil/empresas
+- Removida duplicação de rota /central/empresas
 - Motivo: A rota duplicada sobrescrevia o redirecionamento legado, quebrando o fluxo
 
 ---
@@ -65,21 +65,21 @@ Validar visualmente e funcionalmente a Central após as fases de guards, rotas, 
 ### 4. Redirects Legados
 
 **Redirects validados:**
-- /perfil/empresas → /central/empresas ✅
-- /perfil/empresas/:businessId → BusinessRedirect ✅
-- /perfil/empresas/:businessId/* → BusinessRedirect ✅
-- /perfil/mobilidade/motorista → /central/motorista ✅
-- /perfil/mobilidade/motorista/cadastro → /central/motorista/cadastro ✅
-- /perfil/mobilidade/motorista/disponibilidade → /central/motorista/disponibilidade ✅
-- /perfil/mobilidade/motorista/corridas → /central/motorista/corridas ✅
-- /perfil/mobilidade/motorista/ganhos → /central/motorista/ganhos ✅
-- /perfil/mobilidade/motorista/configuracoes → /central/motorista/configuracoes ✅
-- /perfil/mobilidade/motoboy → /central/motoboy ✅
-- /perfil/mobilidade/motoboy/cadastro → /central/motoboy/cadastro ✅
-- /perfil/mobilidade/motoboy/disponibilidade → /central/motoboy/disponibilidade ✅
-- /perfil/mobilidade/motoboy/entregas → /central/motoboy/entregas ✅
-- /perfil/mobilidade/motoboy/ganhos → /central/motoboy/ganhos ✅
-- /perfil/mobilidade/motoboy/configuracoes → /central/motoboy/configuracoes ✅
+- /central/empresas → /central/empresas ✅
+- /central/empresas/:businessId → roteamento central direto ✅
+- /central/empresas/:businessId/* → roteamento central direto ✅
+- /central/motorista → /central/motorista ✅
+- /central/motorista/cadastro → /central/motorista/cadastro ✅
+- /central/motorista/disponibilidade → /central/motorista/disponibilidade ✅
+- /central/motorista/corridas → /central/motorista/corridas ✅
+- /central/motorista/ganhos → /central/motorista/ganhos ✅
+- /central/motorista/configuracoes → /central/motorista/configuracoes ✅
+- /central/motoboy → /central/motoboy ✅
+- /central/motoboy/cadastro → /central/motoboy/cadastro ✅
+- /central/motoboy/disponibilidade → /central/motoboy/disponibilidade ✅
+- /central/motoboy/entregas → /central/motoboy/entregas ✅
+- /central/motoboy/ganhos → /central/motoboy/ganhos ✅
+- /central/motoboy/configuracoes → /central/motoboy/configuracoes ✅
 
 **Conclusão:** ✅ Todos os redirects legados existem
 
@@ -109,13 +109,13 @@ Validar visualmente e funcionalmente a Central após as fases de guards, rotas, 
 
 ## Problemas Encontrados e Corrigidos
 
-### Duplicação de Rota /perfil/empresas
+### Duplicação de Rota /central/empresas
 
 **Problema:**
-- A rota /perfil/empresas estava definida duas vezes dentro do mesmo layout pai (AppLayoutSidebar)
+- A rota /central/empresas estava definida duas vezes dentro do mesmo layout pai (AppLayoutSidebar)
 - A segunda definição sobrescrevia a primeira, quebrando o redirecionamento legado
-- Linha 131: <Route path="/perfil/empresas" element={<Navigate to="/central/empresas" replace />} />
-- Linha 561: <Route path="/perfil/empresas" element={<P.PerfilEmpresasPage />} />
+- Linha 131: <Route path="/central/empresas" element={<Navigate to="/central/empresas" replace />} />
+- Linha 561: <Route path="/central/empresas" element={<P.PerfilEmpresasPage />} />
 
 **Correção aplicada:**
 - Removida a duplicação na linha 561

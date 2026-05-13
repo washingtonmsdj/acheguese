@@ -9,6 +9,7 @@ import {
   Check,
   ChefHat,
   ClipboardCheck,
+  DollarSign,
   PackageCheck,
   Truck,
 } from 'lucide-react';
@@ -139,6 +140,12 @@ export function OrderOperationsPanel({ order, businessId }: OrderOperationsPanel
   const [cancelReasonCode, setCancelReasonCode] = useState(CANCELLATION_REASONS[0].code);
   const primaryAction = useMemo(() => getPrimaryAction(order), [order]);
   const canCancel = !TERMINAL_STATUSES.includes(order.status);
+  const canConfirmPaymentByStatus =
+    order.payment_status === 'pending_payment' || order.payment_status === 'not_applicable';
+  const canConfirmPayment =
+    !!activeProfile?.id &&
+    (order.payment_method === 'pix' || order.payment_method === 'payment_link') &&
+    canConfirmPaymentByStatus;
   const selectedCancelReason = CANCELLATION_REASONS.find(
     (reason) => reason.code === cancelReasonCode,
   );
@@ -190,7 +197,29 @@ export function OrderOperationsPanel({ order, businessId }: OrderOperationsPanel
     },
   });
 
-  const isBusy = updateStatusMutation.isPending || cancelMutation.isPending;
+  const confirmPaymentMutation = useMutation({
+    mutationFn: async () => {
+      const result = await OrderService.confirmOrderPayment(
+        order.id,
+        activeProfile?.id,
+        'Pagamento confirmado pela operacao da loja',
+      );
+      if (result.error) throw new Error(result.error);
+      return result.data;
+    },
+    onSuccess: async () => {
+      await invalidateOrder();
+      toast.success('Pagamento confirmado.');
+    },
+    onError: (error: Error) => {
+      toast.error(`Erro ao confirmar pagamento: ${error.message}`);
+    },
+  });
+
+  const isBusy =
+    updateStatusMutation.isPending ||
+    cancelMutation.isPending ||
+    confirmPaymentMutation.isPending;
   const normalizedReason = cancelReason.trim();
   const ActionIcon = primaryAction?.icon ?? Check;
 
@@ -250,6 +279,26 @@ export function OrderOperationsPanel({ order, businessId }: OrderOperationsPanel
             >
               <Ban className="mr-2 h-4 w-4" />
               Cancelar
+            </Button>
+          </div>
+        )}
+
+        {canConfirmPayment && (
+          <div className="flex flex-col gap-2 rounded-lg border border-emerald-200 bg-background p-4 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="font-medium">Confirmar pagamento</p>
+              <p className="text-sm text-muted-foreground">
+                Registra o recebimento no SSOT e gera evento na timeline financeira.
+              </p>
+            </div>
+            <Button
+              variant="outline"
+              onClick={() => confirmPaymentMutation.mutate()}
+              disabled={isBusy}
+              className="w-full border-emerald-300 text-emerald-700 hover:bg-emerald-50 sm:w-auto"
+            >
+              <DollarSign className="mr-2 h-4 w-4" />
+              Marcar pagamento confirmado
             </Button>
           </div>
         )}

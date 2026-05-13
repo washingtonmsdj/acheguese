@@ -1,52 +1,22 @@
-/**
- * Página pública de perfil PESSOAL por username — /u/:username
- * 
- * RESPONSABILIDADE:
- * - Renderizar informações públicas do perfil PESSOAL
- * - Usar apenas dados públicos seguros (sem PII sensível)
- * - Contexto: Identidade pessoal/social
- * - Design moderno e profissional
- * 
- * ⚠️ IMPORTANTE:
- * - Esta página é APENAS para perfil personal
- * - Business usa /empresas/:uf/:cidade/:bairro/:slug
- * - Professional usa /profissionais/:uf/:cidade/:slug
- * - Driver não tem página pública
- * 
- * REDIRECIONAMENTOS:
- * - ProfilePublicRoute redireciona outros tipos automaticamente
- * - Ver: src/core/routing/components/ProfilePublicRoute.tsx
- * 
- * CONTRATO PÚBLICO PERMITIDO:
- * - name, username, avatar, bio
- * - location pública/coarse (se existir)
- * - links públicos próprios (se existirem)
- * - reputação, estatísticas públicas
- * 
- * CONTRATO PÚBLICO PROIBIDO:
- * - email, phone (PII sensível)
- * - user_id, ids internos
- * - flags internas, permissões
- * - metadados administrativos
- * 
- * Rota pública canônica:
- * - /u/:username = perfil pessoal/social
- */
-
+import { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { motion } from 'framer-motion';
-import { 
-  ArrowLeft, 
-  MapPin, 
-  CheckCircle2, 
+import {
+  ArrowLeft,
+  Award,
   Calendar,
+  CheckCircle2,
+  Globe2,
+  MapPin,
+  MessageCircle,
+  Share2,
+  ShieldCheck,
+  Sparkles,
   Star,
   TrendingUp,
-  Award,
-  Share2,
-  MessageCircle,
 } from 'lucide-react';
+import { toast } from 'sonner';
 
 import { useAppUrls } from '@/core/routing/hooks/useAppUrls';
 import { Avatar, AvatarFallback, AvatarImage } from '@/shared/components/ui/avatar';
@@ -62,39 +32,72 @@ interface ProfilePublicPageProps {
   profile: Profile;
 }
 
-function getInitials(name?: string): string {
+type PublicLocationVisibility = 'hidden' | 'city_only' | 'district';
+
+type ProfileWithPublicLocation = Profile & {
+  public_location_visibility?: PublicLocationVisibility | null;
+  public_city?: string | null;
+  public_state?: string | null;
+  public_neighborhood?: string | null;
+};
+
+function getInitials(name?: string | null): string {
   if (!name) return 'U';
-  return name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
+  return name
+    .split(' ')
+    .map((part) => part[0])
+    .join('')
+    .toUpperCase()
+    .slice(0, 2);
 }
 
-function formatMemberSince(date?: string): string {
+function formatMemberSince(date?: string | null): string {
   if (!date) return 'Data desconhecida';
-  return new Date(date).toLocaleDateString('pt-BR', { 
-    month: 'long', 
-    year: 'numeric' 
+  return new Date(date).toLocaleDateString('pt-BR', {
+    month: 'long',
+    year: 'numeric',
   });
 }
 
-function getProfileTypeBadgeColor(profileType?: string): string {
+function getProfileTypeBadgeColor(profileType?: string | null): string {
   switch (profileType) {
     case 'business':
-      return 'border-purple-500/30 bg-purple-500/10 text-purple-700 dark:text-purple-400';
+      return 'border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-300';
     case 'professional':
-      return 'border-blue-500/30 bg-blue-500/10 text-blue-700 dark:text-blue-400';
+      return 'border-sky-500/30 bg-sky-500/10 text-sky-700 dark:text-sky-300';
     case 'driver':
-      return 'border-green-500/30 bg-green-500/10 text-green-700 dark:text-green-400';
+      return 'border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300';
     default:
-      return 'border-border bg-muted text-muted-foreground';
+      return 'border-border bg-background/80 text-muted-foreground';
   }
+}
+
+function buildLocationLabel(profile: ProfileWithPublicLocation): string | null {
+  const visibility = profile.public_location_visibility ?? 'city_only';
+
+  if (visibility === 'hidden') return null;
+
+  const cityState = [profile.public_city, profile.public_state].filter(Boolean).join(' / ');
+
+  if (visibility === 'district') {
+    return [profile.public_neighborhood, cityState].filter(Boolean).join(', ') || null;
+  }
+
+  return cityState || null;
 }
 
 export function ProfilePublicPage({ profile }: ProfilePublicPageProps) {
   const navigate = useNavigate();
   const appUrls = useAppUrls();
 
+  const publicProfile = profile as ProfileWithPublicLocation;
+  const locationLabel = useMemo(() => buildLocationLabel(publicProfile), [publicProfile]);
   const profileTypeLabel = getProfileTypeLabel(profile as any);
   const reputationScore = profile.reputation ?? 0;
-  const reputationLevel = Math.floor(reputationScore / 100) + 1;
+  const reputationLevel = Math.max(1, Math.floor(reputationScore / 100) + 1);
+  const hasReputation = reputationScore > 0;
+  const displayName = profile.name || profile.username || 'Perfil';
+  const publicHandle = profile.username ? `@${profile.username}` : '@perfil';
 
   const handleBack = () => {
     if (window.history.length > 1) {
@@ -106,229 +109,203 @@ export function ProfilePublicPage({ profile }: ProfilePublicPageProps) {
 
   const handleShare = async () => {
     const url = `${window.location.origin}/u/${profile.username}`;
-    
+
     if (navigator.share) {
       try {
         await navigator.share({
-          title: `Perfil de ${profile.name}`,
-          text: profile.bio || `Confira o perfil de ${profile.name}`,
+          title: `Perfil de ${displayName}`,
+          text: profile.bio || `Confira o perfil de ${displayName}`,
           url,
         });
-      } catch (err) {
-        // Usuário cancelou ou erro
+        return;
+      } catch {
+        // User cancelled native share.
       }
-    } else {
-      // Fallback: copiar para clipboard
-      try {
-        await navigator.clipboard.writeText(url);
-        // TODO: Adicionar toast de sucesso
-      } catch (err) {
-        // Erro ao copiar
-      }
+    }
+
+    try {
+      await navigator.clipboard.writeText(url);
+      toast.success('Link do perfil copiado');
+    } catch {
+      toast.error('Nao foi possivel copiar o link');
     }
   };
 
   return (
     <>
       <Helmet>
-        <title>{profile.name} (@{profile.username}) | Perfil Público</title>
-        <meta name="description" content={profile.bio || `Perfil público de ${profile.name}`} />
-        <meta property="og:title" content={`${profile.name} (@${profile.username})`} />
-        <meta property="og:description" content={profile.bio || `Perfil público de ${profile.name}`} />
-        {profile.avatar_url && <meta property="og:image" content={profile.avatar_url} />}
+        <title>{displayName} ({publicHandle}) | Perfil publico</title>
+        <meta name="description" content={profile.bio || `Perfil publico de ${displayName}`} />
+        <meta property="og:title" content={`${displayName} (${publicHandle})`} />
+        <meta property="og:description" content={profile.bio || `Perfil publico de ${displayName}`} />
+        {profile.avatar_url ? <meta property="og:image" content={profile.avatar_url} /> : null}
       </Helmet>
 
-      <div className="min-h-screen bg-gradient-to-b from-background to-muted/20">
-        <div className="mx-auto max-w-4xl px-4 py-6 sm:px-6 lg:px-8">
-          {/* Header com botão voltar */}
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3 }}
-            className="mb-6"
-          >
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              className="gap-1.5 -ml-2" 
-              onClick={handleBack}
-            >
+      <div className="min-h-screen overflow-hidden bg-[radial-gradient(circle_at_top_left,hsl(var(--primary)/0.16),transparent_34%),linear-gradient(180deg,hsl(var(--background)),hsl(var(--muted)/0.45))]">
+        <div className="mx-auto flex min-h-screen w-full max-w-6xl flex-col px-4 py-4 sm:px-6 lg:px-8">
+          <header className="mb-4 flex items-center justify-between gap-3 sm:mb-6">
+            <Button variant="ghost" size="sm" className="gap-2 rounded-full" onClick={handleBack}>
               <ArrowLeft className="h-4 w-4" />
               Voltar
             </Button>
-          </motion.div>
+            <Button variant="outline" size="sm" className="gap-2 rounded-full bg-background/70 backdrop-blur" onClick={handleShare}>
+              <Share2 className="h-4 w-4" />
+              Compartilhar
+            </Button>
+          </header>
 
-          {/* Card principal do perfil */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, delay: 0.1 }}
-            className="overflow-hidden rounded-3xl border border-border bg-card shadow-lg"
-          >
-            {/* Cover/Banner (gradiente decorativo) */}
-            <div className="h-32 bg-gradient-to-r from-primary/20 via-primary/10 to-accent/20 sm:h-40" />
+          <main className="grid flex-1 gap-5 lg:grid-cols-[minmax(0,1.35fr)_360px] lg:items-start">
+            <motion.section
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.35 }}
+              className="overflow-hidden rounded-[2rem] border border-border/70 bg-card/90 shadow-xl shadow-black/5 backdrop-blur"
+            >
+              <div className="relative min-h-[220px] overflow-hidden bg-gradient-to-br from-emerald-500/25 via-sky-500/10 to-amber-500/20 p-6 sm:min-h-[280px] sm:p-8">
+                <div className="absolute -right-20 -top-24 h-56 w-56 rounded-full bg-background/30 blur-3xl" />
+                <div className="absolute -bottom-24 left-10 h-56 w-56 rounded-full bg-primary/20 blur-3xl" />
 
-            {/* Conteúdo do perfil */}
-            <div className="relative px-6 pb-6">
-              {/* Avatar sobreposto */}
-              <div className="relative -mt-16 mb-4 sm:-mt-20">
-                <Avatar className="h-28 w-28 border-4 border-card shadow-xl sm:h-32 sm:w-32">
-                  <AvatarImage src={profile.avatar_url || undefined} alt={profile.name} />
-                  <AvatarFallback className="text-2xl font-bold bg-gradient-to-br from-primary/20 to-accent/20 sm:text-3xl">
-                    {getInitials(profile.name)}
-                  </AvatarFallback>
-                </Avatar>
+                <div className="relative z-10 flex h-full flex-col justify-between gap-8">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Badge variant="outline" className={cn('rounded-full px-3 py-1 text-xs font-semibold backdrop-blur', getProfileTypeBadgeColor(profile.profile_type))}>
+                      {profileTypeLabel}
+                    </Badge>
+                    {profile.verified ? (
+                      <Badge variant="outline" className="rounded-full border-primary/30 bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
+                        <CheckCircle2 className="mr-1 h-3.5 w-3.5" />
+                        Verificado
+                      </Badge>
+                    ) : null}
+                  </div>
+
+                  <div className="flex flex-col gap-5 sm:flex-row sm:items-end">
+                    <Avatar className="h-28 w-28 border-4 border-background/90 shadow-2xl sm:h-36 sm:w-36">
+                      <AvatarImage src={profile.avatar_url || undefined} alt={displayName} />
+                      <AvatarFallback className="bg-background text-3xl font-black tracking-tight text-foreground sm:text-4xl">
+                        {getInitials(displayName)}
+                      </AvatarFallback>
+                    </Avatar>
+
+                    <div className="min-w-0 flex-1 pb-1">
+                      <p className="mb-2 inline-flex items-center gap-1.5 rounded-full bg-background/65 px-3 py-1 text-xs font-medium text-muted-foreground backdrop-blur">
+                        <Globe2 className="h-3.5 w-3.5" />
+                        Perfil publico
+                      </p>
+                      <h1 className="text-3xl font-black leading-none tracking-tight text-foreground sm:text-5xl">
+                        {displayName}
+                      </h1>
+                      <p className="mt-3 text-base font-medium text-muted-foreground sm:text-lg">{publicHandle}</p>
+                    </div>
+                  </div>
+                </div>
               </div>
 
-              {/* Nome e verificação */}
-              <div className="space-y-3">
-                <div className="flex flex-wrap items-start justify-between gap-3">
-                  <div className="min-w-0 flex-1 space-y-2">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <h1 className="text-2xl font-bold leading-tight text-foreground sm:text-3xl">
-                        {profile.name}
-                      </h1>
-                      {profile.verified && (
-                        <CheckCircle2 
-                          className="h-6 w-6 shrink-0 text-primary" 
-                          aria-label="Perfil verificado" 
-                        />
-                      )}
-                    </div>
-                    <p className="text-base text-muted-foreground sm:text-lg">
-                      @{profile.username}
-                    </p>
+              <div className="space-y-6 p-5 sm:p-8">
+                {profile.bio ? (
+                  <div className="rounded-3xl border border-border/70 bg-background/65 p-5">
+                    <p className="text-base leading-7 text-foreground sm:text-lg">{profile.bio}</p>
                   </div>
+                ) : (
+                  <div className="rounded-3xl border border-dashed border-border bg-background/60 p-5 text-sm text-muted-foreground">
+                    Este perfil ainda nao publicou uma bio.
+                  </div>
+                )}
 
-                  {/* Ações */}
-                  <div className="flex shrink-0 gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="gap-2"
-                      onClick={handleShare}
-                    >
-                      <Share2 className="h-4 w-4" />
-                      <span className="hidden sm:inline">Compartilhar</span>
-                    </Button>
-                    <Button
-                      size="sm"
-                      className="gap-2"
-                      onClick={() => {
-                        // TODO: Implementar mensagem/contato
-                      }}
-                    >
-                      <MessageCircle className="h-4 w-4" />
-                      <span className="hidden sm:inline">Contato</span>
-                    </Button>
-                  </div>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  {locationLabel ? (
+                    <InfoTile icon={MapPin} label="Localizacao publica" value={locationLabel} />
+                  ) : null}
+                  {profile.created_at ? (
+                    <InfoTile icon={Calendar} label="Na comunidade desde" value={formatMemberSince(profile.created_at)} />
+                  ) : null}
                 </div>
 
-                {/* Badges: Tipo de perfil */}
-                <div className="flex flex-wrap gap-2">
-                  <Badge 
-                    variant="outline" 
-                    className={cn("h-6 text-xs font-semibold", getProfileTypeBadgeColor(profile.profile_type))}
-                  >
-                    {profileTypeLabel}
-                  </Badge>
-                  {profile.verified && (
-                    <Badge variant="outline" className="h-6 text-xs font-semibold border-primary/30 bg-primary/10 text-primary">
-                      Verificado
-                    </Badge>
-                  )}
-                </div>
+                <Separator />
 
-                {/* Bio */}
-                {profile.bio && (
-                  <p className="text-base leading-relaxed text-foreground">
-                    {profile.bio}
+                <div className="flex flex-col gap-3 sm:flex-row">
+                  <Button className="flex-1 gap-2 rounded-2xl" onClick={() => toast.info('Contato publico ainda nao esta disponivel neste perfil')}>
+                    <MessageCircle className="h-4 w-4" />
+                    Enviar mensagem
+                  </Button>
+                  <Button variant="outline" className="flex-1 gap-2 rounded-2xl" onClick={handleShare}>
+                    <Share2 className="h-4 w-4" />
+                    Compartilhar perfil
+                  </Button>
+                </div>
+              </div>
+            </motion.section>
+
+            <motion.aside
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.35, delay: 0.08 }}
+              className="space-y-4"
+            >
+              <div className="rounded-[1.75rem] border border-border/70 bg-card/90 p-5 shadow-lg shadow-black/5 backdrop-blur">
+                <div className="flex items-center gap-2">
+                  <ShieldCheck className="h-5 w-5 text-primary" />
+                  <h2 className="font-semibold text-foreground">Sinais publicos</h2>
+                </div>
+                <div className="mt-4 space-y-3">
+                  <SignalRow label="Identidade" value={profile.verified ? 'Verificada' : 'Nao verificada'} />
+                  <SignalRow label="Tipo" value={profileTypeLabel} />
+                  <SignalRow label="Localizacao" value={locationLabel ? 'Visivel' : 'Oculta'} />
+                </div>
+              </div>
+
+              <div className="rounded-[1.75rem] border border-border/70 bg-card/90 p-5 shadow-lg shadow-black/5 backdrop-blur">
+                <div className="flex items-center gap-2">
+                  <Sparkles className="h-5 w-5 text-amber-600" />
+                  <h2 className="font-semibold text-foreground">Reputacao</h2>
+                </div>
+                {hasReputation ? (
+                  <div className="mt-4 grid gap-3">
+                    <StatCard icon={Star} label="Score" value={reputationScore} color="text-amber-600" />
+                    <StatCard icon={TrendingUp} label="Nivel" value={reputationLevel} color="text-sky-600" />
+                    <StatCard icon={Award} label="Status" value={reputationLevel >= 5 ? 'Destaque' : 'Em crescimento'} color="text-emerald-600" />
+                  </div>
+                ) : (
+                  <p className="mt-4 rounded-2xl bg-muted/50 p-4 text-sm text-muted-foreground">
+                    A reputacao publica ainda nao possui dados suficientes.
                   </p>
                 )}
-
-                <Separator className="my-4" />
-
-                {/* Informações adicionais */}
-                <div className="grid gap-3 sm:grid-cols-2">
-                  {/* Localização */}
-                  {(profile.city || profile.neighborhood) && (
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <MapPin className="h-4 w-4 shrink-0" />
-                      <span>
-                        {profile.neighborhood && profile.city 
-                          ? `${profile.neighborhood}, ${profile.city}`
-                          : profile.city || profile.neighborhood}
-                      </span>
-                    </div>
-                  )}
-
-                  {/* Membro desde */}
-                  {profile.created_at && (
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <Calendar className="h-4 w-4 shrink-0" />
-                      <span>Membro desde {formatMemberSince(profile.created_at)}</span>
-                    </div>
-                  )}
-                </div>
-
-                {/* Reputação e estatísticas */}
-                {reputationScore > 0 && (
-                  <>
-                    <Separator className="my-4" />
-                    <div className="space-y-3">
-                      <h3 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-                        Reputação
-                      </h3>
-                      <div className="grid gap-3 sm:grid-cols-3">
-                        <StatCard
-                          icon={Star}
-                          label="Score"
-                          value={reputationScore}
-                          color="text-amber-600"
-                        />
-                        <StatCard
-                          icon={TrendingUp}
-                          label="Nível"
-                          value={reputationLevel}
-                          color="text-blue-600"
-                        />
-                        <StatCard
-                          icon={Award}
-                          label="Rank"
-                          value={reputationLevel >= 5 ? "Top 10%" : "Crescendo"}
-                          color="text-purple-600"
-                        />
-                      </div>
-                    </div>
-                  </>
-                )}
               </div>
-            </div>
-          </motion.div>
-
-          {/* Seções adicionais (futuro: posts, empresas, etc.) */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, delay: 0.2 }}
-            className="mt-6 space-y-6"
-          >
-            {/* Placeholder para conteúdo futuro */}
-            <div className="rounded-2xl border border-border bg-card p-6 text-center">
-              <p className="text-sm text-muted-foreground">
-                Mais conteúdo em breve...
-              </p>
-            </div>
-          </motion.div>
+            </motion.aside>
+          </main>
         </div>
       </div>
     </>
   );
 }
 
-/* ============================================================
- * COMPONENTES AUXILIARES
- * ============================================================ */
+function InfoTile({
+  icon: Icon,
+  label,
+  value,
+}: {
+  icon: React.ElementType;
+  label: string;
+  value: string;
+}) {
+  return (
+    <div className="rounded-2xl border border-border/70 bg-background/70 p-4">
+      <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+        <Icon className="h-4 w-4" />
+        {label}
+      </div>
+      <p className="mt-2 text-sm font-medium text-foreground">{value}</p>
+    </div>
+  );
+}
+
+function SignalRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex items-center justify-between gap-3 rounded-2xl bg-muted/45 px-3 py-2.5 text-sm">
+      <span className="text-muted-foreground">{label}</span>
+      <span className="font-medium text-foreground">{value}</span>
+    </div>
+  );
+}
 
 function StatCard({
   icon: Icon,
@@ -342,14 +319,12 @@ function StatCard({
   color: string;
 }) {
   return (
-    <div className="rounded-xl border border-border bg-background p-4">
+    <div className="rounded-2xl border border-border/70 bg-background/70 p-4">
       <div className="flex items-center gap-2">
-        <Icon className={cn("h-4 w-4", color)} />
-        <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-          {label}
-        </p>
+        <Icon className={cn('h-4 w-4', color)} />
+        <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{label}</p>
       </div>
-      <p className="mt-2 text-2xl font-bold text-foreground">{value}</p>
+      <p className="mt-2 text-2xl font-black tracking-tight text-foreground">{value}</p>
     </div>
   );
 }

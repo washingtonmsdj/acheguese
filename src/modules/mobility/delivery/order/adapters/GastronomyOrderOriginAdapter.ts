@@ -9,6 +9,7 @@ import {
   type CreateOrderInput,
   type CreateOrderItemInput,
 } from "../types";
+import { buildDeliveryPricingSnapshot } from "../sourceMetadata";
 
 type GastronomyOrderBusiness = Pick<
   GastronomyBusiness,
@@ -36,6 +37,11 @@ export interface CreateGastronomyOrderDraftInput {
     lng?: number | null;
     recipient_name?: string | null;
     phone?: string | null;
+    postal_code?: string | null;
+    street?: string | null;
+    number?: string | null;
+    complement?: string | null;
+    reference?: string | null;
     neighborhood?: string | null;
     city?: string | null;
     state?: string | null;
@@ -146,6 +152,20 @@ export class GastronomyOrderOriginAdapter {
       cart.items.map((item) => this.mapCartItem(item)),
     );
 
+    const formattedDeliveryAddress = [
+      input.delivery_snapshot?.street,
+      input.delivery_snapshot?.number,
+      input.delivery_snapshot?.complement,
+      input.delivery_snapshot?.neighborhood,
+      input.delivery_snapshot?.city,
+      input.delivery_snapshot?.state,
+      input.delivery_snapshot?.postal_code
+        ? `CEP ${input.delivery_snapshot.postal_code}`
+        : null,
+    ]
+      .filter((value): value is string => typeof value === "string" && value.trim().length > 0)
+      .join(", ");
+
     return {
       customer_profile_id: input.customer_profile_id,
       merchant_profile_id: business.profile_id,
@@ -164,9 +184,26 @@ export class GastronomyOrderOriginAdapter {
           delivery_address_id: input.delivery_snapshot?.address_id ?? null,
           delivery_lat: input.delivery_snapshot?.lat ?? null,
           delivery_lng: input.delivery_snapshot?.lng ?? null,
+          delivery_address: formattedDeliveryAddress || null,
+          delivery_street: input.delivery_snapshot?.street ?? null,
+          delivery_number: input.delivery_snapshot?.number ?? null,
+          delivery_postal_code: input.delivery_snapshot?.postal_code ?? null,
+          delivery_zipcode: input.delivery_snapshot?.postal_code ?? null,
+          delivery_complement: input.delivery_snapshot?.complement ?? null,
+          delivery_reference: input.delivery_snapshot?.reference ?? null,
           delivery_neighborhood: input.delivery_snapshot?.neighborhood ?? null,
           delivery_city: input.delivery_snapshot?.city ?? null,
           delivery_state: input.delivery_snapshot?.state ?? null,
+          delivery_items_subtotal: subtotal,
+          delivery_fee_customer: deliveryFee,
+          delivery_order_total: cartTotal,
+          delivery_pricing: buildDeliveryPricingSnapshot({
+            itemsSubtotal: subtotal,
+            feeChargedToCustomer: deliveryFee,
+            orderTotal: cartTotal,
+            courierCost: null,
+            margin: null,
+          }),
         },
       },
       payment_mode: PAYMENT_MODE.DIRECT_TO_MERCHANT,

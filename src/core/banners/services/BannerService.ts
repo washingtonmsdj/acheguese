@@ -10,6 +10,7 @@
 import { supabase } from "@/integrations/supabase/supabase";
 import { logger } from "@/shared/utils/logger";
 import type { AdminSupabaseClient } from "@/core/admin/types/adminDatabase.types";
+import { mediaService } from "@/core/media/services/MediaService";
 
 const supabaseTyped = supabase as unknown as AdminSupabaseClient;
 
@@ -307,24 +308,13 @@ export class BannerService {
    */
   static async uploadBannerImage(file: File): Promise<string> {
     try {
-      const fileExt = file.name.split(".").pop();
-      const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
-      const filePath = `${fileName}`;
-
-      const { error: uploadError } = await supabase.storage
-        .from("banners")
-        .upload(filePath, file, { upsert: true });
-
-      if (uploadError) {
-        logger.error('Error uploading banner image:', uploadError);
-        throw new Error('Erro ao fazer upload da imagem');
-      }
-
-      const {
-        data: { publicUrl },
-      } = supabase.storage.from("banners").getPublicUrl(filePath);
-
-      return publicUrl;
+      const upload = await mediaService.uploadToBucket(file, {
+        bucket: "banners",
+        pathPrefix: "banners",
+        preset: "banner_image",
+        upsert: true,
+      });
+      return upload.url;
     } catch (error: any) {
       logger.error('Error uploading banner image:', error);
       throw new Error(`Erro ao fazer upload: ${error.message}`);

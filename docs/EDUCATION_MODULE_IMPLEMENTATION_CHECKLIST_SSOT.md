@@ -19,7 +19,7 @@ Antes de implementar, assumir estas verdades do repositorio:
 - Existe `business` como base canonica.
 - A gastronomia esta em `src/modules/business/gastronomy` (nao em `src/modules/gastronomy`).
 - Dashboard de empresa usa namespace:
-  - `/perfil/empresas/:businessId/...`
+  - `/central/empresas/:businessId/...`
 - Site premium curto usa:
   - `/p/:slug/*`
   - resolvido por `PremiumBusinessSiteRoute`.
@@ -167,7 +167,7 @@ Expansao futura opcional (quando houver demanda real):
 ## 6) Rotas e navegacao (atualizadas)
 
 ## 6.1 Dashboard da empresa (namespace atual)
-Adicionar em `AppRoutes` dentro de `/perfil/empresas/:businessId`:
+Adicionar em `AppRoutes` dentro de `/central/empresas/:businessId`:
 
 - `education` -> `EducationDashboardPage`
 - `education/setup`
@@ -419,7 +419,7 @@ Falhou:
 
 So considerar pronto quando:
 - [ ] modulo em `src/modules/business/education` implementado.
-- [ ] rotas no namespace atual (`/perfil/empresas/:businessId/...`) funcionando.
+- [ ] rotas no namespace atual (`/central/empresas/:businessId/...`) funcionando.
 - [ ] rota publica education funcionando no padrao territorial.
 - [ ] profile basic + landing premium por entitlement funcionando.
 - [ ] nichos education (registry + service + hook + guard) implementados.
@@ -487,7 +487,7 @@ Regras obrigatorias:
 3) Fluxo: Database -> Service -> Hook -> Component/Page.
 4) Nao use query direta em componente/pagina.
 5) Reuse core: BusinessService, BusinessOwnershipService, OpeningHoursService, BusinessUrlService e core/billing.
-6) Respeite o namespace de rotas atual: /perfil/empresas/:businessId/...
+6) Respeite o namespace de rotas atual: /central/empresas/:businessId/...
 7) Integre premium site curto no modelo atual /p/:slug/* por entitlement.
 8) Implemente nichos de education (registry + service + hook + guard) no mesmo estilo arquitetural da gastronomia.
 9) Rode validacoes finais (typecheck, lint, validate:ssot, check:ssot, validate:architecture:governance, build).

@@ -1,4 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
+import { mediaService } from '@/core/media/services/MediaService';
 import type { Database } from '@/integrations/supabase/types.generated';
 import type {
   CreateTryOnInput,
@@ -33,14 +34,14 @@ class TryOnService {
   private readonly BUCKET = 'tryon';
 
   async uploadProductImage(userId: string, file: File): Promise<string> {
-    const ext = file.name.split('.').pop() || 'png';
-    const path = `${userId}/inputs/${crypto.randomUUID()}.${ext}`;
-    const { error } = await supabase.storage.from(this.BUCKET).upload(path, file, {
+    const upload = await mediaService.uploadToBucket(file, {
+      bucket: this.BUCKET,
+      pathPrefix: `${userId}/inputs`,
+      fileName: `${crypto.randomUUID()}`,
+      preset: 'site_asset',
       upsert: false,
-      contentType: file.type,
     });
-    if (error) throw error;
-    return supabase.storage.from(this.BUCKET).getPublicUrl(path).data.publicUrl;
+    return upload.url;
   }
 
   async createPending(userId: string, input: CreateTryOnInput): Promise<TryOnGeneration> {

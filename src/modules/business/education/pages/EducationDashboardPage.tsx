@@ -1,8 +1,8 @@
-/**
+﻿/**
  * EducationDashboardPage
  *
  * Dashboard administrativo da instituicao de educacao.
- * Rota: /perfil/empresas/:businessId/education
+ * Rota: /central/empresas/:businessId/education
  */
 
 import { useParams, Link } from 'react-router-dom';
@@ -37,7 +37,7 @@ export function EducationDashboardPage() {
       case 'full_enabled':
         return <Badge className="bg-green-100 text-green-800">Completo</Badge>;
       case 'basic_enabled':
-        return <Badge className="bg-blue-100 text-blue-800">Básico</Badge>;
+        return <Badge className="bg-blue-100 text-blue-800">BÃ¡sico</Badge>;
       case 'beta':
         return <Badge className="bg-amber-100 text-amber-800">Beta</Badge>;
       case 'planned':
@@ -50,33 +50,33 @@ export function EducationDashboardPage() {
   const menuItems = [
     {
       icon: Settings,
-      label: 'Configuração',
-      href: `/perfil/empresas/${businessId}/education/setup`,
-      description: 'Dados da instituição e perfil',
+      label: 'ConfiguraÃ§Ã£o',
+      href: `/central/empresas/${businessId}/education/setup`,
+      description: 'Dados da instituiÃ§Ã£o e perfil',
     },
     {
       icon: BookOpen,
       label: 'Programas',
-      href: `/perfil/empresas/${businessId}/education/programas`,
+      href: `/central/empresas/${businessId}/education/programas`,
       description: 'Gerenciar turmas e programas',
     },
     {
       icon: Users,
       label: 'Leads',
-      href: `/perfil/empresas/${businessId}/education/leads`,
-      description: 'Pipeline de matrículas',
+      href: `/central/empresas/${businessId}/education/leads`,
+      description: 'Pipeline de matrÃ­culas',
     },
     {
       icon: Calendar,
       label: 'Eventos',
-      href: `/perfil/empresas/${businessId}/education/eventos`,
+      href: `/central/empresas/${businessId}/education/eventos`,
       description: 'Eventos e visitas agendadas',
     },
     {
       icon: TrendingUp,
       label: 'Analytics',
-      href: `/perfil/empresas/${businessId}/education/analytics`,
-      description: 'Estatísticas e relatórios',
+      href: `/central/empresas/${businessId}/education/analytics`,
+      description: 'EstatÃ­sticas e relatÃ³rios',
     },
   ];
 
@@ -106,9 +106,9 @@ export function EducationDashboardPage() {
             <GraduationCap className="w-5 h-5 text-white" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Educação</h1>
+            <h1 className="text-2xl font-bold text-gray-900">EducaÃ§Ã£o</h1>
             <p className="text-sm text-gray-500">
-              {profile?.institution_type ?? 'Instituição não configurada'}
+              {profile?.institution_type ?? 'InstituiÃ§Ã£o nÃ£o configurada'}
             </p>
           </div>
         </div>
@@ -138,14 +138,14 @@ export function EducationDashboardPage() {
                 <div>
                   <p className="text-lg font-bold">{nicheInfo?.displayName || profile.niche_key}</p>
                   <p className="text-xs text-muted-foreground">
-                    {nicheInfo ? `${nicheInfo.enabledCapabilities.length} capabilities` : 'Nicho não configurado'}
+                    {nicheInfo ? `${nicheInfo.enabledCapabilities.length} capabilities` : 'Nicho nÃ£o configurado'}
                   </p>
                 </div>
                 {getStatusBadge(nicheInfo?.supportLevel)}
               </div>
               {nicheData.isBeta && (
                 <p className="text-xs text-amber-600 mt-2">
-                  Este nicho está em beta. Algumas funcionalidades podem ser limitadas.
+                  Este nicho estÃ¡ em beta. Algumas funcionalidades podem ser limitadas.
                 </p>
               )}
             </CardContent>
@@ -158,7 +158,7 @@ export function EducationDashboardPage() {
             </CardHeader>
             <CardContent>
               <p className="text-2xl font-bold">
-                {profile.whatsapp_number ? 'Configurado' : 'Não configurado'}
+                {profile.whatsapp_number ? 'Configurado' : 'NÃ£o configurado'}
               </p>
             </CardContent>
           </Card>
@@ -228,3 +228,4 @@ export function EducationDashboardPage() {
 }
 
 export default EducationDashboardPage;
+

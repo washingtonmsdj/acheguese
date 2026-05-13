@@ -3,6 +3,7 @@ import { Helmet } from "react-helmet-async";
 import { Link, Navigate } from "react-router-dom";
 import { Badge } from "@/shared/components/ui/badge";
 import { Button } from "@/shared/components/ui/button";
+import { Input } from "@/shared/components/ui/input";
 import {
   MenuItemCard,
   MenuItemDetailDrawer,
@@ -16,6 +17,7 @@ import { useGastronomyCart } from "@/modules/business/gastronomy/hooks";
 export default function PremiumBusinessMenuPage() {
   const { hasGastronomy, gastronomySnapshot, routes } = usePremiumBusinessSiteContext();
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
   const [selectedItem, setSelectedItem] = useState<MenuItemWithRelations | null>(null);
   const business = gastronomySnapshot?.gastronomy.business ?? null;
   const menu = gastronomySnapshot?.gastronomy.menu ?? null;
@@ -36,7 +38,9 @@ export default function PremiumBusinessMenuPage() {
   }, [activeCategory, categories]);
 
   const activeCategoryData = categories.find((category) => category.id === activeCategory);
-  const activeItems = activeCategoryData?.items ?? [];
+  const activeItems = (activeCategoryData?.items ?? []).filter((item) =>
+    item.name.toLowerCase().includes(searchQuery.toLowerCase().trim()),
+  );
   const cart = useGastronomyCart(business);
 
   if (!hasGastronomy || !gastronomySnapshot || !business) {
@@ -61,6 +65,12 @@ export default function PremiumBusinessMenuPage() {
       <section className="space-y-5 pb-24">
         <div className="space-y-3">
           <h1 className="text-2xl font-bold text-foreground">Cardapio</h1>
+          <Input
+            value={searchQuery}
+            onChange={(event) => setSearchQuery(event.target.value)}
+            placeholder="Buscar item no cardapio..."
+            className="max-w-md"
+          />
           <div className="flex flex-wrap items-center gap-2">
             <Badge variant="outline">{categories.length} categorias</Badge>
             <Badge variant="outline">{cart.itemCount} itens no carrinho</Badge>

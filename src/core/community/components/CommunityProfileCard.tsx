@@ -18,6 +18,12 @@ export function CommunityProfileCard({
   compact = false,
 }: CommunityProfileCardProps) {
   const { profile, badges, stats, loading } = useCommunityProfile();
+  const publicLocationLabel = [
+    profile?.public_neighborhood ?? null,
+    profile?.public_city ?? null,
+  ]
+    .filter((value): value is string => typeof value === "string" && value.trim().length > 0)
+    .join(", ");
 
   if (loading) {
     return (
@@ -62,10 +68,12 @@ export function CommunityProfileCard({
                 <CheckCircle className="h-4 w-4 text-blue-500 flex-shrink-0" />
               )}
             </div>
-            <p className="text-sm text-muted-foreground flex items-center gap-1">
-              <MapPin className="h-3 w-3" />
-              {profile.neighborhood}, {profile.city}
-            </p>
+            {publicLocationLabel && (
+              <p className="text-sm text-muted-foreground flex items-center gap-1">
+                <MapPin className="h-3 w-3" />
+                {publicLocationLabel}
+              </p>
+            )}
           </div>
 
           {badges.length > 0 && (
@@ -100,10 +108,12 @@ export function CommunityProfileCard({
             )}
           </div>
 
-          <p className="text-muted-foreground flex items-center gap-1 mb-2">
-            <MapPin className="h-4 w-4" />
-            {profile.neighborhood}, {profile.city}
-          </p>
+          {publicLocationLabel && (
+            <p className="text-muted-foreground flex items-center gap-1 mb-2">
+              <MapPin className="h-4 w-4" />
+              {publicLocationLabel}
+            </p>
+          )}
 
           {profile.bio && (
             <p className="text-sm text-muted-foreground">{profile.bio}</p>

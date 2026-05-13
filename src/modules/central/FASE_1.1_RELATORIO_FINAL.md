@@ -172,9 +172,9 @@ A Fase 1.1 transformou a Central de um wrapper visual em uma base de acesso mais
 **Documentação Completa em `REDIRECIONAMENTOS_PERFIL.md`:**
 
 **Rotas com Redirecionamento Ativo:**
-- `/central/empresas` → `/perfil/empresas` (wrapper)
-- `/central/motorista` → `/perfil/mobilidade/motorista` (wrapper)
-- `/central/motoboy` → `/perfil/mobilidade/motoboy` (wrapper)
+- `/central/empresas` → `/central/empresas` (wrapper)
+- `/central/motorista` → `/central/motorista` (wrapper)
+- `/central/motoboy` → `/central/motoboy` (wrapper)
 
 **Motivo:**
 - Reutilização de páginas legadas existentes

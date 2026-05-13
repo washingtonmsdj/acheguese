@@ -33,8 +33,8 @@ export interface AdminUserProfile {
   name: string;
   username: string;
   avatar_url: string | null;
-  neighborhood: string | null;
-  city: string;
+  public_neighborhood: string | null;
+  public_city: string | null;
   verified: boolean;
   is_active: boolean;
   is_suspended: boolean;

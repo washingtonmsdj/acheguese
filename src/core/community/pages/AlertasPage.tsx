@@ -41,7 +41,7 @@ export default function AlertasPage({ resolved }: AlertasPageProps) {
   });
   const territoryPresentation = !resolved && homeDistrict
     ? {
-      city: homeCity?.name ?? activeProfile?.city ?? "",
+      city: homeCity?.name ?? "",
       neighborhood: homeDistrict.name,
       locationId: homeDistrict.id,
     }

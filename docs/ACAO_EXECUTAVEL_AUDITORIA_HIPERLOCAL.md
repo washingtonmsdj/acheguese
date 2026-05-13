@@ -871,8 +871,8 @@ Status: em andamento transversal.
 
 Itens:
 
-- corrigir rota com typo `businesss` ou manter redirect canonico controlado;
-- [x] Implementado: `/businesss` redireciona para `/empresas`, `/businesss/:id/catalogo` redireciona para `/empresas/:id/catalogo`, admin `/admin/businesss` redireciona para `/admin/empresas`, breadcrumbs usam somente `empresas` como rota canonica.
+- corrigir rota com typo `empresas` ou manter redirect canonico controlado;
+- [x] Implementado: `/empresas` redireciona para `/empresas`, `/empresas/:id/catalogo` redireciona para `/empresas/:id/catalogo`, admin `/admin/empresas` redireciona para `/admin/empresas`, breadcrumbs usam somente `empresas` como rota canonica.
 - sitemap dinamico com URLs reais;
 - canonicals para empresas, servicos, gastronomia, classificados, educacao e turismo;
 - schema.org para LocalBusiness, Product/Offer, Event, JobPosting, Place e FAQ.
@@ -1212,7 +1212,7 @@ Criterio de aceite:
 
 ## SEO / Rotas
 
-- [x] P0: corrigir `businesss` com redirects canonicos e breadcrumb sem rota canonica errada.
+- [x] P0: corrigir `empresas` com redirects canonicos e breadcrumb sem rota canonica errada.
 - [x] P0 parcial: rotas publicas de onboarding cobertas por smoke E2E e marca canonica.
 - [x] P0 parcial: rotas institucionais publicas cobertas por smoke E2E e marca canonica.
 - [x] P0 parcial: decisao de produto para roteamento cidade/modulo/comunidade documentada.

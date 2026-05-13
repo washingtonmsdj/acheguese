@@ -39,7 +39,7 @@ export function MenuItemCard({ item, onSelect }: Props) {
           <img
             src={item.image_url}
             alt={item.name}
-            className="h-44 w-full rounded-lg object-cover sm:h-24 sm:w-24"
+            className="aspect-[4/3] w-full rounded-lg object-cover sm:w-32"
           />
         )}
 

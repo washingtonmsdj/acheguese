@@ -97,13 +97,13 @@ GET /educacao/ba/salvador
 GET /educacao/ba/salvador/caminho-das-arvores/escola-exemplo
 
 # Admin (requer autenticação)
-GET /perfil/empresas/:businessId/education
-GET /perfil/empresas/:businessId/education/setup
-GET /perfil/empresas/:businessId/education/programas
-GET /perfil/empresas/:businessId/education/leads
-GET /perfil/empresas/:businessId/education/eventos
-GET /perfil/empresas/:businessId/education/analytics
-GET /perfil/empresas/:businessId/education/planos
+GET /central/empresas/:businessId/education
+GET /central/empresas/:businessId/education/setup
+GET /central/empresas/:businessId/education/programas
+GET /central/empresas/:businessId/education/leads
+GET /central/empresas/:businessId/education/eventos
+GET /central/empresas/:businessId/education/analytics
+GET /central/empresas/:businessId/education/planos
 ```
 
 #### 5.2 Testes de API

@@ -2,24 +2,21 @@
 
 ## Visao atual
 
-O perfil tem tres camadas canonicas:
+O perfil tem uma unica responsabilidade canonica: representar a area pessoal do usuario.
 
-1. `/perfil` como hub principal do usuario.
-2. Paginas proprias com o mesmo shell visual do perfil:
-   - `/perfil/empresas`
-   - `/perfil/planos`
-   - `/perfil/mobilidade`
-
-As demais secoes internas do hub continuam existindo apenas como estado interno do hub, nao como rota dedicada.
+1. `/perfil` e o hub pessoal do usuario.
+2. `/central` e o hub operacional/profissional.
+3. `/empresas` e o modulo publico de descoberta/listagem de empresas.
 
 ## Regras de navegacao
 
-- `/perfil` e a entrada principal do hub.
-- `/perfil/empresas` e a lista canonica de empresas.
-- `/perfil/planos` e a central canonica de planos e cobrancas.
-- `/perfil/mobilidade` e o painel canonico do perfil operacional.
+- `/perfil` e a entrada principal da area pessoal.
+- `/perfil/planos` centraliza planos e cobrancas pessoais/visao de conta.
+- `/perfil/identidades` e `/perfil/gerenciar` tratam identidades e areas vinculadas ao usuario.
+- Atalhos de empresas navegam para `/central/empresas`.
+- Atalhos de motorista/motoboy navegam para `/central/motorista` ou `/central/motoboy`.
 - O hub de perfil nao usa querystring para trocar secao.
-- Os links internos do app devem sair diretamente para `/perfil/empresas`, `/perfil/planos` e `/perfil/mobilidade`.
+- `/central/empresas/*` e `/central/*` nao existem como rotas canonicas.
 
 ## Shell do perfil
 
@@ -33,53 +30,47 @@ As paginas canonicas do perfil mantem:
 Isso vale para:
 
 - `/perfil`
-- `/perfil/empresas`
 - `/perfil/planos`
-- `/perfil/mobilidade`
+- `/perfil/gerenciar`
+- `/perfil/identidades`
+- `/perfil/conta`
+- `/perfil/familia`
+- `/perfil/configuracoes`
 
-## Shell de empresa
+## Shell operacional
 
-As paginas internas da empresa usam o shell unico em:
+As paginas operacionais usam a Central:
 
-- `/perfil/empresas/:businessId`
-- `/perfil/empresas/:businessId/dados`
-- `/perfil/empresas/:businessId/gastronomia`
-- `/perfil/empresas/:businessId/planos`
-- `/perfil/empresas/:businessId/link-premium`
-- `/perfil/empresas/:businessId/analytics`
-- `/perfil/empresas/:businessId/configuracoes`
+- `/central`
+- `/central/empresas`
+- `/central/empresas/nova`
+- `/central/empresas/:businessId/*`
+- `/central/motorista/*`
+- `/central/motoboy/*`
 
-## Shell de mobilidade
+## Shell publico de empresas
 
-As paginas internas de mobilidade usam um shell proprio em:
+O modulo publico de empresas fica em:
 
-- `/perfil/mobilidade`
-- `/perfil/mobilidade/motorista`
-- `/perfil/mobilidade/motorista/cadastro`
-- `/perfil/mobilidade/motorista/disponibilidade`
-- `/perfil/mobilidade/motorista/corridas`
-- `/perfil/mobilidade/motorista/ganhos`
-- `/perfil/mobilidade/motorista/configuracoes`
-- `/perfil/mobilidade/motoboy`
-- `/perfil/mobilidade/motoboy/cadastro`
-- `/perfil/mobilidade/motoboy/disponibilidade`
-- `/perfil/mobilidade/motoboy/entregas`
-- `/perfil/mobilidade/motoboy/ganhos`
-- `/perfil/mobilidade/motoboy/configuracoes`
+- `/empresas`
+- `/empresas/cadastrar`
+- `/empresas/:id/catalogo`
+
+`/empresas/cadastrar` e uma landing comercial; o formulario operacional real vive em `/central/empresas/nova`.
 
 ## Regras de produto
 
-- Usuario e a conta pagadora.
-- Empresa e a entidade principal de gestao.
-- Gastronomia e uma vertical da empresa.
-- Planos pertencem a empresa.
+- Usuario e a conta pessoal.
+- Empresa e entidade operacional gerida na Central.
+- Gastronomia e education sao verticais da empresa.
+- Planos de empresa pertencem a empresa.
 - Link premium pertence a empresa.
-- Gastronomia consome entitlements da empresa.
-- Mobilidade e um perfil operacional do usuario, separado da empresa.
+- Mobilidade e perfil operacional do usuario, gerido na Central.
 
 ## Implementacao
 
-- `src/modules/profile/utils/profileNavigation.ts` concentra a definicao dos caminhos do perfil.
-- `src/modules/profile/utils/profileMobilityNavigation.ts` concentra a definicao dos caminhos da mobilidade.
-- `src/modules/profile/pages/PerfilHubPage.tsx` controla a secao ativa internamente.
-- `src/modules/profile/pages/PerfilEmpresasPage.tsx`, `src/modules/profile/pages/PerfilPlanosPage.tsx` e `src/modules/profile/pages/PerfilMobilidadeLayout.tsx` reutilizam o shell do perfil.
+- `src/modules/profile/utils/profileNavigation.ts` concentra caminhos do perfil e atalhos para a Central.
+- `src/modules/mobility/routes/mobilityNavigation.ts` concentra navegacao operacional de mobilidade.
+- `src/core/business/utils/businessManagementRoutes.ts` concentra rotas operacionais de empresas.
+- `src/modules/profile/pages/PerfilHubPage.tsx` controla o hub pessoal.
+- `src/modules/central/pages/*` controla paineis operacionais.

@@ -158,7 +158,7 @@ WHERE education_profile_id = '550e8400-e29b-41d4-a716-446655440001';
 Após executar o seed, acesse:
 
 - **Página pública**: `/educacao/ba/salvador/escola-horizonte`
-- **Dashboard**: `/perfil/empresas/550e8400-e29b-41d4-a716-446655440000/education/analytics`
+- **Dashboard**: `/central/empresas/550e8400-e29b-41d4-a716-446655440000/education/analytics`
 
 Os gráficos devem mostrar dados do funil e métricas de conversão.
 

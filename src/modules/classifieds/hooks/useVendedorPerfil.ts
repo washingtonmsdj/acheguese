@@ -44,8 +44,10 @@ export function useVendedorPerfil(sellerId: string | undefined) {
       if (!sellerId) return null;
 
       try {
-        const profile = await profileService.getProfileById(sellerId);
+        const profile = await profileService.getPublicProfileById(sellerId);
         if (!profile) return null;
+        const profileNeighborhood =
+          (profile as { public_neighborhood?: string | null }).public_neighborhood ?? null;
 
         const classifieds = await ClassifiedsFacade.queries.getClassifiedsBySeller(sellerId);
         const activeAds = classifieds.filter((ad) => ad.is_active);
@@ -63,7 +65,7 @@ export function useVendedorPerfil(sellerId: string | undefined) {
           id: profile.id,
           name: profile.name || profile.username || "Vendedor",
           avatar_url: profile.avatar_url || null,
-          neighborhood: profile.neighborhood || "Nao informado",
+          neighborhood: profileNeighborhood || "Nao informado",
           active_ads_count: activeAds.length,
           bio: profile.bio || "Vendedor na plataforma",
           member_since: profile.created_at || new Date().toISOString(),

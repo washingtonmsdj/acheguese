@@ -21,6 +21,11 @@ export interface DeliveryAddress {
   lng: number;
   label?: string;
   locationId?: string;
+  postal_code?: string;
+  street?: string;
+  number?: string;
+  complement?: string;
+  reference?: string;
   neighborhood?: string;
   city?: string;
   state?: string;
@@ -34,6 +39,42 @@ export interface GastronomyCheckoutInput {
   payment_method?: string;
   notes?: string;
   deliveryAddress?: DeliveryAddress;
+}
+
+type DeliveryPaymentMethod = "pix" | "dinheiro" | "cartao" | "link";
+
+function resolveDeliveryPaymentContext(paymentMethod?: string): {
+  deliveryPaymentMethod: DeliveryPaymentMethod;
+  shouldCollectOnDelivery: boolean;
+  operationalLabel: string;
+} {
+  switch (paymentMethod) {
+    case "cash":
+      return {
+        deliveryPaymentMethod: "dinheiro",
+        shouldCollectOnDelivery: true,
+        operationalLabel: "dinheiro",
+      };
+    case "card_on_delivery":
+      return {
+        deliveryPaymentMethod: "cartao",
+        shouldCollectOnDelivery: true,
+        operationalLabel: "cartao",
+      };
+    case "payment_link":
+      return {
+        deliveryPaymentMethod: "link",
+        shouldCollectOnDelivery: false,
+        operationalLabel: "link",
+      };
+    case "pix":
+    default:
+      return {
+        deliveryPaymentMethod: "pix",
+        shouldCollectOnDelivery: true,
+        operationalLabel: "pix",
+      };
+  }
 }
 
 async function resolveDeliveryLocationInfo(deliveryAddress: DeliveryAddress): Promise<{
@@ -155,6 +196,11 @@ export function useGastronomyCheckout() {
               lng: input.deliveryAddress.lng,
               recipient_name: input.deliveryAddress.recipient_name,
               phone: input.deliveryAddress.phone,
+              postal_code: input.deliveryAddress.postal_code,
+              street: input.deliveryAddress.street,
+              number: input.deliveryAddress.number,
+              complement: input.deliveryAddress.complement,
+              reference: input.deliveryAddress.reference,
               neighborhood: deliveryLocationInfo?.neighborhood,
               city: deliveryLocationInfo?.city,
               state: deliveryLocationInfo?.state,
@@ -185,6 +231,37 @@ export function useGastronomyCheckout() {
             dropoff: { lat: input.deliveryAddress.lat, lng: input.deliveryAddress.lng },
           });
 
+          // Minimizacao de dados: o motoboy recebe somente informacoes operacionais
+          // necessarias para localizar o destino (sem observacoes gerais/pagamento).
+          const paymentContext = resolveDeliveryPaymentContext(input.payment_method);
+          const orderSubtotal = Number.isFinite(input.cart.subtotal) ? input.cart.subtotal : 0;
+          const orderDeliveryFee = Number.isFinite(input.cart.delivery_fee) ? input.cart.delivery_fee : 0;
+          const orderTotal = Number.isFinite(input.cart.total) ? input.cart.total : 0;
+          const orderSubtotalLabel = `R$ ${orderSubtotal.toFixed(2)}`;
+          const orderDeliveryFeeLabel = `R$ ${orderDeliveryFee.toFixed(2)}`;
+          const orderTotalLabel = `R$ ${orderTotal.toFixed(2)}`;
+          const motoboyNotes = [
+            `PEDIDO_SUBTOTAL: ${orderSubtotalLabel}`,
+            `TAXA_ENTREGA_CLIENTE: ${orderDeliveryFeeLabel}`,
+            `PEDIDO_TOTAL: ${orderTotalLabel}`,
+            `COBRAR_NA_ENTREGA: ${paymentContext.shouldCollectOnDelivery ? "sim" : "nao"}`,
+            `FORMA_PAGAMENTO: ${paymentContext.operationalLabel}`,
+            input.deliveryAddress.postal_code
+              ? `CEP ${input.deliveryAddress.postal_code}`
+              : null,
+            input.deliveryAddress.street
+              ? `${input.deliveryAddress.street}${input.deliveryAddress.number ? `, ${input.deliveryAddress.number}` : ''}`
+              : null,
+            input.deliveryAddress.complement
+              ? `Complemento: ${input.deliveryAddress.complement}`
+              : null,
+            input.deliveryAddress.reference
+              ? `Referencia: ${input.deliveryAddress.reference}`
+              : null,
+          ]
+            .filter((value): value is string => typeof value === 'string' && value.trim().length > 0)
+            .join(' | ');
+
           const deliveryResult = await motoboy.requestDelivery({
             pickupAddressId: input.business.address_id,
             dropoffAddressId: input.deliveryAddress.id,
@@ -202,15 +279,15 @@ export function useGastronomyCheckout() {
               activeProfile.full_name ||
               "Cliente",
             recipientPhone: input.deliveryAddress.phone || activeProfile.phone,
-            deliveryNotes: input.notes,
-            packageDescription: `Pedido #${order.id} - ${input.business.name}`,
+            deliveryNotes: motoboyNotes || undefined,
+            packageDescription: `Pedido #${order.id} - ${input.business.name} - Total ${orderTotalLabel}`,
             packageSize: "medium",
 
             sourceType: "gastronomy",
             sourceId: order.id,
             authorizationSourceId: input.business.business_data_id,
 
-            paymentMethod: input.payment_method,
+            paymentMethod: paymentContext.deliveryPaymentMethod,
           });
 
           if (deliveryResult.success) {

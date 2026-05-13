@@ -23,6 +23,7 @@ export * from "./settlement-context/SettlementContextService";
 export * from "./order/types";
 export * from "./order/OrderDraftService";
 export * from "./order/adapters/GastronomyOrderOriginAdapter";
+export * from "./order/adapters/BusinessServiceOrderOriginAdapter";
 export * from "./services/OrderDeliverySSOTService";
 export * from "./hooks/useOrderDelivery";
 

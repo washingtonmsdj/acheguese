@@ -57,7 +57,7 @@ A Fase 1.1 (Guards Específicos) e a Fase 2.1 (Migração de Links Internos) da 
 - Sub-rotas de mobilidade (cadastro, disponibilidade, corridas, entregas, ganhos, configuracoes)
   - Motivo: Fluxos específicos ainda não migrados para Central
   - Rota futura: Serão migradas para sub-rotas de `/central/motorista/*` e `/central/motoboy/*`
-- `/perfil/mobilidade` (hub de mobilidade)
+- `/central` (hub de mobilidade)
   - Motivo: Wrapper legado mantido para compatibilidade
   - Rota futura: Será removido após migração completa
 
@@ -90,20 +90,20 @@ A Fase 1.1 (Guards Específicos) e a Fase 2.1 (Migração de Links Internos) da 
 ### Arquivos Alterados (7)
 
 **1. src/core/business/utils/businessManagementRoutes.ts**
-- Adicionado `BusinessRouteTarget` com opção `target?: "central" | "legacy"`
+- Adicionado `rotas centrais canonicas` com opção `rota central canonica`
 - Todas as rotas usam `/central/empresas/:businessId` por padrão
-- Opção `target: "legacy"` retorna `/perfil/empresas/:businessId`
+- Opção `sem rota legada` retorna `/central/empresas/:businessId`
 
 **2. src/core/business/hooks/useBusinessUrls.ts**
 - `dashboard()` usa `/central/empresas/:businessId` por padrão
-- Opção `target: "legacy"` para compatibilidade
+- Opção `sem rota legada` para compatibilidade
 
 **3. src/core/business/services/BusinessUrlService.ts**
 - `buildUrls()` usa `/central/empresas/:id` por padrão
-- Adicionado `BusinessUrlOptions` para compatibilidade
+- Adicionado `opcoes canonicas removidas` para compatibilidade
 
 **4. src/core/routing/hooks/useAppUrls.ts**
-- `profile.central` → `/central`
+- `profile.home` → `/central`
 - `profile.businesses` → `/central/empresas`
 - `profile.mobilidade.motorista.home` → `/central/motorista`
 - `profile.mobilidade.motoboy.home` → `/central/motoboy`
@@ -123,12 +123,12 @@ A Fase 1.1 (Guards Específicos) e a Fase 2.1 (Migração de Links Internos) da 
 
 | Contexto | Antes | Depois |
 |----------|-------|--------|
-| Gestão de empresas (overview) | `/perfil/empresas/:businessId` | `/central/empresas/:businessId` |
-| Gestão de empresas (todas sub-rotas) | `/perfil/empresas/:businessId/*` | `/central/empresas/:businessId/*` |
+| Gestão de empresas (overview) | `/central/empresas/:businessId` | `/central/empresas/:businessId` |
+| Gestão de empresas (todas sub-rotas) | `/central/empresas/:businessId/*` | `/central/empresas/:businessId/*` |
 | Hub Central | `/perfil` | `/central` |
-| Lista de empresas | `/perfil/empresas` | `/central/empresas` |
-| Motorista (home) | `/perfil/mobilidade/motorista` | `/central/motorista` |
-| Motoboy (home) | `/perfil/mobilidade/motoboy` | `/central/motoboy` |
+| Lista de empresas | `/central/empresas` | `/central/empresas` |
+| Motorista (home) | `/central/motorista` | `/central/motorista` |
+| Motoboy (home) | `/central/motoboy` | `/central/motoboy` |
 
 ### Rotas Mantidas por Compatibilidade
 
@@ -136,24 +136,24 @@ A Fase 1.1 (Guards Específicos) e a Fase 2.1 (Migração de Links Internos) da 
 |----------|------|--------|
 | Perfil pessoal (resumo) | `/perfil` | Foco em informações pessoais |
 | Planos/billing | `/perfil/planos` | Página pessoal |
-| Mobilidade (hub) | `/perfil/mobilidade` | Wrapper legado |
-| Cadastro motorista | `/perfil/mobilidade/motorista/cadastro` | Fluxo específico |
-| Disponibilidade motorista | `/perfil/mobilidade/motorista/disponibilidade` | Fluxo específico |
-| Corridas motorista | `/perfil/mobilidade/motorista/corridas` | Fluxo específico |
-| Ganhos motorista | `/perfil/mobilidade/motorista/ganhos` | Fluxo específico |
-| Configurações motorista | `/perfil/mobilidade/motorista/configuracoes` | Fluxo específico |
-| Cadastro motoboy | `/perfil/mobilidade/motoboy/cadastro` | Fluxo específico |
-| Disponibilidade motoboy | `/perfil/mobilidade/motoboy/disponibilidade` | Fluxo específico |
-| Entregas motoboy | `/perfil/mobilidade/motoboy/entregas` | Fluxo específico |
-| Ganhos motoboy | `/perfil/mobilidade/motoboy/ganhos` | Fluxo específico |
-| Configurações motoboy | `/perfil/mobilidade/motoboy/configuracoes` | Fluxo específico |
+| Mobilidade (hub) | `/central` | Wrapper legado |
+| Cadastro motorista | `/central/motorista/cadastro` | Fluxo específico |
+| Disponibilidade motorista | `/central/motorista/disponibilidade` | Fluxo específico |
+| Corridas motorista | `/central/motorista/corridas` | Fluxo específico |
+| Ganhos motorista | `/central/motorista/ganhos` | Fluxo específico |
+| Configurações motorista | `/central/motorista/configuracoes` | Fluxo específico |
+| Cadastro motoboy | `/central/motoboy/cadastro` | Fluxo específico |
+| Disponibilidade motoboy | `/central/motoboy/disponibilidade` | Fluxo específico |
+| Entregas motoboy | `/central/motoboy/entregas` | Fluxo específico |
+| Ganhos motoboy | `/central/motoboy/ganhos` | Fluxo específico |
+| Configurações motoboy | `/central/motoboy/configuracoes` | Fluxo específico |
 
 ### Compatibilidade com Rotas Legadas
 
 **Parâmetro `target` disponível em:**
-- `businessManagementRoutes` - todas as funções aceitam `opts?: BusinessRouteTarget`
-- `useBusinessUrls().dashboard` - aceita `opts?: { target?: "central" | "legacy" }`
-- `BusinessUrlService.buildUrls()` - aceita `opts?: BusinessUrlOptions`
+- `businessManagementRoutes` - todas as funções aceitam `opts?: rotas centrais canonicas`
+- `useBusinessUrls().dashboard` - aceita `opts?: { rota central canonica }`
+- `BusinessUrlService.buildUrls()` - aceita `opts?: opcoes canonicas removidas`
 
 **Uso:**
 ```typescript
@@ -161,7 +161,7 @@ A Fase 1.1 (Guards Específicos) e a Fase 2.1 (Migração de Links Internos) da 
 businessManagementRoutes.overview(businessId) // → /central/empresas/:businessId
 
 // Legacy: usa /perfil
-businessManagementRoutes.overview(businessId, { target: "legacy" }) // → /perfil/empresas/:businessId
+businessManagementRoutes.overview(businessId, { sem rota legada }) // → /central/empresas/:businessId
 ```
 
 ---
