@@ -9,7 +9,7 @@ Documentação da fundação territorial do projeto — Etapas 1–9.
 O sistema territorial resolve qual conteúdo exibir com base na localização geográfica do usuário. Suporta dois modos:
 
 - **Location** — bairro individual (ex: `/ba/salvador/nordeste-de-amaralina`)
-- **Group** — agrupamento de bairros (ex: `/ba/salvador/area/complexo-do-nordeste-de-amaralina`)
+- **Group** — agrupamento de bairros (ex: `/ba/salvador/complexo-do-nordeste-de-amaralina`)
 
 ---
 
@@ -101,7 +101,7 @@ Acesso ao store de território ativo (fora de rota territorial).
 /                                          → HomePage (institucional)
 /:state/:city                              → TerritorialLayout (city)
 /:state/:city/:district                    → TerritorialLayout (location)
-/:state/:city/area/:groupSlug              → TerritorialLayout (group)
+/:state/:city/:groupSlug                   → TerritorialLayout (group)
 ```
 
 Decisao de produto/SEO vigente: `docs/DECISAO_ROTEAMENTO_TERRITORIAL.md`.
@@ -111,21 +111,20 @@ Modelo publico atual:
 ```text
 /:state/:city                              -> hub publico da cidade
 /:state/:city/:district                    -> hub publico do bairro
-/:state/:city/area/:groupSlug              -> hub publico do grupo territorial
+/:state/:city/:groupSlug                   -> hub publico do grupo territorial
 /empresas/:state/:city                     -> vitrine publica do modulo na cidade
 /empresas/:state/:city/:district           -> vitrine publica do modulo no bairro
-/empresas/:state/:city/area/:groupSlug     -> vitrine publica do modulo no grupo
-/comunidade/:state/:city/:district         -> experiencia social/local do bairro
-/comunidade/:state/:city/area/:groupSlug   -> experiencia social/local do territorio
+/empresas/:state/:city/:groupSlug          -> vitrine publica do modulo no grupo
+/comunidade/:state/:city/:territorySlug    -> experiencia social/local do territorio (canonica)
 ```
 
 Exemplo real:
 ```
-/ba/salvador/area/complexo-do-nordeste-de-amaralina     → Complexo do Nordeste
+/ba/salvador/complexo-do-nordeste-de-amaralina     → Complexo do Nordeste
 /ba/salvador/nordeste-de-amaralina                 → Nordeste de Amaralina
 ```
 
-Rotas antigas com `/:country/...`, grupo sem `/area`, `/community` ou `/feed` nao devem ser usadas em implementacoes novas.
+Rotas antigas com `/:country/...`, comunidade com `/area/...`, `/community` ou `/feed` nao devem ser usadas em implementacoes novas.
 
 ---
 
@@ -185,7 +184,7 @@ Grupo seed no `TerritorialGroupRepositoryMock`:
 - **Sem hardcode de localidade** fora de `territoryUrls.ts` (LAUNCH_TERRITORY) e `HomePage`
 - **Membros inativos** não participam de availability nem de rollout
 - **Drift policy** — novos membros de grupo NÃO herdam rollout automaticamente; chamar `reconcileGroupRollout` explicitamente
-- **Ordem do router é crítica**: rotas fixas → group (`/area/:groupSlug`) → district (`/:district`) → catch-all
+- **Ordem do router é crítica**: rotas fixas → group (`/:groupSlug`) → district (`/:district`) → catch-all
 
 ---
 

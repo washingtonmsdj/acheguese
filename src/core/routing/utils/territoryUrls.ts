@@ -5,11 +5,15 @@
  * Nunca concatenar paths manualmente no app — usar estas funções.
  *
  * Padrões canônicos (públicos):
- *   Cidade:  /:state/:city
- *   Bairro:  /:state/:city/:district
- *   Grupo:   /:state/:city/area/:groupSlug
- *   Módulo:  /[modulo]/:state/:city/:district?
- *   Grupo em módulo: /[modulo]/:state/:city/area/:groupSlug
+ *   Cidade:   /:state/:city
+ *   Bairro:   /:state/:city/:district
+ *   Grupo:    /:state/:city/:groupSlug
+ *   Módulo:   /[modulo]/:state/:city/:district?
+ *   Grupo em módulo (não-comunidade): /[modulo]/:state/:city/:groupSlug
+ *
+ * Comunidade — padrão único, sem distinção técnica pública:
+ *   /comunidade/:state/:city/:territorySlug
+ *   (o tipo territorial — grupo, bairro, localidade — é resolvido internamente)
  */
 
 import type { Location, TerritorialGroup } from '@/core/location/types';
@@ -90,7 +94,7 @@ export function buildLocationBaseUrl(location: Location): string {
  */
 export function buildGroupBaseUrl(group: TerritorialGroup, cityPath: string): string {
   const publicCity = geoPathToPublicUrl(cityPath);
-  return `${publicCity}/area/${group.slug}`;
+  return `${publicCity}/${group.slug}`;
 }
 
 /**
@@ -141,15 +145,33 @@ export function buildModuleTerritoryUrl(module: ModuleSlug, territoryBaseUrl: st
   return `/${module}${normalizePublicTerritoryPath(territoryBaseUrl)}`;
 }
 
+/**
+ * Constrói a URL canônica de comunidade para um território.
+ *
+ * Padrão único: /comunidade/:state/:city/:territorySlug
+ * O tipo territorial (grupo, bairro, localidade) é resolvido internamente —
+ * nunca exposto na URL pública.
+ *
+ * Aceita base territorial pública no formato:
+ *   /:state/:city
+ *   /:state/:city/:territorySlug
+ * Nunca usar /area/ em URLs públicas de comunidade.
+ *
+ * Exemplos:
+ *   buildCommunityTerritoryUrl('/ba/salvador/pituba')
+ *   → '/comunidade/ba/salvador/pituba'
+ *
+ *   buildCommunityTerritoryUrl('/ba/salvador/pituba', 'feed')
+ *   → '/comunidade/ba/salvador/pituba/feed'
+ */
 export function buildCommunityTerritoryUrl(territoryBaseUrl: string, suffix = ''): string {
   const normalizedBase = normalizePublicTerritoryPath(territoryBaseUrl);
-  const parts = normalizedBase.split("/").filter(Boolean);
-  const canonicalCommunityBase =
-    parts.length >= 4 && parts[2] === "area"
-      ? `/${parts[0]}/${parts[1]}/${parts[3]}`
-      : normalizedBase;
+  const parts = normalizedBase.split('/').filter(Boolean);
+  if (parts.length >= 3 && parts[2] === 'area') {
+    throw new Error('buildCommunityTerritoryUrl nao aceita /area/. Use /:state/:city/:territorySlug.');
+  }
   const normalizedSuffix = suffix ? `/${suffix.replace(/^\/+/, '')}` : '';
-  return buildModuleTerritoryUrl(MODULE_SLUGS.community, canonicalCommunityBase) + normalizedSuffix;
+  return `/${MODULE_SLUGS.community}${normalizedBase}${normalizedSuffix}`;
 }
 
 export type CommunityTabSuffix = 'feed' | 'grupos';

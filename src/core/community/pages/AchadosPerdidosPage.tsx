@@ -1,6 +1,6 @@
 ﻿import React from "react";
 
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Search,
@@ -74,12 +74,7 @@ export default function AchadosPerdidosPage() {
   // ✅ Verificação de autenticação
   const { activeProfile } = useSessionContext();
   const { hasHome, homeDistrict, loading: territoryLoading } = useUserTerritory();
-  const territoryFilter = useMemo(
-    () => homeDistrict
-      ? { scope: "location" as const, location_id: homeDistrict.id }
-      : { scope: "none" as const },
-    [homeDistrict],
-  );
+  const territoryLocationId = homeDistrict?.id ?? null;
 
   const {
     items,
@@ -96,14 +91,22 @@ export default function AchadosPerdidosPage() {
   } = usePaginatedState<LostFoundItem>();
 
   const fetchPage = useCallback(
-    async (pageNum: number) => {
+    async (
+      pageNum: number,
+      tipo: string,
+      categoria: string,
+      locationId: string | null,
+    ) => {
       setLoading(true);
       const from = pageNum * PAGE_SIZE;
       const to = from + PAGE_SIZE - 1;
+      const territoryFilter = locationId
+        ? { scope: "location" as const, location_id: locationId }
+        : { scope: "none" as const };
 
       // ✅ LOTE 9A - Usar lostFoundService.getPostsPage (SSOT para lost_found_posts)
       const data = await lostFoundService.getPostsPage(
-        { tipo: filterTipo, categoria: filterCategoria, territoryFilter },
+        { tipo, categoria, territoryFilter },
         from,
         to,
       );
@@ -131,9 +134,6 @@ export default function AchadosPerdidosPage() {
       setInitialLoading(false);
     },
     [
-      filterTipo,
-      filterCategoria,
-      territoryFilter,
       PAGE_SIZE,
       setLoading,
       setInitialLoading,
@@ -143,11 +143,13 @@ export default function AchadosPerdidosPage() {
 
   useEffect(() => {
     reset();
-    fetchPage(0);
-  }, [filterTipo, filterCategoria, reset, fetchPage]);
+    void fetchPage(0, filterTipo, filterCategoria, territoryLocationId);
+  }, [filterTipo, filterCategoria, territoryLocationId, reset, fetchPage]);
   useEffect(() => {
-    if (page > 0) fetchPage(page);
-  }, [page, fetchPage]);
+    if (page > 0) {
+      void fetchPage(page, filterTipo, filterCategoria, territoryLocationId);
+    }
+  }, [page, filterTipo, filterCategoria, territoryLocationId, fetchPage]);
 
   const { sentinelRef } = useInfiniteScroll({
     hasMore,

@@ -4,7 +4,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { Button } from "@/shared/components/ui/button";
 import { useResolveTerritoryFromUrl } from "@/core/routing/hooks/useResolveTerritoryFromUrl";
 import { useCommunityProfile } from "@/core/community-experience/hooks/useCommunityProfile";
-import { buildModuleTerritoryUrl, MODULE_SLUGS } from "@/core/routing/utils/territoryUrls";
+import { buildCommunityTerritoryUrl } from "@/core/routing/utils/territoryUrls";
 
 function titleCaseFromSlug(value?: string): string {
   if (!value) return "Comunidade local";
@@ -24,12 +24,12 @@ export function CommunityInterestPage() {
   }>();
   const { resolved } = useResolveTerritoryFromUrl();
   const { data: profile } = useCommunityProfile(resolved);
-  const territoryBase = useMemo(() => {
+  const communityBase = useMemo(() => {
     if (!resolved) return `/${state}/${city}`;
-    if (resolved.kind === "group") return `/${state}/${city}/area/${resolved.group.slug}`;
+    if (resolved.kind === "group") return `/${state}/${city}/${resolved.group.slug}`;
     return `/${state}/${city}/${resolved.location.slug}`;
   }, [city, resolved, state]);
-  const eventsPath = useMemo(() => buildModuleTerritoryUrl(MODULE_SLUGS.events, territoryBase), [territoryBase]);
+  const eventsPath = useMemo(() => buildCommunityTerritoryUrl(communityBase, "eventos"), [communityBase]);
 
   const territoryName = useMemo(() => {
     if (resolved?.kind === "group") return resolved.group.name;
@@ -59,7 +59,7 @@ export function CommunityInterestPage() {
           <Button onClick={() => navigate(`/contato${contactQuery}`)}>
             {profile?.primary_cta_label ?? "Cadastrar interesse"}
           </Button>
-          <Button variant="outline" onClick={() => navigate("/empresas/cadastrar")}>
+          <Button variant="outline" onClick={() => navigate(`${buildCommunityTerritoryUrl(communityBase)}/empresas`)}>
             {profile?.secondary_cta_label ?? "Quero minha empresa aqui"}
           </Button>
           <Button variant="outline" onClick={() => navigate(`/contato${contactQuery}`)}>

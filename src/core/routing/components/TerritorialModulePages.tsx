@@ -6,8 +6,8 @@
  * passando o routeResolved do TerritorialLayout para que
  * os hooks de filtro territorial funcionem corretamente.
  *
- * Padrão: /:country/:state/:city/:district/:module
- *         /:country/:state/:city/:groupSlug/:module
+ * Padrão: /:state/:city/:district/:module
+ *         /:state/:city/:groupSlug/:module
  */
 
 import { lazy, Suspense, type ReactNode } from 'react';
@@ -17,6 +17,7 @@ import { useTerritorialContext } from './TerritorialLayout';
 import { ModulePageLoader } from '@/shared/components/loading/PageLoader';
 import { useCityMetadata } from '@/core/city/hooks/useCityMetadata';
 import { resolveFallbackCityStatus, type CityStatus } from '@/core/city/services/CityService';
+import { TERRITORY_CONFIG } from '@/config/territory';
 
 // Lazy imports dos módulos existentes
 const ComunidadePage       = lazy(() => import('@/modules/community-feed/pages/ComunidadePage'));
@@ -27,7 +28,7 @@ const ProblemasPage        = lazy(() => import('@/modules/community-issues/pages
 const EmpresasPage         = lazy(() => import('@/app/pages/EmpresasLandingPage'));
 const ServicosPage         = lazy(() => import('@/modules/professionals/services/pages/ServicosLandingPage'));
 const ClassificadosPage    = lazy(() => import('@/modules/classifieds/pages/ClassificadosPage'));
-const EventosPage          = lazy(() => import('@/modules/community-events/pages/EventosPage'));
+const EventsListPage     = lazy(() => import('@/features/events/pages/EventsListPage'));
 const GastronomyPage        = lazy(() => import('@/modules/business/gastronomy/pages/GastronomyLandingPage'));
 const MobilidadePage       = lazy(() => import('@/modules/mobility/pages/MobilidadeLandingPage'));
 const VagasPage            = lazy(() => import('@/modules/classifieds/jobs/pages/VagasPublicPage'));
@@ -129,6 +130,15 @@ function CityStatusGate({ module, enforceActive = false, children }: CityStatusG
   const copy = MODULE_EMPTY_COPY[module];
   const pagePath = pathname.startsWith('/') ? pathname : `/${pathname}`;
   const pageTitle = `${copy.title} - ${cityName} | Achegue-se`;
+  const isCommunityPath = pathname.startsWith('/comunidade/');
+  const safeState = state ?? TERRITORY_CONFIG.launch.state;
+  const safeCity = city ?? TERRITORY_CONFIG.launch.city;
+  const canonicalTerritoryBase = resolved.kind === 'group'
+    ? `/${safeState}/${safeCity}/${resolved.group.slug}`
+    : `/${safeState}/${safeCity}/${resolved.location.slug}`;
+  const primaryCtaHref = isCommunityPath
+    ? `/comunidade${canonicalTerritoryBase}/empresas`
+    : `/empresas${canonicalTerritoryBase}`;
 
   return (
     <div className="mx-auto w-full max-w-3xl px-4 py-10">
@@ -148,13 +158,13 @@ function CityStatusGate({ module, enforceActive = false, children }: CityStatusG
         </p>
         <p className="mt-2 text-muted-foreground">{copy.description(cityName)}</p>
         <div className="mt-6 flex flex-wrap gap-3">
-          <Link to="/empresas/cadastrar" className="inline-flex rounded-lg border px-4 py-2 text-sm font-medium hover:bg-accent">
+          <Link to={primaryCtaHref} className="inline-flex rounded-lg border px-4 py-2 text-sm font-medium hover:bg-accent">
             {copy.cta}
           </Link>
           <Link to={`/contato?cidade=${encodeURIComponent(cityName)}`} className="inline-flex rounded-lg border px-4 py-2 text-sm font-medium hover:bg-accent">
             Entrar na lista de interesse
           </Link>
-          <Link to="/ba/salvador" className="inline-flex rounded-lg border px-4 py-2 text-sm font-medium hover:bg-accent">
+          <Link to="/comunidade/ba/salvador/complexo-do-nordeste-de-amaralina" className="inline-flex rounded-lg border px-4 py-2 text-sm font-medium hover:bg-accent">
             Ir para Comunidade do Complexo (piloto ativo)
           </Link>
         </div>
@@ -262,11 +272,11 @@ export function TerritorialClassificadosPage() {
 }
 
 export function TerritorialEventosPage() {
-  const { resolved } = useTerritorialContext();
+  const { resolved, activeMemberIds } = useTerritorialContext();
   return (
     <CityStatusGate module="eventos">
       <Suspense fallback={<ModulePageLoader />}>
-        <EventosPage resolved={resolved} />
+        <EventsListPage resolved={resolved} activeMemberIds={activeMemberIds} />
       </Suspense>
     </CityStatusGate>
   );
@@ -319,4 +329,3 @@ export function TerritorialMapPage() {
     </Suspense>
   );
 }
-

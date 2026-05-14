@@ -93,6 +93,17 @@ export default function VagasPublicPage({ resolved }: VagasPublicPageProps = {})
   const pageTitle = `Vagas de Emprego em ${cityName} | AcheGuese`;
   const pageDescription = `Encontre vagas de emprego em ${cityName}. ${total} oportunidades de trabalho disponíveis. Candidate-se agora!`;
   const isEmbeddedCommunityRoute = location.pathname.startsWith("/comunidade/");
+  const publishPath = useMemo(() => {
+    if (!isEmbeddedCommunityRoute) return "/vagas/publicar";
+    const parts = location.pathname.split("/").filter(Boolean);
+    const routeState = parts[1] ?? state;
+    const routeCity = parts[2] ?? city;
+    const routeTerritorySlug =
+      parts[3] ??
+      (resolved?.kind === "group" ? resolved.group.slug : resolved?.location.slug) ??
+      city;
+    return `/comunidade/${routeState}/${routeCity}/${routeTerritorySlug}/vagas/publicar`;
+  }, [city, isEmbeddedCommunityRoute, location.pathname, resolved, state]);
 
   // Handlers
   const handleVagaClick = useCallback(
@@ -104,18 +115,18 @@ export default function VagasPublicPage({ resolved }: VagasPublicPageProps = {})
 
   const handleOpenPublish = useCallback(() => {
     if (!user) {
-      navigate("/login");
+      navigate("/login", { state: { redirectTo: publishPath } });
       return;
     }
 
     if (!permission.canPublish) {
       toast.error(permission.message);
-      navigate("/vagas/publicar");
+      navigate(publishPath);
       return;
     }
 
-    navigate("/vagas/publicar");
-  }, [user, permission.canPublish, permission.message, navigate]);
+    navigate(publishPath);
+  }, [user, permission.canPublish, permission.message, navigate, publishPath]);
 
   // ============================================
   // Guards: Loading

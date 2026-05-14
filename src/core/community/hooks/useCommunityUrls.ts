@@ -12,7 +12,7 @@
  */
 
 import { useActiveTerritory } from '@/core/location/hooks/useActiveTerritory';
-import { buildCommunityTerritoryUrl, buildGroupBaseUrl, buildModuleTerritoryUrl, geoPathToPublicUrl, MODULE_SLUGS } from '@/core/routing/utils/territoryUrls';
+import { buildCommunityTerritoryUrl, buildModuleTerritoryUrl, geoPathToPublicUrl, MODULE_SLUGS } from '@/core/routing/utils/territoryUrls';
 import { TERRITORY_CONFIG } from '@/config/territory';
 import type { ResolvedTerritory } from '@/core/routing/hooks/useResolveTerritoryFromUrl';
 
@@ -45,9 +45,9 @@ export function useCommunityUrls(routeResolved?: ResolvedTerritory | null): Comm
       const firstMember = routeResolved.group.members[0];
       if (firstMember?.geographic_path) {
         const parts = firstMember.geographic_path.split('/').filter(Boolean);
-        const groupPath = buildGroupBaseUrl(routeResolved.group, `/${parts[0]}/${parts[1]}/${parts[2]}`);
-        feedUrl = buildCommunityTerritoryUrl(groupPath);
-        eventsUrl = buildModuleTerritoryUrl(MODULE_SLUGS.events, groupPath);
+        const communityTerritoryPath = `/${parts[1]}/${parts[2]}/${routeResolved.group.slug}`;
+        feedUrl = buildCommunityTerritoryUrl(communityTerritoryPath);
+        eventsUrl = buildModuleTerritoryUrl(MODULE_SLUGS.events, communityTerritoryPath);
       } else {
         feedUrl = `/comunidade/${TERRITORY_CONFIG.launch.state}/${TERRITORY_CONFIG.launch.city}`;
         eventsUrl = `/eventos/${TERRITORY_CONFIG.launch.state}/${TERRITORY_CONFIG.launch.city}`;

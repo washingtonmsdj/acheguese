@@ -24,7 +24,7 @@ import { prefetchRouteByHref } from "@/app/routes/prefetch";
 import { useCommunityScopeResolver } from "@/core/community/hooks/useCommunityScopeResolver";
 import { useCommunityProfile } from "@/core/community-experience/hooks/useCommunityProfile";
 import { TerritorialLayout } from "./TerritorialLayout";
-import { buildCommunityTerritoryUrl, buildModuleTerritoryUrl, MODULE_SLUGS } from "@/core/routing/utils/territoryUrls";
+import { buildCommunityTerritoryUrl, MODULE_SLUGS } from "@/core/routing/utils/territoryUrls";
 import { resolveSeoPolicy } from "@/core/routing/seo/territorialSeoPolicy";
 
 type CommunityNavItem = {
@@ -76,12 +76,9 @@ function resolveCommunityTerritoryBase(
   const state = parts[1] ?? fallbackState;
   const city = parts[2] ?? fallbackCity;
   const segment3 = parts[3];
-  const segment4 = parts[4];
 
-  if (segment3 === "area" && segment4) {
-    return `/${state}/${city}/area/${segment4}`;
-  }
-
+  // Padrão canônico de comunidade: /comunidade/:state/:city/:territorySlug/...
+  // segment3 é sempre o territorySlug (nunca "area")
   if (segment3 && !Object.values(MODULE_SLUGS).includes(segment3 as (typeof MODULE_SLUGS)[keyof typeof MODULE_SLUGS])) {
     return `/${state}/${city}/${segment3}`;
   }
@@ -197,7 +194,7 @@ export function CommunityTerritorialShell() {
         id: "empresas",
         label: `Comercios do ${shortTerritoryName}`,
         description: `Comercios do ${shortTerritoryName}`,
-        href: buildModuleTerritoryUrl(MODULE_SLUGS.business, territoryBase),
+        href: `${communityBase}/empresas`,
         icon: Building2,
         group: "local",
       },
@@ -205,7 +202,7 @@ export function CommunityTerritorialShell() {
         id: "gastronomia",
         label: "Gastronomia",
         description: "Restaurantes e cardapios locais",
-        href: buildModuleTerritoryUrl(MODULE_SLUGS.gastronomy, territoryBase),
+        href: `${communityBase}/gastronomia`,
         icon: UtensilsCrossed,
         group: "local",
       },
@@ -213,7 +210,7 @@ export function CommunityTerritorialShell() {
         id: "servicos",
         label: "Servicos locais",
         description: `Servicos do ${shortTerritoryName}`,
-        href: buildModuleTerritoryUrl(MODULE_SLUGS.services, territoryBase),
+        href: `${communityBase}/servicos`,
         icon: Briefcase,
         group: "local",
       },
@@ -221,7 +218,7 @@ export function CommunityTerritorialShell() {
         id: "classificados",
         label: "Classificados da comunidade",
         description: `Classificados do ${shortTerritoryName}`,
-        href: buildModuleTerritoryUrl(MODULE_SLUGS.classifieds, territoryBase),
+        href: `${communityBase}/classificados`,
         icon: Tag,
         group: "opportunities",
       },
@@ -229,7 +226,7 @@ export function CommunityTerritorialShell() {
         id: "vagas",
         label: "Oportunidades perto de voce",
         description: "Oportunidades perto de voce",
-        href: buildModuleTerritoryUrl(MODULE_SLUGS.jobs, territoryBase),
+        href: `${communityBase}/vagas`,
         icon: Briefcase,
         group: "opportunities",
       },
@@ -237,7 +234,7 @@ export function CommunityTerritorialShell() {
         id: "eventos",
         label: "Eventos do bairro",
         description: `Eventos do ${shortTerritoryName}`,
-        href: buildModuleTerritoryUrl(MODULE_SLUGS.events, territoryBase),
+        href: `${communityBase}/eventos`,
         icon: MapPin,
         group: "opportunities",
       },
@@ -245,7 +242,7 @@ export function CommunityTerritorialShell() {
         id: "mapa",
         label: "Mapa",
         description: "Camadas territoriais",
-        href: buildModuleTerritoryUrl(MODULE_SLUGS.map, territoryBase),
+        href: `${communityBase}/mapa`,
         icon: Map,
         group: "tools",
       },
@@ -269,12 +266,12 @@ export function CommunityTerritorialShell() {
         id: "mobilidade",
         label: "Mobilidade",
         description: "Caronas e entregas locais",
-        href: buildModuleTerritoryUrl(MODULE_SLUGS.mobility, territoryBase),
+        href: `${communityBase}/mobilidade`,
         icon: Car,
         group: "tools",
       },
     ],
-    [city, communityBase, localContentDescription, shortTerritoryName, state, territoryBase],
+    [city, communityBase, localContentDescription, shortTerritoryName, state],
   );
 
   const navGroups = useMemo(
@@ -364,13 +361,13 @@ export function CommunityTerritorialShell() {
               <Button onClick={() => navigate(interestPath)}>
                 {profile?.primary_cta_label ?? "Cadastrar interesse"}
               </Button>
-              <Button variant="outline" onClick={() => navigate("/empresas/cadastrar")}>
+              <Button variant="outline" onClick={() => navigate(`${communityBase}/empresas`)}>
                 {profile?.secondary_cta_label ?? "Quero minha empresa aqui"}
               </Button>
               <Button variant="outline" onClick={() => navigate(interestPath)}>
                 Indicar comercio ou servico da regiao
               </Button>
-              <Button variant="outline" onClick={() => navigate("/eventos")}>Cadastrar evento da regiao</Button>
+              <Button variant="outline" onClick={() => navigate(`${communityBase}/eventos`)}>Cadastrar evento da regiao</Button>
             </div>
           </div>
         </div>

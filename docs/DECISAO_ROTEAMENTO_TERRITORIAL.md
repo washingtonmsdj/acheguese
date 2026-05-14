@@ -11,7 +11,7 @@ O Achegue-se tem tres camadas publicas:
 
 1. Site geral da cidade.
 2. Modulos publicos por cidade ou territorio.
-3. Comunidade local por bairro ou grupo territorial.
+3. Comunidade local por territorio (slug publico unico por cidade).
 
 Essas camadas podem apontar para os mesmos dados, mas nao devem ter a mesma intencao de produto.
 
@@ -24,14 +24,14 @@ Rotas canonicas:
 ```text
 /ba/salvador
 /ba/salvador/nordeste-de-amaralina
-/ba/salvador/area/complexo-do-nordeste-de-amaralina
+/ba/salvador/complexo-do-nordeste-de-amaralina
 ```
 
 Papel:
 
 - `/ba/salvador` representa a cidade.
 - `/ba/salvador/:bairro` representa um bairro.
-- `/ba/salvador/area/:grupo` representa um grupo territorial, como o Complexo.
+- `/ba/salvador/:grupo` representa um grupo territorial, como o Complexo.
 
 ## Camada 2: Modulos Publicos
 
@@ -48,15 +48,15 @@ Rotas canonicas:
 /empresas/ba/salvador/nordeste-de-amaralina
 /servicos/ba/salvador/nordeste-de-amaralina
 
-/empresas/ba/salvador/area/complexo-do-nordeste-de-amaralina
-/servicos/ba/salvador/area/complexo-do-nordeste-de-amaralina
+/empresas/ba/salvador/complexo-do-nordeste-de-amaralina
+/servicos/ba/salvador/complexo-do-nordeste-de-amaralina
 ```
 
 Papel:
 
 - Cidade: listagem ampla do modulo na cidade.
 - Bairro/grupo: listagem publica filtrada por territorio, util para SEO e descoberta direta.
-- Grupo territorial sempre usa `/area/:groupSlug`; nunca deve competir com slug de bairro.
+- Grupo territorial usa slug publico direto no mesmo padrao `/:state/:city/:territorySlug`.
 - Essas rotas nao devem tentar substituir o feed comunitario.
 
 Regra de titulo SEO:
@@ -82,28 +82,29 @@ Rotas canonicas:
 ```text
 /comunidade/ba/salvador
 /comunidade/ba/salvador/nordeste-de-amaralina
-/comunidade/ba/salvador/area/complexo-do-nordeste-de-amaralina
+/comunidade/ba/salvador/complexo-do-nordeste-de-amaralina
 
-/comunidade/ba/salvador/area/complexo-do-nordeste-de-amaralina/feed
-/comunidade/ba/salvador/area/complexo-do-nordeste-de-amaralina/grupos
-/comunidade/ba/salvador/area/complexo-do-nordeste-de-amaralina/alertas
-/comunidade/ba/salvador/area/complexo-do-nordeste-de-amaralina/problemas
+/comunidade/ba/salvador/complexo-do-nordeste-de-amaralina/feed
+/comunidade/ba/salvador/complexo-do-nordeste-de-amaralina/grupos
+/comunidade/ba/salvador/complexo-do-nordeste-de-amaralina/alertas
+/comunidade/ba/salvador/complexo-do-nordeste-de-amaralina/problemas
 ```
 
 Papel:
 
-- A comunidade e a experiencia principal de bairro/grupo.
+- A comunidade e a experiencia principal de bairro/territorio.
 - Todo conteudo social deve ter territorio claro.
 - Feed, grupos, alertas, problemas urbanos, eventos comunitarios, recomendacoes e achados/perdidos pertencem primeiro a esta camada.
+- URL publica de comunidade nunca expoe tipo tecnico (`area`, `district`, `territorial_group`, `locality`).
 
 ## Rotas de Modulo Dentro da Comunidade
 
 Rotas como estas podem existir:
 
 ```text
-/comunidade/ba/salvador/area/complexo-do-nordeste-de-amaralina/empresas
-/comunidade/ba/salvador/area/complexo-do-nordeste-de-amaralina/servicos
-/comunidade/ba/salvador/area/complexo-do-nordeste-de-amaralina/classificados
+/comunidade/ba/salvador/complexo-do-nordeste-de-amaralina/empresas
+/comunidade/ba/salvador/complexo-do-nordeste-de-amaralina/servicos
+/comunidade/ba/salvador/complexo-do-nordeste-de-amaralina/classificados
 ```
 
 Mas o papel delas e diferente das rotas publicas diretas:

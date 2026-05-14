@@ -7,9 +7,9 @@
  * Padroes canonicos:
  *   /:state/:city                         -> Location city
  *   /:state/:city/:district               -> Location district
- *   /:state/:city/area/:groupSlug         -> TerritorialGroup
+ *   /:state/:city/:groupSlug              -> TerritorialGroup
  *   /[modulo]/:state/:city/:district?     -> Location city/district
- *   /[modulo]/:state/:city/area/:groupSlug -> TerritorialGroup
+ *   /[modulo]/:state/:city/:groupSlug     -> TerritorialGroup
  *   /comunidade/:state/:city/:territorySlug -> Resolver por slug publico de comunidade
  *
  * Grupo territorial nunca e resolvido pelo parametro de bairro. Isso evita
@@ -156,7 +156,7 @@ export function useResolveTerritoryFromUrl(): TerritoryResolveResult {
           return;
         }
 
-        if (isCommunityRoute && districtSlug) {
+        if (districtSlug) {
           try {
             const { data: communityRoute } = await supabase
               .from('territory_communities' as never)
@@ -166,9 +166,10 @@ export function useResolveTerritoryFromUrl(): TerritoryResolveResult {
               .maybeSingle();
 
             if (communityRoute) {
-              if ((communityRoute as { territory_type: string }).territory_type === 'territorial_group') {
+              const mapped = communityRoute as { territory_type: string; territory_id: string };
+              if (mapped.territory_type === 'territorial_group') {
                 const groupRepo = createTerritorialGroupRepository();
-                const withMembers = await groupRepo.findWithMembers((communityRoute as { territory_id: string }).territory_id);
+                const withMembers = await groupRepo.findWithMembers(mapped.territory_id);
                 if (withMembers && withMembers.status === 'active' && isTerritoryPubliclyNavigable(withMembers.metadata)) {
                   if (!cancelled) {
                     setResult({
@@ -179,15 +180,18 @@ export function useResolveTerritoryFromUrl(): TerritoryResolveResult {
                   }
                   return;
                 }
-              }
-
-              if ((communityRoute as { territory_type: string }).territory_type === 'district') {
-                const districtById = await locationRepo.findById((communityRoute as { territory_id: string }).territory_id);
-                if (districtById && districtById.status === 'active' && isTerritoryPubliclyNavigable(districtById.metadata)) {
+              } else {
+                const locationById = await locationRepo.findById(mapped.territory_id);
+                if (
+                  locationById &&
+                  locationById.status === 'active' &&
+                  locationById.parent_id === cityLocation.id &&
+                  isTerritoryPubliclyNavigable(locationById.metadata)
+                ) {
                   if (!cancelled) {
                     setResult({
                       status: TERRITORY_RESOLVE_STATUS.RESOLVED_LOCATION,
-                      resolved: { kind: 'location', location: districtById },
+                      resolved: { kind: 'location', location: locationById },
                       error: null,
                     });
                   }
@@ -199,19 +203,21 @@ export function useResolveTerritoryFromUrl(): TerritoryResolveResult {
             // Fallback para heuristica de slug quando tabela de comunidades ainda nao existir.
           }
 
-          const groupRepo = createTerritorialGroupRepository();
-          const group = await groupRepo.findBySlugAndCity(districtSlug, cityLocation.id);
-          if (group && group.status === 'active' && isTerritoryPubliclyNavigable(group.metadata)) {
-            const withMembers = await groupRepo.findWithMembers(group.id);
-            if (withMembers) {
-              if (!cancelled) {
-                setResult({
-                  status: TERRITORY_RESOLVE_STATUS.RESOLVED_GROUP,
-                  resolved: { kind: 'group', group: withMembers },
-                  error: null,
-                });
+          if (isCommunityRoute) {
+            const groupRepo = createTerritorialGroupRepository();
+            const group = await groupRepo.findBySlugAndCity(districtSlug, cityLocation.id);
+            if (group && group.status === 'active' && isTerritoryPubliclyNavigable(group.metadata)) {
+              const withMembers = await groupRepo.findWithMembers(group.id);
+              if (withMembers) {
+                if (!cancelled) {
+                  setResult({
+                    status: TERRITORY_RESOLVE_STATUS.RESOLVED_GROUP,
+                    resolved: { kind: 'group', group: withMembers },
+                    error: null,
+                  });
+                }
+                return;
               }
-              return;
             }
           }
         }
@@ -220,6 +226,25 @@ export function useResolveTerritoryFromUrl(): TerritoryResolveResult {
         const districtLocation = await locationRepo.findByPath(districtPath);
 
         if (!districtLocation) {
+          // Em rotas de módulo, aceita slug de grupo no padrão público limpo.
+          if (!isCommunityRoute) {
+            const groupRepo = createTerritorialGroupRepository();
+            const groupBySlug = await groupRepo.findBySlugAndCity(districtSlug!, cityLocation.id);
+            if (groupBySlug && groupBySlug.status === 'active' && isTerritoryPubliclyNavigable(groupBySlug.metadata)) {
+              const withMembers = await groupRepo.findWithMembers(groupBySlug.id);
+              if (withMembers) {
+                if (!cancelled) {
+                  setResult({
+                    status: TERRITORY_RESOLVE_STATUS.RESOLVED_GROUP,
+                    resolved: { kind: 'group', group: withMembers },
+                    error: null,
+                  });
+                }
+                return;
+              }
+            }
+          }
+
           if (isGuideRoute) {
             if (cityLocation.status !== 'active') {
               if (!cancelled) setResult({ status: TERRITORY_RESOLVE_STATUS.INACTIVE, resolved: null, error: `Cidade inativa: ${cityLocation.name}` });

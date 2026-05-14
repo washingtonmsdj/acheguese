@@ -133,7 +133,7 @@ export interface GroupSeoInput {
   group: TerritorialGroupWithMembers;
   /** null = landing hub (sem módulo) */
   module: ModuleSlug | null;
-  canonicalPath: string; // ex: /ba/salvador/area/complexo-do-nordeste-de-amaralina
+  canonicalPath: string; // ex: /ba/salvador/complexo-do-nordeste-de-amaralina
 }
 
 export type TerritorialSeoInput = LocationSeoInput | GroupSeoInput;

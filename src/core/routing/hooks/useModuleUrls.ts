@@ -22,7 +22,7 @@ export function useModuleUrls(): ModuleUrls {
 
   if (state && city && !isReservedSlug(state)) {
     const base = groupSlug
-      ? `/${state}/${city}/area/${groupSlug}`
+      ? `/${state}/${city}/${groupSlug}`
       : district
         ? `/${state}/${city}/${district}`
       : groupSlugOrDistrict

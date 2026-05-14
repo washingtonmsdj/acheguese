@@ -28,7 +28,7 @@ const PREFETCHERS: Array<{ test: (path: string) => boolean; load: () => Promise<
   },
   {
     test: (path) => path.startsWith("/eventos"),
-    load: () => import("@/core/community-events/pages/EventosPage"),
+    load: () => import("@/features/events/pages/EventsListPage"),
   },
   {
     test: (path) => path.startsWith("/vagas"),

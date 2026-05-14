@@ -10,6 +10,7 @@ import {
   MODULE_SLUGS,
   buildGroupBaseUrl,
   buildModuleTerritoryUrl,
+  buildCommunityTerritoryUrl,
   geoPathToPublicUrl,
 } from '@/core/routing/utils/territoryUrls';
 import { supabase } from '@/integrations/supabase';
@@ -41,7 +42,6 @@ function generateTerritoryUrls(
     MODULE_SLUGS.business,
     MODULE_SLUGS.services,
     MODULE_SLUGS.classifieds,
-    MODULE_SLUGS.community,
     MODULE_SLUGS.mobility,
   ];
 
@@ -53,15 +53,22 @@ function generateTerritoryUrls(
     });
   });
 
+  // Comunidade usa padrão canônico sem /area/
+  urls.push({
+    loc: `${baseUrl}${buildCommunityTerritoryUrl(publicPath)}`,
+    changefreq: 'daily',
+    priority: 0.7,
+  });
+
   if (isGroup) {
     urls.push(
       {
-        loc: `${baseUrl}${buildModuleTerritoryUrl(MODULE_SLUGS.community, publicPath)}/feed`,
+        loc: `${baseUrl}${buildCommunityTerritoryUrl(publicPath, 'feed')}`,
         changefreq: 'hourly',
         priority: 0.8,
       },
       {
-        loc: `${baseUrl}${buildModuleTerritoryUrl(MODULE_SLUGS.community, publicPath)}/grupos`,
+        loc: `${baseUrl}${buildCommunityTerritoryUrl(publicPath, 'grupos')}`,
         changefreq: 'daily',
         priority: 0.7,
       },

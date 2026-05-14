@@ -22,7 +22,11 @@ import { WidgetErrorBoundary } from "./WidgetErrorBoundary";
  * - Error boundaries para resiliência
  */
 
-export const CommunityRightSidebar = memo(() => {
+interface CommunityRightSidebarProps {
+  showGroupsWidget?: boolean;
+}
+
+export const CommunityRightSidebar = memo(({ showGroupsWidget = true }: CommunityRightSidebarProps) => {
   return (
     <div className="flex flex-col gap-2 w-full">
       <WidgetErrorBoundary widgetName="SponsoredWidget">
@@ -33,9 +37,11 @@ export const CommunityRightSidebar = memo(() => {
         <RankingWidget />
       </WidgetErrorBoundary>
 
-      <WidgetErrorBoundary widgetName="GroupsWidget">
-        <GroupsWidget />
-      </WidgetErrorBoundary>
+      {showGroupsWidget ? (
+        <WidgetErrorBoundary widgetName="GroupsWidget">
+          <GroupsWidget />
+        </WidgetErrorBoundary>
+      ) : null}
 
       <WidgetErrorBoundary widgetName="TrendingWidget">
         <TrendingWidget />

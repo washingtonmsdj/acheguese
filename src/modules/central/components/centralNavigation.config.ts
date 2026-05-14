@@ -1,4 +1,4 @@
-import { Building2, Car, Home, LayoutGrid, User, Bike } from 'lucide-react';
+import { Building2, Car, Home, LayoutGrid, User, Bike, Calendar } from 'lucide-react';
 import { mobilityRoutes } from '@/modules/mobility/routes/mobilityRoutes';
 import { businessManagementRoutes } from '@/core/business/utils/businessManagementRoutes';
 
@@ -52,6 +52,26 @@ export const CENTRAL_NAV_SECTIONS: CentralNavSection[] = [
         label: 'Minhas Empresas',
         href: businessManagementRoutes.list(),
         description: 'Gerenciar empresas',
+      },
+    ],
+  },
+  {
+    id: 'events',
+    label: 'Eventos',
+    items: [
+      {
+        id: 'events-list',
+        icon: Calendar,
+        label: 'Meus Eventos',
+        href: '/central/eventos',
+        description: 'Gerenciar eventos',
+      },
+      {
+        id: 'events-new',
+        icon: Calendar,
+        label: 'Criar Evento',
+        href: '/central/eventos/novo',
+        description: 'Criar novo evento',
       },
     ],
   },

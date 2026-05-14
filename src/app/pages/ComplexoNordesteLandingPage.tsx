@@ -37,7 +37,7 @@ import { useTerritoryFilter } from '@/core/location/hooks/useTerritoryFilter';
 import { useLandingFeatured } from '@/app/features/landing/hooks/useLandingFeatured';
 import { useTerritorialHighlights } from '@/core/territorial/highlights/useTerritorialHighlights';
 import { useTerritoryStats } from '@/core/territorial/hooks/useTerritoryStats';
-import { MODULE_SLUGS } from '@/core/routing/utils/territoryUrls';
+import { MODULE_SLUGS, buildCommunityTerritoryUrl, buildModuleTerritoryUrl } from '@/core/routing/utils/territoryUrls';
 import { BusinessUrlService } from '@/core/business/services/BusinessUrlService';
 import { classifiedUrlService } from '@/modules/classifieds/services/ClassifiedUrlService';
 import { useClassifiedUrls } from '@/modules/classifieds/hooks/useClassifiedUrls';
@@ -206,13 +206,24 @@ export default function ComplexoNordesteLandingPage() {
   const classifiedUrls = useClassifiedUrls(resolved);
 
   const highlights = allHighlights.slice(0, 3);
+  const canonicalTerritoryBase =
+    resolved?.kind === 'group'
+      ? (() => {
+          const firstMember = resolved.group.members[0];
+          const parts = firstMember?.geographic_path?.split('/').filter(Boolean) ?? [];
+          const state = parts[1];
+          const city = parts[2];
+          if (!state || !city) return baseUrl;
+          return `/${state}/${city}/${resolved.group.slug}`;
+        })()
+      : baseUrl;
 
   // URLs dos módulos
   const moduleUrls = {
-    business: `/${MODULE_SLUGS.business}${baseUrl}`,
-    services: `/${MODULE_SLUGS.services}${baseUrl}`,
-    classifieds: `/${MODULE_SLUGS.classifieds}${baseUrl}`,
-    community: `/${MODULE_SLUGS.community}${baseUrl}`,
+    business: buildModuleTerritoryUrl(MODULE_SLUGS.business, canonicalTerritoryBase),
+    services: buildModuleTerritoryUrl(MODULE_SLUGS.services, canonicalTerritoryBase),
+    classifieds: buildModuleTerritoryUrl(MODULE_SLUGS.classifieds, canonicalTerritoryBase),
+    community: buildCommunityTerritoryUrl(canonicalTerritoryBase),
   };
 
   const isGroup = resolved?.kind === 'group';

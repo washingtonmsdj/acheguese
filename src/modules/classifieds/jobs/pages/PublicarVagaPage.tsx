@@ -1,4 +1,4 @@
-/**
+﻿/**
  * 📝 PUBLICAR VAGA PAGE — Formulário completo multi-step
  *
  * ✅ 6 seções: Informações → Detalhes → Salário → Localização → Contato → Revisão
@@ -9,7 +9,7 @@
  */
 
 import React, { useState, useCallback, useMemo } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ArrowLeft, ArrowRight, ChevronRight,
@@ -75,6 +75,7 @@ const SUGGESTED_BENEFITS = [
 // ═════════════════════════════════════════════════════════════
 export default function PublicarVagaPage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { user } = useAuth();
   const { activeProfile } = useSessionContext();
   const {
@@ -127,6 +128,20 @@ export default function PublicarVagaPage() {
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const currentStepIndex = STEPS.findIndex((s) => s.id === currentStep);
+  const vagasListPath = useMemo(() => {
+    const parts = location.pathname.split("/").filter(Boolean);
+    if (
+      parts[0] === "comunidade" &&
+      parts[1] &&
+      parts[2] &&
+      parts[3] &&
+      parts[4] === "vagas" &&
+      parts[5] === "publicar"
+    ) {
+      return `/comunidade/${parts[1]}/${parts[2]}/${parts[3]}/vagas`;
+    }
+    return "/vagas";
+  }, [location.pathname]);
 
   // ─── Helpers ────────────────────────────────────
   const addToList = useCallback(
@@ -168,10 +183,10 @@ export default function PublicarVagaPage() {
           break;
         case "location":
           if (!hasActiveLocation) {
-            newErrors.location = "Selecione uma localiza��o ativa no sistema";
+            newErrors.location = "Selecione uma localiza��o ativa no sistema";
           }
           if (isLoadingPermission) {
-            newErrors.publishPermission = "Aguarde a valida��o das permiss�es.";
+            newErrors.publishPermission = "Aguarde a valida��o das permiss�es.";
           } else if (!permission.canPublish) {
             newErrors.publishPermission = permission.message;
           }
@@ -209,12 +224,9 @@ export default function PublicarVagaPage() {
     if (nextStep) setCurrentStep(nextStep.id);
   }, [currentStep, currentStepIndex, validateStep]);
 
-  const goPrev = useCallback(() => {
-    const prevIdx = currentStepIndex - 1;
-    const prevStep = STEPS.at(prevIdx);
-    if (prevStep) setCurrentStep(prevStep.id);
-    else navigate(-1);
-  }, [currentStepIndex, navigate]);
+  const goBackToVagas = useCallback(() => {
+    navigate(vagasListPath);
+  }, [navigate, vagasListPath]);
 
   const goToStep = useCallback(
     (step: StepId) => {
@@ -308,7 +320,7 @@ export default function PublicarVagaPage() {
     }
 
     if (isLoadingPermission) {
-      toast.error("Aguarde a valida��o das permiss�es para publicar.");
+      toast.error("Aguarde a valida��o das permiss�es para publicar.");
       setCurrentStep("location");
       return;
     }
@@ -320,7 +332,7 @@ export default function PublicarVagaPage() {
     }
 
     if (!permission.isAdmin && !permission.businessId) {
-      toast.error("Empresa vinculada n�o encontrada para publica��o.");
+      toast.error("Empresa vinculada n�o encontrada para publica��o.");
       setCurrentStep("location");
       return;
     }
@@ -332,7 +344,7 @@ export default function PublicarVagaPage() {
     }
 
     if (!activeLocationId) {
-      toast.error("Selecione um territ�rio ativo para publicar.");
+      toast.error("Selecione um territ�rio ativo para publicar.");
       setCurrentStep("location");
       return;
     }
@@ -398,8 +410,8 @@ export default function PublicarVagaPage() {
         ogImageUrl: undefined,
       });
 
-      toast.success("Vaga enviada para revis�o com sucesso.");
-      navigate("/vagas");
+      toast.success("Vaga enviada para revis�o com sucesso.");
+      navigate(vagasListPath);
     } catch (error) {
       const errorMessage =
         error instanceof Error && error.message
@@ -437,15 +449,18 @@ export default function PublicarVagaPage() {
     requisitos,
     vagasQtd,
     navigate,
+    vagasListPath,
   ]);
 
   // Redirect if not logged in
   React.useEffect(() => {
     if (!user) {
       toast.error("Faça login para publicar uma vaga");
-      navigate("/login");
+      navigate("/login", {
+        state: { redirectTo: location.pathname + location.search + location.hash },
+      });
     }
-  }, [user, navigate]);
+  }, [user, navigate, location.pathname, location.search, location.hash]);
 
   React.useEffect(() => {
     if (!permission.businessName) return;
@@ -477,7 +492,7 @@ export default function PublicarVagaPage() {
         <div className="flex items-center gap-3 px-4 py-3 max-w-3xl mx-auto">
           <motion.button
             whileTap={{ scale: 0.9 }}
-            onClick={goPrev}
+            onClick={goBackToVagas}
             className="h-9 w-9 rounded-full bg-secondary flex items-center justify-center text-foreground shrink-0"
             aria-label="Voltar"
           >
@@ -541,21 +556,21 @@ export default function PublicarVagaPage() {
           <div className="space-y-1">
             <p className="text-sm font-semibold text-foreground">
               {isLoadingPermission
-                ? "Validando permiss�o para publicar..."
+                ? "Validando permiss�o para publicar..."
                 : permission.canPublish
-                  ? "Publica��o liberada"
-                  : "Publica��o bloqueada"}
+                  ? "Publica��o liberada"
+                  : "Publica��o bloqueada"}
             </p>
             <p className="text-xs text-muted-foreground">
               {isLoadingPermission
-                ? "Aguarde a valida��o do perfil/empresa."
+                ? "Aguarde a valida��o do perfil/empresa."
                 : permission.message}
             </p>
             {!isLoadingPermission && permission.canPublish && (
               <p className="text-[11px] text-muted-foreground">
                 Perfil ativo selecionado
-                {" � "}
-                Empresa: <strong>{permission.businessName || empresa || "�"}</strong>
+                {" � "}
+                Empresa: <strong>{permission.businessName || empresa || "�"}</strong>
               </p>
             )}
           </div>
@@ -1222,7 +1237,7 @@ export default function PublicarVagaPage() {
                 ) : !permission.canPublish ? (
                   <>
                     <Shield className="h-4 w-4 mr-2" />
-                    Publica��o bloqueada
+                    Publica��o bloqueada
                   </>
                 ) : (
                   <>
@@ -1238,7 +1253,7 @@ export default function PublicarVagaPage() {
                 <Button
                   variant="outline"
                   className="h-12 rounded-xl px-5"
-                  onClick={goPrev}
+                  onClick={goBackToVagas}
                 >
                   <ArrowLeft className="h-4 w-4 mr-1" />
                   Voltar

@@ -42,6 +42,7 @@ export class SessionService {
   private static loadPromise: Promise<void> | null = null;
   private static authSubscription: { unsubscribe: () => void } | null = null;
   private static currentSession: Session | null = null;
+  private static currentSessionPromise: Promise<Session | null> | null = null;
 
   // initPromise resolve após o INITIAL_SESSION ser processado
   private static initResolve: (() => void) | null = null;
@@ -79,6 +80,7 @@ export class SessionService {
       SessionService.authSubscription = null;
     }
     SessionService.currentSession = null;
+    SessionService.currentSessionPromise = null;
     SessionService.initialized = false;
     SessionService.resetInitPromise();
   }
@@ -112,6 +114,7 @@ export class SessionService {
 
       if (event === "SIGNED_OUT") {
         SessionService.cancelPendingLoads();
+        SessionService.currentSessionPromise = null;
         SessionState.clear();
         CacheManager.clearAll();
         SessionService.resolveInit();
@@ -261,6 +264,35 @@ export class SessionService {
     );
   }
 
+  private static async getCurrentSession(): Promise<Session | null> {
+    if (SessionService.currentSession) return SessionService.currentSession;
+    if (SessionService.currentSessionPromise) return SessionService.currentSessionPromise;
+
+    SessionService.currentSessionPromise = (async () => {
+      try {
+        const { data } = await supabase.auth.getSession();
+        SessionService.currentSession = data.session ?? null;
+        return SessionService.currentSession;
+      } catch (error) {
+        // Em dev (StrictMode/múltiplos listeners), o GoTrue pode disputar o lock
+        // e lançar AbortError "Lock broken by another request with the 'steal' option."
+        // Tratamos como condição transitória para evitar unhandled rejection.
+        const message = error instanceof Error ? error.message : String(error);
+        if (message.includes("Lock broken by another request")) {
+          SessionService.debug("[SessionService] getCurrentSession lock contention recovered");
+          return SessionService.currentSession ?? null;
+        }
+        throw error;
+      }
+    })();
+
+    try {
+      return await SessionService.currentSessionPromise;
+    } finally {
+      SessionService.currentSessionPromise = null;
+    }
+  }
+
   // ── getCurrentUser ─────────────────────────────────────────────────────────
   /**
    * Lê o usuário da sessão local (localStorage).
@@ -271,7 +303,7 @@ export class SessionService {
       const cachedUser = SessionState.getState().user;
       if (cachedUser) return cachedUser;
 
-      const session = SessionService.currentSession ?? (await supabase.auth.getSession()).data.session;
+      const session = await SessionService.getCurrentSession();
       if (!session?.user) return null;
       const u = session.user;
       return {
@@ -333,7 +365,7 @@ export class SessionService {
     if (error) throw error;
 
     CacheManager.invalidateSession();
-    const session = SessionService.currentSession ?? (await supabase.auth.getSession()).data.session;
+    const session = await SessionService.getCurrentSession();
     if (session) await SessionService.loadFromSession(session, true);
   }
 
@@ -352,7 +384,7 @@ export class SessionService {
   // ── refreshSession ─────────────────────────────────────────────────────────
   static async refreshSession(): Promise<void> {
     CacheManager.invalidateSession();
-    const session = SessionService.currentSession ?? (await supabase.auth.getSession()).data.session;
+    const session = await SessionService.getCurrentSession();
     if (session) await SessionService.loadFromSession(session, true);
   }
 

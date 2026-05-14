@@ -35,7 +35,7 @@ export function useFriendlyModuleUrls(): FriendlyModuleUrls {
 
   if (hasTerritoryParams && state && city) {
     const territoryBase = groupSlug
-      ? `/${state}/${city}/area/${groupSlug}`
+      ? `/${state}/${city}/${groupSlug}`
       : district
         ? `/${state}/${city}/${district}`
       : groupSlugOrDistrict

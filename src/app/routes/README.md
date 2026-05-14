@@ -77,10 +77,10 @@ No arquivo `AppRoutes.tsx`, adicione dentro do componente `Routes`:
 ```
 /:state/:city                                  # Hub publico da cidade
 /:state/:city/:district                       # Hub publico do bairro
-/:state/:city/area/:groupSlug                 # Hub publico do grupo territorial
+/:state/:city/:groupSlug                      # Hub publico do grupo territorial
 /empresas/:state/:city                        # Vitrine publica do modulo na cidade
 /empresas/:state/:city/:district              # Vitrine publica do modulo no bairro
-/empresas/:state/:city/area/:groupSlug        # Vitrine publica do modulo no grupo
+/empresas/:state/:city/:groupSlug             # Vitrine publica do modulo no grupo
 /comunidade/:state/:city                      # Comunidade da cidade
 /comunidade/:state/:city/:territorySlug       # Comunidade territorial (canonica publica)
 /comunidade/:state/:city/:territorySlug/feed  # Feed comunitario territorial
@@ -93,6 +93,7 @@ Regra de intencao:
 - Rotas dentro de `/comunidade/...` sao experiencia social/local com contexto comunitario.
 - Em comunidade, a URL publica nao expoe tipo tecnico (`district` vs `territorial_group`):
   `/comunidade/:state/:city/:territorySlug`.
+- Nenhuma rota publica de comunidade usa `/area/`.
 - Rotas operacionais ficam em `/central`.
 - Rotas de identidade/configuracao pessoal ficam em `/conta`.
 
@@ -121,7 +122,7 @@ Regra de intencao:
 
 - **Novas páginas**: Adicionar lazy import + rota
 - **Remover páginas**: Remover lazy import + rota
-- **Renomear rotas**: Atualizar path + adicionar redirect legado
+- **Renomear rotas**: Atualizar path canônico único (sem manter padrão legado durante desenvolvimento)
 
 ### Validar Alterações
 

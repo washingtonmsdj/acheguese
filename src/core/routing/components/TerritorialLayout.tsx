@@ -32,7 +32,7 @@ export type TerritorialLayoutContext = {
   /**
    * URL base do território atual, calculada deterministicamente via useParams.
    * Ex: /ba/salvador/nordeste-de-amaralina
-   *     /ba/salvador/area/complexo-do-nordeste-de-amaralina
+   *     /ba/salvador/complexo-do-nordeste-de-amaralina
    *
    * NUNCA depende da ordem dos membros do grupo.
    * Usar este valor em vez de recalcular baseUrl dentro dos filhos.
@@ -166,7 +166,7 @@ export function TerritorialLayout() {
       ? (() => {
           // Para grupo: pega a cidade âncora do primeiro membro
           const firstMember = resolved.group.members[0];
-          if (!firstMember?.geographic_path) return `/${state}/${city}/area/${resolved.group.slug}`;
+          if (!firstMember?.geographic_path) return `/${state}/${city}/${resolved.group.slug}`;
           const parts = firstMember.geographic_path.split('/').filter(Boolean);
           return buildGroupBaseUrl(resolved.group, `/${parts[0]}/${parts[1]}/${parts[2]}`);
         })()

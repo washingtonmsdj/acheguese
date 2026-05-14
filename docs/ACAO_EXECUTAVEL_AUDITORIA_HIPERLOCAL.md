@@ -887,7 +887,7 @@ Implementado transversalmente:
 - [x] Smoke Playwright `tests/e2e/institutional-public.spec.ts` cobre marca canonica e landmark nas paginas institucionais.
 - [x] SEO territorial do hub canonico foi corrigido no SSOT `buildTerritorialMetadata`: landing de bairro/grupo usa titulo editorial `Territorio | Achegue-se`, enquanto modulos mantem titulo operacional por contexto.
 - [x] Smoke Playwright `tests/e2e/landing-public.spec.ts` valida home publica e a rota curta `/complexo` resolvendo para a landing canonica do Complexo sem erro territorial.
-- [x] Smoke Playwright `tests/e2e/landing-public.spec.ts` (revalidado em 2026-05-07) cobre tambem as rotas canonicas territoriais prioritarias: `/ba/salvador`, `/ba/salvador/nordeste-de-amaralina`, `/ba/salvador/area/complexo-do-nordeste-de-amaralina`, `/empresas/ba/salvador`, `/empresas/ba/salvador/nordeste-de-amaralina`, `/empresas/ba/salvador/area/complexo-do-nordeste-de-amaralina`, `/comunidade/ba/salvador/area/complexo-do-nordeste-de-amaralina/feed` e `/comunidade/ba/salvador/area/complexo-do-nordeste-de-amaralina/grupos`.
+- [x] Smoke Playwright `tests/e2e/landing-public.spec.ts` (revalidado em 2026-05-07) cobre tambem as rotas canonicas territoriais prioritarias: `/ba/salvador`, `/ba/salvador/nordeste-de-amaralina`, `/ba/salvador/area/complexo-do-nordeste-de-amaralina`, `/empresas/ba/salvador`, `/empresas/ba/salvador/nordeste-de-amaralina`, `/empresas/ba/salvador/area/complexo-do-nordeste-de-amaralina`, `/comunidade/ba/salvador/complexo-do-nordeste-de-amaralina/feed` e `/comunidade/ba/salvador/complexo-do-nordeste-de-amaralina/grupos`.
 - [x] SEO territorial de modulos com prefixo (`/empresas/...`, `/servicos/...`) extrai cidade corretamente e evita titulos como `em Ba`.
 - [x] Landings raiz `/empresas` e `/servicos` possuem metadados proprios e cobertura Playwright contra loader global e titulo generico.
 - [x] Decisao canonica de roteamento territorial documentada em `docs/DECISAO_ROTEAMENTO_TERRITORIAL.md`: site geral por cidade, modulos publicos por cidade/territorio e comunidade como experiencia social de bairro/grupo.
@@ -1230,7 +1230,7 @@ Criterio de aceite:
 - [ ] P0: remover mocks de producao.
 - [x] P1 parcial: gate operacional consolidado em comando unico (`npm run test:e2e:operations`) cobrindo central/mobilidade, gastronomia e profissionais.
 - [x] P1 parcial: validacao operacional de fase em comando unico (`npm run validate:operations:phase` = typecheck + lint + e2e operacionais).
-- [x] P1 parcial: gate de comunidade territorial (`npm run validate:community:phase`) cobrindo cidade, bairro e grupo territorial em `/area/:groupSlug`.
+- [x] P1 parcial: gate de comunidade territorial (`npm run validate:community:phase`) cobrindo cidade, bairro e grupo territorial em `/comunidade/:state/:city/:territorySlug`.
 - [x] P1 parcial: gate unificado de release tecnica interna (`npm run validate:phase:core` = `typecheck` + `lint` + `test:e2e:phase-core` em uma unica execucao Playwright).
 - [x] P1 parcial: workflow de CI SSOT (`.github/workflows/ssot-tests.yml`) atualizado para exigir `validate:phase:core` no status final.
 - [ ] P1: E2E para comunidade, empresa, gastronomia, mobilidade e alertas.
