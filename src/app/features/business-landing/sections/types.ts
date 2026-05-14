@@ -175,6 +175,8 @@ export interface EmpresasMapaSectionProps extends BaseSectionProps {
 
 export interface EmpresasListaSectionProps extends BaseSectionProps {
   readonly businesses: readonly Business[];
+  readonly territoryNameShort: string;
+  readonly territoryPreposition: string;
   readonly nearbyMode: boolean;
   readonly onToggleNearbyMode: (active: boolean) => void;
   readonly savedBusinesses: ReadonlySet<string>;

@@ -396,6 +396,8 @@ export default function EmpresasLandingPage({
       {/* Lista de Empresas */}
       <EmpresasListaSection
         businesses={filteredBusinesses}
+        territoryNameShort={territoryNameShort}
+        territoryPreposition={territoryPreposition}
         nearbyMode={nearbyMode}
         onToggleNearbyMode={setNearbyMode}
         savedBusinesses={savedBusinesses}
