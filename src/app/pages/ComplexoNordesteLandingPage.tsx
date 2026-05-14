@@ -172,7 +172,7 @@ const RAIZES = [
   {
     icon: Fish,
     label: 'Pesca Artesanal',
-    desc: 'Tradição pesqueira Ã  beira-mar',
+    desc: 'Tradição pesqueira à beira-mar',
   },
   {
     icon: BookOpen,
@@ -229,7 +229,7 @@ export default function ComplexoNordesteLandingPage() {
       </Helmet>
 
       {/* ── A. HERO PARALLAX ──────────────────────────────────────── */}
-      <section className="relative w-full min-h-[90vh] flex items-center justify-center overflow-hidden">
+      <section className="relative w-full min-h-[45vh] flex items-center justify-center overflow-hidden">
         <motion.div className="absolute inset-0">
           <img
             src={heroImg}
@@ -307,10 +307,10 @@ export default function ComplexoNordesteLandingPage() {
               <Button
                 size="lg"
                 className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-base px-8 h-13 shadow-2xl shadow-primary/25 w-full sm:w-auto rounded-xl"
-                onClick={() => navigate(moduleUrls.community)}
+                onClick={() => navigate(user ? '/conta' : '/login')}
               >
                 <Users className="h-5 w-5 mr-2" />
-                Entrar na Comunidade
+                Faça parte do bairro
               </Button>
               <Button
                 size="lg"
@@ -319,18 +319,10 @@ export default function ComplexoNordesteLandingPage() {
                 onClick={() => navigate(moduleUrls.business)}
               >
                 <Store className="h-5 w-5 mr-2" />
-                Empresas Locais
-              </Button>
-              <Button
-                size="lg"
-                variant="outline"
-                className="border-white/25 text-white hover:bg-white/10 hover:border-white/40 font-semibold text-base px-8 h-13 backdrop-blur-md w-full sm:w-auto rounded-xl"
-                onClick={() => navigate(moduleUrls.services)}
-              >
-                <Wrench className="h-5 w-5 mr-2" />
-                Serviços
+                Divulgar meu negócio
               </Button>
             </div>
+
           </motion.div>
         </div>
 
@@ -359,7 +351,7 @@ export default function ComplexoNordesteLandingPage() {
               <span className="text-primary">Um território.</span>
             </h2>
             <p className="text-base text-muted-foreground max-w-2xl mx-auto leading-relaxed">
-              O Complexo do Nordeste de Amaralina nasceu no seculo XX como ocupação popular a beira-mar
+              O Complexo do Nordeste de Amaralina nasceu no século XX como ocupação popular a beira-mar
               e se tornou um dos territórios mais marcantes de Salvador. Com forte identidade cultural afro-brasileira,
               aqui surgiram artistas, músicos, grupos de capoeira, blocos afro e movimentos sociais que deram
               visibilidade as vozes perifericas da capital baiana.
@@ -576,7 +568,7 @@ export default function ComplexoNordesteLandingPage() {
         </div>
       </section>
 
-      {/* ── G. SOBRE O TERRITÃ“RIO (IA) ────────────────────────────── */}
+      {/* ── G. SOBRE O TERRITÓRIO (IA) ────────────────────────────── */}
       <div className="max-w-6xl mx-auto px-4 sm:px-6 py-10 w-full">
         <TerritoryAIContentSection
           territorySlug={resolved?.kind === 'group'
