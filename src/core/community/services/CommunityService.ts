@@ -257,7 +257,21 @@ const BADGE_REQUIREMENTS = {
 };
 
 class CommunityServiceClass {
-  private leaderboardTableAvailable: boolean | null = null;
+  private static readonly LEADERBOARD_TABLE_FLAG_KEY = "community.leaderboard_table_available";
+  private leaderboardTableAvailable: boolean | null = this.readLeaderboardTableFlag();
+
+  private readLeaderboardTableFlag(): boolean | null {
+    if (typeof window === "undefined") return null;
+    const raw = window.sessionStorage.getItem(CommunityServiceClass.LEADERBOARD_TABLE_FLAG_KEY);
+    if (raw === "true") return true;
+    if (raw === "false") return false;
+    return null;
+  }
+
+  private writeLeaderboardTableFlag(value: boolean): void {
+    if (typeof window === "undefined") return;
+    window.sessionStorage.setItem(CommunityServiceClass.LEADERBOARD_TABLE_FLAG_KEY, value ? "true" : "false");
+  }
   // ============================================================================
   // GRUPOS — Boundary canônico para tabela `groups`
   // ✅ LOTE 7
@@ -817,6 +831,7 @@ class CommunityServiceClass {
       if (error) {
         if (isTableNotFoundError(error)) {
           this.leaderboardTableAvailable = false;
+          this.writeLeaderboardTableFlag(false);
           logger.warn("[CommunityService] community_profiles not available; returning empty leaderboard");
           return [];
         }
@@ -828,10 +843,12 @@ class CommunityServiceClass {
       }
 
       this.leaderboardTableAvailable = true;
+      this.writeLeaderboardTableFlag(true);
       return data || [];
     } catch (error) {
       if (isTableNotFoundError(error)) {
         this.leaderboardTableAvailable = false;
+        this.writeLeaderboardTableFlag(false);
         logger.warn("[CommunityService] community_profiles not available; returning empty leaderboard");
         return [];
       }
