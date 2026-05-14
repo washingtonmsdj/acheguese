@@ -3,7 +3,15 @@
  * Centraliza tratamento de erros e mensagens amigáveis.
  */
 import { supabase } from "@/integrations/supabase/client";
-import type { AiError, AiImageRequest, AiImageResult } from "../domain/types";
+import type {
+  AiError,
+  AiImageRequest,
+  AiImageResult,
+  AiTextRequest,
+  AiTextResult,
+  AiVisionRequest,
+  AiVisionResult,
+} from "../domain/types";
 
 function toAiError(raw: unknown): AiError {
   const err = raw as { code?: string; error?: string; message?: string; requestId?: string };
@@ -13,6 +21,22 @@ function toAiError(raw: unknown): AiError {
     err?.message ||
     "Falha ao chamar a IA. Tente novamente em instantes.";
   return { code, message, requestId: err?.requestId ?? null };
+}
+
+async function invoke<TReq, TRes>(name: string, body: TReq): Promise<TRes> {
+  const { data, error } = await supabase.functions.invoke<TRes & { error?: string }>(name, { body });
+  if (error) {
+    let payload: unknown = error;
+    try {
+      const ctx = (error as unknown as { context?: { body?: string } })?.context;
+      if (ctx?.body) payload = JSON.parse(ctx.body);
+    } catch {
+      // ignore
+    }
+    throw toAiError(payload);
+  }
+  if (!data) throw toAiError({ message: "Resposta vazia da IA." });
+  return data as TRes;
 }
 
 export class AiClient {
