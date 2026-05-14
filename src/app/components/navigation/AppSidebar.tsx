@@ -25,8 +25,9 @@ import { useSiteSettings } from '@/core/admin/hooks/useSiteSettings';
 import { MessagingService } from '@/core/messaging';
 import { GuideSidebarItem } from '@/modules/guide/components/GuideSidebarItem';
 import { prefetchRouteByHref } from '@/app/routes/prefetch';
-import { LAUNCH_TERRITORIES, LAUNCH_URLS } from '@/config/territory';
 import { NAV_SECTIONS, type NavItem } from './navigation.config';
+import { usePublicBrowsingCity } from '@/core/location/hooks/usePublicBrowsingCity';
+import { PublicCitySelector } from './PublicCitySelector';
 
 function getInitials(value?: string | null): string {
   if (!value) return 'U';
@@ -47,6 +48,7 @@ export function AppSidebar() {
   const { activeProfile } = useSessionContext();
   const appUrls = useAppUrls();
   const { data: siteSettings, isLoading: isSiteSettingsLoading } = useSiteSettings();
+  const { active } = usePublicBrowsingCity();
   const [unreadMessages, setUnreadMessages] = useState(0);
 
   useEffect(() => {
@@ -73,35 +75,31 @@ export function AppSidebar() {
   }, [user]);
 
   const homeHref = '/';
-  const launchCommunityHref =
-    LAUNCH_TERRITORIES.find(
-      (territory) =>
-        territory.kind === 'group' &&
-        territory.slug === 'complexo-do-nordeste-de-amaralina',
-    )?.path ?? '/ba/salvador/area/complexo-do-nordeste-de-amaralina';
-
   const getNavHref = (item: NavItem): string => {
+    const cityBase = `/${active.state}/${active.city}`;
     switch (item.id) {
       case 'home':
         return homeHref;
       case 'neighborhood':
-        return `/comunidade${launchCommunityHref}`;
+        return `/comunidade${cityBase}`;
       case 'business':
-        return LAUNCH_URLS.business;
+        return `/empresas${cityBase}`;
       case 'gastronomy':
-        return LAUNCH_URLS.gastronomy;
+        return `/gastronomia${cityBase}`;
       case 'services':
-        return LAUNCH_URLS.services;
+        return `/servicos${cityBase}`;
       case 'education':
-        return LAUNCH_URLS.education;
+        return `/educacao${cityBase}`;
       case 'classifieds':
-        return LAUNCH_URLS.classifieds;
+        return `/classificados${cityBase}`;
       case 'jobs':
-        return LAUNCH_URLS.jobs;
+        return `/vagas${cityBase}`;
       case 'events':
-        return LAUNCH_URLS.events;
+        return `/eventos${cityBase}`;
       case 'map':
-        return `/mapa/${LAUNCH_URLS.community.replace('/comunidade/', '')}`;
+        return `/mapa${cityBase}`;
+      case 'search':
+        return `/buscar${cityBase}`;
       default:
         return item.href;
     }
@@ -190,7 +188,11 @@ export function AppSidebar() {
             </>
           )}
         </Link>
-
+        {!collapsed ? (
+          <div className="border-t border-sidebar-border px-2 py-2">
+            <PublicCitySelector compact />
+          </div>
+        ) : null}
       </SidebarHeader>
 
       <SidebarContent className="gap-0">

@@ -23,12 +23,14 @@ export type {
   ElectedOfficials,
   FeaturedDistrict,
   CityMetadata,
+  CityStatus,
 } from '@/core/city/services/CityService';
 
-export function useCityMetadata(state: string = 'ba', city: string = 'salvador') {
+export function useCityMetadata(state?: string, city?: string) {
   return useQuery({
     queryKey: ['city-metadata', state, city],
-    queryFn: () => CityService.getCityMetadata(state, city),
+    queryFn: () => CityService.getCityMetadata(state ?? 'ba', city ?? 'salvador'),
+    enabled: Boolean(state && city),
     staleTime: 10 * 60 * 1000, // 10 minutos - dados da cidade mudam raramente
     gcTime: 30 * 60 * 1000, // 30 minutos no cache
   });

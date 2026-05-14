@@ -17,12 +17,12 @@ import {
 } from "@/core/location";
 import { createLocationRepository } from "@/core/location/repositories/createLocationRepository";
 import { LocationStatus, LocationType } from "@/core/location/types";
-import { canUseResidenceLocalReference } from "@/core/residence/config/residenceAddressPolicy";
 import { locationGeocodingService } from "@/core/location/services/LocationGeocodingService";
 import type { LocationGeocodingResult } from "@/core/location/services/LocationGeocodingService";
 import { toast } from "sonner";
 import { useSessionContext } from "@/core/session";
 import { logger } from "@/shared/utils/logger";
+import { supabase } from "@/integrations/supabase/client";
 
 type LookupStatus = "idle" | "loading" | "success" | "error";
 type AddressEntryMode = "cep" | "manual";
@@ -55,7 +55,10 @@ export function ResidenceManager() {
   const [complement, setComplement] = useState("");
   const [postalCode, setPostalCode] = useState("");
   const [localNeighborhood, setLocalNeighborhood] = useState("");
+  const [cepNeighborhoodCandidate, setCepNeighborhoodCandidate] = useState("");
   const [cityLocationId, setCityLocationId] = useState<string | null>(null);
+  const [stateLocationId, setStateLocationId] = useState<string | null>(null);
+  const [resolvedCoordinates, setResolvedCoordinates] = useState<{ latitude: number; longitude: number } | null>(null);
   const [localities, setLocalities] = useState<ResidentialLocality[]>([]);
   const [loadingLocalities, setLoadingLocalities] = useState(false);
   const [cepLookupStatus, setCepLookupStatus] = useState<LookupStatus>("idle");
@@ -74,9 +77,7 @@ export function ResidenceManager() {
   const [streetTouched, setStreetTouched] = useState(false);
   const [localNeighborhoodTouched, setLocalNeighborhoodTouched] = useState(false);
   const [territoryTouched, setTerritoryTouched] = useState(false);
-  const [showManualLocalityInput, setShowManualLocalityInput] = useState(false);
   const [entryMode, setEntryMode] = useState<AddressEntryMode>("cep");
-  const [showTerritoryEditor, setShowTerritoryEditor] = useState(false);
   const [territoryResolutionNeeded, setTerritoryResolutionNeeded] = useState(false);
   const [highlightedSuggestionIndex, setHighlightedSuggestionIndex] = useState<number>(-1);
   const normalizedInput = normalizeSearch(localNeighborhood);
@@ -95,11 +96,7 @@ export function ResidenceManager() {
     if (entryMode === "manual") {
       setCepLookupStatus("idle");
       setCepLookupMessage("");
-      setShowTerritoryEditor(true);
-    } else {
-      setShowTerritoryEditor(false);
     }
-    setShowManualLocalityInput(false);
     setHighlightedSuggestionIndex(-1);
   }, [entryMode]);
 
@@ -165,6 +162,7 @@ export function ResidenceManager() {
       setLocationId(residence.location_id);
       setTerritorySummary(residence.location?.name ?? null);
       setCityLocationId(null);
+      setStateLocationId(null);
       // Campos do form serão carregados do address se necessário editar
       setStreet("");
       setNumber("");
@@ -175,17 +173,21 @@ export function ResidenceManager() {
           ? residence.address.metadata.local_neighborhood
           : "",
       );
+      setCepNeighborhoodCandidate("");
+      setResolvedCoordinates(null);
     } else {
       setStreet("");
       setNumber("");
       setComplement("");
       setPostalCode("");
       setLocalNeighborhood("");
+      setCepNeighborhoodCandidate("");
       setAddressId(null);
       setLocationId(null);
       setTerritorySummary(null);
       setTerritoryScope(null);
       setCityLocationId(null);
+      setStateLocationId(null);
     }
     setStreetTouched(false);
     setLocalNeighborhoodTouched(false);
@@ -194,10 +196,9 @@ export function ResidenceManager() {
     setCepLookupMessage("");
     setStreetLookupStatus("idle");
     setStreetSuggestions([]);
-    setShowManualLocalityInput(false);
     setEntryMode("cep");
-    setShowTerritoryEditor(false);
     setTerritoryResolutionNeeded(false);
+    setResolvedCoordinates(null);
     setFormOpen(true);
   }
 
@@ -213,6 +214,7 @@ export function ResidenceManager() {
 
       setPostalCode(result.postalCode);
       setCepAutoLookupDone(result.postalCode.replace(/\D/g, ""));
+      setResolvedCoordinates(result.coordinates ?? null);
 
       // Preencher rua se disponível e não foi tocado pelo usuário
       if (result.street && (!streetTouched || !street.trim())) {
@@ -220,21 +222,25 @@ export function ResidenceManager() {
       }
 
       // SSOT: Priorizar dados do território oficial (SSOT) sobre providerAddress
-      const resolvedNeighborhood =
-        result.territory.district?.name ??      // 1º: Bairro oficial do SSOT
-        result.territory.city?.name ??          // 2º: Cidade do SSOT (fallback)
-        result.neighborhood ??                  // 3º: Bairro do geocoding
-        result.providerAddress.neighborhood ??  // 4º: Bairro do provedor externo
+      const postalNeighborhood =
+        result.providerAddress.neighborhood ??
+        result.neighborhood ??
         "";
-      
-      if (resolvedNeighborhood && (!localNeighborhoodTouched || !localNeighborhood.trim())) {
-        setLocalNeighborhood(resolvedNeighborhood);
+      const resolvedNeighborhood =
+        result.territory.district?.name ??
+        postalNeighborhood ??
+        "";
+      setCepNeighborhoodCandidate(resolvedNeighborhood);
+
+      if (postalNeighborhood && (!localNeighborhoodTouched || !localNeighborhood.trim())) {
+        setLocalNeighborhood(postalNeighborhood);
       }
 
       // Cenário ideal: locationId encontrado no SSOT
       if (result.locationData?.locationId && !territoryTouched) {
         setLocationId(result.locationData.locationId);
         setCityLocationId(result.territory.city?.id ?? null);
+        setStateLocationId(result.territory.state?.id ?? null);
         setSelectedStateName(result.territory.state?.name ?? null);
         setSelectedCityName(result.territory.city?.name ?? null);
         setTerritoryScope(result.territory.district ? "district" : result.territory.city ? "city" : null);
@@ -254,6 +260,7 @@ export function ResidenceManager() {
         
         setSelectedStateName(stateFromSSot ?? result.providerAddress.state ?? null);
         setSelectedCityName(cityFromSSot ?? result.providerAddress.city ?? null);
+        setStateLocationId(result.territory.state?.id ?? null);
         
         // Verificar se tem dados mínimos do SSOT (não do provedor)
         const hasSSotData = stateFromSSot && cityFromSSot;
@@ -276,9 +283,39 @@ export function ResidenceManager() {
           setTerritorySummary(null);
           setTerritoryResolutionNeeded(true);
         }
+
+        const candidateCityId = result.territory.city?.id ?? null;
+        if (candidateCityId && resolvedNeighborhood && !territoryTouched) {
+          void (async () => {
+            try {
+              const locationRepository = createLocationRepository();
+              const districts = await locationRepository.findChildren(candidateCityId, {
+                type: LocationType.DISTRICT,
+                status: LocationStatus.ACTIVE,
+                page: 1,
+                page_size: 500,
+              });
+              const matchedDistrict = districts.locations.find((district) =>
+                tryMatchDistrictName(resolvedNeighborhood, district.name),
+              );
+              if (matchedDistrict) {
+                setLocationId(matchedDistrict.id);
+                setTerritoryScope("district");
+                if (result.territory.state?.name && result.territory.city?.name) {
+                  setTerritorySummary(
+                    `${matchedDistrict.name}, ${result.territory.city.name} - ${result.territory.state.name}`,
+                  );
+                }
+                setTerritoryResolutionNeeded(false);
+              }
+            } catch (error) {
+              logger.warn("Failed to auto-match district from CEP candidate", error);
+            }
+          })();
+        }
       }
     },
-    [localNeighborhoodTouched, localNeighborhood, streetTouched, street, territoryTouched],
+    [streetTouched, street, territoryTouched, localNeighborhoodTouched, localNeighborhood],
   );
 
   async function handleLookupCep() {
@@ -304,6 +341,29 @@ export function ResidenceManager() {
       }
       applyLocationLookupResult(result);
       setCepLookupStatus("success");
+
+      if (user && (result.territory.reviewStatus === "needs_review" || result.territory.reviewStatus === "unresolved")) {
+        await supabase.from("territory_resolution_queue" as never).insert({
+          user_id: user.id,
+          source: "residence_cep_lookup",
+          review_status: result.territory.reviewStatus,
+          review_reason: result.territory.reviewReason ?? "auto_reconciliation_requires_review",
+          raw_state: result.providerAddress.state,
+          raw_city: result.providerAddress.city,
+          raw_neighborhood: result.providerAddress.neighborhood,
+          postal_code: result.postalCode,
+          ibge_code: result.ibgeCode,
+          latitude: result.coordinates?.latitude ?? null,
+          longitude: result.coordinates?.longitude ?? null,
+          canonical_state_id: result.territory.state?.id ?? null,
+          canonical_city_id: result.territory.city?.id ?? null,
+          canonical_district_id: result.territory.district?.id ?? null,
+          payload: {
+            providerAddress: result.providerAddress,
+            territory: result.territory,
+          },
+        } as never);
+      }
       
       // Mensagens baseadas na qualidade dos dados do SSOT
       if (result.locationData?.locationId) {
@@ -346,17 +406,10 @@ export function ResidenceManager() {
     ) => {
       setTerritoryTouched(true);
       setLocationId(selectedLocationId);
+      setStateLocationId(locationData?.stateId ?? null);
       setCityLocationId(locationData?.cityId ?? null);
       setSelectedStateName(locationData?.stateName ?? null);
       setSelectedCityName(locationData?.cityName ?? null);
-      if (
-        selectedLocationId &&
-        locationData &&
-        selectedLocationId !== locationData.cityId &&
-        !localNeighborhoodTouched
-      ) {
-        setLocalNeighborhood(locationData.neighborhoodName);
-      }
       setTerritoryScope(
         selectedLocationId && locationData
           ? selectedLocationId === locationData.cityId
@@ -366,11 +419,13 @@ export function ResidenceManager() {
       );
       setTerritorySummary(
         locationData
-          ? `${locationData.neighborhoodName}, ${locationData.cityName} - ${locationData.stateName}`
+          ? locationData.neighborhoodName === locationData.cityName
+            ? `${locationData.cityName} - ${locationData.stateName}`
+            : `${locationData.neighborhoodName}, ${locationData.cityName} - ${locationData.stateName}`
           : null,
       );
     },
-    [localNeighborhoodTouched],
+    [],
   );
 
   useEffect(() => {
@@ -452,6 +507,30 @@ export function ResidenceManager() {
     };
   }, [cityLocationId]);
 
+  useEffect(() => {
+    if (!cityLocationId || !cepNeighborhoodCandidate.trim() || locationId) return;
+    if (loadingLocalities || localities.length === 0) return;
+    const match = localities.find((item) =>
+      tryMatchDistrictName(cepNeighborhoodCandidate, item.name),
+    );
+    if (match) {
+      setLocationId(match.location_id);
+      setTerritoryScope("district");
+      if (selectedStateName && selectedCityName) {
+        setTerritorySummary(`${match.name}, ${selectedCityName} - ${selectedStateName}`);
+      }
+      setTerritoryResolutionNeeded(false);
+    }
+  }, [
+    cityLocationId,
+    cepNeighborhoodCandidate,
+    loadingLocalities,
+    localities,
+    locationId,
+    selectedCityName,
+    selectedStateName,
+  ]);
+
 
   async function handleSave() {
     if (!user) {
@@ -467,7 +546,12 @@ export function ResidenceManager() {
 
     const safeLocalNeighborhood = localNeighborhood.trim();
     if (safeLocalNeighborhood.length > 80) {
-      toast.error("Localidade complementar (privada) deve ter ate 80 caracteres");
+      toast.error("Bairro do endereco deve ter ate 80 caracteres");
+      return;
+    }
+
+    if (!safeLocalNeighborhood) {
+      toast.error("Informe o bairro do endereco para concluir");
       return;
     }
 
@@ -513,6 +597,12 @@ export function ResidenceManager() {
         }
       }
 
+      // Escala nacional progressiva: se o bairro não existe no catálogo do SSOT da cidade,
+      // mantém vínculo canônico na cidade e salva localidade privada para curadoria.
+      if (resolvedLocationId === cityLocationId && safeLocalNeighborhood.length > 0) {
+        setTerritoryScope("city");
+      }
+
       if (residence) {
         // ETAPA 12: Update apenas preserva canônico (não permite editar address inline)
         toast.info("Edição de endereço não implementada. Crie uma nova residência.");
@@ -536,12 +626,35 @@ export function ResidenceManager() {
             address_type: addressType,
             precision: territoryScope === "city" ? "city" : "district",
             geocoding_source: 'manual',
-            latitude: null,
-            longitude: null,
+            latitude: resolvedCoordinates?.latitude ?? null,
+            longitude: resolvedCoordinates?.longitude ?? null,
             metadata: {
               local_neighborhood: safeLocalNeighborhood || null,
+              address_neighborhood_text: safeLocalNeighborhood || null,
+              postal_neighborhood_raw: cepNeighborhoodCandidate || null,
+              canonical_country_id: null,
+              canonical_country_code: "BR",
+              canonical_state_id: stateLocationId ?? null,
               canonical_scope: territoryScope ?? "district",
               canonical_label: territorySummary,
+              reconciliation_status:
+                resolvedLocationId === cityLocationId
+                  ? (safeLocalNeighborhood ? "city_only" : "unresolved")
+                  : "resolved",
+              reconciliation_confidence:
+                resolvedLocationId === cityLocationId
+                  ? 0.7
+                  : 0.95,
+              territory_resolution_level:
+                resolvedLocationId === cityLocationId ? "city" : "district",
+              canonical_city_id: cityLocationId ?? null,
+              canonical_district_id:
+                resolvedLocationId && cityLocationId && resolvedLocationId !== cityLocationId
+                  ? resolvedLocationId
+                  : null,
+              territorial_group_id: null,
+              latitude: resolvedCoordinates?.latitude ?? null,
+              longitude: resolvedCoordinates?.longitude ?? null,
             },
           });
 
@@ -605,19 +718,28 @@ export function ResidenceManager() {
       ? residence.address.metadata.local_neighborhood
       : null;
   const isCepMode = entryMode === "cep";
-  const hasManualTerritorySelection = Boolean(cityLocationId);
+  const hasManualTerritorySelection = Boolean(cityLocationId && selectedStateName && selectedCityName);
   const hasTerritoryData = Boolean(selectedStateName && selectedCityName);
   
   // SIMPLES: Mostrar território quando tem dados OU modo manual
-  const shouldShowTerritorySection = hasTerritoryData || !isCepMode;
+  const shouldShowTerritorySection = hasTerritoryData || !isCepMode || territoryResolutionNeeded;
   
   // SIMPLES: Mostrar campos quando CEP teve sucesso OU modo manual com território
   const shouldShowAddressFields = (isCepMode && cepLookupStatus === "success") || (!isCepMode && hasManualTerritorySelection);
-  const allowLocalReferenceByCity = canUseResidenceLocalReference(selectedCityName);
-  const shouldShowLocalReferenceField =
-    shouldShowAddressFields &&
-    allowLocalReferenceByCity &&
-    (showManualLocalityInput || (localNeighborhood.trim().length > 0 && !isOfficialNeighborhood));
+  const shouldShowPostalNeighborhoodField =
+    shouldShowAddressFields;
+  const shouldShowLocalReferenceField = false;
+  const shouldWarnUnmatchedCepNeighborhood =
+    isCepMode &&
+    cepLookupStatus === "success" &&
+    Boolean(cepNeighborhoodCandidate.trim()) &&
+    Boolean(cityLocationId) &&
+    !loadingLocalities &&
+    localities.length > 0 &&
+    !localities.some(
+      (locality) =>
+        normalizeSearch(locality.name) === normalizeSearch(cepNeighborhoodCandidate),
+    );
 
   return (
     <div className="space-y-6">
@@ -773,26 +895,17 @@ export function ResidenceManager() {
                 </p>
               ) : null}
               {isCepMode && territoryResolutionNeeded ? (
-                <div className="mt-3 flex items-center justify-between rounded-lg border border-amber-400/30 bg-amber-50 px-4 py-3">
+                <div className="mt-3 rounded-lg border border-amber-400/30 bg-amber-50 px-4 py-3">
                   <p className="text-xs text-amber-700">
                     Não validamos o território automaticamente. Confirme estado e cidade para concluir.
                   </p>
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant="ghost"
-                    className="h-8 px-3 text-xs shrink-0 ml-2"
-                    onClick={() => setShowTerritoryEditor(true)}
-                  >
-                    Selecionar território
-                  </Button>
                 </div>
               ) : (
                 <p className="mt-2 text-xs text-muted-foreground">
-                  Digite o CEP e complete o endereço se quiser melhorar a verificação.
-                </p>
-              )}
-            </div>
+                    Digite o CEP e finalize com número/complemento.
+                  </p>
+                )}
+              </div>
 
             {/* SIMPLES: Território - Estado e Cidade */}
             <div className={`col-span-2 mt-4 ${!shouldShowTerritorySection ? "hidden" : ""}`}>
@@ -802,22 +915,21 @@ export function ResidenceManager() {
                     Território da residência
                   </p>
                   <p className="text-xs text-muted-foreground">
-                    Estado, cidade e bairro usados para comunidade e cobertura territorial.
+                    Estado e cidade oficiais do SSOT para validar o endereco.
                   </p>
                 </div>
 
                 <TerritorialSelector
                   initialLocationId={locationId}
                   onLocationChange={handleTerritoryChange}
-                  allowCityOnly
+                  allowCityOnly={true}
+                  cityOnly={true}
                   progressiveReveal={entryMode === "manual"}
                   preferredStateName={selectedStateName}
                   preferredCityName={selectedCityName}
-                  preferredNeighborhoodName={localNeighborhood}
                   labels={{
                     state: "Estado",
                     city: "Cidade",
-                    neighborhood: "Bairro",
                   }}
                 />
 
@@ -826,22 +938,15 @@ export function ResidenceManager() {
                     ✓ Território: {territorySummary}
                   </div>
                 )}
+                {shouldWarnUnmatchedCepNeighborhood ? (
+                  <div className="mt-3 rounded-xl border border-amber-500/30 bg-amber-50 px-4 py-3 text-xs text-amber-800 dark:bg-amber-950/20 dark:text-amber-300">
+                    O bairro retornado pelo CEP foi "{cepNeighborhoodCandidate}" e nao bateu com a base territorial desta cidade.
+                    Ele sera salvo como bairro privado do endereco, sem liberar comunidade de bairro.
+                  </div>
+                ) : null}
               </div>
             </div>
 
-            {/* Localidade complementar (privada) - apenas sob demanda */}
-            <div className={`col-span-2 mt-4 ${!shouldShowAddressFields || !allowLocalReferenceByCity ? "hidden" : ""}`}>
-              {!shouldShowLocalReferenceField ? (
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setShowManualLocalityInput(true)}
-                >
-                  Nao encontrei na lista
-                </Button>
-              ) : null}
-            </div>
             <div className={`col-span-2 mt-2 ${!shouldShowLocalReferenceField ? "hidden" : ""}`}>
               <Label className="text-sm font-medium mb-2 block">Bairro/localidade (complementar e privado)</Label>
               <Input
@@ -860,6 +965,28 @@ export function ResidenceManager() {
               ) : (
                 <p className="mt-2 text-xs text-muted-foreground">
                   Use apenas quando sua localidade nao aparecer no bairro do territorio.
+                </p>
+              )}
+            </div>
+
+            <div className={`col-span-2 mt-4 ${!shouldShowPostalNeighborhoodField ? "hidden" : ""}`}>
+              <Label className="text-sm font-medium mb-2 block">Bairro do endereco *</Label>
+              <Input
+                value={localNeighborhood}
+                onChange={(e) => {
+                  setLocalNeighborhoodTouched(true);
+                  setLocalNeighborhood(e.target.value);
+                }}
+                placeholder="Ex: Ipitanga, Centro, Chapada do Rio Vermelho"
+                maxLength={80}
+              />
+              {localNeighborhood.trim() && !localNeighborhoodTouched ? (
+                <p className="mt-2 text-xs text-green-600">
+                  Preenchido automaticamente pelo CEP.
+                </p>
+              ) : (
+                <p className="mt-2 text-xs text-muted-foreground">
+                  Dado privado do endereco. Comunidade usa apenas bairro validado no SSOT.
                 </p>
               )}
             </div>
@@ -916,6 +1043,12 @@ export function ResidenceManager() {
                 </p>
               ) : null}
             </div>
+
+            {!isCepMode && !hasManualTerritorySelection ? (
+              <div className="col-span-2 mt-2 rounded-lg border border-border bg-muted/30 px-4 py-3 text-xs text-muted-foreground">
+                Selecione estado e cidade para continuar com bairro, rua, numero e complemento.
+              </div>
+            ) : null}
 
             <div className={`mt-4 ${!shouldShowAddressFields ? "hidden" : ""}`}>
               <Label className="text-sm font-medium mb-2 block">Número</Label>

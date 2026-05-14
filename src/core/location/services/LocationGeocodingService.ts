@@ -10,6 +10,7 @@
  * - Troca futura de provider não quebra consumidores, pois todos dependem deste contrato.
  */
 import { logger } from '@/shared/utils/logger';
+import { supabase } from '@/integrations/supabase/client';
 import {
   geocodingService as providerGeocodingService,
   type GeocodeRequest,
@@ -27,6 +28,7 @@ type GeocodingEngine = Pick<
 >;
 
 type TerritoryMatchStatus = 'matched' | 'partial' | 'unmatched';
+type TerritoryReviewStatus = 'resolved' | 'needs_review' | 'unresolved';
 
 interface ProviderAddressSeed {
   formattedAddress?: string;
@@ -48,14 +50,20 @@ interface CachedTerritoryIndex {
   districts: Location[];
   citiesByStateId: Map<string, Location[]>;
   districtsByCityId: Map<string, Location[]>;
+  citiesByIbgeCode: Map<string, Location>;
+  aliasesByNormalizedValue: Map<string, Set<string>>;
+  territorialGroupsByDistrictId: Map<string, Array<{ id: string; slug: string; name: string }>>;
 }
 
 export interface TerritoryResolution {
   sourceOfTruth: 'locations';
   status: TerritoryMatchStatus;
+  reviewStatus: TerritoryReviewStatus;
+  reviewReason: string | null;
   state: Location | null;
   city: Location | null;
   district: Location | null;
+  groups: Array<{ id: string; slug: string; name: string }>;
   authoritativeLocation: Location | null;
 }
 
@@ -216,12 +224,30 @@ function buildTerritoryStatus(territory: {
   return 'unmatched';
 }
 
+function extractIbgeCodeFromLocation(location: Location): string | null {
+  const candidates = [
+    location.metadata?.ibge_code,
+    location.metadata?.ibgeCode,
+    location.metadata?.municipio_ibge,
+    location.metadata?.city_ibge_code,
+  ];
+  for (const value of candidates) {
+    if (typeof value !== 'string') continue;
+    const digits = value.replace(/\D/g, '');
+    if (digits.length >= 6) {
+      return digits;
+    }
+  }
+  return null;
+}
+
 export class LocationGeocodingService {
   private readonly geocoding: GeocodingEngine;
   private readonly locationRepository: ILocationRepository;
   private readonly locationCacheTtlMs: number;
   private territoryIndex: CachedTerritoryIndex | null = null;
   private territoryIndexPromise: Promise<CachedTerritoryIndex> | null = null;
+  private aliasLookupDisabled = false;
 
   constructor(deps: LocationGeocodingServiceDeps = {}) {
     this.geocoding = deps.geocoding ?? providerGeocodingService;
@@ -274,14 +300,28 @@ export class LocationGeocodingService {
       country: 'Brasil',
     });
 
-    const territory = await this.reconcileTerritory(providerAddress);
+    const coordinates =
+      postalCodeResult.coordinates &&
+      Number.isFinite(postalCodeResult.coordinates.latitude) &&
+      Number.isFinite(postalCodeResult.coordinates.longitude)
+        ? {
+            latitude: postalCodeResult.coordinates.latitude,
+            longitude: postalCodeResult.coordinates.longitude,
+          }
+        : undefined;
+
+    const territory = await this.reconcileTerritory(
+      providerAddress,
+      postalCodeResult.ibgeCode,
+      coordinates,
+    );
     const authoritativeLocation = territory.authoritativeLocation;
 
     return {
       postalCode: postalCodeResult.postalCode,
       street: providerAddress.street,
       complement: providerAddress.complement,
-      neighborhood: territory.district?.name ?? null,
+      neighborhood: territory.district?.name ?? providerAddress.neighborhood ?? null,
       city: territory.city?.name ?? null,
       state: territory.state?.name ?? null,
       stateCode: getStateCode(territory.state),
@@ -360,7 +400,11 @@ export class LocationGeocodingService {
       country: providerResult.addressComponents.country,
     });
 
-    const territory = await this.reconcileTerritory(providerAddress);
+    const territory = await this.reconcileTerritory(
+      providerAddress,
+      undefined,
+      providerResult.coordinates,
+    );
 
     return {
       displayAddress: providerResult.formattedAddress,
@@ -379,15 +423,48 @@ export class LocationGeocodingService {
 
   private async reconcileTerritory(
     providerAddress: Pick<ProviderAddressSnapshot, 'state' | 'city' | 'neighborhood'>,
+    ibgeCode?: string,
+    coordinates?: { latitude: number; longitude: number },
   ): Promise<TerritoryResolution> {
     const index = await this.getTerritoryIndex();
 
     let state = this.matchState(providerAddress.state, index.states);
-    let city = this.matchLocation(
-      providerAddress.city,
-      state ? index.citiesByStateId.get(state.id) ?? [] : index.cities,
-      (location) => [location.name, location.slug],
-    );
+    let city: Location | null = null;
+    const normalizedIbge = (ibgeCode ?? '').replace(/\D/g, '');
+    if (normalizedIbge) {
+      city = index.citiesByIbgeCode.get(normalizedIbge) ?? null;
+      if (!city) {
+        const stateCodeForSeed =
+          getStateCode(state) ??
+          ((providerAddress.state ?? '').trim().length === 2
+            ? (providerAddress.state ?? '').trim().toUpperCase()
+            : null);
+        const seededCity = await this.ensureCanonicalCityByIbge(
+          stateCodeForSeed,
+          providerAddress.city,
+          normalizedIbge,
+        );
+        if (seededCity) {
+          this.invalidateTerritoryCache();
+          const freshIndex = await this.getTerritoryIndex();
+          city = freshIndex.citiesByIbgeCode.get(normalizedIbge) ?? null;
+          if (city && !state && city.parent_id) {
+            state = freshIndex.byId.get(city.parent_id) ?? null;
+          }
+        }
+      }
+      if (city && !state && city.parent_id) {
+        state = index.byId.get(city.parent_id) ?? null;
+      }
+    }
+    if (!city) {
+      city = this.matchLocation(
+        providerAddress.city,
+        state ? index.citiesByStateId.get(state.id) ?? [] : index.cities,
+        (location) => [location.name, location.slug],
+        index.aliasesByNormalizedValue,
+      );
+    }
 
     let district: Location | null = null;
     if (city) {
@@ -395,7 +472,12 @@ export class LocationGeocodingService {
         providerAddress.neighborhood,
         index.districtsByCityId.get(city.id) ?? [],
         (location) => [location.name, location.slug],
+        index.aliasesByNormalizedValue,
       );
+    }
+
+    if (!district && city && coordinates) {
+      district = await this.matchDistrictByBoundary(city.id, coordinates);
     }
 
     if (district && !city && district.parent_id) {
@@ -409,11 +491,22 @@ export class LocationGeocodingService {
     const territory = {
       sourceOfTruth: 'locations' as const,
       status: buildTerritoryStatus({ state, city, district }),
+      reviewStatus: 'resolved' as TerritoryReviewStatus,
+      reviewReason: null as string | null,
       state,
       city,
       district,
+      groups: district ? index.territorialGroupsByDistrictId.get(district.id) ?? [] : [],
       authoritativeLocation: district ?? city ?? state ?? null,
     };
+
+    if (territory.status === 'partial') {
+      territory.reviewStatus = 'needs_review';
+      territory.reviewReason = 'district_unresolved_for_city';
+    } else if (territory.status === 'unmatched') {
+      territory.reviewStatus = 'unresolved';
+      territory.reviewReason = 'city_unresolved_from_provider';
+    }
 
     if (territory.status === 'unmatched') {
       logger.warn('[LocationGeocodingService] Provider result outside territorial SSOT', {
@@ -424,6 +517,36 @@ export class LocationGeocodingService {
     }
 
     return territory;
+  }
+
+  private async ensureCanonicalCityByIbge(
+    stateCode: string | null,
+    city: string | null,
+    ibgeCode: string,
+  ): Promise<boolean> {
+    const normalizedStateCode = (stateCode ?? '').trim().toUpperCase();
+    const normalizedCity = (city ?? '').trim();
+    if (!normalizedStateCode || !normalizedCity || !ibgeCode) {
+      return false;
+    }
+
+    const { error } = await supabase.rpc('rpc_upsert_canonical_city_by_ibge', {
+      p_state_code: normalizedStateCode,
+      p_city_name: normalizedCity,
+      p_ibge_code: ibgeCode,
+    });
+
+    if (error) {
+      logger.warn('[LocationGeocodingService] Could not upsert canonical city by IBGE', {
+        state: normalizedStateCode,
+        city: normalizedCity,
+        ibgeCode,
+        error,
+      });
+      return false;
+    }
+
+    return true;
   }
 
   private matchState(rawState: string | null, states: Location[]): Location | null {
@@ -441,6 +564,7 @@ export class LocationGeocodingService {
     rawValue: string | null,
     candidates: Location[],
     tokenBuilder: (location: Location) => Array<string | null | undefined>,
+    aliasesByNormalizedValue?: Map<string, Set<string>>,
   ): Location | null {
     const normalizedNeedle = normalizeText(rawValue);
     if (!normalizedNeedle) {
@@ -472,7 +596,25 @@ export class LocationGeocodingService {
         ),
     );
 
-    return partialMatches.length === 1 ? partialMatches[0] : null;
+    if (partialMatches.length === 1) {
+      return partialMatches[0];
+    }
+
+    if (!aliasesByNormalizedValue) {
+      return null;
+    }
+
+    const aliasMatchedLocationIds = aliasesByNormalizedValue.get(normalizedNeedle);
+    if (!aliasMatchedLocationIds || aliasMatchedLocationIds.size === 0) {
+      return null;
+    }
+
+    const candidateById = new Map(candidates.map((item) => [item.id, item]));
+    const aliasMatches = Array.from(aliasMatchedLocationIds)
+      .map((locationId) => candidateById.get(locationId))
+      .filter((item): item is Location => Boolean(item));
+
+    return aliasMatches.length === 1 ? aliasMatches[0] : null;
   }
 
   private async getTerritoryIndex(): Promise<CachedTerritoryIndex> {
@@ -513,6 +655,13 @@ export class LocationGeocodingService {
     const districts = activeLocations.filter(
       (location) => location.type === LocationType.DISTRICT,
     );
+    const citiesByIbgeCode = new Map<string, Location>();
+    for (const city of cities) {
+      const ibgeCode = extractIbgeCodeFromLocation(city);
+      if (ibgeCode) {
+        citiesByIbgeCode.set(ibgeCode, city);
+      }
+    }
 
     const citiesByStateId = new Map<string, Location[]>();
     for (const city of cities) {
@@ -534,6 +683,61 @@ export class LocationGeocodingService {
       districtsByCityId.set(district.parent_id, bucket);
     }
 
+    const aliasesByNormalizedValue = new Map<string, Set<string>>();
+    let aliasesData: Array<{ location_id: string; alias_value: string }> | null = null;
+
+    if (!this.aliasLookupDisabled) {
+      const aliasesWithValidity = await supabase
+        .from('location_aliases' as never)
+        .select('location_id, alias_value, valid_until')
+        .is('valid_until', null);
+
+      if (aliasesWithValidity.error) {
+        // Compatibilidade com ambientes onde `valid_until` ainda não existe.
+        const aliasesFallback = await supabase
+          .from('location_aliases' as never)
+          .select('location_id, alias_value');
+        if (aliasesFallback.error) {
+          // 42P17: recursão de policy (ex.: admin_users) => desabilita leitura de aliases no cliente.
+          if ((aliasesFallback.error as { code?: string }).code === '42P17') {
+            this.aliasLookupDisabled = true;
+            logger.warn('[LocationGeocodingService] Alias lookup disabled due to recursive RLS policy (42P17)');
+          } else {
+            logger.warn('[LocationGeocodingService] Failed to load location aliases', aliasesFallback.error);
+          }
+        } else {
+          aliasesData = aliasesFallback.data as Array<{ location_id: string; alias_value: string }>;
+        }
+      } else {
+        aliasesData = aliasesWithValidity.data as Array<{ location_id: string; alias_value: string }>;
+      }
+    }
+
+    for (const row of aliasesData ?? []) {
+      const key = normalizeText(row.alias_value);
+      if (!key) continue;
+      const existing = aliasesByNormalizedValue.get(key) ?? new Set<string>();
+      existing.add(row.location_id);
+      aliasesByNormalizedValue.set(key, existing);
+    }
+
+    const territorialGroupsByDistrictId = new Map<
+      string,
+      Array<{ id: string; slug: string; name: string }>
+    >();
+    const { data: groupsData } = await supabase
+      .from('territorial_group_members' as never)
+      .select('location_id, territorial_groups(id, slug, name)');
+    for (const row of (groupsData ?? []) as Array<{
+      location_id: string;
+      territorial_groups: { id: string; slug: string; name: string } | null;
+    }>) {
+      if (!row.territorial_groups) continue;
+      const bucket = territorialGroupsByDistrictId.get(row.location_id) ?? [];
+      bucket.push(row.territorial_groups);
+      territorialGroupsByDistrictId.set(row.location_id, bucket);
+    }
+
     return {
       loadedAt: Date.now(),
       byId,
@@ -542,7 +746,30 @@ export class LocationGeocodingService {
       districts,
       citiesByStateId,
       districtsByCityId,
+      citiesByIbgeCode,
+      aliasesByNormalizedValue,
+      territorialGroupsByDistrictId,
     };
+  }
+
+  private async matchDistrictByBoundary(
+    cityId: string,
+    coordinates: { latitude: number; longitude: number },
+  ): Promise<Location | null> {
+    const { data, error } = await supabase.rpc('rpc_match_district_by_point', {
+      p_city_id: cityId,
+      p_lat: coordinates.latitude,
+      p_lng: coordinates.longitude,
+    });
+
+    if (error) {
+      logger.warn('[LocationGeocodingService] Boundary match RPC failed', error);
+      return null;
+    }
+
+    const locationId = Array.isArray(data) ? (data[0]?.location_id as string | undefined) : null;
+    if (!locationId) return null;
+    return this.locationRepository.findById(locationId);
   }
 }
 

@@ -205,6 +205,14 @@ export class ReconnectionManager {
    */
   private async performHealthCheck(): Promise<void> {
     try {
+      // Sem canais realtime registrados, não há o que reconectar nem monitorar como stale.
+      if (this.channels.size === 0) {
+        if (this.connectionState.status !== 'connected') {
+          this.updateConnectionState('connected');
+        }
+        return;
+      }
+
       // Verificar se conexão está stale
       const isStale = this.isConnectionStale();
       
@@ -239,6 +247,10 @@ export class ReconnectionManager {
    * Verifica se conexão está stale
    */
   private isConnectionStale(): boolean {
+    if (this.channels.size === 0) {
+      return false;
+    }
+
     if (!this.connectionState.lastConnectedAt) {
       return false;
     }

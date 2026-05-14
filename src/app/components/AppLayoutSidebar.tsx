@@ -16,6 +16,7 @@ import { BottomNav } from './BottomNav';
 import { TerritoryMismatchBanner } from '@/core/location/components/TerritoryMismatchBanner';
 import { useIsMobile } from '@/shared/hooks/use-mobile';
 import { scheduleIdleRouteWarmup } from '@/app/routes/prefetch';
+import { PublicCitySelector } from './navigation/PublicCitySelector';
 
 export function AppLayoutSidebar() {
   const isMobile = useIsMobile();
@@ -37,6 +38,15 @@ export function AppLayoutSidebar() {
   const isConversationRoute =
     pathSegments[0] === 'chat' && pathSegments.length >= 2;
   const hideMobileBottomNav = isInternalGroupRoute || isConversationRoute;
+  const hideMobileCitySelector = Boolean(
+    pathname.startsWith('/conta') ||
+    pathname.startsWith('/central') ||
+    pathname.startsWith('/admin') ||
+    pathname.startsWith('/login') ||
+    pathname.startsWith('/cadastro') ||
+    pathname.startsWith('/reset-password') ||
+    pathname.startsWith('/onboarding')
+  );
 
   if (isCommunityTerritorialPath) {
     return (
@@ -50,6 +60,11 @@ export function AppLayoutSidebar() {
     return (
       <div className="h-screen bg-background flex flex-col w-full overflow-hidden">
         <TerritoryMismatchBanner />
+        {!hideMobileCitySelector ? (
+          <div className="border-b border-border px-2 py-1">
+            <PublicCitySelector />
+          </div>
+        ) : null}
         <main
           id="main-content"
           className={`flex-1 overflow-y-auto ${hideMobileBottomNav ? 'pb-0' : 'pb-16'}`}

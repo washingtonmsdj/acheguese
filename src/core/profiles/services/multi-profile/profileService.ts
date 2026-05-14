@@ -12,6 +12,7 @@
 import { logger } from '@/shared/utils/logger';
 import { supabase } from '@/integrations/supabase/supabase';
 import { SessionService } from '@/core/session/services/SessionService';
+import { SessionState } from '@/core/session/state/SessionState';
 import { BusinessService } from './businessService';
 import { ProfessionalService } from './professionalService';
 import { DriverService } from './driverService';
@@ -199,15 +200,19 @@ export class MultiProfileService {
   /**
    * Listar perfis do usuário autenticado (via RLS)
    */
-  static async getMyProfiles(): Promise<Profile[]> {
+  static async getMyProfiles(userId?: string): Promise<Profile[]> {
     try {
-      const user = await SessionService.getCurrentUser();
-      if (!user) return [];
+      const cachedUser = SessionState.getState().user;
+      const resolvedUserId =
+        userId ??
+        cachedUser?.id ??
+        (await SessionService.getCurrentUser())?.id;
+      if (!resolvedUserId) return [];
 
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
-        .eq('user_id', user.id)
+        .eq('user_id', resolvedUserId)
         .order('created_at', { ascending: true });
 
       if (error) throw error;

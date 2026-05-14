@@ -1,11 +1,10 @@
 /**
  * BottomNavV2
- * 
- * Nova bottom nav mobile com badges de notificação para mensagens e alertas.
- * Coexiste com BottomNav original.
+ *
+ * Bottom nav mobile com badges de notificacoes para mensagens e alertas.
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Users, Building2, Wrench, Tag, Home,
   MoreHorizontal, Calendar, Car, Map, Search,
@@ -18,7 +17,7 @@ import { useAppUrls } from '@/core/routing/hooks/useAppUrls';
 import { MessagingService } from '@/core/messaging';
 import { useAuth } from '@/core/auth/hooks/useAuth';
 import { useUnifiedNotifications } from '@/core/notifications/useUnifiedNotifications';
-import { LAUNCH_TERRITORIES, LAUNCH_URLS } from '@/config/territory';
+import { usePublicBrowsingCity } from '@/core/location/hooks/usePublicBrowsingCity';
 import {
   Sheet,
   SheetContent,
@@ -40,16 +39,21 @@ export function BottomNav() {
   const navigate = useNavigate();
   const { pathname } = useRouterLocation();
   const appUrls = useAppUrls();
+  const { active } = usePublicBrowsingCity();
   const { user } = useAuth();
   const [moreOpen, setMoreOpen] = useState(false);
   const [unreadMessages, setUnreadMessages] = useState(0);
 
-  // Notificações
+  const cityBase = `/${active.state}/${active.city}`;
+  const cityModule = (module: string) => `/${module}${cityBase}`;
+
   const { unreadCount: unreadNotifications } = useUnifiedNotifications({ enableRealtime: true });
 
-  // Mensagens não lidas
   useEffect(() => {
-    if (!user) { setUnreadMessages(0); return; }
+    if (!user) {
+      setUnreadMessages(0);
+      return;
+    }
 
     const fetchUnread = async () => {
       try {
@@ -62,17 +66,12 @@ export function BottomNav() {
 
     fetchUnread();
     const sub = MessagingService.subscribeToMessages(user.id, () => fetchUnread());
-    return () => { if (sub) MessagingService.unsubscribeFromMessages(sub); };
+    return () => {
+      if (sub) MessagingService.unsubscribeFromMessages(sub);
+    };
   }, [user]);
 
-  // Total de badges no "Mais" (mensagens + notificações)
   const moreBadgeTotal = unreadMessages + (unreadNotifications ?? 0);
-  const launchCommunityHref =
-    LAUNCH_TERRITORIES.find(
-      (territory) =>
-        territory.kind === 'group' &&
-        territory.slug === 'complexo-do-nordeste-de-amaralina',
-    )?.path ?? '/ba/salvador/area/complexo-do-nordeste-de-amaralina';
 
   const isActive = (path: string) => {
     if (path === '/') return pathname === '/';
@@ -80,22 +79,22 @@ export function BottomNav() {
   };
 
   const mainTabs = [
-    { path: '/', label: 'Início', icon: Home, badge: 0 },
-    { path: LAUNCH_URLS.business, label: 'Empresas', icon: Building2, badge: 0 },
-    { path: `/comunidade${launchCommunityHref}`, label: 'Bairro', icon: Users, badge: 0 },
-    { path: LAUNCH_URLS.classifieds, label: 'Anúncios', icon: Tag, badge: 0 },
+    { path: '/', label: 'Inicio', icon: Home, badge: 0 },
+    { path: cityModule('empresas'), label: 'Empresas', icon: Building2, badge: 0 },
+    { path: cityModule('comunidade'), label: 'Bairro', icon: Users, badge: 0 },
+    { path: cityModule('classificados'), label: 'Anuncios', icon: Tag, badge: 0 },
   ];
 
   const moreItems = [
-    { path: LAUNCH_URLS.services, label: 'Serviços', icon: Wrench, badge: 0 },
-    { path: LAUNCH_URLS.education, label: 'Educacao', icon: GraduationCap, badge: 0 },
-    { path: LAUNCH_URLS.events, label: 'Eventos', icon: Calendar, badge: 0 },
-    { path: LAUNCH_URLS.jobs, label: 'Vagas', icon: Briefcase, badge: 0 },
+    { path: cityModule('servicos'), label: 'Servicos', icon: Wrench, badge: 0 },
+    { path: cityModule('educacao'), label: 'Educacao', icon: GraduationCap, badge: 0 },
+    { path: cityModule('eventos'), label: 'Eventos', icon: Calendar, badge: 0 },
+    { path: cityModule('vagas'), label: 'Vagas', icon: Briefcase, badge: 0 },
     { path: appUrls.messages, label: 'Mensagens', icon: MessageCircle, badge: unreadMessages },
-    { path: appUrls.notifications, label: 'Notificações', icon: Bell, badge: unreadNotifications ?? 0 },
-    { path: `/mapa/${LAUNCH_URLS.community.replace('/comunidade/', '')}`, label: 'Mapa', icon: Map, badge: 0 },
+    { path: appUrls.notifications, label: 'Notificacoes', icon: Bell, badge: unreadNotifications ?? 0 },
+    { path: cityModule('mapa'), label: 'Mapa', icon: Map, badge: 0 },
     { path: appUrls.mobility.home, label: 'Mobilidade', icon: Car, badge: 0 },
-    { path: appUrls.search, label: 'Busca', icon: Search, badge: 0 },
+    { path: cityModule('buscar'), label: 'Busca', icon: Search, badge: 0 },
   ];
 
   const handleNavigate = (path: string) => {
@@ -108,7 +107,7 @@ export function BottomNav() {
     <nav className="fixed bottom-0 left-0 right-0 z-[100] bg-card/95 backdrop-blur-lg border-t border-border safe-area-bottom">
       <div className="flex items-center justify-around h-16 px-1">
         {mainTabs.map(({ path, label, icon: Icon, badge }) => {
-          const active = isActive(path);
+          const activeTab = isActive(path);
           return (
             <button
               key={label}
@@ -121,27 +120,26 @@ export function BottomNav() {
               onTouchStart={() => prefetchRouteByHref(path)}
               className={cn(
                 'relative flex flex-col items-center justify-center gap-0.5 flex-1 py-1.5 transition-colors rounded-lg mx-0.5',
-                active ? 'text-primary' : 'text-muted-foreground active:text-foreground'
+                activeTab ? 'text-primary' : 'text-muted-foreground active:text-foreground'
               )}
-              aria-label={`${label}${badge > 0 ? ` (${badge} não lidas)` : ''}`}
+              aria-label={`${label}${badge > 0 ? ` (${badge} nao lidas)` : ''}`}
             >
               <span className="relative">
-                <Icon className={cn('h-5 w-5', active && 'stroke-[2.5]')} />
+                <Icon className={cn('h-5 w-5', activeTab && 'stroke-[2.5]')} />
                 <BadgeDot count={badge} />
               </span>
-              <span className={cn('text-[10px] leading-tight', active ? 'font-semibold' : 'font-medium')}>
+              <span className={cn('text-[10px] leading-tight', activeTab ? 'font-semibold' : 'font-medium')}>
                 {label}
               </span>
             </button>
           );
         })}
 
-        {/* Mais — com badge agregado */}
         <Sheet open={moreOpen} onOpenChange={setMoreOpen}>
           <SheetTrigger asChild>
             <button
               className="relative flex flex-col items-center justify-center gap-0.5 flex-1 py-1.5 text-muted-foreground active:text-foreground transition-colors rounded-lg mx-0.5"
-              aria-label={`Mais opções${moreBadgeTotal > 0 ? ` (${moreBadgeTotal} pendentes)` : ''}`}
+              aria-label={`Mais opcoes${moreBadgeTotal > 0 ? ` (${moreBadgeTotal} pendentes)` : ''}`}
             >
               <span className="relative">
                 <MoreHorizontal className="h-5 w-5" />
@@ -152,11 +150,11 @@ export function BottomNav() {
           </SheetTrigger>
           <SheetContent side="bottom" className="rounded-t-2xl pb-safe">
             <SheetHeader className="pb-2">
-              <SheetTitle className="text-base">Mais opções</SheetTitle>
+              <SheetTitle className="text-base">Mais opcoes</SheetTitle>
             </SheetHeader>
             <div className="grid grid-cols-4 gap-3 py-4">
               {moreItems.map(({ path, label, icon: Icon, badge }) => {
-                const active = isActive(path);
+                const activeItem = isActive(path);
                 return (
                   <button
                     key={label}
@@ -166,12 +164,12 @@ export function BottomNav() {
                     onTouchStart={() => prefetchRouteByHref(path)}
                     className={cn(
                       'flex flex-col items-center gap-2 p-3 rounded-xl transition-colors',
-                      active ? 'bg-primary/10 text-primary' : 'text-foreground hover:bg-accent active:bg-accent'
+                      activeItem ? 'bg-primary/10 text-primary' : 'text-foreground hover:bg-accent active:bg-accent'
                     )}
                   >
                     <div className={cn(
                       'relative h-10 w-10 rounded-full flex items-center justify-center',
-                      active ? 'bg-primary/15' : 'bg-muted'
+                      activeItem ? 'bg-primary/15' : 'bg-muted'
                     )}>
                       <Icon className="h-5 w-5" />
                       {badge > 0 && (
@@ -191,3 +189,4 @@ export function BottomNav() {
     </nav>
   );
 }
+

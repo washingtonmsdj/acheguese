@@ -19,6 +19,7 @@ import { useCommunityUrls } from './useCommunityUrls';
 import { useMobilityUrls } from '@/modules/mobility/hooks/useMobilityUrls';
 import { buildProfileEditUrl, buildProfileSettingsUrl } from '@/core/profiles/utils/publicProfileUrl';
 import type { ResolvedTerritory } from './useResolveTerritoryFromUrl';
+import { usePublicBrowsingCity } from '@/core/location/hooks/usePublicBrowsingCity';
 
 export interface AppUrls {
   // Módulos territoriais
@@ -83,6 +84,8 @@ export interface AppUrls {
 }
 
 export function useAppUrls(routeResolved?: ResolvedTerritory | null): AppUrls {
+  const { active } = usePublicBrowsingCity();
+  const cityBase = `/${active.state}/${active.city}`;
   const business = useBusinessUrls(routeResolved);
   const services = useServiceUrls(routeResolved);
   const classifieds = useClassifiedUrls(routeResolved);
@@ -126,12 +129,12 @@ export function useAppUrls(routeResolved?: ResolvedTerritory | null): AppUrls {
     settings: '/conta/preferencias',
     messages: '/mensagens',
     chat: (conversationId: string) => `/chat/${conversationId}`,
-    map: '/mapa',
+    map: `/mapa${cityBase}`,
     ranking: '/ranking',
     gamification: '/gamificacao',
-    search: '/busca',
+    search: `/buscar${cityBase}`,
     notifications: '/notificacoes',
-    jobs: '/vagas',
+    jobs: `/vagas${cityBase}`,
     family: {
       home: '/conta',
     },

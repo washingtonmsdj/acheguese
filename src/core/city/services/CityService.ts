@@ -96,6 +96,14 @@ export interface CityMetadata {
   city_hall_info?: CityHallInfo;
   elected_officials?: ElectedOfficials;
   featured_districts?: FeaturedDistrict[];
+  city_status?: CityStatus;
+}
+
+export type CityStatus = 'active' | 'launching' | 'coming_soon' | 'inactive';
+
+export function resolveFallbackCityStatus(state?: string, city?: string): CityStatus {
+  if (!state || !city) return 'coming_soon';
+  return state.toLowerCase() === 'ba' && city.toLowerCase() === 'salvador' ? 'active' : 'coming_soon';
 }
 
 // Dados padrão para Salvador enquanto não há dados no banco
@@ -112,7 +120,30 @@ const SALVADOR_DEFAULT: CityMetadata = {
   description: 'Primeira capital do Brasil, patrimônio cultural da humanidade.',
   founded_year: 1549,
   area_km2: 693,
+  city_status: 'active',
 };
+
+function buildDefaultCityMetadata(state: string, city: string): CityMetadata {
+  const normalizedState = state.trim().toUpperCase();
+  const normalizedCity = city.trim().toLowerCase();
+  if (resolveFallbackCityStatus(normalizedState, normalizedCity) === 'active') {
+    return SALVADOR_DEFAULT;
+  }
+
+  const cityTitle = normalizedCity
+    .split('-')
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(' ');
+
+  return {
+    ...SALVADOR_DEFAULT,
+    id: `${normalizedCity}-${normalizedState.toLowerCase()}`,
+    city: cityTitle,
+    state: normalizedState,
+    description: `Achegue-se em implantação em ${cityTitle}.`,
+    city_status: resolveFallbackCityStatus(normalizedState, normalizedCity),
+  };
+}
 
 export class CityService {
   /**
@@ -120,6 +151,7 @@ export class CityService {
    * ✅ SSOT para city_metadata
    */
   static async getCityMetadata(state: string, city: string): Promise<CityMetadata> {
+    const fallback = buildDefaultCityMetadata(state, city);
     try {
       const supabaseTyped = supabase as unknown as AdminSupabaseClient;
       const { data, error } = await supabaseTyped
@@ -131,7 +163,7 @@ export class CityService {
 
       if (error) {
         logger.warn('City metadata not found in database, using defaults:', error);
-        return SALVADOR_DEFAULT;
+        return fallback;
       }
 
       return {
@@ -158,6 +190,7 @@ export class CityService {
           legislative: { president: null, featured: [], total_councilors: 0 } 
         },
         featured_districts: data.featured_districts ?? [],
+        city_status: (data.city_status as CityStatus | null) ?? fallback.city_status,
       };
     } catch (err) {
       trackError(err as Error, {
@@ -165,7 +198,7 @@ export class CityService {
         action: "getCityMetadata",
         metadata: { state, city },
       });
-      return SALVADOR_DEFAULT;
+      return fallback;
     }
   }
 

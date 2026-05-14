@@ -1,6 +1,7 @@
 import { useParams } from "react-router-dom";
 import { isReservedSlug } from "@/core/routing/reservedSlugs";
 import { buildCommunityTerritoryUrl, buildModuleTerritoryUrl, MODULE_SLUGS } from "@/core/routing/utils/territoryUrls";
+import { usePublicBrowsingCity } from "@/core/location/hooks/usePublicBrowsingCity";
 
 interface FriendlyRouteParams {
   state?: string;
@@ -28,6 +29,7 @@ export interface FriendlyModuleUrls {
 }
 
 export function useFriendlyModuleUrls(): FriendlyModuleUrls {
+  const { cityBasePath } = usePublicBrowsingCity();
   const { state, city, district, groupSlug, groupSlugOrDistrict } = useParams<FriendlyRouteParams>();
   const hasTerritoryParams = Boolean(state && city && !isReservedSlug(state));
 
@@ -46,22 +48,7 @@ export function useFriendlyModuleUrls(): FriendlyModuleUrls {
     );
   }
 
-  return {
-    base: "/",
-    landing: "/",
-    territoryName: null,
-    community: "/comunidade",
-    business: "/empresas",
-    services: "/servicos",
-    classifieds: "/classificados",
-    gastronomy: "/gastronomia",
-    gastronomyFavorites: "/gastronomia/favoritos",
-    events: "/eventos",
-    jobs: "/vagas",
-    touristPoints: "/pontos-turisticos",
-    ranking: "/ranking",
-    map: "/mapa",
-  };
+  return buildTerritorialUrls(cityBasePath, null);
 }
 
 function buildTerritorialUrls(basePath: string, territoryName: string | null): FriendlyModuleUrls {

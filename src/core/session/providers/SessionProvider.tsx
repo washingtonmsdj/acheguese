@@ -54,8 +54,9 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
     return () => {
       clearTimeout(timeout);
       unsubscribe();
-      // Cleanup do auth listener para evitar memory leaks
-      SessionService.cleanup();
+      // Nao chamamos SessionService.cleanup aqui para evitar teardown/re-init
+      // agressivo em React StrictMode (dev), que pode gerar disputa de lock
+      // no Supabase auth bootstrap.
     };
   }, []);
 

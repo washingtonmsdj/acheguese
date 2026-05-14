@@ -149,7 +149,15 @@ export class SessionService {
     // Armazena subscription para cleanup futuro se necessário
     SessionService.authSubscription = subscription;
 
-    void SessionService.ensureInitialSessionFallback();
+    if (typeof window !== "undefined") {
+      window.setTimeout(() => {
+        if (SessionService.initResolve) {
+          void SessionService.ensureInitialSessionFallback();
+        }
+      }, 2500);
+    } else {
+      void SessionService.ensureInitialSessionFallback();
+    }
   }
 
   private static async ensureInitialSessionFallback(): Promise<void> {

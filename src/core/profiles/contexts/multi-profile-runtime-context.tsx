@@ -8,6 +8,8 @@
 } from 'react';
 import { useLocation } from 'react-router-dom';
 import { MultiProfileService } from '../services/multi-profile';
+import { SessionService } from '@/core/session/services/SessionService';
+import { SessionState } from '@/core/session/state/SessionState';
 import type { Profile, ProfileType } from '../services/multi-profile/types';
 import {
   MultiProfileContext,
@@ -41,7 +43,17 @@ export function MultiProfileProvider({ children }: { children: ReactNode }) {
     setLoading(true);
     setError(null);
     try {
-      const profiles = await MultiProfileService.getMyProfiles();
+      await SessionService.initializeSession();
+      const currentUser = SessionState.getState().user;
+      if (!currentUser?.id) {
+        setAllProfiles([]);
+        allProfilesRef.current = [];
+        setActiveProfile(null);
+        localStorage.removeItem(ACTIVE_PROFILE_KEY);
+        return;
+      }
+
+      const profiles = await MultiProfileService.getMyProfiles(currentUser.id);
       setAllProfiles(profiles);
       allProfilesRef.current = profiles;
 

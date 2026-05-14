@@ -22,7 +22,6 @@ import {
   LayoutGrid,
   type LucideIcon,
 } from 'lucide-react';
-import { TERRITORY_CONFIG } from '@/config/territory';
 
 export interface NavItem {
   id: string;
@@ -166,7 +165,7 @@ export const NAV_SECTIONS: NavSection[] = [
         id: 'search',
         icon: Search,
         label: 'Busca',
-        href: `/buscar/${TERRITORY_CONFIG.launch.state}/${TERRITORY_CONFIG.launch.city}`,
+        href: '/buscar',
         description: 'Busca inteligente territorial',
       },
     ],

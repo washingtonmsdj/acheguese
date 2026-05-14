@@ -15,6 +15,7 @@ import { ReactNode } from 'react';
 import { AlertTriangle, MapPin, Lock } from 'lucide-react';
 import { useCommunityRollout } from '../hooks/useCommunityRollout';
 import { useCommunityLocation } from '../hooks/useCommunityLocation';
+import { useTerritoryResolutionLevel } from '@/core/location/hooks/useTerritoryResolutionLevel';
 import { Button } from '@/shared/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import { useAppUrls } from '@/core/routing/hooks';
@@ -26,10 +27,11 @@ interface CommunityRolloutGateProps {
 export function CommunityRolloutGate({ children }: CommunityRolloutGateProps) {
   const { hasActiveLocation, locationName } = useCommunityLocation();
   const { isBlocked, blockReason, isLoading } = useCommunityRollout();
+  const resolution = useTerritoryResolutionLevel();
   const navigate = useNavigate();
   const appUrls = useAppUrls();
 
-  if (isLoading) {
+  if (isLoading || resolution.loading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="text-center space-y-2">
@@ -40,7 +42,14 @@ export function CommunityRolloutGate({ children }: CommunityRolloutGateProps) {
     );
   }
 
-  if (!hasActiveLocation || isBlocked) {
+  const blockedByResolution = resolution.level === 'none' || resolution.level === 'city';
+  const shouldBlock = !hasActiveLocation || isBlocked || blockedByResolution;
+
+  if (shouldBlock) {
+    const finalReason = blockedByResolution
+      ? 'Ações da comunidade exigem território de bairro/grupo canônico. Complete seu endereço para liberar recursos locais.'
+      : blockReason;
+
     return (
       <div className="flex flex-col items-center justify-center min-h-[400px] px-6 py-10 text-center gap-6">
         <div className="bg-amber-50 dark:bg-amber-950/20 p-6 rounded-lg border border-amber-200 dark:border-amber-800 max-w-md">
@@ -51,13 +60,15 @@ export function CommunityRolloutGate({ children }: CommunityRolloutGateProps) {
           </h3>
           
           <p className="text-sm text-amber-800 dark:text-amber-200 mb-4">
-            {blockReason || 'O módulo Comunidade está disponível apenas para moradores confirmados do bairro.'}
+            {finalReason || 'O módulo Comunidade está disponível apenas para moradores confirmados do bairro.'}
           </p>
 
-          {!hasActiveLocation && (
+          {(!hasActiveLocation || blockedByResolution) && (
             <div className="flex items-center gap-2 text-xs text-amber-700 dark:text-amber-300 bg-amber-100 dark:bg-amber-900/30 p-3 rounded mb-4">
               <MapPin className="h-4 w-4 flex-shrink-0" />
-              <span>Você precisa confirmar seu endereço para acessar a comunidade do seu bairro.</span>
+              <span>
+                Você pode usar o site normalmente em nível de cidade, mas recursos comunitários locais exigem bairro/grupo resolvido.
+              </span>
             </div>
           )}
 
