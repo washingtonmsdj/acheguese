@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { RankingUser } from "@/shared/types/community";
 import { CommunityService } from "@/core/community/services/CommunityService";
+import { COMMUNITY_LEADERBOARD_ENABLED } from "@/core/community/config/communityConfig";
 
 /**
  * Hook for search ranking de vizinhos via SSOT.
@@ -8,6 +9,7 @@ import { CommunityService } from "@/core/community/services/CommunityService";
 export function useRankingUsers(limit: number = 3) {
   return useQuery({
     queryKey: ["ranking-users", limit],
+    enabled: COMMUNITY_LEADERBOARD_ENABLED,
     queryFn: async (): Promise<RankingUser[]> => {
       const leaderboard = await CommunityService.getLeaderboard(limit);
       return leaderboard.map((user, index) => ({

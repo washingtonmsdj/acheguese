@@ -11,6 +11,7 @@ import {
   type InteractionType,
   type CommunityProfile,
 } from "@/core/community/services/CommunityService";
+import { COMMUNITY_LEADERBOARD_ENABLED } from "@/core/community/config/communityConfig";
 import { useCommunityLocation } from "./useCommunityLocation";
 import { toast } from "sonner";
 
@@ -72,6 +73,7 @@ export function useCommunityLeaderboard(limit: number = 10, city?: string) {
 
   return useQuery({
     queryKey: COMMUNITY_KEYS.leaderboard(effectiveCity),
+    enabled: COMMUNITY_LEADERBOARD_ENABLED,
     queryFn: () => CommunityService.getLeaderboard(limit, effectiveCity),
     staleTime: 5 * 60 * 1000, // 5 minutos
     retry: 1,
