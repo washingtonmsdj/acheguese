@@ -1,7 +1,7 @@
 /**
  * EmpresasListaSection
  *
- * Secao de lista de empresas com filtros e modo "perto de mim"
+ * Seção de lista de empresas com filtros e modo "perto de mim"
  */
 
 import { Navigation, Search } from "lucide-react";
@@ -47,7 +47,7 @@ export function EmpresasListaSection({
       tags.includes("delivery") ||
       modes.includes("delivery") ||
       modes.includes("domicilio") ||
-      modes.includes("domicilio")
+      modes.includes("domicílio")
     );
   };
 
@@ -84,10 +84,10 @@ export function EmpresasListaSection({
       <div className="flex items-center justify-between mb-5">
         <div>
           <h2 className="text-xl md:text-2xl font-bold text-foreground font-heading flex items-center gap-2">
-            <Navigation className="h-5 w-5 text-primary" /> Comercios {territoryPreposition} {territoryNameShort}
+            <Navigation className="h-5 w-5 text-primary" /> Comércios {territoryPreposition} {territoryNameShort}
           </h2>
           <p className="text-sm text-muted-foreground mt-1">
-            {nearbyMode ? "Ordenado por distancia" : "Contexto territorial da comunidade"} · {businesses.length} resultados
+            {nearbyMode ? "Ordenado por distância" : "Contexto territorial da comunidade"} · {businesses.length} resultados
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -110,7 +110,7 @@ export function EmpresasListaSection({
       {localBusinesses.length > 0 && (
         <div className="mb-6">
           <h3 className="text-base font-semibold text-foreground mb-3">
-            Comercios {territoryPreposition} {territoryNameShort}
+            Comércios {territoryPreposition} {territoryNameShort}
           </h3>
           {renderBusinessGrid(localBusinesses)}
         </div>
@@ -119,7 +119,7 @@ export function EmpresasListaSection({
       {servingBusinesses.length > 0 && (
         <div className="mb-6">
           <h3 className="text-base font-semibold text-foreground mb-3">
-            Tambem atendem {territoryPreposition} {territoryNameShort}
+            Também atendem {territoryPreposition} {territoryNameShort}
           </h3>
           {renderBusinessGrid(servingBusinesses)}
         </div>
@@ -128,7 +128,7 @@ export function EmpresasListaSection({
       {nearbyBusinesses.length > 0 && (
         <div className="mb-2">
           <h3 className="text-base font-semibold text-foreground mb-3">
-            Proximos {territoryPreposition} {territoryNameShort}
+            Próximos {territoryPreposition} {territoryNameShort}
           </h3>
           {renderBusinessGrid(nearbyBusinesses)}
         </div>
