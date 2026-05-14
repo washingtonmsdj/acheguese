@@ -14,7 +14,7 @@ import {
 import { Button } from "@/shared/components/ui/button";
 import { useAuth } from "@/core/auth/hooks/useAuth";
 import { TERRITORY_CONFIG } from "@/config/territory";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 
 // Imagens profissionais
 import heroImg from "@/assets/hero-landing-main.jpg";
@@ -138,6 +138,7 @@ export default function MainLandingPage() {
   const launchCityPath = `/${TERRITORY_CONFIG.launch.state}/${TERRITORY_CONFIG.launch.city}`;
   const [isLoadingCity, setIsLoadingCity] = useState(false);
   const [currentPhraseIndex, setCurrentPhraseIndex] = useState(0);
+  const cityNavigationTimeoutRef = useRef<number | null>(null);
 
   // Carrossel de frases durante o loading
   useEffect(() => {
@@ -155,14 +156,25 @@ export default function MainLandingPage() {
   };
 
   const handleEntrarCidade = () => {
+    if (isLoadingCity || cityNavigationTimeoutRef.current !== null) return;
     setIsLoadingCity(true);
     setCurrentPhraseIndex(0);
     
     // 10 segundos de loading
-    setTimeout(() => {
+    cityNavigationTimeoutRef.current = window.setTimeout(() => {
+      cityNavigationTimeoutRef.current = null;
       navigate(launchCityPath);
     }, 10000);
   };
+
+  useEffect(() => {
+    return () => {
+      if (cityNavigationTimeoutRef.current !== null) {
+        clearTimeout(cityNavigationTimeoutRef.current);
+        cityNavigationTimeoutRef.current = null;
+      }
+    };
+  }, []);
 
   return (
     <div className="relative min-h-screen w-full bg-background text-foreground overflow-x-hidden">

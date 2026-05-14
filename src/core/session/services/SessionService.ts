@@ -49,6 +49,7 @@ export class SessionService {
     (resolve) => { SessionService.initResolve = resolve; }
   );
   private static initFallbackStarted = false;
+  private static authEventQueue: Promise<void> = Promise.resolve();
 
   // ── cancelPendingLoads ─────────────────────────────────────────────────────
   private static cancelPendingLoads(): void {
@@ -126,16 +127,25 @@ export class SessionService {
         event === "USER_UPDATED"
       ) {
         if (session) {
-          // Fire-and-forget: não bloqueia o SDK com await
-          SessionService.loadFromSession(session, true).then(() => {
-            if (isInitEvent) {
-              SessionService.resolveInit();
-            }
-          }).catch(() => {
-            if (isInitEvent) {
-              SessionService.resolveInit();
-            }
-          });
+          // Nunca executar carga de sessão dentro do callback do Supabase.
+          // Encadeamos em fila assíncrona para sair do ciclo do lock interno do GoTrue.
+          SessionService.authEventQueue = SessionService.authEventQueue
+            .catch(() => undefined)
+            .then(
+              () =>
+                new Promise<void>((resolve) => {
+                  window.setTimeout(() => {
+                    SessionService.loadFromSession(session, true)
+                      .then(() => {
+                        if (isInitEvent) SessionService.resolveInit();
+                      })
+                      .catch(() => {
+                        if (isInitEvent) SessionService.resolveInit();
+                      })
+                      .finally(resolve);
+                  }, 0);
+                }),
+            );
         } else {
           SessionState.setState({ user: null, activeProfile: null, profiles: [] });
           // INITIAL_SESSION sem sessão = não logado, libera o init
