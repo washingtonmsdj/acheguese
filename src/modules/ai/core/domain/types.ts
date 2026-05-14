@@ -41,3 +41,45 @@ export interface AiImageResult {
 }
 
 export type AiImageStatus = "idle" | "loading" | "success" | "error";
+
+// ---------- Text ----------
+export interface AiTextMessage {
+  role: "system" | "user" | "assistant";
+  content: string;
+}
+
+export interface AiSchema {
+  name: string;
+  description?: string;
+  parameters: Record<string, unknown>;
+}
+
+export interface AiTextRequest {
+  feature: string;
+  model?: string;
+  system?: string;
+  messages: AiTextMessage[];
+  schema?: AiSchema;
+  temperature?: number;
+  maxTokens?: number;
+  reasoningEffort?: "minimal" | "low" | "medium" | "high" | "xhigh" | "none";
+}
+
+export interface AiTextResult<T = unknown> {
+  text: string;
+  structured: T | null;
+  model: string;
+  requestId?: string | null;
+}
+
+// ---------- Vision ----------
+export interface AiVisionRequest {
+  feature: string;
+  prompt: string;
+  imageUrls: string[];
+  schema?: AiSchema;
+  system?: string;
+  model?: string;
+}
+
+export type AiVisionResult<T = unknown> = AiTextResult<T>;
