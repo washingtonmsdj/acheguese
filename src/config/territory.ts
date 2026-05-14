@@ -20,6 +20,19 @@ export const TERRITORY_CONFIG = {
     city: 'salvador',
     name: 'Salvador',
   },
+  community: {
+    primary: {
+      slug: 'complexo-do-nordeste-de-amaralina',
+      name: 'Complexo do Nordeste de Amaralina',
+      shortName: 'Complexo',
+      status: 'active',
+    },
+    next: {
+      slug: 'pituba',
+      name: 'Pituba',
+      status: 'coming_soon',
+    },
+  },
 
   /**
    * País padrão (decisão de produto: Brasil only)

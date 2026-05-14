@@ -209,7 +209,7 @@ export default function HomePage() {
 
       {/* ── FOOTER ────────────────────────────────────────────────────── */}
       <footer className="w-full px-4 sm:px-6 py-4 text-center text-white/30 text-xs border-t border-white/10">
-        Achegue-se · Salvador, BA
+        Achegue-se Complexo · Salvador, BA (contexto)
       </footer>
     </div>
   );

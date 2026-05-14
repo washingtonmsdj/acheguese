@@ -10,6 +10,7 @@
  *   /:state/:city/area/:groupSlug         -> TerritorialGroup
  *   /[modulo]/:state/:city/:district?     -> Location city/district
  *   /[modulo]/:state/:city/area/:groupSlug -> TerritorialGroup
+ *   /comunidade/:state/:city/:territorySlug -> Resolver por slug publico de comunidade
  *
  * Grupo territorial nunca e resolvido pelo parametro de bairro. Isso evita
  * colisao entre bairro real e agrupamento de bairros.
@@ -20,6 +21,7 @@ import { useParams, useLocation } from 'react-router-dom';
 import { createLocationRepository } from '@/core/location/repositories/createLocationRepository';
 import { createTerritorialGroupRepository } from '@/core/location/repositories/createTerritorialGroupRepository';
 import { TERRITORY_CONFIG } from '@/config/territory';
+import { supabase } from '@/integrations/supabase';
 import type { Location, TerritorialGroupWithMembers } from '@/core/location/types';
 import { isTerritoryPubliclyNavigable } from '../utils/territoryVisibility';
 
@@ -54,6 +56,7 @@ export function useResolveTerritoryFromUrl(): TerritoryResolveResult {
     country?: string;
     state?: string;
     city?: string;
+    territorySlug?: string;
     groupSlug?: string;
     groupSlugOrDistrict?: string;
     district?: string;
@@ -64,7 +67,7 @@ export function useResolveTerritoryFromUrl(): TerritoryResolveResult {
   const state = params.state;
   const city = params.city;
   const groupSlug = params.groupSlug;
-  let districtSlug = params.district || params.groupSlugOrDistrict;
+  let districtSlug = params.territorySlug || params.district || params.groupSlugOrDistrict;
   if (districtSlug === '_') districtSlug = undefined;
 
   const isGuideRoute = pathname.startsWith('/pontos-turisticos/') || pathname.startsWith('/guia/pontos-turisticos/');
@@ -154,6 +157,48 @@ export function useResolveTerritoryFromUrl(): TerritoryResolveResult {
         }
 
         if (isCommunityRoute && districtSlug) {
+          try {
+            const { data: communityRoute } = await supabase
+              .from('territory_communities' as never)
+              .select('territory_type, territory_id')
+              .eq('city_id', cityLocation.id)
+              .eq('slug', districtSlug)
+              .maybeSingle();
+
+            if (communityRoute) {
+              if ((communityRoute as { territory_type: string }).territory_type === 'territorial_group') {
+                const groupRepo = createTerritorialGroupRepository();
+                const withMembers = await groupRepo.findWithMembers((communityRoute as { territory_id: string }).territory_id);
+                if (withMembers && withMembers.status === 'active' && isTerritoryPubliclyNavigable(withMembers.metadata)) {
+                  if (!cancelled) {
+                    setResult({
+                      status: TERRITORY_RESOLVE_STATUS.RESOLVED_GROUP,
+                      resolved: { kind: 'group', group: withMembers },
+                      error: null,
+                    });
+                  }
+                  return;
+                }
+              }
+
+              if ((communityRoute as { territory_type: string }).territory_type === 'district') {
+                const districtById = await locationRepo.findById((communityRoute as { territory_id: string }).territory_id);
+                if (districtById && districtById.status === 'active' && isTerritoryPubliclyNavigable(districtById.metadata)) {
+                  if (!cancelled) {
+                    setResult({
+                      status: TERRITORY_RESOLVE_STATUS.RESOLVED_LOCATION,
+                      resolved: { kind: 'location', location: districtById },
+                      error: null,
+                    });
+                  }
+                  return;
+                }
+              }
+            }
+          } catch {
+            // Fallback para heuristica de slug quando tabela de comunidades ainda nao existir.
+          }
+
           const groupRepo = createTerritorialGroupRepository();
           const group = await groupRepo.findBySlugAndCity(districtSlug, cityLocation.id);
           if (group && group.status === 'active' && isTerritoryPubliclyNavigable(group.metadata)) {

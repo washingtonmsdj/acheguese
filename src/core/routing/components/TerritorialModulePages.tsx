@@ -46,33 +46,33 @@ type PublicModuleKey =
 
 const MODULE_EMPTY_COPY: Record<PublicModuleKey, { title: string; description: (city: string) => string; cta: string }> = {
   empresas: {
-    title: 'Empresas em implantação',
-    description: (city) => `Ainda não temos empresas cadastradas em ${city}. Seja uma das primeiras.`,
+    title: 'Comercios da comunidade em implantação',
+    description: (city) => `Ainda não temos comercios cadastrados para esta comunidade de ${city}. Seja um dos primeiros.`,
     cta: 'Cadastrar empresa',
   },
   gastronomia: {
-    title: 'Gastronomia em implantação',
-    description: (city) => `Estamos organizando restaurantes e cardápios em ${city}.`,
+    title: 'Gastronomia da comunidade em implantação',
+    description: (city) => `Estamos organizando restaurantes e cardapios para esta comunidade de ${city}.`,
     cta: 'Indicar estabelecimento',
   },
   eventos: {
-    title: 'Eventos em implantação',
-    description: (city) => `Ainda não encontramos eventos em ${city}. Cadastre um evento local.`,
+    title: 'Eventos da comunidade em implantação',
+    description: (city) => `Ainda não encontramos eventos para esta comunidade de ${city}. Cadastre um evento local.`,
     cta: 'Cadastrar evento',
   },
   classificados: {
-    title: 'Classificados em implantação',
-    description: (city) => `Ainda não há classificados em ${city}. Publique o primeiro anúncio.`,
+    title: 'Classificados da comunidade em implantação',
+    description: (city) => `Ainda não ha classificados para esta comunidade de ${city}. Publique o primeiro anuncio.`,
     cta: 'Publicar anúncio',
   },
   vagas: {
-    title: 'Vagas em implantação',
-    description: (city) => `Ainda não há vagas publicadas em ${city}. Empresas locais podem cadastrar oportunidades.`,
+    title: 'Vagas próximas em implantação',
+    description: (city) => `Ainda nao ha vagas publicadas para esta comunidade de ${city}. Empresas locais podem cadastrar oportunidades.`,
     cta: 'Cadastrar vaga',
   },
   servicos: {
-    title: 'Serviços em implantação',
-    description: (city) => `Estamos organizando profissionais e serviços em ${city}.`,
+    title: 'Serviços locais em implantação',
+    description: (city) => `Estamos organizando profissionais e servicos para esta comunidade de ${city}.`,
     cta: 'Cadastrar serviço',
   },
   busca: {
@@ -82,7 +82,7 @@ const MODULE_EMPTY_COPY: Record<PublicModuleKey, { title: string; description: (
   },
   comunidade: {
     title: 'Comunidade em implantação',
-    description: (city) => `A comunidade de ${city} ainda não está disponível nesta região.`,
+    description: (city) => `A comunidade deste territorio em ${city} ainda nao esta disponivel.`,
     cta: 'Quero ser avisado',
   },
 };
@@ -155,7 +155,7 @@ function CityStatusGate({ module, enforceActive = false, children }: CityStatusG
             Entrar na lista de interesse
           </Link>
           <Link to="/ba/salvador" className="inline-flex rounded-lg border px-4 py-2 text-sm font-medium hover:bg-accent">
-            Ir para Salvador (piloto ativo)
+            Ir para Comunidade do Complexo (piloto ativo)
           </Link>
         </div>
       </div>
@@ -196,7 +196,7 @@ export function TerritorialCommunityEntryPage() {
   const { resolved } = useTerritorialContext();
 
   if (resolved.kind === "group") {
-    return <TerritorialCommunityPage />;
+    return <TerritorialCommunityHomePage />;
   }
 
   if (resolved.location.type === "city") {

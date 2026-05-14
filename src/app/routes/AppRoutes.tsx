@@ -13,12 +13,15 @@ import { LAUNCH_TERRITORIES } from "@/config/territory";
 // Territorial Components (eager - critical for routing)
 import { TerritorialLayout } from "@/core/routing/components/TerritorialLayout";
 import { CommunityTerritorialShell } from "@/core/routing/components/CommunityTerritorialShell";
+import { CommunityCityEntryPage } from "@/core/routing/components/CommunityCityEntryPage";
+import { CommunityInterestPage } from "@/core/routing/components/CommunityInterestPage";
 import { TerritorialIndexPage } from "@/core/routing/components/TerritorialIndexPage";
 import { StateLandingPage } from "@/core/routing/components/StateLandingPage";
 import { CountryLandingPage } from "@/core/routing/components/CountryLandingPage";
 import { BrasilShowcasePage } from "@/core/routing/components/BrasilShowcasePage";
 import {
   TerritorialCommunityPage,
+  TerritorialCommunityEntryPage,
   TerritorialCommunityAlertsPage,
   TerritorialCommunityIssuesPage,
   TerritorialBusinessPage,
@@ -39,8 +42,6 @@ export function AppRoutes() {
   const launchComplexoPath =
     LAUNCH_TERRITORIES.find((territory) => territory.slug === "complexo-do-nordeste-de-amaralina")?.path ??
     "/ba/salvador/area/complexo-do-nordeste-de-amaralina";
-  const mvpCommunityPath = "/comunidade/ba/salvador/complexo-do-nordeste-de-amaralina";
-
   return (
     <Routes>
       {/* QR Code Resolver - DEVE VIR ANTES DE OUTRAS ROTAS */}
@@ -464,6 +465,7 @@ export function AppRoutes() {
         <Route path="/comunidade/:state/:city/:territorySlug/alertas" element={<CommunityTerritorialShell />}>
           <Route index element={<TerritorialCommunityAlertsPage />} />
         </Route>
+        <Route path="/comunidade/:state/:city/:territorySlug/interesse" element={<CommunityInterestPage />} />
         <Route path="/comunidade/:state/:city/:territorySlug/problemas" element={<CommunityTerritorialShell />}>
           <Route index element={<TerritorialCommunityIssuesPage />} />
         </Route>
@@ -500,52 +502,10 @@ export function AppRoutes() {
         <Route path="/comunidade/:state/:city/:territorySlug/achados-e-perdidos" element={<CommunityTerritorialShell />}>
           <Route index element={<P.AchadosPerdidosPage />} />
         </Route>
-        <Route path="/comunidade/:state/:city/area/:groupSlug/alertas" element={<CommunityTerritorialShell />}>
-          <Route index element={<TerritorialCommunityAlertsPage />} />
-        </Route>
-        <Route path="/comunidade/:state/:city/area/:groupSlug/problemas" element={<CommunityTerritorialShell />}>
-          <Route index element={<TerritorialCommunityIssuesPage />} />
-        </Route>
-        <Route path="/comunidade/:state/:city/area/:groupSlug/empresas" element={<CommunityTerritorialShell />}>
-          <Route index element={<TerritorialBusinessPage />} />
-        </Route>
-        <Route path="/comunidade/:state/:city/area/:groupSlug/servicos" element={<CommunityTerritorialShell />}>
-          <Route index element={<TerritorialServicesPage />} />
-        </Route>
-        <Route path="/comunidade/:state/:city/area/:groupSlug/classificados" element={<CommunityTerritorialShell />}>
-          <Route index element={<TerritorialClassificadosPage />} />
-        </Route>
-        <Route path="/comunidade/:state/:city/area/:groupSlug/gastronomia" element={<CommunityTerritorialShell />}>
-          <Route index element={<TerritorialGastronomyPage />} />
-        </Route>
-        <Route path="/comunidade/:state/:city/area/:groupSlug/vagas" element={<CommunityTerritorialShell />}>
-          <Route index element={<TerritorialVagasPage />} />
-        </Route>
-        <Route path="/comunidade/:state/:city/area/:groupSlug/eventos" element={<CommunityTerritorialShell />}>
-          <Route index element={<TerritorialEventosPage />} />
-        </Route>
-        <Route path="/comunidade/:state/:city/area/:groupSlug/mapa" element={<CommunityTerritorialShell />}>
-          <Route index element={<TerritorialMapPage />} />
-        </Route>
-        <Route path="/comunidade/:state/:city/area/:groupSlug/mobilidade" element={<CommunityTerritorialShell />}>
-          <Route index element={<TerritorialMobilidadePage />} />
-        </Route>
-        <Route path="/comunidade/:state/:city/area/:groupSlug/feed" element={<CommunityTerritorialShell />}>
-          <Route index element={<TerritorialCommunityPage />} />
-        </Route>
-        <Route path="/comunidade/:state/:city/area/:groupSlug/grupos" element={<CommunityTerritorialShell />}>
-          <Route index element={<TerritorialCommunityPage />} />
-        </Route>
-        <Route path="/comunidade/:state/:city/area/:groupSlug/achados-e-perdidos" element={<CommunityTerritorialShell />}>
-          <Route index element={<P.AchadosPerdidosPage />} />
-        </Route>
-        <Route path="/comunidade/:state/:city/area/:groupSlug" element={<CommunityTerritorialShell />}>
-          <Route index element={<TerritorialCommunityPage />} />
-        </Route>
         <Route path="/comunidade/:state/:city/:territorySlug" element={<CommunityTerritorialShell />}>
-          <Route index element={<TerritorialCommunityPage />} />
+          <Route index element={<TerritorialCommunityEntryPage />} />
         </Route>
-        <Route path="/comunidade/:state/:city" element={<P.MainLandingPage />} />
+        <Route path="/comunidade/:state/:city" element={<CommunityCityEntryPage />} />
 
         {/* ═══════════════════════════════════════════════════════════════════════════ */}
         {/* ROTAS DE VAGAS — Módulo Vertical AAA                                              */}

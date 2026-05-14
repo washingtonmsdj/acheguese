@@ -1,22 +1,22 @@
 ﻿/**
- * ComplexoNordesteLandingPage â€” Landing editorial dedicada ao Complexo do Nordeste de Amaralina
+ * ComplexoNordesteLandingPage — Landing editorial dedicada ao Complexo do Nordeste de Amaralina
  *
- * PÃ¡gina rica com conteÃºdo cultural pesquisado, hero parallax, seÃ§Ãµes temÃ¡ticas,
- * integraÃ§Ã£o SSOT com dados reais e estÃ©tica editorial premium.
+ * Página rica com conteúdo cultural pesquisado, hero parallax, seções temáticas,
+ * integração SSOT com dados reais e estética editorial premium.
  *
- * SeÃ§Ãµes:
- *   A. Hero parallax (imagem aÃ©rea do complexo)
- *   B. Identidade territorial (badge + descriÃ§Ã£o cultural)
+ * Seções:
+ *   A. Hero parallax (imagem aérea do complexo)
+ *   B. Identidade territorial (badge + descrição cultural)
  *   C. Bairros do Complexo (cards visuais dos 4 bairros)
- *   D. EstatÃ­sticas do territÃ³rio
- *   E. Cultura & RaÃ­zes (capoeira, percussÃ£o, blocos afro, carnaval)
+ *   D. Estatísticas do território
+ *   E. Cultura & Raízes (capoeira, percussão, blocos afro, carnaval)
  *   F. Projetos Sociais & Protagonismo
- *   G. ComÃ©rcio & Gastronomia local
+ *   G. Comércio & Gastronomia local
  *   H. Empresas em destaque (dados reais via SSOT)
- *   I. ServiÃ§os e profissionais (dados reais)
+ *   I. Serviços e profissionais (dados reais)
  *   J. Classificados recentes (dados reais)
- *   K. CTA â€” FaÃ§a parte
- *   L. RodapÃ©
+ *   K. CTA — Faça parte
+ *   L. Rodapé
  */
 
 import { useNavigate } from 'react-router-dom';
@@ -48,13 +48,13 @@ import { useAuth } from '@/core/auth/hooks/useAuth';
 import heroImg from '@/assets/hero-complexo-nordeste.jpg';
 import culturaImg from '@/assets/complexo-cultura.jpg';
 import musicaImg from '@/assets/complexo-musica.jpg';
-import comercioImg from '@/assets/complexo-comercio.jpg';
+import comércioImg from '@/assets/complexo-comercio.jpg';
 import santaCruz from '@/assets/bairro-santa-cruz.jpg';
 import nordeste from '@/assets/bairro-nordeste.jpg';
 import valePedrinhas from '@/assets/bairro-vale-pedrinhas.jpg';
 import chapada from '@/assets/bairro-chapada.jpg';
 
-// â”€â”€ AnimaÃ§Ãµes â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── Animações ─────────────────────────────────────────────────────────
 const fadeUp = {
   initial: { opacity: 0, y: 24 },
   whileInView: { opacity: 1, y: 0 },
@@ -74,36 +74,36 @@ const staggerItem = {
   transition: { duration: 0.4 },
 };
 
-// â”€â”€ Dados do territÃ³rio â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── Dados do território ───────────────────────────────────────────────
 
 const BAIRROS = [
   {
     name: 'Nordeste de Amaralina',
     slug: 'nordeste-de-amaralina',
     image: nordeste,
-    populacao: '21.887 hab.',
-    desc: 'Parte do aglomerado do Nordeste de Amaralina e referencia historica da ocupacao da regiao.',
+    população: '21.887 hab.',
+    desc: 'Parte do aglomerado do Nordeste de Amaralina e referência histórica da ocupação da região.',
   },
   {
     name: 'Santa Cruz',
     slug: 'santa-cruz',
     image: santaCruz,
-    populacao: '27.083 hab.',
-    desc: 'Maior populacao entre os quatro bairros do Complexo segundo a base ObservaSSA/IBGE 2010.',
+    população: '27.083 hab.',
+    desc: 'Maior população entre os quatro bairros do Complexo segundo a base ObservaSSA/IBGE 2010.',
   },
   {
     name: 'Vale das Pedrinhas',
     slug: 'vale-das-pedrinhas',
     image: valePedrinhas,
-    populacao: '5.162 hab.',
-    desc: 'Territorio de menor populacao no Complexo, com comercio de proximidade e redes comunitarias.',
+    população: '5.162 hab.',
+    desc: 'Território de menor população no Complexo, com comércio de proximidade e redes comunitárias.',
   },
   {
     name: 'Chapada do Rio Vermelho',
     slug: 'chapada-do-rio-vermelho',
     image: chapada,
-    populacao: '21.955 hab.',
-    desc: 'Bairro de conexao com Rio Vermelho, Amaralina e Vasco da Gama.',
+    população: '21.955 hab.',
+    desc: 'Bairro de conexão com Rio Vermelho, Amaralina e Vasco da Gama.',
   },
 ];
 
@@ -111,7 +111,7 @@ const MARCOS_CULTURAIS = [
   {
     icon: Drum,
     title: 'Projeto Quabales',
-    desc: 'Fundado por Marivaldo dos Santos, atende mais de 400 jovens gratuitamente com aulas de mÃºsica e percussÃ£o desde 2012.',
+    desc: 'Fundado por Marivaldo dos Santos, atende mais de 400 jovens gratuitamente com aulas de música e percussão desde 2012.',
     color: 'from-amber-500/15 to-amber-500/5',
     border: 'border-amber-500/25',
     iconColor: 'text-amber-500',
@@ -119,7 +119,7 @@ const MARCOS_CULTURAIS = [
   {
     icon: Theater,
     title: 'Circuito Mestre Bimba',
-    desc: 'Criado em 2005, reÃºne mais de 70 blocos em quase 2km de percurso, atraindo 20 mil foliÃµes por dia no Carnaval.',
+    desc: 'Criado em 2005, reúne mais de 70 blocos em quase 2km de percurso, atraindo 20 mil foliões por dia no Carnaval.',
     color: 'from-rose-500/15 to-rose-500/5',
     border: 'border-rose-500/25',
     iconColor: 'text-rose-500',
@@ -127,15 +127,15 @@ const MARCOS_CULTURAIS = [
   {
     icon: Palette,
     title: 'Editorial Nordeste',
-    desc: 'Projeto que prepara jovens da comunidade para passarelas e concursos de beleza, valorizando a estÃ©tica negra.',
+    desc: 'Projeto que prepara jovens da comunidade para passarelas e concursos de beleza, valorizando a estética negra.',
     color: 'from-violet-500/15 to-violet-500/5',
     border: 'border-violet-500/25',
     iconColor: 'text-violet-500',
   },
   {
     icon: Megaphone,
-    title: 'TV MoradÃ´',
-    desc: 'Canal digital com 58 mil seguidores que dÃ¡ voz aos talentos do bairro e mostra a riqueza da comunidade.',
+    title: 'TV Moradô',
+    desc: 'Canal digital com 58 mil seguidores que dá voz aos talentos do bairro e mostra a riqueza da comunidade.',
     color: 'from-blue-500/15 to-blue-500/5',
     border: 'border-blue-500/25',
     iconColor: 'text-blue-500',
@@ -143,7 +143,7 @@ const MARCOS_CULTURAIS = [
   {
     icon: HandHeart,
     title: 'CSU Requalificado',
-    desc: 'Centro Social Urbano com cursos de mÃºsica, danÃ§a, esportes, qualificaÃ§Ã£o profissional e atividades para idosos.',
+    desc: 'Centro Social Urbano com cursos de música, dança, esportes, qualificação profissional e atividades para idosos.',
     color: 'from-emerald-500/15 to-emerald-500/5',
     border: 'border-emerald-500/25',
     iconColor: 'text-emerald-500',
@@ -151,7 +151,7 @@ const MARCOS_CULTURAIS = [
   {
     icon: Trophy,
     title: 'Blocos Afro',
-    desc: 'TradiÃ§Ã£o de blocos afro e manifestaÃ§Ãµes culturais que celebram a ancestralidade e a cultura afro-brasileira.',
+    desc: 'Tradição de blocos afro e manifestações culturais que celebram a ancestralidade e a cultura afro-brasileira.',
     color: 'from-orange-500/15 to-orange-500/5',
     border: 'border-orange-500/25',
     iconColor: 'text-orange-500',
@@ -162,7 +162,7 @@ const RAIZES = [
   {
     icon: Music,
     label: 'Pagode & Samba',
-    desc: 'BerÃ§o de grandes mÃºsicos do pagode baiano',
+    desc: 'Berço de grandes músicos do pagode baiano',
   },
   {
     icon: Heart,
@@ -172,16 +172,16 @@ const RAIZES = [
   {
     icon: Fish,
     label: 'Pesca Artesanal',
-    desc: 'TradiÃ§Ã£o pesqueira Ã  beira-mar',
+    desc: 'Tradição pesqueira Ã  beira-mar',
   },
   {
     icon: BookOpen,
-    label: 'ReligiÃµes de Matriz Africana',
-    desc: 'Terreiros e tradiÃ§Ãµes preservadas',
+    label: 'Religiões de Matriz Africana',
+    desc: 'Terreiros e tradições preservadas',
   },
 ];
 
-// â”€â”€ Helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── Helpers ──────────────────────────────────────────────────────────
 
 function formatPrice(price: number): string {
   return price.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 });
@@ -191,14 +191,14 @@ function formatCategory(cat: string): string {
   return cat.charAt(0).toUpperCase() + cat.slice(1).replace(/_/g, ' ');
 }
 
-// â”€â”€ PÃ¡gina principal â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── Página principal ─────────────────────────────────────────────────
 
 export default function ComplexoNordesteLandingPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { resolved, baseUrl } = useTerritorialContext();
 
-  // SSOT: dados reais do territÃ³rio
+  // SSOT: dados reais do território
   const filter = useTerritoryFilter(resolved);
   const { businesses, services, classifieds, stats, isLoading } = useLandingFeatured(filter);
   const { data: allHighlights = [], isLoading: highlightsLoading } = useTerritorialHighlights(resolved);
@@ -207,7 +207,7 @@ export default function ComplexoNordesteLandingPage() {
 
   const highlights = allHighlights.slice(0, 3);
 
-  // URLs dos mÃ³dulos
+  // URLs dos módulos
   const moduleUrls = {
     business: `/${MODULE_SLUGS.business}${baseUrl}`,
     services: `/${MODULE_SLUGS.services}${baseUrl}`,
@@ -228,12 +228,12 @@ export default function ComplexoNordesteLandingPage() {
         />
       </Helmet>
 
-      {/* â”€â”€ A. HERO PARALLAX â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+      {/* ── A. HERO PARALLAX ──────────────────────────────────────── */}
       <section className="relative w-full min-h-[90vh] flex items-center justify-center overflow-hidden">
         <motion.div className="absolute inset-0">
           <img
             src={heroImg}
-            alt="Complexo do Nordeste de Amaralina - Vista aÃ©rea"
+            alt="Complexo do Nordeste de Amaralina - Vista aérea"
             className="w-full h-full object-cover"
             width={1920}
             height={1080}
@@ -284,7 +284,7 @@ export default function ComplexoNordesteLandingPage() {
             >
               <MapPin className="h-4 w-4 text-primary-foreground" />
               <span className="text-primary-foreground font-bold text-xs tracking-wide uppercase">
-                4 Bairros Â· ~45.000 moradores Â· Salvador, BA
+                4 Bairros · ~45.000 moradores · Salvador, BA
               </span>
             </motion.div>
 
@@ -295,11 +295,11 @@ export default function ComplexoNordesteLandingPage() {
             </h1>
 
             <p className="text-base sm:text-lg md:text-xl text-white/85 mb-3 max-w-2xl mx-auto">
-              TerritÃ³rio de resistÃªncia, cultura afro-brasileira e potÃªncia comunitÃ¡ria.
-              Um retrato vivo da forÃ§a da periferia soteropolitana.
+              Território de resistência, cultura afro-brasileira e potência comunitária.
+              Um retrato vivo da força da periferia soteropolitana.
             </p>
             <p className="text-sm text-white/55 mb-10">
-              Nordeste Â· Santa Cruz Â· Vale das Pedrinhas Â· Chapada do Rio Vermelho
+              Nordeste · Santa Cruz · Vale das Pedrinhas · Chapada do Rio Vermelho
             </p>
 
             {/* CTAs */}
@@ -328,7 +328,7 @@ export default function ComplexoNordesteLandingPage() {
                 onClick={() => navigate(moduleUrls.services)}
               >
                 <Wrench className="h-5 w-5 mr-2" />
-                ServiÃ§os
+                Serviços
               </Button>
             </div>
           </motion.div>
@@ -346,27 +346,27 @@ export default function ComplexoNordesteLandingPage() {
         </motion.div>
       </section>
 
-      {/* â”€â”€ B. IDENTIDADE TERRITORIAL â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+      {/* ── B. IDENTIDADE TERRITORIAL ─────────────────────────────── */}
       <section className="w-full py-14 -mt-8 relative z-10">
         <div className="max-w-5xl mx-auto px-4 sm:px-6">
           <motion.div {...fadeUp} className="text-center mb-8">
             <div className="inline-flex items-center gap-2 bg-primary/10 border border-primary/20 rounded-full px-4 py-1.5 mb-5">
               <Heart className="h-3.5 w-3.5 text-primary" />
-              <span className="text-xs font-semibold text-primary">ResistÃªncia Â· Cultura Â· Comunidade</span>
+              <span className="text-xs font-semibold text-primary">Resistência · Cultura · Comunidade</span>
             </div>
             <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-foreground mb-4 font-heading">
               Mais do que bairros.{' '}
-              <span className="text-primary">Um territÃ³rio.</span>
+              <span className="text-primary">Um território.</span>
             </h2>
             <p className="text-base text-muted-foreground max-w-2xl mx-auto leading-relaxed">
-              O Complexo do Nordeste de Amaralina nasceu no seculo XX como ocupacao popular a beira-mar
-              e se tornou um dos territÃ³rios mais marcantes de Salvador. Com forte identidade cultural afro-brasileira,
-              aqui surgiram artistas, mÃºsicos, grupos de capoeira, blocos afro e movimentos sociais que deram
+              O Complexo do Nordeste de Amaralina nasceu no seculo XX como ocupação popular a beira-mar
+              e se tornou um dos territórios mais marcantes de Salvador. Com forte identidade cultural afro-brasileira,
+              aqui surgiram artistas, músicos, grupos de capoeira, blocos afro e movimentos sociais que deram
               visibilidade as vozes perifericas da capital baiana.
             </p>
           </motion.div>
 
-          {/* RaÃ­zes culturais */}
+          {/* Raízes culturais */}
           <motion.div
             {...staggerContainer}
             className="grid grid-cols-2 md:grid-cols-4 gap-3"
@@ -388,7 +388,7 @@ export default function ComplexoNordesteLandingPage() {
         </div>
       </section>
 
-      {/* â”€â”€ C. BAIRROS DO COMPLEXO â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+      {/* ── C. BAIRROS DO COMPLEXO ────────────────────────────────── */}
       <section className="max-w-6xl mx-auto px-4 sm:px-6 py-14">
         <motion.div {...fadeUp} className="text-center mb-10">
           <div className="inline-flex items-center gap-2 bg-teal-500/10 border border-teal-500/20 rounded-full px-4 py-1.5 mb-4">
@@ -396,7 +396,7 @@ export default function ComplexoNordesteLandingPage() {
             <span className="text-xs font-semibold text-teal-500">4 Bairros unidos</span>
           </div>
           <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-foreground mb-3 font-heading">
-            ConheÃ§a cada bairro
+            Conheça cada bairro
           </h2>
           <p className="text-base text-muted-foreground max-w-xl mx-auto">
             Quatro comunidades distintas que compartilham origens, cultura e a luta por oportunidades.
@@ -432,7 +432,7 @@ export default function ComplexoNordesteLandingPage() {
                 <h3 className="text-white font-bold text-lg drop-shadow-md leading-tight mb-1">{bairro.name}</h3>
                 <div className="flex items-center gap-1.5 mb-2">
                   <Users className="h-3 w-3 text-primary/80" />
-                  <span className="text-primary/90 text-xs font-semibold">{bairro.populacao}</span>
+                  <span className="text-primary/90 text-xs font-semibold">{bairro.população}</span>
                 </div>
                 <p className="text-white/60 text-xs leading-relaxed line-clamp-2">{bairro.desc}</p>
               </div>
@@ -448,26 +448,26 @@ export default function ComplexoNordesteLandingPage() {
         </div>
       </section>
 
-      {/* â”€â”€ D. ESTATÃSTICAS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+      {/* ── D. ESTATÍSTICAS ────────────────────────────────────────── */}
       <section className="w-full py-14 bg-muted/20 border-y border-border">
         <div className="max-w-6xl mx-auto px-4 sm:px-6">
           <motion.div {...fadeUp} className="text-center mb-10">
             <h2 className="text-2xl sm:text-3xl font-bold text-foreground font-heading">
-              O Complexo em nÃºmeros
+              O Complexo em números
             </h2>
             <p className="text-sm text-muted-foreground mt-2">
-              Dados do territÃ³rio Â· Censo IBGE 2022
+              Dados do território · Censo IBGE 2022
             </p>
           </motion.div>
 
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
             {[
-              { icon: Users, value: statsLoading ? 'â€”' : territoryStats?.population ? `~${(territoryStats.population / 1000).toFixed(0)}mil` : '~45mil', label: 'Habitantes', color: 'text-primary', bg: 'bg-primary/10', border: 'border-primary/20' },
+              { icon: Users, value: statsLoading ? '—' : territoryStats?.population ? `~${(territoryStats.population / 1000).toFixed(0)}mil` : '~45mil', label: 'Habitantes', color: 'text-primary', bg: 'bg-primary/10', border: 'border-primary/20' },
               { icon: MapPin, value: '4', label: 'Bairros', color: 'text-teal-500', bg: 'bg-teal-500/10', border: 'border-teal-500/20' },
-              { icon: Store, value: isLoading ? 'â€”' : stats.businesses || 'â€”', label: 'Empresas', color: 'text-blue-500', bg: 'bg-blue-500/10', border: 'border-blue-500/20' },
-              { icon: Wrench, value: isLoading ? 'â€”' : stats.services || 'â€”', label: 'Profissionais', color: 'text-violet-500', bg: 'bg-violet-500/10', border: 'border-violet-500/20' },
-              { icon: GraduationCap, value: statsLoading ? 'â€”' : territoryStats?.schools ?? 'â€”', label: 'Escolas', color: 'text-emerald-500', bg: 'bg-emerald-500/10', border: 'border-emerald-500/20' },
-              { icon: Bus, value: statsLoading ? 'â€”' : (territoryStats as any)?.bus_lines ?? 'â€”', label: 'Linhas de Ã´nibus', color: 'text-rose-500', bg: 'bg-rose-500/10', border: 'border-rose-500/20' },
+              { icon: Store, value: isLoading ? '—' : stats.businesses || '—', label: 'Empresas', color: 'text-blue-500', bg: 'bg-blue-500/10', border: 'border-blue-500/20' },
+              { icon: Wrench, value: isLoading ? '—' : stats.services || '—', label: 'Profissionais', color: 'text-violet-500', bg: 'bg-violet-500/10', border: 'border-violet-500/20' },
+              { icon: GraduationCap, value: statsLoading ? '—' : territoryStats?.schools ?? '—', label: 'Escolas', color: 'text-emerald-500', bg: 'bg-emerald-500/10', border: 'border-emerald-500/20' },
+              { icon: Bus, value: statsLoading ? '—' : (territoryStats as any)?.bus_lines ?? '—', label: 'Linhas de ônibus', color: 'text-rose-500', bg: 'bg-rose-500/10', border: 'border-rose-500/20' },
             ].map((stat) => (
               <motion.div
                 key={stat.label}
@@ -487,7 +487,7 @@ export default function ComplexoNordesteLandingPage() {
         </div>
       </section>
 
-      {/* â”€â”€ E. CULTURA & RAÃZES â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+      {/* ── E. CULTURA & RAÍZES ───────────────────────────────────── */}
       <section className="max-w-6xl mx-auto px-4 sm:px-6 py-16">
         <motion.div {...fadeUp} className="text-center mb-12">
           <div className="inline-flex items-center gap-2 bg-amber-500/10 border border-amber-500/20 rounded-full px-4 py-1.5 mb-4">
@@ -498,17 +498,17 @@ export default function ComplexoNordesteLandingPage() {
             Onde a cultura <span className="text-primary">pulsa</span>
           </h2>
           <p className="text-base text-muted-foreground max-w-2xl mx-auto">
-            Celeiro de artistas, mÃºsicos e movimentos culturais. O Nordeste Ã© referÃªncia na cena do pagode baiano,
-            mantÃ©m tradiÃ§Ãµes de capoeira, blocos afro, manifestaÃ§Ãµes religiosas e pesca artesanal.
+            Celeiro de artistas, músicos e movimentos culturais. O Nordeste é referência na cena do pagode baiano,
+            mantém tradições de capoeira, blocos afro, manifestações religiosas e pesca artesanal.
           </p>
         </motion.div>
 
         {/* Galeria cultural */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-12">
           {[
-            { img: culturaImg, title: 'Roda de Capoeira', subtitle: 'TradiÃ§Ã£o de Mestre Bimba viva no territÃ³rio' },
-            { img: musicaImg, title: 'PercussÃ£o & Pagode', subtitle: 'Sons que ecoam do Nordeste para o mundo' },
-            { img: comercioImg, title: 'Feira & ComÃ©rcio', subtitle: 'Economia local que movimenta a comunidade' },
+            { img: culturaImg, title: 'Roda de Capoeira', subtitle: 'Tradição de Mestre Bimba viva no território' },
+            { img: musicaImg, title: 'Percussão & Pagode', subtitle: 'Sons que ecoam do Nordeste para o mundo' },
+            { img: comércioImg, title: 'Feira & Comércio', subtitle: 'Economia local que movimenta a comunidade' },
           ].map((item, i) => (
             <motion.div
               key={item.title}
@@ -536,20 +536,20 @@ export default function ComplexoNordesteLandingPage() {
         </div>
       </section>
 
-      {/* â”€â”€ F. PROJETOS SOCIAIS & PROTAGONISMO â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+      {/* ── F. PROJETOS SOCIAIS & PROTAGONISMO ────────────────────── */}
       <section className="w-full py-16 bg-gradient-to-br from-primary/5 via-card to-accent/5 border-y border-border">
         <div className="max-w-6xl mx-auto px-4 sm:px-6">
           <motion.div {...fadeUp} className="text-center mb-12">
             <div className="inline-flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/20 rounded-full px-4 py-1.5 mb-4">
               <Sparkles className="h-3.5 w-3.5 text-emerald-500" />
-              <span className="text-xs font-semibold text-emerald-500">Protagonismo comunitÃ¡rio</span>
+              <span className="text-xs font-semibold text-emerald-500">Protagonismo comunitário</span>
             </div>
             <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-foreground font-heading mb-3">
               Projetos que <span className="text-primary">transformam</span>
             </h2>
             <p className="text-base text-muted-foreground max-w-2xl mx-auto">
-              "Aqui tem projetos sociais de futebol, aÃ§Ãµes religiosas, uniÃ£o dos microempresÃ¡rios para distribuir comida,
-              tudo feito pela comunidade." â€” Israel Almeida, TV MoradÃ´
+              "Aqui tem projetos sociais de futebol, ações religiosas, união dos microempresários para distribuir comida,
+              tudo feito pela comunidade." — Israel Almeida, TV Moradô
             </p>
           </motion.div>
 
@@ -576,7 +576,7 @@ export default function ComplexoNordesteLandingPage() {
         </div>
       </section>
 
-      {/* â”€â”€ G. SOBRE O TERRITÃ“RIO (IA) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+      {/* ── G. SOBRE O TERRITÃ“RIO (IA) ────────────────────────────── */}
       <div className="max-w-6xl mx-auto px-4 sm:px-6 py-10 w-full">
         <TerritoryAIContentSection
           territorySlug={resolved?.kind === 'group'
@@ -589,14 +589,14 @@ export default function ComplexoNordesteLandingPage() {
         />
       </div>
 
-      {/* â”€â”€ H. DESTAQUES EDITORIAIS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+      {/* ── H. DESTAQUES EDITORIAIS ────────────────────────────────── */}
       {(highlightsLoading || highlights.length > 0) && (
         <section className="max-w-6xl mx-auto px-4 sm:px-6 pb-12 w-full">
           <div className="mb-6">
             <h2 className="text-xl md:text-2xl font-bold text-foreground font-heading">
               No Complexo agora
             </h2>
-            <p className="text-sm text-muted-foreground mt-1">Destaques e novidades do territÃ³rio</p>
+            <p className="text-sm text-muted-foreground mt-1">Destaques e novidades do território</p>
           </div>
           {highlightsLoading ? (
             <div className="flex items-center justify-center py-8">
@@ -628,12 +628,12 @@ export default function ComplexoNordesteLandingPage() {
         </section>
       )}
 
-      {/* â”€â”€ I. EMPRESAS EM DESTAQUE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+      {/* ── I. EMPRESAS EM DESTAQUE ────────────────────────────────── */}
       <section className="max-w-6xl mx-auto px-4 sm:px-6 py-12 w-full">
         <div className="flex items-center justify-between mb-8">
           <div>
             <h2 className="text-2xl md:text-3xl font-bold text-foreground font-heading mb-2">Empresas Locais</h2>
-            <p className="text-base text-muted-foreground">ComÃ©rcios e negÃ³cios do territÃ³rio</p>
+            <p className="text-base text-muted-foreground">Comércios e negócios do território</p>
           </div>
           <Button
             variant="outline"
@@ -689,7 +689,7 @@ export default function ComplexoNordesteLandingPage() {
         ) : (
           <div className="rounded-xl border border-dashed border-border bg-muted/20 px-6 py-12 text-center">
             <Store className="h-10 w-10 mx-auto mb-3 text-muted-foreground/30" />
-            <p className="text-sm text-muted-foreground">Em breve, negÃ³cios locais aparecerÃ£o aqui.</p>
+            <p className="text-sm text-muted-foreground">Em breve, negócios locais aparecerão aqui.</p>
             <Button variant="outline" size="sm" className="mt-4 rounded-lg" onClick={() => navigate(moduleUrls.business)}>
               Cadastrar empresa <ArrowRight className="h-3.5 w-3.5 ml-1" />
             </Button>
@@ -697,11 +697,11 @@ export default function ComplexoNordesteLandingPage() {
         )}
       </section>
 
-      {/* â”€â”€ J. SERVIÃ‡OS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+      {/* ── J. SERVIÇOS ───────────────────────────────────────────── */}
       <section className="max-w-6xl mx-auto px-4 sm:px-6 py-12 w-full">
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h2 className="text-2xl md:text-3xl font-bold text-foreground font-heading mb-2">Profissionais e ServiÃ§os</h2>
+            <h2 className="text-2xl md:text-3xl font-bold text-foreground font-heading mb-2">Profissionais e Serviços</h2>
             <p className="text-base text-muted-foreground">Quem atende no Complexo</p>
           </div>
           <Button
@@ -752,17 +752,17 @@ export default function ComplexoNordesteLandingPage() {
         ) : (
           <div className="rounded-xl border border-dashed border-border bg-muted/20 px-6 py-12 text-center">
             <Wrench className="h-10 w-10 mx-auto mb-3 text-muted-foreground/30" />
-            <p className="text-sm text-muted-foreground">Em breve, profissionais da regiÃ£o aparecerÃ£o aqui.</p>
+            <p className="text-sm text-muted-foreground">Em breve, profissionais da região aparecerão aqui.</p>
           </div>
         )}
       </section>
 
-      {/* â”€â”€ K. CLASSIFICADOS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+      {/* ── K. CLASSIFICADOS ──────────────────────────────────────── */}
       <section className="max-w-6xl mx-auto px-4 sm:px-6 py-12 w-full">
         <div className="flex items-center justify-between mb-8">
           <div>
             <h2 className="text-2xl md:text-3xl font-bold text-foreground font-heading mb-2">Classificados</h2>
-            <p className="text-base text-muted-foreground">AnÃºncios recentes no territÃ³rio</p>
+            <p className="text-base text-muted-foreground">Anúncios recentes no território</p>
           </div>
           <Button
             variant="outline"
@@ -827,12 +827,12 @@ export default function ComplexoNordesteLandingPage() {
         ) : (
           <div className="rounded-xl border border-dashed border-border bg-muted/20 px-6 py-12 text-center">
             <Tag className="h-10 w-10 mx-auto mb-3 text-muted-foreground/30" />
-            <p className="text-sm text-muted-foreground">Nenhum anÃºncio ativo no momento.</p>
+            <p className="text-sm text-muted-foreground">Nenhum anúncio ativo no momento.</p>
           </div>
         )}
       </section>
 
-      {/* â”€â”€ L. CTA FINAL â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+      {/* ── L. CTA FINAL ──────────────────────────────────────────── */}
       <section className="relative w-full py-28 overflow-hidden">
         <motion.div className="absolute inset-0">
           <img
@@ -852,13 +852,13 @@ export default function ComplexoNordesteLandingPage() {
             transition={{ duration: 0.6 }}
           >
             <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white mb-4 font-heading leading-tight">
-              "Ã‰ um bairro rico, que nÃ£o se resume a uma Ãºnica coisa."
+              "É um bairro rico, que não se resume a uma única coisa."
             </h2>
             <p className="text-base text-white/60 mb-3 italic">
-              â€” Israel Almeida, TV MoradÃ´
+              — Israel Almeida, TV Moradô
             </p>
             <p className="text-base text-white/70 mb-8 max-w-xl mx-auto">
-              FaÃ§a parte da plataforma que conecta quem vive, trabalha e constrÃ³i o Complexo do Nordeste.
+              Faça parte da plataforma que conecta quem vive, trabalha e constrói o Complexo do Nordeste.
             </p>
 
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
@@ -867,7 +867,7 @@ export default function ComplexoNordesteLandingPage() {
                 className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-base px-10 h-14 shadow-2xl shadow-primary/30 rounded-xl w-full sm:w-auto"
                 onClick={() => navigate(user ? moduleUrls.community : '/login')}
               >
-                {user ? 'Acessar Comunidade' : 'Cadastrar-se GrÃ¡tis'}
+                {user ? 'Acessar Comunidade' : 'Cadastrar-se Grátis'}
                 <ArrowRight className="h-5 w-5 ml-2" />
               </Button>
               <Button
@@ -876,31 +876,31 @@ export default function ComplexoNordesteLandingPage() {
                 className="border-white/25 text-white hover:bg-white/10 hover:border-white/40 font-semibold text-base px-8 h-14 backdrop-blur-md rounded-xl w-full sm:w-auto"
                 onClick={() => navigate(moduleUrls.business)}
               >
-                Divulgar meu negÃ³cio
+                Divulgar meu negócio
               </Button>
             </div>
           </motion.div>
         </div>
       </section>
 
-      {/* â”€â”€ FOOTER â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+      {/* ── FOOTER ────────────────────────────────────────────────── */}
       <footer className="w-full bg-card border-t border-border py-8">
         <div className="max-w-6xl mx-auto px-4 sm:px-6">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
             <span className="text-lg font-bold text-foreground font-heading">
               Achegue<span className="text-primary">-se</span>
-              <span className="text-xs text-muted-foreground ml-2 font-normal">Â· Complexo do Nordeste de Amaralina</span>
+              <span className="text-xs text-muted-foreground ml-2 font-normal">· Complexo do Nordeste de Amaralina</span>
             </span>
 
             <div className="flex items-center gap-6 text-sm text-muted-foreground">
-              <button onClick={() => navigate('/')} className="hover:text-primary transition-colors">InÃ­cio</button>
+              <button onClick={() => navigate('/')} className="hover:text-primary transition-colors">Início</button>
               <button onClick={() => navigate(moduleUrls.community)} className="hover:text-primary transition-colors">Comunidade</button>
               <button onClick={() => navigate('/sobre')} className="hover:text-primary transition-colors">Sobre</button>
               <button onClick={() => navigate('/privacidade')} className="hover:text-primary transition-colors">Privacidade</button>
             </div>
 
             <p className="text-xs text-muted-foreground">
-              Â© 2025 Achegue-se Â· Todos os direitos reservados
+              © 2025 Achegue-se · Todos os direitos reservados
             </p>
           </div>
         </div>

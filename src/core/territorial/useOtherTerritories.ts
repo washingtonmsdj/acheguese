@@ -22,9 +22,9 @@ const OTHER_TERRITORIES: TerritoryCard[] = [
   {
     id: 'pituba',
     name: 'Pituba',
-    description: 'Bairro nobre com forte comércio local.',
-    status: 'soon',
-    url: null,
+    description: 'Proxima comunidade: cadastre interesse e indique comercios locais.',
+    status: 'expanding',
+    url: '/comunidade/ba/salvador/pituba',
   },
   {
     id: 'rio-vermelho',

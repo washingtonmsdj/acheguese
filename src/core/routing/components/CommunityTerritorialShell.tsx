@@ -22,6 +22,7 @@ import { Button } from "@/shared/components/ui/button";
 import { cn } from "@/shared/utils/cn";
 import { prefetchRouteByHref } from "@/app/routes/prefetch";
 import { useCommunityScopeResolver } from "@/core/community/hooks/useCommunityScopeResolver";
+import { useCommunityProfile } from "@/core/community-experience/hooks/useCommunityProfile";
 import { TerritorialLayout } from "./TerritorialLayout";
 import { buildCommunityTerritoryUrl, buildModuleTerritoryUrl, MODULE_SLUGS } from "@/core/routing/utils/territoryUrls";
 import { resolveSeoPolicy } from "@/core/routing/seo/territorialSeoPolicy";
@@ -116,13 +117,14 @@ const NAV_GROUP_LABELS: Record<CommunityNavItem["group"], string> = {
 export function CommunityTerritorialShell() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { resolved, resolvedScope } = useCommunityScopeResolver();
+  const { resolved } = useCommunityScopeResolver();
   const params = useParams<{
     state?: string;
     city?: string;
     territorySlug?: string;
   }>();
   const [transitionMessage, setTransitionMessage] = useState<string | null>(null);
+  const communityProfileQuery = useCommunityProfile(resolved);
 
   const state = params.state ?? "ba";
   const city = params.city ?? "salvador";
@@ -135,10 +137,11 @@ export function CommunityTerritorialShell() {
       ? resolved.group.name
       : resolved.location.name
     : titleFromSlug(territorySlug);
+  const shortTerritoryName = territoryName.replace(/^Complexo do\s+/i, "Complexo");
   const cityName = cityLabelFromSlug(city);
   const scopeLabel = "Meu Bairro";
   const territorySubtitle = "Comunidade local";
-  const localContentDescription = "Panorama da comunidade local";
+  const localContentDescription = "O que esta acontecendo no bairro hoje";
 
   const navItems = useMemo<CommunityNavItem[]>(
     () => [
@@ -153,7 +156,7 @@ export function CommunityTerritorialShell() {
       {
         id: "feed",
         label: "Feed",
-        description: "Conversas locais",
+        description: "Feed da comunidade",
         href: `${communityBase}/feed`,
         icon: LayoutList,
         group: "community",
@@ -169,7 +172,7 @@ export function CommunityTerritorialShell() {
       {
         id: "alertas",
         label: "Alertas",
-        description: "Alertas do territorio",
+        description: "Alertas da comunidade",
         href: `${communityBase}/alertas`,
         icon: MapPin,
         group: "community",
@@ -192,8 +195,8 @@ export function CommunityTerritorialShell() {
       },
       {
         id: "empresas",
-        label: "Empresas",
-        description: "Negocios locais",
+        label: `Comercios do ${shortTerritoryName}`,
+        description: `Comercios do ${shortTerritoryName}`,
         href: buildModuleTerritoryUrl(MODULE_SLUGS.business, territoryBase),
         icon: Building2,
         group: "local",
@@ -208,32 +211,32 @@ export function CommunityTerritorialShell() {
       },
       {
         id: "servicos",
-        label: "Servicos",
-        description: "Prestadores locais",
+        label: "Servicos locais",
+        description: `Servicos do ${shortTerritoryName}`,
         href: buildModuleTerritoryUrl(MODULE_SLUGS.services, territoryBase),
         icon: Briefcase,
         group: "local",
       },
       {
         id: "classificados",
-        label: "Classificados",
-        description: "Anuncios da comunidade",
+        label: "Classificados da comunidade",
+        description: `Classificados do ${shortTerritoryName}`,
         href: buildModuleTerritoryUrl(MODULE_SLUGS.classifieds, territoryBase),
         icon: Tag,
         group: "opportunities",
       },
       {
         id: "vagas",
-        label: "Vagas",
-        description: "Oportunidades locais",
+        label: "Oportunidades perto de voce",
+        description: "Oportunidades perto de voce",
         href: buildModuleTerritoryUrl(MODULE_SLUGS.jobs, territoryBase),
         icon: Briefcase,
         group: "opportunities",
       },
       {
         id: "eventos",
-        label: "Eventos",
-        description: "Agenda do territorio",
+        label: "Eventos do bairro",
+        description: `Eventos do ${shortTerritoryName}`,
         href: buildModuleTerritoryUrl(MODULE_SLUGS.events, territoryBase),
         icon: MapPin,
         group: "opportunities",
@@ -271,7 +274,7 @@ export function CommunityTerritorialShell() {
         group: "tools",
       },
     ],
-    [city, communityBase, localContentDescription, state, territoryBase],
+    [city, communityBase, localContentDescription, shortTerritoryName, state, territoryBase],
   );
 
   const navGroups = useMemo(
@@ -303,6 +306,8 @@ export function CommunityTerritorialShell() {
   }, [territoryName]);
 
   const activeKey = normalizeModulePath(location.pathname);
+  const profile = communityProfileQuery.data;
+  const communityStatus = profile?.status ?? "active";
   const seoPolicy = resolveSeoPolicy(location.pathname);
   const canonicalHref = typeof window !== "undefined"
     ? `${window.location.origin}${seoPolicy.canonicalPath}`
@@ -313,6 +318,65 @@ export function CommunityTerritorialShell() {
     setTransitionMessage(`Saindo do ${territoryName}`);
     window.setTimeout(() => navigate(cityHref), TRANSITION_MS - 120);
   };
+
+  if (communityProfileQuery.isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[#081114] text-white">
+        Carregando comunidade...
+      </div>
+    );
+  }
+
+  if (communityStatus === "inactive") {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-[#081114] text-white px-4 text-center">
+        <h1 className="text-2xl font-bold">Comunidade indisponivel neste momento</h1>
+        <p className="mt-2 text-sm text-white/70 max-w-xl">
+          Esta area ainda nao esta ativa para experiencia comunitaria. Voce pode navegar pela cidade ou entrar no Complexo.
+        </p>
+        <div className="mt-5 flex flex-wrap gap-3 justify-center">
+          <Button onClick={() => navigate(cityHref)}>Navegar por {cityName}</Button>
+          <Button variant="outline" onClick={() => navigate("/comunidade/ba/salvador/complexo-do-nordeste-de-amaralina")}>
+            Ir para Comunidade do Complexo
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  if (communityStatus === "launching" || communityStatus === "coming_soon" || communityStatus === "waiting_list") {
+    const interestPath = `${communityBase}/interesse`;
+    return (
+      <>
+        <Helmet>
+          <meta name="robots" content="noindex, follow" />
+          <title>{profile?.hero_title ?? territoryName} | Achegue-se</title>
+        </Helmet>
+        <div className="min-h-screen bg-[#081114] text-white px-4 py-14">
+          <div className="mx-auto max-w-3xl rounded-2xl border border-white/10 bg-white/5 p-8">
+            <p className="text-xs uppercase tracking-wide text-primary">Proxima comunidade</p>
+            <h1 className="mt-2 text-3xl font-bold">{profile?.hero_title ?? `A comunidade de ${territoryName} esta chegando`}</h1>
+            <p className="mt-3 text-white/75">{profile?.hero_subtitle ?? profile?.description}</p>
+            <p className="mt-2 text-sm text-white/60">
+              Enquanto esta comunidade estiver em preparacao, voce pode navegar pela cidade e registrar interesse para o lancamento.
+            </p>
+            <div className="mt-6 grid gap-3 sm:grid-cols-2">
+              <Button onClick={() => navigate(interestPath)}>
+                {profile?.primary_cta_label ?? "Cadastrar interesse"}
+              </Button>
+              <Button variant="outline" onClick={() => navigate("/empresas/cadastrar")}>
+                {profile?.secondary_cta_label ?? "Quero minha empresa aqui"}
+              </Button>
+              <Button variant="outline" onClick={() => navigate(interestPath)}>
+                Indicar comercio ou servico da regiao
+              </Button>
+              <Button variant="outline" onClick={() => navigate("/eventos")}>Cadastrar evento da regiao</Button>
+            </div>
+          </div>
+        </div>
+      </>
+    );
+  }
 
   return (
     <>
@@ -332,7 +396,7 @@ export function CommunityTerritorialShell() {
             </p>
             <h2 className="mt-2 text-xl font-bold text-foreground">{transitionMessage}</h2>
             <p className="mt-2 text-sm text-muted-foreground">
-              Carregando a experiência local do território.
+              Carregando a experiencia local do territorio.
             </p>
             <div className="mt-5 h-1 overflow-hidden rounded-full bg-muted">
               <div className="h-full w-2/3 animate-pulse rounded-full bg-primary" />
@@ -412,7 +476,7 @@ export function CommunityTerritorialShell() {
             to={cityHref}
             className="mt-2 block rounded-lg px-3 py-2 text-center text-xs text-white/45 hover:text-white"
           >
-            Ir para a página da cidade
+            Ir para a pagina da cidade
           </Link>
         </div>
       </aside>

@@ -45,57 +45,57 @@ const staggerItem = {
 
 // ── Dados ────────────────────────────────────────────────────────────
 
-const LOADING_PHRASES_SALVADOR = [
-  "Passando protetor solar... ☀️",
-  "Preparando o acarajé... 🔥",
-  "Afinando o berimbau... 🎵",
-  "Organizando o trio elétrico... 🎉",
-  "Conferindo a maré... 🌊",
+const LOADING_PHRASES_COMMUNITY = [
+  "Organizando a comunidade... 🧭",
+  "Conectando comercios locais... 🏪",
+  "Preparando alertas do territorio... 🚨",
+  "Atualizando eventos do bairro... 📅",
+  "Ativando servicos da regiao... 🔧",
   "Chamando os vizinhos... 👋",
 ];
 
-const MODULOS = [
+  const MODULOS = [
   {
     icon: Store,
     label: "Empresas Locais",
     color: "text-orange-400",
     bg: "bg-orange-500/15 border-orange-500/20",
-    path: "/comunidade/ba/salvador",
+    path: "/comunidade/ba/salvador/complexo-do-nordeste-de-amaralina",
   },
   {
     icon: Wrench,
     label: "Serviços",
     color: "text-sky-400",
     bg: "bg-sky-500/15 border-sky-500/20",
-    path: "/comunidade/ba/salvador",
+    path: "/comunidade/ba/salvador/complexo-do-nordeste-de-amaralina",
   },
   {
     icon: Briefcase,
     label: "Vagas",
     color: "text-emerald-400",
     bg: "bg-emerald-500/15 border-emerald-500/20",
-    path: "/comunidade/ba/salvador",
+    path: "/comunidade/ba/salvador/complexo-do-nordeste-de-amaralina",
   },
   {
     icon: Tag,
     label: "Classificados",
     color: "text-amber-400",
     bg: "bg-amber-500/15 border-amber-500/20",
-    path: "/comunidade/ba/salvador",
+    path: "/comunidade/ba/salvador/complexo-do-nordeste-de-amaralina",
   },
   {
     icon: Calendar,
     label: "Eventos",
     color: "text-rose-400",
     bg: "bg-rose-500/15 border-rose-500/20",
-    path: "/comunidade/ba/salvador",
+    path: "/comunidade/ba/salvador/complexo-do-nordeste-de-amaralina",
   },
   {
     icon: Users,
     label: "Comunidade",
     color: "text-primary",
     bg: "bg-primary/15 border-primary/20",
-    path: "/comunidade/ba/salvador",
+    path: "/comunidade/ba/salvador/complexo-do-nordeste-de-amaralina",
   },
 ];
 
@@ -144,7 +144,7 @@ export default function MainLandingPage() {
     if (!isLoadingCity) return;
 
     const interval = setInterval(() => {
-      setCurrentPhraseIndex((prev) => (prev + 1) % LOADING_PHRASES_SALVADOR.length);
+      setCurrentPhraseIndex((prev) => (prev + 1) % LOADING_PHRASES_COMMUNITY.length);
     }, 1600); // ~1.6s por frase = 10s total para 6 frases
 
     return () => clearInterval(interval);
@@ -200,7 +200,7 @@ export default function MainLandingPage() {
                     transition={{ duration: 0.4, ease: "easeInOut" }}
                     className="text-xl sm:text-2xl md:text-3xl font-bold text-foreground whitespace-nowrap"
                   >
-                    {LOADING_PHRASES_SALVADOR[currentPhraseIndex]}
+                    {LOADING_PHRASES_COMMUNITY[currentPhraseIndex]}
                   </motion.h2>
                 </AnimatePresence>
               </div>
@@ -211,7 +211,7 @@ export default function MainLandingPage() {
                 transition={{ delay: 0.3 }}
                 className="text-sm sm:text-base text-muted-foreground"
               >
-                Preparando Salvador pra você...
+                Preparando sua comunidade...
               </motion.p>
             </motion.div>
           </motion.div>
@@ -251,10 +251,10 @@ export default function MainLandingPage() {
             </h1>
 
             <p className="text-sm sm:text-base md:text-lg text-white/95 mb-2 max-w-2xl mx-auto drop-shadow-lg">
-              Uma infraestrutura territorial que conecta quem vive, trabalha e constrói o bairro — sem intermediários, sem ruído.
+              Achegue-se Complexo: a comunidade digital do Complexo do Nordeste de Amaralina.
             </p>
             <p className="text-xs sm:text-sm text-white/60 mb-6">
-              Começamos por <span className="text-primary/90 font-medium">Salvador, BA</span> e expandimos por fases.
+              Salvador segue como cidade pública. O foco do MVP é a comunidade do Complexo.
             </p>
 
             {/* CTAs */}
@@ -271,7 +271,7 @@ export default function MainLandingPage() {
                   onClick={handleEntrarCidade}
                   disabled={isLoadingCity}
                 >
-                  Entrar na minha cidade
+                  Ver cidade (contexto técnico)
                 </Button>
               </motion.div>
               <motion.div
@@ -340,20 +340,20 @@ export default function MainLandingPage() {
         <motion.div {...fadeUp} className="text-center mb-10">
           <div className="inline-flex items-center gap-2 bg-primary/10 border border-primary/20 rounded-full px-4 py-1.5 mb-5">
             <MapPin className="h-3.5 w-3.5 text-primary" />
-            <span className="text-xs font-semibold text-primary">Território fundador</span>
+            <span className="text-xs font-semibold text-primary">Comunidade ativa do MVP</span>
           </div>
           <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-foreground mb-2 font-heading">
-            Salvador é onde tudo começa.
+            O Complexo é onde tudo começa.
           </h2>
           <p className="text-sm text-muted-foreground max-w-xl mx-auto">
-            Ativamos bairro por bairro, de dentro pra fora — e cada comunidade que entra fortalece a próxima.
+            A navegação pública por Salvador continua ativa, com experiência comunitária priorizada no Complexo.
           </p>
         </motion.div>
 
         <div className="max-w-6xl mx-auto px-4 sm:px-6">
           <motion.button
             {...fadeUp}
-            onClick={() => navigate(`/comunidade/ba/salvador/area/complexo-do-nordeste-de-amaralina`)}
+            onClick={() => navigate(`/comunidade/ba/salvador/complexo-do-nordeste-de-amaralina`)}
             whileHover={{ y: -6, scale: 1.01 }}
             whileTap={{ scale: 0.99 }}
             className="w-full p-5 sm:p-6 rounded-xl bg-card border-2 border-border hover:border-primary/40 transition-all duration-300 text-left group grid grid-cols-1 gap-5"
@@ -384,6 +384,21 @@ export default function MainLandingPage() {
             </div>
           </motion.button>
         </div>
+      </section>
+
+      <section className="max-w-6xl mx-auto px-4 sm:px-6 pb-8">
+        <motion.div {...fadeUp} className="rounded-xl border border-border bg-card p-5">
+          <p className="text-xs font-semibold uppercase tracking-wide text-primary">Próxima comunidade</p>
+          <h3 className="mt-2 text-xl font-bold text-foreground">Pituba em preparação</h3>
+          <p className="mt-2 text-sm text-muted-foreground">
+            A comunidade da Pituba está chegando. Cadastre interesse e indique comércios e serviços da região.
+          </p>
+          <div className="mt-4">
+            <Button variant="outline" onClick={() => navigate("/comunidade/ba/salvador/pituba")}>
+              Ver página da comunidade da Pituba
+            </Button>
+          </div>
+        </motion.div>
       </section>
 
       {/* Para você */}
@@ -434,7 +449,7 @@ export default function MainLandingPage() {
         <motion.div className="absolute inset-0">
           <img
             src={heroImg}
-            alt="Salvador"
+            alt="Comunidade local"
             loading="lazy"
             className="w-full h-full object-cover"
           />
@@ -477,7 +492,7 @@ export default function MainLandingPage() {
             {/* Links */}
             <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
               <button onClick={() => navigate("/comunidade/ba/salvador")} className="text-sm text-muted-foreground hover:text-primary transition-colors">
-                Explorar Salvador
+                Navegar por Salvador
               </button>
               <button onClick={() => navigate("/sobre")} className="text-sm text-muted-foreground hover:text-primary transition-colors">
                 Sobre

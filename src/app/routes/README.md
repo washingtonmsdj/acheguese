@@ -82,9 +82,8 @@ No arquivo `AppRoutes.tsx`, adicione dentro do componente `Routes`:
 /empresas/:state/:city/:district              # Vitrine publica do modulo no bairro
 /empresas/:state/:city/area/:groupSlug        # Vitrine publica do modulo no grupo
 /comunidade/:state/:city                      # Comunidade da cidade
-/comunidade/:state/:city/:district            # Comunidade do bairro
-/comunidade/:state/:city/area/:groupSlug      # Comunidade do grupo
-/comunidade/:state/:city/area/:groupSlug/feed # Feed comunitario do grupo
+/comunidade/:state/:city/:territorySlug       # Comunidade territorial (canonica publica)
+/comunidade/:state/:city/:territorySlug/feed  # Feed comunitario territorial
 /empresas/:state/:city/:district/:businessSlug # Detalhe especifico de empresa
 ```
 
@@ -92,6 +91,8 @@ Regra de intencao:
 
 - Rotas diretas de modulo (`/empresas/...`, `/servicos/...`) sao vitrines publicas e SEO.
 - Rotas dentro de `/comunidade/...` sao experiencia social/local com contexto comunitario.
+- Em comunidade, a URL publica nao expoe tipo tecnico (`district` vs `territorial_group`):
+  `/comunidade/:state/:city/:territorySlug`.
 - Rotas operacionais ficam em `/central`.
 - Rotas de identidade/configuracao pessoal ficam em `/conta`.
 

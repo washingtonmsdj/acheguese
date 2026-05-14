@@ -36,6 +36,11 @@ export function resolveSeoPolicy(pathname: string): TerritorialSeoPolicy {
           robots: "noindex, follow",
         };
       }
+      const suffix = parts.length > 5 ? `/${parts.slice(5).join("/")}` : "";
+      return {
+        canonicalPath: `/${MODULE_SLUGS.community}/${parts[1]}/${parts[2]}/${parts[4]}${suffix}`,
+        robots: "index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1",
+      };
     } else if (isCityEmbeddedModule) {
       return {
         canonicalPath: `/${part3}/${parts.slice(1, 3).join("/")}`,
