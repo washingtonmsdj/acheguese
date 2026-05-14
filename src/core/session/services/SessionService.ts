@@ -175,21 +175,10 @@ export class SessionService {
     SessionService.initFallbackStarted = true;
 
     try {
-      const { data, error } = await supabase.auth.getSession();
-      if (error) {
-        SessionService.debug("[SessionService] getSession fallback failed", error);
-        SessionService.resolveInit();
-        return;
-      }
-
-      const session = data.session;
-      SessionService.currentSession = session;
-
-      if (session) {
-        await SessionService.loadFromSession(session, true);
-      } else {
-        SessionState.setState({ user: null, activeProfile: null, profiles: [] });
-      }
+      // Evita lock contention no bootstrap: não chamar getSession aqui.
+      // O caminho canônico é o evento INITIAL_SESSION do onAuthStateChange.
+      // Este fallback existe apenas para não bloquear a UI em casos extremos.
+      SessionService.debug("[SessionService] init fallback: resolving without getSession");
     } catch (error) {
       SessionService.debug("[SessionService] getSession fallback threw", error);
     } finally {
@@ -238,20 +227,6 @@ export class SessionService {
     }
 
     const u = session.user;
-
-    // Valida se o usuário ainda existe no servidor antes de prosseguir.
-    // Um 403 indica token órfão (usuário deletado) — faz logout automático.
-    const { error: userError } = await supabase.auth.getUser();
-    if (userError) {
-      // Type assertion necessária pois AuthError não expõe status diretamente
-      const errorWithStatus = userError as { status?: number; message?: string };
-      const status = errorWithStatus.status ?? 0;
-      if (status === 403 || status === 401 || userError.message?.includes('User from sub claim in JWT does not exist')) {
-        logger.warn('⚠️ SessionService: token órfão detectado, fazendo logout automático.');
-        await supabase.auth.signOut();
-        return;
-      }
-    }
 
     const user: User = {
       id: u.id,
