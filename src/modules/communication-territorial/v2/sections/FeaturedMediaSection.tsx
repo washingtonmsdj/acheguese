@@ -2,9 +2,13 @@ import { Link } from "react-router-dom";
 import { Radio, Users, Eye } from "lucide-react";
 import { Card, CardContent } from "@/shared/components/ui/card";
 import { Badge } from "@/shared/components/ui/badge";
+import { CHANNEL_KIND_LABELS, type CommunicationChannel } from "@/core/communication-territorial";
 
-export function FeaturedMediaSection() {
-  const featuredMedia = [
+type FeaturedMediaSectionProps = {
+  channels?: CommunicationChannel[];
+};
+
+const mockFeaturedMedia = [
     {
       id: 1,
       name: "Portal Nordeste de Amaralina",
@@ -57,7 +61,24 @@ export function FeaturedMediaSection() {
       recentActivity: "Publicou ha 30 minutos",
       engagement: "Muito Alta",
     },
-  ];
+];
+
+export function FeaturedMediaSection({ channels }: FeaturedMediaSectionProps) {
+  const ssotFeaturedMedia = (channels ?? []).slice(0, 4).map((channel, idx) => ({
+    id: channel.id,
+    name: channel.public_name,
+    type: CHANNEL_KIND_LABELS[channel.channel_kind],
+    description: channel.description,
+    followers: Math.max(1000, channel.reliability_score * 120),
+    activeNow: channel.status === "active",
+    verified: channel.verification_status === "verified",
+    coverImage: mockFeaturedMedia[idx % mockFeaturedMedia.length].coverImage,
+    avatar: `https://api.dicebear.com/7.x/shapes/svg?seed=${channel.slug || channel.id}`,
+    recentActivity: "Atualizado recentemente",
+    engagement: `Confiabilidade ${channel.reliability_score}/100`,
+  }));
+
+  const featuredMedia = ssotFeaturedMedia.length ? ssotFeaturedMedia : mockFeaturedMedia;
 
   return (
     <section className="space-y-6">

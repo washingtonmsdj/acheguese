@@ -3,16 +3,34 @@ import { ShieldCheck } from "lucide-react";
 import { Card, CardContent } from "@/shared/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/shared/components/ui/avatar";
 import { Badge } from "@/shared/components/ui/badge";
+import { CHANNEL_KIND_LABELS, type CommunicationChannel } from "@/core/communication-territorial";
 
-export function VerifiedChannelsSection() {
-  const verifiedChannels = [
+type VerifiedChannelsSectionProps = {
+  channels?: CommunicationChannel[];
+};
+
+const mockVerifiedChannels = [
     { id: 1, name: "Portal Nordeste", type: "Portal", followers: "12.5k", avatar: "https://api.dicebear.com/7.x/shapes/svg?seed=v1" },
     { id: 2, name: "Radio Comunitaria", type: "Radio", followers: "8.3k", avatar: "https://api.dicebear.com/7.x/shapes/svg?seed=v2" },
     { id: 3, name: "Jornal do Bairro", type: "Jornal", followers: "15.8k", avatar: "https://api.dicebear.com/7.x/shapes/svg?seed=v3" },
     { id: 4, name: "TV Comunitaria", type: "TV", followers: "6.2k", avatar: "https://api.dicebear.com/7.x/shapes/svg?seed=v4" },
     { id: 5, name: "Coletivo Cultural", type: "Coletivo", followers: "4.1k", avatar: "https://api.dicebear.com/7.x/shapes/svg?seed=v5" },
     { id: 6, name: "Pagina do Bairro", type: "Pagina", followers: "9.7k", avatar: "https://api.dicebear.com/7.x/shapes/svg?seed=v6" },
-  ];
+];
+
+export function VerifiedChannelsSection({ channels }: VerifiedChannelsSectionProps) {
+  const ssotVerifiedChannels = (channels ?? [])
+    .filter((channel) => channel.verification_status === "verified")
+    .slice(0, 6)
+    .map((channel) => ({
+      id: channel.id,
+      name: channel.public_name,
+      type: CHANNEL_KIND_LABELS[channel.channel_kind],
+      followers: `${Math.max(1, Math.round(channel.reliability_score / 8))}k`,
+      avatar: `https://api.dicebear.com/7.x/shapes/svg?seed=${channel.slug || channel.id}`,
+    }));
+
+  const verifiedChannels = ssotVerifiedChannels.length ? ssotVerifiedChannels : mockVerifiedChannels;
 
   return (
     <section className="space-y-6">
@@ -31,7 +49,7 @@ export function VerifiedChannelsSection() {
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 md:grid-cols-4 lg:grid-cols-6">
         {verifiedChannels.map((channel) => (
-          <Link key={channel.id} to={`/comunicacao/empresa/${channel.id}`}>
+          <Link key={channel.id} to={`/comunicacao/canal/${channel.id}`}>
             <Card className="group h-full transition-all duration-300 hover:border-primary/40 hover:shadow-lg">
               <CardContent className="space-y-2 p-3 text-center sm:space-y-3 sm:p-4">
                 <div className="relative inline-block">

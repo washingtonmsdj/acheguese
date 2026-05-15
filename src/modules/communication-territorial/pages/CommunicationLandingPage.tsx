@@ -1,4 +1,5 @@
 import { Helmet } from "react-helmet-async";
+import { useQuery } from "@tanstack/react-query";
 import { HeroSection } from "../v2/sections/HeroSection";
 import { FeaturedMediaSection } from "../v2/sections/FeaturedMediaSection";
 import { ActiveCoverageSection } from "../v2/sections/ActiveCoverageSection";
@@ -12,8 +13,15 @@ import { PublicUtilitySection } from "../v2/sections/PublicUtilitySection";
 import { MultimediaContentSection } from "../v2/sections/MultimediaContentSection";
 import { TerritorialSidebar } from "../v2/components/TerritorialSidebar";
 import { TerritorialFilters } from "../v2/components/TerritorialFilters";
+import { CommunicationTerritorialService } from "@/core/communication-territorial";
 
 export default function CommunicationLandingPage() {
+  const { data: hub } = useQuery({
+    queryKey: ["communication-territorial", "landing", "ba", "salvador"],
+    queryFn: () => CommunicationTerritorialService.getPublicHub({ state: "ba", city: "salvador" }),
+    staleTime: 60_000,
+  });
+
   return (
     <>
       <Helmet>
@@ -36,11 +44,11 @@ export default function CommunicationLandingPage() {
           <div className="grid grid-cols-1 gap-4 sm:gap-6 lg:grid-cols-12 lg:gap-8">
             <main className="space-y-6 sm:space-y-8 lg:col-span-8 lg:space-y-10">
               <HeroSection />
-              <FeaturedMediaSection />
-              <VerifiedChannelsSection />
+              <FeaturedMediaSection channels={hub?.channels} />
+              <VerifiedChannelsSection channels={hub?.channels} />
               <ActiveCoverageSection />
               <TrendingTerritorialSection />
-              <LatestPublicationsSection />
+              <LatestPublicationsSection publications={hub?.publications} />
               <CommunitiesInMotionSection />
               <EventsCultureSection />
               <LocalNewsSection />

@@ -3,16 +3,41 @@ import { Clock } from "lucide-react";
 import { Card, CardContent } from "@/shared/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/shared/components/ui/avatar";
 import { Badge } from "@/shared/components/ui/badge";
+import { PUBLICATION_TYPE_LABELS, type CommunicationPublication } from "@/core/communication-territorial";
 
-export function LatestPublicationsSection() {
-  const publications = [
+type LatestPublicationsSectionProps = {
+  publications?: CommunicationPublication[];
+};
+
+const mockPublications = [
     { id: 1, channel: "Portal Nordeste", avatar: "https://api.dicebear.com/7.x/shapes/svg?seed=p1", title: "Mutirao de limpeza mobiliza comunidade", category: "Acao Social", time: "ha 15 min" },
     { id: 2, channel: "Radio Comunitaria", avatar: "https://api.dicebear.com/7.x/shapes/svg?seed=p2", title: "Entrevista com artista local sobre novo projeto", category: "Cultura", time: "ha 30 min" },
     { id: 3, channel: "Jornal do Bairro", avatar: "https://api.dicebear.com/7.x/shapes/svg?seed=p3", title: "Novo posto de saude sera inaugurado em agosto", category: "Saude", time: "ha 1 hora" },
     { id: 4, channel: "Coletivo Cultural", avatar: "https://api.dicebear.com/7.x/shapes/svg?seed=p4", title: "Oficina gratuita de grafite para jovens", category: "Educacao", time: "ha 2 horas" },
     { id: 5, channel: "TV Comunitaria", avatar: "https://api.dicebear.com/7.x/shapes/svg?seed=p5", title: "Reportagem especial sobre mobilidade urbana", category: "Mobilidade", time: "ha 3 horas" },
     { id: 6, channel: "Pagina do Bairro", avatar: "https://api.dicebear.com/7.x/shapes/svg?seed=p6", title: "Feira de economia solidaria acontece no fim de semana", category: "Economia", time: "ha 4 horas" },
-  ];
+];
+
+function formatTimeAgo(value?: string | null): string {
+  if (!value) return "agora";
+  const ms = Date.now() - new Date(value).getTime();
+  const minutes = Math.max(1, Math.floor(ms / 60000));
+  if (minutes < 60) return `ha ${minutes} min`;
+  const hours = Math.floor(minutes / 60);
+  return `ha ${hours} hora${hours > 1 ? "s" : ""}`;
+}
+
+export function LatestPublicationsSection({ publications: ssotPublications }: LatestPublicationsSectionProps) {
+  const publications = (ssotPublications ?? []).length
+    ? (ssotPublications ?? []).slice(0, 6).map((pub) => ({
+        id: pub.id,
+        channel: pub.channel?.public_name ?? "Canal",
+        avatar: `https://api.dicebear.com/7.x/shapes/svg?seed=${pub.channel?.slug || pub.channel_id}`,
+        title: pub.title,
+        category: PUBLICATION_TYPE_LABELS[pub.publication_type],
+        time: formatTimeAgo(pub.published_at ?? pub.created_at),
+      }))
+    : mockPublications;
 
   return (
     <section className="space-y-6">
