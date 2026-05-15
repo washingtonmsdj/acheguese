@@ -4058,18 +4058,24 @@ export type Database = {
       }
       event_participants: {
         Row: {
+          checkin_code: string
+          checked_in_at: string | null
           event_id: string
           id: string
           joined_at: string
           profile_id: string
         }
         Insert: {
+          checkin_code?: string
+          checked_in_at?: string | null
           event_id: string
           id?: string
           joined_at?: string
           profile_id: string
         }
         Update: {
+          checkin_code?: string
+          checked_in_at?: string | null
           event_id?: string
           id?: string
           joined_at?: string

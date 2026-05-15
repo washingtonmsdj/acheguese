@@ -7,4 +7,4 @@
  * @sealed Não importar de outros módulos verticais.
  */
 
-export { default as EmpresasLandingLayout } from "./pages/EmpresasLandingLayout";
+export { EmpresasLandingLayout } from "./pages/EmpresasLandingLayout";

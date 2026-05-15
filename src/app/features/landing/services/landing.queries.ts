@@ -20,6 +20,7 @@ import type {
   NationalStats,
   ActiveTerritoriesWithLanding,
 } from './types';
+import type { Json } from '@/integrations/supabase/types.generated';
 
 interface LocationRow {
   id: string;
@@ -29,7 +30,7 @@ interface LocationRow {
   type: string;
   geographic_path: string;
   parent_id?: string | null;
-  metadata?: Record<string, unknown> | null;
+  metadata?: Json | null;
   status?: string | null;
   parent?: { name?: string | null } | null;
 }
@@ -40,8 +41,19 @@ interface TerritorialGroupRow {
   slug: string;
   description?: string | null;
   anchor_city_id: string;
-  metadata?: Record<string, unknown> | null;
+  metadata?: Json | null;
   anchor_city?: { geographic_path?: string | null } | null;
+}
+
+function asRecord(value: Json | null | undefined): Record<string, unknown> {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return {};
+  return value as Record<string, unknown>;
+}
+
+function getLogoUrlFromJson(value: Json | null | undefined): string | null {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
+  const candidate = (value as { logo_url?: unknown }).logo_url;
+  return typeof candidate === 'string' ? candidate : null;
 }
 
 /**
@@ -108,7 +120,7 @@ export async function getActiveStates(countryCode: string): Promise<StateData[]>
         slug: st.slug,
         type: 'state',
         geographic_path: st.geographic_path,
-        metadata: st.metadata || {},
+        metadata: asRecord(st.metadata),
         status: st.status,
         city_count: count || 0,
       });
@@ -152,7 +164,7 @@ export async function getStateData(countryCode: string, stateSlug: string): Prom
       slug: data.slug,
       type: 'state',
       geographic_path: data.geographic_path,
-      metadata: data.metadata || {},
+      metadata: asRecord(data.metadata),
       status: data.status,
       city_count: 0,
     };
@@ -202,7 +214,7 @@ export async function getActiveCitiesByState(stateId: string): Promise<CityData[
           geographic_path: city.geographic_path,
           parent_id: city.parent_id,
           district_count: count || 0,
-          metadata: city.metadata || {},
+          metadata: asRecord(city.metadata),
         };
       }),
     );
@@ -319,9 +331,9 @@ export async function getPlatformStats(): Promise<PlatformStats> {
     const businessesCount = await BusinessService.getTotalBusinessesCount();
 
     const { count: servicesCount } = await supabase
-      .from('services')
-      .select('*', { count: 'exact', head: true })
-      .eq('status', 'active');
+      .from('professional_data')
+      .select('id', { count: 'exact', head: true })
+      .eq('is_accepting_clients', true);
 
     const stats = {
       cities: citiesCount || 0,
@@ -352,7 +364,7 @@ export async function getVerifiedBusinesses(limit: number = 6): Promise<Verified
     const businesses = await BusinessService.getBusinesses({});
 
     return businesses
-      .filter((b) => b.verified || b.is_premium)
+      .filter((b) => b.is_verified || b.is_premium)
       .sort((a, b) => {
         if (a.is_premium !== b.is_premium) return a.is_premium ? -1 : 1;
         return (b.rating || 0) - (a.rating || 0);
@@ -362,12 +374,12 @@ export async function getVerifiedBusinesses(limit: number = 6): Promise<Verified
         id: b.id,
         name: b.name,
         slug: b.slug || '',
-        category: b.nicho || b.category || '',
+        category: b.category || '',
         logo_url: b.logo_url || null,
-        is_verified: b.verified || false,
+        is_verified: b.is_verified || false,
         is_premium: b.is_premium || false,
         rating: b.rating || 0,
-        city_name: b.city,
+        city_name: b.business_city || null,
         geographic_path: b.geographic_path || '',
       }));
   } catch (error) {
@@ -418,7 +430,7 @@ export async function getNationalBusinesses(limit: number = 6): Promise<National
       profile_id: string;
       business_name: string | null;
       category: string | null;
-      metadata?: { logo_url?: string | null } | null;
+      metadata?: Json | null;
       rating: number | null;
       is_premium: boolean | null;
       is_verified: boolean | null;
@@ -428,7 +440,7 @@ export async function getNationalBusinesses(limit: number = 6): Promise<National
       id: d.profile_id,
       name: d.business_name ?? '',
       category: d.category ?? '',
-      logo_url: d.metadata?.logo_url,
+      logo_url: getLogoUrlFromJson(d.metadata),
       rating: d.rating ?? 0,
       is_premium: d.is_premium ?? false,
       is_verified: d.is_verified ?? false,
@@ -465,7 +477,7 @@ export async function getNationalServices(limit: number = 6): Promise<NationalSe
       id: string;
       professional_name: string | null;
       service_category: string | null;
-      metadata?: { logo_url?: string | null } | null;
+      metadata?: Json | null;
       rating: number | null;
       is_verified: boolean | null;
       price_range: string | null;
@@ -474,7 +486,7 @@ export async function getNationalServices(limit: number = 6): Promise<NationalSe
       id: d.id,
       name: d.professional_name ?? '',
       category: d.service_category ?? '',
-      logo_url: d.metadata?.logo_url,
+      logo_url: getLogoUrlFromJson(d.metadata),
       rating: d.rating ?? 0,
       is_verified: d.is_verified ?? false,
       price_range: d.price_range ?? 'A combinar',

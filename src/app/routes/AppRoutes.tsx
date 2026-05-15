@@ -47,10 +47,10 @@ export function AppRoutes() {
       {/* QR Code Resolver - DEVE VIR ANTES DE OUTRAS ROTAS */}
       <Route path="/q/:token" element={<P.QrResolverPage />} />
       
-      {/* Status Page - P�gina p�blica de status do sistema */}
+      {/* Status Page - Página pública de status do sistema */}
       <Route path="/status" element={<P.StatusPage />} />
       
-      {/* <� EVENTS - Sistema de Eventos */}
+      {/* 🎉 EVENTS - Sistema de Eventos */}
       <Route path="/eventos" element={<P.EventsErrorBoundary><P.EventsListPage /></P.EventsErrorBoundary>} />
       <Route path="/eventos/favoritos" element={<P.EventsErrorBoundary><P.EventsFavoritesPage /></P.EventsErrorBoundary>} />
       <Route path="/eventos/calendario" element={<P.EventsErrorBoundary><P.EventsCalendarPage /></P.EventsErrorBoundary>} />
@@ -61,9 +61,9 @@ export function AppRoutes() {
       <Route path="/eventos/organizador/novo" element={<P.NotFound />} />
       <Route path="/eventos/organizador/editar/:eventId" element={<P.NotFound />} />
       
-      {/* =� EVENTS - Dashboard do Organizador */}
+      {/* 📊 EVENTS - Dashboard do Organizador */}
       
-      {/* Event Detail - Deve vir depois das rotas espec�ficas */}
+      {/* Event Detail - Deve vir depois das rotas específicas */}
       <Route path="/eventos/:eventId" element={<P.EventsErrorBoundary><P.EventDetailPage /></P.EventsErrorBoundary>} />
       
       <Route path="/splash" element={<P.SplashPage />} />

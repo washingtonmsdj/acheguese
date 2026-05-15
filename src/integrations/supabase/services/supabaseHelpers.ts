@@ -8,12 +8,14 @@
 import { supabase } from "@/integrations/supabase";
 import type { Database } from "@/integrations/supabase/types.generated";
 
-type TableName = keyof Database["public"]["Tables"];
+type PublicSchema = Database["public"];
+type TableName = Extract<keyof PublicSchema["Tables"], string>;
 type TableRow<T extends TableName> = Database["public"]["Tables"][T]["Row"];
 type TableInsert<T extends TableName> =
   Database["public"]["Tables"][T]["Insert"];
 type TableUpdate<T extends TableName> =
   Database["public"]["Tables"][T]["Update"];
+type FunctionName = Extract<keyof PublicSchema["Functions"], string>;
 
 export function createTypedQuery<T extends TableName>(tableName: T) {
   type Row = TableRow<T>;
@@ -21,22 +23,35 @@ export function createTypedQuery<T extends TableName>(tableName: T) {
   type Update = TableUpdate<T>;
 
   return {
-    select: (columns = "*") => supabase.from(tableName).select<Row>(columns),
+    select: (columns = "*") => supabase.from(tableName as never).select(columns),
     insert: (data: Insert | Insert[]) =>
-      supabase.from(tableName).insert(data).select<Row>("*"),
+      supabase
+        .from(tableName as never)
+        .insert(data as never)
+        .select("*") as unknown as Promise<{ data: Row[] | null; error: unknown }>,
     update: (data: Update) =>
-      supabase.from(tableName).update(data).select<Row>("*"),
-    delete: () => supabase.from(tableName).delete(),
+      supabase
+        .from(tableName as never)
+        .update(data as never)
+        .select("*") as unknown as Promise<{ data: Row[] | null; error: unknown }>,
+    delete: () => supabase.from(tableName as never).delete(),
     upsert: (data: Insert | Insert[]) =>
-      supabase.from(tableName).upsert(data).select<Row>("*"),
+      supabase
+        .from(tableName as never)
+        .upsert(data as never)
+        .select("*") as unknown as Promise<{ data: Row[] | null; error: unknown }>,
   };
 }
 
-export async function callRPC<T = unknown>(
-  functionName: string,
-  params?: Record<string, unknown>,
-): Promise<{ data: T | null; error: unknown }> {
-  return supabase.rpc(functionName, params);
+export async function callRPC<TResult = unknown, TFunction extends FunctionName = FunctionName>(
+  functionName: TFunction,
+  params?: PublicSchema["Functions"][TFunction]["Args"],
+): Promise<{ data: TResult | null; error: unknown }> {
+  const result = await supabase.rpc(functionName, params);
+  return {
+    data: (result.data as TResult | null) ?? null,
+    error: result.error,
+  };
 }
 
 export async function executeQuery<T>(

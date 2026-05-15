@@ -1,7 +1,7 @@
 /**
  * ðŸ“ EVENT DESCRIPTION V2
  * 
- * SeÃ§Ã£o de descriÃ§Ã£o rica do evento
+ * Seção de descriÃ§Ã£o rica do evento
  * 
  * @version 2.0.0
  */
@@ -33,7 +33,7 @@ export function EventDescription({ event, className }: EventDescriptionProps) {
               Sobre o evento
             </div>
             <h2 className="text-3xl font-bold text-foreground">
-              O que vocÃª vai encontrar
+              O que você vai encontrar
             </h2>
           </div>
 
@@ -94,7 +94,7 @@ export function EventDescription({ event, className }: EventDescriptionProps) {
                   <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-amber-500/10">
                     <AlertCircle className="h-5 w-5 text-amber-500" />
                   </div>
-                  <h3 className="text-lg font-bold text-foreground">ClassificaÃ§Ã£o</h3>
+                  <h3 className="text-lg font-bold text-foreground">Classificação</h3>
                 </div>
                 <p className="text-sm text-muted-foreground">{event.age_restriction}</p>
               </div>
@@ -128,7 +128,7 @@ export function EventDescription({ event, className }: EventDescriptionProps) {
                 {event.features.has_recording && (
                   <div className="flex items-center gap-2 text-sm">
                     <CheckCircle2 className="h-4 w-4 text-primary" />
-                    <span className="text-muted-foreground">GravaÃ§Ã£o disponÃ­vel</span>
+                    <span className="text-muted-foreground">Gravação disponível</span>
                   </div>
                 )}
                 {event.features.has_networking && (
@@ -140,7 +140,7 @@ export function EventDescription({ event, className }: EventDescriptionProps) {
                 {event.features.has_food && (
                   <div className="flex items-center gap-2 text-sm">
                     <CheckCircle2 className="h-4 w-4 text-primary" />
-                    <span className="text-muted-foreground">AlimentaÃ§Ã£o</span>
+                    <span className="text-muted-foreground">Alimentação</span>
                   </div>
                 )}
                 {event.features.has_parking && (
@@ -152,7 +152,7 @@ export function EventDescription({ event, className }: EventDescriptionProps) {
                 {event.features.is_accessible && (
                   <div className="flex items-center gap-2 text-sm">
                     <CheckCircle2 className="h-4 w-4 text-primary" />
-                    <span className="text-muted-foreground">AcessÃ­vel</span>
+                    <span className="text-muted-foreground">Acessível</span>
                   </div>
                 )}
               </div>

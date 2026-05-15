@@ -60,6 +60,7 @@ export { useActiveRide } from "./hooks/useActiveRide";
 export { useRideHistory } from "./hooks/useRideHistory";
 export { useDelivery } from "./hooks/useDelivery";
 export { useMotoboy } from "./hooks/useMotoboy";
+export type { CreateDeliveryData, DeliveryProof } from "./hooks/useDelivery";
 
 // Hooks - Driver (exports básicos apenas)
 export { useDriverProfile } from "./hooks/useDriverProfile";

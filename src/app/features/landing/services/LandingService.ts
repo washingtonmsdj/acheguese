@@ -54,3 +54,7 @@ export const LandingFacade = {
   queries: landingQueries,
 } as const;
 
+// Backward-compatible aliases used by public barrels.
+export const LandingService = LandingFacade;
+export const landingService = LandingFacade;
+

@@ -2,7 +2,7 @@
  * ðŸ“Š EVENT ANALYTICS CARD
  * 
  * Card com analytics detalhados de um evento
- * GrÃ¡ficos, mÃ©tricas e insights
+ * Gráficos, métricas e insights
  * 
  * @version 1.0.0
  */
@@ -75,7 +75,7 @@ export function EventAnalyticsCard({ event, className }: EventAnalyticsCardProps
           </CardTitle>
           <Badge variant="outline" className="gap-1">
             <Calendar className="h-3 w-3" />
-            Ãšltimos 30 dias
+            Últimos 30 dias
           </Badge>
         </div>
       </CardHeader>
@@ -111,7 +111,7 @@ export function EventAnalyticsCard({ event, className }: EventAnalyticsCardProps
                 <p className="text-2xl font-bold text-foreground">
                   {analytics.views.total.toLocaleString('pt-BR')}
                 </p>
-                <p className="text-xs text-muted-foreground">VisualizaÃ§Ãµes</p>
+                <p className="text-xs text-muted-foreground">Visualizações</p>
                 <p className="mt-1 text-xs text-muted-foreground">
                   +{analytics.views.lastWeek} esta semana
                 </p>
@@ -228,7 +228,7 @@ export function EventAnalyticsCard({ event, className }: EventAnalyticsCardProps
           <div className="rounded-lg border border-border bg-muted/30 p-4">
             <h4 className="mb-4 flex items-center gap-2 text-sm font-semibold text-foreground">
               <PieChart className="h-4 w-4" />
-              Origem do TrÃ¡fego
+              Origem do Tráfego
             </h4>
             <div className="space-y-3">
               {Object.entries(analytics.traffic).map(([source, percentage]) => (
@@ -237,7 +237,7 @@ export function EventAnalyticsCard({ event, className }: EventAnalyticsCardProps
                     <span className="capitalize text-muted-foreground">
                       {source === 'direct' ? 'Direto' : 
                        source === 'social' ? 'Redes Sociais' :
-                       source === 'search' ? 'Busca' : 'ReferÃªncia'}
+                       source === 'search' ? 'Busca' : 'Referência'}
                     </span>
                     <span className="font-medium text-foreground">{percentage}%</span>
                   </div>

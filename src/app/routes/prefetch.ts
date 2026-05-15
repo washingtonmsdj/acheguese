@@ -102,7 +102,7 @@ function runIdle(callback: () => void): void {
     return;
   }
 
-  window.setTimeout(callback, 350);
+  globalThis.setTimeout(callback, 350);
 }
 
 /**

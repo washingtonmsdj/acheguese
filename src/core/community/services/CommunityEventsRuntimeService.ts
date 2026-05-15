@@ -1,6 +1,5 @@
 import { supabase } from "@/integrations/supabase/supabase";
-import { applyTerritoryFilter } from "@/core/location/utils/applyTerritoryFilter";
-import type { TerritoryFilter } from "@/core/location/types/TerritoryFilter";
+import type { TerritoryFilter } from "@/core/location/types";
 import { logger } from "@/shared/utils/logger";
 
 export interface CommunityEvent {
@@ -61,6 +60,24 @@ export interface GetEventsPageOutput {
   totalCount: number;
   hasMore: boolean;
   nextPage: number | null;
+}
+
+export interface EventParticipantRow {
+  profile_id: string;
+  joined_at: string;
+  checked_in_at: string | null;
+  profiles:
+    | {
+        id: string;
+        name: string | null;
+        avatar_url: string | null;
+      }
+    | Array<{
+        id: string;
+        name: string | null;
+        avatar_url: string | null;
+      }>
+    | null;
 }
 
 function buildMockEventDate(daysAhead: number, hour = 18): string {
@@ -230,7 +247,11 @@ class CommunityEventsRuntimeService {
       if (filters?.status) query = query.eq("status", filters.status);
       if (filters?.upcoming) query = query.gte("date", new Date().toISOString());
       if (filters?.territoryFilter) {
-        query = applyTerritoryFilter(query, filters.territoryFilter, "location_id");
+        if (filters.territoryFilter.scope === "location") {
+          query = query.eq("location_id", filters.territoryFilter.location_id);
+        } else if (filters.territoryFilter.scope === "group") {
+          query = query.in("location_id", filters.territoryFilter.location_ids);
+        }
       }
 
       const { data, error } = await query;
@@ -257,10 +278,14 @@ class CommunityEventsRuntimeService {
       if (input.status) query = query.eq("status", input.status);
       if (input.upcoming) query = query.gte("date", new Date().toISOString());
       if (input.territoryFilter) {
-        query = applyTerritoryFilter(query, input.territoryFilter, "location_id");
+        if (input.territoryFilter.scope === "location") {
+          query = query.eq("location_id", input.territoryFilter.location_id);
+        } else if (input.territoryFilter.scope === "group") {
+          query = query.in("location_id", input.territoryFilter.location_ids);
+        }
       }
       if (input.search?.trim()) {
-        const search = input.search.trim().replaceAll(",", " ");
+        const search = input.search.trim().replace(/,/g, " ");
         query = query.or(`title.ilike.%${search}%,description.ilike.%${search}%,location.ilike.%${search}%`);
       }
 
@@ -317,7 +342,11 @@ class CommunityEventsRuntimeService {
         .limit(limit);
 
       if (territoryFilter) {
-        query = applyTerritoryFilter(query, territoryFilter, "location_id");
+        if (territoryFilter.scope === "location") {
+          query = query.eq("location_id", territoryFilter.location_id);
+        } else if (territoryFilter.scope === "group") {
+          query = query.in("location_id", territoryFilter.location_ids);
+        }
       }
 
       const { data, error } = await query;
@@ -424,18 +453,137 @@ class CommunityEventsRuntimeService {
     }
   }
 
-  async getEventParticipants(eventId: string) {
+  async getEventParticipants(eventId: string): Promise<EventParticipantRow[]> {
     try {
       const { data, error } = await supabase
         .from("event_participants")
-        .select("profile_id, profiles(id, name, avatar_url)")
+        .select("profile_id, joined_at, checked_in_at, profiles(id, name, avatar_url)")
         .eq("event_id", eventId);
 
       if (error) throw error;
-      return data || [];
+      return ((data || []) as unknown as EventParticipantRow[]);
     } catch (error) {
       logger.error("CommunityEventsRuntimeService.getEventParticipants", error);
       return [];
+    }
+  }
+
+  async getParticipantCheckinCode(eventId: string, profileId: string): Promise<string> {
+    try {
+      const { data, error } = await supabase
+        .from("event_participants")
+        .select("checkin_code")
+        .eq("event_id", eventId)
+        .eq("profile_id", profileId)
+        .maybeSingle();
+
+      if (error) throw error;
+      const code = (data as { checkin_code?: string } | null)?.checkin_code;
+      if (!code) throw new Error("Participação no evento não encontrada.");
+      return code;
+    } catch (error: unknown) {
+      logger.error("CommunityEventsRuntimeService.getParticipantCheckinCode", error);
+      throw new Error(`Erro ao gerar token de check-in: ${this.getErrorMessage(error)}`);
+    }
+  }
+
+  async checkInEvent(eventId: string, profileId: string): Promise<string> {
+    try {
+      const { data: existing, error: existingError } = await supabase
+        .from("event_participants")
+        .select("checked_in_at")
+        .eq("event_id", eventId)
+        .eq("profile_id", profileId)
+        .maybeSingle();
+
+      if (existingError) throw existingError;
+      const existingCheckedInAt = (existing as { checked_in_at?: string } | null)?.checked_in_at;
+      if (existingCheckedInAt) {
+        return existingCheckedInAt;
+      }
+
+      const now = new Date().toISOString();
+      const { data, error } = await supabase
+        .from("event_participants")
+        .update({ checked_in_at: now } as { checked_in_at: string })
+        .eq("event_id", eventId)
+        .eq("profile_id", profileId)
+        .select("checked_in_at")
+        .maybeSingle();
+
+      if (error) throw error;
+      if (!data) {
+        throw new Error("Participação no evento não encontrada para este perfil.");
+      }
+
+      return (data as { checked_in_at?: string }).checked_in_at ?? now;
+    } catch (error: unknown) {
+      logger.error("CommunityEventsRuntimeService.checkInEvent", error);
+      throw new Error(`Erro ao fazer check-in: ${this.getErrorMessage(error)}`);
+    }
+  }
+
+  async checkInEventByCode(eventId: string, checkinCode: string): Promise<{ profileId: string; checkedInAt: string }> {
+    try {
+      const { data: existing, error: existingError } = await supabase
+        .from("event_participants")
+        .select("profile_id, checked_in_at")
+        .eq("event_id", eventId)
+        .eq("checkin_code", checkinCode)
+        .maybeSingle();
+
+      if (existingError) throw existingError;
+      if (!existing) {
+        throw new Error("Código de check-in inválido para este evento.");
+      }
+
+      const existingRow = existing as { profile_id: string; checked_in_at?: string };
+      if (existingRow.checked_in_at) {
+        return {
+          profileId: existingRow.profile_id,
+          checkedInAt: existingRow.checked_in_at,
+        };
+      }
+
+      const now = new Date().toISOString();
+      const { data, error } = await supabase
+        .from("event_participants")
+        .update({ checked_in_at: now } as { checked_in_at: string })
+        .eq("event_id", eventId)
+        .eq("checkin_code", checkinCode)
+        .select("profile_id, checked_in_at")
+        .maybeSingle();
+
+      if (error) throw error;
+      if (!data) {
+        throw new Error("Código de check-in inválido para este evento.");
+      }
+
+      const row = data as { profile_id: string; checked_in_at?: string };
+      return {
+        profileId: row.profile_id,
+        checkedInAt: row.checked_in_at ?? now,
+      };
+    } catch (error: unknown) {
+      logger.error("CommunityEventsRuntimeService.checkInEventByCode", error);
+      throw new Error(`Erro ao validar check-in por código: ${this.getErrorMessage(error)}`);
+    }
+  }
+
+  async getCheckInStatus(eventId: string, profileId: string): Promise<string | null> {
+    try {
+      const { data, error } = await supabase
+        .from("event_participants")
+        .select("checked_in_at")
+        .eq("event_id", eventId)
+        .eq("profile_id", profileId)
+        .maybeSingle();
+
+      if (error) throw error;
+      return (data as { checked_in_at?: string } | null)?.checked_in_at ?? null;
+    } catch (error) {
+      logger.error("CommunityEventsRuntimeService.getCheckInStatus", error);
+      return null;
     }
   }
 
@@ -515,6 +663,10 @@ export class EventsService {
   static leaveEvent = communityEventsRuntimeService.leaveEvent.bind(communityEventsRuntimeService);
   static isParticipating = communityEventsRuntimeService.isParticipating.bind(communityEventsRuntimeService);
   static getEventParticipants = communityEventsRuntimeService.getEventParticipants.bind(communityEventsRuntimeService);
+  static getParticipantCheckinCode = communityEventsRuntimeService.getParticipantCheckinCode.bind(communityEventsRuntimeService);
+  static checkInEvent = communityEventsRuntimeService.checkInEvent.bind(communityEventsRuntimeService);
+  static checkInEventByCode = communityEventsRuntimeService.checkInEventByCode.bind(communityEventsRuntimeService);
+  static getCheckInStatus = communityEventsRuntimeService.getCheckInStatus.bind(communityEventsRuntimeService);
   static getEventsByOrganizerProfile = communityEventsRuntimeService.getEventsByOrganizerProfile.bind(communityEventsRuntimeService);
   static getTotalEventsCount = communityEventsRuntimeService.getTotalEventsCount.bind(communityEventsRuntimeService);
   static getRecentEvents = communityEventsRuntimeService.getRecentEvents.bind(communityEventsRuntimeService);

@@ -1,8 +1,8 @@
 ﻿/**
- * DadosPessoaisSection - SeÃ§Ã£o de dados pessoais do perfil
+ * DadosPessoaisSection - Seção de dados pessoais do perfil
  * 
  * SSOT: Componente isolado com props tipadas
- * Sem gambiarras: LÃ³gica clara e organizada
+ * Sem gambiarras: Lógica clara e organizada
  */
 
 import {

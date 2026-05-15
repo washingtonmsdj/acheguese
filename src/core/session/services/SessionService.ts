@@ -32,9 +32,13 @@ export class SessionService {
   private static readonly debugLogs =
     import.meta.env.DEV && import.meta.env.VITE_DEBUG_SESSION === "true";
   private static debug(...args: unknown[]): void {
-    if (SessionService.debugLogs) {
-      logger.debug(...args);
+    if (!SessionService.debugLogs || args.length === 0) return;
+    const [message, ...context] = args;
+    if (typeof message === "string") {
+      logger.debug(message, context.length <= 1 ? context[0] : context);
+      return;
     }
+    logger.debug(String(message), context.length <= 1 ? context[0] : context);
   }
 
   private static initialized = false;
@@ -403,7 +407,7 @@ export class SessionService {
       id: dbProfile.id,
       userId: dbProfile.user_id,
       name: dbProfile.name,
-      displayName: dbProfile.display_name,
+      displayName: dbProfile.display_name ?? dbProfile.name,
       username: dbProfile.username,
       avatarUrl: dbProfile.avatar_url,
       bio: dbProfile.bio,
@@ -411,7 +415,7 @@ export class SessionService {
       city: dbProfile.city,
       neighborhood: dbProfile.neighborhood,
       state: dbProfile.state ?? null,
-      telefone: dbProfile.telefone ?? null,
+      phone: dbProfile.telefone ?? null,
       whatsapp: dbProfile.whatsapp ?? null,
       locationId: dbProfile.location_id ?? null,
       isActive: dbProfile.is_active,

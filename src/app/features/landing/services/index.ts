@@ -3,6 +3,8 @@
  */
 
 export {
+  LandingService,
+  landingService,
   getCountryData,
   getActiveStates,
   getStateData,

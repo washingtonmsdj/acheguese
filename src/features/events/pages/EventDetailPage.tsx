@@ -1,5 +1,5 @@
 /**
- * �x}0 EVENT DETAIL PAGE V2
+ * 🎉 EVENT DETAIL PAGE V2
  * 
  * Página de detalhes de evento - Versão Premium
  * Inspirada em Sympla, Eventbrite e plataformas profissionais
@@ -22,8 +22,8 @@
  * @author Kiro AI
  */
 
-import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useEffect, useRef, useState } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useParams } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { motion } from 'framer-motion';
@@ -35,7 +35,8 @@ import {
   Share2,
   Heart,
   Bookmark,
-  ExternalLink
+  ExternalLink,
+  CheckCircle2
 } from 'lucide-react';
 import { EventHero } from '../components/EventHero';
 import { EventTickets } from '../components/EventTickets';
@@ -51,6 +52,8 @@ import { EventReminders } from '../components/EventReminders';
 import { EventReviews } from '../components/EventReviews';
 import { EventCheckin } from '../components/EventCheckin';
 import { Button } from '@/shared/components/ui/button';
+import { useToast } from '@/shared/hooks/use-toast';
+import { useSessionContext } from '@/core/session';
 import { useFavorites } from '../hooks/useFavorites';
 import { cn } from '@/shared/utils/cn';
 import { communityEventsRuntimeService } from '@/core/community/services/CommunityEventsRuntimeService';
@@ -62,8 +65,15 @@ import { mapCommunityEventToEvent } from '../utils/eventAdapters';
 
 export default function EventDetailPage() {
   const { eventId } = useParams();
+  const ticketsSectionRef = useRef<HTMLElement | null>(null);
   const [showShareModal, setShowShareModal] = useState(false);
+  const [isParticipating, setIsParticipating] = useState(false);
+  const [isRegistering, setIsRegistering] = useState(false);
+  const [isCancelling, setIsCancelling] = useState(false);
   const { isFavorited, toggleFavorite } = useFavorites();
+  const { toast } = useToast();
+  const { activeProfile } = useSessionContext();
+  const queryClient = useQueryClient();
 
   const { data: event, isLoading } = useQuery({
     queryKey: ['event-detail-ssot', eventId],
@@ -84,6 +94,32 @@ export default function EventDetailPage() {
       return rows.map(mapCommunityEventToEvent).filter((candidate) => candidate.id !== event?.id);
     },
   });
+
+  useEffect(() => {
+    let mounted = true;
+
+    async function loadParticipationState() {
+      if (!event?.id || !activeProfile?.id) {
+        if (mounted) setIsParticipating(false);
+        return;
+      }
+
+      const participating = await communityEventsRuntimeService.isParticipating(
+        event.id,
+        activeProfile.id
+      );
+
+      if (mounted) {
+        setIsParticipating(participating);
+      }
+    }
+
+    loadParticipationState();
+
+    return () => {
+      mounted = false;
+    };
+  }, [event?.id, activeProfile?.id]);
 
   if (isLoading) {
     return <div className="min-h-[40vh] animate-pulse bg-muted/30" />;
@@ -107,13 +143,144 @@ export default function EventDetailPage() {
   };
 
   const handleSelectTicket = (ticketId: string) => {
-    console.log('Selected ticket:', ticketId);
-    // Implement ticket selection
+    if (isRegistering || isCancelling) {
+      return;
+    }
+
+    const selectedTicket = event.tickets.find((ticket) => ticket.id === ticketId);
+    if (!selectedTicket) {
+      toast({
+        title: 'Ingresso indisponível',
+        description: 'Não foi possível selecionar este ingresso agora.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (!activeProfile?.id) {
+      toast({
+        title: 'Faça login para garantir vaga',
+        description: 'Entre com sua conta para concluir a inscrição no evento.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (isParticipating) {
+      toast({
+        title: 'Inscrição já confirmada',
+        description: 'Você já está inscrito neste evento.',
+      });
+      return;
+    }
+
+    setIsRegistering(true);
+
+    communityEventsRuntimeService
+      .joinEvent(event.id, activeProfile.id)
+      .then(async () => {
+        setIsParticipating(true);
+        await Promise.all([
+          queryClient.invalidateQueries({ queryKey: ['event-detail-ssot', eventId] }),
+          queryClient.invalidateQueries({ queryKey: ['event-related-ssot'] }),
+          queryClient.invalidateQueries({ queryKey: ['events-organizer-dashboard'] }),
+        ]);
+
+        toast({
+          title: selectedTicket.is_free ? 'Vaga garantida' : 'Ingresso reservado',
+          description: selectedTicket.is_free
+            ? `${selectedTicket.name} confirmado para este evento.`
+            : `${selectedTicket.name} registrado. Confira os próximos passos no evento.`,
+        });
+      })
+      .catch((error: unknown) => {
+        toast({
+          title: 'Falha ao confirmar inscrição',
+          description:
+            error instanceof Error
+              ? error.message
+              : 'Não foi possível concluir sua inscrição agora.',
+          variant: 'destructive',
+        });
+      })
+      .finally(() => {
+        setIsRegistering(false);
+      });
   };
 
   const handleCTAAction = () => {
-    console.log('CTA clicked');
-    // Implement CTA action
+    if (isRegistering || isCancelling) {
+      return;
+    }
+
+    if (isParticipating) {
+      toast({
+        title: 'Inscrição já confirmada',
+        description: 'Você já está inscrito neste evento.',
+      });
+      return;
+    }
+
+    const firstAvailableTicket = event.tickets.find(
+      (ticket) => ticket.status === 'disponivel' && ticket.quantity_available > 0
+    );
+
+    if (!firstAvailableTicket) {
+      ticketsSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      toast({
+        title: 'Sem vagas no momento',
+        description: 'Este evento está sem ingressos disponíveis.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    ticketsSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    handleSelectTicket(firstAvailableTicket.id);
+  };
+
+  const handleCancelRegistration = () => {
+    if (!activeProfile?.id || !isParticipating || isRegistering || isCancelling) {
+      return;
+    }
+
+    const confirmed = window.confirm(
+      'Tem certeza que deseja cancelar sua inscrição neste evento?'
+    );
+    if (!confirmed) {
+      return;
+    }
+
+    setIsCancelling(true);
+
+    communityEventsRuntimeService
+      .leaveEvent(event.id, activeProfile.id)
+      .then(async () => {
+        setIsParticipating(false);
+        await Promise.all([
+          queryClient.invalidateQueries({ queryKey: ['event-detail-ssot', eventId] }),
+          queryClient.invalidateQueries({ queryKey: ['event-related-ssot'] }),
+          queryClient.invalidateQueries({ queryKey: ['events-organizer-dashboard'] }),
+        ]);
+
+        toast({
+          title: 'Inscrição cancelada',
+          description: 'Sua vaga foi liberada neste evento.',
+        });
+      })
+      .catch((error: unknown) => {
+        toast({
+          title: 'Falha ao cancelar inscrição',
+          description:
+            error instanceof Error
+              ? error.message
+              : 'Não foi possível cancelar sua inscrição agora.',
+          variant: 'destructive',
+        });
+      })
+      .finally(() => {
+        setIsCancelling(false);
+      });
   };
 
   return (
@@ -149,12 +316,63 @@ export default function EventDetailPage() {
 
         {/* Main Content */}
         <div className="mx-auto max-w-7xl">
+          {(isParticipating || isRegistering || isCancelling) && (
+            <section className="pt-8">
+              <div className="mx-auto max-w-4xl px-4 sm:px-6">
+                <div className="rounded-2xl border border-emerald-500/30 bg-emerald-500/10 p-4 sm:p-5">
+                  <div className="flex items-start gap-3">
+                    <CheckCircle2 className="mt-0.5 h-5 w-5 text-emerald-600" />
+                    <div>
+                      <p className="text-sm font-semibold text-emerald-700">
+                        {isRegistering
+                          ? 'Confirmando sua inscrição...'
+                          : isCancelling
+                          ? 'Cancelando inscrição...'
+                          : 'Inscrição confirmada'}
+                      </p>
+                      <p className="text-sm text-emerald-700/90">
+                        {isRegistering
+                          ? 'Estamos finalizando sua vaga neste evento.'
+                          : isCancelling
+                          ? 'Estamos processando o cancelamento da sua vaga.'
+                          : 'Sua vaga já está garantida e registrada para o organizador.'}
+                      </p>
+                    </div>
+                  </div>
+                  {isParticipating && !isRegistering && (
+                    <div className="mt-4">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={handleCancelRegistration}
+                        disabled={isCancelling}
+                        className="border-emerald-600/30 bg-white/60 text-emerald-800 hover:bg-white"
+                      >
+                        {isCancelling ? 'Cancelando...' : 'Cancelar inscrição'}
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </section>
+          )}
+
           {/* Tickets Section */}
-          <EventTickets
-            tickets={event.tickets}
-            isFree={event.is_free}
-            onSelectTicket={handleSelectTicket}
-          />
+          <section ref={ticketsSectionRef}>
+            <EventTickets
+              tickets={event.tickets}
+              isFree={event.is_free}
+              onSelectTicket={handleSelectTicket}
+              disabled={isParticipating || isRegistering || isCancelling}
+              disabledLabel={
+                isRegistering
+                  ? 'Processando...'
+                  : isCancelling
+                  ? 'Cancelando...'
+                  : 'Inscrição confirmada'
+              }
+            />
+          </section>
 
           {/* Description Section */}
           <EventDescription event={event} />
@@ -329,12 +547,21 @@ export default function EventDetailPage() {
         <EventCTA
           cta={{
             type: 'register',
-            label: event.is_free ? 'Inscrição gratuita' : 'Comprar ingresso',
+            label: isRegistering
+              ? 'Processando inscrição...'
+              : isCancelling
+              ? 'Cancelando inscrição...'
+              : isParticipating
+              ? 'Inscrição confirmada'
+              : event.is_free
+              ? 'Inscrição gratuita'
+              : 'Comprar ingresso',
             action: '/register',
             enabled: true
           }}
           isFree={event.is_free}
           isSoldOut={isSoldOut}
+          disabled={isParticipating || isRegistering || isCancelling}
           onAction={handleCTAAction}
         />
       </div>

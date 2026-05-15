@@ -22,3 +22,5 @@ export function EmpresasLandingLayout({ children }: EmpresasLandingLayoutProps) 
     </div>
   );
 }
+
+export default EmpresasLandingLayout;

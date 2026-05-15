@@ -29,7 +29,7 @@
     "types": ["vitest/globals"],
     "useDefineForClassFields": true
   },
-  "include": ["src", ".archive/PerfilHubPage.original.tsx", ".archive/ServiceCard.old.tsx", ".archive/EventCard.old.tsx", ".archive/GrupoCard.old.tsx"],
+  "include": ["src"],
   "exclude": [
     "src/integrations/supabase/types.ts",
     "src/**/*.test.ts",

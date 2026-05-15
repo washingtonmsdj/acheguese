@@ -25,6 +25,17 @@ As entradas publicas de core por dominio sao:
 - `core/community-lost-found`
 - `core/nearby` para descoberta transversal
 
+## Comunicacao Territorial
+
+`Comunicacao Territorial` nao e submodulo social de `community`. E uma camada institucional/editorial separada, documentada em [COMUNICACAO_TERRITORIAL_ARCHITECTURE.md](./COMUNICACAO_TERRITORIAL_ARCHITECTURE.md).
+
+Regras:
+
+- Rotas canonicas editoriais usam `/comunicacao/...`, nao `/comunidade/...`.
+- Conteudo institucional pode aparecer no feed comunitario como agregacao, mas a fonte primaria deve ser o dominio de comunicacao.
+- Alertas institucionais devem consumir a infraestrutura de `core/community-alerts` e `core/notifications`, sem duplicar stack de alerta/push.
+- A autorizacao territorial continua baseada em `location_id`.
+
 ## Boundaries
 
 - Modulos transversais nao importam outros modulos `src/modules/*`.

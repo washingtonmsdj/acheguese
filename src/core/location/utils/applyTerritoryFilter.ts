@@ -6,24 +6,26 @@
 
 import type { TerritoryFilter } from '../types';
 
-type TerritorialQuery<TSelf> = {
-  eq: (column: string, value: string) => TSelf;
-  in: (column: string, values: string[]) => TSelf;
+type TerritorialQuery = {
+  eq: (column: string, value: string) => unknown;
+  in: (column: string, values: string[]) => unknown;
 };
 
 /**
  * Aplica filtro territorial a uma query do Supabase.
  */
-export function applyTerritoryFilter<T extends TerritorialQuery<T>>(
+export function applyTerritoryFilter<T extends TerritorialQuery>(
   query: T,
   filter: TerritoryFilter,
 ): T {
   if (filter.scope === 'location') {
-    return query.eq('location_id', filter.location_id);
+    query.eq('location_id', filter.location_id);
+    return query;
   }
 
   if (filter.scope === 'group') {
-    return query.in('location_id', filter.location_ids);
+    query.in('location_id', filter.location_ids);
+    return query;
   }
 
   return query;

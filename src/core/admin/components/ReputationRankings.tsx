@@ -18,7 +18,29 @@ import { profileService } from "@/core/profiles/services/ProfileService"; // ✅
 import { adminMobilityRuntimeService } from "@/core/admin/services/AdminMobilityRuntimeService";
 
 type TopPassenger = Awaited<ReturnType<typeof profileService.getTopPassengers>>[number];
-type TopDriver = Awaited<ReturnType<typeof adminMobilityRuntimeService.getTopDrivers>>[number];
+interface TopDriver {
+  id: string;
+  name: string | null;
+  total_rides: number;
+  rating: number | null;
+  profile?: { avatar_url?: string | null } | null;
+}
+
+function mapTopDriver(value: unknown): TopDriver | null {
+  if (!value || typeof value !== "object") return null;
+  const row = value as Record<string, unknown>;
+  if (typeof row.id !== "string") return null;
+  return {
+    id: row.id,
+    name: typeof row.name === "string" ? row.name : null,
+    total_rides: typeof row.total_rides === "number" ? row.total_rides : 0,
+    rating: typeof row.rating === "number" ? row.rating : null,
+    profile:
+      row.profile && typeof row.profile === "object"
+        ? (row.profile as { avatar_url?: string | null })
+        : null,
+  };
+}
 
 export function ReputationRankings() {
   const [topPassengers, setTopPassengers] = useState<TopPassenger[]>([]);
@@ -40,12 +62,14 @@ export function ReputationRankings() {
       setTopPassengers(passengers || []);
 
       // ✅ SSOT - Usar MobilityService para top motoristas
-      const drivers = await adminMobilityRuntimeService.getTopDrivers({
+      const driversRaw = await adminMobilityRuntimeService.getTopDrivers({
         minRides: 1,
         limit: 10,
       });
-
-      setTopDrivers(drivers || []);
+      const drivers = (driversRaw ?? [])
+        .map(mapTopDriver)
+        .filter((driver): driver is TopDriver => Boolean(driver));
+      setTopDrivers(drivers);
     } catch (error) {
       logger.error("Error loading rankings:", error);
       toast.error("Erro ao carregar rankings");

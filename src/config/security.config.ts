@@ -180,9 +180,7 @@ export const SECURITY_DOMAINS = {
   },
 } as const;
 
-const IS_DEV = typeof import.meta !== 'undefined' &&
-  typeof (import.meta as Record<string, unknown>).env !== 'undefined' &&
-  !!(import.meta as { env?: { DEV?: boolean } }).env?.DEV;
+const IS_DEV = typeof import.meta !== 'undefined' && Boolean(import.meta.env?.DEV);
 /**
  * Extract URLs from domain registry
  */

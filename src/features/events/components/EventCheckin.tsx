@@ -24,53 +24,92 @@ import { Button } from '@/shared/components/ui/button';
 import { Badge } from '@/shared/components/ui/badge';
 import { cn } from '@/shared/utils/cn';
 import QRCodeLib from 'qrcode';
+import { useToast } from '@/shared/hooks/use-toast';
+import { useSessionContext } from '@/core/session';
+import { communityEventsRuntimeService } from '@/core/community/services/CommunityEventsRuntimeService';
 import type { Event } from '../types';
-
-interface CheckinData {
-  eventId: string;
-  userId: string;
-  checkinTime: string;
-  confirmed: boolean;
-}
 
 interface EventCheckinProps {
   event: Event;
-  userId?: string;
 }
 
-const STORAGE_KEY = 'acheguese_event_checkins';
-
-export function EventCheckin({ event, userId = 'guest-user' }: EventCheckinProps) {
+export function EventCheckin({ event }: EventCheckinProps) {
   const [qrCodeUrl, setQrCodeUrl] = useState<string>('');
   const [isCheckedIn, setIsCheckedIn] = useState(false);
   const [checkinTime, setCheckinTime] = useState<string>('');
   const [showCertificate, setShowCertificate] = useState(false);
   const [showQRCode, setShowQRCode] = useState(false);
+  const [isLoadingCheckin, setIsLoadingCheckin] = useState(false);
+  const { toast } = useToast();
+  const { activeProfile } = useSessionContext();
 
-  // Check if already checked in
+  // Check if already checked in (backend)
   useEffect(() => {
-    try {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      if (stored) {
-        const checkins: CheckinData[] = JSON.parse(stored);
-        const checkin = checkins.find(c => c.eventId === event.id && c.userId === userId);
-        if (checkin) {
-          setIsCheckedIn(true);
-          setCheckinTime(checkin.checkinTime);
+    let mounted = true;
+
+    async function loadCheckinStatus() {
+      if (!activeProfile?.id) {
+        if (mounted) {
+          setIsCheckedIn(false);
+          setCheckinTime('');
         }
+        return;
       }
-    } catch (error) {
-      console.error('Failed to load checkin:', error);
+
+      const checkedInAt = await communityEventsRuntimeService.getCheckInStatus(
+        event.id,
+        activeProfile.id
+      );
+
+      if (mounted) {
+        setIsCheckedIn(Boolean(checkedInAt));
+        setCheckinTime(checkedInAt ?? '');
+      }
     }
-  }, [event.id, userId]);
+
+    loadCheckinStatus();
+
+    return () => {
+      mounted = false;
+    };
+  }, [event.id, activeProfile?.id]);
 
   // Generate QR Code
   const generateQRCode = async () => {
+    if (!activeProfile?.id) {
+      toast({
+        title: 'Faça login para check-in',
+        description: 'Entre com sua conta para gerar o QR Code oficial.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     try {
+      const participating = await communityEventsRuntimeService.isParticipating(
+        event.id,
+        activeProfile.id
+      );
+      if (!participating) {
+        toast({
+          title: 'Inscrição necessária',
+          description: 'Garanta sua vaga antes de gerar o QR de check-in.',
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      const checkinCode = await communityEventsRuntimeService.getParticipantCheckinCode(
+        event.id,
+        activeProfile.id
+      );
+
       const checkinData = {
         eventId: event.id,
         eventTitle: event.title,
-        userId,
+        profileId: activeProfile.id,
+        profileName: activeProfile.name ?? '',
+        checkinCode,
         timestamp: new Date().toISOString(),
       };
 
@@ -90,28 +129,52 @@ export function EventCheckin({ event, userId = 'guest-user' }: EventCheckinProps
     }
   };
 
-  // Perform check-in
-  const handleCheckin = () => {
-    const now = new Date().toISOString();
-    
-    try {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      const checkins: CheckinData[] = stored ? JSON.parse(stored) : [];
-      
-      checkins.push({
-        eventId: event.id,
-        userId,
-        checkinTime: now,
-        confirmed: true,
+  // Perform check-in (backend)
+  const handleCheckin = async () => {
+    if (!activeProfile?.id) {
+      toast({
+        title: 'Faça login para check-in',
+        description: 'Entre com sua conta para confirmar presença.',
+        variant: 'destructive',
       });
+      return;
+    }
 
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(checkins));
-      
+    setIsLoadingCheckin(true);
+    try {
+      const participating = await communityEventsRuntimeService.isParticipating(
+        event.id,
+        activeProfile.id
+      );
+      if (!participating) {
+        toast({
+          title: 'Inscrição necessária',
+          description: 'Garanta sua vaga antes de fazer check-in.',
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      const checkedInAt = await communityEventsRuntimeService.checkInEvent(
+        event.id,
+        activeProfile.id
+      );
+
       setIsCheckedIn(true);
-      setCheckinTime(now);
+      setCheckinTime(checkedInAt);
       setShowQRCode(false);
+      toast({
+        title: 'Check-in confirmado',
+        description: 'Seu check-in foi registrado com sucesso.',
+      });
     } catch (error) {
-      console.error('Failed to save checkin:', error);
+      toast({
+        title: 'Falha no check-in',
+        description: error instanceof Error ? error.message : 'Não foi possível concluir o check-in.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsLoadingCheckin(false);
     }
   };
 
@@ -126,7 +189,7 @@ export function EventCheckin({ event, userId = 'guest-user' }: EventCheckinProps
     const certificateText = `
 CERTIFICADO DE PARTICIPAÃ‡ÃƒO
 
-Certificamos que vocÃª participou do evento:
+Certificamos que você participou do evento:
 
 ${event.title}
 
@@ -167,7 +230,7 @@ Achegue-se - Plataforma de Eventos
         <>
           {/* Pre Check-in */}
           <p className="mb-4 text-sm text-muted-foreground">
-            FaÃ§a o check-in no evento para confirmar sua presenÃ§a e receber seu certificado de participaÃ§Ã£o.
+            Faça o check-in no evento para confirmar sua presenÃ§a e receber seu certificado de participaÃ§Ã£o.
           </p>
 
           <div className="space-y-3">
@@ -175,6 +238,7 @@ Achegue-se - Plataforma de Eventos
               onClick={generateQRCode}
               className="w-full gap-2"
               size="lg"
+              disabled={isLoadingCheckin}
             >
               <QrCode className="h-5 w-5" />
               Gerar QR Code para Check-in
@@ -185,9 +249,10 @@ Achegue-se - Plataforma de Eventos
               variant="outline"
               className="w-full gap-2"
               size="lg"
+              disabled={isLoadingCheckin}
             >
               <CheckCircle className="h-5 w-5" />
-              Fazer Check-in Manual
+              {isLoadingCheckin ? 'Confirmando...' : 'Fazer Check-in Manual'}
             </Button>
           </div>
 
@@ -288,9 +353,10 @@ Achegue-se - Plataforma de Eventos
                     onClick={handleCheckin}
                     className="w-full gap-2"
                     size="lg"
+                    disabled={isLoadingCheckin}
                   >
                     <CheckCircle className="h-5 w-5" />
-                    Confirmar Check-in
+                    {isLoadingCheckin ? 'Confirmando...' : 'Confirmar Check-in'}
                   </Button>
                 </div>
               </motion.div>
@@ -340,7 +406,7 @@ Achegue-se - Plataforma de Eventos
                     {/* Content */}
                     <div className="mb-6 space-y-4 text-center">
                       <p className="text-muted-foreground">
-                        Certificamos que vocÃª participou do evento:
+                        Certificamos que você participou do evento:
                       </p>
                       <h3 className="text-2xl font-bold text-foreground">
                         {event.title}

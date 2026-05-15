@@ -1,0 +1,12 @@
+{
+  "extends": "./tsconfig.app.json",
+  "include": [
+    "src/vite-env.d.ts",
+    "src/features/events/components/EventCheckin.tsx",
+    "src/features/events/components/EventSchedule.tsx",
+    "src/features/events/pages/EventsOrganizerDashboard.tsx",
+    "src/features/events/utils/checkinQr.ts",
+    "src/features/events/utils/checkinQr.test.ts",
+    "src/core/community/services/CommunityEventsRuntimeService.ts"
+  ]
+}

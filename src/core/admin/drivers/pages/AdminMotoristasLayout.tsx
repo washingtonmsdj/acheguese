@@ -17,3 +17,5 @@ export function AdminMotoristasLayout({ children }: AdminMotoristasLayoutProps) 
     </TooltipProvider>
   );
 }
+
+export default AdminMotoristasLayout;

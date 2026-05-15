@@ -106,8 +106,19 @@ interface FeaturedClassifiedRow {
 }
 
 function getErrorMessage(err: unknown): string {
-  if (err instanceof Error) return getErrorMessage(err);
+  if (err instanceof Error) return err.message;
   return String(err);
+}
+
+function getLogoUrl(metadata: unknown): string | undefined {
+  if (!metadata || typeof metadata !== 'object') return undefined;
+  const candidate = (metadata as { logo_url?: unknown }).logo_url;
+  return typeof candidate === 'string' ? candidate : undefined;
+}
+
+function getStringArray(value: unknown): string[] {
+  if (!Array.isArray(value)) return [];
+  return value.filter((item): item is string => typeof item === 'string');
 }
 
 // ✅ SSOT - Função applyTerritoryFilter movida para @/core/location/utils
@@ -146,11 +157,12 @@ export class LandingFeaturedService {
         return [];
       }
 
-      return (data || []).map((d: FeaturedBusinessRow): FeaturedBusiness => ({
+      const rows = (data ?? []) as unknown as FeaturedBusinessRow[];
+      return rows.map((d): FeaturedBusiness => ({
         id: d.profile_id,
         name: d.business_name ?? '',
         category: d.category ?? '',
-        logo_url: d.metadata?.logo_url ?? undefined,
+        logo_url: getLogoUrl(d.metadata),
         rating: d.rating ?? 0,
         is_premium: d.is_premium ?? false,
         is_verified: d.is_verified ?? false,
@@ -193,7 +205,8 @@ export class LandingFeaturedService {
         return [];
       }
 
-      return (data || []).map((d: FeaturedServiceRow): FeaturedService => {
+      const rows = (data ?? []) as unknown as FeaturedServiceRow[];
+      return rows.map((d): FeaturedService => {
         // Formata o preço baseado no tipo
         let priceDisplay = 'A combinar';
 
@@ -217,7 +230,7 @@ export class LandingFeaturedService {
           id: d.id,
           name: d.professional_name ?? '',
           category: d.service_category ?? '',
-          logo_url: d.metadata?.logo_url ?? undefined,
+          logo_url: getLogoUrl(d.metadata),
           rating: d.rating ?? 0,
           is_verified: d.is_verified ?? false,
           price_range: priceDisplay,
@@ -270,12 +283,13 @@ export class LandingFeaturedService {
         return [];
       }
 
-      return (data || []).map((d: FeaturedClassifiedRow): FeaturedClassified => ({
+      const rows = (data ?? []) as unknown as FeaturedClassifiedRow[];
+      return rows.map((d): FeaturedClassified => ({
         id: d.id,
         titulo: d.title ?? d.description ?? 'Classificado',
         category: d.category ?? '',
         price: d.price ?? 0,
-        photos: d.photos ?? [],
+        photos: getStringArray(d.photos),
         created_at: d.created_at ?? '',
         // ✅ Dados para URL canônica
         public_id: d.public_id ?? undefined,

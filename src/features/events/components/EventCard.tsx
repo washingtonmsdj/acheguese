@@ -1,5 +1,5 @@
 /**
- * �x}� EVENT CARD V2
+ * 🎉 EVENT CARD V2
  * 
  * Card premium para listagem de eventos
  * Design inspirado em Sympla/Eventbrite
@@ -108,7 +108,7 @@ export function EventCard({
             )}
             {isAlmostFull && !isSoldOut && (
               <Badge className="bg-amber-500/90 text-white backdrop-blur-sm border-0 animate-pulse">
-                �altimas vagas
+                Últimas vagas
               </Badge>
             )}
           </div>
@@ -280,7 +280,7 @@ export function EventCard({
               "backdrop-blur-sm border-0 text-xs",
               isSoldOut ? "bg-red-500/90 text-white" : "bg-amber-500/90 text-white animate-pulse"
             )}>
-              {isSoldOut ? 'Esgotado' : '�altimas vagas'}
+              {isSoldOut ? 'Esgotado' : 'Últimas vagas'}
             </Badge>
           </div>
         )}

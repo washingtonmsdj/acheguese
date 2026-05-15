@@ -1,14 +1,14 @@
 /**
- * Ã°Å¸Å½Â¯ EXEMPLO DE ROTA PARA EVENTOS V2
+ * 🗺️ EXEMPLO DE ROTA PARA EVENTOS V2
  * 
- * Copie este cÃƒÂ³digo para o arquivo de rotas principal para testar a V2
+ * Copie este código para o arquivo de rotas principal para testar a V2
  * 
- * LocalizaÃƒÂ§ÃƒÂ£o sugerida: src/app/routes/index.tsx
+ * Localização sugerida: src/app/routes/index.tsx
  */
 
 import { lazy } from 'react';
 
-// Lazy load da pÃƒÂ¡gina V2
+// Lazy load da página V2
 const EventDetailPage = lazy(() => import('@/features/events/pages/EventDetailPage'));
 
 // ============================================================================
@@ -21,7 +21,7 @@ export const eventsV2DemoRoute = {
   // Opcional: adicionar metadata
   meta: {
     title: 'Evento V2 - Demo',
-    description: 'DemonstraÃƒÂ§ÃƒÂ£o da nova interface de eventos'
+    description: 'Demonstração da nova interface de eventos'
   }
 };
 
@@ -45,15 +45,15 @@ const router = createBrowserRouter([
 // ============================================================================
 
 /*
-ApÃƒÂ³s adicionar a rota, acesse:
+Após adicionar a rota, acesse:
 http://localhost:5173/eventos-v2/demo
 
-Ou adicione um link em qualquer pÃƒÂ¡gina:
+Ou adicione um link em qualquer página:
 <Link to="/eventos-v2/demo">Ver Evento V2 Demo</Link>
 */
 
 // ============================================================================
-// INTEGRAÃƒâ€¡ÃƒÆ’O COM DADOS REAIS
+// INTEGRAÇÃO COM DADOS REAIS
 // ============================================================================
 
 /*
@@ -78,7 +78,7 @@ export default function EventDetailPage() {
   );
 }
 
-3. Crie a rota dinÃƒÂ¢mica:
+3. Crie a rota dinâmica:
 {
   path: '/eventos-v2/:eventId',
   element: <EventDetailPage />

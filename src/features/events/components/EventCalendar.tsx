@@ -1,7 +1,7 @@
 /**
  * ðŸ“… EVENT CALENDAR
  * 
- * VisualizaÃ§Ã£o de eventos em formato de calendÃ¡rio
+ * VisualizaÃ§Ã£o de eventos em formato de calendário
  * Permite exportar para Google Calendar e iCal
  * 
  * @version 1.0.0
@@ -276,7 +276,7 @@ export function EventCalendar({ events, onEventClick }: EventCalendarProps) {
 
       {/* Weekday headers */}
       <div className="mb-2 grid grid-cols-7 gap-1 sm:gap-2">
-        {['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'SÃ¡b'].map(day => (
+        {['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'].map(day => (
           <div
             key={day}
             className="text-center text-xs font-semibold text-muted-foreground sm:text-sm"

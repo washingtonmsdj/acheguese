@@ -1,9 +1,9 @@
 /**
- * ðŸŽ­ MOCK DATA - Events V2
- * 
- * Dados de demonstraÃ§Ã£o para a V2
+ * 🎭 MOCK DATA - Events V2
+ *
+ * Dados de demonstração para a V2
  * Remover quando integrar com backend real
- * 
+ *
  * @version 2.0.0
  */
 
@@ -135,7 +135,7 @@ export const MOCK_EVENTS: Event[] = [
       }
     ],
     requirements: [
-      'NÃ£o Ã© necessÃ¡rio experiÃªncia prÃ©via',
+      'Não Ã© necessÃ¡rio experiÃªncia prÃ©via',
       'Evento familiar - todas as idades sÃ£o bem-vindas',
       'Recomendamos chegar com antecedÃªncia'
     ],
@@ -172,7 +172,7 @@ export const MOCK_EVENTS: Event[] = [
     subtitle: 'Aprenda a criar e gerenciar seu negÃ³cio online',
     description: `<p>Transforme sua ideia em um negÃ³cio digital de sucesso!</p>
 
-<p>Neste workshop intensivo, vocÃª vai aprender:</p>
+<p>Neste workshop intensivo, você vai aprender:</p>
 
 <ul>
 <li>Como validar sua ideia de negÃ³cio</li>
@@ -227,7 +227,7 @@ export const MOCK_EVENTS: Event[] = [
     tickets: [
       {
         id: 'tkt-003',
-        name: 'InscriÃ§Ã£o Gratuita',
+        name: 'Inscrição Gratuita',
         description: 'Acesso completo ao workshop + material digital',
         price: 0,
         currency: 'BRL',

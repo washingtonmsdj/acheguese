@@ -7,11 +7,12 @@ Este documento define a separacao entre site publico de cidade, modulos publicos
 
 ## Regra Principal
 
-O Achegue-se tem tres camadas publicas:
+O Achegue-se tem quatro camadas publicas:
 
 1. Site geral da cidade.
 2. Modulos publicos por cidade ou territorio.
 3. Comunidade local por territorio (slug publico unico por cidade).
+4. Comunicacao territorial institucional/editorial.
 
 Essas camadas podem apontar para os mesmos dados, mas nao devem ter a mesma intencao de produto.
 
@@ -114,11 +115,37 @@ Mas o papel delas e diferente das rotas publicas diretas:
 
 Se uma tela nao entregar contexto comunitario adicional, ela deve preferir linkar para a rota publica direta em vez de duplicar experiencia.
 
+## Camada 4: Comunicacao Territorial
+
+Uso: camada editorial/institucional para canais comunitarios confiaveis, noticias hiperlocais, utilidade publica e alertas autorizados.
+
+Rotas canonicas:
+
+```text
+/comunicacao
+/comunicacao/ba/salvador
+/comunicacao/ba/salvador/nordeste-de-amaralina
+/comunicacao/ba/salvador/complexo-do-nordeste-de-amaralina
+/comunicacao/ba/salvador/complexo-do-nordeste-de-amaralina/:channelSlug
+```
+
+Papel:
+
+- `/comunicacao/...` e editorial/institucional.
+- `/comunidade/...` e social/comunitario.
+- Um canal de comunicacao nao e usuario comum nem empresa.
+- Publicacoes institucionais podem aparecer no feed comunitario, mas a URL canonica do conteudo editorial deve pertencer a `/comunicacao/...`.
+- Alertas institucionais exigem verificacao, permissao territorial e controle de reputacao.
+
+Contrato detalhado: [COMUNICACAO_TERRITORIAL_ARCHITECTURE.md](./COMUNICACAO_TERRITORIAL_ARCHITECTURE.md).
+
 ## SEO e Canonical
 
 - Rotas publicas de modulo (`/empresas/...`, `/servicos/...`, `/classificados/...`) usam `index, follow` e canonical self.
 - Rotas comunitarias com conteudo social proprio (`/comunidade/...`, `/feed`, `/grupos`, `/alertas`, `/problemas`) usam `index, follow` e canonical self.
+- Rotas editoriais/institucionais (`/comunicacao/...`) usam `index, follow` e canonical self quando publicas e verificadas.
 - Rotas de modulo embutidas dentro da comunidade (`/comunidade/.../empresas`, `/servicos`, `/classificados`, etc.) usam `noindex, follow` e canonical para a rota publica equivalente enquanto nao tiverem conteudo comunitario exclusivo suficiente.
+- Conteudo de comunicacao exibido dentro de `/comunidade/...` deve apontar canonical para `/comunicacao/...` quando for apenas espelho editorial.
 
 ## Decisao de Produto
 
@@ -139,9 +166,10 @@ Antes de criar uma rota nova, responder:
 
 1. A rota e uma vitrine publica/SEO? Use prefixo de modulo direto.
 2. A rota e social/comunitaria? Use prefixo `/comunidade`.
-3. A rota e operacional para dono/motorista/motoboy/profissional? Use `/central`.
-4. A rota e configuracao de identidade pessoal? Use `/perfil`.
-5. A rota exige dados territoriais? Deve passar por `TerritorialLayout` ou usar helper canonico de URL territorial.
+3. A rota e editorial/institucional de canal territorial? Use prefixo `/comunicacao`.
+4. A rota e operacional para dono/motorista/motoboy/profissional/canal? Use `/central`.
+5. A rota e configuracao de identidade pessoal? Use `/perfil`.
+6. A rota exige dados territoriais? Deve passar por `TerritorialLayout`, `CommunityTerritorialShell` ou helper canonico de URL territorial conforme a camada.
 
 ## Pendencias
 

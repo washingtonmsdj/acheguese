@@ -28,6 +28,7 @@ interface EventCTAProps {
   cta: EventCTAType;
   isFree?: boolean;
   isSoldOut?: boolean;
+  disabled?: boolean;
   onAction: () => void;
   className?: string;
 }
@@ -36,6 +37,7 @@ export function EventCTA({
   cta, 
   isFree = false,
   isSoldOut = false,
+  disabled = false,
   onAction,
   className 
 }: EventCTAProps) {
@@ -144,11 +146,11 @@ export function EventCTA({
                 size="lg"
                 className={cn(
                   "gap-2 px-8 shadow-lg",
-                  isSoldOut 
+                  (isSoldOut || disabled)
                     ? "bg-muted text-muted-foreground cursor-not-allowed" 
                     : "bg-gradient-to-r from-primary to-purple-600 hover:from-primary/90 hover:to-purple-600/90"
                 )}
-                disabled={isSoldOut}
+                disabled={isSoldOut || disabled}
                 onClick={onAction}
               >
                 <Icon className="h-5 w-5" />

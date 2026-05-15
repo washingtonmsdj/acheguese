@@ -55,6 +55,12 @@ import {
 export default function DPOContactPage() {
   const { user } = useAuth();
   const { toast } = useToast();
+  const userMetadata = user?.user_metadata;
+  const fullName =
+    userMetadata && typeof userMetadata === 'object'
+      ? (userMetadata as { full_name?: unknown }).full_name
+      : undefined;
+  const defaultName = typeof fullName === 'string' ? fullName : '';
 
   const {
     register,
@@ -66,7 +72,7 @@ export default function DPOContactPage() {
     resolver: zodResolver(DPOContactSchema),
     mode: 'onBlur',
     defaultValues: {
-      name: user?.user_metadata?.full_name || '',
+      name: defaultName,
       email: user?.email || '',
       subject: '',
       requestType: undefined,
@@ -92,7 +98,7 @@ export default function DPOContactPage() {
           'Recebemos sua solicitação. O DPO responderá em até 15 dias úteis conforme LGPD.',
       });
       reset({
-        name: user?.user_metadata?.full_name || '',
+        name: defaultName,
         email: user?.email || '',
         subject: '',
         requestType: undefined,

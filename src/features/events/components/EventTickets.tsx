@@ -18,6 +18,8 @@ interface EventTicketsProps {
   tickets: EventTicket[];
   isFree: boolean;
   onSelectTicket: (ticketId: string) => void;
+  disabled?: boolean;
+  disabledLabel?: string;
   className?: string;
 }
 
@@ -25,6 +27,8 @@ export function EventTickets({
   tickets, 
   isFree, 
   onSelectTicket,
+  disabled = false,
+  disabledLabel = 'Inscrição confirmada',
   className 
 }: EventTicketsProps) {
   const availableTickets = tickets.filter(t => t.status === 'disponivel');
@@ -63,6 +67,7 @@ export function EventTickets({
             const isComingSoon = ticket.status === 'em_breve';
             const occupancyRate = (ticket.quantity_sold / ticket.quantity_total) * 100;
             const isAlmostSoldOut = occupancyRate >= 80 && !isSoldOut;
+            const canSelect = isAvailable && !disabled;
 
             return (
               <motion.div
@@ -73,11 +78,11 @@ export function EventTickets({
                 transition={{ duration: 0.5, delay: index * 0.1 }}
                 className={cn(
                   "group relative overflow-hidden rounded-2xl border-2 bg-card p-6 transition-all",
-                  isAvailable 
+                  canSelect
                     ? "border-border hover:border-primary hover:shadow-xl cursor-pointer" 
                     : "border-border/50 opacity-60"
                 )}
-                onClick={() => isAvailable && onSelectTicket(ticket.id)}
+                onClick={() => canSelect && onSelectTicket(ticket.id)}
               >
                 {/* Popular Badge */}
                 {index === 0 && isAvailable && (
@@ -212,17 +217,19 @@ export function EventTickets({
                 <Button
                   className={cn(
                     "w-full gap-2",
-                    isAvailable && "bg-primary hover:bg-primary/90"
+                    canSelect && "bg-primary hover:bg-primary/90"
                   )}
-                  disabled={!isAvailable}
+                  disabled={!canSelect}
                   onClick={(e) => {
                     e.stopPropagation();
-                    if (isAvailable) {
+                    if (canSelect) {
                       onSelectTicket(ticket.id);
                     }
                   }}
                 >
-                  {isSoldOut ? (
+                  {disabled ? (
+                    disabledLabel
+                  ) : isSoldOut ? (
                     'Esgotado'
                   ) : isComingSoon ? (
                     'Em breve'

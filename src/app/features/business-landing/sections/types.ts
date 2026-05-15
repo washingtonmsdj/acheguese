@@ -40,7 +40,10 @@ export interface Business {
   readonly is_premium?: boolean;
   readonly is_verified?: boolean;
   readonly geographic_path?: string | null;
-  readonly horario_funcionamento?: Record<string, { open: string; close: string; closed?: boolean }>;
+  readonly horario_funcionamento?: Record<
+    string,
+    { open: string; close: string; closed?: boolean } | { closed: true; open?: string; close?: string }
+  >;
   readonly formas_pagamento?: readonly string[];
   readonly especialidades?: readonly string[];
   readonly facilidades?: readonly string[];

@@ -152,7 +152,7 @@ export default function EmpresaDetailLandingPage(
     }
 
     if (!openingHours || typeof openingHours !== "object") {
-      return { open: null as const, todayHours: null };
+      return { open: null, todayHours: null };
     }
 
     const days = ["domingo", "segunda", "terca", "quarta", "quinta", "sexta", "sabado"];
@@ -160,15 +160,15 @@ export default function EmpresaDetailLandingPage(
     const today = (openingHours as Record<string, { open?: string; close?: string; closed?: boolean }>)[dayKey];
 
     if (!today) {
-      return { open: null as const, todayHours: null };
+      return { open: null, todayHours: null };
     }
 
     if (today.closed) {
-      return { open: false as const, todayHours: "Fechado hoje" };
+      return { open: false, todayHours: "Fechado hoje" };
     }
 
     if (!today.open || !today.close) {
-      return { open: null as const, todayHours: null };
+      return { open: null, todayHours: null };
     }
 
     const [openH, openM] = today.open.split(":").map(Number);
@@ -239,7 +239,7 @@ export default function EmpresaDetailLandingPage(
                 : undefined,
             } satisfies NearbyBusiness;
           })
-          .filter((item): item is NearbyBusiness => Boolean(item))
+          .filter((item): item is NonNullable<typeof item> => Boolean(item))
           .slice(0, 4);
 
         if (!cancelled) {
@@ -432,17 +432,14 @@ export default function EmpresaDetailLandingPage(
           />
         )}
 
-        {(business as { business_role?: string }).business_role &&
-          (business as { business_role?: string }).business_role !== "standalone" && (
+        {business.business_role && business.business_role !== "standalone" && (
             <section className="max-w-5xl mx-auto px-4 sm:px-6 w-full mt-6">
               <BranchNetworkBlock
-                businessRole={(business as { business_role?: string }).business_role}
-                parentBusinessId={
-                  (business as { parent_business_id?: string | null }).parent_business_id ?? null
-                }
-                currentBranchId={(business as { id: string }).id}
-                brandHubId={(business as { id: string }).id}
-                brandName={(business as { business_name?: string }).business_name || business.name}
+                businessRole={business.business_role}
+                parentBusinessId={business.parent_business_id ?? null}
+                currentBranchId={business.id}
+                brandHubId={business.id}
+                brandName={business.business_name || business.name}
               />
             </section>
           )}

@@ -16,6 +16,7 @@ import type { GastronomyPreviewItem } from "@/modules/business/gastronomy/servic
 // ============================================
 
 export interface BusinessExtended extends Business {
+  readonly business_role?: "branch" | "brand_hub" | "standalone";
   readonly horario_funcionamento?: Record<string, { open: string; close: string; closed?: boolean }>;
   readonly formas_pagamento?: readonly string[];
   readonly especialidades?: readonly string[];
@@ -27,7 +28,6 @@ export interface BusinessExtended extends Business {
   readonly instagram?: string;
   readonly facebook?: string;
   readonly fotos?: readonly string[];
-  readonly business_role?: string;
   readonly parent_business_id?: string;
   readonly business_name?: string;
 }

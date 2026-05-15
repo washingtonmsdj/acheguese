@@ -1,7 +1,7 @@
 /**
- * â­ EVENTS FAVORITES PAGE
+ * ⭐ EVENTS FAVORITES PAGE
  * 
- * PÃ¡gina de eventos favoritos do usuÃ¡rio
+ * Página de eventos favoritos do usuÃ¡rio
  * Lista todos os eventos salvos
  * 
  * @version 1.0.0
@@ -58,7 +58,7 @@ export default function EventsFavoritesPage() {
             <nav className="flex items-center gap-2 text-sm text-muted-foreground">
               <Link to="/" className="flex items-center gap-1 transition-colors hover:text-foreground">
                 <Home className="h-3.5 w-3.5" />
-                <span className="hidden sm:inline">InÃ­cio</span>
+                <span className="hidden sm:inline">Início</span>
               </Link>
               <span>/</span>
               <Link to="/eventos" className="transition-colors hover:text-foreground">
@@ -94,7 +94,7 @@ export default function EventsFavoritesPage() {
               {/* Subtitle */}
               <p className="mx-auto max-w-2xl text-muted-foreground">
                 {favoriteEvents.length === 0
-                  ? 'VocÃª ainda nÃ£o tem eventos favoritos'
+                  ? 'Você ainda não tem eventos favoritos'
                   : `${favoriteEvents.length} ${favoriteEvents.length === 1 ? 'evento salvo' : 'eventos salvos'}`}
               </p>
 
@@ -141,7 +141,7 @@ export default function EventsFavoritesPage() {
                   Nenhum favorito ainda
                 </h3>
                 <p className="mb-6 text-muted-foreground">
-                  Comece a salvar eventos que vocÃª gosta para vÃª-los aqui
+                  Comece a salvar eventos que você gosta para vê-los aqui
                 </p>
                 <Button onClick={() => navigate('/eventos')} className="gap-2">
                   <Sparkles className="h-4 w-4" />

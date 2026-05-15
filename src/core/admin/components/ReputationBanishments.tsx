@@ -24,6 +24,11 @@ type AdminUser = Awaited<ReturnType<typeof profileService.getAllUsers>>[number];
 type LowRatedUser = Awaited<ReturnType<typeof profileService.getLowRatedUsers>>[number];
 type SuspendedDriver = AdminUser & { cancellation_rate: number };
 
+function getCancellationRate(value: unknown): number {
+  if (typeof value === "number") return value;
+  return 0;
+}
+
 /**
  * FASE PROFILE.1.3 - FECHAMENTO REAL DA IDENTIDADE
  *
@@ -56,7 +61,9 @@ export function ReputationBanishments() {
 
           return {
             ...user,
-            cancellation_rate: driverData?.cancellation_rate || 0,
+            cancellation_rate: getCancellationRate(
+              (driverData as { cancellation_rate?: unknown } | null)?.cancellation_rate,
+            ),
           };
         }),
       );
@@ -119,7 +126,7 @@ export function ReputationBanishments() {
                   className="flex items-center gap-3 p-3 rounded-lg bg-red-50 border border-red-200"
                 >
                   <Avatar>
-                    <AvatarImage src={driver.avatar} />
+                    <AvatarImage src={driver.avatar_url ?? undefined} />
                     <AvatarFallback>{driver.name?.charAt(0)}</AvatarFallback>
                   </Avatar>
                   <div className="flex-1">

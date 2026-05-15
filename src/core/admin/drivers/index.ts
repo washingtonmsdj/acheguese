@@ -8,5 +8,5 @@
  */
 
 export { default as AdminMotoristasPage } from "./pages/AdminMotoristasPage";
-export { default as AdminMotoristasLayout } from "./pages/AdminMotoristasLayout";
+export { AdminMotoristasLayout } from "./pages/AdminMotoristasLayout";
 export { useDriverManagement } from "./hooks/useDriverManagement";

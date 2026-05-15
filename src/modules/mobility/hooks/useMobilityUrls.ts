@@ -10,6 +10,7 @@
 import { mobilityRoutes } from "@/modules/mobility/routes/mobilityRoutes";
 
 export interface MobilityUrls {
+  home: string;
   motorista: {
     home: string;
     cadastro: string;
@@ -34,6 +35,7 @@ export interface MobilityUrls {
 
 export function useMobilityUrls(): MobilityUrls {
   return {
+    home: mobilityRoutes.passageiro.home,
     motorista: mobilityRoutes.motorista,
     motoboy: mobilityRoutes.motoboy,
     passageiro: {

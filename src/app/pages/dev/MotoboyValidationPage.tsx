@@ -339,7 +339,7 @@ export function MotoboyValidationPage() {
   const resolveTestLocationId = useCallback(async (): Promise<string> => {
     if (profile?.id) {
       const profileData = await profileService.getProfileById(profile.id);
-      const profileRecord = profileData as Record<string, unknown> | null;
+      const profileRecord = profileData as unknown as Record<string, unknown> | null;
       const locationId =
         typeof profileRecord?.location_id === 'string' ? profileRecord.location_id : null;
       if (locationId) {

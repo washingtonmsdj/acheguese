@@ -14,6 +14,7 @@ export interface User {
  * @see SessionProfileView em @/core/profiles/views/SessionProfileView
  */
 export type { SessionProfileView };
+export type Profile = SessionProfileView;
 
 export interface SessionData {
   user: User | null;

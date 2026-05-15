@@ -258,7 +258,7 @@ export function EventReminders({ event }: EventRemindersProps) {
 
       {/* Info */}
       <p className="mt-4 text-xs text-muted-foreground">
-        VocÃª receberÃ¡ uma notificaÃ§Ã£o nos horÃ¡rios selecionados. Certifique-se de que as notificaÃ§Ãµes estÃ£o habilitadas no seu navegador.
+        Você receberÃ¡ uma notificaÃ§Ã£o nos horÃ¡rios selecionados. Certifique-se de que as notificaÃ§Ãµes estÃ£o habilitadas no seu navegador.
       </p>
     </div>
   );

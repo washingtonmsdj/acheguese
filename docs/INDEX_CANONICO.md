@@ -16,6 +16,7 @@ Data de referencia: 2026-05-06
 - Arquitetura global: [ARCHITECTURE.md](./ARCHITECTURE.md)
 - Taxonomia global oficial: [architecture/TAXONOMY_SSOT.md](./architecture/TAXONOMY_SSOT.md)
 - SSOT da camada core: [architecture/CORE_LAYER_SSOT.md](./architecture/CORE_LAYER_SSOT.md)
+- Arquitetura de Comunicacao Territorial: [COMUNICACAO_TERRITORIAL_ARCHITECTURE.md](./COMUNICACAO_TERRITORIAL_ARCHITECTURE.md)
 - SSOT da consolidacao de gastronomia: [architecture/GASTRONOMY_CONSOLIDATION_SSOT.md](./architecture/GASTRONOMY_CONSOLIDATION_SSOT.md)
 - Auditoria estrutural global: [AUDITORIA_ESTRUTURAL_GLOBAL.md](./AUDITORIA_ESTRUTURAL_GLOBAL.md)
 - Taxonomia vertical oficial: `src/core/verticals/config.ts` e `src/core/verticals/README.md`

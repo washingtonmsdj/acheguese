@@ -114,7 +114,7 @@ export function EventFAQ({ faqs, title = 'Perguntas Frequentes' }: EventFAQProps
             transition={{ duration: 0.3, delay: faqs.length * 0.05 }}
             className="mt-6 rounded-xl border border-border bg-card p-6 text-center"
           >
-            <p className="text-sm text-muted-foreground">
+            <p className="mt-2 text-muted-foreground">
               Não encontrou a resposta que procurava?{' '}
               <button className="font-semibold text-primary hover:underline">
                 Entre em contato com o organizador

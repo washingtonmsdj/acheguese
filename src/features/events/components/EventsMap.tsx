@@ -2,7 +2,7 @@
  * ðŸ—ºï¸ EVENTS MAP
  * 
  * Mapa interativo mostrando todos os eventos
- * Filtro por distÃ¢ncia e clusters de eventos prÃ³ximos
+ * Filtro por distÃ¢ncia e clusters de eventos próximos
  * 
  * @version 1.0.0
  */
@@ -223,7 +223,7 @@ export function EventsMap({
               className="gap-2 shadow-lg"
             >
               <Navigation className="h-4 w-4" />
-              Minha localizaÃ§Ã£o
+              Minha localização
             </Button>
           )}
           <Button

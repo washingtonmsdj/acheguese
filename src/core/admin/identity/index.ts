@@ -8,4 +8,4 @@
  */
 
 export { default as AdminIdentidadePage } from "./pages/AdminIdentidadePage";
-export { default as AdminIdentidadeLayout } from "./pages/AdminIdentidadeLayout";
+export { AdminIdentidadeLayout } from "./pages/AdminIdentidadeLayout";

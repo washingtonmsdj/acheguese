@@ -73,7 +73,7 @@ export function UserProfileDropdown({ onLogout }: UserProfileDropdownProps) {
             <div className="flex-1 min-w-0">
               <p className="text-sm font-semibold truncate">{activeProfile?.displayName}</p>
               <p className="text-xs text-muted-foreground truncate">
-                {communityProfile?.city}, {communityProfile?.neighborhood}
+                {communityProfile?.public_city}, {communityProfile?.public_neighborhood}
               </p>
 
               {!loading && (
