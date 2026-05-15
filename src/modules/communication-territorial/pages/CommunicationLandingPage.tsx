@@ -25,8 +25,8 @@ export default function CommunicationLandingPage() {
         <link rel="canonical" href="/comunicacao" />
       </Helmet>
 
-      <div className="min-h-screen bg-gradient-to-b from-slate-50 via-white to-slate-50">
-        <div className="sticky top-0 z-40 border-b bg-white/95 shadow-sm backdrop-blur-lg">
+      <div className="min-h-screen bg-background text-foreground">
+        <div className="sticky top-0 z-40 border-b bg-background/95 backdrop-blur-lg">
           <div className="container mx-auto px-3 sm:px-4 lg:px-6">
             <TerritorialFilters />
           </div>
