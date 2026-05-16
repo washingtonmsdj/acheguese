@@ -31,7 +31,7 @@ Se houver conflito entre documentos, vence a ordem abaixo:
 | profile | `src/core/profiles/docs/CONTRACT_AUDIT_USERID_PROFILEID.md` |
 | admin | `src/modules/admin/README.md`, `src/modules/admin/identity/*`, `src/modules/admin/drivers/*`, `src/modules/admin/analytics/*`, `src/core/admin/services/admin.queries.ts` |
 | business | `src/core/business/README.md` (dominio base horizontal; nao e vertical) |
-| comunicacao-territorial | `docs/COMUNICACAO_TERRITORIAL_ARCHITECTURE.md` ate existir contrato tecnico em `src/core/communication-territorial/README.md` |
+| comunicacao-territorial | `docs/COMUNICACAO_TERRITORIAL_ARCHITECTURE.md`, `docs/COMUNICACAO_DISTRIBUICAO_TERRITORIAL_PLANO.md`, `src/core/communication-territorial/README.md` |
 | verticals | `src/core/verticals/config.ts`, `src/core/verticals/README.md` |
 | gastronomy | `src/modules/business/gastronomy/README.md`, `src/modules/business/gastronomy/index.ts` |
 | professionals/services | `src/modules/professionals/README.md`, `src/modules/professionals/services/*`, `src/core/professional/README.md` |

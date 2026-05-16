@@ -55,18 +55,18 @@ export function DadosPessoaisSection({
 
   return (
     <div className="space-y-6">
-      {/* EstatÃ­sticas Pessoais */}
+      {/* Estatísticas Pessoais */}
       <ProfileStats
         stats={[
           {
             icon: UserRound,
             label: "Posts",
             value: operations.posts,
-            hint: "ConteÃºdo publicado na comunidade",
+            hint: "Conteúdo publicado na comunidade",
           },
           {
             icon: Users,
-            label: "ConexÃµes",
+            label: "Conexões",
             value: (stats.followers || 0) + (stats.following || 0),
             hint: "Seguidores e seguindo",
           },
@@ -80,12 +80,12 @@ export function DadosPessoaisSection({
             icon: BarChart3,
             label: "Engajamento",
             value: operations.posts > 0 ? "Ativo" : "Baixo",
-            hint: "NÃ­vel de participaÃ§Ã£o",
+            hint: "Nível de participação",
           },
         ]}
       />
 
-      {/* ReputaÃ§Ã£o e GamificaÃ§Ã£o */}
+      {/* Reputação e Gamificação */}
       {(identity?.reputation || context?.reputation) && personalProfile ? (
         <div className="grid gap-6 lg:grid-cols-2">
           <ReputationLevelCard
@@ -99,7 +99,7 @@ export function DadosPessoaisSection({
         </div>
       ) : null}
 
-      {/* Engajamento CÃ­vico */}
+      {/* Engajamento Cívico */}
       {(stats.reportsCount || stats.supportsCount) ? (
         <CivicEngagementCard
           reportsCount={stats.reportsCount || 0}
@@ -109,7 +109,7 @@ export function DadosPessoaisSection({
         />
       ) : null}
 
-      {/* AÃ§Ãµes Principais */}
+      {/* Ações Principais */}
       <SectionFrame
         title="Acoes da conta"
         description="Gerencie identidade, endereco pessoal, privacidade e preferencias sem misturar operacao da Central."
@@ -118,7 +118,7 @@ export function DadosPessoaisSection({
           <HubLinkCard
             icon={UserRound}
             title="Editar perfil"
-            description="Avatar, bio, dados pÃºblicos"
+            description="Avatar, bio, dados públicos"
             onClick={() => {
               if (!personalProfileId) return;
               navigate(appUrls.profile.edit(personalProfileId));
@@ -133,14 +133,14 @@ export function DadosPessoaisSection({
           <HubLinkCard
             icon={Shield}
             title="Privacidade"
-            description="Visibilidade e exposiÃ§Ã£o"
+            description="Visibilidade e exposição"
             onClick={() => navigate(appUrls.profile.settings("privacy"))}
           />
           <HubLinkCard
             icon={Globe}
-            title="Perfil pÃºblico"
-            description="Ver versÃ£o pÃºblica"
-            badge={publicHandle ? "Ativo" : "IndisponÃ­vel"}
+            title="Perfil público"
+            description="Ver versão pública"
+            badge={publicHandle ? "Ativo" : "Indisponível"}
             onClick={() => {
               if (!publicHandle) return;
               navigate(appUrls.profile.public(publicHandle));
@@ -154,19 +154,19 @@ export function DadosPessoaisSection({
           />
           <HubLinkCard
             icon={Bell}
-            title="NotificaÃ§Ãµes"
+            title="Notificações"
             description="Alertas e inbox"
             onClick={() => navigate(appUrls.notifications)}
           />
           <HubLinkCard
             icon={Users}
-            title="VÃ­nculos"
-            description="ConexÃµes e relaÃ§Ãµes"
+            title="Vínculos"
+            description="Conexões e relações"
             onClick={() => navigate(appUrls.profile.settings("links"))}
           />
           <HubLinkCard
             icon={Lock}
-            title="SeguranÃ§a"
+            title="Segurança"
             description="Senha e conta"
             onClick={() => navigate(appUrls.profile.account)}
           />
@@ -208,7 +208,7 @@ export function DadosPessoaisSection({
         </div>
       </SectionFrame>
 
-      {/* ConteÃºdo Pessoal */}
+      {/* Conteúdo Pessoal */}
       {user && personalProfileId ? (
         <ContentTabsSection
           userId={user.id}
@@ -228,7 +228,7 @@ export function DadosPessoaisSection({
       {user && personalProfileId ? (
         <SectionFrame
           title="Atividade recente"
-          description="Linha do tempo das suas aÃ§Ãµes pessoais."
+          description="Linha do tempo das suas ações pessoais."
         >
           <ActivityTimeline
             userId={user.id}

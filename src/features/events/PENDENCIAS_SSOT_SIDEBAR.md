@@ -1,22 +1,22 @@
-# âš ï¸ PendÃªncias: SSOT Territorial e Sidebars
+# ⚠️ Pendências: SSOT Territorial e Sidebars
 
-## ðŸŽ¯ O Que Falta
+## 🎯 O Que Falta
 
-VocÃª identificou corretamente 2 pendÃªncias importantes:
+Você identificou corretamente 2 pendências importantes:
 
-1. **âŒ SSOT Territorial** - NÃ£o estamos usando `useTerritoryFilter` corretamente
-2. **âŒ Sidebars** - Faltam as sidebars (comunidade e global)
+1. **❌ SSOT Territorial** - Não estamos usando `useTerritoryFilter` corretamente
+2. **❌ Sidebars** - Faltam as sidebars (comunidade e global)
 
 ---
 
 ## 1. SSOT Territorial
 
-### âŒ Problema Atual
+### ❌ Problema Atual
 
-**EventsListPage** estÃ¡ fazendo filtragem manual:
+**EventsListPage** está fazendo filtragem manual:
 
 ```typescript
-// âŒ ERRADO - Filtragem manual
+// ❌ ERRADO - Filtragem manual
 const territorialFilter = useMemo(() => {
   if (!resolved) return null;
   
@@ -31,12 +31,12 @@ const territorialFilter = useMemo(() => {
 }, [resolved]);
 ```
 
-### âœ… SoluÃ§Ã£o Correta
+### ✅ Solução Correta
 
 Usar `useTerritoryFilter` (SSOT):
 
 ```typescript
-// âœ… CORRETO - Usa SSOT
+// ✅ CORRETO - Usa SSOT
 import { useTerritoryFilter } from '@/core/location/hooks/useTerritoryFilter';
 
 // No componente:
@@ -49,7 +49,7 @@ const { data: events } = useQuery({
 });
 ```
 
-### ðŸ“‹ MudanÃ§as NecessÃ¡rias
+### 📋 Mudanças Necessárias
 
 #### 1. **EventsListPage.tsx**
 
@@ -61,19 +61,19 @@ import type { TerritoryFilter } from '@/core/location/types';
 // Adicionar prop activeMemberIds
 export interface EventsListPageProps {
   resolved?: ResolvedTerritory;
-  activeMemberIds?: string[]; // â† ADICIONAR
+  activeMemberIds?: string[]; // ← ADICIONAR
 }
 
 // No componente
 export default function EventsListPage({ 
   resolved, 
-  activeMemberIds = [] // â† ADICIONAR
+  activeMemberIds = [] // ← ADICIONAR
 }: EventsListPageProps = {}) {
   
   // Usar SSOT
   const territoryFilter = useTerritoryFilter(resolved, activeMemberIds);
   
-  // Remover lÃ³gica manual de filtragem
+  // Remover lógica manual de filtragem
   // Usar territoryFilter nas queries
 }
 ```
@@ -81,7 +81,7 @@ export default function EventsListPage({
 #### 2. **TerritorialModulePages.tsx**
 
 ```typescript
-// JÃ¡ estÃ¡ correto! Passa activeMemberIds
+// Já está correto! Passa activeMemberIds
 export function TerritorialEventosPage() {
   const { resolved, activeMemberIds } = useTerritorialContext();
   return (
@@ -89,7 +89,7 @@ export function TerritorialEventosPage() {
       <Suspense fallback={<ModulePageLoader />}>
         <EventsListPage 
           resolved={resolved} 
-          activeMemberIds={activeMemberIds} // â† JÃ¡ passa
+          activeMemberIds={activeMemberIds} // ← Já passa
         />
       </Suspense>
     </CityStatusGate>
@@ -101,20 +101,20 @@ export function TerritorialEventosPage() {
 
 ## 2. Sidebars
 
-### âŒ Problema Atual
+### ❌ Problema Atual
 
-As pÃ¡ginas de eventos **nÃ£o tÃªm sidebars**:
+As páginas de eventos **não têm sidebars**:
 - Sem sidebar da comunidade (quando em contexto territorial)
 - Sem sidebar global (quando sem contexto)
 
-### âœ… SoluÃ§Ã£o
+### ✅ Solução
 
-Adicionar layout com sidebar seguindo o padrÃ£o do `ComunidadePage`:
+Adicionar layout com sidebar seguindo o padrão do `ComunidadePage`:
 
 ```typescript
 // Layout com sidebar
 <div className="grid min-w-0 gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]">
-  {/* ConteÃºdo principal */}
+  {/* Conteúdo principal */}
   <main className="min-w-0 max-w-full overflow-x-hidden">
     {/* Lista de eventos */}
   </main>
@@ -128,7 +128,7 @@ Adicionar layout com sidebar seguindo o padrÃ£o do `ComunidadePage`:
 </div>
 ```
 
-### ðŸ“‹ Componentes de Sidebar
+### 📋 Componentes de Sidebar
 
 #### Sidebar da Comunidade
 ```typescript
@@ -150,77 +150,77 @@ import { CommunityRightSidebar } from '@/core/community/components/CommunityRigh
 // Pode incluir:
 // - Eventos em destaque
 // - Categorias populares
-// - Eventos prÃ³ximos
+// - Eventos próximos
 // - Organizadores verificados
 ```
 
 ---
 
-## ðŸ“Š ComparaÃ§Ã£o
+## 📊 Comparação
 
 ### Antes (Atual)
 ```
-âŒ Filtragem manual (nÃ£o usa SSOT)
-âŒ Sem sidebar
-âŒ Sem widgets laterais
-âŒ Layout simples (sem grid)
+❌ Filtragem manual (não usa SSOT)
+❌ Sem sidebar
+❌ Sem widgets laterais
+❌ Layout simples (sem grid)
 ```
 
 ### Depois (Correto)
 ```
-âœ… useTerritoryFilter (SSOT)
-âœ… Sidebar da comunidade (territorial)
-âœ… Sidebar global (sem contexto)
-âœ… Layout profissional (grid 2 colunas)
+✅ useTerritoryFilter (SSOT)
+✅ Sidebar da comunidade (territorial)
+✅ Sidebar global (sem contexto)
+✅ Layout profissional (grid 2 colunas)
 ```
 
 ---
 
-## ðŸŽ¨ Layout Proposto
+## 🎨 Layout Proposto
 
 ### Com Contexto Territorial
 ```
-â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
-â”‚ Breadcrumbs                                         â”‚
-â”œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”¤
-â”‚ Hero Section                                        â”‚
-â”œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”¤
-â”‚ Filtros                                             â”‚
-â”œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”¬â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”¤
-â”‚                              â”‚                      â”‚
-â”‚  Lista de Eventos            â”‚  Sidebar Comunidade  â”‚
-â”‚  (main)                      â”‚  (aside)             â”‚
-â”‚                              â”‚  â€¢ Widgets           â”‚
-â”‚  â€¢ EventCard                 â”‚  â€¢ Top Users         â”‚
-â”‚  â€¢ EventCard                 â”‚  â€¢ Trending          â”‚
-â”‚  â€¢ EventCard                 â”‚  â€¢ Quick Actions     â”‚
-â”‚                              â”‚                      â”‚
-â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”´â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜
+┌─────────────────────────────────────────────────────┐
+│ Breadcrumbs                                         │
+├─────────────────────────────────────────────────────┤
+│ Hero Section                                        │
+├─────────────────────────────────────────────────────┤
+│ Filtros                                             │
+├──────────────────────────────┬──────────────────────┤
+│                              │                      │
+│  Lista de Eventos            │  Sidebar Comunidade  │
+│  (main)                      │  (aside)             │
+│                              │  • Widgets           │
+│  • EventCard                 │  • Top Users         │
+│  • EventCard                 │  • Trending          │
+│  • EventCard                 │  • Quick Actions     │
+│                              │                      │
+└──────────────────────────────┴──────────────────────┘
 ```
 
 ### Sem Contexto (Global)
 ```
-â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
-â”‚ Breadcrumbs                                         â”‚
-â”œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”¤
-â”‚ Hero Section                                        â”‚
-â”œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”¤
-â”‚ Filtros                                             â”‚
-â”œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”¬â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”¤
-â”‚                              â”‚                      â”‚
-â”‚  Lista de Eventos            â”‚  Sidebar Global      â”‚
-â”‚  (main)                      â”‚  (aside)             â”‚
-â”‚                              â”‚  â€¢ Destaques         â”‚
-â”‚  â€¢ EventCard                 â”‚  â€¢ Categorias        â”‚
-â”‚  â€¢ EventCard                 â”‚  â€¢ PrÃ³ximos          â”‚
-â”‚  â€¢ EventCard                 â”‚  â€¢ Organizadores     â”‚
-â”‚                              â”‚                      â”‚
-â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”´â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜
+┌─────────────────────────────────────────────────────┐
+│ Breadcrumbs                                         │
+├─────────────────────────────────────────────────────┤
+│ Hero Section                                        │
+├─────────────────────────────────────────────────────┤
+│ Filtros                                             │
+├──────────────────────────────┬──────────────────────┤
+│                              │                      │
+│  Lista de Eventos            │  Sidebar Global      │
+│  (main)                      │  (aside)             │
+│                              │  • Destaques         │
+│  • EventCard                 │  • Categorias        │
+│  • EventCard                 │  • Próximos          │
+│  • EventCard                 │  • Organizadores     │
+│                              │                      │
+└──────────────────────────────┴──────────────────────┘
 ```
 
 ---
 
-## ðŸ”§ ImplementaÃ§Ã£o
+## 🔧 Implementação
 
 ### Passo 1: Adicionar SSOT Territorial
 
@@ -247,9 +247,9 @@ export default function EventsListPage({
     let filtered = [...MOCK_EVENTS];
     
     // Aplicar filtro territorial via SSOT
-    // (futuramente serÃ¡ na query do Supabase)
+    // (futuramente será na query do Supabase)
     if (territoryFilter.scope !== 'none') {
-      // LÃ³gica de filtro baseada em territoryFilter
+      // Lógica de filtro baseada em territoryFilter
     }
     
     // Outros filtros...
@@ -272,7 +272,7 @@ import { CommunityRightSidebar } from '@/core/community/components/CommunityRigh
     <main className="min-w-0 max-w-full overflow-x-hidden">
       {/* Filtros */}
       {/* Lista de eventos */}
-      {/* PaginaÃ§Ã£o */}
+      {/* Paginação */}
     </main>
 
     {/* Sidebar */}
@@ -321,12 +321,12 @@ export function EventsGlobalSidebar() {
 
 ---
 
-## âœ… Checklist de ImplementaÃ§Ã£o
+## ✅ Checklist de Implementação
 
 ### SSOT Territorial
 - [ ] Adicionar `useTerritoryFilter` no EventsListPage
 - [ ] Adicionar prop `activeMemberIds`
-- [ ] Remover lÃ³gica manual de filtragem
+- [ ] Remover lógica manual de filtragem
 - [ ] Usar `territoryFilter` nas queries
 - [ ] Testar com contexto territorial
 - [ ] Testar sem contexto
@@ -335,13 +335,13 @@ export function EventsGlobalSidebar() {
 - [ ] Adicionar layout grid 2 colunas
 - [ ] Importar `CommunityRightSidebar`
 - [ ] Criar `EventsGlobalSidebar`
-- [ ] Adicionar lÃ³gica condicional (territorial vs global)
+- [ ] Adicionar lógica condicional (territorial vs global)
 - [ ] Testar responsividade (sidebar oculta em mobile)
 - [ ] Testar sticky positioning
 
 ---
 
-## ðŸ§ª Como Testar
+## 🧪 Como Testar
 
 ### Teste 1: SSOT Territorial
 ```bash
@@ -349,9 +349,9 @@ export function EventsGlobalSidebar() {
 http://localhost:8080/comunidade/ba/salvador/complexo-do-nordeste-de-amaralina/eventos
 
 # Verificar:
-âœ“ territoryFilter estÃ¡ correto
-âœ“ Apenas eventos do territÃ³rio aparecem
-âœ“ Console nÃ£o mostra erros
+✓ territoryFilter está correto
+✓ Apenas eventos do território aparecem
+✓ Console não mostra erros
 ```
 
 ### Teste 2: Sidebar Comunidade
@@ -360,10 +360,10 @@ http://localhost:8080/comunidade/ba/salvador/complexo-do-nordeste-de-amaralina/e
 http://localhost:8080/comunidade/ba/salvador/complexo-do-nordeste-de-amaralina/eventos
 
 # Verificar:
-âœ“ Sidebar aparece no desktop (lg+)
-âœ“ Sidebar oculta no mobile
-âœ“ Widgets da comunidade aparecem
-âœ“ Sticky funciona ao scroll
+✓ Sidebar aparece no desktop (lg+)
+✓ Sidebar oculta no mobile
+✓ Widgets da comunidade aparecem
+✓ Sticky funciona ao scroll
 ```
 
 ### Teste 3: Sidebar Global
@@ -372,14 +372,14 @@ http://localhost:8080/comunidade/ba/salvador/complexo-do-nordeste-de-amaralina/e
 http://localhost:8080/eventos
 
 # Verificar:
-âœ“ Sidebar global aparece
-âœ“ Widgets globais aparecem
-âœ“ Sem widgets da comunidade
+✓ Sidebar global aparece
+✓ Widgets globais aparecem
+✓ Sem widgets da comunidade
 ```
 
 ---
 
-## ðŸ“ Arquivos a Modificar
+## 📝 Arquivos a Modificar
 
 ### Principais
 1. `src/features/events-v2/pages/EventsListPage.tsx`
@@ -392,39 +392,39 @@ http://localhost:8080/eventos
    - Sidebar para contexto global
    - Widgets de eventos
 
-### JÃ¡ Corretos
+### Já Corretos
 3. `src/core/routing/components/TerritorialModulePages.tsx`
-   - JÃ¡ passa `activeMemberIds` âœ…
+   - Já passa `activeMemberIds` ✅
 
 ---
 
-## ðŸŽ¯ Prioridade
+## 🎯 Prioridade
 
 ### Alta (Fazer Agora)
-1. âœ… SSOT Territorial - CrÃ­tico para consistÃªncia
-2. âœ… Sidebar Comunidade - Importante para UX
+1. ✅ SSOT Territorial - Crítico para consistência
+2. ✅ Sidebar Comunidade - Importante para UX
 
-### MÃ©dia (PrÃ³xima Sprint)
+### Média (Próxima Sprint)
 3. EventsGlobalSidebar - Melhoria de UX
 4. Widgets personalizados
 
 ---
 
-## âœ… ConclusÃ£o
+## ✅ Conclusão
 
-VocÃª identificou corretamente as pendÃªncias! Precisamos:
+Você identificou corretamente as pendências! Precisamos:
 
-1. **SSOT Territorial**: Usar `useTerritoryFilter` em vez de lÃ³gica manual
+1. **SSOT Territorial**: Usar `useTerritoryFilter` em vez de lógica manual
 2. **Sidebars**: Adicionar layout com sidebar (comunidade + global)
 
 Isso vai deixar o sistema:
-- âœ… Consistente com resto do projeto
-- âœ… Seguindo princÃ­pios SSOT
-- âœ… Com UX profissional
-- âœ… Preparado para integraÃ§Ã£o com Supabase
+- ✅ Consistente com resto do projeto
+- ✅ Seguindo princípios SSOT
+- ✅ Com UX profissional
+- ✅ Preparado para integração com Supabase
 
 ---
 
 **Criado por**: Kiro AI  
 **Data**: 2026-05-14  
-**Status**: âš ï¸ PENDENTE - Aguardando implementaÃ§Ã£o
+**Status**: ⚠️ PENDENTE - Aguardando implementação

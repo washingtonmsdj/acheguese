@@ -1,8 +1,8 @@
-﻿import React from "react";
+import React from "react";
 import { useNavigate } from "react-router-dom";
 import { Calendar, Ticket } from "lucide-react";
 import { PanicAlertButton } from "./PanicAlertButton";
-import { useAppUrls } from "@/core/routing/hooks"; // âœ… SSOT URLs
+import { useAppUrls } from "@/core/routing/hooks"; // ✅ SSOT URLs
 import { FOCUS_STYLES } from "@/core/community/components/styles/accessibilityAAA";
 
 interface QuickAccessButtonsProps {
@@ -15,18 +15,18 @@ export const QuickAccessButtons = ({
   isMobile,
 }: QuickAccessButtonsProps) => {
   const navigate = useNavigate();
-  const appUrls = useAppUrls(); // âœ… SSOT URLs
+  const appUrls = useAppUrls(); // ✅ SSOT URLs
 
   return (
     <section
       className={`flex gap-2 ${isMobile ? "px-4" : "px-0"} pt-3 pb-1`}
       role="region"
-      aria-label="AÃ§Ãµes rÃ¡pidas"
+      aria-label="Ações rápidas"
     >
       <PanicAlertButton userId={userId} />
 
       <button
-        onClick={() => navigate(appUrls.community.events)} // âœ… SSOT
+        onClick={() => navigate(appUrls.community.events)} // ✅ SSOT
         className={`flex-1 flex items-center gap-2 bg-primary/10 rounded-xl p-3 hover:bg-primary/15 transition-colors ${FOCUS_STYLES.ring}`}
         aria-label="Ver eventos no seu bairro"
       >
@@ -38,7 +38,7 @@ export const QuickAccessButtons = ({
       </button>
 
       <button
-        onClick={() => navigate(appUrls.community.coupons)} // âœ… SSOT
+        onClick={() => navigate(appUrls.community.coupons)} // ✅ SSOT
         className={`flex-1 flex items-center gap-2 bg-success/10 rounded-xl p-3 hover:bg-success/15 transition-colors ${FOCUS_STYLES.ring}`}
         aria-label="Ver cupons de desconto"
       >

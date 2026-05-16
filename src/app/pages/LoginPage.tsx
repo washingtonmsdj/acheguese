@@ -8,7 +8,7 @@ import { Label } from '@/shared/components/ui/label';
 import { Separator } from '@/shared/components/ui/separator';
 import { InlineFieldError } from '@/shared/components/ui/InlineFieldError';
 import { AtSign, CheckCircle2, Eye, EyeOff, Home, Loader2, Mail, ShieldCheck } from 'lucide-react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 import { useAuth } from '@/core/auth/hooks/useAuth';
 import { parseAuthIdentifier } from '@/core/auth/utils/authIdentifier';
 import { getAuthErrorMessage } from '@/core/auth/utils/authMessages';
@@ -34,10 +34,11 @@ export default function LoginPage() {
   const [pendingAction, setPendingAction] = useState<PendingAction>(null);
   const [showPassword, setShowPassword] = useState(false);
   const [searchParams] = useSearchParams();
+  const location = useLocation();
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  const redirectTo = searchParams.get('redirect') || '/';
+  const redirectTo = (location.state as any)?.redirectTo || searchParams.get('redirect') || '/';
   const isEmailConfirmed = searchParams.get('confirmed') === '1';
   const isPasswordReset = searchParams.get('passwordReset') === '1';
 

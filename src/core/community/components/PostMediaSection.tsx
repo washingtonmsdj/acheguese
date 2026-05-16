@@ -63,14 +63,14 @@ export function PostMediaSection({
               <div className="flex items-center gap-2">
                 <MapPin className="h-4 w-4 text-primary" />
                 <span className="text-sm font-medium">
-                  LocalizaÃ§Ã£o adicionada
+                  Localização adicionada
                 </span>
               </div>
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={onLocationRemove}
-                aria-label="Remover localizaÃ§Ã£o"
+                aria-label="Remover localização"
               >
                 <X className="h-4 w-4" />
               </Button>
@@ -100,7 +100,7 @@ export function PostMediaSection({
           disabled={!!postData.location}
         >
           <MapPin className="h-4 w-4" />
-          LocalizaÃ§Ã£o
+          Localização
         </Button>
       </div>
     </div>

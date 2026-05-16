@@ -1,4 +1,3 @@
-import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Building2,
@@ -37,13 +36,7 @@ export default function CentralHubPage() {
     queryScope: "central-hub",
   });
 
-  useEffect(() => {
-    // Redirecionar para login se não autenticado
-    if (!user) {
-      navigate("/login", { replace: true });
-    }
-  }, [user, navigate]);
-
+  // Guard já verifica autenticação, não precisa de useEffect aqui
   if (!user) {
     return null;
   }

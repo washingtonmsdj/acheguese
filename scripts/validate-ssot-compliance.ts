@@ -63,7 +63,7 @@ class SSotValidator {
     'auth', // Contexto de autenticação
     'billing', // Contexto de billing
     'admin', // Contexto administrativo
-    'family' // Contexto familiar usa user_id como owner t�cnico
+    'family' // Contexto familiar usa user_id como owner t?cnico
   ];
 
   async validateProject(): Promise<void> {

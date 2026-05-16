@@ -14,17 +14,17 @@ export const MOCK_EVENTS: Event[] = [
     id: 'evt-001',
     slug: 'roda-de-samba-nordeste',
     title: 'Grande Roda de Samba do Nordeste',
-    subtitle: 'Uma celebraÃ§Ã£o da cultura afro-brasileira com os melhores sambistas da regiÃ£o',
-    description: `<p>Prepare-se para uma noite inesquecÃ­vel de samba, cultura e comunidade!</p>
+    subtitle: 'Uma celebração da cultura afro-brasileira com os melhores sambistas da região',
+    description: `<p>Prepare-se para uma noite inesquecível de samba, cultura e comunidade!</p>
 
-<p>A Grande Roda de Samba do Nordeste Ã© mais do que um evento musical - Ã© uma celebraÃ§Ã£o da nossa identidade cultural, das nossas raÃ­zes e da forÃ§a da nossa comunidade.</p>
+<p>A Grande Roda de Samba do Nordeste é mais do que um evento musical - é uma celebração da nossa identidade cultural, das nossas raízes e da força da nossa comunidade.</p>
 
 <h3>O que esperar:</h3>
 <ul>
-<li>ApresentaÃ§Ãµes de grupos locais renomados</li>
+<li>Apresentações de grupos locais renomados</li>
 <li>Feira de empreendedores do bairro</li>
-<li>Gastronomia tÃ­pica baiana</li>
-<li>EspaÃ§o kids com oficinas culturais</li>
+<li>Gastronomia típica baiana</li>
+<li>Espaço kids com oficinas culturais</li>
 <li>Roda de capoeira</li>
 </ul>
 
@@ -33,7 +33,7 @@ export const MOCK_EVENTS: Event[] = [
     cover_image_url: 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=800',
     banner_image_url: 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=1920',
     category: 'cultural',
-    tags: ['samba', 'cultura', 'mÃºsica', 'comunidade'],
+    tags: ['samba', 'cultura', 'música', 'comunidade'],
     type: 'presencial',
     status: 'publicado',
     start_date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
@@ -48,13 +48,13 @@ export const MOCK_EVENTS: Event[] = [
       neighborhood: 'Nordeste de Amaralina',
       latitude: -13.0032,
       longitude: -38.4698,
-      instructions: 'PrÃ³ximo Ã  quadra comunitÃ¡ria. Acesso por transporte pÃºblico: linhas 1003, 1004.'
+      instructions: 'Próximo à quadra comunitária. Acesso por transporte público: linhas 1003, 1004.'
     },
     organizer: {
       id: 'org-001',
-      name: 'AssociaÃ§Ã£o Cultural do Nordeste',
+      name: 'Associação Cultural do Nordeste',
       avatar_url: 'https://api.dicebear.com/7.x/initials/svg?seed=ACN',
-      bio: 'Promovendo cultura e arte no Complexo do Nordeste hÃ¡ mais de 15 anos',
+      bio: 'Promovendo cultura e arte no Complexo do Nordeste há mais de 15 anos',
       verified: true,
       contact: {
         email: 'contato@culturanordeste.org',
@@ -106,7 +106,7 @@ export const MOCK_EVENTS: Event[] = [
       {
         id: 'sch-001',
         time: '18:00',
-        title: 'Abertura e RecepÃ§Ã£o',
+        title: 'Abertura e Recepção',
         description: 'Chegada dos participantes e abertura da feira de empreendedores',
         duration_minutes: 30
       },
@@ -114,14 +114,14 @@ export const MOCK_EVENTS: Event[] = [
         id: 'sch-002',
         time: '18:30',
         title: 'Roda de Capoeira',
-        description: 'ApresentaÃ§Ã£o do Grupo Capoeira Angola',
+        description: 'Apresentação do Grupo Capoeira Angola',
         duration_minutes: 45,
-        speaker: 'Mestre JoÃ£o'
+        speaker: 'Mestre João'
       },
       {
         id: 'sch-003',
         time: '19:30',
-        title: 'InÃ­cio da Roda de Samba',
+        title: 'Início da Roda de Samba',
         description: 'Samba de raiz com os melhores grupos locais',
         duration_minutes: 180,
         speaker: 'Grupo Samba do Nordeste'
@@ -130,22 +130,22 @@ export const MOCK_EVENTS: Event[] = [
         id: 'sch-004',
         time: '22:00',
         title: 'Encerramento',
-        description: 'Ãšltima mÃºsica e agradecimentos',
+        description: 'Última música e agradecimentos',
         duration_minutes: 30
       }
     ],
     requirements: [
-      'Não Ã© necessÃ¡rio experiÃªncia prÃ©via',
-      'Evento familiar - todas as idades sÃ£o bem-vindas',
-      'Recomendamos chegar com antecedÃªncia'
+      'Não é necessário experiência prévia',
+      'Evento familiar - todas as idades são bem-vindas',
+      'Recomendamos chegar com antecedência'
     ],
     what_to_bring: [
-      'Documento de identificaÃ§Ã£o',
-      'Roupa confortÃ¡vel',
-      'Garrafa de Ã¡gua',
+      'Documento de identificação',
+      'Roupa confortável',
+      'Garrafa de água',
       'Protetor solar (evento ao ar livre)'
     ],
-    accessibility_info: 'Local com acessibilidade para cadeirantes. Banheiros adaptados disponÃ­veis.',
+    accessibility_info: 'Local com acessibilidade para cadeirantes. Banheiros adaptados disponíveis.',
     age_restriction: 'Livre para todas as idades',
     features: {
       has_certificate: false,
@@ -162,32 +162,32 @@ export const MOCK_EVENTS: Event[] = [
     updated_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
     published_at: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString(),
     meta_title: 'Grande Roda de Samba do Nordeste | Achegue-se',
-    meta_description: 'Participe da maior roda de samba do Complexo do Nordeste de Amaralina. MÃºsica, cultura e comunidade em um sÃ³ lugar!',
+    meta_description: 'Participe da maior roda de samba do Complexo do Nordeste de Amaralina. Música, cultura e comunidade em um só lugar!',
     meta_keywords: ['samba', 'nordeste', 'salvador', 'cultura', 'evento']
   },
   {
     id: 'evt-002',
     slug: 'workshop-empreendedorismo-digital',
     title: 'Workshop de Empreendedorismo Digital',
-    subtitle: 'Aprenda a criar e gerenciar seu negÃ³cio online',
-    description: `<p>Transforme sua ideia em um negÃ³cio digital de sucesso!</p>
+    subtitle: 'Aprenda a criar e gerenciar seu negócio online',
+    description: `<p>Transforme sua ideia em um negócio digital de sucesso!</p>
 
 <p>Neste workshop intensivo, você vai aprender:</p>
 
 <ul>
-<li>Como validar sua ideia de negÃ³cio</li>
-<li>EstratÃ©gias de marketing digital</li>
+<li>Como validar sua ideia de negócio</li>
+<li>Estratégias de marketing digital</li>
 <li>Vendas online e redes sociais</li>
-<li>GestÃ£o financeira bÃ¡sica</li>
+<li>Gestão financeira básica</li>
 <li>Ferramentas gratuitas essenciais</li>
 </ul>
 
-<p>Ideal para empreendedores iniciantes e quem quer digitalizar seu negÃ³cio!</p>`,
-    short_description: 'Workshop prÃ¡tico sobre empreendedorismo digital e vendas online.',
+<p>Ideal para empreendedores iniciantes e quem quer digitalizar seu negócio!</p>`,
+    short_description: 'Workshop prático sobre empreendedorismo digital e vendas online.',
     cover_image_url: 'https://images.unsplash.com/photo-1552664730-d307ca884978?w=800',
     banner_image_url: 'https://images.unsplash.com/photo-1552664730-d307ca884978?w=1920',
     category: 'educacional',
-    tags: ['empreendedorismo', 'digital', 'negÃ³cios', 'workshop'],
+    tags: ['empreendedorismo', 'digital', 'negócios', 'workshop'],
     type: 'hibrido',
     status: 'publicado',
     start_date: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(),
@@ -204,13 +204,13 @@ export const MOCK_EVENTS: Event[] = [
       longitude: -38.4711,
       online_platform: 'Google Meet',
       online_url: 'https://meet.google.com/xxx-xxxx-xxx',
-      instructions: 'Link serÃ¡ enviado 1 hora antes do evento'
+      instructions: 'Link será enviado 1 hora antes do evento'
     },
     organizer: {
       id: 'org-002',
       name: 'Instituto de Desenvolvimento Local',
       avatar_url: 'https://api.dicebear.com/7.x/initials/svg?seed=IDL',
-      bio: 'CapacitaÃ§Ã£o e desenvolvimento de empreendedores locais',
+      bio: 'Capacitação e desenvolvimento de empreendedores locais',
       verified: true,
       contact: {
         email: 'contato@idl.org.br',
@@ -247,13 +247,13 @@ export const MOCK_EVENTS: Event[] = [
       {
         id: 'sch-005',
         time: '14:00',
-        title: 'Abertura e ApresentaÃ§Ãµes',
+        title: 'Abertura e Apresentações',
         duration_minutes: 15
       },
       {
         id: 'sch-006',
         time: '14:15',
-        title: 'MÃ³dulo 1: ValidaÃ§Ã£o de Ideias',
+        title: 'Módulo 1: Validação de Ideias',
         description: 'Como testar se sua ideia tem mercado',
         duration_minutes: 45,
         speaker: 'Ana Silva'
@@ -261,8 +261,8 @@ export const MOCK_EVENTS: Event[] = [
       {
         id: 'sch-007',
         time: '15:00',
-        title: 'MÃ³dulo 2: Marketing Digital',
-        description: 'EstratÃ©gias prÃ¡ticas para divulgar seu negÃ³cio',
+        title: 'Módulo 2: Marketing Digital',
+        description: 'Estratégias práticas para divulgar seu negócio',
         duration_minutes: 45,
         speaker: 'Carlos Santos'
       },
@@ -275,8 +275,8 @@ export const MOCK_EVENTS: Event[] = [
       {
         id: 'sch-009',
         time: '16:00',
-        title: 'MÃ³dulo 3: Vendas Online',
-        description: 'Plataformas e tÃ©cnicas de vendas',
+        title: 'Módulo 3: Vendas Online',
+        description: 'Plataformas e técnicas de vendas',
         duration_minutes: 45,
         speaker: 'Maria Oliveira'
       },
@@ -288,14 +288,14 @@ export const MOCK_EVENTS: Event[] = [
       }
     ],
     requirements: [
-      'Ter uma ideia de negÃ³cio (mesmo que inicial)',
+      'Ter uma ideia de negócio (mesmo que inicial)',
       'Notebook ou smartphone para acompanhar',
       'Vontade de aprender e empreender'
     ],
     what_to_bring: [
       'Notebook (recomendado)',
-      'Caderno para anotaÃ§Ãµes',
-      'Documento de identificaÃ§Ã£o'
+      'Caderno para anotações',
+      'Documento de identificação'
     ],
     features: {
       has_certificate: true,
@@ -312,8 +312,8 @@ export const MOCK_EVENTS: Event[] = [
     updated_at: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
     published_at: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
     meta_title: 'Workshop de Empreendedorismo Digital | Achegue-se',
-    meta_description: 'Aprenda a criar e gerenciar seu negÃ³cio online. Workshop gratuito com certificado!',
-    meta_keywords: ['workshop', 'empreendedorismo', 'digital', 'negÃ³cios', 'gratuito']
+    meta_description: 'Aprenda a criar e gerenciar seu negócio online. Workshop gratuito com certificado!',
+    meta_keywords: ['workshop', 'empreendedorismo', 'digital', 'negócios', 'gratuito']
   }
 ];
 

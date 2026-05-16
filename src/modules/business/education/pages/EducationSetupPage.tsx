@@ -50,9 +50,9 @@ import { Separator } from '@/shared/components/ui/separator';
 const INSTITUTION_TYPES = [
   { value: 'school', label: 'Escola' },
   { value: 'university', label: 'Universidade' },
-  { value: 'course', label: 'Curso/PreparatÃ³rio' },
+  { value: 'course', label: 'Curso/Preparatório' },
   { value: 'language_school', label: 'Escola de Idiomas' },
-  { value: 'daycare', label: 'Creche/BerÃ§Ã¡rio' },
+  { value: 'daycare', label: 'Creche/Berçário' },
   { value: 'other', label: 'Outro' },
 ];
 
@@ -289,8 +289,8 @@ export function EducationSetupPage() {
       });
       if (result) {
         toast({
-          title: 'ConfiguraÃ§Ã£o salva',
-          description: 'As alteraÃ§Ãµes foram salvas com sucesso.',
+          title: 'Configuração salva',
+          description: 'As alterações foram salvas com sucesso.',
         });
         refetch();
         navigate(`/central/empresas/${businessId}/education`);
@@ -304,7 +304,7 @@ export function EducationSetupPage() {
     } catch (error) {
       toast({
         title: 'Erro ao salvar',
-        description: 'Ocorreu um erro ao salvar as configuraÃ§Ãµes.',
+        description: 'Ocorreu um erro ao salvar as configurações.',
         variant: 'destructive',
       });
     } finally {
@@ -321,7 +321,7 @@ export function EducationSetupPage() {
       case 'full_enabled':
         return <Badge className="bg-green-100 text-green-800 hover:bg-green-100">Completo</Badge>;
       case 'basic_enabled':
-        return <Badge className="bg-blue-100 text-blue-800 hover:bg-blue-100">BÃ¡sico</Badge>;
+        return <Badge className="bg-blue-100 text-blue-800 hover:bg-blue-100">Básico</Badge>;
       case 'beta':
         return <Badge className="bg-amber-100 text-amber-800 hover:bg-amber-100">Beta</Badge>;
       case 'planned':
@@ -363,9 +363,9 @@ export function EducationSetupPage() {
             <Settings className="w-5 h-5 text-white" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Configurar EducaÃ§Ã£o</h1>
+            <h1 className="text-2xl font-bold text-gray-900">Configurar Educação</h1>
             <p className="text-sm text-gray-500">
-              Configure os dados da sua instituiÃ§Ã£o
+              Configure os dados da sua instituição
             </p>
           </div>
         </div>
@@ -373,12 +373,12 @@ export function EducationSetupPage() {
 
       <form onSubmit={handleSubmit}>
         <div className="space-y-6">
-          {/* Tipo de InstituiÃ§Ã£o */}
+          {/* Tipo de Instituição */}
           <Card>
             <CardHeader>
               <CardTitle className="text-lg flex items-center gap-2">
                 <School className="w-5 h-5 text-blue-500" />
-                Tipo de InstituiÃ§Ã£o
+                Tipo de Instituição
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -391,7 +391,7 @@ export function EducationSetupPage() {
                   }
                 >
                   <SelectTrigger id="institutionType">
-                    <SelectValue placeholder="Selecione o tipo de instituiÃ§Ã£o" />
+                    <SelectValue placeholder="Selecione o tipo de instituição" />
                   </SelectTrigger>
                   <SelectContent>
                     {INSTITUTION_TYPES.map((type) => (
@@ -423,7 +423,7 @@ export function EducationSetupPage() {
                   </SelectContent>
                 </Select>
                 <p className="text-xs text-gray-500 mt-1">
-                  O nicho define as funcionalidades disponÃ­veis para sua instituiÃ§Ã£o.
+                  O nicho define as funcionalidades disponíveis para sua instituição.
                 </p>
               </div>
 
@@ -441,7 +441,7 @@ export function EducationSetupPage() {
                   <Separator className="my-2" />
                   
                   <div className="text-xs space-y-1">
-                    <p><span className="font-medium">Limites:</span> {selectedNiche.entitlements.maxPrograms} programas, {selectedNiche.entitlements.maxEvents} eventos, {selectedNiche.entitlements.maxLeadsPerMonth} leads/mÃªs</p>
+                    <p><span className="font-medium">Limites:</span> {selectedNiche.entitlements.maxPrograms} programas, {selectedNiche.entitlements.maxEvents} eventos, {selectedNiche.entitlements.maxLeadsPerMonth} leads/mês</p>
                     <p><span className="font-medium">Capabilities:</span> {selectedNiche.enabledCapabilities.length} ativas</p>
                   </div>
 
@@ -692,24 +692,24 @@ export function EducationSetupPage() {
             </Card>
           )}
 
-          {/* DescriÃ§Ã£o */}
+          {/* Descrição */}
           <Card>
             <CardHeader>
               <CardTitle className="text-lg flex items-center gap-2">
                 <FileText className="w-5 h-5 text-blue-500" />
-                DescriÃ§Ã£o
+                Descrição
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div>
-                <Label htmlFor="summary">Sobre a instituiÃ§Ã£o</Label>
+                <Label htmlFor="summary">Sobre a instituição</Label>
                 <Textarea
                   id="summary"
                   value={formData.summary}
                   onChange={(e) =>
                     setFormData({ ...formData, summary: e.target.value })
                   }
-                  placeholder="Descreva sua instituiÃ§Ã£o, diferenciais, metodologia..."
+                  placeholder="Descreva sua instituição, diferenciais, metodologia..."
                   rows={4}
                   maxLength={500}
                 />
@@ -740,13 +740,13 @@ export function EducationSetupPage() {
                   placeholder="+5588999999999"
                 />
                 <p className="text-xs text-gray-500 mt-1">
-                  NÃºmero que serÃ¡ exibido para contato na pÃ¡gina pÃºblica.
+                  Número que será exibido para contato na página pública.
                 </p>
               </div>
             </CardContent>
           </Card>
 
-          {/* AÃ§Ãµes */}
+          {/* Ações */}
           <div className="flex gap-4">
             <Button
               type="submit"
@@ -754,7 +754,7 @@ export function EducationSetupPage() {
               className="flex-1 gap-2"
             >
               <Save className="w-4 h-4" />
-              {isSaving ? 'Salvando...' : 'Salvar ConfiguraÃ§Ãµes'}
+              {isSaving ? 'Salvando...' : 'Salvar Configurações'}
             </Button>
             <Button
               type="button"

@@ -1,10 +1,10 @@
 /**
- * useCommunityRollout - Hook para integraÁ„o com sistema de rollout
+ * useCommunityRollout - Hook para integra√ß√£o com sistema de rollout
  *
- * Respons·vel por:
- * - Verificar se community est· ativo na localizaÁ„o
+ * Respons√°vel por:
+ * - Verificar se community est√° ativo na localiza√ß√£o
  * - Bloquear funcionalidades quando inativo
- * - Fornecer configuraÁ„o do mÛdulo
+ * - Fornecer configura√ß√£o do m√≥dulo
  */
 import { logger } from "@/shared/utils/logger";
 import { useState, useEffect, useCallback } from "react";
@@ -33,7 +33,7 @@ export function useCommunityRollout(resolved?: ResolvedTerritory) {
       setIsActive(false);
       setRollout(null);
       setConfig(null);
-      setAccessCheck({ blocked: true, reason: "LocalizaÁ„o n„o selecionada" });
+      setAccessCheck({ blocked: true, reason: "Localiza√ß√£o n√£o selecionada" });
       setIsLoading(false);
       return;
     }

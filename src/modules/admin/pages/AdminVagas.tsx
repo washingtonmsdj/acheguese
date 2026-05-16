@@ -363,8 +363,8 @@ export default function AdminVagas() {
                     <SelectItem value={ALL_CONTRATO_FILTER}>Todos</SelectItem>
                     <SelectItem value="CLT">CLT</SelectItem>
                     <SelectItem value="PJ">PJ</SelectItem>
-                    <SelectItem value="temporario">Temporário</SelectItem>
-                    <SelectItem value="estagio">Estágio</SelectItem>
+                    <SelectItem value="temporario">Tempor?rio</SelectItem>
+                    <SelectItem value="estagio">Est?gio</SelectItem>
                     <SelectItem value="freelancer">Freelancer</SelectItem>
                     <SelectItem value="aprendiz">Aprendiz</SelectItem>
                   </SelectContent>
@@ -384,7 +384,7 @@ export default function AdminVagas() {
                     <SelectItem value={ALL_MODALIDADE_FILTER}>Todas</SelectItem>
                     <SelectItem value="presencial">Presencial</SelectItem>
                     <SelectItem value="remoto">Remoto</SelectItem>
-                    <SelectItem value="hibrido">Híbrido</SelectItem>
+                    <SelectItem value="hibrido">H?brido</SelectItem>
                   </SelectContent>
                 </Select>
                 <Button

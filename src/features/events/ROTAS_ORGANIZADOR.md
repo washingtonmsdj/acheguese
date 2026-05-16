@@ -1,8 +1,8 @@
-# ðŸ›£ï¸ Rotas do Dashboard do Organizador
+# 🛣️ Rotas do Dashboard do Organizador
 
-Guia completo de rotas e navegaÃ§Ã£o para o sistema de eventos.
+Guia completo de rotas e navegação para o sistema de eventos.
 
-## ðŸ“ Estrutura de Rotas
+## 📍 Estrutura de Rotas
 
 ```typescript
 // App.tsx ou routes.tsx
@@ -19,7 +19,7 @@ import EventsFavoritesPage from '@/features/events-v2/pages/EventsFavoritesPage'
 function EventsRoutes() {
   return (
     <Routes>
-      {/* Rotas PÃºblicas */}
+      {/* Rotas Públicas */}
       <Route path="/eventos" element={<EventsListPage />} />
       <Route path="/eventos/:eventId" element={<EventDetailPageV2 />} />
       <Route path="/eventos/calendario" element={<EventsCalendarPage />} />
@@ -58,7 +58,7 @@ function EventsRoutes() {
 
 ---
 
-## ðŸ” ProteÃ§Ã£o de Rotas
+## 🔐 Proteção de Rotas
 
 ### Componente ProtectedRoute
 
@@ -90,7 +90,7 @@ export function ProtectedRoute({
   }
 
   if (requiredRole && user.role !== requiredRole && user.role !== 'admin') {
-    // UsuÃ¡rio nÃ£o tem permissÃ£o
+    // Usuário não tem permissão
     return <Navigate to="/eventos" replace />;
   }
 
@@ -100,7 +100,7 @@ export function ProtectedRoute({
 
 ---
 
-## ðŸ§­ NavegaÃ§Ã£o
+## 🧭 Navegação
 
 ### Menu do Organizador
 
@@ -138,7 +138,7 @@ const menuItems = [
     icon: BarChart3,
   },
   {
-    label: 'ConfiguraÃ§Ãµes',
+    label: 'Configurações',
     href: '/eventos/organizer/settings',
     icon: Settings,
   },
@@ -174,7 +174,7 @@ export function OrganizerMenu() {
 
 ---
 
-## ðŸ”— Links e NavegaÃ§Ã£o ProgramÃ¡tica
+## 🔗 Links e Navegação Programática
 
 ### Usando Link
 
@@ -196,7 +196,7 @@ import { Link } from 'react-router-dom';
   Editar
 </Link>
 
-// Link para visualizar evento (pÃºblico)
+// Link para visualizar evento (público)
 <Link to={`/eventos/${eventId}`}>
   Ver Evento
 </Link>
@@ -237,7 +237,7 @@ function MyComponent() {
 
 ---
 
-## ðŸ“± Breadcrumbs
+## 📱 Breadcrumbs
 
 ### Componente de Breadcrumbs
 
@@ -252,7 +252,7 @@ const routeLabels: Record<string, string> = {
   'organizer': 'Organizador',
   'new': 'Novo Evento',
   'edit': 'Editar Evento',
-  'calendario': 'CalendÃ¡rio',
+  'calendario': 'Calendário',
   'mapa': 'Mapa',
   'favoritos': 'Favoritos',
 };
@@ -268,7 +268,7 @@ export function Breadcrumbs() {
         className="flex items-center gap-1 transition-colors hover:text-foreground"
       >
         <Home className="h-3.5 w-3.5" />
-        <span className="hidden sm:inline">InÃ­cio</span>
+        <span className="hidden sm:inline">Início</span>
       </Link>
 
       {pathnames.map((name, index) => {
@@ -299,7 +299,7 @@ export function Breadcrumbs() {
 
 ---
 
-## ðŸŽ¯ Query Parameters
+## 🎯 Query Parameters
 
 ### Filtros na URL
 
@@ -309,12 +309,12 @@ import { useSearchParams } from 'react-router-dom';
 function EventsList() {
   const [searchParams, setSearchParams] = useSearchParams();
 
-  // Ler parÃ¢metros
+  // Ler parâmetros
   const category = searchParams.get('category');
   const status = searchParams.get('status');
   const search = searchParams.get('q');
 
-  // Atualizar parÃ¢metros
+  // Atualizar parâmetros
   const handleFilterChange = (key: string, value: string) => {
     const newParams = new URLSearchParams(searchParams);
     if (value) {
@@ -350,9 +350,9 @@ function EventsList() {
 
 ---
 
-## ðŸ”„ Redirecionamentos
+## 🔄 Redirecionamentos
 
-### ApÃ³s Criar Evento
+### Após Criar Evento
 
 ```tsx
 function EventsOrganizerForm() {
@@ -362,15 +362,15 @@ function EventsOrganizerForm() {
     try {
       const newEvent = await createEvent(formData);
       
-      // OpÃ§Ã£o 1: Redirecionar para dashboard
+      // Opção 1: Redirecionar para dashboard
       navigate('/eventos/organizer', {
         state: { message: 'Evento criado com sucesso!' }
       });
 
-      // OpÃ§Ã£o 2: Redirecionar para visualizaÃ§Ã£o do evento
+      // Opção 2: Redirecionar para visualização do evento
       navigate(`/eventos/${newEvent.id}`);
 
-      // OpÃ§Ã£o 3: Redirecionar para ediÃ§Ã£o
+      // Opção 3: Redirecionar para edição
       navigate(`/eventos/organizer/edit/${newEvent.id}`);
     } catch (error) {
       console.error(error);
@@ -385,7 +385,7 @@ function EventsOrganizerForm() {
 }
 ```
 
-### ApÃ³s Login
+### Após Login
 
 ```tsx
 function LoginPage() {
@@ -395,7 +395,7 @@ function LoginPage() {
   const handleLogin = async () => {
     await login(credentials);
     
-    // Redirecionar para pÃ¡gina anterior ou dashboard
+    // Redirecionar para página anterior ou dashboard
     const from = location.state?.from?.pathname || '/eventos/organizer';
     navigate(from, { replace: true });
   };
@@ -410,7 +410,7 @@ function LoginPage() {
 
 ---
 
-## ðŸŽ¨ Layout com Sidebar
+## 🎨 Layout com Sidebar
 
 ### Layout do Organizador
 
@@ -450,7 +450,7 @@ export function OrganizerLayout() {
 
 ---
 
-## ðŸ“Š Exemplo Completo
+## 📊 Exemplo Completo
 
 ```tsx
 // App.tsx
@@ -480,7 +480,7 @@ function App() {
         {/* Auth */}
         <Route path="/login" element={<LoginPage />} />
 
-        {/* Eventos PÃºblicos */}
+        {/* Eventos Públicos */}
         <Route path="/eventos">
           <Route index element={<EventsListPage />} />
           <Route path=":eventId" element={<EventDetailPageV2 />} />
@@ -515,7 +515,7 @@ export default App;
 
 ---
 
-## ðŸš€ Dicas de Performance
+## 🚀 Dicas de Performance
 
 ### 1. Lazy Loading
 
@@ -554,5 +554,5 @@ import { Link } from 'react-router-dom';
 
 ---
 
-**Ãšltima atualizaÃ§Ã£o:** 2024
-**VersÃ£o:** 1.0.0
+**Última atualização:** 2024
+**Versão:** 1.0.0

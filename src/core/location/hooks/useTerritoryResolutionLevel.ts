@@ -2,8 +2,10 @@ import { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '@/core/auth/hooks/useAuth';
 import { residenceService } from '@/core/residence/services/ResidenceService';
+import { TerritorialGroupService } from '@/core/location/services/TerritorialGroupService';
 import { useUserTerritory } from './useUserTerritory';
-import { supabase } from '@/integrations/supabase/client';
+
+const territorialGroupService = new TerritorialGroupService();
 
 export type TerritoryResolutionLevel =
   | 'none'
@@ -39,13 +41,8 @@ export function useTerritoryResolutionLevel(): TerritoryResolutionState {
     queryKey: ['territory-resolution', 'group-membership', homeDistrict?.id],
     queryFn: async () => {
       if (!homeDistrict?.id) return false;
-      const { data, error } = await supabase
-        .from('territorial_group_members' as never)
-        .select('group_id')
-        .eq('location_id', homeDistrict.id)
-        .limit(1);
-      if (error) return false;
-      return (data ?? []).length > 0;
+      const groups = await territorialGroupService.findGroupsContainingLocation(homeDistrict.id);
+      return groups.length > 0;
     },
     enabled: !!homeDistrict?.id,
     staleTime: 10 * 60 * 1000,
@@ -82,4 +79,3 @@ export function useTerritoryResolutionLevel(): TerritoryResolutionState {
     residence?.is_verified,
   ]);
 }
-

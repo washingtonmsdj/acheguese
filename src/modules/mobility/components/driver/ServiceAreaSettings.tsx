@@ -1,5 +1,5 @@
 /**
- * ServiceAreaSettings - boundary de UI para gerenciamento de áreas de serviço
+ * ServiceAreaSettings - boundary de UI para gerenciamento de Ã¡reas de serviÃ§o
  *
  * Fluxo SSOT:
  * ServiceAreasManager -> useServiceAreas hooks -> ServiceAreasService

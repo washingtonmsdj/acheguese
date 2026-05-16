@@ -79,7 +79,7 @@ export default function RecomendacoesPage() {
               Escolha seu bairro
             </h2>
             <p className="text-gray-400 mb-6">
-              Para acessar recomendações hiperlocais, escolha seu bairro principal na comunidade.
+              Para acessar recomendaÃ§Ãµes hiperlocais, escolha seu bairro principal na comunidade.
             </p>
             <Button onClick={() => navigate(appUrls.community.feed)} className="bg-teal-500 hover:bg-teal-400">
               Escolher meu bairro

@@ -1,12 +1,12 @@
 /**
- * ClassificadoDetailPage — Página de detalhe item-first
+ * ClassificadoDetailPage - PÃ¡gina de detalhe item-first
  *
- * ? Foco total no produto/anúncio
- * ? Galeria imersiva com navegação touch
- * ? Badge de condição (novo/seminovo/usado)
- * ? Vendedor como info secundária
- * ? Anúncios do mesmo vendedor
- * ? Anúncios relacionados
+ * ? Foco total no produto/anÃºncio
+ * ? Galeria imersiva com navegaÃ§Ã£o touch
+ * ? Badge de condiÃ§Ã£o (novo/seminovo/usado)
+ * - Vendedor como info secundÃ¡ria
+ * ? AnÃºncios do mesmo vendedor
+ * ? AnÃºncios relacionados
  * ? Mobile-first, responsivo para desktop
  */
 
@@ -131,7 +131,7 @@ export default function ClassificadoDetailPage({ classifiedId: propId }: Classif
     if (!classificado?.vendedor) return;
     const phone = classificado.vendedor.whatsapp || classificado.vendedor.phone;
     if (!phone) return;
-    const msg = encodeURIComponent(`Olá! Vi seu anúncio "${classificado.titulo}" e tenho interesse.`);
+    const msg = encodeURIComponent(`OlÃ¡! Vi seu anÃºncio "${classificado.titulo}" e tenho interesse.`);
     window.open(`https://wa.me/${phone}?text=${msg}`, "_blank");
   }, [classificado]);
 
@@ -199,18 +199,18 @@ export default function ClassificadoDetailPage({ classifiedId: propId }: Classif
         classified_id: id!,
         reason: reportReason as ReportReason,
       });
-      toast({ title: "Denúncia enviada", description: "Nossa equipe irá analisar em breve." });
+      toast({ title: "DenÃºncia enviada", description: "Nossa equipe irÃ¡ analisar em breve." });
       setReportOpen(false);
       setReportReason("");
     } catch {
-      toast({ title: "Erro ao enviar denúncia", description: "Tente novamente mais tarde.", variant: "destructive" });
+      toast({ title: "Erro ao enviar denÃºncia", description: "Tente novamente mais tarde.", variant: "destructive" });
     } finally {
       setSubmittingReport(false);
     }
   }, [reportReason, user, id, toast]);
 
   const buildAdUrl = useCallback((ad: any) => {
-    // ? SSOT: Usar classifiedUrlService para construir URL canônica
+    // ? SSOT: Usar classifiedUrlService para construir URL canÃ´nica
     if (ad.geographic_path && ad.category_slug && ad.subcategory_slug && ad.slug && ad.public_id) {
       const urls = classifiedUrlService.buildUrls({
         id: ad.id,
@@ -250,8 +250,8 @@ export default function ClassificadoDetailPage({ classifiedId: propId }: Classif
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center max-w-md px-4">
           <div className="text-6xl mb-4">??</div>
-          <h2 className="text-2xl font-bold text-foreground mb-2">Anúncio não encontrado</h2>
-          <p className="text-muted-foreground mb-6">O anúncio que você procura não existe ou foi removido.</p>
+          <h2 className="text-2xl font-bold text-foreground mb-2">AnÃºncio nÃ£o encontrado</h2>
+          <p className="text-muted-foreground mb-6">O anÃºncio que vocÃª procura nÃ£o existe ou foi removido.</p>
           <Button onClick={() => navigate(appUrls.classifieds.list)}>Voltar para Classificados</Button>
         </div>
       </div>
@@ -406,7 +406,7 @@ export default function ClassificadoDetailPage({ classifiedId: propId }: Classif
               className="flex flex-wrap items-center gap-2"
             >
               <MetaChip icon={Tag} text={classificado.categoria} />
-              <MetaChip icon={MapPin} text={classificado.bairro || "Não informado"} />
+              <MetaChip icon={MapPin} text={classificado.bairro || "NÃ£o informado"} />
               <MetaChip icon={Clock} text={timeAgo} />
             </motion.div>
 
@@ -438,7 +438,7 @@ export default function ClassificadoDetailPage({ classifiedId: propId }: Classif
               className="bg-card border border-border rounded-2xl p-5"
             >
               <h2 className="text-sm font-bold text-foreground mb-3 flex items-center gap-1.5">
-                ?? Descrição
+                ?? DescriÃ§Ã£o
               </h2>
               <p className="text-sm text-muted-foreground whitespace-pre-wrap leading-relaxed">
                 {classificado.descricao}
@@ -453,12 +453,12 @@ export default function ClassificadoDetailPage({ classifiedId: propId }: Classif
               className="grid grid-cols-2 sm:grid-cols-4 gap-3"
             >
               <DetailBox label="Categoria" value={`${categoryEmoji} ${classificado.categoria}`} />
-              <DetailBox label="Condição" value={
+              <DetailBox label="CondiÃ§Ã£o" value={
                 classificado.condition === "novo" ? "?? Novo"
                 : classificado.condition === "seminovo" ? "?? Seminovo"
                 : "? Usado"
               } />
-              <DetailBox label="Localização" value={classificado.bairro || "—"} />
+              <DetailBox label="LocalizaÃ§Ã£o" value={classificado.bairro || "-"} />
               <DetailBox label="Status" value={getClassifiedStatusLabel(classificado.status)} />
               <DetailBox label="Publicado" value={timeAgo} />
             </motion.div>
@@ -488,7 +488,7 @@ export default function ClassificadoDetailPage({ classifiedId: propId }: Classif
                 className="mt-4 flex items-center gap-1.5 text-xs text-muted-foreground hover:text-destructive transition-colors"
               >
                 <Flag className="h-3 w-3" />
-                Denunciar anúncio
+                Denunciar anÃºncio
               </button>
             </div>
           </div>
@@ -529,7 +529,7 @@ export default function ClassificadoDetailPage({ classifiedId: propId }: Classif
           >
             <div className="flex items-center justify-between mb-3">
               <h2 className="text-base sm:text-lg font-bold text-foreground">
-                Anúncios Relacionados
+                AnÃºncios Relacionados
               </h2>
               <Button
                 variant="ghost"
@@ -555,7 +555,7 @@ export default function ClassificadoDetailPage({ classifiedId: propId }: Classif
             className="text-xs text-muted-foreground hover:text-destructive font-medium inline-flex items-center gap-1"
           >
             <Flag className="h-3 w-3" />
-            Denunciar este anúncio
+            Denunciar este anÃºncio
           </button>
         </div>
       </main>
@@ -580,7 +580,7 @@ export default function ClassificadoDetailPage({ classifiedId: propId }: Classif
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
                   <Flag className="h-4 w-4 text-destructive" />
-                  <h2 className="text-base font-bold text-foreground">Denunciar Anúncio</h2>
+                  <h2 className="text-base font-bold text-foreground">Denunciar AnÃºncio</h2>
                 </div>
                 <button onClick={() => setReportOpen(false)} className="text-muted-foreground hover:text-foreground">
                   <X className="h-4 w-4" />
@@ -597,11 +597,11 @@ export default function ClassificadoDetailPage({ classifiedId: propId }: Classif
                 <option value="">Selecione um motivo</option>
                 <option value="fraud">Fraude ou golpe</option>
                 <option value="fake">Produto falso</option>
-                <option value="inappropriate">Conteúdo inapropriado</option>
+                <option value="inappropriate">ConteÃºdo inapropriado</option>
                 <option value="spam">Spam</option>
                 <option value="duplicate">Duplicado</option>
                 <option value="wrong-category">Categoria incorreta</option>
-                <option value="sold">Já vendido</option>
+                <option value="sold">JÃ¡ vendido</option>
                 <option value="other">Outro</option>
               </select>
               <div className="flex gap-2">
@@ -817,11 +817,11 @@ function SafetyTips() {
       <div className="flex items-start gap-2">
         <Shield className="h-4 w-4 text-primary mt-0.5 shrink-0" />
         <div>
-          <p className="text-xs font-bold text-foreground mb-1.5">Dicas de Segurança</p>
+          <p className="text-xs font-bold text-foreground mb-1.5">Dicas de SeguranÃ§a</p>
           <ul className="text-[10px] text-muted-foreground space-y-1 leading-relaxed">
-            <li>• Prefira encontros em locais públicos</li>
-            <li>• Verifique o produto antes de pagar</li>
-            <li>• Desconfie de preços muito baixos</li>
+            <li>- Prefira encontros em locais pÃºblicos</li>
+            <li>- Verifique o produto antes de pagar</li>
+            <li>- Desconfie de preÃ§os muito baixos</li>
           </ul>
         </div>
       </div>

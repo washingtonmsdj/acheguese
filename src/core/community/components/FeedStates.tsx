@@ -1,4 +1,4 @@
-﻿import React from "react";
+import React from "react";
 import { Button } from "@/shared/components/ui/button";
 import { AlertCircle } from "lucide-react";
 import { FOCUS_STYLES } from "@/core/community/components/styles/accessibilityAAA";
@@ -49,7 +49,7 @@ export const ErrorState = ({ onRetry }: { onRetry: () => void }) => (
       Erro ao carregar feed
     </h2>
     <p className="text-gray-400 text-center mb-4">
-      NÃ£o foi possÃ­vel carregar os posts. Verifique sua conexÃ£o.
+      Não foi possível carregar os posts. Verifique sua conexão.
     </p>
     <Button
       onClick={onRetry}
@@ -69,7 +69,7 @@ export const EmptyState = ({ filter }: { filter: FeedCategory }) => (
   >
     <div className="w-16 h-16 mx-auto rounded-full bg-gray-800 flex items-center justify-center mb-4">
       <span className="text-2xl" role="img" aria-label="Feed vazio">
-        ðŸ“±
+        📱
       </span>
     </div>
     <h2 className="text-lg font-semibold text-white mb-2">

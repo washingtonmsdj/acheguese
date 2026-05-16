@@ -9,6 +9,6 @@ export { IdentityChangeConfirmDialog } from './IdentityChangeConfirmDialog';
 export { BusinessIdentityField } from './domains/BusinessIdentityField';
 export { ProfileIdentityField } from './domains/ProfileIdentityField';
 export { ProfessionalIdentityField } from './domains/ProfessionalIdentityField';
+export { CommunicationChannelIdentityField } from './domains/CommunicationChannelIdentityField';
 
 export type { IdentityFieldProps } from './IdentityField';
-

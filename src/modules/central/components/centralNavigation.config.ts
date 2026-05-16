@@ -1,4 +1,4 @@
-import { Building2, Car, Home, LayoutGrid, User, Bike, Calendar } from 'lucide-react';
+import { Building2, Car, Home, User, Bike, Calendar, Radio } from 'lucide-react';
 import { mobilityRoutes } from '@/modules/mobility/routes/mobilityRoutes';
 import { businessManagementRoutes } from '@/core/business/utils/businessManagementRoutes';
 
@@ -72,6 +72,19 @@ export const CENTRAL_NAV_SECTIONS: CentralNavSection[] = [
         label: 'Criar Evento',
         href: '/central/eventos/novo',
         description: 'Criar novo evento',
+      },
+    ],
+  },
+  {
+    id: 'communication',
+    label: 'Comunicacao',
+    items: [
+      {
+        id: 'communication-home',
+        icon: Radio,
+        label: 'Meus Canais',
+        href: '/central/comunicacao',
+        description: 'Publicar conteudo territorial',
       },
     ],
   },

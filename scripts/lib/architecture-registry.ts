@@ -8,6 +8,7 @@ export interface DomainRegistryEntry {
     | "business"
     | "gastronomy"
     | "professionals-services"
+    | "communication-territorial"
     | "community-feed"
     | "community-alerts"
     | "community-issues"
@@ -282,6 +283,36 @@ export const DOMAIN_REGISTRY: DomainRegistryEntry[] = [
       "Fraca. Professional tem README em core, mas professionals/services ainda carece de documentacao viva sobre ownership, tipos oficiais e fronteiras com business/profile.",
     ssotSummary:
       "ProfessionalService, ServicesService e VagasService formam o eixo SSOT em core para professionals/services/vagas, com composicao oficial em modules/professionals/services e modules/classifieds/jobs.",
+  },
+  {
+    id: "communication-territorial",
+    label: "communication-territorial",
+    sourceRoots: [
+      "src/core/communication-territorial",
+      "src/modules/communication-territorial",
+    ],
+    docsPaths: [
+      "docs/COMUNICACAO_TERRITORIAL_ARCHITECTURE.md",
+      "src/core/communication-territorial/README.md",
+    ],
+    ssotPaths: [
+      "src/core/communication-territorial/services/CommunicationTerritorialService.ts",
+      "src/core/communication-territorial/services/AdminCommunicationTerritorialService.ts",
+    ],
+    routePrefixes: ["/comunicacao"],
+    adminRoutePrefixes: ["/admin/comunicacao"],
+    criticality: "high",
+    canonicalServiceBasenames: [
+      "CommunicationTerritorialService.ts",
+      "AdminCommunicationTerritorialService.ts",
+    ],
+    canonicalTypeBasenames: ["types.ts"],
+    adminSummary:
+      "MVP com aprovacao administrativa fechada para canais, ativacao de territorio principal e auditoria de decisoes.",
+    docsSummary:
+      "Dominio documentado em core e no plano arquitetural de Comunicacao Territorial.",
+    ssotSummary:
+      "Core/communication-territorial concentra servicos, tipos, URL canonica e acesso ao Supabase. UI publica, admin e central consomem apenas esses contratos.",
   },
   {
     id: "community-feed",

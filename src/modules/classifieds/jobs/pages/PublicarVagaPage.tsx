@@ -183,10 +183,10 @@ export default function PublicarVagaPage() {
           break;
         case "location":
           if (!hasActiveLocation) {
-            newErrors.location = "Selecione uma localiza��o ativa no sistema";
+            newErrors.location = "Selecione uma localização ativa no sistema";
           }
           if (isLoadingPermission) {
-            newErrors.publishPermission = "Aguarde a valida��o das permiss�es.";
+            newErrors.publishPermission = "Aguarde a validação das permissões.";
           } else if (!permission.canPublish) {
             newErrors.publishPermission = permission.message;
           }
@@ -320,7 +320,7 @@ export default function PublicarVagaPage() {
     }
 
     if (isLoadingPermission) {
-      toast.error("Aguarde a valida��o das permiss�es para publicar.");
+      toast.error("Aguarde a validação das permissões para publicar.");
       setCurrentStep("location");
       return;
     }
@@ -332,7 +332,7 @@ export default function PublicarVagaPage() {
     }
 
     if (!permission.isAdmin && !permission.businessId) {
-      toast.error("Empresa vinculada n�o encontrada para publica��o.");
+      toast.error("Empresa vinculada não encontrada para publicação.");
       setCurrentStep("location");
       return;
     }
@@ -344,7 +344,7 @@ export default function PublicarVagaPage() {
     }
 
     if (!activeLocationId) {
-      toast.error("Selecione um territ�rio ativo para publicar.");
+      toast.error("Selecione um território ativo para publicar.");
       setCurrentStep("location");
       return;
     }
@@ -410,7 +410,7 @@ export default function PublicarVagaPage() {
         ogImageUrl: undefined,
       });
 
-      toast.success("Vaga enviada para revis�o com sucesso.");
+      toast.success("Vaga enviada para revisão com sucesso.");
       navigate(vagasListPath);
     } catch (error) {
       const errorMessage =
@@ -556,21 +556,21 @@ export default function PublicarVagaPage() {
           <div className="space-y-1">
             <p className="text-sm font-semibold text-foreground">
               {isLoadingPermission
-                ? "Validando permiss�o para publicar..."
+                ? "Validando permissão para publicar..."
                 : permission.canPublish
-                  ? "Publica��o liberada"
-                  : "Publica��o bloqueada"}
+                  ? "Publicação liberada"
+                  : "Publicação bloqueada"}
             </p>
             <p className="text-xs text-muted-foreground">
               {isLoadingPermission
-                ? "Aguarde a valida��o do perfil/empresa."
+                ? "Aguarde a validação do perfil/empresa."
                 : permission.message}
             </p>
             {!isLoadingPermission && permission.canPublish && (
               <p className="text-[11px] text-muted-foreground">
                 Perfil ativo selecionado
-                {" � "}
-                Empresa: <strong>{permission.businessName || empresa || "�"}</strong>
+                {" • "}
+                Empresa: <strong>{permission.businessName || empresa || "-"}</strong>
               </p>
             )}
           </div>
@@ -1237,7 +1237,7 @@ export default function PublicarVagaPage() {
                 ) : !permission.canPublish ? (
                   <>
                     <Shield className="h-4 w-4 mr-2" />
-                    Publica��o bloqueada
+                    Publicação bloqueada
                   </>
                 ) : (
                   <>

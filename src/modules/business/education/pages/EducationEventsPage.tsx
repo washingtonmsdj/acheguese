@@ -51,8 +51,8 @@ import type { EducationEvent, SchoolEventType } from '../types';
 
 const SCHOOL_EVENT_TYPE_LABELS: Record<SchoolEventType, string> = {
   open_house: 'Portas Abertas',
-  enrollment_fair: 'Feira de MatrÃ­cula',
-  parent_meeting: 'ReuniÃ£o de Pais',
+  enrollment_fair: 'Feira de Matrícula',
+  parent_meeting: 'Reunião de Pais',
   trial_class: 'Aula Experimental',
   school_tour: 'Visita Escolar',
   cultural_event: 'Evento Cultural',
@@ -62,8 +62,8 @@ const SCHOOL_EVENT_TYPE_LABELS: Record<SchoolEventType, string> = {
 
 const SCHOOL_EVENT_TYPE_OPTIONS: { value: SchoolEventType; label: string }[] = [
   { value: 'open_house', label: 'Portas Abertas' },
-  { value: 'enrollment_fair', label: 'Feira de MatrÃ­cula' },
-  { value: 'parent_meeting', label: 'ReuniÃ£o de Pais' },
+  { value: 'enrollment_fair', label: 'Feira de Matrícula' },
+  { value: 'parent_meeting', label: 'Reunião de Pais' },
   { value: 'trial_class', label: 'Aula Experimental' },
   { value: 'school_tour', label: 'Visita Escolar' },
   { value: 'cultural_event', label: 'Evento Cultural' },
@@ -78,7 +78,7 @@ export function EducationEventsPage() {
   const { data: profile, isLoading: isProfileLoading } = useEducationProfile(businessId);
   const { events, isLoading, create, update, remove } = useEducationEvents(profile?.id);
   
-  // IntegraÃ§Ã£o nicho + billing
+  // Integração nicho + billing
   const nicheBilling = useEducationNicheBilling({
     nicheKey: profile?.niche_key,
     businessId: businessId || '',
@@ -111,7 +111,7 @@ export function EducationEventsPage() {
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // ValidaÃ§Ã£o de capability final = nicho permite AND plano permite
+    // Validação de capability final = nicho permite AND plano permite
     if (isEventsBlocked) {
       toast({ 
         title: 'Recurso bloqueado', 
@@ -121,7 +121,7 @@ export function EducationEventsPage() {
       return;
     }
     
-    // ValidaÃ§Ã£o de limite operacional
+    // Validação de limite operacional
     if (isLimitBlocked) {
       toast({ 
         title: 'Limite atingido', 
@@ -145,7 +145,7 @@ export function EducationEventsPage() {
       setIsDialogOpen(false);
       resetForm();
     } catch (error) {
-      toast({ title: 'Erro', description: 'NÃ£o foi possÃ­vel criar o evento.', variant: 'destructive' });
+      toast({ title: 'Erro', description: 'Não foi possível criar o evento.', variant: 'destructive' });
     }
   };
 
@@ -165,12 +165,12 @@ export function EducationEventsPage() {
           school_event_type: formData.schoolEventType || null,
         },
       });
-      toast({ title: 'Evento atualizado', description: 'As alteraÃ§Ãµes foram salvas.' });
+      toast({ title: 'Evento atualizado', description: 'As alterações foram salvas.' });
       setIsDialogOpen(false);
       setEditingEvent(null);
       resetForm();
     } catch (error) {
-      toast({ title: 'Erro', description: 'NÃ£o foi possÃ­vel atualizar o evento.', variant: 'destructive' });
+      toast({ title: 'Erro', description: 'Não foi possível atualizar o evento.', variant: 'destructive' });
     }
   };
 
@@ -178,9 +178,9 @@ export function EducationEventsPage() {
     if (!confirm('Tem certeza que deseja excluir este evento?')) return;
     try {
       await remove(eventId);
-      toast({ title: 'Evento excluÃ­do', description: 'O evento foi removido com sucesso.' });
+      toast({ title: 'Evento excluído', description: 'O evento foi removido com sucesso.' });
     } catch (error) {
-      toast({ title: 'Erro', description: 'NÃ£o foi possÃ­vel excluir o evento.', variant: 'destructive' });
+      toast({ title: 'Erro', description: 'Não foi possível excluir o evento.', variant: 'destructive' });
     }
   };
 
@@ -328,7 +328,7 @@ export function EducationEventsPage() {
         </Card>
         <Card>
           <CardContent className="p-4">
-            <p className="text-sm text-gray-500">PrÃ³ximos</p>
+            <p className="text-sm text-gray-500">Próximos</p>
             <p className="text-2xl font-bold text-green-600">{upcomingEvents.length}</p>
           </CardContent>
         </Card>
@@ -340,7 +340,7 @@ export function EducationEventsPage() {
         </Card>
         <Card>
           <CardContent className="p-4">
-            <p className="text-sm text-gray-500">PÃºblicos</p>
+            <p className="text-sm text-gray-500">Públicos</p>
             <p className="text-2xl font-bold">
               {events.filter(e => e.is_public).length}
             </p>
@@ -390,7 +390,7 @@ export function EducationEventsPage() {
                             Em breve
                           </Badge>
                         ) : (
-                          <Badge variant="secondary">ConcluÃ­do</Badge>
+                          <Badge variant="secondary">Concluído</Badge>
                         )}
                         {event.school_event_type && profile?.niche_key === 'regular_school' && (
                           <Badge variant="secondary" className="gap-1 bg-indigo-50 text-indigo-700 hover:bg-indigo-50 border-indigo-200">
@@ -400,7 +400,7 @@ export function EducationEventsPage() {
                         {event.is_public ? (
                           <Badge variant="outline" className="gap-1">
                             <Globe className="w-3 h-3" />
-                            PÃºblico
+                            Público
                           </Badge>
                         ) : (
                           <Badge variant="outline" className="gap-1">
@@ -472,7 +472,7 @@ export function EducationEventsPage() {
             className="space-y-4"
           >
             <div>
-              <Label htmlFor="title">TÃ­tulo *</Label>
+              <Label htmlFor="title">Título *</Label>
               <Input
                 id="title"
                 value={formData.title}
@@ -483,7 +483,7 @@ export function EducationEventsPage() {
             </div>
 
             <div>
-              <Label htmlFor="description">DescriÃ§Ã£o</Label>
+              <Label htmlFor="description">Descrição</Label>
               <Textarea
                 id="description"
                 value={formData.description}
@@ -495,7 +495,7 @@ export function EducationEventsPage() {
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="startsAt">InÃ­cio *</Label>
+                <Label htmlFor="startsAt">Início *</Label>
                 <Input
                   id="startsAt"
                   type="datetime-local"
@@ -505,7 +505,7 @@ export function EducationEventsPage() {
                 />
               </div>
               <div>
-                <Label htmlFor="endsAt">TÃ©rmino</Label>
+                <Label htmlFor="endsAt">Término</Label>
                 <Input
                   id="endsAt"
                   type="datetime-local"
@@ -521,7 +521,7 @@ export function EducationEventsPage() {
                 id="location"
                 value={formData.location}
                 onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-                placeholder="Ex: AuditÃ³rio Principal"
+                placeholder="Ex: Auditório Principal"
               />
             </div>
 
@@ -548,12 +548,12 @@ export function EducationEventsPage() {
                 checked={formData.isPublic}
                 onCheckedChange={(checked) => setFormData({ ...formData, isPublic: checked })}
               />
-              <Label htmlFor="isPublic">Evento pÃºblico (visÃ­vel na pÃ¡gina)</Label>
+              <Label htmlFor="isPublic">Evento público (visível na página)</Label>
             </div>
 
             <div className="flex gap-4 pt-4">
               <Button type="submit" className="flex-1">
-                {editingEvent ? 'Salvar AlteraÃ§Ãµes' : 'Criar Evento'}
+                {editingEvent ? 'Salvar Alterações' : 'Criar Evento'}
               </Button>
               <Button
                 type="button"

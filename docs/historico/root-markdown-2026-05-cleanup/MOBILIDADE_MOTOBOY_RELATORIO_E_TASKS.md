@@ -449,7 +449,7 @@ Motivos do nao-100%:
 - Fase 3 (integracao paginas de negocio): 65%
   - CTA de motoboy em empresa e criacao via modal existem
   - mas:
-    - botao/integração atual quebra build
+    - botao/integraÃ§Ã£o atual quebra build
     - `DeliveryManagementPage` cria em SSOT novo, porem lista/atualiza/cancela no legado (`delivery_requests`)
     - historico unificado avancou, mas avaliacao do lado motorista continua stub
 
@@ -461,7 +461,7 @@ Motivos do nao-100%:
     - alguns pontos ainda dependem de update direto em tabela (override operacional)
 
 - Fase 5 (UX/UI final): 30%
-  - ha melhorias em algumas telas, mas nao houve fechamento completo de consistencia mobile/empty/error states em todas as superfícies
+  - ha melhorias em algumas telas, mas nao houve fechamento completo de consistencia mobile/empty/error states em todas as superfï¿½cies
 
 - Fase 6 (testes finais): 10%
   - validacoes de arquitetura executadas

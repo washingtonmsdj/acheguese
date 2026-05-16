@@ -1,32 +1,32 @@
-# ðŸš€ Guia de ImplementaÃ§Ã£o - Events V2
+# 🚀 Guia de Implementação - Events V2
 
-## ðŸ“¦ O que foi criado
+## 📦 O que foi criado
 
 ### Estrutura Completa
 
 ```
 src/features/events-v2/
-â”œâ”€â”€ components/
-â”‚   â”œâ”€â”€ EventHero.tsx          âœ… Hero premium com banner
-â”‚   â”œâ”€â”€ EventTickets.tsx       âœ… Sistema de ingressos
-â”‚   â”œâ”€â”€ EventDescription.tsx   âœ… DescriÃ§Ã£o rica
-â”‚   â”œâ”€â”€ EventSchedule.tsx      âœ… ProgramaÃ§Ã£o/agenda
-â”‚   â”œâ”€â”€ EventCTA.tsx          âœ… CTA sticky configurÃ¡vel
-â”‚   â””â”€â”€ EventCardV2.tsx       âœ… Card para listagens
-â”œâ”€â”€ pages/
-â”‚   â””â”€â”€ EventDetailPageV2.tsx âœ… PÃ¡gina completa
-â”œâ”€â”€ types/
-â”‚   â””â”€â”€ index.ts              âœ… Tipos TypeScript
-â”œâ”€â”€ hooks/                     ðŸ“ (preparado para hooks)
-â”œâ”€â”€ utils/                     ðŸ“ (preparado para utils)
-â”œâ”€â”€ README.md                  âœ… DocumentaÃ§Ã£o completa
-â”œâ”€â”€ IMPLEMENTATION_GUIDE.md    âœ… Este arquivo
-â””â”€â”€ demo-route.example.tsx     âœ… Exemplo de rota
+├── components/
+│   ├── EventHero.tsx          ✅ Hero premium com banner
+│   ├── EventTickets.tsx       ✅ Sistema de ingressos
+│   ├── EventDescription.tsx   ✅ Descrição rica
+│   ├── EventSchedule.tsx      ✅ Programação/agenda
+│   ├── EventCTA.tsx          ✅ CTA sticky configurável
+│   └── EventCardV2.tsx       ✅ Card para listagens
+├── pages/
+│   └── EventDetailPageV2.tsx ✅ Página completa
+├── types/
+│   └── index.ts              ✅ Tipos TypeScript
+├── hooks/                     📝 (preparado para hooks)
+├── utils/                     📝 (preparado para utils)
+├── README.md                  ✅ Documentação completa
+├── IMPLEMENTATION_GUIDE.md    ✅ Este arquivo
+└── demo-route.example.tsx     ✅ Exemplo de rota
 ```
 
-## ðŸŽ¯ Como Testar Agora
+## 🎯 Como Testar Agora
 
-### OpÃ§Ã£o 1: Adicionar Rota TemporÃ¡ria
+### Opção 1: Adicionar Rota Temporária
 
 1. Abra o arquivo de rotas principal (ex: `src/app/routes/index.tsx`)
 
@@ -45,9 +45,9 @@ import EventDetailPageV2 from '@/features/events-v2/pages/EventDetailPageV2';
 
 4. Acesse: `http://localhost:5173/eventos/demo`
 
-### OpÃ§Ã£o 2: Link Direto
+### Opção 2: Link Direto
 
-Adicione um link em qualquer pÃ¡gina:
+Adicione um link em qualquer página:
 
 ```typescript
 import { Link } from 'react-router-dom';
@@ -57,61 +57,61 @@ import { Link } from 'react-router-dom';
 </Link>
 ```
 
-## ðŸŽ¨ Features Implementadas
+## 🎨 Features Implementadas
 
-### âœ… PÃ¡gina de Detalhes Completa
+### ✅ Página de Detalhes Completa
 
 - **Hero Section**
   - Banner full-width com overlay
   - Badges de categoria, tipo, status
-  - InformaÃ§Ãµes principais destacadas
-  - Card lateral com aÃ§Ãµes
+  - Informações principais destacadas
+  - Card lateral com ações
   - Contador de participantes
-  - Barra de progresso de ocupaÃ§Ã£o
+  - Barra de progresso de ocupação
 
 - **Sistema de Ingressos**
-  - Suporte para gratuito, pago e hÃ­brido
+  - Suporte para gratuito, pago e híbrido
   - Cards interativos com hover
   - Progress bar de vendas
-  - Badges de status (esgotado, Ãºltimas vagas)
-  - InformaÃ§Ãµes de quantidade e limites
+  - Badges de status (esgotado, últimas vagas)
+  - Informações de quantidade e limites
 
-- **DescriÃ§Ã£o Rica**
+- **Descrição Rica**
   - HTML formatado
-  - Requisitos e informaÃ§Ãµes adicionais
+  - Requisitos e informações adicionais
   - Features do evento
   - Acessibilidade
 
-- **ProgramaÃ§Ã£o**
+- **Programação**
   - Timeline visual
-  - HorÃ¡rios e duraÃ§Ãµes
+  - Horários e durações
   - Palestrantes e locais
-  - AnimaÃ§Ãµes de entrada
+  - Animações de entrada
 
-- **LocalizaÃ§Ã£o**
-  - EndereÃ§o completo
-  - InstruÃ§Ãµes de acesso
-  - IntegraÃ§Ã£o Google Maps
+- **Localização**
+  - Endereço completo
+  - Instruções de acesso
+  - Integração Google Maps
 
 - **Organizador**
   - Perfil completo
-  - EstatÃ­sticas
-  - Badge de verificaÃ§Ã£o
+  - Estatísticas
+  - Badge de verificação
 
 - **CTA Sticky**
-  - Sempre visÃ­vel
-  - MÃºltiplos canais de contato
-  - Indicadores de confianÃ§a
+  - Sempre visível
+  - Múltiplos canais de contato
+  - Indicadores de confiança
 
-### âœ… Componentes ReutilizÃ¡veis
+### ✅ Componentes Reutilizáveis
 
 - **EventCardV2**
   - 3 variantes: default, compact, featured
-  - AnimaÃ§Ãµes Framer Motion
+  - Animações Framer Motion
   - Hover effects
-  - Badges dinÃ¢micos
+  - Badges dinâmicos
 
-## ðŸ”§ PrÃ³ximos Passos para IntegraÃ§Ã£o
+## 🔧 Próximos Passos para Integração
 
 ### 1. Criar Hooks de Dados
 
@@ -143,10 +143,10 @@ export async function fetchEventV2(eventId: string): Promise<EventV2> {
 }
 ```
 
-### 3. Adicionar Rotas DinÃ¢micas
+### 3. Adicionar Rotas Dinâmicas
 
 ```typescript
-// Rota com parÃ¢metro
+// Rota com parâmetro
 {
   path: '/eventos/:eventId',
   element: <EventDetailPageV2 />
@@ -157,7 +157,7 @@ const { eventId } = useParams();
 const { data: event } = useEventV2(eventId);
 ```
 
-### 4. Implementar AÃ§Ãµes
+### 4. Implementar Ações
 
 ```typescript
 // Favoritar
@@ -178,41 +178,41 @@ const handleShare = async () => {
 };
 ```
 
-## ðŸ“Š MigraÃ§Ã£o da V1 para V2
+## 📊 Migração da V1 para V2
 
-### EstratÃ©gia Recomendada
+### Estratégia Recomendada
 
-1. **Fase 1: ValidaÃ§Ã£o** (Atual)
+1. **Fase 1: Validação** (Atual)
    - V2 isolada para testes
    - Feedback visual e UX
    - Ajustes de design
 
-2. **Fase 2: IntegraÃ§Ã£o Backend**
-   - Criar tabelas/views necessÃ¡rias
+2. **Fase 2: Integração Backend**
+   - Criar tabelas/views necessárias
    - Implementar hooks
    - Conectar com dados reais
 
 3. **Fase 3: Rollout Gradual**
    - Feature flag para alternar V1/V2
    - A/B testing
-   - Monitoramento de mÃ©tricas
+   - Monitoramento de métricas
 
-4. **Fase 4: MigraÃ§Ã£o Completa**
+4. **Fase 4: Migração Completa**
    - Substituir V1 por V2
-   - Remover cÃ³digo legado
-   - DocumentaÃ§Ã£o final
+   - Remover código legado
+   - Documentação final
 
 ### Compatibilidade
 
-A V2 foi projetada para ser **100% compatÃ­vel** com a estrutura existente:
+A V2 foi projetada para ser **100% compatível** com a estrutura existente:
 
-- âœ… NÃ£o altera rotas atuais
-- âœ… NÃ£o modifica componentes existentes
-- âœ… NÃ£o afeta hooks ou serviÃ§os atuais
-- âœ… Pode coexistir com V1
-- âœ… MigraÃ§Ã£o gradual possÃ­vel
+- ✅ Não altera rotas atuais
+- ✅ Não modifica componentes existentes
+- ✅ Não afeta hooks ou serviços atuais
+- ✅ Pode coexistir com V1
+- ✅ Migração gradual possível
 
-## ðŸŽ¨ CustomizaÃ§Ã£o
+## 🎨 Customização
 
 ### Temas e Cores
 
@@ -221,7 +221,7 @@ Todos os componentes usam o design system existente:
 ```typescript
 // Cores principais
 - primary: Cor principal do tema
-- secondary: Cor secundÃ¡ria
+- secondary: Cor secundária
 - muted: Cor de fundo suave
 - border: Cor das bordas
 
@@ -245,48 +245,48 @@ Todos os componentes usam o design system existente:
 <EventTickets onSelectTicket={handler} />
 ```
 
-## ðŸ“± Responsividade
+## 📱 Responsividade
 
-Todos os componentes sÃ£o **mobile-first**:
+Todos os componentes são **mobile-first**:
 
 - Breakpoints: sm (640px), md (768px), lg (1024px)
 - Grid adaptativo
-- Touch-friendly (44px mÃ­nimo)
+- Touch-friendly (44px mínimo)
 - Scroll horizontal em mobile
 - Sticky CTA otimizado
 
-## âš¡ Performance
+## ⚡ Performance
 
-### OtimizaÃ§Ãµes Implementadas
+### Otimizações Implementadas
 
-- âœ… Lazy loading de imagens
-- âœ… Framer Motion otimizado
-- âœ… MemoizaÃ§Ã£o de componentes
-- âœ… Viewport-based animations
-- âœ… CSS-in-JS otimizado
+- ✅ Lazy loading de imagens
+- ✅ Framer Motion otimizado
+- ✅ Memoização de componentes
+- ✅ Viewport-based animations
+- ✅ CSS-in-JS otimizado
 
-### MÃ©tricas Esperadas
+### Métricas Esperadas
 
 - LCP: < 2.5s
 - FID: < 100ms
 - CLS: < 0.1
 - TTI: < 3.5s
 
-## ðŸ”’ SeguranÃ§a
+## 🔒 Segurança
 
-### Boas PrÃ¡ticas
+### Boas Práticas
 
-- âœ… SanitizaÃ§Ã£o de HTML (dangerouslySetInnerHTML apenas onde necessÃ¡rio)
-- âœ… ValidaÃ§Ã£o de tipos TypeScript
-- âœ… Props validation
-- âœ… Error boundaries (recomendado adicionar)
+- ✅ Sanitização de HTML (dangerouslySetInnerHTML apenas onde necessário)
+- ✅ Validação de tipos TypeScript
+- ✅ Props validation
+- ✅ Error boundaries (recomendado adicionar)
 
-## ðŸ“ˆ MÃ©tricas e Analytics
+## 📈 Métricas e Analytics
 
 ### Eventos para Tracking
 
 ```typescript
-// VisualizaÃ§Ã£o
+// Visualização
 trackEvent('event_v2_view', { eventId, category });
 
 // Favoritar
@@ -302,58 +302,58 @@ trackEvent('event_v2_ticket_select', { eventId, ticketId });
 trackEvent('event_v2_cta_click', { eventId, ctaType });
 ```
 
-## ðŸ› Troubleshooting
+## 🐛 Troubleshooting
 
-### Problema: Componentes nÃ£o aparecem
+### Problema: Componentes não aparecem
 
-**SoluÃ§Ã£o**: Verificar se a rota foi adicionada corretamente
+**Solução**: Verificar se a rota foi adicionada corretamente
 
-### Problema: Estilos nÃ£o aplicados
+### Problema: Estilos não aplicados
 
-**SoluÃ§Ã£o**: Verificar se Tailwind estÃ¡ configurado para incluir `src/features/**`
+**Solução**: Verificar se Tailwind está configurado para incluir `src/features/**`
 
-### Problema: Tipos nÃ£o reconhecidos
+### Problema: Tipos não reconhecidos
 
-**SoluÃ§Ã£o**: Verificar tsconfig.json e paths
+**Solução**: Verificar tsconfig.json e paths
 
-### Problema: Imagens nÃ£o carregam
+### Problema: Imagens não carregam
 
-**SoluÃ§Ã£o**: Substituir `/placeholder.svg` por URLs reais
+**Solução**: Substituir `/placeholder.svg` por URLs reais
 
-## ðŸ“ž Suporte
+## 📞 Suporte
 
-Para dÃºvidas ou problemas:
+Para dúvidas ou problemas:
 
 1. Consulte o README.md
 2. Verifique os tipos em types/index.ts
 3. Veja exemplos em demo-route.example.tsx
-4. Analise o cÃ³digo dos componentes
+4. Analise o código dos componentes
 
-## âœ… Checklist de ImplementaÃ§Ã£o
+## ✅ Checklist de Implementação
 
-### Fase 1: ValidaÃ§Ã£o Visual âœ…
+### Fase 1: Validação Visual ✅
 - [x] Estrutura de arquivos criada
 - [x] Componentes implementados
 - [x] Tipos definidos
-- [x] DocumentaÃ§Ã£o completa
+- [x] Documentação completa
 - [x] Exemplo de rota
 
-### Fase 2: IntegraÃ§Ã£o Backend ðŸ“
+### Fase 2: Integração Backend 📝
 - [ ] Criar hooks de dados
 - [ ] Conectar com Supabase
 - [ ] Implementar mutations
 - [ ] Adicionar error handling
 - [ ] Criar loading states
 
-### Fase 3: Features Adicionais ðŸ“
+### Fase 3: Features Adicionais 📝
 - [ ] Galeria de fotos
 - [ ] FAQ section
 - [ ] Eventos relacionados
-- [ ] Sistema de avaliaÃ§Ãµes
+- [ ] Sistema de avaliações
 - [ ] Compartilhamento social
-- [ ] CalendÃ¡rio (iCal)
+- [ ] Calendário (iCal)
 
-### Fase 4: OtimizaÃ§Ãµes ðŸ“
+### Fase 4: Otimizações 📝
 - [ ] Image optimization
 - [ ] Code splitting
 - [ ] Cache strategy
@@ -361,24 +361,24 @@ Para dÃºvidas ou problemas:
 - [ ] Error boundaries
 - [ ] Loading skeletons
 
-### Fase 5: Testes ðŸ“
+### Fase 5: Testes 📝
 - [ ] Unit tests
 - [ ] Integration tests
 - [ ] E2E tests
 - [ ] Accessibility tests
 - [ ] Performance tests
 
-### Fase 6: Deploy ðŸ“
+### Fase 6: Deploy 📝
 - [ ] Feature flag
 - [ ] A/B testing
 - [ ] Monitoring
 - [ ] Rollback plan
 - [ ] Documentation
 
-## ðŸŽ‰ ConclusÃ£o
+## 🎉 Conclusão
 
-A V2 estÃ¡ **pronta para validaÃ§Ã£o visual**! 
+A V2 está **pronta para validação visual**! 
 
-Todos os componentes estÃ£o implementados, documentados e isolados da versÃ£o atual. VocÃª pode testar a interface, validar o design e fazer ajustes antes da integraÃ§Ã£o definitiva com o backend.
+Todos os componentes estão implementados, documentados e isolados da versão atual. Você pode testar a interface, validar o design e fazer ajustes antes da integração definitiva com o backend.
 
-**PrÃ³ximo passo**: Adicionar a rota de demonstraÃ§Ã£o e acessar `/eventos/demo` para ver a pÃ¡gina em aÃ§Ã£o! ðŸš€
+**Próximo passo**: Adicionar a rota de demonstração e acessar `/eventos/demo` para ver a página em ação! 🚀

@@ -1,4 +1,4 @@
-﻿import React from "react";
+import React from "react";
 import { Textarea } from "@/shared/components/ui/textarea";
 import {
   Avatar,
@@ -21,7 +21,7 @@ export function PostForm({
   currentProfile,
   onTextChange,
 }: PostFormProps) {
-  const displayName = currentProfile?.name || "UsuÃ¡rio";
+  const displayName = currentProfile?.name || "Usuário";
 
   return (
     <div className="px-4 py-4">
@@ -38,7 +38,7 @@ export function PostForm({
           <Textarea
             value={postData.texto}
             onChange={(e) => onTextChange(e.target.value)}
-            placeholder="O que vocÃª quer compartilhar com o bairro?"
+            placeholder="O que você quer compartilhar com o bairro?"
             className="min-h-[120px] resize-none border-0 p-0 text-base placeholder:text-muted-foreground focus-visible:ring-0"
             maxLength={2000}
           />

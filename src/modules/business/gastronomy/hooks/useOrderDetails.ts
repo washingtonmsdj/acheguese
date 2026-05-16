@@ -7,8 +7,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { OrderService } from '@/modules/business/gastronomy/services/OrderService';
+import { GastronomyOrderRealtimeService } from '@/modules/business/gastronomy/services/GastronomyOrderRealtimeService';
 import { toast } from 'sonner';
-import { supabase } from '@/integrations/supabase';
 import { useSessionContext } from '@/core/session';
 
 export function useOrderDetails(orderId: string) {
@@ -41,31 +41,13 @@ export function useOrderDetails(orderId: string) {
       }, 250);
     };
 
-    const channel = supabase
-      .channel(`gastronomy-order:${orderId}`)
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'orders',
-          filter: `id=eq.${orderId}`,
-        },
-        invalidateOrder,
-      )
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'order_timeline_events',
-          filter: `order_id=eq.${orderId}`,
-        },
-        invalidateOrder,
-      )
-      .subscribe((status) => {
+    const channel = GastronomyOrderRealtimeService.subscribeOrderDetails(
+      orderId,
+      invalidateOrder,
+      (status) => {
         setIsRealtimeConnected(status === 'SUBSCRIBED');
-      });
+      },
+    );
 
     return () => {
       if (invalidateTimerRef.current) {
@@ -73,7 +55,7 @@ export function useOrderDetails(orderId: string) {
         invalidateTimerRef.current = null;
       }
       setIsRealtimeConnected(false);
-      void supabase.removeChannel(channel);
+      void GastronomyOrderRealtimeService.removeChannel(channel);
     };
   }, [orderId, queryClient]);
 

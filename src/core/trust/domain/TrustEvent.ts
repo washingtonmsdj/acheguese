@@ -177,3 +177,13 @@ export interface ApplyTrustAdminActionInput {
   duration_days?: number | null;
   metadata?: Record<string, unknown>;
 }
+
+export function resolveTrustActorRoleFromProfileType(profileType?: string | null): TrustActorRole {
+  if (profileType === "driver") {
+    return TRUST_ACTOR_ROLES.DRIVER;
+  }
+  if (profileType === "business") {
+    return TRUST_ACTOR_ROLES.MERCHANT;
+  }
+  return TRUST_ACTOR_ROLES.CUSTOMER;
+}

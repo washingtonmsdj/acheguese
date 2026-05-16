@@ -27,9 +27,9 @@ interface PickupLocationJoin {
 function classifyLocationType(locationName: string, locationType?: string): BoardingPointSummary["type"] {
   const normalized = `${locationType ?? ""} ${locationName}`.toLowerCase();
   if (normalized.includes("mercado") || normalized.includes("supermercado")) return "mercado";
-  if (normalized.includes("praÃ§a") || normalized.includes("praca") || normalized.includes("parque")) return "praca";
+  if (normalized.includes("praça") || normalized.includes("praca") || normalized.includes("parque")) return "praca";
   if (normalized.includes("padaria")) return "padaria";
-  if (normalized.includes("escola") || normalized.includes("colÃ©gio") || normalized.includes("colegio")) return "escola";
+  if (normalized.includes("escola") || normalized.includes("colégio") || normalized.includes("colegio")) return "escola";
   if (normalized.includes("igreja") || normalized.includes("templo")) return "igreja";
   if (normalized.includes("cafe") || normalized.includes("cafeteria")) return "cafe";
   return "outro";
@@ -65,7 +65,7 @@ export class BoardingPointService {
           return {
             id,
             name: locationName,
-            description: `Ponto recorrente de embarque na regiÃ£o`,
+            description: `Ponto recorrente de embarque na região`,
             type: classifyLocationType(locationName, value.location.type),
             address,
             popular: value.ridesCount >= 5,
@@ -81,7 +81,7 @@ export class BoardingPointService {
   }
 
   static async submitSuggestion(_input: BoardingPointSuggestionInput): Promise<{ accepted: boolean }> {
-    // Sem tabela canÃ´nica de sugestÃµes no banco no momento.
+    // Sem tabela canônica de sugestões no banco no momento.
     return { accepted: false };
   }
 }

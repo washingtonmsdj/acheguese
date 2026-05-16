@@ -6,7 +6,7 @@ import { useState, useEffect } from "react";
 import { realtimeService } from "@/core/realtime";
 import { messagingService } from "@/core/messaging";
 import { useSessionContext } from "@/core/session";
-import { TRUST_ACTOR_ROLES, TrustEventService } from "@/core/trust";
+import { resolveTrustActorRoleFromProfileType, TrustEventService } from "@/core/trust";
 import type {
   ConversationPreview,
   Message,
@@ -27,12 +27,7 @@ export type { Message as DirectMessage } from "@/core/messaging/types";
 export function useDirectMessages(_currentUserId?: string) {
   const { activeProfile } = useSessionContext();
   const profileId = activeProfile?.id;
-  const actorRole =
-    activeProfile?.profile_type === "driver"
-      ? TRUST_ACTOR_ROLES.DRIVER
-      : activeProfile?.profile_type === "business"
-        ? TRUST_ACTOR_ROLES.MERCHANT
-        : TRUST_ACTOR_ROLES.CUSTOMER;
+  const actorRole = resolveTrustActorRoleFromProfileType(activeProfile?.profile_type);
 
   const [conversations, setConversations] = useState<ConversationPreview[]>([]);
   const [messages, setMessages] = useState<Message[]>([]);

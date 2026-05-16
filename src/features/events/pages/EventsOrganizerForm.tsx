@@ -1,8 +1,8 @@
 /**
- *  EVENTS ORGANIZER FORM
+ * EVENTS ORGANIZER FORM
  * 
- * Formul�rio completo para criar/editar eventos
- * Multi-step com valida��o
+ * Formulário completo para criar/editar eventos
+ * Multi-step com validação
  * 
  * @version 1.0.0
  */
@@ -43,27 +43,17 @@ import {
 import { cn } from '@/shared/utils/cn';
 import { getMockEventById } from '../utils/mockData';
 import type { EventCategory, EventType } from '../types';
+import { EVENT_CATEGORY_OPTIONS } from '../constants';
 
 const STEPS = [
-  { id: 1, title: 'Informa��es B�sicas', icon: FileText },
+  { id: 1, title: 'Informações Básicas', icon: FileText },
   { id: 2, title: 'Data e Local', icon: MapPin },
   { id: 3, title: 'Ingressos', icon: DollarSign },
   { id: 4, title: 'Detalhes', icon: Calendar },
-  { id: 5, title: 'M�dia', icon: ImageIcon },
-  { id: 6, title: 'Programa��o', icon: Clock },
+  { id: 5, title: 'Mídia', icon: ImageIcon },
+  { id: 6, title: 'Programação', icon: Clock },
   { id: 7, title: 'FAQ', icon: HelpCircle },
   { id: 8, title: 'SEO e Extras', icon: CheckCircle },
-];
-
-const CATEGORIES: { value: EventCategory; label: string }[] = [
-  { value: 'cultural', label: 'Cultural' },
-  { value: 'esportivo', label: 'Esportivo' },
-  { value: 'social', label: 'Social' },
-  { value: 'religioso', label: 'Religioso' },
-  { value: 'educacional', label: 'Educacional' },
-  { value: 'gastronomico', label: 'Gastron�mico' },
-  { value: 'artistico', label: 'Art�stico' },
-  { value: 'comunitario', label: 'Comunit�rio' },
 ];
 
 export default function EventsOrganizerForm() {
@@ -118,7 +108,7 @@ export default function EventsOrganizerForm() {
     videoUrl: existingEvent?.video_url || '',
     gallery: existingEvent?.gallery?.map(g => g.url) || [],
     
-    // Step 6: Schedule (Programa��o)
+    // Step 6: Schedule (Programação)
     schedule: existingEvent?.schedule || [],
     
     // Step 7: FAQ
@@ -184,24 +174,24 @@ export default function EventsOrganizerForm() {
           <div className="space-y-6">
             {/* Title */}
             <div>
-              <Label htmlFor="title">T�tulo do Evento *</Label>
+              <Label htmlFor="title">Título do Evento *</Label>
               <Input
                 id="title"
                 value={formData.title}
                 onChange={(e) => handleInputChange('title', e.target.value)}
-                placeholder="Ex: Festival de M�sica 2024"
+                placeholder="Ex: Festival de Música 2024"
                 className="mt-2"
               />
             </div>
 
             {/* Subtitle */}
             <div>
-              <Label htmlFor="subtitle">Subt�tulo (opcional)</Label>
+              <Label htmlFor="subtitle">Subtítulo (opcional)</Label>
               <Input
                 id="subtitle"
                 value={formData.subtitle}
                 onChange={(e) => handleInputChange('subtitle', e.target.value)}
-                placeholder="Ex: O maior festival de m�sica do Nordeste"
+                placeholder="Ex: O maior festival de música do Nordeste"
                 className="mt-2"
               />
             </div>
@@ -217,7 +207,7 @@ export default function EventsOrganizerForm() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {CATEGORIES.map(cat => (
+                  {EVENT_CATEGORY_OPTIONS.map(cat => (
                     <SelectItem key={cat.value} value={cat.value}>
                       {cat.label}
                     </SelectItem>
@@ -228,12 +218,12 @@ export default function EventsOrganizerForm() {
 
             {/* Tags */}
             <div>
-              <Label htmlFor="tags">Tags (separadas por v�rgula)</Label>
+              <Label htmlFor="tags">Tags (separadas por vírgula)</Label>
               <Input
                 id="tags"
                 value={formData.tags}
                 onChange={(e) => handleInputChange('tags', e.target.value)}
-                placeholder="Ex: m�sica, festival, ao vivo, rock"
+                placeholder="Ex: música, festival, ao vivo, rock"
                 className="mt-2"
               />
               <p className="mt-1 text-xs text-muted-foreground">
@@ -243,12 +233,12 @@ export default function EventsOrganizerForm() {
 
             {/* Short Description */}
             <div>
-              <Label htmlFor="shortDescription">Descri��o Curta *</Label>
+              <Label htmlFor="shortDescription">Descrição Curta *</Label>
               <Textarea
                 id="shortDescription"
                 value={formData.shortDescription}
                 onChange={(e) => handleInputChange('shortDescription', e.target.value)}
-                placeholder="Resumo do evento em at� 160 caracteres"
+                placeholder="Resumo do evento em até 160 caracteres"
                 rows={2}
                 maxLength={160}
                 className="mt-2"
@@ -260,7 +250,7 @@ export default function EventsOrganizerForm() {
 
             {/* Description */}
             <div>
-              <Label htmlFor="description">Descri��o Completa *</Label>
+              <Label htmlFor="description">Descrição Completa *</Label>
               <Textarea
                 id="description"
                 value={formData.description}
@@ -279,7 +269,7 @@ export default function EventsOrganizerForm() {
             {/* Date Range */}
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
-                <Label htmlFor="startDate">Data de In�cio *</Label>
+                <Label htmlFor="startDate">Data de Início *</Label>
                 <Input
                   id="startDate"
                   type="datetime-local"
@@ -289,7 +279,7 @@ export default function EventsOrganizerForm() {
                 />
               </div>
               <div>
-                <Label htmlFor="endDate">Data de T�rmino</Label>
+                <Label htmlFor="endDate">Data de Término</Label>
                 <Input
                   id="endDate"
                   type="datetime-local"
@@ -307,7 +297,7 @@ export default function EventsOrganizerForm() {
                 {[
                   { value: 'physical', label: 'Presencial', icon: MapPin },
                   { value: 'online', label: 'Online', icon: Users },
-                  { value: 'hybrid', label: 'H�brido', icon: Calendar },
+                  { value: 'hybrid', label: 'Híbrido', icon: Calendar },
                 ].map(type => (
                   <button
                     key={type.value}
@@ -342,12 +332,12 @@ export default function EventsOrganizerForm() {
                 </div>
 
                 <div>
-                  <Label htmlFor="address">Endere�o Completo *</Label>
+                  <Label htmlFor="address">Endereço Completo *</Label>
                   <Input
                     id="address"
                     value={formData.address}
                     onChange={(e) => handleInputChange('address', e.target.value)}
-                    placeholder="Rua, n�mero"
+                    placeholder="Rua, número"
                     className="mt-2"
                   />
                 </div>
@@ -401,12 +391,12 @@ export default function EventsOrganizerForm() {
                 </div>
 
                 <div>
-                  <Label htmlFor="locationInstructions">Instru��es de Acesso (opcional)</Label>
+                  <Label htmlFor="locationInstructions">Instruções de Acesso (opcional)</Label>
                   <Textarea
                     id="locationInstructions"
                     value={formData.locationInstructions}
                     onChange={(e) => handleInputChange('locationInstructions', e.target.value)}
-                    placeholder="Ex: Entrada pela porta lateral, estacionamento dispon�vel..."
+                    placeholder="Ex: Entrada pela porta lateral, estacionamento disponível..."
                     rows={2}
                     className="mt-2"
                   />
@@ -448,7 +438,7 @@ export default function EventsOrganizerForm() {
                     className="mt-2"
                   />
                   <p className="mt-1 text-xs text-muted-foreground">
-                    O link ser� enviado aos participantes ap�s a inscri��o
+                    O link será enviado aos participantes após a inscrição
                   </p>
                 </div>
               </>
@@ -513,8 +503,8 @@ export default function EventsOrganizerForm() {
             {!formData.isFree && (
               <div className="rounded-lg border border-border bg-muted/30 p-4">
                 <p className="text-sm text-muted-foreground">
-                  =� A configura��o detalhada de ingressos pagos ser� implementada em breve.
-                  Por enquanto, voc� pode criar o evento e adicionar os ingressos depois.
+                  Observação: A configuração detalhada de ingressos pagos será implementada em breve.
+                  Por enquanto, você pode criar o evento e adicionar os ingressos depois.
                 </p>
               </div>
             )}
@@ -544,7 +534,7 @@ export default function EventsOrganizerForm() {
                 id="whatToBring"
                 value={formData.whatToBring}
                 onChange={(e) => handleInputChange('whatToBring', e.target.value)}
-                placeholder="Ex:\nGarrafa de �gua\nProtetor solar"
+                placeholder="Ex:\nGarrafa de água\nProtetor solar"
                 rows={4}
                 className="mt-2"
               />
@@ -552,7 +542,7 @@ export default function EventsOrganizerForm() {
 
             {/* Age Restriction */}
             <div>
-              <Label htmlFor="ageRestriction">Classifica��o Et�ria</Label>
+              <Label htmlFor="ageRestriction">Classificação Etária</Label>
               <Select
                 value={formData.ageRestriction}
                 onValueChange={(value) => handleInputChange('ageRestriction', value)}
@@ -585,17 +575,17 @@ export default function EventsOrganizerForm() {
 
             {/* Accessibility Info */}
             <div>
-              <Label htmlFor="accessibilityInfo">Informa��es de Acessibilidade</Label>
+              <Label htmlFor="accessibilityInfo">Informações de Acessibilidade</Label>
               <Textarea
                 id="accessibilityInfo"
                 value={formData.accessibilityInfo}
                 onChange={(e) => handleInputChange('accessibilityInfo', e.target.value)}
-                placeholder="Ex: Local com rampa de acesso, banheiros adaptados, int�rprete de libras dispon�vel..."
+                placeholder="Ex: Local com rampa de acesso, banheiros adaptados, intérprete de libras disponível..."
                 rows={3}
                 className="mt-2"
               />
               <p className="mt-1 text-xs text-muted-foreground">
-                Informe sobre acessibilidade para pessoas com defici�ncia
+                Informe sobre acessibilidade para pessoas com deficiência
               </p>
             </div>
           </div>
@@ -659,7 +649,7 @@ export default function EventsOrganizerForm() {
 
             {/* Video URL */}
             <div>
-              <Label>V�deo do Evento (opcional)</Label>
+              <Label>Vídeo do Evento (opcional)</Label>
               <p className="mt-1 text-xs text-muted-foreground">
                 Link do YouTube, Vimeo ou outro
               </p>
@@ -680,7 +670,7 @@ export default function EventsOrganizerForm() {
               </p>
               <div className="mt-2 rounded-lg border border-border bg-muted/30 p-4">
                 <p className="text-sm text-muted-foreground">
-                  =� Upload de galeria ser� implementado em breve
+                  Observação: Upload de galeria será implementado em breve
                 </p>
               </div>
             </div>
@@ -693,29 +683,29 @@ export default function EventsOrganizerForm() {
             <div className="rounded-lg border border-primary/20 bg-primary/5 p-4">
               <h3 className="mb-2 flex items-center gap-2 font-semibold text-foreground">
                 <Clock className="h-5 w-5 text-primary" />
-                Programa��o do Evento
+                Programação do Evento
               </h3>
               <p className="text-sm text-muted-foreground">
-                Adicione a agenda/programa��o do seu evento. Isso ajuda os participantes a se organizarem!
+                Adicione a agenda/programação do seu evento. Isso ajuda os participantes a se organizarem!
               </p>
             </div>
 
             <div className="rounded-lg border border-border bg-muted/30 p-6 text-center">
               <Calendar className="mx-auto mb-3 h-12 w-12 text-muted-foreground" />
               <h4 className="mb-2 font-semibold text-foreground">
-                Gerenciador de Programa��o
+                Gerenciador de Programação
               </h4>
               <p className="mb-4 text-sm text-muted-foreground">
-                Adicione hor�rios, palestras, atividades e palestrantes
+                Adicione horários, palestras, atividades e palestrantes
               </p>
               <Button variant="outline" className="gap-2">
                 <Plus className="h-4 w-4" />
-                Adicionar Item � Programa��o
+                Adicionar Item à Programação
               </Button>
             </div>
 
             <div className="text-xs text-muted-foreground">
-              =� <strong>Dica:</strong> Uma programa��o bem detalhada aumenta a confian�a dos participantes!
+              Observação: <strong>Dica:</strong> Uma programação bem detalhada aumenta a confiança dos participantes!
             </div>
           </div>
         );
@@ -729,7 +719,7 @@ export default function EventsOrganizerForm() {
                 Perguntas Frequentes (FAQ)
               </h3>
               <p className="text-sm text-muted-foreground">
-                Responda as d�vidas mais comuns dos participantes antecipadamente!
+                Responda as dúvidas mais comuns dos participantes antecipadamente!
               </p>
             </div>
 
@@ -739,7 +729,7 @@ export default function EventsOrganizerForm() {
                 Gerenciador de FAQ
               </h4>
               <p className="mb-4 text-sm text-muted-foreground">
-                Adicione perguntas e respostas para esclarecer d�vidas
+                Adicione perguntas e respostas para esclarecer dúvidas
               </p>
               <Button variant="outline" className="gap-2">
                 <Plus className="h-4 w-4" />
@@ -752,11 +742,11 @@ export default function EventsOrganizerForm() {
                 Exemplos de perguntas comuns:
               </h4>
               <ul className="space-y-2 text-sm text-muted-foreground">
-                <li>" Posso levar crian�as?</li>
-                <li>" Tem estacionamento no local?</li>
-                <li>" Posso cancelar minha inscri��o?</li>
-                <li>" O evento ser� gravado?</li>
-                <li>" Tem certificado de participa��o?</li>
+                <li>Posso levar crianças?</li>
+                <li>Tem estacionamento no local?</li>
+                <li>Posso cancelar minha inscrição?</li>
+                <li>O evento será gravado?</li>
+                <li>Tem certificado de participação?</li>
               </ul>
             </div>
           </div>
@@ -769,17 +759,17 @@ export default function EventsOrganizerForm() {
             <div>
               <h3 className="mb-4 flex items-center gap-2 text-lg font-semibold text-foreground">
                 <CheckCircle className="h-5 w-5 text-primary" />
-                SEO e Otimiza��es
+                SEO e Otimizações
               </h3>
 
               <div className="space-y-4">
                 <div>
-                  <Label htmlFor="metaTitle">Meta T�tulo (SEO)</Label>
+                  <Label htmlFor="metaTitle">Meta Título (SEO)</Label>
                   <Input
                     id="metaTitle"
                     value={formData.metaTitle}
                     onChange={(e) => handleInputChange('metaTitle', e.target.value)}
-                    placeholder="T�tulo otimizado para buscadores"
+                    placeholder="Título otimizado para buscadores"
                     maxLength={60}
                     className="mt-2"
                   />
@@ -789,12 +779,12 @@ export default function EventsOrganizerForm() {
                 </div>
 
                 <div>
-                  <Label htmlFor="metaDescription">Meta Descri��o (SEO)</Label>
+                  <Label htmlFor="metaDescription">Meta Descrição (SEO)</Label>
                   <Textarea
                     id="metaDescription"
                     value={formData.metaDescription}
                     onChange={(e) => handleInputChange('metaDescription', e.target.value)}
-                    placeholder="Descri��o para aparecer nos resultados de busca"
+                    placeholder="Descrição para aparecer nos resultados de busca"
                     rows={2}
                     maxLength={160}
                     className="mt-2"
@@ -805,12 +795,12 @@ export default function EventsOrganizerForm() {
                 </div>
 
                 <div>
-                  <Label htmlFor="metaKeywords">Palavras-chave (separadas por v�rgula)</Label>
+                  <Label htmlFor="metaKeywords">Palavras-chave (separadas por vírgula)</Label>
                   <Input
                     id="metaKeywords"
                     value={formData.metaKeywords}
                     onChange={(e) => handleInputChange('metaKeywords', e.target.value)}
-                    placeholder="evento, m�sica, festival, salvador"
+                    placeholder="evento, música, festival, salvador"
                     className="mt-2"
                   />
                 </div>
@@ -823,17 +813,17 @@ export default function EventsOrganizerForm() {
                 Recursos do Evento
               </h3>
               <p className="mb-4 text-sm text-muted-foreground">
-                Marque os recursos dispon�veis no seu evento
+                Marque os recursos disponíveis no seu evento
               </p>
 
               <div className="grid gap-3 sm:grid-cols-2">
                 {[
-                  { key: 'hasCertificate', label: 'Certificado de Participa��o', icon: CheckCircle },
-                  { key: 'hasRecording', label: 'Grava��o Dispon�vel', icon: Calendar },
-                  { key: 'hasNetworking', label: '�rea de Networking', icon: Users },
-                  { key: 'hasFood', label: 'Alimenta��o Inclu�da', icon: DollarSign },
+                  { key: 'hasCertificate', label: 'Certificado de Participação', icon: CheckCircle },
+                  { key: 'hasRecording', label: 'Gravação Disponível', icon: Calendar },
+                  { key: 'hasNetworking', label: 'Área de Networking', icon: Users },
+                  { key: 'hasFood', label: 'Alimentação Incluída', icon: DollarSign },
                   { key: 'hasParking', label: 'Estacionamento', icon: MapPin },
-                  { key: 'isAccessible', label: 'Acess�vel (PCD)', icon: CheckCircle },
+                  { key: 'isAccessible', label: 'Acessível (PCD)', icon: CheckCircle },
                 ].map((feature) => (
                   <label
                     key={feature.key}
@@ -863,7 +853,7 @@ export default function EventsOrganizerForm() {
                 Contato do Organizador
               </h3>
               <p className="mb-4 text-sm text-muted-foreground">
-                Formas de contato para os participantes tirarem d�vidas
+                Formas de contato para os participantes tirarem dúvidas
               </p>
 
               <div className="grid gap-4 sm:grid-cols-2">
@@ -930,10 +920,10 @@ export default function EventsOrganizerForm() {
             <div className="rounded-lg border border-green-500/20 bg-green-500/5 p-4">
               <h4 className="mb-2 flex items-center gap-2 font-semibold text-green-600">
                 <CheckCircle className="h-5 w-5" />
-                Quase l�!
+                Quase lá!
               </h4>
               <p className="text-sm text-muted-foreground">
-                Voc� preencheu todas as informa��es. Revise tudo e clique em "Publicar Evento" para finalizar!
+                Você preencheu todas as informações. Revise tudo e clique em "Publicar Evento" para finalizar!
               </p>
             </div>
           </div>
@@ -1058,7 +1048,7 @@ export default function EventsOrganizerForm() {
 
             {currentStep < STEPS.length ? (
               <Button onClick={handleNext} className="gap-2">
-                Pr�ximo
+                Próximo
                 <ArrowRight className="h-4 w-4" />
               </Button>
             ) : (

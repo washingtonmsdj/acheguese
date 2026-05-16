@@ -35,7 +35,7 @@ const PLANS = [
   {
     id: 'free',
     name: 'Gratuito',
-    description: 'Para comeÃ§ar',
+    description: 'Para começar',
     price: 0,
     features: {
       maxPrograms: 5,
@@ -50,8 +50,8 @@ const PLANS = [
   },
   {
     id: 'basic',
-    name: 'BÃ¡sico',
-    description: 'Para instituiÃ§Ãµes em crescimento',
+    name: 'Básico',
+    description: 'Para instituições em crescimento',
     price: 49,
     features: {
       maxPrograms: 20,
@@ -67,7 +67,7 @@ const PLANS = [
   {
     id: 'premium',
     name: 'Premium',
-    description: 'Para instituiÃ§Ãµes profissionais',
+    description: 'Para instituições profissionais',
     price: 99,
     popular: true,
     features: {
@@ -84,7 +84,7 @@ const PLANS = [
   {
     id: 'enterprise',
     name: 'Empresarial',
-    description: 'Para redes de instituiÃ§Ãµes',
+    description: 'Para redes de instituições',
     price: 299,
     features: {
       maxPrograms: 999,
@@ -101,10 +101,10 @@ const PLANS = [
 
 const FEATURE_LABELS: Record<string, { label: string; icon: typeof Check }> = {
   maxPrograms: { label: 'Programas', icon: BookOpen },
-  maxLeadsPerMonth: { label: 'Leads/mÃªs', icon: Users },
+  maxLeadsPerMonth: { label: 'Leads/mês', icon: Users },
   maxEvents: { label: 'Eventos', icon: Calendar },
   storageMB: { label: 'Armazenamento', icon: HardDrive },
-  canUsePremiumPublicPage: { label: 'PÃ¡gina Premium', icon: Globe },
+  canUsePremiumPublicPage: { label: 'Página Premium', icon: Globe },
   canUseShortPremiumLink: { label: 'Link Curto', icon: Lock },
   canUseAnalytics: { label: 'Analytics', icon: TrendingUp },
   canExportData: { label: 'Exportar Dados', icon: Download },
@@ -198,7 +198,7 @@ export function EducationPlansPage() {
           <div>
             <h1 className="text-2xl font-bold text-gray-900">Planos e Assinatura</h1>
             <p className="text-sm text-gray-500">
-              Gerencie sua assinatura e recursos do mÃ³dulo Education
+              Gerencie sua assinatura e recursos do módulo Education
             </p>
           </div>
         </div>
@@ -221,7 +221,7 @@ export function EducationPlansPage() {
               <p className="text-sm text-gray-500">
                 {status?.expiresAt
                   ? `Renova em: ${new Date(status.expiresAt).toLocaleDateString('pt-BR')}`
-                  : 'Sem data de expiraÃ§Ã£o'}
+                  : 'Sem data de expiração'}
               </p>
             </div>
             <div className="flex gap-2">
@@ -241,7 +241,7 @@ export function EducationPlansPage() {
                 </p>
               </div>
               <div>
-                <p className="text-sm text-gray-500">Leads/mÃªs</p>
+                <p className="text-sm text-gray-500">Leads/mês</p>
                 <p className="text-lg font-semibold">
                   {entitlements.maxLeadsPerMonth === 9999 ? 'âˆž' : entitlements.maxLeadsPerMonth}
                 </p>
@@ -292,7 +292,7 @@ export function EducationPlansPage() {
                 <p className="text-sm text-gray-500">{plan.description}</p>
                 <div className="mt-2">
                   <span className="text-3xl font-bold">R$ {plan.price}</span>
-                  <span className="text-gray-500">/mÃªs</span>
+                  <span className="text-gray-500">/mês</span>
                 </div>
               </CardHeader>
               <CardContent className="flex-1 flex flex-col">
@@ -328,14 +328,14 @@ export function EducationPlansPage() {
 
       {/* FAQ */}
       <div className="mt-12">
-        <h2 className="text-lg font-semibold mb-4">DÃºvidas Frequentes</h2>
+        <h2 className="text-lg font-semibold mb-4">Dúvidas Frequentes</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <Card>
             <CardContent className="p-4">
               <h3 className="font-medium mb-2">Posso mudar de plano a qualquer momento?</h3>
               <p className="text-sm text-gray-600">
-                Sim, vocÃª pode fazer upgrade ou downgrade do seu plano a qualquer momento.
-                As alteraÃ§Ãµes serÃ£o aplicadas no prÃ³ximo ciclo de faturamento.
+                Sim, você pode fazer upgrade ou downgrade do seu plano a qualquer momento.
+                As alterações serão aplicadas no próximo ciclo de faturamento.
               </p>
             </CardContent>
           </Card>
@@ -343,8 +343,8 @@ export function EducationPlansPage() {
             <CardContent className="p-4">
               <h3 className="font-medium mb-2">O que acontece se eu exceder os limites?</h3>
               <p className="text-sm text-gray-600">
-                VocÃª serÃ¡ notificado quando estiver prÃ³ximo dos limites. Para continuar
-                usando sem restriÃ§Ãµes, faÃ§a upgrade para um plano superior.
+                Você será notificado quando estiver próximo dos limites. Para continuar
+                usando sem restrições, faça upgrade para um plano superior.
               </p>
             </CardContent>
           </Card>

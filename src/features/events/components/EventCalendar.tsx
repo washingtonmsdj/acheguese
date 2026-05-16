@@ -1,7 +1,7 @@
 /**
- * ðŸ“… EVENT CALENDAR
+ * EVENT CALENDAR
  * 
- * VisualizaÃ§Ã£o de eventos em formato de calendário
+ * Visualização de eventos em formato de calendário
  * Permite exportar para Google Calendar e iCal
  * 
  * @version 1.0.0

@@ -1,5 +1,5 @@
 /**
- * �x` EVENTS ORGANIZER DASHBOARD
+ * EVENTS ORGANIZER DASHBOARD
  * 
  * Dashboard do organizador para gerenciar seus eventos
  * Listagem, estatísticas e ações rápidas
@@ -245,8 +245,8 @@ export default function EventsOrganizerDashboard() {
       parsed = parseEventCheckinQrPayload(parsedUnknown);
     } catch (error) {
       toast({
-        title: 'QR inv??lido',
-        description: error instanceof Error ? error.message : 'Formato inv??lido.',
+        title: 'QR inválido',
+        description: error instanceof Error ? error.message : 'Formato inválido.',
         variant: 'destructive',
       });
       return;

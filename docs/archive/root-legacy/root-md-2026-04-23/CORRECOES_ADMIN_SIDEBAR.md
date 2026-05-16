@@ -3,26 +3,26 @@
 ## Problemas Identificados e Corrigidos
 
 ### 1. ❌ Problema de Encoding na Sidebar
-**Sintoma:** Textos aparecendo como `MapaNotifica��esConfigura��esOpera��es`
+**Sintoma:** Textos aparecendo como `MapaNotificaçõesConfiguraçõesOperações`
 
 **Causa:** Arquivo `AdminLayout.tsx` estava com encoding incorreto (caracteres UTF-8 mal interpretados)
 
 **Solução:** Corrigidos todos os caracteres especiais:
-- ✅ Serviços (era: Servi�os)
-- ✅ Denúncias (era: Den�ncias)
+- ✅ Serviços (era: Serviços)
+- ✅ Denúncias (era: Denúncias)
 - ✅ Promoções (era: Promo��es)
-- ✅ Moderação (era: Modera��o)
-- ✅ Verificações (era: Verifica��es)
-- ✅ Reivindicações (era: Reivindica��es)
+- ✅ Moderação (era: Moderação)
+- ✅ Verificações (era: Verificações)
+- ✅ Reivindicações (era: Reivindicações)
 - ✅ Alertas Comunitários (era: Alertas Comunit�rios)
-- ✅ Usuários (era: Usu�rios)
-- ✅ Gamificação (era: Gamifica��o)
+- ✅ Usuários (era: Usuários)
+- ✅ Gamificação (era: Gamificação)
 - ✅ Permissões (era: Permiss�es)
-- ✅ Notificações (era: Notifica��es)
+- ✅ Notificações (era: Notificações)
 - ✅ Operações (era: Operações)
 - ✅ Avançado (era: Avan�ado)
 - ✅ Pontos Turísticos (era: Pontos Tur�sticos)
-- ✅ Gestão de Territórios (era: Gest�o de Territ�rios)
+- ✅ Gestão de Territórios (era: Gestáo de Territ�rios)
 - ✅ CONTEÚDO & CADASTROS (era: CONTE�DO & CADASTROS)
 - ✅ MODERAÇÃO & SEGURANÇA (era: MODERA��O & SEGURAN�A)
 

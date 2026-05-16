@@ -1,11 +1,11 @@
-﻿/**
+/**
  * Hook para feed da comunidade usando PostService.getFeed()
  *
- * âœ… SSOT â€” Usa PostService como fonte Ãºnica
- * âœ… Infinite scroll com cursor pagination
- * âœ… IntegraÃ§Ã£o com filtros de localizaÃ§Ã£o
- * âœ… Geographic Foundation â€” Integrado com fundaÃ§Ã£o geogrÃ¡fica
- * âœ… Etapa 5 â€” Suporte a TerritoryFilter (location e group)
+ * ✅ SSOT — Usa PostService como fonte única
+ * ✅ Infinite scroll com cursor pagination
+ * ✅ Integração com filtros de localização
+ * ✅ Geographic Foundation — Integrado com fundação geográfica
+ * ✅ Etapa 5 — Suporte a TerritoryFilter (location e group)
  */
 
 import { useInfiniteQuery } from "@tanstack/react-query";
@@ -21,9 +21,9 @@ interface UseCommunityFeedOptions {
   locationScope?: LocationScope;
   context?: "all" | "my_posts" | "saved";
   limit?: number;
-  /** TerritÃ³rio resolvido pela rota â€” passar quando dentro de TerritorialLayout */
+  /** Território resolvido pela rota — passar quando dentro de TerritorialLayout */
   routeResolved?: ResolvedTerritory | null;
-  /** Filtro territorial canÃ´nico resolvido pela pÃ¡gina */
+  /** Filtro territorial canônico resolvido pela página */
   territoryFilter?: TerritoryFilter;
 }
 
@@ -49,20 +49,20 @@ export function useCommunityFeedSimple(options: UseCommunityFeedOptions = {}) {
         limit,
       };
 
-      // Filtro territorial canÃ´nico â€” location ou group
+      // Filtro territorial canônico — location ou group
       if (filter.scope === 'location') {
         params.location_id = filter.location_id;
         params.district_filter = true;
       } else if (filter.scope === 'group') {
         params.location_ids = filter.location_ids;
       }
-      // scope === 'none': sem territÃ³rio resolvido â€” query nÃ£o executa (enabled: filterReady)
+      // scope === 'none': sem território resolvido — query não executa (enabled: filterReady)
 
       return postService.getFeed(params);
     },
     initialPageParam: undefined as string | undefined,
     getNextPageParam: (lastPage) => lastPage.nextCursor,
-    enabled: filterReady, // SÃ³ executa se hÃ¡ territÃ³rio resolvido
+    enabled: filterReady, // Só executa se há território resolvido
     staleTime: 2 * 60 * 1000,
     gcTime: 5 * 60 * 1000,
   });

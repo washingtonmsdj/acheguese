@@ -44,7 +44,7 @@ export function CommunityMobileHeader({
       >
         <button
           className="flex items-center gap-1.5 text-left"
-          aria-label={`LocalizaÃ§Ã£o atual: ${neighborhood || "Nordeste de Amaralina"}`}
+          aria-label={`Localização atual: ${neighborhood || "Nordeste de Amaralina"}`}
         >
           <MapPin
             className="h-4 w-4 flex-shrink-0"
@@ -93,7 +93,7 @@ export function CommunityMobileHeader({
             <Avatar className="h-8 w-8 border-2 border-teal-400/30">
               <AvatarImage
                 src={avatarUrl || ""}
-                alt={`Avatar de ${userName || "UsuÃ¡rio"}`}
+                alt={`Avatar de ${userName || "Usuário"}`}
               />
               <AvatarFallback className="text-xs bg-gradient-to-br from-teal-400 to-cyan-400 text-white">
                 {getInitials(userName)}

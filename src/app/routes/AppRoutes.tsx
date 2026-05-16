@@ -1,8 +1,8 @@
 /**
- * AppRoutes - Configuraï¿½ï¿½o Centralizada de Rotas
+ * AppRoutes - Configuracao Centralizada de Rotas
  *
- * Este componente contï¿½m todas as rotas da aplicaï¿½ï¿½o,
- * separado do App.tsx para melhor organizaï¿½ï¿½o e manutenï¿½ï¿½o.
+ * Este componente contem todas as rotas da aplicacao,
+ * separado do App.tsx para melhor organizacao e manutencao.
  *
  * @version 1.0.0
  */
@@ -36,7 +36,7 @@ import {
   TerritorialMapPage,
 } from "@/core/routing/components/TerritorialModulePages";
 
-// Lazy imports organizados por domï¿½nio
+// Lazy imports organizados por dominio
 import * as P from "./lazyImports";
 
 export function AppRoutes() {
@@ -48,23 +48,23 @@ export function AppRoutes() {
       {/* QR Code Resolver - DEVE VIR ANTES DE OUTRAS ROTAS */}
       <Route path="/q/:token" element={<P.QrResolverPage />} />
 
-      {/* Status Page - PÃ¡gina pÃºblica de status do sistema */}
+      {/* Status Page - Pagina publica de status do sistema */}
       <Route path="/status" element={<P.StatusPage />} />
 
-      {/* ðŸŽ‰ EVENTS - Sistema de Eventos */}
+      {/* EVENTS - Sistema de Eventos */}
       <Route path="/eventos" element={<P.EventsErrorBoundary><P.EventsListPage /></P.EventsErrorBoundary>} />
       <Route path="/eventos/favoritos" element={<P.EventsErrorBoundary><P.EventsFavoritesPage /></P.EventsErrorBoundary>} />
       <Route path="/eventos/calendario" element={<P.EventsErrorBoundary><P.EventsCalendarPage /></P.EventsErrorBoundary>} />
       <Route path="/eventos/mapa" element={<P.EventsErrorBoundary><P.EventsMapPage /></P.EventsErrorBoundary>} />
 
-      {/* Namespace legado removido da Ã¡rea pÃºblica (sem redirect) */}
+      {/* Namespace legado removido da area publica (sem redirect) */}
       <Route path="/eventos/organizador" element={<P.NotFound />} />
       <Route path="/eventos/organizador/novo" element={<P.NotFound />} />
       <Route path="/eventos/organizador/editar/:eventId" element={<P.NotFound />} />
 
-      {/* ðŸ“Š EVENTS - Dashboard do Organizador */}
+      {/* EVENTS - Dashboard do Organizador */}
 
-      {/* Event Detail - Deve vir depois das rotas especÃ­ficas */}
+      {/* Event Detail - Deve vir depois das rotas especificas */}
       <Route path="/eventos/:eventId" element={<P.EventsErrorBoundary><P.EventDetailPage /></P.EventsErrorBoundary>} />
 
       <Route path="/splash" element={<P.SplashPage />} />
@@ -87,8 +87,78 @@ export function AppRoutes() {
         <Route path="checkout" element={<P.PremiumBusinessCheckoutPage />} />
       </Route>
 
+      {/* Central - TEM SUA PRÓPRIA SIDEBAR, não usa AppLayoutSidebar */}
+      <Route path="/centralv2" element={<P.CentralLayoutV2 />}>
+        <Route element={<P.CentralAccessGuard />}>
+          <Route index element={<P.CentralHubPage />} />
+        </Route>
+      </Route>
+      
+      <Route path="/central" element={<P.CentralLayout />}>
+        <Route element={<P.CentralAccessGuard />}>
+          <Route index element={<P.CentralHubPage />} />
+          <Route path="eventos" element={<P.EventsErrorBoundary><P.EventsOrganizerDashboard /></P.EventsErrorBoundary>} />
+          <Route path="eventos/novo" element={<P.EventsErrorBoundary><P.EventsOrganizerForm /></P.EventsErrorBoundary>} />
+          <Route path="eventos/editar/:eventId" element={<P.EventsErrorBoundary><P.EventsOrganizerForm /></P.EventsErrorBoundary>} />
+          <Route path="eventos/analytics/:eventId" element={<P.EventsErrorBoundary><P.EventsOrganizerAnalyticsPage /></P.EventsErrorBoundary>} />
+          <Route path="comunicacao" element={<P.CentralComunicacaoPageV2 />} />
+          <Route path="comunicacao/:channelSlug" element={<P.CommunicationAgentDashboardV2 />} />
+          <Route path="empresas" element={<P.CentralEmpresasPage />} />
+          <Route path="empresas/nova" element={<P.CriarEmpresaPage />} />
+          <Route path="empresas/:businessId" element={<P.BusinessAdminGuard />}>
+            <Route element={<P.BusinessDashboardShellPage />}>
+              <Route index element={<P.BusinessOverviewPage />} />
+              <Route path="dados" element={<P.BusinessDetailsPage />} />
+              <Route path="gastronomia" element={<P.GastronomyDashboardPage />} />
+              <Route path="gastronomia/setup" element={<P.GastronomySetupPage />} />
+              <Route path="gastronomia/cardapio" element={<P.MenuManagementPage />} />
+              <Route path="gastronomia/horarios" element={<P.BusinessHoursPage />} />
+              <Route path="gastronomia/area-entrega" element={<P.DeliveryAreaPage />} />
+              <Route path="gastronomia/pedidos" element={<P.OrdersPage />} />
+              <Route path="gastronomia/pedidos/:orderId" element={<P.OrderDetailsPage />} />
+              <Route path="gastronomia/entregas" element={<P.DeliveryManagementPage />} />
+              <Route path="gastronomia/analytics" element={<P.AnalyticsPage />} />
+              <Route path="gastronomia/promocoes" element={<P.GastronomyPromotionsPage />} />
+              <Route path="education" element={<P.EducationDashboardPage />} />
+              <Route path="education/setup" element={<P.EducationSetupPage />} />
+              <Route path="education/programas" element={<P.EducationProgramsPage />} />
+              <Route path="education/programs" element={<P.EducationProgramsPage />} />
+              <Route path="education/leads" element={<P.EducationLeadsPage />} />
+              <Route path="education/eventos" element={<P.EducationEventsPage />} />
+              <Route path="education/events" element={<P.EducationEventsPage />} />
+              <Route path="education/analytics" element={<P.EducationAnalyticsPage />} />
+              <Route path="education/planos" element={<P.EducationPlansPage />} />
+              <Route path="education/plans" element={<P.EducationPlansPage />} />
+              <Route path="planos" element={<P.BusinessPlansPage />} />
+              <Route path="link-premium" element={<P.BusinessPremiumSitePage />} />
+              <Route path="analytics" element={<P.BusinessAnalyticsPage />} />
+              <Route path="configuracoes" element={<P.BusinessSettingsPage />} />
+            </Route>
+          </Route>
+          <Route path="profissional" element={<P.ProfessionalGuard />}>
+            <Route index element={<P.CentralProfissionalPage />} />
+          </Route>
+          <Route path="motorista" element={<P.DriverGuard service="motorista" />}>
+            <Route element={<P.CentralMotoristaPage />} />
+            <Route path="cadastro" element={<P.CentralMotoristaCadastroPage />} />
+            <Route path="disponibilidade" element={<P.CentralMotoristaDisponibilidadePage />} />
+            <Route path="corridas" element={<P.CentralMotoristaCorridasPage />} />
+            <Route path="ganhos" element={<P.CentralMotoristaGanhosPage />} />
+            <Route path="configuracoes" element={<P.CentralMotoristaConfiguracoesPage />} />
+          </Route>
+          <Route path="motoboy" element={<P.DriverGuard service="motoboy" />}>
+            <Route element={<P.CentralMotoboyPage />} />
+            <Route path="cadastro" element={<P.CentralMotoboyCadastroPage />} />
+            <Route path="disponibilidade" element={<P.CentralMotoboyDisponibilidadePage />} />
+            <Route path="entregas" element={<P.CentralMotoboyEntregasPage />} />
+            <Route path="ganhos" element={<P.CentralMotoboyGanhosPage />} />
+            <Route path="configuracoes" element={<P.CentralMotoboyConfiguracoesPage />} />
+          </Route>
+        </Route>
+      </Route>
+
       <Route element={<P.AppLayoutSidebar />}>
-        {/* Pï¿½gina inicial */}
+        {/* Pagina inicial */}
         <Route path="/" element={<P.MainLandingPage />} />
         <Route path="/home-v2" element={<P.HomePageV2 />} />
         <Route path="/home-v1" element={<P.HomePage />} />
@@ -99,13 +169,13 @@ export function AppRoutes() {
         <Route path="/checkout/cancel" element={<P.CheckoutCancelPage />} />
         <Route path="/settings/subscription" element={<P.SubscriptionManagementPage />} />
 
-        {/* Rotas de Notificaï¿½ï¿½es */}
+        {/* Rotas de Notificacoes */}
         <Route path="/notifications" element={<P.NotificationsPage />} />
         <Route path="/notificacoes" element={<P.NotificationsPage />} />
         <Route path="/settings/notifications" element={<P.NotificationPreferencesPage />} />
         <Route path="/settings/email-logs" element={<P.EmailLogsPage />} />
 
-        {/* Rotas pï¿½blicas de landing pages */}
+        {/* Rotas publicas de landing pages */}
         <Route path="/empresas-landing" element={<P.EmpresasLandingPage />} />
         <Route path="/servicos-landing" element={<P.ServicosLandingPage />} />
         <Route path="/empresa/:id" element={<P.BusinessLegacyRoute />} />
@@ -146,68 +216,6 @@ export function AppRoutes() {
         <Route path="/empresas" element={<P.EmpresasLandingPage />} />
         <Route path="/empresas/cadastrar" element={<P.EmpresasCadastroLandingPage />} />
         <Route path="/edit-business/:profileId" element={<P.EditarEmpresaPage />} />
-        <Route path="/central" element={<P.CentralLayout />}>
-          <Route element={<P.CentralAccessGuard />}>
-            <Route index element={<P.CentralHubPage />} />
-            <Route path="eventos" element={<P.EventsErrorBoundary><P.EventsOrganizerDashboard /></P.EventsErrorBoundary>} />
-            <Route path="eventos/novo" element={<P.EventsErrorBoundary><P.EventsOrganizerForm /></P.EventsErrorBoundary>} />
-            <Route path="eventos/editar/:eventId" element={<P.EventsErrorBoundary><P.EventsOrganizerForm /></P.EventsErrorBoundary>} />
-            <Route path="eventos/analytics/:eventId" element={<P.EventsErrorBoundary><P.EventsOrganizerAnalyticsPage /></P.EventsErrorBoundary>} />
-            <Route path="comunicacao" element={<P.CentralComunicacaoPage />} />
-            <Route path="comunicacao/v2/:channelSlug" element={<P.CommunicationAgentDashboardV2 />} />
-            <Route path="empresas" element={<P.CentralEmpresasPage />} />
-            <Route path="empresas/nova" element={<P.CriarEmpresaPage />} />
-            <Route path="empresas/:businessId" element={<P.BusinessAdminGuard />}>
-              <Route element={<P.BusinessDashboardShellPage />}>
-                <Route index element={<P.BusinessOverviewPage />} />
-                <Route path="dados" element={<P.BusinessDetailsPage />} />
-                <Route path="gastronomia" element={<P.GastronomyDashboardPage />} />
-                <Route path="gastronomia/setup" element={<P.GastronomySetupPage />} />
-                <Route path="gastronomia/cardapio" element={<P.MenuManagementPage />} />
-                <Route path="gastronomia/horarios" element={<P.BusinessHoursPage />} />
-                <Route path="gastronomia/area-entrega" element={<P.DeliveryAreaPage />} />
-                <Route path="gastronomia/pedidos" element={<P.OrdersPage />} />
-                <Route path="gastronomia/pedidos/:orderId" element={<P.OrderDetailsPage />} />
-                <Route path="gastronomia/entregas" element={<P.DeliveryManagementPage />} />
-                <Route path="gastronomia/analytics" element={<P.AnalyticsPage />} />
-                <Route path="gastronomia/promocoes" element={<P.GastronomyPromotionsPage />} />
-                <Route path="education" element={<P.EducationDashboardPage />} />
-                <Route path="education/setup" element={<P.EducationSetupPage />} />
-                <Route path="education/programas" element={<P.EducationProgramsPage />} />
-                <Route path="education/programs" element={<P.EducationProgramsPage />} />
-                <Route path="education/leads" element={<P.EducationLeadsPage />} />
-                <Route path="education/eventos" element={<P.EducationEventsPage />} />
-                <Route path="education/events" element={<P.EducationEventsPage />} />
-                <Route path="education/analytics" element={<P.EducationAnalyticsPage />} />
-                <Route path="education/planos" element={<P.EducationPlansPage />} />
-                <Route path="education/plans" element={<P.EducationPlansPage />} />
-                <Route path="planos" element={<P.BusinessPlansPage />} />
-                <Route path="link-premium" element={<P.BusinessPremiumSitePage />} />
-                <Route path="analytics" element={<P.BusinessAnalyticsPage />} />
-                <Route path="configuracoes" element={<P.BusinessSettingsPage />} />
-              </Route>
-            </Route>
-        <Route path="profissional" element={<P.ProfessionalGuard />}>
-              <Route index element={<P.CentralProfissionalPage />} />
-            </Route>
-            <Route path="motorista" element={<P.DriverGuard service="motorista" />}>
-              <Route element={<P.CentralMotoristaPage />} />
-              <Route path="cadastro" element={<P.CentralMotoristaCadastroPage />} />
-              <Route path="disponibilidade" element={<P.CentralMotoristaDisponibilidadePage />} />
-              <Route path="corridas" element={<P.CentralMotoristaCorridasPage />} />
-              <Route path="ganhos" element={<P.CentralMotoristaGanhosPage />} />
-              <Route path="configuracoes" element={<P.CentralMotoristaConfiguracoesPage />} />
-            </Route>
-            <Route path="motoboy" element={<P.DriverGuard service="motoboy" />}>
-              <Route element={<P.CentralMotoboyPage />} />
-              <Route path="cadastro" element={<P.CentralMotoboyCadastroPage />} />
-              <Route path="disponibilidade" element={<P.CentralMotoboyDisponibilidadePage />} />
-              <Route path="entregas" element={<P.CentralMotoboyEntregasPage />} />
-              <Route path="ganhos" element={<P.CentralMotoboyGanhosPage />} />
-              <Route path="configuracoes" element={<P.CentralMotoboyConfiguracoesPage />} />
-            </Route>
-          </Route>
-        </Route>
 
         <Route path="/admin/dashboard" element={<P.AdminDashboardPage />} />
         <Route path="/admin/businesses" element={<P.AdminBusinessesPage />} />
@@ -239,11 +247,11 @@ export function AppRoutes() {
         <Route path="/privacidade" element={<P.PrivacidadePage />} />
         <Route path="/offline-settings" element={<P.OfflineSettingsPage />} />
 
-        {/* = LGPD / Privacidade */}
+        {/* LGPD / Privacidade */}
         <Route path="/dpo" element={<P.DPOContactPage />} />
         <Route path="/motorista-legacy" element={<P.MotoristaPage />} />
 
-        {/* Rotas legadas sem territï¿½rio */}
+        {/* Rotas legadas sem territorio */}
         <Route path="/educacao" element={<P.EducationExplorerPage />} />
         <Route path="/comunidade" element={<P.ComunidadePage />} />
         <Route path="/comunidade/alertas" element={<P.AlertasPage />} />
@@ -263,9 +271,9 @@ export function AppRoutes() {
         <Route path="/mobilidade/contatos-emergencia" element={<P.EmergencyContactsPage />} />
         <Route path="/mobilidade" element={<P.MobilidadePage />} />
 
-        {/* Rotas canï¿½nicas especï¿½ficas  DEVEM VIR ANTES DAS TERRITORIAIS GENï¿½RICAS */}
+        {/* Rotas canonicas especificas - DEVEM VIR ANTES DAS TERRITORIAIS GENERICAS */}
 
-        {/* Rota pï¿½blica de profissional: /profissionais/:uf/:cidade/:slug */}
+        {/* Rota publica de profissional: /profissionais/:uf/:cidade/:slug */}
         <Route path="/profissionais/:uf/:cidade/:slug" element={<P.ProfissionalPublicPage />} />
 
         {/* Comunicacao Territorial - rotas especificas antes das territoriais genericas */}
@@ -275,7 +283,7 @@ export function AppRoutes() {
         <Route path="/comunicacao/:state/:city/:territorySlug" element={<P.CommunicationTerritoryPage />} />
         <Route path="/comunicacao/:state/:city" element={<P.CommunicationCityPage />} />
 
-        {/* Mï¿½dulo Pontos Turï¿½sticos  vertical tourism */}
+        {/* Modulo Pontos Turisticos - vertical tourism */}
 
         {/* Rota de fallback por ID (UUID): /pontos-turisticos/:id */}
         <Route path="/pontos-turisticos/:id" element={<P.GuideTouristPointDetailPage />} />
@@ -285,7 +293,7 @@ export function AppRoutes() {
           <Route index element={<P.GuideTouristPointDetailPage />} />
         </Route>
 
-        {/* Rota ambï¿½gua (3 segmentos): pode ser listagem com district OU detalhe com slug */}
+        {/* Rota ambigua (3 segmentos): pode ser listagem com district OU detalhe com slug */}
         <Route path="/pontos-turisticos/:state/:city/:district" element={<TerritorialLayout />}>
           <Route index element={<P.TouristPointRouteResolver />} />
         </Route>
@@ -295,9 +303,9 @@ export function AppRoutes() {
           <Route index element={<P.GuideTouristPointsPage />} />
         </Route>
 
-        {/* Rotas territoriais genï¿½ricas  DEVEM VIR DEPOIS DAS ESPECï¿½FICAS */}
+        {/* Rotas territoriais genericas - DEVEM VIR DEPOIS DAS ESPECIFICAS */}
 
-        {/* Landing territorial genï¿½rico */}
+        {/* Landing territorial generico */}
         <Route path="/:state/:city/:district" element={<TerritorialLayout />}>
           <Route
             index
@@ -321,15 +329,15 @@ export function AppRoutes() {
           />
         </Route>
 
-        {/* Landing de estado  lista cidades ativas */}
+        {/* Landing de estado - lista cidades ativas */}
         <Route path="/:state" element={<StateLandingPage />} />
 
-        {/* Landing de paï¿½s  lista estados ativos */}
+        {/* Landing de pais - lista estados ativos */}
         <Route path="/brasil" element={<BrasilShowcasePage />} />
         <Route path="/br" element={<CountryLandingPage />} />
 
-        {/* Mï¿½dulo empresas  estrutura hierï¿½rquica clara */}
-        {/* 5 segmentos = empresa especï¿½fica: /empresas/:uf/:cidade/:bairro/:slug */}
+        {/* Modulo empresas - estrutura hierarquica clara */}
+        {/* 5 segmentos = empresa especifica: /empresas/:uf/:cidade/:bairro/:slug */}
         <Route
           path="/empresas/:state/:city/:district/:slug"
           element={<P.BusinessRouteResolver BusinessDetailComponent={P.EmpresaDetailLandingPage} />}
@@ -355,7 +363,7 @@ export function AppRoutes() {
           <Route index element={<P.EmpresasLandingPage />} />
         </Route>
 
-        {/* Rotas de serviï¿½os */}
+        {/* Rotas de servicos */}
         <Route path="/servicos/:state/:city/:district" element={<TerritorialLayout />}>
           <Route index element={<TerritorialServicesPage />} />
         </Route>
@@ -364,7 +372,7 @@ export function AppRoutes() {
         </Route>
 
         {/* Rotas de classificados */}
-        {/* 7 segmentos = classificado especï¿½fico: /classificados/:uf/:cidade/:bairro/:categoria/:subcategoria/:slug/:publicId */}
+        {/* 7 segmentos = classificado especifico: /classificados/:uf/:cidade/:bairro/:categoria/:subcategoria/:slug/:publicId */}
         <Route path="/classificados/:uf/:cidade/:bairro/:categoria/:subcategoria/:slug/:publicId" element={<P.ClassifiedCanonicalRoute />} />
 
         {/* 5 segmentos = hub categoria no bairro: /classificados/:uf/:cidade/:bairro/:categoria/:subcategoria */}
@@ -395,7 +403,7 @@ export function AppRoutes() {
           <Route index element={<TerritorialEventosPage />} />
         </Route>
 
-        {/* Rotas do mapa  mesmo padrï¿½o territorial */}
+        {/* Rotas do mapa - mesmo padrao territorial */}
         <Route path="/mapa/:state/:city/:district" element={<TerritorialLayout />}>
           <Route index element={<TerritorialMapPage />} />
         </Route>
@@ -431,7 +439,7 @@ export function AppRoutes() {
         <Route path="/gastronomia/favoritos" element={<P.MyFavoritesPage />} />
         <Route path="/gastronomia/pedidos/:orderId" element={<P.OrderDetailsPage />} />
 
-        {/* Rotas de Education  pï¿½blicas territoriais (vitrine premium consolidada) */}
+        {/* Rotas de Education - publicas territoriais (vitrine premium consolidada) */}
         {/* Detalhe: /educacao/:uf/:cidade/:bairro/:slug */}
         <Route path="/educacao/:state/:city/:district/:slug" element={<TerritorialLayout />}>
           <Route index element={<P.EducationDetailPage />} />
@@ -447,7 +455,7 @@ export function AppRoutes() {
           <Route index element={<P.EducationExplorerPage />} />
         </Route>
 
-        {/* Redirecionamentos de URLs antigas  preservam o caminho apos o prefixo */}
+        {/* Redirecionamentos de URLs antigas - preservam o caminho apos o prefixo */}
         <Route path="/educacao-v3/*" element={<P.EducationExplorerPage />} />
         <Route path="/educacao-v2/*" element={<P.EducationExplorerPage />} />
         <Route path="/educacao-explorer/*" element={<P.EducationExplorerPage />} />
@@ -503,11 +511,11 @@ export function AppRoutes() {
         <Route path="/comunidade/:state/:city" element={<CommunityCityEntryPage />} />
 
         {/* PPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP */}
-        {/* ROTAS DE VAGAS  Mï¿½dulo Vertical AAA                                              */}
+        {/* ROTAS DE VAGAS - Modulo Vertical AAA */}
         {/* PPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP */}
 
         <Route path="/vagas" element={<P.VagasPublicPage />} />
-        {/* Detalhe canï¿½nico: /vagas/:uf/:cidade/:slug */}
+        {/* Detalhe canonico: /vagas/:uf/:cidade/:slug */}
         <Route path="/vagas/:state/:city/:slug" element={<P.VagaDetailPublicPage />} />
 
         {/* Listagem territorial: /vagas/:uf/:cidade/:bairro */}
@@ -571,12 +579,12 @@ export function AppRoutes() {
         <Route path="city-metadata" element={<P.AdminCityMetadata />} />
         <Route path="territory-management" element={<P.AdminTerritoryManagement />} />
         <Route path="google-places-import" element={<P.AdminGooglePlacesImport />} />
-        {/* Compatibilidade com links legados de pontos turï¿½sticos */}
+        {/* Compatibilidade com links legados de pontos turisticos */}
         <Route path="pontos-turisticos" element={<P.AdminGuideTouristPointsPage />} />
         <Route path="pontos-turisticos/novo" element={<P.AdminGuideTouristPointFormPage />} />
         <Route path="pontos-turisticos/:id/editar" element={<P.AdminGuideTouristPointFormPage />} />
 
-        {/* Mï¿½dulo Guide - Pontos Turï¿½sticos */}
+        {/* Modulo Guide - Pontos Turisticos */}
         <Route path="guia/pontos-turisticos" element={<P.AdminGuideTouristPointsPage />} />
         <Route path="guia/pontos-turisticos/novo" element={<P.AdminGuideTouristPointFormPage />} />
         <Route path="guia/pontos-turisticos/:id/editar" element={<P.AdminGuideTouristPointFormPage />} />

@@ -1,5 +1,5 @@
 /**
- * ðŸ“Š EVENT ANALYTICS CARD
+ * EVENT ANALYTICS CARD
  * 
  * Card com analytics detalhados de um evento
  * Gráficos, métricas e insights

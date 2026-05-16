@@ -4,7 +4,7 @@
  * ? SSOT compliant:
  * - Usa ClassifiedsFacade
  * - TanStack Query para cache
- * - Mapper centralizado para transformação de dados
+ * - Mapper centralizado para transformaÃ§Ã£o de dados
  * - Tipagem correta
  */
 

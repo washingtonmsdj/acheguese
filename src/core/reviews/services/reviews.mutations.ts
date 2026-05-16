@@ -8,10 +8,11 @@
  */
 
 import { supabase } from "@/integrations/supabase";
+import { insertLooseRow, updateLooseRows } from "@/integrations/supabase/services/supabaseHelpers";
 import { logger } from "@/shared/utils/logger";
 import { trackError } from "@/shared/utils/errorTracking";
 import type { Review, ReviewType, CreateReviewData } from "../types";
-import { getReviewByReviewer } from "./reviews.queries";
+import { getReviewById, getReviewByReviewer } from "./reviews.queries";
 
 // ============================================================================
 // 🔧 HELPERS
@@ -54,14 +55,18 @@ export async function addReview(
     const table = getTableName(type);
 
     const payload = buildReviewInsertPayload(data);
-
-    const { data: review, error } = await supabase
-      .from(table)
-      .insert(payload)
-      .select()
-      .single();
+    const { error } = await insertLooseRow(table, payload);
 
     if (error) throw error;
+
+    const review = await getReviewByReviewer(
+      data.reviewed_profile_id,
+      data.reviewer_profile_id,
+      type,
+    );
+    if (!review) {
+      throw new Error("Review inserted but could not be reloaded");
+    }
 
     logger.info("[reviews.mutations] Review added:", {
       reviewed: data.reviewed_profile_id,
@@ -70,7 +75,7 @@ export async function addReview(
       type,
     });
 
-    return review as Review;
+    return review;
   } catch (error) {
     logger.error("[reviews.mutations] Error adding review:", error);
     trackError(error as Error, {
@@ -94,19 +99,22 @@ export async function updateReview(
     const table = getTableName(type);
 
     const payload = buildReviewUpdatePayload(updates);
-
-    const { data: review, error } = await supabase
-      .from(table)
-      .update(payload)
-      .eq("id", reviewId)
-      .select()
-      .single();
+    const { error } = await updateLooseRows(
+      table,
+      payload as Record<string, unknown>,
+      [{ column: "id", value: reviewId }],
+    );
 
     if (error) throw error;
 
+    const review = await getReviewById(reviewId, type);
+    if (!review) {
+      throw new Error("Review updated but could not be reloaded");
+    }
+
     logger.info("[reviews.mutations] Review updated:", { reviewId, updates, type });
 
-    return review as Review;
+    return review;
   } catch (error) {
     logger.error("[reviews.mutations] Error updating review:", error);
     trackError(error as Error, {
@@ -124,11 +132,10 @@ export async function updateReview(
 export async function removeReview(reviewId: string, type: ReviewType): Promise<boolean> {
   try {
     const table = getTableName(type);
-
-    const { error } = await supabase
+    const { error } = await (supabase
       .from(table)
       .delete()
-      .eq("id", reviewId);
+      .eq("id", reviewId) as unknown as Promise<{ error: unknown }>);
 
     if (error) throw error;
 

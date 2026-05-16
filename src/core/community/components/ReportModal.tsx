@@ -16,15 +16,15 @@ import { RadioGroup, RadioGroupItem } from "@/shared/components/ui/radio-group";
 import { ReportReason } from "@/core/community/types";
 import { AlertTriangle } from "lucide-react";
 /**
- * Modal de denÃºncia de posts e comentÃ¡rios
+ * Modal de denúncia de posts e comentários
  *
- * Requirement 12: Sistema de ModeraÃ§Ã£o
+ * Requirement 12: Sistema de Moderação
  *
  * Funcionalidades:
- * - FormulÃ¡rio de denÃºncia com categorys
- * - Categorias: spam, propaganda, conteÃºdo_ofensivo, links_maliciosos
- * - Campo opcional de descriÃ§Ã£o
- * - ValidaÃ§Ã£o de campos obrigatÃ³rios
+ * - Formulário de denúncia com categorys
+ * - Categorias: spam, propaganda, conteúdo_ofensivo, links_maliciosos
+ * - Campo opcional de descrição
+ * - Validação de campos obrigatórios
  */
 
 interface ReportModalProps {
@@ -43,17 +43,17 @@ const REPORT_CATEGORIES: {
   {
     value: "spam",
     label: "Spam",
-    description: "ConteÃºdo repetitivo ou nÃ£o solicitado",
+    description: "Conteúdo repetitivo ou não solicitado",
   },
   {
     value: "propaganda",
     label: "Propaganda",
-    description: "Publicity nÃ£o autorizada ou excessiva",
+    description: "Publicity não autorizada ou excessiva",
   },
   {
     value: "conteudo_ofensivo",
-    label: "ConteÃºdo Ofensivo",
-    description: "Linguagem ofensiva, assÃ©dio ou discriminaÃ§Ã£o",
+    label: "Conteúdo Ofensivo",
+    description: "Linguagem ofensiva, assédio ou discriminação",
   },
   {
     value: "links_maliciosos",
@@ -88,7 +88,7 @@ export function ReportModal({
     onOpenChange(false);
   };
 
-  const contentTypeLabel = contentType === "post" ? "post" : "comentÃ¡rio";
+  const contentTypeLabel = contentType === "post" ? "post" : "comentário";
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -103,15 +103,15 @@ export function ReportModal({
             <DialogTitle>Denunciar {contentTypeLabel}</DialogTitle>
           </div>
           <DialogDescription id="dialog-description">
-            Selecione o motivo da denÃºncia. Nossa equipe de moderaÃ§Ã£o irÃ¡
-            revisar o conteÃºdo.
+            Selecione o motivo da denúncia. Nossa equipe de moderação irá
+            revisar o conteúdo.
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4 py-4">
-          {/* Categorias de denÃºncia */}
+          {/* Categorias de denúncia */}
           <div className="space-y-3">
-            <Label>Motivo da denÃºncia *</Label>
+            <Label>Motivo da denúncia *</Label>
             <RadioGroup
               value={selectedReason}
               onValueChange={(value) =>
@@ -140,12 +140,12 @@ export function ReportModal({
             </RadioGroup>
           </div>
 
-          {/* DescriÃ§Ã£o adicional (opcional) */}
+          {/* Descrição adicional (opcional) */}
           <div className="space-y-2">
             <Label htmlFor="description">Detalhes adicionais (opcional)</Label>
             <Textarea
               id="description"
-              placeholder="ForneÃ§a mais informaÃ§Ãµes sobre o problema..."
+              placeholder="Forneça mais informações sobre o problema..."
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               rows={3}
@@ -169,7 +169,7 @@ export function ReportModal({
             onClick={handleSubmit}
             disabled={!selectedReason || isSubmitting}
           >
-            {isSubmitting ? "Enviando..." : "Enviar DenÃºncia"}
+            {isSubmitting ? "Enviando..." : "Enviar Denúncia"}
           </Button>
         </DialogFooter>
       </DialogContent>

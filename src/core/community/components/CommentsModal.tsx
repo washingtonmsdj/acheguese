@@ -53,7 +53,7 @@ export function CommentsModal({
   const handleFetchComments = useCallback(async () => {
     const fetchedComments = await fetchComments();
 
-    // Inicializar state de curtidas para cada comentÃ¡rio
+    // Inicializar state de curtidas para cada comentário
     fetchedComments.forEach((comment) => {
       initializeComment(comment.id, comment.is_liked, comment.likes_count);
       comment.replies?.forEach((reply) => {
@@ -118,7 +118,7 @@ export function CommentsModal({
             className="text-base font-bold"
             style={INLINE_STYLES.textPrimary}
           >
-            ComentÃ¡rios {totalComments > 0 && `(${totalComments})`}
+            Comentários {totalComments > 0 && `(${totalComments})`}
           </DialogTitle>
           <p
             id="comments-description"
@@ -127,14 +127,14 @@ export function CommentsModal({
           >
             {postAuthorName
               ? `Post de ${postAuthorName}`
-              : "Visualize e adicione comentÃ¡rios"}
+              : "Visualize e adicione comentários"}
           </p>
         </DialogHeader>
         <DialogDescription className="sr-only">
-          Visualize e adicione comentÃ¡rios nesta publicaÃ§Ã£o
+          Visualize e adicione comentários nesta publicação
         </DialogDescription>
 
-        {/* Ãrea de ComentÃ¡rios com Scroll */}
+        {/* Área de Comentários com Scroll */}
         <ScrollArea className="flex-1 px-5 py-4 overflow-y-auto">
           <CommentsList
             comments={comments}
@@ -149,7 +149,7 @@ export function CommentsModal({
           />
         </ScrollArea>
 
-        {/* Input de ComentÃ¡rio Fixo */}
+        {/* Input de Comentário Fixo */}
         <CommentForm
           value={newComment}
           onChange={setNewComment}

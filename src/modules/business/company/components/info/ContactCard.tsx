@@ -2,10 +2,10 @@
  * ContactCard
  * 
  * Card de contato com telefone, WhatsApp, email, website e redes sociais.
- * BotÃ£o de copiar telefone e CTA de reivindicar empresa.
+ * Botão de copiar telefone e CTA de reivindicar empresa.
  * 
  * SSOT: Props tipadas vindas de sections/types.ts
- * Sem gambiarras: Componente focado apenas em renderizaÃ§Ã£o
+ * Sem gambiarras: Componente focado apenas em renderização
  */
 
 import {
@@ -130,7 +130,7 @@ export function ContactCard({
       <div className="bg-gradient-to-br from-primary/10 via-accent/5 to-transparent border border-primary/20 rounded-xl p-5 text-center">
         <Award className="h-8 w-8 text-primary mx-auto mb-2" />
         <p className="text-sm font-semibold text-foreground mb-1">
-          Esta Ã© a sua empresa?
+          Esta é a sua empresa?
         </p>
         <p className="text-xs text-muted-foreground mb-3">
           Reivindique e gerencie seu perfil gratuitamente

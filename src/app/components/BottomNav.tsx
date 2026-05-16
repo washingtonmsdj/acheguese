@@ -1,22 +1,19 @@
 /**
  * BottomNavV2
  *
- * Bottom nav mobile com badges de notificacoes para mensagens e alertas.
+ * Bottom nav mobile sem atalhos de mensagens/notificacoes (centralizados no header).
  */
 
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import {
   Users, Building2, Wrench, Tag, Home,
   MoreHorizontal, Calendar, Car, Map, Search,
-  MessageCircle, Bell, Briefcase, GraduationCap,
+  Briefcase, GraduationCap,
 } from 'lucide-react';
 import { useNavigate, useLocation as useRouterLocation } from 'react-router-dom';
 import { cn } from '@/shared/utils/cn';
 import { prefetchRouteByHref } from '@/app/routes/prefetch';
 import { useAppUrls } from '@/core/routing/hooks/useAppUrls';
-import { MessagingService } from '@/core/messaging';
-import { useAuth } from '@/core/auth/hooks/useAuth';
-import { useUnifiedNotifications } from '@/core/notifications/useUnifiedNotifications';
 import { usePublicBrowsingCity } from '@/core/location/hooks/usePublicBrowsingCity';
 import {
   Sheet,
@@ -40,38 +37,10 @@ export function BottomNav() {
   const { pathname } = useRouterLocation();
   const appUrls = useAppUrls();
   const { active } = usePublicBrowsingCity();
-  const { user } = useAuth();
   const [moreOpen, setMoreOpen] = useState(false);
-  const [unreadMessages, setUnreadMessages] = useState(0);
 
   const cityBase = `/${active.state}/${active.city}`;
   const cityModule = (module: string) => `/${module}${cityBase}`;
-
-  const { unreadCount: unreadNotifications } = useUnifiedNotifications({ enableRealtime: true });
-
-  useEffect(() => {
-    if (!user) {
-      setUnreadMessages(0);
-      return;
-    }
-
-    const fetchUnread = async () => {
-      try {
-        const count = await MessagingService.getUnreadMessagesCount(user.id);
-        setUnreadMessages(count);
-      } catch {
-        setUnreadMessages(0);
-      }
-    };
-
-    fetchUnread();
-    const sub = MessagingService.subscribeToMessages(user.id, () => fetchUnread());
-    return () => {
-      if (sub) MessagingService.unsubscribeFromMessages(sub);
-    };
-  }, [user]);
-
-  const moreBadgeTotal = unreadMessages + (unreadNotifications ?? 0);
 
   const isActive = (path: string) => {
     if (path === '/') return pathname === '/';
@@ -90,8 +59,6 @@ export function BottomNav() {
     { path: cityModule('educacao'), label: 'Educacao', icon: GraduationCap, badge: 0 },
     { path: cityModule('eventos'), label: 'Eventos', icon: Calendar, badge: 0 },
     { path: cityModule('vagas'), label: 'Vagas', icon: Briefcase, badge: 0 },
-    { path: appUrls.messages, label: 'Mensagens', icon: MessageCircle, badge: unreadMessages },
-    { path: appUrls.notifications, label: 'Notificacoes', icon: Bell, badge: unreadNotifications ?? 0 },
     { path: cityModule('mapa'), label: 'Mapa', icon: Map, badge: 0 },
     { path: appUrls.mobility.home, label: 'Mobilidade', icon: Car, badge: 0 },
     { path: cityModule('buscar'), label: 'Busca', icon: Search, badge: 0 },
@@ -104,7 +71,7 @@ export function BottomNav() {
   };
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-[100] bg-card/95 backdrop-blur-lg border-t border-border safe-area-bottom">
+    <nav className="fixed bottom-0 left-0 right-0 z-[100] bg-card/95 backdrop-blur-lg border-t border-border safe-area-bottom md:hidden">
       <div className="flex items-center justify-around h-16 px-1">
         {mainTabs.map(({ path, label, icon: Icon, badge }) => {
           const activeTab = isActive(path);
@@ -139,12 +106,9 @@ export function BottomNav() {
           <SheetTrigger asChild>
             <button
               className="relative flex flex-col items-center justify-center gap-0.5 flex-1 py-1.5 text-muted-foreground active:text-foreground transition-colors rounded-lg mx-0.5"
-              aria-label={`Mais opcoes${moreBadgeTotal > 0 ? ` (${moreBadgeTotal} pendentes)` : ''}`}
+              aria-label="Mais opcoes"
             >
-              <span className="relative">
-                <MoreHorizontal className="h-5 w-5" />
-                <BadgeDot count={moreBadgeTotal} />
-              </span>
+              <MoreHorizontal className="h-5 w-5" />
               <span className="text-[10px] leading-tight font-medium">Mais</span>
             </button>
           </SheetTrigger>
@@ -189,4 +153,3 @@ export function BottomNav() {
     </nav>
   );
 }
-

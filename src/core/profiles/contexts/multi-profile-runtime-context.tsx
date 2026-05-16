@@ -1,4 +1,4 @@
-﻿import React, {
+import React, {
   useContext,
   useState,
   useEffect,
@@ -21,7 +21,7 @@ const MODULE_ROUTES: Record<string, ProfileType> = {
   '/edit-business': 'business',
   '/empresas': 'business',  // rotas territoriais de empresas
   '/services/cadastrar': 'professional',
-  '/servicos': 'professional',  // rotas territoriais de serviÃ§os
+  '/servicos': 'professional',  // rotas territoriais de serviços
   '/mobilidade/motorista': 'driver',
   '/central/motorista': 'driver',
   '/central/motoboy': 'driver',
@@ -92,7 +92,7 @@ export function MultiProfileProvider({ children }: { children: ReactNode }) {
     }
     const ofType = allProfilesRef.current.filter(p => p.profile_type === type);
     // Se encontrou profile do tipo exato, usa ele
-    // Se nÃ£o encontrou (ex: admin sem profile de motorista), usa o activeProfile como fallback
+    // Se não encontrou (ex: admin sem profile de motorista), usa o activeProfile como fallback
     const resolved = ofType.length >= 1 ? ofType[0] : (allProfilesRef.current[0] ?? null);
     setContextualProfile(resolved);
   }, []);

@@ -134,10 +134,14 @@ Papel:
 - `/comunicacao/...` e editorial/institucional.
 - `/comunidade/...` e social/comunitario.
 - Um canal de comunicacao nao e usuario comum nem empresa.
-- Publicacoes institucionais podem aparecer no feed comunitario, mas a URL canonica do conteudo editorial deve pertencer a `/comunicacao/...`.
+- `/comunicacao` lista e organiza agentes de comunicacao do territorio.
+- A comunidade pode ter aba/bloco `Comunicacao` com publicacoes distribuidas desses agentes.
+- Publicacoes institucionais podem aparecer no feed comunitario, mas a URL canonica de materia/reportagem deve pertencer a `/comunicacao/...`.
+- Postagens comuns de canal podem ser consumidas inline na comunidade quando nao exigirem experiencia editorial completa.
 - Alertas institucionais exigem verificacao, permissao territorial e controle de reputacao.
 
 Contrato detalhado: [COMUNICACAO_TERRITORIAL_ARCHITECTURE.md](./COMUNICACAO_TERRITORIAL_ARCHITECTURE.md).
+Plano de distribuicao: [COMUNICACAO_DISTRIBUICAO_TERRITORIAL_PLANO.md](./COMUNICACAO_DISTRIBUICAO_TERRITORIAL_PLANO.md).
 
 ## SEO e Canonical
 
@@ -145,7 +149,8 @@ Contrato detalhado: [COMUNICACAO_TERRITORIAL_ARCHITECTURE.md](./COMUNICACAO_TERR
 - Rotas comunitarias com conteudo social proprio (`/comunidade/...`, `/feed`, `/grupos`, `/alertas`, `/problemas`) usam `index, follow` e canonical self.
 - Rotas editoriais/institucionais (`/comunicacao/...`) usam `index, follow` e canonical self quando publicas e verificadas.
 - Rotas de modulo embutidas dentro da comunidade (`/comunidade/.../empresas`, `/servicos`, `/classificados`, etc.) usam `noindex, follow` e canonical para a rota publica equivalente enquanto nao tiverem conteudo comunitario exclusivo suficiente.
-- Conteudo de comunicacao exibido dentro de `/comunidade/...` deve apontar canonical para `/comunicacao/...` quando for apenas espelho editorial.
+- Conteudo de comunicacao exibido dentro de `/comunidade/...` deve apontar canonical para `/comunicacao/...` quando for materia/reportagem editorial.
+- Postagem comum de canal exibida inline na comunidade pode manter canonical do contexto comunitario quando houver interacao social/contextual propria.
 
 ## Decisao de Produto
 

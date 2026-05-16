@@ -6,14 +6,14 @@
 import { lazy } from "react";
 
 // ============================================================
-// ÃƒÂ¢Ã‚ÂÃ‚Â±ÃƒÂ¯Ã‚Â¸Ã‚Â LAYOUT E PROVIDERS
+// LAYOUT E PROVIDERS
 // ============================================================
 export const AppLayoutSidebar = lazy(() => 
   import("@/app/components/AppLayoutSidebar").then(m => ({ default: m.AppLayoutSidebar }))
 );
 
 // ============================================================
-// ÃƒÂ°Ã…Â¸Ã‚ÂÃ‚Â  PÃƒÆ’Ã‚ÂGINAS PÃƒÆ’Ã…Â¡BLICAS (Landing Pages)
+// PAGINAS PUBLICAS (Landing Pages)
 // ============================================================
 export const HomePage = lazy(() => import("@/app/pages/HomePage"));
 export const HomePageV2 = lazy(() => import("@/app/pages/HomePageV2"));
@@ -33,7 +33,7 @@ export const StatusPage = lazy(() => import("@/app/pages/StatusPage"));
 export const VirtualTryOnPage = lazy(() => import("@/app/pages/VirtualTryOnPage"));
 
 // ============================================================
-// ÃƒÂ°Ã…Â¸Ã¢â‚¬ÂÃ‚Â AUTENTICAÃƒÆ’Ã¢â‚¬Â¡ÃƒÆ’Ã†â€™O E ONBOARDING
+// AUTENTICACAO E ONBOARDING
 // ============================================================
 export const LoginPage = lazy(() => import("@/app/pages/LoginPage"));
 export const SimpleLoginPage = lazy(() => import("@/app/pages/SimpleLoginPage"));
@@ -42,7 +42,7 @@ export const CadastroConfirmacaoPage = lazy(() => import("@/app/features/onboard
 export const ResetPasswordPage = lazy(() => import("@/app/pages/ResetPasswordPage"));
 
 // ============================================================
-// ÃƒÂ°Ã…Â¸Ã¢â‚¬ËœÃ‚Â¤ PERFIL E CONFIGURAÃƒÆ’Ã¢â‚¬Â¡ÃƒÆ’Ã¢â‚¬Â¢ES
+// PERFIL E CONFIGURACOES
 // ============================================================
 export const ContaPage = lazy(() => import("@/modules/profile/pages/ContaHubPage"));
 export const ContaEditarPerfilPage = lazy(() => import("@/modules/profile/pages/ContaEditarPerfilPage"));
@@ -53,7 +53,7 @@ export const ContaProfissionalPage = lazy(() => import("@/modules/profile/pages/
 export const ContaEditarPage = lazy(() => import("@/modules/profile/pages/ContaEditarPage"));
 
 // ============================================================
-// ÃƒÂ°Ã…Â¸Ã¢â‚¬â„¢Ã‚Â³ BILLING E ASSINATURAS
+// BILLING E ASSINATURAS
 // ============================================================
 export const PricingPage = lazy(() => import("@/app/pages/PricingPage"));
 export const CheckoutSuccessPage = lazy(() => import("@/app/pages/CheckoutSuccessPage"));
@@ -61,7 +61,7 @@ export const CheckoutCancelPage = lazy(() => import("@/app/pages/CheckoutCancelP
 export const SubscriptionManagementPage = lazy(() => import("@/app/pages/SubscriptionManagementPage"));
 
 // ============================================================
-// ÃƒÂ°Ã…Â¸Ã¢â‚¬ÂÃ¢â‚¬Â NOTIFICAÃƒÆ’Ã¢â‚¬Â¡ÃƒÆ’Ã¢â‚¬Â¢ES
+// NOTIFICACOES
 // ============================================================
 export const NotificationsPage = lazy(() => import("@/app/pages/NotificationsPage"));
 export const NotificationPreferencesPage = lazy(() => import("@/app/pages/NotificationPreferencesPage"));
@@ -70,7 +70,7 @@ export const ProfileSettingsPage = lazy(() => import("@/app/pages/ProfileSetting
 export const ProfilePublicRoute = lazy(() => import("@/core/routing/components/ProfilePublicRoute"));
 
 // ============================================================
-// ÃƒÂ°Ã…Â¸Ã‚ÂÃ‚Â¢ EMPRESAS E NEGÃƒÆ’Ã¢â‚¬Å“CIOS
+// EMPRESAS E NEGOCIOS
 // ============================================================
 export const CriarEmpresaPage = lazy(() => import("@/modules/business/pages/CriarEmpresaPageV2"));
 export const EmpresasCadastroLandingPage = lazy(() => import("@/modules/business/pages/EmpresasCadastroLandingPage"));
@@ -96,7 +96,7 @@ export const PremiumBusinessCartPage = lazy(() => import("@/modules/business/pre
 export const PremiumBusinessCheckoutPage = lazy(() => import("@/modules/business/premium/pages/PremiumBusinessCheckoutPage"));
 
 // ============================================================
-// ÃƒÂ°Ã…Â¸Ã‚ÂÃ‚Â½ÃƒÂ¯Ã‚Â¸Ã‚Â GASTRONOMIA
+// GASTRONOMIA
 // ============================================================
 export const GastronomyLandingPage = lazy(() => import("@/modules/business/gastronomy/pages/GastronomyLandingPage"));
 export const GastronomyDetailPage = lazy(() => import("@/modules/business/gastronomy/pages/GastronomyDetailPageV2"));
@@ -115,7 +115,7 @@ export const AnalyticsPage = lazy(() => import("@/modules/business/gastronomy/pa
 export const GastronomyPromotionsPage = lazy(() => import("@/modules/business/gastronomy/pages/GastronomyPromotionsPage"));
 
 // ============================================================
-// ÃƒÂ¯Ã‚Â¿Ã‚Â½ EDUCATION
+// EDUCATION
 // ============================================================
 export const EducationExplorerPage = lazy(() => import("@/modules/business/education/pages/EducationExplorerPage"));
 export const EducationDetailPage = lazy(() => import("@/modules/business/education/pages/EducationDetailPage"));
@@ -128,7 +128,7 @@ export const EducationAnalyticsPage = lazy(() => import("@/modules/business/educ
 export const EducationPlansPage = lazy(() => import("@/modules/business/education/pages/EducationPlansPage"));
 
 // ============================================================
-// ÃƒÂ¯Ã‚Â¿Ã‚Â½ÃƒÂ¯Ã‚Â¿Ã‚Â½ SERVIÃƒÆ’Ã¢â‚¬Â¡OS E PROFISSIONAIS
+// SERVICOS E PROFISSIONAIS
 // ============================================================
 export const ServicosLandingPage = lazy(() => import("@/modules/professionals/services/pages/ServicosLandingPage"));
 export const ProfissionalDetailPage = lazy(() => import("@/modules/professionals/services/pages/ProfissionalDetailPage"));
@@ -138,7 +138,7 @@ export const CadastrarServicoPage = lazy(() => import("@/modules/professionals/s
 export const EditarServicoPage = lazy(() => import("@/modules/professionals/services/pages/EditarServicoPage"));
 
 // ============================================================
-// ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã‚Â¢ CLASSIFICADOS
+// CLASSIFICADOS
 // ============================================================
 export const ClassificadoDetailPage = lazy(() => import("@/modules/classifieds/pages/ClassificadoDetailPage"));
 export const ClassificadosPage = lazy(() => import("@/modules/classifieds/pages/ClassificadosPage"));
@@ -151,7 +151,7 @@ export const ClassifiedCanonicalRoute = lazy(() => import("@/core/routing/compon
 export const ClassifiedShortRoute = lazy(() => import("@/core/routing/components/ClassifiedShortRoute"));
 
 // ============================================================
-// ÃƒÂ°Ã…Â¸Ã¢â‚¬â„¢Ã‚Â¼ VAGAS/EMPREGOS
+// VAGAS/EMPREGOS
 // ============================================================
 export const PublicarVagaPage = lazy(() => import("@/modules/classifieds/jobs/pages/PublicarVagaPage"));
 export const VagasPublicPage = lazy(() => import("@/modules/classifieds/jobs/pages/VagasPublicPage"));
@@ -159,7 +159,7 @@ export const VagaDetailPage = lazy(() => import("@/modules/classifieds/jobs/page
 export const VagaDetailPublicPage = lazy(() => import("@/modules/classifieds/jobs/pages/VagaDetailPublicPage"));
 
 // ============================================================
-// ÃƒÂ°Ã…Â¸Ã¢â‚¬ËœÃ‚Â¥ COMUNIDADE (GRUPOS, EVENTOS, POSTS)
+// COMUNIDADE (GRUPOS, EVENTOS, POSTS)
 // ============================================================
 export const GruposPage = lazy(() => import("@/modules/community-groups/pages/GruposPage"));
 export const ComunidadePage = lazy(() => import("@/modules/community-feed/pages/ComunidadePage"));
@@ -188,8 +188,18 @@ export const ProblemasPage = lazy(() => import("@/modules/community-issues/pages
 export const NovoPostPage = lazy(() => import("@/modules/community-feed/pages/NovoPostPage"));
 export const ExamplePostPage = lazy(() => import("@/modules/community-feed/pages/ExamplePostPage"));
 
+// Comunicacao Territorial
+export const CommunicationLandingPage = lazy(() => import("@/modules/communication-territorial/pages/CommunicationLandingPage").then(module => ({ default: module.default })));
+export const CommunicationRequestPage = lazy(() => import("@/modules/communication-territorial/pages/CommunicationRequestPage"));
+export const CommunicationCityPage = lazy(() => import("@/modules/communication-territorial/pages/CommunicationCityPage"));
+export const CommunicationTerritoryPage = lazy(() => import("@/modules/communication-territorial/pages/CommunicationTerritoryPage"));
+export const CommunicationChannelPage = lazy(() => import("@/modules/communication-territorial/pages/CommunicationChannelPage"));
+export const CommunicationCompanyDetailsPage = lazy(() => import("@/modules/communication-territorial/pages/CommunicationCompanyDetailsPage"));
+export const CommunicationAgentPageV2 = lazy(() => import("@/modules/communication-territorial/v2/pages/CommunicationAgentPageV2"));
+export const CommunicationAgentDashboardV2 = lazy(() => import("@/modules/communication-territorial/v2/pages/CommunicationAgentDashboardV2"));
+
 // ============================================================
-// ÃƒÂ°Ã…Â¸Ã…Â¡Ã¢â‚¬â€ MOBILIDADE (CORRIDAS, MOTORISTAS, MOTOBOY)
+// MOBILIDADE (CORRIDAS, MOTORISTAS, MOTOBOY)
 // ============================================================
 export const MobilidadePage = lazy(() => import("@/modules/mobility/pages/MobilidadeLandingPage"));
 export const PassageiroPage = lazy(() => import("@/modules/mobility/pages/PassageiroPage"));
@@ -204,7 +214,7 @@ export const TrackRidePage = lazy(() => import("@/modules/mobility/pages/TrackRi
 export const EmergencyContactsPage = lazy(() => import("@/modules/mobility/pages/EmergencyContactsPage"));
 
 // ============================================================
-// ÃƒÂ°Ã…Â¸Ã…Â½Ã‚Â¯ PONTOS TURÃƒÆ’Ã‚ÂSTICOS (GUIDE)
+// PONTOS TURISTICOS (GUIDE)
 // ============================================================
 export const PontosTuristicosPage = lazy(() => import("@/app/pages/PontosTuristicosPage"));
 export const PontoTuristicoDetailPage = lazy(() => import("@/app/pages/PontoTuristicoDetailPage"));
@@ -217,42 +227,42 @@ export const AdminGuideTouristPointsPage = lazy(() => import("@/modules/guide/pa
 export const AdminGuideTouristPointFormPage = lazy(() => import("@/modules/guide/pages/AdminTouristPointFormPage"));
 
 // ============================================================
-// ÃƒÂ°Ã…Â¸Ã…Â½Ã‚Â« CUPONS E PROMOÃƒÆ’Ã¢â‚¬Â¡ÃƒÆ’Ã¢â‚¬Â¢ES
+// CUPONS E PROMOCOES
 // ============================================================
 export const CuponsPage = lazy(() => import("@/modules/business/pages/CuponsPage"));
 export const CupomDetailPage = lazy(() => import("@/modules/business/pages/CupomDetailPage"));
 
 // ============================================================
-// ÃƒÂ°Ã…Â¸Ã‚ÂÃ¢â‚¬Â  GAMIFICAÃƒÆ’Ã¢â‚¬Â¡ÃƒÆ’Ã†â€™O E RANKING
+// GAMIFICACAO E RANKING
 // ============================================================
 export const GamificacaoPage = lazy(() => import("@/core/gamification/pages/GamificacaoPage"));
 export const RankingPage = lazy(() => import("@/core/gamification/pages/RankingPage"));
 
 // ============================================================
-// ÃƒÂ°Ã…Â¸Ã¢â‚¬â„¢Ã‚Â¬ MENSAGENS E CHAT
+// MENSAGENS E CHAT
 // ============================================================
 export const MensagensPage = lazy(() => import("@/core/messaging/pages/MensagensPage"));
 export const ChatPage = lazy(() => import("@/core/messaging/pages/ChatPage"));
 
 // ============================================================
-// ÃƒÂ°Ã…Â¸Ã¢â‚¬â€Ã‚ÂºÃƒÂ¯Ã‚Â¸Ã‚Â MAPAS E GEOLOCALIZAÃƒÆ’Ã¢â‚¬Â¡ÃƒÆ’Ã†â€™O
+// MAPAS E GEOLOCALIZACAO
 // ============================================================
 export const MapaPage = lazy(() => import("@/core/maps/pages/MapaPageV4"));
 
 // ============================================================
-// ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã…Â  ANALYTICS
+// ANALYTICS
 // ============================================================
 export const GeneralAnalyticsPage = lazy(() => import("@/core/analytics/pages/AnalyticsPage"));
 
 // ============================================================
-// ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã‚Â± QR CODE
+// QR CODE
 // ============================================================
 export const QrResolverPage = lazy(() => 
   import("@/core/qr/pages/QrResolverPage").then(m => ({ default: m.QrResolverPage }))
 );
 
 // ============================================================
-// ÃƒÂ¢Ã…Â¡Ã¢â€žÂ¢ÃƒÂ¯Ã‚Â¸Ã‚Â LEGAL E CONFIGURAÃƒÆ’Ã¢â‚¬Â¡ÃƒÆ’Ã¢â‚¬Â¢ES
+// LEGAL E CONFIGURACOES
 // ============================================================
 export const RegrasPage = lazy(() => import("@/app/pages/RegrasPage"));
 export const TermosPage = lazy(() => import("@/app/pages/TermosPage"));
@@ -260,13 +270,13 @@ export const PrivacidadePage = lazy(() => import("@/app/pages/PrivacidadePage"))
 export const OfflineSettingsPage = lazy(() => import("@/app/pages/OfflineSettingsPage"));
 
 // ============================================================
-// ÃƒÂ¯Ã‚Â¿Ã‚Â½ LGPD / PRIVACIDADE
+// LGPD / PRIVACIDADE
 // ============================================================
 export const PrivacySettingsPage = lazy(() => import("@/app/pages/PrivacySettingsPage"));
 export const DPOContactPage = lazy(() => import("@/app/pages/DPOContactPage"));
 
 // ============================================================
-// ÃƒÂ¯Ã‚Â¿Ã‚Â½ÃƒÂ°Ã…Â¸Ã¢â‚¬ÂÃ‚Â§ DEV/ADMIN PAGES
+// DEV/ADMIN PAGES
 // ============================================================
 export const MotoboyValidationPage = lazy(() => 
   import("@/app/pages/dev/MotoboyValidationPage").then(m => ({ default: m.MotoboyValidationPage }))
@@ -274,14 +284,14 @@ export const MotoboyValidationPage = lazy(() =>
 export const LocationsAdminPage = lazy(() => import("@/modules/admin/pages/LocationsAdminPage"));
 
 // ============================================================
-// ÃƒÂ°Ã…Â¸Ã¢â‚¬ÂºÃ‚Â¡ÃƒÂ¯Ã‚Â¸Ã‚Â ADMIN DASHBOARD E MÃƒÆ’Ã¢â‚¬Å“DULOS
+// ADMIN DASHBOARD E MODULOS
 // ============================================================
 export const AdminDashboardPage = lazy(() => import("@/modules/admin/pages/AdminDashboardPage"));
 export const AdminBusinessesPage = lazy(() => import("@/modules/admin/pages/AdminBusinessesPage"));
 export const AdminPlansPage = lazy(() => import("@/modules/admin/pages/AdminPlansPage"));
 
 // ============================================================
-// ÃƒÂ°Ã…Â¸Ã¢â‚¬ÂºÃ‚Â¡ÃƒÂ¯Ã‚Â¸Ã‚Â ADMIN LAYOUT E PÃƒÆ’Ã‚ÂGINAS
+// ADMIN LAYOUT E PAGINAS
 // ============================================================
 export const AdminLayout = lazy(() => import("@/modules/admin/pages/AdminLayout"));
 export const AdminDashboard = lazy(() => import("@/modules/admin/pages/AdminDashboard"));
@@ -317,6 +327,7 @@ export const AdminMensagens = lazy(() => import("@/modules/admin/pages/AdminMens
 export const AdminNotifications = lazy(() => import("@/modules/admin/pages/AdminNotifications"));
 export const AdminCommunityAlerts = lazy(() => import("@/modules/admin/pages/AdminCommunityAlerts"));
 export const AdminCommunityIssues = lazy(() => import("@/modules/admin/pages/AdminCommunityIssues"));
+export const AdminComunicacao = lazy(() => import("@/modules/admin/pages/AdminComunicacao"));
 export const AdminIdentidade = lazy(() => import("@/modules/admin/pages/AdminIdentidade"));
 export const AdminMapa = lazy(() => import("@/modules/admin/pages/AdminMapa"));
 export const AdminConfiguracoes = lazy(() => import("@/modules/admin/pages/AdminConfiguracoes"));
@@ -332,13 +343,15 @@ export const AdminTerritoryManagement = lazy(() => import("@/modules/admin/pages
 export const AdminGooglePlacesImport = lazy(() => import("@/modules/admin/pages/AdminGooglePlacesImport"));
 
 // ============================================================
-// ÃƒÂ°Ã…Â¸Ã‚ÂÃ‚Â¢ CENTRAL - GestÃƒÆ’Ã‚Â£o e OperaÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o
+// CENTRAL - Gestao e Operacao
 // ============================================================
 export const CentralHubPage = lazy(() => import("@/modules/central/pages/CentralHubPage"));
 export const CentralEmpresasPage = lazy(() => import("@/modules/central/pages/CentralEmpresasPage"));
 export const CentralProfissionalPage = lazy(() => import("@/modules/central/pages/CentralProfissionalPage"));
 export const CentralMotoristaPage = lazy(() => import("@/modules/central/pages/CentralMotoristaPage"));
 export const CentralMotoboyPage = lazy(() => import("@/modules/central/pages/CentralMotoboyPage"));
+export const CentralComunicacaoPage = lazy(() => import("@/modules/central/pages/CentralComunicacaoPage"));
+export const CentralComunicacaoPageV2 = lazy(() => import("@/modules/central/pages/CentralComunicacaoPageV2"));
 // Sub-rotas de motorista
 export const CentralMotoristaCadastroPage = lazy(() => import("@/modules/central/pages/motorista/CentralMotoristaCadastroPage"));
 export const CentralMotoristaDisponibilidadePage = lazy(() => import("@/modules/central/pages/motorista/CentralMotoristaDisponibilidadePage"));
@@ -354,6 +367,9 @@ export const CentralMotoboyConfiguracoesPage = lazy(() => import("@/modules/cent
 // Layout e guards
 export const CentralLayout = lazy(() =>
   import("@/modules/central/components/CentralLayout").then((m) => ({ default: m.CentralLayout }))
+);
+export const CentralLayoutV2 = lazy(() =>
+  import("@/modules/central/components/v2/CentralLayoutV2").then((m) => ({ default: m.CentralLayoutV2 }))
 );
 export const CentralAccessGuard = lazy(() => import("@/modules/central/guards/CentralAccessGuard").then(m => ({ default: m.CentralAccessGuard })));
 export const BusinessAdminGuard = lazy(() => import("@/modules/central/guards/BusinessAdminGuard").then(m => ({ default: m.BusinessAdminGuard })));

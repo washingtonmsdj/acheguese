@@ -14,6 +14,7 @@ export const URL_PREVIEW_FNS: Record<EntityType, UrlPreviewFn> = {
   business: (slug) => (slug ? `/empresas/:uf/:cidade/:bairro/${slug}` : ''),
   profile: (username) => (username ? `/u/${username}` : ''),
   professional: (slug) => (slug ? `/profissionais/:uf/:cidade/${slug}` : ''),
+  communication_channel: (slug) => (slug ? `/comunicacao/:uf/:cidade/:territorio/${slug}` : ''),
 };
 
 export interface UseIdentityUrlPreviewOptions {
@@ -34,7 +35,9 @@ export function useIdentityUrlPreview({
         ? URL_PREVIEW_FNS.business
         : entityType === 'profile'
           ? URL_PREVIEW_FNS.profile
-          : URL_PREVIEW_FNS.professional;
+          : entityType === 'professional'
+            ? URL_PREVIEW_FNS.professional
+            : URL_PREVIEW_FNS.communication_channel;
     const fn = previewFn ?? defaultFn;
     return fn(identifier);
   }, [entityType, identifier, previewFn]);

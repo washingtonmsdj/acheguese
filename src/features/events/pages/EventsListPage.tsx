@@ -47,54 +47,14 @@ import type { ResolvedTerritory } from '@/core/routing/hooks/useResolveTerritory
 import { useTerritoryFilter } from '@/core/location/hooks/useTerritoryFilter';
 import { communityEventsRuntimeService } from '@/core/community/services/CommunityEventsRuntimeService';
 import { mapCommunityEventToEvent } from '../utils/eventAdapters';
-
-// ============================================================================
-// CONSTANTS
-// ============================================================================
-
-const CATEGORIAS = [
-  { id: 'todos', name: 'Todos', icon: '*', color: 'from-slate-500 to-slate-600' },
-  { id: 'cultural', name: 'Cultural', icon: '*', color: 'from-purple-500 to-pink-500' },
-  { id: 'esportivo', name: 'Esportivo', icon: '*', color: 'from-green-500 to-emerald-500' },
-  { id: 'social', name: 'Social', icon: '*', color: 'from-blue-500 to-cyan-500' },
-  { id: 'religioso', name: 'Religioso', icon: '*', color: 'from-amber-500 to-orange-500' },
-  { id: 'educacional', name: 'Educacional', icon: '*', color: 'from-indigo-500 to-violet-500' },
-  { id: 'gastronomico', name: 'Gastronomico', icon: '*', color: 'from-red-500 to-rose-500' },
-  { id: 'artistico', name: 'Artistico', icon: '*', color: 'from-pink-500 to-purple-500' },
-  { id: 'comunitario', name: 'Comunitario', icon: '*', color: 'from-teal-500 to-cyan-500' },
-];
-
-const DATE_FILTERS = [
-  { id: 'todos', name: 'Todas as datas' },
-  { id: 'hoje', name: 'Hoje' },
-  { id: 'semana', name: 'Esta semana' },
-  { id: 'mes', name: 'Este mês' },
-  { id: 'proximo-mes', name: 'Próximo mês' },
-];
-
-const TYPE_FILTERS = [
-  { id: 'todos', name: 'Todos os tipos' },
-  { id: 'presencial', name: 'Presencial' },
-  { id: 'online', name: 'Online' },
-  { id: 'hibrido', name: 'Híbrido' },
-];
-
-const PRICE_FILTERS = [
-  { id: 'todos', name: 'Todos os preços' },
-  { id: 'gratuito', name: 'Gratuito' },
-  { id: 'pago', name: 'Pago' },
-];
-
-const SORT_OPTIONS = [
-  { id: 'data-asc', name: 'Data: Mais próximos' },
-  { id: 'data-desc', name: 'Data: Mais distantes' },
-  { id: 'popularidade', name: 'Mais populares' },
-  { id: 'preco-asc', name: 'Menor preço' },
-  { id: 'preco-desc', name: 'Maior preço' },
-  { id: 'alfabetica', name: 'A-Z' },
-];
-
-const ITEMS_PER_PAGE = 20;
+import {
+  EVENT_DATE_FILTER_OPTIONS,
+  EVENT_LIST_CATEGORY_OPTIONS,
+  EVENT_PRICE_FILTER_OPTIONS,
+  EVENT_SORT_OPTIONS,
+  EVENT_TYPE_FILTER_OPTIONS,
+  EVENTS_ITEMS_PER_PAGE,
+} from '../constants';
 
 type ViewMode = 'grid' | 'list';
 type SortOption = 'data-asc' | 'data-desc' | 'popularidade' | 'preco-asc' | 'preco-desc' | 'alfabetica';
@@ -259,10 +219,10 @@ export default function EventsListPage({ resolved, activeMemberIds }: EventsList
   }, [category, dateFilter, typeFilter, priceFilter, search, sortBy, eventsData]);
 
   // Pagination
-  const totalPages = Math.ceil(filteredAndSortedEvents.length / ITEMS_PER_PAGE);
+  const totalPages = Math.ceil(filteredAndSortedEvents.length / EVENTS_ITEMS_PER_PAGE);
   const paginatedEvents = useMemo(() => {
-    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-    const endIndex = startIndex + ITEMS_PER_PAGE;
+    const startIndex = (currentPage - 1) * EVENTS_ITEMS_PER_PAGE;
+    const endIndex = startIndex + EVENTS_ITEMS_PER_PAGE;
     return filteredAndSortedEvents.slice(startIndex, endIndex);
   }, [filteredAndSortedEvents, currentPage]);
 
@@ -405,7 +365,7 @@ export default function EventsListPage({ resolved, activeMemberIds }: EventsList
                 <>
                   <span>/</span>
                   <span className="font-medium text-primary">
-                    {CATEGORIAS.find(c => c.id === category)?.name}
+                    {EVENT_LIST_CATEGORY_OPTIONS.find(c => c.id === category)?.name}
                   </span>
                 </>
               )}
@@ -635,7 +595,7 @@ export default function EventsListPage({ resolved, activeMemberIds }: EventsList
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {SORT_OPTIONS.map((option) => (
+                    {EVENT_SORT_OPTIONS.map((option) => (
                       <SelectItem key={option.id} value={option.id} className="text-xs sm:text-sm">
                         {option.name}
                       </SelectItem>
@@ -704,7 +664,7 @@ export default function EventsListPage({ resolved, activeMemberIds }: EventsList
                         Categorias
                       </p>
                       <div className="flex flex-wrap gap-1.5 sm:gap-2">
-                        {CATEGORIAS.map((cat) => {
+                        {EVENT_LIST_CATEGORY_OPTIONS.map((cat) => {
                           const isActive = category === cat.id;
                           return (
                             <motion.button
@@ -741,7 +701,7 @@ export default function EventsListPage({ resolved, activeMemberIds }: EventsList
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
-                            {DATE_FILTERS.map((filter) => (
+                            {EVENT_DATE_FILTER_OPTIONS.map((filter) => (
                               <SelectItem key={filter.id} value={filter.id} className="text-xs sm:text-sm">
                                 {filter.name}
                               </SelectItem>
@@ -760,7 +720,7 @@ export default function EventsListPage({ resolved, activeMemberIds }: EventsList
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
-                            {TYPE_FILTERS.map((filter) => (
+                            {EVENT_TYPE_FILTER_OPTIONS.map((filter) => (
                               <SelectItem key={filter.id} value={filter.id} className="text-xs sm:text-sm">
                                 {filter.name}
                               </SelectItem>
@@ -779,7 +739,7 @@ export default function EventsListPage({ resolved, activeMemberIds }: EventsList
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
-                            {PRICE_FILTERS.map((filter) => (
+                            {EVENT_PRICE_FILTER_OPTIONS.map((filter) => (
                               <SelectItem key={filter.id} value={filter.id} className="text-xs sm:text-sm">
                                 {filter.name}
                               </SelectItem>
@@ -818,9 +778,9 @@ export default function EventsListPage({ resolved, activeMemberIds }: EventsList
             {!isEventsLoading && filteredAndSortedEvents.length > 0 && (
               <div className="mb-4 flex items-center justify-between text-sm text-muted-foreground">
                 <p>
-                  Mostrando <span className="font-semibold text-foreground">{((currentPage - 1) * ITEMS_PER_PAGE) + 1}</span> a{' '}
+                  Mostrando <span className="font-semibold text-foreground">{((currentPage - 1) * EVENTS_ITEMS_PER_PAGE) + 1}</span> a{' '}
                   <span className="font-semibold text-foreground">
-                    {Math.min(currentPage * ITEMS_PER_PAGE, filteredAndSortedEvents.length)}
+                    {Math.min(currentPage * EVENTS_ITEMS_PER_PAGE, filteredAndSortedEvents.length)}
                   </span>{' '}
                   de <span className="font-semibold text-foreground">{filteredAndSortedEvents.length}</span> eventos
                 </p>

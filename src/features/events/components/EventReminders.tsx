@@ -1,8 +1,8 @@
 /**
- * ðŸ”” EVENT REMINDERS
+ * EVENT REMINDERS
  * 
  * Sistema de lembretes para eventos
- * Permite configurar notificaÃ§Ãµes antes do evento
+ * Permite configurar notificações antes do evento
  * 
  * @version 1.0.0
  */
@@ -113,7 +113,7 @@ export function EventReminders({ event }: EventRemindersProps) {
     if (!notificationsEnabled) {
       const granted = await requestNotificationPermission();
       if (!granted) {
-        alert('Por favor, habilite as notificaÃ§Ãµes para receber lembretes.');
+        alert('Por favor, habilite as notificações para receber lembretes.');
         return;
       }
     }
@@ -147,7 +147,7 @@ export function EventReminders({ event }: EventRemindersProps) {
         setTimeout(() => {
           if ('Notification' in window && Notification.permission === 'granted') {
             new Notification(`Lembrete: ${event.title}`, {
-              body: `O evento comeÃ§a em ${option.label.replace(' antes', '')}!`,
+              body: `O evento começa em ${option.label.replace(' antes', '')}!`,
               icon: event.cover_image_url,
               badge: '/logo.png',
               tag: `event-${event.id}-${time}`,
@@ -183,7 +183,7 @@ export function EventReminders({ event }: EventRemindersProps) {
       {!notificationsEnabled && (
         <div className="mb-4 rounded-lg border border-amber-500/20 bg-amber-500/10 p-3">
           <p className="text-sm text-amber-700 dark:text-amber-300">
-            <strong>AtenÃ§Ã£o:</strong> Habilite as notificaÃ§Ãµes para receber lembretes.
+            <strong>Atenção:</strong> Habilite as notificações para receber lembretes.
           </p>
         </div>
       )}
@@ -258,7 +258,7 @@ export function EventReminders({ event }: EventRemindersProps) {
 
       {/* Info */}
       <p className="mt-4 text-xs text-muted-foreground">
-        Você receberÃ¡ uma notificaÃ§Ã£o nos horÃ¡rios selecionados. Certifique-se de que as notificaÃ§Ãµes estÃ£o habilitadas no seu navegador.
+        Você receberá uma notificação nos horários selecionados. Certifique-se de que as notificações estão habilitadas no seu navegador.
       </p>
     </div>
   );

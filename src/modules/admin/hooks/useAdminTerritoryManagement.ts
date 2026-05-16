@@ -9,10 +9,10 @@
 import { logger } from '@/shared/utils/logger';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { supabase } from '@/integrations/supabase';
 import { RolloutService } from '@/core/rollout/services/RolloutService';
 import { createRolloutRepository } from '@/core/rollout/repositories/createRolloutRepository';
 import { createLocationRepository } from '@/core/location/repositories/createLocationRepository';
+import { residenceService } from '@/core/residence/services/ResidenceService';
 import { ModuleKey, RolloutStatus, RolloutSource } from '@/core/rollout/types';
 import { communityRolloutService } from '@/core/community/services';
 import {
@@ -62,23 +62,10 @@ export function useAdminTerritoryManagement() {
             return [districtId, effective.effective_rollout] as const;
           })
         ),
-        supabase
-          .from('user_residences')
-          .select('location_id')
-          .eq('is_primary', true)
-          .in('location_id', districtIds),
+        residenceService.countPrimaryResidencesByLocationIds(districtIds),
       ]);
 
-      if (residencesResult.error) {
-        throw residencesResult.error;
-      }
-
-      const residentsCountByDistrict = new Map<string, number>();
-      for (const row of residencesResult.data ?? []) {
-        const locationId = row.location_id as string | null;
-        if (!locationId) continue;
-        residentsCountByDistrict.set(locationId, (residentsCountByDistrict.get(locationId) ?? 0) + 1);
-      }
+      const residentsCountByDistrict = residencesResult;
 
       const map = new Map<string, DistrictCommunityMetric>();
       for (const [districtId, rollout] of rollouts) {

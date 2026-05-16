@@ -1,9 +1,9 @@
 ﻿/**
- * ðŸ” MOBILITY QUERIES â€” Leitura de dados
+ * MOBILITY QUERIES - Leitura de dados
  * 
- * Responsabilidade Ãºnica: todas as operaÃ§Ãµes de consulta (SELECT)
+ * Responsabilidade única: todas as operações de consulta (SELECT)
  * - Sem escritas (INSERT/UPDATE/DELETE)
- * - Sem lÃ³gica de negÃ³cio complexa
+ * - Sem lógica de negócio complexa
  */
 
 import { supabase } from "@/integrations/supabase";
@@ -156,7 +156,7 @@ export async function getRideById(id: string): Promise<unknown | null> {
 }
 
 /**
- * Buscar todas as solicitaÃ§Ãµes de corrida
+ * Buscar todas as solicitações de corrida
  */
 export async function getAllRideRequests(): Promise<unknown[]> {
   const { data, error } = await supabaseClient
@@ -220,7 +220,7 @@ export async function getActiveRideByDriverProfile(
 }
 
 /**
- * Buscar corrida ativa do usuÃ¡rio (passageiro ou motorista)
+ * Buscar corrida ativa do usuário (passageiro ou motorista)
  */
 export async function getActiveRide(userProfileId: string): Promise<unknown | null> {
   const { data, error } = await supabaseClient
@@ -539,7 +539,7 @@ export async function getTopDrivers(opts: { minRides?: number; limit?: number } 
 }
 
 /**
- * EstatÃ­sticas de mobilidade
+ * Estatísticas de mobilidade
  */
 export async function getMobilityStats(): Promise<{ total_drivers: number; total_rides: number }> {
   try {
@@ -559,7 +559,7 @@ export async function getMobilityStats(): Promise<{ total_drivers: number; total
 }
 
 /**
- * Ganhos do motorista (corridas concluÃ­das)
+ * Ganhos do motorista (corridas concluídas)
  */
 export async function getDriverEarnings(driverProfileId: string): Promise<unknown[]> {
   try {
@@ -585,7 +585,7 @@ export async function getDriverEarnings(driverProfileId: string): Promise<unknow
 }
 
 /**
- * Pagamentos de corridas concluÃ­das por motorista
+ * Pagamentos de corridas concluídas por motorista
  */
 export async function getCompletedRidePaymentsByDriver(
   driverProfileId: string,
@@ -714,7 +714,7 @@ export async function getLastMessage(conversationId: string): Promise<unknown | 
 }
 
 /**
- * Contar mensagens nÃ£o lidas
+ * Contar mensagens não lidas
  */
 export async function getUnreadCount(conversationId: string, profileId: string): Promise<number> {
   try {
@@ -734,19 +734,19 @@ export async function getUnreadCount(conversationId: string, profileId: string):
 }
 
 /**
- * Corridas disponÃ­veis (para motoristas)
+ * Corridas disponíveis (para motoristas)
  * 
- * @deprecated Use MobilityOfferService ao invÃ©s desta funÃ§Ã£o genÃ©rica
+ * @deprecated Use MobilityOfferService ao invés desta função genérica
  * 
- * PROBLEMA: Esta funÃ§Ã£o retorna TODAS as corridas sem considerar:
- * - EstratÃ©gia de dispatch (exclusive vs open board)
+ * PROBLEMA: Esta função retorna TODAS as corridas sem considerar:
+ * - Estratégia de dispatch (exclusive vs open board)
  * - Elegibilidade do motorista
- * - ProteÃ§Ã£o de dados sensÃ­veis
- * - Scoring e ordenaÃ§Ã£o
+ * - Proteção de dados sensíveis
+ * - Scoring e ordenação
  * 
- * SOLUÃ‡ÃƒO: Use MobilityOfferService.getExclusiveOffer() ou getOpenBoardOffers()
+ * SOLUÇÃO: Use MobilityOfferService.getExclusiveOffer() ou getOpenBoardOffers()
  * 
- * Mantido apenas para compatibilidade temporÃ¡ria
+ * Mantido apenas para compatibilidade temporária
  */
 export async function getAvailableRides(limit: number = 10): Promise<unknown[]> {
   logger.warn('getAvailableRides is deprecated. Use MobilityOfferService instead.');
@@ -793,7 +793,7 @@ export async function getAvailableRides(limit: number = 10): Promise<unknown[]> 
 }
 
 /**
- * Buscar corridas do usuÃ¡rio (passageiro ou motorista)
+ * Buscar corridas do usuário (passageiro ou motorista)
  */
 export async function getUserRides(userId: string): Promise<unknown[]> {
   try {
@@ -815,7 +815,7 @@ export async function getUserRides(userId: string): Promise<unknown[]> {
 }
 
 /**
- * Buscar corrida com endereÃ§os completos
+ * Buscar corrida com endereços completos
  */
 export async function getRideWithAddresses(rideId: string): Promise<unknown | null> {
   try {
@@ -840,7 +840,7 @@ export async function getRideWithAddresses(rideId: string): Promise<unknown | nu
 }
 
 /**
- * InformaÃ§Ãµes bÃ¡sicas da corrida
+ * Informações básicas da corrida
  */
 export async function getRideBasicInfo(rideId: string): Promise<unknown | null> {
   try {
@@ -878,7 +878,7 @@ export async function getRideByShareToken(token: string): Promise<unknown | null
 }
 
 /**
- * Assentos disponÃ­veis na corrida
+ * Assentos disponíveis na corrida
  */
 export async function getRideAvailableSeats(rideId: string): Promise<number> {
   try {
@@ -920,7 +920,7 @@ export async function getDriverData(profileId: string): Promise<unknown | null> 
 }
 
 /**
- * Buscar estatÃ­sticas detalhadas do motorista
+ * Buscar estatísticas detalhadas do motorista
  */
 export async function getDriverStatsDetailed(driverProfileId: string): Promise<unknown | null> {
   try {
@@ -1046,7 +1046,7 @@ export async function getOperationalVerificationEntries(
 }
 
 /**
- * HistÃ³rico de corridas do usuÃ¡rio
+ * Histórico de corridas do usuário
  * @deprecated Use getUserRides() - mesmo comportamento
  */
 export async function getRideHistory(
@@ -1058,13 +1058,12 @@ export async function getRideHistory(
 }
 
 /**
- * LocalizaÃ§Ã£o do motorista
- * @deprecated NÃ£o implementado - usar GPS tracking diretamente
+ * Localização do motorista
+ * @deprecated Não implementado - usar GPS tracking diretamente
  */
 export async function getDriverLocation(_driverProfileId: string): Promise<unknown | null> {
   logger.warn("MobilityQueries.getDriverLocation - nao implementado, usar GPS tracking");
   return null;
 }
-
 
 

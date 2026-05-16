@@ -42,6 +42,13 @@ const NOTICE_CONFIG: Record<
     changeMessage:
       'O link público profissional será alterado. Links antigos podem deixar de funcionar.',
   },
+  communication_channel: {
+    variant: 'warning',
+    persistentMessage:
+      'O link publico do canal identifica uma fonte territorial. Alteracoes devem ser usadas com criterio para preservar confiabilidade.',
+    changeMessage:
+      'O link publico do canal de comunicacao sera alterado.',
+  },
 };
 
 export function IdentityImpactNotice({
@@ -56,7 +63,9 @@ export function IdentityImpactNotice({
       ? NOTICE_CONFIG.business
       : entityType === 'profile'
         ? NOTICE_CONFIG.profile
-        : NOTICE_CONFIG.professional;
+        : entityType === 'professional'
+          ? NOTICE_CONFIG.professional
+          : NOTICE_CONFIG.communication_channel;
   const hasChange =
     !!originalValue &&
     !!currentValue &&

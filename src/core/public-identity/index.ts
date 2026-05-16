@@ -31,11 +31,13 @@ export type { IdentityAdapter } from './domain/IdentityAdapter';
 export { BusinessIdentityPolicy } from './policies/BusinessIdentityPolicy';
 export { ProfileIdentityPolicy } from './policies/ProfileIdentityPolicy';
 export { ProfessionalIdentityPolicy } from './policies/ProfessionalIdentityPolicy';
+export { CommunicationChannelIdentityPolicy } from './policies/CommunicationChannelIdentityPolicy';
 
 // Adapters
 export { BusinessIdentityAdapter } from './adapters/BusinessIdentityAdapter';
 export { ProfileIdentityAdapter } from './adapters/ProfileIdentityAdapter';
 export { ProfessionalIdentityAdapter } from './adapters/ProfessionalIdentityAdapter';
+export { CommunicationChannelIdentityAdapter } from './adapters/CommunicationChannelIdentityAdapter';
 
 // Services
 export { PublicIdentityService } from './services/PublicIdentityService';
@@ -71,6 +73,7 @@ export {
   BusinessIdentityField,
   ProfileIdentityField,
   ProfessionalIdentityField,
+  CommunicationChannelIdentityField,
 } from './components';
 export type { IdentityFieldProps } from './components';
 
@@ -86,4 +89,5 @@ export {
   BUSINESS_SPECIFIC_RESERVED,
   PROFILE_SPECIFIC_RESERVED,
   PROFESSIONAL_SPECIFIC_RESERVED,
+  COMMUNICATION_CHANNEL_SPECIFIC_RESERVED,
 } from './utils/reserved-names';

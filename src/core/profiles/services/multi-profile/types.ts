@@ -4,23 +4,21 @@
  * Fonte: ARQUITETURA_MULTI_PERFIL_DEFINITIVA.md v3.0
  */
 
-import type { Database } from '@/integrations/supabase/types';
-
 // Tipos do banco
-export type ProfileType = 'personal' | 'business' | 'professional' | 'driver';
+export type ProfileType = 'personal' | 'business' | 'professional' | 'driver' | 'communication_channel';
 export type ProfileRole = 'owner' | 'admin' | 'member';
 export type LinkType = 'owns' | 'works_for' | 'drives_for' | 'partner';
 
 /**
  * MultiProfileRecord — Perfil na arquitetura multi-profile
- * 
+ *
  * Representa um perfil no contexto da arquitetura multi-profile (FASE 3).
  * Usa snake_case (shape do banco), tem handle obrigatório.
- * 
- * ⚠️ NÃO confundir com Profile de core/profiles/domain/Profile.ts
+ *
+ * ATENCAO: NAO confundir com Profile de core/profiles/domain/Profile.ts
  * - Profile (domain): camelCase, SSOT canônico, 36 campos
  * - MultiProfileRecord: snake_case, contexto multi-profile, shape do banco
- * 
+ *
  * @see Profile em core/profiles/domain/Profile.ts para o SSOT canônico
  */
 export interface MultiProfileRecord {
@@ -143,7 +141,8 @@ export type ProfileWithExtension =
   | { profile: MultiProfileRecord; extension: null; type: 'personal' }
   | { profile: MultiProfileRecord; extension: BusinessData; type: 'business' }
   | { profile: MultiProfileRecord; extension: ProfessionalData; type: 'professional' }
-  | { profile: MultiProfileRecord; extension: DriverData; type: 'driver' };
+  | { profile: MultiProfileRecord; extension: DriverData; type: 'driver' }
+  | { profile: MultiProfileRecord; extension: null; type: 'communication_channel' };
 
 // Dados para criação
 export interface CreateProfileInput {

@@ -81,13 +81,13 @@ export function useProfessionalCreateMultiProfile(
       const activeLocation = locationContextStore.getActiveLocation();
       const locationId = input.location_id ?? activeLocation?.id;
       if (!locationId) {
-        throw new Error("TerritÃ³rio ativo Ã© obrigatÃ³rio para cadastrar serviÃ§o");
+        throw new Error("Território ativo é obrigatório para cadastrar serviço");
       }
 
       const requestedSlug = input.slug?.trim() || input.name;
       const handle = PublicIdentityService.normalize(requestedSlug, "professional");
       if (!handle) {
-        throw new Error("Slug profissional invÃ¡lido");
+        throw new Error("Slug profissional inválido");
       }
       const availability = await PublicIdentityService.checkAvailability({
         identifier: handle,
@@ -97,8 +97,8 @@ export function useProfessionalCreateMultiProfile(
       if (availability.status !== "available") {
         throw new Error(
           availability.message ||
-            `Slug "${handle}" nÃ£o estÃ¡ disponÃ­vel.` +
-              (availability.suggestion ? ` SugestÃ£o: ${availability.suggestion}` : ""),
+            `Slug "${handle}" não está disponível.` +
+              (availability.suggestion ? ` Sugestão: ${availability.suggestion}` : ""),
         );
       }
 

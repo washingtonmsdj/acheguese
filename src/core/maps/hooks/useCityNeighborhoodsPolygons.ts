@@ -1,13 +1,13 @@
 /**
  * useCityNeighborhoodsPolygons
  *
- * Busca os polÌgonos de todos os bairros ativos de uma cidade.
- * SÛ executa quando `enabled` È true ó evita chamadas desnecess·rias.
+ * Busca os pol√≠gonos de todos os bairros ativos de uma cidade.
+ * S√≥ executa quando `enabled` √© true e evita chamadas desnecess√°rias.
  *
  * Fluxo:
  *   1. Busca os filhos diretos da cidade (type=district, status=active)
- *   2. Para cada bairro, busca o boundary canÙnico via SSOT territorial
- *   3. Retorna um TerritoryPolygon[] com todos os anÈis encontrados
+ *   2. Para cada bairro, busca o boundary can√¥nico via SSOT territorial
+ *   3. Retorna um TerritoryPolygon[] com todos os an√©is encontrados
  *
  * @module core/maps/hooks
  */
@@ -23,7 +23,7 @@ import { LocationType, LocationStatus } from '@/core/location/types';
 interface UseCityNeighborhoodsPolygonsOptions {
   /** ID da cidade no banco */
   cityId: string | null | undefined;
-  /** Path geogr·fico da cidade, ex: /br/ba/salvador */
+  /** Path geogr√°fico da cidade, ex: /br/ba/salvador */
   cityGeoPath: string | null | undefined;
   /** Ativa ou desativa a busca */
   enabled: boolean;
@@ -37,7 +37,7 @@ interface UseCityNeighborhoodsPolygonsResult {
 // Cache key para localStorage
 const CACHE_KEY_PREFIX = 'city-neighborhoods-cache-';
 const CACHE_VERSION = 'v1';
-const CACHE_EXPIRY_DAYS = 7; // Cache v·lido por 7 dias
+const CACHE_EXPIRY_DAYS = 7; // Cache v√°lido por 7 dias
 
 interface CachedData {
   version: string;
@@ -87,8 +87,8 @@ function saveToCache(cityId: string, polygons: TerritoryPolygon[]): void {
 }
 
 /**
- * Limpa o cache de uma cidade especÌfica ou de todas as cidades.
- * ⁄til para forÁar re-fetch quando os dados mudam.
+ * Limpa o cache de uma cidade espec√≠fica ou de todas as cidades.
+ * √ötil para for√ßar re-fetch quando os dados mudam.
  */
 export function clearNeighborhoodsCache(cityId?: string): void {
   try {

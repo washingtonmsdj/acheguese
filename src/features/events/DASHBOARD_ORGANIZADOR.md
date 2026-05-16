@@ -1,30 +1,30 @@
-# ðŸ“Š Dashboard do Organizador de Eventos
+# 📊 Dashboard do Organizador de Eventos
 
 Sistema completo para organizadores gerenciarem seus eventos no Achegue-se.
 
-## ðŸŽ¯ VisÃ£o Geral
+## 🎯 Visão Geral
 
-O Dashboard do Organizador Ã© uma Ã¡rea administrativa completa onde os criadores de eventos podem:
+O Dashboard do Organizador é uma área administrativa completa onde os criadores de eventos podem:
 
-- âœ… Criar e editar eventos
-- âœ… Acompanhar mÃ©tricas e analytics
-- âœ… Gerenciar ingressos e vendas
-- âœ… Visualizar participantes
-- âœ… Exportar relatÃ³rios
+- ✅ Criar e editar eventos
+- ✅ Acompanhar métricas e analytics
+- ✅ Gerenciar ingressos e vendas
+- ✅ Visualizar participantes
+- ✅ Exportar relatórios
 
 ---
 
-## ðŸ“ Arquivos Principais
+## 📁 Arquivos Principais
 
 ### 1. **EventsOrganizerDashboard.tsx**
-Dashboard principal com listagem de eventos e estatÃ­sticas.
+Dashboard principal com listagem de eventos e estatísticas.
 
 **Funcionalidades:**
-- ðŸ“Š Cards de estatÃ­sticas (eventos, participantes, visualizaÃ§Ãµes, receita)
-- ðŸ” Busca e filtros por status
-- ðŸ“‹ Listagem de eventos com aÃ§Ãµes rÃ¡pidas
-- ðŸ“¥ ExportaÃ§Ã£o de dados
-- ðŸŽ¨ Interface responsiva e animada
+- 📊 Cards de estatísticas (eventos, participantes, visualizações, receita)
+- 🔍 Busca e filtros por status
+- 📋 Listagem de eventos com ações rápidas
+- 📥 Exportação de dados
+- 🎨 Interface responsiva e animada
 
 **Rotas:**
 ```typescript
@@ -34,36 +34,36 @@ Dashboard principal com listagem de eventos e estatÃ­sticas.
 ```
 
 ### 2. **EventsOrganizerForm.tsx**
-FormulÃ¡rio multi-step para criar/editar eventos.
+Formulário multi-step para criar/editar eventos.
 
 **Steps:**
-1. **InformaÃ§Ãµes BÃ¡sicas** - TÃ­tulo, categoria, descriÃ§Ãµes
-2. **Data e Local** - Datas, tipo (presencial/online/hÃ­brido), endereÃ§o
+1. **Informações Básicas** - Título, categoria, descrições
+2. **Data e Local** - Datas, tipo (presencial/online/híbrido), endereço
 3. **Ingressos** - Gratuito/pago, capacidade, tipos de ingressos
-4. **Detalhes** - Requisitos, o que levar, classificaÃ§Ã£o etÃ¡ria
-5. **MÃ­dia** - Imagem de capa e galeria
+4. **Detalhes** - Requisitos, o que levar, classificação etária
+5. **Mídia** - Imagem de capa e galeria
 
 **Funcionalidades:**
-- âœ… ValidaÃ§Ã£o de formulÃ¡rio
-- âœ… NavegaÃ§Ã£o entre steps
-- âœ… Salvar como rascunho
-- âœ… Preview do evento
-- âœ… PublicaÃ§Ã£o
+- ✅ Validação de formulário
+- ✅ Navegação entre steps
+- ✅ Salvar como rascunho
+- ✅ Preview do evento
+- ✅ Publicação
 
 ---
 
-## ðŸ§© Componentes Auxiliares
+## 🧩 Componentes Auxiliares
 
 ### 1. **EventAnalyticsCard.tsx**
-Card com analytics detalhados de um evento especÃ­fico.
+Card com analytics detalhados de um evento específico.
 
-**MÃ©tricas:**
-- ðŸ‘ï¸ VisualizaÃ§Ãµes (total, tendÃªncia, Ãºltima semana)
-- ðŸ‘¥ Participantes (total, % da capacidade)
-- â¤ï¸ Engajamento (curtidas, compartilhamentos, comentÃ¡rios)
-- ðŸ’° Receita (total, tendÃªncia, ingressos vendidos)
-- ðŸ“Š Origem do trÃ¡fego (direto, redes sociais, busca, referÃªncia)
-- ðŸŽ« Vendas por tipo de ingresso
+**Métricas:**
+- 👁️ Visualizações (total, tendência, última semana)
+- 👥 Participantes (total, % da capacidade)
+- ❤️ Engajamento (curtidas, compartilhamentos, comentários)
+- 💰 Receita (total, tendência, ingressos vendidos)
+- 📊 Origem do tráfego (direto, redes sociais, busca, referência)
+- 🎫 Vendas por tipo de ingresso
 
 **Uso:**
 ```tsx
@@ -76,12 +76,12 @@ import { EventAnalyticsCard } from '@/features/events-v2/components/EventAnalyti
 Componente para upload de imagens com drag & drop.
 
 **Funcionalidades:**
-- ðŸ“¸ Upload via clique ou drag & drop
-- ðŸ–¼ï¸ Preview da imagem
-- âœ… ValidaÃ§Ã£o de tipo e tamanho
-- ðŸ”„ Loading state
-- âŒ RemoÃ§Ã£o de imagem
-- ðŸŽ¨ Suporte a diferentes aspect ratios
+- 📸 Upload via clique ou drag & drop
+- 🖼️ Preview da imagem
+- ✅ Validação de tipo e tamanho
+- 🔄 Loading state
+- ❌ Remoção de imagem
+- 🎨 Suporte a diferentes aspect ratios
 
 **Uso:**
 ```tsx
@@ -99,18 +99,18 @@ import { EventImageUploader } from '@/features/events-v2/components/EventImageUp
 - `value`: URL da imagem atual
 - `onChange`: Callback quando imagem muda
 - `aspectRatio`: 'video' | 'square' | 'portrait'
-- `maxSizeMB`: Tamanho mÃ¡ximo em MB
+- `maxSizeMB`: Tamanho máximo em MB
 
 ### 3. **EventTicketManager.tsx**
 Gerenciador completo de tipos de ingressos.
 
 **Funcionalidades:**
-- âž• Adicionar novos tipos de ingressos
-- âœï¸ Editar ingressos existentes
-- ðŸ—‘ï¸ Remover ingressos
-- ðŸ“Š Visualizar progresso de vendas
-- ðŸ’° Resumo de receita
-- ðŸ“… PerÃ­odo de vendas por ingresso
+- ➕ Adicionar novos tipos de ingressos
+- ✏️ Editar ingressos existentes
+- 🗑️ Remover ingressos
+- 📊 Visualizar progresso de vendas
+- 💰 Resumo de receita
+- 📅 Período de vendas por ingresso
 
 **Uso:**
 ```tsx
@@ -138,16 +138,16 @@ interface Ticket {
 
 ---
 
-## ðŸŽ¨ Interface e UX
+## 🎨 Interface e UX
 
 ### Design System
-- âœ… Componentes do shadcn/ui
-- âœ… AnimaÃ§Ãµes com Framer Motion
-- âœ… Ãcones do Lucide React
-- âœ… Tema dark/light mode
-- âœ… Responsivo (mobile-first)
+- ✅ Componentes do shadcn/ui
+- ✅ Animações com Framer Motion
+- ✅ Ícones do Lucide React
+- ✅ Tema dark/light mode
+- ✅ Responsivo (mobile-first)
 
-### PadrÃµes de Cores
+### Padrões de Cores
 ```typescript
 // Status dos eventos
 publicado: 'bg-green-500'
@@ -156,14 +156,14 @@ cancelado: 'bg-red-500'
 finalizado: 'bg-blue-500'
 em_andamento: 'bg-amber-500'
 
-// MÃ©tricas
+// Métricas
 views: 'text-blue-600'
 participants: 'text-green-600'
 engagement: 'text-pink-600'
 revenue: 'text-amber-600'
 ```
 
-### AnimaÃ§Ãµes
+### Animações
 ```typescript
 // Fade in com delay
 initial={{ opacity: 0, y: 20 }}
@@ -178,9 +178,9 @@ exit={{ opacity: 0, x: -20 }}
 
 ---
 
-## ðŸ”§ IntegraÃ§Ã£o com Backend
+## 🔧 Integração com Backend
 
-### Endpoints NecessÃ¡rios
+### Endpoints Necessários
 
 ```typescript
 // Eventos do organizador
@@ -201,7 +201,7 @@ DELETE /api/events/:id/tickets/:ticketId
 POST   /api/upload/image
 ```
 
-### Exemplo de IntegraÃ§Ã£o
+### Exemplo de Integração
 
 ```typescript
 // hooks/useOrganizerEvents.ts
@@ -224,17 +224,17 @@ export function useOrganizerEvents() {
 
 ---
 
-## ðŸ“Š Fluxo de CriaÃ§Ã£o de Evento
+## 📊 Fluxo de Criação de Evento
 
 ```mermaid
 graph TD
     A[Dashboard] --> B[Criar Evento]
-    B --> C[Step 1: Info BÃ¡sicas]
+    B --> C[Step 1: Info Básicas]
     C --> D[Step 2: Data e Local]
     D --> E[Step 3: Ingressos]
     E --> F[Step 4: Detalhes]
-    F --> G[Step 5: MÃ­dia]
-    G --> H{AÃ§Ã£o}
+    F --> G[Step 5: Mídia]
+    G --> H{Ação}
     H -->|Salvar| I[Rascunho]
     H -->|Publicar| J[Evento Publicado]
     H -->|Preview| K[Visualizar]
@@ -245,38 +245,38 @@ graph TD
 
 ---
 
-## ðŸš€ PrÃ³ximos Passos
+## 🚀 Próximos Passos
 
 ### Funcionalidades Pendentes
 
 1. **Upload Real de Imagens**
-   - IntegraÃ§Ã£o com Supabase Storage
-   - OtimizaÃ§Ã£o automÃ¡tica de imagens
+   - Integração com Supabase Storage
+   - Otimização automática de imagens
    - CDN para performance
 
-2. **Analytics AvanÃ§ados**
-   - GrÃ¡ficos interativos (Chart.js ou Recharts)
-   - ComparaÃ§Ã£o entre perÃ­odos
-   - ExportaÃ§Ã£o de relatÃ³rios PDF
+2. **Analytics Avançados**
+   - Gráficos interativos (Chart.js ou Recharts)
+   - Comparação entre períodos
+   - Exportação de relatórios PDF
 
-3. **GestÃ£o de Participantes**
+3. **Gestão de Participantes**
    - Lista de inscritos
    - Check-in QR Code
-   - ComunicaÃ§Ã£o com participantes
+   - Comunicação com participantes
 
 4. **Pagamentos**
-   - IntegraÃ§Ã£o com Stripe/Mercado Pago
-   - GestÃ£o de reembolsos
-   - RelatÃ³rios financeiros
+   - Integração com Stripe/Mercado Pago
+   - Gestão de reembolsos
+   - Relatórios financeiros
 
-5. **NotificaÃ§Ãµes**
+5. **Notificações**
    - Email para participantes
-   - Lembretes automÃ¡ticos
-   - AtualizaÃ§Ãµes do evento
+   - Lembretes automáticos
+   - Atualizações do evento
 
 ---
 
-## ðŸ“ Exemplos de Uso
+## 📝 Exemplos de Uso
 
 ### Criar Novo Evento
 
@@ -335,70 +335,70 @@ function EventDashboard({ event }) {
 
 ---
 
-## ðŸŽ¯ Checklist de ImplementaÃ§Ã£o
+## 🎯 Checklist de Implementação
 
-### âœ… ConcluÃ­do
+### ✅ Concluído
 - [x] Dashboard principal
-- [x] FormulÃ¡rio multi-step
+- [x] Formulário multi-step
 - [x] Componente de analytics
 - [x] Upload de imagens
-- [x] GestÃ£o de ingressos
+- [x] Gestão de ingressos
 - [x] Filtros e busca
-- [x] AÃ§Ãµes em lote
+- [x] Ações em lote
 - [x] Interface responsiva
-- [x] AnimaÃ§Ãµes
+- [x] Animações
 
-### ðŸš§ Em Desenvolvimento
-- [ ] IntegraÃ§Ã£o com backend real
+### 🚧 Em Desenvolvimento
+- [ ] Integração com backend real
 - [ ] Upload para storage
-- [ ] GrÃ¡ficos interativos
-- [ ] ExportaÃ§Ã£o de relatÃ³rios
-- [ ] Sistema de notificaÃ§Ãµes
+- [ ] Gráficos interativos
+- [ ] Exportação de relatórios
+- [ ] Sistema de notificações
 
-### ðŸ“‹ Planejado
-- [ ] GestÃ£o de participantes
+### 📋 Planejado
+- [ ] Gestão de participantes
 - [ ] Check-in QR Code
-- [ ] IntegraÃ§Ã£o de pagamentos
+- [ ] Integração de pagamentos
 - [ ] Chat com participantes
-- [ ] Certificados automÃ¡ticos
+- [ ] Certificados automáticos
 
 ---
 
-## ðŸ› Troubleshooting
+## 🐛 Troubleshooting
 
-### Problema: Imagens nÃ£o carregam
-**SoluÃ§Ã£o:** Verificar se o storage estÃ¡ configurado corretamente no Supabase.
+### Problema: Imagens não carregam
+**Solução:** Verificar se o storage está configurado corretamente no Supabase.
 
-### Problema: FormulÃ¡rio nÃ£o salva
-**SoluÃ§Ã£o:** Verificar se todos os campos obrigatÃ³rios estÃ£o preenchidos.
+### Problema: Formulário não salva
+**Solução:** Verificar se todos os campos obrigatórios estão preenchidos.
 
-### Problema: Analytics nÃ£o aparecem
-**SoluÃ§Ã£o:** Verificar se o evento tem dados suficientes (views, participantes, etc).
+### Problema: Analytics não aparecem
+**Solução:** Verificar se o evento tem dados suficientes (views, participantes, etc).
 
 ---
 
-## ðŸ“š Recursos Adicionais
+## 📚 Recursos Adicionais
 
-- [DocumentaÃ§Ã£o do Supabase](https://supabase.com/docs)
+- [Documentação do Supabase](https://supabase.com/docs)
 - [shadcn/ui Components](https://ui.shadcn.com)
 - [Framer Motion](https://www.framer.com/motion)
 - [React Hook Form](https://react-hook-form.com)
 
 ---
 
-## ðŸ‘¥ Contribuindo
+## 👥 Contribuindo
 
 Para adicionar novas funcionalidades ao dashboard:
 
 1. Criar componente na pasta `components/`
 2. Adicionar tipos em `types/index.ts`
-3. Criar hook se necessÃ¡rio em `hooks/`
-4. Atualizar documentaÃ§Ã£o
+3. Criar hook se necessário em `hooks/`
+4. Atualizar documentação
 5. Testar responsividade
-6. Adicionar animaÃ§Ãµes
+6. Adicionar animações
 
 ---
 
-**Ãšltima atualizaÃ§Ã£o:** 2024
-**VersÃ£o:** 1.0.0
-**Status:** âœ… Pronto para uso (com mock data)
+**Última atualização:** 2024
+**Versão:** 1.0.0
+**Status:** ✅ Pronto para uso (com mock data)

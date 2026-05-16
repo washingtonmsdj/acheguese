@@ -1,5 +1,5 @@
 /**
- * ðŸŽ‰ EVENTS V2 - EXPORTS
+ * EVENTS V2 - EXPORTS
  * 
  * Barrel file para facilitar imports
  * 

@@ -1,11 +1,11 @@
 /**
  * MobilityService - SSOT core/mobility
  *
- * ⁄nico ponto de acesso ao banco para operaÁıes de mobilidade.
+ * √önico ponto de acesso ao banco para opera√ß√µes de mobilidade.
  *
  * Exporta:
- *   - MobilityService (classe est·tica) ó leitura / admin
- *   - mobilityService (inst‚ncia singleton) ó escrita / runtime
+ *   - MobilityService (classe est√°tica) -> leitura / admin
+ *   - mobilityService (inst√¢ncia singleton) -> escrita / runtime
  */
 
 import { supabase } from "@/integrations/supabase";
@@ -440,7 +440,7 @@ export class MobilityService {
     }
   }
 
-  /** Retorna corridas concluÌdas para c·lculo de ganhos (uso no WeeklyEarningsChart). */
+  /** Retorna corridas conclu√≠das para c√°lculo de ganhos (uso no WeeklyEarningsChart). */
   static async getDriverEarnings(driverProfileId: string): Promise<unknown[]> {
     try {
       const { data, error } = await supabase
@@ -508,7 +508,7 @@ export class MobilityService {
   }
 
   /**
-   * Busca avaliaÁ„o mÈdia do passageiro
+   * Busca avalia√ß√£o m√©dia do passageiro
    * Usado em: PassageiroPage
    */
   static async getPassengerRating(profileId: string): Promise<number> {
@@ -565,7 +565,7 @@ export class MobilityService {
   }
 
   /**
-   * Remove ·rea de serviÁo do motorista (genÈrico)
+   * Remove √°rea de servi√ßo do motorista (gen√©rico)
    * Usado em: ServiceAreaSettings
    */
   static async deleteDriverServiceArea(table: string, id: string): Promise<{ success: boolean; error?: unknown }> {
@@ -615,7 +615,7 @@ export class MobilityService {
   }
 
   /**
-   * Busca ˙ltima mensagem de uma conversa
+   * Busca √∫ltima mensagem de uma conversa
    * Usado em: MobilityChatList
    */
   static async getLastMessage(conversationId: string): Promise<Pick<MobilityMessageRecord, "message"> | null> {
@@ -637,7 +637,7 @@ export class MobilityService {
   }
 
   /**
-   * Conta mensagens n„o lidas de uma conversa
+   * Conta mensagens n√£o lidas de uma conversa
    * Usado em: MobilityChatList
    */
   static async getUnreadCount(conversationId: string, profileId: string): Promise<number> {
@@ -704,7 +704,7 @@ class MobilityServiceInstance {
 
       if (error) throw error;
 
-      // Normalizar campos de endereÁo para compatibilidade com DriverRidesList
+      // Normalizar campos de endere√ßo para compatibilidade com DriverRidesList
       type RideWithAddress = RideRequestRecord & {
         pickup_address?: { street: string | null; latitude: number | null; longitude: number | null } | null;
         dropoff_address?: { street: string | null; latitude: number | null; longitude: number | null } | null;
@@ -713,7 +713,7 @@ class MobilityServiceInstance {
       return rows.map((r) => ({
         ...r,
         origin: r.origin || r.pickup_address?.street || "Origem nao informada",
-        destination: r.destination || r.dropoff_address?.street || "Destino n„o informado",
+        destination: r.destination || r.dropoff_address?.street || "Destino n√£o informado",
         origin_lat: r.origin_lat || r.pickup_address?.latitude,
         origin_lng: r.origin_lng || r.pickup_address?.longitude,
         destination_lat: r.destination_lat || r.dropoff_address?.latitude,
@@ -727,11 +727,11 @@ class MobilityServiceInstance {
 
   async createAdminDriverProfile(userId: string): Promise<unknown | null> {
     try {
-      // Buscar ou criar profile de motorista via serviÁo canÙnico de perfis
+      // Buscar ou criar profile de motorista via servi√ßo can√¥nico de perfis
       const driverProfile = await profileService.ensureDriverProfileForUser(userId);
       if (!driverProfile?.id) return null;
 
-      // Criar driver_data se n„o existir
+      // Criar driver_data se n√£o existir
       const { data: existing } = await supabase
         .from('driver_data')
         .select('*')
@@ -861,7 +861,7 @@ class MobilityServiceInstance {
 
   async checkSuspensionExpiry(profileId: string): Promise<void> {
     try {
-      // Verificar se suspens„o expirou e reativar se necess·rio
+      // Verificar se suspens√£o expirou e reativar se necess√°rio
       const profile = await profileService.getProfileById(profileId);
 
       if (!profile?.is_suspended || !profile?.suspended_until) return;

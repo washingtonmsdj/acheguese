@@ -1,4 +1,4 @@
-﻿/**
+/**
  * EducationDetailPage
  *
  * Pagina de detalhes premium de instituicao educacional.
@@ -630,7 +630,7 @@ export function EducationDetailPage() {
     <div className="min-h-screen bg-background">
       <Helmet>
         <title>
-          {institutionName} â€” Educacao em {cityLabel} | Acheguese
+          {institutionName} — Educacao em {cityLabel} | Acheguese
         </title>
         <meta
           name="description"
@@ -942,7 +942,7 @@ export function EducationDetailPage() {
                   icon={Sparkles}
                   title="Hibrido"
                   description="Combinacao de encontros presenciais e atividades remotas."
-                  highlight={modalitiesPresent.has('hibrido') || modalitiesPresent.has('hÃ­brido')}
+                  highlight={modalitiesPresent.has('hibrido') || modalitiesPresent.has('híbrido')}
                 />
               </div>
             </section>
@@ -1018,8 +1018,8 @@ export function EducationDetailPage() {
                         {ev.school_event_type && profile?.niche_key === 'regular_school' && (
                           <Badge variant="outline" className="text-[11px] border-indigo-200 text-indigo-700 bg-indigo-50">
                             {ev.school_event_type === 'open_house' ? 'Portas Abertas' :
-                             ev.school_event_type === 'enrollment_fair' ? 'Feira de MatrÃ­cula' :
-                             ev.school_event_type === 'parent_meeting' ? 'ReuniÃ£o de Pais' :
+                             ev.school_event_type === 'enrollment_fair' ? 'Feira de Matrícula' :
+                             ev.school_event_type === 'parent_meeting' ? 'Reunião de Pais' :
                              ev.school_event_type === 'trial_class' ? 'Aula Experimental' :
                              ev.school_event_type === 'school_tour' ? 'Visita Escolar' :
                              ev.school_event_type === 'cultural_event' ? 'Evento Cultural' :

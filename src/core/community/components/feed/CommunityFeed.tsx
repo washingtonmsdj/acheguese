@@ -6,11 +6,12 @@ import { PostCardSkeleton } from "../PostCardSkeleton";
 import { useCommunityFeedSimple } from "@/core/community/hooks/feed/useCommunityFeed";
 import { LocationScope } from "@/core/community/hooks/feed/useFeedFilters";
 import { useSessionContext } from "@/core/session";
-import { AlertCircle, BarChart3, Clock3, Flame, MessageCircle, ThumbsUp } from "lucide-react";
+import { AlertCircle, BarChart3, Clock3, FileText, Flame, ImageIcon, Megaphone, MessageCircle, SlidersHorizontal } from "lucide-react";
 import { Alert, AlertDescription } from "@/shared/components/ui/alert";
 import { SPACING } from "../styles/communityDesignSystem";
 import type { TerritoryFilter } from "@/core/location";
 import { usePostActions } from "@/core/posts/hooks";
+import { Avatar, AvatarFallback, AvatarImage } from "@/shared/components/ui/avatar";
 
 type FeedSortType = "recent" | "popular" | "most_commented";
 type FeedPostType =
@@ -21,17 +22,28 @@ type FeedPostType =
   | "alerta"
   | "civic_report";
 
-const POST_TYPE_FILTERS: { id: FeedPostType; label: string; icon: React.ElementType }[] = [
-  { id: "all", label: "Todos", icon: MessageCircle },
-  { id: "discussao", label: "Textos", icon: MessageCircle },
-  { id: "recomendacao", label: "Indicacoes", icon: ThumbsUp },
-  { id: "enquete", label: "Enquetes", icon: BarChart3 },
-];
-
 const SORT_FILTERS: { id: FeedSortType; label: string; icon: React.ElementType }[] = [
   { id: "recent", label: "Recentes", icon: Clock3 },
   { id: "popular", label: "Em alta", icon: Flame },
   { id: "most_commented", label: "Comentados", icon: MessageCircle },
+];
+
+const COMPOSER_ACTIONS: { id: string; label: string; icon: React.ElementType }[] = [
+  { id: "text", label: "Texto", icon: MessageCircle },
+  { id: "media", label: "Foto/vídeo", icon: ImageIcon },
+  { id: "poll", label: "Enquete", icon: BarChart3 },
+  { id: "alert", label: "Aviso", icon: Megaphone },
+  { id: "file", label: "Arquivo", icon: FileText },
+];
+
+const HEADER_FILTERS: { id: string; label: string; postType?: FeedPostType }[] = [
+  { id: "all", label: "Todos", postType: "all" },
+  { id: "for-you", label: "Para você", postType: "recomendacao" },
+  { id: "residents", label: "Moradores", postType: "discussao" },
+  { id: "businesses", label: "Empresas", postType: "all" },
+  { id: "events", label: "Eventos", postType: "all" },
+  { id: "alerts", label: "Alertas", postType: "alerta" },
+  { id: "more", label: "Mais", postType: "all" },
 ];
 
 interface CommunityFeedProps {
@@ -78,6 +90,7 @@ export function CommunityFeed({
   // Local filter states
   const [sortType, setSortType] = useState<FeedSortType>("recent");
   const [postType, setPostType] = useState<FeedPostType>(defaultPostType);
+  const [activeHeaderFilter, setActiveHeaderFilter] = useState<string>("all");
 
   // Handlers
   const handleLike = useCallback((postId: string) => {
@@ -115,6 +128,9 @@ export function CommunityFeed({
   );
 
   const handleUpvoteReport = useCallback((reportId: string) => {}, []);
+  const profileName = activeProfile?.name?.trim() || "Usuário";
+  const profileAvatar = activeProfile?.avatar_url ?? activeProfile?.avatarUrl ?? undefined;
+  const profileInitial = profileName[0]?.toUpperCase() ?? "U";
 
   // Memoized derived values
   const sortCriteria = useMemo(() => {
@@ -162,40 +178,75 @@ export function CommunityFeed({
     <div className="space-y-4">
       <div className="rounded-2xl border border-white/10 bg-[#0f171a] p-3 shadow-xl shadow-black/10 md:p-4">
         <div className="flex min-w-0 items-center gap-3">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-teal-400/15 text-teal-200">
-            <MessageCircle className="h-5 w-5" />
-          </div>
+          <Avatar className="h-10 w-10 shrink-0 border border-white/15">
+            <AvatarImage src={profileAvatar} alt={profileName} />
+            <AvatarFallback className="bg-accent text-foreground font-semibold">
+              {profileInitial}
+            </AvatarFallback>
+          </Avatar>
           <button
             type="button"
             onClick={onOpenCreatePost}
-            className="min-h-11 min-w-0 flex-1 rounded-full border border-white/10 bg-white/[0.06] px-4 text-left text-sm text-white/55 transition-colors hover:border-teal-400/40 hover:bg-teal-400/10 hover:text-white"
+            className="min-h-16 min-w-0 flex-1 rounded-2xl border border-white/10 bg-white/[0.06] px-4 py-3 text-left transition-colors hover:border-teal-400/40 hover:bg-teal-400/10"
           >
-            Compartilhe uma indicacao, pedido, foto ou texto com a comunidade
+            <span className="block text-sm font-medium text-white/85">
+              O que você quer compartilhar com o bairro?
+            </span>
+            <span className="mt-0.5 block text-xs text-white/50">
+              Compartilhe uma indicação,<br />pedido, foto ou texto com a comunidade.
+            </span>
           </button>
         </div>
 
-        <div className="mt-3 flex min-w-0 flex-col gap-2 xl:flex-row xl:items-center xl:justify-between">
-          <div className="flex min-w-0 flex-wrap gap-2" role="tablist" aria-label="Tipo de publicacao">
-            {POST_TYPE_FILTERS.map(({ id, label, icon: Icon }) => (
+        <div className="mt-3 flex min-w-0 flex-wrap gap-2 border-t border-white/10 pt-3" aria-label="Ações de postagem">
+          {COMPOSER_ACTIONS.map(({ id, label, icon: Icon }) => (
+            <button
+              key={id}
+              type="button"
+              onClick={onOpenCreatePost}
+              className="flex min-h-9 items-center gap-2 rounded-lg px-2.5 text-xs font-semibold text-white/75 transition-colors hover:bg-white/5 hover:text-white"
+            >
+              <Icon className="h-3.5 w-3.5" />
+              {label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="rounded-2xl border border-white/10 bg-[#0f171a] p-3 shadow-xl shadow-black/10 md:p-4">
+        <div className="flex min-w-0 items-center justify-between gap-2">
+          <div className="flex min-w-0 flex-wrap gap-2" role="tablist" aria-label="Filtros principais do feed">
+            {HEADER_FILTERS.map(({ id, label, postType: mappedPostType }) => (
               <button
                 key={id}
                 type="button"
                 role="tab"
-                aria-selected={postType === id}
-                onClick={() => setPostType(id)}
+                aria-selected={activeHeaderFilter === id}
+                onClick={() => {
+                  setActiveHeaderFilter(id);
+                  if (mappedPostType) setPostType(mappedPostType);
+                }}
                 className={`flex min-h-9 min-w-0 items-center gap-2 rounded-full border px-3 text-xs font-semibold transition-colors ${
-                  postType === id
+                  activeHeaderFilter === id
                     ? "border-teal-300/50 bg-teal-300/15 text-teal-100"
                     : "border-white/10 bg-black/20 text-white/55 hover:border-white/20 hover:text-white"
                 }`}
               >
-                <Icon className="h-3.5 w-3.5" />
                 {label}
               </button>
             ))}
           </div>
 
-          <div className="flex min-w-0 flex-wrap gap-2" aria-label="Ordenacao do feed">
+          <button
+            type="button"
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-white/10 bg-black/20 text-white/65 transition-colors hover:border-white/20 hover:text-white"
+            aria-label="Ajustar filtros"
+          >
+            <SlidersHorizontal className="h-4 w-4" />
+          </button>
+        </div>
+
+        <div className="mt-3 flex min-w-0 flex-wrap gap-2 border-t border-white/10 pt-3" aria-label="Ordenacao do feed">
             {SORT_FILTERS.map(({ id, label, icon: Icon }) => (
               <button
                 key={id}
@@ -211,7 +262,6 @@ export function CommunityFeed({
                 {label}
               </button>
             ))}
-          </div>
         </div>
       </div>
 

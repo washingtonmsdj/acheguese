@@ -439,7 +439,7 @@ Avancar para fechamento total da Fase 3 (sem abrir Fase 4):
 ## Atualizacao 2026-05-10 (Hardening de Tipagem - Servicos de Comunidade)
 
 - src/core/community/services/CommunityQAService.ts recebeu tipagem explicita para rows de perguntas/respostas/likes e removeu casts ny no fluxo principal de leitura/criacao/like/mencoes.
-- src/core/community/services/CommunityService.ts teve boundary de grupos tipado (GroupRow, GroupCreateInput) e remoÃ§Ã£o de casts supabase as any no arquivo.
+- src/core/community/services/CommunityService.ts teve boundary de grupos tipado (GroupRow, GroupCreateInput) e remoção de casts supabase as any no arquivo.
 - `npm run validate:phase:core`: reexecutado em 2026-05-10 apos limpeza residual de tipagem em `core/modules community`; passou com `55 passed` e `1 skipped` esperado.
 - Limpeza residual concluida em comunidade: `modules/community/services/CommunityRolloutService`, `modules/community/nearby/hooks/useNearbyEntities`, `core/community/components/cards/PostCard` e `core/community/components/Leaderboard` sem `any`/`as any` nesses pontos.
 - `landing/services` hardening em 2026-05-10: `types.ts`, `landing.queries.ts` e `LandingFeaturedService.ts` tipados sem `any` residual no modulo; `npm run validate:phase:core` manteve `55 passed` e `1 skipped` esperado.
@@ -517,7 +517,7 @@ px playwright test tests/e2e/gastronomy-operational.spec.ts --project=chromium -
 
 - 2026-05-11 (tracking realtime SSOT): useOrderTracking migrou para subscription realtime de
 ide_requests (filtro source_type='gastronomy' + match por source_id=orderId) com polling apenas como fallback leve. Tambem foi corrigida a tipagem de
-efetch para retorno assÃ­ncrono e eliminada duplicacao de status ativos em constante unica.
+efetch para retorno assíncrono e eliminada duplicacao de status ativos em constante unica.
 -
 npm run typecheck: passou em 2026-05-11.
 -
@@ -525,7 +525,7 @@ npm run lint: passou em 2026-05-11.
 -
 px playwright test tests/e2e/gastronomy-operational.spec.ts --project=chromium --reporter=list: passou em 2026-05-11 com 2 passed, 2 skipped (skips condicionais de ambiente/certificado).
 
-- 2026-05-11 (contrato SSOT delivery link): corrigido OrderDeliveryLinkService.applyOrderTransition para nao enviar proof em cancelOrder/failOrder (contrato canÃ´nico aceita prova apenas em markDelivered), removendo inconsistÃªncia de payload e mantendo tipagem/semÃ¢ntica do SSOT.
+- 2026-05-11 (contrato SSOT delivery link): corrigido OrderDeliveryLinkService.applyOrderTransition para nao enviar proof em cancelOrder/failOrder (contrato canônico aceita prova apenas em markDelivered), removendo inconsistência de payload e mantendo tipagem/semântica do SSOT.
 -
 npm run typecheck: passou em 2026-05-11.
 -
@@ -541,7 +541,7 @@ npm run lint: passou em 2026-05-11.
 -
 px playwright test tests/e2e/gastronomy-operational.spec.ts --project=chromium --reporter=list: passou em 2026-05-11 com 2 passed, 2 skipped (skips condicionais de ambiente/certificado).
 
-- 2026-05-11 (react-query v5 contract): corrigido useOrderTracking para assinatura canÃ´nica de
+- 2026-05-11 (react-query v5 contract): corrigido useOrderTracking para assinatura canônica de
 efetchInterval no TanStack Query v5 (query => query.state.data), eliminando uso de assinatura antiga e garantindo fallback polling correto por status ativo.
 -
 npm run typecheck: passou em 2026-05-11.
@@ -575,7 +575,7 @@ npm run lint: passou em 2026-05-11.
 -
 px playwright test tests/e2e/gastronomy-operational.spec.ts --project=chromium --reporter=list: passou em 2026-05-11 com 2 passed, 2 skipped (skips condicionais de ambiente/certificado).
 
-- 2026-05-11 (cache realtime timeline): useOrders passou a memorizar order_id ja verificados como pertencentes ao usinessId no canal de timeline, reduzindo consultas repetidas de validacao canÃ´nica (orders.id + source_id) sem abrir excecao de SSOT.
+- 2026-05-11 (cache realtime timeline): useOrders passou a memorizar order_id ja verificados como pertencentes ao usinessId no canal de timeline, reduzindo consultas repetidas de validacao canônica (orders.id + source_id) sem abrir excecao de SSOT.
 -
 npm run typecheck: passou em 2026-05-11.
 -
@@ -603,7 +603,7 @@ npm run validate:phase:core: passou em 2026-05-11 com 55 passed, 1 skipped apos 
 - `npm run lint`: passou em 2026-05-11.
 - `npm run validate:phase:core`: passou em 2026-05-11 com `55 passed`, `1 skipped` (skip administrativo condicional de `SUPABASE_SERVICE_ROLE_KEY`).
 - Suite `tests/e2e/mobile-auth-dashboards.spec.ts` entrou no gate core e passou (`4/4`), cobrindo `central`, `central/empresas`, `central/motorista/corridas` e `central/motoboy/entregas` em 360px.
-- Hardening SSOT de Gastronomia concluido nesta etapa: debounce/coalescencia de invalidacao realtime em pedidos/timeline/tracking, sincronizacao canÃ´nica por `ride_requests` (`source_type='gastronomy'`, `source_id=orderId`) e resiliencia de notificacoes/trust com falha isolada sem quebrar fluxo principal.
+- Hardening SSOT de Gastronomia concluido nesta etapa: debounce/coalescencia de invalidacao realtime em pedidos/timeline/tracking, sincronizacao canônica por `ride_requests` (`source_type='gastronomy'`, `source_id=orderId`) e resiliencia de notificacoes/trust com falha isolada sem quebrar fluxo principal.
 
 ### Proximo Bloco Tecnico (sem abrir nova fase)
 
@@ -614,7 +614,7 @@ npm run validate:phase:core: passou em 2026-05-11 com 55 passed, 1 skipped apos 
 ## Atualizacao 2026-05-11 (P0 Comunidade - Widgets Territoriais)
 
 - Falha real corrigida em widgets da comunidade: `TopPostsWidget` e `PopularTagsWidget` (core e modules) dependiam de `filters.location_id` inexistente no hook de filtros local, podendo desativar consulta silenciosamente.
-- CorreÃ§Ã£o SSOT aplicada: widgets agora usam `useTerritoryFilter` canÃ´nico, cobrindo escopo `location` e `group` com agregacao de resultados por `location_id` (sem campo legado).
+- Correção SSOT aplicada: widgets agora usam `useTerritoryFilter` canônico, cobrindo escopo `location` e `group` com agregacao de resultados por `location_id` (sem campo legado).
 - Arquivos atualizados:
   - `src/core/community/components/PopularTagsWidget.tsx`
   - `src/core/community/components/TopPostsWidget.tsx`
@@ -628,7 +628,7 @@ npm run validate:phase:core: passou em 2026-05-11 com 55 passed, 1 skipped apos 
 ## Atualizacao 2026-05-11 (P0 Comunidade - Ranking Territorial de Usuarios)
 
 - Falha real corrigida no `TopUsersWidget` (core/modules): ranking ainda filtrava por `user_metadata.city/neighborhood`, fora do SSOT territorial ativo.
-- CorreÃ§Ã£o aplicada: widget agora resolve cidade/bairro via contexto territorial canÃ´nico (`useTerritorialContextOptional`) com fallback de localizacao ativa (`useCommunityLocation`), sem dependencia de metadado legado de usuario.
+- Correção aplicada: widget agora resolve cidade/bairro via contexto territorial canônico (`useTerritorialContextOptional`) com fallback de localizacao ativa (`useCommunityLocation`), sem dependencia de metadado legado de usuario.
 - Escopo de bairro respeita somente quando o territorio resolvido/ativo for `district`; em grupo/cidade, consulta usa contexto de cidade.
 - Arquivos atualizados:
   - `src/core/community/components/TopUsersWidget.tsx`
@@ -652,7 +652,7 @@ npm run validate:phase:core: passou em 2026-05-11 com 55 passed, 1 skipped apos 
 ## Atualizacao 2026-05-11 (P0 Comunidade - Sincronia Hook Modules)
 
 - Divergencia estrutural corrigida: `src/modules/community/hooks/feed/useCommunityFeed.ts` estava em versao anterior, sem suporte explicito a `territoryFilter` injetado pela pagina/componente.
-- Hook sincronizado com contrato canÃ´nico de `core`: agora aceita `territoryFilter`, usa `useModuleTerritoryFilter` como fallback e mantem chave/enable por `territoryFilterKey` + `isTerritoryFilterReady`.
+- Hook sincronizado com contrato canônico de `core`: agora aceita `territoryFilter`, usa `useModuleTerritoryFilter` como fallback e mantem chave/enable por `territoryFilterKey` + `isTerritoryFilterReady`.
 - Ajuste complementar: `src/modules/community/components/feed/CommunityFeed.tsx` passou a enviar `userLocation.location_id` com fallback para ambos formatos (`locationId` e `location_id`).
 - Validacoes apos sincronizacao:
   - `npm run typecheck`: passou.
@@ -673,7 +673,7 @@ npm run validate:phase:core: passou em 2026-05-11 com 55 passed, 1 skipped apos 
 - Divergencia `core/modules` corrigida em `useCommunityTerritory`:
   - versao `core` lia apenas `activeProfile.locationId`;
   - versao `modules` lia apenas `activeProfile.location_id`.
-- As duas versoes agora usam fallback canÃ´nico unico (`locationId ?? location_id`) para resolver o territorio do morador sem falso vazio por formato de payload.
+- As duas versoes agora usam fallback canônico unico (`locationId ?? location_id`) para resolver o territorio do morador sem falso vazio por formato de payload.
 - Arquivos atualizados:
   - `src/core/community/hooks/useCommunityTerritory.ts`
   - `src/modules/community/hooks/useCommunityTerritory.ts`
@@ -696,7 +696,7 @@ npm run validate:phase:core: passou em 2026-05-11 com 55 passed, 1 skipped apos 
 
 - Falha real corrigida em `src/modules/community/components/PanicAlertButton.tsx`.
 - O fluxo de envio de alerta exigia apenas `profile.location_id`, podendo falhar quando o perfil viesse no formato `locationId`.
-- Correcao aplicada: adicionado `resolveProfileLocationId(profile)` com fallback canÃ´nico (`locationId` -> `location_id`) e uso desse valor no `createPost` de seguranca.
+- Correcao aplicada: adicionado `resolveProfileLocationId(profile)` com fallback canônico (`locationId` -> `location_id`) e uso desse valor no `createPost` de seguranca.
 - Validacoes apos correcao:
   - `npm run typecheck`: passou.
   - `npm run lint`: passou.
@@ -719,7 +719,7 @@ npm run validate:phase:core: passou em 2026-05-11 com 55 passed, 1 skipped apos 
 
 - Inconsistencia real corrigida em `src/modules/mobility/services/MotoboySourceResolverService.ts`.
 - `getProfileSummaryById` lia apenas `location_id`; quando o payload vinha em `locationId`, o fluxo de resolucao territorial podia retornar vazio e degradar elegibilidade/roteamento operacional.
-- Correcao aplicada: fallback canÃ´nico unico `locationId ?? location_id` antes de expor `location_id` no summary.
+- Correcao aplicada: fallback canônico unico `locationId ?? location_id` antes de expor `location_id` no summary.
 - Validacoes apos correcao:
   - `npm run typecheck`: passou.
   - `npm run lint -- src/modules/mobility/services/MotoboySourceResolverService.ts`: passou.
@@ -940,7 +940,7 @@ npm run validate:phase:core: passou em 2026-05-11 com 55 passed, 1 skipped apos 
 
 ## Atualizacao 2026-05-12 (Hardening SSOT de Notificacoes Operacionais)
 
-- Cobertura unit�ria adicionada para notificacoes transacionais do fluxo de pedidos:
+- Cobertura unitária adicionada para notificacoes transacionais do fluxo de pedidos:
 1. `src/modules/mobility/delivery/__tests__/OrderDeliveryNotificationService.spec.ts`.
 2. Valida audiencia (`customer|merchant|courier`) em metadata.
 3. Valida URLs de acao canonicas por persona (`/gastronomia/pedidos/:orderId`, `/central/empresas/:businessId/gastronomia/pedidos/:orderId`, `/central/motoboy/entregas`).

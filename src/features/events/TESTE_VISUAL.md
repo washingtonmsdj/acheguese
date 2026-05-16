@@ -1,8 +1,8 @@
-# ðŸŽ¨ Guia de Teste Visual - Events V2
+# 🎨 Guia de Teste Visual - Events V2
 
-## ðŸš€ Como Testar Agora
+## 🚀 Como Testar Agora
 
-### 1ï¸âƒ£ Iniciar o Servidor
+### 1️⃣ Iniciar o Servidor
 
 ```bash
 npm run dev
@@ -10,49 +10,49 @@ npm run dev
 
 Aguarde a mensagem:
 ```
-âžœ  Local:   http://localhost:5173/
+➜  Local:   http://localhost:5173/
 ```
 
 ---
 
-## ðŸ“ URLs para Testar
+## 📍 URLs para Testar
 
-### PÃ¡gina de Listagem
+### Página de Listagem
 ```
 http://localhost:5173/eventos
 ```
 
-**O que vocÃª verÃ¡:**
-- ðŸŽ¨ Hero premium com background image de eventos
-- ðŸ” Barra de busca grande e destacada
-- ðŸ“Š 3 cards de estatÃ­sticas (Total, PrÃ³ximos, Participantes)
-- ðŸ·ï¸ 9 categorias com Ã­cones e cores (Todos, Cultural, Esportivo, etc.)
-- ðŸ“‹ Grid com 2 eventos mock
-- ðŸ”˜ FAB (botÃ£o flutuante) no canto inferior direito
+**O que você verá:**
+- 🎨 Hero premium com background image de eventos
+- 🔍 Barra de busca grande e destacada
+- 📊 3 cards de estatísticas (Total, Próximos, Participantes)
+- 🏷️ 9 categorias com ícones e cores (Todos, Cultural, Esportivo, etc.)
+- 📋 Grid com 2 eventos mock
+- 🔘 FAB (botão flutuante) no canto inferior direito
 
-### PÃ¡gina de Detalhes (Evento 1)
+### Página de Detalhes (Evento 1)
 ```
 http://localhost:5173/eventos/evt-001
 ```
 
-**O que vocÃª verÃ¡:**
-- ðŸŽ­ Roda de Samba no Complexo
-- ðŸŽ« 2 tipos de ingressos (Gratuito + Pago R$ 20)
-- ðŸ“… ProgramaÃ§Ã£o com 3 horÃ¡rios
-- ðŸ“ LocalizaÃ§Ã£o com botÃ£o Google Maps
-- ðŸ‘¤ InformaÃ§Ãµes do organizador
+**O que você verá:**
+- 🎭 Roda de Samba no Complexo
+- 🎫 2 tipos de ingressos (Gratuito + Pago R$ 20)
+- 📅 Programação com 3 horários
+- 📍 Localização com botão Google Maps
+- 👤 Informações do organizador
 
-### PÃ¡gina de Detalhes (Evento 2)
+### Página de Detalhes (Evento 2)
 ```
 http://localhost:5173/eventos/evt-002
 ```
 
-**O que vocÃª verÃ¡:**
-- ðŸ’» Workshop de Empreendedorismo Digital
-- ðŸ†“ Evento 100% gratuito
-- ðŸ”„ HÃ­brido (Presencial + Online)
-- ðŸ“… ProgramaÃ§Ã£o com 4 horÃ¡rios
-- ðŸ‘¤ InformaÃ§Ãµes do organizador
+**O que você verá:**
+- 💻 Workshop de Empreendedorismo Digital
+- 🆓 Evento 100% gratuito
+- 🔄 Híbrido (Presencial + Online)
+- 📅 Programação com 4 horários
+- 👤 Informações do organizador
 
 ### Demo (Sempre mostra Evento 1)
 ```
@@ -61,22 +61,22 @@ http://localhost:5173/eventos/demo
 
 ---
 
-## ðŸ“± Teste de Responsividade
+## 📱 Teste de Responsividade
 
 ### Desktop (1920px)
 1. Abra em tela cheia
 2. Observe:
    - Hero ocupa toda a largura
    - Grid com 3 colunas (se tiver 3+ eventos)
-   - Todos os elementos bem espaÃ§ados
-   - AnimaÃ§Ãµes suaves ao scroll
+   - Todos os elementos bem espaçados
+   - Animações suaves ao scroll
 
 ### Tablet (768px)
 1. Redimensione o navegador para ~768px de largura
 2. Observe:
    - Grid muda para 2 colunas
    - Hero se adapta
-   - BotÃµes ficam maiores (touch-friendly)
+   - Botões ficam maiores (touch-friendly)
    - Stats cards menores
 
 ### Mobile (375px)
@@ -88,14 +88,14 @@ http://localhost:5173/eventos/demo
    - Hero compacto mas impactante
    - Busca ocupa toda a largura
    - Categorias em scroll horizontal
-   - FAB menor mas visÃ­vel
+   - FAB menor mas visível
    - Scroll indicator oculto
 
 ---
 
-## ðŸŽ¯ Funcionalidades para Testar
+## 🎯 Funcionalidades para Testar
 
-### Na PÃ¡gina de Listagem
+### Na Página de Listagem
 
 #### 1. Busca
 - [ ] Digite "samba" na busca
@@ -106,72 +106,72 @@ http://localhost:5173/eventos/demo
 #### 2. Filtros por Categoria
 - [ ] Clique em "Cultural"
 - [ ] Deve mostrar apenas eventos culturais
-- [ ] Badge com "1" deve aparecer no botÃ£o Filtros
+- [ ] Badge com "1" deve aparecer no botão Filtros
 - [ ] Clique em "Todos" para resetar
 
 #### 3. Toggle Grid/List
-- [ ] Clique no Ã­cone de lista (â‰¡)
+- [ ] Clique no ícone de lista (≡)
 - [ ] Cards devem mudar para layout horizontal
-- [ ] Clique no Ã­cone de grade (âŠž)
+- [ ] Clique no ícone de grade (⊞)
 - [ ] Cards voltam para layout vertical
 
-#### 4. NavegaÃ§Ã£o
+#### 4. Navegação
 - [ ] Clique em qualquer card de evento
-- [ ] Deve navegar para pÃ¡gina de detalhes
+- [ ] Deve navegar para página de detalhes
 - [ ] URL deve mudar para `/eventos/evt-XXX`
 
-#### 5. FAB (BotÃ£o Flutuante)
-- [ ] Clique no botÃ£o + no canto inferior direito
-- [ ] Deve navegar para `/eventos/criar` (pÃ¡gina ainda nÃ£o existe)
+#### 5. FAB (Botão Flutuante)
+- [ ] Clique no botão + no canto inferior direito
+- [ ] Deve navegar para `/eventos/criar` (página ainda não existe)
 
-### Na PÃ¡gina de Detalhes
+### Na Página de Detalhes
 
 #### 1. Hero Section
 - [ ] Banner deve ocupar toda a largura
-- [ ] InformaÃ§Ãµes principais visÃ­veis
-- [ ] BotÃµes de favoritar e compartilhar (mock)
+- [ ] Informações principais visíveis
+- [ ] Botões de favoritar e compartilhar (mock)
 
 #### 2. Ingressos
 - [ ] Cards de ingressos bem destacados
 - [ ] Progress bar mostrando disponibilidade
-- [ ] BotÃ£o "Selecionar" em cada ingresso
+- [ ] Botão "Selecionar" em cada ingresso
 - [ ] Se gratuito, mostra "Gratuito"
 - [ ] Se pago, mostra valor formatado
 
-#### 3. DescriÃ§Ã£o
-- [ ] Texto formatado e legÃ­vel
+#### 3. Descrição
+- [ ] Texto formatado e legível
 - [ ] Features do evento em lista
 - [ ] Requisitos (se houver)
 
-#### 4. ProgramaÃ§Ã£o
+#### 4. Programação
 - [ ] Timeline visual
-- [ ] HorÃ¡rios e atividades
-- [ ] Ãcones para cada tipo de atividade
+- [ ] Horários e atividades
+- [ ] Ícones para cada tipo de atividade
 
-#### 5. LocalizaÃ§Ã£o
-- [ ] EndereÃ§o completo
-- [ ] InstruÃ§Ãµes de acesso (se houver)
-- [ ] BotÃ£o "Ver no Google Maps"
+#### 5. Localização
+- [ ] Endereço completo
+- [ ] Instruções de acesso (se houver)
+- [ ] Botão "Ver no Google Maps"
 - [ ] Clique deve abrir Google Maps em nova aba
 
 #### 6. Organizador
 - [ ] Avatar do organizador
 - [ ] Nome e bio
-- [ ] EstatÃ­sticas (eventos, participantes, rating)
+- [ ] Estatísticas (eventos, participantes, rating)
 
 #### 7. CTA Sticky
-- [ ] Barra fixa no rodapÃ©
-- [ ] Sempre visÃ­vel ao rolar
-- [ ] BotÃ£o principal destacado
-- [ ] Mostra preÃ§o ou "Gratuito"
+- [ ] Barra fixa no rodapé
+- [ ] Sempre visível ao rolar
+- [ ] Botão principal destacado
+- [ ] Mostra preço ou "Gratuito"
 
 ---
 
-## ðŸŒ“ Teste de Dark Mode
+## 🌓 Teste de Dark Mode
 
 ### Ativar Dark Mode
 1. Procure o toggle de tema na interface
-2. Ou use as configuraÃ§Ãµes do sistema
+2. Ou use as configurações do sistema
 3. Observe:
    - Cores se adaptam automaticamente
    - Contraste mantido
@@ -181,182 +181,182 @@ http://localhost:5173/eventos/demo
 ### Elementos para Verificar
 - [ ] Hero com overlay escuro
 - [ ] Cards com fundo escuro
-- [ ] Texto legÃ­vel em ambos os temas
-- [ ] Bordas visÃ­veis
-- [ ] BotÃµes com contraste adequado
+- [ ] Texto legível em ambos os temas
+- [ ] Bordas visíveis
+- [ ] Botões com contraste adequado
 
 ---
 
-## âœ¨ AnimaÃ§Ãµes para Observar
+## ✨ Animações para Observar
 
 ### Scroll Animations
 - [ ] Hero aparece com fade-in
 - [ ] Stats cards animam ao entrar na tela
-- [ ] SeÃ§Ãµes aparecem suavemente ao rolar
+- [ ] Seções aparecem suavemente ao rolar
 - [ ] Scroll indicator pulsa (desktop)
 
 ### Hover Effects
 - [ ] Cards elevam ao passar o mouse
-- [ ] BotÃµes mudam de cor suavemente
+- [ ] Botões mudam de cor suavemente
 - [ ] Categorias destacam ao hover
 - [ ] Links sublinhados ao hover
 
 ### Click Animations
-- [ ] BotÃµes tÃªm feedback visual
-- [ ] Categorias tÃªm scale ao clicar
+- [ ] Botões têm feedback visual
+- [ ] Categorias têm scale ao clicar
 - [ ] FAB pulsa ao aparecer
-- [ ] TransiÃ§Ãµes suaves entre pÃ¡ginas
+- [ ] Transições suaves entre páginas
 
 ---
 
-## ðŸ› PossÃ­veis Problemas e SoluÃ§Ãµes
+## 🐛 Possíveis Problemas e Soluções
 
-### PÃ¡gina em Branco
-**Problema**: PÃ¡gina nÃ£o carrega  
-**SoluÃ§Ã£o**: 
+### Página em Branco
+**Problema**: Página não carrega  
+**Solução**: 
 1. Verifique o console (F12)
 2. Procure por erros em vermelho
 3. Reinicie o servidor (`Ctrl+C` e `npm run dev`)
 
-### Estilos NÃ£o Aparecem
-**Problema**: PÃ¡gina sem cores/layout  
-**SoluÃ§Ã£o**:
-1. Verifique se Tailwind estÃ¡ configurado
+### Estilos Não Aparecem
+**Problema**: Página sem cores/layout  
+**Solução**:
+1. Verifique se Tailwind está configurado
 2. Limpe o cache: `npm run build` e reinicie
 3. Verifique se `tailwind.config.js` inclui `src/features/**`
 
-### Imagens NÃ£o Carregam
+### Imagens Não Carregam
 **Problema**: Imagens quebradas  
-**SoluÃ§Ã£o**:
-1. Verifique conexÃ£o com internet (usa Unsplash)
-2. Abra DevTools â†’ Network â†’ veja se hÃ¡ erros
-3. Imagens sÃ£o externas, podem demorar
+**Solução**:
+1. Verifique conexão com internet (usa Unsplash)
+2. Abra DevTools → Network → veja se há erros
+3. Imagens são externas, podem demorar
 
-### Rotas NÃ£o Funcionam
+### Rotas Não Funcionam
 **Problema**: 404 ao navegar  
-**SoluÃ§Ã£o**:
-1. Verifique se estÃ¡ usando `npm run dev` (nÃ£o `npm start`)
-2. Verifique se as rotas estÃ£o em `AppRoutes.tsx`
+**Solução**:
+1. Verifique se está usando `npm run dev` (não `npm start`)
+2. Verifique se as rotas estão em `AppRoutes.tsx`
 3. Limpe o cache do navegador
 
 ---
 
-## ðŸ“Š Checklist de ValidaÃ§Ã£o Visual
+## 📊 Checklist de Validação Visual
 
 ### Design Geral
 - [ ] Layout profissional e moderno
 - [ ] Cores harmoniosas
-- [ ] Tipografia legÃ­vel
-- [ ] EspaÃ§amento adequado
+- [ ] Tipografia legível
+- [ ] Espaçamento adequado
 - [ ] Hierarquia visual clara
 
 ### Hero Section
 - [ ] Impactante e atrativo
-- [ ] InformaÃ§Ãµes principais visÃ­veis
+- [ ] Informações principais visíveis
 - [ ] CTA claro
 - [ ] Background image carrega
-- [ ] Overlay nÃ£o esconde conteÃºdo
+- [ ] Overlay não esconde conteúdo
 
 ### Cards de Evento
-- [ ] Imagem de destaque visÃ­vel
-- [ ] InformaÃ§Ãµes organizadas
+- [ ] Imagem de destaque visível
+- [ ] Informações organizadas
 - [ ] Categoria destacada
-- [ ] Data e hora legÃ­veis
+- [ ] Data e hora legíveis
 - [ ] Hover effect funciona
 
 ### Ingressos
 - [ ] Cards bem destacados
-- [ ] PreÃ§os claros
-- [ ] Disponibilidade visÃ­vel
+- [ ] Preços claros
+- [ ] Disponibilidade visível
 - [ ] CTAs evidentes
 - [ ] Progress bar funciona
 
 ### Responsividade
-- [ ] Desktop (1920px) âœ“
-- [ ] Laptop (1366px) âœ“
-- [ ] Tablet (768px) âœ“
-- [ ] Mobile (375px) âœ“
-- [ ] Mobile pequeno (320px) âœ“
+- [ ] Desktop (1920px) ✓
+- [ ] Laptop (1366px) ✓
+- [ ] Tablet (768px) ✓
+- [ ] Mobile (375px) ✓
+- [ ] Mobile pequeno (320px) ✓
 
 ### Performance
-- [ ] Carrega rÃ¡pido (<3s)
-- [ ] AnimaÃ§Ãµes suaves (60fps)
+- [ ] Carrega rápido (<3s)
+- [ ] Animações suaves (60fps)
 - [ ] Scroll fluido
 - [ ] Sem travamentos
 - [ ] Imagens otimizadas
 
 ### Acessibilidade
 - [ ] Contraste adequado
-- [ ] Textos legÃ­veis
-- [ ] BotÃµes grandes o suficiente
-- [ ] NavegaÃ§Ã£o por teclado funciona
+- [ ] Textos legíveis
+- [ ] Botões grandes o suficiente
+- [ ] Navegação por teclado funciona
 - [ ] Alt text em imagens
 
 ---
 
-## ðŸ’¡ Dicas de Teste
+## 💡 Dicas de Teste
 
 ### Use Diferentes Navegadores
 - [ ] Chrome/Edge
 - [ ] Firefox
-- [ ] Safari (se disponÃ­vel)
+- [ ] Safari (se disponível)
 
 ### Teste em Dispositivos Reais
 - [ ] Smartphone Android
 - [ ] iPhone
 - [ ] Tablet
 
-### Teste Diferentes CenÃ¡rios
-- [ ] ConexÃ£o lenta (throttling)
-- [ ] Sem JavaScript (improvÃ¡vel)
+### Teste Diferentes Cenários
+- [ ] Conexão lenta (throttling)
+- [ ] Sem JavaScript (improvável)
 - [ ] Zoom 150%
 - [ ] Modo de alto contraste
 
 ---
 
-## ðŸ“ Feedback
+## 📝 Feedback
 
 Ao testar, anote:
 
-### O que funcionou bem âœ…
+### O que funcionou bem ✅
 - Design
 - Performance
 - Usabilidade
-- AnimaÃ§Ãµes
+- Animações
 
-### O que pode melhorar ðŸ”„
+### O que pode melhorar 🔄
 - Layout
 - Cores
 - Textos
 - Funcionalidades
 
-### Bugs encontrados ðŸ›
-- DescriÃ§Ã£o
+### Bugs encontrados 🐛
+- Descrição
 - Como reproduzir
 - Navegador/dispositivo
-- Screenshot (se possÃ­vel)
+- Screenshot (se possível)
 
 ---
 
-## ðŸŽ‰ PrÃ³ximos Passos
+## 🎉 Próximos Passos
 
-ApÃ³s validar visualmente:
+Após validar visualmente:
 
 1. **Coletar Feedback**
    - Mostrar para stakeholders
-   - Anotar sugestÃµes
+   - Anotar sugestões
    - Priorizar melhorias
 
 2. **Ajustes Finos**
    - Cores
-   - EspaÃ§amentos
+   - Espaçamentos
    - Textos
-   - AnimaÃ§Ãµes
+   - Animações
 
-3. **IntegraÃ§Ã£o Backend**
+3. **Integração Backend**
    - Conectar com API
    - Dados reais
-   - AutenticaÃ§Ã£o
+   - Autenticação
    - Pagamentos
 
 4. **Deploy**
@@ -367,9 +367,9 @@ ApÃ³s validar visualmente:
 
 ---
 
-**Boa sorte com os testes! ðŸš€**
+**Boa sorte com os testes! 🚀**
 
 Se encontrar problemas, consulte:
-- `README.md` - DocumentaÃ§Ã£o completa
-- `STATUS.md` - Status de implementaÃ§Ã£o
-- `QUICK_START.md` - Guia rÃ¡pido
+- `README.md` - Documentação completa
+- `STATUS.md` - Status de implementação
+- `QUICK_START.md` - Guia rápido

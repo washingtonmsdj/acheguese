@@ -7,7 +7,7 @@
  * @version 2.0.0 - Refatoração SSOT
  */
 
-import { supabase } from "@/integrations/supabase";
+import { selectLooseRows } from "@/integrations/supabase/services/supabaseHelpers";
 import { logger } from "@/shared/utils/logger";
 import { trackError } from "@/shared/utils/errorTracking";
 import type {
@@ -39,19 +39,20 @@ export async function hasReviewed(
 ): Promise<boolean> {
   try {
     const table = getTableName(type);
-
-    const { data, error } = await supabase
-      .from(table)
-      .select("id")
-      .eq("reviewed_profile_id", reviewedProfileId)
-      .eq("reviewer_profile_id", reviewerProfileId)
-      .single();
+    const { data, error } = await selectLooseRows<{ id: string }>(table, {
+      columns: "id",
+      filters: [
+        { op: "eq", column: "reviewed_profile_id", value: reviewedProfileId },
+        { op: "eq", column: "reviewer_profile_id", value: reviewerProfileId },
+      ],
+      limit: 1,
+    });
 
     if (error && error.code !== "PGRST116") {
       throw error;
     }
 
-    return !!data;
+    return !!data?.length;
   } catch (error) {
     logger.error("[reviews.queries] Error checking if reviewed:", error);
     trackError(error as Error, {
@@ -73,19 +74,19 @@ export async function getReviewByReviewer(
 ): Promise<Review | null> {
   try {
     const table = getTableName(type);
-
-    const { data, error } = await supabase
-      .from(table)
-      .select("*")
-      .eq("reviewed_profile_id", reviewedProfileId)
-      .eq("reviewer_profile_id", reviewerProfileId)
-      .single();
+    const { data, error } = await selectLooseRows<Review>(table, {
+      filters: [
+        { op: "eq", column: "reviewed_profile_id", value: reviewedProfileId },
+        { op: "eq", column: "reviewer_profile_id", value: reviewerProfileId },
+      ],
+      limit: 1,
+    });
 
     if (error && error.code !== "PGRST116") {
       throw error;
     }
 
-    return data || null;
+    return data?.[0] ?? null;
   } catch (error) {
     logger.error("[reviews.queries] Error getting review by reviewer:", error);
     trackError(error as Error, {
@@ -106,18 +107,16 @@ export async function getReviewById(
 ): Promise<Review | null> {
   try {
     const table = getTableName(type);
-
-    const { data, error } = await supabase
-      .from(table)
-      .select("*")
-      .eq("id", reviewId)
-      .single();
+    const { data, error } = await selectLooseRows<Review>(table, {
+      filters: [{ op: "eq", column: "id", value: reviewId }],
+      limit: 1,
+    });
 
     if (error && error.code !== "PGRST116") {
       throw error;
     }
 
-    return data || null;
+    return data?.[0] ?? null;
   } catch (error) {
     logger.error("[reviews.queries] Error getting review by id:", error);
     trackError(error as Error, {
@@ -139,11 +138,8 @@ export async function getReviewsForProfile(
 ): Promise<ReviewWithProfiles[]> {
   try {
     const table = getTableName(type);
-
-    const { data, error } = await supabase
-      .from(table)
-      .select(
-        `
+    const { data, error } = await selectLooseRows<ReviewWithProfiles>(table, {
+      columns: `
         *,
         reviewed_profile:profiles!reviewed_profile_id (
           id,
@@ -156,10 +152,10 @@ export async function getReviewsForProfile(
           avatar_url
         )
       `,
-      )
-      .eq("reviewed_profile_id", profileId)
-      .order("created_at", { ascending: false })
-      .limit(limit);
+      filters: [{ op: "eq", column: "reviewed_profile_id", value: profileId }],
+      orderBy: { column: "created_at", ascending: false },
+      limit,
+    });
 
     if (error) throw error;
 
@@ -185,11 +181,8 @@ export async function getReviewsByReviewer(
 ): Promise<ReviewWithProfiles[]> {
   try {
     const table = getTableName(type);
-
-    const { data, error } = await supabase
-      .from(table)
-      .select(
-        `
+    const { data, error } = await selectLooseRows<ReviewWithProfiles>(table, {
+      columns: `
         *,
         reviewed_profile:profiles!reviewed_profile_id (
           id,
@@ -202,10 +195,10 @@ export async function getReviewsByReviewer(
           avatar_url
         )
       `,
-      )
-      .eq("reviewer_profile_id", reviewerProfileId)
-      .order("created_at", { ascending: false })
-      .limit(limit);
+      filters: [{ op: "eq", column: "reviewer_profile_id", value: reviewerProfileId }],
+      orderBy: { column: "created_at", ascending: false },
+      limit,
+    });
 
     if (error) throw error;
 
@@ -230,11 +223,10 @@ export async function getReviewStats(
 ): Promise<ReviewStats> {
   try {
     const table = getTableName(type);
-
-    const { data, error } = await supabase
-      .from(table)
-      .select("rating")
-      .eq("reviewed_profile_id", profileId);
+    const { data, error } = await selectLooseRows<{ rating: number }>(table, {
+      columns: "rating",
+      filters: [{ op: "eq", column: "reviewed_profile_id", value: profileId }],
+    });
 
     if (error) throw error;
 
@@ -289,15 +281,14 @@ export async function getReviewCount(
 ): Promise<number> {
   try {
     const table = getTableName(type);
-
-    const { count, error } = await supabase
-      .from(table)
-      .select("*", { count: "exact", head: true })
-      .eq("reviewed_profile_id", profileId);
+    const { data, error } = await selectLooseRows<{ id: string }>(table, {
+      columns: "id",
+      filters: [{ op: "eq", column: "reviewed_profile_id", value: profileId }],
+    });
 
     if (error) throw error;
 
-    return count || 0;
+    return data?.length ?? 0;
   } catch (error) {
     logger.error("[reviews.queries] Error getting review count:", error);
     trackError(error as Error, {
@@ -315,12 +306,11 @@ export async function getReviewCount(
 export async function getAllReviews(type: ReviewType, limit = 100): Promise<Review[]> {
   try {
     const table = getTableName(type);
-
-    const { data, error } = await supabase
-      .from(table)
-      .select("id, reviewed_profile_id, reviewer_profile_id, rating, comment, created_at")
-      .order("created_at", { ascending: false })
-      .limit(limit);
+    const { data, error } = await selectLooseRows<Review>(table, {
+      columns: "id, reviewed_profile_id, reviewer_profile_id, rating, comment, created_at",
+      orderBy: { column: "created_at", ascending: false },
+      limit,
+    });
 
     if (error) throw error;
     return (data || []) as Review[];

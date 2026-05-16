@@ -1,4 +1,4 @@
-﻿import { useState, useCallback } from "react";
+import { useState, useCallback } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/core/auth";
 import { profileService } from "@/core/profiles/services/ProfileService";
@@ -99,9 +99,9 @@ export function useMobilidade() {
       // Invalidar queries para atualizar dados
       queryClient.invalidateQueries({ queryKey: MOBILITY_QUERY_KEYS.rides(user?.id) });
       
-      // Atualizar activeRide se necessÃ¡rio
+      // Atualizar activeRide se necessário
       if (activeRide?.id === event.rideId) {
-        // Recarregar corrida especÃ­fica
+        // Recarregar corrida específica
         getRideById(event.rideId).then(updatedRide => {
           if (updatedRide) {
             setActiveRide(updatedRide);
@@ -109,7 +109,7 @@ export function useMobilidade() {
         });
       }
       
-      // NotificaÃ§Ãµes baseadas no evento
+      // Notificações baseadas no evento
       switch (event.type) {
         case 'driver_assigned':
           toast.success("Motorista encontrado! Aguardando confirmacao...");
@@ -151,7 +151,7 @@ export function useMobilidade() {
     queryFn: async () => {
       if (!user) return 5.0;
       try {
-        // Usar funÃ§Ã£o SSOT
+        // Usar função SSOT
         return await getPassengerRating(user.id);
       } catch (error) {
         logger.error("useMobilidade.getPassengerRating", error as Error);
@@ -230,7 +230,7 @@ export function useMobilidade() {
           throw new Error("Official pricing calculation failed");
         }
 
-        // Usar motor operacional com campos canÃ´nicos
+        // Usar motor operacional com campos canônicos
         const normalizedSuggestedPrice =
           typeof suggestedPrice === "number" && Number.isFinite(suggestedPrice)
             ? suggestedPrice
@@ -238,7 +238,7 @@ export function useMobilidade() {
 
         const result = await RideOperationalService.createRide({
           passengerProfileId: passengerProfile.id,
-          // Campos canÃ´nicos (obrigatÃ³rios no banco)
+          // Campos canônicos (obrigatórios no banco)
           pickupAddressId: rideData.pickup_address_id,
           dropoffAddressId: rideData.dropoff_address_id,
           pickupLocationId: rideData.pickup_location_id,
@@ -269,7 +269,7 @@ export function useMobilidade() {
         queryClient.invalidateQueries({ queryKey: MOBILITY_QUERY_KEYS.rides(user.id) });
         queryClient.invalidateQueries({ queryKey: MOBILITY_QUERY_KEYS.activeRide(user.id) });
         
-        // Toast com preÃ§o calculado OFICIAL
+        // Toast com preço calculado OFICIAL
         if (normalizedSuggestedPrice !== undefined) {
           toast.success(`Corrida solicitada! Preco oficial: R$ ${normalizedSuggestedPrice.toFixed(2)}`);
         } else {
@@ -295,7 +295,7 @@ export function useMobilidade() {
           return false;
         }
 
-        // Buscar o perfil do usuÃ¡rio logado
+        // Buscar o perfil do usuário logado
         const userProfile = 
           (await profileService.getProfileByType(user.id, "personal")) ||
           (await profileService.getActiveProfile(user.id));
@@ -311,7 +311,7 @@ export function useMobilidade() {
           profileId: userProfile.id
         });
         
-        // Buscar corrida para saber quem estÃ¡ cancelando
+        // Buscar corrida para saber quem está cancelando
         const ride: RideRequest | null = await getRideById(rideId);
         if (!ride) {
           logger.warn("useMobilidade.cancelRide - corrida nao encontrada", { rideId });
@@ -363,7 +363,7 @@ export function useMobilidade() {
             toState: result.toState
           });
           
-          // Mensagens de erro mais especÃ­ficas
+          // Mensagens de erro mais específicas
           let errorMessage = result.error || "Erro ao cancelar corrida";
           
           if (errorMessage.includes("Cannot cancel ride in state")) {
@@ -453,7 +453,7 @@ export function useMobilidade() {
         let calculatedFinalPrice = finalPrice;
         
         if (!calculatedFinalPrice) {
-          // Usar suggested_price como confirmaÃ§Ã£o (nÃ£o recalcular)
+          // Usar suggested_price como confirmação (não recalcular)
           const ride: RideRequest | null = await getRideById(rideId);
           calculatedFinalPrice = ride?.suggested_price || 0;
           
@@ -486,7 +486,7 @@ export function useMobilidade() {
         queryClient.invalidateQueries({ queryKey: MOBILITY_QUERY_KEYS.rides(user.id) });
         queryClient.invalidateQueries({ queryKey: MOBILITY_QUERY_KEYS.activeRide(user.id) });
         
-        // Toast com preÃ§o final oficial
+        // Toast com preço final oficial
         if (finalPrice) {
           toast.success(`Corrida completada! Valor ajustado: R$ ${calculatedFinalPrice.toFixed(2)}`);
         } else {

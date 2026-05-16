@@ -1,7 +1,7 @@
 /**
- * ⭐ EVENTS FAVORITES PAGE
+ * EVENTS FAVORITES PAGE
  * 
- * Página de eventos favoritos do usuÃ¡rio
+ * Página de eventos favoritos do usuário
  * Lista todos os eventos salvos
  * 
  * @version 1.0.0

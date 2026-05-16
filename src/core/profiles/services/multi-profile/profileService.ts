@@ -11,6 +11,10 @@
  */
 import { logger } from '@/shared/utils/logger';
 import { supabase } from '@/integrations/supabase/supabase';
+import {
+  selectLooseRows,
+  updateLooseRows,
+} from '@/integrations/supabase/services/supabaseHelpers';
 import { SessionService } from '@/core/session/services/SessionService';
 import { SessionState } from '@/core/session/state/SessionState';
 import { BusinessService } from './businessService';
@@ -33,9 +37,14 @@ import type {
 } from './types';
 
 type PublicProfileRecord = Record<string, unknown>;
+type RpcResponse<T> = { data: T | null; error: unknown };
 
 function errorMessage(error: unknown, fallback: string): string {
   return error instanceof Error ? error.message : fallback;
+}
+
+async function callRpc<T>(functionName: string, params: Record<string, unknown>): Promise<RpcResponse<T>> {
+  return (await supabase.rpc(functionName as never, params as never)) as unknown as RpcResponse<T>;
 }
 
 export class MultiProfileService {
@@ -177,7 +186,7 @@ export class MultiProfileService {
    */
   static async createProfile(input: CreateProfileInput): Promise<ServiceResponse<{ profile_id: string; handle: string }>> {
     try {
-      const { data, error } = await supabase.rpc('create_profile_with_extension', {
+      const { data, error } = await callRpc<ServiceResponse<{ profile_id: string; handle: string }>>('create_profile_with_extension', {
         p_profile_type: input.profile_type,
         p_handle: input.handle,
         p_display_name: input.display_name,
@@ -209,11 +218,10 @@ export class MultiProfileService {
         (await SessionService.getCurrentUser())?.id;
       if (!resolvedUserId) return [];
 
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('user_id', resolvedUserId)
-        .order('created_at', { ascending: true });
+      const { data, error } = await selectLooseRows<Profile>('profiles', {
+        filters: [{ op: 'eq', column: 'user_id', value: resolvedUserId }],
+        orderBy: { column: 'created_at', ascending: true },
+      });
 
       if (error) throw error;
 
@@ -229,15 +237,14 @@ export class MultiProfileService {
    */
   static async getProfileById(profileId: string): Promise<Profile | null> {
     try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', profileId)
-        .single();
+      const { data, error } = await selectLooseRows<Profile>('profiles', {
+        filters: [{ op: 'eq', column: 'id', value: profileId }],
+        limit: 1,
+      });
 
       if (error) throw error;
 
-      return data as Profile;
+      return data?.[0] ?? null;
     } catch (error: unknown) {
       logger.error('Error fetching profile by id:', error);
       return null;
@@ -249,15 +256,14 @@ export class MultiProfileService {
    */
   static async getPublicProfileByHandle(handle: string): Promise<PublicProfileRecord | null> {
     try {
-      const { data, error } = await supabase
-        .from('public_profiles')
-        .select('*')
-        .eq('handle', handle)
-        .single();
+      const { data, error } = await selectLooseRows<PublicProfileRecord>('public_profiles', {
+        filters: [{ op: 'eq', column: 'handle', value: handle }],
+        limit: 1,
+      });
 
       if (error) throw error;
 
-      return data;
+      return data?.[0] ?? null;
     } catch (error: unknown) {
       logger.error('Error fetching public profile:', error);
       return null;
@@ -269,15 +275,14 @@ export class MultiProfileService {
    */
   static async getPublicBusinessProfile(handle: string): Promise<PublicProfileRecord | null> {
     try {
-      const { data, error } = await supabase
-        .from('public_business_profiles')
-        .select('*')
-        .eq('handle', handle)
-        .single();
+      const { data, error } = await selectLooseRows<PublicProfileRecord>('public_business_profiles', {
+        filters: [{ op: 'eq', column: 'handle', value: handle }],
+        limit: 1,
+      });
 
       if (error) throw error;
 
-      return data;
+      return data?.[0] ?? null;
     } catch (error: unknown) {
       logger.error('Error fetching public business profile:', error);
       return null;
@@ -289,15 +294,14 @@ export class MultiProfileService {
    */
   static async getPublicProfessionalProfile(handle: string): Promise<PublicProfileRecord | null> {
     try {
-      const { data, error } = await supabase
-        .from('public_professional_profiles')
-        .select('*')
-        .eq('handle', handle)
-        .single();
+      const { data, error } = await selectLooseRows<PublicProfileRecord>('public_professional_profiles', {
+        filters: [{ op: 'eq', column: 'handle', value: handle }],
+        limit: 1,
+      });
 
       if (error) throw error;
 
-      return data;
+      return data?.[0] ?? null;
     } catch (error: unknown) {
       logger.error('Error fetching public professional profile:', error);
       return null;
@@ -309,15 +313,14 @@ export class MultiProfileService {
    */
   static async getPublicDriverProfile(handle: string): Promise<PublicProfileRecord | null> {
     try {
-      const { data, error } = await supabase
-        .from('public_driver_profiles')
-        .select('*')
-        .eq('handle', handle)
-        .single();
+      const { data, error } = await selectLooseRows<PublicProfileRecord>('public_driver_profiles', {
+        filters: [{ op: 'eq', column: 'handle', value: handle }],
+        limit: 1,
+      });
 
       if (error) throw error;
 
-      return data;
+      return data?.[0] ?? null;
     } catch (error: unknown) {
       logger.error('Error fetching public driver profile:', error);
       return null;
@@ -329,18 +332,22 @@ export class MultiProfileService {
    */
   static async updateProfile(profileId: string, updates: UpdateProfileInput): Promise<ServiceResponse<Profile>> {
     try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .update(updates)
-        .eq('id', profileId)
-        .select()
-        .single();
+      const { error } = await updateLooseRows(
+        'profiles',
+        updates as Record<string, unknown>,
+        [{ column: 'id', value: profileId }],
+      );
 
       if (error) throw error;
 
+      const refreshed = await this.getProfileById(profileId);
+      if (!refreshed) {
+        throw new Error('Updated profile could not be reloaded');
+      }
+
       return {
         success: true,
-        data: data as Profile,
+        data: refreshed,
       };
     } catch (error: unknown) {
       return {
@@ -355,7 +362,7 @@ export class MultiProfileService {
    */
   static async updateHandle(profileId: string, newHandle: string): Promise<ServiceResponse<{ handle: string }>> {
     try {
-      const { data, error } = await supabase.rpc('update_profile_handle', {
+      const { data, error } = await callRpc<ServiceResponse<{ handle: string }>>('update_profile_handle', {
         p_profile_id: profileId,
         p_new_handle: newHandle,
       });
@@ -522,7 +529,7 @@ export class MultiProfileService {
    */
   static async deleteProfile(profileId: string): Promise<ServiceResponse<{ profile_id: string }>> {
     try {
-      const { data, error } = await supabase.rpc('delete_profile', {
+      const { data, error } = await callRpc<ServiceResponse<{ profile_id: string }>>('delete_profile', {
         p_profile_id: profileId,
       });
 
@@ -542,7 +549,7 @@ export class MultiProfileService {
    */
   static async transferOwnership(profileId: string, newOwnerUserId: string): Promise<ServiceResponse<{ profile_id: string }>> {
     try {
-      const { data, error } = await supabase.rpc('transfer_profile_ownership', {
+      const { data, error } = await callRpc<ServiceResponse<{ profile_id: string }>>('transfer_profile_ownership', {
         p_profile_id: profileId,
         p_new_owner_user_id: newOwnerUserId,
       });

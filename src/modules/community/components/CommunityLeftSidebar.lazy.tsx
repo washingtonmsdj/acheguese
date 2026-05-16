@@ -9,12 +9,6 @@ const RankingWidget = lazy(() =>
   })),
 );
 
-const GroupsWidget = lazy(() =>
-  import("./widgets/GroupsWidget").then((module) => ({
-    default: module.GroupsWidget,
-  })),
-);
-
 /**
  * Sidebar esquerda com lazy loading
  * Otimiza bundle inicial carregando widgets sob demanda
@@ -29,11 +23,6 @@ export const CommunityLeftSidebar = memo(() => {
         </Suspense>
       </WidgetErrorBoundary>
 
-      <WidgetErrorBoundary widgetName="GroupsWidget">
-        <Suspense fallback={<WidgetSkeleton hasHeader={false} itemCount={3} />}>
-          <GroupsWidget />
-        </Suspense>
-      </WidgetErrorBoundary>
     </div>
   );
 });

@@ -2,7 +2,6 @@ import React from "react";
 import { memo } from "react";
 import { UserProfileWidget } from "./widgets/UserProfileWidget";
 import { RankingWidget } from "./widgets/RankingWidget";
-import { GroupsWidget } from "./widgets/GroupsWidget";
 import { ActivityWidget } from "./widgets/ActivityWidget";
 import { SuggestionsWidgetSSOT } from "./widgets/SuggestionsWidget";
 import { WidgetErrorBoundary } from "./WidgetErrorBoundary";
@@ -40,11 +39,6 @@ export const CommunityLeftSidebar = memo(() => {
       {/* Widget de Ranking */}
       <WidgetErrorBoundary widgetName="RankingWidget">
         <RankingWidget />
-      </WidgetErrorBoundary>
-
-      {/* Widget de Grupos */}
-      <WidgetErrorBoundary widgetName="GroupsWidget">
-        <GroupsWidget />
       </WidgetErrorBoundary>
 
       {/* Widget de Atividades */}

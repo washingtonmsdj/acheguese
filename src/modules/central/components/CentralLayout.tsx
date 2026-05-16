@@ -1,36 +1,28 @@
 import { Outlet } from "react-router-dom";
 import { SidebarProvider } from "@/shared/components/ui/sidebar";
 import { CentralNavigation } from "@/modules/central/components/CentralNavigation";
-import { CentralBreadcrumbs } from "@/modules/central/components/CentralBreadcrumbs";
-import { TerritoryMismatchBanner } from "@/core/location/components/TerritoryMismatchBanner";
+import { CentralHeader } from "@/modules/central/components/CentralHeader";
+import { BottomNav } from "@/app/components/BottomNav";
 
 /**
  * CentralLayout
  * 
- * Layout próprio para rotas da Central (/central/*).
- * Usa navegação contextual específica da Central, separando gestão de negócios/perfis profissionais/mobilidade do perfil pessoal.
- * 
- * Desktop: sidebar com navegação lateral
- * Mobile: tabs/dropdown/accordion
- * 
- * Não mistura com sidebar de perfil pessoal (AppLayoutSidebar).
+ * Layout COPIADO EXATAMENTE do maker-forge-net AppLayout
+ * Estrutura idêntica, classes idênticas, comportamento idêntico
  */
 export function CentralLayout() {
   return (
     <SidebarProvider>
-      <div className="flex h-screen w-full overflow-hidden bg-background">
-        {/* Navegação lateral específica da Central */}
+      <div className="min-h-screen flex w-full bg-background">
         <CentralNavigation />
-        
-        {/* Conteúdo principal */}
-        <main id="main-content" className="flex-1 overflow-y-auto flex flex-col min-h-0" tabIndex={-1}>
-          <TerritoryMismatchBanner />
-          <CentralBreadcrumbs />
-          <div className="flex-1 min-h-0">
+        <div className="flex-1 flex flex-col min-w-0 w-full">
+          <CentralHeader />
+          <main className="flex-1 p-4 md:p-6 pb-20 md:pb-6 w-full">
             <Outlet />
-          </div>
-        </main>
+          </main>
+        </div>
       </div>
+      <BottomNav />
     </SidebarProvider>
   );
 }

@@ -1,7 +1,7 @@
-﻿/**
+/**
  * useGeolocation (mobility)
  *
- * Hook de geolocalizaÃ§Ã£o para o mÃ³dulo de mobilidade.
+ * Hook de geolocalização para o módulo de mobilidade.
  * Delega ao GeolocationService (SSOT).
  */
 
@@ -28,7 +28,7 @@ export function useGeolocation() {
 
   const requestLocation = useCallback(async (): Promise<GeolocationCoordinates | null> => {
     if (!supported) {
-      setError({ message: 'GeolocalizaÃ§Ã£o nÃ£o suportada' });
+      setError({ message: 'Geolocalização não suportada' });
       return null;
     }
 

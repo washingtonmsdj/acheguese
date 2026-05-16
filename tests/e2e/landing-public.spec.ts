@@ -60,7 +60,7 @@ test.describe("public landing routes", () => {
       .poll(() => readBodyText(page), { timeout: 60_000 })
       .toMatch(/Empresas|Cadastrar Empresa|Localiza/i);
     await expect
-      .poll(async () => (await readBodyText(page)).includes("Preparando a casa para vocÃª se achegar"), {
+      .poll(async () => (await readBodyText(page)).includes("Preparando a casa para você se achegar"), {
         timeout: 30_000,
       })
       .toBe(false);
@@ -70,9 +70,9 @@ test.describe("public landing routes", () => {
 
     await expect
       .poll(() => readBodyText(page), { timeout: 60_000 })
-      .toMatch(/Servi[Ã§c]os|Profissional|Eletricista/i);
+      .toMatch(/Servi[çc]os|Profissional|Eletricista/i);
     await expect
-      .poll(async () => (await readBodyText(page)).includes("Preparando a casa para vocÃª se achegar"), {
+      .poll(async () => (await readBodyText(page)).includes("Preparando a casa para você se achegar"), {
         timeout: 30_000,
       })
       .toBe(false);
@@ -93,7 +93,7 @@ test.describe("public landing routes", () => {
 
     await expect
       .poll(() => readBodyText(page), { timeout: 60_000 })
-      .toMatch(/Servi[Ã§c]os|Complexo do Nordeste de Amaralina|Profissional/i);
+      .toMatch(/Servi[çc]os|Complexo do Nordeste de Amaralina|Profissional/i);
     await expect
       .poll(() => readTitle(page), { timeout: 30_000 })
       .toBe("Achegue-se Complexo do Nordeste de Amaralina | Serviços em Salvador");

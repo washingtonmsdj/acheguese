@@ -1,8 +1,8 @@
 /**
- * ðŸ—ºï¸ EVENTS MAP
+ * EVENTS MAP
  * 
  * Mapa interativo mostrando todos os eventos
- * Filtro por distÃ¢ncia e clusters de eventos próximos
+ * Filtro por distância e clusters de eventos próximos
  * 
  * @version 1.0.0
  */
@@ -326,7 +326,7 @@ export function EventsMap({
 
       {/* Note */}
       <div className="absolute bottom-2 left-1/2 -translate-x-1/2 rounded-full bg-black/50 px-3 py-1 text-xs text-white backdrop-blur-sm">
-        Mapa ilustrativo - Em produÃ§Ã£o, usar Google Maps ou Mapbox
+        Mapa ilustrativo - Em produção, usar Google Maps ou Mapbox
       </div>
     </div>
   );

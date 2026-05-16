@@ -1,5 +1,5 @@
-﻿/**
- * useMenuItems â€” Hook para gerenciar itens do cardÃ¡pio
+/**
+ * useMenuItems — Hook para gerenciar itens do cardápio
  *
  * SSOT: Consome MenuService do modules/business/gastronomy
  */
@@ -124,7 +124,7 @@ export function useMenuItems(menuId: string, categoryId?: string) {
 }
 
 /**
- * useMenuItem â€” Hook para buscar um item especÃ­fico
+ * useMenuItem — Hook para buscar um item específico
  */
 export function useMenuItem(itemId: string | undefined) {
   const { data: item, isLoading, error } = useQuery({

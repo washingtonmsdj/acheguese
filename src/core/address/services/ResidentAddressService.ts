@@ -1,17 +1,17 @@
 /**
- * ResidentAddressService - Orquestrador SSOT para endereÃ§o residencial
+ * ResidentAddressService - Orquestrador SSOT para endereço residencial
  *
  * Fluxo:
  * 1. validar input
  * 2. consultar CEP via camada territorial centralizada
  * 3. normalizar logradouro
  * 4. obter `location_id` reconciliado no SSOT territorial
- * 5. determinar precisÃ£o
- * 6. persistir endereÃ§o
- * 7. criar/atualizar residÃªncia
+ * 5. determinar precisão
+ * 6. persistir endereço
+ * 7. criar/atualizar residência
  *
- * Regra crÃ­tica:
- * - cidade/bairro/estado nÃ£o entram no sistema a partir do provider externo.
+ * Regra crítica:
+ * - cidade/bairro/estado não entram no sistema a partir do provider externo.
  * - o cadastro depende de `locationData` reconciliado contra `locations`.
  */
 import { logger } from '@/shared/utils/logger';
@@ -47,12 +47,12 @@ export class ResidentAddressService {
     });
 
     if (!cepData) {
-      throw new Error('CEP nÃ£o encontrado. Verifique e tente novamente.');
+      throw new Error('CEP não encontrado. Verifique e tente novamente.');
     }
 
     const normalizedStreet = input.street || cepData.street;
     if (!normalizedStreet) {
-      throw new Error('Logradouro nÃ£o identificado. Preencha manualmente.');
+      throw new Error('Logradouro não identificado. Preencha manualmente.');
     }
 
     const locationId = input.location_id || (await this.resolveLocationFromCep(cepData));
@@ -61,15 +61,15 @@ export class ResidentAddressService {
       const providerState = cepData.providerAddress.state ?? 'estado';
 
       throw new Error(
-        `TerritÃ³rio nÃ£o encontrado para ${providerCity}/${providerState}. ` +
-          'Esta cidade pode nÃ£o estar cadastrada no sistema.',
+        `Território não encontrado para ${providerCity}/${providerState}. ` +
+          'Esta cidade pode não estar cadastrada no sistema.',
       );
     }
 
     const locationRepo = createLocationRepository();
     const location = await locationRepo.findById(locationId);
     if (!location) {
-      throw new Error('TerritÃ³rio invÃ¡lido');
+      throw new Error('Território inválido');
     }
 
     const precision = this.determinePrecision(input, cepData);
@@ -151,7 +151,7 @@ export class ResidentAddressService {
 
   async lookupCep(cep: string): Promise<LocationPostalCodeLookupResult | null> {
     logger.warn(
-      'âš ï¸  ResidentAddressService.lookupCep() is deprecated. ' +
+      '⚠️ ResidentAddressService.lookupCep() is deprecated. ' +
         'Use locationGeocodingService.lookupPostalCode() from @/core/location',
     );
 
@@ -162,15 +162,15 @@ export class ResidentAddressService {
 
   private validateInput(input: RegisterResidentAddressInput): void {
     if (!input.user_id) {
-      throw new Error('user_id Ã© obrigatÃ³rio');
+      throw new Error('user_id é obrigatório');
     }
 
     if (!input.postal_code || !this.isValidPostalCode(input.postal_code)) {
-      throw new Error('CEP invÃ¡lido. Use o formato XXXXX-XXX.');
+      throw new Error('CEP inválido. Use o formato XXXXX-XXX.');
     }
 
     if (!input.number || input.number.trim() === '') {
-      throw new Error('NÃºmero Ã© obrigatÃ³rio');
+      throw new Error('Número é obrigatório');
     }
   }
 

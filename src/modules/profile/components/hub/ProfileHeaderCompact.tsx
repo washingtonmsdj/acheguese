@@ -244,7 +244,7 @@ export function ProfileHeaderCompact({
                 ) : (
                   <span className="font-medium">@{handle || "sem-handle"}</span>
                 )}
-                <span className="text-border">·</span>
+                <span className="text-border">?</span>
                 <Badge variant="secondary" className="h-4 text-[9px] font-medium sm:h-5 sm:text-[10px]">
                   {getProfileTypeLabel(activeProfile)}
                 </Badge>
@@ -379,7 +379,7 @@ export function ProfileHeaderCompact({
                   variant="outline"
                   className="h-5 gap-1 border-amber-500/30 bg-amber-500/10 text-[9px] font-semibold text-amber-700 dark:text-amber-400 sm:h-6 sm:text-[10px]"
                 >
-                  Nivel {reputation.level} · {reputation.score} pts
+                  N?vel {reputation.level} ? {reputation.score} pts
                 </Badge>
               </div>
             </>

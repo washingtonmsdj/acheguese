@@ -6,7 +6,7 @@ import { DriverEarningsLayout } from "@/modules/mobility/components/driver/Drive
  * PÃ¡gina de ganhos de motorista na Central (/central/motorista/ganhos).
  * Renderiza o componente compartilhado DriverEarningsLayout com service="motorista".
  * 
- * Esta página renderiza o conteúdo real da rota canônica da Central.
+ * Esta pÃ¡gina renderiza o conteÃºdo real da rota canÃ´nica da Central.
  */
 export default function CentralMotoristaGanhosPage() {
   return <DriverEarningsLayout service="motorista" />;

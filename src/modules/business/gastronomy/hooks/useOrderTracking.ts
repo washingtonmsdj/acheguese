@@ -9,9 +9,9 @@
 
 import { useEffect, useMemo, useRef } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { GastronomyOrderRealtimeService } from '@/modules/business/gastronomy/services/GastronomyOrderRealtimeService';
 import { OrderDeliveryLinkService } from '@/modules/mobility/delivery/services/OrderDeliveryLinkService';
 import type { RideRequest } from '@/modules/mobility/types/types';
-import { supabase } from '@/integrations/supabase';
 
 export interface UseOrderTrackingResult {
   rideRequest: RideRequest | null;
@@ -64,55 +64,43 @@ export function useOrderTracking(orderId: string): UseOrderTrackingResult {
   useEffect(() => {
     if (!orderId) return;
 
-    const channel = supabase
-      .channel(`order-tracking:${orderId}`)
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'ride_requests',
-          filter: `source_id=eq.${orderId}`,
-        },
-        (payload) => {
-          const newSourceId =
-            payload.new && typeof payload.new === 'object' && 'source_id' in payload.new
-              ? String(payload.new.source_id ?? '')
-              : '';
-          const oldSourceId =
-            payload.old && typeof payload.old === 'object' && 'source_id' in payload.old
-              ? String(payload.old.source_id ?? '')
-              : '';
-          const newSourceType =
-            payload.new && typeof payload.new === 'object' && 'source_type' in payload.new
-              ? String(payload.new.source_type ?? '')
-              : '';
-          const oldSourceType =
-            payload.old && typeof payload.old === 'object' && 'source_type' in payload.old
-              ? String(payload.old.source_type ?? '')
-              : '';
+    const channel = GastronomyOrderRealtimeService.subscribeOrderTracking(orderId, (payload) => {
+      const newSourceId =
+        payload.new && typeof payload.new === 'object' && 'source_id' in payload.new
+          ? String(payload.new.source_id ?? '')
+          : '';
+      const oldSourceId =
+        payload.old && typeof payload.old === 'object' && 'source_id' in payload.old
+          ? String(payload.old.source_id ?? '')
+          : '';
+      const newSourceType =
+        payload.new && typeof payload.new === 'object' && 'source_type' in payload.new
+          ? String(payload.new.source_type ?? '')
+          : '';
+      const oldSourceType =
+        payload.old && typeof payload.old === 'object' && 'source_type' in payload.old
+          ? String(payload.old.source_type ?? '')
+          : '';
 
-          const isGastronomyContext =
-            newSourceType === 'gastronomy' || oldSourceType === 'gastronomy';
+      const isGastronomyContext =
+        newSourceType === 'gastronomy' || oldSourceType === 'gastronomy';
 
-          if ((newSourceId === orderId || oldSourceId === orderId) && isGastronomyContext) {
-            if (!invalidateTimerRef.current) {
-              invalidateTimerRef.current = setTimeout(() => {
-                invalidateTimerRef.current = null;
-                void queryClient.invalidateQueries({ queryKey });
-              }, 250);
-            }
-          }
-        },
-      )
-      .subscribe();
+      if ((newSourceId === orderId || oldSourceId === orderId) && isGastronomyContext) {
+        if (!invalidateTimerRef.current) {
+          invalidateTimerRef.current = setTimeout(() => {
+            invalidateTimerRef.current = null;
+            void queryClient.invalidateQueries({ queryKey });
+          }, 250);
+        }
+      }
+    });
 
     return () => {
       if (invalidateTimerRef.current) {
         clearTimeout(invalidateTimerRef.current);
         invalidateTimerRef.current = null;
       }
-      void supabase.removeChannel(channel);
+      void GastronomyOrderRealtimeService.removeChannel(channel);
     };
   }, [orderId, queryClient, queryKey]);
 

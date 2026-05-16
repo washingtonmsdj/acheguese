@@ -6,7 +6,7 @@ import { DriverSettingsLayout } from "@/modules/mobility/components/driver/Drive
  * Página de configurações de motoboy na Central (/central/motoboy/configuracoes).
  * Renderiza o componente compartilhado DriverSettingsLayout com service="motoboy".
  * 
- * Esta p�gina renderiza o conte�do real da rota can�nica da Central.
+ * Esta página renderiza o conteúdo real da rota canônica da Central.
  */
 export default function CentralMotoboyConfiguracoesPage() {
   return <DriverSettingsLayout service="motoboy" />;

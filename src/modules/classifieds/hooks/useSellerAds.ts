@@ -1,5 +1,5 @@
 /**
- * Hook para buscar anúncios de um vendedor específico
+ * Hook para buscar anÃºncios de um vendedor especÃ­fico
  */
 
 import { useQuery } from "@tanstack/react-query";

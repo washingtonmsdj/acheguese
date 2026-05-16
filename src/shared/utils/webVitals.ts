@@ -1,7 +1,7 @@
 /**
  * Web Vitals Monitoring
  * Tracks Core Web Vitals (LCP, INP, CLS) for performance monitoring
- * Integrado com Sentry para monitoramento em produÃ§Ã£o
+ * Integrado com Sentry para monitoramento em produção
  * 
  * @version 2.0.0
  */

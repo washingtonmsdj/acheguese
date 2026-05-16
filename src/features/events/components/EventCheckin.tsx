@@ -1,8 +1,8 @@
 /**
- * âœ… EVENT CHECK-IN
+ * EVENT CHECK-IN
  * 
  * Sistema de check-in digital para eventos
- * QR Code para entrada e certificado de participaÃ§Ã£o
+ * QR Code para entrada e certificado de participação
  * 
  * @version 1.0.0
  */
@@ -187,7 +187,7 @@ export function EventCheckin({ event }: EventCheckinProps) {
   const downloadCertificate = () => {
     // In production, generate a proper PDF certificate
     const certificateText = `
-CERTIFICADO DE PARTICIPAÃ‡ÃƒO
+CERTIFICADO DE PARTICIPAÇÃO
 
 Certificamos que você participou do evento:
 
@@ -230,7 +230,7 @@ Achegue-se - Plataforma de Eventos
         <>
           {/* Pre Check-in */}
           <p className="mb-4 text-sm text-muted-foreground">
-            Faça o check-in no evento para confirmar sua presenÃ§a e receber seu certificado de participaÃ§Ã£o.
+            Faça o check-in no evento para confirmar sua presença e receber seu certificado de participação.
           </p>
 
           <div className="space-y-3">
@@ -259,7 +259,7 @@ Achegue-se - Plataforma de Eventos
           {/* Info */}
           <div className="mt-4 rounded-lg bg-muted/50 p-3">
             <p className="text-xs text-muted-foreground">
-              ðŸ’¡ <strong>Dica:</strong> Apresente o QR Code na entrada do evento ou faÃ§a o check-in manual quando chegar.
+              <strong>Dica:</strong> Apresente o QR Code na entrada do evento ou faça o check-in manual quando chegar.
             </p>
           </div>
         </>
@@ -398,7 +398,7 @@ Achegue-se - Plataforma de Eventos
                     <div className="mb-6 text-center">
                       <Award className="mx-auto mb-3 h-16 w-16 text-primary" />
                       <h2 className="mb-2 text-3xl font-bold text-foreground">
-                        Certificado de ParticipaÃ§Ã£o
+                        Certificado de Participação
                       </h2>
                       <div className="mx-auto h-1 w-24 rounded-full bg-gradient-to-r from-primary to-purple-600" />
                     </div>

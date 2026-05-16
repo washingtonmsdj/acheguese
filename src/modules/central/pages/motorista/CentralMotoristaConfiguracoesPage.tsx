@@ -6,7 +6,7 @@ import { DriverSettingsLayout } from "@/modules/mobility/components/driver/Drive
  * Página de configurações de motorista na Central (/central/motorista/configuracoes).
  * Renderiza o componente compartilhado DriverSettingsLayout com service="motorista".
  * 
- * Esta p�gina renderiza o conte�do real da rota can�nica da Central.
+ * Esta página renderiza o conteúdo real da rota canônica da Central.
  */
 export default function CentralMotoristaConfiguracoesPage() {
   return <DriverSettingsLayout service="motorista" />;

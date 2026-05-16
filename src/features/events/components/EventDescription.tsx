@@ -1,7 +1,7 @@
 /**
- * ðŸ“ EVENT DESCRIPTION V2
+ * EVENT DESCRIPTION V2
  * 
- * Seção de descriÃ§Ã£o rica do evento
+ * Seção de descrição rica do evento
  * 
  * @version 2.0.0
  */

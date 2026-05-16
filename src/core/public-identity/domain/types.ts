@@ -5,26 +5,26 @@
 
 // ── Entity Types ──────────────────────────────────────────────────────────────
 
-export type EntityType = 'business' | 'profile' | 'professional';
+export type EntityType = 'business' | 'profile' | 'professional' | 'communication_channel';
 
 /**
  * Entity ID Canônico por Tipo
- * 
+ *
  * business → business_data.id (PK da tabela)
  * profile → profiles.id (PK da tabela)
  * professional → professional_data.id (PK da tabela)
- * 
+ *
  * NOTA: profile_id de business é relacionamento, não identidade canônica
  */
 export type EntityId = string;
 
 // ── Availability ──────────────────────────────────────────────────────────────
 
-export type AvailabilityStatus = 
-  | 'available' 
-  | 'taken' 
-  | 'invalid' 
-  | 'reserved' 
+export type AvailabilityStatus =
+  | 'available'
+  | 'taken'
+  | 'invalid'
+  | 'reserved'
   | 'cooldown_blocked';
 
 export interface AvailabilityResult {
@@ -36,10 +36,10 @@ export interface AvailabilityResult {
 
 // ── Change Tracking ───────────────────────────────────────────────────────────
 
-export type ChangeReason = 
-  | 'user_requested' 
-  | 'admin_action' 
-  | 'policy_violation' 
+export type ChangeReason =
+  | 'user_requested'
+  | 'admin_action'
+  | 'policy_violation'
   | 'territory_changed';
 
 export interface IdentityChangeRecord {

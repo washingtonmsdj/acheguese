@@ -23,6 +23,7 @@ import { TERRITORY_CONFIG } from '@/config/territory';
 const ComunidadePage       = lazy(() => import('@/modules/community-feed/pages/ComunidadePage'));
 const CidadeLandingPage    = lazy(() => import('@/app/pages/CidadeLandingPage'));
 const ComplexoLandingPage  = lazy(() => import('@/app/pages/ComplexoNordesteLandingPage'));
+const CommunityCommunicationTabPage = lazy(() => import('@/modules/communication-territorial/pages/CommunityCommunicationTabPage'));
 const AlertasPage          = lazy(() => import('@/modules/community-alerts/pages/AlertasPage'));
 const ProblemasPage        = lazy(() => import('@/modules/community-issues/pages/ProblemasPage'));
 const EmpresasPage         = lazy(() => import('@/app/pages/EmpresasLandingPage'));
@@ -233,6 +234,17 @@ export function TerritorialCommunityIssuesPage() {
     <CityStatusGate module="comunidade" enforceActive>
       <Suspense fallback={<ModulePageLoader />}>
         <ProblemasPage resolved={resolved} />
+      </Suspense>
+    </CityStatusGate>
+  );
+}
+
+export function TerritorialCommunityCommunicationPage() {
+  const { resolved } = useTerritorialContext();
+  return (
+    <CityStatusGate module="comunidade" enforceActive>
+      <Suspense fallback={<ModulePageLoader />}>
+        <CommunityCommunicationTabPage resolved={resolved} />
       </Suspense>
     </CityStatusGate>
   );

@@ -103,15 +103,15 @@ export default defineConfig(({ mode }) => ({
   
   plugins: [
     react(),
-    mode === "development" && componentTagger(),
-    mode === "production" && visualizer({
+    mode === "development" ? componentTagger() : null,
+    mode === "production" ? visualizer({
       filename: './dist/stats.html',
       open: false,
       gzipSize: true,
       brotliSize: true,
-    }),
+    }) : null,
     // Sentry plugin para upload de source maps (apenas se configurado)
-    mode === "production" && process.env.SENTRY_AUTH_TOKEN && sentryVitePlugin({
+    mode === "production" && Boolean(process.env.SENTRY_AUTH_TOKEN) ? sentryVitePlugin({
       org: process.env.SENTRY_ORG || "ordax",
       project: process.env.SENTRY_PROJECT || "ordax-saas",
       authToken: process.env.SENTRY_AUTH_TOKEN,
@@ -121,8 +121,8 @@ export default defineConfig(({ mode }) => ({
         ignore: ['node_modules'],
         filesToDeleteAfterUpload: ['./dist/assets/**/*.map'],
       },
-    }),
-  ].filter(Boolean),
+    }) : null,
+  ].filter((plugin): plugin is NonNullable<typeof plugin> => plugin !== null),
   
   resolve: {
     alias: {

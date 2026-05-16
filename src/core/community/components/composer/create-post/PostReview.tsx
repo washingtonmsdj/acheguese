@@ -28,14 +28,14 @@ import {
 import type { UnifiedPostType } from "@/core/community/hooks/usePostCreation";
 
 const postTypeLabels = {
-  discussao: "DiscussÃ£o",
+  discussao: "Discussão",
   pergunta: "Pergunta",
   enquete: "Enquete",
   evento: "Evento",
   alerta: "Alerta",
   achado_perdido: "Achado/Perdido",
   classificado: "Classificado",
-  recomendacao: "RecomendaÃ§Ã£o",
+  recomendacao: "Recomendação",
 };
 
 function getPostTypeLabel(tipo: UnifiedPostType): string {
@@ -127,7 +127,7 @@ export function PostReview({
       <div className="text-center">
         <h2 className="text-xl font-semibold mb-2">Revisar e Publicar</h2>
         <p className="text-muted-foreground">
-          Confira como seu post ficarÃ¡ antes de publicar
+          Confira como seu post ficará antes de publicar
         </p>
       </div>
 
@@ -207,7 +207,7 @@ export function PostReview({
               {location && (
                 <div className="flex items-center gap-1">
                   <MapPin className="h-3 w-3" />
-                  <span>Com localizaÃ§Ã£o</span>
+                  <span>Com localização</span>
                 </div>
               )}
 
@@ -261,11 +261,11 @@ export function PostReview({
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <AlertTriangle className="h-5 w-5 text-orange-500" />
-              Confirmar PublicaÃ§Ã£o
+              Confirmar Publicação
             </DialogTitle>
             <DialogDescription>
-              Como vocÃª Ã© novo na plataforma, seu post passarÃ¡ por uma revisÃ£o
-              rÃ¡pida antes de ser publicado.
+              Como você é novo na plataforma, seu post passará por uma revisão
+              rápida antes de ser publicado.
             </DialogDescription>
           </DialogHeader>
 
@@ -275,9 +275,9 @@ export function PostReview({
                 O que acontece agora?
               </h4>
               <ul className="text-sm text-orange-700 space-y-1">
-                <li>â€¢ Seu post serÃ¡ analisado em atÃ© 30 minutos</li>
-                <li>â€¢ VocÃª receberÃ¡ uma notificaÃ§Ã£o quando for aprovado</li>
-                <li>â€¢ Posts que seguem as regras sÃ£o aprovados rapidamente</li>
+                <li>⬢ Seu post será analisado em até 30 minutos</li>
+                <li>⬢ Você receberá uma notificação quando for aprovado</li>
+                <li>⬢ Posts que seguem as regras são aprovados rapidamente</li>
               </ul>
             </div>
 

@@ -20,8 +20,8 @@ import { useEffect, useState } from 'react';
 import { useParams, useLocation } from 'react-router-dom';
 import { createLocationRepository } from '@/core/location/repositories/createLocationRepository';
 import { createTerritorialGroupRepository } from '@/core/location/repositories/createTerritorialGroupRepository';
+import { TerritoryCommunityRouteService } from '@/core/routing/services/TerritoryCommunityRouteService';
 import { TERRITORY_CONFIG } from '@/config/territory';
-import { supabase } from '@/integrations/supabase';
 import type { Location, TerritorialGroupWithMembers } from '@/core/location/types';
 import { isTerritoryPubliclyNavigable } from '../utils/territoryVisibility';
 
@@ -157,50 +157,39 @@ export function useResolveTerritoryFromUrl(): TerritoryResolveResult {
         }
 
         if (districtSlug) {
-          try {
-            const { data: communityRoute } = await supabase
-              .from('territory_communities' as never)
-              .select('territory_type, territory_id')
-              .eq('city_id', cityLocation.id)
-              .eq('slug', districtSlug)
-              .maybeSingle();
-
-            if (communityRoute) {
-              const mapped = communityRoute as { territory_type: string; territory_id: string };
-              if (mapped.territory_type === 'territorial_group') {
-                const groupRepo = createTerritorialGroupRepository();
-                const withMembers = await groupRepo.findWithMembers(mapped.territory_id);
-                if (withMembers && withMembers.status === 'active' && isTerritoryPubliclyNavigable(withMembers.metadata)) {
-                  if (!cancelled) {
-                    setResult({
-                      status: TERRITORY_RESOLVE_STATUS.RESOLVED_GROUP,
-                      resolved: { kind: 'group', group: withMembers },
-                      error: null,
-                    });
-                  }
-                  return;
+          const communityRoute = await TerritoryCommunityRouteService.resolveByCityAndSlug(cityLocation.id, districtSlug);
+          if (communityRoute) {
+            if (communityRoute.territory_type === 'territorial_group') {
+              const groupRepo = createTerritorialGroupRepository();
+              const withMembers = await groupRepo.findWithMembers(communityRoute.territory_id);
+              if (withMembers && withMembers.status === 'active' && isTerritoryPubliclyNavigable(withMembers.metadata)) {
+                if (!cancelled) {
+                  setResult({
+                    status: TERRITORY_RESOLVE_STATUS.RESOLVED_GROUP,
+                    resolved: { kind: 'group', group: withMembers },
+                    error: null,
+                  });
                 }
-              } else {
-                const locationById = await locationRepo.findById(mapped.territory_id);
-                if (
-                  locationById &&
-                  locationById.status === 'active' &&
-                  locationById.parent_id === cityLocation.id &&
-                  isTerritoryPubliclyNavigable(locationById.metadata)
-                ) {
-                  if (!cancelled) {
-                    setResult({
-                      status: TERRITORY_RESOLVE_STATUS.RESOLVED_LOCATION,
-                      resolved: { kind: 'location', location: locationById },
-                      error: null,
-                    });
-                  }
-                  return;
+                return;
+              }
+            } else {
+              const locationById = await locationRepo.findById(communityRoute.territory_id);
+              if (
+                locationById &&
+                locationById.status === 'active' &&
+                locationById.parent_id === cityLocation.id &&
+                isTerritoryPubliclyNavigable(locationById.metadata)
+              ) {
+                if (!cancelled) {
+                  setResult({
+                    status: TERRITORY_RESOLVE_STATUS.RESOLVED_LOCATION,
+                    resolved: { kind: 'location', location: locationById },
+                    error: null,
+                  });
                 }
+                return;
               }
             }
-          } catch {
-            // Fallback para heuristica de slug quando tabela de comunidades ainda nao existir.
           }
 
           if (isCommunityRoute) {

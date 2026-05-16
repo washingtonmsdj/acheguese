@@ -1,9 +1,9 @@
 /**
- * ?? MOBILITY MUTATIONS — Operações de escrita
+ * MOBILITY MUTATIONS - OperaÃ§Ãµes de escrita
  *
- * Responsabilidade única: criar, atualizar e deletar dados
- * - Sem queries de leitura (exceto necessárias para validação)
- * - Orquestração de múltiplas tabelas quando necessário
+ * Responsabilidade Ãºnica: criar, atualizar e deletar dados
+ * - Sem queries de leitura (exceto necessÃ¡rias para validaÃ§Ã£o)
+ * - OrquestraÃ§Ã£o de mÃºltiplas tabelas quando necessÃ¡rio
  */
 
 import { supabase } from "@/integrations/supabase";
@@ -28,7 +28,7 @@ export async function createRide(data: Record<string, unknown>): Promise<unknown
 }
 
 /**
- * Criar solicitação de corrida (alias para createRide)
+ * Criar solicitaÃ§Ã£o de corrida (alias para createRide)
  */
 export async function createRideRequest(data: Record<string, unknown>): Promise<unknown> {
   return createRide({ ...data, status: RIDE_STATUS.PENDING });
@@ -50,7 +50,7 @@ export async function updateRide(rideId: string, updates: Record<string, unknown
 }
 
 /**
- * Atualizar corrida com guards (validações de estado)
+ * Atualizar corrida com guards (validaÃ§Ãµes de estado)
  */
 export async function updateRideWithGuards(
   rideId: string,
@@ -154,7 +154,7 @@ export async function cancelRide(rideId: string, reason?: string): Promise<void>
 }
 
 /**
- * Criar alerta de emergência
+ * Criar alerta de emergÃªncia
  */
 export async function createEmergencyAlert(
   rideId: string,
@@ -168,7 +168,7 @@ export async function createEmergencyAlert(
 }
 
 /**
- * Incrementar contador de visualizações
+ * Incrementar contador de visualizaÃ§Ãµes
  */
 export async function incrementRideViewCount(rideId: string): Promise<void> {
   try {
@@ -179,7 +179,7 @@ export async function incrementRideViewCount(rideId: string): Promise<void> {
 }
 
 /**
- * Decrementar assentos disponíveis
+ * Decrementar assentos disponÃ­veis
  */
 export async function decrementRideSeats(rideId: string): Promise<void> {
   const { error } = await supabase.rpc("decrement_ride_seats", { ride_id: rideId });
@@ -212,7 +212,7 @@ export async function deleteDriverNeighborhood(id: string): Promise<{ success: b
 }
 
 /**
- * Remover área de serviço do motorista
+ * Remover Ã¡rea de serviÃ§o do motorista
  */
 export async function deleteDriverServiceArea(
   table: string,
@@ -295,7 +295,7 @@ export async function updateDriverData(
   updates: Record<string, unknown>,
 ): Promise<unknown | null> {
   try {
-    // Resolver profile_id se necessário
+    // Resolver profile_id se necessÃ¡rio
     let driverProfileId = identifier;
     const profile = await profileService.getProfileById(identifier);
     if (profile?.profile_type === "driver") {
@@ -324,7 +324,7 @@ export async function updateDriverData(
 }
 
 /**
- * Verificar expiração de suspensão
+ * Verificar expiraÃ§Ã£o de suspensÃ£o
  */
 export async function checkSuspensionExpiry(profileId: string): Promise<void> {
   try {
@@ -348,8 +348,8 @@ export async function checkSuspensionExpiry(profileId: string): Promise<void> {
 }
 
 /**
- * Atualizar localização do motorista
- * @deprecated Implementação futura - usar serviço de GPS tracking
+ * Atualizar localizaÃ§Ã£o do motorista
+ * @deprecated ImplementaÃ§Ã£o futura - usar serviÃ§o de GPS tracking
  */
 export async function updateDriverLocation(
   driverProfileId: string,

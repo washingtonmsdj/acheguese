@@ -1,8 +1,8 @@
 /**
  * useGeolocation
  *
- * Hook para sugerir territÃ³rio a partir do GPS.
- * O reverse geocoding passa pela camada territorial centralizada e sÃ³ devolve
+ * Hook para sugerir território a partir do GPS.
+ * O reverse geocoding passa pela camada territorial centralizada e só devolve
  * bairro/cidade/estado reconciliados com `locations`.
  */
 
@@ -43,7 +43,7 @@ export function useGeolocation(): UseGeolocationResult {
 
   const detect = useCallback(async () => {
     if (!isAvailable) {
-      setError('GeolocalizaÃ§Ã£o nÃ£o disponÃ­vel neste navegador');
+      setError('Geolocalização não disponível neste navegador');
       return;
     }
 

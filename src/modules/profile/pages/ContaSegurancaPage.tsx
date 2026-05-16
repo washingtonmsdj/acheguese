@@ -1,4 +1,4 @@
-﻿/**
+/**
  * /conta/seguranca - Configuracoes da conta, separado da identidade publica.
  *
  * Conta = auth.users (email, senha, sessoes, exclusao)
@@ -36,7 +36,7 @@ export default function ContaSegurancaPage() {
       toast.success('Senha alterada com sucesso');
     } catch (error) {
       toast.error(getAuthErrorMessage(error, 'Erro ao alterar senha'));
-      throw error; // Re-throw para que ChangePasswordForm nÃ£o chame reset()
+      throw error; // Re-throw para que ChangePasswordForm não chame reset()
     }
   };
 
@@ -100,7 +100,7 @@ export default function ContaSegurancaPage() {
           </CardContent>
         </Card>
 
-        {/* ChangePasswordForm agora gerencia seu prÃ³prio estado interno via RHF */}
+        {/* ChangePasswordForm agora gerencia seu próprio estado interno via RHF */}
         <ChangePasswordForm
           onSave={handleChangePassword}
           onCancel={() => {/* estado interno ao componente */}}

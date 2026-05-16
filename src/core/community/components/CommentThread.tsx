@@ -14,15 +14,15 @@ import { CommentForm } from "./CommentForm";
 import { Loader2 } from "lucide-react";
 import type { Comment } from "@/shared/utils/commentTree";
 /**
- * Thread de comentÃ¡rios
+ * Thread de comentários
  *
- * Requirement 6: Sistema de ComentÃ¡rios
+ * Requirement 6: Sistema de Comentários
  *
  * Funcionalidades:
- * - Renderizar lista de comentÃ¡rios
- * - Selector de ordenaÃ§Ã£o (Mais relevantes / Mais recentes)
- * - FormulÃ¡rio de novo comentÃ¡rio
- * - Contador de comentÃ¡rios
+ * - Renderizar lista de comentários
+ * - Selector de ordenação (Mais relevantes / Mais recentes)
+ * - Formulário de novo comentário
+ * - Contador de comentários
  */
 
 interface CommentThreadProps {
@@ -44,14 +44,14 @@ export function CommentThread({ postId }: CommentThreadProps) {
 
   return (
     <div className="space-y-4">
-      {/* Header com contador e ordenaÃ§Ã£o */}
+      {/* Header com contador e ordenação */}
       <div className="flex items-center justify-between">
         <h3 className="font-semibold">
           {comments.length === 0
-            ? "Nenhum comentÃ¡rio"
+            ? "Nenhum comentário"
             : comments.length === 1
-              ? "1 comentÃ¡rio"
-              : `${comments.length} comentÃ¡rios`}
+              ? "1 comentário"
+              : `${comments.length} comentários`}
         </h3>
 
         {comments.length > 0 && (
@@ -72,12 +72,12 @@ export function CommentThread({ postId }: CommentThreadProps) {
 
       <Separator />
 
-      {/* FormulÃ¡rio de novo comentÃ¡rio */}
-      <CommentForm postId={postId} placeholder="Escreva um comentÃ¡rio..." />
+      {/* Formulário de novo comentário */}
+      <CommentForm postId={postId} placeholder="Escreva um comentário..." />
 
       <Separator />
 
-      {/* Lista de comentÃ¡rios */}
+      {/* Lista de comentários */}
       {comments.length === 0 ? (
         <p className="text-center text-sm text-muted-foreground py-8">
           Seja o primeiro a comentar!

@@ -325,6 +325,40 @@ class ResidenceService {
     }
   }
 
+  async countPrimaryResidencesByLocationIds(locationIds: string[]): Promise<Map<string, number>> {
+    const normalizedIds = [...new Set(locationIds.filter(Boolean))];
+    if (!normalizedIds.length) {
+      return new Map<string, number>();
+    }
+
+    try {
+      const { data, error } = await supabase
+        .from("user_residences")
+        .select("location_id")
+        .eq("is_primary", true)
+        .in("location_id", normalizedIds);
+
+      if (error) {
+        throw error;
+      }
+
+      const counts = new Map<string, number>();
+      for (const row of data ?? []) {
+        const locationId = row.location_id as string | null;
+        if (!locationId) continue;
+        counts.set(locationId, (counts.get(locationId) ?? 0) + 1);
+      }
+      return counts;
+    } catch (error) {
+      trackError(error, {
+        component: "ResidenceService",
+        action: "countPrimaryResidencesByLocationIds",
+        metadata: { locationCount: normalizedIds.length },
+      });
+      return new Map<string, number>();
+    }
+  }
+
   async getPrimaryResidenceWithRelations(
     userId: string,
   ): Promise<UserResidenceWithRelations | null> {

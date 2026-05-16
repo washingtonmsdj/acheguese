@@ -24,16 +24,34 @@
       "@/hooks/*": ["./src/hooks/*"]
     },
     "skipLibCheck": true,
+    "skipDefaultLibCheck": true,
     "strict": false,
     "target": "ES2020",
-    "types": ["vitest/globals"],
-    "useDefineForClassFields": true
+    "useDefineForClassFields": true,
+    "incremental": true,
+    "tsBuildInfoFile": ".tmp/tsconfig.app.tsbuildinfo",
+    "assumeChangesOnlyAffectDirectDependencies": true,
+    "disableSourceOfProjectReferenceRedirect": true,
+    "disableSolutionSearching": true
   },
-  "include": ["src"],
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    "src/vite-env.d.ts",
+    "src/styles/css.d.ts"
+  ],
   "exclude": [
     "src/integrations/supabase/types.ts",
+    "src/integrations/supabase/types.generated.ts",
+    "src/integrations/supabase/**/*.ts",
     "src/**/*.test.ts",
     "src/**/*.test.tsx",
-    "src/**/__tests__/**"
+    "src/**/__tests__/**",
+    "node_modules",
+    "dist",
+    ".archive",
+    "**/*.spec.ts",
+    "**/*.spec.tsx",
+    "tests/**/*"
   ]
 }

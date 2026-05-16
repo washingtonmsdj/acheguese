@@ -1,13 +1,13 @@
 /**
- * useResidentAddress - Hook SSOT para endereÃ§o residencial
+ * useResidentAddress - Hook SSOT para endereço residencial
  *
- * Centraliza todo o fluxo de cadastro/verificaÃ§Ã£o de endereÃ§o residencial:
+ * Centraliza todo o fluxo de cadastro/verificação de endereço residencial:
  * - Consulta CEP via camada territorial centralizada
- * - Registro de endereÃ§o
- * - Estado do formulÃ¡rio
+ * - Registro de endereço
+ * - Estado do formulário
  *
  * REGRA: nenhum consumidor define bairro/cidade/estado a partir do provider.
- * O hook consome resultados jÃ¡ reconciliados com `locations`.
+ * O hook consome resultados já reconciliados com `locations`.
  */
 
 import { useState, useCallback } from 'react';
@@ -63,7 +63,7 @@ export function useResidentAddress(userId: string | undefined) {
 
   const lookupCep = useCallback(async (cep: string) => {
     if (!isValidPostalCode(cep)) {
-      toast.error('CEP invÃ¡lido. Use o formato XXXXX-XXX.');
+      toast.error('CEP inválido. Use o formato XXXXX-XXX.');
       return;
     }
 
@@ -75,7 +75,7 @@ export function useResidentAddress(userId: string | undefined) {
       });
 
       if (!data) {
-        toast.error('CEP nÃ£o encontrado.');
+        toast.error('CEP não encontrado.');
         setForm((prev) => ({
           ...prev,
           cepLoading: false,
@@ -101,7 +101,7 @@ export function useResidentAddress(userId: string | undefined) {
       toast.success(
         locationLabel
           ? `CEP reconciliado em ${locationLabel}`
-          : 'CEP encontrado, mas o territÃ³rio ainda nÃ£o estÃ¡ cadastrado no SSOT.',
+          : 'CEP encontrado, mas o território ainda não está cadastrado no SSOT.',
       );
     } catch (error: unknown) {
       toast.error(error instanceof Error ? error.message : 'Erro ao consultar CEP');
@@ -112,7 +112,7 @@ export function useResidentAddress(userId: string | undefined) {
   const registerMutation = useMutation({
     mutationFn: async (): Promise<RegisterResidentAddressResult> => {
       if (!userId) {
-        throw new Error('UsuÃ¡rio nÃ£o autenticado');
+        throw new Error('Usuário não autenticado');
       }
 
       const input: RegisterResidentAddressInput = {
@@ -130,11 +130,11 @@ export function useResidentAddress(userId: string | undefined) {
       queryClient.invalidateQueries({ queryKey: ['user-residence'] });
       queryClient.invalidateQueries({ queryKey: ['user-territory-resolved'] });
 
-      toast.success(`EndereÃ§o cadastrado em ${result.location_name}`);
+      toast.success(`Endereço cadastrado em ${result.location_name}`);
       setForm(INITIAL_STATE);
     },
     onError: (error: Error) => {
-      toast.error(error.message || 'Erro ao cadastrar endereÃ§o');
+      toast.error(error.message || 'Erro ao cadastrar endereço');
     },
   });
 

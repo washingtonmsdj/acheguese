@@ -1,17 +1,17 @@
-# âœ… Checklist de MigraÃ§Ã£o - Events V2 Territorial
+# ✅ Checklist de Migração - Events V2 Territorial
 
-## ðŸ“‹ VerificaÃ§Ã£o de ImplementaÃ§Ã£o
+## 📋 Verificação de Implementação
 
-### âœ… CÃ³digo Implementado
+### ✅ Código Implementado
 
 - [x] **EventsListPage.tsx**
   - [x] Interface `EventsListPageProps` criada
   - [x] Prop `resolved?: ResolvedTerritory` adicionada
   - [x] Import de `ResolvedTerritory` type
-  - [x] LÃ³gica de filtragem territorial implementada
+  - [x] Lógica de filtragem territorial implementada
   - [x] Filtro para `location` (cidade/bairro)
   - [x] Filtro para `group` (grupo de bairros)
-  - [x] SEO dinÃ¢mico baseado em contexto
+  - [x] SEO dinâmico baseado em contexto
   - [x] Breadcrumbs contextuais
   - [x] Hero section personalizado
   - [x] Dependency array atualizada no useMemo
@@ -24,23 +24,23 @@
   - [x] `CityStatusGate` mantido
   - [x] `Suspense` com `ModulePageLoader` mantido
 
-### âœ… TypeScript
+### ✅ TypeScript
 
-- [x] Sem erros de compilaÃ§Ã£o
+- [x] Sem erros de compilação
 - [x] Tipos corretamente importados
 - [x] Props tipadas corretamente
-- [x] InferÃªncia de tipos funcionando
+- [x] Inferência de tipos funcionando
 
-### âœ… Rotas Configuradas
+### ✅ Rotas Configuradas
 
-- [x] `/comunidade/:state/:city/:territorySlug/eventos` â†’ `TerritorialEventosPage`
-- [x] `/eventos/:state/:city/:district` â†’ `TerritorialEventosPage`
-- [x] `/eventos/:state/:city` â†’ `TerritorialEventosPage`
-- [x] `/eventos` â†’ `EventsListPage` (sem contexto)
+- [x] `/comunidade/:state/:city/:territorySlug/eventos` → `TerritorialEventosPage`
+- [x] `/eventos/:state/:city/:district` → `TerritorialEventosPage`
+- [x] `/eventos/:state/:city` → `TerritorialEventosPage`
+- [x] `/eventos` → `EventsListPage` (sem contexto)
 
 ---
 
-## ðŸ§ª Testes Manuais
+## 🧪 Testes Manuais
 
 ### Teste 1: Rota Territorial - Grupo de Bairros
 ```
@@ -48,28 +48,28 @@ URL: http://localhost:8080/comunidade/ba/salvador/complexo-do-nordeste-de-amaral
 ```
 
 **Verificar:**
-- [ ] PÃ¡gina carrega sem erros
-- [ ] TÃ­tulo: "Eventos - Complexo do Nordeste de Amaralina | Achegue-se"
-- [ ] Meta description menciona o territÃ³rio
-- [ ] Breadcrumbs: `InÃ­cio / Complexo do Nordeste de Amaralina / Eventos`
+- [ ] Página carrega sem erros
+- [ ] Título: "Eventos - Complexo do Nordeste de Amaralina | Achegue-se"
+- [ ] Meta description menciona o território
+- [ ] Breadcrumbs: `Início / Complexo do Nordeste de Amaralina / Eventos`
 - [ ] Hero subtitle: "...acontecendo no Complexo do Nordeste de Amaralina"
 - [ ] Apenas eventos dos bairros do grupo aparecem
-- [ ] Filtros funcionam (categoria, data, tipo, preÃ§o)
+- [ ] Filtros funcionam (categoria, data, tipo, preço)
 - [ ] Busca funciona
-- [ ] OrdenaÃ§Ã£o funciona
-- [ ] PaginaÃ§Ã£o funciona
-- [ ] Cards de eventos clicÃ¡veis
-- [ ] BotÃ£o de favoritos funciona
+- [ ] Ordenação funciona
+- [ ] Paginação funciona
+- [ ] Cards de eventos clicáveis
+- [ ] Botão de favoritos funciona
 
-### Teste 2: Rota Territorial - Bairro EspecÃ­fico
+### Teste 2: Rota Territorial - Bairro Específico
 ```
 URL: http://localhost:8080/comunidade/ba/salvador/nordeste-de-amaralina/eventos
 ```
 
 **Verificar:**
-- [ ] PÃ¡gina carrega sem erros
-- [ ] TÃ­tulo: "Eventos em Nordeste de Amaralina | Achegue-se"
-- [ ] Breadcrumbs: `InÃ­cio / Nordeste de Amaralina / Eventos`
+- [ ] Página carrega sem erros
+- [ ] Título: "Eventos em Nordeste de Amaralina | Achegue-se"
+- [ ] Breadcrumbs: `Início / Nordeste de Amaralina / Eventos`
 - [ ] Hero subtitle: "...acontecendo em Nordeste de Amaralina"
 - [ ] Apenas eventos do bairro aparecem
 - [ ] Filtros funcionam
@@ -80,14 +80,14 @@ URL: http://localhost:8080/eventos
 ```
 
 **Verificar:**
-- [ ] PÃ¡gina carrega sem erros
-- [ ] TÃ­tulo: "Eventos Locais | Achegue-se"
-- [ ] Breadcrumbs: `InÃ­cio / Eventos`
-- [ ] Hero subtitle: "...acontecendo na sua regiÃ£o"
+- [ ] Página carrega sem erros
+- [ ] Título: "Eventos Locais | Achegue-se"
+- [ ] Breadcrumbs: `Início / Eventos`
+- [ ] Hero subtitle: "...acontecendo na sua região"
 - [ ] TODOS os eventos aparecem (sem filtro territorial)
 - [ ] Filtros funcionam
 
-### Teste 4: NavegaÃ§Ã£o Entre Rotas
+### Teste 4: Navegação Entre Rotas
 ```
 1. Abrir /eventos
 2. Clicar em um evento
@@ -98,9 +98,9 @@ URL: http://localhost:8080/eventos
 ```
 
 **Verificar:**
-- [ ] NavegaÃ§Ã£o funciona sem erros
-- [ ] Estado dos filtros Ã© mantido ao voltar
-- [ ] Scroll position Ã© restaurado
+- [ ] Navegação funciona sem erros
+- [ ] Estado dos filtros é mantido ao voltar
+- [ ] Scroll position é restaurado
 - [ ] Sem memory leaks
 
 ### Teste 5: Responsividade
@@ -121,121 +121,121 @@ Testar em diferentes tamanhos de tela:
 
 ### Teste 6: Performance
 ```
-Abrir DevTools â†’ Performance
+Abrir DevTools → Performance
 ```
 
 **Verificar:**
 - [ ] Tempo de carregamento < 2s
 - [ ] First Contentful Paint < 1s
 - [ ] Time to Interactive < 3s
-- [ ] Sem re-renders desnecessÃ¡rios
+- [ ] Sem re-renders desnecessários
 - [ ] useMemo funcionando corretamente
 
 ---
 
-## ðŸ” VerificaÃ§Ã£o de Qualidade
+## 🔍 Verificação de Qualidade
 
-### CÃ³digo Limpo
+### Código Limpo
 - [x] Sem console.logs
-- [x] Sem cÃ³digo comentado
-- [x] Sem TODOs nÃ£o resolvidos
-- [x] Sem imports nÃ£o utilizados
-- [x] FormataÃ§Ã£o consistente
+- [x] Sem código comentado
+- [x] Sem TODOs não resolvidos
+- [x] Sem imports não utilizados
+- [x] Formatação consistente
 
 ### SSOT (Single Source of Truth)
-- [x] Uma Ãºnica fonte de dados (MOCK_EVENTS)
-- [x] Filtragem territorial em um Ãºnico lugar
-- [x] Sem duplicaÃ§Ã£o de lÃ³gica
+- [x] Uma única fonte de dados (MOCK_EVENTS)
+- [x] Filtragem territorial em um único lugar
+- [x] Sem duplicação de lógica
 - [x] Contexto territorial vem do TerritorialLayout
 
 ### Arquitetura
 - [x] Componentes desacoplados
 - [x] Props bem definidas
 - [x] Tipos exportados corretamente
-- [x] Hooks reutilizÃ¡veis
-- [x] PadrÃµes consistentes com o projeto
+- [x] Hooks reutilizáveis
+- [x] Padrões consistentes com o projeto
 
-### DocumentaÃ§Ã£o
-- [x] ComentÃ¡rios JSDoc onde necessÃ¡rio
+### Documentação
+- [x] Comentários JSDoc onde necessário
 - [x] README atualizado
-- [x] DocumentaÃ§Ã£o de migraÃ§Ã£o criada
+- [x] Documentação de migração criada
 - [x] Exemplos de uso documentados
 
 ---
 
-## ðŸš€ PreparaÃ§Ã£o para ProduÃ§Ã£o
+## 🚀 Preparação para Produção
 
 ### Antes de Deploy
 - [ ] Todos os testes manuais passaram
 - [ ] TypeScript sem erros
-- [ ] ESLint sem warnings crÃ­ticos
-- [ ] Build de produÃ§Ã£o funciona
-- [ ] Bundle size aceitÃ¡vel
+- [ ] ESLint sem warnings críticos
+- [ ] Build de produção funciona
+- [ ] Bundle size aceitável
 - [ ] Lighthouse score > 90
 
-### Monitoramento PÃ³s-Deploy
+### Monitoramento Pós-Deploy
 - [ ] Configurar analytics para rotas territoriais
 - [ ] Monitorar erros no Sentry
 - [ ] Verificar performance no Real User Monitoring
-- [ ] Coletar feedback dos usuÃ¡rios
+- [ ] Coletar feedback dos usuários
 
 ### Rollback Plan
 ```
-Se houver problemas crÃ­ticos:
+Se houver problemas críticos:
 
-1. Reverter commit da migraÃ§Ã£o
+1. Reverter commit da migração
 2. Restaurar import do EventosPage antigo
-3. Deploy da versÃ£o anterior
+3. Deploy da versão anterior
 4. Investigar e corrigir problemas
-5. Re-deploy quando estÃ¡vel
+5. Re-deploy quando estável
 ```
 
 ---
 
-## ðŸ“Š MÃ©tricas de Sucesso
+## 📊 Métricas de Sucesso
 
-### TÃ©cnicas
+### Técnicas
 - [ ] 0 erros TypeScript
 - [ ] 0 erros de runtime
 - [ ] Tempo de carregamento < 2s
 - [ ] Lighthouse Performance > 90
 
-### NegÃ³cio
+### Negócio
 - [ ] Taxa de cliques em eventos mantida ou melhorada
-- [ ] Tempo na pÃ¡gina mantido ou melhorado
-- [ ] Taxa de rejeiÃ§Ã£o mantida ou melhorada
-- [ ] Feedback positivo dos usuÃ¡rios
+- [ ] Tempo na página mantido ou melhorado
+- [ ] Taxa de rejeição mantida ou melhorada
+- [ ] Feedback positivo dos usuários
 
 ---
 
-## ðŸŽ¯ PrÃ³ximos Passos
+## 🎯 Próximos Passos
 
 ### Imediato (Esta Sprint)
 - [ ] Completar todos os testes manuais
 - [ ] Corrigir bugs encontrados
 - [ ] Deploy em staging
-- [ ] ValidaÃ§Ã£o com stakeholders
+- [ ] Validação com stakeholders
 
-### Curto Prazo (PrÃ³xima Sprint)
-- [ ] IntegraÃ§Ã£o com Supabase
+### Curto Prazo (Próxima Sprint)
+- [ ] Integração com Supabase
 - [ ] Substituir MOCK_EVENTS por dados reais
 - [ ] Adicionar testes automatizados
 - [ ] Otimizar queries
 
-### MÃ©dio Prazo (PrÃ³ximo MÃªs)
+### Médio Prazo (Próximo Mês)
 - [ ] Mapa de eventos territoriais
-- [ ] CalendÃ¡rio territorial
-- [ ] Analytics por territÃ³rio
-- [ ] NotificaÃ§Ãµes de novos eventos
+- [ ] Calendário territorial
+- [ ] Analytics por território
+- [ ] Notificações de novos eventos
 
 ---
 
-## âœ… AprovaÃ§Ã£o Final
+## ✅ Aprovação Final
 
 ### Desenvolvedor
-- [ ] CÃ³digo revisado
+- [ ] Código revisado
 - [ ] Testes passando
-- [ ] DocumentaÃ§Ã£o completa
+- [ ] Documentação completa
 - [ ] Pronto para review
 
 **Assinatura**: ________________  
@@ -243,8 +243,8 @@ Se houver problemas crÃ­ticos:
 
 ### Tech Lead
 - [ ] Arquitetura aprovada
-- [ ] CÃ³digo revisado
-- [ ] Performance aceitÃ¡vel
+- [ ] Código revisado
+- [ ] Performance aceitável
 - [ ] Pronto para staging
 
 **Assinatura**: ________________  
@@ -253,7 +253,7 @@ Se houver problemas crÃ­ticos:
 ### Product Owner
 - [ ] Funcionalidade validada
 - [ ] UX aprovada
-- [ ] Pronto para produÃ§Ã£o
+- [ ] Pronto para produção
 
 **Assinatura**: ________________  
 **Data**: ________________
@@ -262,4 +262,4 @@ Se houver problemas crÃ­ticos:
 
 **Documento criado por**: Kiro AI  
 **Data**: 2026-05-14  
-**VersÃ£o**: 1.0.0
+**Versão**: 1.0.0

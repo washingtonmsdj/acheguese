@@ -1,11 +1,11 @@
 /**
- * Fachada canônica de mobilidade para consumo cross-domain.
+ * Fachada canÃ´nica de mobilidade para consumo cross-domain.
  *
- * SSOT v2.0: Exporta funções de queries e mutations diretamente.
+ * SSOT v2.0: Exporta funÃ§Ãµes de queries e mutations diretamente.
  */
 
 // ============================================================
-// QUERIES - Operações de Leitura (SSOT)
+// QUERIES - OperaÃ§Ãµes de Leitura (SSOT)
 // ============================================================
 export {
   getRideById,
@@ -26,7 +26,7 @@ export {
 } from "@/modules/mobility/services/mobility.queries";
 
 // ============================================================
-// MUTATIONS - Operações de Escrita (SSOT)
+// MUTATIONS - OperaÃ§Ãµes de Escrita (SSOT)
 // ============================================================
 export {
   createRide,

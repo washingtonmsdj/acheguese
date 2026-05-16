@@ -26,11 +26,12 @@ import {
   MapPin, Users, Store, Wrench, Tag, ArrowRight,
   Heart, Music, GraduationCap, Sparkles, Star,
   BadgeCheck, ChevronRight, Building2, Bus,
-  Drum, HandHeart, BookOpen, Theater,
+  Drum, HandHeart, Theater,
   UtensilsCrossed, Fish, Coffee, ShoppingBag,
   Palette, Trophy, Megaphone, Loader2,
 } from 'lucide-react';
 import { Button } from '@/shared/components/ui/button';
+import { LandingFooter } from '@/shared/components/landing/LandingFooter';
 import { BusinessLogo } from '@/shared/components/ui/business-logo';
 import { useTerritorialContext } from '@/core/routing/components/TerritorialLayout';
 import { useTerritoryFilter } from '@/core/location/hooks/useTerritoryFilter';
@@ -174,11 +175,6 @@ const RAIZES = [
     label: 'Pesca Artesanal',
     desc: 'Tradição pesqueira à beira-mar',
   },
-  {
-    icon: BookOpen,
-    label: 'Religiões de Matriz Africana',
-    desc: 'Terreiros e tradições preservadas',
-  },
 ];
 
 // ── Helpers ──────────────────────────────────────────────────────────
@@ -240,7 +236,7 @@ export default function ComplexoNordesteLandingPage() {
       </Helmet>
 
       {/* ── A. HERO PARALLAX ──────────────────────────────────────── */}
-      <section className="relative w-full min-h-[45vh] flex items-center justify-center overflow-hidden">
+      <section className="relative w-full min-h-[52vh] md:min-h-[60vh] flex items-center justify-center overflow-hidden">
         <motion.div className="absolute inset-0">
           <img
             src={heroImg}
@@ -253,63 +249,22 @@ export default function ComplexoNordesteLandingPage() {
         <motion.div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-background" />
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-background" />
 
-        {/* Header */}
-        <header className="absolute top-0 left-0 right-0 z-20 flex items-center justify-between px-4 sm:px-6 lg:px-8 py-5">
-          <button onClick={() => navigate('/')} className="flex items-center gap-2 hover:opacity-80 transition-opacity">
-            <span className="text-xl sm:text-2xl font-bold text-white font-heading tracking-tight">
-              Achegue<span className="text-primary">-se</span>
-            </span>
-          </button>
-          <div className="flex items-center gap-2">
-            <Button
-              variant="ghost"
-              size="sm"
-              className="text-white/70 hover:text-white hover:bg-white/10 hidden sm:inline-flex"
-              onClick={() => navigate(moduleUrls.community)}
-            >
-              Comunidade
-            </Button>
-            <Button
-              size="sm"
-              className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold rounded-lg"
-              onClick={() => navigate(user ? '/conta' : '/login')}
-            >
-              {user ? 'Minha conta' : 'Entrar'}
-            </Button>
-          </div>
-        </header>
+        {/* Header limpo na landing do bairro */}
 
         {/* Hero content */}
-        <div className="relative z-10 text-center px-4 max-w-4xl mx-auto">
+        <div className="relative z-10 text-center px-4 pt-12 md:pt-16 pb-12 md:pb-16 max-w-5xl mx-auto">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, ease: 'easeOut' }}
           >
-            {/* Badge */}
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.2, duration: 0.5 }}
-              className="inline-flex items-center gap-2 bg-primary/90 backdrop-blur-sm border border-primary rounded-full px-5 py-2.5 mb-5 shadow-lg"
-            >
-              <MapPin className="h-4 w-4 text-primary-foreground" />
-              <span className="text-primary-foreground font-bold text-xs tracking-wide uppercase">
-                4 Bairros · ~45.000 moradores · Salvador, BA
-              </span>
-            </motion.div>
-
-            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-white leading-[1.1] mb-5 font-heading">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-white leading-[1.08] mb-6 font-heading">
               Complexo do Nordeste
               <br />
               <span className="text-primary">de Amaralina</span>
             </h1>
 
-            <p className="text-base sm:text-lg md:text-xl text-white/85 mb-3 max-w-2xl mx-auto">
-              Território de resistência, cultura afro-brasileira e potência comunitária.
-              Um retrato vivo da força da periferia soteropolitana.
-            </p>
-            <p className="text-sm text-white/55 mb-10">
+            <p className="text-sm text-white/60 mb-11 md:mb-12">
               Nordeste · Santa Cruz · Vale das Pedrinhas · Chapada do Rio Vermelho
             </p>
 
@@ -886,28 +841,8 @@ export default function ComplexoNordesteLandingPage() {
         </div>
       </section>
 
-      {/* ── FOOTER ────────────────────────────────────────────────── */}
-      <footer className="w-full bg-card border-t border-border py-8">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-            <span className="text-lg font-bold text-foreground font-heading">
-              Achegue<span className="text-primary">-se</span>
-              <span className="text-xs text-muted-foreground ml-2 font-normal">· Complexo do Nordeste de Amaralina</span>
-            </span>
+      <LandingFooter />
 
-            <div className="flex items-center gap-6 text-sm text-muted-foreground">
-              <button onClick={() => navigate('/')} className="hover:text-primary transition-colors">Início</button>
-              <button onClick={() => navigate(moduleUrls.community)} className="hover:text-primary transition-colors">Comunidade</button>
-              <button onClick={() => navigate('/sobre')} className="hover:text-primary transition-colors">Sobre</button>
-              <button onClick={() => navigate('/privacidade')} className="hover:text-primary transition-colors">Privacidade</button>
-            </div>
-
-            <p className="text-xs text-muted-foreground">
-              © 2025 Achegue-se · Todos os direitos reservados
-            </p>
-          </div>
-        </div>
-      </footer>
     </div>
   );
 }

@@ -7,9 +7,9 @@
 import { useEffect, useRef, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { OrderService, type Order, type OrderStatus, type OrderType } from '@/modules/business/gastronomy/services/OrderService';
+import { GastronomyOrderRealtimeService } from '@/modules/business/gastronomy/services/GastronomyOrderRealtimeService';
 import { toast } from 'sonner';
 import { useSessionContext } from '@/core/session';
-import { supabase } from '@/integrations/supabase';
 import type { RealtimePostgresChangesPayload } from '@supabase/supabase-js';
 
 interface UseOrdersFilters {
@@ -86,41 +86,20 @@ export function useOrders(businessId: string, filters?: UseOrdersFilters) {
         invalidateOrders();
         return;
       }
-      const { data, error } = await supabase
-        .from('orders')
-        .select('id')
-        .eq('id', orderId)
-        .eq('source_id', businessId)
-        .maybeSingle();
-      if (error || !data?.id) return;
+      const isBusinessOrder = await GastronomyOrderRealtimeService.orderBelongsToBusiness(orderId, businessId);
+      if (!isBusinessOrder) return;
       rememberVerifiedBusinessOrderId(orderId);
       invalidateOrders();
     };
 
-    const channel = supabase
-      .channel(`gastronomy-orders:${businessId}`)
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'orders',
-          filter: `source_id=eq.${businessId}`,
-        },
-        invalidateOrders,
-      )
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'order_timeline_events',
-        },
-        invalidateOrdersFromTimeline,
-      )
-      .subscribe((status) => {
+    const channel = GastronomyOrderRealtimeService.subscribeBusinessOrders(
+      businessId,
+      invalidateOrders,
+      invalidateOrdersFromTimeline,
+      (status) => {
         setIsRealtimeConnected(status === 'SUBSCRIBED');
-      });
+      },
+    );
 
     return () => {
       if (invalidateTimerRef.current) {
@@ -128,7 +107,7 @@ export function useOrders(businessId: string, filters?: UseOrdersFilters) {
         invalidateTimerRef.current = null;
       }
       setIsRealtimeConnected(false);
-      void supabase.removeChannel(channel);
+      void GastronomyOrderRealtimeService.removeChannel(channel);
     };
   }, [businessId, queryClient]);
 

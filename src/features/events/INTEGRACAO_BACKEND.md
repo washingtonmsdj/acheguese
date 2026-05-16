@@ -1,19 +1,19 @@
-# ðŸ”Œ IntegraÃ§Ã£o com Backend - Dashboard do Organizador
+# 🔌 Integração com Backend - Dashboard do Organizador
 
 Guia completo para integrar o dashboard com Supabase e APIs.
 
-## ðŸ“‹ Ãndice
+## 📋 Índice
 
 1. [Schema do Banco de Dados](#schema-do-banco-de-dados)
 2. [Hooks Personalizados](#hooks-personalizados)
 3. [Mutations](#mutations)
 4. [Upload de Arquivos](#upload-de-arquivos)
-5. [AutenticaÃ§Ã£o](#autenticaÃ§Ã£o)
-6. [PermissÃµes](#permissÃµes)
+5. [Autenticação](#autenticação)
+6. [Permissões](#permissões)
 
 ---
 
-## ðŸ—„ï¸ Schema do Banco de Dados
+## 🗄️ Schema do Banco de Dados
 
 ### Tabela: `events`
 
@@ -22,7 +22,7 @@ CREATE TABLE events (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   organizer_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   
-  -- InformaÃ§Ãµes BÃ¡sicas
+  -- Informações Básicas
   title TEXT NOT NULL,
   slug TEXT UNIQUE NOT NULL,
   short_description TEXT NOT NULL,
@@ -45,7 +45,7 @@ CREATE TABLE events (
   is_free BOOLEAN DEFAULT true,
   capacity INTEGER DEFAULT 0,
   
-  -- MÃ­dia
+  -- Mídia
   cover_image_url TEXT,
   
   -- Detalhes
@@ -53,7 +53,7 @@ CREATE TABLE events (
   what_to_bring TEXT[],
   age_restriction TEXT,
   
-  -- Status e MÃ©tricas
+  -- Status e Métricas
   status TEXT DEFAULT 'rascunho', -- 'rascunho', 'publicado', 'cancelado', 'finalizado', 'em_andamento'
   views_count INTEGER DEFAULT 0,
   participants_count INTEGER DEFAULT 0,
@@ -174,7 +174,7 @@ CREATE INDEX idx_analytics_date ON event_analytics(date);
 
 ---
 
-## ðŸŽ£ Hooks Personalizados
+## 🎣 Hooks Personalizados
 
 ### useOrganizerEvents
 
@@ -191,7 +191,7 @@ export function useOrganizerEvents() {
     queryFn: async () => {
       const { data: { user } } = await supabase.auth.getUser();
       
-      if (!user) throw new Error('NÃ£o autenticado');
+      if (!user) throw new Error('Não autenticado');
 
       const { data, error } = await supabase
         .from('events')
@@ -277,7 +277,7 @@ export function useEventAnalytics(eventId: string, days: number = 30) {
 
 ---
 
-## ðŸ”„ Mutations
+## 🔄 Mutations
 
 ### useCreateEvent
 
@@ -318,7 +318,7 @@ export function useCreateEvent() {
     mutationFn: async (input: CreateEventInput) => {
       const { data: { user } } = await supabase.auth.getUser();
       
-      if (!user) throw new Error('NÃ£o autenticado');
+      if (!user) throw new Error('Não autenticado');
 
       const slug = generateSlug(input.title);
 
@@ -448,7 +448,7 @@ export function useCreateTicket() {
 
 ---
 
-## ðŸ“¤ Upload de Arquivos
+## 📤 Upload de Arquivos
 
 ### useUploadImage
 
@@ -472,7 +472,7 @@ export function useUploadImage() {
 
       if (uploadError) throw uploadError;
 
-      // Obter URL pÃºblica
+      // Obter URL pública
       const { data } = supabase.storage
         .from('event-images')
         .getPublicUrl(filePath);
@@ -511,7 +511,7 @@ function EventForm() {
 
 ---
 
-## ðŸ” AutenticaÃ§Ã£o
+## 🔐 Autenticação
 
 ### useAuth Hook
 
@@ -527,13 +527,13 @@ export function useAuth() {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Obter usuÃ¡rio atual
+    // Obter usuário atual
     supabase.auth.getUser().then(({ data: { user } }) => {
       setUser(user);
       setIsLoading(false);
     });
 
-    // Escutar mudanÃ§as de autenticaÃ§Ã£o
+    // Escutar mudanças de autenticação
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (_event, session) => {
         setUser(session?.user ?? null);
@@ -550,12 +550,12 @@ export function useAuth() {
 
 ---
 
-## ðŸ”’ PermissÃµes (RLS)
+## 🔒 Permissões (RLS)
 
 ### Row Level Security Policies
 
 ```sql
--- Eventos: Organizador pode ver/editar seus prÃ³prios eventos
+-- Eventos: Organizador pode ver/editar seus próprios eventos
 CREATE POLICY "Organizadores podem ver seus eventos"
   ON events FOR SELECT
   USING (auth.uid() = organizer_id);
@@ -572,8 +572,8 @@ CREATE POLICY "Organizadores podem deletar seus eventos"
   ON events FOR DELETE
   USING (auth.uid() = organizer_id);
 
--- Eventos publicados sÃ£o pÃºblicos
-CREATE POLICY "Eventos publicados sÃ£o pÃºblicos"
+-- Eventos publicados são públicos
+CREATE POLICY "Eventos publicados são públicos"
   ON events FOR SELECT
   USING (status = 'publicado');
 
@@ -602,7 +602,7 @@ CREATE POLICY "Organizadores podem gerenciar galeria"
 
 ---
 
-## ðŸ“Š Exemplo Completo de IntegraÃ§Ã£o
+## 📊 Exemplo Completo de Integração
 
 ### EventsOrganizerDashboard com Backend
 
@@ -618,7 +618,7 @@ export default function EventsOrganizerDashboard() {
     if (window.confirm('Tem certeza?')) {
       try {
         await deleteEvent.mutateAsync(eventId);
-        toast.success('Evento excluÃ­do com sucesso!');
+        toast.success('Evento excluído com sucesso!');
       } catch (error) {
         toast.error('Erro ao excluir evento');
       }
@@ -688,17 +688,17 @@ export default function EventsOrganizerForm() {
 
 ---
 
-## ðŸš€ PrÃ³ximos Passos
+## 🚀 Próximos Passos
 
-1. âœ… Implementar todos os hooks
-2. âœ… Configurar RLS no Supabase
-3. âœ… Criar bucket de storage para imagens
-4. âœ… Testar permissÃµes
-5. âœ… Adicionar tratamento de erros
-6. âœ… Implementar loading states
-7. âœ… Adicionar validaÃ§Ãµes
+1. ✅ Implementar todos os hooks
+2. ✅ Configurar RLS no Supabase
+3. ✅ Criar bucket de storage para imagens
+4. ✅ Testar permissões
+5. ✅ Adicionar tratamento de erros
+6. ✅ Implementar loading states
+7. ✅ Adicionar validações
 
 ---
 
-**Ãšltima atualizaÃ§Ã£o:** 2024
-**VersÃ£o:** 1.0.0
+**Última atualização:** 2024
+**Versão:** 1.0.0

@@ -1,34 +1,30 @@
 /**
  * AppLayoutSidebar
  *
- * Layout global unificado: sidebar completa com navegação integrada + bottom nav mobile.
+ * Layout global unificado: sidebar completa com navegação integrada + topbar + bottom nav mobile.
  * 
- * ✅ Sidebar contém: logo, território, navegação, mensagens, notificações, perfil
- * ✅ Sem topbar separada - tudo na sidebar
+ * ✅ Sidebar contém: logo, território, navegação, mensagens, notificações, perfil, tema
+ * ✅ Topbar com ações rápidas (notificações, mensagens, perfil, logout)
  * ✅ Bottom nav apenas no mobile
+ * ✅ Estrutura idêntica à Central
  */
 
 import { useEffect } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import { SidebarProvider } from '@/shared/components/ui/sidebar';
 import { AppSidebar } from './navigation/AppSidebar';
+import { AppTopbar } from './navigation/AppTopbar';
 import { BottomNav } from './BottomNav';
 import { TerritoryMismatchBanner } from '@/core/location/components/TerritoryMismatchBanner';
-import { useIsMobile } from '@/shared/hooks/use-mobile';
 import { scheduleIdleRouteWarmup } from '@/app/routes/prefetch';
-import { PublicCitySelector } from './navigation/PublicCitySelector';
 
 export function AppLayoutSidebar() {
-  const isMobile = useIsMobile();
   const { pathname } = useLocation();
   useEffect(() => {
     scheduleIdleRouteWarmup();
   }, []);
 
   const pathSegments = pathname.split('/').filter(Boolean);
-  const isCommunityTerritorialPath =
-    pathSegments[0] === 'comunidade' &&
-    pathSegments.length >= 3;
 
   // Ocultar sidebar na home e na página de perfil (que tem sua própria sidebar)
   const hideGlobalSidebar = pathname === '/' || pathname.startsWith('/conta');
@@ -38,44 +34,6 @@ export function AppLayoutSidebar() {
   const isConversationRoute =
     pathSegments[0] === 'chat' && pathSegments.length >= 2;
   const hideMobileBottomNav = isInternalGroupRoute || isConversationRoute;
-  const hideMobileCitySelector = Boolean(
-    pathname.startsWith('/conta') ||
-    pathname.startsWith('/central') ||
-    pathname.startsWith('/admin') ||
-    pathname.startsWith('/login') ||
-    pathname.startsWith('/cadastro') ||
-    pathname.startsWith('/reset-password') ||
-    pathname.startsWith('/onboarding')
-  );
-
-  if (isCommunityTerritorialPath) {
-    return (
-      <div className="h-screen w-full overflow-hidden bg-background">
-        <Outlet />
-      </div>
-    );
-  }
-
-  if (isMobile) {
-    return (
-      <div className="h-screen bg-background flex flex-col w-full overflow-hidden">
-        <TerritoryMismatchBanner />
-        {!hideMobileCitySelector ? (
-          <div className="border-b border-border px-2 py-1">
-            <PublicCitySelector />
-          </div>
-        ) : null}
-        <main
-          id="main-content"
-          className={`flex-1 overflow-y-auto ${hideMobileBottomNav ? 'pb-0' : 'pb-16'}`}
-          tabIndex={-1}
-        >
-          <Outlet />
-        </main>
-        {!hideMobileBottomNav ? <BottomNav /> : null}
-      </div>
-    );
-  }
 
   // Se deve ocultar a sidebar global, renderizar apenas o conteúdo
   if (hideGlobalSidebar) {
@@ -93,18 +51,20 @@ export function AppLayoutSidebar() {
 
   return (
     <SidebarProvider>
-      <div className="flex h-screen w-full overflow-hidden bg-background">
+      <div className="min-h-screen flex w-full bg-background">
         {/* Sidebar unificada com tudo */}
         <AppSidebar />
         
-        {/* Conteúdo principal */}
-        <main id="main-content" className="flex-1 overflow-y-auto flex flex-col min-h-0" tabIndex={-1}>
-          <TerritoryMismatchBanner />
-          <div className="flex-1 min-h-0">
+        {/* Conteúdo principal com topbar */}
+        <div className="flex-1 flex flex-col min-w-0 w-full">
+          <AppTopbar />
+          <main id="main-content" className="flex-1 p-4 md:p-6 pb-20 md:pb-6 w-full overflow-y-auto" tabIndex={-1}>
+            <TerritoryMismatchBanner />
             <Outlet />
-          </div>
-        </main>
+          </main>
+        </div>
       </div>
+      {!hideMobileBottomNav ? <BottomNav /> : null}
     </SidebarProvider>
   );
 }

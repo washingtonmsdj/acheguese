@@ -1,5 +1,5 @@
 ﻿/**
- * useMenuVariations â€” Hook para gerenciar variaÃ§Ãµes de itens
+ * useMenuVariations - Hook para gerenciar variações de itens
  *
  * SSOT: Consome MenuService do modules/business/gastronomy
  */
@@ -11,7 +11,7 @@ import { toast } from 'sonner';
 export function useMenuVariations(itemId: string) {
   const queryClient = useQueryClient();
 
-  // Query: Listar variaÃ§Ãµes
+  // Query: Listar variações
   const { data: variations, isLoading, error } = useQuery({
     queryKey: ['menu-variations', itemId],
     queryFn: async () => {
@@ -22,7 +22,7 @@ export function useMenuVariations(itemId: string) {
     enabled: !!itemId,
   });
 
-  // Mutation: Criar variaÃ§Ã£o
+  // Mutation: Criar variação
   const createMutation = useMutation({
     mutationFn: async (input: {
       name: string;
@@ -45,7 +45,7 @@ export function useMenuVariations(itemId: string) {
     },
   });
 
-  // Mutation: Deletar variaÃ§Ã£o
+  // Mutation: Deletar variação
   const deleteMutation = useMutation({
     mutationFn: async (variationId: string) => {
       const result = await MenuService.deleteVariation(variationId);
@@ -71,6 +71,5 @@ export function useMenuVariations(itemId: string) {
     isDeleting: deleteMutation.isPending,
   };
 }
-
 
 

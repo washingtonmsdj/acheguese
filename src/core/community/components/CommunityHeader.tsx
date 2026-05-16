@@ -5,17 +5,17 @@ import { CreatePostButton } from "./CreatePostButton";
 import { QuickActionButtons } from "./QuickActionButtons";
 import { useCommunityFilters } from "@/core/community/hooks/feed/useFeedFilters";
 /**
- * CabeÃ§alho da pÃ¡gina Comunidade
+ * Cabeçalho da página Comunidade
  *
  * Requirements:
- * - Requirement 1: Filtro de LocalizaÃ§Ã£o
- * - Requirement 2: RestriÃ§Ã£o de Postagem para Empresas
+ * - Requirement 1: Filtro de Localização
+ * - Requirement 2: Restrição de Postagem para Empresas
  * - Requirement 3: Criar Post
- * - Requirement 4: Modos de OrdenaÃ§Ã£o
+ * - Requirement 4: Modos de Ordenação
  *
  * Funcionalidades:
  * - Integra LocationFilter e SortSelector
- * - BotÃ£o "Criar Post" (apenas para usuÃ¡rios pessoa fÃ­sica)
+ * - Botão "Criar Post" (apenas para usuários pessoa física)
  * - Layout responsivo com sticky positioning
  */
 
@@ -34,7 +34,7 @@ export function CommunityHeader({ onOpenCreatePost }: CommunityHeaderProps) {
       <div className="w-full py-3 md:py-4 px-4">
         {/* Mobile Layout: Vertical stacking */}
         <div className="flex flex-col gap-3 md:hidden">
-          {/* TÃ­tulo e botÃ£o de create post */}
+          {/* Título e botão de create post */}
           <div className="flex items-center justify-between">
             <h1 className="text-xl font-bold">Comunidade</h1>
             <CreatePostButton onOpenModal={onOpenCreatePost} />
@@ -55,7 +55,7 @@ export function CommunityHeader({ onOpenCreatePost }: CommunityHeaderProps) {
 
         {/* Desktop Layout: Horizontal */}
         <div className="hidden md:flex md:items-center md:justify-between">
-          {/* TÃ­tulo e botÃ£o de create post */}
+          {/* Título e botão de create post */}
           <div className="flex items-center gap-4">
             <h1 className="text-2xl font-bold">Comunidade</h1>
             <CreatePostButton onOpenModal={onOpenCreatePost} />
@@ -87,7 +87,7 @@ export function CommunityHeader({ onOpenCreatePost }: CommunityHeaderProps) {
         )}
       </div>
 
-      {/* BotÃµes de AÃ§Ã£o RÃ¡pida - Formato PÃ­lula com Gradientes */}
+      {/* Botões de Ação Rápida - Formato Pílula com Gradientes */}
       <QuickActionButtons />
     </div>
   );

@@ -1,10 +1,10 @@
 ﻿/**
- * useComunidadePage - Hook principal da pÃ¡gina de comunidade
+ * useComunidadePage - Hook principal da página de comunidade
  * 
  * âœ… SSOT - Usa Services via hooks especializados
  * âœ… Performance - Callbacks memoizados
  * âœ… Type Safety - Interfaces tipadas
- * âœ… Geographic Foundation - Integrado com fundaÃ§Ã£o geogrÃ¡fica
+ * Geographic Foundation - Integrado com fundação geográfica
  */
 
 import { useState, useCallback } from "react";
@@ -110,7 +110,7 @@ export function useComunidadePage() {
   const { effectiveProfile } = useMultiProfileContext();
   const profile = toCommunityActorProfile(effectiveProfile ?? sessionProfile);
   
-  // IntegraÃ§Ã£o com fundaÃ§Ã£o geogrÃ¡fica
+  // Integração com fundação geográfica
   const communityLocation = useCommunityLocation();
 
   const postId = searchParams.get("post");
@@ -120,7 +120,7 @@ export function useComunidadePage() {
     const hasProfileLocation = Boolean(profile?.locationId ?? profile?.location_id);
     const canCreatePost = communityLocation.canCreateContent || hasProfileLocation;
 
-    // Verificar se pode criar conteÃºdo
+    // Verificar se pode criar conteúdo
     if (!canCreatePost) {
       toast.error("Selecione uma localizacao no filtro ou atualize seu bairro no perfil");
       return;
@@ -250,8 +250,7 @@ export function useComunidadePage() {
     deletePostDialogOpen: Boolean(deletePostId),
     isDeletingPost: isDeleting,
     
-    // IntegraÃ§Ã£o com fundaÃ§Ã£o geogrÃ¡fica
+    // Integração com fundação geográfica
     communityLocation,
   };
 }
-

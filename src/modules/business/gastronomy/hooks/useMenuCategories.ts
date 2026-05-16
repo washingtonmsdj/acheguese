@@ -1,5 +1,5 @@
-﻿/**
- * useMenuCategories â€” Hook para gerenciar categorias do cardÃ¡pio
+/**
+ * useMenuCategories — Hook para gerenciar categorias do cardápio
  *
  * SSOT: Consome MenuService do modules/business/gastronomy
  */

@@ -9,7 +9,7 @@ import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import { Textarea } from "@/shared/components/ui/textarea";
 import { Label } from "@/shared/components/ui/label";
-import { useAppUrls } from "@/core/routing/hooks"; // âœ… SSOT URLs
+import { useAppUrls } from "@/core/routing/hooks"; // ✅ SSOT URLs
 import {
   Select,
   SelectContent,
@@ -37,28 +37,28 @@ import {
   type NovoAchadoPerdidoInput,
 } from "@/shared/validation/schemas/lostfound.schema";
 const CATEGORIAS = [
-  { id: "animal", label: "Animal perdido", icon: "ðŸ¾" },
-  { id: "celular", label: "Celular", icon: "ðŸ“±" },
-  { id: "documentos", label: "Documentos", icon: "ðŸ“„" },
-  { id: "chaves", label: "Chaves", icon: "ðŸ”‘" },
-  { id: "carteira", label: "Carteira", icon: "ðŸ‘›" },
-  { id: "objetos", label: "Objetos diversos", icon: "ðŸ“¦" },
-  { id: "outro", label: "Outro", icon: "â“" },
+  { id: "animal", label: "Animal perdido", icon: "🐾" },
+  { id: "celular", label: "Celular", icon: "📱" },
+  { id: "documentos", label: "Documentos", icon: "📄" },
+  { id: "chaves", label: "Chaves", icon: "🔑" },
+  { id: "carteira", label: "Carteira", icon: "👛" },
+  { id: "objetos", label: "Objetos diversos", icon: "📦" },
+  { id: "outro", label: "Outro", icon: "❓" },
 ];
 
 const BAIRROS = [
   "Nova Holanda",
-  "Parque UniÃ£o",
+  "Parque União",
   "Rubens Vaz",
-  "Parque MarÃ©",
+  "Parque Maré",
   "Baixa do Sapateiro",
   "Morro do Timbau",
   "Parque Roquete Pinto",
   "Praia de Ramos",
-  "Conjunto EsperanÃ§a",
-  "Vila do JoÃ£o",
+  "Conjunto Esperança",
+  "Vila do João",
   "Salsa e Merengue",
-  "MarcÃ­lio Dias",
+  "Marcílio Dias",
   "Bento Ribeiro Dantas",
   "Conjunto Pinheiros",
   "Vila dos Pinheiros",
@@ -67,7 +67,7 @@ const BAIRROS = [
 
 export default function NovoAchadoPerdidoPage() {
   const navigate = useNavigate();
-  const appUrls = useAppUrls(); // âœ… SSOT URLs
+  const appUrls = useAppUrls(); // ✅ SSOT URLs
   const { toast } = useToast();
   const { user } = useAuth();
   const { homeDistrict, loading: territoryLoading } = useUserTerritory();
@@ -115,8 +115,8 @@ export default function NovoAchadoPerdidoPage() {
 
   const onValid = async (data: NovoAchadoPerdidoInput) => {
     if (!user) {
-      toast({ title: "FaÃ§a login para publicar", variant: "destructive" });
-      navigate(appUrls.auth.login); // âœ… SSOT
+      toast({ title: "Faça login para publicar", variant: "destructive" });
+      navigate(appUrls.auth.login); // ✅ SSOT
       return;
     }
 
@@ -135,7 +135,7 @@ export default function NovoAchadoPerdidoPage() {
         photoUrl = result.url;
       }
 
-      // âœ… SSOT: Usar LostFoundService para criar post
+      // ✅ SSOT: Usar LostFoundService para criar post
       const result = await lostFoundService.createPost({
         autor_id: user.id,
         tipo: data.tipo === "encontrado" ? "achado" : data.tipo,
@@ -150,7 +150,7 @@ export default function NovoAchadoPerdidoPage() {
       });
 
       if (!result) throw new Error("Erro ao criar post");
-      toast({ title: "PublicaÃ§Ã£o criada!" });
+      toast({ title: "Publicação criada!" });
       navigate(`/achados-perdidos/${result.id}`);
     } catch {
       toast({ title: "Erro ao publicar", variant: "destructive" });
@@ -190,7 +190,7 @@ export default function NovoAchadoPerdidoPage() {
                       : "border-border bg-card hover:bg-secondary/50",
                   )}
                 >
-                  <span className="text-3xl">ðŸ˜¢</span>
+                  <span className="text-3xl">😢</span>
                   <span className="text-sm font-bold">Perdi algo</span>
                   <span className="text-[10px] text-muted-foreground">
                     Preciso de ajuda para encontrar
@@ -206,7 +206,7 @@ export default function NovoAchadoPerdidoPage() {
                       : "border-border bg-card hover:bg-secondary/50",
                   )}
                 >
-                  <span className="text-3xl">ðŸ¤—</span>
+                  <span className="text-3xl">🤗</span>
                   <span className="text-sm font-bold">Encontrei algo</span>
                   <span className="text-[10px] text-muted-foreground">
                     Quero devolver ao dono
@@ -275,9 +275,9 @@ export default function NovoAchadoPerdidoPage() {
           </label>
         </div>
 
-        {/* TÃ­tulo */}
+        {/* Título */}
         <div className="space-y-1.5">
-          <Label>TÃ­tulo *</Label>
+          <Label>Título *</Label>
           <Input
             {...register("titulo")}
             placeholder="Ex: Cachorro perdido na Nova Holanda"
@@ -286,12 +286,12 @@ export default function NovoAchadoPerdidoPage() {
           <InlineFieldError message={errors.titulo?.message} />
         </div>
 
-        {/* DescriÃ§Ã£o */}
+        {/* Descrição */}
         <div className="space-y-1.5">
-          <Label>DescriÃ§Ã£o</Label>
+          <Label>Descrição</Label>
           <Textarea
             {...register("description")}
-            placeholder="Descreva o item com o mÃ¡ximo de detalhes: cor, tamanho, caracterÃ­sticas..."
+            placeholder="Descreva o item com o máximo de detalhes: cor, tamanho, características..."
             rows={3}
             maxLength={1000}
           />
@@ -321,15 +321,15 @@ export default function NovoAchadoPerdidoPage() {
           />
         </div>
 
-        {/* LocalizaÃ§Ã£o aprox */}
+        {/* Localização aprox */}
         <div className="space-y-1.5">
-          <Label>LocalizaÃ§Ã£o aproximada</Label>
-          <Input {...register("localizacaoAprox")} placeholder="Ex: Perto da praÃ§a principal" />
+          <Label>Localização aproximada</Label>
+          <Input {...register("localizacaoAprox")} placeholder="Ex: Perto da praça principal" />
         </div>
 
-        {/* LocalizaÃ§Ã£o Exata no Mapa */}
+        {/* Localização Exata no Mapa */}
         <div className="space-y-2">
-          <Label>LocalizaÃ§Ã£o Exata (Opcional)</Label>
+          <Label>Localização Exata (Opcional)</Label>
           <p className="text-xs text-muted-foreground mb-2">
             Marque no mapa o ponto exato onde{" "}
             {watchTipo === "perdido" ? "perdeu" : "encontrou"} o item. Isso
@@ -343,7 +343,7 @@ export default function NovoAchadoPerdidoPage() {
           >
             <MapPin className="h-4 w-4 mr-2" />
             {watchLatitude && watchLongitude
-              ? `ðŸ“ LocalizaÃ§Ã£o marcada (${watchLatitude.toFixed(4)}, ${watchLongitude.toFixed(4)})`
+              ? `📍 Localização marcada (${watchLatitude.toFixed(4)}, ${watchLongitude.toFixed(4)})`
               : "Marcar no Mapa"}
           </Button>
           {watchLatitude && watchLongitude && (
@@ -357,7 +357,7 @@ export default function NovoAchadoPerdidoPage() {
                 setValue("longitude", null);
               }}
             >
-              Remover localizaÃ§Ã£o
+              Remover localização
             </Button>
           )}
         </div>

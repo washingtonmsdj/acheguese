@@ -1,8 +1,8 @@
-# âš¡ Quick Start - Events V2
+# ⚡ Quick Start - Events V2
 
-## ðŸŽ¯ Acesso RÃ¡pido em 3 Passos
+## 🎯 Acesso Rápido em 3 Passos
 
-### 1ï¸âƒ£ Adicionar Rota
+### 1️⃣ Adicionar Rota
 
 Abra o arquivo de rotas (ex: `src/app/routes/index.tsx`) e adicione:
 
@@ -16,13 +16,13 @@ import EventDetailPageV2 from '@/features/events-v2/pages/EventDetailPageV2';
 }
 ```
 
-### 2ï¸âƒ£ Iniciar o Servidor
+### 2️⃣ Iniciar o Servidor
 
 ```bash
 npm run dev
 ```
 
-### 3ï¸âƒ£ Acessar
+### 3️⃣ Acessar
 
 Abra no navegador:
 
@@ -30,20 +30,20 @@ Abra no navegador:
 http://localhost:5173/eventos/demo
 ```
 
-## ðŸŽ¨ O que vocÃª vai ver
+## 🎨 O que você vai ver
 
-âœ… **Hero Premium** - Banner full-width com overlay e informaÃ§Ãµes destacadas  
-âœ… **Sistema de Ingressos** - Cards interativos com progress bars  
-âœ… **DescriÃ§Ã£o Rica** - ConteÃºdo formatado com features do evento  
-âœ… **ProgramaÃ§Ã£o** - Timeline visual com horÃ¡rios  
-âœ… **LocalizaÃ§Ã£o** - Mapa e instruÃ§Ãµes de acesso  
-âœ… **Organizador** - Perfil completo com estatÃ­sticas  
-âœ… **CTA Sticky** - Call-to-action sempre visÃ­vel  
-âœ… **AnimaÃ§Ãµes** - Framer Motion em todos os elementos  
-âœ… **Responsivo** - Teste em mobile, tablet e desktop  
-âœ… **Dark Mode** - Alterne o tema e veja a adaptaÃ§Ã£o  
+✅ **Hero Premium** - Banner full-width com overlay e informações destacadas  
+✅ **Sistema de Ingressos** - Cards interativos com progress bars  
+✅ **Descrição Rica** - Conteúdo formatado com features do evento  
+✅ **Programação** - Timeline visual com horários  
+✅ **Localização** - Mapa e instruções de acesso  
+✅ **Organizador** - Perfil completo com estatísticas  
+✅ **CTA Sticky** - Call-to-action sempre visível  
+✅ **Animações** - Framer Motion em todos os elementos  
+✅ **Responsivo** - Teste em mobile, tablet e desktop  
+✅ **Dark Mode** - Alterne o tema e veja a adaptação  
 
-## ðŸ“± Teste em Diferentes Dispositivos
+## 📱 Teste em Diferentes Dispositivos
 
 ### Desktop
 - Abra em tela cheia
@@ -60,16 +60,16 @@ http://localhost:5173/eventos/demo
 - Valide scroll vertical
 - Teste CTA sticky
 
-## ðŸŽ­ Dados de DemonstraÃ§Ã£o
+## 🎭 Dados de Demonstração
 
-A pÃ¡gina usa dados mock realistas:
+A página usa dados mock realistas:
 
-- **Evento 1**: Roda de Samba (Presencial, HÃ­brido - Gratuito + Pago)
-- **Evento 2**: Workshop Digital (HÃ­brido, Gratuito)
+- **Evento 1**: Roda de Samba (Presencial, Híbrido - Gratuito + Pago)
+- **Evento 2**: Workshop Digital (Híbrido, Gratuito)
 
 Para ver outros eventos, edite `src/features/events-v2/utils/mockData.ts`
 
-## ðŸ”§ CustomizaÃ§Ã£o RÃ¡pida
+## 🔧 Customização Rápida
 
 ### Alterar Evento Exibido
 
@@ -103,58 +103,58 @@ Os componentes usam o design system. Para customizar:
 </Button>
 ```
 
-## ðŸ› Problemas Comuns
+## 🐛 Problemas Comuns
 
-### Rota nÃ£o funciona
+### Rota não funciona
 
-**SoluÃ§Ã£o**: Verifique se adicionou corretamente no arquivo de rotas e reiniciou o servidor.
+**Solução**: Verifique se adicionou corretamente no arquivo de rotas e reiniciou o servidor.
 
-### Estilos nÃ£o aparecem
+### Estilos não aparecem
 
-**SoluÃ§Ã£o**: Verifique se o Tailwind estÃ¡ configurado para incluir `src/features/**` no `content`.
+**Solução**: Verifique se o Tailwind está configurado para incluir `src/features/**` no `content`.
 
-### Imagens nÃ£o carregam
+### Imagens não carregam
 
-**SoluÃ§Ã£o**: Os mocks usam Unsplash. Verifique sua conexÃ£o com internet.
+**Solução**: Os mocks usam Unsplash. Verifique sua conexão com internet.
 
-### Tipos nÃ£o reconhecidos
+### Tipos não reconhecidos
 
-**SoluÃ§Ã£o**: Reinicie o TypeScript server no VS Code (Cmd/Ctrl + Shift + P â†’ "Restart TS Server").
+**Solução**: Reinicie o TypeScript server no VS Code (Cmd/Ctrl + Shift + P → "Restart TS Server").
 
-## ðŸ“š PrÃ³ximos Passos
+## 📚 Próximos Passos
 
-ApÃ³s validar visualmente:
+Após validar visualmente:
 
-1. âœ… **Feedback**: Anote melhorias e ajustes necessÃ¡rios
-2. ðŸ“ **Backend**: Conecte com dados reais (ver `IMPLEMENTATION_GUIDE.md`)
-3. ðŸ§ª **Testes**: Adicione testes unitÃ¡rios e E2E
-4. ðŸš€ **Deploy**: Configure feature flag e faÃ§a rollout gradual
+1. ✅ **Feedback**: Anote melhorias e ajustes necessários
+2. 📝 **Backend**: Conecte com dados reais (ver `IMPLEMENTATION_GUIDE.md`)
+3. 🧪 **Testes**: Adicione testes unitários e E2E
+4. 🚀 **Deploy**: Configure feature flag e faça rollout gradual
 
-## ðŸ“– DocumentaÃ§Ã£o Completa
+## 📖 Documentação Completa
 
-- **README.md** - VisÃ£o geral e features
-- **IMPLEMENTATION_GUIDE.md** - Guia detalhado de implementaÃ§Ã£o
+- **README.md** - Visão geral e features
+- **IMPLEMENTATION_GUIDE.md** - Guia detalhado de implementação
 - **SUMMARY.md** - Resumo executivo
 - **demo-route.example.tsx** - Exemplos de rotas
 
-## ðŸ’¬ Feedback
+## 💬 Feedback
 
 Ao testar, considere:
 
-- âœ… Design estÃ¡ profissional?
-- âœ… InformaÃ§Ãµes estÃ£o claras?
-- âœ… NavegaÃ§Ã£o Ã© intuitiva?
-- âœ… CTAs sÃ£o evidentes?
-- âœ… Mobile estÃ¡ otimizado?
-- âœ… AnimaÃ§Ãµes sÃ£o suaves?
-- âœ… Performance Ã© boa?
+- ✅ Design está profissional?
+- ✅ Informações estão claras?
+- ✅ Navegação é intuitiva?
+- ✅ CTAs são evidentes?
+- ✅ Mobile está otimizado?
+- ✅ Animações são suaves?
+- ✅ Performance é boa?
 
-## ðŸŽ‰ Pronto!
+## 🎉 Pronto!
 
-VocÃª agora tem acesso Ã  V2 completa dos eventos!
+Você agora tem acesso à V2 completa dos eventos!
 
-Explore, teste e valide a nova experiÃªncia premium. ðŸš€
+Explore, teste e valide a nova experiência premium. 🚀
 
 ---
 
-**DÃºvidas?** Consulte os arquivos de documentaÃ§Ã£o na pasta `src/features/events-v2/`
+**Dúvidas?** Consulte os arquivos de documentação na pasta `src/features/events-v2/`

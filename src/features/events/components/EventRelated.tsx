@@ -1,5 +1,5 @@
 /**
- * �x}� EVENT RELATED
+ * EVENT RELATED
  * 
  * Seção de eventos relacionados/similares
  * Baseado em categoria e localização

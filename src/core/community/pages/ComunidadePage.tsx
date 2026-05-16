@@ -10,10 +10,7 @@
 import React, { lazy, Suspense, useCallback } from "react";
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import {
-  AlertTriangle,
   LayoutList,
-  MapPin,
-  MessageSquare,
   Users,
 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
@@ -46,39 +43,12 @@ import { buildCommunityTabUrlFromPath } from "@/core/routing/utils/territoryUrls
 const GruposPage = lazy(() => import("./GruposPage"));
 
 type CommunityTab = "feed" | "grupos";
-type FeedView = "posts" | "alerts" | "issues" | "all";
 
 const TABS: { id: CommunityTab; label: string; icon: React.ElementType }[] = [
   { id: "feed",   label: "Feed",   icon: LayoutList },
   { id: "grupos", label: "Grupos", icon: Users },
 ];
 
-const FEED_VIEWS: { id: FeedView; label: string; description: string; icon: React.ElementType }[] = [
-  {
-    id: "posts",
-    label: "Publicacoes",
-    description: "Moradores e empresas",
-    icon: MessageSquare,
-  },
-  {
-    id: "alerts",
-    label: "Alertas",
-    description: "Urgente e validado",
-    icon: AlertTriangle,
-  },
-  {
-    id: "issues",
-    label: "Problemas",
-    description: "Zeladoria local",
-    icon: MapPin,
-  },
-  {
-    id: "all",
-    label: "Tudo",
-    description: "Fluxo completo",
-    icon: LayoutList,
-  },
-];
 
 interface ComunidadePageProps {
   resolved?: ResolvedTerritory;
@@ -94,7 +64,6 @@ export default function ComunidadePage({ resolved }: ComunidadePageProps) {
       ? "feed"
       : null;
   const activeTab = routeTab ?? ((searchParams.get("tab") as CommunityTab) || "feed");
-  const [feedView, setFeedView] = React.useState<FeedView>("posts");
   const [showBanner, setShowBanner] = React.useState(true);
   const appUrls = useAppUrls(resolved); // ✅ SSOT URLs com contexto territorial
   const territoryFilter = useTerritoryFilter(resolved);
@@ -341,99 +310,47 @@ export default function ComunidadePage({ resolved }: ComunidadePageProps) {
                 />
               )}
 
-              <section className="mb-5 rounded-2xl border border-white/10 bg-white/[0.035] p-4 shadow-2xl shadow-black/10 md:p-5" aria-label="Publicar no feed">
-                <div className="flex min-w-0 flex-col gap-4 md:flex-row md:items-center md:justify-between">
-                  <div className="min-w-0">
-                    <p className="text-xs font-semibold uppercase tracking-wide text-teal-300">Feed da comunidade</p>
-                    <h2 className="break-words text-2xl font-semibold text-white">O que esta acontecendo no Complexo</h2>
-                    <p className="mt-1 max-w-2xl text-sm leading-relaxed text-gray-400">
-                      Publicacoes de moradores, empresas locais, pedidos, indicacoes e conversas do dia a dia.
-                    </p>
-                  </div>
-                  <Button
-                    onClick={handleOpenCreatePost}
-                    className="h-auto min-h-10 w-full whitespace-normal bg-teal-500 px-5 py-2 font-semibold text-white hover:bg-teal-400 md:w-auto"
-                  >
-                    Publicar no feed
-                  </Button>
-                </div>
+              <LocationScopeCards
+                city={homeCity?.name}
+                neighborhood={homeDistrict?.name}
+                street={primaryStreet}
+                streetAvailable={hasPrimaryStreet}
+                currentScope={immediateFilters.locationScope}
+                onScopeChange={handleScopeChange}
+              />
+              <CommunityFeed
+                currentUserId={profile?.id}
+                onPostClick={handlePostClick}
+                onCommentClick={handleCommentClick}
+                onTagClick={handleTagClick}
+                onOpenCreatePost={handleOpenCreatePost}
+                onOpenAlertModal={handleOpenAlertModal}
+                onOpenIssueModal={handleOpenIssueModal}
+                onDeletePost={handleDeletePost}
+                onEditPost={handleEditPost}
+                onReportClick={handleReportClick}
+                locationScope={immediateFilters.locationScope}
+                territoryFilter={communityTerritoryFilter}
+              />
 
-                <div className="mt-4 grid min-w-0 grid-cols-1 gap-2 min-[360px]:grid-cols-2 xl:grid-cols-4" role="tablist" aria-label="Filtros do feed">
-                  {FEED_VIEWS.map(({ id, label, description, icon: Icon }) => (
-                    <button
-                      key={id}
-                      type="button"
-                      role="tab"
-                      aria-selected={feedView === id}
-                      onClick={() => setFeedView(id)}
-                      className={cn(
-                        "flex min-h-16 min-w-0 items-center gap-3 rounded-xl border px-3 py-3 text-left transition-colors focus:outline-none focus:ring-2 focus:ring-teal-400/60",
-                        feedView === id
-                          ? "border-teal-300/50 bg-teal-300/15 text-white"
-                          : "border-white/10 bg-black/20 text-white/70 hover:border-teal-400/40 hover:bg-teal-400/10 hover:text-white",
-                      )}
-                    >
-                      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-white/10 text-teal-300">
-                        <Icon className="h-4 w-4" aria-hidden="true" />
-                      </span>
-                      <span className="min-w-0">
-                        <span className="block truncate text-sm font-semibold">{label}</span>
-                        <span className="mt-0.5 block truncate text-xs text-white/45">{description}</span>
-                      </span>
-                    </button>
-                  ))}
-                </div>
-              </section>
+              <div className="rounded-2xl border border-red-400/20 bg-red-400/[0.04] p-4 md:p-5">
+                <AlertFeedSection
+                  territoryFilter={communityTerritoryFilter}
+                  city={homeCity?.name}
+                  neighborhood={homeDistrict?.name}
+                  locationId={issueLocationId}
+                />
+              </div>
 
-              {(feedView === "posts" || feedView === "all") && (
-                <>
-                  <LocationScopeCards
-                    city={homeCity?.name}
-                    neighborhood={homeDistrict?.name}
-                    street={primaryStreet}
-                    streetAvailable={hasPrimaryStreet}
-                    currentScope={immediateFilters.locationScope}
-                    onScopeChange={handleScopeChange}
-                  />
-                  <CommunityFeed
-                    currentUserId={profile?.id}
-                    onPostClick={handlePostClick}
-                    onCommentClick={handleCommentClick}
-                    onTagClick={handleTagClick}
-                    onOpenCreatePost={handleOpenCreatePost}
-                    onOpenAlertModal={handleOpenAlertModal}
-                    onOpenIssueModal={handleOpenIssueModal}
-                    onDeletePost={handleDeletePost}
-                    onEditPost={handleEditPost}
-                    onReportClick={handleReportClick}
-                    locationScope={immediateFilters.locationScope}
-                    territoryFilter={communityTerritoryFilter}
-                  />
-                </>
-              )}
-
-              {(feedView === "alerts" || feedView === "all") && (
-                <div className="rounded-2xl border border-red-400/20 bg-red-400/[0.04] p-4 md:p-5">
-                  <AlertFeedSection
-                    territoryFilter={communityTerritoryFilter}
-                    city={homeCity?.name}
-                    neighborhood={homeDistrict?.name}
-                    locationId={issueLocationId}
-                  />
-                </div>
-              )}
-
-              {(feedView === "issues" || feedView === "all") && (
-                <div className="rounded-2xl border border-amber-400/20 bg-amber-400/[0.04] p-4 md:p-5">
-                  <IssueFeedSection
-                    territoryFilter={communityTerritoryFilter}
-                    city={homeCity?.name}
-                    neighborhood={homeDistrict?.name}
-                    locationId={homeDistrict?.id}
-                    profileId={profile.id}
-                  />
-                </div>
-              )}
+              <div className="rounded-2xl border border-amber-400/20 bg-amber-400/[0.04] p-4 md:p-5">
+                <IssueFeedSection
+                  territoryFilter={communityTerritoryFilter}
+                  city={homeCity?.name}
+                  neighborhood={homeDistrict?.name}
+                  locationId={homeDistrict?.id}
+                  profileId={profile.id}
+                />
+              </div>
 
 
 

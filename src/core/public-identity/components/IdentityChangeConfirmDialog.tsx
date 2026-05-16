@@ -42,6 +42,11 @@ const DIALOG_CONFIG: Record<EntityType, { title: string; description: string }> 
     description:
       'Você está alterando o link público profissional. Links antigos podem deixar de funcionar. Revise bem antes de confirmar.',
   },
+  communication_channel: {
+    title: 'Confirmar alteracao de link publico',
+    description:
+      'Voce esta alterando o link publico do canal de comunicacao. Revise antes de confirmar para preservar confiabilidade territorial.',
+  },
 };
 
 export function IdentityChangeConfirmDialog({
@@ -57,7 +62,9 @@ export function IdentityChangeConfirmDialog({
       ? DIALOG_CONFIG.business
       : entityType === 'profile'
         ? DIALOG_CONFIG.profile
-        : DIALOG_CONFIG.professional;
+        : entityType === 'professional'
+          ? DIALOG_CONFIG.professional
+          : DIALOG_CONFIG.communication_channel;
 
   useEffect(() => {
     if (open) {

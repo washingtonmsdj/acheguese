@@ -8,10 +8,10 @@ import { useModeration } from "../hooks/useModeration";
 import { ReportReason } from "@/core/community/types";
 import { INLINE_STYLES } from "./styles/communityDesignSystem";
 /**
- * AÃ§Ãµes do post (curtir, comentar, save, compartilhar, denunciar)
+ * Ações do post (curtir, comentar, save, compartilhar, denunciar)
  *
  * Design System:
- * - BotÃµes com texto em cinza claro (#A0AEC0)
+ * - Botões com texto em cinza claro (#A0AEC0)
  * - Hover com destaque
  */
 

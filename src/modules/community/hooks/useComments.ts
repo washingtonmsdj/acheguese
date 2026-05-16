@@ -40,7 +40,7 @@ function mapRawComment(raw: RawComment): Comment {
     id: raw.id,
     post_id: raw.post_id,
     author_profile_id: raw.author_profile_id || raw.profile_id || "",
-    author_name: raw.profile?.name || "Usu·rio",
+    author_name: raw.profile?.name || "Usu√°rio",
     author_avatar: raw.profile?.avatar_url ?? undefined,
     content: raw.content,
     parent_id: raw.parent_id,
@@ -67,7 +67,7 @@ export function useComments(postId: string | null, _userId?: string) {
       return formattedComments;
     } catch (error) {
       logger.error("Error fetching comments:", error);
-      toast.error("Erro ao carregar coment·rios");
+      toast.error("Erro ao carregar coment√°rios");
       return [];
     } finally {
       setLoading(false);

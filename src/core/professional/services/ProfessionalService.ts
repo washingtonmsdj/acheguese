@@ -706,7 +706,7 @@ export class ProfessionalService {
         : await this.generateUniqueSlug(validatedInput.name);
 
       if (!validatedInput.location_id) {
-        throw new Error("location_id Ã© obrigatÃ³rio para cadastrar profissional.");
+        throw new Error("location_id é obrigatório para cadastrar profissional.");
       }
 
       // 1. Criar profile usando ProfileService (MIGRADO)
@@ -801,7 +801,7 @@ export class ProfessionalService {
         .maybeSingle();
 
       if (currentError) throw currentError;
-      if (!currentProfessional) throw new Error("Profissional nÃ£o encontrado");
+      if (!currentProfessional) throw new Error("Profissional não encontrado");
 
       // Converter input para formato do professional_data
       const professionalData = this.toProfessionalData(validatedInput, {
@@ -837,7 +837,7 @@ export class ProfessionalService {
 
         if (!cooldown.canChange) {
           throw new Error(
-            `NÃ£o Ã© possÃ­vel alterar o slug do profissional agora. Aguarde ${cooldown.daysRemaining || 0} dia(s).`,
+            `Não é possível alterar o slug do profissional agora. Aguarde ${cooldown.daysRemaining || 0} dia(s).`,
           );
         }
 
@@ -850,8 +850,8 @@ export class ProfessionalService {
         if (availability.status !== "available") {
           throw new Error(
             availability.message ||
-              `Slug "${validatedInput.slug}" nÃ£o estÃ¡ disponÃ­vel.` +
-                (availability.suggestion ? ` SugestÃ£o: ${availability.suggestion}` : ""),
+              `Slug "${validatedInput.slug}" não está disponível.` +
+                (availability.suggestion ? ` Sugestão: ${availability.suggestion}` : ""),
           );
         }
 
@@ -895,7 +895,7 @@ export class ProfessionalService {
         .maybeSingle();
 
       if (resolveError) throw resolveError;
-      if (!professional) throw new Error("Profissional nÃ£o encontrado");
+      if (!professional) throw new Error("Profissional não encontrado");
       // Soft delete: marcar como inativo ao invés de remover
       const { error } = await (supabase as any)
         .from("professional_data")
@@ -1342,8 +1342,8 @@ export class ProfessionalService {
     if (availability.status !== "available") {
       throw new Error(
         availability.message ||
-          `Slug "${normalizedSlug}" nÃ£o estÃ¡ disponÃ­vel.` +
-            (availability.suggestion ? ` SugestÃ£o: ${availability.suggestion}` : ""),
+          `Slug "${normalizedSlug}" não está disponível.` +
+            (availability.suggestion ? ` Sugestão: ${availability.suggestion}` : ""),
       );
     }
 
@@ -1371,7 +1371,7 @@ export class ProfessionalService {
           : `${baseSlug}-${attempt + 1}`;
     }
 
-    throw new Error("NÃ£o foi possÃ­vel gerar um slug profissional disponÃ­vel.");
+    throw new Error("Não foi possível gerar um slug profissional disponível.");
   }
 
   private static _generateProfessionalUsername(name: string): string {

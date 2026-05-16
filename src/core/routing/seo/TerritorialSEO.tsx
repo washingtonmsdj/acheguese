@@ -1,15 +1,15 @@
-﻿/**
+/**
  * TerritorialSEO
  *
  * Componente React que aplica os metadados SEO territoriais via react-helmet-async.
- * Usa buildTerritorialMetadata() como Ãºnica fonte de verdade.
+ * Usa buildTerritorialMetadata() como única fonte de verdade.
  *
  * Melhorias v2:
  * - Structured Data (JSON-LD) para LocalBusiness e Place
  * - Meta tags adicionais (geo, author, etc)
  * - Breadcrumb structured data
  *
- * Uso: renderizar dentro de TerritorialLayout, apÃ³s o territÃ³rio estar resolvido.
+ * Uso: renderizar dentro de TerritorialLayout, após o território estar resolvido.
  */
 
 import { Helmet } from 'react-helmet-async';
@@ -22,14 +22,14 @@ import { resolveSeoPolicy } from './territorialSeoPolicy';
 
 interface TerritorialSEOProps {
   resolved: ResolvedTerritory;
-  /** URL base do territÃ³rio, ex: /ba/salvador/complexo-... */
+  /** URL base do território, ex: /ba/salvador/complexo-... */
   baseUrl: string;
 }
 
 /**
- * Extrai o mÃ³dulo atual a partir do pathname.
- * /ba/salvador/complexo.../community â†’ 'community'
- * /ba/salvador/complexo-...          â†’ null (landing hub)
+ * Extrai o módulo atual a partir do pathname.
+ * /ba/salvador/complexo.../community -> 'community'
+ * /ba/salvador/complexo-...          -> null (landing hub)
  */
 function resolveCurrentModule(pathname: string, baseUrl: string): ModuleSlug | null {
   const suffix = pathname.replace(baseUrl, '').replace(/^\//, '');
@@ -41,19 +41,19 @@ function resolveCurrentModule(pathname: string, baseUrl: string): ModuleSlug | n
 }
 
 /**
- * Gera structured data (JSON-LD) para o territÃ³rio
+ * Gera structured data (JSON-LD) para o território
  */
 function generateStructuredData(resolved: ResolvedTerritory, canonicalUrl: string, module: ModuleSlug | null) {
   const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'https://acheguese.com.br';
   
-  // Place schema para territÃ³rio
+  // Place schema para território
   const placeSchema = {
     '@context': 'https://schema.org',
     '@type': 'Place',
     name: resolved.kind === 'location' ? resolved.location.name : resolved.group.name,
     description: resolved.kind === 'location' 
-      ? `InformaÃ§Ãµes, serviÃ§os e comunidade de ${resolved.location.name}`
-      : `InformaÃ§Ãµes, serviÃ§os e comunidade do ${resolved.group.name}`,
+      ? `Informações, serviços e comunidade de ${resolved.location.name}`
+      : `Informações, serviços e comunidade do ${resolved.group.name}`,
     address: {
       '@type': 'PostalAddress',
       addressLocality: resolved.kind === 'location' 
@@ -94,7 +94,7 @@ function generateStructuredData(resolved: ResolvedTerritory, canonicalUrl: strin
     '@context': 'https://schema.org',
     '@type': 'WebSite',
     name: 'Achegue-se',
-    description: 'Plataforma hiperlocal de serviÃ§os e comunidade',
+    description: 'Plataforma hiperlocal de serviços e comunidade',
     url: baseUrl,
     potentialAction: {
       '@type': 'SearchAction',
@@ -138,7 +138,7 @@ export function TerritorialSEO({ resolved, baseUrl }: TerritorialSEOProps) {
 
   const structuredData = generateStructuredData(resolved, canonicalPath, module);
 
-  // Geo tags para localizaÃ§Ã£o
+  // Geo tags para localização
   const geoTags = resolved.kind === 'location' && 
     (resolved.location.metadata?.latitude as number) && 
     (resolved.location.metadata?.longitude as number) ? {

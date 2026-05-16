@@ -49,16 +49,16 @@ export function PricingRulesList({
       
       // Detectar conflito via tipo de erro
       if (err instanceof PricingError && err.isConflict()) {
-        toast.error("Conflito: jÃ¡ existe regra ativa para este modo");
+        toast.error("Conflito: já existe regra ativa para este modo");
       } else if (errorMessage.includes('Conflito') || errorMessage.includes('conflito')) {
-        toast.error("NÃ£o Ã© possÃ­vel desativar a Ãºnica regra ativa desta modalidade");
+        toast.error("Não é possível desativar a única regra ativa desta modalidade");
       } else if (
         typeof err === "object" &&
         err !== null &&
         "code" in err &&
         (err as { code?: string }).code === "23514"
       ) {
-        toast.error("NÃ£o Ã© possÃ­vel desativar a Ãºnica regra ativa desta modalidade");
+        toast.error("Não é possível desativar a única regra ativa desta modalidade");
       } else {
         toast.error(errorMessage || "Erro ao alterar regra");
       }
@@ -99,7 +99,7 @@ export function PricingRulesList({
               <h3 className="font-semibold text-foreground capitalize">
                 {mode === "ride" && "Corrida"}
                 {mode === "delivery" && "Entrega"}
-                {mode === "mototaxi" && "MototÃ¡xi"}
+                {mode === "mototaxi" && "Mototáxi"}
                 {mode === "motoboy" && "Motoboy"}
                 {!["ride", "delivery", "mototaxi", "motoboy"].includes(mode) &&
                   mode}
@@ -147,11 +147,11 @@ export function PricingRulesList({
                       </div>
                       <div className="flex gap-4">
                         <span>
-                          MÃ­nimo: R$ {rule.minimumFare.toFixed(2)}
+                          Mínimo: R$ {rule.minimumFare.toFixed(2)}
                         </span>
                         {rule.maximumFare && (
                           <span>
-                            MÃ¡ximo: R$ {rule.maximumFare.toFixed(2)}
+                            Máximo: R$ {rule.maximumFare.toFixed(2)}
                           </span>
                         )}
                       </div>

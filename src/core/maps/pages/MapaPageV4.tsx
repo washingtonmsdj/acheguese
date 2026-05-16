@@ -1,13 +1,13 @@
 /**
- * MapaPageV4 - PÃ¡gina do mapa
+ * MapaPageV4 - Página do mapa
  *
  * SSoTs respeitados:
- * - TerritÃ³rio   â†’ useTerritoryFilter(resolved, activeMemberIds)
- * - Businesses   â†’ BusinessService.getBusinesses com territoryFilter
- * - Eventos      â†’ EventsService.getByBounds com territoryFilter
- * - ProjeÃ§Ã£o     â†’ mapEntityProjection (MapEntityProjectionService)
- * - Viewport     â†’ useMapViewportFetch + MapLibreAdapter
- * - Geoloc GPS   â†’ MapLibreAdapter.controls.location (via MapLocationControl â†’ useRobustGeolocation â†’ GeolocationService)
+ * - Território   → useTerritoryFilter(resolved, activeMemberIds)
+ * - Businesses   → BusinessService.getBusinesses com territoryFilter
+ * - Eventos      → EventsService.getByBounds com territoryFilter
+ * - Projeção     → mapEntityProjection (MapEntityProjectionService)
+ * - Viewport     → useMapViewportFetch + MapLibreAdapter
+ * - Geoloc GPS   → MapLibreAdapter.controls.location (via MapLocationControl → useRobustGeolocation → GeolocationService)
  *
  * @module core/maps/pages
  */
@@ -34,22 +34,22 @@ import type { TerritoryFilter } from '@/core/location/types';
 import type { Business } from '@/core/business/types/Business';
 import type { ResolvedTerritory } from '@/core/routing/hooks/useResolveTerritoryFromUrl';
 
-// â”€â”€â”€ Props â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Props ────────────────────────────────────────────────────────────────────
 
 interface MapaPageV4Props {
-  /** TerritÃ³rio resolvido pela rota (vem do TerritorialLayout via TerritorialMapPage) */
+  /** Território resolvido pela rota (vem do TerritorialLayout via TerritorialMapPage) */
   resolved?: ResolvedTerritory | null;
   /** IDs dos membros ativos do grupo (para rollout parcial) */
   activeMemberIds?: string[];
 }
 
-// â”€â”€â”€ Tile style â€” SSOT: DEFAULT_TILE_STYLE do MapProvider â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Tile style — SSOT: DEFAULT_TILE_STYLE do MapProvider ────────────────────
 // Mesmo estilo usado pelo StandaloneMap (mini mapa da empresa).
-// Os avisos de sprite (office, swimming_pool, etc.) sÃ£o suprimidos via
-// styleimagemissing no MapLibreAdapter â€” nÃ£o trocamos de estilo por isso.
+// Os avisos de sprite (office, swimming_pool, etc.) são suprimidos via
+// styleimagemissing no MapLibreAdapter — não trocamos de estilo por isso.
 const TILE_STYLE_URL = DEFAULT_TILE_STYLE.styleUrl;
 
-// â”€â”€â”€ Bounds e zoom iniciais (Salvador, BA) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Bounds e zoom iniciais (Salvador, BA) ────────────────────────────────────
 const SALVADOR_BOUNDS: BoundingBox = [-38.6, -13.1, -38.3, -12.8];
 const INITIAL_ZOOM = 13;
 
@@ -59,7 +59,7 @@ function createInitialVisibleLayers(): Partial<Record<MapLayerKey, boolean>> {
   ) as Partial<Record<MapLayerKey, boolean>>;
 }
 
-// â”€â”€â”€ Helper de filtro por bounds (client-side) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Helper de filtro por bounds (client-side) ────────────────────────────────
 function isInsideBounds(
   lat: number | null | undefined,
   lng: number | null | undefined,
@@ -70,7 +70,7 @@ function isInsideBounds(
   return lng >= west && lng <= east && lat >= south && lat <= north;
 }
 
-// â”€â”€â”€ Factories de fetchers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Factories de fetchers ────────────────────────────────────────────────────
 
 function makeBusinessFetcher(territoryFilter: TerritoryFilter) {
   return async (bounds: BoundingBox): Promise<MapMarker[]> => {
@@ -173,7 +173,7 @@ function makeAlertFetcher(territoryFilter: TerritoryFilter) {
       const centerLat = (south + north) / 2;
       const centerLng = (west + east) / 2;
       
-      // Calcular raio aproximado em metros (distÃ¢ncia do centro ao canto)
+      // Calcular raio aproximado em metros (distância do centro ao canto)
       const latDiff = north - south;
       const lngDiff = east - west;
       const radiusMeters = Math.sqrt(latDiff * latDiff + lngDiff * lngDiff) * 111000 / 2; // 111km por grau
@@ -204,7 +204,7 @@ function makeAlertFetcher(territoryFilter: TerritoryFilter) {
   };
 }
 
-// â”€â”€â”€ Componente â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Componente ───────────────────────────────────────────────────────────────
 
 export default function MapaPageV4({ resolved, activeMemberIds = [] }: MapaPageV4Props) {
   const adapterRef = useRef<MapLibreAdapterHandle>(null);
@@ -251,7 +251,7 @@ export default function MapaPageV4({ resolved, activeMemberIds = [] }: MapaPageV
     [focusTarget],
   );
 
-  // LocalizaÃ§Ã£o do usuÃ¡rio com fallback territorial
+  // Localização do usuário com fallback territorial
   const { 
     coords: userLocation, 
     isGps,
@@ -330,13 +330,13 @@ export default function MapaPageV4({ resolved, activeMemberIds = [] }: MapaPageV
   }, [clearLayer]);
 
   // Fetch inicial com bounds de Salvador.
-  // Quando os polÃ­gonos do territÃ³rio chegarem, o MapLibreAdapter centraliza
+  // Quando os polígonos do território chegarem, o MapLibreAdapter centraliza
   // automaticamente e o onViewportChange dispara fetchByBounds com os bounds reais.
   useEffect(() => {
     fetchByBounds(SALVADOR_BOUNDS, INITIAL_ZOOM);
   }, [fetchByBounds]);
 
-  // Re-fetch quando o territÃ³rio muda (fetchers recriados com novo territoryFilter)
+  // Re-fetch quando o território muda (fetchers recriados com novo territoryFilter)
   useEffect(() => {
     if (territoryPolygons.length === 0) return;
     const allCoords = territoryPolygons.flatMap((p) => p.coordinates);
@@ -358,8 +358,8 @@ export default function MapaPageV4({ resolved, activeMemberIds = [] }: MapaPageV
     [fetchByBounds],
   );
 
-  // Marcadores de dados â€” MapMarker[] canÃ´nico, sem conversÃ£o.
-  // O marcador de usuÃ¡rio Ã© gerenciado pelo MapLibreAdapter via userLocationMarker.autoAdd.
+  // Marcadores de dados — MapMarker[] canônico, sem conversão.
+  // O marcador de usuário é gerenciado pelo MapLibreAdapter via userLocationMarker.autoAdd.
   const focusMarkers = React.useMemo(() => {
     if (!focusTarget) return [] as MapMarker[];
 
@@ -381,7 +381,7 @@ export default function MapaPageV4({ resolved, activeMemberIds = [] }: MapaPageV
 
   const markers = React.useMemo(() => {
     // Modo normal: busca por bounds
-    // Combinar marcadores de viewport fetch + pontos turÃ­sticos
+    // Combinar marcadores de viewport fetch + pontos turísticos
     const touristPointMarkers = touristLayerVisible
       ? mapEntityProjection.projectEntities(
           (touristPointsData || []).map((result) => ({
@@ -482,7 +482,7 @@ export default function MapaPageV4({ resolved, activeMemberIds = [] }: MapaPageV
         </div>
       )}
 
-      {/* Indicador de fonte de localizaÃ§Ã£o */}
+      {/* Indicador de fonte de localização */}
       {sourceMessage && locationStatus !== 'idle' && locationStatus !== 'resolving' && (
         <div
           style={{ 

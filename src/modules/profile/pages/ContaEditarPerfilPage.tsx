@@ -80,7 +80,7 @@ function BusinessSection({ data, onChange }: {
     <div className="space-y-4">
       <SectionTitle>Dados da empresa</SectionTitle>
 
-      <Field id="legal_name" label="Raz�o social *">
+      <Field id="legal_name" label="Razão social *">
         <Input id="legal_name" value={data.legal_name ?? ''} onChange={e => set('legal_name', e.target.value)} placeholder="Nome legal da empresa" />
       </Field>
 
@@ -102,14 +102,14 @@ function BusinessSection({ data, onChange }: {
         </Field>
       </div>
 
-      <Field id="industry" label="Setor / Ind�stria">
-        <Input id="industry" value={data.industry ?? ''} onChange={e => set('industry', e.target.value)} placeholder="Ex: Alimenta��o, Tecnologia, Sa�de" />
+      <Field id="industry" label="Setor / Indústria">
+        <Input id="industry" value={data.industry ?? ''} onChange={e => set('industry', e.target.value)} placeholder="Ex: Alimentação, Tecnologia, Saúde" />
       </Field>
 
-      <SectionTitle>Endere�o comercial</SectionTitle>
+      <SectionTitle>Endereço comercial</SectionTitle>
 
-      <Field id="business_address" label="Endere�o">
-        <Input id="business_address" value={data.business_address ?? ''} onChange={e => set('business_address', e.target.value)} placeholder="Rua, n�mero, complemento" />
+      <Field id="business_address" label="Endereço">
+        <Input id="business_address" value={data.business_address ?? ''} onChange={e => set('business_address', e.target.value)} placeholder="Rua, número, complemento" />
       </Field>
 
       <div className="grid grid-cols-2 gap-3">
@@ -145,12 +145,12 @@ function ProfessionalSection({ data, onChange }: {
     <div className="space-y-4">
       <SectionTitle>Dados profissionais</SectionTitle>
 
-      <Field id="profession" label="Profiss�o *">
+      <Field id="profession" label="Profissão *">
         <Input id="profession" value={data.profession ?? ''} onChange={e => set('profession', e.target.value)} placeholder="Ex: Eletricista, Designer, Advogado" />
       </Field>
 
       <div className="grid grid-cols-2 gap-3">
-        <Field id="years_experience" label="Anos de experi�ncia">
+        <Field id="years_experience" label="Anos de experiência">
           <Input id="years_experience" type="number" min={0} max={60}
             value={data.years_experience ?? ''}
             onChange={e => set('years_experience', Number(e.target.value))} />
@@ -162,29 +162,29 @@ function ProfessionalSection({ data, onChange }: {
         </Field>
       </div>
 
-      <Field id="specialties" label="Especialidades" hint="Separe por v�rgula">
+      <Field id="specialties" label="Especialidades" hint="Separe por vírgula">
         <Input id="specialties" value={arrToStr(data.specialties)}
           onChange={e => set('specialties', strToArr(e.target.value))}
-          placeholder="Ex: Instala��o el�trica, Manuten��o predial" />
+          placeholder="Ex: Instalação elétrica, Manutenção predial" />
       </Field>
 
-      <Field id="services_offered" label="Servi�os oferecidos" hint="Separe por v�rgula">
+      <Field id="services_offered" label="Serviços oferecidos" hint="Separe por vírgula">
         <Input id="services_offered" value={arrToStr(data.services_offered)}
           onChange={e => set('services_offered', strToArr(e.target.value))}
-          placeholder="Ex: Visita t�cnica, Or�amento gratuito" />
+          placeholder="Ex: Visita técnica, Orçamento gratuito" />
       </Field>
 
-      <Field id="service_area" label="�reas de atendimento" hint="Separe por v�rgula">
+      <Field id="service_area" label="áreas de atendimento" hint="Separe por vírgula">
         <Input id="service_area" value={arrToStr(data.service_area)}
           onChange={e => set('service_area', strToArr(e.target.value))}
           placeholder="Ex: Nordeste de Amaralina, Pituba, Barra" />
       </Field>
 
-      <Field id="education" label="Forma��o">
-        <Input id="education" value={data.education ?? ''} onChange={e => set('education', e.target.value)} placeholder="Ex: T�cnico em Eletrot�cnica - SENAI" />
+      <Field id="education" label="Formação">
+        <Input id="education" value={data.education ?? ''} onChange={e => set('education', e.target.value)} placeholder="Ex: Técnico em Eletrotécnica - SENAI" />
       </Field>
 
-      <Field id="certifications" label="Certifica��es" hint="Separe por v�rgula">
+      <Field id="certifications" label="Certificações" hint="Separe por vírgula">
         <Input id="certifications" value={arrToStr(data.certifications)}
           onChange={e => set('certifications', strToArr(e.target.value))}
           placeholder="Ex: NR10, NR35" />
@@ -193,7 +193,7 @@ function ProfessionalSection({ data, onChange }: {
       <SectionTitle>Registro profissional</SectionTitle>
 
       <div className="grid grid-cols-2 gap-3">
-        <Field id="license_number" label="N�mero do registro">
+        <Field id="license_number" label="Número do registro">
           <Input id="license_number" value={data.license_number ?? ''} onChange={e => set('license_number', e.target.value)} placeholder="CRM, CREA, OAB..." />
         </Field>
         <Field id="license_state" label="Estado do registro">
@@ -203,7 +203,7 @@ function ProfessionalSection({ data, onChange }: {
 
       <ToggleRow
         label="Atende remotamente"
-        description="Aceita clientes fora da �rea de atendimento presencial"
+        description="Aceita clientes fora da área de atendimento presencial"
         checked={data.accepts_remote ?? false}
         onChange={v => set('accepts_remote', v)}
       />
@@ -222,10 +222,10 @@ function DriverSection({ data, onChange }: {
 
   return (
     <div className="space-y-4">
-      <SectionTitle>Habilita��o</SectionTitle>
+      <SectionTitle>Habilitação</SectionTitle>
 
       <div className="grid grid-cols-2 gap-3">
-        <Field id="license_number" label="N�mero da CNH *">
+        <Field id="license_number" label="Número da CNH *">
           <Input id="license_number" value={data.license_number ?? ''} onChange={e => set('license_number', e.target.value)} placeholder="00000000000" />
         </Field>
         <Field id="license_category" label="Categoria *">
@@ -249,7 +249,7 @@ function DriverSection({ data, onChange }: {
         </Field>
       </div>
 
-      <SectionTitle>Ve�culo</SectionTitle>
+      <SectionTitle>Veículo</SectionTitle>
 
       <div className="grid grid-cols-2 gap-3">
         <Field id="vehicle_type" label="Tipo">
@@ -259,7 +259,7 @@ function DriverSection({ data, onChange }: {
               <SelectItem value="car">Carro</SelectItem>
               <SelectItem value="motorcycle">Moto</SelectItem>
               <SelectItem value="van">Van</SelectItem>
-              <SelectItem value="truck">Caminh�o</SelectItem>
+              <SelectItem value="truck">Caminhão</SelectItem>
             </SelectContent>
           </Select>
         </Field>
@@ -284,7 +284,7 @@ function DriverSection({ data, onChange }: {
       </Field>
 
       <ToggleRow
-        label="Dispon�vel para corridas"
+        label="Disponível para corridas"
         checked={data.is_available ?? false}
         onChange={v => set('is_available', v)}
       />
@@ -329,11 +329,11 @@ export default function ContaEditarPerfilPage() {
     page: 'ContaEditarPerfilPage',
   });
 
-  // Fun��o doSave definida antes do hook que a usa
+  // Função doSave definida antes do hook que a usa
   const doSave = async () => {
     if (!profile) return;
     if (!baseForm.display_name?.trim()) {
-      toast.error('Nome de exibi��o � obrigat�rio');
+      toast.error('Nome de exibição é obrigatório');
       return;
     }
 
@@ -365,8 +365,8 @@ export default function ContaEditarPerfilPage() {
     }
   };
 
-  // Hook de confirma��o - sempre chamado, independente do tipo de perfil
-  // A condi��o entra no render, n�o na chamada do hook
+  // Hook de confirmação - sempre chamado, independente do tipo de perfil
+  // A condição entra no render, não na chamada do hook
   const { triggerSave: handleSave, confirmProps: usernameConfirmProps } = useProfileUsernameSaveGuard({
     username,
     originalUsername,
@@ -384,7 +384,7 @@ export default function ContaEditarPerfilPage() {
         <ShieldAlert className="h-12 w-12 mx-auto text-destructive" />
         <h2 className="text-lg font-semibold">Acesso negado</h2>
         <p className="text-sm text-muted-foreground">
-          Voc� n�o tem permiss�o para editar este perfil.
+          Você não tem permissão para editar este perfil.
         </p>
         <Button variant="outline" onClick={() => navigate('/conta')}>Voltar</Button>
       </div>
@@ -395,9 +395,9 @@ export default function ContaEditarPerfilPage() {
     return (
       <div className="max-w-xl mx-auto px-4 py-16 text-center space-y-4">
         <ShieldAlert className="h-12 w-12 mx-auto text-muted-foreground" />
-        <h2 className="text-lg font-semibold">Perfil n�o encontrado</h2>
+        <h2 className="text-lg font-semibold">Perfil não encontrado</h2>
         <p className="text-sm text-muted-foreground">
-          O perfil solicitado n�o est� dispon�vel para edi��o neste contexto.
+          O perfil solicitado não está disponível para edição neste contexto.
         </p>
         <Button variant="outline" onClick={() => navigate('/conta')}>Voltar</Button>
       </div>
@@ -408,9 +408,9 @@ export default function ContaEditarPerfilPage() {
     return (
       <div className="max-w-xl mx-auto px-4 py-16 text-center space-y-4">
         <ShieldAlert className="h-12 w-12 mx-auto text-destructive" />
-        <h2 className="text-lg font-semibold">Falha ao carregar edi��o</h2>
+        <h2 className="text-lg font-semibold">Falha ao carregar edição</h2>
         <p className="text-sm text-muted-foreground">
-          {error ?? 'N�o foi poss�vel carregar o agregado can�nico de edi��o.'}
+          {error ?? 'Não foi possível carregar o agregado canônico de edição.'}
         </p>
         <Button variant="outline" onClick={() => navigate('/conta')}>Voltar</Button>
       </div>
@@ -421,7 +421,7 @@ export default function ContaEditarPerfilPage() {
     return (
       <div className="max-w-xl mx-auto px-4 py-8 text-center space-y-3">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto" />
-        <p className="text-sm text-muted-foreground">Verificando permiss�es...</p>
+        <p className="text-sm text-muted-foreground">Verificando permissões...</p>
       </div>
     );
   }
@@ -481,14 +481,14 @@ export default function ContaEditarPerfilPage() {
       {/* Campos base */}
       <section className="rounded-3xl border border-border/70 bg-card/90 p-4 shadow-sm sm:p-6">
       <div className="space-y-4">
-        <SectionTitle>Informa��es b�sicas</SectionTitle>
+        <SectionTitle>Informações básicas</SectionTitle>
 
-        <Field id="display_name" label="Nome de exibi��o *">
+        <Field id="display_name" label="Nome de exibição *">
           <Input id="display_name" value={baseForm.display_name ?? ''} onChange={e => setBaseField('display_name', e.target.value)} />
         </Field>
 
         <Field id="bio" label="Bio">
-          <Textarea id="bio" value={baseForm.bio ?? ''} onChange={e => setBaseField('bio', e.target.value)} rows={3} placeholder="Conte um pouco sobre voc� ou seu neg�cio" />
+          <Textarea id="bio" value={baseForm.bio ?? ''} onChange={e => setBaseField('bio', e.target.value)} rows={3} placeholder="Conte um pouco sobre você ou seu negócio" />
         </Field>
 
         <Field id="website" label="Website">
@@ -496,7 +496,7 @@ export default function ContaEditarPerfilPage() {
         </Field>
 
         {profileType !== 'personal' && (
-          <Field id="location_id" label="Bairro (can�nico)">
+          <Field id="location_id" label="Bairro (canônico)">
             <LocationFields
               locationId={baseForm.location_id ?? null}
               onChange={(locationId) => setBaseField('location_id', locationId ?? undefined)}
@@ -505,10 +505,10 @@ export default function ContaEditarPerfilPage() {
         )}
 
         <div className="rounded-xl border border-border bg-muted/30 p-3">
-          <p className="text-sm font-medium">Endere�o de entrega n�o � salvo aqui</p>
+          <p className="text-sm font-medium">Endereço de entrega não é salvo aqui</p>
           <p className="mt-1 text-xs text-muted-foreground">
-            Esta tela edita apenas identidade p�blica (ex.: bio e visibilidade de localiza��o).
-            Endere�o completo de entrega � restrito e fica somente em Configura��es operacionais.
+            Esta tela edita apenas identidade pública (ex.: bio e visibilidade de localização).
+            Endereço completo de entrega é restrito e fica somente em Configurações operacionais.
           </p>
           <Button
             type="button"
@@ -517,11 +517,11 @@ export default function ContaEditarPerfilPage() {
             className="mt-3"
             onClick={() => navigate("/conta/enderecos")}
           >
-            Abrir configura��es operacionais
+            Abrir configurações operacionais
           </Button>
         </div>
 
-        <SectionTitle>Contato p�blico</SectionTitle>
+        <SectionTitle>Contato público</SectionTitle>
 
         <Field id="contact_email" label="E-mail de contato" hint="Diferente do e-mail de login">
           <Input id="contact_email" type="email" value={baseForm.contact_email ?? ''} onChange={e => setBaseField('contact_email', e.target.value)} />
@@ -533,13 +533,13 @@ export default function ContaEditarPerfilPage() {
 
         <SectionTitle>Visibilidade</SectionTitle>
 
-        <ToggleRow label="Perfil p�blico" description="Aparece em buscas e na URL /u/:username"
+        <ToggleRow label="Perfil público" description="Aparece em buscas e na URL /u/:username"
           checked={baseForm.is_public ?? false} onChange={v => setBaseField('is_public', v)} />
         {profileType === 'personal' && (
           <Field
             id="public_location_visibility"
-            label="Localiza��o p�blica"
-            hint="Cidade/bairro p�blico � derivado do endere�o residencial can�nico."
+            label="Localização pública"
+            hint="Cidade/bairro público é derivado do endereço residencial canônico."
           >
             <Select
               value={baseForm.public_location_visibility ?? 'city_only'}
@@ -554,7 +554,7 @@ export default function ContaEditarPerfilPage() {
                 <SelectValue placeholder="Selecione a visibilidade" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="hidden">Ocultar localiza��o</SelectItem>
+                <SelectItem value="hidden">Ocultar localização</SelectItem>
                 <SelectItem value="city_only">Mostrar somente cidade/UF</SelectItem>
                 <SelectItem value="district">Mostrar bairro + cidade/UF</SelectItem>
               </SelectContent>
@@ -565,7 +565,7 @@ export default function ContaEditarPerfilPage() {
           checked={baseForm.show_contact_email ?? false} onChange={v => setBaseField('show_contact_email', v)} />
         <ToggleRow label="Mostrar telefone"
           checked={baseForm.show_phone ?? false} onChange={v => setBaseField('show_phone', v)} />
-        <ToggleRow label="Mostrar v�nculos"
+        <ToggleRow label="Mostrar vínculos"
           checked={baseForm.show_linked_profiles ?? false} onChange={v => setBaseField('show_linked_profiles', v)} />
       </div>
       </section>
@@ -585,7 +585,7 @@ export default function ContaEditarPerfilPage() {
 
       {/* Extensão por tipo */}      {extLoading ? (
         <div className="flex items-center gap-2 rounded-3xl border border-border/70 bg-card/90 p-5 text-sm text-muted-foreground shadow-sm">
-          <Loader2 className="h-4 w-4 animate-spin" />Carregando dados espec�ficos...
+          <Loader2 className="h-4 w-4 animate-spin" />Carregando dados específicos...
         </div>
       ) : (
         <>

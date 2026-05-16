@@ -23,7 +23,7 @@ export function useModeration() {
 
   const reportPostMutation = useMutation({
     mutationFn: async ({ postId, reason, description }: ReportPostInput) => {
-      if (!user || !activeProfile) throw new Error("UsuÃ¡rio nÃ£o autenticado");
+      if (!user || !activeProfile) throw new Error("Usuário não autenticado");
       return await ModerationService.reportContent({
         targetType: "post",
         targetId: postId,
@@ -34,7 +34,7 @@ export function useModeration() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["community-feed"] });
-      toast.success("DenÃºncia enviada. Nossa equipe irÃ¡ revisar o conteÃºdo.");
+      toast.success("Denúncia enviada. Nossa equipe irá revisar o conteúdo.");
     },
     onError: (error: Error) => {
       toast.error(error.message);
@@ -48,7 +48,7 @@ export function useModeration() {
       reason,
       description,
     }: ReportCommentInput & { _postId?: string }) => {
-      if (!user || !activeProfile) throw new Error("UsuÃ¡rio nÃ£o autenticado");
+      if (!user || !activeProfile) throw new Error("Usuário não autenticado");
       return await ModerationService.reportContent({
         targetType: "comment",
         targetId: commentId,
@@ -59,7 +59,7 @@ export function useModeration() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["comments"] });
-      toast.success("DenÃºncia enviada. Nossa equipe irÃ¡ revisar o conteÃºdo.");
+      toast.success("Denúncia enviada. Nossa equipe irá revisar o conteúdo.");
     },
     onError: (error: Error) => {
       toast.error(error.message);

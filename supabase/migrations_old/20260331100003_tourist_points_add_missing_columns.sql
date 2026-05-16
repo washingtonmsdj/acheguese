@@ -9,7 +9,7 @@ ALTER TABLE tourist_points
   ADD COLUMN IF NOT EXISTS observations             TEXT,
   ADD COLUMN IF NOT EXISTS nearby_point_ids         TEXT[]      NOT NULL DEFAULT '{}';
 
--- Constraints de domÃ­nio (com IF NOT EXISTS via DO block)
+-- Constraints de domínio (com IF NOT EXISTS via DO block)
 DO $$
 BEGIN
   IF NOT EXISTS (
@@ -33,14 +33,14 @@ END $$;
 UPDATE tourist_points
 SET
   price_type = CASE
-    WHEN lower(entry_fee) IN ('gratuito', 'grÃ¡tis', 'free', '0', 'r$ 0') THEN 'gratuito'
+    WHEN lower(entry_fee) IN ('gratuito', 'grátis', 'free', '0', 'r$ 0') THEN 'gratuito'
     WHEN entry_fee IS NULL OR entry_fee = '' THEN 'gratuito'
     ELSE 'pago'
   END,
   price_text = CASE
-    WHEN lower(entry_fee) NOT IN ('gratuito', 'grÃ¡tis', 'free', '0', 'r$ 0')
+    WHEN lower(entry_fee) NOT IN ('gratuito', 'grátis', 'free', '0', 'r$ 0')
       AND entry_fee IS NOT NULL AND entry_fee != ''
     THEN entry_fee
     ELSE NULL
   END
-WHERE price_type = 'gratuito'; -- sÃ³ atualiza os que ainda estÃ£o no default
+WHERE price_type = 'gratuito'; -- só atualiza os que ainda estão no default

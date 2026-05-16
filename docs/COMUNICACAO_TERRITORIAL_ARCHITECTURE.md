@@ -10,6 +10,15 @@ Criar o dominio **Comunicacao Territorial** como camada institucional/editorial 
 
 Este dominio nao substitui `/comunidade` e nao deve virar mais um feed social. Ele cria uma identidade propria para canais comunitarios confiaveis, como TV de bairro, radio local, portal de noticias, coletivo de comunicacao, jornal local e canais de utilidade publica.
 
+Decisao de produto atualizada em 2026-05-15:
+
+- `/comunicacao` e a listagem/descoberta dos agentes de comunicacao do territorio.
+- O feed proprio do canal vive na pagina canonica do canal em `/comunicacao/:state/:city/:territorySlug/:channelSlug`.
+- As publicacoes dos canais tambem devem ser distribuidas na comunidade relacionada, em uma aba de Comunicacao ou bloco equivalente.
+- Conteudo do tipo materia/reportagem deve abrir sua experiencia canonica no canal.
+- Conteudo do tipo postagem comum, com texto/fotos, pode ser consumido diretamente na comunidade sem obrigar navegacao para a pagina do canal.
+- A relevancia primaria e territorial/contextual, nao baseada apenas em seguidores.
+
 A rota publica canonica do dominio e:
 
 ```text
@@ -57,6 +66,17 @@ A ideia e forte, mas precisa ser encaixada no SSOT atual do projeto. O ajuste pr
 | `core/community-alerts` | infraestrutura de alertas territoriais e mapa |
 | `core/notifications` | push/in-app/email com preferencia do usuario |
 | `core/feed` / `core/posts` | exibicao agregada no feed geral, sem virar fonte primaria editorial |
+
+## Papel correto no produto
+
+`/comunicacao` nao e um Instagram paralelo e nao e um diretorio de empresas comuns. O papel correto e:
+
+- diretorio inteligente de agentes de comunicacao;
+- descoberta territorial de canais, midias, coletivos e comunicadores;
+- camada editorial que abastece comunidade, feed principal e modulos contextuais;
+- pagina publica canonica para canal e materias editoriais.
+
+O consumo em `/comunidade` deve ser uma distribuicao contextual do conteudo, nao a fonte primaria da entidade editorial.
 
 ## Entidades de produto
 
@@ -154,6 +174,7 @@ Campos principais:
 - `author_profile_id`
 - `location_id`
 - `publication_type`: `news`, `coverage`, `event`, `job`, `public_utility`, `report`, `moderated_alert`, `urgent_alert`
+- `content_format`: `article` ou `update`
 - `title`
 - `summary`
 - `body`
@@ -167,6 +188,51 @@ Campos principais:
 - `updated_at`
 
 Eventos e vagas nao devem duplicar os dominios existentes quando houver entidade propria. Nesses casos, a publicacao pode referenciar `event_id` ou `job_id`, e o modulo de eventos/vagas continua dono da regra operacional.
+
+`content_format` define a experiencia de clique:
+
+- `article`: materia/reportagem/editorial com canonical propria no canal.
+- `update`: postagem comum de canal, consumivel inline na comunidade ou em cards contextuais.
+
+### `communication_publication_distribution`
+
+Tabela recomendada para distribuir publicacoes sem duplicar conteudo.
+
+Campos principais:
+
+- `id`
+- `publication_id`
+- `channel_id`
+- `location_id`
+- `target_type`: `communication_hub`, `community_tab`, `contextual_feed`
+- `is_active`
+- `relevance_score`
+- `rank_score`
+- `rank_reason`
+- `created_at`
+- `updated_at`
+
+Regra: a publicacao continua pertencendo a `communication_publications`. A tabela de distribuicao apenas decide onde ela aparece.
+
+Observacao da fase atual: a primeira implementacao nao grava `territorial_group_id` nem `module_key`. Grupos territoriais sao resolvidos no service para uma lista de `location_id`, preservando `location_id` como SSOT territorial.
+
+SSOT de relevancia:
+
+```sql
+communication_distribution_relevance_score(publication_type, content_format, target_type)
+communication_distribution_rank_score(publication_type, content_format, target_type, reliability_score)
+communication_distribution_rank_reason(publication_type, content_format, target_type, reliability_score)
+```
+
+O frontend nao calcula score de distribuicao. A RPC de publicacao materializa os destinos padrao e usa essas funcoes para preencher `relevance_score`, `rank_score` e `rank_reason`.
+
+Hardening:
+
+- `communication_upsert_default_distribution(publication_id)` e funcao interna, sem grant para `anon` ou `authenticated`.
+- `communication_distribution_relevance_score(...)` tambem e funcao interna, sem grant para `anon` ou `authenticated`.
+- `communication_distribution_rank_score(...)` e `communication_distribution_rank_reason(...)` tambem sao internas.
+- Criacao de distribuicao operacional acontece depois de `publish_communication_publication` validar autenticacao, membro do canal e `location_id` autorizado.
+- Leitura publica da distribuicao exige canal ativo, publicacao publicada e destino ativo.
 
 ### `communication_channel_permissions`
 
@@ -231,6 +297,15 @@ Tipos aceitos no plano atualizado:
 | `report` | denuncia jornalistica/apuracao | sim, com cuidado | nao por padrao |
 | `moderated_alert` | alerta relevante com revisao/limite | sim | limitado |
 | `urgent_alert` | risco imediato autorizado | sim | sim, territorial |
+
+Formato de exibicao:
+
+| Formato | Uso | Clique na comunidade |
+| --- | --- | --- |
+| `article` | materia, reportagem, cobertura longa | abre canonical em `/comunicacao/.../:channelSlug` ou futura rota de detalhe da materia |
+| `update` | post simples com texto/fotos do canal | abre inline/modal/card expandido na comunidade |
+
+O MVP atual publica tipos editoriais, mas ainda precisa da coluna/campo de formato para evitar que toda publicacao seja tratada como materia.
 
 ## Alertas e push territorial
 
@@ -338,6 +413,15 @@ Papel: pagina publica canonica do canal de comunicacao.
 
 Conteudos de Comunicacao Territorial podem aparecer em `/comunidade/.../feed`, mas a canonical URL do conteudo deve apontar para `/comunicacao/...` quando o conteudo for editorial/institucional.
 
+Experiencia recomendada na comunidade:
+
+- aba `Comunicacao` dentro do contexto territorial;
+- lista de publicacoes de todos os canais autorizados naquele territorio;
+- filtros por tipo: noticias, utilidade publica, eventos, vagas, denuncias/reportagens;
+- cards mostram canal, selo/verificacao, territorio, tipo e confiabilidade;
+- `article` redireciona para experiencia canonica do canal;
+- `update` pode ser expandido diretamente na aba da comunidade.
+
 Regra SEO:
 
 - `/comunicacao/...` indexavel quando conteudo for publico e verificado.
@@ -406,6 +490,19 @@ Responsabilidades:
 - Criar rotas publicas `/comunicacao/...`.
 - Integrar feed geral por projecao/leitura, sem duplicar regra de negocio.
 
+### Fase 2.5: distribuicao comunitaria e formato de conteudo
+
+- [x] Adicionar `content_format` em `communication_publications`.
+- [x] Criar `communication_publication_distribution`.
+- [x] Criar `CommunicationDistributionService`.
+- [x] Criar query para aba `Comunicacao` em `/comunidade/:state/:city/:territorySlug`.
+- [x] Garantir que `article` e `update` tenham comportamento de clique diferente.
+- [x] Centralizar score inicial da distribuicao em SQL.
+- [x] Materializar `rank_score` e `rank_reason` no banco.
+- [x] Revogar execucao publica da funcao interna de upsert de distribuicao.
+- Manter canonical editorial em `/comunicacao/...` para materias/reportagens.
+- Nao duplicar publicacoes como posts sociais comuns.
+
 ### Fase 3: alertas autorizados
 
 - Criar RPC `create_communication_alert`.
@@ -435,6 +532,9 @@ Responsabilidades:
 - Verificacao passa por `core/verification`.
 - Moderacao e denuncia passam por `core/moderation`.
 - `/comunicacao` tem papel distinto de `/comunidade`.
+- `/comunidade` possui aba/bloco de Comunicacao alimentado por distribuicao territorial.
+- Materias/reportagens apontam para canonical do canal.
+- Postagens comuns de canal podem ser consumidas inline na comunidade.
 - Canal com baixa confiabilidade perde privilegios automaticamente.
 - Admin consegue explicar por que um canal pode ou nao emitir alerta em um territorio.
 
