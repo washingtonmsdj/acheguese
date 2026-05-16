@@ -107,6 +107,7 @@ import { LocationType, EntityStatus } from "@/shared/types/enums";
 import { PAGINATION } from "@/shared/constants";
 import { resolveCityToLocationIds, resolveNeighborhoodInCity } from "@/core/location/helpers/territorialResolver";
 import { mediaService } from "@/core/media/services/MediaService";
+import { mapPostsWithImagesRows } from "./post.service.rules";
 import type {
   Post,
   PostType,
@@ -142,6 +143,10 @@ export class PostService {
     reach?: 'street' | 'neighborhood' | 'city';
     images?: string[];
     tags?: string[];
+    content_intent?: string;
+    display_format?: string;
+    distribution_channels?: string[];
+    content_payload?: Record<string, unknown>;
   }): Promise<Post> {
     try {
       // 1. Validar location_id obrigatório
@@ -196,6 +201,10 @@ export class PostService {
           reach: data.reach || 'neighborhood',
           images: data.images || [],
           tags: data.tags || [],
+          content_intent: data.content_intent ?? null,
+          display_format: data.display_format ?? null,
+          distribution_channels: data.distribution_channels || [],
+          content_payload: data.content_payload ?? null,
           is_published: true,
         })
         .select(`
@@ -207,6 +216,10 @@ export class PostService {
           reach,
           images,
           tags,
+          content_intent,
+          display_format,
+          distribution_channels,
+          content_payload,
           likes_count,
           comments_count,
           confirmations_count,
@@ -2335,14 +2348,16 @@ export class PostService {
       const { data, error } = await query;
       if (error || !data) return [];
 
-      return data.map((post: any) => ({
-        id: post.id,
-        image_url: post.image_url,
-        content: post.content ?? "",
-        author_name: post.author_profile?.display_name ?? "Comunidade",
-        author_avatar: post.author_profile?.avatar_url ?? null,
-        created_at: post.created_at,
-      }));
+      return mapPostsWithImagesRows(data as Array<{
+        id: string;
+        image_url: string;
+        content?: string | null;
+        created_at: string;
+        author_profile?: {
+          display_name?: string | null;
+          avatar_url?: string | null;
+        } | null;
+      }>);
     } catch (error) {
       trackError(error as Error, {
         component: "PostService",

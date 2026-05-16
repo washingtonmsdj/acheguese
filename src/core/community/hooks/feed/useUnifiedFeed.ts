@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 import { PostAdapter } from "@/core/posts/adapters/PostAdapter";
 import type { UnifiedPost } from "@/shared/types/posts";
+import { filterByTerritorialChannel, type TerritorialFeedChannel } from "./territorialFeedEngine";
 
 type AdapterItem = Parameters<typeof PostAdapter.convertArray>[0][number];
 
@@ -16,8 +17,9 @@ interface UseUnifiedFeedProps {
     | "discussao"
     | "alerta"
     | "recomendacao"
-    | "enquete";
-  userLocation?: { neighborhood?: string; city?: string };
+    | "enquete"
+    | TerritorialFeedChannel;
+  userLocation?: { neighborhood?: string; city?: string; location_id?: string };
 }
 
 export function useUnifiedFeed({
@@ -47,13 +49,30 @@ export function useUnifiedFeed({
     });
   }, [posts, civicReports, communityPosts, feedPosts]);
 
-  const filteredPosts = useMemo(
-    () =>
-      filterType === "all"
-        ? unifiedPosts
-        : PostAdapter.filterByType(unifiedPosts, filterType),
-    [unifiedPosts, filterType],
-  );
+  const filteredPosts = useMemo(() => {
+    if (filterType === "all") return unifiedPosts;
+
+    const territorialChannels: TerritorialFeedChannel[] = [
+      "todos",
+      "para_voce",
+      "moradores",
+      "empresas",
+      "eventos",
+      "alertas",
+      "vagas",
+      "classificados",
+    ];
+
+    if (territorialChannels.includes(filterType as TerritorialFeedChannel)) {
+      return filterByTerritorialChannel(
+        unifiedPosts,
+        filterType as TerritorialFeedChannel,
+        { location_id: userLocation?.location_id },
+      );
+    }
+
+    return PostAdapter.filterByType(unifiedPosts, filterType);
+  }, [unifiedPosts, filterType, userLocation?.location_id]);
 
   const sortedPosts = useMemo(() => {
     if (sortCriteria === "most_commented") {

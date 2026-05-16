@@ -183,7 +183,6 @@ export const RecomendacaoDetailPage = lazy(() => import("@/modules/community-rec
 export const AchadosPerdidosPage = lazy(() => import("@/modules/community-lost-found/pages/AchadosPerdidosPage"));
 export const NovoAchadoPerdidoPage = lazy(() => import("@/modules/community-lost-found/pages/NovoAchadoPerdidoPage"));
 export const AchadoPerdidoDetailPage = lazy(() => import("@/modules/community-lost-found/pages/AchadoPerdidoDetailPage"));
-export const AlertasPage = lazy(() => import("@/modules/community-alerts/pages/AlertasPage"));
 export const ProblemasPage = lazy(() => import("@/modules/community-issues/pages/ProblemasPage"));
 export const NovoPostPage = lazy(() => import("@/modules/community-feed/pages/NovoPostPage"));
 export const ExamplePostPage = lazy(() => import("@/modules/community-feed/pages/ExamplePostPage"));

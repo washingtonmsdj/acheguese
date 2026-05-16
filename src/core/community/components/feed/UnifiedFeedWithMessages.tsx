@@ -4,6 +4,7 @@ import { DirectMessageModal } from "../DirectMessageModal";
 import { useUnifiedFeed } from "../../hooks/feed/useUnifiedFeed";
 import { useMessageModal } from "../../hooks/useMessageModal";
 import type { UnifiedPost } from "@/shared/types/posts";
+import type { TerritorialFeedChannel } from "../../hooks/feed/territorialFeedEngine";
 
 interface UnifiedFeedWithMessagesProps {
   posts?: UnifiedPost[];
@@ -18,7 +19,8 @@ interface UnifiedFeedWithMessagesProps {
     | "discussao"
     | "alerta"
     | "recomendacao"
-    | "enquete";
+    | "enquete"
+    | TerritorialFeedChannel;
   userLocation?: { neighborhood?: string; city?: string };
   onLike?: (postId: string) => void;
   onComment?: (postId: string) => void;

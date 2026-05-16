@@ -29,6 +29,10 @@ export async function createPost(data: {
   reach?: "street" | "neighborhood" | "city";
   images?: string[];
   tags?: string[];
+  content_intent?: string;
+  display_format?: string;
+  distribution_channels?: string[];
+  content_payload?: Record<string, unknown>;
 }): Promise<Post> {
   try {
     // 1. Validar location_id obrigatório
@@ -83,6 +87,10 @@ export async function createPost(data: {
         reach: data.reach || "neighborhood",
         images: data.images || [],
         tags: data.tags || [],
+        content_intent: data.content_intent ?? null,
+        display_format: data.display_format ?? null,
+        distribution_channels: data.distribution_channels || [],
+        content_payload: data.content_payload ?? null,
         is_published: true,
       })
       .select(
@@ -94,6 +102,10 @@ export async function createPost(data: {
           location_id,
           images,
           tags,
+          content_intent,
+          display_format,
+          distribution_channels,
+          content_payload,
           likes_count,
           comments_count,
           confirmations_count,

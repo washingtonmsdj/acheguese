@@ -12,15 +12,9 @@ import { SPACING } from "../styles/communityDesignSystem";
 import type { TerritoryFilter } from "@/core/location";
 import { usePostActions } from "@/core/posts/hooks";
 import { Avatar, AvatarFallback, AvatarImage } from "@/shared/components/ui/avatar";
+import type { TerritorialFeedChannel } from "@/core/community/hooks/feed/territorialFeedEngine";
 
 type FeedSortType = "recent" | "popular" | "most_commented";
-type FeedPostType =
-  | "all"
-  | "discussao"
-  | "recomendacao"
-  | "enquete"
-  | "alerta"
-  | "civic_report";
 
 const SORT_FILTERS: { id: FeedSortType; label: string; icon: React.ElementType }[] = [
   { id: "recent", label: "Recentes", icon: Clock3 },
@@ -36,14 +30,15 @@ const COMPOSER_ACTIONS: { id: string; label: string; icon: React.ElementType }[]
   { id: "file", label: "Arquivo", icon: FileText },
 ];
 
-const HEADER_FILTERS: { id: string; label: string; postType?: FeedPostType }[] = [
-  { id: "all", label: "Todos", postType: "all" },
-  { id: "for-you", label: "Para você", postType: "recomendacao" },
-  { id: "residents", label: "Moradores", postType: "discussao" },
-  { id: "businesses", label: "Empresas", postType: "all" },
-  { id: "events", label: "Eventos", postType: "all" },
-  { id: "alerts", label: "Alertas", postType: "alerta" },
-  { id: "more", label: "Mais", postType: "all" },
+const HEADER_FILTERS: { id: TerritorialFeedChannel; label: string }[] = [
+  { id: "todos", label: "Todos" },
+  { id: "para_voce", label: "Para você" },
+  { id: "moradores", label: "Moradores" },
+  { id: "empresas", label: "Empresas" },
+  { id: "eventos", label: "Eventos" },
+  { id: "alertas", label: "Alertas" },
+  { id: "vagas", label: "Vagas" },
+  { id: "classificados", label: "Classificados" },
 ];
 
 interface CommunityFeedProps {
@@ -58,7 +53,6 @@ interface CommunityFeedProps {
   onEditPost?: (postId: string) => void;
   onReportClick?: (reportId: string) => void;
   locationScope?: LocationScope;
-  defaultPostType?: FeedPostType;
   territoryFilter?: TerritoryFilter;
 }
 
@@ -72,7 +66,6 @@ export function CommunityFeed({
   onEditPost,
   onReportClick,
   locationScope = "city",
-  defaultPostType = "all",
   territoryFilter,
 }: CommunityFeedProps) {
   const { activeProfile } = useSessionContext();
@@ -89,8 +82,7 @@ export function CommunityFeed({
 
   // Local filter states
   const [sortType, setSortType] = useState<FeedSortType>("recent");
-  const [postType, setPostType] = useState<FeedPostType>(defaultPostType);
-  const [activeHeaderFilter, setActiveHeaderFilter] = useState<string>("all");
+  const [activeHeaderFilter, setActiveHeaderFilter] = useState<TerritorialFeedChannel>("todos");
 
   // Handlers
   const handleLike = useCallback((postId: string) => {
@@ -139,16 +131,7 @@ export function CommunityFeed({
     return "recent";
   }, [sortType]);
 
-  const filterType = useMemo(() => {
-    switch (postType) {
-      case "discussao":    return "discussao";
-      case "recomendacao": return "recomendacao";
-      case "enquete":      return "enquete";
-      case "alerta":       return "alerta";
-      case "civic_report": return "civic_report";
-      default:             return "all";
-    }
-  }, [postType]);
+  const filterType = useMemo(() => activeHeaderFilter, [activeHeaderFilter]);
 
   if (isLoading) {
     return (
@@ -189,11 +172,13 @@ export function CommunityFeed({
             onClick={onOpenCreatePost}
             className="min-h-16 min-w-0 flex-1 rounded-2xl border border-white/10 bg-white/[0.06] px-4 py-3 text-left transition-colors hover:border-teal-400/40 hover:bg-teal-400/10"
           >
-            <span className="block text-sm font-medium text-white/85">
-              O que você quer compartilhar com o bairro?
-            </span>
-            <span className="mt-0.5 block text-xs text-white/50">
-              Compartilhe uma indicação,<br />pedido, foto ou texto com a comunidade.
+            <span className="flex flex-col">
+              <span className="block whitespace-nowrap overflow-hidden text-ellipsis text-sm font-medium text-white/85 leading-5">
+                O que você quer compartilhar com o bairro?
+              </span>
+              <span className="block whitespace-nowrap overflow-hidden text-ellipsis text-xs text-white/50 leading-5">
+                Compartilhe uma indicação, pedido, foto ou texto com a comunidade.
+              </span>
             </span>
           </button>
         </div>
@@ -216,7 +201,7 @@ export function CommunityFeed({
       <div className="rounded-2xl border border-white/10 bg-[#0f171a] p-3 shadow-xl shadow-black/10 md:p-4">
         <div className="flex min-w-0 items-center justify-between gap-2">
           <div className="flex min-w-0 flex-wrap gap-2" role="tablist" aria-label="Filtros principais do feed">
-            {HEADER_FILTERS.map(({ id, label, postType: mappedPostType }) => (
+            {HEADER_FILTERS.map(({ id, label }) => (
               <button
                 key={id}
                 type="button"
@@ -224,7 +209,6 @@ export function CommunityFeed({
                 aria-selected={activeHeaderFilter === id}
                 onClick={() => {
                   setActiveHeaderFilter(id);
-                  if (mappedPostType) setPostType(mappedPostType);
                 }}
                 className={`flex min-h-9 min-w-0 items-center gap-2 rounded-full border px-3 text-xs font-semibold transition-colors ${
                   activeHeaderFilter === id

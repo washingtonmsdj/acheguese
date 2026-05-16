@@ -32,8 +32,8 @@ import { LocationScopeCards } from "../components/page/LocationScopeCards";
 import { CommunityFloatingButtons } from "../components/page/CommunityFloatingButtons";
 import { CommunityModals } from "../components/page/CommunityModals";
 import { CreatePostModal } from "../components/composer/CreatePostModal";
-import { AlertFeedSection, CreateAlertModal } from "@/core/community/alerts";
-import { IssueFeedSection, CreateIssueModal } from "@/core/community/issues";
+import { CreateAlertModal } from "@/core/community/alerts";
+import { CreateIssueModal } from "@/core/community/issues";
 import { VerificationBanner } from "@/core/verification";
 import { cn } from "@/shared/utils/cn";
 import type { ResolvedTerritory } from "@/core/routing/hooks/useResolveTerritoryFromUrl";
@@ -332,29 +332,6 @@ export default function ComunidadePage({ resolved }: ComunidadePageProps) {
                 locationScope={immediateFilters.locationScope}
                 territoryFilter={communityTerritoryFilter}
               />
-
-              <div className="rounded-2xl border border-red-400/20 bg-red-400/[0.04] p-4 md:p-5">
-                <AlertFeedSection
-                  territoryFilter={communityTerritoryFilter}
-                  city={homeCity?.name}
-                  neighborhood={homeDistrict?.name}
-                  locationId={issueLocationId}
-                />
-              </div>
-
-              <div className="rounded-2xl border border-amber-400/20 bg-amber-400/[0.04] p-4 md:p-5">
-                <IssueFeedSection
-                  territoryFilter={communityTerritoryFilter}
-                  city={homeCity?.name}
-                  neighborhood={homeDistrict?.name}
-                  locationId={homeDistrict?.id}
-                  profileId={profile.id}
-                />
-              </div>
-
-
-
-
 
             </main>
 

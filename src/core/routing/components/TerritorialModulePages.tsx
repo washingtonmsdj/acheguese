@@ -24,7 +24,6 @@ const ComunidadePage       = lazy(() => import('@/modules/community-feed/pages/C
 const CidadeLandingPage    = lazy(() => import('@/app/pages/CidadeLandingPage'));
 const ComplexoLandingPage  = lazy(() => import('@/app/pages/ComplexoNordesteLandingPage'));
 const CommunityCommunicationTabPage = lazy(() => import('@/modules/communication-territorial/pages/CommunityCommunicationTabPage'));
-const AlertasPage          = lazy(() => import('@/modules/community-alerts/pages/AlertasPage'));
 const ProblemasPage        = lazy(() => import('@/modules/community-issues/pages/ProblemasPage'));
 const EmpresasPage         = lazy(() => import('@/app/pages/EmpresasLandingPage'));
 const ServicosPage         = lazy(() => import('@/modules/professionals/services/pages/ServicosLandingPage'));
@@ -215,17 +214,6 @@ export function TerritorialCommunityEntryPage() {
   }
 
   return <TerritorialCommunityPage />;
-}
-
-export function TerritorialCommunityAlertsPage() {
-  const { resolved } = useTerritorialContext();
-  return (
-    <CityStatusGate module="comunidade" enforceActive>
-      <Suspense fallback={<ModulePageLoader />}>
-        <AlertasPage resolved={resolved} />
-      </Suspense>
-    </CityStatusGate>
-  );
 }
 
 export function TerritorialCommunityIssuesPage() {

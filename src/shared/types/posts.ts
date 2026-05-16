@@ -45,7 +45,12 @@ export interface UnifiedPost {
   created_at: string;
   updated_at?: string;
   tags?: string[];
+  content_intent?: string;
+  display_format?: string;
+  distribution_channels?: string[];
+  content_payload?: Record<string, unknown>;
 
   // Específicos para civic_reports
   civic_type?: CivicProblemType;
 }
+

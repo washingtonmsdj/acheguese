@@ -179,3 +179,8 @@ test-output.txt
 !src/core/communication-territorial/**/*.test.ts
 !src/core/profiles/domain/ProfileType.communication.test.ts
 !src/core/public-identity/utils/reserved-names.communication.test.ts
+
+# Runtime artifacts
+/tmp/
+/playwright-report/
+/test-results/

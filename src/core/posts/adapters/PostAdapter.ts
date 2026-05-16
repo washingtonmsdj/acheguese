@@ -47,6 +47,10 @@ interface CommunityPostData {
   event_date?: string;
   price?: number;
   contact_info?: string;
+  content_intent?: string;
+  display_format?: string;
+  distribution_channels?: string[];
+  content_payload?: Record<string, unknown>;
 }
 
 interface FeedPostData {
@@ -66,6 +70,10 @@ interface FeedPostData {
   saved?: boolean;
   tags?: string[];
   type?: string;
+  content_intent?: string;
+  display_format?: string;
+  distribution_channels?: string[];
+  content_payload?: Record<string, unknown>;
 }
 
 // ─── PostAdapter ──────────────────────────────────────────────────────────────
@@ -111,6 +119,10 @@ export class PostAdapter {
       has_user_confirmed: post.has_user_confirmed,
       created_at: post.created_at,
       tags: post.tags,
+      content_intent: post.content_intent,
+      display_format: post.display_format,
+      distribution_channels: post.distribution_channels,
+      content_payload: post.content_payload,
     };
   }
 
@@ -130,6 +142,10 @@ export class PostAdapter {
       is_saved: post.saved,
       created_at: post.created_at,
       tags: post.tags,
+      content_intent: post.content_intent,
+      display_format: post.display_format,
+      distribution_channels: post.distribution_channels,
+      content_payload: post.content_payload,
     };
   }
 
@@ -158,6 +174,10 @@ export class PostAdapter {
       is_saved: post.is_saved,
       created_at: post.created_at,
       tags: post.tags,
+      content_intent: post.content_intent,
+      display_format: post.display_format,
+      distribution_channels: post.distribution_channels,
+      content_payload: post.content_payload,
     };
   }
 

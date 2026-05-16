@@ -30,6 +30,10 @@ export interface Post {
   comments_count: number;
   created_at: string;
   updated_at: string;
+  content_intent?: string;
+  display_format?: string;
+  distribution_channels?: string[];
+  content_payload?: Record<string, unknown>;
 
   // Relacionamentos
   profile?: ProfileSummary;
@@ -66,6 +70,10 @@ export interface CreatePostData {
   video_url?: string;
   images?: string[];
   tags?: string[];
+  content_intent?: string;
+  display_format?: string;
+  distribution_channels?: string[];
+  content_payload?: Record<string, unknown>;
 }
 
 export interface UpdatePostData {

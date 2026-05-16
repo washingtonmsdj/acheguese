@@ -22,7 +22,6 @@ import { BrasilShowcasePage } from "@/core/routing/components/BrasilShowcasePage
 import {
   TerritorialCommunityPage,
   TerritorialCommunityEntryPage,
-  TerritorialCommunityAlertsPage,
   TerritorialCommunityIssuesPage,
   TerritorialCommunityCommunicationPage,
   TerritorialBusinessPage,
@@ -254,12 +253,10 @@ export function AppRoutes() {
         {/* Rotas legadas sem territorio */}
         <Route path="/educacao" element={<P.EducationExplorerPage />} />
         <Route path="/comunidade" element={<P.ComunidadePage />} />
-        <Route path="/comunidade/alertas" element={<P.AlertasPage />} />
         <Route path="/comunidade/problemas" element={<P.ProblemasPage />} />
         <Route path="/comunicacao" element={<P.CommunicationLandingPage />} />
         <Route path="/comunicacao/v2" element={<P.CommunicationLandingPage />} />
         <Route path="/comunicacao/solicitar" element={<P.CommunicationRequestPage />} />
-        <Route path="/alertas" element={<P.AlertasPage />} />
         <Route path="/services" element={<P.ServicosLandingPage />} />
         <Route path="/classificados" element={<P.ClassificadosPage />} />
         <Route path="/mobilidade/passageiro" element={<P.PassageiroPage />} />
@@ -461,9 +458,6 @@ export function AppRoutes() {
         <Route path="/educacao-explorer/*" element={<P.EducationExplorerPage />} />
 
         {/* Rotas de comunidade */}
-        <Route path="/comunidade/:state/:city/:territorySlug/alertas" element={<CommunityTerritorialShell />}>
-          <Route index element={<TerritorialCommunityAlertsPage />} />
-        </Route>
         <Route path="/comunidade/:state/:city/:territorySlug/interesse" element={<CommunityInterestPage />} />
         <Route path="/comunidade/:state/:city/:territorySlug/problemas" element={<CommunityTerritorialShell />}>
           <Route index element={<TerritorialCommunityIssuesPage />} />

@@ -1,46 +1,13 @@
-/**
- * CreatePostModal - Modal para criação de posts
- *
- * SSOT - Usa postService via hook
- * UX - Validação em tempo real
- * Performance - Memoização de componentes
- * Acessibilidade - ARIA labels completos
- */
-
 import React from "react";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/shared/components/ui/dialog";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/shared/components/ui/tooltip";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/shared/components/ui/dialog";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/shared/components/ui/tooltip";
 import { Button } from "@/shared/components/ui/button";
 import { Textarea } from "@/shared/components/ui/textarea";
+import { Input } from "@/shared/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/shared/components/ui/avatar";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/shared/components/ui/select";
-import {
-  Image,
-  BarChart2,
-  MapPin,
-  MessageSquare,
-  Calendar,
-  Newspaper,
-  Globe,
-  Home,
-  X,
-  AlertCircle,
-} from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/shared/components/ui/select";
+import { Alert, AlertDescription } from "@/shared/components/ui/alert";
+import { AlertCircle, Bell, BriefcaseBusiness, Building2, Calendar, ClipboardList, HelpCircle, Image, Megaphone, MessageSquare, OctagonAlert, PartyPopper, Search, Siren, UserRound, Users, Wrench, X } from "lucide-react";
 import { useSessionContext } from "@/core/session";
 import { useCreatePostForm } from "../../hooks/composer/useCreatePostForm";
 import { postService } from "@/core/posts/services";
@@ -50,7 +17,6 @@ import type { PostType } from "@/core/posts/types/Post";
 import { useMultiProfileContext } from "@/core/profiles/contexts/multi-profile-runtime-context";
 import { ActiveProfileBadge } from "@/core/profiles/components/ActiveProfileBadge";
 import { useTerritoryFilter } from "@/core/location/hooks/useTerritoryFilter";
-import { Alert, AlertDescription } from "@/shared/components/ui/alert";
 
 interface CreatePostModalProps {
   open: boolean;
@@ -62,71 +28,96 @@ interface CreatePostModalProps {
   initialReach?: "street" | "neighborhood" | "city";
 }
 
-interface ProfileForPost {
-  id: string;
-  displayName: string;
-  avatarUrl?: string;
-  locationId?: string;
-  profileType?: string;
-}
+type IntentId =
+  | "discussao"
+  | "pergunta"
+  | "enquete"
+  | "recomendacao"
+  | "aviso_comunitario"
+  | "alerta_urgente"
+  | "reportar_problema"
+  | "vaga"
+  | "classificado"
+  | "promocao"
+  | "servico"
+  | "evento"
+  | "mutirao"
+  | "encontro";
 
-function toProfileForPost(profile: unknown): ProfileForPost | null {
-  if (!profile || typeof profile !== "object") {
-    return null;
-  }
-
-  const record = profile as Record<string, unknown>;
-  const id = typeof record.id === "string" ? record.id : null;
-  if (!id) return null;
-
-  const displayName =
-    (typeof record.display_name === "string" && record.display_name) ||
-    (typeof record.displayName === "string" && record.displayName) ||
-    (typeof record.name === "string" && record.name) ||
-    "Usuario";
-
-  const avatarUrl =
-    (typeof record.avatar_url === "string" && record.avatar_url) ||
-    (typeof record.avatarUrl === "string" && record.avatarUrl) ||
-    undefined;
-
-  const locationId =
-    (typeof record.location_id === "string" && record.location_id) ||
-    (typeof record.locationId === "string" && record.locationId) ||
-    undefined;
-
-  const profileType =
-    (typeof record.profile_type === "string" && record.profile_type) ||
-    (typeof record.profileType === "string" && record.profileType) ||
-    undefined;
-
-  return {
-    id,
-    displayName,
-    avatarUrl,
-    locationId,
-    profileType,
-  };
-}
-
-const POST_TYPES: {
-  value: PostType;
+interface IntentDef {
+  id: IntentId;
   label: string;
   icon: React.ElementType;
-  description: string;
-  color: string;
-}[] = [
-  { value: "discussao", label: "Discussão", icon: MessageSquare, description: "Inicie uma conversa com a vizinhança", color: "text-blue-400" },
-  { value: "recomendacao", label: "Recomendação", icon: MapPin, description: "Indique um lugar, serviço ou pessoa", color: "text-green-400" },
-  { value: "evento", label: "Evento", icon: Calendar, description: "Divulgue um evento local", color: "text-purple-400" },
-  { value: "noticia", label: "Notícia", icon: Newspaper, description: "Compartilhe uma notícia do bairro", color: "text-yellow-400" },
-  { value: "enquete", label: "Enquete", icon: BarChart2, description: "Crie uma votação para a comunidade", color: "text-orange-400" },
+  structuralType: PostType;
+  distribution: Array<"moradores" | "empresas" | "eventos" | "alertas" | "vagas" | "classificados" | "para_voce" | "todos">;
+  tooltip: string;
+}
+
+const INTENT_GROUPS: Array<{ title: string; items: IntentDef[] }> = [
+  {
+    title: "Comunidade",
+    items: [
+      { id: "discussao", label: "Discussão", icon: MessageSquare, structuralType: "discussao", distribution: ["moradores", "para_voce", "todos"], tooltip: "Conversas abertas entre moradores sobre o dia a dia do território." },
+      { id: "pergunta", label: "Pergunta", icon: HelpCircle, structuralType: "pergunta", distribution: ["moradores", "para_voce", "todos"], tooltip: "Pergunta objetiva para obter respostas da comunidade local." },
+      { id: "enquete", label: "Enquete", icon: ClipboardList, structuralType: "enquete", distribution: ["moradores", "para_voce", "todos"], tooltip: "Consulta rápida para tomada de decisão coletiva." },
+      { id: "recomendacao", label: "Recomendação", icon: Search, structuralType: "recomendacao", distribution: ["moradores", "para_voce", "todos"], tooltip: "Indicação de pessoas, lugares ou soluções úteis no bairro." },
+      { id: "aviso_comunitario", label: "Aviso comunitário", icon: Megaphone, structuralType: "discussao", distribution: ["moradores", "todos"], tooltip: "Comunicado local não urgente para orientar a vizinhança." },
+    ],
+  },
+  {
+    title: "Alertas e Problemas",
+    items: [
+      { id: "alerta_urgente", label: "Alerta urgente", icon: Siren, structuralType: "discussao", distribution: ["alertas", "para_voce", "todos"], tooltip: "Situações urgentes ou momentâneas. Exemplo: trânsito, acidente, falta de água agora." },
+      { id: "reportar_problema", label: "Reportar problema", icon: OctagonAlert, structuralType: "discussao", distribution: ["alertas", "para_voce", "todos"], tooltip: "Problemas persistentes do bairro que precisam de acompanhamento. Exemplo: buraco na rua, iluminação quebrada, lixo acumulado." },
+    ],
+  },
+  {
+    title: "Economia local",
+    items: [
+      { id: "vaga", label: "Vaga", icon: BriefcaseBusiness, structuralType: "recomendacao", distribution: ["vagas", "empresas", "para_voce", "todos"], tooltip: "Oportunidade de trabalho vinculada ao território local." },
+      { id: "classificado", label: "Classificado", icon: ClipboardList, structuralType: "desapego", distribution: ["classificados", "empresas", "para_voce", "todos"], tooltip: "Compra, venda e trocas com contexto territorial." },
+      { id: "promocao", label: "Promoção", icon: Bell, structuralType: "recomendacao", distribution: ["empresas", "para_voce", "todos"], tooltip: "Oferta comercial temporária para circulação local." },
+      { id: "servico", label: "Serviço", icon: Wrench, structuralType: "favor", distribution: ["empresas", "classificados", "para_voce", "todos"], tooltip: "Oferta de serviço profissional de alcance local." },
+    ],
+  },
+  {
+    title: "Eventos e atividades",
+    items: [
+      { id: "evento", label: "Evento", icon: Calendar, structuralType: "evento", distribution: ["eventos", "para_voce", "todos"], tooltip: "Programação local com data, horário e participação." },
+      { id: "mutirao", label: "Mutirão", icon: Users, structuralType: "evento", distribution: ["eventos", "moradores", "para_voce", "todos"], tooltip: "Ação coletiva de melhoria territorial com coordenação comunitária." },
+      { id: "encontro", label: "Encontro", icon: PartyPopper, structuralType: "evento", distribution: ["eventos", "moradores", "para_voce", "todos"], tooltip: "Reunião social ou temática entre moradores." },
+    ],
+  },
 ];
 
 const REACH_OPTIONS = [
-  { value: "neighborhood", label: "Meu bairro", icon: Home, description: "Visível para todo o bairro" },
-  { value: "city", label: "Cidade", icon: Globe, description: "Visível para toda a cidade" },
-];
+  { value: "street", label: "Rua" },
+  { value: "neighborhood", label: "Bairro" },
+  { value: "city", label: "Cidade" },
+] as const;
+
+function intentFromPostType(postType?: PostType): IntentId {
+  switch (postType) {
+    case "pergunta":
+      return "pergunta";
+    case "enquete":
+      return "enquete";
+    case "recomendacao":
+      return "recomendacao";
+    case "evento":
+      return "evento";
+    case "favor":
+      return "servico";
+    case "desapego":
+      return "classificado";
+    default:
+      return "discussao";
+  }
+}
+
+function flattenIntents(): IntentDef[] {
+  return INTENT_GROUPS.flatMap((group) => group.items);
+}
 
 export function CreatePostModal({
   open,
@@ -139,331 +130,339 @@ export function CreatePostModal({
 }: CreatePostModalProps) {
   const { activeProfile: sessionProfile } = useSessionContext();
   const { effectiveProfile } = useMultiProfileContext();
-  // effectiveProfile = contextual (business/professional/driver) ?? personal
   const rawProfile = effectiveProfile ?? sessionProfile;
-  const profile = toProfileForPost(rawProfile);
+  const profile = rawProfile as { id?: string; name?: string; avatar_url?: string; avatarUrl?: string; location_id?: string; locationId?: string; profile_type?: string } | null;
   const form = useCreatePostForm();
-  const [publishing, setPublishing] = React.useState(false);
   const territoryFilter = useTerritoryFilter();
+  const [publishing, setPublishing] = React.useState(false);
+  const [intent, setIntent] = React.useState<IntentId>(intentFromPostType(initialType ?? defaultType));
+
+  const [problemLocation, setProblemLocation] = React.useState("");
+  const [problemCategory, setProblemCategory] = React.useState("");
+  const [problemSeverity, setProblemSeverity] = React.useState<"baixa" | "media" | "alta" | "critica">("media");
+  const [problemRecurrence, setProblemRecurrence] = React.useState<"pontual" | "frequente" | "constante">("pontual");
+  const [problemDescription, setProblemDescription] = React.useState("");
+
+  const intents = flattenIntents();
+  const selectedIntent = intents.find((item) => item.id === intent) ?? intents[0];
 
   React.useEffect(() => {
-    if (open) {
-      form.setType(initialType ?? defaultType ?? "discussao");
-      form.setReach(initialReach === "street" ? "neighborhood" : initialReach ?? "neighborhood");
-      form.setContent(initialContent ?? "");
-    }
-  }, [open, defaultType, form, initialContent, initialReach, initialType]);
+    if (!open) return;
+    form.setType((initialType ?? defaultType ?? selectedIntent.structuralType) as PostType);
+    form.setReach(initialReach ?? "neighborhood");
+    form.setContent(initialContent ?? "");
+    setIntent(intentFromPostType(initialType ?? defaultType));
+  }, [open, defaultType, initialType, initialReach, initialContent]); // intentional
 
-  const displayName = profile?.displayName || "Usuário";
-  const initials = displayName.split(" ").map((n: string) => n[0]).join("").toUpperCase().slice(0, 2);
-  const currentType = POST_TYPES.find((t) => t.value === form.type);
-  const currentReach = REACH_OPTIONS.find((r) => r.value === form.reach);
+  React.useEffect(() => {
+    form.setType(selectedIntent.structuralType);
+  }, [selectedIntent.structuralType]); // intentional
 
-  const charPercent = (form.characterCount / 2000) * 100;
-  const charColor = charPercent > 90 ? "text-red-400" : charPercent > 70 ? "text-yellow-400" : "text-muted-foreground/50";
+  const displayName = profile?.name ?? "Usuário";
+  const avatarUrl = profile?.avatar_url ?? profile?.avatarUrl;
+  const initials = displayName
+    .split(" ")
+    .map((part) => part[0] ?? "")
+    .join("")
+    .toUpperCase()
+    .slice(0, 2);
 
-  // SPRINT 2 FASE 3: Resolução de location_id para criação
-  const getLocationIdForPost = (): { location_id: string | null; error: string | null } => {
-    // 1. Se território ativo for group, usar localização do perfil quando disponível
-    if (territoryFilter.scope === "group") {
-      if (profile?.locationId) {
-        return {
-          location_id: profile.locationId,
-          error: null,
-        };
-      }
+  const locationId = territoryFilter.scope === "location"
+    ? territoryFilter.location_id
+    : profile?.location_id ?? profile?.locationId ?? null;
+  const locationError = !locationId ? "Configure sua localização antes de publicar." : null;
 
-      return {
-        location_id: null,
-        error: "Selecione um bairro/cidade no filtro ou atualize sua localização no perfil",
-      };
-    }
+  const isProblemIntent = intent === "reportar_problema";
+  const problemValid =
+    problemLocation.trim().length >= 3 &&
+    problemCategory.trim().length >= 3 &&
+    problemDescription.trim().length >= 20;
 
-    // 2. Se território ativo for location, usar
-    if (territoryFilter.scope === "location") {
-      return {
-        location_id: territoryFilter.location_id,
-        error: null,
-      };
-    }
+  const baseValid = isProblemIntent ? problemValid : form.characterCount >= 20 && form.characterCount <= 2000;
+  const canPublish = !!profile?.id && !locationError && !publishing && baseValid;
 
-    // 3. Fallback para profile.locationId (compatível com camel/snake no adaptador)
-    if (profile?.locationId) {
-      return {
-        location_id: profile.locationId,
-        error: null,
-      };
-    }
+  const buildStructuredPayload = () => {
+    const problemPayload = isProblemIntent
+      ? {
+          location: problemLocation.trim(),
+          category: problemCategory.trim(),
+          severity: problemSeverity,
+          recurrence: problemRecurrence,
+          description: problemDescription.trim(),
+          photo_count: form.images.length,
+        }
+      : null;
 
-    // 4. Sem localização disponível
-    return {
-      location_id: null,
-      error: "Configure sua localização no perfil antes de publicar",
+    const structural = {
+      schema_version: "territorial-content.v1",
+      intent,
+      structural_type: selectedIntent.structuralType,
+      display_format: isProblemIntent ? "issue_card" : "post_card",
+      distribution_territorial: selectedIntent.distribution,
+      problem: problemPayload,
     };
+
+    const content = isProblemIntent
+      ? `Problema reportado: ${problemCategory}\n\n${problemDescription.trim()}`
+      : form.content.trim();
+
+    const tags = [
+      `intent:${intent}`,
+      `structural:${selectedIntent.structuralType}`,
+      ...selectedIntent.distribution.map((channel) => `dist:${channel}`),
+      ...(isProblemIntent ? [`problem:category:${problemCategory.trim().toLowerCase().replace(/\s+/g, "_")}`, `problem:severity:${problemSeverity}`, `problem:recurrence:${problemRecurrence}`] : []),
+      `schema:${structural.schema_version}`,
+    ];
+
+    return { content, tags, structural };
   };
 
-  const { location_id: resolvedLocationId, error: locationError } = getLocationIdForPost();
-  const canPublish = form.isValid && !locationError && !publishing;
+  const handleClose = () => {
+    form.resetForm();
+    setProblemLocation("");
+    setProblemCategory("");
+    setProblemSeverity("media");
+    setProblemRecurrence("pontual");
+    setProblemDescription("");
+    onClose();
+  };
 
   const handlePublish = async () => {
-    if (!form.validateForm()) return;
-    if (!profile) {
-      toast.error("Faça login para publicar");
+    if (!profile?.id) {
+      toast.error("Faça login para publicar.");
       return;
     }
-
-    if (locationError) {
-      toast.error(locationError);
+    if (locationError || !locationId) {
+      toast.error(locationError ?? "Localização inválida.");
       return;
     }
-
-    if (!resolvedLocationId) {
-      toast.error("Erro ao resolver localização");
+    if (!baseValid) {
+      toast.error("Preencha os campos obrigatórios do conteúdo.");
       return;
     }
 
     setPublishing(true);
     try {
-      const data = form.getFormData();
+      const payload = buildStructuredPayload();
 
       if (editPostId) {
-        await postService.updatePost(editPostId, {
-          content: data.content,
-        });
-        toast.success("Post atualizado!");
+        await postService.updatePost(editPostId, { content: payload.content });
+        toast.success("Conteúdo atualizado.");
       } else {
-        // SPRINT 2 FASE 3: Usar createPost() com location_id
         await postService.createPost({
           author_profile_id: profile.id,
-          content: data.content,
-          type: data.type,
-          location_id: resolvedLocationId,
-          reach: data.reach,
-          images: data.images,
+          content: payload.content,
+          type: selectedIntent.structuralType,
+          location_id: locationId,
+          reach: form.reach,
+          images: form.images,
+          tags: payload.tags,
+          content_intent: intent,
+          display_format: payload.structural.display_format,
+          distribution_channels: payload.structural.distribution_territorial,
+          content_payload: payload.structural as unknown as Record<string, unknown>,
         });
-        toast.success("Post publicado!");
+        toast.success("Conteúdo publicado.");
       }
+
       form.resetForm();
-      onClose();
-    } catch (error: unknown) {
-      const errorCode =
-        typeof error === "object" &&
-        error !== null &&
-        "code" in error &&
-        typeof (error as { code?: unknown }).code === "string"
-          ? (error as { code: string }).code
-          : null;
-      // Tratar erros específicos do service
-      if (errorCode === "INVALID_LOCATION_TYPE") {
-        toast.error("Esta localização não permite criação de posts");
-      } else if (errorCode === "INACTIVE_LOCATION") {
-        toast.error("Localização inativa");
-      } else {
-        toast.error("Erro ao publicar");
-      }
+      handleClose();
+    } catch {
+      toast.error("Erro ao publicar conteúdo.");
     } finally {
       setPublishing(false);
     }
   };
 
-  const handleClose = () => {
-    form.resetForm();
-    onClose();
-  };
-
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-[540px] bg-card border-border p-0 gap-0 overflow-hidden">
-        {/* Header */}
-        <DialogHeader className="px-5 py-4 border-b border-border bg-card">
-          <DialogTitle className="text-base font-semibold text-foreground">
-            {editPostId ? "Editar post" : "Criar novo post"}
-          </DialogTitle>
+      <DialogContent className="sm:max-w-[760px] max-h-[88vh] overflow-hidden p-0">
+        <DialogHeader className="border-b border-border px-5 py-4">
+          <DialogTitle className="text-base font-semibold">{editPostId ? "Editar conteúdo territorial" : "Criar conteúdo territorial"}</DialogTitle>
         </DialogHeader>
 
-        {/* Form */}
-        <>
-          <div className="px-5 py-4 flex flex-col gap-4 max-h-[65vh] overflow-y-auto">
-            {/* SPRINT 2 FASE 3: Alerta de bloqueio territorial */}
-            {locationError && (
-              <Alert variant="destructive" className="border-destructive/50 bg-destructive/10">
-                <AlertCircle className="h-4 w-4" />
-                <AlertDescription className="text-sm">
-                  {locationError}
-                </AlertDescription>
-              </Alert>
-            )}
+        <div className="max-h-[70vh] overflow-y-auto px-5 py-4 space-y-5">
+          {locationError && (
+            <Alert variant="destructive">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>{locationError}</AlertDescription>
+            </Alert>
+          )}
 
-            {/* Author + autoria explícita */}
-            <div className="flex flex-col gap-2">
-              <div className="flex items-center gap-3">
-                <Avatar className="h-9 w-9 ring-2 ring-border">
-                  <AvatarImage src={profile?.avatarUrl} />
-                  <AvatarFallback className="bg-primary/20 text-primary text-sm font-semibold">{initials}</AvatarFallback>
-                </Avatar>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-foreground">{displayName}</p>
-                  <div className="flex items-center gap-1 mt-0.5">
-                    {currentReach && (
-                      <span className="text-xs text-muted-foreground flex items-center gap-1">
-                        <currentReach.icon className="h-3 w-3" />
-                        {currentReach.label}
-                      </span>
-                    )}
-                    {currentType && (
-                      <>
-                        <span className="text-muted-foreground/40 text-xs">·</span>
-                        <span className={cn("text-xs", currentType.color)}>{currentType.label}</span>
-                      </>
-                    )}
-                  </div>
+          <div className="flex items-center gap-3">
+            <Avatar className="h-10 w-10">
+              <AvatarImage src={avatarUrl} />
+              <AvatarFallback>{initials}</AvatarFallback>
+            </Avatar>
+            <div className="min-w-0">
+              <p className="text-sm font-medium">{displayName}</p>
+              <p className="text-xs text-muted-foreground">{selectedIntent.label}</p>
+            </div>
+            {effectiveProfile && effectiveProfile.profile_type !== "personal" && (
+              <div className="ml-auto">
+                <ActiveProfileBadge profile={effectiveProfile} action="publicando como" />
+              </div>
+            )}
+          </div>
+
+          <section className="space-y-3">
+            <h3 className="text-sm font-semibold">O que deseja publicar?</h3>
+            {INTENT_GROUPS.map((group) => (
+              <div key={group.title} className="space-y-2">
+                <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{group.title}</p>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                  {group.items.map((item) => {
+                    const Icon = item.icon;
+                    const active = item.id === intent;
+                    return (
+                      <Tooltip key={item.id}>
+                        <TooltipTrigger asChild>
+                          <button
+                            type="button"
+                            onClick={() => setIntent(item.id)}
+                            className={cn(
+                              "rounded-lg border p-2.5 text-left transition-colors",
+                              active ? "border-primary bg-primary/10 text-primary" : "border-border hover:border-primary/40",
+                            )}
+                          >
+                            <div className="flex items-center gap-2">
+                              <Icon className="h-4 w-4" />
+                              <span className="text-xs font-semibold">{item.label}</span>
+                            </div>
+                          </button>
+                        </TooltipTrigger>
+                        <TooltipContent side="bottom" className="max-w-[280px] text-xs">
+                          {item.tooltip}
+                        </TooltipContent>
+                      </Tooltip>
+                    );
+                  })}
                 </div>
               </div>
-              {/* Badge de autoria - visível quando não é o perfil personal padrão */}
-              {effectiveProfile && effectiveProfile.profile_type !== "personal" && (
-                <ActiveProfileBadge profile={effectiveProfile} action="publicando como" />
-              )}
-            </div>
+            ))}
+          </section>
 
-            {/* Textarea */}
-            <div className="relative">
+          {isProblemIntent ? (
+            <section className="space-y-3 rounded-lg border border-border bg-card p-3">
+              <p className="text-sm font-semibold">Dados estruturados do problema</p>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs text-muted-foreground">Localização</label>
+                  <Input value={problemLocation} onChange={(e) => setProblemLocation(e.target.value)} placeholder="Rua, referência ou ponto crítico" />
+                </div>
+                <div>
+                  <label className="text-xs text-muted-foreground">Categoria</label>
+                  <Input value={problemCategory} onChange={(e) => setProblemCategory(e.target.value)} placeholder="Ex.: buraco, iluminação, lixo" />
+                </div>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs text-muted-foreground">Gravidade</label>
+                  <Select value={problemSeverity} onValueChange={(v) => setProblemSeverity(v as typeof problemSeverity)}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="baixa">Baixa</SelectItem>
+                      <SelectItem value="media">Média</SelectItem>
+                      <SelectItem value="alta">Alta</SelectItem>
+                      <SelectItem value="critica">Crítica</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <label className="text-xs text-muted-foreground">Recorrência</label>
+                  <Select value={problemRecurrence} onValueChange={(v) => setProblemRecurrence(v as typeof problemRecurrence)}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="pontual">Pontual</SelectItem>
+                      <SelectItem value="frequente">Frequente</SelectItem>
+                      <SelectItem value="constante">Constante</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <div>
+                <label className="text-xs text-muted-foreground">Descrição estruturada</label>
+                <Textarea
+                  value={problemDescription}
+                  onChange={(e) => setProblemDescription(e.target.value)}
+                  placeholder="Descreva o problema, impacto e contexto."
+                  className="min-h-[120px]"
+                />
+              </div>
+            </section>
+          ) : (
+            <section className="space-y-2">
+              <p className="text-xs text-muted-foreground">Conteúdo principal</p>
               <Textarea
-                placeholder="No que você está pensando?"
                 value={form.content}
                 onChange={(e) => form.setContent(e.target.value)}
-                className="min-h-[120px] resize-none bg-background border-border text-foreground placeholder:text-muted-foreground/40 focus-visible:ring-1 text-sm leading-relaxed"
+                placeholder="Descreva o que deseja publicar no território."
+                className="min-h-[140px]"
                 maxLength={2000}
               />
-              <span className={cn("absolute bottom-2 right-3 text-[10px] tabular-nums", charColor)}>
-                {form.characterCount}/2000
-              </span>
-            </div>
+              <p className="text-[11px] text-muted-foreground">{form.characterCount}/2000</p>
+            </section>
+          )}
 
-            {/* Type grid */}
-            <div>
-              <p className="text-xs text-muted-foreground/70 mb-2 font-medium uppercase tracking-wide text-[10px]">Tipo de post</p>
-              <div className="grid grid-cols-3 gap-1.5">
-                {POST_TYPES.map((t) => {
-                  const Icon = t.icon;
-                  const active = form.type === t.value;
-                  return (
-                    <Tooltip key={t.value}>
-                      <TooltipTrigger asChild>
-                        <button
-                          type="button"
-                          onClick={() => form.setType(t.value)}
-                          className={cn(
-                            "flex flex-col items-center gap-1 p-2.5 rounded-lg border text-xs font-medium transition-all",
-                            active
-                              ? `border-current bg-current/10 ${t.color}`
-                              : "border-border text-muted-foreground hover:border-border/80 hover:text-foreground hover:bg-secondary/50"
-                          )}
-                        >
-                          <Icon className={cn("h-4 w-4", active ? t.color : "")} />
-                          {t.label}
-                        </button>
-                      </TooltipTrigger>
-                      <TooltipContent side="bottom" className="text-xs">{t.description}</TooltipContent>
-                    </Tooltip>
-                  );
-                })}
-              </div>
+          <section className="space-y-2">
+            <div className="flex items-center justify-between">
+              <p className="text-xs text-muted-foreground">Mídia</p>
+              <Button variant="ghost" size="icon" type="button" onClick={form.handleAddImage}>
+                <Image className="h-4 w-4" />
+              </Button>
             </div>
-
-            {/* Reach pills + media */}
-            <div className="flex items-center gap-2 flex-wrap">
-              <p className="text-[10px] text-muted-foreground/70 font-medium uppercase tracking-wide">Visível para:</p>
-              {REACH_OPTIONS.map((r) => {
-                const Icon = r.icon;
-                const active = form.reach === r.value;
-                return (
-                  <Tooltip key={r.value}>
-                    <TooltipTrigger asChild>
-                      <button
-                        type="button"
-                        onClick={() => form.setReach(r.value)}
-                        className={cn(
-                          "flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-xs transition-all",
-                          active
-                            ? "border-primary bg-primary/10 text-primary"
-                            : "border-border text-muted-foreground hover:border-border/80 hover:text-foreground"
-                        )}
-                      >
-                        <Icon className="h-3 w-3" />{r.label}
-                      </button>
-                    </TooltipTrigger>
-                    <TooltipContent side="top" className="text-xs">{r.description}</TooltipContent>
-                  </Tooltip>
-                );
-              })}
-              <div className="ml-auto">
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-foreground" onClick={form.handleAddImage} type="button">
-                      <Image className="h-4 w-4" />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent className="text-xs">Adicionar foto ou vídeo</TooltipContent>
-                </Tooltip>
-              </div>
-            </div>
-
-            {/* Image previews */}
             {form.images.length > 0 && (
               <div className="flex gap-2 flex-wrap">
                 {form.images.map((img, i) => (
-                  <div key={i} className="relative group">
-                    <img src={img} alt="" className="h-16 w-16 object-cover rounded-lg border border-border" />
+                  <div key={img} className="relative">
+                    <img src={img} alt="" className="h-16 w-16 rounded-lg border object-cover" />
                     <button
                       type="button"
                       onClick={() => form.handleRemoveImage(i)}
-                      className="absolute -top-1.5 -right-1.5 h-5 w-5 rounded-full bg-destructive text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                      className="absolute -top-1 -right-1 rounded-full bg-destructive p-0.5 text-white"
                     >
                       <X className="h-3 w-3" />
                     </button>
                   </div>
                 ))}
-                {form.images.length < 3 && (
-                  <button
-                    type="button"
-                    onClick={form.handleAddImage}
-                    className="h-16 w-16 rounded-lg border-2 border-dashed border-border text-muted-foreground hover:border-primary/50 hover:text-primary transition-colors flex items-center justify-center"
-                  >
-                    <Image className="h-5 w-5" />
-                  </button>
-                )}
               </div>
             )}
-          </div>
+          </section>
 
-          {/* Footer */}
-          <div className="px-5 py-3 border-t border-border flex items-center justify-between">
-            <p className="text-xs text-muted-foreground">
-              {locationError
-                ? "Localização inválida"
-                : form.isValid
-                  ? "Pronto para publicar"
-                  : `Mínimo 20 caracteres (${Math.max(0, 20 - form.characterCount)} restantes)`}
-            </p>
-            <div className="flex gap-2">
-              <Button variant="ghost" size="sm" onClick={handleClose} className="text-muted-foreground text-xs">
-                Cancelar
-              </Button>
-              <Button
-                size="sm"
-                onClick={handlePublish}
-                disabled={!canPublish}
-                className="text-xs font-semibold min-w-[100px] bg-primary hover:bg-primary/90 text-primary-foreground"
-              >
-                {publishing ? (editPostId ? "Salvando..." : "Publicando...") : (editPostId ? "Salvar" : "Publicar")}
-              </Button>
+          <section className="space-y-2">
+            <p className="text-xs text-muted-foreground">Distribuição territorial</p>
+            <div className="flex flex-wrap gap-2">
+              {REACH_OPTIONS.map((option) => (
+                <button
+                  key={option.value}
+                  type="button"
+                  onClick={() => form.setReach(option.value)}
+                  className={cn(
+                    "rounded-full border px-3 py-1 text-xs",
+                    form.reach === option.value ? "border-primary bg-primary/10 text-primary" : "border-border text-muted-foreground",
+                  )}
+                >
+                  {option.label}
+                </button>
+              ))}
             </div>
+          </section>
+        </div>
+
+        <div className="border-t border-border px-5 py-3 flex items-center justify-between">
+          <p className="text-xs text-muted-foreground">
+            {canPublish ? "Estrutura válida para publicação" : "Complete os campos obrigatórios"}
+          </p>
+          <div className="flex gap-2">
+            <Button variant="ghost" onClick={handleClose}>Cancelar</Button>
+            <Button onClick={handlePublish} disabled={!canPublish}>
+              {publishing ? (editPostId ? "Salvando..." : "Publicando...") : (editPostId ? "Salvar" : "Publicar")}
+            </Button>
           </div>
-        </>
+        </div>
 
         <input ref={form.fileInputRef} type="file" accept="image/*,video/*" multiple className="hidden" onChange={form.handleFileSelect} />
       </DialogContent>
     </Dialog>
   );
 }
-
