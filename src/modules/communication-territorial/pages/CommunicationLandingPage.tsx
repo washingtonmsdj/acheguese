@@ -1,5 +1,4 @@
 import { Helmet } from "react-helmet-async";
-import { useQuery } from "@tanstack/react-query";
 import { HeroSection } from "../v2/sections/HeroSection";
 import { FeaturedMediaSection } from "../v2/sections/FeaturedMediaSection";
 import { ActiveCoverageSection } from "../v2/sections/ActiveCoverageSection";
@@ -13,14 +12,10 @@ import { PublicUtilitySection } from "../v2/sections/PublicUtilitySection";
 import { MultimediaContentSection } from "../v2/sections/MultimediaContentSection";
 import { TerritorialSidebar } from "../v2/components/TerritorialSidebar";
 import { TerritorialFilters } from "../v2/components/TerritorialFilters";
-import { CommunicationTerritorialService } from "@/core/communication-territorial";
+import { useCommunicationLandingHub } from "../hooks/useCommunicationLandingHub";
 
 export default function CommunicationLandingPage() {
-  const { data: hub } = useQuery({
-    queryKey: ["communication-territorial", "landing", "ba", "salvador"],
-    queryFn: () => CommunicationTerritorialService.getPublicHub({ state: "ba", city: "salvador" }),
-    staleTime: 60_000,
-  });
+  const { data: hub } = useCommunicationLandingHub({ state: "ba", city: "salvador" });
 
   return (
     <>
@@ -28,7 +23,7 @@ export default function CommunicationLandingPage() {
         <title>Comunicacao Territorial | Achegue-se</title>
         <meta
           name="description"
-          content="Hub de comunicacao territorial: descubra portais locais, radios comunitarias, coletivos e agentes de midia do seu territorio."
+          content="Hub de comunicação territorial: descubra portais locais, rádios comunitárias, coletivos e agentes de mídia do seu território."
         />
         <link rel="canonical" href="/comunicacao" />
       </Helmet>
