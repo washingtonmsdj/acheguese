@@ -17,6 +17,7 @@ src/test/
 !tests/e2e/professional-operational.spec.ts
 !tests/e2e/onboarding-public.spec.ts
 !tests/e2e/institutional-public.spec.ts
+!tests/e2e/communication-territorial-operational.spec.ts
 
 # Logs
 logs
@@ -154,10 +155,19 @@ scripts/temp/
 scripts/debug/*.log
 *.tmp
 _tmp_*
+/.tmp*
+/tmp-vite-*.log
+/vite-browser-check.log
+/build.log
+/TYPECHECK_FIXED.txt
 
 # Binarios
 *.exe
 *.dll
+
+# TypeScript build info
+*.tsbuildinfo
+.tmp/*.tsbuildinfo
 
 # Logs de auditoria
 audit_results.txt
@@ -165,3 +175,7 @@ audit_results.txt
 test-output.txt
 .vercel
 .env*.local
+# Communication Territorial MVP tests
+!src/core/communication-territorial/**/*.test.ts
+!src/core/profiles/domain/ProfileType.communication.test.ts
+!src/core/public-identity/utils/reserved-names.communication.test.ts
