@@ -2,12 +2,16 @@ import { Card, CardContent } from "@/shared/components/ui/card";
 import { Button } from "@/shared/components/ui/button";
 import { Badge } from "@/shared/components/ui/badge";
 import { FileText, Edit, Trash2, Send } from "lucide-react";
-import type { CommunicationChannel, CommunicationPublication } from "@/core/communication-territorial";
+import type {
+  DashboardChannelView,
+  DashboardPublicationView,
+  DashboardTerritoryView,
+} from "../../types/agentDashboardViewModels";
 
 interface DashboardDraftsProps {
-  channel: CommunicationChannel;
-  drafts: CommunicationPublication[];
-  territories: any[];
+  channel: DashboardChannelView;
+  drafts: DashboardPublicationView[];
+  territories: DashboardTerritoryView[];
 }
 
 export function DashboardDrafts({ channel, drafts, territories }: DashboardDraftsProps) {
@@ -60,16 +64,16 @@ export function DashboardDrafts({ channel, drafts, territories }: DashboardDraft
                   <span>Última edição: {new Date(draft.updated_at || draft.created_at).toLocaleDateString('pt-BR')}</span>
                 </div>
 
-                <div className="flex gap-2">
-                  <Button variant="default" size="sm">
+                <div className="flex flex-wrap gap-2">
+                  <Button variant="default" size="sm" className="w-full sm:w-auto">
                     <Edit className="h-3 w-3 mr-1" />
                     Continuar Editando
                   </Button>
-                  <Button variant="outline" size="sm">
+                  <Button variant="outline" size="sm" className="w-full sm:w-auto">
                     <Send className="h-3 w-3 mr-1" />
                     Publicar
                   </Button>
-                  <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive ml-auto">
+                  <Button variant="ghost" size="sm" className="w-full text-destructive hover:text-destructive sm:ml-auto sm:w-auto">
                     <Trash2 className="h-3 w-3 mr-1" />
                     Excluir
                   </Button>

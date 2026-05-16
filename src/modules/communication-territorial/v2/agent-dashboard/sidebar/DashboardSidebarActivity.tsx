@@ -1,15 +1,15 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/components/ui/card";
 import { Badge } from "@/shared/components/ui/badge";
 import { FileText, Edit, Trash2, Send, Clock } from "lucide-react";
-import type { CommunicationChannel } from "@/core/communication-territorial";
+import type { DashboardActivityView, DashboardChannelView } from "../../types/agentDashboardViewModels";
 
 interface DashboardSidebarActivityProps {
-  channel: CommunicationChannel;
+  channel: DashboardChannelView;
 }
 
 export function DashboardSidebarActivity({ channel }: DashboardSidebarActivityProps) {
   // Mock recent activity (future implementation will fetch from database)
-  const recentActivity: any[] = [];
+  const recentActivity: DashboardActivityView[] = [];
 
   return (
     <Card>

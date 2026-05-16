@@ -93,7 +93,7 @@ export function DashboardAnalytics({ channel, publications }: DashboardAnalytics
           ) : (
             <div className="space-y-4">
               {publications.slice(0, 5).map((pub, index) => (
-                <div key={pub.id} className="flex items-center gap-4">
+                <div key={pub.id} className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-4">
                   <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-sm font-semibold text-primary">
                     {index + 1}
                   </div>
@@ -103,7 +103,7 @@ export function DashboardAnalytics({ channel, publications }: DashboardAnalytics
                       {new Date(pub.created_at).toLocaleDateString('pt-BR')}
                     </p>
                   </div>
-                  <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                  <div className="flex items-center gap-4 text-sm text-muted-foreground sm:ml-auto">
                     <div className="flex items-center gap-1">
                       <Eye className="h-3 w-3" />
                       <span>0</span>

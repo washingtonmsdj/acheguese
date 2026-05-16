@@ -43,7 +43,7 @@ export function TerritorialSidebar() {
             >
               <div>
                 <p className="text-sm font-semibold text-foreground">{topic.tag}</p>
-                <p className="text-xs text-muted-foreground">{topic.posts} publicacoes</p>
+                <p className="text-xs text-muted-foreground">{topic.posts} publicações</p>
               </div>
               <Badge variant="secondary">{idx + 1}</Badge>
             </Link>
@@ -55,7 +55,7 @@ export function TerritorialSidebar() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-lg">
             <MapPin className="h-5 w-5 text-primary" />
-            Seu Territorio
+            Seu Território
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">

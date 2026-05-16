@@ -68,7 +68,7 @@ export function DashboardSchedule({ channel, publications }: DashboardSchedulePr
           ) : (
             <div className="space-y-4">
               {scheduledPublications.map((pub) => (
-                <div key={pub.id} className="flex items-start gap-4 p-4 rounded-lg border bg-card hover:shadow-sm transition-shadow">
+                <div key={pub.id} className="flex flex-col gap-3 rounded-lg border bg-card p-4 transition-shadow hover:shadow-sm sm:flex-row sm:items-start sm:gap-4">
                   <div className="flex-shrink-0 w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center">
                     <FileText className="h-6 w-6 text-primary" />
                   </div>
@@ -85,7 +85,7 @@ export function DashboardSchedule({ channel, publications }: DashboardSchedulePr
                       </div>
                     </div>
                   </div>
-                  <Badge variant="secondary">Agendado</Badge>
+                  <Badge variant="secondary" className="self-start">Agendado</Badge>
                 </div>
               ))}
             </div>

@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 import { Radio, Users, Eye } from "lucide-react";
 import { Card, CardContent } from "@/shared/components/ui/card";
 import { Badge } from "@/shared/components/ui/badge";
-import { CHANNEL_KIND_LABELS, type CommunicationChannel } from "@/core/communication-territorial";
+import { CHANNEL_KIND_LABELS, type CommunicationChannel } from "../../types";
 
 type FeaturedMediaSectionProps = {
   channels?: CommunicationChannel[];
@@ -13,7 +13,7 @@ const mockFeaturedMedia = [
       id: 1,
       name: "Portal Nordeste de Amaralina",
       type: "Portal Local",
-      description: "Noticias, eventos e cultura do Complexo do Nordeste",
+      description: "Notícias, eventos e cultura do Complexo do Nordeste",
       followers: 12500,
       activeNow: true,
       verified: true,
@@ -24,8 +24,8 @@ const mockFeaturedMedia = [
     },
     {
       id: 2,
-      name: "Radio Comunitaria Amaralina",
-      type: "Radio",
+      name: "Rádio Comunitária Amaralina",
+      type: "Rádio",
       description: "A voz da comunidade no ar desde 1998",
       followers: 8300,
       activeNow: true,
@@ -39,7 +39,7 @@ const mockFeaturedMedia = [
       id: 3,
       name: "Coletivo Cultural Barra",
       type: "Coletivo",
-      description: "Arte, cultura e resistencia na Barra",
+      description: "Arte, cultura e resistência na Barra",
       followers: 5200,
       activeNow: false,
       verified: false,
@@ -66,6 +66,7 @@ const mockFeaturedMedia = [
 export function FeaturedMediaSection({ channels }: FeaturedMediaSectionProps) {
   const ssotFeaturedMedia = (channels ?? []).slice(0, 4).map((channel, idx) => ({
     id: channel.id,
+    slug: channel.slug,
     name: channel.public_name,
     type: CHANNEL_KIND_LABELS[channel.channel_kind],
     description: channel.description,
@@ -81,11 +82,11 @@ export function FeaturedMediaSection({ channels }: FeaturedMediaSectionProps) {
   const featuredMedia = ssotFeaturedMedia.length ? ssotFeaturedMedia : mockFeaturedMedia;
 
   return (
-    <section className="space-y-6">
-      <div className="flex items-center justify-between">
+    <section className="space-y-4 sm:space-y-5 md:space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
         <div>
-          <h2 className="text-2xl font-bold text-foreground sm:text-3xl">Midias em Destaque</h2>
-          <p className="mt-1 text-muted-foreground">Agentes de comunicacao mais ativos do seu territorio</p>
+          <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-foreground">Mídias em Destaque</h2>
+          <p className="mt-1 text-sm sm:text-base text-muted-foreground">Agentes de comunicação mais ativos do seu território</p>
         </div>
         <Link to="/comunicacao/explorar" className="flex items-center gap-1 text-sm font-medium text-primary hover:opacity-80">
           Ver todos
@@ -95,11 +96,11 @@ export function FeaturedMediaSection({ channels }: FeaturedMediaSectionProps) {
         </Link>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6">
+      <div className="grid grid-cols-1 gap-3 sm:gap-4 md:gap-5 lg:gap-6 sm:grid-cols-2">
         {featuredMedia.map((media) => (
-          <Link key={media.id} to={`/comunicacao/canal/${media.id}`}>
+          <Link key={media.id} to={`/comunicacao/agente/${media.slug || media.id}`}>
             <Card className="group h-full overflow-hidden border-2 transition-all duration-300 hover:border-primary/40 hover:shadow-xl">
-              <div className="relative h-40 overflow-hidden sm:h-48">
+              <div className="relative h-36 sm:h-40 md:h-44 lg:h-48 overflow-hidden">
                 <img
                   src={media.coverImage}
                   alt={media.name}
@@ -126,10 +127,10 @@ export function FeaturedMediaSection({ channels }: FeaturedMediaSectionProps) {
                 </div>
               </div>
 
-              <CardContent className="p-4 sm:p-5">
-                <div className="space-y-2 sm:space-y-3">
+              <CardContent className="p-3 sm:p-4 md:p-5">
+                <div className="space-y-2 sm:space-y-2.5 md:space-y-3">
                   <div>
-                    <h3 className="line-clamp-1 text-base font-bold text-foreground transition-colors group-hover:text-primary sm:text-lg">
+                    <h3 className="line-clamp-1 text-sm sm:text-base md:text-lg font-bold text-foreground transition-colors group-hover:text-primary">
                       {media.name}
                     </h3>
                     <Badge variant="secondary" className="mt-1.5 text-xs">
@@ -137,18 +138,18 @@ export function FeaturedMediaSection({ channels }: FeaturedMediaSectionProps) {
                       {media.type}
                     </Badge>
                   </div>
-                  <p className="line-clamp-2 text-xs text-muted-foreground sm:text-sm">{media.description}</p>
-                  <div className="flex items-center gap-3 border-t pt-2 text-xs sm:gap-4 sm:text-sm">
-                    <div className="flex items-center gap-1.5 text-muted-foreground">
-                      <Users className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                  <p className="line-clamp-2 text-xs sm:text-sm text-muted-foreground">{media.description}</p>
+                  <div className="flex flex-wrap items-center gap-2 sm:gap-3 md:gap-4 border-t pt-2 text-xs sm:text-sm">
+                    <div className="flex items-center gap-1 sm:gap-1.5 text-muted-foreground">
+                      <Users className="h-3 w-3 sm:h-3.5 sm:w-3.5 md:h-4 md:w-4" />
                       <span className="font-medium">{media.followers.toLocaleString()}</span>
                     </div>
-                    <div className="flex items-center gap-1.5 text-muted-foreground">
-                      <Eye className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                      <span>{media.engagement}</span>
+                    <div className="flex items-center gap-1 sm:gap-1.5 text-muted-foreground">
+                      <Eye className="h-3 w-3 sm:h-3.5 sm:w-3.5 md:h-4 md:w-4" />
+                      <span className="truncate">{media.engagement}</span>
                     </div>
-                    <div className="flex-1 text-right">
-                      <span className="text-xs text-muted-foreground">{media.recentActivity}</span>
+                    <div className="flex-1 text-right min-w-0">
+                      <span className="text-xs text-muted-foreground truncate block">{media.recentActivity}</span>
                     </div>
                   </div>
                 </div>

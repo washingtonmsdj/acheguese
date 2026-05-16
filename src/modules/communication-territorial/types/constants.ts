@@ -3,4 +3,9 @@ export {
   COMMUNICATION_CONTENT_FORMAT_LABELS,
   PUBLICATION_TYPE_LABELS,
 } from "@/core/communication-territorial";
-export type { ChannelKind, CommunicationChannel } from "@/core/communication-territorial";
+export type {
+  ChannelKind,
+  CommunicationChannel,
+  CommunicationChannelTerritory,
+  CommunicationPublication,
+} from "@/core/communication-territorial";

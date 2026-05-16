@@ -2,12 +2,16 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/sha
 import { Button } from "@/shared/components/ui/button";
 import { Badge } from "@/shared/components/ui/badge";
 import { FileText, Eye, MessageSquare, Share2, Edit, Trash2, MoreVertical } from "lucide-react";
-import type { CommunicationChannel, CommunicationPublication } from "@/core/communication-territorial";
+import type {
+  DashboardChannelView,
+  DashboardPublicationView,
+  DashboardTerritoryView,
+} from "../../types/agentDashboardViewModels";
 
 interface DashboardPublicationsProps {
-  channel: CommunicationChannel;
-  publications: CommunicationPublication[];
-  territories: any[];
+  channel: DashboardChannelView;
+  publications: DashboardPublicationView[];
+  territories: DashboardTerritoryView[];
 }
 
 export function DashboardPublications({ channel, publications, territories }: DashboardPublicationsProps) {
@@ -110,16 +114,16 @@ export function DashboardPublications({ channel, publications, territories }: Da
                     </div>
 
                     {/* Actions */}
-                    <div className="flex gap-2 mt-4">
-                      <Button variant="outline" size="sm">
+                    <div className="mt-4 flex flex-wrap gap-2">
+                      <Button variant="outline" size="sm" className="w-full sm:w-auto">
                         <Edit className="h-3 w-3 mr-1" />
                         Editar
                       </Button>
-                      <Button variant="outline" size="sm">
+                      <Button variant="outline" size="sm" className="w-full sm:w-auto">
                         <Eye className="h-3 w-3 mr-1" />
                         Visualizar
                       </Button>
-                      <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive">
+                      <Button variant="ghost" size="sm" className="w-full text-destructive hover:text-destructive sm:ml-auto sm:w-auto">
                         <Trash2 className="h-3 w-3 mr-1" />
                         Excluir
                       </Button>

@@ -12,32 +12,32 @@ export function CommunitiesInMotionSection() {
   ];
 
   return (
-    <section className="space-y-6">
+    <section className="space-y-4 sm:space-y-5 md:space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <div className="mb-2 flex items-center gap-2">
-            <Users className="h-6 w-6 text-primary" />
-            <h2 className="text-2xl font-bold text-foreground sm:text-3xl">Comunidades em Movimento</h2>
+          <div className="mb-1.5 sm:mb-2 flex items-center gap-2">
+            <Users className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
+            <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-foreground">Comunidades em Movimento</h2>
           </div>
-          <p className="text-muted-foreground">Territorios com maior atividade de comunicacao</p>
+          <p className="text-sm sm:text-base text-muted-foreground">Territórios com maior atividade de comunicação</p>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-1 gap-3 sm:gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {communities.map((community) => (
           <Link key={community.id} to={`/comunicacao/ba/salvador/${community.name.toLowerCase().replace(/\s+/g, "-")}`}>
             <Card className="group overflow-hidden transition-all duration-300 hover:border-primary/40 hover:shadow-lg">
-              <div className="relative h-32 overflow-hidden">
+              <div className="relative h-28 sm:h-32 md:h-36 overflow-hidden">
                 <img src={community.image} alt={community.name} className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105" />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
-                <Badge className="absolute right-2 top-2 border-0 bg-primary text-primary-foreground">
+                <Badge className="absolute right-2 top-2 border-0 bg-primary text-primary-foreground text-xs">
                   <TrendingUp className="mr-1 h-3 w-3" />
                   {community.growth}
                 </Badge>
-                <h3 className="absolute bottom-2 left-2 font-bold text-primary-foreground">{community.name}</h3>
+                <h3 className="absolute bottom-2 left-2 text-sm sm:text-base font-bold text-primary-foreground">{community.name}</h3>
               </div>
-              <CardContent className="p-3">
-                <div className="flex justify-between text-sm">
+              <CardContent className="p-2.5 sm:p-3">
+                <div className="flex justify-between text-xs sm:text-sm">
                   <span className="text-muted-foreground">{community.activeChannels} canais</span>
                   <span className="text-muted-foreground">{community.publications} posts</span>
                 </div>

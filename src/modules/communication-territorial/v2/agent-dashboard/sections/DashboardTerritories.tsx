@@ -2,11 +2,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/sha
 import { Button } from "@/shared/components/ui/button";
 import { Badge } from "@/shared/components/ui/badge";
 import { MapPin, Users, FileText, CheckCircle2 } from "lucide-react";
-import type { CommunicationChannel } from "@/core/communication-territorial";
+import type { DashboardChannelView, DashboardTerritoryView } from "../../types/agentDashboardViewModels";
 
 interface DashboardTerritoriesProps {
-  channel: CommunicationChannel;
-  territories: any[];
+  channel: DashboardChannelView;
+  territories: DashboardTerritoryView[];
 }
 
 export function DashboardTerritories({ channel, territories }: DashboardTerritoriesProps) {

@@ -19,10 +19,11 @@ import {
 } from "lucide-react";
 import { communicationTerritorialGateway } from "../../../services";
 import type { CommunicationChannel } from "../../../types";
+import type { AgentTerritoryView } from "../../types/agentPageViewModels";
 
 interface AgentPublicationComposerProps {
   channel: CommunicationChannel;
-  territories: any[];
+  territories: AgentTerritoryView[];
   onPublished?: () => void;
 }
 

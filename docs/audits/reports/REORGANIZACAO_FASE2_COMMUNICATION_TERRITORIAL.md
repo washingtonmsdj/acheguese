@@ -77,3 +77,34 @@ Atualizados:
 
 ## Risco residual
 - `typecheck:app` completo segue pesado no workspace e estourou timeout em execucao anterior, sem indicativo local de erro neste lote.
+
+## Incremento adicional (continuidade)
+- `pages/CommunicationCompanyDetailsPage.tsx` quebrada em subcomponentes de apresentacao sem alterar UI/fluxo:
+  - `components/company-details/CommunicationCompanyDetailsSections.tsx`
+- `v2/pages/CommunicationAgentPageV2.tsx` enxugada com extracao de fallback/mock para:
+  - `v2/mocks/agentPageFallback.ts`
+- Objetivo atendido: reduzir tamanho de arquivo e acoplamento local, mantendo comportamento funcional.
+
+## Incremento adicional (tipagem do fluxo agent-page)
+- Criado `v2/types/agentPageViewModels.ts` com tipos de view-model para canal/territorio/publicacao.
+- Removido uso de `any` no fluxo principal `v2/agent-page`:
+  - `sections/AgentHeroSection.tsx`
+  - `sections/AgentStatsBar.tsx`
+  - `sections/AgentLatestPublications.tsx`
+  - `sections/AgentWeekHighlights.tsx`
+  - `sections/AgentActiveCoverage.tsx`
+  - `sections/AgentLocalNews.tsx`
+  - `sidebar/AgentSidebarAbout.tsx`
+  - `sidebar/AgentSidebarContact.tsx`
+  - `sidebar/AgentSidebarTerritorial.tsx`
+  - `composer/AgentPublicationComposer.tsx`
+- `v2/mocks/agentPageFallback.ts` tipado com view-models.
+- Ganho: melhor manutenção para IA/humanos sem alterar layout nem comportamento funcional.
+
+## Incremento - Tipagem Agent Dashboard (2026-05-16)
+- Removidos ny remanescentes em 2/agent-dashboard via tipos de view model.
+- Criado 2/types/agentDashboardViewModels.ts para padronizar tipos de canal/publicacao/territorio/atividade/equipe e estado de view.
+- Mantido comportamento funcional, rotas e layout.
+- Validacao: 
+px eslint executado nos arquivos alterados do dashboard sem erros.
+

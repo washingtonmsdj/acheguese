@@ -2,15 +2,15 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/sha
 import { Button } from "@/shared/components/ui/button";
 import { Badge } from "@/shared/components/ui/badge";
 import { Users, UserPlus, Shield, Edit, Trash2 } from "lucide-react";
-import type { CommunicationChannel } from "@/core/communication-territorial";
+import type { DashboardChannelView, DashboardTeamMemberView } from "../../types/agentDashboardViewModels";
 
 interface DashboardTeamProps {
-  channel: CommunicationChannel;
+  channel: DashboardChannelView;
 }
 
 export function DashboardTeam({ channel }: DashboardTeamProps) {
   // Mock team members (future implementation will fetch from database)
-  const teamMembers: any[] = [];
+  const teamMembers: DashboardTeamMemberView[] = [];
 
   return (
     <div className="space-y-6">
@@ -90,7 +90,7 @@ export function DashboardTeam({ channel }: DashboardTeamProps) {
           ) : (
             <div className="space-y-4">
               {teamMembers.map((member) => (
-                <div key={member.id} className="flex items-center gap-4 p-4 rounded-lg border bg-card">
+                <div key={member.id} className="flex flex-col gap-3 rounded-lg border bg-card p-4 sm:flex-row sm:items-center sm:gap-4">
                   <div className="flex-shrink-0 w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
                     <Users className="h-6 w-6 text-primary" />
                   </div>
@@ -98,10 +98,12 @@ export function DashboardTeam({ channel }: DashboardTeamProps) {
                     <h4 className="text-sm font-semibold text-foreground truncate">{member.name}</h4>
                     <p className="text-xs text-muted-foreground truncate">{member.email}</p>
                   </div>
-                  <Badge variant="secondary">{member.role}</Badge>
-                  <Button variant="ghost" size="icon">
-                    <Trash2 className="h-4 w-4 text-destructive" />
-                  </Button>
+                  <div className="flex items-center gap-2 sm:ml-auto">
+                    <Badge variant="secondary">{member.role}</Badge>
+                    <Button variant="ghost" size="icon">
+                      <Trash2 className="h-4 w-4 text-destructive" />
+                    </Button>
+                  </div>
                 </div>
               ))}
             </div>
