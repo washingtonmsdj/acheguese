@@ -1,10 +1,10 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/components/ui/card";
 import { Button } from "@/shared/components/ui/button";
 import { ExternalLink, Eye, Settings, HelpCircle, FileText } from "lucide-react";
-import type { CommunicationChannel } from "@/core/communication-territorial";
+import type { DashboardChannelView } from "../../types/agentDashboardViewModels";
 
 interface DashboardSidebarQuickLinksProps {
-  channel: CommunicationChannel;
+  channel: DashboardChannelView;
 }
 
 export function DashboardSidebarQuickLinks({ channel }: DashboardSidebarQuickLinksProps) {

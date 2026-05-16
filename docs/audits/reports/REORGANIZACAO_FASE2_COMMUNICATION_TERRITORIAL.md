@@ -108,3 +108,29 @@ Atualizados:
 - Validacao: 
 px eslint executado nos arquivos alterados do dashboard sem erros.
 
+
+## Incremento - Governanca de Arquitetura (2026-05-16)
+
+### Mapa da nova arquitetura (communication-territorial)
+- `src/modules/communication-territorial/pages`: paginas publicas e fluxo de solicitacao.
+- `src/modules/communication-territorial/components`: blocos visuais compartilhados do dominio.
+- `src/modules/communication-territorial/hooks`: queries e orquestracao de dados por caso de uso.
+- `src/modules/communication-territorial/services`: gateway e roteamento interno do dominio.
+- `src/modules/communication-territorial/types`: contratos de dominio e constantes de apresentacao.
+- `src/modules/communication-territorial/v2`: camada social-first (agent page, dashboard, sections, mocks, types locais).
+
+### Relatorio do que foi removido/limpo nesta fase
+- Removidos `any` do fluxo `v2/agent-page` e `v2/agent-dashboard`.
+- Removida dependencia direta de tipos de `@/core/communication-territorial` em componentes de UI do dashboard.
+- Consolidacao de tipagem local via `v2/types/agentPageViewModels.ts` e `v2/types/agentDashboardViewModels.ts`.
+
+### Dependencias criticas
+- `@tanstack/react-query`: cache e sincronizacao de dados das telas.
+- `react-router-dom`: parametros e navegacao de rotas publicas e privadas.
+- `communicationTerritorialGateway`: fronteira de integracao com `core` e backend.
+- `@/shared/components/ui/*`: base visual padronizada (sem mudanca de comportamento visual).
+
+### Possiveis riscos tecnicos futuros
+- Expansao de mocks no `v2` pode divergir dos contratos reais se nao houver testes de contrato.
+- Crescimento de documentacao em paralelo ao codigo pode gerar desatualizacao sem rotina de revisao.
+- Evolucao de tipos do `core` pode exigir adaptacao no gateway para preservar isolamento do modulo.

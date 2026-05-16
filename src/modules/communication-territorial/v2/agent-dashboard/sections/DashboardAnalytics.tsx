@@ -1,10 +1,10 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/components/ui/card";
 import { TrendingUp, Eye, Users, MessageSquare, Share2, MapPin } from "lucide-react";
-import type { CommunicationChannel, CommunicationPublication } from "@/core/communication-territorial";
+import type { DashboardChannelView, DashboardPublicationView } from "../../types/agentDashboardViewModels";
 
 interface DashboardAnalyticsProps {
-  channel: CommunicationChannel;
-  publications: CommunicationPublication[];
+  channel: DashboardChannelView;
+  publications: DashboardPublicationView[];
 }
 
 export function DashboardAnalytics({ channel, publications }: DashboardAnalyticsProps) {

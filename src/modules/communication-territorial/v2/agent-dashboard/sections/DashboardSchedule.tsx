@@ -2,11 +2,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/sha
 import { Button } from "@/shared/components/ui/button";
 import { Badge } from "@/shared/components/ui/badge";
 import { Calendar, Clock, FileText } from "lucide-react";
-import type { CommunicationChannel, CommunicationPublication } from "@/core/communication-territorial";
+import type { DashboardChannelView, DashboardPublicationView } from "../../types/agentDashboardViewModels";
 
 interface DashboardScheduleProps {
-  channel: CommunicationChannel;
-  publications: CommunicationPublication[];
+  channel: DashboardChannelView;
+  publications: DashboardPublicationView[];
 }
 
 export function DashboardSchedule({ channel, publications }: DashboardScheduleProps) {
