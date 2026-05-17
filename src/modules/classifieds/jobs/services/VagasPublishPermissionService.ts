@@ -1,5 +1,5 @@
-import { AuthService } from "@/core/auth/services/AuthService";
-import { supabase } from "@/integrations/supabase/supabase";
+﻿import { AuthService } from "@/core/auth/services/AuthService";
+import { supabase } from "@/core/infrastructure/supabase/supabase";
 import { logger } from "@/shared/utils/logger";
 import { profileService } from "@/core/profiles/services/ProfileService";
 
@@ -216,6 +216,7 @@ export class VagasPublishPermissionService {
 }
 
 export const vagasPublishPermissionService = VagasPublishPermissionService;
+
 
 
 

@@ -157,6 +157,7 @@ export const PublicarVagaPage = lazy(() => import("@/modules/classifieds/jobs/pa
 export const VagasPublicPage = lazy(() => import("@/modules/classifieds/jobs/pages/VagasPublicPage"));
 export const VagaDetailPage = lazy(() => import("@/modules/classifieds/jobs/pages/VagaDetailPage"));
 export const VagaDetailPublicPage = lazy(() => import("@/modules/classifieds/jobs/pages/VagaDetailPublicPage"));
+export const WorkOpportunityDetailPage = lazy(() => import("@/modules/work-opportunities/pages/WorkOpportunityDetailPageV2"));
 
 // ============================================================
 // COMUNIDADE (GRUPOS, EVENTOS, POSTS)
@@ -164,8 +165,8 @@ export const VagaDetailPublicPage = lazy(() => import("@/modules/classifieds/job
 export const GruposPage = lazy(() => import("@/modules/community-groups/pages/GruposPage"));
 export const ComunidadePage = lazy(() => import("@/modules/community-feed/pages/ComunidadePage"));
 export const GrupoDetailPage = lazy(() => import("@/modules/community-groups/pages/GrupoDetailPage"));
-export const EventosPage = lazy(() => import("@/core/community/pages/EventosPage"));
-export const EventoDetailPage = lazy(() => import("@/core/community/pages/EventoDetailPage"));
+export const EventosPage = lazy(() => import("@/features/events/pages/EventsListPage"));
+export const EventoDetailPage = lazy(() => import("@/features/events/pages/EventDetailPage"));
 export const EventsListPage = lazy(() => import("@/features/events/pages/EventsListPage"));
 export const EventDetailPage = lazy(() => import("@/features/events/pages/EventDetailPage"));
 export const EventsFavoritesPage = lazy(() => import("@/features/events/pages/EventsFavoritesPage"));

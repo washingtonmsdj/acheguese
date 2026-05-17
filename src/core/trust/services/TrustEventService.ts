@@ -1,9 +1,9 @@
-import { supabase } from "@/integrations/supabase";
+﻿import { supabase } from "@/integrations/supabase";
 import { profileService } from "@/core/profiles/services/ProfileService";
 import { NotificationService } from "@/core/notifications/services/NotificationService";
 import { logger } from "@/shared/utils/logger";
 import { businessManagementRoutes } from "@/core/business/utils/businessManagementRoutes";
-import { mobilityRoutes } from "@/modules/mobility/routes/mobilityRoutes";
+import { mobilityRoutes } from "@/core/mobility/routes/mobilityRoutes";
 import {
   TRUST_ADMIN_ACTION_TYPES,
   TRUST_EVENT_STATUSES,

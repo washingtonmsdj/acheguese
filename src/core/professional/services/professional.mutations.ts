@@ -65,6 +65,7 @@ export async function createProfessional(
       cep: sanitizers.sanitizeString(input.cep),
       education: sanitizers.sanitizeString(input.education),
       price_range: sanitizers.sanitizeString(input.price_range),
+      availability_notes: sanitizers.sanitizeString(input.availability_notes),
       instagram: sanitizers.sanitizeString(input.instagram),
       logo_url: sanitizers.sanitizeUrl(input.logo_url),
       banner_url: sanitizers.sanitizeUrl(input.banner_url),
@@ -108,6 +109,7 @@ export async function createProfessional(
         service_areas: validatedData.service_areas || [],
         service_radius_km: validatedData.service_radius_km,
         available_hours: validatedData.available_hours || {},
+        availability_notes: validatedData.availability_notes,
         whatsapp: validatedData.whatsapp,
         email: validatedData.email,
         website: validatedData.website,
@@ -120,6 +122,7 @@ export async function createProfessional(
         is_active: true,
         is_verified: false,
         is_accepting_clients: true,
+        visibility: validatedData.visibility,
         location_id: validatedData.location_id,
         address_id: validatedData.address_id,
       })
@@ -221,6 +224,9 @@ export async function updateProfessional(
     if (input.price_range !== undefined) {
       sanitized.price_range = input.price_range;
     }
+    if (input.availability_notes !== undefined) {
+      sanitized.availability_notes = sanitizers.sanitizeString(input.availability_notes);
+    }
     if (input.service_areas !== undefined) {
       sanitized.service_areas = input.service_areas;
     }
@@ -235,6 +241,9 @@ export async function updateProfessional(
     }
     if (input.address_id !== undefined) {
       sanitized.address_id = input.address_id;
+    }
+    if (input.visibility !== undefined) {
+      sanitized.visibility = input.visibility;
     }
     if (input.status !== undefined) {
       sanitized.is_active = input.status === "active";

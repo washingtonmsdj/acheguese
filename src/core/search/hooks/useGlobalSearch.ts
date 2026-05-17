@@ -77,6 +77,7 @@ export function useGlobalSearch(
       ({
         businesses: [],
         professionals: [],
+        opportunities: [],
         classifieds: [],
         events: [],
         coupons: [],

@@ -63,13 +63,24 @@ export function useTerritoryFilter(
   const { hasHome, homeDistrict, homeCity } = useUserTerritory();
 
   return useMemo((): TerritoryFilter => {
-    // ✅ PRIORIDADE 1: Modo Bairro (usuário cadastrado)
+    // ✅ PRIORIDADE 1: Grupo territorial explícito na rota
+    // Em contexto de Complexo/Área, o feed precisa ser unificado pelos membros do grupo.
+    if (routeResolved?.kind === 'group') {
+      const ids = activeMemberIds !== undefined
+        ? activeMemberIds
+        : routeResolved.group.members.map((m) => m.id);
+
+      if (ids.length === 0) return { scope: 'none' };
+      return { scope: 'group', location_ids: ids };
+    }
+
+    // ✅ PRIORIDADE 2: Modo Bairro (usuário cadastrado)
     // Quando em modo bairro, SEMPRE filtra pelo bairro do usuário, independente da URL
     if (hasHome && territoryMode === 'bairro' && homeDistrict) {
       return { scope: 'location', location_id: homeDistrict.id };
     }
 
-    // ✅ PRIORIDADE 2: Modo Cidade (usuário cadastrado)
+    // ✅ PRIORIDADE 3: Modo Cidade (usuário cadastrado)
     // Permite navegação por bairros da cidade do usuário
     if (hasHome && territoryMode === 'cidade') {
       // Se está em um bairro específico da cidade do usuário, usar o bairro
@@ -85,26 +96,15 @@ export function useTerritoryFilter(
       }
     }
 
-    // 3. Prioridade: contexto de rota territorial (group ou location via URL)
+    // 4. Prioridade: contexto de rota territorial por localização (URL)
     // Para visitantes ou quando modo não está definido
     if (routeResolved) {
-      if (routeResolved.kind === 'group') {
-        // Se activeMemberIds foi passado, usar apenas os membros com rollout ativo
-        const ids = activeMemberIds !== undefined
-          ? activeMemberIds
-          : routeResolved.group.members.map((m) => m.id);
-
-        // Nunca retornar grupo sem membros como filtro válido
-        if (ids.length === 0) return { scope: 'none' };
-        return { scope: 'group', location_ids: ids };
-      }
-
       if (routeResolved.kind === 'location') {
         return { scope: 'location', location_id: routeResolved.location.id };
       }
     }
 
-    // 2. Fallback: store de contexto (location ativa fora de rota territorial)
+    // 5. Fallback: store de contexto (location ativa fora de rota territorial)
     if (activeTerritory?.type === 'location') {
       return { scope: 'location', location_id: activeTerritory.location.id };
     }

@@ -120,7 +120,8 @@ export async function getProfessionalsList(params: {
       `,
         { count: "exact" },
       )
-      .eq("is_accepting_clients", true);
+      .eq("is_accepting_clients", true)
+      .eq("visibility", "public_listed");
 
     if (territory) {
       query = applyTerritoryFilter(query, territory);
@@ -282,7 +283,8 @@ export async function getTotalProfessionalsCount(): Promise<number> {
     const { count, error } = await supabase
       .from("professional_data")
       .select("*", { count: "exact", head: true })
-      .eq("is_accepting_clients", true);
+      .eq("is_accepting_clients", true)
+      .eq("visibility", "public_listed");
 
     if (error) {
       throw new Error(error.message);
@@ -312,7 +314,8 @@ export async function getProfessionalsCreatedInPeriod(
       .select("*", { count: "exact", head: true })
       .gte("created_at", startDate.toISOString())
       .lte("created_at", endDate.toISOString())
-      .eq("is_accepting_clients", true);
+      .eq("is_accepting_clients", true)
+      .eq("visibility", "public_listed");
 
     if (error) {
       throw new Error(error.message);
@@ -432,7 +435,8 @@ export async function getProfessionalsByIds(ids: string[]): Promise<Professional
       `,
       )
       .in("id", ids)
-      .eq("is_accepting_clients", true);
+      .eq("is_accepting_clients", true)
+      .eq("visibility", "public_listed");
 
     if (error) {
       throw new Error(error.message);
@@ -470,7 +474,8 @@ export async function searchProfessionals(
         location:locations!location_id(id, name, full_name, type, slug)
       `,
       )
-      .eq("is_accepting_clients", true);
+      .eq("is_accepting_clients", true)
+      .eq("visibility", "public_listed");
 
     // Busca textual em múltiplos campos
     if (sanitizedQuery) {

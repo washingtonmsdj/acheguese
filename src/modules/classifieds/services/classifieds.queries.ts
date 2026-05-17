@@ -1,13 +1,13 @@
-/**
- * 📦 CLASSIFIEDS QUERIES - SSOT Read Model
+﻿/**
+ * ðŸ“¦ CLASSIFIEDS QUERIES - SSOT Read Model
  *
- * Todas as operações de leitura para classificados.
+ * Todas as operaÃ§Ãµes de leitura para classificados.
  * Sem side effects, sem mutations.
  *
- * @version 2.0.0 - Extraído de ClassifiedService.impl.ts
+ * @version 2.0.0 - ExtraÃ­do de ClassifiedService.impl.ts
  */
 
-import { supabase } from "@/integrations/supabase";
+import { supabase } from "@/core/infrastructure/supabase";
 import { logger } from "@/shared/utils/logger";
 import { trackError } from "@/shared/utils/errorTracking";
 import { applyTerritoryFilter } from "@/core/location";
@@ -16,7 +16,7 @@ import { createLocationRepository } from "@/core/location/repositories/createLoc
 import type { TerritoryFilter } from "@/core/location/types";
 import type { ClassifiedData, NeighborhoodWithClassifiedCount } from "./types";
 
-// Instância do LocationService com repositório
+// InstÃ¢ncia do LocationService com repositÃ³rio
 const locationService = new LocationService(createLocationRepository());
 
 type ClassifiedSellerRow = {
@@ -74,7 +74,7 @@ function mapClassifiedWithSeller(item: ClassifiedWithRelationsRow): ClassifiedDa
 // ============================================================
 
 /**
- * Busca bairros com anúncios ativos por cidade.
+ * Busca bairros com anÃºncios ativos por cidade.
  */
 export async function getNeighborhoodsWithClassifieds(
   cityId: string,
@@ -126,12 +126,12 @@ export async function getNeighborhoodsWithClassifieds(
 /**
  * Busca todos os classificados ativos, com filtro territorial opcional.
  *
- * @param filter - TerritoryFilter canônico.
- *   scope: 'location' → .eq('location_id', id) + descendentes (hierárquico) + anúncios globais
- *   scope: 'group'    → .in('location_id', ids) + anúncios globais
- *   scope: 'none'     → sem filtro territorial (retorna todos)
+ * @param filter - TerritoryFilter canÃ´nico.
+ *   scope: 'location' â†’ .eq('location_id', id) + descendentes (hierÃ¡rquico) + anÃºncios globais
+ *   scope: 'group'    â†’ .in('location_id', ids) + anÃºncios globais
+ *   scope: 'none'     â†’ sem filtro territorial (retorna todos)
  *
- * ✅ SSOT: Inclui anúncios com reach='city' ou 'state' quando aplicável
+ * âœ… SSOT: Inclui anÃºncios com reach='city' ou 'state' quando aplicÃ¡vel
  */
 export async function getAllClassifieds(
   filter?: TerritoryFilter,
@@ -157,7 +157,7 @@ export async function getAllClassifieds(
       .eq("is_active", true)
       .order("created_at", { ascending: false });
 
-    // ✅ HIERÁRQUICO - Resolve descendentes antes de aplicar filtro
+    // âœ… HIERÃRQUICO - Resolve descendentes antes de aplicar filtro
     let resolvedFilter = filter;
     let parentCityId: string | null = null;
 
@@ -168,7 +168,7 @@ export async function getAllClassifieds(
         { p_location_id: filter.location_id },
       );
 
-      // ✅ SSOT - Busca informações da location via LocationService
+      // âœ… SSOT - Busca informaÃ§Ãµes da location via LocationService
       try {
         const { location } = await locationService.getLocationById({
           id: filter.location_id,
@@ -192,21 +192,21 @@ export async function getAllClassifieds(
           location_ids: descendantIds,
         };
       }
-      // Se erro, mantém filter original (exact match)
+      // Se erro, mantÃ©m filter original (exact match)
     }
 
     // Aplica filtro resolvido (se scope !== 'none', aplica filtro)
     if (resolvedFilter && resolvedFilter.scope !== "none") {
-      // ✅ NOVIDADE: Busca anúncios locais + anúncios com alcance maior
+      // âœ… NOVIDADE: Busca anÃºncios locais + anÃºncios com alcance maior
       if (resolvedFilter.scope === "group") {
-        // Anúncios do bairro/cidade OU anúncios com reach='city' da cidade pai
+        // AnÃºncios do bairro/cidade OU anÃºncios com reach='city' da cidade pai
         if (parentCityId) {
-          // Estamos em um bairro: incluir anúncios do bairro + anúncios com reach='city' da cidade
+          // Estamos em um bairro: incluir anÃºncios do bairro + anÃºncios com reach='city' da cidade
           query = query.or(
             `location_id.in.(${resolvedFilter.location_ids.join(",")}),and(location_id.eq.${parentCityId},reach.eq.city)`,
           );
         } else {
-          // Estamos em uma cidade: apenas anúncios da cidade e descendentes
+          // Estamos em uma cidade: apenas anÃºncios da cidade e descendentes
           query = query.in("location_id", resolvedFilter.location_ids);
         }
       } else {
@@ -325,7 +325,7 @@ export async function getClassifiedsByCategory(category: string): Promise<Classi
 }
 
 /**
- * Busca classificados do usuário
+ * Busca classificados do usuÃ¡rio
  */
 export async function getUserClassifieds(userId: string): Promise<ClassifiedData[]> {
   try {
@@ -369,7 +369,7 @@ export async function getUserClassifieds(userId: string): Promise<ClassifiedData
 }
 
 /**
- * Busca classificados de um vendedor específico
+ * Busca classificados de um vendedor especÃ­fico
  */
 export async function getClassifiedsBySeller(sellerId: string): Promise<ClassifiedData[]> {
   try {
@@ -406,12 +406,12 @@ export async function getClassifiedsBySeller(sellerId: string): Promise<Classifi
 }
 
 // ============================================================
-// QUERIES - ESTATÍSTICAS ADMINISTRATIVAS
+// QUERIES - ESTATÃSTICAS ADMINISTRATIVAS
 // ============================================================
 
 /**
- * 📊 OBTER CONTAGEM TOTAL DE CLASSIFICADOS
- * ✅ SSOT para contagem de classificados no dashboard admin
+ * ðŸ“Š OBTER CONTAGEM TOTAL DE CLASSIFICADOS
+ * âœ… SSOT para contagem de classificados no dashboard admin
  */
 export async function getTotalClassifiedsCount(): Promise<number> {
   try {
@@ -438,8 +438,8 @@ export async function getTotalClassifiedsCount(): Promise<number> {
 }
 
 /**
- * 📋 OBTER CLASSIFICADOS RECENTES
- * ✅ SSOT para atividade recente de classificados
+ * ðŸ“‹ OBTER CLASSIFICADOS RECENTES
+ * âœ… SSOT para atividade recente de classificados
  */
 export async function getRecentClassifieds(limit = 10): Promise<ClassifiedData[]> {
   try {
@@ -469,8 +469,8 @@ export async function getRecentClassifieds(limit = 10): Promise<ClassifiedData[]
 }
 
 /**
- * 📅 OBTER CLASSIFICADOS CRIADOS EM UM PERÍODO
- * ✅ SSOT para atividade de classificados por período
+ * ðŸ“… OBTER CLASSIFICADOS CRIADOS EM UM PERÃODO
+ * âœ… SSOT para atividade de classificados por perÃ­odo
  */
 export async function getClassifiedsCreatedInPeriod(
   startDate: Date,
@@ -506,7 +506,7 @@ export async function getClassifiedsCreatedInPeriod(
 // ============================================================
 
 /**
- * Lista vendedores com contagem de anúncios ativos
+ * Lista vendedores com contagem de anÃºncios ativos
  */
 export async function getSellersWithAds(
   filter?: TerritoryFilter,
@@ -565,5 +565,6 @@ export async function getSellersWithAds(
     return [];
   }
 }
+
 
 

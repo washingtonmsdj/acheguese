@@ -21,7 +21,7 @@
  */
 
 import { logger } from '@/shared/utils/logger';
-import { supabase } from '@/integrations/supabase/supabase';
+import { supabase } from '@/core/infrastructure/supabase/supabase';
 import { getAllClassifieds } from '@/modules/classifieds/services/classifieds.queries';
 
 // ─── Tipos ────────────────────────────────────────────────────────────────────
@@ -288,3 +288,4 @@ export class ClassifiedUrlService {
 }
 
 export const classifiedUrlService = ClassifiedUrlService;
+

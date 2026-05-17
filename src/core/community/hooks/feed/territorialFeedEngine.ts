@@ -3,11 +3,12 @@ import type { UnifiedPost } from "@/shared/types/posts";
 export type TerritorialFeedChannel =
   | "todos"
   | "para_voce"
-  | "moradores"
   | "empresas"
   | "eventos"
   | "alertas"
+  | "oportunidades"
   | "vagas"
+  | "moradores"
   | "classificados";
 
 type FeedUserSignal = {
@@ -19,6 +20,7 @@ const CHANNELS: TerritorialFeedChannel[] = [
   "empresas",
   "eventos",
   "alertas",
+  "oportunidades",
   "vagas",
   "classificados",
 ];
@@ -31,7 +33,8 @@ const INTENT_TO_CHANNELS: Record<string, TerritorialFeedChannel[]> = {
   aviso_comunitario: ["moradores", "alertas"],
   alerta_urgente: ["alertas"],
   reportar_problema: ["alertas"],
-  vaga: ["empresas", "vagas"],
+  vaga: ["empresas", "oportunidades", "vagas"],
+  oportunidade: ["empresas", "oportunidades", "vagas"],
   classificado: ["classificados"],
   promocao: ["empresas", "classificados"],
   servico: ["empresas", "classificados"],
@@ -82,7 +85,10 @@ function inferLegacyChannels(post: UnifiedPost): Set<TerritorialFeedChannel> {
 
   if (isAlert) channels.add("alertas");
   if (isEvent) channels.add("eventos");
-  if (isJob) channels.add("vagas");
+  if (isJob) {
+    channels.add("oportunidades");
+    channels.add("vagas");
+  }
   if (isClassified) channels.add("classificados");
   if (isBusiness) channels.add("empresas");
 
@@ -104,6 +110,16 @@ function inferChannels(post: UnifiedPost): Set<TerritorialFeedChannel> {
 
   for (const channel of post.distribution_channels ?? []) {
     const normalized = norm(channel) as TerritorialFeedChannel;
+    if (normalized === "oportunidades") {
+      channels.add("oportunidades");
+      channels.add("vagas");
+      continue;
+    }
+    if (normalized === "vagas") {
+      channels.add("vagas");
+      channels.add("oportunidades");
+      continue;
+    }
     if (CHANNELS.includes(normalized)) {
       channels.add(normalized);
     }
@@ -122,6 +138,15 @@ function inferChannels(post: UnifiedPost): Set<TerritorialFeedChannel> {
   }
 
   return channels;
+}
+
+function isOpportunityPost(post: UnifiedPost): boolean {
+  const tokens = getTokens(post);
+  return (
+    post.content_intent === "oportunidade" ||
+    post.display_format === "opportunity_card" ||
+    includesAny(tokens, ["oportunidade", "freela", "diaria", "procuro trabalho", "ofereco trabalho"])
+  );
 }
 
 function scoreForYou(post: UnifiedPost, signal?: FeedUserSignal): number {
@@ -160,5 +185,49 @@ export function filterByTerritorialChannel(
     return [...posts].sort((a, b) => scoreForYou(b, signal) - scoreForYou(a, signal));
   }
 
+  if (channel === "oportunidades") {
+    return posts.filter((post) => {
+      const channels = inferChannels(post);
+      return channels.has("oportunidades") || channels.has("vagas");
+    });
+  }
+
   return posts.filter((post) => inferChannels(post).has(channel));
+}
+
+export function rebalanceTerritorialMix(posts: UnifiedPost[]): UnifiedPost[] {
+  if (posts.length <= 4) return posts;
+
+  const opportunities = posts.filter(isOpportunityPost);
+  if (opportunities.length === 0) return posts;
+
+  const maxOpportunityRatio = 0.45;
+  const maxOpportunities = Math.max(3, Math.floor(posts.length * maxOpportunityRatio));
+
+  const result: UnifiedPost[] = [];
+  let keptOpportunityCount = 0;
+  let skippedOpportunityBuffer: UnifiedPost[] = [];
+
+  for (const post of posts) {
+    const opportunity = isOpportunityPost(post);
+    if (!opportunity) {
+      result.push(post);
+      if (skippedOpportunityBuffer.length > 0 && keptOpportunityCount < maxOpportunities) {
+        result.push(skippedOpportunityBuffer.shift() as UnifiedPost);
+        keptOpportunityCount += 1;
+      }
+      continue;
+    }
+
+    const recentOpportunityStreak = result.slice(-2).filter(isOpportunityPost).length;
+    if (keptOpportunityCount >= maxOpportunities || recentOpportunityStreak >= 2) {
+      skippedOpportunityBuffer.push(post);
+      continue;
+    }
+
+    result.push(post);
+    keptOpportunityCount += 1;
+  }
+
+  return result;
 }

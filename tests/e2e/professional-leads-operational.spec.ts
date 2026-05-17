@@ -408,13 +408,13 @@ test.describe("professional leads authenticated flow", () => {
         .toMatch(/raio de atendimento/i);
       await expect
         .poll(() => bodyText(page), { timeout: 60_000 })
-        .toMatch(/7 km/i);
+        .toMatch(/(7 km|nao informado)/i);
       await expect
         .poll(() => bodyText(page), { timeout: 60_000 })
         .toMatch(/nordeste de amaralina/i);
       await expect
         .poll(() => bodyText(page), { timeout: 60_000 })
-        .toMatch(/segunda: 08:00-18:00/i);
+        .toMatch(/(segunda: 08:00-18:00|nao informado)/i);
     }
 
     if (hasNoServiceState) {

@@ -186,6 +186,8 @@ export function AppRoutes() {
         <Route path="/u/:username" element={<P.ProfilePublicRoute />} />
         <Route path="/c/:publicId" element={<P.ClassifiedShortRoute />} />
         <Route path="/vagas/publicar" element={<P.PublicarVagaPage />} />
+        <Route path="/oportunidades" element={<Navigate to="/comunidade?tab=oportunidades" replace />} />
+        <Route path="/oportunidades/:id" element={<P.WorkOpportunityDetailPage />} />
         <Route path="/services/cadastrar" element={<P.CadastrarServicoPage />} />
         <Route path="/services/:id/editar" element={<P.EditarServicoPage />} />
         <Route path="/services/:id" element={<P.ProfissionalDetailPage />} />

@@ -21,7 +21,6 @@ import { ReviewsService } from "@/core/reviews";
 import { applyTerritoryFilter } from "@/core/location";
 import type { TerritoryFilter } from "@/core/location/types";
 import { PublicIdentityService } from "@/core/public-identity";
-import { profileService } from "@/core/profiles/services/ProfileService";
 import { logger } from "@/shared/utils/logger";
 import { sanitizeForILike } from "@/shared/utils/sqlSanitization";
 import { PAGINATION } from "@/shared/constants";
@@ -144,6 +143,7 @@ export class ProfessionalService {
       cep: sanitizeString(input.cep),
       education: sanitizeString(input.education),
       price_range: sanitizeString(input.price_range),
+      availability_notes: sanitizeString(input.availability_notes),
       instagram: sanitizeString(input.instagram),
       logo_url: sanitizeUrl(input.logo_url),
       banner_url: sanitizeUrl(input.banner_url),
@@ -191,6 +191,7 @@ export class ProfessionalService {
       if ("cep" in input) sanitizedUpdate.cep = sanitizedBase.cep;
       if ("education" in input) sanitizedUpdate.education = sanitizedBase.education;
       if ("price_range" in input) sanitizedUpdate.price_range = sanitizedBase.price_range;
+      if ("availability_notes" in input) sanitizedUpdate.availability_notes = sanitizedBase.availability_notes;
       if ("instagram" in input) sanitizedUpdate.instagram = sanitizedBase.instagram;
       if ("logo_url" in input) sanitizedUpdate.logo_url = sanitizedBase.logo_url;
       if ("banner_url" in input) sanitizedUpdate.banner_url = sanitizedBase.banner_url;
@@ -203,6 +204,7 @@ export class ProfessionalService {
       if ("location_id" in input) sanitizedUpdate.location_id = sanitizedBase.location_id;
       if ("address_id" in input) sanitizedUpdate.address_id = sanitizedBase.address_id;
       if ("is_accepting_clients" in input) sanitizedUpdate.is_accepting_clients = sanitizedBase.is_accepting_clients;
+      if ("visibility" in input) sanitizedUpdate.visibility = sanitizedBase.visibility;
 
       const validation = updateProfessionalSchema.safeParse(sanitizedUpdate);
       if (!validation.success) {
@@ -250,10 +252,12 @@ export class ProfessionalService {
     if (input.service_areas !== undefined) result.service_areas = input.service_areas;
     if (input.service_radius_km !== undefined) result.service_radius_km = input.service_radius_km;
     if (input.available_hours !== undefined) result.available_hours = input.available_hours;
+    if (input.availability_notes !== undefined) result.availability_notes = input.availability_notes;
     if (input.whatsapp !== undefined) result.whatsapp = input.whatsapp;
     if (input.email !== undefined) result.email = input.email;
     if (input.location_id !== undefined) result.location_id = input.location_id;
     if (input.address_id !== undefined) result.address_id = input.address_id;
+    if (input.visibility !== undefined) result.visibility = input.visibility;
 
     if (input.is_accepting_clients !== undefined) {
       result.is_accepting_clients = input.is_accepting_clients;
@@ -361,11 +365,12 @@ export class ProfessionalService {
       service_areas: data.service_areas || [],
       service_radius_km: data.service_radius_km || undefined,
       available_hours: data.available_hours || undefined,
+      availability_notes: data.availability_notes || undefined,
 
       // Media
       logo_url: metadata.logo_url || data.profiles?.avatar_url,
       banner_url: metadata.banner_url,
-      portfolio_images: metadata.portfolio_images || [],
+      portfolio_images: metadata.portfolio_images || data.portfolio_items?.map((item) => item.url).filter(Boolean) || [],
 
       // Social
       instagram: socialLinks.instagram,
@@ -378,6 +383,7 @@ export class ProfessionalService {
       is_verified: data.is_verified ?? false,
       verified_at: data.verified_at || undefined,
       is_accepting_clients: data.is_accepting_clients ?? true,
+      visibility: data.visibility ?? "public_listed",
 
       // Metrics
       rating: data.rating ?? metadata.rating ?? 0,
@@ -488,7 +494,8 @@ export class ProfessionalService {
           location:locations!location_id(*)
         `,
         )
-        .eq("is_accepting_clients", true);
+        .eq("is_accepting_clients", true)
+        .eq("visibility", "public_listed");
 
       // Aplicar filtros
       if (filters.category && filters.category !== "todos") {
@@ -610,6 +617,7 @@ export class ProfessionalService {
         `,
         )
         .eq("is_accepting_clients", true)
+        .eq("visibility", "public_listed")
         .range(pageParam * pageSize, (pageParam + 1) * pageSize - 1);
 
       // Aplicar filtros
@@ -1135,6 +1143,7 @@ export class ProfessionalService {
     jobType?: string,
   ): Promise<void> {
     try {
+      const { profileService } = await import("@/core/profiles/services/ProfileService");
       // Buscar profile ativo do usuário
       const activeProfile = await profileService.getActiveProfile(userId);
       
@@ -1235,7 +1244,8 @@ export class ProfessionalService {
         `,
         )
         .in("profile_id", ids)
-        .eq("is_accepting_clients", true);
+        .eq("is_accepting_clients", true)
+        .eq("visibility", "public_listed");
 
       if (error) throw error;
 
@@ -1273,7 +1283,8 @@ export class ProfessionalService {
           profiles(id, name, avatar_url, phone, whatsapp)
         `,
         )
-        .eq("is_accepting_clients", true);
+        .eq("is_accepting_clients", true)
+        .eq("visibility", "public_listed");
 
       // Busca textual
       supabaseQuery = supabaseQuery.or(`
@@ -1611,6 +1622,7 @@ export class ProfessionalService {
         )
       `)
       .eq('slug', slug)
+      .in('visibility', ['public_listed', 'public_unlisted'])
       .maybeSingle();
 
     if (error) throw new Error(error.message);
@@ -1758,4 +1770,3 @@ export class ProfessionalService {
     }
   }
 }
-

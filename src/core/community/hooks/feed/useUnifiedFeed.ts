@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import { PostAdapter } from "@/core/posts/adapters/PostAdapter";
 import type { UnifiedPost } from "@/shared/types/posts";
-import { filterByTerritorialChannel, type TerritorialFeedChannel } from "./territorialFeedEngine";
+import { filterByTerritorialChannel, rebalanceTerritorialMix, type TerritorialFeedChannel } from "./territorialFeedEngine";
 
 type AdapterItem = Parameters<typeof PostAdapter.convertArray>[0][number];
 
@@ -55,11 +55,12 @@ export function useUnifiedFeed({
     const territorialChannels: TerritorialFeedChannel[] = [
       "todos",
       "para_voce",
-      "moradores",
       "empresas",
       "eventos",
       "alertas",
+      "oportunidades",
       "vagas",
+      "moradores",
       "classificados",
     ];
 
@@ -76,11 +77,12 @@ export function useUnifiedFeed({
 
   const sortedPosts = useMemo(() => {
     if (sortCriteria === "most_commented") {
-      return [...filteredPosts].sort(
+      const sorted = [...filteredPosts].sort(
         (a, b) => (b.comments_count ?? 0) - (a.comments_count ?? 0),
       );
+      return rebalanceTerritorialMix(sorted);
     }
-    return PostAdapter.sortPosts(filteredPosts, sortCriteria, userLocation);
+    return rebalanceTerritorialMix(PostAdapter.sortPosts(filteredPosts, sortCriteria, userLocation));
   }, [filteredPosts, sortCriteria, userLocation]);
 
   return { sortedPosts };

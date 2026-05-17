@@ -41,6 +41,11 @@ export type ProfessionalStatus =
   | "pending"
   | "suspended";
 
+export type ProfessionalVisibility =
+  | "public_listed"
+  | "public_unlisted"
+  | "private";
+
 // ============================================================================
 // DATABASE RECORD TYPES (professional_data table)
 // ============================================================================
@@ -60,12 +65,20 @@ export interface ProfessionalDataRecord {
   service_areas: string[] | null;
   service_radius_km: number | null;
   available_hours: Record<string, unknown> | null;
+  availability_notes?: string | null;
+  portfolio_items?: Array<{
+    url: string;
+    caption?: string;
+    media_type?: "image" | "video" | "document";
+    is_cover?: boolean;
+  }> | null;
   whatsapp: string | null;
   email: string | null;
   rating?: number | null;
   is_verified: boolean;
   verified_at: string | null;
   is_accepting_clients: boolean;
+  visibility?: ProfessionalVisibility;
   
   // Modelo canônico (ETAPA 7)
   /** FK para addresses (endereço físico do consultório/escritório) */
@@ -192,6 +205,8 @@ export interface Professional {
   is_verified: boolean;
   verified_at?: string;
   is_accepting_clients: boolean;
+  visibility?: ProfessionalVisibility;
+  availability_notes?: string;
 
   // Metrics
   rating: number;
@@ -255,6 +270,8 @@ export interface CreateProfessionalInput {
 
   // Status
   is_accepting_clients?: boolean;
+  visibility?: ProfessionalVisibility;
+  availability_notes?: string;
 
   // Meta
   languages?: string[];

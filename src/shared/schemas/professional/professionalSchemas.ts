@@ -45,6 +45,12 @@ const professionalStatusSchema = z.enum([
   "suspended",
 ]);
 
+const professionalVisibilitySchema = z.enum([
+  "public_listed",
+  "public_unlisted",
+  "private",
+]);
+
 // ============================================================================
 // FIELD SCHEMAS
 // ============================================================================
@@ -158,6 +164,7 @@ const baseProfessionalSchema = z.object({
   service_areas: arrayStringSchema,
   service_radius_km: serviceRadiusSchema,
   available_hours: z.record(z.any()).optional(),
+  availability_notes: z.string().max(500).trim().optional(),
 
   // Media
   logo_url: urlSchema,
@@ -175,6 +182,7 @@ const baseProfessionalSchema = z.object({
 
   // Status
   is_accepting_clients: z.boolean().default(true),
+  visibility: professionalVisibilitySchema.default("public_listed"),
 
   // Meta
   languages: arrayStringSchema,

@@ -1,4 +1,4 @@
-﻿import { supabase } from "@/integrations/supabase/supabase";
+﻿import { supabase } from "@/core/infrastructure/supabase/supabase";
 import { logger } from "@/shared/utils/logger";
 import type {
   VagaContrato,
@@ -389,4 +389,5 @@ export class AdminVagasService {
     };
   }
 }
+
 

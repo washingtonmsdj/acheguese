@@ -90,9 +90,9 @@ export function UnifiedComposer({
           >
             <MessageCircle className="w-4 h-4 text-blue-500" />
             <div>
-              <div className="font-medium">Post Social</div>
+              <div className="font-medium">Conteudo territorial</div>
               <div className="text-sm text-muted-foreground">
-                Discussao, recomendacao, enquete...
+                Discussao, enquete, oportunidade...
               </div>
             </div>
           </DropdownMenuItem>

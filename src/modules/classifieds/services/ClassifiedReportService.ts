@@ -1,11 +1,11 @@
-/**
- * ClassifiedReportService - Serviço de denúncias de classificados
+﻿/**
+ * ClassifiedReportService - ServiÃ§o de denÃºncias de classificados
  * 
- * Gerencia denúncias de anúncios suspeitos ou inadequados.
+ * Gerencia denÃºncias de anÃºncios suspeitos ou inadequados.
  * Armazena em classified_reports e notifica administradores.
  */
 
-import { supabase } from "@/integrations/supabase";
+import { supabase } from "@/core/infrastructure/supabase";
 import { REPORT_STATUS, type ReportStatus } from "@/shared/types/constants";
 import { logger } from "@/shared/utils/logger";
 import { trackError } from "@/shared/utils/errorTracking";
@@ -48,7 +48,7 @@ export interface CreateReportInput {
 
 class ClassifiedReportServiceClass {
   /**
-   * Cria uma nova denúncia
+   * Cria uma nova denÃºncia
    */
   async createReport(
     userId: string | null,
@@ -90,7 +90,7 @@ class ClassifiedReportServiceClass {
   }
 
   /**
-   * Busca todas as denúncias (admin)
+   * Busca todas as denÃºncias (admin)
    */
   async getAllReports(filters?: {
     status?: string;
@@ -133,7 +133,7 @@ class ClassifiedReportServiceClass {
   }
 
   /**
-   * Busca denúncias de um classificado específico
+   * Busca denÃºncias de um classificado especÃ­fico
    */
   async getReportsByClassified(classifiedId: string): Promise<ClassifiedReport[]> {
     try {
@@ -163,7 +163,7 @@ class ClassifiedReportServiceClass {
   }
 
   /**
-   * Atualiza status de uma denúncia (admin)
+   * Atualiza status de uma denÃºncia (admin)
    */
   async updateReportStatus(
     reportId: string,
@@ -207,7 +207,7 @@ class ClassifiedReportServiceClass {
   }
 
   /**
-   * Conta denúncias pendentes (admin dashboard)
+   * Conta denÃºncias pendentes (admin dashboard)
    */
   async getPendingReportsCount(): Promise<number> {
     try {
@@ -229,7 +229,7 @@ class ClassifiedReportServiceClass {
   }
 
   /**
-   * Busca denúncias recentes (admin dashboard)
+   * Busca denÃºncias recentes (admin dashboard)
    */
   async getRecentReports(limit = 10): Promise<ClassifiedReport[]> {
     try {
@@ -257,5 +257,6 @@ class ClassifiedReportServiceClass {
 }
 
 export const classifiedReportService = new ClassifiedReportServiceClass();
+
 
 

@@ -24,6 +24,7 @@ export const CreateProfileSchema = z.object({
   username: usernameValidator.optional(),
 
   bio: z.string().max(500, validationMessages.string.max(500)).optional(),
+  short_bio: z.string().max(280, validationMessages.string.max(280)).optional(),
 
   avatar_url: z
     .string()
@@ -34,6 +35,9 @@ export const CreateProfileSchema = z.object({
   city: z
     .string({ required_error: validationMessages.fields.city.required })
     .min(2, validationMessages.string.min(2)),
+
+  main_territory_location_id: z.string().uuid().optional(),
+  community_reputation_score: z.number().int().min(0).optional(),
 
   phone: phoneValidator.optional(),
 
@@ -55,6 +59,7 @@ export const UpdateProfileSchema = z.object({
   username: usernameValidator.optional(),
 
   bio: z.string().max(500, validationMessages.string.max(500)).optional(),
+  short_bio: z.string().max(280, validationMessages.string.max(280)).optional(),
 
   avatar_url: z
     .string()
@@ -63,6 +68,8 @@ export const UpdateProfileSchema = z.object({
     .or(z.literal("")),
 
   city: z.string().min(2, validationMessages.string.min(2)).optional(),
+  main_territory_location_id: z.string().uuid().optional(),
+  community_reputation_score: z.number().int().min(0).optional(),
 
   phone: phoneValidator.optional(),
 });

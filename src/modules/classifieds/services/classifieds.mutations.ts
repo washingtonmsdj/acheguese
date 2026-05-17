@@ -1,13 +1,13 @@
-/**
- * 📦 CLASSIFIEDS MUTATIONS - SSOT Write Model
+﻿/**
+ * ðŸ“¦ CLASSIFIEDS MUTATIONS - SSOT Write Model
  *
- * Todas as operações de escrita para classificados.
- * Criação, atualização, exclusão (soft delete).
+ * Todas as operaÃ§Ãµes de escrita para classificados.
+ * CriaÃ§Ã£o, atualizaÃ§Ã£o, exclusÃ£o (soft delete).
  *
- * @version 2.0.0 - Extraído de ClassifiedService.impl.ts
+ * @version 2.0.0 - ExtraÃ­do de ClassifiedService.impl.ts
  */
 
-import { supabase } from "@/integrations/supabase";
+import { supabase } from "@/core/infrastructure/supabase";
 import { logger } from "@/shared/utils/logger";
 import { trackError } from "@/shared/utils/errorTracking";
 import type { ClassifiedData, CreateClassifiedInput, UpdateClassifiedInput } from "./types";
@@ -19,7 +19,7 @@ import { slugify } from "./ClassifiedUrlService";
 // ============================================================
 
 /**
- * Gera slug a partir do título (importado dinamicamente do ClassifiedUrlService)
+ * Gera slug a partir do tÃ­tulo (importado dinamicamente do ClassifiedUrlService)
  */
 async function generateSlug(title: string): Promise<string> {
   return slugify(title);
@@ -37,16 +37,16 @@ export async function createClassified(
   input: CreateClassifiedInput,
 ): Promise<ClassifiedData> {
   try {
-    // Gera slug automaticamente a partir do título
+    // Gera slug automaticamente a partir do tÃ­tulo
     const slug = await generateSlug(input.title);
 
     const { data, error } = await supabase
       .from("classifieds")
       .insert({
         ...input,
-        slug, // ✅ Slug gerado automaticamente
+        slug, // âœ… Slug gerado automaticamente
         seller_id: userId,
-        status: CLASSIFIED_STATUS.ACTIVE, // Define status ao invés de is_active (que é computed)
+        status: CLASSIFIED_STATUS.ACTIVE, // Define status ao invÃ©s de is_active (que Ã© computed)
       })
       .select(
         `
@@ -97,7 +97,7 @@ export async function updateClassified(
       .from("classifieds")
       .update(input)
       .eq("id", id)
-      .eq("seller_id", userId) // Só o vendedor pode atualizar
+      .eq("seller_id", userId) // SÃ³ o vendedor pode atualizar
       .select(
         `
         *,
@@ -141,9 +141,9 @@ export async function deleteClassified(id: string, userId: string): Promise<bool
   try {
     const { error } = await supabase
       .from("classifieds")
-      .update({ status: CLASSIFIED_STATUS.INACTIVE }) // Atualiza status ao invés de is_active (que é computed)
+      .update({ status: CLASSIFIED_STATUS.INACTIVE }) // Atualiza status ao invÃ©s de is_active (que Ã© computed)
       .eq("id", id)
-      .eq("seller_id", userId); // Só o vendedor pode deletar
+      .eq("seller_id", userId); // SÃ³ o vendedor pode deletar
 
     if (error) {
       logger.error("Error deleting classified:", error);
@@ -262,5 +262,6 @@ export async function reactivateClassified(
     throw error;
   }
 }
+
 
 

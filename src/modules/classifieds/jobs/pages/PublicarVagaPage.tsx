@@ -30,6 +30,8 @@ import { useSessionContext } from "@/core/session";
 import { useVagasLocation } from "../hooks/useVagasLocation";
 import { useVagaPublishPermission } from "../hooks/useVagaPublishPermission";
 import { VagasService } from "../services/VagasService";
+import { postService } from "@/core/posts/services";
+import { workOpportunitiesService } from "@/core/work-opportunities/services/WorkOpportunitiesService";
 import { JOB_FORM_LIMITS } from "../constants/form-limits";
 import {
   VAGA_CATEGORIAS,
@@ -365,7 +367,7 @@ export default function PublicarVagaPage() {
       if (destaque) highlightType = "premium";
       else if (urgente) highlightType = "featured";
 
-      await VagasService.createVaga({
+      const createdVaga = await VagasService.createVaga({
         slug: VagasService.generateSlug(titulo.trim(), empresa.trim()),
         titulo: titulo.trim(),
         descricao: descricao.trim(),
@@ -409,6 +411,55 @@ export default function PublicarVagaPage() {
         metaDescription: descricao.trim().slice(0, 160),
         ogImageUrl: undefined,
       });
+
+      try {
+        await postService.createPost({
+          author_profile_id: activeProfile.id,
+          content: `Vaga aberta: ${titulo.trim()} • ${empresa.trim()}`,
+          type: "favor",
+          location_id: activeLocationId,
+          reach: "city",
+          tags: [
+            "format:opportunity",
+            "intent:vaga",
+            `category:${categoria || "outro"}`,
+            `contract:${contrato}`,
+          ],
+          content_intent: "vaga",
+          display_format: "opportunity_card",
+          distribution_channels: ["oportunidades", "empresas", "para_voce", "todos"],
+          content_payload: {
+            schema_version: "territorial-content.v3",
+            intent: "vaga",
+            structural_type: "favor",
+            display_format: "opportunity_card",
+            vaga: {
+              id: createdVaga.id,
+              slug: createdVaga.slug,
+              title: createdVaga.titulo,
+              company: createdVaga.empresaNome,
+              category: createdVaga.categoria,
+              location_id: createdVaga.locationId,
+              target_url: `/vagas/detalhe/${createdVaga.id}`,
+            },
+          },
+        });
+      } catch (feedError) {
+        console.warn("[PublicarVagaPage] Nao foi possivel distribuir vaga no feed", feedError);
+      }
+
+      try {
+        await workOpportunitiesService.notifyMatchingForStructuredVaga({
+          vagaId: createdVaga.id,
+          title: createdVaga.titulo,
+          professionalCategory: createdVaga.categoria,
+          territoryLocationId: createdVaga.locationId,
+          sourceUrl: `/vagas/detalhe/${createdVaga.id}`,
+          actorUserId: user?.id ?? null,
+        });
+      } catch (matchingError) {
+        console.warn("[PublicarVagaPage] Nao foi possivel notificar matching da vaga", matchingError);
+      }
 
       toast.success("Vaga enviada para revisão com sucesso.");
       navigate(vagasListPath);

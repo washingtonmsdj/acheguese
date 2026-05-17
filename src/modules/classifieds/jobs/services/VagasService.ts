@@ -18,7 +18,7 @@
  * @version 3.0.0 - Service Completo AAA
  */
 import { logger } from '@/shared/utils/logger';
-import { supabase } from '@/integrations/supabase/supabase';
+import { supabase } from '@/core/infrastructure/supabase/supabase';
 import { JOB_QUERY_LIMITS } from '../constants/query-limits';
 import type {
   Vaga,
@@ -779,4 +779,5 @@ export class VagasService {
 
 // Export singleton
 export const vagasService = VagasService;
+
 
