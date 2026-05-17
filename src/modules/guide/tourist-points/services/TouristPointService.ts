@@ -1,5 +1,5 @@
-import { logger } from '@/shared/utils/logger';
-import { supabase } from '@/integrations/supabase';
+﻿import { logger } from '@/shared/utils/logger';
+import { supabase } from '@/core/infrastructure/supabase';
 import { resolveCityToLocationIds, resolveNeighborhoodInCity } from '@/core/location/helpers/territorialResolver';
 import { LocationType } from '@/shared/types/enums';
 import { PAGINATION } from '@/shared/constants';
@@ -128,7 +128,7 @@ function mapDbToLegacy(point: any): TouristPoint {
     gallery_urls: Array.isArray(point.gallery_urls)
       ? point.gallery_urls
       : media.map((m) => m.url).filter(Boolean),
-    icon_emoji: toText(point.icon_emoji) ?? '📍',
+    icon_emoji: toText(point.icon_emoji) ?? 'ðŸ“',
     visiting_hours: openingHours,
     entry_fee: toText(point.entry_fee) ?? toText(point.price_text),
     price_type: mapDbPriceTypeToLegacy(point.price_type),
@@ -374,7 +374,7 @@ export class TouristPointService {
       longitude: payload.longitude ?? null,
       photo_url: toText(payload.photo_url),
       gallery_urls: Array.isArray(payload.gallery_urls) ? payload.gallery_urls : [],
-      icon_emoji: toText(payload.icon_emoji) ?? '📍',
+      icon_emoji: toText(payload.icon_emoji) ?? 'ðŸ“',
       opening_hours: openingHours,
       visiting_hours: openingHours,
       entry_fee: toText(payload.entry_fee) ?? toText(payload.price_text),
@@ -468,7 +468,7 @@ export class TouristPointService {
     if (has(payload, 'longitude')) patch.longitude = payload.longitude ?? null;
     if (has(payload, 'photo_url')) patch.photo_url = toText(payload.photo_url);
     if (has(payload, 'gallery_urls')) patch.gallery_urls = Array.isArray(payload.gallery_urls) ? payload.gallery_urls : [];
-    if (has(payload, 'icon_emoji')) patch.icon_emoji = toText(payload.icon_emoji) ?? '📍';
+    if (has(payload, 'icon_emoji')) patch.icon_emoji = toText(payload.icon_emoji) ?? 'ðŸ“';
 
     if (has(payload, 'opening_hours') || has(payload, 'visiting_hours')) {
       const openingHours = toText(payload.opening_hours) ?? toText(payload.visiting_hours);
@@ -657,3 +657,4 @@ export class TouristPointService {
     }
   }
 }
+

@@ -1,12 +1,12 @@
-import { DriverEarningsLayout } from "@/modules/mobility/components/driver/DriverEarningsLayout";
+import { DriverEarningsLayout } from "@/core/mobility/components/driver/DriverEarningsLayout";
 
 /**
  * CentralMotoboyGanhosPage
  * 
- * Página de ganhos de motoboy na Central (/central/motoboy/ganhos).
+ * PÃ¡gina de ganhos de motoboy na Central (/central/motoboy/ganhos).
  * Renderiza o componente compartilhado DriverEarningsLayout com service="motoboy".
  * 
- * Esta página renderiza o conteúdo real da rota canônica da Central.
+ * Esta pÃ¡gina renderiza o conteÃºdo real da rota canÃ´nica da Central.
  */
 export default function CentralMotoboyGanhosPage() {
   return <DriverEarningsLayout service="motoboy" />;

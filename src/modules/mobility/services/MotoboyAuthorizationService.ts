@@ -10,7 +10,7 @@
  * - Zero cálculo de elegibilidade em componentes
  */
 
-import { supabase } from "@/integrations/supabase";
+import { supabase } from "@/core/infrastructure/supabase";
 import { profileService } from "@/core/profiles/services/ProfileService";
 import { logger } from "@/shared/utils/logger";
 import { mobilityRolloutService } from "./MobilityRolloutService";
@@ -710,3 +710,4 @@ export class MotoboyAuthorizationService {
     }
   }
 }
+

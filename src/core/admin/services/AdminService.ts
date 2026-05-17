@@ -1,24 +1,24 @@
-/**
- * AdminService — SSOT canônico de administração
+﻿/**
+ * AdminService â€” SSOT canÃ´nico de administraÃ§Ã£o
  *
- * Centraliza toda a lógica de negócio de administração.
- * Hooks e componentes NÃO acessam Supabase diretamente — consomem este service.
+ * Centraliza toda a lÃ³gica de negÃ³cio de administraÃ§Ã£o.
+ * Hooks e componentes NÃƒO acessam Supabase diretamente â€” consomem este service.
  *
  * Responsabilidades:
- * - Gestão de empresas
- * - Gestão de perfis
- * - Gestão de planos
+ * - GestÃ£o de empresas
+ * - GestÃ£o de perfis
+ * - GestÃ£o de planos
  * - Auditoria
- * - Relatórios
+ * - RelatÃ³rios
  */
 import { logger } from '@/shared/utils/logger';
 import { supabase } from '@/integrations/supabase';
 import type { AdminSupabaseClient } from '../types/adminDatabase.types';
-import { MobilityService } from '@/modules/mobility/services/MobilityService.impl';
+import { MobilityService } from '@/core/mobility/services/runtime';
 
 const supabaseTyped = supabase as unknown as AdminSupabaseClient;
 
-// ── Tipos ─────────────────────────────────────────────────────────────────
+// â”€â”€ Tipos â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export interface ServiceResult<T> {
   data: T | null;
@@ -80,13 +80,13 @@ type PlanUsageSubscriptionRow = {
   business_data?: { name?: string | null } | null;
 };
 
-// ── Service ───────────────────────────────────────────────────────────────
+// â”€â”€ Service â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export const AdminService = {
   
-  // ══════════════════════════════════════════════════════════════════════════
-  // GESTÃO DE EMPRESAS
-  // ══════════════════════════════════════════════════════════════════════════
+  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+  // GESTÃƒO DE EMPRESAS
+  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
   
   /**
    * Lista todas as empresas com resumo
@@ -128,7 +128,7 @@ export const AdminService = {
         return { data: null, error: error.message };
       }
 
-      // Busca plano e estatísticas de cada empresa
+      // Busca plano e estatÃ­sticas de cada empresa
       const businessesWithStats = await Promise.all(
         (businesses || []).map(async (business) => {
           // Busca plano
@@ -138,14 +138,14 @@ export const AdminService = {
             .eq('business_id', business.id)
             .single();
 
-          // Busca estatísticas de pedidos
+          // Busca estatÃ­sticas de pedidos
           const { data: orderStats } = await supabase
             .from('orders')
             .select('total')
             .eq('business_id', business.id)
             .eq('status', 'completed');
 
-          // Busca estatísticas de entregas
+          // Busca estatÃ­sticas de entregas
           const totalDeliveries = await MobilityService.countDeliveredBySource('business', business.id);
 
           const totalOrders = orderStats?.length || 0;
@@ -193,9 +193,9 @@ export const AdminService = {
     }
   },
 
-  // ══════════════════════════════════════════════════════════════════════════
-  // GESTÃO DE PERFIS
-  // ══════════════════════════════════════════════════════════════════════════
+  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+  // GESTÃƒO DE PERFIS
+  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
   /**
    * Lista todos os perfis com resumo
@@ -255,9 +255,9 @@ export const AdminService = {
     }
   },
 
-  // ══════════════════════════════════════════════════════════════════════════
-  // GESTÃO DE PLANOS
-  // ══════════════════════════════════════════════════════════════════════════
+  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+  // GESTÃƒO DE PLANOS
+  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
   /**
    * Lista uso de planos
@@ -279,7 +279,7 @@ export const AdminService = {
         return { data: null, error: error.message };
       }
 
-      // Busca estatísticas de cada empresa
+      // Busca estatÃ­sticas de cada empresa
       const usageData = await Promise.all(
         ((subscriptions as PlanUsageSubscriptionRow[] | null) || []).map(async (sub) => {
           // Busca pedidos
@@ -343,12 +343,12 @@ export const AdminService = {
     }
   },
 
-  // ══════════════════════════════════════════════════════════════════════════
-  // RELATÓRIOS E ESTATÍSTICAS
-  // ══════════════════════════════════════════════════════════════════════════
+  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+  // RELATÃ“RIOS E ESTATÃSTICAS
+  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
   /**
-   * Busca estatísticas gerais da plataforma
+   * Busca estatÃ­sticas gerais da plataforma
    */
   async getPlatformStats(): Promise<ServiceResult<{
     total_businesses: number;
@@ -371,7 +371,7 @@ export const AdminService = {
         .select('*', { count: 'exact', head: true })
         .eq('is_active', true);
 
-      // Total de usuários
+      // Total de usuÃ¡rios
       const { count: totalUsers } = await supabase
         .from('profile_complete')
         .select('*', { count: 'exact', head: true });
@@ -388,7 +388,7 @@ export const AdminService = {
       // Total de entregas
       const totalDeliveries = await MobilityService.countDeliveredMotoboyRides();
 
-      // Distribuição de planos
+      // DistribuiÃ§Ã£o de planos
       const { data: subscriptions } = await supabase
         .from('business_subscriptions')
         .select('plan_tier');

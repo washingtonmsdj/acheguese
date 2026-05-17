@@ -1,15 +1,15 @@
-/**
+﻿/**
  * MobilityService - SSOT core/mobility
  *
- * Único ponto de acesso ao banco para operações de mobilidade.
+ * Ãšnico ponto de acesso ao banco para operaÃ§Ãµes de mobilidade.
  *
  * Exporta:
- *   - MobilityService (classe estática) -> leitura / admin
- *   - mobilityService (instância singleton) -> escrita / runtime
+ *   - MobilityService (classe estÃ¡tica) -> leitura / admin
+ *   - mobilityService (instÃ¢ncia singleton) -> escrita / runtime
  */
 
-import { supabase } from "@/integrations/supabase";
-import type { Tables, TablesUpdate } from "@/integrations/supabase/types.generated";
+import { supabase } from "@/core/infrastructure/supabase";
+import type { Tables, TablesUpdate } from "@/core/infrastructure/supabase/types.generated";
 import { logger } from "@/shared/utils/logger";
 import { profileService } from "@/core/profiles/services/ProfileService";
 import { RIDE_STATUS } from "../constants";
@@ -440,7 +440,7 @@ export class MobilityService {
     }
   }
 
-  /** Retorna corridas concluídas para cálculo de ganhos (uso no WeeklyEarningsChart). */
+  /** Retorna corridas concluÃ­das para cÃ¡lculo de ganhos (uso no WeeklyEarningsChart). */
   static async getDriverEarnings(driverProfileId: string): Promise<unknown[]> {
     try {
       const { data, error } = await supabase
@@ -508,7 +508,7 @@ export class MobilityService {
   }
 
   /**
-   * Busca avaliação média do passageiro
+   * Busca avaliaÃ§Ã£o mÃ©dia do passageiro
    * Usado em: PassageiroPage
    */
   static async getPassengerRating(profileId: string): Promise<number> {
@@ -565,7 +565,7 @@ export class MobilityService {
   }
 
   /**
-   * Remove área de serviço do motorista (genérico)
+   * Remove Ã¡rea de serviÃ§o do motorista (genÃ©rico)
    * Usado em: ServiceAreaSettings
    */
   static async deleteDriverServiceArea(table: string, id: string): Promise<{ success: boolean; error?: unknown }> {
@@ -615,7 +615,7 @@ export class MobilityService {
   }
 
   /**
-   * Busca última mensagem de uma conversa
+   * Busca Ãºltima mensagem de uma conversa
    * Usado em: MobilityChatList
    */
   static async getLastMessage(conversationId: string): Promise<Pick<MobilityMessageRecord, "message"> | null> {
@@ -637,7 +637,7 @@ export class MobilityService {
   }
 
   /**
-   * Conta mensagens não lidas de uma conversa
+   * Conta mensagens nÃ£o lidas de uma conversa
    * Usado em: MobilityChatList
    */
   static async getUnreadCount(conversationId: string, profileId: string): Promise<number> {
@@ -704,7 +704,7 @@ class MobilityServiceInstance {
 
       if (error) throw error;
 
-      // Normalizar campos de endereço para compatibilidade com DriverRidesList
+      // Normalizar campos de endereÃ§o para compatibilidade com DriverRidesList
       type RideWithAddress = RideRequestRecord & {
         pickup_address?: { street: string | null; latitude: number | null; longitude: number | null } | null;
         dropoff_address?: { street: string | null; latitude: number | null; longitude: number | null } | null;
@@ -713,7 +713,7 @@ class MobilityServiceInstance {
       return rows.map((r) => ({
         ...r,
         origin: r.origin || r.pickup_address?.street || "Origem nao informada",
-        destination: r.destination || r.dropoff_address?.street || "Destino não informado",
+        destination: r.destination || r.dropoff_address?.street || "Destino nÃ£o informado",
         origin_lat: r.origin_lat || r.pickup_address?.latitude,
         origin_lng: r.origin_lng || r.pickup_address?.longitude,
         destination_lat: r.destination_lat || r.dropoff_address?.latitude,
@@ -727,11 +727,11 @@ class MobilityServiceInstance {
 
   async createAdminDriverProfile(userId: string): Promise<unknown | null> {
     try {
-      // Buscar ou criar profile de motorista via serviço canônico de perfis
+      // Buscar ou criar profile de motorista via serviÃ§o canÃ´nico de perfis
       const driverProfile = await profileService.ensureDriverProfileForUser(userId);
       if (!driverProfile?.id) return null;
 
-      // Criar driver_data se não existir
+      // Criar driver_data se nÃ£o existir
       const { data: existing } = await supabase
         .from('driver_data')
         .select('*')
@@ -861,7 +861,7 @@ class MobilityServiceInstance {
 
   async checkSuspensionExpiry(profileId: string): Promise<void> {
     try {
-      // Verificar se suspensão expirou e reativar se necessário
+      // Verificar se suspensÃ£o expirou e reativar se necessÃ¡rio
       const profile = await profileService.getProfileById(profileId);
 
       if (!profile?.is_suspended || !profile?.suspended_until) return;
@@ -1096,3 +1096,4 @@ class MobilityServiceInstance {
 }
 
 export const mobilityService = new MobilityServiceInstance();
+

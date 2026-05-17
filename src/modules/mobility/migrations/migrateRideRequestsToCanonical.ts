@@ -1,21 +1,21 @@
-/**
- * Script de migração: ride_requests (legado) → modelo canônico
+﻿/**
+ * Script de migraÃ§Ã£o: ride_requests (legado) â†’ modelo canÃ´nico
  * 
- * Estratégia:
+ * EstratÃ©gia:
  * 1. Resolver pickup_location_id e dropoff_location_id por texto/alias/geoespacial
- * 2. Criar pickup_address_id e dropoff_address_id quando houver dados mínimos
- * 3. Reaproveitar coordenadas válidas dos campos legados
- * 4. Não chutar ambiguidades
- * 5. Gerar relatório detalhado
+ * 2. Criar pickup_address_id e dropoff_address_id quando houver dados mÃ­nimos
+ * 3. Reaproveitar coordenadas vÃ¡lidas dos campos legados
+ * 4. NÃ£o chutar ambiguidades
+ * 5. Gerar relatÃ³rio detalhado
  * 
- * Segurança:
- * - Não inventa dados
- * - Não chuta ambiguidades
- * - Mantém campos legados intactos
- * - Gera relatório detalhado
+ * SeguranÃ§a:
+ * - NÃ£o inventa dados
+ * - NÃ£o chuta ambiguidades
+ * - MantÃ©m campos legados intactos
+ * - Gera relatÃ³rio detalhado
  */
 
-import { supabase } from '@/integrations/supabase';
+import { supabase } from '@/core/infrastructure/supabase';
 import { AddressService } from '@/core/address/services/AddressService';
 import { GeospatialService } from '@/core/geospatial/services/GeospatialService';
 import { getAllRideRequests } from '../services/mobility.queries';
@@ -110,7 +110,7 @@ async function migrateRide(
   ride: HistoricalRide,
   result: RideMigrationResult
 ): Promise<void> {
-  // Skip se já migrado completamente
+  // Skip se jÃ¡ migrado completamente
   if (
     ride.pickup_location_id &&
     ride.dropoff_location_id &&
@@ -121,7 +121,7 @@ async function migrateRide(
     return;
   }
 
-  // Extrair dados de localização dos campos legados
+  // Extrair dados de localizaÃ§Ã£o dos campos legados
   const pickupData = extractLocationData(ride.pickup_location, ride.origin);
   const dropoffData = extractLocationData(ride.dropoff_location, ride.destination);
 
@@ -131,13 +131,13 @@ async function migrateRide(
   // Resolver dropoff
   const dropoff = await resolveLocation(dropoffData, result);
 
-  // Contabilizar resoluções
+  // Contabilizar resoluÃ§Ãµes
   if (pickup.location_id) result.pickup_location_resolved++;
   if (dropoff.location_id) result.dropoff_location_resolved++;
   if (pickup.address_id) result.pickup_address_created++;
   if (dropoff.address_id) result.dropoff_address_created++;
   if (pickup.coordinates_reused || dropoff.coordinates_reused) {
-    // Já contabilizado em resolveLocation
+    // JÃ¡ contabilizado em resolveLocation
   }
 
   // Atualizar ride_requests
@@ -203,7 +203,7 @@ async function resolveLocation(
   let strategy: ResolutionStrategy = 'unresolved';
   let coordinatesReused = false;
 
-  // 1. Tentar resolução por texto (cidade/bairro)
+  // 1. Tentar resoluÃ§Ã£o por texto (cidade/bairro)
   if (data.city) {
     const cityId = await resolveCityByName(data.city);
     
@@ -215,7 +215,7 @@ async function resolveLocation(
           strategy = 'text_resolution';
           result.resolved_by_text++;
         } else {
-          // Bairro não encontrado, usar cidade
+          // Bairro nÃ£o encontrado, usar cidade
           locationId = cityId;
           strategy = 'text_resolution';
           result.resolved_by_text++;
@@ -239,7 +239,7 @@ async function resolveLocation(
     }
   }
 
-  // 3. Fallback para geoespacial se houver coordenadas válidas
+  // 3. Fallback para geoespacial se houver coordenadas vÃ¡lidas
   if (!locationId && isValidCoordinate(data.latitude, data.longitude)) {
     const geoId = await resolveByGeospatial(data.latitude!, data.longitude!);
     if (geoId) {
@@ -249,7 +249,7 @@ async function resolveLocation(
     }
   }
 
-  // 4. Criar address_id se houver dados mínimos
+  // 4. Criar address_id se houver dados mÃ­nimos
   if (locationId) {
     addressId = await createAddress(data, locationId, result);
     if (addressId && isValidCoordinate(data.latitude, data.longitude)) {
@@ -270,12 +270,12 @@ async function createAddress(
   locationId: string,
   result: RideMigrationResult
 ): Promise<string | null> {
-  // Determinar se há dados mínimos para criar address
+  // Determinar se hÃ¡ dados mÃ­nimos para criar address
   const hasAddress = (data.address?.trim() || '').length > 3;
   const hasCoordinates = isValidCoordinate(data.latitude, data.longitude);
   
   if (!hasAddress && !hasCoordinates) {
-    // Sem dados mínimos
+    // Sem dados mÃ­nimos
     return null;
   }
 
@@ -292,7 +292,7 @@ async function createAddress(
     addressInput.longitude = data.longitude;
     result.gps_only_addresses++;
   }
-  // Caso 2: Endereço completo com número
+  // Caso 2: EndereÃ§o completo com nÃºmero
   else if (hasAddress && /\d+/.test(data.address || '')) {
     addressInput.address_type = 'exact';
     addressInput.street = data.address;
@@ -303,7 +303,7 @@ async function createAddress(
       addressInput.longitude = data.longitude;
     }
   }
-  // Caso 3: Endereço aproximado ou referência
+  // Caso 3: EndereÃ§o aproximado ou referÃªncia
   else if (hasAddress) {
     addressInput.address_type = 'approximate';
     addressInput.street = data.address;
@@ -319,7 +319,7 @@ async function createAddress(
     const address = await addressService.createAddress(addressInput);
     return address.id;
   } catch (error) {
-    // Falha ao criar address não bloqueia migração
+    // Falha ao criar address nÃ£o bloqueia migraÃ§Ã£o
     return null;
   }
 }
@@ -340,7 +340,7 @@ async function resolveCityByName(cityName: string): Promise<string | null> {
     normalizeText(city.slug) === normalized
   );
 
-  // Retornar apenas se único
+  // Retornar apenas se Ãºnico
   if (matches.length === 1) return matches[0].id;
   
   return null;
@@ -363,7 +363,7 @@ async function resolveDistrictByName(districtName: string, cityId: string): Prom
     normalizeText(district.slug) === normalized
   );
 
-  // Retornar apenas se único
+  // Retornar apenas se Ãºnico
   if (matches.length === 1) return matches[0].id;
 
   return null;
@@ -379,7 +379,7 @@ async function resolveByAlias(text: string): Promise<string | null> {
 
   if (error || !aliases || aliases.length !== 1) return null;
 
-  // Validar que location é válida
+  // Validar que location Ã© vÃ¡lida
   const { data: location } = await supabase
     .from('locations')
     .select('id, type, status')
@@ -389,7 +389,7 @@ async function resolveByAlias(text: string): Promise<string | null> {
 
   if (!location) return null;
 
-  // Garantir que não é territorial_group
+  // Garantir que nÃ£o Ã© territorial_group
   if (location.type === 'territorial_group') return null;
 
   return location.id;
@@ -429,30 +429,30 @@ function normalizeText(text: string): string {
 }
 
 /**
- * Gerar relatório formatado da migração
+ * Gerar relatÃ³rio formatado da migraÃ§Ã£o
  */
 export function formatMigrationReport(result: RideMigrationResult): string {
   const lines: string[] = [];
 
-  lines.push('# RELATÓRIO DE MIGRAÇÃO - ride_requests');
+  lines.push('# RELATÃ“RIO DE MIGRAÃ‡ÃƒO - ride_requests');
   lines.push('');
   lines.push(`Total de corridas: ${result.total}`);
   lines.push(`Origem resolvida (pickup_location_id): ${result.pickup_location_resolved}`);
   lines.push(`Destino resolvido (dropoff_location_id): ${result.dropoff_location_resolved}`);
-  lines.push(`Endereço origem criado (pickup_address_id): ${result.pickup_address_created}`);
-  lines.push(`Endereço destino criado (dropoff_address_id): ${result.dropoff_address_created}`);
+  lines.push(`EndereÃ§o origem criado (pickup_address_id): ${result.pickup_address_created}`);
+  lines.push(`EndereÃ§o destino criado (dropoff_address_id): ${result.dropoff_address_created}`);
   lines.push('');
-  lines.push('## Estratégias de Resolução');
+  lines.push('## EstratÃ©gias de ResoluÃ§Ã£o');
   lines.push(`Resolvido por texto: ${result.resolved_by_text}`);
   lines.push(`Resolvido por alias: ${result.resolved_by_alias}`);
   lines.push(`Resolvido por geoespacial: ${result.resolved_by_geospatial}`);
-  lines.push(`Endereços GPS-only: ${result.gps_only_addresses}`);
+  lines.push(`EndereÃ§os GPS-only: ${result.gps_only_addresses}`);
   lines.push('');
   lines.push('## Falhas');
-  lines.push(`Ambíguas: ${result.ambiguous}`);
-  lines.push(`Não resolvidas: ${result.unresolved}`);
+  lines.push(`AmbÃ­guas: ${result.ambiguous}`);
+  lines.push(`NÃ£o resolvidas: ${result.unresolved}`);
   lines.push(`Outros erros: ${result.failed_other}`);
-  lines.push(`Já migradas (skip): ${result.skipped_already_migrated}`);
+  lines.push(`JÃ¡ migradas (skip): ${result.skipped_already_migrated}`);
   lines.push('');
 
   if (result.failures.length > 0) {
@@ -460,9 +460,9 @@ export function formatMigrationReport(result: RideMigrationResult): string {
     lines.push('');
     result.failures.slice(0, 10).forEach((failure, index) => {
       lines.push(`${index + 1}. Ride ID: ${failure.ride_id}`);
-      lines.push(`   Razão: ${failure.reason}`);
-      lines.push(`   Estratégia pickup: ${failure.pickup_strategy}`);
-      lines.push(`   Estratégia dropoff: ${failure.dropoff_strategy}`);
+      lines.push(`   RazÃ£o: ${failure.reason}`);
+      lines.push(`   EstratÃ©gia pickup: ${failure.pickup_strategy}`);
+      lines.push(`   EstratÃ©gia dropoff: ${failure.dropoff_strategy}`);
       lines.push('');
     });
   }
@@ -479,4 +479,5 @@ export function formatMigrationReport(result: RideMigrationResult): string {
 
   return lines.join('\n');
 }
+
 

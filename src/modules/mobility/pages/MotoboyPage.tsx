@@ -1,7 +1,7 @@
 /**
- * Painel do Motoboy — Página Dedicada para Entregas
+ * Painel do Motoboy â€” PÃ¡gina Dedicada para Entregas
  * 
- * Separação profissional entre motorista (corridas) e motoboy (entregas)
+ * SeparaÃ§Ã£o profissional entre motorista (corridas) e motoboy (entregas)
  * seguindo SSOT e arquitetura limpa.
  * 
  * Rota: /mobilidade/motoboy
@@ -18,7 +18,7 @@ import {
 import { Badge } from "@/shared/components/ui/badge";
 import { Button } from "@/shared/components/ui/button";
 import { ErrorBoundary, ErrorState } from "../components/ErrorBoundary";
-import { useMotoboyPage } from "@/modules/mobility/hooks/useMotoboyPage";
+import { useMotoboyPage } from "@/core/mobility/hooks/useMotoboyPage";
 import { useMobilityUrls } from "@/modules/mobility/hooks/useMobilityUrls";
 import { useUnifiedNotifications } from '@/core/notifications/useUnifiedNotifications';
 import { DriverSuspensionAlert } from "../components/driver/DriverSuspensionAlert";
@@ -68,14 +68,14 @@ export default function MotoboyPage() {
     "today" | "week" | "month" | "total" | null
   >(null);
 
-  // ✅ SSOT COMPLIANT: Redirecionar para cadastro se não for motoboy
+  // âœ… SSOT COMPLIANT: Redirecionar para cadastro se nÃ£o for motoboy
   React.useEffect(() => {
     if (!hook.loading && !hook.isDriver) {
       navigate(mobilityUrls.motoboy.cadastro);
     }
   }, [hook.isDriver, hook.loading, navigate, mobilityUrls.motoboy.cadastro]);
 
-  // ✅ SSOT COMPLIANT: Verificar se tem capacidade de entrega
+  // âœ… SSOT COMPLIANT: Verificar se tem capacidade de entrega
   React.useEffect(() => {
     if (!hook.loading && hook.isDriver && !hook.canAcceptDeliveryOffers) {
       // Redirecionar para habilitar entregas
@@ -93,7 +93,7 @@ export default function MotoboyPage() {
               error={hook.error}
               onRetry={() => hook.refetch()}
               title="Erro ao carregar"
-              description="Verifique sua conexão."
+              description="Verifique sua conexÃ£o."
             />
           </div>
         </div>
@@ -116,10 +116,10 @@ export default function MotoboyPage() {
   return (
     <ErrorBoundary onReset={() => window.location.reload()}>
       <div className="bg-background">
-        {/* Header da página */}
+        {/* Header da pÃ¡gina */}
         <PageHeader {...hook} hook={hook} />
 
-        {/* Conteúdo */}
+        {/* ConteÃºdo */}
         <div className="max-w-7xl mx-auto px-4 py-4">
           <DriverSuspensionAlert />
 
@@ -130,7 +130,7 @@ export default function MotoboyPage() {
               Modo Motoboy
             </Badge>
             <span className="text-xs text-muted-foreground">
-              Apenas entregas disponíveis
+              Apenas entregas disponÃ­veis
             </span>
           </div>
 
@@ -199,12 +199,12 @@ export default function MotoboyPage() {
                 </div>
               )}
 
-              {/* Entregas Disponíveis */}
+              {/* Entregas DisponÃ­veis */}
               {hook.availableDeliveries?.length > 0 && (
                 <div className="space-y-3">
                   <h3 className="text-xs font-bold text-foreground flex items-center gap-1.5">
                     <Package className="h-3.5 w-3.5 text-orange-500" />
-                    Entregas Disponíveis ({hook.availableDeliveries.length})
+                    Entregas DisponÃ­veis ({hook.availableDeliveries.length})
                   </h3>
                   {hook.availableDeliveries.map((delivery: DashboardRide) => (
                     <div
@@ -214,7 +214,7 @@ export default function MotoboyPage() {
                       <div className="flex items-start justify-between">
                         <div className="space-y-1">
                           <p className="text-sm font-medium">
-                            {delivery.origin} → {delivery.destination}
+                            {delivery.origin} â†’ {delivery.destination}
                           </p>
                           <p className="text-xs text-muted-foreground">
                             {delivery.package_description || "Pacote"}
@@ -242,7 +242,7 @@ export default function MotoboyPage() {
                   <div className="text-center py-12">
                     <Package className="h-12 w-12 text-muted-foreground/50 mx-auto mb-4" />
                     <p className="text-sm font-medium text-muted-foreground">
-                      Nenhuma entrega disponível
+                      Nenhuma entrega disponÃ­vel
                     </p>
                     <p className="text-xs text-muted-foreground mt-1">
                       {hook.isDriverOnline
@@ -355,7 +355,7 @@ export default function MotoboyPage() {
   );
 }
 
-/* ─── Page Header ─── */
+/* â”€â”€â”€ Page Header â”€â”€â”€ */
 
 function PageHeader({
   isDriverOnline,
@@ -411,7 +411,7 @@ function PageHeader({
                   {hook.driverStats.avgRating.toFixed(1)}
                 </span>
               </div>
-              <span className="text-xs text-muted-foreground">★</span>
+              <span className="text-xs text-muted-foreground">â˜…</span>
             </div>
             <div className="text-center">
               <div className="flex items-center gap-1">

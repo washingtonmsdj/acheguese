@@ -1,20 +1,20 @@
-/**
- * DeliveryAreaService — SSOT canônico de áreas de entrega
+﻿/**
+ * DeliveryAreaService â€” SSOT canÃ´nico de Ã¡reas de entrega
  *
- * Centraliza toda a lógica de negócio de áreas de entrega e taxas.
- * Hooks e componentes NÃO acessam Supabase diretamente — consomem este service.
+ * Centraliza toda a lÃ³gica de negÃ³cio de Ã¡reas de entrega e taxas.
+ * Hooks e componentes NÃƒO acessam Supabase diretamente â€” consomem este service.
  *
  * Responsabilidades:
- * - CRUD de áreas de entrega
+ * - CRUD de Ã¡reas de entrega
  * - CRUD de bairros atendidos
- * - Validação de elegibilidade
- * - Cálculo de taxa e tempo
+ * - ValidaÃ§Ã£o de elegibilidade
+ * - CÃ¡lculo de taxa e tempo
  */
 
 import { logger } from '@/shared/utils/logger';
-import { supabase } from '@/integrations/supabase';
+import { supabase } from '@/core/infrastructure/supabase';
 
-// ── Tipos ─────────────────────────────────────────────────────────────────
+// â”€â”€ Tipos â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export interface ServiceResult<T> {
   data: T | null;
@@ -74,16 +74,16 @@ export interface DeliveryAreaSummary {
   avg_estimated_time: number | null;
 }
 
-// ── Service ───────────────────────────────────────────────────────────────
+// â”€â”€ Service â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export const DeliveryAreaService = {
   
-  // ══════════════════════════════════════════════════════════════════════════
-  // ÁREAS DE ENTREGA
-  // ══════════════════════════════════════════════════════════════════════════
+  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+  // ÃREAS DE ENTREGA
+  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
   
   /**
-   * Lista áreas de entrega de uma empresa
+   * Lista Ã¡reas de entrega de uma empresa
    */
   async listAreas(businessId: string): Promise<ServiceResult<DeliveryArea[]>> {
     try {
@@ -106,7 +106,7 @@ export const DeliveryAreaService = {
   },
 
   /**
-   * Busca uma área específica
+   * Busca uma Ã¡rea especÃ­fica
    */
   async getArea(areaId: string): Promise<ServiceResult<DeliveryArea>> {
     try {
@@ -129,7 +129,7 @@ export const DeliveryAreaService = {
   },
 
   /**
-   * Cria uma nova área de entrega
+   * Cria uma nova Ã¡rea de entrega
    */
   async createArea(input: {
     business_id: string;
@@ -178,7 +178,7 @@ export const DeliveryAreaService = {
   },
 
   /**
-   * Atualiza uma área de entrega
+   * Atualiza uma Ã¡rea de entrega
    */
   async updateArea(
     areaId: string,
@@ -205,7 +205,7 @@ export const DeliveryAreaService = {
   },
 
   /**
-   * Deleta uma área de entrega
+   * Deleta uma Ã¡rea de entrega
    */
   async deleteArea(areaId: string): Promise<ServiceResult<boolean>> {
     try {
@@ -227,14 +227,14 @@ export const DeliveryAreaService = {
   },
 
   /**
-   * Reordena áreas de entrega
+   * Reordena Ã¡reas de entrega
    */
   async reorderAreas(
     businessId: string,
     areaIds: string[]
   ): Promise<ServiceResult<boolean>> {
     try {
-      // Atualiza display_order de cada área
+      // Atualiza display_order de cada Ã¡rea
       const updates = areaIds.map((id, index) =>
         supabase
           .from('delivery_areas')
@@ -248,7 +248,7 @@ export const DeliveryAreaService = {
 
       if (hasError) {
         logger.error('[DeliveryAreaService] reorderAreas error');
-        return { data: null, error: 'Erro ao reordenar áreas' };
+        return { data: null, error: 'Erro ao reordenar Ã¡reas' };
       }
 
       return { data: true, error: null };
@@ -258,12 +258,12 @@ export const DeliveryAreaService = {
     }
   },
 
-  // ══════════════════════════════════════════════════════════════════════════
+  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
   // BAIRROS
-  // ══════════════════════════════════════════════════════════════════════════
+  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
   /**
-   * Lista bairros de uma área
+   * Lista bairros de uma Ã¡rea
    */
   async listNeighborhoods(areaId: string): Promise<ServiceResult<DeliveryNeighborhood[]>> {
     try {
@@ -286,7 +286,7 @@ export const DeliveryAreaService = {
   },
 
   /**
-   * Adiciona um bairro a uma área
+   * Adiciona um bairro a uma Ã¡rea
    */
   async addNeighborhood(input: {
     delivery_area_id: string;
@@ -376,7 +376,7 @@ export const DeliveryAreaService = {
   },
 
   /**
-   * Adiciona múltiplos bairros de uma vez
+   * Adiciona mÃºltiplos bairros de uma vez
    */
   async addNeighborhoodsBulk(
     areaId: string,
@@ -410,9 +410,9 @@ export const DeliveryAreaService = {
     }
   },
 
-  // ══════════════════════════════════════════════════════════════════════════
-  // VALIDAÇÃO E CÁLCULOS
-  // ══════════════════════════════════════════════════════════════════════════
+  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+  // VALIDAÃ‡ÃƒO E CÃLCULOS
+  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
   /**
    * Verifica elegibilidade de entrega
@@ -453,7 +453,7 @@ export const DeliveryAreaService = {
   },
 
   /**
-   * Retorna resumo das áreas de entrega
+   * Retorna resumo das Ã¡reas de entrega
    */
   async getSummary(businessId: string): Promise<ServiceResult<DeliveryAreaSummary>> {
     try {
@@ -476,4 +476,5 @@ export const DeliveryAreaService = {
     }
   },
 };
+
 

@@ -5,7 +5,7 @@
  * `profiles (driver)` + MobilityService.
  */
 
-import type { Tables } from "@/integrations/supabase/types.generated";
+import type { Tables } from "@/core/infrastructure/supabase/types.generated";
 import { profileService } from "@/core/profiles/services/ProfileService";
 import { getCompletedRidePaymentsByDriver, getDriverData, getDriverStatsDetailed } from "./mobility.queries";
 import { updateDriverData, updateDriverOnlineStatus } from "./mobility.mutations";
@@ -178,3 +178,4 @@ export class DriverService {
 }
 
 export const driverService = new DriverService();
+

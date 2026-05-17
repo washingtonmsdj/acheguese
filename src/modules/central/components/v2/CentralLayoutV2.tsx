@@ -2,13 +2,13 @@ import { Outlet } from "react-router-dom";
 import { SidebarProvider } from "@/shared/components/ui/sidebar";
 import { CentralSidebarV2 } from "./CentralSidebarV2";
 import { CentralTopbarV2 } from "./CentralTopbarV2";
-import { BottomNav } from "@/app/components/BottomNav";
+import { BottomNav } from "@/core/navigation/BottomNav";
 
 /**
  * CentralLayoutV2
  * 
  * Layout COPIADO EXATAMENTE do maker-forge-net AppLayout
- * Estrutura idêntica, classes idênticas, comportamento idêntico
+ * Estrutura idÃªntica, classes idÃªnticas, comportamento idÃªntico
  */
 export function CentralLayoutV2() {
   return (

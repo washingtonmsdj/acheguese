@@ -1,14 +1,14 @@
 /**
- * ContaHubPage - Página principal do hub de conta (refatorada)
+ * ContaHubPage - PÃ¡gina principal do hub de conta (refatorada)
  * 
- * SSOT: Usa sections modulares e layout reutilizável
- * Sem gambiarras: Código limpo e organizado
+ * SSOT: Usa sections modulares e layout reutilizÃ¡vel
+ * Sem gambiarras: CÃ³digo limpo e organizado
  * 
  * Responsabilidades:
  * - Carregar dados via useProfileHub
  * - Fazer guards (loading/error/no-user)
  * - Determinar section ativa
- * - Construir props específicas por section
+ * - Construir props especÃ­ficas por section
  * - Renderizar layout + section ativa
  */
 
@@ -17,7 +17,7 @@ import { useNavigate } from "react-router-dom";
 import { CircleAlert, RefreshCw, Users } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 
-import { useProfileHub } from "@/modules/profile/hooks/useProfileHub";
+import { useProfileHub } from "@/core/profile/hooks/useProfileHub";
 import { ContaHubLayout } from "./ContaHubLayout";
 
 import {
@@ -201,11 +201,11 @@ export default function ContaHubPage() {
   const [activeSection, setActiveSection] = useState<ProfileSectionId>("resumo");
   const data = useProfileHub();
 
-  // ✅ SSOT: Perfil personal é a identidade principal
+  // âœ… SSOT: Perfil personal Ã© a identidade principal
   const personalProfile = data.allProfiles.find((p) => p.profile_type === "personal") || data.profile;
   const personalProfileId = personalProfile?.id ?? null;
 
-  // Função para mudar de section
+  // FunÃ§Ã£o para mudar de section
   const handleSectionChange = (section: ProfileSectionId) => {
     const nextPath = getProfileSectionPath(section);
 
@@ -217,14 +217,14 @@ export default function ContaHubPage() {
     navigate(nextPath, { replace: true });
   };
 
-  // ✅ SSOT: Usar configuração de seções com badges dinâmicos
+  // âœ… SSOT: Usar configuraÃ§Ã£o de seÃ§Ãµes com badges dinÃ¢micos
   const sectionItems: SectionNavItem<ProfileSectionId>[] = buildProfileSectionItems({
     businessModules: data.businessModules,
     operations: data.operations,
     notifications: data.notifications,
   }) as SectionNavItem<ProfileSectionId>[];
 
-  // Guard: Redirecionar se não estiver logado
+  // Guard: Redirecionar se nÃ£o estiver logado
   useEffect(() => {
     if (!data.user) {
       navigate(data.appUrls.auth.login);

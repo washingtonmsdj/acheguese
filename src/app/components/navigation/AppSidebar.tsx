@@ -129,7 +129,7 @@ export function AppSidebar() {
         label: 'Oportunidades',
         items: [
           { id: 'community-classifieds', icon: Tag, label: 'Classificados da comunidade', description: `Classificados do ${territoryName}`, href: `${base}/classificados` },
-          { id: 'community-jobs', icon: Briefcase, label: 'Oportunidades perto de voce', description: 'Oportunidades perto de voce', href: `${base}/vagas` },
+          { id: 'community-jobs', icon: Briefcase, label: 'Oportunidades perto de voce', description: 'Oportunidades perto de voce', href: `${base}/feed?tab=oportunidades` },
           { id: 'community-events', icon: Calendar, label: 'Eventos do bairro', description: `Eventos do ${territoryName}`, href: `${base}/eventos` },
         ] as NavItem[],
       },

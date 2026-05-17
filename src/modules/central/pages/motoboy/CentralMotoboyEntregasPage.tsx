@@ -1,12 +1,12 @@
-import { DriverDeliveriesLayout } from "@/modules/mobility/components/driver/DriverDeliveriesLayout";
+import { DriverDeliveriesLayout } from "@/core/mobility/components/driver/DriverDeliveriesLayout";
 
 /**
  * CentralMotoboyEntregasPage
  * 
- * Página de entregas de motoboy na Central (/central/motoboy/entregas).
+ * PÃ¡gina de entregas de motoboy na Central (/central/motoboy/entregas).
  * Renderiza o componente compartilhado DriverDeliveriesLayout.
  * 
- * Esta página renderiza o conteúdo real da rota canônica da Central.
+ * Esta pÃ¡gina renderiza o conteÃºdo real da rota canÃ´nica da Central.
  */
 export default function CentralMotoboyEntregasPage() {
   return <DriverDeliveriesLayout />;

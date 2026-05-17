@@ -5,12 +5,12 @@ import { Button } from "@/shared/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/components/ui/card";
 import { DriverNotifications } from "@/modules/mobility/components/driver/DriverNotifications";
 import { DriverSettingsPanel } from "@/modules/mobility/components/driver/DriverSettingsPanel";
-import { useDriverProfileIdentity } from "@/modules/mobility/hooks/useDriverProfileIdentity";
+import { useDriverProfileIdentity } from "@/core/mobility/hooks/useDriverProfileIdentity";
 import { getMobilityServicePath } from "@/modules/mobility/routes/mobilityNavigation";
 
 export interface DriverSettingsLayoutProps {
   /**
-   * Tipo de serviço: "motorista" ou "motoboy"
+   * Tipo de serviÃ§o: "motorista" ou "motoboy"
    */
   service: "motorista" | "motoboy";
 }
@@ -18,7 +18,7 @@ export interface DriverSettingsLayoutProps {
 /**
  * DriverSettingsLayout
  * 
- * Layout compartilhado para página de configurações de motorista/motoboy.
+ * Layout compartilhado para pÃ¡gina de configuraÃ§Ãµes de motorista/motoboy.
  * Reutiliza os componentes DriverSettingsPanel e DriverNotifications.
  * 
  * Este componente renderiza o layout das rotas operacionais da Central.
@@ -31,10 +31,10 @@ export function DriverSettingsLayout({ service }: DriverSettingsLayoutProps) {
   });
 
   const isMotorista = service === "motorista";
-  const title = isMotorista ? "Configurações de Motorista" : "Configurações de Motoboy";
+  const title = isMotorista ? "ConfiguraÃ§Ãµes de Motorista" : "ConfiguraÃ§Ãµes de Motoboy";
   const description = isMotorista 
-    ? "Preferências, notificações e controles do fluxo de corridas."
-    : "Preferências, notificações e controles do fluxo de entregas.";
+    ? "PreferÃªncias, notificaÃ§Ãµes e controles do fluxo de corridas."
+    : "PreferÃªncias, notificaÃ§Ãµes e controles do fluxo de entregas.";
   const profileLabel = isMotorista ? "motorista" : "motoboy";
   const profileStatus = identity.driverProfileId 
     ? `Perfil de ${profileLabel} vinculado` 
@@ -63,10 +63,10 @@ export function DriverSettingsLayout({ service }: DriverSettingsLayoutProps) {
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-lg">
               <Bell className="h-4 w-4 text-primary" />
-              Informações rápidas
+              InformaÃ§Ãµes rÃ¡pidas
             </CardTitle>
             <CardDescription>
-              Ajustes de segurança e acesso do perfil de {profileLabel}.
+              Ajustes de seguranÃ§a e acesso do perfil de {profileLabel}.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
@@ -91,7 +91,7 @@ export function DriverSettingsLayout({ service }: DriverSettingsLayoutProps) {
       <Card className="border-border">
         <CardHeader>
           <CardTitle className="text-lg">
-            Notificações e alertas de {quickActionLabel}
+            NotificaÃ§Ãµes e alertas de {quickActionLabel}
           </CardTitle>
           <CardDescription>
             Alertas operacionais do perfil de {profileLabel}.

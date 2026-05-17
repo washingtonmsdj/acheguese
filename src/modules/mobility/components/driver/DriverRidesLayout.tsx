@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/sha
 import { DriverRidesList } from "@/modules/mobility/components/driver/DriverRidesList";
 import { useMotoristaPageV2 } from "@/modules/mobility/hooks/useMotoristaPageV2";
 import { getMobilityServicePath } from "@/modules/mobility/routes/mobilityNavigation";
-import type { MobilityRide } from "@/modules/mobility/components/driver/DriverRidesTab";
+import type { MobilityRide } from "@/core/mobility/components/driver/DriverRidesTab";
 
 type RideLike = MobilityRide & {
   ride_mode?: string | null;
@@ -35,10 +35,10 @@ function getTrustRiskLabel(ride: RideLike): string | null {
 /**
  * DriverRidesLayout
  * 
- * Layout compartilhado para página de corridas de motorista.
+ * Layout compartilhado para pÃ¡gina de corridas de motorista.
  * Reutiliza o componente DriverRidesList e o hook useMotoristaPageV2.
  * 
- * Este componente renderiza o mesmo layout que a página legada
+ * Este componente renderiza o mesmo layout que a pÃ¡gina legada
  * /central/motorista/corridas.
  */
 export function DriverRidesLayout() {

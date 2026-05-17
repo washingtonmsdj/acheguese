@@ -1,4 +1,4 @@
-﻿import { supabase } from "@/integrations/supabase";
+﻿import { supabase } from "@/core/infrastructure/supabase";
 import { logger } from "@/shared/utils/logger";
 
 export interface RideStateAuditInput {
@@ -100,3 +100,4 @@ export class MobilityAuditService {
 }
 
 export const mobilityAuditService = new MobilityAuditService();
+

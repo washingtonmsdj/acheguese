@@ -31,7 +31,7 @@ import { CreateDeliveryModal } from '@/shared/services/mobilityDelivery';
 import { useDelivery } from '@/shared/services/mobilityDelivery';
 import { useLocationContext } from '@/core/location/hooks/useLocationContext';
 import { useOrders } from '../hooks/useOrders';
-import { OrderDeliveryLinkService } from '@/modules/mobility/delivery/services/OrderDeliveryLinkService';
+import { OrderDeliveryLinkService } from '@/core/mobility/delivery/services/OrderDeliveryLinkService';
 import { businessManagementRoutes } from '@/core/business/utils/businessManagementRoutes';
 
 type DeliveryFilterTab = 'all' | 'pending' | 'in_progress' | 'delivered' | 'failed' | 'cancelled';

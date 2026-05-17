@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Education Mutations - SSOT Write Model
  *
  * Todas as operacoes de escrita para o modulo Education.
@@ -7,7 +7,7 @@
  * @version 1.0.0
  */
 
-import { supabase } from '@/integrations/supabase';
+import { supabase } from '@/core/infrastructure/supabase';
 import { logger } from '@/shared/utils/logger';
 import {
   getSchoolStageOptions,
@@ -213,13 +213,13 @@ export async function createEducationProgram(
     const stageGrade = normalizeStageText(payload.grade ?? null);
 
     if (!stageName) {
-      return { data: null, error: new Error('Etapa/série obrigatória para escolas') };
+      return { data: null, error: new Error('Etapa/sÃ©rie obrigatÃ³ria para escolas') };
     }
 
     const official = isOfficialStageLabel(stageName, nicheKey);
     const custom = validateCustomStageText(stageName);
     if (!official && !custom) {
-      return { data: null, error: new Error('Etapa/série inválida para o padrão oficial') };
+      return { data: null, error: new Error('Etapa/sÃ©rie invÃ¡lida para o padrÃ£o oficial') };
     }
 
     payload.name = stageName;
@@ -254,7 +254,7 @@ export async function updateEducationProgram(
     .single();
 
   if (existingProgramError || !existingProgram?.education_profile_id) {
-    return { data: null, error: new Error('Programa não encontrado') };
+    return { data: null, error: new Error('Programa nÃ£o encontrado') };
   }
 
   const nicheKey = await getProfileNicheKey(existingProgram.education_profile_id);
@@ -271,7 +271,7 @@ export async function updateEducationProgram(
       const official = isOfficialStageLabel(candidate, nicheKey);
       const custom = validateCustomStageText(candidate);
       if (!official && !custom) {
-        return { data: null, error: new Error('Etapa/série inválida para o padrão oficial') };
+        return { data: null, error: new Error('Etapa/sÃ©rie invÃ¡lida para o padrÃ£o oficial') };
       }
       (payload as any).name = updatedName ?? candidate;
       (payload as any).grade = updatedGrade ?? candidate;
@@ -333,7 +333,7 @@ export async function createEducationLead(
       const official = isOfficialStageLabel(desired, nicheKey);
       const custom = validateCustomStageText(desired);
       if (!official && !custom) {
-        return { data: null, error: new Error('Série/etapa desejada inválida') };
+        return { data: null, error: new Error('SÃ©rie/etapa desejada invÃ¡lida') };
       }
       payload.desired_grade = desired;
     }
@@ -469,3 +469,4 @@ export async function deleteEducationEvent(
 
   return { data: null, error: null };
 }
+

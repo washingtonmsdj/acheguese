@@ -1,12 +1,12 @@
-import { DriverSettingsLayout } from "@/modules/mobility/components/driver/DriverSettingsLayout";
+import { DriverSettingsLayout } from "@/core/mobility/components/driver/DriverSettingsLayout";
 
 /**
  * CentralMotoboyConfiguracoesPage
  * 
- * Página de configurações de motoboy na Central (/central/motoboy/configuracoes).
+ * PÃ¡gina de configuraÃ§Ãµes de motoboy na Central (/central/motoboy/configuracoes).
  * Renderiza o componente compartilhado DriverSettingsLayout com service="motoboy".
  * 
- * Esta página renderiza o conteúdo real da rota canônica da Central.
+ * Esta pÃ¡gina renderiza o conteÃºdo real da rota canÃ´nica da Central.
  */
 export default function CentralMotoboyConfiguracoesPage() {
   return <DriverSettingsLayout service="motoboy" />;

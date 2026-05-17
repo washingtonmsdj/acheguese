@@ -1,6 +1,6 @@
 import { Car, FileText, MapPinned, Package, Route, Settings2, Wallet } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
-import { mobilityRoutes } from "@/modules/mobility/routes/mobilityRoutes";
+import { mobilityRoutes } from "@/core/mobility/routes/mobilityRoutes";
 
 export type MobilityServiceType = "motorista" | "motoboy";
 export type MotoristaSectionId = keyof typeof mobilityRoutes.motorista;

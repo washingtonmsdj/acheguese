@@ -34,6 +34,7 @@ export interface MultiProfileRecord {
   website?: string;
   location?: string;
   location_id?: string | null;
+  main_territory_location_id?: string | null;
   city?: string;
   neighborhood?: string;
   street?: string;
@@ -49,11 +50,22 @@ export interface MultiProfileRecord {
   show_linked_profiles: boolean;
   show_business_links: boolean;
   show_professional_links: boolean;
+  short_bio?: string | null;
+  community_reputation_score?: number;
   reputation_score: number;
   trust_score: number;
   created_at: string;
   updated_at: string;
 }
+
+export type Profile = Partial<MultiProfileRecord> & {
+  id: string;
+  user_id: string;
+  profile_type: ProfileType;
+  display_name: string;
+  created_at: string;
+  updated_at: string;
+};
 
 // Business extension
 export interface BusinessData {
@@ -78,6 +90,8 @@ export interface BusinessData {
 export interface ProfessionalData {
   profile_id: string;
   profession: string;
+  professional_name?: string;
+  service_category?: string;
   specialties?: string[];
   license_number?: string;
   license_state?: string;
@@ -86,6 +100,14 @@ export interface ProfessionalData {
   certifications?: string[];
   services_offered?: string[];
   service_area?: string[];
+  availability_notes?: string;
+  portfolio_items?: Array<{
+    url: string;
+    caption?: string;
+    media_type?: 'image' | 'video' | 'document';
+    is_cover?: boolean;
+  }>;
+  visibility?: 'public_listed' | 'public_unlisted' | 'private';
   hourly_rate?: number;
   accepts_remote: boolean;
   created_at: string;
@@ -165,11 +187,14 @@ export interface UpdateProfileInput {
   website?: string;
   location?: string;
   location_id?: string;
+  main_territory_location_id?: string;
   city?: string;
   neighborhood?: string;
   street?: string;
   public_location_visibility?: 'hidden' | 'city_only' | 'district';
   state?: string;
+  short_bio?: string;
+  community_reputation_score?: number;
   is_public?: boolean;
   show_contact_email?: boolean;
   show_phone?: boolean;

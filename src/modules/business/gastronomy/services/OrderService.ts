@@ -1,4 +1,4 @@
-/**
+﻿/**
  * OrderService - facade de pedidos da gastronomia.
  *
  * O SSOT real de pedidos/entregas e OrderDeliverySSOTService. Este facade mantem
@@ -7,17 +7,17 @@
  */
 
 import { logger } from '@/shared/utils/logger';
-import { OrderDeliverySSOTService } from '@/modules/mobility/delivery/services/OrderDeliverySSOTService';
-import { MobilityService } from '@/modules/mobility/services/MobilityService.impl';
+import { OrderDeliverySSOTService } from '@/core/mobility/delivery/services/OrderDeliverySSOTService';
+import { MobilityService } from '@/core/mobility/services/runtime';
 import {
   asDeliveryOrderSourceMetadata,
   buildDeliveryPricingSnapshot,
-} from '@/modules/mobility/delivery/order/sourceMetadata';
-import { LOGISTICS_STATUS, type LogisticsStatus } from '@/modules/mobility/delivery/logistics/types';
-import { FINANCIAL_STATUS } from '@/modules/mobility/delivery/payment-context/types';
-import { ORDER_SOURCE_TYPE, type OrderItemRecord, type OrderRecord } from '@/modules/mobility/delivery/order/types';
-import type { OrderTimelineEvent } from '@/modules/mobility/delivery/audit-timeline/types';
-import type { DeliveryProof } from '@/modules/mobility/delivery/proof-of-delivery/types';
+} from '@/core/mobility/delivery/order/sourceMetadata';
+import { LOGISTICS_STATUS, type LogisticsStatus } from '@/core/mobility/delivery/logistics/types';
+import { FINANCIAL_STATUS } from '@/core/mobility/delivery/payment-context/types';
+import { ORDER_SOURCE_TYPE, type OrderItemRecord, type OrderRecord } from '@/core/mobility/delivery/order/types';
+import type { OrderTimelineEvent } from '@/core/mobility/delivery/audit-timeline/types';
+import type { DeliveryProof } from '@/core/mobility/delivery/proof-of-delivery/types';
 import {
   TRUST_ACTOR_ROLES,
   TRUST_CONTEXT_TYPES,
@@ -470,7 +470,7 @@ export const OrderService = {
   async createOrder(): Promise<ServiceResult<OrderWithItems>> {
     return {
       data: null,
-      error: 'Criação de pedido de gastronomia deve usar GastronomyCheckoutService/OrderDeliverySSOTService.',
+      error: 'CriaÃƒÂ§ÃƒÂ£o de pedido de gastronomia deve usar GastronomyCheckoutService/OrderDeliverySSOTService.',
     };
   },
 
@@ -742,3 +742,4 @@ export const OrderService = {
     };
   },
 };
+

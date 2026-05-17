@@ -1,4 +1,4 @@
-import { supabase } from "@/integrations/supabase";
+﻿import { supabase } from "@/core/infrastructure/supabase";
 
 export interface CreateRideRatingInput {
   rideId: string;
@@ -24,4 +24,5 @@ export class RideRatingService {
     if (error) throw error;
   }
 }
+
 

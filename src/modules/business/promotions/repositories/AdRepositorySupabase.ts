@@ -9,7 +9,7 @@
  * Migration necessária: src/modules/ads/sql/001_ads_tables.sql (a criar)
  */
 
-import { supabase } from '@/integrations/supabase';
+import { supabase } from '@/core/infrastructure/supabase';
 import type { IAdRepository } from './IAdRepository';
 import type { AdCampaignWithTargets, AdPlacementKey, AdTarget } from '../types';
 
@@ -126,3 +126,4 @@ export class AdRepositorySupabase implements IAdRepository {
     return rowToCampaign(row, targets);
   }
 }
+

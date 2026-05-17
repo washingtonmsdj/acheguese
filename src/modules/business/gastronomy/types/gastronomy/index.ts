@@ -1,6 +1,6 @@
-import type { Business } from '@/core/business';
+﻿import type { Business } from '@/core/business';
 import type { TerritoryFilter } from '@/core/location/types';
-import type { Json } from '@/integrations/supabase';
+import type { Json } from '@/core/infrastructure/supabase';
 import type { GastronomyProfileStatus } from '@/core/business/constants';
 
 export type PriceRange = '$' | '$$' | '$$$' | '$$$$';
@@ -122,3 +122,4 @@ export interface GastronomyActivityFilters {
 }
 
 export type { CuisineType } from '../constants/cuisine';
+

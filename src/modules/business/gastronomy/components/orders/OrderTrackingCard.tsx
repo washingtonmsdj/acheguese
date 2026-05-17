@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/sha
 import { Badge } from '@/shared/components/ui/badge';
 import { Button } from '@/shared/components/ui/button';
 import { Clock, MapPin, Navigation, Phone, RefreshCw, User } from 'lucide-react';
-import { RideTrackingMap } from '@/modules/mobility/components/RideTrackingMap';
+import { RideTrackingMap } from '@/core/mobility/components/RideTrackingMap';
 import { useOrderTracking } from '../../hooks/useOrderTracking';
 import type { Order } from '@/modules/business/gastronomy/services/OrderService';
 

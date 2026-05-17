@@ -1,16 +1,16 @@
-/**
- * GastronomyProfileService — SSOT canônico do vertical Gastronomia
+﻿/**
+ * GastronomyProfileService â€” SSOT canÃ´nico do vertical Gastronomia
  *
- * Centraliza toda a lógica de negócio do perfil gastronômico.
- * Hooks e componentes NÃO acessam Supabase diretamente — consomem este service.
+ * Centraliza toda a lÃ³gica de negÃ³cio do perfil gastronÃ´mico.
+ * Hooks e componentes NÃƒO acessam Supabase diretamente â€” consomem este service.
  *
  * Responsabilidades:
  * - CRUD do gastronomy_profile
- * - Validação de elegibilidade
- * - Verificação de existência
+ * - ValidaÃ§Ã£o de elegibilidade
+ * - VerificaÃ§Ã£o de existÃªncia
  */
 import { logger } from '@/shared/utils/logger';
-import { supabase } from '@/integrations/supabase';
+import { supabase } from '@/core/infrastructure/supabase';
 import { isEligibleForVertical } from '@/core/verticals/config';
 import type { BusinessCategory } from '@/core/business/types/Business';
 import { GASTRONOMY_PROFILE_STATUSES } from '@/core/business/constants';
@@ -21,26 +21,26 @@ import type {
 } from './types';
 import { sanitizeString } from '@/shared/utils/sanitization';
 
-// ── Tipos de resultado ────────────────────────────────────────────────────────
+// â”€â”€ Tipos de resultado â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export interface ServiceResult<T> {
   data: T | null;
   error: string | null;
 }
 
-// ── Service ───────────────────────────────────────────────────────────────────
+// â”€â”€ Service â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export const GastronomyProfileService = {
 
   /**
-   * Verifica se uma categoria de empresa é elegível para o vertical gastronomia.
+   * Verifica se uma categoria de empresa Ã© elegÃ­vel para o vertical gastronomia.
    */
   validateEligibility(category: BusinessCategory): boolean {
     return isEligibleForVertical(category, 'gastronomy');
   },
 
   /**
-   * Verifica se uma empresa já possui perfil gastronômico ativo.
+   * Verifica se uma empresa jÃ¡ possui perfil gastronÃ´mico ativo.
    */
   async canActivateForBusiness(businessId: string): Promise<ServiceResult<boolean>> {
     try {
@@ -55,7 +55,7 @@ export const GastronomyProfileService = {
         return { data: null, error: error.message };
       }
 
-      // Pode ativar se não existe perfil ainda
+      // Pode ativar se nÃ£o existe perfil ainda
       return { data: data === null, error: null };
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
@@ -64,7 +64,7 @@ export const GastronomyProfileService = {
   },
 
   /**
-   * Busca o perfil gastronômico de uma empresa.
+   * Busca o perfil gastronÃ´mico de uma empresa.
    */
   async getByBusinessId(businessId: string): Promise<ServiceResult<GastronomyProfile>> {
     try {
@@ -87,7 +87,7 @@ export const GastronomyProfileService = {
   },
 
   /**
-   * Cria o perfil gastronômico para uma empresa.
+   * Cria o perfil gastronÃ´mico para uma empresa.
    * Valida ownership via RLS do Supabase.
    */
   async createProfileForBusiness(
@@ -101,7 +101,7 @@ export const GastronomyProfileService = {
         .maybeSingle();
 
       if (existing) {
-        return { data: null, error: 'Este negócio já possui um perfil gastronômico.' };
+        return { data: null, error: 'Este negÃ³cio jÃ¡ possui um perfil gastronÃ´mico.' };
       }
 
       const { data, error } = await supabase
@@ -144,7 +144,7 @@ export const GastronomyProfileService = {
   },
 
   /**
-   * Atualiza o perfil gastronômico de uma empresa.
+   * Atualiza o perfil gastronÃ´mico de uma empresa.
    */
   async updateProfile(
     businessId: string,
@@ -192,3 +192,4 @@ export const GastronomyProfileService = {
     }
   },
 };
+

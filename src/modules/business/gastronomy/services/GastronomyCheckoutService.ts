@@ -1,21 +1,21 @@
 /**
- * GastronomyCheckoutService — SSOT de checkout de gastronomia
+ * GastronomyCheckoutService â€” SSOT de checkout de gastronomia
  * 
- * INTEGRAÇÃO CORRETA:
+ * INTEGRAÃ‡ÃƒO CORRETA:
  * 1. Usa OrderDeliverySSOTService (tabela orders)
- * 2. Usa GastronomyOrderOriginAdapter para conversão
- * 3. NÃO usa delivery_requests legado
+ * 2. Usa GastronomyOrderOriginAdapter para conversÃ£o
+ * 3. NÃƒO usa delivery_requests legado
  * 
  * Fluxo:
- * Cart → Adapter → OrderDeliverySSOTService.createOrder → orders table
+ * Cart â†’ Adapter â†’ OrderDeliverySSOTService.createOrder â†’ orders table
  */
 
 import { logger } from "@/shared/utils/logger";
 import type { Cart } from "../types/menu";
 import type { GastronomyBusiness } from "../types/gastronomy";
-import { OrderDeliverySSOTService } from "@/modules/mobility/delivery/services/OrderDeliverySSOTService";
-import { GastronomyOrderOriginAdapter } from "@/modules/mobility/delivery/order/adapters/GastronomyOrderOriginAdapter";
-import type { OrderRecord } from "@/modules/mobility/delivery/order/types";
+import { OrderDeliverySSOTService } from "@/core/mobility/delivery/services/OrderDeliverySSOTService";
+import { GastronomyOrderOriginAdapter } from "@/core/mobility/delivery/order/adapters/GastronomyOrderOriginAdapter";
+import type { OrderRecord } from "@/core/mobility/delivery/order/types";
 import { DeliveryAreaService } from "./DeliveryAreaService";
 
 export interface GastronomyCheckoutOrderRecord {
@@ -64,7 +64,7 @@ export interface CreateGastronomyCheckoutOrderInput {
 
 /**
  * Converte OrderRecord (SSOT) para formato legado de resposta
- * Mantém compatibilidade com código existente
+ * MantÃ©m compatibilidade com cÃ³digo existente
  */
 function orderRecordToCheckoutRecord(order: OrderRecord): GastronomyCheckoutOrderRecord {
   return {
@@ -88,9 +88,9 @@ export class GastronomyCheckoutService {
    * Cria pedido usando SSOT correto (OrderDeliverySSOTService)
    * 
    * Fluxo:
-   * 1. Converte Cart → CreateOrderInput via GastronomyOrderOriginAdapter
+   * 1. Converte Cart â†’ CreateOrderInput via GastronomyOrderOriginAdapter
    * 2. Cria pedido em orders table via OrderDeliverySSOTService
-   * 3. Retorna formato compatível com código existente
+   * 3. Retorna formato compatÃ­vel com cÃ³digo existente
    */
   static async createOrder(
     input: CreateGastronomyCheckoutOrderInput,

@@ -102,17 +102,20 @@ export interface Profile {
   username: string;
   type?: LegacyProfileType;
   bio?: string;
+  short_bio?: string;
   avatar_url?: string;
   cover_url?: string;
   city: string;
   neighborhood?: string;
   state?: string;
   location_id?: string;
+  main_territory_location_id?: string;
   street?: string;
   public_location_visibility?: "hidden" | "city_only" | "district";
   verified: boolean;
   is_verified?: boolean;
   reputation: number;
+  community_reputation_score?: number;
   is_active: boolean;
   is_suspended?: boolean;
   suspended?: boolean;
@@ -149,6 +152,7 @@ export interface CreateProfileData {
   city: string;
   type?: LegacyProfileType;
   bio?: string;
+  short_bio?: string;
   avatar_url?: string;
   neighborhood?: string;
   street?: string;
@@ -173,6 +177,8 @@ export interface UpdateProfileData {
   phone?: string;
   state?: string;
   location_id?: string;
+  main_territory_location_id?: string;
+  community_reputation_score?: number;
   reputation?: number;
   suspended?: boolean;
   suspended_until?: string | null;

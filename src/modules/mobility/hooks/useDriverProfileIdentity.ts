@@ -1,7 +1,7 @@
-import { useQuery } from "@tanstack/react-query";
+﻿import { useQuery } from "@tanstack/react-query";
 import { useIsAdmin } from "@/core/auth/hooks/useIsAdmin";
 import { useSessionContext } from "@/core/session";
-import type { Tables } from "@/integrations/supabase/types.generated";
+import type { Tables } from "@/core/infrastructure/supabase/types.generated";
 import { mobilityService } from "@/modules/mobility/services";
 
 type DriverDataRecord = Tables<"driver_data">;
@@ -58,4 +58,5 @@ export function useDriverProfileIdentity({
     refetch: query.refetch,
   };
 }
+
 

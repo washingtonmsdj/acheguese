@@ -2,7 +2,6 @@ import React from "react";
 import { useNavigate } from "react-router-dom";
 import { Users, Loader2 } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
-import { useAppUrls } from "@/core/routing/hooks";
 import { GrupoCardEnhanced } from "./GrupoCardEnhanced";
 
 interface GroupLike {
@@ -39,7 +38,6 @@ export function GruposList({
   onTabChange,
 }: GruposListProps) {
   const navigate = useNavigate();
-  const appUrls = useAppUrls();
 
   if (isLoading) {
     return (
@@ -85,7 +83,7 @@ export function GruposList({
           group={group}
           variant="grid"
           index={index}
-          onClick={() => navigate(appUrls.community.groupDetail(group.id))}
+          onClick={() => navigate(`/comunidade/grupos/${group.id}`)}
           onJoin={onJoin}
         />
       ))}

@@ -1,7 +1,7 @@
 import { getAllProfileSections, type ProfileSectionId } from "@/modules/profile/config/profile-sections.config";
 import type { SectionNavItem } from "@/modules/profile/components/hub/ProfileSectionsNav";
 import type { ProfileBusinessModuleItem } from "@/core/profiles/services/types";
-import { mobilityRoutes } from "@/modules/mobility/routes/mobilityRoutes";
+import { mobilityRoutes } from "@/core/mobility/routes/mobilityRoutes";
 import { businessManagementRoutes } from "@/core/business/utils/businessManagementRoutes";
 
 interface ProfileNavigationSource {

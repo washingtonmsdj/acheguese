@@ -25,8 +25,8 @@ import { mobilityRolloutService } from "../services/MobilityRolloutService";
 import { mobilityAuditService } from "../services/MobilityAuditService";
 import { MotoboyAuthorizationService } from "../services/MotoboyAuthorizationService";
 import { profileService } from "@/core/profiles/services/ProfileService";
-import { OrderDeliveryLinkService } from "@/modules/mobility/delivery/services/OrderDeliveryLinkService";
-import { mobilityRoutes } from "@/modules/mobility/routes/mobilityRoutes";
+import { OrderDeliveryLinkService } from "@/core/mobility/delivery/services/OrderDeliveryLinkService";
+import { mobilityRoutes } from "@/core/mobility/routes/mobilityRoutes";
 
 // ============================================
 // TIPOS

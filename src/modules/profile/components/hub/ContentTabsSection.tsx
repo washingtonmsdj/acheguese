@@ -13,7 +13,7 @@ import { SectionFrame } from './SectionFrame';
 import { UserPostsGrid } from '../UserPostsGrid';
 import { SavedPostsGrid } from '../SavedPostsGrid';
 import { FavoritesList } from '../FavoritesList';
-import { UserServicesSection } from '../UserServicesSection';
+import { UserServicesSectionV2 } from '../UserServicesSectionV2';
 import { UserClassifiedsSection } from '../UserClassifiedsSection';
 
 import type { Business } from '@/core/profiles/services/types';
@@ -107,7 +107,7 @@ export function ContentTabsSection({
         </TabsContent>
 
         <TabsContent value="services" className="mt-0">
-          <UserServicesSection
+          <UserServicesSectionV2
             profileId={profileId}
             onCreateNew={onCreateService}
             onEdit={onEditService}

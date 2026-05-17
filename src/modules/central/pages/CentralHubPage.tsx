@@ -12,21 +12,21 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/sha
 import { Button } from "@/shared/components/ui/button";
 import { Badge } from "@/shared/components/ui/badge";
 import { useSessionContext } from "@/core/session";
-import { useProfileHub } from "@/modules/profile/hooks/useProfileHub";
-import { useDriverProfileIdentity } from "@/modules/mobility/hooks/useDriverProfileIdentity";
-import { mobilityRoutes } from "@/modules/mobility/routes/mobilityRoutes";
+import { useProfileHub } from "@/core/profile/hooks/useProfileHub";
+import { useDriverProfileIdentity } from "@/core/mobility/hooks/useDriverProfileIdentity";
+import { mobilityRoutes } from "@/core/mobility/routes/mobilityRoutes";
 import { businessManagementRoutes } from "@/core/business/utils/businessManagementRoutes";
 
 /**
  * CentralHubPage
  * 
- * Página hub da Central (/central).
- * Mostra cards dinâmicos baseados nas entidades do usuário:
+ * PÃ¡gina hub da Central (/central).
+ * Mostra cards dinÃ¢micos baseados nas entidades do usuÃ¡rio:
  * - Minhas empresas
- * - Área profissional
+ * - Ãrea profissional
  * - Motorista
  * - Motoboy/Entregas
- * - Administração (se for admin)
+ * - AdministraÃ§Ã£o (se for admin)
  */
 export default function CentralHubPage() {
   const navigate = useNavigate();
@@ -36,7 +36,7 @@ export default function CentralHubPage() {
     queryScope: "central-hub",
   });
 
-  // Guard já verifica autenticação, não precisa de useEffect aqui
+  // Guard jÃ¡ verifica autenticaÃ§Ã£o, nÃ£o precisa de useEffect aqui
   if (!user) {
     return null;
   }
@@ -51,14 +51,14 @@ export default function CentralHubPage() {
       <div className="space-y-2">
         <h1 className="text-3xl font-bold tracking-tight">Central</h1>
         <p className="text-muted-foreground">
-          Hub de gestão e operação para empresas, profissionais e mobilidade.
+          Hub de gestÃ£o e operaÃ§Ã£o para empresas, profissionais e mobilidade.
         </p>
       </div>
 
-      {/* Seção de Entidades Ativas */}
+      {/* SeÃ§Ã£o de Entidades Ativas */}
       {(hasBusinesses || hasProfessional || hasDriver || isAdmin) && (
         <div className="space-y-4">
-          <h2 className="text-lg font-semibold">Suas Áreas de Gestão</h2>
+          <h2 className="text-lg font-semibold">Suas Ãreas de GestÃ£o</h2>
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             {/* Empresas */}
             {hasBusinesses && (
@@ -69,7 +69,7 @@ export default function CentralHubPage() {
                     Minhas Empresas
                   </CardTitle>
                   <CardDescription>
-                    Gerencie seus negócios, cardápios, pedidos e analytics.
+                    Gerencie seus negÃ³cios, cardÃ¡pios, pedidos e analytics.
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -89,10 +89,10 @@ export default function CentralHubPage() {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <GraduationCap className="h-5 w-5 text-primary" />
-                    Área Profissional
+                    Ãrea Profissional
                   </CardTitle>
                   <CardDescription>
-                    Gerencie seus serviços, orçamentos, agenda e avaliações.
+                    Gerencie seus serviÃ§os, orÃ§amentos, agenda e avaliaÃ§Ãµes.
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -143,13 +143,13 @@ export default function CentralHubPage() {
               </Card>
             )}
 
-            {/* Administração */}
+            {/* AdministraÃ§Ã£o */}
             {isAdmin && (
               <Card className="border-primary/20 bg-primary/5">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Shield className="h-5 w-5 text-primary" />
-                    Administração
+                    AdministraÃ§Ã£o
                   </CardTitle>
                   <CardDescription>
                     Acesso ao painel administrativo do sistema.
@@ -166,7 +166,7 @@ export default function CentralHubPage() {
         </div>
       )}
 
-      {/* Seção de CTAs para usuários sem entidades */}
+      {/* SeÃ§Ã£o de CTAs para usuÃ¡rios sem entidades */}
       {!hasBusinesses && !hasProfessional && !hasDriver && (
         <div className="space-y-4">
           <h2 className="text-lg font-semibold">Comece a Gerenciar</h2>
@@ -179,7 +179,7 @@ export default function CentralHubPage() {
                   Cadastre sua Empresa
                 </CardTitle>
                 <CardDescription>
-                  Crie e gerencie seu negócio no Achegue-se.
+                  Crie e gerencie seu negÃ³cio no Achegue-se.
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -199,10 +199,10 @@ export default function CentralHubPage() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <User className="h-5 w-5" />
-                  Área Profissional
+                  Ãrea Profissional
                 </CardTitle>
                 <CardDescription>
-                  Ofereça serviços e gerencie sua carreira profissional.
+                  OfereÃ§a serviÃ§os e gerencie sua carreira profissional.
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -212,7 +212,7 @@ export default function CentralHubPage() {
                   onClick={() => navigate("/services/cadastrar")}
                 >
                   <Sparkles className="mr-2 h-4 w-4" />
-                  Cadastrar Serviço
+                  Cadastrar ServiÃ§o
                 </Button>
               </CardContent>
             </Card>

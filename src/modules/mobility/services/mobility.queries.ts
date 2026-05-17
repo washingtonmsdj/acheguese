@@ -6,7 +6,7 @@
  * - Sem lógica de negócio complexa
  */
 
-import { supabase } from "@/integrations/supabase";
+import { supabase } from "@/core/infrastructure/supabase";
 import { logger } from "@/shared/utils/logger";
 import { profileService } from "@/core/profiles/services/ProfileService";
 import { RIDE_STATUS } from "../constants";
@@ -1065,5 +1065,6 @@ export async function getDriverLocation(_driverProfileId: string): Promise<unkno
   logger.warn("MobilityQueries.getDriverLocation - nao implementado, usar GPS tracking");
   return null;
 }
+
 
 

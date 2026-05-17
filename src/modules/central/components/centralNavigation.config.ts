@@ -1,5 +1,5 @@
 import { Building2, Car, Home, User, Bike, Calendar, Radio } from 'lucide-react';
-import { mobilityRoutes } from '@/modules/mobility/routes/mobilityRoutes';
+import { mobilityRoutes } from '@/core/mobility/routes/mobilityRoutes';
 import { businessManagementRoutes } from '@/core/business/utils/businessManagementRoutes';
 
 export interface CentralNavItem {
@@ -19,10 +19,10 @@ export interface CentralNavSection {
 }
 
 /**
- * Estrutura de navegação da Central
+ * Estrutura de navegaÃ§Ã£o da Central
  * 
- * Áreas:
- * - Visão geral
+ * Ãreas:
+ * - VisÃ£o geral
  * - Empresas
  * - Profissional
  * - Motorista
@@ -31,14 +31,14 @@ export interface CentralNavSection {
 export const CENTRAL_NAV_SECTIONS: CentralNavSection[] = [
   {
     id: 'overview',
-    label: 'Visão Geral',
+    label: 'VisÃ£o Geral',
     items: [
       {
         id: 'central-home',
         icon: Home,
-        label: 'Início',
+        label: 'InÃ­cio',
         href: '/central',
-        description: 'Visão geral da Central',
+        description: 'VisÃ£o geral da Central',
       },
     ],
   },
@@ -108,7 +108,7 @@ export const CENTRAL_NAV_SECTIONS: CentralNavSection[] = [
       {
         id: 'driver-home',
         icon: Car,
-        label: 'Início',
+        label: 'InÃ­cio',
         href: mobilityRoutes.motorista.home,
         description: 'Resumo operacional',
       },
@@ -143,9 +143,9 @@ export const CENTRAL_NAV_SECTIONS: CentralNavSection[] = [
       {
         id: 'driver-configuracoes',
         icon: Car,
-        label: 'Configurações',
+        label: 'ConfiguraÃ§Ãµes',
         href: mobilityRoutes.motorista.configuracoes,
-        description: 'Preferências e notificações',
+        description: 'PreferÃªncias e notificaÃ§Ãµes',
       },
     ],
   },
@@ -156,7 +156,7 @@ export const CENTRAL_NAV_SECTIONS: CentralNavSection[] = [
       {
         id: 'motoboy-home',
         icon: Bike,
-        label: 'Início',
+        label: 'InÃ­cio',
         href: mobilityRoutes.motoboy.home,
         description: 'Resumo operacional',
       },
@@ -191,9 +191,9 @@ export const CENTRAL_NAV_SECTIONS: CentralNavSection[] = [
       {
         id: 'motoboy-configuracoes',
         icon: Bike,
-        label: 'Configurações',
+        label: 'ConfiguraÃ§Ãµes',
         href: mobilityRoutes.motoboy.configuracoes,
-        description: 'Preferências e notificações',
+        description: 'PreferÃªncias e notificaÃ§Ãµes',
       },
     ],
   },

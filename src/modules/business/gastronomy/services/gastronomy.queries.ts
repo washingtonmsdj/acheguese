@@ -1,13 +1,13 @@
-/**
- * 🍽️ GASTRONOMY QUERIES - SSOT Read Model
+﻿/**
+ * ðŸ½ï¸ GASTRONOMY QUERIES - SSOT Read Model
  *
- * Todas as operações de leitura para gastronomia.
+ * Todas as operaÃ§Ãµes de leitura para gastronomia.
  * Sem side effects, sem mutations.
  *
- * @version 2.0.0 - Extraído de GastronomyQueryService
+ * @version 2.0.0 - ExtraÃ­do de GastronomyQueryService
  */
 import { logger } from '@/shared/utils/logger';
-import { supabase } from '@/integrations/supabase';
+import { supabase } from '@/core/infrastructure/supabase';
 import { BusinessService } from '@/core/business/services/BusinessService';
 import type { Business } from '@/core/business/types';
 import { OpeningHoursService } from '@/core/business/services/OpeningHoursService';
@@ -66,7 +66,7 @@ async function fetchActiveGastronomyProfileByBusinessDataId(
 // ============================================================
 
 /**
- * Resolve filtro territorial hierárquico
+ * Resolve filtro territorial hierÃ¡rquico
  */
 async function resolveHierarchicalTerritoryFilter(
   territoryFilter?: TerritoryFilter,
@@ -96,7 +96,7 @@ async function loadProfilesMap(profileIds: string[]) {
 }
 
 /**
- * Build base query para perfis gastronômicos
+ * Build base query para perfis gastronÃ´micos
  */
 function buildProfilesQuery(
   filters: GastronomyBusinessFilters = {},
@@ -255,11 +255,11 @@ async function fetchBusinessDataRecords(params: {
 }
 
 // ============================================================
-// QUERIES PÚBLICAS - Gastronomia
+// QUERIES PÃšBLICAS - Gastronomia
 // ============================================================
 
 /**
- * Buscar perfil gastronômico por business_id
+ * Buscar perfil gastronÃ´mico por business_id
  */
 export async function getGastronomyProfile(businessId: string): Promise<GastronomyProfile | null> {
   try {
@@ -287,7 +287,7 @@ export async function getGastronomyProfile(businessId: string): Promise<Gastrono
 }
 
 /**
- * Buscar negócio gastronômico por slug ou ID
+ * Buscar negÃ³cio gastronÃ´mico por slug ou ID
  */
 export async function getGastronomyBusiness(identifier: string): Promise<GastronomyBusiness | null> {
   try {
@@ -319,7 +319,7 @@ export async function getGastronomyBusiness(identifier: string): Promise<Gastron
       return mapRecordToGastronomyBusiness(bySlug);
     }
 
-    // Se não for ID válido, retornar null
+    // Se nÃ£o for ID vÃ¡lido, retornar null
     if (!isValidId(normalizedIdentifier)) {
       return null;
     }
@@ -366,7 +366,7 @@ export async function getGastronomyBusiness(identifier: string): Promise<Gastron
 }
 
 /**
- * Buscar negócio gastronômico por slug territorial
+ * Buscar negÃ³cio gastronÃ´mico por slug territorial
  */
 export async function getGastronomyBusinessByTerritorySlug(
   params: TerritorySlugParams,
@@ -380,8 +380,8 @@ export async function getGastronomyBusinessByTerritorySlug(
     const { state, city, district, slug } = params;
     const geoPath = `/br/${state}/${city}/${district}`;
 
-    // geographic_path está em locations, não em business_data.
-    // Resolver o location_id primeiro, depois buscar o negócio.
+    // geographic_path estÃ¡ em locations, nÃ£o em business_data.
+    // Resolver o location_id primeiro, depois buscar o negÃ³cio.
     const { data: locationData, error: locationError } = await supabase
       .from('locations')
       .select('id')
@@ -418,7 +418,7 @@ export async function getGastronomyBusinessByTerritorySlug(
 }
 
 /**
- * Listar negócios gastronômicos (paginado)
+ * Listar negÃ³cios gastronÃ´micos (paginado)
  */
 export async function getGastronomyBusinessesList(params: {
   pageParam: number;
@@ -438,7 +438,7 @@ export async function getGastronomyBusinessesList(params: {
       return { businesses: [], nextPage: null, totalCount: 0 };
     }
 
-    // Carregar todos os perfis gastronômicos de uma vez
+    // Carregar todos os perfis gastronÃ´micos de uma vez
     const businessIds = records.map((r) => r.id);
     const { data: profiles } = await supabase
       .from('gastronomy_profiles')
@@ -450,7 +450,7 @@ export async function getGastronomyBusinessesList(params: {
       (profiles || []).map((p) => [p.business_id, p as GastronomyProfile]),
     );
 
-    // Carregar todos os perfis de negócio
+    // Carregar todos os perfis de negÃ³cio
     const profileIds = records.map((r) => r.profile_id).filter(Boolean) as string[];
     const hydratedProfilesMap = await loadProfilesMap(profileIds);
 
@@ -478,7 +478,7 @@ export async function getGastronomyBusinessesList(params: {
 }
 
 /**
- * Buscar negócios por filtros (não paginado)
+ * Buscar negÃ³cios por filtros (nÃ£o paginado)
  */
 export async function getGastronomyBusinesses(
   filters: GastronomyBusinessFilters = {},
@@ -521,7 +521,7 @@ export async function getGastronomyBusinesses(
 }
 
 /**
- * Buscar negócios por IDs
+ * Buscar negÃ³cios por IDs
  */
 export async function getGastronomyBusinessesByIds(businessIds: string[]): Promise<GastronomyBusiness[]> {
   if (!businessIds.length) {
@@ -571,7 +571,7 @@ export async function getGastronomyBusinessesByIds(businessIds: string[]): Promi
 }
 
 /**
- * Verificar se negócio tem perfil gastronômico
+ * Verificar se negÃ³cio tem perfil gastronÃ´mico
  */
 export async function hasGastronomyProfile(businessId: string): Promise<boolean> {
   const profile = await getGastronomyProfile(businessId);
@@ -583,5 +583,6 @@ export async function hasGastronomyProfile(businessId: string): Promise<boolean>
 // ============================================================
 
 export type { PaginatedGastronomyBusinesses, TerritorySlugParams };
+
 
 

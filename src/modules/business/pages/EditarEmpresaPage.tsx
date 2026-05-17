@@ -1,5 +1,5 @@
 /**
- * 🏆 EDITAR EMPRESA PAGE - SSOT Completo
+ * ðŸ† EDITAR EMPRESA PAGE - SSOT Completo
  */
 
 import { useEffect, useRef, useState } from "react";
@@ -9,7 +9,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { ArrowLeft, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { useSessionContext } from "@/core/session";
-import { useBusinessById } from "@/modules/business/hooks/useBusinessById";
+import { useBusinessById } from "@/core/business/hooks/useBusinessById";
 import { useBusinessEdit, useBusinessImageUpload } from "@/modules/business/hooks/useBusinessEdit";
 import { updateBusinessSchema } from "@/shared/schemas/business/businessSchemas";
 import type {
@@ -156,7 +156,7 @@ export default function EditarEmpresaPage() {
     
     // Validar tamanho (5MB)
     if (file.size > 5 * 1024 * 1024) {
-      toast.error("Imagem muito grande. Máximo 5MB");
+      toast.error("Imagem muito grande. MÃ¡ximo 5MB");
       return;
     }
     
@@ -183,7 +183,7 @@ export default function EditarEmpresaPage() {
     
     // Validar tamanho (5MB)
     if (file.size > 5 * 1024 * 1024) {
-      toast.error("Imagem muito grande. Máximo 5MB");
+      toast.error("Imagem muito grande. MÃ¡ximo 5MB");
       return;
     }
     
@@ -255,7 +255,7 @@ export default function EditarEmpresaPage() {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
-          <h2 className="text-xl font-semibold mb-2">Empresa não encontrada</h2>
+          <h2 className="text-xl font-semibold mb-2">Empresa nÃ£o encontrada</h2>
           <button
             onClick={() => navigate("/conta")}
             className="text-primary hover:underline"
@@ -285,7 +285,7 @@ export default function EditarEmpresaPage() {
       <div className="max-w-2xl mx-auto px-4 py-6 space-y-6">
         <StepProgress currentStep={currentStep} totalSteps={3} />
 
-        {/* Autoria explícita */}
+        {/* Autoria explÃ­cita */}
         {effectiveProfile && (
           <ActiveProfileBadge profile={effectiveProfile} action="editando como" />
         )}
@@ -389,7 +389,7 @@ export default function EditarEmpresaPage() {
                 onSave={handleSave}
               />
               
-              {/* Área de Cobertura */}
+              {/* Ãrea de Cobertura */}
               <div className="mt-6">
                 <CoverageSettingsForm
                   entityType="business"

@@ -1,4 +1,4 @@
-import { callRPC } from "@/integrations/supabase/services/supabaseHelpers";
+﻿import { callRPC } from "@/core/infrastructure/supabase/helpers";
 import { SERVICE_MODES } from "@/core/business/constants";
 import { logger } from "@/shared/utils/logger";
 import type {
@@ -29,7 +29,7 @@ function toBoolean(value: unknown): boolean | undefined {
   if (typeof value === "string") {
     const normalized = value.trim().toLowerCase();
     if (["true", "1", "sim", "yes"].includes(normalized)) return true;
-    if (["false", "0", "nao", "não", "no"].includes(normalized)) return false;
+    if (["false", "0", "nao", "nÃ£o", "no"].includes(normalized)) return false;
   }
   return undefined;
 }
@@ -260,3 +260,4 @@ export class PublicSnapshotRpcService {
     }
   }
 }
+

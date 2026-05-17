@@ -3,7 +3,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { useSessionContext } from "@/core/session";
 import { MOBILITY_QUERY_KEYS } from "@/modules/mobility/constants";
-import { useDriverProfileIdentity } from "@/modules/mobility/hooks/useDriverProfileIdentity";
+import { useDriverProfileIdentity } from "@/core/mobility/hooks/useDriverProfileIdentity";
 import { mobilityService } from "@/modules/mobility/services/MobilityService";
 
 export function useDriverProfile() {

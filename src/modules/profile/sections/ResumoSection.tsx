@@ -1,4 +1,4 @@
-﻿/**
+/**
  * ResumoSection - visao pessoal do usuario.
  *
  * Mantem a conta como area pessoal e envia operacoes para a Central.
@@ -27,11 +27,11 @@ import {
   NextActionsPanel,
 } from "@/modules/profile/components/hub";
 import { ProfileActiveRideCard } from "@/modules/profile/components/ProfileActiveRideCard";
-import { DashboardMetricCard } from "@/modules/profile/components/cards";
+import { DashboardMetricCard } from "@/core/profile/components/cards";
 
 import type { ResumoSectionProps } from "./types";
-import { getMobilityServiceStatus } from "@/modules/profile/utils/mobilityServiceStatus";
-import type { MobilityRide } from "@/modules/mobility/components/driver/DriverRidesTab";
+import { getMobilityServiceStatus } from "@/core/profile/utils/mobilityServiceStatus";
+import type { MobilityRide } from "@/core/mobility/components/driver/DriverRidesTab";
 
 export function ResumoSection({
   operations,

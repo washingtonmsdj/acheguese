@@ -1,5 +1,5 @@
-import { logger } from '@/shared/utils/logger';
-import { supabase } from '@/integrations/supabase';
+﻿import { logger } from '@/shared/utils/logger';
+import { supabase } from '@/core/infrastructure/supabase';
 import type {
   GastronomyActivity,
   GastronomyActivityFilters,
@@ -216,5 +216,6 @@ export class ActivityQueryService {
     }
   }
 }
+
 
 

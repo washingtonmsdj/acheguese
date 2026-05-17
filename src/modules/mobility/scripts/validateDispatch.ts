@@ -1,10 +1,10 @@
-/**
- * Script de Validação - Dispatch Automático
+﻿/**
+ * Script de ValidaÃ§Ã£o - Dispatch AutomÃ¡tico
  * 
- * Valida que todos os componentes do dispatch automático estão funcionando
+ * Valida que todos os componentes do dispatch automÃ¡tico estÃ£o funcionando
  */
 import { logger } from '@/shared/utils/logger';
-import { supabase } from '@/integrations/supabase';
+import { supabase } from '@/core/infrastructure/supabase';
 import { AutoDispatchService } from '../core/AutoDispatchService';
 import { RideOperationalService } from '../core/RideOperationalService';
 import { RideDispatchService } from '../core/RideDispatchService';
@@ -20,14 +20,14 @@ interface ValidationResult {
 async function validateDispatchSystem(): Promise<ValidationResult[]> {
   const results: ValidationResult[] = [];
 
-  // 1. Verificar tabelas necessárias
+  // 1. Verificar tabelas necessÃ¡rias
   try {
     await getAllRideRequests();
 
     results.push({
       check: 'Tabela ride_requests',
       status: 'pass',
-      message: 'Tabela acessível',
+      message: 'Tabela acessÃ­vel',
     });
   } catch (error) {
     results.push({
@@ -46,7 +46,7 @@ async function validateDispatchSystem(): Promise<ValidationResult[]> {
     results.push({
       check: 'Tabela ride_dispatch_audit',
       status: auditError ? 'fail' : 'pass',
-      message: auditError ? auditError.message : 'Tabela acessível',
+      message: auditError ? auditError.message : 'Tabela acessÃ­vel',
     });
   } catch (error) {
     results.push({
@@ -65,7 +65,7 @@ async function validateDispatchSystem(): Promise<ValidationResult[]> {
     results.push({
       check: 'Tabela driver_availability',
       status: availError ? 'fail' : 'pass',
-      message: availError ? availError.message : 'Tabela acessível',
+      message: availError ? availError.message : 'Tabela acessÃ­vel',
     });
   } catch (error) {
     results.push({
@@ -75,7 +75,7 @@ async function validateDispatchSystem(): Promise<ValidationResult[]> {
     });
   }
 
-  // 2. Verificar motoristas disponíveis
+  // 2. Verificar motoristas disponÃ­veis
   try {
     const { data: drivers, error } = await supabase
       .from('driver_availability')
@@ -85,14 +85,14 @@ async function validateDispatchSystem(): Promise<ValidationResult[]> {
 
     const count = drivers?.length || 0;
     results.push({
-      check: 'Motoristas disponíveis',
+      check: 'Motoristas disponÃ­veis',
       status: count > 0 ? 'pass' : 'warning',
-      message: `${count} motorista(s) online e disponível(is)`,
+      message: `${count} motorista(s) online e disponÃ­vel(is)`,
       details: { count },
     });
   } catch (error) {
     results.push({
-      check: 'Motoristas disponíveis',
+      check: 'Motoristas disponÃ­veis',
       status: 'fail',
       message: (error as Error).message,
     });
@@ -147,35 +147,35 @@ async function validateDispatchSystem(): Promise<ValidationResult[]> {
     results.push({
       check: 'Auditoria de dispatch',
       status: 'warning',
-      message: 'Tabela não existe ou sem dados (normal se nunca rodou)',
+      message: 'Tabela nÃ£o existe ou sem dados (normal se nunca rodou)',
     });
   }
 
-  // 5. Verificar serviços carregados
+  // 5. Verificar serviÃ§os carregados
   results.push({
     check: 'AutoDispatchService',
     status: typeof AutoDispatchService.startDispatch === 'function' ? 'pass' : 'fail',
-    message: 'Serviço carregado corretamente',
+    message: 'ServiÃ§o carregado corretamente',
   });
 
   results.push({
     check: 'RideOperationalService',
     status: typeof RideOperationalService.createRide === 'function' ? 'pass' : 'fail',
-    message: 'Serviço carregado corretamente',
+    message: 'ServiÃ§o carregado corretamente',
   });
 
   results.push({
     check: 'RideDispatchService',
     status: typeof RideDispatchService.findEligibleDrivers === 'function' ? 'pass' : 'fail',
-    message: 'Serviço carregado corretamente',
+    message: 'ServiÃ§o carregado corretamente',
   });
 
   return results;
 }
 
-// Executar validação
+// Executar validaÃ§Ã£o
 export async function runValidation() {
-  console.log('🔍 Validando sistema de dispatch automático...\n');
+  console.log('ðŸ” Validando sistema de dispatch automÃ¡tico...\n');
 
   const results = await validateDispatchSystem();
 
@@ -184,7 +184,7 @@ export async function runValidation() {
   let warnCount = 0;
 
   results.forEach((result) => {
-    const icon = result.status === 'pass' ? '✅' : result.status === 'fail' ? '❌' : '⚠️';
+    const icon = result.status === 'pass' ? 'âœ…' : result.status === 'fail' ? 'âŒ' : 'âš ï¸';
     console.log(`${icon} ${result.check}: ${result.message}`);
     
     if (result.details) {
@@ -196,15 +196,15 @@ export async function runValidation() {
     else warnCount++;
   });
 
-  console.log('\n📊 Resumo:');
-  console.log(`   ✅ Passou: ${passCount}`);
-  console.log(`   ⚠️  Avisos: ${warnCount}`);
-  console.log(`   ❌ Falhou: ${failCount}`);
+  console.log('\nðŸ“Š Resumo:');
+  console.log(`   âœ… Passou: ${passCount}`);
+  console.log(`   âš ï¸  Avisos: ${warnCount}`);
+  console.log(`   âŒ Falhou: ${failCount}`);
 
   if (failCount === 0) {
-    console.log('\n🎉 Sistema de dispatch automático validado com sucesso!');
+    console.log('\nðŸŽ‰ Sistema de dispatch automÃ¡tico validado com sucesso!');
   } else {
-    console.log('\n⚠️  Alguns checks falharam. Verifique os erros acima.');
+    console.log('\nâš ï¸  Alguns checks falharam. Verifique os erros acima.');
   }
 
   return { results, passCount, failCount, warnCount };
@@ -214,4 +214,5 @@ export async function runValidation() {
 if (import.meta.url === `file://${process.argv[1]}`) {
   runValidation().catch(console.error);
 }
+
 

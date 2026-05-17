@@ -1,17 +1,17 @@
-/**
- * SSOT: módulo vertical de delivery/pedidos
+﻿/**
+ * SSOT: mÃ³dulo vertical de delivery/pedidos
  *
  * Fase ativa:
  * - payment_mode: direct_to_merchant
  * - delivery_mode: merchant_own_fleet
  *
- * Fase futura (preparada, mas não ativa):
+ * Fase futura (preparada, mas nÃ£o ativa):
  * - payment_mode: platform_checkout
  * - delivery_mode: platform_courier_network
  * - payout/split/settlement real
  */
 
-import { supabase } from "@/integrations/supabase";
+import { supabase } from "@/core/infrastructure/supabase";
 import { logger } from "@/shared/utils/logger";
 import type {
   OrderActorRole,
@@ -221,13 +221,13 @@ function asOccurrence(row: Record<string, unknown>): DeliveryOccurrence {
 function toErrorMessage(error: unknown): string {
   if (error instanceof Error) return error.message;
   if (typeof error === "string") return error;
-  return "Erro inesperado no módulo de pedidos/entregas.";
+  return "Erro inesperado no mÃ³dulo de pedidos/entregas.";
 }
 
 function normalizeRpcRow(data: unknown, rpcName: string): Record<string, unknown> {
   const row = Array.isArray(data) ? data[0] : data;
   if (!row || typeof row !== "object" || Array.isArray(row)) {
-    throw new Error(`Resposta inválida do RPC ${rpcName}.`);
+    throw new Error(`Resposta invÃ¡lida do RPC ${rpcName}.`);
   }
   return row as Record<string, unknown>;
 }
@@ -252,7 +252,7 @@ export class OrderDeliverySSOTService {
   ): void {
     if (deliveryMode !== DELIVERY_MODE.MERCHANT_OWN_FLEET) {
       throw new Error(
-        `delivery_mode=${deliveryMode} preparado no SSOT, mas ainda não está ativo na operação atual.`,
+        `delivery_mode=${deliveryMode} preparado no SSOT, mas ainda nÃ£o estÃ¡ ativo na operaÃ§Ã£o atual.`,
       );
     }
   }
@@ -268,7 +268,7 @@ export class OrderDeliverySSOTService {
 
     if (payoutStatuses.includes(financialStatus)) {
       throw new Error(
-        "Status de payout/split existe no SSOT, mas a execução real de settlement ainda não está ativa.",
+        "Status de payout/split existe no SSOT, mas a execuÃ§Ã£o real de settlement ainda nÃ£o estÃ¡ ativa.",
       );
     }
   }
@@ -276,7 +276,7 @@ export class OrderDeliverySSOTService {
   private static requireActorProfileId(actorProfileId?: string): string {
     if (!actorProfileId) {
       throw new Error(
-        "actor_profile_id é obrigatório para operações mutáveis do módulo delivery.",
+        "actor_profile_id Ã© obrigatÃ³rio para operaÃ§Ãµes mutÃ¡veis do mÃ³dulo delivery.",
       );
     }
 
@@ -878,6 +878,7 @@ export class OrderDeliverySSOTService {
     }
   }
 }
+
 
 
 

@@ -1,16 +1,16 @@
-/**
+﻿/**
  * Admin Mutations - SSOT v2.0
  * 
- * Funções de escrita para operações administrativas
- * ✅ SEGURO: Usa edge functions ao invés de supabaseAdmin
+ * FunÃ§Ãµes de escrita para operaÃ§Ãµes administrativas
+ * âœ… SEGURO: Usa edge functions ao invÃ©s de supabaseAdmin
  */
 import { logger } from '@/shared/utils/logger';
-import { supabase } from '@/integrations/supabase';
+import { supabase } from '@/core/infrastructure/supabase';
 import type { AdminUserConfig, AdminUserResult } from './types';
 
 /**
- * Criar usuário administrador
- * ✅ SEGURO: Usa edge function admin-create-user
+ * Criar usuÃ¡rio administrador
+ * âœ… SEGURO: Usa edge function admin-create-user
  */
 export async function createAdminUser(config: AdminUserConfig): Promise<AdminUserResult> {
   try {
@@ -31,15 +31,15 @@ export async function createAdminUser(config: AdminUserConfig): Promise<AdminUse
       logger.error('admin.mutations.createAdminUser', error);
       return {
         success: false,
-        message: error.message || 'Erro ao criar usuário',
+        message: error.message || 'Erro ao criar usuÃ¡rio',
       };
     }
 
-    logger.info('admin.mutations.createAdminUser', `Usuário criado: ${data.user.id}`);
+    logger.info('admin.mutations.createAdminUser', `UsuÃ¡rio criado: ${data.user.id}`);
 
     return {
       success: true,
-      message: 'Usuário admin criado com sucesso!',
+      message: 'UsuÃ¡rio admin criado com sucesso!',
       userId: data.user.id,
     };
 
@@ -51,4 +51,5 @@ export async function createAdminUser(config: AdminUserConfig): Promise<AdminUse
     };
   }
 }
+
 

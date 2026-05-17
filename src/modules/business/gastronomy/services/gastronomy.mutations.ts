@@ -1,14 +1,14 @@
-/**
- * 🍽️ GASTRONOMY MUTATIONS - SSOT Write Model
+﻿/**
+ * ðŸ½ï¸ GASTRONOMY MUTATIONS - SSOT Write Model
  *
- * Todas as operações de escrita para gastronomia.
- * INSERT, UPDATE, DELETE com validações.
+ * Todas as operaÃ§Ãµes de escrita para gastronomia.
+ * INSERT, UPDATE, DELETE com validaÃ§Ãµes.
  *
- * @version 2.0.0 - Extraído de GastronomyService
+ * @version 2.0.0 - ExtraÃ­do de GastronomyService
  */
 import { logger } from '@/shared/utils/logger';
-import { supabase } from '@/integrations/supabase';
-import type { Json } from '@/integrations/supabase';
+import { supabase } from '@/core/infrastructure/supabase';
+import type { Json } from '@/core/infrastructure/supabase';
 import { BusinessOwnershipService } from '@/core/business/services/BusinessOwnershipService';
 import {
   GASTRONOMY_PROFILE_STATUSES,
@@ -26,7 +26,7 @@ import type {
 // ============================================================
 
 /**
- * Sanitizar input de criação/atualização
+ * Sanitizar input de criaÃ§Ã£o/atualizaÃ§Ã£o
  */
 function sanitizeInput(
   input: CreateGastronomyProfileInput | UpdateGastronomyProfileInput,
@@ -39,11 +39,11 @@ function sanitizeInput(
 }
 
 // ============================================================
-// MUTATIONS PÚBLICAS - Perfil Gastronômico
+// MUTATIONS PÃšBLICAS - Perfil GastronÃ´mico
 // ============================================================
 
 /**
- * Criar perfil gastronômico
+ * Criar perfil gastronÃ´mico
  */
 export async function createGastronomyProfile(
   input: CreateGastronomyProfileInput,
@@ -53,7 +53,7 @@ export async function createGastronomyProfile(
     // 1. Verificar ownership via BusinessOwnershipService (SSOT)
     await BusinessOwnershipService.requireOwnership(input.business_id, userId);
 
-    // 2. Verificar se já existe perfil gastronômico
+    // 2. Verificar se jÃ¡ existe perfil gastronÃ´mico
     const { data: existing } = await supabase
       .from('gastronomy_profiles')
       .select('id')
@@ -61,7 +61,7 @@ export async function createGastronomyProfile(
       .maybeSingle();
 
     if (existing) {
-      throw new Error('Este negócio já possui um perfil gastronômico');
+      throw new Error('Este negÃ³cio jÃ¡ possui um perfil gastronÃ´mico');
     }
 
     // 3. Sanitizar input
@@ -106,12 +106,12 @@ export async function createGastronomyProfile(
   } catch (error) {
     logger.error('[GastronomyMutations] Error creating profile:', error);
     const message = error instanceof Error ? error.message : String(error);
-    throw new Error(`Erro ao criar perfil gastronômico: ${message}`);
+    throw new Error(`Erro ao criar perfil gastronÃ´mico: ${message}`);
   }
 }
 
 /**
- * Atualizar perfil gastronômico
+ * Atualizar perfil gastronÃ´mico
  */
 export async function updateGastronomyProfile(
   businessId: string,
@@ -142,12 +142,12 @@ export async function updateGastronomyProfile(
   } catch (error) {
     logger.error('[GastronomyMutations] Error updating profile:', error);
     const message = error instanceof Error ? error.message : String(error);
-    throw new Error(`Erro ao atualizar perfil gastronômico: ${message}`);
+    throw new Error(`Erro ao atualizar perfil gastronÃ´mico: ${message}`);
   }
 }
 
 /**
- * Deletar perfil gastronômico (soft delete)
+ * Deletar perfil gastronÃ´mico (soft delete)
  */
 export async function deleteGastronomyProfile(
   businessId: string,
@@ -170,7 +170,7 @@ export async function deleteGastronomyProfile(
   } catch (error) {
     logger.error('[GastronomyMutations] Error deleting profile:', error);
     const message = error instanceof Error ? error.message : String(error);
-    throw new Error(`Erro ao deletar perfil gastronômico: ${message}`);
+    throw new Error(`Erro ao deletar perfil gastronÃ´mico: ${message}`);
   }
 }
 
@@ -208,7 +208,7 @@ export async function updateOperationalStatus(
 // ============================================================
 
 /**
- * Atualizar múltiplos campos do perfil em uma operação
+ * Atualizar mÃºltiplos campos do perfil em uma operaÃ§Ã£o
  */
 export async function patchGastronomyProfile(
   businessId: string,
@@ -219,7 +219,7 @@ export async function patchGastronomyProfile(
     // 1. Verificar ownership
     await BusinessOwnershipService.requireOwnership(businessId, userId);
 
-    // 2. Aplicar apenas campos válidos
+    // 2. Aplicar apenas campos vÃ¡lidos
     const validPatches: Record<string, unknown> = {};
     
     if (patches.cuisine_type !== undefined) {
@@ -246,7 +246,7 @@ export async function patchGastronomyProfile(
     if (patches.metadata !== undefined) validPatches.metadata = patches.metadata as Json;
 
     if (Object.keys(validPatches).length === 0) {
-      throw new Error('Nenhum campo válido para atualizar');
+      throw new Error('Nenhum campo vÃ¡lido para atualizar');
     }
 
     validPatches.updated_at = new Date().toISOString();
@@ -268,5 +268,6 @@ export async function patchGastronomyProfile(
     throw new Error(`Erro ao atualizar perfil: ${message}`);
   }
 }
+
 
 

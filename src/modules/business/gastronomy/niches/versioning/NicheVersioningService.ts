@@ -1,13 +1,13 @@
-/**
- * 🔄 NICHE VERSIONING SERVICE
+﻿/**
+ * ðŸ”„ NICHE VERSIONING SERVICE
  *
- * Serviço para gerenciar versionamento e evolução de nichos.
- * Garante que upgrades não quebrem registros antigos.
+ * ServiÃ§o para gerenciar versionamento e evoluÃ§Ã£o de nichos.
+ * Garante que upgrades nÃ£o quebrem registros antigos.
  *
  * @version 1.0.0
  */
 
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from '@/core/infrastructure/supabase/client';
 import type { NicheCapability, NicheStatus } from '../types';
 import type {
   AddCapabilityParams,
@@ -45,7 +45,7 @@ export class NicheVersioningService {
   }
 
   /**
-   * Verifica se um perfil tem uma capability específica
+   * Verifica se um perfil tem uma capability especÃ­fica
    */
   static async hasCapability(
     business_id: string,
@@ -73,7 +73,7 @@ export class NicheVersioningService {
   }
 
   /**
-   * Verifica múltiplas capabilities de uma vez
+   * Verifica mÃºltiplas capabilities de uma vez
    */
   static async hasCapabilities(
     business_id: string,
@@ -141,7 +141,7 @@ export class NicheVersioningService {
   }
 
   /**
-   * Adiciona múltiplas capabilities de uma vez
+   * Adiciona mÃºltiplas capabilities de uma vez
    */
   static async addCapabilities(
     business_id: string,
@@ -187,7 +187,7 @@ export class NicheVersioningService {
   static async upgradeNiche(
     params: UpgradeNicheParams,
   ): Promise<UpgradeNicheResult> {
-    // Buscar configuração atual
+    // Buscar configuraÃ§Ã£o atual
     const { data: currentProfile, error: fetchError } = await supabase
       .from('gastronomy_profiles')
       .select('niche_config_version, operational_mode, enabled_capabilities')
@@ -200,7 +200,7 @@ export class NicheVersioningService {
         from_version: '0.0.0',
         to_version: params.to_version,
         added_capabilities: [],
-        error: 'Perfil gastronômico não encontrado',
+        error: 'Perfil gastronÃ´mico nÃ£o encontrado',
       };
     }
 
@@ -236,7 +236,7 @@ export class NicheVersioningService {
       };
     }
 
-    // Registrar no histórico
+    // Registrar no histÃ³rico
     await supabase.from('gastronomy_niche_upgrade_history').insert({
       business_id: params.business_id,
       from_version: fromVersion,
@@ -258,7 +258,7 @@ export class NicheVersioningService {
   }
 
   /**
-   * Obtém configuração de nicho de um perfil
+   * ObtÃ©m configuraÃ§Ã£o de nicho de um perfil
    */
   static async getProfileNicheConfig(
     business_id: string,
@@ -297,7 +297,7 @@ export class NicheVersioningService {
   }
 
   /**
-   * Obtém perfil com informações de nicho
+   * ObtÃ©m perfil com informaÃ§Ãµes de nicho
    */
   static async getProfileWithNicheInfo(
     business_id: string,
@@ -316,7 +316,7 @@ export class NicheVersioningService {
   }
 
   /**
-   * Obtém histórico de upgrades de um perfil
+   * ObtÃ©m histÃ³rico de upgrades de um perfil
    */
   static async getUpgradeHistory(
     business_id: string,
@@ -370,3 +370,4 @@ export class NicheVersioningService {
     return data as unknown as GastronomyProfileWithNiche[];
   }
 }
+

@@ -1,14 +1,14 @@
 /**
- * SegurancaSection - Seção de segurança e dados
+ * SegurancaSection - SeÃ§Ã£o de seguranÃ§a e dados
  * 
  * SSOT: Componente isolado com props tipadas
- * Sem gambiarras: Lógica clara e organizada
+ * Sem gambiarras: LÃ³gica clara e organizada
  */
 
 import { Database, Download, Lock, Pause, Trash2 } from "lucide-react";
 
 import { SectionFrame, AccountHealthPanel } from "@/modules/profile/components/hub";
-import { SecurityActionCard } from "@/modules/profile/components/cards";
+import { SecurityActionCard } from "@/core/profile/components/cards";
 import { DataManagementDialogs } from "@/modules/profile/components/DataManagementDialogs";
 
 import type { SegurancaSectionProps } from "./types";

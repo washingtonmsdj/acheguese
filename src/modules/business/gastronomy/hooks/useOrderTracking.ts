@@ -1,5 +1,5 @@
-/**
- * useOrderTracking — Hook para rastreamento GPS de pedidos
+﻿/**
+ * useOrderTracking Ã¢â‚¬â€ Hook para rastreamento GPS de pedidos
  *
  * SSOT: Vincula orders (pedido) com ride_requests (rastreamento GPS)
  *
@@ -10,8 +10,8 @@
 import { useEffect, useMemo, useRef } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { GastronomyOrderRealtimeService } from '@/modules/business/gastronomy/services/GastronomyOrderRealtimeService';
-import { OrderDeliveryLinkService } from '@/modules/mobility/delivery/services/OrderDeliveryLinkService';
-import type { RideRequest } from '@/modules/mobility/types/types';
+import { OrderDeliveryLinkService } from '@/core/mobility/delivery/services/OrderDeliveryLinkService';
+import type { RideRequest } from '@/core/mobility/types/types';
 
 export interface UseOrderTrackingResult {
   rideRequest: RideRequest | null;
@@ -116,3 +116,4 @@ export function useOrderTracking(orderId: string): UseOrderTrackingResult {
     refetch,
   };
 }
+

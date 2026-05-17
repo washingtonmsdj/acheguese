@@ -1,5 +1,5 @@
-import { supabase } from "@/integrations/supabase";
-import { MobilityService } from "@/modules/mobility/services/MobilityService.impl";
+﻿import { supabase } from "@/integrations/supabase";
+import { MobilityService } from "@/core/mobility/services/runtime";
 
 export interface AdminMotoboyDelivery {
   id: string;

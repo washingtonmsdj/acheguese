@@ -1,9 +1,9 @@
-import { supabase } from "@/integrations/supabase";
+import { supabase } from "@/core/infrastructure/supabase";
 import { profileService } from "@/core/profiles/services/ProfileService";
 import { logger } from "@/shared/utils/logger";
 import type { OrderRecord } from "../order/types";
 import { LOGISTICS_STATUS, type LogisticsStatus } from "../logistics/types";
-import { mobilityRoutes } from "@/modules/mobility/routes/mobilityRoutes";
+import { mobilityRoutes } from "@/core/mobility/routes/mobilityRoutes";
 import { businessManagementRoutes } from "@/core/business/utils/businessManagementRoutes";
 
 interface NotificationPayload {
@@ -299,3 +299,4 @@ export class OrderDeliveryNotificationService {
     }
   }
 }
+

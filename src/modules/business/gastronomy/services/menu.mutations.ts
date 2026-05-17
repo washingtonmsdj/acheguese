@@ -1,12 +1,12 @@
-/**
- * 🍽️ MENU MUTATIONS - SSOT Write Model para Cardápios
+﻿/**
+ * ðŸ½ï¸ MENU MUTATIONS - SSOT Write Model para CardÃ¡pios
  *
- * Todas as operações de escrita para menus, categorias e itens.
+ * Todas as operaÃ§Ãµes de escrita para menus, categorias e itens.
  *
- * @version 2.0.0 - Extraído de MenuService
+ * @version 2.0.0 - ExtraÃ­do de MenuService
  */
 
-import { supabase } from '@/integrations/supabase';
+import { supabase } from '@/core/infrastructure/supabase';
 import { BusinessOwnershipService } from '@/core/business/services/BusinessOwnershipService';
 import { sanitizeString } from '@/shared/utils/sanitization';
 import type {
@@ -31,7 +31,7 @@ import type {
 } from '../types';
 
 // ============================================================
-// TIPOS PARA RELAÇÕES ANINHADAS DO SUPABASE
+// TIPOS PARA RELAÃ‡Ã•ES ANINHADAS DO SUPABASE
 // ============================================================
 
 interface ItemWithNestedBusinessId {
@@ -42,7 +42,7 @@ interface ItemWithNestedBusinessId {
 }
 
 // ============================================================
-// HELPERS DE EXTRAÇÃO DE BUSINESS_ID
+// HELPERS DE EXTRAÃ‡ÃƒO DE BUSINESS_ID
 // ============================================================
 
 function extractBusinessIdFromCategory(data: unknown): string | null {
@@ -101,7 +101,7 @@ export async function updateMenu(
     .single();
 
   if (!menu) {
-    throw new Error('Menu não encontrado');
+    throw new Error('Menu nÃ£o encontrado');
   }
 
   // Verificar ownership via BusinessOwnershipService (SSOT)
@@ -134,7 +134,7 @@ export async function deleteMenu(menuId: string, userId: string): Promise<void> 
     .single();
 
   if (!menu) {
-    throw new Error('Menu não encontrado');
+    throw new Error('Menu nÃ£o encontrado');
   }
 
   // Verificar ownership via BusinessOwnershipService (SSOT)
@@ -166,7 +166,7 @@ export async function createCategory(
     .single();
 
   if (!menu) {
-    throw new Error('Menu não encontrado');
+    throw new Error('Menu nÃ£o encontrado');
   }
 
   // Verificar ownership via BusinessOwnershipService (SSOT)
@@ -203,12 +203,12 @@ export async function updateCategory(
     .single();
 
   if (!category) {
-    throw new Error('Categoria não encontrada');
+    throw new Error('Categoria nÃ£o encontrada');
   }
 
   const businessId = extractBusinessIdFromCategory(category);
   if (!businessId) {
-    throw new Error('Não foi possível identificar o negócio proprietário da categoria');
+    throw new Error('NÃ£o foi possÃ­vel identificar o negÃ³cio proprietÃ¡rio da categoria');
   }
 
   // Verificar ownership via BusinessOwnershipService (SSOT)
@@ -240,12 +240,12 @@ export async function deleteCategory(categoryId: string, userId: string): Promis
     .single();
 
   if (!category) {
-    throw new Error('Categoria não encontrada');
+    throw new Error('Categoria nÃ£o encontrada');
   }
 
   const businessId = extractBusinessIdFromCategory(category);
   if (!businessId) {
-    throw new Error('Não foi possível identificar o negócio proprietário da categoria');
+    throw new Error('NÃ£o foi possÃ­vel identificar o negÃ³cio proprietÃ¡rio da categoria');
   }
 
   // Verificar ownership via BusinessOwnershipService (SSOT)
@@ -274,12 +274,12 @@ export async function createItem(input: CreateMenuItemInput, userId: string): Pr
     .single();
 
   if (!category) {
-    throw new Error('Categoria não encontrada');
+    throw new Error('Categoria nÃ£o encontrada');
   }
 
   const businessId = extractBusinessIdFromCategory(category);
   if (!businessId) {
-    throw new Error('Não foi possível identificar o negócio proprietário da categoria');
+    throw new Error('NÃ£o foi possÃ­vel identificar o negÃ³cio proprietÃ¡rio da categoria');
   }
 
   // Verificar ownership via BusinessOwnershipService (SSOT)
@@ -330,12 +330,12 @@ export async function updateItem(
     .single();
 
   if (!item) {
-    throw new Error('Item não encontrado');
+    throw new Error('Item nÃ£o encontrado');
   }
 
   const businessId = extractBusinessIdFromItem(item);
   if (!businessId) {
-    throw new Error('Não foi possível identificar o negócio proprietário do item');
+    throw new Error('NÃ£o foi possÃ­vel identificar o negÃ³cio proprietÃ¡rio do item');
   }
 
   // Verificar ownership via BusinessOwnershipService (SSOT)
@@ -367,12 +367,12 @@ export async function deleteItem(itemId: string, userId: string): Promise<void> 
     .single();
 
   if (!item) {
-    throw new Error('Item não encontrado');
+    throw new Error('Item nÃ£o encontrado');
   }
 
   const businessId = extractBusinessIdFromItem(item);
   if (!businessId) {
-    throw new Error('Não foi possível identificar o negócio proprietário do item');
+    throw new Error('NÃ£o foi possÃ­vel identificar o negÃ³cio proprietÃ¡rio do item');
   }
 
   // Verificar ownership via BusinessOwnershipService (SSOT)
@@ -404,12 +404,12 @@ export async function createVariant(
     .single();
 
   if (!item) {
-    throw new Error('Item não encontrado');
+    throw new Error('Item nÃ£o encontrado');
   }
 
   const businessId = extractBusinessIdFromItem(item);
   if (!businessId) {
-    throw new Error('Não foi possível identificar o negócio proprietário do item');
+    throw new Error('NÃ£o foi possÃ­vel identificar o negÃ³cio proprietÃ¡rio do item');
   }
 
   // Verificar ownership via BusinessOwnershipService (SSOT)
@@ -446,12 +446,12 @@ export async function updateVariant(
     .single();
 
   if (!variant) {
-    throw new Error('Variante não encontrada');
+    throw new Error('Variante nÃ£o encontrada');
   }
 
   const businessId = extractBusinessIdFromItem(variant);
   if (!businessId) {
-    throw new Error('Não foi possível identificar o negócio proprietário da variante');
+    throw new Error('NÃ£o foi possÃ­vel identificar o negÃ³cio proprietÃ¡rio da variante');
   }
 
   // Verificar ownership via BusinessOwnershipService (SSOT)
@@ -483,12 +483,12 @@ export async function deleteVariant(variantId: string, userId: string): Promise<
     .single();
 
   if (!variant) {
-    throw new Error('Variante não encontrada');
+    throw new Error('Variante nÃ£o encontrada');
   }
 
   const businessId = extractBusinessIdFromItem(variant);
   if (!businessId) {
-    throw new Error('Não foi possível identificar o negócio proprietário da variante');
+    throw new Error('NÃ£o foi possÃ­vel identificar o negÃ³cio proprietÃ¡rio da variante');
   }
 
   // Verificar ownership via BusinessOwnershipService (SSOT)
@@ -517,12 +517,12 @@ export async function createAddon(
     .single();
 
   if (!item) {
-    throw new Error('Item não encontrado');
+    throw new Error('Item nÃ£o encontrado');
   }
 
   const businessId = extractBusinessIdFromItem(item);
   if (!businessId) {
-    throw new Error('Não foi possível identificar o negócio proprietário do item');
+    throw new Error('NÃ£o foi possÃ­vel identificar o negÃ³cio proprietÃ¡rio do item');
   }
 
   // Verificar ownership via BusinessOwnershipService (SSOT)
@@ -559,12 +559,12 @@ export async function updateAddon(
     .single();
 
   if (!addon) {
-    throw new Error('Adicional não encontrado');
+    throw new Error('Adicional nÃ£o encontrado');
   }
 
   const businessId = extractBusinessIdFromItem(addon);
   if (!businessId) {
-    throw new Error('Não foi possível identificar o negócio proprietário do adicional');
+    throw new Error('NÃ£o foi possÃ­vel identificar o negÃ³cio proprietÃ¡rio do adicional');
   }
 
   // Verificar ownership via BusinessOwnershipService (SSOT)
@@ -596,12 +596,12 @@ export async function deleteAddon(addonId: string, userId: string): Promise<void
     .single();
 
   if (!addon) {
-    throw new Error('Adicional não encontrado');
+    throw new Error('Adicional nÃ£o encontrado');
   }
 
   const businessId = extractBusinessIdFromItem(addon);
   if (!businessId) {
-    throw new Error('Não foi possível identificar o negócio proprietário do adicional');
+    throw new Error('NÃ£o foi possÃ­vel identificar o negÃ³cio proprietÃ¡rio do adicional');
   }
 
   // Verificar ownership via BusinessOwnershipService (SSOT)
@@ -613,11 +613,11 @@ export async function deleteAddon(addonId: string, userId: string): Promise<void
 }
 
 // ============================================================
-// MUTATIONS - PROMOÇÕES
+// MUTATIONS - PROMOÃ‡Ã•ES
 // ============================================================
 
 /**
- * Criar promoção
+ * Criar promoÃ§Ã£o
  */
 export async function createPromotion(
   input: CreateMenuPromotionInput,
@@ -648,14 +648,14 @@ export async function createPromotion(
 }
 
 /**
- * Atualizar promoção
+ * Atualizar promoÃ§Ã£o
  */
 export async function updatePromotion(
   promotionId: string,
   input: UpdateMenuPromotionInput,
   userId: string,
 ): Promise<MenuPromotion> {
-  // menu_promotions.business_id é a FK direta — sem join necessário
+  // menu_promotions.business_id Ã© a FK direta â€” sem join necessÃ¡rio
   const { data: promotion } = await supabase
     .from('menu_promotions')
     .select('business_id')
@@ -663,7 +663,7 @@ export async function updatePromotion(
     .single();
 
   if (!promotion) {
-    throw new Error('Promoção não encontrada');
+    throw new Error('PromoÃ§Ã£o nÃ£o encontrada');
   }
 
   // Verificar ownership via BusinessOwnershipService (SSOT)
@@ -692,7 +692,7 @@ export async function updatePromotion(
 }
 
 /**
- * Deletar promoção
+ * Deletar promoÃ§Ã£o
  */
 export async function deletePromotion(promotionId: string, userId: string): Promise<void> {
   const { data: promotion } = await supabase
@@ -702,7 +702,7 @@ export async function deletePromotion(promotionId: string, userId: string): Prom
     .single();
 
   if (!promotion) {
-    throw new Error('Promoção não encontrada');
+    throw new Error('PromoÃ§Ã£o nÃ£o encontrada');
   }
 
   // Verificar ownership via BusinessOwnershipService (SSOT)
@@ -732,12 +732,12 @@ export async function reorderMenuItems(
     .single();
 
   if (!category) {
-    throw new Error('Categoria não encontrada');
+    throw new Error('Categoria nÃ£o encontrada');
   }
 
   const reorderBusinessId = extractBusinessIdFromCategory(category);
   if (!reorderBusinessId) {
-    throw new Error('Não foi possível identificar o negócio proprietário da categoria');
+    throw new Error('NÃ£o foi possÃ­vel identificar o negÃ³cio proprietÃ¡rio da categoria');
   }
 
   // Verificar ownership via BusinessOwnershipService (SSOT)
@@ -770,7 +770,7 @@ export async function reorderMenuCategories(
     .single();
 
   if (!menu) {
-    throw new Error('Menu não encontrado');
+    throw new Error('Menu nÃ£o encontrado');
   }
 
   // Verificar ownership via BusinessOwnershipService (SSOT)
@@ -783,5 +783,6 @@ export async function reorderMenuCategories(
 
   await Promise.all(updates);
 }
+
 
 

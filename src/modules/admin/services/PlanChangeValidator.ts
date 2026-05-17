@@ -1,21 +1,21 @@
-/**
- * PlanChangeValidator — Validação de impacto em mudanças de plano
+﻿/**
+ * PlanChangeValidator â€” ValidaÃ§Ã£o de impacto em mudanÃ§as de plano
  *
  * REGRAS ARQUITETURAIS:
- *   - Validar impacto antes de permitir alteração de plano
- *   - Bloquear alterações destrutivas sem estratégia
+ *   - Validar impacto antes de permitir alteraÃ§Ã£o de plano
+ *   - Bloquear alteraÃ§Ãµes destrutivas sem estratÃ©gia
  *   - Exibir impacto claro para admin
  *
  * FASE: 3 - Services e Contratos
- * REFERÊNCIA: F3_MIGRACAO_GATES_FRONTEND.md
+ * REFERÃŠNCIA: F3_MIGRACAO_GATES_FRONTEND.md
  *
  * @version 1.0.0
  */
 
-import { supabase } from '@/integrations/supabase';
+import { supabase } from '@/core/infrastructure/supabase';
 import { logger } from '@/shared/utils/logger';
 
-// ─── Tipos ────────────────────────────────────────────────────────────────────
+// â”€â”€â”€ Tipos â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export interface PlanChangeImpact {
   canChange: boolean;
@@ -28,11 +28,11 @@ export interface PlanChangeImpact {
   migrationStrategy?: string;
 }
 
-// ─── Service ──────────────────────────────────────────────────────────────────
+// â”€â”€â”€ Service â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export class PlanChangeValidator {
   /**
-   * Valida se mudança de plano é permitida e retorna impacto.
+   * Valida se mudanÃ§a de plano Ã© permitida e retorna impacto.
    */
   static async validateChange(
     businessId: string,
@@ -66,27 +66,27 @@ export class PlanChangeValidator {
       // Determinar features perdidas/ganhas
       const { willLose, willGain } = this.compareFeatures(currentPlanTier, newPlanTier);
       
-      // Determinar se é downgrade (perde features)
+      // Determinar se Ã© downgrade (perde features)
       const isDowngrade = willLose.length > 0;
       
-      // Determinar se requer migração
+      // Determinar se requer migraÃ§Ã£o
       const requiresMigration = isDowngrade && affectedContracts > 0;
       
-      // Bloquear downgrade destrutivo sem estratégia
+      // Bloquear downgrade destrutivo sem estratÃ©gia
       if (requiresMigration) {
         return {
           canChange: false,
-          reason: `Downgrade bloqueado: ${affectedContracts} contrato(s) ativo(s) perderão acesso a recursos críticos. Defina estratégia de migração antes de prosseguir.`,
+          reason: `Downgrade bloqueado: ${affectedContracts} contrato(s) ativo(s) perderÃ£o acesso a recursos crÃ­ticos. Defina estratÃ©gia de migraÃ§Ã£o antes de prosseguir.`,
           affectedContracts,
           affectedUsers,
           willLoseFeatures: willLose,
           willGainFeatures: willGain,
           requiresMigration: true,
-          migrationStrategy: 'Sugestão: Notifique usuários afetados e ofereça período de transição de 30 dias.',
+          migrationStrategy: 'SugestÃ£o: Notifique usuÃ¡rios afetados e ofereÃ§a perÃ­odo de transiÃ§Ã£o de 30 dias.',
         };
       }
       
-      // Permitir upgrade ou mudança sem impacto
+      // Permitir upgrade ou mudanÃ§a sem impacto
       return {
         canChange: true,
         affectedContracts,
@@ -97,7 +97,7 @@ export class PlanChangeValidator {
       };
       
     } catch (error) {
-      logger.error('[PlanChangeValidator] Erro ao validar mudança:', error);
+      logger.error('[PlanChangeValidator] Erro ao validar mudanÃ§a:', error);
       return {
         canChange: false,
         reason: 'Erro inesperado ao validar impacto.',
@@ -120,29 +120,29 @@ export class PlanChangeValidator {
     // Mapa de features por tier
     const featuresByTier: Record<string, string[]> = {
       free: [
-        'Página pública básica',
-        'Cardápio limitado (20 itens)',
+        'PÃ¡gina pÃºblica bÃ¡sica',
+        'CardÃ¡pio limitado (20 itens)',
       ],
       pro: [
-        'Página pública básica',
-        'Página premium',
+        'PÃ¡gina pÃºblica bÃ¡sica',
+        'PÃ¡gina premium',
         'Link curto (/p/slug)',
         'QR Code personalizado',
-        'Cardápio ilimitado',
-        'Promoções',
-        'Analytics básico',
+        'CardÃ¡pio ilimitado',
+        'PromoÃ§Ãµes',
+        'Analytics bÃ¡sico',
       ],
       delivery: [
-        'Página pública básica',
-        'Página premium',
+        'PÃ¡gina pÃºblica bÃ¡sica',
+        'PÃ¡gina premium',
         'Link curto (/p/slug)',
         'QR Code personalizado',
-        'Cardápio ilimitado',
-        'Promoções',
-        'Analytics básico',
+        'CardÃ¡pio ilimitado',
+        'PromoÃ§Ãµes',
+        'Analytics bÃ¡sico',
         'Pedidos internos',
         'Rede de motoboys',
-        'Analytics avançado',
+        'Analytics avanÃ§ado',
       ],
     };
     
@@ -161,4 +161,5 @@ export class PlanChangeValidator {
 }
 
 export const planChangeValidator = PlanChangeValidator;
+
 

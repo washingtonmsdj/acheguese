@@ -1,8 +1,8 @@
-/**
+﻿/**
  * EducationTrackingService
  *
- * Serviço centralizado para tracking de eventos do módulo Education.
- * Todas as operações de analytics devem passar por aqui.
+ * ServiÃ§o centralizado para tracking de eventos do mÃ³dulo Education.
+ * Todas as operaÃ§Ãµes de analytics devem passar por aqui.
  *
  * Principios:
  * - Fire-and-forget: tracking nunca bloqueia a UI
@@ -12,7 +12,7 @@
  * @version 1.0.0
  */
 
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from '@/core/infrastructure/supabase/client';
 import { logger } from '@/shared/utils/logger';
 import type {
   EducationAnalyticsEventType,
@@ -233,3 +233,4 @@ export const EducationTrackingService = {
     });
   },
 };
+

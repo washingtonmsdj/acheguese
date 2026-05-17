@@ -1,26 +1,26 @@
-/**
+﻿/**
  * LandingFeaturedService
  *
- * Serviço centralizado para os blocos de destaque da landing territorial.
- * Queries leves, limitadas, respeitando TerritoryFilter canônico.
+ * ServiÃ§o centralizado para os blocos de destaque da landing territorial.
+ * Queries leves, limitadas, respeitando TerritoryFilter canÃ´nico.
  *
- * Regras de "featured" por módulo:
- *   Business    — is_premium DESC, rating DESC, created_at DESC
- *   Services    — is_accepting_clients=true, rating DESC, created_at DESC
- *   Classifieds — status='active', created_at DESC (mais recentes)
+ * Regras de "featured" por mÃ³dulo:
+ *   Business    â€” is_premium DESC, rating DESC, created_at DESC
+ *   Services    â€” is_accepting_clients=true + visibility=public_listed, rating DESC, created_at DESC
+ *   Classifieds â€” status='active', created_at DESC (mais recentes)
  *
  * Todas as queries:
  *   - Aceitam TerritoryFilter (scope: location | group | none)
  *   - Aplicam eq(location_id) ou in(location_id, ids) conforme o scope
- *   - Limitam resultados (padrão: 4)
- *   - Retornam shape mínimo para card (sem dados pesados)
- *   - Retornam [] em caso de erro (nunca lançam para a UI)
+ *   - Limitam resultados (padrÃ£o: 4)
+ *   - Retornam shape mÃ­nimo para card (sem dados pesados)
+ *   - Retornam [] em caso de erro (nunca lanÃ§am para a UI)
  */
 import { logger } from '@/shared/utils/logger';
-import { supabase } from '@/integrations/supabase';
+import { supabase } from '@/core/infrastructure/supabase';
 import { applyTerritoryFilter } from '@/core/location/utils';
 import type { TerritoryFilter } from '@/core/location/types';
-// ── Shapes de saída (mínimos para card) ──────────────────────────────────────
+// â”€â”€ Shapes de saÃ­da (mÃ­nimos para card) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export interface FeaturedBusiness {
   id: string;
@@ -31,7 +31,7 @@ export interface FeaturedBusiness {
   is_premium: boolean;
   is_verified: boolean;
   slug?: string;
-  /** geographic_path da location associada — necessário para URL canônica territorial */
+  /** geographic_path da location associada â€” necessÃ¡rio para URL canÃ´nica territorial */
   geographic_path?: string | null;
 }
 
@@ -52,7 +52,7 @@ export interface FeaturedClassified {
   price: number;
   photos: string[];
   created_at: string;
-  // ✅ Dados para construir URL canônica
+  // âœ… Dados para construir URL canÃ´nica
   public_id?: string;
   slug?: string;
   geographic_path?: string;
@@ -121,16 +121,16 @@ function getStringArray(value: unknown): string[] {
   return value.filter((item): item is string => typeof item === 'string');
 }
 
-// ✅ SSOT - Função applyTerritoryFilter movida para @/core/location/utils
-// Agora importada de lá para evitar duplicação
+// âœ… SSOT - FunÃ§Ã£o applyTerritoryFilter movida para @/core/location/utils
+// Agora importada de lÃ¡ para evitar duplicaÃ§Ã£o
 
-// ── Serviço ──────────────────────────────────────────────────────────────────
+// â”€â”€ ServiÃ§o â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export class LandingFeaturedService {
   /**
-   * Negócios em destaque.
+   * NegÃ³cios em destaque.
    * Regra: premium primeiro, depois por rating, depois mais recentes.
-   * Retorna shape mínimo para card.
+   * Retorna shape mÃ­nimo para card.
    */
   static async getFeaturedBusinesses(
     filter: TerritoryFilter,
@@ -142,7 +142,7 @@ export class LandingFeaturedService {
         .from('business_data')
         .select('profile_id, business_name, category, metadata, rating, is_premium, is_verified, slug, location:locations!location_id(geographic_path)')
         .eq('status', 'active')
-        // Blindagem: nunca retornar registros sem location_id (não territorializados)
+        // Blindagem: nunca retornar registros sem location_id (nÃ£o territorializados)
         .not('location_id', 'is', null)
         .order('is_premium', { ascending: false })
         .order('rating', { ascending: false })
@@ -153,7 +153,7 @@ export class LandingFeaturedService {
 
       const { data, error } = await query;
       if (error) {
-        logger.warn('⚠️ LandingFeaturedService.getFeaturedBusinesses:', error.message);
+        logger.warn('âš ï¸ LandingFeaturedService.getFeaturedBusinesses:', error.message);
         return [];
       }
 
@@ -170,13 +170,13 @@ export class LandingFeaturedService {
         geographic_path: d.location?.geographic_path ?? null,
       }));
     } catch (err: unknown) {
-      logger.warn('⚠️ LandingFeaturedService.getFeaturedBusinesses unexpected:', getErrorMessage(err));
+      logger.warn('âš ï¸ LandingFeaturedService.getFeaturedBusinesses unexpected:', getErrorMessage(err));
       return [];
     }
   }
 
   /**
-   * Serviços em destaque.
+   * ServiÃ§os em destaque.
    * Regra: aceitando clientes, verificados primeiro, depois por rating.
    */
   static async getFeaturedServices(
@@ -190,7 +190,8 @@ export class LandingFeaturedService {
         .from('professional_data')
         .select('id, professional_name, service_category, metadata, rating, is_verified, price_range, price_type, hourly_rate')
         .eq('is_accepting_clients', true)
-        // Blindagem: nunca retornar registros sem location_id (não territorializados)
+        .eq('visibility', 'public_listed')
+        // Blindagem: nunca retornar registros sem location_id (nÃ£o territorializados)
         .not('location_id', 'is', null)
         .order('is_verified', { ascending: false })
         .order('rating', { ascending: false })
@@ -201,13 +202,13 @@ export class LandingFeaturedService {
 
       const { data, error } = await query;
       if (error) {
-        logger.warn('⚠️ LandingFeaturedService.getFeaturedServices:', error.message);
+        logger.warn('âš ï¸ LandingFeaturedService.getFeaturedServices:', error.message);
         return [];
       }
 
       const rows = (data ?? []) as unknown as FeaturedServiceRow[];
       return rows.map((d): FeaturedService => {
-        // Formata o preço baseado no tipo
+        // Formata o preÃ§o baseado no tipo
         let priceDisplay = 'A combinar';
 
         if (d.price_type === 'hourly' && d.hourly_rate) {
@@ -219,7 +220,7 @@ export class LandingFeaturedService {
         } else if (d.price_type === 'free') {
           priceDisplay = 'Gratuito';
         } else if (d.price_type === 'package') {
-          priceDisplay = d.price_range || 'Pacotes disponíveis';
+          priceDisplay = d.price_range || 'Pacotes disponÃ­veis';
         } else if (d.price_type === 'consultation') {
           priceDisplay = 'Sob consulta';
         } else if (d.price_range) {
@@ -237,7 +238,7 @@ export class LandingFeaturedService {
         };
       });
     } catch (err: unknown) {
-      logger.warn('⚠️ LandingFeaturedService.getFeaturedServices unexpected:', getErrorMessage(err));
+      logger.warn('âš ï¸ LandingFeaturedService.getFeaturedServices unexpected:', getErrorMessage(err));
       return [];
     }
   }
@@ -245,7 +246,7 @@ export class LandingFeaturedService {
   /**
    * Classificados em destaque.
    * Regra: ativos, mais recentes primeiro.
-   * ✅ SSOT EXCEPTION: LandingFeaturedService é o serviço autorizado para queries de landing
+   * âœ… SSOT EXCEPTION: LandingFeaturedService Ã© o serviÃ§o autorizado para queries de landing
    */
   static async getFeaturedClassifieds(
     filter: TerritoryFilter,
@@ -279,7 +280,7 @@ export class LandingFeaturedService {
 
       const { data, error } = await query;
       if (error) {
-        logger.warn('⚠️ LandingFeaturedService.getFeaturedClassifieds:', error.message);
+        logger.warn('âš ï¸ LandingFeaturedService.getFeaturedClassifieds:', error.message);
         return [];
       }
 
@@ -291,7 +292,7 @@ export class LandingFeaturedService {
         price: d.price ?? 0,
         photos: getStringArray(d.photos),
         created_at: d.created_at ?? '',
-        // ✅ Dados para URL canônica
+        // âœ… Dados para URL canÃ´nica
         public_id: d.public_id ?? undefined,
         slug: d.slug ?? undefined,
         geographic_path: d.locations?.geographic_path ?? undefined,
@@ -299,14 +300,14 @@ export class LandingFeaturedService {
         subcategory_slug: d.classified_subcategories?.slug ?? undefined,
       }));
     } catch (err: unknown) {
-      logger.warn('⚠️ LandingFeaturedService.getFeaturedClassifieds unexpected:', getErrorMessage(err));
+      logger.warn('âš ï¸ LandingFeaturedService.getFeaturedClassifieds unexpected:', getErrorMessage(err));
       return [];
     }
   }
 
   /**
-   * Contagens básicas do território.
-   * Usa COUNT(*) com head:true — sem carregar dados.
+   * Contagens bÃ¡sicas do territÃ³rio.
+   * Usa COUNT(*) com head:true â€” sem carregar dados.
    * Retorna 0 em caso de erro (nunca bloqueia a landing).
    */
   static async getTerritoryStats(filter: TerritoryFilter): Promise<TerritoryStats> {
@@ -327,6 +328,7 @@ export class LandingFeaturedService {
         let q = supabase.from('professional_data')
           .select('id', { count: 'exact', head: true })
           .eq('is_accepting_clients', true)
+          .eq('visibility', 'public_listed')
           .not('location_id', 'is', null);
         q = applyTerritoryFilter(q, filter);
         return q;
@@ -348,3 +350,4 @@ export class LandingFeaturedService {
     };
   }
 }
+

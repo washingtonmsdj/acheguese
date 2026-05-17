@@ -1,9 +1,9 @@
-/**
- * StateLandingPage — Landing pública para nível estadual
+﻿/**
+ * StateLandingPage â€” Landing pÃºblica para nÃ­vel estadual
  *
  * Lista cidades ativas dentro do estado.
  * Serve como fallback elegante e base futura de escala.
- * Quando há apenas 1 cidade ativa, ainda mostra a landing (não redireciona).
+ * Quando hÃ¡ apenas 1 cidade ativa, ainda mostra a landing (nÃ£o redireciona).
  */
 
 import { useEffect, useState } from 'react';
@@ -13,7 +13,7 @@ import {
   Users, Store, ArrowRight,
 } from 'lucide-react';
 import { TERRITORY_CONFIG } from '@/config/territory';
-import { getStateData, getActiveCitiesByState } from '@/app/features/landing/services/LandingService';
+import { getStateData, getActiveCitiesByState } from '@/core/landing/services/LandingService';
 
 interface CityItem {
   id: string;
@@ -89,15 +89,15 @@ export function StateLandingPage() {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center gap-3 p-8 text-center">
         <Map className="h-12 w-12 text-muted-foreground" />
-        <p className="text-lg font-semibold text-foreground">Estado não encontrado</p>
+        <p className="text-lg font-semibold text-foreground">Estado nÃ£o encontrado</p>
         <p className="text-sm text-muted-foreground max-w-sm">
-          Este estado não está disponível no momento.
+          Este estado nÃ£o estÃ¡ disponÃ­vel no momento.
         </p>
         <button
           onClick={() => navigate('/')}
           className="mt-4 text-sm text-primary hover:underline"
         >
-          Voltar ao início
+          Voltar ao inÃ­cio
         </button>
       </div>
     );
@@ -121,10 +121,10 @@ export function StateLandingPage() {
               </h1>
               <p className="text-sm text-muted-foreground mt-1">
                 {cities.length === 0
-                  ? 'Nenhuma cidade disponível no momento'
+                  ? 'Nenhuma cidade disponÃ­vel no momento'
                   : cities.length === 1
-                    ? '1 cidade disponível'
-                    : `${cities.length} cidades disponíveis`}
+                    ? '1 cidade disponÃ­vel'
+                    : `${cities.length} cidades disponÃ­veis`}
               </p>
             </div>
           </div>
@@ -141,8 +141,8 @@ export function StateLandingPage() {
         {cities.length === 0 ? (
           <div className="rounded-xl border border-dashed border-border bg-muted/20 px-4 py-8 text-center">
             <MapPin className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
-            <p className="text-sm text-muted-foreground">Nenhuma cidade disponível neste estado</p>
-            <p className="text-xs text-muted-foreground/60 mt-1">Em breve novas cidades serão adicionadas</p>
+            <p className="text-sm text-muted-foreground">Nenhuma cidade disponÃ­vel neste estado</p>
+            <p className="text-xs text-muted-foreground/60 mt-1">Em breve novas cidades serÃ£o adicionadas</p>
           </div>
         ) : (
           <div className="grid gap-3">
@@ -173,7 +173,7 @@ export function StateLandingPage() {
         )}
       </section>
 
-      {/* Nota de expansão */}
+      {/* Nota de expansÃ£o */}
       <div className="px-4 max-w-3xl mx-auto">
         <p className="text-xs text-muted-foreground text-center">
           Em breve em mais cidades de {stateData?.name || stateCode}

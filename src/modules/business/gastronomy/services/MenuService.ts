@@ -1,8 +1,8 @@
-/**
+﻿/**
  * MenuService - SSOT de cardapio com validacao de plano.
  */
 import { logger } from '@/shared/utils/logger';
-import { supabase } from '@/integrations/supabase';
+import { supabase } from '@/core/infrastructure/supabase';
 import { sanitizeString } from '@/shared/utils/sanitization';
 import { SubscriptionService } from '@/core/billing/SubscriptionService';
 import { EntitlementsService } from '@/core/billing/entitlements';
@@ -755,3 +755,4 @@ export const MenuService = {
     }
   },
 };
+

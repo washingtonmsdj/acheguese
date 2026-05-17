@@ -1,6 +1,6 @@
-import { supabase } from '@/integrations/supabase/client';
+﻿import { supabase } from '@/core/infrastructure/supabase/client';
 import { mediaService } from '@/core/media/services/MediaService';
-import type { Database } from '@/integrations/supabase/types.generated';
+import type { Database } from '@/core/infrastructure/supabase/types.generated';
 import type {
   CreateTryOnInput,
   TryOnGeneration,
@@ -93,7 +93,7 @@ class TryOnService {
     if (error) throw error;
   }
 
-  /** Dispara a edge function de forma assíncrona (UI não trava). */
+  /** Dispara a edge function de forma assÃ­ncrona (UI nÃ£o trava). */
   async enqueueGeneration(generationId: string): Promise<void> {
     const { error } = await supabase.functions.invoke('tryon-generate', {
       body: { generationId },
@@ -101,7 +101,7 @@ class TryOnService {
     if (error) throw error;
   }
 
-  /** Realtime: recebe atualizações de status. */
+  /** Realtime: recebe atualizaÃ§Ãµes de status. */
   subscribeToGeneration(id: string, cb: (g: TryOnGeneration) => void) {
     const channel = supabase
       .channel(`tryon:${id}`)
@@ -118,3 +118,4 @@ class TryOnService {
 }
 
 export const tryOnService = new TryOnService();
+

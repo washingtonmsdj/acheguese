@@ -16,7 +16,7 @@
  * - active_ride_id amarrado à corrida
  */
 import { logger } from '@/shared/utils/logger';
-import { supabase as supabaseClient } from '@/integrations/supabase';
+import { supabase as supabaseClient } from '@/core/infrastructure/supabase';
 import { getDriverDataByProfileIds, getDriverOfferCapabilities } from './mobility.queries';
 import { MobilityService } from './MobilityService.impl';
 
@@ -786,3 +786,4 @@ export class DriverAvailabilityService {
     return (degrees * Math.PI) / 180;
   }
 }
+

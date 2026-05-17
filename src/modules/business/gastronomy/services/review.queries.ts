@@ -1,21 +1,21 @@
-/**
- * Review Query Service — operações de reviews para gastronomia
+﻿/**
+ * Review Query Service â€” operaÃ§Ãµes de reviews para gastronomia
  *
- * Usa a tabela canônica `reviews` (schema base) com as colunas
+ * Usa a tabela canÃ´nica `reviews` (schema base) com as colunas
  * adicionadas pela migration 20260412000001 (photos, status, helpful_count, etc.)
  *
- * O core/reviews usa tabelas legadas (business_reviews_new) — este serviço
- * opera na tabela canônica e é o SSOT para reviews de gastronomia.
+ * O core/reviews usa tabelas legadas (business_reviews_new) â€” este serviÃ§o
+ * opera na tabela canÃ´nica e Ã© o SSOT para reviews de gastronomia.
  */
 
 import { logger } from '@/shared/utils/logger';
-import { supabase } from '@/integrations/supabase';
+import { supabase } from '@/core/infrastructure/supabase';
 import { REPORT_STATUS } from '@/shared/types/constants';
 import { EntityStatus } from '@/shared/types/enums';
 
-// ── Tipos estendidos da tabela canônica `reviews` ─────────────────────────────
+// â”€â”€ Tipos estendidos da tabela canÃ´nica `reviews` â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // Estende o tipo base de @/shared/types/reviews com os campos adicionados
-// pela migration 20260412000001 (específicos de gastronomia).
+// pela migration 20260412000001 (especÃ­ficos de gastronomia).
 
 export interface Review {
   id: string;
@@ -69,7 +69,7 @@ export interface VoteReviewInput {
 
 export class ReviewQueryService {
   /**
-   * Obter avaliações de um negócio
+   * Obter avaliaÃ§Ãµes de um negÃ³cio
    */
   static async getBusinessReviews(params: {
     businessProfileId: string;
@@ -98,7 +98,7 @@ export class ReviewQueryService {
   }
 
   /**
-   * Verificar se usuário pode avaliar um negócio
+   * Verificar se usuÃ¡rio pode avaliar um negÃ³cio
    */
   static async canUserReviewBusiness(params: {
     userId: string;
@@ -123,7 +123,7 @@ export class ReviewQueryService {
   }
 
   /**
-   * Criar avaliação
+   * Criar avaliaÃ§Ã£o
    */
   static async createReview(input: CreateReviewInput): Promise<{ id: string }> {
     try {
@@ -154,7 +154,7 @@ export class ReviewQueryService {
   }
 
   /**
-   * Atualizar avaliação
+   * Atualizar avaliaÃ§Ã£o
    */
   static async updateReview(
     reviewId: string,
@@ -181,7 +181,7 @@ export class ReviewQueryService {
   }
 
   /**
-   * Deletar avaliação
+   * Deletar avaliaÃ§Ã£o
    */
   static async deleteReview(reviewId: string): Promise<void> {
     try {
@@ -227,7 +227,7 @@ export class ReviewQueryService {
   }
 
   /**
-   * Denunciar avaliação
+   * Denunciar avaliaÃ§Ã£o
    */
   static async reportReview(input: ReportReviewInput): Promise<{ id: string }> {
     try {
@@ -261,7 +261,7 @@ export class ReviewQueryService {
   }
 
   /**
-   * Votar em avaliação (útil/não útil)
+   * Votar em avaliaÃ§Ã£o (Ãºtil/nÃ£o Ãºtil)
    */
   static async voteReview(input: VoteReviewInput): Promise<void> {
     try {
@@ -291,7 +291,7 @@ export class ReviewQueryService {
   }
 
   /**
-   * Obter voto do usuário em uma avaliação
+   * Obter voto do usuÃ¡rio em uma avaliaÃ§Ã£o
    */
   static async getUserReviewVote(params: {
     reviewId: string;
@@ -318,7 +318,7 @@ export class ReviewQueryService {
   }
 
   /**
-   * Obter estatísticas de avaliações de um negócio
+   * Obter estatÃ­sticas de avaliaÃ§Ãµes de um negÃ³cio
    */
   static async getBusinessReviewStats(businessProfileId: string): Promise<{
     total: number;
@@ -383,5 +383,6 @@ export class ReviewQueryService {
     }
   }
 }
+
 
 

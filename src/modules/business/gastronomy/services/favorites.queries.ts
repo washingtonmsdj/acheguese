@@ -1,17 +1,17 @@
-/**
- * Favorites Query Service — operações de favoritos de gastronomia
+﻿/**
+ * Favorites Query Service â€” operaÃ§Ãµes de favoritos de gastronomia
  *
  * Usa a tabela `user_favorite_businesses` criada pela migration 20260412000002.
- * É distinta de:
- *   - `profile_favorites_new` (core/favorites — favoritos entre perfis)
- *   - `business_favorites` (core/favorites — tabela legada de business)
+ * Ã‰ distinta de:
+ *   - `profile_favorites_new` (core/favorites â€” favoritos entre perfis)
+ *   - `business_favorites` (core/favorites â€” tabela legada de business)
  *
- * Esta tabela é específica para o relacionamento user → business_data
- * com campos extras (tags, notas, preferências de notificação).
+ * Esta tabela Ã© especÃ­fica para o relacionamento user â†’ business_data
+ * com campos extras (tags, notas, preferÃªncias de notificaÃ§Ã£o).
  */
 
 import { logger } from '@/shared/utils/logger';
-import { supabase } from '@/integrations/supabase';
+import { supabase } from '@/core/infrastructure/supabase';
 
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -154,10 +154,10 @@ function isLegacyFavoritesRpcSchemaError(error: unknown): boolean {
 
 export class FavoritesQueryService {
   /**
-   * Em SSOT, o caminho principal é leitura direta de `user_favorite_businesses`
+   * Em SSOT, o caminho principal Ã© leitura direta de `user_favorite_businesses`
    * + `business_data` + `gastronomy_profiles`.
-   * RPC fica desabilitada por padrão para evitar drift de schema em ambientes
-   * ainda não migrados, mas pode ser reativada alterando este flag.
+   * RPC fica desabilitada por padrÃ£o para evitar drift de schema em ambientes
+   * ainda nÃ£o migrados, mas pode ser reativada alterando este flag.
    */
   private static useFavoritesRpc = false;
   private static hasLoggedRpcFallback = false;
@@ -253,7 +253,7 @@ export class FavoritesQueryService {
   }
 
   /**
-   * Obter favoritos do usuário
+   * Obter favoritos do usuÃ¡rio
    */
   static async getUserFavorites(params: {
     userId: string;
@@ -303,7 +303,7 @@ export class FavoritesQueryService {
   }
 
   /**
-   * Verificar se negócio está nos favoritos
+   * Verificar se negÃ³cio estÃ¡ nos favoritos
    */
   static async isBusinessFavorited(params: {
     userId: string;
@@ -419,7 +419,7 @@ export class FavoritesQueryService {
   }
 
   /**
-   * Atualizar preferências de um favorito
+   * Atualizar preferÃªncias de um favorito
    */
   static async updateFavoritePreferences(
     favoriteId: string,
@@ -453,7 +453,7 @@ export class FavoritesQueryService {
   }
 
   /**
-   * Obter contador de favoritos de um negócio
+   * Obter contador de favoritos de um negÃ³cio
    */
   static async getBusinessFavoritesCount(businessId: string): Promise<number> {
     if (!UUID_REGEX.test(businessId)) {
@@ -562,7 +562,7 @@ export class FavoritesQueryService {
         business_rating: item.business_data.rating,
         business_total_reviews: item.business_data.total_reviews,
         business_is_verified: item.business_data.is_verified,
-        business_geographic_path: null, // não disponível nesta query
+        business_geographic_path: null, // nÃ£o disponÃ­vel nesta query
         cuisine_type: item.business_data.gastronomy_profiles?.[0]?.cuisine_type ?? null,
         delivery_enabled: item.business_data.gastronomy_profiles?.[0]?.delivery_enabled ?? null,
         price_range: item.business_data.gastronomy_profiles?.[0]?.price_range ?? null,
@@ -580,5 +580,6 @@ export class FavoritesQueryService {
     }
   }
 }
+
 
 

@@ -9,7 +9,7 @@
  * - Adicionar notas de resolução (admin)
  */
 
-import { supabase } from "@/integrations/supabase/supabase";
+import { supabase } from "@/core/infrastructure/supabase/supabase";
 import { logger } from "@/shared/utils/logger";
 
 export type ReportType =
@@ -329,4 +329,5 @@ export class RideReportsService {
     }
   }
 }
+
 

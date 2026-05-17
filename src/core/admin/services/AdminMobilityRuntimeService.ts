@@ -1,12 +1,12 @@
-import { supabase } from "@/integrations/supabase";
+﻿import { supabase } from "@/integrations/supabase";
 import { logger } from "@/shared/utils/logger";
 import { RolloutService } from "@/core/rollout/services/RolloutService";
 import { createRolloutRepository } from "@/core/rollout/repositories/createRolloutRepository";
 import { createLocationRepository } from "@/core/location/repositories/createLocationRepository";
 import { ModuleKey, RolloutStatus } from "@/core/rollout/types";
 import { profileService } from "@/core/profiles/services/ProfileService";
-import { mobilityService } from "@/modules/mobility/services/MobilityService.impl";
-import { DriverAvailabilityService } from "@/modules/mobility/services/DriverAvailabilityService";
+import { mobilityService } from "@/core/mobility/services/runtime";
+import { DriverAvailabilityService } from "@/core/mobility/services/runtime";
 
 const MOTOBOY_ENABLED_CONFIG_KEY = "motoboy_enabled";
 const DEFAULT_MOTOBOY_ENABLED = true;

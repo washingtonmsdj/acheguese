@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Education Queries - SSOT Read Model
  *
  * Todas as operacoes de leitura para o modulo Education.
@@ -7,7 +7,7 @@
  * @version 1.0.0
  */
 
-import { supabase } from '@/integrations/supabase';
+import { supabase } from '@/core/infrastructure/supabase';
 import { logger } from '@/shared/utils/logger';
 import type {
   EducationProfile,
@@ -399,7 +399,7 @@ export async function countLeadsByStatus(profileId: string): Promise<LeadStatusC
 }
 
 /**
- * Calcula métricas de leads por série (desired_grade)
+ * Calcula mÃ©tricas de leads por sÃ©rie (desired_grade)
  */
 export async function getLeadsByGradeMetrics(profileId: string): Promise<GradeLeadMetrics[]> {
   if (!isValidUuid(profileId)) return [];
@@ -417,7 +417,7 @@ export async function getLeadsByGradeMetrics(profileId: string): Promise<GradeLe
   const gradeMap = new Map<string, { leadCount: number; enrollmentCount: number }>();
 
   (data ?? []).forEach((lead) => {
-    const grade = lead.desired_grade ?? 'Não informada';
+    const grade = lead.desired_grade ?? 'NÃ£o informada';
     const current = gradeMap.get(grade) ?? { leadCount: 0, enrollmentCount: 0 };
     current.leadCount++;
     if (lead.status === 'enrolled') {
@@ -436,7 +436,7 @@ export async function getLeadsByGradeMetrics(profileId: string): Promise<GradeLe
 }
 
 /**
- * Calcula métricas de leads por turno (desired_shift)
+ * Calcula mÃ©tricas de leads por turno (desired_shift)
  */
 export async function getLeadsByShiftMetrics(profileId: string): Promise<ShiftLeadMetrics[]> {
   if (!isValidUuid(profileId)) return [];
@@ -454,7 +454,7 @@ export async function getLeadsByShiftMetrics(profileId: string): Promise<ShiftLe
   const shiftMap = new Map<string, { leadCount: number; enrollmentCount: number }>();
 
   (data ?? []).forEach((lead) => {
-    const shift = lead.desired_shift ?? 'Não informado';
+    const shift = lead.desired_shift ?? 'NÃ£o informado';
     const current = shiftMap.get(shift) ?? { leadCount: 0, enrollmentCount: 0 };
     current.leadCount++;
     if (lead.status === 'enrolled') {
@@ -464,11 +464,11 @@ export async function getLeadsByShiftMetrics(profileId: string): Promise<ShiftLe
   });
 
   const shiftLabels: Record<string, string> = {
-    morning: 'Manhã',
+    morning: 'ManhÃ£',
     afternoon: 'Tarde',
     evening: 'Noite',
     full_day: 'Integral',
-    'Não informado': 'Não informado',
+    'NÃ£o informado': 'NÃ£o informado',
   };
 
   return Array.from(shiftMap.entries())
@@ -481,7 +481,7 @@ export async function getLeadsByShiftMetrics(profileId: string): Promise<ShiftLe
 }
 
 /**
- * Calcula métricas de matrícula nos programas (using max_capacity e current_enrollment)
+ * Calcula mÃ©tricas de matrÃ­cula nos programas (using max_capacity e current_enrollment)
  */
 export async function getProgramEnrollmentMetrics(profileId: string): Promise<ProgramEnrollmentMetrics> {
   if (!isValidUuid(profileId)) {
@@ -560,7 +560,7 @@ export async function countEventsByType(profileId: string): Promise<EventTypeCou
 }
 
 /**
- * Calcula taxa de conversão de leads
+ * Calcula taxa de conversÃ£o de leads
  */
 export async function getLeadConversionRate(profileId: string): Promise<{ rate: number; avgDays: number }> {
   if (!isValidUuid(profileId)) return { rate: 0, avgDays: 0 };
@@ -884,3 +884,4 @@ export async function getEventMetrics(profileId: string): Promise<EventMetrics[]
     ).length,
   }));
 }
+

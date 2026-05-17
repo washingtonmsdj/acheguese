@@ -1,4 +1,4 @@
-﻿/**
+/**
  * useMobilityUrls - Hook SSOT para URLs do módulo de Mobilidade
  *
  * ✅ SSOT COMPLIANT
@@ -7,7 +7,7 @@
  * @returns Objeto com URLs do módulo de mobilidade
  */
 
-import { mobilityRoutes } from "@/modules/mobility/routes/mobilityRoutes";
+import { mobilityRoutes } from "@/core/mobility/routes/mobilityRoutes";
 
 export interface MobilityUrls {
   home: string;

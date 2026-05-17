@@ -5,14 +5,14 @@ import { ArrowRight, BadgeCheck, Bike, Car, FileCheck2, IdCard, ImagePlus } from
 import { Badge } from "@/shared/components/ui/badge";
 import { Button } from "@/shared/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/components/ui/card";
-import { DriverOperationalSnapshotCard, DriverVehicleDetailsCard } from "@/modules/profile/components/cards";
-import { useDriverProfileIdentity } from "@/modules/mobility/hooks/useDriverProfileIdentity";
-import { getMobilityServiceStatus } from "@/modules/profile/utils/mobilityServiceStatus";
+import { DriverOperationalSnapshotCard, DriverVehicleDetailsCard } from "@/core/profile/components/cards";
+import { useDriverProfileIdentity } from "@/core/mobility/hooks/useDriverProfileIdentity";
+import { getMobilityServiceStatus } from "@/core/profile/utils/mobilityServiceStatus";
 import { getMobilityServicePath } from "@/modules/mobility/routes/mobilityNavigation";
 
 export interface DriverProfileLayoutProps {
   /**
-   * Tipo de serviço: "motorista" ou "motoboy"
+   * Tipo de serviÃ§o: "motorista" ou "motoboy"
    */
   service: "motorista" | "motoboy";
 }
@@ -26,7 +26,7 @@ function formatValue(value: unknown): string {
 /**
  * DriverProfileLayout
  * 
- * Layout compartilhado para página de cadastro de motorista/motoboy.
+ * Layout compartilhado para pÃ¡gina de cadastro de motorista/motoboy.
  * Reutiliza os componentes DriverOperationalSnapshotCard e DriverVehicleDetailsCard.
  * 
  * Este componente renderiza o layout das rotas operacionais da Central.

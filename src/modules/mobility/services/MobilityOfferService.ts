@@ -8,7 +8,7 @@
  * - Reservation Board: agendamentos
  */
 import { logger } from '@/shared/utils/logger';
-import { supabase } from '@/integrations/supabase';
+import { supabase } from '@/core/infrastructure/supabase';
 import { profileService } from '@/core/profiles/services/ProfileService';
 import { TRUST_ACTOR_ROLES, TrustEventService } from '@/core/trust';
 import { MobilityDispatchConfigService } from './MobilityDispatchConfigService';
@@ -693,6 +693,7 @@ export class MobilityOfferService {
     return getDriverOfferCapabilities(driverProfileId);
   }
 }
+
 
 
 

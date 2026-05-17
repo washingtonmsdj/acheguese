@@ -1,6 +1,6 @@
-import { BarChart3, Bike, Package, TrendingUp } from "lucide-react";
+﻿import { BarChart3, Bike, Package, TrendingUp } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/components/ui/card";
-import { RequestMotoboyButton } from "@/modules/mobility/components/RequestMotoboyButton";
+import { RequestMotoboyButton } from "@/core/mobility/components/RequestMotoboyButton";
 
 interface Props {
   businessId: string;
@@ -14,10 +14,10 @@ export default function EmpresaDashboardTab({ businessId }: Props) {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Bike className="h-5 w-5" />
-            Ações Rápidas
+            AÃ§Ãµes RÃ¡pidas
           </CardTitle>
           <CardDescription>
-            Gerencie entregas e operações da sua empresa
+            Gerencie entregas e operaÃ§Ãµes da sua empresa
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -31,7 +31,7 @@ export default function EmpresaDashboardTab({ businessId }: Props) {
         </CardContent>
       </Card>
 
-      {/* Placeholder para métricas futuras */}
+      {/* Placeholder para mÃ©tricas futuras */}
       <div className="grid gap-4 md:grid-cols-3">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -46,7 +46,7 @@ export default function EmpresaDashboardTab({ businessId }: Props) {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total do Mês</CardTitle>
+            <CardTitle className="text-sm font-medium">Total do MÃªs</CardTitle>
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -57,7 +57,7 @@ export default function EmpresaDashboardTab({ businessId }: Props) {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Análises</CardTitle>
+            <CardTitle className="text-sm font-medium">AnÃ¡lises</CardTitle>
             <BarChart3 className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>

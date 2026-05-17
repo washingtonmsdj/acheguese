@@ -8,7 +8,7 @@ import {
   type TrustFeedbackReason,
   type TrustFeedbackTarget,
 } from "@/core/trust";
-import { OrderDeliverySSOTService } from "@/modules/mobility/delivery/services/OrderDeliverySSOTService";
+import { OrderDeliverySSOTService } from "@/core/mobility/delivery/services/OrderDeliverySSOTService";
 import type { MobilityRide } from "./DriverRidesTab";
 
 interface DriverTrustFeedbackPanelProps {

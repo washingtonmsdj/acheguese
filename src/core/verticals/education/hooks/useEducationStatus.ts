@@ -1,6 +1,6 @@
-import { useQuery } from "@tanstack/react-query";
-import { useEducationProfile } from "@/modules/business/education/hooks/useEducationProfile";
-import type { EducationProfileStatus } from "@/modules/business/education/types";
+﻿import { useQuery } from "@tanstack/react-query";
+import { useEducationProfile } from "@/core/education/hooks/useEducationProfile";
+import type { EducationProfileStatus } from "@/core/education/types";
 
 export type EducationActivationStatus = "not_eligible" | "not_configured" | EducationProfileStatus;
 

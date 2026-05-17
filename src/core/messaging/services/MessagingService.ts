@@ -1,17 +1,17 @@
-/**
- * 🏆 MESSAGING SERVICE - SSOT para Sistema de Mensagens
+﻿/**
+ * ðŸ† MESSAGING SERVICE - SSOT para Sistema de Mensagens
  *
- * ✅ Fonte única de verdade para conversas e mensagens
- * ✅ Acesso centralizado às tabelas conversations e messages
- * ✅ Lógica de negócio: contagem de não lidas, bloqueios, relatórios
- * ✅ Integração com ProfileService e ClassifiedService
+ * âœ… Fonte Ãºnica de verdade para conversas e mensagens
+ * âœ… Acesso centralizado Ã s tabelas conversations e messages
+ * âœ… LÃ³gica de negÃ³cio: contagem de nÃ£o lidas, bloqueios, relatÃ³rios
+ * âœ… IntegraÃ§Ã£o com ProfileService e ClassifiedService
  */
 
 import { supabase } from "@/integrations/supabase";
 import { trackError } from "@/shared/utils/errorTracking";
 import { logger } from "@/shared/utils/logger";
 import { profileService } from "@/core/profiles/services";
-import { getClassifiedById } from "@/modules/classifieds/services";
+import { getClassifiedById } from "@/core/classifieds/services";
 import { ALERT_STATUS } from "@/shared/types/constants";
 import type { RealtimeChannel } from "@supabase/supabase-js";
 import type {
@@ -35,13 +35,13 @@ type ConversationRow = Conversation;
 
 class MessagingService {
   /**
-   * Busca conversas de um usuário com detalhes
+   * Busca conversas de um usuÃ¡rio com detalhes
    */
   async getConversationPreviews(
     userId: string,
   ): Promise<ConversationPreview[]> {
     try {
-      // Buscar conversas do usuário
+      // Buscar conversas do usuÃ¡rio
       const { data: conversations, error } = await supabase
         .from("conversations")
         .select("*")
@@ -51,7 +51,7 @@ class MessagingService {
       if (error) throw error;
       if (!conversations || conversations.length === 0) return [];
 
-      // Coletar IDs únicos
+      // Coletar IDs Ãºnicos
       const classifiedIds = [
         ...new Set(conversations.map((c) => c.classified_id)),
       ] as string[];
@@ -76,7 +76,7 @@ class MessagingService {
       // Criar previews com dados completos
       const previews: ConversationPreview[] = await Promise.all(
         conversations.map(async (conv) => {
-          // Buscar última mensagem e contagem de não lidas
+          // Buscar Ãºltima mensagem e contagem de nÃ£o lidas
           const [lastMessage, unreadCount] = await Promise.all([
             this.getLastMessage(conv.id),
             this.getUnreadCount(conv.id, userId),
@@ -91,10 +91,10 @@ class MessagingService {
 
           return {
             ...conv,
-            classified_title: classified?.title || "Anúncio",
+            classified_title: classified?.title || "AnÃºncio",
             classified_price: classified?.price || 0,
             classified_photo: classified?.photos?.[0] || "",
-            other_user_name: otherProfile?.name || "Usuário",
+            other_user_name: otherProfile?.name || "UsuÃ¡rio",
             other_user_avatar: otherProfile?.avatarUrl || "",
             last_message_text: lastMessage?.text || "",
             unread_count: unreadCount,
@@ -130,7 +130,7 @@ class MessagingService {
       if (error) throw error;
       if (!conversation) return null;
 
-      // Buscar dados do classificado e do outro usuário
+      // Buscar dados do classificado e do outro usuÃ¡rio
       const [classified, otherProfile] = await Promise.all([
         this.getClassifiedById(conversation.classified_id),
         (() => {
@@ -144,10 +144,10 @@ class MessagingService {
 
       return {
         ...conversation,
-        classified_title: classified?.title || "Anúncio",
+        classified_title: classified?.title || "AnÃºncio",
         classified_price: classified?.price || 0,
         classified_photo: classified?.photos?.[0] || "",
-        other_user_name: otherProfile?.name || "Usuário",
+        other_user_name: otherProfile?.name || "UsuÃ¡rio",
         other_user_avatar: otherProfile?.avatar_url || "",
       };
     } catch (error) {
@@ -184,7 +184,7 @@ class MessagingService {
   }
 
   /**
-   * Busca última mensagem de uma conversa
+   * Busca Ãºltima mensagem de uma conversa
    */
   async getLastMessage(conversationId: string): Promise<Message | null> {
     try {
@@ -205,7 +205,7 @@ class MessagingService {
   }
 
   /**
-   * Conta mensagens não lidas de uma conversa
+   * Conta mensagens nÃ£o lidas de uma conversa
    */
   async getUnreadCount(
     conversationId: string,
@@ -228,11 +228,11 @@ class MessagingService {
   }
 
   /**
-   * Conta total de mensagens não lidas de um usuário
+   * Conta total de mensagens nÃ£o lidas de um usuÃ¡rio
    */
   async getTotalUnreadCount(userId: string): Promise<number> {
     try {
-      // Buscar todas as conversas do usuário
+      // Buscar todas as conversas do usuÃ¡rio
       const { data: conversations, error: convError } = await supabase
         .from("conversations")
         .select("id")
@@ -241,7 +241,7 @@ class MessagingService {
       if (convError) throw convError;
       if (!conversations || conversations.length === 0) return 0;
 
-      // Contar mensagens não lidas em todas as conversas
+      // Contar mensagens nÃ£o lidas em todas as conversas
       const { count, error } = await supabase
         .from("messages")
         .select("*", { count: "exact", head: true })
@@ -261,14 +261,14 @@ class MessagingService {
   }
 
   /**
-   * Conta mensagens não lidas de um usuário (alias para compatibilidade)
+   * Conta mensagens nÃ£o lidas de um usuÃ¡rio (alias para compatibilidade)
    */
   async getUnreadMessagesCount(userId: string): Promise<number> {
     return this.getTotalUnreadCount(userId);
   }
 
   /**
-   * Subscreve a mudanças em mensagens para um usuário
+   * Subscreve a mudanÃ§as em mensagens para um usuÃ¡rio
    */
   subscribeToMessages(userId: string, callback: () => void): RealtimeChannel | null {
     try {
@@ -293,7 +293,7 @@ class MessagingService {
   }
 
   /**
-   * Subscreve mensagens de uma conversa específica
+   * Subscreve mensagens de uma conversa especÃ­fica
    */
   subscribeToConversationMessages(
     conversationId: string,
@@ -324,7 +324,7 @@ class MessagingService {
   }
 
   /**
-   * Remove subscrição de mensagens
+   * Remove subscriÃ§Ã£o de mensagens
    */
   unsubscribeFromMessages(subscription: RealtimeChannel | null): void {
     try {
@@ -375,7 +375,7 @@ class MessagingService {
   }
 
   /**
-   * Busca ou cria uma conversa entre dois usuários para um classificado
+   * Busca ou cria uma conversa entre dois usuÃ¡rios para um classificado
    */
   async findOrCreateConversation(
     classifiedId: string,
@@ -482,7 +482,7 @@ class MessagingService {
         .update({
           status: "blocked",
           blocked_by: input.blocked_by,
-          block_reason: input.block_reason || "Bloqueado pelo usuário",
+          block_reason: input.block_reason || "Bloqueado pelo usuÃ¡rio",
         })
         .eq("id", input.conversation_id);
 
@@ -525,7 +525,7 @@ class MessagingService {
 
   /**
    * Fecha/desativa uma conversa (is_active = false)
-   * ✅ LOTE 7 - Boundary canônico para encerramento de conversa de mobilidade
+   * âœ… LOTE 7 - Boundary canÃ´nico para encerramento de conversa de mobilidade
    */
   async closeConversation(conversationId: string): Promise<void> {
     try {
@@ -546,7 +546,7 @@ class MessagingService {
   }
 
   /**
-   * Verifica se uma conversa está bloqueada
+   * Verifica se uma conversa estÃ¡ bloqueada
    */
   async isConversationBlocked(conversationId: string): Promise<boolean> {
     try {
@@ -566,7 +566,7 @@ class MessagingService {
 
   /**
    * Desbloqueia uma conversa (admin only)
-   * ✅ SSOT - Boundary canônico para desbloqueio de conversa
+   * âœ… SSOT - Boundary canÃ´nico para desbloqueio de conversa
    */
   async unblockConversation(conversationId: string): Promise<void> {
     try {
@@ -593,7 +593,7 @@ class MessagingService {
 
   /**
    * Reabre uma conversa (is_active = true)
-   * ✅ SSOT - Boundary canônico para reabertura de conversa
+   * âœ… SSOT - Boundary canÃ´nico para reabertura de conversa
    */
   async reopenConversation(conversationId: string): Promise<void> {
     try {
@@ -616,7 +616,7 @@ class MessagingService {
 
   /**
    * Deleta uma conversa (hard delete - admin only)
-   * ✅ SSOT - Boundary canônico para exclusão de conversa
+   * âœ… SSOT - Boundary canÃ´nico para exclusÃ£o de conversa
    */
   async deleteConversation(conversationId: string): Promise<void> {
     try {
@@ -638,11 +638,11 @@ class MessagingService {
   }
 
   /**
-   * Métodos auxiliares privados para buscar classificados via ClassifiedService
+   * MÃ©todos auxiliares privados para buscar classificados via ClassifiedService
    */
   private async getClassifiedById(id: string): Promise<ClassifiedSummary | null> {
     try {
-      // ✅ SSOT — usa queries diretas
+      // âœ… SSOT â€” usa queries diretas
       return await getClassifiedById(id);
     } catch (error) {
       logger.error("Error fetching classified:", error);
@@ -652,7 +652,7 @@ class MessagingService {
 
   private async getClassifiedsByIds(ids: string[]): Promise<ClassifiedSummary[]> {
     try {
-      // ✅ SSOT — usa queries diretas
+      // âœ… SSOT â€” usa queries diretas
       const results = await Promise.all(
         ids.map((id) => getClassifiedById(id)),
       );

@@ -1,4 +1,4 @@
-import { supabase } from "@/integrations/supabase";
+﻿import { supabase } from "@/core/infrastructure/supabase";
 import { BusinessOwnershipService } from "@/core/business/services/BusinessOwnershipService";
 import type {
   PizzaCatalog,
@@ -254,3 +254,4 @@ export class PizzaAdminService {
     if (error) throw error;
   }
 }
+

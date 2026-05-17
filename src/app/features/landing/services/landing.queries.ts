@@ -1,10 +1,10 @@
-/**
+﻿/**
  * Landing Queries - SSOT v2.0
  * 
- * Funções de leitura para landing pages nacionais e estaduais
+ * FunÃ§Ãµes de leitura para landing pages nacionais e estaduais
  */
 import { logger } from '@/shared/utils/logger';
-import { supabase } from '@/integrations/supabase';
+import { supabase } from '@/core/infrastructure/supabase';
 import { isTerritoryVisibleInLanding } from '@/core/routing/utils/territoryVisibility';
 import { BusinessService } from '@/core/business/services/BusinessService';
 import type {
@@ -20,7 +20,7 @@ import type {
   NationalStats,
   ActiveTerritoriesWithLanding,
 } from './types';
-import type { Json } from '@/integrations/supabase/types.generated';
+import type { Json } from '@/core/infrastructure/supabase/types.generated';
 
 interface LocationRow {
   id: string;
@@ -57,7 +57,7 @@ function getLogoUrlFromJson(value: Json | null | undefined): string | null {
 }
 
 /**
- * Buscar dados de um país
+ * Buscar dados de um paÃ­s
  */
 export async function getCountryData(countryCode: string): Promise<CountryData | null> {
   try {
@@ -84,7 +84,7 @@ export async function getCountryData(countryCode: string): Promise<CountryData |
 }
 
 /**
- * Buscar estados ativos de um país
+ * Buscar estados ativos de um paÃ­s
  */
 export async function getActiveStates(countryCode: string): Promise<StateData[]> {
   try {
@@ -311,7 +311,7 @@ export async function getTerritorialGroups(): Promise<TerritorialGroupData[]> {
 }
 
 /**
- * Buscar estatísticas da plataforma
+ * Buscar estatÃ­sticas da plataforma
  */
 export async function getPlatformStats(): Promise<PlatformStats> {
   try {
@@ -333,7 +333,8 @@ export async function getPlatformStats(): Promise<PlatformStats> {
     const { count: servicesCount } = await supabase
       .from('professional_data')
       .select('id', { count: 'exact', head: true })
-      .eq('is_accepting_clients', true);
+      .eq('is_accepting_clients', true)
+      .eq('visibility', 'public_listed');
 
     const stats = {
       cities: citiesCount || 0,
@@ -389,7 +390,7 @@ export async function getVerifiedBusinesses(limit: number = 6): Promise<Verified
 }
 
 /**
- * Verificar se usuário tem role de admin
+ * Verificar se usuÃ¡rio tem role de admin
  */
 export async function checkAdminRole(userId: string): Promise<boolean> {
   try {
@@ -455,7 +456,7 @@ export async function getNationalBusinesses(limit: number = 6): Promise<National
 }
 
 /**
- * Buscar serviços nacionais em destaque
+ * Buscar serviÃ§os nacionais em destaque
  */
 export async function getNationalServices(limit: number = 6): Promise<NationalService[]> {
   try {
@@ -463,6 +464,7 @@ export async function getNationalServices(limit: number = 6): Promise<NationalSe
       .from('professional_data')
       .select('id, professional_name, service_category, metadata, rating, is_verified, price_range, location:locations!location_id(name)')
       .eq('is_accepting_clients', true)
+      .eq('visibility', 'public_listed')
       .not('location_id', 'is', null)
       .order('is_verified', { ascending: false })
       .order('rating', { ascending: false })
@@ -539,7 +541,7 @@ export async function getNationalClassifieds(limit: number = 6): Promise<Nationa
 }
 
 /**
- * Buscar estatísticas nacionais
+ * Buscar estatÃ­sticas nacionais
  */
 export async function getNationalStats(): Promise<NationalStats> {
   try {
@@ -550,7 +552,7 @@ export async function getNationalStats(): Promise<NationalStats> {
       getTotalClassifiedsCount(),
       supabase.from('locations').select('id', { count: 'exact', head: true }).eq('type', 'city').eq('status', 'active'),
       supabase.from('locations').select('id', { count: 'exact', head: true }).eq('type', 'district').eq('status', 'active'),
-      supabase.from('professional_data').select('id', { count: 'exact', head: true }).eq('is_accepting_clients', true),
+      supabase.from('professional_data').select('id', { count: 'exact', head: true }).eq('is_accepting_clients', true).eq('visibility', 'public_listed'),
     ]);
 
     const stats = {
@@ -577,7 +579,7 @@ export async function getNationalStats(): Promise<NationalStats> {
 }
 
 /**
- * Buscar territórios ativos com landing habilitada
+ * Buscar territÃ³rios ativos com landing habilitada
  */
 export async function getActiveTerritoriesWithLanding(): Promise<ActiveTerritoriesWithLanding> {
   try {
@@ -642,3 +644,4 @@ export async function getActiveTerritoriesWithLanding(): Promise<ActiveTerritori
     };
   }
 }
+

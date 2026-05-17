@@ -1,4 +1,4 @@
-import { supabase } from "@/integrations/supabase";
+﻿import { supabase } from "@/core/infrastructure/supabase";
 import type { PlanTier } from "@/core/billing";
 import { logger } from "@/shared/utils/logger";
 import type { GastronomySubscriptionStatus } from "../constants/subscription-status";
@@ -148,6 +148,7 @@ export class GastronomySubscriptionService {
     return data as GastronomyInvoice[];
   }
 }
+
 
 
 

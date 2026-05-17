@@ -1,6 +1,6 @@
 /**
  * Widget de Corrida Ativa
- * Mostra a corrida em andamento do usuário com informações resumidas
+ * Mostra a corrida em andamento do usuÃ¡rio com informaÃ§Ãµes resumidas
  */
 
 import { memo } from "react";
@@ -17,7 +17,7 @@ import { Badge } from "@/shared/components/ui/badge";
 import { motion } from "framer-motion";
 import { cn } from "@/shared/utils/cn";
 import type { RideRequest } from "@/modules/mobility/types";
-import { mobilityRoutes } from "@/modules/mobility/routes/mobilityRoutes";
+import { mobilityRoutes } from "@/core/mobility/routes/mobilityRoutes";
 
 interface ActiveRideWidgetProps {
   ride: RideRequest;
@@ -48,7 +48,7 @@ const STATUS_CONFIG = {
     color: "bg-teal-500/20 text-teal-400 border-teal-500/30",
   },
   completed: {
-    label: "Concluída",
+    label: "ConcluÃ­da",
     color: "bg-green-500/20 text-green-400 border-green-500/30",
   },
   cancelled: {
@@ -179,7 +179,7 @@ export const ActiveRideWidget = memo(
               </div>
             </div>
 
-            {/* Informações da outra pessoa */}
+            {/* InformaÃ§Ãµes da outra pessoa */}
             {otherPerson && (
               <div className="flex items-center gap-3 p-3 rounded-lg bg-white/5 mb-4">
                 <Avatar className="h-10 w-10 border-2 border-teal-400/30">
@@ -203,7 +203,7 @@ export const ActiveRideWidget = memo(
                     {isDriver ? "Passageiro" : "Motorista"}
                     {!isDriver &&
                       ride.driver?.vehicle_model &&
-                      ` • ${ride.driver.vehicle_model}`}
+                      ` â€¢ ${ride.driver.vehicle_model}`}
                   </p>
                 </div>
                 {!isDriver && ride.driver?.rating && (
@@ -211,13 +211,13 @@ export const ActiveRideWidget = memo(
                     <span className="text-sm font-medium">
                       {ride.driver.rating.toFixed(1)}
                     </span>
-                    <span className="text-xs">⭐</span>
+                    <span className="text-xs">â­</span>
                   </div>
                 )}
               </div>
             )}
 
-            {/* Preço */}
+            {/* PreÃ§o */}
             {ride.final_price && (
               <div className="flex items-center justify-between p-3 rounded-lg bg-white/5 mb-4">
                 <span className="text-sm text-gray-400">Valor</span>
@@ -227,7 +227,7 @@ export const ActiveRideWidget = memo(
               </div>
             )}
 
-            {/* Botão de ação */}
+            {/* BotÃ£o de aÃ§Ã£o */}
             <Button
               onClick={handleClick}
               className="w-full bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-600 hover:to-cyan-600"

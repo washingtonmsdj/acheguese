@@ -1,12 +1,12 @@
-import { DriverRidesLayout } from "@/modules/mobility/components/driver/DriverRidesLayout";
+import { DriverRidesLayout } from "@/core/mobility/components/driver/DriverRidesLayout";
 
 /**
  * CentralMotoristaCorridasPage
  * 
- * Página de corridas de motorista na Central (/central/motorista/corridas).
+ * PÃ¡gina de corridas de motorista na Central (/central/motorista/corridas).
  * Renderiza o componente compartilhado DriverRidesLayout.
  * 
- * Esta página renderiza o conteúdo real da rota canônica da Central.
+ * Esta pÃ¡gina renderiza o conteÃºdo real da rota canÃ´nica da Central.
  */
 export default function CentralMotoristaCorridasPage() {
   return <DriverRidesLayout />;

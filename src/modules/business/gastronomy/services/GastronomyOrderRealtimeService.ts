@@ -1,4 +1,4 @@
-import { supabase } from "@/integrations/supabase";
+﻿import { supabase } from "@/core/infrastructure/supabase";
 import type { RealtimeChannel, RealtimeChannelStatus, RealtimePostgresChangesPayload } from "@supabase/supabase-js";
 
 export class GastronomyOrderRealtimeService {
@@ -100,4 +100,5 @@ export class GastronomyOrderRealtimeService {
     await supabase.removeChannel(channel);
   }
 }
+
 

@@ -1,20 +1,20 @@
 import { Link, useLocation, useParams } from 'react-router-dom';
 import { ChevronRight, Home } from 'lucide-react';
 import { cn } from '@/shared/utils/cn';
-import { useBusinessById } from '@/modules/business/hooks/useBusinessById';
+import { useBusinessById } from '@/core/business/hooks/useBusinessById';
 import { Skeleton } from '@/shared/components/ui/skeleton';
 
 /**
  * CentralBreadcrumbs
  * 
- * Breadcrumbs simples para navegação da Central.
+ * Breadcrumbs simples para navegaÃ§Ã£o da Central.
  * 
  * Exemplos:
  * - Central > Empresas
  * - Central > Empresas > Nome da empresa
  * - Central > Empresas > Nome da empresa > Gastronomia
- * - Central > Empresas > Nome da empresa > Gastronomia > Cardápio
- * - Central > Empresas > Nome da empresa > Gastronomia > Horários
+ * - Central > Empresas > Nome da empresa > Gastronomia > CardÃ¡pio
+ * - Central > Empresas > Nome da empresa > Gastronomia > HorÃ¡rios
  * - Central > Empresas > Nome da empresa > Gastronomia > Pedidos
  * - Central > Motorista > Ganhos
  * - Central > Motoboy > Entregas
@@ -24,11 +24,11 @@ export function CentralBreadcrumbs() {
   const { businessId } = useParams<{ businessId: string }>();
   const pathname = location.pathname;
 
-  // Buscar dados da empresa quando businessId está presente
-  // Hook sempre chamado, mas só faz fetch quando businessId está presente
+  // Buscar dados da empresa quando businessId estÃ¡ presente
+  // Hook sempre chamado, mas sÃ³ faz fetch quando businessId estÃ¡ presente
   const { business, isLoading: loadingBusiness } = useBusinessById(businessId);
 
-  // Se não estiver na Central, não renderizar breadcrumbs
+  // Se nÃ£o estiver na Central, nÃ£o renderizar breadcrumbs
   if (!pathname.startsWith('/central')) {
     return null;
   }
@@ -36,12 +36,12 @@ export function CentralBreadcrumbs() {
   // Extrair segmentos do path
   const segments = pathname.split('/').filter(Boolean);
   
-  // Se for apenas /central, não renderizar breadcrumbs
+  // Se for apenas /central, nÃ£o renderizar breadcrumbs
   if (segments.length === 1) {
     return null;
   }
 
-  // Mapear segmentos para labels legíveis
+  // Mapear segmentos para labels legÃ­veis
   const getSegmentLabel = (segment: string, index: number): string => {
     if (index === 0) return 'Central';
     if (segment === 'empresas') return 'Empresas';
@@ -53,19 +53,19 @@ export function CentralBreadcrumbs() {
     if (segment === 'corridas') return 'Corridas';
     if (segment === 'entregas') return 'Entregas';
     if (segment === 'ganhos') return 'Ganhos';
-    if (segment === 'configuracoes') return 'Configurações';
+    if (segment === 'configuracoes') return 'ConfiguraÃ§Ãµes';
     if (segment === 'dados') return 'Dados da empresa';
     if (segment === 'gastronomia') return 'Gastronomia';
     if (segment === 'setup') return 'Setup';
-    if (segment === 'cardapio') return 'Cardápio';
-    if (segment === 'horarios') return 'Horários';
-    if (segment === 'area-entrega') return 'Área de entrega';
+    if (segment === 'cardapio') return 'CardÃ¡pio';
+    if (segment === 'horarios') return 'HorÃ¡rios';
+    if (segment === 'area-entrega') return 'Ãrea de entrega';
     if (segment === 'pedidos') return 'Pedidos';
-    if (segment === 'promocoes') return 'Promoções';
+    if (segment === 'promocoes') return 'PromoÃ§Ãµes';
     if (segment === 'planos') return 'Planos';
     if (segment === 'link-premium') return 'Link premium';
     if (segment === 'analytics') return 'Analytics';
-    if (segment === 'education') return 'Educação';
+    if (segment === 'education') return 'EducaÃ§Ã£o';
     if (segment === 'programas') return 'Programas';
     if (segment === 'programs') return 'Programas';
     if (segment === 'leads') return 'Leads';

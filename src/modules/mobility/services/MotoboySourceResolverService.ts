@@ -1,4 +1,4 @@
-import { supabase } from "@/integrations/supabase";
+﻿import { supabase } from "@/core/infrastructure/supabase";
 import { logger } from "@/shared/utils/logger";
 import type { SourceType } from "../constants";
 import { profileService } from "@/core/profiles/services/ProfileService";
@@ -215,6 +215,7 @@ export class MotoboySourceResolverService {
     return (data as SourceBusinessDataSummary | null) ?? null;
   }
 }
+
 
 
 

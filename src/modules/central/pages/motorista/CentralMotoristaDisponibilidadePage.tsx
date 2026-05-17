@@ -1,12 +1,12 @@
-import { DriverAvailabilityLayout } from "@/modules/mobility/components/driver/DriverAvailabilityLayout";
+import { DriverAvailabilityLayout } from "@/core/mobility/components/driver/DriverAvailabilityLayout";
 
 /**
  * CentralMotoristaDisponibilidadePage
  * 
- * Página de disponibilidade de motorista na Central (/central/motorista/disponibilidade).
+ * PÃ¡gina de disponibilidade de motorista na Central (/central/motorista/disponibilidade).
  * Renderiza o componente compartilhado DriverAvailabilityLayout com service="motorista".
  * 
- * Esta página renderiza o conteúdo real da rota canônica da Central.
+ * Esta pÃ¡gina renderiza o conteÃºdo real da rota canÃ´nica da Central.
  */
 export default function CentralMotoristaDisponibilidadePage() {
   return <DriverAvailabilityLayout service="motorista" />;

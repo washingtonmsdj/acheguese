@@ -1,20 +1,20 @@
-/**
+﻿/**
  * useCityFeatured
  * 
- * Hook para buscar conteúdo em destaque de uma cidade inteira.
- * Similar ao useLandingFeatured, mas para escopo de cidade (não bairro).
+ * Hook para buscar conteÃºdo em destaque de uma cidade inteira.
+ * Similar ao useLandingFeatured, mas para escopo de cidade (nÃ£o bairro).
  */
 
 import { useQuery } from '@tanstack/react-query';
-import { createLandingFeaturedService } from '@/app/features/landing/hooks/createLandingFeaturedService';
+import { LandingFeaturedService } from '@/core/landing/services/LandingFeaturedService';
 import type { TerritoryFilter } from '@/core/location/types';
 
 const STALE_TIME = 5 * 60 * 1000;
 
 export function useCityFeatured(state: string = 'ba', city: string = 'salvador') {
-  const svc = createLandingFeaturedService();
+  const svc = LandingFeaturedService;
   
-  // Cria filtro para cidade inteira (sem bairro específico)
+  // Cria filtro para cidade inteira (sem bairro especÃ­fico)
   const filter: TerritoryFilter = {
     scope: "group",
     location_ids: [], // Vazio = toda a cidade

@@ -1,4 +1,4 @@
-﻿/**
+/**
  * MobilidadeSection - Secao de mobilidade do perfil
  * SSOT: componente isolado com props tipadas.
  */
@@ -9,12 +9,12 @@ import { ProfileActiveRideCard } from "@/modules/profile/components/ProfileActiv
 import {
   DriverOperationalSnapshotCard,
   DriverVehicleDetailsCard,
-} from "@/modules/profile/components/cards";
+} from "@/core/profile/components/cards";
 
 import type { MobilidadeSectionProps } from "./types";
-import type { Tables } from "@/integrations/supabase";
-import { getMobilityServiceStatus } from "@/modules/profile/utils/mobilityServiceStatus";
-import type { MobilityRide } from "@/modules/mobility/components/driver/DriverRidesTab";
+import type { Tables } from "@/core/infrastructure/supabase";
+import { getMobilityServiceStatus } from "@/core/profile/utils/mobilityServiceStatus";
+import type { MobilityRide } from "@/core/mobility/components/driver/DriverRidesTab";
 
 type DriverDataRecord = Tables<"driver_data">;
 
@@ -127,3 +127,4 @@ export function MobilidadeSection({
     </div>
   );
 }
+

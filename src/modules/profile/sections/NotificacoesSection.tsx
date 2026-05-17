@@ -1,12 +1,12 @@
 /**
- * NotificacoesSection - Seção de notificações do perfil
+ * NotificacoesSection - SeÃ§Ã£o de notificaÃ§Ãµes do perfil
  * 
  * SSOT: Componente isolado com props tipadas
- * Sem gambiarras: Lógica clara e organizada
+ * Sem gambiarras: LÃ³gica clara e organizada
  */
 
 import { SectionFrame, NotificationsPanel } from "@/modules/profile/components/hub";
-import { NotificationStatCard } from "@/modules/profile/components/cards";
+import { NotificationStatCard } from "@/core/profile/components/cards";
 
 import type { NotificacoesSectionProps } from "./types";
 

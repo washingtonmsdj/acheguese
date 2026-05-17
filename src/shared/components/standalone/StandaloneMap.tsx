@@ -17,8 +17,6 @@ import { MapPin, Navigation, Loader2, Map as MapIcon } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/components/ui/card';
 import { Button } from '@/shared/components/ui/button';
 import { useRobustGeolocation } from '@/shared/hooks';
-import { getCoordinates } from '@/core/business/services/business.helpers';
-import { DEFAULT_TILE_STYLE } from '@/core/maps/providers/MapProvider';
 
 interface Business {
   name: string;
@@ -42,6 +40,11 @@ interface StandaloneMapProps {
   business: Business;
 }
 
+const DEFAULT_TILE_STYLE = {
+  styleUrl: "https://tiles.openfreemap.org/styles/positron",
+  attribution: '&copy; <a href="https://openstreetmap.org">OpenStreetMap</a> contributors',
+} as const;
+
 function haversineDistance(a: [number, number], b: [number, number]): string {
   const R = 6371;
   const dLat = ((b[0] - a[0]) * Math.PI) / 180;
@@ -55,7 +58,34 @@ function haversineDistance(a: [number, number], b: [number, number]): string {
 
 /** Extrai coordenadas do Business canônico */
 function getBusinessCoords(business: Business): [number, number] | null {
-  const coords = getCoordinates(business);
+  const metadata = business.metadata;
+  const isFiniteNumber = (value: unknown): value is number =>
+    typeof value === "number" && Number.isFinite(value);
+
+  const addressCoords = business.address;
+  const locationCoords = business.location;
+
+  const coords =
+    addressCoords &&
+    isFiniteNumber(addressCoords.latitude) &&
+    isFiniteNumber(addressCoords.longitude)
+      ? { latitude: addressCoords.latitude, longitude: addressCoords.longitude }
+      : locationCoords &&
+          isFiniteNumber(locationCoords.canonical_lat) &&
+          isFiniteNumber(locationCoords.canonical_lng)
+        ? { latitude: locationCoords.canonical_lat, longitude: locationCoords.canonical_lng }
+        : metadata && typeof metadata === "object"
+          ? (() => {
+              const latitude = metadata.latitude ?? metadata.lat ?? metadata.canonical_lat;
+              const longitude =
+                metadata.longitude ?? metadata.lng ?? metadata.lon ?? metadata.canonical_lng;
+              if (isFiniteNumber(latitude) && isFiniteNumber(longitude)) {
+                return { latitude, longitude };
+              }
+              return null;
+            })()
+          : null;
+
   if (coords) return [coords.latitude, coords.longitude];
   return null;
 }

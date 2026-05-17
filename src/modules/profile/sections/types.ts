@@ -1,15 +1,15 @@
-/**
+﻿/**
  * Types compartilhados para as sections do ContaHub
  * 
  * SSOT: Todas as sections recebem props tipadas e validadas
- * Sem gambiarras: Props explícitas, sem "any" ou "unknown"
+ * Sem gambiarras: Props explÃ­citas, sem "any" ou "unknown"
  */
 
 import type { NavigateFunction } from "react-router-dom";
 import type { MultiProfileRecord } from "@/core/profiles/services/multi-profile/types";
 import type { ProfileBusinessModuleItem } from "@/core/profiles/services/types";
 import type { AppUrls } from "@/core/routing/types";
-import type { Tables } from "@/integrations/supabase/types.generated";
+import type { Tables } from "@/core/infrastructure/supabase/types.generated";
 import type { ProfileSectionId } from "@/modules/profile/config/profile-sections.config";
 
 // ============================================
@@ -29,7 +29,7 @@ export interface BaseSectionProps {
 }
 
 // ============================================
-// Operations (métricas de atividade)
+// Operations (mÃ©tricas de atividade)
 // ============================================
 
 export interface Operations {
@@ -55,7 +55,7 @@ export interface Notifications {
 }
 
 // ============================================
-// Stats (estatísticas do perfil)
+// Stats (estatÃ­sticas do perfil)
 // ============================================
 
 export interface Stats {
@@ -66,7 +66,7 @@ export interface Stats {
 }
 
 // ============================================
-// Identity & Context (dados de reputação/plano)
+// Identity & Context (dados de reputaÃ§Ã£o/plano)
 // ============================================
 
 export interface Identity {
@@ -96,7 +96,7 @@ export interface Context {
 }
 
 // ============================================
-// Next Actions (ações sugeridas)
+// Next Actions (aÃ§Ãµes sugeridas)
 // ============================================
 
 export interface NextAction {
@@ -145,7 +145,7 @@ export interface AccountSnapshot {
 }
 
 // ============================================
-// Roles (permissões)
+// Roles (permissÃµes)
 // ============================================
 
 export interface Roles {
@@ -153,7 +153,7 @@ export interface Roles {
 }
 
 // ============================================
-// Section Props Específicas
+// Section Props EspecÃ­ficas
 // ============================================
 
 export interface ResumoSectionProps extends BaseSectionProps {
@@ -270,3 +270,4 @@ export type SectionPropsMap = {
   readonly preferencias: PreferenciasSectionProps;
   readonly seguranca: SegurancaSectionProps;
 };
+

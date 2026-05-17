@@ -1,12 +1,12 @@
-/**
- * 🍽️ MENU QUERIES - SSOT Read Model para Cardápios
+﻿/**
+ * ðŸ½ï¸ MENU QUERIES - SSOT Read Model para CardÃ¡pios
  *
- * Todas as operações de leitura para menus, categorias e itens.
+ * Todas as operaÃ§Ãµes de leitura para menus, categorias e itens.
  *
- * @version 2.0.0 - Extraído de MenuQueryService
+ * @version 2.0.0 - ExtraÃ­do de MenuQueryService
  */
 import { logger } from '@/shared/utils/logger';
-import { supabase } from '@/integrations/supabase';
+import { supabase } from '@/core/infrastructure/supabase';
 import { OpeningHoursService } from '@/core/business/services/OpeningHoursService';
 import { sanitizeForILike } from '@/shared/utils/sqlSanitization';
 import {
@@ -37,7 +37,7 @@ import type {
 // ============================================================
 
 /**
- * Mapeia item para formato público de catálogo
+ * Mapeia item para formato pÃºblico de catÃ¡logo
  */
 function mapToPublicFoodItem(params: {
   item: MenuItem;
@@ -139,7 +139,7 @@ export async function getMenu(menuId: string): Promise<Menu | null> {
 }
 
 /**
- * Buscar menus de um negócio
+ * Buscar menus de um negÃ³cio
  */
 export async function getMenusByBusiness(businessId: string): Promise<Menu[]> {
   try {
@@ -322,7 +322,7 @@ export async function getMenuItemsByCategory(
       return [];
     }
 
-    // Carregar relações para cada item
+    // Carregar relaÃ§Ãµes para cada item
     const itemsWithRelations = await Promise.all(
       (data || []).map(async (item) => {
         const [variants, addons] = await Promise.all([
@@ -383,7 +383,7 @@ export async function getMenuItem(itemId: string): Promise<MenuItemWithRelations
 }
 
 /**
- * Buscar itens em destaque de um negócio
+ * Buscar itens em destaque de um negÃ³cio
  */
 export async function getFeaturedMenuItems(businessId: string): Promise<MenuItemWithRelations[]> {
   try {
@@ -391,7 +391,7 @@ export async function getFeaturedMenuItems(businessId: string): Promise<MenuItem
       return [];
     }
 
-    // Buscar menus do negócio
+    // Buscar menus do negÃ³cio
     const menus = await getMenusByBusiness(businessId);
     if (!menus.length) return [];
 
@@ -412,7 +412,7 @@ export async function getFeaturedMenuItems(businessId: string): Promise<MenuItem
       return [];
     }
 
-    // Carregar relações
+    // Carregar relaÃ§Ãµes
     const itemsWithRelations = await Promise.all(
       (data || []).map(async (item) => {
         const [variants, addons] = await Promise.all([
@@ -496,11 +496,11 @@ export async function getMenuItemAddons(itemId: string): Promise<MenuItemAddon[]
 }
 
 // ============================================================
-// QUERIES - PROMOÇÕES
+// QUERIES - PROMOÃ‡Ã•ES
 // ============================================================
 
 /**
- * Buscar promoções ativas de um negócio gastronômico.
+ * Buscar promoÃ§Ãµes ativas de um negÃ³cio gastronÃ´mico.
  * SSOT: menu_promotions pertence diretamente a business_data via business_id.
  */
 export async function getActiveMenuPromotions(businessId: string): Promise<MenuPromotion[]> {
@@ -533,11 +533,11 @@ export async function getActiveMenuPromotions(businessId: string): Promise<MenuP
 }
 
 // ============================================================
-// QUERIES - CATÁLOGO PÚBLICO
+// QUERIES - CATÃLOGO PÃšBLICO
 // ============================================================
 
 /**
- * Buscar catálogo completo de um negócio para exibição pública
+ * Buscar catÃ¡logo completo de um negÃ³cio para exibiÃ§Ã£o pÃºblica
  */
 export async function getPublicMenuCatalog(businessId: string): Promise<{
   business: GastronomyBusiness | null;
@@ -569,7 +569,7 @@ export async function getPublicMenuCatalog(businessId: string): Promise<{
 }
 
 /**
- * Buscar catálogo de comida por território com filtros
+ * Buscar catÃ¡logo de comida por territÃ³rio com filtros
  */
 export async function getPublicFoodCatalog(params: {
   territoryFilter: import('@/core/location/types').TerritoryFilter;
@@ -580,7 +580,7 @@ export async function getPublicFoodCatalog(params: {
   sortBy?: string;
 }): Promise<PublicGastronomyFoodItem[]> {
   try {
-    // Buscar negócios gastronômicos por território
+    // Buscar negÃ³cios gastronÃ´micos por territÃ³rio
     const filters: GastronomyBusinessFilters = {
       territoryFilter: params.territoryFilter,
       cuisine_type: params.cuisineType,
@@ -686,7 +686,7 @@ export async function getPublicFoodCatalog(params: {
       })
       .filter((item): item is PublicGastronomyFoodItem => item !== null);
 
-    // Aplicar ordenação
+    // Aplicar ordenaÃ§Ã£o
     switch (params.sortBy) {
       case 'price_asc':
         publicItems.sort((left, right) => left.price - right.price);
@@ -718,7 +718,7 @@ export async function getPublicFoodCatalog(params: {
 }
 
 /**
- * Buscar itens para catálogo público (formato simplificado)
+ * Buscar itens para catÃ¡logo pÃºblico (formato simplificado)
  */
 export async function getPublicFoodItems(params: {
   businessId: string;
@@ -740,7 +740,7 @@ export async function getPublicFoodItems(params: {
     } else if (featuredOnly) {
       items = await getFeaturedMenuItems(businessId);
     } else {
-      // Buscar todos os itens do negócio
+      // Buscar todos os itens do negÃ³cio
       const menus = await getMenusByBusiness(businessId);
       const menuIds = menus.map((m) => m.id);
       
@@ -766,7 +766,7 @@ export async function getPublicFoodItems(params: {
       }
     }
 
-    // Mapear para formato público usando batch queries
+    // Mapear para formato pÃºblico usando batch queries
     const categoryIds = items.map((item) => item.category_id);
     const menuIds = [...new Set(items.map((item) => item.menu_id || '').filter(Boolean))];
 
@@ -808,7 +808,7 @@ export async function getPublicFoodItems(params: {
 }
 
 /**
- * Buscar uso atual dos recursos de cardápio para o dashboard.
+ * Buscar uso atual dos recursos de cardÃ¡pio para o dashboard.
  */
 export async function getMenuUsageStats(businessId: string): Promise<{
   currentMenuItems: number;
@@ -885,5 +885,6 @@ export async function getMenuUsageStats(businessId: string): Promise<{
     };
   }
 }
+
 
 

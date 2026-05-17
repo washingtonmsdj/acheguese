@@ -149,6 +149,24 @@ function ProfessionalSection({ data, onChange }: {
         <Input id="profession" value={data.profession ?? ''} onChange={e => set('profession', e.target.value)} placeholder="Ex: Eletricista, Designer, Advogado" />
       </Field>
 
+      <Field id="professional_name" label="Nome profissional">
+        <Input
+          id="professional_name"
+          value={data.professional_name ?? ''}
+          onChange={e => set('professional_name', e.target.value)}
+          placeholder="Como este perfil profissional deve aparecer publicamente"
+        />
+      </Field>
+
+      <Field id="service_category" label="Categoria profissional">
+        <Input
+          id="service_category"
+          value={data.service_category ?? ''}
+          onChange={e => set('service_category', e.target.value)}
+          placeholder="Ex: Construção, Alimentação, Elétrica"
+        />
+      </Field>
+
       <div className="grid grid-cols-2 gap-3">
         <Field id="years_experience" label="Anos de experiência">
           <Input id="years_experience" type="number" min={0} max={60}
@@ -180,6 +198,16 @@ function ProfessionalSection({ data, onChange }: {
           placeholder="Ex: Nordeste de Amaralina, Pituba, Barra" />
       </Field>
 
+      <Field id="availability_notes" label="Disponibilidade">
+        <Textarea
+          id="availability_notes"
+          rows={2}
+          value={data.availability_notes ?? ''}
+          onChange={e => set('availability_notes', e.target.value)}
+          placeholder="Ex: Segunda a sexta, 08:00 às 18:00. Sábados sob agendamento."
+        />
+      </Field>
+
       <Field id="education" label="Formação">
         <Input id="education" value={data.education ?? ''} onChange={e => set('education', e.target.value)} placeholder="Ex: Técnico em Eletrotécnica - SENAI" />
       </Field>
@@ -207,6 +235,28 @@ function ProfessionalSection({ data, onChange }: {
         checked={data.accepts_remote ?? false}
         onChange={v => set('accepts_remote', v)}
       />
+
+      <Field
+        id="professional_visibility"
+        label="Visibilidade do perfil profissional"
+        hint="Controla se o perfil aparece no marketplace público."
+      >
+        <Select
+          value={data.visibility ?? 'public_listed'}
+          onValueChange={v =>
+            set('visibility', v as 'public_listed' | 'public_unlisted' | 'private')
+          }
+        >
+          <SelectTrigger id="professional_visibility">
+            <SelectValue placeholder="Selecione a visibilidade" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="public_listed">Público listado</SelectItem>
+            <SelectItem value="public_unlisted">Público não listado</SelectItem>
+            <SelectItem value="private">Privado</SelectItem>
+          </SelectContent>
+        </Select>
+      </Field>
     </div>
   );
 }
@@ -491,6 +541,18 @@ export default function ContaEditarPerfilPage() {
           <Textarea id="bio" value={baseForm.bio ?? ''} onChange={e => setBaseField('bio', e.target.value)} rows={3} placeholder="Conte um pouco sobre você ou seu negócio" />
         </Field>
 
+        {profileType === 'personal' && (
+          <Field id="short_bio" label="Bio curta social" hint="Resumo curto para identidade social (máx. 280)">
+            <Textarea
+              id="short_bio"
+              value={baseForm.short_bio ?? ''}
+              onChange={e => setBaseField('short_bio', e.target.value.slice(0, 280))}
+              rows={2}
+              placeholder="Quem é você na sua comunidade e território"
+            />
+          </Field>
+        )}
+
         <Field id="website" label="Website">
           <Input id="website" type="url" value={baseForm.website ?? ''} onChange={e => setBaseField('website', e.target.value)} placeholder="https://" />
         </Field>
@@ -502,6 +564,40 @@ export default function ContaEditarPerfilPage() {
               onChange={(locationId) => setBaseField('location_id', locationId ?? undefined)}
             />
           </Field>
+        )}
+
+        {profileType === 'personal' && (
+          <Field id="main_territory_location_id" label="Território principal">
+            <LocationFields
+              locationId={baseForm.main_territory_location_id ?? null}
+              onChange={(locationId) => setBaseField('main_territory_location_id', locationId ?? undefined)}
+            />
+          </Field>
+        )}
+
+        {profileType === 'personal' && (
+          <Field
+            id="community_reputation_score"
+            label="Reputação comunitária"
+            hint="Pontuação social na comunidade local."
+          >
+            <Input
+              id="community_reputation_score"
+              type="number"
+              min={0}
+              value={baseForm.community_reputation_score ?? 0}
+              onChange={(e) => setBaseField('community_reputation_score', Number(e.target.value))}
+            />
+          </Field>
+        )}
+
+        {profileType === 'personal' && (
+          <div className="rounded-xl border border-border bg-muted/30 p-3">
+            <p className="text-sm font-medium">Participação e grupos</p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              A participação em grupos é vinculada automaticamente pela sua atuação em comunidades e organizações.
+            </p>
+          </div>
         )}
 
         <div className="rounded-xl border border-border bg-muted/30 p-3">

@@ -17,8 +17,6 @@ import { Search, X, Heart } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { Input } from '@/shared/components/ui/input';
 import { Button } from '@/shared/components/ui/button';
-import { useTerritorialContextOptional } from '@/core/routing/components/TerritorialLayout';
-import { useSessionContext } from '@/core/session';
 
 export interface ModuleHeaderProps {
   /** Nome do módulo (ex: "Gastronomia", "Empresas") */
@@ -37,6 +35,10 @@ export interface ModuleHeaderProps {
   favoritesLink?: string;
   /** Mostrar botão de favoritos (default: false) */
   showFavorites?: boolean;
+  /** Nome do território atual (opcional para manter componente desacoplado de core) */
+  territoryName?: string;
+  /** Sinaliza usuário autenticado para render de ações opcionais */
+  isAuthenticated?: boolean;
 }
 
 const DEFAULT_TAGLINES = [
@@ -77,18 +79,9 @@ export function ModuleHeader({
   taglines,
   favoritesLink,
   showFavorites = false,
+  territoryName,
+  isAuthenticated = false,
 }: ModuleHeaderProps) {
-  const territorialContext = useTerritorialContextOptional();
-  const resolved = territorialContext?.resolved ?? null;
-  const { user } = useSessionContext();
-
-  const territoryName =
-    resolved?.kind === 'location'
-      ? resolved.location.name
-      : resolved?.kind === 'group'
-        ? resolved.group.name
-        : undefined;
-
   const tagline = getTagline(territoryName, moduleName, taglines);
   
   const placeholder = searchPlaceholder ?? (
@@ -140,7 +133,7 @@ export function ModuleHeader({
         </div>
 
         {/* Favoritos — apenas se habilitado e usuário autenticado */}
-        {showFavorites && user && favoritesLink && (
+        {showFavorites && isAuthenticated && favoritesLink && (
           <Button
             asChild
             variant="outline"

@@ -1,8 +1,8 @@
-/**
- * AI Platform — Cliente único para invocar edge functions de IA.
- * Centraliza tratamento de erros e mensagens amigáveis.
+﻿/**
+ * AI Platform â€” Cliente Ãºnico para invocar edge functions de IA.
+ * Centraliza tratamento de erros e mensagens amigÃ¡veis.
  */
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/core/infrastructure/supabase/client";
 import type {
   AiError,
   AiImageRequest,
@@ -43,19 +43,20 @@ export class AiClient {
   /** Gera (ou edita) imagens via edge function `ai-image`. */
   async image(req: AiImageRequest): Promise<AiImageResult> {
     const data = await invoke<AiImageRequest, AiImageResult>("ai-image", req);
-    if (!("urls" in data)) throw toAiError({ message: "Resposta inválida da IA." });
+    if (!("urls" in data)) throw toAiError({ message: "Resposta invÃ¡lida da IA." });
     return data;
   }
 
-  /** Geração de texto / structured output via edge function `ai-text`. */
+  /** GeraÃ§Ã£o de texto / structured output via edge function `ai-text`. */
   async text<T = unknown>(req: AiTextRequest): Promise<AiTextResult<T>> {
     return invoke<AiTextRequest, AiTextResult<T>>("ai-text", req);
   }
 
-  /** Análise multimodal de imagens via edge function `ai-vision`. */
+  /** AnÃ¡lise multimodal de imagens via edge function `ai-vision`. */
   async vision<T = unknown>(req: AiVisionRequest): Promise<AiVisionResult<T>> {
     return invoke<AiVisionRequest, AiVisionResult<T>>("ai-vision", req);
   }
 }
 
 export const aiClient = new AiClient();
+

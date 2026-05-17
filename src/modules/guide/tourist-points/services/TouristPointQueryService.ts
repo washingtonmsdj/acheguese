@@ -1,11 +1,11 @@
-/**
+﻿/**
  * TouristPointQueryService
  *
  * Canonical read owner for tourist_points.
  * Keeps all read logic in core and avoids parallel query services.
  */
 
-import { supabase } from '@/integrations/supabase';
+import { supabase } from '@/core/infrastructure/supabase';
 import type { TerritoryFilter } from '@/core/location/types';
 import type { TouristPoint } from '../types';
 
@@ -201,4 +201,5 @@ export class TouristPointQueryService {
     }
   }
 }
+
 

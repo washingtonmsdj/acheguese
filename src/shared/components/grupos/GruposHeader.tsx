@@ -2,7 +2,6 @@ import React from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { ArrowLeft, Plus } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
-import { useAppUrls } from "@/core/routing/hooks";
 
 interface GruposHeaderProps {
   onCreateClick: () => void;
@@ -11,7 +10,6 @@ interface GruposHeaderProps {
 export function GruposHeader({ onCreateClick }: GruposHeaderProps) {
   const navigate = useNavigate();
   const location = useLocation();
-  const appUrls = useAppUrls();
   const currentParams = new URLSearchParams(location.search);
   const isCommunityTabGroups =
     location.pathname.startsWith("/comunidade/") &&
@@ -24,7 +22,7 @@ export function GruposHeader({ onCreateClick }: GruposHeaderProps) {
       navigate(`${location.pathname}?${params.toString()}`);
       return;
     }
-    navigate(appUrls.community.feed);
+    navigate("/comunidade");
   };
 
   return (
