@@ -1,13 +1,13 @@
 /**
- * ComunidadePage - Página principal da comunidade
+ * ComunidadePage - Pagina principal da comunidade
  * 
- * ✅ SSOT - Usa Services via hooks
- * ✅ Arquitetura Modular - Componentes isolados
- * ✅ Performance - Lazy loading e memoização
- * ✅ Acessibilidade - ARIA labels e roles
+ * SSOT - Usa Services via hooks
+ * Arquitetura modular - Componentes isolados
+ * Performance - Lazy loading e memoizacao
+ * Acessibilidade - ARIA labels e roles
  */
 
-import React, { lazy, Suspense, useCallback } from "react";
+import React, { lazy, Suspense, useCallback, useMemo } from "react";
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import {
   LayoutList,
@@ -25,6 +25,11 @@ import { useTerritoryFilter } from "@/core/location/hooks/useTerritoryFilter";
 import { useCommunityRollout } from "@/core/community/hooks/useCommunityRollout";
 import { communityRolloutService } from "@/core/community/services";
 import { residenceService } from "@/core/residence/services/ResidenceService";
+import {
+  resolveCommunityFeedChannelFromTab,
+  resolveCommunityFeedQueryTabFromChannel,
+  type CommunityDiscoveryTab,
+} from "@/core/community/utils/communityFeedTab";
 import { useComunidadePage } from "../hooks/page/useComunidadePage";
 import { CommunityFeed } from "../components/feed/CommunityFeed";
 import { CommunityRightSidebar } from "../components/CommunityRightSidebar";
@@ -35,10 +40,13 @@ import { CreatePostModal } from "../components/composer/CreatePostModal";
 import { CreateAlertModal } from "@/core/community/alerts";
 import { CreateIssueModal } from "@/core/community/issues";
 import { VerificationBanner } from "@/core/verification";
+import { COMMUNITY_PAGE_COPY } from "@/core/community/utils/communityCopy";
+import { resolveCommunityFeedTerritoryFilter } from "@/core/community/utils/resolveCommunityFeedTerritoryFilter";
 import { cn } from "@/shared/utils/cn";
 import type { ResolvedTerritory } from "@/core/routing/hooks/useResolveTerritoryFromUrl";
 import type { TerritoryFilter } from "@/core/location";
 import { buildCommunityTabUrlFromPath } from "@/core/routing/utils/territoryUrls";
+import type { TerritorialFeedChannel } from "@/core/community/hooks/feed/territorialFeedEngine";
 
 const GruposPage = lazy(() => import("./GruposPage"));
 
@@ -63,12 +71,16 @@ export default function ComunidadePage({ resolved }: ComunidadePageProps) {
     : location.pathname.endsWith("/feed")
       ? "feed"
       : null;
-  const activeTab = routeTab ?? ((searchParams.get("tab") as CommunityTab) || "feed");
+  const requestedTab = (searchParams.get("tab") as CommunityDiscoveryTab | null) ?? null;
+  const activeTab: CommunityTab =
+    routeTab ?? (requestedTab === "grupos" ? "grupos" : "feed");
+  const feedHeaderFilter: TerritorialFeedChannel =
+    resolveCommunityFeedChannelFromTab(requestedTab);
   const [showBanner, setShowBanner] = React.useState(true);
-  const appUrls = useAppUrls(resolved); // ✅ SSOT URLs com contexto territorial
+  const appUrls = useAppUrls(resolved); // SSOT URLs com contexto territorial
   const territoryFilter = useTerritoryFilter(resolved);
 
-  // ✅ SSOT: guarda de acesso por UUID canônico, não por string de perfil
+  // SSOT: guarda de acesso por UUID canonico, nao por string de perfil
   const { homeDistrict, homeCity, loading: territoryLoading } = useUserTerritory();
   const { isAdmin, loading: adminLoading } = useIsAdmin();
   const { isLoading: rolloutLoading } = useCommunityRollout(resolved);
@@ -94,6 +106,22 @@ export default function ComunidadePage({ resolved }: ComunidadePageProps) {
     setSearchParams(tab === "feed" ? {} : { tab });
   };
 
+  const handleFeedHeaderFilterChange = useCallback(
+    (filter: TerritorialFeedChannel) => {
+      const tabParam = resolveCommunityFeedQueryTabFromChannel(filter);
+      setSearchParams((prev) => {
+        const next = new URLSearchParams(prev);
+        if (!tabParam) {
+          next.delete("tab");
+        } else {
+          next.set("tab", tabParam);
+        }
+        return next;
+      });
+    },
+    [setSearchParams],
+  );
+
   const {
     profile,
     postId,
@@ -108,9 +136,7 @@ export default function ComunidadePage({ resolved }: ComunidadePageProps) {
     sharePost,
     setLocationScope,
     handleOpenCreatePost,
-    handleOpenAlertModal,
     handleCloseAlertModal,
-    handleOpenIssueModal,
     handleCloseIssueModal,
     handlePostClick,
     handleClosePostDetail,
@@ -121,7 +147,6 @@ export default function ComunidadePage({ resolved }: ComunidadePageProps) {
     handleCancelDeletePost,
     handleConfirmDeletePost,
     handleEditPost,
-    handleReportClick,
     handleCloseModal,
     deletePostDialogOpen,
     isDeletingPost,
@@ -139,12 +164,17 @@ export default function ComunidadePage({ resolved }: ComunidadePageProps) {
     communityLocation.activeLocation?.type === "district"
       ? communityLocation.activeLocation.name
       : homeDistrict?.name;
-  const communityTerritoryFilter: TerritoryFilter =
-    immediateFilters.locationScope === "city" && homeCity
-      ? { scope: "location", location_id: homeCity.id }
-      : homeDistrict
-        ? { scope: "location", location_id: homeDistrict.id }
-        : territoryFilter;
+  const communityTerritoryFilter: TerritoryFilter = useMemo(
+    () =>
+      resolveCommunityFeedTerritoryFilter({
+        baseFilter: territoryFilter,
+        locationScope: immediateFilters.locationScope,
+        resolved,
+        homeCityId: homeCity?.id,
+        homeDistrictId: homeDistrict?.id,
+      }),
+    [territoryFilter, immediateFilters.locationScope, resolved, homeCity?.id, homeDistrict?.id],
+  );
   const {
     data: primaryResidence,
     isLoading: primaryResidenceLoading,
@@ -173,13 +203,13 @@ export default function ComunidadePage({ resolved }: ComunidadePageProps) {
   const handleScopeChange = useCallback(
     (scope: "city" | "neighborhood" | "street") => {
       if (scope === "street" && !hasPrimaryStreet) {
-        toast.info("Cadastre sua rua em Meus enderecos para acessar o feed da sua rua.");
+        toast.info(COMMUNITY_PAGE_COPY.streetScopeMissingAddress);
         navigate("/conta/enderecos");
         return;
       }
 
       if (scope === "street") {
-        toast.info("O feed por rua exige SSOT de logradouros antes de ser liberado com seguranca.");
+        toast.info(COMMUNITY_PAGE_COPY.streetScopeBlocked);
         return;
       }
 
@@ -188,7 +218,7 @@ export default function ComunidadePage({ resolved }: ComunidadePageProps) {
     [hasPrimaryStreet, navigate, setLocationScope],
   );
 
-  // Bloquear se não estiver logado
+  // Bloquear se nao estiver logado
   if (!profile) {
     return (
       <TooltipProvider>
@@ -196,13 +226,13 @@ export default function ComunidadePage({ resolved }: ComunidadePageProps) {
           <div className="text-center p-8 max-w-md">
             <Users className="h-16 w-16 text-teal-400 mx-auto mb-4" />
             <h2 className="text-xl font-semibold text-white mb-4">
-              Faça login para acessar a comunidade
+              {COMMUNITY_PAGE_COPY.loginRequiredTitle}
             </h2>
             <p className="text-gray-400 mb-6">
-              A comunidade é exclusiva para moradores cadastrados do bairro.
+              {COMMUNITY_PAGE_COPY.loginRequiredDescription}
             </p>
             <Button onClick={() => navigate(appUrls.auth.login)} className="bg-teal-500 hover:bg-teal-400">
-              Fazer Login
+              {COMMUNITY_PAGE_COPY.loginRequiredAction}
             </Button>
           </div>
         </div>
@@ -210,7 +240,7 @@ export default function ComunidadePage({ resolved }: ComunidadePageProps) {
     );
   }
 
-  // Aguardar resolução do território antes de bloquear
+  // Aguardar resolucao do territorio antes de bloquear
   if (territoryLoading || adminLoading || rolloutLoading || homeDistrictRolloutLoading) {
     return (
       <div className="min-h-screen w-full max-w-full overflow-x-hidden bg-[#12181B] flex items-center justify-center">
@@ -219,8 +249,8 @@ export default function ComunidadePage({ resolved }: ComunidadePageProps) {
     );
   }
 
-  // ✅ SSOT: bloquear por ausência de user_residence (location_id), não por string de perfil
-  // Admin e moderadores têm acesso mesmo sem bairro cadastrado
+  // SSOT: bloquear por ausencia de user_residence (location_id), nao por string de perfil
+  // Admin e moderadores tem acesso mesmo sem bairro cadastrado
   if (!homeDistrict && !isAdmin) {
     return (
       <TooltipProvider>
@@ -228,14 +258,13 @@ export default function ComunidadePage({ resolved }: ComunidadePageProps) {
           <div className="text-center p-8 max-w-md">
             <Users className="h-16 w-16 text-amber-400 mx-auto mb-4" />
             <h2 className="text-xl font-semibold text-white mb-4">
-              Defina seu bairro para acessar a comunidade
+              {COMMUNITY_PAGE_COPY.setupDistrictTitle}
             </h2>
             <p className="text-gray-400 mb-6">
-              A comunidade e hiperlocal. Cadastre sua residencia com estado, cidade e bairro
-              para liberar feed, alertas, grupos e problemas da sua regiao.
+              {COMMUNITY_PAGE_COPY.setupDistrictDescription}
             </p>
             <Button onClick={() => navigate("/conta/enderecos")} className="bg-teal-500 hover:bg-teal-400">
-              Cadastrar endereco
+              {COMMUNITY_PAGE_COPY.setupDistrictAction}
             </Button>
           </div>
         </div>
@@ -251,10 +280,9 @@ export default function ComunidadePage({ resolved }: ComunidadePageProps) {
         <div className="min-h-screen w-full max-w-full overflow-x-hidden bg-[#12181B] flex items-center justify-center" role="main">
           <div className="text-center p-8 max-w-md">
             <Users className="h-16 w-16 text-amber-400 mx-auto mb-4" />
-            <h2 className="text-xl font-semibold text-white mb-4">Comunidade ainda nao liberada</h2>
+            <h2 className="text-xl font-semibold text-white mb-4">{COMMUNITY_PAGE_COPY.rolloutBlockedTitle}</h2>
             <p className="text-gray-400 mb-6">
-              Seu bairro ainda nao foi aprovado no rollout da comunidade. Quando for liberado, os atalhos
-              e conteudos locais serao ativados automaticamente.
+              {COMMUNITY_PAGE_COPY.rolloutBlockedDescription}
             </p>
           </div>
         </div>
@@ -262,7 +290,7 @@ export default function ComunidadePage({ resolved }: ComunidadePageProps) {
     );
   }
 
-  // Aviso se não for verificado (mas permite acesso)
+  // Aviso se nao for verificado (mas permite acesso)
   const showVerificationBanner = !profile?.verified;
 
   return (
@@ -271,7 +299,10 @@ export default function ComunidadePage({ resolved }: ComunidadePageProps) {
         {/* Bloco legado desativado: hero expandido da comunidade */}
 
         <div className="mx-auto w-full max-w-[1600px] min-w-0 px-4 py-6 md:px-6 lg:px-8">
-          <nav className="mb-6 flex min-w-0 flex-wrap gap-1 border-b border-white/10 pb-0" aria-label="Subcategorias da comunidade">
+          <nav
+            className="mb-6 flex min-w-0 flex-wrap gap-1 border-b border-white/10 pb-0"
+            aria-label={COMMUNITY_PAGE_COPY.subcategoryNavAriaLabel}
+          >
             {TABS.map(({ id, label, icon: Icon }) => (
               <button
                 key={id}
@@ -312,7 +343,8 @@ export default function ComunidadePage({ resolved }: ComunidadePageProps) {
 
               <LocationScopeCards
                 city={homeCity?.name}
-                neighborhood={homeDistrict?.name}
+                neighborhood={resolved?.kind === "group" ? resolved.group.name : homeDistrict?.name}
+                isTerritorialGroup={resolved?.kind === "group"}
                 street={primaryStreet}
                 streetAvailable={hasPrimaryStreet}
                 currentScope={immediateFilters.locationScope}
@@ -324,13 +356,12 @@ export default function ComunidadePage({ resolved }: ComunidadePageProps) {
                 onCommentClick={handleCommentClick}
                 onTagClick={handleTagClick}
                 onOpenCreatePost={handleOpenCreatePost}
-                onOpenAlertModal={handleOpenAlertModal}
-                onOpenIssueModal={handleOpenIssueModal}
                 onDeletePost={handleDeletePost}
                 onEditPost={handleEditPost}
-                onReportClick={handleReportClick}
                 locationScope={immediateFilters.locationScope}
                 territoryFilter={communityTerritoryFilter}
+                initialHeaderFilter={feedHeaderFilter}
+                onHeaderFilterChange={handleFeedHeaderFilterChange}
               />
 
             </main>
@@ -375,7 +406,7 @@ export default function ComunidadePage({ resolved }: ComunidadePageProps) {
           locationId={issueLocationId}
         />
 
-        {/* Modais de Detalhes e Comentários */}
+        {/* Modais de Detalhes e Comentarios */}
         <CommunityModals
           modalState={modalState}
           postId={postId}
@@ -396,10 +427,10 @@ export default function ComunidadePage({ resolved }: ComunidadePageProps) {
           onOpenChange={(open) => {
             if (!open) handleCancelDeletePost();
           }}
-          title="Excluir publicacao?"
-          description="Esta acao remove a publicacao do feed. Use apenas quando tiver certeza de que ela nao deve continuar visivel."
-          confirmLabel="Excluir publicacao"
-          cancelLabel="Manter publicacao"
+          title={COMMUNITY_PAGE_COPY.deleteDialogTitle}
+          description={COMMUNITY_PAGE_COPY.deleteDialogDescription}
+          confirmLabel={COMMUNITY_PAGE_COPY.deleteDialogConfirmLabel}
+          cancelLabel={COMMUNITY_PAGE_COPY.deleteDialogCancelLabel}
           onConfirm={handleConfirmDeletePost}
           disabled={isDeletingPost}
         />

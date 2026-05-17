@@ -7,6 +7,7 @@ src/test/
 !src/core/admin/services/__tests__/*.spec.ts
 !src/app/components/__tests__/Breadcrumbs.spec.tsx
 !src/core/maps/**/*.spec.ts
+!src/core/community/utils/__tests__/*.spec.ts
 !src/core/professional/__tests__/ProfessionalLeadSSOT.test.ts
 !src/modules/business/gastronomy/__tests__/GastronomyOperationalSSOT.test.ts
 !src/modules/business/gastronomy/components/GastronomyCheckoutSheet.spec.tsx

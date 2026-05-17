@@ -1,5 +1,7 @@
 import React, { memo } from "react";
 import { Badge } from "@/shared/components/ui/badge";
+import { MapPin, Clock3 } from "lucide-react";
+import { COMMUNITY_POST_CARD_COPY } from "@/core/community/utils/communityCopy";
 import {
   CIVIC_PROBLEM_TYPES,
   type CivicProblemType,
@@ -11,6 +13,12 @@ import {
   type PostUrgency,
 } from "@/shared/constants/statusConfig";
 import { type PostType } from "@/shared/constants/postTypeConfig";
+import {
+  extractOpportunityPayload,
+  getOpportunityTypeEmoji,
+  getOpportunityTypeLabel,
+  getOpportunityUrgencyLabel,
+} from "@/core/work-opportunities";
 
 const civicTypeConfigMap = new Map(
   Object.entries(CIVIC_PROBLEM_TYPES) as Array<
@@ -31,15 +39,22 @@ interface PostContentProps {
   civicType?: CivicProblemType;
   status?: PostStatus;
   urgency?: PostUrgency;
+  contentIntent?: string;
+  displayFormat?: string;
+  contentPayload?: Record<string, unknown>;
   tags?: string[];
   onTagClick?: (tag: string) => void;
 }
 
 export const PostContent = memo<PostContentProps>(
-  ({ postType, content, image, civicType, status, urgency, tags, onTagClick }) => {
+  ({ postType, content, image, civicType, status, urgency, contentIntent, displayFormat, contentPayload, tags, onTagClick }) => {
     const civicTypeConfig = civicType ? civicTypeConfigMap.get(civicType) : undefined;
     const statusConfig = status ? statusConfigMap.get(status) : undefined;
     const urgencyConfig = urgency ? urgencyConfigMap.get(urgency) : undefined;
+    const opportunityPayload =
+      displayFormat === "opportunity_card" || contentIntent === "oportunidade"
+        ? extractOpportunityPayload(contentPayload)
+        : null;
 
     return (
       <>
@@ -66,6 +81,32 @@ export const PostContent = memo<PostContentProps>(
             >
               {civicTypeConfig.label}
             </span>
+          </div>
+        )}
+
+        {opportunityPayload && (
+          <div className="mb-4 rounded-xl border border-emerald-500/30 bg-emerald-500/8 p-4">
+            <p className="text-xs uppercase tracking-[0.14em] text-emerald-200/80">
+              {COMMUNITY_POST_CARD_COPY.territoryOpportunityLabel}
+            </p>
+            <p className="mt-2 text-base font-semibold text-emerald-100">
+              {getOpportunityTypeEmoji(opportunityPayload.type)} {opportunityPayload.headline ?? content}
+            </p>
+            <div className="mt-2 space-y-1.5 text-sm text-emerald-100/85">
+              <p className="flex items-center gap-2">
+                <MapPin className="h-4 w-4 text-emerald-300" />
+                {opportunityPayload.territory_name || COMMUNITY_POST_CARD_COPY.localTerritoryFallback}
+              </p>
+              <p className="flex items-center gap-2">
+                <Clock3 className="h-4 w-4 text-emerald-300" />
+                {getOpportunityTypeLabel(opportunityPayload.type)} - {getOpportunityUrgencyLabel(opportunityPayload.urgency)}
+              </p>
+              {opportunityPayload.availability_notes && (
+                <p className="text-xs text-emerald-100/70">
+                  {COMMUNITY_POST_CARD_COPY.availabilityPrefix} {opportunityPayload.availability_notes}
+                </p>
+              )}
+            </div>
           </div>
         )}
 
@@ -104,7 +145,7 @@ export const PostContent = memo<PostContentProps>(
                   color: urgencyConfig.color,
                 }}
               >
-                Urgencia: {urgencyConfig.label}
+                {COMMUNITY_POST_CARD_COPY.urgencyPrefix} {urgencyConfig.label}
               </Badge>
             )}
           </div>
@@ -120,7 +161,7 @@ export const PostContent = memo<PostContentProps>(
                   onTagClick?.(tag);
                 }}
                 className="text-xs px-2 py-1 rounded-full bg-gray-800/50 text-gray-300 hover:bg-gray-700/50 transition-colors"
-                aria-label={`Filtrar por tag ${tag}`}
+                aria-label={`${COMMUNITY_POST_CARD_COPY.postTagFilterAriaPrefix} ${tag}`}
                 role="listitem"
               >
                 #{tag}

@@ -22,12 +22,12 @@ import { ptBR } from "date-fns/locale";
 import {
   SPACING,
 } from "../styles/communityDesignSystem";
-// Sub-componentes
 import { PostHeader } from "./PostHeader";
 import { PostBadges } from "./PostBadges";
 import { PostContent } from "./PostContent";
 import { AlertConfirmation } from "./AlertConfirmation";
 import { PostActions } from "./PostActions";
+import { COMMUNITY_POST_CARD_COPY } from "@/core/community/utils/communityCopy";
 import { logger } from "@/shared/utils/logger";
 
 import { UnifiedPost } from "@/shared/types/posts";
@@ -36,17 +36,17 @@ interface UnifiedPostCardProps {
   post: UnifiedPost;
   currentUserId?: string;
 
-  // Ações princicountry
+  // Acoes principais
   onLike?: (postId: string) => void;
   onComment?: (postId: string) => void;
   onShare?: (postId: string) => void;
   onSave?: (postId: string) => void;
   onReport?: (postId: string) => void;
 
-  // Ações específicas
+  // Acoes especificas
   onUpvote?: (postId: string) => void;
   onConfirm?: (postId: string) => void;
-  onPostClick?: (postId: string) => void;
+  onPostClick?: (postId: string, post: UnifiedPost) => void;
 
   // Sistema de mensagens
   onSendMessage?: (postId: string, recipientProfileId: string) => void;
@@ -58,19 +58,8 @@ interface UnifiedPostCardProps {
 }
 
 /**
- * Card unificado para exibição de posts da comunidade
- * Suporta múltiplos tipos: civic_report, discussao, alerta, recomendacao, etc.
- *
- * @component
- * @example
- * ```tsx
- * <UnifiedPostCard
- *   post={post}
- *   currentUserId={user.id}
- *   onLike={handleLike}
- *   onComment={handleComment}
- * />
- * ```
+ * Card unificado para exibicao de posts da comunidade.
+ * Suporta multiplos tipos: civic_report, discussao, alerta, recomendacao, etc.
  */
 const UnifiedPostCardComponent = ({
   post,
@@ -88,7 +77,7 @@ const UnifiedPostCardComponent = ({
   onEdit,
   onTagClick,
 }: UnifiedPostCardProps) => {
-  // Hook de interações com otimistic updates e Supabase
+  // Hook de interacoes com optimistic updates e Supabase
   const {
     state,
     isProcessing,
@@ -117,7 +106,7 @@ const UnifiedPostCardComponent = ({
     return (foundNewType as PostType) || post.type;
   }, [post.type, post.tags]);
 
-  // Memoizar configuração do tipo
+  // Memoizar configuracao do tipo
   const typeConfig = useMemo(
     () =>
       Object.entries(POST_TYPE_CONFIG).find(([key]) => key === effectiveType)?.[1] ??
@@ -128,7 +117,7 @@ const UnifiedPostCardComponent = ({
   const isOwnPost = currentUserId === post.author_profile_id;
   const showMessageButton = currentUserId && !isOwnPost && onSendMessage;
 
-  // Memoizar conteúdo do post
+  // Memoizar conteudo do post
   const postContent = useMemo(
     () => post.content || post.description || "",
     [post.content, post.description],
@@ -142,19 +131,19 @@ const UnifiedPostCardComponent = ({
     return post.image_url;
   }, [post.images, post.image_url]);
 
-  // Memoizar localização formatada
-  // ✅ SSOT: usa location.name do JOIN — sem fallback em campos legados
+  // Memoizar localizacao formatada.
+  // SSOT: prioriza location.name do JOIN e usa fallback unico padronizado.
   const formattedLocation = useMemo(() => {
-    if (post.location && typeof post.location === 'object' && 'name' in post.location) {
+    if (post.location && typeof post.location === "object" && "name" in post.location) {
       return post.location.name;
     }
-    if (post.location && typeof post.location === 'string') {
+    if (post.location && typeof post.location === "string") {
       return post.location;
     }
-    return "Localização não informada";
+    return COMMUNITY_POST_CARD_COPY.locationFallback;
   }, [post.location]);
 
-  // Memoizar tempo relactive
+  // Memoizar tempo relativo
   const relativeTime = useMemo(
     () =>
       formatDistanceToNow(new Date(post.created_at), {
@@ -175,7 +164,7 @@ const UnifiedPostCardComponent = ({
       .slice(0, 2);
   }, [post.author_name]);
 
-  // Handlers com otimistic updates
+  // Handlers com optimistic updates
   const handleLike = useCallback(() => {
     if (import.meta.env.DEV) {
       logger.info("[UnifiedPostCard] Like action", { postId: post.id });
@@ -207,8 +196,8 @@ const UnifiedPostCardComponent = ({
   }, [sharePost, onShare, post.id]);
 
   const handleCardClick = useCallback(() => {
-    onPostClick?.(post.id);
-  }, [onPostClick, post.id]);
+    onPostClick?.(post.id, post);
+  }, [onPostClick, post]);
 
   const handleSendMessage = useCallback(() => {
     onSendMessage?.(post.id, post.author_profile_id);
@@ -258,17 +247,17 @@ const UnifiedPostCardComponent = ({
 
         <PostBadges postType={effectiveType} />
 
-        {/* ✅ SPRINT 2 FASE 5: Badge de reach — metadado de visibilidade */}
+        {/* Badge de reach: metadado de visibilidade */}
         {post.reach && (
           <div className="mt-1" data-testid="reach-badge">
             <span
               className="inline-flex items-center text-xs px-2 py-0.5 rounded-full"
-              style={{ backgroundColor: 'rgba(156,163,175,0.15)', color: '#9CA3AF' }}
-              aria-label={`Visibilidade: ${post.reach}`}
+              style={{ backgroundColor: "rgba(156,163,175,0.15)", color: "#9CA3AF" }}
+              aria-label={`${COMMUNITY_POST_CARD_COPY.reachVisibilityPrefix} ${post.reach}`}
             >
-              {post.reach === 'street' && '🏠 Minha rua'}
-              {post.reach === 'neighborhood' && '📍 Meu bairro'}
-              {post.reach === 'city' && '🏙️ Cidade'}
+              {post.reach === "street" && COMMUNITY_POST_CARD_COPY.reachStreetLabel}
+              {post.reach === "neighborhood" && COMMUNITY_POST_CARD_COPY.reachNeighborhoodLabel}
+              {post.reach === "city" && COMMUNITY_POST_CARD_COPY.reachCityLabel}
             </span>
           </div>
         )}
@@ -285,22 +274,25 @@ const UnifiedPostCardComponent = ({
         }}
         tabIndex={0}
         role="button"
-        aria-label="Abrir detalhes do post"
+        aria-label={COMMUNITY_POST_CARD_COPY.openPostDetailsAriaLabel}
       >
         <PostContent
           postType={post.type}
           content={postContent}
           image={postImage}
-          civicType={post.civic_type}
-          status={post.status}
-          urgency={post.urgency}
+          civicType={post.civic_type as CivicProblemType | undefined}
+          status={post.status as PostStatus | undefined}
+          urgency={post.urgency as PostUrgency | undefined}
+          contentIntent={post.content_intent}
+          displayFormat={post.display_format}
+          contentPayload={post.content_payload}
           tags={post.tags}
           onTagClick={onTagClick}
         />
       </CardContent>
 
       <CardFooter className={`${SPACING.cardPadding} pt-0`}>
-        {/* Seção de Confirmações (para alertas) */}
+        {/* Secao de confirmacoes para alertas */}
         {post.type === "alerta" && post.confirmations_count !== undefined && (
           <AlertConfirmation
             confirmationsCount={post.confirmations_count}
@@ -332,11 +324,11 @@ const UnifiedPostCardComponent = ({
   );
 };
 
-// Memoizar componente para evitar re-renders desnecessários
+// Memoizar componente para evitar re-renders desnecessarios
 export const UnifiedPostCard = memo(UnifiedPostCardComponent);
 
 // Adicionar displayName para debugging
 UnifiedPostCard.displayName = "UnifiedPostCard";
 
-// Exportar sub-componentes para uso individual se necessário
+// Exportar sub-componentes para uso individual se necessario
 export { PostHeader, PostBadges, PostContent, AlertConfirmation, PostActions };

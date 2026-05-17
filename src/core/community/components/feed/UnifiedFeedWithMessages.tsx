@@ -5,6 +5,7 @@ import { useUnifiedFeed } from "../../hooks/feed/useUnifiedFeed";
 import { useMessageModal } from "../../hooks/useMessageModal";
 import type { UnifiedPost } from "@/shared/types/posts";
 import type { TerritorialFeedChannel } from "../../hooks/feed/territorialFeedEngine";
+import { COMMUNITY_FEED_COPY } from "@/core/community/utils/communityCopy";
 
 interface UnifiedFeedWithMessagesProps {
   posts?: UnifiedPost[];
@@ -21,7 +22,7 @@ interface UnifiedFeedWithMessagesProps {
     | "recomendacao"
     | "enquete"
     | TerritorialFeedChannel;
-  userLocation?: { neighborhood?: string; city?: string };
+  userLocation?: { neighborhood?: string; city?: string; location_id?: string };
   onLike?: (postId: string) => void;
   onComment?: (postId: string) => void;
   onShare?: (postId: string) => void;
@@ -29,7 +30,7 @@ interface UnifiedFeedWithMessagesProps {
   onReport?: (postId: string) => void;
   onUpvote?: (postId: string) => void;
   onConfirm?: (postId: string) => void;
-  onPostClick?: (postId: string) => void;
+  onPostClick?: (postId: string, post: UnifiedPost) => void;
   onDelete?: (postId: string) => void;
   onEdit?: (postId: string) => void;
   onTagClick?: (tag: string) => void;
@@ -131,8 +132,8 @@ const UnifiedFeedWithMessages = React.forwardRef<
         <div className="space-y-5">
           {sortedPosts.length === 0 ? (
             <div className="rounded-2xl border border-dashed border-white/10 bg-white/[0.03] px-4 py-10 text-center text-gray-400">
-              <p className="text-sm font-semibold text-white/75">Nenhuma postagem encontrada</p>
-              <p className="mt-1 text-xs text-white/45">Mude o filtro ou seja a primeira pessoa a publicar neste fluxo.</p>
+              <p className="text-sm font-semibold text-white/75">{COMMUNITY_FEED_COPY.emptyStateTitle}</p>
+              <p className="mt-1 text-xs text-white/45">{COMMUNITY_FEED_COPY.emptyStateDescription}</p>
             </div>
           ) : (
             sortedPosts.map((post) => (

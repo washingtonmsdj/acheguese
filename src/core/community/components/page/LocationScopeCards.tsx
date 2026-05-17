@@ -1,6 +1,7 @@
 import React, { memo } from "react";
 import { motion } from "framer-motion";
 import { Building2, MapPin, Home } from "lucide-react";
+import { COMMUNITY_LOCATION_SCOPE_COPY } from "@/core/community/utils/communityCopy";
 import { cn } from "@/shared/utils/cn";
 
 interface LocationScopeCardProps {
@@ -58,6 +59,7 @@ LocationScopeCard.displayName = "LocationScopeCard";
 interface LocationScopeCardsProps {
   city?: string | null;
   neighborhood?: string | null;
+  isTerritorialGroup?: boolean;
   street?: string | null;
   streetAvailable?: boolean;
   currentScope: string;
@@ -67,11 +69,19 @@ interface LocationScopeCardsProps {
 export function LocationScopeCards({
   city,
   neighborhood,
+  isTerritorialGroup = false,
   street,
   streetAvailable = false,
   currentScope,
   onScopeChange,
 }: LocationScopeCardsProps) {
+  const neighborhoodLabel = isTerritorialGroup
+    ? COMMUNITY_LOCATION_SCOPE_COPY.neighborhoodGroupLabel
+    : COMMUNITY_LOCATION_SCOPE_COPY.neighborhoodLabel;
+  const neighborhoodFallback = isTerritorialGroup
+    ? COMMUNITY_LOCATION_SCOPE_COPY.neighborhoodGroupFallbackValue
+    : COMMUNITY_LOCATION_SCOPE_COPY.neighborhoodFallbackValue;
+
   return (
     <motion.div
       className="mb-4 grid grid-cols-3 gap-2 sm:gap-3"
@@ -81,22 +91,26 @@ export function LocationScopeCards({
     >
       <LocationScopeCard
         icon={Building2}
-        label="Toda a cidade"
-        value={city || "Cidade"}
+        label={COMMUNITY_LOCATION_SCOPE_COPY.cityLabel}
+        value={city || COMMUNITY_LOCATION_SCOPE_COPY.cityFallbackValue}
         isActive={currentScope === "city"}
         onClick={() => onScopeChange("city")}
       />
       <LocationScopeCard
         icon={MapPin}
-        label="Todo o bairro"
-        value={neighborhood || "Bairro"}
+        label={neighborhoodLabel}
+        value={neighborhood || neighborhoodFallback}
         isActive={currentScope === "neighborhood"}
         onClick={() => onScopeChange("neighborhood")}
       />
       <LocationScopeCard
         icon={Home}
-        label="Minha rua"
-        value={streetAvailable ? street || "Rua" : "Cadastre sua rua"}
+        label={COMMUNITY_LOCATION_SCOPE_COPY.streetLabel}
+        value={
+          streetAvailable
+            ? street || COMMUNITY_LOCATION_SCOPE_COPY.streetFallbackValue
+            : COMMUNITY_LOCATION_SCOPE_COPY.streetMissingValue
+        }
         isActive={streetAvailable && currentScope === "street"}
         onClick={() => onScopeChange("street")}
         disabled={!streetAvailable}

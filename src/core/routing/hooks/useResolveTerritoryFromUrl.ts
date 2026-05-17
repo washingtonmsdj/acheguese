@@ -12,8 +12,9 @@
  *   /[modulo]/:state/:city/:groupSlug     -> TerritorialGroup
  *   /comunidade/:state/:city/:territorySlug -> Resolver por slug publico de comunidade
  *
- * Grupo territorial nunca e resolvido pelo parametro de bairro. Isso evita
- * colisao entre bairro real e agrupamento de bairros.
+ * Em /comunidade, o slug pode resolver para grupo territorial quando houver
+ * configuracao publica da comunidade ou quando o bairro pertencer de forma
+ * univoca a um grupo ativo/navegavel.
  */
 
 import { useEffect, useState } from 'react';
@@ -264,6 +265,32 @@ export function useResolveTerritoryFromUrl(): TerritoryResolveResult {
             error: `${districtLocation.name} nao esta disponivel para navegacao publica no momento.`,
           });
           return;
+        }
+
+        if (isCommunityRoute) {
+          const groupRepo = createTerritorialGroupRepository();
+          const containingGroups = await groupRepo.findGroupsContainingLocation(districtLocation.id);
+          const eligibleGroups = containingGroups.filter(
+            (group) =>
+              group.status === 'active' &&
+              group.anchor_city_id === cityLocation.id &&
+              isTerritoryPubliclyNavigable(group.metadata),
+          );
+
+          // Evita ambiguidade: promove para grupo apenas quando há associação única.
+          if (eligibleGroups.length === 1) {
+            const withMembers = await groupRepo.findWithMembers(eligibleGroups[0].id);
+            if (withMembers && withMembers.status === 'active' && isTerritoryPubliclyNavigable(withMembers.metadata)) {
+              if (!cancelled) {
+                setResult({
+                  status: TERRITORY_RESOLVE_STATUS.RESOLVED_GROUP,
+                  resolved: { kind: 'group', group: withMembers },
+                  error: null,
+                });
+              }
+              return;
+            }
+          }
         }
 
         if (!cancelled) setResult({ status: TERRITORY_RESOLVE_STATUS.RESOLVED_LOCATION, resolved: { kind: 'location', location: districtLocation }, error: null });

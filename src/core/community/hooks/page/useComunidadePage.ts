@@ -1,14 +1,14 @@
 ﻿/**
  * useComunidadePage - Hook principal da página de comunidade
  * 
- * âœ… SSOT - Usa Services via hooks especializados
- * âœ… Performance - Callbacks memoizados
- * âœ… Type Safety - Interfaces tipadas
+ * SSOT - Usa services via hooks especializados
+ * Performance - Callbacks memoizados
+ * Type safety - Interfaces tipadas
  * Geographic Foundation - Integrado com fundação geográfica
  */
 
 import { useState, useCallback } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
 import { useCommunityFiltersAAA } from "@/core/community/hooks/useCommunityFiltersAAA";
 import { usePostActions } from "@/core/posts/hooks";
@@ -17,8 +17,12 @@ import { useMultiProfileContext } from "@/core/profiles/contexts/multi-profile-r
 import { usePostById } from "@/core/community/hooks/usePostById";
 import { useCommunityLocation } from "@/core/community/hooks/useCommunityLocation";
 import { postService } from "@/core/posts/services";
+import { extractOpportunityPayload } from "@/core/work-opportunities/utils/opportunityPayload";
+import { workOpportunitiesService } from "@/core/work-opportunities/services/WorkOpportunitiesService";
+import { workOpportunityTelemetryService } from "@/core/work-opportunities/services/WorkOpportunityTelemetryService";
 import { logger } from "@/shared/utils/logger";
 import type { PostType } from "@/core/posts/types/Post";
+import type { UnifiedPost } from "@/shared/types/posts";
 
 interface ModalState {
   type: "comment" | "post" | "unified" | "report" | "create" | null;
@@ -98,6 +102,7 @@ function toCommunityActorProfile(input: unknown): CommunityActorProfile | null {
 }
 
 export function useComunidadePage() {
+  const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const [modalState, setModalState] = useState<ModalState>({ type: null, data: null });
   const [alertModalOpen, setAlertModalOpen] = useState(false);
@@ -136,8 +141,102 @@ export function useComunidadePage() {
   const handleCloseIssueModal = useCallback(() => setIssueModalOpen(false), []);
 
   const handlePostClick = useCallback(
-    (postId: string) => setSearchParams({ post: postId }),
-    [setSearchParams],
+    async (postId: string, post?: UnifiedPost) => {
+      try {
+        const vagaPayloadRoot =
+          post?.content_payload && typeof post.content_payload === "object"
+            ? (post.content_payload as Record<string, unknown>)
+            : null;
+        const vagaPayload =
+          vagaPayloadRoot && typeof vagaPayloadRoot.vaga === "object"
+            ? (vagaPayloadRoot.vaga as Record<string, unknown>)
+            : null;
+        const vagaTargetUrl =
+          (vagaPayload && typeof vagaPayload.target_url === "string" && vagaPayload.target_url) ||
+          null;
+        const vagaId =
+          (vagaPayload && typeof vagaPayload.id === "string" && vagaPayload.id) ||
+          null;
+
+        if (post?.content_intent === "vaga" || vagaPayload) {
+          if (vagaTargetUrl) {
+            navigate(vagaTargetUrl);
+            return;
+          }
+          if (vagaId) {
+            navigate(`/vagas/detalhe/${vagaId}`);
+            return;
+          }
+        }
+
+        const opportunityPayload = extractOpportunityPayload(post?.content_payload);
+        if (opportunityPayload?.id) {
+          void workOpportunityTelemetryService.trackOpportunityClick({
+            opportunityId: opportunityPayload.id,
+            professionalId: opportunityPayload.professional_id,
+            territoryLocationId: opportunityPayload.territory_location_id,
+            source: "feed",
+            actorProfileId: profile?.id,
+            actorUserId: profile?.user_id ?? profile?.userId ?? null,
+            metadata: {
+              click_path: "feed_card_payload",
+              post_id: postId,
+            },
+          });
+          void workOpportunityTelemetryService.trackOpportunityOpen({
+            opportunityId: opportunityPayload.id,
+            professionalId: opportunityPayload.professional_id,
+            territoryLocationId: opportunityPayload.territory_location_id,
+            source: "feed",
+            actorProfileId: profile?.id,
+            actorUserId: profile?.user_id ?? profile?.userId ?? null,
+            metadata: {
+              open_path: "feed_card_payload",
+              post_id: postId,
+            },
+          });
+          navigate(`/oportunidades/${opportunityPayload.id}?source=feed`);
+          return;
+        }
+
+        if (post?.content_intent === "oportunidade" || post?.display_format === "opportunity_card") {
+          const opportunity = await workOpportunitiesService.getOpportunityByPostId(postId);
+          if (opportunity?.id) {
+            void workOpportunityTelemetryService.trackOpportunityClick({
+              opportunityId: opportunity.id,
+              professionalId: opportunity.professional_id ?? null,
+              territoryLocationId: opportunity.territory_location_id,
+              source: "feed",
+              actorProfileId: profile?.id,
+              actorUserId: profile?.user_id ?? profile?.userId ?? null,
+              metadata: {
+                click_path: "feed_card_post_lookup",
+                post_id: postId,
+              },
+            });
+            void workOpportunityTelemetryService.trackOpportunityOpen({
+              opportunityId: opportunity.id,
+              professionalId: opportunity.professional_id ?? null,
+              territoryLocationId: opportunity.territory_location_id,
+              source: "feed",
+              actorProfileId: profile?.id,
+              actorUserId: profile?.user_id ?? profile?.userId ?? null,
+              metadata: {
+                open_path: "feed_card_post_lookup",
+                post_id: postId,
+              },
+            });
+            navigate(`/oportunidades/${opportunity.id}?source=feed`);
+            return;
+          }
+        }
+      } catch (error) {
+        logger.warn("Falha ao resolver detalhe de oportunidade pelo feed", error as Error, { postId });
+      }
+
+      setSearchParams({ post: postId });
+    },
+    [navigate, profile?.id, profile?.userId, profile?.user_id, setSearchParams],
   );
 
   const handleClosePostDetail = useCallback(
@@ -210,10 +309,6 @@ export function useComunidadePage() {
     }
   }, []);
 
-  const handleReportClick = useCallback((reportId: string) => {
-    setModalState({ type: "unified", data: { type: "civic_report" as const, reportId } });
-  }, []);
-
   const handleCloseModal = useCallback(() => {
     setModalState({ type: null, data: null });
   }, []);
@@ -245,7 +340,6 @@ export function useComunidadePage() {
     handleCancelDeletePost,
     handleConfirmDeletePost,
     handleEditPost,
-    handleReportClick,
     handleCloseModal,
     deletePostDialogOpen: Boolean(deletePostId),
     isDeletingPost: isDeleting,
