@@ -28,39 +28,23 @@ import { MapTerritoryControl } from './controls/MapTerritoryControl';
 import { MapControlsLayout } from './controls/MapControlsLayout';
 import { MapRadiusControl } from './controls/MapRadiusControl';
 import { createUserLocationSvg } from '@/shared/utils/safeSvg';
-import { EntityStatus } from '@/shared/types/enums';
 import type { BoundingBox, MapViewport, MapMarker } from '../../types/core';
 import type { TerritoryPolygon } from '../../hooks/useTerritoryPolygon';
 import type { MapControlsConfig, UserLocationMarkerConfig } from './controls/types';
 import type { ResolvedTerritory } from '@/core/routing/hooks/useResolveTerritoryFromUrl';
-interface CircleArea {
-  center: [number, number];
-  radiusMeters: number;
-}
-
-type MapRuntimeState = {
-  loaded?: boolean;
-  tilesLoaded?: boolean;
-  idle?: boolean;
-  zoom?: number;
-  lastCenter?: { lat: number; lng: number };
-  errors?: string[];
-  webglContextLost?: boolean;
-};
-
-type WindowWithMapState = Window & { __mapState?: MapRuntimeState };
-
-function readMapState(): MapRuntimeState {
-  if (typeof window === 'undefined') return {};
-  const typedWindow = window as WindowWithMapState;
-  return typedWindow.__mapState ?? {};
-}
-
-function writeMapState(state: MapRuntimeState): void {
-  if (typeof window === 'undefined') return;
-  const typedWindow = window as WindowWithMapState;
-  typedWindow.__mapState = state;
-}
+import {
+  createClusterRenderMarker,
+  createUserLocationMarker,
+  DEFAULT_CENTER,
+  DEFAULT_ZOOM,
+  getRecordBoolean,
+  MARKER_TYPE_TO_LAYER,
+  readMapState,
+  type RenderMarker,
+  setRecordBoolean,
+  writeMapState,
+  type CircleArea,
+} from './MapLibreAdapter.helpers';
 export interface MapLibreAdapterHandle {
   /** Acesso direto à instância MapLibre (para casos avançados) */
   getMap: () => maplibregl.Map | null;
@@ -120,104 +104,6 @@ export interface MapLibreAdapterProps {
   className?: string;
 }
 
-const DEFAULT_CENTER: [number, number] = [-38.5014, -12.9714]; // Salvador, BA [lng, lat]
-const DEFAULT_ZOOM = 13;
-
-interface ClusterRenderMarker {
-  id: string;
-  type: 'cluster';
-  coordinates: { latitude: number; longitude: number };
-  title: string;
-  status: typeof EntityStatus.ACTIVE;
-  metadata: {
-    isCluster: true;
-    pointCount: number;
-    clusterId: number;
-  };
-}
-
-type RenderMarker = MapMarker | ClusterRenderMarker;
-
-const MARKER_TYPE_TO_LAYER: Partial<Record<string, string>> = {
-  business: 'businesses',
-  service: 'services',
-  classified: 'classifieds',
-  event: 'events',
-  alert: 'alerts',
-  professional: 'professionals',
-  tourist_point: 'tourist_points',
-  driver: 'mobility',
-  ride: 'mobility',
-};
-
-function getRecordBoolean(source: Record<string, boolean>, key: string): boolean | undefined {
-  for (const [entryKey, value] of Object.entries(source)) {
-    if (entryKey === key) {
-      return value;
-    }
-  }
-  return undefined;
-}
-
-function setRecordBoolean(
-  source: Record<string, boolean>,
-  key: string,
-  value: boolean,
-): Record<string, boolean> {
-  let found = false;
-  const entries = Object.entries(source).map(([entryKey, entryValue]) => {
-    if (entryKey === key) {
-      found = true;
-      return [entryKey, value] as const;
-    }
-    return [entryKey, entryValue] as const;
-  });
-
-  if (!found) {
-    entries.push([key, value] as const);
-  }
-  return Object.fromEntries(entries);
-}
-
-function createUserLocationMarker(
-  coordinates: { latitude: number; longitude: number },
-  label?: string,
-): MapMarker {
-  return {
-    id: 'user-location',
-    type: 'user_location' as const,
-    coordinates: {
-      latitude: coordinates.latitude,
-      longitude: coordinates.longitude,
-    },
-    title: label ?? 'Voce esta aqui',
-    status: EntityStatus.ACTIVE,
-    metadata: { isUserLocation: true },
-  };
-}
-
-function createClusterRenderMarker(
-  clusterId: number,
-  pointCount: number,
-  coordinates: [number, number],
-): ClusterRenderMarker {
-  const [longitude, latitude] = coordinates;
-  const marker = {
-    id: `cluster-${clusterId}`,
-    type: 'cluster' as const,
-    title: `${pointCount} itens`,
-    status: EntityStatus.ACTIVE,
-    metadata: {
-      isCluster: true,
-      pointCount,
-      clusterId,
-    },
-  } as ClusterRenderMarker;
-
-  marker.coordinates = { latitude, longitude };
-
-  return marker;
-}
 
 /**
  * Adaptador MapLibre GL JS para o sistema de hooks v3.

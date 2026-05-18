@@ -1,13 +1,13 @@
 # FASE 1 - Hardening Arquitetural (Gate-First)
 
-Gerado em: 2026-05-18T22:07:32.613Z
+Gerado em: 2026-05-18T22:11:06.816Z
 
 ## Problemas encontrados
 - Dependencias ciclicas detectadas: 0
 - Imports relativos profundos (>= 3 niveis): 0
 - Arquivos com acesso DB fora de service/repository: 0
 - Services com nome duplicado: 32
-- Arquivos grandes (>= 900 linhas): 9
+- Arquivos grandes (>= 900 linhas): 8
 - Violacoes de layer (shared/core boundaries): 0
 
 ## Modulos mais criticos
@@ -18,7 +18,6 @@ Gerado em: 2026-05-18T22:07:32.613Z
 - landing/routing
 
 ## Arquivos mais problematicos
-- `src/core/maps/components/v3/MapLibreAdapter.tsx` (946 linhas)
 - `src/app/pages/ClassificadoChatLandingPage.tsx` (929 linhas)
 - `src/features/events/pages/EventsListPage.tsx` (924 linhas)
 - `src/modules/classifieds/pages/ClassificadoDetailPage.tsx` (924 linhas)
@@ -43,7 +42,7 @@ Gerado em: 2026-05-18T22:07:32.613Z
 
 ## Score de estabilidade arquitetural
 - Score Gate-First (ciclos/boundaries/DB/layers): **100/100**
-- Score Debt Estrutural (inclui duplicacoes e arquivos gigantes): **77/100**
+- Score Debt Estrutural (inclui duplicacoes e arquivos gigantes): **78/100**
 - Baseline de referencia: 70/100
 - Meta desta fase: 85+/100
 
