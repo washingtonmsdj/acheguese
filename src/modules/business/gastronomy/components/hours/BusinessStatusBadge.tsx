@@ -17,7 +17,7 @@ interface BusinessStatusBadgeProps {
 }
 
 export function BusinessStatusBadge({ businessId, showNextOpening = true }: BusinessStatusBadgeProps) {
-  const { status, isLoading } = useBusinessStatus(businessId);
+  const { isOpen, nextOpening, isLoading } = useBusinessStatus(businessId);
 
   if (isLoading) {
     return (
@@ -27,12 +27,6 @@ export function BusinessStatusBadge({ businessId, showNextOpening = true }: Busi
       </Badge>
     );
   }
-
-  if (!status) {
-    return null;
-  }
-
-  const { isOpen, nextOpening } = status;
 
   return (
     <div className="flex flex-col gap-2">

@@ -16,7 +16,7 @@ export class GeospatialServiceMock implements IGeospatialPort {
     radius_km: number
   ): Promise<boolean> {
     if (radius_km < 1 || radius_km > 100) {
-      throw this.createError('INVALID_RADIUS', `Radius must be between 1 and 100 km`);
+      throw this.createError('INVALID_RADIUS' as GeospatialErrorCode, `Radius must be between 1 and 100 km`);
     }
 
     const distance = await this.calculateDistance(origin_location_id, target_location_id);
@@ -28,20 +28,20 @@ export class GeospatialServiceMock implements IGeospatialPort {
     const locationB = await this.locationRepository.findById(location_id_b);
 
     if (!locationA) {
-      throw this.createError('LOCATION_NOT_FOUND', `Location ${location_id_a} not found`);
+      throw this.createError('LOCATION_NOT_FOUND' as GeospatialErrorCode, `Location ${location_id_a} not found`);
     }
 
     if (!locationB) {
-      throw this.createError('LOCATION_NOT_FOUND', `Location ${location_id_b} not found`);
+      throw this.createError('LOCATION_NOT_FOUND' as GeospatialErrorCode, `Location ${location_id_b} not found`);
     }
 
     // Verificar se coordenadas existem
     if (!locationA.metadata?.canonical_lat || !locationA.metadata?.canonical_lng) {
-      throw this.createError('COORDINATES_NOT_FOUND', `Coordinates not found for location ${location_id_a}`);
+      throw this.createError('COORDINATES_NOT_FOUND' as GeospatialErrorCode, `Coordinates not found for location ${location_id_a}`);
     }
 
     if (!locationB.metadata?.canonical_lat || !locationB.metadata?.canonical_lng) {
-      throw this.createError('COORDINATES_NOT_FOUND', `Coordinates not found for location ${location_id_b}`);
+      throw this.createError('COORDINATES_NOT_FOUND' as GeospatialErrorCode, `Coordinates not found for location ${location_id_b}`);
     }
 
     // Calcular distância usando fórmula de Haversine
@@ -79,3 +79,4 @@ export class GeospatialServiceMock implements IGeospatialPort {
     return { code, message };
   }
 }
+

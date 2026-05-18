@@ -12,6 +12,23 @@ import { logger } from "@/shared/utils/logger";
 import { PAGINATION } from "@/shared/constants";
 import type { AdminSupabaseClient } from "@/core/admin/types/adminDatabase.types";
 import { ReviewsService } from "@/core/reviews/services/ReviewsService";
+const businessAdminDb = supabase as any;
+
+export interface LegacyCoupon {
+  id: string;
+  codigo: string;
+  titulo: string;
+  description: string | null;
+  tipo: string;
+  desconto: string;
+  validade: string | null;
+  max_usos: number | null;
+  usos: number | null;
+  business_logo: string | null;
+  business_name: string | null;
+  neighborhood: string | null;
+  is_active: boolean;
+}
 
 /**
  * Buscar reivindicações de empresas
@@ -166,7 +183,7 @@ export async function getBusinessMetrics(
     const monthAgo = new Date(now.getTime() - 30 * 86400000).toISOString();
 
     // Usar ReviewsService para estatísticas de reviews
-    const reviewStats = await ReviewsService.getReviewStats(businessId, "business");
+    const reviewStats = (await ReviewsService.getReviewStats(businessId, "business")) as any;
 
     let totalViewsQuery = (supabase as unknown as AdminSupabaseClient)
       .from("business_views")
@@ -195,8 +212,8 @@ export async function getBusinessMetrics(
       totalViews: viewsRes.count || 0,
       weekViews: weekRes.count || 0,
       monthViews: monthRes.count || 0,
-      averageRating: reviewStats.average_rating || 0,
-      totalReviews: reviewStats.total_reviews || 0,
+      averageRating: reviewStats.average_rating ?? reviewStats.averageRating ?? 0,
+      totalReviews: reviewStats.total_reviews ?? reviewStats.totalReviews ?? 0,
     };
   } catch (error) {
     logger.error("Failed to fetch business metrics:", error);
@@ -218,7 +235,7 @@ export async function updateBusinessClaimStatus(
   status: "aprovada" | "rejeitada",
 ): Promise<boolean> {
   try {
-    const { error } = await (supabase as unknown as AdminSupabaseClient)
+    const { error } = await businessAdminDb
       .from("business_claims")
       .update({ status, resolved_at: new Date().toISOString() })
       .eq("id", claimId);
@@ -237,7 +254,7 @@ export async function updateBusinessClaimStatus(
 /**
  * Cupons ativos (legado)
  */
-export async function getActiveCoupons(): Promise<unknown[]> {
+export async function getActiveCoupons(): Promise<LegacyCoupon[]> {
   try {
     const { data, error } = await (supabase as unknown as AdminSupabaseClient)
       .from("coupons")
@@ -249,7 +266,7 @@ export async function getActiveCoupons(): Promise<unknown[]> {
       logger.error("Error fetching coupons:", error);
       return [];
     }
-    return data || [];
+    return (data ?? []) as LegacyCoupon[];
   } catch (error) {
     logger.error("Error in getActiveCoupons:", error);
     return [];
@@ -259,7 +276,7 @@ export async function getActiveCoupons(): Promise<unknown[]> {
 /**
  * Cupom por ID (legado)
  */
-export async function getCouponById(id: string): Promise<unknown | null> {
+export async function getCouponById(id: string): Promise<LegacyCoupon | null> {
   try {
     const { data, error } = await (supabase as unknown as AdminSupabaseClient)
       .from("coupons")
@@ -271,7 +288,7 @@ export async function getCouponById(id: string): Promise<unknown | null> {
       logger.error("Error fetching coupon:", error);
       return null;
     }
-    return data;
+    return data as LegacyCoupon;
   } catch (error) {
     logger.error("Error in getCouponById:", error);
     return null;

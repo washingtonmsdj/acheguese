@@ -121,9 +121,9 @@ export function ContaHubLayout({
               <ProfileHeaderCompact
                 activeProfile={personalProfile}
                 profile={profile}
-                allProfiles={allProfiles}
+                allProfiles={allProfiles as any}
                 userEmail={userEmail}
-                accountSnapshot={accountSnapshot}
+                accountSnapshot={accountSnapshot as any}
                 identity={identity}
                 context={context}
                 notifications={notifications}

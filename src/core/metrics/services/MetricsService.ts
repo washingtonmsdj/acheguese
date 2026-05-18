@@ -36,6 +36,7 @@ export interface ReputationStats {
 }
 
 export class MetricsService {
+  private static readonly db = supabase as any;
   /**
    * Buscar métricas em tempo real
    * ✅ SSOT: Delega para os serviços apropriados
@@ -45,8 +46,8 @@ export class MetricsService {
       const [users, sessions, rides, posts, businesses] = await Promise.all([
         // ✅ Delega para ProfileService
         profileService.getTotalProfilesCount(),
-        supabase.from('user_sessions').select('id', { count: 'exact', head: true }).eq('active', true),
-        supabase.from('rides').select('id', { count: 'exact', head: true }).eq('status', 'active'),
+        this.db.from('user_sessions').select('id', { count: 'exact', head: true }).eq('active', true),
+        this.db.from('rides').select('id', { count: 'exact', head: true }).eq('status', 'active'),
         // ✅ Delega para PostService
         postService.getTotalPostsCount(),
         // ✅ Delega para BusinessService
@@ -111,7 +112,8 @@ export class MetricsService {
   static async getReputationStats(userId: string): Promise<ReputationStats | null> {
     try {
       // ✅ Delega para ProfileService
-      const profile = await profileService.getProfileByUserId(userId);
+      const profiles = await profileService.getProfilesByUserId(userId);
+      const profile = profiles?.[0];
       if (!profile) return null;
 
       // ✅ Delega para ReviewsService
@@ -146,7 +148,7 @@ export class MetricsService {
    */
   static async incrementMetric(metric: string, value = 1) {
     try {
-      await supabase.rpc('increment_metric', { 
+      await this.db.rpc('increment_metric', { 
         metric_name: metric, 
         increment_value: value 
       });
@@ -164,7 +166,7 @@ export class MetricsService {
     endDate: string
   ) {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await this.db
         .from('metrics_history')
         .select('*')
         .eq('metric_name', metricName)

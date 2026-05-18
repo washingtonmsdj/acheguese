@@ -63,7 +63,7 @@ export function VagasListagemSection({
               {vagasUrgentes.map((vaga) => (
                 <VagaCardEnhanced
                   key={vaga.id}
-                  vaga={vaga}
+                  vaga={vaga as never}
                   variant="compact"
                   onClick={() => onVagaClick(vaga.slug)}
                 />
@@ -88,8 +88,8 @@ export function VagasListagemSection({
               {vagasDestaque.map((vaga) => (
                 <VagaCardEnhanced
                   key={vaga.id}
-                  vaga={vaga}
-                  variant="featured"
+                  vaga={vaga as never}
+                  variant="compact"
                   onClick={() => onVagaClick(vaga.slug)}
                 />
               ))}
@@ -103,7 +103,7 @@ export function VagasListagemSection({
           {vagas.map((vaga) => (
             <VagaCardEnhanced
               key={vaga.id}
-              vaga={vaga}
+              vaga={vaga as never}
               variant="list"
               onClick={() => onVagaClick(vaga.slug)}
             />

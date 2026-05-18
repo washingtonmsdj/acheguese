@@ -23,12 +23,15 @@ export interface SendEmailParams {
 export interface EmailLog {
   id: string;
   user_id: string | null;
-  recipient_email: string;
+  recipient_email?: string;
+  email?: string;
   subject: string;
-  category: string;
+  category?: string;
+  template?: string;
   status: 'sent' | 'failed' | 'bounced';
   error_message: string | null;
-  sent_at: string;
+  sent_at?: string;
+  created_at?: string;
 }
 
 export class EmailService {
@@ -203,7 +206,7 @@ export class EmailService {
       return [];
     }
 
-    return data || [];
+    return (data as EmailLog[]) || [];
   }
 
   // ============================================================================

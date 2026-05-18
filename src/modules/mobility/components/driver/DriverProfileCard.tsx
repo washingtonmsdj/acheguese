@@ -143,7 +143,7 @@ export function DriverProfileCard({
             size="sm"
             variant="outline"
             className="flex-1 md:flex-initial border-white/10 text-gray-300 hover:bg-white/5 rounded-xl text-xs h-9"
-            onClick={() => navigate(mobilityUrls.driverProfile)}
+            onClick={() => navigate(mobilityUrls.driver)}
           >
             <ExternalLink className="h-3.5 w-3.5 mr-1.5" />
             Meu Perfil

@@ -52,7 +52,7 @@ export function useBusinessRollout() {
     } catch (error) {
       logger.error('Error checking business rollout', error as Error, {
         hook: 'useBusinessRollout',
-        businessId,
+        locationId: activeLocationId,
       });
       setIsActive(false);
       setRollout(null);

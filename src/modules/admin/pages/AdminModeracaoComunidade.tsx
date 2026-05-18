@@ -39,6 +39,14 @@ import type { LucideIcon } from "lucide-react";
 
 type FilterStatus = "all" | "pending" | "flagged" | "approved" | "rejected";
 type ModerationAction = "approve" | "reject" | "flag" | "delete";
+type PostModerationService = {
+  moderatePost: (
+    postId: string,
+    moderatedBy: string,
+    action: ModerationAction,
+    reason?: string,
+  ) => Promise<void>;
+};
 
 const statusConfig = {
   pending: {
@@ -135,7 +143,7 @@ export default function AdminModeracaoComunidade() {
     if (!actionModal.post || !actionModal.action || !user) return;
 
     try {
-      await ModerationService.moderatePost(
+      await (ModerationService as unknown as PostModerationService).moderatePost(
         actionModal.post.id,
         user.id,
         actionModal.action,

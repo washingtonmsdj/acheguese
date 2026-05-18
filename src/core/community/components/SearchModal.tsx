@@ -4,7 +4,7 @@ import { Input } from "@/shared/components/ui/input";
 import { ScrollArea } from "@/shared/components/ui/scroll-area";
 import { Button } from "@/shared/components/ui/button";
 import { useSearch } from "../hooks/useSearch";
-import { PostCard } from "./PostCard";
+import PostCard from "./PostCard";
 import { INLINE_STYLES } from "./styles/communityDesignSystem";
 import {
   Search,
@@ -231,7 +231,7 @@ export function SearchModal({
                   {results.posts.map((post) => (
                     <PostCard
                       key={post.id}
-                      post={post}
+                      post={post as any}
                       onLike={() => {}}
                       onComment={() => {}}
                       onSave={() => {}}

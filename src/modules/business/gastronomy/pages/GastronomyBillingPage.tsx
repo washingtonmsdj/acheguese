@@ -57,7 +57,7 @@ export default function GastronomyBillingPage() {
   const { data: allPlans, isLoading: isLoadingPlans } = useBillingPlans();
   
   // Encontrar plano atual no catálogo
-  const currentPlanData = allPlans?.find(p => p.tier === currentPlan);
+  const currentPlanData = allPlans?.find((p) => p.code === currentPlan);
   
   // Capability flags
   const canUpgrade = isActive && !isDelivery;
@@ -233,7 +233,7 @@ export default function GastronomyBillingPage() {
               {/* Pro Plan */}
               {isFree && allPlans && (
                 <PlanCard
-                  plan={allPlans.find(p => p.tier === PlanTier.PRO)!}
+                  plan={allPlans.find((p) => p.code === PlanTier.PRO)!}
                   onUpgrade={() => handleUpgrade('gastronomy_pro')}
                   isUpgrading={isUpgrading}
                   isCurrent={false}
@@ -243,7 +243,7 @@ export default function GastronomyBillingPage() {
               {/* Delivery Plan */}
               {!isDelivery && allPlans && (
                 <PlanCard
-                  plan={allPlans.find(p => p.tier === PlanTier.DELIVERY)!}
+                  plan={allPlans.find((p) => p.code === PlanTier.DELIVERY)!}
                   onUpgrade={() => handleUpgrade('gastronomy_delivery')}
                   isUpgrading={isUpgrading}
                   isCurrent={false}
@@ -354,7 +354,6 @@ interface PlanCardProps {
     name: string;
     priceDisplay: string;
     features: string[];
-    tier: PlanTier;
   };
   onUpgrade: () => void;
   isUpgrading: boolean;

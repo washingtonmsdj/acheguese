@@ -105,7 +105,7 @@ export function useRecordInteraction() {
         interactionType,
         targetType,
         targetId,
-        metadata,
+        metadata as import("@/shared/types/supabase.types").FlexibleMetadata | undefined,
       ),
     onSuccess: (result, variables) => {
       if (result.success) {
@@ -143,7 +143,7 @@ export function useUpdateCommunityProfile() {
       updates: Partial<
         Pick<
           CommunityProfile,
-          "display_name" | "avatar_url" | "bio" | "city" | "neighborhood"
+          "display_name" | "avatar_url" | "bio" | "public_city" | "public_neighborhood"
         >
       >;
     }) => CommunityService.updateCommunityProfile(userId, updates),

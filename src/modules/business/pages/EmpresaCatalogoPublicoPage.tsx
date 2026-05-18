@@ -52,6 +52,8 @@ type Product = {
   image_url: string | null;
   category: string;
   active: boolean;
+  featured: boolean;
+  promotion: boolean;
   destaque: boolean;
   promocao: boolean;
 };
@@ -128,6 +130,8 @@ export default function EmpresaCatalogoPublicoPage() {
           image_url: product.image_url || null,
           category: product.category || "geral",
           active: product.active,
+          featured: product.featured,
+          promotion: product.promotion,
           destaque: product.featured,
           promocao: product.promotion,
         }));

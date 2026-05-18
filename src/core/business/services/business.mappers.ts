@@ -147,7 +147,7 @@ export function toBusinessData(
   setIfDefined(result, "payment_methods", input.formas_pagamento ? paymentMethods : undefined);
   setIfDefined(result, "specialties", input.especialidades ? input.especialidades : undefined);
   setIfDefined(result, "facilities", input.facilidades ? input.facilidades : undefined);
-  setIfDefined(result, "metadata", metadata ?? undefined);
+  setIfDefined(result, "metadata", (metadata as any) ?? undefined);
   setIfDefined(result, "status", input.status);
   setIfDefined(result, "slug", input.slug);
 
@@ -169,7 +169,7 @@ export function toBusinessData(
   // Compatibilidade: se os modos vierem definidos, garante coerencia minima de metadata.
   if (serviceModes.length > 0 && !metadata?.modos_atendimento) {
     result.metadata = {
-      ...(result.metadata ?? {}),
+      ...((result.metadata ?? {}) as Record<string, unknown>),
       modos_atendimento: serviceModes,
       tem_delivery: serviceModes.includes("delivery"),
     };

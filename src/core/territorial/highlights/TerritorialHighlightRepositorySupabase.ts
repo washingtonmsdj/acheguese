@@ -43,7 +43,7 @@ export class TerritorialHighlightRepositorySupabase
       logger.warn('⚠️ TerritorialHighlightRepositorySupabase.listForTerritory:', error.message);
       return [];
     }
-    return (data ?? []) as TerritorialHighlight[];
+    return (data ?? []) as unknown as TerritorialHighlight[];
   }
 
   async findById(id: string): Promise<TerritorialHighlight | null> {
@@ -53,7 +53,7 @@ export class TerritorialHighlightRepositorySupabase
       .eq('id', id)
       .maybeSingle();
     if (error) return null;
-    return data as TerritorialHighlight | null;
+    return data as unknown as TerritorialHighlight | null;
   }
 
   async create(input: CreateHighlightInput): Promise<TerritorialHighlight> {
@@ -77,7 +77,7 @@ export class TerritorialHighlightRepositorySupabase
       .select()
       .single();
     if (error) throw new Error(`Erro ao criar highlight: ${error.message}`);
-    return data as TerritorialHighlight;
+    return data as unknown as TerritorialHighlight;
   }
 
   async update(id: string, input: Partial<CreateHighlightInput>): Promise<TerritorialHighlight> {
@@ -88,7 +88,7 @@ export class TerritorialHighlightRepositorySupabase
       .select()
       .single();
     if (error) throw new Error(`Erro ao atualizar highlight: ${error.message}`);
-    return data as TerritorialHighlight;
+    return data as unknown as TerritorialHighlight;
   }
 
   async delete(id: string): Promise<void> {
@@ -99,3 +99,4 @@ export class TerritorialHighlightRepositorySupabase
     if (error) throw new Error(`Erro ao deletar highlight: ${error.message}`);
   }
 }
+

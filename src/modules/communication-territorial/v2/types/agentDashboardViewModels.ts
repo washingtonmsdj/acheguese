@@ -1,9 +1,3 @@
-import type {
-  CommunicationChannel,
-  CommunicationPublication,
-  CommunicationChannelTerritory,
-} from "../../types";
-
 export type DashboardView =
   | "overview"
   | "publications"
@@ -13,14 +7,33 @@ export type DashboardView =
   | "schedule"
   | "team";
 
-export type DashboardChannelView = CommunicationChannel;
+export interface DashboardChannelView {
+  id: string;
+  slug: string;
+  public_name?: string;
+  name?: string;
+  verification_status?: string;
+  description?: string;
+}
 
-export type DashboardPublicationView = CommunicationPublication;
+export interface DashboardPublicationView {
+  id: string;
+  title?: string;
+  content?: string;
+  body?: string;
+  media_url?: string;
+  created_at: string;
+  updated_at?: string;
+  scheduled_at?: string | null;
+  status?: string;
+}
 
-export type DashboardTerritoryView = CommunicationChannelTerritory & {
+export interface DashboardTerritoryView {
+  id: string;
+  name?: string;
   city?: string;
   state?: string;
-};
+}
 
 export type DashboardTeamMemberView = {
   id: string;

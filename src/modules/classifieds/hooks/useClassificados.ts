@@ -20,11 +20,19 @@ export interface ClassificadoWithVendedor {
   descricao: string;
   preco: number;
   categoria: string;
+  subcategoria?: string | null;
   condition?: string; // novo | seminovo | usado
+  aceita_troca?: boolean;
+  entrega_disponivel?: boolean;
   fotos: string[];
   status: string;
   bairro: string;
+  location_id?: string;
+  seller_id?: string;
+  latitude?: number | null;
+  longitude?: number | null;
   created_at: string;
+  updated_at?: string;
   // Dados para construir URL canônica
   geographic_path?: string;
   category_slug?: string;
@@ -33,6 +41,7 @@ export interface ClassificadoWithVendedor {
     id: string;
     nome: string;
     avatar_url: string | null;
+    rating?: number;
     phone?: string | null;
     whatsapp?: string | null;
   } | null;

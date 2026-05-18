@@ -70,6 +70,14 @@ export default function VagaDetailPage() {
 
   const vaga = id ? getVagaById(id) : undefined;
   const relatedVagas = vaga ? getRelatedVagas(vaga) : [];
+  const vagaLegacy = vaga as typeof vaga & {
+    contatoWhatsapp?: string;
+    contatoEmail?: string;
+    contatoUrl?: string;
+    empresa?: string;
+    destaque?: boolean;
+  };
+  const companyName = vagaLegacy?.empresa ?? vaga?.empresaNome ?? "Empresa";
 
   // ── LOADING ──
   if (isLoading) {
@@ -117,8 +125,8 @@ export default function VagaDetailPage() {
   }
 
   // ── Derived data ──
-  const whatsappUrl = vaga.contatoWhatsapp
-    ? `https://wa.me/55${vaga.contatoWhatsapp}?text=${encodeURIComponent(`Olá! Vi a vaga "${vaga.titulo}" e tenho interesse. Podemos conversar?`)}`
+  const whatsappUrl = vagaLegacy?.contatoWhatsapp
+    ? `https://wa.me/55${vagaLegacy.contatoWhatsapp}?text=${encodeURIComponent(`Olá! Vi a vaga "${vaga.titulo}" e tenho interesse. Podemos conversar?`)}`
     : null;
 
   return (
@@ -169,13 +177,13 @@ export default function VagaDetailPage() {
 
             <div className="flex items-start gap-4">
               <div className="h-14 w-14 rounded-2xl bg-card border border-border flex items-center justify-center flex-shrink-0">
-                <span className="text-xl font-bold text-primary">{vaga.empresa[0]}</span>
+                    <span className="text-xl font-bold text-primary">{companyName[0]}</span>
               </div>
               <div className="flex-1 min-w-0">
                 <h1 className="text-xl sm:text-2xl font-bold text-foreground font-heading leading-tight mb-1">{vaga.titulo}</h1>
                 <p className="text-sm text-muted-foreground flex items-center gap-1.5">
                   <Building2 className="h-3.5 w-3.5" />
-                  {vaga.empresa}
+                  {companyName}
                 </p>
               </div>
             </div>
@@ -194,7 +202,7 @@ export default function VagaDetailPage() {
                 <GraduationCap className="h-3 w-3 mr-1" />
                 {NIVEL_LABELS[vaga.nivel]}
               </Badge>
-              {vaga.destaque && (
+              {vagaLegacy?.destaque && (
                 <Badge className="bg-warning/15 text-warning border-warning/30 font-semibold">
                   <Star className="h-3 w-3 mr-1" /> Destaque
                 </Badge>
@@ -314,9 +322,9 @@ export default function VagaDetailPage() {
                   </Button>
                 )}
 
-                {vaga.contatoEmail && (
+                {vagaLegacy?.contatoEmail && (
                   <Button
-                    onClick={() => window.open(`mailto:${vaga.contatoEmail}?subject=Interesse na vaga: ${vaga.titulo}`, "_blank")}
+                    onClick={() => window.open(`mailto:${vagaLegacy.contatoEmail}?subject=Interesse na vaga: ${vaga.titulo}`, "_blank")}
                     variant="outline"
                     className="w-full border-primary/30 text-primary hover:bg-primary/10 font-bold rounded-xl h-11"
                   >
@@ -325,9 +333,9 @@ export default function VagaDetailPage() {
                   </Button>
                 )}
 
-                {vaga.contatoUrl && (
+                {vagaLegacy?.contatoUrl && (
                   <Button
-                    onClick={() => window.open(vaga.contatoUrl!, "_blank")}
+                    onClick={() => window.open(vagaLegacy.contatoUrl!, "_blank")}
                     variant="outline"
                     className="w-full border-border text-foreground hover:bg-secondary font-bold rounded-xl h-11"
                   >
@@ -341,10 +349,10 @@ export default function VagaDetailPage() {
               <div className="mt-5 pt-4 border-t border-border">
                 <div className="flex items-center gap-3 mb-3">
                   <div className="h-10 w-10 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center">
-                    <span className="text-sm font-bold text-primary">{vaga.empresa[0]}</span>
+                    <span className="text-sm font-bold text-primary">{companyName[0]}</span>
                   </div>
                   <div>
-                    <p className="text-sm font-bold text-foreground">{vaga.empresa}</p>
+                    <p className="text-sm font-bold text-foreground">{companyName}</p>
                     {activeLocationName && (
                       <p className="text-[11px] text-muted-foreground flex items-center gap-1">
                         <MapPin className="h-3 w-3" />

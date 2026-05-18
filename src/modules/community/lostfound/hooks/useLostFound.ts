@@ -114,7 +114,11 @@ export function useToggleLostFoundResolved() {
   const { toast } = useToast();
 
   return useMutation({
-    mutationFn: (postId: string) => lostFoundService.toggleResolved(postId),
+    mutationFn: async (postId: string) => {
+      const post = await lostFoundService.getPostById(postId);
+      if (!post) return false;
+      return lostFoundService.updatePost(postId, { resolvido: !post.resolvido });
+    },
     onSuccess: (_, postId) => {
       // Invalidar cache do post específico e lista de posts
       queryClient.invalidateQueries({ queryKey: ["lost-found-post", postId] });

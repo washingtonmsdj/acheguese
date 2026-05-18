@@ -16,6 +16,7 @@ import {
 import { cn } from "@/shared/utils/cn";
 import PhotoGallery from "@/modules/business/components/PhotoGallery.tsx";
 import type { VisaoGeralTabProps, ModoAtendimentoIcon } from "@/modules/business/types/components";
+import type { BizData } from "@/modules/business/types";
 
 const MODOS_ICONS: Record<string, ModoAtendimentoIcon> = {
   presencial: {
@@ -47,6 +48,12 @@ export function VisaoGeralTab({
   user,
   onReviewsUpdate,
 }: VisaoGeralTabProps) {
+  const businessData = business as BizData;
+  const galleryPhotos = gallery.map((photo) => ({
+    ...photo,
+    caption: photo.caption ?? "",
+  }));
+
   return (
     <div className="space-y-5 sm:space-y-6">
       {/* Descrição */}
@@ -70,8 +77,8 @@ export function VisaoGeralTab({
       </Card>
 
       {/* Galeria de Fotos */}
-      {gallery.length > 0 && (
-        <PhotoGallery photos={gallery} businessName={business.name} />
+      {galleryPhotos.length > 0 && (
+        <PhotoGallery photos={galleryPhotos} businessName={business.name} />
       )}
 
       {/* Modos de Atendimento */}
@@ -138,14 +145,14 @@ export function VisaoGeralTab({
           <h2 className="text-lg sm:text-xl font-bold">Informações Rápidas</h2>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
-          {business.ano_fundacao && (
+          {businessData.ano_fundacao && (
             <div className="flex items-center gap-4 p-4 rounded-xl bg-secondary/50 hover:bg-secondary/70 transition-colors">
               <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
                 <Calendar className="h-6 w-6 text-primary" />
               </div>
               <div>
                 <p className="text-xs text-muted-foreground mb-0.5">Fundada em</p>
-                <p className="text-base font-semibold">{business.ano_fundacao}</p>
+                <p className="text-base font-semibold">{businessData.ano_fundacao}</p>
               </div>
             </div>
           )}
@@ -156,11 +163,11 @@ export function VisaoGeralTab({
             <div>
               <p className="text-xs text-muted-foreground mb-0.5">Avaliações</p>
               <p className="text-base font-semibold">
-                {business.total_avaliacoes} {business.total_avaliacoes === 1 ? 'cliente avaliou' : 'clientes avaliaram'}
+                {(businessData.total_avaliacoes ?? business.total_reviews)} {(businessData.total_avaliacoes ?? business.total_reviews) === 1 ? 'cliente avaliou' : 'clientes avaliaram'}
               </p>
             </div>
           </div>
-          {business.verified && (
+          {(businessData.verified ?? business.is_verified) && (
             <div className="flex items-center gap-4 p-4 rounded-xl bg-primary/10 hover:bg-primary/15 transition-colors md:col-span-2">
               <div className="h-12 w-12 rounded-xl bg-primary/20 flex items-center justify-center shrink-0">
                 <BadgeCheck className="h-6 w-6 text-primary" />
@@ -314,8 +321,8 @@ export function VisaoGeralTab({
               <h2 className="text-lg sm:text-xl font-bold">Avaliações dos Clientes</h2>
             </div>
             <p className="text-sm text-muted-foreground ml-13">
-              {business.total_avaliacoes}{" "}
-              {business.total_avaliacoes === 1 ? "avaliação" : "avaliações"}
+              {(businessData.total_avaliacoes ?? business.total_reviews)}{" "}
+              {(businessData.total_avaliacoes ?? business.total_reviews) === 1 ? "avaliação" : "avaliações"}
             </p>
           </div>
         </div>

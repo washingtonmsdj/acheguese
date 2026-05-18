@@ -219,8 +219,7 @@ export class CommunityQAService {
         component: "CommunityQAService",
         action: "getQuestions",
         severity: "medium",
-        filters,
-        error,
+        metadata: { filters, error },
       });
       return [];
     }
@@ -461,3 +460,4 @@ export class CommunityQAService {
     }
   }
 }
+

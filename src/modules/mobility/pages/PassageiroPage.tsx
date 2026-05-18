@@ -565,7 +565,7 @@ export default function PassageiroPage() {
           onOpenChange={setIsCreateOpen}
           initialType={createModalInitialType}
           onSubmit={async (data) => {
-            const ride = await createRideRequest(data);
+            const ride = await createRideRequest(data) as { id?: string } | null;
             if (ride?.id) {
               navigate(`/mobilidade/buscando/${ride.id}`);
             }

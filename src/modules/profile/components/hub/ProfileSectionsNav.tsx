@@ -33,7 +33,7 @@ export interface SectionNavItem<TId extends string = string> {
 }
 
 interface ProfileSectionsNavProps<TId extends string = string> {
-  items: SectionNavItem<TId>[];
+  items: readonly SectionNavItem<TId>[];
   activeId: TId;
   onChange: (id: TId) => void;
   /** Variante de exibição. Defaults: "sidebar" (desktop) e "tabs" (mobile) */

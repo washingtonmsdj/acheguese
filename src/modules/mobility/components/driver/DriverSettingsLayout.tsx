@@ -79,7 +79,13 @@ export function DriverSettingsLayout({ service }: DriverSettingsLayoutProps) {
             <Button 
               variant="outline" 
               className="w-full justify-between" 
-              onClick={() => navigate(getMobilityServicePath(service, "disponibilidade"))}
+              onClick={() =>
+                navigate(
+                  service === "motorista"
+                    ? getMobilityServicePath("motorista", "disponibilidade")
+                    : getMobilityServicePath("motoboy", "disponibilidade"),
+                )
+              }
             >
               Ver disponibilidade
               <ShieldCheck className="h-4 w-4" />

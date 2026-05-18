@@ -166,22 +166,22 @@ export function PendingCommentCard({ comment }: PendingCommentCardProps) {
 
           {isExpanded && (
             <div className="space-y-2">
-              {comment.reports.map((report) => (
+              {comment.reports.map((rawReport) => { const report = rawReport as unknown as { id: string; type: string; reason: string; reporter: { name_completo?: string } }; return (
                 <div
                   key={report.id}
                   className="p-3 bg-muted/50 rounded-lg text-sm"
                 >
                   <div className="flex items-center gap-2 mb-1">
                     <Badge variant="outline" className="text-xs">
-                      {REPORT_TYPE_LABELS[report.type]}
+                      {REPORT_TYPE_LABELS[report.type as keyof typeof REPORT_TYPE_LABELS] ?? report.type}
                     </Badge>
                     <span className="text-xs text-muted-foreground">
-                      por {report.reporter.name_completo}
+                      por {report.reporter?.name_completo ?? "Desconhecido"}
                     </span>
                   </div>
                   <p className="text-muted-foreground">{report.reason}</p>
                 </div>
-              ))}
+              ); })}
             </div>
           )}
         </div>
@@ -245,3 +245,4 @@ export function PendingCommentCard({ comment }: PendingCommentCardProps) {
     </Card>
   );
 }
+

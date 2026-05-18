@@ -77,7 +77,6 @@ export default function ClassificadoDetailPage({ classifiedId: propId }: Classif
   });
 
   const { sellerAds } = useSellerAds(classificado?.vendedor?.id, id);
-  const { data: sellerReputation } = useSellerReputation(classificado?.vendedor?.id);
   const isOwner = Boolean(activeProfile?.id && classificado?.vendedor?.id === activeProfile.id);
   const statusMutation = useMutation({
     mutationFn: async (nextStatus: "active" | "inactive" | "sold") => {
@@ -425,8 +424,6 @@ export default function ClassificadoDetailPage({ classifiedId: propId }: Classif
                 onWhatsApp={handleWhatsApp}
                 onChat={handleChat}
               activeAdsCount={sellerAds.length + 1}
-                averageRating={sellerReputation?.averageRating ?? 0}
-                totalReviews={sellerReputation?.totalReviews ?? 0}
               />
             </div>
 
@@ -477,8 +474,6 @@ export default function ClassificadoDetailPage({ classifiedId: propId }: Classif
                 onWhatsApp={handleWhatsApp}
                 onChat={handleChat}
               activeAdsCount={sellerAds.length + 1}
-                averageRating={sellerReputation?.averageRating ?? 0}
-                totalReviews={sellerReputation?.totalReviews ?? 0}
               />
               <div className="mt-4">
                 <SafetyTips />

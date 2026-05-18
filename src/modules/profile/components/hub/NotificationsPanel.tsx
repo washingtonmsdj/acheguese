@@ -20,7 +20,7 @@ interface Notification {
 }
 
 interface NotificationsPanelProps {
-  notifications: Notification[];
+  notifications: readonly Notification[];
   onNotificationClick: () => void;
   onViewAll: () => void;
 }

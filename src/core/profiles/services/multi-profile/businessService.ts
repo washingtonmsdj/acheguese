@@ -41,7 +41,7 @@ export class BusinessService {
     try {
       const { data, error } = await supabase
         .from('business_data')
-        .update(updates)
+        .update(updates as any)
         .eq('profile_id', profileId)
         .select()
         .single();

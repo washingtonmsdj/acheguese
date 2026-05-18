@@ -6,7 +6,14 @@ import {
 import type { PostType } from "@/core/posts/types";
 import { logger } from "@/shared/utils/logger";
 
-export type UnifiedPostType = PostType;
+export type UnifiedPostType =
+  | PostType
+  | "discussao"
+  | "pergunta"
+  | "classificado"
+  | "achados"
+  | "desapego"
+  | "favor";
 
 export function usePostForm() {
   const [texto, setTexto] = useState("");

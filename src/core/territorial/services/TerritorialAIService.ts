@@ -45,7 +45,7 @@ export class TerritorialAIService {
    */
   static async getAIContent(territorySlug: string): Promise<TerritoryAIContent | null> {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('territory_ai_content')
         .select('*')
         .eq('territory_slug', territorySlug)
@@ -56,7 +56,7 @@ export class TerritorialAIService {
         throw error;
       }
 
-      return data;
+      return data as unknown as TerritoryAIContent;
     } catch (err) {
       trackError(err as Error, {
         component: "TerritorialAIService",
@@ -77,7 +77,7 @@ export class TerritorialAIService {
     members?: string[];
   }): Promise<TerritoryAIGenerateResponse> {
     try {
-      const { data, error } = await supabase.functions.invoke('territory-ai-content', {
+      const { data, error } = await (supabase as any).functions.invoke('territory-ai-content', {
         body: params,
       });
 
@@ -111,10 +111,10 @@ export class TerritorialAIService {
     updates: Partial<TerritoryAIContent>
   ): Promise<TerritoryAIContent> {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('territory_ai_content')
         .update({
-          ...updates,
+          ...(updates as unknown as Record<string, unknown>),
           is_manual_override: true,
           manually_edited_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
@@ -128,7 +128,7 @@ export class TerritorialAIService {
         throw error;
       }
 
-      return data;
+      return data as unknown as TerritoryAIContent;
     } catch (err) {
       trackError(err as Error, {
         component: "TerritorialAIService",
@@ -142,3 +142,5 @@ export class TerritorialAIService {
 
 // Export singleton
 export const territorialAIService = TerritorialAIService;
+
+

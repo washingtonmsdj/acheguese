@@ -74,7 +74,7 @@ function getStatusBadge(vaga: Vaga) {
     case 'expired':
       return { label: 'Expirada', variant: 'secondary' as const, icon: Clock };
     case 'paused':
-      return { label: 'Pausada', variant: 'warning' as const, icon: AlertCircle };
+      return { label: 'Pausada', variant: 'secondary' as const, icon: AlertCircle };
     case 'published':
       if (!isVagaActive(vaga)) {
         return { label: 'Expirada', variant: 'secondary' as const, icon: Clock };

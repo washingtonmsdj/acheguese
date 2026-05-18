@@ -8,9 +8,22 @@ export function CardapioTab({
   businessName = "Empresa",
   isOwner,
 }: CardapioTabProps) {
+  const menuProducts = products.map((product) => ({
+    id: product.id,
+    name: product.name,
+    description: product.description,
+    price: product.price,
+    image_url: product.image_url ?? null,
+    business_id: product.profile_id,
+    active: product.active,
+    category: product.category,
+    destaque: product.featured,
+    promocao: product.promotion,
+  }));
+
   return (
     <DigitalMenu
-      products={products}
+      products={menuProducts}
       businessName={businessName}
       isOwner={isOwner}
     />

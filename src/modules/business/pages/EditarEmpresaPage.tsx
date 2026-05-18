@@ -64,6 +64,8 @@ export default function EditarEmpresaPage() {
   });
   
   const { mutateAsync: uploadImage, isPending: uploading } = useBusinessImageUpload();
+  const uploadBusinessImage = (file: File, folder: "logos" | "banners") =>
+    uploadImage({ file, folder });
 
   const { logAttempt, logSuccess, logError } = useIdentitySaveLogger({
     entityType: 'business',
@@ -167,7 +169,7 @@ export default function EditarEmpresaPage() {
     }
     
     try {
-      const url = await uploadImage({ file, folder: "logos" });
+      const url = await uploadBusinessImage(file, "logos");
       form.setValue("logo_url", url);
       setLogoPreview(url);
       toast.success("Logo atualizado!");
@@ -194,7 +196,7 @@ export default function EditarEmpresaPage() {
     }
     
     try {
-      const url = await uploadImage({ file, folder: "banners" });
+      const url = await uploadBusinessImage(file, "banners");
       form.setValue("banner_url", url);
       setCapaPreview(url);
       toast.success("Capa atualizada!");

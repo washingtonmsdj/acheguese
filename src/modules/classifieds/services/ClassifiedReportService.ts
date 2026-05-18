@@ -46,6 +46,13 @@ export interface CreateReportInput {
   description?: string;
 }
 
+function mapReport(row: Record<string, unknown>): ClassifiedReport {
+  return {
+    ...(row as unknown as ClassifiedReport),
+    reason: (row.reason as ReportReason) ?? "other",
+  };
+}
+
 class ClassifiedReportServiceClass {
   /**
    * Cria uma nova denÃºncia
@@ -78,7 +85,7 @@ class ClassifiedReportServiceClass {
         reason: input.reason,
       });
 
-      return data;
+      return mapReport(data as Record<string, unknown>);
     } catch (error) {
       logger.error("Error in createReport:", error);
       trackError(error as Error, {
@@ -121,7 +128,7 @@ class ClassifiedReportServiceClass {
         throw error;
       }
 
-      return data || [];
+      return (data || []).map((item) => mapReport(item as Record<string, unknown>));
     } catch (error) {
       logger.error("Error in getAllReports:", error);
       trackError(error as Error, {
@@ -151,7 +158,7 @@ class ClassifiedReportServiceClass {
         throw error;
       }
 
-      return data || [];
+      return (data || []).map((item) => mapReport(item as Record<string, unknown>));
     } catch (error) {
       logger.error("Error in getReportsByClassified:", error);
       trackError(error as Error, {
@@ -195,7 +202,7 @@ class ClassifiedReportServiceClass {
         adminId,
       });
 
-      return data;
+      return mapReport(data as Record<string, unknown>);
     } catch (error) {
       logger.error("Error in updateReportStatus:", error);
       trackError(error as Error, {
@@ -248,7 +255,7 @@ class ClassifiedReportServiceClass {
         return [];
       }
 
-      return data || [];
+      return (data || []).map((item) => mapReport(item as Record<string, unknown>));
     } catch (error) {
       logger.error("Error in getRecentReports:", error);
       return [];

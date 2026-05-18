@@ -112,7 +112,7 @@ class AlertModerationServiceClass {
 
   async getAuditLog(alertId: string): Promise<CommunityAlertAudit[]> {
     try {
-      const { data, error } = await selectLooseRows<CommunityAlertAudit>(
+      const { data, error } = await selectLooseRows(
         "community_alert_audit",
         {
           columns: "*",
@@ -122,7 +122,7 @@ class AlertModerationServiceClass {
       );
 
       if (error) throw error;
-      return (data as CommunityAlertAudit[]) ?? [];
+      return (data as unknown as CommunityAlertAudit[]) ?? [];
     } catch (error) {
       logger.error("AlertModerationService.getAuditLog", error);
       return [];

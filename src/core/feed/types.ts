@@ -4,15 +4,13 @@
  * Tipos TypeScript para o serviço de feed
  */
 
+import type {
+  Post as CanonicalPost,
+  PostType as CanonicalPostType,
+} from "@/core/posts/types";
 import type { ProfileSummary } from "@/core/profiles/views/ProfileSummary";
 
-export type PostType =
-  | "texto"
-  | "alerta"
-  | "recomendacao"
-  | "achado_perdido"
-  | "evento"
-  | "enquete";
+export type PostType = CanonicalPostType;
 
 export type FeedContext = "all" | "my_posts" | "saved";
 

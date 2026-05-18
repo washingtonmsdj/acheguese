@@ -51,7 +51,7 @@ export function DadosPessoaisSection({
   appUrls,
   handleBusinessClick,
 }: DadosPessoaisSectionProps) {
-  const publicHandle = profile?.username || profile?.handle || "";
+  const publicHandle = (profile as any)?.username || (profile as any)?.handle || "";
 
   return (
     <div className="space-y-6">
@@ -104,8 +104,7 @@ export function DadosPessoaisSection({
         <CivicEngagementCard
           reportsCount={stats.reportsCount || 0}
           supportsCount={stats.supportsCount || 0}
-          onViewReports={() => navigate("/relatos")}
-          onViewSupports={() => navigate("/apoios")}
+          engagementScore={(stats.reportsCount || 0) + (stats.supportsCount || 0)}
         />
       ) : null}
 
@@ -201,7 +200,7 @@ export function DadosPessoaisSection({
           {profile ? (
             <ResidentVerificationCard
               profileId={profile.id}
-              currentStatus={verificationStatus}
+              currentStatus={verificationStatus as any}
               rejectionReason={verificationRejectionReason}
             />
           ) : null}
@@ -213,9 +212,9 @@ export function DadosPessoaisSection({
         <ContentTabsSection
           userId={user.id}
           profileId={personalProfileId}
-          favorites={favorites}
+          favorites={favorites as any}
           onPostClick={(id) => navigate(`${appUrls.community.feed}?post=${id}`)}
-          onBusinessClick={handleBusinessClick}
+          onBusinessClick={handleBusinessClick as any}
           onExplore={() => navigate(appUrls.business.list)}
           onCreateService={() => navigate(appUrls.services.register)}
           onEditService={(id) => navigate(appUrls.services.edit(id))}
@@ -240,5 +239,3 @@ export function DadosPessoaisSection({
     </div>
   );
 }
-
-

@@ -13,9 +13,10 @@ export class ApplicationLogService {
   static async insert(records: ApplicationLogRecord[]): Promise<void> {
     if (records.length === 0) return;
 
-    const { error } = await supabase.from("application_logs").insert(records);
+    const { error } = await (supabase as any).from("application_logs").insert(records);
     if (error) throw error;
   }
 }
+
 
 

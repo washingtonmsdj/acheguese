@@ -12,8 +12,16 @@ import { Star, Car } from "lucide-react";
 import { cn } from "@/shared/utils/cn";
 import type { RideRequest } from "@/modules/mobility/types";
 
+type RateRide = RideRequest & {
+  driver?: {
+    name?: string | null;
+    vehicle_model?: string | null;
+    vehicle_plate?: string | null;
+  } | null;
+};
+
 interface RateDriverModalProps {
-  ride: RideRequest | null;
+  ride: RateRide | null;
   onClose: () => void;
   onRate: (rideId: string, rating: number, comment: string) => void;
 }

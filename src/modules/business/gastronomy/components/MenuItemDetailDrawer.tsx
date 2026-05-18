@@ -82,7 +82,7 @@ export function MenuItemDetailDrawer({
   hydrateFromServer = true,
 }: Props) {
   const itemId = item?.id;
-  const { data: hydratedItem } = useMenuItem(hydrateFromServer ? itemId : undefined);
+  const { item: hydratedItem } = useMenuItem(hydrateFromServer ? itemId : undefined);
   const addItem = useGastronomyCartStore((state) => state.addItem);
   const addCartItem = useGastronomyCartStore((state) => state.addCartItem);
   const resolvedItem = hydratedItem ?? item;

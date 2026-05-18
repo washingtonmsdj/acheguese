@@ -296,7 +296,6 @@ export function CommentItem({ comment, maxDepth = 5 }: CommentItemProps) {
         description="Essa acao remove o comentario e suas respostas vinculadas. Nao e possivel desfazer."
         confirmLabel="Excluir"
         cancelLabel="Cancelar"
-        variant="destructive"
         onConfirm={handleConfirmDelete}
       />
     </div>

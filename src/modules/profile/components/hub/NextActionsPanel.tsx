@@ -9,14 +9,16 @@ import { Button } from '@/shared/components/ui/button';
 import { SectionFrame } from './SectionFrame';
 
 interface NextAction {
-  title: string;
+  title?: string;
   description: string;
-  actionLabel: string;
-  onClick: () => void;
+  actionLabel?: string;
+  onClick?: () => void;
+  label?: string;
+  action?: () => void;
 }
 
 interface NextActionsPanelProps {
-  actions: NextAction[];
+  actions: readonly NextAction[];
 }
 
 export function NextActionsPanel({ actions }: NextActionsPanelProps) {
@@ -31,12 +33,12 @@ export function NextActionsPanel({ actions }: NextActionsPanelProps) {
     >
       <div className="grid gap-3 lg:grid-cols-2">
         {actions.map((action) => (
-          <div key={action.title} className="rounded-2xl border border-border bg-background p-4">
-            <p className="text-sm font-semibold text-foreground">{action.title}</p>
+          <div key={action.title ?? action.label ?? action.description} className="rounded-2xl border border-border bg-background p-4">
+            <p className="text-sm font-semibold text-foreground">{action.title ?? action.label ?? "Proxima acao"}</p>
             <p className="mt-1 text-xs text-muted-foreground">{action.description}</p>
-            <Button size="sm" className="mt-4 gap-1.5" onClick={action.onClick}>
+            <Button size="sm" className="mt-4 gap-1.5" onClick={action.onClick ?? action.action}>
               <ArrowRight className="h-3.5 w-3.5" />
-              {action.actionLabel}
+              {action.actionLabel ?? "Executar"}
             </Button>
           </div>
         ))}

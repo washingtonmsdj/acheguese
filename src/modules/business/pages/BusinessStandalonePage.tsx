@@ -98,6 +98,12 @@ export default function BusinessStandalonePage({
         geographic_path: (business as Business & { geographic_path?: string | null }).geographic_path ?? null,
       })
     : "/empresas";
+  const seoAddress =
+    typeof business.address === "string"
+      ? business.address
+      : [business.address?.street, business.address?.number, business.address?.complement]
+          .filter(Boolean)
+          .join(", ");
 
   return (
     <>
@@ -109,20 +115,20 @@ export default function BusinessStandalonePage({
         category={business.category}
         rating={business.rating}
         reviewCount={business.total_reviews}
-        address={business.address}
+        address={seoAddress}
         phone={business.phone}
       />
       <CanonicalUrl url={canonicalUrl} />
 
       <div className="min-h-screen bg-background">
-        <StandaloneNav business={business} />
-        <StandaloneHero business={business} />
-        <StandaloneContactBar business={business} />
+        <StandaloneNav business={business as never} />
+        <StandaloneHero business={business as never} />
+        <StandaloneContactBar business={business as never} />
         <main className="w-full">
-          <StandaloneAbout business={business} />
-          <StandaloneMap business={business} />
+          <StandaloneAbout business={business as never} />
+          <StandaloneMap business={business as never} />
         </main>
-        <StandaloneFooter business={business} />
+        <StandaloneFooter business={business as never} />
       </div>
     </>
   );

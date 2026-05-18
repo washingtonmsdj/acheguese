@@ -20,7 +20,7 @@ export class PushNotificationPreferencesService {
       .maybeSingle();
 
     if (error) throw error;
-    return (data as PushNotificationPreferencesRecord) || null;
+    return (data as unknown as PushNotificationPreferencesRecord) || null;
   }
 
   static async upsertByUserId(

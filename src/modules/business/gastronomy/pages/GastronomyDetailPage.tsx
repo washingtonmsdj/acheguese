@@ -256,7 +256,7 @@ export default function GastronomyDetailPage() {
         ownerProfileId && profile.delivery_enabled
           ? { label: 'Entregas', url: businessManagementRoutes.gastronomyEntregas(ownerProfileId) }
           : null,
-      ].filter((item): item is { label: string; url: string; primary?: boolean } => Boolean(item?.url))
+      ].filter((item) => Boolean(item?.url)) as Array<{ label: string; url: string; primary?: boolean }>
     : [];
 
   return (

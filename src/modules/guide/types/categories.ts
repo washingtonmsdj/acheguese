@@ -4,52 +4,12 @@
  * Categorias e filtros para experiência item-first de pontos turísticos.
  */
 
-export const TOURIST_POINT_CATEGORY = {
-  BEACH: 'praia',
-  SQUARE: 'praca',
-  PARK: 'parque',
-  TRAIL: 'trilha',
-  VIEWPOINT: 'mirante',
-  MUSEUM: 'museu',
-  CULTURAL_CENTER: 'centro-cultural',
-  HISTORIC: 'historico',
-  CHURCH: 'igreja',
-  MONUMENT: 'monumento',
-  MARKET: 'mercado',
-  OUTDOOR: 'ar-livre',
-} as const;
-
-export type TouristPointCategory = typeof TOURIST_POINT_CATEGORY[keyof typeof TOURIST_POINT_CATEGORY];
-
-export const CATEGORY_LABELS: Record<TouristPointCategory, string> = {
-  praia: 'Praia',
-  praca: 'Praça',
-  parque: 'Parque',
-  trilha: 'Trilha',
-  mirante: 'Mirante',
-  museu: 'Museu',
-  'centro-cultural': 'Centro Cultural',
-  historico: 'Histórico',
-  igreja: 'Igreja',
-  monumento: 'Monumento',
-  mercado: 'Mercado',
-  'ar-livre': 'Ao Ar Livre',
-};
-
-export const CATEGORY_ICONS: Record<TouristPointCategory, string> = {
-  praia: '🏖️',
-  praca: '🌳',
-  parque: '🌿',
-  trilha: '🥾',
-  mirante: '🏔️',
-  museu: '🏛️',
-  'centro-cultural': '🎭',
-  historico: '🏰',
-  igreja: '⛪',
-  monumento: '🗿',
-  mercado: '🛍️',
-  'ar-livre': '☀️',
-};
+export {
+  TouristPointCategory,
+  CATEGORY_LABELS,
+  CATEGORY_ICONS,
+} from '@/modules/guide/tourist-points/types';
+import type { TouristPointCategory } from '@/modules/guide/tourist-points/types';
 
 // ── Quick Filters ────────────────────────────────────────────────────────────
 

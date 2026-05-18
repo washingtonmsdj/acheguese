@@ -36,12 +36,13 @@ export interface RoleHistory {
 }
 
 class AdminRolesServiceClass {
+  private readonly db = supabase as any;
   /**
    * Lista roles ativos de um usuário.
    */
   async getUserRoles(userId: string): Promise<UserRole[]> {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await this.db
         .from("user_roles")
         .select("*")
         .eq("user_id", userId)
@@ -60,7 +61,7 @@ class AdminRolesServiceClass {
    */
   async getRolesList(): Promise<UserRole[]> {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await this.db
         .from("user_roles")
         .select("*")
         .order("granted_at", { ascending: false });
@@ -78,7 +79,7 @@ class AdminRolesServiceClass {
    */
   async hasRole(userId: string, role: string): Promise<boolean> {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await this.db
         .from("user_roles")
         .select("id")
         .eq("user_id", userId)
@@ -99,7 +100,7 @@ class AdminRolesServiceClass {
    */
   async getStats(): Promise<RoleStats> {
     try {
-      const { data: roles, error } = await supabase
+      const { data: roles, error } = await this.db
         .from("user_roles")
         .select("*");
 
@@ -142,7 +143,7 @@ class AdminRolesServiceClass {
     try {
       const { page = 1, limit = 20, search, role, isActive } = params;
 
-      let query = supabase
+      let query = this.db
         .from("user_roles")
         .select(`
           *,
@@ -200,16 +201,17 @@ class AdminRolesServiceClass {
     try {
       const { userId, role, grantedBy, expiresAt, reason } = params;
 
-      const { error } = await supabase.from("user_roles").insert([
+      const { error } = await this.db.from("user_roles").insert([
         {
           user_id: userId,
           role,
+          role_enum: role,
           granted_by: grantedBy,
           granted_at: new Date().toISOString(),
           expires_at: expiresAt,
           is_active: true,
         },
-      ]);
+      ] as any);
 
       if (error) throw error;
 
@@ -241,7 +243,7 @@ class AdminRolesServiceClass {
     try {
       const { userId, role, revokedBy, reason } = params;
 
-      const { error } = await supabase
+      const { error } = await this.db
         .from("user_roles")
         .update({ 
           is_active: false,
@@ -273,14 +275,14 @@ class AdminRolesServiceClass {
    */
   async getUserRoleHistory(userId: string): Promise<RoleHistory[]> {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await this.db
         .from("role_history")
         .select("*")
         .eq("user_id", userId)
         .order("granted_at", { ascending: false });
 
       if (error) throw error;
-      return data || [];
+      return (data as RoleHistory[]) || [];
     } catch (error) {
       logger.error("Error fetching role history:", error);
       return [];
@@ -295,7 +297,7 @@ class AdminRolesServiceClass {
       const futureDate = new Date();
       futureDate.setDate(futureDate.getDate() + daysAhead);
 
-      const { data, error } = await supabase
+      const { data, error } = await this.db
         .from("user_roles")
         .select(`
           *,
@@ -329,7 +331,7 @@ class AdminRolesServiceClass {
     try {
       const { userId, role, newExpiresAt, renewedBy } = params;
 
-      const { error } = await supabase
+      const { error } = await this.db
         .from("user_roles")
         .update({ expires_at: newExpiresAt })
         .eq("user_id", userId)
@@ -367,7 +369,7 @@ class AdminRolesServiceClass {
     try {
       const { userId, role, action, grantedBy, reason } = params;
 
-      await supabase.from("role_history").insert([
+      await this.db.from("role_history").insert([
         {
           user_id: userId,
           role,
@@ -376,7 +378,7 @@ class AdminRolesServiceClass {
           granted_at: new Date().toISOString(),
           reason,
         },
-      ]);
+      ] as any);
     } catch (error) {
       logger.error("Error logging role history:", error);
     }
@@ -387,7 +389,7 @@ class AdminRolesServiceClass {
    */
   async getUsersByRole(role: string) {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await this.db
         .from("user_roles")
         .select(`
           *,

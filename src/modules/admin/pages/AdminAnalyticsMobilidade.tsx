@@ -46,7 +46,6 @@ import { RIDE_STATUS } from "@/shared/types/constants";
 import { useAdminGuard } from "@/modules/admin/hooks/useAdminGuard";
 import { logger } from "@/shared/utils/logger";
 import { adminMobilityService } from "@/core/admin"; // ✅ MIGRADO - Usa AdminMobilityService do core
-import type { RideRequest } from "@/shared/services/mobilityAdmin"; // ✅ MIGRADO - Tipo movido para core
 
 interface MobilidadeStats {
   totalRides: number;
@@ -83,6 +82,19 @@ type DriverAggregation = {
   };
   count: number;
   revenue: number;
+};
+type AnalyticsRide = {
+  created_at: string;
+  status: string;
+  final_price?: number | null;
+  suggested_price?: number | null;
+  driver_profile_id?: string | null;
+};
+type DriverProfileLite = {
+  id: string;
+  is_verified?: boolean;
+  name?: string;
+  profile?: { name?: string; avatar_url?: string; neighborhood?: string };
 };
 
 const PIE_COLORS = [
@@ -136,12 +148,12 @@ export default function AdminAnalyticsMobilidade() {
 
       // Fetch rides
       const rides = await adminMobilityService.getAllRides();
-      const allRides: RideRequest[] = (rides || []).filter(
+      const allRides: AnalyticsRide[] = ((rides || []) as unknown as AnalyticsRide[]).filter(
         (r) => r.created_at >= startISO,
       );
 
       // SSOT: Fetch all drivers usando driver_complete_profile
-      const allDrivers = await adminMobilityService.getAllDriversComplete();
+      const allDrivers = (await adminMobilityService.getAllDriversComplete()) as DriverProfileLite[];
 
       // Fetch ratings
       const allRatings = await adminMobilityService.getAllRideRatings();
@@ -164,7 +176,7 @@ export default function AdminAnalyticsMobilidade() {
 
       const totalRevenue = completed.reduce(
         (sum, r) =>
-          sum + (r.final_price || (r as RideRequest).suggested_price || 0),
+          sum + (r.final_price || r.suggested_price || 0),
         0,
       );
       const avgRating =
@@ -216,7 +228,7 @@ export default function AdminAnalyticsMobilidade() {
           if (r.status === RIDE_STATUS.COMPLETED) {
             daily.completed += 1;
             daily.revenue +=
-              r.final_price || (r as RideRequest).suggested_price || 0;
+              r.final_price || r.suggested_price || 0;
           }
           if (r.status === RIDE_STATUS.CANCELLED) daily.cancelled += 1;
         }
@@ -226,13 +238,18 @@ export default function AdminAnalyticsMobilidade() {
       // Top drivers by completed rides
       const driverRideCount = new Map<string, DriverAggregation>();
       completed.forEach((r) => {
-        const driverProfileId =
-          (r as RideRequest).driver_profile_id || r.driver_profile_id;
+        const driverProfileId = r.driver_profile_id;
         if (driverProfileId) {
           if (!driverRideCount.has(driverProfileId)) {
             const drv = allDrivers.find((d) => d.id === driverProfileId);
             driverRideCount.set(driverProfileId, {
-              driver: drv,
+            driver: drv
+              ? {
+                  id: drv.id,
+                  name: drv.name,
+                  profile: drv.profile,
+                }
+              : undefined,
               count: 0,
               revenue: 0,
             });
@@ -243,10 +260,27 @@ export default function AdminAnalyticsMobilidade() {
           }
           entry.count += 1;
           entry.revenue +=
-            r.final_price || (r as RideRequest).suggested_price || 0;
+            r.final_price || r.suggested_price || 0;
         }
       });
       const sorted = Array.from(driverRideCount.values())
+        .filter(
+          (
+            entry,
+          ): entry is {
+            driver: {
+              id: string;
+              name?: string;
+              profile?: {
+                name?: string;
+                avatar_url?: string;
+                neighborhood?: string;
+              };
+            };
+            count: number;
+            revenue: number;
+          } => Boolean(entry.driver),
+        )
         .sort((a, b) => b.count - a.count)
         .slice(0, 5);
       setTopDrivers(sorted);

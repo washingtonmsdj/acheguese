@@ -1,5 +1,6 @@
 import { PROFILE_VERIFICATION_STATUS } from "@/core/profile/constants/verificationStatus";
 import type {
+  PlanType,
   ProfilePermissions,
   ProfilePlan,
   ProfileReputation,
@@ -43,7 +44,7 @@ export function calculatePlan(subscription: UserSubscriptionLike): ProfilePlan {
   }
 
   return {
-    type: subscription.plan_type || "premium",
+    type: (subscription.plan_type || "premium") as PlanType,
     isPremium: true,
     expiresAt: subscription.expires_at,
   };

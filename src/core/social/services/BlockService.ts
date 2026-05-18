@@ -9,7 +9,6 @@
 import { supabase } from "@/integrations/supabase";
 import { logger } from "@/shared/utils/logger";
 import { trackError } from "@/shared/utils/errorTracking";
-import type { AdminSupabaseClient } from "@/core/admin/types/adminDatabase.types";
 
 export interface BlockedUser {
   id: string;
@@ -33,7 +32,7 @@ export interface BlockStats {
 
 class BlockService {
   private readonly TABLE = "user_blocks";
-  private readonly db = supabase as unknown as AdminSupabaseClient;
+  private readonly db = supabase as any;
 
   /**
    * ✅ SSOT: Obter lista de usuários bloqueados
@@ -259,3 +258,4 @@ class BlockService {
 }
 
 export const blockService = new BlockService();
+

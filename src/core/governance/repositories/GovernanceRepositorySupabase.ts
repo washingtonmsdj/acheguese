@@ -20,13 +20,14 @@ import type {
 } from '../types';
 
 export class GovernanceRepositorySupabase implements IGovernanceRepository {
+  private readonly db = supabase as any;
   // ============================================
   // LOCATION VERSIONS
   // ============================================
 
   async createLocationVersion(data: CreateLocationVersionInput): Promise<LocationVersion> {
     // Buscar próximo version_number
-    const { data: versions, error: countError } = await supabase
+    const { data: versions, error: countError } = await this.db
       .from('location_versions')
       .select('version_number')
       .eq('location_id', data.location_id)
@@ -37,7 +38,7 @@ export class GovernanceRepositorySupabase implements IGovernanceRepository {
 
     const nextVersion = versions && versions.length > 0 ? versions[0].version_number + 1 : 1;
 
-    const { data: version, error } = await supabase
+    const { data: version, error } = await this.db
       .from('location_versions')
       .insert({
         location_id: data.location_id,
@@ -56,11 +57,11 @@ export class GovernanceRepositorySupabase implements IGovernanceRepository {
       .single();
 
     if (error) throw error;
-    return version;
+    return version as LocationVersion;
   }
 
   async getActiveVersionForLocation(locationId: string): Promise<LocationVersion | null> {
-    const { data, error } = await supabase
+    const { data, error } = await this.db
       .from('location_versions')
       .select('*')
       .eq('location_id', locationId)
@@ -70,18 +71,18 @@ export class GovernanceRepositorySupabase implements IGovernanceRepository {
       .maybeSingle();
 
     if (error) throw error;
-    return data ?? null;
+    return (data as LocationVersion | null) ?? null;
   }
 
   async listVersionsForLocation(locationId: string): Promise<LocationVersion[]> {
-    const { data, error } = await supabase
+    const { data, error } = await this.db
       .from('location_versions')
       .select('*')
       .eq('location_id', locationId)
       .order('version_number', { ascending: false });
 
     if (error) throw error;
-    return data ?? [];
+    return (data as LocationVersion[]) ?? [];
   }
 
   // ============================================
@@ -89,7 +90,7 @@ export class GovernanceRepositorySupabase implements IGovernanceRepository {
   // ============================================
 
   async createLocationAlias(data: CreateLocationAliasInput): Promise<LocationAlias> {
-    const { data: alias, error } = await supabase
+    const { data: alias, error } = await this.db
       .from('location_aliases')
       .insert({
         location_id: data.location_id,
@@ -102,11 +103,11 @@ export class GovernanceRepositorySupabase implements IGovernanceRepository {
       .single();
 
     if (error) throw error;
-    return alias;
+    return alias as LocationAlias;
   }
 
   async findLocationByAlias(aliasValue: string, aliasType?: string): Promise<string | null> {
-    let query = supabase
+    let query = this.db
       .from('location_aliases')
       .select('location_id')
       .eq('alias_value', aliasValue)
@@ -123,14 +124,14 @@ export class GovernanceRepositorySupabase implements IGovernanceRepository {
   }
 
   async listAliasesForLocation(locationId: string): Promise<LocationAlias[]> {
-    const { data, error } = await supabase
+    const { data, error } = await this.db
       .from('location_aliases')
       .select('*')
       .eq('location_id', locationId)
       .order('created_at', { ascending: false });
 
     if (error) throw error;
-    return data ?? [];
+    return (data as LocationAlias[]) ?? [];
   }
 
   // ============================================
@@ -138,7 +139,7 @@ export class GovernanceRepositorySupabase implements IGovernanceRepository {
   // ============================================
 
   async createSlugRedirect(data: CreateSlugRedirectInput): Promise<SlugRedirect> {
-    const { data: redirect, error } = await supabase
+    const { data: redirect, error } = await this.db
       .from('slug_redirects')
       .insert({
         location_id: data.location_id,
@@ -152,11 +153,11 @@ export class GovernanceRepositorySupabase implements IGovernanceRepository {
       .single();
 
     if (error) throw error;
-    return redirect;
+    return redirect as SlugRedirect;
   }
 
   async findRedirectByOldSlug(oldSlug: string): Promise<SlugRedirect | null> {
-    const { data, error } = await supabase
+    const { data, error } = await this.db
       .from('slug_redirects')
       .select('*')
       .eq('old_slug', oldSlug)
@@ -165,18 +166,18 @@ export class GovernanceRepositorySupabase implements IGovernanceRepository {
       .maybeSingle();
 
     if (error) throw error;
-    return data ?? null;
+    return (data as SlugRedirect | null) ?? null;
   }
 
   async listRedirectsForLocation(locationId: string): Promise<SlugRedirect[]> {
-    const { data, error } = await supabase
+    const { data, error } = await this.db
       .from('slug_redirects')
       .select('*')
       .eq('location_id', locationId)
       .order('created_at', { ascending: false });
 
     if (error) throw error;
-    return data ?? [];
+    return (data as SlugRedirect[]) ?? [];
   }
 
   // ============================================
@@ -184,7 +185,7 @@ export class GovernanceRepositorySupabase implements IGovernanceRepository {
   // ============================================
 
   async createTerritoryChangeEvent(data: CreateTerritoryChangeEventInput): Promise<TerritoryChangeEvent> {
-    const { data: event, error } = await supabase
+    const { data: event, error } = await this.db
       .from('territory_change_events')
       .insert({
         location_id: data.location_id,
@@ -194,24 +195,24 @@ export class GovernanceRepositorySupabase implements IGovernanceRepository {
         official_source: data.official_source,
         official_document_url: data.official_document_url,
         effective_date: data.effective_date,
-        metadata: data.metadata ?? {},
+        metadata: (data.metadata ?? {}) as Record<string, unknown>,
       })
       .select()
       .single();
 
     if (error) throw error;
-    return event;
+    return event as TerritoryChangeEvent;
   }
 
   async listEventsForLocation(locationId: string): Promise<TerritoryChangeEvent[]> {
-    const { data, error } = await supabase
+    const { data, error } = await this.db
       .from('territory_change_events')
       .select('*')
       .eq('location_id', locationId)
       .order('effective_date', { ascending: false });
 
     if (error) throw error;
-    return data ?? [];
+    return (data as TerritoryChangeEvent[]) ?? [];
   }
 
   // ============================================
@@ -219,7 +220,7 @@ export class GovernanceRepositorySupabase implements IGovernanceRepository {
   // ============================================
 
   async createPostalCodeHistory(data: CreatePostalCodeHistoryInput): Promise<PostalCodeHistory> {
-    const { data: history, error } = await supabase
+    const { data: history, error } = await this.db
       .from('postal_code_history')
       .insert({
         location_id: data.location_id,
@@ -233,17 +234,17 @@ export class GovernanceRepositorySupabase implements IGovernanceRepository {
       .single();
 
     if (error) throw error;
-    return history;
+    return history as PostalCodeHistory;
   }
 
   async listPostalCodeHistoryForLocation(locationId: string): Promise<PostalCodeHistory[]> {
-    const { data, error } = await supabase
+    const { data, error } = await this.db
       .from('postal_code_history')
       .select('*')
       .eq('location_id', locationId)
       .order('valid_from', { ascending: false });
 
     if (error) throw error;
-    return data ?? [];
+    return (data as PostalCodeHistory[]) ?? [];
   }
 }

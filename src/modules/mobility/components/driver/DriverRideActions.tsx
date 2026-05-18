@@ -1,5 +1,6 @@
 import { Button } from "@/shared/components/ui/button";
-import { RideStatus, RideRequest } from "@/modules/mobility/types";
+import { RideStatus } from "@/modules/mobility/types";
+import type { RideRequest } from "@/modules/mobility/types/types";
 import { RIDE_STATUS } from "@/shared/types/constants";
 import {
   Car,
@@ -258,9 +259,9 @@ export function DriverRideActions({
 
   // Status: cancelled - Corrida cancelada
   if (
-    status === RIDE_STATUS.CANCELLED ||
-    status === RIDE_STATUS.CANCELLED_BY_DRIVER ||
-    status === RIDE_STATUS.CANCELLED_BY_PASSENGER
+    String(status) === RIDE_STATUS.CANCELLED ||
+    String(status) === RIDE_STATUS.CANCELLED_BY_DRIVER ||
+    String(status) === RIDE_STATUS.CANCELLED_BY_PASSENGER
   ) {
     return (
       <div className="px-3 py-2 rounded-xl bg-red-500/10 border border-red-500/20 text-center">

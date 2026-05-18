@@ -5,7 +5,6 @@ import { Heart, MessageSquare, Bookmark, Share2, Flag } from "lucide-react";
 import { cn } from "@/shared/utils/cn";
 import { ReportModal } from "./ReportModal";
 import { useModeration } from "../hooks/useModeration";
-import { ReportReason } from "@/core/community/types";
 import { INLINE_STYLES } from "./styles/communityDesignSystem";
 /**
  * Ações do post (curtir, comentar, save, compartilhar, denunciar)
@@ -37,8 +36,8 @@ export function PostActions({
   const [showReportModal, setShowReportModal] = useState(false);
   const { reportPost, isReportingPost } = useModeration();
 
-  const handleReport = (reason: ReportReason, description?: string) => {
-    reportPost({ postId, reason, description });
+  const handleReport = (reason: string, description?: string) => {
+    reportPost({ postId, reason: reason as any, description });
     setShowReportModal(false);
   };
 
@@ -121,4 +120,3 @@ export function PostActions({
     </>
   );
 }
-

@@ -322,7 +322,7 @@ export class OrderDeliverySSOTService {
     rpcName: string,
     args: Record<string, unknown>,
   ): Promise<OrderRecord> {
-    const { data, error } = await supabase.rpc(rpcName, args);
+    const { data, error } = await (supabase as any).rpc(rpcName, args);
 
     if (error) throw error;
 
@@ -333,7 +333,7 @@ export class OrderDeliverySSOTService {
     rpcName: string,
     args: Record<string, unknown>,
   ): Promise<DeliveryOccurrence> {
-    const { data, error } = await supabase.rpc(rpcName, args);
+    const { data, error } = await (supabase as any).rpc(rpcName, args);
 
     if (error) throw error;
 

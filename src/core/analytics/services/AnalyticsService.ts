@@ -7,7 +7,6 @@
 
 import { supabase } from "@/integrations/supabase";
 import { logger } from "@/shared/utils/logger";
-import type { AdminSupabaseClient } from "@/core/admin/types/adminDatabase.types";
 
 interface AnalyticsEvent {
   event_type: string;
@@ -17,12 +16,14 @@ interface AnalyticsEvent {
 }
 
 class AnalyticsServiceClass {
+  private readonly db = supabase as any;
+
   /**
    * Track analytics event
    */
   async trackEvent(event: AnalyticsEvent): Promise<void> {
     try {
-      const { error } = await (supabase as unknown as AdminSupabaseClient)
+      const { error } = await this.db
         .from("analytics_events").insert({
         ...event,
         timestamp: new Date().toISOString(),

@@ -20,6 +20,11 @@
 
 import { logger } from '@/shared/utils/logger';
 import type { Location, TerritoryMode } from '../types';
+export interface MismatchInfo {
+  reason: string;
+  currentMode?: TerritoryMode;
+  suggestedMode?: TerritoryMode;
+}
 export class TerritoryModeManager {
   /**
    * Verifica se deve forçar mudança de modo bairro para cidade baseado na URL.
@@ -34,8 +39,8 @@ export class TerritoryModeManager {
    */
   static shouldForceModeToCityFromUrl(
     pathname: string,
-    homeDistrict: Location | null,
-    homeCity: Location | null
+    homeDistrict: { geographic_path?: string; path?: string } | null,
+    homeCity: { geographic_path?: string; path?: string } | null
   ): boolean {
     if (!homeDistrict || !homeCity) return false;
 
@@ -49,7 +54,8 @@ export class TerritoryModeManager {
     const urlDistrictSlug = segments[3];
     
     // Pegar o slug do bairro do usuário
-    const homeDistrictSlug = homeDistrict.geographic_path.split('/').filter(Boolean).pop();
+    const districtPath = homeDistrict.geographic_path ?? homeDistrict.path ?? '';
+    const homeDistrictSlug = districtPath.split('/').filter(Boolean).pop();
     
     // Se a URL aponta para um bairro diferente do usuário, forçar cidade
     if (urlDistrictSlug !== homeDistrictSlug) {

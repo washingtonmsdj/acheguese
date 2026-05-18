@@ -35,7 +35,7 @@ export default function SubscriptionPlans({
         {SUBSCRIPTION_PLANS.map((plan) => {
           const Icon = PLAN_ICONS[plan.id];
           const isCurrentPlan = currentPlan === plan.id;
-          const isPopular = plan.featured;
+          const isPopular = Boolean(plan.destaque);
 
           return (
             <Card

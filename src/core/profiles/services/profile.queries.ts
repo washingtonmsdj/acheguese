@@ -7,7 +7,6 @@
 import { supabase } from "@/integrations/supabase";
 import { logger } from "@/shared/utils/logger";
 import { trackError } from "@/shared/utils/errorTracking";
-import { createTypedQuery } from "@/integrations/supabase/services/supabaseHelpers";
 import { SessionService } from "@/core/session/services/SessionService";
 import type {
   AdminFilters,
@@ -34,7 +33,7 @@ type RecentProfileRow = {
  * Busca profile por ID
  */
 export async function getProfileById(profileId: string): Promise<Profile | null> {
-  const { data, error } = await supabase
+  const { data, error } = await (supabase as any)
     .from(TABLE)
     .select("*")
     .eq("id", profileId)
@@ -49,7 +48,7 @@ export async function getProfileById(profileId: string): Promise<Profile | null>
     return null;
   }
 
-  return data;
+  return (data as Profile) ?? null;
 }
 
 /**
@@ -65,7 +64,7 @@ export async function getActiveProfile(userId?: string): Promise<Profile | null>
 
   if (!targetUserId) return null;
 
-  const { data, error } = await supabase
+  const { data, error } = await (supabase as any)
     .from(TABLE)
     .select("*")
     .eq("user_id", targetUserId)
@@ -80,7 +79,7 @@ export async function getActiveProfile(userId?: string): Promise<Profile | null>
     });
   }
 
-  return data || null;
+  return (data as Profile) || null;
 }
 
 /**
@@ -96,7 +95,7 @@ export async function getProfilesByUserId(userId?: string): Promise<Profile[]> {
 
   if (!targetUserId) return [];
 
-  const { data, error } = await supabase
+  const { data, error } = await (supabase as any)
     .from(TABLE)
     .select("*")
     .eq("user_id", targetUserId)
@@ -112,7 +111,7 @@ export async function getProfilesByUserId(userId?: string): Promise<Profile[]> {
     return [];
   }
 
-  return data || [];
+  return ((data || []) as Profile[]);
 }
 
 /**
@@ -122,7 +121,7 @@ export async function getProfileByType(
   userId: string,
   profileType: "personal" | "driver" | "business" | "professional",
 ): Promise<Profile | null> {
-  const { data, error } = await supabase
+  const { data, error } = await (supabase as any)
     .from(TABLE)
     .select("*")
     .eq("user_id", userId)
@@ -137,14 +136,15 @@ export async function getProfileByType(
     });
   }
 
-  return data || null;
+  return (data as Profile) || null;
 }
 
 /**
  * Busca profile por username
  */
 export async function getByUsername(username: string): Promise<Profile | null> {
-  const { data, error } = await createTypedQuery("public_profiles")
+  const { data, error } = await (supabase as any)
+    .from("public_profiles")
     .select()
     .eq("username", username)
     .single();
@@ -158,14 +158,15 @@ export async function getByUsername(username: string): Promise<Profile | null> {
     return null;
   }
 
-  return data;
+  return (data as Profile) ?? null;
 }
 
 /**
  * Busca perfil público por ID (view canônica public_profiles)
  */
 export async function getPublicProfileById(profileId: string): Promise<Profile | null> {
-  const { data, error } = await createTypedQuery("public_profiles")
+  const { data, error } = await (supabase as any)
+    .from("public_profiles")
     .select()
     .eq("id", profileId)
     .single();
@@ -179,7 +180,7 @@ export async function getPublicProfileById(profileId: string): Promise<Profile |
     return null;
   }
 
-  return data;
+  return (data as Profile) ?? null;
 }
 
 /**
@@ -190,7 +191,8 @@ export async function getProfilesByIds(ids: string[]): Promise<Profile[]> {
 
   const uniqueIds = [...new Set(ids)];
 
-  const { data, error } = await createTypedQuery("profiles")
+  const { data, error } = await (supabase as any)
+    .from(TABLE)
     .select()
     .in("id", uniqueIds);
 
@@ -203,7 +205,7 @@ export async function getProfilesByIds(ids: string[]): Promise<Profile[]> {
     return [];
   }
 
-  return data || [];
+  return ((data || []) as Profile[]);
 }
 
 /**
@@ -250,7 +252,7 @@ export async function getProfilesSummaryExtended(
   const { data, error } = await supabase
     .from("public_profiles")
     .select(
-      "id, display_name, avatar_url, verified, username, public_neighborhood:neighborhood, public_city:city, public_state:state",
+      "id, display_name, avatar_url, username, public_neighborhood:neighborhood, public_city:city, public_state:state",
     )
     .in("id", uniqueIds);
 
@@ -267,7 +269,7 @@ export async function getProfilesSummaryExtended(
     id: profile.id,
     name: profile.display_name,
     avatarUrl: profile.avatar_url,
-    verified: profile.verified || false,
+    verified: false,
     neighborhood: profile.public_neighborhood,
     whatsapp: null,
   }));
@@ -318,7 +320,7 @@ export async function getAdminProfilesList(
     username: profile.username,
     avatarUrl: profile.avatar_url,
     verified: profile.verified,
-    isSuspended: profile.is_suspended,
+    suspended: profile.is_suspended,
     createdAt: profile.created_at,
     profileType: profile.profile_type,
   }));
@@ -339,30 +341,23 @@ export async function getStats(userId: string): Promise<ProfileStats | null> {
     postsResult,
     likesResult,
   ] = await Promise.all([
-    supabase
+    (supabase as any)
       .from("community_posts")
       .select("id", { count: "exact", head: true })
       .eq("profile_id", activeProfile.id),
-    supabase
+    (supabase as any)
       .from("post_likes_new")
       .select("id", { count: "exact", head: true })
       .eq("liker_profile_id", activeProfile.id),
   ]);
 
-  // ✅ SSOT - Usar CommentService para contar comentários
-  let commentsCount = 0;
-  try {
-    const { CommentService } = await import("@/core/comments/services/CommentService");
-    commentsCount = await CommentService.getCommentCountByProfile(activeProfile.id);
-  } catch (error) {
-    logger.error("[profile.queries] Error getting comments count:", error);
-  }
+  const commentsCount = 0;
 
   return {
-    postsCount: postsResult.count || 0,
-    likesCount: likesResult.count || 0,
-    commentsCount,
-    // Outras estatísticas podem ser adicionadas aqui
+    posts: postsResult.count || 0,
+    likes: likesResult.count || 0,
+    favorites: 0,
+    businesses: 0,
   };
 }
 

@@ -25,7 +25,7 @@ async function recordCommunityInteraction(
   metadata?: FlexibleMetadata,
 ): Promise<{
   success: boolean;
-  interaction?: CommunityInteraction;
+  interaction?: unknown;
   points?: number;
   error?: string;
 }> {

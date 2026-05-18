@@ -87,13 +87,13 @@ export function RideHistoryUnified({
   const pageSize = 10;
 
   // Buscar histórico
-  const { data: rides = [], isLoading } = useQuery({
+  const { data: rides = [], isLoading } = useQuery<RideRequest[]>({
     queryKey: MOBILITY_QUERY_KEYS.rideHistory(user?.id || ""),
     queryFn: async () => {
       if (!user) return [];
-      const allRides = await mobilityService.getUserRides(user.id);
+      const allRides = (await mobilityService.getUserRides(user.id)) as RideRequest[];
       return (allRides || []).filter(
-        (r: RideRequest) =>
+        (r) =>
           r.status === RIDE_STATUS.COMPLETED || r.status === RIDE_STATUS.CANCELLED,
       );
     },

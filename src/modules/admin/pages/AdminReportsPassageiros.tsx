@@ -12,13 +12,14 @@ import { useAdminGuard } from "@/modules/admin/hooks/useAdminGuard";
 import { useSessionContext } from "@/core/session";
 import { profileService } from "@/core/profiles/services/ProfileService"; // ✅ MIGRADO - Usa ProfileService
 import { REPORT_TYPE, REPORT_SEVERITY } from "@/shared/services/mobilityAdmin"; // ✅ Import constants
-import { MobilityService } from "@/shared/services/mobilityAdmin"; // ✅ Import MobilityService
 
 // ✅ SSOT - Define REPORT_STATUS localmente (não existe em constants)
 const REPORT_STATUS = {
   PENDING: 'pending' as const,
+  INVESTIGATING: 'under_review' as const,
   UNDER_REVIEW: 'under_review' as const,
   RESOLVED: 'resolved' as const,
+  DISMISSED: 'rejected' as const,
   REJECTED: 'rejected' as const,
 };
 import { Card, CardContent } from "@/shared/components/ui/card";
@@ -51,16 +52,8 @@ import { ptBR } from "date-fns/locale";
 import { adminMobilityService } from "@/core/admin"; // ✅ MIGRADO - Usa AdminMobilityService do core
 
 // SSOT: Importar tipos e constantes centralizadas
-import type {
-  RideReportsRow,
-  ReportStatus,
-  ReportSeverity,
-  REPORT_STATUS,
-  REPORT_SEVERITY,
-  REPORT_TYPE,
-} from "@/shared/services/mobilityAdmin";
-import { RIDE_STATUS, ALERT_STATUS, USER_ROLE } from "@/shared/types/constants";
-import { logger } from "@/shared/utils/logger";
+import type { RideReport as RideReportsRow, ReportStatus, ReportSeverity } from "@/shared/services/mobilityAdmin";
+import { RIDE_STATUS, ALERT_STATUS } from "@/shared/types/constants";
 
 // Type alias para compatibilidade
 type RideReport = RideReportsRow;
@@ -338,16 +331,16 @@ export default function AdminReportsPassageiros() {
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={(v: string) => setActiveTab(v as ReportStatus)}>
         <TabsList className="bg-[#1E2529] border border-white/10">
-          <TabsTrigger value={RIDE_STATUS.PENDING}>
+          <TabsTrigger value={REPORT_STATUS.PENDING}>
             Pendentes ({stats?.pending || 0})
           </TabsTrigger>
-          <TabsTrigger value="investigating">
+          <TabsTrigger value={REPORT_STATUS.INVESTIGATING}>
             Investigando ({stats?.investigating || 0})
           </TabsTrigger>
-          <TabsTrigger value={ALERT_STATUS.RESOLVED}>
+          <TabsTrigger value={REPORT_STATUS.RESOLVED}>
             Resolvidos ({stats?.resolved || 0})
           </TabsTrigger>
-          <TabsTrigger value={ALERT_STATUS.DISMISSED}>
+          <TabsTrigger value={REPORT_STATUS.DISMISSED}>
             Arquivados ({stats?.dismissed || 0})
           </TabsTrigger>
         </TabsList>

@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import { useQuery } from "@tanstack/react-query";
 import { Skeleton } from "@/shared/components/ui/skeleton";
 import { BusinessService } from "@/core/business/services/BusinessService";
+import type { LegacyCoupon } from "@/core/business/services/business.admin";
 import { ALERT_STATUS } from "@/shared/types/constants";
 const tipoIcons: Record<string, string> = {
   porcentagem: "🏷️",
@@ -20,7 +21,7 @@ export default function CuponsPage() {
   const navigate = useNavigate();
   const [saved, setSaved] = useState<Set<string>>(new Set());
 
-  const { data: cupons = [], isLoading } = useQuery({
+  const { data: cupons = [], isLoading } = useQuery<LegacyCoupon[]>({
     queryKey: ["coupons"],
     queryFn: () => BusinessService.getActiveCoupons(),
   });

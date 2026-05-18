@@ -31,9 +31,12 @@ import { createUserLocationSvg } from '@/shared/utils/safeSvg';
 import { EntityStatus } from '@/shared/types/enums';
 import type { BoundingBox, MapViewport, MapMarker } from '../../types/core';
 import type { TerritoryPolygon } from '../../hooks/useTerritoryPolygon';
-import type { CircleArea } from '../../providers/types';
 import type { MapControlsConfig, UserLocationMarkerConfig } from './controls/types';
-import type { ResolvedTerritory } from '../../routing/hooks/useResolveTerritoryFromUrl';
+import type { ResolvedTerritory } from '@/core/routing/hooks/useResolveTerritoryFromUrl';
+interface CircleArea {
+  center: [number, number];
+  radiusMeters: number;
+}
 
 type MapRuntimeState = {
   loaded?: boolean;
@@ -180,20 +183,17 @@ function createUserLocationMarker(
   coordinates: { latitude: number; longitude: number },
   label?: string,
 ): MapMarker {
-  const marker = {
+  return {
     id: 'user-location',
     type: 'user_location' as const,
+    coordinates: {
+      latitude: coordinates.latitude,
+      longitude: coordinates.longitude,
+    },
     title: label ?? 'Voce esta aqui',
     status: EntityStatus.ACTIVE,
     metadata: { isUserLocation: true },
-  } as MapMarker;
-
-  marker.coordinates = {
-    latitude: coordinates.latitude,
-    longitude: coordinates.longitude,
   };
-
-  return marker;
 }
 
 function createClusterRenderMarker(
@@ -796,8 +796,9 @@ export const MapLibreAdapter = forwardRef<MapLibreAdapterHandle, MapLibreAdapter
           const { latitude: lat, longitude: lng } = marker.coordinates;
           if (lat == null || lng == null || isNaN(lat) || isNaN(lng)) return;
 
-          const isUserLocation = marker.metadata?.isUserLocation === true;
-          const isCluster = marker.metadata?.isCluster === true;
+          const metadata = (marker.metadata ?? {}) as Record<string, unknown>;
+          const isUserLocation = metadata.isUserLocation === true;
+          const isCluster = metadata.isCluster === true;
           const el = document.createElement('div');
 
           if (isUserLocation) {
@@ -807,7 +808,7 @@ export const MapLibreAdapter = forwardRef<MapLibreAdapterHandle, MapLibreAdapter
             el.appendChild(svg);
           } else if (isCluster) {
             // Renderizar cluster
-            const pointCount = marker.metadata?.pointCount || 0;
+            const pointCount = typeof metadata.pointCount === 'number' ? metadata.pointCount : 0;
             const size = pointCount < 10 ? 40 : pointCount < 50 ? 50 : 60;
             el.style.cssText = [
               `width:${size}px`, `height:${size}px`,
@@ -833,7 +834,8 @@ export const MapLibreAdapter = forwardRef<MapLibreAdapterHandle, MapLibreAdapter
             });
           } else {
             // Usa SSOT: getMarkerConfig de markerConfig.ts
-            const cfg = getMarkerConfig(marker.type);
+            const markerType = marker.type === 'cluster' ? 'business' : marker.type;
+            const cfg = getMarkerConfig(markerType);
             el.style.cssText = [
               'width:36px', 'height:36px',
               'display:flex', 'align-items:center', 'justify-content:center',

@@ -43,7 +43,7 @@ export function useTouristPointsByBounds(
         return [];
       }
 
-      logger.debug('[useTouristPointsByBounds] fetching with bounds:', bounds, 'locationId:', options?.locationId);
+      logger.debug(`[useTouristPointsByBounds] fetching with bounds=${JSON.stringify(bounds)} locationId=${options?.locationId ?? ''}`);
 
       try {
         // SSOT: Usa SpatialSearchService ao invés de acessar Supabase diretamente
@@ -53,7 +53,7 @@ export function useTouristPointsByBounds(
           locationId: options?.locationId,
           limit: 200,
         });
-        logger.debug('[useTouristPointsByBounds] results:', results);
+        logger.debug(`[useTouristPointsByBounds] results=${results.length}`);
         return results;
       } catch (error) {
         logger.error('[useTouristPointsByBounds] error:', error);

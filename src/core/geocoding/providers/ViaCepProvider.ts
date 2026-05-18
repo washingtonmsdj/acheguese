@@ -18,9 +18,9 @@ import type {
   ReverseGeocodeRequest,
   ReverseGeocodeResult,
   PostalCodeLookupRequest,
-  PostalCodeLookupResult,
-  GeocodingError
+  PostalCodeLookupResult
 } from '../types';
+import { GeocodingError } from '../types';
 
 const VIACEP_BASE_URL = 'https://viacep.com.br/ws';
 
@@ -91,7 +91,10 @@ export class ViaCepProvider extends BaseGeocodingProvider {
       );
     }
 
-    const cacheKey = this.generateCacheKey('lookupPostalCode', request);
+    const cacheKey = this.generateCacheKey(
+      'lookupPostalCode',
+      request as unknown as Record<string, unknown>,
+    );
     const cached = this.getFromCache<PostalCodeLookupResult>(cacheKey);
     if (cached) {
       this.log('info', 'Cache hit for postal code lookup', { postalCode: request.postalCode });

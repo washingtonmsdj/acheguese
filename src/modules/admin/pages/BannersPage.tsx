@@ -14,7 +14,11 @@ import {
 import { useToast } from "@/shared/hooks/use-toast";
 import { logger } from "@/shared/utils/logger";
 import { SessionService } from "@/core/session/services/SessionService";
-import { BannerService, type Banner } from "@/core/banners/services/BannerService";
+import {
+  BannerService,
+  type Banner,
+  type CreateBannerInput,
+} from "@/core/banners/services/BannerService";
 
 export default function BannersPage() {
   const [banners, setBanners] = useState<Banner[]>([]);
@@ -78,12 +82,15 @@ export default function BannersPage() {
         setUploading(false);
       }
 
-      const bannerData = {
-        ...formData,
+      const bannerData: CreateBannerInput = {
+        title: formData.title,
+        description: formData.description || undefined,
         image_url: imageUrl,
-        created_by_user_id: user.id,
-        start_date: formData.start_date || null,
-        end_date: formData.end_date || null,
+        link_url: formData.link_url || undefined,
+        position: formData.position as Banner["position"],
+        priority: formData.priority,
+        starts_at: formData.start_date || undefined,
+        ends_at: formData.end_date || undefined,
       };
 
       if (editingBanner) {
@@ -182,13 +189,13 @@ export default function BannersPage() {
       image_url: banner.image_url,
       link_url: banner.link_url || "",
       position: banner.position,
-      page: banner.page,
+      page: "home",
       priority: banner.priority,
       is_active: banner.is_active,
-      start_date: banner.start_date ? banner.start_date.split("T")[0] : "",
-      end_date: banner.end_date ? banner.end_date.split("T")[0] : "",
-      background_color: banner.background_color,
-      text_color: banner.text_color,
+      start_date: banner.starts_at ? banner.starts_at.split("T")[0] : "",
+      end_date: banner.ends_at ? banner.ends_at.split("T")[0] : "",
+      background_color: banner.background_color || "#ffffff",
+      text_color: banner.text_color || "#000000",
     });
     setEditingBanner(banner);
     setImagePreview(banner.image_url);
@@ -486,11 +493,11 @@ export default function BannersPage() {
                 {banner.description}
               </p>
               <div className="flex gap-4 text-xs text-muted-foreground mt-2">
-                <span>Página: {banner.page}</span>
+                <span>Página: n/a</span>
                 <span>Posição: {banner.position}</span>
                 <span>Prioridade: {banner.priority}</span>
-                <span>👁️ {banner.views_count}</span>
-                <span>🖱️ {banner.clicks_count}</span>
+                <span>👁️ {banner.view_count}</span>
+                <span>🖱️ {banner.click_count}</span>
               </div>
             </div>
             <div className="flex gap-2">

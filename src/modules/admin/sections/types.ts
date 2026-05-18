@@ -16,7 +16,13 @@ export interface TerritoryNode {
   readonly id: string;
   readonly name: string;
   readonly slug: string;
-  readonly type: "country" | "state" | "city" | "district" | "territorial_group";
+  readonly type:
+    | "country"
+    | "state"
+    | "city"
+    | "district"
+    | "territorial_group"
+    | "group";
   readonly status: TerritoryNodeStatus;
   readonly parent_id: string | null;
   readonly geographic_path?: string;

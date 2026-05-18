@@ -39,9 +39,11 @@ export interface PostFlag {
 }
 
 class AdminCommunityService {
+  private readonly db = supabase as any;
+
   async getModerationStats(): Promise<ModerationStats | null> {
     try {
-      const { data, error } = await supabase.rpc("get_moderation_stats");
+      const { data, error } = await this.db.rpc("get_moderation_stats");
       if (error) throw error;
       const rows = data as ModerationStats[] | null;
       if (!rows || rows.length === 0) return null;
@@ -113,7 +115,7 @@ class AdminCommunityService {
 
   async getCivicReports(status: string): Promise<(CommunityIssue & { reporter_name: string; is_critical: boolean; supporters_count: number })[]> {
     try {
-      const { data, error } = await (supabase as unknown as AdminSupabaseClient)
+      const { data, error } = await (this.db as unknown as AdminSupabaseClient)
         .from("community_issues")
         .select(`*, profiles!community_issues_profile_id_fkey(name)`)
         .eq("status", status)
@@ -121,7 +123,7 @@ class AdminCommunityService {
 
       if (error) throw error;
 
-      return (data || []).map((r) => ({
+      return (data || []).map((r: any) => ({
         ...(r as unknown as CommunityIssue),
         reporter_name: r.profiles?.name || "Anônimo",
         is_critical: false,
@@ -135,7 +137,7 @@ class AdminCommunityService {
 
   async getCivicReportStats(): Promise<Record<string, number>> {
     try {
-      const { data, error } = await (supabase as unknown as AdminSupabaseClient)
+      const { data, error } = await (this.db as unknown as AdminSupabaseClient)
         .from("community_issues")
         .select("status");
 
@@ -159,7 +161,7 @@ class AdminCommunityService {
 
   async updateCivicReportStatus(reportId: string, status: CommunityIssue['status']): Promise<void> {
     try {
-      const { error } = await supabase
+      const { error } = await this.db
         .from("community_issues")
         .update({ status })
         .eq("id", reportId);
@@ -173,7 +175,7 @@ class AdminCommunityService {
 
   async getProfessionalReports(): Promise<ProfessionalReport[]> {
     try {
-      const { data, error } = await (supabase as unknown as AdminSupabaseClient)
+      const { data, error } = await (this.db as unknown as AdminSupabaseClient)
         .from("professional_reports")
         .select("*")
         .order("created_at", { ascending: false });
@@ -188,7 +190,7 @@ class AdminCommunityService {
 
   async getAllProfessionals(): Promise<ProfessionalData[]> {
     try {
-      const { data, error } = await (supabase as unknown as AdminSupabaseClient)
+      const { data, error } = await (this.db as unknown as AdminSupabaseClient)
         .from("professional_data")
         .select("*")
         .order("created_at", { ascending: false });

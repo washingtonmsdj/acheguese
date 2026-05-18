@@ -1,4 +1,4 @@
-﻿import { SessionService } from "@/core/session/services/SessionService";
+import { SessionService } from "@/core/session/services/SessionService";
 import { NotificationService } from "@/core/notifications/services/NotificationService";
 import { postService } from "@/core/posts/services";
 import { supabase } from "@/integrations/supabase";
@@ -615,10 +615,10 @@ class WorkOpportunitiesServiceClass {
             rating: rawProfessional.rating,
             total_reviews: this.getTotalReviews(rawProfessional),
             portfolio_images: this.extractPortfolioImages(rawProfessional),
-            portfolio_items: rawProfessional.portfolio_items?.filter(
-              (item): item is NonNullable<ProfessionalDataDetailRow["portfolio_items"]>[number] =>
+            portfolio_items: (rawProfessional.portfolio_items ?? []).filter(
+              (item): item is { url: string; caption?: string; media_type?: "image" | "video" | "document"; is_cover?: boolean } =>
                 Boolean(item?.url),
-            ) ?? [],
+            ).map((item) => ({ ...item, url: item.url as string })),
           };
         }
       }
@@ -875,3 +875,4 @@ class WorkOpportunitiesServiceClass {
 
 export const workOpportunitiesService = new WorkOpportunitiesServiceClass();
 export { workOpportunitiesService as WorkOpportunitiesService };
+

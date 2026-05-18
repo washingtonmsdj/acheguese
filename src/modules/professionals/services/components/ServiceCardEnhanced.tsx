@@ -34,7 +34,7 @@ export const ServiceCardEnhanced = memo<ServiceCardProps>(
 
     const hasRating = professional.rating && professional.rating > 0;
     const hasWhatsApp = Boolean(professional.whatsapp);
-    const isAccepting = professional.isAcceptingClients ?? true;
+    const isAccepting = true;
 
     const handleCardClick = useCallback(() => {
       onProfessionalClick(professional);
@@ -69,9 +69,9 @@ export const ServiceCardEnhanced = memo<ServiceCardProps>(
         aria-label={`${professional.name} - ${professional.category}`}
       >
         <div className="relative h-full w-[88px] shrink-0 overflow-hidden">
-          {professional.photo ? (
+          {professional.avatar_url ? (
             <img
-              src={professional.photo}
+              src={professional.avatar_url}
               alt={professional.name}
               loading="lazy"
               className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
@@ -82,7 +82,7 @@ export const ServiceCardEnhanced = memo<ServiceCardProps>(
             </div>
           )}
 
-          {professional.isVerified && (
+          {(professional.rating ?? 0) >= 4.5 && (
             <div className="absolute left-1 top-1">
               <BadgeCheck className="h-3.5 w-3.5 fill-primary/20 text-primary" />
             </div>
@@ -106,13 +106,13 @@ export const ServiceCardEnhanced = memo<ServiceCardProps>(
               <span className="flex items-center gap-0.5 text-[11px] font-semibold">
                 <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
                 {professional.rating!.toFixed(1)}
-                {professional.totalAvaliacoes && (
-                  <span className="text-muted-foreground">({professional.totalAvaliacoes})</span>
+                {professional.reviews_count > 0 && (
+                  <span className="text-muted-foreground">({professional.reviews_count})</span>
                 )}
               </span>
             )}
-            {professional.priceRange && (
-              <span className="text-[11px] font-semibold text-primary">{professional.priceRange}</span>
+            {professional.price_range && (
+              <span className="text-[11px] font-semibold text-primary">{professional.price_range}</span>
             )}
           </div>
 
@@ -155,4 +155,3 @@ export const ServiceCardEnhanced = memo<ServiceCardProps>(
 );
 
 ServiceCardEnhanced.displayName = 'ServiceCardEnhanced';
-

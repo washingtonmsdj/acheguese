@@ -9,7 +9,6 @@
 import { logger } from '@/shared/utils/logger';
 import { supabase } from '@/core/infrastructure/supabase';
 import { BusinessService } from '@/core/business/services/BusinessService';
-import type { Business } from '@/core/business/types';
 import { OpeningHoursService } from '@/core/business/services/OpeningHoursService';
 import { applyTerritoryFilter } from '@/core/location/utils';
 import type { TerritoryFilter } from '@/core/location/types';
@@ -150,9 +149,9 @@ function buildProfilesQuery(
  * Mapeia registro business_data para GastronomyBusiness
  */
 async function mapRecordToGastronomyBusiness(
-  record: Business,
+  record: any,
   params: {
-    profilesMap?: Map<string, Business>;
+    profilesMap?: Map<string, { id: string; name?: string }>;
     gastronomyProfilesMap?: Map<string, GastronomyProfile>;
   } = {},
 ): Promise<GastronomyBusiness | null> {
@@ -174,7 +173,7 @@ async function mapRecordToGastronomyBusiness(
       id: record.profile_id,
       name: record.business_name || 'Empresa',
     },
-  });
+  } as any);
 
   return {
     ...business,
@@ -206,7 +205,7 @@ async function fetchBusinessDataRecords(params: {
       return [];
     }
 
-    effectiveBusinessIds = (gastronomyProfiles || []).map((profile) => profile.business_id);
+    effectiveBusinessIds = (gastronomyProfiles || []).map((profile: any) => profile.business_id);
   }
 
   if (!effectiveBusinessIds?.length) {
@@ -226,7 +225,7 @@ async function fetchBusinessDataRecords(params: {
 
   const territoryFilter = await resolveHierarchicalTerritoryFilter(filters.territoryFilter);
   if (territoryFilter && territoryFilter.scope !== 'none') {
-    query = applyTerritoryFilter(query, territoryFilter);
+    query = applyTerritoryFilter(query as any, territoryFilter) as any;
   }
 
   if (filters.search) {

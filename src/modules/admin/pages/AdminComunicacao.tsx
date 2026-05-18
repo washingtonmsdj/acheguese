@@ -89,7 +89,14 @@ export default function AdminComunicacao() {
   });
 
   const updateTerritory = useMutation({
-    mutationFn: (input: { territoryId: string; channelId: string; can_publish?: boolean; can_alert?: boolean; can_push?: boolean }) =>
+    mutationFn: (input: {
+      territoryId: string;
+      channelId: string;
+      territoryRole?: "primary" | "coverage" | "temporary";
+      can_publish?: boolean;
+      can_alert?: boolean;
+      can_push?: boolean;
+    }) =>
       AdminCommunicationTerritorialService.updateTerritoryPermissions(input),
     onSuccess: () => {
       toast.success("Permissao territorial atualizada.");
@@ -298,7 +305,7 @@ export default function AdminComunicacao() {
                             updateTerritory.mutate({
                               territoryId: territory.id,
                               channelId: channel.id,
-                              territory_role: value as "primary" | "coverage" | "temporary",
+                              territoryRole: value as "primary" | "coverage" | "temporary",
                             })
                           }
                         >

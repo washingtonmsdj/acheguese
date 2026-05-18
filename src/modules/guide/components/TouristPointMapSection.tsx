@@ -41,6 +41,7 @@ export function TouristPointMapSection({
   const googleMapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${latitude},${longitude}`;
   const appleMapsUrl = `maps://maps.apple.com/?daddr=${latitude},${longitude}&q=${encodeURIComponent(title)}`;
   const wazeUrl = `https://waze.com/ul?ll=${latitude},${longitude}&navigate=yes`;
+  const internalMapUrl = '/mapa';
 
   // URL territorial do mapa — SSOT via useFriendlyModuleUrls
   const handleCopyCoordinates = () => {

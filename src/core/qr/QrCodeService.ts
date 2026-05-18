@@ -13,16 +13,16 @@
 import { logger } from '@/shared/utils/logger';
 import { supabase } from '@/integrations/supabase';
 import { nanoid } from 'nanoid';
-import type {
-  QrCode,
-  QrCodeScan,
-  QrCodeAnalytics,
-  CreateQrCodeParams,
-  RecordScanParams,
-  QrEntityType,
-  QrStyleVariant,
-  QrDestinationVariant,
+import {
   DeviceType,
+  QrDestinationVariant,
+  QrStyleVariant,
+  type QrCode,
+  type QrCodeAnalytics,
+  type QrCodeScan,
+  type CreateQrCodeParams,
+  type QrEntityType,
+  type RecordScanParams,
 } from './types';
 // ══════════════════════════════════════════════════════════════════════════
 // TYPES
@@ -67,7 +67,7 @@ export class QrCodeService {
     try {
       const token = this.generateToken();
       
-      const qrCode: Partial<QrCode> = {
+      const qrCode = {
         token,
         entity_type: params.entity_type,
         entity_id: params.entity_id,
@@ -82,7 +82,7 @@ export class QrCodeService {
         metadata: params.metadata || null,
       };
       
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('qr_codes')
         .insert(qrCode)
         .select()
@@ -284,7 +284,7 @@ export class QrCodeService {
    */
   static async recordScan(params: RecordScanParams): Promise<ServiceResult<QrCodeScan>> {
     try {
-      const scan: Partial<QrCodeScan> = {
+      const scan = {
         qr_code_id: params.qr_code_id,
         device_type: params.device_type,
         user_agent: params.user_agent || null,
@@ -295,7 +295,7 @@ export class QrCodeService {
         scanned_at: new Date().toISOString(),
       };
       
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('qr_code_scans')
         .insert(scan)
         .select()

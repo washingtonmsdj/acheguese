@@ -543,15 +543,25 @@ export class FavoritesQueryService {
             logo_url?: string | null;
             banner_url?: string | null;
           } | null;
-          gastronomy_profiles?: Array<{
-            cuisine_type: string;
-            delivery_enabled: boolean;
-            price_range: string;
-          }>;
+          gastronomy_profiles?:
+            | Array<{
+                cuisine_type: string;
+                delivery_enabled: boolean;
+                price_range: string;
+              }>
+            | {
+              cuisine_type: string;
+              delivery_enabled: boolean;
+              price_range: string;
+            };
         };
       };
 
-      const favorites: FavoriteBusiness[] = (data as TagSearchRow[] || []).map((item) => ({
+      const favorites: FavoriteBusiness[] = (((data as unknown) as TagSearchRow[]) || []).map((item) => {
+        const profile = Array.isArray(item.business_data.gastronomy_profiles)
+          ? item.business_data.gastronomy_profiles[0]
+          : item.business_data.gastronomy_profiles;
+        return ({
         favorite_id: item.id,
         business_id: item.business_data.id,
         business_name: item.business_data.business_name,
@@ -563,15 +573,16 @@ export class FavoritesQueryService {
         business_total_reviews: item.business_data.total_reviews,
         business_is_verified: item.business_data.is_verified,
         business_geographic_path: null, // nÃ£o disponÃ­vel nesta query
-        cuisine_type: item.business_data.gastronomy_profiles?.[0]?.cuisine_type ?? null,
-        delivery_enabled: item.business_data.gastronomy_profiles?.[0]?.delivery_enabled ?? null,
-        price_range: item.business_data.gastronomy_profiles?.[0]?.price_range ?? null,
+        cuisine_type: profile?.cuisine_type ?? null,
+        delivery_enabled: profile?.delivery_enabled ?? null,
+        price_range: profile?.price_range ?? null,
         notify_on_promotions: item.notify_on_promotions,
         notify_on_new_items: item.notify_on_new_items,
         notes: item.notes,
         tags: item.tags,
         favorited_at: item.created_at,
-      }));
+      });
+      });
 
       return favorites;
     } catch (error) {

@@ -75,7 +75,7 @@ export const EducationCard = memo(function EducationCard({
         >
           <span className="flex items-center gap-1">
             <MapPin className="h-3 w-3" />
-            {profile.niche_key.replaceAll('_', ' ')}
+            {profile.niche_key.replace(/_/g, ' ')}
           </span>
           {profile.school_inep_code && (
             <span>INEP {profile.school_inep_code}</span>

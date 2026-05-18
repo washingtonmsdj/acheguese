@@ -73,4 +73,13 @@ export interface SessionProfileView {
   
   /** Data/hora de criação */
   createdAt: string;
+  user_id?: string;
+  display_name?: string;
+  avatar_url?: string | null;
+  profile_type?: string;
+  location_id?: string | null;
+  created_at?: string;
+  street?: string | null;
+  [key: string]: unknown;
 }
+

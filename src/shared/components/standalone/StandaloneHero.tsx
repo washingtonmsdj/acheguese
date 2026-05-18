@@ -15,6 +15,11 @@ interface StandaloneHeroProps {
 }
 
 export default function StandaloneHero({ business }: StandaloneHeroProps) {
+  const standaloneBusiness = business as Business & {
+    total_reviews?: number;
+    is_open_now?: boolean;
+  };
+
   return (
     <section id="hero" className="relative w-full">
       {/* Imagem de Capa */}
@@ -80,9 +85,9 @@ export default function StandaloneHero({ business }: StandaloneHeroProps) {
                   <div className="flex items-center gap-1">
                     <Star className="h-4 w-4 fill-amber-400 text-amber-400" />
                     <span className="font-semibold">{business.rating}</span>
-                    {business.total_reviews > 0 && (
+                    {Number(standaloneBusiness.total_reviews || 0) > 0 && (
                       <span className="text-muted-foreground">
-                        ({business.total_reviews})
+                        ({standaloneBusiness.total_reviews})
                       </span>
                     )}
                   </div>
@@ -97,15 +102,15 @@ export default function StandaloneHero({ business }: StandaloneHeroProps) {
                 )}
 
                 {/* Status */}
-                {business.is_open_now !== undefined && (
+                {standaloneBusiness.is_open_now !== undefined && (
                   <div className="flex items-center gap-1">
                     <Clock className="h-4 w-4" />
                     <span
                       className={
-                        business.is_open_now ? "text-green-600" : "text-red-600"
+                        standaloneBusiness.is_open_now ? "text-green-600" : "text-red-600"
                       }
                     >
-                      {business.is_open_now ? "Aberto agora" : "Fechado"}
+                      {standaloneBusiness.is_open_now ? "Aberto agora" : "Fechado"}
                     </span>
                   </div>
                 )}

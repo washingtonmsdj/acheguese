@@ -34,10 +34,12 @@ interface ProgressSectionProps {
 export function ProgressSection({ profile }: ProgressSectionProps) {
   const navigate = useNavigate();
   const appUrls = useAppUrls(); // ✅ SSOT URLs
-  const nivel = getNivel(profile?.pontos || 0);
-  const progresso = getProgresso(profile?.pontos || 0);
-  const memberSince = profile?.created_at
-    ? new Date(profile.created_at).getFullYear()
+  const legacyProfile = profile as any;
+  const points = legacyProfile?.pontos || 0;
+  const nivel = getNivel(points);
+  const progresso = getProgresso(points);
+  const memberSince = legacyProfile?.created_at
+    ? new Date(legacyProfile.created_at).getFullYear()
     : new Date().getFullYear();
 
   return (
@@ -56,7 +58,7 @@ export function ProgressSection({ profile }: ProgressSectionProps) {
           <div className="flex items-center justify-between text-sm">
             <span className="font-medium">Progresso para o próximo nível</span>
             <span className="text-muted-foreground">
-              {profile?.pontos || 0} / {nivel.maxPontos} pts
+              {points} / {nivel.maxPontos} pts
             </span>
           </div>
           <Progress value={progresso} className="h-3" />
@@ -93,11 +95,11 @@ export function ProgressSection({ profile }: ProgressSectionProps) {
           </div>
         </div>
 
-        {profile?.badges && profile.badges.length > 0 && (
+        {legacyProfile?.badges && legacyProfile.badges.length > 0 && (
           <div className="space-y-2">
             <h4 className="text-sm font-semibold">Conquistas</h4>
             <div className="flex flex-wrap gap-2">
-              {profile.badges.map((bId: string) => {
+              {legacyProfile.badges.map((bId: string) => {
                 const b = badges.find((x) => x.id === bId);
                 if (!b) return null;
                 return (
@@ -128,3 +130,4 @@ export function ProgressSection({ profile }: ProgressSectionProps) {
     </Card>
   );
 }
+

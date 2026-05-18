@@ -381,11 +381,11 @@ export default function ComunidadePage({ resolved }: ComunidadePageProps) {
         <CreatePostModal
           open={modalState.type === "create"}
           onClose={handleCloseModal}
-          defaultType={modalState.data?.defaultType}
-          editPostId={modalState.data?.editPostId}
-          initialContent={modalState.data?.initialContent}
-          initialType={modalState.data?.initialType}
-          initialReach={modalState.data?.initialReach}
+          defaultType={(modalState.data as any)?.defaultType}
+          editPostId={(modalState.data as any)?.editPostId}
+          initialContent={(modalState.data as any)?.initialContent}
+          initialType={(modalState.data as any)?.initialType}
+          initialReach={(modalState.data as any)?.initialReach}
         />
 
         {/* Modal de Criar Alerta */}
@@ -408,9 +408,9 @@ export default function ComunidadePage({ resolved }: ComunidadePageProps) {
 
         {/* Modais de Detalhes e Comentarios */}
         <CommunityModals
-          modalState={modalState}
+          modalState={modalState as any}
           postId={postId}
-          postData={postData}
+          postData={postData as any}
           isLoadingPost={isLoadingPost}
           profileId={profile?.id}
           onCloseModal={handleCloseModal}

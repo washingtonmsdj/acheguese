@@ -8,7 +8,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { locationGeocodingService } from '@/core/location/services/LocationGeocodingService';
 
-export interface Coordinates {
+interface Coordinates {
   latitude: number;
   longitude: number;
 }

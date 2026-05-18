@@ -160,8 +160,6 @@ export class AdminUserService {
     grant: boolean,
     grantedBy: string,
   ): Promise<void> {
-    if (!supabaseAdmin) throw new Error("supabaseAdmin não disponível");
-
     if (grant) {
       const success = await adminRolesService.grantRole({
         userId,

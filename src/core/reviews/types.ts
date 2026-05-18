@@ -12,6 +12,18 @@ export interface Review {
   comment?: string;
   created_at: string;
   updated_at?: string;
+  [key: string]: unknown;
+}
+
+export interface ReviewProfileRef {
+  id: string;
+  name?: string | null;
+  avatar_url?: string | null;
+}
+
+export interface ReviewWithProfiles extends Review {
+  reviewed_profile?: ReviewProfileRef | null;
+  reviewer_profile?: ReviewProfileRef | null;
 }
 
 export interface CreateReviewData {
@@ -32,4 +44,7 @@ export interface ReviewStats {
   total: number;
   average: number;
   distribution: Record<number, number>;
+  total_reviews?: number;
+  average_rating?: number;
+  rating_distribution?: Record<number, number>;
 }

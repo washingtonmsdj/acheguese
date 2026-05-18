@@ -5,7 +5,6 @@
 import { supabase } from "@/integrations/supabase";
 import { logger } from "@/shared/utils/logger";
 import { MODERATION_REPORT_STATUS } from "@/core/moderation/constants/reportStatus";
-import type { AdminSupabaseClient } from "@/core/admin/types/adminDatabase.types";
 
 interface ReportContentInput {
   targetType: "post" | "comment" | "profile";
@@ -43,8 +42,8 @@ class ModerationServiceClass {
     profile: "profile_id",
   } as const;
 
-  private db(): AdminSupabaseClient {
-    return supabase as unknown as AdminSupabaseClient;
+  private db(): any {
+    return supabase as any;
   }
 
   private getErrorMessage(error: unknown, fallback: string): string {
@@ -246,6 +245,39 @@ class ModerationServiceClass {
     } catch (error: unknown) {
       logger.error("Error removing comment:", error);
       throw new Error(`Erro ao remover comentario: ${this.getErrorMessage(error, "erro desconhecido")}`);
+    }
+  }
+
+  async moderatePost(
+    postId: string,
+    moderatedBy: string,
+    action: "approve" | "reject" | "flag" | "delete",
+    reason?: string,
+  ): Promise<void> {
+    try {
+      if (action === "delete") {
+        const { error } = await this.db().from("community_posts").delete().eq("id", postId);
+        if (error) throw error;
+        return;
+      }
+
+      const moderationStatus =
+        action === "approve" ? "approved" : action === "reject" ? "rejected" : "flagged";
+
+      const { error } = await this.db()
+        .from("community_posts")
+        .update({
+          moderation_status: moderationStatus,
+          moderated_at: new Date().toISOString(),
+          moderated_by: moderatedBy,
+          moderation_reason: reason || null,
+        })
+        .eq("id", postId);
+
+      if (error) throw error;
+    } catch (error: unknown) {
+      logger.error("Error moderating post:", error);
+      throw new Error(`Erro ao moderar postagem: ${this.getErrorMessage(error, "erro desconhecido")}`);
     }
   }
 

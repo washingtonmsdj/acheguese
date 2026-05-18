@@ -633,10 +633,10 @@ export function CreateRideModal({ open, onOpenChange, onSubmit, initialType = "v
                 </button>
                 <button
                   type="button"
-                  onClick={() => setPaymentMethod(PAYMENT_METHOD.DINHEIRO)}
+                  onClick={() => setPaymentMethod(PAYMENT_METHOD.DINHEIRO as unknown as PaymentMethod)}
                   className={cn(
                     "flex items-center justify-center gap-2 py-2.5 rounded-xl border-2 transition-all text-xs font-medium",
-                    paymentMethod === PAYMENT_METHOD.DINHEIRO ? "border-success bg-success/10 text-success" : "border-border text-muted-foreground",
+                    String(paymentMethod) === PAYMENT_METHOD.DINHEIRO ? "border-success bg-success/10 text-success" : "border-border text-muted-foreground",
                   )}
                 >
                   <Banknote className="h-3.5 w-3.5" /> Dinheiro

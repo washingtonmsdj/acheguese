@@ -208,7 +208,7 @@ export async function createEducationProgram(
     return { data: null, error: new Error('Perfil de educacao nao encontrado') };
   }
 
-  if (isSchoolNiche(nicheKey)) {
+  if (isSchoolNiche(nicheKey as any)) {
     const stageName = normalizeStageText(payload.name);
     const stageGrade = normalizeStageText(payload.grade ?? null);
 
@@ -262,7 +262,7 @@ export async function updateEducationProgram(
     return { data: null, error: new Error('Perfil de educacao nao encontrado') };
   }
 
-  if (isSchoolNiche(nicheKey)) {
+  if (isSchoolNiche(nicheKey as any)) {
     const updatedName = normalizeStageText((payload as any).name ?? null);
     const updatedGrade = normalizeStageText((payload as any).grade ?? null);
     const candidate = updatedName ?? updatedGrade;
@@ -327,7 +327,7 @@ export async function createEducationLead(
     return { data: null, error: new Error('Perfil de educacao nao encontrado') };
   }
 
-  if (isSchoolNiche(nicheKey)) {
+  if (isSchoolNiche(nicheKey as any)) {
     const desired = normalizeStageText(payload.desired_grade ?? null);
     if (desired) {
       const official = isOfficialStageLabel(desired, nicheKey);

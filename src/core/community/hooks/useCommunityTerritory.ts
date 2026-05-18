@@ -11,11 +11,14 @@
 import { useEffect, useState } from 'react';
 import { useSessionContext } from '@/core/session/hooks/useSessionContext';
 import { LocationService } from '@/core/location/services/LocationService';
+import { createLocationRepository } from '@/core/location/repositories/createLocationRepository';
 import type { Location } from '@/core/location/types';
+
+const locationService = new LocationService(createLocationRepository());
 
 export function useCommunityTerritory() {
   const { activeProfile } = useSessionContext();
-  const profileLocationId = activeProfile?.locationId ?? activeProfile?.location_id ?? null;
+  const profileLocationId = activeProfile?.locationId ?? null;
   const [userLocation, setUserLocation] = useState<Location | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
@@ -30,7 +33,7 @@ export function useCommunityTerritory() {
 
       try {
         setIsLoading(true);
-        const location = await LocationService.getLocationById(profileLocationId);
+        const { location } = await locationService.getLocationById({ id: profileLocationId });
         setUserLocation(location);
         setError(null);
       } catch (err) {

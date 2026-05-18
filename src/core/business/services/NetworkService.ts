@@ -7,7 +7,6 @@
 import { logger } from '@/shared/utils/logger';
 import { supabase } from '@/integrations/supabase';
 import type { BusinessDataRecord } from '../types';
-import type { AdminSupabaseClient } from '@/core/admin/types/adminDatabase.types';
 import { EntityStatus } from '@/shared/types/enums';
 
 // ─── Tipos ────────────────────────────────────────────────────────────────────
@@ -63,8 +62,8 @@ type BrandHubRow = {
 // ─── Service ──────────────────────────────────────────────────────────────────
 
 export class NetworkService {
-  private static adminDb(): AdminSupabaseClient {
-    return supabase as unknown as AdminSupabaseClient;
+  private static adminDb(): any {
+    return supabase as any;
   }
 
 

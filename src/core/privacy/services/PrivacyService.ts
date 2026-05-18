@@ -65,12 +65,13 @@ export interface DeleteAccountResponse {
 // ── Service ────────────────────────────────────────────────────────────────
 
 export class PrivacyService {
+  private static readonly db = supabase as any;
   /**
    * Registra uma solicitação ao DPO (Art. 41 LGPD).
    * Persiste na tabela `dpo_requests` e dispara email de notificação.
    */
   static async createDPORequest(params: CreateDPORequestParams): Promise<void> {
-    const { error: dbError } = await supabase.from('dpo_requests').insert({
+    const { error: dbError } = await this.db.from('dpo_requests').insert({
       user_id: params.userId ?? null,
       requester_name: params.requesterName,
       requester_email: params.requesterEmail,

@@ -29,7 +29,7 @@ export type CoverageEntityType =
 
 export type CoverageType = 'location' | 'radius' | 'polygon';
 
-export interface Coordinates {
+interface Coordinates {
   latitude: number;
   longitude: number;
 }
@@ -139,7 +139,7 @@ export class CoverageService {
     const result = data[0];
     return {
       has_coverage: result.has_coverage,
-      coverage_type: result.coverage_type ?? undefined,
+      coverage_type: (result.coverage_type as CoverageType | undefined) ?? undefined,
       distance_meters: result.distance_meters ?? undefined,
       location_id: result.location_id ?? undefined,
     };
@@ -174,7 +174,7 @@ export class CoverageService {
     });
 
     if (!rpcResult.error) {
-      return (rpcResult.data || []).map(this.mapCoverageArea);
+    return ((rpcResult.data || []) as CoverageAreaRow[]).map(this.mapCoverageArea);
     }
 
     const errorCode = String(rpcResult.error.code ?? '');
@@ -206,7 +206,7 @@ export class CoverageService {
       throw new Error(`Erro ao listar áreas de cobertura: ${error.message}`);
     }
 
-    return (data || []).map(this.mapCoverageArea);
+    return ((data || []) as CoverageAreaRow[]).map(this.mapCoverageArea);
   }
 
   /**
@@ -395,7 +395,7 @@ export class CoverageService {
       throw new Error(`Erro ao listar areas de cobertura: ${error.message}`);
     }
 
-    return (data || []).map(this.mapCoverageArea);
+    return ((data || []) as CoverageAreaRow[]).map(this.mapCoverageArea);
   }
 
   private validateCoordinates(coords: Coordinates): void {
@@ -435,7 +435,7 @@ export class CoverageService {
 
     return {
       id: row.id,
-      coverage_type: row.coverage_type,
+      coverage_type: row.coverage_type as CoverageType,
       location_id: row.location_id ?? undefined,
       location_name: row.location_name ?? undefined,
       center_latitude: row.center_latitude ?? undefined,

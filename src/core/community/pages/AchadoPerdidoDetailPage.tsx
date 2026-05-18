@@ -3,7 +3,7 @@ import React from "react";
 
 import { useParams, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
-import { lostFoundService } from "@/core/community-lost-found/services";
+import { lostFoundRuntimeService as lostFoundService } from "@/core/community/services/LostFoundRuntimeService";
 import { useAppUrls } from "@/core/routing/hooks"; // ✅ SSOT URLs
 import {
   ArrowLeft,

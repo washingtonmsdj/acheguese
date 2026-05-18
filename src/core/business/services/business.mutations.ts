@@ -8,8 +8,7 @@ import { supabase } from "@/integrations/supabase";
 import { PublicIdentityService } from "@/core/public-identity";
 import { AddressService } from "@/core/address/services/AddressService";
 import { BusinessHoursService } from "@/core/business/BusinessHoursService";
-import type { AdminSupabaseClient } from "@/core/admin/types/adminDatabase.types";
-const supabaseTyped = supabase as unknown as AdminSupabaseClient;
+const supabaseTyped = supabase as any;
 import { callRPC } from "@/integrations/supabase/services/supabaseHelpers";
 import {
   createBusinessSchema,
@@ -99,7 +98,7 @@ function sanitizeAndValidateInput(
   input: CreateBusinessInput | UpdateBusinessInput,
   isUpdate = false,
 ): CreateBusinessInput | UpdateBusinessInput {
-  const foundedYearRaw = input.founded_year;
+  const foundedYearRaw = (input as any).founded_year as string | number | undefined;
   const foundedYear =
     typeof foundedYearRaw === "number"
       ? foundedYearRaw

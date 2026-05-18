@@ -115,7 +115,7 @@ export default function AdminServicos() {
     try {
       // Load professionals via AdminCommunityService
       const pros = await adminCommunityService.getAllProfessionals();
-      setProfessionals((pros as Professional[]) || []);
+      setProfessionals((pros as unknown as Professional[]) || []);
 
       // Load reviews via ReviewsService (SSOT)
       const revs = await ReviewsService.getAllReviews("professional", 100);
@@ -143,16 +143,16 @@ export default function AdminServicos() {
         );
 
         setReviews(
-          revs.map((r: ReviewRecord) => ({
+          revs.map((r) => ({
             ...r,
-            reviewer: profileMap.get(r.reviewer_profile_id) || {
+            reviewer: profileMap.get((r as ReviewRecord).reviewer_profile_id) || {
               name: "Usuário",
               avatar_url: "",
             },
-            professional: proMap.get(r.reviewed_profile_id) || {
+            professional: proMap.get((r as ReviewRecord).reviewed_profile_id) || {
               name: "Desconhecido",
             },
-          })) as Review[],
+          })) as unknown as Review[],
         );
       } else {
         setReviews([]);
@@ -176,8 +176,16 @@ export default function AdminServicos() {
         setReports(
           reps.map((r) => ({
             ...r,
+            motivo:
+              (r as { motivo?: string; reason?: string }).motivo ??
+              (r as { reason?: string }).reason ??
+              "",
+            detalhes:
+              (r as { detalhes?: string; description?: string }).detalhes ??
+              (r as { description?: string }).description ??
+              "",
             professional: proMap.get(r.professional_id) || null,
-          })),
+          })) as unknown as Report[],
         );
       } else {
         setReports([]);

@@ -13,7 +13,7 @@
  */
 import { logger } from '@/shared/utils/logger';
 import { supabase } from '@/integrations/supabase';
-import type { AdminSupabaseClient } from '@/core/admin/types/adminDatabase.types';
+const businessHoursDb = supabase as any;
 
 // ── Tipos ─────────────────────────────────────────────────────────────────
 
@@ -95,7 +95,7 @@ export const BusinessHoursService = {
    */
   async listHours(businessId: string): Promise<ServiceResult<BusinessHours[]>> {
     try {
-      const { data, error } = await (supabase as unknown as AdminSupabaseClient)
+      const { data, error } = await businessHoursDb
         .from('business_hours')
         .select('*')
         .eq('business_id', businessId)
@@ -124,7 +124,7 @@ export const BusinessHoursService = {
     is_closed?: boolean;
   }): Promise<ServiceResult<BusinessHours>> {
     try {
-      const { data, error } = await (supabase as unknown as AdminSupabaseClient)
+      const { data, error } = await businessHoursDb
         .from('business_hours')
         .upsert({
           business_id: input.business_id,
@@ -168,7 +168,7 @@ export const BusinessHoursService = {
         ...h,
       }));
 
-      const { error } = await supabase
+      const { error } = await businessHoursDb
         .from('business_hours')
         .upsert(records, {
           onConflict: 'business_id,day_of_week',
@@ -195,7 +195,7 @@ export const BusinessHoursService = {
    */
   async listExceptions(businessId: string): Promise<ServiceResult<BusinessHoursException[]>> {
     try {
-      const { data, error } = await (supabase as unknown as AdminSupabaseClient)
+      const { data, error } = await businessHoursDb
         .from('business_hours_exceptions')
         .select('*')
         .eq('business_id', businessId)
@@ -225,7 +225,7 @@ export const BusinessHoursService = {
     reason?: string;
   }): Promise<ServiceResult<BusinessHoursException>> {
     try {
-      const { data, error } = await (supabase as unknown as AdminSupabaseClient)
+      const { data, error } = await businessHoursDb
         .from('business_hours_exceptions')
         .upsert({
           business_id: input.business_id,
@@ -257,7 +257,7 @@ export const BusinessHoursService = {
    */
   async deleteException(exceptionId: string): Promise<ServiceResult<boolean>> {
     try {
-      const { error } = await supabase
+      const { error } = await businessHoursDb
         .from('business_hours_exceptions')
         .delete()
         .eq('id', exceptionId);
@@ -283,7 +283,7 @@ export const BusinessHoursService = {
    */
   async getOperationConfig(businessId: string): Promise<ServiceResult<BusinessOperationConfig>> {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await businessHoursDb
         .from('business_operation_config')
         .select('*')
         .eq('business_id', businessId)
@@ -318,7 +318,7 @@ export const BusinessHoursService = {
     temporarily_closed_until?: string | null;
   }): Promise<ServiceResult<BusinessOperationConfig>> {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await businessHoursDb
         .from('business_operation_config')
         .upsert({
           business_id: input.business_id,
@@ -359,7 +359,7 @@ export const BusinessHoursService = {
    */
   async isOpenNow(businessId: string): Promise<ServiceResult<boolean>> {
     try {
-      const { data, error } = await supabase.rpc('is_business_open_now', {
+      const { data, error } = await businessHoursDb.rpc('is_business_open_now', {
         p_business_id: businessId,
       });
 
@@ -380,7 +380,7 @@ export const BusinessHoursService = {
    */
   async getNextOpening(businessId: string): Promise<ServiceResult<BusinessStatus['nextOpening']>> {
     try {
-      const { data, error } = await supabase.rpc('get_next_opening_time', {
+      const { data, error } = await businessHoursDb.rpc('get_next_opening_time', {
         p_business_id: businessId,
       });
 

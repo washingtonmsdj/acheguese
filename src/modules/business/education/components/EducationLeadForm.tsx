@@ -17,7 +17,7 @@ import { Label } from '@/shared/components/ui/label';
 import { Textarea } from '@/shared/components/ui/textarea';
 import { cn } from '@/shared/utils/cn';
 import { useLabels } from '../hooks/useEducationLabels';
-import type { SchoolShift } from '../types';
+import type { EducationNicheKey, SchoolShift } from '../types';
 import { getSchoolStageOptions, SCHOOL_STAGE_OTHER_VALUE } from '../constants/schoolStageOptions';
 
 export interface EducationLeadFormProps {
@@ -55,9 +55,9 @@ export function EducationLeadForm({
   className,
 }: EducationLeadFormProps) {
   void educationProfileId;
-  const labels = useLabels(nicheKey);
+  const labels = useLabels((nicheKey ?? undefined) as EducationNicheKey | undefined);
   const isSchoolContext = nicheKey === 'regular_school' || nicheKey === 'daycare';
-  const stageOptions = getSchoolStageOptions(nicheKey ?? undefined);
+  const stageOptions = getSchoolStageOptions((nicheKey ?? undefined) as EducationNicheKey | undefined);
 
   const [formData, setFormData] = useState<LeadFormData>({
     fullName: '',

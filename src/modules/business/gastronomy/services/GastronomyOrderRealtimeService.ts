@@ -1,5 +1,7 @@
-﻿import { supabase } from "@/core/infrastructure/supabase";
-import type { RealtimeChannel, RealtimeChannelStatus, RealtimePostgresChangesPayload } from "@supabase/supabase-js";
+import { supabase } from "@/core/infrastructure/supabase";
+import type { RealtimeChannel, RealtimePostgresChangesPayload } from "@supabase/supabase-js";
+
+type RealtimeChannelStatus = string;
 
 export class GastronomyOrderRealtimeService {
   static subscribeOrderDetails(
@@ -100,5 +102,8 @@ export class GastronomyOrderRealtimeService {
     await supabase.removeChannel(channel);
   }
 }
+
+
+
 
 

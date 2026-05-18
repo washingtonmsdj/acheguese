@@ -47,7 +47,7 @@ export function ProfileSidebarHeader({
   
   if (!profile) return null;
 
-  const displayName = profile.display_name || profile.name || "Usuário";
+  const displayName = profile.display_name || "Usuario";
   const avatarUrl = profile.avatar_url;
   const profileType = getProfileTypeLabel(profile);
 

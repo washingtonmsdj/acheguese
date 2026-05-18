@@ -42,9 +42,15 @@ export default function CentralHubPage() {
   }
 
   const hasBusinesses = profileHub.businessModules.length > 0;
-  const hasProfessional = profileHub.personalProfile?.professional_data ? true : false;
+  const hasProfessional = Boolean((profileHub.profile as { professional_data?: unknown } | null)?.professional_data);
   const hasDriver = driverRegistered;
-  const isAdmin = profileHub.identity?.reputation?.is_moderator || false;
+  const isAdmin = Boolean((profileHub.identity?.reputation as { is_moderator?: boolean } | undefined)?.is_moderator);
+  const driverMode =
+    driverData?.can_do_rides
+      ? "driver"
+      : driverData?.can_do_delivery
+      ? "motoboy"
+      : null;
 
   return (
     <div className="container mx-auto max-w-6xl space-y-6 px-4 py-8">
@@ -104,7 +110,7 @@ export default function CentralHubPage() {
             )}
 
             {/* Motorista */}
-            {hasDriver && driverData?.mode === "driver" && (
+            {hasDriver && driverMode === "driver" && (
               <Card className="border-primary/20 bg-primary/5">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
@@ -124,7 +130,7 @@ export default function CentralHubPage() {
             )}
 
             {/* Motoboy */}
-            {hasDriver && driverData?.mode === "motoboy" && (
+            {hasDriver && driverMode === "motoboy" && (
               <Card className="border-primary/20 bg-primary/5">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">

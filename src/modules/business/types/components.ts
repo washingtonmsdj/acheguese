@@ -5,7 +5,8 @@
  * Garante type safety em toda a aplicação
  */
 
-import type { Business, Product, Review } from "@/core/business/types";
+import type { Product, Review } from "@/core/business/types";
+import type { BizData } from "@/modules/business/types";
 
 /**
  * Tipo para usuário em componentes
@@ -47,7 +48,7 @@ export interface BusinessService {
  * Props para VisaoGeralTab
  */
 export interface VisaoGeralTabProps {
-  business: Business;
+  business: BizData;
   gallery: GalleryPhoto[];
   reviews: Review[];
   user: BusinessUser | null;
@@ -58,7 +59,7 @@ export interface VisaoGeralTabProps {
  * Props para ProdutosTab
  */
 export interface ProdutosTabProps {
-  business: Business;
+  business: BizData;
   products: Product[];
   isOwner: boolean;
   onUpdate: () => void;
@@ -68,7 +69,7 @@ export interface ProdutosTabProps {
  * Props para ServicosTab
  */
 export interface ServicosTabProps {
-  business: Business;
+  business: BizData;
   services: BusinessService[];
   isOwner: boolean;
   onUpdate: () => void;
@@ -87,7 +88,7 @@ export interface CardapioTabProps {
  * Props para PortfolioTab
  */
 export interface PortfolioTabProps {
-  business: Business;
+  business: BizData;
   isOwner: boolean;
 }
 
@@ -95,7 +96,7 @@ export interface PortfolioTabProps {
  * Props para PromocoesTab
  */
 export interface PromocoesTabProps {
-  business: Business;
+  business: BizData;
   isOwner: boolean;
 }
 
@@ -103,7 +104,7 @@ export interface PromocoesTabProps {
  * Props para EstatisticasTab
  */
 export interface EstatisticasTabProps {
-  business: Business;
+  business: BizData;
   isOwner: boolean;
 }
 
@@ -111,14 +112,14 @@ export interface EstatisticasTabProps {
  * Props para DashboardTab
  */
 export interface DashboardTabProps {
-  business: Business;
+  business: BizData;
 }
 
 /**
  * Props para BusinessTabs
  */
 export interface BusinessTabsProps {
-  business: Business;
+  business: BizData;
   isOwner: boolean;
   canSeeDashboard: boolean;
   user: BusinessUser | null;

@@ -237,7 +237,7 @@ export default function AdminBillingPlansEditor() {
                     </TableCell>
                     <TableCell>
                       {plan.isActive ? (
-                        <Badge variant="success">Ativo</Badge>
+                          <Badge variant="secondary">Ativo</Badge>
                       ) : (
                         <Badge variant="secondary">Inativo</Badge>
                       )}

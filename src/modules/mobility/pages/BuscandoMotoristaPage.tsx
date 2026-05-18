@@ -299,35 +299,40 @@ export default function BuscandoMotoristaPage() {
     destination?: string | null;
     estimated_fare?: number | null;
     final_price?: number | null;
+    suggested_price?: number | null;
   };
   const rideData = ride as RideWithAddresses | null | undefined;
-  const rideStatus = rideData?.status;
+  const rideStatus = String(rideData?.status ?? "");
 
   // Navegar quando motorista aceitar ou corrida terminar
   useEffect(() => {
     if (!rideStatus) return;
 
+    const successStatuses: string[] = [
+      RIDE_STATUS.DRIVER_ACCEPTED,
+      RIDE_STATUS.DRIVER_ARRIVING,
+      RIDE_STATUS.DRIVER_ASSIGNED,
+      RIDE_STATUS.DRIVER_ON_THE_WAY,
+      RIDE_STATUS.IN_PROGRESS,
+    ];
+
     if (
-      [
-        RIDE_STATUS.DRIVER_ACCEPTED,
-        RIDE_STATUS.DRIVER_ARRIVING,
-        RIDE_STATUS.DRIVER_ASSIGNED,
-        RIDE_STATUS.DRIVER_ON_THE_WAY,
-        RIDE_STATUS.IN_PROGRESS,
-      ].includes(rideStatus)
+      successStatuses.includes(rideStatus)
     ) {
       toast.success(BUSCANDO_MOTORISTA_PAGE_LABELS.TOAST_DRIVER_FOUND);
       navigate("/mobilidade/passageiro", { replace: true });
     }
 
+    const terminalStatuses: string[] = [
+      RIDE_STATUS.CANCELLED,
+      RIDE_STATUS.CANCELLED_BY_PASSENGER,
+      RIDE_STATUS.CANCELLED_BY_DRIVER,
+      RIDE_STATUS.EXPIRED,
+      RIDE_STATUS.FAILED,
+    ];
+
     if (
-      [
-        RIDE_STATUS.CANCELLED,
-        RIDE_STATUS.CANCELLED_BY_PASSENGER,
-        RIDE_STATUS.CANCELLED_BY_DRIVER,
-        RIDE_STATUS.EXPIRED,
-        RIDE_STATUS.FAILED,
-      ].includes(rideStatus)
+      terminalStatuses.includes(rideStatus)
     ) {
       navigate("/mobilidade/passageiro", { replace: true });
     }

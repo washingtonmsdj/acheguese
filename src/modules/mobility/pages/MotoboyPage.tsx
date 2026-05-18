@@ -214,14 +214,14 @@ export default function MotoboyPage() {
                       <div className="flex items-start justify-between">
                         <div className="space-y-1">
                           <p className="text-sm font-medium">
-                            {delivery.origin} â†’ {delivery.destination}
+                            {String(delivery.origin ?? "")} â†’ {String(delivery.destination ?? "")}
                           </p>
                           <p className="text-xs text-muted-foreground">
-                            {delivery.package_description || "Pacote"}
+                            {String(delivery.package_description || "Pacote")}
                           </p>
                         </div>
                         <Badge className="bg-orange-500/10 text-orange-600">
-                          R$ {delivery.suggested_price?.toFixed(2) || "0.00"}
+                          R$ {typeof delivery.suggested_price === "number" ? delivery.suggested_price.toFixed(2) : "0.00"}
                         </Badge>
                       </div>
                       <Button
@@ -486,3 +486,4 @@ function PageHeader({
     </div>
   );
 }
+

@@ -11,10 +11,9 @@ import { logger } from "@/shared/utils/logger";
 import { toast } from "sonner";
 import { notificationService } from "./services/NotificationService";
 import type {
-  Notification,
   NotificationFilters,
-  NotificationStats,
 } from "./types";
+import type { Notification } from "./services/NotificationService";
 
 interface UseUnifiedNotificationsOptions {
   filters?: NotificationFilters;
@@ -24,9 +23,7 @@ interface UseUnifiedNotificationsOptions {
   refreshInterval?: number;
 }
 
-type RealtimeChannelLike = {
-  unsubscribe?: () => void;
-};
+type RealtimeChannelLike = (() => void) | { unsubscribe?: () => void };
 
 export function useUnifiedNotifications(
   options: UseUnifiedNotificationsOptions = {},
@@ -41,10 +38,10 @@ export function useUnifiedNotifications(
 
   const { user } = useAuth();
   const [notifications, setNotifications] = useState<Notification[]>([]);
-  const [stats, setStats] = useState<NotificationStats>({
+  const [stats, setStats] = useState({
     total: 0,
     unread: 0,
-    by_type: {},
+    by_type: {} as Record<string, number>,
     by_priority: { low: 0, medium: 0, high: 0, urgent: 0 },
   });
   const [loading, setLoading] = useState(true);
@@ -78,10 +75,10 @@ export function useUnifiedNotifications(
           user.id,
           filtersRef.current,
         );
-        setNotifications(data);
+        setNotifications(data as Notification[]);
 
         const statsData = await notificationService.getStats(user.id);
-        setStats(statsData);
+        setStats((prev) => ({ ...prev, ...statsData }));
       } catch (err) {
         const message =
           err instanceof Error ? err.message : "Erro ao carregar notificacoes";
@@ -97,28 +94,23 @@ export function useUnifiedNotifications(
 
   const markAsRead = useCallback(async (notificationId: string) => {
     try {
-      const success = await notificationService.markAsRead(notificationId);
-
-      if (success) {
-        setNotifications((prev) =>
-          prev.map((notification) =>
-            notification.id === notificationId
-              ? {
-                  ...notification,
-                  read: true,
-                  read_at: new Date().toISOString(),
-                }
-              : notification,
-          ),
-        );
-
-        setStats((prev) => ({
-          ...prev,
-          unread: Math.max(0, prev.unread - 1),
-        }));
-      }
-
-      return success;
+      await notificationService.markAsRead(notificationId);
+      setNotifications((prev) =>
+        prev.map((notification) =>
+          notification.id === notificationId
+            ? {
+                ...notification,
+                read: true,
+                read_at: new Date().toISOString(),
+              }
+            : notification,
+        ),
+      );
+      setStats((prev) => ({
+        ...prev,
+        unread: Math.max(0, prev.unread - 1),
+      }));
+      return true;
     } catch (err) {
       logger.error("Erro ao marcar como lida:", err);
       return false;
@@ -129,7 +121,7 @@ export function useUnifiedNotifications(
     if (!user?.id) return 0;
 
     try {
-      const count = await notificationService.markAllAsRead(user.id);
+      const count = await notificationService.markAllAsRead();
 
       setNotifications((prev) =>
         prev.map((notification) => ({
@@ -157,20 +149,15 @@ export function useUnifiedNotifications(
 
   const deleteNotification = useCallback(async (notificationId: string) => {
     try {
-      const success =
-        await notificationService.deleteNotification(notificationId);
-
-      if (success) {
-        setNotifications((prev) =>
-          prev.filter((notification) => notification.id !== notificationId),
-        );
-        setStats((prev) => ({
-          ...prev,
-          total: Math.max(0, prev.total - 1),
-        }));
-      }
-
-      return success;
+      await notificationService.deleteNotification(notificationId);
+      setNotifications((prev) =>
+        prev.filter((notification) => notification.id !== notificationId),
+      );
+      setStats((prev) => ({
+        ...prev,
+        total: Math.max(0, prev.total - 1),
+      }));
+      return true;
     } catch (err) {
       logger.error("Erro ao deletar notificacao:", err);
       return false;
@@ -209,8 +196,11 @@ export function useUnifiedNotifications(
             },
             by_priority: {
               ...prev.by_priority,
-              [newNotification.priority]:
-                prev.by_priority[newNotification.priority] + 1,
+              [((newNotification as any).priority as string) || "medium"]:
+                prev.by_priority[
+                  ((((newNotification as any).priority as string) || "medium") as
+                    "low" | "medium" | "high" | "urgent")
+                ] + 1,
             },
           }));
 
@@ -223,11 +213,16 @@ export function useUnifiedNotifications(
         },
       );
 
-      channelRef.current = channel;
+      channelRef.current = channel as RealtimeChannelLike;
 
       return () => {
-        if (channel && typeof channel.unsubscribe === "function") {
-          channel.unsubscribe();
+        if (typeof channelRef.current === "function") {
+          channelRef.current();
+        } else if (
+          channelRef.current &&
+          typeof channelRef.current.unsubscribe === "function"
+        ) {
+          channelRef.current.unsubscribe();
         }
         channelRef.current = null;
       };
@@ -272,8 +267,8 @@ export function useUnifiedNotifications(
     getHighPriorityNotifications: () =>
       notifications.filter(
         (notification) =>
-          notification.priority === "high" ||
-          notification.priority === "urgent",
+          (notification as any).priority === "high" ||
+          (notification as any).priority === "urgent",
       ),
   };
 }

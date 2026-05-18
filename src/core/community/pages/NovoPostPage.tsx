@@ -15,7 +15,6 @@ export default function NovoPostPage() {
       type === "discussao" ||
       type === "recomendacao" ||
       type === "evento" ||
-      type === "noticia" ||
       type === "enquete"
     ) {
       return type;

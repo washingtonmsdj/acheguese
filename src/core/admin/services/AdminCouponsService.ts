@@ -56,12 +56,13 @@ interface CouponWithBusinessRow extends CouponData {
 }
 
 class AdminCouponsServiceClass {
+  private readonly db = supabase as any;
   /**
    * Busca estatísticas de cupons
    */
   async getStats(): Promise<CouponsStats> {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await this.db
         .from("coupons")
         .select("is_active, usos_count, validade");
 
@@ -71,7 +72,7 @@ class AdminCouponsServiceClass {
       }
 
       const now = new Date().toISOString();
-      const rows: CouponStatsRow[] = data || [];
+      const rows: CouponStatsRow[] = (data as CouponStatsRow[]) || [];
       const stats: CouponsStats = {
         total: rows.length,
         active: rows.filter((c) => c.is_active && (!c.validade || c.validade > now)).length,
@@ -100,7 +101,7 @@ class AdminCouponsServiceClass {
       const limit = options.limit || 20;
       const offset = (page - 1) * limit;
 
-      let query = supabase
+      let query = this.db
         .from("coupons")
         .select(
           `
@@ -134,7 +135,7 @@ class AdminCouponsServiceClass {
       }
 
       // Map database response to CouponData interface
-      const rows: CouponWithBusinessRow[] = data || [];
+      const rows: CouponWithBusinessRow[] = (data as CouponWithBusinessRow[]) || [];
       const coupons = rows.map((item) => ({
         ...item,
         business_name: item.business?.business_name,
@@ -173,7 +174,7 @@ class AdminCouponsServiceClass {
    */
   async createCoupon(data: Partial<CouponData>): Promise<CouponData> {
     try {
-      const { data: newCoupon, error } = await supabase
+      const { data: newCoupon, error } = await this.db
         .from("coupons")
         .insert({
           codigo: data.codigo,
@@ -186,7 +187,7 @@ class AdminCouponsServiceClass {
           is_active: data.is_active ?? true,
           validade: data.validade,
           business_id: data.business_id,
-        })
+        } as any)
         .select()
         .single();
 
@@ -222,9 +223,9 @@ class AdminCouponsServiceClass {
       if (updates.validade !== undefined) schemaUpdates.validade = updates.validade;
       if (updates.business_id !== undefined) schemaUpdates.business_id = updates.business_id;
 
-      const { data, error } = await supabase
+      const { data, error } = await this.db
         .from("coupons")
-        .update(schemaUpdates)
+        .update(schemaUpdates as any)
         .eq("id", id)
         .select()
         .single();
@@ -246,7 +247,7 @@ class AdminCouponsServiceClass {
    */
   async deleteCoupon(id: string): Promise<boolean> {
     try {
-      const { error } = await supabase
+      const { error } = await this.db
         .from("coupons")
         .delete()
         .eq("id", id);
@@ -268,7 +269,7 @@ class AdminCouponsServiceClass {
    */
   async toggleActive(id: string, isActive: boolean): Promise<boolean> {
     try {
-      const { error } = await supabase
+      const { error } = await this.db
         .from("coupons")
         .update({ is_active: isActive })
         .eq("id", id);

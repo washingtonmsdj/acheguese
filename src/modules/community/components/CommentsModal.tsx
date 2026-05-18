@@ -172,7 +172,6 @@ export function CommentsModal({
         description="Essa acao remove o comentario e suas respostas vinculadas. Nao e possivel desfazer."
         confirmLabel="Excluir"
         cancelLabel="Cancelar"
-        variant="destructive"
         onConfirm={handleConfirmDeleteComment}
       />
     </>

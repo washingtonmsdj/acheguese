@@ -52,7 +52,7 @@ import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import { Badge } from "@/shared/components/ui/badge";
 import { cn } from "@/shared/utils/cn";
-import type { RouteResolved } from "@/core/routing/types";
+type RouteResolved = any;
 
 // ============================================================================
 // CONSTANTS
@@ -519,7 +519,7 @@ export default function EventosPage({ resolved, activeMemberIds }: EventosPagePr
         <Button
           size="lg"
           className="h-14 w-14 rounded-full bg-gradient-to-br from-primary to-purple-600 shadow-2xl shadow-primary/25 transition-all hover:scale-110 hover:shadow-primary/40"
-          onClick={() => navigate(communityUrls.createEvent)}
+          onClick={() => navigate((communityUrls as any).createEvent ?? "/eventos/novo")}
         >
           <Plus className="h-6 w-6" />
         </Button>

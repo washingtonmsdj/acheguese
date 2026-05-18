@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase";
+const db = supabase as any;
 
 export interface CivicReport {
   id: string;
@@ -57,7 +58,7 @@ export const CivicReportService = {
     type?: string;
     city?: string;
   }): Promise<CivicReport[]> {
-    let q = supabase
+    let q = db
       .from("civic_reports")
       .select("*")
       .order("created_at", { ascending: false });
@@ -74,7 +75,7 @@ export const CivicReportService = {
   },
 
   async getReportById(reportId: string): Promise<CivicReport> {
-    const { data, error } = await supabase
+    const { data, error } = await db
       .from("civic_reports")
       .select("*")
       .eq("id", reportId)
@@ -96,7 +97,7 @@ export const CivicReportService = {
   },
 
   async getReportComments(reportId: string): Promise<CivicReportComment[]> {
-    const { data, error } = await supabase
+    const { data, error } = await db
       .from("civic_report_comments")
       .select("*")
       .eq("report_id", reportId)
@@ -106,7 +107,7 @@ export const CivicReportService = {
   },
 
   async createReport(reportData: CreateCivicReportInput): Promise<CivicReport> {
-    const { data, error } = await supabase
+    const { data, error } = await db
       .from("civic_reports")
       .insert(reportData)
       .select()
@@ -120,7 +121,7 @@ export const CivicReportService = {
     profileId: string,
     content: string,
   ): Promise<CivicReportComment> {
-    const { data, error } = await supabase
+    const { data, error } = await db
       .from("civic_report_comments")
       .insert({ report_id: reportId, profile_id: profileId, content })
       .select()
@@ -138,7 +139,7 @@ export const CivicReportService = {
   },
 
   async upvoteReport(reportId: string): Promise<void> {
-    const { error } = await supabase.rpc("increment_civic_upvote", {
+    const { error } = await db.rpc("increment_civic_upvote", {
       report_id: reportId,
     });
     if (error) throw error;

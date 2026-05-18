@@ -302,11 +302,11 @@ export function TerritorialMobilidadePage() {
 }
 
 export function TerritorialVagasPage() {
-  const { resolved, activeMemberIds } = useTerritorialContext();
+  const { resolved } = useTerritorialContext();
   return (
     <CityStatusGate module="vagas">
       <Suspense fallback={<ModulePageLoader />}>
-        <VagasPage resolved={resolved} activeMemberIds={activeMemberIds} />
+        <VagasPage resolved={resolved} />
       </Suspense>
     </CityStatusGate>
   );

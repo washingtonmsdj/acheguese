@@ -70,13 +70,15 @@ export function useOrders(businessId: string, filters?: UseOrdersFilters) {
     };
 
     const invalidateOrdersFromTimeline = async (
-      payload: RealtimePostgresChangesPayload<{ order_id?: string | null }>,
+      payload: RealtimePostgresChangesPayload<Record<string, unknown>>,
     ) => {
+      const newRow = payload.new as { order_id?: unknown } | null;
+      const oldRow = payload.old as { order_id?: unknown } | null;
       const orderId =
-        typeof payload.new?.order_id === 'string'
-          ? payload.new.order_id
-          : typeof payload.old?.order_id === 'string'
-            ? payload.old.order_id
+        typeof newRow?.order_id === 'string'
+          ? newRow.order_id
+          : typeof oldRow?.order_id === 'string'
+            ? oldRow.order_id
             : null;
 
       // Filtra por vinculo canonical (orders.source_id = businessId),
@@ -113,8 +115,8 @@ export function useOrders(businessId: string, filters?: UseOrdersFilters) {
 
   // Mutation: Criar pedido
   const createOrderMutation = useMutation({
-    mutationFn: async (input: Parameters<typeof OrderService.createOrder>[0]) => {
-      const result = await OrderService.createOrder(input);
+    mutationFn: async () => {
+      const result = await OrderService.createOrder();
       if (result.error) throw new Error(result.error);
       return result.data;
     },

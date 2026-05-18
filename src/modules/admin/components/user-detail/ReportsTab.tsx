@@ -9,7 +9,7 @@ import { Badge } from "@/shared/components/ui/badge";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { cn } from "@/shared/utils/cn";
-import type { UserReport } from "@/modules/admin/hooks/useAdminUserDetail";
+import type { UserReport } from "@/core/admin/services/AdminUserDetailService";
 
 interface ReportsTabProps {
   reportsReceived: UserReport[];

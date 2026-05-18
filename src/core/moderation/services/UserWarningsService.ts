@@ -10,7 +10,6 @@
 import { supabase } from "@/integrations/supabase";
 import { logger } from "@/shared/utils/logger";
 import { trackError } from "@/shared/utils/errorTracking";
-import type { AdminSupabaseClient } from "@/core/admin/types/adminDatabase.types";
 
 // ============================================================================
 // 📦 TIPOS
@@ -38,8 +37,8 @@ export interface CreateUserWarningData {
 
 class UserWarningsService {
   private readonly TABLE = "user_warnings";
-  private db(): AdminSupabaseClient {
-    return supabase as unknown as AdminSupabaseClient;
+  private db(): any {
+    return supabase as any;
   }
 
   /**

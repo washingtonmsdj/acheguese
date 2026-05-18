@@ -92,16 +92,24 @@ export function MessagesInbox({ currentUserId }: MessagesInboxProps) {
   >(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const {
-    conversations,
-    messages,
-    isLoading,
-    error,
-    fetchConversations,
-    fetchMessages,
-    sendMessage,
-    reportConversation,
-  } = useDirectMessages(currentUserId);
+  const dm = useDirectMessages(currentUserId) as any;
+  const conversations = (dm.conversations ?? []) as Conversation[];
+  const messages = dm.messages;
+  const isLoading = dm.isLoading as boolean;
+  const error = dm.error as string | null;
+  const fetchConversations = dm.fetchConversations as () => Promise<void>;
+  const fetchMessages = dm.fetchMessages as (conversationId: string) => Promise<void>;
+  const sendMessage = dm.sendMessage as (
+    conversationId: string,
+    messageText: string,
+    messageType?: "text" | "location",
+  ) => Promise<void>;
+  const reportConversation = dm.reportConversation as (
+    conversationId: string,
+    profileId: string,
+    reason: string,
+    description?: string,
+  ) => Promise<void>;
 
   useEffect(() => {
     fetchConversations();
@@ -388,14 +396,21 @@ export function MessagesInbox({ currentUserId }: MessagesInboxProps) {
               conversations.find((c) => c.id === selectedConversation)?.post_type,
             ),
           }}
-          recipientProfile={
-            getOtherParticipant(
-              conversations.find((c) => c.id === selectedConversation)!,
-            ) || {
-              id: "",
-              name: "UsuÃ¡rio",
-            }
-          }
+          recipientProfile={(() => {
+            const recipient =
+              getOtherParticipant(
+                conversations.find((c) => c.id === selectedConversation)!,
+              ) || {
+                id: "",
+                name: "Usuário",
+              };
+            return {
+              id: recipient.id,
+              displayName: recipient.name ?? "Usuário",
+              avatarUrl: recipient.avatar_url ?? null,
+              verified: Boolean(recipient.is_verified),
+            };
+          })()}
           currentUserId={currentUserId}
           onSendMessage={handleSendMessage}
           onReportConversation={handleReportConversation}
@@ -404,3 +419,4 @@ export function MessagesInbox({ currentUserId }: MessagesInboxProps) {
     </div>
   );
 }
+

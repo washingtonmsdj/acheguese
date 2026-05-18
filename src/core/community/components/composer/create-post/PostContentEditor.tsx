@@ -9,7 +9,7 @@ import {
 import { cn } from "@/shared/utils/cn";
 import { POST_TYPES } from "./postTypes";
 import { PollEditor } from "./PollEditor";
-import type { UnifiedPostType } from "../../hooks/usePostCreation";
+import type { UnifiedPostType } from "../../../hooks/usePostCreation";
 
 interface PostContentEditorProps {
   tipo: UnifiedPostType;

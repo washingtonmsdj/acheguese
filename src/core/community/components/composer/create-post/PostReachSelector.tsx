@@ -6,7 +6,7 @@ import {
   AvatarImage,
 } from "@/shared/components/ui/avatar";
 import { POST_TYPES } from "./postTypes";
-import type { UnifiedPostType } from "../../hooks/usePostCreation";
+import type { UnifiedPostType } from "../../../hooks/usePostCreation";
 
 interface PostReachSelectorProps {
   alcance: "rua" | "neighborhood" | "city";

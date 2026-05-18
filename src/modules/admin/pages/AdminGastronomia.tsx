@@ -25,7 +25,7 @@ import {
   TableRow,
 } from "@/shared/components/ui/table";
 import { Badge } from "@/shared/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/shared/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/shared/components/ui/tabs";
 import {
   ChefHat,
@@ -331,14 +331,14 @@ export default function AdminGastronomia() {
                           <TableCell>{profile.price_range}</TableCell>
                           <TableCell>
                             {profile.delivery_enabled ? (
-                              <Badge variant="success">Sim</Badge>
+                              <Badge variant="secondary">Sim</Badge>
                             ) : (
                               <Badge variant="secondary">Nao</Badge>
                             )}
                           </TableCell>
                           <TableCell>
                             {profile.status === "active" ? (
-                              <Badge variant="success">Ativo</Badge>
+                              <Badge variant="secondary">Ativo</Badge>
                             ) : (
                               <Badge variant="secondary">Inativo</Badge>
                             )}
@@ -410,7 +410,7 @@ export default function AdminGastronomia() {
                         <TableCell>{menu.itemCount}</TableCell>
                         <TableCell>
                           {menu.is_active ? (
-                            <Badge variant="success">Ativo</Badge>
+                            <Badge variant="secondary">Ativo</Badge>
                           ) : (
                             <Badge variant="secondary">Inativo</Badge>
                           )}
@@ -467,14 +467,14 @@ export default function AdminGastronomia() {
                         <TableCell>R$ {Number(item.basePrice || 0).toFixed(2)}</TableCell>
                         <TableCell>
                           {item.image_url ? (
-                            <Badge variant="success">Com imagem</Badge>
+                            <Badge variant="secondary">Com imagem</Badge>
                           ) : (
                             <Badge variant="secondary">Sem imagem</Badge>
                           )}
                         </TableCell>
                         <TableCell>
                           {item.is_available ? (
-                            <Badge variant="success">Disponivel</Badge>
+                            <Badge variant="secondary">Disponivel</Badge>
                           ) : (
                             <Badge variant="secondary">Indisponivel</Badge>
                           )}
@@ -554,7 +554,7 @@ export default function AdminGastronomia() {
                         <TableCell>{business.cuisineType || "-"}</TableCell>
                         <TableCell>
                           {business.status === "active" ? (
-                            <Badge variant="success">Ativo</Badge>
+                            <Badge variant="secondary">Ativo</Badge>
                           ) : (
                             <Badge variant="secondary">Inativo</Badge>
                           )}

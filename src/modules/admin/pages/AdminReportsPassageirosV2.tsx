@@ -149,7 +149,7 @@ export default function AdminReportsPassageirosV2() {
     if (!selectedReport) return;
     updateReportMutation.mutate({
       reportId: selectedReport.id,
-      updates: { status, resolutionNotes, adminNotes },
+      updates: { status, resolution_notes: resolutionNotes, admin_notes: adminNotes },
     });
   };
 

@@ -98,7 +98,10 @@ export async function getBusinesses(
     // SSOT - Filtro territorial usando utilitário compartilhado
     if (filters.territoryFilter) {
       query = applyTerritoryFilter(
-        query as unknown as { in: (field: string, values: string[]) => unknown },
+        query as unknown as {
+          eq: (field: string, value: string) => unknown;
+          in: (field: string, values: string[]) => unknown;
+        },
         filters.territoryFilter,
       ) as typeof query;
     }
@@ -261,7 +264,10 @@ export async function getBusinessesList(params: {
 
     if (resolvedFilter) {
       query = applyTerritoryFilter(
-        query as unknown as { in: (field: string, values: string[]) => unknown },
+        query as unknown as {
+          eq: (field: string, value: string) => unknown;
+          in: (field: string, values: string[]) => unknown;
+        },
         resolvedFilter,
       ) as typeof query;
     }

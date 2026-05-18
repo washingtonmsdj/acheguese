@@ -122,7 +122,7 @@ export class TrackingService {
       if (!data) return null;
 
       // GATE 2: Conversão explícita BANCO → APP
-      return this.mapToPosition(data);
+      return this.mapToPosition(data as TrackingRow);
     } catch (error) {
       logger.error('[TrackingService] Error getting current position:', error);
       return null;
@@ -224,7 +224,7 @@ export class TrackingService {
           (payload) => {
             if (payload.new) {
               // GATE 2: Conversão explícita BANCO → APP
-              const position = this.mapToPosition(payload.new);
+              const position = this.mapToPosition(payload.new as TrackingRow);
               callback(position);
             }
           }
@@ -590,7 +590,7 @@ export class TrackingService {
           await this.updatePresence(payload.entityId, payload.status, payload.entityType);
           this.reconnectionManager.removePendingOperation(operation.id);
         } else if (operation.type === 'heartbeat') {
-          await this.sendHeartbeat(operation.payload as HeartbeatPayload);
+          await this.sendHeartbeat(operation.payload as unknown as HeartbeatPayload);
           this.reconnectionManager.removePendingOperation(operation.id);
         }
       } catch (error) {
@@ -679,11 +679,12 @@ export class TrackingService {
       entityId: data.driver_profile_id || data.user_id || data.vehicle_id || '',
       position: this.mapToPosition(data),
       recordedAt: data.created_at || data.updated_at || new Date().toISOString(),
-      source: data.source || 'gps',
+      source: ((data.source as 'manual' | 'gps' | 'network' | undefined) ?? 'gps'),
     };
   }
 }
 
 // Singleton instance
 export const trackingService = TrackingService.getInstance();
+
 

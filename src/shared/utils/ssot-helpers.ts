@@ -162,7 +162,7 @@ export const SSOTUtils = {
   getRideStatusLabel: (status: string): string => {
     const labels = {
       [RIDE_STATUS.PENDING]: "Pendente",
-      [RIDE_STATUS.ACCEPTED]: "Aceita",
+      [RIDE_STATUS.DRIVER_ACCEPTED]: "Aceita",
       [RIDE_STATUS.DRIVER_ASSIGNED]: "Motorista Designado",
       [RIDE_STATUS.DRIVER_ON_THE_WAY]: "Motorista a Caminho",
       [RIDE_STATUS.DRIVER_ARRIVED]: "Motorista Chegou",

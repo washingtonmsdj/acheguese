@@ -41,7 +41,7 @@ export function useRideHistory(
   pageSize?: number,
 ) {
   const { user } = useAuth();
-  const cancelledStatuses = new Set([
+  const cancelledStatuses = new Set<string>([
     RIDE_STATUS.CANCELLED,
     RIDE_STATUS.CANCELLED_BY_DRIVER,
     RIDE_STATUS.CANCELLED_BY_PASSENGER,
@@ -79,7 +79,7 @@ export function useRideHistory(
         stats: {
           total: mapped.length,
           completed: mapped.filter((r) => r.status === RIDE_STATUS.COMPLETED).length,
-          cancelled: mapped.filter((r) => cancelledStatuses.has(r.status)).length,
+          cancelled: mapped.filter((r) => cancelledStatuses.has(String(r.status))).length,
           totalSpent: mapped.reduce(
             (acc: number, r) => acc + (r.final_price || 0),
             0,

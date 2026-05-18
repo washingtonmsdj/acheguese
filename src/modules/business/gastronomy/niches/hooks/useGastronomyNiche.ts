@@ -170,7 +170,7 @@ export function useGastronomyNiche(
     sectionVisibility,
 
     // Configs
-    defaultConfig: defaultConfigs.config,
+    defaultConfig: defaultConfigs.config as Record<string, unknown>,
     suggestedCategories: defaultConfigs.categories,
     suggestedItems: defaultConfigs.items,
 

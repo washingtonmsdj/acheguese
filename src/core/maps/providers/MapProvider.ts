@@ -10,10 +10,16 @@
  * Para trocar de provider de tiles (ex: Maptiler, Stadia), mude apenas aqui.
  */
 
-import type { TileProviderConfig, MapCamera } from './types';
+import type { TileProviderConfig } from '../types/providers';
+
+interface MapCamera {
+  center: [number, number];
+  zoom: number;
+}
 
 /** Style URL compativel com MapLibre GL - OpenFreeMap (OSM, sem token) */
 export const DEFAULT_TILE_STYLE: TileProviderConfig = {
+  name: 'openfreemap',
   styleUrl: 'https://tiles.openfreemap.org/styles/positron',
   attribution: '&copy; <a href="https://openstreetmap.org">OpenStreetMap</a> contributors',
 };

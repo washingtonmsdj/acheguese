@@ -395,12 +395,20 @@ export function useDeliveryDestination(options: UseDeliveryDestinationOptions) {
 
     let coords = getResidenceReferenceCoords(primaryResidence);
     if (!coords) {
+      const locationMetadata =
+        primaryResidence.location?.metadata && typeof primaryResidence.location.metadata === 'object'
+          ? (primaryResidence.location.metadata as Record<string, unknown>)
+          : {};
+      const cityFromLocation =
+        typeof locationMetadata.city_name === 'string' ? locationMetadata.city_name : null;
+      const stateFromLocation =
+        typeof locationMetadata.state_code === 'string' ? locationMetadata.state_code : null;
       const rawAddressParts = [
         primaryResidence.address?.street,
         primaryResidence.address?.number,
-        primaryResidence.address?.neighborhood,
-        primaryResidence.address?.city,
-        primaryResidence.address?.state,
+        primaryResidence.location?.name,
+        cityFromLocation,
+        stateFromLocation,
         primaryResidence.address?.postal_code,
       ].filter((value): value is string => typeof value === 'string' && value.trim().length > 0);
       const fallbackQuery = rawAddressParts.join(', ').trim();
@@ -438,6 +446,14 @@ export function useDeliveryDestination(options: UseDeliveryDestinationOptions) {
     const label = getResidenceReferenceLabel(primaryResidence) || 'Residencia principal';
 
     setDestinationErrorMessage(null);
+    const locationMetadata =
+      primaryResidence.location?.metadata && typeof primaryResidence.location.metadata === 'object'
+        ? (primaryResidence.location.metadata as Record<string, unknown>)
+        : {};
+    const cityName =
+      typeof locationMetadata.city_name === 'string' ? locationMetadata.city_name : null;
+    const stateCode =
+      typeof locationMetadata.state_code === 'string' ? locationMetadata.state_code : null;
     setDeliveryDestination({
       source: 'saved_residence',
       latitude: coords.latitude,
@@ -447,11 +463,8 @@ export function useDeliveryDestination(options: UseDeliveryDestinationOptions) {
       number: primaryResidence.address?.number ?? null,
       complement: primaryResidence.address?.complement ?? null,
       neighborhood: primaryResidence.location?.name ?? null,
-      city: primaryResidence.location?.metadata?.city_name ?? null,
-      state:
-        typeof primaryResidence.location?.metadata?.state_code === 'string'
-          ? primaryResidence.location.metadata.state_code
-          : null,
+      city: cityName,
+      state: stateCode,
       postalCode: primaryResidence.address?.postal_code ?? null,
       reference: null,
       updatedAt: new Date().toISOString(),

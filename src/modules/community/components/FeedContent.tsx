@@ -1,4 +1,3 @@
- 
 import React, { useMemo } from "react";
 import { AnimatePresence } from "framer-motion";
 import { Loader2 } from "lucide-react";
@@ -36,15 +35,15 @@ export const FeedContent = ({
   sentinelRef,
 }: FeedContentProps) => {
   const filteredAndSortedPosts = useMemo(() => {
-    const URGENT = ["alerta", "segurança"];
-    const filtered =
-      filter === "todos" ? posts : posts.filter((p) => p.category === filter);
+    const safePosts = posts as Array<FeedPost & { category?: string; hidden?: boolean }>;
+    const urgent = ["alerta", "seguranca"];
+    const filtered = filter === "todos" ? safePosts : safePosts.filter((p) => p.category === filter);
 
     return [...filtered]
       .filter((p) => !p.hidden)
       .sort((a, b) => {
-        const aUrgent = URGENT.includes(a.category);
-        const bUrgent = URGENT.includes(b.category);
+        const aUrgent = typeof a.category === "string" ? urgent.includes(a.category) : false;
+        const bUrgent = typeof b.category === "string" ? urgent.includes(b.category) : false;
         if (aUrgent && !bUrgent) return -1;
         if (!aUrgent && bUrgent) return 1;
         return 0;
@@ -57,11 +56,7 @@ export const FeedContent = ({
       aria-label="Feed de posts"
       aria-live="polite"
       aria-busy={loading || loadingMore}
-      className={
-        isMobile
-          ? "flex flex-col"
-          : "grid grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-4"
-      }
+      className={isMobile ? "flex flex-col" : "grid grid-cols-1 gap-4 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3"}
     >
       {error ? (
         <div className="col-span-full">
@@ -94,18 +89,9 @@ export const FeedContent = ({
       <div ref={sentinelRef} className="h-1" aria-hidden="true" />
 
       {loadingMore && (
-        <div
-          className="flex justify-center py-4 col-span-full"
-          role="status"
-          aria-label="Carregando mais posts"
-        >
-          <Loader2
-            className="h-5 w-5 animate-spin text-muted-foreground"
-            aria-hidden="true"
-          />
-          <span className="ml-2 text-sm text-muted-foreground">
-            Carregando mais posts...
-          </span>
+        <div className="col-span-full flex justify-center py-4" role="status" aria-label="Carregando mais posts">
+          <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" aria-hidden="true" />
+          <span className="ml-2 text-sm text-muted-foreground">Carregando mais posts...</span>
         </div>
       )}
     </main>

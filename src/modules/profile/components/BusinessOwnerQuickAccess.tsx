@@ -23,7 +23,7 @@ import { Badge } from "@/shared/components/ui/badge";
 import type { ProfileBusinessModuleItem } from "@/core/profiles/services/types";
 
 interface BusinessOwnerQuickAccessProps {
-  businesses: ProfileBusinessModuleItem[];
+  businesses: readonly ProfileBusinessModuleItem[];
   onNavigate: (url: string) => void;
 }
 

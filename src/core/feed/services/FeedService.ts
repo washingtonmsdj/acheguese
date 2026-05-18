@@ -1,17 +1,5 @@
-/**
- * Feed Service
- *
- * Serviço profissional de gerenciamento de feed
- *
- * Responsabilidades:
- * - Buscar posts com filtros de localização
- * - Paginação cursor-based
- * - CRUD de posts
- * - Performance < 100ms
- */
-
-import { supabase } from "@/integrations/supabase";
-import { postService } from "@/core/posts/services"; // ✅ SSOT - Usar PostService`r`nimport { SessionService } from "@/core/session/services/SessionService";
+import { postService } from "@/core/posts/services";
+import { SessionService } from "@/core/session/services/SessionService";
 import type {
   Post,
   FeedParams,
@@ -20,42 +8,42 @@ import type {
   UpdatePostData,
 } from "../types";
 import { FeedError } from "../types";
+
 class FeedService {
-  /**
-   * Busca posts do feed com filtros e paginação
-   *
-   * @param params - Parâmetros de busca
-   * @returns Posts paginados
-   */
+  private adaptPost(post: unknown): Post {
+    return post as Post;
+  }
+
   async getFeed(params: FeedParams = {}): Promise<FeedResult> {
     try {
       const {
-        city,
-        neighborhood,
-        street,
+        location_id,
+        location_ids,
+        district_filter,
+        city_filter,
         context = "all",
         cursor,
         limit = 20,
       } = params;
 
-      // Verifica autenticação para contextos específicos
       const user = await SessionService.getCurrentUser();
-
       if ((context === "my_posts" || context === "saved") && !user) {
         throw new FeedError("User not authenticated", "UNAUTHENTICATED", 401);
       }
 
-      // ✅ SSOT - Usar PostService para buscar posts
-      const posts = await postService.getPostsByLocation(
-        { city, neighborhood, street },
-        { limit: limit + 1, cursor },
-      );
+      const result = await postService.getFeed({
+        location_id,
+        location_ids,
+        district_filter,
+        city_filter,
+        cursor,
+        limit: limit + 1,
+      });
 
-      // Verifica se tem mais posts
+      const posts = result.posts.map((post) => this.adaptPost(post));
       const hasMore = posts.length > limit;
       const resultPosts = hasMore ? posts.slice(0, limit) : posts;
 
-      // Gera próximo cursor
       const nextCursor =
         hasMore && resultPosts.length > 0
           ? this.encodeCursor({
@@ -63,75 +51,50 @@ class FeedService {
             })
           : undefined;
 
-      return {
-        posts: resultPosts,
-        nextCursor,
-        hasMore,
-      };
+      return { posts: resultPosts, nextCursor, hasMore };
     } catch (error) {
       if (error instanceof FeedError) throw error;
       throw new FeedError("Unexpected error fetching feed", "UNKNOWN_ERROR");
     }
   }
 
-  /**
-   * Busca um post específico por ID
-   *
-   * @param postId - ID do post
-   * @returns Post ou null
-   */
   async getPostById(postId: string): Promise<Post | null> {
     try {
-      // ✅ LOTE 8 - Delegado ao PostService (canonical boundary)
-      return await postService.getPostById(postId);
+      const post = await postService.getPostById(postId);
+      return post ? this.adaptPost(post) : null;
     } catch (error) {
       if (error instanceof FeedError) throw error;
       throw new FeedError("Unexpected error fetching post", "UNKNOWN_ERROR");
     }
   }
 
-  /**
-   * Cria um novo post
-   *
-   * @param profileId - ID do profile que está criando
-   * @param date - Dados do post
-   * @returns Post created
-   */
-  async createPost(profileId: string, date: CreatePostData): Promise<Post> {
+  async createPost(profileId: string, data: CreatePostData): Promise<Post> {
     try {
-      // ✅ LOTE 8 - Delegado ao PostService (canonical boundary)
-      return await postService.createPost(profileId, date);
+      const created = await postService.createPost({
+        author_profile_id: profileId,
+        content: data.content,
+        type: data.type,
+        location_id: (data as { location_id?: string }).location_id || "",
+      });
+      return this.adaptPost(created);
     } catch (error) {
       if (error instanceof FeedError) throw error;
       throw new FeedError("Unexpected error creating post", "UNKNOWN_ERROR");
     }
   }
 
-  /**
-   * Atualiza um post
-   *
-   * @param postId - ID do post
-   * @param date - Dados para update
-   * @returns Post updated
-   */
-  async updatePost(postId: string, date: UpdatePostData): Promise<Post> {
+  async updatePost(postId: string, data: UpdatePostData): Promise<Post> {
     try {
-      // ✅ SSOT - Usar PostService
-      return await postService.updatePost(postId, date);
+      const updated = await postService.updatePost(postId, data);
+      return this.adaptPost(updated);
     } catch (error) {
       if (error instanceof FeedError) throw error;
       throw new FeedError("Unexpected error updating post", "UNKNOWN_ERROR");
     }
   }
 
-  /**
-   * Deleta um post
-   *
-   * @param postId - ID do post
-   */
   async deletePost(postId: string): Promise<void> {
     try {
-      // ✅ SSOT - Usar PostService
       await postService.deletePost(postId);
     } catch (error) {
       if (error instanceof FeedError) throw error;
@@ -139,28 +102,8 @@ class FeedService {
     }
   }
 
-  /**
-   * Codifica cursor para paginação
-   *
-   * @param date - Dados do cursor
-   * @returns Cursor codificado
-   */
-  private encodeCursor(date: { created_at: string }): string {
-    return Buffer.from(JSON.stringify(date)).toString("base64");
-  }
-
-  /**
-   * Decodifica cursor de paginação
-   *
-   * @param cursor - Cursor codificado
-   * @returns Dados do cursor
-   */
-  private decodeCursor(cursor: string): { created_at: string } {
-    try {
-      return JSON.parse(Buffer.from(cursor, "base64").toString("utf-8"));
-    } catch {
-      throw new FeedError("Invalid cursor", "INVALID_CURSOR", 400);
-    }
+  private encodeCursor(data: { created_at: string }): string {
+    return Buffer.from(JSON.stringify(data)).toString("base64");
   }
 }
 

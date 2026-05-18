@@ -12,7 +12,7 @@ import { useMemo } from 'react';
 import { useActiveTerritory } from '@/core/location/hooks/useActiveTerritory';
 
 export function useVagasLocation() {
-  const { activeLocation, isLoading } = useActiveTerritory();
+  const { activeLocation } = useActiveTerritory();
 
   const hasActiveLocation = useMemo(() => {
     return activeLocation !== null && activeLocation !== undefined;
@@ -32,7 +32,7 @@ export function useVagasLocation() {
 
   return {
     activeLocation,
-    isLoading,
+    isLoading: false,
     hasActiveLocation,
     activeLocationId,
     activeLocationName,

@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -124,7 +124,7 @@ export function PricingRuleDialog({
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
             <Label>Modalidade</Label>
-            <Select value={mode} onValueChange={setMode} disabled={!!rule}>
+            <Select value={mode} onValueChange={(value) => setMode(value as typeof mode)} disabled={!!rule}>
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
@@ -198,3 +198,4 @@ export function PricingRuleDialog({
     </Dialog>
   );
 }
+

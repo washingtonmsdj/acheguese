@@ -26,10 +26,19 @@ import {
 } from "@/shared/components/ui/avatar";
 import { Badge } from "@/shared/components/ui/badge";
 
+type CompletionRide = RideRequest & {
+  driver?: {
+    name?: string | null;
+    avatar_url?: string | null;
+    vehicle_model?: string | null;
+    rating?: number | null;
+  } | null;
+};
+
 interface RideCompletionConfirmationProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  ride: RideRequest | null;
+  ride: CompletionRide | null;
   onConfirm: (rideId: string) => Promise<void>;
   onReportProblem: (rideId: string, problem: string) => Promise<void>;
   loading?: boolean;

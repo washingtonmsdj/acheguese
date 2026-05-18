@@ -10,8 +10,9 @@
  */
 
 import { useModuleLocation } from '@/core/location/hooks/useModuleLocation';
+import { BaseLocationService } from "@/core/location/services/BaseLocationService";
 import { communityLocationService } from '../services';
 
 export function useCommunityLocation() {
-  return useModuleLocation(communityLocationService);
+  return useModuleLocation(communityLocationService as BaseLocationService);
 }

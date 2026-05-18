@@ -51,7 +51,7 @@ export function GastronomyShareDialog({
   };
 
   const downloadQRCode = () => {
-    const svg = document.getElementById('gastronomy-qr-code') as SVGElement | null;
+    const svg = document.getElementById('gastronomy-qr-code') as unknown as SVGElement | null;
     if (!svg) return;
 
     const svgData = new XMLSerializer().serializeToString(svg);

@@ -19,7 +19,8 @@ import ShareBusinessDialog from "@/modules/business/components/ShareBusinessDial
 import EmpresaEditSheet from "@/modules/business/components/EmpresaEditSheet.tsx";
 import { cn } from "@/shared/utils/cn";
 import { useBusinessFavorite } from "@/modules/business/hooks/useBusinessFavorite";
-import type { Business } from "@/modules/business/types";
+import type { BizData } from "@/modules/business/types";
+import type { BizEditData } from "@/modules/business/components/EmpresaEditSheet";
 import type { LucideIcon } from "lucide-react";
 import { logger } from "@/shared/utils/logger";
 
@@ -29,7 +30,7 @@ interface User {
 }
 
 interface BusinessHeaderProps {
-  business: Business;
+  business: BizData;
   isOwner: boolean;
   user: User | null;
 }
@@ -39,6 +40,31 @@ export function BusinessHeader({
   isOwner,
   user: _user,
 }: BusinessHeaderProps) {
+  const editData: BizEditData = {
+    id: business.id,
+    name: business.name,
+    description: business.description ?? "",
+    category: business.category,
+    address: typeof business.address === "string" ? business.address : "",
+    neighborhood: business.neighborhood ?? "",
+    phone: business.phone ?? "",
+    whatsapp: business.whatsapp ?? "",
+    schedule: business.schedule ?? "",
+    schedule_fechamento: business.schedule_fechamento ?? "",
+    email: business.email ?? "",
+    instagram: business.instagram ?? "",
+    facebook: business.facebook ?? "",
+    website: business.website ?? "",
+    logo: business.logo ?? business.logo_url ?? "",
+    capa: business.capa ?? business.banner_url ?? "",
+    formas_pagamento: business.formas_pagamento ?? [],
+    especialidades: business.especialidades ?? [],
+    facilidades: business.facilidades ?? [],
+    ano_fundacao: business.ano_fundacao ?? null,
+    latitude: business.latitude ?? null,
+    longitude: business.longitude ?? null,
+    modos_atendimento: business.modos_atendimento ?? ["presencial"],
+  };
   const [shareDialogOpen, setShareDialogOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const { isFavorite, loading: favoriteLoading, toggleFavorite } =
@@ -283,7 +309,7 @@ export function BusinessHeader({
         <EmpresaEditSheet
           open={editOpen}
           onOpenChange={setEditOpen}
-          biz={business}
+          biz={editData}
           onSaved={(updated) => {
             if (import.meta.env.DEV) {
               logger.info("Empresa atualizada:", updated);

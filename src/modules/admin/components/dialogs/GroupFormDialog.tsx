@@ -37,7 +37,7 @@ export function GroupFormDialog({
           </p>
         </DialogHeader>
         <TerritorialGroupForm
-          group={editingGroup}
+          group={editingGroup as unknown as { id: string; name?: string | null; slug?: string | null; description?: string | null; parent_id?: string | null; status?: string | null; member_ids?: string[]; }}
           onSuccess={onClose}
           onCancel={onClose}
         />
@@ -45,3 +45,4 @@ export function GroupFormDialog({
     </Dialog>
   );
 }
+

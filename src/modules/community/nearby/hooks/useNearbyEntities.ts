@@ -92,7 +92,7 @@ export function useNearbyEntities(options: UseNearbyEntitiesOptions) {
         distance: b.distance_meters,
         latitude: b.latitude,
         longitude: b.longitude,
-        metadata: b,
+        metadata: b as unknown as Record<string, unknown>,
       })));
     }
 
@@ -104,7 +104,7 @@ export function useNearbyEntities(options: UseNearbyEntitiesOptions) {
         distance: e.distance_meters,
         latitude: e.latitude,
         longitude: e.longitude,
-        metadata: e,
+        metadata: e as unknown as Record<string, unknown>,
       })));
     }
 
@@ -116,7 +116,7 @@ export function useNearbyEntities(options: UseNearbyEntitiesOptions) {
         distance: a.distance_meters,
         latitude: a.latitude,
         longitude: a.longitude,
-        metadata: a,
+        metadata: a as unknown as Record<string, unknown>,
       })));
     }
 
@@ -128,7 +128,7 @@ export function useNearbyEntities(options: UseNearbyEntitiesOptions) {
         distance: t.distance_meters,
         latitude: t.latitude,
         longitude: t.longitude,
-        metadata: t,
+        metadata: t as unknown as Record<string, unknown>,
       })));
     }
 

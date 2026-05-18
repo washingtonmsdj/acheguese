@@ -38,8 +38,10 @@ export function CommunityRideFeed({
 
   const handlePublish = async (data: PublishPayload) => {
     await createPost({
+      author_profile_id: currentUserId,
+      location_id: undefined,
+      reach: 'neighborhood',
       content: data.content,
-      ...data,
     });
   };
 

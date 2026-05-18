@@ -8,4 +8,4 @@
  * por outros módulos verticais.
  */
 
-export { default as EmpresaDetailLayout } from "./pages/EmpresaDetailLayout";
+export { EmpresaDetailLayout } from "./pages/EmpresaDetailLayout";

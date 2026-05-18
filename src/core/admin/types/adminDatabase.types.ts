@@ -66,6 +66,37 @@ export interface CommunityIssueInsert extends Omit<CommunityIssue, 'id' | 'creat
 export type CommunityIssueUpdate = Partial<CommunityIssue>;
 
 // ============================================
+// BUSINESS SUBSCRIPTIONS / CITY METADATA
+// ============================================
+
+export interface BusinessSubscription {
+  [key: string]: unknown;
+  id: string;
+  business_id: string;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export type BusinessSubscriptionInsert = Partial<BusinessSubscription> & {
+  business_id: string;
+};
+
+export type BusinessSubscriptionUpdate = Partial<BusinessSubscription>;
+
+export interface CityMetadata {
+  [key: string]: unknown;
+  city: string;
+  state?: string;
+  country?: string;
+}
+
+export type CityMetadataInsert = Partial<CityMetadata> & {
+  city: string;
+};
+
+export type CityMetadataUpdate = Partial<CityMetadata>;
+
+// ============================================
 // PROFESSIONAL REPORTS
 // ============================================
 

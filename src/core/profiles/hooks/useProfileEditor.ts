@@ -43,7 +43,7 @@ export function useProfileEditor(profileId?: string) {
       MultiProfileService.loadProfileEditor({
         profileId: profileId!,
         userId: user!.id,
-        availableProfiles: allProfiles,
+        availableProfiles: allProfiles as any,
       }),
     enabled: Boolean(profileId && user?.id),
     refetchOnWindowFocus: false,

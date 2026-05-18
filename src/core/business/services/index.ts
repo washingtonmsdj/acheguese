@@ -97,8 +97,6 @@ export {
   getGastronomyBusinesses,
   getGastronomyBusinessesByIds,
   hasGastronomyProfile,
-  type PaginatedGastronomyBusinesses,
-  type TerritorySlugParams,
 } from "./gastronomy.queries";
 
 // ============================================================

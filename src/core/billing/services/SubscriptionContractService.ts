@@ -17,6 +17,7 @@
 import { supabase } from '@/integrations/supabase/supabase';
 import { logger } from '@/shared/utils/logger';
 import { CatalogService } from './CatalogService';
+const subscriptionContractDb = supabase as any;
 
 // ─── Tipos ────────────────────────────────────────────────────────────────────
 
@@ -109,7 +110,7 @@ export class SubscriptionContractService {
       };
       
       // 4. Criar contrato
-      const { data: subscription, error } = await supabase
+      const { data: subscription, error } = await subscriptionContractDb
         .from('user_subscriptions')
         .insert({
           user_id: params.user_id,
@@ -179,7 +180,7 @@ export class SubscriptionContractService {
         updates.status_v2 = params.changes.status_v2;
       }
       
-      const { error } = await supabase
+      const { error } = await subscriptionContractDb
         .from('user_subscriptions')
         .update(updates)
         .eq('id', params.subscription_id);
@@ -218,7 +219,7 @@ export class SubscriptionContractService {
         updates.status_v2 = 'active'; // Mantém ativo até o fim
       }
       
-      const { error } = await supabase
+      const { error } = await subscriptionContractDb
         .from('user_subscriptions')
         .update(updates)
         .eq('id', params.subscription_id);
@@ -249,7 +250,7 @@ export class SubscriptionContractService {
       const nextPeriodEnd = new Date(now);
       nextPeriodEnd.setMonth(nextPeriodEnd.getMonth() + 1);
       
-      const { error } = await supabase
+      const { error } = await subscriptionContractDb
         .from('user_subscriptions')
         .update({
           status_v2: 'active',
@@ -283,7 +284,7 @@ export class SubscriptionContractService {
     business_id?: string
   ): Promise<SubscriptionContract | null> {
     try {
-      let query = supabase
+      let query = subscriptionContractDb
         .from('user_subscriptions')
         .select('*')
         .eq('user_id', user_id)

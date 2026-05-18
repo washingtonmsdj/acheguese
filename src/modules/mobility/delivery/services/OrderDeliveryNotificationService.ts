@@ -1,4 +1,4 @@
-import { supabase } from "@/core/infrastructure/supabase";
+import { NotificationService } from "@/core/notifications/services/NotificationService";
 import { profileService } from "@/core/profiles/services/ProfileService";
 import { logger } from "@/shared/utils/logger";
 import type { OrderRecord } from "../order/types";
@@ -174,18 +174,16 @@ export class OrderDeliveryNotificationService {
   }
 
   private static async createNotification(payload: NotificationPayload): Promise<void> {
-    const { error } = await supabase.rpc("create_notification", {
-      p_user_id: payload.userId,
-      p_type: payload.type,
-      p_category: payload.category,
-      p_title: payload.title,
-      p_message: payload.message,
-      p_action_url: payload.actionUrl ?? null,
-      p_action_label: payload.actionLabel ?? null,
-      p_metadata: payload.metadata,
+    await NotificationService.createNotification({
+      user_id: payload.userId,
+      type: payload.type,
+      category: payload.category,
+      title: payload.title,
+      message: payload.message,
+      action_url: payload.actionUrl ?? null,
+      action_label: payload.actionLabel ?? null,
+      metadata: payload.metadata,
     });
-
-    if (error) throw error;
   }
 
   private static resolveDefaultEvent(order: OrderRecord): OrderNotificationEvent {

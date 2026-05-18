@@ -17,17 +17,17 @@ function getErrorMessage(error: unknown, fallback: string): string {
 interface Group {
   id: string;
   name: string;
-  description: string;
-  slug: string;
+  description?: string;
+  slug?: string;
   cover_image?: string;
-  created_by: string;
-  members_count: number;
-  is_public: boolean;
+  created_by?: string;
+  members_count?: number;
+  is_public?: boolean;
   rules?: string;
   category?: string;
   tags?: string[];
   created_at: string;
-  updated_at: string;
+  updated_at?: string;
 }
 
 interface GroupMessage {

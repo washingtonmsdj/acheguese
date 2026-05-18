@@ -73,13 +73,11 @@ export function useBusinessFormSteps() {
   };
 
   const validateStep1 = (): boolean => {
-    const validation = businessSchema
-      .pick({ name: true, description: true, category: true })
-      .safeParse({
-        name: formData.name,
-        description: formData.description,
-        category: formData.category,
-      });
+    const validation = businessSchema.safeParse({
+      name: formData.name,
+      description: formData.description,
+      category: formData.category,
+    });
 
     if (!validation.success) {
       const fieldErrors: Record<string, string> = {};

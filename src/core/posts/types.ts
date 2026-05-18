@@ -12,7 +12,15 @@ export type PostType =
   | "recomendacao"
   | "achado_perdido"
   | "evento"
-  | "enquete";
+  | "enquete"
+  // legacy compatibility
+  | "discussao"
+  | "pergunta"
+  | "classificado"
+  | "favor"
+  | "desapego"
+  | "achados"
+  | "civic_report";
 
 export type FeedContext = "all" | "my_posts" | "saved";
 
@@ -34,6 +42,8 @@ export interface Post {
   display_format?: string;
   distribution_channels?: string[];
   content_payload?: Record<string, unknown>;
+  category?: string;
+  hidden?: boolean;
 
   // Relacionamentos
   profile?: ProfileSummary;
@@ -155,6 +165,25 @@ export interface CommunityPost {
   comments_count: number;
   created_at: string;
   updated_at: string;
+  // Compatibilidade legada de UI community
+  is_liked?: boolean;
+  is_saved?: boolean;
+  author_name?: string;
+  author_avatar?: string;
+  city?: string;
+  neighborhood?: string;
+  is_verified_resident?: boolean;
+  is_verified?: boolean;
+  is_edited?: boolean;
+  confirmations_count?: number;
+}
+
+export interface EditHistory {
+  id: string;
+  post_id: string;
+  previous_content: string;
+  edited_at: string;
+  edited_by?: string;
 }
 
 export interface CreateCommunityPostData {

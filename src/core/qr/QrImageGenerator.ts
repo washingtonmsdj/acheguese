@@ -7,7 +7,7 @@
  */
 import { logger } from '@/shared/utils/logger';
 import QRCode from 'qrcode';
-import type { QrImageOptions, QrPrintableAsset, QrStyleVariant } from './types';
+import { QrStyleVariant, type QrImageOptions, type QrPrintableAsset } from './types';
 // ══════════════════════════════════════════════════════════════════════════
 // QR IMAGE GENERATOR
 // ══════════════════════════════════════════════════════════════════════════
@@ -19,7 +19,7 @@ export class QrImageGenerator {
    */
   private static getDefaultOptions(styleVariant: QrStyleVariant): Partial<QrImageOptions> {
     switch (styleVariant) {
-      case 'basic':
+      case QrStyleVariant.BASIC:
         return {
           size: 300,
           margin: 4,
@@ -28,7 +28,7 @@ export class QrImageGenerator {
           backgroundColor: '#FFFFFF',
         };
       
-      case 'branded':
+      case QrStyleVariant.BRANDED:
         return {
           size: 400,
           margin: 4,
@@ -37,7 +37,7 @@ export class QrImageGenerator {
           backgroundColor: '#FFFFFF',
         };
       
-      case 'custom':
+      case QrStyleVariant.CUSTOM:
         return {
           size: 400,
           margin: 4,
@@ -45,7 +45,7 @@ export class QrImageGenerator {
           // Cores customizadas serão passadas pelo usuário
         };
       
-      case 'premium':
+      case QrStyleVariant.PREMIUM:
         return {
           size: 500,
           margin: 4,
@@ -150,7 +150,7 @@ export class QrImageGenerator {
     canonicalUrl: string,
     title: string,
     description?: string,
-    styleVariant: QrStyleVariant = 'basic'
+    styleVariant: QrStyleVariant = QrStyleVariant.BASIC
   ): Promise<QrPrintableAsset> {
     try {
       const defaultOptions = this.getDefaultOptions(styleVariant);

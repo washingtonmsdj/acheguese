@@ -158,12 +158,12 @@ export function CommunityFeed({
       {/* Unified Feed */}
       <UnifiedFeedWithMessages
         civicReports={[]}
-        communityPosts={posts}
+        communityPosts={posts as never}
         currentUserId={currentUserId}
         sortCriteria={sortCriteria}
         filterType={filterType}
         userLocation={{
-          location_id: activeProfile?.locationId ?? activeProfile?.location_id,
+          location_id: activeProfile?.locationId,
         }}
         onLike={handleLike}
         onComment={handleComment}

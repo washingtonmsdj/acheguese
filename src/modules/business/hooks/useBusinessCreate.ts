@@ -52,7 +52,7 @@ export function useBusinessCreate(
         );
       }
 
-      return await BusinessService.createBusiness(validation.data, activeProfile.id);
+      return await BusinessService.createBusiness(validation.data as CreateBusinessInput, activeProfile.id);
     },
 
     onSuccess: (business) => {
@@ -86,16 +86,16 @@ export function useBusinessCreate(
 export function useBusinessImageUpload() {
   const { activeProfile } = useSessionContext();
 
-  const uploadImage = async (
-    file: File,
-    folder: "logos" | "banners",
-  ): Promise<string> => {
+  const uploadImage = async (input: {
+    file: File;
+    folder: "logos" | "banners";
+  }): Promise<string> => {
     if (!activeProfile?.id) {
       throw new Error("Perfil ativo nao encontrado");
     }
 
-    const type = folder === "logos" ? "logo" : "capa";
-    const result = await mediaService.uploadBusinessImage(activeProfile.id, file, type);
+    const type = input.folder === "logos" ? "logo" : "capa";
+    const result = await mediaService.uploadBusinessImage(activeProfile.id, input.file, type);
     return result.url;
   };
 

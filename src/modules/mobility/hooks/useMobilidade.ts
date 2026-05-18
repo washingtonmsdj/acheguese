@@ -64,6 +64,32 @@ export function useMobilidade() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [activeRide, setActiveRide] = useState<RideRequest | null>(null);
+  const ACTIVE_RIDE_STATUSES: RideRequest["status"][] = [
+    RIDE_STATUS.PENDING,
+    RIDE_STATUS.IN_PROGRESS,
+    RIDE_STATUS.REQUESTED,
+    RIDE_STATUS.SEARCHING_DRIVER,
+    RIDE_STATUS.DRIVER_ASSIGNED,
+    RIDE_STATUS.DRIVER_ACCEPTED,
+    RIDE_STATUS.DRIVER_ARRIVING,
+    RIDE_STATUS.PASSENGER_BOARDED,
+    RIDE_STATUS.DRIVER_ON_THE_WAY,
+    RIDE_STATUS.DRIVER_ARRIVED,
+    RIDE_STATUS.PASSENGER_ON_BOARD,
+  ];
+  const PENDING_RIDE_STATUSES: RideRequest["status"][] = [
+    RIDE_STATUS.PENDING,
+    RIDE_STATUS.REQUESTED,
+    RIDE_STATUS.SEARCHING_DRIVER,
+    RIDE_STATUS.DRIVER_ASSIGNED,
+  ];
+  const ONGOING_RIDE_STATUSES: RideRequest["status"][] = [
+    RIDE_STATUS.DRIVER_ACCEPTED,
+    RIDE_STATUS.IN_PROGRESS,
+    RIDE_STATUS.DRIVER_ARRIVING,
+    RIDE_STATUS.PASSENGER_BOARDED,
+    RIDE_STATUS.PASSENGER_ON_BOARD,
+  ];
 
   const {
     data: rides = [],
@@ -73,15 +99,10 @@ export function useMobilidade() {
     queryKey: MOBILITY_QUERY_KEYS.rides(user?.id),
     queryFn: async (): Promise<RideRequest[]> => {
       if (!user) return [];
-      const data = await getUserRides(user.id);
-      const active = (data || []).find((r: RideRequest) =>
-        [RIDE_STATUS.PENDING, RIDE_STATUS.IN_PROGRESS,
-         RIDE_STATUS.REQUESTED, RIDE_STATUS.SEARCHING_DRIVER, RIDE_STATUS.DRIVER_ASSIGNED,
-         RIDE_STATUS.DRIVER_ACCEPTED, RIDE_STATUS.DRIVER_ARRIVING, RIDE_STATUS.PASSENGER_BOARDED,
-         RIDE_STATUS.DRIVER_ON_THE_WAY, RIDE_STATUS.DRIVER_ARRIVED, RIDE_STATUS.PASSENGER_ON_BOARD].includes(r.status),
-      );
+      const data = ((await getUserRides(user.id)) || []) as RideRequest[];
+      const active = data.find((r: RideRequest) => ACTIVE_RIDE_STATUSES.includes(r.status));
       if (active) setActiveRide(active);
-      return data || [];
+      return data;
     },
     enabled: !!user,
     // REALTIME: Removido polling, usando subscription
@@ -104,7 +125,7 @@ export function useMobilidade() {
         // Recarregar corrida específica
         getRideById(event.rideId).then(updatedRide => {
           if (updatedRide) {
-            setActiveRide(updatedRide);
+            setActiveRide(updatedRide as RideRequest);
           }
         });
       }
@@ -264,7 +285,7 @@ export function useMobilidade() {
         }
 
         // Buscar corrida criada
-        const data = await getRideById(result.rideId!);
+        const data = (await getRideById(result.rideId!)) as RideRequest | null;
         setActiveRide(data);
         queryClient.invalidateQueries({ queryKey: MOBILITY_QUERY_KEYS.rides(user.id) });
         queryClient.invalidateQueries({ queryKey: MOBILITY_QUERY_KEYS.activeRide(user.id) });
@@ -312,7 +333,7 @@ export function useMobilidade() {
         });
         
         // Buscar corrida para saber quem está cancelando
-        const ride: RideRequest | null = await getRideById(rideId);
+        const ride = (await getRideById(rideId)) as RideRequest | null;
         if (!ride) {
           logger.warn("useMobilidade.cancelRide - corrida nao encontrada", { rideId });
           toast.error("Corrida nao encontrada");
@@ -431,7 +452,7 @@ export function useMobilidade() {
           return null;
         }
 
-        const data = await getRideById(rideId);
+        const data = (await getRideById(rideId)) as RideRequest | null;
         setActiveRide(data);
         queryClient.invalidateQueries({ queryKey: MOBILITY_QUERY_KEYS.rides(user.id) });
         queryClient.invalidateQueries({ queryKey: MOBILITY_QUERY_KEYS.activeRide(user.id) });
@@ -454,7 +475,7 @@ export function useMobilidade() {
         
         if (!calculatedFinalPrice) {
           // Usar suggested_price como confirmação (não recalcular)
-          const ride: RideRequest | null = await getRideById(rideId);
+          const ride = (await getRideById(rideId)) as RideRequest | null;
           calculatedFinalPrice = ride?.suggested_price || 0;
           
           logger.info("useMobilidade.completeRide - confirming suggested price", { 
@@ -643,18 +664,14 @@ export function useMobilidade() {
     reportRideProblem,
     myRides,
     error,
-    pendingRides: rides.filter((r: RideRequest) => [RIDE_STATUS.PENDING, RIDE_STATUS.REQUESTED, RIDE_STATUS.SEARCHING_DRIVER, RIDE_STATUS.DRIVER_ASSIGNED].includes(r.status)),
+    pendingRides: rides.filter((r: RideRequest) => PENDING_RIDE_STATUSES.includes(r.status)),
     activeRides: rides.filter((r: RideRequest) =>
-      [RIDE_STATUS.DRIVER_ACCEPTED, RIDE_STATUS.IN_PROGRESS, RIDE_STATUS.DRIVER_ARRIVING, RIDE_STATUS.PASSENGER_BOARDED, RIDE_STATUS.PASSENGER_ON_BOARD].includes(r.status),
+      ONGOING_RIDE_STATUSES.includes(r.status),
     ),
     // SSOT - Rating do passageiro
     passengerRating,
     isLoadingRating,
   };
 }
-
-
-
-
 
 

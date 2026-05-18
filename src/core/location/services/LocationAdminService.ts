@@ -22,6 +22,7 @@ export interface CreateAdminLocationInput {
 }
 
 export class LocationAdminService {
+  private static readonly db = supabase as any;
   static async listLocations(): Promise<AdminLocationRecord[]> {
     const repository = createLocationRepository();
     const locations = await repository.findAll();
@@ -52,7 +53,7 @@ export class LocationAdminService {
   }
 
   static async createLocation(input: CreateAdminLocationInput): Promise<void> {
-    const { error } = await supabase.from('locations').insert(input);
+    const { error } = await this.db.from('locations').insert(input);
     if (error) throw error;
   }
 
@@ -60,7 +61,7 @@ export class LocationAdminService {
     locationId: string,
     updates: Partial<Pick<AdminLocationRecord, 'name' | 'slug' | 'metadata'>>,
   ): Promise<void> {
-    const { error } = await supabase
+    const { error } = await this.db
       .from('locations')
       .update(updates)
       .eq('id', locationId);

@@ -95,10 +95,10 @@ const UnifiedFeedWithMessages = React.forwardRef<
     ref,
   ) => {
     const { sortedPosts } = useUnifiedFeed({
-      posts,
-      civicReports,
-      communityPosts,
-      feedPosts,
+      posts: posts as any,
+      civicReports: civicReports as any,
+      communityPosts: communityPosts as any,
+      feedPosts: feedPosts as any,
       sortCriteria,
       filterType,
       userLocation,
@@ -116,7 +116,7 @@ const UnifiedFeedWithMessages = React.forwardRef<
 
     const handleLike = (postId: string) => {
       const post = sortedPosts.find((p) => p.id === postId);
-      if (post?.type === "civic_report") {
+      if ((post?.type as string) === "civic_report") {
         onUpvote?.(postId);
       } else {
         onLike?.(postId);

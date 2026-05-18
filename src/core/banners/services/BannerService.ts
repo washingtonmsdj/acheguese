@@ -9,10 +9,9 @@
 
 import { supabase } from "@/integrations/supabase/supabase";
 import { logger } from "@/shared/utils/logger";
-import type { AdminSupabaseClient } from "@/core/admin/types/adminDatabase.types";
 import { mediaService } from "@/core/media/services/MediaService";
 
-const supabaseTyped = supabase as unknown as AdminSupabaseClient;
+const supabaseTyped = supabase as any;
 
 export interface Banner {
   id: string;
@@ -82,7 +81,7 @@ export class BannerService {
       
       // Filtrar por data no cliente
       const now = new Date();
-      const filtered = (data || []).filter(banner => {
+      const filtered = ((data || []) as any[]).filter((banner: any) => {
         const startsAt = banner.starts_at ? new Date(banner.starts_at) : null;
         const endsAt = banner.ends_at ? new Date(banner.ends_at) : null;
         
@@ -93,7 +92,7 @@ export class BannerService {
       });
       
       // Ordenar por priority se existir, senão por created_at
-      filtered.sort((a, b) => {
+      filtered.sort((a: any, b: any) => {
         const priorityA = a.priority ?? 0;
         const priorityB = b.priority ?? 0;
         return priorityB - priorityA;
@@ -232,7 +231,7 @@ export class BannerService {
    */
   static async incrementViews(id: string): Promise<void> {
     try {
-      await supabase.rpc('increment_banner_views', { banner_id: id });
+      await supabaseTyped.rpc('increment_banner_views', { banner_id: id });
     } catch (error: any) {
       logger.error('Error incrementing banner views:', error);
     }
@@ -243,7 +242,7 @@ export class BannerService {
    */
   static async incrementClicks(id: string): Promise<void> {
     try {
-      await supabase.rpc('increment_banner_clicks', { banner_id: id });
+      await supabaseTyped.rpc('increment_banner_clicks', { banner_id: id });
     } catch (error: any) {
       logger.error('Error incrementing banner clicks:', error);
     }
@@ -262,13 +261,14 @@ export class BannerService {
 
       if (error) throw error;
       
-      const ctr = data.view_count > 0 
-        ? (data.click_count / data.view_count) * 100 
+      const bannerStats = data as { click_count: number; view_count: number } | null;
+      const ctr = (bannerStats?.view_count || 0) > 0 
+        ? ((bannerStats?.click_count || 0) / (bannerStats?.view_count || 0)) * 100 
         : 0;
 
       return {
-        clicks: data.click_count,
-        views: data.view_count,
+        clicks: bannerStats?.click_count || 0,
+        views: bannerStats?.view_count || 0,
         ctr: Math.round(ctr * 100) / 100
       };
     } catch (error: any) {

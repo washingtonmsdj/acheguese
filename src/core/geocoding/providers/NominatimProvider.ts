@@ -16,9 +16,9 @@ import type {
   ReverseGeocodeRequest,
   ReverseGeocodeResult,
   PostalCodeLookupRequest,
-  PostalCodeLookupResult,
-  GeocodingError
+  PostalCodeLookupResult
 } from '../types';
+import { GeocodingError } from '../types';
 
 interface NominatimResult {
   place_id: number;
@@ -70,7 +70,10 @@ export class NominatimProvider extends BaseGeocodingProvider {
    * Geocoding direto de endereços
    */
   async geocode(request: GeocodeRequest): Promise<GeocodeResult[]> {
-    const cacheKey = this.generateCacheKey('geocode', request);
+    const cacheKey = this.generateCacheKey(
+      'geocode',
+      request as unknown as Record<string, unknown>,
+    );
     const cached = this.getFromCache<GeocodeResult[]>(cacheKey);
     if (cached) {
       this.log('info', 'Cache hit for geocode', { query: request.query });
@@ -156,7 +159,10 @@ export class NominatimProvider extends BaseGeocodingProvider {
       );
     }
 
-    const cacheKey = this.generateCacheKey('reverseGeocode', request);
+    const cacheKey = this.generateCacheKey(
+      'reverseGeocode',
+      request as unknown as Record<string, unknown>,
+    );
     const cached = this.getFromCache<ReverseGeocodeResult>(cacheKey);
     if (cached) {
       this.log('info', 'Cache hit for reverse geocode', {

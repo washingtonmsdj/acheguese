@@ -46,15 +46,14 @@ import { useAppUrls } from "@/core/routing/hooks/useAppUrls";
 import { ProfileCompletenessWidget } from "@/modules/profile/components/ProfileCompletenessWidget";
 
 import type { MultiProfileRecord } from "@/core/profiles/services/multi-profile/types";
-import type { ProfileAccountSnapshot } from "@/core/profiles/views/ProfileAccountSnapshot";
-import type { Context, Identity } from "@/modules/profile/sections/types";
+import type { Context, Identity, AccountSnapshot } from "@/modules/profile/sections/types";
 
 interface ProfileHeaderCompactProps {
   activeProfile: MultiProfileRecord | null;
   profile: MultiProfileRecord | null;
-  allProfiles?: MultiProfileRecord[];
+  allProfiles?: readonly MultiProfileRecord[];
   userEmail: string;
-  accountSnapshot: ProfileAccountSnapshot;
+  accountSnapshot: AccountSnapshot;
   identity: Identity | null;
   context: Context | null;
   notifications: { unread: number; highPriority: number; urgentPriority: number };
@@ -94,7 +93,7 @@ function formatPlanLabel(value?: string | null): string {
   return map[value] ?? value[0].toUpperCase() + value.slice(1);
 }
 
-function getAccountTone(state: ProfileAccountSnapshot["accountState"]): string {
+function getAccountTone(state: AccountSnapshot["accountState"]): string {
   switch (state) {
     case "active":
       return "border-success/30 bg-success/10 text-success";
@@ -107,7 +106,7 @@ function getAccountTone(state: ProfileAccountSnapshot["accountState"]): string {
   }
 }
 
-function getAccountStateLabel(state: ProfileAccountSnapshot["accountState"]): string {
+function getAccountStateLabel(state: AccountSnapshot["accountState"]): string {
   switch (state) {
     case "active":
       return "Ativa";

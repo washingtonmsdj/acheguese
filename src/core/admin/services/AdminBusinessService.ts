@@ -300,11 +300,10 @@ class AdminBusinessServiceClass {
 
       // 3. Criar business_data usando BusinessService
       await BusinessService.createBusiness({
-        profile_id: profile.id,
         ...businessData,
-        status: "pendente",
-        neighborhood_id: ADMIN_PLACEHOLDER_IDS.EMPTY_LOCATION_ID,
-      }, userId);
+        status: "pending",
+        neighborhood: ADMIN_PLACEHOLDER_IDS.EMPTY_LOCATION_ID,
+      } as any, userId);
 
       return profile;
     } catch (error) {

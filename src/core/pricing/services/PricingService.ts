@@ -30,11 +30,11 @@ import type {
   PricingRule,
   PricingServiceConfig,
   PRICING_CONSTANTS,
-  PricingError,
 } from '../types';
 
 export class PricingService {
   private static instance: PricingService;
+  private readonly db = supabase as any;
   private config: PricingServiceConfig;
   private rulesCache: Map<PricingMode, { rule: PricingRule; cachedAt: number }>;
   private readonly CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutos
@@ -188,7 +188,7 @@ export class PricingService {
     try {
       const now = new Date().toISOString();
       
-      const { data: ruleData, error: ruleError } = await supabase
+      const { data: ruleData, error: ruleError } = await this.db
         .from('pricing_rules')
         .select('*')
         .eq('mode', mode)
@@ -207,14 +207,14 @@ export class PricingService {
       }
 
       // Buscar multiplicadores de horário de pico
-      const { data: multipliersData } = await supabase
+      const { data: multipliersData } = await this.db
         .from('pricing_peak_hour_multipliers')
         .select('*')
         .eq('rule_id', ruleData.id)
         .eq('is_active', true);
 
       // Buscar taxas adicionais
-      const { data: feesData } = await supabase
+      const { data: feesData } = await this.db
         .from('pricing_additional_fees')
         .select('*')
         .eq('rule_id', ruleData.id)
@@ -248,7 +248,7 @@ export class PricingService {
     try {
       // Se está ativando uma regra, usar RPC para evitar conflito com trigger
       if (updates.isActive === true) {
-        const { error: rpcError } = await supabase.rpc('activate_pricing_rule', {
+        const { error: rpcError } = await this.db.rpc('activate_pricing_rule', {
           p_rule_id: ruleId,
           p_performed_by: performedBy,
         });
@@ -281,7 +281,7 @@ export class PricingService {
       if (Object.keys(updateData).length > 0) {
         updateData.updated_by = performedBy;
 
-        const { error } = await supabase
+        const { error } = await this.db
           .from('pricing_rules')
           .update(updateData)
           .eq('id', ruleId);
@@ -336,7 +336,7 @@ export class PricingService {
    */
   async listRules(includeInactive: boolean = false): Promise<PricingRule[]> {
     try {
-      let query = supabase
+      let query = this.db
         .from('pricing_rules')
         .select(`
           *,
@@ -376,7 +376,7 @@ export class PricingService {
     try {
       // Usar RPC para criar regra ativa (desativa outras automaticamente)
       if (rule.isActive) {
-        const { data: ruleId, error: rpcError } = await supabase.rpc('create_active_pricing_rule', {
+        const { data: ruleId, error: rpcError } = await this.db.rpc('create_active_pricing_rule', {
           p_mode: rule.mode,
           p_name: rule.name,
           p_base_fare: rule.baseFare,
@@ -387,7 +387,7 @@ export class PricingService {
           p_is_active: rule.isActive,
           p_valid_from: rule.validFrom?.toISOString() || null,
           p_valid_until: rule.validUntil?.toISOString() || null,
-          p_metadata: rule.metadata || {},
+          p_metadata: (rule.metadata || {}) as Record<string, unknown>,
           p_performed_by: performedBy,
         });
 
@@ -432,7 +432,7 @@ export class PricingService {
           }
 
           if (multipliers.length > 0) {
-            await supabase.from('pricing_peak_hour_multipliers').insert(multipliers);
+            await this.db.from('pricing_peak_hour_multipliers').insert(multipliers);
           }
         }
 
@@ -446,7 +446,7 @@ export class PricingService {
             reason: fee.reason,
           }));
 
-          await supabase.from('pricing_additional_fees').insert(fees);
+          await this.db.from('pricing_additional_fees').insert(fees);
         }
 
         // Limpar cache
@@ -467,12 +467,12 @@ export class PricingService {
         is_active: false,
         valid_from: rule.validFrom?.toISOString(),
         valid_until: rule.validUntil?.toISOString(),
-        metadata: rule.metadata || {},
+        metadata: (rule.metadata || {}) as Record<string, unknown>,
         created_by: performedBy,
         updated_by: performedBy,
       };
 
-      const { data, error } = await supabase
+      const { data, error } = await this.db
         .from('pricing_rules')
         .insert(ruleData)
         .select('id')
@@ -515,7 +515,7 @@ export class PricingService {
         }
 
         if (multipliers.length > 0) {
-          await supabase.from('pricing_peak_hour_multipliers').insert(multipliers);
+          await this.db.from('pricing_peak_hour_multipliers').insert(multipliers);
         }
       }
 
@@ -529,7 +529,7 @@ export class PricingService {
           reason: fee.reason,
         }));
 
-        await supabase.from('pricing_additional_fees').insert(fees);
+        await this.db.from('pricing_additional_fees').insert(fees);
       }
 
       // Limpar cache
@@ -640,8 +640,6 @@ export class PricingService {
     switch (mode) {
       case 'ride':
         return fallbacks.ride;
-      case 'taxi':
-        return fallbacks.taxi;
       case 'mototaxi':
         return fallbacks.mototaxi;
       case 'motoboy':
@@ -670,17 +668,17 @@ export class PricingService {
     });
 
     const additionalFees: AdditionalFee[] = fees.map((f) => ({
-      id: f.id,
-      label: f.label,
+      id: String(f.id ?? ""),
+      label: String(f.label ?? ""),
       amount: Number(f.amount),
-      type: f.fee_type,
-      reason: f.reason,
+      type: String(f.fee_type ?? "fixed") as "fixed" | "percentage",
+      reason: String(f.reason ?? ""),
     }));
 
     return {
-      id: data.id,
-      mode: data.mode,
-      name: data.name,
+      id: String(data.id ?? ""),
+      mode: String(data.mode ?? "ride") as PricingMode,
+      name: String(data.name ?? ""),
       baseFare: Number(data.base_fare),
       pricePerKm: Number(data.price_per_km),
       pricePerMinute: Number(data.price_per_minute),
@@ -688,10 +686,10 @@ export class PricingService {
       maximumFare: data.maximum_fare ? Number(data.maximum_fare) : undefined,
       peakHourMultipliers: Object.keys(peakHourMultipliers).length > 0 ? peakHourMultipliers : undefined,
       additionalFees: additionalFees.length > 0 ? additionalFees : undefined,
-      isActive: data.is_active,
-      validFrom: data.valid_from ? new Date(data.valid_from) : undefined,
-      validUntil: data.valid_until ? new Date(data.valid_until) : undefined,
-      metadata: data.metadata || {},
+      isActive: Boolean(data.is_active),
+      validFrom: data.valid_from ? new Date(String(data.valid_from)) : undefined,
+      validUntil: data.valid_until ? new Date(String(data.valid_until)) : undefined,
+      metadata: (data.metadata || {}) as Record<string, unknown>,
     };
   }
 
@@ -850,7 +848,7 @@ export class PricingService {
    */
   async getAuditLog(limit: number = 20): Promise<Record<string, unknown>[]> {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await this.db
         .from('pricing_audit_log')
         .select('*')
         .order('created_at', { ascending: false })
@@ -861,7 +859,10 @@ export class PricingService {
       return data || [];
     } catch (error) {
       logger.error('[PricingService] Error fetching audit log:', error);
-      trackError(error as Error, { context: 'PricingService.getAuditLog' });
+      trackError(error as Error, {
+        component: "PricingService",
+        action: "getAuditLog",
+      });
       throw error;
     }
   }

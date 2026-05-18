@@ -17,7 +17,7 @@ interface UseUnifiedFeedProps {
     | "alerta"
     | "recomendacao"
     | "enquete";
-  userLocation?: { neighborhood?: string; city?: string };
+  userLocation?: { neighborhood?: string; city?: string; location_id?: string };
 }
 
 export function useUnifiedFeed({
@@ -33,9 +33,9 @@ export function useUnifiedFeed({
     // Convert all data sources, using convertArray which auto-detects the format
     const allItems = [
       ...PostAdapter.convertArray(posts),
-      ...civicReports.map((report) => PostAdapter.fromCivicReport(report)),
+      ...PostAdapter.convertArray(civicReports),
       ...PostAdapter.convertArray(communityPosts),
-      ...feedPosts.map((post) => PostAdapter.fromFeedPost(post)),
+      ...PostAdapter.convertArray(feedPosts),
     ];
 
     // Deduplicate by id

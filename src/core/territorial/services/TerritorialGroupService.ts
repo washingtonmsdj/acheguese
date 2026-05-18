@@ -90,7 +90,7 @@ export class TerritorialGroupService {
       throw new Error('Group ID is required');
     }
     const members = await this.repository.listMembers(groupId);
-    return members.filter(m => m.status === EntityStatus.ACTIVE);
+    return members.filter(m => String(m.status) === EntityStatus.ACTIVE);
   }
 
   /**
@@ -141,7 +141,7 @@ export class TerritorialGroupService {
    */
   async isGroupActive(groupId: string): Promise<boolean> {
     const group = await this.repository.findById(groupId);
-    return group?.status === EntityStatus.ACTIVE;
+    return String(group?.status) === EntityStatus.ACTIVE;
   }
 
   // ============================================
@@ -285,7 +285,7 @@ export class TerritorialGroupService {
         throw new Error(`Location ${locationId} does not belong to anchor city ${group.anchor_city_id}`);
       }
       
-      if (location.status !== EntityStatus.ACTIVE) {
+      if (String(location.status) !== EntityStatus.ACTIVE) {
         throw new Error(`Location ${locationId} is not active`);
       }
     }
@@ -345,14 +345,14 @@ export class TerritorialGroupService {
           throw new Error(`Location ${locationId} does not belong to anchor city ${group.anchor_city_id}`);
         }
         
-        if (location.status !== EntityStatus.ACTIVE) {
+        if (String(location.status) !== EntityStatus.ACTIVE) {
           throw new Error(`Location ${locationId} is not active`);
         }
       }
     }
 
     // Se grupo está ativo e vai ficar vazio, rejeitar
-    if (group.status === EntityStatus.ACTIVE && locationIds.length === 0) {
+    if (String(group.status) === EntityStatus.ACTIVE && locationIds.length === 0) {
       throw new Error('Cannot remove all members from active group');
     }
 
@@ -361,3 +361,4 @@ export class TerritorialGroupService {
 }
 
 export const territorialGroupService = new TerritorialGroupService();
+

@@ -65,7 +65,7 @@ export default function EmergencyContactsPage() {
       name: contact.name,
       phone: contact.phone,
       relationship: contact.relationship,
-      isPrimary: contact.is_primary,
+      isPrimary: contact.isPrimary,
     });
     setIsAdding(false);
   };
@@ -209,7 +209,7 @@ export default function EmergencyContactsPage() {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
                       <h3 className="font-semibold">{contact.name}</h3>
-                      {contact.is_primary && (
+                      {contact.isPrimary && (
                         <span className="px-2 py-0.5 rounded-full bg-primary/20 text-primary text-xs font-medium">
                           Primario
                         </span>

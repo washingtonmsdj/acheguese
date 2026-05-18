@@ -138,7 +138,7 @@ export class LandingFeaturedService {
   ): Promise<FeaturedBusiness[]> {
     if (filter.scope === 'none') return [];
     try {
-      let query = supabase
+      let query = (supabase as any)
         .from('business_data')
         .select('profile_id, business_name, category, metadata, rating, is_premium, is_verified, slug, location:locations!location_id(geographic_path)')
         .eq('status', 'active')
@@ -149,7 +149,7 @@ export class LandingFeaturedService {
         .order('created_at', { ascending: false })
         .limit(limit);
 
-      query = applyTerritoryFilter(query, filter);
+      query = applyTerritoryFilter(query as any, filter) as any;
 
       const { data, error } = await query;
       if (error) {
@@ -186,7 +186,7 @@ export class LandingFeaturedService {
     if (filter.scope === 'none') return [];
 
     try {
-      let query = supabase
+      let query = (supabase as any)
         .from('professional_data')
         .select('id, professional_name, service_category, metadata, rating, is_verified, price_range, price_type, hourly_rate')
         .eq('is_accepting_clients', true)
@@ -198,7 +198,7 @@ export class LandingFeaturedService {
         .order('created_at', { ascending: false })
         .limit(limit);
 
-      query = applyTerritoryFilter(query, filter);
+      query = applyTerritoryFilter(query as any, filter) as any;
 
       const { data, error } = await query;
       if (error) {
@@ -256,7 +256,7 @@ export class LandingFeaturedService {
 
     try {
       // eslint-disable-next-line ssot/no-direct-classified-access
-      let query = supabase
+      let query = (supabase as any)
         .from('classifieds')
         .select(`
           id,
@@ -276,7 +276,7 @@ export class LandingFeaturedService {
         .order('created_at', { ascending: false })
         .limit(limit);
 
-      query = applyTerritoryFilter(query, filter);
+      query = applyTerritoryFilter(query as any, filter) as any;
 
       const { data, error } = await query;
       if (error) {
@@ -315,30 +315,31 @@ export class LandingFeaturedService {
 
 
 
+    const supabaseAny = supabase as any;
     const [businessRes, serviceRes, classifiedRes] = await Promise.allSettled([
       (() => {
-        let q = supabase.from('business_data')
+        let q = supabaseAny.from('business_data')
           .select('profile_id', { count: 'exact', head: true })
           .eq('status', 'active')
           .not('location_id', 'is', null);
-        q = applyTerritoryFilter(q, filter);
+        q = applyTerritoryFilter(q as any, filter) as any;
         return q;
       })(),
       (() => {
-        let q = supabase.from('professional_data')
+        let q = supabaseAny.from('professional_data')
           .select('id', { count: 'exact', head: true })
           .eq('is_accepting_clients', true)
           .eq('visibility', 'public_listed')
           .not('location_id', 'is', null);
-        q = applyTerritoryFilter(q, filter);
+        q = applyTerritoryFilter(q as any, filter) as any;
         return q;
       })(),
       (() => {
         // eslint-disable-next-line ssot/no-direct-classified-access
-        let q = supabase.from('classifieds')
+        let q = supabaseAny.from('classifieds')
           .select('id', { count: 'exact', head: true })
           .eq('status', 'active');
-        q = applyTerritoryFilter(q, filter);
+        q = applyTerritoryFilter(q as any, filter) as any;
         return q;
       })(),
     ]);

@@ -66,7 +66,8 @@ export function TopUsersWidget() {
   const { data: topUsers, isLoading } = useQuery<TopUserItem[]>({
     queryKey: ["top-users", city, neighborhood],
     queryFn: async () => {
-      return await GamificationService.getTopUsersByLocation(city, neighborhood, 5);
+      const result = await GamificationService.getTopUsersByLocation(city, neighborhood, 5);
+      return result as unknown as TopUserItem[];
     },
     staleTime: 5 * 60 * 1000,
     enabled: city.length > 0,

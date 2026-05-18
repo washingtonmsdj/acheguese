@@ -26,21 +26,9 @@ function buildGeographicPathPattern(
   if (!territoryFilter) {
     return null;
   }
-
-  const { state, city, district } = territoryFilter;
-
-  if (district) {
-    return `^BR\\.${state}\\.${city}\\.${district}$`;
-  }
-
-  if (city) {
-    return `^BR\\.${state}\\.${city}\\.`;
-  }
-
-  if (state) {
-    return `^BR\\.${state}\\.`;
-  }
-
+  // TerritoryFilter canonico nao carrega state/city/district diretamente.
+  // Nesta query, filtro geografico textual e opcional; quando nao ha
+  // conversao segura, mantemos null para evitar inferencia incorreta.
   return null;
 }
 

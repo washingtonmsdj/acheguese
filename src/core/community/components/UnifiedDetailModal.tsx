@@ -180,14 +180,12 @@ export function UnifiedDetailModal({
     handleLike: likePost,
     handleSave: savePost,
     handleShare: sharePost,
-    upvoteMutation,
-    createCommentMutation,
     handleUpvoteReport,
     handleSubmitComment,
   } = useUnifiedDetailModal(content);
 
   const isCivicReport = content.type === "civic_report";
-  const allComments = isPost ? comments : civicReportData?.comments || [];
+  const allComments = isPost ? comments : [];
 
   if (isCivicReport && isLoadingReport) {
     return (
@@ -279,7 +277,7 @@ export function UnifiedDetailModal({
       <CivicReportMetrics
         upvotes={civicReportData?.upvotes || 0}
         commentsCount={allComments.length}
-        isUpvoting={upvoteMutation.isPending}
+        isUpvoting={false}
         onUpvote={handleUpvoteReport}
         onShare={() => onShare?.(id)}
       />
@@ -318,7 +316,7 @@ export function UnifiedDetailModal({
           value={commentText}
           onChange={setCommentText}
           onSubmit={handleSubmitComment}
-          isSubmitting={createCommentMutation.isPending}
+          isSubmitting={false}
         />
       </DialogContent>
     </Dialog>

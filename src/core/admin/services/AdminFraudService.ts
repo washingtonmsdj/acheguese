@@ -7,7 +7,7 @@
 
 import { supabase } from "@/integrations/supabase";
 import { logger } from "@/shared/utils/logger";
-import type { AdminSupabaseClient, FraudAlert } from "../types/adminDatabase.types";
+import type { FraudAlert } from "../types/adminDatabase.types";
 
 export interface FraudStats {
   total: number;
@@ -22,9 +22,11 @@ type FraudAlertUpdate = {
 };
 
 export class AdminFraudService {
+  private static readonly db = supabase as any;
+
   static async getAlerts(limit = 50): Promise<FraudAlert[]> {
     try {
-      const { data, error } = await (supabase as unknown as AdminSupabaseClient)
+      const { data, error } = await this.db
         .from("fraud_alerts")
         .select("*, ride_id, driver_profile_id")
         .order("created_at", { ascending: false })
@@ -40,11 +42,10 @@ export class AdminFraudService {
 
   static async getStats(): Promise<FraudStats> {
     try {
-      const client = supabase as unknown as AdminSupabaseClient;
       const [{ count: total }, { count: pending }, { count: critical }] = await Promise.all([
-        client.from("fraud_alerts").select("*", { count: "exact", head: true }),
-        client.from("fraud_alerts").select("*", { count: "exact", head: true }).eq("status", "pending"),
-        client.from("fraud_alerts").select("*", { count: "exact", head: true }).eq("severity", "critical"),
+        this.db.from("fraud_alerts").select("*", { count: "exact", head: true }),
+        this.db.from("fraud_alerts").select("*", { count: "exact", head: true }).eq("status", "pending"),
+        this.db.from("fraud_alerts").select("*", { count: "exact", head: true }).eq("severity", "critical"),
       ]);
 
       return { total: total || 0, pending: pending || 0, critical: critical || 0 };
@@ -59,14 +60,13 @@ export class AdminFraudService {
     status: FraudAlert["status"],
     resolutionNotes?: string,
   ): Promise<void> {
-    const client = supabase as unknown as AdminSupabaseClient;
-    const { error } = await client
+    const { error } = await this.db
       .from("fraud_alerts")
       .update({
         status,
         resolution_notes: resolutionNotes || null,
         reviewed_at: new Date().toISOString(),
-      } as FraudAlertUpdate)
+      } as unknown as any)
       .eq("id", alertId);
 
     if (error) throw error;

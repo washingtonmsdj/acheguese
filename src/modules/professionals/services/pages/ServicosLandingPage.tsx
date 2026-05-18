@@ -111,9 +111,9 @@ function ProfessionalCard({ pro, index, onClick }: { pro: ProfessionalItem; inde
     >
       {/* Emoji/Foto à esquerda */}
       <div className="relative h-full w-[88px] shrink-0 overflow-hidden">
-        {pro.photo ? (
+        {pro.avatar_url ? (
           <img
-            src={pro.photo}
+            src={pro.avatar_url}
             alt={pro.name}
             loading="lazy"
             className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
@@ -146,13 +146,13 @@ function ProfessionalCard({ pro, index, onClick }: { pro: ProfessionalItem; inde
             <span className="flex items-center gap-0.5 text-[11px] font-semibold">
               <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
               {pro.rating!.toFixed(1)}
-              {pro.totalAvaliacoes && (
-                <span className="text-muted-foreground">({pro.totalAvaliacoes})</span>
+              {pro.reviews_count && (
+                <span className="text-muted-foreground">({pro.reviews_count})</span>
               )}
             </span>
           )}
-          {pro.priceMedio && (
-            <span className="text-[11px] font-semibold text-primary">{pro.priceMedio}</span>
+          {pro.price_range && (
+            <span className="text-[11px] font-semibold text-primary">{pro.price_range}</span>
           )}
         </div>
 
@@ -195,8 +195,8 @@ function TopRatedCard({ pro, rank, onClick }: { pro: ProfessionalItem; rank: num
       className="flex-shrink-0 w-44 bg-card border border-border rounded-2xl p-3 hover:shadow-xl hover:border-warning/30 transition-all text-left group"
     >
       <div className="relative">
-        {pro.photo ? (
-          <img src={pro.photo} alt={pro.name} className="h-24 w-full rounded-xl object-cover mb-2 group-hover:scale-[1.02] transition-transform" loading="lazy" />
+        {pro.avatar_url ? (
+          <img src={pro.avatar_url} alt={pro.name} className="h-24 w-full rounded-xl object-cover mb-2 group-hover:scale-[1.02] transition-transform" loading="lazy" />
         ) : (
           <div className="h-24 w-full rounded-xl bg-gradient-to-br from-warning/10 to-primary/10 flex items-center justify-center text-3xl mb-2">
             {getServiceCategoryIcon(pro.category)}
@@ -209,7 +209,7 @@ function TopRatedCard({ pro, rank, onClick }: { pro: ProfessionalItem; rank: num
       <div className="flex items-center gap-1 mt-1">
         <Star className="h-3 w-3 text-warning fill-warning" />
         <span className="text-xs font-semibold text-foreground">{pro.rating?.toFixed(1) || "0.0"}</span>
-        <span className="text-[10px] text-muted-foreground">({pro.totalAvaliacoes})</span>
+        <span className="text-[10px] text-muted-foreground">({pro.reviews_count})</span>
       </div>
     </motion.button>
   );

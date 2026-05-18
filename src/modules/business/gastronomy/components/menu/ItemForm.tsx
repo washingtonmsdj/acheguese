@@ -75,7 +75,7 @@ type ItemFormValues = z.infer<typeof itemSchema>;
 interface ItemFormProps {
   open: boolean;
   onClose: () => void;
-  onSubmit: (values: ItemFormValues) => void;
+  onSubmit: (values: Record<string, unknown>) => void;
   item?: MenuItem | null;
   categories: MenuCategory[];
   isSubmitting?: boolean;
@@ -95,7 +95,11 @@ export function ItemForm({
   allowImage = true,
   isPizzaria = false,
 }: ItemFormProps) {
-  const pizzaVisual = item?.nutritional_info?.pizza_visual as
+  const itemNutritionalInfo =
+    item?.nutritional_info && typeof item.nutritional_info === 'object'
+      ? (item.nutritional_info as Record<string, unknown>)
+      : {};
+  const pizzaVisual = itemNutritionalInfo.pizza_visual as
     | { size_label?: string; slices?: number; diameter_cm?: number }
     | undefined;
 
@@ -119,15 +123,16 @@ export function ItemForm({
       stock_quantity: item?.stock_quantity ?? undefined,
       stock_alert_threshold: item?.stock_alert_threshold ?? undefined,
       is_available: item?.is_available ?? true,
-      calories: item?.calories || undefined,
+      calories: typeof itemNutritionalInfo.calories === 'number' ? itemNutritionalInfo.calories : undefined,
       is_featured: item?.is_featured || false,
-      is_vegetarian: item?.is_vegetarian || false,
-      is_vegan: item?.is_vegan || false,
-      is_gluten_free: item?.is_gluten_free || false,
-      is_lactose_free: item?.is_lactose_free || false,
-      is_spicy: item?.is_spicy || false,
-      spicy_level: item?.spicy_level || undefined,
-      ingredients: item?.ingredients?.join(', ') || '',
+      is_vegetarian: itemNutritionalInfo.is_vegetarian === true,
+      is_vegan: itemNutritionalInfo.is_vegan === true,
+      is_gluten_free: itemNutritionalInfo.is_gluten_free === true,
+      is_lactose_free: itemNutritionalInfo.is_lactose_free === true,
+      is_spicy: itemNutritionalInfo.is_spicy === true,
+      spicy_level: typeof itemNutritionalInfo.spicy_level === 'number' ? itemNutritionalInfo.spicy_level : undefined,
+      ingredients:
+        Array.isArray(itemNutritionalInfo.ingredients) ? itemNutritionalInfo.ingredients.join(', ') : '',
       tags: item?.tags?.join(', ') || '',
       allergens: item?.allergens?.join(', ') || '',
       pizza_size_label: pizzaVisual?.size_label || '',
@@ -145,10 +150,7 @@ export function ItemForm({
       ...baseValues
     } = values;
 
-    const baseNutritionalInfo =
-      item?.nutritional_info && typeof item.nutritional_info === 'object'
-        ? { ...item.nutritional_info }
-        : {};
+    const baseNutritionalInfo = { ...itemNutritionalInfo };
 
     const hasPizzaVisual =
       Boolean(values.pizza_size_label?.trim()) ||
@@ -168,18 +170,23 @@ export function ItemForm({
     // Converter strings separadas por vírgula para arrays
     const processedValues = {
       ...baseValues,
-      ingredients: baseValues.ingredients
-        ? baseValues.ingredients.split(',').map((i) => i.trim()).filter(Boolean)
-        : [],
-      tags: baseValues.tags
-        ? baseValues.tags.split(',').map((t) => t.trim()).filter(Boolean)
-        : [],
-      allergens: baseValues.allergens
-        ? baseValues.allergens.split(',').map((a) => a.trim()).filter(Boolean)
-        : [],
+      tags: baseValues.tags || undefined,
+      allergens: baseValues.allergens || undefined,
       image_url: allowImage ? baseValues.image_url || undefined : undefined,
       category_id: allowCategorySelection ? baseValues.category_id || undefined : undefined,
-      nutritional_info: Object.keys(baseNutritionalInfo).length > 0 ? baseNutritionalInfo : undefined,
+      nutritional_info: {
+        ...baseNutritionalInfo,
+        calories: baseValues.calories,
+        is_vegetarian: baseValues.is_vegetarian,
+        is_vegan: baseValues.is_vegan,
+        is_gluten_free: baseValues.is_gluten_free,
+        is_lactose_free: baseValues.is_lactose_free,
+        is_spicy: baseValues.is_spicy,
+        spicy_level: baseValues.spicy_level,
+        ingredients: baseValues.ingredients
+          ? baseValues.ingredients.split(',').map((i) => i.trim()).filter(Boolean)
+          : [],
+      },
     };
 
     onSubmit(processedValues);

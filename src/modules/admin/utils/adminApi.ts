@@ -48,16 +48,7 @@ async function getHeaders() {
 // === Stats & Activity ===
 export async function adminGetStats(): Promise<Record<string, number>> {
   // ✅ SSOT: Usar AdminStatsService para obter estatísticas
-  const tables = [
-    "businesses",
-    "professional_data",
-    "classifieds",
-    "events",
-    "posts",
-    "profiles",
-    "comments",
-  ];
-  return await adminStatsService.getTableStats(tables);
+  return await adminStatsService.getTableStats();
 }
 
 export async function adminGetActivity(days = 30): Promise<ActivityData[]> {

@@ -54,7 +54,7 @@ export function useGroups() {
     queryFn: async () => {
       // ✅ LOTE 7 - CommunityService.getGroups
       const data = await CommunityService.getGroups();
-      return data as Group[];
+      return data as unknown as Group[];
     },
     staleTime: 2 * 60 * 1000, // 2 minutos
   });
@@ -68,7 +68,7 @@ export function useGroup(groupId: string | undefined) {
       // ✅ LOTE 7 - CommunityService.getGroupById
       const data = await CommunityService.getGroupById(groupId!);
       if (!data) throw new Error("Grupo não encontrado");
-      return data as Group;
+      return data as unknown as Group;
     },
     enabled: !!groupId,
     staleTime: 5 * 60 * 1000, // 5 minutos

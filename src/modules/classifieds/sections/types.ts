@@ -21,7 +21,15 @@ export interface BaseSectionProps {
 // Classificado (item da listagem)
 // ============================================
 
-export type Classificado = ClassificadoWithVendedor;
+export type Classificado = ClassificadoWithVendedor & {
+  readonly subcategoria?: string | null;
+  readonly aceita_troca?: boolean;
+  readonly entrega_disponivel?: boolean;
+  readonly latitude?: number | null;
+  readonly longitude?: number | null;
+  readonly updated_at?: string;
+  readonly vendedor?: (ClassificadoWithVendedor["vendedor"] & { rating?: number }) | null;
+};
 
 // ============================================
 // Vendedor
@@ -29,8 +37,18 @@ export type Classificado = ClassificadoWithVendedor;
 
 export interface Vendedor {
   readonly id: string;
-  readonly nome: string;
+  readonly name?: string;
+  readonly nome?: string;
   readonly avatar?: string;
+  readonly avatar_url?: string | null;
+  readonly neighborhood?: string;
+  readonly active_ads_count?: number;
+  readonly featured_ads?: readonly {
+    readonly id: string;
+    readonly title: string;
+    readonly price: number;
+    readonly photos: readonly string[];
+  }[];
   readonly rating?: number;
   readonly totalAds?: number;
   readonly memberSince?: string;
@@ -163,12 +181,12 @@ export interface ClassifiedsFiltrosSectionProps extends BaseSectionProps {
 }
 
 export interface ClassifiedsHorizontalSectionProps extends BaseSectionProps {
-  readonly title: string;
-  readonly subtitle: string;
-  readonly icon: React.ReactNode;
+  readonly title?: string;
+  readonly subtitle?: string;
+  readonly icon?: React.ReactNode;
   readonly ads: readonly Classificado[];
-  readonly badgeText: string;
-  readonly badgeColor: string;
+  readonly badgeText?: string;
+  readonly badgeColor?: string;
   readonly onAdClick: (ad: Classificado) => void;
 }
 

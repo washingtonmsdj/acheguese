@@ -55,6 +55,7 @@ import type { ProfileType } from '../domain/ProfileType';
  * Normaliza invariantes: display_name ?? name, slug ?? username ?? id, etc.
  */
 export function rowToDomain(row: ProfileRow): Profile {
+  const legacyRow = row as any;
   return {
     id: row.id,
     userId: row.user_id,
@@ -74,7 +75,7 @@ export function rowToDomain(row: ProfileRow): Profile {
     // Informações básicas
     bio: row.bio ?? null,
     avatarUrl: row.avatar_url ?? null,
-    coverUrl: row.cover_url ?? null,
+    coverUrl: legacyRow.cover_url ?? null,
 
     // Localização
     locationId: row.location_id ?? null,
@@ -113,7 +114,7 @@ export function rowToDomain(row: ProfileRow): Profile {
     updatedAt: row.updated_at,
 
     // Metadata
-    metadata: (row.metadata as Record<string, unknown>) ?? {},
+    metadata: (legacyRow.metadata as Record<string, unknown>) ?? {},
   };
 }
 
@@ -156,7 +157,7 @@ export function domainToInsert(profile: Omit<Profile, 'id' | 'createdAt' | 'upda
     verified_at: profile.verifiedAt,
     reputation: profile.reputation,
     metadata: profile.metadata as any,
-  };
+  } as ProfileInsert;
 }
 
 /**
@@ -191,7 +192,7 @@ export function domainToInsertWithSnapshots(
  * Converte Profile parcial (domínio) para ProfileUpdate (banco)
  */
 export function domainToUpdate(profile: Partial<Profile>): Partial<ProfileRow> {
-  const update: Partial<ProfileRow> = {};
+  const update: Partial<ProfileRow> & Record<string, unknown> = {};
 
   if (profile.profileType !== undefined) update.profile_type = profile.profileType;
   if (profile.slug !== undefined) update.slug = profile.slug;

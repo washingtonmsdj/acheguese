@@ -48,7 +48,7 @@ interface AgentPublicationComposerProps {
 export function AgentPublicationComposer({ channel, territories, onPublished }: AgentPublicationComposerProps) {
   const queryClient = useQueryClient();
   const [isExpanded, setIsExpanded] = useState(false);
-  const [publicationType, setPublicationType] = useState<"post" | "news" | "event" | "alert">("post");
+  const [publicationType, setPublicationType] = useState<"post" | "news" | "event" | "report">("post");
   const [form, setForm] = useState({
     title: "",
     content: "",
@@ -63,7 +63,7 @@ export function AgentPublicationComposer({ channel, territories, onPublished }: 
         channel_id: channel.id,
         location_id: form.territory_id,
         publication_type: publicationType === "post" ? "news" : publicationType,
-        content_format: publicationType === "post" ? "post" : "article",
+        content_format: publicationType === "post" ? "update" : "article",
         title: form.title || form.content.substring(0, 100),
         summary: "",
         body: form.content,
@@ -167,9 +167,9 @@ export function AgentPublicationComposer({ channel, territories, onPublished }: 
                 Evento
               </Button>
               <Button
-                variant={publicationType === "alert" ? "default" : "outline"}
+                variant={publicationType === "report" ? "default" : "outline"}
                 size="sm"
-                onClick={() => setPublicationType("alert")}
+                onClick={() => setPublicationType("report")}
               >
                 <AlertCircle className="h-3 w-3 mr-1" />
                 Alerta
@@ -214,16 +214,19 @@ export function AgentPublicationComposer({ channel, territories, onPublished }: 
                     Nenhum território autorizado
                   </Badge>
                 ) : (
-                  territories.map((territory) => (
-                    <Badge
-                      key={territory.id}
-                      variant={form.territory_id === territory.location_id ? "default" : "outline"}
-                      className="cursor-pointer"
-                      onClick={() => setForm({ ...form, territory_id: territory.location_id })}
-                    >
-                      {territory.location?.name || "Território"}
-                    </Badge>
-                  ))
+                  territories.map((territory) => {
+                    const location = territory.location as { name?: string } | undefined;
+                    return (
+                      <Badge
+                        key={territory.id}
+                        variant={form.territory_id === territory.location_id ? "default" : "outline"}
+                        className="cursor-pointer"
+                        onClick={() => setForm({ ...form, territory_id: territory.location_id ?? "" })}
+                      >
+                        {location?.name || "Território"}
+                      </Badge>
+                    );
+                  })
                 )}
               </div>
             </div>

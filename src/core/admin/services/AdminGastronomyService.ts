@@ -9,7 +9,7 @@
 
 import { supabase } from "@/integrations/supabase";
 import { logger } from "@/shared/utils/logger";
-import type { AdminSupabaseClient, GastronomyProfile } from "../types/adminDatabase.types";
+import type { GastronomyProfile } from "../types/adminDatabase.types";
 
 export interface GastronomyStats {
   total: number;
@@ -107,9 +107,11 @@ type NicheBusinessRow = {
 };
 
 class AdminGastronomyServiceClass {
+  private readonly db = supabase as any;
+
   async getStats(): Promise<GastronomyStats> {
     try {
-      const { data: profiles, error } = await (supabase as unknown as AdminSupabaseClient)
+      const { data: profiles, error } = await this.db
         .from("gastronomy_profiles")
         .select("*");
 
@@ -142,7 +144,7 @@ class AdminGastronomyServiceClass {
       stats.byPriceRange = Object.fromEntries(priceRangeCounts.entries());
 
       if (businessIds.length > 0) {
-        const { count } = await supabase
+        const { count } = await this.db
           .from("menus")
           .select("id", { count: "exact", head: true })
           .in("business_id", businessIds);
@@ -159,9 +161,9 @@ class AdminGastronomyServiceClass {
   async getMenuStats(): Promise<MenuStats> {
     try {
       const [menusResult, categoriesResult, itemsResult] = await Promise.all([
-        supabase.from("menus").select("id", { count: "exact", head: true }),
-        supabase.from("menu_categories").select("id", { count: "exact", head: true }),
-        supabase.from("menu_items").select("base_price"),
+        this.db.from("menus").select("id", { count: "exact", head: true }),
+        this.db.from("menu_categories").select("id", { count: "exact", head: true }),
+        this.db.from("menu_items").select("base_price"),
       ]);
 
       const totalMenus = menusResult.count || 0;
@@ -197,7 +199,7 @@ class AdminGastronomyServiceClass {
     const { page = 1, limit = 20, search, cuisineType, priceRange, isActive } = params;
 
     try {
-      let query = supabase
+      let query = this.db
         .from("gastronomy_profiles")
         .select(
           `
@@ -249,9 +251,9 @@ class AdminGastronomyServiceClass {
 
   async toggleActive(profileId: string, isActive: boolean): Promise<boolean> {
     try {
-      const { error } = await (supabase as unknown as AdminSupabaseClient)
+      const { error } = await this.db
         .from("gastronomy_profiles")
-        .update({ status: isActive ? "active" : "inactive" })
+        .update({ status: isActive ? "active" : "inactive" } as any)
         .eq("id", profileId);
 
       if (error) throw error;
@@ -264,7 +266,7 @@ class AdminGastronomyServiceClass {
 
   async deleteProfile(profileId: string): Promise<boolean> {
     try {
-      const { error } = await supabase
+      const { error } = await this.db
         .from("gastronomy_profiles")
         .delete()
         .eq("id", profileId);
@@ -286,7 +288,7 @@ class AdminGastronomyServiceClass {
     const { page = 1, limit = 20, search, isActive } = params;
 
     try {
-      let query = supabase.from("menus").select("*", { count: "exact" });
+      let query = this.db.from("menus").select("*", { count: "exact" });
 
       if (search) query = query.ilike("name", `%${search}%`);
       if (isActive !== undefined) query = query.eq("is_active", isActive);
@@ -306,17 +308,17 @@ class AdminGastronomyServiceClass {
       const businessIds = [...new Set(menus.map((menu) => menu.business_id))];
 
       const [categoriesRes, businessesRes] = await Promise.all([
-        supabase
+        this.db
           .from("menu_categories")
           .select("id, menu_id")
           .in("menu_id", menuIds),
-        supabase
+        this.db
           .from("business_data")
           .select("id, name")
           .in("id", businessIds),
       ]);
 
-      const categories = categoriesRes.data || [];
+      const categories = (categoriesRes.data || []) as Array<{ id: string; menu_id: string }>;
       const categoriesByMenu = new Map<string, number>();
       categories.forEach((category) => {
         categoriesByMenu.set(category.menu_id, (categoriesByMenu.get(category.menu_id) || 0) + 1);
@@ -326,7 +328,7 @@ class AdminGastronomyServiceClass {
       const categoryIds = categories.map((category) => category.id);
       let itemRows: Array<{ id: string; category_id: string }> = [];
       if (categoryIds.length > 0) {
-        const menuItemsRes = await supabase
+        const menuItemsRes = await this.db
           .from("menu_items")
           .select("id, category_id")
           .in("category_id", categoryIds);
@@ -344,7 +346,7 @@ class AdminGastronomyServiceClass {
       });
 
       const businessNameById = new Map(
-        (businessesRes.data || []).map((business) => [business.id, business.name]),
+        ((businessesRes.data || []) as Array<{ id: string; name: string | null }>).map((business) => [business.id, business.name]),
       );
 
       const enrichedMenus: AdminGastronomyMenuRecord[] = menus.map((menu) => ({
@@ -380,7 +382,7 @@ class AdminGastronomyServiceClass {
     const { page = 1, limit = 20, search, categoryId, isAvailable } = params;
 
     try {
-      let query = supabase
+      let query = this.db
         .from("menu_items")
         .select("id, name, category_id, base_price, is_available, image_url", { count: "exact" });
 
@@ -400,32 +402,32 @@ class AdminGastronomyServiceClass {
       }
 
       const categoryIds = [...new Set(items.map((item) => item.category_id))];
-      const categoriesRes = await supabase
+      const categoriesRes = await this.db
         .from("menu_categories")
         .select("id, name, menu_id")
         .in("id", categoryIds);
-      const categories = categoriesRes.data || [];
-      const categoryById = new Map(
+      const categories = (categoriesRes.data || []) as Array<{ id: string; name: string; menu_id: string }>;
+      const categoryById = new Map<string, { name: string; menu_id: string }>(
         categories.map((category) => [category.id, { name: category.name, menu_id: category.menu_id }]),
       );
 
       const menuIds = [...new Set(categories.map((category) => category.menu_id))];
-      const menusRes = await supabase
+      const menusRes = await this.db
         .from("menus")
         .select("id, name, business_id")
         .in("id", menuIds);
-      const menus = menusRes.data || [];
-      const menuById = new Map(
+      const menus = (menusRes.data || []) as Array<{ id: string; name: string; business_id: string }>;
+      const menuById = new Map<string, { name: string; business_id: string }>(
         menus.map((menu) => [menu.id, { name: menu.name, business_id: menu.business_id }]),
       );
 
       const businessIds = [...new Set(menus.map((menu) => menu.business_id))];
-      const businessesRes = await supabase
+      const businessesRes = await this.db
         .from("business_data")
         .select("id, name")
         .in("id", businessIds);
-      const businessById = new Map(
-        (businessesRes.data || []).map((business) => [business.id, business.name]),
+      const businessById = new Map<string, string | null>(
+        ((businessesRes.data || []) as Array<{ id: string; name: string | null }>).map((business) => [business.id, business.name]),
       );
 
       const enrichedItems: AdminGastronomyItemRecord[] = items.map((item) => {
@@ -460,7 +462,7 @@ class AdminGastronomyServiceClass {
 
   async toggleMenuItem(itemId: string, isAvailable: boolean): Promise<boolean> {
     try {
-      const { error } = await supabase
+      const { error } = await this.db
         .from("menu_items")
         .update({ is_available: isAvailable })
         .eq("id", itemId);
@@ -475,7 +477,7 @@ class AdminGastronomyServiceClass {
 
   async toggleMenu(menuId: string, isActive: boolean): Promise<boolean> {
     try {
-      const { error } = await supabase
+      const { error } = await this.db
         .from("menus")
         .update({ is_active: isActive })
         .eq("id", menuId);
@@ -491,10 +493,10 @@ class AdminGastronomyServiceClass {
   async getIntegritySummary(): Promise<GastronomyIntegritySummary> {
     try {
       const [profilesRes, menusRes, categoriesRes, itemsRes] = await Promise.all([
-        supabase.from("gastronomy_profiles").select("id, business_id, status"),
-        supabase.from("menus").select("id, business_id, is_active"),
-        supabase.from("menu_categories").select("id, menu_id"),
-        supabase.from("menu_items").select("id, category_id, base_price, image_url"),
+        this.db.from("gastronomy_profiles").select("id, business_id, status"),
+        this.db.from("menus").select("id, business_id, is_active"),
+        this.db.from("menu_categories").select("id, menu_id"),
+        this.db.from("menu_items").select("id, category_id, base_price, image_url"),
       ]);
 
       const profiles = profilesRes.data || [];
@@ -558,7 +560,7 @@ class AdminGastronomyServiceClass {
 
   async getPromotionOwnershipSummary(): Promise<GastronomyPromotionOwnershipSummary> {
     try {
-      const profilesRes = await supabase
+      const profilesRes = await this.db
         .from("gastronomy_profiles")
         .select("business_id");
 
@@ -577,15 +579,15 @@ class AdminGastronomyServiceClass {
       }
 
       const [promotionsRes, couponsRes, menuPromotionsRes] = await Promise.all([
-        supabase
+        this.db
           .from("promotions")
           .select("id, business_id, is_active, expires_at")
           .in("business_id", businessIds),
-        supabase
+        this.db
           .from("coupons")
           .select("id, business_id, is_active, validade")
           .in("business_id", businessIds),
-        supabase
+        this.db
           .from("menu_promotions")
           .select("id, business_id, is_active")
           .in("business_id", businessIds),
@@ -633,7 +635,7 @@ class AdminGastronomyServiceClass {
     const { page = 1, limit = 20, search } = params;
 
     try {
-      let query = supabase
+      let query = this.db
         .from("gastronomy_profiles")
         .select(
           `
@@ -693,12 +695,12 @@ class AdminGastronomyServiceClass {
     try {
       // Buscar dados em paralelo
       const [configRes, sizesRes, flavorsRes, edgesRes, doughsRes, businessRes] = await Promise.all([
-        supabase.from("pizza_niche_configs").select("*").eq("business_id", businessId).single(),
-        supabase.from("pizza_sizes").select("id").eq("business_id", businessId),
-        supabase.from("pizza_flavors").select("id").eq("business_id", businessId),
-        supabase.from("pizza_edges").select("id").eq("business_id", businessId),
-        supabase.from("pizza_doughs").select("id").eq("business_id", businessId),
-        supabase.from("business_data").select("name").eq("id", businessId).single(),
+        this.db.from("pizza_niche_configs").select("*").eq("business_id", businessId).single(),
+        this.db.from("pizza_sizes").select("id").eq("business_id", businessId),
+        this.db.from("pizza_flavors").select("id").eq("business_id", businessId),
+        this.db.from("pizza_edges").select("id").eq("business_id", businessId),
+        this.db.from("pizza_doughs").select("id").eq("business_id", businessId),
+        this.db.from("business_data").select("name").eq("id", businessId).single(),
       ]);
 
       if (configRes.error) {

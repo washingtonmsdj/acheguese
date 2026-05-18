@@ -108,8 +108,8 @@ const APPOINTMENT_TYPES = [
 function mapCanonicalNotification(
   notification: Notification,
 ): AppointmentNotification {
-  const metadata =
-    (notification.metadata as AppointmentNotificationMetadata) ?? {};
+  const metadata: Partial<AppointmentNotificationMetadata> =
+    (notification.metadata as Partial<AppointmentNotificationMetadata>) ?? {};
 
   const typeMap: Record<string, AppointmentNotification["type"]> = {
     [NotificationType.APPOINTMENT_NEW]: "new_appointment",
@@ -166,10 +166,12 @@ export default function AppointmentNotifications({
     return canonicalNotifications
       .filter((notification) => {
         const metadata =
-          (notification.metadata as AppointmentNotificationMetadata) ?? {};
+          (notification.metadata as Partial<AppointmentNotificationMetadata>) ?? {};
         return !metadata.business_id || metadata.business_id === businessId;
       })
-      .map(mapCanonicalNotification);
+      .map((notification) =>
+        mapCanonicalNotification(notification as unknown as Notification),
+      );
   }, [businessId, canonicalNotifications, isOwner]);
 
   const unreadCount = notifications.filter((n) => !n.is_read).length;

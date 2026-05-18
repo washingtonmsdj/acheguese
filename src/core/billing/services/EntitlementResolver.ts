@@ -16,6 +16,7 @@ import { supabase } from '@/integrations/supabase/supabase';
 import { BillingPlanService } from '@/core/billing/services/BillingPlanService';
 import { logger } from '@/shared/utils/logger';
 import type { GenericBillingEntitlementAliases } from '../types';
+const entitlementDb = supabase as any;
 
 // ─── Tipos ────────────────────────────────────────────────────────────────────
 
@@ -209,7 +210,7 @@ export class EntitlementResolver {
     context: EntitlementContext
   ): Promise<SubscriptionData | null> {
     try {
-      let query = supabase
+      let query = entitlementDb
         .from('user_subscriptions')
         .select(`
           id,
@@ -257,10 +258,11 @@ export class EntitlementResolver {
     const resolved = { ...DEFAULT_FREE_ENTITLEMENTS };
 
     const plan = await BillingPlanService.getPlanByCode(subscription.plan_code);
-    const snapshotEntitlements = subscription.contract_snapshot?.catalog_item?.entitlements;
+    const snapshot = subscription.contract_snapshot as Record<string, any> | null;
+    const snapshotEntitlements = snapshot?.catalog_item?.entitlements as Record<string, any> | undefined;
 
     // Aplicar entitlements do plano atual, se existir
-    const policy = plan?.entitlements || snapshotEntitlements;
+    const policy = (plan?.entitlements || snapshotEntitlements) as Record<string, any> | undefined;
     if (policy) {
       
       // Página Pública

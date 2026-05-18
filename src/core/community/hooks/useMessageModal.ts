@@ -9,11 +9,14 @@ type ConversationPostContext = Parameters<
   ReturnType<typeof useDirectMessages>["createOrGetConversation"]
 >[0];
 
-const postTypeMap: Partial<Record<UnifiedPost["type"], ConversationPostContext["type"]>> = {
-  civic_report: "civic_report",
-  recomendacao: "recomendacao",
-  alerta: "alerta",
-};
+function resolveConversationPostType(
+  postType: UnifiedPost["type"],
+): ConversationPostContext["type"] {
+  if ((postType as string) === "alerta") return "alerta";
+  if ((postType as string) === "achado") return "achado";
+  if ((postType as string) === "civic_report") return "civic_report";
+  return "recomendacao";
+}
 
 export function useMessageModal(currentUserId?: string) {
   const [isOpen, setIsOpen] = useState(false);
@@ -53,7 +56,7 @@ export function useMessageModal(currentUserId?: string) {
             post.content.substring(0, 50) +
             (post.content.length > 50 ? "..." : ""),
           imageUrl: post.images?.[0] || post.image_url,
-          type: postTypeMap[post.type] ?? "recomendacao",
+          type: resolveConversationPostType(post.type),
         },
         recipientProfileId,
       );

@@ -8,12 +8,12 @@ import {
   updateLooseRows,
 } from "@/integrations/supabase/services/supabaseHelpers";
 import { logger } from "@/shared/utils/logger";
-import { notificationService } from "@/core/notifications/services/NotificationService";
+import { NotificationService } from "@/core/notifications/services/NotificationService";
+import { profileService } from "@/core/profiles/services/ProfileService";
 import { ALERT_RULES } from "../config/alertConfig";
 import type { AlertNotificationQueueItem } from "../domain/types";
 
 interface AlertSnapshotRow {
-  category: string | null;
   neighborhood_display: string | null;
   city: string | null;
   description: string | null;
@@ -30,7 +30,7 @@ class AlertNotificationServiceClass {
         Date.now() - ALERT_RULES.NOTIFICATION_LOCK_TIMEOUT_MINUTES * 60 * 1000
       ).toISOString();
 
-      const { data: items, error } = await selectLooseRows<AlertNotificationQueueItem>(
+      const { data: items, error } = await selectLooseRows(
         this.QUEUE_TABLE,
         {
           columns: "*",
@@ -47,7 +47,7 @@ class AlertNotificationServiceClass {
       if (error) throw error;
       if (!items?.length) return 0;
 
-      for (const item of items) {
+      for (const item of items as unknown as AlertNotificationQueueItem[]) {
         await this._processItem(item);
         processed++;
       }
@@ -69,36 +69,31 @@ class AlertNotificationServiceClass {
     );
 
     try {
-      const { profileService } = await import("@/core/profiles/services/ProfileService");
-      const users = await profileService.getProfilesByLocation({
-        city: item.city,
-        neighborhood: item.neighborhood,
-      });
+      const userIds = await profileService.getUserIdsByCity(item.city, 500);
 
-      if (!users || users.length === 0) {
+      if (!userIds || userIds.length === 0) {
         throw new Error("No users found in the region");
       }
 
       const { data: alert } = await supabase
         .from("community_alerts")
-        .select("category, neighborhood_display, city, description")
+        .select("neighborhood_display, city, description")
         .eq("id", item.alert_id)
         .maybeSingle();
 
       if (!alert) throw new Error("alert_not_found");
-      const alertSnapshot = alert as AlertSnapshotRow;
+      const alertSnapshot = alert as unknown as AlertSnapshotRow;
 
-      const notifications = users.map((u: { user_id: string }) =>
-        notificationService
+      const notifications = userIds.map((userId: string) =>
+        NotificationService
           .createNotification({
-            user_id: u.user_id,
-            type: "community",
+            user_id: userId,
+            type: "warning",
             title: `Alerta em ${alertSnapshot.neighborhood_display ?? "sua regiao"}`,
             message: (alertSnapshot.description ?? "").slice(0, 100),
-            priority: "high",
+            category: "social",
             metadata: {
               alert_id: item.alert_id,
-              category: alertSnapshot.category,
               neighborhood: item.neighborhood,
               city: item.city,
             },

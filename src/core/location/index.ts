@@ -63,7 +63,6 @@ export { residentialLocalityService, ResidentialLocalityService } from './servic
 export type { ResidentialLocality } from './services/ResidentialLocalityService';
 export { TerritorialGroupService } from './services/TerritorialGroupService';
 export { TerritoryModeManager } from './services/TerritoryModeManager'; // SSOT para lógica de modo territorial
-export type { MismatchInfo } from './services/TerritoryModeManager';
 
 // ============================================
 // PUBLIC HOOKS

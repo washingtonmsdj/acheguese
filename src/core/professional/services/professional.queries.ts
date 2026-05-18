@@ -13,7 +13,6 @@ import { trackError } from "@/shared/utils/errorTracking";
 import { PAGINATION } from "@/shared/constants";
 import { applyTerritoryFilter } from "@/core/location";
 import { ReviewsService } from "@/core/reviews";
-import { PublicIdentityService } from "@/core/public-identity";
 import { sanitizeForILike } from "@/shared/utils/sqlSanitization";
 import type { TerritoryFilter } from "@/core/location/types";
 import type {
@@ -50,8 +49,8 @@ export async function getProfessionals(
       );
 
     // Aplicar filtro territorial
-    if (filters.territory) {
-      query = applyTerritoryFilter(query, filters.territory);
+    if (filters.territoryFilter) {
+      query = applyTerritoryFilter(query, filters.territoryFilter);
     }
 
     // Filtro de categoria
@@ -68,15 +67,15 @@ export async function getProfessionals(
     // Ordenação
     if (filters.sortBy === "rating") {
       query = query.order("rating", { ascending: false });
-    } else if (filters.sortBy === "recent") {
+    } else if (filters.sortBy === "created_at") {
       query = query.order("created_at", { ascending: false });
     } else {
       query = query.order("professional_name", { ascending: true });
     }
 
     // Paginação
-    const limit = filters.limit || PAGINATION.DEFAULT_LIMIT;
-    const offset = filters.offset || 0;
+    const limit = PAGINATION.DEFAULT_LIMIT;
+    const offset = 0;
     query = query.range(offset, offset + limit - 1);
 
     const { data, error } = await query;
@@ -241,10 +240,10 @@ export async function getServicesByProfile(profileId: string): Promise<Professio
  */
 export async function getStats(professionalId: string): Promise<ProfessionalStats> {
   try {
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from("professional_stats")
       .select("*")
-      .eq("professional_id", professionalId)
+      .eq("profile_id", professionalId)
       .single();
 
     if (error && error.code !== "PGRST116") {
@@ -252,11 +251,16 @@ export async function getStats(professionalId: string): Promise<ProfessionalStat
     }
 
     return {
-      total_views: data?.total_views || 0,
-      total_contacts: data?.total_contacts || 0,
-      total_reviews: data?.total_reviews || 0,
-      average_rating: data?.average_rating || 0,
-      total_jobs: data?.total_jobs || 0,
+      profile_id: data?.profile_id ?? professionalId,
+      views_count: data?.views_count || 0,
+      contacts_count: data?.contacts_count || 0,
+      favorites_count: data?.favorites_count || 0,
+      shares_count: data?.shares_count || 0,
+      jobs_completed: data?.jobs_completed || 0,
+      response_rate: data?.response_rate || 0,
+      average_response_time: data?.average_response_time || 0,
+      created_at: data?.created_at ?? new Date(0).toISOString(),
+      updated_at: data?.updated_at ?? new Date(0).toISOString(),
     };
   } catch (error) {
     logger.error("[professional.queries] Error fetching stats:", error);
@@ -266,11 +270,16 @@ export async function getStats(professionalId: string): Promise<ProfessionalStat
       metadata: { professionalId },
     });
     return {
-      total_views: 0,
-      total_contacts: 0,
-      total_reviews: 0,
-      average_rating: 0,
-      total_jobs: 0,
+      profile_id: professionalId,
+      views_count: 0,
+      contacts_count: 0,
+      favorites_count: 0,
+      shares_count: 0,
+      jobs_completed: 0,
+      response_rate: 0,
+      average_response_time: 0,
+      created_at: new Date(0).toISOString(),
+      updated_at: new Date(0).toISOString(),
     };
   }
 }
@@ -280,7 +289,7 @@ export async function getStats(professionalId: string): Promise<ProfessionalStat
  */
 export async function getTotalProfessionalsCount(): Promise<number> {
   try {
-    const { count, error } = await supabase
+    const { count, error } = await (supabase as any)
       .from("professional_data")
       .select("*", { count: "exact", head: true })
       .eq("is_accepting_clients", true)
@@ -309,7 +318,7 @@ export async function getProfessionalsCreatedInPeriod(
   endDate: Date,
 ): Promise<number> {
   try {
-    const { count, error } = await supabase
+    const { count, error } = await (supabase as any)
       .from("professional_data")
       .select("*", { count: "exact", head: true })
       .gte("created_at", startDate.toISOString())
@@ -342,7 +351,7 @@ export async function getProfessionalsCreatedInPeriod(
  */
 export async function getReviews(professionalId: string): Promise<ProfessionalReview[]> {
   try {
-    const reviews = await ReviewsService.getReviewsForTarget(
+    const reviews = await ReviewsService.getReviewsForProfile(
       professionalId,
       "professional",
     );
@@ -366,12 +375,12 @@ export async function getMyReview(
   userId: string,
 ): Promise<ProfessionalReview | null> {
   try {
-    const review = await ReviewsService.getReviewByUser(
+    const review = await ReviewsService.getReviewByReviewer(
       professionalId,
-      "professional",
       userId,
+      "professional",
     );
-    return review as ProfessionalReview | null;
+    return review as unknown as ProfessionalReview | null;
   } catch (error) {
     logger.error("[professional.queries] Error fetching my review:", error);
     trackError(error as Error, {
@@ -484,8 +493,8 @@ export async function searchProfessionals(
       );
     }
 
-    if (filters.territory) {
-      dbQuery = applyTerritoryFilter(dbQuery, filters.territory);
+    if (filters.territoryFilter) {
+      dbQuery = applyTerritoryFilter(dbQuery, filters.territoryFilter);
     }
 
     if (filters.category) {
@@ -528,19 +537,19 @@ export async function getPublicProfileBySlug(
   cidade: string,
 ): Promise<Professional | null> {
   try {
-    // Buscar pela identidade pública
-    const identity = await PublicIdentityService.resolveIdentity({
-      slug,
-      uf,
-      cidade,
-      type: "professional",
-    });
-
-    if (!identity?.entity_id) {
-      return null;
-    }
-
-    return await getProfessionalById(identity.entity_id);
+    const { data, error } = await (supabase as any)
+      .from("professional_data")
+      .select(
+        `
+        *,
+        profiles:profile_id(id, name, avatar_url, verified),
+        addresses:address_id(*)
+      `,
+      )
+      .eq("slug", slug)
+      .maybeSingle();
+    if (error) throw error;
+    return (data as Professional | null) ?? null;
   } catch (error) {
     logger.error("[professional.queries] Error fetching public profile:", error);
     trackError(error as Error, {

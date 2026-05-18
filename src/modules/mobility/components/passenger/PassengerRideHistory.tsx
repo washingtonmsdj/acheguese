@@ -17,10 +17,17 @@ import { Input } from "@/shared/components/ui/input";
 import { cn } from "@/shared/utils/cn";
 import type { RideRequest } from "@/modules/mobility/types";
 import { RIDE_STATUS, PAYMENT_METHOD } from "@/shared/types/constants";
+
+type PassengerRide = RideRequest & {
+  driver?: { name?: string; vehicle_plate?: string } | null;
+  rating?: number | { rating?: number; comment?: string } | null;
+  departure_time?: string;
+  cancellation_reason?: string | null;
+};
 interface PassengerRideHistoryProps {
-  completedRides: RideRequest[];
-  cancelledRides: RideRequest[];
-  onRate: (ride: RideRequest) => void;
+  completedRides: PassengerRide[];
+  cancelledRides: PassengerRide[];
+  onRate: (ride: PassengerRide) => void;
 }
 
 export function PassengerRideHistory({
@@ -41,7 +48,7 @@ export function PassengerRideHistory({
   const [searchQuery, setSearchQuery] = useState("");
   const [showFilters, setShowFilters] = useState(false);
 
-  const allRides = useMemo(() => {
+  const allRides = useMemo<PassengerRide[]>(() => {
     return [...completedRides, ...cancelledRides].sort(
       (a, b) =>
         new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime(),
@@ -79,9 +86,9 @@ export function PassengerRideHistory({
       // Busca por texto
       if (searchQuery) {
         const query = searchQuery.toLowerCase();
-        const matchOrigin = ride.origin.toLowerCase().includes(query);
-        const matchDestination = ride.destination.toLowerCase().includes(query);
-        const matchDriver = ride.driver?.name.toLowerCase().includes(query);
+        const matchOrigin = (ride.origin ?? "").toLowerCase().includes(query);
+        const matchDestination = (ride.destination ?? "").toLowerCase().includes(query);
+        const matchDriver = (ride.driver?.name ?? "").toLowerCase().includes(query);
         if (!matchOrigin && !matchDestination && !matchDriver) return false;
       }
 
@@ -102,8 +109,8 @@ export function PassengerRideHistory({
     const completed = filteredRides.filter(
       (r) => r.status === RIDE_STATUS.COMPLETED,
     );
-    const totalSpent = completed.reduce(
-      (sum, r) => sum + (r.final_price || r.suggested_price),
+      const totalSpent = completed.reduce(
+      (sum, r) => sum + (r.final_price || r.suggested_price || 0),
       0,
     );
     return {
@@ -430,12 +437,12 @@ export function PassengerRideHistory({
                 <div className="flex items-center gap-4 text-xs text-muted-foreground">
                   <div className="flex items-center gap-1">
                     <Clock className="h-3 w-3" />
-                    {formatTime(ride.departure_time)}
+                    {formatTime(ride.departure_time || ride.updated_at)}
                   </div>
                   <div className="flex items-center gap-1">
                     <DollarSign className="h-3 w-3" />
                     <span className="text-success font-bold">
-                      R$ {(ride.final_price || ride.suggested_price).toFixed(2)}
+                      R$ {(ride.final_price || ride.suggested_price || 0).toFixed(2)}
                     </span>
                   </div>
                   {ride.payment_method && (
@@ -462,22 +469,37 @@ export function PassengerRideHistory({
 
                 {ride.rating && (
                   <div className="mt-2 flex items-center gap-1">
+                    {(() => {
+                      const ratingValue = ride.rating as any;
+                      const numericRating =
+                        typeof ratingValue === "number"
+                          ? ratingValue
+                          : (ratingValue?.rating ?? 0);
+                      const commentRating =
+                        typeof ratingValue === "object" && ratingValue
+                          ? ratingValue.comment
+                          : undefined;
+                      return (
+                        <>
                     {Array.from({ length: 5 }).map((_, i) => (
                       <Star
                         key={i}
                         className={cn(
                           "h-3 w-3",
-                          i < ride.rating!.rating
+                          i < numericRating
                             ? "text-warning fill-warning"
                             : "text-muted",
                         )}
                       />
                     ))}
-                    {ride.rating.comment && (
+                    {commentRating && (
                       <span className="text-[0.6rem] text-muted-foreground ml-1 italic">
-                        "{ride.rating.comment}"
+                        "{commentRating}"
                       </span>
                     )}
+                        </>
+                      );
+                    })()}
                   </div>
                 )}
 

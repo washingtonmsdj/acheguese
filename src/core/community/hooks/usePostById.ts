@@ -35,9 +35,9 @@ export function usePostById(postId: string | null) {
       // ✅ FASE 2: Usar ProfileService.getActiveProfile() para contexto social (opcional)
       const activeProfile = await profileService.getActiveProfile();
 
-      const post = (await postService.getCommunityPostById(
+      const post = (await postService.getPostById(
         postId,
-      )) as CommunityPostRecord | null;
+      )) as unknown as CommunityPostRecord | null;
       if (!post) return null;
 
       const authorProfile = await profileService.getProfilesSummary([post.author_profile_id]);
@@ -47,7 +47,9 @@ export function usePostById(postId: string | null) {
       const interactions: CommunityPostInteractions = activeProfile
         ? await postService.getPostUserInteractions(
             postId,
-            activeProfile.userId,
+            (activeProfile as { userId?: string; user_id?: string }).userId ??
+              (activeProfile as { userId?: string; user_id?: string }).user_id ??
+              "",
             post.type,
           )
         : {
@@ -65,13 +67,13 @@ export function usePostById(postId: string | null) {
           ...pollData,
           user_voted: true,
           user_vote_option_id: interactions.pollVoteOptionId,
-        };
+        } as any;
       } else if (pollData) {
         enrichedPoll = {
           ...pollData,
           user_voted: false,
           user_vote_option_id: undefined,
-        };
+        } as any;
       }
 
       // ✅ SSOT — menções via PostService
@@ -101,7 +103,7 @@ export function usePostById(postId: string | null) {
         is_edited: post.is_edited || false,
         poll: enrichedPoll,
         mentioned_profiles: mentionedProfiles,
-      } as CommunityPost;
+      } as unknown as CommunityPost;
     },
     enabled: !!postId,
   });

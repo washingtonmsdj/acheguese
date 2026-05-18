@@ -15,7 +15,6 @@ import {
 import { logger } from "@/shared/utils/logger";
 import { SocialInteractionsService } from "@/core/social/services/SocialInteractionsService"; // ✅ SSOT
 import { GroupService } from "@/core/social/services/GroupService"; // ✅ SSOT
-import type { RealtimeChannel } from "@supabase/supabase-js";
 
 export interface GroupMessage {
   id: string;
@@ -39,7 +38,7 @@ export function useGroupChat(groupId: string | undefined) {
   const [messages, setMessages] = useState<GroupMessage[]>([]);
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
-  const subscriptionRef = useRef<RealtimeChannel | null>(null);
+  const subscriptionRef = useRef<{ unsubscribe: () => void } | null>(null);
 
   // Load initial messages
   const loadMessages = useCallback(async () => {
@@ -74,7 +73,7 @@ export function useGroupChat(groupId: string | undefined) {
         if (data) {
           setMessages((prev) => {
             if (prev.find((m) => m.id === data.id)) return prev;
-            return [...prev, data];
+            return [...prev, data as unknown as GroupMessage];
           });
         }
       },

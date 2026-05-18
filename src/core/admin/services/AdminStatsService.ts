@@ -262,11 +262,11 @@ class AdminStatsService {
   async getActivity(days = 30): Promise<ActivityData[]> {
     try {
       const [posts, profiles, businesses, events, classifieds] = await Promise.all([
-        postService.getRecentPosts(200),
-        profileService.getRecentProfiles(200),
-        BusinessService.getRecentBusinessesLegacy(200),
-        adminEventsRuntimeService.getRecentEvents(200),
-        adminClassifiedsService.getRecentClassifieds(200),
+        postService.getRecentPosts(10),
+        profileService.getRecentProfiles(10),
+        BusinessService.getRecentBusinessesLegacy(10),
+        adminEventsRuntimeService.getRecentEvents(10),
+        adminClassifiedsService.getRecentClassifieds(10),
       ]);
 
       // Monta um mapa date → contagens
@@ -284,11 +284,11 @@ class AdminStatsService {
 
       const dateKey = (iso: string) => iso?.split("T")[0] ?? "";
 
-      posts.forEach((p) => { const e = map.get(dateKey(p.created_at)); if (e) e.posts++; });
-      profiles.forEach((p) => { const e = map.get(dateKey(p.created_at)); if (e) e.users++; });
-      businesses.forEach((b) => { const e = map.get(dateKey(b.created_at)); if (e) e.businesses++; });
-      events.forEach((ev) => { const e = map.get(dateKey(ev.created_at)); if (e) e.eventos++; });
-      classifieds.forEach((c) => { const e = map.get(dateKey(c.created_at)); if (e) e.classificados++; });
+      (posts as Array<{ created_at: string }>).forEach((p) => { const e = map.get(dateKey(p.created_at)); if (e) e.posts++; });
+      (profiles as Array<{ created_at: string }>).forEach((p) => { const e = map.get(dateKey(p.created_at)); if (e) e.users++; });
+      (businesses as Array<{ created_at: string }>).forEach((b) => { const e = map.get(dateKey(b.created_at)); if (e) e.businesses++; });
+      (events as Array<{ created_at: string }>).forEach((ev) => { const e = map.get(dateKey(ev.created_at)); if (e) e.eventos++; });
+      (classifieds as Array<{ created_at: string }>).forEach((c) => { const e = map.get(dateKey(c.created_at)); if (e) e.classificados++; });
 
       return Array.from(map.values());
     } catch (error) {
@@ -318,16 +318,16 @@ class AdminStatsService {
       // ✅ SSOT: Buscar de cada serviço específico em paralelo
       const [businesses, posts, events, classifieds, profiles, comments] =
         await Promise.all([
-          BusinessService.getRecentBusinessesLegacy(5),
-          postService.getRecentPosts(5),
-          adminEventsRuntimeService.getRecentEvents(5),
-          adminClassifiedsService.getRecentClassifieds(5),
+          BusinessService.getRecentBusinessesLegacy(10),
+          postService.getRecentPosts(10),
+          adminEventsRuntimeService.getRecentEvents(10),
+          adminClassifiedsService.getRecentClassifieds(10),
           profileService.getRecentProfiles(5),
           commentService.getRecentComments(5),
         ]);
 
       // Adicionar businesses
-      businesses.forEach((b) => {
+      (businesses as Array<{ name?: string | null; created_at: string }>).forEach((b) => {
         recent.push({
           type: "business",
           label: `Nova empresa: ${b.name || "Sem nome"}`,

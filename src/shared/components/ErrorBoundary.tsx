@@ -40,7 +40,7 @@ export function ErrorBoundary({
   return (
     <SentryErrorBoundary
       fallback={({ error, resetError }) => (
-        <FallbackComponent error={error} resetError={resetError} />
+        <FallbackComponent error={error as Error} resetError={resetError} />
       )}
       showDialog={showDialog}
       dialogOptions={{

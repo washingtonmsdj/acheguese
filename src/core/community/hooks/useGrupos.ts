@@ -111,7 +111,7 @@ export function useGrupos(options: UseGruposOptions = {}) {
   });
 
   const rawGroups = useMemo(
-    () => ((data?.pages || []).flatMap((page) => page.items) || []) as Group[],
+    () => ((data?.pages || []).flatMap((page) => page.items) || []) as unknown as Group[],
     [data?.pages],
   );
   const groups = useMemo(() => {

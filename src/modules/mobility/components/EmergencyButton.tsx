@@ -25,8 +25,18 @@ import type { RideRequest } from "@/modules/mobility/types";
 import { logger } from "@/shared/utils/logger";
 import { toast } from "sonner";
 
+type EmergencyRide = RideRequest & {
+  driver?: {
+    id?: string | null;
+    name?: string | null;
+    vehicle_plate?: string | null;
+    vehicle_model?: string | null;
+    is_verified?: boolean | null;
+  } | null;
+};
+
 interface EmergencyButtonProps {
-  ride?: RideRequest;
+  ride?: EmergencyRide;
   className?: string;
   variant?: "full" | "compact";
 }
@@ -228,7 +238,7 @@ export function EmergencyButton({
 interface EmergencyDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  ride?: RideRequest;
+  ride?: EmergencyRide;
   onTrigger: () => void;
   onShare: () => void;
   sending?: boolean;

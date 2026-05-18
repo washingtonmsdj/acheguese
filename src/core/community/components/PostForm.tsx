@@ -5,7 +5,9 @@ import {
   AvatarFallback,
   AvatarImage,
 } from "@/shared/components/ui/avatar";
-import type { PostData } from "@/core/community/hooks/useNovoPost";
+interface PostData {
+  texto: string;
+}
 
 interface PostFormProps {
   postData: PostData;
@@ -52,4 +54,3 @@ export function PostForm({
     </div>
   );
 }
-

@@ -30,7 +30,7 @@ export function NotificacoesSection({
       </SectionFrame>
 
       <NotificationsPanel
-        notifications={notifications.recent || []}
+        notifications={(notifications.recent || []) as any}
         onNotificationClick={() => navigate(appUrls.notifications)}
         onViewAll={() => navigate(appUrls.notifications)}
       />

@@ -79,11 +79,12 @@ export function TerritorialGroupForm({ group, onSuccess, onCancel }: Territorial
         
         try {
           // ✅ SSOT - Buscar membros via TerritorialGroupService
-          const members = await service.getGroupMembers(group.id);
+          const groupWithMembers = await service.getGroupWithMembers(group.id);
+          const members = groupWithMembers?.members ?? [];
           
           if (members) {
-            setSelectedDistricts(members.map(m => m.location_id));
-            setCurrentMemberNames(members.map(m => m.location_name || 'Desconhecido'));
+            setSelectedDistricts(members.map(m => m.id));
+            setCurrentMemberNames(members.map(m => m.name || 'Desconhecido'));
           }
         } catch (err) {
           logger.error('Error loading group members:', err);
@@ -313,3 +314,5 @@ export function TerritorialGroupForm({ group, onSuccess, onCancel }: Territorial
     </form>
   );
 }
+
+

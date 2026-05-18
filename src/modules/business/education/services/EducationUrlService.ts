@@ -28,6 +28,13 @@ interface BusinessIdentifiers {
   slug: string;
 }
 
+interface EducationBusinessUrlData {
+  state: string;
+  city: string;
+  district: string;
+  slug: string;
+}
+
 // ============================================================
 // URL BUILDERS
 // ============================================================
@@ -73,14 +80,15 @@ export const EducationUrlService = {
       preferShortLink?: boolean;
     } = {},
   ): Promise<string> {
-    // Tenta usar BusinessUrlService para resolver URL canonica
-    const canonicalUrl = await BusinessUrlService.getCanonicalUrl(businessId);
-    if (canonicalUrl) {
-      return canonicalUrl;
+    const resolved = await BusinessUrlService.resolveById(businessId);
+    if (resolved) {
+      return BusinessUrlService.getCanonicalUrl(resolved);
     }
 
-    // Fallback: constroi URL basica com base nos dados do business
-    const business = await BusinessUrlService.getBusinessData(businessId);
+    // Fallback: dado compativel legado (quando disponivel)
+    const business = (await (BusinessUrlService as unknown as {
+      getBusinessData?: (id: string) => Promise<EducationBusinessUrlData | null>;
+    }).getBusinessData?.(businessId)) ?? null;
     if (business) {
       return this.buildDetailUrl({
         state: business.state,

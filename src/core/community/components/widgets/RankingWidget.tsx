@@ -88,7 +88,7 @@ export const RankingWidget = memo(() => {
 
               {/* Avatar */}
               <Avatar className="h-7 w-7 flex-shrink-0">
-                <AvatarImage src={user.avatar_url || undefined} />
+                <AvatarImage src={(user as { avatar_url?: string; avatarUrl?: string }).avatar_url || (user as { avatar_url?: string; avatarUrl?: string }).avatarUrl || undefined} />
                 <AvatarFallback className="text-[10px] bg-primary/10 text-primary">
                   {getInitials(user.name)}
                 </AvatarFallback>

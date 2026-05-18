@@ -32,6 +32,12 @@ export interface ClassifiedCardProps {
 
 export const ClassifiedCard = React.forwardRef<HTMLDivElement, ClassifiedCardProps>(
   ({ ad, index, onClick }, ref) => {
+    const adCompat = ad as Classificado & {
+      subcategoria?: string | null;
+      aceita_troca?: boolean;
+      entrega_disponivel?: boolean;
+      vendedor?: (Classificado["vendedor"] & { rating?: number }) | null;
+    };
     const status = STATUS_CONFIG[ad.status] || STATUS_CONFIG.active;
     const firstImage = ad.fotos?.[0] || "/placeholder.svg";
     const timeAgo = getRelativeTime(ad.created_at);
@@ -147,7 +153,7 @@ export const ClassifiedCard = React.forwardRef<HTMLDivElement, ClassifiedCardPro
           {ad.categoria && (
             <p className="text-xs text-muted-foreground">
               <span className="font-medium text-foreground/80">{ad.categoria}</span>
-              {ad.subcategoria && ` · ${ad.subcategoria}`}
+              {adCompat.subcategoria && ` · ${adCompat.subcategoria}`}
             </p>
           )}
 
@@ -162,10 +168,10 @@ export const ClassifiedCard = React.forwardRef<HTMLDivElement, ClassifiedCardPro
                   {ad.vendedor.nome}
                 </span>
               </div>
-              {ad.vendedor.rating && (
+              {adCompat.vendedor?.rating && (
                 <div className="flex items-center gap-1 shrink-0 ml-2">
                   <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
-                  <span className="font-medium">{ad.vendedor.rating.toFixed(1)}</span>
+                  <span className="font-medium">{adCompat.vendedor.rating.toFixed(1)}</span>
                 </div>
               )}
             </div>
@@ -191,12 +197,12 @@ export const ClassifiedCard = React.forwardRef<HTMLDivElement, ClassifiedCardPro
                   : "Usado"}
               </span>
             )}
-            {ad.aceita_troca && (
+            {adCompat.aceita_troca && (
               <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-secondary text-secondary-foreground">
                 Aceita troca
               </span>
             )}
-            {ad.entrega_disponivel && (
+            {adCompat.entrega_disponivel && (
               <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-secondary text-secondary-foreground flex items-center gap-0.5">
                 <Truck className="h-2.5 w-2.5" /> Entrega
               </span>

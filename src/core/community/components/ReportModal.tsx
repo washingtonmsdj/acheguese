@@ -13,8 +13,18 @@ import { Button } from "@/shared/components/ui/button";
 import { Label } from "@/shared/components/ui/label";
 import { Textarea } from "@/shared/components/ui/textarea";
 import { RadioGroup, RadioGroupItem } from "@/shared/components/ui/radio-group";
-import { ReportReason } from "@/core/community/types";
 import { AlertTriangle } from "lucide-react";
+type ReportReason =
+  | "spam"
+  | "propaganda"
+  | "conteudo_ofensivo"
+  | "links_maliciosos"
+  | "odio"
+  | "assedio"
+  | "violencia"
+  | "desinformacao"
+  | "conteudo_inadequado"
+  | "outro";
 /**
  * Modal de denúncia de posts e comentários
  *
@@ -30,7 +40,7 @@ import { AlertTriangle } from "lucide-react";
 interface ReportModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSubmit: (reason: ReportReason, description?: string) => void;
+  onSubmit: (reason: string, description?: string) => void;
   isSubmitting?: boolean;
   contentType?: "post" | "comment";
 }
@@ -176,4 +186,3 @@ export function ReportModal({
     </Dialog>
   );
 }
-

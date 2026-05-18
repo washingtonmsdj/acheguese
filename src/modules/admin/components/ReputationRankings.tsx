@@ -19,6 +19,15 @@ import { MobilityService } from "@/shared/services/mobilityAdmin"; // ✅ SSOT -
 
 type TopPassenger = Awaited<ReturnType<typeof profileService.getTopPassengers>>[number];
 type TopDriver = Awaited<ReturnType<typeof MobilityService.getTopDrivers>>[number];
+type DriverRow = {
+  id: string;
+  name?: string;
+  total_rides?: number;
+  rating?: number;
+  profile?: {
+    avatar_url?: string;
+  };
+};
 
 export function ReputationRankings() {
   const [topPassengers, setTopPassengers] = useState<TopPassenger[]>([]);
@@ -45,7 +54,7 @@ export function ReputationRankings() {
         limit: 10,
       });
 
-      setTopDrivers(drivers || []);
+      setTopDrivers(((drivers || []) as DriverRow[]) as TopDriver[]);
     } catch (error) {
       logger.error("Error loading rankings:", error);
       toast.error("Erro ao carregar rankings");
@@ -114,34 +123,36 @@ export function ReputationRankings() {
         </CardHeader>
         <CardContent>
           <div className="space-y-3">
-            {topDrivers.map((driver, index) => (
+            {topDrivers.map((driver, index) => {
+              const row = driver as DriverRow;
+              return (
               <div
-                key={driver.id}
+                key={row.id}
                 className="flex items-center gap-3 p-3 rounded-lg hover:bg-secondary/50"
               >
                 <div className="text-lg font-bold text-muted-foreground w-6">
                   #{index + 1}
                 </div>
                 <Avatar>
-                  <AvatarImage src={driver.profile?.avatar_url} />
-                  <AvatarFallback>{driver.name?.charAt(0)}</AvatarFallback>
+                  <AvatarImage src={row.profile?.avatar_url} />
+                  <AvatarFallback>{row.name?.charAt(0)}</AvatarFallback>
                 </Avatar>
                 <div className="flex-1">
-                  <p className="font-medium">{driver.name}</p>
+                  <p className="font-medium">{row.name}</p>
                   <p className="text-xs text-muted-foreground">
-                    {driver.total_rides} corridas
+                    {row.total_rides ?? 0} corridas
                   </p>
                 </div>
                 <div className="text-right">
                   <div className="flex items-center gap-1 text-yellow-500">
                     <Star className="h-4 w-4 fill-yellow-500" />
                     <span className="font-bold">
-                      {driver.rating?.toFixed(2)}
+                      {typeof row.rating === "number" ? row.rating.toFixed(2) : "0.00"}
                     </span>
                   </div>
                 </div>
               </div>
-            ))}
+            )})}
           </div>
         </CardContent>
       </Card>

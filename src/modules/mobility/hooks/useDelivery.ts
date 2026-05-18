@@ -69,7 +69,7 @@ export interface DeliveryProof {
 // ESTADOS ATIVOS DE ENTREGA
 // ============================================
 
-const ACTIVE_DELIVERY_STATES = [
+const ACTIVE_DELIVERY_STATES: RideRequest["status"][] = [
   RIDE_STATUS.REQUESTED,
   RIDE_STATUS.SEARCHING_DRIVER,
   RIDE_STATUS.DRIVER_ASSIGNED,
@@ -99,7 +99,7 @@ export function useDelivery(sourceType: SourceType, sourceId?: string) {
     queryKey: MOBILITY_QUERY_KEYS.deliveries(sourceType, sourceId || user?.id || ""),
     queryFn: async () => {
       if (!user) return [];
-      const all = await mobilityService.getUserRides(user.id);
+      const all = (await mobilityService.getUserRides(user.id)) as RideRequest[];
       const filtered = (all || []).filter(
         (r: RideRequest) =>
           r.ride_mode === RIDE_MODE.MOTOBOY &&
@@ -125,7 +125,7 @@ export function useDelivery(sourceType: SourceType, sourceId?: string) {
 
       if (activeDelivery?.id === event.rideId) {
         mobilityService.getRideById(event.rideId).then((updated) => {
-          if (updated) setActiveDelivery(updated);
+          if (updated) setActiveDelivery(updated as RideRequest);
         });
       }
 

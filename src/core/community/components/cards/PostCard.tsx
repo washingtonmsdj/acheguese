@@ -25,7 +25,7 @@ import {
 } from "../styles/communityDesignSystem";
 
 // ✅ Importar tipos de core/ (tipos compartilhados entre módulos)
-import type { EditHistory, CommunityPost } from "@/core/posts/types";
+import type { CommunityPost } from "@/core/posts/types";
 import type { PostType } from "../PostBadge";
 
 interface PostCardProps {
@@ -55,11 +55,12 @@ export function PostCard({
   onTagClick,
   onPostClick,
 }: PostCardProps) {
+  const postAny = post as any;
   const [showEditHistory, setShowEditHistory] = useState(false);
   const { state, isProcessing, handleLike, handleSave, handleShare } =
     usePostInteractions(post.id, {
-      isLiked: post.is_liked || false,
-      isSaved: post.is_saved || false,
+      isLiked: postAny.is_liked || false,
+      isSaved: postAny.is_saved || false,
       likesCount: post.likes_count,
     });
   const isOwnPost = currentUserId === post.author_profile_id;
@@ -98,25 +99,25 @@ export function PostCard({
     >
       <CardHeader className={`${SPACING.cardPadding} pb-3`}>
         <PostHeader
-          authorName={post.author_name}
-          authorAvatar={post.author_avatar}
-          city={post.city || post.city}
-          neighborhood={post.neighborhood || post.neighborhood}
+          authorName={postAny.author_name}
+          authorAvatar={postAny.author_avatar}
+          city={postAny.city || postAny.city}
+          neighborhood={postAny.neighborhood || postAny.neighborhood}
           timestamp={getRelativeTime(post.created_at)}
-          isVerifiedResident={post.is_verified_resident}
+          isVerifiedResident={postAny.is_verified_resident}
           isOwnPost={isOwnPost}
           onDelete={onDelete ? () => onDelete(post.id) : undefined}
           onEdit={onEdit ? () => onEdit(post.id) : undefined}
           onReport={() => onReport(post.id)}
         />
-        <PostBadge type={getPostType(post.type)} isVerified={post.is_verified} />
+        <PostBadge type={getPostType(post.type)} isVerified={postAny.is_verified} />
       </CardHeader>
       <CardContent
         className={`${SPACING.cardPadding} pt-0 pb-3 cursor-pointer`}
         onClick={() => onPostClick?.(post.id)}
       >
         <PostContent content={post.content} images={post.images} />
-        {post.is_edited && (
+        {postAny.is_edited && (
           <Button
             variant="ghost"
             size="sm"
@@ -138,7 +139,7 @@ export function PostCard({
         <PostMetrics
           likesCount={state.likesCount}
           commentsCount={post.comments_count}
-          confirmationsCount={post.confirmations_count}
+          confirmationsCount={postAny.confirmations_count}
           showConfirmations={false}
           isLiked={state.isLiked}
           isSaved={state.isSaved}

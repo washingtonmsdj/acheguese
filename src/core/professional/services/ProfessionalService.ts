@@ -717,6 +717,8 @@ export class ProfessionalService {
         throw new Error("location_id é obrigatório para cadastrar profissional.");
       }
 
+      const { profileService } = await import("@/core/profiles/services/ProfileService");
+
       // 1. Criar profile usando ProfileService (MIGRADO)
       const profile = await profileService.createProfile({
         profile_type: "professional",
@@ -825,6 +827,8 @@ export class ProfessionalService {
       };
       delete updatePayload.slug;
 
+      const { profileService } = await import("@/core/profiles/services/ProfileService");
+
       // Atualizar profile usando ProfileService se necessário (MIGRADO)
       if (validatedInput.name) {
         await profileService.updateProfile(currentProfessional.profile_id, {
@@ -904,6 +908,7 @@ export class ProfessionalService {
 
       if (resolveError) throw resolveError;
       if (!professional) throw new Error("Profissional não encontrado");
+      const { profileService } = await import("@/core/profiles/services/ProfileService");
       // Soft delete: marcar como inativo ao invés de remover
       const { error } = await (supabase as any)
         .from("professional_data")
@@ -982,7 +987,7 @@ export class ProfessionalService {
         .single();
 
       if (error) throw error;
-      return data as ProfessionalStats;
+      return data as unknown as ProfessionalStats;
     } catch (error: any) {
       throw new Error(`Erro ao buscar estatísticas: ${error.message}`);
     }
@@ -1100,6 +1105,7 @@ export class ProfessionalService {
   ): Promise<ProfessionalReview | null> {
     try {
       // ✅ LOTE 6 - Usar profile ativo em vez de user_id
+      const { profileService } = await import("@/core/profiles/services/ProfileService");
 
       const activeProfile = await profileService.getActiveProfile(userId);
       if (!activeProfile) return null;
@@ -1530,15 +1536,15 @@ export class ProfessionalService {
   static getFormattedAddress(professional: ProfessionalDataRecord): string {
     // Usar apenas address canônico quando relações estiverem carregadas
     if ((professional as ProfessionalDataWithRelations).address) {
-      const addr = (professional as ProfessionalDataWithRelations).address;
+      const addr = (professional as ProfessionalDataWithRelations).address as unknown as Record<string, unknown>;
       const parts: string[] = [];
       
-      if (addr.street) parts.push(addr.street);
-      if (addr.number) parts.push(addr.number);
-      if (addr.neighborhood) parts.push(addr.neighborhood);
-      if (addr.city) parts.push(addr.city);
-      if (addr.state) parts.push(addr.state);
-      if (addr.postal_code) parts.push(`CEP ${addr.postal_code}`);
+      if (typeof addr.street === "string") parts.push(addr.street);
+      if (typeof addr.number === "string") parts.push(addr.number);
+      if (typeof addr.neighborhood === "string") parts.push(addr.neighborhood);
+      if (typeof addr.city === "string") parts.push(addr.city);
+      if (typeof addr.state === "string") parts.push(addr.state);
+      if (typeof addr.postal_code === "string") parts.push(`CEP ${addr.postal_code}`);
 
       return parts.join(', ');
     }

@@ -70,11 +70,12 @@ async function hydrateAdminNames(events: DriverModerationEvent[]): Promise<Drive
 }
 
 export class AdminMobilityRuntimeService {
+  private readonly db = supabase as any;
   private rolloutService = new RolloutService(createRolloutRepository(), createLocationRepository());
 
   async getDriverProfiles(): Promise<{ data: unknown[]; error: unknown }> {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await this.db
         .from("driver_complete_profile")
         .select("*")
         .order("created_at", { ascending: false });
@@ -88,7 +89,7 @@ export class AdminMobilityRuntimeService {
   async getTopDrivers(opts: { minRides?: number; limit?: number } = {}): Promise<unknown[]> {
     try {
       const { minRides = 1, limit = 10 } = opts;
-      const { data, error } = await supabase
+      const { data, error } = await this.db
         .from("driver_complete_profile")
         .select("profile_id, display_name, avg_rating, total_rides, avatar_url")
         .gte("total_rides", minRides)
@@ -129,13 +130,13 @@ export class AdminMobilityRuntimeService {
     reason?: string;
     metadata?: Record<string, unknown>;
   }): Promise<void> {
-    const { error } = await supabase.from("driver_moderation_events").insert({
+    const { error } = await this.db.from("driver_moderation_events").insert({
       driver_profile_id: input.driverProfileId,
       admin_profile_id: input.adminProfileId ?? null,
       action: input.action,
       reason: input.reason ?? null,
       metadata: input.metadata ?? {},
-    });
+    } as any);
 
     if (error && !isMissingTableError(error)) {
       logger.warn("AdminMobilityRuntimeService.createDriverModerationEvent", error);
@@ -143,7 +144,7 @@ export class AdminMobilityRuntimeService {
   }
 
   async listDriverModerationEvents(driverProfileId: string): Promise<DriverModerationEvent[]> {
-    const { data, error } = await supabase
+    const { data, error } = await this.db
       .from("driver_moderation_events")
       .select("id, driver_profile_id, admin_profile_id, action, reason, metadata, created_at")
       .eq("driver_profile_id", driverProfileId)

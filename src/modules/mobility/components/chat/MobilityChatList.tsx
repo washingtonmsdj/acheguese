@@ -1,10 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useSessionContext } from "@/core/session";
-import {
-  useConversations,
-  useUserConversationsSubscription,
-} from "@/modules/mobility";
 import { ChatWindow } from "./ChatWindow";
 import {
   MessageCircle,
@@ -26,7 +22,7 @@ import { Skeleton } from "@/shared/components/ui/skeleton";
 import { cn } from "@/shared/utils/cn";
 import { motion, AnimatePresence } from "framer-motion";
 import { RIDE_STATUS, USER_ROLE } from "@/shared/types/constants";
-import { RIDE_STATUS as MOBILITY_RIDE_STATUS, FILTER_TYPES } from "../../constants";
+import { FILTER_TYPES } from "../../constants";
 import { logger } from "@/shared/utils/logger";
 import { profileService } from "@/core/profiles/services/ProfileService";
 import {
@@ -95,7 +91,13 @@ export function MobilityChatList({ role }: MobilityChatListProps) {
         setLoading(true);
 
         // ✅ SSOT - Buscar conversas via MobilityService
-        const conversations = await getMobilityConversations(activeProfile.id);
+        const conversations = (await getMobilityConversations(activeProfile.id)) as Array<{
+          id: string;
+          ride_id: string;
+          passenger_profile_id: string;
+          driver_profile_id: string;
+          updated_at: string;
+        }>;
 
         if (!conversations || conversations.length === 0) {
           setConversations(EMPTY_CHATS);
@@ -114,7 +116,13 @@ export function MobilityChatList({ role }: MobilityChatListProps) {
         const mapped: RideChatPreview[] = await Promise.all(
           filteredConversations.map(async (conv) => {
             // ✅ SSOT - Buscar viagem via MobilityService
-            const ride = await getRideBasicInfo(conv.ride_id);
+            const ride = (await getRideBasicInfo(conv.ride_id)) as {
+              origin?: string | null;
+              destination?: string | null;
+              status?: string | null;
+              final_price?: number | null;
+              suggested_price?: number | null;
+            } | null;
 
             // ✅ SSOT - Buscar perfil do outro usuário via ProfileService
             const otherUserId =
@@ -124,7 +132,7 @@ export function MobilityChatList({ role }: MobilityChatListProps) {
             const profile = await profileService.getProfileById(otherUserId);
 
             // ✅ SSOT - Buscar última mensagem via MobilityService
-            const lastMsg = await getLastMessage(conv.id);
+            const lastMsg = (await getLastMessage(conv.id)) as { message?: string | null } | null;
 
             // ✅ SSOT - Contar não lidas via MobilityService
             const unreadCount = await getUnreadCount(conv.id, activeProfile.id);
@@ -169,11 +177,11 @@ export function MobilityChatList({ role }: MobilityChatListProps) {
     const matchFilter =
       (filter === FILTER_TYPES.ALL ||
       (filter === FILTER_TYPES.ACTIVE &&
-        [RIDE_STATUS.PENDING, MOBILITY_RIDE_STATUS.ACCEPTED, MOBILITY_RIDE_STATUS.IN_PROGRESS].includes(
+        ([RIDE_STATUS.PENDING, RIDE_STATUS.DRIVER_ACCEPTED, RIDE_STATUS.IN_PROGRESS] as string[]).includes(
           chat.ride_status,
         )) ||
-      (filter === RIDE_STATUS.COMPLETED &&
-        [RIDE_STATUS.COMPLETED, MOBILITY_RIDE_STATUS.CANCELLED].includes(chat.ride_status)));
+      (filter === FILTER_TYPES.COMPLETED &&
+        ([RIDE_STATUS.COMPLETED, RIDE_STATUS.CANCELLED] as string[]).includes(chat.ride_status)));
 
     return matchSearch && matchFilter;
   });
@@ -313,11 +321,11 @@ export function MobilityChatList({ role }: MobilityChatListProps) {
               {filtered.map((chat, i) => {
                 const status =
                   statusConfig[chat.ride_status] || statusConfig.pending;
-                const isActive = [
+                const isActive = ([
                   RIDE_STATUS.PENDING,
-                  MOBILITY_RIDE_STATUS.ACCEPTED,
-                  MOBILITY_RIDE_STATUS.IN_PROGRESS,
-                ].includes(chat.ride_status);
+                  RIDE_STATUS.DRIVER_ACCEPTED,
+                  RIDE_STATUS.IN_PROGRESS,
+                ] as string[]).includes(chat.ride_status);
 
                 return (
                   <motion.div

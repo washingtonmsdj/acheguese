@@ -20,7 +20,6 @@ export interface GastronomySubscription {
 
 export interface SubscriptionWithDetails extends GastronomySubscription {
   business_name?: string;
-  stripe_customer_id?: string;
 }
 
 export interface UpgradePlanParams {

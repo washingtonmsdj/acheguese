@@ -27,6 +27,8 @@ export type PostType =
   | "enquete"
   | "pergunta"
   | "achados"
+  | "alerta"
+  | "civic_report"
   | "favor"
   | "evento"
   | "desapego"
@@ -81,6 +83,22 @@ export const POST_TYPE_CONFIG: Record<PostType, PostTypeConfig> = {
     icon: Search,
     category: "Utilidade",
     action: "Chat privado",
+  },
+  alerta: {
+    badge: "Alerta",
+    color: "#EF4444",
+    bgColor: "rgba(239, 68, 68, 0.2)",
+    icon: AlertTriangle,
+    category: "Utilidade",
+    action: "Confirmar alerta",
+  },
+  civic_report: {
+    badge: "Zeladoria",
+    color: "#F97316",
+    bgColor: "rgba(249, 115, 22, 0.2)",
+    icon: Construction,
+    category: "Utilidade",
+    action: "Acompanhar",
   },
   favor: {
     badge: "Favor/Empréstimo",

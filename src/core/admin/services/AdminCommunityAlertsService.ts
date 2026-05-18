@@ -112,13 +112,14 @@ class AdminCommunityAlertsServiceClass {
   private readonly TABLE = 'community_alerts';
   private readonly REPORTS_TABLE = 'community_alert_reports';
   private readonly BLOCKED_TERMS_TABLE = 'alert_blocked_terms';
+  private readonly db = supabase as any;
 
   /**
    * Busca estatísticas gerais de alertas
    */
   async getStats(): Promise<AlertStats> {
     try {
-      const { data: alerts, error } = await supabase
+      const { data: alerts, error } = await this.db
         .from(this.TABLE)
         .select('status, report_count, under_review');
 
@@ -200,7 +201,7 @@ class AdminCommunityAlertsServiceClass {
         limit = 20,
       } = filters;
 
-      let query = supabase
+      let query = this.db
         .from(this.TABLE)
         .select(`
           *,
@@ -312,7 +313,7 @@ class AdminCommunityAlertsServiceClass {
         count: alertsWithReports.length,
       });
 
-      return alertsWithReports as AlertWithDetails[];
+      return alertsWithReports as unknown as AlertWithDetails[];
     } catch (error) {
       logger.error('AdminCommunityAlertsService.getAlertsUnderReview', error);
       return [];
@@ -436,7 +437,8 @@ class AdminCommunityAlertsServiceClass {
    */
   async getAuditLog(alertId: string) {
     try {
-      const { data, error } = await supabase
+      const db = this.db as any;
+      const { data, error } = await db
         .from('community_alert_audit')
         .select('*')
         .eq('alert_id', alertId)
@@ -461,14 +463,15 @@ class AdminCommunityAlertsServiceClass {
       return;
     }
 
-    const { error } = await supabase
+    const db = this.db as any;
+    const { error } = await db
       .from('community_alert_audit')
       .insert({
         alert_id: alertId,
         actor_id: user.id,
         action_type: actionType,
         metadata,
-      });
+      } as any);
 
     if (error) {
       throw error;

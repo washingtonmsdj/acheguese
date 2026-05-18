@@ -8,8 +8,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/sha
 import {
   COMMUNICATION_CONTENT_FORMAT_LABELS,
   PUBLICATION_TYPE_LABELS,
-  type CommunicationPublicationDistribution,
 } from "../types";
+import type { CommunicationPublicationDistribution } from "@/core/communication-territorial/types";
 import type { ResolvedTerritory } from "@/core/routing/hooks/useResolveTerritoryFromUrl";
 import { useCommunityCommunicationFeed } from "../hooks";
 import { communicationTerritorialGateway } from "../services";

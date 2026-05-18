@@ -38,7 +38,7 @@ interface CivicReport {
   title: string;
   description: string;
   images: string[];
-  status: "pendente" | "em_analise" | "resolvido" | "rejeitado";
+  status: "open" | "in_progress" | "resolved" | "closed";
   supporters_count: number;
   is_critical: boolean;
   neighborhood: string;
@@ -47,7 +47,7 @@ interface CivicReport {
 }
 
 const STATUS_OPTIONS = [
-  { value: "pendente", label: "Pendente", icon: Clock, color: "bg-yellow-500" },
+  { value: "open", label: "Pendente", icon: Clock, color: "bg-yellow-500" },
   { value: "em_analise", label: "Em Análise", icon: Eye, color: "bg-blue-500" },
   {
     value: "resolvido",
@@ -68,7 +68,7 @@ export default function AdminZeladoria() {
   const [canModerate, setCanModerate] = useState<boolean | null>(null);
   const [reports, setReports] = useState<CivicReport[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState("pendente");
+  const [activeTab, setActiveTab] = useState<"open" | "in_progress" | "resolved" | "closed">("open");
   const [stats, setStats] = useState({
     total: 0,
     pendente: 0,
@@ -115,7 +115,21 @@ export default function AdminZeladoria() {
     setLoading(true);
     try {
       const mapped = await adminCommunityService.getCivicReports(activeTab);
-      setReports(mapped);
+      setReports(
+        mapped.map((item) => ({
+          id: item.id,
+          problem_type: "other",
+          title: item.title ?? "Sem título",
+          description: item.description ?? "",
+          images: [],
+          status: item.status,
+          supporters_count: item.supporters_count,
+          is_critical: item.is_critical,
+          neighborhood: "",
+          created_at: item.created_at,
+          reporter_name: item.reporter_name,
+        })),
+      );
     } catch (error) {
       logger.error("Erro ao buscar reportes:", error);
       toast.error("Erro ao carregar reportes");
@@ -126,14 +140,24 @@ export default function AdminZeladoria() {
 
   const fetchStats = async () => {
     try {
-      const stats = await adminCommunityService.getCivicReportStats();
-      setStats(stats);
+      const loadedStats = await adminCommunityService.getCivicReportStats();
+      setStats({
+        total: loadedStats.total ?? 0,
+        pendente: loadedStats.pendente ?? 0,
+        em_analise: loadedStats.em_analise ?? 0,
+        resolvido: loadedStats.resolvido ?? 0,
+        rejeitado: loadedStats.rejeitado ?? 0,
+        critical: loadedStats.critical ?? 0,
+      });
     } catch (error) {
       logger.error("Erro ao buscar estatísticas:", error);
     }
   };
 
-  const updateStatus = async (reportId: string, newStatus: string) => {
+  const updateStatus = async (
+    reportId: string,
+    newStatus: "open" | "in_progress" | "resolved" | "closed",
+  ) => {
     try {
       await adminCommunityService.updateCivicReportStatus(reportId, newStatus);
       toast.success("Status atualizado!");
@@ -197,12 +221,17 @@ export default function AdminZeladoria() {
       </div>
 
       {/* Tabs por Status */}
-      <Tabs value={activeTab} onValueChange={setActiveTab}>
+      <Tabs
+        value={activeTab}
+        onValueChange={(value) =>
+          setActiveTab(value as "open" | "in_progress" | "resolved" | "closed")
+        }
+      >
         <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="pendente">Pendentes</TabsTrigger>
-          <TabsTrigger value="em_analise">Em Análise</TabsTrigger>
-          <TabsTrigger value="resolvido">Resolvidos</TabsTrigger>
-          <TabsTrigger value="rejeitado">Rejeitados</TabsTrigger>
+          <TabsTrigger value="open">Pendentes</TabsTrigger>
+          <TabsTrigger value="in_progress">Em Análise</TabsTrigger>
+          <TabsTrigger value="resolved">Resolvidos</TabsTrigger>
+          <TabsTrigger value="closed">Rejeitados</TabsTrigger>
         </TabsList>
 
         <TabsContent value={activeTab} className="mt-6">

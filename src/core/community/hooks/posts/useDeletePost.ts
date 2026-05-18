@@ -5,13 +5,13 @@
  */
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { feedService } from "@/core/posts/services";
+import { postService } from "@/core/posts/services/PostService";
 
 export function useDeletePost() {
   const queryClient = useQueryClient();
 
   return useMutation<void, Error, string>({
-    mutationFn: (postId: string) => feedService.deletePost(postId),
+    mutationFn: (postId: string) => postService.deletePost(postId),
 
     onSuccess: (date, postId) => {
       queryClient.removeQueries({ queryKey: ["post", postId] });

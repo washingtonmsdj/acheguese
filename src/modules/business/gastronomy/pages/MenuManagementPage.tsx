@@ -96,7 +96,7 @@ export default function MenuManagementPage() {
     setCategoryFormOpen(true);
   };
 
-  const handleCategorySubmit = (values: Record<string, unknown>) => {
+  const handleCategorySubmit = (values: { name: string; description?: string; display_order?: number }) => {
     if (selectedCategory) {
       updateCategory({ categoryId: selectedCategory.id, ...values });
     } else {
@@ -124,7 +124,20 @@ export default function MenuManagementPage() {
     setItemFormOpen(true);
   };
 
-  const handleItemSubmit = (values: Record<string, unknown>) => {
+  const handleItemSubmit = (values: {
+    name: string;
+    price: number;
+    description?: string;
+    image_url?: string;
+    category_id?: string;
+    preparation_time_min?: number;
+    stock_quantity?: number;
+    stock_alert_threshold?: number;
+    is_available?: boolean;
+    tags?: string[];
+    allergens?: string[];
+    nutritional_info?: Record<string, unknown>;
+  }) => {
     const normalizedValues = {
       ...values,
       image_url: canUseImages ? values.image_url : undefined,
@@ -315,7 +328,9 @@ export default function MenuManagementPage() {
                   item={item}
                   onEdit={handleEditItem}
                   onDelete={setItemToDelete}
-                  onToggleAvailability={toggleAvailability}
+                  onToggleAvailability={(itemId, isAvailable) =>
+                    toggleAvailability({ itemId, isAvailable })
+                  }
                   onMarkSoldOut={handleMarkItemSoldOut}
                 />
               ))}

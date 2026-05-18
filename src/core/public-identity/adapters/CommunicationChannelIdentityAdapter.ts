@@ -17,11 +17,13 @@ import type {
 } from '../domain/types';
 
 interface CommunicationChannelRow {
+  [key: string]: unknown;
   id: string;
   slug: string;
 }
 
 interface CommunicationAuditRow {
+  [key: string]: unknown;
   id: string;
   channel_id: string | null;
   action_type: string;

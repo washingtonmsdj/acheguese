@@ -152,7 +152,7 @@ export class SubscriptionService {
     userId: string,
   ): Promise<Subscription | null> {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from("user_subscriptions")
         .select("*")
         .eq("user_id", userId)
@@ -179,7 +179,7 @@ export class SubscriptionService {
    */
   static async getSubscriptionHistory(userId: string): Promise<Subscription[]> {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from("user_subscriptions")
         .select("*")
         .eq("user_id", userId)
@@ -208,7 +208,7 @@ export class SubscriptionService {
   }> {
     try {
       // Desativar assinaturas antigas
-      await supabase
+      await (supabase as any)
         .from("user_subscriptions")
         .update({ active: false })
         .eq("user_id", params.user_id)
@@ -217,7 +217,7 @@ export class SubscriptionService {
       // Criar nova assinatura
       const features = params.features || PLAN_FEATURES[params.plan_type];
 
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from("user_subscriptions")
         .insert({
           user_id: params.user_id,
@@ -260,7 +260,7 @@ export class SubscriptionService {
     updates: UpdateSubscriptionParams,
   ): Promise<{ success: boolean; error?: string }> {
     try {
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from("user_subscriptions")
         .update(updates)
         .eq("user_id", userId)
@@ -304,7 +304,7 @@ export class SubscriptionService {
         updates.expires_at = new Date().toISOString();
       }
 
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from("user_subscriptions")
         .update(updates)
         .eq("user_id", userId)
@@ -334,7 +334,7 @@ export class SubscriptionService {
     amountCents?: number,
   ): Promise<{ success: boolean; error?: string }> {
     try {
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from("user_subscriptions")
         .update({
           status: USER_SUBSCRIPTION_STATUS.ACTIVE,
@@ -420,7 +420,7 @@ export class SubscriptionService {
     revenue_monthly: number;
   }> {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from("user_subscriptions")
         .select("plan_type, status, active, amount_cents");
 
@@ -474,7 +474,7 @@ export class SubscriptionService {
     expired: number;
   }> {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from("user_subscriptions")
         .update({
           status: USER_SUBSCRIPTION_STATUS.EXPIRED,
@@ -510,3 +510,4 @@ export class SubscriptionService {
 
 // Export singleton
 export const subscriptionService = SubscriptionService;
+

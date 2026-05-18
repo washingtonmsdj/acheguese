@@ -208,7 +208,11 @@ export default function GruposPage() {
             </div>
 
             <GruposList
-              groups={visibleGroups}
+              groups={visibleGroups.map((group) => ({
+                ...group,
+                members_count: group.members_count ?? 0,
+                posts_count: group.posts_count ?? 0,
+              }))}
               isLoading={isLoading}
               tab={tab}
               onJoin={(_e, groupId) => handleJoin(groupId)}

@@ -49,6 +49,7 @@ export interface ProfileLocation {
 }
 
 class LocationServiceClass {
+  private readonly db = supabase as any;
   /**
    * Salva localização no histórico
    */
@@ -56,14 +57,14 @@ class LocationServiceClass {
     locationData: Omit<LocationHistory, "id" | "created_at">,
   ): Promise<LocationHistory | null> {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await this.db
         .from("location_history")
         .insert([locationData])
         .select()
         .single();
 
       if (error) throw error;
-      return data;
+      return data as LocationHistory;
     } catch (error) {
       logger.error("Error saving location:", error);
       return null;
@@ -78,7 +79,7 @@ class LocationServiceClass {
     limit: number = 100,
   ): Promise<LocationHistory[]> {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await this.db
         .from("location_history")
         .select("*")
         .eq("profile_id", profileId)
@@ -86,7 +87,7 @@ class LocationServiceClass {
         .limit(limit);
 
       if (error) throw error;
-      return data || [];
+      return (data as LocationHistory[]) || [];
     } catch (error) {
       logger.error("Error fetching location history:", error);
       return [];
@@ -98,7 +99,7 @@ class LocationServiceClass {
    */
   async getLastLocation(profileId: string): Promise<LocationHistory | null> {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await this.db
         .from("location_history")
         .select("*")
         .eq("profile_id", profileId)
@@ -107,7 +108,7 @@ class LocationServiceClass {
         .single();
 
       if (error) throw error;
-      return data;
+      return data as LocationHistory;
     } catch (error) {
       logger.error("Error fetching last location:", error);
       return null;
@@ -122,7 +123,7 @@ class LocationServiceClass {
       const cutoffDate = new Date();
       cutoffDate.setDate(cutoffDate.getDate() - daysOld);
 
-      const { error } = await supabase
+      const { error } = await this.db
         .from("location_history")
         .delete()
         .lt("created_at", cutoffDate.toISOString());

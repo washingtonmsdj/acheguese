@@ -34,7 +34,7 @@ export function useFavorites(profileId?: string | null): UseFavoritesResult {
 
       return favoriteIds
         .map((favoriteId) => businessById.get(favoriteId))
-        .filter((business): business is Business => Boolean(business));
+        .filter(Boolean) as Business[];
     },
     enabled: Boolean(profileId),
   });

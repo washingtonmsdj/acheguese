@@ -19,7 +19,7 @@ interface UnifiedFeedWithMessagesProps {
     | "alerta"
     | "recomendacao"
     | "enquete";
-  userLocation?: { neighborhood?: string; city?: string };
+  userLocation?: { neighborhood?: string; city?: string; location_id?: string };
   onLike?: (postId: string) => void;
   onComment?: (postId: string) => void;
   onShare?: (postId: string) => void;
@@ -92,10 +92,10 @@ const UnifiedFeedWithMessages = React.forwardRef<
     ref,
   ) => {
     const { sortedPosts } = useUnifiedFeed({
-      posts,
-      civicReports,
-      communityPosts,
-      feedPosts,
+      posts: posts as never,
+      civicReports: civicReports as never,
+      communityPosts: communityPosts as never,
+      feedPosts: feedPosts as never,
       sortCriteria,
       filterType,
       userLocation,
@@ -113,7 +113,7 @@ const UnifiedFeedWithMessages = React.forwardRef<
 
     const handleLike = (postId: string) => {
       const post = sortedPosts.find((p) => p.id === postId);
-      if (post?.type === "civic_report") {
+      if (String(post?.type) === "civic_report") {
         onUpvote?.(postId);
       } else {
         onLike?.(postId);

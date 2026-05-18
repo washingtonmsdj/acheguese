@@ -9,8 +9,7 @@ type ConversationPostContext = Parameters<
   ReturnType<typeof useDirectMessages>["createOrGetConversation"]
 >[0];
 
-const postTypeMap: Partial<Record<UnifiedPost["type"], ConversationPostContext["type"]>> = {
-  civic_report: "civic_report",
+const postTypeMap: Partial<Record<string, ConversationPostContext["type"]>> = {
   recomendacao: "recomendacao",
   alerta: "alerta",
 };
@@ -53,7 +52,7 @@ export function useMessageModal(currentUserId?: string) {
             post.content.substring(0, 50) +
             (post.content.length > 50 ? "..." : ""),
           imageUrl: post.images?.[0] || post.image_url,
-          type: postTypeMap[post.type] ?? "recomendacao",
+          type: postTypeMap[String(post.type)] ?? "recomendacao",
         },
         recipientProfileId,
       );

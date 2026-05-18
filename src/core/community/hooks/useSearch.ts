@@ -59,14 +59,14 @@ export function useSearch() {
       const batches = await Promise.all(
         postTypes.map((type) => postService.getPostsByType(type, { search: q })),
       );
-      const posts = batches
+      const posts = (batches as any)
         .flat()
         .sort((a: SearchPostLike, b: SearchPostLike) => {
           const aDate = new Date(a.created_at || 0).getTime();
           const bDate = new Date(b.created_at || 0).getTime();
           return bDate - aDate;
         })
-        .slice(0, 20) as CommunityPost[];
+        .slice(0, 20) as unknown as CommunityPost[];
       const hashtagCounts = new Map<string, number>();
       for (const post of posts as Array<{ content?: string | null }>) {
         const content = post.content || "";

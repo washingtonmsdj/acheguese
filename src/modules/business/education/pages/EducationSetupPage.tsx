@@ -227,29 +227,29 @@ export function EducationSetupPage() {
     if (preset === 'daycare') {
       setFormData((prev) => ({
         ...prev,
-        schoolBasicResources: ['water_supply', 'electricity', 'sewage', 'waste_collection'],
-        schoolAccessibilityFeatures: ['ramps', 'wide_doors_80cm'],
-        schoolEquipmentFeatures: ['computer', 'internet', 'printer'],
-        schoolFacilityFeatures: ['bathroom', 'child_bathroom', 'playground', 'kitchen', 'cafeteria', 'library'],
+        schoolBasicResources: ['water_supply', 'electricity', 'sewage', 'waste_collection'] as any,
+        schoolAccessibilityFeatures: ['ramps', 'wide_doors_80cm'] as any,
+        schoolEquipmentFeatures: ['computer', 'internet', 'printer'] as any,
+        schoolFacilityFeatures: ['bathroom', 'child_bathroom', 'playground', 'kitchen', 'cafeteria', 'library'] as any,
       }));
       return;
     }
     if (preset === 'basic_school') {
       setFormData((prev) => ({
         ...prev,
-        schoolBasicResources: ['water_supply', 'electricity', 'sewage', 'waste_collection'],
-        schoolAccessibilityFeatures: ['ramps'],
-        schoolEquipmentFeatures: ['computer', 'internet', 'multimedia_projector', 'printer'],
-        schoolFacilityFeatures: ['bathroom', 'library', 'science_lab', 'computer_lab', 'sports_court', 'cafeteria'],
+        schoolBasicResources: ['water_supply', 'electricity', 'sewage', 'waste_collection'] as any,
+        schoolAccessibilityFeatures: ['ramps'] as any,
+        schoolEquipmentFeatures: ['computer', 'internet', 'multimedia_projector', 'printer'] as any,
+        schoolFacilityFeatures: ['bathroom', 'library', 'science_lab', 'computer_lab', 'sports_court', 'cafeteria'] as any,
       }));
       return;
     }
     setFormData((prev) => ({
       ...prev,
-      schoolBasicResources: ['water_supply', 'electricity', 'sewage', 'waste_collection'],
-      schoolAccessibilityFeatures: ['ramps', 'wide_doors_80cm', 'tactile_flooring', 'visual_signage', 'accessible_bathroom_pcd'],
-      schoolEquipmentFeatures: ['computer', 'internet', 'multimedia_projector'],
-      schoolFacilityFeatures: ['bathroom', 'accessible_bathroom_pcd', 'library', 'computer_lab', 'multiuse_room'],
+      schoolBasicResources: ['water_supply', 'electricity', 'sewage', 'waste_collection'] as any,
+      schoolAccessibilityFeatures: ['ramps', 'wide_doors_80cm', 'tactile_flooring', 'visual_signage', 'accessible_bathroom_pcd'] as any,
+      schoolEquipmentFeatures: ['computer', 'internet', 'multimedia_projector'] as any,
+      schoolFacilityFeatures: ['bathroom', 'accessible_bathroom_pcd', 'library', 'computer_lab', 'multiuse_room'] as any,
     }));
   };
 
@@ -771,5 +771,4 @@ export function EducationSetupPage() {
 }
 
 export default EducationSetupPage;
-
 

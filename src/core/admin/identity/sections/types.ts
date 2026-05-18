@@ -122,11 +122,11 @@ export interface GovernanceCardProps {
 }
 
 export interface LinkedEntitiesCardProps {
-  readonly entities: readonly AdminProfileIdentityDetail["linkedEntities"];
+  readonly entities: AdminProfileIdentityDetail["linkedEntities"];
 }
 
 export interface UsernameHistoryCardProps {
-  readonly history: readonly AdminProfileIdentityDetail["usernameHistory"];
+  readonly history: AdminProfileIdentityDetail["usernameHistory"];
 }
 
 export interface SecondaryEntitiesCardProps {

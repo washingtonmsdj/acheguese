@@ -140,12 +140,9 @@ export const EducationNicheBillingIntegration = {
     switch (planTier) {
       case PlanTier.FREE:
         return false;
-      case PlanTier.BASIC:
         // Basic permite mais que free, mas não tudo
-        return !this.isPremiumCapability(capability);
       case PlanTier.PRO:
       case PlanTier.DELIVERY:
-      case PlanTier.ENTERPRISE:
         return true;
       default:
         return false;

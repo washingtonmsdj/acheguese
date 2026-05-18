@@ -71,7 +71,10 @@ const TAP_SCALE = 0.98;
 // ============================================================================
 
 interface ClassificadoCardProps {
-  classificado: ClassificadoWithVendedor;
+  classificado: ClassificadoWithVendedor & {
+    latitude?: number | null;
+    longitude?: number | null;
+  };
   variant?: 'grid' | 'list';
   index?: number;
   onClick: () => void;

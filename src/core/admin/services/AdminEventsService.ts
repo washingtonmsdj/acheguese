@@ -57,12 +57,13 @@ interface EventListRow extends AdminEventData {
 }
 
 class AdminEventsServiceClass {
+  private readonly db = supabase as any;
   /**
    * Busca estatísticas de eventos
    */
   async getStats(): Promise<EventsStats> {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await this.db
         .from("events")
         .select("status");
 
@@ -102,7 +103,7 @@ class AdminEventsServiceClass {
       const limit = options.limit || 20;
       const offset = (page - 1) * limit;
 
-      let query = supabase
+      let query = this.db
         .from("events")
         .select(
           `
@@ -138,7 +139,7 @@ class AdminEventsServiceClass {
         throw error;
       }
 
-      const rows: EventListRow[] = data || [];
+      const rows = (data || []) as EventListRow[];
       const events: AdminEventData[] = rows.map((item) => ({
         ...item,
         organizer_name: item.organizer?.name,
@@ -163,7 +164,7 @@ class AdminEventsServiceClass {
    */
   async getEventById(id: string): Promise<AdminEventData | null> {
     try {
-      const { data: event, error } = await supabase
+      const { data: event, error } = await this.db
         .from("events")
         .select("*")
         .eq("id", id)
@@ -179,7 +180,7 @@ class AdminEventsServiceClass {
       }
 
       // Busca informações do organizador
-      const { data: organizer } = await supabase
+      const { data: organizer } = await this.db
         .from("profiles")
         .select("name, avatar_url")
         .eq("id", event.organizer_profile_id)
@@ -208,7 +209,7 @@ class AdminEventsServiceClass {
       // Remove campos que não são parte de CreateEventInput
       const { organizer_name, organizer_avatar, organizer_profile_id, current_participants, created_at, updated_at, ...safeUpdates } = updates;
 
-      const { data: updated, error } = await supabase
+      const { data: updated, error } = await this.db
         .from("events")
         .update(safeUpdates)
         .eq("id", id)
@@ -233,7 +234,7 @@ class AdminEventsServiceClass {
    */
   async deleteEvent(id: string): Promise<boolean> {
     try {
-      const { error } = await supabase
+      const { error } = await this.db
         .from("events")
         .delete()
         .eq("id", id);
@@ -255,7 +256,7 @@ class AdminEventsServiceClass {
    */
   async cancelEvent(id: string): Promise<boolean> {
     try {
-      const { error } = await supabase
+      const { error } = await this.db
         .from("events")
         .update({ status: "cancelled" })
         .eq("id", id);
@@ -277,7 +278,7 @@ class AdminEventsServiceClass {
    */
   async markAsCompleted(id: string): Promise<boolean> {
     try {
-      const { error } = await supabase
+      const { error } = await this.db
         .from("events")
         .update({ status: "completed" })
         .eq("id", id);
@@ -300,7 +301,7 @@ class AdminEventsServiceClass {
    */
   async getEventParticipants(eventId: string) {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await this.db
         .from("event_participants")
         .select(`
           profile_id,
@@ -326,7 +327,7 @@ class AdminEventsServiceClass {
    */
   async removeParticipant(eventId: string, profileId: string): Promise<boolean> {
     try {
-      const { error } = await supabase
+      const { error } = await this.db
         .from("event_participants")
         .delete()
         .eq("event_id", eventId)
@@ -337,7 +338,7 @@ class AdminEventsServiceClass {
         throw error;
       }
 
-      await supabase.rpc("decrement_event_participants", { event_id: eventId });
+      await this.db.rpc("decrement_event_participants", { event_id: eventId });
       return true;
     } catch (error) {
       logger.error("Error in removeParticipant:", error);

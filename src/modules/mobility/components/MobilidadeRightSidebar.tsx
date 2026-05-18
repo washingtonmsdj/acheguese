@@ -7,7 +7,7 @@ import { useTerritoryLabels } from "@/core/location";
 import type { ResolvedTerritory } from "@/core/routing/hooks/useResolveTerritoryFromUrl";
 
 interface MobilidadeRightSidebarProps {
-  rides: RideRequest[];
+  rides: (RideRequest & { passenger?: { name?: string | null } | null })[];
   onlineDriversCount: number;
   resolved?: ResolvedTerritory;
 }
@@ -110,14 +110,14 @@ export function MobilidadeRightSidebar({
                 key={ride.id}
                 className="flex items-center gap-2 px-2.5 py-2 rounded-lg bg-white/5"
               >
-                {ride.type === "entrega" ? (
+                {ride.type === "entrega" || ride.type === "delivery" ? (
                   <Package className="h-3.5 w-3.5 text-amber-400" />
                 ) : (
                   <Car className="h-3.5 w-3.5 text-teal-400" />
                 )}
                 <div className="flex-1 min-w-0">
                   <p className="text-xs text-white truncate">
-                    {ride.passenger?.name}
+                    {ride.passenger?.name || "Passageiro"}
                   </p>
                   <p className="text-[0.6rem] text-gray-500 truncate">
                     {ride.origin} → {ride.destination}

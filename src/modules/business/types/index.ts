@@ -26,6 +26,7 @@ export type {
   BusinessRole,
   BusinessStatus,
 } from "@/core/business/types/Business";
+import type { Business } from "@/core/business/types/Business";
 
 export type {
   CreateBusinessInput,
@@ -72,6 +73,33 @@ export interface GalleryPhoto {
   image_url: string;
   caption: string;
 }
+
+/**
+ * Compatibilidade de componentes legados de business.
+ */
+export type BizData = Omit<Business, "address"> & {
+  logo?: string;
+  capa?: string;
+  neighborhood?: string;
+  address?: Business["address"] | string;
+  latitude?: number;
+  longitude?: number;
+  schedule?: string;
+  aberto?: boolean;
+  schedule_fechamento?: string;
+  whatsapp?: string;
+  secoes_ativas?: {
+    services?: boolean;
+    products?: boolean;
+    cardapio?: boolean;
+    portfolio?: boolean;
+    promocoes?: boolean;
+  };
+  total_avaliacoes?: number;
+  ano_fundacao?: number | null;
+  verified?: boolean;
+  specialties?: string[];
+};
 
 /**
  * Sort options for business lists

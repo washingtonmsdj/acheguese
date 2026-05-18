@@ -25,7 +25,7 @@ interface CommunityRolloutGateProps {
 }
 
 export function CommunityRolloutGate({ children }: CommunityRolloutGateProps) {
-  const { hasActiveLocation, locationName } = useCommunityLocation();
+  const { hasActiveLocation, activeLocationName: locationName } = useCommunityLocation();
   const { isBlocked, blockReason, isLoading } = useCommunityRollout();
   const resolution = useTerritoryResolutionLevel();
   const navigate = useNavigate();

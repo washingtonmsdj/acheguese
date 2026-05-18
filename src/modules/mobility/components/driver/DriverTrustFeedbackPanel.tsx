@@ -9,7 +9,7 @@ import {
   type TrustFeedbackTarget,
 } from "@/core/trust";
 import { OrderDeliverySSOTService } from "@/core/mobility/delivery/services/OrderDeliverySSOTService";
-import type { MobilityRide } from "./DriverRidesTab";
+import type { MobilityRide } from "@/core/mobility/types/ride";
 
 interface DriverTrustFeedbackPanelProps {
   ride: MobilityRide;

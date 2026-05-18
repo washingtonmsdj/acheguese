@@ -18,10 +18,12 @@ const CANONICAL_MODULES = [
   "community-issues",
   "community-lost-found",
   "community-recommendations",
+  "communication-territorial",
   "guide",
   "mobility",
   "professionals",
   "profile",
+  "work-opportunities",
 ] as const;
 
 const DEPRECATED_COMPAT_MODULE_ROOTS = [
@@ -38,7 +40,6 @@ const LEGACY_FORBIDDEN_MODULE_ROOTS = [
   "empresas-landing",
   "gastronomy",
   "jobs",
-  "landing",
   "notifications",
   "onboarding",
   "promotions",
@@ -53,15 +54,12 @@ const LEGACY_FORBIDDEN_CORE_ROOTS = [
   "civic",
   "events",
   "gastronomy",
-  "landing",
   "lostfound",
   "supabase",
   "promotions",
   "services",
   "tourist-points",
   "vagas",
-  "classifieds",
-  "mobility",
 ] as const;
 
 const REQUIRED_NESTED_PATHS = [

@@ -51,13 +51,10 @@ export class GeospatialRepositorySupabase implements IGeospatialRepository {
   }
 
   async setLocationBoundary(locationId: string, boundary: BoundaryGeoJSON): Promise<void> {
-    // Converter GeoJSON para WKT para PostGIS
-    const wkt = this.geoJSONToWKT(boundary);
-
     const { error } = await supabase
       .from('locations')
       .update({
-        boundary: supabase.rpc('ST_GeomFromText', { wkt, srid: 4326 }),
+        boundary: boundary as unknown,
       })
       .eq('id', locationId);
 
@@ -77,16 +74,5 @@ export class GeospatialRepositorySupabase implements IGeospatialRepository {
     // Converter de PostGIS para GeoJSON
     // Nota: Supabase retorna geometry como GeoJSON automaticamente
     return data.boundary as BoundaryGeoJSON;
-  }
-
-  // ============================================
-  // HELPERS
-  // ============================================
-
-  private geoJSONToWKT(geojson: BoundaryGeoJSON): string {
-    const coords = geojson.coordinates[0]
-      .map(([lng, lat]) => `${lng} ${lat}`)
-      .join(', ');
-    return `POLYGON((${coords}))`;
   }
 }

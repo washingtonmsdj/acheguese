@@ -117,7 +117,7 @@ export class TouristPointQueryService {
 
       const { data, error } = await query;
       if (error || !data) return [];
-      return data;
+      return data as unknown as TouristPoint[];
     } catch {
       return [];
     }
@@ -136,7 +136,7 @@ export class TouristPointQueryService {
         .maybeSingle();
 
       if (error || !data) return null;
-      return data;
+      return data as unknown as TouristPoint;
     } catch {
       return null;
     }
@@ -180,7 +180,7 @@ export class TouristPointQueryService {
 
       const { data, error } = await query;
       if (error || !data) return [];
-      return data;
+      return data as unknown as TouristPoint[];
     } catch {
       return [];
     }
@@ -195,7 +195,7 @@ export class TouristPointQueryService {
         .maybeSingle();
 
       if (error || !data) return null;
-      return data;
+      return data as unknown as TouristPoint;
     } catch {
       return null;
     }

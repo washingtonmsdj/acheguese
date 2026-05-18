@@ -62,7 +62,7 @@ export const PostActions = memo<PostActionsProps>(
     onSave,
     onShare,
   }) => {
-    const isCivicReport = postType === "civic_report";
+    const isCivicReport = String(postType) === "civic_report";
     const likeCount = isCivicReport ? upvotesCount : likesCount;
     const isLikeActive = isCivicReport ? upvotesCount > 0 : isLiked;
 

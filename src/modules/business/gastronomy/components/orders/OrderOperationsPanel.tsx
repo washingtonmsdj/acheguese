@@ -82,6 +82,7 @@ const CANCELLATION_REASONS = [
     helper: 'Registra motivo sensivel para auditoria operacional.',
   },
 ] as const;
+type CancellationReasonCode = (typeof CANCELLATION_REASONS)[number]['code'];
 
 function getPrimaryAction(order: OrderWithItems): OrderAction | null {
   switch (order.status) {
@@ -137,7 +138,9 @@ export function OrderOperationsPanel({ order, businessId }: OrderOperationsPanel
   const { activeProfile } = useSessionContext();
   const [cancelOpen, setCancelOpen] = useState(false);
   const [cancelReason, setCancelReason] = useState('');
-  const [cancelReasonCode, setCancelReasonCode] = useState(CANCELLATION_REASONS[0].code);
+  const [cancelReasonCode, setCancelReasonCode] = useState<CancellationReasonCode>(
+    CANCELLATION_REASONS[0].code,
+  );
   const primaryAction = useMemo(() => getPrimaryAction(order), [order]);
   const canCancel = !TERMINAL_STATUSES.includes(order.status);
   const canConfirmPaymentByStatus =
@@ -322,7 +325,7 @@ export function OrderOperationsPanel({ order, businessId }: OrderOperationsPanel
             <Select
               value={cancelReasonCode}
               onValueChange={(value) =>
-                setCancelReasonCode(value as (typeof CANCELLATION_REASONS)[number]['code'])
+                setCancelReasonCode(value as CancellationReasonCode)
               }
               disabled={isBusy}
             >

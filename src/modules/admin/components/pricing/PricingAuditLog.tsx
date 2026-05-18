@@ -7,6 +7,7 @@ import type { ComponentProps } from "react";
 
 export function PricingAuditLog() {
   const { logs, loading } = usePricingAuditLog(20);
+  const typedLogs = logs as Array<{ id: string; action: string; created_at: string; new_values?: Record<string, unknown> }>;
   type BadgeVariant = ComponentProps<typeof Badge>["variant"];
 
   if (loading) {
@@ -17,7 +18,7 @@ export function PricingAuditLog() {
     );
   }
 
-  if (logs.length === 0) {
+  if (typedLogs.length === 0) {
     return (
       <div className="text-center py-8">
         <p className="text-sm text-muted-foreground">
@@ -39,7 +40,7 @@ export function PricingAuditLog() {
 
   const getActionColor = (action: string): BadgeVariant => {
     if (action === "rule_created") return "default";
-    if (action === "rule_activated") return "success";
+    if (action === "rule_activated") return "default";
     if (action === "rule_deactivated") return "destructive";
     return "secondary";
   };
@@ -50,7 +51,7 @@ export function PricingAuditLog() {
         Histórico de Alterações
       </h3>
       <div className="space-y-2 max-h-96 overflow-y-auto">
-        {logs.map((log) => (
+        {typedLogs.map((log) => (
           <div
             key={log.id}
             className="p-3 rounded-lg border bg-card text-sm space-y-1"
@@ -68,12 +69,12 @@ export function PricingAuditLog() {
             </div>
             {log.new_values?.name && (
               <p className="text-foreground font-medium">
-                {log.new_values.name}
+                {String(log.new_values.name)}
               </p>
             )}
             {log.new_values?.mode && (
               <p className="text-xs text-muted-foreground capitalize">
-                Modo: {log.new_values.mode}
+                Modo: {String(log.new_values.mode)}
               </p>
             )}
           </div>
@@ -82,3 +83,6 @@ export function PricingAuditLog() {
     </div>
   );
 }
+
+
+

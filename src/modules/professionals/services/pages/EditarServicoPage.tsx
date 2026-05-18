@@ -145,7 +145,7 @@ export default function EditarServicoPage() {
         phone: professional.phone || "",
         whatsapp: professional.whatsapp || "",
         email: professional.email || "",
-        availableHours: professional.available_hours?.schedule || "",
+        availableHours: ((professional.available_hours as any)?.schedule as string) || "",
         priceRange: professional.price_range || "",
         experienceYears: professional.experience_years?.toString() || "",
         education: professional.education || "",

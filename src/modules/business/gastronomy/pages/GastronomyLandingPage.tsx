@@ -127,7 +127,16 @@ const EmojiIcon = ({ emoji, className }: { emoji: string; className?: string }) 
 
 
 
-const GASTRO_CATEGORIES = [
+type CategoryIconComponent = (props: { className?: string }) => JSX.Element;
+
+const GASTRO_CATEGORIES: Array<{
+  id: string;
+  icon: CategoryIconComponent;
+  label: string;
+  cuisineFilter: string;
+  iconColor: string;
+  bg: string;
+}> = [
 
   { id: 'lanches',    icon: () => <EmojiIcon emoji="🥪" />, label: 'Lanches',       cuisineFilter: 'lanchonete',   iconColor: 'text-amber-400',   bg: 'bg-amber-500/15 border-amber-500/20' },
 
@@ -685,7 +694,9 @@ export default function GastronomyLandingPage() {
 
                     <motion.div whileHover={{ rotate: [0, -10, 10, 0] }} transition={{ duration: 0.4 }}>
 
-                      <Icon className={`h-5 w-5 ${cat.iconColor}`} />
+                      <span className={cat.iconColor}>
+                        <Icon />
+                      </span>
 
                     </motion.div>
 

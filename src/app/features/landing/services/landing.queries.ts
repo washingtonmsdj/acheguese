@@ -5,7 +5,10 @@
  */
 import { logger } from '@/shared/utils/logger';
 import { supabase } from '@/core/infrastructure/supabase';
-import { isTerritoryVisibleInLanding } from '@/core/routing/utils/territoryVisibility';
+import {
+  isTerritoryVisibleInLanding,
+  type TerritoryVisibilityMetadata,
+} from '@/core/routing/utils/territoryVisibility';
 import { BusinessService } from '@/core/business/services/BusinessService';
 import type {
   CountryData,
@@ -50,10 +53,26 @@ function asRecord(value: Json | null | undefined): Record<string, unknown> {
   return value as Record<string, unknown>;
 }
 
+function asTerritoryVisibilityMetadata(
+  value: Json | null | undefined,
+): TerritoryVisibilityMetadata | null {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
+  return value as TerritoryVisibilityMetadata;
+}
+
 function getLogoUrlFromJson(value: Json | null | undefined): string | null {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
   const candidate = (value as { logo_url?: unknown }).logo_url;
   return typeof candidate === 'string' ? candidate : null;
+}
+
+async function countPublicServices(): Promise<number> {
+  const { count } = await (supabase as any)
+    .from('professional_data')
+    .select('id', { count: 'exact', head: true })
+    .eq('is_accepting_clients', true)
+    .eq('visibility', 'public_listed');
+  return typeof count === 'number' ? count : 0;
 }
 
 /**
@@ -101,7 +120,7 @@ export async function getActiveStates(countryCode: string): Promise<StateData[]>
     }
 
     const activeStates = ((stateRows || []) as LocationRow[]).filter(
-      (s) => isTerritoryVisibleInLanding(s.metadata)
+      (s) => isTerritoryVisibleInLanding(asTerritoryVisibilityMetadata(s.metadata))
     );
 
     const statesWithCounts: StateData[] = [];
@@ -193,7 +212,7 @@ export async function getActiveCitiesByState(stateId: string): Promise<CityData[
     }
 
     const activeCities = ((cityRows || []) as LocationRow[]).filter(
-      (city) => isTerritoryVisibleInLanding(city.metadata),
+      (city) => isTerritoryVisibleInLanding(asTerritoryVisibilityMetadata(city.metadata)),
     );
 
     const withCounts = await Promise.all(
@@ -244,7 +263,7 @@ export async function getActiveCities(): Promise<CityData[]> {
     }
 
     const cities = ((data || []) as LocationRow[])
-      .filter((city) => isTerritoryVisibleInLanding(city.metadata))
+      .filter((city) => isTerritoryVisibleInLanding(asTerritoryVisibilityMetadata(city.metadata)))
       .map((c) => ({
         id: c.id,
         name: c.name,
@@ -290,7 +309,7 @@ export async function getTerritorialGroups(): Promise<TerritorialGroupData[]> {
     });
 
     const groupsData = ((groups || []) as TerritorialGroupRow[])
-      .filter((group) => isTerritoryVisibleInLanding(group.metadata))
+      .filter((group) => isTerritoryVisibleInLanding(asTerritoryVisibilityMetadata(group.metadata)))
       .map((g) => ({
         id: g.id,
         name: g.name,
@@ -330,17 +349,13 @@ export async function getPlatformStats(): Promise<PlatformStats> {
 
     const businessesCount = await BusinessService.getTotalBusinessesCount();
 
-    const { count: servicesCount } = await supabase
-      .from('professional_data')
-      .select('id', { count: 'exact', head: true })
-      .eq('is_accepting_clients', true)
-      .eq('visibility', 'public_listed');
+    const servicesCount = await countPublicServices();
 
     const stats = {
       cities: citiesCount || 0,
       districts: districtsCount || 0,
       businesses: businessesCount,
-      services: servicesCount || 0,
+      services: servicesCount,
     };
 
     logger.info('landing.queries.getPlatformStats', stats);
@@ -460,7 +475,7 @@ export async function getNationalBusinesses(limit: number = 6): Promise<National
  */
 export async function getNationalServices(limit: number = 6): Promise<NationalService[]> {
   try {
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from('professional_data')
       .select('id, professional_name, service_category, metadata, rating, is_verified, price_range, location:locations!location_id(name)')
       .eq('is_accepting_clients', true)
@@ -546,13 +561,14 @@ export async function getNationalClassifieds(limit: number = 6): Promise<Nationa
 export async function getNationalStats(): Promise<NationalStats> {
   try {
     const { getTotalClassifiedsCount } = await import('@/modules/classifieds/services');
+    const supabaseAny = supabase as any;
 
     const [bizCount, clsCount, cities, districts, svc] = await Promise.allSettled([
       BusinessService.getTotalBusinessesCount(),
       getTotalClassifiedsCount(),
-      supabase.from('locations').select('id', { count: 'exact', head: true }).eq('type', 'city').eq('status', 'active'),
-      supabase.from('locations').select('id', { count: 'exact', head: true }).eq('type', 'district').eq('status', 'active'),
-      supabase.from('professional_data').select('id', { count: 'exact', head: true }).eq('is_accepting_clients', true).eq('visibility', 'public_listed'),
+      supabaseAny.from('locations').select('id', { count: 'exact', head: true }).eq('type', 'city').eq('status', 'active'),
+      supabaseAny.from('locations').select('id', { count: 'exact', head: true }).eq('type', 'district').eq('status', 'active'),
+      supabaseAny.from('professional_data').select('id', { count: 'exact', head: true }).eq('is_accepting_clients', true).eq('visibility', 'public_listed'),
     ]);
 
     const stats = {
@@ -599,7 +615,7 @@ export async function getActiveTerritoriesWithLanding(): Promise<ActiveTerritori
 
     const groups: ActiveTerritoriesWithLanding['groups'] = [];
     for (const g of ((grps || []) as TerritorialGroupRow[]).filter((group) =>
-      isTerritoryVisibleInLanding(group.metadata),
+      isTerritoryVisibleInLanding(asTerritoryVisibilityMetadata(group.metadata)),
     )) {
       const { count } = await supabase
         .from('territorial_group_members')
@@ -618,7 +634,9 @@ export async function getActiveTerritoriesWithLanding(): Promise<ActiveTerritori
 
     const result = {
       locations: ((locs || []) as LocationRow[])
-        .filter((location) => isTerritoryVisibleInLanding(location.metadata))
+        .filter((location) =>
+          isTerritoryVisibleInLanding(asTerritoryVisibilityMetadata(location.metadata)),
+        )
         .map((l) => ({
           id: l.id,
           name: l.name,

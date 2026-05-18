@@ -3,14 +3,39 @@
  */
 
 import { supabase } from "@/integrations/supabase";
-import type {
-  Alert,
-  CreateAlertData,
-  AlertStatus,
-} from "../../../services/alert/types";
-import { AlertError } from "../../../services/alert/types";
 import { ALERT_STATUS } from "@/shared/types/constants";
-import type { AdminSupabaseClient } from "@/core/admin/types/adminDatabase.types";
+
+type AlertStatus = "active" | "resolved" | "expired";
+
+interface Alert {
+  [key: string]: unknown;
+  id: string;
+  profile_id: string;
+  type: string;
+  title: string;
+  description: string;
+  city: string;
+  neighborhood?: string;
+  street?: string;
+  status: AlertStatus;
+}
+
+interface CreateAlertData {
+  type: string;
+  title: string;
+  description: string;
+  city: string;
+  neighborhood?: string;
+  street?: string;
+}
+
+class AlertError extends Error {
+  constructor(message: string, public code: string) {
+    super(message);
+    this.name = "AlertError";
+  }
+}
+
 interface GetAlertsParams {
   city: string;
   neighborhood?: string;
@@ -20,6 +45,7 @@ interface GetAlertsParams {
 }
 
 class AlertService {
+  private readonly db = supabase as any;
   /**
    * Cria um novo alerta (auto-define expires_at para 30 dias)
    */
@@ -28,7 +54,7 @@ class AlertService {
       const expiresAt = new Date();
       expiresAt.setDate(expiresAt.getDate() + 30);
 
-      const { data: alert, error } = await (supabase as unknown as AdminSupabaseClient)
+      const { data: alert, error } = await this.db
         .from("alerts")
         .insert({
           profile_id: profileId,
@@ -48,7 +74,7 @@ class AlertService {
         throw new AlertError(error.message, error.code || "CREATE_FAILED");
       }
 
-      return alert;
+      return alert as Alert;
     } catch (error) {
       if (error instanceof AlertError) throw error;
       throw new AlertError("Unexpected error creating alert", "UNKNOWN_ERROR");
@@ -60,7 +86,7 @@ class AlertService {
    */
   async getAlerts(params: GetAlertsParams): Promise<Alert[]> {
     try {
-      let query = (supabase as unknown as AdminSupabaseClient)
+      let query = this.db
         .from("alerts")
         .select("*")
         .eq("city", params.city)
@@ -99,7 +125,7 @@ class AlertService {
   async confirmAlert(alertId: string, profileId: string): Promise<void> {
     try {
       // Incrementa o contador de confirmações
-      const { error } = await (supabase as unknown as AdminSupabaseClient).rpc("increment_alert_confirmations", {
+      const { error } = await this.db.rpc("increment_alert_confirmations", {
         alert_id: alertId,
       });
 
@@ -122,7 +148,7 @@ class AlertService {
   async unconfirmAlert(alertId: string, profileId: string): Promise<void> {
     try {
       // Decrementa o contador de confirmações
-      const { error } = await (supabase as unknown as AdminSupabaseClient).rpc("decrement_alert_confirmations", {
+      const { error } = await this.db.rpc("decrement_alert_confirmations", {
         alert_id: alertId,
       });
 
@@ -143,7 +169,7 @@ class AlertService {
    */
   async resolveAlert(alertId: string): Promise<void> {
     try {
-      const { error } = await (supabase as unknown as AdminSupabaseClient)
+      const { error } = await this.db
         .from("alerts")
         .update({ status: ALERT_STATUS.RESOLVED })
         .eq("id", alertId);

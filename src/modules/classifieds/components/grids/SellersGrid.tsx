@@ -11,14 +11,14 @@ import { ShoppingBag } from "lucide-react";
 import { Skeleton } from "@/shared/components/ui/skeleton";
 import { VendedorCard } from "@/modules/classifieds/components/VendedorCard";
 import { useClassifiedUrls } from "@/modules/classifieds/hooks/useClassifiedUrls";
-import type { Vendedor } from "../../sections/types";
+import type { VendedorWithAds } from "@/modules/classifieds/hooks/useVendedores";
 
 // ============================================
 // Props
 // ============================================
 
 export interface SellersGridProps {
-  readonly vendedores: readonly Vendedor[];
+  readonly vendedores: readonly VendedorWithAds[];
   readonly isLoading: boolean;
 }
 

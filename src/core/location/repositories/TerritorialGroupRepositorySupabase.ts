@@ -50,7 +50,7 @@ export class TerritorialGroupRepositorySupabase implements ITerritorialGroupRepo
       .select('locations(*)')
       .eq('group_id', groupId);
     if (error) throw error;
-    return (data ?? [])
+    return ((data ?? []) as unknown as Array<{ locations: Location | null }>)
       .map((row: { locations: Location | null }) => row.locations)
       .filter((location): location is Location => Boolean(location));
   }
@@ -61,7 +61,7 @@ export class TerritorialGroupRepositorySupabase implements ITerritorialGroupRepo
       .select('territorial_groups(*)')
       .eq('location_id', locationId);
     if (error) throw error;
-    return (data ?? [])
+    return ((data ?? []) as unknown as Array<{ territorial_groups: TerritorialGroup | null }>)
       .map((row: { territorial_groups: TerritorialGroup | null }) => row.territorial_groups)
       .filter((group): group is TerritorialGroup => Boolean(group));
   }

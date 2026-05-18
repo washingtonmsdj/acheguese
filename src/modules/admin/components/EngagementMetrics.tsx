@@ -89,7 +89,7 @@ export function useEngagementMetrics() {
       const [statsWithTrends, activity, recentPosts] = await Promise.all([
         adminStatsService.getTableStatsWithTrends(7),
         adminStatsService.getActivity(7),
-        postService.getRecentPosts(200),
+        postService.getRecentPosts(),
       ]);
 
       const activeUsers7d = activity.reduce((sum, day) => sum + (day.users || 0), 0);
@@ -142,4 +142,5 @@ export function useEngagementMetrics() {
 
   return { metrics: query.data || [], loading: query.isLoading };
 }
+
 

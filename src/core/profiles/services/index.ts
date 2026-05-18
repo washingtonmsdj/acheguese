@@ -89,7 +89,6 @@ export type {
   ProfileManagedAssetItem,
   ProfileNotificationsSnapshot,
   ProfileNotificationItem,
-  ProfileAccountSnapshot,
   ProfileEffectivePermission,
   ProfilePrivacySettingsInput,
   ProfileVerificationStatusValue,

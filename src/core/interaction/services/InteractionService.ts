@@ -7,7 +7,7 @@
  * - Comments → CommentService
  */
 import { logger } from '@/shared/utils/logger';
-import { InteractionError } from "../../../services/interaction/types";
+import { InteractionError } from "../types";
 import { SocialInteractionsService } from "@/core/social/services/SocialInteractionsService";
 import { commentService } from "@/core/comments/services";
 import type { Comment } from "@/core/comments/types";

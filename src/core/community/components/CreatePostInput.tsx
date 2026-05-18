@@ -44,7 +44,7 @@ const CreatePostInput = React.forwardRef<HTMLDivElement, CreatePostInputProps>(
     const profileData = {
       name: profile?.name ?? null,
       city: publicCity,
-      street: profile?.street ?? null,
+      street: (profile as { street?: string | null } | null)?.street ?? null,
       neighborhood: publicNeighborhood,
       avatarUrl: profile?.avatarUrl ?? null,
     };

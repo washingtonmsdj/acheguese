@@ -127,6 +127,15 @@ export function useGastronomyCheckout() {
     sourceId: undefined,
   });
 
+  const resolveBusinessCoords = (business: GastronomyBusiness): { lat: number; lng: number } | null => {
+    const lat = business.address?.latitude ?? business.location?.canonical_lat;
+    const lng = business.address?.longitude ?? business.location?.canonical_lng;
+    if (typeof lat === "number" && typeof lng === "number" && Number.isFinite(lat) && Number.isFinite(lng)) {
+      return { lat, lng };
+    }
+    return null;
+  };
+
   const mutation = useMutation({
     mutationFn: async (
       input: GastronomyCheckoutInput,
@@ -185,9 +194,9 @@ export function useGastronomyCheckout() {
         payment_method: input.payment_method,
         notes: input.notes,
         customer_snapshot: {
-          full_name: activeProfile.full_name,
+          full_name: activeProfile.displayName || activeProfile.name,
           phone: activeProfile.phone,
-          email: activeProfile.email,
+          email: typeof activeProfile.email === "string" ? activeProfile.email : undefined,
         },
         delivery_snapshot: input.deliveryAddress
           ? {
@@ -221,13 +230,14 @@ export function useGastronomyCheckout() {
         input.business.location_id
       ) {
         try {
-          if (!input.business.lat || !input.business.lng) {
+          const businessCoords = resolveBusinessCoords(input.business);
+          if (!businessCoords) {
             throw new Error("Estabelecimento sem coordenadas configuradas");
           }
 
           logger.info("[useGastronomyCheckout] Criando ride_request para rastreamento", {
             order_id: order.id,
-            pickup: { lat: input.business.lat, lng: input.business.lng },
+            pickup: { lat: businessCoords.lat, lng: businessCoords.lng },
             dropoff: { lat: input.deliveryAddress.lat, lng: input.deliveryAddress.lng },
           });
 
@@ -269,14 +279,15 @@ export function useGastronomyCheckout() {
             dropoffLocationId:
               input.deliveryAddress.locationId || input.business.location_id,
 
-            originLat: input.business.lat,
-            originLng: input.business.lng,
+            originLat: businessCoords.lat,
+            originLng: businessCoords.lng,
             destinationLat: input.deliveryAddress.lat,
             destinationLng: input.deliveryAddress.lng,
 
             recipientName:
               input.deliveryAddress.recipient_name ||
-              activeProfile.full_name ||
+              activeProfile.displayName ||
+              activeProfile.name ||
               "Cliente",
             recipientPhone: input.deliveryAddress.phone || activeProfile.phone,
             deliveryNotes: motoboyNotes || undefined,
@@ -293,7 +304,7 @@ export function useGastronomyCheckout() {
           if (deliveryResult.success) {
             logger.info("[useGastronomyCheckout] Rastreamento GPS ativado com sucesso", {
               order_id: order.id,
-              ride_id: deliveryResult.data?.id,
+              ride_id: deliveryResult.rideId,
             });
 
             toast.success("Pedido criado! Buscando entregador...");

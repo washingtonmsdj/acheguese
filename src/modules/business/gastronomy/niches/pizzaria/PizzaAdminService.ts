@@ -78,19 +78,21 @@ async function requireOwnership(businessId: string, userId: string): Promise<voi
 }
 
 async function upsertTable<T>(
-  table: string,
+  table: "pizza_sizes" | "pizza_flavors" | "pizza_edges" | "pizza_doughs",
   businessId: string,
   input: Record<string, unknown>,
 ): Promise<T> {
+  const db = supabase as any;
   const payload = {
     ...input,
     business_id: businessId,
     updated_at: new Date().toISOString(),
   };
+  const inputId = typeof input.id === "string" ? input.id : null;
 
-  const query = input.id
-    ? supabase.from(table).update(payload).eq("id", input.id).select().single()
-    : supabase.from(table).insert(payload).select().single();
+  const query = inputId
+    ? db.from(table).update(payload).eq("id", inputId).select().single()
+    : db.from(table).insert(payload).select().single();
 
   const { data, error } = await query;
   if (error) throw error;
@@ -206,7 +208,7 @@ export class PizzaAdminService {
     userId: string,
   ): Promise<PizzaSize> {
     await requireOwnership(businessId, userId);
-    return upsertTable<PizzaSize>("pizza_sizes", businessId, input);
+    return upsertTable<PizzaSize>("pizza_sizes", businessId, input as unknown as Record<string, unknown>);
   }
 
   static async upsertFlavor(
@@ -215,7 +217,7 @@ export class PizzaAdminService {
     userId: string,
   ): Promise<PizzaFlavor> {
     await requireOwnership(businessId, userId);
-    return upsertTable<PizzaFlavor>("pizza_flavors", businessId, input);
+    return upsertTable<PizzaFlavor>("pizza_flavors", businessId, input as unknown as Record<string, unknown>);
   }
 
   static async upsertEdge(
@@ -224,7 +226,7 @@ export class PizzaAdminService {
     userId: string,
   ): Promise<PizzaEdge> {
     await requireOwnership(businessId, userId);
-    return upsertTable<PizzaEdge>("pizza_edges", businessId, input);
+    return upsertTable<PizzaEdge>("pizza_edges", businessId, input as unknown as Record<string, unknown>);
   }
 
   static async upsertDough(
@@ -233,7 +235,7 @@ export class PizzaAdminService {
     userId: string,
   ): Promise<PizzaDough> {
     await requireOwnership(businessId, userId);
-    return upsertTable<PizzaDough>("pizza_doughs", businessId, input);
+    return upsertTable<PizzaDough>("pizza_doughs", businessId, input as unknown as Record<string, unknown>);
   }
 
   static async setAvailability(

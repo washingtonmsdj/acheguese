@@ -1,6 +1,7 @@
-﻿import { supabase } from "@/core/infrastructure/supabase";
+import { supabase } from "@/core/infrastructure/supabase";
 import { logger } from "@/shared/utils/logger";
 import { profileService } from "@/core/profiles/services/ProfileService";
+import type { Json } from "@/shared/types/mobility.generated";
 
 const MISSING_TABLE_ERROR_CODES = new Set(["42P01", "PGRST116", "PGRST205"]);
 
@@ -86,7 +87,7 @@ export class DriverModerationEventsService {
       admin_profile_id: input.adminProfileId ?? null,
       action: input.action,
       reason: input.reason ?? null,
-      metadata: input.metadata ?? {},
+      metadata: (input.metadata ?? {}) as Json,
     };
 
     const { error } = await supabase.from("driver_moderation_events").insert(payload);
@@ -122,6 +123,7 @@ export class DriverModerationEventsService {
     return hydrateAdminNames((data || []) as DriverModerationEvent[]);
   }
 }
+
 
 
 

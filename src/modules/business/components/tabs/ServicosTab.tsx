@@ -190,7 +190,7 @@ export function ServicosTab({
                     <h3 className="font-semibold text-base line-clamp-1 group-hover:text-primary transition-colors">
                       {service.name}
                     </h3>
-                    {service.destaque && (
+                    {service.featured && (
                       <Badge className="bg-yellow-500 text-white">
                         Destaque
                       </Badge>

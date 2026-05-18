@@ -13,6 +13,7 @@
 import { supabase } from '@/integrations/supabase/client';
 import { logger } from '@/shared/utils/logger';
 import { mediaService } from '@/core/media/services/MediaService';
+import type { Json } from '@/integrations/supabase/types.generated';
 import {
   SITE_SETTINGS_STORAGE,
   SITE_SETTING_KEYS,
@@ -42,12 +43,13 @@ export interface SiteSettings {
 }
 
 class SiteSettingsServiceClass {
+  private readonly db = supabase as any;
   /**
    * Obtém todas as configurações do site
    */
   async getAllSettings(): Promise<SiteSettings> {
     try {
-      const { data, error } = await supabase.rpc('get_all_site_settings');
+      const { data, error } = await this.db.rpc('get_all_site_settings');
 
       if (error) {
         logger.error('Erro ao buscar configurações do site', error);
@@ -57,8 +59,8 @@ class SiteSettingsServiceClass {
       // Converter array de settings para objeto
       const settings: SiteSettings = {};
       if (data) {
-        data.forEach((setting: SiteSetting) => {
-          settings[setting.key as keyof SiteSettings] = setting.value;
+        (data as SiteSetting[]).forEach((setting: SiteSetting) => {
+          settings[setting.key as keyof SiteSettings] = setting.value as any;
         });
       }
 
@@ -74,7 +76,7 @@ class SiteSettingsServiceClass {
    */
   async getSetting(key: string): Promise<unknown> {
     try {
-      const { data, error } = await supabase.rpc('get_site_setting', { p_key: key });
+      const { data, error } = await this.db.rpc('get_site_setting', { p_key: key });
 
       if (error) {
         logger.error(`Erro ao buscar configuração ${key}`, error);
@@ -93,9 +95,9 @@ class SiteSettingsServiceClass {
    */
   async upsertSetting(key: SiteSettingKey, value: unknown, description?: string): Promise<SiteSetting> {
     try {
-      const { data, error } = await supabase.rpc('upsert_site_setting', {
+      const { data, error } = await this.db.rpc('upsert_site_setting', {
         p_key: key,
-        p_value: value,
+        p_value: value as Json,
         p_description: description,
       });
 
@@ -104,7 +106,7 @@ class SiteSettingsServiceClass {
         throw error;
       }
 
-      return data;
+      return data as SiteSetting;
     } catch (error) {
       logger.error(`Erro ao upsert configuração ${key}`, error as Error);
       throw error;

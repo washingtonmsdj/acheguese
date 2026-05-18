@@ -19,6 +19,8 @@ import {
   Wrench,
   Briefcase,
   Sparkles,
+  Flame,
+  Star,
 } from "lucide-react";
 import { useClassificadosPage } from "@/modules/classifieds/hooks/useClassificadosPage";
 import { ClassificadosLayout } from "./ClassificadosLayout";
@@ -218,6 +220,11 @@ export default function ClassificadosPage({
         <ClassifiedsTrendingSection
           territoryName={territoryName}
           navigate={() => {}}
+          title="Em alta"
+          subtitle="Anúncios com maior tração"
+          icon={<Flame className="h-4 w-4 text-orange-400" />}
+          badgeText="Alta"
+          badgeColor="bg-orange-500/90"
           ads={trendingAds}
           onAdClick={handleClassificadoClick}
         />
@@ -228,6 +235,11 @@ export default function ClassificadosPage({
         <ClassifiedsPopularSection
           territoryName={territoryName}
           navigate={() => {}}
+          title="Mais procurados"
+          subtitle="Categorias com maior procura"
+          icon={<Sparkles className="h-4 w-4 text-emerald-400" />}
+          badgeText="Popular"
+          badgeColor="bg-emerald-500/90"
           ads={mostWantedAds}
           onAdClick={handleClassificadoClick}
         />
@@ -238,6 +250,11 @@ export default function ClassificadosPage({
         <ClassifiedsFeaturedSection
           territoryName={territoryName}
           navigate={() => {}}
+          title="Destaques"
+          subtitle="Itens premium selecionados"
+          icon={<Star className="h-4 w-4 text-amber-400" />}
+          badgeText="Premium"
+          badgeColor="bg-amber-500/90"
           ads={featuredAds}
           onAdClick={handleClassificadoClick}
         />
@@ -266,7 +283,7 @@ export default function ClassificadosPage({
         viewMode={viewMode}
         onViewModeChange={setViewMode}
         classificados={classificados}
-        vendedores={vendedores}
+        vendedores={vendedores.map((v) => ({ ...v, nome: v.name ?? "" }))}
         adsCount={activeCount}
         sellersCount={vendedores.length}
         isLoading={isLoading}

@@ -92,9 +92,15 @@ export type {
 } from "./services/DriverService";
 
 export type {
-  DriverLocation,
-  RideStats,
-} from "./services/MobilityService";
+  RideDispatchContextRow as DriverLocation,
+} from "./services/mobility.queries";
+
+export type RideStats = {
+  totalRides: number;
+  completedRides: number;
+  cancelledRides: number;
+  averageRating: number;
+};
 
 export type {
   ChatMessage,

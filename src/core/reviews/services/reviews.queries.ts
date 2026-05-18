@@ -25,6 +25,10 @@ function getTableName(type: ReviewType): string {
   return type === "business" ? "business_reviews_new" : "professional_reviews_new";
 }
 
+function hasErrorCode(error: unknown, code: string): boolean {
+  return Boolean(error && typeof error === "object" && (error as { code?: string }).code === code);
+}
+
 // ============================================================================
 // 🔍 QUERY OPERATIONS
 // ============================================================================
@@ -48,7 +52,7 @@ export async function hasReviewed(
       limit: 1,
     });
 
-    if (error && error.code !== "PGRST116") {
+    if (error && !hasErrorCode(error, "PGRST116")) {
       throw error;
     }
 
@@ -82,7 +86,7 @@ export async function getReviewByReviewer(
       limit: 1,
     });
 
-    if (error && error.code !== "PGRST116") {
+    if (error && !hasErrorCode(error, "PGRST116")) {
       throw error;
     }
 
@@ -112,7 +116,7 @@ export async function getReviewById(
       limit: 1,
     });
 
-    if (error && error.code !== "PGRST116") {
+    if (error && !hasErrorCode(error, "PGRST116")) {
       throw error;
     }
 
@@ -235,6 +239,9 @@ export async function getReviewStats(
 
     if (total === 0) {
       return {
+        total: 0,
+        average: 0,
+        distribution: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 },
         total_reviews: 0,
         average_rating: 0,
         rating_distribution: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 },
@@ -253,6 +260,9 @@ export async function getReviewStats(
     );
 
     return {
+      total,
+      average: Math.round(average * 10) / 10,
+      distribution,
       total_reviews: total,
       average_rating: Math.round(average * 10) / 10,
       rating_distribution: distribution,
@@ -265,6 +275,9 @@ export async function getReviewStats(
       metadata: { profileId, type },
     });
     return {
+      total: 0,
+      average: 0,
+      distribution: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 },
       total_reviews: 0,
       average_rating: 0,
       rating_distribution: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 },

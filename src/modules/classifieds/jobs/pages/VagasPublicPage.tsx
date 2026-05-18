@@ -55,14 +55,25 @@ export default function VagasPublicPage({ resolved }: VagasPublicPageProps = {})
     useVagaPublishPermission();
 
   const moduleTerritory = useModuleTerritoryFilter({ routeResolved: resolved });
-  const territoryLabels = useTerritoryLabels(moduleTerritory.location);
+  const territoryLabels = useTerritoryLabels(moduleTerritory.location as never);
   const locationId = moduleTerritory.resolvedLocationIds[0] ?? "";
   const locationIds = moduleTerritory.resolvedLocationIds;
   const cityName = moduleTerritory.displayLabel || "sua cidade";
-  const territoryBadgeLabel = useMemo(
-    () => territoryLabels.districtName ?? territoryLabels.cityName ?? moduleTerritory.displayLabel,
-    [moduleTerritory.displayLabel, territoryLabels.cityName, territoryLabels.districtName],
-  );
+  const territoryBadgeLabel = useMemo(() => {
+    const labels = territoryLabels as {
+      districtName?: string;
+      cityName?: string;
+      district?: string;
+      city?: string;
+    };
+    return (
+      labels.districtName ??
+      labels.cityName ??
+      labels.district ??
+      labels.city ??
+      moduleTerritory.displayLabel
+    );
+  }, [moduleTerritory.displayLabel, territoryLabels]);
 
   // Hooks de dados
   const {
@@ -93,6 +104,17 @@ export default function VagasPublicPage({ resolved }: VagasPublicPageProps = {})
   const pageTitle = `Vagas de Emprego em ${cityName} | AcheGuese`;
   const pageDescription = `Encontre vagas de emprego em ${cityName}. ${total} oportunidades de trabalho disponíveis. Candidate-se agora!`;
   const isEmbeddedCommunityRoute = location.pathname.startsWith("/comunidade/");
+  const moduleBasePath = useMemo(() => {
+    if (!isEmbeddedCommunityRoute) return "/vagas";
+    const parts = location.pathname.split("/").filter(Boolean);
+    const routeState = parts[1] ?? state;
+    const routeCity = parts[2] ?? city;
+    const routeTerritorySlug =
+      parts[3] ??
+      (resolved?.kind === "group" ? resolved.group.slug : resolved?.location.slug) ??
+      city;
+    return `/comunidade/${routeState}/${routeCity}/${routeTerritorySlug}/vagas`;
+  }, [city, isEmbeddedCommunityRoute, location.pathname, resolved, state]);
   const publishPath = useMemo(() => {
     if (!isEmbeddedCommunityRoute) return "/vagas/publicar";
     const parts = location.pathname.split("/").filter(Boolean);
@@ -141,8 +163,6 @@ export default function VagasPublicPage({ resolved }: VagasPublicPageProps = {})
   if (!locationId) {
     return (
       <VagasError
-        title="Localização não encontrada"
-        message="Não foi possível carregar as vagas para esta localização."
         onRetry={() => window.location.reload()}
       />
     );
@@ -228,7 +248,7 @@ export default function VagasPublicPage({ resolved }: VagasPublicPageProps = {})
         navigate={navigate}
         total={total}
         isLoading={isLoading}
-        filters={filters}
+        filters={filters as never}
         updateFilter={updateFilter}
         clearFilters={clearFilters}
         hasActiveFilters={hasActiveFilters}
@@ -244,9 +264,9 @@ export default function VagasPublicPage({ resolved }: VagasPublicPageProps = {})
         state={state}
         city={city}
         navigate={navigate}
-        vagas={vagas}
-        vagasUrgentes={vagasUrgentes}
-        vagasDestaque={vagasDestaque}
+        vagas={vagas as never}
+        vagasUrgentes={vagasUrgentes as never}
+        vagasDestaque={vagasDestaque as never}
         total={total}
         hasMore={hasMore}
         isLoading={isLoading}
@@ -261,7 +281,8 @@ export default function VagasPublicPage({ resolved }: VagasPublicPageProps = {})
       <ModuleLocationDialog
         open={locationDialogOpen}
         onOpenChange={setLocationDialogOpen}
-        modulePath="/vagas"
+        moduleBasePath={moduleBasePath}
+        onApplyPath={(path) => navigate(path)}
       />
     </VagasPublicLayout>
     </>

@@ -46,7 +46,9 @@ function mapToPublicFoodItem(params: {
   business: GastronomyBusiness;
 }): PublicGastronomyFoodItem {
   const { item, category, menu, business } = params;
-  const metadata = item.metadata || {};
+  const metadata = (item.metadata && typeof item.metadata === 'object'
+    ? (item.metadata as Record<string, unknown>)
+    : {}) as Record<string, unknown>;
   
   // Validar coordenadas antes de usar (evitar null/NaN no MapLibre)
   const businessLatitude =
@@ -354,7 +356,7 @@ export async function getMenuItem(itemId: string): Promise<MenuItemWithRelations
       return null;
     }
 
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from('menu_items')
       .select('*')
       .eq('id', itemId)
@@ -398,7 +400,7 @@ export async function getFeaturedMenuItems(businessId: string): Promise<MenuItem
     const menuIds = menus.map((m) => m.id);
 
     // Buscar itens em destaque
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from('menu_items')
       .select('*')
       .in('menu_id', menuIds)
@@ -746,7 +748,7 @@ export async function getPublicFoodItems(params: {
       
       if (!menuIds.length) return [];
 
-      const { data } = await supabase
+      const { data } = await (supabase as any)
         .from('menu_items')
         .select('*')
         .in('menu_id', menuIds)
@@ -768,7 +770,9 @@ export async function getPublicFoodItems(params: {
 
     // Mapear para formato pÃºblico usando batch queries
     const categoryIds = items.map((item) => item.category_id);
-    const menuIds = [...new Set(items.map((item) => item.menu_id || '').filter(Boolean))];
+    const menuIds = [
+      ...new Set(items.map((item) => ((item as unknown as { menu_id?: string }).menu_id || '')).filter(Boolean)),
+    ];
 
     const [categoriesData, menusData] = await Promise.all([
       supabase
@@ -793,7 +797,7 @@ export async function getPublicFoodItems(params: {
         const category = categoryMap.get(item.category_id);
         if (!category) return null;
 
-        const menu = menuMap.get(item.menu_id || '');
+        const menu = menuMap.get((item as unknown as { menu_id?: string }).menu_id || '');
         if (!menu) return null;
 
         return mapToPublicFoodItem({ item, category, menu, business });
@@ -841,18 +845,18 @@ export async function getMenuUsageStats(businessId: string): Promise<{
       imagesCountResult,
       promotionsCountResult,
     ] = await Promise.all([
-      supabase
+      (supabase as any)
         .from('menu_items')
         .select('*', { count: 'exact', head: true })
         .in('menu_id', menuIds)
         .eq('is_available', true),
-      supabase
+      (supabase as any)
         .from('menu_items')
         .select('*', { count: 'exact', head: true })
         .in('menu_id', menuIds)
         .eq('is_available', true)
         .not('image_url', 'is', null),
-      supabase
+      (supabase as any)
         .from('menu_promotions')
         .select('*', { count: 'exact', head: true })
         .eq('business_id', businessId)

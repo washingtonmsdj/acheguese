@@ -57,7 +57,7 @@ export default function ShareBusinessDialog({
   };
 
   const downloadQRCode = () => {
-    const svg = document.getElementById("qr-code-svg") as SVGElement | null;
+    const svg = document.getElementById("qr-code-svg") as unknown as SVGElement | null;
     if (!svg) {
       return;
     }

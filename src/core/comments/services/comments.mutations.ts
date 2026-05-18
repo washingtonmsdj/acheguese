@@ -13,6 +13,7 @@ const TABLE = "comments";
 const LIKES_TABLE = "comment_likes";
 
 const supabaseTyped = supabase as unknown as AdminSupabaseClient;
+const commentsDb = supabase as any;
 
 export class CommentError extends Error {
   constructor(
@@ -44,7 +45,7 @@ export async function createComment(
       parent_comment_id: commentData.parent_id,
     });
 
-    const { data, error } = await supabaseTyped
+    const { data, error } = await commentsDb
       .from(TABLE)
       .insert([
         {
@@ -91,7 +92,7 @@ export async function updateComment(
       content: updates.content,
     });
 
-    const { data, error } = await supabaseTyped
+    const { data, error } = await commentsDb
       .from(TABLE)
       .update({ content: validatedData.content })
       .eq("id", commentId)
@@ -122,7 +123,7 @@ export async function updateComment(
  */
 export async function deleteComment(commentId: string): Promise<boolean> {
   try {
-    const { error } = await supabaseTyped
+    const { error } = await commentsDb
       .from(TABLE)
       .delete()
       .eq("id", commentId);
@@ -148,7 +149,7 @@ export async function likeComment(
   userId: string,
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    const { error } = await supabaseTyped
+    const { error } = await commentsDb
       .from(LIKES_TABLE)
       .insert({ comment_id: commentId, user_id: userId });
 
@@ -177,7 +178,7 @@ export async function unlikeComment(
   userId: string,
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    const { error } = await supabaseTyped
+    const { error } = await commentsDb
       .from(LIKES_TABLE)
       .delete()
       .eq("comment_id", commentId)

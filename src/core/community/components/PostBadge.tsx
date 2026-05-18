@@ -26,7 +26,13 @@ export type PostType =
   | "discussao"
   | "recomendacao"
   | "enquete"
-  | "achados_e_perdidos";
+  | "achados"
+  | "achados_e_perdidos"
+  | "alerta"
+  | "favor"
+  | "desapego"
+  | "classificado"
+  | "civic_report";
 
 interface PostBadgeProps {
   type: PostType;
@@ -87,6 +93,8 @@ function getPostTypeConfig(type: PostType) {
     case "recomendacao":
       return postTypeConfig.recomendacao;
     case "achados_e_perdidos":
+      return postTypeConfig.achados_e_perdidos;
+    case "achados":
       return postTypeConfig.achados_e_perdidos;
     default:
       return postTypeConfig.discussao;

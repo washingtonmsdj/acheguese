@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useSessionContext } from "@/core/session";
-import type { PostType } from "../types";
+import type { PostType } from "@/core/posts/types";
 import { toast } from "sonner";
 import {
   sanitizeContent,
@@ -59,7 +59,7 @@ export function useCreatePost() {
         data.images?.map(sanitizeUrl).filter((url) => url !== "") || [];
 
       const resolvedLocationId =
-        activeProfile.locationId ?? activeProfile.location_id ?? null;
+        activeProfile.locationId ?? (activeProfile as { location_id?: string | null }).location_id ?? null;
       if (!resolvedLocationId) {
         throw new Error("Configure seu bairro no perfil antes de publicar");
       }

@@ -3,7 +3,7 @@ import { toast } from "sonner";
 import { logger } from "@/shared/utils/logger";
 import { commentService } from "@/core/comments/services";
 
-interface Comment {
+export interface Comment {
   id: string;
   post_id: string;
   author_profile_id: string;

@@ -56,6 +56,25 @@ interface RideTrackingData {
   };
 }
 
+type RideShareRow = {
+  id: string;
+  passenger_profile_id: string;
+  driver_profile_id?: string | null;
+  share_token: string;
+  share_expires_at?: string | null;
+  share_is_active?: boolean | null;
+  status: string;
+  origin: string;
+  destination: string;
+  origin_lat: number | null;
+  origin_lng: number | null;
+  destination_lat: number | null;
+  destination_lng: number | null;
+  type: string;
+  created_at: string;
+  updated_at: string;
+};
+
 export default function TrackRidePage() {
   const { token } = useParams<{ token: string }>();
   const [data, setData] = useState<RideTrackingData | null>(null);
@@ -69,7 +88,7 @@ export default function TrackRidePage() {
     }
     
     try {
-      const rideData = await getRideByShareToken(token!);
+      const rideData = (await getRideByShareToken(token!)) as RideShareRow | null;
 
       if (!rideData) {
         setError("Link invalido ou expirado");
@@ -241,11 +260,12 @@ export default function TrackRidePage() {
     [RIDE_STATUS.CANCELLED]: "bg-red-500/20 text-red-400 border-red-500/30",
   };
 
-  const isActive = [
+  const activeStatuses: string[] = [
     RIDE_STATUS.DRIVER_ASSIGNED,
     RIDE_STATUS.DRIVER_ON_THE_WAY,
     RIDE_STATUS.IN_PROGRESS,
-  ].includes(data.status);
+  ];
+  const isActive = activeStatuses.includes(data.status);
 
   return (
     <div className="min-h-screen bg-background">

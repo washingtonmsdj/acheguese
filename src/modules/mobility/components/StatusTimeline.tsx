@@ -3,8 +3,19 @@ import { RideRequest } from "@/modules/mobility/types";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
+type TimelineRide = RideRequest & {
+  driver_assigned_at?: string | null;
+  driver_on_the_way_at?: string | null;
+  driver_arrived_at?: string | null;
+  passenger_on_board_at?: string | null;
+  started_at?: string | null;
+  completed_at?: string | null;
+  cancelled_at?: string | null;
+  cancellation_reason?: string | null;
+};
+
 interface StatusTimelineProps {
-  ride: RideRequest;
+  ride: TimelineRide;
 }
 
 interface TimelineStep {

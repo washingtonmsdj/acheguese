@@ -1,5 +1,5 @@
 // Barrel export for classifieds hooks
-export * from "./types";
+export type { ClassificadosFilters as ClassificadosFiltersLegacy, VendedorWithAds as VendedorWithAdsLegacy } from "./types";
 export * from "./useClassificadoDetail";
 export * from "./useClassificados";
 export * from "./useClassificadosPage";

@@ -34,7 +34,7 @@ export interface NeighborhoodBoundsInput {
 
 export interface BoundaryServiceDeps {
   locationRepository?: ILocationRepository;
-  supabaseClient?: Pick<typeof supabase, 'from'>;
+  supabaseClient?: any;
   locationCacheTtlMs?: number;
   customBoundariesEnabled?: boolean;
 }
@@ -97,7 +97,7 @@ class BoundaryServiceClass {
 
   private readonly FALLBACK_CENTER: [number, number] = [-12.975, -38.476];
   private readonly locationRepository: ILocationRepository;
-  private readonly supabaseClient: Pick<typeof supabase, 'from'>;
+  private readonly supabaseClient: any;
   private readonly locationCacheTtlMs: number;
   private readonly customBoundariesEnabled: boolean;
   private territoryIndex: CachedTerritoryIndex | null = null;

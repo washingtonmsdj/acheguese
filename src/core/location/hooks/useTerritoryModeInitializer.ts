@@ -70,8 +70,8 @@ export function useTerritoryModeInitializer() {
     // Verificar se deve forçar mudança para cidade
     const shouldForce = TerritoryModeManager.shouldForceModeToCityFromUrl(
       location.pathname,
-      homeDistrict,
-      homeCity
+      homeDistrict as any,
+      homeCity as any
     );
 
     if (shouldForce) {

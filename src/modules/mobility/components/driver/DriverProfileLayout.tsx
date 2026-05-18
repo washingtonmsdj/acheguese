@@ -117,7 +117,7 @@ export function DriverProfileLayout({ service }: DriverProfileLayoutProps) {
             {driverProfileId && snapshot ? (
               <DriverOperationalSnapshotCard
                 driverDisplayName={formatValue(snapshot?.display_name)}
-                driverSnapshot={snapshot}
+                driverSnapshot={snapshot as never}
               />
             ) : (
               <div className="rounded-2xl border border-dashed border-border bg-background p-4 text-sm text-muted-foreground">
@@ -173,7 +173,7 @@ export function DriverProfileLayout({ service }: DriverProfileLayoutProps) {
             </CardHeader>
             <CardContent>
               {driverProfileId && snapshot ? (
-                <DriverVehicleDetailsCard driverSnapshot={snapshot} />
+                <DriverVehicleDetailsCard driverSnapshot={snapshot as never} />
               ) : (
                 <p className="text-sm text-muted-foreground">O {vehicleLabel} sera exibido apos a criacao do perfil.</p>
               )}
@@ -206,7 +206,7 @@ export function DriverProfileLayout({ service }: DriverProfileLayoutProps) {
             </CardHeader>
             <CardContent>
               {driverProfileId && snapshot ? (
-                <DriverVehicleDetailsCard driverSnapshot={snapshot} />
+                <DriverVehicleDetailsCard driverSnapshot={snapshot as never} />
               ) : (
                 <p className="text-sm text-muted-foreground">A {vehicleLabel} sera exibida apos a criacao do perfil.</p>
               )}

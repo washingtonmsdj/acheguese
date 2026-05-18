@@ -44,7 +44,7 @@ export const PostContent = memo<PostContentProps>(
 
     return (
       <>
-        {postType === "civic_report" && civicTypeConfig && (
+        {String(postType) === "civic_report" && civicTypeConfig && (
           <div
             className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg mb-3"
             style={{
@@ -84,7 +84,7 @@ export const PostContent = memo<PostContentProps>(
           </div>
         )}
 
-        {postType === "civic_report" && (statusConfig || urgencyConfig) && (
+        {String(postType) === "civic_report" && (statusConfig || urgencyConfig) && (
           <div className="flex items-center gap-2 mb-3">
             {statusConfig && (
               <Badge

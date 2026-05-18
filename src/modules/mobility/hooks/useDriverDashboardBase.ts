@@ -543,7 +543,7 @@ export function useDriverDashboardBase({
 
       const passengerProfileId =
         typeof (rideToRate as { passenger_profile_id?: unknown }).passenger_profile_id === "string"
-          ? ((rideToRate as { passenger_profile_id: string }).passenger_profile_id)
+          ? ((rideToRate as unknown as { passenger_profile_id: string }).passenger_profile_id)
           : null;
 
       if (!passengerProfileId) {

@@ -16,8 +16,10 @@ export interface DeletionStatusRecord {
 }
 
 export class PrivacySettingsService {
+  private static readonly db = supabase as any;
+
   static async getUserConsents(userId: string): Promise<UserConsentRecord[]> {
-    const { data, error } = await supabase
+    const { data, error } = await this.db
       .from("user_consents")
       .select("*")
       .eq("user_id", userId)
@@ -28,7 +30,7 @@ export class PrivacySettingsService {
   }
 
   static async getDeletionStatus(userId: string): Promise<DeletionStatusRecord | null> {
-    const { data, error } = await supabase
+    const { data, error } = await this.db
       .from("user_deletion_schedule")
       .select("status, scheduled_purge_at")
       .eq("user_id", userId)
@@ -53,7 +55,7 @@ export class PrivacySettingsService {
     granted: boolean;
     userAgent: string;
   }): Promise<void> {
-    const { error } = await supabase.rpc("record_consent", {
+    const { error } = await this.db.rpc("record_consent", {
       p_user_id: input.userId,
       p_consent_type: input.consentType,
       p_granted: input.granted,
@@ -66,7 +68,7 @@ export class PrivacySettingsService {
   }
 
   static async cancelAccountDeletion(userId: string): Promise<void> {
-    const { error } = await supabase.rpc("cancel_account_deletion", {
+    const { error } = await this.db.rpc("cancel_account_deletion", {
       p_user_id: userId,
       p_reason: "Cancelado pelo usuario",
     });

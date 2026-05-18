@@ -43,7 +43,7 @@ export function useCreateTouristPoint(userId?: string) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (input: CreateTouristPointInput) =>
-      TouristPointService.create(input, userId),
+      TouristPointService.create(input as CreateTouristPointInput & Record<string, unknown>, userId),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: [QUERY_KEY] });
       qc.invalidateQueries({ queryKey: ['guide:tourist-points'] });

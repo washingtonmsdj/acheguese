@@ -39,7 +39,10 @@ export function NearbyCard({ entity, onNavigate }: NearbyCardProps) {
   const config = ENTITY_CONFIG[entity.type];
   const Icon = config.icon;
   const hasRealDistance = entity.distance > 0 && entity.distance < 100000;
-  const territoryName = entity.metadata?.neighborhood || entity.metadata?.city || null;
+  const neighborhood =
+    typeof entity.metadata?.neighborhood === "string" ? entity.metadata.neighborhood : null;
+  const city = typeof entity.metadata?.city === "string" ? entity.metadata.city : null;
+  const territoryName = neighborhood || city || null;
   const isService = entity.metadata?.category === "services" || entity.metadata?.is_mobile_service;
 
   const url = React.useMemo(() => {

@@ -121,5 +121,5 @@ export interface GastronomyActivityFilters {
   types?: ActivityType[];
 }
 
-export type { CuisineType } from '../constants/cuisine';
+export type { CuisineType } from '../../constants/cuisine';
 

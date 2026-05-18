@@ -142,7 +142,7 @@ export function UserPostsGrid({
             {posts.map((post) => (
               <PostCard
                 key={post.id}
-                post={post}
+                post={post as any}
                 currentUserId={currentProfileId}
                 onLike={likePost}
                 onComment={onCommentClick ?? (() => undefined)}

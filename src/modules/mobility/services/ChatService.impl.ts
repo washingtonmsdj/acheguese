@@ -1,7 +1,7 @@
-Ôªø/**
+/**
  * ChatService - SSOT para chat de corridas
  * 
- * IMPLEMENTA√á√ÉO REAL - N√£o importar diretamente
+ * IMPLEMENTA«√O REAL - N„o importar diretamente
  * Use: import { ChatService } from './ChatService'
  * 
  * Responsabilidades:
@@ -45,11 +45,11 @@ export class ChatService {
    * Buscar chat de uma corrida
    * 
    * @param rideId - ID da corrida
-   * @returns Chat da corrida ou null se n√£o existir
+   * @returns Chat da corrida ou null se n„o existir
    */
   static async getChatByRideId(rideId: string): Promise<RideChat | null> {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('ride_chats')
         .select('*')
         .eq('ride_id', rideId)
@@ -75,7 +75,7 @@ export class ChatService {
    */
   static async getMessages(chatId: string): Promise<ChatMessage[]> {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('ride_chat_messages')
         .select('*')
         .eq('chat_id', chatId)
@@ -102,10 +102,10 @@ export class ChatService {
   static async sendMessage(input: SendMessageInput): Promise<ChatMessage> {
     try {
       if (!input.message.trim()) {
-        throw new Error('Mensagem n√£o pode estar vazia');
+        throw new Error('Mensagem n„o pode estar vazia');
       }
 
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('ride_chat_messages')
         .insert({
           chat_id: input.chat_id,
@@ -137,11 +137,11 @@ export class ChatService {
    * Marcar mensagens como lidas
    * 
    * @param chatId - ID do chat
-   * @param userId - ID do usu√°rio que est√° lendo
+   * @param userId - ID do usu·rio que est· lendo
    */
   static async markMessagesAsRead(chatId: string, userId: string): Promise<void> {
     try {
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from('ride_chat_messages')
         .update({ read_at: new Date().toISOString() })
         .eq('chat_id', chatId)
@@ -159,7 +159,7 @@ export class ChatService {
       });
     } catch (error) {
       logger.error('ChatService.markMessagesAsRead', error);
-      // N√£o lan√ßar erro - marcar como lido √© opera√ß√£o n√£o cr√≠tica
+      // N„o lanÁar erro - marcar como lido È operaÁ„o n„o crÌtica
     }
   }
 
@@ -171,7 +171,7 @@ export class ChatService {
    */
   static async createChat(rideId: string): Promise<RideChat> {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('ride_chats')
         .insert({ ride_id: rideId })
         .select()
@@ -198,4 +198,5 @@ export const ChatFacade = {
   queries: chatQueries,
   mutations: chatMutations,
 } as const;
+
 

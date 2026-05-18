@@ -1,20 +1,11 @@
-/**
- * MapMarkerPopup — Painel de detalhes do marcador selecionado.
- *
- * Componente de apresentação puro — sem lógica de navegação.
- * O consumidor (MapaPageV4) passa onNavigate para manter SSOT de roteamento.
- */
-
 import { X, ExternalLink, Star } from 'lucide-react';
 import { Button } from '@/shared/components/ui/button';
-import { cn } from '@/shared/utils/cn';
 import { getMarkerConfig } from '../../config/markerConfig';
 import type { MapMarker } from '../../types/core';
 
 interface MapMarkerPopupProps {
   marker: MapMarker;
   onClose: () => void;
-  /** Chamado quando o usuário clica em "Ver detalhes" */
   onNavigate?: (url: string) => void;
 }
 
@@ -24,6 +15,10 @@ export function MapMarkerPopup({ marker, onClose, onNavigate }: MapMarkerPopupPr
   const rating = marker.metadata?.rating as number | undefined;
   const category = marker.metadata?.category as string | undefined;
   const isVerified = marker.metadata?.is_verified as boolean | undefined;
+  const distanceMeters =
+    typeof marker.metadata?.distance_meters === 'number'
+      ? marker.metadata.distance_meters
+      : undefined;
 
   return (
     <div
@@ -32,12 +27,10 @@ export function MapMarkerPopup({ marker, onClose, onNavigate }: MapMarkerPopupPr
       aria-label={`Detalhes: ${marker.title}`}
     >
       <div className="bg-card border border-border rounded-2xl shadow-xl overflow-hidden">
-        {/* Header */}
         <div className="flex items-start gap-3 p-4 pb-3">
-          {/* Ícone do tipo — usa SSOT markerConfig */}
           <div
             className="w-8 h-8 rounded-full shrink-0 flex items-center justify-center text-base mt-0.5"
-            style={{ backgroundColor: config.color + '20' }}
+            style={{ backgroundColor: `${config.color}20` }}
           >
             <span>{config.emoji}</span>
           </div>
@@ -76,11 +69,11 @@ export function MapMarkerPopup({ marker, onClose, onNavigate }: MapMarkerPopupPr
                   </span>
                 </>
               )}
-              {marker.metadata?.distance_meters !== undefined && (
+              {distanceMeters !== undefined && (
                 <>
                   <span className="text-muted-foreground/40">·</span>
                   <span className="text-xs text-blue-600 font-medium">
-                    📍 {(marker.metadata.distance_meters / 1000).toFixed(1)} km
+                    {(distanceMeters / 1000).toFixed(1)} km
                   </span>
                 </>
               )}
@@ -102,11 +95,13 @@ export function MapMarkerPopup({ marker, onClose, onNavigate }: MapMarkerPopupPr
           </button>
         </div>
 
-        {/* Ação */}
         {marker.url && onNavigate && (
           <div className="px-4 pb-4">
             <Button
-              onClick={() => { onNavigate(marker.url!); onClose(); }}
+              onClick={() => {
+                onNavigate(marker.url as string);
+                onClose();
+              }}
               size="sm"
               className="w-full gap-1.5"
             >

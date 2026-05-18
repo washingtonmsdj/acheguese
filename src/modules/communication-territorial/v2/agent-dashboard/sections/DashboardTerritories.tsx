@@ -10,6 +10,7 @@ interface DashboardTerritoriesProps {
 }
 
 export function DashboardTerritories({ channel, territories }: DashboardTerritoriesProps) {
+  const territoryItems = territories as unknown as Array<Record<string, unknown>>;
   return (
     <div className="space-y-6">
       
@@ -44,14 +45,14 @@ export function DashboardTerritories({ channel, territories }: DashboardTerritor
             </CardContent>
           </Card>
         ) : (
-          territories.map((territory) => (
-            <Card key={territory.id} className="hover:shadow-md transition-shadow">
+          territoryItems.map((territory) => (
+            <Card key={String(territory.id)} className="hover:shadow-md transition-shadow">
               <CardHeader>
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex-1 min-w-0">
-                    <CardTitle className="text-lg truncate">{territory.name}</CardTitle>
+                    <CardTitle className="text-lg truncate">{typeof territory.name === "string" ? territory.name : "Territorio"}</CardTitle>
                     <CardDescription className="mt-1">
-                      {territory.city}, {territory.state}
+                      {typeof territory.city === "string" ? territory.city : ""}{typeof territory.state === "string" ? `, ${territory.state}` : ""}
                     </CardDescription>
                   </div>
                   <Badge variant="default" className="flex-shrink-0">

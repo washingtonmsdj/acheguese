@@ -11,6 +11,8 @@
 import { logger } from '@/shared/utils/logger';
 import { supabase } from '@/core/infrastructure/supabase/client';
 
+type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[];
+
 // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 // TYPES
 // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
@@ -224,17 +226,16 @@ class EducationObservabilityServiceClass {
       const { error } = await supabase.from('education_analytics_events').insert({
         education_profile_id: payload.profileId ?? null,
         event_type: payload.eventType,
-        event_data: {
+        metadata: ({
           businessId: payload.businessId,
           leadId: payload.leadId,
           programId: payload.programId,
-          nicheKey: payload.nicheKey,
           userId: payload.userId,
           metadata: payload.metadata,
           error: payload.error,
           performance: payload.performance,
-        },
-        user_id: payload.userId ?? null,
+        } as unknown as Json),
+        niche_key: payload.nicheKey,
         session_id: this.getSessionId(),
       });
 

@@ -404,7 +404,7 @@ export class TouristPointService {
 
     const { data, error } = await supabase
       .from('tourist_points')
-      .insert(insertPayload)
+      .insert(insertPayload as any)
       .select(SELECT_LEGACY)
       .single();
     if (error || !data) throw error ?? new Error('Falha ao criar ponto turistico');
@@ -512,7 +512,7 @@ export class TouristPointService {
     if (!nextSlug && name) nextSlug = slugify(name);
     if (nextSlug) patch.slug = await this.ensureUniqueSlug(locationId, nextSlug, id);
 
-    const { data, error } = await supabase.from('tourist_points').update(patch).eq('id', id).select(SELECT_LEGACY).single();
+    const { data, error } = await (supabase as any).from('tourist_points').update(patch).eq('id', id).select(SELECT_LEGACY).single();
     if (error || !data) throw error ?? new Error('Falha ao atualizar ponto turistico');
     return mapDbToLegacy(data);
   }

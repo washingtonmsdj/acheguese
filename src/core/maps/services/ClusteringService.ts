@@ -96,7 +96,7 @@ export class ClusteringService {
     }
 
     // Supercluster espera [west, south, east, north]
-    return this.supercluster.getClusters(bounds, Math.floor(zoom));
+    return this.supercluster.getClusters(bounds, Math.floor(zoom)) as unknown as ClusterPoint[];
   }
 
   /**
@@ -124,7 +124,7 @@ export class ClusteringService {
     }
 
     try {
-      return this.supercluster.getLeaves(clusterId, limit);
+      return this.supercluster.getLeaves(clusterId, limit) as unknown as ClusterPoint[];
     } catch (error) {
       logger.error('[ClusteringService] Error getting cluster leaves:', error);
       return [];

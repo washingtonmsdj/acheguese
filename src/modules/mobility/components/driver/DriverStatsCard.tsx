@@ -62,9 +62,9 @@ export function DriverStatsCard() {
       if (!driverProfile) return null;
 
       // SSOT: Buscar dados de driver_data via MobilityService
-      const driverData = await mobilityService.getDriverStatsDetailed(
+      const driverData = (await mobilityService.getDriverStatsDetailed(
         driverProfile.id,
-      );
+      )) as Record<string, unknown> | null;
 
       if (!driverData) return null;
 
@@ -77,21 +77,21 @@ export function DriverStatsCard() {
       // Buscar contagem de reviews via ReviewsService
       const reviewCount = await ReviewsService.getReviewCount(
         driverProfile.id,
-        "driver",
+        "driver" as never,
       );
 
       return {
-        accepted_rides: driverData.total_rides || 0,
-        completed_rides: driverData.total_rides_completed || 0,
-        failed_rides: driverData.total_rides_cancelled || 0,
-        total_rides: driverData.total_rides || 0,
-        completion_rate: driverData.acceptance_rate || 100,
-        cancellation_rate: driverData.cancellation_rate || 0,
+        accepted_rides: Number(driverData.total_rides || 0),
+        completed_rides: Number(driverData.total_rides_completed || 0),
+        failed_rides: Number(driverData.total_rides_cancelled || 0),
+        total_rides: Number(driverData.total_rides || 0),
+        completion_rate: Number(driverData.acceptance_rate || 100),
+        cancellation_rate: Number(driverData.cancellation_rate || 0),
         priority_score: Math.max(
           0,
-          100 - (driverData.cancellation_rate || 0) * 2,
+          100 - Number(driverData.cancellation_rate || 0) * 2,
         ),
-        rating: driverData.rating || 5.0,
+        rating: Number(driverData.rating || 5.0),
         total_ratings: reviewCount || 0,
         total_earnings: totalEarnings,
       } as DriverStats;

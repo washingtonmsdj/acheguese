@@ -1,9 +1,9 @@
-﻿/**
- * MOBILITY MUTATIONS - OperaÃ§Ãµes de escrita
+/**
+ * MOBILITY MUTATIONS - Operações de escrita
  *
- * Responsabilidade Ãºnica: criar, atualizar e deletar dados
- * - Sem queries de leitura (exceto necessÃ¡rias para validaÃ§Ã£o)
- * - OrquestraÃ§Ã£o de mÃºltiplas tabelas quando necessÃ¡rio
+ * Responsabilidade única: criar, atualizar e deletar dados
+ * - Sem queries de leitura (exceto necessárias para validação)
+ * - Orquestração de múltiplas tabelas quando necessário
  */
 
 import { supabase } from "@/core/infrastructure/supabase";
@@ -17,8 +17,8 @@ import { DriverAvailabilityService } from "@/modules/mobility/services/DriverAva
  * Criar nova corrida
  */
 export async function createRide(data: Record<string, unknown>): Promise<unknown> {
-  const { data: ride, error } = await supabase
-    .from("ride_requests")
+  const { data: ride, error } = await (supabase as any)
+    .from("ride_requests" as any)
     .insert(data)
     .select()
     .single();
@@ -28,7 +28,7 @@ export async function createRide(data: Record<string, unknown>): Promise<unknown
 }
 
 /**
- * Criar solicitaÃ§Ã£o de corrida (alias para createRide)
+ * Criar solicitação de corrida (alias para createRide)
  */
 export async function createRideRequest(data: Record<string, unknown>): Promise<unknown> {
   return createRide({ ...data, status: RIDE_STATUS.PENDING });
@@ -38,8 +38,8 @@ export async function createRideRequest(data: Record<string, unknown>): Promise<
  * Atualizar corrida
  */
 export async function updateRide(rideId: string, updates: Record<string, unknown>): Promise<unknown> {
-  const { data, error } = await supabase
-    .from("ride_requests")
+  const { data, error } = await (supabase as any)
+    .from("ride_requests" as any)
     .update(updates)
     .eq("id", rideId)
     .select()
@@ -50,7 +50,7 @@ export async function updateRide(rideId: string, updates: Record<string, unknown
 }
 
 /**
- * Atualizar corrida com guards (validaÃ§Ãµes de estado)
+ * Atualizar corrida com guards (validações de estado)
  */
 export async function updateRideWithGuards(
   rideId: string,
@@ -61,7 +61,7 @@ export async function updateRideWithGuards(
   } = {},
 ): Promise<boolean> {
   let query = supabase
-    .from("ride_requests")
+    .from("ride_requests" as any)
     .update(updates)
     .eq("id", rideId);
 
@@ -86,8 +86,8 @@ export async function updateRideIfStatusIn(
   updates: Record<string, unknown>,
   allowedStatuses: string[],
 ): Promise<boolean> {
-  const { data, error } = await supabase
-    .from("ride_requests")
+  const { data, error } = await (supabase as any)
+    .from("ride_requests" as any)
     .update(updates)
     .eq("id", rideId)
     .in("status", allowedStatuses)
@@ -138,7 +138,7 @@ export async function completeRide(
  * Confirmar corrida (passageiro)
  */
 export async function confirmRide(rideId: string): Promise<void> {
-  await updateRide(rideId, { status: RIDE_STATUS.CONFIRMED });
+  await updateRide(rideId, { status: RIDE_STATUS.DRIVER_ARRIVED });
 }
 
 /**
@@ -154,35 +154,35 @@ export async function cancelRide(rideId: string, reason?: string): Promise<void>
 }
 
 /**
- * Criar alerta de emergÃªncia
+ * Criar alerta de emergência
  */
 export async function createEmergencyAlert(
   rideId: string,
   userId: string,
   location: { lat: number; lng: number },
 ): Promise<void> {
-  await supabase
+  await (supabase as any)
     .from("emergency_alerts")
     .insert({ ride_id: rideId, user_id: userId, location })
     .throwOnError();
 }
 
 /**
- * Incrementar contador de visualizaÃ§Ãµes
+ * Incrementar contador de visualizações
  */
 export async function incrementRideViewCount(rideId: string): Promise<void> {
   try {
-    await supabase.rpc("increment_ride_view_count", { ride_id: rideId });
+    await (supabase as any).rpc("increment_ride_view_count" as any, { ride_id: rideId });
   } catch (error) {
     logger.warn("MobilityMutations.incrementRideViewCount", error);
   }
 }
 
 /**
- * Decrementar assentos disponÃ­veis
+ * Decrementar assentos disponíveis
  */
 export async function decrementRideSeats(rideId: string): Promise<void> {
-  const { error } = await supabase.rpc("decrement_ride_seats", { ride_id: rideId });
+  const { error } = await (supabase as any).rpc("decrement_ride_seats" as any, { ride_id: rideId });
   if (error) {
     logger.error("MobilityMutations.decrementRideSeats", error);
     throw error;
@@ -194,8 +194,8 @@ export async function decrementRideSeats(rideId: string): Promise<void> {
  */
 export async function deleteDriverNeighborhood(id: string): Promise<{ success: boolean; error?: unknown }> {
   try {
-    const { error } = await supabase
-      .from("driver_accepted_neighborhoods")
+    const { error } = await (supabase as any)
+      .from("driver_accepted_neighborhoods" as any)
       .delete()
       .eq("id", id);
 
@@ -212,14 +212,14 @@ export async function deleteDriverNeighborhood(id: string): Promise<{ success: b
 }
 
 /**
- * Remover Ã¡rea de serviÃ§o do motorista
+ * Remover área de serviço do motorista
  */
 export async function deleteDriverServiceArea(
   table: string,
   id: string,
 ): Promise<{ success: boolean; error?: unknown }> {
   try {
-    const { error } = await supabase.from(table).delete().eq("id", id);
+    const { error } = await (supabase as any).from(table).delete().eq("id", id);
 
     if (error) {
       logger.error("MobilityMutations.deleteDriverServiceArea", { table, id, error });
@@ -241,7 +241,7 @@ export async function createAdminDriverProfile(userId: string): Promise<unknown 
     const driverProfile = await profileService.ensureDriverProfileForUser(userId);
     if (!driverProfile?.id) return null;
 
-    const { data: existing } = await supabase
+    const { data: existing } = await (supabase as any)
       .from("driver_data")
       .select("*")
       .eq("profile_id", driverProfile.id)
@@ -249,7 +249,7 @@ export async function createAdminDriverProfile(userId: string): Promise<unknown 
 
     if (existing) return existing;
 
-    const { data: driverData, error: driverError } = await supabase
+    const { data: driverData, error: driverError } = await (supabase as any)
       .from("driver_data")
       .insert({
         profile_id: driverProfile.id,
@@ -295,7 +295,7 @@ export async function updateDriverData(
   updates: Record<string, unknown>,
 ): Promise<unknown | null> {
   try {
-    // Resolver profile_id se necessÃ¡rio
+    // Resolver profile_id se necessário
     let driverProfileId = identifier;
     const profile = await profileService.getProfileById(identifier);
     if (profile?.profile_type === "driver") {
@@ -308,7 +308,7 @@ export async function updateDriverData(
       driverProfileId = driverProfile.id;
     }
 
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from("driver_data")
       .update(updates)
       .eq("profile_id", driverProfileId)
@@ -324,7 +324,7 @@ export async function updateDriverData(
 }
 
 /**
- * Verificar expiraÃ§Ã£o de suspensÃ£o
+ * Verificar expiração de suspensão
  */
 export async function checkSuspensionExpiry(profileId: string): Promise<void> {
   try {
@@ -348,8 +348,8 @@ export async function checkSuspensionExpiry(profileId: string): Promise<void> {
 }
 
 /**
- * Atualizar localizaÃ§Ã£o do motorista
- * @deprecated ImplementaÃ§Ã£o futura - usar serviÃ§o de GPS tracking
+ * Atualizar localização do motorista
+ * @deprecated Implementação futura - usar serviço de GPS tracking
  */
 export async function updateDriverLocation(
   driverProfileId: string,
@@ -361,7 +361,7 @@ export async function updateDriverLocation(
   }
 
   const nowIso = new Date().toISOString();
-  const { error } = await supabase
+  const { error } = await (supabase as any)
     .from("driver_availability")
     .update({
       current_lat: latitude,
@@ -386,4 +386,6 @@ export async function updateDriverLocation(
   });
   await DriverAvailabilityService.markLastSeen(driverProfileId);
 }
+
+
 

@@ -37,14 +37,14 @@ export function useModeration() {
       // ✅ SSOT AAA - Usa AdminModerationService que delega para serviços de domínio
       const data = await adminModerationService.getAllModerationData();
       
-      setPosts(data.posts);
-      setComments(data.comments);
-      setProfiles(data.profiles);
+      setPosts((data.posts ?? []) as unknown as Record<string, unknown>[]);
+      setComments((data.comments ?? []) as unknown as Record<string, unknown>[]);
+      setProfiles((data.profiles ?? []) as unknown as Record<string, unknown>[]);
       setPostReports([]); // Tabela post_reports não existe
       setCommentReports([]); // Tabela comment_reports não existe
       setProfileReports([]); // Tabela profile_reports não existe
-      setWarnings(data.warnings);
-      setAuditLogs(data.auditLogs);
+      setWarnings((data.warnings ?? []) as unknown as Record<string, unknown>[]);
+      setAuditLogs((data.auditLogs ?? []) as unknown as Record<string, unknown>[]);
     } catch (e) {
       logger.error(e);
     } finally {
@@ -156,3 +156,4 @@ export function useModeration() {
     fetchAll,
   };
 }
+

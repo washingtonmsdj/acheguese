@@ -1,4 +1,4 @@
-﻿/**
+/**
  * MenuService - SSOT de cardapio com validacao de plano.
  */
 import { logger } from '@/shared/utils/logger';
@@ -9,6 +9,7 @@ import { EntitlementsService } from '@/core/billing/entitlements';
 import { BillingPlanService, type PlanEntitlements } from '@/core/billing/services/BillingPlanService';
 
 export const __MENU_SERVICE_FACADE_HINT__ = 'compatibility facade';
+const legacyDb = supabase as any;
 
 export interface ServiceResult<T> {
   data: T | null;
@@ -112,7 +113,7 @@ async function resolveBusinessIdFromMenu(menuId: string): Promise<string | null>
     return String(primary.data.business_id);
   }
 
-  const fallback = await supabase
+  const fallback = await legacyDb
     .from('gastronomy_menus')
     .select('business_id')
     .eq('id', menuId)
@@ -126,7 +127,7 @@ async function resolveBusinessIdFromMenu(menuId: string): Promise<string | null>
 }
 
 async function resolveMenuIdFromCategory(categoryId: string): Promise<string | null> {
-  const { data, error } = await supabase
+  const { data, error } = await legacyDb
     .from('gastronomy_menu_categories')
     .select('menu_id')
     .eq('id', categoryId)
@@ -140,7 +141,7 @@ async function resolveMenuIdFromCategory(categoryId: string): Promise<string | n
 }
 
 async function resolveItem(itemId: string): Promise<Pick<MenuItem, 'id' | 'menu_id' | 'image_url'> | null> {
-  const { data, error } = await supabase
+  const { data, error } = await legacyDb
     .from('gastronomy_menu_items')
     .select('id, menu_id, image_url')
     .eq('id', itemId)
@@ -156,14 +157,14 @@ async function resolveItem(itemId: string): Promise<Pick<MenuItem, 'id' | 'menu_
 async function getEntitlementsForBusiness(businessId: string): Promise<PlanEntitlements> {
   const subscriptionResult = await SubscriptionService.getByBusinessId(businessId);
 
-  const planTier = subscriptionResult.data?.plan_tier ?? 'free';
+  const planTier = (subscriptionResult.data?.plan_tier ?? 'free') as any;
   const dynamicEntitlements = await BillingPlanService.getEntitlements(planTier).catch(() => null);
 
   if (dynamicEntitlements) {
     return dynamicEntitlements;
   }
 
-  return EntitlementsService.getAll(planTier);
+  return EntitlementsService.getAll(planTier as any);
 }
 
 async function getPlanContextByMenuId(menuId: string): Promise<PlanContext | null> {
@@ -187,7 +188,7 @@ async function getPlanContextByItemId(itemId: string): Promise<PlanContext | nul
 }
 
 async function countMenuCategories(menuId: string): Promise<number> {
-  const { count } = await supabase
+  const { count } = await legacyDb
     .from('gastronomy_menu_categories')
     .select('*', { count: 'exact', head: true })
     .eq('menu_id', menuId);
@@ -195,7 +196,7 @@ async function countMenuCategories(menuId: string): Promise<number> {
 }
 
 async function countMenuItems(menuId: string): Promise<number> {
-  const { count } = await supabase
+  const { count } = await legacyDb
     .from('gastronomy_menu_items')
     .select('*', { count: 'exact', head: true })
     .eq('menu_id', menuId);
@@ -203,7 +204,7 @@ async function countMenuItems(menuId: string): Promise<number> {
 }
 
 async function countMenuItemsWithImage(menuId: string): Promise<number> {
-  const { count } = await supabase
+  const { count } = await legacyDb
     .from('gastronomy_menu_items')
     .select('*', { count: 'exact', head: true })
     .eq('menu_id', menuId)
@@ -221,8 +222,8 @@ function requirePlanContext(context: PlanContext | null): ServiceResult<true> {
 export const MenuService = {
   async listCategories(menuId: string): Promise<ServiceResult<MenuCategory[]>> {
     try {
-      const { data, error } = await supabase
-        .from('gastronomy_menu_categories')
+      const { data, error } = await legacyDb
+    .from('gastronomy_menu_categories')
         .select('*')
         .eq('menu_id', menuId)
         .order('display_order', { ascending: true });
@@ -263,8 +264,8 @@ export const MenuService = {
         }
       }
 
-      const { data, error } = await supabase
-        .from('gastronomy_menu_categories')
+      const { data, error } = await legacyDb
+    .from('gastronomy_menu_categories')
         .insert({
           menu_id: input.menu_id,
           name: sanitizeString(input.name),
@@ -306,8 +307,8 @@ export const MenuService = {
       if (input.display_order !== undefined) updates.display_order = input.display_order;
       if (input.is_active !== undefined) updates.is_active = input.is_active;
 
-      const { data, error } = await supabase
-        .from('gastronomy_menu_categories')
+      const { data, error } = await legacyDb
+    .from('gastronomy_menu_categories')
         .update(updates)
         .eq('id', categoryId)
         .select()
@@ -334,8 +335,8 @@ export const MenuService = {
         return { data: null, error: 'Seu plano nao permite gerenciar categorias.' };
       }
 
-      const { error } = await supabase
-        .from('gastronomy_menu_categories')
+      const { error } = await legacyDb
+    .from('gastronomy_menu_categories')
         .delete()
         .eq('id', categoryId);
 
@@ -363,8 +364,8 @@ export const MenuService = {
       }
 
       for (const update of updates) {
-        const { error } = await supabase
-          .from('gastronomy_menu_categories')
+        const { error } = await legacyDb
+    .from('gastronomy_menu_categories')
           .update({ display_order: update.display_order })
           .eq('id', update.id);
 
@@ -382,8 +383,8 @@ export const MenuService = {
 
   async listItems(menuId: string, categoryId?: string): Promise<ServiceResult<MenuItem[]>> {
     try {
-      let query = supabase
-        .from('gastronomy_menu_items')
+      let query = legacyDb
+    .from('gastronomy_menu_items')
         .select('*')
         .eq('menu_id', menuId);
 
@@ -406,8 +407,8 @@ export const MenuService = {
 
   async getItem(itemId: string): Promise<ServiceResult<MenuItem>> {
     try {
-      const { data, error } = await supabase
-        .from('gastronomy_menu_items')
+      const { data, error } = await legacyDb
+    .from('gastronomy_menu_items')
         .select('*')
         .eq('id', itemId)
         .single();
@@ -471,8 +472,8 @@ export const MenuService = {
         }
       }
 
-      const { data, error } = await supabase
-        .from('gastronomy_menu_items')
+      const { data, error } = await legacyDb
+    .from('gastronomy_menu_items')
         .insert({
           menu_id: input.menu_id,
           category_id: input.category_id || null,
@@ -561,8 +562,8 @@ export const MenuService = {
       if (input.allergens !== undefined) updates.allergens = input.allergens;
       if (input.nutritional_info !== undefined) updates.nutritional_info = input.nutritional_info;
 
-      const { data, error } = await supabase
-        .from('gastronomy_menu_items')
+      const { data, error } = await legacyDb
+    .from('gastronomy_menu_items')
         .update(updates)
         .eq('id', itemId)
         .select()
@@ -581,8 +582,8 @@ export const MenuService = {
 
   async deleteItem(itemId: string): Promise<ServiceResult<boolean>> {
     try {
-      const { error } = await supabase
-        .from('gastronomy_menu_items')
+      const { error } = await legacyDb
+    .from('gastronomy_menu_items')
         .delete()
         .eq('id', itemId);
 
@@ -603,8 +604,8 @@ export const MenuService = {
 
   async listVariations(itemId: string): Promise<ServiceResult<MenuItemVariation[]>> {
     try {
-      const { data, error } = await supabase
-        .from('gastronomy_menu_item_variations')
+      const { data, error } = await legacyDb
+    .from('gastronomy_menu_item_variations')
         .select('*')
         .eq('item_id', itemId)
         .order('display_order', { ascending: true });
@@ -635,8 +636,8 @@ export const MenuService = {
         return { data: null, error: 'Seu plano nao permite variacoes de item.' };
       }
 
-      const { data, error } = await supabase
-        .from('gastronomy_menu_item_variations')
+      const { data, error } = await legacyDb
+    .from('gastronomy_menu_item_variations')
         .insert({
           item_id: input.item_id,
           name: sanitizeString(input.name),
@@ -661,8 +662,8 @@ export const MenuService = {
 
   async deleteVariation(variationId: string): Promise<ServiceResult<boolean>> {
     try {
-      const { error } = await supabase
-        .from('gastronomy_menu_item_variations')
+      const { error } = await legacyDb
+    .from('gastronomy_menu_item_variations')
         .delete()
         .eq('id', variationId);
 
@@ -679,8 +680,8 @@ export const MenuService = {
 
   async listAddons(itemId: string): Promise<ServiceResult<MenuItemAddon[]>> {
     try {
-      const { data, error } = await supabase
-        .from('gastronomy_menu_item_addons')
+      const { data, error } = await legacyDb
+    .from('gastronomy_menu_item_addons')
         .select('*')
         .eq('item_id', itemId)
         .order('display_order', { ascending: true });
@@ -712,8 +713,8 @@ export const MenuService = {
         return { data: null, error: 'Seu plano nao permite adicionais.' };
       }
 
-      const { data, error } = await supabase
-        .from('gastronomy_menu_item_addons')
+      const { data, error } = await legacyDb
+    .from('gastronomy_menu_item_addons')
         .insert({
           item_id: input.item_id,
           name: sanitizeString(input.name),
@@ -739,8 +740,8 @@ export const MenuService = {
 
   async deleteAddon(addonId: string): Promise<ServiceResult<boolean>> {
     try {
-      const { error } = await supabase
-        .from('gastronomy_menu_item_addons')
+      const { error } = await legacyDb
+    .from('gastronomy_menu_item_addons')
         .delete()
         .eq('id', addonId);
 
@@ -755,4 +756,8 @@ export const MenuService = {
     }
   },
 };
+
+
+
+
 

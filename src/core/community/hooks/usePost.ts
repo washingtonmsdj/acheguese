@@ -5,12 +5,13 @@
  */
 
 import { useQuery } from "@tanstack/react-query";
-import { feedService } from "@/core/posts/services";
-import type { Post } from "@/core/feed/types";
+import { postService } from "@/core/posts/services/PostService";
+type Post = Record<string, unknown>;
 export function usePost(postId: string | undefined) {
   return useQuery<Post | null, Error>({
     queryKey: ["post", postId],
-    queryFn: () => feedService.getPostById(postId!),
+    queryFn: () =>
+      postService.getPostById(postId!) as unknown as Promise<Post | null>,
     enabled: !!postId,
     staleTime: 5 * 60 * 1000,
     retry: 1,

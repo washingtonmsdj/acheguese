@@ -14,7 +14,7 @@
  * - location_id (SSOT territorial)
  */
 
-export const MOCK_CLASSIFIEDS: ClassificadoWithVendedor[] = [
+export const MOCK_CLASSIFIEDS = [
   {
     id: "class-001",
     public_id: "abc12345",
@@ -503,4 +503,4 @@ export const MOCK_CLASSIFIEDS: ClassificadoWithVendedor[] = [
       whatsapp: "71987123456"
     },
   },
-];
+] as ClassificadoWithVendedor[];

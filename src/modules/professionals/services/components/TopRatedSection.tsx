@@ -31,9 +31,9 @@ export function TopRatedSection({
             onClick={() => onProfessionalClick(professional)}
             className="flex-shrink-0 w-32 bg-card rounded-xl border p-2 cursor-pointer hover:shadow-md transition-shadow"
           >
-            {professional.photo ? (
+            {professional.avatar_url ? (
               <img
-                src={professional.photo}
+                src={professional.avatar_url}
                 alt={professional.name}
                 className="h-16 w-full rounded-lg object-cover mb-1"
                 loading="lazy"

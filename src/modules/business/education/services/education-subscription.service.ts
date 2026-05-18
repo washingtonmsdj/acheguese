@@ -8,8 +8,8 @@
  */
 
 import { logger } from '@/shared/utils/logger';
-import { BusinessService } from '@/core/business/services/BusinessService';
-import type { BusinessSubscription } from '@/core/billing/types';
+import type { BusinessSubscription, PlanTier } from '@/core/billing/types';
+import { SubscriptionService } from '@/core/subscription/services/SubscriptionService';
 
 // ============================================================
 // TIPOS
@@ -28,7 +28,7 @@ export interface EducationEntitlements {
 
 export interface EducationSubscriptionStatus {
   isActive: boolean;
-  planType: 'free' | 'basic' | 'premium' | 'enterprise';
+  planType: 'free' | 'basic' | 'premium';
   entitlements: EducationEntitlements;
   expiresAt: string | null;
 }
@@ -70,17 +70,6 @@ const PREMIUM_ENTITLEMENTS: EducationEntitlements = {
   storageMB: 500,
 };
 
-const ENTERPRISE_ENTITLEMENTS: EducationEntitlements = {
-  canUsePremiumPublicPage: true,
-  canUseShortPremiumLink: true,
-  canUseAnalytics: true,
-  canExportData: true,
-  maxPrograms: 999,
-  maxLeadsPerMonth: 9999,
-  maxEvents: 999,
-  storageMB: 2000,
-};
-
 // ============================================================
 // SERVICE
 // ============================================================
@@ -89,14 +78,12 @@ export const EducationSubscriptionService = {
   /**
    * Obtém status de assinatura para education
    */
-  async getSubscriptionStatus(
-    businessId: string
-  ): Promise<EducationSubscriptionStatus> {
+  async getSubscriptionStatus(businessId: string): Promise<EducationSubscriptionStatus> {
     try {
-      // Busca assinatura do business via BusinessService
-      const business = await BusinessService.getBusinessSubscription(businessId);
-      
-      if (!business?.subscription) {
+      const subscription = await (SubscriptionService as unknown as {
+        getBusinessSubscription?: (id: string) => Promise<BusinessSubscription | null>;
+      }).getBusinessSubscription?.(businessId);
+      if (!subscription) {
         return {
           isActive: false,
           planType: 'free',
@@ -104,8 +91,6 @@ export const EducationSubscriptionService = {
           expiresAt: null,
         };
       }
-
-      const subscription = business.subscription;
       const planType = this.resolvePlanType(subscription);
       const entitlements = this.getEntitlementsForPlan(planType);
 
@@ -130,31 +115,20 @@ export const EducationSubscriptionService = {
   /**
    * Resolve tipo de plano a partir da assinatura
    */
-  resolvePlanType(subscription: BusinessSubscription): 'free' | 'basic' | 'premium' | 'enterprise' {
-    const planSlug = subscription.plan_slug?.toLowerCase() || '';
-    
-    if (planSlug.includes('enterprise') || planSlug.includes('empresarial')) {
-      return 'enterprise';
-    }
-    if (planSlug.includes('premium') || planSlug.includes('pro')) {
-      return 'premium';
-    }
-    if (planSlug.includes('basic') || planSlug.includes('basico')) {
-      return 'basic';
-    }
-    
-    return 'free';
+  resolvePlanType(subscription: BusinessSubscription): 'free' | 'basic' | 'premium' {
+    const tier = subscription.plan_tier as PlanTier;
+    if (tier === 'free') return 'free';
+    if (tier === 'pro' || tier === 'delivery') return 'premium';
+    return 'basic';
   },
 
   /**
    * Obtém entitlements para um plano específico
    */
   getEntitlementsForPlan(
-    planType: 'free' | 'basic' | 'premium' | 'enterprise'
+    planType: 'free' | 'basic' | 'premium'
   ): EducationEntitlements {
     switch (planType) {
-      case 'enterprise':
-        return ENTERPRISE_ENTITLEMENTS;
       case 'premium':
         return PREMIUM_ENTITLEMENTS;
       case 'basic':

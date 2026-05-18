@@ -107,7 +107,9 @@ export class PushService {
       // Subscribe to push
       const subscription = await registration.pushManager.subscribe({
         userVisibleOnly: true,
-        applicationServerKey: this.urlBase64ToUint8Array(configData.vapidPublicKey),
+        applicationServerKey: this.urlBase64ToUint8Array(
+          configData.vapidPublicKey,
+        ) as unknown as BufferSource,
       });
 
       // Convert to JSON

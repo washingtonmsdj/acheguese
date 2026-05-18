@@ -15,7 +15,7 @@ interface OperationalStatusCardProps {
 }
 
 export function OperationalStatusCard({ businessId }: OperationalStatusCardProps) {
-  const { status, isLoading: statusLoading } = useBusinessStatus(businessId);
+  const { isOpen, nextOpening, isLoading: statusLoading } = useBusinessStatus(businessId);
   const { config, isLoading: configLoading } = useOperationConfig(businessId);
 
   if (statusLoading || configLoading) {
@@ -28,7 +28,6 @@ export function OperationalStatusCard({ businessId }: OperationalStatusCardProps
     );
   }
 
-  const isOpen = status?.isOpen ?? false;
   const isTemporarilyClosed = config?.is_temporarily_closed ?? false;
 
   return (
@@ -61,9 +60,9 @@ export function OperationalStatusCard({ businessId }: OperationalStatusCardProps
                   {config.temporarily_closed_reason}
                 </p>
               )}
-              {!isTemporarilyClosed && status?.nextOpening && !isOpen && (
+              {!isTemporarilyClosed && nextOpening && !isOpen && (
                 <p className="text-sm text-muted-foreground">
-                  Próxima abertura: {status.nextOpening.opens_at}
+                  Próxima abertura: {nextOpening.opens_at}
                 </p>
               )}
             </div>

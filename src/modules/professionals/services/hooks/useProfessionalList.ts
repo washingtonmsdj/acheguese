@@ -56,11 +56,10 @@ export function useProfessionalList({
     queryFn: async ({ pageParam = 0 }) => {
       return await ProfessionalFacade.queries.getProfessionalsList({
         pageParam: pageParam as number,
-        pageSize,
         category: filters.category,
-        searchQuery: filters.search,
+        search: filters.search,
         // Parâmetro de localização passado para o service (preparado para backend)
-        territoryFilter: activeLocationId
+        territory: activeLocationId
           ? { scope: "location", location_id: activeLocationId }
           : undefined,
       });

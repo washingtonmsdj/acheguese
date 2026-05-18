@@ -109,7 +109,7 @@ function calculateVacancyRate(total: number, filled: number): number {
 // ============================================================
 
 export function useEducationAnalytics(options: UseEducationAnalyticsOptions) {
-  const { businessId, period = '30d', enabled = true, nicheKey } = options;
+  const { businessId, profileId, period = '30d', enabled = true, nicheKey } = options;
 
   const analyticsQuery = useQuery({
     queryKey: ['education', 'analytics', businessId, profileId, period, nicheKey],

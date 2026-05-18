@@ -11,7 +11,7 @@ import { Badge } from "@/shared/components/ui/badge";
 import { Textarea } from "@/shared/components/ui/textarea";
 import { profileService } from "@/core/profiles/services";
 import { AdminFraudService } from "@/core/admin/services/AdminFraudService";
-import type { FraudAlert } from "@/core/admin/services/AdminFraudService";
+
 import {
   AlertTriangle,
   CheckCircle2,
@@ -40,6 +40,7 @@ type FraudRideSummary = {
 type FraudDriverSummary = {
   profile?: { name?: string | null } | null;
 };
+type FraudAlert = { id: string; ride_id?: string | null; driver_profile_id?: string | null; status: "pending" | "investigating" | "confirmed" | "false_positive" | "resolved"; severity?: string; fraud_type?: string; description?: string | null; evidence?: FraudEvidence | null; created_at?: string };
 type FraudAlertExtended = FraudAlert & {
   ride?: FraudRideSummary | null;
   driver?: FraudDriverSummary | null;
@@ -75,7 +76,7 @@ export function FraudDetectionPanel() {
         profileService.getProfilesSummary(driverProfileIds as string[]),
       ]);
 
-      const rideMap = new Map((ridesData.data || []).map((r) => [r.id, r]));
+      const rideMap = new Map<string, FraudRideSummary>((((ridesData.data || []) as FraudRideSummary[]).map((r) => [r.id, r] as [string, FraudRideSummary])));
       const driverMap = new Map(driversData.map((d) => [d.id, { id: d.id, name: d.name }]));
 
       setAlerts(
@@ -247,18 +248,18 @@ export function FraudDetectionPanel() {
                   {/* Header */}
                   <div className="flex items-center gap-2 flex-wrap">
                     <Badge className={getSeverityColor(alert.severity)}>
-                      {alert.severity.toUpperCase()}
+                      {String(alert.severity ?? "low").toUpperCase()}
                     </Badge>
                     <Badge className={getStatusColor(alert.status)}>
                       {alert.status}
                     </Badge>
                     <span className="text-sm font-semibold text-foreground">
-                      {getFraudTypeLabel(alert.fraud_type)}
+                      {getFraudTypeLabel(String(alert.fraud_type ?? "unknown"))}
                     </span>
                   </div>
 
                   {/* Description */}
-                  <p className="text-sm text-foreground">{alert.description}</p>
+                  <p className="text-sm text-foreground">{String(alert.description ?? "") }</p>
 
                   {/* Evidence */}
                   {alert.evidence && Object.keys(alert.evidence).length > 0 && (
@@ -302,7 +303,7 @@ export function FraudDetectionPanel() {
 
                   {/* Date */}
                   <p className="text-xs text-muted-foreground">
-                    {new Date(alert.created_at).toLocaleString("pt-BR")}
+                    {new Date(alert.created_at ?? new Date().toISOString()).toLocaleString("pt-BR")}
                   </p>
                 </div>
 
@@ -374,3 +375,6 @@ export function FraudDetectionPanel() {
     </div>
   );
 }
+
+
+

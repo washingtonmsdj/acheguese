@@ -390,7 +390,7 @@ export class MultiProfileService {
   static async canEditProfile(
     profileId: string,
     userId: string,
-    availableProfiles: Profile[] = [],
+    availableProfiles: ReadonlyArray<Profile> = [],
   ): Promise<boolean> {
     const ownedProfile = availableProfiles.find((profile) => profile.id === profileId);
     if (ownedProfile?.user_id === userId) {
@@ -438,7 +438,7 @@ export class MultiProfileService {
       return {
         success: true,
         data: {
-          profile,
+          profile: profile as any,
           baseForm: this.buildBaseForm(profile),
           editableUsername,
           username: editableUsername ?? '',

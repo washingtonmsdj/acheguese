@@ -1,7 +1,7 @@
-Ôªø/**
+/**
  * Chat Mutations - SSOT v2.0
  * 
- * Fun√ß√µes de escrita para chat de corridas
+ * FunÁıes de escrita para chat de corridas
  */
 import { logger } from '@/shared/utils/logger';
 import { supabase } from '@/core/infrastructure/supabase';
@@ -16,10 +16,10 @@ import type { ChatMessage, SendMessageInput } from './chat.types';
 export async function sendMessage(input: SendMessageInput): Promise<ChatMessage> {
   try {
     if (!input.message.trim()) {
-      throw new Error('Mensagem n√£o pode estar vazia');
+      throw new Error('Mensagem n„o pode estar vazia');
     }
 
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from('ride_chat_messages')
       .insert({
         chat_id: input.chat_id,
@@ -51,11 +51,11 @@ export async function sendMessage(input: SendMessageInput): Promise<ChatMessage>
  * Marcar mensagens como lidas
  * 
  * @param chatId - ID do chat
- * @param userId - ID do usu√°rio que est√° lendo
+ * @param userId - ID do usu·rio que est· lendo
  */
 export async function markMessagesAsRead(chatId: string, userId: string): Promise<void> {
   try {
-    const { error } = await supabase
+    const { error } = await (supabase as any)
       .from('ride_chat_messages')
       .update({ read_at: new Date().toISOString() })
       .eq('chat_id', chatId)
@@ -73,7 +73,7 @@ export async function markMessagesAsRead(chatId: string, userId: string): Promis
     });
   } catch (error) {
     logger.error('chat.mutations.markMessagesAsRead', error);
-    // N√£o lan√ßar erro - marcar como lido √© opera√ß√£o n√£o cr√≠tica
+    // N„o lanÁar erro - marcar como lido È operaÁ„o n„o crÌtica
   }
 }
 
@@ -85,7 +85,7 @@ export async function markMessagesAsRead(chatId: string, userId: string): Promis
  */
 export async function createChat(rideId: string): Promise<import('./chat.types').RideChat> {
   try {
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from('ride_chats')
       .insert({ ride_id: rideId })
       .select()
@@ -104,4 +104,5 @@ export async function createChat(rideId: string): Promise<import('./chat.types')
     throw error;
   }
 }
+
 

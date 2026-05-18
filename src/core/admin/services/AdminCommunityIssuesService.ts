@@ -104,6 +104,7 @@ export interface IssueFilters {
 // ============================================================================
 
 class AdminCommunityIssuesServiceClass {
+  private readonly db = supabase as any;
   private readonly TABLE = 'community_issues';
   private readonly REPORTS_TABLE = 'community_issue_reports';
   private readonly SUPPORTS_TABLE = 'community_issue_supports';
@@ -403,9 +404,9 @@ class AdminCommunityIssuesServiceClass {
         },
       };
 
-      const { error: auditError } = await (supabase as unknown as AdminSupabaseClient)
+      const { error: auditError } = await this.db
         .from(this.AUDIT_TABLE)
-        .insert([auditData]);
+        .insert([auditData] as any);
 
       if (auditError) throw auditError;
 
@@ -443,7 +444,7 @@ class AdminCommunityIssuesServiceClass {
         metadata: { priority },
       };
 
-      await (supabase as unknown as AdminSupabaseClient).from(this.AUDIT_TABLE).insert([auditData]);
+      await this.db.from(this.AUDIT_TABLE).insert([auditData] as any);
 
       logger.info('AdminCommunityIssuesService.updatePriority', { issueId, priority });
       return true;
@@ -480,7 +481,7 @@ class AdminCommunityIssuesServiceClass {
         metadata: { reason },
       };
 
-      await (supabase as unknown as AdminSupabaseClient).from(this.AUDIT_TABLE).insert([auditData]);
+      await this.db.from(this.AUDIT_TABLE).insert([auditData] as any);
 
       logger.info('AdminCommunityIssuesService.removeIssue', { issueId, reason });
       return true;
@@ -509,12 +510,12 @@ class AdminCommunityIssuesServiceClass {
       if (error) throw error;
 
       // Audit log
-      await (supabase as unknown as AdminSupabaseClient).from(this.AUDIT_TABLE).insert({
+      await this.db.from(this.AUDIT_TABLE).insert({
         issue_id: issueId,
         actor_id: user.id,
         action: 'reviewed_cleared',
         metadata: { cleared_at: new Date().toISOString() },
-      });
+      } as any);
 
       logger.info('AdminCommunityIssuesService.clearUnderReview', { issueId });
       return true;
@@ -529,7 +530,7 @@ class AdminCommunityIssuesServiceClass {
    */
   async getAuditLog(issueId: string) {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await this.db
         .from(this.AUDIT_TABLE)
         .select('*')
         .eq('issue_id', issueId)

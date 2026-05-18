@@ -9,7 +9,6 @@ import {
 } from "@/shared/components/ui/dropdown-menu";
 import { useAppUrls } from "@/core/routing/hooks"; // ✅ SSOT URLs
 import { useNotifications } from "../hooks/useNotifications";
-import { Notification, NotificationType } from "@/shared/types/notification";
 import { INLINE_STYLES } from "./styles/communityDesignSystem";
 import {
   Bell,
@@ -40,7 +39,7 @@ import { useNavigate } from "react-router-dom";
  * - Loading states
  */
 
-const notificationIcons: Record<NotificationType, typeof Heart> = {
+const notificationIcons: Record<string, typeof Heart> = {
   like: Heart,
   comment: MessageCircle,
   mention: AtSign,
@@ -51,7 +50,7 @@ const notificationIcons: Record<NotificationType, typeof Heart> = {
   system: Info,
 };
 
-const notificationColors: Record<NotificationType, string> = {
+const notificationColors: Record<string, string> = {
   like: "#EC4899",
   comment: "#06B6D4",
   mention: "#F59E0B",
@@ -65,17 +64,16 @@ const notificationColors: Record<NotificationType, string> = {
 export function NotificationDropdown() {
   const navigate = useNavigate();
   const appUrls = useAppUrls(); // ✅ SSOT URLs
-  const {
-    notifications,
-    stats,
-    isLoading,
-    isRefreshing,
-    markAsRead,
-    markAllAsRead,
-    deleteNotification,
-  } = useNotifications();
+  const notificationsApi = useNotifications() as any;
+  const notifications = (notificationsApi.notifications ?? []) as any[];
+  const stats = (notificationsApi.stats ?? { total_unread: 0 }) as { total_unread: number };
+  const isLoading = Boolean(notificationsApi.isLoading ?? notificationsApi.loading);
+  const isRefreshing = Boolean(notificationsApi.isRefreshing);
+  const markAsRead = (notificationsApi.markAsRead ?? (() => {})) as (id: string) => void;
+  const markAllAsRead = (notificationsApi.markAllAsRead ?? (() => {})) as () => void;
+  const deleteNotification = (notificationsApi.deleteNotification ?? (() => {})) as (id: string) => void;
 
-  const handleNotificationClick = (notification: Notification) => {
+  const handleNotificationClick = (notification: any) => {
     // Marcar como lida
     if (!notification.is_read) {
       markAsRead(notification.id);
@@ -178,8 +176,8 @@ export function NotificationDropdown() {
           <ScrollArea className="h-[400px]">
             <div className="py-2">
               {notifications.map((notification) => {
-                const Icon = notificationIcons[notification.type];
-                const iconColor = notificationColors[notification.type];
+                const Icon = notificationIcons[String(notification.type)] ?? Info;
+                const iconColor = notificationColors[String(notification.type)] ?? "#6B7280";
 
                 return (
                   <div key={notification.id} className="group relative">

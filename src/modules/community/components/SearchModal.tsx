@@ -15,6 +15,7 @@ import {
   AlertCircle,
 } from "lucide-react";
 import { useEffect, useRef } from "react";
+import type { CommunityPost } from "@/core/community/types";
 /**
  * Modal profissional de busca
  *
@@ -86,6 +87,11 @@ export function SearchModal({
   const showResults = query && !isSearching && results.posts.length > 0;
   const showEmpty = query && !isSearching && results.posts.length === 0;
   const showSuggestions = query && results.suggestions.length > 0;
+
+  const toFeedPost = (post: CommunityPost) => ({
+    ...post,
+    updated_at: "updated_at" in post && typeof post.updated_at === "string" ? post.updated_at : post.created_at,
+  });
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
@@ -231,16 +237,10 @@ export function SearchModal({
                   {results.posts.map((post) => (
                     <PostCard
                       key={post.id}
-                      post={post}
+                      post={toFeedPost(post) as never}
                       onLike={() => {}}
                       onComment={() => {}}
-                      onSave={() => {}}
-                      onShare={() => {}}
                       onReport={() => {}}
-                      onPostClick={(postId) => {
-                        onPostClick?.(postId);
-                        handleClose();
-                      }}
                     />
                   ))}
                 </div>

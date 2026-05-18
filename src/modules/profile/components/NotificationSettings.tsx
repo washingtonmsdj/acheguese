@@ -18,7 +18,7 @@ import {
   AlertCircle,
 } from "lucide-react";
 import { toast } from "sonner";
-import { notificationService } from "@/core/notifications";
+import { NotificationService } from "@/core/notifications";
 
 interface NotificationSettingsProps {
   userId: string;
@@ -98,6 +98,7 @@ export function NotificationSettings({
   userId,
   onUpdate,
 }: NotificationSettingsProps) {
+  const notificationService = new NotificationService();
   const [settings, setSettings] = useState<NotificationSettingsForm>(DEFAULT_FORM);
 
   const settingsQuery = useQuery({

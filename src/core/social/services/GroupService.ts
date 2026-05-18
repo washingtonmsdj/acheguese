@@ -53,7 +53,7 @@ export interface GroupMemberDetail {
 type GroupRow = Group & { members_count?: Array<{ count?: number } | null> | number };
 
 export class GroupService {
-  private static readonly db = supabase as unknown as AdminSupabaseClient;
+  private static readonly db = supabase as any;
   /**
    * Busca todos os grupos ordenados por membros
    */
@@ -205,3 +205,4 @@ export class GroupService {
     }
   }
 }
+

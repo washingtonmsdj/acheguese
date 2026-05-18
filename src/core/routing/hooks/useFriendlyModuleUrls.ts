@@ -30,7 +30,8 @@ export interface FriendlyModuleUrls {
 
 export function useFriendlyModuleUrls(): FriendlyModuleUrls {
   const { cityBasePath } = usePublicBrowsingCity();
-  const { state, city, district, groupSlug, groupSlugOrDistrict } = useParams<FriendlyRouteParams>();
+  const { state, city, district, groupSlug, groupSlugOrDistrict } =
+    useParams<Record<string, string | undefined>>();
   const hasTerritoryParams = Boolean(state && city && !isReservedSlug(state));
 
   if (hasTerritoryParams && state && city) {

@@ -49,6 +49,10 @@ export function BusinessContactSidebar({
   const navigate = useNavigate();
   const { navigateToBusiness } = useBusinessNavigation();
   const [similarBusinesses, setSimilarBusinesses] = useState<SimilarBusiness[]>([]);
+  const structuredAddress =
+    typeof business.address === "object" && business.address
+      ? business.address
+      : null;
 
   useEffect(() => {
     async function fetchSimilar() {
@@ -66,13 +70,13 @@ export function BusinessContactSidebar({
         const mapped = data.map((b) => ({
           id: b.id,
           name: b.name,
-          logo: b.logo,
+          logo: b.logo_url || "",
           category: b.category,
           rating: b.rating || 0,
           total_avaliacoes: b.total_reviews || 0,
-          neighborhood: b.neighborhood,
+          neighborhood: b.location?.name || "",
           slug: b.slug,
-          city: b.address,
+          city: b.business_city || "",
           is_premium: b.is_premium || false,
           nicho: b.category,
         }));
@@ -383,14 +387,14 @@ export function BusinessContactSidebar({
                     {typeof business.address === 'string' 
                       ? business.address 
                       : [
-                          business.address.street,
-                          business.address.number,
-                          business.address.complement
+                          structuredAddress?.street,
+                          structuredAddress?.number,
+                          structuredAddress?.complement
                         ].filter(Boolean).join(', ')
                     }
-                    {typeof business.address === 'object' && business.address.postal_code && (
+                    {structuredAddress?.postal_code && (
                       <span className="block text-xs text-muted-foreground mt-1">
-                        CEP: {business.address.postal_code}
+                        CEP: {structuredAddress.postal_code}
                       </span>
                     )}
                   </p>
@@ -495,9 +499,9 @@ export function BusinessContactSidebar({
                   {typeof business.address === 'string' 
                     ? business.address 
                     : [
-                        business.address.street,
-                        business.address.number,
-                        business.address.complement
+                        structuredAddress?.street,
+                        structuredAddress?.number,
+                        structuredAddress?.complement
                       ].filter(Boolean).join(', ')
                   }
                 </p>
@@ -506,9 +510,9 @@ export function BusinessContactSidebar({
                     {business.neighborhood}
                   </p>
                 )}
-                {typeof business.address === 'object' && business.address.postal_code && (
+                {structuredAddress?.postal_code && (
                   <p className="text-xs text-muted-foreground mt-0.5">
-                    CEP: {business.address.postal_code}
+                    CEP: {structuredAddress.postal_code}
                   </p>
                 )}
               </div>
@@ -526,13 +530,13 @@ export function BusinessContactSidebar({
                     src={`https://www.google.com/maps?q=${business.latitude},${business.longitude}&output=embed&z=15`}
                     allowFullScreen
                   />
-                ) : typeof business.address === 'object' && business.address.latitude && business.address.longitude ? (
+                ) : structuredAddress?.latitude && structuredAddress?.longitude ? (
                   <iframe
                     width="100%"
                     height="100%"
                     frameBorder="0"
                     style={{ border: 0 }}
-                    src={`https://www.google.com/maps?q=${business.address.latitude},${business.address.longitude}&output=embed&z=15`}
+                    src={`https://www.google.com/maps?q=${structuredAddress.latitude},${structuredAddress.longitude}&output=embed&z=15`}
                     allowFullScreen
                   />
                 ) : (
@@ -544,7 +548,7 @@ export function BusinessContactSidebar({
                     src={`https://www.google.com/maps?q=${encodeURIComponent(
                       typeof business.address === 'string' 
                         ? `${business.address}, ${business.neighborhood || ""}` 
-                        : `${business.address.street || ''} ${business.address.number || ''}, ${business.neighborhood || ""}`
+                        : `${structuredAddress?.street || ''} ${structuredAddress?.number || ''}, ${business.neighborhood || ""}`
                     )}&output=embed&z=15`}
                     allowFullScreen
                   />
@@ -553,11 +557,11 @@ export function BusinessContactSidebar({
 
               <div className="flex gap-2">
                 {(business.latitude && business.longitude) || 
-                 (typeof business.address === 'object' && business.address.latitude && business.address.longitude) ? (
+                 (structuredAddress?.latitude && structuredAddress?.longitude) ? (
                   <>
                     <ViewOnMapButton
-                      latitude={business.latitude || (typeof business.address === 'object' ? business.address.latitude : undefined)}
-                      longitude={business.longitude || (typeof business.address === 'object' ? business.address.longitude : undefined)}
+                      latitude={business.latitude || structuredAddress?.latitude}
+                      longitude={business.longitude || structuredAddress?.longitude}
                       itemId={business.id}
                       itemType="business"
                       itemName={business.name}

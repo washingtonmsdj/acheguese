@@ -31,8 +31,14 @@ export type VagaStatus =
 
 /** Tipo de contrato */
 export type VagaContrato =
+  | 'clt'
+  | 'pj'
   | 'CLT'
   | 'PJ'
+  | 'Estágio'
+  | 'Temporário'
+  | 'Freelance'
+  | 'estagiario'
   | 'estagio'
   | 'temporario'
   | 'freelancer'
@@ -40,12 +46,20 @@ export type VagaContrato =
 
 /** Modalidade de trabalho */
 export type VagaModalidade =
+  | 'Presencial'
+  | 'Híbrido'
+  | 'Remoto'
   | 'presencial'
   | 'hibrido'
   | 'remoto';
 
 /** Nível de experiência */
 export type VagaNivel =
+  | 'Júnior'
+  | 'Pleno'
+  | 'Sênior'
+  | 'Especialista'
+  | 'Estágio'
   | 'junior'
   | 'pleno'
   | 'senior'
@@ -271,22 +285,36 @@ export const VAGA_STATUS_LABELS: Record<VagaStatus, string> = {
   removed: 'Removida',
 };
 
-export const CONTRATO_LABELS: Record<VagaContrato, string> = {
+export const CONTRATO_LABELS: Record<string, string> = {
+  clt: 'CLT',
+  pj: 'PJ',
   CLT: 'CLT',
   PJ: 'PJ',
+  'Estágio': 'Estágio',
+  'Temporário': 'Temporário',
+  Freelance: 'Freelance',
+  estagiario: 'Estágio',
   estagio: 'Estágio',
   temporario: 'Temporário',
   freelancer: 'Freelancer',
   aprendiz: 'Aprendiz',
 };
 
-export const MODALIDADE_LABELS: Record<VagaModalidade, string> = {
+export const MODALIDADE_LABELS: Record<string, string> = {
+  Presencial: 'Presencial',
+  'Híbrido': 'Híbrido',
+  Remoto: 'Remoto',
   presencial: 'Presencial',
   hibrido: 'Híbrido',
   remoto: 'Remoto',
 };
 
-export const NIVEL_LABELS: Record<VagaNivel, string> = {
+export const NIVEL_LABELS: Record<string, string> = {
+  'Júnior': 'Júnior',
+  Pleno: 'Pleno',
+  'Sênior': 'Sênior',
+  Especialista: 'Especialista',
+  'Estágio': 'Estágio',
   junior: 'Júnior',
   pleno: 'Pleno',
   senior: 'Sênior',

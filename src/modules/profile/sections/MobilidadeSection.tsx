@@ -14,7 +14,7 @@ import {
 import type { MobilidadeSectionProps } from "./types";
 import type { Tables } from "@/core/infrastructure/supabase";
 import { getMobilityServiceStatus } from "@/core/profile/utils/mobilityServiceStatus";
-import type { MobilityRide } from "@/core/mobility/components/driver/DriverRidesTab";
+import type { MobilityRide } from "@/core/mobility/types/ride";
 
 type DriverDataRecord = Tables<"driver_data">;
 

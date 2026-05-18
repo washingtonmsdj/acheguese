@@ -31,7 +31,7 @@ import { DashboardMetricCard } from "@/core/profile/components/cards";
 
 import type { ResumoSectionProps } from "./types";
 import { getMobilityServiceStatus } from "@/core/profile/utils/mobilityServiceStatus";
-import type { MobilityRide } from "@/core/mobility/components/driver/DriverRidesTab";
+import type { MobilityRide } from "@/core/mobility/types/ride";
 
 export function ResumoSection({
   operations,
@@ -148,7 +148,7 @@ export function ResumoSection({
         </div>
       </SectionFrame>
 
-      <NextActionsPanel actions={nextActions} />
+      <NextActionsPanel actions={nextActions as any} />
 
       <SectionFrame
         title="Acoes pessoais"

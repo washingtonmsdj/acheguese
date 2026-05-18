@@ -469,7 +469,7 @@ export default function TouristPointsPage() {
                   {Object.entries(quickFilters).filter(([, v]) => v).map(([key]) => (
                     <Badge key={key} variant="secondary" className="gap-1 pr-1">
                       {key === 'is_free' ? 'Gratuito' : key === 'is_accessible' ? 'Acessível' : 'Família'}
-                      <button onClick={() => handleQuickFilter(key)} className="ml-1 hover:text-destructive">×</button>
+                      <button onClick={() => handleQuickFilter(key as QuickFilterKey)} className="ml-1 hover:text-destructive">×</button>
                     </Badge>
                   ))}
                 </div>

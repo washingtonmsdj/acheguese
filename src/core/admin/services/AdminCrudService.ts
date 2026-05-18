@@ -27,8 +27,10 @@ class AdminCrudError extends Error {
 
 /** @deprecated Use domain-specific admin services instead */
 export class AdminCrudService {
+  private readonly db = supabase as any;
+
   private getTableQuery(table: string) {
-    return supabase.from(table as never);
+    return this.db.from(table as any);
   }
   /**
    * Lista todos os registros de uma tabela
@@ -150,7 +152,7 @@ export class AdminCrudService {
   async create(table: string, data: Record<string, unknown>): Promise<Record<string, unknown>> {
     try {
       const { data: result, error } = await this.getTableQuery(table)
-        .insert(data)
+        .insert(data as any)
         .select()
         .single();
 
@@ -189,7 +191,7 @@ export class AdminCrudService {
     try {
       // Primeiro fazer o update sem select
       const { error: updateError } = await this.getTableQuery(table)
-        .update(data)
+        .update(data as any)
         .eq("id", id);
 
       if (updateError) {

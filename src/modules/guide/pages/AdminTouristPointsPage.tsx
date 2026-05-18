@@ -26,8 +26,8 @@ import {
   useSetTouristPointStatus,
   useSetTouristPointFeatured,
 } from '../hooks/useAdminTouristPoints';
-import { TOURIST_POINT_STATUS_LABELS, PRICE_TYPE_LABELS } from '../types';
-import type { TouristPoint, TouristPointStatus } from '../types';
+import { TOURIST_POINT_STATUS_LABELS, PRICE_TYPE_LABELS } from '../tourist-points/types';
+import type { TouristPoint, TouristPointStatus } from '../tourist-points/types';
 
 // Locations de Salvador para filtro piloto
 const SALVADOR_LOCATION_IDS = [

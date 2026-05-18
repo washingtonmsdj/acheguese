@@ -21,7 +21,6 @@ import type {
   ETAResponse,
   DistanceMatrixRequest,
   DistanceMatrixResponse,
-  RoutingProvider,
 } from '@/core/routing/types';
 
 import type {

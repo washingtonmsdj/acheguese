@@ -39,20 +39,21 @@ export interface CreateAdminAuditLogData {
 
 class AdminAuditService {
   private readonly TABLE = "admin_audit_logs";
+  private readonly db = supabase as any;
 
   /**
    * Busca todos os audit logs
    */
   async getAllAuditLogs(limit = 100): Promise<AdminAuditLog[]> {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await this.db
         .from(this.TABLE)
         .select("*")
         .order("created_at", { ascending: false })
         .limit(limit);
 
       if (error) throw error;
-      return data || [];
+      return (data as AdminAuditLog[]) || [];
     } catch (error) {
       trackError(error as Error, {
         component: "AdminAuditService",
@@ -68,7 +69,7 @@ class AdminAuditService {
    */
   async getAdminAuditLogs(adminId: string, limit = 100): Promise<AdminAuditLog[]> {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await this.db
         .from(this.TABLE)
         .select("*")
         .eq("admin_id", adminId)
@@ -76,7 +77,7 @@ class AdminAuditService {
         .limit(limit);
 
       if (error) throw error;
-      return data || [];
+      return (data as AdminAuditLog[]) || [];
     } catch (error) {
       trackError(error as Error, {
         component: "AdminAuditService",
@@ -93,7 +94,7 @@ class AdminAuditService {
    */
   async createAuditLog(data: CreateAdminAuditLogData): Promise<AdminAuditLog> {
     try {
-      const { data: auditLog, error } = await supabase
+      const { data: auditLog, error } = await this.db
         .from(this.TABLE)
         .insert(data)
         .select()
@@ -101,7 +102,7 @@ class AdminAuditService {
 
       if (error) throw error;
       logger.info(`Audit log criado por admin ${data.admin_id}: ${data.action_type}`);
-      return auditLog;
+      return auditLog as AdminAuditLog;
     } catch (error) {
       trackError(error as Error, {
         component: "AdminAuditService",

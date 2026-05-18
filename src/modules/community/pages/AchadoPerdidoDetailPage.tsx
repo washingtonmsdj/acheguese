@@ -199,7 +199,7 @@ export default function AchadoPerdidoDetailPage() {
 
   async function handleMarkResolved() {
     if (!post || post.autor_id !== user?.id) return;
-    await lostFoundService.toggleResolved(post.id);
+    await lostFoundService.updatePost(post.id, { resolvido: !post.resolvido });
     toast({
       title: post.resolvido
         ? "Marcado como não resolvido"

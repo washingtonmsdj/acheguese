@@ -457,7 +457,7 @@ export class DriverAvailabilityService {
         lastSeenAt: data.last_seen_at || undefined,
         activeRideId: data.active_ride_id || undefined,
         busySince: data.busy_since || undefined,
-        activeRideMode: data.active_ride_mode || undefined,
+        activeRideMode: (data.active_ride_mode as 'ride' | 'motoboy' | null) || undefined,
         updatedAt: data.updated_at,
       };
     } catch (error) {

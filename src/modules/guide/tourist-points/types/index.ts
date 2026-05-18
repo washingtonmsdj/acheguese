@@ -20,6 +20,12 @@ export const TouristPointCategory = {
   ESPORTIVO: 'esportivo',
   ENTRETENIMENTO: 'entretenimento',
   COMPRAS: 'compras',
+  PRACA: 'praca',
+  TRILHA: 'trilha',
+  IGREJA: 'igreja',
+  MERCADO: 'mercado',
+  CENTRO_CULTURAL: 'centro-cultural',
+  AR_LIVRE: 'ar-livre',
   OUTRO: 'outro',
 } as const;
 
@@ -40,6 +46,12 @@ export const CATEGORY_LABELS: Record<TouristPointCategory, string> = {
   esportivo: 'Esportivo',
   entretenimento: 'Entretenimento',
   compras: 'Compras',
+  praca: 'Praca',
+  trilha: 'Trilha',
+  igreja: 'Igreja',
+  mercado: 'Mercado',
+  'centro-cultural': 'Centro Cultural',
+  'ar-livre': 'Ar Livre',
   outro: 'Outro',
 };
 
@@ -58,32 +70,61 @@ export const CATEGORY_ICONS: Record<TouristPointCategory, string> = {
   esportivo: '⚽',
   entretenimento: '🎡',
   compras: '🛍️',
+  praca: '🏛️',
+  trilha: '🥾',
+  igreja: '⛪',
+  mercado: '🛒',
+  'centro-cultural': '🎭',
+  'ar-livre': '🌳',
   outro: '📍',
 };
 
 export const TouristPointStatus = {
+  DRAFT: 'draft',
+  PUBLISHED: 'published',
+  ARCHIVED: 'archived',
   ACTIVE: 'active',
   INACTIVE: 'inactive',
   PENDING_REVIEW: 'pending_review',
-  ARCHIVED: 'archived',
 } as const;
 
 export type TouristPointStatus = typeof TouristPointStatus[keyof typeof TouristPointStatus];
 
 /** Tipo de preço do ponto turístico */
 export const PriceType = {
-  FREE: 'gratuito',
-  PAID: 'pago',
-  CONSULT: 'consultar',
+  FREE: 'free',
+  PAID: 'paid',
+  RANGE: 'range',
+  CONSULT: 'consult',
 } as const;
 
 export type PriceType = typeof PriceType[keyof typeof PriceType];
 
 export const PRICE_TYPE_LABELS: Record<PriceType, string> = {
-  gratuito: 'Gratuito',
-  pago: 'Pago',
-  consultar: 'Consultar',
+  free: 'Gratuito',
+  paid: 'Pago',
+  range: 'Faixa de preco',
+  consult: 'Consultar',
 };
+export const PRICE_TYPE = PriceType;
+export const TOURIST_POINT_STATUS = TouristPointStatus;
+export const TOURIST_POINT_STATUS_LABELS: Record<TouristPointStatus, string> = {
+  draft: 'Rascunho',
+  published: 'Publicado',
+  archived: 'Arquivado',
+  active: 'Ativo',
+  inactive: 'Inativo',
+  pending_review: 'Em revisao',
+};
+
+export function generateSlug(value: string): string {
+  return value
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+}
 
 /** Nível de acessibilidade */
 export const AccessibilityLevel = {
@@ -104,6 +145,13 @@ export const ACCESSIBILITY_LABELS: Record<AccessibilityLevel, string> = {
 
 export interface TouristPoint {
   id: string;
+  title: string;
+  summary: string;
+  opening_hours: string | null;
+  media?: TouristPointMedia[];
+  accessibility_notes?: string | null;
+  official_url?: string | null;
+  updated_by?: string | null;
   name: string;
   slug: string;
   description: string;
@@ -174,14 +222,19 @@ export interface TouristPoint {
 }
 
 export interface CreateTouristPointInput {
-  name: string;
+  title?: string;
+  summary?: string;
+  opening_hours?: string;
+  accessibility_notes?: string;
+  official_url?: string;
+  name?: string;
   slug?: string;
-  description: string;
+  description?: string;
   short_description?: string;
-  category: TouristPointCategory;
+  category?: TouristPointCategory;
   tags?: string[];
-  state: string;
-  city: string;
+  state?: string;
+  city?: string;
   // Canônico
   location_id?: string;
   address_id?: string;
@@ -229,4 +282,18 @@ export interface TouristPointFilters {
   limit?: number;
   offset?: number;
 }
+
+export interface TouristPointMedia {
+  id: string;
+  tourist_point_id?: string;
+  url: string;
+  alt_text: string | null;
+  is_cover: boolean;
+  display_order: number;
+  created_at?: string;
+}
+
+export type TouristPointQueryFilters = TouristPointFilters & {
+  location_ids?: string[];
+};
 

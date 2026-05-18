@@ -16,6 +16,13 @@ export interface ProfessionalItem {
   latitude: number | null;
   longitude: number | null;
   created_at: string;
+  // Legacy/camelCase compatibility
+  photo?: string | null;
+  totalAvaliacoes?: number;
+  priceMedio?: string;
+  priceRange?: string;
+  isVerified?: boolean;
+  isAcceptingClients?: boolean;
 }
 
 export interface ProfessionalDetailView {
@@ -73,6 +80,12 @@ export function mapProfessionalToItem(professional: Professional): ProfessionalI
     latitude: professional.latitude ?? null,
     longitude: professional.longitude ?? null,
     created_at: professional.created_at,
+    photo: professional.logo_url || null,
+    totalAvaliacoes: professional.total_reviews,
+    priceMedio: professional.price_range || "",
+    priceRange: professional.price_range || "",
+    isVerified: professional.is_verified,
+    isAcceptingClients: professional.is_accepting_clients,
   };
 }
 

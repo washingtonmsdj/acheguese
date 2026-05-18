@@ -30,7 +30,7 @@ export function useDistricts(cityId: string | undefined) {
     queryFn: async () => {
       if (!cityId) return [];
       const result = await repo.findChildren(cityId, {
-        type: 'district',
+        type: 'district' as any,
         status: LocationStatus.ACTIVE,
         page: 1,
         page_size: 500,
@@ -41,3 +41,4 @@ export function useDistricts(cityId: string | undefined) {
     staleTime: 5 * 60 * 1000,
   });
 }
+

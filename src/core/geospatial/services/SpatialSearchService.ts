@@ -30,7 +30,7 @@ export type EntityType =
   | 'alert' 
   | 'tourist_point';
 
-export interface Coordinates {
+interface Coordinates {
   latitude: number;
   longitude: number;
 }

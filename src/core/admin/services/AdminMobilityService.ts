@@ -195,7 +195,7 @@ class AdminMobilityServiceClass {
     filter: AdminMobilityOperationalFilter = "all",
     limit = 50,
   ): Promise<AdminMobilityOperationalSnapshot> {
-    const [drivers, rides, profileService] = await Promise.all([
+    const [drivers, rides, profileServiceRef] = await Promise.all([
       MobilityAdminQueryService.getActiveDriversForMap(),
       MobilityAdminQueryService.getActiveRidesForMap(),
       Promise.resolve(profileService),
@@ -211,12 +211,12 @@ class AdminMobilityServiceClass {
     ];
 
     const profileSummaries = profileIds.length
-      ? await profileService.getProfilesSummary(profileIds)
+      ? await profileServiceRef.getProfilesSummary(profileIds)
       : [];
     const profileMap = new Map(profileSummaries.map((profile) => [profile.id, profile]));
 
     const driverItems: AdminMobilityOperationalItem[] = drivers.map((driver) => {
-      const profile = profileMap.get(driver.profile_id);
+      const profile = profileMap.get(driver.profile_id) as ProfileSummaryWithAvatar | undefined;
       return {
         id: `driver-${driver.profile_id}`,
         kind: "driver",
@@ -228,9 +228,9 @@ class AdminMobilityServiceClass {
 
     const rideItems: AdminMobilityOperationalItem[] = rides.map((ride) => {
       const isDelivery = ride.ride_mode === "motoboy";
-      const profile = ride.driver_profile_id
+      const profile = (ride.driver_profile_id
         ? profileMap.get(ride.driver_profile_id)
-        : undefined;
+        : undefined) as ProfileSummaryWithAvatar | undefined;
       return {
         id: ride.id,
         kind: isDelivery ? "delivery" : "ride",

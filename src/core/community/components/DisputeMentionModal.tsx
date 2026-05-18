@@ -69,9 +69,9 @@ export function DisputeMentionModal({
   const [submitting, setSubmitting] = useState(false);
 
   const actorRole =
-    activeProfile?.profile_type === "driver"
+    (activeProfile as { profile_type?: string } | null)?.profile_type === "driver"
       ? TRUST_ACTOR_ROLES.DRIVER
-      : activeProfile?.profile_type === "business"
+      : (activeProfile as { profile_type?: string } | null)?.profile_type === "business"
         ? TRUST_ACTOR_ROLES.MERCHANT
         : TRUST_ACTOR_ROLES.CUSTOMER;
 

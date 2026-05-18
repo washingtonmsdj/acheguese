@@ -40,12 +40,17 @@ import {
 } from "@/modules/admin/components";
 import type { Promotion } from "@/core/admin/services/AdminPromotionsService";
 
+const statusFromTab = (
+  tab: string,
+): "active" | "expired" | "scheduled" | "all" =>
+  tab === "active" || tab === "expired" || tab === "scheduled" ? tab : "all";
+
 export default function AdminPromocoes() {
   const queryClient = useQueryClient();
-  const [activeTab, setActiveTab] = useState("all");
+  const [activeTab, setActiveTab] = useState<"all" | "expiring" | "top" | "analytics">("all");
   const [search, setSearch] = useState("");
   const [typeFilter, setTypeFilter] = useState("");
-  const [statusFilter, setStatusFilter] = useState("");
+  const [statusFilter, setStatusFilter] = useState<"" | "active" | "expired" | "scheduled">("");
   const [page, setPage] = useState(1);
 
   // Buscar estatísticas
@@ -137,7 +142,7 @@ export default function AdminPromocoes() {
       case "fixed":
         return <Badge variant="secondary">Fixo</Badge>;
       case "freebie":
-        return <Badge variant="success">Brinde</Badge>;
+        return <Badge className="bg-emerald-100 text-emerald-800 border-emerald-200">Brinde</Badge>;
       default:
         return <Badge>{type}</Badge>;
     }
@@ -152,12 +157,12 @@ export default function AdminPromocoes() {
       return <Badge variant="secondary">Inativa</Badge>;
     }
     if (startsAt > now) {
-      return <Badge variant="warning">Agendada</Badge>;
+      return <Badge className="bg-amber-100 text-amber-800 border-amber-200">Agendada</Badge>;
     }
     if (expiresAt && expiresAt < now) {
       return <Badge variant="destructive">Expirada</Badge>;
     }
-    return <Badge variant="success">Ativa</Badge>;
+    return <Badge className="bg-emerald-100 text-emerald-800 border-emerald-200">Ativa</Badge>;
   };
 
   return (
@@ -209,7 +214,12 @@ export default function AdminPromocoes() {
       </div>
 
       {/* Tabs */}
-      <Tabs value={activeTab} onValueChange={setActiveTab}>
+      <Tabs
+        value={activeTab}
+        onValueChange={(value) =>
+          setActiveTab(value as "all" | "expiring" | "top" | "analytics")
+        }
+      >
         <TabsList>
           <TabsTrigger value="all" className="flex items-center gap-2">
             <Ticket className="h-4 w-4" />
@@ -240,7 +250,9 @@ export default function AdminPromocoes() {
             filterValues={{ type: typeFilter, status: statusFilter }}
             onFilterChange={(key, value) => {
               if (key === "type") setTypeFilter(value);
-              if (key === "status") setStatusFilter(value);
+              if (key === "status") {
+                setStatusFilter(value as "" | "active" | "expired" | "scheduled");
+              }
             }}
             onClear={() => {
               setSearch("");
@@ -384,16 +396,18 @@ export default function AdminPromocoes() {
                             {promo.usage_limit && ` / ${promo.usage_limit}`}
                           </p>
                         </div>
-                        {promo.business && (
+                        {Boolean((promo as Promotion & { business?: { logo_url?: string; name?: string } }).business) && (
                           <div className="flex items-center gap-2">
-                            {promo.business.logo_url && (
+                            {(promo as Promotion & { business?: { logo_url?: string; name?: string } }).business?.logo_url && (
                               <img
-                                src={promo.business.logo_url}
-                                alt={promo.business.name}
+                                src={(promo as Promotion & { business?: { logo_url?: string; name?: string } }).business?.logo_url}
+                                alt={(promo as Promotion & { business?: { name?: string } }).business?.name || "Business"}
                                 className="h-8 w-8 rounded object-cover"
                               />
                             )}
-                            <span className="text-sm">{promo.business.name}</span>
+                            <span className="text-sm">
+                              {(promo as Promotion & { business?: { name?: string } }).business?.name}
+                            </span>
                           </div>
                         )}
                       </div>
@@ -456,5 +470,3 @@ export default function AdminPromocoes() {
     </div>
   );
 }
-  const statusFromTab = (tab: string): "active" | "expired" | "scheduled" | "all" =>
-    tab === "active" || tab === "expired" || tab === "scheduled" ? tab : "all";

@@ -15,6 +15,8 @@ import { DollarSign, CheckCircle2 } from "lucide-react";
 interface RideLike {
   id: string;
   status: string;
+  origin?: string | null;
+  destination?: string | null;
   suggested_price?: number | null;
   final_price?: number | null;
   [key: string]: unknown;

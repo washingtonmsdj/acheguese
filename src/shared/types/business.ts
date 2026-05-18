@@ -1,0 +1,30 @@
+export interface Business {
+  id?: string;
+  name: string;
+  category?: string;
+  description?: string | null;
+  logo_url?: string | null;
+  banner_url?: string | null;
+  is_verified?: boolean;
+  is_premium?: boolean;
+  rating?: number | null;
+  review_count?: number | null;
+  total_reviews?: number | null;
+  address?: string | null;
+  neighborhood?: string | null;
+  city?: string | null;
+  phone?: string | null;
+  whatsapp?: string | null;
+  email?: string | null;
+  website?: string | null;
+  instagram?: string | null;
+  facebook?: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
+  schedule?: string | null;
+  formas_pagamento?: string[] | null;
+  especialidades?: string[] | null;
+  facilidades?: string[] | null;
+  ano_fundacao?: number | null;
+  is_open_now?: boolean | null;
+}

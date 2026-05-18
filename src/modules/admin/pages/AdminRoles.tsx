@@ -129,7 +129,7 @@ export default function AdminRoles() {
       case "admin":
         return <Badge variant="destructive">Admin</Badge>;
       case "moderator":
-        return <Badge variant="warning">Moderador</Badge>;
+      return <Badge variant="outline">Moderador</Badge>;
       case "user":
         return <Badge variant="secondary">Usuário</Badge>;
       default:
@@ -226,7 +226,7 @@ export default function AdminRoles() {
             <Clock className="h-4 w-4" />
             Expirando
             {stats?.expiredRoles ? (
-              <Badge variant="warning" className="ml-1">
+                    <Badge variant="outline" className="ml-1">
                 {stats.expiredRoles}
               </Badge>
             ) : null}
@@ -326,7 +326,7 @@ export default function AdminRoles() {
                           </TableCell>
                           <TableCell>
                             {roleData.is_active ? (
-                              <Badge variant="success">Ativo</Badge>
+                        <Badge variant="secondary">Ativo</Badge>
                             ) : (
                               <Badge variant="secondary">Inativo</Badge>
                             )}

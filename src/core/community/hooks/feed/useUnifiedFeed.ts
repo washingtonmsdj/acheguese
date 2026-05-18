@@ -35,9 +35,9 @@ export function useUnifiedFeed({
     // Convert all data sources, using convertArray which auto-detects the format
     const allItems = [
       ...PostAdapter.convertArray(posts),
-      ...civicReports.map((report) => PostAdapter.fromCivicReport(report)),
+      ...civicReports.map((report) => PostAdapter.fromCivicReport(report as any)),
       ...PostAdapter.convertArray(communityPosts),
-      ...feedPosts.map((post) => PostAdapter.fromFeedPost(post)),
+      ...feedPosts.map((post) => PostAdapter.fromFeedPost(post as any)),
     ];
 
     // Deduplicate by id

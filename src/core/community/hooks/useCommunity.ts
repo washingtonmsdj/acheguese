@@ -14,6 +14,7 @@ import {
 import { COMMUNITY_LEADERBOARD_ENABLED } from "@/core/community/config/communityConfig";
 import { useCommunityLocation } from "./useCommunityLocation";
 import { toast } from "sonner";
+import type { FlexibleMetadata } from "@/shared/types/supabase.types";
 
 // Query Keys
 const COMMUNITY_KEYS = {
@@ -98,7 +99,7 @@ export function useRecordInteraction() {
       interactionType: InteractionType;
       targetType?: string;
       targetId?: string;
-      metadata?: Record<string, unknown>;
+      metadata?: FlexibleMetadata;
     }) =>
       CommunityService.recordInteraction(
         userId,
@@ -143,7 +144,7 @@ export function useUpdateCommunityProfile() {
       updates: Partial<
         Pick<
           CommunityProfile,
-          "display_name" | "avatar_url" | "bio" | "city" | "neighborhood"
+          "display_name" | "avatar_url" | "bio" | "public_city" | "public_neighborhood"
         >
       >;
     }) => CommunityService.updateCommunityProfile(userId, updates),

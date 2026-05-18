@@ -22,7 +22,6 @@ import { supabase } from '@/core/infrastructure/supabase/supabase';
 import { JOB_QUERY_LIMITS } from '../constants/query-limits';
 import type {
   Vaga,
-  VagaRow,
   VagaFilters,
   VagaSortOption,
   VagasQueryParams,
@@ -33,79 +32,82 @@ import type {
 // MAPEAMENTO DATABASE -> DOMAIN
 // ═══════════════════════════════════════════════════════════════════════════════
 
-function mapRowToVaga(row: VagaRow): Vaga {
+type VagaRowLike = Record<string, unknown>;
+
+function mapRowToVaga(row: VagaRowLike): Vaga {
+  const raw = row as Record<string, unknown>;
   return {
     // Identificação
-    id: row.id,
-    slug: row.slug,
+    id: String(raw.id ?? ''),
+    slug: String(raw.slug ?? ''),
     
     // Dados
-    titulo: row.titulo,
-    descricao: row.descricao,
-    resumo: row.resumo ?? undefined,
+    titulo: String(raw.titulo ?? ''),
+    descricao: String(raw.descricao ?? ''),
+    resumo: typeof raw.resumo === 'string' ? raw.resumo : undefined,
     
     // Empresa
-    empresaNome: row.empresa_nome,
-    empresaLogoUrl: row.empresa_logo_url ?? undefined,
-    empresaId: row.empresa_id ?? undefined,
-    ownerProfileId: row.owner_profile_id,
+    empresaNome: String(raw.empresa_nome ?? raw.empresa ?? ''),
+    empresaLogoUrl: typeof raw.empresa_logo_url === 'string' ? raw.empresa_logo_url : undefined,
+    empresaId: typeof raw.empresa_id === 'string' ? raw.empresa_id : undefined,
+    ownerProfileId: String(raw.owner_profile_id ?? ''),
     
     // Localização
-    locationId: row.location_id,
-    bairroId: row.bairro_id ?? undefined,
-    bairroNome: row.bairro_nome ?? undefined,
+    locationId: String(raw.location_id ?? ''),
+    bairroId: typeof raw.bairro_id === 'string' ? raw.bairro_id : undefined,
+    bairroNome: typeof raw.bairro_nome === 'string' ? raw.bairro_nome : undefined,
     
     // Classificação
-    categoria: row.categoria,
-    subcategoria: row.subcategoria ?? undefined,
-    contrato: row.contrato,
-    modalidade: row.modalidade,
-    nivel: row.nivel,
-    tags: row.tags ?? [],
+    categoria: String(raw.categoria ?? ''),
+    subcategoria: typeof raw.subcategoria === 'string' ? raw.subcategoria : undefined,
+    contrato: (raw.contrato as Vaga['contrato']) ?? 'CLT',
+    modalidade: (raw.modalidade as Vaga['modalidade']) ?? 'Presencial',
+    nivel: (raw.nivel as Vaga['nivel']) ?? 'Pleno',
+    tags: Array.isArray(raw.tags) ? (raw.tags as string[]) : [],
     
     // Remuneração
-    salaryMode: row.salary_mode,
-    salarioMin: row.salario_min ?? undefined,
-    salarioMax: row.salario_max ?? undefined,
-    salarioTexto: row.salario_texto ?? undefined,
-    beneficios: row.beneficios ?? [],
+    salaryMode: (raw.salary_mode as Vaga['salaryMode']) ?? 'a_combinar',
+    salarioMin: typeof raw.salario_min === 'number' ? raw.salario_min : undefined,
+    salarioMax: typeof raw.salario_max === 'number' ? raw.salario_max : undefined,
+    salarioTexto: typeof raw.salario_texto === 'string' ? raw.salario_texto : undefined,
+    beneficios: Array.isArray(raw.beneficios) ? (raw.beneficios as string[]) : [],
     
     // Detalhes
-    requisitos: row.requisitos ?? [],
-    diferenciais: row.diferenciais ?? [],
-    responsabilidades: row.responsabilidades ?? [],
-    jornadaDescricao: row.jornada_descricao ?? undefined,
+    requisitos: Array.isArray(raw.requisitos) ? (raw.requisitos as string[]) : [],
+    diferenciais: Array.isArray(raw.diferenciais) ? (raw.diferenciais as string[]) : [],
+    responsabilidades: Array.isArray(raw.responsabilidades) ? (raw.responsabilidades as string[]) : [],
+    jornadaDescricao: typeof raw.jornada_descricao === 'string' ? raw.jornada_descricao : undefined,
     
     // Candidatura
-    applicationChannel: row.application_channel,
-    applicationUrl: row.application_url ?? undefined,
-    applicationWhatsapp: row.application_whatsapp ?? undefined,
-    applicationEmail: row.application_email ?? undefined,
-    applicationPhone: row.application_phone ?? undefined,
-    applicationInstructions: row.application_instructions ?? undefined,
+    applicationChannel: (raw.application_channel as Vaga['applicationChannel']) ?? 'internal',
+    applicationUrl: typeof raw.application_url === 'string' ? raw.application_url : undefined,
+    applicationWhatsapp: typeof raw.application_whatsapp === 'string' ? raw.application_whatsapp : undefined,
+    applicationEmail: typeof raw.application_email === 'string' ? raw.application_email : undefined,
+    applicationPhone: typeof raw.application_phone === 'string' ? raw.application_phone : undefined,
+    applicationInstructions: typeof raw.application_instructions === 'string' ? raw.application_instructions : undefined,
     
     // Controle
-    status: row.status,
-    urgencia: row.urgencia ?? 'normal',
-    highlightType: row.highlight_type ?? 'none',
-    vagasQuantidade: row.vagas_quantidade ?? 1,
+    status: (raw.status as Vaga['status']) ?? 'published',
+    urgencia: (raw.urgencia as Vaga['urgencia']) ?? 'normal',
+    highlightType: (raw.highlight_type as Vaga['highlightType']) ?? 'none',
+    vagasQuantidade: typeof raw.vagas_quantidade === 'number' ? raw.vagas_quantidade : 1,
     
     // Datas
-    createdAt: new Date(row.created_at),
-    updatedAt: new Date(row.updated_at),
-    publishedAt: row.published_at ? new Date(row.published_at) : undefined,
-    expiresAt: row.expires_at ? new Date(row.expires_at) : undefined,
-    closedAt: row.closed_at ? new Date(row.closed_at) : undefined,
+    createdAt: new Date(String(raw.created_at ?? new Date().toISOString())),
+    updatedAt: new Date(String(raw.updated_at ?? new Date().toISOString())),
+    publishedAt: typeof raw.published_at === 'string' ? new Date(raw.published_at) : undefined,
+    expiresAt: typeof raw.expires_at === 'string' ? new Date(raw.expires_at) : undefined,
+    closedAt: typeof raw.closed_at === 'string' ? new Date(raw.closed_at) : undefined,
     
     // SEO
-    metaTitle: row.meta_title ?? undefined,
-    metaDescription: row.meta_description ?? undefined,
-    ogImageUrl: row.og_image_url ?? undefined,
+    metaTitle: typeof raw.meta_title === 'string' ? raw.meta_title : undefined,
+    metaDescription: typeof raw.meta_description === 'string' ? raw.meta_description : undefined,
+    ogImageUrl: typeof raw.og_image_url === 'string' ? raw.og_image_url : undefined,
     
     // Analytics
-    viewCount: row.view_count ?? 0,
-    applicationCount: row.application_count ?? 0,
-    shareCount: row.share_count ?? 0,
+    viewCount: typeof raw.view_count === 'number' ? raw.view_count : 0,
+    applicationCount: typeof raw.application_count === 'number' ? raw.application_count : 0,
+    shareCount: typeof raw.share_count === 'number' ? raw.share_count : 0,
   };
 }
 
@@ -124,8 +126,8 @@ export class VagasService {
    * visibilidade/status. Isso evita drift entre o frontend e o enum real
    * do banco quando as migrations locais ainda não foram aplicadas no ambiente.
    */
-  private static getPublicQuery() {
-    return supabase.from('vagas');
+  private static getPublicQuery(): any {
+    return (supabase as any).from('vagas');
   }
 
   private static isMissingColumnError(error: unknown): boolean {
@@ -147,13 +149,13 @@ export class VagasService {
       return [];
     }
 
-    return ((data ?? []) as VagaRow[]).map(mapRowToVaga);
+    return ((data ?? []) as VagaRowLike[]).map(mapRowToVaga);
   }
 
-  private static applyLocationIds<T extends { eq: (column: string, value: string) => T; in: (column: string, values: string[]) => T }>(
-    query: T,
+  private static applyLocationIds(
+    query: any,
     locationIds: string[],
-  ): T {
+  ): any {
     const uniqueLocationIds = Array.from(new Set(locationIds.filter(Boolean)));
     if (uniqueLocationIds.length <= 1) {
       return query.eq('location_id', uniqueLocationIds[0] ?? '');
@@ -170,7 +172,7 @@ export class VagasService {
     const resolvedLocationIds = locationIds?.length ? locationIds : [locationId];
     
     try {
-      let query = this.applyLocationIds(
+      let query: any = this.applyLocationIds(
         this.getPublicQuery().select('*', { count: 'exact' }),
         resolvedLocationIds,
       );
@@ -197,17 +199,17 @@ export class VagasService {
 
         // Contrato
         if (filters.contrato) {
-          query = query.eq('contrato', filters.contrato);
+          query = query.eq('contrato', String(filters.contrato));
         }
 
         // Modalidade
         if (filters.modalidade) {
-          query = query.eq('modalidade', filters.modalidade);
+          query = query.eq('modalidade', String(filters.modalidade));
         }
 
         // Nível
         if (filters.nivel) {
-          query = query.eq('nivel', filters.nivel);
+          query = query.eq('nivel', String(filters.nivel));
         }
 
         // Bairro: filtro visual resolvido para locations.id; query canônica em location_id.
@@ -271,7 +273,7 @@ export class VagasService {
         throw new Error(`Falha ao buscar vagas: ${error.message}`);
       }
 
-      const rows = (data ?? []) as VagaRow[];
+      const rows = (data ?? []) as VagaRowLike[];
       if (sort === 'relevance') {
         const weight = (highlightType?: string) => {
           switch (highlightType) {
@@ -285,7 +287,7 @@ export class VagasService {
               return 0;
           }
         };
-        rows.sort((a, b) => weight(b.highlight_type) - weight(a.highlight_type));
+        rows.sort((a, b) => weight(String(b.highlight_type ?? '')) - weight(String(a.highlight_type ?? '')));
       }
 
       const vagas = rows.map(mapRowToVaga);
@@ -328,7 +330,7 @@ export class VagasService {
       // Incrementar view count (fire and forget)
       this.incrementViewCount(data.id).catch(() => {});
 
-      return mapRowToVaga(data as VagaRow);
+      return mapRowToVaga(data as VagaRowLike);
     } catch (error) {
       logger.error('[VagasService] Erro inesperado:', error);
       throw error;
@@ -354,7 +356,7 @@ export class VagasService {
         throw new Error(`Falha ao buscar vaga: ${error.message}`);
       }
 
-      return mapRowToVaga(data as VagaRow);
+      return mapRowToVaga(data as VagaRowLike);
     } catch (error) {
       logger.error('[VagasService] Erro inesperado:', error);
       throw error;
@@ -393,7 +395,7 @@ export class VagasService {
       }
 
       this.urgenciaColumnAvailable = true;
-      return ((data ?? []) as VagaRow[]).map(mapRowToVaga);
+      return ((data ?? []) as VagaRowLike[]).map(mapRowToVaga);
     } catch (error) {
       logger.error('[VagasService] Erro:', error);
       return [];
@@ -433,7 +435,7 @@ export class VagasService {
       }
 
       this.highlightTypeColumnAvailable = true;
-      return ((data ?? []) as VagaRow[]).map(mapRowToVaga);
+      return ((data ?? []) as VagaRowLike[]).map(mapRowToVaga);
     } catch (error) {
       logger.error('[VagasService] Erro:', error);
       return [];
@@ -483,7 +485,7 @@ export class VagasService {
    */
   static async getVagasByEmpresa(empresaId: string, limit = 10): Promise<Vaga[]> {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('vagas')
         .select('*')
         .eq('empresa_id', empresaId)
@@ -535,7 +537,7 @@ export class VagasService {
     try {
       const resolvedLocationIds = locationIds?.length ? locationIds : [locationId];
       const { data, error } = await this.applyLocationIds(
-        supabase.from('vagas').select('location_id'),
+        (supabase as any).from('vagas').select('location_id'),
         resolvedLocationIds,
       );
 
@@ -588,6 +590,7 @@ export class VagasService {
         descricao: vagaData.descricao,
         resumo: vagaData.resumo,
         empresa_nome: vagaData.empresaNome,
+        empresa: vagaData.empresaNome,
         empresa_logo_url: vagaData.empresaLogoUrl,
         empresa_id: vagaData.empresaId,
         owner_profile_id: vagaData.ownerProfileId,
@@ -626,7 +629,7 @@ export class VagasService {
 
       const { data, error } = await supabase
         .from('vagas')
-        .insert(dbRow)
+        .insert(dbRow as never)
         .select()
         .single();
 
@@ -636,7 +639,7 @@ export class VagasService {
       }
 
       logger.info(`[VagasService] Vaga criada: ${data.id}`);
-      return mapRowToVaga(data as VagaRow);
+      return mapRowToVaga(data as VagaRowLike);
     } catch (error) {
       logger.error('[VagasService] Erro:', error);
       throw error;
@@ -700,7 +703,7 @@ export class VagasService {
       }
 
       logger.info(`[VagasService] Vaga atualizada: ${id}`);
-      return mapRowToVaga(data as VagaRow);
+      return mapRowToVaga(data as VagaRowLike);
     } catch (error) {
       logger.error('[VagasService] Erro:', error);
       throw error;
@@ -755,7 +758,7 @@ export class VagasService {
    */
   private static async incrementViewCount(id: string): Promise<void> {
     try {
-      await supabase.rpc('increment_vaga_view_count', { vaga_id: id });
+      await supabase.rpc('increment_vaga_view_count' as never, { vaga_id: id } as never);
     } catch {
       // Silencioso - não quebrar a experiência por analytics
     }

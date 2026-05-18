@@ -5,7 +5,7 @@
  */
 
 import { useState } from 'react';
-import { Navigation, Loader2, MapPin, Wifi, Database } from 'lucide-react';
+import { Navigation, Loader2, MapPin, Database } from 'lucide-react';
 import { Button } from '@/shared/components/ui/button';
 import { useRobustGeolocation } from '@/shared/hooks';
 import { cn } from '@/shared/utils/cn';
@@ -47,8 +47,6 @@ export function LocationButton({
     switch (source) {
       case 'gps':
         return <Navigation className="h-4 w-4" />;
-      case 'ip':
-        return <Wifi className="h-4 w-4" />;
       case 'cache':
         return <Database className="h-4 w-4" />;
       default:
@@ -60,8 +58,6 @@ export function LocationButton({
     switch (source) {
       case 'gps':
         return 'GPS';
-      case 'ip':
-        return 'IP';
       case 'cache':
         return 'Cache';
       default:
@@ -81,7 +77,9 @@ export function LocationButton({
       <Button
         variant={variant}
         size={size}
-        onClick={requestLocation}
+        onClick={() => {
+          void requestLocation();
+        }}
         disabled={loading}
         className={cn('gap-2', className)}
         onMouseEnter={() => setShowDetails(true)}

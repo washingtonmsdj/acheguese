@@ -55,7 +55,6 @@ export function OperationConfigForm({ businessId }: OperationConfigFormProps) {
 
   const handleSave = () => {
     updateConfig({
-      business_id: businessId,
       ...formData,
       temporarily_closed_reason: formData.temporarily_closed_reason || null,
       temporarily_closed_until: formData.temporarily_closed_until || null,

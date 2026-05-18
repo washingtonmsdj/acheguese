@@ -117,7 +117,7 @@ const POST_TYPES: {
   { value: "discussao",    label: "Discussão",    icon: MessageSquare, description: "Inicie uma conversa com a vizinhança", color: "text-blue-400" },
   { value: "recomendacao", label: "Recomendação", icon: MapPin,        description: "Indique um lugar, serviço ou pessoa",  color: "text-green-400" },
   { value: "evento",       label: "Evento",       icon: Calendar,      description: "Divulgue um evento local",             color: "text-purple-400" },
-  { value: "noticia",      label: "Notícia",      icon: Newspaper,     description: "Compartilhe uma notícia do bairro",    color: "text-yellow-400" },
+  { value: "discussao",    label: "Notícia",      icon: Newspaper,     description: "Compartilhe uma notícia do bairro",    color: "text-yellow-400" },
   { value: "enquete",      label: "Enquete",      icon: BarChart2,     description: "Crie uma votação para a comunidade",   color: "text-orange-400" },
 ];
 
@@ -125,7 +125,7 @@ const REACH_OPTIONS = [
   { value: "street",       label: "Minha rua",  icon: Navigation, description: "Visível apenas para moradores da sua rua" },
   { value: "neighborhood", label: "Meu bairro", icon: Home,       description: "Visível para todo o bairro" },
   { value: "city",         label: "Cidade",     icon: Globe,      description: "Visível para toda a cidade" },
-];
+] as const;
 
 export function CreatePostModal({ open, onClose, defaultType }: CreatePostModalProps) {
   const { activeProfile: sessionProfile } = useSessionContext();

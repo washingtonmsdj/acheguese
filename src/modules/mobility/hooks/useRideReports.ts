@@ -59,7 +59,7 @@ export function useRideReports() {
       if (!profile) throw new Error("Perfil não encontrado");
 
       // Determinar tipo de reporter baseado no perfil
-      const reporterType = profile.type === "driver" ? "driver" : "passenger";
+      const reporterType = String(profile.type) === "driver" ? "driver" : "passenger";
 
       return RideReportsService.createReport({
         ...input,

@@ -59,6 +59,24 @@ export interface UpdateResidenceData {
   is_primary?: boolean;
 }
 
+export interface EnqueueTerritoryResolutionReviewInput {
+  userId: string;
+  source: string;
+  reviewStatus: "needs_review" | "unresolved";
+  reviewReason?: string | null;
+  rawState?: string | null;
+  rawCity?: string | null;
+  rawNeighborhood?: string | null;
+  postalCode?: string | null;
+  ibgeCode?: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
+  canonicalStateId?: string | null;
+  canonicalCityId?: string | null;
+  canonicalDistrictId?: string | null;
+  payload?: Record<string, unknown>;
+}
+
 class ResidenceService {
   /**
    * Buscar residências do usuário
@@ -76,7 +94,7 @@ class ResidenceService {
         throw new Error("Failed to fetch user residences");
       }
 
-      return data || [];
+      return ((data ?? []) as unknown) as UserResidence[];
     } catch (error) {
       trackError(error, {
         component: "ResidenceService",
@@ -109,7 +127,7 @@ class ResidenceService {
         throw new Error("Failed to fetch user residences with relations");
       }
 
-      return data || [];
+      return ((data ?? []) as unknown) as UserResidenceWithRelations[];
     } catch (error) {
       trackError(error, {
         component: "ResidenceService",
@@ -430,6 +448,44 @@ class ResidenceService {
         component: "ResidenceService",
         action: "requestVerification",
         metadata: { residenceId },
+      });
+      throw error;
+    }
+  }
+
+  async enqueueTerritoryResolutionReview(
+    input: EnqueueTerritoryResolutionReviewInput,
+  ): Promise<void> {
+    try {
+      const { error } = await (supabase as any).from("territory_resolution_queue").insert({
+        user_id: input.userId,
+        source: input.source,
+        review_status: input.reviewStatus,
+        review_reason: input.reviewReason ?? "auto_reconciliation_requires_review",
+        raw_state: input.rawState ?? null,
+        raw_city: input.rawCity ?? null,
+        raw_neighborhood: input.rawNeighborhood ?? null,
+        postal_code: input.postalCode ?? null,
+        ibge_code: input.ibgeCode ?? null,
+        latitude: input.latitude ?? null,
+        longitude: input.longitude ?? null,
+        canonical_state_id: input.canonicalStateId ?? null,
+        canonical_city_id: input.canonicalCityId ?? null,
+        canonical_district_id: input.canonicalDistrictId ?? null,
+        payload: (input.payload ?? {}) as any,
+      });
+
+      if (error) {
+        throw error;
+      }
+    } catch (error) {
+      trackError(error, {
+        component: "ResidenceService",
+        action: "enqueueTerritoryResolutionReview",
+        metadata: {
+          source: input.source,
+          reviewStatus: input.reviewStatus,
+        },
       });
       throw error;
     }

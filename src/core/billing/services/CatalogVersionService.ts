@@ -16,8 +16,9 @@ import type {
   CatalogVersionValidationResult,
   ValidationError,
 } from '../types/admin.types';
-import type { CatalogVersionStatus } from '../types/catalog.types';
+type CatalogVersionStatus = 'draft' | 'published' | 'deprecated' | 'archived';
 import { CatalogAdminService } from './CatalogAdminService';
+const catalogVersionDb = supabase as any;
 
 export class CatalogVersionService {
   // ============================================================================
@@ -35,7 +36,7 @@ export class CatalogVersionService {
     }
 
     // Check if version already exists
-    const { data: existing, error: existingError } = await supabase
+    const { data: existing, error: existingError } = await catalogVersionDb
       .from('commercial_catalog_version')
       .select('id')
       .eq('version_number', input.version_number)
@@ -50,7 +51,7 @@ export class CatalogVersionService {
     }
 
     // Create version
-    const { data: version, error: versionError } = await supabase
+    const { data: version, error: versionError } = await catalogVersionDb
       .from('commercial_catalog_version')
       .insert({
         version_number: input.version_number,
@@ -77,7 +78,7 @@ export class CatalogVersionService {
     updates: CatalogVersionUpdateInput
   ): Promise<CatalogVersionWithStats> {
     // Fetch current version
-    const { data: version, error: versionError } = await supabase
+    const { data: version, error: versionError } = await catalogVersionDb
       .from('commercial_catalog_version')
       .select('status')
       .eq('id', versionId)
@@ -92,7 +93,7 @@ export class CatalogVersionService {
     }
 
     // Update version
-    const { error: updateError } = await supabase
+    const { error: updateError } = await catalogVersionDb
       .from('commercial_catalog_version')
       .update({
         description: updates.description,
@@ -114,7 +115,7 @@ export class CatalogVersionService {
    */
   static async deleteVersion(versionId: string): Promise<void> {
     // Fetch version
-    const { data: version, error: versionError } = await supabase
+    const { data: version, error: versionError } = await catalogVersionDb
       .from('commercial_catalog_version')
       .select('status')
       .eq('id', versionId)
@@ -129,7 +130,7 @@ export class CatalogVersionService {
     }
 
     // Check if version has items
-    const { data: items, error: itemsError } = await supabase
+    const { data: items, error: itemsError } = await catalogVersionDb
       .from('catalog_item')
       .select('id')
       .eq('catalog_version_id', versionId)
@@ -144,7 +145,7 @@ export class CatalogVersionService {
     }
 
     // Delete version
-    const { error: deleteError } = await supabase
+    const { error: deleteError } = await catalogVersionDb
       .from('commercial_catalog_version')
       .delete()
       .eq('id', versionId);
@@ -158,7 +159,7 @@ export class CatalogVersionService {
    * Get version with statistics
    */
   static async getVersionWithStats(versionId: string): Promise<CatalogVersionWithStats> {
-    const { data: version, error: versionError } = await supabase
+    const { data: version, error: versionError } = await catalogVersionDb
       .from('commercial_catalog_version')
       .select('*')
       .eq('id', versionId)
@@ -169,7 +170,7 @@ export class CatalogVersionService {
     }
 
     // Get item counts
-    const { data: items, error: itemsError } = await supabase
+    const { data: items, error: itemsError } = await catalogVersionDb
       .from('catalog_item')
       .select('item_type')
       .eq('catalog_version_id', versionId);
@@ -188,7 +189,7 @@ export class CatalogVersionService {
     // Get active contracts count (only for published versions)
     let activeContractsCount = 0;
     if (version.status === 'published' || version.status === 'deprecated') {
-      const { count, error: contractsError } = await supabase
+      const { count, error: contractsError } = await catalogVersionDb
         .from('user_subscriptions')
         .select('*', { count: 'exact', head: true })
         .eq('catalog_version_id', versionId)
@@ -258,7 +259,7 @@ export class CatalogVersionService {
     }
 
     // Update status to published
-    const { error } = await supabase
+    const { error } = await catalogVersionDb
       .from('commercial_catalog_version')
       .update({
         status: 'published',
@@ -281,7 +282,7 @@ export class CatalogVersionService {
    * New contracts cannot use deprecated versions.
    */
   static async deprecateVersion(versionId: string): Promise<CatalogVersionWithStats> {
-    const { data: version, error: versionError } = await supabase
+    const { data: version, error: versionError } = await catalogVersionDb
       .from('commercial_catalog_version')
       .select('status')
       .eq('id', versionId)
@@ -295,7 +296,7 @@ export class CatalogVersionService {
       throw new Error(`Cannot deprecate ${version.status} version. Only published versions can be deprecated.`);
     }
 
-    const { error } = await supabase
+    const { error } = await catalogVersionDb
       .from('commercial_catalog_version')
       .update({
         status: 'deprecated',
@@ -318,7 +319,7 @@ export class CatalogVersionService {
    * Archived versions are read-only and hidden from normal views.
    */
   static async archiveVersion(versionId: string): Promise<CatalogVersionWithStats> {
-    const { data: version, error: versionError } = await supabase
+    const { data: version, error: versionError } = await catalogVersionDb
       .from('commercial_catalog_version')
       .select('status')
       .eq('id', versionId)
@@ -333,7 +334,7 @@ export class CatalogVersionService {
     }
 
     // Check for active contracts
-    const { count, error: contractsError } = await supabase
+    const { count, error: contractsError } = await catalogVersionDb
       .from('user_subscriptions')
       .select('*', { count: 'exact', head: true })
       .eq('catalog_version_id', versionId)
@@ -347,7 +348,7 @@ export class CatalogVersionService {
       throw new Error(`Cannot archive version with ${count} active contracts. Wait for contracts to expire or migrate them.`);
     }
 
-    const { error } = await supabase
+    const { error } = await catalogVersionDb
       .from('commercial_catalog_version')
       .update({
         status: 'archived',
@@ -376,7 +377,7 @@ export class CatalogVersionService {
     const itemsValidation: Record<string, any> = {};
 
     // Fetch version
-    const { data: version, error: versionError } = await supabase
+    const { data: version, error: versionError } = await catalogVersionDb
       .from('commercial_catalog_version')
       .select('status')
       .eq('id', versionId)
@@ -401,7 +402,7 @@ export class CatalogVersionService {
     }
 
     // Fetch all items
-    const { data: items, error: itemsError } = await supabase
+    const { data: items, error: itemsError } = await catalogVersionDb
       .from('catalog_item')
       .select('*')
       .eq('catalog_version_id', versionId);

@@ -103,7 +103,7 @@ export function UserServicesSectionV2({
                     professionalId: service.professional_data_id || service.id,
                     source: "profile_professions",
                     actorProfileId: activeProfile?.id,
-                    actorUserId: activeProfile?.user_id ?? activeProfile?.userId ?? null,
+                    actorUserId: activeProfile?.userId ?? activeProfile?.userId ?? null,
                     metadata: { entrypoint: "profile_professions_chip" },
                   });
                   navigate(`/services/${service.professional_data_id || service.id}`);
@@ -187,7 +187,7 @@ export function UserServicesSectionV2({
                         professionalId: service.professional_data_id || service.id,
                         source: "profile_professions",
                         actorProfileId: activeProfile?.id,
-                        actorUserId: activeProfile?.user_id ?? activeProfile?.userId ?? null,
+                        actorUserId: activeProfile?.userId ?? activeProfile?.userId ?? null,
                         metadata: { entrypoint: "profile_professions_card" },
                       });
                       navigate(`/services/${service.professional_data_id || service.id}`);
@@ -237,7 +237,7 @@ export function UserServicesSectionV2({
                       territoryLocationId: opportunity.territory_location_id,
                       source: "profile_professions",
                       actorProfileId: activeProfile?.id,
-                      actorUserId: activeProfile?.user_id ?? activeProfile?.userId ?? null,
+                      actorUserId: activeProfile?.userId ?? activeProfile?.userId ?? null,
                       metadata: {
                         open_path: "profile_recent_opportunities",
                       },

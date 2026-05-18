@@ -10,6 +10,7 @@ import {
   DropdownMenuTrigger,
 } from "@/shared/components/ui/dropdown-menu";
 import { PizzaPricingService } from "../PizzaPricingService";
+import { PizzaCartItemBuilder } from "../PizzaCartItemBuilder";
 import { PizzaValidationService } from "../PizzaValidationService";
 import type { PizzaBuildSelection, PizzaCatalog, PizzaFlavor } from "../types";
 import type { MenuItemAddon, MenuItemWithRelations } from "../../../types/menu";

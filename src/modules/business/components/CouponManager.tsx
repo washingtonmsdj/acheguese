@@ -252,7 +252,7 @@ export default function CouponManager({
                   <Label>Tipo de Desconto *</Label>
                   <Select
                     value={formData.tipo}
-                    onValueChange={(v: string) =>
+                    onValueChange={(v: "porcentagem" | "valor" | "brinde") =>
                       setFormData({ ...formData, tipo: v })
                     }
                   >

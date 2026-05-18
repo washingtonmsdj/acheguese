@@ -116,14 +116,14 @@ export function useComunidadePage() {
   const profile = toCommunityActorProfile(effectiveProfile ?? sessionProfile);
   
   // Integração com fundação geográfica
-  const communityLocation = useCommunityLocation();
+  const communityLocation = useCommunityLocation() as any;
 
   const postId = searchParams.get("post");
   const { data: postData, isLoading: isLoadingPost } = usePostById(postId);
 
   const handleOpenCreatePost = useCallback((defaultType?: string) => {
     const hasProfileLocation = Boolean(profile?.locationId ?? profile?.location_id);
-    const canCreatePost = communityLocation.canCreateContent || hasProfileLocation;
+    const canCreatePost = Boolean(communityLocation.canCreateContent) || hasProfileLocation;
 
     // Verificar se pode criar conteúdo
     if (!canCreatePost) {
@@ -132,7 +132,7 @@ export function useComunidadePage() {
     }
 
     setModalState({ type: "create", data: { defaultType: defaultType || "discussao" } });
-  }, [communityLocation.canCreateContent, profile?.location_id, profile?.locationId]);
+  }, [communityLocation, profile?.location_id, profile?.locationId]);
 
   const handleOpenAlertModal = useCallback(() => setAlertModalOpen(true), []);
   const handleCloseAlertModal = useCallback(() => setAlertModalOpen(false), []);
@@ -231,7 +231,7 @@ export function useComunidadePage() {
           }
         }
       } catch (error) {
-        logger.warn("Falha ao resolver detalhe de oportunidade pelo feed", error as Error, { postId });
+        logger.warn("Falha ao resolver detalhe de oportunidade pelo feed", error as Error);
       }
 
       setSearchParams({ post: postId });
@@ -281,9 +281,8 @@ export function useComunidadePage() {
 
   const handleConfirmDeletePost = useCallback(() => {
     if (!deletePostId) return;
-    deletePost(deletePostId, {
-      onSettled: () => setDeletePostId(null),
-    });
+    deletePost(deletePostId);
+    setDeletePostId(null);
   }, [deletePost, deletePostId]);
 
   const handleEditPost = useCallback(async (postId: string) => {

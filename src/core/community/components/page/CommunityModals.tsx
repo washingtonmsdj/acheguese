@@ -113,7 +113,7 @@ export function CommunityModals({
           <PostDetailModal
             isOpen={true}
             onClose={onClosePostDetail}
-            post={postData}
+            post={postData as any}
             comments={[]}
             onLike={onLike}
             onSave={onSave}
@@ -129,7 +129,7 @@ export function CommunityModals({
           <UnifiedDetailModal
             isOpen={true}
             onClose={onCloseModal}
-            content={modalState.data}
+            content={modalState.data as any}
             comments={[]}
             onLike={onLike}
             onSave={onSave}

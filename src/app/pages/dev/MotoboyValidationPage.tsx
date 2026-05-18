@@ -265,7 +265,7 @@ export function MotoboyValidationPage() {
 
       const profileSummary: ProfileSummary = {
         id: activeProfile.id,
-        fullName: activeProfile.full_name ?? activeProfile.display_name ?? null,
+        fullName: activeProfile.display_name ?? activeProfile.name ?? null,
         profileType: activeProfile.profile_type ?? null,
       };
 

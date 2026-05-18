@@ -35,17 +35,21 @@ export async function fetchGastronomyQuickMetrics(
   const now = new Date();
   const weekAgo = new Date(now.getTime() - 7 * 86_400_000).toISOString();
 
+  const rpcClient = supabase as unknown as {
+    rpc: (fn: string, args?: Record<string, unknown>) => Promise<{ data: unknown; error: unknown }>;
+  };
+
   const [summaryRes, reviewsRes, viewsLast7Res] = await Promise.all([
-    supabase.rpc("get_business_views_summary", {
+    rpcClient.rpc("get_business_views_summary", {
       p_business_profile_id: businessProfileId,
       p_week_start: weekAgo,
     }),
-    supabase.rpc("get_business_reviews", {
+    rpcClient.rpc("get_business_reviews", {
       p_business_profile_id: businessProfileId,
       p_limit: 500,
       p_offset: 0,
     }),
-    supabase.rpc("get_business_views_last_7_days", {
+    rpcClient.rpc("get_business_views_last_7_days", {
       p_business_profile_id: businessProfileId,
       p_week_start: weekAgo,
     }),
@@ -60,7 +64,8 @@ export async function fetchGastronomyQuickMetrics(
     dayMap.set(day, 0);
   }
 
-  (viewsLast7Res.data ?? []).forEach((view: ViewRecord) => {
+  const viewsRows = Array.isArray(viewsLast7Res.data) ? (viewsLast7Res.data as ViewRecord[]) : [];
+  viewsRows.forEach((view) => {
     const day = view.viewed_at?.slice(0, 10);
     if (day && dayMap.has(day)) {
       const currentCount = dayMap.get(day) ?? 0;
@@ -68,13 +73,16 @@ export async function fetchGastronomyQuickMetrics(
     }
   });
 
-  const reviews: ReviewRecord[] = Array.isArray(reviewsRes.data) ? reviewsRes.data : [];
+  const reviews: ReviewRecord[] = Array.isArray(reviewsRes.data) ? (reviewsRes.data as ReviewRecord[]) : [];
   const avgRating =
     reviews.length > 0
       ? reviews.reduce((sum, review) => sum + review.rating, 0) / reviews.length
       : 0;
 
-  const summary = (summaryRes.data?.[0] ?? {}) as { total_views?: number; views_this_week?: number };
+  const summaryRows = Array.isArray(summaryRes.data)
+    ? (summaryRes.data as Array<{ total_views?: number; views_this_week?: number }>)
+    : [];
+  const summary = summaryRows[0] ?? {};
 
   return {
     totalViews: summary.total_views ?? 0,
@@ -129,7 +137,6 @@ export async function fetchSimilarGastronomyBusinesses(params: {
         id,
         business_name,
         slug,
-        banner_url,
         rating,
         total_reviews,
         location:locations!location_id(geographic_path)
@@ -147,7 +154,7 @@ export async function fetchSimilarGastronomyBusinesses(params: {
       business_data_id: business.id as string,
       name: (business.business_name as string) || "",
       slug: (business.slug as string) || "",
-      banner_url: (business.banner_url as string | null) || null,
+      banner_url: null,
       rating: (business.rating as number) || 0,
       total_reviews: (business.total_reviews as number) || 0,
       cuisine_type: profilesMap.get(business.id as string)?.cuisine_type || cuisineType,

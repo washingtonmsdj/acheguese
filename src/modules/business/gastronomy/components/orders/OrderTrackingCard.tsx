@@ -7,7 +7,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/components/ui/card';
 import { Badge } from '@/shared/components/ui/badge';
 import { Button } from '@/shared/components/ui/button';
-import { Clock, MapPin, Navigation, Phone, RefreshCw, User } from 'lucide-react';
+import { Clock, MapPin, Navigation, RefreshCw, User } from 'lucide-react';
 import { RideTrackingMap } from '@/core/mobility/components/RideTrackingMap';
 import { useOrderTracking } from '../../hooks/useOrderTracking';
 import type { Order } from '@/modules/business/gastronomy/services/OrderService';
@@ -35,10 +35,10 @@ export function OrderTrackingCard({ order, className }: OrderTrackingCardProps) 
   const { rideRequest, hasTracking, isActive, isLoading, refetch } = useOrderTracking(order.id);
   const hasDriver = !!rideRequest?.driver_profile_id;
   const hasRouteCoordinates =
-    typeof rideRequest?.pickup_location?.lat === 'number' &&
-    typeof rideRequest?.pickup_location?.lng === 'number' &&
-    typeof rideRequest?.dropoff_location?.lat === 'number' &&
-    typeof rideRequest?.dropoff_location?.lng === 'number';
+    typeof rideRequest?.origin_lat === 'number' &&
+    typeof rideRequest?.origin_lng === 'number' &&
+    typeof rideRequest?.destination_lat === 'number' &&
+    typeof rideRequest?.destination_lng === 'number';
   const statusLabel = rideRequest ? STATUS_LABELS[rideRequest.status] || rideRequest.status : 'Entrega ainda nao vinculada';
 
   return (
@@ -78,10 +78,10 @@ export function OrderTrackingCard({ order, className }: OrderTrackingCardProps) 
           <RideTrackingMap
             driverProfileId={rideRequest.driver_profile_id!}
             rideId={rideRequest.id}
-            destinationLat={rideRequest.dropoff_location!.lat}
-            destinationLon={rideRequest.dropoff_location!.lng}
-            originLat={rideRequest.pickup_location!.lat}
-            originLon={rideRequest.pickup_location!.lng}
+            destinationLat={rideRequest.destination_lat}
+            destinationLon={rideRequest.destination_lng}
+            originLat={rideRequest.origin_lat}
+            originLon={rideRequest.origin_lng}
             showETA
             className="h-72 sm:h-96 rounded-lg overflow-hidden"
           />
@@ -107,45 +107,30 @@ export function OrderTrackingCard({ order, className }: OrderTrackingCardProps) 
               <div className="flex-1 space-y-1">
                 <p className="text-sm font-medium">Entregador</p>
                 <p className="text-xs text-muted-foreground">
-                  {rideRequest.driver_profile.full_name || 'Nao informado'}
+                  {rideRequest.driver_profile.name || 'Nao informado'}
                 </p>
-                {rideRequest.driver_profile.phone && (
-                  <a
-                    href={`tel:${rideRequest.driver_profile.phone}`}
-                    className="flex items-center gap-1 text-xs text-primary hover:underline"
-                  >
-                    <Phone className="h-3 w-3" />
-                    {rideRequest.driver_profile.phone}
-                  </a>
-                )}
               </div>
             </div>
           )}
 
-          {rideRequest?.estimated_arrival_time && (
+          {rideRequest?.estimated_duration && (
             <div className="flex items-start gap-3 p-4 rounded-lg border bg-card">
               <Clock className="h-5 w-5 text-muted-foreground mt-0.5" />
               <div className="flex-1 space-y-1">
-                <p className="text-sm font-medium">Previsao de chegada</p>
+                <p className="text-sm font-medium">Tempo estimado</p>
                 <p className="text-xs text-muted-foreground">
-                  {new Date(rideRequest.estimated_arrival_time).toLocaleTimeString('pt-BR', {
-                    hour: '2-digit',
-                    minute: '2-digit',
-                  })}
+                  {rideRequest.estimated_duration} min
                 </p>
               </div>
             </div>
           )}
 
-          {rideRequest?.recipient_name && (
+          {rideRequest?.destination_address && (
             <div className="flex items-start gap-3 p-4 rounded-lg border bg-card">
               <User className="h-5 w-5 text-muted-foreground mt-0.5" />
               <div className="flex-1 space-y-1">
-                <p className="text-sm font-medium">Destinatario</p>
-                <p className="text-xs text-muted-foreground">{rideRequest.recipient_name}</p>
-                {rideRequest.recipient_phone && (
-                  <p className="text-xs text-muted-foreground">{rideRequest.recipient_phone}</p>
-                )}
+                <p className="text-sm font-medium">Destino</p>
+                <p className="text-xs text-muted-foreground">{rideRequest.destination_address}</p>
               </div>
             </div>
           )}

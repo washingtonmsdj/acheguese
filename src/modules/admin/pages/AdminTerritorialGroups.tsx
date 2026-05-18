@@ -139,14 +139,14 @@ export default function AdminTerritorialGroups() {
                     </div>
                     <div className="flex items-center gap-1">
                       <Users className="h-3 w-3" />
-                      <span>{group.member_count || 0} bairros</span>
+                      <span>{group.members?.length || 0} bairros</span>
                     </div>
-                    {group.anchor_city_name && (
+                    {group.anchor_city_id ? (
                       <div className="flex items-center gap-1">
                         <MapPin className="h-3 w-3" />
-                        <span>Cidade: {group.anchor_city_name}</span>
+                        <span>Cidade âncora: {group.anchor_city_id}</span>
                       </div>
-                    )}
+                    ) : null}
                   </div>
                 </div>
 

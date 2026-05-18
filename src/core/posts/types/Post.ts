@@ -70,6 +70,8 @@ export interface CommunityPost {
   event_date?: string;
   price?: number;
   contact_info?: string;
+  category?: string;
+  hidden?: boolean;
 }
 
 export type PostType =
@@ -81,4 +83,7 @@ export type PostType =
   | "favor"
   | "evento"
   | "desapego"
-  | "post";
+  | "post"
+  | "alerta"
+  | "classificado"
+  | "civic_report";

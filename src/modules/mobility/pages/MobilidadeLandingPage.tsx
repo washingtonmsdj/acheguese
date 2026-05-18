@@ -305,7 +305,7 @@ export default function MobilidadeLandingPage({ resolved }: MobilidadeLandingPag
               <Car className="h-4 w-4" />
               Motorista
             </Button>
-            <Button size="lg" variant="outline" onClick={() => navigate(mobilityUrls.motoboy)} className="gap-2 rounded-xl border-orange-200 text-orange-600 hover:bg-orange-50">
+            <Button size="lg" variant="outline" onClick={() => navigate(mobilityUrls.motoboy.home)} className="gap-2 rounded-xl border-orange-200 text-orange-600 hover:bg-orange-50">
               <Bike className="h-4 w-4" />
               Motoboy
             </Button>

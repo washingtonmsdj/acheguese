@@ -17,10 +17,9 @@ import { Button } from "@/shared/components/ui/button";
 import { Badge } from "@/shared/components/ui/badge";
 import { Card } from "@/shared/components/ui/card";
 import { Skeleton } from "@/shared/components/ui/skeleton";
-import { obterNicho } from "@/shared/utils/urlUtils";
 import { BusinessUrlService } from "@/core/business/services/BusinessUrlService";
 import { useAdminGuard } from "@/modules/admin/hooks/useAdminGuard";
-import { notificationService, NotificationType, NotificationPriority } from "@/core/notifications";
+import { NotificationService } from "@/core/notifications";
 import { profileService } from "@/core/profiles/services/ProfileService";
 import { logger } from "@/shared/utils/logger";
 
@@ -38,6 +37,16 @@ interface Claim {
   business_category?: string;
   business_is_premium?: boolean;
 }
+
+type BusinessClaimRecord = {
+  id: string;
+  user_id: string;
+  business_id: string;
+  mensagem: string | null;
+  status: string;
+  created_at: string;
+  resolved_at: string | null;
+};
 
 export default function AdminReivindicacoes() {
   const { canModerate, isChecking } = useAdminGuard();
@@ -61,7 +70,7 @@ export default function AdminReivindicacoes() {
 
     // Enrich with user and business names using ProfileService
     const enriched = await Promise.all(
-      (data || []).map(async (claim) => {
+      ((data || []) as BusinessClaimRecord[]).map(async (claim) => {
         const [profile, biz] = await Promise.all([
           profileService.getProfileById(claim.user_id),
           adminBusinessService.getBusinessClaimDetails(claim.business_id),
@@ -122,12 +131,15 @@ export default function AdminReivindicacoes() {
       try {
         // Buscar business completa para obter dados territoriais reais
         const businessDetails = await adminBusinessService.getBusinessClaimDetails(claim.business_id);
-        if (businessDetails?.uf && businessDetails?.city) {
-          // Só gerar URL canônica com dados territoriais reais
+        const businessContext = businessDetails as
+          | { profile_id?: string; geographic_path?: string; is_premium?: boolean }
+          | null;
+        if (businessContext?.profile_id && businessContext?.geographic_path) {
           businessUrl = BusinessUrlService.getCanonicalUrl({
+            id: businessContext.profile_id,
             slug: claim.business_slug,
-            uf: businessDetails.uf,
-            city: businessDetails.city,
+            geographic_path: businessContext.geographic_path,
+            is_premium: businessContext.is_premium,
           });
         }
       } catch (error) {
@@ -141,9 +153,9 @@ export default function AdminReivindicacoes() {
         ? `Sua reivindicação da empresa "${claim.business_name}" foi aprovada!`
         : `Sua reivindicação da empresa "${claim.business_name}" foi rejeitada.`;
 
-    await notificationService.createNotification({
+    await NotificationService.createNotification({
       user_id: claim.user_id,
-      type: "system" as const,
+      type: "info" as const,
       title:
         action === "aprovada"
           ? "✅ Reivindicação aprovada"

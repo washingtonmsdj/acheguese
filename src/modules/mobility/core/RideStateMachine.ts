@@ -268,12 +268,13 @@ export class RideStateMachine {
    * Verifica se é estado de entrega (motoboy)
    */
   static isDeliveryState(state: RideState): boolean {
-    return [
+    const deliveryStates: RideState[] = [
       RIDE_STATE.PICKUP_CONFIRMED,
       RIDE_STATE.IN_DELIVERY,
       RIDE_STATE.DELIVERED,
       RIDE_STATE.FAILED_DELIVERY,
-    ].includes(state);
+    ];
+    return deliveryStates.includes(state);
   }
 
   /**
@@ -282,7 +283,7 @@ export class RideStateMachine {
    */
   static canPassengerCancel(state: RideState): boolean {
     // Passageiro NÃO pode cancelar após embarcar ou após coleta (motoboy)
-    const blockedStates = [
+    const blockedStates: RideState[] = [
       RIDE_STATE.PASSENGER_BOARDED,
       RIDE_STATE.IN_PROGRESS,
       RIDE_STATE.PICKUP_CONFIRMED,  // Motoboy: após coleta, apenas motorista pode cancelar
@@ -299,7 +300,7 @@ export class RideStateMachine {
    */
   static canDriverCancel(state: RideState): boolean {
     // Motorista NÃO pode cancelar durante corrida ativa ou entrega em andamento
-    const blockedStates = [
+    const blockedStates: RideState[] = [
       RIDE_STATE.IN_PROGRESS,  // Corrida em andamento físico
       RIDE_STATE.IN_DELIVERY,  // Entrega em andamento - usar failDelivery()
     ];

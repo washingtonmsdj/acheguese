@@ -35,20 +35,20 @@ export function DriverStatsCompact({
       if (!driverProfile) return null;
 
       // SSOT: Buscar dados de driver_data via MobilityService
-      const data = await mobilityService.getDriverStatsDetailed(
+      const data = (await mobilityService.getDriverStatsDetailed(
         driverProfile.id,
-      );
+      )) as Record<string, unknown> | null;
 
       if (!data) return null;
 
       // Calcular completion_rate a partir de acceptance_rate
-      const completion_rate = data.acceptance_rate || 100;
+      const completion_rate = Number(data.acceptance_rate || 100);
 
       return {
         completion_rate: completion_rate,
-        cancellation_rate: data.cancellation_rate || 0,
-        rating: data.rating || 5.0,
-        priority_score: Math.max(0, 100 - (data.cancellation_rate || 0) * 2), // Score baseado em cancelamento
+        cancellation_rate: Number(data.cancellation_rate || 0),
+        rating: Number(data.rating || 5.0),
+        priority_score: Math.max(0, 100 - Number(data.cancellation_rate || 0) * 2), // Score baseado em cancelamento
       };
     },
     enabled: !!activeProfile?.id,

@@ -5,8 +5,12 @@ import { RideChatDialog } from "./RideChatDialog";
 import { useSessionContext } from "@/core/session";
 import type { RideRequest } from "@/modules/mobility/types";
 
+type ChatRide = RideRequest & {
+  driver?: { name?: string | null } | null;
+};
+
 interface PassengerRideChatButtonProps {
-  ride: RideRequest;
+  ride: ChatRide;
   className?: string;
 }
 

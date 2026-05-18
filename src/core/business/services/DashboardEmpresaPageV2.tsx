@@ -22,6 +22,7 @@ import CouponManager from '@/core/business/components/CouponManager';
 import SubscriptionPlans from '@/core/business/components/SubscriptionPlans';
 import { NetworkTab } from '@/core/business';
 import { QrCodeWidget } from '@/core/qr';
+import { QrEntityType } from '@/core/qr/types';
 import type { PlanType } from "@/shared/types/subscription";
 import { SUBSCRIPTION_PLAN } from "@/shared/types/constants";
 import { useMultiProfileContext } from "@/core/profiles/contexts/multi-profile-runtime-context";
@@ -145,7 +146,7 @@ export default function DashboardEmpresaPageV2() {
             </div>
             
             <QrCodeWidget
-              entityType="business"
+              entityType={QrEntityType.BUSINESS}
               entityId={business.id}
               businessId={business.id}
               canonicalUrl={business.slug && business.geographic_path 

@@ -327,7 +327,14 @@ export default function StandaloneMap({ business }: StandaloneMapProps) {
                 </div>
               )}
               <div className="space-y-2">
-                <Button onClick={requestLocation} variant="outline" className="w-full gap-2" disabled={loadingLoc}>
+                <Button
+                  onClick={() => {
+                    void requestLocation();
+                  }}
+                  variant="outline"
+                  className="w-full gap-2"
+                  disabled={loadingLoc}
+                >
                   {loadingLoc ? <Loader2 className="h-4 w-4 animate-spin" /> : <MapPin className="h-4 w-4" />}
                   {userPos ? 'Atualizar Minha Localização' : 'Mostrar Rota'}
                 </Button>

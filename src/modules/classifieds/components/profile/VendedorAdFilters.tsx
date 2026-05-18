@@ -194,10 +194,18 @@ export function VendedorAdFilters({
 /**
  * Aplica filtros e ordenação à lista de anúncios
  */
-export function applyAdFilters(
-  ads: Array<{ category: string; condition: string; price: number; created_at: string }>,
+export function applyAdFilters<T extends {
+    id: string;
+    title: string;
+    photos: string[];
+    category: string;
+    condition: string;
+    price: number;
+    created_at: string;
+  }>(
+  ads: T[],
   filters: AdFilters
-) {
+): T[] {
   // Filtrar
   let filtered = ads.filter((ad) => {
     if (filters.category !== "todos") {

@@ -17,6 +17,7 @@
 import { logger } from '@/shared/utils/logger';
 import { supabase } from '@/integrations/supabase/supabase';
 import type { GenericBillingEntitlementAliases } from '../types';
+const billingDb = supabase as any;
 
 // ══════════════════════════════════════════════════════════════════════════
 // TYPES
@@ -32,7 +33,7 @@ interface BillingPlanRow {
   currency: string;
   billing_period: string;
   features: string[];
-  entitlements: Record<string, unknown>;
+  entitlements: unknown;
   is_active: boolean;
   is_featured: boolean;
   display_order: number;
@@ -190,7 +191,7 @@ export class BillingPlanService {
     }
 
     try {
-      const { data, error } = await supabase
+      const { data, error } = await billingDb
         .from('billing_plans')
         .select('*')
         .eq('is_active', true)
@@ -225,7 +226,7 @@ export class BillingPlanService {
     }
 
     try {
-      const { data, error } = await supabase
+      const { data, error } = await billingDb
         .from('billing_plans')
         .select('*')
         .eq('code', code)
@@ -275,7 +276,7 @@ export class BillingPlanService {
    */
   static async getFeaturedPlan(): Promise<BillingPlan | null> {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await billingDb
         .from('billing_plans')
         .select('*')
         .eq('is_active', true)
@@ -314,7 +315,7 @@ export class BillingPlanService {
    */
   static async getAllPlans(): Promise<BillingPlan[]> {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await billingDb
         .from('billing_plans')
         .select('*')
         .order('display_order', { ascending: true });
@@ -351,9 +352,9 @@ export class BillingPlanService {
         display_order: plan.displayOrder,
       };
 
-      const { data, error } = await supabase
+      const { data, error } = await billingDb
         .from('billing_plans')
-        .insert([row])
+        .insert([row as any])
         .select()
         .single();
 
@@ -385,14 +386,14 @@ export class BillingPlanService {
       if (updates.currency !== undefined) row.currency = updates.currency;
       if (updates.billingPeriod !== undefined) row.billing_period = updates.billingPeriod;
       if (updates.features !== undefined) row.features = updates.features;
-      if (updates.entitlements !== undefined) row.entitlements = updates.entitlements;
+      if (updates.entitlements !== undefined) row.entitlements = updates.entitlements as any;
       if (updates.isActive !== undefined) row.is_active = updates.isActive;
       if (updates.isFeatured !== undefined) row.is_featured = updates.isFeatured;
       if (updates.displayOrder !== undefined) row.display_order = updates.displayOrder;
 
-      const { data, error } = await supabase
+      const { data, error } = await billingDb
         .from('billing_plans')
-        .update(row)
+        .update(row as any)
         .eq('id', id)
         .select()
         .single();
@@ -416,7 +417,7 @@ export class BillingPlanService {
    */
   static async deletePlan(id: string): Promise<void> {
     try {
-      const { error } = await supabase
+      const { error } = await billingDb
         .from('billing_plans')
         .delete()
         .eq('id', id);
@@ -458,7 +459,7 @@ export class BillingPlanService {
       }));
 
       for (const update of updates) {
-        await supabase
+        await billingDb
           .from('billing_plans')
           .update({ display_order: update.display_order })
           .eq('id', update.id);

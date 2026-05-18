@@ -17,7 +17,7 @@ function toRideStatus(status: string): RideStatus {
 export const RideCardHeader = ({ status, isEntrega }: RideCardHeaderProps) => {
   return (
     <div className="flex items-center justify-between mb-4">
-      <StatusBadge status={toRideStatus(status)} size="md" />
+      <StatusBadge status={toRideStatus(status) as any} size="md" />
       <Badge
         className={cn(
           "text-[0.6rem] px-2 rounded-full",

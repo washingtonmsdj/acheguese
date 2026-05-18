@@ -13,7 +13,6 @@ export {
 } from './types';
 export type {
   Notification,
-  NotificationType,
   NotificationTypeValue,
   NotificationFilters,
   CreateNotificationParams,

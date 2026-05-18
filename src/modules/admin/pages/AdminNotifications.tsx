@@ -16,8 +16,8 @@ import {
 } from "lucide-react";
 import {
   adminNotificationsService,
-  type AdminNotificationRecord,
 } from "@/core/admin";
+import type { AdminNotificationRecord } from "@/core/admin/services/AdminNotificationsService";
 import { NotificationPriority } from "@/core/notifications";
 import {
   AdminDataState,
@@ -782,7 +782,7 @@ export default function AdminNotifications() {
                   Payload
                 </p>
                 <pre className="text-xs overflow-x-auto whitespace-pre-wrap">
-                  {JSON.stringify(selectedNotification.data || {}, null, 2)}
+                  {JSON.stringify(selectedNotification.metadata || {}, null, 2)}
                 </pre>
               </div>
             </div>

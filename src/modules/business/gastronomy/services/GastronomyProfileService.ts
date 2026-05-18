@@ -18,7 +18,7 @@ import type {
   GastronomyProfile,
   CreateGastronomyProfileInput,
   UpdateGastronomyProfileInput,
-} from './types';
+} from '../types';
 import { sanitizeString } from '@/shared/utils/sanitization';
 
 // â”€â”€ Tipos de resultado â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€

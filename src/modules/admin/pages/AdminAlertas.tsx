@@ -179,11 +179,17 @@ export default function AdminAlertas() {
       {tab === "alertas" && (
         <AlertFilters
           filterStatus={filters.filterStatus}
-          onFilterStatusChange={filters.setFilterStatus}
+          onFilterStatusChange={(value) =>
+            filters.setFilterStatus(
+              value as "todos" | "active" | "expirado" | "oculto",
+            )
+          }
           filterBairro={filters.filterBairro}
           onFilterBairroChange={filters.setFilterBairro}
           filterDenuncias={filters.filterDenuncias}
-          onFilterDenunciasChange={filters.setFilterDenuncias}
+          onFilterDenunciasChange={(value) =>
+            filters.setFilterDenuncias(value as "todos" | "0" | "1-2" | "3+")
+          }
           uniqueBairros={filters.uniqueBairros}
           hasActiveFilters={filters.hasActiveFilters}
           onClearFilters={filters.clearFilters}

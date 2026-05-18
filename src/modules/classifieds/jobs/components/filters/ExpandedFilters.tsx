@@ -25,8 +25,8 @@ export interface ExpandedFiltersProps {
 
 function getContratoLabel(tipo: VagaContrato): string {
   switch (tipo) {
-    case "clt": return CONTRATO_LABELS.clt;
-    case "pj": return CONTRATO_LABELS.pj;
+    case "CLT": return CONTRATO_LABELS.CLT;
+    case "PJ": return CONTRATO_LABELS.PJ;
     case "temporario": return CONTRATO_LABELS.temporario;
     case "estagio": return CONTRATO_LABELS.estagio;
     case "freelancer": return CONTRATO_LABELS.freelancer;
@@ -45,7 +45,7 @@ function getModalidadeLabel(mod: VagaModalidade): string {
 
 function getNivelLabel(nivel: VagaNivel): string {
   switch (nivel) {
-    case "estagiario": return NIVEL_LABELS.estagiario;
+    case "estagio": return NIVEL_LABELS.estagio;
     case "junior": return NIVEL_LABELS.junior;
     case "pleno": return NIVEL_LABELS.pleno;
     case "senior": return NIVEL_LABELS.senior;

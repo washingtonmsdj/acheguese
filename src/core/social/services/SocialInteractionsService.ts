@@ -25,10 +25,10 @@ import type {
   GroupMessage,
   CreateGroupMessageData,
   SocialInteractionStats,
-} from "../../../services/social/types";
+} from "@/core/social/types";
 
 export class SocialInteractionsService {
-  private static readonly db = supabase as unknown as AdminSupabaseClient;
+  private static readonly db = supabase as any;
   private static async resolveGroupContext(groupId: string, userId?: string) {
     const { data: groupRow } = await this.db.rpc("get_community_group_by_id", {
       p_group_id: groupId,
@@ -1195,3 +1195,4 @@ export const SocialInteractionsFacade = {
   // Stats
   getInteractionStats: SocialInteractionsService.getInteractionStats,
 } as const;
+

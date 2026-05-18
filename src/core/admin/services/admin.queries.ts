@@ -188,7 +188,7 @@ export async function getRealtimeMetrics(): Promise<{
       adminMobilityService.getAllDriversComplete(),
     ]);
 
-    const rides = (allRidesRaw as RawRecord[]) || [];
+    const rides = (allRidesRaw as unknown as RawRecord[]) || [];
     const allDrivers = (allDriversRaw as RawRecord[]) || [];
     const onlineDrivers = allDrivers
       .filter((driver) => {

@@ -26,7 +26,11 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Card } from '@/shared/components/ui/card';
 import { Badge } from '@/shared/components/ui/badge';
 import { cn } from '@/shared/utils/cn';
-import type { RouteEstimate } from '@/core/maps';
+type RouteEstimate = {
+  distance: { distanceFormatted: string };
+  eta: { durationFormatted: string; arrivalTime: Date };
+  fare?: { finalFare?: number; totalFare?: number; minimumFare?: number; breakdown?: Array<{ label: string; value: number }> };
+};
 
 // ============================================================================
 // CONSTANTS

@@ -16,6 +16,7 @@ import { logger } from "@/shared/utils/logger";
 import { mobilityRolloutService } from "./MobilityRolloutService";
 import { MobilityService, mobilityService } from "./MobilityService.impl";
 
+const supabaseAny = supabase as any;
 const MODERATOR_ROLES = ["owner", "admin"] as const;
 
 export type MotoboySourceType =

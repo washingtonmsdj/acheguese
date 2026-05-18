@@ -1,18 +1,11 @@
-/**
- * CommunityLocationService
- *
- * Integra o módulo community com a fundação geográfica.
- * Estende BaseLocationService — não duplica lógica comum.
- */
-
-import { BaseLocationService } from '@/core/location/services/BaseLocationService';
+import { BaseLocationService } from "@/core/location/services/BaseLocationService";
 
 export class CommunityLocationService extends BaseLocationService {
   getDefaultBehavior() {
     return {
-      allowContent: false,
-      showMessage: 'Selecione uma localização para ver o conteúdo da comunidade',
-      filterScope: 'none' as const,
+      allowListing: false,
+      showMessage: "Selecione uma localizacao para ver o conteudo da comunidade",
+      filterScope: "none" as const,
     };
   }
 }

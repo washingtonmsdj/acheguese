@@ -7,6 +7,7 @@
 
 import type { NavigateFunction } from "react-router-dom";
 import type {
+  Vaga,
   VagaSortOption,
   VagaContrato,
   VagaModalidade,
@@ -29,29 +30,12 @@ export interface BaseSectionProps {
 // Vaga (item da listagem)
 // ============================================
 
-export interface Vaga {
-  readonly id: string;
-  readonly slug: string;
-  readonly titulo: string;
-  readonly empresa: string;
-  readonly empresaLogo?: string;
-  readonly salario?: string;
-  readonly contrato: VagaContrato;
-  readonly modalidade: VagaModalidade;
-  readonly nivel: VagaNivel;
-  readonly categoria?: string;
-  readonly bairro?: string;
-  readonly urgente?: boolean;
-  readonly destaque?: boolean;
-  readonly createdAt: string;
-}
-
 // ============================================
 // Filters (filtros de busca)
 // ============================================
 
 export interface VagasFilters {
-  readonly search: string | null;
+  readonly search?: string | null;
   readonly categoria: string | null;
   readonly contrato: VagaContrato | null;
   readonly modalidade: VagaModalidade | null;
@@ -138,6 +122,7 @@ export interface VagasListagemSectionProps extends BaseSectionProps {
   readonly clearFilters: () => void;
   readonly fetchNextPage: () => void;
   readonly onVagaClick: (slug: string) => void;
+  readonly variant?: "grid" | "list" | "compact" | "featured";
 }
 
 export interface VagasFooterSectionProps extends BaseSectionProps {

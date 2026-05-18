@@ -171,7 +171,31 @@ export default function AdminPontosTuristicos() {
     if (editingPoint) {
       updateMutation.mutate({ id: editingPoint.id, data: payload });
     } else {
-      createMutation.mutate(payload);
+      const createPayload: CreateTouristPointInput = {
+        name: String(payload.name || ''),
+        description: String(payload.description || ''),
+        category: payload.category as TouristPointCategory,
+        state: String(payload.state || ''),
+        city: String(payload.city || ''),
+        location_id: payload.location_id as string | undefined,
+        short_description: payload.short_description as string | undefined,
+        address_text: payload.address as string | undefined,
+        latitude: payload.latitude as number | undefined,
+        longitude: payload.longitude as number | undefined,
+        photo_url: payload.photo_url as string | undefined,
+        icon_emoji: payload.icon_emoji as string | undefined,
+        visiting_hours: payload.visiting_hours as string | undefined,
+        entry_fee: payload.entry_fee as string | undefined,
+        website: payload.website as string | undefined,
+        phone: payload.phone as string | undefined,
+        is_featured: payload.is_featured as boolean | undefined,
+        accessibility: payload.accessibility as boolean | undefined,
+        has_parking: payload.has_parking as boolean | undefined,
+        has_restaurant: payload.has_restaurant as boolean | undefined,
+        has_guide: payload.has_guide as boolean | undefined,
+        tags: payload.tags as string[] | undefined,
+      };
+      createMutation.mutate(createPayload);
     }
   };
 
@@ -505,7 +529,12 @@ function TouristPointForm({
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="sm:col-span-2">
           <Label htmlFor="address">Endereço completo</Label>
-          <Input id="address" name="address" defaultValue={point?.address || ''} placeholder="Rua, número, complemento" />
+          <Input
+            id="address"
+            name="address"
+            defaultValue={typeof point?.address === 'string' ? point.address : ''}
+            placeholder="Rua, número, complemento"
+          />
         </div>
         <div>
           <Label htmlFor="latitude">Latitude</Label>

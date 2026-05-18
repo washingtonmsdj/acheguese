@@ -41,6 +41,21 @@ export interface AdminUserDetail {
   updated_at: string;
 }
 
+type AdminProfileType = AdminUserDetail["profile_type"];
+const PROFILE_TYPES: readonly AdminProfileType[] = [
+  "personal",
+  "driver",
+  "business",
+  "professional",
+  "community",
+];
+
+function normalizeProfileType(value: string | null | undefined): AdminProfileType {
+  return PROFILE_TYPES.includes(value as AdminProfileType)
+    ? (value as AdminProfileType)
+    : "personal";
+}
+
 export interface DriverDetail {
   id: string;
   profile_id: string;
@@ -148,8 +163,8 @@ export function useAdminUserDetail(
         suspended: profileData.is_suspended || false,
         suspended_until: profileData.suspended_until || null,
         reputation: profileData.reputation || 0,
-        pontos: profileData.points || 0,
-        profile_type: profileData.profile_type,
+        pontos: profileData.pontos || 0,
+        profile_type: normalizeProfileType(profileData.profile_type),
         created_at: profileData.created_at,
         updated_at: profileData.updated_at,
       });
@@ -267,5 +282,7 @@ export function useAdminUserDetail(
     refetch: fetchUserDetail,
   };
 }
+
+
 
 

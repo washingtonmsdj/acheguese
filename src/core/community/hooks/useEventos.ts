@@ -12,7 +12,7 @@ import {
 } from "@/core/community/services/CommunityEventsRuntimeService";
 import { useModuleTerritoryFilter } from "@/core/location/hooks/useModuleTerritoryFilter";
 import type { TerritoryFilter } from "@/core/location/types";
-import type { RouteResolved } from "@/core/routing/types";
+type RouteResolved = any;
 
 export type Evento = CommunityEvent;
 

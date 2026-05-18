@@ -17,6 +17,12 @@ import { Button } from '@/shared/components/ui/button';
 import { useEducationNicheBilling } from '../niches/hooks/useEducationNicheBilling';
 import { EducationUpgradeBanner } from '../niches/components/EducationUpgradeBanner';
 import { useEducationProfile } from '../hooks/useEducationProfile';
+import type { UpgradeReason } from '../niches/components/EducationUpgradeBanner';
+
+function toUpgradeReason(reason: string): UpgradeReason {
+  if (reason === 'plan_denied' || reason === 'niche_denied') return reason;
+  return 'feature_unavailable';
+}
 
 export function EducationAnalyticsPage() {
   const { businessId } = useParams<{ businessId: string }>();
@@ -51,7 +57,7 @@ export function EducationAnalyticsPage() {
         <EducationUpgradeBanner
           nicheKey={profile?.niche_key}
           businessId={businessId || ''}
-          reason={!canViewAnalytics.allowed ? canViewAnalytics.reason : 'plan_denied'}
+          reason={!canViewAnalytics.allowed ? toUpgradeReason(canViewAnalytics.reason) : 'plan_denied'}
           feature="analytics_basic"
           variant="card"
         />
@@ -75,7 +81,7 @@ export function EducationAnalyticsPage() {
           <EducationUpgradeBanner
             nicheKey={profile?.niche_key}
             businessId={businessId || ''}
-            reason={canAdvancedAnalytics.reason}
+            reason={toUpgradeReason(canAdvancedAnalytics.reason)}
             feature="analytics_advanced"
             variant="inline"
           />

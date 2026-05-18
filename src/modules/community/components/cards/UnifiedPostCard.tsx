@@ -10,9 +10,6 @@ import {
   getCardClasses,
   getCardBackground,
 } from "../styles/communityDesignSystem";
-import type { PostType } from "@/shared/constants/postTypeConfig";
-import type { CivicProblemType } from "@/shared/constants/civicProblemTypes";
-import type { PostStatus, PostUrgency } from "@/shared/constants/statusConfig";
 import type { UnifiedPost } from "@/shared/types/posts";
 
 interface UnifiedPostCardProps {
@@ -86,7 +83,8 @@ const UnifiedPostCardComponent = ({
   const TypeIcon = typeConfig?.icon;
   const isOwnPost = currentUserId === post.author_profile_id;
   const showMessageButton = currentUserId && !isOwnPost && onSendMessage;
-  const isCivicReport = post.type === "civic_report";
+  const postType = String(post.type);
+  const isCivicReport = postType === "civic_report";
 
   // Handlers
   const handleLike = useCallback(() => {
@@ -157,7 +155,7 @@ const UnifiedPostCardComponent = ({
         onTagClick={onTagClick}
       />
 
-      {post.type === "alerta" && post.confirmations_count !== undefined && (
+      {postType === "alerta" && post.confirmations_count !== undefined && (
         <AlertConfirmation
           confirmationsCount={post.confirmations_count}
           hasUserConfirmed={post.has_user_confirmed || false}

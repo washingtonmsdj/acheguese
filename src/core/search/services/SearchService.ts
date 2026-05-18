@@ -128,7 +128,7 @@ export class SearchService {
 
   private static async searchBusinesses(query: string, _filters: SearchFilters): Promise<Business[]> {
     try {
-      return await BusinessService.searchBusinessesLegacy(query, 20);
+      return (await BusinessService.searchBusinessesLegacy(query, 20)) as Business[];
     } catch (error) {
       logger.error("Error searching businesses:", error);
       return [];
@@ -353,3 +353,5 @@ export class SearchService {
 }
 
 export const searchService = new SearchService();
+
+

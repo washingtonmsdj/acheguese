@@ -38,7 +38,7 @@ export function PendingPostsQueue() {
   const handleStatusChange = (value: string) => {
     setFilters((prev) => ({
       ...prev,
-      status: value === "all" ? undefined : [value] as ModerationStatusFilter,
+      status: value === "all" ? undefined : ([value] as unknown as ModerationStatusFilter),
     }));
   };
 
@@ -142,3 +142,4 @@ export function PendingPostsQueue() {
     </div>
   );
 }
+

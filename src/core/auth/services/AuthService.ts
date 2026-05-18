@@ -15,6 +15,13 @@ import { mediaService } from "@/core/media/services/MediaService";
 import type { User, Session, AuthChangeEvent, Subscription } from "@supabase/supabase-js";
 import type { AdminSupabaseClient } from "@/core/admin/types/adminDatabase.types";
 
+function parseAuthIdentifier(input: string): { kind: "email" | "username"; value: string } | null {
+  const value = input.trim();
+  if (!value) return null;
+  if (value.includes("@")) return { kind: "email", value };
+  return { kind: "username", value: value.replace(/^@/, "") };
+}
+
 export class AuthService {
   private static adminCache = new Map<string, boolean>();
   private static cacheExpiry = new Map<string, number>();
@@ -97,7 +104,7 @@ export class AuthService {
   private static async resolveEmailByUsername(username: string): Promise<string> {
     const normalizedUsername = username.replace(/^@/, "").toLowerCase().trim();
 
-    const { data: email, error: rpcError } = await (supabase as unknown as AdminSupabaseClient)
+    const { data: email, error: rpcError } = await (supabase as any)
       .rpc("get_email_by_username", { p_username: normalizedUsername });
 
     if (rpcError || !email) {

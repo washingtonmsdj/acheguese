@@ -22,7 +22,6 @@ import type { LocationGeocodingResult } from "@/core/location/services/LocationG
 import { toast } from "sonner";
 import { useSessionContext } from "@/core/session";
 import { logger } from "@/shared/utils/logger";
-import { supabase } from "@/integrations/supabase/client";
 
 type LookupStatus = "idle" | "loading" | "success" | "error";
 type AddressEntryMode = "cep" | "manual";
@@ -343,26 +342,26 @@ export function ResidenceManager() {
       setCepLookupStatus("success");
 
       if (user && (result.territory.reviewStatus === "needs_review" || result.territory.reviewStatus === "unresolved")) {
-        await supabase.from("territory_resolution_queue" as never).insert({
-          user_id: user.id,
+        await residenceService.enqueueTerritoryResolutionReview({
+          userId: user.id,
           source: "residence_cep_lookup",
-          review_status: result.territory.reviewStatus,
-          review_reason: result.territory.reviewReason ?? "auto_reconciliation_requires_review",
-          raw_state: result.providerAddress.state,
-          raw_city: result.providerAddress.city,
-          raw_neighborhood: result.providerAddress.neighborhood,
-          postal_code: result.postalCode,
-          ibge_code: result.ibgeCode,
+          reviewStatus: result.territory.reviewStatus,
+          reviewReason: result.territory.reviewReason ?? "auto_reconciliation_requires_review",
+          rawState: result.providerAddress.state,
+          rawCity: result.providerAddress.city,
+          rawNeighborhood: result.providerAddress.neighborhood,
+          postalCode: result.postalCode,
+          ibgeCode: result.ibgeCode,
           latitude: result.coordinates?.latitude ?? null,
           longitude: result.coordinates?.longitude ?? null,
-          canonical_state_id: result.territory.state?.id ?? null,
-          canonical_city_id: result.territory.city?.id ?? null,
-          canonical_district_id: result.territory.district?.id ?? null,
+          canonicalStateId: result.territory.state?.id ?? null,
+          canonicalCityId: result.territory.city?.id ?? null,
+          canonicalDistrictId: result.territory.district?.id ?? null,
           payload: {
             providerAddress: result.providerAddress,
             territory: result.territory,
           },
-        } as never);
+        });
       }
       
       // Mensagens baseadas na qualidade dos dados do SSOT
@@ -401,6 +400,7 @@ export function ResidenceManager() {
         stateName: string;
         cityName: string;
         neighborhoodName: string;
+        stateId?: string;
         cityId?: string;
       } | null,
     ) => {
@@ -514,7 +514,7 @@ export function ResidenceManager() {
       tryMatchDistrictName(cepNeighborhoodCandidate, item.name),
     );
     if (match) {
-      setLocationId(match.location_id);
+      setLocationId(match.id);
       setTerritoryScope("district");
       if (selectedStateName && selectedCityName) {
         setTerritorySummary(`${match.name}, ${selectedCityName} - ${selectedStateName}`);

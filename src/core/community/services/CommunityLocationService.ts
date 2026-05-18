@@ -10,7 +10,7 @@ import { BaseLocationService } from '@/core/location/services/BaseLocationServic
 export class CommunityLocationService extends BaseLocationService {
   getDefaultBehavior() {
     return {
-      allowContent: false,
+      allowListing: false,
       showMessage: 'Selecione uma localização para ver o conteúdo da comunidade',
       filterScope: 'none' as const,
     };
@@ -18,3 +18,4 @@ export class CommunityLocationService extends BaseLocationService {
 }
 
 export const communityLocationService = new CommunityLocationService();
+

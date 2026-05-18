@@ -1,6 +1,7 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import { useEffect, useState } from "react";
 import { adminStatsService } from "@/core/admin/services/AdminStatsService";
+import type { ActivityData, RecentActivity } from "@/core/admin/services/AdminStatsService";
 import { TrendIndicator, TrendData } from "../components/TrendIndicator";
 import {
   Building2,
@@ -137,8 +138,8 @@ const activityIcons: Record<string, { icon: LucideIcon; color: string }> = {
 export default function AdminDashboard() {
   const [stats, setStats] = useState<Record<string, number>>({});
   const [trends, setTrends] = useState<Record<string, TrendData>>({});
-  const [activity, setActivity] = useState<Record<string, unknown>[]>([]);
-  const [recent, setRecent] = useState<Array<{ type?: string; label?: string; date?: string }>>([]);
+  const [activity, setActivity] = useState<ActivityData[]>([]);
+  const [recent, setRecent] = useState<RecentActivity[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [days, setDays] = useState(30);

@@ -22,7 +22,7 @@ import { Skeleton } from "@/shared/components/ui/skeleton";
 import { PassengerTrustBadge } from "../../../../shared/components/badges/PassengerTrustBadge";
 import { RideChatDialog } from "../RideChatDialog";
 import { cn } from "@/shared/utils/cn";
-import type { MobilityRide } from "./DriverRidesTab";
+import type { MobilityRide } from "@/core/mobility/types/ride";
 import { useSessionContext } from "@/core/session";
 import { RIDE_STATUS, PAYMENT_METHOD } from "@/shared/types/constants";
 import { toast } from "sonner";
@@ -252,16 +252,17 @@ export function DriverRidesList({
         const passengerTrust = getPassengerTrustInfo(ride);
         const isEntrega = ride.ride_mode === "motoboy" || ride.type === "entrega";
         const isActionLoading = loadingAction === ride.id;
-        const canStartRide = [
+        const canStartStatuses: string[] = [
           RIDE_STATUS.DRIVER_ASSIGNED,
           RIDE_STATUS.DRIVER_ACCEPTED,
           RIDE_STATUS.DRIVER_ARRIVING,
           RIDE_STATUS.DRIVER_ARRIVED,
           RIDE_STATUS.PASSENGER_BOARDED,
           RIDE_STATUS.PASSENGER_ON_BOARD,
-        ].includes(ride.status as string);
+        ];
+        const canStartRide = canStartStatuses.includes(ride.status);
         const canCompleteRide = ride.status === RIDE_STATUS.IN_PROGRESS;
-        const canCancelRide = [
+        const canCancelStatuses: string[] = [
           RIDE_STATUS.REQUESTED,
           RIDE_STATUS.SEARCHING_DRIVER,
           RIDE_STATUS.DRIVER_ASSIGNED,
@@ -270,7 +271,8 @@ export function DriverRidesList({
           RIDE_STATUS.DRIVER_ARRIVED,
           RIDE_STATUS.PASSENGER_BOARDED,
           RIDE_STATUS.PASSENGER_ON_BOARD,
-        ].includes(ride.status as string);
+        ];
+        const canCancelRide = canCancelStatuses.includes(ride.status);
         const canTrustFeedback =
           type === "history" &&
           (ride.status === RIDE_STATUS.COMPLETED || ride.status === RIDE_STATUS.DELIVERED);
@@ -355,13 +357,13 @@ export function DriverRidesList({
                 <div>
                   <p className="text-[0.6rem] text-muted-foreground">Origem</p>
                   <p className="text-sm text-foreground font-medium">
-                    {ride.origin}
+                    {String(ride.origin ?? "")}
                   </p>
                 </div>
                 <div>
                   <p className="text-[0.6rem] text-muted-foreground">Destino</p>
                   <p className="text-sm text-foreground font-medium">
-                    {ride.destination}
+                    {String(ride.destination ?? "")}
                   </p>
                 </div>
               </div>
@@ -381,7 +383,7 @@ export function DriverRidesList({
               </div>
               {ride.payment_method && (
                 <Badge className="bg-secondary/50 text-muted-foreground text-[0.6rem] px-2 rounded-full border border-border">
-                  {resolvePaymentBadgeLabel(ride.payment_method)}
+                  {resolvePaymentBadgeLabel(String(ride.payment_method))}
                 </Badge>
               )}
             </div>
@@ -410,7 +412,7 @@ export function DriverRidesList({
               </Button>
             )}
 
-            {type === RIDE_STATUS.ACCEPTED && (
+            {type === "accepted" && (
               <div className="space-y-2">
                 <div className="grid grid-cols-2 gap-2">
                   <Button

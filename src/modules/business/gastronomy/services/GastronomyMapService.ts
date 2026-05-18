@@ -88,13 +88,10 @@ class GastronomyMapService {
         .limit(limit * 3);
 
       if (territoryFilter) {
-        query = applyTerritoryFilter(
-          query as unknown as { in: (field: string, values: string[]) => unknown },
-          territoryFilter,
-        );
+        query = applyTerritoryFilter(query as any, territoryFilter) as any;
       }
 
-      const { data, error } = await query;
+      const { data, error } = await (query as any);
 
       if (error) {
         logger.error("GastronomyMapService.getByBounds", error as Error);

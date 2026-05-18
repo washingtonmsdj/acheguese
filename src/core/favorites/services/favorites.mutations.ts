@@ -15,6 +15,7 @@ const TABLE = "profile_favorites_new";
 const BUSINESS_FAVORITES_TABLE = "business_favorites";
 
 const supabaseTyped = supabase as unknown as AdminSupabaseClient;
+const favoritesDb = supabaseTyped as any;
 
 /**
  * Adicionar favorito
@@ -23,7 +24,7 @@ export async function addFavorite(
   data: CreateFavoriteData,
 ): Promise<ProfileFavorite | null> {
   try {
-    const { data: favorite, error } = await supabaseTyped
+    const { data: favorite, error } = await favoritesDb
       .from(TABLE)
       .insert(data)
       .select()
@@ -56,7 +57,7 @@ export async function removeFavorite(
   favoritingProfileId: string,
 ): Promise<boolean> {
   try {
-    const { error } = await supabaseTyped
+    const { error } = await favoritesDb
       .from(TABLE)
       .delete()
       .eq("favorited_profile_id", favoritedProfileId)

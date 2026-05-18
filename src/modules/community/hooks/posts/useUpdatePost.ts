@@ -5,7 +5,7 @@
  */
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { feedService } from "@/core/posts/services";
+import { postService } from "@/core/posts/services";
 import type { UpdatePostData, Post } from "@/core/feed/types";
 interface UpdatePostVariables {
   postId: string;
@@ -16,7 +16,7 @@ export function useUpdatePost() {
   const queryClient = useQueryClient();
 
   return useMutation<Post, Error, UpdatePostVariables>({
-    mutationFn: ({ postId, date }) => feedService.updatePost(postId, date),
+    mutationFn: ({ postId, date }) => postService.updatePost(postId, date),
 
     onMutate: async ({ postId, date }) => {
       await queryClient.cancelQueries({ queryKey: ["post", postId] });

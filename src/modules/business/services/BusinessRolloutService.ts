@@ -13,6 +13,7 @@ import { createRolloutRepository } from '@/core/rollout/repositories/createRollo
 import { createLocationRepository } from '@/core/location/repositories/createLocationRepository';
 import { businessLocationService } from './BusinessLocationService';
 import type { EffectiveRollout } from '@/core/rollout/types';
+import { ModuleKey } from '@/core/rollout/types';
 
 export class BusinessRolloutService {
   private rolloutService: RolloutService;
@@ -38,7 +39,7 @@ export class BusinessRolloutService {
 
     try {
       const result = await this.rolloutService.isModuleActive({
-        module_key: 'business',
+        module_key: ModuleKey.BUSINESS,
         location_id: locationId
       });
       
@@ -62,7 +63,7 @@ export class BusinessRolloutService {
 
     try {
       const result = await this.rolloutService.getEffectiveRollout({
-        module_key: 'business',
+        module_key: ModuleKey.BUSINESS,
         location_id: locationId
       });
       
@@ -110,7 +111,7 @@ export class BusinessRolloutService {
 
     try {
       const result = await this.rolloutService.getModuleConfig({
-        module_key: 'business',
+        module_key: ModuleKey.BUSINESS,
         location_id: locationId
       });
       

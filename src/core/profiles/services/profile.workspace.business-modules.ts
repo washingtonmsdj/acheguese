@@ -1,4 +1,5 @@
 import { businessManagementRoutes } from "@/core/business/utils/businessManagementRoutes";
+import type { ProfileBusinessModuleSnapshot } from "./types";
 
 type BusinessWorkspaceInput = {
   id: string;
@@ -62,7 +63,7 @@ export function buildBusinessModuleSnapshot(params: {
   qrCode: QrCodeLike;
   getCanonicalUrl: BusinessUrlBuilder;
   getShareUrl: BusinessUrlBuilder;
-}) {
+}): ProfileBusinessModuleSnapshot {
   const {
     business,
     planTier,

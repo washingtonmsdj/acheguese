@@ -14,6 +14,7 @@ import { createRolloutRepository } from '@/core/rollout/repositories/createRollo
 import { createLocationRepository } from '@/core/location/repositories/createLocationRepository';
 import { classifiedsLocationService } from './ClassifiedsLocationService';
 import type { EffectiveRollout } from '@/core/rollout/types';
+import { ModuleKey } from '@/core/rollout/types';
 
 export class ClassifiedsRolloutService {
   private rolloutService: RolloutService;
@@ -31,7 +32,7 @@ export class ClassifiedsRolloutService {
 
     try {
       const result = await this.rolloutService.isModuleActive({
-        module_key: 'classifieds',
+        module_key: ModuleKey.CLASSIFIEDS,
         location_id: locationId,
       });
       return result.is_active;
@@ -46,7 +47,7 @@ export class ClassifiedsRolloutService {
 
     try {
       const result = await this.rolloutService.getEffectiveRollout({
-        module_key: 'classifieds',
+        module_key: ModuleKey.CLASSIFIEDS,
         location_id: locationId,
       });
       return result.effective_rollout;
@@ -72,7 +73,7 @@ export class ClassifiedsRolloutService {
 
     try {
       const result = await this.rolloutService.getModuleConfig({
-        module_key: 'classifieds',
+        module_key: ModuleKey.CLASSIFIEDS,
         location_id: locationId,
       });
       return result.config;

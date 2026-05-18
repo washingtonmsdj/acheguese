@@ -165,32 +165,36 @@ export class CityService {
         logger.warn('City metadata not found in database, using defaults:', error);
         return fallback;
       }
+      if (!data) {
+        return fallback;
+      }
 
+      const dataAny = data as any;
       return {
-        id: data.id,
-        city: data.city,
-        state: data.state,
-        population: data.population ?? SALVADOR_DEFAULT.population,
-        districts_count: data.districts_count ?? SALVADOR_DEFAULT.districts_count,
-        active_businesses: data.active_businesses ?? SALVADOR_DEFAULT.active_businesses,
-        schools_count: data.schools_count ?? SALVADOR_DEFAULT.schools_count,
-        professionals_count: data.professionals_count ?? SALVADOR_DEFAULT.professionals_count,
-        bus_lines_count: data.bus_lines_count ?? SALVADOR_DEFAULT.bus_lines_count,
-        description: data.description,
-        founded_year: data.founded_year,
-        area_km2: data.area_km2,
-        updated_at: data.updated_at,
+        id: dataAny.id,
+        city: dataAny.city,
+        state: dataAny.state,
+        population: dataAny.population ?? SALVADOR_DEFAULT.population,
+        districts_count: dataAny.districts_count ?? SALVADOR_DEFAULT.districts_count,
+        active_businesses: dataAny.active_businesses ?? SALVADOR_DEFAULT.active_businesses,
+        schools_count: dataAny.schools_count ?? SALVADOR_DEFAULT.schools_count,
+        professionals_count: dataAny.professionals_count ?? SALVADOR_DEFAULT.professionals_count,
+        bus_lines_count: dataAny.bus_lines_count ?? SALVADOR_DEFAULT.bus_lines_count,
+        description: dataAny.description,
+        founded_year: dataAny.founded_year,
+        area_km2: dataAny.area_km2,
+        updated_at: dataAny.updated_at,
         // JSONB fields
-        emergency_contacts: data.emergency_contacts ?? [],
-        utility_contacts: data.utility_contacts ?? [],
-        tourist_attractions: data.tourist_attractions ?? [],
-        city_hall_info: data.city_hall_info ?? {},
-        elected_officials: data.elected_officials ?? { 
+        emergency_contacts: dataAny.emergency_contacts ?? [],
+        utility_contacts: dataAny.utility_contacts ?? [],
+        tourist_attractions: dataAny.tourist_attractions ?? [],
+        city_hall_info: dataAny.city_hall_info ?? {},
+        elected_officials: dataAny.elected_officials ?? { 
           executive: [], 
           legislative: { president: null, featured: [], total_councilors: 0 } 
         },
-        featured_districts: data.featured_districts ?? [],
-        city_status: (data.city_status as CityStatus | null) ?? fallback.city_status,
+        featured_districts: dataAny.featured_districts ?? [],
+        city_status: (dataAny.city_status as CityStatus | null) ?? fallback.city_status,
       };
     } catch (err) {
       trackError(err as Error, {
@@ -240,8 +244,8 @@ export class CityService {
     updates: Partial<CityMetadata>
   ): Promise<void> {
     try {
-      const supabaseTyped = supabase as unknown as AdminSupabaseClient;
-      const { error } = await supabaseTyped
+      const cityDb = supabase as any;
+      const { error } = await cityDb
         .from('city_metadata')
         .update(updates)
         .eq('id', cityId);

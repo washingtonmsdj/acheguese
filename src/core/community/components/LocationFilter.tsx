@@ -25,7 +25,9 @@ export function LocationFilter({ value, onChange }: LocationFilterProps) {
   const userLocation = {
     city: publicCity?.trim() || "Sua cidade",
     neighborhood: publicNeighborhood?.trim() || "Seu bairro",
-    street: activeProfile?.street?.trim() || "Sua rua",
+    street:
+      ((activeProfile as { street?: string | null } | null)?.street ?? "")
+        .trim() || "Sua rua",
   };
 
   return (

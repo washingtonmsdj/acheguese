@@ -256,7 +256,7 @@ export const DOMAIN_REGISTRY: DomainRegistryEntry[] = [
       "src/core/service-areas/services/ServiceAreasService.ts",
       "src/core/services/services/ServicesService.ts",
       "src/modules/classifieds/jobs/services/VagasService.ts",
-      "src/modules/classifieds/jobs/services/AdminVagasService.ts",
+      "src/core/admin/services/AdminVagasService.ts",
     ],
     routePrefixes: [
       "/services/:id",

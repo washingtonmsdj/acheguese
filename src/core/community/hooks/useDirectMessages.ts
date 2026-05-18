@@ -27,7 +27,7 @@ export type { Message as DirectMessage } from "@/core/messaging/types";
 export function useDirectMessages(_currentUserId?: string) {
   const { activeProfile } = useSessionContext();
   const profileId = activeProfile?.id;
-  const actorRole = resolveTrustActorRoleFromProfileType(activeProfile?.profile_type);
+  const actorRole = resolveTrustActorRoleFromProfileType(activeProfile?.profileType);
 
   const [conversations, setConversations] = useState<ConversationPreview[]>([]);
   const [messages, setMessages] = useState<Message[]>([]);

@@ -33,9 +33,9 @@ export class RoleService {
    * Usa a função `has_role()` do banco (SECURITY DEFINER).
    */
   static async hasRole(userId: string, role: AppRole): Promise<boolean> {
-    const { data, error } = await supabase.rpc('has_role', {
-      _user_id: userId,
-      _role: role
+    const { data, error } = await (supabase as any).rpc('has_role', {
+      p_user_id: userId,
+      p_role: role
     });
 
     if (error) {
@@ -52,8 +52,8 @@ export class RoleService {
    * Usa a função `is_admin()` do banco (SECURITY DEFINER).
    */
   static async isAdmin(userId: string): Promise<boolean> {
-    const { data, error } = await supabase.rpc('is_admin', {
-      _user_id: userId
+    const { data, error } = await (supabase as any).rpc('is_admin', {
+      p_user_id: userId
     });
 
     if (error) {
@@ -70,8 +70,8 @@ export class RoleService {
    * Usa a função `is_super_admin()` do banco (SECURITY DEFINER).
    */
   static async isSuperAdmin(userId: string): Promise<boolean> {
-    const { data, error } = await supabase.rpc('is_super_admin', {
-      _user_id: userId
+    const { data, error } = await (supabase as any).rpc('is_super_admin', {
+      p_user_id: userId
     });
 
     if (error) {
@@ -88,8 +88,8 @@ export class RoleService {
    * Usa a função `get_user_roles()` do banco (SECURITY DEFINER).
    */
   static async getUserRoles(userId: string): Promise<AppRole[]> {
-    const { data, error } = await supabase.rpc('get_user_roles', {
-      _user_id: userId
+    const { data, error } = await (supabase as any).rpc('get_user_roles', {
+      p_user_id: userId
     });
 
     if (error) {

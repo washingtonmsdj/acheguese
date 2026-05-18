@@ -1,6 +1,13 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase";
-import type { SponsoredAd } from "@/core/community/types";
+
+type SponsoredAd = {
+  id: string;
+  title: string;
+  description: string;
+  imageUrl: string;
+  link: string;
+};
 
 export function useSponsoredAdsRuntime(placementKey = "sidebar_widget") {
   const query = useQuery({

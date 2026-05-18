@@ -63,7 +63,7 @@ export function TopUsersWidget() {
     return { city: "", neighborhood: null as string | null };
   }, [territorialContext, activeLocation, filters.locationScope]);
 
-  const { data: topUsers, isLoading } = useQuery<TopUserItem[]>({
+  const { data: topUsers, isLoading } = useQuery<any>({
     queryKey: ["top-users", city, neighborhood],
     queryFn: async () => {
       return await GamificationService.getTopUsersByLocation(city, neighborhood, 5);
@@ -72,7 +72,8 @@ export function TopUsersWidget() {
     enabled: city.length > 0,
   });
 
-  if (isLoading || !topUsers || topUsers.length === 0) return null;
+  const users = (topUsers ?? []) as TopUserItem[];
+  if (isLoading || users.length === 0) return null;
 
   return (
     <Card>
@@ -83,7 +84,7 @@ export function TopUsersWidget() {
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-3">
-        {topUsers.map((topUser, index: number) => (
+        {users.map((topUser, index: number) => (
           <div
             key={topUser.id}
             className="flex items-center gap-3 cursor-pointer hover:bg-accent p-2 rounded-md transition-colors"

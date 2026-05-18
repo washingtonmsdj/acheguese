@@ -16,17 +16,7 @@ import {
 } from './mobility.mutations';
 import { TRUST_ACTOR_ROLES, TrustEventService } from '@/core/trust';
 import { RIDE_STATUS } from '../constants';
-
-export interface RideRequest {
-  id: string;
-  passenger_profile_id: string;
-  driver_profile_id?: string;
-  status: string;
-  pickup_location: string;
-  dropoff_location: string;
-  created_at: string;
-  [key: string]: unknown;
-}
+import type { RideRequest } from '../types/types';
 
 export interface CreateRideData {
   pickup_location: string;

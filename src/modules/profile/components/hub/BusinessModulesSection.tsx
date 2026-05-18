@@ -20,7 +20,7 @@ import { businessManagementRoutes } from '@/core/business/utils/businessManageme
 import type { ProfileBusinessModuleItem } from '@/core/profiles/services/types';
 
 interface BusinessModulesSectionProps {
-  businessModules: ProfileBusinessModuleItem[];
+  businessModules: readonly ProfileBusinessModuleItem[];
   showOnboarding: boolean;
   onCreateBusiness: () => void;
   onNavigate: (url: string) => void;

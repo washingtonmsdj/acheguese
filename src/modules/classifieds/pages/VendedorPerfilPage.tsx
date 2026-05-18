@@ -15,6 +15,7 @@ import { Badge } from "@/shared/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/shared/components/ui/tabs";
 import { cn } from "@/shared/utils/cn";
 import { useVendedorPerfil } from "../hooks/useVendedorPerfil";
+import type { VendedorPerfil } from "../hooks/useVendedorPerfil";
 import { Skeleton } from "@/shared/components/ui/skeleton";
 import { VendedorAdFilters, applyAdFilters, type AdFilters } from "../components/profile/VendedorAdFilters";
 import { VendedorContactBar } from "../components/profile/VendedorContactBar";
@@ -31,7 +32,7 @@ export default function VendedorPerfilPage() {
     sortBy: 'recent',
   });
 
-  const filteredAds = useMemo(() => {
+  const filteredAds = useMemo<VendedorPerfil["all_ads"]>(() => {
     if (!vendedor) return [];
     return applyAdFilters(vendedor.all_ads, filters);
   }, [vendedor, filters]);

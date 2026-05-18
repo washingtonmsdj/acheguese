@@ -132,7 +132,7 @@ export async function updateReview(
 export async function removeReview(reviewId: string, type: ReviewType): Promise<boolean> {
   try {
     const table = getTableName(type);
-    const { error } = await (supabase
+    const { error } = await ((supabase as any)
       .from(table)
       .delete()
       .eq("id", reviewId) as unknown as Promise<{ error: unknown }>);

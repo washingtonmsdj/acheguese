@@ -24,7 +24,7 @@ export { BusinessAbout } from "./BusinessAbout";
 export { BusinessGallery } from "./BusinessGallery";
 export { BusinessHours } from "./BusinessHours";
 export { BusinessReviews } from "./BusinessReviews";
-export { BusinessStats } from "./BusinessStats";
+export { default as BusinessStats } from "./BusinessStats";
 
 // ============================================
 // FEATURE COMPONENTS - Funcionalidades específicas
@@ -32,40 +32,40 @@ export { BusinessStats } from "./BusinessStats";
 
 export { BusinessProducts } from "./BusinessProducts";
 export { BusinessServices } from "./BusinessServices";
-export { DigitalMenu } from "./DigitalMenu";
-export { PhotoGallery } from "./PhotoGallery";
-export { PromoBanner } from "./PromoBanner";
+export { default as DigitalMenu } from "./DigitalMenu";
+export { default as PhotoGallery } from "./PhotoGallery";
+export { default as PromoBanner } from "./PromoBanner";
 
 // ============================================
 // MANAGEMENT COMPONENTS - Gestão de negócio
 // ============================================
 
-export { AnalyticsDashboard } from "./AnalyticsDashboard";
-export { AppointmentsPanel } from "./AppointmentsPanel";
-export { AppointmentNotifications } from "./AppointmentNotifications";
-export { CouponManager } from "./CouponManager";
-export { EmpresaDashboardTab } from "./EmpresaDashboardTab";
-export { EmpresaEditSheet } from "./EmpresaEditSheet";
-export { SecoesAtivasManager } from "./SecoesAtivasManager";
+export { default as AnalyticsDashboard } from "./AnalyticsDashboard";
+export { default as AppointmentsPanel } from "./AppointmentsPanel";
+export { default as AppointmentNotifications } from "./AppointmentNotifications";
+export { default as CouponManager } from "./CouponManager";
+export { default as EmpresaDashboardTab } from "./EmpresaDashboardTab";
+export { default as EmpresaEditSheet } from "./EmpresaEditSheet";
+export { default as SecoesAtivasManager } from "./SecoesAtivasManager";
 
 // ============================================
 // NETWORK COMPONENTS - Rede de empresas
 // ============================================
 
 export { default as BranchNetworkBlock } from "@/core/business/components/BranchNetworkBlock";
-export { NetworkTab } from "./NetworkTab";
+export { default as NetworkTab } from "./NetworkTab";
 
 // ============================================
 // UI COMPONENTS - Componentes de interface
 // ============================================
 
-export { BookingButton } from "./BookingButton";
+export { default as BookingButton } from "./BookingButton";
 export { BusinessFilters } from "./BusinessFilters";
 export { ContactLink } from "./ContactLink";
 export { NeighborhoodMap } from "@/core/business/components/NeighborhoodMap";
-export { QuickActions } from "./QuickActions";
-export { ShareBusinessDialog } from "./ShareBusinessDialog";
-export { SubscriptionPlans } from "./SubscriptionPlans";
+export { default as QuickActions } from "./QuickActions";
+export { default as ShareBusinessDialog } from "./ShareBusinessDialog";
+export { default as SubscriptionPlans } from "./SubscriptionPlans";
 
 // ============================================
 // SUB-FOLDERS - Componentes em subpastas

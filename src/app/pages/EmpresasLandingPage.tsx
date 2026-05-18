@@ -177,7 +177,7 @@ export default function EmpresasLandingPage({
     if (nearbyMode && nearbyBusinesses && nearbyBusinesses.length > 0) {
       return (nearbyBusinesses as NearbyBusinessResult[]).map((result) => ({
         id: result.entity_id || result.id,
-        name: result.entity_data?.name || result.name || 'Empresa',
+        name: result.entity_data?.name || 'Empresa',
         category: result.entity_data?.category || "Outros",
         rating: result.entity_data?.rating || 0,
         reviews: result.entity_data?.total_reviews || 0,

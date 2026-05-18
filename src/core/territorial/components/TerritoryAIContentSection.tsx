@@ -69,7 +69,7 @@ export function TerritoryAIContentSection({ territorySlug, territoryName, member
 
   if (!content) return null;
 
-  const demographics = content.demographics || {};
+  const demographics = (content.demographics || {}) as Record<string, unknown>;
   const events = (content.events || []) as TerritoryEvent[];
 
   return (
@@ -115,7 +115,7 @@ export function TerritoryAIContentSection({ territorySlug, territoryName, member
               <div className="bg-gradient-to-br from-teal-500/8 to-teal-500/4 border border-teal-500/20 rounded-xl p-3.5">
                 <Users className="h-4 w-4 text-teal-500 mb-1.5" />
                 <p className="text-lg font-bold text-foreground">
-                  ~{(demographics.estimated_population / 1000).toFixed(0)}mil
+                  ~{(Number(demographics.estimated_population ?? 0) / 1000).toFixed(0)}mil
                 </p>
                 <p className="text-[10px] text-muted-foreground">Habitantes</p>
               </div>
@@ -123,27 +123,27 @@ export function TerritoryAIContentSection({ territorySlug, territoryName, member
             {demographics.area_km2 && (
               <div className="bg-gradient-to-br from-blue-500/8 to-blue-500/4 border border-blue-500/20 rounded-xl p-3.5">
                 <MapPin className="h-4 w-4 text-blue-500 mb-1.5" />
-                <p className="text-lg font-bold text-foreground">{demographics.area_km2} km²</p>
+                <p className="text-lg font-bold text-foreground">{String(demographics.area_km2 ?? "")} km²</p>
                 <p className="text-[10px] text-muted-foreground">Área</p>
               </div>
             )}
             {demographics.economy && (
               <div className="col-span-2 bg-gradient-to-br from-amber-500/8 to-amber-500/4 border border-amber-500/20 rounded-xl p-3.5">
                 <Building2 className="h-4 w-4 text-amber-500 mb-1.5" />
-                <p className="text-xs text-foreground/80 leading-relaxed">{demographics.economy}</p>
+                <p className="text-xs text-foreground/80 leading-relaxed">{String(demographics.economy ?? "")}</p>
                 <p className="text-[10px] text-muted-foreground mt-1">Economia local</p>
               </div>
             )}
           </div>
 
-          {demographics.main_characteristics?.length > 0 && (
+          {Array.isArray(demographics.main_characteristics) && demographics.main_characteristics.length > 0 && (
             <div className="mt-3 flex flex-wrap gap-1.5">
-              {demographics.main_characteristics.map((c: string, i: number) => (
+              {demographics.main_characteristics.map((c: unknown, i: number) => (
                 <span
                   key={i}
                   className="text-[10px] bg-muted/60 text-muted-foreground px-2.5 py-1 rounded-full border border-border"
                 >
-                  {c}
+                  {String(c)}
                 </span>
               ))}
             </div>
@@ -186,3 +186,4 @@ export function TerritoryAIContentSection({ territorySlug, territoryName, member
     </>
   );
 }
+

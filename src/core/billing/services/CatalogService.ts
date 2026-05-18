@@ -15,6 +15,7 @@
 
 import { supabase } from '@/integrations/supabase/supabase';
 import { logger } from '@/shared/utils/logger';
+const catalogDb = supabase as any;
 
 // ─── Tipos ────────────────────────────────────────────────────────────────────
 
@@ -96,7 +97,7 @@ export class CatalogService {
     context: EligibilityContext
   ): Promise<EligibleCatalog> {
     try {
-      const { data: items, error } = await supabase
+      const { data: items, error } = await catalogDb
         .from('catalog_item')
         .select(`
           id,
@@ -141,9 +142,10 @@ export class CatalogService {
       }
       
       // Separar por tipo
-      const base_plans = items?.filter(i => i.item_type === 'base_plan') || [];
-      const vertical_packages = items?.filter(i => i.item_type === 'vertical_package') || [];
-      const addons = items?.filter(i => i.item_type === 'addon') || [];
+      const typedItems = (items || []) as CatalogRow[];
+      const base_plans = typedItems.filter(i => i.item_type === 'base_plan');
+      const vertical_packages = typedItems.filter(i => i.item_type === 'vertical_package');
+      const addons = typedItems.filter(i => i.item_type === 'addon');
       
       return {
         base_plans: base_plans.map(this.mapCatalogItem),
@@ -162,7 +164,7 @@ export class CatalogService {
    */
   static async getPlanByCode(planCode: string): Promise<CatalogItem | null> {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await catalogDb
         .from('catalog_item')
         .select(`
           id,
@@ -218,7 +220,7 @@ export class CatalogService {
    */
   static async getAddonsByVertical(vertical: string): Promise<CatalogItem[]> {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await catalogDb
         .from('catalog_item')
         .select(`
           id,
@@ -277,7 +279,7 @@ export class CatalogService {
     itemId: string
   ): Promise<{ eligible: boolean; reason?: string }> {
     try {
-      const { data: item, error } = await supabase
+      const { data: item, error } = await catalogDb
         .from('catalog_item')
         .select('entity_family, vertical, status')
         .eq('id', itemId)

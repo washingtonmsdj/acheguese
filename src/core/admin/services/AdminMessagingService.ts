@@ -12,7 +12,6 @@ import type { AdminSupabaseClient } from "../types/adminDatabase.types";
 import { messagingService } from "@/core/messaging/services/MessagingService";
 import type {
   Conversation,
-  ConversationPreview,
   Message,
 } from "@/core/messaging/types";
 
@@ -53,6 +52,8 @@ interface ConversationListRow extends AdminConversationData {
 }
 
 class AdminMessagingServiceClass {
+  private readonly db = supabase as any;
+
   /**
    * Busca estatísticas de mensagens
    */
@@ -102,7 +103,7 @@ class AdminMessagingServiceClass {
       const limit = options.limit || 20;
       const offset = (page - 1) * limit;
 
-      let query = supabase
+      let query = this.db
         .from("conversations")
         .select(
           `
@@ -140,10 +141,10 @@ class AdminMessagingServiceClass {
       }
 
       // Buscar contagem de mensagens para cada conversa
-      const rows: ConversationListRow[] = data || [];
+      const rows = (data || []) as ConversationListRow[];
       const conversationsWithCounts = await Promise.all(
         rows.map(async (conv) => {
-          const { count: msgCount } = await supabase
+          const { count: msgCount } = await this.db
             .from("messages")
             .select("id", { count: "exact", head: true })
             .eq("conversation_id", conv.id);
@@ -189,19 +190,19 @@ class AdminMessagingServiceClass {
       }
 
       // Buscar contagem de mensagens
-      const { count: msgCount } = await supabase
+      const { count: msgCount } = await this.db
         .from("messages")
         .select("id", { count: "exact", head: true })
         .eq("conversation_id", id);
 
       // Buscar informações de ambos os usuários
       const [buyerProfile, sellerProfile] = await Promise.all([
-        supabase
+        this.db
           .from("profiles")
           .select("name, avatar_url")
           .eq("id", conversation.buyer_id)
           .single(),
-        supabase
+        this.db
           .from("profiles")
           .select("name, avatar_url")
           .eq("id", conversation.seller_id)

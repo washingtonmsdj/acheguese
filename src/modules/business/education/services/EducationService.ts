@@ -141,7 +141,6 @@ export const EducationService = {
       whatsapp_number: null,
       status: 'draft',
       published_at: null,
-      niche_config_overrides: {},
       school_type: null,
       school_network: null,
       school_inep_code: null,
@@ -215,7 +214,7 @@ export const EducationService = {
     const profile = await queries.getEducationProfileById(profileId);
     if (!profile) return false;
 
-    return BusinessOwnershipService.isOwnerOrManager(profile.business_id, userId);
+    return BusinessOwnershipService.isOwner(profile.business_id, userId);
   },
 
   /**

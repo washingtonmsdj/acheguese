@@ -28,7 +28,7 @@ export function useBusinessSimilar({
           category,
           limit,
         );
-        setBusinesses(data);
+        setBusinesses((data ?? []).filter((item): item is Business => !!item?.id));
       } catch (err) {
         logger.error("Error fetching similar businesses:", err);
         setError(err as Error);

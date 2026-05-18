@@ -64,7 +64,7 @@ class MapLayerRuntimeService {
     try {
       if (territoryFilter?.scope === "none") return [];
 
-      let query = supabase
+      let query = (supabase as any)
         .from("business_data")
         .select(
           `
@@ -86,10 +86,7 @@ class MapLayerRuntimeService {
         .limit(limit * 3);
 
       if (territoryFilter) {
-        query = applyTerritoryFilter(
-          query as unknown as { in: (field: string, values: string[]) => unknown },
-          territoryFilter,
-        );
+        query = applyTerritoryFilter(query as any, territoryFilter) as any;
       }
 
       const { data, error } = await query;
@@ -132,7 +129,7 @@ class MapLayerRuntimeService {
     const radiusDegrees = radiusMeters / 111000;
 
     try {
-      let query = supabase
+      let query = (supabase as any)
         .from("community_alerts")
         .select("id, latitude, longitude, neighborhood_display, description, created_at, location_id")
         .eq("status", "ativo")
@@ -146,7 +143,7 @@ class MapLayerRuntimeService {
         .limit(limit * 2);
 
       if (territoryFilter) {
-        query = applyTerritoryFilter(query, territoryFilter, "location_id");
+        query = applyTerritoryFilter(query as any, territoryFilter) as any;
       }
 
       const { data, error } = await query;

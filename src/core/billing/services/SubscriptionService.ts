@@ -11,6 +11,7 @@
 import { logger } from '@/shared/utils/logger';
 import { supabase } from '@/integrations/supabase/supabase';
 import { SessionService } from '@/core/session/services/SessionService';
+const subscriptionDb = supabase as any;
 export interface UserSubscription {
   id: string;
   user_id: string;
@@ -50,7 +51,7 @@ export class SubscriptionService {
       throw new Error('User not authenticated');
     }
 
-    const { data, error } = await supabase
+    const { data, error } = await subscriptionDb
       .from('user_subscriptions')
       .select('*')
       .eq('user_id', user.id)
@@ -78,7 +79,7 @@ export class SubscriptionService {
       throw new Error('User not authenticated');
     }
 
-    const { data, error } = await supabase.rpc('get_user_active_subscription', {
+    const { data, error } = await subscriptionDb.rpc('get_user_active_subscription', {
       p_user_id: user.id,
     });
 
@@ -100,7 +101,7 @@ export class SubscriptionService {
       return false;
     }
 
-    const { data, error } = await supabase.rpc('user_has_plan', {
+    const { data, error } = await subscriptionDb.rpc('user_has_plan', {
       p_user_id: user.id,
       p_plan_code: planCode,
     });
@@ -123,7 +124,7 @@ export class SubscriptionService {
       return false;
     }
 
-    const { data, error } = await supabase.rpc('user_has_feature', {
+    const { data, error } = await subscriptionDb.rpc('user_has_feature', {
       p_user_id: user.id,
       p_feature: feature,
     });
@@ -146,7 +147,7 @@ export class SubscriptionService {
       return 0;
     }
 
-    const { data, error } = await supabase.rpc('get_user_entitlement_limit', {
+    const { data, error } = await subscriptionDb.rpc('get_user_entitlement_limit', {
       p_user_id: user.id,
       p_entitlement: entitlement,
     });

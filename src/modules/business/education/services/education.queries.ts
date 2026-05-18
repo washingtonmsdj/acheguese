@@ -203,7 +203,7 @@ export async function listEducationLeads(
     .eq('education_profile_id', profileId);
 
   if (status) {
-    query = query.eq('status', status);
+    query = query.eq('status', status as NonNullable<EducationLead['status']>);
   }
 
   const { data, error, count } = await query

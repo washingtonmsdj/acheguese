@@ -115,12 +115,12 @@ export default function WorkOpportunityDetailPageV2() {
       territoryLocationId: data.territory_location_id,
       source,
       actorProfileId: activeProfile?.id,
-      actorUserId: activeProfile?.user_id ?? activeProfile?.userId ?? null,
+      actorUserId: activeProfile?.userId ?? null,
       metadata: {
         view_path: "opportunity_detail",
       },
     });
-  }, [activeProfile?.id, activeProfile?.userId, activeProfile?.user_id, data?.id, data?.professional_id, data?.territory_location_id, source]);
+  }, [activeProfile?.id, activeProfile?.userId, data?.id, data?.professional_id, data?.territory_location_id, source]);
 
   const handleCopyContact = async () => {
     if (!data?.contact_notes) return;
@@ -147,7 +147,7 @@ export default function WorkOpportunityDetailPageV2() {
           territoryLocationId: data.territory_location_id,
           source,
           actorProfileId: activeProfile?.id,
-          actorUserId: activeProfile?.user_id ?? activeProfile?.userId ?? null,
+          actorUserId: activeProfile?.userId ?? null,
         },
         answer,
       );
@@ -249,7 +249,7 @@ export default function WorkOpportunityDetailPageV2() {
                         territoryLocationId: data.territory_location_id,
                         source,
                         actorProfileId: activeProfile?.id,
-                        actorUserId: activeProfile?.user_id ?? activeProfile?.userId ?? null,
+                        actorUserId: activeProfile?.userId ?? null,
                       });
 
                       const opened = tryOpenContact(data.contact_notes);
@@ -260,7 +260,7 @@ export default function WorkOpportunityDetailPageV2() {
                           territoryLocationId: data.territory_location_id,
                           source,
                           actorProfileId: activeProfile?.id,
-                          actorUserId: activeProfile?.user_id ?? activeProfile?.userId ?? null,
+                          actorUserId: activeProfile?.userId ?? null,
                         });
                       } else {
                         toast.info("Nao foi possivel abrir automaticamente. Copie o contato.");
@@ -280,7 +280,7 @@ export default function WorkOpportunityDetailPageV2() {
                           territoryLocationId: data.territory_location_id,
                           source,
                           actorProfileId: activeProfile?.id,
-                          actorUserId: activeProfile?.user_id ?? activeProfile?.userId ?? null,
+                          actorUserId: activeProfile?.userId ?? null,
                           metadata: { channel: "phone" },
                         });
                         window.open(`tel:${directPhone}`, "_self");
@@ -298,7 +298,7 @@ export default function WorkOpportunityDetailPageV2() {
                         territoryLocationId: data.territory_location_id,
                         source,
                         actorProfileId: activeProfile?.id,
-                        actorUserId: activeProfile?.user_id ?? activeProfile?.userId ?? null,
+                        actorUserId: activeProfile?.userId ?? null,
                         metadata: { conversion_type: "quick_interest" },
                       });
                       toast.success("Interesse rapido enviado. Continue o contato direto.");
@@ -359,7 +359,7 @@ export default function WorkOpportunityDetailPageV2() {
                           territoryLocationId: item.territory_location_id,
                           source: "direct",
                           actorProfileId: activeProfile?.id,
-                          actorUserId: activeProfile?.user_id ?? activeProfile?.userId ?? null,
+                          actorUserId: activeProfile?.userId ?? null,
                           metadata: {
                             click_path: "detail_recent_opportunities",
                           },
@@ -431,7 +431,7 @@ export default function WorkOpportunityDetailPageV2() {
                           territoryLocationId: data.territory_location_id,
                           source,
                           actorProfileId: activeProfile?.id,
-                          actorUserId: activeProfile?.user_id ?? activeProfile?.userId ?? null,
+                          actorUserId: activeProfile?.userId ?? null,
                         });
                         navigate(`/services/${data.professional?.id}`);
                       }}
@@ -471,3 +471,4 @@ export default function WorkOpportunityDetailPageV2() {
     </div>
   );
 }
+

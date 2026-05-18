@@ -15,7 +15,7 @@ import type {
   EducationNicheCapability,
   EducationNicheValidationResult 
 } from '../types';
-import type { PlanTier } from '@/core/billing/types';
+import { PlanTier } from '@/core/billing/types';
 
 // ═══════════════════════════════════════════════════════════════════════════
 // TIPOS
@@ -29,7 +29,7 @@ export interface UseEducationNicheBillingOptions {
 
 export interface CapabilityCheck {
   allowed: boolean;
-  reason: 'allowed' | 'niche_denied' | 'plan_denied' | 'inactive';
+  reason: 'allowed' | 'niche_denied' | 'plan_denied' | 'inactive' | 'unknown';
   upgradeMessage: string;
 }
 
@@ -248,14 +248,14 @@ function mapPlanTypeToTier(planType: string): PlanTier {
     case 'free':
       return PlanTier.FREE;
     case 'basic':
-      return PlanTier.BASIC;
+      return PlanTier.PRO;
     case 'pro':
     case 'premium':
       return PlanTier.PRO;
     case 'delivery':
       return PlanTier.DELIVERY;
     case 'enterprise':
-      return PlanTier.ENTERPRISE;
+      return PlanTier.PRO;
     default:
       return PlanTier.FREE;
   }

@@ -11,7 +11,7 @@ import { logger } from '@/shared/utils/logger';
 import { supabase } from '@/integrations/supabase';
 import { BusinessService } from './BusinessService';
 import type { Business } from '../types';
-import { OpeningHoursService } from '../OpeningHoursService';
+import { BusinessHoursService as OpeningHoursService } from '../BusinessHoursService';
 import { applyTerritoryFilter } from '@/core/location/utils';
 import type { TerritoryFilter } from '@/core/location/types';
 import { resolveLocationDescendants } from '@/core/location/utils/resolveLocationDescendants';
@@ -25,9 +25,11 @@ import type {
   GastronomyBusiness,
   GastronomyBusinessFilters,
   GastronomyProfile,
+  BusinessDataWithProfiles,
   TerritorySlugParams,
   PaginatedGastronomyBusinesses,
 } from '../types';
+type BusinessRow = BusinessDataWithProfiles & { business_name?: string; profile_id: string };
 
 // ============================================================
 // HELPERS INTERNOS
@@ -118,9 +120,9 @@ function buildProfilesQuery(
  * Mapeia registro business_data para GastronomyBusiness
  */
 async function mapRecordToGastronomyBusiness(
-  record: Business,
+  record: BusinessRow,
   params: {
-    profilesMap?: Map<string, Business>;
+    profilesMap?: Map<string, any>;
     gastronomyProfilesMap?: Map<string, GastronomyProfile>;
   } = {},
 ): Promise<GastronomyBusiness | null> {
@@ -142,7 +144,7 @@ async function mapRecordToGastronomyBusiness(
       id: record.profile_id,
       name: record.business_name || 'Empresa',
     },
-  });
+  } as BusinessDataWithProfiles);
 
   return {
     ...business,
@@ -174,14 +176,15 @@ async function fetchBusinessDataRecords(params: {
       return [];
     }
 
-    effectiveBusinessIds = (gastronomyProfiles || []).map((profile) => profile.business_id);
+    effectiveBusinessIds = ((gastronomyProfiles || []) as unknown as Array<{ business_id: string }>).map((profile) => profile.business_id);
   }
 
   if (!effectiveBusinessIds?.length) {
     return [];
   }
 
-  let query = supabase
+  let query = supabase as any;
+  query = query
     .from('business_data')
     .select(`
       *,
@@ -219,7 +222,7 @@ async function fetchBusinessDataRecords(params: {
     return [];
   }
 
-  return data || [];
+  return (data || []) as BusinessRow[];
 }
 
 // ============================================================
@@ -285,7 +288,7 @@ export async function getGastronomyBusiness(identifier: string): Promise<Gastron
     }
 
     if (bySlug) {
-      return mapRecordToGastronomyBusiness(bySlug);
+      return mapRecordToGastronomyBusiness(bySlug as BusinessRow);
     }
 
     // Se não for ID válido, retornar null
@@ -310,7 +313,7 @@ export async function getGastronomyBusiness(identifier: string): Promise<Gastron
       return null;
     }
 
-    return mapRecordToGastronomyBusiness(byId);
+    return mapRecordToGastronomyBusiness(byId as BusinessRow);
   } catch (error) {
     logger.error('[GastronomyQueries] Unexpected error:', error);
     return null;
@@ -362,7 +365,7 @@ export async function getGastronomyBusinessByTerritorySlug(
       return null;
     }
 
-    return mapRecordToGastronomyBusiness(data);
+    return mapRecordToGastronomyBusiness(data as BusinessRow);
   } catch (error) {
     logger.error('[GastronomyQueries] Error:', error);
     return null;

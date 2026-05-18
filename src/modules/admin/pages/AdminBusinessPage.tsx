@@ -102,10 +102,10 @@ export default function AdminBusinessPage() {
   const fields = ADMIN_BUSINESS_FIELDS;
   const quickActions = ADMIN_BUSINESS_ACTIONS;
   const filters = ADMIN_BUSINESS_FILTERS;
-  const getFieldValue = (business: Business, key: string): unknown =>
-    Object.entries(business as Record<string, unknown>).find(
-      ([entryKey]) => entryKey === key,
-    )?.[1];
+  const getFieldValue = (business: Business, key: string): unknown => {
+    const businessRecord = business as unknown as Record<string, unknown>;
+    return businessRecord[key];
+  };
 
   // 🎯 LOAD DATA usando BusinessService com PAGINAÇÃO
   const loadBusinesses = async (pageParam = 0, append = false) => {
@@ -193,11 +193,7 @@ export default function AdminBusinessPage() {
       if (value) {
         result = result.filter(
           (business) =>
-            String(
-              Object.entries(business as Record<string, unknown>).find(
-                ([entryKey]) => entryKey === key,
-              )?.[1] ?? "",
-            ).toLowerCase() ===
+            String(getFieldValue(business, key) ?? "").toLowerCase() ===
             value.toLowerCase(),
         );
       }
@@ -267,7 +263,7 @@ export default function AdminBusinessPage() {
       } else {
         // Create - precisa de userId (usar admin atual)
         const created = await BusinessService.createBusiness(
-          form as CreateBusinessInput,
+          form as unknown as CreateBusinessInput,
           activeProfile?.id || "",
         );
 
@@ -385,7 +381,11 @@ export default function AdminBusinessPage() {
       );
     }
     if (f.type === "number")
-      return <span className="font-mono text-xs">{val ?? 0}</span>;
+      return (
+        <span className="font-mono text-xs">
+          {typeof val === "number" || typeof val === "string" ? val : 0}
+        </span>
+      );
     return (
       <span className="truncate block max-w-[180px]">{String(val ?? "-")}</span>
     );
@@ -621,7 +621,7 @@ export default function AdminBusinessPage() {
                   </button>
                 ) : f.type === "select" && f.options ? (
                   <select
-                    value={form[f.key] ?? ""}
+                    value={String(form[f.key] ?? "")}
                     onChange={(e) =>
                       setForm((prev) => ({ ...prev, [f.key]: e.target.value }))
                     }
@@ -636,7 +636,7 @@ export default function AdminBusinessPage() {
                   </select>
                 ) : f.type === "textarea" ? (
                   <textarea
-                    value={form[f.key] ?? ""}
+                    value={String(form[f.key] ?? "")}
                     onChange={(e) =>
                       setForm((prev) => ({ ...prev, [f.key]: e.target.value }))
                     }
@@ -646,7 +646,7 @@ export default function AdminBusinessPage() {
                 ) : (
                   <Input
                     type={f.type === "number" ? "number" : "text"}
-                    value={form[f.key] ?? ""}
+                    value={String(form[f.key] ?? "")}
                     placeholder={f.placeholder}
                     onChange={(e) =>
                       setForm((prev) => ({

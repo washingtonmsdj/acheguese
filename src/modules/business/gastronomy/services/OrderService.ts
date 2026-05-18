@@ -664,11 +664,11 @@ export const OrderService = {
         return { data: currentOrder, error: null };
       }
 
-      const allowedPendingStatuses = new Set([
+      const allowedPendingStatuses = new Set<string>([
         FINANCIAL_STATUS.PENDING_PAYMENT,
         FINANCIAL_STATUS.NOT_APPLICABLE,
       ]);
-      if (!allowedPendingStatuses.has(currentOrder.payment_status as typeof FINANCIAL_STATUS[keyof typeof FINANCIAL_STATUS])) {
+      if (!allowedPendingStatuses.has(String(currentOrder.payment_status))) {
         return {
           data: null,
           error: `Status financeiro atual (${currentOrder.payment_status}) nao permite confirmacao manual.`,

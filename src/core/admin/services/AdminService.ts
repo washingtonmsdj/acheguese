@@ -17,6 +17,7 @@ import type { AdminSupabaseClient } from '../types/adminDatabase.types';
 import { MobilityService } from '@/core/mobility/services/runtime';
 
 const supabaseTyped = supabase as unknown as AdminSupabaseClient;
+const db = supabase as any;
 
 // â”€â”€ Tipos â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
@@ -98,7 +99,7 @@ export const AdminService = {
     limit?: number;
   }): Promise<ServiceResult<BusinessSummary[]>> {
     try {
-      let query = supabase
+      let query = db
         .from('business_data')
         .select(`
           id,
@@ -132,14 +133,14 @@ export const AdminService = {
       const businessesWithStats = await Promise.all(
         (businesses || []).map(async (business) => {
           // Busca plano
-          const { data: subscription } = await supabase
+          const { data: subscription } = await db
             .from('business_subscriptions')
             .select('plan_tier')
             .eq('business_id', business.id)
             .single();
 
           // Busca estatÃ­sticas de pedidos
-          const { data: orderStats } = await supabase
+          const { data: orderStats } = await db
             .from('orders')
             .select('total')
             .eq('business_id', business.id)
@@ -149,7 +150,11 @@ export const AdminService = {
           const totalDeliveries = await MobilityService.countDeliveredBySource('business', business.id);
 
           const totalOrders = orderStats?.length || 0;
-          const totalRevenue = orderStats?.reduce((sum, o) => sum + o.total, 0) || 0;
+          const totalRevenue =
+            (orderStats as Array<{ total?: number | null }> | null)?.reduce(
+              (sum, o) => sum + (o.total || 0),
+              0,
+            ) || 0;
 
           return {
             ...business,
@@ -176,7 +181,7 @@ export const AdminService = {
     isActive: boolean
   ): Promise<ServiceResult<boolean>> {
     try {
-      const { error } = await supabase
+      const { error } = await db
         .from('business_data')
         .update({ is_active: isActive })
         .eq('id', businessId);
@@ -205,7 +210,7 @@ export const AdminService = {
     limit?: number;
   }): Promise<ServiceResult<ProfileSummary[]>> {
     try {
-      let query = supabase
+      let query = db
         .from('profile_complete')
         .select(`
           id,
@@ -234,7 +239,7 @@ export const AdminService = {
       // Busca email e total de empresas de cada perfil
       const profilesWithStats = await Promise.all(
         ((profiles as ProfileListRow[] | null) || []).map(async (profile) => {
-          const { data: businesses } = await supabase
+          const { data: businesses } = await db
             .from('profile_links')
             .select('id')
             .eq('profile_id', profile.id)
@@ -264,7 +269,7 @@ export const AdminService = {
    */
   async listPlanUsage(): Promise<ServiceResult<PlanUsage[]>> {
     try {
-      const { data: subscriptions, error } = await supabase
+      const { data: subscriptions, error } = await db
         .from('business_subscriptions')
         .select(`
           business_id,
@@ -283,14 +288,14 @@ export const AdminService = {
       const usageData = await Promise.all(
         ((subscriptions as PlanUsageSubscriptionRow[] | null) || []).map(async (sub) => {
           // Busca pedidos
-          const { data: orders } = await supabase
+          const { data: orders } = await db
             .from('orders')
             .select('total')
             .eq('business_id', sub.business_id)
             .eq('status', 'completed');
 
           // Busca analytics
-          const { data: analytics } = await supabase.rpc('get_analytics_metrics', {
+          const { data: analytics } = await db.rpc('get_analytics_metrics', {
             p_entity_type: 'business',
             p_entity_id: sub.business_id,
           });
@@ -326,7 +331,7 @@ export const AdminService = {
     planTier: string
   ): Promise<ServiceResult<boolean>> {
     try {
-      const { error } = await supabase
+      const { error } = await db
         .from('business_subscriptions')
         .update({ plan_tier: planTier })
         .eq('business_id', businessId);
@@ -361,40 +366,44 @@ export const AdminService = {
   }>> {
     try {
       // Total de empresas
-      const { count: totalBusinesses } = await supabase
+      const { count: totalBusinesses } = await db
         .from('business_data')
         .select('*', { count: 'exact', head: true });
 
       // Empresas ativas
-      const { count: activeBusinesses } = await supabase
+      const { count: activeBusinesses } = await db
         .from('business_data')
         .select('*', { count: 'exact', head: true })
         .eq('is_active', true);
 
       // Total de usuÃ¡rios
-      const { count: totalUsers } = await supabase
+      const { count: totalUsers } = await db
         .from('profile_complete')
         .select('*', { count: 'exact', head: true });
 
       // Total de pedidos
-      const { data: orders } = await supabase
+      const { data: orders } = await db
         .from('orders')
         .select('total, status');
 
-      const completedOrders = orders?.filter(o => o.status === 'completed') || [];
+      const completedOrders =
+        ((orders as Array<{ status?: string; total?: number | null }> | null) || []).filter(
+          (o) => o.status === "completed",
+        );
       const totalOrders = completedOrders.length;
-      const totalRevenue = completedOrders.reduce((sum, o) => sum + o.total, 0);
+      const totalRevenue = completedOrders.reduce((sum, o) => sum + (o.total || 0), 0);
 
       // Total de entregas
       const totalDeliveries = await MobilityService.countDeliveredMotoboyRides();
 
       // DistribuiÃ§Ã£o de planos
-      const { data: subscriptions } = await supabase
+      const { data: subscriptions } = await db
         .from('business_subscriptions')
         .select('plan_tier');
 
-      const planDistribution = (subscriptions || []).reduce((acc, sub) => {
-        acc[sub.plan_tier] = (acc[sub.plan_tier] || 0) + 1;
+      const planDistribution = ((subscriptions as Array<{ plan_tier?: string }> | null) || []).reduce((acc, sub) => {
+        const tier = sub.plan_tier || "free";
+        acc[tier] = (acc[tier] || 0) + 1;
         return acc;
       }, {} as Record<string, number>);
 

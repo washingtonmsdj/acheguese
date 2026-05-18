@@ -1,8 +1,7 @@
  
 import React from "react";
 import { motion } from "framer-motion";
-import { AnswerCard } from "./AnswerCard";
-// Answer type definido localmente abaixo
+import { AnswerCard, type Answer } from "./AnswerCard";
 
 interface AnswersListProps {
   answers: Answer[];

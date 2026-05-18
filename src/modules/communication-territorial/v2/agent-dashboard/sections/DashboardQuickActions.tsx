@@ -19,7 +19,7 @@ interface DashboardQuickActionsProps {
 }
 
 export function DashboardQuickActions({ channel, activeView, onViewChange }: DashboardQuickActionsProps) {
-  const views = [
+  const views: Array<{ id: DashboardView; label: string; icon: typeof LayoutDashboard }> = [
     { id: "overview", label: "Visão Geral", icon: LayoutDashboard },
     { id: "publications", label: "Publicações", icon: FileText },
     { id: "drafts", label: "Rascunhos", icon: FilePen },

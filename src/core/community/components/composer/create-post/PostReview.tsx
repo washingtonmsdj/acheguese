@@ -38,7 +38,7 @@ const postTypeLabels = {
   recomendacao: "Recomendação",
 };
 
-function getPostTypeLabel(tipo: UnifiedPostType): string {
+function getPostTypeLabel(tipo: string): string {
   switch (tipo) {
     case "discussao":
       return postTypeLabels.discussao;
@@ -308,4 +308,3 @@ export function PostReview({
     </div>
   );
 }
-

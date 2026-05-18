@@ -70,10 +70,11 @@ export function getCoordinates(
     metadata?: Record<string, unknown> | null;
   },
 ): { latitude: number; longitude: number } | null {
+  const businessRecord = business as any;
   const isFiniteNumber = (value: unknown): value is number =>
     typeof value === "number" && Number.isFinite(value);
 
-  const addressCoords = business.address;
+  const addressCoords = businessRecord.address;
   if (
     addressCoords &&
     isFiniteNumber(addressCoords.latitude) &&
@@ -85,7 +86,7 @@ export function getCoordinates(
     };
   }
 
-  const canonicalCoords = business.location;
+  const canonicalCoords = businessRecord.location;
   if (
     canonicalCoords &&
     isFiniteNumber(canonicalCoords.canonical_lat) &&
@@ -97,7 +98,7 @@ export function getCoordinates(
     };
   }
 
-  const metadata = business.metadata;
+  const metadata = businessRecord.metadata;
   if (metadata && typeof metadata === "object") {
     const latitude =
       metadata.latitude ??

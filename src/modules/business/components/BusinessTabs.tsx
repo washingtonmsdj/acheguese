@@ -19,6 +19,7 @@ import PromoBanner from "@/modules/business/components/PromoBanner.tsx";
 import { BusinessService } from "@/core/business/services/BusinessService";
 import type { Product, Review } from "@/core/business/types";
 import type { BusinessService as BusinessServiceType, GalleryPhoto, BusinessTabsProps } from "@/modules/business/types/components";
+import { ReviewsService } from "@/core/reviews/services/ReviewsService";
 // Tabs
 import { DashboardTab } from "./tabs/DashboardTab";
 import { VisaoGeralTab } from "./tabs/VisaoGeralTab";
@@ -37,6 +38,10 @@ export function BusinessTabs({
   canSeeDashboard,
   user,
 }: BusinessTabsProps) {
+  const businessAddress =
+    typeof business.address === "object" && business.address !== null
+      ? business.address
+      : null;
   const [products, setProducts] = useState<Product[]>([]);
   const [services, setServices] = useState<BusinessServiceType[]>([]);
   const [gallery, setGallery] = useState<GalleryPhoto[]>([]);
@@ -45,15 +50,23 @@ export function BusinessTabs({
   // Fetch date
   const fetchProducts = useCallback(async () => {
     if (business.id === "exemplo-123") {
-      setProducts(productsExemplo);
+      setProducts(productsExemplo as unknown as Product[]);
       return;
     }
 
     if (!business.id) return;
 
     try {
-      const data = await BusinessService.getProducts(business.id);
-      setProducts(data);
+      const data = (await BusinessService.getProducts(business.id)) as Array<
+        Partial<Product> & { id: string; name: string; category: string; active: boolean; featured: boolean; promotion: boolean; price: number; description: string }
+      >;
+      setProducts(
+        data.map((product) => ({
+          ...product,
+          profile_id: product.profile_id ?? business.id,
+          created_at: product.created_at ?? new Date().toISOString(),
+        })),
+      );
     } catch (err) {
       logger.warn("Error search products:", err);
       setProducts([]);
@@ -62,15 +75,30 @@ export function BusinessTabs({
 
   const fetchServices = useCallback(async () => {
     if (business.id === "exemplo-123") {
-      setServices(servicesExemplo);
+      setServices(servicesExemplo as unknown as BusinessServiceType[]);
       return;
     }
 
     if (!business.id) return;
 
     try {
-      const data = await BusinessService.getServices(business.id);
-      setServices(data);
+      const data = (await BusinessService.getServices(business.id)) as Array<
+        Partial<BusinessServiceType> & { id: string; name: string; active: boolean }
+      >;
+      setServices(
+        data.map((service) => ({
+          id: service.id,
+          business_id: service.business_id ?? business.id,
+          name: service.name,
+          description: service.description ?? undefined,
+          category: service.category ?? undefined,
+          price: service.price ?? undefined,
+          duration: service.duration ?? undefined,
+          active: Boolean(service.active),
+          featured: service.featured ?? false,
+          created_at: service.created_at ?? new Date().toISOString(),
+        })),
+      );
     } catch (err) {
       logger.warn("Error search serviços:", err);
       setServices([]);
@@ -79,7 +107,7 @@ export function BusinessTabs({
 
   const fetchGallery = useCallback(async () => {
     if (business.id === "exemplo-123") {
-      setGallery(galeriaExemplo);
+      setGallery(galeriaExemplo as unknown as GalleryPhoto[]);
       return;
     }
     // Tabela business_gallery não existe no schema — galeria vazia por padrão
@@ -95,8 +123,8 @@ export function BusinessTabs({
     if (!business.id) return;
 
     try {
-      const data = await BusinessService.getReviews(business.id);
-      setReviews(data);
+      const data = await ReviewsService.getReviewsForProfile(business.id, "business");
+      setReviews(data as unknown as Review[]);
     } catch (err) {
       logger.warn("Error search avaliações:", err);
       setReviews([]);
@@ -111,14 +139,15 @@ export function BusinessTabs({
   }, [fetchProducts, fetchServices, fetchGallery, fetchReviews]);
 
   // Determinar abas ativas
-  const activeTabs = [];
+  const activeTabs: string[] = [];
+  const sections = business.secoes_ativas ?? {};
   activeTabs.push("visao-geral");
-  if (business.secoes_ativas?.services) activeTabs.push("services");
-  if (business.secoes_ativas?.products) activeTabs.push("products");
-  if (business.secoes_ativas?.cardapio || products.length > 0)
+  if (sections.services) activeTabs.push("services");
+  if (sections.products) activeTabs.push("products");
+  if (sections.cardapio || products.length > 0)
     activeTabs.push("cardapio");
-  if (business.secoes_ativas?.portfolio) activeTabs.push("portfolio");
-  if (business.secoes_ativas?.promocoes) activeTabs.push("promocoes");
+  if (sections.portfolio) activeTabs.push("portfolio");
+  if (sections.promocoes) activeTabs.push("promocoes");
   if (isOwner && services.length > 0) activeTabs.push("agendamentos");
 
   const gridColsMap: Record<number, string> = {
@@ -156,8 +185,8 @@ export function BusinessTabs({
       <QuickActions
         whatsapp={business.whatsapp}
         phone={business.phone}
-        latitude={business.latitude}
-        longitude={business.longitude}
+        latitude={business.latitude ?? businessAddress?.latitude ?? undefined}
+        longitude={business.longitude ?? businessAddress?.longitude ?? undefined}
         businessName={business.name}
         businessId={business.id}
         hasProducts={products.length > 0}
@@ -187,7 +216,7 @@ export function BusinessTabs({
           >
             Visão Geral
           </TabsTrigger>
-          {business.secoes_ativas?.services && (
+          {sections.services && (
             <TabsTrigger 
               value="services"
               className="data-[state=active]:bg-background data-[state=active]:shadow-md transition-all"
@@ -195,7 +224,7 @@ export function BusinessTabs({
               Serviços
             </TabsTrigger>
           )}
-          {business.secoes_ativas?.products && (
+          {sections.products && (
             <TabsTrigger 
               value="products"
               className="data-[state=active]:bg-background data-[state=active]:shadow-md transition-all"
@@ -203,7 +232,7 @@ export function BusinessTabs({
               Produtos
             </TabsTrigger>
           )}
-          {(business.secoes_ativas?.cardapio || products.length > 0) && (
+          {(sections.cardapio || products.length > 0) && (
             <TabsTrigger 
               value="cardapio"
               className="data-[state=active]:bg-background data-[state=active]:shadow-md transition-all"
@@ -211,7 +240,7 @@ export function BusinessTabs({
               Cardápio
             </TabsTrigger>
           )}
-          {business.secoes_ativas?.portfolio && (
+          {sections.portfolio && (
             <TabsTrigger 
               value="portfolio"
               className="data-[state=active]:bg-background data-[state=active]:shadow-md transition-all"
@@ -219,7 +248,7 @@ export function BusinessTabs({
               Portfólio
             </TabsTrigger>
           )}
-          {business.secoes_ativas?.promocoes && (
+          {sections.promocoes && (
             <TabsTrigger 
               value="promocoes"
               className="data-[state=active]:bg-background data-[state=active]:shadow-md transition-all"
@@ -247,7 +276,7 @@ export function BusinessTabs({
           />
         </TabsContent>
 
-        {business.secoes_ativas?.products && (
+        {sections.products && (
           <TabsContent value="products">
             <ProdutosTab
               business={business}
@@ -258,7 +287,7 @@ export function BusinessTabs({
           </TabsContent>
         )}
 
-        {business.secoes_ativas?.services && (
+        {sections.services && (
           <TabsContent value="services">
             <ServicosTab
               business={business}
@@ -269,7 +298,7 @@ export function BusinessTabs({
           </TabsContent>
         )}
 
-        {(business.secoes_ativas?.cardapio || products.length > 0) && (
+        {(sections.cardapio || products.length > 0) && (
           <TabsContent value="cardapio">
             <CardapioTab
               products={products}
@@ -279,13 +308,13 @@ export function BusinessTabs({
           </TabsContent>
         )}
 
-        {business.secoes_ativas?.portfolio && (
+        {sections.portfolio && (
           <TabsContent value="portfolio">
             <PortfolioTab business={business} isOwner={isOwner} />
           </TabsContent>
         )}
 
-        {business.secoes_ativas?.promocoes && (
+        {sections.promocoes && (
           <TabsContent value="promocoes">
             <PromocoesTab business={business} isOwner={isOwner} />
           </TabsContent>

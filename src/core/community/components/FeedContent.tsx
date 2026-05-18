@@ -38,13 +38,15 @@ export const FeedContent = ({
   const filteredAndSortedPosts = useMemo(() => {
     const URGENT = ["alerta", "segurança"];
     const filtered =
-      filter === "todos" ? posts : posts.filter((p) => p.category === filter);
+      filter === "todos"
+        ? posts
+        : posts.filter((p) => ((p as { category?: string }).category ?? "") === filter);
 
     return [...filtered]
-      .filter((p) => !p.hidden)
+      .filter((p) => !((p as { hidden?: boolean }).hidden ?? false))
       .sort((a, b) => {
-        const aUrgent = URGENT.includes(a.category);
-        const bUrgent = URGENT.includes(b.category);
+        const aUrgent = URGENT.includes((a as { category?: string }).category ?? "");
+        const bUrgent = URGENT.includes((b as { category?: string }).category ?? "");
         if (aUrgent && !bUrgent) return -1;
         if (!aUrgent && bUrgent) return 1;
         return 0;
@@ -77,15 +79,16 @@ export const FeedContent = ({
         </div>
       ) : (
         <AnimatePresence>
-          {filteredAndSortedPosts.map((post, i) => (
+          {filteredAndSortedPosts.map((post) => (
             <PostCard
               key={post.id}
               post={post}
-              index={i}
+              currentUserId={currentProfileId}
               onLike={onLike}
               onComment={onComment}
               onReport={onReport}
-              isLoggedIn={!!currentProfileId}
+              onSave={() => {}}
+              onShare={() => {}}
             />
           ))}
         </AnimatePresence>

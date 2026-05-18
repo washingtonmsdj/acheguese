@@ -287,7 +287,6 @@ export default function EmpresaEditSheet({
             bio: data.description?.trim() ?? "",
             avatar_url: logo.trim() || null,
             phone: data.phone?.trim() || null,
-            whatsapp: data.whatsapp?.trim() || null,
           },
           payload,
           activeProfile.id,

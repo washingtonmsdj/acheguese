@@ -101,7 +101,7 @@ export async function createProfessional(
         service_subcategory: validatedData.subcategory,
         description: validatedData.description,
         certifications: validatedData.certifications
-          ? validatedData.certifications.split(",").map((s: string) => s.trim())
+          ? String(validatedData.certifications).split(",").map((s: string) => s.trim())
           : [],
         experience_years: validatedData.experience_years,
         education: validatedData.education,
@@ -201,10 +201,12 @@ export async function updateProfessional(
         .filter(Boolean);
     }
     if (input.certifications !== undefined) {
-      sanitized.certifications = sanitizers.sanitizeArray(
+      sanitized.certifications = String(
+        sanitizers.sanitizeArray(
         Array.isArray(input.certifications)
           ? input.certifications.join(",")
           : "",
+      ),
       )
         .split(",")
         .map((s: string) => s.trim());
@@ -245,8 +247,8 @@ export async function updateProfessional(
     if (input.visibility !== undefined) {
       sanitized.visibility = input.visibility;
     }
-    if (input.status !== undefined) {
-      sanitized.is_active = input.status === "active";
+    if ((input as any).status !== undefined) {
+      sanitized.is_active = (input as any).status === "active";
     }
 
     // 2. Validação (se houver dados para validar)
@@ -345,12 +347,12 @@ export async function createJob(
       .from("professional_jobs")
       .insert({
         professional_id: professionalId,
-        title: jobData.title,
-        description: jobData.description,
-        price: jobData.price,
-        price_type: jobData.price_type,
-        category: jobData.category,
-        duration_hours: jobData.duration_hours,
+        title: (jobData as any).title ?? (jobData as any).nome ?? "Servico",
+        description: (jobData as any).description ?? (jobData as any).descricao ?? "",
+        price: (jobData as any).price ?? (jobData as any).preco ?? null,
+        price_type: (jobData as any).price_type ?? (jobData as any).tipo_preco ?? "fixed",
+        category: (jobData as any).category ?? (jobData as any).categoria ?? "geral",
+        duration_hours: (jobData as any).duration_hours ?? (jobData as any).duracao_horas ?? null,
         is_active: true,
       })
       .select()
@@ -439,7 +441,7 @@ export async function updateProfessionalReport(
   try {
     // ✅ SSOT - Usar ModerationService para atualizar reports
     const { ModerationService } = await import("@/core/moderation/services/ModerationService");
-    await ModerationService.updateReportStatus(reportId, status);
+    await (ModerationService as any).updateReportStatus(reportId, status);
 
     logger.info("[professional.mutations] Report status updated:", { reportId, status });
   } catch (error) {

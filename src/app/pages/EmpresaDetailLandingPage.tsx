@@ -420,7 +420,7 @@ export default function EmpresaDetailLandingPage(
         <EmpresaAvaliacoesSection
           business={business}
           reviews={reviews}
-          user={user}
+          user={user as any}
           navigate={navigate}
           reviewUrl={gastronomyUrl}
         />

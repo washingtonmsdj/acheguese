@@ -68,10 +68,10 @@ export function useNearbyEntities(options: UseNearbyEntitiesOptions) {
           id: business.id,
           type: "business" as const,
           name: business.name,
-          distance: business.distance_meters,
+          distance: business.distance_meters ?? 0,
           latitude: business.latitude,
           longitude: business.longitude,
-          metadata: business,
+          metadata: business as unknown as Record<string, unknown>,
         })),
       );
     }
@@ -82,10 +82,10 @@ export function useNearbyEntities(options: UseNearbyEntitiesOptions) {
           id: event.id,
           type: "event" as const,
           name: event.name,
-          distance: event.distance_meters,
+          distance: event.distance_meters ?? 0,
           latitude: event.latitude,
           longitude: event.longitude,
-          metadata: event,
+          metadata: event as unknown as Record<string, unknown>,
         })),
       );
     }
@@ -96,10 +96,10 @@ export function useNearbyEntities(options: UseNearbyEntitiesOptions) {
           id: alert.id,
           type: "alert" as const,
           name: alert.name,
-          distance: alert.distance_meters,
+          distance: alert.distance_meters ?? 0,
           latitude: alert.latitude,
           longitude: alert.longitude,
-          metadata: alert,
+          metadata: alert as unknown as Record<string, unknown>,
         })),
       );
     }
@@ -110,10 +110,10 @@ export function useNearbyEntities(options: UseNearbyEntitiesOptions) {
           id: touristPoint.id,
           type: "tourist_point" as const,
           name: touristPoint.name,
-          distance: touristPoint.distance_meters,
+          distance: touristPoint.distance_meters ?? 0,
           latitude: touristPoint.latitude,
           longitude: touristPoint.longitude,
-          metadata: touristPoint,
+          metadata: touristPoint as unknown as Record<string, unknown>,
         })),
       );
     }

@@ -84,7 +84,7 @@ export const GrupoCardEnhanced = memo(
     const isNew = useMemo(() => isNewGroup(group.created_at), [group.created_at]);
     const isPopular = useMemo(() => isPopularGroup(group.members_count), [group.members_count]);
 
-    const isPrivate = group.is_private || group.visibility === "private";
+    const isPrivate = group.is_private || (group as { visibility?: string }).visibility === "private";
     const isMember = group.is_member;
 
     const handleClick = useCallback(() => {

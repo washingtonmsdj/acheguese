@@ -9,7 +9,15 @@
 
 import type { Address } from '@/core/address/types';
 import type { Location } from '@/core/location/types';
-import type { RideRequestRecord, RideRequestWithRelations } from '../types';
+import type { Tables } from "@/core/infrastructure/supabase/types.generated";
+
+type RideRequestRecord = Tables<"ride_requests">;
+type RideRequestWithRelations = RideRequestRecord & {
+  pickup_address?: Address | null;
+  dropoff_address?: Address | null;
+  pickup_location?: Location | Record<string, unknown> | null;
+  dropoff_location?: Location | Record<string, unknown> | null;
+};
 
 type LegacyLocationLike = {
   address?: string;
@@ -59,10 +67,11 @@ export function hasDropoffAddress(ride: RideRequestRecord): boolean {
  * Obter endereço formatado de origem (compatível com legado)
  */
 export function getFormattedPickupAddress(ride: RideRequestRecord): string {
+  const legacyRide = ride as unknown as LegacyRideLike & Record<string, unknown>;
   const parts: string[] = [];
   
   // Tentar pickup_location primeiro
-  const pickup = ride.pickup_location;
+  const pickup = legacyRide.pickup_location as LegacyLocationLike | null | undefined;
   if (pickup && typeof pickup === 'object') {
     if (pickup.address) parts.push(pickup.address);
     if (pickup.neighborhood) parts.push(pickup.neighborhood);
@@ -72,11 +81,12 @@ export function getFormattedPickupAddress(ride: RideRequestRecord): string {
   }
   
   // Fallback para origin
-  if (parts.length === 0 && ride.origin && typeof ride.origin === 'object') {
-    if (ride.origin.address) parts.push(ride.origin.address);
-    if (ride.origin.neighborhood) parts.push(ride.origin.neighborhood);
-    if (ride.origin.city) parts.push(ride.origin.city);
-    if (ride.origin.state) parts.push(ride.origin.state);
+  const origin = legacyRide.origin;
+  if (parts.length === 0 && origin && typeof origin === 'object') {
+    if (origin.address) parts.push(origin.address);
+    if (origin.neighborhood) parts.push(origin.neighborhood);
+    if (origin.city) parts.push(origin.city);
+    if (origin.state) parts.push(origin.state);
   }
 
   return parts.join(', ');
@@ -86,10 +96,11 @@ export function getFormattedPickupAddress(ride: RideRequestRecord): string {
  * Obter endereço formatado de destino (compatível com legado)
  */
 export function getFormattedDropoffAddress(ride: RideRequestRecord): string {
+  const legacyRide = ride as unknown as LegacyRideLike & Record<string, unknown>;
   const parts: string[] = [];
   
   // Tentar dropoff_location primeiro
-  const dropoff = ride.dropoff_location;
+  const dropoff = legacyRide.dropoff_location as LegacyLocationLike | null | undefined;
   if (dropoff && typeof dropoff === 'object') {
     if (dropoff.address) parts.push(dropoff.address);
     if (dropoff.neighborhood) parts.push(dropoff.neighborhood);
@@ -99,11 +110,12 @@ export function getFormattedDropoffAddress(ride: RideRequestRecord): string {
   }
   
   // Fallback para destination
-  if (parts.length === 0 && ride.destination && typeof ride.destination === 'object') {
-    if (ride.destination.address) parts.push(ride.destination.address);
-    if (ride.destination.neighborhood) parts.push(ride.destination.neighborhood);
-    if (ride.destination.city) parts.push(ride.destination.city);
-    if (ride.destination.state) parts.push(ride.destination.state);
+  const destination = legacyRide.destination;
+  if (parts.length === 0 && destination && typeof destination === 'object') {
+    if (destination.address) parts.push(destination.address);
+    if (destination.neighborhood) parts.push(destination.neighborhood);
+    if (destination.city) parts.push(destination.city);
+    if (destination.state) parts.push(destination.state);
   }
 
   return parts.join(', ');

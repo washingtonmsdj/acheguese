@@ -71,10 +71,10 @@ function inferLegacyChannels(post: UnifiedPost): Set<TerritorialFeedChannel> {
   const tokens = getTokens(post);
 
   const isAlert =
-    post.type === "alerta" ||
+    (post.type as string) === "alerta" ||
     includesAny(tokens, ["alerta", "urgente", "seguranca", "risco", "transito", "utilidade"]);
   const isEvent =
-    post.type === "evento" ||
+    (post.type as string) === "evento" ||
     includesAny(tokens, ["evento", "programacao", "agenda", "oficina", "show", "encontro"]);
   const isJob = includesAny(tokens, ["vaga", "emprego", "oportunidade", "contrata", "curriculo", "trabalho"]);
   const isClassified = includesAny(tokens, ["classificado", "compra", "venda", "aluga", "servico", "frete", "desapego"]);
@@ -94,10 +94,10 @@ function inferLegacyChannels(post: UnifiedPost): Set<TerritorialFeedChannel> {
 
   if (
     !isBusiness ||
-    post.type === "discussao" ||
-    post.type === "pergunta" ||
-    post.type === "recomendacao" ||
-    post.type === "enquete"
+    (post.type as string) === "discussao" ||
+    (post.type as string) === "pergunta" ||
+    (post.type as string) === "recomendacao" ||
+    (post.type as string) === "enquete"
   ) {
     channels.add("moradores");
   }
@@ -206,7 +206,7 @@ export function rebalanceTerritorialMix(posts: UnifiedPost[]): UnifiedPost[] {
 
   const result: UnifiedPost[] = [];
   let keptOpportunityCount = 0;
-  let skippedOpportunityBuffer: UnifiedPost[] = [];
+  const skippedOpportunityBuffer: UnifiedPost[] = [];
 
   for (const post of posts) {
     const opportunity = isOpportunityPost(post);

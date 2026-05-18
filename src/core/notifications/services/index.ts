@@ -20,7 +20,6 @@ export type {
   NotificationFilters,
   NotificationPriority,
   NotificationStats,
-  NotificationSettings,
   NotificationTypeValue as NotificationType,
 } from "../types";
 

@@ -1,3 +1,4 @@
+import type { Json } from "@/core/infrastructure/supabase";
 import type { CartItem, CartItemAddon, MenuItemAddon } from "../../types/menu";
 import { money } from "../../utils/currency";
 import { PizzaPricingService } from "./PizzaPricingService";
@@ -153,8 +154,8 @@ export class PizzaCartItemBuilder {
       subtotal: breakdown.line_total,
       structured_item: {
         kind: "pizza",
-        snapshot,
-        price_breakdown: breakdown,
+        snapshot: snapshot as unknown as Json,
+        price_breakdown: breakdown as unknown as Json,
       },
     };
   }

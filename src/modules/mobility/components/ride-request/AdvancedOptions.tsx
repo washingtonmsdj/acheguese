@@ -23,8 +23,9 @@ import { cn } from '@/shared/utils/cn';
 import { Input } from '@/shared/components/ui/input';
 import { Label } from '@/shared/components/ui/label';
 import { Textarea } from '@/shared/components/ui/textarea';
-import type { RideType, PaymentMethod } from '@/modules/mobility/types';
+import type { RideType } from '@/modules/mobility/types';
 import { PAYMENT_METHOD } from '@/shared/types/constants';
+type PaymentMethod = (typeof PAYMENT_METHOD)[keyof typeof PAYMENT_METHOD];
 
 export interface AdvancedOptionsProps {
   /** Tipo de corrida (afeta campos exibidos) */
@@ -235,7 +236,7 @@ export const AdvancedOptions = memo<AdvancedOptionsProps>(function AdvancedOptio
                 <div className="grid grid-cols-2 gap-2">
                   <motion.button
                     type="button"
-                    onClick={() => onPaymentMethodChange(PAYMENT_METHOD.PIX)}
+                    onClick={() => onPaymentMethodChange(PAYMENT_METHOD.PIX as PaymentMethod)}
                     disabled={disabled}
                     className={cn(
                       'flex items-center justify-center gap-2 py-2.5 rounded-xl border-2 transition-all text-xs font-medium',
@@ -253,7 +254,7 @@ export const AdvancedOptions = memo<AdvancedOptionsProps>(function AdvancedOptio
                   </motion.button>
                   <motion.button
                     type="button"
-                    onClick={() => onPaymentMethodChange(PAYMENT_METHOD.DINHEIRO)}
+                    onClick={() => onPaymentMethodChange(PAYMENT_METHOD.DINHEIRO as PaymentMethod)}
                     disabled={disabled}
                     className={cn(
                       'flex items-center justify-center gap-2 py-2.5 rounded-xl border-2 transition-all text-xs font-medium',

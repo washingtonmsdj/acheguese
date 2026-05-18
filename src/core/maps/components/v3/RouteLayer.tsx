@@ -64,7 +64,7 @@ export function RouteLayer({
   const routeSourceRef = useRef<string | null>(null);
 
   useEffect(() => {
-    const mapRegistry = window as Window & Record<string, unknown>;
+    const mapRegistry = window as unknown as Window & Record<string, unknown>;
     const map = mapRegistry[`maplibre-map-${mapId}`] as maplibregl.Map | undefined;
     if (!map) {
       logger.warn(`[RouteLayer] Mapa ${mapId} não encontrado`);

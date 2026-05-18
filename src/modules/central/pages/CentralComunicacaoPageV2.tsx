@@ -1,4 +1,4 @@
-import { useNavigate } from "react-router-dom";
+﻿import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/components/ui/card";
 import { Button } from "@/shared/components/ui/button";
@@ -19,23 +19,6 @@ import {
 import { CommunicationTerritorialService } from "@/core/communication-territorial";
 import { nordesteAgents } from "@/core/communication-territorial/v2/mocks";
 
-/**
- * CentralComunicacaoPageV2
- * 
- * Hub de gestÃ£o de canais de comunicaÃ§Ã£o territorial.
- * 
- * Conceito: Cockpit operacional, nÃ£o local de criaÃ§Ã£o de conteÃºdo.
- * 
- * Funcionalidades:
- * - VisÃ£o geral dos canais gerenciados
- * - Acesso rÃ¡pido ao dashboard de cada canal
- * - Acesso rÃ¡pido Ã  pÃ¡gina pÃºblica de cada canal
- * - MÃ©tricas resumidas
- * - AÃ§Ãµes rÃ¡pidas
- * 
- * CriaÃ§Ã£o de conteÃºdo: Na pÃ¡gina pÃºblica do agente (social-first)
- * GestÃ£o e analytics: No dashboard do canal
- */
 export default function CentralComunicacaoPageV2() {
   const navigate = useNavigate();
 
@@ -45,7 +28,7 @@ export default function CentralComunicacaoPageV2() {
       // Tentar buscar canais reais primeiro
       const realChannels = await CommunicationTerritorialService.listManagedChannels();
       
-      // Se nÃ£o houver canais reais, usar mocks para desenvolvimento
+      // Se nÃƒÂ£o houver canais reais, usar mocks para desenvolvimento
       if (!realChannels || realChannels.length === 0) {
         // Converter agentes mockados para formato de canal
         return nordesteAgents.map(agent => ({
@@ -70,10 +53,10 @@ export default function CentralComunicacaoPageV2() {
       {/* Header */}
       <div className="space-y-2 sm:space-y-3">
         <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">
-          ComunicaÃ§Ã£o Territorial
+          ComunicaÃƒÂ§ÃƒÂ£o Territorial
         </h1>
         <p className="text-sm sm:text-base lg:text-lg text-muted-foreground">
-          Gerencie seus canais de comunicaÃ§Ã£o territorial. Para publicar conteÃºdo, acesse a pÃ¡gina pÃºblica do canal.
+          Gerencie seus canais de comunicaÃƒÂ§ÃƒÂ£o territorial. Para publicar conteÃƒÂºdo, acesse a pÃƒÂ¡gina pÃƒÂºblica do canal.
         </p>
       </div>
 
@@ -95,7 +78,7 @@ export default function CentralComunicacaoPageV2() {
               <div className="space-y-2 sm:space-y-3">
                 <h2 className="text-xl sm:text-2xl font-bold text-foreground">Nenhum canal encontrado</h2>
                 <p className="text-sm sm:text-base text-muted-foreground">
-                  VocÃª ainda nÃ£o gerencia nenhum canal de comunicaÃ§Ã£o territorial.
+                  VocÃƒÂª ainda nÃƒÂ£o gerencia nenhum canal de comunicaÃƒÂ§ÃƒÂ£o territorial.
                 </p>
               </div>
               <div className="flex flex-col sm:flex-row gap-3 justify-center">
@@ -103,7 +86,7 @@ export default function CentralComunicacaoPageV2() {
                   Solicitar Novo Canal
                 </Button>
                 <Button variant="outline" onClick={() => navigate("/comunicacao")}>
-                  Explorar ComunicaÃ§Ã£o
+                  Explorar ComunicaÃƒÂ§ÃƒÂ£o
                 </Button>
               </div>
             </div>
@@ -137,7 +120,7 @@ export default function CentralComunicacaoPageV2() {
                 <div className="grid grid-cols-2 gap-3 sm:gap-4 py-3 sm:py-4 border-y">
                   <div className="space-y-1">
                     <p className="text-xl sm:text-2xl font-bold text-foreground">{channel.publications || 0}</p>
-                    <p className="text-xs text-muted-foreground">PublicaÃ§Ãµes</p>
+                    <p className="text-xs text-muted-foreground">PublicaÃƒÂ§ÃƒÂµes</p>
                   </div>
                   <div className="space-y-1">
                     <p className="text-xl sm:text-2xl font-bold text-foreground">{channel.followers?.toLocaleString() || 0}</p>
@@ -163,7 +146,7 @@ export default function CentralComunicacaoPageV2() {
                     onClick={() => navigate(`/comunicacao/agente/${channel.slug}`)}
                   >
                     <Eye className="h-4 w-4" />
-                    Ver PÃ¡gina PÃºblica
+                    Ver PÃƒÂ¡gina PÃƒÂºblica
                     <ExternalLink className="h-3 w-3 ml-auto" />
                   </Button>
                   
@@ -187,7 +170,7 @@ export default function CentralComunicacaoPageV2() {
                     onClick={() => navigate(`/central/comunicacao/${channel.slug}`)}
                   >
                     <FileText className="h-3 w-3" />
-                    <span className="truncate">PublicaÃ§Ãµes</span>
+                    <span className="truncate">PublicaÃƒÂ§ÃƒÂµes</span>
                   </Button>
                   <Button 
                     variant="ghost" 
@@ -205,7 +188,7 @@ export default function CentralComunicacaoPageV2() {
                     onClick={() => navigate(`/central/comunicacao/${channel.slug}`)}
                   >
                     <MapPin className="h-3 w-3" />
-                    <span className="truncate">TerritÃ³rios</span>
+                    <span className="truncate">TerritÃƒÂ³rios</span>
                   </Button>
                   <Button 
                     variant="ghost" 
@@ -230,22 +213,22 @@ export default function CentralComunicacaoPageV2() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
               <MessageSquare className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
-              Como publicar conteÃºdo?
+              Como publicar conteÃƒÂºdo?
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3 sm:space-y-4">
             <p className="text-xs sm:text-sm text-muted-foreground">
-              Para criar e publicar conteÃºdo, acesse a <strong>pÃ¡gina pÃºblica do canal</strong>. 
-              LÃ¡ vocÃª encontrarÃ¡ um composer social-first, similar ao Instagram ou Facebook.
+              Para criar e publicar conteÃƒÂºdo, acesse a <strong>pÃƒÂ¡gina pÃƒÂºblica do canal</strong>. 
+              LÃƒÂ¡ vocÃƒÂª encontrarÃƒÂ¡ um composer social-first, similar ao Instagram ou Facebook.
             </p>
             <div className="flex flex-wrap gap-2">
-              <Badge variant="outline" className="text-xs">âœ¨ Postagens rÃ¡pidas</Badge>
-              <Badge variant="outline" className="text-xs">ðŸ“° NotÃ­cias</Badge>
-              <Badge variant="outline" className="text-xs">ðŸ“… Eventos</Badge>
-              <Badge variant="outline" className="text-xs">ðŸš¨ Alertas</Badge>
+              <Badge variant="outline" className="text-xs">Ã¢Å“Â¨ Postagens rÃƒÂ¡pidas</Badge>
+              <Badge variant="outline" className="text-xs">Ã°Å¸â€œÂ° NotÃƒÂ­cias</Badge>
+              <Badge variant="outline" className="text-xs">Ã°Å¸â€œâ€¦ Eventos</Badge>
+              <Badge variant="outline" className="text-xs">Ã°Å¸Å¡Â¨ Alertas</Badge>
             </div>
             <p className="text-xs text-muted-foreground">
-              Use este painel (Central) apenas para gestÃ£o, analytics, configuraÃ§Ãµes e moderaÃ§Ã£o.
+              Use este painel (Central) apenas para gestÃƒÂ£o, analytics, configuraÃƒÂ§ÃƒÂµes e moderaÃƒÂ§ÃƒÂ£o.
             </p>
           </CardContent>
         </Card>

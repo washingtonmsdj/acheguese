@@ -12,6 +12,7 @@ import { logger } from '@/shared/utils/logger';
 import { supabase } from '@/core/infrastructure/supabase';
 import { REPORT_STATUS } from '@/shared/types/constants';
 import { EntityStatus } from '@/shared/types/enums';
+const rpcDb = supabase as any;
 
 // â”€â”€ Tipos estendidos da tabela canÃ´nica `reviews` â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // Estende o tipo base de @/shared/types/reviews com os campos adicionados
@@ -127,7 +128,7 @@ export class ReviewQueryService {
    */
   static async createReview(input: CreateReviewInput): Promise<{ id: string }> {
     try {
-      const { data, error } = await supabase.rpc('create_business_review', {
+      const { data, error } = await rpcDb.rpc('create_business_review', {
         p_reviewed_profile_id: input.reviewed_profile_id,
         p_reviewer_profile_id: input.reviewer_profile_id,
         p_rating: input.rating,
@@ -145,8 +146,9 @@ export class ReviewQueryService {
         throw new Error('No data returned from review creation');
       }
 
-      logger.info('Review created successfully', { reviewId: data.id ?? data.review_id });
-      return { id: data.id ?? data.review_id };
+      const reviewData = (data ?? {}) as { id?: string; review_id?: string };
+      logger.info('Review created successfully', { reviewId: reviewData.id ?? reviewData.review_id });
+      return { id: reviewData.id ?? reviewData.review_id ?? '' };
     } catch (error) {
       logger.error('Error in createReview', error);
       throw error;
@@ -161,7 +163,7 @@ export class ReviewQueryService {
     input: UpdateReviewInput,
   ): Promise<void> {
     try {
-      const { error } = await supabase.rpc('update_business_review', {
+      const { error } = await rpcDb.rpc('update_business_review', {
         p_review_id: reviewId,
         p_rating: input.rating ?? null,
         p_comment: input.comment ?? null,
@@ -185,7 +187,7 @@ export class ReviewQueryService {
    */
   static async deleteReview(reviewId: string): Promise<void> {
     try {
-      const { error } = await supabase.rpc('delete_business_review', {
+      const { error } = await rpcDb.rpc('delete_business_review', {
         p_review_id: reviewId,
       });
 
@@ -209,7 +211,7 @@ export class ReviewQueryService {
     input: BusinessResponseInput,
   ): Promise<void> {
     try {
-      const { error } = await supabase.rpc('add_business_review_response', {
+      const { error } = await rpcDb.rpc('add_business_review_response', {
         p_review_id: reviewId,
         p_business_response: input.business_response,
       });

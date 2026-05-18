@@ -2,7 +2,10 @@
 import { Image, X, MapPin } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
-import type { PostData } from "@/core/community/hooks/useNovoPost";
+interface PostData {
+  imagePreview?: string | null;
+  location?: string | null;
+}
 
 interface PostMediaSectionProps {
   postData: PostData;
@@ -106,4 +109,3 @@ export function PostMediaSection({
     </div>
   );
 }
-

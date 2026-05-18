@@ -57,7 +57,7 @@ export function useVerifications() {
     },
     onError: (error) => {
       toast.error("Erro ao aprovar verificacao");
-      logger.error(error);
+      logger.error(error instanceof Error ? error.message : String(error));
     },
   });
 
@@ -76,7 +76,7 @@ export function useVerifications() {
     },
     onError: (error) => {
       toast.error("Erro ao rejeitar verificacao");
-      logger.error(error);
+      logger.error(error instanceof Error ? error.message : String(error));
     },
   });
 
@@ -94,7 +94,7 @@ export function useVerifications() {
     },
     onError: (error) => {
       toast.error("Erro ao revogar verificacao");
-      logger.error(error);
+      logger.error(error instanceof Error ? error.message : String(error));
     },
   });
 
@@ -114,3 +114,4 @@ export function useVerifications() {
     revoke: revokeMutation.mutate,
   };
 }
+

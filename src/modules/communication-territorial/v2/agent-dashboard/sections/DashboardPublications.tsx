@@ -15,6 +15,7 @@ interface DashboardPublicationsProps {
 }
 
 export function DashboardPublications({ channel, publications, territories }: DashboardPublicationsProps) {
+  const publicationItems = publications as unknown as Array<Record<string, unknown>>;
   return (
     <div className="space-y-6">
       
@@ -62,17 +63,17 @@ export function DashboardPublications({ channel, publications, territories }: Da
             </CardContent>
           </Card>
         ) : (
-          publications.map((pub) => (
-            <Card key={pub.id} className="hover:shadow-md transition-shadow">
+          publicationItems.map((pub) => (
+            <Card key={String(pub.id)} className="hover:shadow-md transition-shadow">
               <CardContent className="p-6">
                 <div className="flex flex-col sm:flex-row gap-4">
                   
                   {/* Thumbnail */}
-                  {pub.media_url && (
+                  {typeof pub.media_url === "string" && pub.media_url.length > 0 && (
                     <div className="w-full sm:w-32 h-32 rounded-lg bg-muted overflow-hidden flex-shrink-0">
                       <img 
-                        src={pub.media_url} 
-                        alt={pub.title}
+                        src={pub.media_url}
+                        alt={typeof pub.title === "string" ? pub.title : "Publicacao"}
                         className="w-full h-full object-cover"
                       />
                     </div>
@@ -83,10 +84,10 @@ export function DashboardPublications({ channel, publications, territories }: Da
                     <div className="flex items-start justify-between gap-4 mb-2">
                       <div className="flex-1 min-w-0">
                         <h3 className="text-lg font-semibold text-foreground mb-1 truncate">
-                          {pub.title}
+                          {typeof pub.title === "string" ? pub.title : "Sem titulo"}
                         </h3>
                         <p className="text-sm text-muted-foreground line-clamp-2">
-                          {pub.content}
+                          {typeof pub.content === "string" ? pub.content : ""}
                         </p>
                       </div>
                       <Button variant="ghost" size="icon" className="flex-shrink-0">
@@ -109,7 +110,7 @@ export function DashboardPublications({ channel, publications, territories }: Da
                         <span>0 compartilhamentos</span>
                       </div>
                       <Badge variant="secondary" className="ml-auto">
-                        {new Date(pub.created_at).toLocaleDateString('pt-BR')}
+                        {typeof pub.created_at === "string" ? new Date(pub.created_at).toLocaleDateString("pt-BR") : "N/A"}
                       </Badge>
                     </div>
 

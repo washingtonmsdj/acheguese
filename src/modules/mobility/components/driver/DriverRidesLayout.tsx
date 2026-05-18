@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/sha
 import { DriverRidesList } from "@/modules/mobility/components/driver/DriverRidesList";
 import { useMotoristaPageV2 } from "@/modules/mobility/hooks/useMotoristaPageV2";
 import { getMobilityServicePath } from "@/modules/mobility/routes/mobilityNavigation";
-import type { MobilityRide } from "@/core/mobility/components/driver/DriverRidesTab";
+import type { MobilityRide } from "@/core/mobility/types/ride";
 
 type RideLike = MobilityRide & {
   ride_mode?: string | null;
@@ -99,10 +99,12 @@ export function DriverRidesLayout() {
               type="accepted"
               loading={shell.loading}
               onStart={(rideId) => shell.startRide(rideId)}
-              onComplete={(_, ride) => {
+              onComplete={(rideId) => {
+                const ride = acceptedRides.find((item) => item.id === rideId);
                 if (ride) shell.handleOpenCompleteDialog(ride as MobilityRide);
               }}
-              onCancel={(_, ride) => {
+              onCancel={(rideId) => {
+                const ride = acceptedRides.find((item) => item.id === rideId);
                 if (ride) shell.handleOpenCancelDialog(ride as MobilityRide);
               }}
             />
@@ -116,9 +118,9 @@ export function DriverRidesLayout() {
                       <div className="flex flex-wrap items-start justify-between gap-3">
                         <div>
                           <p className="text-sm font-medium text-foreground">
-                            {ride.origin} {"->"} {ride.destination}
+                            {String(ride.origin ?? "")} {"->"} {String(ride.destination ?? "")}
                           </p>
-                          <p className="text-xs text-muted-foreground">{ride.passenger?.name || "Solicitacao de corrida"}</p>
+                          <p className="text-xs text-muted-foreground">{String(ride.passenger?.name ?? "Solicitacao de corrida")}</p>
                           {getTrustRiskLabel(ride) ? (
                             <Badge variant="outline" className="mt-2">
                               {getTrustRiskLabel(ride)}

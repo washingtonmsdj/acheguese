@@ -288,6 +288,10 @@ function normalizeText(value: unknown): string | null {
   return normalized.length > 0 ? normalized : null;
 }
 
+function requiredText(value: unknown, fallback: string): string {
+  return normalizeText(value) ?? fallback;
+}
+
 function resolveProfileVerified(profile: RawRecord): boolean {
   return Boolean(profile.verified ?? profile.is_verified);
 }
@@ -338,7 +342,7 @@ function buildLinkedEntities(payload: {
     const row = payload.business;
     entities.push({
       kind: "business",
-      id: row.id,
+      id: requiredText(row.id, "business"),
       title: normalizeText(row.business_name) ?? "Empresa sem nome",
       subtitle: normalizeText(row.category),
       status:
@@ -357,7 +361,7 @@ function buildLinkedEntities(payload: {
     const row = payload.professional;
     entities.push({
       kind: "professional",
-      id: row.id,
+      id: requiredText(row.id, "professional"),
       title:
         normalizeText(row.professional_name) ??
         normalizeText(row.profession) ??
@@ -380,7 +384,7 @@ function buildLinkedEntities(payload: {
     const row = payload.driver;
     entities.push({
       kind: "driver",
-      id: row.id,
+      id: requiredText(row.id, "driver"),
       title: "Perfil de motorista",
       subtitle: row.vehicle_type ? `Veiculo: ${row.vehicle_type}` : null,
       status: row.is_online ? "online" : "offline",
@@ -640,12 +644,14 @@ function buildResidenceSummary(row?: RawRecord | null): AdminProfileResidenceSum
       : null;
   const isVerified = row.is_verified === true;
 
+  const address = (row.address as RawRecord | null | undefined) ?? null;
+
   return {
-    id: row.id,
-    locationId: row.location_id,
-    locationName: normalizeText(row.location?.name),
-    addressLine: formatResidenceAddress(row.address),
-    postalCode: normalizeText(row.address?.postal_code),
+    id: requiredText(row.id, "residence"),
+    locationId: requiredText(row.location_id, "unknown-location"),
+    locationName: normalizeText((row.location as RawRecord | undefined)?.name),
+    addressLine: formatResidenceAddress(address),
+    postalCode: normalizeText(address?.postal_code),
     country: normalizeText(row.country),
     isPrimary: row.is_primary !== false,
     isVerified,
@@ -829,8 +835,10 @@ async function loadActiveSubscriptionsByUserId(
 
   const map = new Map<string, RawRecord>();
   for (const row of (data as RawRecord[]) ?? []) {
-    if (!map.has(row.user_id)) {
-      map.set(row.user_id, row);
+    const userId = normalizeText(row.user_id);
+    if (!userId) continue;
+    if (!map.has(userId)) {
+      map.set(userId, row);
     }
   }
 
@@ -929,7 +937,7 @@ async function loadEntityMaps(profileIds: string[]): Promise<{
       try {
         const driverData = await profileService.getDriverData(profileId);
         if (driverData) {
-          driverMap.set(profileId, driverData);
+          driverMap.set(profileId, driverData as RawRecord);
         }
       } catch (error) {
         logger.error(`AdminProfileGovernanceService.loadEntityMaps.driver for ${profileId}`, error);
@@ -949,10 +957,14 @@ async function loadEntityMaps(profileIds: string[]): Promise<{
 
   return {
     businessMap: new Map(
-      ((businessResult.data as RawRecord[]) ?? []).map((row) => [row.profile_id, row]),
+      ((businessResult.data as RawRecord[]) ?? [])
+        .map((row) => [normalizeText(row.profile_id), row] as const)
+        .filter(([profileId]) => Boolean(profileId)) as Array<[string, RawRecord]>,
     ),
     professionalMap: new Map(
-      ((professionalResult.data as RawRecord[]) ?? []).map((row) => [row.profile_id, row]),
+      ((professionalResult.data as RawRecord[]) ?? [])
+        .map((row) => [normalizeText(row.profile_id), row] as const)
+        .filter(([profileId]) => Boolean(profileId)) as Array<[string, RawRecord]>,
     ),
     driverMap, // ✅ SSOT: Já carregado usando ProfileService
   };
@@ -974,7 +986,9 @@ async function loadDriverReputationMap(
   }
 
   return new Map(
-    ((data as RawRecord[]) ?? []).map((row) => [row.profile_id, row]),
+    ((data as RawRecord[]) ?? [])
+      .map((row) => [normalizeText(row.profile_id), row] as const)
+      .filter(([profileId]) => Boolean(profileId)) as Array<[string, RawRecord]>,
   );
 }
 
@@ -1072,8 +1086,10 @@ async function loadPrimaryResidenceMap(
 
   const map = new Map<string, RawRecord>();
   for (const row of (data as RawRecord[]) ?? []) {
-    if (!map.has(row.user_id)) {
-      map.set(row.user_id, row);
+    const userId = normalizeText(row.user_id);
+    if (!userId) continue;
+    if (!map.has(userId)) {
+      map.set(userId, row);
     }
   }
 
@@ -1084,7 +1100,7 @@ async function loadFamilySummary(userId: string): Promise<AdminProfileFamilySumm
   try {
     const summary = await FamilyService.getCoverageSummaryByUserId(
       userId,
-      supabase,
+      supabase as any,
     );
     const hasAnyFamilyRecord =
       summary.activeChildrenCount > 0 ||
@@ -1221,8 +1237,8 @@ function buildIdentityRecord(payload: {
   });
 
   return {
-    id: profile.id,
-    userId: profile.user_id,
+    id: requiredText(profile.id, "unknown-profile"),
+    userId: requiredText(profile.user_id, "unknown-user"),
     name: normalizeText(profile.name) ?? "Perfil sem nome",
     displayName: normalizeText(profile.display_name),
     username,
@@ -1235,7 +1251,7 @@ function buildIdentityRecord(payload: {
     isSuspended: resolveProfileSuspended(profile),
     isVerified: resolveProfileVerified(profile),
     reputation: Number(profile.reputation ?? 0),
-    createdAt: profile.created_at ?? null,
+    createdAt: normalizeText(profile.created_at),
     accountProfileCount,
     roles,
     activePlan: normalizeText(subscription?.plan_type) ?? "basic",
@@ -1352,28 +1368,30 @@ class AdminProfileGovernanceService {
       let withVerifiedResidence = 0;
 
       for (const profile of profilesRaw) {
+        const profileId = requiredText(profile.id, "");
+        const userId = requiredText(profile.user_id, "");
         const username = normalizeText(profile.username);
         const isPublic = resolveProfileVisibility(profile);
-        const residence = primaryResidenceMap.get(profile.user_id) ?? null;
+        const residence = primaryResidenceMap.get(userId) ?? null;
         const linkedEntities = buildLinkedEntities({
-          business: entityMaps.businessMap.get(profile.id),
-          professional: entityMaps.professionalMap.get(profile.id),
-          driver: entityMaps.driverMap.get(profile.id),
+          business: entityMaps.businessMap.get(profileId),
+          professional: entityMaps.professionalMap.get(profileId),
+          driver: entityMaps.driverMap.get(profileId),
         });
         const preferenceScopes = buildPreferenceScopes({
           profile,
           linkedEntities,
-          notificationSettings: notificationSettingsUserIds.has(profile.user_id)
+          notificationSettings: notificationSettingsUserIds.has(userId)
             ? { email_notifications: true }
             : null,
         });
         const reputationSources = buildReputationSources({
           profile,
           linkedEntities,
-          driverReputation: driverReputationMap.get(profile.id),
-          businessReviews: reviewAggregateMaps.businessReviewMap.get(profile.id) ?? null,
+          driverReputation: driverReputationMap.get(profileId),
+          businessReviews: reviewAggregateMaps.businessReviewMap.get(profileId) ?? null,
           professionalReviews:
-            reviewAggregateMaps.professionalReviewMap.get(profile.id) ?? null,
+            reviewAggregateMaps.professionalReviewMap.get(profileId) ?? null,
         });
         const trackedOrigins = countTrackedReputationOrigins(reputationSources);
 
@@ -1395,18 +1413,18 @@ class AdminProfileGovernanceService {
         }
 
         if (
-          entityMaps.businessMap.has(profile.id) ||
-          entityMaps.professionalMap.has(profile.id) ||
-          entityMaps.driverMap.has(profile.id)
+          entityMaps.businessMap.has(profileId) ||
+          entityMaps.professionalMap.has(profileId) ||
+          entityMaps.driverMap.has(profileId)
         ) {
           withLinkedEntities += 1;
         }
 
-        if ((usernameHistoryCountMap.get(profile.id) ?? 0) > 0) {
+        if ((usernameHistoryCountMap.get(profileId) ?? 0) > 0) {
           withUsernameHistory += 1;
         }
 
-        if (notificationSettingsUserIds.has(profile.user_id)) {
+        if (notificationSettingsUserIds.has(userId)) {
           withPreferences += 1;
         }
 
@@ -1646,11 +1664,11 @@ class AdminProfileGovernanceService {
       // Driver data agora vem do ProfileService, não precisa verificar erro
       
       const roles = ((rolesData.data as RawRecord[]) ?? []).map((row) => ({
-        id: typeof row === 'string' ? row : row.id,
-        role: typeof row === 'string' ? row : row.role,
+        id: typeof row === 'string' ? row : requiredText(row.id, "role"),
+        role: typeof row === 'string' ? row : (normalizeText(row.role) ?? "member"),
         isActive: typeof row === 'string' ? true : (row.is_active !== false),
-        grantedAt: typeof row === 'string' ? null : (row.granted_at ?? null),
-        expiresAt: typeof row === 'string' ? null : (row.expires_at ?? null),
+        grantedAt: typeof row === 'string' ? null : normalizeText(row.granted_at),
+        expiresAt: typeof row === 'string' ? null : normalizeText(row.expires_at),
       }));
 
       const subscription = subscriptionResult.data
@@ -1672,15 +1690,15 @@ class AdminProfileGovernanceService {
       });
 
       const members = ((membersResult.data as RawRecord[]) ?? []).map((row) => ({
-        id: row.id,
-        userId: row.user_id,
+        id: requiredText(row.id, "member"),
+        userId: requiredText(row.user_id, "unknown-user"),
         role: normalizeText(row.role) ?? "member",
-        joinedAt: row.joined_at ?? row.created_at ?? null,
-        invitedBy: row.invited_by ?? null,
+        joinedAt: normalizeText(row.joined_at) ?? normalizeText(row.created_at),
+        invitedBy: normalizeText(row.invited_by),
       }));
 
       const siblingProfiles = ((siblingProfilesData.data as RawRecord[]) ?? []).map((row) => ({
-        id: row.id,
+        id: requiredText(row.id, "sibling"),
         name: normalizeText(row.name) ?? "Perfil sem nome",
         username: normalizeText(row.username),
         profileType: normalizeText(row.profile_type) ?? "personal",

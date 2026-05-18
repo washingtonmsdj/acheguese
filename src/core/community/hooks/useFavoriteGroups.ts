@@ -26,7 +26,7 @@ export function useFavoriteGroups() {
       if (groupIds.length === 0) return [];
 
       const groups = await CommunityService.getGroups(undefined, undefined);
-      const byMembership = (groups as CommunityGroupListItem[])
+      const byMembership = (groups as unknown as CommunityGroupListItem[])
         .filter((group) => groupIds.includes(group.id))
         .sort((a, b) => (b.members_count || 0) - (a.members_count || 0));
 

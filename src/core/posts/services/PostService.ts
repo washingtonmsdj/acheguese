@@ -97,12 +97,10 @@ export const PostsFacade = {
 // 🔄 BACKWARD COMPATIBILITY - PostService legado
 // ============================================================
 import { supabase } from "@/integrations/supabase";
-import { NotificationType } from "@/core/notifications/types";
-import { notificationService } from "@/core/notifications/services/NotificationService";
+import { NotificationService } from "@/core/notifications/services/NotificationService";
 import { SocialInteractionsService } from "@/core/social/services/SocialInteractionsService";
 import { profileService } from "@/core/profiles/services/ProfileService";
 import { trackError } from "@/shared/utils/errorTracking";
-import { StructuredLogger } from "../utils/StructuredLogger";
 import { LocationType, EntityStatus } from "@/shared/types/enums";
 import { PAGINATION } from "@/shared/constants";
 import { resolveCityToLocationIds, resolveNeighborhoodInCity } from "@/core/location/helpers/territorialResolver";
@@ -250,7 +248,7 @@ export class PostService {
         throw new PostError(error.message, error.code || "CREATE_FAILED");
       }
 
-      return post as Post;
+      return post as unknown as Post;
     } catch (error) {
       if (error instanceof PostError) throw error;
       
@@ -1991,9 +1989,9 @@ export class PostService {
       const postInfo = await this.getPostBasicInfo(postId);
       if (!postInfo || postInfo.author_profile_id === likerId) return;
 
-      await notificationService.createNotification({
+      await NotificationService.createNotification({
         user_id: postInfo.author_profile_id,
-        type: NotificationType.POST_LIKE,
+        type: "info",
         title: "Novo like no seu post",
         message: `Alguem curtiu seu post: ${postInfo.title?.substring(0, 50) ?? ""}...`,
         priority: "low",

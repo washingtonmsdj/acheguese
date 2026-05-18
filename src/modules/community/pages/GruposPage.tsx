@@ -45,7 +45,11 @@ export default function GruposPage() {
         />
 
         <GruposList
-          groups={groups}
+          groups={groups.map((group) => ({
+            ...group,
+            members_count: group.members_count ?? 0,
+            posts_count: group.posts_count ?? 0,
+          }))}
           isLoading={isLoading}
           tab={tab as "todos" | "meus"}
           onJoin={(_e, groupId) => handleJoin(groupId)}

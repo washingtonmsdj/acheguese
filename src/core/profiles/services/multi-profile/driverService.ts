@@ -41,7 +41,7 @@ export class DriverService {
     try {
       const { data, error } = await supabase
         .from('driver_data')
-        .update(updates)
+        .update(updates as any)
         .eq('profile_id', profileId)
         .select()
         .single();
@@ -75,7 +75,7 @@ export class DriverService {
    */
   static async updateLocation(profileId: string, location: { lat: number; lng: number }): Promise<ServiceResponse<DriverData>> {
     return this.updateDriverData(profileId, {
-      current_location: `POINT(${location.lng} ${location.lat})`,
+      current_location: { lat: location.lat, lng: location.lng },
       last_location_update: new Date().toISOString(),
     });
   }

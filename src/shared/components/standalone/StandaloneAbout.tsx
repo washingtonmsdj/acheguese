@@ -20,6 +20,12 @@ interface StandaloneAboutProps {
 }
 
 export default function StandaloneAbout({ business }: StandaloneAboutProps) {
+  const standaloneBusiness = business as BizData & {
+    especialidades?: string[];
+    facilidades?: string[];
+    ano_fundacao?: string | number;
+  };
+
   return (
     <section id="about" className="py-16 bg-muted/30">
       <div className="container mx-auto px-4">
@@ -95,7 +101,7 @@ export default function StandaloneAbout({ business }: StandaloneAboutProps) {
               )}
 
             {/* Especialidades */}
-            {business.especialidades && business.especialidades.length > 0 && (
+            {standaloneBusiness.especialidades && standaloneBusiness.especialidades.length > 0 && (
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
@@ -105,7 +111,7 @@ export default function StandaloneAbout({ business }: StandaloneAboutProps) {
                 </CardHeader>
                 <CardContent>
                   <div className="flex flex-wrap gap-2">
-                    {business.especialidades.map(
+                    {standaloneBusiness.especialidades.map(
                       (esp: string, index: number) => (
                         <Badge key={index} variant="outline">
                           {esp}
@@ -118,7 +124,7 @@ export default function StandaloneAbout({ business }: StandaloneAboutProps) {
             )}
 
             {/* Facilidades */}
-            {business.facilidades && business.facilidades.length > 0 && (
+            {standaloneBusiness.facilidades && standaloneBusiness.facilidades.length > 0 && (
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
@@ -128,7 +134,7 @@ export default function StandaloneAbout({ business }: StandaloneAboutProps) {
                 </CardHeader>
                 <CardContent>
                   <div className="flex flex-wrap gap-2">
-                    {business.facilidades.map((fac: string, index: number) => (
+                    {standaloneBusiness.facilidades.map((fac: string, index: number) => (
                       <Badge key={index} variant="outline">
                         {fac}
                       </Badge>
@@ -140,13 +146,13 @@ export default function StandaloneAbout({ business }: StandaloneAboutProps) {
           </div>
 
           {/* Ano de Fundação */}
-          {business.ano_fundacao && (
+          {standaloneBusiness.ano_fundacao && (
             <Card>
               <CardContent className="pt-6 text-center">
                 <p className="text-muted-foreground">
                   Desde{" "}
                   <span className="font-bold text-foreground text-xl">
-                    {business.ano_fundacao}
+                    {standaloneBusiness.ano_fundacao}
                   </span>
                 </p>
               </CardContent>

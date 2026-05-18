@@ -42,6 +42,23 @@ import { toast } from "sonner";
 import { useAdminGuard } from "@/modules/admin/hooks/useAdminGuard";
 import { PICKUP_POINTS_DEFAULTS } from "@/modules/admin/config/pickupPoints.config";
 
+type PickupPointFormData = {
+  name: string;
+  description: string;
+  address: string;
+  neighborhood: string;
+  latitude: number;
+  longitude: number;
+  type: string;
+  capacity: number;
+  has_shelter: boolean;
+  has_bench: boolean;
+  has_lighting: boolean;
+  accessibility: boolean;
+  active: boolean;
+  notes: string;
+};
+
 const typeConfig: Record<
   string,
   { icon: React.ReactNode; label: string; color: string }
@@ -89,7 +106,7 @@ export default function AdminPontosEmbarque() {
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [editingPoint, setEditingPoint] = useState<PickupPoint | null>(null);
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<PickupPointFormData>({
     name: "",
     description: "",
     address: "",

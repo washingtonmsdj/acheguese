@@ -38,13 +38,13 @@ export function EmpresasSection({
       {/* Widget de Acesso Rápido para Donos - Destaque na seção empresas */}
       {businessModules.length > 0 && (
         <BusinessOwnerQuickAccess
-          businesses={businessModules}
+          businesses={businessModules as any}
           onNavigate={(url) => navigate(url)}
         />
       )}
 
       <BusinessModulesSection
-        businessModules={businessModules}
+        businessModules={businessModules as any}
         showOnboarding={showBusinessOnboarding}
         onCreateBusiness={() => navigate(appUrls.business.create)}
         onNavigate={(url) => navigate(url)}

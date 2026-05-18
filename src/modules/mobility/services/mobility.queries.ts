@@ -1,9 +1,9 @@
-ï»¿/**
+/**
  * MOBILITY QUERIES - Leitura de dados
  * 
- * Responsabilidade Ãºnica: todas as operaÃ§Ãµes de consulta (SELECT)
+ * Responsabilidade única: todas as operações de consulta (SELECT)
  * - Sem escritas (INSERT/UPDATE/DELETE)
- * - Sem lÃ³gica de negÃ³cio complexa
+ * - Sem lógica de negócio complexa
  */
 
 import { supabase } from "@/core/infrastructure/supabase";
@@ -11,7 +11,7 @@ import { logger } from "@/shared/utils/logger";
 import { profileService } from "@/core/profiles/services/ProfileService";
 import { RIDE_STATUS } from "../constants";
 
-const supabaseClient = supabase;
+const supabaseClient = supabase as any;
 
 function isMissingColumnError(error: unknown): boolean {
   if (!error || typeof error !== "object") return false;
@@ -123,7 +123,7 @@ export async function getActiveRides(): Promise<unknown[]> {
     ].filter(Boolean) as string[];
 
     const { data, error } = await supabaseClient
-      .from("ride_requests")
+      .from("ride_requests" as any)
       .select("*")
       .in("status", activeStatuses)
       .order("created_at", { ascending: false });
@@ -142,7 +142,7 @@ export async function getActiveRides(): Promise<unknown[]> {
 export async function getRideById(id: string): Promise<unknown | null> {
   try {
     const { data, error } = await supabaseClient
-      .from("ride_requests")
+      .from("ride_requests" as any)
       .select("*")
       .eq("id", id)
       .maybeSingle();
@@ -156,11 +156,11 @@ export async function getRideById(id: string): Promise<unknown | null> {
 }
 
 /**
- * Buscar todas as solicitaÃ§Ãµes de corrida
+ * Buscar todas as solicitações de corrida
  */
 export async function getAllRideRequests(): Promise<unknown[]> {
   const { data, error } = await supabaseClient
-    .from("ride_requests")
+    .from("ride_requests" as any)
     .select("*")
     .order("created_at");
 
@@ -173,7 +173,7 @@ export async function getAllRideRequests(): Promise<unknown[]> {
  */
 export async function getRidesByPassenger(passengerProfileId: string): Promise<unknown[]> {
   const { data, error } = await supabaseClient
-    .from("ride_requests")
+    .from("ride_requests" as any)
     .select("*")
     .eq("passenger_profile_id", passengerProfileId)
     .order("created_at", { ascending: false });
@@ -187,7 +187,7 @@ export async function getRidesByPassenger(passengerProfileId: string): Promise<u
  */
 export async function getRidesByDriverProfile(driverProfileId: string): Promise<unknown[]> {
   const { data, error } = await supabaseClient
-    .from("ride_requests")
+    .from("ride_requests" as any)
     .select("*")
     .eq("driver_profile_id", driverProfileId)
     .order("created_at", { ascending: false });
@@ -205,7 +205,7 @@ export async function getActiveRideByDriverProfile(
   excludeRideId?: string,
 ): Promise<unknown | null> {
   let query = supabaseClient
-    .from("ride_requests")
+    .from("ride_requests" as any)
     .select("id")
     .eq("driver_profile_id", driverProfileId)
     .in("status", statuses);
@@ -220,11 +220,11 @@ export async function getActiveRideByDriverProfile(
 }
 
 /**
- * Buscar corrida ativa do usuÃ¡rio (passageiro ou motorista)
+ * Buscar corrida ativa do usuário (passageiro ou motorista)
  */
 export async function getActiveRide(userProfileId: string): Promise<unknown | null> {
   const { data, error } = await supabaseClient
-    .from("ride_requests")
+    .from("ride_requests" as any)
     .select("*")
     .or(`passenger_profile_id.eq.${userProfileId},driver_profile_id.eq.${userProfileId}`)
     .in("status", ["pending", "accepted", "in_progress"])
@@ -241,7 +241,7 @@ export async function getActiveRide(userProfileId: string): Promise<unknown | nu
  */
 export async function getRideDispatchData(rideId: string): Promise<unknown | null> {
   const { data, error } = await supabaseClient
-    .from("ride_requests")
+    .from("ride_requests" as any)
     .select(`
       id,
       status,
@@ -263,7 +263,7 @@ export async function getRideDispatchContextById(
   rideId: string,
 ): Promise<RideDispatchContextRow | null> {
   const { data, error } = await supabaseClient
-    .from("ride_requests")
+    .from("ride_requests" as any)
     .select("ride_mode, source_type, is_scheduled, scheduled_for, status")
     .eq("id", rideId)
     .maybeSingle();
@@ -276,7 +276,7 @@ export async function getExclusiveOfferRideForDriver(
   driverProfileId: string,
 ): Promise<ExclusiveOfferRideRow | null> {
   const { data, error } = await supabaseClient
-    .from("ride_requests")
+    .from("ride_requests" as any)
     .select(
       [
         "id",
@@ -321,7 +321,7 @@ export async function getOpenBoardOfferRides(params: {
   } = params;
 
   let query = supabaseClient
-    .from("ride_requests")
+    .from("ride_requests" as any)
     .select(
       [
         "id",
@@ -367,7 +367,7 @@ export async function getReservationOfferRides(
   limit: number = 10,
 ): Promise<ReservationOfferRideRow[]> {
   const { data, error } = await supabaseClient
-    .from("ride_requests")
+    .from("ride_requests" as any)
     .select(
       [
         "id",
@@ -539,13 +539,13 @@ export async function getTopDrivers(opts: { minRides?: number; limit?: number } 
 }
 
 /**
- * EstatÃ­sticas de mobilidade
+ * Estatísticas de mobilidade
  */
 export async function getMobilityStats(): Promise<{ total_drivers: number; total_rides: number }> {
   try {
     const [driversResult, ridesResult] = await Promise.all([
       supabaseClient.from("driver_data").select("id", { count: "exact", head: true }),
-      supabaseClient.from("ride_requests").select("id", { count: "exact", head: true }),
+      supabaseClient.from("ride_requests" as any).select("id", { count: "exact", head: true }),
     ]);
 
     return {
@@ -559,12 +559,12 @@ export async function getMobilityStats(): Promise<{ total_drivers: number; total
 }
 
 /**
- * Ganhos do motorista (corridas concluÃ­das)
+ * Ganhos do motorista (corridas concluídas)
  */
 export async function getDriverEarnings(driverProfileId: string): Promise<unknown[]> {
   try {
     const { data, error } = await supabaseClient
-      .from("ride_requests")
+      .from("ride_requests" as any)
       .select("final_price, completed_at, updated_at")
       .eq("driver_profile_id", driverProfileId)
       .eq("status", RIDE_STATUS.COMPLETED)
@@ -585,14 +585,14 @@ export async function getDriverEarnings(driverProfileId: string): Promise<unknow
 }
 
 /**
- * Pagamentos de corridas concluÃ­das por motorista
+ * Pagamentos de corridas concluídas por motorista
  */
 export async function getCompletedRidePaymentsByDriver(
   driverProfileId: string,
   sinceIso?: string,
 ): Promise<unknown[]> {
   let query = supabaseClient
-    .from("ride_requests")
+    .from("ride_requests" as any)
     .select("created_at, actual_fare, final_price")
     .eq("driver_profile_id", driverProfileId)
     .eq("status", RIDE_STATUS.COMPLETED);
@@ -672,7 +672,7 @@ export async function getPassengerRating(profileId: string): Promise<number> {
 export async function getMobilityConversations(profileId: string): Promise<unknown[]> {
   try {
     const { data, error } = await supabaseClient
-      .from("mobility_conversations")
+      .from("mobility_conversations" as any)
       .select(`
         id,
         ride_id,
@@ -693,12 +693,12 @@ export async function getMobilityConversations(profileId: string): Promise<unkno
 }
 
 /**
- * ÃƒÅ¡ltima mensagem de uma conversa
+ * Ãšltima mensagem de uma conversa
  */
 export async function getLastMessage(conversationId: string): Promise<unknown | null> {
   try {
     const { data, error } = await supabaseClient
-      .from("mobility_messages")
+      .from("mobility_messages" as any)
       .select("message")
       .eq("conversation_id", conversationId)
       .order("created_at", { ascending: false })
@@ -714,12 +714,12 @@ export async function getLastMessage(conversationId: string): Promise<unknown | 
 }
 
 /**
- * Contar mensagens nÃ£o lidas
+ * Contar mensagens não lidas
  */
 export async function getUnreadCount(conversationId: string, profileId: string): Promise<number> {
   try {
     const { count, error } = await supabaseClient
-      .from("mobility_messages")
+      .from("mobility_messages" as any)
       .select("*", { count: "exact", head: true })
       .eq("conversation_id", conversationId)
       .eq("read", false)
@@ -734,26 +734,26 @@ export async function getUnreadCount(conversationId: string, profileId: string):
 }
 
 /**
- * Corridas disponÃ­veis (para motoristas)
+ * Corridas disponíveis (para motoristas)
  * 
- * @deprecated Use MobilityOfferService ao invÃ©s desta funÃ§Ã£o genÃ©rica
+ * @deprecated Use MobilityOfferService ao invés desta função genérica
  * 
- * PROBLEMA: Esta funÃ§Ã£o retorna TODAS as corridas sem considerar:
- * - EstratÃ©gia de dispatch (exclusive vs open board)
+ * PROBLEMA: Esta função retorna TODAS as corridas sem considerar:
+ * - Estratégia de dispatch (exclusive vs open board)
  * - Elegibilidade do motorista
- * - ProteÃ§Ã£o de dados sensÃ­veis
- * - Scoring e ordenaÃ§Ã£o
+ * - Proteção de dados sensíveis
+ * - Scoring e ordenação
  * 
- * SOLUÃ‡ÃƒO: Use MobilityOfferService.getExclusiveOffer() ou getOpenBoardOffers()
+ * SOLUÇÃO: Use MobilityOfferService.getExclusiveOffer() ou getOpenBoardOffers()
  * 
- * Mantido apenas para compatibilidade temporÃ¡ria
+ * Mantido apenas para compatibilidade temporária
  */
 export async function getAvailableRides(limit: number = 10): Promise<unknown[]> {
   logger.warn('getAvailableRides is deprecated. Use MobilityOfferService instead.');
   
   try {
     const { data, error } = await supabaseClient
-      .from("ride_requests")
+      .from("ride_requests" as any)
       .select(`
         *,
         pickup_address:addresses!pickup_address_id(street, latitude, longitude),
@@ -793,7 +793,7 @@ export async function getAvailableRides(limit: number = 10): Promise<unknown[]> 
 }
 
 /**
- * Buscar corridas do usuÃ¡rio (passageiro ou motorista)
+ * Buscar corridas do usuário (passageiro ou motorista)
  */
 export async function getUserRides(userId: string): Promise<unknown[]> {
   try {
@@ -801,7 +801,7 @@ export async function getUserRides(userId: string): Promise<unknown[]> {
     if (!activeProfile?.id) return [];
 
     const { data, error } = await supabaseClient
-      .from("ride_requests")
+      .from("ride_requests" as any)
       .select("*")
       .or(`passenger_profile_id.eq.${activeProfile.id},driver_profile_id.eq.${activeProfile.id}`)
       .order("created_at", { ascending: false });
@@ -815,12 +815,12 @@ export async function getUserRides(userId: string): Promise<unknown[]> {
 }
 
 /**
- * Buscar corrida com endereÃ§os completos
+ * Buscar corrida com endereços completos
  */
 export async function getRideWithAddresses(rideId: string): Promise<unknown | null> {
   try {
     const { data, error } = await supabaseClient
-      .from("ride_requests")
+      .from("ride_requests" as any)
       .select(`
         *,
         pickup_address:addresses!pickup_address_id(street, latitude, longitude),
@@ -840,12 +840,12 @@ export async function getRideWithAddresses(rideId: string): Promise<unknown | nu
 }
 
 /**
- * InformaÃ§Ãµes bÃ¡sicas da corrida
+ * Informações básicas da corrida
  */
 export async function getRideBasicInfo(rideId: string): Promise<unknown | null> {
   try {
     const { data, error } = await supabaseClient
-      .from("ride_requests")
+      .from("ride_requests" as any)
       .select("id, origin, destination, status, final_price, suggested_price")
       .eq("id", rideId)
       .maybeSingle();
@@ -864,7 +864,7 @@ export async function getRideBasicInfo(rideId: string): Promise<unknown | null> 
 export async function getRideByShareToken(token: string): Promise<unknown | null> {
   try {
     const { data, error } = await supabaseClient
-      .from("ride_requests")
+      .from("ride_requests" as any)
       .select("*")
       .eq("share_token", token)
       .maybeSingle();
@@ -878,12 +878,12 @@ export async function getRideByShareToken(token: string): Promise<unknown | null
 }
 
 /**
- * Assentos disponÃ­veis na corrida
+ * Assentos disponíveis na corrida
  */
 export async function getRideAvailableSeats(rideId: string): Promise<number> {
   try {
     const { data, error } = await supabaseClient
-      .from("ride_requests")
+      .from("ride_requests" as any)
       .select("available_seats")
       .eq("id", rideId)
       .maybeSingle();
@@ -920,7 +920,7 @@ export async function getDriverData(profileId: string): Promise<unknown | null> 
 }
 
 /**
- * Buscar estatÃ­sticas detalhadas do motorista
+ * Buscar estatísticas detalhadas do motorista
  */
 export async function getDriverStatsDetailed(driverProfileId: string): Promise<unknown | null> {
   try {
@@ -946,7 +946,7 @@ export async function getMotoboyRuntimeDatabaseChecks(): Promise<MotoboyRuntimeD
   const details: string[] = [];
 
   const rideColumnsResult = await supabaseClient
-    .from("ride_requests")
+    .from("ride_requests" as any)
     .select(
       [
         "id",
@@ -1046,7 +1046,7 @@ export async function getOperationalVerificationEntries(
 }
 
 /**
- * HistÃ³rico de corridas do usuÃ¡rio
+ * Histórico de corridas do usuário
  * @deprecated Use getUserRides() - mesmo comportamento
  */
 export async function getRideHistory(
@@ -1058,13 +1058,15 @@ export async function getRideHistory(
 }
 
 /**
- * LocalizaÃ§Ã£o do motorista
- * @deprecated NÃ£o implementado - usar GPS tracking diretamente
+ * Localização do motorista
+ * @deprecated Não implementado - usar GPS tracking diretamente
  */
 export async function getDriverLocation(_driverProfileId: string): Promise<unknown | null> {
   logger.warn("MobilityQueries.getDriverLocation - nao implementado, usar GPS tracking");
   return null;
 }
+
+
 
 
 

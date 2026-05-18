@@ -48,6 +48,11 @@ export type {
   ProfileActivityStats,
   ProfilePrivacySettingsInput,
 } from "./ProfileOperationTypes";
+import type { ProfileActivityStats } from "./ProfileOperationTypes";
+import type {
+  ProfileAssociatedBusiness,
+  ProfileBusinessModuleSnapshot,
+} from "./ProfileBusinessTypes";
 
 export type { ProfileContext } from "@/core/profiles/views/ProfileContext";
 
@@ -78,7 +83,8 @@ export type ProfileType =
   | "driver"
   | "business"
   | "professional"
-  | "community";
+  | "community"
+  | (string & {});
 
 /** @deprecated Tipo legado — não usar em código novo */
 export type LegacyProfileType = "personal" | "company" | "service";
@@ -250,6 +256,7 @@ export interface AdminFilters {
   suspended?: boolean;
   verified?: boolean;
   profileType?: ProfileType;
+  search?: string;
   limit?: number;
 }
 

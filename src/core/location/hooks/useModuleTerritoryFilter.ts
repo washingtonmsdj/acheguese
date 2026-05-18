@@ -93,7 +93,7 @@ export function useModuleTerritoryFilter({
   nearbyEnabled = true,
   includeDescendants = true,
 }: UseModuleTerritoryFilterOptions = {}): ModuleTerritoryFilterResult {
-  const routeParams = useParams<RouteParams>();
+  const routeParams = useParams() as Readonly<RouteParams>;
   const [searchParams] = useSearchParams();
   const userTerritory = useUserTerritory();
   const nearbyLocation = useResolvedUserLocation({

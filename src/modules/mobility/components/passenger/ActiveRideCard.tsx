@@ -53,7 +53,7 @@ export function ActiveRideCard({
 }: ActiveRideCardProps) {
   const [showTimeline, setShowTimeline] = useState(false);
   const [showMap, setShowMap] = useState(false);
-  const isEntrega = ride.type === "entrega";
+  const isEntrega = ride.type === "entrega" || ride.type === "delivery";
 
   const shouldShowMapOption =
     ride.driver &&
@@ -102,7 +102,13 @@ export function ActiveRideCard({
 
       {showDriverInfo && ride.driver && (
         <DriverInfo
-          driver={ride.driver}
+          driver={{
+            name: ride.driver.name || "Motorista",
+            vehicle_model: ride.driver.vehicle_model || "Veículo",
+            vehicle_plate: ride.driver.vehicle_plate || "N/A",
+            rating: ride.driver.rating || 0,
+            total_rides: 0,
+          }}
           ride={ride}
           shouldShowMapOption={!!shouldShowMapOption}
           showMap={showMap}

@@ -184,7 +184,7 @@ export const CommunityPostHeader = ({
         timestamp={getRelativeTime(createdAt)}
       />
 
-      {postType === "alerta" && (
+      {(postType as string) === "alerta" && (
         <div className="mt-2">
           <PostBadge type={postType} isVerified={isVerified} />
         </div>

@@ -39,8 +39,12 @@ import {
 } from 'lucide-react';
 import { useQrCode } from '../hooks/useQrCode';
 import { QrImageGenerator } from '../QrImageGenerator';
-import { useBusinessSubscription, EntitlementsService } from '@/core/billing';
-import type { QrEntityType, QrStyleVariant, QrDestinationVariant } from '../types';
+import { useBusinessSubscription, EntitlementsService, PlanTier } from '@/core/billing';
+import {
+  QrDestinationVariant,
+  QrStyleVariant,
+  type QrEntityType,
+} from '../types';
 // ══════════════════════════════════════════════════════════════════════════
 // TYPES
 // ══════════════════════════════════════════════════════════════════════════
@@ -70,8 +74,8 @@ export function QrCodeWidget({
   ownerProfileId,
   businessId,
   shortUrl,
-  styleVariant = 'basic',
-  destinationVariant = 'canonical',
+  styleVariant = QrStyleVariant.BASIC,
+  destinationVariant = QrDestinationVariant.CANONICAL,
   title = 'QR Code',
   description,
   showAnalytics = true,
@@ -85,11 +89,11 @@ export function QrCodeWidget({
   const subscriptionResult = useBusinessSubscription(businessId || '');
   const { entitlements, planTier, isLoading: isLoadingSubscription } = businessId 
     ? subscriptionResult
-    : { entitlements: null, planTier: 'free' as const, isLoading: false };
+    : { entitlements: null, planTier: PlanTier.FREE, isLoading: false };
   
   // Determinar estilo baseado no plano usando EntitlementsService
-  const effectiveStyleVariant = entitlements
-    ? EntitlementsService.getQrStyleVariant(planTier)
+  const effectiveStyleVariant: QrStyleVariant = entitlements
+    ? (EntitlementsService.getQrStyleVariant(planTier) as QrStyleVariant)
     : styleVariant;
   
   // Determinar permissões via entitlements

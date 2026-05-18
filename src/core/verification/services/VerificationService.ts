@@ -74,7 +74,7 @@ export class VerificationService {
     profileId: string,
   ): Promise<Verification[]> {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from("verification")
         .select("*")
         .eq("profile_id", profileId)
@@ -82,7 +82,7 @@ export class VerificationService {
 
       if (error) throw error;
 
-      return data || [];
+      return ((data || []) as unknown as Verification[]);
     } catch (error) {
       trackError(error as Error, {
         component: "VerificationService",
@@ -101,7 +101,7 @@ export class VerificationService {
     verificationType: VerificationType,
   ): Promise<Verification | null> {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from("verification")
         .select("*")
         .eq("profile_id", profileId)
@@ -112,7 +112,7 @@ export class VerificationService {
         throw error;
       }
 
-      return data;
+      return (data as unknown as Verification | null);
     } catch (error) {
       trackError(error as Error, {
         component: "VerificationService",
@@ -157,7 +157,7 @@ export class VerificationService {
     error?: string;
   }> {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from("verification")
         .insert({
           profile_id: params.profile_id,
@@ -187,7 +187,7 @@ export class VerificationService {
         type: params.verification_type,
       });
 
-      return { success: true, verification: data };
+      return { success: true, verification: data as unknown as Verification };
     } catch (error) {
       const err = error as Error;
       trackError(err, {
@@ -206,7 +206,7 @@ export class VerificationService {
     params: ApproveVerificationParams,
   ): Promise<{ success: boolean; error?: string }> {
     try {
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from("verification")
         .update({
           verified: true,
@@ -245,7 +245,7 @@ export class VerificationService {
     params: RejectVerificationParams,
   ): Promise<{ success: boolean; error?: string }> {
     try {
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from("verification")
         .update({
           verified: false,
@@ -299,7 +299,7 @@ export class VerificationService {
 
       if (error) throw error;
 
-      return data || [];
+      return ((data || []) as unknown as Verification[]);
     } catch (error) {
       trackError(error as Error, {
         component: "VerificationService",
@@ -321,7 +321,7 @@ export class VerificationService {
     by_type: Record<VerificationType, number>;
   }> {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from("verification")
         .select("verified, verification_type, rejection_reason");
 
@@ -373,7 +373,7 @@ export class VerificationService {
     verificationType: VerificationType,
   ): Promise<{ success: boolean; error?: string }> {
     try {
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from("verification")
         .delete()
         .eq("profile_id", profileId)
@@ -397,3 +397,4 @@ export class VerificationService {
 
 // Export singleton
 export const verificationService = VerificationService;
+

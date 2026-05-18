@@ -9,19 +9,19 @@ import { Clock } from "lucide-react";
 import { OpeningHoursEditor } from "../OpeningHoursEditor";
 
 interface DaySchedule {
-  open: boolean;
-  start?: string;
-  end?: string;
+  open?: string;
+  close?: string;
+  closed?: boolean;
 }
 
 interface OpeningHours {
-  monday?: DaySchedule;
-  tuesday?: DaySchedule;
-  wednesday?: DaySchedule;
-  thursday?: DaySchedule;
-  friday?: DaySchedule;
-  saturday?: DaySchedule;
-  sunday?: DaySchedule;
+  segunda?: DaySchedule;
+  terca?: DaySchedule;
+  quarta?: DaySchedule;
+  quinta?: DaySchedule;
+  sexta?: DaySchedule;
+  sabado?: DaySchedule;
+  domingo?: DaySchedule;
 }
 
 interface OpeningHoursSectionProps {

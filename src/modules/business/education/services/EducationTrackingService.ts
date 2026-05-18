@@ -19,6 +19,8 @@ import type {
   EducationNicheKey,
 } from '../types';
 
+type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[];
+
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 export interface TrackEventOptions {
@@ -85,7 +87,7 @@ export const EducationTrackingService = {
           lead_id: options.leadId ?? null,
           source_page: options.sourcePage ?? (typeof window !== 'undefined' ? window.location.pathname : null),
           session_id: getSessionId(),
-          metadata: options.metadata ?? {},
+          metadata: (options.metadata ?? {}) as Json,
         })
         .then(({ error }) => {
           if (error) {

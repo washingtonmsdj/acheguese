@@ -17,8 +17,8 @@ import { cn } from "@/shared/utils/cn";
 import type {
   AdminUserDetail,
   DriverDetail,
-  UserReport,
 } from "@/modules/admin/hooks/useAdminUserDetail";
+import type { UserReport } from "@/core/admin/services/AdminUserDetailService";
 
 interface AnalyticsTabProps {
   user: AdminUserDetail;

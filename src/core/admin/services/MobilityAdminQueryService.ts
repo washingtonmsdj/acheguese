@@ -16,6 +16,7 @@
 
 import { supabase } from "@/integrations/supabase";
 import { logger } from "@/shared/utils/logger";
+const mobilityDb = supabase as any;
 
 export interface RawCommunityPost {
   id: string;
@@ -54,8 +55,8 @@ export interface RawRide {
   passenger_profile_id: string;
   driver_profile_id?: string;
   status: string;
-  pickup_location: string;
-  dropoff_location: string;
+  pickup_location?: string;
+  dropoff_location?: string;
   final_price?: number;
   created_at: string;
   updated_at: string;
@@ -88,7 +89,7 @@ export class MobilityAdminQueryService {
     filter?: "pending" | "approved" | "rejected" | "flagged",
   ): Promise<RawCommunityPost[]> {
     try {
-      let query = supabase
+      let query = mobilityDb
         .from("community_ride_posts")
         .select(
           "id, author_profile_id, content, intent, destination, moderation_status, flag_count, interested_count, created_at, moderated_at, moderation_reason",
@@ -108,7 +109,7 @@ export class MobilityAdminQueryService {
 
   static async getPostFlags(postId: string): Promise<RawPostFlag[]> {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await mobilityDb
         .from("community_post_flags")
         .select("id, reason, description, flagged_by, created_at")
         .eq("post_id", postId);
@@ -125,7 +126,7 @@ export class MobilityAdminQueryService {
 
   static async getDriversRaw(): Promise<RawDriverProfile[]> {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await mobilityDb
         .from("driver_data")
         .select(`
           id,

@@ -66,13 +66,13 @@ export function BusinessSidebar({
         const mapped = data.map((b) => ({
           id: b.id,
           name: b.name,
-          logo: b.logo,
+          logo: b.logo_url || "",
           category: b.category,
           rating: b.rating || 0,
           total_avaliacoes: b.total_reviews || 0,
-          neighborhood: b.neighborhood,
+          neighborhood: b.location?.name || "",
           slug: b.slug,
-          city: b.address,
+          city: b.business_city || "",
           is_premium: b.is_premium || false,
           nicho: b.category,
         }));
@@ -205,10 +205,8 @@ export function BusinessSidebar({
                       navigateToBusiness({
                         id: sim.id,
                         slug: sim.slug,
-                        nicho: sim.nicho,
-                        city: sim.city || "salvador",
-                        neighborhood: sim.neighborhood,
                         is_premium: sim.is_premium || false,
+                        geographic_path: null,
                       })
                     }
                     className="w-full flex items-center gap-2 p-2 rounded-xl hover:bg-secondary transition-all group cursor-pointer"

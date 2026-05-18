@@ -49,6 +49,11 @@ type NeighborhoodClassifiedRow = {
   locations: NeighborhoodLocationRow | null;
 };
 
+function ensureStringArray(value: unknown): string[] {
+  if (Array.isArray(value)) return value.filter((item): item is string => typeof item === "string");
+  return [];
+}
+
 // ============================================================
 // HELPERS INTERNOS
 // ============================================================
@@ -59,6 +64,7 @@ type NeighborhoodClassifiedRow = {
 function mapClassifiedWithSeller(item: ClassifiedWithRelationsRow): ClassifiedData {
   return {
     ...item,
+    photos: ensureStringArray((item as { photos?: unknown }).photos),
     seller_name: item.seller?.name,
     seller_avatar: item.seller?.avatar_url,
     seller_phone: item.seller?.phone,
@@ -66,6 +72,17 @@ function mapClassifiedWithSeller(item: ClassifiedWithRelationsRow): ClassifiedDa
     geographic_path: item.locations?.geographic_path,
     category_slug: item.classified_categories?.slug,
     subcategory_slug: item.classified_subcategories?.slug,
+  };
+}
+
+function mapRawClassified(item: Record<string, unknown>): ClassifiedData {
+  return {
+    ...(item as unknown as ClassifiedData),
+    photos: ensureStringArray(item.photos),
+    seller_name: (item.seller as ClassifiedSellerRow | undefined)?.name,
+    seller_avatar: (item.seller as ClassifiedSellerRow | undefined)?.avatar_url,
+    seller_phone: (item.seller as ClassifiedSellerRow | undefined)?.phone,
+    seller_whatsapp: (item.seller as ClassifiedSellerRow | undefined)?.whatsapp,
   };
 }
 
@@ -137,7 +154,7 @@ export async function getAllClassifieds(
   filter?: TerritoryFilter,
 ): Promise<ClassifiedData[]> {
   try {
-    let query = supabase
+    let query: any = supabase
       .from("classifieds")
       .select(
         `
@@ -221,7 +238,9 @@ export async function getAllClassifieds(
       throw error;
     }
 
-    return (data || []).map(mapClassifiedWithSeller);
+    return ((data || []) as unknown[]).map((item) =>
+      mapClassifiedWithSeller(item as ClassifiedWithRelationsRow),
+    );
   } catch (error) {
     logger.error("Error in getAllClassifieds:", error);
     trackError(error as Error, {
@@ -262,13 +281,7 @@ export async function getClassifiedById(id: string): Promise<ClassifiedData | nu
       throw error;
     }
 
-    return {
-      ...data,
-      seller_name: data.seller?.name,
-      seller_avatar: data.seller?.avatar_url,
-      seller_phone: data.seller?.phone,
-      seller_whatsapp: data.seller?.whatsapp,
-    };
+    return mapRawClassified(data as Record<string, unknown>);
   } catch (error) {
     logger.error("Error in getClassifiedById:", error);
     trackError(error as Error, {
@@ -307,13 +320,7 @@ export async function getClassifiedsByCategory(category: string): Promise<Classi
       throw error;
     }
 
-    return (data || []).map((item) => ({
-      ...item,
-      seller_name: item.seller?.name,
-      seller_avatar: item.seller?.avatar_url,
-      seller_phone: item.seller?.phone,
-      seller_whatsapp: item.seller?.whatsapp,
-    }));
+    return (data || []).map((item) => mapRawClassified(item as Record<string, unknown>));
   } catch (error) {
     logger.error("Error in getClassifiedsByCategory:", error);
     trackError(error as Error, {
@@ -351,13 +358,7 @@ export async function getUserClassifieds(userId: string): Promise<ClassifiedData
       throw error;
     }
 
-    return (data || []).map((item) => ({
-      ...item,
-      seller_name: item.seller?.name,
-      seller_avatar: item.seller?.avatar_url,
-      seller_phone: item.seller?.phone,
-      seller_whatsapp: item.seller?.whatsapp,
-    }));
+    return (data || []).map((item) => mapRawClassified(item as Record<string, unknown>));
   } catch (error) {
     logger.error("Error in getUserClassifieds:", error);
     trackError(error as Error, {
@@ -392,13 +393,7 @@ export async function getClassifiedsBySeller(sellerId: string): Promise<Classifi
       throw error;
     }
 
-    return (data || []).map((item) => ({
-      ...item,
-      seller_name: item.seller?.name,
-      seller_avatar: item.seller?.avatar_url,
-      seller_phone: item.seller?.phone,
-      seller_whatsapp: item.seller?.whatsapp,
-    }));
+    return (data || []).map((item) => mapRawClassified(item as Record<string, unknown>));
   } catch (error) {
     logger.error("Error in getClassifiedsBySeller:", error);
     return [];
@@ -458,7 +453,7 @@ export async function getRecentClassifieds(limit = 10): Promise<ClassifiedData[]
       return [];
     }
 
-    return data || [];
+    return (data || []).map((item) => mapRawClassified(item as Record<string, unknown>));
   } catch (error) {
     logger.error("Error getting recent classifieds", error as Error, {
       service: "ClassifiedsQueries",

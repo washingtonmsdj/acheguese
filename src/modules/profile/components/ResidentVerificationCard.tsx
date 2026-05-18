@@ -320,8 +320,8 @@ export function ResidentVerificationCard({
             {form.cepData && (
               <p className="flex items-center gap-1 text-[10px] text-success sm:text-xs">
                 <CheckCircle className="h-3 w-3" />
-                {form.cepData.bairro && `${form.cepData.bairro}, `}
-                {form.cepData.localidade}/{form.cepData.uf}
+                {form.cepData.neighborhood && `${form.cepData.neighborhood}, `}
+                {form.cepData.city}/{form.cepData.stateCode ?? form.cepData.state}
               </p>
             )}
           </div>

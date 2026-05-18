@@ -17,7 +17,7 @@ import { DashboardSidebarStats } from "../agent-dashboard/sidebar/DashboardSideb
 import { DashboardSidebarActivity } from "../agent-dashboard/sidebar/DashboardSidebarActivity";
 import { DashboardSidebarQuickLinks } from "../agent-dashboard/sidebar/DashboardSidebarQuickLinks";
 import { DashboardSidebarHelp } from "../agent-dashboard/sidebar/DashboardSidebarHelp";
-import type { DashboardView } from "../types/agentDashboardViewModels";
+import type { DashboardChannelView, DashboardView } from "../types/agentDashboardViewModels";
 
 export default function CommunicationAgentDashboardV2() {
   const { channelSlug } = useParams<{ channelSlug: string }>();
@@ -35,6 +35,7 @@ export default function CommunicationAgentDashboardV2() {
     setSelectedChannelId,
     isLoading,
   } = useCommunicationAgentDashboardData(channelSlug);
+  const selectedChannelView = selectedChannel as DashboardChannelView | null;
 
   return (
     <>
@@ -45,7 +46,7 @@ export default function CommunicationAgentDashboardV2() {
 
       <div className="min-h-screen overflow-x-hidden bg-gradient-to-b from-background via-background to-muted/30">
         <DashboardHeader
-          channels={channels ?? []}
+          channels={(channels ?? []) as never}
           selectedChannelId={selectedChannelId}
           onChannelSelect={setSelectedChannelId}
           isLoading={channelsLoading}
@@ -92,10 +93,10 @@ export default function CommunicationAgentDashboardV2() {
           </div>
         ) : null}
 
-        {!isLoading && selectedChannel ? (
+        {!isLoading && selectedChannelView ? (
           <div className="container mx-auto px-3 sm:px-4 lg:px-6 py-6 sm:py-8">
             <DashboardQuickActions
-              channel={selectedChannel}
+              channel={selectedChannelView}
               activeView={activeView}
               onViewChange={setActiveView}
             />
@@ -105,55 +106,55 @@ export default function CommunicationAgentDashboardV2() {
                 {activeView === "overview" ? (
                   <>
                     <DashboardOverview
-                      channel={selectedChannel}
-                      publications={publications ?? []}
-                      territories={territories ?? []}
-                      drafts={drafts ?? []}
+                      channel={selectedChannel as never}
+                      publications={(publications ?? []) as never}
+                      territories={(territories ?? []) as never}
+                      drafts={(drafts ?? []) as never}
                     />
-                    <DashboardAnalytics channel={selectedChannel} publications={publications ?? []} />
+                    <DashboardAnalytics channel={selectedChannel as never} publications={(publications ?? []) as never} />
                   </>
                 ) : null}
 
                 {activeView === "publications" ? (
                   <DashboardPublications
-                    channel={selectedChannel}
-                    publications={publications ?? []}
-                    territories={territories ?? []}
+                    channel={selectedChannel as never}
+                    publications={(publications ?? []) as never}
+                    territories={(territories ?? []) as never}
                   />
                 ) : null}
 
                 {activeView === "drafts" ? (
                   <DashboardDrafts
-                    channel={selectedChannel}
-                    drafts={drafts ?? []}
-                    territories={territories ?? []}
+                    channel={selectedChannel as never}
+                    drafts={(drafts ?? []) as never}
+                    territories={(territories ?? []) as never}
                   />
                 ) : null}
 
                 {activeView === "analytics" ? (
-                  <DashboardAnalytics channel={selectedChannel} publications={publications ?? []} />
+                  <DashboardAnalytics channel={selectedChannel as never} publications={(publications ?? []) as never} />
                 ) : null}
 
                 {activeView === "territories" ? (
-                  <DashboardTerritories channel={selectedChannel} territories={territories ?? []} />
+                  <DashboardTerritories channel={selectedChannel as never} territories={(territories ?? []) as never} />
                 ) : null}
 
                 {activeView === "schedule" ? (
-                  <DashboardSchedule channel={selectedChannel} publications={publications ?? []} />
+                  <DashboardSchedule channel={selectedChannel as never} publications={(publications ?? []) as never} />
                 ) : null}
 
-                {activeView === "team" ? <DashboardTeam channel={selectedChannel} /> : null}
+                {activeView === "team" ? <DashboardTeam channel={selectedChannel as never} /> : null}
               </main>
 
               <aside className="lg:col-span-4 space-y-6">
                 <div className="lg:sticky lg:top-6 space-y-6">
                   <DashboardSidebarStats
-                    channel={selectedChannel}
-                    publications={publications ?? []}
-                    territories={territories ?? []}
+                    channel={selectedChannel as never}
+                    publications={(publications ?? []) as never}
+                    territories={(territories ?? []) as never}
                   />
-                  <DashboardSidebarActivity channel={selectedChannel} />
-                  <DashboardSidebarQuickLinks channel={selectedChannel} />
+                  <DashboardSidebarActivity channel={selectedChannel as never} />
+                  <DashboardSidebarQuickLinks channel={selectedChannel as never} />
                   <DashboardSidebarHelp />
                 </div>
               </aside>

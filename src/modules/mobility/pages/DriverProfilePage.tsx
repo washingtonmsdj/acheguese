@@ -69,7 +69,7 @@ export default function DriverProfilePage() {
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => navigate(mobilityUrls.driver)}
+            onClick={() => navigate(mobilityUrls.motorista.home)}
             className="mb-4"
           >
             <ArrowLeft className="mr-2 h-4 w-4" />
@@ -122,7 +122,7 @@ export default function DriverProfilePage() {
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => navigate(mobilityUrls.driver)}
+            onClick={() => navigate(mobilityUrls.motorista.home)}
           >
             <ArrowLeft className="mr-2 h-4 w-4" />
             Voltar

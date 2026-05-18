@@ -5,10 +5,9 @@
  */
 
 import { logger } from "@/shared/utils/logger";
-import { notificationService } from "@/core/notifications/services/NotificationService";
+import { NotificationService } from "@/core/notifications/services/NotificationService";
 import type {
   NotificationType,
-  NotificationPriority,
 } from "@/core/notifications/services/NotificationService";
 import { commentService } from "@/core/comments/services";
 import { postService } from "@/core/posts/services";
@@ -16,11 +15,11 @@ import { AuthorizationEngine } from "@/core/authorization/services/Authorization
 import { profileService } from "@/core/profiles/services/ProfileService";
 import type { Post } from "@/core/posts/types";
 
-type PostOwnershipShape = Pick<Post, "author_profile_id" | "profile_id">;
+type PostOwnershipShape = Pick<Post, "author_profile_id">;
 
 function getPostOwnerProfileId(post: PostOwnershipShape | null): string | null {
   if (!post) return null;
-  return post.author_profile_id ?? post.profile_id ?? null;
+  return post.author_profile_id ?? null;
 }
 
 /**
@@ -130,12 +129,12 @@ export async function createCommentNotification(
 
     const actor = await profileService.getProfileById(actorId);
 
-    await notificationService.createNotification({
+    await NotificationService.createNotification({
       user_id: postOwnerProfileId,
-      type: "community" as NotificationType,
+      type: "info" as NotificationType,
+      category: "social",
       title: "Novo comentário",
       message: `${actor?.name || "Alguém"} comentou no seu post`,
-      priority: "medium" as NotificationPriority,
       metadata: {
         post_id: postId,
         comment_id: "",
@@ -177,12 +176,12 @@ export async function createReplyNotification(
     }
 
     const actor = await profileService.getProfileById(actorId);
-    await notificationService.createNotification({
+    await NotificationService.createNotification({
       user_id: parentComment.author_profile_id,
-      type: "community" as NotificationType,
+      type: "info" as NotificationType,
+      category: "social",
       title: "Nova resposta no comentario",
       message: `${actor?.name || "Alguem"} respondeu seu comentario`,
-      priority: "medium" as NotificationPriority,
       metadata: {
         post_id: postId,
         parent_comment_id: parentCommentId,
@@ -222,12 +221,12 @@ export async function createLikeNotification(
 
     const actor = await profileService.getProfileById(actorId);
 
-    await notificationService.createNotification({
+    await NotificationService.createNotification({
       user_id: postOwnerProfileId,
-      type: "community" as NotificationType,
+      type: "info" as NotificationType,
+      category: "social",
       title: "Nova curtida",
       message: `${actor?.name || "Alguém"} curtiu seu post`,
-      priority: "low" as NotificationPriority,
       metadata: {
         post_id: postId,
         actor_id: actorId,
@@ -259,12 +258,12 @@ export async function createFollowedPostNotifications(
     for (const followerId of followerIds) {
       if (followerId === actorId) continue;
       try {
-        await notificationService.createNotification({
+        await NotificationService.createNotification({
           user_id: followerId,
-          type: "community" as NotificationType,
+          type: "info" as NotificationType,
+          category: "social",
           title: "Novo comentário em post seguido",
           message: `${actor?.name || "Alguém"} comentou em um post que você segue`,
-          priority: "low" as NotificationPriority,
           metadata: {
             post_id: postId,
             actor_id: actorId,
@@ -320,12 +319,12 @@ export async function createMentionNotifications(
 
     for (const user of mentionedUsers) {
       try {
-        await notificationService.createNotification({
+        await NotificationService.createNotification({
           user_id: user.id,
-          type: "community" as NotificationType,
+          type: "info" as NotificationType,
+          category: "social",
           title: "Você foi mencionado",
           message: `${actor?.name || "Alguém"} mencionou você em um post`,
-          priority: "medium" as NotificationPriority,
           metadata: {
             post_id: postId,
             actor_id: actorId,

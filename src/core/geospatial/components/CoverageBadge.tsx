@@ -68,7 +68,7 @@ export function CoverageBadge({
   // Tem cobertura
   if (coverage?.has_coverage) {
     return (
-      <Badge variant="success" className={`bg-green-100 text-green-800 ${className}`}>
+      <Badge variant="secondary" className={`bg-green-100 text-green-800 ${className}`}>
         <CheckCircle2 className="w-3 h-3 mr-1" />
         Atende sua região
       </Badge>
@@ -78,7 +78,7 @@ export function CoverageBadge({
   // Não tem cobertura
   if (!showOnlyIfCovered) {
     return (
-      <Badge variant="warning" className={`bg-yellow-100 text-yellow-800 ${className}`}>
+      <Badge variant="outline" className={`bg-yellow-100 text-yellow-800 ${className}`}>
         <XCircle className="w-3 h-3 mr-1" />
         Fora da área de cobertura
       </Badge>

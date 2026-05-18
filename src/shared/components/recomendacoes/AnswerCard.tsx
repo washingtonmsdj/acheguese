@@ -9,7 +9,31 @@ import { CheckCircle2, ThumbsUp, Flag, Star } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { cn } from "@/shared/utils/cn";
-// Answer type definido localmente abaixo
+
+export type MentionedProfessional = {
+  id: string;
+  name: string;
+  service?: string | null;
+  rating?: number | null;
+};
+
+export type MentionedBusiness = {
+  id: string;
+  name: string;
+  category?: string | null;
+};
+
+export type Answer = {
+  id: string;
+  texto: string;
+  created_at: string;
+  curtidas: number;
+  liked?: boolean;
+  melhor_resposta?: boolean;
+  autor?: { name?: string | null; avatar_url?: string | null } | null;
+  professional?: MentionedProfessional | null;
+  business?: MentionedBusiness | null;
+};
 
 interface AnswerCardProps {
   answer: Answer;

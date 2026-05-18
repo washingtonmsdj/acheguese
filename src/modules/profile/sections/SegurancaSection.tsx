@@ -44,19 +44,17 @@ export function SegurancaSection({
     <>
       <div className="space-y-6">
         <AccountHealthPanel
-          accountSnapshot={
-            account || {
+          accountSnapshot={(account || {
               accountState: "inactive",
               isBlocked: false,
               isSuspended: false,
               verificationStatus,
               verificationRejectionReason,
-            }
-          }
+            }) as any}
           identity={identity}
           context={context}
-          activeProfile={activeProfile}
-          roles={roles}
+          activeProfile={activeProfile as any}
+          roles={roles as any}
         />
 
         <SectionFrame
@@ -105,8 +103,8 @@ export function SegurancaSection({
       </div>
 
       <DataManagementDialogs
-        profile={profile}
-        stats={stats}
+        profile={profile as any}
+        stats={stats as any}
         userEmail={user?.email}
         downloadOpen={downloadDataOpen}
         viewOpen={viewDataOpen}

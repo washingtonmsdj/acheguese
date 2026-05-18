@@ -30,10 +30,7 @@ export function buildTree(locations: readonly TerritoryNode[]): TerritoryNode[] 
       roots.push(node);
     } else {
       logger.warn(
-        "Orphan node (parent not found):",
-        node.name,
-        "parent_id:",
-        node.parent_id
+        `Orphan node (parent not found): ${node.name}; parent_id: ${node.parent_id}`,
       );
     }
   });

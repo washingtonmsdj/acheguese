@@ -177,7 +177,7 @@ export function PendingPostCard({ post }: PendingPostCardProps) {
 
           {showReports && (
             <div className="mt-3 space-y-2">
-              {post.reports.map((report) => (
+              {post.reports.map((rawReport) => { const report = rawReport as unknown as { id: string; type: string; reason?: string; description?: string; reporter_avatar?: string; reporter_name?: string }; return (
                 <div
                   key={report.id}
                   className="p-3 bg-muted rounded-lg text-sm"
@@ -195,17 +195,17 @@ export function PendingPostCard({ post }: PendingPostCardProps) {
                       </span>
                     </div>
                     <Badge variant="outline" className="text-xs">
-                      {REPORT_TYPE_LABELS[report.type]}
+                      {REPORT_TYPE_LABELS[report.type as keyof typeof REPORT_TYPE_LABELS] ?? report.type}
                     </Badge>
                   </div>
-                  <p className="text-muted-foreground">{report.reason}</p>
+                  <p className="text-muted-foreground">{String(report.reason ?? "") }</p>
                   {report.description && (
                     <p className="text-xs text-muted-foreground mt-1">
-                      {report.description}
+                      {String(report.description ?? "") }
                     </p>
                   )}
                 </div>
-              ))}
+              ); })}
             </div>
           )}
         </div>
@@ -306,3 +306,5 @@ export function PendingPostCard({ post }: PendingPostCardProps) {
     </Card>
   );
 }
+
+

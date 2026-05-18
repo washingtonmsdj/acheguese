@@ -40,12 +40,14 @@ export interface Subscription {
 }
 
 class AdminSubscriptionsServiceClass {
+  private readonly db = supabase as any;
+
   /**
    * Busca estatísticas de assinaturas
    */
   async getStats(): Promise<SubscriptionStats> {
     try {
-      const { data: subscriptions, error } = await supabase
+      const { data: subscriptions, error } = await this.db
         .from("user_subscriptions")
         .select("*");
 
@@ -64,7 +66,7 @@ class AdminSubscriptionsServiceClass {
       };
       const byPlanCounter = new Map<string, number>();
 
-      subscriptions?.forEach(s => {
+      (subscriptions || []).forEach((s: any) => {
         if (s.plan_type) {
           incrementCounter(byPlanCounter, s.plan_type, 1);
         }
@@ -78,11 +80,11 @@ class AdminSubscriptionsServiceClass {
       stats.byPlan = Object.fromEntries(byPlanCounter.entries());
 
       // Calcular tempo médio de vida das assinaturas
-      const lifetimes = subscriptions
-        ?.filter(s => s.started_at)
-        .map(s => {
+      const lifetimes = (subscriptions || [])
+        .filter((s: any) => s.started_at)
+        .map((s: any) => {
           const start = new Date(s.started_at);
-          const end = s.cancelled_at ? new Date(s.cancelled_at) : now;
+          const end = s.canceled_at ? new Date(s.canceled_at) : now;
           return (end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24); // dias
         }) || [];
 
@@ -116,7 +118,7 @@ class AdminSubscriptionsServiceClass {
         status,
       } = params;
 
-      let query = supabase
+      let query = this.db
         .from("user_subscriptions")
         .select(`
           *,
@@ -167,14 +169,14 @@ class AdminSubscriptionsServiceClass {
    */
   async createSubscription(data: Partial<Subscription>): Promise<Subscription | null> {
     try {
-      const { data: subscription, error } = await supabase
+      const { data: subscription, error } = await this.db
         .from("user_subscriptions")
-        .insert([data])
+        .insert([data] as any)
         .select()
         .single();
 
       if (error) throw error;
-      return subscription;
+      return subscription as Subscription;
     } catch (error) {
       logger.error("Error creating subscription:", error);
       return null;
@@ -186,9 +188,9 @@ class AdminSubscriptionsServiceClass {
    */
   async updateSubscription(id: string, data: Partial<Subscription>): Promise<boolean> {
     try {
-      const { error } = await supabase
+      const { error } = await this.db
         .from("user_subscriptions")
-        .update(data)
+        .update(data as any)
         .eq("id", id);
 
       if (error) throw error;
@@ -204,12 +206,12 @@ class AdminSubscriptionsServiceClass {
    */
   async cancelSubscription(subscriptionId: string, reason?: string): Promise<boolean> {
     try {
-      const { error } = await supabase
+      const { error } = await this.db
         .from("user_subscriptions")
         .update({
           status: ADMIN_SUBSCRIPTION_STATUS.CANCELLED,
           active: false,
-          cancelled_at: new Date().toISOString(),
+          canceled_at: new Date().toISOString(),
         })
         .eq("id", subscriptionId);
 
@@ -226,12 +228,12 @@ class AdminSubscriptionsServiceClass {
    */
   async reactivateSubscription(subscriptionId: string): Promise<boolean> {
     try {
-      const { error } = await supabase
+      const { error } = await this.db
         .from("user_subscriptions")
         .update({
           status: ADMIN_SUBSCRIPTION_STATUS.ACTIVE,
           active: true,
-          cancelled_at: null,
+          canceled_at: null,
         })
         .eq("id", subscriptionId);
 
@@ -252,7 +254,7 @@ class AdminSubscriptionsServiceClass {
       const futureDate = new Date();
       futureDate.setDate(futureDate.getDate() + daysAhead);
 
-      const { data, error } = await supabase
+      const { data, error } = await this.db
         .from("user_subscriptions")
         .select(`
           *,
@@ -281,7 +283,7 @@ class AdminSubscriptionsServiceClass {
    */
   async getRevenueByPeriod(startDate: string, endDate: string) {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await this.db
         .from("user_subscriptions")
         .select("amount_cents, created_at, plan_type")
         .gte("created_at", startDate)
@@ -297,7 +299,7 @@ class AdminSubscriptionsServiceClass {
       const byPlanCounter = new Map<string, number>();
       const byMonthCounter = new Map<string, number>();
 
-      data?.forEach(s => {
+      (data || []).forEach((s: any) => {
         const amount = s.amount_cents / 100;
         revenue.total += amount;
 
@@ -326,16 +328,16 @@ class AdminSubscriptionsServiceClass {
       const startDate = new Date();
       startDate.setMonth(startDate.getMonth() - months);
 
-      const { data: subscriptions, error } = await supabase
+      const { data: subscriptions, error } = await this.db
         .from("user_subscriptions")
-        .select("status, cancelled_at")
+        .select("status, canceled_at")
         .gte("created_at", startDate.toISOString());
 
       if (error) throw error;
 
       const total = subscriptions?.length || 0;
-      const cancelled = subscriptions?.filter(
-        s => s.status === ADMIN_SUBSCRIPTION_STATUS.CANCELLED,
+      const cancelled = (subscriptions || []).filter(
+        (s: any) => s.status === ADMIN_SUBSCRIPTION_STATUS.CANCELLED,
       ).length || 0;
 
       return {
@@ -354,12 +356,12 @@ class AdminSubscriptionsServiceClass {
    */
   async upgradePlan(subscriptionId: string, newPlan: string, newAmount: number): Promise<boolean> {
     try {
-      const { error } = await supabase
+      const { error } = await this.db
         .from("user_subscriptions")
         .update({
           plan_type: newPlan,
           amount_cents: newAmount,
-        })
+        } as any)
         .eq("id", subscriptionId);
 
       if (error) throw error;
@@ -375,12 +377,12 @@ class AdminSubscriptionsServiceClass {
    */
   async downgradePlan(subscriptionId: string, newPlan: string, newAmount: number): Promise<boolean> {
     try {
-      const { error } = await supabase
+      const { error } = await this.db
         .from("user_subscriptions")
         .update({
           plan_type: newPlan,
           amount_cents: newAmount,
-        })
+        } as any)
         .eq("id", subscriptionId);
 
       if (error) throw error;

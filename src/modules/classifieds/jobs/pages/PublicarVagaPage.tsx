@@ -483,6 +483,7 @@ export default function PublicarVagaPage() {
     isLoadingPermission,
     permission,
     activeProfile?.id,
+    user?.id,
     activeLocationId,
     activeLocation,
     salarioMin,

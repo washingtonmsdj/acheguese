@@ -137,7 +137,7 @@ export async function createPost(data: {
       throw new PostError(error.message, error.code || "CREATE_FAILED");
     }
 
-    return post as Post;
+    return post as unknown as Post;
   } catch (error) {
     if (error instanceof PostError) throw error;
 

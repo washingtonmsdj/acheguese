@@ -637,7 +637,7 @@ function MembersPanel({
         Membros ({members.length})
       </h3>
       {members.map((m) => (
-        <div key={m.id} className="flex items-center gap-2.5 py-2">
+        <div key={m.member_profile_id} className="flex items-center gap-2.5 py-2">
           <Avatar className="w-9 h-9">
             <AvatarImage src={m.profile?.avatar_url || ""} />
             <AvatarFallback className="text-xs bg-gradient-to-br from-teal-400 to-cyan-400 text-white">
@@ -766,7 +766,7 @@ export default function GrupoDetailPage() {
       toast.success("Você entrou no grupo!");
       refetch();
     } catch (err: unknown) {
-      toast.error(err.message || "Error entrar");
+      toast.error(err instanceof Error ? err.message : "Error entrar");
     }
   };
 
@@ -776,7 +776,7 @@ export default function GrupoDetailPage() {
       toast.success("Você saiu do grupo");
       refetch();
     } catch (err: unknown) {
-      toast.error(err.message || "Error sair");
+      toast.error(err instanceof Error ? err.message : "Error sair");
     }
   };
 

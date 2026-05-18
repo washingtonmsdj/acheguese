@@ -131,8 +131,15 @@ export function PostDetailModal({
         ...prev,
         {
           id: createdComment.id,
-          author_name: activeProfile.display_name?.trim() || "Usuario",
-          author_avatar: activeProfile.avatar_url,
+          author_name:
+            ((activeProfile as { display_name?: string } | null)?.display_name ??
+              activeProfile.displayName ??
+              "Usuario")
+              .trim(),
+          author_avatar:
+            (activeProfile as { avatar_url?: string | null } | null)?.avatar_url ??
+            activeProfile.avatarUrl ??
+            undefined,
           content: createdComment.content,
           created_at: createdComment.created_at,
           likes_count: createdComment.likes_count ?? 0,
@@ -172,7 +179,7 @@ export function PostDetailModal({
                 timestamp={getRelativeTime(post.created_at)}
               />
 
-              {post.type === "alerta" && (
+              {(post.type as string) === "alerta" && (
                 <div className="mt-2">
                   <PostBadge type={post.type} isVerified={post.is_verified} />
                 </div>

@@ -14,16 +14,34 @@
 export * from './types';
 
 // Services
-export * from './services/GeospatialService';
-export * from './services/SpatialSearchService';
-export * from './services/CoverageService';
-export * from './services/BoundaryService';
+export { GeospatialService } from './services/GeospatialService';
+export { SpatialSearchService } from './services/SpatialSearchService';
+export type {
+  EntityType,
+  BoundingBox,
+  SpatialSearchResult,
+  SearchByRadiusInput,
+  SearchByBoundsInput,
+  SearchHybridInput,
+} from './services/SpatialSearchService';
+export { CoverageService } from './services/CoverageService';
+export type {
+  CoverageEntityType,
+  CoverageType,
+  CoverageCheckResult,
+  CoverageArea,
+  CheckCoverageInput,
+  AddCoverageByRadiusInput,
+  AddCoverageByLocationInput,
+  FindEntitiesWithCoverageInput,
+} from './services/CoverageService';
+export { boundaryService, BoundaryServiceClass } from './services/BoundaryService';
+export type { BoundsResult, CityBoundsInput, NeighborhoodBoundsInput } from './services/BoundaryService';
 
 // Service Instances
 export { geospatialService } from './services/GeospatialService';
 export { spatialSearchService } from './services/SpatialSearchService';
 export { coverageService } from './services/CoverageService';
-export { boundaryService } from './services/BoundaryService';
 
 // Hooks
 export * from './hooks/useSpatialSearch';

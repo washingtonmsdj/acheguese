@@ -22,10 +22,12 @@ const VERTICAL_URL_BUILDERS: Record<VerticalKey, VerticalUrlBuilder> = {
       geographic_path: ctx.geographic_path,
       is_premium: ctx.is_premium,
     }),
+  education: (ctx) => `/educacao/${ctx.slug || ctx.id}`,
 };
 
 const VERTICAL_REQUIRES_PROFILE: Record<VerticalKey, boolean> = {
   gastronomy: true,
+  education: true,
 };
 
 export function getVerticalPublicUrl(

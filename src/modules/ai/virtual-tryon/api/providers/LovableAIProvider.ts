@@ -1,4 +1,4 @@
-import type { TryOnProvider, TryOnProviderRequest, TryOnProviderResult } from '../domain/types';
+import type { TryOnProvider, TryOnProviderRequest, TryOnProviderResult } from '../../domain/types';
 
 /**
  * LovableAIProvider — usa o gateway Lovable AI (Gemini image) via edge function.

@@ -43,7 +43,7 @@ export function DashboardHeader({ channels, selectedChannelId, onChannelSelect, 
                     {channels.map((channel) => (
                       <SelectItem key={channel.id} value={channel.id}>
                         <div className="flex items-center gap-2">
-                          <span className="truncate">{channel.public_name || channel.name}</span>
+                          <span className="truncate">{channel.public_name || "Canal"}</span>
                           {channel.verification_status === "verified" && (
                             <Badge variant="secondary" className="text-xs flex-shrink-0">Verificado</Badge>
                           )}

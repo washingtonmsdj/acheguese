@@ -8,11 +8,11 @@ import {
   SelectValue,
 } from "@/shared/components/ui/select";
 import { Separator } from "@/shared/components/ui/separator";
-import { useComments } from "@/modules/community/hooks/useComments";
+import { useComments, type Comment } from "@/modules/community/hooks/useComments";
 import { CommentItem } from "./CommentItem";
 import { CommentForm } from "./CommentForm";
 import { Loader2 } from "lucide-react";
-import type { Comment } from "@/shared/utils/commentTree";
+import type { Comment as TreeComment } from "@/shared/utils/commentTree";
 /**
  * Thread de comentários
  *
@@ -32,7 +32,7 @@ interface CommentThreadProps {
 export function CommentThread({ postId }: CommentThreadProps) {
   const [sortBy, setSortBy] = useState<"relevantes" | "recentes">("relevantes");
   const { comments, loading: isLoading } = useComments(postId);
-  const typedComments = comments as Comment[];
+  const typedComments = comments;
 
   if (isLoading) {
     return (
@@ -85,7 +85,7 @@ export function CommentThread({ postId }: CommentThreadProps) {
       ) : (
         <div className="space-y-4">
           {typedComments.map((comment) => (
-            <CommentItem key={comment.id} comment={comment} />
+            <CommentItem key={comment.id} comment={comment as unknown as TreeComment} />
           ))}
         </div>
       )}

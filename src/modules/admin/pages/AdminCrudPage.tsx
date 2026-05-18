@@ -161,11 +161,7 @@ export default function AdminCrudPage({
       if (value) {
         result = result.filter(
           (item) =>
-            String(
-              Object.entries(item as Record<string, unknown>).find(
-                ([entryKey]) => entryKey === key,
-              )?.[1] ?? "",
-            ).toLowerCase() === value.toLowerCase(),
+            String(item[key] ?? "").toLowerCase() === value.toLowerCase(),
         );
       }
     });
@@ -291,7 +287,11 @@ export default function AdminCrudPage({
       );
     }
     if (f.type === "number")
-      return <span className="font-mono text-xs">{val ?? 0}</span>;
+      return (
+        <span className="font-mono text-xs">
+          {typeof val === "number" || typeof val === "string" ? val : 0}
+        </span>
+      );
     return (
       <span className="truncate block max-w-[180px]">{String(val ?? "-")}</span>
     );
@@ -533,7 +533,7 @@ export default function AdminCrudPage({
                   </button>
                 ) : f.type === "select" && f.options ? (
                   <select
-                    value={form[f.key] ?? ""}
+                    value={String(form[f.key] ?? "")}
                     onChange={(e) =>
                       setForm((prev) => ({ ...prev, [f.key]: e.target.value }))
                     }
@@ -548,7 +548,7 @@ export default function AdminCrudPage({
                   </select>
                 ) : f.type === "textarea" ? (
                   <textarea
-                    value={form[f.key] ?? ""}
+                    value={String(form[f.key] ?? "")}
                     onChange={(e) =>
                       setForm((prev) => ({ ...prev, [f.key]: e.target.value }))
                     }
@@ -558,7 +558,7 @@ export default function AdminCrudPage({
                 ) : (
                   <Input
                     type={f.type === "number" ? "number" : "text"}
-                    value={form[f.key] ?? ""}
+                    value={String(form[f.key] ?? "")}
                     placeholder={f.placeholder}
                     onChange={(e) =>
                       setForm((prev) => ({

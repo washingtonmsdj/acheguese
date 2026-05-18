@@ -2,29 +2,9 @@ import React from "react";
 import { MapPin } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import { DriverRidesList } from "./DriverRidesList";
-import { RIDE_STATUS } from "@/shared/types/constants";
+import type { MobilityRide } from "@/core/mobility/types/ride";
 
 type OfferModeFilter = "all" | "ride" | "motoboy";
-
-export interface MobilityRide {
-  id: string;
-  status: string;
-  type?: string;
-  ride_mode?: string | null;
-  created_at?: string;
-  updated_at?: string;
-  completed_at?: string;
-  final_price?: number | null;
-  actual_fare?: number | null;
-  price?: number | null;
-  suggested_price?: number | null;
-  passenger?: {
-    name?: string;
-    rating?: number | null;
-    [key: string]: unknown;
-  };
-  [key: string]: unknown;
-}
 
 interface DriverRidesTabProps {
   isDriverOnline: boolean;
@@ -74,7 +54,7 @@ export function DriverRidesTab({
           </h3>
           <DriverRidesList
             rides={acceptedPassengerRides}
-            type={RIDE_STATUS.ACCEPTED}
+            type="accepted"
             onStart={onStartRide}
             onComplete={onCompleteRide}
             onCancel={onCancelRide}

@@ -103,23 +103,28 @@ export function NearbyCard({ entity, onNavigate }: NearbyCardProps) {
   const hasRealDistance = entity.distance > 0 && entity.distance < 100000; // <100km = real
   const distance = hasRealDistance ? formatDistance(entity.distance) : null;
   const walkingTime = hasRealDistance ? getWalkingTime(entity.distance) : null;
-  const territoryName = entity.metadata?.neighborhood || entity.metadata?.city || null;
+  const metadata = entity.metadata as Record<string, unknown> | undefined;
+  const territoryName =
+    (typeof metadata?.neighborhood === "string" ? metadata.neighborhood : null) ||
+    (typeof metadata?.city === "string" ? metadata.city : null);
   
   const url = React.useMemo(() => {
     if (entity.type === 'tourist_point') {
-      return `${config.baseUrl}/${entity.metadata?.slug || entity.id}`;
+      const slug = typeof metadata?.slug === "string" ? metadata.slug : null;
+      return `${config.baseUrl}/${slug || entity.id}`;
     }
-    if (entity.type === 'business' && entity.metadata?.slug) {
-      return `${config.baseUrl}/${entity.metadata.slug}`;
+    if (entity.type === 'business' && typeof metadata?.slug === "string") {
+      return `${config.baseUrl}/${metadata.slug}`;
     }
-    if (entity.type === 'event' && entity.metadata?.slug) {
-      return `${config.baseUrl}/${entity.metadata.slug}`;
+    if (entity.type === 'event' && typeof metadata?.slug === "string") {
+      return `${config.baseUrl}/${metadata.slug}`;
     }
     return `${config.baseUrl}/${entity.id}`;
   }, [entity, config.baseUrl]);
 
   // Badge de tipo de serviço
-  const isService = entity.metadata?.category === 'services' || entity.metadata?.is_mobile_service;
+  const isService =
+    metadata?.category === "services" || metadata?.is_mobile_service === true;
   const entityBadge = isService ? 'Serviço' : config.label;
 
   return (

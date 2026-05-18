@@ -106,7 +106,7 @@ export class GastronomyStripeService {
    */
   static async createCustomer(
     params: CreateCustomerParams
-  ): Promise<StripeServiceResult<Stripe.Customer>> {
+  ): Promise<StripeServiceResult<any>> {
     try {
       const customer = await stripe.customers.create({
         email: params.email,
@@ -133,7 +133,7 @@ export class GastronomyStripeService {
    */
   static async getCustomer(
     customerId: string
-  ): Promise<StripeServiceResult<Stripe.Customer>> {
+  ): Promise<StripeServiceResult<any>> {
     try {
       const customer = await stripe.customers.retrieve(customerId);
       
@@ -141,7 +141,7 @@ export class GastronomyStripeService {
         return { data: null, error: 'Customer foi deletado' };
       }
       
-      return { data: customer as Stripe.Customer, error: null };
+      return { data: customer as any, error: null };
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Erro ao buscar customer';
       logger.error('[StripeService] Erro ao buscar customer:', error);
@@ -159,7 +159,7 @@ export class GastronomyStripeService {
   static async updateCustomer(
     customerId: string,
     params: Partial<Pick<CreateCustomerParams, 'email' | 'name' | 'metadata'>>
-  ): Promise<StripeServiceResult<Stripe.Customer>> {
+  ): Promise<StripeServiceResult<any>> {
     try {
       const customer = await stripe.customers.update(customerId, {
         email: params.email,
@@ -187,13 +187,8 @@ export class GastronomyStripeService {
    */
   static async createSubscription(
     params: CreateSubscriptionParams
-  ): Promise<StripeServiceResult<Stripe.Subscription>> {
+  ): Promise<StripeServiceResult<any>> {
     try {
-      // Validar plan tier
-      if (params.planTier === GastronomyPlanTier.FREE) {
-        return { data: null, error: 'Plano Free não requer assinatura Stripe' };
-      }
-      
       // Obter price_id
       const priceId = PRICE_IDS[params.planTier];
       if (!priceId) {
@@ -236,7 +231,7 @@ export class GastronomyStripeService {
    */
   static async getSubscription(
     subscriptionId: string
-  ): Promise<StripeServiceResult<Stripe.Subscription>> {
+  ): Promise<StripeServiceResult<any>> {
     try {
       const subscription = await stripe.subscriptions.retrieve(subscriptionId);
       return { data: subscription, error: null };
@@ -255,13 +250,8 @@ export class GastronomyStripeService {
    */
   static async updateSubscription(
     params: UpdateSubscriptionParams
-  ): Promise<StripeServiceResult<Stripe.Subscription>> {
+  ): Promise<StripeServiceResult<any>> {
     try {
-      // Validar plan tier
-      if (params.newPlanTier === GastronomyPlanTier.FREE) {
-        return { data: null, error: 'Use cancelSubscription para downgrade para Free' };
-      }
-      
       // Obter price_id
       const priceId = PRICE_IDS[params.newPlanTier];
       if (!priceId) {
@@ -305,7 +295,7 @@ export class GastronomyStripeService {
   static async cancelSubscription(
     subscriptionId: string,
     immediately: boolean = false
-  ): Promise<StripeServiceResult<Stripe.Subscription>> {
+  ): Promise<StripeServiceResult<any>> {
     try {
       if (immediately) {
         // Cancelar imediatamente
@@ -333,7 +323,7 @@ export class GastronomyStripeService {
    */
   static async reactivateSubscription(
     subscriptionId: string
-  ): Promise<StripeServiceResult<Stripe.Subscription>> {
+  ): Promise<StripeServiceResult<any>> {
     try {
       const subscription = await stripe.subscriptions.update(subscriptionId, {
         cancel_at_period_end: false,
@@ -359,7 +349,7 @@ export class GastronomyStripeService {
    */
   static async createSetupIntent(
     customerId: string
-  ): Promise<StripeServiceResult<Stripe.SetupIntent>> {
+  ): Promise<StripeServiceResult<any>> {
     try {
       const setupIntent = await stripe.setupIntents.create({
         customer: customerId,
@@ -382,7 +372,7 @@ export class GastronomyStripeService {
    */
   static async listPaymentMethods(
     customerId: string
-  ): Promise<StripeServiceResult<Stripe.PaymentMethod[]>> {
+  ): Promise<StripeServiceResult<any[]>> {
     try {
       const paymentMethods = await stripe.paymentMethods.list({
         customer: customerId,
@@ -407,7 +397,7 @@ export class GastronomyStripeService {
   static async setDefaultPaymentMethod(
     customerId: string,
     paymentMethodId: string
-  ): Promise<StripeServiceResult<Stripe.Customer>> {
+  ): Promise<StripeServiceResult<any>> {
     try {
       const customer = await stripe.customers.update(customerId, {
         invoice_settings: {
@@ -437,7 +427,7 @@ export class GastronomyStripeService {
   static async listInvoices(
     customerId: string,
     limit: number = 10
-  ): Promise<StripeServiceResult<Stripe.Invoice[]>> {
+  ): Promise<StripeServiceResult<any[]>> {
     try {
       const invoices = await stripe.invoices.list({
         customer: customerId,
@@ -460,7 +450,7 @@ export class GastronomyStripeService {
    */
   static async getInvoice(
     invoiceId: string
-  ): Promise<StripeServiceResult<Stripe.Invoice>> {
+  ): Promise<StripeServiceResult<any>> {
     try {
       const invoice = await stripe.invoices.retrieve(invoiceId);
       return { data: invoice, error: null };
@@ -511,7 +501,7 @@ export class GastronomyStripeService {
    * @returns Status para o banco
    */
   static mapSubscriptionStatus(
-    stripeStatus: Stripe.Subscription.Status
+    stripeStatus: string
   ): 'active' | 'canceled' | 'past_due' | 'trialing' {
     switch (stripeStatus) {
       case "active":
@@ -541,5 +531,7 @@ export class GastronomyStripeService {
 // ══════════════════════════════════════════════════════════════════════════
 
 export { stripe };
+
+
 
 

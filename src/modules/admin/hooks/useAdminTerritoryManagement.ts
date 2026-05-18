@@ -97,12 +97,12 @@ export function useAdminTerritoryManagement() {
 
   const toggleLocationMutation = useMutation({
     mutationFn: async ({ id, currentValue }: { id: string; currentValue: boolean }) => {
-      logger.debug('🔄 Toggle location:', id, 'from', currentValue, 'to', !currentValue);
+      logger.debug(`Toggle location ${id}: ${currentValue} -> ${!currentValue}`);
       
       const newValue = !currentValue;
       await TerritorialManagementService.toggleLocationSelector(id, newValue);
       
-      logger.debug('✅ Toggle completed');
+      logger.debug("Toggle location completed");
       return { id, newValue };
     },
     onMutate: async ({ id, currentValue }) => {
@@ -131,11 +131,11 @@ export function useAdminTerritoryManagement() {
       if (context?.previousData) {
         queryClient.setQueryData(['admin', 'territory-management'], context.previousData);
       }
-      logger.error('❌ Mutation error:', err);
+      logger.error("Toggle location mutation error", err);
       toast.error(err instanceof Error ? err.message : 'Erro ao atualizar visibilidade');
     },
     onSuccess: () => {
-      logger.debug('✅ Mutation success, invalidating queries...');
+      logger.debug("Toggle location mutation success; invalidating queries");
       
       // Pequeno delay para garantir que o banco foi atualizado
       setTimeout(() => {
@@ -149,12 +149,12 @@ export function useAdminTerritoryManagement() {
 
   const toggleGroupMutation = useMutation({
     mutationFn: async ({ id, currentValue }: { id: string; currentValue: boolean }) => {
-      logger.debug('🔄 Toggle group:', id, 'from', currentValue, 'to', !currentValue);
+      logger.debug(`Toggle group ${id}: ${currentValue} -> ${!currentValue}`);
       
       const newValue = !currentValue;
       await TerritorialManagementService.toggleGroupSelector(id, newValue);
       
-      logger.debug('✅ Toggle completed');
+      logger.debug("Toggle group completed");
       return { id, newValue };
     },
     onMutate: async ({ id, currentValue }) => {
@@ -183,11 +183,11 @@ export function useAdminTerritoryManagement() {
       if (context?.previousData) {
         queryClient.setQueryData(['admin', 'territory-management'], context.previousData);
       }
-      logger.error('❌ Mutation error:', err);
+      logger.error("Toggle group mutation error", err);
       toast.error(err instanceof Error ? err.message : 'Erro ao atualizar visibilidade do grupo');
     },
     onSuccess: () => {
-      logger.debug('✅ Mutation success, invalidating queries...');
+      logger.debug("Toggle group mutation success; invalidating queries");
       
       // Pequeno delay para garantir que o banco foi atualizado
       setTimeout(() => {

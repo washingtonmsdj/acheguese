@@ -1032,7 +1032,7 @@ export class RideOperationalService {
     }
 
     // item_current_holder no pode ser 'recipient' em failed_delivery
-    if (metadata.item_current_holder === 'recipient') {
+    if (String(metadata.item_current_holder) === 'recipient') {
       throw new Error('item_current_holder no pode ser recipient em failed_delivery');
     }
   }

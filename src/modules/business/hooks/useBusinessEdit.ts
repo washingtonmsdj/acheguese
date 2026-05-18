@@ -88,16 +88,19 @@ export function useBusinessEdit(
 export function useBusinessImageUpload() {
   const { activeProfile } = useSessionContext();
 
-  const uploadImage = async (
-    file: File,
-    folder: "logos" | "banners",
-  ): Promise<string> => {
+  const uploadImage = async (input: {
+    file: File;
+    folder: "logos" | "banners";
+  } | File): Promise<string> => {
     if (!activeProfile?.id) {
       throw new Error("Perfil ativo nao encontrado");
     }
 
-    const type = folder === "logos" ? "logo" : "capa";
-    const result = await mediaService.uploadBusinessImage(activeProfile.id, file, type);
+    const normalized = input instanceof File
+      ? { file: input, folder: "logos" as const }
+      : input;
+    const type = normalized.folder === "logos" ? "logo" : "capa";
+    const result = await mediaService.uploadBusinessImage(activeProfile.id, normalized.file, type);
     return result.url;
   };
 

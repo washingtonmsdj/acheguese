@@ -10,6 +10,6 @@ export interface ClassifiedConversationParticipant {
 
 export class ClassifiedTrustService {
   static async listConversationParticipants(classifiedId: string): Promise<ClassifiedConversationParticipant[]> {
-    return messagingService.getClassifiedConversationParticipants(classifiedId);
+    return messagingService.listConversationParticipantsByClassified(classifiedId);
   }
 }

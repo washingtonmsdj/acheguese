@@ -11,6 +11,7 @@ import { getMobilityServicePath } from "@/modules/mobility/routes/mobilityNaviga
 
 type DeliveryLike = {
   id: string;
+  status: string;
   origin?: string | null;
   destination?: string | null;
   suggested_price?: number | null;

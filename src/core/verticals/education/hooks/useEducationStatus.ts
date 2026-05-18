@@ -1,4 +1,4 @@
-﻿import { useQuery } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { useEducationProfile } from "@/core/education/hooks/useEducationProfile";
 import type { EducationProfileStatus } from "@/core/education/types";
 
@@ -6,7 +6,7 @@ export type EducationActivationStatus = "not_eligible" | "not_configured" | Educ
 
 export interface EducationStatusResult {
   status: EducationActivationStatus;
-  profile: EducationProfile | null;
+  profile: unknown | null;
   isLoading: boolean;
 }
 
@@ -31,3 +31,5 @@ export function useEducationStatus(businessId: string, isEligible: boolean): Edu
     isLoading: false,
   };
 }
+
+

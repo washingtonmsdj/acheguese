@@ -1,12 +1,12 @@
-ï»¿/**
- * RideReportsService - ServiÃ§o para gestÃ£o de reports de corridas
+/**
+ * RideReportsService - Serviço para gestão de reports de corridas
  * 
- * SSOT: ride_reports como fonte Ãºnica de reports
+ * SSOT: ride_reports como fonte única de reports
  * Funcionalidades:
  * - Criar report (passenger/driver)
- * - Listar reports (admin/prÃ³prios)
+ * - Listar reports (admin/próprios)
  * - Atualizar status (admin)
- * - Adicionar notas de resoluÃ§Ã£o (admin)
+ * - Adicionar notas de resolução (admin)
  */
 
 import { supabase } from "@/core/infrastructure/supabase/supabase";
@@ -79,7 +79,7 @@ export class RideReportsService {
     try {
       logger.info("RideReportsService.createReport", { rideId: input.rideId, reportType: input.reportType });
 
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from("ride_reports")
         .insert({
           ride_id: input.rideId,
@@ -110,7 +110,7 @@ export class RideReportsService {
   }
 
   /**
-   * Listar reports (admin ou prÃ³prios)
+   * Listar reports (admin ou próprios)
    */
   static async listReports(filters?: {
     status?: ReportStatus;
@@ -162,7 +162,7 @@ export class RideReportsService {
         return [];
       }
 
-      return data || [];
+      return (data || []) as RideReport[];
     } catch (error) {
       logger.error("RideReportsService.listReports - exception", error as Error);
       return [];
@@ -174,7 +174,7 @@ export class RideReportsService {
    */
   static async getReportById(reportId: string): Promise<RideReport | null> {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from("ride_reports")
         .select("*")
         .eq("id", reportId)
@@ -223,7 +223,7 @@ export class RideReportsService {
         updateData.admin_notes = updates.adminNotes;
       }
 
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from("ride_reports")
         .update(updateData)
         .eq("id", reportId);
@@ -242,7 +242,7 @@ export class RideReportsService {
   }
 
   /**
-   * Obter estatÃ­sticas de reports
+   * Obter estatísticas de reports
    */
   static async getReportStats(): Promise<{
     total: number;
@@ -254,7 +254,7 @@ export class RideReportsService {
     byType: Record<ReportType, number>;
   }> {
     try {
-      const { data, error } = await supabase.from("ride_reports").select("status, severity, report_type");
+      const { data, error } = await (supabase as any).from("ride_reports").select("status, severity, report_type");
 
       if (error) {
         logger.error("RideReportsService.getReportStats - error", error);
@@ -329,5 +329,7 @@ export class RideReportsService {
     }
   }
 }
+
+
 
 

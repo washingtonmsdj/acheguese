@@ -14,6 +14,26 @@ import type { ClassifiedData, CreateClassifiedInput, UpdateClassifiedInput } fro
 import { CLASSIFIED_STATUS } from "../constants/statuses";
 import { slugify } from "./ClassifiedUrlService";
 
+function ensureStringArray(value: unknown): string[] {
+  if (Array.isArray(value)) return value.filter((item): item is string => typeof item === "string");
+  return [];
+}
+
+function mapMutationClassified(data: Record<string, unknown>): ClassifiedData {
+  const seller = data.seller as
+    | { name?: string | null; avatar_url?: string | null; phone?: string | null; whatsapp?: string | null }
+    | undefined;
+
+  return {
+    ...(data as unknown as ClassifiedData),
+    photos: ensureStringArray(data.photos),
+    seller_name: seller?.name,
+    seller_avatar: seller?.avatar_url,
+    seller_phone: seller?.phone,
+    seller_whatsapp: seller?.whatsapp,
+  };
+}
+
 // ============================================================
 // HELPERS INTERNOS
 // ============================================================
@@ -67,13 +87,7 @@ export async function createClassified(
       throw error;
     }
 
-    return {
-      ...data,
-      seller_name: data.seller?.name,
-      seller_avatar: data.seller?.avatar_url,
-      seller_phone: data.seller?.phone,
-      seller_whatsapp: data.seller?.whatsapp,
-    };
+    return mapMutationClassified(data as Record<string, unknown>);
   } catch (error) {
     logger.error("Error in createClassified:", error);
     trackError(error as Error, {
@@ -117,13 +131,7 @@ export async function updateClassified(
       throw error;
     }
 
-    return {
-      ...data,
-      seller_name: data.seller?.name,
-      seller_avatar: data.seller?.avatar_url,
-      seller_phone: data.seller?.phone,
-      seller_whatsapp: data.seller?.whatsapp,
-    };
+    return mapMutationClassified(data as Record<string, unknown>);
   } catch (error) {
     logger.error("Error in updateClassified:", error);
     trackError(error as Error, {
@@ -197,13 +205,7 @@ export async function markAsSold(
       throw error;
     }
 
-    return {
-      ...data,
-      seller_name: data.seller?.name,
-      seller_avatar: data.seller?.avatar_url,
-      seller_phone: data.seller?.phone,
-      seller_whatsapp: data.seller?.whatsapp,
-    };
+    return mapMutationClassified(data as Record<string, unknown>);
   } catch (error) {
     logger.error("Error in markAsSold:", error);
     trackError(error as Error, {
@@ -246,13 +248,7 @@ export async function reactivateClassified(
       throw error;
     }
 
-    return {
-      ...data,
-      seller_name: data.seller?.name,
-      seller_avatar: data.seller?.avatar_url,
-      seller_phone: data.seller?.phone,
-      seller_whatsapp: data.seller?.whatsapp,
-    };
+    return mapMutationClassified(data as Record<string, unknown>);
   } catch (error) {
     logger.error("Error in reactivateClassified:", error);
     trackError(error as Error, {

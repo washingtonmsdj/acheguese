@@ -18,7 +18,7 @@
 import { logger } from '@/shared/utils/logger';
 import { supabase } from '@/integrations/supabase';
 import { trackError } from '@/shared/utils/errorTracking';
-import { notificationService } from '@/core/notifications';
+import { NotificationService } from '@/core/notifications';
 import { mediaService } from '@/core/media/services/MediaService';
 import { emailNotificationProvider } from '../providers/EmailNotificationProvider';
 import {
@@ -29,13 +29,21 @@ import type {
   EmergencyAlert,
   CreateEmergencyAlertInput,
   EmergencyAlertStatus,
+  EmergencyAlertType,
   RideShare,
   CreateRideShareInput,
+  RideShareStatus,
   SharedRideData,
   SafetyIncident,
   CreateSafetyIncidentInput,
+  SafetyIncidentStatus,
+  SafetyIncidentType,
   SafetyEvidence,
+  SafetyEvidenceType,
   UploadSafetyEvidenceInput,
+  EmergencyContact,
+  CreateEmergencyContactInput,
+  UpdateEmergencyContactInput,
   SafetyAuditEntry,
   SafetyServiceConfig,
   SafetyResult,
@@ -151,7 +159,7 @@ export class SafetyService {
         created_at: new Date().toISOString(),
       };
 
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('emergency_alerts')
         .insert(alertData)
         .select()
@@ -204,7 +212,7 @@ export class SafetyService {
    */
   async getEmergencyAlert(alertId: string): Promise<EmergencyAlert | null> {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('emergency_alerts')
         .select('*')
         .eq('id', alertId)
@@ -225,7 +233,7 @@ export class SafetyService {
    */
   async listEmergencyAlerts(filter: SafetyFilter = {}): Promise<EmergencyAlert[]> {
     try {
-      let query = supabase
+      let query = (supabase as any)
         .from('emergency_alerts')
         .select('*')
         .order('created_at', { ascending: false });
@@ -272,7 +280,7 @@ export class SafetyService {
         updateData.resolved_at = new Date().toISOString();
       }
 
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('emergency_alerts')
         .update(updateData)
         .eq('id', alertId)
@@ -328,7 +336,7 @@ export class SafetyService {
         created_at: new Date().toISOString(),
       };
 
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('ride_shares')
         .insert(shareData)
         .select()
@@ -386,7 +394,7 @@ export class SafetyService {
   async getSharedRideData(shareToken: string): Promise<SharedRideData | null> {
     try {
       // Buscar share ativo
-      const { data: shareData, error: shareError } = await supabase
+      const { data: shareData, error: shareError } = await (supabase as any)
         .from('ride_shares')
         .select('ride_id, expires_at, status')
         .eq('share_token', shareToken)
@@ -404,7 +412,14 @@ export class SafetyService {
       // Buscar dados da corrida via MobilityService (SSOT)
       const { MobilityService: MS } = await import('@/modules/mobility/services');
       const rideData = await MS.getRideById(shareData.ride_id) as
-        | { status?: string | null; driver_profile_id?: string | null; passenger_profile_id?: string | null }
+        | {
+            id?: string | null;
+            status?: string | null;
+            origin?: string | null;
+            destination?: string | null;
+            driver_profile_id?: string | null;
+            passenger_profile_id?: string | null;
+          }
         | null;
       if (!rideData) return null;
 
@@ -427,7 +442,7 @@ export class SafetyService {
       // Buscar localização atual do motorista
       let currentLocation;
       if (rideData.driver_profile_id) {
-        const { data: locationData } = await supabase
+        const { data: locationData } = await (supabase as any)
           .from('driver_locations')
           .select('latitude, longitude, updated_at')
           .eq('driver_profile_id', rideData.driver_profile_id)
@@ -445,10 +460,10 @@ export class SafetyService {
       }
 
       return {
-        rideId: rideData.id,
-        status: rideData.status,
-        origin: rideData.origin,
-        destination: rideData.destination,
+        rideId: rideData.id ?? shareData.ride_id,
+        status: rideData.status ?? null,
+        origin: rideData.origin ?? null,
+        destination: rideData.destination ?? null,
         driverName,
         vehicleModel,
         vehiclePlate,
@@ -468,7 +483,7 @@ export class SafetyService {
     performedBy: string
   ): Promise<SafetyResult<void>> {
     try {
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from('ride_shares')
         .update({
           status: SAFETY_RIDE_SHARE_STATUS.REVOKED,
@@ -519,7 +534,7 @@ export class SafetyService {
         created_at: new Date().toISOString(),
       };
 
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('safety_incidents')
         .insert(incidentData)
         .select()
@@ -565,7 +580,7 @@ export class SafetyService {
    */
   async getSafetyIncident(incidentId: string): Promise<SafetyIncident | null> {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('safety_incidents')
         .select('*')
         .eq('id', incidentId)
@@ -633,7 +648,7 @@ export class SafetyService {
         updateData.resolved_at = new Date().toISOString();
       }
 
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('safety_incidents')
         .update(updateData)
         .eq('id', incidentId)
@@ -678,7 +693,7 @@ export class SafetyService {
       const upload = await mediaService.uploadToBucket(input.file, {
         bucket: 'safety-evidence',
         pathPrefix: input.incidentId,
-        preset: 'verification_photo',
+        preset: 'post_image',
         upsert: false,
       });
 
@@ -695,7 +710,7 @@ export class SafetyService {
         created_at: new Date().toISOString(),
       };
 
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('safety_evidence')
         .insert(evidenceData)
         .select()
@@ -730,7 +745,7 @@ export class SafetyService {
    */
   async listIncidentEvidence(incidentId: string): Promise<SafetyEvidence[]> {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('safety_evidence')
         .select('*')
         .eq('incident_id', incidentId)
@@ -756,7 +771,7 @@ export class SafetyService {
     entry: Omit<SafetyAuditEntry, 'id' | 'createdAt' | 'ipAddress' | 'userAgent'>
   ): Promise<void> {
     try {
-      await supabase.from('safety_audit_log').insert({
+      await (supabase as any).from('safety_audit_log').insert({
         action: entry.action,
         entity_type: entry.entityType,
         entity_id: entry.entityId,
@@ -794,8 +809,8 @@ export class SafetyService {
       id: data.id,
       profileId: data.profile_id,
       rideId: data.ride_id,
-      alertType: data.alert_type,
-      status: data.status,
+      alertType: data.alert_type as EmergencyAlertType,
+      status: data.status as EmergencyAlertStatus,
       location,
       metadata: data.metadata || {},
       description: data.description,
@@ -815,9 +830,9 @@ export class SafetyService {
       id: data.id,
       rideId: data.ride_id,
       reportedBy: data.reported_by,
-      incidentType: data.incident_type,
-      severity: data.severity,
-      status: data.status,
+      incidentType: data.incident_type as SafetyIncidentType,
+      severity: data.severity as SafetyIncident['severity'],
+      status: data.status as SafetyIncidentStatus,
       description: data.description,
       location,
       evidenceIds: data.evidence_ids,
@@ -831,7 +846,7 @@ export class SafetyService {
     return {
       id: data.id,
       incidentId: data.incident_id,
-      evidenceType: data.evidence_type,
+      evidenceType: data.evidence_type as SafetyEvidenceType,
       fileUrl: data.file_url,
       fileName: data.file_name,
       fileSize: data.file_size,
@@ -863,7 +878,7 @@ export class SafetyService {
         created_at: new Date().toISOString(),
       };
 
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('emergency_contacts')
         .insert(contactData)
         .select()
@@ -889,7 +904,7 @@ export class SafetyService {
    */
   async listEmergencyContacts(profileId: string): Promise<EmergencyContact[]> {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('emergency_contacts')
         .select('*')
         .eq('profile_id', profileId)
@@ -924,7 +939,7 @@ export class SafetyService {
       if (updates.isPrimary !== undefined) updateData.is_primary = updates.isPrimary;
       if (updates.isActive !== undefined) updateData.is_active = updates.isActive;
 
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('emergency_contacts')
         .update(updateData)
         .eq('id', contactId)
@@ -951,7 +966,7 @@ export class SafetyService {
    */
   async deleteEmergencyContact(contactId: string): Promise<SafetyResult<void>> {
     try {
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from('emergency_contacts')
         .update({ is_active: false, updated_at: new Date().toISOString() })
         .eq('id', contactId);
@@ -1062,7 +1077,7 @@ export class SafetyService {
     try {
       const target = result.metadata?.to as string || 'unknown';
       
-      await supabase.from('emergency_delivery_log').insert({
+      await (supabase as any).from('emergency_delivery_log').insert({
         alert_id: alertId,
         contact_id: result.contactId,
         channel: result.channel,
@@ -1090,12 +1105,13 @@ export class SafetyService {
     metadata?: Record<string, unknown>
   ): Promise<void> {
     try {
-      await notificationService.createNotification({
+      await NotificationService.createNotification({
         user_id: userId,
-        type: 'mobility', // Tipo de notificação
+        type: type === 'alert' ? 'error' : 'warning',
+        category: 'system',
         title,
         message,
-        priority: type === 'alert' ? 'urgent' : 'high',
+        priority: type === 'alert' ? 'high' : 'medium',
         metadata: {
           ...metadata,
           safetyType: type,
@@ -1128,3 +1144,4 @@ export class SafetyService {
 
 // Singleton instance
 export const safetyService = SafetyService.getInstance();
+

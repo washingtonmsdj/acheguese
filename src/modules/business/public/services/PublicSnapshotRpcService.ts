@@ -82,9 +82,11 @@ function resolveServiceModes(business: Record<string, unknown>): string[] {
   return temDelivery ? ["presencial", "delivery"] : ["presencial"];
 }
 
-function normalizeInstitutionalBusinessSnapshot(
-  snapshot: PublicBusinessSnapshot,
-): PublicBusinessSnapshot {
+function normalizeInstitutionalBusinessSnapshot<
+  TSnapshot extends PublicBusinessSnapshot | PublicGastronomySnapshot,
+>(
+  snapshot: TSnapshot,
+): TSnapshot {
   const institutional = isRecord(snapshot.institutional) ? snapshot.institutional : null;
   const business = institutional && isRecord(institutional.business)
     ? institutional.business
@@ -125,7 +127,7 @@ function normalizeInstitutionalBusinessSnapshot(
   return {
     ...snapshot,
     institutional: nextInstitutional,
-  };
+  } as TSnapshot;
 }
 
 function normalizeGastronomyBusinessSnapshot(
@@ -180,7 +182,7 @@ function isBusinessSnapshotLike(value: unknown): value is PublicBusinessSnapshot
 
 function isGastronomySnapshotLike(value: unknown): value is PublicGastronomySnapshot {
   if (!isBusinessSnapshotLike(value)) return false;
-  const gastronomy = (value as Record<string, unknown>).gastronomy;
+  const gastronomy = (value as unknown as Record<string, unknown>).gastronomy;
   return isRecord(gastronomy) && isRecord(gastronomy.profile) && isRecord(gastronomy.business);
 }
 

@@ -229,7 +229,7 @@ export default function BuscaPage() {
                   opportunityId: opportunity.id,
                   source: "search",
                   actorProfileId: activeProfile?.id,
-                  actorUserId: activeProfile?.user_id ?? activeProfile?.userId ?? null,
+                  actorUserId: activeProfile?.userId ?? null,
                   metadata: {
                     search_query: query,
                     search_category: activeFilter,
@@ -240,7 +240,7 @@ export default function BuscaPage() {
                   opportunityId: opportunity.id,
                   source: "search",
                   actorProfileId: activeProfile?.id,
-                  actorUserId: activeProfile?.user_id ?? activeProfile?.userId ?? null,
+                  actorUserId: activeProfile?.userId ?? null,
                   metadata: {
                     search_query: query,
                     search_category: activeFilter,
@@ -250,7 +250,7 @@ export default function BuscaPage() {
               } else {
                 void analyticsService.trackEvent({
                   event_type: "structured_vaga_click_search",
-                  user_id: activeProfile?.user_id ?? activeProfile?.userId ?? undefined,
+                  user_id: activeProfile?.userId ?? undefined,
                   metadata: {
                     vaga_id: opportunity.id,
                     search_query: query,
@@ -261,7 +261,7 @@ export default function BuscaPage() {
                 });
                 void analyticsService.trackEvent({
                   event_type: "structured_vaga_open_search",
-                  user_id: activeProfile?.user_id ?? activeProfile?.userId ?? undefined,
+                  user_id: activeProfile?.userId ?? undefined,
                   metadata: {
                     vaga_id: opportunity.id,
                     search_query: query,
@@ -597,3 +597,4 @@ function OpportunityCard({
 function ClockDot({ urgency }: { urgency: string }) {
   return <span>{urgency === "hoje" ? "Hoje" : urgency === "24h" ? "24h" : urgency === "semana" ? "Semana" : "Flexivel"}</span>;
 }
+

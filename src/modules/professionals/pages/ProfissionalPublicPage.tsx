@@ -66,7 +66,7 @@ export default function ProfissionalPublicPage() {
     );
   }
 
-  const initials = professional.professional_name
+  const initials = professional.name
     .split(' ')
     .slice(0, 2)
     .map((n) => n[0])
@@ -91,22 +91,22 @@ export default function ProfissionalPublicPage() {
       <div className="flex flex-col items-center px-4 pt-8 pb-4 gap-3">
         <Avatar className="h-24 w-24">
           <AvatarImage
-            src={professional.logo_url ?? professional.avatar_url ?? undefined}
-            alt={professional.professional_name}
+            src={professional.logo_url ?? undefined}
+            alt={professional.name}
           />
           <AvatarFallback className="text-2xl font-bold">{initials}</AvatarFallback>
         </Avatar>
 
         <div className="flex items-center gap-2">
-          <h2 className="text-xl font-bold">{professional.professional_name}</h2>
+          <h2 className="text-xl font-bold">{professional.name}</h2>
           {professional.is_verified && (
             <BadgeCheck className="h-5 w-5 text-blue-500" aria-label="Verificado" />
           )}
         </div>
 
-        {professional.service_category && (
+        {professional.category && (
           <Badge variant="secondary" className="capitalize">
-            {professional.service_subcategory ?? professional.service_category}
+            {professional.subcategory ?? professional.category}
           </Badge>
         )}
 
@@ -186,8 +186,8 @@ export default function ProfissionalPublicPage() {
         open={leadDialogOpen}
         onOpenChange={setLeadDialogOpen}
         professionalId={professional.id}
-        professionalName={professional.professional_name}
-        defaultService={professional.service_subcategory ?? professional.service_category}
+        professionalName={professional.name}
+        defaultService={professional.subcategory ?? professional.category}
         sourceChannel="public_profile"
       />
     </div>

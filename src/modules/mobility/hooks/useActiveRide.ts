@@ -11,14 +11,13 @@ export function useActiveRide() {
     queryKey: MOBILITY_QUERY_KEYS.activeRide(user?.id || ""),
     queryFn: async () => {
       if (!user) return null;
-      const rides = await MobilityFacade.getUserRides(user.id);
-      const active = rides.find((r: RideRequest) =>
-        [
-          RIDE_STATUS.PENDING,
-          RIDE_STATUS.DRIVER_ACCEPTED,
-          RIDE_STATUS.IN_PROGRESS,
-        ].includes(r.status),
-      );
+      const rides = (await MobilityFacade.getUserRides(user.id)) as RideRequest[];
+      const activeStatuses: RideRequest["status"][] = [
+        RIDE_STATUS.PENDING,
+        RIDE_STATUS.DRIVER_ACCEPTED,
+        RIDE_STATUS.IN_PROGRESS,
+      ];
+      const active = rides.find((r) => activeStatuses.includes(r.status));
       return active || null;
     },
     enabled: !!user,

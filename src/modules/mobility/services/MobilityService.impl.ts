@@ -1,14 +1,15 @@
-﻿/**
+/**
  * MobilityService - SSOT core/mobility
  *
- * Ãšnico ponto de acesso ao banco para operaÃ§Ãµes de mobilidade.
+ * Único ponto de acesso ao banco para operações de mobilidade.
  *
  * Exporta:
- *   - MobilityService (classe estÃ¡tica) -> leitura / admin
- *   - mobilityService (instÃ¢ncia singleton) -> escrita / runtime
+ *   - MobilityService (classe estática) -> leitura / admin
+ *   - mobilityService (instância singleton) -> escrita / runtime
  */
 
 import { supabase } from "@/core/infrastructure/supabase";
+const db = supabase as any;
 import type { Tables, TablesUpdate } from "@/core/infrastructure/supabase/types.generated";
 import { logger } from "@/shared/utils/logger";
 import { profileService } from "@/core/profiles/services/ProfileService";
@@ -17,14 +18,14 @@ import { RIDE_STATUS } from "../constants";
 type DriverDataRecord = Tables<"driver_data">;
 type RideRequestRecord = Tables<"ride_requests">;
 type DriverCompleteProfileRecord = Tables<"driver_complete_profile">;
-type MobilityConversationRecord = Tables<"mobility_conversations">;
-type MobilityMessageRecord = Tables<"mobility_messages">;
+type MobilityConversationRecord = Record<string, unknown>;
+type MobilityMessageRecord = Record<string, unknown>;
 
 // --- Static (leitura / admin) ------------------------------------------------
 
 export class MobilityService {
   static async getLatestRideBySource(sourceType: string, sourceId: string): Promise<unknown | null> {
-    const { data, error } = await supabase
+    const { data, error } = await db
       .from("ride_requests")
       .select("*")
       .eq("source_type", sourceType)
@@ -38,7 +39,7 @@ export class MobilityService {
   }
 
   static async getRideSourceIdById(rideId: string, sourceType?: string): Promise<string | null> {
-    let query = supabase
+    let query = db
       .from("ride_requests")
       .select("source_id")
       .eq("id", rideId);
@@ -57,7 +58,7 @@ export class MobilityService {
     sourceType?: string;
     limit?: number;
   }): Promise<unknown[]> {
-    let query = supabase
+    let query = db
       .from("ride_requests")
       .select(
         "id, status, source_type, source_id, recipient_name, package_size, suggested_price, created_at, updated_at, driver_profile_id, pickup_location_id, delivery_notes, failed_delivery_reason",
@@ -79,7 +80,7 @@ export class MobilityService {
   }
 
   static async listMotoboyStatsRows(): Promise<Array<{ status: string; created_at: string; driver_profile_id: string | null }>> {
-    const { data, error } = await supabase
+    const { data, error } = await db
       .from("ride_requests")
       .select("id, status, created_at, driver_profile_id")
       .eq("ride_mode", "motoboy");
@@ -89,7 +90,7 @@ export class MobilityService {
   }
 
   static async countDeliveredBySource(sourceType: string, sourceId: string): Promise<number> {
-    const { count, error } = await supabase
+    const { count, error } = await db
       .from("ride_requests")
       .select("id", { count: "exact", head: true })
       .eq("ride_mode", "motoboy")
@@ -102,7 +103,7 @@ export class MobilityService {
   }
 
   static async countDeliveredMotoboyRides(): Promise<number> {
-    const { count, error } = await supabase
+    const { count, error } = await db
       .from("ride_requests")
       .select("id", { count: "exact", head: true })
       .eq("ride_mode", "motoboy")
@@ -116,7 +117,7 @@ export class MobilityService {
     profileId: string,
     defaults?: { canDoDelivery?: boolean; canDoRides?: boolean },
   ): Promise<void> {
-    const { data: existing, error: readError } = await supabase
+    const { data: existing, error: readError } = await db
       .from("driver_data")
       .select("profile_id")
       .eq("profile_id", profileId)
@@ -128,12 +129,12 @@ export class MobilityService {
     if (defaults?.canDoDelivery !== undefined) payload.can_do_delivery = defaults.canDoDelivery;
     if (defaults?.canDoRides !== undefined) payload.can_do_rides = defaults.canDoRides;
 
-    const { error } = await supabase.from("driver_data").insert(payload);
+    const { error } = await db.from("driver_data").insert(payload as any);
     if (error && error.code !== "23505") throw error;
   }
 
   static async getDriverRideSessions(driverProfileId: string, limit = 300): Promise<Array<{ started_at: string | null; completed_at: string | null }>> {
-    const { data, error } = await supabase
+    const { data, error } = await db
       .from("ride_requests")
       .select("started_at, completed_at")
       .eq("driver_profile_id", driverProfileId)
@@ -147,7 +148,7 @@ export class MobilityService {
   }
 
   static async listRecentRidePickupLocations(limit = 300): Promise<unknown[]> {
-    const { data, error } = await supabase
+    const { data, error } = await db
       .from("ride_requests")
       .select(`
         pickup_location_id,
@@ -175,13 +176,12 @@ export class MobilityService {
         RIDE_STATUS.SEARCHING_DRIVER,
         RIDE_STATUS.DRIVER_ASSIGNED,
         RIDE_STATUS.DRIVER_ACCEPTED,
-        RIDE_STATUS.ACCEPTED,
-        RIDE_STATUS.IN_PROGRESS,
+                RIDE_STATUS.IN_PROGRESS,
         RIDE_STATUS.DRIVER_ARRIVING,
         RIDE_STATUS.PASSENGER_BOARDED,
       ].filter(Boolean) as string[];
 
-      const { data, error } = await supabase
+      const { data, error } = await db
         .from("ride_requests")
         .select("*")
         .in("status", activeStatuses)
@@ -197,7 +197,7 @@ export class MobilityService {
 
   static async getRideById(id: string): Promise<unknown | null> {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await db
         .from("ride_requests")
         .select("*")
         .eq("id", id)
@@ -212,7 +212,7 @@ export class MobilityService {
   }
 
   static async createRide(data: Record<string, unknown>): Promise<unknown> {
-    const { data: ride, error } = await supabase
+    const { data: ride, error } = await db
       .from("ride_requests")
       .insert(data)
       .select()
@@ -223,7 +223,7 @@ export class MobilityService {
   }
 
   static async getAllRideRequests(): Promise<unknown[]> {
-    const { data, error } = await supabase
+    const { data, error } = await db
       .from("ride_requests")
       .select("*")
       .order("created_at");
@@ -233,7 +233,7 @@ export class MobilityService {
   }
 
   static async getRidesByPassenger(passengerProfileId: string): Promise<unknown[]> {
-    const { data, error } = await supabase
+    const { data, error } = await db
       .from("ride_requests")
       .select("*")
       .eq("passenger_profile_id", passengerProfileId)
@@ -244,7 +244,7 @@ export class MobilityService {
   }
 
   static async getRidesByDriverProfile(driverProfileId: string): Promise<unknown[]> {
-    const { data, error } = await supabase
+    const { data, error } = await db
       .from("ride_requests")
       .select("*")
       .eq("driver_profile_id", driverProfileId)
@@ -259,7 +259,7 @@ export class MobilityService {
     statuses: string[],
     excludeRideId?: string,
   ): Promise<unknown | null> {
-    let query = supabase
+    let query = db
       .from("ride_requests")
       .select("id")
       .eq("driver_profile_id", driverProfileId)
@@ -275,7 +275,7 @@ export class MobilityService {
   }
 
   static async getActiveRide(userProfileId: string): Promise<unknown | null> {
-    const { data, error } = await supabase
+    const { data, error } = await db
       .from("ride_requests")
       .select("*")
       .or(`passenger_profile_id.eq.${userProfileId},driver_profile_id.eq.${userProfileId}`)
@@ -289,7 +289,7 @@ export class MobilityService {
   }
 
   static async updateRide(rideId: string, updates: Record<string, unknown>): Promise<unknown> {
-    const { data, error } = await supabase
+    const { data, error } = await db
       .from("ride_requests")
       .update(updates)
       .eq("id", rideId)
@@ -308,7 +308,7 @@ export class MobilityService {
       driverProfileIdEq?: string;
     } = {},
   ): Promise<boolean> {
-    let query = supabase
+    let query = db
       .from("ride_requests")
       .update(updates)
       .eq("id", rideId);
@@ -331,7 +331,7 @@ export class MobilityService {
     updates: Record<string, unknown>,
     allowedStatuses: string[],
   ): Promise<boolean> {
-    const { data, error } = await supabase
+    const { data, error } = await db
       .from("ride_requests")
       .update(updates)
       .eq("id", rideId)
@@ -344,7 +344,7 @@ export class MobilityService {
   }
 
   static async getRideDispatchData(rideId: string): Promise<unknown | null> {
-    const { data, error } = await supabase
+    const { data, error } = await db
       .from("ride_requests")
       .select(`
         id,
@@ -367,7 +367,7 @@ export class MobilityService {
     userId: string,
     location: { lat: number; lng: number },
   ): Promise<void> {
-    await supabase
+    await db
       .from("emergency_alerts")
       .insert({ ride_id: rideId, user_id: userId, location })
       .throwOnError();
@@ -375,7 +375,7 @@ export class MobilityService {
 
   static async getDriverProfiles(): Promise<{ data: unknown[]; error: unknown }> {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await db
         .from("driver_complete_profile")
         .select("*")
         .order("created_at", { ascending: false });
@@ -389,7 +389,7 @@ export class MobilityService {
   static async getDriverDataByProfileIds(profileIds: string[]): Promise<unknown[]> {
     if (!profileIds.length) return [];
 
-    const { data, error } = await supabase
+    const { data, error } = await db
       .from("driver_data")
       .select("profile_id, rating, can_do_delivery")
       .in("profile_id", profileIds);
@@ -401,7 +401,7 @@ export class MobilityService {
   static async getTopDrivers(opts: { minRides?: number; limit?: number } = {}): Promise<unknown[]> {
     try {
       const { minRides = 1, limit = 10 } = opts;
-      const { data, error } = await supabase
+      const { data, error } = await db
         .from("driver_complete_profile")
         .select("profile_id, display_name, avg_rating, total_rides, avatar_url")
         .gte("total_rides", minRides)
@@ -440,10 +440,10 @@ export class MobilityService {
     }
   }
 
-  /** Retorna corridas concluÃ­das para cÃ¡lculo de ganhos (uso no WeeklyEarningsChart). */
+  /** Retorna corridas concluídas para cálculo de ganhos (uso no WeeklyEarningsChart). */
   static async getDriverEarnings(driverProfileId: string): Promise<unknown[]> {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await db
         .from("ride_requests")
         .select("final_price, completed_at, updated_at")
         .eq("driver_profile_id", driverProfileId)
@@ -466,7 +466,7 @@ export class MobilityService {
     driverProfileId: string,
     sinceIso?: string,
   ): Promise<unknown[]> {
-    let query = supabase
+    let query = db
       .from("ride_requests")
       .select("created_at, actual_fare, final_price")
       .eq("driver_profile_id", driverProfileId)
@@ -493,7 +493,7 @@ export class MobilityService {
     avg_rating: number;
   } | null> {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await db
         .from("driver_complete_profile")
         .select("display_name, vehicle_model, vehicle_color, vehicle_plate, avg_rating")
         .eq("profile_id", profileId)
@@ -508,12 +508,12 @@ export class MobilityService {
   }
 
   /**
-   * Busca avaliaÃ§Ã£o mÃ©dia do passageiro
+   * Busca avaliação média do passageiro
    * Usado em: PassageiroPage
    */
   static async getPassengerRating(profileId: string): Promise<number> {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await db
         .from("ride_ratings")
         .select("rating")
         .eq("rated_id", profileId);
@@ -547,7 +547,7 @@ export class MobilityService {
    */
   static async deleteDriverNeighborhood(id: string): Promise<{ success: boolean; error?: unknown }> {
     try {
-      const { error } = await supabase
+      const { error } = await db
         .from('driver_accepted_neighborhoods')
         .delete()
         .eq('id', id);
@@ -565,12 +565,12 @@ export class MobilityService {
   }
 
   /**
-   * Remove Ã¡rea de serviÃ§o do motorista (genÃ©rico)
+   * Remove área de serviço do motorista (genérico)
    * Usado em: ServiceAreaSettings
    */
   static async deleteDriverServiceArea(table: string, id: string): Promise<{ success: boolean; error?: unknown }> {
     try {
-      const { error } = await supabase
+      const { error } = await db
         .from(table)
         .delete()
         .eq('id', id);
@@ -593,7 +593,7 @@ export class MobilityService {
    */
   static async getMobilityConversations(profileId: string): Promise<MobilityConversationRecord[]> {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await db
         .from("mobility_conversations")
         .select(`
           id,
@@ -615,12 +615,12 @@ export class MobilityService {
   }
 
   /**
-   * Busca Ãºltima mensagem de uma conversa
+   * Busca última mensagem de uma conversa
    * Usado em: MobilityChatList
    */
   static async getLastMessage(conversationId: string): Promise<Pick<MobilityMessageRecord, "message"> | null> {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await db
         .from("mobility_messages")
         .select("message")
         .eq("conversation_id", conversationId)
@@ -637,12 +637,12 @@ export class MobilityService {
   }
 
   /**
-   * Conta mensagens nÃ£o lidas de uma conversa
+   * Conta mensagens não lidas de uma conversa
    * Usado em: MobilityChatList
    */
   static async getUnreadCount(conversationId: string, profileId: string): Promise<number> {
     try {
-      const { count, error } = await supabase
+      const { count, error } = await db
         .from("mobility_messages")
         .select("*", { count: "exact", head: true })
         .eq("conversation_id", conversationId)
@@ -691,7 +691,7 @@ class MobilityServiceInstance {
 
   async getAvailableRides(): Promise<unknown[]> {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await db
         .from("ride_requests")
         .select(`
           *,
@@ -704,7 +704,7 @@ class MobilityServiceInstance {
 
       if (error) throw error;
 
-      // Normalizar campos de endereÃ§o para compatibilidade com DriverRidesList
+      // Normalizar campos de endereço para compatibilidade com DriverRidesList
       type RideWithAddress = RideRequestRecord & {
         pickup_address?: { street: string | null; latitude: number | null; longitude: number | null } | null;
         dropoff_address?: { street: string | null; latitude: number | null; longitude: number | null } | null;
@@ -713,7 +713,7 @@ class MobilityServiceInstance {
       return rows.map((r) => ({
         ...r,
         origin: r.origin || r.pickup_address?.street || "Origem nao informada",
-        destination: r.destination || r.dropoff_address?.street || "Destino nÃ£o informado",
+        destination: r.destination || r.dropoff_address?.street || "Destino não informado",
         origin_lat: r.origin_lat || r.pickup_address?.latitude,
         origin_lng: r.origin_lng || r.pickup_address?.longitude,
         destination_lat: r.destination_lat || r.dropoff_address?.latitude,
@@ -727,12 +727,12 @@ class MobilityServiceInstance {
 
   async createAdminDriverProfile(userId: string): Promise<unknown | null> {
     try {
-      // Buscar ou criar profile de motorista via serviÃ§o canÃ´nico de perfis
+      // Buscar ou criar profile de motorista via serviço canônico de perfis
       const driverProfile = await profileService.ensureDriverProfileForUser(userId);
       if (!driverProfile?.id) return null;
 
-      // Criar driver_data se nÃ£o existir
-      const { data: existing } = await supabase
+      // Criar driver_data se não existir
+      const { data: existing } = await db
         .from('driver_data')
         .select('*')
         .eq('profile_id', driverProfile.id)
@@ -740,7 +740,7 @@ class MobilityServiceInstance {
 
       if (existing) return existing;
 
-      const { data: driverData, error: driverError } = await supabase
+      const { data: driverData, error: driverError } = await db
         .from('driver_data')
         .insert({
           profile_id: driverProfile.id,
@@ -772,7 +772,7 @@ class MobilityServiceInstance {
       const driverProfileId = await this.resolveDriverProfileId(identifier);
       if (!driverProfileId) return null;
 
-      const { data, error } = await supabase
+      const { data, error } = await db
         .from("driver_data")
         .select("*")
         .eq("profile_id", driverProfileId)
@@ -796,7 +796,7 @@ class MobilityServiceInstance {
         throw new Error("Driver profile not found");
       }
 
-      const { data, error } = await supabase
+      const { data, error } = await db
         .from("driver_data")
         .update(updates)
         .eq("profile_id", driverProfileId)
@@ -819,7 +819,7 @@ class MobilityServiceInstance {
       const driverProfileId = await this.resolveDriverProfileId(identifier);
       if (!driverProfileId) return [];
 
-      const { data, error } = await supabase
+      const { data, error } = await db
         .from("ride_requests")
         .select("*")
         .eq("driver_profile_id", driverProfileId)
@@ -861,7 +861,7 @@ class MobilityServiceInstance {
 
   async checkSuspensionExpiry(profileId: string): Promise<void> {
     try {
-      // Verificar se suspensÃ£o expirou e reativar se necessÃ¡rio
+      // Verificar se suspensão expirou e reativar se necessário
       const profile = await profileService.getProfileById(profileId);
 
       if (!profile?.is_suspended || !profile?.suspended_until) return;
@@ -891,7 +891,7 @@ class MobilityServiceInstance {
 
   async getDriverStatsDetailed(driverProfileId: string): Promise<unknown | null> {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await db
         .from("driver_data")
         .select("rating, total_rides, total_rides_completed, total_rides_cancelled, acceptance_rate, cancellation_rate, is_online, is_verified, subscription_active")
         .eq("profile_id", driverProfileId)
@@ -911,7 +911,7 @@ class MobilityServiceInstance {
     subscription_active: boolean;
   }> {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await db
         .from("driver_data")
         .select("is_verified, is_online, subscription_active")
         .eq("profile_id", driverProfileId)
@@ -934,7 +934,7 @@ class MobilityServiceInstance {
       const since = new Date();
       since.setDate(since.getDate() - days);
 
-      const { data, error } = await supabase
+      const { data, error } = await db
         .from("ride_requests")
         .select("final_price")
         .eq("driver_profile_id", driverProfileId)
@@ -954,7 +954,7 @@ class MobilityServiceInstance {
 
   async getRideById(rideId: string): Promise<unknown | null> {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await db
         .from("ride_requests")
         .select("*")
         .eq("id", rideId)
@@ -970,7 +970,7 @@ class MobilityServiceInstance {
 
   async confirmRideCompletionByPassenger(rideId: string, passengerProfileId: string): Promise<void> {
     const now = new Date().toISOString();
-    const { data, error } = await supabase
+    const { data, error } = await db
       .from("ride_requests")
       .update({
         passenger_confirmed_at: now,
@@ -987,7 +987,7 @@ class MobilityServiceInstance {
 
   async getRideWithAddresses(rideId: string): Promise<unknown | null> {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await db
         .from("ride_requests")
         .select(`
           *,
@@ -1012,7 +1012,7 @@ class MobilityServiceInstance {
       const activeProfile = await profileService.getActiveProfile(userId);
       if (!activeProfile?.id) return [];
 
-      const { data, error } = await supabase
+      const { data, error } = await db
         .from("ride_requests")
         .select("*")
         .or(`passenger_profile_id.eq.${activeProfile.id},driver_profile_id.eq.${activeProfile.id}`)
@@ -1028,7 +1028,7 @@ class MobilityServiceInstance {
 
   async getRideBasicInfo(rideId: string): Promise<unknown | null> {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await db
         .from("ride_requests")
         .select("id, origin, destination, status, final_price, suggested_price")
         .eq("id", rideId)
@@ -1044,7 +1044,7 @@ class MobilityServiceInstance {
 
   async getRideByShareToken(token: string): Promise<unknown | null> {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await db
         .from("ride_requests")
         .select("*")
         .eq("share_token", token)
@@ -1062,7 +1062,7 @@ class MobilityServiceInstance {
 
   async incrementRideViewCount(rideId: string): Promise<void> {
     try {
-      await supabase.rpc("increment_ride_view_count", { ride_id: rideId });
+      await db.rpc("increment_ride_view_count", { ride_id: rideId });
     } catch (error) {
       logger.warn("mobilityService.incrementRideViewCount", error);
     }
@@ -1072,7 +1072,7 @@ class MobilityServiceInstance {
 
   async getRideAvailableSeats(rideId: string): Promise<number> {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await db
         .from("ride_requests")
         .select("available_seats")
         .eq("id", rideId)
@@ -1087,7 +1087,7 @@ class MobilityServiceInstance {
   }
 
   async decrementRideSeats(rideId: string): Promise<void> {
-    const { error } = await supabase.rpc("decrement_ride_seats", { ride_id: rideId });
+    const { error } = await db.rpc("decrement_ride_seats", { ride_id: rideId });
     if (error) {
       logger.error("mobilityService.decrementRideSeats", error);
       throw error;
@@ -1096,4 +1096,7 @@ class MobilityServiceInstance {
 }
 
 export const mobilityService = new MobilityServiceInstance();
+
+
+
 

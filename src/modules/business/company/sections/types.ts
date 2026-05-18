@@ -15,22 +15,22 @@ import type { GastronomyPreviewItem } from "@/modules/business/gastronomy/servic
 // Business Extended (com campos adicionais)
 // ============================================
 
-export interface BusinessExtended extends Business {
-  readonly business_role?: "branch" | "brand_hub" | "standalone";
-  readonly horario_funcionamento?: Record<string, { open: string; close: string; closed?: boolean }>;
-  readonly formas_pagamento?: readonly string[];
-  readonly especialidades?: readonly string[];
-  readonly facilidades?: readonly string[];
-  readonly modos_atendimento?: readonly string[];
-  readonly tem_delivery?: boolean;
-  readonly aceita_cartao?: boolean;
-  readonly aceita_pix?: boolean;
-  readonly instagram?: string;
-  readonly facebook?: string;
-  readonly fotos?: readonly string[];
-  readonly parent_business_id?: string;
-  readonly business_name?: string;
-}
+export type BusinessExtended = Business & {
+  business_role?: "branch" | "brand_hub" | "standalone";
+  horario_funcionamento?: Record<string, { open: string; close: string; closed?: boolean }>;
+  formas_pagamento?: readonly string[];
+  especialidades?: readonly string[];
+  facilidades?: readonly string[];
+  modos_atendimento?: readonly string[];
+  tem_delivery: boolean;
+  aceita_cartao: boolean;
+  aceita_pix: boolean;
+  instagram?: string;
+  facebook?: string;
+  fotos?: readonly string[];
+  parent_business_id?: string;
+  business_name?: string;
+};
 
 // ============================================
 // Product

@@ -36,10 +36,7 @@ class WorkOpportunityTelemetryServiceClass {
         },
       });
     } catch (error) {
-      logger.warn("WorkOpportunityTelemetryService.track", error as Error, {
-        eventName,
-        opportunityId: context.opportunityId,
-      });
+      logger.warn("WorkOpportunityTelemetryService.track", error as Error);
     }
   }
 
@@ -83,3 +80,6 @@ class WorkOpportunityTelemetryServiceClass {
 
 export const workOpportunityTelemetryService = new WorkOpportunityTelemetryServiceClass();
 export { workOpportunityTelemetryService as WorkOpportunityTelemetryService };
+
+
+

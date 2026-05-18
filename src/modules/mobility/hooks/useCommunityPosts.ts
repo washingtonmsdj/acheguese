@@ -11,13 +11,26 @@ export interface CommunityPost {
   created_at: string;
   likes_count: number;
   comments_count: number;
+  author_name?: string;
+  author_avatar?: string;
+  author_neighborhood?: string;
+  author_verified?: boolean;
+  intent?: 'offering' | 'requesting';
+  origin?: string;
+  destination?: string;
+  departure_time?: string;
+  seats_available?: number;
+  ride_type?: 'viagem' | 'carona_compartilhada' | 'entrega' | 'agendada';
+  price?: number;
+  interested_count?: number;
+  has_joined?: boolean;
 }
 
 interface CreateCommunityPostInput {
-  author_profile_id: string;
+  author_profile_id?: string;
   content: string;
-  location_id: string;
-  reach?: 'city' | 'neighborhood' | 'group';
+  location_id?: string;
+  reach?: 'city' | 'neighborhood' | 'street';
 }
 
 export function useCommunityPosts(filters?: {
@@ -39,10 +52,10 @@ export function useCommunityPosts(filters?: {
     // ✅ CLEANUP PÓS-SPRINT2: createPost() com location_id do postData
     // postData deve incluir author_profile_id e location_id
     await postService.createPost({
-      author_profile_id: postData.author_profile_id,
+      author_profile_id: postData.author_profile_id ?? 'unknown',
       content: postData.content,
       type: "ride_share",
-      location_id: postData.location_id,
+      location_id: postData.location_id ?? 'unknown',
       reach: postData.reach || 'neighborhood',
     });
     refetch();

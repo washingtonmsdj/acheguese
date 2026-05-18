@@ -382,7 +382,7 @@ export function CreateDeliveryModal({
           address_type: "approximate",
           latitude: effectivePickup.lat,
           longitude: effectivePickup.lng,
-          geocoding_source: "geocoding",
+          geocoding_source: "manual",
         });
         pickupAddressId = pickupAddr.id;
       }
@@ -393,7 +393,7 @@ export function CreateDeliveryModal({
         address_type: "approximate",
         latitude: dropoffCoords.latitude,
         longitude: dropoffCoords.longitude,
-        geocoding_source: "geocoding",
+        geocoding_source: "manual",
       });
 
       const data: CreateDeliveryData = {

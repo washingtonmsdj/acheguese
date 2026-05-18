@@ -27,6 +27,9 @@ export interface MultiProfileRecord {
   profile_type: ProfileType;
   handle: string;
   display_name: string;
+  // Legacy/cross-module aliases
+  name?: string;
+  username?: string | null;
   avatar_url?: string;
   bio?: string;
   contact_email?: string;
@@ -212,11 +215,11 @@ export interface ProfileEditorExtensionForms {
 export interface LoadProfileEditorInput {
   profileId: string;
   userId: string;
-  availableProfiles?: MultiProfileRecord[];
+  availableProfiles?: ReadonlyArray<Profile>;
 }
 
 export interface ProfileEditorSnapshot extends ProfileEditorExtensionForms {
-  profile: MultiProfileRecord;
+  profile: Profile;
   baseForm: UpdateProfileInput;
   editableUsername: string | null;
   username: string;
@@ -224,7 +227,7 @@ export interface ProfileEditorSnapshot extends ProfileEditorExtensionForms {
 }
 
 export interface SaveProfileEditorInput extends ProfileEditorExtensionForms {
-  profile: Pick<MultiProfileRecord, 'id' | 'profile_type'>;
+  profile: Pick<Profile, 'id' | 'profile_type'>;
   baseForm: UpdateProfileInput;
   username?: string;
   originalUsername?: string;

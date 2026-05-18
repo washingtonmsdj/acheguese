@@ -36,7 +36,6 @@ import {
   usePaginatedState,
 } from "@/shared/hooks/useInfiniteScroll";
 import { lostFoundRuntimeService as lostFoundService } from "@/core/community/services/LostFoundRuntimeService";
-import { ViewOnMapButton } from "@/core/maps/components/ViewOnMapButton";
 
 const CATEGORIAS = [
   { id: "todos", label: "Todos", icon: "🔍" },
@@ -52,16 +51,14 @@ const CATEGORIAS = [
 interface LostFoundItem {
   id: string;
   tipo: string;
-  category: string;
+  categoria: string;
   titulo: string;
-  description: string;
-  photo_url: string;
-  publicNeighborhood: string;
-  date_ocorrido: string;
+  descricao: string;
+  foto_url: string;
+  bairro_publico: string;
+  data_ocorrido: string;
   resolvido: boolean;
   created_at: string;
-  latitude?: number;
-  longitude?: number;
 }
 
 export default function AchadosPerdidosPage() {
@@ -116,16 +113,14 @@ export default function AchadosPerdidosPage() {
           data.map((p) => ({
             id: p.id,
             tipo: p.tipo,
-            category: p.category,
+            categoria: p.categoria,
             titulo: p.titulo,
-            description: p.description || "",
-            photo_url: p.photo_url || "",
-            publicNeighborhood: p.neighborhood || "",
-            date_ocorrido: p.data_ocorrido || "",
+            descricao: p.descricao || "",
+            foto_url: p.imagens?.[0] || "",
+            bairro_publico: "",
+            data_ocorrido: p.data_perdido || "",
             resolvido: p.resolvido || false,
             created_at: p.created_at || "",
-            latitude: p.latitude,
-            longitude: p.longitude,
           })),
           pageNum === 0,
         );
@@ -162,8 +157,8 @@ export default function AchadosPerdidosPage() {
     (p) =>
       !search ||
       p.titulo.toLowerCase().includes(searchLower) ||
-      p.description.toLowerCase().includes(searchLower) ||
-      p.publicNeighborhood.toLowerCase().includes(searchLower),
+      p.descricao.toLowerCase().includes(searchLower) ||
+      p.bairro_publico.toLowerCase().includes(searchLower),
   );
 
   const getCatIcon = (cat: string) =>
@@ -321,16 +316,16 @@ export default function AchadosPerdidosPage() {
                 item.resolvido && "opacity-60",
               )}
             >
-              {item.photo_url ? (
+              {item.foto_url ? (
                 <img
-                  src={item.photo_url}
+                  src={item.foto_url}
                   alt={item.titulo}
                   className="h-20 w-20 rounded-xl object-cover flex-shrink-0"
                   loading="lazy"
                 />
               ) : (
                 <div className="h-20 w-20 rounded-xl bg-secondary flex items-center justify-center text-3xl flex-shrink-0">
-                  {getCatIcon(item.category)}
+                  {getCatIcon(item.categoria)}
                 </div>
               )}
               <div className="flex-1 min-w-0">
@@ -354,37 +349,22 @@ export default function AchadosPerdidosPage() {
                 </div>
                 <h3 className="text-sm font-bold truncate">{item.titulo}</h3>
                 <p className="text-xs text-muted-foreground line-clamp-1 mt-0.5">
-                  {item.description}
+                  {item.descricao}
                 </p>
                 <div className="flex items-center gap-3 mt-1.5 text-xs text-muted-foreground">
                   <span className="flex items-center gap-0.5">
                     <MapPin className="h-3 w-3" />
-                    {item.publicNeighborhood || "Não informado"}
+                    {item.bairro_publico || "Não informado"}
                   </span>
-                  {item.date_ocorrido && (
+                  {item.data_ocorrido && (
                     <span>
                       {format(
-                        new Date(item.date_ocorrido + "T12:00:00"),
+                        new Date(item.data_ocorrido + "T12:00:00"),
                         "dd/MM/yyyy",
                       )}
                     </span>
                   )}
                 </div>
-                {item.latitude && item.longitude && (
-                  <div className="mt-2">
-                    <ViewOnMapButton
-                      latitude={item.latitude}
-                      longitude={item.longitude}
-                      itemId={item.id}
-                      itemType="achado_perdido"
-                      itemName={item.titulo}
-                      variant="outline"
-                      size="sm"
-                      className="w-full h-7 text-[10px]"
-                      onClick={() => {}}
-                    />
-                  </div>
-                )}
               </div>
             </motion.div>
           ))

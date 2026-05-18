@@ -63,8 +63,14 @@ export default function AdminTerritoryManagement() {
   // ============================================
   // Computed Values
   // ============================================
-  const visualDuplicates = useMemo(() => detectVisualDuplicates(locations), [locations]);
-  const slugDuplicates = useMemo(() => detectSlugDuplicates(locations), [locations]);
+  const visualDuplicates = useMemo(
+    () => detectVisualDuplicates(locations as unknown as readonly TerritoryNode[]),
+    [locations],
+  );
+  const slugDuplicates = useMemo(
+    () => detectSlugDuplicates(locations as unknown as readonly TerritoryNode[]),
+    [locations],
+  );
 
   const stats = useMemo(() => {
     const activeCount = locations.filter(l => l.is_selector_active).length +
@@ -178,8 +184,8 @@ export default function AdminTerritoryManagement() {
       <AdminTerritoryViewSection
         filterState={filterState}
         searchQuery={searchQuery}
-        locations={locations}
-        groups={groups}
+        locations={locations as unknown as readonly TerritoryNode[]}
+        groups={groups as unknown as readonly TerritoryNode[]}
         groupMembers={groupMembers}
         isToggling={isToggling}
         onToggleLocation={toggleLocationSelector}

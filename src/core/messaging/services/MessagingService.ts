@@ -1,13 +1,4 @@
-﻿/**
- * ðŸ† MESSAGING SERVICE - SSOT para Sistema de Mensagens
- *
- * âœ… Fonte Ãºnica de verdade para conversas e mensagens
- * âœ… Acesso centralizado Ã s tabelas conversations e messages
- * âœ… LÃ³gica de negÃ³cio: contagem de nÃ£o lidas, bloqueios, relatÃ³rios
- * âœ… IntegraÃ§Ã£o com ProfileService e ClassifiedService
- */
-
-import { supabase } from "@/integrations/supabase";
+﻿import { supabase } from "@/integrations/supabase";
 import { trackError } from "@/shared/utils/errorTracking";
 import { logger } from "@/shared/utils/logger";
 import { profileService } from "@/core/profiles/services";
@@ -34,6 +25,7 @@ type ClassifiedSummary = {
 type ConversationRow = Conversation;
 
 class MessagingService {
+  private readonly db = supabase as any;
   /**
    * Busca conversas de um usuÃ¡rio com detalhes
    */
@@ -506,7 +498,7 @@ class MessagingService {
     reason: string,
   ): Promise<void> {
     try {
-      const { error } = await supabase.from("message_reports").insert({
+      const { error } = await this.db.from("message_reports").insert({
         message_id: messageId,
         reporter_id: reporterId,
         reason: reason,
@@ -637,6 +629,39 @@ class MessagingService {
     }
   }
 
+  async listConversationParticipantsByClassified(classifiedId: string): Promise<
+    Array<{
+      conversationId: string;
+      buyerId: string;
+      sellerId: string;
+      buyerName: string | null;
+      sellerName: string | null;
+    }>
+  > {
+    const { data, error } = await supabase
+      .from("conversations")
+      .select(
+        `
+        id,
+        buyer_id,
+        seller_id,
+        buyer:profiles!conversations_buyer_id_fkey(name),
+        seller:profiles!conversations_seller_id_fkey(name)
+      `,
+      )
+      .eq("classified_id", classifiedId);
+
+    if (error || !data) return [];
+
+    return data.map((row) => ({
+      conversationId: row.id,
+      buyerId: row.buyer_id,
+      sellerId: row.seller_id,
+      buyerName: (row.buyer as { name?: string | null } | null)?.name ?? null,
+      sellerName: (row.seller as { name?: string | null } | null)?.name ?? null,
+    }));
+  }
+
   /**
    * MÃ©todos auxiliares privados para buscar classificados via ClassifiedService
    */
@@ -656,7 +681,7 @@ class MessagingService {
       const results = await Promise.all(
         ids.map((id) => getClassifiedById(id)),
       );
-      return results.filter((item): item is ClassifiedSummary => Boolean(item));
+      return results.filter(Boolean) as ClassifiedSummary[];
     } catch (error) {
       logger.error("Error fetching classifieds:", error);
       return [];

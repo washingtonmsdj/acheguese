@@ -98,7 +98,7 @@ export function UserMentionsGrid({
 
   return (
     <div className="space-y-4">
-      {(mentions as MentionItem[]).map((mention) => (
+      {(mentions as unknown as MentionItem[]).map((mention) => (
         <Card
           key={mention.id}
           className="hover:shadow-md transition-shadow cursor-pointer"

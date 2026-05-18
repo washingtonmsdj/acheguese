@@ -38,7 +38,7 @@ import {
   TOURIST_POINT_STATUS_LABELS,
   generateSlug,
 } from '../types';
-import type { CreateTouristPointInput, PriceType, TouristPointStatus } from '../types';
+import type { CreateTouristPointInput, PriceType, UpdateTouristPointInput } from '../types';
 import { InlineFieldError } from '@/shared/components/ui/InlineFieldError';
 import {
   TouristPointFormSchema,
@@ -95,20 +95,25 @@ export default function AdminTouristPointFormPage() {
   // Preenche o formulário ao editar
   useEffect(() => {
     if (existing) {
+      const point = existing as unknown as Record<string, unknown>;
+      const normalizedStatus =
+        point.status === TOURIST_POINT_STATUS.PUBLISHED || point.status === TOURIST_POINT_STATUS.ARCHIVED
+          ? (point.status as TouristPointFormInput['status'])
+          : TOURIST_POINT_STATUS.DRAFT;
       reset({
-        location_id:          existing.location_id,
-        title:                existing.title,
-        slug:                 existing.slug,
-        summary:              existing.summary,
-        description:          existing.description,
-        address_text:         existing.address_text ?? null,
-        price_type:           existing.price_type,
-        price_text:           existing.price_text ?? null,
-        opening_hours:        existing.opening_hours ?? null,
-        accessibility_notes:  existing.accessibility_notes ?? null,
-        official_url:         existing.official_url ?? null,
-        is_featured:          existing.is_featured,
-        status:               existing.status,
+        location_id:          String(point.location_id ?? ''),
+        title:                String(point.title ?? point.name ?? ''),
+        slug:                 String(point.slug ?? ''),
+        summary:              String(point.summary ?? point.short_description ?? ''),
+        description:          String(point.description ?? ''),
+        address_text:         (point.address_text as string | null | undefined) ?? null,
+        price_type:           (point.price_type as PriceType) ?? PRICE_TYPE.FREE,
+        price_text:           (point.price_text as string | null | undefined) ?? null,
+        opening_hours:        (point.opening_hours as string | null | undefined) ?? null,
+        accessibility_notes:  (point.accessibility_notes as string | null | undefined) ?? null,
+        official_url:         (point.official_url as string | null | undefined) ?? null,
+        is_featured:          Boolean(point.is_featured),
+        status:               normalizedStatus,
       });
     }
   }, [existing, reset]);
@@ -127,12 +132,15 @@ export default function AdminTouristPointFormPage() {
       accessibility_notes:  values.accessibility_notes,
       official_url:         values.official_url,
       is_featured:          values.is_featured,
-      status:               values.status,
     };
 
     try {
       if (isEditing && id) {
-        await updateMutation.mutateAsync({ id, input });
+        const updateInput: UpdateTouristPointInput = {
+          ...input,
+          status: values.status,
+        };
+        await updateMutation.mutateAsync({ id, input: updateInput });
         toast({ title: 'Salvo', description: 'Ponto turístico atualizado.' });
       } else {
         await createMutation.mutateAsync(input);
@@ -277,7 +285,7 @@ export default function AdminTouristPointFormPage() {
                 <Label htmlFor="price_type">Tipo de preço *</Label>
                 <Select
                   defaultValue={PRICE_TYPE.FREE}
-                  onValueChange={(v) => setValue('price_type', v as PriceType, { shouldValidate: true })}
+                  onValueChange={(v) => setValue('price_type', v as TouristPointFormInput['price_type'], { shouldValidate: true })}
                 >
                   <SelectTrigger id="price_type">
                     <SelectValue />
@@ -335,7 +343,7 @@ export default function AdminTouristPointFormPage() {
               <Label htmlFor="status">Status</Label>
               <Select
                 defaultValue={TOURIST_POINT_STATUS.DRAFT}
-                onValueChange={(v) => setValue('status', v as TouristPointStatus)}
+                onValueChange={(v) => setValue('status', v as TouristPointFormInput['status'])}
               >
                 <SelectTrigger id="status">
                   <SelectValue />

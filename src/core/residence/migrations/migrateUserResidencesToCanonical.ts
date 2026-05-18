@@ -85,7 +85,7 @@ export async function migrateUserResidencesToCanonical(): Promise<MigrationResul
   result.total = residences.length;
 
   // Migrar cada residência
-  for (const residence of residences as LegacyResidence[]) {
+  for (const residence of (residences as unknown as LegacyResidence[])) {
     // Skip se já migrado
     if (residence.address_id && residence.location_id) {
       result.skipped_already_migrated++;

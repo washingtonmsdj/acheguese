@@ -51,10 +51,10 @@ export async function createProfile(profile: CreateProfileData): Promise<Profile
       user_id: user.id,
       name: profile.name,
       username: profile.username,
-      avatar_url: profile.avatarUrl,
+      avatar_url: profile.avatar_url,
       bio: profile.bio,
-      profile_type: profile.profileType || "personal",
-      whatsapp: profile.whatsapp,
+      profile_type: profile.profile_type || "personal",
+      whatsapp: (profile as any).whatsapp,
       is_active: true,
     })
     .select()
@@ -69,7 +69,7 @@ export async function createProfile(profile: CreateProfileData): Promise<Profile
     throw new Error(`Failed to create profile: ${error.message}`);
   }
 
-  return data;
+  return data as unknown as Profile;
 }
 
 // ============================================================================
@@ -96,7 +96,7 @@ export async function updateProfile(
     .update({
       name: updates.name,
       username: updates.username,
-      avatar_url: updates.avatarUrl,
+      avatar_url: updates.avatar_url,
       bio: updates.bio,
       whatsapp: updates.whatsapp,
       updated_at: new Date().toISOString(),
@@ -114,7 +114,7 @@ export async function updateProfile(
     throw new Error(`Failed to update profile: ${error.message}`);
   }
 
-  return data;
+  return data as unknown as Profile;
 }
 
 /**
@@ -143,7 +143,7 @@ export async function updatePrivacySettings(
     throw new Error(`Failed to update privacy settings: ${error.message}`);
   }
 
-  return data;
+  return data as unknown as Profile;
 }
 
 /**
@@ -256,7 +256,7 @@ export async function ensureDriverProfileForUser(userId: string): Promise<Profil
     .insert({
       user_id: userId,
       name: activeProfile.name,
-      username: `${activeProfile.username}-driver`,
+      username: `${activeProfile.username ?? activeProfile.id}-driver`,
       avatar_url: activeProfile.avatar_url,
       profile_type: "driver",
       is_active: false, // Não ativa automaticamente
@@ -274,7 +274,7 @@ export async function ensureDriverProfileForUser(userId: string): Promise<Profil
     return null;
   }
 
-  return newDriverProfile;
+  return newDriverProfile as unknown as Profile;
 }
 
 // ============================================================================

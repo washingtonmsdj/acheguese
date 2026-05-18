@@ -48,7 +48,7 @@ export function EmpresasMapaSection({
         <div className="relative h-96 md:h-[500px]">
           <MapLibreAdapter
             styleUrl={DEFAULT_TILE_STYLE.styleUrl}
-            territoryPolygons={territoryPolygons}
+            territoryPolygons={[...territoryPolygons] as any}
             resolved={resolved}
             enableClustering={true}
             markers={businesses

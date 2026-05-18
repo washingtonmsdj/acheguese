@@ -34,7 +34,7 @@ export function DriverAvailabilityLayout({ service }: DriverAvailabilityLayoutPr
   const navigate = useNavigate();
   const shell = useMotoristaPageV2();
 
-  const driverData = shell.driverData;
+  const driverData = shell.driverData as Record<string, unknown> | null;
   const isMotorista = service === "motorista";
   
   const modeLabel = useMemo(
@@ -61,7 +61,6 @@ export function DriverAvailabilityLayout({ service }: DriverAvailabilityLayoutPr
     ? `Perfil de ${profileLabel} encontrado` 
     : `Perfil de ${profileLabel} ausente`;
   const actionLabel = isMotorista ? "Ver corridas" : "Ver entregas";
-  const actionSection = isMotorista ? "corridas" : "entregas";
   const otherServiceLabel = isMotorista ? "entregas" : "corridas";
   const otherServiceMessage = isMotorista 
     ? "Configure entregas apenas na area Motoboy."
@@ -138,7 +137,16 @@ export function DriverAvailabilityLayout({ service }: DriverAvailabilityLayoutPr
                 {shell.isDriverOnline ? <ToggleLeft className="h-4 w-4" /> : <ToggleRight className="h-4 w-4" />}
                 {shell.isDriverOnline ? "Ficar offline" : "Ficar online"}
               </Button>
-              <Button variant="outline" onClick={() => navigate(getMobilityServicePath(service, actionSection))}>
+              <Button
+                variant="outline"
+                onClick={() =>
+                  navigate(
+                    service === "motorista"
+                      ? getMobilityServicePath("motorista", "corridas")
+                      : getMobilityServicePath("motoboy", "entregas"),
+                  )
+                }
+              >
                 {actionLabel}
               </Button>
             </div>

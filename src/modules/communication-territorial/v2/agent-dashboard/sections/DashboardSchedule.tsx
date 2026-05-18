@@ -10,8 +10,8 @@ interface DashboardScheduleProps {
 }
 
 export function DashboardSchedule({ channel, publications }: DashboardScheduleProps) {
-  // Filter scheduled publications (future implementation)
-  const scheduledPublications = publications.filter(pub => pub.scheduled_at);
+  const publicationItems = publications as unknown as Array<Record<string, unknown>>;
+  const scheduledPublications = publicationItems.filter((pub) => typeof pub.scheduled_at === "string" && pub.scheduled_at.length > 0);
 
   return (
     <div className="space-y-6">
@@ -68,20 +68,20 @@ export function DashboardSchedule({ channel, publications }: DashboardSchedulePr
           ) : (
             <div className="space-y-4">
               {scheduledPublications.map((pub) => (
-                <div key={pub.id} className="flex flex-col gap-3 rounded-lg border bg-card p-4 transition-shadow hover:shadow-sm sm:flex-row sm:items-start sm:gap-4">
+                <div key={String(pub.id)} className="flex flex-col gap-3 rounded-lg border bg-card p-4 transition-shadow hover:shadow-sm sm:flex-row sm:items-start sm:gap-4">
                   <div className="flex-shrink-0 w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center">
                     <FileText className="h-6 w-6 text-primary" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <h4 className="text-sm font-semibold text-foreground mb-1 truncate">{pub.title}</h4>
+                    <h4 className="text-sm font-semibold text-foreground mb-1 truncate">{typeof pub.title === "string" ? pub.title : "Sem titulo"}</h4>
                     <div className="flex items-center gap-3 text-xs text-muted-foreground">
                       <div className="flex items-center gap-1">
                         <Calendar className="h-3 w-3" />
-                        <span>{pub.scheduled_at ? new Date(pub.scheduled_at).toLocaleDateString('pt-BR') : 'N/A'}</span>
+                        <span>{typeof pub.scheduled_at === "string" ? new Date(pub.scheduled_at).toLocaleDateString("pt-BR") : "N/A"}</span>
                       </div>
                       <div className="flex items-center gap-1">
                         <Clock className="h-3 w-3" />
-                        <span>{pub.scheduled_at ? new Date(pub.scheduled_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : 'N/A'}</span>
+                        <span>{typeof pub.scheduled_at === "string" ? new Date(pub.scheduled_at).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }) : "N/A"}</span>
                       </div>
                     </div>
                   </div>

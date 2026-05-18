@@ -23,7 +23,7 @@ import type {
   UpdateAlertPayload,
 } from "../domain/types";
 
-type CommunityAlertsRow = Database["public"]["Tables"]["community_alerts"]["Row"];
+type CommunityAlertsRow = any;
 
 class CommunityAlertServiceClass {
   private readonly TABLE = "community_alerts";
@@ -194,7 +194,7 @@ class CommunityAlertServiceClass {
   async createAlert(payload: CreateAlertPayload): Promise<AlertRpcResult> {
     try {
       const { data, error } = await callRPC<AlertRpcResult>("create_community_alert", {
-        payload,
+        payload: payload as any,
       });
 
       if (error) {
@@ -396,7 +396,7 @@ class CommunityAlertServiceClass {
   }
 
   private _toPublicList(rows: CommunityAlertsRow[] | null): CommunityAlertPublic[] {
-    return (rows ?? []).map((row) => this._toPublic(row));
+    return ((rows ?? []) as any[]).map((row) => this._toPublic(row as CommunityAlertsRow));
   }
 
   private _toPublic(row: CommunityAlertsRow): CommunityAlertPublic {

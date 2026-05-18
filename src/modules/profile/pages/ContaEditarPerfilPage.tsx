@@ -89,7 +89,7 @@ function BusinessSection({ data, onChange }: {
           <Input id="cnpj" value={data.cnpj ?? ''} onChange={e => set('cnpj', e.target.value)} placeholder="00.000.000/0001-00" />
         </Field>
         <Field id="company_type" label="Tipo">
-          <Select value={data.company_type ?? ''} onValueChange={v => set('company_type', v)}>
+          <Select value={data.company_type ?? ''} onValueChange={v => set('company_type', v as any)}>
             <SelectTrigger id="company_type"><SelectValue placeholder="Tipo" /></SelectTrigger>
             <SelectContent>
               <SelectItem value="mei">MEI</SelectItem>
@@ -303,7 +303,7 @@ function DriverSection({ data, onChange }: {
 
       <div className="grid grid-cols-2 gap-3">
         <Field id="vehicle_type" label="Tipo">
-          <Select value={data.vehicle_type ?? ''} onValueChange={v => set('vehicle_type', v)}>
+          <Select value={data.vehicle_type ?? ''} onValueChange={v => set('vehicle_type', v as any)}>
             <SelectTrigger id="vehicle_type"><SelectValue placeholder="Tipo" /></SelectTrigger>
             <SelectContent>
               <SelectItem value="car">Carro</SelectItem>

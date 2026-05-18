@@ -281,7 +281,7 @@ async function createAddress(
 
   const addressInput: CreateAddressInput = {
     location_id: locationId,
-    geocoding_source: 'migration_history',
+    geocoding_source: 'migration_history' as any,
     geocoding_confidence: 0.7,
   };
 

@@ -14,17 +14,18 @@ import { logger } from '@/shared/utils/logger';
 import React, { useState, useEffect, useCallback } from 'react';
 import { locationGeocodingService } from '@/core/location/services/LocationGeocodingService';
 import { locationAdminService } from '@/modules/admin/services';
+import { LocationType } from '@/core/location/types';
 import { Button } from '@/shared/components/ui/button';
 import { Input } from '@/shared/components/ui/input';
 import { Label } from '@/shared/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/components/ui/select';
 import { useToast } from '@/shared/hooks/use-toast';
-import { MapPin, Plus, Edit, RefreshCw, Map, ChevronRight, ChevronDown } from 'lucide-react';
+import { MapPin, Plus, Edit, RefreshCw, Map as MapIcon, ChevronRight, ChevronDown } from 'lucide-react';
 interface Location {
   id: string;
   parent_id: string | null;
-  type: 'country' | 'state' | 'city' | 'district';
+  type: LocationType;
   slug: string;
   name: string;
   full_name: string;
@@ -53,7 +54,7 @@ export default function LocationsAdminPage() {
   // Form state
   const [formData, setFormData] = useState({
     parentId: '',
-    type: 'district' as Location['type'],
+    type: LocationType.DISTRICT as Location['type'],
     slug: '',
     name: '',
     latitude: '',
@@ -165,7 +166,7 @@ export default function LocationsAdminPage() {
       // Resetar form e recarregar
       setFormData({
         parentId: '',
-        type: 'district',
+          type: LocationType.DISTRICT,
         slug: '',
         name: '',
         latitude: '',
@@ -214,7 +215,7 @@ export default function LocationsAdminPage() {
       setEditingLocation(null);
       setFormData({
         parentId: '',
-        type: 'district',
+          type: LocationType.DISTRICT,
         slug: '',
         name: '',
         latitude: '',
@@ -382,7 +383,7 @@ export default function LocationsAdminPage() {
                 onClick={() => window.open(`https://www.google.com/maps?q=${location.metadata.center_latitude},${location.metadata.center_longitude}`, '_blank')}
                 title="Ver no Google Maps"
               >
-                <Map className="w-4 h-4" />
+                <MapIcon className="w-4 h-4" />
               </Button>
             )}
           </div>
@@ -642,7 +643,7 @@ export default function LocationsAdminPage() {
                   setEditingLocation(null);
                   setFormData({
                     parentId: '',
-                    type: 'district',
+                    type: LocationType.DISTRICT,
                     slug: '',
                     name: '',
                     latitude: '',

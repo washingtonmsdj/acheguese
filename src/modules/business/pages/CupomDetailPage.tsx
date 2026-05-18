@@ -8,13 +8,14 @@ import { toast } from "sonner";
 import { useQuery } from "@tanstack/react-query";
 import { Skeleton } from "@/shared/components/ui/skeleton";
 import { BusinessService } from "@/core/business/services/BusinessService";
+import type { LegacyCoupon } from "@/core/business/services/business.admin";
 export default function CupomDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [copiado, setCopiado] = useState(false);
   const [salvo, setSalvo] = useState(false);
 
-  const { data: cupom, isLoading } = useQuery({
+  const { data: cupom, isLoading } = useQuery<LegacyCoupon | null>({
     queryKey: ["coupon", id],
     queryFn: () => BusinessService.getCouponById(id!),
     enabled: !!id,

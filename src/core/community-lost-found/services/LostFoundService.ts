@@ -39,14 +39,15 @@ class LostFoundServiceClass {
     } = {},
   ): Promise<LostFoundPost[]> {
     try {
-      let query = supabase
+      let query = supabase as any;
+      query = query
         .from("lost_found_posts")
         .select("*")
         .order("created_at", { ascending: false });
 
-      if (filters.tipo) query = query.eq("tipo", filters.tipo);
-      if (filters.categoria) query = query.eq("categoria", filters.categoria);
-      if (filters.resolvido !== undefined) query = query.eq("resolvido", filters.resolvido);
+      if (filters.tipo) query = (query as any).eq("tipo", filters.tipo);
+      if (filters.categoria) query = (query as any).eq("categoria", filters.categoria);
+      if (filters.resolvido !== undefined) query = (query as any).eq("resolvido", filters.resolvido);
       if (filters.territoryFilter?.scope === "location") {
         query = query.eq("location_id", filters.territoryFilter.location_id);
       } else if (filters.territoryFilter?.scope === "group" && filters.territoryFilter.location_ids.length > 0) {
@@ -109,6 +110,17 @@ class LostFoundServiceClass {
     }
   }
 
+  async toggleResolved(postId: string): Promise<boolean> {
+    try {
+      const current = await this.getPostById(postId);
+      if (!current) return false;
+      return this.updatePost(postId, { resolvido: !current.resolvido });
+    } catch (error) {
+      logger.error("LostFoundService.toggleResolved", error);
+      return false;
+    }
+  }
+
   async getComments(postId: string): Promise<LostFoundComment[]> {
     try {
       const { data, error } = await supabase
@@ -142,7 +154,7 @@ class LostFoundServiceClass {
   }
 
   async getPostsPage(
-    filters: { tipo?: string; categoria?: string; territoryFilter?: TerritoryFilter } = {},
+    filters: { tipo?: LostFoundPost["tipo"] | "todos"; categoria?: string; territoryFilter?: TerritoryFilter } = {},
     from: number,
     to: number,
   ): Promise<LostFoundPost[]> {
@@ -153,8 +165,8 @@ class LostFoundServiceClass {
         .order("created_at", { ascending: false })
         .range(from, to);
 
-      if (filters.tipo && filters.tipo !== "todos") query = query.eq("tipo", filters.tipo);
-      if (filters.categoria && filters.categoria !== "todos") query = query.eq("category", filters.categoria);
+      if (filters.tipo && filters.tipo !== "todos") query = (query as any).eq("tipo", filters.tipo as LostFoundPost["tipo"]);
+      if (filters.categoria && filters.categoria !== "todos") query = (query as any).eq("category", filters.categoria);
       if (filters.territoryFilter?.scope === "location") {
         query = query.eq("location_id", filters.territoryFilter.location_id);
       } else if (filters.territoryFilter?.scope === "group" && filters.territoryFilter.location_ids.length > 0) {

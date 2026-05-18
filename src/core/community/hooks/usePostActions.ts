@@ -56,6 +56,7 @@ async function createLikeNotification(postId: string, userId: string) {
  */
 export function usePostActions() {
   const { user, activeProfile: profileContext } = useSessionContext();
+  const profileStatus = (profileContext as { status?: { isActive?: boolean; isBlocked?: boolean } } | null)?.status;
 
   const queryClient = useQueryClient();
 
@@ -65,7 +66,7 @@ export function usePostActions() {
       if (!user || !profileContext) throw new Error("Usuário não autenticado");
 
       // ✅ MIGRADO - Verifica permissão usando ProfileService
-      if (!profileContext.status.isActive || profileContext.status.isBlocked) {
+      if (profileStatus && (!profileStatus.isActive || profileStatus.isBlocked)) {
         throw new Error("Você não tem permissão para curtir posts");
       }
 
@@ -142,13 +143,13 @@ export function usePostActions() {
                   "type" in item && item.type === "post" ? item.data : item;
                 const postId2 = postData?.id || item?.id;
                 if (postId2 === postId) {
-                  const isCurrentlyLiked = postData.is_liked;
+                  const isCurrentlyLiked = (postData as FeedLikeablePost).is_liked;
                   const updated = {
                     ...postData,
                     is_liked: !isCurrentlyLiked,
                     likes_count: isCurrentlyLiked
-                      ? (postData.likes_count || 1) - 1
-                      : (postData.likes_count || 0) + 1,
+                      ? (((postData as FeedLikeablePost).likes_count) || 1) - 1
+                      : (((postData as FeedLikeablePost).likes_count) || 0) + 1,
                   };
                   return "type" in item && item.type === "post"
                     ? { ...item, data: updated }
@@ -180,7 +181,7 @@ export function usePostActions() {
       if (!user || !profileContext) throw new Error("Usuário não autenticado");
 
       // ✅ MIGRADO - Verifica permissão usando ProfileService
-      if (!profileContext.status.isActive || profileContext.status.isBlocked) {
+      if (profileStatus && (!profileStatus.isActive || profileStatus.isBlocked)) {
         throw new Error("Você não tem permissão para salvar posts");
       }
 
@@ -229,7 +230,7 @@ export function usePostActions() {
     mutationFn: async (postId: string) => {
       if (!user || !profileContext) throw new Error("Usuário não autenticado");
 
-      if (!profileContext.status.isActive || profileContext.status.isBlocked) {
+      if (profileStatus && (!profileStatus.isActive || profileStatus.isBlocked)) {
         throw new Error("Você não tem permissão para seguir posts");
       }
 
@@ -286,7 +287,7 @@ export function usePostActions() {
       if (!user || !profileContext) throw new Error("Usuário não autenticado");
 
       // ✅ MIGRADO - Verifica permissão usando ProfileService
-      if (!profileContext.status.isActive || profileContext.status.isBlocked) {
+      if (profileStatus && (!profileStatus.isActive || profileStatus.isBlocked)) {
         throw new Error("Você não tem permissão para reportar posts");
       }
 
@@ -315,7 +316,7 @@ export function usePostActions() {
       if (!user || !profileContext) throw new Error("Usuário não autenticado");
 
       // ✅ MIGRADO - Verifica permissão usando ProfileService
-      if (!profileContext.status.isActive || profileContext.status.isBlocked) {
+      if (profileStatus && (!profileStatus.isActive || profileStatus.isBlocked)) {
         throw new Error("Você não tem permissão para deletar posts");
       }
 

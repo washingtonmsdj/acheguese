@@ -67,10 +67,7 @@ export default function CriarMotoristaPage() {
       await refetch();
       // ✅ Driver não tem página pública
       // Redirecionar para dashboard de mobilidade
-      toast({
-        title: "Cadastro realizado com sucesso!",
-        description: `Seu perfil de ${driverType} está ativo.`,
-      });
+      toast.success(`Cadastro realizado com sucesso! Seu perfil de ${driverType} está ativo.`);
       navigate(mobilityUrls.home);
     },
   });
@@ -140,4 +137,5 @@ export default function CriarMotoristaPage() {
     </div>
   );
 }
+
 

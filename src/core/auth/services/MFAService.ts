@@ -93,11 +93,12 @@ class MFAService {
         return null;
       }
 
-      const { data, error } = await supabase
+      const { data: initialData, error } = await supabase
         .from('user_mfa_status')
         .select('*')
         .eq('user_id', user.id)
         .single();
+      let data = initialData;
 
       if (error) {
         // Se não existe registro, criar um
@@ -122,7 +123,7 @@ class MFAService {
 
       return {
         mfaEnabled: data.mfa_enabled,
-        mfaMethod: data.mfa_method,
+        mfaMethod: (data.mfa_method as 'totp' | 'sms' | 'email' | null),
         enrolledAt: data.enrolled_at,
         lastVerifiedAt: data.last_verified_at,
         backupCodesGenerated: data.backup_codes_generated,

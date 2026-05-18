@@ -5,7 +5,11 @@ import { Input } from "@/shared/components/ui/input";
 import { Textarea } from "@/shared/components/ui/textarea";
 import { Label } from "@/shared/components/ui/label";
 import { Loader2 } from "lucide-react";
-// NovaRecomendacaoData type definido localmente abaixo
+
+type NovaRecomendacaoData = {
+  titulo: string;
+  description: string;
+};
 
 interface RecomendacaoFormProps {
   formData: NovaRecomendacaoData;

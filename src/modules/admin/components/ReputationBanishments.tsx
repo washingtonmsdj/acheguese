@@ -52,11 +52,15 @@ export function ReputationBanishments() {
       const suspendedWithData = await Promise.all(
         suspended.map(async (user) => {
           // ✅ SSOT - Usar MobilityService para dados de motorista
-          const driverData = await adminMobilityService.getUserRides(user.id);
+          const driverRides = (await adminMobilityService.getUserRides(user.id)) as Array<{
+            status?: string;
+          }>;
+          const total = driverRides.length;
+          const cancelled = driverRides.filter((ride) => ride.status === "cancelled").length;
 
           return {
             ...user,
-            cancellation_rate: driverData?.cancellation_rate || 0,
+            cancellation_rate: total > 0 ? (cancelled / total) * 100 : 0,
           };
         }),
       );
@@ -119,7 +123,7 @@ export function ReputationBanishments() {
                   className="flex items-center gap-3 p-3 rounded-lg bg-red-50 border border-red-200"
                 >
                   <Avatar>
-                    <AvatarImage src={driver.avatar} />
+                    <AvatarImage src={driver.avatar_url} />
                     <AvatarFallback>{driver.name?.charAt(0)}</AvatarFallback>
                   </Avatar>
                   <div className="flex-1">

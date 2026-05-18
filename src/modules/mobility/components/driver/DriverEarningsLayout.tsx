@@ -104,7 +104,13 @@ export function DriverEarningsLayout({ service }: DriverEarningsLayoutProps) {
       <Button 
         variant="outline" 
         className="w-full justify-between" 
-        onClick={() => navigate(getMobilityServicePath(service, "configuracoes"))}
+        onClick={() =>
+          navigate(
+            service === "motorista"
+              ? getMobilityServicePath("motorista", "configuracoes")
+              : getMobilityServicePath("motoboy", "configuracoes"),
+          )
+        }
       >
         {actionLabel}
         <RotateCcw className="h-4 w-4" />

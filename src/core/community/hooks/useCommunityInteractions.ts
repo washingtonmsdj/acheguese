@@ -6,6 +6,7 @@ import {
 import { useSessionContext } from "@/core/session";
 import { toast } from "sonner";
 import { logger } from "@/shared/utils/logger";
+import type { FlexibleMetadata } from "@/shared/types/supabase.types";
 
 /**
  * Hook para registrar interações comunitárias
@@ -26,7 +27,7 @@ export function useCommunityInteractions() {
     interactionType: InteractionType,
     targetType?: string,
     targetId?: string,
-    metadata?: Record<string, unknown>,
+    metadata?: FlexibleMetadata,
     options?: {
       showToast?: boolean;
       showBadgeNotification?: boolean;
@@ -77,7 +78,7 @@ export function useCommunityInteractions() {
       type: InteractionType;
       targetType?: string;
       targetId?: string;
-      metadata?: Record<string, unknown>;
+      metadata?: FlexibleMetadata;
     }>,
   ) {
     if (!user || !activeProfile) {

@@ -38,7 +38,7 @@ export function useUpdatePricingRule() {
     }: {
       mode: PricingMode;
       rule: Partial<PricingRule>;
-    }) => pricingService.updateRule(mode, rule),
+    }) => pricingService.updateRule(mode, rule, "system"),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['pricing-rule', variables.mode] });
       queryClient.invalidateQueries({ queryKey: ['pricing-rules'] });

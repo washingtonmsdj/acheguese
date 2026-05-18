@@ -13,6 +13,7 @@ import type {
   ImpactAnalysisResult,
   BulkImpactAnalysisResult,
 } from '../types/admin.types';
+const impactDb = supabase as any;
 
 export class ImpactAnalysisService {
   /**
@@ -25,7 +26,7 @@ export class ImpactAnalysisService {
    */
   static async analyzeItemImpact(itemId: string): Promise<ImpactAnalysisResult> {
     // Fetch item details
-    const { data: item, error: itemError } = await supabase
+    const { data: item, error: itemError } = await impactDb
       .from('catalog_item')
       .select(`
         id,
@@ -44,7 +45,7 @@ export class ImpactAnalysisService {
     const currentPriceCents = (item as any).catalog_pricing_policy?.price_cents || 0;
 
     // Find contracts using this catalog version
-    const { data: contracts, error: contractsError } = await supabase
+    const { data: contracts, error: contractsError } = await impactDb
       .from('user_subscriptions')
       .select(`
         id,
@@ -152,7 +153,7 @@ export class ImpactAnalysisService {
    */
   static async analyzeVersionImpact(versionId: string): Promise<BulkImpactAnalysisResult> {
     // Fetch version details
-    const { data: version, error: versionError } = await supabase
+    const { data: version, error: versionError } = await impactDb
       .from('commercial_catalog_version')
       .select('version_number')
       .eq('id', versionId)
@@ -163,7 +164,7 @@ export class ImpactAnalysisService {
     }
 
     // Fetch all items in version
-    const { data: items, error: itemsError } = await supabase
+    const { data: items, error: itemsError } = await impactDb
       .from('catalog_item')
       .select('id')
       .eq('catalog_version_id', versionId);
@@ -276,7 +277,7 @@ export class ImpactAnalysisService {
     const baseImpact = await this.analyzeItemImpact(itemId);
 
     // Fetch current price
-    const { data: pricing, error: pricingError } = await supabase
+    const { data: pricing, error: pricingError } = await impactDb
       .from('catalog_pricing_policy')
       .select('price_cents')
       .eq('catalog_item_id', itemId)

@@ -139,7 +139,7 @@ export default function AdminAssinaturas() {
       case "basic":
         return <Badge variant="default">Basic</Badge>;
       case "premium":
-        return <Badge variant="success">Premium</Badge>;
+        return <Badge className="bg-emerald-100 text-emerald-800 border-emerald-200">Premium</Badge>;
       case "enterprise":
         return <Badge variant="destructive">Enterprise</Badge>;
       default:
@@ -150,13 +150,13 @@ export default function AdminAssinaturas() {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "active":
-        return <Badge variant="success">Ativa</Badge>;
+        return <Badge className="bg-emerald-100 text-emerald-800 border-emerald-200">Ativa</Badge>;
       case "expired":
         return <Badge variant="destructive">Expirada</Badge>;
       case "cancelled":
         return <Badge variant="secondary">Cancelada</Badge>;
       case "pending":
-        return <Badge variant="warning">Pendente</Badge>;
+        return <Badge className="bg-amber-100 text-amber-800 border-amber-200">Pendente</Badge>;
       default:
         return <Badge>{status}</Badge>;
     }

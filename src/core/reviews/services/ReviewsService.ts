@@ -37,7 +37,6 @@ export {
 // Re-exports de types (centralizados em ../types.ts)
 export type {
   Review,
-  ReviewWithProfiles,
   CreateReviewData,
   ReviewStats,
   ReviewType,

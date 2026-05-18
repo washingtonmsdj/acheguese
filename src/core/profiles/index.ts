@@ -64,9 +64,6 @@ export type { PublicProfile, PublicProfileExtended } from './views/PublicProfile
 export { createPublicProfile } from './views/PublicProfile';
 export type {
   ProfileContext,
-  PlanType,
-  ProfilePlan,
-  ProfileReputation,
 } from './views/ProfileContext';
 export { createDefaultProfileContext } from './views/ProfileContext';
 
@@ -169,17 +166,8 @@ export {
   profileVerificationAdminService,
 } from "./services/ProfileVerificationAdminService";
 export type {
-  ProfileType,
   CreateProfileData,
   UpdateProfileData,
-  ProfileContext,
-  ProfileStatus,
-  ProfilePermissions,
-  ProfilePlan,
-  ProfileReputation,
-  PlanType,
-  ProfileSummary,
-  ProfileSummaryExtended,
   AdminProfileListItem,
   AdminFilters,
   BasePermissions,
@@ -191,7 +179,6 @@ export type {
   ProfileManagedAssetItem,
   ProfileNotificationsSnapshot,
   ProfileNotificationItem,
-  ProfileAccountSnapshot,
   ProfileEffectivePermission,
   ProfileVerificationStatusValue,
 } from "./services/types";

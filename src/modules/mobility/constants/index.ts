@@ -308,7 +308,6 @@ export const FILTER_TYPES = {
 // ============================================
 // EXPORTS - Re-exports para compatibilidade
 // ============================================
-export type RideStatus = typeof RIDE_STATUS[keyof typeof RIDE_STATUS];
 export type UserType = typeof USER_TYPES[keyof typeof USER_TYPES];
 export type RideType = typeof RIDE_TYPES[keyof typeof RIDE_TYPES];
 export type PaymentStatus = typeof PAYMENT_STATUS[keyof typeof PAYMENT_STATUS];

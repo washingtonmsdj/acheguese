@@ -72,3 +72,4 @@ export {
 // ============================================================
 export { PostService } from "./PostService";
 export { postService } from "./PostService";
+export { postService as feedService } from "./PostService";

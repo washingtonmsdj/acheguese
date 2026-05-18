@@ -7,7 +7,12 @@ interface BusinessAboutProps {
 }
 
 export function BusinessAbout({ business }: BusinessAboutProps) {
-  if (!business.description && !business.specialties?.length) {
+  const specialties =
+    (business as Business & { specialties?: string[] }).specialties ||
+    business.especialidades ||
+    [];
+
+  if (!business.description && specialties.length === 0) {
     return null;
   }
 
@@ -21,13 +26,13 @@ export function BusinessAbout({ business }: BusinessAboutProps) {
         </p>
       )}
 
-      {business.specialties && business.specialties.length > 0 && (
+      {specialties.length > 0 && (
         <div>
           <h3 className="text-lg font-semibold text-gray-900 mb-2">
             Especialidades
           </h3>
           <div className="flex flex-wrap gap-2">
-            {business.specialties.map((specialty, index) => (
+            {specialties.map((specialty, index) => (
               <span
                 key={index}
                 className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm"

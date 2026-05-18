@@ -38,6 +38,17 @@ const fadeUp = {
   viewport: { once: true },
 } as const;
 
+type StateGroup = {
+  slug: string;
+  cities: Array<{
+    id: string;
+    name: string;
+    slug: string;
+    geographic_path: string;
+    type: string;
+  }>;
+};
+
 // â”€â”€ Helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function formatNumber(num: number): string {
   if (num >= 1000000) return `${(num / 1000000).toFixed(1)}M`;
@@ -181,7 +192,7 @@ export function BrasilShowcasePage() {
         existing.cities.push(city);
       }
       return acc;
-    }, new Map<string, StateGroup>());
+    }, new globalThis.Map<string, StateGroup>());
     return [...stateGroups.values()];
   }, [cities]);
 

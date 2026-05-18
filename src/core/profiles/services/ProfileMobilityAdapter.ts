@@ -113,7 +113,7 @@ export class ProfileMobilityAdapter {
       is_suspended: boolean | null;
     }>
   > {
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from("profiles")
       .select("passenger_rating, passenger_trust_level, is_suspended")
       .gte("passenger_completed_rides", 1);

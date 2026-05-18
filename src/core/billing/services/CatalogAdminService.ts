@@ -19,7 +19,7 @@ import type {
   CatalogItemValidationResult,
   ValidationError,
 } from '../types/admin.types';
-import type { CatalogVersionStatus } from '../types/catalog.types';
+const catalogAdminDb = supabase as any;
 
 export class CatalogAdminService {
   // ============================================================================
@@ -39,7 +39,7 @@ export class CatalogAdminService {
     pricing?: CatalogPricingPolicyInput
   ): Promise<CatalogItemWithPolicies> {
     // 1. Validate version is in draft
-    const { data: version, error: versionError } = await supabase
+    const { data: version, error: versionError } = await catalogAdminDb
       .from('commercial_catalog_version')
       .select('status')
       .eq('id', input.catalog_version_id)
@@ -54,7 +54,7 @@ export class CatalogAdminService {
     }
 
     // 2. Validate item_code uniqueness within version
-    const { data: existing, error: existingError } = await supabase
+    const { data: existing, error: existingError } = await catalogAdminDb
       .from('catalog_item')
       .select('id')
       .eq('catalog_version_id', input.catalog_version_id)
@@ -71,7 +71,7 @@ export class CatalogAdminService {
 
     // 3. Validate dependencies
     if (input.requires_item_codes && input.requires_item_codes.length > 0) {
-      const { data: dependencies, error: depsError } = await supabase
+      const { data: dependencies, error: depsError } = await catalogAdminDb
         .from('catalog_item')
         .select('item_code')
         .eq('catalog_version_id', input.catalog_version_id)
@@ -90,7 +90,7 @@ export class CatalogAdminService {
     }
 
     // 4. Create catalog item
-    const { data: item, error: itemError } = await supabase
+    const { data: item, error: itemError } = await catalogAdminDb
       .from('catalog_item')
       .insert({
         catalog_version_id: input.catalog_version_id,
@@ -135,7 +135,7 @@ export class CatalogAdminService {
     updates: CatalogItemUpdateInput
   ): Promise<CatalogItemWithPolicies> {
     // 1. Fetch item with version status
-    const { data: item, error: itemError } = await supabase
+    const { data: item, error: itemError } = await catalogAdminDb
       .from('catalog_item')
       .select(`
         *,
@@ -155,7 +155,7 @@ export class CatalogAdminService {
     }
 
     // 2. Update item
-    const { data: updated, error: updateError } = await supabase
+    const { data: updated, error: updateError } = await catalogAdminDb
       .from('catalog_item')
       .update({
         display_name: updates.display_name,
@@ -189,7 +189,7 @@ export class CatalogAdminService {
    */
   static async deleteCatalogItem(itemId: string): Promise<void> {
     // 1. Fetch item with version status
-    const { data: item, error: itemError } = await supabase
+    const { data: item, error: itemError } = await catalogAdminDb
       .from('catalog_item')
       .select(`
         item_code,
@@ -210,7 +210,7 @@ export class CatalogAdminService {
     }
 
     // 2. Check if item is referenced by other items
-    const { data: references, error: refsError } = await supabase
+    const { data: references, error: refsError } = await catalogAdminDb
       .from('catalog_item')
       .select('id, item_code')
       .eq('catalog_version_id', item.catalog_version_id)
@@ -227,13 +227,13 @@ export class CatalogAdminService {
 
     // 3. Delete policies first (cascade)
     await Promise.all([
-      supabase.from('catalog_eligibility_rule').delete().eq('catalog_item_id', itemId),
-      supabase.from('catalog_entitlement_policy').delete().eq('catalog_item_id', itemId),
-      supabase.from('catalog_pricing_policy').delete().eq('catalog_item_id', itemId),
+      catalogAdminDb.from('catalog_eligibility_rule').delete().eq('catalog_item_id', itemId),
+      catalogAdminDb.from('catalog_entitlement_policy').delete().eq('catalog_item_id', itemId),
+      catalogAdminDb.from('catalog_pricing_policy').delete().eq('catalog_item_id', itemId),
     ]);
 
     // 4. Delete item
-    const { error: deleteError } = await supabase
+    const { error: deleteError } = await catalogAdminDb
       .from('catalog_item')
       .delete()
       .eq('id', itemId);
@@ -247,7 +247,7 @@ export class CatalogAdminService {
    * Get catalog item with all policies
    */
   static async getCatalogItem(itemId: string): Promise<CatalogItemWithPolicies | null> {
-    const { data: item, error: itemError } = await supabase
+    const { data: item, error: itemError } = await catalogAdminDb
       .from('catalog_item')
       .select('*')
       .eq('id', itemId)
@@ -277,7 +277,7 @@ export class CatalogAdminService {
       search?: string;
     }
   ): Promise<CatalogItemWithPolicies[]> {
-    let query = supabase
+    let query = catalogAdminDb
       .from('catalog_item')
       .select('*')
       .eq('catalog_version_id', versionId)
@@ -326,7 +326,7 @@ export class CatalogAdminService {
   ): Promise<void> {
     await this.ensureDraftVersion(itemId);
 
-    const { error } = await supabase
+    const { error } = await catalogAdminDb
       .from('catalog_eligibility_rule')
       .upsert({
         catalog_item_id: itemId,
@@ -352,7 +352,7 @@ export class CatalogAdminService {
   ): Promise<void> {
     await this.ensureDraftVersion(itemId);
 
-    const { error } = await supabase
+    const { error } = await catalogAdminDb
       .from('catalog_entitlement_policy')
       .upsert({
         catalog_item_id: itemId,
@@ -373,7 +373,7 @@ export class CatalogAdminService {
   ): Promise<void> {
     await this.ensureDraftVersion(itemId);
 
-    const { error } = await supabase
+    const { error } = await catalogAdminDb
       .from('catalog_pricing_policy')
       .upsert({
         catalog_item_id: itemId,
@@ -446,7 +446,7 @@ export class CatalogAdminService {
 
     // Validate dependencies exist
     if (item.requires_item_codes && item.requires_item_codes.length > 0) {
-      const { data: deps } = await supabase
+      const { data: deps } = await catalogAdminDb
         .from('catalog_item')
         .select('item_code')
         .eq('catalog_version_id', item.catalog_version_id)
@@ -488,7 +488,7 @@ export class CatalogAdminService {
     } = {};
 
     if (eligibility) {
-      await supabase.from('catalog_eligibility_rule').insert({
+      await catalogAdminDb.from('catalog_eligibility_rule').insert({
         catalog_item_id: itemId,
         ...eligibility,
       });
@@ -496,7 +496,7 @@ export class CatalogAdminService {
     }
 
     if (entitlement) {
-      await supabase.from('catalog_entitlement_policy').insert({
+      await catalogAdminDb.from('catalog_entitlement_policy').insert({
         catalog_item_id: itemId,
         ...entitlement,
       });
@@ -504,7 +504,7 @@ export class CatalogAdminService {
     }
 
     if (pricing) {
-      await supabase.from('catalog_pricing_policy').insert({
+      await catalogAdminDb.from('catalog_pricing_policy').insert({
         catalog_item_id: itemId,
         ...pricing,
       });
@@ -516,9 +516,9 @@ export class CatalogAdminService {
 
   private static async fetchPolicies(itemId: string) {
     const [eligibilityRes, entitlementRes, pricingRes] = await Promise.all([
-      supabase.from('catalog_eligibility_rule').select('*').eq('catalog_item_id', itemId).maybeSingle(),
-      supabase.from('catalog_entitlement_policy').select('*').eq('catalog_item_id', itemId).maybeSingle(),
-      supabase.from('catalog_pricing_policy').select('*').eq('catalog_item_id', itemId).maybeSingle(),
+      catalogAdminDb.from('catalog_eligibility_rule').select('*').eq('catalog_item_id', itemId).maybeSingle(),
+      catalogAdminDb.from('catalog_entitlement_policy').select('*').eq('catalog_item_id', itemId).maybeSingle(),
+      catalogAdminDb.from('catalog_pricing_policy').select('*').eq('catalog_item_id', itemId).maybeSingle(),
     ]);
 
     return {
@@ -529,7 +529,7 @@ export class CatalogAdminService {
   }
 
   private static async ensureDraftVersion(itemId: string): Promise<void> {
-    const { data: item, error } = await supabase
+    const { data: item, error } = await catalogAdminDb
       .from('catalog_item')
       .select(`
         commercial_catalog_version!inner(status)

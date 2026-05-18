@@ -141,7 +141,7 @@ function GastronomyCheckoutContent({ business }: GastronomyCheckoutContentProps)
 
   useEffect(() => {
     if (!activeProfile) return;
-    setRecipientName((current) => current || activeProfile.full_name || "");
+    setRecipientName((current) => current || activeProfile.displayName || activeProfile.name || "");
     setRecipientPhone((current) => current || activeProfile.phone || "");
   }, [activeProfile]);
 

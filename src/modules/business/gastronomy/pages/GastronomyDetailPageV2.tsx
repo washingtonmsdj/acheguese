@@ -21,7 +21,7 @@ import {
 import { useSessionContext } from '@/core/session';
 import { Badge } from '@/shared/components/ui/badge';
 import { Button } from '@/shared/components/ui/button';
-import { ScrollArea } from '@/shared/components/ui/scroll-area';
+import { ScrollArea, ScrollBar } from '@/shared/components/ui/scroll-area';
 import { Separator } from '@/shared/components/ui/separator';
 import { Skeleton } from '@/shared/components/ui/skeleton';
 import { usePublicGastronomySnapshot } from '@/modules/business/public/hooks';
@@ -346,7 +346,7 @@ function CategoryNav({ categories, activeCategory, onSelect, itemCounts }: Categ
   return (
     <div className="sticky top-[73px] z-20 border-b border-border bg-card/95 backdrop-blur-md">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <ScrollArea className="w-full" orientation="horizontal">
+        <ScrollArea className="w-full">
           <div ref={scrollRef} className="flex gap-2 py-3">
             {categories.map((category) => {
               const count = itemCounts[category.id] ?? 0;
@@ -381,6 +381,7 @@ function CategoryNav({ categories, activeCategory, onSelect, itemCounts }: Categ
               );
             })}
           </div>
+          <ScrollBar orientation="horizontal" />
         </ScrollArea>
       </div>
     </div>

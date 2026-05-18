@@ -36,12 +36,18 @@ export default function AdminTerritoryContent() {
 
   useEffect(() => {
     if (content) {
+      const demographics = (content.demographics || {}) as {
+        economy?: string;
+        estimated_population?: number;
+        area_km2?: number;
+        main_characteristics?: string[];
+      };
       setDescription(content.description || '');
       setHistory(content.history || '');
-      setEconomy(content.demographics?.economy || '');
-      setPopulation(String(content.demographics?.estimated_population || ''));
-      setArea(String(content.demographics?.area_km2 || ''));
-      setCharacteristics((content.demographics?.main_characteristics || []).join(', '));
+      setEconomy(demographics.economy || '');
+      setPopulation(String(demographics.estimated_population || ''));
+      setArea(String(demographics.area_km2 || ''));
+      setCharacteristics((demographics.main_characteristics || []).join(', '));
       setEvents(content.events || []);
     }
   }, [content]);

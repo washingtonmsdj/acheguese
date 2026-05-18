@@ -14,6 +14,7 @@ import { logger } from "@/shared/utils/logger";
 import type { TerritoryFilter } from "@/core/location/types";
 import { SessionService } from "@/core/session/services/SessionService";
 import { profileService } from "@/core/profiles/services/ProfileService";
+import type { Json } from "@/integrations/supabase/types";
 import type {
   CommunityIssuePublic,
   CreateIssuePayload,
@@ -98,7 +99,7 @@ class CommunityIssueServiceClass {
       const { data, error } = await query;
       if (error) throw error;
 
-      return (data as CommunityIssuePublic[]) ?? [];
+      return (data as unknown as CommunityIssuePublic[]) ?? [];
     } catch (error) {
       logger.error("CommunityIssueService.getIssues", error);
       return [];
@@ -135,7 +136,7 @@ class CommunityIssueServiceClass {
         .maybeSingle();
 
       if (error) throw error;
-      return data as CommunityIssuePublic | null;
+      return data as unknown as CommunityIssuePublic | null;
     } catch (error) {
       logger.error("CommunityIssueService.getIssueById", error);
       return null;
@@ -155,7 +156,7 @@ class CommunityIssueServiceClass {
         .limit(limit);
 
       if (error) throw error;
-      return (data as CommunityIssuePublic[]) ?? [];
+      return (data as unknown as CommunityIssuePublic[]) ?? [];
     } catch (error) {
       logger.error("CommunityIssueService.getIssuesByProfile", error);
       return [];
@@ -173,7 +174,7 @@ class CommunityIssueServiceClass {
   async createIssue(payload: CreateIssuePayload): Promise<IssueRpcResult> {
     try {
       const { data, error } = await callRPC<IssueRpcResult>("create_community_issue", {
-        payload,
+        payload: payload as unknown as Json,
       });
 
       if (error) {
@@ -330,7 +331,7 @@ class CommunityIssueServiceClass {
         issue_id: issueId,
         actor_id: user.id,
         action,
-        metadata,
+        metadata: metadata as Json,
       });
     } catch (error) {
       // Audit log nunca deve quebrar o fluxo principal

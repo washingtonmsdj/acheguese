@@ -42,7 +42,7 @@ export function ChatWindow({
 }: ChatWindowProps) {
   const { activeProfile } = useSessionContext();
   const { messages, loading, sending, sendMessage, markAsRead, markAllAsRead } =
-    useMobilidadeChat();
+    useMobilidadeChat(conversationId);
 
   const [inputText, setInputText] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -241,7 +241,10 @@ export function ChatWindow({
                             addSuffix: true,
                             locale: ptBR,
                           })}
-                          {isOwn && message.read && " • Lida"}
+                          {(() => {
+                            const messageMeta = message as unknown as { read?: boolean };
+                            return isOwn && messageMeta.read ? " • Lida" : null;
+                          })()}
                         </span>
                       )}
                     </div>

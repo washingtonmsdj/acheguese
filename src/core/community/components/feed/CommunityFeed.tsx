@@ -116,7 +116,10 @@ export function CommunityFeed({
 
   const handleUpvoteReport = useCallback((_reportId: string) => {}, []);
   const profileName = activeProfile?.name?.trim() || "Usuario";
-  const profileAvatar = activeProfile?.avatar_url ?? activeProfile?.avatarUrl ?? undefined;
+  const profileAvatar =
+    (activeProfile as { avatar_url?: string | null } | null)?.avatar_url ??
+    activeProfile?.avatarUrl ??
+    undefined;
   const profileInitial = profileName[0]?.toUpperCase() ?? "U";
 
   const sortCriteria = useMemo(() => {
@@ -126,6 +129,16 @@ export function CommunityFeed({
   }, [sortType]);
 
   const filterType = useMemo(() => activeHeaderFilter, [activeHeaderFilter]);
+  const unifiedPosts = useMemo(
+    () =>
+      posts.map((post) => ({
+        ...post,
+        type: (post.type === "texto" ? "discussao" : post.type) as UnifiedPost["type"],
+        author_name: (post as { author_name?: string }).author_name ?? "Morador",
+        tags: (post as { tags?: string[] }).tags ?? [],
+      })),
+    [posts],
+  );
 
   if (isLoading) {
     return (
@@ -260,12 +273,14 @@ export function CommunityFeed({
       <div className="mx-auto w-full max-w-2xl">
         <UnifiedFeedWithMessages
           civicReports={[]}
-          communityPosts={posts}
+          communityPosts={unifiedPosts}
           currentUserId={currentUserId}
           sortCriteria={sortCriteria}
           filterType={filterType}
           userLocation={{
-            location_id: activeProfile?.locationId ?? activeProfile?.location_id,
+            location_id:
+              activeProfile?.locationId ??
+              (activeProfile as { location_id?: string | null } | null)?.location_id,
           }}
           onLike={handleLike}
           onComment={handleComment}

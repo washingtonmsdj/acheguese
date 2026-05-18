@@ -32,7 +32,7 @@ interface CommentThreadProps {
 export function CommentThread({ postId }: CommentThreadProps) {
   const [sortBy, setSortBy] = useState<"relevantes" | "recentes">("relevantes");
   const { comments, loading: isLoading } = useComments(postId);
-  const typedComments = comments as Comment[];
+  const typedComments = comments as unknown as Comment[];
 
   if (isLoading) {
     return (
@@ -92,4 +92,3 @@ export function CommentThread({ postId }: CommentThreadProps) {
     </div>
   );
 }
-

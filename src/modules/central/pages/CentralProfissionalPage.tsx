@@ -746,13 +746,13 @@ export default function CentralProfissionalPage() {
           />
           <StatCard
             title="Visualizacoes"
-            value={stats?.total_views ?? 0}
+            value={(stats as { total_views?: number; totalViews?: number } | undefined)?.total_views ?? (stats as { total_views?: number; totalViews?: number } | undefined)?.totalViews ?? 0}
             description="Servico principal"
             icon={Eye}
           />
           <StatCard
             title="Contatos"
-            value={stats?.total_contacts ?? 0}
+            value={(stats as { total_contacts?: number; totalContacts?: number } | undefined)?.total_contacts ?? (stats as { total_contacts?: number; totalContacts?: number } | undefined)?.totalContacts ?? 0}
             description="Sinais de demanda"
             icon={MessageSquare}
           />

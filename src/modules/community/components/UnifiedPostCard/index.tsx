@@ -304,7 +304,7 @@ const UnifiedPostCardComponent = ({
 
       <CardFooter className={`${SPACING.cardPadding} pt-0`}>
         {/* Seção de Confirmações (para alertas) */}
-        {post.type === "alerta" && post.confirmations_count !== undefined && (
+        {String(post.type) === "alerta" && post.confirmations_count !== undefined && (
           <AlertConfirmation
             confirmationsCount={post.confirmations_count}
             hasUserConfirmed={post.has_user_confirmed}

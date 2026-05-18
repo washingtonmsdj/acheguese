@@ -36,12 +36,13 @@ export interface Promotion {
 }
 
 class AdminPromotionsServiceClass {
+  private readonly db = supabase as any;
   /**
    * Busca estatísticas de promoções
    */
   async getStats(): Promise<PromotionStats> {
     try {
-      const { data: promotions, error } = await (supabase as unknown as AdminSupabaseClient)
+      const { data: promotions, error } = await this.db
         .from("promotions")
         .select("*");
 
@@ -95,7 +96,7 @@ class AdminPromotionsServiceClass {
         businessId,
       } = params;
 
-      let query = supabase
+      let query = this.db
         .from("promotions")
         .select(`
           *,
@@ -157,7 +158,7 @@ class AdminPromotionsServiceClass {
    */
   async createPromotion(data: Partial<Promotion>): Promise<Promotion | null> {
     try {
-      const { data: promotion, error } = await supabase
+      const { data: promotion, error } = await this.db
         .from("promotions")
         .insert([data])
         .select()
@@ -176,7 +177,7 @@ class AdminPromotionsServiceClass {
    */
   async updatePromotion(id: string, data: Partial<Promotion>): Promise<boolean> {
     try {
-      const { error } = await supabase
+      const { error } = await this.db
         .from("promotions")
         .update(data)
         .eq("id", id);
@@ -194,7 +195,7 @@ class AdminPromotionsServiceClass {
    */
   async toggleActive(promotionId: string, isActive: boolean): Promise<boolean> {
     try {
-      const { error } = await supabase
+      const { error } = await this.db
         .from("promotions")
         .update({ is_active: isActive })
         .eq("id", promotionId);
@@ -212,7 +213,7 @@ class AdminPromotionsServiceClass {
    */
   async deletePromotion(promotionId: string): Promise<boolean> {
     try {
-      const { error } = await supabase
+      const { error } = await this.db
         .from("promotions")
         .delete()
         .eq("id", promotionId);
@@ -234,7 +235,7 @@ class AdminPromotionsServiceClass {
       const futureDate = new Date();
       futureDate.setDate(futureDate.getDate() + daysAhead);
 
-      const { data, error } = await supabase
+      const { data, error } = await this.db
         .from("promotions")
         .select(`
           *,
@@ -263,7 +264,7 @@ class AdminPromotionsServiceClass {
    */
   async getTopPromotions(limit: number = 10) {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await this.db
         .from("promotions")
         .select(`
           *,
@@ -289,7 +290,7 @@ class AdminPromotionsServiceClass {
    */
   async validateCode(code: string): Promise<{ valid: boolean; promotion?: Promotion; reason?: string }> {
     try {
-      const { data: promotion, error } = await supabase
+      const { data: promotion, error } = await this.db
         .from("promotions")
         .select("*")
         .eq("code", code.toUpperCase())
@@ -328,7 +329,7 @@ class AdminPromotionsServiceClass {
    */
   async incrementUsage(promotionId: string): Promise<boolean> {
     try {
-      const { error } = await supabase.rpc("increment_promotion_usage", {
+      const { error } = await this.db.rpc("increment_promotion_usage", {
         promotion_id: promotionId,
       });
 

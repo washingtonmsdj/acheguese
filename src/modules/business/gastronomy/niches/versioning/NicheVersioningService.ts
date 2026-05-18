@@ -26,6 +26,10 @@ import type {
 } from './types';
 
 export class NicheVersioningService {
+  private static toCapabilities(values: unknown): NicheCapability[] {
+    if (!Array.isArray(values)) return [];
+    return values.filter((value): value is NicheCapability => typeof value === 'string') as NicheCapability[];
+  }
   private static toNicheStatus(value: unknown): NicheStatus {
     const valid: NicheStatus[] = ['full_enabled', 'basic_enabled', 'beta_enabled', 'hidden', 'coming_soon'];
     return valid.includes(value as NicheStatus) ? (value as NicheStatus) : 'basic_enabled';
@@ -289,8 +293,8 @@ export class NicheVersioningService {
       niche_config_version: data.niche_config_version as string,
       support_level: this.toNicheStatus(data.support_level),
       operational_mode: this.toOperationalMode(data.operational_mode),
-      enabled_capabilities: (data.enabled_capabilities as string[]) || [],
-      missing_capabilities: (data.missing_capabilities as string[]) || [],
+      enabled_capabilities: this.toCapabilities(data.enabled_capabilities),
+      missing_capabilities: this.toCapabilities(data.missing_capabilities),
       needs_niche_upgrade: data.needs_niche_upgrade as boolean,
       last_niche_upgrade_at: data.last_niche_upgrade_at as string | null,
     };
@@ -336,7 +340,7 @@ export class NicheVersioningService {
       business_id: record.business_id,
       from_version: record.from_version,
       to_version: record.to_version,
-      added_capabilities: (record.added_capabilities as string[]) || [],
+      added_capabilities: this.toCapabilities(record.added_capabilities),
       from_operational_mode: this.toOperationalMode(record.from_operational_mode),
       to_operational_mode: this.toOperationalMode(record.to_operational_mode),
       upgrade_type: this.toUpgradeType(record.upgrade_type),

@@ -81,6 +81,9 @@ interface Filters {
   priceMax: string;
   condition: string;
   hasPhoto: boolean;
+  stateSlug: string;
+  citySlug: string;
+  locationSlug: string;
 }
 
 const DEFAULT_FILTERS: Filters = {
@@ -91,6 +94,9 @@ const DEFAULT_FILTERS: Filters = {
   priceMax: "",
   condition: "todos",
   hasPhoto: false,
+  stateSlug: "",
+  citySlug: "",
+  locationSlug: "",
 };
 
 // ── Props ─────────────────────────────────────────────────────

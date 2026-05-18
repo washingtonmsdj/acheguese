@@ -13,6 +13,7 @@ import type {
   ProfileStatus,
   ProfileType,
 } from "../types";
+const authzDb = supabase as any;
 
 export class AuthorizationEngine {
   private static permissionCache = new Map<string, boolean>();
@@ -185,7 +186,7 @@ export class AuthorizationEngine {
     status: ProfileStatus;
     verified: boolean;
   } | null> {
-    const { data, error } = await supabase
+    const { data, error } = await authzDb
       .from("profiles")
       .select("id, profile_type, is_active, is_suspended, verified")
       .eq("id", profileId)
@@ -290,7 +291,7 @@ export class AuthorizationEngine {
     communityId: string,
     action: string,
   ): Promise<boolean> {
-    const { data } = await supabase
+    const { data } = await authzDb
       .from("communities")
       .select("settings")
       .eq("id", communityId)
@@ -304,13 +305,13 @@ export class AuthorizationEngine {
   // ── 15.10 ──────────────────────────────────────────────────────────────────
 
   private static async isModerator(profileId: string): Promise<boolean> {
-    const { data: profile } = await supabase
+    const { data: profile } = await authzDb
       .from("profiles")
       .select("user_id")
       .eq("id", profileId)
       .single();
     if (!profile) return false;
-    const { data } = await supabase
+    const { data } = await authzDb
       .from("user_roles")
       .select("role")
       .eq("user_id", profile.user_id)
@@ -326,7 +327,7 @@ export class AuthorizationEngine {
     profileId: string,
     communityId: string,
   ): Promise<boolean> {
-    const { data } = await supabase
+    const { data } = await authzDb
       .from("community_moderators")
       .select("id")
       .eq("profile_id", profileId)
@@ -342,7 +343,7 @@ export class AuthorizationEngine {
     profileId: string,
     postId: string,
   ): Promise<boolean> {
-    const { data } = await supabase
+    const { data } = await authzDb
       .from("posts")
       .select("author_profile_id")
       .eq("id", postId)
@@ -354,7 +355,7 @@ export class AuthorizationEngine {
     profileId: string,
     commentId: string,
   ): Promise<boolean> {
-    const { data } = await supabase
+    const { data } = await authzDb
       .from("comments")
       .select("author_profile_id")
       .eq("id", commentId)
@@ -366,7 +367,7 @@ export class AuthorizationEngine {
     profileId: string,
     businessId: string,
   ): Promise<boolean> {
-    const { data } = await supabase
+    const { data } = await authzDb
       .from("businesses")
       .select("owner_profile_id")
       .eq("id", businessId)
@@ -378,7 +379,7 @@ export class AuthorizationEngine {
     profileId: string,
     messageId: string,
   ): Promise<boolean> {
-    const { data } = await supabase
+    const { data } = await authzDb
       .from("messages")
       .select("sender_profile_id")
       .eq("id", messageId)

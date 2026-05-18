@@ -1,5 +1,4 @@
-import type { TouristPoint } from './index';
-import type { TouristPointCategory } from './categories';
+import type { TouristPoint, TouristPointCategory } from '@/modules/guide/tourist-points/types';
 
 export interface TouristPointCategoryShortcut {
   id: string;
@@ -40,7 +39,7 @@ export const TOURIST_CATEGORY_SHORTCUTS: TouristPointCategoryShortcut[] = [
   },
 ];
 
-export interface TouristPointDisplay extends TouristPoint {
+export type TouristPointDisplay = Omit<TouristPoint, 'category'> & {
   category: TouristPointCategory;
   rating: number;
   review_count: number;
@@ -52,22 +51,25 @@ export interface TouristPointDisplay extends TouristPoint {
   longitude: number | null;
   tips: string | null;
   how_to_get_there: string | null;
-}
+};
 
 function resolveCategory(value: unknown): TouristPointCategory {
   if (
     value === 'praia' ||
-    value === 'praca' ||
     value === 'parque' ||
-    value === 'trilha' ||
     value === 'mirante' ||
     value === 'museu' ||
-    value === 'centro-cultural' ||
     value === 'historico' ||
-    value === 'igreja' ||
+    value === 'natural' ||
+    value === 'religioso' ||
+    value === 'cultural' ||
+    value === 'gastronomico' ||
     value === 'monumento' ||
-    value === 'mercado' ||
-    value === 'ar-livre'
+    value === 'arquitetonico' ||
+    value === 'esportivo' ||
+    value === 'entretenimento' ||
+    value === 'compras' ||
+    value === 'outro'
   ) {
     return value;
   }
@@ -91,3 +93,4 @@ export function toTouristPointDisplay(point: TouristPoint): TouristPointDisplay 
     how_to_get_there: null,
   };
 }
+

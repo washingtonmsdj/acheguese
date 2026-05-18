@@ -186,11 +186,11 @@ export default function AdminVagas() {
   const getStatusBadge = (status: VagaStatus) => {
     switch (status) {
       case "published":
-        return <Badge variant="success">Publicada</Badge>;
+      return <Badge variant="secondary">Publicada</Badge>;
       case "pending_review":
         return <Badge variant="default">Em revisão</Badge>;
       case "paused":
-        return <Badge variant="warning">Pausada</Badge>;
+      return <Badge variant="outline">Pausada</Badge>;
       case "closed":
         return <Badge variant="secondary">Encerrada</Badge>;
       case "draft":
@@ -650,5 +650,4 @@ export default function AdminVagas() {
     </div>
   );
 }
-
 

@@ -14,8 +14,9 @@ import type {
   EntityFamily,
   Vertical,
   PricingModel,
-  CatalogVersionStatus,
 } from './catalog.types';
+
+export type CatalogVersionStatus = 'draft' | 'published' | 'deprecated' | 'archived';
 
 // ============================================================================
 // Catalog Version Management

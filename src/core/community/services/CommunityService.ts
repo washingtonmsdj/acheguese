@@ -15,6 +15,7 @@
  */
 
 import { supabase } from "@/integrations/supabase";
+const db = supabase as any;
 import { GamificationService } from "@/core/gamification/services/GamificationService";
 import { trackError } from "@/shared/utils/errorTracking";
 import { logger } from "@/shared/utils/logger";
@@ -152,7 +153,7 @@ interface GroupRow {
   created_by: string | null;
   location_id: string | null;
   profiles?: GroupProfileInfo | null;
-  members_count?: GroupMemberCountRow[] | null;
+  members_count?: GroupMemberCountRow[] | number | null;
   [key: string]: unknown;
 }
 
@@ -297,7 +298,7 @@ class CommunityServiceClass {
       sortBy = "recentes",
     } = params;
     try {
-      let query = supabase
+      let query = db
         .from("groups")
         .select(
           `
@@ -365,7 +366,7 @@ class CommunityServiceClass {
 
   async getGroups(search?: string, territoryFilter?: TerritoryFilter): Promise<GroupRow[]> {
     try {
-      let query = supabase
+      let query = db
         .from("groups")
         .select(`
           *,
@@ -407,11 +408,11 @@ class CommunityServiceClass {
    */
   async getGroupById(groupId: string): Promise<GroupRow | null> {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await db
         .from("groups")
         .select("*, profiles:created_by(name, avatar_url)")
         .eq("id", groupId)
-        .single<GroupRow>();
+        .single();
 
       if (error) throw error;
       return data;
@@ -460,11 +461,11 @@ class CommunityServiceClass {
         location_id: groupData.location_id,
       };
 
-      const { data, error } = await supabase
+      const { data, error } = await db
         .from("groups")
         .insert(payload)
         .select()
-        .single<GroupRow>();
+        .single();
 
       if (error) throw error;
       return data;
@@ -499,7 +500,7 @@ class CommunityServiceClass {
     try {
       const points = getInteractionPoints(interactionType);
 
-      const { data: interaction, error } = await supabase
+      const { data: interaction, error } = await db
         .from("community_interactions")
         .insert({
           user_id: userId,
@@ -538,7 +539,7 @@ class CommunityServiceClass {
    */
   async getUserStats(userId: string): Promise<CommunityStats> {
     try {
-      const { data: interactions, error } = await supabase
+      const { data: interactions, error } = await db
         .from("community_interactions")
         .select("interaction_type, points")
         .eq("user_id", userId);
@@ -646,7 +647,7 @@ class CommunityServiceClass {
     error?: string;
   }> {
     try {
-      const { data: badge, error } = await supabase
+      const { data: badge, error } = await db
         .from("community_badges")
         .select("id")
         .eq("code", badgeCode)
@@ -684,7 +685,7 @@ class CommunityServiceClass {
    */
   async getAvailableBadges(userId: string): Promise<UserBadge[]> {
     try {
-      const { data: allBadges, error } = await supabase
+      const { data: allBadges, error } = await db
         .from("community_badges")
         .select("*")
         .eq("is_active", true)
@@ -735,7 +736,7 @@ class CommunityServiceClass {
     stats: CommunityStats;
   } | null> {
     try {
-      const { data: profile, error: profileError } = await supabase
+      const { data: profile, error: profileError } = await db
         .from("community_profiles")
         .select("*")
         .eq("user_id", userId)
@@ -780,7 +781,7 @@ class CommunityServiceClass {
     >,
   ): Promise<{ success: boolean; profile?: CommunityProfile; error?: string }> {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await db
         .from("community_profiles")
         .update({ ...updates, updated_at: new Date().toISOString() })
         .eq("user_id", userId)
@@ -821,7 +822,7 @@ class CommunityServiceClass {
     }
 
     try {
-      const query = supabase
+      const query = db
         .from("community_profiles")
         .select("*")
         .order("total_points", { ascending: false });
@@ -874,7 +875,7 @@ class CommunityServiceClass {
     const limit = options?.limit ?? 10;
 
     try {
-      let query = supabase
+      let query = db
         .from("civic_engagement_scores")
         .select("*")
         .eq("entity_type", entityType)
@@ -987,3 +988,4 @@ class CommunityServiceClass {
 
 export const CommunityService = new CommunityServiceClass();
 export { CommunityService as communityService };
+

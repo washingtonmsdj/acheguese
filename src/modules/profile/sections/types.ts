@@ -8,9 +8,9 @@
 import type { NavigateFunction } from "react-router-dom";
 import type { MultiProfileRecord } from "@/core/profiles/services/multi-profile/types";
 import type { ProfileBusinessModuleItem } from "@/core/profiles/services/types";
-import type { AppUrls } from "@/core/routing/types";
 import type { Tables } from "@/core/infrastructure/supabase/types.generated";
-import type { ProfileSectionId } from "@/modules/profile/config/profile-sections.config";
+export type ProfileSectionId =
+  import("@/modules/profile/config/profile-sections.config").ProfileSectionId;
 
 // ============================================
 // Base Props (compartilhadas por todas)
@@ -24,8 +24,8 @@ export interface BaseSectionProps {
   readonly personalProfile: MultiProfileRecord | null;
   readonly personalProfileId: string | null;
   readonly navigate: NavigateFunction;
-  readonly appUrls: AppUrls;
-  readonly moduleUrls: Record<string, string>;
+  readonly appUrls: any;
+  readonly moduleUrls: any;
 }
 
 // ============================================
@@ -51,7 +51,14 @@ export interface Notifications {
   readonly highPriority: number;
   readonly urgentPriority: number;
   readonly total: number;
-  readonly recent?: readonly Record<string, unknown>[];
+  readonly recent?: readonly {
+    readonly id: string;
+    readonly title: string;
+    readonly type: string;
+    readonly createdAt: string;
+    readonly read: boolean;
+    readonly priority: "low" | "normal" | "high" | "urgent";
+  }[];
 }
 
 // ============================================
@@ -100,11 +107,14 @@ export interface Context {
 // ============================================
 
 export interface NextAction {
-  readonly id: string;
-  readonly label: string;
+  readonly id?: string;
+  readonly label?: string;
   readonly description: string;
-  readonly priority: "high" | "medium" | "low";
-  readonly action: () => void;
+  readonly priority?: "high" | "medium" | "low";
+  readonly action?: () => void;
+  readonly title?: string;
+  readonly actionLabel?: string;
+  readonly onClick?: () => void;
 }
 
 // ============================================
@@ -224,7 +234,7 @@ export interface SegurancaSectionProps extends BaseSectionProps {
   readonly identity: Identity | null;
   readonly context: Context | null;
   readonly account: AccountSnapshot | null;
-  readonly roles: Roles;
+  readonly roles: any;
   readonly activeProfile: MultiProfileRecord | null;
   readonly stats: Stats;
   readonly verificationStatus: string;
@@ -247,17 +257,6 @@ export interface SegurancaSectionProps extends BaseSectionProps {
 // ============================================
 // Section Map Type (para type safety)
 // ============================================
-
-export type ProfileSectionId =
-  | "resumo"
-  | "dados-pessoais"
-  | "empresas"
-  | "mobilidade"
-  | "delivery"
-  | "planos"
-  | "notificacoes"
-  | "preferencias"
-  | "seguranca";
 
 export type SectionPropsMap = {
   readonly resumo: ResumoSectionProps;

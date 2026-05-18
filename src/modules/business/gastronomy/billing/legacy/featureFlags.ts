@@ -152,14 +152,14 @@ export class GastronomyFeatureFlags {
    * Verifica se um plano tem acesso a checkout interno
    */
   static hasCheckoutAccess(planTier: GastronomyPlanTier): boolean {
-    return this.isFeatureEnabled(planTier, GastronomyFeature.INTERNAL_CHECKOUT);
+    return this.isFeatureEnabled(planTier, GastronomyFeature.INTERNAL_ORDERS);
   }
   
   /**
    * Verifica se um plano tem acesso a analytics
    */
   static hasAnalyticsAccess(planTier: GastronomyPlanTier): boolean {
-    return this.isFeatureEnabled(planTier, GastronomyFeature.ANALYTICS);
+    return this.isFeatureEnabled(planTier, GastronomyFeature.BASIC_REPORTS);
   }
   
   /**
@@ -173,7 +173,7 @@ export class GastronomyFeatureFlags {
    * Verifica se um plano pode criar cupons
    */
   static canCreateCoupons(planTier: GastronomyPlanTier): boolean {
-    return this.isFeatureEnabled(planTier, GastronomyFeature.COUPONS);
+    return this.isFeatureEnabled(planTier, GastronomyFeature.PROMOTIONS);
   }
   
   /**
@@ -197,10 +197,6 @@ export class GastronomyFeatureFlags {
     
     if (minPlan.tier === GastronomyPlanTier.PRO) {
       return `Faça upgrade para o plano Pro (R$ ${minPlan.price_monthly}/mês) para acessar este recurso.`;
-    }
-    
-    if (minPlan.tier === GastronomyPlanTier.MARKETPLACE) {
-      return 'Ative o plano Marketplace para acessar este recurso.';
     }
     
     return null;

@@ -14,7 +14,11 @@ import {
   geoPathToPublicUrl,
 } from '@/core/routing/utils/territoryUrls';
 import { supabase } from '@/integrations/supabase';
-import { isTerritoryVisibleInLanding } from '@/core/routing/utils/territoryVisibility';
+import { LocationsReadService } from '@/core/location/services/LocationsReadService';
+import {
+  isTerritoryVisibleInLanding,
+  type TerritoryVisibilityMetadata,
+} from '@/core/routing/utils/territoryVisibility';
 import { writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 
@@ -23,6 +27,13 @@ interface SitemapUrl {
   lastmod?: string;
   changefreq?: 'always' | 'hourly' | 'daily' | 'weekly' | 'monthly' | 'yearly' | 'never';
   priority?: number;
+}
+
+function asTerritoryVisibilityMetadata(
+  value: unknown,
+): TerritoryVisibilityMetadata | null {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
+  return value as TerritoryVisibilityMetadata;
 }
 
 function generateTerritoryUrls(
@@ -145,19 +156,12 @@ export function generateSitemap(
 }
 
 export async function generateAndSaveSitemap() {
-  const { data: locationsRows, error: locationsError } = await supabase
-    .from('locations')
-    .select('*')
-    .in('type', ['city', 'district'])
-    .eq('status', 'active');
-
-  if (locationsError) {
-    logger.error('generateAndSaveSitemap.locations', locationsError);
-    throw locationsError;
-  }
-
-  const locations = ((locationsRows as Location[] | null) ?? []).filter((location) =>
-    isTerritoryVisibleInLanding(location.metadata),
+  const locationsRows = (await LocationsReadService.getAll()) as unknown as Location[];
+  const locations = locationsRows
+    .filter((location) => location.type === "city" || location.type === "district")
+    .filter((location) => location.status === "active")
+    .filter((location) =>
+    isTerritoryVisibleInLanding(asTerritoryVisibilityMetadata(location.metadata)),
   );
 
   const { data: groupsRows, error: groupsError } = await supabase
@@ -171,7 +175,7 @@ export async function generateAndSaveSitemap() {
   }
 
   const activeGroups = (groupsRows ?? []).filter((group) =>
-    isTerritoryVisibleInLanding(group.metadata),
+    isTerritoryVisibleInLanding(asTerritoryVisibilityMetadata(group.metadata)),
   );
 
   const groupIds = activeGroups.map((group) => group.id);
