@@ -1,40 +1,11 @@
-/**
- * EVENTS ORGANIZER DASHBOARD
- * 
- * Dashboard do organizador para gerenciar seus eventos
- * Listagem, estatísticas e ações rápidas
- * 
- * @version 1.0.0
- */
-
 import { useState, useMemo, useRef, useEffect, useCallback } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate, Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { motion } from 'framer-motion';
 import {
-  Plus,
-  Calendar,
-  Users,
-  TrendingUp,
-  Eye,
-  Edit,
-  Trash2,
-  Copy,
-  MoreVertical,
-  Search,
-  Filter,
-  Download,
-  Share2,
-  BarChart3,
-  Home,
-  Settings,
-  CheckCircle,
-  XCircle,
-  Clock,
-  DollarSign,
-  QrCode,
-  Loader2
+  Plus, Calendar, Users, TrendingUp, Eye, Edit, Trash2, Copy, MoreVertical, Search, Filter,
+  Download, Share2, BarChart3, Home, Settings, CheckCircle, XCircle, Clock, DollarSign, QrCode, Loader2,
 } from 'lucide-react';
 import { Button } from '@/shared/components/ui/button';
 import { Input } from '@/shared/components/ui/input';
@@ -94,7 +65,6 @@ export default function EventsOrganizerDashboard() {
     joinedAt?: string | null;
   }>>([]);
 
-  // Mock: Em produção, buscar eventos do organizador logado
   const { data: organizerEvents = [] } = useQuery({
     queryKey: ['events-organizer-dashboard', activeProfile?.id],
     enabled: Boolean(activeProfile?.id),
@@ -107,7 +77,6 @@ export default function EventsOrganizerDashboard() {
     },
   });
 
-  // Filter events
   const filteredEvents = useMemo(() => {
     return organizerEvents.filter(event => {
       const matchesSearch = event.title.toLowerCase().includes(search.toLowerCase());
@@ -116,7 +85,6 @@ export default function EventsOrganizerDashboard() {
     });
   }, [organizerEvents, search, statusFilter]);
 
-  // Calculate stats
   const stats = useMemo(() => {
     const total = organizerEvents.length;
     const published = organizerEvents.filter(e => e.status === 'publicado').length;
@@ -131,7 +99,6 @@ export default function EventsOrganizerDashboard() {
     return { total, published, draft, totalParticipants, totalViews, totalRevenue };
   }, [organizerEvents]);
 
-  // Handlers
   const handleCreateEvent = () => {
     navigate('/central/eventos/novo');
   };
@@ -145,19 +112,16 @@ export default function EventsOrganizerDashboard() {
   };
 
   const handleDuplicateEvent = (eventId: string) => {
-    // TODO: Implementar duplicação
     alert(`Duplicar evento ${eventId}`);
   };
 
   const handleDeleteEvent = (eventId: string) => {
     if (window.confirm('Tem certeza que deseja excluir este evento?')) {
-      // TODO: Implementar exclusão
       alert(`Excluir evento ${eventId}`);
     }
   };
 
   const handleExportData = () => {
-    // TODO: Implementar exportação
     alert('Exportar dados');
   };
 
@@ -408,7 +372,7 @@ export default function EventsOrganizerDashboard() {
               }
             }
           } catch {
-            // Ignorar frame inválido e continuar.
+            void 0;
           }
           scanFrameRef.current = requestAnimationFrame(scanLoop);
         };
@@ -428,8 +392,6 @@ export default function EventsOrganizerDashboard() {
       stopScanner();
     };
   }, [processQrRawValue, scannerOpen, scannerSupported, stopScanner]);
-
-  // Status badge
   const getStatusBadge = (status: EventStatus) => {
     const config = {
       publicado: { label: 'Publicado', className: 'bg-green-500' },

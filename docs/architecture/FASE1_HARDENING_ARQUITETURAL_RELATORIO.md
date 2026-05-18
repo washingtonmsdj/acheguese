@@ -1,13 +1,13 @@
 # FASE 1 - Hardening Arquitetural (Gate-First)
 
-Gerado em: 2026-05-18T22:15:52.893Z
+Gerado em: 2026-05-18T22:20:05.339Z
 
 ## Problemas encontrados
 - Dependencias ciclicas detectadas: 0
 - Imports relativos profundos (>= 3 niveis): 0
 - Arquivos com acesso DB fora de service/repository: 0
 - Services com nome duplicado: 32
-- Arquivos grandes (>= 900 linhas): 7
+- Arquivos grandes (>= 900 linhas): 6
 - Violacoes de layer (shared/core boundaries): 0
 
 ## Modulos mais criticos
@@ -22,7 +22,6 @@ Gerado em: 2026-05-18T22:15:52.893Z
 - `src/features/events/pages/EventsListPage.tsx` (924 linhas)
 - `src/modules/classifieds/pages/ClassificadoDetailPage.tsx` (924 linhas)
 - `src/modules/professionals/services/pages/EditarServicoPage.tsx` (923 linhas)
-- `src/features/events/pages/EventsOrganizerDashboard.tsx` (919 linhas)
 - `src/core/routing/components/BrasilShowcasePage.tsx` (900 linhas)
 - `src/modules/classifieds/pages/ClassificadosLandingPage.tsx` (900 linhas)
 
