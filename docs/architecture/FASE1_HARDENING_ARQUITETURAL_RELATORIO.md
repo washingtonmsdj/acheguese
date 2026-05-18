@@ -1,13 +1,13 @@
 # FASE 1 - Hardening Arquitetural (Gate-First)
 
-Gerado em: 2026-05-18T22:37:46.431Z
+Gerado em: 2026-05-18T22:44:44.842Z
 
 ## Problemas encontrados
 - Dependencias ciclicas detectadas: 0
 - Imports relativos profundos (>= 3 niveis): 0
 - Arquivos com acesso DB fora de service/repository: 0
 - Services com nome duplicado: 32
-- Arquivos grandes (>= 900 linhas): 5
+- Arquivos grandes (>= 900 linhas): 4
 - Violacoes de layer (shared/core boundaries): 0
 
 ## Modulos mais criticos
@@ -19,9 +19,8 @@ Gerado em: 2026-05-18T22:37:46.431Z
 
 ## Arquivos mais problematicos
 - `src/app/pages/ClassificadoChatLandingPage.tsx` (929 linhas)
-- `src/modules/classifieds/pages/ClassificadoDetailPage.tsx` (916 linhas)
-- `src/modules/professionals/services/pages/EditarServicoPage.tsx` (914 linhas)
 - `src/core/routing/components/BrasilShowcasePage.tsx` (900 linhas)
+- `src/modules/classifieds/pages/ClassificadoDetailPage.tsx` (900 linhas)
 - `src/modules/classifieds/pages/ClassificadosLandingPage.tsx` (900 linhas)
 
 ## Riscos arquiteturais

@@ -1,40 +1,13 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import {
-  ArrowLeft,
-  Upload,
-  Loader2,
-  MapPin,
-  Clock,
-  DollarSign,
-  Phone,
-  MessageCircle,
-  Briefcase,
-  Award,
-  GraduationCap,
-  Globe,
-  Save,
-  Camera,
-  Trash2,
-} from "lucide-react";
+import { ArrowLeft, Upload, Loader2, MapPin, Clock, DollarSign, Phone, MessageCircle, Briefcase, Award, GraduationCap, Globe, Save, Camera, Trash2 } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import { Textarea } from "@/shared/components/ui/textarea";
 import { Label } from "@/shared/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/shared/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/shared/components/ui/select";
 import { Checkbox } from "@/shared/components/ui/checkbox";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/shared/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/shared/components/ui/card";
 import { Separator } from "@/shared/components/ui/separator";
 import { Badge } from "@/shared/components/ui/badge";
 import { Switch } from "@/shared/components/ui/switch";

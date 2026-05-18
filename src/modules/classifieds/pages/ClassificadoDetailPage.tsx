@@ -1,15 +1,3 @@
-/**
- * ClassificadoDetailPage - Página de detalhe item-first
- *
- * ? Foco total no produto/anúncio
- * ? Galeria imersiva com navegação touch
- * ? Badge de condição (novo/seminovo/usado)
- * - Vendedor como info secundária
- * ? Anúncios do mesmo vendedor
- * ? Anúncios relacionados
- * ? Mobile-first, responsivo para desktop
- */
-
 import { useState, useCallback, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -41,15 +29,11 @@ import { cn } from "@/shared/utils/cn";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
-
 type ReportReason = "fraud" | "fake" | "inappropriate" | "spam" | "duplicate" | "wrong-category" | "sold" | "other";
 
-interface ClassificadoDetailPageProps {
-  classifiedId?: string;
-}
+interface ClassificadoDetailPageProps { classifiedId?: string; }
 
 const CLASSIFIED_FAVORITES_KEY = "classifieds:favorites";
-
 
 export default function ClassificadoDetailPage({ classifiedId: propId }: ClassificadoDetailPageProps = {}) {
   const { id: paramId } = useParams<{ id: string }>();
