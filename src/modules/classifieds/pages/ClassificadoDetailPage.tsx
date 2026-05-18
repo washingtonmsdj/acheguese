@@ -30,9 +30,7 @@ import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
 type ReportReason = "fraud" | "fake" | "inappropriate" | "spam" | "duplicate" | "wrong-category" | "sold" | "other";
-
 interface ClassificadoDetailPageProps { classifiedId?: string; }
-
 const CLASSIFIED_FAVORITES_KEY = "classifieds:favorites";
 
 export default function ClassificadoDetailPage({ classifiedId: propId }: ClassificadoDetailPageProps = {}) {

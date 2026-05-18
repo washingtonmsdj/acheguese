@@ -12,21 +12,12 @@
 import React, { useState, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import {
-  Search, Star, MapPin, ChevronRight, ArrowRight,
-  Sparkles, BadgeCheck, MessageCircle, Shield,
-  SlidersHorizontal, ArrowUpDown, Camera, Package,
-  Zap, Plus, PackageOpen, Loader2, Flame,
-  ShoppingBag, UserCheck, Truck,
-  Tag,
-} from "lucide-react";
+import { Search, Star, MapPin, ChevronRight, ArrowRight, Sparkles, BadgeCheck, MessageCircle, Shield, SlidersHorizontal, ArrowUpDown, Camera, Package, Zap, Plus, PackageOpen, Loader2, Flame, ShoppingBag, UserCheck, Truck, Tag } from "lucide-react";
 import { CanonicalHero } from "@/shared/components/hero/CanonicalHero";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import { Skeleton } from "@/shared/components/ui/skeleton";
-import {
-  Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger,
-} from "@/shared/components/ui/sheet";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/shared/components/ui/sheet";
 import { useSessionContext } from "@/core/session";
 import { useAppUrls } from "@/core/routing/hooks/useAppUrls";
 import { ModuleLocationDialog, useTerritoryLabels } from "@/core/location";

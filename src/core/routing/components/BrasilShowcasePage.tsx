@@ -36,16 +36,7 @@ const fadeUp = {
   viewport: { once: true },
 } as const;
 
-type StateGroup = {
-  slug: string;
-  cities: Array<{
-    id: string;
-    name: string;
-    slug: string;
-    geographic_path: string;
-    type: string;
-  }>;
-};
+type StateGroup = { slug: string; cities: Array<{ id: string; name: string; slug: string; geographic_path: string; type: string }> };
 
 
 export function BrasilShowcasePage() {

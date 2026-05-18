@@ -1,13 +1,13 @@
 # FASE 1 - Hardening Arquitetural (Gate-First)
 
-Gerado em: 2026-05-18T22:44:44.842Z
+Gerado em: 2026-05-18T22:56:30.575Z
 
 ## Problemas encontrados
 - Dependencias ciclicas detectadas: 0
 - Imports relativos profundos (>= 3 niveis): 0
 - Arquivos com acesso DB fora de service/repository: 0
 - Services com nome duplicado: 32
-- Arquivos grandes (>= 900 linhas): 4
+- Arquivos grandes (>= 900 linhas): 0
 - Violacoes de layer (shared/core boundaries): 0
 
 ## Modulos mais criticos
@@ -18,10 +18,6 @@ Gerado em: 2026-05-18T22:44:44.842Z
 - landing/routing
 
 ## Arquivos mais problematicos
-- `src/app/pages/ClassificadoChatLandingPage.tsx` (929 linhas)
-- `src/core/routing/components/BrasilShowcasePage.tsx` (900 linhas)
-- `src/modules/classifieds/pages/ClassificadoDetailPage.tsx` (900 linhas)
-- `src/modules/classifieds/pages/ClassificadosLandingPage.tsx` (900 linhas)
 
 ## Riscos arquiteturais
 
@@ -38,7 +34,7 @@ Gerado em: 2026-05-18T22:44:44.842Z
 
 ## Score de estabilidade arquitetural
 - Score Gate-First (ciclos/boundaries/DB/layers): **100/100**
-- Score Debt Estrutural (inclui duplicacoes e arquivos gigantes): **79/100**
+- Score Debt Estrutural (inclui duplicacoes e arquivos gigantes): **80/100**
 - Baseline de referencia: 70/100
 - Meta desta fase: 85+/100
 

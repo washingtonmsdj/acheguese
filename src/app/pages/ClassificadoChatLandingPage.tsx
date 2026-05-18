@@ -64,7 +64,6 @@ import { TERRITORY_CONFIG } from "@/config/territory";
 import { cn } from "@/shared/utils/cn";
 import { toast } from "sonner";
 
-// ── Category Icons ───────────────────────────────────────────────────
 const CATEGORY_ICONS: Record<string, React.ElementType> = {
   veiculos: Car,
   imoveis: Home,
@@ -75,28 +74,9 @@ const CATEGORY_ICONS: Record<string, React.ElementType> = {
   outros: Package,
 };
 
-function getCategoryIcon(category: string): React.ElementType {
-  switch (category) {
-    case "veiculos":
-      return Car;
-    case "imoveis":
-      return Home;
-    case "eletronicos":
-      return Laptop;
-    case "roupas":
-      return Shirt;
-    case "moveis":
-      return Sofa;
-    case "esportes":
-      return Bike;
-    case "outros":
-      return Package;
-    default:
-      return Package;
-  }
-}
+const getCategoryIcon = (category: string): React.ElementType =>
+  CATEGORY_ICONS[category] ?? Package;
 
-// ── Mock Data ────────────────────────────────────────────────────────
 interface MockClassified {
   id: string;
   titulo: string;
@@ -257,7 +237,6 @@ function generateMockMessages(sellerId: string): MockMessage[] {
   ];
 }
 
-// ── Helpers ──────────────────────────────────────────────────────────
 function getInitials(name: string) {
   return name
     .split(" ")
@@ -291,7 +270,6 @@ function lastSeenText(lastSeen: string, isOnline: boolean): string {
   return `Visto há ${Math.floor(hours / 24)}d`;
 }
 
-// ── Quick Replies ────────────────────────────────────────────────────
 const QUICK_REPLIES = [
   "Ainda está disponível?",
   "Aceita proposta?",
@@ -299,7 +277,6 @@ const QUICK_REPLIES = [
   "Onde podemos combinar?",
 ];
 
-// ── PAGE ─────────────────────────────────────────────────────────────
 
 export default function ClassificadoChatLandingPage() {
   const { id } = useParams();
@@ -323,14 +300,12 @@ export default function ClassificadoChatLandingPage() {
   const CatIcon = ad ? getCategoryIcon(ad.categoria) : Package;
   const currentUserId = user?.id || "current-user";
 
-  // Load mock messages
   useEffect(() => {
     if (seller) {
       setMessages(generateMockMessages(seller.id));
     }
   }, [seller]);
 
-  // Scroll to bottom
   const scrollToBottom = useCallback(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, []);
@@ -339,7 +314,6 @@ export default function ClassificadoChatLandingPage() {
     scrollToBottom();
   }, [messages, scrollToBottom]);
 
-  // Send message
   const handleSend = async (text?: string) => {
     const messageText = (text || newMessage).trim();
     if (!messageText || sending || isBlocked) return;
@@ -359,7 +333,6 @@ export default function ClassificadoChatLandingPage() {
 
     setMessages((prev) => [...prev, newMsg]);
 
-    // Simulate seller response
     setTimeout(() => {
       const responses = [
         "Claro! Me diga mais sobre o que precisa saber.",
@@ -393,7 +366,6 @@ export default function ClassificadoChatLandingPage() {
     setBlockDialogOpen(false);
   };
 
-  // ── NOT FOUND ──────────────────────────────────────────────────────
   if (!ad || !seller) {
     return (
       <div className="min-h-screen bg-background flex flex-col">
@@ -428,7 +400,6 @@ export default function ClassificadoChatLandingPage() {
     );
   }
 
-  // ── Group messages by date ─────────────────────────────────────────
   const groupedMessages: { date: string; messages: MockMessage[] }[] = [];
   messages.forEach((msg) => {
     const dateKey = new Date(msg.created_at).toLocaleDateString("pt-BR");
@@ -648,7 +619,6 @@ export default function ClassificadoChatLandingPage() {
               </div>
 
               {group.messages.map((msg, i) => {
-                // System message
                 if (msg.type === "system") {
                   return (
                     <motion.div
