@@ -133,7 +133,6 @@ export default function EditarServicoPage() {
     page: 'EditarServicoPage',
   });
 
-  // Populate form when professional data loads
   useEffect(() => {
     if (professional) {
       setForm({
@@ -245,7 +244,6 @@ export default function EditarServicoPage() {
   };
 
   const removePortfolioImage = (index: number) => {
-    // If this is an existing URL (not a newly added file)
     const existingCount = (professional?.portfolio_images || []).length;
     if (index < existingCount) {
       setPortfolioPreviews((prev) => prev.filter((_, i) => i !== index));
@@ -260,7 +258,6 @@ export default function EditarServicoPage() {
   const doSave = async () => {
     if (!user || !id) return;
 
-    // Basic validation
     if (!form.name.trim()) {
       toast({ title: "Informe seu nome completo", variant: "destructive" });
       setActiveTab("info");
@@ -281,7 +278,6 @@ export default function EditarServicoPage() {
     try {
       let logoUrl: string | undefined;
 
-      // Upload logo usando MediaService
       if (photoFile) {
         const result = await mediaService.uploadProfessionalImage(
           user.id,
@@ -291,7 +287,6 @@ export default function EditarServicoPage() {
         logoUrl = result.url;
       }
 
-      // Upload new portfolio images usando MediaService
       const existingPortfolioUrls = (
         professional?.portfolio_images || []
       ).filter(
@@ -311,7 +306,6 @@ export default function EditarServicoPage() {
         newPortfolioUrls.push(result.url);
       }
 
-      // Build final portfolio: keep existing URLs that weren't removed + new uploads
       const finalPortfolio = [
         ...portfolioPreviews.filter((p) => !p.startsWith("data:")),
         ...newPortfolioUrls,
@@ -360,7 +354,6 @@ export default function EditarServicoPage() {
       if (hasSlugChange) {
         logError(originalSlug, slug, err.message || 'Erro ao salvar', err.code);
       }
-      // Error handled by hook onError
     } finally {
       setSaving(false);
     }
@@ -372,7 +365,6 @@ export default function EditarServicoPage() {
     onSave: doSave,
   });
 
-  // Loading state
   if (loadingProfessional) {
     return (
       <div className="flex flex-col min-h-screen bg-background">
@@ -390,7 +382,6 @@ export default function EditarServicoPage() {
     );
   }
 
-  // Error / not found
   if (loadError || !professional) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen bg-background p-4">

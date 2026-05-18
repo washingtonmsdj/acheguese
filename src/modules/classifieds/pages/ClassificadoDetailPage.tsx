@@ -41,7 +41,6 @@ import { cn } from "@/shared/utils/cn";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
-// -- Types -----------------------------------------------------
 
 type ReportReason = "fraud" | "fake" | "inappropriate" | "spam" | "duplicate" | "wrong-category" | "sold" | "other";
 
@@ -51,7 +50,6 @@ interface ClassificadoDetailPageProps {
 
 const CLASSIFIED_FAVORITES_KEY = "classifieds:favorites";
 
-// -- Page ------------------------------------------------------
 
 export default function ClassificadoDetailPage({ classifiedId: propId }: ClassificadoDetailPageProps = {}) {
   const { id: paramId } = useParams<{ id: string }>();
@@ -114,7 +112,6 @@ export default function ClassificadoDetailPage({ classifiedId: propId }: Classif
     }
   }, [id]);
 
-  // -- Handlers ----------------------------------------
 
   const nextImg = useCallback(() => {
     if (!classificado?.fotos) return;
@@ -147,7 +144,7 @@ export default function ClassificadoDetailPage({ classifiedId: propId }: Classif
         return;
       }
     } catch {
-      // Ignore native share errors and fallback to clipboard.
+      void 0;
     }
 
     try {
@@ -209,7 +206,6 @@ export default function ClassificadoDetailPage({ classifiedId: propId }: Classif
   }, [reportReason, user, id, toast]);
 
   const buildAdUrl = useCallback((ad: any) => {
-    // ? SSOT: Usar classifiedUrlService para construir URL canônica
     if (ad.geographic_path && ad.category_slug && ad.subcategory_slug && ad.slug && ad.public_id) {
       const urls = classifiedUrlService.buildUrls({
         id: ad.id,
@@ -221,11 +217,9 @@ export default function ClassificadoDetailPage({ classifiedId: propId }: Classif
       });
       return urls.canonical;
     }
-    // Fallback para URL curta
     return `/c/${ad.public_id || ad.id}`;
   }, []);
 
-  // -- Loading -----------------------------------------
 
   if (isLoading) {
     return (
@@ -669,7 +663,6 @@ export default function ClassificadoDetailPage({ classifiedId: propId }: Classif
   );
 }
 
-// -- Sub-components -------------------------------------------
 
 function MetaChip({ icon: Icon, text }: { icon: any; text: string }) {
   return (
@@ -880,7 +873,6 @@ function MiniAdCard({ ad, index, onClick }: { ad: any; index: number; onClick: (
   );
 }
 
-// -- Utils ----------------------------------------------------
 
 function getRelativeTime(dateStr: string): string {
   if (!dateStr) return "";

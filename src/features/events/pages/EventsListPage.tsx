@@ -1,7 +1,3 @@
-/**
- * EVENTS LIST PAGE
- */
-
 import { useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate, Link } from 'react-router-dom';
@@ -59,9 +55,6 @@ import {
 type ViewMode = 'grid' | 'list';
 type SortOption = 'data-asc' | 'data-desc' | 'popularidade' | 'preco-asc' | 'preco-desc' | 'alfabetica';
 
-// ============================================================================
-// COMPONENT PROPS
-// ============================================================================
 
 export interface EventsListPageProps {
   /**
@@ -72,9 +65,6 @@ export interface EventsListPageProps {
   activeMemberIds?: string[];
 }
 
-// ============================================================================
-// MAIN COMPONENT
-// ============================================================================
 
 export default function EventsListPage({ resolved, activeMemberIds }: EventsListPageProps = {}) {
   const navigate = useNavigate();
@@ -105,9 +95,6 @@ export default function EventsListPage({ resolved, activeMemberIds }: EventsList
     },
   });
 
-  // ========================================================================
-  // STATE
-  // ========================================================================
 
   const [category, setCategory] = useState<string>('todos');
   const [dateFilter, setDateFilter] = useState<string>('todos');
@@ -120,19 +107,14 @@ export default function EventsListPage({ resolved, activeMemberIds }: EventsList
   const [showFilters, setShowFilters] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
 
-  // ========================================================================
-  // COMPUTED VALUES
-  // ========================================================================
 
   const filteredAndSortedEvents = useMemo(() => {
     let filtered = [...eventsData];
 
-    // Filter by category
     if (category !== 'todos') {
       filtered = filtered.filter(event => event.category === category);
     }
 
-    // Filter by date
     if (dateFilter !== 'todos') {
       const now = new Date();
       const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
@@ -164,12 +146,10 @@ export default function EventsListPage({ resolved, activeMemberIds }: EventsList
       });
     }
 
-    // Filter by type
     if (typeFilter !== 'todos') {
       filtered = filtered.filter(event => event.location.type === typeFilter);
     }
 
-    // Filter by price
     if (priceFilter !== 'todos') {
       if (priceFilter === 'gratuito') {
         filtered = filtered.filter(event => event.is_free);
@@ -178,7 +158,6 @@ export default function EventsListPage({ resolved, activeMemberIds }: EventsList
       }
     }
 
-    // Filter by search
     if (search) {
       const searchLower = search.toLowerCase();
       filtered = filtered.filter(event =>
@@ -189,7 +168,6 @@ export default function EventsListPage({ resolved, activeMemberIds }: EventsList
       );
     }
 
-    // Sort
     filtered.sort((a, b) => {
       switch (sortBy) {
         case 'data-asc':
@@ -218,7 +196,6 @@ export default function EventsListPage({ resolved, activeMemberIds }: EventsList
     return filtered;
   }, [category, dateFilter, typeFilter, priceFilter, search, sortBy, eventsData]);
 
-  // Pagination
   const totalPages = Math.ceil(filteredAndSortedEvents.length / EVENTS_ITEMS_PER_PAGE);
   const paginatedEvents = useMemo(() => {
     const startIndex = (currentPage - 1) * EVENTS_ITEMS_PER_PAGE;
@@ -244,9 +221,6 @@ export default function EventsListPage({ resolved, activeMemberIds }: EventsList
     return count;
   }, [category, dateFilter, typeFilter, priceFilter, search]);
 
-  // ========================================================================
-  // HANDLERS
-  // ========================================================================
 
   const handleCategoryChange = (newCategory: string) => {
     setCategory(newCategory);
@@ -284,11 +258,6 @@ export default function EventsListPage({ resolved, activeMemberIds }: EventsList
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  // ========================================================================
-  // RENDER
-  // ========================================================================
-
-  // Determine page title based on context
   const pageTitle = useMemo(() => {
     if (!resolved) return 'Eventos Locais | Achegue-se';
     
@@ -849,14 +818,12 @@ export default function EventsListPage({ resolved, activeMemberIds }: EventsList
 
                     <div className="flex items-center gap-1">
                       {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => {
-                        // Show first page, last page, current page, and pages around current
                         const showPage =
                           page === 1 ||
                           page === totalPages ||
                           (page >= currentPage - 1 && page <= currentPage + 1);
 
                         if (!showPage) {
-                          // Show ellipsis
                           if (page === currentPage - 2 || page === currentPage + 2) {
                             return (
                               <span key={page} className="px-2 text-muted-foreground">
