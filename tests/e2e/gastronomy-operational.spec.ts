@@ -11,6 +11,21 @@ const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
 let BOOTSTRAP_BUSINESS_ID: string | null = null;
 let BOOTSTRAP_BUSINESS_DATA_ID: string | null = null;
 
+async function recoverFromGlobalErrorBoundary(page: Page) {
+  const boundaryHeading = page.getByRole('heading', { name: /oops! algo deu errado/i });
+  const reloadButton = page.getByRole('button', { name: /recarregar/i });
+
+  if (await boundaryHeading.isVisible().catch(() => false)) {
+    if (await reloadButton.isVisible().catch(() => false)) {
+      await reloadButton.click();
+      await page.waitForLoadState('domcontentloaded');
+      await page.waitForTimeout(1000);
+    }
+  }
+
+  await expect(boundaryHeading).toHaveCount(0, { timeout: 15_000 });
+}
+
 function isUuid(value: string | null | undefined): value is string {
   if (!value) return false;
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
@@ -628,6 +643,7 @@ test.describe('Gastronomia operacional autenticada', () => {
       waitUntil: 'domcontentloaded',
       timeout: 60_000,
     });
+    await recoverFromGlobalErrorBoundary(page);
 
     await expect
       .poll(

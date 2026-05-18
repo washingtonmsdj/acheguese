@@ -101,3 +101,59 @@ export function truncateText(text: string, maxLength: number): string {
   if (!text || text.length <= maxLength) return text;
   return text.substring(0, maxLength) + "...";
 }
+
+export function getRideStatusLabel(status: string): string {
+  const labels: Record<string, string> = {
+    [RIDE_STATUS.PENDING]: "Pendente",
+    [RIDE_STATUS.REQUESTED]: "Solicitada",
+    [RIDE_STATUS.SEARCHING_DRIVER]: "Buscando motorista",
+    [RIDE_STATUS.DRIVER_ASSIGNED]: "Motorista atribuido",
+    [RIDE_STATUS.DRIVER_ACCEPTED]: "Motorista aceitou",
+    [RIDE_STATUS.DRIVER_ARRIVING]: "Motorista a caminho",
+    [RIDE_STATUS.DRIVER_ON_THE_WAY]: "Motorista a caminho",
+    [RIDE_STATUS.DRIVER_ARRIVED]: "Motorista chegou",
+    [RIDE_STATUS.PASSENGER_BOARDED]: "Passageiro embarcado",
+    [RIDE_STATUS.PASSENGER_ON_BOARD]: "Passageiro embarcado",
+    [RIDE_STATUS.IN_PROGRESS]: "Em andamento",
+    [RIDE_STATUS.PICKUP_CONFIRMED]: "Coleta confirmada",
+    [RIDE_STATUS.IN_DELIVERY]: "Em entrega",
+    [RIDE_STATUS.DELIVERED]: "Entregue",
+    [RIDE_STATUS.COMPLETED]: "Concluida",
+    [RIDE_STATUS.CANCELLED]: "Cancelada",
+    [RIDE_STATUS.CANCELLED_BY_DRIVER]: "Cancelada pelo motorista",
+    [RIDE_STATUS.CANCELLED_BY_PASSENGER]: "Cancelada pelo passageiro",
+    [RIDE_STATUS.EXPIRED]: "Expirada",
+    [RIDE_STATUS.FAILED]: "Falhou",
+    [RIDE_STATUS.FAILED_DELIVERY]: "Falha na entrega",
+  };
+
+  return labels[status] ?? "Status desconhecido";
+}
+
+export function getRideStatusColor(status: string): string {
+  const colors: Record<string, string> = {
+    [RIDE_STATUS.PENDING]: "text-amber-600",
+    [RIDE_STATUS.REQUESTED]: "text-amber-600",
+    [RIDE_STATUS.SEARCHING_DRIVER]: "text-blue-600",
+    [RIDE_STATUS.DRIVER_ASSIGNED]: "text-indigo-600",
+    [RIDE_STATUS.DRIVER_ACCEPTED]: "text-indigo-600",
+    [RIDE_STATUS.DRIVER_ARRIVING]: "text-indigo-600",
+    [RIDE_STATUS.DRIVER_ON_THE_WAY]: "text-indigo-600",
+    [RIDE_STATUS.DRIVER_ARRIVED]: "text-violet-600",
+    [RIDE_STATUS.PASSENGER_BOARDED]: "text-cyan-600",
+    [RIDE_STATUS.PASSENGER_ON_BOARD]: "text-cyan-600",
+    [RIDE_STATUS.IN_PROGRESS]: "text-cyan-600",
+    [RIDE_STATUS.PICKUP_CONFIRMED]: "text-cyan-600",
+    [RIDE_STATUS.IN_DELIVERY]: "text-cyan-600",
+    [RIDE_STATUS.DELIVERED]: "text-green-600",
+    [RIDE_STATUS.COMPLETED]: "text-green-600",
+    [RIDE_STATUS.CANCELLED]: "text-red-600",
+    [RIDE_STATUS.CANCELLED_BY_DRIVER]: "text-red-600",
+    [RIDE_STATUS.CANCELLED_BY_PASSENGER]: "text-red-600",
+    [RIDE_STATUS.EXPIRED]: "text-slate-500",
+    [RIDE_STATUS.FAILED]: "text-red-700",
+    [RIDE_STATUS.FAILED_DELIVERY]: "text-red-700",
+  };
+
+  return colors[status] ?? "text-muted-foreground";
+}

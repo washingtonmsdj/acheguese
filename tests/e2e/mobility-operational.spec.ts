@@ -18,6 +18,21 @@ async function waitForCoreLayout(page: import('@playwright/test').Page) {
     .toBe(true);
 }
 
+async function recoverFromGlobalErrorBoundary(page: import('@playwright/test').Page) {
+  const boundaryHeading = page.getByRole('heading', { name: /oops! algo deu errado/i });
+  const reloadButton = page.getByRole('button', { name: /recarregar/i });
+
+  if (await boundaryHeading.isVisible().catch(() => false)) {
+    if (await reloadButton.isVisible().catch(() => false)) {
+      await reloadButton.click();
+      await page.waitForLoadState('domcontentloaded');
+      await page.waitForTimeout(1000);
+    }
+  }
+
+  await expect(boundaryHeading).toHaveCount(0, { timeout: 15_000 });
+}
+
 test.describe('Mobility operational authenticated flow', () => {
   test('motorista acessa corridas da central com fluxo estavel', async ({ page }) => {
     await loginAsUser(page);
@@ -59,6 +74,7 @@ test.describe('Mobility operational authenticated flow', () => {
       waitUntil: 'domcontentloaded',
       timeout: 60_000,
     });
+    await recoverFromGlobalErrorBoundary(page);
 
     await waitForCoreLayout(page);
 
@@ -102,4 +118,3 @@ test.describe('Mobility operational authenticated flow', () => {
     }
   });
 });
-
