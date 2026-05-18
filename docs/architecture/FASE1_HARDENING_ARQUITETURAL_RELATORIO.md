@@ -1,13 +1,13 @@
 # FASE 1 - Hardening Arquitetural (Gate-First)
 
-Gerado em: 2026-05-18T21:35:21.863Z
+Gerado em: 2026-05-18T21:55:54.026Z
 
 ## Problemas encontrados
 - Dependencias ciclicas detectadas: 0
 - Imports relativos profundos (>= 3 niveis): 0
 - Arquivos com acesso DB fora de service/repository: 0
 - Services com nome duplicado: 32
-- Arquivos grandes (>= 900 linhas): 13
+- Arquivos grandes (>= 900 linhas): 11
 - Violacoes de layer (shared/core boundaries): 0
 
 ## Modulos mais criticos
@@ -18,8 +18,6 @@ Gerado em: 2026-05-18T21:35:21.863Z
 - landing/routing
 
 ## Arquivos mais problematicos
-- `src/modules/business/gastronomy/pages/GastronomyLandingPage.tsx` (1061 linhas)
-- `src/core/profiles/services/profile.queries.ts` (1036 linhas)
 - `src/modules/mobility/core/RideOperationalService.ts` (952 linhas)
 - `src/core/maps/components/v3/MapLibreAdapter.tsx` (946 linhas)
 - `src/core/business/services/business.queries.ts` (931 linhas)
@@ -30,6 +28,7 @@ Gerado em: 2026-05-18T21:35:21.863Z
 - `src/features/events/pages/EventsOrganizerDashboard.tsx` (919 linhas)
 - `src/core/admin/components/TrustEventsQueue.tsx` (905 linhas)
 - `src/core/routing/components/BrasilShowcasePage.tsx` (900 linhas)
+- `src/modules/classifieds/pages/ClassificadosLandingPage.tsx` (900 linhas)
 
 ## Riscos arquiteturais
 
@@ -46,7 +45,7 @@ Gerado em: 2026-05-18T21:35:21.863Z
 
 ## Score de estabilidade arquitetural
 - Score Gate-First (ciclos/boundaries/DB/layers): **100/100**
-- Score Debt Estrutural (inclui duplicacoes e arquivos gigantes): **76/100**
+- Score Debt Estrutural (inclui duplicacoes e arquivos gigantes): **77/100**
 - Baseline de referencia: 70/100
 - Meta desta fase: 85+/100
 
