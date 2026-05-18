@@ -2,10 +2,10 @@ import React, { useCallback, memo } from "react";
 import { Card } from "@/shared/components/ui/card";
 import { usePostInteractions } from "../../hooks/posts/usePostInteractions";
 import { usePostCard } from "../../hooks/posts/usePostCard";
-import { PostHeader } from "../post-card/PostHeader";
-import { PostContent } from "../post-card/PostContent";
-import { AlertConfirmation } from "../post-card/AlertConfirmation";
-import { PostActions } from "../post-card/PostActions";
+import { PostHeader } from "@/core/community/components/post-card/PostHeader";
+import { PostContent } from "@/core/community/components/post-card/PostContent";
+import { AlertConfirmation } from "@/core/community/components/post-card/AlertConfirmation";
+import { PostActions } from "@/core/community/components/post-card/PostActions";
 import {
   getCardClasses,
   getCardBackground,

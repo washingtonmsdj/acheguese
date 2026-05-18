@@ -25,10 +25,10 @@ import {
   SPACING,
 } from "../styles/communityDesignSystem";
 // Sub-componentes
-import { PostHeader } from "./PostHeader";
-import { PostBadges } from "./PostBadges";
+import { PostHeader } from "@/core/community/components/UnifiedPostCard/PostHeader";
+import { PostBadges } from "@/core/community/components/UnifiedPostCard/PostBadges";
 import { PostContent } from "./PostContent";
-import { AlertConfirmation } from "./AlertConfirmation";
+import { AlertConfirmation } from "@/core/community/components/UnifiedPostCard/AlertConfirmation";
 import { PostActions } from "./PostActions";
 import { logger } from "@/shared/utils/logger";
 
