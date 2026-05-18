@@ -2,7 +2,7 @@
  * 💬 USE DIRECT MESSAGES HOOK - SSOT Migration
  */
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { realtimeService } from "@/core/realtime";
 import { messagingService } from "@/core/messaging";
 import { useSessionContext } from "@/core/session";
@@ -34,7 +34,7 @@ export function useDirectMessages(_currentUserId?: string) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchConversations = async () => {
+  const fetchConversations = useCallback(async () => {
     if (!profileId) return;
     setIsLoading(true);
     setError(null);
@@ -47,9 +47,9 @@ export function useDirectMessages(_currentUserId?: string) {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [profileId]);
 
-  const fetchMessages = async (conversationId: string) => {
+  const fetchMessages = useCallback(async (conversationId: string) => {
     setIsLoading(true);
     setError(null);
     try {
@@ -63,9 +63,9 @@ export function useDirectMessages(_currentUserId?: string) {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [profileId]);
 
-  const createOrGetConversation = async (
+  const createOrGetConversation = useCallback(async (
     postContext: PostContext,
     participantId: string,
   ): Promise<string | null> => {
@@ -81,9 +81,9 @@ export function useDirectMessages(_currentUserId?: string) {
       setError(err instanceof Error ? err.message : "Erro ao criar conversa");
       return null;
     }
-  };
+  }, [profileId]);
 
-  const sendMessage = async (
+  const sendMessage = useCallback(async (
     conversationId: string,
     messageText: string,
     _messageType: "text" | "location" = "text",
@@ -106,9 +106,9 @@ export function useDirectMessages(_currentUserId?: string) {
       setError(err instanceof Error ? err.message : "Erro ao enviar mensagem");
       return false;
     }
-  };
+  }, [fetchMessages, profileId]);
 
-  const reportConversation = async (
+  const reportConversation = useCallback(async (
     conversationId: string,
     _reportedUserId: string,
     reason: string,
@@ -153,9 +153,9 @@ export function useDirectMessages(_currentUserId?: string) {
       );
       return false;
     }
-  };
+  }, [actorRole, profileId]);
 
-  const deactivateConversation = async (conversationId: string) => {
+  const deactivateConversation = useCallback(async (conversationId: string) => {
     if (!profileId) return false;
     try {
       await messagingService.blockConversation({
@@ -171,7 +171,7 @@ export function useDirectMessages(_currentUserId?: string) {
       );
       return false;
     }
-  };
+  }, [fetchConversations, profileId]);
 
   // ✅ SSOT - Usar RealtimeService para subscriptions
   useEffect(() => {

@@ -96,6 +96,8 @@ export function createUserLocationMarker(
   coordinates: { latitude: number; longitude: number },
   label?: string,
 ): MapMarker {
+  // This helper builds synthetic runtime markers, not projected domain entities.
+  // eslint-disable-next-line maps/no-manual-entity-projection
   return {
     id: "user-location",
     type: "user_location" as const,
@@ -115,6 +117,7 @@ export function createClusterRenderMarker(
   coordinates: [number, number],
 ): RenderMarker {
   const [longitude, latitude] = coordinates;
+  // Clusters are synthetic map UI markers and do not originate from entity projection.
   const marker = {
     id: `cluster-${clusterId}`,
     type: "cluster" as const,

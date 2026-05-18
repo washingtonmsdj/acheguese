@@ -30,7 +30,7 @@ export function MessagesInbox({ currentUserId }: MessagesInboxProps) {
 
   useEffect(() => {
     fetchConversations();
-  }, [currentUserId]);
+  }, [currentUserId, fetchConversations]);
 
   const filtered = useMemo(() => {
     const q = searchTerm.toLowerCase();

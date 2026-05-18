@@ -108,19 +108,14 @@ export function NearbyCard({ entity, onNavigate }: NearbyCardProps) {
     (typeof metadata?.neighborhood === "string" ? metadata.neighborhood : null) ||
     (typeof metadata?.city === "string" ? metadata.city : null);
   
-  const url = React.useMemo(() => {
-    if (entity.type === 'tourist_point') {
-      const slug = typeof metadata?.slug === "string" ? metadata.slug : null;
-      return `${config.baseUrl}/${slug || entity.id}`;
-    }
-    if (entity.type === 'business' && typeof metadata?.slug === "string") {
-      return `${config.baseUrl}/${metadata.slug}`;
-    }
-    if (entity.type === 'event' && typeof metadata?.slug === "string") {
-      return `${config.baseUrl}/${metadata.slug}`;
-    }
-    return `${config.baseUrl}/${entity.id}`;
-  }, [entity, config.baseUrl]);
+  const url =
+    entity.type === 'tourist_point'
+      ? `${config.baseUrl}/${typeof metadata?.slug === "string" ? metadata.slug : entity.id}`
+      : entity.type === 'business' && typeof metadata?.slug === "string"
+        ? `${config.baseUrl}/${metadata.slug}`
+        : entity.type === 'event' && typeof metadata?.slug === "string"
+          ? `${config.baseUrl}/${metadata.slug}`
+          : `${config.baseUrl}/${entity.id}`;
 
   // Badge de tipo de serviço
   const isService =
