@@ -1,13 +1,13 @@
 # FASE 1 - Hardening Arquitetural (Gate-First)
 
-Gerado em: 2026-05-18T21:55:54.026Z
+Gerado em: 2026-05-18T22:02:45.500Z
 
 ## Problemas encontrados
 - Dependencias ciclicas detectadas: 0
 - Imports relativos profundos (>= 3 niveis): 0
 - Arquivos com acesso DB fora de service/repository: 0
 - Services com nome duplicado: 32
-- Arquivos grandes (>= 900 linhas): 11
+- Arquivos grandes (>= 900 linhas): 10
 - Violacoes de layer (shared/core boundaries): 0
 
 ## Modulos mais criticos
@@ -18,7 +18,6 @@ Gerado em: 2026-05-18T21:55:54.026Z
 - landing/routing
 
 ## Arquivos mais problematicos
-- `src/modules/mobility/core/RideOperationalService.ts` (952 linhas)
 - `src/core/maps/components/v3/MapLibreAdapter.tsx` (946 linhas)
 - `src/core/business/services/business.queries.ts` (931 linhas)
 - `src/app/pages/ClassificadoChatLandingPage.tsx` (929 linhas)

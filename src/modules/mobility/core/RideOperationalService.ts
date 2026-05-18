@@ -22,7 +22,6 @@ import type { FailedDeliveryMetadata, ResolutionStatus } from "../types/FailedDe
 import { OperationalVerificationService } from "../services/OperationalVerificationService";
 import { mobilityRolloutService } from "../services/MobilityRolloutService";
 import { mobilityAuditService } from "../services/MobilityAuditService";
-import { MotoboyAuthorizationService } from "../services/MotoboyAuthorizationService";
 import { OrderDeliveryLinkService } from "@/core/mobility/delivery/services/OrderDeliveryLinkService";
 import type {
   CancelInput,
@@ -33,12 +32,17 @@ import type {
   TransitionResult,
 } from "./RideOperationalTypes";
 import {
-  ensureMotoboyCanOperate,
   ensureProfileCanRequest,
   hasValidRouteCoordinates,
-  validateFailedDeliveryResolution,
-  validateFailedDeliverySnapshot,
 } from "./RideOperationalGuards";
+import {
+  confirmDeliveryOperation,
+  confirmPickupOperation,
+  createDeliveryOperation,
+  failDeliveryOperation,
+  startDeliveryOperation,
+  updateFailedDeliveryResolutionOperation,
+} from "./RideDeliveryOperationalActions";
 import {
   handleRidePostTransition,
   logRideStateChange,
@@ -597,122 +601,9 @@ export class RideOperationalService {
    * GATE AUTH: Autorizacao centralizada via MotoboyAuthorizationService antes de qualquer escrita.
    */
   static async createDelivery(input: CreateDeliveryInput): Promise<TransitionResult> {
-    try {
-      if (
-        !input.pickupAddressId?.trim() ||
-        !input.dropoffAddressId?.trim() ||
-        !input.pickupLocationId?.trim() ||
-        !input.dropoffLocationId?.trim()
-      ) {
-        return {
-          success: false,
-          error:
-            "Endereco de coleta e entrega sao obrigatorios e precisam estar reconciliados com territorios validos.",
-        };
-      }
-
-      const authorizationSourceId = input.authorizationSourceId ?? input.sourceId;
-
-      // GATE AUTH: Verificar autorizao centralizada por source_type/source_id
-      const authResult = await MotoboyAuthorizationService.canRequestDelivery({
-        sourceType: input.sourceType,
-        sourceId: authorizationSourceId,
-        locationId: input.pickupLocationId,
-        userId: input.requestingUserId,
-      });
-
-      if (!authResult.allowed) {
-        logger.warn('RideOperationalService.createDelivery - authorization denied', {
-          sourceType: input.sourceType,
-          sourceId: input.sourceId,
-          authorizationSourceId,
-          code: authResult.code,
-          reason: authResult.reason,
-        });
-        return {
-          success: false,
-          error: authResult.reason || 'No autorizado a solicitar entrega.',
-        };
-      }
-
-      const requesterBlock = await ensureProfileCanRequest(input.passengerProfileId);
-      if (requesterBlock) return requesterBlock;
-
-      if (!hasValidRouteCoordinates(input)) {
-        return { success: false, error: 'Coordenadas so obrigatrias para calculo de preco.' };
-      }
-
-      if (!input.recipientName?.trim()) {
-        return { success: false, error: 'Nome do destinatario  obrigatorio.' };
-      }
-
-      if (input.suggestedPrice && input.suggestedPrice < 5.00) {
-        return { success: false, error: 'Preo minimo  R$ 5,00.' };
-      }
-
-      const ride = await createRide({
-          passenger_profile_id: input.passengerProfileId,
-          pickup_address_id: input.pickupAddressId,
-          dropoff_address_id: input.dropoffAddressId,
-          pickup_location_id: input.pickupLocationId,
-          dropoff_location_id: input.dropoffLocationId,
-          status: RIDE_STATE.REQUESTED,
-          // Campos de motoboy
-          ride_mode: 'motoboy',
-          source_type: input.sourceType,
-          source_id: input.sourceId || null,
-          recipient_name: input.recipientName,
-          recipient_phone: input.recipientPhone || null,
-          delivery_notes: input.deliveryNotes || null,
-          package_description: input.packageDescription || null,
-          package_size: input.packageSize || 'small',
-          suggested_price: input.suggestedPrice,
-          observation: input.observation || null,
-          payment_method: input.paymentMethod || null,
-          updated_at: new Date().toISOString(),
-        }) as { id: string };
-
-
-
-      logger.info('RideOperationalService.createDelivery - success', { rideId: ride.id });
-
-      await logRideStateChange(ride.id, null, RIDE_STATE.REQUESTED, input.passengerProfileId, 'Delivery created');
-
-      // GATE 7 FASE 2.5: Resolver se PIN  exigido e criar verificacao automaticamente
-      const pinRequirement = await OperationalVerificationService.resolveDeliveryPINRequirement({
-        senderProfileId: input.passengerProfileId, // Remetente  o passenger_profile_id
-        operationId: input.sourceId, // Se houver operacao associada
-      });
-
-      if (pinRequirement.isRequired && pinRequirement.requiredBy) {
-        const verificationResult = await OperationalVerificationService.createVerification({
-          rideId: ride.id,
-          verificationType: 'pin',
-          isRequired: true,
-          requiredBy: pinRequirement.requiredBy,
-        });
-
-        if (verificationResult.success) {
-          logger.info('RideOperationalService.createDelivery - PIN verification created', {
-            rideId: ride.id,
-            requiredBy: pinRequirement.requiredBy,
-            reason: pinRequirement.reason,
-          });
-        } else {
-          logger.error('RideOperationalService.createDelivery - Failed to create PIN verification',
-            new Error(verificationResult.error || 'Unknown error'),
-            { rideId: ride.id }
-          );
-        }
-      }
-
-      await this.transitionTo(ride.id, RIDE_STATE.SEARCHING_DRIVER, 'system');
-
-      return { success: true, rideId: ride.id, newState: RIDE_STATE.SEARCHING_DRIVER };
-    } catch (error) {
-      logger.error('RideOperationalService.createDelivery', error as Error);
-      return { success: false, error: (error as Error).message };
-    }
+    return createDeliveryOperation(input, (rideId, toState, actorProfileId, reason) =>
+      this.transitionTo(rideId, toState, actorProfileId, reason),
+    );
   }
 
   /**
@@ -722,27 +613,12 @@ export class RideOperationalService {
     rideId: string,
     driverProfileId: string
   ): Promise<TransitionResult> {
-    try {
-      const ride = await getRideById(rideId) as {
-        status?: string;
-        driver_profile_id?: string | null;
-        ride_mode?: string | null;
-      } | null;
-
-      if (!ride) return { success: false, error: 'Entrega no encontrada.' };
-      if (ride.ride_mode !== 'motoboy') return { success: false, error: 'Operao exclusiva de motoboy.' };
-      if (ride.driver_profile_id !== driverProfileId) return { success: false, error: 'Apenas o motoboy atribuido pode confirmar coleta.' };
-
-      const operatorBlock = await ensureMotoboyCanOperate(driverProfileId);
-      if (operatorBlock) return operatorBlock;
-
-      await updateRideMutation(rideId, { pickup_confirmed_at: new Date().toISOString() });
-
-      return await this.transitionTo(rideId, RIDE_STATE.PICKUP_CONFIRMED, driverProfileId, 'Pickup confirmed');
-    } catch (error) {
-      logger.error('RideOperationalService.confirmPickup', error as Error, { rideId });
-      return { success: false, error: (error as Error).message };
-    }
+    return confirmPickupOperation(
+      rideId,
+      driverProfileId,
+      (nextRideId, toState, actorProfileId, reason) =>
+        this.transitionTo(nextRideId, toState, actorProfileId, reason),
+    );
   }
 
   /**
@@ -752,25 +628,12 @@ export class RideOperationalService {
     rideId: string,
     driverProfileId: string
   ): Promise<TransitionResult> {
-    try {
-      const ride = await getRideById(rideId) as {
-        status?: string;
-        driver_profile_id?: string | null;
-        ride_mode?: string | null;
-      } | null;
-
-      if (!ride) return { success: false, error: 'Entrega no encontrada.' };
-      if (ride.ride_mode !== 'motoboy') return { success: false, error: 'Operao exclusiva de motoboy.' };
-      if (ride.driver_profile_id !== driverProfileId) return { success: false, error: 'Apenas o motoboy atribuido pode iniciar entrega.' };
-
-      const operatorBlock = await ensureMotoboyCanOperate(driverProfileId);
-      if (operatorBlock) return operatorBlock;
-
-      return await this.transitionTo(rideId, RIDE_STATE.IN_DELIVERY, driverProfileId, 'Delivery started');
-    } catch (error) {
-      logger.error('RideOperationalService.startDelivery', error as Error, { rideId });
-      return { success: false, error: (error as Error).message };
-    }
+    return startDeliveryOperation(
+      rideId,
+      driverProfileId,
+      (nextRideId, toState, actorProfileId, reason) =>
+        this.transitionTo(nextRideId, toState, actorProfileId, reason),
+    );
   }
 
   /**
@@ -788,63 +651,15 @@ export class RideOperationalService {
     finalPrice?: number,
     pin?: string // GATE 7: PIN opcional para validacao
   ): Promise<TransitionResult> {
-    try {
-      const ride = await getRideById(rideId) as {
-        status?: string;
-        driver_profile_id?: string | null;
-        ride_mode?: string | null;
-      } | null;
-
-      if (!ride) return { success: false, error: 'Entrega no encontrada.' };
-      if (ride.ride_mode !== 'motoboy') return { success: false, error: 'Operao exclusiva de motoboy.' };
-      if (ride.driver_profile_id !== driverProfileId) return { success: false, error: 'Apenas o motoboy atribuido pode confirmar entrega.' };
-
-      const operatorBlock = await ensureMotoboyCanOperate(driverProfileId);
-      if (operatorBlock) return operatorBlock;
-
-      // GATE 7: Validar PIN se exigido
-      const verification = await OperationalVerificationService.getVerificationStatus(rideId);
-
-      if (verification?.is_required && verification.status !== 'verified') {
-        // Se PIN fornecido, validar
-        if (pin) {
-          const verifyResult = await OperationalVerificationService.verifyPIN({
-            rideId,
-            pin,
-            verifiedBy: driverProfileId,
-          });
-
-          if (!verifyResult.success || !verifyResult.data?.verified) {
-            return {
-              success: false,
-              error: verifyResult.data?.message || verifyResult.error || 'Invalid PIN',
-            };
-          }
-        } else {
-          return {
-            success: false,
-            error: 'PIN required for delivery confirmation',
-          };
-        }
-      }
-
-      const updates: Record<string, unknown> = {
-        delivered_at: new Date().toISOString(),
-        proof_of_delivery: { ...proof, signed_at: new Date().toISOString() },
-      };
-      if (finalPrice !== undefined) updates.final_price = finalPrice;
-
-      await updateRideMutation(rideId, updates);
-
-      // DELIVERED -> COMPLETED
-      const deliveredResult = await this.transitionTo(rideId, RIDE_STATE.DELIVERED, driverProfileId, 'Delivered');
-      if (!deliveredResult.success) return deliveredResult;
-
-      return await this.transitionTo(rideId, RIDE_STATE.COMPLETED, driverProfileId, 'Delivery completed');
-    } catch (error) {
-      logger.error('RideOperationalService.confirmDelivery', error as Error, { rideId });
-      return { success: false, error: (error as Error).message };
-    }
+    return confirmDeliveryOperation(
+      rideId,
+      driverProfileId,
+      proof,
+      finalPrice,
+      pin,
+      (nextRideId, toState, actorProfileId, reason) =>
+        this.transitionTo(nextRideId, toState, actorProfileId, reason),
+    );
   }
 
   /**
@@ -856,39 +671,13 @@ export class RideOperationalService {
     driverProfileId: string,
     metadata: FailedDeliveryMetadata
   ): Promise<TransitionResult> {
-    try {
-      const ride = await getRideById(rideId) as {
-        status?: string;
-        driver_profile_id?: string | null;
-        ride_mode?: string | null;
-      } | null;
-
-      if (!ride) return { success: false, error: 'Entrega no encontrada.' };
-      if (ride.ride_mode !== 'motoboy') return { success: false, error: 'Operao exclusiva de motoboy.' };
-      if (ride.driver_profile_id !== driverProfileId) return { success: false, error: 'Apenas o motoboy atribuido pode registrar falha.' };
-
-      const operatorBlock = await ensureMotoboyCanOperate(driverProfileId);
-      if (operatorBlock) return operatorBlock;
-
-      // GATE 3: Validar snaposhot obrigatorio
-      validateFailedDeliverySnapshot(metadata);
-
-      // Garantir default de resolution_status
-      if (!metadata.resolution_status) {
-        metadata.resolution_status = 'pending';
-      }
-
-      await updateRideMutation(rideId, {
-        failed_delivery_at: new Date().toISOString(),
-        failed_delivery_reason: metadata.failure_reason,
-        failed_delivery_metadata: metadata,
-      });
-
-      return await this.transitionTo(rideId, RIDE_STATE.FAILED_DELIVERY, driverProfileId, metadata.failure_reason);
-    } catch (error) {
-      logger.error('RideOperationalService.failDelivery', error as Error, { rideId });
-      return { success: false, error: (error as Error).message };
-    }
+    return failDeliveryOperation(
+      rideId,
+      driverProfileId,
+      metadata,
+      (nextRideId, toState, actorProfileId, reason) =>
+        this.transitionTo(nextRideId, toState, actorProfileId, reason),
+    );
   }
 
   /**
@@ -906,46 +695,7 @@ export class RideOperationalService {
       resolution_action_notes?: string;
     }
   ): Promise<TransitionResult> {
-    try {
-      // Buscar metadata atual
-      const ride = await getRideById(rideId) as {
-        status?: string;
-        failed_delivery_metadata?: Record<string, unknown> | null;
-      } | null;
-      if (!ride) {
-        return { success: false, error: 'Corrida no encontrada' };
-      }
-
-      if (ride.status !== RIDE_STATE.FAILED_DELIVERY) {
-        return { success: false, error: 'Corrida no est em failed_delivery' };
-      }
-
-      if (!ride.failed_delivery_metadata) {
-        return { success: false, error: 'Metadata de falha no encontrada' };
-      }
-
-      // Validar resolucao
-      validateFailedDeliveryResolution(resolutionUpdate);
-
-      // Merge com metadata existente
-      const updatedMetadata = {
-        ...ride.failed_delivery_metadata,
-        ...resolutionUpdate
-      };
-
-      // Atualizar banco
-      await updateRideMutation(rideId, { failed_delivery_metadata: updatedMetadata });
-
-      logger.info('RideOperationalService.updateFailedDeliveryResolution - success', {
-        rideId,
-        resolution_status: resolutionUpdate.resolution_status
-      });
-
-      return { success: true, rideId };
-    } catch (error) {
-      logger.error('RideOperationalService.updateFailedDeliveryResolution', error as Error, { rideId });
-      return { success: false, error: (error as Error).message };
-    }
+    return updateFailedDeliveryResolutionOperation(rideId, resolutionUpdate);
   }
 }
 
