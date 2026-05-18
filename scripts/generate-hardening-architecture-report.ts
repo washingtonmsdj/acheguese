@@ -77,6 +77,23 @@ function extractImports(content: string): string[] {
   return Array.from(clean.matchAll(importRegex)).map((match) => match[1]);
 }
 
+function isPureReexportModule(content: string): boolean {
+  const clean = content
+    .replace(/\/\*[\s\S]*?\*\//g, "")
+    .replace(/(^|[^:])\/\/.*$/gm, "$1")
+    .trim();
+
+  if (!clean) return false;
+
+  const withoutReexports = clean
+    .replace(/export\s+(?:type\s+)?\*\s+from\s+['"][^'"]+['"]\s*;?/g, "")
+    .replace(/export\s+(?:type\s+)?\{[\s\S]*?\}\s+from\s+['"][^'"]+['"]\s*;?/g, "")
+    .replace(/\s+/g, "")
+    .trim();
+
+  return withoutReexports.length === 0;
+}
+
 function resolveImport(currentFile: string, importPath: string, fileSet: Set<string>): string | null {
   let basePath: string | null = null;
   if (importPath.startsWith("@/")) {
@@ -201,7 +218,7 @@ function main() {
   const layerViolations: Array<{ file: string; importPath: string }> = [];
   const fileSizes: Array<{ file: string; lines: number }> = [];
   const directDbOutsideService: string[] = [];
-  const serviceNames = new Map<string, string[]>();
+  const serviceNames = new Map<string, Array<{ file: string; pureReexport: boolean }>>();
   const componentNames = new Map<string, string[]>();
 
   for (const file of files) {
@@ -215,7 +232,10 @@ function main() {
     const baseName = path.basename(relative);
     if (/Service(?:\.impl)?\.ts$/i.test(baseName)) {
       const key = baseName.replace(".impl.ts", ".ts");
-      serviceNames.set(key, [...(serviceNames.get(key) ?? []), relative]);
+      serviceNames.set(key, [
+        ...(serviceNames.get(key) ?? []),
+        { file: relative, pureReexport: isPureReexportModule(content) },
+      ]);
     }
     if (/^[A-Z].*\.tsx$/.test(baseName)) {
       componentNames.set(baseName, [...(componentNames.get(baseName) ?? []), relative]);
@@ -271,8 +291,23 @@ function main() {
     .filter((entry) => !HUGE_FILE_EXCLUSIONS.some((prefix) => entry.file.startsWith(prefix)))
     .sort((a, b) => b.lines - a.lines);
   const duplicatedServices = Array.from(serviceNames.entries())
-    .filter(([, entries]) => entries.length > 1)
-    .sort((a, b) => b[1].length - a[1].length);
+    .map(([name, entries]) => ({
+      name,
+      entries,
+      implementationEntries: entries.filter((entry) => !entry.pureReexport),
+      aliasEntries: entries.filter((entry) => entry.pureReexport),
+    }))
+    .filter((item) => item.implementationEntries.length > 1)
+    .sort((a, b) => b.implementationEntries.length - a.implementationEntries.length);
+  const aliasedServices = Array.from(serviceNames.entries())
+    .map(([name, entries]) => ({
+      name,
+      entries,
+      implementationEntries: entries.filter((entry) => !entry.pureReexport),
+      aliasEntries: entries.filter((entry) => entry.pureReexport),
+    }))
+    .filter((item) => item.implementationEntries.length === 1 && item.aliasEntries.length > 0)
+    .sort((a, b) => b.aliasEntries.length - a.aliasEntries.length);
   const duplicatedComponents = Array.from(componentNames.entries())
     .filter(([, entries]) => entries.length > 2)
     .sort((a, b) => b[1].length - a[1].length);
@@ -309,7 +344,8 @@ function main() {
     `- Dependencias ciclicas detectadas: ${cycles.length}`,
     `- Imports relativos profundos (>= 3 niveis): ${deepRelativeImports.length}`,
     `- Arquivos com acesso DB fora de service/repository: ${filteredDbOutsideService.length}`,
-    `- Services com nome duplicado: ${duplicatedServices.length}`,
+    `- Services com implementacao duplicada: ${duplicatedServices.length}`,
+    `- Services com aliases/reexports publicos: ${aliasedServices.length}`,
     `- Arquivos grandes (>= 900 linhas): ${hugeFiles.length}`,
     `- Violacoes de layer (shared/core boundaries): ${filteredLayerViolations.length}`,
     "",
@@ -348,7 +384,20 @@ function main() {
     "",
     "## Anexos tecnicos",
     "### Duplicacao de services (top)",
-    ...duplicatedServices.slice(0, 12).map(([name, entries]) => `- \`${name}\`: ${entries.join(", ")}`),
+    ...duplicatedServices
+      .slice(0, 12)
+      .map(
+        (item) =>
+          `- \`${item.name}\`: ${item.implementationEntries.map((entry) => entry.file).join(", ")}`,
+      ),
+    "",
+    "### Services com aliases/reexports (top)",
+    ...aliasedServices
+      .slice(0, 12)
+      .map(
+        (item) =>
+          `- \`${item.name}\`: canonic \`${item.implementationEntries[0]?.file ?? "n/a"}\`, aliases ${item.aliasEntries.map((entry) => `\`${entry.file}\``).join(", ")}`,
+      ),
     "",
     "### Duplicacao de components (top)",
     ...duplicatedComponents.slice(0, 12).map(([name, entries]) => `- \`${name}\`: ${entries.join(", ")}`),
