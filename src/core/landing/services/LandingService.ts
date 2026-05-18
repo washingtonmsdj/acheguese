@@ -1,7 +1,7 @@
-﻿export {
+export {
   getCountryData,
   getActiveStates,
   getStateData,
   getActiveCitiesByState,
   checkAdminRole,
-} from '@/app/features/landing/services/LandingService';
+} from "@/app/features/landing/services/LandingService";
