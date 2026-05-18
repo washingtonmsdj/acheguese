@@ -9,8 +9,8 @@ import { useSearchParams } from 'react-router-dom';
 import {
   type GastronomyBusinessFilters,
   type PriceRange,
-} from '../../../types';
-import { getCuisineLabel } from '../../../constants/cuisine';
+} from '@/modules/business/gastronomy/types';
+import { getCuisineLabel } from '@/modules/business/gastronomy/constants/cuisine';
 
 export function useGastronomyFilters() {
   const [searchParams, setSearchParams] = useSearchParams();

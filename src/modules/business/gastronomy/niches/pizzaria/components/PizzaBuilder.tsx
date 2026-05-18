@@ -6,7 +6,7 @@ import { PizzaCartItemBuilder } from "../PizzaCartItemBuilder";
 import { PizzaPricingService } from "../PizzaPricingService";
 import { PizzaValidationService } from "../PizzaValidationService";
 import type { PizzaBuildSelection, PizzaCatalog, PizzaFlavor } from "../types";
-import type { MenuItemWithRelations } from "../../../types/menu";
+import type { MenuItemWithRelations } from "@/modules/business/gastronomy/types/menu";
 import { PizzaSliceVisualizer } from "./PizzaSliceVisualizer";
 import { findFlavorByMenuItemName } from "../utils/flavorMatch";
 import { resolvePizzaRenderSize, textHasPizzaCrustHint } from "../utils/pizzaVisualRules";

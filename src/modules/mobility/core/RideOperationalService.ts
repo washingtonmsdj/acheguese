@@ -19,145 +19,36 @@ import {
   updateRideWithGuards,
 } from "../services/mobility.mutations";
 import type { FailedDeliveryMetadata, ResolutionStatus } from "../types/FailedDeliveryMetadata";
-import { VALID_FAILURE_REASONS, VALID_ITEM_DESTINATIONS, VALID_ITEM_HOLDERS } from "../types/FailedDeliveryMetadata";
 import { OperationalVerificationService } from "../services/OperationalVerificationService";
 import { mobilityRolloutService } from "../services/MobilityRolloutService";
 import { mobilityAuditService } from "../services/MobilityAuditService";
 import { MotoboyAuthorizationService } from "../services/MotoboyAuthorizationService";
-import { profileService } from "@/core/profiles/services/ProfileService";
 import { OrderDeliveryLinkService } from "@/core/mobility/delivery/services/OrderDeliveryLinkService";
-import { mobilityRoutes } from "@/core/mobility/routes/mobilityRoutes";
-
-// ============================================
-// TIPOS
-// ============================================
-
-export interface CreateRideInput {
-  passengerProfileId: string;
-  // Campos canonicos (schema real do banco)
-  pickupAddressId: string;
-  dropoffAddressId: string;
-  pickupLocationId: string;
-  dropoffLocationId: string;
-  // Campos legados / complementares
-  origin?: string;
-  destination?: string;
-  originLat: number;
-  originLng: number;
-  destinationLat: number;
-  destinationLng: number;
-  mode?: 'ride' | 'delivery';
-  suggestedPrice?: number;
-  observation?: string;
-  availableSeats?: number;
-  paymentMethod?: string;
-  departureTime?: string;
-}
-
-// Campos especificos de entrega motoboy
-export interface CreateDeliveryInput extends Omit<CreateRideInput, 'mode'> {
-  // Origem da solicitacao
-  sourceType: 'passenger' | 'business' | 'gastronomy' | 'service';
-  sourceId?: string;
-  // Fonte usada apenas para autorizacao. A sourceId persistida continua sendo a entidade operacional.
-  authorizationSourceId?: string;
-  // Dados da entrega
-  recipientName: string;
-  recipientPhone?: string;
-  deliveryNotes?: string;
-  packageDescription?: string;
-  packageSize?: 'small' | 'medium' | 'large';
-  // Autorizacao (passados pelo hook, nao pelo componente)
-  requestingUserId?: string;
-  planTier?: string;
-}
-
-interface TransitionResult {
-  success: boolean;
-  rideId?: string;
-  newState?: RideState;
-  fromState?: RideState;
-  toState?: RideState;
-  error?: string;
-}
-
-interface CancelInput {
-  rideId: string;
-  cancelledBy: 'passenger' | 'driver';
-  profileId: string;
-  reason?: string;
-}
-
-interface ProviderErrorShape {
-  code?: string;
-  details?: string;
-  hint?: string;
-}
-
-interface RidePostTransitionSnapshot {
-  passenger_profile_id?: string | null;
-  driver_profile_id?: string | null;
-  ride_mode?: string | null;
-}
-
+import type {
+  CancelInput,
+  CreateDeliveryInput,
+  CreateRideInput,
+  ProviderErrorShape,
+  RidePostTransitionSnapshot,
+  TransitionResult,
+} from "./RideOperationalTypes";
+import {
+  ensureMotoboyCanOperate,
+  ensureProfileCanRequest,
+  hasValidRouteCoordinates,
+  validateFailedDeliveryResolution,
+  validateFailedDeliverySnapshot,
+} from "./RideOperationalGuards";
+import {
+  handleRidePostTransition,
+  logRideStateChange,
+} from "./RideOperationalPostTransition";
+export type { CreateDeliveryInput, CreateRideInput } from "./RideOperationalTypes";
 // ============================================
 // RIDE OPERATIONAL SERVICE
 // ============================================
 
 export class RideOperationalService {
-  private static isProfileSuspended(profile: Record<string, unknown> | null): boolean {
-    const suspended = Boolean(profile?.is_suspended ?? profile?.suspended ?? false);
-    if (!suspended) return false;
-
-    const suspendedUntil = typeof profile?.suspended_until === "string" ? profile.suspended_until : null;
-    if (!suspendedUntil) return true;
-
-    const until = new Date(suspendedUntil);
-    return Number.isNaN(until.getTime()) || until > new Date();
-  }
-
-  private static async ensureProfileCanRequest(profileId: string): Promise<TransitionResult | null> {
-    const profile = await profileService.getProfileById(profileId).catch(() => null);
-    if (!profile) {
-      return { success: false, error: "Perfil solicitante nao encontrado." };
-    }
-    if (this.isProfileSuspended(profile as Record<string, unknown> | null)) {
-      return { success: false, error: "Usuario suspenso nao pode solicitar chamadas." };
-    }
-    return null;
-  }
-
-  private static async ensureMotoboyCanOperate(driverProfileId: string): Promise<TransitionResult | null> {
-    const authResult = await MotoboyAuthorizationService.canOperateDelivery(driverProfileId);
-    if (authResult.allowed) return null;
-    return {
-      success: false,
-      error: authResult.reason || "Motoboy nao autorizado a operar entrega.",
-    };
-  }
-
-  private static isValidLatitude(value: number): boolean {
-    return Number.isFinite(value) && value >= -90 && value <= 90;
-  }
-
-  private static isValidLongitude(value: number): boolean {
-    return Number.isFinite(value) && value >= -180 && value <= 180;
-  }
-
-  private static hasValidRouteCoordinates(input: {
-    originLat: number;
-    originLng: number;
-    destinationLat: number;
-    destinationLng: number;
-  }): boolean {
-    return (
-      this.isValidLatitude(input.originLat) &&
-      this.isValidLongitude(input.originLng) &&
-      this.isValidLatitude(input.destinationLat) &&
-      this.isValidLongitude(input.destinationLng)
-    );
-  }
-
   /**
    * Cria nova corrida no estado inicial
    */
@@ -165,7 +56,7 @@ export class RideOperationalService {
     try {
       const initialState = RIDE_STATE.REQUESTED;
 
-      const requesterBlock = await this.ensureProfileCanRequest(input.passengerProfileId);
+      const requesterBlock = await ensureProfileCanRequest(input.passengerProfileId);
       if (requesterBlock) return requesterBlock;
 
       if (
@@ -182,7 +73,7 @@ export class RideOperationalService {
       }
 
       // CONTRATO PRICING: Validar coordenadas obrigatorias para calculo oficial
-      if (!this.hasValidRouteCoordinates(input)) {
+      if (!hasValidRouteCoordinates(input)) {
         return {
           success: false,
           error: 'Coordenadas so obrigatrias para calculo de preco oficial. Selecione enderecos validos no mapa.',
@@ -217,7 +108,7 @@ export class RideOperationalService {
       logger.info('RideOperationalService.createRide - success', { rideId: ride.id });
 
       // Registrar auditoria
-      await this.logStateChange(ride.id, null, initialState, input.passengerProfileId, 'Ride created');
+      await logRideStateChange(ride.id, null, initialState, input.passengerProfileId, 'Ride created');
 
       // GATE 7 FASE 2.5: Resolver se PIN  exigido e criar verificacao automaticamente
       const pinRequirement = await OperationalVerificationService.resolveRidePINRequirement({
@@ -325,7 +216,7 @@ export class RideOperationalService {
 
             if (!verifyResult.success || !verifyResult.data?.verified) {
               // Registrar tentativa falha na auditoria
-              await this.logStateChange(
+              await logRideStateChange(
                 rideId,
                 fromState,
                 fromState, // No transiciona
@@ -340,7 +231,7 @@ export class RideOperationalService {
             }
 
             // PIN valido, registrar na auditoria
-            await this.logStateChange(
+            await logRideStateChange(
               rideId,
               fromState,
               fromState, // Ainda no transicionou
@@ -390,7 +281,7 @@ export class RideOperationalService {
       }
 
       // Registrar auditoria
-      await this.logStateChange(rideId, fromState, toState, actor, reason);
+      await logRideStateChange(rideId, fromState, toState, actor, reason);
 
       await OrderDeliveryLinkService.syncRideStatusToOrder({
         rideId,
@@ -400,7 +291,7 @@ export class RideOperationalService {
       });
 
       // Acoes ps-transicao
-      await this.handlePostTransition(rideId, toState, ride);
+      await handleRidePostTransition(rideId, toState, ride);
 
       return {
         success: true,
@@ -744,10 +635,10 @@ export class RideOperationalService {
         };
       }
 
-      const requesterBlock = await this.ensureProfileCanRequest(input.passengerProfileId);
+      const requesterBlock = await ensureProfileCanRequest(input.passengerProfileId);
       if (requesterBlock) return requesterBlock;
 
-      if (!this.hasValidRouteCoordinates(input)) {
+      if (!hasValidRouteCoordinates(input)) {
         return { success: false, error: 'Coordenadas so obrigatrias para calculo de preco.' };
       }
 
@@ -785,7 +676,7 @@ export class RideOperationalService {
 
       logger.info('RideOperationalService.createDelivery - success', { rideId: ride.id });
 
-      await this.logStateChange(ride.id, null, RIDE_STATE.REQUESTED, input.passengerProfileId, 'Delivery created');
+      await logRideStateChange(ride.id, null, RIDE_STATE.REQUESTED, input.passengerProfileId, 'Delivery created');
 
       // GATE 7 FASE 2.5: Resolver se PIN  exigido e criar verificacao automaticamente
       const pinRequirement = await OperationalVerificationService.resolveDeliveryPINRequirement({
@@ -842,7 +733,7 @@ export class RideOperationalService {
       if (ride.ride_mode !== 'motoboy') return { success: false, error: 'Operao exclusiva de motoboy.' };
       if (ride.driver_profile_id !== driverProfileId) return { success: false, error: 'Apenas o motoboy atribuido pode confirmar coleta.' };
 
-      const operatorBlock = await this.ensureMotoboyCanOperate(driverProfileId);
+      const operatorBlock = await ensureMotoboyCanOperate(driverProfileId);
       if (operatorBlock) return operatorBlock;
 
       await updateRideMutation(rideId, { pickup_confirmed_at: new Date().toISOString() });
@@ -872,7 +763,7 @@ export class RideOperationalService {
       if (ride.ride_mode !== 'motoboy') return { success: false, error: 'Operao exclusiva de motoboy.' };
       if (ride.driver_profile_id !== driverProfileId) return { success: false, error: 'Apenas o motoboy atribuido pode iniciar entrega.' };
 
-      const operatorBlock = await this.ensureMotoboyCanOperate(driverProfileId);
+      const operatorBlock = await ensureMotoboyCanOperate(driverProfileId);
       if (operatorBlock) return operatorBlock;
 
       return await this.transitionTo(rideId, RIDE_STATE.IN_DELIVERY, driverProfileId, 'Delivery started');
@@ -908,7 +799,7 @@ export class RideOperationalService {
       if (ride.ride_mode !== 'motoboy') return { success: false, error: 'Operao exclusiva de motoboy.' };
       if (ride.driver_profile_id !== driverProfileId) return { success: false, error: 'Apenas o motoboy atribuido pode confirmar entrega.' };
 
-      const operatorBlock = await this.ensureMotoboyCanOperate(driverProfileId);
+      const operatorBlock = await ensureMotoboyCanOperate(driverProfileId);
       if (operatorBlock) return operatorBlock;
 
       // GATE 7: Validar PIN se exigido
@@ -976,11 +867,11 @@ export class RideOperationalService {
       if (ride.ride_mode !== 'motoboy') return { success: false, error: 'Operao exclusiva de motoboy.' };
       if (ride.driver_profile_id !== driverProfileId) return { success: false, error: 'Apenas o motoboy atribuido pode registrar falha.' };
 
-      const operatorBlock = await this.ensureMotoboyCanOperate(driverProfileId);
+      const operatorBlock = await ensureMotoboyCanOperate(driverProfileId);
       if (operatorBlock) return operatorBlock;
 
       // GATE 3: Validar snaposhot obrigatorio
-      this.validateFailedDeliverySnaposhot(metadata);
+      validateFailedDeliverySnapshot(metadata);
 
       // Garantir default de resolution_status
       if (!metadata.resolution_status) {
@@ -997,43 +888,6 @@ export class RideOperationalService {
     } catch (error) {
       logger.error('RideOperationalService.failDelivery', error as Error, { rideId });
       return { success: false, error: (error as Error).message };
-    }
-  }
-
-  /**
-   * Valida snaposhot obrigatorio da falha
-   * GATE 3: Validao de campos obrigatorios e condicionais
-   */
-  private static validateFailedDeliverySnaposhot(
-    metadata: FailedDeliveryMetadata
-  ): void {
-    // Campos obrigatorios
-    if (!metadata.failure_reason || !metadata.item_destination ||
-        !metadata.item_current_holder || !metadata.timestamp) {
-      throw new Error('Campos obrigatorios do snaposhot ausentes: failure_reason, item_destination, item_current_holder, timestamp');
-    }
-
-    // Validar enums
-    if (!VALID_FAILURE_REASONS.includes(metadata.failure_reason)) {
-      throw new Error(`failure_reason invalido: ${metadata.failure_reason}`);
-    }
-
-    if (!VALID_ITEM_DESTINATIONS.includes(metadata.item_destination)) {
-      throw new Error(`item_destination invalido: ${metadata.item_destination}`);
-    }
-
-    if (!VALID_ITEM_HOLDERS.includes(metadata.item_current_holder)) {
-      throw new Error(`item_current_holder invalido: ${metadata.item_current_holder}`);
-    }
-
-    // resolution_notes obrigatorio se failure_reason = 'other'
-    if (metadata.failure_reason === 'other' && !metadata.resolution_notes) {
-      throw new Error('resolution_notes obrigatorio quando failure_reason = other');
-    }
-
-    // item_current_holder no pode ser 'recipient' em failed_delivery
-    if (String(metadata.item_current_holder) === 'recipient') {
-      throw new Error('item_current_holder no pode ser recipient em failed_delivery');
     }
   }
 
@@ -1071,7 +925,7 @@ export class RideOperationalService {
       }
 
       // Validar resolucao
-      this.validateFailedDeliveryResolution(resolutionUpdate);
+      validateFailedDeliveryResolution(resolutionUpdate);
 
       // Merge com metadata existente
       const updatedMetadata = {
@@ -1093,220 +947,5 @@ export class RideOperationalService {
       return { success: false, error: (error as Error).message };
     }
   }
-
-  /**
-   * Valida atualizacao de resolucao
-   * GATE 3: Validao de campos de resolucao
-   */
-  private static validateFailedDeliveryResolution(
-    resolutionUpdate: {
-      resolution_status?: ResolutionStatus;
-      resolved_at?: string;
-      manual_resolution_owner_profile_id?: string;
-    }
-  ): void {
-    // resolved exige resolved_at
-    if (resolutionUpdate.resolution_status === 'resolved' && !resolutionUpdate.resolved_at) {
-      throw new Error('resolved_at obrigatorio quando resolution_status = resolved');
-    }
-
-    // escalated exige manual_resolution_owner_profile_id
-    if (resolutionUpdate.resolution_status === 'escalated' && !resolutionUpdate.manual_resolution_owner_profile_id) {
-      throw new Error('manual_resolution_owner_profile_id obrigatorio quando resolution_status = escalated');
-    }
-  }
-
-  /**
-   * Acoes ps-transicao
-   */
-  private static async handlePostTransition(
-    rideId: string,
-    newState: RideState,
-    ride: RidePostTransitionSnapshot
-  ): Promise<void> {
-    try {
-      // GATE 5: Liberar motorista quando corrida e cancelada ou completada
-      if (RideStateMachine.isFinalState(newState) && ride.driver_profile_id) {
-        const { DriverAvailabilityService } = await import('@/modules/mobility/services/DriverAvailabilityService');
-        await DriverAvailabilityService.releaseBusy(ride.driver_profile_id, rideId);
-      }
-
-      const passengerProfileId = typeof ride?.passenger_profile_id === "string" ? ride.passenger_profile_id : null;
-      const driverProfileId = typeof ride?.driver_profile_id === "string" ? ride.driver_profile_id : null;
-      const isDeliveryMode = ride?.ride_mode === "motoboy";
-      const { NotificationService } = await import("@/core/notifications/services/NotificationService");
-      const [passengerUserId, driverUserId] = await Promise.all([
-        this.resolveUserIdFromProfileId(passengerProfileId),
-        this.resolveUserIdFromProfileId(driverProfileId),
-      ]);
-      const passengerTrackingUrl = mobilityRoutes.passageiro.buscando(rideId);
-
-      const notify = async (
-        audience: "passenger" | "driver",
-        userId: string | null,
-        type: "info" | "success" | "warning" | "error",
-        title: string,
-        message: string,
-        event: string,
-        actionUrl: string,
-      ) => {
-        if (!userId) return;
-        try {
-          await NotificationService.createNotification({
-            user_id: userId,
-            type,
-            category: "transactional",
-            title,
-            message,
-            metadata: {
-              ride_id: rideId,
-              state: newState,
-              event,
-              audience,
-              ride_mode: isDeliveryMode ? "motoboy" : "ride",
-            },
-            action_url: actionUrl,
-            action_label: "Ver detalhes",
-          });
-        } catch (error) {
-          logger.warn("RideOperationalService.handlePostTransition.notification", {
-            userId,
-            rideId,
-            state: newState,
-            error: (error as Error).message,
-          });
-        }
-      };
-
-      if (newState === RIDE_STATE.DRIVER_ACCEPTED) {
-        await notify(
-          "passenger",
-          passengerUserId,
-          "success",
-          "Motorista confirmou a corrida",
-          "Seu motorista confirmou o aceite e vai iniciar em breve.",
-          "ride_driver_accepted",
-          passengerTrackingUrl,
-        );
-        return;
-      }
-
-      if (newState === RIDE_STATE.IN_PROGRESS) {
-        await notify(
-          "passenger",
-          passengerUserId,
-          "info",
-          "Corrida iniciada",
-          "Sua corrida foi iniciada.",
-          "ride_in_progress",
-          passengerTrackingUrl,
-        );
-        return;
-      }
-
-      if (newState === RIDE_STATE.IN_DELIVERY) {
-        await notify(
-          "passenger",
-          passengerUserId,
-          "info",
-          "Entrega em rota",
-          "Seu motoboy iniciou a rota.",
-          "delivery_in_route",
-          passengerTrackingUrl,
-        );
-        return;
-      }
-
-      if (newState === RIDE_STATE.DELIVERED || newState === RIDE_STATE.COMPLETED) {
-        await notify(
-          "passenger",
-          passengerUserId,
-          "success",
-          newState === RIDE_STATE.DELIVERED ? "Entrega concluida" : "Corrida concluida",
-          "Operacao finalizada com sucesso.",
-          newState === RIDE_STATE.DELIVERED ? "delivery_completed" : "ride_completed",
-          passengerTrackingUrl,
-        );
-        await notify(
-          "driver",
-          driverUserId,
-          "success",
-          "Operacao concluida",
-          "A operacao foi finalizada e registrada no historico.",
-          "operation_completed",
-          isDeliveryMode ? mobilityRoutes.motoboy.entregas : mobilityRoutes.motorista.corridas,
-        );
-        return;
-      }
-
-      if (newState === RIDE_STATE.CANCELLED_BY_DRIVER || newState === RIDE_STATE.CANCELLED_BY_PASSENGER) {
-        await notify(
-          "passenger",
-          passengerUserId,
-          "warning",
-          "Corrida cancelada",
-          "A corrida foi cancelada.",
-          newState === RIDE_STATE.CANCELLED_BY_DRIVER
-            ? "ride_canceled_by_driver"
-            : "ride_canceled_by_passenger",
-          passengerTrackingUrl,
-        );
-        await notify(
-          "driver",
-          driverUserId,
-          "warning",
-          "Corrida cancelada",
-          "A corrida foi cancelada.",
-          newState === RIDE_STATE.CANCELLED_BY_DRIVER
-            ? "ride_canceled_by_driver"
-            : "ride_canceled_by_passenger",
-          isDeliveryMode ? mobilityRoutes.motoboy.entregas : mobilityRoutes.motorista.corridas,
-        );
-      }
-    } catch (error) {
-      logger.error('RideOperationalService.handlePostTransition', error as Error, { rideId, newState });
-    }
-  }
-
-  private static async resolveUserIdFromProfileId(profileId: string | null): Promise<string | null> {
-    if (!profileId) return null;
-
-    try {
-      const profile = await profileService.getProfileById(profileId);
-      return typeof profile?.user_id === "string" ? profile.user_id : null;
-    } catch (error) {
-      logger.warn("RideOperationalService.resolveUserIdFromProfileId", {
-        profileId,
-        error: error instanceof Error ? error.message : String(error),
-      });
-      return null;
-    }
-  }
-
-  /**
-   * Registra mudanca de estado
-   */
-  private static async logStateChange(
-    rideId: string,
-    fromState: RideState | null,
-    toState: RideState,
-    actor: string,
-    reason?: string
-  ): Promise<void> {
-    try {
-      await mobilityAuditService.logRideStateChange({
-        rideId,
-        fromState,
-        toState,
-        changedBy: actor,
-        reason: reason || '',
-      });
-
-      if (fromState) {
-        RideStateMachine.logTransition(rideId, fromState, toState, actor, reason);
-      }
-    } catch (error) {
-      logger.error('RideOperationalService.logStateChange', error as Error, { rideId });
-    }
-  }
 }
+

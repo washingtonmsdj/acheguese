@@ -302,6 +302,45 @@ export const BusinessHoursService = {
   },
 
   /**
+   * Retorna IDs de empresas temporariamente fechadas no momento.
+   */
+  async listTemporarilyClosedBusinessIds(
+    businessIds: string[],
+  ): Promise<ServiceResult<string[]>> {
+    try {
+      if (businessIds.length === 0) {
+        return { data: [], error: null };
+      }
+
+      const { data, error } = await businessHoursDb
+        .from("business_operation_config")
+        .select("business_id, is_temporarily_closed, temporarily_closed_until")
+        .in("business_id", businessIds)
+        .eq("is_temporarily_closed", true);
+
+      if (error) {
+        logger.error("[BusinessHoursService] listTemporarilyClosedBusinessIds error", error);
+        return { data: null, error: error.message };
+      }
+
+      const now = Date.now();
+      const ids = (data ?? [])
+        .filter(
+          (row) =>
+            !row.temporarily_closed_until ||
+            new Date(row.temporarily_closed_until).getTime() > now,
+        )
+        .map((row) => row.business_id)
+        .filter((id): id is string => typeof id === "string" && id.length > 0);
+
+      return { data: ids, error: null };
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      return { data: null, error: msg };
+    }
+  },
+
+  /**
    * Cria ou atualiza configuração operacional
    */
   async setOperationConfig(input: {

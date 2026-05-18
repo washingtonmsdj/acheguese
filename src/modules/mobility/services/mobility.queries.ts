@@ -1,15 +1,26 @@
-/**
+ï»¿/**
  * MOBILITY QUERIES - Leitura de dados
  * 
- * Responsabilidade única: todas as operações de consulta (SELECT)
+ * Responsabilidade ï¿½nica: todas as operaï¿½ï¿½es de consulta (SELECT)
  * - Sem escritas (INSERT/UPDATE/DELETE)
- * - Sem lógica de negócio complexa
+ * - Sem lï¿½gica de negï¿½cio complexa
  */
 
 import { supabase } from "@/core/infrastructure/supabase";
 import { logger } from "@/shared/utils/logger";
 import { profileService } from "@/core/profiles/services/ProfileService";
 import { RIDE_STATUS } from "../constants";
+export {
+  getLastMessage,
+  getMobilityConversations,
+  getOperationalVerificationEntries,
+  getRideAvailableSeats,
+  getRideBasicInfo,
+  getRideByShareToken,
+  getRideStateAuditEntries,
+  getRideWithAddresses,
+  getUnreadCount,
+} from "./mobility.ride-read-queries";
 
 const supabaseClient = supabase as any;
 
@@ -156,7 +167,7 @@ export async function getRideById(id: string): Promise<unknown | null> {
 }
 
 /**
- * Buscar todas as solicitações de corrida
+ * Buscar todas as solicitaï¿½ï¿½es de corrida
  */
 export async function getAllRideRequests(): Promise<unknown[]> {
   const { data, error } = await supabaseClient
@@ -220,7 +231,7 @@ export async function getActiveRideByDriverProfile(
 }
 
 /**
- * Buscar corrida ativa do usuário (passageiro ou motorista)
+ * Buscar corrida ativa do usuï¿½rio (passageiro ou motorista)
  */
 export async function getActiveRide(userProfileId: string): Promise<unknown | null> {
   const { data, error } = await supabaseClient
@@ -539,7 +550,7 @@ export async function getTopDrivers(opts: { minRides?: number; limit?: number } 
 }
 
 /**
- * Estatísticas de mobilidade
+ * Estatï¿½sticas de mobilidade
  */
 export async function getMobilityStats(): Promise<{ total_drivers: number; total_rides: number }> {
   try {
@@ -559,7 +570,7 @@ export async function getMobilityStats(): Promise<{ total_drivers: number; total
 }
 
 /**
- * Ganhos do motorista (corridas concluídas)
+ * Ganhos do motorista (corridas concluï¿½das)
  */
 export async function getDriverEarnings(driverProfileId: string): Promise<unknown[]> {
   try {
@@ -585,7 +596,7 @@ export async function getDriverEarnings(driverProfileId: string): Promise<unknow
 }
 
 /**
- * Pagamentos de corridas concluídas por motorista
+ * Pagamentos de corridas concluï¿½das por motorista
  */
 export async function getCompletedRidePaymentsByDriver(
   driverProfileId: string,
@@ -667,86 +678,19 @@ export async function getPassengerRating(profileId: string): Promise<number> {
 }
 
 /**
- * Conversas de mobilidade do perfil
- */
-export async function getMobilityConversations(profileId: string): Promise<unknown[]> {
-  try {
-    const { data, error } = await supabaseClient
-      .from("mobility_conversations" as any)
-      .select(`
-        id,
-        ride_id,
-        passenger_profile_id,
-        driver_profile_id,
-        created_at,
-        updated_at
-      `)
-      .or(`passenger_profile_id.eq.${profileId},driver_profile_id.eq.${profileId}`)
-      .order("updated_at", { ascending: false });
-
-    if (error) throw error;
-    return data || [];
-  } catch (error) {
-    logger.error("MobilityQueries.getMobilityConversations", { profileId, error });
-    return [];
-  }
-}
-
-/**
- * Ãšltima mensagem de uma conversa
- */
-export async function getLastMessage(conversationId: string): Promise<unknown | null> {
-  try {
-    const { data, error } = await supabaseClient
-      .from("mobility_messages" as any)
-      .select("message")
-      .eq("conversation_id", conversationId)
-      .order("created_at", { ascending: false })
-      .limit(1)
-      .maybeSingle();
-
-    if (error) throw error;
-    return data;
-  } catch (error) {
-    logger.error("MobilityQueries.getLastMessage", { conversationId, error });
-    return null;
-  }
-}
-
-/**
- * Contar mensagens não lidas
- */
-export async function getUnreadCount(conversationId: string, profileId: string): Promise<number> {
-  try {
-    const { count, error } = await supabaseClient
-      .from("mobility_messages" as any)
-      .select("*", { count: "exact", head: true })
-      .eq("conversation_id", conversationId)
-      .eq("read", false)
-      .neq("sender_profile_id", profileId);
-
-    if (error) throw error;
-    return count || 0;
-  } catch (error) {
-    logger.error("MobilityQueries.getUnreadCount", { conversationId, profileId, error });
-    return 0;
-  }
-}
-
-/**
- * Corridas disponíveis (para motoristas)
+ * Corridas disponï¿½veis (para motoristas)
  * 
- * @deprecated Use MobilityOfferService ao invés desta função genérica
+ * @deprecated Use MobilityOfferService ao invï¿½s desta funï¿½ï¿½o genï¿½rica
  * 
- * PROBLEMA: Esta função retorna TODAS as corridas sem considerar:
- * - Estratégia de dispatch (exclusive vs open board)
+ * PROBLEMA: Esta funï¿½ï¿½o retorna TODAS as corridas sem considerar:
+ * - Estratï¿½gia de dispatch (exclusive vs open board)
  * - Elegibilidade do motorista
- * - Proteção de dados sensíveis
- * - Scoring e ordenação
+ * - Proteï¿½ï¿½o de dados sensï¿½veis
+ * - Scoring e ordenaï¿½ï¿½o
  * 
- * SOLUÇÃO: Use MobilityOfferService.getExclusiveOffer() ou getOpenBoardOffers()
+ * SOLUï¿½ï¿½O: Use MobilityOfferService.getExclusiveOffer() ou getOpenBoardOffers()
  * 
- * Mantido apenas para compatibilidade temporária
+ * Mantido apenas para compatibilidade temporï¿½ria
  */
 export async function getAvailableRides(limit: number = 10): Promise<unknown[]> {
   logger.warn('getAvailableRides is deprecated. Use MobilityOfferService instead.');
@@ -793,7 +737,7 @@ export async function getAvailableRides(limit: number = 10): Promise<unknown[]> 
 }
 
 /**
- * Buscar corridas do usuário (passageiro ou motorista)
+ * Buscar corridas do usuï¿½rio (passageiro ou motorista)
  */
 export async function getUserRides(userId: string): Promise<unknown[]> {
   try {
@@ -814,87 +758,6 @@ export async function getUserRides(userId: string): Promise<unknown[]> {
   }
 }
 
-/**
- * Buscar corrida com endereços completos
- */
-export async function getRideWithAddresses(rideId: string): Promise<unknown | null> {
-  try {
-    const { data, error } = await supabaseClient
-      .from("ride_requests" as any)
-      .select(`
-        *,
-        pickup_address:addresses!pickup_address_id(street, latitude, longitude),
-        dropoff_address:addresses!dropoff_address_id(street, latitude, longitude),
-        pickup_location:locations!pickup_location_id(name),
-        dropoff_location:locations!dropoff_location_id(name)
-      `)
-      .eq("id", rideId)
-      .maybeSingle();
-
-    if (error) throw error;
-    return data;
-  } catch (error) {
-    logger.error("MobilityQueries.getRideWithAddresses", error as Error);
-    return null;
-  }
-}
-
-/**
- * Informações básicas da corrida
- */
-export async function getRideBasicInfo(rideId: string): Promise<unknown | null> {
-  try {
-    const { data, error } = await supabaseClient
-      .from("ride_requests" as any)
-      .select("id, origin, destination, status, final_price, suggested_price")
-      .eq("id", rideId)
-      .maybeSingle();
-
-    if (error) throw error;
-    return data;
-  } catch (error) {
-    logger.error("MobilityQueries.getRideBasicInfo", error as Error);
-    return null;
-  }
-}
-
-/**
- * Buscar corrida por token de compartilhamento
- */
-export async function getRideByShareToken(token: string): Promise<unknown | null> {
-  try {
-    const { data, error } = await supabaseClient
-      .from("ride_requests" as any)
-      .select("*")
-      .eq("share_token", token)
-      .maybeSingle();
-
-    if (error) throw error;
-    return data;
-  } catch (error) {
-    logger.error("MobilityQueries.getRideByShareToken", error as Error);
-    return null;
-  }
-}
-
-/**
- * Assentos disponíveis na corrida
- */
-export async function getRideAvailableSeats(rideId: string): Promise<number> {
-  try {
-    const { data, error } = await supabaseClient
-      .from("ride_requests" as any)
-      .select("available_seats")
-      .eq("id", rideId)
-      .maybeSingle();
-
-    if (error) throw error;
-    return (data as { available_seats?: number } | null)?.available_seats ?? 0;
-  } catch (error) {
-    logger.error("MobilityQueries.getRideAvailableSeats", error as Error);
-    return 0;
-  }
-}
 
 /**
  * Buscar dados do motorista por ID de perfil
@@ -920,7 +783,7 @@ export async function getDriverData(profileId: string): Promise<unknown | null> 
 }
 
 /**
- * Buscar estatísticas detalhadas do motorista
+ * Buscar estatï¿½sticas detalhadas do motorista
  */
 export async function getDriverStatsDetailed(driverProfileId: string): Promise<unknown | null> {
   try {
@@ -1015,38 +878,8 @@ export async function getMotoboyRuntimeDatabaseChecks(): Promise<MotoboyRuntimeD
   };
 }
 
-export async function getRideStateAuditEntries(
-  rideId: string,
-  limit: number = 30,
-): Promise<unknown[]> {
-  const { data, error } = await supabaseClient
-    .from("ride_state_audit")
-    .select("*")
-    .eq("ride_id", rideId)
-    .order("created_at", { ascending: false })
-    .limit(limit);
-
-  if (error) throw error;
-  return data || [];
-}
-
-export async function getOperationalVerificationEntries(
-  rideId: string,
-  limit: number = 5,
-): Promise<unknown[]> {
-  const { data, error } = await supabaseClient
-    .from("operational_verifications")
-    .select("*")
-    .eq("ride_id", rideId)
-    .order("created_at", { ascending: false })
-    .limit(limit);
-
-  if (error) throw error;
-  return data || [];
-}
-
 /**
- * Histórico de corridas do usuário
+ * Histï¿½rico de corridas do usuï¿½rio
  * @deprecated Use getUserRides() - mesmo comportamento
  */
 export async function getRideHistory(
@@ -1057,16 +890,8 @@ export async function getRideHistory(
   return getUserRides(userId);
 }
 
-/**
- * Localização do motorista
- * @deprecated Não implementado - usar GPS tracking diretamente
- */
+/** @deprecated Nï¿½o implementado - usar GPS tracking diretamente. */
 export async function getDriverLocation(_driverProfileId: string): Promise<unknown | null> {
   logger.warn("MobilityQueries.getDriverLocation - nao implementado, usar GPS tracking");
   return null;
 }
-
-
-
-
-

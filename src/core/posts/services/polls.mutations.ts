@@ -35,6 +35,13 @@ export async function createPoll(data: CreatePollData): Promise<Poll> {
       );
     }
 
+    if (data.options.length > 6) {
+      throw new PostError(
+        "Enquete pode ter no maximo 6 opcoes",
+        "INVALID_OPTIONS",
+      );
+    }
+
     if (data.options.some((o) => !o.text || o.text.trim().length < 1)) {
       throw new PostError(
         "Todas as opções devem ter texto",
@@ -51,6 +58,7 @@ export async function createPoll(data: CreatePollData): Promise<Poll> {
         expires_at: new Date(
           Date.now() + data.expiresInDays * 24 * 60 * 60 * 1000,
         ).toISOString(),
+        options: [],
       })
       .select("*")
       .single();
@@ -78,9 +86,29 @@ export async function createPoll(data: CreatePollData): Promise<Poll> {
       throw new PostError(optionsError.message, optionsError.code);
     }
 
+    const optionsForPoll = (options || []).map((option: any) => ({
+      id: option.id,
+      text: option.text,
+      votes: option.votes || 0,
+      position: option.position,
+    }));
+
+    const { error: updateError } = await (supabase as any)
+      .from("community_polls")
+      .update({ options: optionsForPoll })
+      .eq("id", poll.id);
+
+    if (updateError) {
+      trackError(updateError as Error, {
+        component: "polls.mutations",
+        action: "createPoll",
+        metadata: { pollId: poll.id, step: "update_options" },
+      });
+    }
+
     return {
       ...poll,
-      options: options || [],
+      options: optionsForPoll,
       total_votes: 0,
     } as Poll;
   } catch (error) {

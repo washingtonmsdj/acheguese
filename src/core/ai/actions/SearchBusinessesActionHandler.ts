@@ -1,8 +1,8 @@
 import { BusinessService, BusinessUrlService, type Business, hasGastronomyProfile } from "@/core/business";
+import { BusinessHoursService } from "@/core/business/BusinessHoursService";
 import { isOpenNow } from "@/core/business/utils/openingHoursHelpers";
 import { GastronomyUrlService } from "@/core/verticals/gastronomy";
 import { spatialSearchService, type SpatialSearchResult } from "@/core/geospatial";
-import { supabase } from "@/integrations/supabase";
 import { logger } from "@/shared/utils/logger";
 import type { AIActionContext, AIActionResultItem, AIIntent } from "../domain/types";
 import type { IActionHandler } from "./IActionHandler";
@@ -122,25 +122,15 @@ export class SearchBusinessesActionHandler implements IActionHandler {
     const businessIds = businesses.map((business) => business.id).filter(Boolean);
     if (businessIds.length === 0) return businesses;
 
-    const { data, error } = await supabase
-      .from("business_operation_config")
-      .select("business_id, is_temporarily_closed, temporarily_closed_until")
-      .in("business_id", businessIds)
-      .eq("is_temporarily_closed", true);
-
-    if (error || !data) {
+    const { data: closedBusinessIds, error } =
+      await BusinessHoursService.listTemporarilyClosedBusinessIds(businessIds);
+    if (error || !closedBusinessIds) {
       logger.warn("[AI] Could not apply temporarily_closed filter on open_now search", {
-        error: error?.message,
+        error,
       });
       return businesses;
     }
-
-    const now = Date.now();
-    const closedSet = new Set(
-      data
-        .filter((item) => !item.temporarily_closed_until || new Date(item.temporarily_closed_until).getTime() > now)
-        .map((item) => item.business_id),
-    );
+    const closedSet = new Set(closedBusinessIds);
 
     return businesses.filter((business) => !closedSet.has(business.id));
   }

@@ -10,7 +10,7 @@ export {
   default as ClassifiedService,
   CLASSIFIED_CONDITIONS,
   CLASSIFIED_STATUSES,
-} from "../../../modules/classifieds/services/ClassifiedService";
+} from "@/modules/classifieds/services/ClassifiedService";
 
 export {
   getNeighborhoodsWithClassifieds,
@@ -23,7 +23,7 @@ export {
   getTotalClassifiedsCount,
   getRecentClassifieds,
   getClassifiedsCreatedInPeriod,
-} from "../../../modules/classifieds/services/classifieds.queries";
+} from "@/modules/classifieds/services/classifieds.queries";
 
 export {
   createClassified,
@@ -31,7 +31,7 @@ export {
   deleteClassified,
   markAsSold,
   reactivateClassified,
-} from "../../../modules/classifieds/services/classifieds.mutations";
+} from "@/modules/classifieds/services/classifieds.mutations";
 
 export type {
   ClassifiedData,
@@ -55,12 +55,12 @@ export type {
   ClassifiedResolution,
 } from "./ClassifiedUrlService";
 
-export { classifiedReportService } from "../../../modules/classifieds/services/ClassifiedReportService";
+export { classifiedReportService } from "@/modules/classifieds/services/ClassifiedReportService";
 export type {
   ClassifiedReport,
   CreateReportInput,
   ReportReason,
-} from "../../../modules/classifieds/services/ClassifiedReportService";
+} from "@/modules/classifieds/services/ClassifiedReportService";
 
 export {
   classifiedCommentService,

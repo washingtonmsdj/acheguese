@@ -17,7 +17,7 @@ import {
 import { cn } from '@/shared/utils/cn';
 import { BUSINESS_SORT_OPTIONS } from '../constants';
 import type { DisplayLayout } from '../types';
-import type { BusinessSortKey } from '../../../hooks/useGastronomyBusinessSort';
+import type { BusinessSortKey } from '@/modules/business/gastronomy/hooks/useGastronomyBusinessSort';
 
 interface FilterControlsProps {
   sortBy: BusinessSortKey;

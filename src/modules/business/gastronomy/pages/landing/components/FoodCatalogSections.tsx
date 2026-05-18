@@ -3,7 +3,7 @@
  */
 
 import { Star, TrendingUp } from 'lucide-react';
-import { FoodSectionCarousel } from '../../../components';
+import { FoodSectionCarousel } from '@/modules/business/gastronomy/components';
 import type { FoodSectionItems } from '../types';
 
 interface FoodCatalogSectionsProps {

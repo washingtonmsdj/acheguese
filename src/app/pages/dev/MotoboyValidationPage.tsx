@@ -14,9 +14,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/sha
 import { Badge } from '@/shared/components/ui/badge';
 import { Alert, AlertDescription } from '@/shared/components/ui/alert';
 import { Input } from '@/shared/components/ui/input';
-import { Label } from '@/shared/components/ui/label';
-import { Textarea } from '@/shared/components/ui/textarea';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/shared/components/ui/dialog';
 import {
   Loader2,
   CheckCircle2,
@@ -49,64 +46,21 @@ import {
   getRidesByDriverProfile,
   type MotoboyRuntimeDatabaseChecks,
 } from '@/modules/mobility/services/mobility.queries';
-
-type LogStatus = 'success' | 'error' | 'info';
-
-interface ValidationLog {
-  timestamp: string;
-  action: string;
-  status: LogStatus;
-  message: string;
-}
-
-interface ProfileSummary {
-  id: string;
-  fullName: string | null;
-  profileType: string | null;
-}
-
-interface DriverDataSummary {
-  profile_id: string;
-  can_do_delivery: boolean | null;
-  can_do_rides: boolean | null;
-  is_online: boolean | null;
-  is_available: boolean | null;
-  is_verified: boolean | null;
-  subscription_active: boolean | null;
-}
-
-interface RideSummary {
-  id: string;
-  status: string;
-  ride_mode: string | null;
-  driver_profile_id: string | null;
-  recipient_name: string | null;
-  package_size: string | null;
-  created_at: string;
-}
-
-interface RideAuditEntry {
-  id: string;
-  fromState: string | null;
-  toState: string | null;
-  reason: string | null;
-  changedBy: string | null;
-  changedAt: string | null;
-}
-
-interface VerificationEntry {
-  id: string;
-  status: string;
-  isRequired: boolean;
-  attempts: number;
-  createdAt: string | null;
-  expiresAt: string | null;
-  verifiedAt: string | null;
-}
-
-interface GenericDbRow {
-  [key: string]: unknown;
-}
+import { MotoboyValidationDialogs } from './MotoboyValidationDialogs';
+import {
+  getErrorMessage,
+  parseBoolean,
+  toRideSummary,
+  type DriverDataSummary,
+  type GenericDbRow,
+  type LogStatus,
+  type ProfileSummary,
+  type RideAuditEntry,
+  type RideSummary,
+  type ValidationLog,
+  type VerificationEntry,
+} from './motoboyValidation.runtime';
+import { MotoboyValidationTelemetry } from './MotoboyValidationTelemetry';
 
 const ACTIVE_DELIVERY_STATUSES = [
   RIDE_STATUS.DRIVER_ASSIGNED,
@@ -115,42 +69,6 @@ const ACTIVE_DELIVERY_STATUSES = [
   RIDE_STATUS.PICKUP_CONFIRMED,
   RIDE_STATUS.IN_DELIVERY,
 ] as const;
-
-function getErrorMessage(error: unknown): string {
-  if (error instanceof Error) {
-    return error.message;
-  }
-
-  if (typeof error === 'object' && error !== null) {
-    const maybeMessage = (error as { message?: unknown }).message;
-    if (typeof maybeMessage === 'string') {
-      return maybeMessage;
-    }
-  }
-
-  return 'Unknown error';
-}
-
-function parseBoolean(value: unknown): boolean {
-  return value === true;
-}
-
-function toRideSummary(row: unknown): RideSummary | null {
-  const typed = row as GenericDbRow;
-  if (typeof typed.id !== 'string' || typeof typed.status !== 'string') {
-    return null;
-  }
-
-  return {
-    id: typed.id,
-    status: typed.status,
-    ride_mode: typeof typed.ride_mode === 'string' ? typed.ride_mode : null,
-    driver_profile_id: typeof typed.driver_profile_id === 'string' ? typed.driver_profile_id : null,
-    recipient_name: typeof typed.recipient_name === 'string' ? typed.recipient_name : null,
-    package_size: typeof typed.package_size === 'string' ? typed.package_size : null,
-    created_at: typeof typed.created_at === 'string' ? typed.created_at : new Date(0).toISOString(),
-  };
-}
 
 export function MotoboyValidationPage() {
   const { user } = useAuth();
@@ -938,186 +856,27 @@ export function MotoboyValidationPage() {
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Ride Audit And Verification</CardTitle>
-          <CardDescription>
-            {selectedRideId ? `Selected ride: ${selectedRideId}` : 'Select a ride to inspect operational audit.'}
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex gap-2">
-            <Input
-              value={selectedRideId ?? ''}
-              onChange={(event) => setSelectedRideId(event.target.value || null)}
-              placeholder="Ride ID for audit inspection"
-            />
-            <Button variant="outline" onClick={() => void handleRefreshSelectedRideLogs()}>
-              <RefreshCw className="mr-1 h-4 w-4" />
-              Refresh
-            </Button>
-          </div>
+      <MotoboyValidationTelemetry
+        selectedRideId={selectedRideId}
+        auditEntries={auditEntries}
+        verificationEntries={verificationEntries}
+        logs={logs}
+        onSelectedRideIdChange={setSelectedRideId}
+        onRefreshSelectedRideLogs={() => void handleRefreshSelectedRideLogs()}
+      />
 
-          <div className="space-y-2">
-            <h4 className="text-sm font-semibold">State Audit ({auditEntries.length})</h4>
-            {auditEntries.length === 0 ? (
-              <p className="text-xs text-muted-foreground">No audit entries loaded.</p>
-            ) : (
-              <div className="max-h-56 space-y-2 overflow-y-auto">
-                {auditEntries.map((entry) => (
-                  <div key={entry.id} className="rounded border p-2 text-xs">
-                    <div className="flex items-center justify-between">
-                      <span className="font-medium">
-                        {entry.fromState || 'null'} -&gt; {entry.toState || 'null'}
-                      </span>
-                      <span className="text-muted-foreground">
-                        {entry.changedAt ? new Date(entry.changedAt).toLocaleString() : 'no timestamp'}
-                      </span>
-                    </div>
-                    {entry.reason && <p className="text-muted-foreground">{entry.reason}</p>}
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-
-          <div className="space-y-2">
-            <h4 className="text-sm font-semibold">Operational Verification ({verificationEntries.length})</h4>
-            {verificationEntries.length === 0 ? (
-              <p className="text-xs text-muted-foreground">No verification rows loaded for this ride.</p>
-            ) : (
-              <div className="max-h-56 space-y-2 overflow-y-auto">
-                {verificationEntries.map((entry) => (
-                  <div key={entry.id} className="rounded border p-2 text-xs">
-                    <div className="flex items-center justify-between">
-                      <span className="font-medium">status: {entry.status}</span>
-                      <span className="text-muted-foreground">attempts: {entry.attempts}</span>
-                    </div>
-                    <p className="text-muted-foreground">
-                      required: {String(entry.isRequired)} | created: {entry.createdAt || '-'} | expires: {entry.expiresAt || '-'}
-                    </p>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Validation Log</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="max-h-96 space-y-2 overflow-y-auto">
-            {logs.length === 0 ? (
-              <p className="text-sm text-muted-foreground">No actions recorded yet.</p>
-            ) : (
-              logs.map((log, index) => (
-                <div key={`${log.timestamp}-${index}`} className="flex items-start gap-2 border-l-2 border-l-muted p-2">
-                  {log.status === 'success' && <CheckCircle2 className="mt-0.5 h-4 w-4 text-green-600" />}
-                  {log.status === 'error' && <XCircle className="mt-0.5 h-4 w-4 text-red-600" />}
-                  {log.status === 'info' && <AlertTriangle className="mt-0.5 h-4 w-4 text-blue-600" />}
-                  <div className="flex-1 space-y-1">
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm font-medium">{log.action}</span>
-                      <span className="text-xs text-muted-foreground">
-                        {new Date(log.timestamp).toLocaleTimeString()}
-                      </span>
-                    </div>
-                    <p className="text-xs text-muted-foreground">{log.message}</p>
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
-        </CardContent>
-      </Card>
-
-      <Dialog
-        open={confirmDeliveryModal.open}
-        onOpenChange={(open) => setConfirmDeliveryModal({ open, deliveryId: null })}
-      >
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Confirm Delivery</DialogTitle>
-            <DialogDescription>Register proof of delivery (optional fields)</DialogDescription>
-          </DialogHeader>
-
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="proof-code">Verification Code</Label>
-              <Input
-                id="proof-code"
-                placeholder="Ex: 1234"
-                value={proofData.code || ''}
-                onChange={(event) => setProofData({ ...proofData, code: event.target.value })}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="proof-photo">Photo URL</Label>
-              <Input
-                id="proof-photo"
-                placeholder="https://..."
-                value={proofData.photo_url || ''}
-                onChange={(event) => setProofData({ ...proofData, photo_url: event.target.value })}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="proof-obs">Observation</Label>
-              <Textarea
-                id="proof-obs"
-                placeholder="Delivered to concierge..."
-                value={proofData.observation || ''}
-                onChange={(event) => setProofData({ ...proofData, observation: event.target.value })}
-              />
-            </div>
-          </div>
-
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setConfirmDeliveryModal({ open: false, deliveryId: null })}>
-              Cancel
-            </Button>
-            <Button onClick={() => void handleConfirmDelivery()}>Confirm Delivery</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      <Dialog
-        open={failDeliveryModal.open}
-        onOpenChange={(open) => setFailDeliveryModal({ open, deliveryId: null })}
-      >
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Register Delivery Failure</DialogTitle>
-            <DialogDescription>Failure reason is mandatory</DialogDescription>
-          </DialogHeader>
-
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="fail-reason">Failure Reason *</Label>
-              <Textarea
-                id="fail-reason"
-                placeholder="Recipient unavailable, wrong address..."
-                value={failReason}
-                onChange={(event) => setFailReason(event.target.value)}
-                required
-              />
-            </div>
-          </div>
-
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setFailDeliveryModal({ open: false, deliveryId: null })}>
-              Cancel
-            </Button>
-            <Button variant="destructive" onClick={() => void handleFailDelivery()}>
-              Register Failure
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <MotoboyValidationDialogs
+        confirmDeliveryModal={confirmDeliveryModal}
+        failDeliveryModal={failDeliveryModal}
+        proofData={proofData}
+        failReason={failReason}
+        onConfirmModalOpenChange={(open) => setConfirmDeliveryModal({ open, deliveryId: null })}
+        onFailModalOpenChange={(open) => setFailDeliveryModal({ open, deliveryId: null })}
+        onProofDataChange={setProofData}
+        onFailReasonChange={setFailReason}
+        onConfirmDelivery={() => void handleConfirmDelivery()}
+        onFailDelivery={() => void handleFailDelivery()}
+      />
     </div>
   );
 }

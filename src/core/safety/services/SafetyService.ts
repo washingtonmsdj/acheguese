@@ -20,11 +20,9 @@ import { supabase } from '@/integrations/supabase';
 import { trackError } from '@/shared/utils/errorTracking';
 import { NotificationService } from '@/core/notifications';
 import { mediaService } from '@/core/media/services/MediaService';
-import { emailNotificationProvider } from '../providers/EmailNotificationProvider';
-import {
-  SAFETY_ALERT_STATUS,
-  SAFETY_RIDE_SHARE_STATUS,
-} from '@/core/safety/constants/status';
+import { SafetyEmergencyContactsService } from './SafetyEmergencyContactsService';
+import { SafetyRideShareService } from './SafetyRideShareService';
+import { SAFETY_ALERT_STATUS } from '@/core/safety/constants/status';
 import type {
   EmergencyAlert,
   CreateEmergencyAlertInput,
@@ -32,7 +30,6 @@ import type {
   EmergencyAlertType,
   RideShare,
   CreateRideShareInput,
-  RideShareStatus,
   SharedRideData,
   SafetyIncident,
   CreateSafetyIncidentInput,
@@ -95,22 +92,10 @@ type SafetyEvidenceRow = {
   created_at: string;
 };
 
-type EmergencyContactRow = {
-  id: string;
-  profile_id: string;
-  name: string;
-  phone: string;
-  relationship: string;
-  is_primary: boolean;
-  is_active: boolean;
-  metadata?: Record<string, unknown> | null;
-  created_at: string;
-  updated_at: string;
-};
-
 export class SafetyService {
   private static instance: SafetyService;
   private config: SafetyServiceConfig;
+  private readonly rideShareService: SafetyRideShareService;
 
   private constructor() {
     this.config = {
@@ -119,6 +104,18 @@ export class SafetyService {
       shareExpirationHours: 24,
       maxEvidenceFileSize: 10 * 1024 * 1024, // 10MB
     };
+    this.rideShareService = new SafetyRideShareService({
+      getShareExpirationHours: () => this.config.shareExpirationHours,
+      createAuditEntry: async (entry) => this.createAuditEntry(entry),
+      sendSafetyNotification: async (
+        profileId: string,
+        type: 'alert' | 'incident' | 'share',
+        title: string,
+        message: string,
+        data?: Record<string, unknown>
+      ) =>
+        this.sendSafetyNotification(profileId, type, title, message, data),
+    });
   }
 
   static getInstance(): SafetyService {
@@ -321,158 +318,14 @@ export class SafetyService {
   async createRideShare(
     input: CreateRideShareInput
   ): Promise<SafetyResult<RideShare>> {
-    try {
-      const token = this.generateShareToken();
-      const expiresAt = new Date(
-        Date.now() + (input.expiresInHours || this.config.shareExpirationHours) * 60 * 60 * 1000
-      ).toISOString();
-
-      const shareData = {
-        ride_id: input.rideId,
-        share_token: token,
-        status: SAFETY_RIDE_SHARE_STATUS.ACTIVE,
-        created_by: input.createdBy,
-        expires_at: expiresAt,
-        created_at: new Date().toISOString(),
-      };
-
-      const { data, error } = await (supabase as any)
-        .from('ride_shares')
-        .insert(shareData)
-        .select()
-        .single();
-
-      if (error) throw error;
-
-      const shareUrl = `${window.location.origin}/track/${token}`;
-
-      const rideShare: RideShare = {
-        id: data.id,
-        rideId: data.ride_id,
-        shareToken: data.share_token,
-        shareUrl,
-        status: data.status,
-        createdBy: data.created_by,
-        expiresAt: data.expires_at,
-        createdAt: data.created_at,
-      };
-
-      // Auditoria
-      await this.createAuditEntry({
-        action: 'share_created',
-        entityType: 'share',
-        entityId: data.id,
-        performedBy: input.createdBy,
-        metadata: { expiresAt },
-      });
-
-      // ✅ Enviar notificação de safety
-      await this.sendSafetyNotification(
-        input.createdBy,
-        'share',
-        '🔗 Compartilhamento de Viagem Criado',
-        `Link de rastreamento criado com sucesso. Expira em ${input.expiresInHours || this.config.shareExpirationHours}h.`,
-        { shareId: data.id, shareUrl }
-      );
-
-      return {
-        success: true,
-        data: rideShare,
-      };
-    } catch (error) {
-      logger.error('[SafetyService] Error creating ride share:', error);
-      return {
-        success: false,
-        error: error instanceof Error ? error.message : 'Erro ao criar compartilhamento',
-      };
-    }
+    return this.rideShareService.createRideShare(input);
   }
 
   /**
    * Obtém dados de viagem compartilhada por token
    */
   async getSharedRideData(shareToken: string): Promise<SharedRideData | null> {
-    try {
-      // Buscar share ativo
-      const { data: shareData, error: shareError } = await (supabase as any)
-        .from('ride_shares')
-        .select('ride_id, expires_at, status')
-        .eq('share_token', shareToken)
-        .eq('status', SAFETY_RIDE_SHARE_STATUS.ACTIVE)
-        .maybeSingle();
-
-      if (shareError) throw shareError;
-      if (!shareData) return null;
-
-      // Verificar expiração
-      if (new Date(shareData.expires_at) < new Date()) {
-        return null;
-      }
-
-      // Buscar dados da corrida via MobilityService (SSOT)
-      const { MobilityService: MS } = await import('@/modules/mobility/services');
-      const rideData = await MS.getRideById(shareData.ride_id) as
-        | {
-            id?: string | null;
-            status?: string | null;
-            origin?: string | null;
-            destination?: string | null;
-            driver_profile_id?: string | null;
-            passenger_profile_id?: string | null;
-          }
-        | null;
-      if (!rideData) return null;
-
-      // Buscar dados do motorista
-      let driverName, vehicleModel, vehiclePlate;
-      if (rideData.driver_profile_id) {
-        const { MobilityService } = await import('@/modules/mobility/services');
-        const { profileService } = await import('@/core/profiles');
-
-        const [driverCompleteProfile, driverProfile] = await Promise.all([
-          MobilityService.getDriverCompleteProfile(rideData.driver_profile_id),
-          profileService.getProfileById(rideData.driver_profile_id),
-        ]);
-
-        driverName = driverProfile?.name;
-        vehicleModel = driverCompleteProfile?.vehicle_model;
-        vehiclePlate = driverCompleteProfile?.vehicle_plate;
-      }
-
-      // Buscar localização atual do motorista
-      let currentLocation;
-      if (rideData.driver_profile_id) {
-        const { data: locationData } = await (supabase as any)
-          .from('driver_locations')
-          .select('latitude, longitude, updated_at')
-          .eq('driver_profile_id', rideData.driver_profile_id)
-          .order('updated_at', { ascending: false })
-          .limit(1)
-          .maybeSingle();
-
-        if (locationData) {
-          currentLocation = {
-            latitude: locationData.latitude,
-            longitude: locationData.longitude,
-            timestamp: locationData.updated_at,
-          };
-        }
-      }
-
-      return {
-        rideId: rideData.id ?? shareData.ride_id,
-        status: rideData.status ?? null,
-        origin: rideData.origin ?? null,
-        destination: rideData.destination ?? null,
-        driverName,
-        vehicleModel,
-        vehiclePlate,
-        currentLocation,
-      };
-    } catch (error) {
-      logger.error('[SafetyService] Error getting shared ride data:', error);
-      return null;
-    }
+    return this.rideShareService.getSharedRideData(shareToken);
   }
 
   /**
@@ -482,33 +335,7 @@ export class SafetyService {
     shareId: string,
     performedBy: string
   ): Promise<SafetyResult<void>> {
-    try {
-      const { error } = await (supabase as any)
-        .from('ride_shares')
-        .update({
-          status: SAFETY_RIDE_SHARE_STATUS.REVOKED,
-          revoked_at: new Date().toISOString(),
-        })
-        .eq('id', shareId);
-
-      if (error) throw error;
-
-      // Auditoria
-      await this.createAuditEntry({
-        action: 'share_revoked',
-        entityType: 'share',
-        entityId: shareId,
-        performedBy,
-      });
-
-      return { success: true };
-    } catch (error) {
-      logger.error('[SafetyService] Error revoking ride share:', error);
-      return {
-        success: false,
-        error: error instanceof Error ? error.message : 'Erro ao revogar compartilhamento',
-      };
-    }
+    return this.rideShareService.revokeRideShare(shareId, performedBy);
   }
 
   // ============================================
@@ -789,15 +616,6 @@ export class SafetyService {
   // HELPERS
   // ============================================
 
-  private generateShareToken(): string {
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-    let token = '';
-    for (let i = 0; i < 12; i++) {
-      token += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
-    return token;
-  }
-
   private mapToEmergencyAlert(data: EmergencyAlertRow): EmergencyAlert {
     const location = data.latitude && data.longitude ? {
       latitude: data.latitude,
@@ -867,58 +685,14 @@ export class SafetyService {
   async createEmergencyContact(
     input: CreateEmergencyContactInput
   ): Promise<SafetyResult<EmergencyContact>> {
-    try {
-      const contactData = {
-        profile_id: input.profileId,
-        name: input.name,
-        phone: input.phone,
-        relationship: input.relationship,
-        is_primary: input.isPrimary || false,
-        is_active: true,
-        created_at: new Date().toISOString(),
-      };
-
-      const { data, error } = await (supabase as any)
-        .from('emergency_contacts')
-        .insert(contactData)
-        .select()
-        .single();
-
-      if (error) throw error;
-
-      return {
-        success: true,
-        data: this.mapToEmergencyContact(data),
-      };
-    } catch (error) {
-      logger.error('[SafetyService] Error creating emergency contact:', error);
-      return {
-        success: false,
-        error: error instanceof Error ? error.message : 'Erro ao criar contato',
-      };
-    }
+    return SafetyEmergencyContactsService.createEmergencyContact(input);
   }
 
   /**
    * Lista contatos de emergência de um perfil
    */
   async listEmergencyContacts(profileId: string): Promise<EmergencyContact[]> {
-    try {
-      const { data, error } = await (supabase as any)
-        .from('emergency_contacts')
-        .select('*')
-        .eq('profile_id', profileId)
-        .eq('is_active', true)
-        .order('is_primary', { ascending: false })
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-
-      return (data || []).map((item) => this.mapToEmergencyContact(item));
-    } catch (error) {
-      logger.error('[SafetyService] Error listing emergency contacts:', error);
-      return [];
-    }
+    return SafetyEmergencyContactsService.listEmergencyContacts(profileId);
   }
 
   /**
@@ -928,59 +702,14 @@ export class SafetyService {
     contactId: string,
     updates: UpdateEmergencyContactInput
   ): Promise<SafetyResult<EmergencyContact>> {
-    try {
-      const updateData: Record<string, unknown> = {
-        updated_at: new Date().toISOString(),
-      };
-
-      if (updates.name !== undefined) updateData.name = updates.name;
-      if (updates.phone !== undefined) updateData.phone = updates.phone;
-      if (updates.relationship !== undefined) updateData.relationship = updates.relationship;
-      if (updates.isPrimary !== undefined) updateData.is_primary = updates.isPrimary;
-      if (updates.isActive !== undefined) updateData.is_active = updates.isActive;
-
-      const { data, error } = await (supabase as any)
-        .from('emergency_contacts')
-        .update(updateData)
-        .eq('id', contactId)
-        .select()
-        .single();
-
-      if (error) throw error;
-
-      return {
-        success: true,
-        data: this.mapToEmergencyContact(data),
-      };
-    } catch (error) {
-      logger.error('[SafetyService] Error updating emergency contact:', error);
-      return {
-        success: false,
-        error: error instanceof Error ? error.message : 'Erro ao atualizar contato',
-      };
-    }
+    return SafetyEmergencyContactsService.updateEmergencyContact(contactId, updates);
   }
 
   /**
    * Deleta contato de emergência (soft delete)
    */
   async deleteEmergencyContact(contactId: string): Promise<SafetyResult<void>> {
-    try {
-      const { error } = await (supabase as any)
-        .from('emergency_contacts')
-        .update({ is_active: false, updated_at: new Date().toISOString() })
-        .eq('id', contactId);
-
-      if (error) throw error;
-
-      return { success: true };
-    } catch (error) {
-      logger.error('[SafetyService] Error deleting emergency contact:', error);
-      return {
-        success: false,
-        error: error instanceof Error ? error.message : 'Erro ao deletar contato',
-      };
-    }
+    return SafetyEmergencyContactsService.deleteEmergencyContact(contactId);
   }
 
   /**
@@ -991,53 +720,9 @@ export class SafetyService {
     alert: EmergencyAlert
   ): Promise<void> {
     try {
-      // Buscar contatos ativos
-      const contacts = await this.listEmergencyContacts(profileId);
-
-      if (contacts.length === 0) {
-        logger.warn('[SafetyService] No emergency contacts found for profile:', profileId);
-        return;
-      }
-
-      // Buscar dados do perfil do usuário via ProfileService (SSOT)
-      const { profileService } = await import('@/core/profiles');
-      const profileRecord = await profileService.getProfileById(profileId);
-
-      const userProfile = {
-        name: profileRecord?.name,
-        phone:
-          profileRecord &&
-          typeof profileRecord === 'object' &&
-          'phone' in profileRecord
-            ? (profileRecord as { phone?: string | null }).phone
-            : undefined,
-      };
-
-      // Enviar notificação para cada contato
-      const deliveryResults = await Promise.allSettled(
-        contacts.map(async (contact) => {
-          const result = await emailNotificationProvider.sendEmergencyAlert(
-            contact,
-            alert,
-            userProfile
-          );
-
-          // Persistir log de entrega
-          await this.saveDeliveryLog(alert.id, result);
-
-          return result;
-        })
-      );
-
-      // Contar sucessos e falhas
-      const successful = deliveryResults.filter(
-        (r) => r.status === 'fulfilled' && r.value.success
-      ).length;
-      const failed = deliveryResults.length - successful;
-
-      logger.info(
-        `[SafetyService] Notified ${successful}/${contacts.length} emergency contacts about alert ${alert.id}`,
-        { successful, failed }
+      const summary = await SafetyEmergencyContactsService.notifyEmergencyContacts(
+        profileId,
+        alert
       );
 
       // Registrar na auditoria
@@ -1047,49 +732,14 @@ export class SafetyService {
         entityId: alert.id,
         performedBy: profileId,
         metadata: {
-          contactsNotified: contacts.length,
-          contactIds: contacts.map((c) => c.id),
-          deliverySuccessful: successful,
-          deliveryFailed: failed,
+          contactsNotified: summary.contactsNotified,
+          contactIds: summary.contactIds,
+          deliverySuccessful: summary.successful,
+          deliveryFailed: summary.failed,
         },
       });
     } catch (error) {
       logger.error('[SafetyService] Error notifying emergency contacts:', error);
-      // Não falhar operação principal
-    }
-  }
-
-  /**
-   * Salva log de entrega de notificação
-   */
-  private async saveDeliveryLog(
-    alertId: string,
-    result: {
-      success: boolean;
-      contactId: string;
-      channel: string;
-      timestamp: string;
-      status: string;
-      error?: string;
-      metadata?: Record<string, unknown>;
-    }
-  ): Promise<void> {
-    try {
-      const target = result.metadata?.to as string || 'unknown';
-      
-      await (supabase as any).from('emergency_delivery_log').insert({
-        alert_id: alertId,
-        contact_id: result.contactId,
-        channel: result.channel,
-        status: result.status,
-        target,
-        error_message: result.error,
-        metadata: result.metadata || {},
-        created_at: result.timestamp,
-        delivered_at: result.status === 'sent' ? result.timestamp : null,
-      });
-    } catch (error) {
-      logger.error('[SafetyService] Error saving delivery log:', error);
       // Não falhar operação principal
     }
   }
@@ -1126,20 +776,6 @@ export class SafetyService {
     }
   }
 
-  private mapToEmergencyContact(data: EmergencyContactRow): EmergencyContact {
-    return {
-      id: data.id,
-      profileId: data.profile_id,
-      name: data.name,
-      phone: data.phone,
-      relationship: data.relationship,
-      isPrimary: data.is_primary,
-      isActive: data.is_active,
-      metadata: data.metadata || {},
-      createdAt: data.created_at,
-      updatedAt: data.updated_at,
-    };
-  }
 }
 
 // Singleton instance

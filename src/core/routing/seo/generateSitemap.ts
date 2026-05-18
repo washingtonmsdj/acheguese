@@ -13,8 +13,8 @@ import {
   buildCommunityTerritoryUrl,
   geoPathToPublicUrl,
 } from '@/core/routing/utils/territoryUrls';
-import { supabase } from '@/integrations/supabase';
 import { LocationsReadService } from '@/core/location/services/LocationsReadService';
+import { TerritorialGroupsReadService } from '@/core/location/services/TerritorialGroupsReadService';
 import {
   isTerritoryVisibleInLanding,
   type TerritoryVisibilityMetadata,
@@ -164,50 +164,10 @@ export async function generateAndSaveSitemap() {
     isTerritoryVisibleInLanding(asTerritoryVisibilityMetadata(location.metadata)),
   );
 
-  const { data: groupsRows, error: groupsError } = await supabase
-    .from('territorial_groups')
-    .select('*')
-    .eq('status', 'active');
-
-  if (groupsError) {
-    logger.error('generateAndSaveSitemap.groups', groupsError);
-    throw groupsError;
-  }
-
-  const activeGroups = (groupsRows ?? []).filter((group) =>
-    isTerritoryVisibleInLanding(asTerritoryVisibilityMetadata(group.metadata)),
-  );
-
-  const groupIds = activeGroups.map((group) => group.id);
-  const membersByGroup = new Map<string, Location[]>();
-
-  if (groupIds.length > 0) {
-    const { data: membersRows, error: membersError } = await supabase
-      .from('territorial_group_members')
-      .select('group_id, location:locations!location_id(*)')
-      .in('group_id', groupIds);
-
-    if (membersError) {
-      logger.error('generateAndSaveSitemap.groupMembers', membersError);
-      throw membersError;
-    }
-
-    for (const member of membersRows ?? []) {
-      const row = member as {
-        group_id: string;
-        location?: Location | null;
-      };
-      if (!row.group_id || !row.location) continue;
-      const current = membersByGroup.get(row.group_id) ?? [];
-      current.push(row.location);
-      membersByGroup.set(row.group_id, current);
-    }
-  }
-
-  const groups: TerritorialGroupWithMembers[] = activeGroups.map((group) => ({
-    ...(group as TerritorialGroupWithMembers),
-    members: membersByGroup.get(group.id) ?? [],
-  }));
+  const groups = (await TerritorialGroupsReadService.listActiveGroups())
+    .filter((group) =>
+      isTerritoryVisibleInLanding(asTerritoryVisibilityMetadata(group.metadata)),
+    ) as TerritorialGroupWithMembers[];
 
   const sitemap = generateSitemap(locations, groups);
   const outputPath = resolve(process.cwd(), 'public', 'sitemap.xml');

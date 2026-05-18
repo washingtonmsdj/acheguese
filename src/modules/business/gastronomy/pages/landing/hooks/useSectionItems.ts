@@ -3,7 +3,7 @@
  */
 
 import { useMemo } from 'react';
-import type { GastronomyBusiness, PublicGastronomyFoodItem } from '../../../types';
+import type { GastronomyBusiness, PublicGastronomyFoodItem } from '@/modules/business/gastronomy/types';
 import type { BusinessSectionItems, FoodSectionItems } from '../types';
 import {
   DISTANCE_FALLBACK,

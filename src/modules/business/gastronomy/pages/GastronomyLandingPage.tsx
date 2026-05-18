@@ -12,8 +12,6 @@
 
  */
 
-
-
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { Link, useNavigate } from 'react-router-dom';
@@ -23,8 +21,6 @@ import { Helmet } from 'react-helmet-async';
 import { motion } from 'framer-motion';
 
 import { Loader2 } from 'lucide-react';
-
-
 
 import gastronomyHeroBg from '@/assets/gastronomy-hero-bg.jpg';
 
@@ -103,8 +99,6 @@ import type { DisplayLayout } from './landing/types';
 
 import { INSECURE_CONTEXT_DESTINATION_MESSAGE } from './landing/constants';
 
-
-
 const fadeIn = {
 
   hidden: { opacity: 0, y: 24 },
@@ -112,8 +106,6 @@ const fadeIn = {
   visible: { opacity: 1, y: 0, transition: { duration: 0.45 } },
 
 };
-
-
 
 // â”€â”€ Categorias de gastronomia (estilo empresa) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
@@ -124,8 +116,6 @@ const EmojiIcon = ({ emoji, className }: { emoji: string; className?: string }) 
   <span className={className} style={{ fontSize: '1.5rem', lineHeight: 1 }}>{emoji}</span>
 
 );
-
-
 
 type CategoryIconComponent = (props: { className?: string }) => JSX.Element;
 
@@ -172,8 +162,6 @@ const GASTRO_CATEGORIES: Array<{
 
 ];
 
-
-
 export default function GastronomyLandingPage() {
 
   const navigate = useNavigate();
@@ -190,15 +178,11 @@ export default function GastronomyLandingPage() {
 
   const territoryFilter = moduleTerritory.territoryFilter;
 
-
-
   // Estado local
 
   const [displayLayout, setDisplayLayout] = useState<DisplayLayout>('grid');
 
   const [sortBy, setSortBy] = useState<BusinessSortKey>('relevance');
-
-
 
   // Delivery destination management
 
@@ -211,8 +195,6 @@ export default function GastronomyLandingPage() {
     autoRequestLocation: true,
 
   });
-
-
 
   const {
 
@@ -252,13 +234,9 @@ export default function GastronomyLandingPage() {
 
   } = deliveryDestinationManager;
 
-
-
   // Filters management
 
   const filtersManager = useGastronomyFilters();
-
-
 
   const {
 
@@ -288,8 +266,6 @@ export default function GastronomyLandingPage() {
 
   } = filtersManager;
 
-
-
   // Territory info
 
   const territoryName =
@@ -304,15 +280,11 @@ export default function GastronomyLandingPage() {
 
         : moduleTerritory.displayLabel;
 
-
-
   const hasDeliveryContext = Boolean(deliveryDestination);
 
   const isDestinationRequired = !hasDeliveryContext;
 
   const shouldLoadCatalog = hasDeliveryContext && territoryFilter.scope !== 'none';
-
-
 
   // Active filters for queries
 
@@ -331,8 +303,6 @@ export default function GastronomyLandingPage() {
     [filters, searchQuery, territoryFilter],
 
   );
-
-
 
   // Data fetching
 
@@ -353,8 +323,6 @@ export default function GastronomyLandingPage() {
     enabled: shouldLoadCatalog,
 
   });
-
-
 
   const { data: foodCatalog = [] } = useGastronomyFoodCatalog(
 
@@ -380,8 +348,6 @@ export default function GastronomyLandingPage() {
 
   );
 
-
-
   const loadedBusinesses = useMemo(
 
     () => businessesData?.pages.flatMap((page) => page.businesses) || [],
@@ -390,13 +356,9 @@ export default function GastronomyLandingPage() {
 
   );
 
-
-
   const effectiveBusinesses = loadedBusinesses;
 
   const effectiveFoodCatalog = foodCatalog;
-
-
 
   // Sorting and proximity calculation (unified hook)
 
@@ -420,15 +382,11 @@ export default function GastronomyLandingPage() {
 
   });
 
-
-
   const nearestDistanceLabel = nearestDistance
 
     ? `${(nearestDistance / 1000).toFixed(1)} km`
 
     : null;
-
-
 
   // Pagination
 
@@ -444,15 +402,9 @@ export default function GastronomyLandingPage() {
 
   });
 
-
-
   const { visibleCount, canLoadMore, handleLoadMore } = paginationManager;
 
-
-
   const displayedBusinesses = sortedBusinesses.slice(0, visibleCount);
-
-
 
   // Section items
 
@@ -465,8 +417,6 @@ export default function GastronomyLandingPage() {
     distanceMap: businessDistanceMap,
 
   });
-
-
 
   // Cuisine counts
 
@@ -484,8 +434,6 @@ export default function GastronomyLandingPage() {
 
   }, [effectiveFoodCatalog]);
 
-
-
   // Computed values
 
   const sectionScopeLabel = hasCuisineFilter
@@ -494,19 +442,13 @@ export default function GastronomyLandingPage() {
 
     : `em ${territoryName}`;
 
-
-
   const shouldShowFoodSections =
 
     effectiveFoodCatalog.length > 0 && (!hasActiveFilters || hasCuisineFilter);
 
-
-
   const shouldShowBusinessSections =
 
     effectiveBusinesses.length > 0 && (!hasActiveFilters || hasCuisineFilter);
-
-
 
   const allStoresSubtitle = hasCuisineFilter
 
@@ -517,8 +459,6 @@ export default function GastronomyLandingPage() {
       ? 'Exibindo restaurantes com filtros ativos'
 
       : `Catalogo completo de restaurantes em ${territoryName}`;
-
-
 
   const destinationGateMessage = !canUseGeolocation
 
@@ -534,8 +474,6 @@ export default function GastronomyLandingPage() {
 
         : 'Informe um endereco completo ou use sua localizacao atual para liberar restaurantes e cardapios.';
 
-
-
   const proximityFallbackMessage = distanceReferenceCoords
 
     ? `Ainda estamos mapeando os restaurantes desta seleção. Em breve você verá os mais próximos do seu endereço.`
@@ -550,13 +488,9 @@ export default function GastronomyLandingPage() {
 
         : 'Defina um destino de entrega para ordenar por distancia real.';
 
-
-
   const isProximitySortActive = sortBy === 'nearest';
 
   const isLoading = businessesLoading && sortedBusinesses.length === 0;
-
-
 
   // Handlers
 
@@ -574,15 +508,11 @@ export default function GastronomyLandingPage() {
 
   }, [appUrls.auth.login, navigate]);
 
-
-
   const handleSortChange = useCallback((value: string) => {
 
     setSortBy(value as BusinessSortKey);
 
   }, []);
-
-
 
   // Auto-switch to nearest when searching
 
@@ -597,8 +527,6 @@ export default function GastronomyLandingPage() {
     setSortBy((current) => (current === 'relevance' ? 'nearest' : current));
 
   }, [searchQuery]);
-
-
 
   if (isLoading) {
 
@@ -620,8 +548,6 @@ export default function GastronomyLandingPage() {
 
   }
 
-
-
   return (
 
     <>
@@ -640,8 +566,6 @@ export default function GastronomyLandingPage() {
 
       </Helmet>
 
-
-
       <div className="min-h-screen bg-background">
 
         {/* â”€â”€ Header exclusivo â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
@@ -653,8 +577,6 @@ export default function GastronomyLandingPage() {
           onSearchChange={setSearchQuery}
 
         />
-
-
 
         {/* â”€â”€ Cards de Categorias (TOPO) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
 
@@ -717,8 +639,6 @@ export default function GastronomyLandingPage() {
           </div>
 
         </section>
-
-
 
         {/* â”€â”€ Hero Carrossel de Banners â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
 
@@ -808,8 +728,6 @@ export default function GastronomyLandingPage() {
 
         />
 
-
-
         <section className="container mx-auto px-4 pt-4">
 
           {/* â”€â”€ Google AdSense â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
@@ -832,11 +750,7 @@ export default function GastronomyLandingPage() {
 
           </div>
 
-
-
         </section>
-
-
 
         {isDestinationRequired && (
 
@@ -855,8 +769,6 @@ export default function GastronomyLandingPage() {
           />
 
         )}
-
-
 
         {hasDeliveryContext && (
 
@@ -930,8 +842,6 @@ export default function GastronomyLandingPage() {
 
             />
 
-
-
             {shouldShowBusinessSections && (
 
               <BusinessSections
@@ -956,8 +866,6 @@ export default function GastronomyLandingPage() {
 
             )}
 
-
-
             {shouldShowFoodSections && (
 
               <FoodCatalogSections
@@ -969,8 +877,6 @@ export default function GastronomyLandingPage() {
               />
 
             )}
-
-
 
             <section className="container mx-auto px-4 py-6">
 
@@ -995,8 +901,6 @@ export default function GastronomyLandingPage() {
                 onClearFilters={clearFilters}
 
               />
-
-
 
               {isProximitySortActive && (
 
@@ -1026,8 +930,6 @@ export default function GastronomyLandingPage() {
 
               )}
 
-
-
               {showAdvancedFilters && (
 
                 <AdvancedFiltersPanel
@@ -1039,8 +941,6 @@ export default function GastronomyLandingPage() {
                 />
 
               )}
-
-
 
               <BusinessListSection
 
@@ -1085,8 +985,6 @@ export default function GastronomyLandingPage() {
               />
 
             </section>
-
-
 
             <section className="border-t border-border/50">
 
@@ -1152,8 +1050,6 @@ export default function GastronomyLandingPage() {
 
         )}
 
-
-
       </div>
 
     </>
@@ -1161,6 +1057,4 @@ export default function GastronomyLandingPage() {
   );
 
 }
-
-
 

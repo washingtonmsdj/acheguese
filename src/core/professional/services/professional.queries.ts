@@ -13,6 +13,7 @@ import { trackError } from "@/shared/utils/errorTracking";
 import { PAGINATION } from "@/shared/constants";
 import { applyTerritoryFilter } from "@/core/location";
 import { ReviewsService } from "@/core/reviews";
+import { PublicIdentityService } from "@/core/public-identity";
 import { sanitizeForILike } from "@/shared/utils/sqlSanitization";
 import type { TerritoryFilter } from "@/core/location/types";
 import type {
@@ -355,7 +356,7 @@ export async function getReviews(professionalId: string): Promise<ProfessionalRe
       professionalId,
       "professional",
     );
-    return reviews as ProfessionalReview[];
+    return reviews as unknown as ProfessionalReview[];
   } catch (error) {
     logger.error("[professional.queries] Error fetching reviews:", error);
     trackError(error as Error, {
@@ -559,4 +560,188 @@ export async function getPublicProfileBySlug(
     });
     return null;
   }
+}
+
+export type ProfessionalPublicProfile = {
+  id: string;
+  slug: string;
+  professional_name: string;
+  description: string | null;
+  service_category: string | null;
+  service_subcategory: string | null;
+  is_verified: boolean;
+  is_accepting_clients: boolean;
+  city: string | null;
+  state: string | null;
+  avatar_url: string | null;
+  logo_url: string | null;
+  certifications: string[] | null;
+  experience_years: number | null;
+  price_range: string | null;
+};
+
+export async function getProfessionalPublicProfileBySlug(
+  slug: string,
+  uf: string,
+  cidade: string,
+): Promise<ProfessionalPublicProfile | null> {
+  const { data, error } = await (supabase as any)
+    .from("professional_data")
+    .select(
+      `
+      id, slug, professional_name, description,
+      service_category, service_subcategory,
+      is_verified, is_accepting_clients,
+      certifications, experience_years, price_range, metadata,
+      profiles!inner(avatar_url),
+      location:locations!professional_data_location_id_fkey(
+        name, type, slug,
+        parent:locations!locations_parent_id_fkey(name, slug)
+      )
+    `,
+    )
+    .eq("slug", slug)
+    .in("visibility", ["public_listed", "public_unlisted"])
+    .maybeSingle();
+
+  if (error) throw new Error(error.message);
+  if (!data) return null;
+
+  const location = data.location as any;
+  let city: string | null = null;
+  let state: string | null = null;
+
+  if (location) {
+    if (location.type === "city") {
+      city = location.name;
+      state = location.parent?.slug?.toUpperCase() ?? null;
+    } else if (location.type === "district") {
+      city = location.parent?.name ?? null;
+      state = uf.toUpperCase();
+    }
+  }
+
+  const ufMatch = !state || state.toLowerCase() === uf.toLowerCase();
+  const cidadeMatch =
+    !city ||
+    city.toLowerCase().replace(/\s+/g, "-") === cidade.toLowerCase() ||
+    location?.slug === cidade.toLowerCase();
+
+  if (!ufMatch || !cidadeMatch) return null;
+
+  const profiles = data.profiles as any;
+  const metadata = (data.metadata as any) ?? {};
+
+  return {
+    id: data.id,
+    slug: data.slug,
+    professional_name: data.professional_name,
+    description: data.description,
+    service_category: data.service_category,
+    service_subcategory: data.service_subcategory,
+    is_verified: data.is_verified,
+    is_accepting_clients: data.is_accepting_clients,
+    city,
+    state,
+    avatar_url: profiles?.avatar_url ?? null,
+    logo_url: metadata?.logo_url ?? null,
+    certifications: data.certifications,
+    experience_years: data.experience_years,
+    price_range: data.price_range,
+  };
+}
+
+export async function checkProfessionalSlugExists(
+  slug: string,
+  excludeId?: string,
+): Promise<boolean> {
+  let query = (supabase as any)
+    .from("professional_data")
+    .select("id")
+    .eq("slug", slug)
+    .limit(1);
+
+  if (excludeId) {
+    query = query.neq("id", excludeId);
+  }
+
+  const { data, error } = await query.maybeSingle();
+  if (error) throw error;
+  return !!data;
+}
+
+export async function getProfessionalSimilarSlugs(
+  slug: string,
+  limit = PAGINATION.DEFAULT_LIMIT,
+): Promise<string[]> {
+  const { data, error } = await supabase
+    .from("professional_data")
+    .select("slug")
+    .ilike("slug", `${slug}%`)
+    .limit(limit);
+
+  if (error) throw error;
+  return (data || []).map((row: { slug: string }) => row.slug).filter(Boolean);
+}
+
+export async function getProfessionalSlugHistory(
+  professionalId: string,
+): Promise<
+  Array<{
+    id: string;
+    old_slug: string;
+    new_slug: string | null;
+    change_reason: string;
+    created_at: string;
+  }>
+> {
+  const { data, error } = await (supabase as any)
+    .from("professional_slug_history")
+    .select("*")
+    .eq("professional_id", professionalId)
+    .order("created_at", { ascending: false });
+
+  if (error) throw error;
+  return data || [];
+}
+
+export async function validateAvailableProfessionalSlug(slug: string): Promise<string> {
+  const normalizedSlug = PublicIdentityService.normalize(slug, "professional");
+  const availability = await PublicIdentityService.checkAvailability({
+    identifier: normalizedSlug,
+    entityType: "professional",
+  });
+
+  if (availability.status !== "available") {
+    throw new Error(
+      availability.message ||
+        `Slug "${normalizedSlug}" nao esta disponivel.` +
+          (availability.suggestion ? ` Sugestao: ${availability.suggestion}` : ""),
+    );
+  }
+
+  return normalizedSlug;
+}
+
+export async function generateUniqueProfessionalSlug(name: string): Promise<string> {
+  const baseSlug = PublicIdentityService.normalize(name, "professional") || "profissional";
+  let candidate = baseSlug;
+
+  for (let attempt = 0; attempt < 10; attempt += 1) {
+    const availability = await PublicIdentityService.checkAvailability({
+      identifier: candidate,
+      entityType: "professional",
+    });
+
+    if (availability.status === "available") {
+      return candidate;
+    }
+
+    candidate =
+      availability.suggestion && availability.suggestion !== candidate
+        ? availability.suggestion
+        : `${baseSlug}-${attempt + 1}`;
+  }
+
+  throw new Error("Nao foi possivel gerar um slug profissional disponivel.");
 }

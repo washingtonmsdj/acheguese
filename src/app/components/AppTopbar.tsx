@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Home, LogIn, MessageCircle } from 'lucide-react';
+import { LogIn, MessageCircle } from 'lucide-react';
 import { Button } from '@/shared/components/ui/button';
 import { UnifiedNotificationBellV2 } from '@/core/notifications';
 import { MessagingService } from '@/core/messaging';
@@ -15,6 +15,8 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/shared/components/ui/tooltip';
+
+const OFFICIAL_LOGO_SRC = '/images/logo-icon.png';
 
 export function AppTopbar() {
   const navigate = useNavigate();
@@ -65,27 +67,16 @@ export function AppTopbar() {
           onTouchStart={() => prefetchRouteByHref('/')}
           className="flex items-center gap-2 hover:scale-105 transition-transform duration-200 flex-shrink-0 group"
         >
-          {siteSettings?.logo_url ? (
-            <>
-              <img
-                src={siteSettings.logo_url}
-                alt={siteSettings.site_name || 'Logo'}
-                className="h-10 w-auto object-contain"
-              />
-              <span className="text-xl font-bold text-foreground font-heading hidden sm:inline">
-                Achegue-<span className="text-primary">se</span>
-              </span>
-            </>
-          ) : (
-            <>
-              <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-primary via-primary to-primary/80 flex items-center justify-center shadow-md group-hover:shadow-lg transition-shadow">
-                <Home className="h-4.5 w-4.5 text-primary-foreground" />
-              </div>
-              <span className="text-xl font-bold text-foreground font-heading hidden sm:inline">
-                Achegue-<span className="text-primary">se</span>
-              </span>
-            </>
-          )}
+          <>
+            <img
+              src={OFFICIAL_LOGO_SRC}
+              alt={siteSettings?.site_name || 'Achegue-se'}
+              className="h-12 sm:h-14 w-auto object-contain"
+            />
+            <span className="text-xl font-bold text-foreground font-heading hidden sm:inline">
+              Achegue-<span className="text-primary">se</span>
+            </span>
+          </>
         </Link>
 
         <div className="flex min-w-0 flex-1" />

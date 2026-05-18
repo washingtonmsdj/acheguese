@@ -5,7 +5,7 @@
 import { motion } from 'framer-motion';
 import { MapPin, Tag } from 'lucide-react';
 import { Button } from '@/shared/components/ui/button';
-import { BusinessSectionCarousel } from '../../../components';
+import { BusinessSectionCarousel } from '@/modules/business/gastronomy/components';
 import type { BusinessSectionItems } from '../types';
 import { INSECURE_CONTEXT_DESTINATION_MESSAGE } from '../constants';
 

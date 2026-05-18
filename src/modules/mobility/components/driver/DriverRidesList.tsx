@@ -19,7 +19,7 @@ import { Button } from "@/shared/components/ui/button";
 import { Avatar, AvatarFallback } from "@/shared/components/ui/avatar";
 import { Badge } from "@/shared/components/ui/badge";
 import { Skeleton } from "@/shared/components/ui/skeleton";
-import { PassengerTrustBadge } from "../../../../shared/components/badges/PassengerTrustBadge";
+import { PassengerTrustBadge } from "@/shared/components/badges/PassengerTrustBadge";
 import { RideChatDialog } from "../RideChatDialog";
 import { cn } from "@/shared/utils/cn";
 import type { MobilityRide } from "@/core/mobility/types/ride";

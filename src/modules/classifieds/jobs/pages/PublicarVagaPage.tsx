@@ -12,67 +12,54 @@ import React, { useState, useCallback, useMemo } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  ArrowLeft, ArrowRight, ChevronRight,
-  Briefcase, Building2, MapPin, Tag, DollarSign,
-  GraduationCap, Award, Phone, Mail, Globe,
-  ExternalLink, Eye, Loader2, CheckCircle2,
-  AlertCircle, Sparkles, Plus, X, Send,
-  FileText, Users, Clock, Shield,
+  ArrowRight,
+  Globe,
+  AlertCircle,
+  FileText,
 } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
-import { Input } from "@/shared/components/ui/input";
-import { Textarea } from "@/shared/components/ui/textarea";
-import { Switch } from "@/shared/components/ui/switch";
 import { cn } from "@/shared/utils/cn";
 import { toast } from "sonner";
 import { useAuth } from "@/core/auth/hooks/useAuth";
 import { useSessionContext } from "@/core/session";
 import { useVagasLocation } from "../hooks/useVagasLocation";
 import { useVagaPublishPermission } from "../hooks/useVagaPublishPermission";
-import { VagasService } from "../services/VagasService";
-import { postService } from "@/core/posts/services";
-import { workOpportunitiesService } from "@/core/work-opportunities/services/WorkOpportunitiesService";
+import { VagasPublishWorkflowService } from "../services/VagasPublishWorkflowService";
 import { JOB_FORM_LIMITS } from "../constants/form-limits";
 import {
   VAGA_CATEGORIAS,
-  CONTRATO_LABELS,
-  MODALIDADE_LABELS,
-  NIVEL_LABELS,
   type VagaContrato,
-  type VagaHighlightType,
   type VagaModalidade,
   type VagaNivel,
-  type VagaSalaryMode,
 } from "../types/vagas.types";
-
-// ─── Steps ────────────────────────────────────────────────────
-const STEPS = [
-  { id: "info",      label: "Informações",  icon: Briefcase, number: 1 },
-  { id: "details",   label: "Detalhes",     icon: Tag,       number: 2 },
-  { id: "salary",    label: "Salário",      icon: DollarSign, number: 3 },
-  { id: "location",  label: "Localização",  icon: MapPin,    number: 4 },
-  { id: "contact",   label: "Contato",      icon: Phone,     number: 5 },
-  { id: "preview",   label: "Revisão",      icon: Eye,       number: 6 },
-] as const;
-
-type StepId = typeof STEPS[number]["id"];
-
-const contratoLabelsMap = new Map(
-  Object.entries(CONTRATO_LABELS) as Array<[VagaContrato, string]>,
-);
-const modalidadeLabelsMap = new Map(
-  Object.entries(MODALIDADE_LABELS) as Array<[VagaModalidade, string]>,
-);
-const nivelLabelsMap = new Map(
-  Object.entries(NIVEL_LABELS) as Array<[VagaNivel, string]>,
-);
-
-// ─── Suggested benefits ──────────────────────────────────────
-const SUGGESTED_BENEFITS = [
-  "Vale Refeição", "Vale Transporte", "Plano de Saúde", "Plano Odontológico",
-  "Seguro de Vida", "Gympass", "Day Off Aniversário", "PLR",
-  "Home Office", "Horário Flexível", "Estacionamento", "Auxílio Creche",
-];
+import {
+  STEPS,
+  SUGGESTED_BENEFITS,
+  addUniqueListItem,
+  buildVagasListPath,
+  contratoLabelsMap,
+  modalidadeLabelsMap,
+  nivelLabelsMap,
+  parseSalaryInputToCents,
+  removeListItem,
+  resolveSalaryMode,
+  toggleListItem,
+  type StepId,
+} from "./publicarVaga.shared";
+import { validateBeforePublish } from "./publicarVaga.validation";
+import {
+  ContactStep,
+  DetailsStep,
+  InfoStep,
+  LocationStep,
+  PreviewStep,
+  SalaryStep,
+} from "./steps";
+import {
+  PublishBottomActions,
+  PublishHeader,
+  PublishPermissionBanner,
+} from "./publicarVaga.chrome";
 
 // ═════════════════════════════════════════════════════════════
 export default function PublicarVagaPage() {
@@ -130,27 +117,17 @@ export default function PublicarVagaPage() {
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const currentStepIndex = STEPS.findIndex((s) => s.id === currentStep);
-  const vagasListPath = useMemo(() => {
-    const parts = location.pathname.split("/").filter(Boolean);
-    if (
-      parts[0] === "comunidade" &&
-      parts[1] &&
-      parts[2] &&
-      parts[3] &&
-      parts[4] === "vagas" &&
-      parts[5] === "publicar"
-    ) {
-      return `/comunidade/${parts[1]}/${parts[2]}/${parts[3]}/vagas`;
-    }
-    return "/vagas";
-  }, [location.pathname]);
+  const vagasListPath = useMemo(
+    () => buildVagasListPath(location.pathname),
+    [location.pathname],
+  );
 
   // ─── Helpers ────────────────────────────────────
   const addToList = useCallback(
     (list: string[], setList: (v: string[]) => void, input: string, setInput: (v: string) => void) => {
-      const trimmed = input.trim();
-      if (trimmed && !list.includes(trimmed)) {
-        setList([...list, trimmed]);
+      const next = addUniqueListItem(list, input);
+      if (next !== list) {
+        setList(next);
         setInput("");
       }
     },
@@ -159,15 +136,13 @@ export default function PublicarVagaPage() {
 
   const removeFromList = useCallback(
     (list: string[], setList: (v: string[]) => void, index: number) => {
-      setList(list.filter((_, i) => i !== index));
+      setList(removeListItem(list, index));
     },
     []
   );
 
   const toggleBenefit = useCallback((benefit: string) => {
-    setBeneficios((prev) =>
-      prev.includes(benefit) ? prev.filter((b) => b !== benefit) : [...prev, benefit]
-    );
+    setBeneficios((prev) => toggleListItem(prev, benefit));
   }, []);
 
   // ─── Step validation ───────────────────────────
@@ -257,97 +232,27 @@ export default function PublicarVagaPage() {
     return Math.round((filled / total) * 100);
   }, [titulo, empresa, descricao, categoria, salarioMin, salarioMax, ocultarSalario, activeLocationId, contatoEmail, contatoWhatsapp, contatoTelefone, linkExterno, requisitos, beneficios]);
 
-  const parseSalaryInputToCents = useCallback((value: string): number | undefined => {
-    const sanitized = value.trim();
-    if (!sanitized) return undefined;
-    const numeric = Number(sanitized.replace(",", "."));
-    if (!Number.isFinite(numeric) || numeric <= 0) return undefined;
-    return Math.round(numeric * 100);
-  }, []);
-
-  const resolveSalaryMode = useCallback(
-    (
-      minValueInCents: number | undefined,
-      maxValueInCents: number | undefined,
-    ): {
-      mode: VagaSalaryMode;
-      min?: number;
-      max?: number;
-      text?: string;
-    } => {
-      if (ocultarSalario) {
-        return {
-          mode: "a_combinar",
-          text: "A combinar",
-        };
-      }
-
-      if (minValueInCents && maxValueInCents) {
-        return {
-          mode: "range",
-          min: Math.min(minValueInCents, maxValueInCents),
-          max: Math.max(minValueInCents, maxValueInCents),
-        };
-      }
-
-      if (minValueInCents || maxValueInCents) {
-        const fixedValue = minValueInCents ?? maxValueInCents;
-        return {
-          mode: "fixed",
-          min: fixedValue,
-          max: fixedValue,
-        };
-      }
-
-      return {
-        mode: "a_combinar",
-        text: "A combinar",
-      };
-    },
-    [ocultarSalario],
-  );
-
   // ─── Submit ─────────────────────────────────────
   const handlePublish = useCallback(async () => {
-    if (!titulo.trim() || !empresa.trim() || !descricao.trim()) {
-      toast.error("Preencha todos os campos obrigatórios");
-      setCurrentStep("info");
-      return;
-    }
-
-    if (!contatoEmail.trim() && !contatoWhatsapp.trim() && !contatoTelefone.trim() && !linkExterno.trim()) {
-      toast.error("Informe ao menos um canal de contato");
-      setCurrentStep("contact");
-      return;
-    }
-
-    if (isLoadingPermission) {
-      toast.error("Aguarde a validação das permissões para publicar.");
-      setCurrentStep("location");
-      return;
-    }
-
-    if (!permission.canPublish) {
-      toast.error(permission.message);
-      setCurrentStep("location");
-      return;
-    }
-
-    if (!permission.isAdmin && !permission.businessId) {
-      toast.error("Empresa vinculada não encontrada para publicação.");
-      setCurrentStep("location");
-      return;
-    }
-
-    if (!activeProfile?.id) {
-      toast.error("Selecione um perfil ativo para publicar.");
-      setCurrentStep("location");
-      return;
-    }
-
-    if (!activeLocationId) {
-      toast.error("Selecione um território ativo para publicar.");
-      setCurrentStep("location");
+    const validationError = validateBeforePublish({
+      titulo,
+      empresa,
+      descricao,
+      contatoEmail,
+      contatoWhatsapp,
+      contatoTelefone,
+      linkExterno,
+      isLoadingPermission,
+      canPublish: permission.canPublish,
+      permissionMessage: permission.message,
+      isAdmin: permission.isAdmin,
+      businessId: permission.businessId,
+      activeProfileId: activeProfile?.id,
+      activeLocationId,
+    });
+    if (validationError) {
+      toast.error(validationError.message);
+      setCurrentStep(validationError.step);
       return;
     }
 
@@ -355,111 +260,54 @@ export default function PublicarVagaPage() {
     try {
       const salarioMinCents = parseSalaryInputToCents(salarioMin);
       const salarioMaxCents = parseSalaryInputToCents(salarioMax);
-      const salary = resolveSalaryMode(salarioMinCents, salarioMaxCents);
+      const salary = resolveSalaryMode(
+        ocultarSalario,
+        salarioMinCents,
+        salarioMaxCents,
+      );
+      const normalizedSalaryMode =
+        salary.mode === "fixed" ? "range" : salary.mode;
+      const normalizedActiveLocation = activeLocation
+        ? {
+            id: activeLocation.id,
+            name: activeLocation.name,
+            type: activeLocation.type === "district" ? "district" : "city",
+          }
+        : null;
 
-      let applicationChannel: "email" | "whatsapp" | "external_url" | "phone" = "email";
-      if (linkExterno.trim()) applicationChannel = "external_url";
-      else if (contatoWhatsapp.trim()) applicationChannel = "whatsapp";
-      else if (contatoTelefone.trim()) applicationChannel = "phone";
-      else if (contatoEmail.trim()) applicationChannel = "email";
-
-      let highlightType: VagaHighlightType = "none";
-      if (destaque) highlightType = "premium";
-      else if (urgente) highlightType = "featured";
-
-      const createdVaga = await VagasService.createVaga({
-        slug: VagasService.generateSlug(titulo.trim(), empresa.trim()),
-        titulo: titulo.trim(),
-        descricao: descricao.trim(),
-        resumo: descricao.trim().slice(0, 180),
-        empresaNome: empresa.trim(),
-        empresaLogoUrl: undefined,
-        empresaId: permission.businessId,
-        ownerProfileId: activeProfile.id,
-        locationId: activeLocationId,
-        bairroId: activeLocation?.type === "district" ? activeLocation.id : undefined,
-        bairroNome: activeLocation?.type === "district" ? activeLocation.name : undefined,
-        categoria: categoria || "outro",
-        subcategoria: undefined,
-        contrato,
-        modalidade,
-        nivel,
-        tags,
-        salaryMode: salary.mode,
-        salarioMin: salary.min,
-        salarioMax: salary.max,
-        salarioTexto: salary.text,
-        beneficios,
-        requisitos,
-        diferenciais: [],
-        responsabilidades: [],
-        jornadaDescricao: undefined,
-        applicationChannel,
-        applicationUrl: linkExterno.trim() || undefined,
-        applicationWhatsapp: contatoWhatsapp.trim() || undefined,
-        applicationEmail: contatoEmail.trim() || undefined,
-        applicationPhone: contatoTelefone.trim() || undefined,
-        applicationInstructions: undefined,
-        status: "pending_review",
-        urgencia: urgente ? "urgente" : "normal",
-        highlightType,
-        vagasQuantidade: Number(vagasQtd) > 0 ? Number(vagasQtd) : 1,
-        publishedAt: undefined,
-        expiresAt: new Date(Date.now() + 45 * 24 * 60 * 60 * 1000),
-        closedAt: undefined,
-        metaTitle: `${titulo.trim()} | ${empresa.trim()}`,
-        metaDescription: descricao.trim().slice(0, 160),
-        ogImageUrl: undefined,
-      });
-
-      try {
-        await postService.createPost({
-          author_profile_id: activeProfile.id,
-          content: `Vaga aberta: ${titulo.trim()} • ${empresa.trim()}`,
-          type: "favor",
-          location_id: activeLocationId,
-          reach: "city",
-          tags: [
-            "format:opportunity",
-            "intent:vaga",
-            `category:${categoria || "outro"}`,
-            `contract:${contrato}`,
-          ],
-          content_intent: "vaga",
-          display_format: "opportunity_card",
-          distribution_channels: ["oportunidades", "empresas", "para_voce", "todos"],
-          content_payload: {
-            schema_version: "territorial-content.v3",
-            intent: "vaga",
-            structural_type: "favor",
-            display_format: "opportunity_card",
-            vaga: {
-              id: createdVaga.id,
-              slug: createdVaga.slug,
-              title: createdVaga.titulo,
-              company: createdVaga.empresaNome,
-              category: createdVaga.categoria,
-              location_id: createdVaga.locationId,
-              target_url: `/vagas/detalhe/${createdVaga.id}`,
-            },
-          },
-        });
-      } catch (feedError) {
-        console.warn("[PublicarVagaPage] Nao foi possivel distribuir vaga no feed", feedError);
-      }
-
-      try {
-        await workOpportunitiesService.notifyMatchingForStructuredVaga({
-          vagaId: createdVaga.id,
-          title: createdVaga.titulo,
-          professionalCategory: createdVaga.categoria,
-          territoryLocationId: createdVaga.locationId,
-          sourceUrl: `/vagas/detalhe/${createdVaga.id}`,
+      await VagasPublishWorkflowService.publish({
+        form: {
+          titulo,
+          empresa,
+          descricao,
+          categoria,
+          contrato,
+          modalidade,
+          nivel,
+          tags,
+          beneficios,
+          requisitos,
+          contatoEmail,
+          contatoWhatsapp,
+          contatoTelefone,
+          linkExterno,
+          vagasQtd,
+          ocultarSalario,
+          salarioMinCents: salary.min,
+          salarioMaxCents: salary.max,
+          salaryMode: normalizedSalaryMode,
+          salaryText: salary.text,
+          urgente,
+          destaque,
+        },
+        context: {
+          activeProfileId: activeProfile.id,
+          activeLocationId,
+          activeLocation: normalizedActiveLocation,
+          permission,
           actorUserId: user?.id ?? null,
-        });
-      } catch (matchingError) {
-        console.warn("[PublicarVagaPage] Nao foi possivel notificar matching da vaga", matchingError);
-      }
+        },
+      });
 
       toast.success("Vaga enviada para revisão com sucesso.");
       navigate(vagasListPath);
@@ -488,8 +336,7 @@ export default function PublicarVagaPage() {
     activeLocation,
     salarioMin,
     salarioMax,
-    resolveSalaryMode,
-    parseSalaryInputToCents,
+    ocultarSalario,
     destaque,
     urgente,
     categoria,
@@ -539,95 +386,21 @@ export default function PublicarVagaPage() {
   // ─── Render ─────────────────────────────────────
   return (
     <div className="flex flex-col min-h-full bg-background">
-      {/* ─── Header ────────────────────────────────── */}
-      <header className="sticky top-0 z-20 border-b border-border bg-card/95 backdrop-blur-sm">
-        <div className="flex items-center gap-3 px-4 py-3 max-w-3xl mx-auto">
-          <motion.button
-            whileTap={{ scale: 0.9 }}
-            onClick={goBackToVagas}
-            className="h-9 w-9 rounded-full bg-secondary flex items-center justify-center text-foreground shrink-0"
-            aria-label="Voltar"
-          >
-            <ArrowLeft className="h-5 w-5" />
-          </motion.button>
-          <div className="flex-1 min-w-0">
-            <h1 className="text-lg font-bold text-foreground truncate flex items-center gap-2">
-              <Briefcase className="h-4 w-4 text-primary shrink-0" />
-              {STEPS.at(currentStepIndex)?.label ?? "Etapa"}
-            </h1>
-            <p className="text-[10px] text-muted-foreground">
-              Passo {currentStepIndex + 1} de {STEPS.length} · {completeness}% preenchido
-            </p>
-          </div>
-          <div className="w-16 h-1.5 rounded-full bg-muted overflow-hidden shrink-0">
-            <motion.div
-              className="h-full rounded-full bg-primary"
-              animate={{ width: `${completeness}%` }}
-              transition={{ duration: 0.4 }}
-            />
-          </div>
-        </div>
+      <PublishHeader
+        steps={STEPS}
+        currentStepIndex={currentStepIndex}
+        completeness={completeness}
+        onBack={goBackToVagas}
+        onStepChange={goToStep}
+      />
 
-        {/* Step indicators */}
-        <div className="flex gap-1 px-4 pb-2 max-w-3xl mx-auto overflow-x-auto scrollbar-hide">
-          {STEPS.map((s, i) => (
-            <button
-              key={s.id}
-              onClick={() => goToStep(s.id)}
-              className={cn(
-                "flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-medium whitespace-nowrap transition-all shrink-0",
-                i === currentStepIndex
-                  ? "bg-primary text-primary-foreground"
-                  : i < currentStepIndex
-                  ? "bg-primary/20 text-primary"
-                  : "bg-muted text-muted-foreground"
-              )}
-            >
-              <s.icon className="h-3 w-3" />
-              <span className="hidden sm:inline">{s.label}</span>
-              <span className="sm:hidden">{s.number}</span>
-            </button>
-          ))}
-        </div>
-      </header>
-
-      <div className="max-w-3xl mx-auto w-full px-4 pt-4">
-        <div
-          className={cn(
-            "rounded-xl border p-3 flex items-start gap-3",
-            permission.canPublish
-              ? "bg-success/10 border-success/25"
-              : "bg-warning/10 border-warning/25",
-          )}
-        >
-          {permission.canPublish ? (
-            <CheckCircle2 className="h-5 w-5 text-success shrink-0 mt-0.5" />
-          ) : (
-            <Shield className="h-5 w-5 text-warning shrink-0 mt-0.5" />
-          )}
-          <div className="space-y-1">
-            <p className="text-sm font-semibold text-foreground">
-              {isLoadingPermission
-                ? "Validando permissão para publicar..."
-                : permission.canPublish
-                  ? "Publicação liberada"
-                  : "Publicação bloqueada"}
-            </p>
-            <p className="text-xs text-muted-foreground">
-              {isLoadingPermission
-                ? "Aguarde a validação do perfil/empresa."
-                : permission.message}
-            </p>
-            {!isLoadingPermission && permission.canPublish && (
-              <p className="text-[11px] text-muted-foreground">
-                Perfil ativo selecionado
-                {" • "}
-                Empresa: <strong>{permission.businessName || empresa || "-"}</strong>
-              </p>
-            )}
-          </div>
-        </div>
-      </div>
+      <PublishPermissionBanner
+        canPublish={permission.canPublish}
+        isLoadingPermission={isLoadingPermission}
+        permissionMessage={permission.message}
+        businessName={permission.businessName}
+        empresaFallback={empresa}
+      />
 
       {/* ─── Step Content ──────────────────────────── */}
       <AnimatePresence mode="wait">
@@ -641,730 +414,134 @@ export default function PublicarVagaPage() {
         >
           {/* ═══ STEP 1: Informações ═══ */}
           {currentStep === "info" && (
-            <div className="space-y-5">
-              {/* Título */}
-              <FormField label="Título da Vaga" error={errors.titulo} counter={`${titulo.length}/${JOB_FORM_LIMITS.MAX_TITLE}`} required>
-                <Input
-                  placeholder="Ex: Desenvolvedor Full Stack, Vendedor Externo..."
-                  value={titulo}
-                  onChange={(e) => setTitulo(e.target.value)}
-                  maxLength={JOB_FORM_LIMITS.MAX_TITLE}
-                  className={cn("h-12 text-sm rounded-xl", errors.titulo && "border-destructive")}
-                />
-              </FormField>
-
-              {/* Empresa */}
-              <FormField label="Nome da Empresa" error={errors.empresa} required>
-                <div className="relative">
-                  <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    placeholder="Ex: TechBa Solutions"
-                    value={empresa}
-                    onChange={(e) => setEmpresa(e.target.value)}
-                    maxLength={100}
-                    className={cn("pl-10 h-12 text-sm rounded-xl", errors.empresa && "border-destructive")}
-                  />
-                </div>
-              </FormField>
-
-              {/* Descrição */}
-              <FormField label="Descrição da Vaga" error={errors.descricao} counter={`${descricao.length}/${JOB_FORM_LIMITS.MAX_DESCRIPTION}`} required>
-                <Textarea
-                  placeholder="Descreva as responsabilidades, ambiente de trabalho, diferenciais..."
-                  rows={5}
-                  value={descricao}
-                  onChange={(e) => setDescricao(e.target.value)}
-                  maxLength={JOB_FORM_LIMITS.MAX_DESCRIPTION}
-                  className={cn("text-sm rounded-xl resize-none", errors.descricao && "border-destructive")}
-                />
-              </FormField>
-
-              {/* Contrato / Modalidade / Nível */}
-              <div className="space-y-4">
-                {/* Contrato */}
-                <div className="space-y-2">
-                  <label className="text-sm font-semibold text-foreground">Tipo de Contrato</label>
-                  <div className="flex flex-wrap gap-1.5">
-                    {(Object.entries(CONTRATO_LABELS) as [VagaContrato, string][]).map(([key, label]) => (
-                      <button
-                        key={key}
-                        onClick={() => setContrato(key)}
-                        className={cn(
-                          "px-3 py-1.5 rounded-lg border text-xs font-medium transition-all",
-                          contrato === key
-                            ? "bg-primary/15 border-primary/50 text-primary"
-                            : "bg-card border-border text-muted-foreground hover:border-primary/30"
-                        )}
-                      >
-                        {label}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Modalidade */}
-                <div className="space-y-2">
-                  <label className="text-sm font-semibold text-foreground">Modalidade</label>
-                  <div className="flex flex-wrap gap-1.5">
-                    {(Object.entries(MODALIDADE_LABELS) as [VagaModalidade, string][]).map(([key, label]) => (
-                      <button
-                        key={key}
-                        onClick={() => setModalidade(key)}
-                        className={cn(
-                          "px-3 py-1.5 rounded-lg border text-xs font-medium transition-all",
-                          modalidade === key
-                            ? "bg-accent/15 border-accent/50 text-accent"
-                            : "bg-card border-border text-muted-foreground hover:border-accent/30"
-                        )}
-                      >
-                        {label}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Nível */}
-                <div className="space-y-2">
-                  <label className="text-sm font-semibold text-foreground">Nível</label>
-                  <div className="flex flex-wrap gap-1.5">
-                    {(Object.entries(NIVEL_LABELS) as [VagaNivel, string][]).map(([key, label]) => (
-                      <button
-                        key={key}
-                        onClick={() => setNivel(key)}
-                        className={cn(
-                          "px-3 py-1.5 rounded-lg border text-xs font-medium transition-all",
-                          nivel === key
-                            ? "bg-success/15 border-success/50 text-success"
-                            : "bg-card border-border text-muted-foreground hover:border-success/30"
-                        )}
-                      >
-                        {label}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              </div>
-
-              {/* Categoria */}
-              <div className="space-y-2">
-                <label className="text-sm font-semibold text-foreground">Categoria</label>
-                <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
-                  {formCategories.map((cat) => (
-                    <button
-                      key={cat.id}
-                      onClick={() => setCategoria(categoria === cat.id ? "" : cat.id)}
-                      className={cn(
-                        "flex flex-col items-center gap-1 p-3 rounded-xl border text-center transition-all",
-                        categoria === cat.id
-                          ? "bg-primary/10 border-primary text-primary shadow-sm"
-                          : "bg-card border-border text-foreground hover:border-primary/30"
-                      )}
-                    >
-                      <span className="text-xl">{cat.emoji}</span>
-                      <span className="text-[10px] font-semibold leading-tight">{cat.label}</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Qtd de vagas */}
-              <FormField label="Quantidade de vagas" optional>
-                <div className="relative">
-                  <Users className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    type="number"
-                    placeholder="Ex: 3"
-                    value={vagasQtd}
-                    onChange={(e) => setVagasQtd(e.target.value)}
-                    className="pl-10 h-12 text-sm rounded-xl"
-                    min={1}
-                  />
-                </div>
-              </FormField>
-            </div>
+            <InfoStep
+              errors={errors}
+              titulo={titulo}
+              setTitulo={setTitulo}
+              empresa={empresa}
+              setEmpresa={setEmpresa}
+              descricao={descricao}
+              setDescricao={setDescricao}
+              contrato={contrato}
+              setContrato={setContrato}
+              contratoEntries={Array.from(contratoLabelsMap.entries())}
+              modalidade={modalidade}
+              setModalidade={setModalidade}
+              modalidadeEntries={Array.from(modalidadeLabelsMap.entries())}
+              nivel={nivel}
+              setNivel={setNivel}
+              nivelEntries={Array.from(nivelLabelsMap.entries())}
+              categoria={categoria}
+              setCategoria={setCategoria}
+              formCategories={formCategories}
+              vagasQtd={vagasQtd}
+              setVagasQtd={setVagasQtd}
+            />
           )}
 
           {/* ═══ STEP 2: Detalhes ═══ */}
           {currentStep === "details" && (
-            <div className="space-y-6">
-              {/* Tags / Habilidades */}
-              <div className="space-y-2">
-                <label className="text-sm font-semibold text-foreground flex items-center gap-1.5">
-                  <Tag className="h-4 w-4 text-primary" />
-                  Habilidades / Tags
-                </label>
-                <div className="flex gap-2">
-                  <Input
-                    placeholder="Ex: React, Excel, Atendimento..."
-                    value={tagInput}
-                    onChange={(e) => setTagInput(e.target.value)}
-                    onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addToList(tags, setTags, tagInput, setTagInput))}
-                    className="h-11 text-sm rounded-xl flex-1"
-                  />
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant="outline"
-                    onClick={() => addToList(tags, setTags, tagInput, setTagInput)}
-                    className="rounded-xl h-11 px-3"
-                  >
-                    <Plus className="h-4 w-4" />
-                  </Button>
-                </div>
-                {tags.length > 0 && (
-                  <div className="flex flex-wrap gap-1.5 mt-2">
-                    {tags.map((tag, i) => (
-                      <span key={i} className="text-xs bg-primary/10 text-primary border border-primary/20 px-2.5 py-1 rounded-full flex items-center gap-1">
-                        {tag}
-                        <button onClick={() => removeFromList(tags, setTags, i)} aria-label={`Remover ${tag}`}>
-                          <X className="h-3 w-3" />
-                        </button>
-                      </span>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              {/* Requisitos */}
-              <div className="space-y-2">
-                <label className="text-sm font-semibold text-foreground flex items-center gap-1.5">
-                  <GraduationCap className="h-4 w-4 text-accent" />
-                  Requisitos
-                </label>
-                <div className="flex gap-2">
-                  <Input
-                    placeholder="Ex: 3+ anos de experiência, CNH B..."
-                    value={reqInput}
-                    onChange={(e) => setReqInput(e.target.value)}
-                    onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addToList(requisitos, setRequisitos, reqInput, setReqInput))}
-                    className="h-11 text-sm rounded-xl flex-1"
-                  />
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant="outline"
-                    onClick={() => addToList(requisitos, setRequisitos, reqInput, setReqInput)}
-                    className="rounded-xl h-11 px-3"
-                  >
-                    <Plus className="h-4 w-4" />
-                  </Button>
-                </div>
-                {requisitos.length > 0 && (
-                  <ul className="space-y-1.5 mt-2">
-                    {requisitos.map((r, i) => (
-                      <li key={i} className="text-xs text-muted-foreground flex items-center justify-between bg-card border border-border rounded-lg px-3 py-2">
-                        <span className="flex items-center gap-2">
-                          <span className="text-accent">•</span>{r}
-                        </span>
-                        <button onClick={() => removeFromList(requisitos, setRequisitos, i)} aria-label={`Remover ${r}`}>
-                          <X className="h-3 w-3 text-muted-foreground hover:text-destructive" />
-                        </button>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </div>
-
-              {/* Benefícios */}
-              <div className="space-y-2">
-                <label className="text-sm font-semibold text-foreground flex items-center gap-1.5">
-                  <Award className="h-4 w-4 text-success" />
-                  Benefícios
-                </label>
-
-                {/* Sugestões rápidas */}
-                <div className="flex flex-wrap gap-1.5">
-                  {SUGGESTED_BENEFITS.map((b) => (
-                    <button
-                      key={b}
-                      onClick={() => toggleBenefit(b)}
-                      className={cn(
-                        "px-2.5 py-1 rounded-full border text-[11px] font-medium transition-all",
-                        beneficios.includes(b)
-                          ? "bg-success/15 border-success/40 text-success"
-                          : "bg-card border-border text-muted-foreground hover:border-success/30"
-                      )}
-                    >
-                      {beneficios.includes(b) ? "✓ " : ""}{b}
-                    </button>
-                  ))}
-                </div>
-
-                {/* Input customizado */}
-                <div className="flex gap-2 mt-1">
-                  <Input
-                    placeholder="Outro benefício..."
-                    value={benInput}
-                    onChange={(e) => setBenInput(e.target.value)}
-                    onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addToList(beneficios, setBeneficios, benInput, setBenInput))}
-                    className="h-11 text-sm rounded-xl flex-1"
-                  />
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant="outline"
-                    onClick={() => addToList(beneficios, setBeneficios, benInput, setBenInput)}
-                    className="rounded-xl h-11 px-3"
-                  >
-                    <Plus className="h-4 w-4" />
-                  </Button>
-                </div>
-
-                {/* Custom benefits (not in suggestions) */}
-                {beneficios.filter((b) => !SUGGESTED_BENEFITS.includes(b)).length > 0 && (
-                  <div className="flex flex-wrap gap-1.5 mt-1">
-                    {beneficios.filter((b) => !SUGGESTED_BENEFITS.includes(b)).map((b, i) => (
-                      <span key={i} className="text-xs bg-success/10 text-success border border-success/20 px-2.5 py-1 rounded-full flex items-center gap-1">
-                        {b}
-                        <button onClick={() => setBeneficios((prev) => prev.filter((x) => x !== b))} aria-label={`Remover ${b}`}>
-                          <X className="h-3 w-3" />
-                        </button>
-                      </span>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </div>
+            <DetailsStep
+              tagInput={tagInput}
+              setTagInput={setTagInput}
+              tags={tags}
+              addTag={() => addToList(tags, setTags, tagInput, setTagInput)}
+              removeTag={(index) => removeFromList(tags, setTags, index)}
+              reqInput={reqInput}
+              setReqInput={setReqInput}
+              requisitos={requisitos}
+              addRequisito={() => addToList(requisitos, setRequisitos, reqInput, setReqInput)}
+              removeRequisito={(index) => removeFromList(requisitos, setRequisitos, index)}
+              beneficios={beneficios}
+              toggleBenefit={toggleBenefit}
+              benInput={benInput}
+              setBenInput={setBenInput}
+              addBeneficio={() => addToList(beneficios, setBeneficios, benInput, setBenInput)}
+              removeBeneficioByValue={(value) =>
+                setBeneficios((prev) => prev.filter((item) => item !== value))
+              }
+              suggestedBenefits={SUGGESTED_BENEFITS}
+            />
           )}
 
-          {/* ═══ STEP 3: Salário ═══ */}
           {currentStep === "salary" && (
-            <div className="space-y-5">
-              <div className="flex items-center justify-between p-4 rounded-xl bg-card border border-border">
-                <div>
-                  <p className="text-sm font-semibold text-foreground">Ocultar salário</p>
-                  <p className="text-[10px] text-muted-foreground">
-                    Exibir como "A combinar" para candidatos
-                  </p>
-                </div>
-                <Switch checked={ocultarSalario} onCheckedChange={setOcultarSalario} />
-              </div>
-
-              {!ocultarSalario && (
-                <div className="space-y-4">
-                  <FormField label="Faixa Salarial (R$)">
-                    <div className="grid grid-cols-2 gap-3">
-                      <div className="relative">
-                        <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                        <Input
-                          type="number"
-                          placeholder="Mínimo"
-                          value={salarioMin}
-                          onChange={(e) => setSalarioMin(e.target.value)}
-                          className="pl-9 h-12 text-sm rounded-xl"
-                          min={0}
-                        />
-                      </div>
-                      <div className="relative">
-                        <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                        <Input
-                          type="number"
-                          placeholder="Máximo"
-                          value={salarioMax}
-                          onChange={(e) => setSalarioMax(e.target.value)}
-                          className="pl-9 h-12 text-sm rounded-xl"
-                          min={0}
-                        />
-                      </div>
-                    </div>
-                  </FormField>
-
-                  <p className="text-xs text-muted-foreground px-1">
-                    💡 Vagas com salário informado recebem até 3x mais candidaturas
-                  </p>
-                </div>
-              )}
-
-              {/* Preview */}
-              <div className="p-4 rounded-xl bg-primary/5 border border-primary/20">
-                <p className="text-xs text-muted-foreground mb-1">Prévia do salário:</p>
-                <p className="text-lg font-bold text-primary">{salaryDisplay}</p>
-              </div>
-
-              {/* Urgente */}
-              <div className="flex items-center justify-between p-4 rounded-xl bg-card border border-border">
-                <div>
-                  <p className="text-sm font-semibold text-foreground flex items-center gap-1.5">
-                    <Clock className="h-4 w-4 text-warning" />
-                    Vaga Urgente
-                  </p>
-                  <p className="text-[10px] text-muted-foreground">
-                    Destaca com selo de urgência na listagem
-                  </p>
-                </div>
-                <Switch checked={urgente} onCheckedChange={setUrgente} />
-              </div>
-
-              {/* Destaque */}
-              <div className="p-4 rounded-xl bg-accent/5 border border-accent/20">
-                <div className="flex items-center gap-2 mb-2">
-                  <Sparkles className="h-4 w-4 text-primary" />
-                  <p className="text-sm font-semibold text-foreground">Destaque Premium</p>
-                </div>
-                <p className="text-xs text-muted-foreground mb-3">
-                  Coloque sua vaga no topo dos resultados por 7 dias.
-                </p>
-                <Button variant="outline" size="sm" className="rounded-xl text-xs" disabled>
-                  Em breve
-                </Button>
-              </div>
-            </div>
+            <SalaryStep
+              ocultarSalario={ocultarSalario}
+              setOcultarSalario={setOcultarSalario}
+              salarioMin={salarioMin}
+              setSalarioMin={setSalarioMin}
+              salarioMax={salarioMax}
+              setSalarioMax={setSalarioMax}
+              salaryDisplay={salaryDisplay}
+              urgente={urgente}
+              setUrgente={setUrgente}
+            />
           )}
 
-          {/* ═══ STEP 4: Localização ═══ */}
           {currentStep === "location" && (
-            <div className="space-y-5">
-              {/* Location status - SSOT */}
-              <div
-                className={cn(
-                  "flex items-center gap-3 p-4 rounded-xl border",
-                  hasActiveLocation
-                    ? "bg-primary/5 border-primary/20"
-                    : "bg-destructive/5 border-destructive/20"
-                )}
-              >
-                <MapPin
-                  className={cn(
-                    "h-5 w-5 shrink-0",
-                    hasActiveLocation ? "text-primary" : "text-destructive"
-                  )}
-                />
-                <div className="flex-1">
-                  {hasActiveLocation ? (
-                    <>
-                      <p className="text-sm font-semibold text-foreground">
-                        📍 {activeLocationName}
-                      </p>
-                      <p className="text-[10px] text-muted-foreground">
-                        Localização ativa — sua vaga aparecerá nesta região
-                      </p>
-                    </>
-                  ) : (
-                    <>
-                      <p className="text-sm font-semibold text-destructive">
-                        Nenhuma localização ativa
-                      </p>
-                      <p className="text-[10px] text-muted-foreground">
-                        Selecione uma comunidade/cidade para publicar sua vaga
-                      </p>
-                    </>
-                  )}
-                </div>
-                {hasActiveLocation && (
-                  <CheckCircle2 className="h-5 w-5 text-primary shrink-0" />
-                )}
-              </div>
-
-              {errors.location && (
-                <div className="flex items-center gap-2 p-3 rounded-xl bg-destructive/10 border border-destructive/20">
-                  <AlertCircle className="h-4 w-4 text-destructive shrink-0" />
-                  <p className="text-xs text-destructive">{errors.location}</p>
-                </div>
-              )}
-
-              {errors.publishPermission && (
-                <div className="flex items-center gap-2 p-3 rounded-xl bg-warning/10 border border-warning/20">
-                  <Shield className="h-4 w-4 text-warning shrink-0" />
-                  <p className="text-xs text-warning">{errors.publishPermission}</p>
-                </div>
-              )}
-
-              {modalidade === "remoto" && (
-                <div className="p-4 rounded-xl bg-accent/10 border border-accent/20">
-                  <p className="text-xs text-muted-foreground">
-                    Vaga remota - a localizacao indica a sede da empresa para referencia.
-                  </p>
-                </div>
-              )}
-            </div>
+            <LocationStep
+              hasActiveLocation={hasActiveLocation}
+              activeLocationName={activeLocationName}
+              errors={errors}
+              modalidade={modalidade}
+            />
           )}
 
-          {/* ═══ STEP 5: Contato ═══ */}
           {currentStep === "contact" && (
-            <div className="space-y-5">
-              <p className="text-xs text-muted-foreground">
-                Informe pelo menos um canal para que candidatos entrem em contato.
-              </p>
-
-              {errors.contact && (
-                <div className="flex items-center gap-2 p-3 rounded-xl bg-destructive/10 border border-destructive/20">
-                  <AlertCircle className="h-4 w-4 text-destructive shrink-0" />
-                  <p className="text-xs text-destructive">{errors.contact}</p>
-                </div>
-              )}
-
-              <FormField label="Email">
-                <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    type="email"
-                    placeholder="rh@empresa.com"
-                    value={contatoEmail}
-                    onChange={(e) => setContatoEmail(e.target.value)}
-                    className="pl-10 h-12 text-sm rounded-xl"
-                  />
-                </div>
-              </FormField>
-
-              <FormField label="WhatsApp">
-                <div className="relative">
-                  <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    placeholder="71999990001"
-                    value={contatoWhatsapp}
-                    onChange={(e) => setContatoWhatsapp(e.target.value)}
-                    className="pl-10 h-12 text-sm rounded-xl"
-                  />
-                </div>
-              </FormField>
-
-              <FormField label="Telefone">
-                <div className="relative">
-                  <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    placeholder="7133001234"
-                    value={contatoTelefone}
-                    onChange={(e) => setContatoTelefone(e.target.value)}
-                    className="pl-10 h-12 text-sm rounded-xl"
-                  />
-                </div>
-              </FormField>
-
-              <FormField label="Link externo" optional>
-                <div className="relative">
-                  <ExternalLink className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    placeholder="https://empresa.com/vagas"
-                    value={linkExterno}
-                    onChange={(e) => setLinkExterno(e.target.value)}
-                    className="pl-10 h-12 text-sm rounded-xl"
-                  />
-                </div>
-              </FormField>
-            </div>
+            <ContactStep
+              errors={errors}
+              contatoEmail={contatoEmail}
+              setContatoEmail={setContatoEmail}
+              contatoWhatsapp={contatoWhatsapp}
+              setContatoWhatsapp={setContatoWhatsapp}
+              contatoTelefone={contatoTelefone}
+              setContatoTelefone={setContatoTelefone}
+              linkExterno={linkExterno}
+              setLinkExterno={setLinkExterno}
+            />
           )}
 
-          {/* ═══ STEP 6: Revisão ═══ */}
           {currentStep === "preview" && (
-            <div className="space-y-4">
-              <div className="flex items-center gap-2 mb-2">
-                <Eye className="h-5 w-5 text-warning" />
-                <h2 className="text-lg font-bold text-foreground">Revisão da Vaga</h2>
-              </div>
-
-              {/* Main info */}
-              <div className="bg-card border border-border rounded-xl p-4 space-y-3">
-                <div>
-                  <h3 className="text-base font-bold text-foreground">{titulo || "Sem título"}</h3>
-                  <p className="text-sm text-muted-foreground flex items-center gap-1 mt-0.5">
-                    <Building2 className="h-3.5 w-3.5" />
-                    {empresa || "Sem empresa"}
-                  </p>
-                </div>
-
-                <div className="flex flex-wrap gap-1.5">
-                  <span className="text-[10px] bg-primary/10 text-primary px-2 py-0.5 rounded-full font-medium">{contratoLabelsMap.get(contrato) ?? contrato}</span>
-                  <span className="text-[10px] bg-accent/10 text-accent px-2 py-0.5 rounded-full font-medium">{modalidadeLabelsMap.get(modalidade) ?? modalidade}</span>
-                  <span className="text-[10px] bg-success/10 text-success px-2 py-0.5 rounded-full font-medium">{nivelLabelsMap.get(nivel) ?? nivel}</span>
-                  {urgente && (
-                    <span className="text-[10px] bg-warning/10 text-warning px-2 py-0.5 rounded-full font-medium flex items-center gap-0.5">
-                      <Clock className="h-2.5 w-2.5" /> Urgente
-                    </span>
-                  )}
-                  {categoria && (
-                    <span className="text-[10px] bg-secondary text-secondary-foreground px-2 py-0.5 rounded-full font-medium">
-                      {formCategories.find((c) => c.id === categoria)?.emoji} {formCategories.find((c) => c.id === categoria)?.label}
-                    </span>
-                  )}
-                </div>
-
-                {(activeLocationName) && (
-                  <p className="text-xs text-muted-foreground flex items-center gap-1">
-                    <MapPin className="h-3 w-3" />
-                    {activeLocationName}
-                  </p>
-                )}
-              </div>
-
-              {/* Salário */}
-              <div className="bg-card border border-border rounded-xl p-4">
-                <p className="text-xs font-bold text-foreground uppercase tracking-wider mb-1">Salário</p>
-                <p className="text-sm text-primary font-bold">{salaryDisplay}</p>
-              </div>
-
-              {/* Descrição */}
-              <div className="bg-card border border-border rounded-xl p-4">
-                <p className="text-xs font-bold text-foreground uppercase tracking-wider mb-1">Descrição</p>
-                <p className="text-sm text-muted-foreground whitespace-pre-line">{descricao || "—"}</p>
-              </div>
-
-              {/* Tags */}
-              {tags.length > 0 && (
-                <div className="bg-card border border-border rounded-xl p-4">
-                  <p className="text-xs font-bold text-foreground uppercase tracking-wider mb-2">Tags</p>
-                  <div className="flex flex-wrap gap-1.5">
-                    {tags.map((t) => (
-                      <span key={t} className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full">{t}</span>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Requisitos */}
-              {requisitos.length > 0 && (
-                <div className="bg-card border border-border rounded-xl p-4">
-                  <p className="text-xs font-bold text-foreground uppercase tracking-wider mb-2">Requisitos</p>
-                  <ul className="space-y-1">
-                    {requisitos.map((r) => (
-                      <li key={r} className="text-sm text-muted-foreground">• {r}</li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-
-              {/* Benefícios */}
-              {beneficios.length > 0 && (
-                <div className="bg-card border border-border rounded-xl p-4">
-                  <p className="text-xs font-bold text-foreground uppercase tracking-wider mb-2">Benefícios</p>
-                  <div className="flex flex-wrap gap-1.5">
-                    {beneficios.map((b) => (
-                      <span key={b} className="text-xs bg-success/10 text-success px-2 py-0.5 rounded-full">{b}</span>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Contato */}
-              <div className="bg-card border border-border rounded-xl p-4">
-                <p className="text-xs font-bold text-foreground uppercase tracking-wider mb-2">Contato</p>
-                <div className="space-y-1 text-sm text-muted-foreground">
-                  {contatoEmail && <p className="flex items-center gap-2"><Mail className="h-3.5 w-3.5" /> {contatoEmail}</p>}
-                  {contatoWhatsapp && <p className="flex items-center gap-2"><Phone className="h-3.5 w-3.5" /> {contatoWhatsapp}</p>}
-                  {contatoTelefone && <p className="flex items-center gap-2"><Phone className="h-3.5 w-3.5" /> {contatoTelefone}</p>}
-                  {linkExterno && <p className="flex items-center gap-2"><ExternalLink className="h-3.5 w-3.5" /> {linkExterno}</p>}
-                  {!contatoEmail && !contatoWhatsapp && !contatoTelefone && !linkExterno && (
-                    <p className="text-destructive text-xs">Atencao: nenhum contato informado</p>
-                  )}
-                </div>
-              </div>
-
-              {vagasQtd && (
-                <div className="bg-card border border-border rounded-xl p-4">
-                  <p className="text-xs font-bold text-foreground uppercase tracking-wider mb-1">Vagas disponíveis</p>
-                  <p className="text-sm text-foreground font-semibold">{vagasQtd} vaga(s)</p>
-                </div>
-              )}
-            </div>
+            <PreviewStep
+              titulo={titulo}
+              empresa={empresa}
+              contratoLabel={contratoLabelsMap.get(contrato) ?? contrato}
+              modalidadeLabel={modalidadeLabelsMap.get(modalidade) ?? modalidade}
+              nivelLabel={nivelLabelsMap.get(nivel) ?? nivel}
+              urgente={urgente}
+              categoria={categoria}
+              formCategories={formCategories}
+              activeLocationName={activeLocationName}
+              salaryDisplay={salaryDisplay}
+              descricao={descricao}
+              tags={tags}
+              requisitos={requisitos}
+              beneficios={beneficios}
+              contatoEmail={contatoEmail}
+              contatoWhatsapp={contatoWhatsapp}
+              contatoTelefone={contatoTelefone}
+              linkExterno={linkExterno}
+              vagasQtd={vagasQtd}
+            />
           )}
         </motion.div>
       </AnimatePresence>
 
-      {/* ─── Fixed Bottom Actions ──────────────────── */}
-      <div className="fixed bottom-0 left-0 right-0 p-4 bg-background/95 backdrop-blur-sm border-t border-border z-20">
-        <div className="max-w-3xl mx-auto">
-          {currentStep === "preview" ? (
-            <div className="flex gap-3">
-              <Button
-                variant="outline"
-                className="flex-1 h-12 rounded-xl"
-                onClick={() => setCurrentStep("info")}
-              >
-                Editar
-              </Button>
-              <Button
-                className="flex-1 h-12 text-base font-semibold rounded-xl shadow-lg"
-                onClick={handlePublish}
-                disabled={publishing || isLoadingPermission || !permission.canPublish}
-              >
-                {publishing ? (
-                  <>
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    Publicando...
-                  </>
-                ) : isLoadingPermission ? (
-                  <>
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    Validando...
-                  </>
-                ) : !permission.canPublish ? (
-                  <>
-                    <Shield className="h-4 w-4 mr-2" />
-                    Publicação bloqueada
-                  </>
-                ) : (
-                  <>
-                    <Send className="h-4 w-4 mr-2" />
-                    Publicar Vaga
-                  </>
-                )}
-              </Button>
-            </div>
-          ) : (
-            <div className="flex gap-3">
-              {currentStepIndex > 0 && (
-                <Button
-                  variant="outline"
-                  className="h-12 rounded-xl px-5"
-                  onClick={goBackToVagas}
-                >
-                  <ArrowLeft className="h-4 w-4 mr-1" />
-                  Voltar
-                </Button>
-              )}
-              <Button
-                className="flex-1 h-12 text-base font-semibold rounded-xl"
-                onClick={goNext}
-              >
-                {currentStepIndex === STEPS.length - 2 ? "Revisar" : "Próximo"}
-                <ChevronRight className="h-4 w-4 ml-1" />
-              </Button>
-            </div>
-          )}
-        </div>
-      </div>
+      <PublishBottomActions
+        isPreview={currentStep === "preview"}
+        publishing={publishing}
+        isLoadingPermission={isLoadingPermission}
+        canPublish={permission.canPublish}
+        currentStepIndex={currentStepIndex}
+        stepsLength={STEPS.length}
+        onEdit={() => setCurrentStep("info")}
+        onPublish={handlePublish}
+        onBack={goBackToVagas}
+        onNext={goNext}
+      />
     </div>
   );
 }
 
-// ─── Reusable Form Field ──────────────────────────────────────
-function FormField({
-  label,
-  error,
-  counter,
-  optional,
-  required,
-  children,
-}: {
-  label: string;
-  error?: string;
-  counter?: string;
-  optional?: boolean;
-  required?: boolean;
-  children: React.ReactNode;
-}) {
-  return (
-    <div className="space-y-1.5">
-      <div className="flex items-center justify-between">
-        <label className="text-sm font-semibold text-foreground">
-          {label}
-          {required && <span className="text-destructive ml-0.5">*</span>}
-          {optional && (
-            <span className="text-muted-foreground font-normal text-xs ml-1">(opcional)</span>
-          )}
-        </label>
-        {counter && (
-          <span className="text-[10px] text-muted-foreground">{counter}</span>
-        )}
-      </div>
-      {children}
-      {error && (
-        <p className="text-xs text-destructive flex items-center gap-1">
-          <AlertCircle className="h-3 w-3" />
-          {error}
-        </p>
-      )}
-    </div>
-  );
-}
 
 

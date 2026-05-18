@@ -17,8 +17,8 @@ import {
   Sparkles,
   X
 } from "lucide-react";
-import { communicationTerritorialGateway } from "../../../services";
-import type { CommunicationChannel } from "../../../types";
+import { communicationTerritorialGateway } from "@/modules/communication-territorial/services";
+import type { CommunicationChannel } from "@/modules/communication-territorial/types";
 import type { AgentTerritoryView } from "../../types/agentPageViewModels";
 
 interface AgentPublicationComposerProps {

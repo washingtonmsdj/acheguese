@@ -1,7 +1,7 @@
 /**
- * PontoTuristicoDetailPage - Página de detalhe de ponto turístico
+ * PontoTuristicoDetailPage - PÃ¡gina de detalhe de ponto turÃ­stico
  * 
- * ✅ SSOT COMPLIANT - Usa TouristPointService
+ * âœ… SSOT COMPLIANT - Usa TouristPointService
  */
 
 import { useState } from 'react';
@@ -26,11 +26,10 @@ import {
   ACCESSIBILITY_LABELS,
   type TouristPoint,
 } from '@/modules/guide/tourist-points';
-import { useNearbyBusinesses, useNearbyGuides, type NearbyBusiness } from '@/modules/guide/tourist-points/hooks/useNearbyBusinesses';
 import { useCommunityPhotos } from '@/modules/guide/tourist-points/hooks/useCommunityPhotos';
 import { formatDistance } from '@/shared/utils/geolocation';
 import { SEO } from '@/app/components/SEO';
-import { BusinessUrlService } from '@/core/business/services/BusinessUrlService';
+import { NearbyBusinessesSection, NearbyGuidesSection } from './PontoTuristicoNearbySections';
 
 export default function PontoTuristicoDetailPage() {
   const navigate = useNavigate();
@@ -48,9 +47,9 @@ export default function PontoTuristicoDetailPage() {
   if (!point) {
     return (
       <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-4">
-        <SEO title="Ponto turístico não encontrado" noIndex />
+        <SEO title="Ponto turÃ­stico nÃ£o encontrado" noIndex />
         <Camera className="h-12 w-12 text-muted-foreground" />
-        <h1 className="text-xl font-bold text-foreground">Ponto turístico não encontrado</h1>
+        <h1 className="text-xl font-bold text-foreground">Ponto turÃ­stico nÃ£o encontrado</h1>
         <Button variant="outline" onClick={() => navigate(`/pontos-turisticos/${state}/${city}`)}>
           <ArrowLeft className="h-4 w-4 mr-2" />
           Voltar para lista
@@ -61,7 +60,7 @@ export default function PontoTuristicoDetailPage() {
 
   const cityName = city.charAt(0).toUpperCase() + city.slice(1);
 
-  const seoTitle = `${point.icon_emoji} ${point.name} — ${point.location?.name ?? point.neighborhood ?? cityName}`;
+  const seoTitle = `${point.icon_emoji} ${point.name} â€” ${point.location?.name ?? point.neighborhood ?? cityName}`;
   const seoDescription = point.short_description
     ?? point.description.slice(0, 160).replace(/\n/g, ' ');
   const seoImage = point.photo_url ?? undefined;
@@ -98,7 +97,7 @@ export default function PontoTuristicoDetailPage() {
             className="hover:text-foreground transition-colors flex items-center gap-1"
           >
             <ArrowLeft className="h-3.5 w-3.5" />
-            Pontos Turísticos
+            Pontos TurÃ­sticos
           </Link>
           <span>/</span>
           <span className="text-foreground font-medium truncate">{point.name}</span>
@@ -108,7 +107,7 @@ export default function PontoTuristicoDetailPage() {
       {/* Main Content */}
       <div className="max-w-5xl mx-auto px-4 sm:px-6 py-6">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Left Column — Main Info */}
+          {/* Left Column â€” Main Info */}
           <div className="lg:col-span-2 space-y-6">
             {/* Title + Category */}
             <div>
@@ -143,7 +142,7 @@ export default function PontoTuristicoDetailPage() {
                     <span className="font-bold text-sm">{point.rating.toFixed(1)}</span>
                   </div>
                   <span className="text-xs text-muted-foreground">
-                    ({point.total_reviews.toLocaleString('pt-BR')} avaliações)
+                    ({point.total_reviews.toLocaleString('pt-BR')} avaliaÃ§Ãµes)
                   </span>
                 </div>
               )}
@@ -171,7 +170,7 @@ export default function PontoTuristicoDetailPage() {
                   <div className="flex items-start gap-3">
                     <AlertTriangle className="h-5 w-5 text-warning flex-shrink-0 mt-0.5" />
                     <div>
-                      <h3 className="text-sm font-semibold text-foreground mb-1">Observações Importantes</h3>
+                      <h3 className="text-sm font-semibold text-foreground mb-1">ObservaÃ§Ãµes Importantes</h3>
                       <p className="text-sm text-muted-foreground leading-relaxed">{point.observations}</p>
                     </div>
                   </div>
@@ -209,7 +208,7 @@ export default function PontoTuristicoDetailPage() {
             <CommunityPhotosSection point={point} />
           </div>
 
-          {/* Right Column — Sidebar */}
+          {/* Right Column â€” Sidebar */}
           <div className="space-y-4">
             {/* Price Card */}
             <Card>
@@ -220,8 +219,8 @@ export default function PontoTuristicoDetailPage() {
                 </div>
                 <div>
                   <Badge
-                    variant={point.price_type === 'gratuito' ? 'default' : 'secondary'}
-                    className={`text-sm ${point.price_type === 'gratuito' ? 'bg-green-600 hover:bg-green-700' : ''}`}
+                    variant={point.price_type === 'free' ? 'default' : 'secondary'}
+                    className={`text-sm ${point.price_type === 'free' ? 'bg-green-600 hover:bg-green-700' : ''}`}
                   >
                     {PRICE_TYPE_LABELS[point.price_type]}
                   </Badge>
@@ -238,7 +237,7 @@ export default function PontoTuristicoDetailPage() {
                 <CardContent className="p-4 space-y-2">
                   <div className="flex items-center gap-2">
                     <Clock className="h-5 w-5 text-primary" />
-                    <h3 className="font-semibold text-foreground">Horário de Funcionamento</h3>
+                    <h3 className="font-semibold text-foreground">HorÃ¡rio de Funcionamento</h3>
                   </div>
                   <p className="text-sm text-muted-foreground">{point.visiting_hours}</p>
                 </CardContent>
@@ -251,11 +250,11 @@ export default function PontoTuristicoDetailPage() {
                 <CardContent className="p-4 space-y-3">
                   <div className="flex items-center gap-2">
                     <MapPin className="h-5 w-5 text-primary" />
-                    <h3 className="font-semibold text-foreground">Endereço</h3>
+                    <h3 className="font-semibold text-foreground">EndereÃ§o</h3>
                   </div>
                   <div className="text-sm text-muted-foreground space-y-1">
                     {point.address ? (
-                      // Canônico: join com addresses
+                      // CanÃ´nico: join com addresses
                       <>
                         {point.address.street && (
                           <p>{point.address.street}{point.address.number ? `, ${point.address.number}` : ''}</p>
@@ -325,8 +324,8 @@ export default function PontoTuristicoDetailPage() {
                 <h3 className="font-semibold text-foreground">Comodidades</h3>
                 <div className="space-y-2">
                   <AmenityItem icon={<ParkingMeter className="h-4 w-4" />} label="Estacionamento" available={point.has_parking} />
-                  <AmenityItem icon={<UtensilsCrossed className="h-4 w-4" />} label="Restaurante / Alimentação" available={point.has_restaurant} />
-                  <AmenityItem icon={<Users className="h-4 w-4" />} label="Guia disponível" available={point.has_guide} />
+                  <AmenityItem icon={<UtensilsCrossed className="h-4 w-4" />} label="Restaurante / AlimentaÃ§Ã£o" available={point.has_restaurant} />
+                  <AmenityItem icon={<Users className="h-4 w-4" />} label="Guia disponÃ­vel" available={point.has_guide} />
                 </div>
               </CardContent>
             </Card>
@@ -380,7 +379,7 @@ export default function PontoTuristicoDetailPage() {
   );
 }
 
-// ── Hero Gallery ─────────────────────────────────────────────────────
+// â”€â”€ Hero Gallery â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function HeroGallery({ point }: { point: TouristPoint }) {
   const [lightboxOpen, setLightboxOpen] = useState(false);
@@ -520,7 +519,7 @@ function HeroGallery({ point }: { point: TouristPoint }) {
   );
 }
 
-// ── Map Section ──────────────────────────────────────────────────────
+// â”€â”€ Map Section â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function MapSection({ point }: { point: TouristPoint }) {
   const lat = point.address?.latitude ?? point.latitude;
@@ -534,7 +533,7 @@ function MapSection({ point }: { point: TouristPoint }) {
       <CardHeader className="pb-2">
         <CardTitle className="text-lg flex items-center gap-2">
           <MapPin className="h-5 w-5 text-primary" />
-          Localização no Mapa
+          LocalizaÃ§Ã£o no Mapa
         </CardTitle>
       </CardHeader>
       <CardContent>
@@ -553,7 +552,7 @@ function MapSection({ point }: { point: TouristPoint }) {
   );
 }
 
-// ── Nearby Attractions ───────────────────────────────────────────────
+// â”€â”€ Nearby Attractions â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function NearbySection({ point, state, city }: { point: TouristPoint; state: string; city: string }) {
   const { data: nearby = [] } = useNearbyTouristPoints(point.nearby_point_ids || []);
@@ -565,7 +564,7 @@ function NearbySection({ point, state, city }: { point: TouristPoint; state: str
       <CardHeader className="pb-2">
         <CardTitle className="text-lg flex items-center gap-2">
           <Star className="h-5 w-5 text-warning" />
-          Atrações Próximas
+          AtraÃ§Ãµes PrÃ³ximas
         </CardTitle>
       </CardHeader>
       <CardContent>
@@ -593,7 +592,7 @@ function NearbySection({ point, state, city }: { point: TouristPoint; state: str
                 </p>
                 <p className="text-xs text-muted-foreground truncate">
                   {CATEGORY_ICONS[np.category]} {CATEGORY_LABELS[np.category]}
-                  {np.neighborhood ? ` · ${np.neighborhood}` : ''}
+                  {np.neighborhood ? ` Â· ${np.neighborhood}` : ''}
                 </p>
               </div>
               {np.rating > 0 && (
@@ -610,203 +609,7 @@ function NearbySection({ point, state, city }: { point: TouristPoint; state: str
   );
 }
 
-// ── Nearby Businesses ────────────────────────────────────────────────
-
-const BUSINESS_CATEGORY_LABELS: Record<string, string> = {
-  restaurante: 'Restaurante',
-  lazer: 'Lazer & Turismo',
-  servicos: 'Serviços',
-  mercado: 'Mercado',
-  farmacia: 'Farmácia',
-  saude: 'Saúde',
-  educacao: 'Educação',
-  outros: 'Outros',
-};
-
-const BUSINESS_CATEGORY_ICONS: Record<string, React.ReactNode> = {
-  restaurante: <Utensils className="h-3.5 w-3.5" />,
-  lazer: <Compass className="h-3.5 w-3.5" />,
-  servicos: <Building2 className="h-3.5 w-3.5" />,
-};
-
-function NearbyBusinessesSection({ point }: { point: TouristPoint }) {
-  const lat = point.address?.latitude ?? point.latitude ?? null;
-  const lng = point.address?.longitude ?? point.longitude ?? null;
-  const { data: businesses = [], isLoading } = useNearbyBusinesses(lat, lng);
-
-  if (isLoading) {
-    return (
-      <Card>
-        <CardHeader className="pb-2">
-          <CardTitle className="text-lg flex items-center gap-2">
-            <Building2 className="h-5 w-5 text-primary" />
-            Empresas e Serviços Próximos
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex items-center justify-center py-6">
-            <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
-
-  if (businesses.length === 0) return null;
-
-  return (
-    <Card>
-      <CardHeader className="pb-2">
-        <CardTitle className="text-lg flex items-center gap-2">
-          <Building2 className="h-5 w-5 text-primary" />
-          Empresas e Serviços Próximos
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div className="space-y-3">
-          {businesses.map((biz) => (
-            <a
-              key={biz.id}
-              href={biz.slug && biz.geographic_path
-                ? BusinessUrlService.getCanonicalUrl({ id: biz.profile_id || biz.id, slug: biz.slug, is_premium: biz.is_premium, geographic_path: biz.geographic_path })
-                : '#'}
-              className="flex items-center gap-3 p-3 rounded-xl border border-border hover:border-primary/40 hover:bg-primary/5 transition-all group"
-            >
-              {/* Logo ou ícone */}
-              {biz.logo_url ? (
-                <img
-                  src={biz.logo_url}
-                  alt={biz.name}
-                  className="w-12 h-12 rounded-lg object-cover flex-shrink-0 bg-muted"
-                />
-              ) : (
-                <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0 text-primary">
-                  {BUSINESS_CATEGORY_ICONS[biz.category] ?? <Building2 className="h-5 w-5" />}
-                </div>
-              )}
-
-              {/* Info */}
-              <div className="min-w-0 flex-1">
-                <p className="text-sm font-semibold text-foreground group-hover:text-primary transition-colors truncate">
-                  {biz.name}
-                </p>
-                <div className="flex items-center gap-2 mt-0.5">
-                  <span className="text-xs text-muted-foreground">
-                    {BUSINESS_CATEGORY_LABELS[biz.category] ?? biz.category}
-                  </span>
-                  {biz.distanceMeters !== undefined && (
-                    <>
-                      <span className="text-muted-foreground/40 text-xs">·</span>
-                      <span className="text-xs text-muted-foreground flex items-center gap-0.5">
-                        <MapPin className="h-3 w-3" />
-                        {formatDistance(biz.distanceMeters)}
-                      </span>
-                    </>
-                  )}
-                </div>
-              </div>
-
-              {/* Rating */}
-              {biz.rating > 0 && (
-                <div className="flex items-center gap-0.5 text-xs text-warning flex-shrink-0">
-                  <Star className="h-3 w-3 fill-warning" />
-                  {biz.rating.toFixed(1)}
-                </div>
-              )}
-            </a>
-          ))}
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
-
-// ── Nearby Guides ─────────────────────────────────────────────────────────────
-
-function NearbyGuidesSection({ point }: { point: TouristPoint }) {
-  const lat = point.address?.latitude ?? point.latitude ?? null;
-  const lng = point.address?.longitude ?? point.longitude ?? null;
-  const { data: guides = [], isLoading } = useNearbyGuides(lat, lng);
-
-  if (isLoading) return (
-    <Card>
-      <CardHeader className="pb-2">
-        <CardTitle className="text-lg flex items-center gap-2">
-          <UserCheck className="h-5 w-5 text-primary" />
-          Guias de Turismo
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div className="flex items-center justify-center py-6">
-          <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-        </div>
-      </CardContent>
-    </Card>
-  );
-
-  if (guides.length === 0) return null;
-
-  return (
-    <Card>
-      <CardHeader className="pb-2">
-        <CardTitle className="text-lg flex items-center gap-2">
-          <UserCheck className="h-5 w-5 text-primary" />
-          Guias de Turismo
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div className="space-y-3">
-          {guides.map((guide) => (
-            <a
-              key={guide.id}
-              href={guide.slug && guide.geographic_path
-                ? BusinessUrlService.getCanonicalUrl({ id: guide.profile_id || guide.id, slug: guide.slug, is_premium: guide.is_premium, geographic_path: guide.geographic_path })
-                : '#'}
-              className="flex items-center gap-3 p-3 rounded-xl border border-border hover:border-primary/40 hover:bg-primary/5 transition-all group"
-            >
-              {guide.logo_url ? (
-                <img src={guide.logo_url} alt={guide.name} className="w-12 h-12 rounded-full object-cover flex-shrink-0 bg-muted" />
-              ) : (
-                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 text-primary">
-                  <UserCheck className="h-5 w-5" />
-                </div>
-              )}
-              <div className="min-w-0 flex-1">
-                <p className="text-sm font-semibold text-foreground group-hover:text-primary transition-colors truncate">
-                  {guide.name}
-                </p>
-                {guide.especialidades?.length > 0 && (
-                  <p className="text-xs text-muted-foreground truncate">
-                    {guide.especialidades.slice(0, 2).join(' · ')}
-                  </p>
-                )}
-                {guide.distanceMeters !== undefined && (
-                  <p className="text-xs text-muted-foreground flex items-center gap-0.5 mt-0.5">
-                    <MapPin className="h-3 w-3" />
-                    {formatDistance(guide.distanceMeters)}
-                  </p>
-                )}
-              </div>
-              <div className="flex flex-col items-end gap-1 flex-shrink-0">
-                {guide.rating > 0 && (
-                  <div className="flex items-center gap-0.5 text-xs text-warning">
-                    <Star className="h-3 w-3 fill-warning" />
-                    {guide.rating.toFixed(1)}
-                  </div>
-                )}
-                {guide.is_verified && (
-                  <BadgeCheck className="h-4 w-4 text-primary" />
-                )}
-              </div>
-            </a>
-          ))}
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
-
-// ── Community Photos ───────────────────────────────────────────────────────────
+// â”€â”€ Nearby Businesses â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function CommunityPhotosSection({ point }: { point: TouristPoint }) {
   const [lightboxOpen, setLightboxOpen] = useState(false);
@@ -931,7 +734,7 @@ function CommunityPhotosSection({ point }: { point: TouristPoint }) {
   );
 }
 
-// ── Amenity Item ─────────────────────────────────────────────────────
+// â”€â”€ Amenity Item â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function AmenityItem({ icon, label, available }: { icon: React.ReactNode; label: string; available: boolean }) {
   return (

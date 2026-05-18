@@ -1,1 +1,1 @@
-﻿export { getClassifiedById } from '@/modules/classifieds/services';
+export { getClassifiedById } from '@/modules/classifieds/services';

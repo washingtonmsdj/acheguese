@@ -170,7 +170,7 @@ export class TrackingService {
 
       // GATE 5: Atualizar last_seen_at para motoristas
       if (entityType === 'driver') {
-        const { DriverAvailabilityService } = await import('@/modules/mobility/services');
+        const { DriverAvailabilityService } = await import('@/core/mobility/services/runtime');
         await DriverAvailabilityService.markLastSeen(entityId);
       }
     } catch (error) {
@@ -274,7 +274,7 @@ export class TrackingService {
   ): Promise<PresenceStatus> {
     try {
       if (entityType === 'driver') {
-        const { mobilityService } = await import('@/modules/mobility/services');
+        const { mobilityService } = await import('@/core/mobility/services/runtime');
         const stats = await mobilityService.getDriverVerificationStatus(entityId);
         if (!stats) return 'unknown';
         if (!stats.is_online) return 'offline';
@@ -298,7 +298,7 @@ export class TrackingService {
   ): Promise<void> {
     try {
       if (entityType === 'driver') {
-        const { mobilityService } = await import('@/modules/mobility/services');
+        const { mobilityService } = await import('@/core/mobility/services/runtime');
         await mobilityService.updateDriverOnlineStatus(entityId, status === 'online' || status === 'busy');
       }
     } catch (error) {
@@ -334,7 +334,7 @@ export class TrackingService {
 
       // GATE 5: Atualizar last_seen_at para motoristas
       if (payload.entityType === 'driver') {
-        const { DriverAvailabilityService } = await import('@/modules/mobility/services');
+        const { DriverAvailabilityService } = await import('@/core/mobility/services/runtime');
         await DriverAvailabilityService.markLastSeen(payload.entityId);
       }
 
@@ -525,7 +525,7 @@ export class TrackingService {
 
       // GATE 5: Atualizar last_seen_at para motoristas
       if (entityType === 'driver') {
-        const { DriverAvailabilityService } = await import('@/modules/mobility/services');
+        const { DriverAvailabilityService } = await import('@/core/mobility/services/runtime');
         await DriverAvailabilityService.markLastSeen(entityId);
       }
 

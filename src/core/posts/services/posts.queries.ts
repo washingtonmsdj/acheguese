@@ -17,7 +17,6 @@ import type {
   PaginationParams,
   FeedParams,
   FeedResult,
-  Poll,
 } from "../types";
 import { PostError } from "../types";
 
@@ -516,11 +515,11 @@ export async function getPostsByCategory(params: {
  */
 export async function getPostBasicInfo(
   postId: string,
-): Promise<{ author_profile_id: string; content?: string } | null> {
+): Promise<{ author_profile_id: string; title?: string; content?: string } | null> {
   try {
     const { data: post, error } = await (supabase as any)
       .from("posts")
-      .select("author_profile_id, content")
+      .select("author_profile_id, title, content")
       .eq("id", postId)
       .single();
 
@@ -575,7 +574,14 @@ export async function getPostAuthorId(
 export async function getTopPosts(
   locationId: string,
   limit = 5,
-): Promise<Post[]> {
+): Promise<
+  Array<{
+    id: string;
+    content: string;
+    author_name: string;
+    engagement: number;
+  }>
+> {
   try {
     const sevenDaysAgo = new Date();
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
@@ -584,22 +590,31 @@ export async function getTopPosts(
       .from("posts")
       .select(
         `
-        *,
-        author_profile:profiles!author_profile_id(id, name, avatar_url),
-        location:locations(id, name, type, parent_id)
+        id,
+        content,
+        likes_count,
+        comments_count,
+        author:profiles!author_profile_id(name)
       `,
       )
+      .eq("location_id", locationId)
       .eq("is_published", true)
       .gte("created_at", sevenDaysAgo.toISOString())
       .order("likes_count", { ascending: false })
-      .order("comments_count", { ascending: false })
       .limit(limit);
 
     if (error) {
       throw new PostError(error.message, error.code);
     }
 
-    return (posts || []) as Post[];
+    return (posts || []).map((post: any) => ({
+      id: post.id,
+      content:
+        (post.content || "").substring(0, 100) +
+        ((post.content || "").length > 100 ? "..." : ""),
+      author_name: post.author?.name || "Usuário",
+      engagement: (post.likes_count || 0) + (post.comments_count || 0),
+    }));
   } catch (error) {
     if (error instanceof PostError) throw error;
 
@@ -618,7 +633,7 @@ export async function getTopPosts(
  */
 export async function getPopularTags(
   locationId: string,
-  limit = PAGINATION.SMALL_LIMIT,
+  limit: number = PAGINATION.SMALL_LIMIT,
 ): Promise<Array<{ tag: string; count: number }>> {
   try {
     const sevenDaysAgo = new Date();
@@ -627,6 +642,7 @@ export async function getPopularTags(
     const { data: posts, error } = await (supabase as any)
       .from("posts")
       .select("tags")
+      .eq("location_id", locationId)
       .eq("is_published", true)
       .gte("created_at", sevenDaysAgo.toISOString())
       .not("tags", "is", null);
@@ -661,3 +677,9 @@ export async function getPopularTags(
     throw new PostError("Erro ao buscar tags populares", "FETCH_ERROR");
   }
 }
+
+
+export * from "./posts.media.queries";
+export * from "./posts.alerts.queries";
+export * from "./posts.feed.queries";
+export * from "./posts.user.queries";

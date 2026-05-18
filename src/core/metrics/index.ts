@@ -1,5 +1,5 @@
-export { MetricsService } from './services/MetricsService';
-export type { RealtimeMetrics, ReputationStats } from './services/MetricsService';
+export { MetricsService } from "./services/MetricsService";
+export type { RealtimeMetrics, ReputationStats } from "./services/MetricsService";
 
-// Re-export removido: supabase não deve ser re-exportado de domínios de negócio.
-// Consumidores migrados para import { supabase } from '@/integrations/supabase' em 2026-03-30.
+// Re-export removido: cliente de infraestrutura nao deve ser re-exportado por dominio de negocio.
+// Consumidores foram migrados para o entrypoint canonico de infraestrutura (2026-03-30).

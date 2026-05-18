@@ -1,32 +1,10 @@
-﻿/**
-/**
- * ProfileServiceLegacy - IDENTITY CORE (FASE PROFILE.1)
- * 
- * Fonte Ãºnica de verdade da identidade do usuÃ¡rio
- * ResponsÃ¡vel por:
- * - Dados bÃ¡sicos (nome, avatar, etc)
- * - Status (ativo, bloqueado, suspenso)
- * - VerificaÃ§Ã£o
- * - Plano (basic/premium)
- * - NÃ­vel/score (apenas leitura)
- * - PermissÃµes centralizadas
- * 
- * REGRAS:
- * - ZERO acessos diretos a supabase.from('profiles') fora deste service
- * - Todas as regras de negÃ³cio ficam aqui
- * - Hooks apenas fazem fetch/loading/error
- */
-
 import { supabase } from "@/integrations/supabase";
 import { logger } from "@/shared/utils/logger";
 import { trackError } from "@/shared/utils/errorTracking";
-import { SessionService } from "@/core/session/services/SessionService";
-import { FavoritesService } from "@/core/favorites/services/FavoritesService";
-import { mediaService } from "@/core/media/services/MediaService";
 import { getServicesByProfile } from "@/core/professional/services/professional.queries";
 import { BusinessUrlService } from "@/core/business/services/BusinessUrlService";
 import { publicIdentityService, PublicIdentityService } from "@/core/public-identity";
-import { createTypedQuery, callRPC } from "@/integrations/supabase/services/supabaseHelpers";
+import { callRPC } from "@/integrations/supabase/services/supabaseHelpers";
 import { PROFILE_VERIFICATION_STATUS } from "@/core/profile/constants/verificationStatus";
 import type {
   AdminFilters,
@@ -50,400 +28,135 @@ import type {
 } from "./types";
 import type {
   ProfilePermissions,
-  ProfilePlan,
-  ProfileReputation,
   ProfileStatus,
 } from "@/core/profiles/contracts/ProfileRuntimeContracts";
 import type {
-  ActiveRideIdRow,
-  AdminProfileListRow,
-  BannedUserLike,
   BusinessRow,
-  MentionRow,
   PassengerRatingRow,
   ProfileFilterRow,
   ProfileIdRow,
-  ProfileSummaryExtendedRow,
-  ProfileSummaryRow,
-  ProfileWithAlertBanRow,
-  RankingRow,
   RecentProfileRow,
-  RideProfileRow,
-  UserListRow,
   UserSubscriptionLike,
   VerificationWorkflowStatus,
 } from "./profile.service.types";
 import {
-  calculatePlan,
-  calculateProfileStatus,
-  calculateReputation,
-  calculateSuspensionEnd,
   mapBusinessRecords,
   resolveVerificationStatus,
 } from "./profile.service.rules";
 import {
-  buildVerificationStatusUpdates,
-  mapAdminUserList,
-} from "./profile.service.admin-rules";
-import {
   buildPermissionMatrix,
-  buildManagedAssets,
-  buildWorkspaceOperations,
-  countActiveRides,
-  mapRecentNotifications,
-  normalizeNotificationPayload,
 } from "./profile.workspace.rules";
 import { buildBusinessModuleSnapshot } from "./profile.workspace.business-modules";
-
+import { getPrivateWorkspaceAggregate } from "./profile.workspace.aggregate";
+import {
+  getUserLikeActivityQuery,
+  getUserMentionsQuery,
+  getUserPollVoteActivityQuery,
+  getUserSaveActivityQuery,
+} from "./profile.activity.queries";
+import {
+  addProfileMemberMutation,
+  getProfileMembersQuery,
+  isProfileOwnerQuery,
+} from "./profile.membership.queries";
+import { updateProfileCommand } from "./profile.identity.commands";
+import { getProfileContextAggregate } from "./profile.context.aggregate";
+import { getProfileStatsAggregate } from "./profile.stats.aggregate";
+import {
+  clearActiveRideId as clearActiveRideIdMutation,
+  createProfileWithIdentityValidation,
+  deleteProfile as deleteProfileMutation,
+  ensureActiveDriverProfileForUser,
+  setActiveRideId as setActiveRideIdMutation,
+  suspendUser as suspendUserMutation,
+  updateAlertBanStatus as updateAlertBanStatusMutation,
+  updatePrivacySettingsDirect,
+  updateProfileDirect,
+  uploadAvatar as uploadAvatarMutation,
+  updateVerificationStatus as updateVerificationStatusMutation,
+  verifyUser as verifyUserMutation,
+} from "./profile.mutations";
+import {
+  getUserFavoriteBusinessesQuery,
+  getUserFavoritesCountQuery,
+  getUserBusinessesByProfilesQuery,
+  getUserBusinessesQuery,
+  searchProfilesByNameQuery,
+} from "./profile.external-data.queries";
+import {
+  getActiveProfileRpc,
+  getActiveRideId as getActiveRideIdQuery,
+  getAllUsers as getAllUsersQuery,
+  getAllProfileIds as getAllProfileIdsQuery,
+  getAdminProfilesList as getAdminProfilesListQuery,
+  checkUsernameExists as checkUsernameExistsQuery,
+  getByUsername as getByUsernameQuery,
+  getPassengerRatings as getPassengerRatingsQuery,
+  getProfileByIdLegacy,
+  getProfileByTypeLegacy,
+  getPublicProfileById as getPublicProfileByIdQuery,
+  getProfilesByUserIdLegacy,
+  getProfilesByIds as getProfilesByIdsQuery,
+  getProfilesByVerificationStatus as getProfilesByVerificationStatusQuery,
+  getProfilesCreatedInPeriod as getProfilesCreatedInPeriodQuery,
+  getProfilesFiltered as getProfilesFilteredQuery,
+  getProfilesForRides as getProfilesForRidesQuery,
+  getProfilesSummary as getProfilesSummaryQuery,
+  getProfilesSummaryExtended as getProfilesSummaryExtendedQuery,
+  getProfilesWithAlertBan as getProfilesWithAlertBanQuery,
+  getRecentProfiles as getRecentProfilesQuery,
+  getRanking as getRankingQuery,
+  getSimilarUsernames as getSimilarUsernamesQuery,
+  getTotalProfilesCount as getTotalProfilesCountQuery,
+  getUserIdsByCity as getUserIdsByCityQuery,
+  getUsernameHistory as getUsernameHistoryQuery,
+  getVerificationStats as getVerificationStatsQuery,
+  resolveProfileIdByUserId,
+} from "./profile.queries";
 export class ProfileServiceLegacy {
-  // ============================================================================
-  // FASE PROFILE.1 â€” IDENTITY CORE METHODS
-  // ============================================================================
-
-  /**
-   * PROFILE CONTEXT - Nucleo de identidade
-   * Retorna contexto completo do usuario incluindo status, permissoes e plano
-   * @param userId - ID do usuario
-   */
+  private async withFallback<T>(
+    action: string,
+    fallback: T,
+    run: () => Promise<T>,
+    metadata: Record<string, unknown> = {},
+  ): Promise<T> {
+    try {
+      return await run();
+    } catch (error) {
+      trackError(error as Error, {
+        component: "ProfileService",
+        action,
+        metadata,
+      });
+      return fallback;
+    }
+  }
+  private async withVoidAction(
+    action: string,
+    run: () => Promise<void>,
+    metadata: Record<string, unknown> = {},
+  ): Promise<void> {
+    try {
+      await run();
+    } catch (error) {
+      trackError(error as Error, {
+        component: "ProfileService",
+        action,
+        metadata,
+      });
+      throw error;
+    }
+  }
   async getProfileContext(userId: string): Promise<ProfileContext | null> {
-    try {
-      // Buscar perfil ativo
-      const profile = await this.getActiveProfile(userId);
-      if (!profile) {
-        logger.warn("No active profile found for user", { userId });
-        return null;
-      }
-
-      // Buscar dados complementares em paralelo
-      const [bannedUser, subscription, verification] = await Promise.all([
-        this._getBannedUserStatus(userId),
-        this._getUserSubscription(userId),
-        profile.id
-          ? this._getVerificationStatus(profile.id)
-          : Promise.resolve(null),
-      ]);
-
-      // Calcular status
-      const status = calculateProfileStatus(profile, bannedUser);
-
-      // Calcular permissÃµes baseadas no status
-      const permissions = await this._calculatePermissions(status, profile);
-
-      // Calcular plano
-      const plan = calculatePlan(subscription);
-
-      // Calcular reputaÃ§Ã£o
-      const reputation = calculateReputation(profile);
-
-      return {
-        id: profile.id,
-        name: profile.name,
-        displayName: profile.display_name,
-        username: profile.username,
-        avatar: profile.avatar_url,
-        status,
-        permissions,
-        plan,
-        reputation,
-        verified: profile.verified || verification?.verified || false,
-      };
-    } catch (error) {
-      logger.error("Error getting profile context:", error);
-      trackError(new Error("Error getting profile context"), {
-        component: "ProfileService",
-        action: "getProfileContext",
-        metadata: { userId },
-      });
-      return null;
-    }
+    return getProfileContextAggregate({ userId, getActiveProfile: (id) => this.getActiveProfile(id) });
   }
-
-  // ============================================================================
-  // MÃ‰TODOS PRIVADOS - REGRAS DE NEGÃ“CIO
-  // ============================================================================
-
-  /**
-   * Calcula permissÃµes baseadas no status do usuÃ¡rio
-   * âœ… LOTE 6 - Refatorado para usar AdminRolesService
-   */
-  private async _calculatePermissions(
-    status: ProfileStatus,
-    profile: Profile,
-  ): Promise<ProfilePermissions> {
-    // UsuÃ¡rio bloqueado ou suspenso nÃ£o pode fazer nada
-    if (status.isBlocked || status.isSuspended) {
-      return {
-        canPost: false,
-        canComment: false,
-        canMessage: false,
-        canCreateBusiness: false,
-        canModerate: false,
-      };
-    }
-
-    // UsuÃ¡rio inativo tem permissÃµes limitadas
-    if (!status.isActive) {
-      return {
-        canPost: false,
-        canComment: false,
-        canMessage: true,
-        canCreateBusiness: false,
-        canModerate: false,
-      };
-    }
-
-    // âœ… LOTE 6 - Verificar se Ã© admin/moderador via AdminRolesService
-    let canModerate = false;
-    try {
-      const { adminRolesService } =
-        await import("@/core/admin/services/AdminRolesService");
-      const roles = await adminRolesService.getUserRoles(profile.user_id);
-      canModerate = roles.some(
-        (r) => ["admin", "moderator"].includes(r.role) && r.is_active,
-      );
-    } catch (err) {
-      // Silently fail - default to no moderation
-    }
-
-    // UsuÃ¡rio ativo normal
-    return {
-      canPost: true,
-      canComment: true,
-      canMessage: true,
-      canCreateBusiness: true,
-      canModerate,
-    };
+  async getProfileById(profileId: string): Promise<Profile | null> { return getProfileByIdLegacy(profileId); }
+  async getActiveProfile(userId?: string): Promise<Profile | null> { return getActiveProfileRpc(userId); }
+  async getProfilesByUserId(userId?: string): Promise<Profile[]> { return getProfilesByUserIdLegacy(userId); }
+  async getProfileByType(userId: string, profileType: "personal" | "driver" | "business" | "professional"): Promise<Profile | null> {
+    return getProfileByTypeLegacy(userId, profileType);
   }
-
-  /**
-   * Busca status de usuÃ¡rio banido
-   * âœ… LOTE 9A - Delegado para ModerationService (SSOT para banned_users)
-   */
-  private async _getBannedUserStatus(userId: string): Promise<BannedUserLike> {
-    try {
-      const { ModerationService } =
-        await import("@/core/moderation/services/ModerationService");
-      return (await ModerationService.getBannedStatus(userId)) as unknown as BannedUserLike;
-    } catch (error) {
-      logger.error("Error in _getBannedUserStatus:", error);
-      return null;
-    }
-  }
-
-  /**
-   * Busca assinatura do usuÃ¡rio
-   */
-  private async _getUserSubscription(userId: string) {
-    try {
-      const { data, error } = await supabase
-        .from("user_subscriptions")
-        .select("*")
-        .eq("user_id", userId)
-        .eq("active", true)
-        .maybeSingle();
-
-      // Ignora erros de "nÃ£o encontrado" ou "tabela nÃ£o existe"
-      if (error) {
-        if (!["PGRST116", "42P01", "PGRST301"].includes(error.code || "")) {
-          logger.error("Error fetching user subscription:", error);
-        }
-        return null;
-      }
-
-      return data;
-    } catch (error) {
-      logger.error("Error in _getUserSubscription:", error);
-      return null;
-    }
-  }
-
-  /**
-   * Busca status de verificaÃ§Ã£o
-   */
-  private async _getVerificationStatus(profileId: string) {
-    try {
-      const { VerificationService } = await import(
-        "@/core/verification/services/VerificationService"
-      );
-      const verifications =
-        await VerificationService.getProfileVerifications(profileId);
-      return verifications[0] ?? null;
-    } catch (error) {
-      logger.error("Error in _getVerificationStatus:", error);
-      return null;
-    }
-  }
-
-  // ============================================================================
-  // MÃ‰TODOS EXISTENTES (mantidos para compatibilidade)
-  // ============================================================================
-
-  /**
-   * Busca profile por ID
-   * @param profileId - ID do perfil
-   */
-  async getProfileById(profileId: string): Promise<Profile | null> {
-    const { data, error } = await supabase
-      .from("profiles")
-      .select("*")
-      .eq("id", profileId)
-      .limit(1);
-
-    if (error) {
-      trackError(new Error("Error fetching profile"), {
-        component: "ProfileService",
-        action: "getProfileById",
-        metadata: { profileId, error },
-      });
-      return null;
-    }
-
-    return data && data.length > 0 ? ((data[0] as unknown) as Profile) : null;
-  }
-
-  /**
-   * Busca perfil ativo do usuÃ¡rio
-   * @param userId - ID do usuÃ¡rio (opcional, usa usuÃ¡rio autenticado se nÃ£o fornecido)
-   */
-  async getActiveProfile(userId?: string): Promise<Profile | null> {
-    let targetUserId = userId;
-
-    if (!targetUserId) {
-      const user = await SessionService.getCurrentUser();
-      if (!user) return null;
-      targetUserId = user.id;
-    }
-
-    const { data, error } = await callRPC("get_active_profile", {
-      p_user_id: targetUserId,
-    });
-
-    if (error) {
-      trackError(new Error("Error fetching active profile"), {
-        component: "ProfileService",
-        action: "getActiveProfile",
-        metadata: { userId: targetUserId, error },
-      });
-      return null;
-    }
-
-    // RPC retorna SETOF profiles (array) â€” pegar o primeiro elemento
-    const profile = Array.isArray(data) ? data[0] : data;
-    return (profile as Profile) || null;
-  }
-
-  /**
-   * Busca todos os perfis de um usuÃ¡rio
-   * @param userId - ID do usuÃ¡rio (opcional, usa usuÃ¡rio autenticado se nÃ£o fornecido)
-   */
-  async getProfilesByUserId(userId?: string): Promise<Profile[]> {
-    let targetUserId = userId;
-
-    if (!targetUserId) {
-      const user = await SessionService.getCurrentUser();
-      if (!user) return [];
-      targetUserId = user.id;
-    }
-
-    const { data, error } = await supabase
-      .from("profiles")
-      .select("*")
-      .eq("user_id", targetUserId)
-      .order("created_at", { ascending: true });
-
-    if (error) {
-      trackError(new Error("Error fetching profiles"), {
-        component: "ProfileService",
-        action: "getProfilesByUserId",
-        metadata: { userId: targetUserId, error },
-      });
-      return [];
-    }
-
-    return ((data || []) as unknown) as Profile[];
-  }
-
-  /**
-   * Busca perfil especÃ­fico por tipo
-   * @param userId - ID do usuÃ¡rio
-   * @param profileType - Tipo do perfil (personal, driver, business, professional)
-   */
-  async getProfileByType(
-    userId: string,
-    profileType: "personal" | "driver" | "business" | "professional",
-  ): Promise<Profile | null> {
-    // âœ… CORREÃ‡ÃƒO: Buscar todos e pegar o primeiro (caso haja duplicados)
-    const { data, error } = await supabase
-      .from("profiles")
-      .select("*")
-      .eq("user_id", userId)
-      .eq("profile_type", profileType)
-      .order("created_at", { ascending: true }) // Pegar o mais antigo
-      .limit(1);
-
-    if (error) {
-      trackError(new Error("Error fetching profile by type"), {
-        component: "ProfileService",
-        action: "getProfileByType",
-        metadata: { userId, profileType, error },
-      });
-      return null;
-    }
-
-    // Retornar o primeiro resultado (ou null se nÃ£o houver)
-    return data && data.length > 0 ? ((data[0] as unknown) as Profile) : null;
-  }
-
-  /**
-   * Garante que o usuÃ¡rio tenha um profile do tipo driver.
-   * Retorna o profile existente ou cria um novo quando necessÃ¡rio.
-   */
-  async ensureDriverProfileForUser(userId: string): Promise<Profile | null> {
-    try {
-      const existingDriverProfile = await this.getProfileByType(userId, "driver");
-      if (existingDriverProfile) {
-        return existingDriverProfile;
-      }
-
-      const personalProfile = await this.getProfileByType(userId, "personal");
-
-      const { data, error } = await supabase
-        .from("profiles")
-        .insert({
-          user_id: userId,
-          profile_type: "driver",
-          name: personalProfile?.name || "Admin",
-          display_name: `${personalProfile?.display_name || "Admin"} (Motorista)`,
-          is_active: true,
-        })
-        .select("*")
-        .single();
-
-      if (error) {
-        trackError(new Error("Error ensuring driver profile"), {
-          component: "ProfileService",
-          action: "ensureDriverProfileForUser",
-          metadata: { userId, error },
-        });
-        return null;
-      }
-
-      return data as unknown as Profile;
-    } catch (error) {
-      trackError(new Error("Unexpected error ensuring driver profile"), {
-        component: "ProfileService",
-        action: "ensureDriverProfileForUser",
-        metadata: { userId, error },
-      });
-      return null;
-    }
-  }
-
-  /**
-   * Busca perfil ativo obrigatÃ³rio - lanÃ§a erro se nÃ£o encontrar
-   * @param userId - ID do usuÃ¡rio (opcional, usa usuÃ¡rio autenticado se nÃ£o fornecido)
-   * @throws Error se nÃ£o houver profile ativo
-   */
+  async ensureDriverProfileForUser(userId: string): Promise<Profile | null> { return ensureActiveDriverProfileForUser(userId); }
   async getRequiredActiveProfile(userId?: string): Promise<Profile> {
     const profile = await this.getActiveProfile(userId);
     if (!profile) {
@@ -451,140 +164,18 @@ export class ProfileServiceLegacy {
     }
     return profile;
   }
-
-  /**
-   * Busca profile por username
-   * @param username - Username do perfil
-   */
   async getByUsername(username: string): Promise<Profile | null> {
-    const { data, error } = await (supabase as any)
-      .from("public_profiles")
-      .select()
-      .eq("username", username)
-      .single();
-
-    if (error) {
-      trackError(new Error("Error fetching profile by username"), {
-        component: "ProfileService",
-        action: "getByUsername",
-        metadata: { username, error },
-      });
-      return null;
-    }
-
-    return (data as Profile) ?? null;
+    return getByUsernameQuery(username);
   }
-
-  /**
-   * Busca perfil pÃºblico por ID (view canÃ´nica public_profiles)
-   */
   async getPublicProfileById(profileId: string): Promise<Profile | null> {
-    const { data, error } = await (supabase as any)
-      .from("public_profiles")
-      .select()
-      .eq("id", profileId)
-      .single();
-
-    if (error) {
-      trackError(new Error("Error fetching public profile by id"), {
-        component: "ProfileService",
-        action: "getPublicProfileById",
-        metadata: { profileId, error },
-      });
-      return null;
-    }
-
-    return (data as Profile) ?? null;
+    return getPublicProfileByIdQuery(profileId);
   }
-
-  /**
-   * Busca profile por handle (@username) - DEPRECATED, use getByUsername
-   * @deprecated Use getByUsername instead. Will be removed in v2.0.0
-   */
   async getByHandle(handle: string): Promise<Profile | null> {
-    if (process.env.NODE_ENV === 'development') {
-      logger.warn(
-        'âš ï¸  ProfileService.getByHandle() is deprecated.\n' +
-        '   Use getByUsername() instead.\n' +
-        '   This method will be removed in v2.0.0'
-      );
-    }
     return this.getByUsername(handle);
   }
-
-  /**
-   * Cria novo profile
-   * âœ… INTEGRADO: Usa PublicIdentityService para validaÃ§Ã£o de username
-   * @param profile - Dados do perfil
-   */
   async createProfile(profile: CreateProfileData): Promise<Profile> {
-    const user = await SessionService.getCurrentUser();
-    if (!user) throw new Error("Not authenticated");
-
-    // Validar campos obrigatÃ³rios da nova arquitetura
-    if (!profile.profile_type) {
-      throw new Error("profile_type is required");
-    }
-    if (!profile.name) {
-      throw new Error("name is required");
-    }
-    if (!profile.username) {
-      throw new Error("username is required");
-    }
-
-    // âœ… INTEGRAÃ‡ÃƒO: Validar username via PublicIdentityService
-    const validation = PublicIdentityService.validateFormat(
-      profile.username,
-      'profile'
-    );
-    
-    if (!validation.valid) {
-      throw new Error(`Invalid username: ${validation.error}`);
-    }
-
-    // âœ… INTEGRAÃ‡ÃƒO: Verificar disponibilidade via PublicIdentityService
-    const availability = await PublicIdentityService.checkAvailability({
-      identifier: profile.username,
-      entityType: 'profile',
-    });
-    
-    if (availability.status !== 'available') {
-      throw new Error('Username already in use');
-    }
-
-    const { data, error } = await supabase
-      .from("profiles")
-      .insert({
-        user_id: user.id,
-        profile_type: profile.profile_type,
-        name: profile.name,
-        display_name: profile.display_name || profile.name,
-        username: profile.username,
-        avatar_url: profile.avatar_url,
-        bio: profile.bio,
-        is_active: true,
-        ...profile,
-      })
-      .select()
-      .single();
-
-    if (error) {
-      trackError(new Error("Error creating profile"), {
-        component: "ProfileService",
-        action: "createProfile",
-        metadata: { userId: user.id, error },
-      });
-      throw error;
-    }
-
-    return data as unknown as Profile;
+    return createProfileWithIdentityValidation(profile);
   }
-
-  /**
-   * Troca o perfil ativo do usuÃ¡rio
-   * @param userId - ID do usuÃ¡rio
-   * @param profileId - ID do perfil a ser ativado
-   */
   async switchActiveProfile(
     userId: string,
     profileId: string,
@@ -593,7 +184,6 @@ export class ProfileServiceLegacy {
       p_user_id: userId,
       p_profile_id: profileId,
     });
-
     if (error) {
       trackError(new Error("Error switching profile"), {
         component: "ProfileService",
@@ -603,178 +193,38 @@ export class ProfileServiceLegacy {
       throw error;
     }
   }
-
-  /**
-   * Atualiza profile existente
-   * âœ… INTEGRADO: Usa PublicIdentityService para validaÃ§Ã£o e cooldown de username
-   * 
-   * REGRAS:
-   * - Alterar name/display_name NÃƒO afeta username
-   * - Username sÃ³ muda se fornecido explicitamente no payload
-   * - MudanÃ§a de username respeita cooldown de 30 dias
-   * - MudanÃ§a de username valida disponibilidade
-   */
   async updateProfile(
     profileId: string,
     updates: UpdateProfileData,
   ): Promise<Profile> {
-    // Se username nÃ£o estÃ¡ sendo alterado, update direto
-    if (!updates.username) {
-      return this._updateProfileDirect(profileId, updates);
-    }
-
-    // Buscar profile atual
-    const currentProfile = await this.getProfileById(profileId);
-    if (!currentProfile) {
-      throw new Error('Profile not found');
-    }
-
-    // Se username Ã© o mesmo, update direto (sem validaÃ§Ã£o)
-    if (currentProfile.username === updates.username) {
-      return this._updateProfileDirect(profileId, updates);
-    }
-
-    // âœ… INTEGRAÃ‡ÃƒO: Validar novo username via PublicIdentityService
-    const validation = PublicIdentityService.validateFormat(
-      updates.username,
-      'profile'
-    );
-    
-    if (!validation.valid) {
-      throw new Error(`Invalid username: ${validation.error}`);
-    }
-
-    // âœ… INTEGRAÃ‡ÃƒO: Verificar cooldown via PublicIdentityService
-    const cooldown = await PublicIdentityService.canChangeIdentifier({
-      entityType: 'profile',
-      entityId: profileId,
+    return updateProfileCommand({
+      profileId,
+      updates,
+      getProfileById: (id) => this.getProfileById(id),
+      updateProfileDirect: (id, payload) => updateProfileDirect(id, payload),
     });
-    
-    if (!cooldown.canChange) {
-      const daysRemaining = cooldown.daysRemaining || 0;
-      throw new Error(
-        `Cannot change username. You must wait ${daysRemaining} more day(s).`
-      );
-    }
-
-    // âœ… INTEGRAÃ‡ÃƒO: Verificar disponibilidade via PublicIdentityService
-    const availability = await PublicIdentityService.checkAvailability({
-      identifier: updates.username,
-      entityType: 'profile',
-      excludeEntityId: profileId,
-    });
-    
-    if (availability.status !== 'available') {
-      throw new Error('Username already in use');
-    }
-
-    // Update com novo username (trigger registra histÃ³rico)
-    return this._updateProfileDirect(profileId, updates);
   }
-
-  /**
-   * Update direto sem validaÃ§Ã£o de username
-   * Usado internamente quando username nÃ£o muda ou jÃ¡ foi validado
-   */
   private async _updateProfileDirect(
     profileId: string,
     updates: UpdateProfileData,
   ): Promise<Profile> {
-    const { data, error } = await supabase
-      .from("profiles")
-      .update(updates)
-      .eq("id", profileId)
-      .select()
-      .single();
-
-    if (error) {
-      trackError(new Error("Error updating profile"), {
-        component: "ProfileService",
-        action: "_updateProfileDirect",
-        metadata: { profileId, error },
-      });
-      throw error;
-    }
-
-    return data as unknown as Profile;
+    return updateProfileDirect(profileId, updates);
   }
-
-  /**
-   * SSOT: Atualiza configuraes de privacidade do perfil
-   */
   async updatePrivacySettings(
     profileId: string,
     settings: ProfilePrivacySettingsInput,
   ): Promise<Profile> {
-    const { data, error } = await supabase
-      .from("profiles")
-      .update(settings)
-      .eq("id", profileId)
-      .select()
-      .single();
-
-    if (error) {
-      trackError(new Error("Error updating privacy settings"), {
-        component: "ProfileService",
-        action: "updatePrivacySettings",
-        metadata: { profileId, error },
-      });
-      throw error;
-    }
-
-    return data as unknown as Profile;
+    return updatePrivacySettingsDirect(profileId, settings);
   }
-
-  /**
-   * SSOT: Atualiza status de ban de alertas do perfil
-   * Usado por admin para bloquear/desbloquear criao de alertas
-   */
   async updateAlertBanStatus(
     profileId: string,
     alertBanned: boolean,
   ): Promise<Profile> {
-    const { data, error } = await supabase
-      .from("profiles")
-      .update(({ alert_banned: alertBanned } as unknown) as any)
-      .eq("id", profileId)
-      .select()
-      .single();
-
-    if (error) {
-      trackError(new Error("Error updating alert ban status"), {
-        component: "ProfileService",
-        action: "updateAlertBanStatus",
-        metadata: { profileId, alertBanned, error },
-      });
-      throw error;
-    }
-
-    return data as unknown as Profile;
+    return updateAlertBanStatusMutation(profileId, alertBanned);
   }
-
-  /**
-   * Deleta profile
-   */
   async deleteProfile(profileId: string): Promise<void> {
-    const { error } = await supabase
-      .from("profiles")
-      .delete()
-      .eq("id", profileId);
-
-    if (error) {
-      trackError(new Error("Error deleting profile"), {
-        component: "ProfileService",
-        action: "deleteProfile",
-        metadata: { profileId, error },
-      });
-      throw error;
-    }
+    await deleteProfileMutation(profileId);
   }
-
-  /**
-   * Busca profiles por IDs com campos adicionais para admin (alert_banned, neighborhood, created_at)
-   * âœ… SSOT - Ãšnico mÃ©todo autorizado para buscar alert_banned em batch
-   */
   async getProfilesWithAlertBan(profileIds: string[]): Promise<
     Array<{
       id: string;
@@ -783,551 +233,50 @@ export class ProfileServiceLegacy {
       created_at: string;
     }>
   > {
-    if (profileIds.length === 0) return [];
-
-    try {
-      const { data, error } = await (supabase as any)
-        .from("profiles")
-        .select("id, alert_banned, neighborhood, created_at")
-        .in("id", profileIds);
-
-      if (error) {
-        trackError(new Error("Error fetching profiles with alert_banned"), {
-          component: "ProfileService",
-          action: "getProfilesWithAlertBan",
-          metadata: { profileIds, error },
-        });
-        throw error;
-      }
-
-      return ((data as ProfileWithAlertBanRow[] | null) || []).map((p) => ({
-        id: p.id,
-        alert_banned: p.alert_banned || false,
-        neighborhood: p.neighborhood || null,
-        created_at: p.created_at || "",
-      }));
-    } catch (error) {
-      trackError(error as Error, {
-        component: "ProfileService",
-        action: "getProfilesWithAlertBan",
-        metadata: { profileIds },
-      });
-      throw error;
-    }
+    return getProfilesWithAlertBanQuery(profileIds);
   }
-
-  /**
-   * Snapshot privado canÃ´nico do hub de perfil.
-   *
-   * Consolida o estado privado usado por `/conta` em um Ãºnico agregado
-   * de service, sem espalhar orquestraÃ§Ã£o por hook/pÃ¡gina.
-   */
   async getPrivateWorkspace(userId: string): Promise<ProfilePrivateWorkspace> {
-    const emptyWorkspace: ProfilePrivateWorkspace = {
-      profile: null,
-      context: null,
-      identity: null,
-      account: {
-        accountState: "inactive",
-        isBlocked: false,
-        isSuspended: false,
-        verificationStatus: "not_requested",
-      },
-      stats: {
-        posts: 0,
-        likes: 0,
-        favorites: 0,
-        businesses: 0,
-      },
-      operations: {
-        managedProfiles: 0,
-        businesses: 0,
-        services: 0,
-        classifieds: 0,
-        posts: 0,
-        events: 0,
-        alerts: 0,
-        issues: 0,
-        favoritesGiven: 0,
-        favoritesReceived: 0,
-        notificationsTotal: 0,
-        notificationsUnread: 0,
-        ridesTotal: 0,
-        activeRides: 0,
-      },
-      managedAssets: [],
-      notifications: {
-        total: 0,
-        unread: 0,
-        highPriority: 0,
-        urgentPriority: 0,
-        recent: [],
-      },
-      roles: [],
-      businesses: [],
-      businessModules: [],
-      activeRide: null,
-      hasActiveRide: false,
-      verificationStatus: "not_requested",
-    };
-
-    try {
-      const activeProfile = await this.getActiveProfile(userId);
-      if (!activeProfile) {
-        return emptyWorkspace;
-      }
-
-      const { postService } = await import("@/core/posts/services");
-      const { getActiveRide, getUserRides } = await import("@/modules/mobility/services");
-      const { VerificationService } = await import(
-        "@/core/verification/services/VerificationService"
-      );
-      const { getUserClassifieds } = await import("@/modules/classifieds/services");
-      const { eventService } = await import("@/core/community-events/services/CommunityEventsRuntimeService");
-      const { communityAlertService } = await import("@/modules/community-alerts");
-      const { communityIssueService } = await import("@/core/community-issues/services/CommunityIssueService");
-      const { notificationService } = await import("@/core/notifications/services");
-
-      const profileContextPromise = this.getProfileContext(userId);
-      const profilesPromise = this.getProfilesByUserId(userId);
-      const rolesPromise = this.getUserRoles(userId);
-      const postsPromise = postService
-        .getPostsCountByProfile(activeProfile.id)
-        .catch(() => 0);
-      const likesPromise = this.getUserLikesCount(activeProfile.id);
-      const favoritesPromise = FavoritesService.getFavoriteStats(activeProfile.id);
-      const activeRidePromise = getActiveRide(activeProfile.id).catch(() => null);
-      const verificationPromise = VerificationService.getVerification(
-        activeProfile.id,
-        "resident",
-      );
-      const servicesPromise = getServicesByProfile(activeProfile.id).catch(
-        () => [],
-      );
-      const classifiedsPromise = getUserClassifieds(activeProfile.id).catch(() => []);
-      const eventsPromise = eventService
-        .getEventsByOrganizerProfile(activeProfile.id, 20)
-        .catch(() => []);
-      const alertsCountPromise = communityAlertService
-        .getCountByProfile(activeProfile.id)
-        .catch(() => 0);
-      const issuesCountPromise = communityIssueService
-        .getCountByProfile(activeProfile.id)
-        .catch(() => 0);
-      const notificationStatsPromise = notificationService.getStats(userId).catch(() => null);
-      const notificationFeedPromise = notificationService.fetchNotifications(userId, { limit: 5 }).catch(() => []);
-      const ridesPromise = getUserRides(userId).catch(() => []);
-
-      const [
-        profileContext,
-        profiles,
-        roles,
-        postsCount,
-        likesCount,
-        favoritesResult,
-        activeRide,
-        verification,
-        services,
-        classifieds,
-        events,
-        alertsCount,
-        issuesCount,
-        notificationStats,
-        recentNotifications,
-        rides,
-      ] =
-        await Promise.all([
-          profileContextPromise,
-          profilesPromise,
-          rolesPromise,
-          postsPromise,
-          likesPromise,
-          favoritesPromise,
-          activeRidePromise,
-          verificationPromise,
-          servicesPromise,
-          classifiedsPromise,
-          eventsPromise,
-          alertsCountPromise,
-          issuesCountPromise,
-          notificationStatsPromise,
-          notificationFeedPromise,
-          ridesPromise,
-        ]);
-
-      const businesses = mapBusinessRecords(
-        await this.getUserBusinessesByProfiles(
-          profiles.length ? profiles.map((profile) => profile.id) : [activeProfile.id],
-        ),
-      );
-      const businessModules = await Promise.all(
-        businesses.map(async (business) => {
-          const [
-            { SubscriptionService, EntitlementsService, PlanTier },
-            { GastronomyProfileService },
-            { getEligibleVerticals },
-            { QrCodeService },
-            { QrEntityType },
-          ] = await Promise.all([
-            import("@/core/billing"),
-            import("@/modules/business/gastronomy"),
-            import("@/core/verticals/config"),
-            import("@/core/qr"),
-            import("@/core/qr/types"),
-          ]);
-
-          const [subscriptionResult, gastronomyResult, qrCodeResult] = await Promise.all([
-            SubscriptionService.getByBusinessId(business.id),
-            GastronomyProfileService.getByBusinessId(business.id),
-            QrCodeService.getByEntity(QrEntityType.BUSINESS, business.id),
-          ]);
-
-          const subscription = subscriptionResult.data;
-          const gastronomyProfile = gastronomyResult.data;
-          const qrCode = qrCodeResult.data;
-          const planTier = subscription?.plan_tier ?? PlanTier.FREE;
-          const entitlements = EntitlementsService.getAll(planTier);
-          const gastronomyEligible = Boolean(
-            business.category && getEligibleVerticals(business.category as never).length > 0,
-          );
-          return buildBusinessModuleSnapshot({
-            business,
-            planTier,
-            subscription,
-            entitlements,
-            gastronomyEligible,
-            gastronomyProfile,
-            qrCode,
-            getCanonicalUrl: BusinessUrlService.getCanonicalUrl,
-            getShareUrl: BusinessUrlService.getShareUrl,
-          });
-        }),
-      );
-
-      const activeRideStatuses = new Set([
-        "pending",
-        "requested",
-        "searching_driver",
-        "driver_assigned",
-        "driver_accepted",
-        "driver_on_the_way",
-        "driver_arrived",
-        "passenger_on_board",
-        "in_progress",
-      ]);
-
-      const ridesList = Array.isArray(rides) ? rides : [];
-      const activeRidesFromHistory = countActiveRides(ridesList, activeRideStatuses);
-
-      const notificationPayload = normalizeNotificationPayload(notificationStats);
-
-      const profileStatus = profileContext?.status || {
-        isActive: Boolean(activeProfile.is_active),
-        isBlocked: false,
-        isSuspended: Boolean(activeProfile.is_suspended),
-        suspendedAt: activeProfile.suspended_at,
-        suspensionReason: activeProfile.suspension_reason,
-        suspendedUntil: activeProfile.suspended_until,
-      };
-
-      const profilePlan = profileContext?.plan || {
-        type: "basic",
-        isPremium: false,
-      };
-
-      const profileReputation = profileContext?.reputation || {
-        level: Math.floor((activeProfile.reputation || 0) / 100) + 1,
-        score: activeProfile.reputation || 0,
-      };
-
-      const permissions = profileContext?.permissions || {
-        canPost: false,
-        canComment: false,
-        canMessage: false,
-        canCreateBusiness: false,
-        canModerate: false,
-      };
-
-      const permissionMatrix = buildPermissionMatrix(permissions);
-
-      let territoryLabel: string | null = null;
-      if (activeProfile.location_id) {
-        const { data: locationRow } = await supabase
-          .from("locations")
-          .select("full_name")
-          .eq("id", activeProfile.location_id)
-          .maybeSingle();
-        territoryLabel =
-          typeof locationRow?.full_name === "string" && locationRow.full_name.trim().length > 0
-            ? locationRow.full_name
-            : null;
-      }
-
-      const verificationSummary = resolveVerificationStatus(verification);
-      const stats: ProfileStats = {
-        posts: postsCount || 0,
-        likes: likesCount || 0,
-        favorites: favoritesResult.total_favorites_given || 0,
-        businesses: businesses.length,
-      };
-
-      const managedAssets = buildManagedAssets({
-        businesses,
-        services: services as Array<{ id: string; name?: string; updated_at?: string; is_accepting_clients?: boolean }>,
-        classifieds: classifieds as Array<{ id: string; title?: string; updated_at?: string; is_active?: boolean }>,
-        events: events as Array<{ id: string; title?: string; status?: string; updated_at?: string }>,
-      });
-
-      const operations = buildWorkspaceOperations({
-        profilesCount: profiles.length,
-        businessesCount: businesses.length,
-        servicesCount: Array.isArray(services) ? services.length : 0,
-        classifiedsCount: Array.isArray(classifieds) ? classifieds.length : 0,
-        postsCount: postsCount || 0,
-        eventsCount: Array.isArray(events) ? events.length : 0,
-        alertsCount: alertsCount || 0,
-        issuesCount: issuesCount || 0,
-        favoritesGiven: favoritesResult.total_favorites_given || 0,
-        favoritesReceived: favoritesResult.total_favorites_received || 0,
-        notificationsTotal: notificationPayload.total,
-        notificationsUnread: notificationPayload.unread,
-        ridesTotal: ridesList.length,
-        activeRides: Math.max(activeRidesFromHistory, activeRide ? 1 : 0),
-      });
-
-      return {
-        profile: activeProfile,
-        context: profileContext,
-        identity: {
-          profileId: activeProfile.id,
-          profileType: activeProfile.profile_type,
-          displayName: activeProfile.display_name || activeProfile.name,
-          username: activeProfile.username || "",
-          isPublic: activeProfile.is_public !== false,
-          verified: profileContext?.verified || Boolean(activeProfile.verified),
-          territoryLabel,
-          locationId: activeProfile.location_id,
-          status: profileStatus,
-          plan: profilePlan,
-          reputation: profileReputation,
-          permissions: permissionMatrix,
+    return getPrivateWorkspaceAggregate({
+      userId,
+      getActiveProfile: (id) => this.getActiveProfile(id),
+      getProfileContext: (id) => this.getProfileContext(id),
+      getProfilesByUserId: (id) => this.getProfilesByUserId(id),
+      getUserRoles: (id) => this.getUserRoles(id),
+      getUserLikesCount: (profileId) => this.getUserLikesCount(profileId),
+      getUserBusinessesByProfiles: (profileIds) => this.getUserBusinessesByProfiles(profileIds),
+      resolvePermissions: (profileContext) =>
+        profileContext?.permissions ?? {
+          canPost: false,
+          canComment: false,
+          canMessage: false,
+          canCreateBusiness: false,
+          canModerate: false,
         },
-        account: {
-          accountState: profileStatus.isBlocked
-            ? "blocked"
-            : profileStatus.isSuspended
-              ? "suspended"
-              : profileStatus.isActive
-                ? "active"
-                : "inactive",
-          isBlocked: profileStatus.isBlocked,
-          isSuspended: profileStatus.isSuspended,
-          suspendedAt: profileStatus.suspendedAt,
-          suspendedUntil: profileStatus.suspendedUntil,
-          suspensionReason: profileStatus.suspensionReason,
-          verificationStatus: verificationSummary.status,
-          verificationRejectionReason: verificationSummary.rejectionReason,
-        },
-        stats,
-        operations,
-        managedAssets,
-        notifications: {
-          total: notificationPayload.total,
-          unread: notificationPayload.unread,
-          highPriority: notificationPayload.by_priority.high || 0,
-          urgentPriority: notificationPayload.by_priority.urgent || 0,
-          recent: mapRecentNotifications(
-            recentNotifications as Array<{
-              id: string;
-              type?: string;
-              title?: string;
-              priority?: "low" | "medium" | "high" | "urgent";
-              read?: boolean;
-              created_at?: string;
-            }>,
-          ),
-        },
-        roles,
-        businesses,
-        businessModules,
-        activeRide: activeRide || null,
-        hasActiveRide: Boolean(activeRide),
-        verificationStatus: verificationSummary.status,
-        verificationRejectionReason: verificationSummary.rejectionReason,
-      };
-    } catch (error) {
-      trackError(error as Error, {
-        component: "ProfileService",
-        action: "getPrivateWorkspace",
-        metadata: { userId },
-      });
-      return emptyWorkspace;
-    }
+    });
   }
-
-  /**
-   * Busca estatÃ­sticas do profile
-   */
   async getStats(userId: string) {
-    // âœ… SSOT COMPLIANT - Usa mÃ©todos internos do ProfileService
-    const activeProfile = await this.getActiveProfile(userId);
-
-    if (!activeProfile) {
-      return {
-        posts: 0,
-        likes: 0,
-        favorites: 0,
-      };
-    }
-
-    // âœ… SSOT - Usar PostService para contagem de posts
-    const { postService } = await import("@/core/posts/services");
-
-    const [postsCount, likesCount, favoritesResult] = await Promise.all([
-      postService.getPostsCountByUser(userId),
-      // âœ… SSOT - Usar mÃ©todo interno getUserLikesCount
-      this.getUserLikesCount(activeProfile.id),
-      // âœ… SSOT - Usar FavoritesService
-      FavoritesService.getFavoriteStats(activeProfile.id),
-    ]);
-
-    return {
-      posts: postsCount || 0,
-      likes: likesCount || 0,
-      favorites: favoritesResult.total_favorites_given || 0,
-    };
+    return getProfileStatsAggregate({
+      userId,
+      getActiveProfile: (id) => this.getActiveProfile(id),
+      getUserLikesCount: (profileId) => this.getUserLikesCount(profileId),
+    });
   }
-
-  // ============================================================================
   // ðŸ“Š ESTATÃSTICAS ADMINISTRATIVAS
-  // ============================================================================
-
-  /**
-   * ðŸ“Š OBTER CONTAGEM TOTAL DE USUÃRIOS
-   * âœ… SSOT para contagem de usuÃ¡rios no dashboard admin
-   *
-   * @returns NÃºmero total de usuÃ¡rios cadastrados
-   */
   async getTotalProfilesCount(): Promise<number> {
-    try {
-      const { count, error } = await supabase
-        .from("profiles")
-        .select("*", { count: "exact", head: true });
-
-      if (error) {
-        logger.error("Error getting profiles count", error, {
-          service: "ProfileService",
-          method: "getTotalProfilesCount",
-        });
-        return 0;
-      }
-
-      return count || 0;
-    } catch (error) {
-      logger.error("Error getting profiles count", error as Error, {
-        service: "ProfileService",
-        method: "getTotalProfilesCount",
-      });
-      return 0;
-    }
+    return getTotalProfilesCountQuery();
   }
-
-  /**
-   * ðŸ“‹ OBTER USUÃRIOS RECENTES
-   * âœ… SSOT para atividade recente de usuÃ¡rios
-   *
-   * @param limit - NÃºmero mÃ¡ximo de resultados (padrÃ£o: 10)
-   * @returns Lista de usuÃ¡rios recentes
-   */
   async getRecentProfiles(limit = 10): Promise<RecentProfileRow[]> {
-    try {
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("id, name, username, avatar_url, created_at")
-        .order("created_at", { ascending: false })
-        .limit(limit);
-
-      if (error) {
-        logger.error("Error getting recent profiles", error, {
-          service: "ProfileService",
-          method: "getRecentProfiles",
-          limit,
-        });
-        return [];
-      }
-
-      return (data as RecentProfileRow[] | null) || [];
-    } catch (error) {
-      logger.error("Error getting recent profiles", error as Error, {
-        service: "ProfileService",
-        method: "getRecentProfiles",
-      });
-      return [];
-    }
+    return getRecentProfilesQuery(limit);
   }
-
-  /**
-   * ðŸ“… OBTER USUÃRIOS CRIADOS EM UM PERÃODO
-   * âœ… SSOT para atividade de usuÃ¡rios por perÃ­odo
-   *
-   * @param startDate - Data inicial do perÃ­odo
-   * @param endDate - Data final do perÃ­odo
-   * @returns NÃºmero de usuÃ¡rios criados no perÃ­odo
-   */
   async getProfilesCreatedInPeriod(
     startDate: Date,
     endDate: Date,
   ): Promise<number> {
-    try {
-      const { count, error } = await supabase
-        .from("profiles")
-        .select("*", { count: "exact", head: true })
-        .gte("created_at", startDate.toISOString())
-        .lte("created_at", endDate.toISOString());
-
-      if (error) {
-        logger.error("Error getting profiles in period", error, {
-          service: "ProfileService",
-          method: "getProfilesCreatedInPeriod",
-          startDate: startDate.toISOString(),
-          endDate: endDate.toISOString(),
-        });
-        return 0;
-      }
-
-      return count || 0;
-    } catch (error) {
-      logger.error("Error getting profiles in period", error as Error, {
-        service: "ProfileService",
-        method: "getProfilesCreatedInPeriod",
-      });
-      return 0;
-    }
+    return getProfilesCreatedInPeriodQuery(startDate, endDate);
   }
-
-  /**
-   * Upload de avatar
-   */
   async uploadAvatar(userId: string, file: File): Promise<string | null> {
-    try {
-      const upload = await mediaService.uploadAvatar(userId, file);
-      return upload.url;
-    } catch (error) {
-      trackError(new Error("Error uploading avatar"), {
-        component: "ProfileService",
-        action: "uploadAvatar",
-        metadata: { userId, error },
-      });
-      throw error;
-    }
+    return uploadAvatarMutation(userId, file);
   }
-
-  /**
-   * Verifica se username estÃ¡ disponÃ­vel
-   * âœ… INTEGRADO: Delega para PublicIdentityService (SSOT)
-   * @param username - Username para verificar
-   * @param excludeProfileId - ID do perfil a excluir da verificaÃ§Ã£o (para updates)
-   */
   async isUsernameAvailable(
     username: string,
     excludeProfileId?: string,
@@ -1348,181 +297,29 @@ export class ProfileServiceLegacy {
       return false;
     }
   }
-
-  /**
-   * Verifica se handle estÃ¡ disponÃ­vel - DEPRECATED, use isUsernameAvailable
-   * @deprecated Use isUsernameAvailable instead. Will be removed in v2.0.0
-   */
   async isHandleAvailable(
     handle: string,
     excludeUserId?: string,
   ): Promise<boolean> {
-    if (process.env.NODE_ENV === 'development') {
-      logger.warn(
-        'âš ï¸  ProfileService.isHandleAvailable() is deprecated.\n' +
-        '   Use isUsernameAvailable() instead.\n' +
-        '   This method will be removed in v2.0.0'
-      );
-    }
     return this.isUsernameAvailable(handle, excludeUserId);
   }
-
-  // ============================================================================
   // READ MODELS TIPADOS - GATE 2
-  // ============================================================================
-
-  /**
-   * Read model para feeds, listas e comentÃ¡rios
-   * Evita N+1 queries e nÃ£o expÃµe shape do banco
-   */
   async getProfilesByIds(ids: string[]): Promise<Profile[]> {
-    if (ids.length === 0) return [];
-
-    const uniqueIds = [...new Set(ids)];
-
-    const { data, error } = await (supabase as any)
-      .from("profiles")
-      .select()
-      .in("id", uniqueIds);
-
-    if (error) {
-      trackError(new Error("Error fetching profiles by ids"), {
-        component: "ProfileService",
-        action: "getProfilesByIds",
-        metadata: { ids: uniqueIds, error },
-      });
-      return [];
-    }
-
-    return ((data ?? []) as unknown) as Profile[];
+    return getProfilesByIdsQuery(ids);
   }
-
   async getProfilesSummary(ids: string[]): Promise<ProfileSummary[]> {
-    if (ids.length === 0) return [];
-
-    const uniqueIds = [...new Set(ids)];
-
-    const { data, error } = await supabase
-      .from("profiles")
-      .select("id, user_id, name, avatar_url, verified")
-      .in("id", uniqueIds);
-
-    if (error) {
-      trackError(new Error("Error fetching profiles summary"), {
-        component: "ProfileService",
-        action: "getProfilesSummary",
-        metadata: { ids: uniqueIds, error },
-      });
-      return [];
-    }
-
-    // Mapear para shape de domÃ­nio (camelCase)
-    return ((data as ProfileSummaryRow[] | null) || []).map((profile) => ({
-      id: profile.id,
-      userId: profile.user_id,
-      name: profile.name,
-      avatarUrl: profile.avatar_url,
-      verified: profile.verified || false,
-    }));
+    return getProfilesSummaryQuery(ids);
   }
-
-  /**
-   * GATE 2 - Read model estendido para casos especÃ­ficos
-   * Usado quando ProfileSummary nÃ£o tem campos suficientes
-   */
   async getProfilesSummaryExtended(
     ids: string[],
   ): Promise<ProfileSummaryExtended[]> {
-    if (ids.length === 0) return [];
-
-    const uniqueIds = [...new Set(ids)];
-
-    const { data, error } = await supabase
-      .from("public_profiles")
-      .select(
-        "id, display_name, avatar_url, username, public_neighborhood:neighborhood, public_city:city, public_state:state",
-      )
-      .in("id", uniqueIds);
-
-    if (error) {
-      trackError(new Error("Error fetching profiles summary extended"), {
-        component: "ProfileService",
-        action: "getProfilesSummaryExtended",
-        metadata: { ids: uniqueIds, error },
-      });
-      return [];
-    }
-
-    // Mapear para shape de domÃ­nio (camelCase)
-    return ((data as unknown as ProfileSummaryExtendedRow[] | null) || []).map((profile) => ({
-      id: profile.id,
-      name: profile.display_name,
-      avatarUrl: profile.avatar_url,
-      verified: false,
-      neighborhood: profile.public_neighborhood,
-      whatsapp: null,
-    }));
+    return getProfilesSummaryExtendedQuery(ids);
   }
-
-  /**
-   * Read model para painÃ©is administrativos
-   * Campos especÃ­ficos para administraÃ§Ã£o
-   */
   async getAdminProfilesList(
     filters?: AdminFilters,
   ): Promise<AdminProfileListItem[]> {
-    let query = supabase
-      .from("profiles")
-      .select(
-        "id, name, username, avatar_url, verified, is_suspended, created_at, profile_type",
-      );
-
-    if (filters?.suspended !== undefined) {
-      query = query.eq("is_suspended", filters.suspended);
-    }
-
-    if (filters?.verified !== undefined) {
-      query = query.eq("verified", filters.verified);
-    }
-
-    if (filters?.profileType) {
-      query = query.eq("profile_type", filters.profileType);
-    }
-
-    if (filters?.limit) {
-      query = query.limit(filters.limit);
-    }
-
-    query = query.order("created_at", { ascending: false });
-
-    const { data, error } = await query;
-
-    if (error) {
-      trackError(new Error("Error fetching admin profiles list"), {
-        component: "ProfileService",
-        action: "getAdminProfilesList",
-        metadata: { filters, error },
-      });
-      return [];
-    }
-
-    // Mapear para shape de domÃ­nio (camelCase)
-    return ((data as AdminProfileListRow[] | null) || []).map((profile) => ({
-      id: profile.id,
-      name: profile.name,
-      username: profile.username,
-      avatarUrl: profile.avatar_url,
-      verified: profile.verified || false,
-      suspended: profile.is_suspended || false,
-      createdAt: profile.created_at,
-      profileType: profile.profile_type,
-    }));
+    return getAdminProfilesListQuery(filters);
   }
-
-  /**
-   * Busca profiles com filtros avanÃ§ados e paginaÃ§Ã£o para uso administrativo.
-   * Suporta filtro por tipo, visibilidade, busca textual e paginaÃ§Ã£o com count total.
-   */
   async getProfilesFiltered(filters: {
     search?: string;
     profileType?: string;
@@ -1530,189 +327,37 @@ export class ProfileServiceLegacy {
     page?: number;
     limit?: number;
   }): Promise<{ data: ProfileFilterRow[]; total: number }> {
-    const { search, profileType, visibility = "all", page = 1, limit = 20 } = filters;
-
-    let query = supabase
-      .from("profiles")
-      .select(
-        "id, user_id, created_at, profile_type, is_public, username, name, display_name",
-        { count: "exact" },
-      )
-      .order("created_at", { ascending: false });
-
-    if (profileType) {
-      query = query.eq("profile_type", profileType);
-    }
-
-    if (visibility === "public") {
-      query = query.eq("is_public", true);
-    } else if (visibility === "private") {
-      query = query.eq("is_public", false);
-    }
-
-    if (search?.trim()) {
-      const term = search.trim().replace(/[%(),]/g, " ").trim();
-      query = query.or(
-        `name.ilike.%${term}%,display_name.ilike.%${term}%,username.ilike.%${term}%,user_id.ilike.%${term}%`,
-      );
-    }
-
-    const from = (page - 1) * limit;
-    const to = from + limit - 1;
-
-    const { data, error, count } = await query.range(from, to);
-
-    if (error) {
-      trackError(new Error("Error fetching profiles filtered"), {
-        component: "ProfileService",
-        action: "getProfilesFiltered",
-        metadata: { filters, error },
-      });
-      return { data: [], total: 0 };
-    }
-
-    return { data: (data as ProfileFilterRow[] | null) ?? [], total: count ?? 0 };
+    return getProfilesFilteredQuery(filters);
   }
-
-  /**
-   * Busca todos os IDs de profiles para uso administrativo.
-   */
   async getAllProfileIds(): Promise<string[]> {
-    const { data, error } = await supabase
-      .from("profiles")
-      .select("id");
-
-    if (error) {
-      trackError(new Error("Error fetching all profile ids"), {
-        component: "ProfileService",
-        action: "getAllProfileIds",
-        metadata: { error },
-      });
-      return [];
-    }
-
-    return (data ?? []).map((p: { id: string }) => p.id);
+    return getAllProfileIdsQuery();
   }
-
-  /**
-   * PermissÃµes-base tipadas (nÃ£o motor genÃ©rico)
-   * Apenas identidade bÃ¡sica, regras de domÃ­nio ficam no domÃ­nio
-   */
   async getBasePermissions(userId: string): Promise<BasePermissions> {
     const context = await this.getProfileContext(userId);
-    if (!context) {
-      return {
-        canPost: false,
-        canComment: false,
-        canMessage: false,
-      };
-    }
-
     return {
-      canPost: context.permissions.canPost,
-      canComment: context.permissions.canComment,
-      canMessage: context.permissions.canMessage,
+      canPost: context?.permissions.canPost ?? false,
+      canComment: context?.permissions.canComment ?? false,
+      canMessage: context?.permissions.canMessage ?? false,
     };
   }
-
-  // ============================================================================
-  // MÃ‰TODOS TEMPORÃRIOS PARA MOBILIDADE - GATE 2 CLOSURE
-  // TODO: Mover para MobilityService quando refatorar arquitetura
-  // ============================================================================
-
-  /**
-   * ObtÃ©m active_ride_id de um perfil
-   * TEMPORÃRIO: Este campo deveria estar em tabela separada de estado de mobilidade
-   */
   async getActiveRideId(profileId: string): Promise<string | null> {
-    const { data, error } = await supabase
-      .from("profiles")
-      .select("active_ride_id")
-      .eq("id", profileId)
-      .single();
-
-    if (error) return null;
-    return (data as ActiveRideIdRow | null)?.active_ride_id || null;
+    return getActiveRideIdQuery(profileId);
   }
-
-  /**
-   * Define active_ride_id de um perfil
-   * TEMPORÃRIO: Este campo deveria estar em tabela separada de estado de mobilidade
-   */
   async setActiveRideId(
     profileId: string,
     rideId: string | null,
   ): Promise<void> {
-    const { error } = await supabase
-      .from("profiles")
-      .update({ active_ride_id: rideId })
-      .eq("id", profileId);
-
-    if (error) {
-      trackError(new Error("Error setting active_ride_id"), {
-        component: "ProfileService",
-        action: "setActiveRideId",
-        metadata: { profileId, rideId, error },
-      });
-      throw error;
-    }
+    await setActiveRideIdMutation(profileId, rideId);
   }
-
-  /**
-   * Limpa active_ride_id de um perfil (apenas se corresponder ao rideId fornecido)
-   * TEMPORÃRIO: Este campo deveria estar em tabela separada de estado de mobilidade
-   */
   async clearActiveRideId(profileId: string, rideId: string): Promise<void> {
-    const { error } = await supabase
-      .from("profiles")
-      .update({ active_ride_id: null })
-      .eq("id", profileId)
-      .eq("active_ride_id", rideId);
-
-    if (error) {
-      trackError(new Error("Error clearing active_ride_id"), {
-        component: "ProfileService",
-        action: "clearActiveRideId",
-        metadata: { profileId, rideId, error },
-      });
-      throw error;
-    }
+    await clearActiveRideIdMutation(profileId, rideId);
   }
-
-  /**
-   * Busca dados bÃ¡sicos de perfis para mobilidade (passageiro/motorista)
-   * TEMPORÃRIO: Retorna campos especÃ­ficos de mobilidade
-   */
   async getProfilesForRides(
     ids: string[],
     type: "passenger" | "driver",
   ): Promise<ProfileLikeActivityRecord[]> {
-    if (ids.length === 0) return [];
-
-    const selectFields =
-      type === "passenger"
-        ? "id, name, avatar_url, city, neighborhood, street, pontos, telefone"
-        : "id, name, avatar_url";
-
-    const { data, error } = await supabase
-      .from("profiles")
-      .select(selectFields)
-      .in("id", ids);
-
-    if (error) {
-      trackError(new Error("Error fetching profiles for rides"), {
-        component: "ProfileService",
-        action: "getProfilesForRides",
-        metadata: { ids, type, error },
-      });
-      return [];
-    }
-
-    return (((data as unknown as RideProfileRow[] | null) || []) as unknown) as ProfileLikeActivityRecord[];
+    return getProfilesForRidesQuery(ids, type);
   }
-  /**
-   * Remove suspensÃ£o de um usuÃ¡rio
-   */
   async unsuspendUser(userId: string): Promise<void> {
     await this.updateProfile(userId, {
       is_suspended: false,
@@ -1721,35 +366,9 @@ export class ProfileServiceLegacy {
       suspension_reason: undefined,
     });
   }
-
-  /**
-   * Verifica um usuÃ¡rio (marca como verificado)
-   */
   async verifyUser(userId: string): Promise<void> {
-    try {
-      const { error } = await supabase
-        .from("profiles")
-        .update({
-          is_verified: true,
-          verified_at: new Date().toISOString(),
-        })
-        .eq("id", userId);
-
-      if (error) throw error;
-    } catch (error) {
-      trackError(new Error("Error verifying user"), {
-        component: "ProfileService",
-        action: "verifyUser",
-        metadata: { userId, error },
-      });
-      throw error;
-    }
+    await verifyUserMutation(userId);
   }
-
-  /**
-   * Busca perfis por status de verificaÃ§Ã£o
-   * Usado por VerificationService para listar perfis pendentes/verificados/rejeitados
-   */
   async getProfilesByVerificationStatus(
     status: VerificationWorkflowStatus,
     options?: {
@@ -1758,213 +377,41 @@ export class ProfileServiceLegacy {
       orderBy?: 'created_at' | 'updated_at';
     }
   ): Promise<Profile[]> {
-    try {
-      let query = (supabase as any)
-        .from('profiles')
-        .select('*')
-        .eq('verification_status', status);
-
-      if (options?.orderBy) {
-        query = query.order(options.orderBy, { ascending: false });
-      } else {
-        query = query.order('updated_at', { ascending: false });
-      }
-
-      if (options?.limit) {
-        query = query.limit(options.limit);
-      }
-
-      if (options?.offset) {
-        query = query.range(options.offset, options.offset + (options.limit || 20) - 1);
-      }
-
-      const { data, error } = await query;
-
-      if (error) {
-        logger.error('Error fetching profiles by verification status:', error);
-        throw error;
-      }
-
-      return ((data ?? []) as unknown) as Profile[];
-    } catch (error) {
-      trackError(new Error('Error getting profiles by verification status'), {
-        component: 'ProfileService',
-        action: 'getProfilesByVerificationStatus',
-        metadata: { status, options, error },
-      });
-      throw error;
-    }
+    return getProfilesByVerificationStatusQuery(status, options);
   }
-
   async getUserIdsByCity(city: string, limit = 500): Promise<string[]> {
-    try {
-      const normalizedCity = city.trim();
-      if (!normalizedCity) return [];
-
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("user_id")
-        .eq("city", normalizedCity)
-        .limit(limit);
-
-      if (error) {
-        trackError(new Error("Error fetching user ids by city"), {
-          component: "ProfileService",
-          action: "getUserIdsByCity",
-          metadata: {
-            city: normalizedCity,
-            limit,
-            error: error.message,
-          },
-        });
-        return [];
-      }
-
-      return (data ?? [])
-        .map((row) => row.user_id)
-        .filter((id): id is string => typeof id === "string" && id.length > 0);
-    } catch (error) {
-      trackError(new Error("Error fetching user ids by city"), {
-        component: "ProfileService",
-        action: "getUserIdsByCity",
-        metadata: {
-          city,
-          limit,
-          error: error instanceof Error ? error.message : String(error),
-        },
-      });
-      return [];
-    }
+    return getUserIdsByCityQuery(city, limit);
   }
-
-  /**
-   * Busca estatÃ­sticas de verificaÃ§Ã£o
-   * Retorna contagem de perfis por status de verificaÃ§Ã£o
-   */
   async getVerificationStats(): Promise<{
     total_pending: number;
     total_verified: number;
     total_rejected: number;
   }> {
-    try {
-      const [pending, verified, rejected] = await Promise.all([
-        (supabase as any)
-          .from('profiles')
-          .select('*', { count: 'exact', head: true })
-          .eq('verification_status', 'pending'),
-        (supabase as any)
-          .from('profiles')
-          .select('*', { count: 'exact', head: true })
-          .eq('verification_status', 'verified'),
-        (supabase as any)
-          .from('profiles')
-          .select('*', { count: 'exact', head: true })
-          .eq('verification_status', 'rejected'),
-      ]);
-
-      return {
-        total_pending: pending.count ?? 0,
-        total_verified: verified.count ?? 0,
-        total_rejected: rejected.count ?? 0,
-      };
-    } catch (error) {
-      trackError(new Error('Error getting verification stats'), {
-        component: 'ProfileService',
-        action: 'getVerificationStats',
-        metadata: { error },
-      });
-      throw error;
-    }
+    return getVerificationStatsQuery();
   }
-
-  /**
-   * Atualiza status de verificaÃ§Ã£o de um perfil
-   * MÃ©todo genÃ©rico usado pelos mÃ©todos especÃ­ficos abaixo
-   */
   async updateVerificationStatus(
     profileId: string,
     status: VerificationWorkflowStatus,
     reason?: string
   ): Promise<void> {
-    try {
-      const updates = buildVerificationStatusUpdates(status, reason);
-
-      const { error } = await supabase
-        .from('profiles')
-        .update(updates)
-        .eq('id', profileId);
-
-      if (error) {
-        logger.error('Error updating verification status:', error);
-        throw error;
-      }
-    } catch (error) {
-      trackError(new Error('Error updating verification status'), {
-        component: 'ProfileService',
-        action: 'updateVerificationStatus',
-        metadata: { profileId, status, reason, error },
-      });
-      throw error;
-    }
+    await updateVerificationStatusMutation(profileId, status, reason);
   }
-
-  /**
-   * Aprova verificaÃ§Ã£o de um perfil
-   */
   async approveVerification(profileId: string): Promise<void> {
     await this.updateVerificationStatus(profileId, 'verified');
   }
-
-  /**
-   * Rejeita verificaÃ§Ã£o de um perfil
-   */
   async rejectVerification(profileId: string, reason?: string): Promise<void> {
     await this.updateVerificationStatus(profileId, 'rejected', reason);
   }
-
-  /**
-   * Revoga verificaÃ§Ã£o de um perfil
-   */
   async revokeVerification(profileId: string): Promise<void> {
     await this.updateVerificationStatus(profileId, 'none');
   }
-
-  /**
-   * Suspende um usuÃ¡rio
-   */
   async suspendUser(
     userId: string,
     duration: string,
     reason: string,
   ): Promise<void> {
-    try {
-      const suspendedUntil = calculateSuspensionEnd(duration);
-
-      const { error } = await supabase
-        .from("profiles")
-        .update({
-          is_suspended: true,
-          suspended: true,
-          suspended_at: new Date().toISOString(),
-          suspended_until: suspendedUntil,
-          suspension_reason: reason,
-        })
-        .eq("id", userId);
-
-      if (error) throw error;
-    } catch (error) {
-      trackError(new Error("Error suspending user"), {
-        component: "ProfileService",
-        action: "suspendUser",
-        metadata: { userId, duration, reason, error },
-      });
-      throw error;
-    }
+    await suspendUserMutation(userId, duration, reason);
   }
-
-  /**
-   * Busca todos os usuÃ¡rios com contexto de status
-   */
   async getAllUsers(): Promise<
     Array<{
       id: string;
@@ -1976,33 +423,9 @@ export class ProfileServiceLegacy {
       reputation: number;
     }>
   > {
-    const { data, error } = await supabase
-      .from("profiles")
-      .select(
-        "id, name, avatar_url, is_active, is_suspended, suspended_at, suspension_reason, suspended_until, verified, reputation",
-      )
-      .order("created_at", { ascending: false });
-
-    if (error) {
-      trackError(new Error("Error fetching all users"), {
-        component: "ProfileService",
-        action: "getAllUsers",
-        metadata: { error },
-      });
-      return [];
-    }
-
-    return mapAdminUserList((data as UserListRow[] | null) || []);
+    return getAllUsersQuery();
   }
-
-  // ============================================================================
   // SSOT: MÃ©todos auxiliares para dados complementares de perfil
-  // ============================================================================
-
-  /**
-   * Busca roles de um usuÃ¡rio
-   * âœ… LOTE 6 - Refatorado para usar AdminRolesService
-   */
   async getUserRoles(userId: string): Promise<string[]> {
     try {
       const { adminRolesService } =
@@ -2018,10 +441,6 @@ export class ProfileServiceLegacy {
       return [];
     }
   }
-
-  /**
-   * Conta likes dados por um perfil (usando SocialInteractionsService)
-   */
   async getUserLikesCount(profileId: string): Promise<number> {
     try {
       // Import dinÃ¢mico evita ciclo ProfileService <-> SocialInteractionsService.
@@ -2039,72 +458,16 @@ export class ProfileServiceLegacy {
       return 0;
     }
   }
-
-  /**
-   * Conta favoritos de um usuÃ¡rio
-   */
-  async getUserFavoritesCount(userId: string): Promise<number> {
-    try {
-      const { data: byUserId, error: byUserIdError } = await supabase
-        .from("profiles")
-        .select("id")
-        .eq("user_id", userId);
-
-      if (byUserIdError) return 0;
-
-      let profileIds = ((byUserId as Array<{ id: string }> | null) || []).map((p) => p.id);
-
-      if (profileIds.length === 0) {
-        const { data: byProfileId, error: byProfileIdError } = await supabase
-          .from("profiles")
-          .select("id")
-          .eq("id", userId)
-          .limit(1);
-
-        if (byProfileIdError) return 0;
-        profileIds = ((byProfileId as Array<{ id: string }> | null) || []).map((p) => p.id);
-      }
-
-      if (profileIds.length === 0) return 0;
-
-      const { count, error } = await supabase
-        .from("profile_favorites_new")
-        .select("*", { count: "exact", head: true })
-        .in("favoriting_profile_id", profileIds);
-
-      if (error) return 0;
-      return count || 0;
-    } catch {
-      return 0;
-    }
+  private async resolveProfileIdByUserId(userId: string): Promise<string | null> {
+    return resolveProfileIdByUserId(userId);
   }
-
-  /**
-   * Busca businesses de mÃºltiplos perfis (para useProfile)
-   */
+  async getUserFavoritesCount(userId: string): Promise<number> {
+    return getUserFavoritesCountQuery(userId);
+  }
   async getUserBusinessesByProfiles(profileIds: string[]): Promise<BusinessRow[]> {
-    if (!profileIds.length) return [];
-
-    const { data, error } = await supabase
-      .from("business_data")
-      .select(
-        `
-        profile_id,
-        business_name,
-        category,
-        metadata,
-        rating,
-        is_premium,
-        is_verified,
-        slug,
-        description,
-        created_at
-      `,
-      )
-      .in("profile_id", profileIds)
-      .order("created_at", { ascending: false });
-
-    if (error) {
+    try {
+      return await getUserBusinessesByProfilesQuery(profileIds);
+    } catch (error) {
       trackError(new Error("Error fetching user businesses"), {
         component: "ProfileService",
         action: "getUserBusinessesByProfiles",
@@ -2112,34 +475,11 @@ export class ProfileServiceLegacy {
       });
       return [];
     }
-
-    return (data as BusinessRow[] | null) || [];
   }
-
-  /**
-   * Busca businesses de um perfil
-   */
   async getUserBusinesses(profileId: string): Promise<BusinessRow[]> {
-    const { data, error } = await supabase
-      .from("business_data")
-      .select(
-        `
-        profile_id,
-        business_name,
-        category,
-        metadata,
-        slug,
-        is_verified,
-        is_premium,
-        description,
-        created_at,
-        profiles(name, neighborhood, city)
-      `,
-      )
-      .eq("profile_id", profileId)
-      .order("created_at", { ascending: false });
-
-    if (error) {
+    try {
+      return await getUserBusinessesQuery(profileId);
+    } catch (error) {
       trackError(new Error("Error fetching user businesses"), {
         component: "ProfileService",
         action: "getUserBusinesses",
@@ -2147,99 +487,17 @@ export class ProfileServiceLegacy {
       });
       return [];
     }
-
-    return (data as BusinessRow[] | null) || [];
   }
-
-  /**
-   * Busca favoritos de negÃ³cios de um usuÃ¡rio
-   */
   async getUserFavoriteBusinesses(userId: string): Promise<BusinessRow[]> {
-    const { data: profileRows, error: profileError } = await supabase
-      .from("profiles")
-      .select("id")
-      .eq("user_id", userId);
-
-    if (profileError) return [];
-
-    let ownerProfileIds = ((profileRows as Array<{ id: string }> | null) || []).map((row) => row.id);
-    if (ownerProfileIds.length === 0) {
-      const { data: profileById, error: profileByIdError } = await supabase
-        .from("profiles")
-        .select("id")
-        .eq("id", userId)
-        .limit(1);
-
-      if (profileByIdError) return [];
-      ownerProfileIds = ((profileById as Array<{ id: string }> | null) || []).map((row) => row.id);
-    }
-
-    if (!ownerProfileIds.length) return [];
-
-    const businessIdGroups = await Promise.all(
-      ownerProfileIds.map((profileId) => FavoritesService.getUserBusinessFavorites(profileId)),
-    );
-
-    const businessIds = [...new Set(businessIdGroups.flat().filter(Boolean))];
-    if (!businessIds.length) return [];
-
-    const { data: businesses, error: bizError } = await supabase
-      .from("business_data")
-      .select(
-        `
-        profile_id,
-        business_name,
-        category,
-        metadata,
-        slug,
-        is_verified,
-        is_premium,
-        description,
-        profiles(name, neighborhood, city)
-      `,
-      )
-      .in("profile_id", businessIds)
-      .eq("status", "active");
-
-    if (bizError) return [];
-    return (businesses as BusinessRow[] | null) || [];
+    return getUserFavoriteBusinessesQuery(userId);
   }
-
-  /**
-   * Busca ranking de usuÃ¡rios por pontos
-   */
   async getRanking(
     limit: number = 50,
   ): Promise<
     Array<{ id: string; name: string; avatar_url: string; pontos: number }>
   > {
-    const { data, error } = await supabase
-      .from("profiles")
-      .select("id, name, avatar_url, pontos")
-      .order("pontos", { ascending: false })
-      .limit(limit);
-
-    if (error) {
-      trackError(new Error("Error fetching ranking"), {
-        component: "ProfileService",
-        action: "getRanking",
-        metadata: { error },
-      });
-      return [];
-    }
-
-    return ((data as RankingRow[] | null) || []).map((p) => ({
-      id: p.id,
-      name: p.name || "UsuÃ¡rio",
-      avatar_url: p.avatar_url || "",
-      pontos: p.pontos || 0,
-    }));
+    return getRankingQuery(limit);
   }
-
-  /**
-   * Busca dados de motorista de um perfil (admin)
-   * âœ… LOTE 9A - Delegado para MobilityService (SSOT para driver_data)
-   */
   async getDriverData(profileId: string): Promise<unknown | null> {
     try {
       const { mobilityService } = await import("@/modules/mobility/services");
@@ -2249,211 +507,77 @@ export class ProfileServiceLegacy {
       return null;
     }
   }
-
-  /**
-   * Busca confirmaÃ§Ãµes de alertas (admin)
-   */
-  /**
-   * Busca menÃ§Ãµes de um usuÃ¡rio em posts
-   */
   async getUserMentions(
     userId: string,
     from: number,
     to: number,
   ): Promise<ProfileLikeActivityRecord[]> {
-    const { data, error } = await (supabase as any)
-      .from("community_post_mentions")
-      .select(
-        `
-        id, rank, created_at,
-        post:posts!inner (
-          id, type, content, created_at, likes_count, comments_count,
-          author:profiles!posts_author_id_fkey (id, name, avatar_url)
-        )
-      `,
-      )
-      .eq("mentioned_profile_id", userId)
-      .order("created_at", { ascending: false })
-      .range(from, to);
-
-    if (error) return [];
-    return ((data as MentionRow[] | null) || []).map((mention) => ({
-      id: mention.id,
-      rank: mention.rank,
-      created_at: mention.created_at,
-      post: {
-        id: mention.post.id,
-        type: mention.post.type,
-        content: mention.post.content,
-        created_at: mention.post.created_at,
-        likes_count: mention.post.likes_count,
-        comments_count: mention.post.comments_count,
-        author: mention.post.author,
-      },
-    }));
+    return getUserMentionsQuery(userId, from, to);
   }
-
-  /**
-   * Busca atividade de likes de um usuÃ¡rio
-   */
   async getUserLikeActivity(
     userId: string,
     from: number,
     to: number,
   ): Promise<ProfileLikeActivityRecord[]> {
-    const { data: profileData } = await supabase
-      .from("profiles")
-      .select("id")
-      .eq("user_id", userId)
-      .maybeSingle();
-
-    if (!profileData) return [];
-
-    const { data, error } = await supabase
-      .from("post_likes_new")
-      .select(
-        `id, created_at,
-        post:posts!post_likes_new_post_id_fkey(
-          id, type, content,
-          author:profiles!posts_author_profile_id_fkey(id, name, avatar_url)
-        )`,
-      )
-      .eq("liker_profile_id", profileData.id)
-      .order("created_at", { ascending: false })
-      .range(from, to);
-
-    if (error) return [];
-    return ((data ?? []) as unknown) as ProfileLikeActivityRecord[];
+    const profileId = await this.resolveProfileIdByUserId(userId);
+    if (!profileId) return [];
+    return getUserLikeActivityQuery(profileId, from, to);
   }
-
-  /**
-   * Busca atividade de saves de um usuÃ¡rio
-   */
   async getUserSaveActivity(
     userId: string,
     from: number,
     to: number,
   ): Promise<ProfileSaveActivityRecord[]> {
-    const { data: profileData } = await supabase
-      .from("profiles")
-      .select("id")
-      .eq("user_id", userId)
-      .maybeSingle();
-
-    if (!profileData) return [];
-
-    const { data, error } = await supabase
-      .from("saved_posts_new")
-      .select(
-        `id, created_at,
-        post:posts!saved_posts_new_post_id_fkey(
-          id, type, content,
-          author:profiles!posts_author_profile_id_fkey(id, name, avatar_url)
-        )`,
-      )
-      .eq("saver_profile_id", profileData.id)
-      .order("created_at", { ascending: false })
-      .range(from, to);
-
-    if (error) return [];
-    return data || [];
+    const profileId = await this.resolveProfileIdByUserId(userId);
+    if (!profileId) return [];
+    return getUserSaveActivityQuery(profileId, from, to);
   }
-
-  /**
-   * Busca atividade de votos em enquetes de um usuÃ¡rio
-   */
   async getUserPollVoteActivity(
     userId: string,
     from: number,
     to: number,
   ): Promise<ProfilePollVoteActivityRecord[]> {
-    // community_polls.post_id agora referencia posts.id (Sprint Q&A Fase 1)
-    const { data, error } = await (supabase as any)
-      .from("community_poll_votes")
-      .select(
-        `
-        id, option_id, created_at,
-        poll:community_polls!inner(id, question, options, post_id)
-      `,
-      )
-      .eq("user_id", userId)
-      .order("created_at", { ascending: false })
-      .range(from, to);
-
-    if (error) return [];
-    return ((data ?? []) as unknown) as ProfilePollVoteActivityRecord[];
+    return getUserPollVoteActivityQuery(userId, from, to);
   }
-
-  /**
-   * Busca usuÃ¡rios com baixo rating (admin)
-   */
   async getLowRatedUsers(params: {
     maxRating: number;
     minRides: number;
     limit: number;
   }): Promise<PassengerRatingRow[]> {
-    try {
-      const { data, error } = await (supabase as any)
-        .from("profiles")
-        .select(
-          "id, name, avatar_url, passenger_rating, passenger_trust_level, passenger_completed_rides",
-        )
-        .lte("passenger_rating", params.maxRating)
-        .gte("passenger_completed_rides", params.minRides)
-        .order("passenger_rating", { ascending: true })
-        .limit(params.limit);
-
-      if (error) throw error;
-      return ((data as unknown) as PassengerRatingRow[] | null) || [];
-    } catch (error) {
-      logger.error("Error fetching low rated users:", error);
-      return [];
-    }
+    return this.getPassengerRatings({
+      minRides: params.minRides,
+      limit: params.limit,
+      maxRating: params.maxRating,
+      ascending: true,
+      errorLabel: "low rated users",
+    });
   }
-
-  /**
-   * Busca top passageiros por rating (admin)
-   */
   async getTopPassengers(params: {
     minRides: number;
     limit: number;
   }): Promise<PassengerRatingRow[]> {
-    try {
-      const { data, error } = await (supabase as any)
-        .from("profiles")
-        .select(
-          "id, name, avatar_url, passenger_rating, passenger_trust_level, passenger_completed_rides",
-        )
-        .gte("passenger_completed_rides", params.minRides)
-        .order("passenger_rating", { ascending: false })
-        .limit(params.limit);
-
-      if (error) throw error;
-      return ((data as unknown) as PassengerRatingRow[] | null) || [];
-    } catch (error) {
-      logger.error("Error fetching top passengers:", error);
-      return [];
-    }
+    return this.getPassengerRatings({
+      minRides: params.minRides,
+      limit: params.limit,
+      ascending: false,
+      errorLabel: "top passengers",
+    });
   }
-
-  /**
-   * Busca perfis por nome (para MentionInput)
-   */
+  private async getPassengerRatings(params: {
+    minRides: number;
+    limit: number;
+    ascending: boolean;
+    maxRating?: number;
+    errorLabel: string;
+  }): Promise<PassengerRatingRow[]> {
+    return getPassengerRatingsQuery(params);
+  }
   async searchProfilesByName(
     searchQuery: string,
     maxResults: number = 10,
   ): Promise<Profile[]> {
     try {
-      const { data, error } = await (supabase as any).rpc(
-        "search_profiles_by_name",
-        {
-          search_query: searchQuery,
-          max_results: maxResults,
-        },
-      );
-
-      if (error) throw error;
-      return ((data ?? []) as unknown) as Profile[];
+      return await searchProfilesByNameQuery(searchQuery, maxResults);
     } catch (error) {
       trackError(error as Error, {
         component: "ProfileService",
@@ -2463,165 +587,48 @@ export class ProfileServiceLegacy {
       return [];
     }
   }
-
-  /**
-   * Busca membros de um perfil/business (para useDashboardAccess)
-   */
   async getProfileMembers(
     profileId: string,
   ): Promise<Array<{ user_id: string; role: string }>> {
-    try {
-      const { data, error } = await supabase
-        .from("profile_members")
-        .select("user_id, role")
-        .eq("profile_id", profileId);
-
-      if (error) throw error;
-      return data || [];
-    } catch (error) {
-      trackError(error as Error, {
-        component: "ProfileService",
-        action: "getProfileMembers",
-        metadata: { profileId },
-      });
-      return [];
-    }
+    return this.withFallback(
+      "getProfileMembers",
+      [],
+      () => getProfileMembersQuery(profileId),
+      { profileId },
+    );
   }
-
   async isProfileOwner(profileId: string, userId: string): Promise<boolean> {
-    try {
-      const { data, error } = await supabase
-        .from("profile_members")
-        .select("id")
-        .eq("profile_id", profileId)
-        .eq("user_id", userId)
-        .eq("role", "owner")
-        .maybeSingle();
-
-      if (error) throw error;
-      return !!data;
-    } catch (error) {
-      trackError(error as Error, {
-        component: "ProfileService",
-        action: "isProfileOwner",
-        metadata: { profileId, userId },
-      });
-      return false;
-    }
+    return this.withFallback(
+      "isProfileOwner",
+      false,
+      () => isProfileOwnerQuery(profileId, userId),
+      { profileId, userId },
+    );
   }
-
-  /**
-   * Adiciona um membro a um perfil
-   * âœ… SSOT: Ãšnico ponto de entrada para inserÃ§Ã£o em profile_members
-   */
   async addMember(
     profileId: string,
     userId: string,
     role: "owner" | "admin" | "member" = "member",
   ): Promise<void> {
-    try {
-      const { error } = await supabase
-        .from("profile_members")
-        .insert({ profile_id: profileId, user_id: userId, role });
-
-      if (error) throw error;
-    } catch (error) {
-      trackError(error as Error, {
-        component: "ProfileService",
-        action: "addMember",
-        metadata: { profileId, userId, role },
-      });
-      throw error;
-    }
+    await this.withVoidAction(
+      "addMember",
+      () => addProfileMemberMutation({ profileId, userId, role }),
+      { profileId, userId, role },
+    );
   }
-
-  // ============================================================================
   // âœ… SSOT: USERNAME MANAGEMENT (para ProfileIdentityAdapter)
-  // ============================================================================
-
-  /**
-   * âœ… SSOT: Verifica se username existe
-   * Usado por ProfileIdentityAdapter.identifierExists()
-   * 
-   * @param username - Username normalizado para verificar
-   * @param excludeId - ID do perfil a excluir da verificaÃ§Ã£o (para updates)
-   * @returns true se username existe, false caso contrÃ¡rio
-   */
   static async checkUsernameExists(
     username: string,
     excludeId?: string
   ): Promise<boolean> {
-    try {
-      let query = supabase
-        .from('profiles')
-        .select('id')
-        .eq('username', username)
-        .limit(1);
-
-      if (excludeId) {
-        query = query.neq('id', excludeId);
-      }
-
-      const { data, error } = await query.maybeSingle();
-
-      if (error) {
-        logger.error('[ProfileService] checkUsernameExists error:', error);
-        throw new Error(`Failed to check username existence: ${error.message}`);
-      }
-
-      return !!data;
-    } catch (error) {
-      if (error instanceof Error && error.message.startsWith('Failed to check')) {
-        throw error;
-      }
-      logger.error('[ProfileService] checkUsernameExists unexpected error:', error);
-      throw new Error('Infrastructure error checking username');
-    }
+    return checkUsernameExistsQuery(username, excludeId);
   }
-
-  /**
-   * âœ… SSOT: Busca usernames similares
-   * Usado por ProfileIdentityAdapter.getExistingSimilar()
-   * 
-   * @param username - Username base para buscar similares
-   * @param limit - NÃºmero mÃ¡ximo de resultados (padrÃ£o: 20)
-   * @returns Array de usernames similares
-   */
   static async getSimilarUsernames(
     username: string,
     limit = 20
   ): Promise<string[]> {
-    try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('username')
-        .ilike('username', `${username}%`)
-        .limit(limit);
-
-      if (error) {
-        logger.error('[ProfileService] getSimilarUsernames error:', error);
-        throw new Error(`Failed to get similar usernames: ${error.message}`);
-      }
-
-      return (data || [])
-        .map((d: { username: string | null }) => d.username)
-        .filter((u): u is string => !!u);
-    } catch (error) {
-      if (error instanceof Error && error.message.startsWith('Failed to get')) {
-        throw error;
-      }
-      logger.error('[ProfileService] getSimilarUsernames unexpected error:', error);
-      throw new Error('Infrastructure error getting similar usernames');
-    }
+    return getSimilarUsernamesQuery(username, limit);
   }
-
-  /**
-   * âœ… SSOT: ObtÃ©m histÃ³rico de mudanÃ§as de username
-   * Usado por ProfileIdentityAdapter.getHistory()
-   * 
-   * @param profileId - ID do perfil
-   * @returns Array de mudanÃ§as de username ordenado por data (mais recente primeiro)
-   */
   static async getUsernameHistory(profileId: string): Promise<Array<{
     id: string;
     profile_id: string;
@@ -2630,68 +637,11 @@ export class ProfileServiceLegacy {
     change_reason: string;
     changed_at: string;
   }>> {
-    try {
-      const { data, error } = await supabase
-        .from('profile_username_history')
-        .select('*')
-        .eq('profile_id', profileId)
-        .order('changed_at', { ascending: false });
-
-      if (error) {
-        logger.error('[ProfileService] getUsernameHistory error:', error);
-        throw new Error(`Failed to get username history: ${error.message}`);
-      }
-
-      return data || [];
-    } catch (error) {
-      if (error instanceof Error && error.message.startsWith('Failed to get')) {
-        throw error;
-      }
-      logger.error('[ProfileService] getUsernameHistory unexpected error:', error);
-      throw new Error('Infrastructure error getting username history');
-    }
+    return getUsernameHistoryQuery(profileId);
   }
 }
-
-// ============================================================
 // ðŸ›ï¸ PROFILE FACADE - Interface unificada SSOT v2.0
-// ============================================================
-
 export { ProfileFacade } from "./profile.facade";
-
-/**
- * ProfileFacade - Interface unificada para operaÃ§Ãµes de Profile
- *
- * OrganizaÃ§Ã£o SSOT:
- * - queries: Todas as operaÃ§Ãµes de leitura
- * - mutations: Todas as operaÃ§Ãµes de escrita
- *
- * @example
- * ```typescript
- * // Queries
- * const profile = await ProfileFacade.queries.getProfileById(id);
- * const active = await ProfileFacade.queries.getActiveProfile(userId);
- *
- * // Mutations
- * const newProfile = await ProfileFacade.mutations.createProfile(data);
- * await ProfileFacade.mutations.updateProfile(id, updates);
- * ```
- */
-
-
-// ============================================================
 // ðŸ”§ LEGACY - Compatibilidade com cÃ³digo existente
-// ============================================================
-
-/**
- * @deprecated Use ProfileFacade ou os exports diretos
- * InstÃ¢ncia singleton do ProfileServiceLegacy
- */
 export const profileService = new ProfileServiceLegacy();
-
-/**
- * @deprecated Use ProfileFacade ou os exports diretos
- * Alias para ProfileServiceLegacy mantido para compatibilidade
- */
 export { ProfileServiceLegacy as ProfileService };
-

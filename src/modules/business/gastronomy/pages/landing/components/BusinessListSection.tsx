@@ -6,9 +6,9 @@ import { motion } from 'framer-motion';
 import { ChevronRight, Loader2, Store } from 'lucide-react';
 import { Button } from '@/shared/components/ui/button';
 import { Badge } from '@/shared/components/ui/badge';
-import { GastronomyCard } from '../../../components';
-import type { GastronomyBusiness } from '../../../types';
-import { getCuisineLabel } from '../../../constants';
+import { GastronomyCard } from '@/modules/business/gastronomy/components';
+import type { GastronomyBusiness } from '@/modules/business/gastronomy/types';
+import { getCuisineLabel } from '@/modules/business/gastronomy/constants';
 import type { DisplayLayout } from '../types';
 
 const containerVariants = {

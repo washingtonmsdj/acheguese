@@ -67,6 +67,8 @@ function formatSlugLabel(slug?: string): string {
     .join(' ');
 }
 
+const OFFICIAL_LOGO_SRC = '/images/logo-icon.png';
+
 export function AppSidebar() {
   const location = useLocation();
   const { state: sidebarState } = useSidebar();
@@ -247,27 +249,16 @@ export function AppSidebar() {
                 collapsed ? 'h-6 w-6' : 'h-24 w-full',
               )}
             />
-          ) : siteSettings?.logo_url ? (
-            <>
-              <img
-                src={siteSettings.logo_url}
-                alt={siteSettings.site_name || 'Achegue-se'}
-                className={cn(
-                  'object-contain',
-                  collapsed ? 'h-6 w-6 rounded-sm' : 'h-28 w-auto max-w-full',
-                )}
-              />
-              {!collapsed ? (
-                <span className="w-full text-center text-2xl font-semibold text-foreground font-heading leading-none -mt-3">
-                  Achegue-<span className="text-primary">se</span>
-                </span>
-              ) : null}
-            </>
           ) : (
             <>
-              <div className="flex h-20 w-20 items-center justify-center rounded-md bg-primary text-primary-foreground text-2xl font-bold">
-                A
-              </div>
+              <img
+                src={OFFICIAL_LOGO_SRC}
+                alt={siteSettings?.site_name || 'Achegue-se'}
+                className={cn(
+                  'object-contain',
+                  collapsed ? 'h-8 w-8 rounded-sm' : 'h-32 w-auto max-w-full',
+                )}
+              />
               {!collapsed ? (
                 <span className="w-full text-center text-2xl font-semibold text-foreground font-heading leading-none -mt-3">
                   Achegue-<span className="text-primary">se</span>

@@ -13,7 +13,7 @@ import { PizzaPricingService } from "../PizzaPricingService";
 import { PizzaCartItemBuilder } from "../PizzaCartItemBuilder";
 import { PizzaValidationService } from "../PizzaValidationService";
 import type { PizzaBuildSelection, PizzaCatalog, PizzaFlavor } from "../types";
-import type { MenuItemAddon, MenuItemWithRelations } from "../../../types/menu";
+import type { MenuItemAddon, MenuItemWithRelations } from "@/modules/business/gastronomy/types/menu";
 import { PizzaSliceVisualizer } from "./PizzaSliceVisualizer";
 import { findFlavorByMenuItemName } from "../utils/flavorMatch";
 import { resolvePizzaRenderSize, textHasPizzaCrustHint } from "../utils/pizzaVisualRules";

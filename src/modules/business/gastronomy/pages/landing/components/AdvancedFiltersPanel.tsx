@@ -10,7 +10,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/shared/components/ui/select';
-import type { PriceRange } from '../../../types';
+import type { PriceRange } from '@/modules/business/gastronomy/types';
 
 // Opções alinhadas com o tipo PriceRange do SSOT
 const PRICE_RANGE_OPTIONS: { value: PriceRange | 'todos'; label: string }[] = [

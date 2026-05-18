@@ -1,19 +1,19 @@
-/**
- * CidadeLandingPage — Vitrine pública da cidade
+﻿/**
+ * CidadeLandingPage â€” Vitrine pÃºblica da cidade
  * 
  * Estilo editorial: dark theme, acentos teal, motion.
  * Consistente com HomePageV2 e ServicosLandingPage.
  * 
- * Seções:
+ * SeÃ§Ãµes:
  *   A. Hero da cidade
- *   B. Estatísticas (bairros, moradores, empresas, serviços)
+ *   B. EstatÃ­sticas (bairros, moradores, empresas, serviÃ§os)
  *   C. Bairros em destaque
  *   D. Vagas de emprego
- *   E. Pontos turísticos
- *   F. Políticos eleitos
- *   G. Contatos úteis (emergência, utilidade pública)
- *   H. CTA — Faça parte
- *   I. Rodapé com dados da prefeitura
+ *   E. Pontos turÃ­sticos
+ *   F. PolÃ­ticos eleitos
+ *   G. Contatos Ãºteis (emergÃªncia, utilidade pÃºblica)
+ *   H. CTA â€” FaÃ§a parte
+ *   I. RodapÃ© com dados da prefeitura
  */
 
 import { type FormEvent, useState } from "react";
@@ -22,10 +22,8 @@ import { motion } from "framer-motion";
 import {
   Search, MapPin, Users, Building2, Store, Wrench,
   ArrowRight, ChevronRight, Star,
-  Briefcase, Landmark, Camera, Phone, Mail,
-  Globe, Instagram, Facebook, Twitter, Youtube,
-  GraduationCap, Heart, Shield, TreePine, Bus,
-  Clock, ExternalLink, Award, Vote, MapPinned,
+  Briefcase, Camera, GraduationCap, Shield, TreePine, Bus,
+  Award, MapPinned,
   AlertTriangle, Ambulance, Flame,
   Home, Loader2, BadgeCheck, Tag, X,
 } from "lucide-react";
@@ -42,166 +40,38 @@ import { useClassifiedUrls } from "@/modules/classifieds/hooks/useClassifiedUrls
 import { useTouristPoints } from "@/modules/guide/tourist-points/hooks/useTouristPoints";
 
 import heroImg from "@/assets/hero-cidade-salvador-real.jpg";
-import bairroPituba from "@/assets/bairro-pituba.jpg";
-import bairroRioVermelho from "@/assets/bairro-riovermelho.jpg";
-import bairroOndina from "@/assets/bairro-ondina.jpg";
-import bairroNordeste from "@/assets/bairro-nordeste.jpg";
+import {
+  BAIRROS_DESTAQUE,
+  CLASSIFICADOS_MOCK,
+  CONTATOS_EMERGENCIA,
+  CONTATOS_UTILIDADE,
+  EMPRESAS_MOCK,
+  FALLBACK_CANAIS_CIVICOS,
+  POLITICOS,
+  PREFEITURA,
+  SERVICOS_MOCK,
+  VAGAS_EMPREGO,
+  formatCategory,
+  formatNumber,
+  formatPrice,
+} from "./CidadeLanding.constants";
+import {
+  CityCommunityCtaSection,
+  CityElectedOfficialsSection,
+  CityHallFooter,
+  CityUsefulContactsSection,
+} from "./CidadeLanding.sections";
 
-// ── Animação base ────────────────────────────────────────────────────
+// â”€â”€ AnimaÃ§Ã£o base â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const fadeUp = {
   initial: { opacity: 0, y: 20 },
   whileInView: { opacity: 1, y: 0 },
   viewport: { once: true },
 };
 
-// ── Helpers ──────────────────────────────────────────────────────────
+// â”€â”€ Helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
-// ── Helpers ──────────────────────────────────────────────────────────
-
-function formatNumber(num: number): string {
-  if (num >= 1000000) return `${(num / 1000000).toFixed(1)}M`;
-  if (num >= 1000) return `${(num / 1000).toFixed(0)}k+`;
-  return num.toString();
-}
-
-function formatCategory(cat: string): string {
-  return cat.charAt(0).toUpperCase() + cat.slice(1).replace(/_/g, ' ');
-}
-
-function formatPrice(price: number): string {
-  return price.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 });
-}
-
-// ── Dados mockados originais (para comparação) ────────────────────────
-
-const EMPRESAS_MOCK = [
-  { 
-    id: 'mock-1',
-    name: "Padaria São Jorge", 
-    category: "alimentacao", 
-    rating: 4.8, 
-    is_verified: true, 
-    is_premium: false,
-    logo_url: null,
-    slug: null,
-    geographic_path: null,
-  },
-  { 
-    id: 'mock-2',
-    name: "Farmácia Vida", 
-    category: "saude", 
-    rating: 4.5, 
-    is_verified: true, 
-    is_premium: true,
-    logo_url: null,
-    slug: null,
-    geographic_path: null,
-  },
-];
-
-const SERVICOS_MOCK = [
-  { 
-    id: 'mock-s1',
-    name: "João Eletricista", 
-    category: "eletrica", 
-    price_range: "R$ 80-150/h", 
-    is_verified: true,
-    logo_url: null,
-  },
-  { 
-    id: 'mock-s2',
-    name: "Maria Diarista", 
-    category: "limpeza", 
-    price_range: "R$ 120/dia", 
-    is_verified: true,
-    logo_url: null,
-  },
-];
-
-const CLASSIFICADOS_MOCK = [
-  {
-    id: 'mock-c1',
-    titulo: "Sofá 3 Lugares Novo",
-    category: "moveis",
-    price: 1200,
-    photos: null,
-    public_id: 'mock001',
-    geographic_path: null,
-    category_slug: null,
-    subcategory_slug: null,
-    slug: null,
-  },
-  {
-    id: 'mock-c2',
-    titulo: "iPhone 12 Pro 128GB",
-    category: "eletronicos",
-    price: 2800,
-    photos: null,
-    public_id: 'mock002',
-    geographic_path: null,
-    category_slug: null,
-    subcategory_slug: null,
-    slug: null,
-  },
-];
-
-const VAGAS_EMPREGO = [
-  { titulo: "Desenvolvedor Full Stack",  empresa: "TechBa Solutions",     tipo: "CLT",        salario: "R$ 6.000 - R$ 9.000", bairro: "Pituba",        tags: ["React", "Node.js"] },
-  { titulo: "Auxiliar Administrativo",   empresa: "Grupo Salvador",        tipo: "CLT",        salario: "R$ 1.800 - R$ 2.200", bairro: "Comércio",      tags: ["Excel", "Organização"] },
-  { titulo: "Vendedor(a) Externo",       empresa: "Distribuidora Bahia",   tipo: "Comissão",   salario: "R$ 2.500 + comissão",  bairro: "Brotas",        tags: ["Vendas", "Comunicação"] },
-  { titulo: "Garçom/Garçonete",          empresa: "Restaurante Mar Azul",  tipo: "CLT",        salario: "R$ 1.500 + gorjetas",  bairro: "Rio Vermelho",  tags: ["Atendimento", "Gastronomia"] },
-  { titulo: "Professor(a) de Inglês",    empresa: "Instituto Cultural BA", tipo: "PJ",         salario: "R$ 45/hora",           bairro: "Barra",         tags: ["Educação", "Idiomas"] },
-  { titulo: "Motorista de App",          empresa: "Cooperativa Mobilidade",tipo: "Autônomo",   salario: "Livre",                bairro: "Toda cidade",   tags: ["CNH B", "Disponibilidade"] },
-];
-
-const BAIRROS_DESTAQUE = [
-  { nome: "Pituba", resumo: "Polo residencial e comercial com serviços, escolas e vida local ativa.", imagem: bairroPituba },
-  { nome: "Rio Vermelho", resumo: "Bairro cultural com gastronomia, turismo e comércio de rua.", imagem: bairroRioVermelho },
-  { nome: "Ondina", resumo: "Orla urbana com mobilidade estratégica e acesso rápido ao centro.", imagem: bairroOndina },
-  { nome: "Nordeste de Amaralina", resumo: "Território com forte identidade comunitária e comércio local.", imagem: bairroNordeste },
-];
-
-const FALLBACK_CANAIS_CIVICOS = [
-  { titulo: "Fala Salvador (Ouvidoria Geral)", detalhe: "Canal central da Prefeitura para demandas e serviços", acao: "Ligar 156", href: "tel:156" },
-  { titulo: "Defesa Civil (Codesal)", detalhe: "Risco de deslizamento, alagamento e ocorrência emergencial", acao: "Ligar 199", href: "tel:199" },
-  { titulo: "Transparência Municipal", detalhe: "Acompanhe gastos, contratos e indicadores oficiais", acao: "Abrir portal", href: "https://transparencia.salvador.ba.gov.br/" },
-  { titulo: "Participação e solicitações", detalhe: "Abertura e acompanhamento digital de demandas", acao: "Acessar Fala Salvador", href: "https://falasalvador.ba.gov.br/" },
-];
-
-const POLITICOS = [
-  { nome: "Bruno Reis",            cargo: "Prefeito",                   partido: "União Brasil", mandato: "2025-2028", foto: null },
-  { nome: "Ana Paula Matos",       cargo: "Vice-Prefeita",             partido: "PDT",           mandato: "2025-2028", foto: null },
-  { nome: "Carlos Muniz",          cargo: "Presidente da Câmara",      partido: "PSDB",          mandato: "2025-2026", foto: null },
-];
-
-const CONTATOS_EMERGENCIA = [
-  { nome: "SAMU",                telefone: "192",     icone: Ambulance,       cor: "text-destructive" },
-  { nome: "Bombeiros",           telefone: "193",     icone: Flame,           cor: "text-warning" },
-  { nome: "Polícia Militar",     telefone: "190",     icone: Shield,          cor: "text-blue-500" },
-  { nome: "Defesa Civil",        telefone: "199",     icone: AlertTriangle,   cor: "text-accent" },
-];
-
-const CONTATOS_UTILIDADE = [
-  { nome: "Ouvidoria Municipal",  telefone: "156",             tipo: "telefone" },
-  { nome: "Iluminação Pública",   telefone: "0800 071 5454",   tipo: "telefone" },
-  { nome: "Cagece (Água)",        telefone: "0800 071 0115",   tipo: "telefone" },
-  { nome: "Coelba (Energia)",     telefone: "0800 071 0300",   tipo: "telefone" },
-];
-
-const PREFEITURA = {
-  nome: "Prefeitura Municipal de Salvador",
-  endereco: "Praça Municipal, s/n - Centro, Salvador - BA, 40020-010",
-  telefone: "(71) 3202-6100",
-  email: "ouvidoria@salvador.ba.gov.br",
-  site: "https://www.salvador.ba.gov.br",
-  instagram: "@preikiatura_ssa",
-  facebook: "PrefeituraDeSalvador",
-  twitter: "@prefikitura_ssa",
-  youtube: "PrefeituraDeSalvador",
-  horario: "Seg a Sex, 8h às 17h",
-};
-
-// ── Página principal ─────────────────────────────────────────────────
+// â”€â”€ Helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export default function CidadeLandingPage() {
   const navigate = useNavigate();
@@ -209,26 +79,26 @@ export default function CidadeLandingPage() {
   const { state = 'ba', city = 'salvador' } = useParams();
   const [searchQuery, setSearchQuery] = useState("");
 
-  // Busca metadados da cidade (população, bairros, etc.)
+  // Busca metadados da cidade (populaÃ§Ã£o, bairros, etc.)
   const { data: cityMetadata, isLoading: metadataLoading } = useCityMetadata(state, city);
   
-  // Busca conteúdo em destaque (empresas, serviços, classificados reais)
+  // Busca conteÃºdo em destaque (empresas, serviÃ§os, classificados reais)
   const { businesses: businessesReal, services: servicesReal, classifieds: classifiedsReal, isLoading: featuredLoading } = useCityFeatured(state, city);
   
-  // Mistura dados reais com mocks para comparação
-  // Empresas: 2 mocks + até 4 reais = 6 total
+  // Mistura dados reais com mocks para comparaÃ§Ã£o
+  // Empresas: 2 mocks + atÃ© 4 reais = 6 total
   const businesses = [...EMPRESAS_MOCK, ...businessesReal.slice(0, 4)];
   
-  // Serviços: 2 mocks + até 4 reais = 6 total
+  // ServiÃ§os: 2 mocks + atÃ© 4 reais = 6 total
   const services = [...SERVICOS_MOCK, ...servicesReal.slice(0, 4)];
   
-  // Classificados: 2 mocks + até 4 reais = 6 total
+  // Classificados: 2 mocks + atÃ© 4 reais = 6 total
   const classifieds = [...CLASSIFICADOS_MOCK, ...classifiedsReal.slice(0, 4)];
   
   // URLs helper para classificados
   const classifiedUrls = useClassifiedUrls(null);
 
-  // Pontos turísticos via SSOT (com fallback para mock)
+  // Pontos turÃ­sticos via SSOT (com fallback para mock)
   const { data: touristPoints = [] } = useTouristPoints({ state, city, limit: 6 });
   const updatedAtLabel = cityMetadata?.updated_at
     ? new Date(cityMetadata.updated_at).toLocaleDateString("pt-BR")
@@ -245,13 +115,13 @@ export default function CidadeLandingPage() {
   };
 
   const heroModules = [
-    { icon: Store, label: "Empresas", value: "Negócios locais", path: LAUNCH_URLS.business },
-    { icon: Wrench, label: "Serviços", value: "Profissionais", path: LAUNCH_URLS.services },
+    { icon: Store, label: "Empresas", value: "NegÃ³cios locais", path: LAUNCH_URLS.business },
+    { icon: Wrench, label: "ServiÃ§os", value: "Profissionais", path: LAUNCH_URLS.services },
     { icon: Tag, label: "Classificados", value: "Compra e venda", path: LAUNCH_URLS.classifieds },
     { icon: Briefcase, label: "Vagas", value: "Oportunidades", path: LAUNCH_URLS.jobs },
   ];
 
-  // Estatísticas dinâmicas da cidade
+  // EstatÃ­sticas dinÃ¢micas da cidade
   const CITY_STATS = [
     { icon: MapPinned, value: formatNumber(cityMetadata?.districts_count ?? 163), label: "Bairros", color: "text-cyan-200", bg: "bg-cyan-400/15", border: "border-cyan-200/20" },
     { icon: Users, value: formatNumber(cityMetadata?.population ?? 2900000), label: "Habitantes", color: "text-amber-200", bg: "bg-amber-400/15", border: "border-amber-200/20" },
@@ -263,7 +133,7 @@ export default function CidadeLandingPage() {
   const featuredDistricts = cityMetadata?.featured_districts?.length
     ? cityMetadata.featured_districts.slice(0, 4).map((district) => ({
         nome: district.name,
-        resumo: district.description || "Sem descrição cadastrada",
+        resumo: district.description || "Sem descriÃ§Ã£o cadastrada",
         imagem: district.image_url || heroImg,
       }))
     : BAIRROS_DESTAQUE;
@@ -340,7 +210,7 @@ export default function CidadeLandingPage() {
         <div className="absolute inset-0">
           <img
             src={heroImg}
-            alt="Vista real do Elevador Lacerda, Centro Histórico e Baía de Todos-os-Santos em Salvador"
+            alt="Vista real do Elevador Lacerda, Centro HistÃ³rico e BaÃ­a de Todos-os-Santos em Salvador"
             className="h-full w-full scale-105 object-cover object-center"
             width={1920}
             height={800}
@@ -375,7 +245,7 @@ export default function CidadeLandingPage() {
             </h1>
 
             <p className="mt-6 max-w-2xl text-base leading-8 text-white/82 md:text-lg">
-              Plataforma territorial de Salvador para descobrir negócios, profissionais, classificados e oportunidades com navegação clara e foco no que está perto de você.
+              Plataforma territorial de Salvador para descobrir negÃ³cios, profissionais, classificados e oportunidades com navegaÃ§Ã£o clara e foco no que estÃ¡ perto de vocÃª.
             </p>
 
             <form onSubmit={handleSearchSubmit} className="mt-8 max-w-2xl rounded-2xl border border-white/15 bg-white/12 p-2 shadow-2xl shadow-black/25 backdrop-blur-xl">
@@ -435,12 +305,12 @@ export default function CidadeLandingPage() {
             <div className="absolute -left-8 -top-8 h-32 w-32 rounded-full bg-amber-300/25 blur-3xl" />
             <div className="absolute -bottom-10 right-0 h-40 w-40 rounded-full bg-cyan-300/20 blur-3xl" />
             <div className="relative overflow-hidden rounded-[2rem] border border-white/18 bg-white/10 p-3 shadow-2xl shadow-black/30 backdrop-blur-xl">
-              <img src={heroImg} alt="Centro Histórico de Salvador visto da Baía de Todos-os-Santos" className="h-[440px] w-full rounded-[1.55rem] object-cover object-center" />
+              <img src={heroImg} alt="Centro HistÃ³rico de Salvador visto da BaÃ­a de Todos-os-Santos" className="h-[440px] w-full rounded-[1.55rem] object-cover object-center" />
               <div className="absolute inset-x-6 bottom-6 rounded-3xl border border-white/15 bg-slate-950/62 p-5 text-white shadow-xl backdrop-blur-xl">
                 <div className="flex items-center justify-between gap-4">
                   <div>
                     <p className="text-xs font-bold uppercase tracking-[0.2em] text-amber-200">Foto real de Salvador</p>
-                    <p className="mt-1 text-lg font-black">Elevador Lacerda e Baía</p>
+                    <p className="mt-1 text-lg font-black">Elevador Lacerda e BaÃ­a</p>
                   </div>
                   <div className="rounded-full border border-white/15 bg-white/10 p-3">
                     <Camera className="h-5 w-5 text-cyan-100" />
@@ -482,7 +352,7 @@ export default function CidadeLandingPage() {
         <div className="flex items-center justify-between mb-6">
           <div>
             <h2 className="text-xl md:text-2xl font-bold text-foreground font-heading">Bairros em Destaque</h2>
-            <p className="text-sm text-muted-foreground mt-1">Panorama territorial para navegar Salvador por região</p>
+            <p className="text-sm text-muted-foreground mt-1">Panorama territorial para navegar Salvador por regiÃ£o</p>
           </div>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -505,13 +375,12 @@ export default function CidadeLandingPage() {
         </div>
       </section>
 
-
-      {/* ── EMPRESAS REAIS DA CIDADE ──────────────────────────────── */}
+      {/* â”€â”€ EMPRESAS REAIS DA CIDADE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 py-8 md:py-10 w-full">
         <div className="flex items-center justify-between mb-6">
           <div>
             <h2 className="text-xl md:text-2xl font-bold text-foreground font-heading">Empresas em Destaque</h2>
-            <p className="text-sm text-muted-foreground mt-1">Negócios locais verificados</p>
+            <p className="text-sm text-muted-foreground mt-1">NegÃ³cios locais verificados</p>
           </div>
           <Button
             variant="outline"
@@ -595,12 +464,12 @@ export default function CidadeLandingPage() {
         )}
       </section>
 
-      {/* ── SERVIÇOS REAIS DA CIDADE ──────────────────────────────── */}
+      {/* â”€â”€ SERVIÃ‡OS REAIS DA CIDADE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 py-8 md:py-10 w-full">
         <div className="flex items-center justify-between mb-6">
           <div>
             <h2 className="text-xl md:text-2xl font-bold text-foreground font-heading">Profissionais em Destaque</h2>
-            <p className="text-sm text-muted-foreground mt-1">Serviços verificados na cidade</p>
+            <p className="text-sm text-muted-foreground mt-1">ServiÃ§os verificados na cidade</p>
           </div>
           <Button
             variant="outline"
@@ -666,12 +535,12 @@ export default function CidadeLandingPage() {
         )}
       </section>
 
-      {/* ── CLASSIFICADOS REAIS DA CIDADE ─────────────────────────── */}
+      {/* â”€â”€ CLASSIFICADOS REAIS DA CIDADE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 py-8 md:py-10 w-full">
         <div className="flex items-center justify-between mb-6">
           <div>
             <h2 className="text-xl md:text-2xl font-bold text-foreground font-heading">Classificados Recentes</h2>
-            <p className="text-sm text-muted-foreground mt-1">Anúncios ativos na cidade</p>
+            <p className="text-sm text-muted-foreground mt-1">AnÃºncios ativos na cidade</p>
           </div>
           <Button
             variant="outline"
@@ -753,7 +622,7 @@ export default function CidadeLandingPage() {
         )}
       </section>
 
-      {/* ── D. VAGAS DE EMPREGO ───────────────────────────────────── */}
+      {/* â”€â”€ D. VAGAS DE EMPREGO â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       <section id="vagas" className="w-full bg-gradient-to-br from-primary/8 via-card to-accent/8 border-y border-border">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 md:py-10">
           <div className="text-center mb-6">
@@ -762,7 +631,7 @@ export default function CidadeLandingPage() {
               <h2 className="text-xl md:text-2xl font-bold text-foreground font-heading">Vagas de Emprego</h2>
             </div>
             <p className="text-sm text-muted-foreground">Oportunidades de trabalho em Salvador</p>
-            <p className="text-[11px] text-muted-foreground mt-1">Curadoria local da comunidade (não é feed oficial em tempo real)</p>
+            <p className="text-[11px] text-muted-foreground mt-1">Curadoria local da comunidade (nÃ£o Ã© feed oficial em tempo real)</p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -816,13 +685,13 @@ export default function CidadeLandingPage() {
         </div>
       </section>
 
-      {/* ── E. PONTOS TURÍSTICOS ─────────────────────────────────── */}
+      {/* â”€â”€ E. PONTOS TURÃSTICOS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       <section id="turismo" className="max-w-7xl mx-auto px-4 sm:px-6 py-12 md:py-16 w-full">
         <div className="flex items-center justify-between mb-8">
           <div className="text-center flex-1">
             <div className="flex items-center justify-center gap-2 mb-2">
               <Camera className="h-5 w-5 text-warning" />
-              <h2 className="text-xl md:text-2xl font-bold text-foreground font-heading">Pontos Turísticos</h2>
+              <h2 className="text-xl md:text-2xl font-bold text-foreground font-heading">Pontos TurÃ­sticos</h2>
             </div>
             <p className="text-sm text-muted-foreground">Descubra as belezas de Salvador</p>
           </div>
@@ -883,261 +752,25 @@ export default function CidadeLandingPage() {
         </div>
       </section>
 
-      {/* ── F. POLÍTICOS ELEITOS ──────────────────────────────────── */}
-      <section className="w-full bg-secondary/30 border-y border-border">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-12 md:py-16">
-          <div className="text-center mb-10">
-            <div className="flex items-center justify-center gap-2 mb-2">
-              <Vote className="h-6 w-6 text-primary" />
-              <h2 className="text-2xl md:text-3xl font-bold text-foreground font-heading">Representantes Eleitos</h2>
-            </div>
-            <p className="text-base text-muted-foreground">Poder executivo de Salvador (2025–2028)</p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-5 md:gap-6">
-            {electedCards.map((pol, i) => (
-              <motion.div
-                key={pol.nome}
-                {...fadeUp}
-                transition={{ delay: i * 0.1 }}
-                className="bg-card border border-border rounded-2xl p-6 md:p-7 text-center hover:shadow-xl hover:border-primary/30 transition-all"
-              >
-                <div className="h-20 w-20 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
-                  <Landmark className="h-9 w-9 text-primary" />
-                </div>
-                <h3 className="text-base font-bold text-foreground mb-1">{pol.nome}</h3>
-                <p className="text-sm text-primary font-semibold mb-2">{pol.cargo}</p>
-                <p className="text-xs text-muted-foreground">{pol.partido} · {pol.mandato}</p>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── G. CONTATOS ÚTEIS ─────────────────────────────────────── */}
-      <section id="contatos" className="max-w-7xl mx-auto px-4 sm:px-6 py-12 md:py-16 w-full">
-        <div className="text-center mb-8">
-          <div className="flex items-center justify-center gap-2 mb-2">
-            <Phone className="h-5 w-5 text-success" />
-            <h2 className="text-xl md:text-2xl font-bold text-foreground font-heading">Contatos Úteis</h2>
-          </div>
-          <p className="text-sm text-muted-foreground">Números de emergência e utilidade pública</p>
-        </div>
-
-        {/* Emergência */}
-        <div className="mb-6">
-          <h3 className="text-sm font-bold text-foreground mb-3 flex items-center gap-2">
-            <AlertTriangle className="h-4 w-4 text-destructive" />
-            Emergência
-          </h3>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            {emergencyContacts.map((c) => (
-              <a
-                key={c.nome}
-                href={`tel:${c.telefone}`}
-                className="bg-card border border-border rounded-2xl p-4 text-center hover:shadow-lg hover:border-destructive/30 transition-all group"
-              >
-                <div className="flex justify-center mb-2">
-                  <div className="h-10 w-10 rounded-xl bg-destructive/10 flex items-center justify-center group-hover:bg-destructive/20 transition-colors">
-                    <c.icone className={`h-5 w-5 ${c.cor}`} />
-                  </div>
-                </div>
-                <p className="text-lg font-bold text-foreground">{c.telefone}</p>
-                <p className="text-xs text-muted-foreground mt-0.5">{c.nome}</p>
-              </a>
-            ))}
-          </div>
-        </div>
-
-        {/* Utilidade pública */}
-        <div>
-          <h3 className="text-sm font-bold text-foreground mb-3 flex items-center gap-2">
-            <Phone className="h-4 w-4 text-primary" />
-            Utilidade Pública
-          </h3>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {utilityContacts.map((c) => (
-              <a
-                key={c.nome}
-                href={`tel:${c.telefone.replace(/\s/g, "")}`}
-                className="flex items-center gap-3 bg-card border border-border rounded-xl p-4 hover:border-primary/30 transition-all"
-              >
-                <div className="h-9 w-9 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
-                  <Phone className="h-4 w-4 text-primary" />
-                </div>
-                <div>
-                  <p className="text-sm font-semibold text-foreground">{c.nome}</p>
-                  <p className="text-xs text-primary font-medium">{c.telefone}</p>
-                </div>
-              </a>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 pb-8 md:pb-10 w-full">
-        <div className="text-center mb-6">
-          <h2 className="text-xl md:text-2xl font-bold text-foreground font-heading">Canais Cívicos Essenciais</h2>
-          <p className="text-sm text-muted-foreground mt-1">Atalhos para resolver demandas públicas e acompanhar a cidade</p>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {civicChannels.map((channel) => (
-            <a
-              key={channel.titulo}
-              href={channel.href}
-              target={channel.href.startsWith("http") ? "_blank" : undefined}
-              rel={channel.href.startsWith("http") ? "noopener noreferrer" : undefined}
-              className="flex items-start justify-between gap-3 rounded-2xl border border-border bg-card p-4 hover:border-primary/30 hover:shadow-md transition-all"
-            >
-              <div>
-                <h3 className="text-sm font-bold text-foreground">{channel.titulo}</h3>
-                <p className="text-xs text-muted-foreground mt-1 leading-relaxed">{channel.detalhe}</p>
-              </div>
-              <span className="text-xs font-semibold text-primary whitespace-nowrap">{channel.acao}</span>
-            </a>
-          ))}
-        </div>
-      </section>
-
-      {/* ── H. CTA ────────────────────────────────────────────────── */}
-      <section className="w-full bg-gradient-to-br from-primary/15 via-accent/10 to-primary/5 border-t border-border">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 py-16 md:py-20 text-center">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6 }}
-          >
-            <div className="inline-flex items-center gap-2 bg-primary/10 border border-primary/20 rounded-full px-4 py-2 mb-6">
-              <Heart className="h-4 w-4 text-primary" />
-              <span className="text-primary font-bold text-sm">Junte-se a nós</span>
-            </div>
-            
-            <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4 font-heading leading-tight">
-              Faça Parte da Comunidade<br className="hidden sm:block" /> de Salvador
-            </h2>
-            
-            <p className="text-muted-foreground text-base md:text-lg mb-8 max-w-2xl mx-auto leading-relaxed">
-              Conecte-se com moradores do seu bairro, descubra serviços locais, encontre vagas de emprego e fique por dentro de tudo que acontece na sua cidade.
-            </p>
-            
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-              <Button
-                onClick={() => navigate(user ? communityUrl : "/login")}
-                size="lg"
-                className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-base h-12 px-8 rounded-xl shadow-lg hover:shadow-xl transition-all w-full sm:w-auto"
-              >
-                {user ? "Ir para Comunidade" : "Criar Conta Grátis"}
-                <ArrowRight className="h-5 w-5 ml-2" />
-              </Button>
-              <Button
-                variant="outline"
-                onClick={() => navigate(LAUNCH_URLS.business)}
-                size="lg"
-                className="border-border text-foreground hover:border-primary hover:text-primary hover:bg-primary/5 font-semibold h-12 px-8 rounded-xl w-full sm:w-auto"
-              >
-                Cadastrar Negócio
-              </Button>
-            </div>
-
-            <p className="text-xs text-muted-foreground mt-6">
-              Gratuito para sempre · Sem taxas ocultas · Comunidade local
-            </p>
-          </motion.div>
-        </div>
-      </section>
-
-      {/* ── I. RODAPÉ DA PREFEITURA ───────────────────────────────── */}
-      <footer className="w-full bg-card border-t border-border">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-10 md:py-14">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-12">
-            
-            {/* Info da Prefeitura */}
-            <div>
-              <div className="flex items-center gap-2 mb-4">
-                <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center">
-                  <Landmark className="h-5 w-5 text-primary" />
-                </div>
-                <div>
-                  <h3 className="text-sm font-bold text-foreground">Prefeitura de Salvador</h3>
-                  <p className="text-[10px] text-muted-foreground">Governo Municipal</p>
-                </div>
-              </div>
-              <div className="space-y-2 text-xs text-muted-foreground">
-                <p className="flex items-start gap-2">
-                  <MapPin className="h-3.5 w-3.5 text-primary flex-shrink-0 mt-0.5" />
-                  {prefeituraInfo.endereco}
-                </p>
-                <p className="flex items-center gap-2">
-                  <Clock className="h-3.5 w-3.5 text-primary" />
-                  {prefeituraInfo.horario}
-                </p>
-              </div>
-            </div>
-
-            {/* Contato */}
-            <div>
-              <h3 className="text-sm font-bold text-foreground mb-4">Contato</h3>
-              <div className="space-y-2.5">
-                <a href={`tel:${prefeituraInfo.telefone}`} className="flex items-center gap-2 text-xs text-muted-foreground hover:text-primary transition-colors">
-                  <Phone className="h-3.5 w-3.5 text-primary" />
-                  {prefeituraInfo.telefone}
-                </a>
-                <a href={`mailto:${prefeituraInfo.email}`} className="flex items-center gap-2 text-xs text-muted-foreground hover:text-primary transition-colors">
-                  <Mail className="h-3.5 w-3.5 text-primary" />
-                  {prefeituraInfo.email}
-                </a>
-                <a href={prefeituraInfo.site} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-xs text-muted-foreground hover:text-primary transition-colors">
-                  <Globe className="h-3.5 w-3.5 text-primary" />
-                  {prefeituraInfo.site.replace("https://", "")}
-                  <ExternalLink className="h-3 w-3" />
-                </a>
-              </div>
-            </div>
-
-            {/* Redes sociais */}
-            <div>
-              <h3 className="text-sm font-bold text-foreground mb-4">Redes Sociais</h3>
-              <div className="grid grid-cols-2 gap-2.5">
-                <a href={`https://instagram.com/${(prefeituraInfo.instagram || "").replace("@", "")}`} target="_blank" rel="noopener noreferrer"
-                  className="flex items-center gap-2 text-xs text-muted-foreground hover:text-primary transition-colors bg-secondary/50 rounded-lg px-3 py-2">
-                  <Instagram className="h-4 w-4" />
-                  Instagram
-                </a>
-                <a href={`https://facebook.com/${prefeituraInfo.facebook || ""}`} target="_blank" rel="noopener noreferrer"
-                  className="flex items-center gap-2 text-xs text-muted-foreground hover:text-primary transition-colors bg-secondary/50 rounded-lg px-3 py-2">
-                  <Facebook className="h-4 w-4" />
-                  Facebook
-                </a>
-                <a href={`https://twitter.com/${(prefeituraInfo.twitter || "").replace("@", "")}`} target="_blank" rel="noopener noreferrer"
-                  className="flex items-center gap-2 text-xs text-muted-foreground hover:text-primary transition-colors bg-secondary/50 rounded-lg px-3 py-2">
-                  <Twitter className="h-4 w-4" />
-                  Twitter/X
-                </a>
-                <a href={`https://youtube.com/${prefeituraInfo.youtube || ""}`} target="_blank" rel="noopener noreferrer"
-                  className="flex items-center gap-2 text-xs text-muted-foreground hover:text-destructive transition-colors bg-secondary/50 rounded-lg px-3 py-2">
-                  <Youtube className="h-4 w-4" />
-                  YouTube
-                </a>
-              </div>
-            </div>
-          </div>
-
-          {/* Divider + links */}
-          <div className="border-t border-border mt-8 pt-6 flex flex-col sm:flex-row items-center justify-between gap-4">
-            <div className="flex items-center gap-4 text-xs text-muted-foreground">
-              <button onClick={() => navigate("/")} className="hover:text-primary transition-colors">Início</button>
-              <button onClick={() => navigate(LAUNCH_URLS.business)} className="hover:text-primary transition-colors">Empresas</button>
-              <button onClick={() => navigate(LAUNCH_URLS.services)} className="hover:text-primary transition-colors">Serviços</button>
-              <button onClick={() => navigate(LAUNCH_URLS.classifieds)} className="hover:text-primary transition-colors">Classificados</button>
-              <button onClick={() => navigate(communityUrl)} className="hover:text-primary transition-colors">Comunidade</button>
-            </div>
-            <p className="text-[10px] text-muted-foreground">
-              © 2025 Comunidade Conectada · Salvador, BA · Todos os direitos reservados
-            </p>
-          </div>
-        </div>
-      </footer>
+      <CityElectedOfficialsSection electedCards={electedCards} />
+      <CityUsefulContactsSection
+        emergencyContacts={emergencyContacts}
+        utilityContacts={utilityContacts}
+        civicChannels={civicChannels}
+      />
+      <CityCommunityCtaSection
+        isAuthenticated={Boolean(user)}
+        onOpenCommunity={() => navigate(user ? communityUrl : "/login")}
+        onOpenBusiness={() => navigate(LAUNCH_URLS.business)}
+      />
+      <CityHallFooter
+        prefeituraInfo={prefeituraInfo}
+        onNavigate={navigate}
+        communityUrl={communityUrl}
+        businessPath={LAUNCH_URLS.business}
+        servicesPath={LAUNCH_URLS.services}
+        classifiedsPath={LAUNCH_URLS.classifieds}
+      />
 
     </div>
   );

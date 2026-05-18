@@ -319,6 +319,10 @@ export default tseslint.config(
       "src/core/posts/services/PostService.ts",
       "src/core/posts/services/posts.mutations.ts",
       "src/core/posts/services/posts.queries.ts",
+      "src/core/posts/services/posts.alerts.queries.ts",
+      "src/core/posts/services/posts.feed.queries.ts",
+      "src/core/posts/services/posts.media.queries.ts",
+      "src/core/posts/services/posts.user.queries.ts",
     ],
     rules: {
       "ssot/no-direct-posts-polls-access": "off",
@@ -388,6 +392,7 @@ export default tseslint.config(
     files: [
       "src/modules/mobility/services/mobility.mutations.ts",
       "src/modules/mobility/services/mobility.queries.ts",
+      "src/modules/mobility/services/MobilityRuntimeService.ts",
     ],
     rules: { "ssot/no-direct-mobility-access": "off" },
   },
@@ -446,6 +451,14 @@ export default tseslint.config(
   {
     files: ["src/core/professional/services/ProfessionalService.ts"],
     rules: { "ssot/no-direct-profile-access": "off" },
+  },
+  // CommunityGroupsService é owner de leitura/escrita de groups extraído do CommunityService.
+  {
+    files: [
+      "src/core/community/services/CommunityGroupsService.ts",
+      "src/core/community/services/CommunityGamificationService.ts",
+    ],
+    rules: { "ssot/no-direct-community-access": "off" },
   },
   // AdminUserService usa supabaseAdmin (service_role) para auth.admin.* — admin context legítimo.
   {

@@ -9,17 +9,25 @@ import { logger } from "@/shared/utils/logger";
 import { trackError } from "@/shared/utils/errorTracking";
 import { SessionService } from "@/core/session/services/SessionService";
 import { mediaService } from "@/core/media/services/MediaService";
+import { PublicIdentityService } from "@/core/public-identity";
 import type {
   CreateProfileData,
   Profile,
   ProfilePrivacySettingsInput,
   UpdateProfileData,
 } from "./types";
+import type { VerificationWorkflowStatus } from "./profile.service.types";
 import {
   getActiveProfile,
   getProfileByType,
   isUsernameAvailable,
 } from "./profile.queries";
+import { buildVerificationStatusUpdates } from "./profile.service.admin-rules";
+import { calculateSuspensionEnd } from "./profile.service.rules";
+import {
+  buildCreateProfileInsert,
+  validateCreateProfileInput,
+} from "./profile.service.presenters";
 
 const TABLE = "profiles";
 
@@ -72,6 +80,45 @@ export async function createProfile(profile: CreateProfileData): Promise<Profile
   return data as unknown as Profile;
 }
 
+export async function createProfileWithIdentityValidation(
+  profile: CreateProfileData,
+): Promise<Profile> {
+  const user = await SessionService.getCurrentUser();
+  if (!user) throw new Error("Not authenticated");
+
+  validateCreateProfileInput(profile);
+
+  const validation = PublicIdentityService.validateFormat(profile.username, "profile");
+  if (!validation.valid) {
+    throw new Error(`Invalid username: ${validation.error}`);
+  }
+
+  const availability = await PublicIdentityService.checkAvailability({
+    identifier: profile.username,
+    entityType: "profile",
+  });
+  if (availability.status !== "available") {
+    throw new Error("Username already in use");
+  }
+
+  const { data, error } = await supabase
+    .from(TABLE)
+    .insert(buildCreateProfileInsert(user.id, profile) as any)
+    .select()
+    .single();
+
+  if (error) {
+    trackError(new Error("Error creating profile"), {
+      component: "profile.mutations",
+      action: "createProfileWithIdentityValidation",
+      metadata: { userId: user.id, error },
+    });
+    throw error;
+  }
+
+  return data as unknown as Profile;
+}
+
 // ============================================================================
 // ✏️ UPDATE
 // ============================================================================
@@ -112,6 +159,75 @@ export async function updateProfile(
       metadata: { profileId, updates },
     });
     throw new Error(`Failed to update profile: ${error.message}`);
+  }
+
+  return data as unknown as Profile;
+}
+
+export async function updateProfileDirect(
+  profileId: string,
+  updates: UpdateProfileData,
+): Promise<Profile> {
+  const { data, error } = await supabase
+    .from(TABLE)
+    .update(updates)
+    .eq("id", profileId)
+    .select()
+    .single();
+
+  if (error) {
+    trackError(new Error("Error updating profile"), {
+      component: "profile.mutations",
+      action: "updateProfileDirect",
+      metadata: { profileId, error },
+    });
+    throw error;
+  }
+
+  return data as unknown as Profile;
+}
+
+export async function updatePrivacySettingsDirect(
+  profileId: string,
+  settings: ProfilePrivacySettingsInput,
+): Promise<Profile> {
+  const { data, error } = await supabase
+    .from(TABLE)
+    .update(settings)
+    .eq("id", profileId)
+    .select()
+    .single();
+
+  if (error) {
+    trackError(new Error("Error updating privacy settings"), {
+      component: "profile.mutations",
+      action: "updatePrivacySettingsDirect",
+      metadata: { profileId, error },
+    });
+    throw error;
+  }
+
+  return data as unknown as Profile;
+}
+
+export async function updateAlertBanStatus(
+  profileId: string,
+  alertBanned: boolean,
+): Promise<Profile> {
+  const { data, error } = await supabase
+    .from(TABLE)
+    .update(({ alert_banned: alertBanned } as unknown) as any)
+    .eq("id", profileId)
+    .select()
+    .single();
+
+  if (error) {
+    trackError(new Error("Error updating alert ban status"), {
+      component: "profile.mutations",
+      action: "updateAlertBanStatus",
+      metadata: { profileId, alertBanned, error },
+    });
+    throw error;
   }
 
   return data as unknown as Profile;
@@ -277,6 +393,79 @@ export async function ensureDriverProfileForUser(userId: string): Promise<Profil
   return newDriverProfile as unknown as Profile;
 }
 
+export async function ensureActiveDriverProfileForUser(userId: string): Promise<Profile | null> {
+  try {
+    const existingDriverProfile = await getProfileByType(userId, "driver");
+    if (existingDriverProfile) {
+      return existingDriverProfile;
+    }
+
+    const personalProfile = await getProfileByType(userId, "personal");
+    const { data, error } = await supabase
+      .from(TABLE)
+      .insert({
+        user_id: userId,
+        profile_type: "driver",
+        name: personalProfile?.name || "Admin",
+        display_name: `${personalProfile?.display_name || "Admin"} (Motorista)`,
+        is_active: true,
+      })
+      .select("*")
+      .single();
+
+    if (error) {
+      trackError(new Error("Error ensuring driver profile"), {
+        component: "profile.mutations",
+        action: "ensureActiveDriverProfileForUser",
+        metadata: { userId, error },
+      });
+      return null;
+    }
+
+    return data as unknown as Profile;
+  } catch (error) {
+    trackError(new Error("Unexpected error ensuring driver profile"), {
+      component: "profile.mutations",
+      action: "ensureActiveDriverProfileForUser",
+      metadata: { userId, error },
+    });
+    return null;
+  }
+}
+
+export async function setActiveRideId(profileId: string, rideId: string | null): Promise<void> {
+  const { error } = await supabase
+    .from(TABLE)
+    .update({ active_ride_id: rideId })
+    .eq("id", profileId);
+
+  if (error) {
+    trackError(new Error("Error setting active_ride_id"), {
+      component: "profile.mutations",
+      action: "setActiveRideId",
+      metadata: { profileId, rideId, error },
+    });
+    throw error;
+  }
+}
+
+export async function clearActiveRideId(profileId: string, rideId: string): Promise<void> {
+  const { error } = await supabase
+    .from(TABLE)
+    .update({ active_ride_id: null })
+    .eq("id", profileId)
+    .eq("active_ride_id", rideId);
+
+  if (error) {
+    trackError(new Error("Error clearing active_ride_id"), {
+      component: "profile.mutations",
+      action: "clearActiveRideId",
+      metadata: { profileId, rideId, error },
+    });
+    throw error;
+  }
+}
+
 // ============================================================================
 // ✅ VERIFICAÇÃO
 // ============================================================================
@@ -289,4 +478,75 @@ export async function checkUsernameAvailability(
   excludeProfileId?: string,
 ): Promise<boolean> {
   return isUsernameAvailable(username, excludeProfileId);
+}
+
+export async function verifyUser(userId: string): Promise<void> {
+  const { error } = await supabase
+    .from(TABLE)
+    .update({
+      is_verified: true,
+      verified_at: new Date().toISOString(),
+    })
+    .eq("id", userId);
+
+  if (error) {
+    trackError(new Error("Error verifying user"), {
+      component: "profile.mutations",
+      action: "verifyUser",
+      metadata: { userId, error },
+    });
+    throw error;
+  }
+}
+
+export async function updateVerificationStatus(
+  profileId: string,
+  status: VerificationWorkflowStatus,
+  reason?: string,
+): Promise<void> {
+  try {
+    const updates = buildVerificationStatusUpdates(status, reason);
+    const { error } = await supabase.from(TABLE).update(updates).eq("id", profileId);
+
+    if (error) {
+      logger.error("Error updating verification status:", error);
+      throw error;
+    }
+  } catch (error) {
+    trackError(new Error("Error updating verification status"), {
+      component: "profile.mutations",
+      action: "updateVerificationStatus",
+      metadata: { profileId, status, reason, error },
+    });
+    throw error;
+  }
+}
+
+export async function suspendUser(
+  userId: string,
+  duration: string,
+  reason: string,
+): Promise<void> {
+  try {
+    const suspendedUntil = calculateSuspensionEnd(duration);
+    const { error } = await supabase
+      .from(TABLE)
+      .update({
+        is_suspended: true,
+        suspended: true,
+        suspended_at: new Date().toISOString(),
+        suspended_until: suspendedUntil,
+        suspension_reason: reason,
+      })
+      .eq("id", userId);
+
+    if (error) throw error;
+  } catch (error) {
+    trackError(new Error("Error suspending user"), {
+      component: "profile.mutations",
+      action: "suspendUser",
+      metadata: { userId, duration, reason, error },
+    });
+    throw error;
+  }
 }

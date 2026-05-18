@@ -18,7 +18,6 @@
  * @module education
  * @version 3.0.0
  */
-
 import { useEffect, useMemo, useState } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { Link, useParams } from 'react-router-dom';
@@ -37,14 +36,6 @@ import {
   Users,
   Shield,
   Building2,
-  School,
-  Baby,
-  Languages,
-  Calculator,
-  Wrench,
-  BookOpen,
-  Music,
-  Dumbbell,
   Phone,
   MessageCircle,
   X,
@@ -85,6 +76,14 @@ import {
 } from './explorerFilterControls';
 import { EditorialCard, SkeletonCard } from './explorerCards';
 import {
+  CARD_HIDDEN_STAT_LABELS,
+  NICHE_ACCENT,
+  NICHE_ICONS,
+  SCHOOL_NETWORK_LABELS,
+  slugToLabel,
+} from './explorerPresentation.constants';
+import { NicheChip } from './explorerNicheChip';
+import {
   getEducationPreviewDistricts,
   getEducationPreviewProfiles,
   getEducationPreviewRoute,
@@ -92,99 +91,6 @@ import {
 } from '../mocks/educationPreviewRuntime';
 import { educationDetailPreviewMap } from '../mocks/publicEducationPage.mock';
 import type { EducationProfile } from '../types';
-
-// ============================================================================
-// MAPAS DE PRESENTACAO (UI-only, derivados do registry)
-// ============================================================================
-
-const NICHE_ICONS: Record<string, React.ElementType> = {
-  regular_school: School,
-  daycare: Baby,
-  language_school: Languages,
-  prep_course: Calculator,
-  technical_school: Wrench,
-  tutoring_center: BookOpen,
-  music_school: Music,
-  sports_school: Dumbbell,
-};
-
-const NICHE_ACCENT: Record<string, string> = {
-  regular_school: 'from-blue-500/90 to-indigo-600/90',
-  daycare: 'from-pink-400/90 to-rose-500/90',
-  language_school: 'from-emerald-400/90 to-teal-600/90',
-  prep_course: 'from-orange-400/90 to-amber-600/90',
-  technical_school: 'from-violet-500/90 to-purple-600/90',
-  tutoring_center: 'from-cyan-400/90 to-blue-500/90',
-  music_school: 'from-fuchsia-400/90 to-pink-600/90',
-  sports_school: 'from-lime-400/90 to-green-600/90',
-};
-
-const SCHOOL_NETWORK_LABELS: Record<string, string> = {
-  municipal: 'Municipal',
-  state: 'Estadual',
-  federal: 'Federal',
-  private: 'Privada',
-};
-
-const CARD_HIDDEN_STAT_LABELS = new Set(['ensino', 'fonte']);
-
-
-
-function slugToLabel(slug: string): string {
-  const LOWERCASE_WORDS = new Set(['de', 'da', 'do', 'das', 'dos', 'e', 'em', 'a', 'o']);
-  return slug
-    .split('-')
-    .map((word, i) =>
-      i === 0 || !LOWERCASE_WORDS.has(word)
-        ? word.charAt(0).toUpperCase() + word.slice(1)
-        : word
-    )
-    .join(' ');
-}
-
-// ============================================================================
-// COMPONENTES INTERNOS
-// ============================================================================
-
-function NicheChip({
-  active,
-  label,
-  icon: Icon,
-  onClick,
-  count,
-}: {
-  active?: boolean;
-  label: string;
-  icon: React.ElementType;
-  onClick: () => void;
-  count?: number;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={cn(
-        'group inline-flex items-center gap-2 whitespace-nowrap rounded-full border px-4 py-2 text-sm font-medium transition-all',
-        active
-          ? 'border-primary bg-primary text-primary-foreground shadow-sm shadow-primary/20'
-          : 'border-border/70 bg-card/60 text-muted-foreground hover:border-primary/40 hover:text-foreground'
-      )}
-    >
-      <Icon className="h-4 w-4" />
-      <span>{label}</span>
-      {typeof count === 'number' && (
-        <span
-          className={cn(
-            'rounded-full px-1.5 py-0.5 text-[10px] font-semibold',
-            active ? 'bg-primary-foreground/20' : 'bg-muted text-muted-foreground'
-          )}
-        >
-          {count}
-        </span>
-      )}
-    </button>
-  );
-}
 
 // ============================================================================
 // PAGINA PRINCIPAL
@@ -712,10 +618,6 @@ export function EducationExplorerPage() {
             </div>
           </div>
       </section>
-
-      {/* ==========================================================================
-          FEATURED SECTION â€” Instituicoes em Destaque
-          ========================================================================== */}
       <section className="border-t border-border bg-gradient-to-b from-muted/30 via-background to-background py-16">
         <div className="container mx-auto px-4">
           <div className="mb-10 flex flex-wrap items-end justify-between gap-4">
@@ -860,9 +762,6 @@ export function EducationExplorerPage() {
         </div>
       </section>
 
-      {/* ==========================================================================
-          CTA SECTION â€” Cadastro de instituicao
-          ========================================================================== */}
       <section className="relative overflow-hidden border-t border-border py-20">
         <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-background to-primary/10" />
         <div className="absolute -right-24 top-0 h-72 w-72 rounded-full bg-primary/10 blur-3xl" />
@@ -947,7 +846,6 @@ export function EducationExplorerPage() {
         </div>
       </section>
 
-      {/* Floating compare drawer */}
       <AnimatePresence>
         {comparing.length > 0 && (
           <motion.div
@@ -997,6 +895,4 @@ export function EducationExplorerPage() {
     </div>
   );
 }
-
 export default EducationExplorerPage;
-

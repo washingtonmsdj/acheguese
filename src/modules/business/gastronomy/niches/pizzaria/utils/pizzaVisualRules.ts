@@ -1,4 +1,4 @@
-import type { MenuItemAddon } from "../../../types/menu";
+import type { MenuItemAddon } from "@/modules/business/gastronomy/types/menu";
 
 export type PizzaRenderSize = "sm" | "md" | "lg" | "xl";
 

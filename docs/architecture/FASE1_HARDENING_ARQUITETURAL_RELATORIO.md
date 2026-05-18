@@ -1,13 +1,14 @@
-﻿# FASE 1 - Hardening Arquitetural (Gate-First)
+# FASE 1 - Hardening Arquitetural (Gate-First)
 
-Gerado em: 2026-05-17T00:00:00-03:00
-Atualizado em: 2026-05-18T00:35:00-03:00
+Gerado em: 2026-05-18T21:35:21.863Z
 
 ## Problemas encontrados
-- Dependencias ciclicas reais entre modulos: removidas nos pontos criticos mapeados (profile/professional e mobility UI).
-- Acoplamento de acesso DB em services com tipagem quebrada (overloads `never` no client Supabase).
-- Inconsistencias de contrato entre dominios (`core/business`, `modules/profile`, `modules/professionals`).
-- Arquivos grandes e duplicacao estrutural (principalmente community e alguns services core).
+- Dependencias ciclicas detectadas: 0
+- Imports relativos profundos (>= 3 niveis): 0
+- Arquivos com acesso DB fora de service/repository: 0
+- Services com nome duplicado: 32
+- Arquivos grandes (>= 900 linhas): 13
+- Violacoes de layer (shared/core boundaries): 0
 
 ## Modulos mais criticos
 - community
@@ -17,75 +18,68 @@ Atualizado em: 2026-05-18T00:35:00-03:00
 - landing/routing
 
 ## Arquivos mais problematicos
-- `src/core/profiles/services/ProfileService.ts`
-- `src/core/posts/services/PostService.ts`
-- `src/core/professional/services/ProfessionalService.ts`
-- `src/core/admin/services/AdminProfileGovernanceService.ts`
-- `src/modules/classifieds/jobs/pages/PublicarVagaPage.tsx`
-- `src/modules/mobility/core/RideOperationalService.ts`
-- `src/core/residence/ResidenceManager.ts`
+- `src/modules/business/gastronomy/pages/GastronomyLandingPage.tsx` (1061 linhas)
+- `src/core/profiles/services/profile.queries.ts` (1036 linhas)
+- `src/modules/mobility/core/RideOperationalService.ts` (952 linhas)
+- `src/core/maps/components/v3/MapLibreAdapter.tsx` (946 linhas)
+- `src/core/business/services/business.queries.ts` (931 linhas)
+- `src/app/pages/ClassificadoChatLandingPage.tsx` (929 linhas)
+- `src/features/events/pages/EventsListPage.tsx` (924 linhas)
+- `src/modules/classifieds/pages/ClassificadoDetailPage.tsx` (924 linhas)
+- `src/modules/professionals/services/pages/EditarServicoPage.tsx` (923 linhas)
+- `src/features/events/pages/EventsOrganizerDashboard.tsx` (919 linhas)
+- `src/core/admin/components/TrustEventsQueue.tsx` (905 linhas)
+- `src/core/routing/components/BrasilShowcasePage.tsx` (900 linhas)
 
 ## Riscos arquiteturais
-- Debt de contratos tipados entre camadas em `core/business` e `modules/profile`.
-- Duplicacoes amplas em community (components/hooks/services paralelos).
-- Services muito extensos com responsabilidades mistas (ainda sem fatiamento completo nesta fase).
 
 ## Melhorias aplicadas
-- Gates arquiteturais estabilizados:
-  - `validate:deps`: PASS (0 ciclos, 0 violacoes)
-  - `validate:architecture:incremental -- --strict --json`: PASS (`[]`)
-  - `validate:architecture:governance -- --json`: PASS (`[]`)
-  - `validate:taxonomy`: PASS
-  - `validate:ssot`: PASS (0 violacoes)
-  - `check:ssot`: PASS (0 violacoes)
-- Normalizacao de boundaries em services criticos (remocao de acesso direto indevido e uso de service/client canonico).
-- Remocao de ciclos de tipos em mobility com extracao de contrato compartilhado (`MobilityRide`) e desacoplamento de imports cruzados em cadeia.
-- Consolidacao de uso de `NotificationService` no fluxo de notificacao de delivery.
-- Ajustes incrementais em `admin` e `billing` para reduzir falhas estruturais de tipagem sem alterar UX.
-- Fechamento de violacoes de layer `modules -> integrations` em:
-  - `src/modules/business/education/services/EducationObservabilityService.ts`
-  - `src/modules/business/education/services/EducationTrackingService.ts`
-  substituindo import indevido de `Json` por tipo local no dominio.
-- Fechamento de violacao de layer `modules -> integrations` em:
-  - `src/modules/mobility/services/DriverModerationEventsService.ts`
-  substituindo import indevido por tipo `Json` de owner permitido (`shared`).
-- Correcoes finais de tipagem para fechamento do gate:
-  - `src/modules/mobility/core/RideStateMachine.ts`
-  - `src/modules/mobility/hooks/useRideHistory.ts`
-  - `src/modules/mobility/hooks/useRideReports.ts`
-  - `src/modules/mobility/pages/BuscandoMotoristaPage.tsx`
-  - `src/modules/mobility/pages/CriarMotoristaPage.tsx`
-  - `src/modules/business/gastronomy/services/OrderService.ts`
-  - `src/modules/business/gastronomy/services/menu.queries.ts`
-  - `src/modules/classifieds/jobs/services/VagasService.ts`
+- Gates de arquitetura e SSOT alinhados com estabilizacao gate-first.
+- APIs de service reforcadas para eliminar acesso DB direto em UI.
+- Ciclos criticos removidos em profile/professional e mobility driver UI.
+- Taxonomia ajustada para modulos oficiais ativos.
 
 ## Pendencias restantes
-- `npm run lint` com 4 warnings não bloqueantes:
-  - `src/core/maps/components/v3/MapLibreAdapter.tsx` (`maps/no-manual-entity-projection`)
-  - `src/modules/community/components/MessagesInbox.tsx` (`react-hooks/exhaustive-deps`)
-  - `src/modules/community/nearby/components/NearbyCard.tsx` (`react-hooks/exhaustive-deps`)
-  - `src/shared/components/ui/sidebar-maker.tsx` (`react-refresh/only-export-components`)
-- Smoke E2E (`test:e2e:mobile`, `test:e2e:operations`) permanece pendente para rodada dedicada de regressao funcional.
-- Fatiamento de arquivos gigantes e remocao de duplicacao ampla ficam para fase posterior dedicada.
+- Duplicacoes amplas em community (componentes/hooks em paralelo) exigem fase dedicada.
+- Arquivos grandes ainda exigem fatiamento gradual por responsabilidade.
+- Consolidacao estrutural de roots compativeis em core/landing, core/classifieds e core/mobility.
 
 ## Score de estabilidade arquitetural
-- Baseline estimado: **70/100**
-- Score atual (gate-first, arquitetura/governanca/ssot/deps/typecheck): **89/100**
-- Justificativa do score:
-  - Gates arquiteturais e SSOT automatizados aprovados.
-  - Ciclos e boundaries criticos tratados.
-  - Debt restante concentrado em contratos de tipagem e consolidacao estrutural de modulos grandes.
+- Score Gate-First (ciclos/boundaries/DB/layers): **100/100**
+- Score Debt Estrutural (inclui duplicacoes e arquivos gigantes): **76/100**
+- Baseline de referencia: 70/100
+- Meta desta fase: 85+/100
 
-## Evidencias de validacao (execucao atual)
-- `npm run validate:deps` -> PASS
-- `npm run validate:architecture:incremental -- --strict --json` -> `[]`
-- `npm run validate:architecture:governance -- --json` -> `[]`
-- `npm run validate:taxonomy` -> PASS
-- `npm run validate:ssot` -> PASS
-- `npm run check:ssot` -> PASS
-- `npm run lint` -> PASS com 1 warning
-- `npm run lint` -> PASS com 4 warnings
-- `npm run typecheck:app -- --pretty false` -> PASS
+## Anexos tecnicos
+### Duplicacao de services (top)
+- `AdminService.ts`: src/core/admin/AdminService.ts, src/core/admin/services/AdminService.ts, src/modules/admin/services/AdminService.ts
+- `SubscriptionService.ts`: src/core/billing/services/SubscriptionService.ts, src/core/billing/SubscriptionService.ts, src/core/subscription/services/SubscriptionService.ts
+- `CommunityIssueService.ts`: src/core/community/issues/services/CommunityIssueService.ts, src/core/community-issues/services/CommunityIssueService.ts, src/modules/community/issues/services/CommunityIssueService.ts
+- `LandingFeaturedService.ts`: src/app/features/landing/services/LandingFeaturedService.ts, src/core/landing/services/LandingFeaturedService.ts
+- `LandingService.ts`: src/app/features/landing/services/LandingService.ts, src/core/landing/services/LandingService.ts
+- `AdminVagasService.ts`: src/core/admin/services/AdminVagasService.ts, src/modules/classifieds/jobs/services/AdminVagasService.ts
+- `MobilityAdminQueryService.ts`: src/core/admin/services/MobilityAdminQueryService.ts, src/modules/mobility/services/MobilityAdminQueryService.ts
+- `AnalyticsService.ts`: src/core/analytics/AnalyticsService.ts, src/core/analytics/services/AnalyticsService.ts
+- `SessionService.ts`: src/core/auth/services/SessionService.ts, src/core/session/services/SessionService.ts
+- `BusinessService.ts`: src/core/business/services/BusinessService.ts, src/modules/business/services/BusinessService.ts
+- `AlertModerationService.ts`: src/core/community/alerts/services/AlertModerationService.ts, src/modules/community/alerts/services/AlertModerationService.ts
+- `AlertNotificationService.ts`: src/core/community/alerts/services/AlertNotificationService.ts, src/modules/community/alerts/services/AlertNotificationService.ts
 
-## Conclusao desta fase
-A fundacao arquitetural gate-first foi estabelecida com sucesso para dependencias, boundaries, governanca, SSOT e tipagem de aplicacao. Permanecem apenas warnings de lint e refactors estruturais nao bloqueantes para fases seguintes.
+### Duplicacao de components (top)
+- `PostActions.tsx`: src/core/community/components/post-card/PostActions.tsx, src/core/community/components/PostActions.tsx, src/core/community/components/UnifiedPostCard/PostActions.tsx, src/modules/community/components/post-card/PostActions.tsx, src/modules/community/components/PostActions.tsx, src/modules/community/components/UnifiedPostCard/PostActions.tsx
+- `PostContent.tsx`: src/core/community/components/post-card/PostContent.tsx, src/core/community/components/PostContent.tsx, src/core/community/components/UnifiedPostCard/PostContent.tsx, src/modules/community/components/post-card/PostContent.tsx, src/modules/community/components/PostContent.tsx, src/modules/community/components/UnifiedPostCard/PostContent.tsx
+- `PostHeader.tsx`: src/core/community/components/post-card/PostHeader.tsx, src/core/community/components/PostHeader.tsx, src/core/community/components/UnifiedPostCard/PostHeader.tsx, src/modules/community/components/post-card/PostHeader.tsx, src/modules/community/components/PostHeader.tsx, src/modules/community/components/UnifiedPostCard/PostHeader.tsx
+- `ErrorBoundary.tsx`: src/app/components/ErrorBoundary.tsx, src/modules/mobility/components/ErrorBoundary.tsx, src/shared/components/ErrorBoundary.tsx, src/shared/components/errors/ErrorBoundary.tsx, src/shared/components/ui/ErrorBoundary.tsx
+- `PostCard.tsx`: src/core/community/components/cards/PostCard.tsx, src/core/community/components/PostCard.tsx, src/core/posts/components/PostCard.tsx, src/modules/community/components/cards/PostCard.tsx, src/modules/community/components/PostCard.tsx
+- `CommentItem.tsx`: src/core/community/components/CommentItem.tsx, src/core/community/components/comments/CommentItem.tsx, src/modules/community/components/CommentItem.tsx, src/modules/community/components/comments/CommentItem.tsx, src/shared/components/drawer/CommentItem.tsx
+- `StatCard.tsx`: src/core/admin/components/stats/StatCard.tsx, src/core/admin/drivers/components/cards/StatCard.tsx, src/modules/admin/components/stats/StatCard.tsx, src/modules/admin/drivers/components/cards/StatCard.tsx
+- `AlertCard.tsx`: src/core/alerts/components/AlertCard.tsx, src/core/community/alerts/components/AlertCard.tsx, src/modules/admin/components/alerts/AlertCard.tsx, src/modules/community/alerts/components/AlertCard.tsx
+- `CommentForm.tsx`: src/core/community/components/CommentForm.tsx, src/core/community/components/comments/CommentForm.tsx, src/modules/community/components/CommentForm.tsx, src/modules/community/components/comments/CommentForm.tsx
+- `CommentsList.tsx`: src/core/community/components/comments/CommentsList.tsx, src/core/community/components/detail-modal/CommentsList.tsx, src/modules/community/components/comments/CommentsList.tsx, src/modules/community/components/detail-modal/CommentsList.tsx
+- `CreatePostModal.tsx`: src/core/community/components/composer/CreatePostModal.tsx, src/core/community-feed/components/composer/CreatePostModal.tsx, src/modules/community/components/composer/CreatePostModal.tsx, src/modules/community-feed/components/composer/CreatePostModal.tsx
+- `UnifiedComposer.tsx`: src/core/community/components/composer/UnifiedComposer.tsx, src/core/community-feed/components/composer/UnifiedComposer.tsx, src/modules/community/components/composer/UnifiedComposer.tsx, src/modules/community-feed/components/composer/UnifiedComposer.tsx
+
+### Imports profundos (top)
+
+### DB fora de service/repository (top)
+
