@@ -29,74 +29,21 @@ import {
   TrustPolicyService,
   type TrustEvent,
   type TrustEventStatus,
-  type TrustPolicyDecision,
 } from "@/core/trust";
 import { logger } from "@/shared/utils/logger";
-
-type TrustContextFilter = "all" | TrustEvent["context_type"];
-
-const CONTEXT_LABELS: Record<TrustContextFilter, string> = {
-  all: "Todos",
-  order: "Pedidos",
-  ride: "Corridas",
-  delivery: "Entregas",
-  classified: "Classificados",
-  service: "Servicos",
-  community: "Comunidade",
-};
-
-const SEVERITY_LABELS: Record<TrustEvent["severity"], string> = {
-  low: "Baixa",
-  medium: "Media",
-  high: "Alta",
-  critical: "Critica",
-};
-
-const STATUS_LABELS: Record<TrustEventStatus, string> = {
-  active: "Ativo",
-  under_review: "Em analise",
-  dismissed: "Descartado",
-  confirmed: "Confirmado",
-  penalized: "Penalizado",
-};
-
-const RISK_LABELS: Record<TrustPolicyDecision["risk_level"], string> = {
-  trusted: "Confiavel",
-  watchlist: "Observacao",
-  restricted: "Restrito",
-  critical: "Critico",
-};
-
-const ACTION_LABELS: Record<TrustPolicyDecision["recommended_action"], string> = {
-  none: "Sem acao",
-  monitor: "Monitorar",
-  warn: "Avisar",
-  manual_review: "Revisao manual",
-  temporary_restriction: "Restricao temporaria",
-};
-
-function getSeverityVariant(severity: TrustEvent["severity"]) {
-  return severity === "critical" || severity === "high" ? "destructive" : "outline";
-}
-
-function getRiskVariant(risk: TrustPolicyDecision["risk_level"]) {
-  if (risk === "critical" || risk === "restricted") return "destructive";
-  if (risk === "watchlist") return "secondary";
-  return "outline";
-}
-
-function renderProfileShortId(id: string) {
-  return id.slice(0, 8);
-}
-
-function asRecord(value: unknown): Record<string, unknown> {
-  if (!value || typeof value !== "object" || Array.isArray(value)) return {};
-  return value as Record<string, unknown>;
-}
-
-function asString(value: unknown): string | null {
-  return typeof value === "string" && value.trim().length > 0 ? value : null;
-}
+import {
+  ACTION_LABELS,
+  asRecord,
+  asString,
+  CONTEXT_LABELS,
+  getRiskVariant,
+  getSeverityVariant,
+  renderProfileShortId,
+  RISK_LABELS,
+  SEVERITY_LABELS,
+  STATUS_LABELS,
+  type TrustContextFilter,
+} from "./TrustEventsQueue.constants";
 
 export interface TrustEventsQueueProps {
   initialContextFilter?: TrustContextFilter;
