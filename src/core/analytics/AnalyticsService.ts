@@ -24,6 +24,7 @@ export interface ServiceResult<T> {
 export type AnalyticsEventType =
   | 'qr_scan'
   | 'page_view'
+  | 'business_interaction'
   | 'menu_view'
   | 'item_view'
   | 'order_started'
@@ -36,7 +37,9 @@ export type AnalyticsEventType =
   | 'click_directions'
   | 'share'
   | 'favorite_added'
-  | 'favorite_removed';
+  | 'favorite_removed'
+  | 'structured_vaga_click_search'
+  | 'structured_vaga_open_search';
 
 export type AnalyticsEventSource =
   | 'web'
@@ -118,7 +121,8 @@ export const AnalyticsService = {
     metadata?: Record<string, any>;
   }): Promise<ServiceResult<string>> {
     try {
-      const { data, error } = await supabase.rpc('track_analytics_event', {
+      const analyticsDb = supabase as any;
+      const { data, error } = await analyticsDb.rpc('track_analytics_event', {
         p_entity_type: input.entity_type,
         p_entity_id: input.entity_id,
         p_event_type: input.event_type,

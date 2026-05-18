@@ -31,6 +31,10 @@ const DB_ACCESS_ALLOWED_SUFFIXES = [
   ".test.ts",
   ".spec.ts",
 ];
+const DISTINCT_SERVICE_CONTEXT_PREFIXES: Record<string, string[]> = {
+  "SessionService.ts": ["src/core/session/", "src/core/auth/"],
+  "SubscriptionService.ts": ["src/core/subscription/", "src/core/billing/"],
+};
 
 function normalize(value: string): string {
   return value.replace(/\\/g, "/");
@@ -320,6 +324,18 @@ function main() {
     .filter((entry) => entry.lines >= 900)
     .filter((entry) => !HUGE_FILE_EXCLUSIONS.some((prefix) => entry.file.startsWith(prefix)))
     .sort((a, b) => b.lines - a.lines);
+  const distinctContextServiceNames = new Set(
+    Array.from(serviceNames.entries())
+      .filter(([name, entries]) => {
+        const allowedPrefixes = DISTINCT_SERVICE_CONTEXT_PREFIXES[name];
+        if (!allowedPrefixes || entries.length < 2) return false;
+        return entries.every((entry) =>
+          allowedPrefixes.some((prefix) => entry.file.startsWith(prefix)),
+        );
+      })
+      .map(([name]) => name),
+  );
+
   const duplicatedServices = Array.from(serviceNames.entries())
     .map(([name, entries]) => ({
       name,
@@ -329,6 +345,7 @@ function main() {
       ),
       aliasEntries: entries.filter((entry) => entry.pureReexport || entry.compatibilityFacade),
     }))
+    .filter((item) => !distinctContextServiceNames.has(item.name))
     .filter((item) => item.implementationEntries.length > 1)
     .sort((a, b) => b.implementationEntries.length - a.implementationEntries.length);
   const aliasedServices = Array.from(serviceNames.entries())
@@ -340,8 +357,13 @@ function main() {
       ),
       aliasEntries: entries.filter((entry) => entry.pureReexport || entry.compatibilityFacade),
     }))
+    .filter((item) => !distinctContextServiceNames.has(item.name))
     .filter((item) => item.implementationEntries.length === 1 && item.aliasEntries.length > 0)
     .sort((a, b) => b.aliasEntries.length - a.aliasEntries.length);
+  const distinctContextServices = Array.from(serviceNames.entries())
+    .map(([name, entries]) => ({ name, entries }))
+    .filter((item) => distinctContextServiceNames.has(item.name))
+    .sort((a, b) => b.entries.length - a.entries.length);
   const duplicatedComponents = Array.from(componentNames.entries())
     .filter(([, entries]) => entries.length > 2)
     .sort((a, b) => b[1].length - a[1].length);
@@ -380,6 +402,7 @@ function main() {
     `- Arquivos com acesso DB fora de service/repository: ${filteredDbOutsideService.length}`,
     `- Services com implementacao duplicada: ${duplicatedServices.length}`,
     `- Services com aliases/reexports publicos: ${aliasedServices.length}`,
+    `- Services homonimos em contextos distintos: ${distinctContextServices.length}`,
     `- Arquivos grandes (>= 900 linhas): ${hugeFiles.length}`,
     `- Violacoes de layer (shared/core boundaries): ${filteredLayerViolations.length}`,
     "",
@@ -431,6 +454,14 @@ function main() {
       .map(
         (item) =>
           `- \`${item.name}\`: canonic \`${item.implementationEntries[0]?.file ?? "n/a"}\`, aliases ${item.aliasEntries.map((entry) => `\`${entry.file}\``).join(", ")}`,
+      ),
+    "",
+    "### Services homonimos por contexto (top)",
+    ...distinctContextServices
+      .slice(0, 12)
+      .map(
+        (item) =>
+          `- \`${item.name}\`: ${item.entries.map((entry) => `\`${entry.file}\``).join(", ")}`,
       ),
     "",
     "### Duplicacao de components (top)",

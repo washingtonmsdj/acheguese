@@ -1,69 +1,79 @@
-/**
- * Analytics Service
- *
- * Handles analytics event tracking
- * SSOT for analytics_events table
- */
+import {
+  AnalyticsService as canonicalAnalyticsService,
+  type AnalyticsEventSource,
+  type AnalyticsEventType,
+} from "@/core/analytics/AnalyticsService";
 
-import { supabase } from "@/integrations/supabase";
-import { logger } from "@/shared/utils/logger";
-
-interface AnalyticsEvent {
-  event_type: string;
+interface LegacyAnalyticsEvent {
+  event_type: AnalyticsEventType;
   business_id?: string;
   user_id?: string;
   metadata?: Record<string, any>;
 }
 
-class AnalyticsServiceClass {
-  private readonly db = supabase as any;
+function isNonEmptyString(value: unknown): value is string {
+  return typeof value === "string" && value.length > 0;
+}
 
-  /**
-   * Track analytics event
-   */
-  async trackEvent(event: AnalyticsEvent): Promise<void> {
-    try {
-      const { error } = await this.db
-        .from("analytics_events").insert({
-        ...event,
-        timestamp: new Date().toISOString(),
-      });
-      if (error) {
-        logger.error("Analytics tracking error:", error);
-      }
-    } catch (error) {
-      logger.error("Analytics tracking error:", error);
-    }
+function resolveLegacyEntity(event: LegacyAnalyticsEvent): { entityType: string; entityId: string } | null {
+  if (isNonEmptyString(event.business_id)) {
+    return { entityType: "business", entityId: event.business_id };
   }
 
-  /**
-   * Track page view
-   */
+  const metadata = event.metadata ?? {};
+  const vagaId = metadata["vaga_id"];
+  if (isNonEmptyString(vagaId)) {
+    return { entityType: "vaga", entityId: vagaId };
+  }
+
+  const explicitEntityType = metadata["entity_type"];
+  const explicitEntityId = metadata["entity_id"];
+  if (isNonEmptyString(explicitEntityType) && isNonEmptyString(explicitEntityId)) {
+    return { entityType: explicitEntityType, entityId: explicitEntityId };
+  }
+
+  return null;
+}
+
+class AnalyticsServiceCompatibility {
+  async trackEvent(event: LegacyAnalyticsEvent): Promise<void> {
+    const resolvedEntity = resolveLegacyEntity(event);
+    if (!resolvedEntity) return;
+
+    await canonicalAnalyticsService.trackEvent({
+      entity_type: resolvedEntity.entityType,
+      entity_id: resolvedEntity.entityId,
+      event_type: event.event_type,
+      event_source: "web" satisfies AnalyticsEventSource,
+      user_id: event.user_id,
+      metadata: event.metadata,
+    });
+  }
+
   async trackPageView(businessId: string, userId?: string): Promise<void> {
-    await this.trackEvent({
+    await canonicalAnalyticsService.trackEvent({
+      entity_type: "business",
+      entity_id: businessId,
       event_type: "page_view",
-      business_id: businessId,
       user_id: userId,
       metadata: {
-        url: window.location.href,
-        referrer: document.referrer,
+        url: typeof window === "undefined" ? undefined : window.location.href,
+        referrer: typeof document === "undefined" ? undefined : document.referrer,
         timestamp: Date.now(),
       },
     });
   }
 
-  /**
-   * Track business interaction
-   */
   async trackBusinessInteraction(
     businessId: string,
     action: string,
     userId?: string,
     metadata?: Record<string, any>,
   ): Promise<void> {
-    await this.trackEvent({
+    await canonicalAnalyticsService.trackEvent({
+      entity_type: "business",
+      entity_id: businessId,
       event_type: "business_interaction",
-      business_id: businessId,
       user_id: userId,
       metadata: {
         action,
@@ -73,4 +83,4 @@ class AnalyticsServiceClass {
   }
 }
 
-export const analyticsService = new AnalyticsServiceClass();
+export const analyticsService = new AnalyticsServiceCompatibility();

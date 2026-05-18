@@ -1,13 +1,14 @@
 # FASE 1 - Hardening Arquitetural (Gate-First)
 
-Gerado em: 2026-05-18T23:42:34.156Z
+Gerado em: 2026-05-18T23:49:17.622Z
 
 ## Problemas encontrados
 - Dependencias ciclicas detectadas: 0
 - Imports relativos profundos (>= 3 niveis): 0
 - Arquivos com acesso DB fora de service/repository: 0
-- Services com implementacao duplicada: 3
-- Services com aliases/reexports publicos: 26
+- Services com implementacao duplicada: 0
+- Services com aliases/reexports publicos: 27
+- Services homonimos em contextos distintos: 2
 - Arquivos grandes (>= 900 linhas): 0
 - Violacoes de layer (shared/core boundaries): 0
 
@@ -35,15 +36,12 @@ Gerado em: 2026-05-18T23:42:34.156Z
 
 ## Score de estabilidade arquitetural
 - Score Gate-First (ciclos/boundaries/DB/layers): **100/100**
-- Score Debt Estrutural (inclui duplicacoes e arquivos gigantes): **94/100**
+- Score Debt Estrutural (inclui duplicacoes e arquivos gigantes): **100/100**
 - Baseline de referencia: 70/100
 - Meta desta fase: 85+/100
 
 ## Anexos tecnicos
 ### Duplicacao de services (top)
-- `SubscriptionService.ts`: src/core/billing/services/SubscriptionService.ts, src/core/billing/SubscriptionService.ts, src/core/subscription/services/SubscriptionService.ts
-- `AnalyticsService.ts`: src/core/analytics/AnalyticsService.ts, src/core/analytics/services/AnalyticsService.ts
-- `SessionService.ts`: src/core/auth/services/SessionService.ts, src/core/session/services/SessionService.ts
 
 ### Services com aliases/reexports (top)
 - `AdminService.ts`: canonic `src/core/admin/services/AdminService.ts`, aliases `src/core/admin/AdminService.ts`, `src/modules/admin/services/AdminService.ts`
@@ -51,13 +49,17 @@ Gerado em: 2026-05-18T23:42:34.156Z
 - `LandingFeaturedService.ts`: canonic `src/core/landing/services/LandingFeaturedService.ts`, aliases `src/app/features/landing/services/LandingFeaturedService.ts`
 - `AdminVagasService.ts`: canonic `src/core/admin/services/AdminVagasService.ts`, aliases `src/modules/classifieds/jobs/services/AdminVagasService.ts`
 - `MobilityAdminQueryService.ts`: canonic `src/core/admin/services/MobilityAdminQueryService.ts`, aliases `src/modules/mobility/services/MobilityAdminQueryService.ts`
+- `AnalyticsService.ts`: canonic `src/core/analytics/AnalyticsService.ts`, aliases `src/core/analytics/services/AnalyticsService.ts`
 - `AlertModerationService.ts`: canonic `src/core/community/alerts/services/AlertModerationService.ts`, aliases `src/modules/community/alerts/services/AlertModerationService.ts`
 - `AlertNotificationService.ts`: canonic `src/core/community/alerts/services/AlertNotificationService.ts`, aliases `src/modules/community/alerts/services/AlertNotificationService.ts`
 - `CommunityAlertService.ts`: canonic `src/core/community/alerts/services/CommunityAlertService.ts`, aliases `src/modules/community/alerts/services/CommunityAlertService.ts`
 - `CommunityEventsRuntimeService.ts`: canonic `src/core/community/services/CommunityEventsRuntimeService.ts`, aliases `src/core/community-events/services/CommunityEventsRuntimeService.ts`
 - `CommunityLocationService.ts`: canonic `src/core/community/services/CommunityLocationService.ts`, aliases `src/modules/community/services/CommunityLocationService.ts`
 - `CommunityRolloutService.ts`: canonic `src/core/community/services/CommunityRolloutService.ts`, aliases `src/modules/community/services/CommunityRolloutService.ts`
-- `LostFoundService.ts`: canonic `src/core/community-lost-found/services/LostFoundService.ts`, aliases `src/modules/community/lostfound/services/LostFoundService.ts`
+
+### Services homonimos por contexto (top)
+- `SubscriptionService.ts`: `src/core/billing/services/SubscriptionService.ts`, `src/core/billing/SubscriptionService.ts`, `src/core/subscription/services/SubscriptionService.ts`
+- `SessionService.ts`: `src/core/auth/services/SessionService.ts`, `src/core/session/services/SessionService.ts`
 
 ### Duplicacao de components (top)
 - `PostActions.tsx`: src/core/community/components/post-card/PostActions.tsx, src/core/community/components/PostActions.tsx, src/core/community/components/UnifiedPostCard/PostActions.tsx, src/modules/community/components/post-card/PostActions.tsx, src/modules/community/components/PostActions.tsx, src/modules/community/components/UnifiedPostCard/PostActions.tsx
