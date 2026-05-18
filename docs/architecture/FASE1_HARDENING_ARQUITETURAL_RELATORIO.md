@@ -1,13 +1,13 @@
 # FASE 1 - Hardening Arquitetural (Gate-First)
 
-Gerado em: 2026-05-18T23:36:21.186Z
+Gerado em: 2026-05-18T23:42:34.156Z
 
 ## Problemas encontrados
 - Dependencias ciclicas detectadas: 0
 - Imports relativos profundos (>= 3 niveis): 0
 - Arquivos com acesso DB fora de service/repository: 0
-- Services com implementacao duplicada: 7
-- Services com aliases/reexports publicos: 25
+- Services com implementacao duplicada: 3
+- Services com aliases/reexports publicos: 26
 - Arquivos grandes (>= 900 linhas): 0
 - Violacoes de layer (shared/core boundaries): 0
 
@@ -35,33 +35,29 @@ Gerado em: 2026-05-18T23:36:21.186Z
 
 ## Score de estabilidade arquitetural
 - Score Gate-First (ciclos/boundaries/DB/layers): **100/100**
-- Score Debt Estrutural (inclui duplicacoes e arquivos gigantes): **86/100**
+- Score Debt Estrutural (inclui duplicacoes e arquivos gigantes): **94/100**
 - Baseline de referencia: 70/100
 - Meta desta fase: 85+/100
 
 ## Anexos tecnicos
 ### Duplicacao de services (top)
 - `SubscriptionService.ts`: src/core/billing/services/SubscriptionService.ts, src/core/billing/SubscriptionService.ts, src/core/subscription/services/SubscriptionService.ts
-- `AdminService.ts`: src/core/admin/services/AdminService.ts, src/modules/admin/services/AdminService.ts
 - `AnalyticsService.ts`: src/core/analytics/AnalyticsService.ts, src/core/analytics/services/AnalyticsService.ts
 - `SessionService.ts`: src/core/auth/services/SessionService.ts, src/core/session/services/SessionService.ts
-- `TerritorialGroupService.ts`: src/core/location/services/TerritorialGroupService.ts, src/core/territorial/services/TerritorialGroupService.ts
-- `GastronomyUrlService.ts`: src/core/verticals/gastronomy/services/GastronomyUrlService.ts, src/modules/business/gastronomy/services/GastronomyUrlService.ts
-- `MobilityService.ts`: src/modules/mobility/services/MobilityService.impl.ts, src/modules/mobility/services/MobilityService.ts
 
 ### Services com aliases/reexports (top)
+- `AdminService.ts`: canonic `src/core/admin/services/AdminService.ts`, aliases `src/core/admin/AdminService.ts`, `src/modules/admin/services/AdminService.ts`
 - `CommunityIssueService.ts`: canonic `src/core/community/issues/services/CommunityIssueService.ts`, aliases `src/core/community-issues/services/CommunityIssueService.ts`, `src/modules/community/issues/services/CommunityIssueService.ts`
 - `LandingFeaturedService.ts`: canonic `src/core/landing/services/LandingFeaturedService.ts`, aliases `src/app/features/landing/services/LandingFeaturedService.ts`
-- `LandingService.ts`: canonic `src/app/features/landing/services/LandingService.ts`, aliases `src/core/landing/services/LandingService.ts`
 - `AdminVagasService.ts`: canonic `src/core/admin/services/AdminVagasService.ts`, aliases `src/modules/classifieds/jobs/services/AdminVagasService.ts`
 - `MobilityAdminQueryService.ts`: canonic `src/core/admin/services/MobilityAdminQueryService.ts`, aliases `src/modules/mobility/services/MobilityAdminQueryService.ts`
-- `BusinessService.ts`: canonic `src/core/business/services/BusinessService.ts`, aliases `src/modules/business/services/BusinessService.ts`
 - `AlertModerationService.ts`: canonic `src/core/community/alerts/services/AlertModerationService.ts`, aliases `src/modules/community/alerts/services/AlertModerationService.ts`
 - `AlertNotificationService.ts`: canonic `src/core/community/alerts/services/AlertNotificationService.ts`, aliases `src/modules/community/alerts/services/AlertNotificationService.ts`
 - `CommunityAlertService.ts`: canonic `src/core/community/alerts/services/CommunityAlertService.ts`, aliases `src/modules/community/alerts/services/CommunityAlertService.ts`
 - `CommunityEventsRuntimeService.ts`: canonic `src/core/community/services/CommunityEventsRuntimeService.ts`, aliases `src/core/community-events/services/CommunityEventsRuntimeService.ts`
 - `CommunityLocationService.ts`: canonic `src/core/community/services/CommunityLocationService.ts`, aliases `src/modules/community/services/CommunityLocationService.ts`
 - `CommunityRolloutService.ts`: canonic `src/core/community/services/CommunityRolloutService.ts`, aliases `src/modules/community/services/CommunityRolloutService.ts`
+- `LostFoundService.ts`: canonic `src/core/community-lost-found/services/LostFoundService.ts`, aliases `src/modules/community/lostfound/services/LostFoundService.ts`
 
 ### Duplicacao de components (top)
 - `PostActions.tsx`: src/core/community/components/post-card/PostActions.tsx, src/core/community/components/PostActions.tsx, src/core/community/components/UnifiedPostCard/PostActions.tsx, src/modules/community/components/post-card/PostActions.tsx, src/modules/community/components/PostActions.tsx, src/modules/community/components/UnifiedPostCard/PostActions.tsx

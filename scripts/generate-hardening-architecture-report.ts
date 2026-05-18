@@ -94,6 +94,29 @@ function isPureReexportModule(content: string): boolean {
   return withoutReexports.length === 0;
 }
 
+function isCompatibilityFacadeModule(content: string): boolean {
+  const clean = content
+    .replace(/\/\*[\s\S]*?\*\//g, "")
+    .replace(/(^|[^:])\/\/.*$/gm, "$1");
+  const normalized = clean.toLowerCase();
+
+  if (
+    !normalized.includes("facade") &&
+    !normalized.includes("compat") &&
+    !normalized.includes("delegate") &&
+    !normalized.includes("@deprecated")
+  ) {
+    return false;
+  }
+
+  const hasDirectDbAccess =
+    /import\s+(?!type\b)[\s\S]*?\bfrom\s+['"]@\/integrations\/supabase(?:\/client)?['"]/.test(clean) ||
+    /\bsupabase\s*\.\s*(from|rpc|channel|functions|auth|storage|removeChannel)\s*\(/.test(clean);
+  if (hasDirectDbAccess) return false;
+
+  return true;
+}
+
 function resolveImport(currentFile: string, importPath: string, fileSet: Set<string>): string | null {
   let basePath: string | null = null;
   if (importPath.startsWith("@/")) {
@@ -218,7 +241,10 @@ function main() {
   const layerViolations: Array<{ file: string; importPath: string }> = [];
   const fileSizes: Array<{ file: string; lines: number }> = [];
   const directDbOutsideService: string[] = [];
-  const serviceNames = new Map<string, Array<{ file: string; pureReexport: boolean }>>();
+  const serviceNames = new Map<
+    string,
+    Array<{ file: string; pureReexport: boolean; compatibilityFacade: boolean }>
+  >();
   const componentNames = new Map<string, string[]>();
 
   for (const file of files) {
@@ -234,7 +260,11 @@ function main() {
       const key = baseName.replace(".impl.ts", ".ts");
       serviceNames.set(key, [
         ...(serviceNames.get(key) ?? []),
-        { file: relative, pureReexport: isPureReexportModule(content) },
+        {
+          file: relative,
+          pureReexport: isPureReexportModule(content),
+          compatibilityFacade: isCompatibilityFacadeModule(content),
+        },
       ]);
     }
     if (/^[A-Z].*\.tsx$/.test(baseName)) {
@@ -294,8 +324,10 @@ function main() {
     .map(([name, entries]) => ({
       name,
       entries,
-      implementationEntries: entries.filter((entry) => !entry.pureReexport),
-      aliasEntries: entries.filter((entry) => entry.pureReexport),
+      implementationEntries: entries.filter(
+        (entry) => !entry.pureReexport && !entry.compatibilityFacade,
+      ),
+      aliasEntries: entries.filter((entry) => entry.pureReexport || entry.compatibilityFacade),
     }))
     .filter((item) => item.implementationEntries.length > 1)
     .sort((a, b) => b.implementationEntries.length - a.implementationEntries.length);
@@ -303,8 +335,10 @@ function main() {
     .map(([name, entries]) => ({
       name,
       entries,
-      implementationEntries: entries.filter((entry) => !entry.pureReexport),
-      aliasEntries: entries.filter((entry) => entry.pureReexport),
+      implementationEntries: entries.filter(
+        (entry) => !entry.pureReexport && !entry.compatibilityFacade,
+      ),
+      aliasEntries: entries.filter((entry) => entry.pureReexport || entry.compatibilityFacade),
     }))
     .filter((item) => item.implementationEntries.length === 1 && item.aliasEntries.length > 0)
     .sort((a, b) => b.aliasEntries.length - a.aliasEntries.length);
