@@ -1,25 +1,4 @@
-/**
- * EducationDetailPage
- *
- * Pagina de detalhes premium de instituicao educacional.
- * Layout magazine premium com hero imersivo, navegacao por secoes,
- * sidebar sticky de conversao (lead form + WhatsApp + visita).
- *
- * Foco: confianca, clareza e conversao.
- *
- * Rota: /educacao/:state/:city/:district/:slug
- *
- * Consome SSOT existente:
- *  - useEducationDetail (hook)
- *  - getNicheByKey (registry)
- *  - preview runtime centralizado em /mocks/educationPreviewRuntime
- *  - EducationLeadForm (componente compartilhado)
- *
- * @module education
- * @version 3.0.0
- */
-
-import { useEffect, useMemo, useState } from 'react';
+﻿import { useEffect, useMemo, useState } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { Link, useParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -36,10 +15,8 @@ import {
   Check,
   ChevronRight,
   ArrowRight,
-  MessageCircle,
   Globe,
   Mail,
-  FileText,
   Award,
   Lightbulb,
   Target,
@@ -61,7 +38,6 @@ import {
 import { Button } from '@/shared/components/ui/button';
 import { Badge } from '@/shared/components/ui/badge';
 import { Separator } from '@/shared/components/ui/separator';
-import { Skeleton } from '@/shared/components/ui/skeleton';
 import {
   Accordion,
   AccordionContent,
@@ -75,7 +51,6 @@ import { getNicheByKey } from '../niches/registry';
 import { useLabels } from '../hooks/useEducationLabels';
 import { useEducationTracking } from '../hooks/useEducationTracking';
 import { useEducationLeads } from '../hooks/useEducationLeads';
-import { EducationLeadForm } from '../components/EducationLeadForm';
 import type { LeadFormData } from '../components/EducationLeadForm';
 import {
   getEducationPreviewDetailBySlug,
@@ -105,10 +80,12 @@ import {
   ProgramCard,
   StickyTabs,
 } from './EducationDetailPresentation';
-
-// ============================================================================
-// PAGINA PRINCIPAL
-// ============================================================================
+import { EducationDetailSidebar } from './EducationDetailSidebar';
+import {
+  EducationDetailErrorState,
+  EducationDetailLoadingState,
+  EducationDetailNotFoundState,
+} from './EducationDetailStateViews';
 
 export function EducationDetailPage() {
   const { state, city, district, slug } = useParams();
@@ -150,16 +127,12 @@ export function EducationDetailPage() {
   const SECTIONS = getSections(labels);
   const [activeSection, setActiveSection] = useState<string>('overview');
   const [favorited, setFavorited] = useState(false);
-
-  // Tracking
   const { trackProfileView, trackProgramView, trackEventView, trackWhatsAppClick, trackEnrollmentCTAClick, trackLeadSubmitted } =
     useEducationTracking({
       educationProfileId: profile?.id ?? '',
       nicheKey: profile?.niche_key ?? 'regular_school',
       businessId: profile?.business_id,
     });
-
-  // Lead creation for tracking
   const { create: createLead } = useEducationLeads(isPreviewSource ? undefined : (profile?.id ?? undefined));
 
   const handleLeadSubmit = async (formData: LeadFormData) => {
@@ -188,8 +161,6 @@ export function EducationDetailPage() {
       });
     }
   };
-
-  // Track page view once profile loads
   useEffect(() => {
     if (profile?.id && !isPreviewSource) {
       trackProfileView();
@@ -217,85 +188,25 @@ export function EducationDetailPage() {
   const equipmentFeatures = (profile.school_equipment_features ?? []).map((key) => EQUIPMENT_LABELS[key]).filter(Boolean);
   const facilityFeatures = (profile.school_facility_features ?? []).map((key) => FACILITY_LABELS[key]).filter(Boolean);
 
-  // ============================================================================
-  // ESTADOS
-  // ============================================================================
+  const goToShowcase = () => navigate(`/educacao/${state}/${city}`);
 
   if (isLoading && !previewDetail) {
-    return (
-      <div className="min-h-screen bg-background">
-        <div className="container mx-auto px-4 py-10">
-          <Skeleton className="h-8 w-48" />
-          <Skeleton className="mt-6 h-64 w-full rounded-3xl" />
-          <div className="mt-6 grid gap-6 lg:grid-cols-[1fr_360px]">
-            <div className="space-y-4">
-              {Array.from({ length: 4 }).map((_, i) => (
-                <Skeleton key={i} className="h-32 w-full rounded-2xl" />
-              ))}
-            </div>
-            <Skeleton className="h-96 w-full rounded-2xl" />
-          </div>
-        </div>
-      </div>
-    );
+    return <EducationDetailLoadingState />;
   }
 
   if (isError && !previewDetail) {
-    return (
-      <div className="min-h-screen bg-background">
-        <div className="container mx-auto flex min-h-[60vh] flex-col items-center justify-center px-4 py-10 text-center">
-          <Shield className="h-12 w-12 text-rose-500" />
-          <h1 className="mt-4 text-2xl font-bold">Nao conseguimos carregar esta pagina</h1>
-          <p className="mt-2 max-w-md text-muted-foreground">
-            Houve um erro ao buscar os detalhes desta instituicao. Tente novamente em
-            instantes ou volte para a vitrine.
-          </p>
-          <div className="mt-6 flex gap-2">
-            <Button variant="outline" onClick={() => navigate(-1)} className="rounded-full">
-              <ChevronLeft className="mr-1 h-4 w-4" /> Voltar
-            </Button>
-            <Button
-              onClick={() => navigate(`/educacao/${state}/${city}`)}
-              className="rounded-full"
-            >
-              Ir para vitrine
-            </Button>
-          </div>
-        </div>
-      </div>
-    );
+    return <EducationDetailErrorState onBack={() => navigate(-1)} onGoToShowcase={goToShowcase} />;
   }
 
   if (!profile) {
-    return (
-      <div className="min-h-screen bg-background">
-        <div className="container mx-auto flex min-h-[60vh] flex-col items-center justify-center px-4 py-10 text-center">
-          <Compass className="h-12 w-12 text-muted-foreground" />
-          <h1 className="mt-4 text-2xl font-bold">Instituicao nao encontrada</h1>
-          <p className="mt-2 max-w-md text-muted-foreground">
-            Nao localizamos a instituicao buscada. Volte para a vitrine para descobrir
-            outras opcoes em {cityLabel}.
-          </p>
-          <Button
-            onClick={() => navigate(`/educacao/${state}/${city}`)}
-            className="mt-6 rounded-full"
-          >
-            Ver vitrine educacional
-          </Button>
-        </div>
-      </div>
-    );
+    return <EducationDetailNotFoundState cityLabel={cityLabel} onGoToShowcase={goToShowcase} />;
   }
-
-  // ============================================================================
-  // RENDER
-  // ============================================================================
 
   return (
     <div className="min-h-screen bg-background">
       <Helmet>
         <title>
-          {institutionName} — Educacao em {cityLabel} | Acheguese
+          {institutionName} â€” Educacao em {cityLabel} | Acheguese
         </title>
         <meta
           name="description"
@@ -607,7 +518,7 @@ export function EducationDetailPage() {
                   icon={Sparkles}
                   title="Hibrido"
                   description="Combinacao de encontros presenciais e atividades remotas."
-                  highlight={modalitiesPresent.has('hibrido') || modalitiesPresent.has('híbrido')}
+                  highlight={modalitiesPresent.has('hibrido') || modalitiesPresent.has('hÃ­brido')}
                 />
               </div>
             </section>
@@ -683,8 +594,8 @@ export function EducationDetailPage() {
                         {ev.school_event_type && profile?.niche_key === 'regular_school' && (
                           <Badge variant="outline" className="text-[11px] border-indigo-200 text-indigo-700 bg-indigo-50">
                             {ev.school_event_type === 'open_house' ? 'Portas Abertas' :
-                             ev.school_event_type === 'enrollment_fair' ? 'Feira de Matrícula' :
-                             ev.school_event_type === 'parent_meeting' ? 'Reunião de Pais' :
+                             ev.school_event_type === 'enrollment_fair' ? 'Feira de MatrÃ­cula' :
+                             ev.school_event_type === 'parent_meeting' ? 'ReuniÃ£o de Pais' :
                              ev.school_event_type === 'trial_class' ? 'Aula Experimental' :
                              ev.school_event_type === 'school_tour' ? 'Visita Escolar' :
                              ev.school_event_type === 'cultural_event' ? 'Evento Cultural' :
@@ -790,87 +701,15 @@ export function EducationDetailPage() {
             </section>
           </div>
 
-          {/* STICKY SIDEBAR */}
-          <aside className="lg:sticky lg:top-24 lg:h-fit">
-            <div className="space-y-4">
-              {/* CTAs principais */}
-              <div className="rounded-3xl border border-border bg-card p-5 shadow-sm">
-                <h3 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-                  Falar com a instituicao
-                </h3>
-                <div className="mt-3 space-y-2">
-                  {whatsappHref && (
-                    <a
-                      href={whatsappHref}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="block"
-                      onClick={() => trackWhatsAppClick()}
-                    >
-                      <Button className="w-full rounded-full bg-emerald-500 text-white hover:bg-emerald-600">
-                        <MessageCircle className="mr-2 h-4 w-4" />
-                        WhatsApp
-                      </Button>
-                    </a>
-                  )}
-                  <Button 
-                    variant="outline" 
-                    className="w-full rounded-full"
-                    onClick={() => trackEnrollmentCTAClick('Agendar visita')}
-                  >
-                    <Calendar className="mr-2 h-4 w-4" />
-                    Agendar visita
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    className="w-full rounded-full"
-                    onClick={() => trackEnrollmentCTAClick('Solicitar orcamento')}
-                  >
-                    <FileText className="mr-2 h-4 w-4" />
-                    Solicitar orcamento
-                  </Button>
-                </div>
-              </div>
-
-              {/* Lead form */}
-              <div className="rounded-3xl border border-border bg-card p-5 shadow-sm">
-                <EducationLeadForm 
-                  educationProfileId={profile.id} 
-                  nicheKey={profile.niche_key}
-                  onSubmit={handleLeadSubmit}
-                />
-              </div>
-
-              {/* Confianca */}
-              <div className="rounded-3xl border border-border bg-gradient-to-br from-muted/40 to-card p-5">
-                <div className="flex items-center gap-2 text-sm font-semibold">
-                  <Shield className="h-4 w-4 text-emerald-500" /> Por que confiar
-                </div>
-                <ul className="mt-3 space-y-2 text-xs text-muted-foreground">
-                  <li className="flex items-start gap-2">
-                    <Check className="mt-0.5 h-3.5 w-3.5 text-emerald-500" /> Perfil
-                    institucional publicado
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <Check className="mt-0.5 h-3.5 w-3.5 text-emerald-500" /> Comunicacao
-                    direta com a instituicao
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <Check className="mt-0.5 h-3.5 w-3.5 text-emerald-500" /> Dados
-                    declarados e rastreaveis por fonte
-                  </li>
-                </ul>
-              </div>
-
-              {/* Voltar para vitrine */}
-              <Link
-                to={`/educacao/${state}/${city}`}
-                className="block rounded-3xl border border-dashed border-border bg-card/40 p-4 text-center text-sm text-muted-foreground transition hover:border-primary/40 hover:text-foreground"
-              >
-                <ChevronLeft className="mr-1 inline h-4 w-4" /> Voltar para vitrine
-              </Link>
-            </div>
-          </aside>
+          <EducationDetailSidebar
+            city={city}
+            handleLeadSubmit={handleLeadSubmit}
+            profile={profile}
+            state={state}
+            trackEnrollmentCTAClick={trackEnrollmentCTAClick}
+            trackWhatsAppClick={trackWhatsAppClick}
+            whatsappHref={whatsappHref}
+          />
         </div>
       </section>
     </div>
@@ -878,3 +717,5 @@ export function EducationDetailPage() {
 }
 
 export default EducationDetailPage;
+
+
