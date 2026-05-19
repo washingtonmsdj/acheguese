@@ -17,15 +17,11 @@ import {
   X,
   ChevronDown,
   Plus,
-  ChevronLeft,
-  ChevronRight,
   Home,
   ArrowUpDown,
   Heart,
   Map,
 } from 'lucide-react';
-import { EventCard } from '../components/EventCard';
-import { EventSkeleton } from '../components/EventSkeleton';
 import { Button } from '@/shared/components/ui/button';
 import { Input } from '@/shared/components/ui/input';
 import { Badge } from '@/shared/components/ui/badge';
@@ -38,7 +34,6 @@ import {
 } from '@/shared/components/ui/select';
 import { cn } from '@/shared/utils/cn';
 import { useFavorites } from '../hooks/useFavorites';
-import type { EventCategory, EventType } from '../types';
 import type { ResolvedTerritory } from '@/core/routing/hooks/useResolveTerritoryFromUrl';
 import { useTerritoryFilter } from '@/core/location/hooks/useTerritoryFilter';
 import { communityEventsRuntimeService } from '@/core/community/services/CommunityEventsRuntimeService';
@@ -51,9 +46,17 @@ import {
   EVENT_TYPE_FILTER_OPTIONS,
   EVENTS_ITEMS_PER_PAGE,
 } from '../constants';
-
-type ViewMode = 'grid' | 'list';
-type SortOption = 'data-asc' | 'data-desc' | 'popularidade' | 'preco-asc' | 'preco-desc' | 'alfabetica';
+import { EventsListResults } from './EventsListResults';
+import {
+  filterAndSortEvents,
+  getActiveFiltersCount,
+  getEventsListPageDescription,
+  getEventsListPageTitle,
+  getEventsListStats,
+  paginateEvents,
+  type SortOption,
+  type ViewMode,
+} from './EventsListPage.model';
 
 
 export interface EventsListPageProps {
@@ -108,118 +111,23 @@ export default function EventsListPage({ resolved, activeMemberIds }: EventsList
   const [currentPage, setCurrentPage] = useState(1);
 
 
-  const filteredAndSortedEvents = useMemo(() => {
-    let filtered = [...eventsData];
-
-    if (category !== 'todos') {
-      filtered = filtered.filter(event => event.category === category);
-    }
-
-    if (dateFilter !== 'todos') {
-      const now = new Date();
-      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-      
-      filtered = filtered.filter(event => {
-        const eventDate = new Date(event.start_date);
-        
-        switch (dateFilter) {
-          case 'hoje': {
-            return eventDate.toDateString() === today.toDateString();
-          }
-          case 'semana': {
-            const weekEnd = new Date(today);
-            weekEnd.setDate(weekEnd.getDate() + 7);
-            return eventDate >= today && eventDate <= weekEnd;
-          }
-          case 'mes':
-            return eventDate.getMonth() === today.getMonth() && 
-                   eventDate.getFullYear() === today.getFullYear();
-          case 'proximo-mes': {
-            const nextMonth = new Date(today);
-            nextMonth.setMonth(nextMonth.getMonth() + 1);
-            return eventDate.getMonth() === nextMonth.getMonth() && 
-                   eventDate.getFullYear() === nextMonth.getFullYear();
-          }
-          default:
-            return true;
-        }
-      });
-    }
-
-    if (typeFilter !== 'todos') {
-      filtered = filtered.filter(event => event.location.type === typeFilter);
-    }
-
-    if (priceFilter !== 'todos') {
-      if (priceFilter === 'gratuito') {
-        filtered = filtered.filter(event => event.is_free);
-      } else if (priceFilter === 'pago') {
-        filtered = filtered.filter(event => !event.is_free);
-      }
-    }
-
-    if (search) {
-      const searchLower = search.toLowerCase();
-      filtered = filtered.filter(event =>
-        event.title.toLowerCase().includes(searchLower) ||
-        event.description.toLowerCase().includes(searchLower) ||
-        event.location.neighborhood?.toLowerCase().includes(searchLower) ||
-        event.location.city?.toLowerCase().includes(searchLower)
-      );
-    }
-
-    filtered.sort((a, b) => {
-      switch (sortBy) {
-        case 'data-asc':
-          return new Date(a.start_date).getTime() - new Date(b.start_date).getTime();
-        case 'data-desc':
-          return new Date(b.start_date).getTime() - new Date(a.start_date).getTime();
-        case 'popularidade':
-          return b.participants_count - a.participants_count;
-        case 'preco-asc': {
-          const priceA = a.is_free ? 0 : Math.min(...a.tickets.map(t => t.price));
-          const priceB = b.is_free ? 0 : Math.min(...b.tickets.map(t => t.price));
-          return priceA - priceB;
-        }
-        case 'preco-desc': {
-          const priceA = a.is_free ? 0 : Math.max(...a.tickets.map(t => t.price));
-          const priceB = b.is_free ? 0 : Math.max(...b.tickets.map(t => t.price));
-          return priceB - priceA;
-        }
-        case 'alfabetica':
-          return a.title.localeCompare(b.title);
-        default:
-          return 0;
-      }
-    });
-
-    return filtered;
-  }, [category, dateFilter, typeFilter, priceFilter, search, sortBy, eventsData]);
+  const filteredAndSortedEvents = useMemo(
+    () => filterAndSortEvents(eventsData, { category, dateFilter, typeFilter, priceFilter, search, sortBy }),
+    [category, dateFilter, typeFilter, priceFilter, search, sortBy, eventsData],
+  );
 
   const totalPages = Math.ceil(filteredAndSortedEvents.length / EVENTS_ITEMS_PER_PAGE);
-  const paginatedEvents = useMemo(() => {
-    const startIndex = (currentPage - 1) * EVENTS_ITEMS_PER_PAGE;
-    const endIndex = startIndex + EVENTS_ITEMS_PER_PAGE;
-    return filteredAndSortedEvents.slice(startIndex, endIndex);
-  }, [filteredAndSortedEvents, currentPage]);
+  const paginatedEvents = useMemo(
+    () => paginateEvents(filteredAndSortedEvents, currentPage, EVENTS_ITEMS_PER_PAGE),
+    [filteredAndSortedEvents, currentPage],
+  );
 
-  const stats = useMemo(() => {
-    return {
-      total: filteredAndSortedEvents.length,
-      upcoming: filteredAndSortedEvents.filter(e => e.status === 'publicado').length,
-      participants: filteredAndSortedEvents.reduce((acc, e) => acc + e.participants_count, 0),
-    };
-  }, [filteredAndSortedEvents]);
+  const stats = useMemo(() => getEventsListStats(filteredAndSortedEvents), [filteredAndSortedEvents]);
 
-  const activeFiltersCount = useMemo(() => {
-    let count = 0;
-    if (category !== 'todos') count++;
-    if (dateFilter !== 'todos') count++;
-    if (typeFilter !== 'todos') count++;
-    if (priceFilter !== 'todos') count++;
-    if (search) count++;
-    return count;
-  }, [category, dateFilter, typeFilter, priceFilter, search]);
+  const activeFiltersCount = useMemo(
+    () => getActiveFiltersCount({ category, dateFilter, typeFilter, priceFilter, search }),
+    [category, dateFilter, typeFilter, priceFilter, search],
+  );
 
 
   const handleCategoryChange = (newCategory: string) => {
@@ -258,29 +166,8 @@ export default function EventsListPage({ resolved, activeMemberIds }: EventsList
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const pageTitle = useMemo(() => {
-    if (!resolved) return 'Eventos Locais | Achegue-se';
-    
-    if (resolved.kind === 'location') {
-      const locationName = resolved.location.name;
-      return `Eventos em ${locationName} | Achegue-se`;
-    } else {
-      const groupName = resolved.group.name;
-      return `Eventos - ${groupName} | Achegue-se`;
-    }
-  }, [resolved]);
-
-  const pageDescription = useMemo(() => {
-    if (!resolved) return 'Descubra eventos incríveis na sua comunidade. Cultura, esporte, educação e muito mais!';
-    
-    if (resolved.kind === 'location') {
-      const locationName = resolved.location.name;
-      return `Descubra eventos incríveis em ${locationName}. Cultura, esporte, educação e muito mais acontecendo na sua região!`;
-    } else {
-      const groupName = resolved.group.name;
-      return `Eventos do ${groupName}. Cultura, esporte, educação e muito mais acontecendo na comunidade!`;
-    }
-  }, [resolved]);
+  const pageTitle = useMemo(() => getEventsListPageTitle(resolved), [resolved]);
+  const pageDescription = useMemo(() => getEventsListPageDescription(resolved), [resolved]);
 
   return (
     <>
@@ -737,134 +624,18 @@ export default function EventsListPage({ resolved, activeMemberIds }: EventsList
           </div>
         </section>
 
-        {/* ================================================================== */}
-        {/* EVENTS GRID/LIST */}
-        {/* ================================================================== */}
-        <section className="flex-1 px-4 py-6 sm:px-6">
-          <div className="mx-auto max-w-7xl">
-            <main>
-            {/* Results Count */}
-            {!isEventsLoading && filteredAndSortedEvents.length > 0 && (
-              <div className="mb-4 flex items-center justify-between text-sm text-muted-foreground">
-                <p>
-                  Mostrando <span className="font-semibold text-foreground">{((currentPage - 1) * EVENTS_ITEMS_PER_PAGE) + 1}</span> a{' '}
-                  <span className="font-semibold text-foreground">
-                    {Math.min(currentPage * EVENTS_ITEMS_PER_PAGE, filteredAndSortedEvents.length)}
-                  </span>{' '}
-                  de <span className="font-semibold text-foreground">{filteredAndSortedEvents.length}</span> eventos
-                </p>
-              </div>
-            )}
-
-            {isEventsLoading ? (
-              <div className={cn(
-                "grid gap-3 sm:gap-4 lg:gap-6",
-                viewMode === 'grid' ? "grid-cols-2 sm:grid-cols-3 lg:grid-cols-5" : "grid-cols-1"
-              )}>
-                {Array.from({ length: 10 }).map((_, i) => (
-                  <EventSkeleton key={i} variant={viewMode === 'grid' ? 'card' : 'compact'} />
-                ))}
-              </div>
-            ) : paginatedEvents.length === 0 ? (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="flex flex-col items-center justify-center py-12 text-center sm:py-16"
-              >
-                <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-muted sm:h-20 sm:w-20">
-                  <Calendar className="h-8 w-8 text-muted-foreground sm:h-10 sm:w-10" />
-                </div>
-                <h3 className="mb-2 text-base font-semibold text-foreground sm:text-lg">
-                  Nenhum evento encontrado
-                </h3>
-                <p className="mb-4 text-sm text-muted-foreground">
-                  Tente ajustar os filtros ou buscar por outros termos
-                </p>
-                {activeFiltersCount > 0 && (
-                  <Button onClick={handleClearFilters} variant="outline" size="sm">
-                    Limpar filtros
-                  </Button>
-                )}
-              </motion.div>
-            ) : (
-              <>
-                <div className={cn(
-                  "grid gap-3 sm:gap-4 lg:gap-6",
-                  viewMode === 'grid' ? "grid-cols-2 sm:grid-cols-3 lg:grid-cols-5" : "grid-cols-1"
-                )}>
-                  {paginatedEvents.map((event, index) => (
-                    <EventCard
-                      key={event.id}
-                      event={event}
-                      variant={viewMode === 'grid' ? 'default' : 'compact'}
-                      onClick={handleEventClick}
-                    />
-                  ))}
-                </div>
-
-                {/* Pagination */}
-                {totalPages > 1 && (
-                  <div className="mt-8 flex items-center justify-center gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handlePageChange(currentPage - 1)}
-                      disabled={currentPage === 1}
-                      className="gap-1"
-                    >
-                      <ChevronLeft className="h-4 w-4" />
-                      <span className="hidden sm:inline">Anterior</span>
-                    </Button>
-
-                    <div className="flex items-center gap-1">
-                      {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => {
-                        const showPage =
-                          page === 1 ||
-                          page === totalPages ||
-                          (page >= currentPage - 1 && page <= currentPage + 1);
-
-                        if (!showPage) {
-                          if (page === currentPage - 2 || page === currentPage + 2) {
-                            return (
-                              <span key={page} className="px-2 text-muted-foreground">
-                                ...
-                              </span>
-                            );
-                          }
-                          return null;
-                        }
-
-                        return (
-                          <Button
-                            key={page}
-                            variant={currentPage === page ? 'default' : 'outline'}
-                            size="sm"
-                            onClick={() => handlePageChange(page)}
-                            className="h-9 w-9 p-0"
-                          >
-                            {page}
-                          </Button>
-                        );
-                      })}
-                    </div>
-
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handlePageChange(currentPage + 1)}
-                      disabled={currentPage === totalPages}
-                      className="gap-1"
-                    >
-                      <span className="hidden sm:inline">Próxima</span>
-                      <ChevronRight className="h-4 w-4" />
-                    </Button>
-                  </div>
-                )}
-              </>
-            )}
-            </main>
-          </div>
-        </section>
+        <EventsListResults
+          activeFiltersCount={activeFiltersCount}
+          currentPage={currentPage}
+          events={paginatedEvents}
+          filteredCount={filteredAndSortedEvents.length}
+          isLoading={isEventsLoading}
+          onClearFilters={handleClearFilters}
+          onEventClick={handleEventClick}
+          onPageChange={handlePageChange}
+          totalPages={totalPages}
+          viewMode={viewMode}
+        />
 
         {/* ================================================================== */}
         {/* FLOATING ACTION BUTTON */}
