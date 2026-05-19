@@ -20,7 +20,6 @@ import type {
 } from "./AdminProfileGovernanceTypes";
 import {
   buildIdentityRecord,
-  buildLinkedEntities,
   buildPreferenceScopes,
   buildReputationSources,
   buildResidenceSummary,
@@ -40,12 +39,15 @@ import {
   loadRolesByUserId,
   loadUserProfileCountMap,
   loadUsernameHistoryCountMap,
+} from "./AdminProfileGovernanceInternals";
+import {
+  buildLinkedEntities,
   normalizeText,
   requiredText,
   resolveProfileSuspended,
   resolveProfileVisibility,
   unique,
-} from "./AdminProfileGovernanceInternals";
+} from "./AdminProfileGovernanceUtils";
 export type * from "./AdminProfileGovernanceTypes";
 // ✅ Fronteira de camada correta: service importa de contracts/, não de views/
 
