@@ -1,14 +1,17 @@
 ﻿import { readFile } from 'fs/promises';
 import { resolve } from 'path';
 import { createHash, createHmac, timingSafeEqual } from 'crypto';
-import { createServiceSupabaseClient } from '../../src/core/supabase/services/adminClient';
-import { profileService } from '../../src/core/profiles/services/ProfileService';
+import {
+  createImportedBusinessProfile,
+  profileUsernameExists,
+} from '../_shared/profileAdminRepository.js';
+import { createServiceSupabaseClient } from '../_shared/supabaseAdmin.js';
 import {
   checkRateLimit,
   clearAuthFailures,
   getAuthBackoffRemainingMs,
   registerAuthFailure,
-} from '../_shared/securityStore';
+} from '../_shared/securityStore.js';
 
 type ReqBody = {
   mode?: 'dry-run' | 'apply';
@@ -381,11 +384,10 @@ async function slugExists(supabase: SupabaseServiceClient, slug: string): Promis
 }
 
 async function profileHandleExists(
-  _supabase: SupabaseServiceClient,
+  supabase: SupabaseServiceClient,
   handle: string,
 ): Promise<boolean> {
-  const available = await profileService.isUsernameAvailable(handle);
-  return !available;
+  return profileUsernameExists(supabase, handle);
 }
 
 async function createUniqueSlug(
@@ -600,19 +602,12 @@ export default async function handler(req: RequestLike, res: ResponseLike) {
       }
 
       const handle = await createUniqueHandle(supabase, slug);
-      const profile = await profileService.createProfile({
-        user_id: ownerUserId,
-        profile_type: 'business',
+      const profile = await createImportedBusinessProfile(supabase, {
+        ownerUserId,
         name,
-        display_name: name,
-        username: handle,
-        city: 'Salvador',
-        state: 'BA',
-        phone: item.phone || undefined,
-        location: item.address || undefined,
-        is_active: true,
-        is_public: true,
-        verified: false,
+        handle,
+        phone: item.phone,
+        address: item.address,
       });
 
       const business = await supabase
