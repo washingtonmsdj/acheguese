@@ -1,8 +1,7 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { motion } from 'framer-motion';
-import { useSessionContext } from '@/core/session';
 import { useActiveTerritory } from '@/core/location/hooks/useActiveTerritory';
 import {
   MapPin, ChevronRight, Loader2, Globe, Building2,
@@ -19,7 +18,6 @@ import { Input } from '@/shared/components/ui/input';
 import { BusinessLogo } from '@/shared/components/ui/business-logo';
 import { useNationalFeatured } from '@/core/landing/hooks/useNationalFeatured';
 import { useAppUrls } from '@/core/routing/hooks/useAppUrls';
-import { checkAdminRole } from '@/core/landing/services/LandingService';
 import {
   BRASIL_INFO,
   BRASIL_STATS,
@@ -30,75 +28,29 @@ import {
   PONTOS_TURISTICOS,
   PRESIDENCIA,
 } from './BrasilShowcaseData';
-const fadeUp = {
-  initial: { opacity: 0, y: 20 },
-  whileInView: { opacity: 1, y: 0 },
-  viewport: { once: true },
-} as const;
-
-type StateGroup = { slug: string; cities: Array<{ id: string; name: string; slug: string; geographic_path: string; type: string }> };
-
+import {
+  buildBrasilSearchUrl,
+  fadeUp,
+  filterVerifiedBusinesses,
+  getBrasilShowcaseHomeUrl,
+  groupCitiesByState,
+} from './BrasilShowcasePage.model';
+import { useBrasilShowcaseAdminAccess } from './useBrasilShowcaseAdminAccess';
 
 export function BrasilShowcasePage() {
   const navigate = useNavigate();
   const appUrls = useAppUrls();
-  const { user, isLoading: sessionLoading } = useSessionContext();
   const { activeLocation } = useActiveTerritory();
   const [searchQuery, setSearchQuery] = useState('');
-  const [isAuthorized, setIsAuthorized] = useState(false);
+  const { sessionLoading, isAuthorized } = useBrasilShowcaseAdminAccess();
   const { stats: platformStats, territories, businesses, isLoading } = useNationalFeatured();
 
-  // Verificar autenticação e permissão de admin
-  useEffect(() => {
-    if (sessionLoading) return;
-
-    if (!user) {
-      // Não autenticado - redirecionar para home silenciosamente
-      navigate('/');
-      return;
-    }
-
-    // Verificar se é admin
-    const checkAdmin = async () => {
-      try {
-        const isAdmin = await checkAdminRole(user.id);
-
-        if (isAdmin) {
-          setIsAuthorized(true);
-        } else {
-          // Não é admin - redirecionar silenciosamente
-          navigate('/');
-        }
-      } catch {
-        navigate('/');
-      }
-    };
-
-    checkAdmin();
-  }, [user, sessionLoading, navigate]);
 
   const cities = useMemo(() => territories.locations.filter(l => l.type === 'city'), [territories.locations]);
   const groups = territories.groups;
 
-  // Agrupar cidades por estado para navegação
-  const states = useMemo(() => {
-    const stateGroups = cities.reduce<Map<string, StateGroup>>((acc, city) => {
-      const parts = city.geographic_path.split('/').filter(Boolean);
-      const stateSlug = parts[1]; // /br/ba -> ba
-      if (!stateSlug) return acc;
-      const existing = acc.get(stateSlug);
-      if (!existing) {
-        acc.set(stateSlug, { slug: stateSlug, cities: [city] });
-      } else {
-        existing.cities.push(city);
-      }
-      return acc;
-    }, new globalThis.Map<string, StateGroup>());
-    return [...stateGroups.values()];
-  }, [cities]);
-
-  // Filtrar apenas empresas verificadas com CNPJ
-  const verifiedBusinesses = useMemo(() => businesses.filter(b => b.is_verified || b.is_premium), [businesses]);
+  const states = useMemo(() => groupCitiesByState(cities), [cities]);
+  const verifiedBusinesses = useMemo(() => filterVerifiedBusinesses(businesses), [businesses]);
 
   const scrollTo = (id: string) => {
     if (id.startsWith('#') && id.length > 1) {
@@ -107,30 +59,11 @@ export function BrasilShowcasePage() {
   };
 
   const handleSearch = () => {
-    if (searchQuery.trim()) {
-      navigate(`/busca?q=${encodeURIComponent(searchQuery)}&scope=brasil`);
-    }
+    const searchUrl = buildBrasilSearchUrl(searchQuery);
+    if (searchUrl) navigate(searchUrl);
   };
 
-  // URL para o botão "Início" - vai para landing da CIDADE ou home
-  const homeUrl = (() => {
-    if (activeLocation?.geographic_path) {
-      const path = activeLocation.geographic_path.replace(/^\/br/, '');
-      
-      // Se é um bairro (district), pega apenas até a cidade
-      if (activeLocation.type === 'district') {
-        // /ba/salvador/barra → /ba/salvador
-        const parts = path.split('/').filter(Boolean);
-        if (parts.length >= 2) {
-          return `/${parts[0]}/${parts[1]}`; // /ba/salvador
-        }
-      }
-      
-      // Se é cidade ou estado, usa o path completo
-      return path || '/';
-    }
-    return '/';
-  })();
+  const homeUrl = getBrasilShowcaseHomeUrl(activeLocation);
 
   // Mostrar loading enquanto verifica autenticação
   if (sessionLoading || !isAuthorized) {
