@@ -8,7 +8,6 @@ import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { adminCommunityIssuesService } from "@/core/admin";
 import { Button } from "@/shared/components/ui/button";
-import { Input } from "@/shared/components/ui/input";
 import {
   Select,
   SelectContent,
@@ -16,21 +15,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/shared/components/ui/select";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/shared/components/ui/card";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/shared/components/ui/table";
 import {
   Dialog,
   DialogContent,
@@ -47,45 +31,18 @@ import {
 } from "@/shared/components/ui/tabs";
 import { Badge } from "@/shared/components/ui/badge";
 import { Textarea } from "@/shared/components/ui/textarea";
-import {
-  AlertCircle,
-  CheckCircle,
-  XCircle,
-  Trash2,
-  TrendingUp,
-  Search,
-  ArrowUp,
-  ArrowDown,
-  Clock,
-} from "lucide-react";
+import { AlertCircle } from "lucide-react";
 import { toast } from "sonner";
-import { format } from "date-fns";
-import { ptBR } from "date-fns/locale";
-import type { BadgeProps } from "@/shared/components/ui/badge";
-import type { LucideIcon } from "lucide-react";
 import {
-  ISSUE_CATEGORY_LABELS,
   ISSUE_STATUS_LABELS,
-  ISSUE_PRIORITY_LABELS,
-  ISSUE_REPORT_REASON_LABELS,
 } from "@/shared/services/communityIssues";
 import type { IssueCategory, IssueStatus, IssuePriority } from "@/shared/services/communityIssues";
-
-type IssueAdminItem = {
-  id: string;
-  title: string;
-  description: string;
-  category: IssueCategory;
-  neighborhood_display: string;
-  city: string;
-  status: IssueStatus;
-  priority: IssuePriority;
-  support_count?: number;
-  report_count: number;
-  created_at: string;
-  under_review?: boolean;
-  reports?: Array<{ id: string; reason: keyof typeof ISSUE_REPORT_REASON_LABELS }>;
-};
+import { AdminCommunityIssuesAnalytics } from "./community-issues/AdminCommunityIssuesAnalytics";
+import { AdminCommunityIssuesFilters } from "./community-issues/AdminCommunityIssuesFilters";
+import { AdminCommunityIssuesReviewList } from "./community-issues/AdminCommunityIssuesReviewList";
+import { AdminCommunityIssuesStats } from "./community-issues/AdminCommunityIssuesStats";
+import { AdminCommunityIssuesTable } from "./community-issues/AdminCommunityIssuesTable";
+import type { IssueAdminItem } from "./community-issues/AdminCommunityIssues.types";
 
 export default function AdminCommunityIssues() {
   const queryClient = useQueryClient();
@@ -102,8 +59,6 @@ export default function AdminCommunityIssues() {
   const [removalReason, setRemovalReason] = useState("");
   const [showStatusDialog, setShowStatusDialog] = useState(false);
   const [newStatus, setNewStatus] = useState<IssueStatus | "">("");
-  const [showPriorityDialog, setShowPriorityDialog] = useState(false);
-  const [newPriority, setNewPriority] = useState<IssuePriority | "">("");
 
   // Buscar estatísticas
   const { data: stats } = useQuery({
@@ -137,12 +92,6 @@ export default function AdminCommunityIssues() {
   const { data: topSupported } = useQuery({
     queryKey: ["admin-community-issues-top-supported"],
     queryFn: () => adminCommunityIssuesService.getTopSupportedIssues(10),
-    enabled: activeTab === "analytics",
-  });
-
-  const { data: topReported } = useQuery({
-    queryKey: ["admin-community-issues-top-reported"],
-    queryFn: () => adminCommunityIssuesService.getTopReportedIssues(10),
     enabled: activeTab === "analytics",
   });
 
@@ -191,21 +140,6 @@ export default function AdminCommunityIssues() {
     },
   });
 
-  const updatePriorityMutation = useMutation({
-    mutationFn: ({ id, priority }: { id: string; priority: IssuePriority }) =>
-      adminCommunityIssuesService.updatePriority(id, priority),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["admin-community-issues"] });
-      toast.success("Prioridade atualizada");
-      setShowPriorityDialog(false);
-      setSelectedIssue(null);
-      setNewPriority("");
-    },
-    onError: () => {
-      toast.error("Erro ao atualizar prioridade");
-    },
-  });
-
   const clearReviewMutation = useMutation({
     mutationFn: (id: string) => adminCommunityIssuesService.clearUnderReview(id),
     onSuccess: () => {
@@ -218,77 +152,6 @@ export default function AdminCommunityIssues() {
       toast.error("Erro ao aprovar issue");
     },
   });
-
-  const getStatusBadge = (status: IssueStatus) => {
-    const variants: Record<IssueStatus, { variant: BadgeProps["variant"]; label: string }> = {
-      aberto: { variant: "default", label: "Aberto" },
-      em_analise: { variant: "secondary", label: "Em Análise" },
-      em_andamento: { variant: "outline", label: "Em Andamento" },
-      resolvido: { variant: "default", label: "Resolvido" },
-      rejeitado: { variant: "destructive", label: "Rejeitado" },
-    };
-    const config = (() => {
-      switch (status) {
-        case "aberto":
-          return variants.aberto;
-        case "em_analise":
-          return variants.em_analise;
-        case "em_andamento":
-          return variants.em_andamento;
-        case "resolvido":
-          return variants.resolvido;
-        case "rejeitado":
-          return variants.rejeitado;
-        default:
-          return variants.aberto;
-      }
-    })();
-    return <Badge variant={config.variant}>{config.label}</Badge>;
-  };
-
-  const getPriorityBadge = (priority: IssuePriority) => {
-    const variants: Record<IssuePriority, { variant: BadgeProps["variant"]; icon: LucideIcon | null }> = {
-      baixa: { variant: "outline", icon: ArrowDown },
-      media: { variant: "secondary", icon: null },
-      alta: { variant: "default", icon: ArrowUp },
-      urgente: { variant: "destructive", icon: AlertCircle },
-    };
-    const config = (() => {
-      switch (priority) {
-        case "baixa":
-          return variants.baixa;
-        case "media":
-          return variants.media;
-        case "alta":
-          return variants.alta;
-        case "urgente":
-          return variants.urgente;
-        default:
-          return variants.media;
-      }
-    })();
-    const Icon = config.icon;
-    const priorityLabel = (() => {
-      switch (priority) {
-        case "baixa":
-          return ISSUE_PRIORITY_LABELS.baixa;
-        case "media":
-          return ISSUE_PRIORITY_LABELS.media;
-        case "alta":
-          return ISSUE_PRIORITY_LABELS.alta;
-        case "urgente":
-          return ISSUE_PRIORITY_LABELS.urgente;
-        default:
-          return ISSUE_PRIORITY_LABELS.media;
-      }
-    })();
-    return (
-      <Badge variant={config.variant} className="flex items-center gap-1">
-        {Icon && <Icon className="h-3 w-3" />}
-        {priorityLabel}
-      </Badge>
-    );
-  };
 
   return (
     <div className="space-y-6">
@@ -303,71 +166,7 @@ export default function AdminCommunityIssues() {
         </p>
       </div>
 
-      {/* Stats Cards */}
-      <div className="grid gap-4 md:grid-cols-5">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Total de Issues
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats?.total || 0}</div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Abertos
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-blue-600">
-              {stats?.aberto || 0}
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Em Andamento
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-orange-600">
-              {stats?.em_andamento || 0}
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Resolvidos
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-green-600">
-              {stats?.resolvido || 0}
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Sob Revisão
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-red-600">
-              {stats?.underReview || 0}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+      <AdminCommunityIssuesStats stats={stats} />
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
@@ -384,356 +183,53 @@ export default function AdminCommunityIssues() {
           <TabsTrigger value="analytics">Analytics</TabsTrigger>
         </TabsList>
 
-        {/* Todos os Issues Tab */}
         <TabsContent value="all" className="space-y-4">
-          {/* Filtros */}
-          <Card>
-            <CardContent className="pt-6">
-              <div className="flex flex-col md:flex-row gap-4">
-                <div className="flex-1">
-                  <div className="relative">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      placeholder="Buscar por título, descrição ou bairro..."
-                      value={search}
-                      onChange={(e) => setSearch(e.target.value)}
-                      className="pl-10"
-                    />
-                  </div>
-                </div>
-
-                <Select value={statusFilter || "all"} onValueChange={(value) => setStatusFilter(value === "all" ? "" : value as IssueStatus)}>
-                  <SelectTrigger className="w-[180px]">
-                    <SelectValue placeholder="Status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Todos</SelectItem>
-                    {Object.entries(ISSUE_STATUS_LABELS).map(([key, label]) => (
-                      <SelectItem key={key} value={key}>
-                        {label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-
-                <Select value={categoryFilter || "all"} onValueChange={(value) => setCategoryFilter(value === "all" ? "" : value as IssueCategory)}>
-                  <SelectTrigger className="w-[220px]">
-                    <SelectValue placeholder="Categoria" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Todas</SelectItem>
-                    {Object.entries(ISSUE_CATEGORY_LABELS).map(([key, label]) => (
-                      <SelectItem key={key} value={key}>
-                        {label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-
-                <Select value={priorityFilter || "all"} onValueChange={(value) => setPriorityFilter(value === "all" ? "" : value as IssuePriority)}>
-                  <SelectTrigger className="w-[180px]">
-                    <SelectValue placeholder="Prioridade" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Todas</SelectItem>
-                    {Object.entries(ISSUE_PRIORITY_LABELS).map(([key, label]) => (
-                      <SelectItem key={key} value={key}>
-                        {label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Tabela de Issues */}
-          <Card>
-            <CardContent className="pt-6">
-              {isLoading ? (
-                <div className="text-center py-8">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto" />
-                </div>
-              ) : (
-                <>
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Título</TableHead>
-                        <TableHead>Categoria</TableHead>
-                        <TableHead>Localização</TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead>Prioridade</TableHead>
-                        <TableHead>Apoios</TableHead>
-                        <TableHead>Data</TableHead>
-                        <TableHead className="text-right">Ações</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {issuesData?.data?.map((issue: IssueAdminItem) => (
-                        <TableRow key={issue.id}>
-                          <TableCell className="font-medium max-w-xs">
-                            <div className="truncate">{issue.title}</div>
-                            {issue.under_review && (
-                              <Badge variant="outline" className="mt-1">
-                                Em Revisão
-                              </Badge>
-                            )}
-                          </TableCell>
-                          <TableCell>
-                            {ISSUE_CATEGORY_LABELS[issue.category as IssueCategory]}
-                          </TableCell>
-                          <TableCell>
-                            <div className="text-sm">
-                              <div>{issue.neighborhood_display}</div>
-                              <div className="text-muted-foreground">{issue.city}</div>
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            {getStatusBadge(issue.status)}
-                          </TableCell>
-                          <TableCell>
-                            {getPriorityBadge(issue.priority)}
-                          </TableCell>
-                          <TableCell>
-                            <Badge variant="outline">{issue.support_count || 0}</Badge>
-                          </TableCell>
-                          <TableCell className="text-sm text-muted-foreground">
-                            {format(new Date(issue.created_at), "dd/MM/yyyy", {
-                              locale: ptBR,
-                            })}
-                          </TableCell>
-                          <TableCell className="text-right">
-                            <div className="flex items-center justify-end gap-2">
-                              {issue.under_review && (
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  onClick={() => clearReviewMutation.mutate(issue.id)}
-                                  disabled={clearReviewMutation.isPending}
-                                >
-                                  <CheckCircle className="h-4 w-4" />
-                                </Button>
-                              )}
-                              
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => {
-                                  setSelectedIssue(issue);
-                                  setShowStatusDialog(true);
-                                }}
-                              >
-                                <Clock className="h-4 w-4" />
-                              </Button>
-
-                              <Button
-                                size="sm"
-                                variant="destructive"
-                                onClick={() => {
-                                  setSelectedIssue(issue);
-                                  setShowRemoveDialog(true);
-                                }}
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-
-                  {/* Paginação */}
-                  {issuesData && issuesData.totalPages > 1 && (
-                    <div className="flex items-center justify-between mt-4">
-                      <p className="text-sm text-muted-foreground">
-                        Página {issuesData.page} de {issuesData.totalPages}
-                      </p>
-                      <div className="flex gap-2">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          disabled={page === 1}
-                          onClick={() => setPage(page - 1)}
-                        >
-                          Anterior
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          disabled={page === issuesData.totalPages}
-                          onClick={() => setPage(page + 1)}
-                        >
-                          Próxima
-                        </Button>
-                      </div>
-                    </div>
-                  )}
-                </>
-              )}
-            </CardContent>
-          </Card>
+          <AdminCommunityIssuesFilters
+            search={search}
+            statusFilter={statusFilter}
+            categoryFilter={categoryFilter}
+            priorityFilter={priorityFilter}
+            onSearchChange={setSearch}
+            onStatusFilterChange={setStatusFilter}
+            onCategoryFilterChange={setCategoryFilter}
+            onPriorityFilterChange={setPriorityFilter}
+          />
+          <AdminCommunityIssuesTable
+            issuesData={issuesData}
+            isLoading={isLoading}
+            page={page}
+            isClearingReview={clearReviewMutation.isPending}
+            onPageChange={setPage}
+            onClearReview={(issueId) => clearReviewMutation.mutate(issueId)}
+            onOpenStatusDialog={(issue) => {
+              setSelectedIssue(issue);
+              setShowStatusDialog(true);
+            }}
+            onOpenRemoveDialog={(issue) => {
+              setSelectedIssue(issue);
+              setShowRemoveDialog(true);
+            }}
+          />
         </TabsContent>
 
-        {/* Sob Revisão Tab */}
         <TabsContent value="review" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Issues Sob Revisão</CardTitle>
-              <CardDescription>
-                Issues que atingiram o limite de reports e precisam de análise
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {reviewIssues && reviewIssues.length > 0 ? (
-                <div className="space-y-4">
-                  {reviewIssues.map((issue: IssueAdminItem) => (
-                    <div key={issue.id} className="border rounded-lg p-4">
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-2">
-                            <Badge>{ISSUE_CATEGORY_LABELS[issue.category as IssueCategory]}</Badge>
-                            {getPriorityBadge(issue.priority)}
-                            <Badge variant="destructive">{issue.report_count} reports</Badge>
-                          </div>
-                          <h3 className="font-medium mb-1">{issue.title}</h3>
-                          <p className="text-sm text-muted-foreground mb-2">
-                            {issue.description}
-                          </p>
-                          <p className="text-sm text-muted-foreground">
-                            {issue.neighborhood_display}, {issue.city}
-                          </p>
-                          
-                          {issue.reports && issue.reports.length > 0 && (
-                            <div className="mt-3 pt-3 border-t">
-                              <p className="text-sm font-medium mb-2">Motivos dos Reports:</p>
-                              <div className="flex flex-wrap gap-2">
-                                {issue.reports.map((report: { id: string; reason: keyof typeof ISSUE_REPORT_REASON_LABELS }) => (
-                                  <Badge key={report.id} variant="outline">
-                                    {ISSUE_REPORT_REASON_LABELS[report.reason]}
-                                  </Badge>
-                                ))}
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                        
-                        <div className="flex gap-2 ml-4">
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => clearReviewMutation.mutate(issue.id)}
-                            disabled={clearReviewMutation.isPending}
-                          >
-                            <CheckCircle className="h-4 w-4 mr-2" />
-                            Aprovar
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="destructive"
-                            onClick={() => {
-                              setSelectedIssue(issue);
-                              setShowRemoveDialog(true);
-                            }}
-                          >
-                            <Trash2 className="h-4 w-4 mr-2" />
-                            Remover
-                          </Button>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-center text-muted-foreground py-8">
-                  Nenhum issue sob revisão no momento
-                </p>
-              )}
-            </CardContent>
-          </Card>
+          <AdminCommunityIssuesReviewList
+            reviewIssues={reviewIssues}
+            isClearingReview={clearReviewMutation.isPending}
+            onClearReview={(issueId) => clearReviewMutation.mutate(issueId)}
+            onOpenRemoveDialog={(issue) => {
+              setSelectedIssue(issue);
+              setShowRemoveDialog(true);
+            }}
+          />
         </TabsContent>
 
-        {/* Analytics Tab */}
         <TabsContent value="analytics" className="space-y-4">
-          <div className="grid gap-4 md:grid-cols-2">
-            {/* Taxa de Resolução */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Taxa de Resolução</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-center">
-                  <div className="text-4xl font-bold text-green-600">
-                    {resolutionRate?.rate || 0}%
-                  </div>
-                  <p className="text-sm text-muted-foreground mt-2">
-                    {resolutionRate?.resolved || 0} resolvidos de {resolutionRate?.total || 0} total
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Issues Mais Apoiados */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <TrendingUp className="h-5 w-5" />
-                  Issues Mais Apoiados
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                {topSupported && topSupported.length > 0 ? (
-                  <div className="space-y-3">
-                    {topSupported.slice(0, 5).map((issue: IssueAdminItem, index: number) => (
-                      <div key={issue.id} className="flex items-center justify-between">
-                        <div className="flex-1">
-                          <p className="text-sm font-medium truncate">
-                            #{index + 1} - {issue.title}
-                          </p>
-                          <p className="text-xs text-muted-foreground">
-                            {issue.neighborhood_display}
-                          </p>
-                        </div>
-                        <Badge variant="outline">{issue.support_count} apoios</Badge>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-center text-muted-foreground py-4">
-                    Nenhum dado disponível
-                  </p>
-                )}
-              </CardContent>
-            </Card>
-
-            {/* Estatísticas por Categoria */}
-            <Card className="md:col-span-2">
-              <CardHeader>
-                <CardTitle>Issues por Categoria</CardTitle>
-              </CardHeader>
-              <CardContent>
-                {categoryStats && Object.keys(categoryStats).length > 0 ? (
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                    {Object.entries(categoryStats)
-                      .sort(([, a], [, b]) => (b as number) - (a as number))
-                      .map(([category, count]) => (
-                        <div key={category} className="flex items-center justify-between p-3 border rounded-lg">
-                          <p className="text-sm">
-                            {ISSUE_CATEGORY_LABELS[category as IssueCategory]}
-                          </p>
-                          <Badge variant="outline">{count as number}</Badge>
-                        </div>
-                      ))}
-                  </div>
-                ) : (
-                  <p className="text-center text-muted-foreground py-4">
-                    Nenhum dado disponível
-                  </p>
-                )}
-              </CardContent>
-            </Card>
-          </div>
+          <AdminCommunityIssuesAnalytics
+            resolutionRate={resolutionRate}
+            topSupported={topSupported}
+            categoryStats={categoryStats}
+          />
         </TabsContent>
       </Tabs>
 
