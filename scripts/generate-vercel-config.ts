@@ -24,7 +24,6 @@ import { SECURITY_HEADERS, CACHE_HEADERS, getSecurityConfigSummary } from '../sr
  * Security headers are injected from SSOT.
  */
 const VERCEL_CONFIG_TEMPLATE = {
-  _comment: 'AUTO-GENERATED FROM SSOT - DO NOT EDIT MANUALLY',
   buildCommand: 'npm run build',
   outputDirectory: 'dist',
   devCommand: 'npm run dev',

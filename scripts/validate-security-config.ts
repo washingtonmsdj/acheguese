@@ -115,13 +115,6 @@ if (!fs.existsSync(vercelJsonPath)) {
   try {
     const vercelJson = JSON.parse(fs.readFileSync(vercelJsonPath, 'utf-8'));
     
-    // Check if it's auto-generated
-    if (!vercelJson._comment?.includes('AUTO-GENERATED')) {
-      results.warnings.push('vercel.json may not be auto-generated');
-      console.log('   ⚠️  vercel.json may not be auto-generated');
-    } else {
-      console.log('   ✅ vercel.json is auto-generated');
-    }
     
     // Check if CSP header exists
     const headers = vercelJson.headers?.[0]?.headers || [];
@@ -133,6 +126,15 @@ if (!fs.existsSync(vercelJsonPath)) {
       console.log('   ❌ CSP header missing');
     } else {
       console.log('   ✅ CSP header present');
+    }
+
+    const generatedCsp = SECURITY_HEADERS['Content-Security-Policy'];
+    if (cspHeader?.value !== generatedCsp) {
+      results.passed = false;
+      results.errors.push('vercel.json CSP is out of sync with security SSOT');
+      console.log('   ERROR: CSP header out of sync with SSOT');
+    } else {
+      console.log('   OK: vercel.json CSP matches security SSOT');
     }
     
   } catch (error) {
