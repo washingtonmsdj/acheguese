@@ -1,6 +1,6 @@
 # FASE 1 - Hardening Arquitetural (Gate-First)
 
-Gerado em: 2026-05-19T00:31:29.876Z
+Gerado em: 2026-05-19T00:38:09.373Z
 
 ## Problemas encontrados
 - Dependencias ciclicas detectadas: 0
@@ -72,8 +72,8 @@ Gerado em: 2026-05-19T00:31:29.876Z
 - `PostActions.tsx`: src/core/community/components/post-card/PostActions.tsx, src/core/community/components/PostActions.tsx, src/core/community/components/UnifiedPostCard/PostActions.tsx, src/modules/community/components/UnifiedPostCard/PostActions.tsx
 - `PostContent.tsx`: src/core/community/components/post-card/PostContent.tsx, src/core/community/components/PostContent.tsx, src/core/community/components/UnifiedPostCard/PostContent.tsx, src/modules/community/components/UnifiedPostCard/PostContent.tsx
 - `ComunidadePage.tsx`: src/core/community/pages/ComunidadePage.tsx, src/core/community-feed/pages/ComunidadePage.tsx, src/modules/community/pages/ComunidadePage.tsx, src/modules/community-feed/pages/ComunidadePage.tsx
-- `ExamplePostPage.tsx`: src/core/community/pages/ExamplePostPage.tsx, src/core/community-feed/pages/ExamplePostPage.tsx, src/modules/community/pages/ExamplePostPage.tsx, src/modules/community-feed/pages/ExamplePostPage.tsx
-- `GrupoDetailPage.tsx`: src/core/community/pages/GrupoDetailPage.tsx, src/core/community-groups/pages/GrupoDetailPage.tsx, src/modules/community/pages/GrupoDetailPage.tsx, src/modules/community-groups/pages/GrupoDetailPage.tsx
+- `GruposPage.tsx`: src/core/community/pages/GruposPage.tsx, src/core/community-groups/pages/GruposPage.tsx, src/modules/community/pages/GruposPage.tsx, src/modules/community-groups/pages/GruposPage.tsx
+- `NovaRecomendacaoPage.tsx`: src/core/community/pages/NovaRecomendacaoPage.tsx, src/core/community-recommendations/pages/NovaRecomendacaoPage.tsx, src/modules/community/pages/NovaRecomendacaoPage.tsx, src/modules/community-recommendations/pages/NovaRecomendacaoPage.tsx
 
 ### Imports profundos (top)
 
