@@ -11,8 +11,8 @@ import { useSessionContext } from "@/core/session";
 import { useCommentInteractions } from "@/modules/community/hooks/useCommentInteractions";
 import { useComments } from "@/modules/community/hooks/useComments";
 import { useCommentActions } from "@/modules/community/hooks/useCommentActions";
-import { CommentsList } from "./comments/CommentsList";
-import { CommentForm } from "./comments/CommentForm";
+import { CommentsList } from "@/core/community/components/comments/CommentsList";
+import { CommentForm } from "@/core/community/components/comments/CommentForm";
 import { INLINE_STYLES } from "./styles/communityDesignSystem";
 import { ConfirmActionDialog } from "@/shared/components/ConfirmActionDialog";
 interface CommentsModalProps {

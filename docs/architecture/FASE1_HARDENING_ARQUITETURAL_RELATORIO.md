@@ -1,6 +1,6 @@
 # FASE 1 - Hardening Arquitetural (Gate-First)
 
-Gerado em: 2026-05-19T00:02:51.704Z
+Gerado em: 2026-05-19T00:11:00.774Z
 
 ## Problemas encontrados
 - Dependencias ciclicas detectadas: 0
@@ -64,16 +64,16 @@ Gerado em: 2026-05-19T00:02:51.704Z
 ### Duplicacao de components (top)
 - `ErrorBoundary.tsx`: src/app/components/ErrorBoundary.tsx, src/modules/mobility/components/ErrorBoundary.tsx, src/shared/components/ErrorBoundary.tsx, src/shared/components/errors/ErrorBoundary.tsx, src/shared/components/ui/ErrorBoundary.tsx
 - `PostCard.tsx`: src/core/community/components/cards/PostCard.tsx, src/core/community/components/PostCard.tsx, src/core/posts/components/PostCard.tsx, src/modules/community/components/cards/PostCard.tsx, src/modules/community/components/PostCard.tsx
-- `CommentItem.tsx`: src/core/community/components/CommentItem.tsx, src/core/community/components/comments/CommentItem.tsx, src/modules/community/components/CommentItem.tsx, src/modules/community/components/comments/CommentItem.tsx, src/shared/components/drawer/CommentItem.tsx
 - `StatCard.tsx`: src/core/admin/components/stats/StatCard.tsx, src/core/admin/drivers/components/cards/StatCard.tsx, src/modules/admin/components/stats/StatCard.tsx, src/modules/admin/drivers/components/cards/StatCard.tsx
 - `AlertCard.tsx`: src/core/alerts/components/AlertCard.tsx, src/core/community/alerts/components/AlertCard.tsx, src/modules/admin/components/alerts/AlertCard.tsx, src/modules/community/alerts/components/AlertCard.tsx
-- `CommentForm.tsx`: src/core/community/components/CommentForm.tsx, src/core/community/components/comments/CommentForm.tsx, src/modules/community/components/CommentForm.tsx, src/modules/community/components/comments/CommentForm.tsx
-- `CommentsList.tsx`: src/core/community/components/comments/CommentsList.tsx, src/core/community/components/detail-modal/CommentsList.tsx, src/modules/community/components/comments/CommentsList.tsx, src/modules/community/components/detail-modal/CommentsList.tsx
+- `CommentItem.tsx`: src/core/community/components/CommentItem.tsx, src/core/community/components/comments/CommentItem.tsx, src/modules/community/components/CommentItem.tsx, src/shared/components/drawer/CommentItem.tsx
 - `CreatePostModal.tsx`: src/core/community/components/composer/CreatePostModal.tsx, src/core/community-feed/components/composer/CreatePostModal.tsx, src/modules/community/components/composer/CreatePostModal.tsx, src/modules/community-feed/components/composer/CreatePostModal.tsx
 - `UnifiedComposer.tsx`: src/core/community/components/composer/UnifiedComposer.tsx, src/core/community-feed/components/composer/UnifiedComposer.tsx, src/modules/community/components/composer/UnifiedComposer.tsx, src/modules/community-feed/components/composer/UnifiedComposer.tsx
 - `PostActions.tsx`: src/core/community/components/post-card/PostActions.tsx, src/core/community/components/PostActions.tsx, src/core/community/components/UnifiedPostCard/PostActions.tsx, src/modules/community/components/UnifiedPostCard/PostActions.tsx
 - `PostContent.tsx`: src/core/community/components/post-card/PostContent.tsx, src/core/community/components/PostContent.tsx, src/core/community/components/UnifiedPostCard/PostContent.tsx, src/modules/community/components/UnifiedPostCard/PostContent.tsx
 - `AchadoPerdidoDetailPage.tsx`: src/core/community/pages/AchadoPerdidoDetailPage.tsx, src/core/community-lost-found/pages/AchadoPerdidoDetailPage.tsx, src/modules/community/pages/AchadoPerdidoDetailPage.tsx, src/modules/community-lost-found/pages/AchadoPerdidoDetailPage.tsx
+- `AchadosPerdidosPage.tsx`: src/core/community/pages/AchadosPerdidosPage.tsx, src/core/community-lost-found/pages/AchadosPerdidosPage.tsx, src/modules/community/pages/AchadosPerdidosPage.tsx, src/modules/community-lost-found/pages/AchadosPerdidosPage.tsx
+- `ComunidadePage.tsx`: src/core/community/pages/ComunidadePage.tsx, src/core/community-feed/pages/ComunidadePage.tsx, src/modules/community/pages/ComunidadePage.tsx, src/modules/community-feed/pages/ComunidadePage.tsx
 
 ### Imports profundos (top)
 

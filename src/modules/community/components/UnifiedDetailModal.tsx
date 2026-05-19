@@ -33,7 +33,7 @@ import {
   CommunityPostMetrics,
   CivicReportMetrics,
 } from "./detail-modal/DetailModalMetrics";
-import { CommentsList } from "./detail-modal/CommentsList";
+import { CommentsList } from "@/core/community/components/detail-modal/CommentsList";
 import { CommentInput } from "./detail-modal/CommentInput";
 import { useUnifiedDetailModal } from "../hooks/modals/useUnifiedDetailModal";
 import { PostType } from "./PostBadge";
