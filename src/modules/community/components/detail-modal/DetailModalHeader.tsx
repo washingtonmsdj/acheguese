@@ -5,7 +5,7 @@ import {
   AvatarImage,
 } from "@/shared/components/ui/avatar";
 import { Badge } from "@/shared/components/ui/badge";
-import { PostHeader } from "../PostHeader";
+import { PostHeader } from "@/core/community/components/PostHeader";
 import { PostBadge, PostType } from "../PostBadge";
 import { Construction, MapPin, Clock } from "lucide-react";
 import { INLINE_STYLES } from "../styles/communityDesignSystem";

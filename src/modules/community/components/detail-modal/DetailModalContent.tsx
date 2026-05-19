@@ -1,5 +1,5 @@
 import React from "react";
-import { PostContent } from "../PostContent";
+import { PostContent } from "@/core/community/components/PostContent";
 import { PostTags } from "../PostTags";
 import { PollCard } from "../PollCard";
 import { Poll } from "@/shared/types/poll";
