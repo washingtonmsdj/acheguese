@@ -249,7 +249,10 @@ function main() {
     string,
     Array<{ file: string; pureReexport: boolean; compatibilityFacade: boolean }>
   >();
-  const componentNames = new Map<string, string[]>();
+  const componentNames = new Map<
+    string,
+    Array<{ file: string; pureReexport: boolean; compatibilityFacade: boolean }>
+  >();
 
   for (const file of files) {
     const relative = relativeFromRoot(file);
@@ -272,7 +275,14 @@ function main() {
       ]);
     }
     if (/^[A-Z].*\.tsx$/.test(baseName)) {
-      componentNames.set(baseName, [...(componentNames.get(baseName) ?? []), relative]);
+      componentNames.set(baseName, [
+        ...(componentNames.get(baseName) ?? []),
+        {
+          file: relative,
+          pureReexport: isPureReexportModule(content),
+          compatibilityFacade: isCompatibilityFacadeModule(content),
+        },
+      ]);
     }
 
     const layer = getLayer(relative);
@@ -365,8 +375,27 @@ function main() {
     .filter((item) => distinctContextServiceNames.has(item.name))
     .sort((a, b) => b.entries.length - a.entries.length);
   const duplicatedComponents = Array.from(componentNames.entries())
-    .filter(([, entries]) => entries.length > 2)
-    .sort((a, b) => b[1].length - a[1].length);
+    .map(([name, entries]) => ({
+      name,
+      entries,
+      implementationEntries: entries.filter(
+        (entry) => !entry.pureReexport && !entry.compatibilityFacade,
+      ),
+      aliasEntries: entries.filter((entry) => entry.pureReexport || entry.compatibilityFacade),
+    }))
+    .filter((item) => item.implementationEntries.length > 1)
+    .sort((a, b) => b.implementationEntries.length - a.implementationEntries.length);
+  const aliasedComponents = Array.from(componentNames.entries())
+    .map(([name, entries]) => ({
+      name,
+      entries,
+      implementationEntries: entries.filter(
+        (entry) => !entry.pureReexport && !entry.compatibilityFacade,
+      ),
+      aliasEntries: entries.filter((entry) => entry.pureReexport || entry.compatibilityFacade),
+    }))
+    .filter((item) => item.implementationEntries.length === 1 && item.aliasEntries.length > 0)
+    .sort((a, b) => b.aliasEntries.length - a.aliasEntries.length);
 
   const filteredLayerViolations = layerViolations.filter(
     (item) => !LAYER_VIOLATION_EXCLUSIONS.some((prefix) => item.file.startsWith(prefix)),
@@ -403,6 +432,8 @@ function main() {
     `- Services com implementacao duplicada: ${duplicatedServices.length}`,
     `- Services com aliases/reexports publicos: ${aliasedServices.length}`,
     `- Services homonimos em contextos distintos: ${distinctContextServices.length}`,
+    `- Components com implementacao duplicada: ${duplicatedComponents.length}`,
+    `- Components com aliases/reexports publicos: ${aliasedComponents.length}`,
     `- Arquivos grandes (>= 900 linhas): ${hugeFiles.length}`,
     `- Violacoes de layer (shared/core boundaries): ${filteredLayerViolations.length}`,
     "",
@@ -465,7 +496,20 @@ function main() {
       ),
     "",
     "### Duplicacao de components (top)",
-    ...duplicatedComponents.slice(0, 12).map(([name, entries]) => `- \`${name}\`: ${entries.join(", ")}`),
+    ...duplicatedComponents
+      .slice(0, 12)
+      .map(
+        (item) =>
+          `- \`${item.name}\`: ${item.implementationEntries.map((entry) => entry.file).join(", ")}`,
+      ),
+    "",
+    "### Components com aliases/reexports (top)",
+    ...aliasedComponents
+      .slice(0, 12)
+      .map(
+        (item) =>
+          `- \`${item.name}\`: canonic \`${item.implementationEntries[0]?.file ?? "n/a"}\`, aliases ${item.aliasEntries.map((entry) => `\`${entry.file}\``).join(", ")}`,
+      ),
     "",
     "### Imports profundos (top)",
     ...deepRelativeImports.slice(0, 20).map(

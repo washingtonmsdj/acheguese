@@ -1,6 +1,6 @@
 # FASE 1 - Hardening Arquitetural (Gate-First)
 
-Gerado em: 2026-05-19T01:15:28.567Z
+Gerado em: 2026-05-19T01:21:01.795Z
 
 ## Problemas encontrados
 - Dependencias ciclicas detectadas: 0
@@ -9,6 +9,8 @@ Gerado em: 2026-05-19T01:15:28.567Z
 - Services com implementacao duplicada: 0
 - Services com aliases/reexports publicos: 27
 - Services homonimos em contextos distintos: 2
+- Components com implementacao duplicada: 150
+- Components com aliases/reexports publicos: 69
 - Arquivos grandes (>= 900 linhas): 0
 - Violacoes de layer (shared/core boundaries): 0
 
@@ -63,17 +65,31 @@ Gerado em: 2026-05-19T01:15:28.567Z
 
 ### Duplicacao de components (top)
 - `ErrorBoundary.tsx`: src/app/components/ErrorBoundary.tsx, src/modules/mobility/components/ErrorBoundary.tsx, src/shared/components/ErrorBoundary.tsx, src/shared/components/errors/ErrorBoundary.tsx, src/shared/components/ui/ErrorBoundary.tsx
-- `PostCard.tsx`: src/core/community/components/cards/PostCard.tsx, src/core/community/components/PostCard.tsx, src/core/posts/components/PostCard.tsx, src/modules/community/components/cards/PostCard.tsx, src/modules/community/components/PostCard.tsx
-- `StatCard.tsx`: src/core/admin/components/stats/StatCard.tsx, src/core/admin/drivers/components/cards/StatCard.tsx, src/modules/admin/components/stats/StatCard.tsx, src/modules/admin/drivers/components/cards/StatCard.tsx
 - `AlertCard.tsx`: src/core/alerts/components/AlertCard.tsx, src/core/community/alerts/components/AlertCard.tsx, src/modules/admin/components/alerts/AlertCard.tsx, src/modules/community/alerts/components/AlertCard.tsx
-- `CommentItem.tsx`: src/core/community/components/CommentItem.tsx, src/core/community/components/comments/CommentItem.tsx, src/modules/community/components/CommentItem.tsx, src/shared/components/drawer/CommentItem.tsx
-- `CreatePostModal.tsx`: src/core/community/components/composer/CreatePostModal.tsx, src/core/community-feed/components/composer/CreatePostModal.tsx, src/modules/community/components/composer/CreatePostModal.tsx, src/modules/community-feed/components/composer/CreatePostModal.tsx
-- `UnifiedComposer.tsx`: src/core/community/components/composer/UnifiedComposer.tsx, src/core/community-feed/components/composer/UnifiedComposer.tsx, src/modules/community/components/composer/UnifiedComposer.tsx, src/modules/community-feed/components/composer/UnifiedComposer.tsx
 - `PostActions.tsx`: src/core/community/components/post-card/PostActions.tsx, src/core/community/components/PostActions.tsx, src/core/community/components/UnifiedPostCard/PostActions.tsx, src/modules/community/components/UnifiedPostCard/PostActions.tsx
 - `PostContent.tsx`: src/core/community/components/post-card/PostContent.tsx, src/core/community/components/PostContent.tsx, src/core/community/components/UnifiedPostCard/PostContent.tsx, src/modules/community/components/UnifiedPostCard/PostContent.tsx
-- `DashboardHeader.tsx`: src/app/features/dashboard/components/DashboardHeader.tsx, src/modules/communication-territorial/v2/agent-dashboard/sections/DashboardHeader.tsx, src/shared/components/dashboard/DashboardHeader.tsx
-- `DashboardEmpresaPageV2.tsx`: src/app/features/dashboard/pages/DashboardEmpresaPageV2.tsx, src/core/business/services/DashboardEmpresaPageV2.tsx, src/modules/business/pages/DashboardEmpresaPageV2.tsx
-- `StatusBadge.tsx`: src/core/admin/identity/components/badges/StatusBadge.tsx, src/modules/admin/identity/components/badges/StatusBadge.tsx, src/modules/mobility/components/StatusBadge.tsx
+- `StatCard.tsx`: src/core/admin/components/stats/StatCard.tsx, src/core/admin/drivers/components/cards/StatCard.tsx, src/modules/admin/components/stats/StatCard.tsx
+- `CommentForm.tsx`: src/core/community/components/CommentForm.tsx, src/core/community/components/comments/CommentForm.tsx, src/modules/community/components/CommentForm.tsx
+- `CommentItem.tsx`: src/core/community/components/CommentItem.tsx, src/core/community/components/comments/CommentItem.tsx, src/shared/components/drawer/CommentItem.tsx
+- `StepIndicator.tsx`: src/core/community/components/composer/create-post/StepIndicator.tsx, src/modules/business/components/create/StepIndicator.tsx, src/modules/community/components/composer/create-post/StepIndicator.tsx
+- `CategoryFilters.tsx`: src/core/community/components/feed/CategoryFilters.tsx, src/modules/community/components/feed/CategoryFilters.tsx, src/shared/components/recomendacoes/CategoryFilters.tsx
+- `PostHeader.tsx`: src/core/community/components/post-card/PostHeader.tsx, src/core/community/components/PostHeader.tsx, src/core/community/components/UnifiedPostCard/PostHeader.tsx
+- `ContactStep.tsx`: src/modules/business/components/edit/ContactStep.tsx, src/modules/classifieds/components/create/ContactStep.tsx, src/modules/classifieds/jobs/pages/steps/ContactStep.tsx
+- `AppTopbar.tsx`: src/app/components/AppTopbar.tsx, src/app/components/navigation/AppTopbar.tsx
+
+### Components com aliases/reexports (top)
+- `DashboardEmpresaPageV2.tsx`: canonic `src/core/business/services/DashboardEmpresaPageV2.tsx`, aliases `src/app/features/dashboard/pages/DashboardEmpresaPageV2.tsx`, `src/modules/business/pages/DashboardEmpresaPageV2.tsx`
+- `BadgeDisplay.tsx`: canonic `src/core/community/components/BadgeDisplay.tsx`, aliases `src/core/gamification/components/BadgeDisplay.tsx`, `src/modules/community/components/BadgeDisplay.tsx`
+- `CommunityProfileCard.tsx`: canonic `src/core/community/components/CommunityProfileCard.tsx`, aliases `src/core/gamification/components/CommunityProfileCard.tsx`, `src/modules/community/components/CommunityProfileCard.tsx`
+- `Leaderboard.tsx`: canonic `src/core/community/components/Leaderboard.tsx`, aliases `src/core/gamification/components/Leaderboard.tsx`, `src/modules/community/components/Leaderboard.tsx`
+- `PostCardSkeleton.tsx`: canonic `src/core/community/components/PostCardSkeleton.tsx`, aliases `src/core/posts/components/PostCardSkeleton.tsx`, `src/modules/community/components/PostCardSkeleton.tsx`
+- `UserLevelBadge.tsx`: canonic `src/core/community/components/UserLevelBadge.tsx`, aliases `src/core/gamification/components/UserLevelBadge.tsx`, `src/modules/community/components/UserLevelBadge.tsx`
+- `AchadoPerdidoDetailPage.tsx`: canonic `src/core/community/pages/AchadoPerdidoDetailPage.tsx`, aliases `src/core/community-lost-found/pages/AchadoPerdidoDetailPage.tsx`, `src/modules/community-lost-found/pages/AchadoPerdidoDetailPage.tsx`
+- `AchadosPerdidosPage.tsx`: canonic `src/core/community/pages/AchadosPerdidosPage.tsx`, aliases `src/core/community-lost-found/pages/AchadosPerdidosPage.tsx`, `src/modules/community-lost-found/pages/AchadosPerdidosPage.tsx`
+- `ComunidadePage.tsx`: canonic `src/core/community/pages/ComunidadePage.tsx`, aliases `src/core/community-feed/pages/ComunidadePage.tsx`, `src/modules/community-feed/pages/ComunidadePage.tsx`
+- `ExamplePostPage.tsx`: canonic `src/core/community/pages/ExamplePostPage.tsx`, aliases `src/core/community-feed/pages/ExamplePostPage.tsx`, `src/modules/community-feed/pages/ExamplePostPage.tsx`
+- `GrupoDetailPage.tsx`: canonic `src/core/community/pages/GrupoDetailPage.tsx`, aliases `src/core/community-groups/pages/GrupoDetailPage.tsx`, `src/modules/community-groups/pages/GrupoDetailPage.tsx`
+- `GruposPage.tsx`: canonic `src/core/community/pages/GruposPage.tsx`, aliases `src/core/community-groups/pages/GruposPage.tsx`, `src/modules/community-groups/pages/GruposPage.tsx`
 
 ### Imports profundos (top)
 
