@@ -130,6 +130,22 @@ export const SECURITY_DOMAINS = {
     alternatives: 'Only present in preview environments',
   },
 
+  CLOUDFLARE_INSIGHTS_SCRIPT: {
+    url: 'https://static.cloudflareinsights.com',
+    purpose: 'Cloudflare Web Analytics beacon script',
+    risk: 'LOW',
+    justification: 'Required when Cloudflare Web Analytics injects the beacon on production pages',
+    alternatives: 'Disable Cloudflare Web Analytics injection',
+  },
+
+  CLOUDFLARE_INSIGHTS_COLLECT: {
+    url: 'https://cloudflareinsights.com',
+    purpose: 'Cloudflare Web Analytics collection endpoint',
+    risk: 'LOW',
+    justification: 'Required for Cloudflare Web Analytics beacon delivery',
+    alternatives: 'Disable Cloudflare Web Analytics injection',
+  },
+
   // Google AdSense - Advertising
   GOOGLE_ADSENSE_SCRIPT: {
     url: 'https://pagead2.googlesyndication.com',
@@ -219,6 +235,7 @@ export const CSP_DIRECTIVES = {
     SECURITY_DOMAINS.SUPABASE_HTTPS.url,
     SECURITY_DOMAINS.VERCEL_SCRIPTS.url,
     SECURITY_DOMAINS.VERCEL_LIVE.url,
+    SECURITY_DOMAINS.CLOUDFLARE_INSIGHTS_SCRIPT.url,
     SECURITY_DOMAINS.GOOGLE_ADSENSE_SCRIPT.url,
     SECURITY_DOMAINS.GOOGLE_ADSENSE_ADS.url,
     SECURITY_DOMAINS.GOOGLE_ADSENSE_STATIC.url,
@@ -261,6 +278,7 @@ export const CSP_DIRECTIVES = {
     SECURITY_DOMAINS.OSRM_ROUTER.url,
     SECURITY_DOMAINS.SENTRY_INGEST.url,
     SECURITY_DOMAINS.VERCEL_VITALS.url,
+    SECURITY_DOMAINS.CLOUDFLARE_INSIGHTS_COLLECT.url,
     SECURITY_DOMAINS.GOOGLE_ADSENSE_SCRIPT.url,
     SECURITY_DOMAINS.GOOGLE_ADSENSE_ADS.url,
     SECURITY_DOMAINS.GOOGLE_ADSENSE_STATIC.url,
