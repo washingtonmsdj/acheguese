@@ -27,8 +27,8 @@ export { CreatePostButton } from "./components/CreatePostButton";
 
 // Modal components
 export { PostDetailModal } from "./components/modals/PostDetailModal";
-export { UnifiedDetailModal } from "./components/UnifiedDetailModal";
-export { CommentsModal } from "./components/CommentsModal";
+export { UnifiedDetailModal } from "@/core/community/components/UnifiedDetailModal";
+export { CommentsModal } from "@/core/community/components/CommentsModal";
 
 // Widgets
 export { CommunityLeftSidebar } from "./components/CommunityLeftSidebar";
