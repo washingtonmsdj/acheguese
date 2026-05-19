@@ -1,6 +1,6 @@
 # FASE 1 - Hardening Arquitetural (Gate-First)
 
-Gerado em: 2026-05-19T01:41:36.989Z
+Gerado em: 2026-05-19T01:46:36.123Z
 
 ## Problemas encontrados
 - Dependencias ciclicas detectadas: 0
@@ -9,8 +9,8 @@ Gerado em: 2026-05-19T01:41:36.989Z
 - Services com implementacao duplicada: 0
 - Services com aliases/reexports publicos: 27
 - Services homonimos em contextos distintos: 2
-- Components com implementacao duplicada: 147
-- Components com aliases/reexports publicos: 71
+- Components com implementacao duplicada: 141
+- Components com aliases/reexports publicos: 77
 - Arquivos grandes (>= 900 linhas): 0
 - Violacoes de layer (shared/core boundaries): 0
 
