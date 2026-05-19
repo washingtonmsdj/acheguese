@@ -1,6 +1,6 @@
 # FASE 1 - Hardening Arquitetural (Gate-First)
 
-Gerado em: 2026-05-19T01:21:01.795Z
+Gerado em: 2026-05-19T01:26:19.057Z
 
 ## Problemas encontrados
 - Dependencias ciclicas detectadas: 0
@@ -9,7 +9,7 @@ Gerado em: 2026-05-19T01:21:01.795Z
 - Services com implementacao duplicada: 0
 - Services com aliases/reexports publicos: 27
 - Services homonimos em contextos distintos: 2
-- Components com implementacao duplicada: 150
+- Components com implementacao duplicada: 149
 - Components com aliases/reexports publicos: 69
 - Arquivos grandes (>= 900 linhas): 0
 - Violacoes de layer (shared/core boundaries): 0
@@ -75,7 +75,7 @@ Gerado em: 2026-05-19T01:21:01.795Z
 - `CategoryFilters.tsx`: src/core/community/components/feed/CategoryFilters.tsx, src/modules/community/components/feed/CategoryFilters.tsx, src/shared/components/recomendacoes/CategoryFilters.tsx
 - `PostHeader.tsx`: src/core/community/components/post-card/PostHeader.tsx, src/core/community/components/PostHeader.tsx, src/core/community/components/UnifiedPostCard/PostHeader.tsx
 - `ContactStep.tsx`: src/modules/business/components/edit/ContactStep.tsx, src/modules/classifieds/components/create/ContactStep.tsx, src/modules/classifieds/jobs/pages/steps/ContactStep.tsx
-- `AppTopbar.tsx`: src/app/components/AppTopbar.tsx, src/app/components/navigation/AppTopbar.tsx
+- `BusinessCard.tsx`: src/app/features/business-landing/components/cards/BusinessCard.tsx, src/modules/business/components/BusinessCard.tsx
 
 ### Components com aliases/reexports (top)
 - `DashboardEmpresaPageV2.tsx`: canonic `src/core/business/services/DashboardEmpresaPageV2.tsx`, aliases `src/app/features/dashboard/pages/DashboardEmpresaPageV2.tsx`, `src/modules/business/pages/DashboardEmpresaPageV2.tsx`
