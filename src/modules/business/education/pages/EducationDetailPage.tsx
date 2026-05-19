@@ -718,4 +718,3 @@ export function EducationDetailPage() {
 
 export default EducationDetailPage;
 
-
