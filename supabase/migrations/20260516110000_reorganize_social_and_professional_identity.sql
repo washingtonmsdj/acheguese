@@ -379,6 +379,55 @@ JOIN public.profiles p ON p.id = bd.profile_id
 WHERE p.profile_type = 'business'
   AND p.is_active = true;
 
+ALTER TABLE public.groups
+  ADD COLUMN IF NOT EXISTS slug TEXT;
+
+UPDATE public.groups
+SET slug = NULL
+WHERE slug IS NOT NULL
+  AND trim(slug) = '';
+
+WITH normalized AS (
+  SELECT
+    id,
+    COALESCE(
+      NULLIF(
+        lower(
+          trim(
+            both '-'
+            from regexp_replace(
+              regexp_replace(coalesce(name, id::text), '[^a-zA-Z0-9]+', '-', 'g'),
+              '-+',
+              '-',
+              'g'
+            )
+          )
+        ),
+        ''
+      ),
+      id::text
+    ) AS base_slug
+  FROM public.groups
+  WHERE slug IS NULL
+),
+deduplicated AS (
+  SELECT
+    id,
+    CASE
+      WHEN row_number() OVER (PARTITION BY base_slug ORDER BY id) = 1 THEN base_slug
+      ELSE base_slug || '-' || left(id::text, 8)
+    END AS resolved_slug
+  FROM normalized
+)
+UPDATE public.groups g
+SET slug = d.resolved_slug
+FROM deduplicated d
+WHERE g.id = d.id;
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_groups_slug_unique
+  ON public.groups(slug)
+  WHERE slug IS NOT NULL;
+
 CREATE OR REPLACE VIEW public.user_organizations AS
 SELECT
   p.user_id,

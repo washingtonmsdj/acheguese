@@ -968,6 +968,13 @@ export type Database = {
             referencedRelation: "public_business_search"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "billing_transactions_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "user_companies"
+            referencedColumns: ["company_id"]
+          },
         ]
       }
       business_claims: {
@@ -1220,6 +1227,20 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "business_data_parent_business_id_fkey"
+            columns: ["parent_business_id"]
+            isOneToOne: false
+            referencedRelation: "user_companies"
+            referencedColumns: ["company_id"]
+          },
+          {
+            foreignKeyName: "business_data_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "personal_social_profiles"
+            referencedColumns: ["profile_id"]
+          },
+          {
             foreignKeyName: "business_data_profile_id_fkey"
             columns: ["profile_id"]
             isOneToOne: false
@@ -1259,6 +1280,13 @@ export type Database = {
             foreignKeyName: "business_favorites_business_id_fkey"
             columns: ["business_id"]
             isOneToOne: false
+            referencedRelation: "personal_social_profiles"
+            referencedColumns: ["profile_id"]
+          },
+          {
+            foreignKeyName: "business_favorites_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
@@ -1268,6 +1296,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "public_profiles"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "business_favorites_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "personal_social_profiles"
+            referencedColumns: ["profile_id"]
           },
           {
             foreignKeyName: "business_favorites_profile_id_fkey"
@@ -1331,6 +1366,13 @@ export type Database = {
             referencedRelation: "public_business_search"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "business_gallery_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "user_companies"
+            referencedColumns: ["company_id"]
+          },
         ]
       }
       business_hours: {
@@ -1379,6 +1421,13 @@ export type Database = {
             referencedRelation: "public_business_search"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "business_hours_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "user_companies"
+            referencedColumns: ["company_id"]
+          },
         ]
       }
       business_hours_exceptions: {
@@ -1426,6 +1475,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "public_business_search"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "business_hours_exceptions_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "user_companies"
+            referencedColumns: ["company_id"]
           },
         ]
       }
@@ -1493,6 +1549,13 @@ export type Database = {
             referencedRelation: "public_business_search"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "business_operation_config_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: true
+            referencedRelation: "user_companies"
+            referencedColumns: ["company_id"]
+          },
         ]
       }
       business_premium_links: {
@@ -1531,6 +1594,13 @@ export type Database = {
             isOneToOne: true
             referencedRelation: "public_business_search"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "business_premium_links_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: true
+            referencedRelation: "user_companies"
+            referencedColumns: ["company_id"]
           },
         ]
       }
@@ -1588,6 +1658,13 @@ export type Database = {
             foreignKeyName: "business_products_profile_id_fkey"
             columns: ["profile_id"]
             isOneToOne: false
+            referencedRelation: "personal_social_profiles"
+            referencedColumns: ["profile_id"]
+          },
+          {
+            foreignKeyName: "business_products_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
@@ -1633,6 +1710,13 @@ export type Database = {
             foreignKeyName: "business_reviews_new_reviewed_profile_id_fkey"
             columns: ["reviewed_profile_id"]
             isOneToOne: false
+            referencedRelation: "personal_social_profiles"
+            referencedColumns: ["profile_id"]
+          },
+          {
+            foreignKeyName: "business_reviews_new_reviewed_profile_id_fkey"
+            columns: ["reviewed_profile_id"]
+            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
@@ -1642,6 +1726,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "public_profiles"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "business_reviews_new_reviewer_profile_id_fkey"
+            columns: ["reviewer_profile_id"]
+            isOneToOne: false
+            referencedRelation: "personal_social_profiles"
+            referencedColumns: ["profile_id"]
           },
           {
             foreignKeyName: "business_reviews_new_reviewer_profile_id_fkey"
@@ -1691,6 +1782,13 @@ export type Database = {
           price?: number | null
         }
         Relationships: [
+          {
+            foreignKeyName: "business_services_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "personal_social_profiles"
+            referencedColumns: ["profile_id"]
+          },
           {
             foreignKeyName: "business_services_business_id_fkey"
             columns: ["business_id"]
@@ -1750,6 +1848,13 @@ export type Database = {
             referencedRelation: "public_business_search"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "business_slug_history_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "user_companies"
+            referencedColumns: ["company_id"]
+          },
         ]
       }
       business_stats: {
@@ -1794,6 +1899,20 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "public_business_search"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "business_stats_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "user_companies"
+            referencedColumns: ["company_id"]
+          },
+          {
+            foreignKeyName: "business_stats_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: true
+            referencedRelation: "personal_social_profiles"
+            referencedColumns: ["profile_id"]
           },
           {
             foreignKeyName: "business_stats_profile_id_fkey"
@@ -1869,6 +1988,13 @@ export type Database = {
             referencedRelation: "public_business_search"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "business_subscriptions_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: true
+            referencedRelation: "user_companies"
+            referencedColumns: ["company_id"]
+          },
         ]
       }
       business_views: {
@@ -1891,6 +2017,13 @@ export type Database = {
           viewer_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "business_views_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "personal_social_profiles"
+            referencedColumns: ["profile_id"]
+          },
           {
             foreignKeyName: "business_views_business_id_fkey"
             columns: ["business_id"]
@@ -2035,6 +2168,13 @@ export type Database = {
           whatsapp?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "businesses_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "personal_social_profiles"
+            referencedColumns: ["profile_id"]
+          },
           {
             foreignKeyName: "businesses_profile_id_fkey"
             columns: ["profile_id"]
@@ -2478,6 +2618,13 @@ export type Database = {
             foreignKeyName: "classified_comments_author_profile_id_fkey"
             columns: ["author_profile_id"]
             isOneToOne: false
+            referencedRelation: "personal_social_profiles"
+            referencedColumns: ["profile_id"]
+          },
+          {
+            foreignKeyName: "classified_comments_author_profile_id_fkey"
+            columns: ["author_profile_id"]
+            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
@@ -2578,6 +2725,13 @@ export type Database = {
             foreignKeyName: "classified_reports_reporter_id_fkey"
             columns: ["reporter_id"]
             isOneToOne: false
+            referencedRelation: "personal_social_profiles"
+            referencedColumns: ["profile_id"]
+          },
+          {
+            foreignKeyName: "classified_reports_reporter_id_fkey"
+            columns: ["reporter_id"]
+            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
@@ -2587,6 +2741,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "public_profiles"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "classified_reports_reviewed_by_fkey"
+            columns: ["reviewed_by"]
+            isOneToOne: false
+            referencedRelation: "personal_social_profiles"
+            referencedColumns: ["profile_id"]
           },
           {
             foreignKeyName: "classified_reports_reviewed_by_fkey"
@@ -2767,6 +2928,13 @@ export type Database = {
             foreignKeyName: "classifieds_profile_id_fkey"
             columns: ["seller_id"]
             isOneToOne: false
+            referencedRelation: "personal_social_profiles"
+            referencedColumns: ["profile_id"]
+          },
+          {
+            foreignKeyName: "classifieds_profile_id_fkey"
+            columns: ["seller_id"]
+            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
@@ -2776,6 +2944,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "public_profiles"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "classifieds_profile_id_fkey1"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "personal_social_profiles"
+            referencedColumns: ["profile_id"]
           },
           {
             foreignKeyName: "classifieds_profile_id_fkey1"
@@ -2891,6 +3066,13 @@ export type Database = {
             foreignKeyName: "comments_author_profile_id_fkey"
             columns: ["author_profile_id"]
             isOneToOne: false
+            referencedRelation: "personal_social_profiles"
+            referencedColumns: ["profile_id"]
+          },
+          {
+            foreignKeyName: "comments_author_profile_id_fkey"
+            columns: ["author_profile_id"]
+            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
@@ -2900,6 +3082,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "public_profiles"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "comments_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "personal_social_profiles"
+            referencedColumns: ["profile_id"]
           },
           {
             foreignKeyName: "comments_business_id_fkey"
@@ -2928,6 +3117,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "posts"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "comments_professional_id_fkey"
+            columns: ["professional_id"]
+            isOneToOne: false
+            referencedRelation: "personal_social_profiles"
+            referencedColumns: ["profile_id"]
           },
           {
             foreignKeyName: "comments_professional_id_fkey"
@@ -3105,6 +3301,13 @@ export type Database = {
             foreignKeyName: "communication_channel_requests_requested_profile_id_fkey"
             columns: ["requested_profile_id"]
             isOneToOne: false
+            referencedRelation: "personal_social_profiles"
+            referencedColumns: ["profile_id"]
+          },
+          {
+            foreignKeyName: "communication_channel_requests_requested_profile_id_fkey"
+            columns: ["requested_profile_id"]
+            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
@@ -3234,6 +3437,13 @@ export type Database = {
             foreignKeyName: "communication_channels_profile_id_fkey"
             columns: ["profile_id"]
             isOneToOne: true
+            referencedRelation: "personal_social_profiles"
+            referencedColumns: ["profile_id"]
+          },
+          {
+            foreignKeyName: "communication_channels_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: true
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
@@ -3246,11 +3456,76 @@ export type Database = {
           },
         ]
       }
+      communication_publication_distribution: {
+        Row: {
+          channel_id: string
+          created_at: string
+          id: string
+          is_active: boolean
+          location_id: string
+          publication_id: string
+          rank_reason: string
+          rank_score: number
+          relevance_score: number
+          target_type: string
+          updated_at: string
+        }
+        Insert: {
+          channel_id: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          location_id: string
+          publication_id: string
+          rank_reason?: string
+          rank_score?: number
+          relevance_score?: number
+          target_type: string
+          updated_at?: string
+        }
+        Update: {
+          channel_id?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          location_id?: string
+          publication_id?: string
+          rank_reason?: string
+          rank_score?: number
+          relevance_score?: number
+          target_type?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "communication_publication_distribution_channel_id_fkey"
+            columns: ["channel_id"]
+            isOneToOne: false
+            referencedRelation: "communication_channels"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "communication_publication_distribution_location_id_fkey"
+            columns: ["location_id"]
+            isOneToOne: false
+            referencedRelation: "locations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "communication_publication_distribution_publication_id_fkey"
+            columns: ["publication_id"]
+            isOneToOne: false
+            referencedRelation: "communication_publications"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       communication_publications: {
         Row: {
           author_profile_id: string
           body: string
           channel_id: string
+          content_format: string
           created_at: string
           expires_at: string | null
           id: string
@@ -3269,6 +3544,7 @@ export type Database = {
           author_profile_id: string
           body: string
           channel_id: string
+          content_format?: string
           created_at?: string
           expires_at?: string | null
           id?: string
@@ -3287,6 +3563,7 @@ export type Database = {
           author_profile_id?: string
           body?: string
           channel_id?: string
+          content_format?: string
           created_at?: string
           expires_at?: string | null
           id?: string
@@ -3302,6 +3579,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "communication_publications_author_profile_id_fkey"
+            columns: ["author_profile_id"]
+            isOneToOne: false
+            referencedRelation: "personal_social_profiles"
+            referencedColumns: ["profile_id"]
+          },
           {
             foreignKeyName: "communication_publications_author_profile_id_fkey"
             columns: ["author_profile_id"]
@@ -3446,6 +3730,13 @@ export type Database = {
             foreignKeyName: "community_alerts_profile_id_fkey"
             columns: ["profile_id"]
             isOneToOne: false
+            referencedRelation: "personal_social_profiles"
+            referencedColumns: ["profile_id"]
+          },
+          {
+            foreignKeyName: "community_alerts_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
@@ -3541,6 +3832,13 @@ export type Database = {
             foreignKeyName: "community_issue_reports_profile_id_fkey"
             columns: ["profile_id"]
             isOneToOne: false
+            referencedRelation: "personal_social_profiles"
+            referencedColumns: ["profile_id"]
+          },
+          {
+            foreignKeyName: "community_issue_reports_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
@@ -3586,6 +3884,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "community_issues_public"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "community_issue_supports_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "personal_social_profiles"
+            referencedColumns: ["profile_id"]
           },
           {
             foreignKeyName: "community_issue_supports_profile_id_fkey"
@@ -3684,6 +3989,13 @@ export type Database = {
             foreignKeyName: "community_issues_author_profile_id_fkey"
             columns: ["author_profile_id"]
             isOneToOne: false
+            referencedRelation: "personal_social_profiles"
+            referencedColumns: ["profile_id"]
+          },
+          {
+            foreignKeyName: "community_issues_author_profile_id_fkey"
+            columns: ["author_profile_id"]
+            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
@@ -3700,6 +4012,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "locations"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "community_issues_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "personal_social_profiles"
+            referencedColumns: ["profile_id"]
           },
           {
             foreignKeyName: "community_issues_profile_id_fkey"
@@ -3865,6 +4184,13 @@ export type Database = {
             foreignKeyName: "community_posts_author_profile_id_fkey"
             columns: ["author_profile_id"]
             isOneToOne: false
+            referencedRelation: "personal_social_profiles"
+            referencedColumns: ["profile_id"]
+          },
+          {
+            foreignKeyName: "community_posts_author_profile_id_fkey"
+            columns: ["author_profile_id"]
+            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
@@ -3937,6 +4263,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "community_questions_author_profile_id_fkey"
+            columns: ["author_profile_id"]
+            isOneToOne: false
+            referencedRelation: "personal_social_profiles"
+            referencedColumns: ["profile_id"]
+          },
           {
             foreignKeyName: "community_questions_author_profile_id_fkey"
             columns: ["author_profile_id"]
@@ -4163,6 +4496,13 @@ export type Database = {
             referencedRelation: "public_business_search"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "delivery_areas_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "user_companies"
+            referencedColumns: ["company_id"]
+          },
         ]
       }
       delivery_neighborhoods: {
@@ -4268,6 +4608,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "orders"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "delivery_occurrences_reported_by_profile_id_fkey"
+            columns: ["reported_by_profile_id"]
+            isOneToOne: false
+            referencedRelation: "personal_social_profiles"
+            referencedColumns: ["profile_id"]
           },
           {
             foreignKeyName: "delivery_occurrences_reported_by_profile_id_fkey"
@@ -4405,6 +4752,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "public_business_search"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "delivery_requests_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "user_companies"
+            referencedColumns: ["company_id"]
           },
           {
             foreignKeyName: "delivery_requests_driver_id_fkey"
@@ -4668,6 +5022,13 @@ export type Database = {
             foreignKeyName: "driver_data_profile_id_fkey"
             columns: ["profile_id"]
             isOneToOne: true
+            referencedRelation: "personal_social_profiles"
+            referencedColumns: ["profile_id"]
+          },
+          {
+            foreignKeyName: "driver_data_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: true
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
@@ -4719,6 +5080,13 @@ export type Database = {
             foreignKeyName: "driver_locations_driver_profile_id_fkey"
             columns: ["driver_profile_id"]
             isOneToOne: true
+            referencedRelation: "personal_social_profiles"
+            referencedColumns: ["profile_id"]
+          },
+          {
+            foreignKeyName: "driver_locations_driver_profile_id_fkey"
+            columns: ["driver_profile_id"]
+            isOneToOne: true
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
@@ -4764,6 +5132,13 @@ export type Database = {
             foreignKeyName: "driver_moderation_events_admin_profile_id_fkey"
             columns: ["admin_profile_id"]
             isOneToOne: false
+            referencedRelation: "personal_social_profiles"
+            referencedColumns: ["profile_id"]
+          },
+          {
+            foreignKeyName: "driver_moderation_events_admin_profile_id_fkey"
+            columns: ["admin_profile_id"]
+            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
@@ -4773,6 +5148,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "public_profiles"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "driver_moderation_events_driver_profile_id_fkey"
+            columns: ["driver_profile_id"]
+            isOneToOne: false
+            referencedRelation: "personal_social_profiles"
+            referencedColumns: ["profile_id"]
           },
           {
             foreignKeyName: "driver_moderation_events_driver_profile_id_fkey"
@@ -4825,6 +5207,13 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "driver_profiles_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "personal_social_profiles"
+            referencedColumns: ["profile_id"]
+          },
           {
             foreignKeyName: "driver_profiles_profile_id_fkey"
             columns: ["profile_id"]
@@ -4885,6 +5274,13 @@ export type Database = {
           waypoints?: Json | null
         }
         Relationships: [
+          {
+            foreignKeyName: "driver_routes_driver_profile_id_fkey"
+            columns: ["driver_profile_id"]
+            isOneToOne: false
+            referencedRelation: "personal_social_profiles"
+            referencedColumns: ["profile_id"]
+          },
           {
             foreignKeyName: "driver_routes_driver_profile_id_fkey"
             columns: ["driver_profile_id"]
@@ -4958,6 +5354,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "public_business_search"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "education_analytics_events_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "user_companies"
+            referencedColumns: ["company_id"]
           },
           {
             foreignKeyName: "education_analytics_events_education_event_id_fkey"
@@ -5244,6 +5647,13 @@ export type Database = {
             foreignKeyName: "education_profiles_business_id_fkey"
             columns: ["business_id"]
             isOneToOne: false
+            referencedRelation: "personal_social_profiles"
+            referencedColumns: ["profile_id"]
+          },
+          {
+            foreignKeyName: "education_profiles_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
@@ -5399,6 +5809,13 @@ export type Database = {
             foreignKeyName: "emergency_alerts_profile_id_fkey"
             columns: ["profile_id"]
             isOneToOne: false
+            referencedRelation: "personal_social_profiles"
+            referencedColumns: ["profile_id"]
+          },
+          {
+            foreignKeyName: "emergency_alerts_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
@@ -5456,6 +5873,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "emergency_contacts_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "personal_social_profiles"
+            referencedColumns: ["profile_id"]
+          },
           {
             foreignKeyName: "emergency_contacts_profile_id_fkey"
             columns: ["profile_id"]
@@ -5566,6 +5990,13 @@ export type Database = {
             foreignKeyName: "event_participants_profile_id_fkey"
             columns: ["profile_id"]
             isOneToOne: false
+            referencedRelation: "personal_social_profiles"
+            referencedColumns: ["profile_id"]
+          },
+          {
+            foreignKeyName: "event_participants_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
@@ -5652,6 +6083,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "events_organizer_profile_id_fkey"
+            columns: ["organizer_profile_id"]
+            isOneToOne: false
+            referencedRelation: "personal_social_profiles"
+            referencedColumns: ["profile_id"]
+          },
           {
             foreignKeyName: "events_organizer_profile_id_fkey"
             columns: ["organizer_profile_id"]
@@ -5942,6 +6380,13 @@ export type Database = {
             referencedRelation: "public_business_search"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "gastronomy_niche_upgrade_history_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "user_companies"
+            referencedColumns: ["company_id"]
+          },
         ]
       }
       gastronomy_profiles: {
@@ -6065,6 +6510,13 @@ export type Database = {
             referencedRelation: "public_business_search"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "gastronomy_profiles_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: true
+            referencedRelation: "user_companies"
+            referencedColumns: ["company_id"]
+          },
         ]
       }
       gastronomy_subscriptions: {
@@ -6125,6 +6577,13 @@ export type Database = {
             referencedRelation: "public_business_search"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "gastronomy_subscriptions_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: true
+            referencedRelation: "user_companies"
+            referencedColumns: ["company_id"]
+          },
         ]
       }
       gastronomy_tags: {
@@ -6183,6 +6642,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "groups"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "group_members_new_member_profile_id_fkey"
+            columns: ["member_profile_id"]
+            isOneToOne: false
+            referencedRelation: "personal_social_profiles"
+            referencedColumns: ["profile_id"]
           },
           {
             foreignKeyName: "group_members_new_member_profile_id_fkey"
@@ -6259,6 +6725,13 @@ export type Database = {
             foreignKeyName: "group_message_reports_reporter_profile_id_fkey"
             columns: ["reporter_profile_id"]
             isOneToOne: false
+            referencedRelation: "personal_social_profiles"
+            referencedColumns: ["profile_id"]
+          },
+          {
+            foreignKeyName: "group_message_reports_reporter_profile_id_fkey"
+            columns: ["reporter_profile_id"]
+            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
@@ -6268,6 +6741,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "public_profiles"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "group_message_reports_reviewed_by_fkey"
+            columns: ["reviewed_by"]
+            isOneToOne: false
+            referencedRelation: "personal_social_profiles"
+            referencedColumns: ["profile_id"]
           },
           {
             foreignKeyName: "group_message_reports_reviewed_by_fkey"
@@ -6334,6 +6814,13 @@ export type Database = {
             foreignKeyName: "group_messages_new_sender_profile_id_fkey"
             columns: ["sender_profile_id"]
             isOneToOne: false
+            referencedRelation: "personal_social_profiles"
+            referencedColumns: ["profile_id"]
+          },
+          {
+            foreignKeyName: "group_messages_new_sender_profile_id_fkey"
+            columns: ["sender_profile_id"]
+            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
@@ -6363,6 +6850,7 @@ export type Database = {
           name: string
           posting_policy: string
           rules: string | null
+          slug: string | null
           status: string
           tags: string[]
           type: string
@@ -6385,6 +6873,7 @@ export type Database = {
           name: string
           posting_policy?: string
           rules?: string | null
+          slug?: string | null
           status?: string
           tags?: string[]
           type?: string
@@ -6407,6 +6896,7 @@ export type Database = {
           name?: string
           posting_policy?: string
           rules?: string | null
+          slug?: string | null
           status?: string
           tags?: string[]
           type?: string
@@ -6414,6 +6904,13 @@ export type Database = {
           visibility?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "groups_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "personal_social_profiles"
+            referencedColumns: ["profile_id"]
+          },
           {
             foreignKeyName: "groups_created_by_fkey"
             columns: ["created_by"]
@@ -6463,6 +6960,13 @@ export type Database = {
           term?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "issue_blocked_terms_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "personal_social_profiles"
+            referencedColumns: ["profile_id"]
+          },
           {
             foreignKeyName: "issue_blocked_terms_created_by_fkey"
             columns: ["created_by"]
@@ -6665,6 +7169,13 @@ export type Database = {
             foreignKeyName: "lost_found_comments_autor_id_fkey"
             columns: ["autor_id"]
             isOneToOne: false
+            referencedRelation: "personal_social_profiles"
+            referencedColumns: ["profile_id"]
+          },
+          {
+            foreignKeyName: "lost_found_comments_autor_id_fkey"
+            columns: ["autor_id"]
+            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
@@ -6737,6 +7248,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "lost_found_posts_autor_id_fkey"
+            columns: ["autor_id"]
+            isOneToOne: false
+            referencedRelation: "personal_social_profiles"
+            referencedColumns: ["profile_id"]
+          },
           {
             foreignKeyName: "lost_found_posts_autor_id_fkey"
             columns: ["autor_id"]
@@ -7080,6 +7598,13 @@ export type Database = {
             referencedRelation: "public_business_search"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "menu_promotions_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "user_companies"
+            referencedColumns: ["company_id"]
+          },
         ]
       }
       menus: {
@@ -7136,6 +7661,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "public_business_search"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "menus_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "user_companies"
+            referencedColumns: ["company_id"]
           },
         ]
       }
@@ -7440,6 +7972,13 @@ export type Database = {
             foreignKeyName: "operational_verifications_verified_by_fkey"
             columns: ["verified_by"]
             isOneToOne: false
+            referencedRelation: "personal_social_profiles"
+            referencedColumns: ["profile_id"]
+          },
+          {
+            foreignKeyName: "operational_verifications_verified_by_fkey"
+            columns: ["verified_by"]
+            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
@@ -7555,6 +8094,13 @@ export type Database = {
           to_logistics_status?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "order_timeline_events_actor_profile_id_fkey"
+            columns: ["actor_profile_id"]
+            isOneToOne: false
+            referencedRelation: "personal_social_profiles"
+            referencedColumns: ["profile_id"]
+          },
           {
             foreignKeyName: "order_timeline_events_actor_profile_id_fkey"
             columns: ["actor_profile_id"]
@@ -7701,6 +8247,13 @@ export type Database = {
             foreignKeyName: "orders_courier_profile_id_fkey"
             columns: ["courier_profile_id"]
             isOneToOne: false
+            referencedRelation: "personal_social_profiles"
+            referencedColumns: ["profile_id"]
+          },
+          {
+            foreignKeyName: "orders_courier_profile_id_fkey"
+            columns: ["courier_profile_id"]
+            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
@@ -7715,6 +8268,13 @@ export type Database = {
             foreignKeyName: "orders_customer_profile_id_fkey"
             columns: ["customer_profile_id"]
             isOneToOne: false
+            referencedRelation: "personal_social_profiles"
+            referencedColumns: ["profile_id"]
+          },
+          {
+            foreignKeyName: "orders_customer_profile_id_fkey"
+            columns: ["customer_profile_id"]
+            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
@@ -7724,6 +8284,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "public_profiles"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "orders_merchant_profile_id_fkey"
+            columns: ["merchant_profile_id"]
+            isOneToOne: false
+            referencedRelation: "personal_social_profiles"
+            referencedColumns: ["profile_id"]
           },
           {
             foreignKeyName: "orders_merchant_profile_id_fkey"
@@ -7856,6 +8423,13 @@ export type Database = {
             referencedRelation: "public_business_search"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "pizza_doughs_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "user_companies"
+            referencedColumns: ["company_id"]
+          },
         ]
       }
       pizza_edges: {
@@ -7906,6 +8480,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "public_business_search"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pizza_edges_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "user_companies"
+            referencedColumns: ["company_id"]
           },
         ]
       }
@@ -7976,6 +8557,13 @@ export type Database = {
             referencedRelation: "public_business_search"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "pizza_flavors_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "user_companies"
+            referencedColumns: ["company_id"]
+          },
         ]
       }
       pizza_menu_items: {
@@ -8026,6 +8614,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "public_business_search"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pizza_menu_items_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "user_companies"
+            referencedColumns: ["company_id"]
           },
           {
             foreignKeyName: "pizza_menu_items_default_dough_id_fkey"
@@ -8106,6 +8701,13 @@ export type Database = {
             referencedRelation: "public_business_search"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "pizza_niche_configs_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: true
+            referencedRelation: "user_companies"
+            referencedColumns: ["company_id"]
+          },
         ]
       }
       pizza_sizes: {
@@ -8166,6 +8768,13 @@ export type Database = {
             referencedRelation: "public_business_search"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "pizza_sizes_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "user_companies"
+            referencedColumns: ["company_id"]
+          },
         ]
       }
       post_likes_new: {
@@ -8188,6 +8797,13 @@ export type Database = {
           post_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "post_likes_new_liker_profile_id_fkey"
+            columns: ["liker_profile_id"]
+            isOneToOne: false
+            referencedRelation: "personal_social_profiles"
+            referencedColumns: ["profile_id"]
+          },
           {
             foreignKeyName: "post_likes_new_liker_profile_id_fkey"
             columns: ["liker_profile_id"]
@@ -8258,7 +8874,11 @@ export type Database = {
           comments_count: number
           confirmations_count: number
           content: string | null
+          content_intent: string | null
+          content_payload: Json | null
           created_at: string
+          display_format: string | null
+          distribution_channels: string[]
           id: string
           image_url: string | null
           images: Json | null
@@ -8277,7 +8897,11 @@ export type Database = {
           comments_count?: number
           confirmations_count?: number
           content?: string | null
+          content_intent?: string | null
+          content_payload?: Json | null
           created_at?: string
+          display_format?: string | null
+          distribution_channels?: string[]
           id?: string
           image_url?: string | null
           images?: Json | null
@@ -8296,7 +8920,11 @@ export type Database = {
           comments_count?: number
           confirmations_count?: number
           content?: string | null
+          content_intent?: string | null
+          content_payload?: Json | null
           created_at?: string
+          display_format?: string | null
+          distribution_channels?: string[]
           id?: string
           image_url?: string | null
           images?: Json | null
@@ -8317,6 +8945,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "locations"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "posts_author_profile_id_fkey"
+            columns: ["author_profile_id"]
+            isOneToOne: false
+            referencedRelation: "personal_social_profiles"
+            referencedColumns: ["profile_id"]
           },
           {
             foreignKeyName: "posts_author_profile_id_fkey"
@@ -8416,6 +9051,13 @@ export type Database = {
           user_agent?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "pricing_audit_log_performed_by_fkey"
+            columns: ["performed_by"]
+            isOneToOne: false
+            referencedRelation: "personal_social_profiles"
+            referencedColumns: ["profile_id"]
+          },
           {
             foreignKeyName: "pricing_audit_log_performed_by_fkey"
             columns: ["performed_by"]
@@ -8536,6 +9178,13 @@ export type Database = {
             foreignKeyName: "pricing_rules_created_by_fkey"
             columns: ["created_by"]
             isOneToOne: false
+            referencedRelation: "personal_social_profiles"
+            referencedColumns: ["profile_id"]
+          },
+          {
+            foreignKeyName: "pricing_rules_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
@@ -8545,6 +9194,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "public_profiles"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pricing_rules_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "personal_social_profiles"
+            referencedColumns: ["profile_id"]
           },
           {
             foreignKeyName: "pricing_rules_updated_by_fkey"
@@ -8566,6 +9222,7 @@ export type Database = {
         Row: {
           accepts_remote: boolean | null
           address_id: string | null
+          availability_notes: string | null
           available_hours: Json | null
           certifications: Json | null
           created_at: string
@@ -8581,6 +9238,8 @@ export type Database = {
           license_state: string | null
           location_id: string
           metadata: Json
+          owner_user_id: string | null
+          portfolio_items: Json
           price_range: string | null
           price_type: string | null
           profession: string | null
@@ -8596,13 +9255,16 @@ export type Database = {
           slug: string | null
           specialties: string[] | null
           updated_at: string
+          updated_by_user_id: string | null
           verified_at: string | null
+          visibility: Database["public"]["Enums"]["professional_profile_visibility"]
           whatsapp: string | null
           years_experience: number | null
         }
         Insert: {
           accepts_remote?: boolean | null
           address_id?: string | null
+          availability_notes?: string | null
           available_hours?: Json | null
           certifications?: Json | null
           created_at?: string
@@ -8618,6 +9280,8 @@ export type Database = {
           license_state?: string | null
           location_id: string
           metadata?: Json
+          owner_user_id?: string | null
+          portfolio_items?: Json
           price_range?: string | null
           price_type?: string | null
           profession?: string | null
@@ -8633,13 +9297,16 @@ export type Database = {
           slug?: string | null
           specialties?: string[] | null
           updated_at?: string
+          updated_by_user_id?: string | null
           verified_at?: string | null
+          visibility?: Database["public"]["Enums"]["professional_profile_visibility"]
           whatsapp?: string | null
           years_experience?: number | null
         }
         Update: {
           accepts_remote?: boolean | null
           address_id?: string | null
+          availability_notes?: string | null
           available_hours?: Json | null
           certifications?: Json | null
           created_at?: string
@@ -8655,6 +9322,8 @@ export type Database = {
           license_state?: string | null
           location_id?: string
           metadata?: Json
+          owner_user_id?: string | null
+          portfolio_items?: Json
           price_range?: string | null
           price_type?: string | null
           profession?: string | null
@@ -8670,7 +9339,9 @@ export type Database = {
           slug?: string | null
           specialties?: string[] | null
           updated_at?: string
+          updated_by_user_id?: string | null
           verified_at?: string | null
+          visibility?: Database["public"]["Enums"]["professional_profile_visibility"]
           whatsapp?: string | null
           years_experience?: number | null
         }
@@ -8702,6 +9373,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "locations"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "professional_data_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "personal_social_profiles"
+            referencedColumns: ["profile_id"]
           },
           {
             foreignKeyName: "professional_data_profile_id_fkey"
@@ -8743,6 +9421,13 @@ export type Database = {
             foreignKeyName: "professional_favorites_professional_id_fkey"
             columns: ["professional_id"]
             isOneToOne: false
+            referencedRelation: "personal_social_profiles"
+            referencedColumns: ["profile_id"]
+          },
+          {
+            foreignKeyName: "professional_favorites_professional_id_fkey"
+            columns: ["professional_id"]
+            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
@@ -8752,6 +9437,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "public_profiles"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "professional_favorites_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "personal_social_profiles"
+            referencedColumns: ["profile_id"]
           },
           {
             foreignKeyName: "professional_favorites_profile_id_fkey"
@@ -8808,6 +9500,13 @@ export type Database = {
             foreignKeyName: "professional_jobs_client_id_fkey"
             columns: ["client_id"]
             isOneToOne: false
+            referencedRelation: "personal_social_profiles"
+            referencedColumns: ["profile_id"]
+          },
+          {
+            foreignKeyName: "professional_jobs_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
@@ -8817,6 +9516,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "public_profiles"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "professional_jobs_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "personal_social_profiles"
+            referencedColumns: ["profile_id"]
           },
           {
             foreignKeyName: "professional_jobs_profile_id_fkey"
@@ -9050,6 +9756,27 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "professional_leads_professional_id_fkey"
+            columns: ["professional_id"]
+            isOneToOne: false
+            referencedRelation: "user_professional_profiles"
+            referencedColumns: ["professional_profile_id"]
+          },
+          {
+            foreignKeyName: "professional_leads_professional_id_fkey"
+            columns: ["professional_id"]
+            isOneToOne: false
+            referencedRelation: "work_opportunity_match_candidates"
+            referencedColumns: ["professional_id"]
+          },
+          {
+            foreignKeyName: "professional_leads_requester_profile_id_fkey"
+            columns: ["requester_profile_id"]
+            isOneToOne: false
+            referencedRelation: "personal_social_profiles"
+            referencedColumns: ["profile_id"]
+          },
+          {
             foreignKeyName: "professional_leads_requester_profile_id_fkey"
             columns: ["requester_profile_id"]
             isOneToOne: false
@@ -9062,6 +9789,71 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "public_profiles"
             referencedColumns: ["id"]
+          },
+        ]
+      }
+      professional_profile_media: {
+        Row: {
+          caption: string | null
+          created_at: string
+          display_order: number
+          id: string
+          is_cover: boolean
+          media_type: string
+          media_url: string
+          professional_id: string
+          updated_at: string
+        }
+        Insert: {
+          caption?: string | null
+          created_at?: string
+          display_order?: number
+          id?: string
+          is_cover?: boolean
+          media_type?: string
+          media_url: string
+          professional_id: string
+          updated_at?: string
+        }
+        Update: {
+          caption?: string | null
+          created_at?: string
+          display_order?: number
+          id?: string
+          is_cover?: boolean
+          media_type?: string
+          media_url?: string
+          professional_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "professional_profile_media_professional_id_fkey"
+            columns: ["professional_id"]
+            isOneToOne: false
+            referencedRelation: "professional_data"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "professional_profile_media_professional_id_fkey"
+            columns: ["professional_id"]
+            isOneToOne: false
+            referencedRelation: "public_professional_search"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "professional_profile_media_professional_id_fkey"
+            columns: ["professional_id"]
+            isOneToOne: false
+            referencedRelation: "user_professional_profiles"
+            referencedColumns: ["professional_profile_id"]
+          },
+          {
+            foreignKeyName: "professional_profile_media_professional_id_fkey"
+            columns: ["professional_id"]
+            isOneToOne: false
+            referencedRelation: "work_opportunity_match_candidates"
+            referencedColumns: ["professional_id"]
           },
         ]
       }
@@ -9101,6 +9893,13 @@ export type Database = {
             foreignKeyName: "professional_reports_professional_id_fkey"
             columns: ["professional_id"]
             isOneToOne: false
+            referencedRelation: "personal_social_profiles"
+            referencedColumns: ["profile_id"]
+          },
+          {
+            foreignKeyName: "professional_reports_professional_id_fkey"
+            columns: ["professional_id"]
+            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
@@ -9110,6 +9909,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "public_profiles"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "professional_reports_reporter_id_fkey"
+            columns: ["reporter_id"]
+            isOneToOne: false
+            referencedRelation: "personal_social_profiles"
+            referencedColumns: ["profile_id"]
           },
           {
             foreignKeyName: "professional_reports_reporter_id_fkey"
@@ -9160,6 +9966,13 @@ export type Database = {
             foreignKeyName: "professional_reviews_new_reviewed_profile_id_fkey"
             columns: ["reviewed_profile_id"]
             isOneToOne: false
+            referencedRelation: "personal_social_profiles"
+            referencedColumns: ["profile_id"]
+          },
+          {
+            foreignKeyName: "professional_reviews_new_reviewed_profile_id_fkey"
+            columns: ["reviewed_profile_id"]
+            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
@@ -9169,6 +9982,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "public_profiles"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "professional_reviews_new_reviewer_profile_id_fkey"
+            columns: ["reviewer_profile_id"]
+            isOneToOne: false
+            referencedRelation: "personal_social_profiles"
+            referencedColumns: ["profile_id"]
           },
           {
             foreignKeyName: "professional_reviews_new_reviewer_profile_id_fkey"
@@ -9270,11 +10090,32 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "professional_service_engagements_professional_id_fkey"
+            columns: ["professional_id"]
+            isOneToOne: false
+            referencedRelation: "user_professional_profiles"
+            referencedColumns: ["professional_profile_id"]
+          },
+          {
+            foreignKeyName: "professional_service_engagements_professional_id_fkey"
+            columns: ["professional_id"]
+            isOneToOne: false
+            referencedRelation: "work_opportunity_match_candidates"
+            referencedColumns: ["professional_id"]
+          },
+          {
             foreignKeyName: "professional_service_engagements_quote_id_fkey"
             columns: ["quote_id"]
             isOneToOne: true
             referencedRelation: "professional_lead_quotes"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "professional_service_engagements_requester_profile_id_fkey"
+            columns: ["requester_profile_id"]
+            isOneToOne: false
+            referencedRelation: "personal_social_profiles"
+            referencedColumns: ["profile_id"]
           },
           {
             foreignKeyName: "professional_service_engagements_requester_profile_id_fkey"
@@ -9332,6 +10173,20 @@ export type Database = {
             referencedRelation: "public_professional_search"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "professional_slug_history_professional_id_fkey"
+            columns: ["professional_id"]
+            isOneToOne: false
+            referencedRelation: "user_professional_profiles"
+            referencedColumns: ["professional_profile_id"]
+          },
+          {
+            foreignKeyName: "professional_slug_history_professional_id_fkey"
+            columns: ["professional_id"]
+            isOneToOne: false
+            referencedRelation: "work_opportunity_match_candidates"
+            referencedColumns: ["professional_id"]
+          },
         ]
       }
       professional_stats: {
@@ -9372,6 +10227,13 @@ export type Database = {
           views_count?: number
         }
         Relationships: [
+          {
+            foreignKeyName: "professional_stats_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: true
+            referencedRelation: "personal_social_profiles"
+            referencedColumns: ["profile_id"]
+          },
           {
             foreignKeyName: "professional_stats_profile_id_fkey"
             columns: ["profile_id"]
@@ -9418,6 +10280,13 @@ export type Database = {
             foreignKeyName: "profile_audit_log_profile_id_fkey"
             columns: ["profile_id"]
             isOneToOne: false
+            referencedRelation: "personal_social_profiles"
+            referencedColumns: ["profile_id"]
+          },
+          {
+            foreignKeyName: "profile_audit_log_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
@@ -9450,6 +10319,13 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "profile_favorites_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "personal_social_profiles"
+            referencedColumns: ["profile_id"]
+          },
           {
             foreignKeyName: "profile_favorites_profile_id_fkey"
             columns: ["profile_id"]
@@ -9490,6 +10366,13 @@ export type Database = {
             foreignKeyName: "profile_favorites_new_favorited_profile_id_fkey"
             columns: ["favorited_profile_id"]
             isOneToOne: false
+            referencedRelation: "personal_social_profiles"
+            referencedColumns: ["profile_id"]
+          },
+          {
+            foreignKeyName: "profile_favorites_new_favorited_profile_id_fkey"
+            columns: ["favorited_profile_id"]
+            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
@@ -9499,6 +10382,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "public_profiles"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "profile_favorites_new_favoriting_profile_id_fkey"
+            columns: ["favoriting_profile_id"]
+            isOneToOne: false
+            referencedRelation: "personal_social_profiles"
+            referencedColumns: ["profile_id"]
           },
           {
             foreignKeyName: "profile_favorites_new_favoriting_profile_id_fkey"
@@ -9549,6 +10439,13 @@ export type Database = {
             foreignKeyName: "profile_links_from_profile_id_fkey"
             columns: ["from_profile_id"]
             isOneToOne: false
+            referencedRelation: "personal_social_profiles"
+            referencedColumns: ["profile_id"]
+          },
+          {
+            foreignKeyName: "profile_links_from_profile_id_fkey"
+            columns: ["from_profile_id"]
+            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
@@ -9558,6 +10455,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "public_profiles"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "profile_links_to_profile_id_fkey"
+            columns: ["to_profile_id"]
+            isOneToOne: false
+            referencedRelation: "personal_social_profiles"
+            referencedColumns: ["profile_id"]
           },
           {
             foreignKeyName: "profile_links_to_profile_id_fkey"
@@ -9601,6 +10505,13 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "profile_members_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "personal_social_profiles"
+            referencedColumns: ["profile_id"]
+          },
           {
             foreignKeyName: "profile_members_profile_id_fkey"
             columns: ["profile_id"]
@@ -9650,6 +10561,13 @@ export type Database = {
             foreignKeyName: "profile_slug_history_profile_id_fkey"
             columns: ["profile_id"]
             isOneToOne: false
+            referencedRelation: "personal_social_profiles"
+            referencedColumns: ["profile_id"]
+          },
+          {
+            foreignKeyName: "profile_slug_history_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
@@ -9692,6 +10610,13 @@ export type Database = {
             foreignKeyName: "profile_username_history_profile_id_fkey"
             columns: ["profile_id"]
             isOneToOne: false
+            referencedRelation: "personal_social_profiles"
+            referencedColumns: ["profile_id"]
+          },
+          {
+            foreignKeyName: "profile_username_history_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
@@ -9710,6 +10635,7 @@ export type Database = {
           avatar_url: string | null
           bio: string | null
           city: string | null
+          community_reputation_score: number
           contact_email: string | null
           country: string | null
           created_at: string
@@ -9721,6 +10647,7 @@ export type Database = {
           is_suspended: boolean
           location: string | null
           location_id: string | null
+          main_territory_location_id: string | null
           name: string
           neighborhood: string | null
           phone: string | null
@@ -9732,6 +10659,7 @@ export type Database = {
           requires_pin_for_deliveries: boolean | null
           requires_pin_for_rides: boolean | null
           share_activity_default: boolean | null
+          short_bio: string | null
           show_business_links: boolean | null
           show_contact_email: boolean | null
           show_linked_profiles: boolean | null
@@ -9759,6 +10687,7 @@ export type Database = {
           avatar_url?: string | null
           bio?: string | null
           city?: string | null
+          community_reputation_score?: number
           contact_email?: string | null
           country?: string | null
           created_at?: string
@@ -9770,6 +10699,7 @@ export type Database = {
           is_suspended?: boolean
           location?: string | null
           location_id?: string | null
+          main_territory_location_id?: string | null
           name: string
           neighborhood?: string | null
           phone?: string | null
@@ -9781,6 +10711,7 @@ export type Database = {
           requires_pin_for_deliveries?: boolean | null
           requires_pin_for_rides?: boolean | null
           share_activity_default?: boolean | null
+          short_bio?: string | null
           show_business_links?: boolean | null
           show_contact_email?: boolean | null
           show_linked_profiles?: boolean | null
@@ -9808,6 +10739,7 @@ export type Database = {
           avatar_url?: string | null
           bio?: string | null
           city?: string | null
+          community_reputation_score?: number
           contact_email?: string | null
           country?: string | null
           created_at?: string
@@ -9819,6 +10751,7 @@ export type Database = {
           is_suspended?: boolean
           location?: string | null
           location_id?: string | null
+          main_territory_location_id?: string | null
           name?: string
           neighborhood?: string | null
           phone?: string | null
@@ -9830,6 +10763,7 @@ export type Database = {
           requires_pin_for_deliveries?: boolean | null
           requires_pin_for_rides?: boolean | null
           share_activity_default?: boolean | null
+          short_bio?: string | null
           show_business_links?: boolean | null
           show_contact_email?: boolean | null
           show_linked_profiles?: boolean | null
@@ -9856,6 +10790,13 @@ export type Database = {
           {
             foreignKeyName: "fk_profiles_location_id"
             columns: ["location_id"]
+            isOneToOne: false
+            referencedRelation: "locations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "profiles_main_territory_location_id_fkey"
+            columns: ["main_territory_location_id"]
             isOneToOne: false
             referencedRelation: "locations"
             referencedColumns: ["id"]
@@ -10002,6 +10943,13 @@ export type Database = {
             foreignKeyName: "qr_codes_owner_profile_id_fkey"
             columns: ["owner_profile_id"]
             isOneToOne: false
+            referencedRelation: "personal_social_profiles"
+            referencedColumns: ["profile_id"]
+          },
+          {
+            foreignKeyName: "qr_codes_owner_profile_id_fkey"
+            columns: ["owner_profile_id"]
+            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
@@ -10085,6 +11033,13 @@ export type Database = {
             foreignKeyName: "question_answers_author_profile_id_fkey"
             columns: ["author_profile_id"]
             isOneToOne: false
+            referencedRelation: "personal_social_profiles"
+            referencedColumns: ["profile_id"]
+          },
+          {
+            foreignKeyName: "question_answers_author_profile_id_fkey"
+            columns: ["author_profile_id"]
+            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
@@ -10099,6 +11054,13 @@ export type Database = {
             foreignKeyName: "question_answers_business_id_fkey"
             columns: ["business_id"]
             isOneToOne: false
+            referencedRelation: "personal_social_profiles"
+            referencedColumns: ["profile_id"]
+          },
+          {
+            foreignKeyName: "question_answers_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
@@ -10108,6 +11070,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "public_profiles"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "question_answers_professional_id_fkey"
+            columns: ["professional_id"]
+            isOneToOne: false
+            referencedRelation: "personal_social_profiles"
+            referencedColumns: ["profile_id"]
           },
           {
             foreignKeyName: "question_answers_professional_id_fkey"
@@ -10216,6 +11185,13 @@ export type Database = {
             foreignKeyName: "review_helpfulness_voter_profile_id_fkey"
             columns: ["voter_profile_id"]
             isOneToOne: false
+            referencedRelation: "personal_social_profiles"
+            referencedColumns: ["profile_id"]
+          },
+          {
+            foreignKeyName: "review_helpfulness_voter_profile_id_fkey"
+            columns: ["voter_profile_id"]
+            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
@@ -10273,6 +11249,13 @@ export type Database = {
             foreignKeyName: "review_reports_reporter_profile_id_fkey"
             columns: ["reporter_profile_id"]
             isOneToOne: false
+            referencedRelation: "personal_social_profiles"
+            referencedColumns: ["profile_id"]
+          },
+          {
+            foreignKeyName: "review_reports_reporter_profile_id_fkey"
+            columns: ["reporter_profile_id"]
+            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
@@ -10289,6 +11272,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "reviews"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "review_reports_reviewed_by_fkey"
+            columns: ["reviewed_by"]
+            isOneToOne: false
+            referencedRelation: "personal_social_profiles"
+            referencedColumns: ["profile_id"]
           },
           {
             foreignKeyName: "review_reports_reviewed_by_fkey"
@@ -10370,6 +11360,13 @@ export type Database = {
             foreignKeyName: "reviews_reviewed_profile_id_fkey"
             columns: ["reviewed_profile_id"]
             isOneToOne: false
+            referencedRelation: "personal_social_profiles"
+            referencedColumns: ["profile_id"]
+          },
+          {
+            foreignKeyName: "reviews_reviewed_profile_id_fkey"
+            columns: ["reviewed_profile_id"]
+            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
@@ -10379,6 +11376,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "public_profiles"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reviews_reviewer_profile_id_fkey"
+            columns: ["reviewer_profile_id"]
+            isOneToOne: false
+            referencedRelation: "personal_social_profiles"
+            referencedColumns: ["profile_id"]
           },
           {
             foreignKeyName: "reviews_reviewer_profile_id_fkey"
@@ -10434,6 +11438,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "ride_dispatch_audit_driver_profile_id_fkey"
+            columns: ["driver_profile_id"]
+            isOneToOne: false
+            referencedRelation: "personal_social_profiles"
+            referencedColumns: ["profile_id"]
+          },
           {
             foreignKeyName: "ride_dispatch_audit_driver_profile_id_fkey"
             columns: ["driver_profile_id"]
@@ -10499,6 +11510,13 @@ export type Database = {
             foreignKeyName: "ride_offers_driver_profile_id_fkey"
             columns: ["driver_profile_id"]
             isOneToOne: false
+            referencedRelation: "personal_social_profiles"
+            referencedColumns: ["profile_id"]
+          },
+          {
+            foreignKeyName: "ride_offers_driver_profile_id_fkey"
+            columns: ["driver_profile_id"]
+            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
@@ -10551,6 +11569,13 @@ export type Database = {
             foreignKeyName: "ride_ratings_rated_id_fkey"
             columns: ["rated_id"]
             isOneToOne: false
+            referencedRelation: "personal_social_profiles"
+            referencedColumns: ["profile_id"]
+          },
+          {
+            foreignKeyName: "ride_ratings_rated_id_fkey"
+            columns: ["rated_id"]
+            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
@@ -10560,6 +11585,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "public_profiles"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ride_ratings_rater_id_fkey"
+            columns: ["rater_id"]
+            isOneToOne: false
+            referencedRelation: "personal_social_profiles"
+            referencedColumns: ["profile_id"]
           },
           {
             foreignKeyName: "ride_ratings_rater_id_fkey"
@@ -10653,6 +11685,13 @@ export type Database = {
             foreignKeyName: "ride_reports_reporter_profile_id_fkey"
             columns: ["reporter_profile_id"]
             isOneToOne: false
+            referencedRelation: "personal_social_profiles"
+            referencedColumns: ["profile_id"]
+          },
+          {
+            foreignKeyName: "ride_reports_reporter_profile_id_fkey"
+            columns: ["reporter_profile_id"]
+            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
@@ -10662,6 +11701,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "public_profiles"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ride_reports_reviewed_by_fkey"
+            columns: ["reviewed_by"]
+            isOneToOne: false
+            referencedRelation: "personal_social_profiles"
+            referencedColumns: ["profile_id"]
           },
           {
             foreignKeyName: "ride_reports_reviewed_by_fkey"
@@ -10833,6 +11879,13 @@ export type Database = {
             foreignKeyName: "ride_requests_driver_profile_id_fkey"
             columns: ["driver_profile_id"]
             isOneToOne: false
+            referencedRelation: "personal_social_profiles"
+            referencedColumns: ["profile_id"]
+          },
+          {
+            foreignKeyName: "ride_requests_driver_profile_id_fkey"
+            columns: ["driver_profile_id"]
+            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
@@ -10863,6 +11916,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "locations"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ride_requests_passenger_profile_id_fkey"
+            columns: ["passenger_profile_id"]
+            isOneToOne: false
+            referencedRelation: "personal_social_profiles"
+            referencedColumns: ["profile_id"]
           },
           {
             foreignKeyName: "ride_requests_passenger_profile_id_fkey"
@@ -10940,6 +12000,13 @@ export type Database = {
           status?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "ride_shares_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "personal_social_profiles"
+            referencedColumns: ["profile_id"]
+          },
           {
             foreignKeyName: "ride_shares_created_by_fkey"
             columns: ["created_by"]
@@ -11062,6 +12129,13 @@ export type Database = {
             foreignKeyName: "route_reservations_passenger_profile_id_fkey"
             columns: ["passenger_profile_id"]
             isOneToOne: false
+            referencedRelation: "personal_social_profiles"
+            referencedColumns: ["profile_id"]
+          },
+          {
+            foreignKeyName: "route_reservations_passenger_profile_id_fkey"
+            columns: ["passenger_profile_id"]
+            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
@@ -11152,6 +12226,13 @@ export type Database = {
             foreignKeyName: "safety_audit_log_performed_by_fkey"
             columns: ["performed_by"]
             isOneToOne: false
+            referencedRelation: "personal_social_profiles"
+            referencedColumns: ["profile_id"]
+          },
+          {
+            foreignKeyName: "safety_audit_log_performed_by_fkey"
+            columns: ["performed_by"]
+            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
@@ -11208,6 +12289,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "safety_incidents"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "safety_evidence_uploaded_by_fkey"
+            columns: ["uploaded_by"]
+            isOneToOne: false
+            referencedRelation: "personal_social_profiles"
+            referencedColumns: ["profile_id"]
           },
           {
             foreignKeyName: "safety_evidence_uploaded_by_fkey"
@@ -11276,6 +12364,13 @@ export type Database = {
             foreignKeyName: "safety_incidents_reported_by_fkey"
             columns: ["reported_by"]
             isOneToOne: false
+            referencedRelation: "personal_social_profiles"
+            referencedColumns: ["profile_id"]
+          },
+          {
+            foreignKeyName: "safety_incidents_reported_by_fkey"
+            columns: ["reported_by"]
+            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
@@ -11321,6 +12416,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "posts"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "saved_posts_new_saver_profile_id_fkey"
+            columns: ["saver_profile_id"]
+            isOneToOne: false
+            referencedRelation: "personal_social_profiles"
+            referencedColumns: ["profile_id"]
           },
           {
             foreignKeyName: "saved_posts_new_saver_profile_id_fkey"
@@ -12416,6 +13518,13 @@ export type Database = {
             foreignKeyName: "trust_admin_actions_applied_by_profile_id_fkey"
             columns: ["applied_by_profile_id"]
             isOneToOne: false
+            referencedRelation: "personal_social_profiles"
+            referencedColumns: ["profile_id"]
+          },
+          {
+            foreignKeyName: "trust_admin_actions_applied_by_profile_id_fkey"
+            columns: ["applied_by_profile_id"]
+            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
@@ -12425,6 +13534,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "public_profiles"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "trust_admin_actions_subject_profile_id_fkey"
+            columns: ["subject_profile_id"]
+            isOneToOne: false
+            referencedRelation: "personal_social_profiles"
+            referencedColumns: ["profile_id"]
           },
           {
             foreignKeyName: "trust_admin_actions_subject_profile_id_fkey"
@@ -12521,6 +13637,13 @@ export type Database = {
             foreignKeyName: "trust_events_actor_profile_id_fkey"
             columns: ["actor_profile_id"]
             isOneToOne: false
+            referencedRelation: "personal_social_profiles"
+            referencedColumns: ["profile_id"]
+          },
+          {
+            foreignKeyName: "trust_events_actor_profile_id_fkey"
+            columns: ["actor_profile_id"]
+            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
@@ -12535,6 +13658,13 @@ export type Database = {
             foreignKeyName: "trust_events_reviewed_by_profile_id_fkey"
             columns: ["reviewed_by_profile_id"]
             isOneToOne: false
+            referencedRelation: "personal_social_profiles"
+            referencedColumns: ["profile_id"]
+          },
+          {
+            foreignKeyName: "trust_events_reviewed_by_profile_id_fkey"
+            columns: ["reviewed_by_profile_id"]
+            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
@@ -12544,6 +13674,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "public_profiles"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "trust_events_subject_profile_id_fkey"
+            columns: ["subject_profile_id"]
+            isOneToOne: false
+            referencedRelation: "personal_social_profiles"
+            referencedColumns: ["profile_id"]
           },
           {
             foreignKeyName: "trust_events_subject_profile_id_fkey"
@@ -12715,6 +13852,13 @@ export type Database = {
             referencedRelation: "public_business_search"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "user_favorite_businesses_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "user_companies"
+            referencedColumns: ["company_id"]
+          },
         ]
       }
       user_follows: {
@@ -12741,6 +13885,13 @@ export type Database = {
             foreignKeyName: "user_follows_follower_id_fkey"
             columns: ["follower_id"]
             isOneToOne: false
+            referencedRelation: "personal_social_profiles"
+            referencedColumns: ["profile_id"]
+          },
+          {
+            foreignKeyName: "user_follows_follower_id_fkey"
+            columns: ["follower_id"]
+            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
@@ -12750,6 +13901,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "public_profiles"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_follows_following_id_fkey"
+            columns: ["following_id"]
+            isOneToOne: false
+            referencedRelation: "personal_social_profiles"
+            referencedColumns: ["profile_id"]
           },
           {
             foreignKeyName: "user_follows_following_id_fkey"
@@ -12863,6 +14021,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "public_business_search"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_recommended_businesses_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "user_companies"
+            referencedColumns: ["company_id"]
           },
         ]
       }
@@ -13202,6 +14367,13 @@ export type Database = {
             referencedRelation: "public_business_search"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "user_subscriptions_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "user_companies"
+            referencedColumns: ["company_id"]
+          },
         ]
       }
       vagas: {
@@ -13356,6 +14528,13 @@ export type Database = {
             foreignKeyName: "vagas_owner_profile_id_fkey"
             columns: ["owner_profile_id"]
             isOneToOne: false
+            referencedRelation: "personal_social_profiles"
+            referencedColumns: ["profile_id"]
+          },
+          {
+            foreignKeyName: "vagas_owner_profile_id_fkey"
+            columns: ["owner_profile_id"]
+            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
@@ -13425,6 +14604,13 @@ export type Database = {
             foreignKeyName: "verification_profile_id_fkey"
             columns: ["profile_id"]
             isOneToOne: false
+            referencedRelation: "personal_social_profiles"
+            referencedColumns: ["profile_id"]
+          },
+          {
+            foreignKeyName: "verification_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
@@ -13433,6 +14619,157 @@ export type Database = {
             columns: ["profile_id"]
             isOneToOne: false
             referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      work_opportunities: {
+        Row: {
+          author_profile_id: string
+          author_user_id: string | null
+          availability_end_at: string | null
+          availability_notes: string | null
+          availability_start_at: string | null
+          closed_at: string | null
+          compensation_notes: string | null
+          contact_notes: string | null
+          created_at: string
+          description: string
+          headline: string
+          id: string
+          is_feed_distributed: boolean
+          matching_metadata: Json
+          opportunity_type: Database["public"]["Enums"]["work_opportunity_type"]
+          post_id: string | null
+          professional_category: string
+          professional_id: string | null
+          published_at: string | null
+          reach: string
+          source_context: string
+          status: Database["public"]["Enums"]["work_opportunity_status"]
+          territory_location_id: string
+          updated_at: string
+          urgency: string
+          visibility: Database["public"]["Enums"]["professional_profile_visibility"]
+        }
+        Insert: {
+          author_profile_id: string
+          author_user_id?: string | null
+          availability_end_at?: string | null
+          availability_notes?: string | null
+          availability_start_at?: string | null
+          closed_at?: string | null
+          compensation_notes?: string | null
+          contact_notes?: string | null
+          created_at?: string
+          description: string
+          headline: string
+          id?: string
+          is_feed_distributed?: boolean
+          matching_metadata?: Json
+          opportunity_type: Database["public"]["Enums"]["work_opportunity_type"]
+          post_id?: string | null
+          professional_category: string
+          professional_id?: string | null
+          published_at?: string | null
+          reach?: string
+          source_context?: string
+          status?: Database["public"]["Enums"]["work_opportunity_status"]
+          territory_location_id: string
+          updated_at?: string
+          urgency?: string
+          visibility?: Database["public"]["Enums"]["professional_profile_visibility"]
+        }
+        Update: {
+          author_profile_id?: string
+          author_user_id?: string | null
+          availability_end_at?: string | null
+          availability_notes?: string | null
+          availability_start_at?: string | null
+          closed_at?: string | null
+          compensation_notes?: string | null
+          contact_notes?: string | null
+          created_at?: string
+          description?: string
+          headline?: string
+          id?: string
+          is_feed_distributed?: boolean
+          matching_metadata?: Json
+          opportunity_type?: Database["public"]["Enums"]["work_opportunity_type"]
+          post_id?: string | null
+          professional_category?: string
+          professional_id?: string | null
+          published_at?: string | null
+          reach?: string
+          source_context?: string
+          status?: Database["public"]["Enums"]["work_opportunity_status"]
+          territory_location_id?: string
+          updated_at?: string
+          urgency?: string
+          visibility?: Database["public"]["Enums"]["professional_profile_visibility"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "work_opportunities_author_profile_id_fkey"
+            columns: ["author_profile_id"]
+            isOneToOne: false
+            referencedRelation: "personal_social_profiles"
+            referencedColumns: ["profile_id"]
+          },
+          {
+            foreignKeyName: "work_opportunities_author_profile_id_fkey"
+            columns: ["author_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "work_opportunities_author_profile_id_fkey"
+            columns: ["author_profile_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "work_opportunities_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: true
+            referencedRelation: "posts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "work_opportunities_professional_id_fkey"
+            columns: ["professional_id"]
+            isOneToOne: false
+            referencedRelation: "professional_data"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "work_opportunities_professional_id_fkey"
+            columns: ["professional_id"]
+            isOneToOne: false
+            referencedRelation: "public_professional_search"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "work_opportunities_professional_id_fkey"
+            columns: ["professional_id"]
+            isOneToOne: false
+            referencedRelation: "user_professional_profiles"
+            referencedColumns: ["professional_profile_id"]
+          },
+          {
+            foreignKeyName: "work_opportunities_professional_id_fkey"
+            columns: ["professional_id"]
+            isOneToOne: false
+            referencedRelation: "work_opportunity_match_candidates"
+            referencedColumns: ["professional_id"]
+          },
+          {
+            foreignKeyName: "work_opportunities_territory_location_id_fkey"
+            columns: ["territory_location_id"]
+            isOneToOne: false
+            referencedRelation: "locations"
             referencedColumns: ["id"]
           },
         ]
@@ -13597,6 +14934,13 @@ export type Database = {
             foreignKeyName: "community_issues_author_profile_id_fkey"
             columns: ["profile_id"]
             isOneToOne: false
+            referencedRelation: "personal_social_profiles"
+            referencedColumns: ["profile_id"]
+          },
+          {
+            foreignKeyName: "community_issues_author_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
@@ -13631,6 +14975,13 @@ export type Database = {
           vehicle: Json | null
         }
         Relationships: [
+          {
+            foreignKeyName: "driver_data_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: true
+            referencedRelation: "personal_social_profiles"
+            referencedColumns: ["profile_id"]
+          },
           {
             foreignKeyName: "driver_data_profile_id_fkey"
             columns: ["profile_id"]
@@ -13790,6 +15141,13 @@ export type Database = {
             referencedRelation: "public_business_search"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "gastronomy_profiles_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: true
+            referencedRelation: "user_companies"
+            referencedColumns: ["company_id"]
+          },
         ]
       }
       geography_columns: {
@@ -13844,6 +15202,32 @@ export type Database = {
           with_coordinates: number | null
         }
         Relationships: []
+      }
+      personal_social_profiles: {
+        Row: {
+          avatar_url: string | null
+          bio: string | null
+          community_reputation_score: number | null
+          created_at: string | null
+          display_name: string | null
+          groups_count: number | null
+          main_territory_location_id: string | null
+          name: string | null
+          profile_id: string | null
+          short_bio: string | null
+          updated_at: string | null
+          user_id: string | null
+          username: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "profiles_main_territory_location_id_fkey"
+            columns: ["main_territory_location_id"]
+            isOneToOne: false
+            referencedRelation: "locations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       pii_access_stats: {
         Row: {
@@ -13906,6 +15290,13 @@ export type Database = {
             foreignKeyName: "business_data_profile_id_fkey"
             columns: ["profile_id"]
             isOneToOne: false
+            referencedRelation: "personal_social_profiles"
+            referencedColumns: ["profile_id"]
+          },
+          {
+            foreignKeyName: "business_data_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
@@ -13921,6 +15312,7 @@ export type Database = {
       public_professional_search: {
         Row: {
           address_id: string | null
+          availability_notes: string | null
           created_at: string | null
           description: string | null
           geographic_path: string | null
@@ -13931,6 +15323,8 @@ export type Database = {
           location_id: string | null
           longitude: number | null
           metadata: Json | null
+          owner_user_id: string | null
+          portfolio_items: Json | null
           price_range: string | null
           professional_name: string | null
           profile_id: string | null
@@ -13938,6 +15332,9 @@ export type Database = {
           service_category: string | null
           slug: string | null
           updated_at: string | null
+          visibility:
+            | Database["public"]["Enums"]["professional_profile_visibility"]
+            | null
         }
         Relationships: [
           {
@@ -13967,6 +15364,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "locations"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "professional_data_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "personal_social_profiles"
+            referencedColumns: ["profile_id"]
           },
           {
             foreignKeyName: "professional_data_profile_id_fkey"
@@ -14005,6 +15409,13 @@ export type Database = {
             foreignKeyName: "profile_links_from_profile_id_fkey"
             columns: ["from_profile_id"]
             isOneToOne: false
+            referencedRelation: "personal_social_profiles"
+            referencedColumns: ["profile_id"]
+          },
+          {
+            foreignKeyName: "profile_links_from_profile_id_fkey"
+            columns: ["from_profile_id"]
+            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
@@ -14014,6 +15425,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "public_profiles"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "profile_links_to_profile_id_fkey"
+            columns: ["to_profile_id"]
+            isOneToOne: false
+            referencedRelation: "personal_social_profiles"
+            referencedColumns: ["profile_id"]
           },
           {
             foreignKeyName: "profile_links_to_profile_id_fkey"
@@ -14064,6 +15482,105 @@ export type Database = {
           },
         ]
       }
+      public_work_opportunity_search: {
+        Row: {
+          author_avatar_url: string | null
+          author_name: string | null
+          author_profile_id: string | null
+          availability_notes: string | null
+          compensation_notes: string | null
+          contact_notes: string | null
+          created_at: string | null
+          description: string | null
+          geographic_path: string | null
+          headline: string | null
+          id: string | null
+          opportunity_type:
+            | Database["public"]["Enums"]["work_opportunity_type"]
+            | null
+          post_id: string | null
+          professional_category: string | null
+          professional_id: string | null
+          professional_name: string | null
+          professional_slug: string | null
+          published_at: string | null
+          reach: string | null
+          service_category: string | null
+          status: Database["public"]["Enums"]["work_opportunity_status"] | null
+          territory_location_id: string | null
+          territory_name: string | null
+          updated_at: string | null
+          urgency: string | null
+          visibility:
+            | Database["public"]["Enums"]["professional_profile_visibility"]
+            | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "work_opportunities_author_profile_id_fkey"
+            columns: ["author_profile_id"]
+            isOneToOne: false
+            referencedRelation: "personal_social_profiles"
+            referencedColumns: ["profile_id"]
+          },
+          {
+            foreignKeyName: "work_opportunities_author_profile_id_fkey"
+            columns: ["author_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "work_opportunities_author_profile_id_fkey"
+            columns: ["author_profile_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "work_opportunities_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: true
+            referencedRelation: "posts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "work_opportunities_professional_id_fkey"
+            columns: ["professional_id"]
+            isOneToOne: false
+            referencedRelation: "professional_data"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "work_opportunities_professional_id_fkey"
+            columns: ["professional_id"]
+            isOneToOne: false
+            referencedRelation: "public_professional_search"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "work_opportunities_professional_id_fkey"
+            columns: ["professional_id"]
+            isOneToOne: false
+            referencedRelation: "user_professional_profiles"
+            referencedColumns: ["professional_profile_id"]
+          },
+          {
+            foreignKeyName: "work_opportunities_professional_id_fkey"
+            columns: ["professional_id"]
+            isOneToOne: false
+            referencedRelation: "work_opportunity_match_candidates"
+            referencedColumns: ["professional_id"]
+          },
+          {
+            foreignKeyName: "work_opportunities_territory_location_id_fkey"
+            columns: ["territory_location_id"]
+            isOneToOne: false
+            referencedRelation: "locations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       territory_aliases: {
         Row: {
           alias_type: string | null
@@ -14096,6 +15613,166 @@ export type Database = {
           {
             foreignKeyName: "location_aliases_location_id_fkey"
             columns: ["location_id"]
+            isOneToOne: false
+            referencedRelation: "locations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_companies: {
+        Row: {
+          business_name: string | null
+          category: string | null
+          company_id: string | null
+          created_at: string | null
+          location_id: string | null
+          profile_id: string | null
+          slug: string | null
+          status: string | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "business_data_location_id_fkey"
+            columns: ["location_id"]
+            isOneToOne: false
+            referencedRelation: "locations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "business_data_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "personal_social_profiles"
+            referencedColumns: ["profile_id"]
+          },
+          {
+            foreignKeyName: "business_data_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "business_data_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_organizations: {
+        Row: {
+          joined_at: string | null
+          membership_role: string | null
+          organization_id: string | null
+          organization_name: string | null
+          organization_slug: string | null
+          organization_type: string | null
+          user_id: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "group_members_new_group_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_professional_profiles: {
+        Row: {
+          created_at: string | null
+          is_accepting_clients: boolean | null
+          is_verified: boolean | null
+          location_id: string | null
+          professional_name: string | null
+          professional_profile_id: string | null
+          profile_id: string | null
+          rating: number | null
+          service_category: string | null
+          updated_at: string | null
+          user_id: string | null
+          visibility:
+            | Database["public"]["Enums"]["professional_profile_visibility"]
+            | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fk_professional_data_location_id"
+            columns: ["location_id"]
+            isOneToOne: false
+            referencedRelation: "locations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "professional_data_location_id_fkey"
+            columns: ["location_id"]
+            isOneToOne: false
+            referencedRelation: "locations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "professional_data_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "personal_social_profiles"
+            referencedColumns: ["profile_id"]
+          },
+          {
+            foreignKeyName: "professional_data_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "professional_data_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      work_opportunity_match_candidates: {
+        Row: {
+          availability_notes: string | null
+          is_accepting_clients: boolean | null
+          opportunity_author_user_id: string | null
+          opportunity_id: string | null
+          professional_category: string | null
+          professional_id: string | null
+          professional_location_id: string | null
+          professional_owner_user_id: string | null
+          professional_visibility:
+            | Database["public"]["Enums"]["professional_profile_visibility"]
+            | null
+          service_category: string | null
+          territory_location_id: string | null
+          urgency: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fk_professional_data_location_id"
+            columns: ["professional_location_id"]
+            isOneToOne: false
+            referencedRelation: "locations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "professional_data_location_id_fkey"
+            columns: ["professional_location_id"]
+            isOneToOne: false
+            referencedRelation: "locations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "work_opportunities_territory_location_id_fkey"
+            columns: ["territory_location_id"]
             isOneToOne: false
             referencedRelation: "locations"
             referencedColumns: ["id"]
@@ -14428,7 +16105,37 @@ export type Database = {
         Args: { p_channel_id: string }
         Returns: boolean
       }
+      communication_distribution_rank_reason: {
+        Args: {
+          p_content_format: string
+          p_publication_type: string
+          p_reliability_score?: number
+          p_target_type: string
+        }
+        Returns: string
+      }
+      communication_distribution_rank_score: {
+        Args: {
+          p_content_format: string
+          p_publication_type: string
+          p_reliability_score?: number
+          p_target_type: string
+        }
+        Returns: number
+      }
+      communication_distribution_relevance_score: {
+        Args: {
+          p_content_format: string
+          p_publication_type: string
+          p_target_type: string
+        }
+        Returns: number
+      }
       communication_slugify: { Args: { input: string }; Returns: string }
+      communication_upsert_default_distribution: {
+        Args: { p_publication_id: string }
+        Returns: undefined
+      }
       count_lost_found_posts_by_type: {
         Args: never
         Returns: {
@@ -14582,6 +16289,7 @@ export type Database = {
         Returns: {
           accepts_remote: boolean | null
           address_id: string | null
+          availability_notes: string | null
           available_hours: Json | null
           certifications: Json | null
           created_at: string
@@ -14597,6 +16305,8 @@ export type Database = {
           license_state: string | null
           location_id: string
           metadata: Json
+          owner_user_id: string | null
+          portfolio_items: Json
           price_range: string | null
           price_type: string | null
           profession: string | null
@@ -14612,7 +16322,9 @@ export type Database = {
           slug: string | null
           specialties: string[] | null
           updated_at: string
+          updated_by_user_id: string | null
           verified_at: string | null
+          visibility: Database["public"]["Enums"]["professional_profile_visibility"]
           whatsapp: string | null
           years_experience: number | null
         }
@@ -15535,6 +17247,13 @@ export type Database = {
       enablelongtransactions: { Args: never; Returns: string }
       equals: { Args: { geom1: unknown; geom2: unknown }; Returns: boolean }
       exec_sql: { Args: { sql: string }; Returns: Json }
+      expire_stale_work_opportunities: {
+        Args: { p_now?: string }
+        Returns: {
+          expired_count: number
+          expired_ids: string[]
+        }[]
+      }
       find_eligible_drivers: {
         Args: {
           p_max_radius_km?: number
@@ -15686,6 +17405,7 @@ export type Database = {
           avatar_url: string | null
           bio: string | null
           city: string | null
+          community_reputation_score: number
           contact_email: string | null
           country: string | null
           created_at: string
@@ -15697,6 +17417,7 @@ export type Database = {
           is_suspended: boolean
           location: string | null
           location_id: string | null
+          main_territory_location_id: string | null
           name: string
           neighborhood: string | null
           phone: string | null
@@ -15708,6 +17429,7 @@ export type Database = {
           requires_pin_for_deliveries: boolean | null
           requires_pin_for_rides: boolean | null
           share_activity_default: boolean | null
+          short_bio: string | null
           show_business_links: boolean | null
           show_contact_email: boolean | null
           show_linked_profiles: boolean | null
@@ -17216,6 +18938,10 @@ export type Database = {
         }
         Returns: Json
       }
+      work_opportunity_expiration_hours: {
+        Args: { p_type: Database["public"]["Enums"]["work_opportunity_type"] }
+        Returns: number
+      }
     }
     Enums: {
       address_precision:
@@ -17352,6 +19078,10 @@ export type Database = {
         | "completed"
         | "cancelled"
         | "archived"
+      professional_profile_visibility:
+        | "public_listed"
+        | "public_unlisted"
+        | "private"
       qr_destination_variant:
         | "canonical"
         | "short"
@@ -17440,6 +19170,18 @@ export type Database = {
         | "mobility_company"
         | "mobility_driver"
         | "mobility_courier"
+      work_opportunity_status:
+        | "active"
+        | "paused"
+        | "filled"
+        | "expired"
+        | "cancelled"
+      work_opportunity_type:
+        | "looking_for_work"
+        | "offering_work"
+        | "freelance"
+        | "quick_job"
+        | "service_availability"
     }
     CompositeTypes: {
       geometry_dump: {
@@ -18175,6 +19917,11 @@ export const Constants = {
         "cancelled",
         "archived",
       ],
+      professional_profile_visibility: [
+        "public_listed",
+        "public_unlisted",
+        "private",
+      ],
       qr_destination_variant: [
         "canonical",
         "short",
@@ -18274,6 +20021,20 @@ export const Constants = {
         "mobility_company",
         "mobility_driver",
         "mobility_courier",
+      ],
+      work_opportunity_status: [
+        "active",
+        "paused",
+        "filled",
+        "expired",
+        "cancelled",
+      ],
+      work_opportunity_type: [
+        "looking_for_work",
+        "offering_work",
+        "freelance",
+        "quick_job",
+        "service_availability",
       ],
     },
   },

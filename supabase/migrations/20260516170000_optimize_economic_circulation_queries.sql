@@ -60,7 +60,21 @@ CREATE INDEX IF NOT EXISTS idx_professional_data_service_category_trgm
 -- --------------------------------------------------------------------------
 
 DO $$
+DECLARE
+  v_public_vaga_status text;
 BEGIN
+  SELECT CASE
+    WHEN EXISTS (
+      SELECT 1
+      FROM pg_enum e
+      JOIN pg_type t ON t.oid = e.enumtypid
+      WHERE t.typname = 'vaga_status'
+        AND e.enumlabel = 'published'
+    ) THEN 'published'
+    ELSE 'ativa'
+  END
+  INTO v_public_vaga_status;
+
   IF EXISTS (
     SELECT 1
     FROM information_schema.columns
@@ -68,11 +82,11 @@ BEGIN
       AND table_name = 'vagas'
       AND column_name = 'published_at'
   ) THEN
-    EXECUTE '
+    EXECUTE format('
       CREATE INDEX IF NOT EXISTS idx_vagas_public_timeline
       ON public.vagas(status, published_at DESC, created_at DESC)
-      WHERE status = ''published''
-    ';
+      WHERE status = %L::public.vaga_status
+    ', v_public_vaga_status);
   END IF;
 END $$;
 
@@ -120,4 +134,3 @@ BEGIN
 END $$;
 
 NOTIFY pgrst, 'reload schema';
-
