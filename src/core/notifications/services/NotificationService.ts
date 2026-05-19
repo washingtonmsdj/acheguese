@@ -14,8 +14,9 @@ import { SessionService } from '@/core/session/services/SessionService';
 export interface Notification {
   id: string;
   user_id: string;
-  type: 'info' | 'success' | 'warning' | 'error';
+  type: string;
   category: 'transactional' | 'social' | 'system' | 'marketing';
+  priority?: 'low' | 'medium' | 'high' | 'urgent';
   title: string;
   message: string;
   action_url?: string;
@@ -24,6 +25,8 @@ export interface Notification {
   read: boolean;
   read_at?: string;
   created_at: string;
+  updated_at?: string;
+  deleted_at?: string | null;
 }
 
 export interface CreateNotificationInput {

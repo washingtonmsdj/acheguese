@@ -1,6 +1,16 @@
-import { Baby, BookOpen, Calculator, Dumbbell, Languages, Music, School, Wrench } from 'lucide-react';
+import {
+  Baby,
+  BookOpen,
+  Calculator,
+  Dumbbell,
+  Languages,
+  Music,
+  School,
+  Wrench,
+  type LucideIcon,
+} from 'lucide-react';
 
-export const NICHE_ICONS: Record<string, React.ElementType> = {
+export const NICHE_ICONS: Record<string, LucideIcon> = {
   regular_school: School,
   daycare: Baby,
   language_school: Languages,

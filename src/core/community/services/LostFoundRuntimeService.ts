@@ -48,7 +48,11 @@ class LostFoundRuntimeService {
   }
 
   async getPostsPage(
-    filters: { tipo?: string; categoria?: string; territoryFilter?: TerritoryFilter } = {},
+    filters: {
+      tipo?: "perdido" | "achado" | "todos";
+      categoria?: string;
+      territoryFilter?: TerritoryFilter;
+    } = {},
     from: number,
     to: number,
   ): Promise<LostFoundPost[]> {

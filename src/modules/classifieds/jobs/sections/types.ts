@@ -7,6 +7,13 @@
 
 import type { NavigateFunction } from "react-router-dom";
 import type {
+  Vaga as VagaModel,
+  VagaSortOption as VagaSortOptionModel,
+  VagaContrato as VagaContratoModel,
+  VagaModalidade as VagaModalidadeModel,
+  VagaNivel as VagaNivelModel,
+} from "../types/vagas.types";
+export type {
   Vaga,
   VagaSortOption,
   VagaContrato,
@@ -37,9 +44,9 @@ export interface BaseSectionProps {
 export interface VagasFilters {
   readonly search?: string | null;
   readonly categoria: string | null;
-  readonly contrato: VagaContrato | null;
-  readonly modalidade: VagaModalidade | null;
-  readonly nivel: VagaNivel | null;
+  readonly contrato: VagaContratoModel | null;
+  readonly modalidade: VagaModalidadeModel | null;
+  readonly nivel: VagaNivelModel | null;
   readonly bairroId: string | null;
   readonly hasSalary: boolean | null;
 }
@@ -104,15 +111,15 @@ export interface VagasFiltrosSectionProps extends BaseSectionProps {
   readonly updateFilter: (key: keyof VagasFilters, value: any) => void;
   readonly clearFilters: () => void;
   readonly hasActiveFilters: boolean;
-  readonly sort: VagaSortOption;
-  readonly setSort: (sort: VagaSortOption) => void;
+  readonly sort: VagaSortOptionModel;
+  readonly setSort: (sort: VagaSortOptionModel) => void;
   readonly bairros: readonly Bairro[];
 }
 
 export interface VagasListagemSectionProps extends BaseSectionProps {
-  readonly vagas: readonly Vaga[];
-  readonly vagasUrgentes: readonly Vaga[];
-  readonly vagasDestaque: readonly Vaga[];
+  readonly vagas: readonly VagaModel[];
+  readonly vagasUrgentes: readonly VagaModel[];
+  readonly vagasDestaque: readonly VagaModel[];
   readonly total: number;
   readonly hasMore: boolean;
   readonly isLoading: boolean;

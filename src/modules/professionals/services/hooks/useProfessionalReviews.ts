@@ -14,7 +14,7 @@ import { useAppUrls } from "@/core/routing/hooks/useAppUrls";
 import { useCommunityInteractions } from "@/core/social/hooks/useCommunityInteractions";
 import { profileService } from "@/core/profiles/services/ProfileService";
 import { ReviewsService } from "@/core/reviews/services/ReviewsService";
-import type { ReviewWithProfiles } from "@/shared/types/reviews";
+import type { ReviewWithProfiles } from "@/core/reviews/types";
 export interface ProfessionalReview {
   id: string;
   rating: number;

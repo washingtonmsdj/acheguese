@@ -15,6 +15,7 @@ import { LocationType, EntityStatus } from "@/shared/types/enums";
 import type { Post, CreatePostData, UpdatePostData } from "../types";
 import { PostError } from "../types";
 import * as queries from "./posts.queries";
+import type { Json } from "@/integrations/supabase/types";
 
 // ============================================================================
 // 📝 POST MUTATIONS - CRUD de posts
@@ -92,7 +93,7 @@ export async function createPost(data: {
         content_intent: data.content_intent ?? null,
         display_format: data.display_format ?? null,
         distribution_channels: data.distribution_channels || [],
-        content_payload: data.content_payload ?? null,
+        content_payload: (data.content_payload ?? null) as Json,
         is_published: true,
       })
       .select(

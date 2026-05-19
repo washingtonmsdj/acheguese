@@ -47,6 +47,7 @@ const CATEGORIAS = [
   { id: "objetos", label: "Objetos", icon: "📦" },
   { id: "outro", label: "Outro", icon: "❓" },
 ];
+type LostFoundTipoFilter = "todos" | "perdido" | "achado";
 
 interface LostFoundItem {
   id: string;
@@ -65,7 +66,7 @@ export default function AchadosPerdidosPage() {
   const navigate = useNavigate();
   const appUrls = useAppUrls(); // ✅ SSOT URLs
   const [search, setSearch] = useState("");
-  const [filterTipo, setFilterTipo] = useState("todos");
+  const [filterTipo, setFilterTipo] = useState<LostFoundTipoFilter>("todos");
   const [filterCategoria, setFilterCategoria] = useState("todos");
 
   // ✅ Verificação de autenticação
@@ -90,7 +91,7 @@ export default function AchadosPerdidosPage() {
   const fetchPage = useCallback(
     async (
       pageNum: number,
-      tipo: string,
+      tipo: "perdido" | "achado" | "todos",
       categoria: string,
       locationId: string | null,
     ) => {
@@ -249,11 +250,11 @@ export default function AchadosPerdidosPage() {
         {[
           { id: "todos", label: "Todos", color: "" },
           { id: "perdido", label: "🔴 Perdido", color: "text-destructive" },
-          { id: "encontrado", label: "🟢 Encontrado", color: "text-success" },
+          { id: "achado" as const, label: "🟢 Encontrado", color: "text-success" },
         ].map((t) => (
           <button
             key={t.id}
-            onClick={() => setFilterTipo(t.id)}
+            onClick={() => setFilterTipo(t.id as LostFoundTipoFilter)}
             className={cn(
               "px-3 py-1.5 rounded-full border text-xs font-medium transition-all",
               filterTipo === t.id

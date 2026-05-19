@@ -5,7 +5,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { ReviewsService } from "@/core/reviews/services/ReviewsService";
-import type { ReviewWithProfiles } from "@/shared/types/reviews";
+import type { ReviewWithProfiles } from "@/core/reviews/types";
 
 interface UseBusinessReviewsReturn {
   reviews: ReviewWithProfiles[];

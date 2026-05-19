@@ -23,7 +23,7 @@ import {
 } from "@/shared/components/ui/tabs";
 import { cn } from "@/shared/utils/cn";
 import { useUnifiedNotifications } from "@/core/notifications/useUnifiedNotifications";
-import type { Notification } from "@/core/notifications/types";
+import type { Notification } from "@/core/notifications/services/NotificationService";
 
 const typeConfig: Record<string, { icon: string; color: string; bg: string }> =
   {

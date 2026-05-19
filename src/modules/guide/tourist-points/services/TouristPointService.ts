@@ -70,9 +70,10 @@ function normalizeDbPriceType(priceType: unknown): string {
 
 function mapDbPriceTypeToLegacy(priceType: unknown): TouristPoint['price_type'] {
   const v = toText(priceType)?.toLowerCase();
-  if (v === 'free') return 'gratuito';
-  if (v === 'consult') return 'consultar';
-  return 'pago';
+  if (v === 'free' || v === 'gratuito') return 'free';
+  if (v === 'range' || v === 'faixa') return 'range';
+  if (v === 'consult' || v === 'consultar') return 'consult';
+  return 'paid';
 }
 
 function firstOrNull<T>(v: T | T[] | null | undefined): T | null {
@@ -93,6 +94,11 @@ function mapDbToLegacy(point: any): TouristPoint {
 
   return {
     id: point.id,
+    title: toText(point.title) ?? toText(point.name) ?? 'Ponto turistico',
+    summary,
+    opening_hours: openingHours,
+    accessibility_notes: toText(point.accessibility_notes) ?? toText(point.accessibility_description),
+    official_url: website,
     name: toText(point.name) ?? toText(point.title) ?? 'Ponto turistico',
     slug: point.slug,
     description: toText(point.description) ?? '',
@@ -149,6 +155,8 @@ function mapDbToLegacy(point: any): TouristPoint {
     observations: toText(point.observations),
     nearby_point_ids: Array.isArray(point.nearby_point_ids) ? point.nearby_point_ids : [],
     created_by: point.created_by ?? null,
+    updated_by: point.updated_by ?? null,
+    published_at: point.published_at ?? null,
     created_at: point.created_at,
     updated_at: point.updated_at,
   };

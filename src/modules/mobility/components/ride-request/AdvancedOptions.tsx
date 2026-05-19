@@ -23,9 +23,8 @@ import { cn } from '@/shared/utils/cn';
 import { Input } from '@/shared/components/ui/input';
 import { Label } from '@/shared/components/ui/label';
 import { Textarea } from '@/shared/components/ui/textarea';
-import type { RideType } from '@/modules/mobility/types';
+import type { PaymentMethod, RideType } from '@/modules/mobility/types';
 import { PAYMENT_METHOD } from '@/shared/types/constants';
-type PaymentMethod = (typeof PAYMENT_METHOD)[keyof typeof PAYMENT_METHOD];
 
 export interface AdvancedOptionsProps {
   /** Tipo de corrida (afeta campos exibidos) */

@@ -7,6 +7,7 @@
 
 import type { NavigateFunction } from "react-router-dom";
 import type { ClassificadoWithVendedor } from "@/modules/classifieds/hooks/useClassificados";
+import type { VendedorWithAds } from "@/modules/classifieds/hooks/useVendedores";
 
 // ============================================
 // Base Props (compartilhadas por todas)
@@ -199,7 +200,7 @@ export interface ClassifiedsListagemSectionProps extends BaseSectionProps {
   readonly viewMode: ViewMode;
   readonly onViewModeChange: (mode: ViewMode) => void;
   readonly classificados: readonly Classificado[];
-  readonly vendedores: readonly Vendedor[];
+  readonly vendedores: readonly VendedorWithAds[];
   readonly adsCount: number;
   readonly sellersCount: number;
   readonly isLoading: boolean;

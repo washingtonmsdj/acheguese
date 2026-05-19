@@ -87,7 +87,18 @@ export const TOURIST_CATEGORY_SHORTCUTS: TouristCategoryShortcut[] = [
 
 // ── Mock tourist points with extended fields ─────────────────────────────────
 
-export interface MockTouristPointExtended extends TouristPoint {
+export interface MockTouristPointExtended extends Partial<TouristPoint> {
+  id: string;
+  slug: string;
+  title: string;
+  summary: string;
+  description: string;
+  address_text: string | null;
+  price_type: TouristPoint['price_type'];
+  status: TouristPoint['status'];
+  is_featured: boolean;
+  created_at: string;
+  updated_at: string;
   category: TouristPointCategory;
   rating: number;
   review_count: number;

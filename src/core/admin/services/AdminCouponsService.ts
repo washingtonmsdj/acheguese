@@ -24,8 +24,8 @@ export interface CouponData {
   is_active: boolean;
   validade?: string; // expires_at
   business_id?: string;
-  created_at: string;
-  updated_at: string;
+  created_at?: string;
+  updated_at?: string;
   business_name?: string;
   business_logo?: string;
   neighborhood?: string;

@@ -34,7 +34,7 @@ import type {
   Product as CompanyProduct,
   Review as CompanyReview,
 } from "@/modules/business/company/sections/types";
-import type { ReviewWithProfiles } from "@/shared/types/reviews";
+import type { ReviewWithProfiles } from "@/core/reviews/types";
 import type { BusinessOperationConfig } from "@/core/business/BusinessHoursService";
 
 interface EmpresaDetailLandingPageProps {

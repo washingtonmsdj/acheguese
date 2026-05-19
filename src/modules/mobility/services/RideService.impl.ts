@@ -17,6 +17,7 @@ import {
 import { TRUST_ACTOR_ROLES, TrustEventService } from '@/core/trust';
 import { RIDE_STATUS } from '../constants';
 import type { RideRequest } from '../types/types';
+export type { RideRequest } from '../types/types';
 
 export interface CreateRideData {
   pickup_location: string;

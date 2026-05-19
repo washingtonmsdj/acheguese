@@ -471,7 +471,11 @@ export function RideHistoryUnified({
                       {ride.driver_rating && (
                         <div className="flex items-center gap-1">
                           <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                          <span className="text-sm">{ride.driver_rating}</span>
+                          <span className="text-sm">
+                            {typeof ride.driver_rating === 'number'
+                              ? ride.driver_rating.toFixed(1)
+                              : ride.driver_rating.rating?.toFixed(1)}
+                          </span>
                         </div>
                       )}
                     </div>

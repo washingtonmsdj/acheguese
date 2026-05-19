@@ -25,7 +25,7 @@ export class ProfessionalService {
         .single();
 
       if (error) throw error;
-      return data as ProfessionalData;
+      return data as unknown as ProfessionalData;
     } catch (err: unknown) {
       logger.error('[ProfessionalService] getProfessionalData:', errorMessage(err, 'unknown_error'));
       return null;
@@ -48,7 +48,7 @@ export class ProfessionalService {
         .single();
 
       if (error) throw error;
-      return { success: true, data: data as ProfessionalData };
+      return { success: true, data: data as unknown as ProfessionalData };
     } catch (err: unknown) {
       return { success: false, error: errorMessage(err, 'Failed to update professional data') };
     }

@@ -129,8 +129,8 @@ export default function CommunicationAgentPageV2() {
           <div className="container mx-auto px-3 sm:px-4 lg:px-6 py-6 sm:py-8 lg:py-12">
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8">
               <main className="lg:col-span-8 space-y-6 sm:space-y-8">
-                {isChannelManager && displayAgent ? (
-                  <AgentPublicationComposer channel={displayAgent} territories={displayTerritories} />
+                {isChannelManager && agent ? (
+                  <AgentPublicationComposer channel={agent} territories={displayTerritories} />
                 ) : null}
 
                 <AgentWeekHighlights publications={publications} />
@@ -164,4 +164,3 @@ export default function CommunicationAgentPageV2() {
     </>
   );
 }
-

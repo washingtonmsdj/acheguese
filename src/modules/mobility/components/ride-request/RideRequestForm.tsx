@@ -316,16 +316,23 @@ export const RideRequestForm = memo<RideRequestFormProps>(function RideRequestFo
               >
                 <RouteEstimateCardEnhanced
                   estimate={{
-                    distance: priceEstimate.metadata.distanceKm,
-                    duration: priceEstimate.metadata.durationMinutes,
-                    price: priceEstimate.estimatedPrice,
-                    eta: `${priceEstimate.metadata.durationMinutes} min`,
+                    distance: {
+                      distanceFormatted: `${priceEstimate.metadata.distanceKm.toFixed(1)} km`,
+                    },
+                    eta: {
+                      durationFormatted: `${priceEstimate.metadata.durationMinutes} min`,
+                      arrivalTime: new Date(
+                        Date.now() + priceEstimate.metadata.durationMinutes * 60_000,
+                      ),
+                    },
                     fare: {
-                      base: priceEstimate.breakdown?.baseFare || 0,
-                      distance: priceEstimate.breakdown?.distanceFare || 0,
-                      time: priceEstimate.breakdown?.timeFare || 0,
-                      total: priceEstimate.estimatedPrice,
-                      formatted: `R$ ${priceEstimate.estimatedPrice.toFixed(2)}`,
+                      finalFare: priceEstimate.estimatedPrice,
+                      totalFare: priceEstimate.estimatedPrice,
+                      breakdown: [
+                        { label: 'Base', value: priceEstimate.breakdown?.baseFare || 0 },
+                        { label: 'Distancia', value: priceEstimate.breakdown?.distanceFare || 0 },
+                        { label: 'Tempo', value: priceEstimate.breakdown?.timeFare || 0 },
+                      ],
                     },
                   }}
                   variant="compact"

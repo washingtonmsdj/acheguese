@@ -87,7 +87,7 @@ export function useEducationSubscription(options: UseEducationSubscriptionOption
     canExportData: entitlements?.canExportData ?? false,
     
     // Baseado no status ativo
-    isPremium: status?.planType === 'premium' || status?.planType === 'enterprise',
+    isPremium: status?.planType === 'premium',
     isBasic: status?.planType === 'basic',
     isFree: status?.planType === 'free',
   };

@@ -145,9 +145,9 @@ export const ACCESSIBILITY_LABELS: Record<AccessibilityLevel, string> = {
 
 export interface TouristPoint {
   id: string;
-  title: string;
-  summary: string;
-  opening_hours: string | null;
+  title?: string;
+  summary?: string;
+  opening_hours?: string | null;
   media?: TouristPointMedia[];
   accessibility_notes?: string | null;
   official_url?: string | null;
@@ -214,6 +214,7 @@ export interface TouristPoint {
   rating: number;
   total_reviews: number;
   status: TouristPointStatus;
+  published_at?: string | null;
   observations: string | null;
   nearby_point_ids: string[];
   created_by: string | null;

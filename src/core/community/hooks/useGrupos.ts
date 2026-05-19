@@ -159,6 +159,9 @@ export function useGrupos(options: UseGruposOptions = {}) {
       const result = await CommunityService.createGroup({
         ...newGroup,
         location_id: newGroup.location_id ?? defaultLocationId,
+        rules: newGroup.rules
+          ? newGroup.rules.split("\n").map((rule) => rule.trim()).filter(Boolean)
+          : DEFAULT_GROUP_RULES,
       });
       if (!result) throw new Error("Erro ao criar grupo");
       toast.success("Grupo criado!");

@@ -10,7 +10,14 @@ export * from './mobility.generated';
 export type RideReportsRow = Record<string, unknown>;
 export type ReportStatus = "pending" | "reviewed" | "resolved";
 export type ReportSeverity = "low" | "medium" | "high";
-export type PaymentMethod = "cash" | "card" | "pix" | "dinheiro" | "cartao";
+export type PaymentMethod =
+  | "cash"
+  | "card"
+  | "pix"
+  | "dinheiro"
+  | "cartao"
+  | "credito"
+  | "debito";
 
 export type ResolutionStrategy =
   | "text_resolution"

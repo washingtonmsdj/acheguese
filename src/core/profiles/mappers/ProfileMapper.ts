@@ -7,6 +7,20 @@
 
 import type { Profile } from "../services/types";
 
+const CANONICAL_PROFILE_TYPES = new Set<CanonicalProfile["profileType"]>([
+  "personal",
+  "driver",
+  "business",
+  "professional",
+  "community",
+]);
+
+function toCanonicalProfileType(type: Profile["profile_type"]): CanonicalProfile["profileType"] {
+  return CANONICAL_PROFILE_TYPES.has(type as CanonicalProfile["profileType"])
+    ? (type as CanonicalProfile["profileType"])
+    : "personal";
+}
+
 /**
  * Shape canônico de Profile — camelCase unificado
  * Usado em activeProfile e profiles[]
@@ -54,7 +68,7 @@ export function toCanonicalProfile(profile: Profile): CanonicalProfile {
   return {
     id: profile.id,
     userId: profile.user_id,
-    profileType: profile.profile_type,
+    profileType: toCanonicalProfileType(profile.profile_type),
     name: profile.name,
     displayName: profile.display_name,
     username: profile.username,
