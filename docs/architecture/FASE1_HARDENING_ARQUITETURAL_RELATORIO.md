@@ -1,6 +1,6 @@
 # FASE 1 - Hardening Arquitetural (Gate-First)
 
-Gerado em: 2026-05-19T00:56:36.354Z
+Gerado em: 2026-05-19T01:07:24.160Z
 
 ## Problemas encontrados
 - Dependencias ciclicas detectadas: 0
@@ -71,9 +71,9 @@ Gerado em: 2026-05-19T00:56:36.354Z
 - `UnifiedComposer.tsx`: src/core/community/components/composer/UnifiedComposer.tsx, src/core/community-feed/components/composer/UnifiedComposer.tsx, src/modules/community/components/composer/UnifiedComposer.tsx, src/modules/community-feed/components/composer/UnifiedComposer.tsx
 - `PostActions.tsx`: src/core/community/components/post-card/PostActions.tsx, src/core/community/components/PostActions.tsx, src/core/community/components/UnifiedPostCard/PostActions.tsx, src/modules/community/components/UnifiedPostCard/PostActions.tsx
 - `PostContent.tsx`: src/core/community/components/post-card/PostContent.tsx, src/core/community/components/PostContent.tsx, src/core/community/components/UnifiedPostCard/PostContent.tsx, src/modules/community/components/UnifiedPostCard/PostContent.tsx
-- `ComunidadePage.tsx`: src/core/community/pages/ComunidadePage.tsx, src/core/community-feed/pages/ComunidadePage.tsx, src/modules/community/pages/ComunidadePage.tsx, src/modules/community-feed/pages/ComunidadePage.tsx
 - `DashboardHeader.tsx`: src/app/features/dashboard/components/DashboardHeader.tsx, src/modules/communication-territorial/v2/agent-dashboard/sections/DashboardHeader.tsx, src/shared/components/dashboard/DashboardHeader.tsx
 - `DashboardEmpresaPageV2.tsx`: src/app/features/dashboard/pages/DashboardEmpresaPageV2.tsx, src/core/business/services/DashboardEmpresaPageV2.tsx, src/modules/business/pages/DashboardEmpresaPageV2.tsx
+- `StatusBadge.tsx`: src/core/admin/identity/components/badges/StatusBadge.tsx, src/modules/admin/identity/components/badges/StatusBadge.tsx, src/modules/mobility/components/StatusBadge.tsx
 
 ### Imports profundos (top)
 

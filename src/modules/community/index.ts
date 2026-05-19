@@ -88,7 +88,7 @@ export { useSearch } from "./hooks/useSearch";
 // Pages - Route Components
 // ============================================================================
 
-export { default as ComunidadePage } from "./pages/ComunidadePage";
+export { default as ComunidadePage } from "@/core/community-feed/pages/ComunidadePage";
 
 // ============================================================================
 // Types - Public Type Definitions
