@@ -1,6 +1,6 @@
 # FASE 1 - Hardening Arquitetural (Gate-First)
 
-Gerado em: 2026-05-19T00:11:00.774Z
+Gerado em: 2026-05-19T00:31:29.876Z
 
 ## Problemas encontrados
 - Dependencias ciclicas detectadas: 0
@@ -71,9 +71,9 @@ Gerado em: 2026-05-19T00:11:00.774Z
 - `UnifiedComposer.tsx`: src/core/community/components/composer/UnifiedComposer.tsx, src/core/community-feed/components/composer/UnifiedComposer.tsx, src/modules/community/components/composer/UnifiedComposer.tsx, src/modules/community-feed/components/composer/UnifiedComposer.tsx
 - `PostActions.tsx`: src/core/community/components/post-card/PostActions.tsx, src/core/community/components/PostActions.tsx, src/core/community/components/UnifiedPostCard/PostActions.tsx, src/modules/community/components/UnifiedPostCard/PostActions.tsx
 - `PostContent.tsx`: src/core/community/components/post-card/PostContent.tsx, src/core/community/components/PostContent.tsx, src/core/community/components/UnifiedPostCard/PostContent.tsx, src/modules/community/components/UnifiedPostCard/PostContent.tsx
-- `AchadoPerdidoDetailPage.tsx`: src/core/community/pages/AchadoPerdidoDetailPage.tsx, src/core/community-lost-found/pages/AchadoPerdidoDetailPage.tsx, src/modules/community/pages/AchadoPerdidoDetailPage.tsx, src/modules/community-lost-found/pages/AchadoPerdidoDetailPage.tsx
-- `AchadosPerdidosPage.tsx`: src/core/community/pages/AchadosPerdidosPage.tsx, src/core/community-lost-found/pages/AchadosPerdidosPage.tsx, src/modules/community/pages/AchadosPerdidosPage.tsx, src/modules/community-lost-found/pages/AchadosPerdidosPage.tsx
 - `ComunidadePage.tsx`: src/core/community/pages/ComunidadePage.tsx, src/core/community-feed/pages/ComunidadePage.tsx, src/modules/community/pages/ComunidadePage.tsx, src/modules/community-feed/pages/ComunidadePage.tsx
+- `ExamplePostPage.tsx`: src/core/community/pages/ExamplePostPage.tsx, src/core/community-feed/pages/ExamplePostPage.tsx, src/modules/community/pages/ExamplePostPage.tsx, src/modules/community-feed/pages/ExamplePostPage.tsx
+- `GrupoDetailPage.tsx`: src/core/community/pages/GrupoDetailPage.tsx, src/core/community-groups/pages/GrupoDetailPage.tsx, src/modules/community/pages/GrupoDetailPage.tsx, src/modules/community-groups/pages/GrupoDetailPage.tsx
 
 ### Imports profundos (top)
 
