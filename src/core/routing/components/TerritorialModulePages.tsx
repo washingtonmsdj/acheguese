@@ -1,12 +1,12 @@
 /**
  * TerritorialModulePages
  *
- * Páginas de módulo dentro do contexto territorial.
- * Cada uma renderiza o conteúdo existente do módulo,
+ * Paginas de modulo dentro do contexto territorial.
+ * Cada uma renderiza o conteudo existente do modulo,
  * passando o routeResolved do TerritorialLayout para que
  * os hooks de filtro territorial funcionem corretamente.
  *
- * Padrão: /:state/:city/:district/:module
+ * Padrao: /:state/:city/:district/:module
  *         /:state/:city/:groupSlug/:module
  */
 
@@ -18,8 +18,9 @@ import { ModulePageLoader } from '@/shared/components/loading/PageLoader';
 import { useCityMetadata } from '@/core/city/hooks/useCityMetadata';
 import { resolveFallbackCityStatus, type CityStatus } from '@/core/city/services/CityService';
 import { TERRITORY_CONFIG } from '@/config/territory';
+import { buildPublicAbsoluteUrl } from '@/shared/config/publicAppOrigin';
 
-// Lazy imports dos módulos existentes
+// Lazy imports dos modulos existentes
 const ComunidadePage       = lazy(() => import('@/modules/community-feed/pages/ComunidadePage'));
 const CidadeLandingPage    = lazy(() => import('@/app/pages/CidadeLandingPage'));
 const ComplexoLandingPage  = lazy(() => import('@/app/pages/ComplexoNordesteLandingPage'));
@@ -30,6 +31,7 @@ const ServicosPage         = lazy(() => import('@/modules/professionals/services
 const ClassificadosPage    = lazy(() => import('@/modules/classifieds/pages/ClassificadosPage'));
 const EventsListPage     = lazy(() => import('@/features/events/pages/EventsListPage'));
 const GastronomyPage        = lazy(() => import('@/modules/business/gastronomy/pages/GastronomyLandingPage'));
+const EducationPage         = lazy(() => import('@/modules/business/education/pages/EducationExplorerPage'));
 const MobilidadePage       = lazy(() => import('@/modules/mobility/pages/MobilidadeLandingPage'));
 const VagasPage            = lazy(() => import('@/modules/classifieds/jobs/pages/VagasPublicPage'));
 const CategoryBusinessPage = lazy(() => import('@/core/business/pages/CategoryBusinessPage'));
@@ -38,6 +40,7 @@ const MapaPage             = lazy(() => import('@/core/maps/pages/MapaPageV4'));
 type PublicModuleKey =
   | 'empresas'
   | 'gastronomia'
+  | 'educacao'
   | 'eventos'
   | 'classificados'
   | 'vagas'
@@ -47,42 +50,47 @@ type PublicModuleKey =
 
 const MODULE_EMPTY_COPY: Record<PublicModuleKey, { title: string; description: (city: string) => string; cta: string }> = {
   empresas: {
-    title: 'Comercios da comunidade em implantação',
-    description: (city) => `Ainda não temos comercios cadastrados para esta comunidade de ${city}. Seja um dos primeiros.`,
+    title: 'Comercios da comunidade em implantacao',
+    description: (city) => `Ainda nao temos comercios cadastrados para esta comunidade de ${city}. Seja um dos primeiros.`,
     cta: 'Cadastrar empresa',
   },
   gastronomia: {
-    title: 'Gastronomia da comunidade em implantação',
+    title: 'Gastronomia da comunidade em implantacao',
     description: (city) => `Estamos organizando restaurantes e cardapios para esta comunidade de ${city}.`,
     cta: 'Indicar estabelecimento',
   },
+  educacao: {
+    title: 'Educacao da comunidade em implantacao',
+    description: (city) => `Estamos organizando escolas, cursos e instituicoes para esta comunidade de ${city}.`,
+    cta: 'Indicar instituicao',
+  },
   eventos: {
-    title: 'Eventos da comunidade em implantação',
-    description: (city) => `Ainda não encontramos eventos para esta comunidade de ${city}. Cadastre um evento local.`,
+    title: 'Eventos da comunidade em implantacao',
+    description: (city) => `Ainda nao encontramos eventos para esta comunidade de ${city}. Cadastre um evento local.`,
     cta: 'Cadastrar evento',
   },
   classificados: {
-    title: 'Classificados da comunidade em implantação',
-    description: (city) => `Ainda não ha classificados para esta comunidade de ${city}. Publique o primeiro anuncio.`,
-    cta: 'Publicar anúncio',
+    title: 'Classificados da comunidade em implantacao',
+    description: (city) => `Ainda nao ha classificados para esta comunidade de ${city}. Publique o primeiro anuncio.`,
+    cta: 'Publicar anuncio',
   },
   vagas: {
-    title: 'Vagas próximas em implantação',
+    title: 'Vagas proximas em implantacao',
     description: (city) => `Ainda nao ha vagas publicadas para esta comunidade de ${city}. Empresas locais podem cadastrar oportunidades.`,
     cta: 'Cadastrar vaga',
   },
   servicos: {
-    title: 'Serviços locais em implantação',
+    title: 'Servicos locais em implantacao',
     description: (city) => `Estamos organizando profissionais e servicos para esta comunidade de ${city}.`,
-    cta: 'Cadastrar serviço',
+    cta: 'Cadastrar servico',
   },
   busca: {
-    title: 'Busca em implantação',
+    title: 'Busca em implantacao',
     description: (city) => `Estamos estruturando resultados locais em ${city}.`,
     cta: 'Voltar para cidade ativa',
   },
   comunidade: {
-    title: 'Comunidade em implantação',
+    title: 'Comunidade em implantacao',
     description: (city) => `A comunidade deste territorio em ${city} ainda nao esta disponivel.`,
     cta: 'Quero ser avisado',
   },
@@ -129,6 +137,7 @@ function CityStatusGate({ module, enforceActive = false, children }: CityStatusG
 
   const copy = MODULE_EMPTY_COPY[module];
   const pagePath = pathname.startsWith('/') ? pathname : `/${pathname}`;
+  const canonicalHref = buildPublicAbsoluteUrl(pagePath);
   const pageTitle = `${copy.title} - ${cityName} | Achegue-se`;
   const isCommunityPath = pathname.startsWith('/comunidade/');
   const safeState = state ?? TERRITORY_CONFIG.launch.state;
@@ -147,15 +156,15 @@ function CityStatusGate({ module, enforceActive = false, children }: CityStatusG
         <title>{pageTitle}</title>
         <meta name="description" content={copy.description(cityName)} />
         <meta name="robots" content="noindex, follow" />
-        <link rel="canonical" href={`https://acheguese.com.br${pagePath}`} />
+        <link rel="canonical" href={canonicalHref} />
       </Helmet>
       <div className="rounded-2xl border bg-card p-6 md:p-8">
         <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-          Em implantação
+          Em implantacao
         </p>
         <h1 className="text-2xl font-semibold">{copy.title}</h1>
         <p className="mt-3 text-muted-foreground">
-          {`Estamos chegando em ${cityName}. O Achegue-se ainda está organizando empresas, eventos, serviços e conteúdos locais nesta região.`}
+          {`Estamos chegando em ${cityName}. O Achegue-se ainda esta organizando empresas, eventos, servicos e conteudos locais nesta regiao.`}
         </p>
         <p className="mt-2 text-muted-foreground">{copy.description(cityName)}</p>
         <div className="mt-6 flex flex-wrap gap-3">
@@ -166,7 +175,7 @@ function CityStatusGate({ module, enforceActive = false, children }: CityStatusG
             Entrar na lista de interesse
           </Link>
           <Link to={communityEntryHref} className="inline-flex rounded-lg border px-4 py-2 text-sm font-medium hover:bg-accent">
-            Abrir página da comunidade
+            Abrir pagina da comunidade
           </Link>
         </div>
       </div>
@@ -175,11 +184,11 @@ function CityStatusGate({ module, enforceActive = false, children }: CityStatusG
 }
 
 /**
- * HOC mínimo: injeta routeResolved no contexto do módulo.
- * Os módulos lêem routeResolved via useTerritoryFilter(routeResolved).
- * Por ora, os módulos existentes não recebem props — o TerritoryFilter
- * é resolvido via useTerritorialContext() dentro de useTerritoryFilter.
- * Esta camada garante que o contexto de Outlet está disponível.
+ * HOC minimo: injeta routeResolved no contexto do modulo.
+ * Os modulos leem routeResolved via useTerritoryFilter(routeResolved).
+ * Por ora, os modulos existentes nao recebem props - o TerritoryFilter
+ * e resolvido via useTerritorialContext() dentro de useTerritoryFilter.
+ * Esta camada garante que o contexto de Outlet esta disponivel.
  */
 
 export function TerritorialCommunityPage() {
@@ -293,6 +302,16 @@ export function TerritorialGastronomyPage() {
   );
 }
 
+export function TerritorialEducationPage() {
+  return (
+    <CityStatusGate module="educacao">
+      <Suspense fallback={<ModulePageLoader />}>
+        <EducationPage />
+      </Suspense>
+    </CityStatusGate>
+  );
+}
+
 export function TerritorialMobilidadePage() {
   const { resolved } = useTerritorialContext();
   return (
@@ -330,3 +349,4 @@ export function TerritorialMapPage() {
     </Suspense>
   );
 }
+

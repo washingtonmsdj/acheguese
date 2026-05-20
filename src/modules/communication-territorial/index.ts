@@ -4,8 +4,8 @@ export { default as CommunicationCityPage } from "./pages/CommunicationCityPage"
 export { default as CommunicationTerritoryPage } from "./pages/CommunicationTerritoryPage";
 export { default as CommunicationChannelPage } from "./pages/CommunicationChannelPage";
 export { default as CommunicationCompanyDetailsPage } from "./pages/CommunicationCompanyDetailsPage";
-export { default as CommunicationAgentPageV2 } from "./v2/pages/CommunicationAgentPageV2";
-export { default as CommunicationAgentDashboardV2 } from "./v2/pages/CommunicationAgentDashboardV2";
+export { default as CommunicationAgentPage } from "./pages/CommunicationAgentPage";
+export { default as CommunicationAgentDashboard } from "./pages/CommunicationAgentDashboard";
 export * from "./hooks";
 export * from "./services";
 export type { CommunicationLandingFilters } from "./types";

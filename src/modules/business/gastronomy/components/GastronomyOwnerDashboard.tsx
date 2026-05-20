@@ -1,14 +1,14 @@
 /**
- * GastronomyOwnerDashboard — Dashboard completo do dono do restaurante
+ * GastronomyOwnerDashboard - Dashboard completo do dono do restaurante
  *
- * Gastronomia é um braço da empresa — reutiliza diretamente os componentes
- * de empresa sem duplicação:
- *   - AnalyticsDashboard → Analytics (visualizações, WhatsApp, conversão)
- *   - CouponManager      → Cupons e promoções
- *   - NeighborhoodMap    → Mapa do bairro com outros restaurantes
- *   - BranchNetworkBlock → Rede de filiais
+ * Gastronomia e um braco da empresa - reutiliza diretamente os componentes
+ * de empresa sem duplicacao:
+ *   - AnalyticsDashboard - Analytics (visualizacoes, WhatsApp, conversao)
+ *   - CouponManager      - Cupons e promocoes
+ *   - NeighborhoodMap    - Mapa do bairro com outros restaurantes
+ *   - BranchNetworkBlock - Rede de filiais
  *
- * O GastronomyOwnerDashboard é apenas um orquestrador de tabs.
+ * O GastronomyOwnerDashboard e apenas um orquestrador de tabs.
  */
 
 import { useQuery } from '@tanstack/react-query';
@@ -31,9 +31,10 @@ import {
   TabsTrigger,
 } from '@/shared/components/ui/tabs';
 import { cn } from '@/shared/utils/cn';
+import { PlanTier } from '@/core/billing/types';
 import { fetchGastronomyQuickMetrics } from '@/modules/business/gastronomy/services/gastronomy-runtime.queries';
 
-// Componentes de empresa reutilizados a partir do domínio de business
+// Componentes de empresa reutilizados a partir do dominio de business
 import AnalyticsDashboard from '@/core/business/components/AnalyticsDashboard';
 import CouponManager from '@/core/business/components/CouponManager';
 import { NeighborhoodMap } from '@/core/business/components/NeighborhoodMap';
@@ -43,7 +44,7 @@ import { useNeighborhoodBounds } from '@/core/business/hooks/useNeighborhoodBoun
 import { useGastronomyFavoritersCount } from '../hooks/useGastronomyFavoriters';
 import type { GastronomyBusiness } from '../types';
 
-// ── Tipos ─────────────────────────────────────────────────────────────────────
+// Tipos
 
 interface QuickMetrics {
   totalViews: number;
@@ -53,13 +54,13 @@ interface QuickMetrics {
   recentViews: { date: string; count: number }[];
 }
 
-// ── Query function — fora do componente, sem side effects ─────────────────────
+// Query function fora do componente, sem side effects
 
 async function fetchQuickMetrics(businessProfileId: string): Promise<QuickMetrics> {
   return fetchGastronomyQuickMetrics(businessProfileId);
 }
 
-// ── Painel de métricas rápidas ────────────────────────────────────────────────
+// Painel de metricas rapidas
 
 function QuickMetricsPanel({
   businessProfileId,
@@ -95,7 +96,7 @@ function QuickMetricsPanel({
   const stats = [
     {
       icon: Eye,
-      label: 'Visualizações totais',
+      label: 'Visualizacoes totais',
       value: metrics.totalViews,
       color: 'bg-primary/10 text-primary',
       span: true,
@@ -109,8 +110,8 @@ function QuickMetricsPanel({
     },
     {
       icon: Star,
-      label: 'Avaliações',
-      value: `${metrics.avgRating} ⭐ (${metrics.totalReviews})`,
+      label: 'Avaliacoes',
+      value: `${metrics.avgRating} estrelas (${metrics.totalReviews})`,
       color: 'bg-amber-500/10 text-amber-600',
       span: false,
     },
@@ -146,13 +147,13 @@ function QuickMetricsPanel({
         ))}
       </div>
 
-      {/* Mini gráfico de barras — últimos 7 dias */}
+      {/* Mini grafico de barras - ultimos 7 dias */}
       <Card>
         <CardContent className="p-4">
           <div className="flex items-center gap-2 mb-3">
             <BarChart3 className="h-4 w-4 text-muted-foreground" />
             <p className="text-xs font-medium text-muted-foreground">
-              Visualizações · últimos 7 dias
+              Visualizacoes - ultimos 7 dias
             </p>
           </div>
           <div className="flex items-end gap-1.5 h-20">
@@ -179,16 +180,14 @@ function QuickMetricsPanel({
   );
 }
 
-// ── Mapa do bairro ────────────────────────────────────────────────────────────
+// Mapa do bairro
 
 function GastronomyNeighborhoodMap({ business }: { business: GastronomyBusiness }) {
   const latitude = business.address?.latitude;
   const longitude = business.address?.longitude;
   const locationName = business.location?.name;
   const geoPath = business.location?.geographic_path ?? '';
-
-  // geographic_path: "ba/salvador/pituba" → state="ba", city="salvador"
-  const [state, , ] = geoPath.split('/');
+  const [state, city] = geoPath.split('/');
   const cityFromFullName = business.location?.full_name?.split(', ')[1] ?? '';
 
   const { namedBounds, center, isLoading } = useNeighborhoodBounds({
@@ -217,7 +216,7 @@ function GastronomyNeighborhoodMap({ business }: { business: GastronomyBusiness 
   if (!hasCoords && !locationName) {
     return (
       <div className="flex h-64 items-center justify-center rounded-xl border border-dashed bg-muted/20 text-sm text-muted-foreground">
-        Coordenadas não disponíveis para exibir o mapa
+        Coordenadas nao disponiveis para exibir o mapa
       </div>
     );
   }
@@ -225,7 +224,7 @@ function GastronomyNeighborhoodMap({ business }: { business: GastronomyBusiness 
   return (
     <div className="space-y-3">
       <p className="text-sm text-muted-foreground">
-        Localização do restaurante no bairro
+        Localizacao do restaurante no bairro
       </p>
       <div className="h-72 rounded-xl overflow-hidden border">
         {isLoading ? (
@@ -243,14 +242,14 @@ function GastronomyNeighborhoodMap({ business }: { business: GastronomyBusiness 
   );
 }
 
-// ── Componente principal ──────────────────────────────────────────────────────
+// Componente principal
 
 interface GastronomyOwnerDashboardProps {
-  /** profile_id do business — chave para views, reviews e analytics */
+  /** profile_id do business - chave para views, reviews e analytics */
   businessProfileId: string;
-  /** id da tabela business_data — chave para favoritos e cupons */
+  /** id da tabela business_data - chave para favoritos e cupons */
   businessDataId: string;
-  /** Objeto completo do negócio — para mapa e rede de filiais */
+  /** Objeto completo do negocio - para mapa e rede de filiais */
   business: GastronomyBusiness;
 }
 
@@ -265,7 +264,7 @@ export function GastronomyOwnerDashboard({
         <TabsList className="w-full grid grid-cols-4">
           <TabsTrigger value="visao-geral" className="gap-1.5">
             <Eye className="h-4 w-4" />
-            <span className="hidden sm:inline">Visão Geral</span>
+            <span className="hidden sm:inline">Visao Geral</span>
           </TabsTrigger>
           <TabsTrigger value="analytics" className="gap-1.5">
             <BarChart3 className="h-4 w-4" />
@@ -281,7 +280,7 @@ export function GastronomyOwnerDashboard({
           </TabsTrigger>
         </TabsList>
 
-        {/* Visão Geral: métricas rápidas + rede de filiais */}
+        {/* Visao Geral: metricas rapidas + rede de filiais */}
         <TabsContent value="visao-geral" className="mt-6 space-y-6">
           <QuickMetricsPanel
             businessProfileId={businessProfileId}
@@ -298,20 +297,20 @@ export function GastronomyOwnerDashboard({
           />
         </TabsContent>
 
-        {/* Analytics — mesmo componente do DashboardEmpresaPageV2 */}
+        {/* Analytics - mesmo componente do DashboardEmpresaPage */}
         <TabsContent value="analytics" className="mt-6">
           <AnalyticsDashboard businessId={businessProfileId} />
         </TabsContent>
 
-        {/* Cupons — mesmo componente do DashboardEmpresaPageV2 */}
+        {/* Cupons - mesmo componente do DashboardEmpresaPage */}
         <TabsContent value="cupons" className="mt-6">
           <CouponManager
             businessId={businessProfileId}
-            planType="profissional"
+            planType={PlanTier.PRO}
           />
         </TabsContent>
 
-        {/* Mapa do bairro */}
+// Mapa do bairro
         <TabsContent value="mapa" className="mt-6">
           <GastronomyNeighborhoodMap business={business} />
         </TabsContent>
@@ -319,4 +318,5 @@ export function GastronomyOwnerDashboard({
     </div>
   );
 }
+
 

@@ -1,4 +1,4 @@
-﻿/**
+/**
  * MOBILITY MODULE CONSTANTS
  * 
  * Centralização de todos os hardcodes do módulo de mobilidade
@@ -182,8 +182,6 @@ export const MOBILITY_QUERY_KEYS = {
   // Driver
   motoristaData: (userId: string) => ['motorista-data', userId],
   motoristaRides: (userId: string) => ['motorista-rides', userId],
-  motoristaV2Data: (userId: string) => ['motorista-v2-data', userId],
-  motoristaV2Rides: (userId: string) => ['motorista-v2-rides', userId],
   availableRides: () => ['motorista-available-rides'],
   driverProfile: (userId: string) => ['driver-profile', userId],
   driverStats: (profileId: string) => ['driver-stats', profileId],

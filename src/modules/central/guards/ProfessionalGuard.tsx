@@ -1,20 +1,20 @@
-import { useEffect } from "react";
-import { useNavigate, Outlet } from "react-router-dom";
+﻿import { useNavigate, Outlet } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { useSessionContext } from "@/core/session";
 import { SessionService } from "@/core/session/services/SessionService";
 import { Building2, Plus } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import { Card, CardContent } from "@/shared/components/ui/card";
+import { centralRoutes } from "@/modules/central/routes/centralRoutes";
 
 /**
  * ProfessionalGuard
  *
- * Guard que valida vínculo profissional.
+ * Guard que valida vinculo profissional.
  * Protege rotas /central/profissional/*
  *
- * Se usuário não tiver professional_data, mostra empty state com CTA
- * para ativar/cadastrar usando fluxo atual (/services/cadastrar).
+ * Se usuario nao tiver professional_data, mostra empty state com CTA
+ * para ativar/cadastrar usando fluxo atual.
  */
 export function ProfessionalGuard() {
   const navigate = useNavigate();
@@ -36,11 +36,6 @@ export function ProfessionalGuard() {
       : profiles ?? [];
   const hasProfessionalProfile = effectiveProfiles.some((p) => p.profileType === "professional");
 
-  useEffect(() => {
-    // Redirecionamento não é necessário aqui, mostraremos empty state
-  }, []);
-
-  // Mostrar loading enquanto verifica
   if (sessionLoading || (user && freshProfilesQuery.isLoading)) {
     return (
       <div className="flex min-h-[60vh] items-center justify-center px-4">
@@ -52,7 +47,6 @@ export function ProfessionalGuard() {
     );
   }
 
-  // Se não tiver perfil profissional, mostrar empty state
   if (!hasProfessionalProfile) {
     return (
       <div className="flex min-h-[60vh] items-center justify-center px-4">
@@ -62,17 +56,14 @@ export function ProfessionalGuard() {
               <Building2 className="h-8 w-8 text-primary" />
             </div>
             <div className="space-y-2">
-              <h3 className="text-lg font-semibold">Perfil profissional não encontrado</h3>
+              <h3 className="text-lg font-semibold">Perfil profissional nao encontrado</h3>
               <p className="text-sm text-muted-foreground">
-                Você ainda não ativou seu perfil profissional. Cadastre seus serviços para começar a receber clientes.
+                Voce ainda nao ativou seu perfil profissional. Cadastre seus servicos para comecar a receber clientes.
               </p>
             </div>
-            <Button
-              onClick={() => navigate("/services/cadastrar")}
-              className="gap-2"
-            >
+            <Button onClick={() => navigate(centralRoutes.servicos.create)} className="w-full gap-2 sm:w-auto">
               <Plus className="h-4 w-4" />
-              Cadastrar serviços
+              Cadastrar servicos
             </Button>
           </CardContent>
         </Card>
@@ -83,5 +74,4 @@ export function ProfessionalGuard() {
   return <Outlet />;
 }
 
-// Export default para lazy import
 export default ProfessionalGuard;

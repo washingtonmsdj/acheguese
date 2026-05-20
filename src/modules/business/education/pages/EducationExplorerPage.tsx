@@ -168,6 +168,9 @@ export function EducationExplorerPage() {
   const canonicalPath = district
     ? `/educacao/${effectiveState}/${effectiveCity}/${district}`
     : `/educacao/${effectiveState}/${effectiveCity}`;
+  const businessExplorerHref = district
+    ? `/empresas/${effectiveState}/${effectiveCity}/${district}`
+    : `/empresas/${effectiveState}/${effectiveCity}`;
 
   return (
     <div className="min-h-screen bg-background">
@@ -444,7 +447,7 @@ export function EducationExplorerPage() {
 
       <EducationDataDisclaimer />
 
-      <EducationInstitutionCta />
+      <EducationInstitutionCta businessExplorerHref={businessExplorerHref} />
 
       <EducationCompareBar
         comparing={comparing}

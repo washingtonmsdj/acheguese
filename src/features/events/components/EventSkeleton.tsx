@@ -1,5 +1,5 @@
 /**
- * 💀 EVENT SKELETON V2
+ * Event skeleton
  * 
  * Loading states premium para eventos
  * 

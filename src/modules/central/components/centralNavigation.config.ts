@@ -1,6 +1,6 @@
 import { Building2, Car, Home, User, Bike, Calendar, Radio } from 'lucide-react';
-import { mobilityRoutes } from '@/core/mobility/routes/mobilityRoutes';
 import { businessManagementRoutes } from '@/core/business/utils/businessManagementRoutes';
+import { centralRoutes } from '@/modules/central/routes/centralRoutes';
 
 export interface CentralNavItem {
   id: string;
@@ -17,6 +17,16 @@ export interface CentralNavSection {
   label: string;
   items: CentralNavItem[];
 }
+
+const CENTRAL_PRIMARY_NAV_IDS = [
+  'central-home',
+  'business-list',
+  'events-list',
+  'communication-home',
+  'professional-home',
+  'driver-home',
+  'motoboy-home',
+] as const;
 
 /**
  * Estrutura de navegacao da Central
@@ -37,7 +47,7 @@ export const CENTRAL_NAV_SECTIONS: CentralNavSection[] = [
         id: 'central-home',
         icon: Home,
         label: 'Inicio',
-        href: '/central',
+        href: centralRoutes.home,
         description: 'Visao geral da Central',
       },
     ],
@@ -63,14 +73,14 @@ export const CENTRAL_NAV_SECTIONS: CentralNavSection[] = [
         id: 'events-list',
         icon: Calendar,
         label: 'Meus Eventos',
-        href: '/central/eventos',
+        href: centralRoutes.eventos.list,
         description: 'Gerenciar eventos',
       },
       {
         id: 'events-new',
         icon: Calendar,
         label: 'Criar Evento',
-        href: '/central/eventos/novo',
+        href: centralRoutes.eventos.create,
         description: 'Criar novo evento',
       },
     ],
@@ -83,7 +93,7 @@ export const CENTRAL_NAV_SECTIONS: CentralNavSection[] = [
         id: 'communication-home',
         icon: Radio,
         label: 'Meus Canais',
-        href: '/central/comunicacao',
+        href: centralRoutes.comunicacao.home,
         description: 'Publicar conteudo territorial',
       },
     ],
@@ -96,7 +106,7 @@ export const CENTRAL_NAV_SECTIONS: CentralNavSection[] = [
         id: 'professional-home',
         icon: User,
         label: 'Perfil Profissional',
-        href: '/central/profissional',
+        href: centralRoutes.profissional.home,
         description: 'Gerenciar perfil profissional',
       },
     ],
@@ -109,42 +119,42 @@ export const CENTRAL_NAV_SECTIONS: CentralNavSection[] = [
         id: 'driver-home',
         icon: Car,
         label: 'Inicio',
-        href: mobilityRoutes.motorista.home,
+        href: centralRoutes.motorista.home,
         description: 'Resumo operacional',
       },
       {
         id: 'driver-cadastro',
         icon: Car,
         label: 'Cadastro',
-        href: mobilityRoutes.motorista.cadastro,
+        href: centralRoutes.motorista.cadastro,
         description: 'Dados e documentos',
       },
       {
         id: 'driver-disponibilidade',
         icon: Car,
         label: 'Disponibilidade',
-        href: mobilityRoutes.motorista.disponibilidade,
+        href: centralRoutes.motorista.disponibilidade,
         description: 'Controle online/offline',
       },
       {
         id: 'driver-corridas',
         icon: Car,
         label: 'Corridas',
-        href: mobilityRoutes.motorista.corridas,
+        href: centralRoutes.motorista.corridas,
         description: 'Marketplace de corridas',
       },
       {
         id: 'driver-ganhos',
         icon: Car,
         label: 'Ganhos',
-        href: mobilityRoutes.motorista.ganhos,
+        href: centralRoutes.motorista.ganhos,
         description: 'Resumo de ganhos',
       },
       {
         id: 'driver-configuracoes',
         icon: Car,
         label: 'Configuracoes',
-        href: mobilityRoutes.motorista.configuracoes,
+        href: centralRoutes.motorista.configuracoes,
         description: 'Preferencias e notificacoes',
       },
     ],
@@ -157,44 +167,51 @@ export const CENTRAL_NAV_SECTIONS: CentralNavSection[] = [
         id: 'motoboy-home',
         icon: Bike,
         label: 'Inicio',
-        href: mobilityRoutes.motoboy.home,
+        href: centralRoutes.motoboy.home,
         description: 'Resumo operacional',
       },
       {
         id: 'motoboy-cadastro',
         icon: Bike,
         label: 'Cadastro',
-        href: mobilityRoutes.motoboy.cadastro,
+        href: centralRoutes.motoboy.cadastro,
         description: 'Dados e documentos',
       },
       {
         id: 'motoboy-disponibilidade',
         icon: Bike,
         label: 'Disponibilidade',
-        href: mobilityRoutes.motoboy.disponibilidade,
+        href: centralRoutes.motoboy.disponibilidade,
         description: 'Controle online/offline',
       },
       {
         id: 'motoboy-entregas',
         icon: Bike,
         label: 'Entregas',
-        href: mobilityRoutes.motoboy.entregas,
+        href: centralRoutes.motoboy.entregas,
         description: 'Marketplace de entregas',
       },
       {
         id: 'motoboy-ganhos',
         icon: Bike,
         label: 'Ganhos',
-        href: mobilityRoutes.motoboy.ganhos,
+        href: centralRoutes.motoboy.ganhos,
         description: 'Resumo de ganhos',
       },
       {
         id: 'motoboy-configuracoes',
         icon: Bike,
         label: 'Configuracoes',
-        href: mobilityRoutes.motoboy.configuracoes,
+        href: centralRoutes.motoboy.configuracoes,
         description: 'Preferencias e notificacoes',
       },
     ],
   },
 ];
+
+export function getCentralPrimaryNavItems(): CentralNavItem[] {
+  const allItems = CENTRAL_NAV_SECTIONS.flatMap((section) => section.items);
+  return CENTRAL_PRIMARY_NAV_IDS.map((id) => allItems.find((item) => item.id === id)).filter(
+    (item): item is CentralNavItem => Boolean(item),
+  );
+}

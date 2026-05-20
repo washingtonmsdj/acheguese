@@ -2,7 +2,7 @@
  * useMobilityLocation
  *
  * Expõe o contexto geográfico do app para o módulo mobility.
- * NÃO expõe localização GPS do motorista — isso é responsabilidade de useDriverLocation.
+ * Nao expoe localizacao GPS do motorista; isso e responsabilidade de useDriverLocation.
  *
  * Etapa 5: expõe TerritoryFilter para uso em queries de rotas/corridas.
  * Mobility opera por CITY — district é promovido para cidade pai.
@@ -42,7 +42,7 @@ export function useMobilityLocation() {
   }, [operationalLocationId]);
 
   return {
-    /** Localização de contexto do app (district/city) — NÃO é GPS */
+    /** Localizacao de contexto do app (district/city); nao e GPS. */
     activeLocation,
     /** location_id bruto do contexto (pode ser district) */
     locationId,

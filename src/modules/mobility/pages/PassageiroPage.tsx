@@ -1,5 +1,5 @@
 /**
- * Painel do Passageiro â€” Premium Mobile-First
+ * Painel do Passageiro - mobile-first
  * UI superior a Uber/99, otimizada para mobile
  */
 
@@ -101,7 +101,7 @@ export default function PassageiroPage() {
     reportRideProblem,
     error,
     refetch,
-    passengerRating = 5.0, // ✅ SSOT - Rating vem do hook
+    passengerRating = 5.0, // SSOT: rating vem do hook.
   } = useMobilidade();
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [createModalInitialType, setCreateModalInitialType] = useState<"viagem" | "entrega">("viagem");
@@ -113,7 +113,7 @@ export default function PassageiroPage() {
 
   const activeRides = myRides.filter((r) => ACTIVE_RIDE_STATUSES.includes(r.status));
 
-  // Auto-switch para aba "Ativas" quando há corrida ativa
+  // Auto-switch para aba "Ativas" quando ha corrida ativa.
   useEffect(() => {
     if (activeRides.length > 0) {
       setActiveTab("ativas");
@@ -204,7 +204,7 @@ export default function PassageiroPage() {
   return (
     <ErrorBoundary onReset={() => window.location.reload()}>
       <div className="bg-background">
-        {/* Premium Header */}
+        {/* Header */}
         <div className="sticky top-0 z-50 bg-card/80 backdrop-blur-2xl border-b border-border">
           <div className="max-w-lg mx-auto h-14 px-4 flex items-center justify-between">
             <div className="flex items-center gap-3">
@@ -244,7 +244,7 @@ export default function PassageiroPage() {
           initial="hidden"
           animate="visible"
         >
-          {/* Quick Actions â€” Uber-style large CTAs */}
+          {/* Quick actions */}
           <motion.div variants={fadeUp} className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-5">
             <button
               onClick={() => {
@@ -290,7 +290,7 @@ export default function PassageiroPage() {
             </button>
           </motion.div>
 
-          {/* Stats Strip â€” Compact & elegant */}
+          {/* Stats strip */}
           <motion.div
             variants={fadeUp}
             className="flex items-center gap-2 mb-5 overflow-x-auto pb-1"
@@ -370,7 +370,7 @@ export default function PassageiroPage() {
             </motion.div>
           )}
 
-          {/* Tab Navigation â€” Premium pill style */}
+          {/* Tab navigation */}
           <motion.div
             variants={fadeUp}
             className="flex items-center gap-1.5 p-1 rounded-2xl bg-card border border-border mb-5"
@@ -540,7 +540,7 @@ export default function PassageiroPage() {
           </AnimatePresence>
         </motion.div>
 
-        {/* Floating Action Button â€” visible when not on 'ativas' empty state */}
+        {/* Floating action button */}
         {activeTab !== "ativas" && (
           <motion.div
             initial={{ scale: 0, opacity: 0 }}

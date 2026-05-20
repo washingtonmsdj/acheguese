@@ -4,7 +4,7 @@
  * Componente React que aplica os metadados SEO territoriais via react-helmet-async.
  * Usa buildTerritorialMetadata() como única fonte de verdade.
  *
- * Melhorias v2:
+ * Melhorias:
  * - Structured Data (JSON-LD) para LocalBusiness e Place
  * - Meta tags adicionais (geo, author, etc)
  * - Breadcrumb structured data
@@ -19,6 +19,7 @@ import type { ResolvedTerritory } from '../hooks/useResolveTerritoryFromUrl';
 import type { ModuleSlug } from '../utils/territoryUrls';
 import { MODULE_SLUGS } from '../utils/territoryUrls';
 import { resolveSeoPolicy } from './territorialSeoPolicy';
+import { getPublicAppOrigin } from '@/shared/config/publicAppOrigin';
 
 interface TerritorialSEOProps {
   resolved: ResolvedTerritory;
@@ -44,7 +45,7 @@ function resolveCurrentModule(pathname: string, baseUrl: string): ModuleSlug | n
  * Gera structured data (JSON-LD) para o território
  */
 function generateStructuredData(resolved: ResolvedTerritory, canonicalUrl: string, module: ModuleSlug | null) {
-  const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'https://acheguese.com.br';
+  const baseUrl = getPublicAppOrigin();
   
   // Place schema para território
   const placeSchema = {
@@ -206,7 +207,7 @@ interface TerritorialFallbackSEOProps {
 
 export function TerritorialFallbackSEO({ pathname }: TerritorialFallbackSEOProps) {
   const policy = resolveSeoPolicy(pathname);
-  const origin = typeof window !== "undefined" ? window.location.origin : "https://acheguese.com.br";
+  const origin = getPublicAppOrigin();
   const canonical = `${origin}${policy.canonicalPath}`;
 
   return (

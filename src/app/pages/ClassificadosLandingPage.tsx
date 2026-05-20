@@ -1,6 +1,6 @@
 /**
  * ClassificadosLandingPage — Vitrine pública de classificados
- * Estilo consistente com HomePageV2 e ServicosLandingPage: dark theme, acentos teal, motion.
+ * Estilo consistente com ServicosLandingPage: dark theme, acentos teal, motion.
  */
 
 import { useState, useCallback } from "react";

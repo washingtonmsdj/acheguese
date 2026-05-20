@@ -1,10 +1,9 @@
 /**
- * 🎭 EVENT HERO V2
+ * Event hero
  * 
- * Hero section premium para página de evento
+ * Hero section para pagina de evento
  * Inspirado em Sympla/Eventbrite com design moderno
  * 
- * @version 2.0.0
  */
 
 import { motion } from 'framer-motion';
@@ -116,7 +115,7 @@ export function EventHero({
               {isAlmostFull && !isSoldOut && (
                 <Badge className="bg-amber-500/90 text-white backdrop-blur-sm border-0 text-sm px-3 py-1 gap-1.5 animate-pulse">
                   <TrendingUp className="h-3.5 w-3.5" />
-                  Últimas vagas
+                  Ultimas vagas
                 </Badge>
               )}
               {isSoldOut && (
@@ -185,13 +184,13 @@ export function EventHero({
                   <Clock className="h-5 w-5 text-blue-400" />
                 </div>
                 <div>
-                  <p className="text-xs font-medium text-white/60">Horário</p>
+                  <p className="text-xs font-medium text-white/60">Horario</p>
                   <p className="text-sm font-bold text-white">
                     {format(eventDate, 'HH:mm', { locale: ptBR })}
                   </p>
                   {event.duration_minutes && (
                     <p className="text-xs text-white/80">
-                      Duração: {event.duration_minutes} min
+                      Duracao: {event.duration_minutes} min
                     </p>
                   )}
                 </div>
@@ -230,7 +229,7 @@ export function EventHero({
                       {event.location.online_platform}
                     </p>
                     <p className="text-xs text-white/80">
-                      Link enviado após inscrição
+                      Link enviado apos inscricao
                     </p>
                   </div>
                 </div>
@@ -259,7 +258,7 @@ export function EventHero({
                 </p>
                 {event.organizer.stats && (
                   <p className="text-xs text-white/70">
-                    {event.organizer.stats.events_created} eventos • {event.organizer.stats.total_participants} participantes
+                    {event.organizer.stats.events_created} eventos - {event.organizer.stats.total_participants} participantes
                   </p>
                 )}
               </div>
@@ -291,7 +290,7 @@ export function EventHero({
               {totalCapacity > 0 && (
                 <div className="mb-6">
                   <div className="mb-2 flex justify-between text-xs text-muted-foreground">
-                    <span>Ocupação</span>
+                    <span>Ocupacao</span>
                     <span>{Math.round(occupancyRate)}%</span>
                   </div>
                   <div className="h-2 overflow-hidden rounded-full bg-muted">
@@ -334,7 +333,7 @@ export function EventHero({
 
               {/* Views Counter */}
               <div className="text-center text-xs text-muted-foreground">
-                {event.views_count.toLocaleString('pt-BR')} visualizações
+                {event.views_count.toLocaleString('pt-BR')} visualizacoes
               </div>
             </motion.div>
           </div>

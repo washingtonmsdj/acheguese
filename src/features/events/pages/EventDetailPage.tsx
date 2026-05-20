@@ -1,15 +1,15 @@
 /**
- * 🎉 EVENT DETAIL PAGE V2
+ * Event detail page
  * 
- * Página de detalhes de evento - Versão Premium
+ * Pagina de detalhes de evento
  * Inspirada em Sympla, Eventbrite e plataformas profissionais
  * 
  * Features:
  * - Hero impactante com banner
- * - Seção de ingressos/inscrições
- * - Descrição rica
- * - Programação/agenda
- * - Mapa e localização
+ * - Secao de ingressos/inscricoes
+ * - Descricao rica
+ * - Programacao/agenda
+ * - Mapa e localizacao
  * - Galeria de fotos
  * - FAQ
  * - Eventos relacionados
@@ -18,8 +18,6 @@
  * - SEO otimizado
  * - Performance AAA
  * 
- * @version 2.0.0
- * @author Kiro AI
  */
 
 import { useEffect, useRef, useState } from 'react';
@@ -150,8 +148,8 @@ export default function EventDetailPage() {
     const selectedTicket = event.tickets.find((ticket) => ticket.id === ticketId);
     if (!selectedTicket) {
       toast({
-        title: 'Ingresso indisponível',
-        description: 'Não foi possível selecionar este ingresso agora.',
+        title: 'Ingresso indisponivel',
+        description: 'Nao foi possivel selecionar este ingresso agora.',
         variant: 'destructive',
       });
       return;
@@ -159,8 +157,8 @@ export default function EventDetailPage() {
 
     if (!activeProfile?.id) {
       toast({
-        title: 'Faça login para garantir vaga',
-        description: 'Entre com sua conta para concluir a inscrição no evento.',
+        title: 'Faca login para garantir vaga',
+        description: 'Entre com sua conta para concluir a inscricao no evento.',
         variant: 'destructive',
       });
       return;
@@ -168,8 +166,8 @@ export default function EventDetailPage() {
 
     if (isParticipating) {
       toast({
-        title: 'Inscrição já confirmada',
-        description: 'Você já está inscrito neste evento.',
+        title: 'Inscricao ja confirmada',
+        description: 'Voce ja esta inscrito neste evento.',
       });
       return;
     }
@@ -190,16 +188,16 @@ export default function EventDetailPage() {
           title: selectedTicket.is_free ? 'Vaga garantida' : 'Ingresso reservado',
           description: selectedTicket.is_free
             ? `${selectedTicket.name} confirmado para este evento.`
-            : `${selectedTicket.name} registrado. Confira os próximos passos no evento.`,
+            : `${selectedTicket.name} registrado. Confira os proximos passos no evento.`,
         });
       })
       .catch((error: unknown) => {
         toast({
-          title: 'Falha ao confirmar inscrição',
+          title: 'Falha ao confirmar inscricao',
           description:
             error instanceof Error
               ? error.message
-              : 'Não foi possível concluir sua inscrição agora.',
+              : 'Nao foi possivel concluir sua inscricao agora.',
           variant: 'destructive',
         });
       })
@@ -215,8 +213,8 @@ export default function EventDetailPage() {
 
     if (isParticipating) {
       toast({
-        title: 'Inscrição já confirmada',
-        description: 'Você já está inscrito neste evento.',
+        title: 'Inscricao ja confirmada',
+        description: 'Voce ja esta inscrito neste evento.',
       });
       return;
     }
@@ -229,7 +227,7 @@ export default function EventDetailPage() {
       ticketsSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
       toast({
         title: 'Sem vagas no momento',
-        description: 'Este evento está sem ingressos disponíveis.',
+        description: 'Este evento esta sem ingressos disponiveis.',
         variant: 'destructive',
       });
       return;
@@ -245,7 +243,7 @@ export default function EventDetailPage() {
     }
 
     const confirmed = window.confirm(
-      'Tem certeza que deseja cancelar sua inscrição neste evento?'
+      'Tem certeza que deseja cancelar sua inscricao neste evento?'
     );
     if (!confirmed) {
       return;
@@ -264,17 +262,17 @@ export default function EventDetailPage() {
         ]);
 
         toast({
-          title: 'Inscrição cancelada',
+          title: 'Inscricao cancelada',
           description: 'Sua vaga foi liberada neste evento.',
         });
       })
       .catch((error: unknown) => {
         toast({
-          title: 'Falha ao cancelar inscrição',
+          title: 'Falha ao cancelar inscricao',
           description:
             error instanceof Error
               ? error.message
-              : 'Não foi possível cancelar sua inscrição agora.',
+              : 'Nao foi possivel cancelar sua inscricao agora.',
           variant: 'destructive',
         });
       })
@@ -325,17 +323,17 @@ export default function EventDetailPage() {
                     <div>
                       <p className="text-sm font-semibold text-emerald-700">
                         {isRegistering
-                          ? 'Confirmando sua inscrição...'
+                          ? 'Confirmando sua inscricao...'
                           : isCancelling
-                          ? 'Cancelando inscrição...'
-                          : 'Inscrição confirmada'}
+                          ? 'Cancelando inscricao...'
+                          : 'Inscricao confirmada'}
                       </p>
                       <p className="text-sm text-emerald-700/90">
                         {isRegistering
                           ? 'Estamos finalizando sua vaga neste evento.'
                           : isCancelling
                           ? 'Estamos processando o cancelamento da sua vaga.'
-                          : 'Sua vaga já está garantida e registrada para o organizador.'}
+                          : 'Sua vaga ja esta garantida e registrada para o organizador.'}
                       </p>
                     </div>
                   </div>
@@ -348,7 +346,7 @@ export default function EventDetailPage() {
                         disabled={isCancelling}
                         className="border-emerald-600/30 bg-white/60 text-emerald-800 hover:bg-white"
                       >
-                        {isCancelling ? 'Cancelando...' : 'Cancelar inscrição'}
+                        {isCancelling ? 'Cancelando...' : 'Cancelar inscricao'}
                       </Button>
                     </div>
                   )}
@@ -369,7 +367,7 @@ export default function EventDetailPage() {
                   ? 'Processando...'
                   : isCancelling
                   ? 'Cancelando...'
-                  : 'Inscrição confirmada'
+                  : 'Inscricao confirmada'
               }
             />
           </section>
@@ -431,7 +429,7 @@ export default function EventDetailPage() {
                   <div className="mb-8">
                     <div className="mb-3 inline-flex items-center gap-2 rounded-full bg-primary/10 px-4 py-1.5 text-sm font-semibold text-primary">
                       <MapPin className="h-4 w-4" />
-                      Localização
+                      Localizacao
                     </div>
                     <h2 className="text-3xl font-bold text-foreground">
                       Como chegar
@@ -494,7 +492,7 @@ export default function EventDetailPage() {
                     Organizador
                   </div>
                   <h2 className="text-3xl font-bold text-foreground">
-                    Quem está organizando
+                    Quem esta organizando
                   </h2>
                 </div>
 
@@ -519,7 +517,7 @@ export default function EventDetailPage() {
                           <span>{event.organizer.stats.events_created} eventos realizados</span>
                           <span>{event.organizer.stats.total_participants.toLocaleString('pt-BR')} participantes</span>
                           {event.organizer.stats.rating && (
-                            <span>⭐ {event.organizer.stats.rating.toFixed(1)}</span>
+                            <span>Nota {event.organizer.stats.rating.toFixed(1)}</span>
                           )}
                         </div>
                       )}
@@ -548,13 +546,13 @@ export default function EventDetailPage() {
           cta={{
             type: 'register',
             label: isRegistering
-              ? 'Processando inscrição...'
+              ? 'Processando inscricao...'
               : isCancelling
-              ? 'Cancelando inscrição...'
+              ? 'Cancelando inscricao...'
               : isParticipating
-              ? 'Inscrição confirmada'
+              ? 'Inscricao confirmada'
               : event.is_free
-              ? 'Inscrição gratuita'
+              ? 'Inscricao gratuita'
               : 'Comprar ingresso',
             action: '/register',
             enabled: true

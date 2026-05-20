@@ -16,7 +16,7 @@
     "validate:maps": "node scripts/validate-maps-architecture.mjs",
     "format": "prettier --write \"src/**/*.{ts,tsx,js,jsx,json,css,md}\"",
     "typecheck": "npm run typecheck:ci",
-    "typecheck:ci": "echo ⚠️ Typecheck completo - pode demorar 10-30 minutos... && tsc -b tsconfig.app.json tsconfig.node.json --force",
+    "typecheck:ci": "echo Typecheck completo - pode demorar 10-30 minutos... && tsc -b tsconfig.app.json tsconfig.node.json --force",
     "typecheck:full": "npm run typecheck:ci",
     "typecheck:diagnose": "node scripts/diagnose-typecheck.mjs",
     "typecheck:clean": "node -e \"require('fs').rmSync('.tmp', {recursive: true, force: true})\"",
@@ -235,3 +235,4 @@
     ]
   }
 }
+

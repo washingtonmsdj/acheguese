@@ -22,7 +22,7 @@ export default function CriarMotoristaPage() {
 
   const personalProfile = profiles.find((profile) => profile.profileType === "personal");
 
-  // ✅ SSOT COMPLIANT: Detectar tipo baseado no parâmetro URL
+  // Detecta o tipo operacional com base no parametro da URL.
   const driverType: DriverType = useMemo(() => {
     const typeParam = searchParams.get("type");
     return typeParam === "motoboy" ? "motoboy" : "motorista";

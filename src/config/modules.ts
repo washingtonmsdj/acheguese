@@ -375,7 +375,7 @@ export function detectModuleFromPath(pathname: string): ModuleConfig | null {
  */
 export function getContextMessageFromPath(pathname: string): string | null {
   // Página inicial: Feed da comunidade
-  if (pathname === '/' || pathname === '/home-v1') {
+  if (pathname === '/') {
     return 'Feed de';
   }
   

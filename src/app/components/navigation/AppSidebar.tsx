@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+﻿import { useMemo } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import {
   Bell,
@@ -113,7 +113,7 @@ export function AppSidebar() {
           { id: 'community-feed', icon: LayoutList, label: 'Feed', description: 'Feed da comunidade', href: `${base}/feed` },
           { id: 'community-groups', icon: Users, label: 'Grupos', description: 'Nucleos e interesses locais', href: `${base}/grupos` },
           { id: 'community-comms', icon: Newspaper, label: 'Comunicacao', description: 'Midias e canais locais', href: `${base}/comunicacao` },
-          { id: 'community-alerts', icon: Bell, label: 'Alertas', description: 'Alertas da comunidade', href: `${base}/alertas` },
+          { id: 'community-alerts', icon: Bell, label: 'Alertas', description: 'Alertas da comunidade', href: `${base}/feed?tab=alertas` },
           { id: 'community-issues', icon: MessageSquare, label: 'Problemas', description: 'Problemas da regiao', href: `${base}/problemas` },
           { id: 'community-lost-found', icon: Search, label: 'Achados e Perdidos', description: 'Itens perdidos e encontrados', href: `${base}/achados-e-perdidos` },
         ] as NavItem[],
@@ -124,7 +124,7 @@ export function AppSidebar() {
         items: [
           { id: 'community-business', icon: Building2, label: `Comercios do ${territoryName}`, description: `Comercios do ${territoryName}`, href: `${base}/empresas` },
           { id: 'community-gastronomy', icon: UtensilsCrossed, label: 'Gastronomia', description: 'Restaurantes e cardapios locais', href: `${base}/gastronomia` },
-          { id: 'community-education', icon: GraduationCap, label: 'Educacao', description: `Escolas e cursos do ${territoryName}`, href: `/educacao/${communityContext.state}/${communityContext.city}/${communityContext.territorySlug}` },
+          { id: 'community-education', icon: GraduationCap, label: 'Educacao', description: `Escolas e cursos do ${territoryName}`, href: `${base}/educacao` },
           { id: 'community-services', icon: Wrench, label: 'Servicos locais', description: `Servicos do ${territoryName}`, href: `${base}/servicos` },
         ] as NavItem[],
       },
@@ -341,7 +341,7 @@ export function AppSidebar() {
       </SidebarContent>
 
       <SidebarFooter className="border-t border-sidebar-border p-2 space-y-2">
-        {/* Botão de tema */}
+        {/* Botao de tema */}
         <button
           onClick={toggleTheme}
           className="flex items-center gap-2 w-full rounded-xl px-2 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-sidebar-accent/50 transition-colors"
@@ -415,3 +415,4 @@ export function AppSidebar() {
     </Sidebar>
   );
 }
+

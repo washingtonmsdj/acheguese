@@ -1,8 +1,8 @@
 /**
- * EVENTS V2 - TYPE DEFINITIONS
+ * EVENTS - TYPE DEFINITIONS
  * 
  * Sistema de tipos completo para a nova arquitetura de eventos
- * Preparado para eventos gratuitos, pagos, híbridos, online e presenciais
+ * Preparado para eventos gratuitos, pagos, hibridos, online e presenciais
  * 
  * @version 2.0.0
  * @author Kiro AI

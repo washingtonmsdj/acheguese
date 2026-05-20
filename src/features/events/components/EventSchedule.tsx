@@ -1,5 +1,5 @@
 /**
- * EVENT SCHEDULE V2
+ * EVENT SCHEDULE
  *
  * Programacao/agenda do evento
  *

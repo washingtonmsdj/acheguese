@@ -1,7 +1,7 @@
 /**
  * Hook otimizado para MobilityService
  * Usa TanStack Query para cache e estado
- * ✅ REFATORADO: Usa MobilityFacade (SSOT) em vez de MobilityService legado
+ * Usa MobilityFacade como fronteira canonica do modulo.
  */
 import { logger } from '@/shared/utils/logger';
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -13,7 +13,7 @@ const MOBILITY_KEYS = {
   rides: (...args: string[]) => ["mobility", "routes", ...args] as string[],
 };
 /**
- * Hook para buscar corridas do usuário
+ * Hook para buscar corridas do usuario
  */
 export function useUserRides(userId: string | undefined) {
   return useQuery({
@@ -51,7 +51,7 @@ export function useRide(rideId: string | undefined) {
 }
 
 /**
- * Hook para criar solicitação de corrida
+ * Hook para criar solicitacao de corrida
  */
 export function useCreateRideRequest() {
   const queryClient = useQueryClient();
@@ -59,7 +59,7 @@ export function useCreateRideRequest() {
   return useMutation({
     mutationFn: (rideData: Record<string, unknown>) => MobilityFacade.createRideRequest(rideData),
     onSuccess: (_data, variables) => {
-      toast.success("Solicitação de corrida criada!");
+      toast.success("Solicitacao de corrida criada!");
 
       // Invalidar queries relacionadas
       queryClient.invalidateQueries({ queryKey: MOBILITY_KEYS.rides() });
@@ -71,7 +71,7 @@ export function useCreateRideRequest() {
       }
     },
     onError: () => {
-      toast.error("Erro ao criar solicitação de corrida");
+      toast.error("Erro ao criar solicitacao de corrida");
     },
   });
 }
@@ -180,7 +180,7 @@ export function useConfirmRide() {
 }
 
 /**
- * Hook para buscar estatísticas de corridas
+ * Hook para buscar estatisticas de corridas
  */
 export function useRideStats(
   userId: string | undefined,
@@ -196,7 +196,7 @@ export function useRideStats(
 }
 
 /**
- * Hook para buscar histórico de corridas
+ * Hook para buscar historico de corridas
  */
 export function useRideHistory(
   userId: string | undefined,
@@ -212,7 +212,7 @@ export function useRideHistory(
 }
 
 /**
- * Hook para atualizar localização do motorista
+ * Hook para atualizar localizacao do motorista
  */
 export function useUpdateDriverLocation() {
   return useMutation({
@@ -224,14 +224,14 @@ export function useUpdateDriverLocation() {
       location: { latitude: number; longitude: number };
     }) => MobilityFacade.updateDriverLocation(driverProfileId, location),
     onError: () => {
-      // Falha silenciosa para não interromper a experiência
-      logger.warn("Erro ao atualizar localização do motorista");
+      // Falha silenciosa para nao interromper a experiencia.
+      logger.warn("Erro ao atualizar localizacao do motorista");
     },
   });
 }
 
 /**
- * Hook para buscar localização do motorista
+ * Hook para buscar localizacao do motorista
  */
 export function useDriverLocation(driverProfileId: string | undefined) {
   return useQuery({
@@ -239,7 +239,7 @@ export function useDriverLocation(driverProfileId: string | undefined) {
     queryFn: () => MobilityFacade.getDriverLocation(driverProfileId!),
     enabled: !!driverProfileId,
     staleTime: TIMEOUTS.CACHE_STALE_TIME_SHORT,
-    // ✅ REALTIME: Removido polling, localização atualizada via GPS tracking
+    // Realtime: sem polling; localizacao atualizada via GPS tracking.
     retry: 1,
   });
 }

@@ -1,7 +1,7 @@
 /**
- * ContentTabsSection - Seção de conteúdo com tabs
+ * ContentTabsSection - SeÃ§Ã£o de conteÃºdo com tabs
  * 
- * Exibe posts, salvos, favoritos, serviços e classificados em tabs
+ * Exibe posts, salvos, favoritos, serviÃ§os e classificados em tabs
  */
 
 import { useState } from 'react';
@@ -13,7 +13,7 @@ import { SectionFrame } from './SectionFrame';
 import { UserPostsGrid } from '../UserPostsGrid';
 import { SavedPostsGrid } from '../SavedPostsGrid';
 import { FavoritesList } from '../FavoritesList';
-import { UserServicesSectionV2 } from '../UserServicesSectionV2';
+import { UserServicesSection } from '../UserServicesSection';
 import { UserClassifiedsSection } from '../UserClassifiedsSection';
 
 import type { Business } from '@/core/profiles/services/types';
@@ -107,7 +107,7 @@ export function ContentTabsSection({
         </TabsContent>
 
         <TabsContent value="services" className="mt-0">
-          <UserServicesSectionV2
+          <UserServicesSection
             profileId={profileId}
             onCreateNew={onCreateService}
             onEdit={onEditService}

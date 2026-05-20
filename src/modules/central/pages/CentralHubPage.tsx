@@ -1,21 +1,21 @@
-import { useNavigate } from "react-router-dom";
+﻿import { useNavigate } from "react-router-dom";
 import {
-  Building2,
   Bike,
+  Building2,
   Car,
   GraduationCap,
   Shield,
   Sparkles,
   User,
 } from "lucide-react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/components/ui/card";
-import { Button } from "@/shared/components/ui/button";
 import { Badge } from "@/shared/components/ui/badge";
+import { Button } from "@/shared/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/components/ui/card";
 import { useSessionContext } from "@/core/session";
 import { useProfileHub } from "@/core/profile/hooks/useProfileHub";
 import { useDriverProfileIdentity } from "@/core/mobility/hooks/useDriverProfileIdentity";
-import { mobilityRoutes } from "@/core/mobility/routes/mobilityRoutes";
 import { businessManagementRoutes } from "@/core/business/utils/businessManagementRoutes";
+import { centralRoutes } from "@/modules/central/routes/centralRoutes";
 
 /**
  * CentralHubPage
@@ -36,241 +36,226 @@ export default function CentralHubPage() {
     queryScope: "central-hub",
   });
 
-  // Guard ja verifica autenticacao, nao precisa de useEffect aqui
   if (!user) {
     return null;
   }
 
   const hasBusinesses = profileHub.businessModules.length > 0;
-  const hasProfessional = Boolean((profileHub.profile as { professional_data?: unknown } | null)?.professional_data);
+  const hasProfessionalData = Boolean(
+    (profileHub.profile as { professional_data?: unknown } | null)?.professional_data,
+  );
+  const hasProfessionalProfile = profileHub.allProfiles.some((profile) => profile.profile_type === "professional");
+  const hasProfessional = hasProfessionalData || hasProfessionalProfile;
   const hasDriver = driverRegistered;
-  const isAdmin = Boolean((profileHub.identity?.reputation as { is_moderator?: boolean } | undefined)?.is_moderator);
-  const driverMode =
-    driverData?.can_do_rides
-      ? "driver"
-      : driverData?.can_do_delivery
-      ? "motoboy"
-      : null;
+  const canDoRides = hasDriver && driverData?.can_do_rides !== false;
+  const canDoDelivery = hasDriver && driverData?.can_do_delivery === true;
+  const showDriverCard = hasDriver && canDoRides;
+  const showMotoboyCard = hasDriver && canDoDelivery;
+  const showMobilitySetupCard = hasDriver && !showDriverCard && !showMotoboyCard;
+  const isAdmin = Boolean(
+    (profileHub.identity?.reputation as { is_moderator?: boolean } | undefined)?.is_moderator,
+  );
 
   return (
     <div className="container mx-auto max-w-6xl space-y-6 px-4 py-8">
       <div className="space-y-2">
         <h1 className="text-3xl font-bold tracking-tight">Central</h1>
-        <p className="text-muted-foreground">
-          Hub de gestao e operacao para empresas, profissionais e mobilidade.
-        </p>
+        <p className="text-muted-foreground">Hub de gestao e operacao para empresas, profissionais e mobilidade.</p>
       </div>
 
-      {/* Secao de entidades ativas */}
-      {(hasBusinesses || hasProfessional || hasDriver || isAdmin) && (
-        <div className="space-y-4">
+      {(hasBusinesses || hasProfessional || hasDriver || isAdmin) ? (
+        <section className="space-y-4">
           <h2 className="text-lg font-semibold">Suas areas de gestao</h2>
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {/* Empresas */}
-            {hasBusinesses && (
+            {hasBusinesses ? (
               <Card className="rounded-lg border-primary/20 bg-primary/5">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Building2 className="h-5 w-5 text-primary" />
                     Minhas Empresas
                   </CardTitle>
-                  <CardDescription>
-                    Gerencie seus negocios, cardapios, pedidos e analytics.
-                  </CardDescription>
+                  <CardDescription>Gerencie seus negocios, operacao e analytics.</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="flex items-center justify-between">
+                  <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                     <Badge variant="secondary">{profileHub.businessModules.length} ativa(s)</Badge>
-                    <Button onClick={() => navigate(businessManagementRoutes.list())}>
+                    <Button className="w-full sm:w-auto" onClick={() => navigate(businessManagementRoutes.list())}>
                       Acessar
                     </Button>
                   </div>
                 </CardContent>
               </Card>
-            )}
+            ) : null}
 
-            {/* Profissional */}
-            {hasProfessional && (
+            {hasProfessional ? (
               <Card className="rounded-lg border-primary/20 bg-primary/5">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <GraduationCap className="h-5 w-5 text-primary" />
                     Area profissional
                   </CardTitle>
-                  <CardDescription>
-                    Gerencie seus servicos, orcamentos, agenda e avaliacoes.
-                  </CardDescription>
+                  <CardDescription>Gerencie servicos, orcamentos, agenda e avaliacoes.</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <Button onClick={() => navigate("/central/profissional")}>
+                  <Button
+                    className="w-full sm:w-auto"
+                    onClick={() => navigate(centralRoutes.profissional.home)}
+                  >
                     Acessar
                   </Button>
                 </CardContent>
               </Card>
-            )}
+            ) : null}
 
-            {/* Motorista */}
-            {hasDriver && driverMode === "driver" && (
+            {showDriverCard ? (
               <Card className="rounded-lg border-primary/20 bg-primary/5">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Car className="h-5 w-5 text-primary" />
                     Motorista
                   </CardTitle>
-                  <CardDescription>
-                    Gerencie corridas, disponibilidade e ganhos como motorista.
-                  </CardDescription>
+                  <CardDescription>Gerencie corridas, disponibilidade e ganhos.</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <Button onClick={() => navigate(mobilityRoutes.motorista.home)}>
+                  <Button className="w-full sm:w-auto" onClick={() => navigate(centralRoutes.motorista.home)}>
                     Acessar
                   </Button>
                 </CardContent>
               </Card>
-            )}
+            ) : null}
 
-            {/* Motoboy */}
-            {hasDriver && driverMode === "motoboy" && (
+            {showMotoboyCard ? (
               <Card className="rounded-lg border-primary/20 bg-primary/5">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Bike className="h-5 w-5 text-primary" />
                     Motoboy
                   </CardTitle>
-                  <CardDescription>
-                    Gerencie entregas, disponibilidade e ganhos como motoboy.
-                  </CardDescription>
+                  <CardDescription>Gerencie entregas, disponibilidade e ganhos.</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <Button onClick={() => navigate(mobilityRoutes.motoboy.home)}>
+                  <Button className="w-full sm:w-auto" onClick={() => navigate(centralRoutes.motoboy.home)}>
                     Acessar
                   </Button>
                 </CardContent>
               </Card>
-            )}
+            ) : null}
 
-            {/* Administracao */}
-            {isAdmin && (
+            {showMobilitySetupCard ? (
+              <Card className="rounded-lg border-primary/20 bg-primary/5">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Car className="h-5 w-5 text-primary" />
+                    Mobilidade
+                  </CardTitle>
+                  <CardDescription>Finalize seu cadastro para ativar corridas ou entregas.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <Button className="w-full sm:w-auto" onClick={() => navigate(centralRoutes.motorista.cadastro)}>
+                    Continuar cadastro
+                  </Button>
+                </CardContent>
+              </Card>
+            ) : null}
+
+            {isAdmin ? (
               <Card className="rounded-lg border-primary/20 bg-primary/5">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Shield className="h-5 w-5 text-primary" />
                     Administracao
                   </CardTitle>
-                  <CardDescription>
-                    Acesso ao painel administrativo do sistema.
-                  </CardDescription>
+                  <CardDescription>Acesso ao painel administrativo do sistema.</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <Button onClick={() => navigate("/admin")}>
-                    Acessar Admin
+                  <Button className="w-full sm:w-auto" onClick={() => navigate(centralRoutes.admin.home)}>
+                    Acessar admin
                   </Button>
                 </CardContent>
               </Card>
-            )}
+            ) : null}
           </div>
-        </div>
-      )}
+        </section>
+      ) : null}
 
-      {/* Secao de CTAs para usuarios sem entidades */}
-      {!hasBusinesses && !hasProfessional && !hasDriver && (
-        <div className="space-y-4">
-          <h2 className="text-lg font-semibold">Comece a Gerenciar</h2>
+      {!hasBusinesses && !hasProfessional && !hasDriver ? (
+        <section className="space-y-4">
+          <h2 className="text-lg font-semibold">Comece a gerenciar</h2>
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {/* Cadastrar Empresa */}
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Building2 className="h-5 w-5" />
-                  Cadastre sua Empresa
+                  Cadastre sua empresa
                 </CardTitle>
-                <CardDescription>
-                  Crie e gerencie seu negocio no Achegue-se.
-                </CardDescription>
+                <CardDescription>Crie e gerencie seu negocio no Achegue-se.</CardDescription>
               </CardHeader>
               <CardContent>
-                <Button
-                  className="w-full"
-                  variant="outline"
-                  onClick={() => navigate("/central/empresas/nova")}
-                >
+                <Button className="w-full" variant="outline" onClick={() => navigate(centralRoutes.empresas.create)}>
                   <Sparkles className="mr-2 h-4 w-4" />
-                  Criar Empresa
+                  Criar empresa
                 </Button>
               </CardContent>
             </Card>
 
-            {/* Cadastrar Profissional */}
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <User className="h-5 w-5" />
                   Area profissional
                 </CardTitle>
-                <CardDescription>
-                  Ofereca servicos e gerencie sua carreira profissional.
-                </CardDescription>
+                <CardDescription>Ofereca servicos e gerencie sua carreira profissional.</CardDescription>
               </CardHeader>
               <CardContent>
-                <Button
-                  className="w-full"
-                  variant="outline"
-                  onClick={() => navigate("/services/cadastrar")}
-                >
+                <Button className="w-full" variant="outline" onClick={() => navigate(centralRoutes.servicos.create)}>
                   <Sparkles className="mr-2 h-4 w-4" />
                   Cadastrar servico
                 </Button>
               </CardContent>
             </Card>
 
-            {/* Seja Motorista */}
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Car className="h-5 w-5" />
-                  Seja Motorista
+                  Seja motorista
                 </CardTitle>
-                <CardDescription>
-                  Trabalhe como motorista de app na sua cidade.
-                </CardDescription>
+                <CardDescription>Trabalhe como motorista de app na sua cidade.</CardDescription>
               </CardHeader>
               <CardContent>
                 <Button
                   className="w-full"
                   variant="outline"
-                  onClick={() => navigate(mobilityRoutes.motorista.cadastro)}
+                  onClick={() => navigate(centralRoutes.motorista.cadastro)}
                 >
                   <Sparkles className="mr-2 h-4 w-4" />
-                  Cadastrar Motorista
+                  Cadastrar motorista
                 </Button>
               </CardContent>
             </Card>
 
-            {/* Seja Motoboy */}
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Bike className="h-5 w-5" />
-                  Seja Entregador
+                  Seja entregador
                 </CardTitle>
-                <CardDescription>
-                  Trabalhe como motoboy realizando entregas.
-                </CardDescription>
+                <CardDescription>Trabalhe como motoboy realizando entregas.</CardDescription>
               </CardHeader>
               <CardContent>
                 <Button
                   className="w-full"
                   variant="outline"
-                  onClick={() => navigate(mobilityRoutes.motoboy.cadastro)}
+                  onClick={() => navigate(centralRoutes.motoboy.cadastro)}
                 >
                   <Sparkles className="mr-2 h-4 w-4" />
-                  Cadastrar Motoboy
+                  Cadastrar motoboy
                 </Button>
               </CardContent>
             </Card>
           </div>
-        </div>
-      )}
+        </section>
+      ) : null}
     </div>
   );
 }

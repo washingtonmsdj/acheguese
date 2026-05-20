@@ -1,11 +1,11 @@
 /**
  * MapTerritoryControl - Controle territorial do mapa
  *
- * Wrapper que combina TerritorySelectorV2 + TerritoryIndicator
- * em um único controle posicionável no mapa.
+ * Wrapper que combina TerritoryModeSelector + TerritoryIndicator
+ * em um unico controle posicionavel no mapa.
  */
 
-import { TerritorySelectorV2 } from '@/core/location/components/TerritorySelectorV2';
+import { TerritoryModeSelector } from '@/core/location/components/TerritoryModeSelector';
 import { TerritoryIndicator } from '@/core/location/components/TerritoryIndicator';
 import type { ResolvedTerritory } from '@/core/routing/hooks/useResolveTerritoryFromUrl';
 import type { TerritoryControlConfig } from './types';
@@ -24,7 +24,7 @@ export function MapTerritoryControl({
 }: MapTerritoryControlProps) {
   return (
     <div className="flex flex-col items-end gap-1">
-      {showSelector && <TerritorySelectorV2 compact={compact} />}
+      {showSelector && <TerritoryModeSelector compact={compact} />}
       {showIndicator && resolved && (
         <TerritoryIndicator
           resolved={resolved}

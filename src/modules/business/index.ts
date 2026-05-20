@@ -5,7 +5,7 @@
  * Internal implementation details should not be exported.
  *
  * Validates: Requirements 8.1, 8.2, 8.3
- * Validates: Property 6 (Barrel Exports Apenas para API Pública)
+ * Validates: Property 6 (Barrel Exports Apenas para API PÃºblica)
  */
 
 // Components
@@ -59,7 +59,7 @@ export { useBusinessServices } from "./hooks/useBusinessServices";
 
 // Pages
 export { default as BusinessStandalonePage } from "./pages/BusinessStandalonePage";
-export { default as CriarEmpresaPageV2 } from "./pages/CriarEmpresaPageV2";
+export { default as CriarEmpresaPage } from "./pages/CriarEmpresaPage";
 export { default as EditarEmpresaPage } from "./pages/EditarEmpresaPage";
 export { default as EmpresaCatalogoPublicoPage } from "./pages/EmpresaCatalogoPublicoPage";
 export { default as EmpresasPage } from "./pages/EmpresasPage";
@@ -104,3 +104,4 @@ export {
   businessUXSchema,
   type BusinessUXInput,
 } from "@/shared/schemas/business/businessSchemas";
+

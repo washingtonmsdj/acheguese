@@ -34,7 +34,7 @@ export function useMotoboy({ sourceType, sourceId }: UseMotoboyOptions) {
     isLoading: delivery.isLoading,
     isSubmitting: delivery.isSubmitting,
 
-    // Ações — nomes semânticos para contexto externo
+    // Acoes com nomes semanticos para contexto externo.
     requestDelivery: delivery.createDelivery,
     cancelDelivery: delivery.cancelDelivery,
 

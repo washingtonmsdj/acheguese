@@ -5,12 +5,12 @@ import { Button } from "@/shared/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/components/ui/card";
 import { DriverEarningsCard } from "@/modules/mobility/components/driver/DriverEarningsCard";
 import { WeeklyEarningsChart } from "@/modules/mobility/components/driver/WeeklyEarningsChart";
-import { useMotoristaPageV2 } from "@/modules/mobility/hooks/useMotoristaPageV2";
+import { useMotoristaPage } from "@/modules/mobility/hooks/useMotoristaPage";
 import { getMobilityServicePath } from "@/modules/mobility/routes/mobilityNavigation";
 
 export interface DriverEarningsLayoutProps {
   /**
-   * Tipo de serviço: "motorista" ou "motoboy"
+   * Tipo de servico: "motorista" ou "motoboy"
    */
   service: "motorista" | "motoboy";
 }
@@ -23,7 +23,7 @@ function formatMoney(value?: number | null): string {
 /**
  * DriverEarningsLayout
  * 
- * Layout compartilhado para página de ganhos de motorista/motoboy.
+ * Layout compartilhado para pagina de ganhos de motorista/motoboy.
  * Reutiliza os componentes DriverEarningsCard e WeeklyEarningsChart.
  * 
  * Este componente renderiza o layout das rotas operacionais da Central.
@@ -31,7 +31,7 @@ function formatMoney(value?: number | null): string {
  */
 export function DriverEarningsLayout({ service }: DriverEarningsLayoutProps) {
   const navigate = useNavigate();
-  const shell = useMotoristaPageV2();
+  const shell = useMotoristaPage();
   const driverEarnings = shell.driverEarnings as {
     today?: number | null;
     week?: number | null;
@@ -44,15 +44,15 @@ export function DriverEarningsLayout({ service }: DriverEarningsLayoutProps) {
     ? "Resumo de ganhos por corrida" 
     : "Resumo de ganhos por entrega";
   const earningsDescription = isMotorista 
-    ? "Ganhos, taxas e consolidado da operação de motorista."
-    : "Consolidado da operação de motoboy.";
+    ? "Ganhos, taxas e consolidado da operacao de motorista."
+    : "Consolidado da operacao de motoboy.";
   const weeklyTitle = "Resumo semanal";
   const weeklyDescription = isMotorista 
     ? "Fluxo recente de ganhos em corridas."
     : "Fluxo recente de ganhos em entregas.";
   const actionLabel = isMotorista 
-    ? "Revisar configurações de corridas" 
-    : "Revisar configurações de entregas";
+    ? "Revisar configuracoes de corridas" 
+    : "Revisar configuracoes de entregas";
 
   return (
     <div className="space-y-4">

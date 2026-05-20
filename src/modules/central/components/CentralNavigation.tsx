@@ -1,38 +1,26 @@
-import { Link, useLocation } from 'react-router-dom';
-import { LayoutGrid, Building2, Calendar, Radio, User, Car, Bike, Sun, Moon } from 'lucide-react';
+﻿import { Link, useLocation } from "react-router-dom";
+import { LayoutGrid, Moon, Sun } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
+  SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
   SidebarGroupLabel,
   SidebarHeader,
-  SidebarFooter,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
   useSidebar,
-} from '@/shared/components/ui/sidebar';
-import { Avatar, AvatarFallback, AvatarImage } from '@/shared/components/ui/avatar';
-import { cn } from '@/shared/utils/cn';
-import { useTheme } from '@/shared/hooks/useTheme';
-import { useSessionContext } from '@/core/session';
+} from "@/shared/components/ui/sidebar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/shared/components/ui/avatar";
+import { cn } from "@/shared/utils/cn";
+import { useTheme } from "@/shared/hooks/useTheme";
+import { useSessionContext } from "@/core/session";
+import { getCentralPrimaryNavItems } from "./centralNavigation.config";
 
-const navItems = [
-  { title: "Início", url: "/central", icon: LayoutGrid },
-  { title: "Minhas Empresas", url: "/central/empresas", icon: Building2 },
-  { title: "Meus Eventos", url: "/central/eventos", icon: Calendar },
-  { title: "Meus Canais", url: "/central/comunicacao", icon: Radio },
-  { title: "Perfil Profissional", url: "/central/profissional", icon: User },
-  { title: "Motorista", url: "/central/motorista", icon: Car },
-  { title: "Motoboy", url: "/central/motoboy", icon: Bike },
-];
+const navItems = getCentralPrimaryNavItems();
 
-/**
- * CentralNavigation
- * 
- * Sidebar copiada EXATAMENTE do maker-forge-net AppSidebar
- */
 export function CentralNavigation() {
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
@@ -40,13 +28,12 @@ export function CentralNavigation() {
   const { theme, toggleTheme } = useTheme();
   const { user, activeProfile } = useSessionContext();
 
-  console.log("🔵 Sidebar state:", state, "collapsed:", collapsed);
-
-  const isActive = (url: string) => {
-    if (url === "/central") {
+  const isActive = (href: string) => {
+    if (href === "/central") {
       return location.pathname === "/central";
     }
-    return location.pathname.startsWith(url);
+
+    return location.pathname.startsWith(href);
   };
 
   return (
@@ -56,31 +43,27 @@ export function CentralNavigation() {
           <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary">
             <LayoutGrid className="h-5 w-5 text-primary-foreground" />
           </div>
-          {!collapsed && (
-            <span className="font-display text-lg font-bold text-foreground">
-              Central
-            </span>
-          )}
+          {!collapsed ? <span className="font-display text-lg font-bold text-foreground">Central</span> : null}
         </Link>
       </SidebarHeader>
 
       <SidebarContent className="flex-1 overflow-hidden">
         <SidebarGroup>
-          <SidebarGroupLabel className="text-muted-foreground text-xs">Menu</SidebarGroupLabel>
+          <SidebarGroupLabel className="text-xs text-muted-foreground">Menu</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {navItems.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild isActive={isActive(item.url)}>
+                <SidebarMenuItem key={item.id}>
+                  <SidebarMenuButton asChild isActive={isActive(item.href)}>
                     <Link
-                      to={item.url}
+                      to={item.href}
                       className={cn(
-                        "hover:bg-sidebar-accent/50 rounded-xl transition-colors",
-                        isActive(item.url) && "bg-sidebar-accent text-primary font-medium"
+                        "rounded-xl transition-colors hover:bg-sidebar-accent/50",
+                        isActive(item.href) && "bg-sidebar-accent font-medium text-primary",
                       )}
                     >
                       <item.icon className="mr-2 h-4 w-4" />
-                      {!collapsed && <span>{item.title}</span>}
+                      {!collapsed ? <span>{item.label}</span> : null}
                     </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
@@ -90,29 +73,34 @@ export function CentralNavigation() {
         </SidebarGroup>
       </SidebarContent>
 
-      <SidebarFooter className="p-4 border-t border-sidebar-border space-y-3">
+      <SidebarFooter className="space-y-3 border-t border-sidebar-border p-4">
         <button
           onClick={toggleTheme}
-          className="flex items-center gap-2 w-full rounded-xl px-2 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-sidebar-accent/50 transition-colors"
+          className="flex w-full items-center gap-2 rounded-xl px-2 py-2 text-sm text-muted-foreground transition-colors hover:bg-sidebar-accent/50 hover:text-foreground"
         >
           {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-          {!collapsed && <span>{theme === "dark" ? "Modo Claro" : "Modo Escuro"}</span>}
+          {!collapsed ? <span>{theme === "dark" ? "Modo Claro" : "Modo Escuro"}</span> : null}
         </button>
-        <Link to="/perfil" className="flex items-center gap-3 hover:bg-sidebar-accent/50 rounded-xl p-2 transition-colors">
+
+        <Link
+          to="/conta"
+          className="flex items-center gap-3 rounded-xl p-2 transition-colors hover:bg-sidebar-accent/50"
+        >
           <Avatar className="h-8 w-8 border border-primary/30">
             <AvatarImage src={activeProfile?.avatarUrl || ""} />
             <AvatarFallback>
               {activeProfile?.displayName?.[0]?.toUpperCase() || user?.email?.[0]?.toUpperCase() || "U"}
             </AvatarFallback>
           </Avatar>
-          {!collapsed && (
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-foreground truncate">
-                {activeProfile?.displayName || user?.email || "Usuário"}
+
+          {!collapsed ? (
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-sm font-medium text-foreground">
+                {activeProfile?.displayName || user?.email || "Usuario"}
               </p>
               <span className="text-xs text-muted-foreground">Ver perfil</span>
             </div>
-          )}
+          ) : null}
         </Link>
       </SidebarFooter>
     </Sidebar>

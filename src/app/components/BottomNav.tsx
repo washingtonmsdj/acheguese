@@ -1,5 +1,5 @@
 /**
- * BottomNavV2
+ * BottomNav
  *
  * Bottom nav mobile sem atalhos de mensagens/notificacoes (centralizados no header).
  */

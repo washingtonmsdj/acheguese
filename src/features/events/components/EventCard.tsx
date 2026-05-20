@@ -1,10 +1,9 @@
 /**
- * 🎉 EVENT CARD V2
+ * Event card
  * 
  * Card premium para listagem de eventos
  * Design inspirado em Sympla/Eventbrite
  * 
- * @version 2.0.0
  */
 
 import { motion } from 'framer-motion';
@@ -108,7 +107,7 @@ export function EventCard({
             )}
             {isAlmostFull && !isSoldOut && (
               <Badge className="bg-amber-500/90 text-white backdrop-blur-sm border-0 animate-pulse">
-                Últimas vagas
+                Ultimas vagas
               </Badge>
             )}
           </div>
@@ -185,7 +184,7 @@ export function EventCard({
           />
           {event.is_free && (
             <Badge className="absolute left-1 top-1 bg-green-500/90 text-white border-0 text-[10px] px-1.5 py-0.5">
-              Grátis
+              Gratis
             </Badge>
           )}
         </div>
@@ -201,7 +200,7 @@ export function EventCard({
                 <Calendar className="h-3 w-3" />
                 {format(eventDate, "d MMM", { locale: ptBR })}
               </span>
-              <span>⬢</span>
+              <span>-</span>
               <span className="flex items-center gap-1">
                 <MapPin className="h-3 w-3" />
                 {event.location.neighborhood || event.location.city}
@@ -280,7 +279,7 @@ export function EventCard({
               "backdrop-blur-sm border-0 text-xs",
               isSoldOut ? "bg-red-500/90 text-white" : "bg-amber-500/90 text-white animate-pulse"
             )}>
-              {isSoldOut ? 'Esgotado' : 'Últimas vagas'}
+              {isSoldOut ? 'Esgotado' : 'Ultimas vagas'}
             </Badge>
           </div>
         )}

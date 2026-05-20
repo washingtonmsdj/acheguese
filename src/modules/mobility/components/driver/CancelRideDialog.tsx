@@ -26,7 +26,7 @@ const DRIVER_CANCEL_REASONS = [
   "Destino incorreto",
   "Problema no carro",
   "Passageiro solicitou cancelamento",
-  "Distância muito longa",
+  "Distancia muito longa",
   "Condições climáticas ruins",
   "Outro motivo",
 ];

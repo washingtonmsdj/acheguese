@@ -8,7 +8,7 @@
 const PREFETCHERS: Array<{ test: (path: string) => boolean; load: () => Promise<unknown> }> = [
   {
     test: (path) => path === "/",
-    load: () => import("@/app/pages/HomePageV2"),
+    load: () => import("@/app/pages/MainLandingPage"),
   },
   {
     test: (path) => path.startsWith("/empresas"),

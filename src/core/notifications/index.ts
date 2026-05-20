@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Core Notifications Barrel Export
  */
 
@@ -27,4 +27,4 @@ export type {
 } from './types';
 
 // Components
-export { UnifiedNotificationBellV2 } from './components/UnifiedNotificationBellV2';
+export { UnifiedNotificationBell } from './components/UnifiedNotificationBell';

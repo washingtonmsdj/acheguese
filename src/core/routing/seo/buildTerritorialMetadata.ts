@@ -14,6 +14,7 @@
 import type { Location, TerritorialGroupWithMembers } from '@/core/location/types';
 import type { ModuleSlug } from '../utils/territoryUrls';
 import { MODULE_SLUGS } from '../utils/territoryUrls';
+import { buildPublicAbsoluteUrl, getPublicAppOrigin } from '@/shared/config/publicAppOrigin';
 
 // ── Textos para a landing hub (sem módulo) ───────────────────────────────────
 
@@ -26,7 +27,6 @@ const HUB_COPY = {
 // ── Configuração da marca ────────────────────────────────────────────────────
 
 const BRAND = 'Achegue-se';
-const SITE_URL = 'https://acheguese.com.br';
 const DEFAULT_OG_IMAGE = '/og-image.png';
 
 // ── Textos por módulo ────────────────────────────────────────────────────────
@@ -147,7 +147,7 @@ export type TerritorialSeoInput = LocationSeoInput | GroupSeoInput;
 
 export function buildTerritorialMetadata(input: TerritorialSeoInput): TerritorialMetadata {
   const copy = input.module ? MODULE_COPY[input.module] : HUB_COPY;
-  const canonical = `${SITE_URL}${input.canonicalPath}`;
+  const canonical = buildPublicAbsoluteUrl(input.canonicalPath);
 
   if (input.kind === 'location') {
     return buildLocationMetadata(input, copy, canonical);
@@ -212,6 +212,9 @@ function buildMetadata(
   description: string,
   canonical: string,
 ): TerritorialMetadata {
+  const publicOrigin = getPublicAppOrigin();
+  const absoluteOgImage = publicOrigin ? `${publicOrigin}${DEFAULT_OG_IMAGE}` : DEFAULT_OG_IMAGE;
+
   return {
     title,
     description,
@@ -221,7 +224,7 @@ function buildMetadata(
       description,
       url: canonical,
       type: 'website',
-      image: `${SITE_URL}${DEFAULT_OG_IMAGE}`,
+      image: absoluteOgImage,
       siteName: BRAND,
       locale: 'pt_BR',
     },
@@ -229,7 +232,7 @@ function buildMetadata(
       card: 'summary_large_image',
       title,
       description,
-      image: `${SITE_URL}${DEFAULT_OG_IMAGE}`,
+      image: absoluteOgImage,
     },
   };
 }

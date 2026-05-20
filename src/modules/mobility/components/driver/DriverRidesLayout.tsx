@@ -6,7 +6,7 @@ import { Badge } from "@/shared/components/ui/badge";
 import { Button } from "@/shared/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/components/ui/card";
 import { DriverRidesList } from "@/modules/mobility/components/driver/DriverRidesList";
-import { useMotoristaPageV2 } from "@/modules/mobility/hooks/useMotoristaPageV2";
+import { useMotoristaPage } from "@/modules/mobility/hooks/useMotoristaPage";
 import { getMobilityServicePath } from "@/modules/mobility/routes/mobilityNavigation";
 import type { MobilityRide } from "@/core/mobility/types/ride";
 
@@ -35,15 +35,15 @@ function getTrustRiskLabel(ride: RideLike): string | null {
 /**
  * DriverRidesLayout
  * 
- * Layout compartilhado para pÃ¡gina de corridas de motorista.
- * Reutiliza o componente DriverRidesList e o hook useMotoristaPageV2.
+ * Layout compartilhado para pagina de corridas de motorista.
+ * Reutiliza o componente DriverRidesList e o hook useMotoristaPage.
  * 
- * Este componente renderiza o mesmo layout que a pÃ¡gina legada
+ * Este componente renderiza o layout operacional canonico
  * /central/motorista/corridas.
  */
 export function DriverRidesLayout() {
   const navigate = useNavigate();
-  const shell = useMotoristaPageV2();
+  const shell = useMotoristaPage();
 
   const availableRides = useMemo(
     () => (shell.availableRides || []).filter((ride: RideLike) => !isDeliveryRide(ride)),

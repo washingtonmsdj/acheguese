@@ -6,7 +6,7 @@ Ownership canonico do dominio de notificacoes.
 - Hook oficial de leitura: `useUnifiedNotifications`
 - Service oficial de escrita/consulta: `NotificationService`
 - Tipos canonicos: `types.ts`
-- Componente oficial de sino: `components/UnifiedNotificationBellV2.tsx`
+- Componente oficial de sino: `components/UnifiedNotificationBell.tsx`
 
 ## Regras
 - Nao criar wrappers em `modules/notifications`.

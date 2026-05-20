@@ -12,7 +12,7 @@ import { getMobilityServicePath } from "@/modules/mobility/routes/mobilityNaviga
 
 export interface DriverProfileLayoutProps {
   /**
-   * Tipo de serviÃ§o: "motorista" ou "motoboy"
+   * Tipo de servico: "motorista" ou "motoboy"
    */
   service: "motorista" | "motoboy";
 }
@@ -26,7 +26,7 @@ function formatValue(value: unknown): string {
 /**
  * DriverProfileLayout
  * 
- * Layout compartilhado para pÃ¡gina de cadastro de motorista/motoboy.
+ * Layout compartilhado para pagina de cadastro de motorista/motoboy.
  * Reutiliza os componentes DriverOperationalSnapshotCard e DriverVehicleDetailsCard.
  * 
  * Este componente renderiza o layout das rotas operacionais da Central.

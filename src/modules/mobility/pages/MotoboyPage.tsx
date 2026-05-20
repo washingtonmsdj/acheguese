@@ -75,7 +75,7 @@ export default function MotoboyPage() {
     }
   }, [hook.isDriver, hook.loading, navigate, mobilityUrls.motoboy.cadastro]);
 
-  // âœ… SSOT COMPLIANT: Verificar se tem capacidade de entrega
+  // Verifica capacidade de entrega pelo SSOT operacional.
   React.useEffect(() => {
     if (!hook.loading && hook.isDriver && !hook.canAcceptDeliveryOffers) {
       // Redirecionar para habilitar entregas
@@ -355,7 +355,7 @@ export default function MotoboyPage() {
   );
 }
 
-/* â”€â”€â”€ Page Header â”€â”€â”€ */
+/* Page Header */
 
 function PageHeader({
   isDriverOnline,

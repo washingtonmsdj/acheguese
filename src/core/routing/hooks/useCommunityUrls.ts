@@ -53,7 +53,7 @@ export function useCommunityUrls(routeResolved?: ResolvedTerritory | null): Comm
     eventsUrl = `/eventos/${TERRITORY_CONFIG.launch.state}/${TERRITORY_CONFIG.launch.city}`;
   }
 
-  const alertsUrl = `${feedUrl}/alertas`;
+  const alertsUrl = `${feedUrl}/feed?tab=alertas`;
   const issuesUrl = `${feedUrl}/problemas`;
   const groupsUrl = `${feedUrl}/grupos`;
 

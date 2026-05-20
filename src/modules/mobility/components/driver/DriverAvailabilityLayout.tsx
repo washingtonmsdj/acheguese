@@ -5,12 +5,12 @@ import { Clock3, MapPin, Navigation2, Radio, ToggleLeft, ToggleRight } from "luc
 import { Badge } from "@/shared/components/ui/badge";
 import { Button } from "@/shared/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/components/ui/card";
-import { useMotoristaPageV2 } from "@/modules/mobility/hooks/useMotoristaPageV2";
+import { useMotoristaPage } from "@/modules/mobility/hooks/useMotoristaPage";
 import { getMobilityServicePath } from "@/modules/mobility/routes/mobilityNavigation";
 
 export interface DriverAvailabilityLayoutProps {
   /**
-   * Tipo de serviço: "motorista" ou "motoboy"
+   * Tipo de servico: "motorista" ou "motoboy"
    */
   service: "motorista" | "motoboy";
 }
@@ -24,15 +24,15 @@ function formatValue(value: unknown): string {
 /**
  * DriverAvailabilityLayout
  * 
- * Layout compartilhado para página de disponibilidade de motorista/motoboy.
- * Reutiliza o hook useMotoristaPageV2 e o layout da página legada.
+ * Layout compartilhado para pagina de disponibilidade de motorista/motoboy.
+ * Reutiliza o hook useMotoristaPage e o layout operacional canonico.
  * 
  * Este componente renderiza o layout das rotas operacionais da Central.
  * /central/motorista/disponibilidade e /central/motoboy/disponibilidade.
  */
 export function DriverAvailabilityLayout({ service }: DriverAvailabilityLayoutProps) {
   const navigate = useNavigate();
-  const shell = useMotoristaPageV2();
+  const shell = useMotoristaPage();
 
   const driverData = shell.driverData as Record<string, unknown> | null;
   const isMotorista = service === "motorista";

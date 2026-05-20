@@ -1,18 +1,18 @@
-import { Helmet } from "react-helmet-async";
+﻿import { Helmet } from "react-helmet-async";
 import { buildPublicAbsoluteUrl } from "@/shared/config/publicAppOrigin";
-import { HeroSection } from "../v2/sections/HeroSection";
-import { FeaturedMediaSection } from "../v2/sections/FeaturedMediaSection";
-import { ActiveCoverageSection } from "../v2/sections/ActiveCoverageSection";
-import { VerifiedChannelsSection } from "../v2/sections/VerifiedChannelsSection";
-import { TrendingTerritorialSection } from "../v2/sections/TrendingTerritorialSection";
-import { LatestPublicationsSection } from "../v2/sections/LatestPublicationsSection";
-import { CommunitiesInMotionSection } from "../v2/sections/CommunitiesInMotionSection";
-import { EventsCultureSection } from "../v2/sections/EventsCultureSection";
-import { LocalNewsSection } from "../v2/sections/LocalNewsSection";
-import { PublicUtilitySection } from "../v2/sections/PublicUtilitySection";
-import { MultimediaContentSection } from "../v2/sections/MultimediaContentSection";
-import { TerritorialSidebar } from "../v2/components/TerritorialSidebar";
-import { TerritorialFilters } from "../v2/components/TerritorialFilters";
+import { HeroSection } from "../sections/HeroSection";
+import { FeaturedMediaSection } from "../sections/FeaturedMediaSection";
+import { ActiveCoverageSection } from "../sections/ActiveCoverageSection";
+import { VerifiedChannelsSection } from "../sections/VerifiedChannelsSection";
+import { TrendingTerritorialSection } from "../sections/TrendingTerritorialSection";
+import { LatestPublicationsSection } from "../sections/LatestPublicationsSection";
+import { CommunitiesInMotionSection } from "../sections/CommunitiesInMotionSection";
+import { EventsCultureSection } from "../sections/EventsCultureSection";
+import { LocalNewsSection } from "../sections/LocalNewsSection";
+import { PublicUtilitySection } from "../sections/PublicUtilitySection";
+import { MultimediaContentSection } from "../sections/MultimediaContentSection";
+import { TerritorialSidebar } from "../components/TerritorialSidebar";
+import { TerritorialFilters } from "../components/TerritorialFilters";
 import { useCommunicationLandingHub } from "../hooks/useCommunicationLandingHub";
 
 export default function CommunicationLandingPage() {
@@ -64,3 +64,4 @@ export default function CommunicationLandingPage() {
     </>
   );
 }
+

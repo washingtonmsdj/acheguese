@@ -1,18 +1,20 @@
-import { useEffect, useState } from "react";
+﻿import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { communicationTerritorialGateway } from "../services";
-import { nordesteAgents, portalNordesteMock } from "../v2/mocks";
+import { nordesteAgents, portalNordesteMock } from "../mocks";
 import type {
   DashboardChannelView,
   DashboardPublicationView,
   DashboardTerritoryView,
-} from "../v2/types/agentDashboardViewModels";
+} from "../types/agentDashboardViewModels";
+
+const communicationDashboardQueryKey = "communication-dashboard";
 
 export function useCommunicationAgentDashboardData(channelSlug?: string) {
   const [selectedChannelId, setSelectedChannelId] = useState<string | null>(null);
 
   const { data: channels, isLoading: channelsLoading } = useQuery<DashboardChannelView[]>({
-    queryKey: ["communication-dashboard-v2", "channels"],
+    queryKey: [communicationDashboardQueryKey, "channels"],
     queryFn: async () => {
       const realChannels = await communicationTerritorialGateway.listManagedChannels();
       if (!realChannels || realChannels.length === 0) {
@@ -38,7 +40,7 @@ export function useCommunicationAgentDashboardData(channelSlug?: string) {
   });
 
   const { data: channelData, isLoading: channelLoading } = useQuery({
-    queryKey: ["communication-dashboard-v2", "channel", selectedChannelId],
+    queryKey: [communicationDashboardQueryKey, "channel", selectedChannelId],
     queryFn: () => {
       if (!selectedChannelId) return null;
       const channel = channels?.find((c) => c.id === selectedChannelId);
@@ -49,7 +51,7 @@ export function useCommunicationAgentDashboardData(channelSlug?: string) {
   });
 
   const { data: territories } = useQuery<DashboardTerritoryView[]>({
-    queryKey: ["communication-dashboard-v2", "territories", selectedChannelId],
+    queryKey: [communicationDashboardQueryKey, "territories", selectedChannelId],
     queryFn: async () => {
       if (!selectedChannelId) return [];
       const realTerritories = await communicationTerritorialGateway.listAuthorizedTerritories(selectedChannelId);
@@ -74,7 +76,7 @@ export function useCommunicationAgentDashboardData(channelSlug?: string) {
   });
 
   const { data: publications } = useQuery<DashboardPublicationView[]>({
-    queryKey: ["communication-dashboard-v2", "publications", selectedChannelId],
+    queryKey: [communicationDashboardQueryKey, "publications", selectedChannelId],
     queryFn: async () => {
       if (!selectedChannelId) return [];
       const realPubs = await communicationTerritorialGateway.listPublications({
@@ -110,7 +112,7 @@ export function useCommunicationAgentDashboardData(channelSlug?: string) {
   });
 
   const { data: drafts } = useQuery<DashboardPublicationView[]>({
-    queryKey: ["communication-dashboard-v2", "drafts", selectedChannelId],
+    queryKey: [communicationDashboardQueryKey, "drafts", selectedChannelId],
     queryFn: async () => {
       const rawDrafts = await communicationTerritorialGateway.listPublications({
         channelId: selectedChannelId!,
@@ -167,3 +169,4 @@ export function useCommunicationAgentDashboardData(channelSlug?: string) {
     isLoading,
   };
 }
+

@@ -91,6 +91,15 @@ type BusinessAddressLike = {
   longitude?: number;
 };
 
+type BusinessLocationLike = {
+  canonical_lat?: number;
+  canonical_lng?: number;
+};
+
+function normalizeCoordinate(value: number | null | undefined): number | null {
+  return typeof value === "number" && Number.isFinite(value) ? value : null;
+}
+
 export default function EmpresasLandingPage({
   resolved: resolvedProp,
   activeMemberIds: activeMemberIdsProp,
@@ -197,7 +206,13 @@ export default function EmpresasLandingPage({
         distanceMeters: result.distance_meters,
       })) as Business[];
     }
-    return realBusinesses.map(b => ({
+    return realBusinesses.map(b => {
+          const address = b.address as BusinessAddressLike | undefined;
+          const location = b.location as BusinessLocationLike | undefined;
+          const lat = normalizeCoordinate(address?.latitude) ?? normalizeCoordinate(location?.canonical_lat) ?? 0;
+          const lng = normalizeCoordinate(address?.longitude) ?? normalizeCoordinate(location?.canonical_lng) ?? 0;
+
+          return {
           id: b.id,
           name: b.name,
           category: b.category || "Outros",
@@ -211,15 +226,13 @@ export default function EmpresasLandingPage({
           isOpen: true,
           neighborRecs: 0,
           lastVisit: "",
-          coords: {
-            lat: (b.address as BusinessAddressLike | undefined)?.latitude || 0,
-            lng: (b.address as BusinessAddressLike | undefined)?.longitude || 0,
-          },
+          coords: { lat, lng },
           phone: b.phone || "",
           slug: b.slug,
           is_premium: b.is_premium,
           geographic_path: (b as { geographic_path?: string }).geographic_path,
-        })) as Business[];
+        };
+      }) as Business[];
   }, [nearbyMode, nearbyBusinesses, realBusinesses]);
 
   const filteredBusinesses = useMemo(() => {

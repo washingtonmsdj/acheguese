@@ -2,7 +2,7 @@
  * Location Module - Public Contracts
  * 
  * SSOT territorial do produto.
- * Etapa 2: Contratos Públicos (Revisado V2)
+ * Etapa 2: Contratos publicos
  */
 
 // ============================================
@@ -149,7 +149,7 @@ export interface TerritorialGroup {
   slug: string;
   name: string;
   description: string | null;
-  /** Cidade âncora — facilitador operacional, não hierarquia */
+  /** Cidade Ã¢ncora â€” facilitador operacional, nÃ£o hierarquia */
   anchor_city_id: string;
   status: TerritorialGroupStatus;
   metadata: Record<string, unknown>;
@@ -176,21 +176,21 @@ export type ActiveTerritory = { type: 'location'; location: Location } | null;
 // ============================================
 // TERRITORY MODE
 // ============================================
-// 'bairro' = conteúdo filtrado apenas pelo bairro do usuário
-// 'cidade' = conteúdo da cidade inteira com filtros por bairro
-// null     = visitante sem modo (apenas cidade com filtros públicos)
+// 'bairro' = conteÃºdo filtrado apenas pelo bairro do usuÃ¡rio
+// 'cidade' = conteÃºdo da cidade inteira com filtros por bairro
+// null     = visitante sem modo (apenas cidade com filtros pÃºblicos)
 
 export type TerritoryMode = 'bairro' | 'cidade' | null;
 
 // ============================================
-// TERRITORY FILTER — Contrato único de filtro territorial
+// TERRITORY FILTER â€” Contrato Ãºnico de filtro territorial
 //
-// Todos os módulos que filtram dados por território devem usar este tipo.
-// Nunca construir filtros ad-hoc em componentes ou hooks de módulo.
+// Todos os mÃ³dulos que filtram dados por territÃ³rio devem usar este tipo.
+// Nunca construir filtros ad-hoc em componentes ou hooks de mÃ³dulo.
 //
-// scope: 'location' → eq(location_id, id)   — bairro único
-// scope: 'group'    → in(location_id, ids)  — grupo de bairros
-// scope: 'none'     → sem filtro territorial (território não resolvido)
+// scope: 'location' â†’ eq(location_id, id)   â€” bairro Ãºnico
+// scope: 'group'    â†’ in(location_id, ids)  â€” grupo de bairros
+// scope: 'none'     â†’ sem filtro territorial (territÃ³rio nÃ£o resolvido)
 // ============================================
 
 export type TerritoryFilter =

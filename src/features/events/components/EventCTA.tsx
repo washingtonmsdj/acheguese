@@ -1,10 +1,9 @@
 /**
- * 🎯 EVENT CTA V2
+ * Event CTA
  * 
  * Call-to-action principal do evento
- * Suporta múltiplos tipos: inscrição, contato, externo, lista de espera
+ * Suporta multiplos tipos: inscricao, contato, externo, lista de espera
  * 
- * @version 2.0.0
  */
 
 import { motion } from 'framer-motion';
@@ -160,7 +159,7 @@ export function EventCTA({
                     : cta.type === 'waitlist' 
                     ? 'Entrar na lista de espera'
                     : cta.type === 'register'
-                    ? isFree ? 'Garantir vaga grátis' : 'Comprar ingresso'
+                    ? isFree ? 'Garantir vaga gratis' : 'Comprar ingresso'
                     : cta.label
                   }
                 </span>
@@ -175,7 +174,7 @@ export function EventCTA({
           <div className="mt-3 flex flex-wrap items-center gap-4 text-xs text-muted-foreground">
             <div className="flex items-center gap-1.5">
               <CheckCircle2 className="h-3.5 w-3.5 text-primary" />
-              <span>Confirmação imediata</span>
+              <span>Confirmacao imediata</span>
             </div>
             <div className="flex items-center gap-1.5">
               <CheckCircle2 className="h-3.5 w-3.5 text-primary" />

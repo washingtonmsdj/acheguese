@@ -6,7 +6,7 @@ import { Badge } from "@/shared/components/ui/badge";
 import { Button } from "@/shared/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/components/ui/card";
 import { MotoboyDeliveryActions } from "@/modules/mobility/components/driver/MotoboyDeliveryActions";
-import { useMotoristaPageV2 } from "@/modules/mobility/hooks/useMotoristaPageV2";
+import { useMotoristaPage } from "@/modules/mobility/hooks/useMotoristaPage";
 import { getMobilityServicePath } from "@/modules/mobility/routes/mobilityNavigation";
 
 type DeliveryLike = {
@@ -40,15 +40,15 @@ function getTrustRiskLabel(delivery: DeliveryLike): string | null {
 /**
  * DriverDeliveriesLayout
  * 
- * Layout compartilhado para página de entregas de motoboy.
- * Reutiliza o componente MotoboyDeliveryActions e o hook useMotoristaPageV2.
+ * Layout compartilhado para pagina de entregas de motoboy.
+ * Reutiliza o componente MotoboyDeliveryActions e o hook useMotoristaPage.
  * 
- * Este componente renderiza o mesmo layout que a página legada
+ * Este componente renderiza o layout operacional canonico
  * /central/motoboy/entregas.
  */
 export function DriverDeliveriesLayout() {
   const navigate = useNavigate();
-  const shell = useMotoristaPageV2();
+  const shell = useMotoristaPage();
 
   const activeDeliveries = useMemo(
     () => (shell.activeDeliveries || []).filter(isDeliveryRide),

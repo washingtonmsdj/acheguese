@@ -1,4 +1,4 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import { Link } from "react-router-dom";
 import {
   Award,
@@ -33,6 +33,7 @@ import {
   getProfessionalStatsValue,
   resolveProfessionalPublicUrl,
 } from "./CentralProfissionalPage.model";
+import { centralRoutes } from "@/modules/central/routes/centralRoutes";
 
 export function CentralProfessionalHeader({
   onCreateService,
@@ -47,7 +48,7 @@ export function CentralProfessionalHeader({
           Gerencie seu perfil, disponibilidade, servicos publicados e sinais de demanda local.
         </p>
       </div>
-      <Button onClick={onCreateService} className="gap-2">
+      <Button onClick={onCreateService} className="w-full gap-2 sm:w-auto">
         <Plus className="h-4 w-4" />
         Novo servico
       </Button>
@@ -186,7 +187,7 @@ function ServiceCard({ service }: { service: Professional }) {
 
         <div className="flex flex-wrap gap-2">
           <Button asChild variant="outline" size="sm">
-            <Link to={`/services/${service.id}/editar`}>
+            <Link to={centralRoutes.servicos.edit(service.id)}>
               <Pencil className="mr-2 h-4 w-4" />
               Editar
             </Link>
@@ -238,7 +239,7 @@ export function CentralProfessionalOperationPanel({
             <p className="mx-auto mt-2 max-w-md text-sm text-muted-foreground">
               Cadastre seu primeiro servico para aparecer na busca local e receber contatos de moradores.
             </p>
-            <Button onClick={onCreateService} className="mt-4 gap-2">
+            <Button onClick={onCreateService} className="mt-4 w-full gap-2 sm:w-auto">
               <Plus className="h-4 w-4" />
               Cadastrar servico
             </Button>
@@ -294,6 +295,8 @@ function PrimaryServiceOperationalData({ service }: { service: Professional }) {
 
 export function LeadPipeline({
   leads,
+  isLoading,
+  error,
   isUpdating,
   isReplying,
   isQuoting,
@@ -302,6 +305,8 @@ export function LeadPipeline({
   onQuote,
 }: {
   leads: ProfessionalLeadRecord[];
+  isLoading: boolean;
+  error: unknown;
   isUpdating: boolean;
   isReplying: boolean;
   isQuoting: boolean;
@@ -332,6 +337,18 @@ export function LeadPipeline({
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
+        {error && (
+          <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">
+            Nao foi possivel carregar os pedidos agora.
+          </div>
+        )}
+        {isLoading && (
+          <div className="grid gap-3 sm:grid-cols-3">
+            {Array.from({ length: 3 }).map((_, idx) => (
+              <Skeleton key={`lead-kpi-${idx}`} className="h-20 rounded-lg" />
+            ))}
+          </div>
+        )}
         <div className="grid gap-3 sm:grid-cols-3">
           <div className="rounded-lg border p-3">
             <p className="text-xs text-muted-foreground">Abertos</p>
@@ -349,7 +366,7 @@ export function LeadPipeline({
           </div>
         </div>
 
-        {leads.length ? (
+        {!isLoading && leads.length ? (
           <div className="space-y-3">
             {leads.slice(0, 3).map((lead) => {
               const quote = quoteByLeadId[lead.id];
@@ -384,6 +401,7 @@ export function LeadPipeline({
                       rows={2}
                     />
                     <Button
+                      className="w-full sm:w-auto"
                       size="sm"
                       disabled={isReplying || !(replyByLeadId[lead.id] ?? "").trim()}
                       onClick={() => {
@@ -411,7 +429,7 @@ export function LeadPipeline({
               );
             })}
           </div>
-        ) : (
+        ) : !isLoading ? (
           <div className="rounded-xl border border-dashed p-6 text-center">
             <Clock3 className="mx-auto mb-3 h-10 w-10 text-muted-foreground" />
             <h2 className="font-semibold">Nenhum pedido recebido ainda</h2>
@@ -419,7 +437,7 @@ export function LeadPipeline({
               Quando um morador solicitar orcamento pelo perfil publico, o pedido aparece aqui.
             </p>
           </div>
-        )}
+        ) : null}
       </CardContent>
     </Card>
   );
@@ -494,6 +512,7 @@ function LeadQuoteForm({
         rows={2}
       />
       <Button
+        className="w-full sm:w-auto"
         size="sm"
         variant="secondary"
         disabled={disabled || !quote?.description?.trim() || !quote?.amount}
@@ -556,7 +575,7 @@ function LeadStatusActions({
           disabled={disabled}
           onClick={() => onStatusChange(lead.id, "completed")}
         >
-          Concluido
+          Concluir
         </Button>
       )}
       {lead.status !== "archived" && (
@@ -575,10 +594,14 @@ function LeadStatusActions({
 
 export function EngagementsPanel({
   engagements,
+  isLoading,
+  error,
   isUpdating,
   onStatusChange,
 }: {
   engagements: ProfessionalServiceEngagementRecord[];
+  isLoading: boolean;
+  error: unknown;
   isUpdating: boolean;
   onStatusChange: (
     engagementId: string,
@@ -601,6 +624,18 @@ export function EngagementsPanel({
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
+        {error && (
+          <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">
+            Nao foi possivel carregar os atendimentos agora.
+          </div>
+        )}
+        {isLoading && (
+          <div className="grid gap-3 sm:grid-cols-3">
+            {Array.from({ length: 3 }).map((_, idx) => (
+              <Skeleton key={`engagement-kpi-${idx}`} className="h-20 rounded-lg" />
+            ))}
+          </div>
+        )}
         <div className="grid gap-3 sm:grid-cols-3">
           <div className="rounded-lg border p-3">
             <p className="text-xs text-muted-foreground">Ativos</p>
@@ -620,7 +655,7 @@ export function EngagementsPanel({
           </div>
         </div>
 
-        {engagements.length ? (
+        {!isLoading && engagements.length ? (
           <div className="space-y-3">
             {engagements.slice(0, 5).map((engagement) => (
               <EngagementCard
@@ -631,7 +666,7 @@ export function EngagementsPanel({
               />
             ))}
           </div>
-        ) : (
+        ) : !isLoading ? (
           <div className="rounded-xl border border-dashed p-6 text-center">
             <CalendarCheck className="mx-auto mb-3 h-10 w-10 text-muted-foreground" />
             <h2 className="font-semibold">Nenhum atendimento contratado</h2>
@@ -639,7 +674,7 @@ export function EngagementsPanel({
               Quando o cliente aceitar uma proposta, o atendimento contratado aparece aqui.
             </p>
           </div>
-        )}
+        ) : null}
       </CardContent>
     </Card>
   );
@@ -711,3 +746,4 @@ function EngagementCard({
     </div>
   );
 }
+

@@ -21,4 +21,5 @@ export type {
 } from "./types/dashboard";
 
 // Pages
-export { default as DashboardEmpresaPageV2 } from "./pages/DashboardEmpresaPageV2";
+export { default as DashboardEmpresaPage } from "./pages/DashboardEmpresaPage";
+

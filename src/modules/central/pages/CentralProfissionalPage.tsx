@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+﻿import { useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useSessionContext } from "@/core/session";
@@ -17,6 +17,7 @@ import {
   EngagementsPanel,
   LeadPipeline,
 } from "./CentralProfissionalPageSections";
+import { centralRoutes } from "@/modules/central/routes/centralRoutes";
 
 export default function CentralProfissionalPage() {
   const navigate = useNavigate();
@@ -40,10 +41,7 @@ export default function CentralProfissionalPage() {
     () => services.filter((service) => service.is_accepting_clients),
     [services],
   );
-  const averageRating = useMemo(
-    () => getAverageProfessionalRating(services),
-    [services],
-  );
+  const averageRating = useMemo(() => getAverageProfessionalRating(services), [services]);
 
   const statsQuery = useQuery<ProfessionalStats>({
     queryKey: ["central-professional", "stats", primaryService?.id],
@@ -189,10 +187,11 @@ export default function CentralProfissionalPage() {
   });
 
   const isLoading = servicesQuery.isLoading;
+  const handleCreateService = () => navigate(centralRoutes.servicos.create);
 
   return (
-    <div className="container mx-auto max-w-6xl space-y-6 px-4 py-8">
-      <CentralProfessionalHeader onCreateService={() => navigate("/services/cadastrar")} />
+    <div className="container mx-auto max-w-6xl space-y-6 px-4 py-6 sm:py-8">
+      <CentralProfessionalHeader onCreateService={handleCreateService} />
 
       <CentralProfessionalStatsGrid
         activeServicesCount={activeServices.length}
@@ -207,13 +206,15 @@ export default function CentralProfissionalPage() {
         isLoading={isLoading}
         primaryService={primaryService}
         services={services}
-        onCreateService={() => navigate("/services/cadastrar")}
+        onCreateService={handleCreateService}
       />
 
       {!isLoading && primaryService && (
         <>
           <LeadPipeline
             leads={leadsQuery.data ?? []}
+            isLoading={leadsQuery.isLoading}
+            error={leadsQuery.error}
             isUpdating={updateLeadStatusMutation.isPending}
             isReplying={sendLeadMessageMutation.isPending}
             isQuoting={createLeadQuoteMutation.isPending}
@@ -227,6 +228,8 @@ export default function CentralProfissionalPage() {
           />
           <EngagementsPanel
             engagements={engagementsQuery.data ?? []}
+            isLoading={engagementsQuery.isLoading}
+            error={engagementsQuery.error}
             isUpdating={updateEngagementStatusMutation.isPending}
             onStatusChange={(engagementId, status) =>
               updateEngagementStatusMutation.mutate({ engagementId, status })

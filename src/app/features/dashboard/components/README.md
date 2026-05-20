@@ -2,11 +2,11 @@
 
 Componentes React para o dashboard de empresas.
 
-## 📦 Componentes Disponíveis
+## ðŸ“¦ Componentes DisponÃ­veis
 
 ### DashboardBreadcrumb
 
-Breadcrumb de navegação simples.
+Breadcrumb de navegaÃ§Ã£o simples.
 
 **Uso:**
 
@@ -18,7 +18,7 @@ Breadcrumb de navegação simples.
 
 ### DashboardHeader
 
-Header com logo, nome da empresa e botões de ação.
+Header com logo, nome da empresa e botÃµes de aÃ§Ã£o.
 
 **Props:**
 
@@ -44,7 +44,7 @@ interface DashboardHeaderProps {
 
 ### DashboardTabs
 
-Sistema de tabs para navegação no dashboard.
+Sistema de tabs para navegaÃ§Ã£o no dashboard.
 
 **Props:**
 
@@ -71,7 +71,7 @@ interface DashboardTabsProps {
 
 ### TabPanel
 
-Wrapper para conteúdo de cada tab.
+Wrapper para conteÃºdo de cada tab.
 
 **Props:**
 
@@ -94,7 +94,7 @@ interface TabPanelProps {
 
 ### SettingsTab
 
-Tab de configurações da empresa.
+Tab de configuraÃ§Ãµes da empresa.
 
 **Props:**
 
@@ -116,11 +116,11 @@ interface SettingsTabProps {
 
 ---
 
-## 🎨 Padrões de Design
+## ðŸŽ¨ PadrÃµes de Design
 
 ### Composition
 
-Componentes compostos para máxima flexibilidade.
+Componentes compostos para mÃ¡xima flexibilidade.
 
 ### Controlled Components
 
@@ -129,13 +129,13 @@ Tabs controladas pelo componente pai.
 ### Separation of Concerns
 
 - Componentes focam apenas em UI
-- Lógica de negócio nos hooks
+- LÃ³gica de negÃ³cio nos hooks
 - Types definidos em `@/types/dashboard`
 
 ---
 
-## 📚 Documentação Adicional
+## ðŸ“š DocumentaÃ§Ã£o Adicional
 
 - [Hooks](../../hooks/README.md)
 - [Types](../../types/dashboard.ts)
-- [Página Principal](../../pages/DashboardEmpresaPageV2.tsx)
+- [PÃ¡gina Principal](../../pages/DashboardEmpresaPage.tsx)

@@ -402,7 +402,7 @@ export function EducationDataDisclaimer() {
   );
 }
 
-export function EducationInstitutionCta() {
+export function EducationInstitutionCta({ businessExplorerHref }: { businessExplorerHref: string }) {
   return (
     <section className="relative overflow-hidden border-t border-border py-20">
       <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-background to-primary/10" />
@@ -455,7 +455,7 @@ export function EducationInstitutionCta() {
                       <ArrowUpRight className="ml-2 h-4 w-4" />
                     </Button>
                   </Link>
-                  <Link to="/empresas">
+                  <Link to={businessExplorerHref}>
                     <Button size="lg" variant="outline" className="w-full rounded-full sm:w-auto">
                       Ver empresas
                     </Button>

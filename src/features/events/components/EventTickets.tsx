@@ -1,10 +1,9 @@
 /**
- * 🎫 EVENT TICKETS V2
+ * Event tickets
  * 
- * Seção de ingressos/inscrições premium
- * Suporta eventos gratuitos, pagos e híbridos
+ * Secao de ingressos/inscricoes
+ * Suporta eventos gratuitos, pagos e hibridos
  * 
- * @version 2.0.0
  */
 
 import { motion } from 'framer-motion';
@@ -28,7 +27,7 @@ export function EventTickets({
   isFree, 
   onSelectTicket,
   disabled = false,
-  disabledLabel = 'Inscrição confirmada',
+  disabledLabel = 'Inscricao confirmada',
   className 
 }: EventTicketsProps) {
   const availableTickets = tickets.filter(t => t.status === 'disponivel');
@@ -47,14 +46,14 @@ export function EventTickets({
         >
           <div className="mb-3 inline-flex items-center gap-2 rounded-full bg-primary/10 px-4 py-1.5 text-sm font-semibold text-primary">
             <Ticket className="h-4 w-4" />
-            {isFree ? 'Inscrições Gratuitas' : 'Ingressos'}
+            {isFree ? 'Inscricoes gratuitas' : 'Ingressos'}
           </div>
           <h2 className="text-3xl font-bold text-foreground">
             {isFree ? 'Garanta sua vaga' : 'Escolha seu ingresso'}
           </h2>
           <p className="mt-2 text-muted-foreground">
             {hasAvailability 
-              ? 'Selecione a melhor opção para você' 
+              ? 'Selecione a melhor opcao para voce' 
               : 'Ingressos esgotados'}
           </p>
         </motion.div>
@@ -108,7 +107,7 @@ export function EventTickets({
                 {isAlmostSoldOut && (
                   <div className="absolute right-4 top-4">
                     <Badge className="bg-amber-500 text-white border-0 animate-pulse">
-                      Últimas unidades
+                      Ultimas unidades
                     </Badge>
                   </div>
                 )}
@@ -162,7 +161,7 @@ export function EventTickets({
                           <span className="font-semibold text-foreground">
                             {ticket.quantity_available}
                           </span>
-                          {' '}de {ticket.quantity_total} disponíveis
+                          {' '}de {ticket.quantity_total} disponiveis
                         </>
                       ) : isSoldOut ? (
                         'Esgotado'
@@ -177,7 +176,7 @@ export function EventTickets({
                     <div className="flex items-center gap-2 text-sm">
                       <Clock className="h-4 w-4 text-muted-foreground" />
                       <span className="text-muted-foreground">
-                        Vendas até {new Date(ticket.sales_end).toLocaleDateString('pt-BR')}
+                        Vendas ate {new Date(ticket.sales_end).toLocaleDateString('pt-BR')}
                       </span>
                     </div>
                   )}
@@ -187,7 +186,7 @@ export function EventTickets({
                     <div className="flex items-center gap-2 text-sm">
                       <AlertCircle className="h-4 w-4 text-muted-foreground" />
                       <span className="text-muted-foreground">
-                        Máx. {ticket.max_per_order} por pessoa
+                        Max. {ticket.max_per_order} por pessoa
                       </span>
                     </div>
                   )}
@@ -236,7 +235,7 @@ export function EventTickets({
                   ) : ticket.is_free ? (
                     <>
                       <Check className="h-4 w-4" />
-                      Garantir vaga grátis
+                      Garantir vaga gratis
                     </>
                   ) : (
                     <>
@@ -270,7 +269,7 @@ export function EventTickets({
               Ingressos esgotados
             </h3>
             <p className="text-sm text-muted-foreground">
-              Todos os ingressos para este evento já foram vendidos.
+              Todos os ingressos para este evento ja foram vendidos.
             </p>
           </motion.div>
         )}

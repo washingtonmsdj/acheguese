@@ -29,6 +29,7 @@ import {
   TerritorialClassificadosPage,
   TerritorialEventosPage,
   TerritorialGastronomyPage,
+  TerritorialEducationPage,
   TerritorialMobilidadePage,
   TerritorialVagasPage,
   TerritorialCategoryBusinessPage,
@@ -86,13 +87,7 @@ export function AppRoutes() {
         <Route path="checkout" element={<P.PremiumBusinessCheckoutPage />} />
       </Route>
 
-      {/* Central - TEM SUA PRÓPRIA SIDEBAR, não usa AppLayoutSidebar */}
-      <Route path="/centralv2" element={<P.CentralLayoutV2 />}>
-        <Route element={<P.CentralAccessGuard />}>
-          <Route index element={<P.CentralHubPage />} />
-        </Route>
-      </Route>
-
+      {/* Central - tem sidebar propria; nao usa AppLayoutSidebar */}
       <Route path="/central" element={<P.CentralLayout />}>
         <Route element={<P.CentralAccessGuard />}>
           <Route index element={<P.CentralHubPage />} />
@@ -100,8 +95,8 @@ export function AppRoutes() {
           <Route path="eventos/novo" element={<P.EventsErrorBoundary><P.EventsOrganizerForm /></P.EventsErrorBoundary>} />
           <Route path="eventos/editar/:eventId" element={<P.EventsErrorBoundary><P.EventsOrganizerForm /></P.EventsErrorBoundary>} />
           <Route path="eventos/analytics/:eventId" element={<P.EventsErrorBoundary><P.EventsOrganizerAnalyticsPage /></P.EventsErrorBoundary>} />
-          <Route path="comunicacao" element={<P.CentralComunicacaoPageV2 />} />
-          <Route path="comunicacao/:channelSlug" element={<P.CommunicationAgentDashboardV2 />} />
+          <Route path="comunicacao" element={<P.CentralComunicacaoPage />} />
+          <Route path="comunicacao/:channelSlug" element={<P.CommunicationAgentDashboard />} />
           <Route path="empresas" element={<P.CentralEmpresasPage />} />
           <Route path="empresas/nova" element={<P.CriarEmpresaPage />} />
           <Route path="empresas/nova/:verticalSlug" element={<P.CriarEmpresaPage />} />
@@ -157,8 +152,6 @@ export function AppRoutes() {
       <Route element={<P.AppLayoutSidebar />}>
         {/* Pagina inicial */}
         <Route path="/" element={<P.MainLandingPage />} />
-        <Route path="/home-v2" element={<P.HomePageV2 />} />
-        <Route path="/home-v1" element={<P.HomePage />} />
 
         {/* Rotas de Billing e Assinaturas */}
         <Route path="/pricing" element={<P.PricingPage />} />
@@ -252,13 +245,12 @@ export function AppRoutes() {
         <Route path="/comunidade" element={<P.ComunidadePage />} />
         <Route path="/comunidade/problemas" element={<P.ProblemasPage />} />
         <Route path="/comunicacao" element={<P.CommunicationLandingPage />} />
-        <Route path="/comunicacao/v2" element={<P.CommunicationLandingPage />} />
         <Route path="/comunicacao/solicitar" element={<P.CommunicationRequestPage />} />
         <Route path="/services" element={<P.ServicosLandingPage />} />
         <Route path="/classificados" element={<P.ClassificadosPage />} />
         <Route path="/mobilidade/passageiro" element={<P.PassageiroPage />} />
         <Route path="/mobilidade/buscando/:rideId" element={<P.BuscandoMotoristaPage />} />
-        <Route path="/mobilidade/motorista" element={<P.MotoristaPageV2 />} />
+        <Route path="/mobilidade/motorista" element={<P.MotoristaPage />} />
         <Route path="/mobilidade/motoboy" element={<P.MotoboyPage />} />
         <Route path="/mobilidade/motorista/perfil" element={<P.DriverProfilePage />} />
         <Route path="/mobilidade/historico" element={<P.HistoricoPage />} />
@@ -273,7 +265,7 @@ export function AppRoutes() {
         {/* Comunicacao Territorial - rotas especificas antes das territoriais genericas */}
         <Route path="/comunicacao/:state/:city/:territorySlug/:channelSlug" element={<P.CommunicationChannelPage />} />
         <Route path="/comunicacao/empresa/:channelSlug" element={<P.CommunicationCompanyDetailsPage />} />
-        <Route path="/comunicacao/agente/:channelSlug" element={<P.CommunicationAgentPageV2 />} />
+        <Route path="/comunicacao/agente/:channelSlug" element={<P.CommunicationAgentPage />} />
         <Route path="/comunicacao/:state/:city/:territorySlug" element={<P.CommunicationTerritoryPage />} />
         <Route path="/comunicacao/:state/:city" element={<P.CommunicationCityPage />} />
 
@@ -449,11 +441,6 @@ export function AppRoutes() {
           <Route index element={<P.EducationExplorerPage />} />
         </Route>
 
-        {/* Redirecionamentos de URLs antigas - preservam o caminho apos o prefixo */}
-        <Route path="/educacao-v3/*" element={<P.EducationExplorerPage />} />
-        <Route path="/educacao-v2/*" element={<P.EducationExplorerPage />} />
-        <Route path="/educacao-explorer/*" element={<P.EducationExplorerPage />} />
-
         {/* Rotas de comunidade */}
         <Route path="/comunidade/:state/:city/:territorySlug/interesse" element={<CommunityInterestPage />} />
         <Route path="/comunidade/:state/:city/:territorySlug/problemas" element={<CommunityTerritorialShell />}>
@@ -473,6 +460,9 @@ export function AppRoutes() {
         </Route>
         <Route path="/comunidade/:state/:city/:territorySlug/gastronomia" element={<CommunityTerritorialShell />}>
           <Route index element={<TerritorialGastronomyPage />} />
+        </Route>
+        <Route path="/comunidade/:state/:city/:territorySlug/educacao" element={<CommunityTerritorialShell />}>
+          <Route index element={<TerritorialEducationPage />} />
         </Route>
         <Route path="/comunidade/:state/:city/:territorySlug/vagas" element={<CommunityTerritorialShell />}>
           <Route index element={<TerritorialVagasPage />} />
@@ -588,3 +578,5 @@ export function AppRoutes() {
     </Routes>
   );
 }
+
+

@@ -1,7 +1,7 @@
-/**
+﻿/**
  * PontoTuristicoDetailPage - Pagina de detalhe de ponto turistico
  *
- * âœ… SSOT COMPLIANT - Usa TouristPointService
+ * SSOT compliant - usa TouristPointService
  */
 
 import { useState } from 'react';
@@ -379,7 +379,7 @@ export default function PontoTuristicoDetailPage() {
   );
 }
 
-// â”€â”€ Hero Gallery â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// Hero Gallery
 
 function HeroGallery({ point }: { point: TouristPoint }) {
   const [lightboxOpen, setLightboxOpen] = useState(false);
@@ -519,7 +519,7 @@ function HeroGallery({ point }: { point: TouristPoint }) {
   );
 }
 
-// â”€â”€ Map Section â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// Map Section
 
 function MapSection({ point }: { point: TouristPoint }) {
   const lat = point.address?.latitude ?? point.latitude;
@@ -552,7 +552,7 @@ function MapSection({ point }: { point: TouristPoint }) {
   );
 }
 
-// â”€â”€ Nearby Attractions â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// Nearby Attractions
 
 function NearbySection({ point, state, city }: { point: TouristPoint; state: string; city: string }) {
   const { data: nearby = [] } = useNearbyTouristPoints(point.nearby_point_ids || []);
@@ -592,7 +592,7 @@ function NearbySection({ point, state, city }: { point: TouristPoint; state: str
                 </p>
                 <p className="text-xs text-muted-foreground truncate">
                   {CATEGORY_ICONS[np.category]} {CATEGORY_LABELS[np.category]}
-                  {np.neighborhood ? ` Â· ${np.neighborhood}` : ''}
+                  {np.neighborhood ? ` · ${np.neighborhood}` : ''}
                 </p>
               </div>
               {np.rating > 0 && (
@@ -609,7 +609,7 @@ function NearbySection({ point, state, city }: { point: TouristPoint; state: str
   );
 }
 
-// â”€â”€ Nearby Businesses â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// Nearby Businesses
 
 function CommunityPhotosSection({ point }: { point: TouristPoint }) {
   const [lightboxOpen, setLightboxOpen] = useState(false);
@@ -734,7 +734,7 @@ function CommunityPhotosSection({ point }: { point: TouristPoint }) {
   );
 }
 
-// â”€â”€ Amenity Item â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// Amenity Item
 
 function AmenityItem({ icon, label, available }: { icon: React.ReactNode; label: string; available: boolean }) {
   return (
@@ -745,3 +745,5 @@ function AmenityItem({ icon, label, available }: { icon: React.ReactNode; label:
     </div>
   );
 }
+
+
