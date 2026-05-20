@@ -162,7 +162,7 @@ export default function EditarEmpresaPage() {
 
     // Validar tamanho (5MB)
     if (file.size > 5 * 1024 * 1024) {
-      toast.error("Imagem muito grande. Maximo 5MB");
+      toast.error("Imagem muito grande. Máximo 5MB");
       return;
     }
 
@@ -189,7 +189,7 @@ export default function EditarEmpresaPage() {
 
     // Validar tamanho (5MB)
     if (file.size > 5 * 1024 * 1024) {
-      toast.error("Imagem muito grande. Maximo 5MB");
+      toast.error("Imagem muito grande. Máximo 5MB");
       return;
     }
 
@@ -224,7 +224,7 @@ export default function EditarEmpresaPage() {
       });
       if (slugSafety.status === "review") {
         toast.error(
-          "O link publico esta muito diferente do nome do negocio. Ajuste para manter autenticidade.",
+          "O link público está muito diferente do nome do negócio. Ajuste para manter autenticidade.",
         );
         return;
       }
@@ -243,7 +243,7 @@ export default function EditarEmpresaPage() {
     } catch (error) {
       if (hasSlugChange) {
         const errorCode = error && typeof error === 'object' && 'code' in error ? (error as { code?: string }).code : undefined;
-        logError(originalSlug, slug, (error as Error).message || 'Erro ao salvar', errorCode);
+        logError(originalSlug, slug, (error as Error).message || "Erro ao salvar", errorCode);
       }
       throw error;
     }
@@ -278,7 +278,7 @@ export default function EditarEmpresaPage() {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
-          <h2 className="text-xl font-semibold mb-2">Empresa nao encontrada</h2>
+          <h2 className="text-xl font-semibold mb-2">Empresa não encontrada</h2>
           <button
             onClick={() => navigate("/conta")}
             className="text-primary hover:underline"
@@ -308,7 +308,7 @@ export default function EditarEmpresaPage() {
       <div className="max-w-2xl mx-auto px-4 py-6 space-y-6">
         <StepProgress currentStep={currentStep} totalSteps={3} />
 
-        {/* Autoria explicita */}
+        {/* Autoria explícita */}
         {effectiveProfile && (
           <ActiveProfileBadge profile={effectiveProfile} action="editando como" />
         )}

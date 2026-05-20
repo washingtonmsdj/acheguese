@@ -13,7 +13,7 @@ export default function CouponManager({
 }: CouponManagerProps) {
   const planLabel =
     planType === PlanTier.FREE
-      ? "Basico"
+      ? "Básico"
       : planType === PlanTier.PRO
         ? "Profissional"
         : "Delivery";
@@ -21,7 +21,7 @@ export default function CouponManager({
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold">Cupons e Promocoes</h2>
+        <h2 className="text-2xl font-bold">Cupons e Promoções</h2>
         <p className="text-muted-foreground">
           Plano atual: {planLabel}
         </p>
@@ -34,17 +34,17 @@ export default function CouponManager({
           </div>
           <div className="space-y-2">
             <h3 className="font-semibold text-amber-950">
-              Gestao de cupons por empresa indisponivel
+              Gestão de cupons por empresa indisponível
             </h3>
             <p className="text-sm text-amber-900">
-              A tabela canonica de cupons ainda nao possui um identificador de
-              empresa. Sem esse vinculo, a tela nao cria nem lista cupons para
-              evitar associacao por nome, dados falsos ou registros globais
+              A tabela canônica de cupons ainda não possui um identificador de
+              empresa. Sem esse vínculo, a tela não cria nem lista cupons para
+              evitar associação por nome, dados falsos ou registros globais
               indevidos.
             </p>
             <p className="text-xs text-amber-800">
-              Proximo passo tecnico: adicionar `business_id` em `coupons` e
-              atualizar o servico de cupons para consultar por empresa.
+              Próximo passo técnico: adicionar `business_id` em `coupons` e
+              atualizar o serviço de cupons para consultar por empresa.
             </p>
           </div>
         </div>
@@ -53,7 +53,7 @@ export default function CouponManager({
       <Card className="border-dashed p-12 text-center text-muted-foreground">
         <Ticket className="mx-auto mb-4 h-12 w-12 opacity-30" />
         <p className="text-sm">
-          Nenhum cupom sera exibido ate existir vinculo canonico com a empresa.
+          Nenhum cupom será exibido até existir vínculo canônico com a empresa.
         </p>
       </Card>
     </div>

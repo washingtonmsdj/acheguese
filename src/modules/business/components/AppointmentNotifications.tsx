@@ -93,7 +93,7 @@ const NOTIFICATION_CONFIG = {
     color: "text-indigo-600",
     bgColor: "bg-indigo-50",
     borderColor: "border-indigo-200",
-    title: "Agendamento Concluido",
+    title: "Agendamento Concluído",
   },
 } as const;
 
@@ -125,7 +125,7 @@ function mapCanonicalNotification(
     appointment_id: metadata.appointment_id || notification.id,
     client_name: metadata.client_name || "Cliente",
     client_phone: metadata.client_phone || "",
-    service_name: metadata.service_name || "Servico",
+    service_name: metadata.service_name || "Serviço",
     appointment_date: metadata.appointment_date || undefined,
     appointment_time: metadata.appointment_time || undefined,
     message: notification.message,
@@ -136,10 +136,10 @@ function mapCanonicalNotification(
 }
 
 function formatDate(value: string | undefined, pattern: string): string {
-  if (!value) return "Nao informado";
+  if (!value) return "Não informado";
 
   const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "Nao informado";
+  if (Number.isNaN(date.getTime())) return "Não informado";
 
   return format(date, pattern, { locale: ptBR });
 }
@@ -197,7 +197,7 @@ export default function AppointmentNotifications({
     const unread = notifications.filter((notification) => !notification.is_read);
     await Promise.all(unread.map((notification) => markAsRead(notification.id)));
     await refresh();
-    toast.success("Todas as notificacoes foram marcadas como lidas");
+    toast.success("Todas as notificações foram marcadas como lidas");
   };
 
   const handleNotificationClick = async (
@@ -223,8 +223,8 @@ export default function AppointmentNotifications({
     }
 
     const dateLabel = formatDate(notification.appointment_date, "dd/MM/yyyy");
-    const timeLabel = notification.appointment_time || "horario nao informado";
-    const message = `Ola ${notification.client_name}! Sobre seu agendamento de ${notification.service_name} para ${dateLabel} as ${timeLabel}.`;
+    const timeLabel = notification.appointment_time || "horário não informado";
+    const message = `Olá ${notification.client_name}! Sobre seu agendamento de ${notification.service_name} para ${dateLabel} às ${timeLabel}.`;
     window.open(
       `https://wa.me/${notification.client_phone.replace(/\D/g, "")}?text=${encodeURIComponent(message)}`,
       "_blank",
@@ -239,7 +239,7 @@ export default function AppointmentNotifications({
         <div className="flex items-center gap-3">
           <div className="h-5 w-5 animate-spin rounded-full border-b-2 border-primary" />
           <span className="text-sm text-muted-foreground">
-            Carregando notificacoes...
+            Carregando notificações...
           </span>
         </div>
       </Card>
@@ -261,9 +261,9 @@ export default function AppointmentNotifications({
                 )}
               </div>
               <div>
-                <h3 className="font-semibold">Notificacoes de Agendamentos</h3>
+                <h3 className="font-semibold">Notificações de Agendamentos</h3>
                 <p className="text-xs text-muted-foreground">
-                  {unreadCount > 0 ? `${unreadCount} nao lidas` : "Todas lidas"}
+                  {unreadCount > 0 ? `${unreadCount} não lidas` : "Todas lidas"}
                 </p>
               </div>
             </div>
@@ -286,7 +286,7 @@ export default function AppointmentNotifications({
           {notifications.length === 0 ? (
             <div className="p-8 text-center text-muted-foreground">
               <Bell className="mx-auto mb-3 h-12 w-12 opacity-20" />
-              <p className="text-sm">Nenhuma notificacao ainda</p>
+              <p className="text-sm">Nenhuma notificação ainda</p>
             </div>
           ) : (
             <>
@@ -352,7 +352,7 @@ export default function AppointmentNotifications({
                           </span>
                           <span className="flex items-center gap-1">
                             <Clock className="h-3 w-3" />
-                            {notification.appointment_time || "Nao informado"}
+                            {notification.appointment_time || "Não informado"}
                           </span>
                         </div>
                       </div>
@@ -398,10 +398,10 @@ export default function AppointmentNotifications({
       <Dialog open={detailsOpen} onOpenChange={setDetailsOpen}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>Detalhes da Notificacao</DialogTitle>
+            <DialogTitle>Detalhes da Notificação</DialogTitle>
           </DialogHeader>
           <DialogDescription className="sr-only">
-            Gerenciar notificacoes de agendamentos
+            Gerenciar notificações de agendamentos
           </DialogDescription>
 
           {selectedNotification && (
@@ -412,7 +412,7 @@ export default function AppointmentNotifications({
                   <p className="text-sm font-medium">{selectedNotification.client_name}</p>
                 </div>
                 <div>
-                  <label className="text-xs font-medium text-muted-foreground">Servico</label>
+                  <label className="text-xs font-medium text-muted-foreground">Serviço</label>
                   <p className="text-sm font-medium">{selectedNotification.service_name}</p>
                 </div>
                 <div className="grid grid-cols-2 gap-3">
@@ -423,9 +423,9 @@ export default function AppointmentNotifications({
                     </p>
                   </div>
                   <div>
-                    <label className="text-xs font-medium text-muted-foreground">Horario</label>
+                    <label className="text-xs font-medium text-muted-foreground">Horário</label>
                     <p className="text-sm">
-                      {selectedNotification.appointment_time || "Nao informado"}
+                      {selectedNotification.appointment_time || "Não informado"}
                     </p>
                   </div>
                 </div>

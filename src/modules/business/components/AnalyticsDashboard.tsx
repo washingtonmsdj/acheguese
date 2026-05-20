@@ -90,14 +90,14 @@ export default function AnalyticsDashboard({
   if (isError || !data) {
     return (
       <Card className="p-8 text-center text-sm text-muted-foreground">
-        Nao foi possivel carregar os dados de analytics.
+        Não foi possível carregar os dados de analytics.
       </Card>
     );
   }
 
   const metrics: AnalyticsMetric[] = [
     {
-      label: "Visualizacoes",
+      label: "Visualizações",
       value: data.views,
       previous: data.previous.views,
       icon: Eye,
@@ -156,7 +156,7 @@ export default function AnalyticsDashboard({
         <div>
           <h2 className="text-2xl font-bold">Analytics</h2>
           <p className="text-muted-foreground">
-            Desempenho da pagina com dados reais do periodo.
+            Desempenho da página com dados reais do período.
           </p>
         </div>
 
@@ -186,7 +186,7 @@ export default function AnalyticsDashboard({
                   CLIQUES WHATSAPP
                 </p>
                 <p className="text-xs text-green-600">
-                  Intencao direta de contato
+                  Intenção direta de contato
                 </p>
               </div>
             </div>
@@ -200,7 +200,7 @@ export default function AnalyticsDashboard({
               {data.whatsappClicks}
             </span>
             <span className="mb-1 text-sm font-medium text-green-700">
-              {whatsappConversion}% das visualizacoes
+              {whatsappConversion}% das visualizações
             </span>
           </div>
         </Card>
@@ -212,10 +212,10 @@ export default function AnalyticsDashboard({
             </div>
             <div>
               <p className="text-sm font-medium text-blue-700">
-                CONVERSAO TOTAL
+                CONVERSÃO TOTAL
               </p>
               <p className="text-xs text-blue-600">
-                Agendamentos sobre visualizacoes
+                Agendamentos sobre visualizações
               </p>
             </div>
           </div>
@@ -239,7 +239,7 @@ export default function AnalyticsDashboard({
 
         <div className="grid gap-4 sm:grid-cols-3">
           {[
-            { label: "Visualizacoes", value: data.views, width: 100 },
+            { label: "Visualizações", value: data.views, width: 100 },
             {
               label: "Cliques WhatsApp",
               value: data.whatsappClicks,
@@ -300,8 +300,8 @@ export default function AnalyticsDashboard({
         </h3>
         <div className="space-y-3 text-sm text-muted-foreground">
           <p>
-            WhatsApp converteu {whatsappConversion}% das visualizacoes no
-            periodo selecionado.
+            WhatsApp converteu {whatsappConversion}% das visualizações no
+            período selecionado.
           </p>
           <p>
             Foram registrados {data.routeClicks} cliques de rota e{" "}
@@ -309,8 +309,8 @@ export default function AnalyticsDashboard({
           </p>
           {data.views === 0 && (
             <p>
-              Ainda nao ha visualizacoes registradas para este periodo. Os
-              cards permanecem zerados ate o tracking receber eventos reais.
+              Ainda não há visualizações registradas para este período. Os
+              cards permanecem zerados até o tracking receber eventos reais.
             </p>
           )}
         </div>

@@ -21,7 +21,7 @@ function getPlanIcon(plan: BillingPlan) {
 }
 
 function formatPeriod(period: string) {
-  if (period === "month" || period === "monthly") return "/mes";
+  if (period === "month" || period === "monthly") return "/mês";
   if (period === "year" || period === "yearly") return "/ano";
   return period ? `/${period}` : "";
 }
@@ -45,7 +45,7 @@ export default function SubscriptionPlans({
   if (isError || plans.length === 0) {
     return (
       <Card className="p-8 text-center text-sm text-muted-foreground">
-        Nao foi possivel carregar os planos disponiveis.
+        Não foi possível carregar os planos disponíveis.
       </Card>
     );
   }
@@ -55,7 +55,7 @@ export default function SubscriptionPlans({
       <div className="mb-8 text-center">
         <h2 className="mb-2 text-3xl font-bold">Escolha seu plano</h2>
         <p className="text-muted-foreground">
-          Planos carregados do billing para refletir precos e recursos atuais.
+          Planos carregados do billing para refletir preços e recursos atuais.
         </p>
       </div>
 
@@ -131,7 +131,7 @@ export default function SubscriptionPlans({
       </div>
 
       <div className="mt-8 text-center text-sm text-muted-foreground">
-        <p>Os recursos e limites sao definidos no billing central.</p>
+        <p>Os recursos e limites são definidos no billing central.</p>
       </div>
     </div>
   );

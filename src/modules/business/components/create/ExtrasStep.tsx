@@ -81,10 +81,10 @@ export function ExtrasStep({
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Globe className="h-5 w-5 text-primary" />
-          Midia, canais publicos e operacao complementar
+          Mídia, canais públicos e operação complementar
         </CardTitle>
         <CardDescription>
-          Ajustes finais para enriquecer a pagina publica do seu {copy.entityNoun} e o dashboard.
+          Ajustes finais para enriquecer a página pública do seu {copy.entityNoun} e o dashboard.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
@@ -113,7 +113,7 @@ export function ExtrasStep({
             {capaPreview ? "Trocar capa" : "Adicionar capa"}
           </Button>
           <p className="text-xs text-muted-foreground">
-            Opcional. Recomendado para dashboard e pagina publica.
+            Opcional. Recomendado para dashboard e página pública.
           </p>
         </div>
 
@@ -175,7 +175,7 @@ export function ExtrasStep({
             onChange={(event) => onEspecialidadesChange(event.target.value)}
             placeholder={copy.specialtiesPlaceholder}
           />
-          <p className="text-xs text-muted-foreground">Separe por virgula.</p>
+          <p className="text-xs text-muted-foreground">Separe por vírgula.</p>
         </div>
 
         <div className="space-y-2">
@@ -186,7 +186,7 @@ export function ExtrasStep({
             onChange={(event) => onFacilidadesChange(event.target.value)}
             placeholder={copy.facilitiesPlaceholder}
           />
-          <p className="text-xs text-muted-foreground">Separe por virgula.</p>
+          <p className="text-xs text-muted-foreground">Separe por vírgula.</p>
         </div>
 
         <div className="space-y-2">

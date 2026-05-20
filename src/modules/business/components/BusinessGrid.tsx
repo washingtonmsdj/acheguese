@@ -1,17 +1,5 @@
 /**
- * 🏆 BUSINESS GRID - REFATORADO (NÍVEL AAA)
- *
- * ✅ CARACTERÍSTICAS:
- * - Grid responsivo otimizado
- * - Infinite scroll
- * - Loading skeletons
- * - Empty states
- * - Error handling
- * - Acessibilidade completa
- *
- * @version 2.0.0
- * @author Kiro AI
- * @date 2026-03-13
+ * Grid de empresas com estados de loading, erro e paginação incremental.
  */
 
 import { memo, useEffect, useRef, Fragment } from "react";
@@ -19,11 +7,9 @@ import { motion, AnimatePresence } from "framer-motion";
 import { AlertCircle, Loader2, Store } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import { BusinessCard } from "./BusinessCard";
-import { cn } from "@/shared/utils/cn";
 import { useBusinessAd } from "@/modules/business/hooks/useBusinessAd";
 import { SponsoredAdCard } from "@/modules/business/promotions";
 
-// 🎯 TYPES
 interface BusinessGridItem {
   business: import("@/modules/business/types").Business;
   distance?: string | null;
@@ -44,7 +30,6 @@ interface BusinessGridProps {
   allResultsLabel?: string;
 }
 
-// 🎨 SKELETON COMPONENT
 const BusinessSkeleton = memo(() => (
   <div className="overflow-hidden rounded-xl bg-white/5 border border-white/10 animate-pulse">
     <div className="h-40 bg-gradient-to-br from-gray-700 to-gray-800" />
@@ -67,7 +52,6 @@ const BusinessSkeleton = memo(() => (
 ));
 BusinessSkeleton.displayName = "BusinessSkeleton";
 
-// 🎨 LOADING STATE
 const LoadingState = memo(() => (
   <div
     className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
@@ -81,7 +65,6 @@ const LoadingState = memo(() => (
 ));
 LoadingState.displayName = "LoadingState";
 
-// 🎨 EMPTY STATE
 const EmptyState = memo(() => (
   <motion.div
     initial={{ opacity: 0, y: 20 }}
@@ -103,7 +86,6 @@ const EmptyState = memo(() => (
 ));
 EmptyState.displayName = "EmptyState";
 
-// 🎨 ERROR STATE
 interface ErrorStateProps {
   error: Error;
   onRetry?: () => void;
@@ -127,14 +109,13 @@ const ErrorState = memo(({ error, onRetry }: ErrorStateProps) => (
     </p>
     {onRetry && (
       <Button onClick={onRetry} variant="outline">
-        Tentar Novamente
+        Tentar novamente
       </Button>
     )}
   </motion.div>
 ));
 ErrorState.displayName = "ErrorState";
 
-// 🎨 LOAD MORE TRIGGER
 interface LoadMoreTriggerProps {
   onLoadMore: () => void;
   isFetching: boolean;
@@ -180,10 +161,6 @@ const LoadMoreTrigger = memo(
 );
 LoadMoreTrigger.displayName = "LoadMoreTrigger";
 
-/**
- * Business Grid Component
- * Grid responsivo com infinite scroll
- */
 export const BusinessGrid = memo(
   ({
     businesses,
@@ -200,25 +177,21 @@ export const BusinessGrid = memo(
   }: BusinessGridProps) => {
     const { ad } = useBusinessAd();
 
-    // 🎯 LOADING STATE
     if (isLoading) {
       return <LoadingState />;
     }
 
-    // 🎯 ERROR STATE
     if (isError && error) {
       return <ErrorState error={error} onRetry={onRetry} />;
     }
 
-    // 🎯 EMPTY STATE
     if (businesses.length === 0) {
       return <EmptyState />;
     }
 
-    // Slot de anúncio após o 3º item (índice 2)
+    // Slot de anúncio após o 3º item (índice 2).
     const AD_SLOT_INDEX = 2;
 
-    // 🎯 GRID WITH DATA
     return (
       <div className="space-y-6">
         <motion.div
@@ -246,32 +219,24 @@ export const BusinessGrid = memo(
                   onNavigate={onNavigate}
                 />
                 {index === AD_SLOT_INDEX && ad && (
-                  <SponsoredAdCard
-                    key="business-ad-slot"
-                    campaign={ad}
-                  />
+                  <SponsoredAdCard key="business-ad-slot" campaign={ad} />
                 )}
               </Fragment>
             ))}
           </AnimatePresence>
         </motion.div>
 
-        {/* Infinite Scroll Trigger */}
         {hasMore && (
-          <LoadMoreTrigger
-            onLoadMore={onLoadMore}
-            isFetching={isFetchingMore}
-          />
+          <LoadMoreTrigger onLoadMore={onLoadMore} isFetching={isFetchingMore} />
         )}
 
-        {/* End Message */}
         {!hasMore && businesses.length > 0 && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             className="text-center py-8 text-gray-400 text-sm"
           >
-            {allResultsLabel || 'Você viu todas as empresas disponíveis'}
+            {allResultsLabel || "Você viu todas as empresas disponíveis"}
           </motion.div>
         )}
       </div>
@@ -280,4 +245,3 @@ export const BusinessGrid = memo(
 );
 
 BusinessGrid.displayName = "BusinessGrid";
-

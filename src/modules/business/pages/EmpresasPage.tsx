@@ -1,23 +1,7 @@
- 
 /**
- * 🏆 EMPRESAS PAGE - REFATORADA (NÍVEL AAA)
+ * EmpresasPage
  *
- * ⚠️ ATENÇÃO: Este módulo ainda NÃO foi migrado para a nova arquitetura feature-first
- * Migração prevista: Fase 6 - Semana 4 (Dias 1-2)
- *
- * ✅ MELHORIAS:
- * - TanStack Query com cache otimizado
- * - Infinite scroll profissional
- * - Componentes memoizados
- * - Filtros debounced
- * - Design moderno
- * - Acessibilidade WCAG AAA
- * - Performance otimizada
- * - TypeScript strict
- *
- * @version 2.0.0
- * @author Kiro AI
- * @date 2026-03-13
+ * Listagem territorial de empresas com filtros, favoritos e infinite scroll.
  */
 
 import React, { memo, useCallback, useState, useMemo } from "react";
@@ -30,16 +14,11 @@ import { useBusinessList } from "@/modules/business/hooks/useBusinessList";
 import { useBusinessFavorites } from "@/modules/business/hooks/useBusinessFavorite";
 import { useAppUrls } from "@/core/routing/hooks/useAppUrls";
 
-/**
- * ✅ SSOT COMPLIANT - EmpresasPage migrada
- * Usa useAppUrls para navegação
- */
 import { BusinessFilters } from "@/modules/business/components/BusinessFilters";
 import { BusinessGrid } from "@/modules/business/components/BusinessGrid";
 import { TerritoryIndicator, useTerritoryLabels } from "@/core/location";
 import { calculateDistance, formatDistance } from "@/shared/utils/geolocation";
 import { toast } from "sonner";
-import { MigrationWarningBanner } from "@/shared/components/MigrationWarningBanner";
 import type { ResolvedTerritory } from "@/core/routing/hooks/useResolveTerritoryFromUrl";
 
 interface EmpresasPageProps {
@@ -66,9 +45,8 @@ const CreateBusinessFAB = memo(({ onClick }: { onClick: () => void }) => (
 CreateBusinessFAB.displayName = "CreateBusinessFAB";
 
 /**
- * Empresas Page Component
- * Página de listagem de empresas com infinite scroll
- * Respeita o contexto territorial quando navegando em rotas territoriais
+ * Página de listagem de empresas com infinite scroll.
+ * Respeita o contexto territorial quando navegando em rotas territoriais.
  */
 export default function EmpresasPage({ resolved, activeMemberIds }: EmpresasPageProps) {
   const navigate = useNavigate();
@@ -77,14 +55,14 @@ export default function EmpresasPage({ resolved, activeMemberIds }: EmpresasPage
   const geoState = useGeolocation();
   const territoryLabels = useTerritoryLabels(resolved);
 
-  // 🎯 STATES
+  // Estado local
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("todos");
   const [selectedSortBy, setSelectedSortBy] = useState<"rating" | "recommendations_count" | "name" | "created_at">("rating");
   const { favorites, toggleFavorite } = useBusinessFavorites();
   const favoriteIds = useMemo(() => new Set(favorites), [favorites]);
 
-  // 🎯 HOOKS - Passa routeResolved para respeitar contexto territorial
+  // Dados
   const {
     businesses,
     isLoading,
@@ -100,15 +78,15 @@ export default function EmpresasPage({ resolved, activeMemberIds }: EmpresasPage
     searchQuery: searchQuery.trim() || undefined,
     sortBy: selectedSortBy,
     enabled: true,
-    routeResolved: resolved, // ✅ Passa contexto territorial
-    activeMemberIds, // ✅ Passa IDs dos membros ativos do grupo
+    routeResolved: resolved,
+    activeMemberIds,
   });
 
-  // 🎯 HANDLERS
+  // Ações
   const handleToggleFavorite = useCallback(
     async (businessId: string) => {
       if (!activeProfile) {
-        toast.error("Faça login para favoritar empresas");
+        toast.error("Fa\u00e7a login para favoritar empresas");
         return;
       }
 
@@ -137,7 +115,7 @@ export default function EmpresasPage({ resolved, activeMemberIds }: EmpresasPage
     navigate("/empresas/cadastrar");
   }, [navigate]);
 
-  // 🎯 TRANSFORM BUSINESSES FOR GRID - Match BusinessCardProps shape
+  // Normaliza dados para renderização do grid
   const transformedBusinesses = useMemo(() => {
     return businesses.map((business) => {
       // Calculate distance
@@ -169,13 +147,6 @@ export default function EmpresasPage({ resolved, activeMemberIds }: EmpresasPage
 
   return (
     <div className="bg-[#12181B] md:pb-0">
-      {/* Migration Warning Banner */}
-      <div className="max-w-[1400px] mx-auto px-4 pt-4">
-        <MigrationWarningBanner
-          moduleName="Business (Empresas)"
-          expectedMigrationPhase="Fase 6 - Semana 4 (Dias 1-2)"
-        />
-      </div>
       {/* Filters */}
       <div
         className="sticky top-0 z-40 border-b bg-[#1E2529]/95 backdrop-blur-lg border-white/10"

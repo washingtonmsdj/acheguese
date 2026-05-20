@@ -1,16 +1,5 @@
 /**
- * 🏆 BUSINESS FILTERS - REFATORADO (NÍVEL AAA)
- *
- * ✅ CARACTERÍSTICAS:
- * - Filtros com debounce
- * - Busca otimizada
- * - Categorias animadas
- * - Acessibilidade completa
- * - Performance otimizada
- *
- * @version 2.0.0
- * @author Kiro AI
- * @date 2026-03-13
+ * Filtros de empresas com busca, categoria e ordenação.
  */
 
 import { memo, useCallback, useState, useEffect, useRef } from "react";
@@ -29,7 +18,6 @@ import { Input } from "@/shared/components/ui/input";
 import { Button } from "@/shared/components/ui/button";
 import { cn } from "@/shared/utils/cn";
 
-// 🎯 TYPES
 export interface Category {
   id: string;
   label: string;
@@ -60,7 +48,6 @@ export type SortOptionId =
   | "name"
   | "created_at";
 
-// 🎨 DEFAULT CATEGORIES
 const DEFAULT_CATEGORIES: Category[] = [
   { id: "todos", label: "Todas", icon: Store },
   { id: "restaurante", label: "Restaurantes", icon: ShoppingBag },
@@ -79,7 +66,6 @@ const DEFAULT_SORT_OPTIONS: SortOption[] = [
   { id: "created_at", label: "Mais recentes" },
 ];
 
-// 🎯 DEBOUNCE HOOK
 function useDebounce<T>(value: T, delay: number): T {
   const [debouncedValue, setDebouncedValue] = useState<T>(value);
 
@@ -96,9 +82,6 @@ function useDebounce<T>(value: T, delay: number): T {
   return debouncedValue;
 }
 
-/**
- * Category Button Component
- */
 interface CategoryButtonProps {
   category: Category;
   isActive: boolean;
@@ -144,10 +127,6 @@ const CategoryButton = memo(
 );
 CategoryButton.displayName = "CategoryButton";
 
-/**
- * Business Filters Component
- * Filtros de busca e categoria com debounce
- */
 export const BusinessFilters = memo(
   ({
     searchQuery,
@@ -165,7 +144,7 @@ export const BusinessFilters = memo(
     const debouncedSearch = useDebounce(localSearch, debounceMs);
     const isFirstRender = useRef(true);
 
-    // 🎯 SYNC DEBOUNCED SEARCH
+    // Sincroniza a busca apenas após o debounce.
     useEffect(() => {
       if (isFirstRender.current) {
         isFirstRender.current = false;
@@ -174,7 +153,6 @@ export const BusinessFilters = memo(
       onSearchChange(debouncedSearch);
     }, [debouncedSearch, onSearchChange]);
 
-    // 🎯 HANDLERS
     const handleSearchChange = useCallback(
       (e: React.ChangeEvent<HTMLInputElement>) => {
         setLocalSearch(e.target.value);
@@ -203,7 +181,6 @@ export const BusinessFilters = memo(
 
     return (
       <div className="space-y-4">
-        {/* Search Bar */}
         <motion.div
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
@@ -235,7 +212,6 @@ export const BusinessFilters = memo(
           )}
         </motion.div>
 
-        {/* Categories */}
         <motion.div
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
@@ -254,7 +230,6 @@ export const BusinessFilters = memo(
           ))}
         </motion.div>
 
-        {/* Sort */}
         <motion.div
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
@@ -279,7 +254,6 @@ export const BusinessFilters = memo(
           </select>
         </motion.div>
 
-        {/* Active Filters Indicator */}
         {(localSearch || selectedCategory !== "todos" || selectedSortBy !== "rating") && (
           <motion.div
             initial={{ opacity: 0, height: 0 }}

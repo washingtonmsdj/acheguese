@@ -1,17 +1,17 @@
 /**
  * BusinessSlugSection
- * Secao de identidade publica para criacao/edicao de empresa.
+ * Seção de identidade pública para criação/edição de empresa.
  */
 
-import { useState } from 'react';
-import { BusinessIdentityField } from '@/core/public-identity/components/domains/BusinessIdentityField';
-import { IdentityImpactNotice } from '@/core/public-identity/components/IdentityImpactNotice';
-import { IdentityChangeConfirmDialog } from '@/core/public-identity/components/IdentityChangeConfirmDialog';
-import { getBusinessCreateFieldCopy } from '@/modules/business/components/create/businessCreateCopy';
-import { buildPublicAbsoluteUrl } from '@/shared/config/publicAppOrigin';
-import { Button } from '@/shared/components/ui/button';
-import { evaluateBusinessSlugSafety } from '@/core/public-identity/domain/businessSlugSafety';
-import { isBusinessSlugSafetyBypassAllowed } from '@/core/public-identity/domain/businessSlugSafety';
+import { useState } from "react";
+import { BusinessIdentityField } from "@/core/public-identity/components/domains/BusinessIdentityField";
+import { IdentityImpactNotice } from "@/core/public-identity/components/IdentityImpactNotice";
+import { IdentityChangeConfirmDialog } from "@/core/public-identity/components/IdentityChangeConfirmDialog";
+import { getBusinessCreateFieldCopy } from "@/modules/business/components/create/businessCreateCopy";
+import { buildPublicAbsoluteUrl } from "@/shared/config/publicAppOrigin";
+import { Button } from "@/shared/components/ui/button";
+import { evaluateBusinessSlugSafety } from "@/core/public-identity/domain/businessSlugSafety";
+import { isBusinessSlugSafetyBypassAllowed } from "@/core/public-identity/domain/businessSlugSafety";
 
 interface BusinessSlugSectionProps {
   slug: string;
@@ -33,12 +33,12 @@ interface BusinessSlugSectionProps {
 }
 
 function toUrlSegment(value: string | undefined, fallback: string): string {
-  const normalized = (value || '')
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
+  const normalized = (value || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
     .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '');
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
 
   return normalized || fallback;
 }
@@ -46,7 +46,7 @@ function toUrlSegment(value: string | undefined, fallback: string): string {
 export function BusinessSlugSection({
   slug,
   onSlugChange,
-  originalSlug = '',
+  originalSlug = "",
   businessId,
   isPremium = false,
   category,
@@ -64,12 +64,12 @@ export function BusinessSlugSection({
   const [confirmOpen, setConfirmOpen] = useState(false);
   const copy = getBusinessCreateFieldCopy(category);
 
-  const stateSegment = toUrlSegment(stateName, 'seu-estado');
-  const citySegment = toUrlSegment(cityName, 'sua-cidade');
-  const districtSegment = toUrlSegment(districtName, 'seu-bairro');
+  const stateSegment = toUrlSegment(stateName, "seu-estado");
+  const citySegment = toUrlSegment(cityName, "sua-cidade");
+  const districtSegment = toUrlSegment(districtName, "seu-bairro");
 
   const canonicalPreviewFn = (value: string) => {
-    if (!value) return '';
+    if (!value) return "";
     return buildPublicAbsoluteUrl(`/empresas/${stateSegment}/${citySegment}/${districtSegment}/${value}`);
   };
   const canonicalPreviewSkeleton = buildPublicAbsoluteUrl(
@@ -77,7 +77,7 @@ export function BusinessSlugSection({
   );
 
   const previewFn = isPremium
-    ? (value: string) => (value ? buildPublicAbsoluteUrl(`/p/${value}`) : '')
+    ? (value: string) => (value ? buildPublicAbsoluteUrl(`/p/${value}`) : "")
     : canonicalPreviewFn;
   const slugSafety =
     manualMode && businessName && slug
@@ -87,17 +87,17 @@ export function BusinessSlugSection({
     slugSafety?.status === "review" &&
     !isBusinessSlugSafetyBypassAllowed({ isVerifiedOfficial });
 
-  const originalUrl = originalSlug ? previewFn(originalSlug) : '';
-  const newUrl = slug ? previewFn(slug) : '';
+  const originalUrl = originalSlug ? previewFn(originalSlug) : "";
+  const newUrl = slug ? previewFn(slug) : "";
 
   return (
     <div className="rounded-lg border bg-card p-4 space-y-3">
       <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-        Seu link publico
+        Seu link público
       </p>
       <p className="text-xs text-muted-foreground">{copy.identityHelper}</p>
       <p className="text-xs text-muted-foreground">
-        URL publica: <span className="font-mono">{canonicalPreviewSkeleton}</span>
+        URL pública: <span className="font-mono">{canonicalPreviewSkeleton}</span>
       </p>
 
       <BusinessIdentityField
@@ -137,20 +137,20 @@ export function BusinessSlugSection({
             }}
             disabled={disabled}
           >
-            Usar link automatico pelo nome
+            Usar link automático pelo nome
           </Button>
         )}
       </div>
 
       {!manualMode && (
         <p className="text-xs text-muted-foreground">
-          O link esta em modo automatico e acompanha o nome do negocio.
+          O link está em modo automático e acompanha o nome do negócio.
         </p>
       )}
 
       {shouldShowSafetyWarning && (
         <p className="text-xs text-amber-700">
-          Este link esta distante do nome informado. Para reduzir risco de fraude, use um link mais proximo do nome oficial.
+          Este link está distante do nome informado. Para reduzir risco de fraude, use um link mais próximo do nome oficial.
         </p>
       )}
 

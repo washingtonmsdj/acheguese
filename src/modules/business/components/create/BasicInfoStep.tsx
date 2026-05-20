@@ -163,10 +163,10 @@ export function BasicInfoStep({
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Building2 className="h-5 w-5 text-primary" />
-          {contextTitle ?? "Identidade e classificacao"}
+          {contextTitle ?? "Identidade e classificação"}
         </CardTitle>
         <CardDescription>
-          {contextDescription ?? "Nome, enquadramento e descricao que definem a empresa no dominio canonico."}
+          {contextDescription ?? "Nome, enquadramento e descrição que definem a empresa no domínio canônico."}
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
@@ -198,7 +198,7 @@ export function BasicInfoStep({
                 {logoPreview ? "Trocar logo" : "Adicionar logo"}
               </Button>
               <p className="text-xs text-muted-foreground">
-                Recomendado: imagem quadrada, ate 5 MB.
+                Recomendado: imagem quadrada, até 5 MB.
               </p>
             </div>
           </div>
@@ -221,7 +221,7 @@ export function BasicInfoStep({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="legal_name">Razao social</Label>
+            <Label htmlFor="legal_name">Razão social</Label>
             <Input
               id="legal_name"
               value={legalName}
@@ -279,14 +279,14 @@ export function BasicInfoStep({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="company_type">Tipo societario</Label>
+            <Label htmlFor="company_type">Tipo societário</Label>
             <select
               id="company_type"
               value={companyType}
               onChange={(event) => onCompanyTypeChange(event.target.value)}
               className="w-full rounded-md border bg-background px-3 py-2"
             >
-              <option value="">Nao informado</option>
+              <option value="">Não informado</option>
               {BUSINESS_COMPANY_TYPES.map((option) => (
                 <option key={option} value={option}>
                   {getCompanyTypeLabel(option)}
@@ -304,7 +304,7 @@ export function BasicInfoStep({
               onChange={(event) => onEmployeeCountChange(event.target.value)}
               className="w-full rounded-md border bg-background px-3 py-2"
             >
-              <option value="">Nao informado</option>
+              <option value="">Não informado</option>
               {BUSINESS_EMPLOYEE_COUNTS.map((option) => (
                 <option key={option} value={option}>
                   {getEmployeeCountLabel(option)}
@@ -315,7 +315,7 @@ export function BasicInfoStep({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="founded_year">Ano de fundacao</Label>
+            <Label htmlFor="founded_year">Ano de fundação</Label>
             <Input
               id="founded_year"
               type="number"
@@ -345,7 +345,7 @@ export function BasicInfoStep({
               }}
               className="w-full rounded-md border bg-background px-3 py-2"
             >
-              <option value="">Nao informado</option>
+              <option value="">Não informado</option>
               {industryOptions.map((option) => (
                 <option key={option} value={option}>
                   {option}
@@ -366,7 +366,7 @@ export function BasicInfoStep({
 
         <div className="space-y-2">
           <Label htmlFor="description">
-            Descricao <span className="text-destructive">*</span>
+            Descrição <span className="text-destructive">*</span>
           </Label>
           <Textarea
             id="description"
@@ -378,7 +378,7 @@ export function BasicInfoStep({
           />
           <div className="flex items-center justify-between text-xs text-muted-foreground">
             <span className={errors.description ? "text-destructive" : ""}>
-              {errors.description || "Minimo de 10 caracteres"}
+              {errors.description || "Mínimo de 10 caracteres"}
             </span>
             <span>{description.length}/1000</span>
           </div>
@@ -387,10 +387,10 @@ export function BasicInfoStep({
         <div className="rounded-xl border bg-muted/30 p-4 text-sm text-muted-foreground">
           <div className="mb-2 flex items-center gap-2 font-medium text-foreground">
             <FileText className="h-4 w-4" />
-            O que esta sendo definido aqui
+            O que está sendo definido aqui
           </div>
           <p>
-            Esta etapa define a identidade principal do seu {copy.entityNoun}, o enquadramento basico no dominio business e a base reutilizada no painel, pagina publica e extensoes verticais.
+            Esta etapa define a identidade principal do seu {copy.entityNoun}, o enquadramento básico no domínio business e a base reutilizada no painel, página pública e extensões verticais.
           </p>
         </div>
 

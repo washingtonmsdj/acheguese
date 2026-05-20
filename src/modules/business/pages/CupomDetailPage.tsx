@@ -30,7 +30,7 @@ export default function CupomDetailPage() {
       </div>
     );
 
-  if (!cupom) return <div className="p-4">Cupom nÃ£o encontrado.</div>;
+  if (!cupom) return <div className="p-4">Cupom não encontrado.</div>;
 
   const diasRestantes = cupom.validade
     ? Math.max(
@@ -46,7 +46,7 @@ export default function CupomDetailPage() {
   const copiarCodigo = () => {
     navigator.clipboard.writeText(cupom.codigo);
     setCopiado(true);
-    toast.success("CÃ³digo copiado!");
+    toast.success("Código copiado!");
     setTimeout(() => setCopiado(false), 2000);
   };
 
@@ -82,7 +82,7 @@ export default function CupomDetailPage() {
 
         <div className="bg-card rounded-xl border p-4">
           <p className="text-xs text-muted-foreground mb-2 text-center">
-            CÃ³digo do cupom
+            Código do cupom
           </p>
           <div className="flex items-center justify-center gap-2">
             <code className="text-xl font-bold font-mono tracking-widest text-primary bg-primary/10 px-4 py-2 rounded-lg">
@@ -122,7 +122,7 @@ export default function CupomDetailPage() {
           <div className="flex items-center gap-2 bg-secondary rounded-xl p-3">
             <Ticket className="h-5 w-5 text-primary" />
             <div>
-              <p className="text-[11px] text-muted-foreground">DisponÃ­veis</p>
+              <p className="text-[11px] text-muted-foreground">Disponíveis</p>
               <p className="text-xs font-semibold">
                 {usosRestantes} de {maxUsos}
               </p>
@@ -146,7 +146,7 @@ export default function CupomDetailPage() {
         {cupom.neighborhood && (
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <MapPin className="h-4 w-4" />
-            <span>VÃ¡lido em {cupom.neighborhood}</span>
+            <span>Válido em {cupom.neighborhood}</span>
           </div>
         )}
 
@@ -158,7 +158,7 @@ export default function CupomDetailPage() {
               </>
             ) : (
               <>
-                <Copy className="h-4 w-4 mr-1" /> Copiar CÃ³digo
+                <Copy className="h-4 w-4 mr-1" /> Copiar código
               </>
             )}
           </Button>

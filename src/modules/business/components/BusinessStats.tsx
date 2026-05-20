@@ -40,9 +40,9 @@ interface BusinessStatsProps {
 
 const PERIOD_LABEL: Record<BusinessAnalyticsPeriod, string> = {
   today: "Hoje",
-  week: "Ultima semana",
-  month: "Ultimos 30 dias",
-  year: "Ultimo ano",
+  week: "Última semana",
+  month: "Últimos 30 dias",
+  year: "Último ano",
 };
 
 function formatChange(current: number, previous: number) {
@@ -87,7 +87,7 @@ export default function BusinessStats({
       <Card className="border-2 p-6">
         <div className="text-center text-muted-foreground">
           <BarChart3 className="mx-auto mb-4 h-16 w-16 opacity-20" />
-          <h3 className="mb-2 text-lg font-semibold">Estatisticas</h3>
+          <h3 className="mb-2 text-lg font-semibold">Estatísticas</h3>
           <p className="mb-4 text-sm">
             Apenas o dono da empresa pode ver estes dados.
           </p>
@@ -112,14 +112,14 @@ export default function BusinessStats({
   if (isError || !data) {
     return (
       <Card className="border-2 p-8 text-center text-sm text-muted-foreground">
-        Nao foi possivel carregar as estatisticas da empresa.
+        Não foi possível carregar as estatísticas da empresa.
       </Card>
     );
   }
 
   const stats: StatItem[] = [
     {
-      label: "Visualizacoes",
+      label: "Visualizações",
       value: data.views,
       previous: data.previous.views,
       icon: Eye,
@@ -133,7 +133,7 @@ export default function BusinessStats({
       color: "bg-green-500/10 text-green-600",
     },
     {
-      label: "Ligacoes",
+      label: "Ligações",
       value: data.phoneClicks,
       previous: data.previous.phoneClicks,
       icon: Phone,
@@ -159,7 +159,7 @@ export default function BusinessStats({
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h2 className="font-display text-xl font-bold">
-            Estatisticas da Empresa
+            Estatísticas da Empresa
           </h2>
           <p className="text-sm text-muted-foreground">
             Dados reais de desempenho para {businessName}.
@@ -215,7 +215,7 @@ export default function BusinessStats({
               <div className="mt-3 flex items-center justify-between">
                 {formatChange(numericValue, stat.previous)}
                 <span className="text-xs text-muted-foreground">
-                  vs. periodo anterior
+                  vs. período anterior
                 </span>
               </div>
             </Card>
@@ -227,9 +227,9 @@ export default function BusinessStats({
         <Card className="border-2 p-6">
           <div className="mb-4 flex items-center justify-between">
             <div>
-              <h3 className="font-semibold">Horarios de Pico</h3>
+              <h3 className="font-semibold">Horários de Pico</h3>
               <p className="text-sm text-muted-foreground">
-                Visitas por horario no periodo selecionado
+                Visitas por horário no período selecionado
               </p>
             </div>
             <Clock className="h-5 w-5 text-muted-foreground" />
@@ -256,7 +256,7 @@ export default function BusinessStats({
             </div>
           ) : (
             <p className="text-sm text-muted-foreground">
-              Ainda nao ha visitas registradas para montar horarios de pico.
+              Ainda não há visitas registradas para montar horários de pico.
             </p>
           )}
 
@@ -264,7 +264,7 @@ export default function BusinessStats({
             <div className="mt-6 border-t pt-4">
               <div className="flex items-center justify-between text-sm">
                 <span className="text-muted-foreground">
-                  Melhor horario observado:
+                  Melhor horário observado:
                 </span>
                 <span className="font-semibold">{bestHour}</span>
               </div>
@@ -275,12 +275,12 @@ export default function BusinessStats({
         <Card className="border-2 border-primary/20 p-6">
           <div className="mb-4 flex items-center gap-3">
             <TrendingUp className="h-5 w-5 text-primary" />
-            <h3 className="font-semibold">Leitura do Periodo</h3>
+            <h3 className="font-semibold">Leitura do Período</h3>
           </div>
 
           <div className="space-y-3 text-sm text-muted-foreground">
             <p>
-              A pagina recebeu {data.views} visualizacoes e gerou{" "}
+              A página recebeu {data.views} visualizações e gerou{" "}
               {data.whatsappClicks} cliques no WhatsApp.
             </p>
             <p>
@@ -289,7 +289,7 @@ export default function BusinessStats({
             </p>
             {data.views === 0 && (
               <p>
-                Sem eventos no periodo. A tela permanece zerada ate o tracking
+                Sem eventos no período. A tela permanece zerada até o tracking
                 receber dados reais.
               </p>
             )}

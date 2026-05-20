@@ -57,19 +57,19 @@ interface ContactLocationStepProps {
 }
 
 const MODOS_ATENDIMENTO = [
-  { id: "presencial", label: "Atendimento presencial", hint: "Cliente vai ate a empresa." },
-  { id: "delivery", label: "Delivery", hint: "Entrega de pedidos no endereco do cliente." },
-  { id: "domicilio", label: "A domicilio", hint: "Servico prestado no local do cliente." },
+  { id: "presencial", label: "Atendimento presencial", hint: "Cliente vai até a empresa." },
+  { id: "delivery", label: "Delivery", hint: "Entrega de pedidos no endereço do cliente." },
+  { id: "domicilio", label: "A domicílio", hint: "Serviço prestado no local do cliente." },
   { id: "online", label: "Online", hint: "Atendimento remoto ou digital." },
 ];
 
 const DAY_LABELS: Array<{ key: string; label: string }> = [
   { key: "segunda", label: "Segunda-feira" },
-  { key: "terca", label: "Terca-feira" },
+  { key: "terca", label: "Terça-feira" },
   { key: "quarta", label: "Quarta-feira" },
   { key: "quinta", label: "Quinta-feira" },
   { key: "sexta", label: "Sexta-feira" },
-  { key: "sabado", label: "Sabado" },
+  { key: "sabado", label: "Sábado" },
   { key: "domingo", label: "Domingo" },
 ];
 
@@ -126,7 +126,7 @@ export function ContactLocationStep({
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <MapPin className="h-5 w-5 text-primary" />
-          Territorio, contato e operacao
+          Território, contato e operação
         </CardTitle>
         <CardDescription>
           Defina como a empresa aparece territorialmente, onde ela opera e como o cliente entra em contato.
@@ -136,7 +136,7 @@ export function ContactLocationStep({
         <div className="space-y-4 rounded-xl border p-4">
           <div className="flex items-center gap-2">
             <MapPin className="h-4 w-4 text-primary" />
-            <h3 className="font-medium">Territorio principal</h3>
+            <h3 className="font-medium">Território principal</h3>
           </div>
           <TerritorialSelector
             initialLocationId={locationId}
@@ -145,7 +145,7 @@ export function ContactLocationStep({
           {errors.location_id && <p className="text-xs text-destructive">{errors.location_id}</p>}
           {locationData && (
             <div className="rounded-lg bg-muted/40 p-3 text-sm text-muted-foreground">
-              Exibicao publica principal em <span className="font-medium text-foreground">{locationData.neighborhoodName}</span>, {locationData.cityName} - {locationData.stateName}.
+              Exibição pública principal em <span className="font-medium text-foreground">{locationData.neighborhoodName}</span>, {locationData.cityName} - {locationData.stateName}.
             </div>
           )}
         </div>
@@ -190,7 +190,7 @@ export function ContactLocationStep({
             />
             {errors.email && <p className="text-xs text-destructive">{errors.email}</p>}
             <p className="text-xs text-muted-foreground">
-              Informe pelo menos um canal de contato entre telefone, WhatsApp ou email.
+              Informe pelo menos um canal de contato entre telefone, WhatsApp ou e-mail.
             </p>
           </div>
         </div>
@@ -198,7 +198,7 @@ export function ContactLocationStep({
         <div className="space-y-4 rounded-xl border p-4">
           <div className="flex items-center gap-2">
             <MapPin className="h-4 w-4 text-primary" />
-            <h3 className="font-medium">Endereco fisico</h3>
+            <h3 className="font-medium">Endereço físico</h3>
           </div>
           <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
             <div className="space-y-2 md:col-span-2">
@@ -213,7 +213,7 @@ export function ContactLocationStep({
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="address_number">Numero</Label>
+              <Label htmlFor="address_number">Número</Label>
               <Input
                 id="address_number"
                 value={addressNumber}
@@ -248,7 +248,7 @@ export function ContactLocationStep({
         <div className="space-y-4 rounded-xl border p-4">
           <div className="flex items-center gap-2">
             <Clock3 className="h-4 w-4 text-primary" />
-            <h3 className="font-medium">Horario de funcionamento</h3>
+            <h3 className="font-medium">Horário de funcionamento</h3>
           </div>
           <div className="space-y-3">
             {DAY_LABELS.map((day) => {

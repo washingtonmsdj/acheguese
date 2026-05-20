@@ -306,7 +306,7 @@ export default function CriarEmpresaPage() {
       if (slugSafety.status === "review") {
         form.setError("slug", {
           message:
-            "O link publico esta muito diferente do nome informado. Para seguranca, ajuste o link ou use o modo automatico.",
+            "O link público está muito diferente do nome informado. Para segurança, ajuste o link ou use o modo automático.",
         });
         return;
       }
@@ -404,7 +404,7 @@ export default function CriarEmpresaPage() {
           <div className="flex items-start gap-3 rounded-xl border border-destructive/30 bg-destructive/5 p-4 text-sm text-destructive">
             <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
             <div>
-              <p className="font-medium">Nao foi possivel criar a empresa.</p>
+              <p className="font-medium">Não foi possível criar a empresa.</p>
               <p>{error.message}</p>
             </div>
           </div>
@@ -479,7 +479,7 @@ export default function CriarEmpresaPage() {
 
               {step1Attempted && step1ErrorMessages.length > 0 && (
                 <div className="rounded-xl border border-destructive/30 bg-destructive/5 p-4 text-sm text-destructive">
-                  <p className="font-medium">Nao foi possivel continuar.</p>
+                  <p className="font-medium">Não foi possível continuar.</p>
                   <ul className="mt-2 list-disc space-y-1 pl-4">
                     {step1ErrorMessages.map((message) => (
                       <li key={message}>{message}</li>

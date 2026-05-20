@@ -6,9 +6,9 @@ import { Button } from "@/shared/components/ui/button";
 import { Card, CardContent } from "@/shared/components/ui/card";
 
 const benefits = [
-  "Perfil publico para descoberta local",
+  "Perfil público para descoberta local",
   "Painel operacional na Central",
-  "Gestao de dados, verticais e planos em um so lugar",
+  "Gestão de dados, verticais e planos em um só lugar",
 ];
 
 export default function EmpresasCadastroLandingPage() {
@@ -29,25 +29,25 @@ export default function EmpresasCadastroLandingPage() {
           <div className="space-y-7">
             <div className="inline-flex items-center gap-2 rounded-full border border-border/70 bg-background/75 px-3 py-1 text-xs font-semibold text-muted-foreground backdrop-blur">
               <Store className="h-3.5 w-3.5 text-primary" />
-              Entrada comercial publica
+              Entrada comercial pública
             </div>
 
             <div className="space-y-4">
               <h1 className="max-w-3xl text-4xl font-black tracking-tight text-foreground sm:text-5xl lg:text-6xl">
-                Cadastre sua empresa sem misturar vitrine publica com gestao.
+                Cadastre sua empresa sem misturar vitrine pública com gestão.
               </h1>
               <p className="max-w-2xl text-base leading-7 text-muted-foreground sm:text-lg">
-                A pagina publica de empresas serve para descoberta. A criacao, configuracao e gestao real acontecem na Central empresarial.
+                A página pública de empresas serve para descoberta. A criação, configuração e gestão real acontecem na Central empresarial.
               </p>
             </div>
 
             <div className="flex flex-col gap-3 sm:flex-row">
               <Button size="lg" className="gap-2 rounded-2xl" onClick={() => navigate("/central/empresas/nova")}>
-                Comecar cadastro
+                Começar cadastro
                 <ArrowRight className="h-4 w-4" />
               </Button>
               <Button size="lg" variant="outline" className="rounded-2xl bg-background/70" onClick={() => navigate("/empresas")}>
-                Ver empresas publicas
+                Ver empresas públicas
               </Button>
             </div>
           </div>
@@ -59,9 +59,9 @@ export default function EmpresasCadastroLandingPage() {
               </div>
 
               <div>
-                <h2 className="text-2xl font-bold text-foreground">Como fica a separacao</h2>
+                <h2 className="text-2xl font-bold text-foreground">Como fica a separação</h2>
                 <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                  O cliente encontra sua empresa em /empresas. Voce administra tudo em /central.
+                  O cliente encontra sua empresa em /empresas. Você administra tudo em /central.
                 </p>
               </div>
 
@@ -77,12 +77,12 @@ export default function EmpresasCadastroLandingPage() {
               <div className="grid gap-3 pt-2 sm:grid-cols-2">
                 <div className="rounded-2xl border border-border/70 bg-background/70 p-4">
                   <MapPin className="h-5 w-5 text-primary" />
-                  <p className="mt-3 text-sm font-semibold">Modulo publico</p>
+                  <p className="mt-3 text-sm font-semibold">Módulo público</p>
                   <p className="text-xs text-muted-foreground">/empresas</p>
                 </div>
                 <div className="rounded-2xl border border-border/70 bg-background/70 p-4">
                   <LayoutDashboard className="h-5 w-5 text-primary" />
-                  <p className="mt-3 text-sm font-semibold">Gestao real</p>
+                  <p className="mt-3 text-sm font-semibold">Gestão real</p>
                   <p className="text-xs text-muted-foreground">/central/empresas/nova</p>
                 </div>
               </div>
